@@ -486,6 +486,34 @@ function runCdCheck(command: string): Promise<{ code: number; stderr: string }> 
   return runChecker("syn-cd-pretool-check.sh", command);
 }
 
+// Asset seatbelt (bin/syn-asset-pretool-check.sh): a governed path may not be
+// edited until its owning asset has been read this session. The read itself is
+// recorded through the same script, so the gate is self-contained.
+function runAssetCheck(path: string): Promise<{ code: number; stderr: string }> {
+  return new Promise((resolveResult) => {
+    const child = spawn(`${root}/bin/syn-asset-pretool-check.sh`, ["--path", path], {
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+    let stderr = "";
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on("error", () => resolveResult({ code: 0, stderr: "" }));
+    child.on("close", (code) => resolveResult({ code: code ?? 0, stderr }));
+  });
+}
+
+function noteAssetRead(path: string): void {
+  try {
+    const child = spawn(`${root}/bin/syn-asset-pretool-check.sh`, ["--note", path], {
+      stdio: ["ignore", "ignore", "ignore"],
+    });
+    child.on("error", () => undefined);
+  } catch {
+    // The note is best-effort; never break a read over it.
+  }
+}
+
 export default function (pi: ExtensionAPI) {
   let sessionstartGeneration: SessionstartGeneration | null = null;
   let sessionstartExitListenerRegistered = false;
@@ -566,7 +594,28 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("tool_call", async (event) => {
-    if (event.type !== "tool_call" || event.toolName !== "bash") return {};
+    if (event.type !== "tool_call") return {};
+
+    // Reading an asset records it, which unlocks editing the governed path.
+    if (event.toolName === "read") {
+      const readPath = String((event.input as { path?: unknown })?.path ?? "");
+      if (readPath.includes("/assets/")) noteAssetRead(readPath.replace(/^\.\//, ""));
+      return {};
+    }
+
+    // A governed path may not be edited until its owning asset was loaded.
+    if (event.toolName === "edit" || event.toolName === "write") {
+      const editPath = String((event.input as { path?: unknown })?.path ?? "");
+      if (editPath) {
+        const assetResult = await runAssetCheck(editPath);
+        if (assetResult.code === 2) {
+          return { block: true, reason: assetResult.stderr.trim() || "denied by the governed-path asset seatbelt" };
+        }
+      }
+      return {};
+    }
+
+    if (event.toolName !== "bash") return {};
     const command = String((event.input as { command?: unknown })?.command ?? "");
     if (!command) return {};
     const cdResult = await runCdCheck(command);

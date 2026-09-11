@@ -126,6 +126,18 @@ emit_context "$DATA/operator.md" "operator"
 emit_context "$DATA/projects.md" "projects"
 emit_context "$DATA/learnings.md" "learnings"
 
+section "ASSET ROUTING"
+# Load the owning asset BEFORE editing a governed path. A code change not
+# reflected in its asset is an incomplete change. Router: galdr/SKILL.md.
+printf 'governed[6]{path,load_first}:\n'
+printf '  "bin/ymir-install.sh",".agents/skills/galdr/assets/installation.md"\n'
+printf '  "apps/hlidskjalf/**",".agents/skills/galdr/assets/hlidskjalf-ui.md"\n'
+printf '  "bin/mimir*",".agents/skills/galdr/assets/memory-well.md"\n'
+printf '  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr/assets/nornir-jobs.md"\n'
+printf '  "bin/valknut-load.sh | .pi/**",".agents/skills/galdr/assets/harness-integration/README.md"\n'
+printf '  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr/assets/smidja.md"\n'
+printf 'rule: load the asset, then change the code, then update the asset in the same change.\n'
+
 section "CRON START"
 if [ -x "$SCRIPT_DIR/nornir-cron-start.sh" ]; then
   BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/nornir-cron-start.sh" || printf 'cron: start reported a failure (see above)\n'
