@@ -12,6 +12,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
 import { dirname, join, resolve } from 'node:path';
+import { homedir } from 'node:os';
 
 const PORT = Number(process.env.PORT ?? 3889);
 const HERE = import.meta.dir;
@@ -889,8 +890,12 @@ function stream() {
 const CHAT_DIR = join(STATE_DIR, 'chat');
 const CHAT_WINDOW = 40; // rolling context — the last 40 messages
 const SAFE_SESSION = /^[A-Za-z0-9._-]+$/;
-// Kaia speaks through the first OpenAI-compatible backend that answers: an
-// explicit CHAT_BASE_URL, the local llama-server, then the Bifrost bridge.
+// Kaia speaks through the models the operator actually connected. The root Pi
+// catalog (`~/.pi/agent/models.json`) is the source of truth for the llama.cpp
+// router (`:8080`) and LM Studio; the Bifrost bridge (`:4603`) is the online
+// fallback. We never guess a llama.cpp model id — we read the one `.pi` uses.
+const PI_MODELS_PATH = join(homedir(), '.pi/agent/models.json');
+const PI_SETTINGS_PATH = join(homedir(), '.pi/agent/settings.json');
 const CHAT_BASES = [
   process.env.CHAT_BASE_URL,
   'http://127.0.0.1:8080/v1',
@@ -899,10 +904,55 @@ const CHAT_BASES = [
 const CHAT_MODEL_ENV = process.env.CHAT_MODEL;
 const modelFor: Record<string, string> = {};
 
+interface ChatTarget {
+  base: string;
+  model: string;
+  key?: string;
+  label: string;
+  kind: 'local' | 'online';
+}
+interface ChatCatalogEntry extends ChatTarget {
+  id: string;
+  name: string;
+  provider: string;
+}
+
 async function listModels(base: string): Promise<string[]> {
   const res = await fetch(`${base}/models`);
   const data = (await res.json()) as { data?: { id?: string }[] };
   return (data.data ?? []).map((m) => m.id ?? '').filter(Boolean);
+}
+
+/** Providers from the root Pi catalog: the exact base/model/key Pi uses. */
+function piCatalog(): ChatCatalogEntry[] {
+  const out: ChatCatalogEntry[] = [];
+  try {
+    const raw = JSON.parse(read(PI_MODELS_PATH)) as {
+      providers?: Record<string, { baseUrl?: string; apiKey?: string; models?: { id?: string }[] }>;
+    };
+    for (const [pkey, pv] of Object.entries(raw.providers ?? {})) {
+      const base = pv.baseUrl ?? '';
+      if (!base) continue;
+      const kind: 'local' | 'online' = /(127\.0\.0\.1|localhost)/.test(base) ? 'local' : 'online';
+      const models = (pv.models ?? []).map((m) => m.id ?? '').filter(Boolean);
+      const single = models.length === 1;
+      for (const mid of models) {
+        out.push({
+          id: single ? pkey : `${pkey}/${mid}`,
+          name: mid,
+          provider: pkey,
+          kind,
+          base,
+          model: mid,
+          key: pv.apiKey,
+          label: mid,
+        });
+      }
+    }
+  } catch {
+    /* no Pi catalog — fall back to live probing */
+  }
+  return out;
 }
 
 async function resolveModel(base: string): Promise<string> {
@@ -915,61 +965,86 @@ async function resolveModel(base: string): Promise<string> {
   return pick;
 }
 
-/** Try each backend in order; return the first non-empty reply. */
+/** Order the backends to try for a chosen model (or the operator's default). */
+function resolveChatTarget(model?: string): ChatTarget[] {
+  const cat = piCatalog();
+  if (model) {
+    const exact = cat.find((e) => e.id === model || e.name === model);
+    if (exact) return [exact];
+    if (/^(opencode-go|opencode)\//.test(model)) {
+      return [{ base: 'http://127.0.0.1:4603/v1', model, label: model, kind: 'online' }];
+    }
+    const raw: ChatTarget[] = [
+      { base: 'http://127.0.0.1:8080/v1', model, label: model, kind: 'local' },
+      { base: 'http://127.0.0.1:4603/v1', model, label: model, kind: 'online' },
+    ];
+    return raw;
+  }
+  // No choice: the operator's Pi default, then any local catalog model, then bases.
+  const targets: ChatTarget[] = [];
+  try {
+    const s = JSON.parse(read(PI_SETTINGS_PATH)) as { defaultProvider?: string; defaultModel?: string };
+    const d = cat.find((e) => e.provider === s.defaultProvider && e.model === s.defaultModel) ?? cat.find((e) => e.provider === s.defaultProvider);
+    if (d) targets.push(d);
+  } catch {
+    /* no settings */
+  }
+  const local = cat.find((e) => e.kind === 'local');
+  if (local && !targets.some((t) => t.base === local.base && t.model === local.model)) targets.push(local);
+  for (const base of CHAT_BASES) {
+    if (!targets.some((t) => t.base === base)) targets.push({ base, model: '', label: '', kind: base.includes('4603') ? 'online' : 'local' });
+  }
+  return targets;
+}
+
+/** Try the ordered targets; return the first non-empty reply. */
 async function chatCompletion(
   messages: { role: string; content: string }[],
-  modelOverride?: string,
+  targets: ChatTarget[],
 ): Promise<{ body: string; backend: string; model: string }> {
   let lastErr = '';
-  for (const base of CHAT_BASES) {
+  for (const t of targets) {
     try {
-      const model = modelOverride || (await resolveModel(base));
-      const res = await fetch(`${base}/chat/completions`, {
+      const model = t.model || (await resolveModel(t.base));
+      const headers: Record<string, string> = { 'content-type': 'application/json' };
+      if (t.key) headers.authorization = `Bearer ${t.key}`;
+      const res = await fetch(`${t.base}/chat/completions`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers,
         body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: 700 }),
       });
       if (!res.ok) {
-        lastErr = `${base} → ${res.status}`;
+        lastErr = `${t.base} → ${res.status}`;
         continue;
       }
       const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
       const body = data.choices?.[0]?.message?.content?.trim();
-      if (body) return { body, backend: base, model };
-      lastErr = `${base} → empty`;
+      if (body) return { body, backend: t.base, model };
+      lastErr = `${t.base} → empty`;
     } catch (err) {
-      lastErr = `${base} → ${(err as Error).message}`;
+      lastErr = `${t.base} → ${(err as Error).message}`;
     }
   }
   throw new Error(lastErr || 'no chat backend reachable');
 }
 
-/** The models the user has actually connected: each live backend's catalog,
- *  plus Pi's merged provider catalog. Free-typing any id is always allowed. */
+/** The models the operator has connected: the root Pi catalog (exact ids,
+ *  bases, keys), plus any live online backend. Free-typing is still allowed. */
 async function chatModels(): Promise<{ id: string; name: string; provider: string; kind: 'local' | 'online' }[]> {
   const out = new Map<string, { id: string; name: string; provider: string; kind: 'local' | 'online' }>();
-  for (const base of CHAT_BASES) {
-    try {
-      const kind: 'local' | 'online' = base.includes('4603') ? 'online' : 'local';
-      const provider = kind === 'online' ? 'opencode-go' : 'local';
-      for (const id of await listModels(base)) out.set(id, { id, name: id, provider, kind });
-    } catch {
-      /* backend down — skip */
-    }
-  }
+  for (const e of piCatalog()) out.set(e.id, { id: e.id, name: e.name, provider: e.provider, kind: e.kind });
+  // Online providers Pi knows (opencode-go / opencode) — list without probing.
   try {
-    const pi = run(['bash', '-lc', 'pi --list-models 2>/dev/null']);
-    for (const line of pi.split('\n').slice(1)) {
-      const toks = line.trim().split(/\s+/);
-      if (toks.length < 2) continue;
-      const provider = toks[0];
-      const name = toks[1];
-      if (!/^[A-Za-z0-9._-]+$/.test(provider) || !/^[A-Za-z0-9._/:@-]+$/.test(name)) continue;
-      const id = `${provider}/${name}`;
-      if (!out.has(id)) out.set(id, { id, name, provider, kind: 'online' });
+    const res = await fetch('http://127.0.0.1:4603/v1/models', { signal: AbortSignal.timeout(2500) });
+    if (res.ok) {
+      const data = (await res.json()) as { data?: { id?: string }[] };
+      for (const m of data.data ?? []) {
+        const id = m.id ?? '';
+        if (id && !out.has(id)) out.set(id, { id, name: id, provider: 'opencode-go', kind: 'online' });
+      }
     }
   } catch {
-    /* pi not available */
+    /* bridge down */
   }
   return [...out.values()].sort((a, b) => a.id.localeCompare(b.id));
 }
@@ -1110,7 +1185,7 @@ async function postChat(
   let live = false;
   let usedModel: string | undefined;
   try {
-    const out = await chatCompletion(messages, model);
+    const out = await chatCompletion(messages, resolveChatTarget(model));
     body = out.body;
     usedModel = out.model;
     live = true;

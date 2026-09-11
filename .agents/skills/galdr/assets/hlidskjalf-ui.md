@@ -4,15 +4,22 @@ Ymir's own surface (one of the three things Ymir owns: the UI, the runtime, A2A)
 Load this when touching `apps/hlidskjalf`. The design contract is `docs/design.md`;
 the tokens are the single source of truth.
 
-## 15.1 Location & stack
+## Location & stack
 
 - App: `apps/hlidskjalf` — **React 19 + Vite + TypeScript**, state via **Zustand**.
-- Run: `cd apps/hlidskjalf && npm install && npm run dev` → `http://127.0.0.1:3888/`.
-- Verify: `npm run typecheck` (`tsc --noEmit`) and `npm run build` must both be green.
-- Headless check: render with Playwright/Chrome and assert **0 console errors**
-  before claiming done.
+- Gate API: `apps/hlidskjalf/server/index.ts` — **Bun + `bun:sqlite`**, read-only,
+  bound to the runtime and the smithy trace; Vite proxies `/api` → `:3889`.
+- Raise everything with the scripts (do not hand-start each process):
 
-## 15.2 Tokens — never hardcode colour
+```bash
+scripts/start.sh    # SPA :3888 · gate API :3889 · Smíðja visualizer :8437 · Nornir cron · Bifrost bridge
+scripts/stop.sh     # lower them all
+```
+
+- Verify: `npm run typecheck` (`tsc --noEmit`) and `npm run build` must both be green.
+- Headless check: render with Playwright/Chrome and assert **0 console errors**.
+
+## Tokens — never hardcode colour
 
 - Canonical tokens: `midgard/design-system/tokens.css`, imported once in
   `src/main.tsx` (Vite `server.fs.allow` grants access outside the app root).
@@ -23,81 +30,98 @@ the tokens are the single source of truth.
   the user (`state/store.ts` → `applyAccent`). Tenant overrides live in
   `tenantColors`.
 
-## 15.3 The shell (structural, do not redesign)
+## The shell (structural, do not redesign)
 
-- `.shell` grid: `236px rail | 1fr`; rows `56px topbar · stage · 192px stream`.
+- `.shell` grid: `236px rail | 1fr`; rows `56px topbar · stage · stream`
+  (the stream height is draggable, persisted in `streamHeight`).
 - `.rail` (brand · gates · tenants · status), `.topbar` (realm chip · search ·
   accent · density · trace index · account), `main.stage` (the gate), `.stream`
-  (Ratatoskr + Runes).
-- Gates are **deep-linkable**: `#/fleet`, `#/tasks`, `#/well`, `#/runes`,
-  `#/reviews`, `#/processes`, `#/files`, `#/chat`, `#/forge`, `#/profile`.
+  (Ratatoskr + Runes, pausable).
+- Gates are **deep-linkable** and registered in `src/data/realms.ts` (`GATES`) and
+  routed in `src/app/Shell.tsx`:
+  `#/fleet` · `#/tasks` · `#/well` · `#/runes` · `#/reviews` · `#/processes` ·
+  `#/files` · `#/chat` · `#/forge` · `#/profile` · `#/sessions` · `#/trace` ·
+  `#/decisions` · `#/stats` · `#/cron` · `#/runtime`.
 
-## 15.4 Rules of the surface
+## Rules of the surface
 
 1. **Color-only states are forbidden** — every status carries glyph + colour + text
    (`StatusChip`, `TaskChip`).
 2. **Runecoded, not emoji** — use the rune family (Cinzel); never an emoji as an icon.
 3. **Every button must act** — no dead controls. Wire to a state change, a modal, or
-   a toast. New actions use the overlay system below.
+   a toast.
 4. **Motion explains** — 120–240ms, no bounce; honour `prefers-reduced-motion`.
 5. **Metrics are JetBrains Mono, tabular** (`.mono`, `.tabular`).
 6. **Metadata per page** — a gate declares its title/description/OG tags in
    `src/data/metadata.ts`; `Shell` applies them on gate/realm change.
 
-## 15.5 Interaction patterns (modal + toast)
+## Interaction patterns (modal + toast)
 
 - `src/state/ui.ts` exposes `useUI()` → `toast({kind,title,body})` and
   `openModal({variant,title,body,fields,content,onSubmit})`.
 - `<Overlay/>` (mounted in `App`) renders the modal + toast host. Variants:
-  `confirm` (glyph + confirm), `form` (fields), `info` (content block, e.g. a diff).
-- Any destructive or consequential action **must** open a confirm/form modal, mutate
-  the store, emit a rune (`pushStream`), and toast the outcome. See
-  `components/PRCard.tsx` (Seal / Request changes / View diff) as the reference
-  implementation.
+  `confirm`, `form` (fields), `info` (content block, e.g. a diff).
+- Any consequential action **must** open a confirm/form modal, mutate the store,
+  emit a rune (`pushStream`), and toast the outcome. Reference: `components/PRCard.tsx`
+  (Seal / Request changes / View diff).
 - Buttons get press feedback from `styles/overlays.css` (`translateY(1px) scale(.97)`).
 
-## 15.6 State
+## State & live data
 
-- `src/state/store.ts` — session, realm, gate, accent, tenant colours, company, data
-  (agents, tasks, runes, stream, recall, processes, reviews, files, chat, skills).
-- Realm switching is **granted**: `setRealm` refuses a realm the session has no grant
-  for. Tenant boundaries are sacred — never render another tenant's data.
+- `src/state/store.ts` — session, realm, gate, accent, tenant colours, company,
+  and data: agents, tasks, runes, stream, recall, processes, reviews, files, chat,
+  skills, **smidja** (sessions/stats/decisions/db), **mimir**.
+- **Live mode** loads the gate API (`loadLive`); every call degrades on its own and
+  has a 10s timeout (`services/api.ts`). Smíðja loads on a **separate track**
+  (`refreshSmidja`) so a slow endpoint (e.g. `/api/reviews`) cannot hold its gates
+  hostage. `App` polls `refreshSmidja` every 5s.
+- Realm switching is **granted**: `setRealm` refuses a realm the session has no
+  grant. Tenant boundaries are sacred — never render another tenant's data.
 - Persist user prefs to `localStorage` (`ymir.accent`, `ymir.tenant-colors`,
-  `ymir.company.*`).
+  `ymir.company.*`, `ymir.stream-height`).
 
-## 15.7 Adding a gate (checklist)
+## The gate API surface (`/api`, read-only)
 
-1. Add the id to `GateId` in `src/types.ts`.
-2. Add its `{ id, label, glyph, hint }` to `GATES` in `src/data/realms.ts`.
-3. Add its `PageMeta` to `GATE_META` in `src/data/metadata.ts`.
-4. Create `src/gates/<Gate>.tsx`; render it in the `Stage` switch in
-   `src/app/Shell.tsx`.
-5. Components are token-driven; reuse `AgentCard`, `TaskChip`, `TraceRow`,
-   `RecallPanel`, `MetricTile`, `RuneTag`, `PRCard`, `StatusChip`.
-6. Extend the headless verification (`/tmp/verify.cjs` pattern) and keep it green.
+`/api/health · /api/me · /api/workspace · /api/agents · /api/tasks · /api/runes ·
+/api/well · /api/processes · /api/reviews · /api/files · /api/runtime · /api/cron ·
+/api/loaders · /api/checks · /api/settings · /api/stream · /api/mimir …` plus the
+smithy trace: `/api/smidja/{health,sessions,sessions/:id,decisions,stats}` and
+chat: `/api/chat/history`, `POST /api/chat`.
 
-## 15.8 Agents, skills & mythological naming
+## Smíðja in the UI
 
-- The Forge gate (`src/gates/Forge.tsx`) creates/edits **Eindri** and **skills**.
+The smithy's trace (its own `smidja/smidja_data/smidja.db`) is rendered by four gates:
+
+| Gate | Route | Reads |
+|---|---|---|
+| Sessions | `#/sessions` | every run, status, tokens/cost — **Open visualizer** + **Refresh** |
+| Trace | `#/trace` | the selected run: phase lanes, events, agent sessions |
+| Decisions | `#/decisions` | failures clustered by diagnosis/model |
+| Stats | `#/stats` | token/cost breakdown, cache, providers |
+
+**Open visualizer** opens `VISUALIZER_URL` (`src/data/metadata.ts`, default
+`http://127.0.0.1:8437`) — Smíðja's own Vue trace UI, served by the smithy's Bun
+API on the same port (`scripts/start.sh` raises it). Details: `assets/smidja.md`,
+`docs/lore.md` §XIII.
+
+## Agents, skills & mythological naming
+
+- The Forge gate (`src/gates/Forge.tsx`) creates/edits **Eindri** and **skills**,
+  and reads/edits the smithy's prompts.
 - Naming law: `src/data/mythology.ts` maps a craft/capability → the Norse figure
   whose myth matches it (smith→Sindri, skald→Bragi, sage→Huginn, judge→Tyr,
-  forger→Brokk …). Every new Eindri takes a name from the suggestion engine; skills
-  take an **aett** prefix (`galdr-`, `mimir-`, `yggd-`, `rat-`, `heimd-`, `bifr-`,
-  `val-`, `skyr-`).
-- New skills are **validated in Utgard** before production (mock flag today;
-  W0007/Gungnir lands the real gate). On save they register in the skill index and
-  emit a rune.
+  forger→Brokk …). Skills take an **aett** prefix.
+- New skills are validated in Utgard before production (Gungnir, W0007).
 
-## 15.9 Identity
+## Identity
 
-- Mark: `midgard/design-system/ymir-mark.svg` (served copy
-  `apps/hlidskjalf/public/ymir-mark.svg`), used for the login/rail logo and favicon.
-  OG image: `public/og.png` (1200×630), source `public/og.svg`. Rebuild the PNG with
-  headless Chrome if the SVG changes.
+- Mark: `midgard/design-system/ymir-mark.svg` (served `public/ymir-mark.svg`), used
+  for login/rail logo and favicon. OG image: `public/og.png` (1200×630), source
+  `public/og.svg`. Rebuild the PNG with headless Chrome if the SVG changes.
 
 ## Verification
 
-```
+```bash
 cd apps/hlidskjalf
 npm run typecheck        # tsc --noEmit
 npm run build            # must be green
@@ -108,5 +132,5 @@ npm run build            # must be green
 
 - **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md`.
 - **Mirror:** `.agents/skills/tyr-check/assets/hlidskjalf-ui.md`.
-- When the shell, tokens, or gate contract changes, update this asset and
+- When the shell, tokens, gates, or the gate API change, update this asset and
   `docs/design.md` together.

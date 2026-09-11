@@ -62,6 +62,31 @@ function Stage() {
   }
 }
 
+function PageFeed() {
+  const streams = useYmir((s) => s.streams);
+  const gate = useYmir((s) => s.gate);
+  const items = (streams[gate]?.length ? streams[gate] : streams.all ?? []).slice(0, 3);
+  return (
+    <div className="page-feed" aria-live="polite" title="Live page feed — last 40">
+      {items.length === 0 ? (
+        <span className="pf-line dim">awaiting the first message…</span>
+      ) : (
+        items.map((e) => (
+          <span className="pf-line" key={e.id}>
+            <span className="pf-ts">
+              {new Date(e.ts).toLocaleTimeString('en-GB', { hour12: false })}
+            </span>
+            <span className="pf-from">{e.from}</span>
+            <span className="pf-msg" title={e.message}>
+              {e.message}
+            </span>
+          </span>
+        ))
+      )}
+    </div>
+  );
+}
+
 export function Shell() {
   const realm = useYmir((s) => s.realm);
   const session = useYmir((s) => s.session);
@@ -87,11 +112,16 @@ export function Shell() {
       <Rail />
       <Topbar />
       <main className="stage" role="main">
-        {gateDef ? (
-          <div className="stage-deck" style={{ marginBottom: 'var(--ymir-space-4)' }}>
-            <span aria-hidden="true">{gateDef.glyph}</span> {gateDef.hint}
-          </div>
-        ) : null}
+        <div className="stage-header-row">
+          {gateDef ? (
+            <div className="stage-deck">
+              <span aria-hidden="true">{gateDef.glyph}</span> {gateDef.hint}
+            </div>
+          ) : (
+            <span />
+          )}
+          <PageFeed />
+        </div>
         <Stage />
       </main>
       <BottomStream />

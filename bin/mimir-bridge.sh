@@ -38,11 +38,15 @@ case "$ACTION" in
     if listening; then printf 'well[1]{port,status}:\n  %s,"up"\n' "$PORT"; else printf 'well[1]{port,status}:\n  %s,"down"\n' "$PORT"; fi
     exit 0 ;;
   stop)
-    if [ -r "$PID_FILE" ]; then pid=$(tr -d '[:space:]' <"$PID_FILE"); kill "$pid" 2>/dev/null || true; rm -f "$PID_FILE"; printf 'well: stopped pid=%s\n' "$pid"; else printf 'well: already stopped\n'; fi
+    stopped=0
+    if [ -r "$PID_FILE" ]; then pid=$(tr -d '[:space:]' <"$PID_FILE"); if kill "$pid" 2>/dev/null; then stopped=1; fi; rm -f "$PID_FILE"; fi
+    if listening; then pkill -f "bin/mimir-bridge.py" 2>/dev/null && stopped=1; fi
+    if [ "$stopped" = 1 ]; then printf 'well: stopped\n'; else printf 'well: already stopped\n'; fi
     exit 0 ;;
 esac
 
 if listening; then
+  pgrep -f "bin/mimir-bridge.py" >"$PID_FILE" 2>/dev/null || true
   printf 'well[1]{port,status}:\n  %s,"already up"\n' "$PORT"
   exit 0
 fi
