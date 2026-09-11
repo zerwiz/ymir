@@ -2,7 +2,7 @@
 # /// script
 # dependencies = []
 # ///
-"""/install — stamp the smidja smidja from the skill into the cwd. Idempotent.
+"""/install — stamp the smithy from the skill into the cwd. Idempotent.
 
 Usage:
     uv run <skill>/scripts/install.py [--force]

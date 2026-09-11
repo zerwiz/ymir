@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
 # nornir-job-observer.sh - Huginn, the raven of observation.
 #
-# Read-only bridge from the Ymir runtime into the two external systems that
-# already exist on this machine:
-#   /home/zerwiz/command     FEATURES.md registry, .compliance/ gates,
-#                            smidja runs (smidja.db), Kaia engram
-#   /home/zerwiz/brokk   crew sessions, worktree state, outcomes
+# Read-only observation of the Ymir runtime into Runes. This job touches nothing
+# outside Ymir; every source below lives inside the repo (or the external worktree
+# root, which is read-only):
+#   docs/masterplan.md               open forge orders
+#   .agents/agents/*.md              the agent roster
+#   .agents/memory/well/             the well (episodes)
+#   workspace/memory/runes_audit.md  the ledger
+#   smidja/smidja_data/smidja.db     Smíðja runs (read-only SQLite URI)
+#   ~/.treehouse                     external worktrees (read-only)
 #
-# CONTRACT: this job NEVER writes into either tree. It only reads manifests,
-# SQLite databases in read-only mode, and small state files. Every observation
-# is carved as a Runes line and echoed to state/observer.log. When a source is
-# absent the job still carves an ABSENT line — silence is never mistaken for
-# health.
+# CONTRACT: this job NEVER writes anywhere but state/observer.log and the Runes
+# ledger. It only reads manifests, SQLite databases in read-only mode, and small
+# state files. Every observation is carved as a Runes line and echoed to
+# state/observer.log. When a source is absent the job still carves an ABSENT
+# line — silence is never mistaken for health.
 #
 # Environment:
-#   BROKK_COMMAND_ROOT, BROKK_FIRSTMATE_ROOT     source roots (defaults below)
 #   BROKK_YGGDRASIL_ROOT  external worktree root to observe (default ~/.treehouse)
 set -u
 
@@ -25,9 +28,12 @@ STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 # shellcheck source=bin/runes-append.sh
 . "$SCRIPT_DIR/runes-append.sh"
 
-COMMAND_ROOT="${BROKK_COMMAND_ROOT:-/home/zerwiz/command}"
-FIRSTMATE_ROOT="${BROKK_FIRSTMATE_ROOT:-/home/zerwiz/brokk}"
 WORKTREE_ROOT="${BROKK_YGGDRASIL_ROOT:-$HOME/.treehouse}"
+SMIDJA_DB="$ROOT/smidja/smidja_data/smidja.db"
+MASTERPLAN="$ROOT/docs/masterplan.md"
+WELL_DIR="$ROOT/.agents/memory/well"
+AGENTS_DIR="$ROOT/.agents/agents"
+RUNES_LEDGER="$ROOT/workspace/memory/runes_audit.md"
 OBS_LOG="$STATE/observer.log"
 OBS_LAST="$STATE/observer.last"
 
@@ -41,40 +47,60 @@ observe() {  # <source> <message>
 }
 
 printf 'OBSERVER - %s\n' "$LOG_TS"
-printf 'command=%s brokk=%s\n' "$COMMAND_ROOT" "$FIRSTMATE_ROOT"
+printf 'root=%s worktrees=%s\n' "$ROOT" "$WORKTREE_ROOT"
 
-# ---- command: FEATURES.md registry ---------------------------------------
-if [ -r "$COMMAND_ROOT/FEATURES.md" ]; then
-  projects=$(grep -cE '^\| `' "$COMMAND_ROOT/FEATURES.md" 2>/dev/null || printf 0)
-  msg="FEATURES.md registry readable; projects=${projects:-0}"
-  printf 'command.features projects=%s\n' "${projects:-0}"
+# ---- ymir: forge orders (masterplan) -------------------------------------
+if [ -r "$MASTERPLAN" ]; then
+  open=$(grep -cE '^- Status: ADDED' "$MASTERPLAN" 2>/dev/null | tr -d '[:space:]')
+  working=$(grep -cE '^- Status:.*WORKING' "$MASTERPLAN" 2>/dev/null | tr -d '[:space:]')
+  done=$(grep -cE '\. \+ <[0-9]{4}' "$MASTERPLAN" 2>/dev/null | tr -d '[:space:]')
+  msg="masterplan readable; open=${open:-0} working=${working:-0} completed_notes=${done:-0}"
+  printf 'ymir.orders open=%s working=%s\n' "${open:-0}" "${working:-0}"
 else
-  msg="FEATURES.md ABSENT at $COMMAND_ROOT/FEATURES.md"
-  printf 'command.features ABSENT\n'
+  msg="masterplan ABSENT at $MASTERPLAN"
+  printf 'ymir.orders ABSENT\n'
 fi
-observe "command.features" "$msg"
+observe "ymir.orders" "$msg"
 
-# ---- command: .compliance gates ------------------------------------------
-if [ -d "$COMMAND_ROOT/.compliance" ]; then
-  gates_dir="$COMMAND_ROOT/.compliance/gates"
-  gate_count=0
-  gate_names=""
-  if [ -d "$gates_dir" ]; then
-    gate_count=$(find "$gates_dir" -maxdepth 1 -name 'check_*.sh' 2>/dev/null | wc -l | tr -d '[:space:]')
-    gate_names=$(find "$gates_dir" -maxdepth 1 -name 'check_*.sh' -printf '%f ' 2>/dev/null | sed 's/ $//')
-  fi
-  config_ok="absent"
-  [ -r "$COMMAND_ROOT/.compliance/config/core_four.yaml" ] && config_ok="present"
-  msg=".compliance present; gates=${gate_count:-0} [${gate_names}] core_four=${config_ok}"
-  printf 'command.compliance gates=%s core_four=%s\n' "${gate_count:-0}" "$config_ok"
+# ---- ymir: agent roster ---------------------------------------------------
+if [ -d "$AGENTS_DIR" ]; then
+  n=$(find "$AGENTS_DIR" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d '[:space:]')
+  msg="agent roster readable; agents=${n:-0}"
+  printf 'ymir.agents count=%s\n' "${n:-0}"
 else
-  msg=".compliance ABSENT under $COMMAND_ROOT"
-  printf 'command.compliance ABSENT\n'
+  msg="agent roster ABSENT at $AGENTS_DIR"
+  printf 'ymir.agents ABSENT\n'
 fi
-observe "command.compliance" "$msg"
+observe "ymir.agents" "$msg"
 
-# ---- command: smidja runs (smidja.db, read-only) -----------------------
-SMIDJA_DB="$COMMAND_ROOT/smidja/smidja_data/smidja.db"
+# ---- ymir: the well (episodes) -------------------------------------------
+if [ -d "$WELL_DIR" ]; then
+  episodes=0
+  for f in "$WELL_DIR"/*.jsonl; do
+    [ -r "$f" ] || continue
+    c=$(wc -l <"$f" 2>/dev/null | tr -d '[:space:]')
+    episodes=$((episodes + ${c:-0}))
+  done
+  msg="well readable; episodes=${episodes}"
+  printf 'ymir.well episodes=%s\n' "$episodes"
+else
+  msg="well ABSENT at $WELL_DIR"
+  printf 'ymir.well ABSENT\n'
+fi
+observe "ymir.well" "$msg"
+
+# ---- ymir: the ledger -----------------------------------------------------
+if [ -r "$RUNES_LEDGER" ]; then
+  lines=$(wc -l <"$RUNES_LEDGER" 2>/dev/null | tr -d '[:space:]')
+  msg="runes ledger readable; lines=${lines:-0}"
+  printf 'ymir.runes lines=%s\n' "${lines:-0}"
+else
+  msg="runes ledger ABSENT at $RUNES_LEDGER"
+  printf 'ymir.runes ABSENT\n'
+fi
+observe "ymir.runes" "$msg"
+
+# ---- smidja: runs (smidja.db, read-only) ---------------------------------
 if [ -r "$SMIDJA_DB" ] && command -v python3 >/dev/null 2>&1; then
   smidja_summary=$(python3 - "$SMIDJA_DB" 2>/dev/null <<'PY'
 import sqlite3, sys
@@ -109,7 +135,7 @@ PY
 )
   first_line=$(printf '%s' "$smidja_summary" | head -n 1)
   msg="smidja.db read-only: ${first_line:-unreadable}"
-  printf 'command.smidja %s\n' "$msg"
+  printf 'smidja.runs %s\n' "$msg"
   printf '%s\n' "$smidja_summary" | tail -n +2 | sed 's/^/  /'
 else
   if [ ! -r "$SMIDJA_DB" ]; then
@@ -117,65 +143,21 @@ else
   else
     msg="smidja.db present but python3 unavailable for read-only query"
   fi
-  printf 'command.smidja ABSENT/UNREADABLE\n'
+  printf 'smidja.runs ABSENT/UNREADABLE\n'
 fi
-observe "command.smidja" "$msg"
+observe "smidja.runs" "$msg"
 
-# ---- command: Kaia engram ------------------------------------------------
-ENGRAM="$COMMAND_ROOT/smidja/smidja_data/kaia.engram"
-if [ -r "$ENGRAM" ]; then
-  size=$(stat -c '%s' "$ENGRAM" 2>/dev/null || printf 0)
-  mtime=$(stat -c '%y' "$ENGRAM" 2>/dev/null | cut -d'.' -f1)
-  wal="absent"
-  [ -e "$ENGRAM-wal" ] && wal="present"
-  msg="kaia.engram size=${size}B wal=${wal} mtime=${mtime}"
-  printf 'command.engram size=%s wal=%s mtime=%s\n' "$size" "$wal" "$mtime"
-else
-  msg="kaia.engram ABSENT at $ENGRAM"
-  printf 'command.engram ABSENT\n'
-fi
-observe "command.engram" "$msg"
-
-# ---- brokk: crew sessions --------------------------------------------
-if [ -r "$FIRSTMATE_ROOT/state/home-summary.json" ]; then
-  active=$(grep -m1 '"active_children":' "$FIRSTMATE_ROOT/state/home-summary.json" 2>/dev/null | sed -E 's/[^0-9]//g')
-  open_dec=$(grep -m1 '"decisions_open":' "$FIRSTMATE_ROOT/state/home-summary.json" 2>/dev/null | sed -E 's/[^0-9]//g')
-  valid=$(grep -m1 '"valid":' "$FIRSTMATE_ROOT/state/home-summary.json" 2>/dev/null | sed -E 's/.*"valid":[[:space:]]*(true|false).*/\1/')
-  metas=$(find "$FIRSTMATE_ROOT/state" -maxdepth 1 -name '*.meta' 2>/dev/null | wc -l | tr -d '[:space:]')
-  msg="crew sessions: active_children=${active:-0} decisions_open=${open_dec:-0} valid=${valid:-unknown} session_meta=${metas:-0}"
-  printf 'brokk.sessions active=%s decisions=%s valid=%s\n' "${active:-0}" "${open_dec:-0}" "${valid:-unknown}"
-else
-  msg="home-summary.json ABSENT under $FIRSTMATE_ROOT/state"
-  printf 'brokk.sessions ABSENT\n'
-fi
-observe "brokk.sessions" "$msg"
-
-# ---- brokk: branch outcomes ------------------------------------------
-OUTCOMES="$FIRSTMATE_ROOT/state/branch-outcomes.jsonl"
-if [ -r "$OUTCOMES" ]; then
-  n=$(wc -l <"$OUTCOMES" 2>/dev/null | tr -d '[:space:]')
-  task=$(tail -n 1 "$OUTCOMES" 2>/dev/null | sed -n 's/.*"task":"\([^"]*\)".*/\1/p')
-  recorded=no
-  tail -n 1 "$OUTCOMES" 2>/dev/null | grep -q '"verdict"' && recorded=yes
-  msg="branch outcomes=${n:-0}; latest task=${task:-unknown} outcome_recorded=${recorded}"
-  printf 'brokk.outcomes count=%s latest_task=%s outcome_recorded=%s\n' "${n:-0}" "${task:-unknown}" "$recorded"
-else
-  msg="branch-outcomes.jsonl ABSENT under $FIRSTMATE_ROOT/state"
-  printf 'brokk.outcomes ABSENT\n'
-fi
-observe "brokk.outcomes" "$msg"
-
-# ---- worktree state (external, read-only) ------------------------------------------
+# ---- worktrees (external, read-only) -------------------------------------
 if [ -d "$WORKTREE_ROOT" ]; then
   wt_count=$(find "$WORKTREE_ROOT" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d '[:space:]')
   state_files=$(find "$WORKTREE_ROOT" -mindepth 2 -maxdepth 2 -name 'treehouse-state.json' 2>/dev/null | wc -l | tr -d '[:space:]')
   msg="worktrees=${wt_count:-0} state_files=${state_files:-0}"
-  printf 'brokk.worktrees trees=%s state_files=%s\n' "${wt_count:-0}" "${state_files:-0}"
+  printf 'yggdrasil.worktrees trees=%s state_files=%s\n' "${wt_count:-0}" "${state_files:-0}"
 else
   msg="worktree root ABSENT at $WORKTREE_ROOT"
-  printf 'brokk.worktrees ABSENT\n'
+  printf 'yggdrasil.worktrees ABSENT\n'
 fi
-observe "brokk.worktrees" "$msg"
+observe "yggdrasil.worktrees" "$msg"
 
 printf '%s\n' "observer summary written: $LOG_TS" >"$OBS_LAST"
 printf 'observer: observations carved (log=%s)\n' "$OBS_LOG"

@@ -6,7 +6,7 @@ swap model, the gateway, and how pi/opencode/dual-chat connect to it.
 
 - Machine: zerwiz (RTX A5000 **16 GB VRAM**, 122 GiB RAM)
 - Status: verified 2026-09-07
-- Backup copy of every script: `~/command/docs/zerwizdocs/backupscripts/llama-menu/`
+- Backup copy of every script: `~/Ymir/docs/zerwizdocs/backupscripts/llama-menu/`
 
 ---
 
@@ -142,7 +142,7 @@ POST /v1/chat/completions → resolve model → model-host start <id>
                             (unloads all others) → forward request
 ```
 
-- Ops: `~/command/scripts/swap-proxy {start|stop|status|restart}`
+- Ops: `~/Ymir/scripts/swap-proxy {start|stop|status|restart}`
 - Log: `/tmp/opencode/swap-proxy.log`; pid `/tmp/opencode/swap-proxy.pid`
 - **Aliases** (`ALIASES` in `swap-proxy.cjs`): opencode short ids
   (`gemma4-12b-qat-uncensored`) → registry ids (`hauhau-gemma-swap`).
@@ -249,7 +249,7 @@ swap-proxy status                       # gateway status (:8090, legacy)
 - [`swap-proxy.md`](./swap-proxy.md) — gateway ops
 - [`../models/qwen3.8-flash-next-settings.md`](../models/qwen3.8-flash-next-settings.md) — big-MoE offload
 - [`../llamacpp/TESTING.md`](../llamacpp/TESTING.md) — the CUDA llama-server build
-- `~/command/docs/zerwizdocs/backupscripts/llama-menu/` — backup copy of every script
+- `~/Ymir/docs/zerwizdocs/backupscripts/llama-menu/` — backup copy of every script
 
 ---
 

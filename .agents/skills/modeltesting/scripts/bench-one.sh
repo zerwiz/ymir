@@ -17,10 +17,10 @@
 #     prompt-json optional request file (default: a built-in 3800-token coding prompt)
 #     max-tokens  completion length (default 256)
 #
-# Requires: model-host (in PATH or ~/command/scripts), llama-models, curl, jq-ish python3.
+# Requires: model-host (in PATH or ~/Ymir/scripts), llama-models, curl, jq-ish python3.
 set -euo pipefail
 
-MH=/home/zerwiz/command/scripts/model-host.sh
+MH=/home/zerwiz/Ymir/scripts/model-host.sh
 MODELS_BIN=/home/zerwiz/.local/bin/llama-models
 MODEL=${1:?usage: bench-one.sh <model-id> [prompt-json] [max-tokens]}
 PROMPT_JSON=${2:-}

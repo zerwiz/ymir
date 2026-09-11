@@ -267,3 +267,13 @@ Entity card fields: `name, type (company|personal), owner (zerwiz|craig), realm,
   - Upstream reference dumps: `assets/reference/**`, `assets/Ymir.md` — provenance only.
 - **Verified:** `python3 -m py_compile` clean (scripts), `bash -n` clean (shell), `apps/hlidskjalf` `tsc --noEmit` + `vite build` green. Visualizer `node_modules` is a broken bun install (pre-existing) so `vue-tsc` could not run; identifier rename verified by grep (no old camelCase forms remain).
 - **Files:** entire tree (158 files) — see `docs/masterplan.md` §5 log.
+
+## ENTRY 2026-09-11-018 — Observer is self-contained: no `command` connection, points at Ymir's Smíðja DB
+
+- **Status:** DONE · **Owner:** Brokk · **Authority:** Allfather directive 2026-09-11 ("point it to smidja db; no connections left to command").
+- **DECISION:** `bin/nornir-job-observer.sh` (Huginn) no longer reads the external `~/command` tree. It observes **Ymir's own runtime**: `docs/masterplan.md` (orders), `.agents/agents` (roster), `.agents/memory/well` (episodes), `workspace/memory/runes_audit.md` (ledger), `smidja/smidja_data/smidja.db` (Smíðja runs, read-only SQLite), plus the read-only external worktree root. Outputs remain `state/observer.log` + Runes only.
+- **Removed:** `BROKK_COMMAND_ROOT` / `COMMAND_ROOT`, and the `command.features` / `command.compliance` / `command.smidja` / `command.engram` observations. New sources: `ymir.orders`, `ymir.agents`, `ymir.well`, `ymir.runes`, `smidja.runs`, `yggdrasil.worktrees`.
+- **Repointed:** every `~/command` reference in the Smíðja skill, `.agents/backend`, and `docs/plans` → `~/Ymir`; `docs/command docs/` → `docs/`. Plan 23 rewritten as **Ymir Runtime Observer (self-observation)** and renamed `docs/plans/23-ymir-observer.md`.
+- **NOT changed:** immutable history (`append-only-log`, `runes_audit`, daily logs, `episodes.jsonl`) and imported provenance data (`assets/reference/**`, `assets/data/**`) — these are records, not connections.
+- **Verified:** `bash -n` clean; observer self-runs (`ymir.orders open=93 working=11`, `ymir.agents=9`, `ymir.well episodes=395`, `smidja.runs` points at `/home/zerwiz/Ymir/smidja/smidja_data/smidja.db`). Masterplan notes appended under W0012 and W0086.
+- **Files:** `bin/nornir-job-observer.sh`, `.agents/skills/galdr/assets/{nornir-jobs,runtime-components,brokk-distro-runtime,runtime-compliance}.md` (+ `tyr-check` mirrors), `.agents/backend/opencode-go-bridge.py`, `.agents/skills/smidja/**`, `docs/plans/{23-ymir-observer,24-cron-schedule,29-brokk-distro-runtime}.md`, `docs/plans/README.md`, `docs/masterplan.md`.

@@ -36,7 +36,7 @@ index_cmd() {
   local n=0
   while IFS= read -r f; do
     [ -n "$f" ] || continue
-    python3 - "$f" "$ROOT" "$realm" "$STORE" <<'PY'
+    add=$(python3 - "$f" "$ROOT" "$realm" "$STORE" <<'PY'
 import sys, os, re, json, hashlib, datetime
 f, root, realm, store = sys.argv[1:5]
 try: text=open(f, encoding='utf-8', errors='ignore').read()
@@ -72,9 +72,11 @@ with open(store,'a',encoding='utf-8') as out:
         out.write(json.dumps(rec)+'\n'); added+=1
 print(added)
 PY
-    n=$((n + 1))
+)
+    add=${add:-0}
+    n=$((n + add))
   done < <(find "$ROOT/workspace" "$ROOT/svartalfaheim/$realm/workspace" "$ROOT/midgard" -name '*.md' 2>/dev/null | sort)
-  printf 'indexed[1]{realm,store,entries}:\n  "%s","%s",%s\n' "$realm" "${STORE#"$ROOT"/}" "$(wc -l <"$STORE" | tr -d ' ')"
+  printf 'indexed[1]{realm,store,added,entries}:\n  "%s","%s",%s,%s\n' "$realm" "${STORE#"$ROOT"/}" "$n" "$(wc -l <"$STORE" | tr -d ' ')"
 }
 
 query_cmd() {

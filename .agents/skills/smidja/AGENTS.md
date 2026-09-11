@@ -1,13 +1,13 @@
 ---
 name: smidja
-description: Smíðja — the smithy (the smithy). Deploy and operate repeatable agents+code workflows in any codebase. Use when installing the workshop, creating/running/updating a smidja, managing the agent roster in smidja.config.yaml, or observing running agent workflows. For LAUNCHING runs use the sibling skills smidja-launcher / smidja-start. Keywords - smidja, smithy, smithy, AI developer workflow, agent pipeline, install smidja.
-argument-hint: "[install | create smidja | run smidja | update config | ...]"
+description: Smíðja — the smithy. Deploy and operate repeatable agents+code workflows in any codebase. Use when installing the workshop, creating/running/updating a smithy, managing the agent roster in smidja.config.yaml, or observing running agent workflows. For LAUNCHING runs use the sibling skills smidja-launcher / smidja-start. Keywords - smidja, smithy, AI developer workflow, agent pipeline, install smithy.
+argument-hint: "[install | create smithy | run smithy | update config | ...]"
 ---
 
-# Smíðja — the Smithy (the smithy)
+# Smíðja — the Smithy
 
 > **Norse name:** **Smíðja** (the smithy). Its orchestrator seat is **Völundr**,
-> the master smith — the smidja's Kaia. Formerly "smidja" (provenance).
+> the master smith — Smíðja's orchestrator (Kaia's seat inside the smithy).
 > Registry: `.agents/assets/agents/naming.md`, `docs/lore.md` §XI.
 
 Reusable combination of **agents plus code**: deterministic Python smidja scripts own sequencing, retries, and acceptance; coding agents (Pi in v1) work inside bounded phases; typed JSON envelopes carry context between them; everything streams into SQLite for the polled visualizer. Agent proposes, code disposes.
@@ -22,7 +22,7 @@ or starting agents, load the sibling instead:
 - **`smidja-start`** — exactly how to start agents for work: teams
   (rosters), local/online models, chains, orchestrator, gotchas.
 - **`smidja-instructions`** — turn a vague ask into a runnable request file.
-- **`command-repo`** — conventions when working inside `~/command`.
+- **`smidja`** — conventions when working inside `~/Ymir`.
 
 ## Current runtime (verified 2026-08-31)
 
@@ -54,7 +54,7 @@ or starting agents, load the sibling instead:
 - **Bench missions:** `tests/local-models/missions/` (T1 recon, T2 build, T3
   context probe) via `smidja mission T1|T2 [--config <roster>]`; results in
   `tests/local-models/RESULTS.md`.
-- **Deep-reference docs:** `docs/command docs/` — `software-smidja.md`
+- **Deep-reference docs:** `docs/` — `software-smidja.md`
   (overview), `software-smidja-run.md` (how to run), `software-smidja-pi.md` /
   `software-smidja-opencode.md` (coding-agent setups), `software-smidja-visualizer.md`
   (trace UI), `SmidjaAgentsAndModels.md` (roster + model backends source of

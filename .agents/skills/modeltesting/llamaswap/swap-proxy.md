@@ -4,7 +4,7 @@ Operational doc for the **real auto-swap proxy** that powers "swap model in
 pi.dev/opencode → stop the running model, start the one I chose."
 
 - Status: **BUILT + VERIFIED** (2026-09-07)
-- Files: `~/command/scripts/swap-proxy.cjs`, launcher `~/command/scripts/swap-proxy`
+- Files: `~/Ymir/scripts/swap-proxy.cjs`, launcher `~/Ymir/scripts/swap-proxy`
 - Companion: [`how-llama-swap-works.md`](./how-llama-swap-works.md) (research background)
 
 ---
@@ -29,12 +29,12 @@ Client sees one URL; swapping the `model` field triggers the backend swap.
 
 ```bash
 # start (detached, survives shell exit)
-~/command/scripts/swap-proxy start
+~/Ymir/scripts/swap-proxy start
 
 # status / stop / restart
-~/command/scripts/swap-proxy status
-~/command/scripts/swap-proxy stop
-~/command/scripts/swap-proxy restart
+~/Ymir/scripts/swap-proxy status
+~/Ymir/scripts/swap-proxy stop
+~/Ymir/scripts/swap-proxy restart
 ```
 
 - PID: `/tmp/opencode/swap-proxy.pid`
@@ -46,7 +46,7 @@ Client sees one URL; swapping the `model` field triggers the backend swap.
 
 - Port: `--port 8090` (or `SWAP_PROXY_PORT`).
 - Models file: `~/.pi/agent/models.json` (or `--models`).
-- model-host: `~/command/scripts/model-host.sh` (or `--host`).
+- model-host: `~/Ymir/scripts/model-host.sh` (or `--host`).
 
 **Aliases** (`ALIASES` in `swap-proxy.cjs`): client-facing short IDs
 (`qwen3.6-35b-q2_k_xl`) map to pi IDs (`qwen3.6-35b-a3b@q2_k_xl`). Direct pi

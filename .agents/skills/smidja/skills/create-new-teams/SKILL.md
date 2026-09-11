@@ -14,7 +14,7 @@ allowed-tools: read, write, edit, bash, grep, glob
   existing team or agent.
 - **`smidja` / `smidja-launcher` / `smidja-start`** — running the team once it
   exists.
-- **`command-repo`** — conventions when work lands in `~/command`.
+- **`smidja`** — conventions when work lands in `~/Ymir`.
 
 ## The one rule
 **A team is a `stacks:` block in the roster file: which agents, and which model

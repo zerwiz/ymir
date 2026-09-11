@@ -10,6 +10,7 @@
  *   PORT=3889 bun run server/index.ts
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { Database } from 'bun:sqlite';
 import { join, resolve } from 'node:path';
 
 const PORT = Number(process.env.PORT ?? 3889);
@@ -241,6 +242,107 @@ function processes() {
     });
   }
   return out;
+}
+
+/* ---- /api/smidja (the smithy's own trace, read-only) --------------------- */
+const SMIDJA_DB = resolve(ROOT, process.env.SMIDJA_DB ?? 'smidja/smidja_data/smidja.db');
+
+function smidja(): Database | null {
+  try {
+    if (!existsSync(SMIDJA_DB)) return null;
+    return new Database(SMIDJA_DB, { readonly: true });
+  } catch {
+    return null;
+  }
+}
+
+function smidjaHealth() {
+  const db = smidja();
+  if (!db) return { db: 'absent', sessions: 0 };
+  try {
+    const r = db.query('select count(*) c from sessions').get() as { c?: number };
+    return { db: 'present', sessions: r?.c ?? 0 };
+  } catch {
+    return { db: 'present', sessions: 0 };
+  } finally {
+    db.close();
+  }
+}
+
+function smidjaSessions(limit = 100) {
+  const db = smidja();
+  if (!db) return [];
+  try {
+    return db
+      .query(
+        'select smidja_id, smidja_name, status, engineer, total_tokens, total_cost, started_at, ended_at from sessions order by started_at desc limit ?',
+      )
+      .all(limit);
+  } catch {
+    return [];
+  } finally {
+    db.close();
+  }
+}
+
+function smidjaSession(id: string) {
+  const db = smidja();
+  if (!db) return null;
+  try {
+    const session = db.query('select * from sessions where smidja_id = ?').get(id);
+    if (!session) return null;
+    return {
+      session,
+      phases: db.query('select * from phases where smidja_id = ? order by seq, rowid').all(id),
+      events: db
+        .query('select rowid, event_id, phase_id, parent_id, type, name, payload_json, tokens, started_at, ended_at from events where smidja_id = ? order by rowid limit 2000')
+        .all(id),
+      envelopes: db.query('select * from envelopes where smidja_id = ? order by created_at, rowid').all(id),
+      gates: db.query('select * from gate_results where smidja_id = ? order by id').all(id),
+      agents: db.query('select * from agent_sessions where smidja_id = ? order by created_at, agent').all(id),
+    };
+  } catch {
+    return null;
+  } finally {
+    db.close();
+  }
+}
+
+function smidjaDecisions() {
+  const db = smidja();
+  if (!db) return { total_failed: 0, decisions: [] };
+  try {
+    const decisions = db
+      .query(
+        "select ph.name phase, ph.error, ag.model, count(*) count from phases ph left join agent_sessions ag on ag.smidja_id=ph.smidja_id and ag.agent=ph.owner where ph.status='fail' group by ph.name, ph.error, ag.model order by count desc",
+      )
+      .all();
+    return { total_failed: decisions.length, decisions };
+  } catch {
+    return { total_failed: 0, decisions: [] };
+  } finally {
+    db.close();
+  }
+}
+
+function smidjaStats() {
+  const db = smidja();
+  if (!db) return { totals: {}, by_chain: [], by_model: [] };
+  try {
+    return {
+      totals: db.query('select count(*) runs, coalesce(sum(total_tokens),0) tokens, coalesce(sum(total_cost),0) cost from sessions').get(),
+      by_chain: db
+        .query("select coalesce(smidja_name,'?') chain, count(*) runs, coalesce(sum(total_tokens),0) tokens, coalesce(sum(total_cost),0) cost from sessions group by smidja_name order by runs desc")
+        .all(),
+      by_model: db
+        .query("select coalesce(model,'?') model, count(*) runs, coalesce(sum(context_tokens),0) context_tokens from agent_sessions group by model order by runs desc")
+        .all(),
+    };
+  } catch {
+    return { totals: {}, by_chain: [], by_model: [] };
+  } finally {
+    db.close();
+  }
 }
 
 /* ---- /api/reviews (compliance as checks) --------------------------------- */
@@ -562,6 +664,15 @@ const server = Bun.serve({
       if (p === '/api/cron') return json(cron());
       if (p === '/api/loaders') return json(loaders());
       if (p === '/api/checks') return json(checks());
+      if (p === '/api/smidja/health') return json(smidjaHealth());
+      if (p === '/api/smidja/sessions') return json(smidjaSessions());
+      if (p === '/api/smidja/decisions') return json(smidjaDecisions());
+      if (p === '/api/smidja/stats') return json(smidjaStats());
+      if (p.startsWith('/api/smidja/sessions/')) {
+        const id = decodeURIComponent(p.slice('/api/smidja/sessions/'.length));
+        const detail = smidjaSession(id);
+        return detail ? json(detail) : json({ error: `no session ${id}` }, 404);
+      }
       if (p === '/api/settings') return json(settings());
       if (p === '/api/stream') return stream();
       if (p === '/api/chat/history') return json(chatHistory());

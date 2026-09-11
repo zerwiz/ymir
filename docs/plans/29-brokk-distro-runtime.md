@@ -229,7 +229,7 @@ and validation (Norse: Einherjar).
 **NOT**
 - A new agent framework, queue, or scheduler — reuse upstream distro's patterns, Ratatoskr (A2A), and the cron spine (W0011/W0063/W0089).
 - A second UI engine — Hlidskjalf only (plan 22).
-- Writing into `~/command` or `~/upstream distro` — read-only by contract (plan 23).
+- Writing into Ymir's own runtime tree or the upstream distro — read-only by contract (plan 23).
 - Starting any platform backend before the frontend gate.
 
 **KEEP**

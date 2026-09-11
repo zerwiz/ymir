@@ -14,7 +14,7 @@ and logged to Runes.
 |---|---|---|
 | Daily briefing | 07:00 | `svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md` |
 | Git backup / sync | configurable (e.g. hourly) | push to remotes; `runes_audit.md` |
-| Command/firstmate observation | plan 23 | Mimirsbrunn episodes + Runes |
+| Runtime observation | plan 23 | Runes lines + `state/observer.log` |
 | Social poster | configurable | marketing workspace |
 | Memory housekeeping | nightly | engram `decay()`/`compress()`/backup (when wired) |
 

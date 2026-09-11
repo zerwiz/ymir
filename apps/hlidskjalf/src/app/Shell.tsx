@@ -17,6 +17,10 @@ import { Forge } from '../gates/Forge';
 import { Profile } from '../gates/Profile';
 import { Runtime } from '../gates/Runtime';
 import { Cron } from '../gates/Cron';
+import { Sessions } from '../gates/Sessions';
+import { Trace } from '../gates/Trace';
+import { Decisions } from '../gates/Decisions';
+import { Stats } from '../gates/Stats';
 
 function Stage() {
   const gate = useYmir((s) => s.gate);
@@ -45,6 +49,14 @@ function Stage() {
       return <Runtime />;
     case 'cron':
       return <Cron />;
+    case 'sessions':
+      return <Sessions />;
+    case 'trace':
+      return <Trace />;
+    case 'decisions':
+      return <Decisions />;
+    case 'stats':
+      return <Stats />;
     default:
       return <Fleet />;
   }

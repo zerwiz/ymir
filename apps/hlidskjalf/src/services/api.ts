@@ -83,6 +83,67 @@ export interface ChatReply {
   live: boolean;
 }
 
+export interface SmidjaSession {
+  smidja_id: string;
+  smidja_name: string | null;
+  status: string | null;
+  engineer: string | null;
+  total_tokens: number | null;
+  total_cost: number | null;
+  started_at: string | null;
+  ended_at: string | null;
+}
+export interface SmidjaPhase {
+  phase_id: string;
+  seq: number | null;
+  name: string | null;
+  kind: string | null;
+  owner: string | null;
+  description: string | null;
+  status: string | null;
+  attempt: number | null;
+  error: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+}
+export interface SmidjaEvent {
+  rowid: number;
+  type: string | null;
+  name: string | null;
+  phase_id: string | null;
+  parent_id: string | null;
+  payload_json: string | null;
+  tokens: number | null;
+  started_at: string | null;
+  ended_at: string | null;
+}
+export interface SmidjaAgent {
+  agent: string;
+  coding_agent: string | null;
+  model: string | null;
+  context_tokens: number | null;
+  context_window: number | null;
+}
+export interface SmidjaDetail {
+  session: SmidjaSession;
+  phases: SmidjaPhase[];
+  events: SmidjaEvent[];
+  envelopes: unknown[];
+  gates: unknown[];
+  agents: SmidjaAgent[];
+}
+export interface SmidjaDecision {
+  phase: string;
+  error: string | null;
+  model: string | null;
+  count: number;
+}
+export interface SmidjaStats {
+  totals: { runs?: number; tokens?: number; cost?: number };
+  by_chain: { chain: string; runs: number; tokens: number; cost: number }[];
+  by_model: { model: string; runs: number; context_tokens: number }[];
+}
+
 export const gateApi = {
   health: () => get<{ ok: boolean; root: string }>('/api/health'),
   me: () => get<{ login: string; realm: RealmId }>('/api/me'),
@@ -102,4 +163,9 @@ export const gateApi = {
   orders: () => get<OrdersInfo>('/api/orders'),
   chatHistory: () => get<ChatMessage[]>('/api/chat/history'),
   chat: (content: string) => post<ChatReply>('/api/chat', { content }),
+  smidjaHealth: () => get<{ db: string; sessions: number }>('/api/smidja/health'),
+  smidjaSessions: () => get<SmidjaSession[]>('/api/smidja/sessions'),
+  smidjaSession: (id: string) => get<SmidjaDetail>(`/api/smidja/sessions/${encodeURIComponent(id)}`),
+  smidjaDecisions: () => get<{ total_failed: number; decisions: SmidjaDecision[] }>('/api/smidja/decisions'),
+  smidjaStats: () => get<SmidjaStats>('/api/smidja/stats'),
 };

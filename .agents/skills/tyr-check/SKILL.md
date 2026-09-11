@@ -158,7 +158,7 @@ No examples, placeholders, or mock data in the shipped runtime; failures report 
 **Improve:** Replace mocks with real implementations; fail honestly instead of faking.
 
 ### 17. Scheduled jobs are safe
-Nornir jobs are idempotent and once-per-day date-guarded; the Huginn observer is strictly read-only over `~/command` and `~/Brokk`; the Runes ledger is append-only with a chained checksum.
+Nornir jobs are idempotent and once-per-day date-guarded; the Huginn observer is strictly read-only over `~/Ymir` and `~/Brokk`; the Runes ledger is append-only with a chained checksum.
 **Assess:** Does a job double-run in one minute? Does the observer write anywhere external? Is the ledger ever rewritten?
 **Improve:** Add the date guard; make external access read-only; append, never rewrite.
 

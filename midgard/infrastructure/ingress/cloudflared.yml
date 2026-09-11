@@ -1,0 +1,17 @@
+# Gjallarhorn — the horn (Cloudflare Tunnel)
+# Outbound-only ingress: nothing listens on the host; the tunnel dials out.
+#
+#   YMIR_TUNNEL_NAME=ymir   the named tunnel
+#   YMIR_DOMAIN=ymir.example.com
+# Credentials file is mounted from a secret path, never committed.
+tunnel: ${YMIR_TUNNEL_NAME:-ymir}
+credentials-file: /etc/cloudflared/creds.json
+
+ingress:
+  # The portal (through Bifrost → Heimdall).
+  - hostname: ${YMIR_DOMAIN}
+    service: http://127.0.0.1:80
+    originRequest:
+      noTLSVerify: true
+  # Everything else is closed.
+  - service: http_status:404
