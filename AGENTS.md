@@ -30,11 +30,29 @@ mandate{operator,eindri}:
 ## Manual (load the row the task needs)
 
 ```
-manual[4]{asset,path,load_when}:
+manual[7]{asset,path,load_when}:
   "naming",".agents/assets/agents/naming.md","naming any subsystem / component map"
   "registry",".agents/assets/agents/registry.md","skills, assets, tools, commands inventories"
   "runtime",".agents/assets/agents/runtime.md","how Ymir boots / supervises the primary"
   "toon-tasks",".agents/assets/agents/toon-tasks-cli.md","building agent-facing output / tasks-cli"
+  "installation",".agents/skills/galdr/assets/installation.md","changing bin/ymir-install.sh, engines, first setup"
+  "ui",".agents/skills/galdr/assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
+  "runtime-spec",".agents/skills/galdr/assets/brokk-distro-runtime.md","the runtime, digest, lock, supervision, cron"
+```
+
+**Governed paths — load the asset before you edit the code.** Every subsystem
+below has an owning asset; a code change not reflected in its asset is an
+incomplete change. The router is `.agents/skills/galdr/SKILL.md` (its `assets[]`
+table maps every task to its file).
+
+```
+governed[6]{path,load_first}:
+  "bin/ymir-install.sh",".agents/skills/galdr/assets/installation.md"
+  "apps/hlidskjalf/**",".agents/skills/galdr/assets/hlidskjalf-ui.md"
+  "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr/assets/memory-well.md"
+  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr/assets/nornir-jobs.md"
+  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr/assets/harness-integration/README.md"
+  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr/assets/smidja.md"
 ```
 
 Deep doctrine and the full asset index: `.agents/skills/galdr/SKILL.md` and
