@@ -80,6 +80,12 @@ export function AccentPicker() {
         ? 'var(--realm-tint)'
         : ACCENTS.find((a) => a.id === accentId)?.tint ?? 'var(--ymir-cyan-1)';
 
+  /** Back to the hall as it was carved: realm accent, forge canvas. */
+  function restore() {
+    setAccent('realm');
+    setBg('');
+  }
+
   return (
     <div className="menu-wrap" ref={ref}>
       <button
@@ -190,6 +196,10 @@ export function AccentPicker() {
               {bg && !BACKGROUNDS.some((b) => b.hex === bg) ? bg : 'pick a hex'}
             </span>
           </label>
+
+          <button className="btn restore-btn" type="button" onClick={restore}>
+            <span aria-hidden="true">ᛉ</span> Restore defaults
+          </button>
         </div>
       ) : null}
     </div>
