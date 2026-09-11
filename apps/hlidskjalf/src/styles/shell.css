@@ -602,3 +602,11 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
 .ws-chip .house-glyph {
   color: var(--realm-tint);
 }
+
+/* Keep the header stat chip visible; never let it shrink off the bar. */
+.trace-chip {
+  flex-shrink: 0;
+}
+.topbar .search {
+  min-width: 120px;
+}
