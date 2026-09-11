@@ -1,0 +1,169 @@
+/* ============================================================
+   MOBILE — the whole hall on a phone.
+   Loaded last so it overrides every surface. Tuned for the APK / PWA.
+   ============================================================ */
+
+@media (max-width: 780px) {
+  /* --- Shell: one column; the rail becomes a top strip ---------- */
+  .shell {
+    --rail-w: 0px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto var(--topbar-h) minmax(0, 1fr) var(--stream-h);
+    grid-template-areas:
+      'rail'
+      'topbar'
+      'stage'
+      'stream';
+  }
+  .rail {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ymir-space-2);
+    height: auto;
+    padding: 6px var(--ymir-space-3);
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--ymir-steel-1);
+  }
+  .rail .brand {
+    padding: 0 4px 0 0;
+  }
+  .rail .gate {
+    padding: 8px 10px;
+  }
+  .rail-foot {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .wordmark,
+  .gate-label,
+  .gate-count,
+  .realm-opt span.label,
+  .rail-node span {
+    display: none;
+  }
+
+  /* --- Topbar: one row, swappable bits scroll ------------------- */
+  .topbar {
+    gap: var(--ymir-space-2);
+    padding: 0 var(--ymir-space-3);
+  }
+  .topbar .search {
+    display: none;
+  }
+  .ws-switch {
+    overflow-x: auto;
+    max-width: 44vw;
+  }
+  .trace-chip {
+    display: none;
+  }
+
+  /* --- Stage ---------------------------------------------------- */
+  .stage {
+    padding: var(--ymir-space-3);
+  }
+  .stage-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .stage-title {
+    font-size: 22px;
+  }
+  .stage-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .page-feed {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* --- Grids: one column; metrics: two -------------------------- */
+  .gate-grid,
+  .cols-2,
+  .cols-3,
+  .cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+  .span-2 {
+    grid-column: auto !important;
+  }
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* --- Tables scroll, never clip -------------------------------- */
+  .panel-body.flush,
+  .panel-body {
+    overflow-x: auto;
+  }
+  .data-table {
+    min-width: 520px;
+  }
+
+  /* --- Chat stacks: thread first, sidebars below ---------------- */
+  .chat-layout {
+    grid-template-columns: 1fr !important;
+    height: auto;
+  }
+  .chat-side {
+    min-height: 0;
+  }
+  .chat-side-list {
+    max-height: 180px;
+  }
+  .chat-scroll {
+    min-height: 300px;
+  }
+
+  /* --- Login: single column, scrollable ------------------------- */
+  .login {
+    align-items: start;
+    min-height: 100dvh;
+    padding: var(--ymir-space-4);
+  }
+  .gate {
+    grid-template-columns: 1fr;
+    gap: var(--ymir-space-4);
+  }
+  .gate-lore {
+    order: 2;
+    padding: var(--ymir-space-2) 0;
+  }
+  .login-card {
+    max-width: 100%;
+    padding: var(--ymir-space-4);
+  }
+  /* 16px avoids mobile auto-zoom on focus */
+  .login-card input,
+  .field input,
+  .field select,
+  .chat-compose input {
+    font-size: 16px;
+  }
+
+  /* --- Stream --------------------------------------------------- */
+  .stream-body {
+    max-height: 26vh;
+  }
+  .stream-line {
+    grid-template-columns: 62px 80px 1fr !important;
+  }
+  .stream-line .kind {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+  .ws-switch {
+    max-width: 52vw;
+  }
+}
