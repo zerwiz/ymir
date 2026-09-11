@@ -117,6 +117,12 @@
   cursor: pointer;
 }
 
+.restore-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--ymir-space-3);
+}
+
 /* --- Account -------------------------------------------------- */
 .account-popover {
   width: 330px;

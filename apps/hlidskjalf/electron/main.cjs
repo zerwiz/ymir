@@ -107,9 +107,14 @@ app.whenReady().then(async () => {
   const up = await ensureStack();
   app.setName('Ymir');
   const view = (process.env.YMIR_DESKTOP_VIEW ?? 'hlidskjalf').toLowerCase();
-  const startUrl = view === 'smidja' ? SMIDJA : HLIDSKJALF;
-  const startTitle = view === 'smidja' ? 'Ymir · Smiðja' : 'Ymir · Hlidskjalf';
-  openWindow(startUrl, startTitle);
+  if (view === 'both') {
+    openWindow(HLIDSKJALF, 'Ymir · Hlidskjalf');
+    openWindow(SMIDJA, 'Ymir · Smiðja');
+  } else {
+    const startUrl = view === 'smidja' ? SMIDJA : HLIDSKJALF;
+    const startTitle = view === 'smidja' ? 'Ymir · Smiðja' : 'Ymir · Hlidskjalf';
+    openWindow(startUrl, startTitle);
+  }
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) openWindow(HLIDSKJALF, 'Ymir · Hlidskjalf');
   });
