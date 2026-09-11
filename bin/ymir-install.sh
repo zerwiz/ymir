@@ -37,19 +37,68 @@ have() { command -v "$1" >/dev/null 2>&1; }
 TOON="install[0]{step,status,detail}:"
 
 # ── 1. prereqs ───────────────────────────────────────────────────────────────
+#
+# engram is OPTIONAL: it powers the memory well (Mimir) but the platform runs
+# without it. We try to install it and, when the interpreter is too new for the
+# published wheel, say so plainly instead of leaving a permanent WARN that
+# looks like a broken install.
+ENGRAM_PY=""
+find_engram_python() {
+  # Prefer an interpreter that satisfies engram's Requires-Python (>=3.12,<3.14).
+  for c in python3.12 python3.13 engram-python; do
+    have "$c" && { echo "$c"; return 0; }
+  done
+  return 1
+}
+install_pkg_hint() {
+  # Best-effort package install for a missing CLI, across common managers.
+  local pkg="$1"
+  if have pacman; then printf 'help: sudo pacman -S --needed %s\n' "$pkg" >&2
+  elif have apt-get; then printf 'help: sudo apt-get install -y %s\n' "$pkg" >&2
+  elif have dnf; then printf 'help: sudo dnf install -y %s\n' "$pkg" >&2
+  elif have brew; then printf 'help: brew install %s\n' "$pkg" >&2
+  fi
+}
 step_prereqs() {
-  # Handle the fixable gaps for the user; only report the system-level ones.
   if [ "$CHECK" = 0 ]; then
-    python3 -c "import engram" >/dev/null 2>&1 || python3 -m pip install --user --break-system-packages -q engram >/dev/null 2>&1 || true
-    python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1 || python3 -m pip install --user --break-system-packages -q 'mcp<2' >/dev/null 2>&1 || true
+    # bun: the runtime for the gate API and the Smiðja visualizer.
+    if ! have bun; then
+      # Try a user-space install first so we never need sudo here.
+      if curl -fsSL https://bun.sh/install 2>/dev/null | bash >/dev/null 2>&1; then
+        [ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
+      fi
+      have bun || install_pkg_hint bun
+    fi
+    # pip: the installer's own Python steps need it.
+    if ! python3 -m pip --version >/dev/null 2>&1; then
+      install_pkg_hint python-pip || true
+    fi
+    # mcp<2: the harness MCP server library.
+    python3 -m pip --version >/dev/null 2>&1 && \
+      { python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1 || \
+        python3 -m pip install --user --break-system-packages -q 'mcp<2' >/dev/null 2>&1 || true; }
+    # engram (optional): install if any compatible interpreter exists.
+    if ! python3 -c "import engram" >/dev/null 2>&1; then
+      if ENGRAM_PY="$(find_engram_python)"; then
+        "$ENGRAM_PY" -m pip install --user --break-system-packages -q engram >/dev/null 2>&1 || true
+      fi
+    fi
   fi
   local miss=""
   for c in git python3 bun; do have "$c" || miss="$miss $c"; done
-  python3 -c "import engram" >/dev/null 2>&1 || miss="$miss engram"
   python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1 || miss="$miss mcp<2"
   have docker || miss="$miss docker"
   have gh || miss="$miss gh"
-  if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "git python3 bun docker gh engram mcp<2"; fi
+  if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "git python3 bun docker gh mcp<2"; fi
+  # engram is reported separately and never fails the step.
+  if python3 -c "import engram" >/dev/null 2>&1 || { [ -n "$ENGRAM_PY" ] && "$ENGRAM_PY" -c "import engram" >/dev/null 2>&1; }; then
+    add memory-well OK "engram present"
+  elif [ "$CHECK" = 1 ] && ! have python3; then
+    add memory-well SKIP "needs python3"
+  else
+    local pyv; pyv="$(python3 -c 'import sys;print("%d.%d"%sys.version_info[:2])' 2>/dev/null || echo '?')"
+    add memory-well SKIP "optional — engram needs Python >=3.12,<3.14 (have $pyv); Mimir stays off, platform fully runs"
+  fi
 }
 
 # ── 2. workspace tree ────────────────────────────────────────────────────────
@@ -154,6 +203,17 @@ step_sandbox() {
   elif [ "$CHECK" = 1 ]; then
     add sandbox WARN "utgard-runner:latest missing (run without --check)"
   else
+    # Distinguish "no daemon access" from "build failed" so the operator gets
+    # an actionable message instead of a blanket failure.
+    if ! docker info >/dev/null 2>&1; then
+      local who; who="$(id -un)"
+      if id -nG "$who" 2>/dev/null | grep -qw docker; then
+        add sandbox WARN "docker daemon unreachable — log out and back in so the docker group applies"
+      else
+        add sandbox WARN "docker permission denied — add $who to the docker group, then re-login"
+      fi
+      return
+    fi
     if "$SCRIPT_DIR/utgard.sh" build >/dev/null 2>&1; then add sandbox OK "utgard-runner:latest built"; else add sandbox WARN "image build failed (see docker)"; fi
   fi
 }
