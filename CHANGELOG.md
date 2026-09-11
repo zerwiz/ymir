@@ -174,3 +174,11 @@ Entries are appended chronologically; never rewritten.
   toggle dirtied the tree and made `bin/brokk-update.sh` refuse. It now lives in
   the gitignored `state/ro`; `YMIR_RO`/`BROKK_RO` set a default; the legacy
   `config/ro` is read once for upgrade then never written. Tracked file removed.
+
+## 2026-09-12 — Fleet preferences
+
+- `data/fleet.md` (gitignored) holds fleet-wide per-user settings (`ro: on|off`).
+- `bin/fleet-apply.sh` applies them to this home + every registered Eindri-home
+  (into each home's gitignored `state/`; remote routes reported).
+- `bin/brokk-update.sh` re-applies fleet preferences on every sweep — one setting
+  reaches the whole fleet, no tracked tree dirtied.

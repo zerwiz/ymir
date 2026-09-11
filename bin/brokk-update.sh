@@ -102,3 +102,7 @@ printf 'update[%d]{id,target,state,detail}:\n' "${#ROWS[@]}"
 printf '%s\n' "${ROWS[@]}"
 printf 'reread-Brokk: %s\n' "$reread"
 if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS# }"; else printf 'nudge-eindri-homes: none\n'; fi
+
+# Keep the whole fleet on the fleet preferences (writes each home's gitignored
+# state/; never touches a tracked tree).
+[ -x "$SCRIPT_DIR/fleet-apply.sh" ] && "$SCRIPT_DIR/fleet-apply.sh" >/dev/null 2>&1 || true
