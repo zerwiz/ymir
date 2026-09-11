@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""kaia-recall.py — recall what Kaia remembers about a project.
+"""volundr-recall.py — recall what Völundr remembers about a project.
 
 Usage:
-    kaia-recall.py <project> [k] [mode] [--url http://127.0.0.1:4602]
+    volundr-recall.py <project> [k] [mode] [--url http://127.0.0.1:4602]
 
 k     : number of hits (default 5)
 mode  : hybrid | cosine | spreading (default hybrid)

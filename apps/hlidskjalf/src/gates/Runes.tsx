@@ -56,10 +56,10 @@ export function Runes() {
       </div>
 
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
-        <MetricTile label="Entries" value={runes.length} delta="append-strict" spark={[4, 6, 7, 9, 11, runes.length]} />
-        <MetricTile label="Chain status" value="VALID" tone="var(--ymir-ok)" delta="head 88aa12" spark={[1, 1, 1, 1, 1]} />
-        <MetricTile label="Warnings" value={runes.filter((r) => r.level === 'warn').length} tone="var(--ymir-warn)" delta="degraded" spark={[0, 0, 1, 1, 1]} />
-        <MetricTile label="Failures" value={runes.filter((r) => r.level === 'danger').length} tone="var(--ymir-danger)" delta="sealed safely" spark={[0, 1, 1, 1, 1]} />
+        <MetricTile label="Entries" value={runes.length} delta="append-strict" />
+        <MetricTile label="Chain status" value={runes.length ? 'VALID' : 'EMPTY'} tone={runes.length ? 'var(--ymir-ok)' : 'var(--ymir-warn)'} delta={`head ${runes[0]?.checksum?.slice(0, 6) ?? '—'}`} />
+        <MetricTile label="Warnings" value={runes.filter((r) => r.level === 'warn').length} tone="var(--ymir-warn)" delta="degraded" />
+        <MetricTile label="Failures" value={runes.filter((r) => r.level === 'danger').length} tone="var(--ymir-danger)" delta="sealed safely" />
       </div>
 
       <section className="panel">

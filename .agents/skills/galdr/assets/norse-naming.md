@@ -146,6 +146,7 @@ These terms must never name a Ymir subsystem, file, config key, environment vari
 |---|---|---|
 | `Allfather` / "the Allfather" | Imported nautical operator name | **Allfather** |
 | `first mate` / `Brokk` | Upstream project name; provenance only | **Brokk** |
+| `Super Simple Software Factory` / `SSSF` / `sssf` | Upstream project name; provenance only — must never appear as a Ymir name | **Smíðja** (the smithy) |
 | `crew` / `Eindri` | Imported worker term | **Eindri** (worker), **Einherjar** (the spawn act) |
 | `Eindri-home` / `secondmates` | Imported isolated-home concept | **dropped** — one Brokk home; realm homes handle scope |
 | `FM_HOME`, `FM_*`, `fm-*` | Upstream env/file prefix | **`BROKK_HOME`, `BROKK_*`, `<figure>-*`** |

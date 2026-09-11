@@ -7,8 +7,8 @@ allowed-tools: read, write, edit, bash, grep, glob
 # smidja-launcher — the one command for the smidja
 
 `scripts/smidja` is the single entry point for any agent (opencode, claude, pi,
-herdr, human) to start, watch, audit, and mission the Super Simple Software
-Smíðja. You never do smidja work yourself — you launch and observe.
+herdr, human) to start, watch, audit, and mission the smithy (Smíðja). You never
+do smidja work yourself — you launch and observe.
 
 ## Sibling skills — load one if the task matches
 

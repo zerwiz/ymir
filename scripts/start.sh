@@ -46,6 +46,14 @@ else
   echo "bun not found — SPA will run; live data disabled (demo mode still works)." >&2
 fi
 
+# Runtime services: the Nornir schedule and the Bifrost model bridge.
+if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
+  if "$ROOT/bin/nornir-cron-start.sh" >/dev/null 2>&1; then echo "Nornir cron: started"; else echo "Nornir cron: start failed" >&2; fi
+fi
+if [ -x "$ROOT/bin/bifrost-bridge.sh" ]; then
+  if BROKK_ENV_FILE="$ROOT/.env.local" "$ROOT/bin/bifrost-bridge.sh" --start >/dev/null 2>&1; then echo "Bifrost bridge: up"; else echo "Bifrost bridge: not up (needs OPENCODE_GO_API_KEY)" >&2; fi
+fi
+
 cd "$APP"
 
 if [[ "${1:-}" == "--foreground" ]]; then

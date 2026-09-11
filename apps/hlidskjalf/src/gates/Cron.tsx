@@ -26,10 +26,10 @@ export function Cron() {
       </div>
 
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
-        <MetricTile label="Scheduler" value={running ? 'RUNNING' : 'STOPPED'} tone={running ? 'var(--ymir-ok)' : 'var(--ymir-danger)'} delta={cron?.pid ? `pid ${cron.pid}` : '—'} spark={[jobs.length, jobs.length, jobs.length]} />
-        <MetricTile label="Jobs" value={jobs.length} delta="declared in config/cron.yaml" spark={[1, 2, 3, jobs.length]} />
-        <MetricTile label="Daily briefing" value="07:00" delta="workspace/memory/daily" spark={[1, 1, 1]} />
-        <MetricTile label="Observer" value="06:00" delta="Huginn · read-only" spark={[1, 1, 1]} />
+        <MetricTile label="Scheduler" value={running ? 'RUNNING' : 'STOPPED'} tone={running ? 'var(--ymir-ok)' : 'var(--ymir-danger)'} delta={cron?.pid ? `pid ${cron.pid}` : '—'} />
+        <MetricTile label="Jobs" value={jobs.length} delta="declared in config/cron.yaml" />
+        <MetricTile label="Daily briefing" value="07:00" delta="workspace/memory/daily" />
+        <MetricTile label="Observer" value="06:00" delta="Huginn · read-only" />
       </div>
 
       <section className="panel">

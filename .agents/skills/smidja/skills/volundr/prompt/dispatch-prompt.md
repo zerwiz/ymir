@@ -1,8 +1,8 @@
-# Kaia dispatch prompt template
+# Völundr dispatch prompt template
 
 Used by `smidja/smidja_orchestrate.py` to hand the WHOLE task to the orchestrator
 with her memory of the project already injected. Fill the three variables,
-then give it to Kaia (as the system prompt + this dispatch):
+then give it to Völundr (as the system prompt + this dispatch):
 
 ```text
 OBJECTIVE (the original ask, unchanged):
@@ -26,7 +26,7 @@ Trailing instruction given with the dispatch:
 
 ## Output contract — OrchestratorOutput (the REAL shape)
 
-Kaia must reply with ONLY valid JSON of this exact shape — no prose. This is
+Völundr must reply with ONLY valid JSON of this exact shape — no prose. This is
 the pydantic contract in `smidja/smidja_modules/data_types.py`:
 
 ```json
@@ -47,18 +47,18 @@ the pydantic contract in `smidja/smidja_modules/data_types.py`:
 
 Rules the gates enforce (`orchestrator_dispatched`, `diff_matches_claims`):
 
-- `used_subagent_tools` **must be `true`** — Kaia must have actually called
+- `used_subagent_tools` **must be `true`** — Völundr must have actually called
   `subagent_create` / `subagent_continue`. Never claim dispatch she did not do.
 - `subagents` **must be non-empty** — name each sub-agent (`file`) and its
   outcome (`note`). This is the traceable proof she coordinated.
 - `changed_files` lists ONLY files a sub-agent actually wrote AND that exist on
-  disk at report time. Kaia never writes code files herself.
-- `status: "fail"` is legal — the reviewer getst it and Kaia revises; the gate
+  disk at report time. Völundr never writes code files herself.
+- `status: "fail"` is legal — the reviewer getst it and Völundr revises; the gate
   cares about dispatch proof, not a rosy summary.
 
 ## Dispatch chains — routing sub-agents to local / hybrid / online models
 
-Kaia's whole job is dispatching sub-agents. Each dispatch picks a **model** via
+Völundr's whole job is dispatching sub-agents. Each dispatch picks a **model** via
 `subagent_create(task, thinking, model=…)`. **The standing team definitions
 are the file** (the truth, not this table): `smidja/smidja_smidja_config/roster.yaml`
 (teams in `stacks:`, agent roles in `role_defaults:`, model catalog in `tiers:`)
@@ -67,7 +67,7 @@ resolves to the `smidja.*.config.yaml` the run builds, and the
 (`just orchestrate` / `just sdlc` / `just simple-sdlc`, honoring
 `SMIDJA_CONFIG` → `SMIDJA_ROSTER` → `SMIDJA_MODEL_TIER`).
 
-**What pi (Kaia) can actually dispatch — verified in `~/.pi/agent/models.json`
+**What pi (Völundr) can actually dispatch — verified in `~/.pi/agent/models.json`
 on 2026-08-31** (registry ↓ = the subagent's model must resolve here):
 
 | Chain | Sub-agent model routing (per role) | Verdict |

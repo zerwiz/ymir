@@ -76,7 +76,7 @@ myth-made-module:
 | **Svartalfaheim** | tenant realms | the isolated dwarf-halls — `sandbox_isolated`, nothing bleeds between halls |
 | **Brokk** | agent workers | the forge itself — autonomous workers that build, audit, transform |
 | **Utgard** | ephemeral sandboxes | the walled realm — `docker_ephemeral`, sealed and destroyed after each task |
-| **Yggdrasil** | worktree manager | the tree — `.treehouses` branches hold parallel work without collision |
+| **Yggdrasil** | worktree manager | the tree — `.yggdrasil` branches hold parallel work without collision |
 | **Ratatoskr** | event bus / A2A backbone | the messenger — carries every word between all gates |
 
 ---
@@ -148,9 +148,9 @@ The smiths forged the gods' weapons; the system ships the same by analogy:
 - **Þjazi** — the experimental terminal backend that drives sub-agent panes.
   Native per-pane agent state and push events; protocol 14+ required;
   0.7.1/0.7.3/0.7.4/0.7.5/0.8.0 floors; presentation spaces on 0.8.0+. Þjazi
-  provides the terminal session while Treehouse continues to provide task
-  worktrees. When the Captain spawns a sub-agent, Þjazi opens a visible terminal
-  pane pointing to the Treehouse worktree, enabling real-time observation of the
+  provides the terminal session while Yggdrasil continues to provide task
+  worktrees. When the Allfather spawns a sub-agent, Þjazi opens a visible terminal
+  pane pointing to the Yggdrasil worktree, enabling real-time observation of the
   agent's typing, CLI execution, and test runs.
 
 ### V.b. The Runes of Introduction (Ratatoskr's law)
@@ -216,7 +216,7 @@ Norse name and a Norn-carved shell:
 | Docker (rootless, network-none) | **Utgard** |
 | MinIO/FileBrowser | **Skrymir** |
 | PM2/Docker | **Valhalla** |
-| `smidja`, `firstmate`, `.compliance`, smidja visualizer | the **library of the halls** — existing, adopted, not rebuilt |
+| `firstmate`, `.compliance`, the **Smíðja visualizer** | the **library of the halls** — existing, adopted, not rebuilt |
 
 The rule: *does a validated OSS project already do this?* If yes, name it and
 use it. Only what differentiates Ymir is smithed in Ymir's own forge.
@@ -288,7 +288,7 @@ identity, never rebuilding from raw ore.
 | Docker (rootless, network-none) | **Utgard** | ephemeral sandboxes |
 | MinIO/FileBrowser | **Skrymir** | file browser |
 | PM2/Docker | **Valhalla** | process health monitor |
-| `smidja`, `firstmate`, `.compliance`, smidja visualizer | the **library of the halls** | existing, adopted, not rebuilt |
+| `firstmate`, `.compliance`, the **Smíðja visualizer** | the **library of the halls** | existing, adopted, not rebuilt |
 | TOON (Token-Oriented Object Notation) | **Galdr** | token-efficient output format |
 | principles.yaml (10 design principles) | the **runes of ergonomics** | CLI standards |
 
@@ -302,8 +302,8 @@ in the Ymir tradition — Norse-named, TOON-output, all 10 principles baked in.
 The recent galdr family illustrates this:
 
 - **`galdr`** — Agent experience incantation standards (renamed from `axi`, adapted TOON)
-- **`galdr-compliance`** — Ymir Galdr compliance checker (renamed from `axi-compliance`)
-- **`galdr-crafter`** — generates new Galdr-compliant skills using TOON format (NEW)
+- **`tyr-check`** — Ymir Galdr compliance checker (renamed from `axi-compliance`)
+- **`brokk-craft`** — generates new Galdr-compliant skills using TOON format (NEW)
 
 Each carries the same 10 principles, each Norse-named, each adapted for Ymir's
 architecture rather than copied wholesale.
@@ -313,7 +313,7 @@ New skills are not dropped into the repo — they are ** framed** into the Ymir
 structure:
 
 - Skill index: `.agents/skills/README.md` tracks every galdr skill
-- Compliance gate: `galdr-compliance` runs on every new skill before merge
+- Compliance gate: `tyr-check` runs on every new skill before merge
 - Frame placement: skills live in `.agents/skills/<norse-name>/SKILL.md`
 - Session integration: each skill declares its hook or skill-path in its frontmatter
 - The frame remembers: every significant action is observed into Mimirsbrunn
@@ -329,7 +329,7 @@ Ymir skills follow an **aett** (Norse: "a family of eight") naming pattern:
 
 | Aett name | Pattern | Example |
 |---|---|---|
-| **galdr-** | incantation / chant standards | `galdr`, `galdr-compliance`, `galdr-crafter` |
+| **galdr-** | incantation / chant standards | `galdr`, `tyr-check`, `brokk-craft` |
 | **mimir-** | memory / recall | (planned) |
 | **yggd-** | tree / worktree | (planned) |
 | **rat-** | messenger / A2A | `ratatoskr` (bus), `rat-***`-axi (community) |
@@ -347,7 +347,7 @@ Before a new galdr skill is considered forged, it must pass:
 
 1. **TOON output test** — all stdout output uses TOON format, measured ~40% smaller
    than equivalent JSON across 3 sample outputs
-2. **Principle compliance** — all 10 design principles assessed via `galdr-compliance`
+2. **Principle compliance** — all 10 design principles assessed via `tyr-check`
 3. **Norse name validity** — skill name follows the aett pattern, not a random label
 4. **Frame integration** — SKILL.md placed in `.agents/skills/<name>/`, referenced in
    `.agents/skills/README.md`, daily briefing notes the new forge entry
@@ -360,7 +360,7 @@ plugin in `.config/opencode/plugins/`.
 
 ---
 
-## XI. Smíðja — the Smithy (the Smíðja)
+## XI. Smíðja — the Smithy (the Software Factory)
 
 Norse: **Smíðja** is the *smithy* — the workshop where the metal is actually worked.
 Ymir's smiths (Brokk, the Eindri) are the hands; **Smíðja is the shop floor they work
@@ -377,14 +377,14 @@ trace so it can be watched and learned from. The old rule holds:
 
 **Völundr** — Wayland the Smith, the craftiest smith in the Norse tales — is the master
 who runs the shop floor. Where **Kaia** is the eye by the well (Ymir-wide orchestration:
-recall, veil, dispatch), **Völundr** is the smidja's own orchestrator: the smith who
+recall, veil, dispatch), **Völundr** is Smíðja's own orchestrator: the smith who
 reads the roster, sets the chain, and drives each phase to its acceptance gate. Two
 seats, two roles: Kaia decides *what* is forged; Völundr decides *how* the smithy runs.
 
 | Aspect | Name | What it is |
 |---|---|---|
 | The workshop / engine | **Smíðja** | the smithy — rosters, phases, envelopes, retries, acceptance |
-| The master smith | **Völundr** | the smidja orchestrator (the smidja's Kaia) |
+| The master smith | **Völundr** | the Smíðja orchestrator (Kaia's seat inside Smíðja) |
 | The observation window | **Smíðja's eye** | the trace visualizer — runs, lanes, phases, decisions, stats |
 
 ### Naming rationale
@@ -402,9 +402,8 @@ seats, two roles: Kaia decides *what* is forged; Völundr decides *how* the smit
 3. Context crosses phases only in **typed envelopes** — never by guessing.
 4. Every run is **observed** — the trace is the shop's memory (Mimirsbrunn) and its
    ledger (Runes). A run that is not watched cannot be trusted.
-5. **The smithy is borrowed, not rebuilt** — Smíðja adopts the validated smidja
-   (the Smíðja) and wears the Norse name, as every borrowed
-   anvil in §VII does.
+5. **The smithy is borrowed, not rebuilt** — Smíðja adopts the validated upstream
+   engine and wears the Norse name, as every borrowed anvil in §VII does.
 
 Smíðja can be watched *beside* Hlidskjalf, or from within it — the two seats of the
 same Allfather: Hlidskjalf for the whole of Ymir, Smíðja for the work in the fire.
