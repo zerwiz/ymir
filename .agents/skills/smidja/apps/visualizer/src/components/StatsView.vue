@@ -253,7 +253,7 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .stat b {
   font-size: 22px;
-  color: #ff8f5c;
+  color: #7dd3fc;
   font-variant-numeric: tabular-nums;
 }
 .stat span {
@@ -295,7 +295,7 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .vendor-select:focus {
   outline: none;
-  border-color: #ff8f5c;
+  border-color: #7dd3fc;
 }
 
 .split-bar {
