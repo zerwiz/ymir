@@ -1,7 +1,7 @@
 ---
 name: ymir-update
 description: >-
-  Self-update a running Brokk and its secondmates to the latest from origin.
+  Self-update a running Brokk and its eindri-homes to the latest from origin.
   Use when the Allfather invokes /updateBrokk (e.g. "/updateBrokk", "update Brokk", "pull the latest Brokk").
   Fast-forwards this Brokk repo's default branch and every local or remote Eindri-home through its guarded update path (never forced, never disruptive), then re-reads AGENTS.md and nudges each updated Eindri-home to do the same, so the whole tree runs the latest bin/ and instructions.
 user-invocable: true
@@ -31,7 +31,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
    It fast-forwards this Brokk repo's default branch from origin, then updates every registered local or remote Eindri-home home through its placement-specific guarded path.
    It prints one status line per target (`updated <old>..<new>` / `already current` / `skipped: <reason>`), followed by two action lines that tell you exactly what to do next:
    - `reread-Brokk: yes|no`
-   - `nudge-secondmates: fm-<id>...|none`
+   - `nudge-eindri-homes: fm-<id>...|none`
 
 2. **Re-read AGENTS.md if your own instructions changed.**
    When the updater printed `reread-Brokk: yes`, the tracked instruction surface (`AGENTS.md`, `bin/`, or `.agents/skills/`) just advanced under you.
@@ -39,7 +39,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
    When it printed `reread-Brokk: no`, nothing changed for you - skip the re-read.
 
 3. **Nudge each updated live Eindri-home.**
-   For every target listed on the `nudge-secondmates:` line (do nothing when it says `none`), send a one-line re-read nudge so that Eindri-home picks up its new instructions too:
+   For every target listed on the `nudge-eindri-homes:` line (do nothing when it says `none`), send a one-line re-read nudge so that Eindri-home picks up its new instructions too:
    ```sh
    BROKK_HOME=<this-Brokk-home> bin/brokk-send.sh <id> 'Brokk was updated to the latest - please re-read your AGENTS.md to pick up the new instructions.'
    ```
@@ -49,7 +49,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
 
 4. **Report to the Allfather in plain outcomes.**
    Summarize what landed under `AGENTS.md` section 9 without Brokk's internal vocabulary: which parts of the fleet are now on the latest, and which were left as-is and why.
-   For example: "Allfather, Brokk and both second mates are now on the latest."
+   For example: "Allfather, Brokk and both Eindri-homes are now on the latest."
    Surface any skipped target whose reason needs the Allfather's attention - for instance a home with its own un-landed changes (diverged) or local edits (dirty), which were left untouched on purpose.
 
 ## Safety
@@ -59,6 +59,6 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
   Nothing with unlanded work is ever discarded - this is prime directive #3.
 - **Only the Brokk repo and its worktrees** are touched, never `projects/`.
   It is the same sanctioned self-write as the fleet sync.
-- **Secondmates are never disrupted.**
+- **Eindri-homes are never disrupted.**
   A local or remote Eindri-home gets a tracked-files fast-forward only when its own checkout is safe to advance, plus a gentle re-read nudge when it changed.
   It is never torn down, interrupted, or forced.

@@ -72,7 +72,7 @@ Galdr needs to know about these build tool categories and their asset requiremen
 - **Location**: External agent distro by kunchenguid
 - **Features**: One Allfather talks to first mate running autonomous coding agents in tmux panes on git worktrees
 - **Project modes**: no-mistakes/direct-PR/local-only/+yolo
-- **Assets**: Crew orchestration, worktree isolation (yggdrasil/orca), restart-proof disk state, supervision watcher, X/Discord Relay, secondmates
+- **Assets**: Crew orchestration, worktree isolation (yggdrasil/orca), restart-proof disk state, supervision watcher, X/Discord Relay, eindri-homes
 
 ### 4. Galdr Skill Assets
 - **Location**: `.agents/skills/galdr/assets/`
