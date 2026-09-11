@@ -5,6 +5,9 @@ function tone(status: string | null) {
   return status === 'success' ? 'nominal' : status === 'fail' ? 'down' : status === 'running' ? 'degraded' : 'degraded';
 }
 
+/** The smithy's borrowed "engineer" is the Allfather's seat in these halls. */
+const who = (v: string | null | undefined) => (v === 'engineer' ? 'Allfather' : v ?? '—');
+
 /** Trace — one run's lanes, phases, agents, and tool calls (W0081/W0082). */
 export function Trace() {
   const id = useYmir((s) => s.selectedSession);
@@ -87,8 +90,8 @@ export function Trace() {
                       <div className="mono">{p.name ?? '—'}</div>
                       {p.description ? <div className="dim" style={{ fontSize: 11 }}>{p.description}</div> : null}
                     </td>
-                    <td className="muted">{p.kind ?? '—'}</td>
-                    <td className="mono">{p.owner ?? '—'}</td>
+                    <td className="muted">{who(p.kind)}</td>
+                    <td className="mono">{who(p.owner)}</td>
                     <td>
                       <StatusChip status={tone(p.status)} />
                     </td>

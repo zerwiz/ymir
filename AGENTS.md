@@ -151,3 +151,39 @@ security[4]{rule}:
 +- **Portal (Hlidskjalf)**: the single control plane; auth via Heimdall
 +  through Bifrost; tenant isolation enforced at the proxy. UI guide:
 +  `.agents/skills/galdr/assets/hlidskjalf-ui.md`.
+
+## The Lore (load-bearing allegory)
+
+Ymir carries Norse names not as decoration but as **load-bearing allegory** —
+every name explains the machine's job. The full lore is at [`docs/lore.md`](docs/lore.md).
+
+Quick reference:
+
+| Name | What it is |
+|------|------------|
+| **Ymir** | The substrate — one repo, one machine, all realms carved from it |
+| **Brokk** | You — the primary agent, the bellows that drives the forge |
+| **Eindri** | Sub-agent workers — isolated smiths in Utgard sandboxes |
+| **Kaia** | The eye that remembers — orchestrator, recalls from Mimirsbrunn |
+| **Yggdrasil** | Git worktree isolation — parallel branches, zero collision |
+| **Utgard** | Ephemeral sandbox — untrusted code runs there, never in the halls |
+| **Mimirsbrunn** | Engram memory engine — long-term memory, embeddings |
+| **Ratatoskr** | A2A 1.0 collaboration backbone — agent-to-agent messaging |
+| **Hlidskjalf** | Control plane / dashboard — Odin's high seat |
+| **Bifrost** | Ingress gateway — every crossing passes over it |
+| **Heimdall** | OAuth/security guard — signs every agent's rune of introduction |
+| **Gjallarhorn** | Cloudflare tunnel — outbound encrypted signal |
+| **Runes** | Append-only audit ledger — every action inscribed, never un-carved |
+| **Mjollnir** | Issue→PR pipeline — strikes, returns with a PR |
+| **Gungnir** | Skill synthesis engine — forged, validated, hits its mark |
+| **Smíðja** | The smithy — agent factory, Völundr orchestrator |
+| **Völundr** | Wayland the Smith — Smíðja's master craftsman |
+| **Sága** | The seeress — session start digest, seat taken before first word |
+| **Nornir** | Fates/schedule — cron jobs, daily briefing, quota dispatch |
+| **Muninn** | Memory — session-knowledge curation, routing, persistence |
+| **Huginn** | Observation — the raven that flies daily for Odin |
+| **Þjazi** | Terminal backend — sub-agent panes, protocol 14+ |
+
+The lore is not optional reading — it is the naming law. Every subsystem, every
+component, every process must be named for the figure whose role matches its work.
+See `.agents/assets/agents/naming.md` for the full component map.

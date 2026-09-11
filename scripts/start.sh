@@ -53,6 +53,44 @@ fi
 if [ -x "$ROOT/bin/bifrost-bridge.sh" ]; then
   if BROKK_ENV_FILE="$ROOT/.env.local" "$ROOT/bin/bifrost-bridge.sh" --start >/dev/null 2>&1; then echo "Bifrost bridge: up"; else echo "Bifrost bridge: not up (needs OPENCODE_GO_API_KEY)" >&2; fi
 fi
+# The well — Mimirsbrunn (engram) on :4602; the gate API and mimir.sh drink here.
+if [ -x "$ROOT/bin/mimir-bridge.sh" ]; then
+  if "$ROOT/bin/mimir-bridge.sh" --start >/dev/null 2>&1; then echo "Mimir bridge: up"; else echo "Mimir bridge: not up (needs engram)" >&2; fi
+fi
+
+# Smíðja's eye — the Vue trace visualizer (API :8437, UI :8438). Reads the repo's
+# own smidja.db and exposes the Sessions/Trace/Decisions/Stats views behind the
+# Hlidskjalf Sessions gate's "Open visualizer" button.
+VIZ_DIR="$ROOT/.agents/skills/smidja/apps/visualizer"
+VIZ_API_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
+VIZ_UI_PORT="${SMIDJA_VIZ_UI_PORT:-8438}"
+VIZ_API_PID_FILE="$RUN/smidja-viz-api.pid"
+VIZ_UI_PID_FILE="$RUN/smidja-viz-ui.pid"
+SMIDJA_DB_PATH="${SMIDJA_DB:-$ROOT/smidja/smidja_data/smidja.db}"
+if command -v bun >/dev/null 2>&1 && [ -d "$VIZ_DIR" ]; then
+  [ -d "$VIZ_DIR/node_modules" ] || (cd "$VIZ_DIR" && bun install >/dev/null 2>&1 || true)
+  if [ -f "$VIZ_API_PID_FILE" ] && kill -0 "$(cat "$VIZ_API_PID_FILE")" 2>/dev/null; then
+    echo "Smíðja visualizer API already running (pid $(cat "$VIZ_API_PID_FILE")) → http://127.0.0.1:${VIZ_API_PORT}/"
+  else
+    setsid env CMD_DB="$SMIDJA_DB_PATH" PORT="$VIZ_API_PORT" bun run "$VIZ_DIR/server/index.ts" >"$RUN/smidja-viz-api.log" 2>&1 < /dev/null &
+    echo $! > "$VIZ_API_PID_FILE"
+    for _ in $(seq 1 20); do curl -s -o /dev/null "http://127.0.0.1:${VIZ_API_PORT}/api/health" && break; sleep 0.5; done
+    echo "Smíðja visualizer API raised (pid $(cat "$VIZ_API_PID_FILE")) → http://127.0.0.1:${VIZ_API_PORT}/"
+  fi
+  if [ -f "$VIZ_UI_PID_FILE" ] && kill -0 "$(cat "$VIZ_UI_PID_FILE")" 2>/dev/null; then
+    echo "Smíðja visualizer dev UI already running (pid $(cat "$VIZ_UI_PID_FILE")) → http://127.0.0.1:${VIZ_UI_PORT}/"
+  elif [ "${SMIDJA_VIZ_DEV:-0}" = "1" ]; then
+    # Opt-in Vite dev server for working on the visualizer itself.
+    setsid bash -c "cd '$VIZ_DIR' && exec bunx vite --port ${VIZ_UI_PORT} --strictPort" >"$RUN/smidja-viz-ui.log" 2>&1 < /dev/null &
+    echo $! > "$VIZ_UI_PID_FILE"
+    for _ in $(seq 1 30); do curl -s -o /dev/null "http://127.0.0.1:${VIZ_UI_PORT}/" && break; sleep 0.5; done
+    echo "Smíðja visualizer dev UI raised (pid $(cat "$VIZ_UI_PID_FILE")) → http://127.0.0.1:${VIZ_UI_PORT}/"
+  else
+    echo "Smíðja visualizer UI: served by the API at http://127.0.0.1:${VIZ_API_PORT}/"
+  fi
+else
+  echo "Smíðja visualizer skipped (needs bun + $VIZ_DIR)." >&2
+fi
 
 cd "$APP"
 

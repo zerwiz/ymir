@@ -9,9 +9,9 @@
  *   bun run apps/hlidskjalf/server/index.ts        # API on :3889
  *   PORT=3889 bun run server/index.ts
  */
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const PORT = Number(process.env.PORT ?? 3889);
 const HERE = import.meta.dir;
@@ -177,7 +177,14 @@ function runes() {
 }
 
 /* ---- /api/well ----------------------------------------------------------- */
-function well(q = '') {
+const MIMIR_URL = process.env.MIMIRSBRUNN_URL ?? 'http://127.0.0.1:4602';
+
+function wellTitle(body: string, i = 0): string {
+  return (body.split('\n')[0] ?? '').replace(/^#+\s*/, '').slice(0, 80) || `episode ${i}`;
+}
+
+/** The local JSONL well — used when the engram bridge is down. */
+function localWell(q = '') {
   const rows = read(WELL)
     .split('\n')
     .filter((l) => l.trim().startsWith('{'))
@@ -185,10 +192,9 @@ function well(q = '') {
       try {
         const e = JSON.parse(l);
         const body = String(e.content ?? '');
-        const title = (body.split('\n')[0] ?? '').replace(/^#+\s*/, '').slice(0, 80) || `episode ${i}`;
         return {
           id: e.hash ?? `ep-${i}`,
-          title,
+          title: wellTitle(body, i),
           body: body.slice(0, 600),
           score: 0.9,
           mode: 'hybrid',
@@ -204,6 +210,67 @@ function well(q = '') {
   const ql = q.toLowerCase();
   const filtered = q ? rows.filter((r) => `${r.title} ${r.body}`.toLowerCase().includes(ql)) : rows;
   return filtered.slice(0, 60).reverse();
+}
+
+/** Drink from the well: the engram bridge answers when it is up, else the file. */
+async function well(q = '') {
+  try {
+    const url = q
+      ? `${MIMIR_URL}/recall?q=${encodeURIComponent(q)}&k=60`
+      : `${MIMIR_URL}/recent?limit=60`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (res.ok) {
+      const data = (await res.json()) as {
+        results?: { score?: number; episode?: { id?: string; content?: string; timestamp?: string; tags?: string[]; actors?: string[]; agent_id?: string } }[];
+        episodes?: { id?: string; content?: string; timestamp?: string; tags?: string[]; actors?: string[]; agent_id?: string }[];
+      };
+      if (data.results) {
+        return data.results.map((r) => {
+          const e = r.episode ?? {};
+          const body = String(e.content ?? '');
+          return {
+            id: e.id ?? '',
+            title: wellTitle(body),
+            body: body.slice(0, 600),
+            score: r.score ?? 0,
+            mode: 'hybrid',
+            agentScope: (e.actors ?? [])[0] ?? e.agent_id ?? 'well',
+            ts: e.timestamp ?? '',
+            tags: e.tags ?? [],
+          };
+        });
+      }
+      if (data.episodes) {
+        return data.episodes.map((e) => {
+          const body = String(e.content ?? '');
+          return {
+            id: e.id ?? '',
+            title: wellTitle(body),
+            body: body.slice(0, 600),
+            score: 0.9,
+            mode: 'recent',
+            agentScope: (e.actors ?? [])[0] ?? e.agent_id ?? 'well',
+            ts: e.timestamp ?? '',
+            tags: e.tags ?? [],
+          };
+        });
+      }
+    }
+  } catch {
+    /* bridge down — fall through to the local file */
+  }
+  return localWell(q);
+}
+
+/* ---- /api/mimir/health --------------------------------------------------- */
+async function mimirHealth() {
+  try {
+    const res = await fetch(`${MIMIR_URL}/health`, { signal: AbortSignal.timeout(4000) });
+    if (res.ok) return json(await res.json());
+  } catch {
+    /* down */
+  }
+  return { status: 'down', store: null, episodes: 0, agents: [] };
 }
 
 /* ---- /api/processes ------------------------------------------------------ */
@@ -807,7 +874,9 @@ function stream() {
 }
 
 /* ---- /api/chat — Kaia, the oracle by the well ---------------------------- */
-const CHAT_LOG = join(ROOT, 'state/chat.jsonl');
+const CHAT_DIR = join(STATE_DIR, 'chat');
+const CHAT_WINDOW = 40; // rolling context — the last 40 messages
+const SAFE_SESSION = /^[A-Za-z0-9._-]+$/;
 // Kaia speaks through the first OpenAI-compatible backend that answers: an
 // explicit CHAT_BASE_URL, the local llama-server, then the Bifrost bridge.
 const CHAT_BASES = [
@@ -818,12 +887,16 @@ const CHAT_BASES = [
 const CHAT_MODEL_ENV = process.env.CHAT_MODEL;
 const modelFor: Record<string, string> = {};
 
+async function listModels(base: string): Promise<string[]> {
+  const res = await fetch(`${base}/models`);
+  const data = (await res.json()) as { data?: { id?: string }[] };
+  return (data.data ?? []).map((m) => m.id ?? '').filter(Boolean);
+}
+
 async function resolveModel(base: string): Promise<string> {
   if (CHAT_MODEL_ENV) return CHAT_MODEL_ENV;
   if (modelFor[base]) return modelFor[base];
-  const res = await fetch(`${base}/models`);
-  const data = (await res.json()) as { data?: { id?: string }[] };
-  const ids = (data.data ?? []).map((m) => m.id ?? '').filter(Boolean);
+  const ids = await listModels(base);
   const pick = ids.find((i) => /gemma|qwen|deepseek|hermes/i.test(i)) ?? ids[0];
   if (!pick) throw new Error('no models advertised');
   modelFor[base] = pick;
@@ -831,11 +904,14 @@ async function resolveModel(base: string): Promise<string> {
 }
 
 /** Try each backend in order; return the first non-empty reply. */
-async function chatCompletion(messages: { role: string; content: string }[]): Promise<{ body: string; backend: string }> {
+async function chatCompletion(
+  messages: { role: string; content: string }[],
+  modelOverride?: string,
+): Promise<{ body: string; backend: string; model: string }> {
   let lastErr = '';
   for (const base of CHAT_BASES) {
     try {
-      const model = await resolveModel(base);
+      const model = modelOverride || (await resolveModel(base));
       const res = await fetch(`${base}/chat/completions`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -847,13 +923,43 @@ async function chatCompletion(messages: { role: string; content: string }[]): Pr
       }
       const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
       const body = data.choices?.[0]?.message?.content?.trim();
-      if (body) return { body, backend: base };
+      if (body) return { body, backend: base, model };
       lastErr = `${base} → empty`;
     } catch (err) {
       lastErr = `${base} → ${(err as Error).message}`;
     }
   }
   throw new Error(lastErr || 'no chat backend reachable');
+}
+
+/** The models the user has actually connected: each live backend's catalog,
+ *  plus Pi's merged provider catalog. Free-typing any id is always allowed. */
+async function chatModels(): Promise<{ id: string; name: string; provider: string; kind: 'local' | 'online' }[]> {
+  const out = new Map<string, { id: string; name: string; provider: string; kind: 'local' | 'online' }>();
+  for (const base of CHAT_BASES) {
+    try {
+      const kind: 'local' | 'online' = base.includes('4603') ? 'online' : 'local';
+      const provider = kind === 'online' ? 'opencode-go' : 'local';
+      for (const id of await listModels(base)) out.set(id, { id, name: id, provider, kind });
+    } catch {
+      /* backend down — skip */
+    }
+  }
+  try {
+    const pi = run(['bash', '-lc', 'pi --list-models 2>/dev/null']);
+    for (const line of pi.split('\n').slice(1)) {
+      const toks = line.trim().split(/\s+/);
+      if (toks.length < 2) continue;
+      const provider = toks[0];
+      const name = toks[1];
+      if (!/^[A-Za-z0-9._-]+$/.test(provider) || !/^[A-Za-z0-9._/:@-]+$/.test(name)) continue;
+      const id = `${provider}/${name}`;
+      if (!out.has(id)) out.set(id, { id, name, provider, kind: 'online' });
+    }
+  } catch {
+    /* pi not available */
+  }
+  return [...out.values()].sort((a, b) => a.id.localeCompare(b.id));
 }
 
 const KAIA_SYSTEM = [
@@ -871,11 +977,19 @@ interface ChatRow {
   body: string;
   ts: string;
   recalling?: boolean;
+  thinking?: boolean;
   error?: boolean;
+  model?: string;
+  agents?: string[];
 }
 
-function chatHistory(): ChatRow[] {
-  return read(CHAT_LOG)
+function chatFile(session: string): string {
+  const safe = SAFE_SESSION.test(session) ? session : 'default';
+  return join(CHAT_DIR, `${safe}.jsonl`);
+}
+
+function chatHistory(session = 'default'): ChatRow[] {
+  return read(chatFile(session))
     .split('\n')
     .filter((l) => l.trim().startsWith('{'))
     .map((l) => {
@@ -888,42 +1002,105 @@ function chatHistory(): ChatRow[] {
     .filter(Boolean) as ChatRow[];
 }
 
-/** A bounded recall from the well — drink before you answer. */
-function chatRecall(): string {
-  const rows = read(WELL).split('\n').filter((l) => l.trim().startsWith('{')).slice(-400);
-  const picks: string[] = [];
-  for (let i = rows.length - 1; i >= 0 && picks.length < 4; i--) {
+function appendChat(session: string, row: ChatRow): void {
+  mkdirSync(CHAT_DIR, { recursive: true });
+  appendFileSync(chatFile(session), `${JSON.stringify(row)}\n`);
+}
+
+/** Every stored conversation, newest first; `default` always exists. */
+function chatSessions(): { id: string; messages: number; updated_at: string | null }[] {
+  mkdirSync(CHAT_DIR, { recursive: true });
+  if (!existsSync(chatFile('default'))) appendFileSync(chatFile('default'), '');
+  const ids = readdirSync(CHAT_DIR)
+    .filter((f) => f.endsWith('.jsonl'))
+    .map((f) => f.replace(/\.jsonl$/, ''))
+    .filter((id) => SAFE_SESSION.test(id));
+  return ids
+    .map((id) => {
+      const fp = chatFile(id);
+      let messages = 0;
+      let updated_at: string | null = null;
+      try {
+        messages = read(fp).split('\n').filter((l) => l.trim().startsWith('{')).length;
+        updated_at = statSync(fp).mtime.toISOString();
+      } catch {
+        /* empty */
+      }
+      return { id, messages, updated_at };
+    })
+    .sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''));
+}
+
+function deleteChatSession(session: string): { ok: boolean } {
+  try {
+    unlinkSync(chatFile(session));
+  } catch {
+    /* already gone */
+  }
+  return { ok: true };
+}
+
+/** A bounded recall from the well — Kaia drinks before every dispatch.
+ *  Relevance to the query first, recency as the tie-break. */
+function chatRecall(query: string, limit = 6): { text: string; count: number } {
+  const lines = read(WELL).split('\n').filter((l) => l.trim().startsWith('{'));
+  const terms = query
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 3);
+  const scored: { score: number; source: string; head: string; i: number }[] = [];
+  for (const line of lines) {
     try {
-      const e = JSON.parse(rows[i]);
-      const t = String(e.content ?? '').split('\n')[0].replace(/^#+\s*/, '').trim();
-      if (t) picks.push(`- (${e.source ?? 'well'}) ${t.slice(0, 110)}`);
+      const e = JSON.parse(line) as { content?: string; source?: string };
+      const content = String(e.content ?? '');
+      const head = content.split('\n')[0].replace(/^#+\s*/, '').trim();
+      if (!head) continue;
+      const low = content.toLowerCase();
+      let score = 0;
+      for (const t of terms) if (low.includes(t)) score++;
+      scored.push({ score, source: e.source ?? 'well', head, i: scored.length });
     } catch {
       /* skip malformed */
     }
   }
-  return picks.join('\n');
+  scored.sort((a, b) => b.score - a.score || b.i - a.i);
+  const picks = scored.slice(0, limit);
+  return {
+    text: picks.map((p) => `- (${p.source}) ${p.head.slice(0, 140)}`).join('\n'),
+    count: picks.length,
+  };
 }
 
-async function postChat(content: string): Promise<{ reply: ChatRow; live: boolean }> {
-  mkdirSync(STATE_DIR, { recursive: true });
+async function postChat(
+  session: string,
+  content: string,
+  model?: string,
+  agents?: string[],
+): Promise<{ reply: ChatRow; live: boolean }> {
+  mkdirSync(CHAT_DIR, { recursive: true });
+  const sid = SAFE_SESSION.test(session) ? session : 'default';
   const user: ChatRow = { id: `u-${Date.now()}`, from: 'user', body: content, ts: new Date().toISOString() };
-  appendFileSync(CHAT_LOG, `${JSON.stringify(user)}\n`);
+  appendChat(sid, user);
 
-  const history = chatHistory().slice(-12);
-  const recall = chatRecall();
+  // Rolling window of the last 40 messages — the context Kaia keeps in view.
+  const history = chatHistory(sid).slice(-CHAT_WINDOW);
+  const recall = chatRecall(content);
+  const lanes = agents?.length ? `\n\nFocused Eindri lanes: ${agents.join(', ')}.` : '';
   const messages = [
     {
       role: 'system',
-      content: `${KAIA_SYSTEM}\n\nWell recall:\n${recall || '(dry — answer from first principles, and say the well was dry)'}`,
+      content: `${KAIA_SYSTEM}${lanes}\n\nWell recall:\n${recall.text || '(dry — answer from first principles, and say the well was dry)'}`,
     },
     ...history.map((m) => ({ role: m.from === 'user' ? 'user' : 'assistant', content: m.body })),
   ];
 
   let body: string;
   let live = false;
+  let usedModel: string | undefined;
   try {
-    const out = await chatCompletion(messages);
+    const out = await chatCompletion(messages, model);
     body = out.body;
+    usedModel = out.model;
     live = true;
   } catch (err) {
     body = `The well is local; no model backend answered (${(err as Error).message}). Recall ran; for a reply, raise a local model (llama-server on :8080) or the Bifrost bridge (\`bin/bifrost-bridge.sh\`).`;
@@ -934,11 +1111,53 @@ async function postChat(content: string): Promise<{ reply: ChatRow; live: boolea
     from: 'kaia',
     body,
     ts: new Date().toISOString(),
-    recalling: recall.length > 0,
+    recalling: recall.count > 0,
+    ...(usedModel ? { model: usedModel } : {}),
+    ...(agents?.length ? { agents } : {}),
     ...(live ? {} : { error: true }),
   };
-  appendFileSync(CHAT_LOG, `${JSON.stringify(kaia)}\n`);
+  appendChat(sid, kaia);
   return { reply: kaia, live };
+}
+
+/* ---- /api/prompts — the smithy's agent prompts, editable in the Forge ---- */
+const PROMPT_ROOT = join(ROOT, 'smidja/smidja_data/prompt_engineering');
+
+interface PromptFile {
+  agent: string;
+  kind: 'system' | 'user';
+  path: string;
+  body: string;
+}
+
+function prompts(): PromptFile[] {
+  if (!existsSync(PROMPT_ROOT)) return [];
+  const out: PromptFile[] = [];
+  for (const agent of readdirSync(PROMPT_ROOT).sort()) {
+    const dir = join(PROMPT_ROOT, agent);
+    try {
+      if (!statSync(dir).isDirectory()) continue;
+    } catch {
+      continue;
+    }
+    for (const kind of ['system', 'user'] as const) {
+      const fp = join(dir, `${kind}.md`);
+      if (existsSync(fp)) {
+        out.push({ agent, kind, path: `smidja/smidja_data/prompt_engineering/${agent}/${kind}.md`, body: read(fp) });
+      }
+    }
+  }
+  return out;
+}
+
+function savePrompt(agent: string, kind: string, body: string): { ok: boolean; path: string } {
+  if (!/^[A-Za-z0-9._-]+$/.test(agent) || (kind !== 'system' && kind !== 'user')) {
+    throw new Error('bad prompt id');
+  }
+  const fp = join(PROMPT_ROOT, agent, `${kind}.md`);
+  mkdirSync(dirname(fp), { recursive: true });
+  writeFileSync(fp, body);
+  return { ok: true, path: `smidja/smidja_data/prompt_engineering/${agent}/${kind}.md` };
 }
 
 /* ---- server -------------------------------------------------------------- */
@@ -955,7 +1174,8 @@ const server = Bun.serve({
       if (p === '/api/tasks') return json(tasks());
       if (p === '/api/orders') return json({ open: orders().filter((o) => o.status !== 'COMPLETED').length, orders: orders() });
       if (p === '/api/runes') return json(runes());
-      if (p === '/api/well') return json(well(url.searchParams.get('q') ?? ''));
+      if (p === '/api/well') return json(await well(url.searchParams.get('q') ?? ''));
+      if (p === '/api/mimir/health') return json(await mimirHealth());
       if (p === '/api/processes') return json(processes());
       if (p === '/api/reviews') return json(reviews());
       if (p === '/api/files') return json(files(url.searchParams.get('realm') ?? 'way-of'));
@@ -973,13 +1193,29 @@ const server = Bun.serve({
         return detail ? json(detail) : json({ error: `no session ${id}` }, 404);
       }
       if (p === '/api/settings') return json(settings());
+      if (p === '/api/prompts' && req.method === 'GET') return json(prompts());
+      if (p === '/api/prompts' && req.method === 'POST') {
+        const body = (await req.json().catch(() => ({}))) as { agent?: string; kind?: string; body?: string };
+        if (!body.agent || !body.kind) return json({ error: 'prompt needs agent + kind' }, 400);
+        return json(savePrompt(body.agent, body.kind, body.body ?? ''));
+      }
       if (p === '/api/stream') return stream();
-      if (p === '/api/chat/history') return json(chatHistory());
+      if (p === '/api/chat/models') return json(await chatModels());
+      if (p === '/api/chat/sessions') return json(chatSessions());
+      if (p === '/api/chat/history') return json(chatHistory(url.searchParams.get('session') ?? 'default'));
+      if (p === '/api/chat/session' && req.method === 'DELETE') {
+        return json(deleteChatSession(url.searchParams.get('session') ?? 'default'));
+      }
       if (p === '/api/chat' && req.method === 'POST') {
-        const body = (await req.json().catch(() => ({}))) as { content?: string };
+        const body = (await req.json().catch(() => ({}))) as {
+          session?: string;
+          content?: string;
+          model?: string;
+          agents?: string[];
+        };
         const content = (body.content ?? '').trim();
         if (!content) return json({ error: 'chat needs content' }, 400);
-        return json(await postChat(content));
+        return json(await postChat(body.session ?? 'default', content, body.model, body.agents));
       }
       if (p.startsWith('/api/')) return json({ error: `no route ${p}` }, 404);
       return new Response('Hlidskjalf gate API. Endpoints under /api/*.', { status: 200 });
