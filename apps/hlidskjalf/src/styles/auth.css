@@ -28,6 +28,103 @@
   gap: var(--ymir-space-4);
 }
 
+/* --- The visitor's lore, beside the gate ------------------------ */
+.gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 460px);
+  gap: var(--ymir-space-6);
+  align-items: center;
+  width: 100%;
+  max-width: 1040px;
+}
+
+.gate-lore {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ymir-space-3);
+  padding: var(--ymir-space-5) var(--ymir-space-4);
+}
+
+.lore-kicker {
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ymir-cyan-1);
+}
+.lore-hero {
+  font-family: var(--ymir-font-head);
+  font-size: 34px;
+  line-height: 1.12;
+  letter-spacing: 0.01em;
+  color: var(--ymir-text-0);
+}
+.lore-lede {
+  color: var(--ymir-text-2);
+  font-size: 15px;
+  line-height: 23px;
+}
+.lore-beats {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: var(--ymir-space-2) 0 0;
+  padding: 0;
+}
+.lore-beats li {
+  display: grid;
+  grid-template-columns: 22px 104px 1fr;
+  align-items: baseline;
+  gap: var(--ymir-space-2);
+  padding: var(--ymir-space-2) 0;
+  border-top: 1px solid var(--ymir-steel-1);
+}
+.lore-rune {
+  font-family: var(--ymir-font-head);
+  color: var(--ymir-cyan-1);
+  font-size: 15px;
+}
+.lore-name {
+  font-family: var(--ymir-font-head);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ymir-text-0);
+}
+.lore-line {
+  color: var(--ymir-text-2);
+  font-size: 13px;
+  line-height: 20px;
+}
+.lore-close {
+  margin-top: var(--ymir-space-2);
+  color: var(--ymir-text-1);
+  font-size: 14px;
+  line-height: 21px;
+}
+.lore-cta {
+  color: var(--ymir-cyan-1);
+}
+
+@media (max-width: 960px) {
+  .gate {
+    grid-template-columns: 1fr;
+    max-width: 460px;
+  }
+  .gate-lore {
+    padding: var(--ymir-space-2) var(--ymir-space-1);
+  }
+  .lore-hero {
+    font-size: 26px;
+  }
+  .lore-beats li {
+    grid-template-columns: 22px 1fr;
+  }
+  .lore-line {
+    grid-column: 2;
+  }
+}
+
 .login-brand {
   display: flex;
   align-items: center;
