@@ -8,10 +8,10 @@ const emit = defineEmits<{ (e: 'open', adwId: string): void }>()
 </script>
 
 <template>
-  <button class="mini" type="button" @click="emit('open', launch.factory_id)">
+  <button class="mini" type="button" @click="emit('open', launch.smidja_id)">
     <span class="dot" :class="launch.status ?? 'queued'"></span>
     <span class="mid">
-      <code class="id">{{ launch.factory_id }}</code>
+      <code class="id">{{ launch.smidja_id }}</code>
       <span class="meta">{{ launch.team }} · {{ modelName(launch.model) }}</span>
     </span>
     <span class="edge">

@@ -10,7 +10,7 @@ matches its work (Gungnir naming law).
 skills[21]{name,norse,purpose,origin}:
   "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer of the runtime","core"
   "tyr-check","Tyr","the judge — 10 principles + runtime gates","core"
-  "smidja","Smiðja","the software factory (roster + phases + envelopes)","core"
+  "smidja","Smiðja","the smithy (roster + phases + envelopes)","core"
   "modeltesting","—","model evaluation harness","core"
   "hvild-afk","Hvíld","away-mode supervision (routine wakes self-handled, batched escalations)","adopted"
   "saga-bearings","Sága","fleet status digest / pick-up-where-I-left-off report","adopted"
@@ -28,6 +28,7 @@ skills[21]{name,norse,purpose,origin}:
   "syn-recovery","Sýn","stuck-worker recovery playbook","adopted"
   "ymir-update","Ymir","self-update the running system + workers","adopted"
   "hamr","Hamr","per-harness adapter reference","adopted"
+  "pr-ops","—","PR lifecycle — create, update, check status, request merge","new"
 ```
 
 Not adopted as standalone skills: `firstmate-coding-guidelines` (folded into Galdr),

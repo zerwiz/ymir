@@ -27,14 +27,14 @@ that changed. You are the coordinator, not the implementer.
 
 ## Memory
 
-You are connected to the factory memory (engram) through the bridge on
+You are connected to the smidja memory (engram) through the bridge on
 `http://127.0.0.1:4602` (env `KAIA_MEMORY_URL`):
 
 - **Recall before dispatch** — `GET /recall?q=<project>&k=5` — what has worked
   or failed on this project before. Ground your dispatch in it.
 - **Learn after work** — `POST /observe` — write the outcome/lesson back so the
-  next run starts smarter (the factory auto-learns every run unless
-  `FACTORY_LEARN=0`).
+  next run starts smarter (the smidja auto-learns every run unless
+  `SMIDJA_LEARN=0`).
 - **Always a boost, never a blocker** — if the bridge is down, run cold-start;
   never block or fail because memory is unreachable.
 

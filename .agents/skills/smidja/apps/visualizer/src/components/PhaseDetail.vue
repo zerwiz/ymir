@@ -72,7 +72,7 @@ const phaseOutputs = computed<Envelope[]>(() => {
       }
       return {
         envelope_id: `out_${e.event_id}`,
-        factory_id: e.factory_id,
+        smidja_id: e.smidja_id,
         phase_id: e.phase_id,
         agent: e.name,
         output_type: 'subagent_result',
@@ -159,7 +159,7 @@ function money(n: number): string {
   return n < 0.0001 ? '<$0.0001' : `$${n.toFixed(4)}`
 }
 
-// The engineer's incoming ask, logged by every factory's request phase as a
+// The engineer's incoming ask, logged by every smidja's request phase as a
 // `log` event with an `input` payload — surfaced as its own section.
 const requestText = computed(() => {
   if (props.phase.kind !== 'engineer') return null
@@ -294,7 +294,7 @@ const typeClass: Record<string, string> = {
 
 // ── Compiled prompts ─────────────────────────────────────────────────────────
 // The exact system/user prompts sent to this phase's agent, fetched once per
-// (factory_id, agent) and cached for the trace view's lifetime.
+// (smidja_id, agent) and cached for the trace view's lifetime.
 
 const prompts = ref<PromptsResponse | null>(null)
 const promptsState = ref<'idle' | 'loading' | 'ready' | 'error'>('idle')
@@ -305,11 +305,11 @@ const openPanels = reactive(new Set<string>())
 const rawView = reactive(new Set<string>())
 
 // The trace view replaces the phase object on every poll tick, so the watch
-// getter re-fires constantly — only react when the (factory_id, agent) key truly
+// getter re-fires constantly — only react when the (smidja_id, agent) key truly
 // changes, or open panels would snap shut twice a second.
 let lastPromptKey: string | null | undefined
 watch(
-  () => [props.phase.factory_id, props.phase.owner, props.phase.kind] as const,
+  () => [props.phase.smidja_id, props.phase.owner, props.phase.kind] as const,
   async ([adwId, owner, kind]) => {
     const key = kind === 'agent' && owner ? `${adwId}:${owner}` : null
     if (key === lastPromptKey) return

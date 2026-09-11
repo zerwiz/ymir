@@ -2,10 +2,10 @@
 
 Galdr references these TOON (Token-Oriented Object Notation) schemas per tool type. All output converts to TOON at the output boundary; internal logic remains on JSON.
 
-## 1. Factory Orchestrator Schema
+## 1. Smíðja Orchestrator Schema
 
 ```toon
-factory:
+smidja:
   status: open|closed|in-progress
   phase: <phase-name>
   progress: integer 0-100
@@ -15,7 +15,7 @@ factory:
   phase_complete: boolean
 ```
 
-**Usage**: Python factory scripts (`factory_*.py`) — status, phase, progress tracking, utgard sandbox flag, worktree branch, phase completion.
+**Usage**: Python smidja scripts (`smidja_*.py`) — status, phase, progress tracking, utgard sandbox flag, worktree branch, phase completion.
 
 ## 2. Brokk Crew Schema
 

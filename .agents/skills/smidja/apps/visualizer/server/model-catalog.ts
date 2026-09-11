@@ -2,8 +2,8 @@
  * Model catalog — the machine's pi-resolvable models, shared by every surface
  * that spawns pi (orchestrator chat, future pickers).
  *
- * There are two registries in the factory:
- *   1. ROSTER models (roster.yaml)  — what factory RUNS use for each agent role
+ * There are two registries in the smidja:
+ *   1. ROSTER models (roster.yaml)  — what smidja RUNS use for each agent role
  *   2. PI catalog (`pi --list-models`) — what this machine's pi can actually
  *      RESOLVE (providers the user has configured: lmstudio, opencode-go, ...)
  *

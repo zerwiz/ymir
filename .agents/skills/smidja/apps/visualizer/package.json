@@ -1,9 +1,9 @@
 {
-  "name": "factory-visualizer",
+  "name": "smidja-visualizer",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Read-only observability UI for the Super Simple Software Factory — polls factory.db in a target repo.",
+  "description": "Read-only observability UI for the Smíðja — polls smidja.db in a target repo.",
   "scripts": {
     "dev": "vite",
     "server": "bun run server/index.ts",

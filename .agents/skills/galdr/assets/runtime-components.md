@@ -313,7 +313,7 @@ Env: `BROKK_HOME`, `BROKK_STATE_OVERRIDE`, `BROKK_DATA_OVERRIDE`, `BROKK_BACKUP_
 
 ### 3.18 `bin/nornir-job-observer.sh` — Huginn, the observation raven
 
-**Read-only** bridge into `/home/zerwiz/command` (FEATURES.md, `.compliance`, `factory.db` read-only SQLite, `kaia.engram`) and `/home/zerwiz/Brokk` (crew sessions, branch outcomes) plus an external worktree root. Never writes either tree; carves a Runes line and appends `state/observer.log` for every observation, including explicit `ABSENT` lines.
+**Read-only** bridge into `/home/zerwiz/command` (FEATURES.md, `.compliance`, `smidja.db` read-only SQLite, `kaia.engram`) and `/home/zerwiz/Brokk` (crew sessions, branch outcomes) plus an external worktree root. Never writes either tree; carves a Runes line and appends `state/observer.log` for every observation, including explicit `ABSENT` lines.
 
 Env: `BROKK_ROOT_OVERRIDE`, `BROKK_HOME`, `BROKK_STATE_OVERRIDE`, `BROKK_COMMAND_ROOT`, `BROKK_FIRSTMATE_ROOT`, `BROKK_YGGDRASIL_ROOT` (`~/.Yggdrasil`). Sources `runes-append.sh`.
 

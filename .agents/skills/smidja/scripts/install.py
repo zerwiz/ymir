@@ -2,13 +2,13 @@
 # /// script
 # dependencies = []
 # ///
-"""/install — stamp the factory factory from the skill into the cwd. Idempotent.
+"""/install — stamp the smidja smidja from the skill into the cwd. Idempotent.
 
 Usage:
     uv run <skill>/scripts/install.py [--force]
 
-Stamps: factory/ (modules + starter factory), factory/factory_data/prompt_engineering/
-(4 starter agents), factory/factory_factory_config/factory.config.yaml, .env.sample,
+Stamps: smidja/ (modules + starter smidja), smidja/smidja_data/prompt_engineering/
+(4 starter agents), smidja/smidja_smidja_config/smidja.config.yaml, .env.sample,
 .gitignore entries.
 Existing files are skipped unless --force.
 """
@@ -21,10 +21,10 @@ from pathlib import Path
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 
 GITIGNORE_ENTRIES = [
-    "factory/factory_data/sessions/",
-    "factory/factory_data/factory.db*",
+    "smidja/smidja_data/sessions/",
+    "smidja/smidja_data/smidja.db*",
     ".env",
-    # The factory are Python, so importing factory_modules writes bytecode next to it.
+    # The smidja are Python, so importing smidja_modules writes bytecode next to it.
     # Chains that end in a commit phase call `git add -A`, so without this a
     # stamped repo commits its own .pyc files — 15 of them showed up in the
     # first repo that was ever installed into from scratch.
@@ -54,7 +54,7 @@ def ensure_gitignore(root: Path, stamped: list) -> None:
     missing = [e for e in GITIGNORE_ENTRIES if e not in existing]
     if missing:
         with gitignore.open("a") as f:
-            f.write("\n# factory runtime\n" + "\n".join(missing) + "\n")
+            f.write("\n# smidja runtime\n" + "\n".join(missing) + "\n")
         stamped.append(f"{gitignore} (+{len(missing)} entries)")
 
 
@@ -66,13 +66,13 @@ def main() -> int:
     root = Path.cwd()
     stamped, skipped = [], []
 
-    stamp(TEMPLATES / "factory", root / "factory", args.force, stamped, skipped)
+    stamp(TEMPLATES / "smidja", root / "smidja", args.force, stamped, skipped)
     stamp(TEMPLATES / "prompt_engineering",
-          root / "factory" / "factory_data" / "prompt_engineering", args.force, stamped, skipped)
+          root / "smidja" / "smidja_data" / "prompt_engineering", args.force, stamped, skipped)
     stamp(TEMPLATES / "harness_engineering",
-          root / "factory" / "factory_data" / "harness_engineering", args.force, stamped, skipped)
-    stamp(TEMPLATES / "factory.config.yaml",
-          root / "factory" / "factory_factory_config" / "factory.config.yaml",
+          root / "smidja" / "smidja_data" / "harness_engineering", args.force, stamped, skipped)
+    stamp(TEMPLATES / "smidja.config.yaml",
+          root / "smidja" / "smidja_smidja_config" / "smidja.config.yaml",
           args.force, stamped, skipped)
     stamp(TEMPLATES / "env.sample", root / ".env.sample", args.force, stamped, skipped)
     # The recipes are part of the operating experience, and several cookbooks
@@ -81,7 +81,7 @@ def main() -> int:
     stamp(TEMPLATES / "justfile", root / "justfile", args.force, stamped, skipped)
     ensure_gitignore(root, stamped)
 
-    print(f"factory installed into {root}")
+    print(f"smidja installed into {root}")
     print(f"  stamped: {len(stamped)} file(s)")
     for s in stamped:
         print(f"    + {s}")
@@ -93,7 +93,7 @@ def main() -> int:
     print("  3. just sessions         # what just happened")
     print("  4. just obs              # the trace UI, needs bun")
     print("\n  no just? the raw form of step 2 is:")
-    print("     uv run factory/factory_prompt.py \"say hello\" --agent scout")
+    print("     uv run smidja/smidja_prompt.py \"say hello\" --agent scout")
     return 0
 
 

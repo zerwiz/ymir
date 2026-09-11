@@ -21,7 +21,7 @@
 // State is never a module-level or process-global singleton.
 //
 // Verified against Pi 0.81.1 declarations and the Pi 0.82.0 CLI, which expose
-// ExtensionUIContext.setWidget() with a component factory, per-widget dispose(), and
+// ExtensionUIContext.setWidget() with a component smidja, per-widget dispose(), and
 // TUI.requestRender(). Pi renders a widget through Component.render(width), so this
 // module recomputes its track from that width on every frame instead of caching a
 // terminal size that a resize would invalidate. A resize while the boat is hidden is

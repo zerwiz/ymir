@@ -189,7 +189,7 @@ const providerShare = (kind: 'local' | 'online') => {
         </table>
       </section>
 
-      <!-- per model / factory -->
+      <!-- per model / smidja -->
       <section class="panel">
         <div class="panel-title">By workflow</div>
         <table class="tbl">

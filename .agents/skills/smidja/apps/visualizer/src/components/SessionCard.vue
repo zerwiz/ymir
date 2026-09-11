@@ -19,9 +19,9 @@ const emit = defineEmits<{ archived: [adwId: string] }>()
 async function archive(event: MouseEvent) {
   event.preventDefault()
   event.stopPropagation()
-  emit('archived', props.session.factory_id)
+  emit('archived', props.session.smidja_id)
   try {
-    await archiveSession(props.session.factory_id)
+    await archiveSession(props.session.smidja_id)
   } catch {
     emit('archived', '')   // signals the parent to re-sync from the server
   }
@@ -36,10 +36,10 @@ async function stopRun(event: MouseEvent) {
   if (stopping.value) return
   stopping.value = true
   try {
-    const res = await stopSession(props.session.factory_id)
-    console.log(`[factory] stopped ${props.session.factory_id} — ${res.stopped} process(es)`)
+    const res = await stopSession(props.session.smidja_id)
+    console.log(`[smidja] stopped ${props.session.smidja_id} — ${res.stopped} process(es)`)
   } catch (err) {
-    console.error(`[factory] stop failed:`, err)
+    console.error(`[smidja] stop failed:`, err)
   } finally {
     stopping.value = false
   }
@@ -52,14 +52,14 @@ async function togglePause(event: MouseEvent) {
   pausing.value = true
   try {
     if (paused.value) {
-      await resumeSession(props.session.factory_id)
+      await resumeSession(props.session.smidja_id)
       paused.value = false
     } else {
-      await pauseSession(props.session.factory_id)
+      await pauseSession(props.session.smidja_id)
       paused.value = true
     }
   } catch (err) {
-    console.error(`[factory] pause failed:`, err)
+    console.error(`[smidja] pause failed:`, err)
   } finally {
     pausing.value = false
   }
@@ -86,7 +86,7 @@ async function pull() {
     do {
       // Cursor pagination is inherently sequential: each request needs the previous cursor.
       // oxlint-disable-next-line no-await-in-loop
-      page = await fetchEvents(props.session.factory_id, cursor, 1000)
+      page = await fetchEvents(props.session.smidja_id, cursor, 1000)
       cursor = Math.max(cursor, page.cursor)
       fresh.push(...page.events)
     } while (page.has_more)
@@ -236,7 +236,7 @@ const hiddenRowCount = computed(() =>
 </script>
 
 <template>
-  <a class="card" :class="session.status" :href="hrefFor(session.factory_id)">
+  <a class="card" :class="session.status" :href="hrefFor(session.smidja_id)">
     <button
       class="card-archive"
       type="button"
@@ -268,8 +268,8 @@ const hiddenRowCount = computed(() =>
     >
       ■
     </button>
-    <span class="card-id">{{ session.factory_id }}</span>
-    <span class="card-factory" :title="session.factory_name ?? ''">{{ session.factory_name ?? '—' }}</span>
+    <span class="card-id">{{ session.smidja_id }}</span>
+    <span class="card-smidja" :title="session.smidja_name ?? ''">{{ session.smidja_name ?? '—' }}</span>
     <span class="card-req" :title="session.request ?? ''">{{ session.request }}</span>
 
     <div v-if="rows.length" class="tl">
@@ -443,7 +443,7 @@ const hiddenRowCount = computed(() =>
   color: var(--purple);
 }
 
-.card-factory {
+.card-smidja {
   flex: none;
   font-family: var(--mono);
   font-size: 16px;

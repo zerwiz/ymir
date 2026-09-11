@@ -29,8 +29,8 @@ platform[26]{subsystem,norse,role}:
   "Watch / supervision","Sýn","watchful sight; guards the turn boundary"
   "Session lock","Gleipnir","the chain that binds one session"
   "Scheduled jobs","Nornir","the fates who govern time"
-  "Software factory","Smíðja","repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace"
-  "Factory orchestrator","Völundr","the master smith who runs Smíðja (Kaia's seat inside the factory)"
+  "Software smidja","Smíðja","repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace"
+  "Smíðja orchestrator","Völundr","the master smith who runs Smíðja (Kaia's seat inside the smidja)"
 ```
 
 ```

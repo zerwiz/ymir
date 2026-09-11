@@ -779,7 +779,7 @@ export default function (pi: ExtensionAPI) {
       extensionFactories: [
         {
           name: "skuld-branch-cache-key",
-          factory: (branchPi: ExtensionAPI) => {
+          smidja: (branchPi: ExtensionAPI) => {
             branchPi.on("before_provider_request", (event) => {
               const payload = event.payload;
               // Only providers whose request already carries Pi's default

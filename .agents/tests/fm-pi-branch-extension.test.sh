@@ -418,7 +418,7 @@ function makeCtx(extra) {
 }
 
 // A TUI-mode context whose ui.custom runs the extension's real picker
-// component headlessly: the factory receives a fake renderer, a pass-through
+// component headlessly: the smidja receives a fake renderer, a pass-through
 // theme, and a keybindings manager that matches a keybinding id against the
 // raw key data, and then the next queued keystroke script is fed to the
 // component's own handleInput. Keystrokes are either a keybinding id
@@ -445,10 +445,10 @@ function makeTuiCtx(extra) {
     },
     ui: {
       ...base.ui,
-      async custom(factory) {
+      async custom(smidja) {
         let result;
         let settled = false;
-        const component = await factory(
+        const component = await smidja(
           {
             requestRender() {},
           },
@@ -606,9 +606,9 @@ if (hooked.env.FM_LEASE_HOLDER_PID !== String(process.ppid)) throw new Error("br
 // 3. Shared per-home prompt_cache_key: overrides only payloads that already
 // carry one, stable within the home.
 let cacheHandler = null;
-const factoryEntry = loader.options.extensionFactories[0];
-const factory = typeof factoryEntry === "function" ? factoryEntry : factoryEntry.factory;
-factory({ on: (event, handler) => { if (event === "before_provider_request") cacheHandler = handler; } });
+const smidjaEntry = loader.options.extensionFactories[0];
+const smidja = typeof smidjaEntry === "function" ? smidjaEntry : smidjaEntry.smidja;
+smidja({ on: (event, handler) => { if (event === "before_provider_request") cacheHandler = handler; } });
 if (!cacheHandler) throw new Error("branch cache-key hook not registered");
 const rewriteA = cacheHandler({ type: "before_provider_request", payload: { prompt_cache_key: "session-a", model: "m" } });
 const rewriteB = cacheHandler({ type: "before_provider_request", payload: { prompt_cache_key: "session-b", model: "m" } });
@@ -1103,7 +1103,7 @@ await settle(() => (globalThis.__fmPrompts ?? []).length === 1, "branch wake pro
 const loader = globalThis.__fmLoaders[0];
 const entry = loader.options.extensionFactories[0];
 let handler = null;
-(typeof entry === "function" ? entry : entry.factory)({ on: (e, h) => { if (e === "before_provider_request") handler = h; } });
+(typeof entry === "function" ? entry : entry.smidja)({ on: (e, h) => { if (e === "before_provider_request") handler = h; } });
 const rewritten = handler({ type: "before_provider_request", payload: { prompt_cache_key: "x" } });
 console.log(rewritten.prompt_cache_key);
 process.exit(0);

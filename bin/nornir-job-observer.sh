@@ -4,7 +4,7 @@
 # Read-only bridge from the Ymir runtime into the two external systems that
 # already exist on this machine:
 #   /home/zerwiz/command     FEATURES.md registry, .compliance/ gates,
-#                            factory runs (factory.db), Kaia engram
+#                            smidja runs (smidja.db), Kaia engram
 #   /home/zerwiz/brokk   crew sessions, worktree state, outcomes
 #
 # CONTRACT: this job NEVER writes into either tree. It only reads manifests,
@@ -73,10 +73,10 @@ else
 fi
 observe "command.compliance" "$msg"
 
-# ---- command: factory runs (factory.db, read-only) -----------------------
-FACTORY_DB="$COMMAND_ROOT/factory/factory_data/factory.db"
-if [ -r "$FACTORY_DB" ] && command -v python3 >/dev/null 2>&1; then
-  factory_summary=$(python3 - "$FACTORY_DB" 2>/dev/null <<'PY'
+# ---- command: smidja runs (smidja.db, read-only) -----------------------
+SMIDJA_DB="$COMMAND_ROOT/smidja/smidja_data/smidja.db"
+if [ -r "$SMIDJA_DB" ] && command -v python3 >/dev/null 2>&1; then
+  smidja_summary=$(python3 - "$SMIDJA_DB" 2>/dev/null <<'PY'
 import sqlite3, sys
 db = sys.argv[1]
 try:
@@ -95,7 +95,7 @@ gates = q("select count(*) from gate_results", 0)
 gate_fail = q("select count(*) from gate_results where passed=0", 0)
 print("sessions=%s phases=%s gates=%s gate_fail=%s" % (sessions, phases, gates, gate_fail))
 try:
-    rows = c.execute("select factory_id,status from sessions order by rowid desc limit 3").fetchall()
+    rows = c.execute("select smidja_id,status from sessions order by rowid desc limit 3").fetchall()
     print("recent=" + ",".join("%s:%s" % (r[0], r[1]) for r in rows))
 except Exception as e:
     print("recent=unavailable(%s)" % e)
@@ -107,22 +107,22 @@ except Exception as e:
 c.close()
 PY
 )
-  first_line=$(printf '%s' "$factory_summary" | head -n 1)
-  msg="factory.db read-only: ${first_line:-unreadable}"
-  printf 'command.factory %s\n' "$msg"
-  printf '%s\n' "$factory_summary" | tail -n +2 | sed 's/^/  /'
+  first_line=$(printf '%s' "$smidja_summary" | head -n 1)
+  msg="smidja.db read-only: ${first_line:-unreadable}"
+  printf 'command.smidja %s\n' "$msg"
+  printf '%s\n' "$smidja_summary" | tail -n +2 | sed 's/^/  /'
 else
-  if [ ! -r "$FACTORY_DB" ]; then
-    msg="factory.db ABSENT at $FACTORY_DB"
+  if [ ! -r "$SMIDJA_DB" ]; then
+    msg="smidja.db ABSENT at $SMIDJA_DB"
   else
-    msg="factory.db present but python3 unavailable for read-only query"
+    msg="smidja.db present but python3 unavailable for read-only query"
   fi
-  printf 'command.factory ABSENT/UNREADABLE\n'
+  printf 'command.smidja ABSENT/UNREADABLE\n'
 fi
-observe "command.factory" "$msg"
+observe "command.smidja" "$msg"
 
 # ---- command: Kaia engram ------------------------------------------------
-ENGRAM="$COMMAND_ROOT/factory/factory_data/kaia.engram"
+ENGRAM="$COMMAND_ROOT/smidja/smidja_data/kaia.engram"
 if [ -r "$ENGRAM" ]; then
   size=$(stat -c '%s' "$ENGRAM" 2>/dev/null || printf 0)
   mtime=$(stat -c '%y' "$ENGRAM" 2>/dev/null | cut -d'.' -f1)

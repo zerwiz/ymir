@@ -7,7 +7,7 @@ Emits a single JSON object on stdout:
 
 Mirrors scripts/resolve-config.py's exact model resolution for each stack
 (overrides > tier map > defaults) so the UI picker reflects what a real
-`factory run` would use, but leaves the yaml on disk untouched — this is
+`smidja run` would use, but leaves the yaml on disk untouched — this is
 read-only, for the picker only.
 
 Usage:
@@ -68,7 +68,7 @@ def _weak(model: str) -> bool:
 
 
 def resolve_rosters_and_models(repo_root: Path, roster_path: Path | None = None) -> dict:
-    r = roster_path or repo_root / "factory" / "factory_config" / "roster.yaml"
+    r = roster_path or repo_root / "smidja" / "smidja_config" / "roster.yaml"
     data = {}
     if r and r.exists():
         import yaml

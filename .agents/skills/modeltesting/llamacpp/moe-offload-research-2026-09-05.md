@@ -184,7 +184,7 @@ is registered twice in `llama-models.yaml` for two jobs:
 
 Orchestrator measured: 4,682 MiB VRAM + ~9 GB RAM, prefill 885 t/s, decode
 26 t/s. Two-model test (q3 :8093 + 9b :8081) = 15,645 MiB total, both healthy —
-this is the factory layout (big orchestrator + several 9b GPU workers on
+this is the smidja layout (big orchestrator + several 9b GPU workers on
 parallel ports).
 
 ## 6. The "expert-only offload" option: `-ot "exps=CPU"` (advanced)

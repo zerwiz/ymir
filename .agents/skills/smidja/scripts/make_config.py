@@ -2,7 +2,7 @@
 # /// script
 # dependencies = []
 # ///
-"""make_config — generate factory/factory_factory_config/factory.config.yaml with great defaults.
+"""make_config — generate smidja/smidja_smidja_config/smidja.config.yaml with great defaults.
 
 Usage:
     uv run <skill>/scripts/make_config.py [--force]
@@ -13,7 +13,7 @@ import shutil
 import sys
 from pathlib import Path
 
-TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "factory.config.yaml"
+TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "smidja.config.yaml"
 
 
 def main() -> int:
@@ -21,7 +21,7 @@ def main() -> int:
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
 
-    dest = Path.cwd() / "factory" / "factory_factory_config" / "factory.config.yaml"
+    dest = Path.cwd() / "smidja" / "smidja_smidja_config" / "smidja.config.yaml"
     if dest.exists() and not args.force:
         print(f"{dest} already exists — use --force to overwrite")
         return 1
