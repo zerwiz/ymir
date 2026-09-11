@@ -62,12 +62,19 @@ export interface OrdersInfo {
   orders: OrderRow[];
 }
 
+function noteUnauthorized(path: string, status: number): void {
+  if (status === 401 && !path.startsWith('/api/login') && !path.startsWith('/api/session')) {
+    window.dispatchEvent(new Event('ymir:unauthorized'));
+  }
+}
+
 async function get<T>(path: string): Promise<T> {
   // Bound every call so one slow endpoint can never stall a combined load.
   const ctrl = new AbortController();
   const timer = window.setTimeout(() => ctrl.abort(), 10_000);
   try {
     const res = await fetch(`${BASE}${path}`, { credentials: 'include', signal: ctrl.signal });
+    noteUnauthorized(path, res.status);
     if (!res.ok) throw new Error(`${path} → ${res.status}`);
     return (await res.json()) as T;
   } finally {
@@ -82,12 +89,14 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   });
+  noteUnauthorized(path, res.status);
   if (!res.ok) throw new Error(`${path} → ${res.status}`);
   return (await res.json()) as T;
 }
 
 async function del<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { method: 'DELETE', credentials: 'include' });
+  noteUnauthorized(path, res.status);
   if (!res.ok) throw new Error(`${path} → ${res.status}`);
   return (await res.json()) as T;
 }
