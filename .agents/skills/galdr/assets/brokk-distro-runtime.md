@@ -143,7 +143,9 @@ Gleipnir is the impossible chain that binds one live Brokk session per home so a
 
 - **File:** `state/.lock` — a bare PID, read by the Pi extensions.
 - **Library:** `bin/gleipnir-lock-lib.sh` (source-safe). Functions: `gleipnir_lock_acquire`, `gleipnir_lock_release`, `gleipnir_lock_owner`, `gleipnir_lock_owned`, `gleipnir_pid_alive`, `gleipnir_lock_path`, `gleipnir_state_dir`, `gleipnir_root`.
-- **Critical invariant:** the lock must bind to the **live harness process**, not the short-lived digest helper. Harnesses pass `BROKK_SESSION_PID`; `gleipnir_lock_acquire` writes `${BROKK_SESSION_PID:-$$}` to `state/.lock`. `gleipnir_lock_owned` walks up to 8 ancestry levels so a helper can prove the session owns the lock.
+- **Critical invariant:** the lock must bind to the **live harness process**, not the short-lived digest helper. Harnesses pass `BROKK_SESSION_PID`; when it is absent, `gleipnir_session_pid` walks the ancestry (up to 8 levels) for the harness itself (`pi`, `opencode`, `claude`, `cursor`, `codex`, `grok`, `kimi`, `muse`, `hermes`) and binds to that — only a run with no harness ancestor falls back to `$$`.
+- **Why the walk matters:** running `bin/saga-session-start.sh` **manually** leaves `BROKK_SESSION_PID` unset. Writing `$$` recorded the digest helper's pid, which is dead a second later — an orphan lock that reads as "no live session" and silently blocks supervision from arming. The ancestry walk is the fix; a helper's pid is never authoritative.
+- `gleipnir_lock_owned` walks up to 8 ancestry levels so a helper can prove the session owns the lock.
 - **Refused lock ⇒ read-only session.** No spawn, steer, merge, drain, or repair. The digest says so in stage 1.
 - **Reclaim:** a lock whose pid is not alive is reclaimable; a live foreign pid is never overridden. The guard's `lockOwnership()` treats missing / other / pid 1 as non-owned.
 

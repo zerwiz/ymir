@@ -137,6 +137,7 @@ asset_for() {
     *bin/ymir-install.sh)                      printf '%s' "$GALDR/assets/installation.md" ;;
     *apps/hlidskjalf/*)                        printf '%s' "$GALDR/assets/hlidskjalf-ui.md" ;;
     *bin/mimir*)                               printf '%s' "$GALDR/assets/memory-well.md" ;;
+    *bin/gleipnir-lock-lib.sh|*bin/saga-session-start.sh|*state/.lock) printf '%s' "$GALDR/assets/brokk-distro-runtime.md" ;;
     *bin/nornir-*|*config/cron.yaml)           printf '%s' "$GALDR/assets/nornir-jobs.md" ;;
     *bin/valknut-load.sh|*/.pi/*|*/.opencode/*) printf '%s' "$GALDR/assets/harness-integration/README.md" ;;
     *bin/smidja*|*.agents/skills/smidja/*)     printf '%s' "$GALDR/assets/smidja.md" ;;
