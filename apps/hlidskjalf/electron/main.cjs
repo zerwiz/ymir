@@ -79,7 +79,7 @@ function buildMenu() {
     {
       label: 'Ymir',
       submenu: [
-        { label: 'Hlidskjalf — control plane', accelerator: 'CmdOrCtrl+1', click: () => win && win.loadURL(HLIDSKJALF) },
+        { label: 'Ymir · Hlidskjalf', accelerator: 'CmdOrCtrl+1', click: () => win && win.loadURL(HLIDSKJALF) },
         { label: 'Smiðja — the smithy', accelerator: 'CmdOrCtrl+2', click: () => win && win.loadURL(SMIDJA) },
         { type: 'separator' },
         { label: 'Reload', accelerator: 'CmdOrCtrl+R', click: () => win && win.reload() },
@@ -106,9 +106,9 @@ app.whenReady().then(async () => {
   buildMenu();
   const up = await ensureStack();
   app.setName('Ymir');
-  openWindow(HLIDSKJALF, up ? 'Hlidskjalf — Ymir control plane' : 'Hlidskjalf — stack not answering');
+  openWindow(HLIDSKJALF, up ? 'Ymir · Hlidskjalf' : 'Ymir · Hlidskjalf');
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) openWindow(HLIDSKJALF, 'Hlidskjalf');
+    if (BrowserWindow.getAllWindows().length === 0) openWindow(HLIDSKJALF, 'Ymir · Hlidskjalf');
   });
 });
 
