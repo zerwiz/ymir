@@ -31,7 +31,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
    It fast-forwards this Brokk repo's default branch from origin, then updates every registered local or remote Eindri-home home through its placement-specific guarded path.
    It prints one status line per target (`updated <old>..<new>` / `already current` / `skipped: <reason>`), followed by two action lines that tell you exactly what to do next:
    - `reread-Brokk: yes|no`
-   - `nudge-eindri-homes: fm-<id>...|none`
+   - `nudge-eindri-homes: <id> ...|none`
 
 2. **Re-read AGENTS.md if your own instructions changed.**
    When the updater printed `reread-Brokk: yes`, the tracked instruction surface (`AGENTS.md`, `bin/`, or `.agents/skills/`) just advanced under you.
