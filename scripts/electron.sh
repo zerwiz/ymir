@@ -20,7 +20,7 @@ VIEW="${YMIR_DESKTOP_VIEW:-hlidskjalf}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-start}"; shift || true
-while [ $# -gt 0 ]; do case "$1" in --no-install) NO_INSTALL=1; shift ;; --view) VIEW=${2-hlidskjalf}; shift 2 ;; *) shift ;; esac; done
+while [ $# -gt 0 ]; do case "$1" in --no-install) NO_INSTALL=1; shift ;; --view|--both) [ "$1" = "--both" ] && { VIEW=both; shift; } || { VIEW=${2-hlidskjalf}; shift 2; } ;; *) shift ;; esac; done
 
 running() { [ -r "$PID_FILE" ] && kill -0 "$(tr -d '[:space:]' <"$PID_FILE")" 2>/dev/null; }
 

@@ -43,4 +43,8 @@ if running; then printf 'gjallarhorn[1]{state,host}:\n  "already up","ymirdell.z
 nohup cloudflared tunnel --config "$CONFIG" run "$TUNNEL" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 sleep 4
-if running; then printf 'gjallarhorn[1]{state,host,pid}:\n  "up","ymirdell.zerwiz.org",%s\n' "$(cat "$PID_FILE")"; else printf 'error: tunnel failed to start; see %s\n' "${LOG_FILE#"$ROOT"/}" >&2; tail -3 "$LOG_FILE" >&2; exit 1; fi
+if running; then
+  printf 'gjallarhorn[1]{state,host,pid}:\n  "up","ymirdell.zerwiz.org",%s\n' "$(cat "$PID_FILE")"
+  # Bust the edge cache for the hostname (no-op without CLOUDFLARE_API_TOKEN).
+  [ -x "$SCRIPT_DIR/gjallarhorn-purge.sh" ] && "$SCRIPT_DIR/gjallarhorn-purge.sh" ymirdell.zerwiz.org >/dev/null 2>&1 || true
+else printf 'error: tunnel failed to start; see %s\n' "${LOG_FILE#"$ROOT"/}" >&2; tail -3 "$LOG_FILE" >&2; exit 1; fi
