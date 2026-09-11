@@ -1043,3 +1043,21 @@ own (no Norse rename); Ymir shells it.
 subagents, sandbox backends: local/Docker/SSH/Singularity/Modal). It is not yet
 in `einherjar-spawn.sh`'s verified-harness set — adding it requires a tested
 launch contract; until then it is provisioned and available, not wired.
+
+## 13. Desktop, tunnel, and mobile surfaces (2026-09-11)
+
+- **Electron desktop shell** — `apps/hlidskjalf/electron/{main,preload}.cjs` +
+  `scripts/electron.sh` (start/stop/status). Raises the stack if down, opens
+  Hlidskjalf; menu switches to Smiðja. `npm run desktop` or `scripts/electron.sh start`.
+- **Gjallarhorn tunnel** — `ymirdell.zerwiz.org` → `http://127.0.0.1:3889`
+  (the gate API, which now also serves the built SPA). Config:
+  `midgard/infrastructure/ingress/cloudflared-ymir.yml` → `~/.cloudflared/config-ymir.yml`;
+  helper `bin/gjallarhorn-tunnel.sh`. Tunnel id `c9a65c62-…`; DNS CNAME routed.
+- **Temporary auth** — hardcoded HTTP Basic (`zerwiz:allfather`) on the gate API
+  (`HLIDSKJALF_AUTH`), applied to every route. **Replace with Heimdall
+  (oauth2-proxy) and move the credential to `.env.local`** — hardcoding is a
+  stopgap, not the law.
+- **Mobile** — a **PWA manifest** now ships (`public/manifest.webmanifest`), so
+  `https://ymirdell.zerwiz.org` installs to a phone home screen. Recommended APK
+  path: **Capacitor** thin shell over the tunnel URL (reuses the web app);
+  the Expo app (`apps/hlidskjalf-mobile`) stays a separate-codebase option.
