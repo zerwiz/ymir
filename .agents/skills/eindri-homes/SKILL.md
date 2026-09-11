@@ -252,3 +252,12 @@ It kills child windows, discards child work and state inside the Eindri-home hom
 If forced teardown contends with a fresh task publication in any affected home, one command refuses without publishing or removing task state; treat that refusal as terminal and inspect the other operation before retrying.
 Relaunch and non-forced teardown remain outside that serialization.
 Never use `--force` unless the Allfather explicitly said to discard the work.
+
+## Fleet preferences
+
+Fleet-wide per-user settings live in `data/fleet.md` (gitignored), one
+`key: value` per line. `bin/fleet-apply.sh` writes each into THIS home and every
+registered home's gitignored `state/` (for `ro`: `state/ro`), and
+`bin/brokk-update.sh` re-applies them on every sweep — so one fleet setting
+reaches every home without dirtying any tracked tree. Remote routes are reported,
+not written. Keys: `ro: on | off` (Ró calm presentation).

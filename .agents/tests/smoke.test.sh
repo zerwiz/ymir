@@ -75,8 +75,8 @@ else
   add "galdr compliance" FAIL
 fi
 
-# 8. config resolves under .agents/config
-if [ -f "$BROKK_CONFIG_OVERRIDE/cron.yaml" ] && [ -f "$BROKK_CONFIG_OVERRIDE/ro" ]; then
+# 8. config resolves under .agents/config (ro is now per-user in state/)
+if [ -f "$BROKK_CONFIG_OVERRIDE/cron.yaml" ] && [ -f "$BROKK_CONFIG_OVERRIDE/eindri-harness" ]; then
   add "config repo-local" OK
 else
   add "config repo-local" FAIL
