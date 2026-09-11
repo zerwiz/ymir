@@ -119,6 +119,30 @@ API on the same port (`scripts/start.sh` raises it). Details: `assets/smidja.md`
   for login/rail logo and favicon. OG image: `public/og.png` (1200×630), source
   `public/og.svg`. Rebuild the PNG with headless Chrome if the SVG changes.
 
+## The desktop apps (Electron)
+
+`Hlidskjalf` and `Smíðja` each run as their own Electron app (`electron/main.cjs`,
+launched by `scripts/electron.sh start --both`).
+
+**Window placement.** The apps open on a **non-primary** display when one is
+attached (the Allfather keeps the dashboards beside his work) and on the primary
+otherwise. All geometry is in **logical** units — Electron's `screen` API returns
+physical ÷ scale, and Omarchy commonly runs a fractional scale (e.g. a 1920×1200
+panel at 1.5 is a 1280×800 logical desktop), so a 1440-wide default is clamped to
+the work area rather than overflowing it. `YMIR_DESKTOP_DISPLAY` overrides the
+choice: `other` (default) · `primary` · an index.
+
+**Identity.** Never track an Electron app by the pid returned from
+`.bin/electron` — that is a node shim which *spawns* the real binary, so the pid
+is wrong and a second launch stacks on the first. Identify it by its own command
+line (the per-view `--user-data-dir` is stable), which is what `electron.sh` does.
+
+**GPU.** On a small-VRAM iGPU the Wayland `--type=gpu-process` can die with
+`amdgpu: Not enough memory for command submission` (SIGSEGV, not an OOM).
+`YMIR_DESKTOP_DISABLE_GPU=1` adds `--disable-gpu --disable-gpu-compositing` —
+these are dashboards, not 3D apps. See `assets/ymir-omarchy` / the `ymir-omarchy`
+skill for the full native story.
+
 ## Verification
 
 ```bash
