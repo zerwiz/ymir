@@ -1,9 +1,12 @@
-# Gjallarhorn — the `ymir` tunnel. Hosts the Hlidskjalf control plane.
+# Gjallarhorn — the `ymir` tunnel. Hosts the Hlidskjalf control plane and the
+# Smíðja trace UI behind the same gate.
 #
-#   ymirdell.zerwiz.org  ->  http://127.0.0.1:3888  (Hlidskjalf SPA; it proxies /api)
+#   ymirdell.zerwiz.org        ->  http://127.0.0.1:3889  (Hlidskjalf; gate + API)
+#   ymirsmidjadell.zerwiz.org  ->  http://127.0.0.1:3889  (Smíðja; gate then proxy :8437)
 #
 # Created with:  cloudflared tunnel create ymir
 #                cloudflared tunnel route dns --overwrite-dns <id> ymirdell.zerwiz.org
+#                cloudflared tunnel route dns --overwrite-dns <id> ymirsmidjadell.zerwiz.org
 #
 # SECURITY: Hlidskjalf's auth is a mock until Heimdall (oauth2-proxy) lands.
 # Put an authenticating origin (Bifrost → Heimdall) in front before broad
@@ -13,6 +16,10 @@ credentials-file: /home/zerwiz/.cloudflared/c9a65c62-7f1b-4fe6-bcdd-9558570eefd9
 
 ingress:
   - hostname: ymirdell.zerwiz.org
+    service: http://127.0.0.1:3889
+    originRequest:
+      noTLSVerify: true
+  - hostname: ymirsmidjadell.zerwiz.org
     service: http://127.0.0.1:3889
     originRequest:
       noTLSVerify: true
