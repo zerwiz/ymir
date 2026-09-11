@@ -7,6 +7,7 @@ import type {
   RecallEpisode,
   RealmId,
   RuneEntry,
+  SkillDef,
   Task,
 } from '../types';
 
@@ -123,6 +124,18 @@ export interface MimirHealth {
   store: string | null;
   episodes: number;
   agents: string[];
+}
+export interface WorkspaceRow {
+  id: string;
+  name: string;
+  kind: string;
+  company?: string;
+  domains: string[];
+}
+export interface SetupStep {
+  step: string;
+  status: string;
+  detail: string;
 }
 export interface WellEpisode {
   id: string;
@@ -282,6 +295,11 @@ export const gateApi = {
   reviews: () => get<PullRequest[]>('/api/reviews'),
   files: (realm?: string) =>
     get<FileNode>(`/api/files${realm ? `?realm=${encodeURIComponent(realm)}` : ''}`),
+  file: (realm: string, path: string) =>
+    get<{ path: string; size?: number; updated?: string; body?: string; note?: string; error?: string }>(
+      `/api/file?realm=${encodeURIComponent(realm)}&path=${encodeURIComponent(path)}`,
+    ),
+  skills: () => get<SkillDef[]>('/api/skills'),
   runtime: () => get<RuntimeInfo>('/api/runtime'),
   cron: () => get<CronInfo>('/api/cron'),
   loaders: () => get<LoaderRow[]>('/api/loaders'),
@@ -301,5 +319,10 @@ export const gateApi = {
   smidjaDecisions: () => get<{ total_failed: number; decisions: SmidjaDecision[] }>('/api/smidja/decisions'),
   smidjaStats: () => get<SmidjaStats>('/api/smidja/stats'),
   mimirHealth: () => get<MimirHealth>('/api/mimir/health'),
+  workspaces: () => get<WorkspaceRow[]>('/api/workspaces'),
+  createWorkspace: (body: { name: string; kind: string; domains: string[] }) =>
+    post<unknown>('/api/workspaces', body),
+  setupStatus: () => get<SetupStep[]>('/api/setup/status'),
+  setupRun: () => post<SetupStep[]>('/api/setup/run', {}),
   wellEpisode: (id: string) => get<{ episode: WellEpisode }>(`/api/well/episode?id=${encodeURIComponent(id)}`),
 };

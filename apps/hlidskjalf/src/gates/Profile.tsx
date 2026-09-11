@@ -137,9 +137,9 @@ export function Profile() {
         <section className="panel">
           <div className="panel-head">
             <div className="panel-title">
-              <span className="glyph" aria-hidden="true">ᛊ</span> Tenant colours
+              <span className="glyph" aria-hidden="true">ᛊ</span> Workspace colours
             </div>
-            <span className="mono dim" style={{ fontSize: 10 }}>boundaries are sacred</span>
+            <span className="mono dim" style={{ fontSize: 10 }}>one tenant · many scopes</span>
           </div>
           <div className="panel-body col" style={{ gap: 'var(--ymir-space-3)' }}>
             {session.tenants.map((t) => (
@@ -153,7 +153,7 @@ export function Profile() {
               />
             ))}
             <p className="mono dim" style={{ fontSize: 11 }}>
-              Each tenant swatch repaints that realm's tint. Set accent to “Realm default” to follow it.
+              Each workspace swatch repaints that workspace's tint. Set accent to “Realm default” to follow it.
             </p>
           </div>
         </section>
@@ -184,7 +184,7 @@ export function Profile() {
               </label>
             </div>
 
-            <div className="eyebrow">Members</div>
+            <div className="eyebrow">Workspaces</div>
             <div className="col" style={{ gap: 6 }}>
               {session.tenants.map((t) => (
                 <div className="tenant-row" key={t.realm}>

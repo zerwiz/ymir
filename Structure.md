@@ -92,7 +92,7 @@ ymir/
 │   ├── sandbox/                   # UTGARD — ephemeral container isolation
 │   │   ├── Dockerfile.utgard      # [d] Hardened execution container
 │   │   ├── execute_utgard.ts      # [p] Docker runner for safe execution
-│   │   └── sandcastle.config.json # [d] CPU/RAM/timeout caps
+│   │   └── utgard.config.json    # [d] CPU/RAM/timeout caps
 │   │
 │   ├── skills/                    # GUNGNIR — reusable executable skills
 │   │   ├── README.md              # [d] Skill index & synthesis rules

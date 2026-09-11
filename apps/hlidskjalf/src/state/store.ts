@@ -16,7 +16,6 @@ import type {
   Task,
 } from '../types';
 import { realmDef, ACCENTS, GATES } from '../data/realms';
-import { seedGateFeed } from '../data/feeds';
 import {
   seedAgents,
   seedChat,
@@ -166,7 +165,7 @@ interface YmirState {
   skills: SkillDef[];
 
   signIn: (identity: MockIdentity) => void;
-  provision: (input: { login: string; name: string; house: HouseId; cloneRepos: boolean }) => void;
+  provision: (input: { login: string; name: string; kind: 'work' | 'personal'; domains: string[] }) => void;
   signOut: () => void;
   enterDemo: () => void;
   loadLive: () => Promise<void>;
@@ -230,7 +229,24 @@ export function gateFromHash(): GateId {
   return (GATE_IDS as string[]).includes(raw) ? (raw as GateId) : 'fleet';
 }
 
-function hydrate(realm: RealmId) {
+/** Honest empty state — live mode fills from the gate API; nothing is invented. */
+function emptyState() {
+  return {
+    agents: [] as YmirState['agents'],
+    tasks: [] as YmirState['tasks'],
+    runes: [] as YmirState['runes'],
+    streams: { all: [] } as YmirState['streams'],
+    recall: [] as YmirState['recall'],
+    processes: [] as YmirState['processes'],
+    reviews: [] as YmirState['reviews'],
+    files: { name: 'realm', type: 'dir', path: '/', children: [] } as YmirState['files'],
+    chat: [] as YmirState['chat'],
+    skills: [] as YmirState['skills'],
+  };
+}
+
+/** Seeded state — used ONLY by the hidden demo (never by a live boot). */
+function seedState(realm: RealmId) {
   return {
     agents: seedAgents(realm),
     tasks: seedTasks(realm),
@@ -274,14 +290,14 @@ function realmTintOf(state: Pick<YmirState, 'session' | 'realm' | 'tenantColors'
 const initialSession = loadSession();
 
 function initialRealm(session: Session | null): RealmId {
-  if (!session || session.tenants.length === 0) return 'way-of';
   try {
-    const stored = localStorage.getItem('ymir.realm');
-    if (stored && session.tenants.some((t) => t.realm === stored)) return stored;
+    const stored = localStorage.getItem('ymir.workspace') ?? localStorage.getItem('ymir.realm');
+    if (stored) return stored;
   } catch {
     /* ignore */
   }
-  return session.tenants[0].realm;
+  if (session && session.tenants.length > 0) return session.tenants[0].realm;
+  return 'work';
 }
 
 export const useYmir = create<YmirState>((set, get) => ({
@@ -313,7 +329,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   chatModel: '',
   chatAgents: [],
   chatPending: false,
-  ...hydrate(initialRealm(initialSession)),
+  ...emptyState(),
 
   loadLive: async () => {
     if (get().demo) return;
@@ -379,7 +395,7 @@ export const useYmir = create<YmirState>((set, get) => ({
     document.documentElement.dataset.realm = 'way-of';
     const { accentId, customAccent } = get();
     applyAccent(accentId, customAccent);
-    set({ session, realm: 'way-of', demo: true, live: false, runtime: null, cron: null, ...hydrate('way-of') });
+    set({ session, realm: 'way-of', demo: true, live: false, runtime: null, cron: null, ...seedState('way-of') });
   },
 
   signIn: (identity) => {
@@ -393,7 +409,7 @@ export const useYmir = create<YmirState>((set, get) => ({
       customAccent,
       tenantColors[realm] ?? session.tenants.find((t) => t.realm === realm)?.tint,
     );
-    set({ session, realm, demo: false, ...hydrate(realm) });
+    set({ session, realm, demo: false, ...emptyState() });
     void get().loadLive();
   },
 
@@ -408,7 +424,7 @@ export const useYmir = create<YmirState>((set, get) => ({
       customAccent,
       tenantColors[realm] ?? session.tenants.find((t) => t.realm === realm)?.tint,
     );
-    set({ session, realm, demo: false, ...hydrate(realm) });
+    set({ session, realm, demo: false, ...emptyState() });
     void get().loadLive();
   },
 
@@ -418,33 +434,25 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   setRealm: (realm) => {
-    const session = get().session;
-    // Tenant boundaries are sacred — never switch into a realm without a grant.
-    if (!session || !session.tenants.some((t) => t.realm === realm)) return;
+    // Single tenant: switch freely between workspaces (work | personal | …).
     try {
-      localStorage.setItem('ymir.realm', realm);
+      localStorage.setItem('ymir.workspace', realm);
       document.documentElement.dataset.realm = realm;
     } catch {
       /* ignore */
     }
     const { accentId, customAccent, tenantColors } = get();
-    applyAccent(
-      accentId,
-      customAccent,
-      tenantColors[realm] ?? session.tenants.find((t) => t.realm === realm)?.tint,
-    );
-    set({ realm, ...hydrate(realm) });
+    applyAccent(accentId, customAccent, tenantColors[realm] ?? realmDef(realm).tint);
+    set({ realm, ...emptyState() });
     if (!get().demo) void get().loadLive();
   },
 
   setGate: (gate) =>
-    set((s) => {
+    set(() => {
       if (window.location.hash !== `#/${gate}`) {
         window.location.hash = `#/${gate}`;
       }
-      return s.streams[gate]?.length
-        ? { gate }
-        : { gate, streams: { ...s.streams, [gate]: seedGateFeed(gate) } };
+      return { gate };
     }),
 
   setDensity: (density) => set({ density }),
@@ -672,7 +680,6 @@ export const useYmir = create<YmirState>((set, get) => ({
 if (initialSession) void useYmir.getState().loadLive();
 
 export const currentRealmDef = () => {
-  const { session, realm } = useYmir.getState();
-  const tenant = session?.tenants.find((t) => t.realm === realm);
-  return realmDef(realm, tenant);
+  const { realm } = useYmir.getState();
+  return realmDef(realm);
 };

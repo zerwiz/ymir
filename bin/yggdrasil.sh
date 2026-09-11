@@ -11,7 +11,13 @@
 #   yggdrasil.sh status <id> [--repo <path>]
 #   yggdrasil.sh merge  <id> [--repo <path>] [--into <branch>] [--no-ff]
 #   yggdrasil.sh cleanup <id> [--repo <path>] [--force]
+#   yggdrasil.sh pool   <treehouse args…>   # the reusable worktree pool engine
 #   yggdrasil.sh --version
+#
+# Engine: the reusable worktree pool is **treehouse**
+# (github.com/kunchenguid/treehouse); this script is the Norse shell. `create`
+# keeps an explicit, named branch for merge/cleanup; `pool` delegates to the
+# treehouse pool directly.
 #
 # Exit: 0 ok, 1 error, 2 usage.
 set -u
@@ -29,6 +35,12 @@ case "$CMD" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") usage; exit 0 ;;
 esac
+
+# `pool` delegates straight to the treehouse pool engine (no branch bookkeeping).
+if [ "$CMD" = "pool" ]; then
+  command -v treehouse >/dev/null 2>&1 || { printf 'error: treehouse not installed\nhelp: bin/ymir-install.sh\n' >&2; exit 1; }
+  exec treehouse "$@"
+fi
 
 ID=""
 BASE=""

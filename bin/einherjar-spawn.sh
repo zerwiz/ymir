@@ -402,7 +402,7 @@ mkdir -p "$STATE" "$DATA/$ID"
 LAUNCH_SCRIPT="$STATE/$ID.launch.sh"
 
 if [ "$ISOLATION_EFFECTIVE" = on ]; then
-  # The worktree is mounted at the sandcastle target; state/ and data/ are
+  # The worktree is mounted at the Utgard target; state/ and data/ are
   # mounted at their own host paths so the brief's status, inbox, and report
   # paths resolve identically inside the container.
   LAUNCH_CWD=/sandbox/workspace
