@@ -17,7 +17,7 @@ Add a blog section to the AIGeeks & Freaks homepage where AI-generated and commu
 ### 2.1 AIGeeks & Freaks Homepage
 
 - **Stack:** Next.js 16, port 3800
-- **Pages:** Home, Meetups, Courses, Shipped, Factory, Way of Teams, Login
+- **Pages:** Home, Meetups, Courses, Shipped, Smíðja, Way of Teams, Login
 - **Content:** All mock data (no real blog, no real content)
 - **Auth:** None currently
 

@@ -115,7 +115,7 @@ and `MOCK` toggles cleanly to the live transport; typecheck + build green.
 |---|---|---|
 | F-1 | **Runtime digest view** — render the session-start digest (fleet, wake-queue, context, cron) read-only in Hlidskjalf | operator can see what Brokk was injected |
 | F-2 | **Cron status page** (W0090) | job last/next/status/pause |
-| F-3 | **Sessions list + Session Trace + Phase Detail** (W0080–W0082) | factory-run observability |
+| F-3 | **Sessions list + Session Trace + Phase Detail** (W0080–W0082) | smidja-run observability |
 | F-4 | **Decisions + Stats + Settings views** (W0083–W0085) | self-improving + config surfaces |
 | F-5 | **External systems + Houses & Entities views** (W0087–W0088) | command/upstream distro + companies |
 | F-6 | **Context editors** — operator.md / learning / project registry read+edit with masked secrets | the operator can shape what gets injected |
@@ -149,7 +149,7 @@ surface; until it is raised it uses the mock store, exactly like the current
 | # | Task | Delivers |
 |---|---|---|
 | B-10 | Gate API (W0027): `/api/me|workspace|agents|tasks|well|runes|processes|reviews` + `/api/stream` | frontend goes live |
-| B-11 | Run-store + trace ingest, run control, rosters/models, decisions/stats (W0075–W0079) | factory observability backend |
+| B-11 | Run-store + trace ingest, run control, rosters/models, decisions/stats (W0075–W0079) | smidja observability backend |
 | B-12 | Observer, Houses/Entities, external-systems, Hermóðr, cross-realm grants, four-layer gates, context budget (W0086–W0097) | the plan-21–27 backlog |
 
 ---

@@ -1,7 +1,7 @@
 /**
  * Types shared by the read-only server and the Vue client.
  *
- * Every interface mirrors a table in factory.db one-for-one (see
+ * Every interface mirrors a table in smidja.db one-for-one (see
  * references/observability.md). Nothing here is derived state: phase durations,
  * session progress and lane layout are computed in the UI, never stored.
  */
@@ -31,9 +31,9 @@ export type EventType =
   | "usage";
 
 export interface Session {
-  factory_id: string;
-  /** factory script(s) that ran this session, e.g. "factory_plan + factory_build_test". */
-  factory_name: string | null;
+  smidja_id: string;
+  /** smidja script(s) that ran this session, e.g. "smidja_plan + smidja_build_test". */
+  smidja_name: string | null;
   request: string | null;
   status: SessionStatus | null;
   engineer: string | null;
@@ -64,7 +64,7 @@ export interface SessionSummary extends Session {
 
 export interface Phase {
   phase_id: string;
-  factory_id: string;
+  smidja_id: string;
   seq: number | null;
   name: string | null;
   kind: PhaseKind | null;
@@ -82,7 +82,7 @@ export interface Event {
   /** SQLite rowid — the polling cursor. Monotonic, insertion-ordered. */
   rowid: number;
   event_id: string;
-  factory_id: string;
+  smidja_id: string;
   phase_id: string | null;
   /** Span nesting: an agent phase expands into its tool-call children. */
   parent_id: string | null;
@@ -97,7 +97,7 @@ export interface Event {
 
 export interface Envelope {
   envelope_id: string;
-  factory_id: string;
+  smidja_id: string;
   phase_id: string | null;
   agent: string | null;
   /** Name of the data_types model the response was parsed against. */
@@ -111,7 +111,7 @@ export interface Envelope {
 
 export interface GateResult {
   id: number;
-  factory_id: string;
+  smidja_id: string;
   phase_id: string | null;
   attempt: number | null;
   gate: string | null;
@@ -138,13 +138,13 @@ export interface GateCheck {
 
 /** agent_sessions — the queryable mirror of agent_map.json. Supplies lane labels (`name · model`). */
 export interface AgentSession {
-  factory_id: string;
+  smidja_id: string;
   agent: string;
   coding_agent: string | null;
   model: string | null;
   session_id: string | null;
   /**
-   * The agent's lane color from factory.config.yaml, e.g. "#a78bfa". Null on dbs
+   * The agent's lane color from smidja.config.yaml, e.g. "#a78bfa". Null on dbs
    * written by a tracer predating the column, and on agents with no configured
    * color — fall back to the UI's own palette.
    */
@@ -232,7 +232,7 @@ export interface ToolCallPayload {
 /** GET /api/sessions */
 export type SessionsResponse = SessionSummary[];
 
-/** GET /api/sessions/:factory_id */
+/** GET /api/sessions/:smidja_id */
 /**
  * What actually moved through a session, summed across every agent.
  *
@@ -253,7 +253,7 @@ export interface SessionDetail {
   /** Ordered by seq. */
   phases: Phase[];
   /**
-   * One entry per agent that has run OR is running under this factory_id — lane
+   * One entry per agent that has run OR is running under this smidja_id — lane
    * labels come from here. Finished agents come from the agent_sessions table;
    * an agent still in flight has no row there yet, so its entry is built from
    * its agent_start event (coding_agent is null until it finishes).
@@ -262,7 +262,7 @@ export interface SessionDetail {
 }
 
 /**
- * GET /api/sessions/:factory_id/events?after=<rowid>&limit=500
+ * GET /api/sessions/:smidja_id/events?after=<rowid>&limit=500
  *
  * Poll with `after` = the cursor from the previous response. `cursor` is the
  * highest rowid in this page (or the `after` you sent, when the page is empty),
@@ -275,10 +275,10 @@ export interface EventsPage {
 }
 
 /**
- * GET /api/sessions/:factory_id/agents/:agent/prompts
+ * GET /api/sessions/:smidja_id/agents/:agent/prompts
  *
  * The exact compiled prompts sent to an agent, read from
- * `{data_dir}/sessions/{factory_id}/{agent}/prompts/`. These live only as files —
+ * `{data_dir}/sessions/{smidja_id}/{agent}/prompts/`. These live only as files —
  * the db has no copy. Either field is null when that file isn't on disk, which
  * is the normal state for an agent that never ran in this session, so a 200
  * with two nulls is a valid answer rather than an error.
@@ -291,10 +291,10 @@ export interface AgentPrompts {
 /** Alias matching the naming of the other endpoint payloads. */
 export type PromptsResponse = AgentPrompts;
 
-/** GET /api/sessions/:factory_id/envelopes */
+/** GET /api/sessions/:smidja_id/envelopes */
 export type EnvelopesResponse = Envelope[];
 
-/** GET /api/sessions/:factory_id/gates */
+/** GET /api/sessions/:smidja_id/gates */
 export type GatesResponse = GateResult[];
 
 /** GET /api/health */
@@ -514,9 +514,9 @@ export interface ChatToolCall {
   expanded?: boolean;
 }
 
-/** A factory session launched from chat — rendered as a special card. */
+/** A smidja session launched from chat — rendered as a special card. */
 export interface SessionLaunch {
-  factory_id: string;
+  smidja_id: string;
   team: string;
   model: string;
   status: SessionStatus | null;
@@ -533,7 +533,7 @@ export interface ChatMessage {
   content: string;
   /** Tool calls embedded in a Kaia message — rendered as cards under the text. */
   tool_calls?: ChatToolCall[];
-  /** Set when this Kaia message also launched a factory session. */
+  /** Set when this Kaia message also launched a smidja session. */
   session_launch?: SessionLaunch;
   /** While true the model is still generating this message. */
   streaming?: boolean;
@@ -588,7 +588,7 @@ export interface ChatMessageResponse {
   message: ChatMessage;
 }
 
-/** Payload for POST /api/chat/session (factory launch). */
+/** Payload for POST /api/chat/session (smidja launch). */
 export interface SessionStartRequest {
   roster: string;
   /** Orchestrator model override — written as a session-scoped override, not persisted. */
@@ -601,7 +601,7 @@ export interface SessionStartResponse {
   session_id: string;
   roster: string;
   model: string;
-  factory_id: string;
+  smidja_id: string;
 }
 
 /** GET /api/chat/history */

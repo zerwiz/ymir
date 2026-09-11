@@ -2,30 +2,30 @@
 
 Galdr needs to understand these build tool categories and their asset requirements for proper skill synthesis and compliance checking.
 
-## 1. Python Factory Tools
+## 1. Python Smíðja Tools
 
-**Location**: `templates/factory/` (deterministic Python scripts that own sequencing/retries/acceptance)
+**Location**: `templates/smidja/` (deterministic Python scripts that own sequencing/retries/acceptance)
 
 **Key Files**:
-- `factory_*.py` — Orchestrator scripts (factory_simple_sdlc, factory_orchestrate, etc.)
-- `factory_modules/data_types.py` — Pydantic v2 data types and data contracts
-- `factory_modules/tracer.py` — SQLite WAL + JSONL events for tracing
-- `factory_modules/quality.py` — Deterministic subprocess runs for quality gates
-- `factory_modules/permissions.py` — Path-based write enforcement
-- `factory_modules/agents.py` — Context handoff, sub-agent lane materialization (G2)
+- `smidja_*.py` — Orchestrator scripts (smidja_simple_sdlc, smidja_orchestrate, etc.)
+- `smidja_modules/data_types.py` — Pydantic v2 data types and data contracts
+- `smidja_modules/tracer.py` — SQLite WAL + JSONL events for tracing
+- `smidja_modules/quality.py` — Deterministic subprocess runs for quality gates
+- `smidja_modules/permissions.py` — Path-based write enforcement
+- `smidja_modules/agents.py` — Context handoff, sub-agent lane materialization (G2)
 - `agent_pi.py` — Pi agent runtime
 - `agent_opencode.py` — OpenCode agent runtime
 
 **Assets Galdr Needs**:
-- Tool schemas for factory module data types
+- Tool schemas for smidja module data types
 - Quality gate validation patterns
 - Permission enforcement rules
 - Context handoff format specifications
 - Sub-agent task packet structures
 
-## 2. Command-Factory (Reuse OSS)
+## 2. Command-Smíðja (Reuse OSS)
 
-**Validated OSS project**: `command-factory` (disler-style "Super Simple Software Factory")
+**Validated OSS project**: `smidja` (disler-style "Smíðja")
 
 **Features**:
 - Deterministic Python owns graph, agents bounded nodes
@@ -34,7 +34,7 @@ Galdr needs to understand these build tool categories and their asset requiremen
 - Vue visualizer at port 4601
 
 **Assets Galdr Needs**:
-- Factory script patterns
+- Smíðja script patterns
 - JSON envelope schemas
 - SQLite telemetry structure
 - Visualizer data format
@@ -74,9 +74,9 @@ Galdr needs to understand these build tool categories and their asset requiremen
 
 Galdr references these TOON output schemas per tool type:
 
-### Factory Orchestrator (Python)
+### Smíðja Orchestrator (Python)
 ```toon
-factory:
+smidja:
   status: open|closed|in-progress
   phase: <phase-name>
   progress: 0-100

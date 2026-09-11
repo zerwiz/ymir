@@ -22,7 +22,7 @@ const isMeta = computed(() => isMemory.value || isDecisions.value || isStats.val
    //    nothing removed, the old styling is kept as an option).
    //    data-theme="high-contrast" adds a WCAG AAA compliant high contrast mode.
    //    Choice is persisted locally. ──
-  const savedTheme = localStorage.getItem('factory-theme')
+  const savedTheme = localStorage.getItem('smidja-theme')
   if (savedTheme === 'classic' || savedTheme === 'high-contrast') {
     document.documentElement.dataset.theme = savedTheme
   }
@@ -38,17 +38,17 @@ const isMeta = computed(() => isMemory.value || isDecisions.value || isStats.val
     } else {
       document.documentElement.dataset.theme = theme.value
     }
-    localStorage.setItem('factory-theme', theme.value)
+    localStorage.setItem('smidja-theme', theme.value)
   }
 
 // Running inside the Electron shell? Then the native frame is hidden and the
 // topbar doubles as the title bar — its right edge gets the window controls.
 // Custom controls only appear on Linux; Windows/macOS draw native overlay
 // buttons (which already sit on the right / follow the OS convention).
-const isDesktop = (window as { factoryDesktop?: { isDesktop?: boolean } }).factoryDesktop?.isDesktop ?? false
-const isLinuxDesktop = isDesktop && (window as { factoryDesktop?: { platform?: string } }).factoryDesktop?.platform === 'linux'
+const isDesktop = (window as { smidjaDesktop?: { isDesktop?: boolean } }).smidjaDesktop?.isDesktop ?? false
+const isLinuxDesktop = isDesktop && (window as { smidjaDesktop?: { platform?: string } }).smidjaDesktop?.platform === 'linux'
 function winControl(action: 'minimize' | 'maximize' | 'close') {
-  ;(window as { factoryDesktop?: { windowControl?: (a: string) => void } }).factoryDesktop?.windowControl?.(action)
+  ;(window as { smidjaDesktop?: { windowControl?: (a: string) => void } }).smidjaDesktop?.windowControl?.(action)
 }
 </script>
 
@@ -64,7 +64,7 @@ function winControl(action: 'minimize' | 'maximize' | 'close') {
           <rect x="8" y="13.5" width="20" height="5" rx="2.5" fill="#FF8F5C" />
           <rect x="4" y="21" width="13" height="5" rx="2.5" fill="#E25A26" />
         </svg>
-        <span class="brand">WayOf Factory</span>
+        <span class="brand">WayOf Smidja</span>
         <span class="sep">›</span>
         <a :href="hrefFor()" :class="{ current: !route.adwId }">sessions</a>
         <span class="sep">›</span>

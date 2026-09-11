@@ -18,10 +18,10 @@
 |---|---|---|
 | **Ona** | Family / personal | Personal AI orchestrator & squad (Solin + specialists). Dual Telegram bots, web UI, Electron, PWA. |
 | **WayOfTeams** | Work / production | Main SaaS at `teams.zerwiz.org`. Multi-tenant: tickets, kanban, standups, skills, AI chat, analytics. |
-| **Software Factory (`wayoffactory`)** | Engineering | Agents-plus-code pipelines. Equal to factory, better stack. Productized as WayOfTeams feature. |
+| **Smíðja (`wayoffactory`)** | Engineering | Agents-plus-code pipelines. Equal to smidja, better stack. Productized as WayOfTeams feature. |
 | **CloudSync** | Sync hub | Headless canonical sync hub. Edges push/pull/bootstrap/stream; LWW conflict resolution. |
 | **AG&F (aigeeksandfreaks)** | Marketing | Marketing platform + blog (`aigeeksnfreaks.zerwiz.org`). Blog posts, landing pages, funnels. |
-| **NorthStar Rules (NSR)** | Compliance | Canonical core ruleset for every Way-Of project. Mandatory doc structure, `.agents/skills/` automation, `.factory/` deterministic harness. |
+| **NorthStar Rules (NSR)** | Compliance | Canonical core ruleset for every Way-Of project. Mandatory doc structure, `.agents/skills/` automation, `.smidja/` deterministic harness. |
 
 ### Marketing Stack (on zerwizserver)
 
@@ -61,12 +61,12 @@
 | D-001 | Masterplan lives in `plans/masterplan/`; ecosystem AGENTS.md inside it | **Locked** |
 | D-002 | `wayofpackets` monorepo is the target home for the refactored ecosystem | **Locked** |
 | D-003 | Masterplan is design + decisions + open-questions (not a build spec) | **Locked** |
-| D-004 | Dead products consolidated: CTO Dashboard → wayofteams; LinkableWork → domain-core; Way of Work → jido-agents + factory | **Locked** |
+| D-004 | Dead products consolidated: CTO Dashboard → wayofteams; LinkableWork → domain-core; Way of Work → jido-agents + smidja | **Locked** |
 | D-005 | Packet model: `packages/` (composable) + `apps/` (entry shells) + `tools/` | **Locked** |
 | D-006 | Stack pillars documented as **target** — confirm each before locking | Candidate |
 | D-007 | **NSR is the compliance layer** — every repo must pass NSR harness | **Locked** |
 | D-008 | Integration via MCP gateway + A2A mesh (not bespoke bridges) | Candidate |
-| D-009 | **factory is reference only.** We build **`wayoffactory`** on a better stack | **Locked** |
+| D-009 | **smidja is reference only.** We build **`wayoffactory`** on a better stack | **Locked** |
 | D-010 | **UX principle: "spaces, not everything at once."** | **Locked** |
 | D-011 | **Client-first product.** Designed for external paying customers | **Locked** |
 | D-012 | **Every project ships project-specific skills** (D-012) | **Locked** |
@@ -85,8 +85,8 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 
 1. **Dual-layer docs** — root routing files + granular sub-documents
 2. **Zero ad-hoc shell commands** — all operations via `.agents/skills/` scripts
-3. **Dual factory** — Embedded Agent Skill Factory + Standalone Electron Factory App
-4. **Deterministic harness (`.factory/`)** — Core Four config, code-based gates, typed envelopes
+3. **Dual smidja** — Embedded Agent Skill Smíðja + Standalone Electron Smíðja App
+4. **Deterministic harness (`.smidja/`)** — Core Four config, code-based gates, typed envelopes
 5. **WayOfTeams sync** — Kanban, Knowledge Base, Anchor Memory via MCP
 6. **No feature duplication** — every feature registered in `FEATURES.md`
 7. **Subfolder AGENTS.md** — every functional subfolder defines scoped boundaries
@@ -98,7 +98,7 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 13. **Developer setup** — `docs/DEVELOPER_SETUP/` documents every dev
 14. **Tech-stack mapping** — `TECH_STACK.md` maps every feature to its pinned stack
 15. **Work with agents per the operating manual** — agents are bounded nodes
-16. **Factory-ready skill set** — every project implements the skills in `docs/project-skills.md`
+16. **Smíðja-ready skill set** — every project implements the skills in `docs/project-skills.md`
 
 ---
 
@@ -125,9 +125,9 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 - [ ] Decide fate of `wayofcollab`, `wayofinvestready`, ona-sphere
 
 ### Phase 2 — NSR compliance bootstrap
-- [ ] Run `.factory/installer/` in target repos
+- [ ] Run `.smidja/installer/` in target repos
 - [ ] Stand up `TECH_STACK.md` / `FEATURES.md` / `STRUCTURE.md` per repo
-- [ ] Add `.agents/skills/` lifecycle/git-ops/features/factory scripts
+- [ ] Add `.agents/skills/` lifecycle/git-ops/features/smidja scripts
 - [ ] **Author project-specific skills (D-012)**
 - [ ] Pass env/paths/platform gates everywhere
 - [ ] Wire WayOfTeams MCP sync per repo
@@ -141,22 +141,22 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 
 ### Phase 4 — Validation
 - [ ] `tools/dev.sh` starts each app standalone AND the whole stack
-- [ ] Factory factory run against refactored repos
+- [ ] Smíðja smidja run against refactored repos
 - [ ] CloudSync hub reconciles multi-edge state
 - [ ] NSR acceptance gates pass for every migrated repo
 - [ ] Trace UI + Langfuse observability
 
 ### Phase 5 — Productization
-- [ ] Factory-as-feature shipped in WayOfTeams
+- [ ] Smíðja-as-feature shipped in WayOfTeams
 - [ ] Pilot client on NSR-compliant `wayoffactory` distribution
-- [ ] Ona ↔ WayOfTeams ↔ Factory full A2A/MCP interop in production
+- [ ] Ona ↔ WayOfTeams ↔ Smíðja full A2A/MCP interop in production
 
 ### Priority Order
 1. **Phase 1 audit** (know where we stand)
 2. **NSR compliance** (the standard everything hangs off)
 3. **`packages/domain-core` + `jido-agents` extraction** (biggest leverage)
 4. **MCP gateway + A2A** (integration backbone)
-5. **`apps/*` consolidation** (Ona/WayOfTeams/Factory/CloudSync on shared core)
+5. **`apps/*` consolidation** (Ona/WayOfTeams/Smíðja/CloudSync on shared core)
 
 ---
 
@@ -165,14 +165,14 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 ### Platform
 - **Live site:** `https://aigeeksnfreaks.zerwiz.org` (Cloudflare tunnel → `localhost:3800`)
 - **App:** Next.js 16 + Tailwind + shadcn/ui + Prisma (SQLite)
-- **Pages:** homepage, meetups, courses, factory, software-factory, way-of-teams, shipped, login, admin API
+- **Pages:** homepage, meetups, courses, smidja, software-smidja, way-of-teams, shipped, login, admin API
 
 ### Capabilities
 | Capability | Tool | How we drive it |
 |---|---|---|
 | **Social posting** (X, LinkedIn, Reddit, Threads, FB, YouTube) | Postiz | Postiz API/UI; scheduled via cron |
 | **Auto-manage WhatsApp / Telegram groups** | Telegram bot (pi) + agents | `telegram-message-handler` skill |
-| **Blog posts** | AG&F (Next.js + Prisma) | factory write → review → publish → Post record |
+| **Blog posts** | AG&F (Next.js + Prisma) | smidja write → review → publish → Post record |
 | **Landing pages + marketing funnels** | AG&F pages | agents update page content; funnels tracked with UTM |
 | **Email campaigns on cron** | Mautic | Mautic campaigns + cron workers |
 | **Scrape potential clients** | Activepieces + crawl4ai | scrapers as workflows: find leads, enrich, drop into Mautic/AG&F |
@@ -200,7 +200,7 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 - [ ] Configure **Mautic** email domain + campaigns; test cron sends
 - [ ] Build the **client-scraper** workflows (Activepieces + crawl4ai)
 - [ ] Build marketing **skills** into `.agents/skills/`
-- [ ] AG&F **blog publishing pipeline** (factory factory → Post → rebuild)
+- [ ] AG&F **blog publishing pipeline** (smidja smidja → Post → rebuild)
 - [ ] **Telegram/WhatsApp group** management via the Telegram bot (pi)
 - [ ] Track **funnels** with UTM + Mautic + Postiz analytics
 
@@ -240,7 +240,7 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 - [ ] Mautic email domain + campaigns — configure sending domain, test cron sends
 - [ ] Client scraper workflows — Activepieces + crawl4ai
 - [ ] Marketing skills into `.agents/skills/`
-- [ ] AG&F blog publishing pipeline — factory factory write→review→publish
+- [ ] AG&F blog publishing pipeline — smidja smidja write→review→publish
 - [ ] Telegram/WhatsApp group management
 - [ ] Funnel tracking — UTM + Mautic + Postiz analytics
 
@@ -250,7 +250,7 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 - [ ] Enforcement owner — who/when runs the acceptance gates?
 
 ### Productization
-- [ ] Factory-as-feature — pricing, tenant scoping, resource limits
+- [ ] Smíðja-as-feature — pricing, tenant scoping, resource limits
 - [ ] Client onboarding — do clients get NSR-compliant repos by default?
 - [ ] sphere — role once the new build lands
 - [ ] Client lifecycle — signup, tenant provisioning, billing/payment, support
@@ -304,7 +304,7 @@ NSR is the **canonical core ruleset** for every Way-Of project. It is what keeps
 | `supabase.zerwiz.org` | 8000 | Supabase stack |
 | `aigeeksnfreaks.zerwiz.org` | 3800 | AG&F blog/marketing |
 | `dojo.zerwiz.org` | 8038 | Dojo |
-| `linuxcommand.zerwiz.org` | 4601 | Factory visualizer |
+| `linuxcommand.zerwiz.org` | 4601 | Smíðja visualizer |
 | `masterplan.zerwiz.org` | 3900 | Masterplan homepage |
 | `obsidian-sync.zerwiz.org` | 5984 | Obsidian LiveSync |
 | `obsidian.zerwiz.org` | 15323 | Obsidian |

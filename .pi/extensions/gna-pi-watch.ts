@@ -4,7 +4,7 @@
 // Pi emits session_shutdown for ordinary same-process replacements (/new, /resume,
 // /fork, reload) as well as terminal quit. This extension binds one generation per
 // session activation. Only the active live generation may start, stop, rearm, or
-// clear the arm child. Replacement session_start (or a fresh factory bind) activates
+// clear the arm child. Replacement session_start (or a fresh smidja bind) activates
 // a new live generation so monitoring can arm again without restarting Pi. Terminal
 // quit leaves the final generation stopped so late callbacks cannot rearm. Stale
 // callbacks from a prior generation are no-ops against the active replacement.

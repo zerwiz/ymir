@@ -79,7 +79,7 @@ async function run() {
       <textarea
         v-model="task"
         rows="3"
-        placeholder="Describe what you want the factory to do…"
+        placeholder="Describe what you want the smidja to do…"
       />
     </label>
 

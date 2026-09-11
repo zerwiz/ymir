@@ -3,13 +3,13 @@
  *
  *   POST /api/chat/message  → send a message to Pi (Kaia), capture the reply
  *   GET  /api/chat/history  → conversation for one session (JSONL on disk)
- *   POST /api/chat/session  → launch a factory run for a team + task
+ *   POST /api/chat/session  → launch a smidja run for a team + task
  *   POST /api/chat/steer    → inject guidance into the active session
  *
  * Conversation is stored as JSONL at <data_dir>/chat-history/<session>.jsonl,
  * one JSON object per line (the data_dir is the sibling of the trace db).
  *
- * This mirrors the existing server style: read-only against factory.db, cautious
+ * This mirrors the existing server style: read-only against smidja.db, cautious
  * about spawning, and everything wrapped by `safely` in the caller.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync } from "node:fs";
@@ -24,7 +24,7 @@ import type {
   SessionStartResponse,
 } from "../shared/types.ts";
 
-const VERBOSE = process.env.FACTORY_CHAT_DEBUG === "1" || process.env.FACTORY_DEBUG === "1";
+const VERBOSE = process.env.SMIDJA_CHAT_DEBUG === "1" || process.env.SMIDJA_DEBUG === "1";
 
 /** Debug helper: always visible in the server log when chat debugging is on. */
 function dbg(...parts: unknown[]): void {
@@ -247,13 +247,13 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
 }
 
 /**
- * Kaia's prompt files (identity + full factory capabilities/tools), appended
+ * Kaia's prompt files (identity + full smidja capabilities/tools), appended
  * to pi's base system prompt so the chat replies as Kaia, not as a generic
  * pi coding agent. Skips paths that don't exist in the target repo.
  */
 function kaiaPromptArgs(cwd: string): string[] {
   const candidates = [
-    "factory/factory_data/prompt_engineering/orchestrator/system.md",
+    "smidja/smidja_data/prompt_engineering/orchestrator/system.md",
     ".agents/skills/smidja/skills/volundr/prompt/kaia-system.md",
   ];
   const args: string[] = [];
@@ -267,22 +267,22 @@ function kaiaPromptArgs(cwd: string): string[] {
 /**
  * GET /api/chat/models — models the CHAT pi process can actually resolve, from
  * pi's own catalog (`pi --list-models`), e.g. opencode-go/qwen3.6-plus. The
- * roster model ids (roster-api) are for factory runs, not the chat -- a roster
+ * roster model ids (roster-api) are for smidja runs, not the chat -- a roster
  * id like lmstudio/qwen3.5-9b may not exist in a machine's pi catalog.
  */
 export { piModels } from "./model-catalog.ts";
 
 /**
- * POST /api/chat/session — launch a factory run for the chosen team + task.
+ * POST /api/chat/session — launch a smidja run for the chosen team + task.
  * Builds a resolved roster config (reusing resolve-config.py), optionally injecting
- * an orchestrator model override, then launches `factory run` detached in the repo.
+ * an orchestrator model override, then launches `smidja run` detached in the repo.
  *
- * Returns the factory_id so the UI can switch to live progress.
+ * Returns the smidja_id so the UI can switch to live progress.
  */
 export async function startSession(
   req: SessionStartRequest,
   dbPath: string,
-  binaryPath = "scripts/factory",
+  binaryPath = "scripts/smidja",
 ): Promise<SessionStartResponse> {
   const root = repoRootOf(dbPath);
   const config = await buildTeamConfig(root, req.roster, req.orchestratorModel);
@@ -299,7 +299,7 @@ export async function startSession(
     },
   );
 
-  // Return immediately with a provisional id; the run's real factory_id is
+  // Return immediately with a provisional id; the run's real smidja_id is
   // extracted from output on a subsequent poll if needed.
   const adwId = `chat-${Date.now().toString(36)}`;
   // Swallow all errors here — this is fire-and-forget background logging and
@@ -308,24 +308,24 @@ export async function startSession(
     .then(async (code) => {
       try {
         const err = code === 0 ? "" : await new Response(proc.stderr).text().catch(() => "");
-        if (code !== 0) console.error(`[chat] factory run exit ${code}: ${err.slice(0, 500)}`);
+        if (code !== 0) console.error(`[chat] smidja run exit ${code}: ${err.slice(0, 500)}`);
         else if (VERBOSE) {
           const out = await new Response(proc.stdout).text().catch(() => "");
-          console.error(`[chat] factory started:\n${out.slice(0, 500)}`);
+          console.error(`[chat] smidja started:\n${out.slice(0, 500)}`);
         }
       } catch (logError) {
         if (VERBOSE) console.error(`[chat] post-run logging failed: ${logError}`);
       }
     })
     .catch((launchError) => {
-      if (VERBOSE) console.error(`[chat] factory run launch error: ${launchError}`);
+      if (VERBOSE) console.error(`[chat] smidja run launch error: ${launchError}`);
     });
 
   return {
     session_id: adwId,
     roster: req.roster,
     model: req.orchestratorModel ?? "",
-    factory_id: adwId,
+    smidja_id: adwId,
   };
 }
 
@@ -338,7 +338,7 @@ async function buildTeamConfig(root: string, roster: string, override?: string):
   let cfgPath: string;
   const base = Bun.spawn(
     ["uv", "run", "--with", "pyyaml", "python", resolveScript],
-    { stdout: "pipe", stderr: "pipe", cwd: root, env: envWith({ FACTORY_ROSTER: roster }) },
+    { stdout: "pipe", stderr: "pipe", cwd: root, env: envWith({ SMIDJA_ROSTER: roster }) },
   );
   const [baseOut, baseErr] = await Promise.all([
     new Response(base.stdout).text(),
@@ -358,8 +358,8 @@ import sys, os, yaml, tempfile
 cfg = yaml.safe_load(open(sys.argv[1]))
 for a in cfg.get("agents", []):
     if a.get("name") == "orchestrator":
-        a["model"] = os.environ["FACTORY_CHAT_ORCHESTRATOR"]
-fd, path = tempfile.mkstemp(suffix=".config.yaml", prefix="factory-chat-orch-")
+        a["model"] = os.environ["SMIDJA_CHAT_ORCHESTRATOR"]
+fd, path = tempfile.mkstemp(suffix=".config.yaml", prefix="smidja-chat-orch-")
 with os.fdopen(fd, "w") as f:
     yaml.safe_dump(cfg, f, sort_keys=False)
 print(path)
@@ -368,7 +368,7 @@ print(path)
     stdout: "pipe",
     stderr: "pipe",
     cwd: root,
-    env: envWith({ FACTORY_CHAT_ORCHESTRATOR: override }),
+    env: envWith({ SMIDJA_CHAT_ORCHESTRATOR: override }),
   });
   const [injOut, injErr] = await Promise.all([
     new Response(inject.stdout).text(),
@@ -393,7 +393,7 @@ export async function steer(dbPath: string, adwId: string, message: string): Pro
 }
 
 function repoRootOf(dbPath: string): string {
-  // dbPath is <repoRoot>/factory/factory_data/factory.db — three dirnames up is the repo root.
+  // dbPath is <repoRoot>/smidja/smidja_data/smidja.db — three dirnames up is the repo root.
   return resolve(dirname(dirname(dirname(dbPath))));
 }
 

@@ -9,7 +9,7 @@ allowed-tools: read, write, edit, bash, grep, glob
 
 ## Sibling skills
 - **`create-new-teams`** / **`create-new-agent`** — creating teams and roles.
-- **`factory` / `factory-launcher` / `start-the-factory`** — running them.
+- **`smidja` / `smidja-launcher` / `smidja-start`** — running them.
 - **`command-repo`** — conventions when work lands in `~/command`.
 
 ## When to use
@@ -20,7 +20,7 @@ allowed-tools: read, write, edit, bash, grep, glob
 ## The three dials (all hand-editable)
 1. **Model** — per (team × agent), in the roster file (`stacks` → per-agent
    `models:` / `tiers:` (the model catalog lives in the same file).
-2. **Prompt** — `factory/factory_data/prompt_engineering/<name>/{system,user}.md`.
+2. **Prompt** — `smidja/smidja_data/prompt_engineering/<name>/{system,user}.md`.
    Who the agent is, and the task template.
 3. **Injection** — what goes into the agent's context before it works: the
    team's `inject:` list (AGENTS.md, skills, memory, prior spec) and the
@@ -45,23 +45,23 @@ and why.
 
 ## 0. Fast path — let the scaffold set it
 
-`factory model set` writes the exact change below (and `model pin <stack> <role>
+`smidja model set` writes the exact change below (and `model pin <stack> <role>
 <model>` is its alias), validates the string against known providers (+ the LM
 Studio catalog for `lmstudio/`), and refuses a small model on
 orchestrator/planner/reviewer:
 
 ```bash
-factory model set cloud-free orchestrator openrouter/qwen3.5-235b-a22b:free   # shared tier
-factory model set local-ui builder lmstudio/frontend-design-expert-8b          # one team (override)
-factory model pin  local-ui builder lmstudio/frontend-design-expert-8b         # alias, stack-forced
-factory doctor --stack local-ui   # green = applied + legal
+smidja model set cloud-free orchestrator openrouter/qwen3.5-235b-a22b:free   # shared tier
+smidja model set local-ui builder lmstudio/frontend-design-expert-8b          # one team (override)
+smidja model pin  local-ui builder lmstudio/frontend-design-expert-8b         # alias, stack-forced
+smidja doctor --stack local-ui   # green = applied + legal
 ```
 The change below is identical — hand-edit only when the export is the point
 (machine-verified either way).
 
 ## 1. Change the model (per team × agent)
 
-In `factory/factory_factory_config/roster.yaml`, target the exact scope:
+In `smidja/smidja_smidja_config/roster.yaml`, target the exact scope:
 
 ```yaml
 # one team only — override just that agent (the runtime resolver reads overrides.<role>.model)
@@ -96,8 +96,8 @@ Selection rules (see `plans/model-team-agent-playbook.md` §1):
 
 ```bash
 curl -s http://localhost:1234/v1/models | python3 -c "import json,sys;print('\n'.join(m['id'] for m in json.load(sys.stdin)['data']))"   # local
-factory doctor                    # planned: models resolve, prompts exist, no 4B coordinator
-factory rosters                   # show what each stack resolves to today
+smidja doctor                    # planned: models resolve, prompts exist, no 4B coordinator
+smidja rosters                   # show what each stack resolves to today
 ```
 A local id missing from `:1234` will fail at spawn — catch it here, in a second,
 not halfway through a run.
@@ -126,7 +126,7 @@ stacks:
   my-team:
     inject:
       - AGENTS.md                       # project rules the builder must follow
-      - factory/factory_data/knowledge/team-notes.md   # domain memory
+      - smidja/smidja_data/knowledge/team-notes.md   # domain memory
 ```
 Keep injection lean — every injected file spends the agent's context window on
 setup instead of work. When in doubt, smaller + focused beats bigger + diffuse.
@@ -134,7 +134,7 @@ setup instead of work. When in doubt, smaller + focused beats bigger + diffuse.
 ## 5. Re-run and confirm
 
 ```bash
-factory run --roster my-team "<ask>"
+smidja run --roster my-team "<ask>"
 ```
 Check the trace (:4601): the changed lane shows the new model, and the
 injected context shows up in the agent's transcript. Report what changed and

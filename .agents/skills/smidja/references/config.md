@@ -1,8 +1,8 @@
 # Config Reference
 
-The full `factory.config.yaml` spec: every field, how defaults merge, and how model / thinking / tools / extensions map onto the coding agent.
+The full `smidja.config.yaml` spec: every field, how defaults merge, and how model / thinking / tools / extensions map onto the coding agent.
 
-It lives at **`factory/factory_factory_config/factory.config.yaml`** — the default path every `factory_*.py` and the justfile resolve, and where `install.py` / `make_config.py` stamp it. Pass `--config <path>` to any factory (or set `FACTORY_CONFIG` for the justfile) to run against a different roster.
+It lives at **`smidja/smidja_smidja_config/smidja.config.yaml`** — the default path every `smidja_*.py` and the justfile resolve, and where `install.py` / `make_config.py` stamp it. Pass `--config <path>` to any smidja (or set `SMIDJA_CONFIG` for the justfile) to run against a different roster.
 
 ## Shape
 
@@ -13,10 +13,10 @@ defaults:
   thinking: medium
   harness_engineering: []
   tools: [read, bash, edit, write, grep, find, ls]
-  data_dir: factory/factory_data
+  data_dir: smidja/smidja_data
 
 observability:
-  db: factory/factory_data/factory.db
+  db: smidja/smidja_data/smidja.db
   poll_ms: 500
 
 agents:
@@ -27,8 +27,8 @@ agents:
     color: "#a78bfa"
     purpose: Turn a request into a plan the builder can implement without asking questions.
     prompt_engineering:
-      system: factory/factory_data/prompt_engineering/planner/system.md
-      user: factory/factory_data/prompt_engineering/planner/user.md
+      system: smidja/smidja_data/prompt_engineering/planner/system.md
+      user: smidja/smidja_data/prompt_engineering/planner/user.md
     harness_engineering:
       - json-enforcer
     tools:
@@ -48,34 +48,34 @@ agents:
 | `color` | hex string | Lane color for every agent that does not set its own. Default empty — the visualizer falls back to its own palette. |
 | `harness_engineering` | list[string] | Coding-agent extensions. Pi: extension names. Claude Code: reserved (MCP, hooks). |
 | `tools` | list[string] | Roster-wide tool allowlist. Every agent that omits its own `tools` inherits this. Unset = all tools usable. |
-| `protected_files` | list[string] | Paths **no** agent may modify unless it names them in its own `writes`. Default: `factory/factory_modules/`, `factory/factory_factory_config/`, `factory/factory_*.py` — an agent must not be able to edit the machinery that decides whether its work passed. |
-| `data_dir` | path | Runtime home. Sessions land at `{data_dir}/sessions/{factory_id}/{agent_name}/`. Default `factory/factory_data`. |
+| `protected_files` | list[string] | Paths **no** agent may modify unless it names them in its own `writes`. Default: `smidja/smidja_modules/`, `smidja/smidja_smidja_config/`, `smidja/smidja_*.py` — an agent must not be able to edit the machinery that decides whether its work passed. |
+| `data_dir` | path | Runtime home. Sessions land at `{data_dir}/sessions/{smidja_id}/{agent_name}/`. Default `smidja/smidja_data`. |
 
 ### `observability`
 
 | Field | Type | Meaning |
 |---|---|---|
-| `db` | path | SQLite trace db. `tracer.py` writes it directly; the visualizer polls it. Default `factory/factory_data/factory.db`. |
+| `db` | path | SQLite trace db. `tracer.py` writes it directly; the visualizer polls it. Default `smidja/smidja_data/smidja.db`. |
 | `poll_ms` | int | Visualizer live-poll cadence in ms. History uses the same queries, lazy-paged. Default `500`. |
 
 ### `agents[]`
 
 | Field | Required | Meaning |
 |---|---|---|
-| `name` | yes | The identifier factory scripts use. **factory name agents, never models.** |
+| `name` | yes | The identifier smidja scripts use. **smidja name agents, never models.** |
 | `purpose` | yes | One sentence: what this agent is for. Should match its `system.md` Purpose. |
 | `prompt_engineering.system` | yes | Path to the system prompt — who the agent is, its single purpose, its output contract. |
 | `prompt_engineering.user` | yes | Path to the default user prompt — the task template with `{{prompt}}`, `{{previous_envelope}}`, `{{context_handoff_dir}}`. |
-| `color` | no | Hex swatch (`"#a78bfa"`) for this agent's lane in the visualizer. Travels config → `agent_sessions.color` → `/api/sessions/:factory_id`, and rides the `agent_start` event so a lane is colored while the agent is still running. Unset = the UI's fallback palette. |
+| `color` | no | Hex swatch (`"#a78bfa"`) for this agent's lane in the visualizer. Travels config → `agent_sessions.color` → `/api/sessions/:smidja_id`, and rides the `agent_start` event so a lane is colored while the agent is still running. Unset = the UI's fallback palette. |
 | `coding_agent`, `model`, `thinking`, `color`, `harness_engineering` | no | Override the corresponding `defaults` key. |
 | `tools` | no | Allowlist. **Omitting the key means all tools usable.** A capability list, not a boundary — see `writes`. |
 | `writes` | no | What this agent may modify **in the repo**, enforced after every call. Omitted = unrestricted (still barred from `protected_files`). `[]` = no repo writes at all. A list = only those paths: a trailing `/` is a directory prefix, `*` matches within one path segment, `**` crosses segments, anything else is an exact path. Naming a `protected_files` path here is what unlocks it. **The session runtime under `data_dir` is always writable** — `writes: []` means read-only with respect to the repo, not unable to write its own report. |
 
-Output types are deliberately absent: config defines who an agent *is*; the factory call site defines how it's *used*. One agent serves many calls — same system prompt, different user prompt + output type per call.
+Output types are deliberately absent: config defines who an agent *is*; the smidja call site defines how it's *used*. One agent serves many calls — same system prompt, different user prompt + output type per call.
 
 ## Defaults merging
 
-`agents.py` merges each entry **over** `defaults`, key by key. An entry states only what differs; anything unset inherits. `agents.validate(cfg, REQUIRED_AGENTS)` then confirms every name an factory declares exists, resolves to a usable coding agent + model, and has both prompt files present on disk. Any miss fails the run immediately — **no agent is ever spawned against a half-valid config.**
+`agents.py` merges each entry **over** `defaults`, key by key. An entry states only what differs; anything unset inherits. `agents.validate(cfg, REQUIRED_AGENTS)` then confirms every name an smidja declares exists, resolves to a usable coding agent + model, and has both prompt files present on disk. Any miss fails the run immediately — **no agent is ever spawned against a half-valid config.**
 
 ## Thinking levels
 
@@ -131,7 +131,7 @@ engineer's uncommitted work; `write` reaches any path, not only the one report
 file an agent was granted it for. So "this agent changes nothing" is a claim a
 tool list can state but never keep.
 
-`factory_modules/permissions.py` keeps it, the same way every other claim in this
+`smidja_modules/permissions.py` keeps it, the same way every other claim in this
 system is kept — after the fact, against the repo. Before an agent's first
 prompt the working tree's change-set is fingerprinted; after its last send
 (including JSON retries and gate corrections) it is fingerprinted again. Any
@@ -153,7 +153,7 @@ redo; a write has already happened, so re-prompting fixes nothing. Instead:
 
 ```yaml
 defaults:
-  protected_files: [factory/factory_modules/, factory/factory_factory_config/, "factory/factory_*.py"]
+  protected_files: [smidja/smidja_modules/, smidja/smidja_smidja_config/, "smidja/smidja_*.py"]
 
 agents:
   - name: builder      # no `writes` key -> unrestricted, minus protected_files

@@ -10,13 +10,13 @@ allowed-tools: read, write, edit, bash, grep, glob
 ## Sibling skills
 - **`create-new-teams`** — teams (stacks) built from agent roles.
 - **`add-or-edit-ai-models`** — tuning an existing agent's model/prompt/injection.
-- **`factory` / `factory-launcher` / `start-the-factory`** — running the team.
+- **`smidja` / `smidja-launcher` / `smidja-start`** — running the team.
 - **`command-repo`** — conventions when work lands in `~/command`.
 
 ## The one mental model
 **An agent is a role, defined once; it carries no model of its own.** A role =
 one `role_defaults:` entry (purpose, thinking, tools, writes, color) +
-one prompt pair (`factory/factory_data/prompt_engineering/<name>/{system,user}.md`).
+one prompt pair (`smidja/smidja_data/prompt_engineering/<name>/{system,user}.md`).
 The model is assigned later, per team, in the stack. So creating an agent is
 creating the *role* — and every team that lists it gets a model for it.
 
@@ -46,22 +46,22 @@ State your choices before writing.
 
 ## 0. Fast path — let the scaffold write it
 
-`factory agent new` appends the `role_defaults:` entry below, scaffolds the prompt
+`smidja agent new` appends the `role_defaults:` entry below, scaffolds the prompt
 pair, assigns a lane color, and refuses a bad name up front:
 
 ```bash
-factory agent new my-role --from planner \
+smidja agent new my-role --from planner \
   --thinking medium --tools read,edit,write,bash,grep,find,ls \
   --writes specs/ \
   --purpose "<one sentence from the interview>"
-then:  factory doctor    # green = roles known, prompts on disk
+then:  smidja doctor    # green = roles known, prompts on disk
 ```
 Hand-editing below stays valid — the scaffold writes the same block + prompt
 pair, and preserves every comment in the file.
 
 ## 1. Hand-edit the role (roster file)
 
-Add the role to the `role_defaults:` block in `factory/factory_factory_config/roster.yaml`:
+Add the role to the `role_defaults:` block in `smidja/smidja_smidja_config/roster.yaml`:
 
 ```yaml
 role_defaults:
@@ -76,7 +76,7 @@ role_defaults:
 Rules (origin `references/config.md`):
 - **tools** is an allowlist; omitted = all builtins. `grep/find/ls` are off in
   bare pi — name them. If the role spawns subagents, add `subagent_*` tool names
-  **and** `harness_engineering: [factory/factory_data/harness_engineering/subagents.ts]`.
+  **and** `harness_engineering: [smidja/smidja_data/harness_engineering/subagents.ts]`.
 - **writes** is the repo boundary enforced after every call: trailing `/` =
   dir prefix, `*` one segment, `**` crosses, else exact path. `data_dir`
   (reports/sessions) is always writable.
@@ -84,7 +84,7 @@ Rules (origin `references/config.md`):
 
 ## 2. Write the prompt pair (hand-editable, tunable — the point)
 
-Create `factory/factory_data/prompt_engineering/<name>/system.md` and `user.md`:
+Create `smidja/smidja_data/prompt_engineering/<name>/system.md` and `user.md`:
 
 - `system.md` — who the agent is; repeat `purpose` verbatim (they must not
   drift); its output contract.
@@ -93,8 +93,8 @@ Create `factory/factory_data/prompt_engineering/<name>/system.md` and `user.md`:
   the agent needs injected (AGENTS.md, skills, examples) can be appended here or
   wired through the team's `inject:` list.
 
-**Triad rule:** the output *type* (`factory/factory_modules/data_types.py`), the
-`## Report` example (`user.md`), and `output_type=` at the factory call site are one
+**Triad rule:** the output *type* (`smidja/smidja_modules/data_types.py`), the
+`## Report` example (`user.md`), and `output_type=` at the smidja call site are one
 thing — change one, change all three in the same edit.
 
 Clone path shortcut: copying `planner`'s pair and editing the Purpose/Report
@@ -104,13 +104,13 @@ sections is the fastest correct start.
 
 - Add the name to the `agents:` list of any stack that should contain it
   (then give it a model there — per team).
-- If an factory should use it directly, list it in that factory's `REQUIRED_AGENTS` /
-  phase `owner=` (factory name agents, never models).
+- If an smidja should use it directly, list it in that smidja's `REQUIRED_AGENTS` /
+  phase `owner=` (smidja name agents, never models).
 
 ## 4. Validate
 
 ```bash
-factory doctor          # planned: role exists, prompts present, model resolvable, no 4B coordinator
+smidja doctor          # planned: role exists, prompts present, model resolvable, no 4B coordinator
 ```
 A role with no prompt pair or an unresolvable model fails before anything
 spawns — that's the design, not a bug.

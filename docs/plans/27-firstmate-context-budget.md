@@ -7,7 +7,7 @@
 
 ## Problem Statement
 
-Dex Horthy: *"The 'dumb zone' at ~50% context is real — for models AND humans."* Current factory has no token budget awareness. Agents token-max while bottleneck is code review, leading to degraded model quality in the second half of context window.
+Dex Horthy: *"The 'dumb zone' at ~50% context is real — for models AND humans."* Current smidja has no token budget awareness. Agents token-max while bottleneck is code review, leading to degraded model quality in the second half of context window.
 
 ## Current State (Ymir Integration)
 

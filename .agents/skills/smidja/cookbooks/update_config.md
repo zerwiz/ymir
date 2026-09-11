@@ -1,6 +1,6 @@
 # Update Config
 
-Add or retune agents in `factory.config.yaml`.
+Add or retune agents in `smidja.config.yaml`.
 
 ## Retune model or thinking
 
@@ -16,7 +16,7 @@ Write the model as `provider/model-id`, never a bare id. The same model is usual
 
 Thinking levels are Pi's reasoning effort: `off | minimal | low | medium | high | xhigh | max`. It only bites when the model is registered with `reasoning: true` in `~/.pi/agent/models.json`.
 
-**A model change means a fresh session.** `agent_map.json` records the model each coding-agent session was created with. When a joined run (`--factory-id`) finds the config's model no longer matches the recorded one, that agent starts a **new** session rather than resuming — the map is updated, never a bad resume. Thinking changes do not invalidate a session; model changes do. Expect the agent to lose its accumulated context window on the first run after the change.
+**A model change means a fresh session.** `agent_map.json` records the model each coding-agent session was created with. When a joined run (`--smidja-id`) finds the config's model no longer matches the recorded one, that agent starts a **new** session rather than resuming — the map is updated, never a bad resume. Thinking changes do not invalidate a session; model changes do. Expect the agent to lose its accumulated context window on the first run after the change.
 
 ## Recolor an agent's lane
 
@@ -86,17 +86,17 @@ Skip the second half and it fails silently: extension loaded, run green, tool ne
 
 ## Add a new agent
 
-Three steps, all required — skipping any one fails `agents.validate()` at factory startup, before anything spawns:
+Three steps, all required — skipping any one fails `agents.validate()` at smidja startup, before anything spawns:
 
-1. **Prompts.** Create `factory/factory_data/prompt_engineering/{name}/system.md` (Purpose + Instructions — the agent's static identity, nothing else) and `user.md` (an h3 per incoming datum: `{{prompt}}`, `{{previous_envelope}}`, `{{context_handoff_dir}}`, then the task, then a `## Report` section showing the exact output JSON). Copy an existing pair as the shape.
+1. **Prompts.** Create `smidja/smidja_data/prompt_engineering/{name}/system.md` (Purpose + Instructions — the agent's static identity, nothing else) and `user.md` (an h3 per incoming datum: `{{prompt}}`, `{{previous_envelope}}`, `{{context_handoff_dir}}`, then the task, then a `## Report` section showing the exact output JSON). Copy an existing pair as the shape.
 2. **Config entry.** Name, purpose, prompt refs, plus anything that differs from `defaults`.
-3. **An output type.** Every agent call parses against a concrete Pydantic model in `factory_modules/data_types.py`. If none of `PlanOutput`, `BuildOutput`, `ScoutOutput`, `ReviewOutput`, `DocumentOutput` fits the new agent's report, add one — see `update_modules.md`. The user prompt's `Report` section must show exactly that JSON shape.
+3. **An output type.** Every agent call parses against a concrete Pydantic model in `smidja_modules/data_types.py`. If none of `PlanOutput`, `BuildOutput`, `ScoutOutput`, `ReviewOutput`, `DocumentOutput` fits the new agent's report, add one — see `update_modules.md`. The user prompt's `Report` section must show exactly that JSON shape.
 
-Then name the agent in an factory's `REQUIRED_AGENTS` and call it.
+Then name the agent in an smidja's `REQUIRED_AGENTS` and call it.
 
 ## Rules that do not bend
 
-- factory scripts name **agents**, never models. Swapping a model is a config edit and touches no Python.
+- smidja scripts name **agents**, never models. Swapping a model is a config edit and touches no Python.
 - One agent, one prompt, one purpose. If an entry needs two purposes, it is two agents.
 - Output types never appear in config — they live at the call site, paired with the user prompt.
 
