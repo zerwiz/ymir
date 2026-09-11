@@ -398,6 +398,8 @@ export const useYmir = create<YmirState>((set, get) => ({
 
   enterDemo: () => {
     const session = githubAuthorize(MOCK_IDENTITIES[0]);
+    // Demo is anonymous — never the operator's name.
+    session.user = { login: 'allfather', name: 'Allfather', email: 'allfather@ymir.local', avatar: 'AL' };
     saveSession(session);
     document.documentElement.dataset.realm = 'work';
     const { accentId, customAccent } = get();
