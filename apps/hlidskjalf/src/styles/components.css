@@ -267,13 +267,20 @@
 /* --- Trace row ------------------------------------------------ */
 .trace-row {
   display: grid;
-  grid-template-columns: 150px 120px 100px 1fr 74px;
+  grid-template-columns: 128px 112px minmax(150px, 220px) minmax(0, 1fr) 96px;
   gap: var(--ymir-space-3);
   padding: 7px var(--ymir-space-4);
   border-bottom: 1px solid rgba(51, 65, 85, 0.4);
   font-family: var(--ymir-font-mono);
   font-size: 12px;
   align-items: center;
+}
+/* every cell truncates with an ellipsis — no cell may spill into its neighbour */
+.trace-row > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .trace-row:hover {
   background: var(--ymir-bg-3);
@@ -289,9 +296,6 @@
 }
 .trace-row .event {
   color: var(--ymir-text-1);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .trace-row .checksum {
   color: var(--ymir-text-3);
