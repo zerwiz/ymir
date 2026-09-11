@@ -5,6 +5,7 @@ import { applyMeta } from '../data/metadata';
 import { Rail } from './Rail';
 import { Topbar } from './Topbar';
 import { BottomStream } from './BottomStream';
+import { MobileNav } from './MobileNav';
 import { Fleet } from '../gates/Fleet';
 import { Tasks } from '../gates/Tasks';
 import { Well } from '../gates/Well';
@@ -125,6 +126,7 @@ export function Shell() {
         <Stage />
       </main>
       <BottomStream />
+      <MobileNav />
     </div>
   );
 }

@@ -22,3 +22,10 @@ createRoot(el).render(
     <App />
   </StrictMode>,
 );
+
+// PWA: register the app-shell service worker (production only).
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
