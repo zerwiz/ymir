@@ -1348,7 +1348,7 @@ function workspaceProvision(name: string, kind: string, domains: string) {
 /* ---- tunnel gate (hardcoded for now) ------------------------------------- */
 // Temporary HTTP Basic Auth for the public tunnel. Override with
 // HLIDSKJALF_AUTH="user:pass"; replace with Heimdall (oauth2-proxy) later.
-const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? 'zerwiz:allfather';
+const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? '';
 const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
 const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? 'ymirsmidjadell.zerwiz.org').toLowerCase();
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
@@ -1504,7 +1504,7 @@ const server = Bun.serve({
     try {
       if (p === '/api/login' && req.method === 'POST') {
         const b = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
-        if (`${b.username ?? ''}:${b.password ?? ''}` === GATE_AUTH) {
+        if (GATE_AUTH && `${b.username ?? ''}:${b.password ?? ''}` === GATE_AUTH) {
           const token = crypto.randomUUID();
           SESSIONS.add(token);
           return new Response(JSON.stringify({ ok: true }), {
@@ -1516,7 +1516,7 @@ const server = Bun.serve({
         }
         return json({ error: 'invalid credentials' }, 401);
       }
-      if (p === '/api/session') return json({ authed: isAuthed(req) });
+      if (p === '/api/session') return json({ authed: GATE_AUTH ? isAuthed(req) : true });
       if (p === '/api/logout' && req.method === 'POST') {
         SESSIONS.delete(cookieToken(req));
         return new Response(JSON.stringify({ ok: true }), {
@@ -1533,7 +1533,7 @@ const server = Bun.serve({
         }
         return proxySmidja(req, url);
       }
-      if (p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
+      if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
       if (p === '/api/me') return json({ login: 'Allfather', realm: 'work' });
       if (p === '/api/workspace') {
