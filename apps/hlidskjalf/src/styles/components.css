@@ -740,6 +740,139 @@
   max-height: 520px;
 }
 
+/* Markdown reader (react-markdown + remark-gfm) */
+.file-preview.md-preview {
+  font-family: var(--ymir-font-body);
+  font-size: 13.5px;
+  line-height: 1.65;
+  white-space: normal;
+}
+.md-render > :first-child {
+  margin-top: 0;
+}
+.md-render > :last-child {
+  margin-bottom: 0;
+}
+.md-render h1,
+.md-render h2,
+.md-render h3,
+.md-render h4 {
+  color: var(--ymir-text-0);
+  line-height: 1.25;
+  margin: var(--ymir-space-5) 0 var(--ymir-space-3);
+}
+.md-render h1 {
+  font-size: 21px;
+  padding-bottom: var(--ymir-space-2);
+  border-bottom: 1px solid var(--ymir-steel-1);
+}
+.md-render h2 {
+  font-size: 17px;
+}
+.md-render h3 {
+  font-size: 15px;
+}
+.md-render h4 {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ymir-text-2);
+}
+.md-render p {
+  margin: 0 0 var(--ymir-space-3);
+}
+.md-render a {
+  color: var(--ymir-cyan-1);
+}
+.md-render a:hover {
+  text-decoration: underline;
+}
+.md-render strong {
+  color: var(--ymir-text-0);
+}
+.md-render ul,
+.md-render ol {
+  margin: 0 0 var(--ymir-space-3);
+  padding-left: 22px;
+}
+.md-render li {
+  margin: 2px 0;
+}
+.md-render li::marker {
+  color: var(--realm-tint);
+}
+.md-render code {
+  font-family: var(--ymir-font-mono);
+  font-size: 12px;
+  background: var(--ymir-bg-3);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.md-render pre {
+  background: var(--ymir-bg-0);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  padding: var(--ymir-space-3);
+  overflow-x: auto;
+  margin: 0 0 var(--ymir-space-3);
+}
+.md-render pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.md-render blockquote {
+  margin: 0 0 var(--ymir-space-3);
+  padding: var(--ymir-space-1) var(--ymir-space-3);
+  border-left: 3px solid var(--realm-tint);
+  color: var(--ymir-text-2);
+}
+.md-render hr {
+  border: 0;
+  border-top: 1px solid var(--ymir-steel-1);
+  margin: var(--ymir-space-5) 0;
+}
+.md-render table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 var(--ymir-space-3);
+  font-size: 12px;
+}
+.md-render th,
+.md-render td {
+  border: 1px solid var(--ymir-steel-1);
+  padding: 5px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+.md-render th {
+  background: var(--ymir-bg-3);
+  color: var(--ymir-text-0);
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.md-render input[type='checkbox'] {
+  margin-right: 6px;
+  accent-color: var(--realm-tint);
+}
+.md-render img {
+  max-width: 100%;
+}
+.ep-body .md-render p {
+  margin: 0 0 6px;
+}
+.modal-content.md-preview {
+  font-family: var(--ymir-font-body);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: normal;
+}
+
 /* Chat */
 .chat-layout {
   display: grid;

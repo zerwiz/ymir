@@ -110,10 +110,16 @@ function loadAccent(): { accentId: string; customAccent: string | null } {
 export const STREAM_MIN = 46;
 export const STREAM_MAX = 680;
 
+/** The stream can be drawn all the way up to just under the header. */
+function streamMax(): number {
+  const vh = typeof window !== 'undefined' ? window.innerHeight : STREAM_MAX;
+  return Math.max(STREAM_MAX, vh - 64);
+}
+
 function loadStreamHeight(): number {
   try {
     const v = Number(localStorage.getItem('ymir.stream-height'));
-    if (Number.isFinite(v) && v >= STREAM_MIN) return Math.min(STREAM_MAX, v);
+    if (Number.isFinite(v) && v >= STREAM_MIN) return Math.min(streamMax(), v);
   } catch {
     /* ignore */
   }
@@ -336,7 +342,7 @@ export const useYmir = create<YmirState>((set, get) => ({
     // Smíðja loads on its own track so a slow endpoint never holds its gates hostage.
     void get().refreshSmidja();
     try {
-      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir] =
+      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
           gateApi.agents().catch(() => get().agents),
@@ -349,8 +355,9 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.runtime().catch(() => get().runtime),
           gateApi.cron().catch(() => get().cron),
           gateApi.mimirHealth().catch(() => null),
+          gateApi.skills().catch(() => get().skills),
         ]);
-      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, live: true });
+      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills, live: true });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set({ live: false });
@@ -416,7 +423,8 @@ export const useYmir = create<YmirState>((set, get) => ({
   provision: (input) => {
     const session = provisionWorkspace(input);
     saveSession(session);
-    const realm = session.tenants[0]?.realm ?? 'way-of';
+    const slug = input.name.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/(^-|-$)/g, '');
+    const realm = session.tenants.find((t) => t.realm === slug)?.realm ?? session.tenants[0]?.realm ?? 'work';
     document.documentElement.dataset.realm = realm;
     const { accentId, customAccent, tenantColors } = get();
     applyAccent(
@@ -527,7 +535,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   setStreamHeight: (height) => {
-    const clamped = Math.min(STREAM_MAX, Math.max(STREAM_MIN, Math.round(height)));
+    const clamped = Math.min(streamMax(), Math.max(STREAM_MIN, Math.round(height)));
     try {
       localStorage.setItem('ymir.stream-height', String(clamped));
     } catch {
@@ -550,11 +558,12 @@ export const useYmir = create<YmirState>((set, get) => ({
     set((s) => {
       const g = event.gate ?? gateForModule(event.module) ?? s.gate;
       const tagged = { ...event, gate: g };
-      const cur = s.streams[g] ?? [];
-      const all = s.streams.all ?? [];
+      const base = s.streams ?? {};
+      const cur = base[g] ?? [];
+      const all = base.all ?? [];
       return {
         streams: {
-          ...s.streams,
+          ...base,
           [g]: [tagged, ...cur].slice(0, STREAM_WINDOW),
           all: [tagged, ...all].slice(0, STREAM_WINDOW),
         },

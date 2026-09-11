@@ -25,7 +25,7 @@ export function BottomStream() {
   const [filter, setFilter] = useState<'all' | StreamEvent['kind']>('all');
 
   // Each page keeps its own rolling 40; fall back to the fleet-wide feed.
-  const page = streams[gate]?.length ? streams[gate] : streams.all ?? [];
+  const page = streams?.[gate]?.length ? streams[gate] : streams?.all ?? [];
   const shown = (filter === 'all' ? page : page.filter((e) => e.kind === filter)).slice(0, 40);
 
   function beginResize(e: ReactPointerEvent<HTMLDivElement>) {
@@ -77,7 +77,7 @@ export function BottomStream() {
         <span className={`live-dot ${paused ? 'paused' : ''}`} aria-hidden="true" />
         <span className="stream-title">The Stream</span>
         <span className="mono dim" style={{ fontSize: 10 }}>
-          {gate} · ratatoskr · runes · last 40
+          {gate} · last 40
         </span>
 
         <div className="stream-tabs" role="group" aria-label="Stream filter">
@@ -102,6 +102,11 @@ export function BottomStream() {
       </div>
 
       <div className="stream-body" role="log" aria-live="polite">
+        {shown.length === 0 ? (
+          <div className="mono dim" style={{ fontSize: 11, padding: 8 }}>
+            — no live events —
+          </div>
+        ) : null}
         {shown.map((e) => (
           <div className="stream-line" key={e.id}>
             <span className="ts">{fmt(e.ts)}</span>

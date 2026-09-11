@@ -31,7 +31,8 @@ export function Fleet() {
   const tasks = useYmir((s) => s.tasks);
   const realm = useYmir((s) => s.realm);
   const session = useYmir((s) => s.session);
-  const trace = useYmir((s) => s.traceability);
+  const runes = useYmir((s) => s.runes);
+  const integrity = runes.length ? runes.filter((r) => r.checksum).length / runes.length : null;
   const live = useYmir((s) => s.live);
   const { openModal } = useUI();
   const def = useTenantDef(realm, session?.tenants.find((t) => t.realm === realm));
@@ -86,7 +87,7 @@ export function Fleet() {
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
         <MetricTile label="Agents nominal" value={`${online}/${agents.length}`} delta={`${agents.length} registered`} />
         <MetricTile label="Active tasks" value={active} delta={`${tasks.length} forge orders`} />
-        <MetricTile label="Traceability" value={trace.toFixed(3)} delta="target 0.984" tone="var(--ymir-ok)" />
+        <MetricTile label="Ledger integrity" value={integrity != null ? integrity.toFixed(3) : '—'} delta={`${runes.length} runes`} tone="var(--ymir-ok)" />
         <MetricTile label="Utgard sealed" value={sealed} delta={`${working} degraded`} tone="var(--ymir-warn)" />
       </div>
 

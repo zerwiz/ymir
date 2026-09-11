@@ -1,13 +1,21 @@
-# YMIR — The Multi-Tenant Agent Operating System
+# YMIR — The Single-Tenant Agent Operating System
 
 > **One operator. One repo. A whole business, run by a Norse-named agent fleet.**
 
-![Ymir — the multi-tenant agent OS](assets/ymir-banner-03.png)
+![Ymir — the single-tenant agent OS](assets/ymir-banner-03.png)
 
 Ymir is a lean, single-operator agentic OS. You are the **Allfather**; **Brokk** is
 your primary agent; **Eindri** are the isolated workers it dispatches. Everything —
 development, marketing, business strategy, life — runs from one repository, with an
-audit ledger, a memory well, seven realms, and a control plane you actually look at.
+audit ledger, a memory well, one tenant and its workspaces, and a control plane you actually look at.
+
+---
+
+## The Allfather's Chain
+
+The Allfather holds the only chain. If the Allfather does not draw it, Ymir walks
+the machine as the Allfather walks it — no gate between the agent and the tools,
+no second master but the Allfather's own hand.
 
 ---
 
@@ -24,7 +32,7 @@ Every significant action is carved into **Runes**, an append-only ledger. Work
 passes the **seven gates** and is built on **borrowed anvils** — validated open
 source first, always. The full tale: [`docs/lore.md`](docs/lore.md).
 
-| Realm | Role |
+| Component | Role |
 |---|---|
 | **Ymir** | the platform / host daemon |
 | **Brokk** | the primary autonomous agent |
@@ -34,14 +42,6 @@ source first, always. The full tale: [`docs/lore.md`](docs/lore.md).
 | **Utgard** | ephemeral Docker sandboxes — the execution barrier |
 | **Runes** | the append-only audit ledger |
 | **Hlidskjalf** | the control plane / observability |
-
----
-
-## The Allfather's Chain
-
-The Allfather holds the only chain. If the Allfather does not draw it, Ymir walks
-the machine as the Allfather walks it — no gate between the agent and the tools,
-no second master but the Allfather's own hand.
 
 ---
 
@@ -76,8 +76,8 @@ no second master but the Allfather's own hand.
 | Tunnel | **Gjallarhorn** | Cloudflare outbound tunnel |
 | Dashboard | **Hlidskjalf** | observability & control plane |
 | File browser | **Skrymir** | web file explorer |
-| Tenants | **Svartalfaheim** | scoped realm workspaces |
-| Shared space | **Midgard** | cross-tenant assets & repos |
+| Workspaces | **workspace/** | personal & work scopes over domains |
+| Shared space | **Midgard** | shared assets & repos |
 | Message bus | **Ratatoskr** | A2A 1.0 backbone (cards, lifecycle, Redis) |
 | Vector memory | **Mimirsbrunn** | engram store + Kaia's bridge (`:4602`) |
 | Audit ledger | **Runes** | append-only system log |
@@ -239,24 +239,37 @@ full spec in [`docs/design.md`](docs/design.md).
 
 ## Folder Structure
 
+> **Single tenant.** One operator (the Allfather), many **workspaces**
+> (personal · work) over knowledge **domains** (company · marketing ·
+> development · life · me). Houses (Ymir Labs, Brokk Forge, …) are brands, not
+> isolation. OSS engines under Norse shells: **treehouse** → Yggdrasil
+> (worktrees), **sandcastle** → Utgard (sandboxes), **no-mistakes** →
+> Mjollnir/Glitnir (clean-PR gate).
+
 ```
 ymir/
 ├── AGENTS.md                  # the always-loaded contract (Brokk)
-├── bin/                       # Norse runtime CLI: saga, syn, rodd, gleipnir, nornir, einherjar…
+├── bin/                       # Norse runtime: saga, syn, rodd, gleipnir, nornir, einherjar,
+│                              #   yggdrasil (treehouse), utgard (sandcastle), mimir-bridge,
+│                              #   ymir-install, workspace-provision, project-git, mjollnir
 ├── .agents/
 │   ├── agents/                # Brokk + the Eindri profiles (and Galdr)
 │   ├── skills/                # Gungnir skills (galdr, tyr-check, hvild-afk, …)
 │   ├── backend/               # vendored fleet backend
 │   ├── config/                # ro, cron.yaml, eindri-dispatch, eindri-harness
-│   ├── memory/                # Mimirsbrunn well (episodes) + Runes
-│   ├── sandbox/               # Utgard Docker barrier
+│   ├── memory/               # Mimirsbrunn well — kaia.engram + episodes.jsonl
+│   ├── sandbox/               # Utgard barrier (Dockerfile.utgard, utgard.config.json)
 │   └── bus/                   # Ratatoskr (A2A) protocol
-├── .pi/extensions/            # Pi adapters (Sýn, Gná, Ró, Skuld)
+├── .pi/extensions/  .pi/mcp.json   # Pi adapters (Sýn, Gná, Ró, Skuld) + engram MCP
 ├── .opencode/plugins/         # OpenCode adapters (Sága, Sýn, Rödd)
-├── apps/hlidskjalf/           # the control plane (React + Vite + gate API)
-├── midgard/                   # shared workspace + design tokens
-├── svartalfaheim/             # realms/tenants: way-of, zerwiz, craig
-├── workspace/                 # audit + config
+├── apps/hlidskjalf/           # the control plane (React + Vite + Bun gate API)
+├── midgard/                   # shared assets, design tokens, icons
+├── svartalfaheim/             # company container root (WayOf) — future multi-user
+├── workspace/                 # THE SINGLE TENANT: work/ · personal/ · companies/ ·
+│                              #   workspaces.yaml · projects.yaml · memory/ · INSTALL.md
+├── smidja/                    # the smithy engine + smidja.db (runs, stats, trace)
+├── state/                     # runtime state: lock, chat/, bridges, cron
+├── scripts/start.sh stop.sh   # raise/lower the whole system
 ├── assets/                    # art, the OS diagram, reference material
 └── docs/                      # lore, architecture, masterplan, plans, session-start
 ```
