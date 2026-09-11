@@ -223,9 +223,9 @@ status_is_paused_or_Allfather_held() {  # <status-line>
 # ends at the first tag rather than special-casing "[key=...]".
 #
 # Correlation tokens. That bracket rule already covers every BRACKETED tag,
-# including the "[corr=<16 hex>]" form bin/brokk-secondmate-report.sh writes. It
+# including the "[corr=<16 hex>]" form bin/brokk-eindri-home-report.sh writes. It
 # does not cover the UNBRACKETED token that bin/brokk-pending-reply-lib.sh writes
-# (fm_pending_reply_corr_token), which a secondmate answering a marked request
+# (fm_pending_reply_corr_token), which a eindri-home answering a marked request
 # echoes on its parent status line ahead of the key tag (bin/erindi-brief.sh), so a
 # real transition routinely arrives as
 #   needs-decision corr=<16 hex> [key=texte-du-mur]: <summary>
@@ -257,7 +257,7 @@ status_is_paused_or_Allfather_held() {  # <status-line>
 # extra words and therefore stays a non-transition, exactly as before.
 #
 # The 16 hex classes are written out literally rather than built from a
-# variable, the same way bin/brokk-secondmate-report.sh validates the id it is
+# variable, the same way bin/brokk-eindri-home-report.sh validates the id it is
 # handed: a variable holding a glob is only re-read as a pattern under some
 # shells' expansion rules, and a safety parse must not turn on that.
 #
@@ -1673,7 +1673,7 @@ BROKK_WORKTREE_WRITE_TIMEOUT=${BROKK_WORKTREE_WRITE_TIMEOUT:-10}
 # evidence therefore always leaves the caller's existing escalation schedule
 # untouched, so a crew that writes nothing still escalates exactly as before.
 #
-# A kind=secondmate task records a provisioned brokk home, not a code tree, and
+# A kind=eindri-home task records a provisioned brokk home, not a code tree, and
 # such a home runs its OWN supervision inside it: its state/ directory churns a
 # watcher beacon, pane hashes, and heartbeats whether or not the mate is producing
 # anything, so a walk there would report liveness for a mate that has done nothing.
@@ -1699,8 +1699,8 @@ crew_worktree_written_since() {  # <id> <state> <anchor-file>
   wt=$(grep '^worktree=' "$state/$id.meta" 2>/dev/null | tail -1 | cut -d= -f2- || true)
   [ -n "$wt" ] && [ -d "$wt" ] || return 1
   kind=$(grep '^kind=' "$state/$id.meta" 2>/dev/null | tail -1 | cut -d= -f2- || true)
-  [ "$kind" != secondmate ] || return 1
-  if [ -e "$wt/.brokk-secondmate-home" ] || [ -L "$wt/.brokk-secondmate-home" ]; then
+  [ "$kind" != eindri-home ] || return 1
+  if [ -e "$wt/.brokk-eindri-home-home" ] || [ -L "$wt/.brokk-eindri-home-home" ]; then
     return 1
   fi
   read -r -a names <<< "$BROKK_WORKTREE_WRITE_PRUNE"
@@ -1726,7 +1726,7 @@ crew_worktree_written_since() {  # <id> <state> <anchor-file>
 # Files are mapped to task ids by stripping the .status / .turn-ended suffix;
 # a no-verb wake with nothing
 # provably working must surface, so an empty/unresolvable list returns 1.
-# A kind=secondmate task's .status signal is never absorbable here regardless of
+# A kind=eindri-home task's .status signal is never absorbable here regardless of
 # busy evidence: that stream is the mate's routed-reply channel, so every append
 # is parent-directed content the supervisor must read (a routed reply, a newly
 # raised decision, a mirrored remote line), and a busy mate agent makes its note
@@ -1746,7 +1746,7 @@ signal_crew_provably_working() {  # <file> ...
     [ -n "$task" ] || continue
     case "$base" in
       *.status)
-        if [ "$(grep '^kind=' "$dir/$task.meta" 2>/dev/null | tail -1 | cut -d= -f2-)" = secondmate ]; then
+        if [ "$(grep '^kind=' "$dir/$task.meta" 2>/dev/null | tail -1 | cut -d= -f2-)" = eindri-home ]; then
           return 1
         fi
         ;;

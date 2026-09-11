@@ -164,7 +164,7 @@ Deferred means: named, bounded, and intentionally not built now. These are not b
 | Pi supervision branch | `.pi/extensions/fm-branch-supervision.ts`, `docs/pi-supervision-branch.md` | W0073 / W0053 |
 | Per-harness supervision protocol docs | `docs/supervision-protocols/*.md` | when the Sága supervision stage needs per-harness blocks |
 | Grok / Kimi adapters | Brokk hook scripts | plan 29 B-3 remainder |
-| Secondmate homes | `fm-Eindri-home-*.sh` | not planned (realm homes instead) |
+| Eindri-home homes | `fm-Eindri-home-*.sh` | not planned (realm homes instead) |
 | Extra spawn backends | `bin/backends/*.sh` | only if a validated need appears |
 | Voice relay / X / Discord | `fm-voice-*`, `fm-x-*` | Ratatoskr/Hlidskjalf own channels |
 

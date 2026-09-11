@@ -39,7 +39,7 @@ Board answers are acted on later under the normal authority rules; this skill's 
    Do not create or consult a second fleet-state reader, parser contract, status-event-tail interpretation, visible-session recap, ad-hoc project probe, or ad-hoc `gh-axi`/`gh` query.
    The command's header and `--help` output own its exact fields, bounds, opt-ins, and output contract.
    Keep the default local-only read unless the Allfather asks to include PRs.
-   For registered secondmates, use the snapshot's structured-home classification and provenance.
+   For registered eindri-homes, use the snapshot's structured-home classification and provenance.
    A parent event or bounded terminal contradiction is fallback evidence, never authority over readable structured home state.
    A decision is simply a task held for the Allfather (`Allfather-hold-lifecycle`); every due, unblocked Allfather-held task appears under `decisions_open`, whatever its kind.
    A Allfather hold deferred by date sits under `gates` with its `until <date>:` reason until it is due, and a hold whose reason or body carries an explicit deferred/superseded marker is suppressed from the default view with an `omitted` disclosure.
