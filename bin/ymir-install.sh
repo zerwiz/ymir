@@ -129,6 +129,18 @@ step_engines() {
   if [ -z "$got" ]; then add engines WARN "none installed (offline?) — install manually"; else add engines OK "installed:$got"; fi
 }
 
+# ── 3b. hermes runtime ───────────────────────────────────────────────────────
+step_hermes() {
+  [ "$SKIP_ENGINES" = 1 ] && { add hermes SKIP "--skip-engines"; return; }
+  if [ -x "$SCRIPT_DIR/hermes-ensure.sh" ]; then
+    if [ "$CHECK" = 1 ]; then
+      if "$SCRIPT_DIR/hermes-ensure.sh" status >/dev/null 2>&1; then add hermes OK "present"; else add hermes WARN "absent"; fi
+    else
+      if "$SCRIPT_DIR/hermes-ensure.sh" ensure --install >/dev/null 2>&1; then add hermes OK "present"; else add hermes WARN "not installed (run bin/hermes-ensure.sh install)"; fi
+    fi
+  else add hermes SKIP "no hermes-ensure.sh"; fi
+}
+
 # ── 4. sandbox image ─────────────────────────────────────────────────────────
 step_sandbox() {
   if ! have docker; then add sandbox SKIP "docker absent"; return; fi
@@ -188,7 +200,7 @@ step_register() {
   add register OK "wrote workspace/INSTALL.md"
 }
 
-step_prereqs; step_tree; step_engines; step_sandbox; step_memory; step_loaders; step_register
+step_prereqs; step_tree; step_engines; step_hermes; step_sandbox; step_memory; step_loaders; step_register
 [ "$CHECK" = 0 ] && step_services
 
 printf 'install[%d]{step,status,detail}:\n' "${#IDS[@]}"
