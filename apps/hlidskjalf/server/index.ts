@@ -325,21 +325,320 @@ function smidjaDecisions() {
   }
 }
 
+interface VendorModelDef {
+  id: string;
+  name: string;
+  provider: string;
+  tier: 1 | 2 | 3;
+  rank: number;
+  pin: number;
+  po: number;
+  cache: number;
+}
+
+// Commercial model catalog — rates are standard pay-as-you-go API prices per 1M
+// tokens (input/output), midpoint where the spec quotes a range. `cache` is the
+// share of the input price billed on a cache read (OpenAI/DeepSeek/Meta 50%,
+// Google 25%, Anthropic 10%). Ported 1:1 from the Smiðja visualizer db.ts.
+const VENDOR_MODELS: VendorModelDef[] = [
+  { id: 'gpt-5.5-pro', name: 'GPT-5.5 Pro', provider: 'OpenAI', tier: 1, rank: 1, pin: 30.0, po: 180.0, cache: 0.5 },
+  { id: 'o3-pro', name: 'o3-pro', provider: 'OpenAI', tier: 1, rank: 2, pin: 20.0, po: 80.0, cache: 0.5 },
+  { id: 'claude-opus', name: 'Claude Opus 4.6 / 5', provider: 'Anthropic', tier: 1, rank: 3, pin: 5.0, po: 25.0, cache: 0.1 },
+  { id: 'gpt-5.5', name: 'GPT-5.5', provider: 'OpenAI', tier: 1, rank: 4, pin: 5.0, po: 30.0, cache: 0.5 },
+  { id: 'llama-3.1-405b', name: 'Llama 3.1 405B', provider: 'Meta (Hosted)', tier: 1, rank: 5, pin: 3.75, po: 3.75, cache: 0.5 },
+  { id: 'gpt-5.4', name: 'GPT-5.4', provider: 'OpenAI', tier: 1, rank: 6, pin: 2.5, po: 15.0, cache: 0.5 },
+  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', tier: 1, rank: 7, pin: 2.5, po: 10.0, cache: 0.5 },
+  { id: 'gemini-3.1-pro', name: 'Gemini 3.1 Pro', provider: 'Google', tier: 1, rank: 8, pin: 2.0, po: 12.0, cache: 0.25 },
+  { id: 'o3', name: 'o3', provider: 'OpenAI', tier: 1, rank: 9, pin: 2.0, po: 8.0, cache: 0.5 },
+  { id: 'claude-sonnet', name: 'Claude Sonnet 4.6 / 5', provider: 'Anthropic', tier: 1, rank: 10, pin: 2.5, po: 12.5, cache: 0.1 },
+  { id: 'mistral-large-3', name: 'Mistral Large 3', provider: 'Mistral AI', tier: 2, rank: 11, pin: 0.5, po: 1.5, cache: 0.5 },
+  { id: 'claude-haiku', name: 'Claude Haiku 4.5', provider: 'Anthropic', tier: 2, rank: 12, pin: 1.0, po: 5.0, cache: 0.1 },
+  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google', tier: 2, rank: 13, pin: 1.25, po: 10.0, cache: 0.25 },
+  { id: 'o4-mini', name: 'o4-mini', provider: 'OpenAI', tier: 2, rank: 14, pin: 0.55, po: 2.2, cache: 0.5 },
+  { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek', tier: 2, rank: 15, pin: 0.55, po: 2.19, cache: 0.5 },
+  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', provider: 'Google', tier: 2, rank: 16, pin: 0.5, po: 3.0, cache: 0.25 },
+  { id: 'command-r-plus', name: 'Command R+', provider: 'Cohere', tier: 2, rank: 17, pin: 2.5, po: 10.0, cache: 0.5 },
+  { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini', provider: 'OpenAI', tier: 2, rank: 18, pin: 0.75, po: 4.5, cache: 0.5 },
+  { id: 'deepseek-v4', name: 'DeepSeek V4', provider: 'DeepSeek', tier: 2, rank: 19, pin: 0.3, po: 0.5, cache: 0.5 },
+  { id: 'codestral', name: 'Codestral', provider: 'Mistral AI', tier: 2, rank: 20, pin: 0.3, po: 0.9, cache: 0.5 },
+  { id: 'deepseek-chat-v3.2', name: 'DeepSeek-Chat (V3.2)', provider: 'DeepSeek', tier: 2, rank: 21, pin: 0.28, po: 0.42, cache: 0.5 },
+  { id: 'llama-3.3-70b', name: 'Llama 3.3 70B', provider: 'Meta (Hosted)', tier: 2, rank: 22, pin: 0.41, po: 0.52, cache: 0.5 },
+  { id: 'mistral-medium-3.5', name: 'Mistral Medium 3.5', provider: 'Mistral AI', tier: 2, rank: 23, pin: 1.5, po: 7.5, cache: 0.5 },
+  { id: 'gpt-4.1', name: 'GPT-4.1', provider: 'OpenAI', tier: 2, rank: 24, pin: 2.0, po: 8.0, cache: 0.5 },
+  { id: 'qwen-2.5-72b', name: 'Qwen 2.5 72B', provider: 'Alibaba (Hosted)', tier: 2, rank: 25, pin: 0.35, po: 0.4, cache: 0.5 },
+  { id: 'gemini-3.7-flash', name: 'Gemini 3.7 Flash', provider: 'Google', tier: 3, rank: 26, pin: 0.75, po: 3.75, cache: 0.25 },
+  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', provider: 'Google', tier: 3, rank: 27, pin: 0.75, po: 3.75, cache: 0.25 },
+  { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', provider: 'OpenAI', tier: 3, rank: 28, pin: 0.4, po: 1.6, cache: 0.5 },
+  { id: 'llama-4-maverick', name: 'Llama 4 Maverick', provider: 'Meta (Hosted)', tier: 3, rank: 29, pin: 0.25, po: 0.875, cache: 0.5 },
+  { id: 'gpt-5-mini', name: 'GPT-5 Mini', provider: 'OpenAI', tier: 3, rank: 30, pin: 0.25, po: 2.0, cache: 0.5 },
+  { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash-Lite', provider: 'Google', tier: 3, rank: 31, pin: 0.25, po: 1.5, cache: 0.25 },
+  { id: 'gpt-5.4-nano', name: 'GPT-5.4 Nano', provider: 'OpenAI', tier: 3, rank: 32, pin: 0.2, po: 1.25, cache: 0.5 },
+  { id: 'mistral-small-4', name: 'Mistral Small 4', provider: 'Mistral AI', tier: 3, rank: 33, pin: 0.15, po: 0.6, cache: 0.5 },
+  { id: 'gpt-4o-mini', name: 'GPT-4o mini', provider: 'OpenAI', tier: 3, rank: 34, pin: 0.15, po: 0.6, cache: 0.5 },
+  { id: 'gpt-4.1-nano', name: 'GPT-4.1 Nano', provider: 'OpenAI', tier: 3, rank: 35, pin: 0.1, po: 0.4, cache: 0.5 },
+  { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite', provider: 'Google', tier: 3, rank: 36, pin: 0.1, po: 0.4, cache: 0.25 },
+  { id: 'llama-4-scout', name: 'Llama 4 Scout', provider: 'Meta (Hosted)', tier: 3, rank: 37, pin: 0.165, po: 0.5, cache: 0.5 },
+  { id: 'ministral-8b', name: 'Ministral 8B', provider: 'Mistral AI', tier: 3, rank: 38, pin: 0.1, po: 0.1, cache: 0.5 },
+  { id: 'llama-3.2-3b', name: 'Llama 3.2 3B', provider: 'Meta (Hosted)', tier: 3, rank: 39, pin: 0.02, po: 0.02, cache: 0.5 },
+  { id: 'ministral-3b', name: 'Ministral 3B', provider: 'Mistral AI', tier: 3, rank: 40, pin: 0.04, po: 0.04, cache: 0.5 },
+];
+
+const TIER_LABEL: Record<number, string> = {
+  1: 'Tier 1 — heavyweight flagships & enterprise intelligence',
+  2: 'Tier 2 — mid-range & high-efficiency workhorses',
+  3: 'Tier 3 — flash, mini & edge engines',
+};
+
+const LOCAL_MODEL_PREFIXES = ['lmstudio/', 'ollama/', 'localhost/', 'vllm/', 'unsloth/'];
+const isLocalModel = (model: string) =>
+  LOCAL_MODEL_PREFIXES.some((p) => model.toLowerCase().startsWith(p));
+
+function emptyStats() {
+  const provider = () => ({ events: 0, sessions: 0, tokens: 0, cost: 0, input: 0, output: 0, cache_read: 0 });
+  const vendorCost = { cached_cost: 0, total_cost: 0, savings: 0, savings_pct: 0 };
+  return {
+    totals: { runs: 0, success: 0, fail: 0, running: 0, tokens: 0, cost: 0 },
+    usage: { input: 0, output: 0, cache_read: 0, cache_write: 0, total: 0 },
+    cache_hit_ratio: 0,
+    avg_cache_hit_per_run: 0,
+    vendors: { gpt4o: { ...vendorCost }, gemini: { ...vendorCost } },
+    vendor_catalog: [] as unknown[],
+    providers: { local: provider(), online: provider(), per_model: [] as unknown[] },
+    by_chain: [] as unknown[],
+    by_model: [] as unknown[],
+    generated_at: new Date().toISOString(),
+  };
+}
+
+/** Statistics — runs, tokens, cost, cache-hit ratio, and commercial savings.
+ *  Ported 1:1 from the Smiðja visualizer `db.ts` `stats()`: usage comes from
+ *  `agent_end` event payloads, model attribution from `agent_start` events. */
 function smidjaStats() {
   const db = smidja();
-  if (!db) return { totals: {}, by_chain: [], by_model: [] };
+  if (!db) return emptyStats();
   try {
+    const hasSessions = db
+      .query("select name from sqlite_master where type='table' and name='sessions'")
+      .get();
+    if (!hasSessions) return emptyStats();
+
+    const sessions = db
+      .query('select smidja_id, smidja_name, status, engineer, total_tokens, total_cost, started_at from sessions order by started_at desc')
+      .all() as Array<{
+      smidja_id: string;
+      smidja_name: string | null;
+      status: string | null;
+      engineer: string | null;
+      total_tokens: number | null;
+      total_cost: number | null;
+      started_at: string | null;
+    }>;
+
+    const totals = { runs: 0, success: 0, fail: 0, running: 0, tokens: 0, cost: 0 };
+    for (const s of sessions) {
+      totals.runs += 1;
+      if (s.status === 'success') totals.success += 1;
+      else if (s.status === 'fail') totals.fail += 1;
+      else if (s.status === 'running') totals.running += 1;
+      totals.tokens += s.total_tokens ?? 0;
+      totals.cost += s.total_cost ?? 0;
+    }
+
+    const usage = { input: 0, output: 0, cache_read: 0, cache_write: 0, total: 0 };
+    const cacheHitRuns: number[] = [];
+    interface ModelAgg {
+      events: number;
+      sessions: Set<string>;
+      tokens: number;
+      cost: number;
+      input: number;
+      output: number;
+      cache_read: number;
+      coding_agent: string | null;
+    }
+    const modelAggs = new Map<string, ModelAgg>();
+    const agentModel = new Map<string, string | null>();
+    const agentCoding = new Map<string, string | null>();
+    const started = new Map<string, { events: number; sessions: Set<string>; coding_agent: string | null }>();
+    const emptyAgg = (): ModelAgg => ({
+      events: 0,
+      sessions: new Set(),
+      tokens: 0,
+      cost: 0,
+      input: 0,
+      output: 0,
+      cache_read: 0,
+      coding_agent: null,
+    });
+
+    for (const s of sessions) {
+      const evs = db
+        .query('select type, name, payload_json from events where smidja_id = ? order by rowid')
+        .all(s.smidja_id) as Array<{ type: string; name: string | null; payload_json: string | null }>;
+      let r = 0;
+      let t = 0;
+      for (const e of evs) {
+        let payload: Record<string, unknown> = {};
+        try {
+          payload = e.payload_json ? JSON.parse(e.payload_json) : {};
+        } catch {
+          payload = {};
+        }
+        if (e.type === 'agent_start') {
+          const sp = payload as { model?: string; coding_agent?: string };
+          if (sp?.model) {
+            const key = `${s.smidja_id}|${e.name}`;
+            if (!agentModel.has(key)) {
+              const st =
+                started.get(sp.model) ?? { events: 0, sessions: new Set<string>(), coding_agent: sp.coding_agent ?? null };
+              st.events += 1;
+              st.sessions.add(s.smidja_id);
+              st.coding_agent = sp.coding_agent ?? st.coding_agent;
+              started.set(sp.model, st);
+            }
+            agentModel.set(key, sp.model);
+            agentCoding.set(key, sp.coding_agent ?? null);
+          }
+          continue;
+        }
+        if (e.type !== 'agent_end') continue;
+        const p = payload as {
+          usage?: {
+            input_tokens?: number;
+            output_tokens?: number;
+            cache_read_tokens?: number;
+            cache_write_tokens?: number;
+            total_tokens?: number;
+            input_cost?: number;
+            output_cost?: number;
+            cache_read_cost?: number;
+            cache_write_cost?: number;
+          };
+          cost?: number;
+        };
+        const u = p?.usage;
+        if (!u) continue;
+        usage.input += u.input_tokens ?? 0;
+        usage.output += u.output_tokens ?? 0;
+        usage.cache_read += u.cache_read_tokens ?? 0;
+        usage.cache_write += u.cache_write_tokens ?? 0;
+        usage.total += u.total_tokens ?? 0;
+        r += u.cache_read_tokens ?? 0;
+        t += (u.input_tokens ?? 0) + (u.cache_read_tokens ?? 0);
+        const model = e.name ? agentModel.get(`${s.smidja_id}|${e.name}`) : undefined;
+        if (!model) continue;
+        const usageCost =
+          (u.input_cost ?? 0) + (u.output_cost ?? 0) + (u.cache_read_cost ?? 0) + (u.cache_write_cost ?? 0);
+        const agg = modelAggs.get(model) ?? emptyAgg();
+        agg.events += 1;
+        agg.sessions.add(s.smidja_id);
+        agg.tokens += u.total_tokens ?? 0;
+        agg.cost += usageCost || (p.cost ?? 0);
+        agg.input += u.input_tokens ?? 0;
+        agg.output += u.output_tokens ?? 0;
+        agg.cache_read += u.cache_read_tokens ?? 0;
+        const coding = e.name ? agentCoding.get(`${s.smidja_id}|${e.name}`) : undefined;
+        agg.coding_agent = coding ?? agg.coding_agent;
+        modelAggs.set(model, agg);
+      }
+      if (t > 0) cacheHitRuns.push(r / t);
+    }
+
+    for (const [model, st] of started) {
+      if (modelAggs.has(model)) continue;
+      const agg = emptyAgg();
+      agg.events = st.events;
+      agg.sessions = st.sessions;
+      agg.coding_agent = st.coding_agent;
+      modelAggs.set(model, agg);
+    }
+    const ingested = usage.input + usage.cache_read;
+    const cacheHitRatio = ingested > 0 ? usage.cache_read / ingested : 0;
+
+    const vendor = (pin: number, pcr: number, po: number) => {
+      const std = (usage.input / 1_000_000) * pin;
+      const cached = (usage.cache_read / 1_000_000) * pcr;
+      const out = (usage.output / 1_000_000) * po;
+      const total = std + cached + out;
+      const savings = total - totals.cost;
+      const savings_pct = total > 0 ? savings / total : 0;
+      return { cached_cost: cached, total_cost: total, savings, savings_pct };
+    };
+    const gpt4o = vendor(2.5, 1.25, 10.0);
+    const gemini = vendor(1.25, 0.3125, 5.0);
+
+    const vendor_catalog = VENDOR_MODELS.map((m) => {
+      const v = vendor(m.pin, m.pin * m.cache, m.po);
+      return {
+        id: m.id,
+        name: m.name,
+        provider: m.provider,
+        tier: m.tier,
+        rank: m.rank,
+        tier_label: TIER_LABEL[m.tier],
+        input_price: m.pin,
+        output_price: m.po,
+        cache_price: m.pin * m.cache,
+        ...v,
+      };
+    });
+
+    const providerAgg = () => ({ events: 0, sessions: 0, tokens: 0, cost: 0, input: 0, output: 0, cache_read: 0 });
+    const providers = { local: providerAgg(), online: providerAgg() };
+    for (const [model, agg] of modelAggs) {
+      const p = providers[isLocalModel(model) ? 'local' : 'online'];
+      p.events += agg.events;
+      p.sessions += agg.sessions.size;
+      p.tokens += agg.tokens;
+      p.cost += agg.cost;
+      p.input += agg.input;
+      p.output += agg.output;
+      p.cache_read += agg.cache_read;
+    }
+    const per_model = [...modelAggs.entries()]
+      .map(([model, agg]) => ({
+        model,
+        kind: isLocalModel(model) ? ('local' as const) : ('online' as const),
+        coding_agent: agg.coding_agent,
+        events: agg.events,
+        tokens: agg.tokens,
+        cost: agg.cost,
+      }))
+      .sort((a, b) => b.tokens - a.tokens);
+
+    const byChain = new Map<string, { runs: number; success: number; tokens: number; cost: number }>();
+    const byModel = new Map<string, { runs: number; success: number; tokens: number; cost: number }>();
+    for (const s of sessions) {
+      const chain = (s.smidja_name ?? 'smidja').split(' + ')[0];
+      const chainAgg = byChain.get(chain) ?? { runs: 0, success: 0, tokens: 0, cost: 0 };
+      chainAgg.runs += 1;
+      if (s.status === 'success') chainAgg.success += 1;
+      chainAgg.tokens += s.total_tokens ?? 0;
+      chainAgg.cost += s.total_cost ?? 0;
+      byChain.set(chain, chainAgg);
+
+      const modelAgg = byModel.get(s.smidja_name ?? '?') ?? { runs: 0, success: 0, tokens: 0, cost: 0 };
+      modelAgg.runs += 1;
+      if (s.status === 'success') modelAgg.success += 1;
+      modelAgg.tokens += s.total_tokens ?? 0;
+      modelAgg.cost += s.total_cost ?? 0;
+      byModel.set(s.smidja_name ?? '?', modelAgg);
+    }
+
     return {
-      totals: db.query('select count(*) runs, coalesce(sum(total_tokens),0) tokens, coalesce(sum(total_cost),0) cost from sessions').get(),
-      by_chain: db
-        .query("select coalesce(smidja_name,'?') chain, count(*) runs, coalesce(sum(total_tokens),0) tokens, coalesce(sum(total_cost),0) cost from sessions group by smidja_name order by runs desc")
-        .all(),
-      by_model: db
-        .query("select coalesce(model,'?') model, count(*) runs, coalesce(sum(context_tokens),0) context_tokens from agent_sessions group by model order by runs desc")
-        .all(),
+      totals,
+      usage,
+      cache_hit_ratio: cacheHitRatio,
+      avg_cache_hit_per_run: cacheHitRuns.length ? cacheHitRuns.reduce((a, b) => a + b, 0) / cacheHitRuns.length : 0,
+      vendors: { gpt4o, gemini },
+      vendor_catalog,
+      providers: { ...providers, per_model },
+      by_chain: [...byChain.entries()].map(([chain, agg]) => Object.assign({ chain }, agg)).sort((a, b) => b.runs - a.runs),
+      by_model: [...byModel.entries()].map(([model, agg]) => Object.assign({ model }, agg)).sort((a, b) => b.runs - a.runs),
+      generated_at: new Date().toISOString(),
     };
   } catch {
-    return { totals: {}, by_chain: [], by_model: [] };
+    return emptyStats();
   } finally {
     db.close();
   }
