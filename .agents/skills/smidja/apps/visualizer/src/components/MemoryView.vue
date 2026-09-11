@@ -276,7 +276,7 @@ function tagClass(tag: string): string {
 
 .panel {
   background: rgba(16, 21, 32, 0.6);
-  border: 1px solid rgba(255, 143, 92, 0.12);
+  border: 1px solid rgba(125, 211, 252, 0.12);
   border-radius: 12px;
   padding: 14px 16px;
 }

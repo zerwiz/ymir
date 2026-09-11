@@ -8,10 +8,24 @@ const { spawn } = require('node:child_process');
 const http = require('node:http');
 const path = require('node:path');
 
-const ICON = path.join(__dirname, 'icon.png');
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const HLIDSKJALF = process.env.HLIDSKJALF_URL || 'http://127.0.0.1:3888/';
 const SMIDJA = process.env.SMIDJA_URL || 'http://127.0.0.1:8437/';
+
+// One window, one app identity: Hlidskjalf and Smíðja are separate desktop
+// apps so they never stack in the taskbar and each carries its own icon.
+const VIEW = (process.env.YMIR_DESKTOP_VIEW ?? 'hlidskjalf').toLowerCase();
+const IS_SMIDJA = VIEW === 'smidja';
+const APP_NAME = IS_SMIDJA ? 'Ymir · Smíðja' : 'Ymir · Hlidskjalf';
+const APP_SLUG = IS_SMIDJA ? 'ymir-smidja' : 'ymir-hlidskjalf';
+const ICON = path.join(__dirname, IS_SMIDJA ? 'smidja-icon.png' : 'icon.png');
+
+app.setName(APP_SLUG);
+if (process.platform === 'linux') {
+  // Wayland/GNOME taskbar grouping + icon come from the matching .desktop file.
+  app.setDesktopName(`${APP_SLUG}.desktop`);
+  app.commandLine.appendSwitch('class', APP_SLUG);
+}
 
 let win = null;
 let raised = false;
@@ -104,19 +118,19 @@ function buildMenu() {
 
 app.whenReady().then(async () => {
   buildMenu();
-  const up = await ensureStack();
-  app.setName('Ymir');
-  const view = (process.env.YMIR_DESKTOP_VIEW ?? 'hlidskjalf').toLowerCase();
-  if (view === 'both') {
+  await ensureStack();
+  if (VIEW === 'both') {
+    // Back-compat only: one process for both windows shares one app identity,
+    // so they stack. Prefer scripts/electron.sh --both, which starts two.
     openWindow(HLIDSKJALF, 'Ymir · Hlidskjalf');
-    openWindow(SMIDJA, 'Ymir · Smiðja');
+    openWindow(SMIDJA, 'Ymir · Smíðja');
   } else {
-    const startUrl = view === 'smidja' ? SMIDJA : HLIDSKJALF;
-    const startTitle = view === 'smidja' ? 'Ymir · Smiðja' : 'Ymir · Hlidskjalf';
-    openWindow(startUrl, startTitle);
+    openWindow(IS_SMIDJA ? SMIDJA : HLIDSKJALF, APP_NAME);
   }
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) openWindow(HLIDSKJALF, 'Ymir · Hlidskjalf');
+    if (BrowserWindow.getAllWindows().length === 0) {
+      openWindow(IS_SMIDJA ? SMIDJA : HLIDSKJALF, APP_NAME);
+    }
   });
 });
 

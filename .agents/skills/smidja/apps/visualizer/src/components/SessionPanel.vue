@@ -231,7 +231,7 @@ async function steer() {
   font-size: 13px;
   padding: 7px 9px;
 }
-.steer-row input:focus { outline: none; border-color: rgba(255, 107, 53, 0.55); }
+.steer-row input:focus { outline: none; border-color: rgba(56, 189, 248, 0.55); }
 .s-btn {
   display: inline-flex;
   align-items: center;
