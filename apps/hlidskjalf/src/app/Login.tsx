@@ -19,6 +19,7 @@ const PRESET: Record<'work' | 'personal', string[]> = {
 };
 
 export function Login() {
+  const signIn = useYmir((s) => s.signIn);
   const provision = useYmir((s) => s.provision);
   const enterDemo = useYmir((s) => s.enterDemo);
 
@@ -30,6 +31,16 @@ export function Login() {
   const [busy, setBusy] = useState(false);
 
   function choose(id: MockIdentity) {
+    // An existing operator with workspaces signs straight in.
+    if (id.tenants.length > 0) {
+      signIn(id);
+      return;
+    }
+    setIdentity(id);
+    setPhase('provision');
+  }
+
+  function newWorkspace(id: MockIdentity) {
     setIdentity(id);
     setPhase('provision');
   }
@@ -43,15 +54,15 @@ export function Login() {
     setDomains((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]));
   }
 
-  async function finish() {
+  function finish() {
     if (!identity || busy) return;
     setBusy(true);
-    try {
-      await gateApi.createWorkspace({ name, kind, domains }).catch(() => null);
-      await gateApi.setupRun().catch(() => null);
-    } finally {
-      provision({ login: identity.login, name, kind, domains });
-    }
+    const login = identity.login;
+    // Log in immediately — never block the operator on the slow installer.
+    provision({ login, name, kind, domains });
+    // Provision the workspace + stand the system up in the background.
+    void gateApi.createWorkspace({ name, kind, domains }).catch(() => null);
+    void gateApi.setupRun().catch(() => null);
   }
 
   return (
@@ -84,14 +95,24 @@ export function Login() {
 
             <div className="divider">or</div>
 
-            <button
-              className="btn"
-              style={{ justifyContent: 'center', width: '100%' }}
-              onClick={enterDemo}
-              title="Explore Hlidskjalf with seeded data — no runtime required"
-            >
-              <span aria-hidden="true">ᛟ</span> Enter demo mode
-            </button>
+            <div className="row" style={{ gap: 8 }}>
+              <button
+                className="btn grow"
+                style={{ justifyContent: 'center' }}
+                onClick={() => newWorkspace(MOCK_IDENTITIES[0])}
+                title="Provision a new workspace (personal or work)"
+              >
+                <span aria-hidden="true">＋</span> New workspace
+              </button>
+              <button
+                className="btn btn-primary grow"
+                style={{ justifyContent: 'center' }}
+                onClick={enterDemo}
+                title="Explore Hlidskjalf with seeded data — no runtime required"
+              >
+                <span aria-hidden="true">ᛟ</span> Enter demo mode
+              </button>
+            </div>
 
             <p className="legal">
               In production this is a GitHub App OAuth code flow → httpOnly JWT

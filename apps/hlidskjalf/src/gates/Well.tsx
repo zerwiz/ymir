@@ -40,8 +40,11 @@ export function Well() {
         ? `${hits.length} episode${hits.length === 1 ? '' : 's'} (hybrid) — drink before you act.`
         : 'Dry well. Firing cold — never a blocker.',
       content: hits.length
-        ? hits.map((e) => `${e.score.toFixed(2)}  ${e.title}\n    ${e.body}`).join('\n\n')
+        ? hits
+            .map((e) => `**${e.score.toFixed(2)}** · ${e.title}\n\n${e.body}`)
+            .join('\n\n---\n\n')
         : undefined,
+      format: 'markdown',
     });
     toast({
       kind: hits.length ? 'info' : 'warn',
@@ -62,6 +65,7 @@ export function Well() {
         title: episode.tags[0] ? `#${episode.tags[0]}` : 'Memory',
         body: `${when}${episode.actors?.length ? ` · ${episode.actors.join(', ')}` : ''}`,
         content: episode.content,
+        format: 'markdown',
       });
     } catch {
       toast({ kind: 'warn', title: 'Recall failed', body: 'The well did not answer.' });

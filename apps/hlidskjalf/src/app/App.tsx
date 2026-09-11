@@ -23,7 +23,7 @@ export default function App() {
   }, [session, demo]);
 
   useEffect(() => {
-    const onHash = () => useYmir.setState({ gate: gateFromHash() });
+    const onHash = () => useYmir.getState().setGate(gateFromHash());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);

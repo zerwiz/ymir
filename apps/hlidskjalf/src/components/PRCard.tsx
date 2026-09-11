@@ -15,24 +15,6 @@ const STATE_META: Record<
   merged: { label: 'MERGED', tone: 'ok', glyph: 'ᛗ' },
 };
 
-function syntheticDiff(pr: PullRequest): string {
-  return [
-    `diff --git a/${pr.repo}/${pr.title.split(':')[0]} b/${pr.repo}/patch`,
-    `--- a/${pr.repo}`,
-    `+++ b/${pr.repo}`,
-    `@@ -1,${Math.max(3, pr.deletions)} +1,${Math.max(6, pr.additions)} @@`,
-    `-# ${pr.title}`,
-    `+# ${pr.title}`,
-    `+`,
-    `+// forged in a Yggdrasil worktree, validated in Utgard`,
-    `+export function ${pr.title.split(/[^a-zA-Z]/).filter(Boolean)[1] ?? 'patch'}() {`,
-    `+  return '${pr.issue ?? 'artifact'}';`,
-    `+}`,
-    ``,
-    `  ... ${pr.additions} added, ${pr.deletions} removed across ${1 + (pr.number % 4)} files`,
-  ].join('\n');
-}
-
 export function PRCard({ pr }: { pr: PullRequest }) {
   const state = STATE_META[pr.state];
   const { openModal, toast } = useUI();
@@ -99,9 +81,21 @@ export function PRCard({ pr }: { pr: PullRequest }) {
       variant: 'info',
       tone: 'info',
       glyph: 'ᛞ',
-      title: `Diff — #${pr.number}`,
+      title: `PR #${pr.number} — ${pr.repo}`,
       body: pr.title,
-      content: syntheticDiff(pr),
+      content: [
+        `diff is not available from the read-only gate.`,
+        ``,
+        `repo     ${pr.repo}`,
+        `author   @${pr.author}`,
+        pr.issue ? `closes   ${pr.issue}` : '',
+        `changes  +${pr.additions} −${pr.deletions}`,
+        `checks   ${pr.checks.map((c) => `${c.name}:${c.state}`).join('  ')}`,
+        ``,
+        `The diff lives in GitHub — open the pull request there.`,
+      ]
+        .filter(Boolean)
+        .join('\n'),
     });
   }
 

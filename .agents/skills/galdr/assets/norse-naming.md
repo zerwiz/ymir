@@ -150,7 +150,6 @@ These terms must never name a Ymir subsystem, file, config key, environment vari
 | `crew` / `Eindri` | Imported worker term | **Eindri** (worker), **Einherjar** (the spawn act) |
 | `Eindri-home` / `secondmates` | Imported isolated-home concept | **dropped** — one Brokk home; realm homes handle scope |
 | `FM_HOME`, `FM_*`, `fm-*` | Upstream env/file prefix | **`BROKK_HOME`, `BROKK_*`, `<figure>-*`** |
-| `Yggdrasil`, `treehouses` | Upstream worktree engine name | **Yggdrasil** |
 | `calm` | Upstream presentation mode; deferred, not ported | (not named; presentation theming deferred) |
 | `harness-adapters`, `bootstrap-diagnostics`, `supervision-protocols` (as skill names) | Upstream skill names | Galdr aett name or runtime file |
 | `lavish`, `gh-axi`, `chrome-devtools-axi` (as Ymir names) | Upstream tooling names | reuse the OSS tool; do not rename into Ymir |

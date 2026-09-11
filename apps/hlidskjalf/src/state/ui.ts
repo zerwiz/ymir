@@ -29,6 +29,7 @@ export interface ModalSpec {
   fields?: ModalField[];
   /** long pre-formatted text for info modals (e.g. a diff or logs) */
   content?: string;
+  format?: 'markdown' | 'text';
   onSubmit?: (values: Record<string, string>) => void;
 }
 
