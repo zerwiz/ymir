@@ -95,8 +95,8 @@ defineExpose({ focus })
   padding: 9px 10px;
 }
 .box:focus-within {
-  border-color: rgba(255, 107, 53, 0.55);
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
 }
 .field {
   flex: 1 1 auto;

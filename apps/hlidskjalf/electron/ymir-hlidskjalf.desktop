@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Ymir · Hlidskjalf
+GenericName=Ymir Control Plane
+Comment=Odin's high seat — the Ymir control plane
+Exec=bash /home/zerwiz/Ymir/scripts/electron.sh start --view hlidskjalf
+Icon=/home/zerwiz/Ymir/apps/hlidskjalf/electron/icon.png
+Terminal=false
+Categories=Development;Utility;
+StartupWMClass=ymir-hlidskjalf
+StartupNotify=true

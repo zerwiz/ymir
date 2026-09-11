@@ -229,7 +229,7 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .panel {
   background: rgba(16, 21, 32, 0.6);
-  border: 1px solid rgba(255, 143, 92, 0.12);
+  border: 1px solid rgba(125, 211, 252, 0.12);
   border-radius: 12px;
   padding: 14px 16px;
 }
@@ -285,7 +285,7 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .vendor-select {
   background: rgba(11, 15, 24, 0.8);
-  border: 1px solid rgba(255, 143, 92, 0.25);
+  border: 1px solid rgba(125, 211, 252, 0.25);
   border-radius: 8px;
   color: #e5e9f0;
   font-size: 13px;
@@ -311,7 +311,7 @@ const providerShare = (kind: 'local' | 'online') => {
   transition: width 0.3s ease;
 }
 .split-online {
-  background: linear-gradient(90deg, #fb923c, #fda4af);
+  background: linear-gradient(90deg, #38bdf8, #fda4af);
   transition: width 0.3s ease;
 }
 .split-legend {
@@ -330,7 +330,7 @@ const providerShare = (kind: 'local' | 'online') => {
   margin-right: 4px;
 }
 .dot-local { background: #34d399; }
-.dot-online { background: #fb923c; }
+.dot-online { background: #38bdf8; }
 .provider-tbl { margin-top: 4px; }
 .badge {
   display: inline-block;
@@ -342,7 +342,7 @@ const providerShare = (kind: 'local' | 'online') => {
   padding: 2px 8px;
 }
 .badge.local { color: #86efac; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.3); }
-.badge.online { color: #fb923c; background: rgba(251, 146, 60, 0.12); border: 1px solid rgba(251, 146, 60, 0.3); }
+.badge.online { color: #38bdf8; background: rgba(251, 146, 60, 0.12); border: 1px solid rgba(251, 146, 60, 0.3); }
 .badge.unknown { color: #8a93a6; background: rgba(138, 147, 166, 0.12); border: 1px solid rgba(138, 147, 166, 0.3); }
 
 .tbl {

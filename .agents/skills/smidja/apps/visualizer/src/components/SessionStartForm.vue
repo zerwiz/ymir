@@ -112,7 +112,7 @@ select, textarea {
   font-size: 14px;
   padding: 8px 10px;
 }
-select:focus, textarea:focus { outline: none; border-color: rgba(255, 107, 53, 0.55); }
+select:focus, textarea:focus { outline: none; border-color: rgba(56, 189, 248, 0.55); }
 textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
 
 .team-note {
