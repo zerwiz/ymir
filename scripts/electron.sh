@@ -16,10 +16,11 @@ APP="$ROOT/apps/hlidskjalf"
 PID_FILE="$ROOT/state/electron.pid"
 LOG_FILE="$ROOT/state/electron.log"
 NO_INSTALL=0
+VIEW="${YMIR_DESKTOP_VIEW:-hlidskjalf}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-start}"; shift || true
-while [ $# -gt 0 ]; do case "$1" in --no-install) NO_INSTALL=1; shift ;; *) shift ;; esac; done
+while [ $# -gt 0 ]; do case "$1" in --no-install) NO_INSTALL=1; shift ;; --view) VIEW=${2-hlidskjalf}; shift 2 ;; *) shift ;; esac; done
 
 running() { [ -r "$PID_FILE" ] && kill -0 "$(tr -d '[:space:]' <"$PID_FILE")" 2>/dev/null; }
 
@@ -30,7 +31,7 @@ case "$ACTION" in
   stop)
     if running; then pid=$(tr -d '[:space:]' <"$PID_FILE"); kill "$pid" 2>/dev/null || true; rm -f "$PID_FILE"; printf 'electron: stopped pid=%s\n' "$pid"; else printf 'electron: already stopped\n'; fi
     exit 0 ;;
-  start) ;;
+  start|hlidskjalf|smidja) [ "$ACTION" = smidja ] && VIEW=smidja ;;
   *) printf 'error: unknown action %s\nhelp: electron.sh [start|stop|status]\n' "$ACTION" >&2; exit 2 ;;
 esac
 
@@ -45,7 +46,7 @@ if [ ! -x "$APP/node_modules/.bin/electron" ]; then
   ( cd "$APP" && npm install ) >/dev/null 2>&1 || { printf 'error: npm install failed — see apps/hlidskjalf\n' >&2; exit 1; }
 fi
 
-nohup "$APP/node_modules/.bin/electron" "$APP" >"$LOG_FILE" 2>&1 &
+nohup env YMIR_DESKTOP_VIEW="$VIEW" "$APP/node_modules/.bin/electron" "$APP" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 sleep 2
 if running; then printf 'electron[1]{state,pid,url}:\n  "up",%s,"http://127.0.0.1:3888/"\n' "$(cat "$PID_FILE")"; else printf 'error: electron failed to start; see %s\n' "${LOG_FILE#"$ROOT"/}" >&2; exit 1; fi
