@@ -61,19 +61,6 @@ export function Topbar() {
         </button>
       </div>
 
-      <label className="search">
-        <span aria-hidden="true">ᛊ</span>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={`Search ${realm} workspace…`}
-          aria-label="Workspace-scoped search"
-        />
-        <kbd>/</kbd>
-      </label>
-
-      <div className="topbar-spacer" />
-
       <div className="trace-chip" title="Fleet — nominal agents of connected">
         <span className="label">Fleet</span>
         <span
@@ -91,6 +78,19 @@ export function Topbar() {
           {agents.filter((a) => a.status === 'nominal').length}/{agents.length}
         </span>
       </div>
+
+      <label className="search">
+        <span aria-hidden="true">ᛊ</span>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`Search ${realm} workspace…`}
+          aria-label="Workspace-scoped search"
+        />
+        <kbd>/</kbd>
+      </label>
+
+      <div className="topbar-spacer" />
 
       <AccentPicker />
 
