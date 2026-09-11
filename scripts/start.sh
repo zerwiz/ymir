@@ -74,6 +74,12 @@ VIZ_UI_PID_FILE="$RUN/smidja-viz-ui.pid"
 SMIDJA_DB_PATH="${SMIDJA_DB:-$ROOT/smidja/smidja_data/smidja.db}"
 if command -v bun >/dev/null 2>&1 && [ -d "$VIZ_DIR" ]; then
   [ -d "$VIZ_DIR/node_modules" ] || (cd "$VIZ_DIR" && bun install >/dev/null 2>&1 || true)
+  # The API serves the UI from ./dist. Without a build it answers the API but
+  # shows "No ./dist build found", so build once when dist is absent.
+  if [ ! -d "$VIZ_DIR/dist" ]; then
+    (cd "$VIZ_DIR" && bun run build >/dev/null 2>&1) || \
+      echo "Smíðja visualizer UI build failed — run: (cd $VIZ_DIR && bun run build)" >&2
+  fi
   if [ -f "$VIZ_API_PID_FILE" ] && kill -0 "$(cat "$VIZ_API_PID_FILE")" 2>/dev/null; then
     echo "Smíðja visualizer API already running (pid $(cat "$VIZ_API_PID_FILE")) → http://127.0.0.1:${VIZ_API_PORT}/"
   else

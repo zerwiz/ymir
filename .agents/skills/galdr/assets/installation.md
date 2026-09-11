@@ -21,7 +21,7 @@ bin/ymir-install.sh --status      # alias of --check
 ## The steps
 
 ```
-install[15]{step,what,self-heals}:
+install[16]{step,what,self-heals}:
   "prereqs","git python3 bun docker gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml","creates if missing"
@@ -32,15 +32,30 @@ install[15]{step,what,self-heals}:
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build; distinguishes docker-group permission from build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
+  "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
   "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh"
   "register","workspace/INSTALL.md","writes the record"
-  "services","gate API, SPA, Nornir, bridges, visualizer","raises via scripts/start.sh"
+  "services","gate API, SPA, Nornir, bridges, visualizer","raises via scripts/start.sh (which builds the visualizer UI when ./dist is absent)"
   "desktop","Hlidskjalf + Smíðja desktop apps","bin/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
 (In `--check` the runtime-only steps — services, desktop, validate — are skipped,
-so 12 rows are printed.)
+so 13 rows are printed.)
+
+## The visualizer UI
+
+The Smíðja visualizer **API** runs on `:8437` and serves its **UI** from
+`apps/visualizer/dist`. A fresh clone has no `dist`, so the API answers but shows
+"No ./dist build found" — an install gap. The installer (and `scripts/start.sh`)
+now build it when absent:
+
+```bash
+(cd .agents/skills/smidja/apps/visualizer && bun run build)   # vue-tsc + vite
+```
+
+`bin/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing, so the
+gap cannot silently return.
 
 ## Desktop placement (Omarchy desktops, not monitors)
 

@@ -100,6 +100,14 @@ else
   add smidja-db FAIL "smidja.db missing — run bin/smidja-bootstrap.sh"
 fi
 
+# ── 7b. visualizer UI (the API serves it from ./dist) ───────────────────
+VIZ="$ROOT/.agents/skills/smidja/apps/visualizer"
+if [ -d "$VIZ/dist" ]; then
+  add visualizer PASS "UI built and served on :8437"
+elif [ -d "$VIZ" ]; then
+  add visualizer FAIL "UI not built (./dist missing) — (cd $VIZ && bun run build)"
+fi
+
 # ── 8. desktop apps (both Electron windows) ─────────────────────────────────
 if [ -x "$ROOT/scripts/electron.sh" ]; then
   st="$("$ROOT/scripts/electron.sh" status 2>/dev/null || true)"
