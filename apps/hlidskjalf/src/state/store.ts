@@ -37,7 +37,15 @@ import {
   saveSession,
   type MockIdentity,
 } from '../services/auth';
-import { gateApi, type CronInfo, type RuntimeInfo } from '../services/api';
+import {
+  gateApi,
+  type CronInfo,
+  type RuntimeInfo,
+  type SmidjaDecision,
+  type SmidjaDetail,
+  type SmidjaSession,
+  type SmidjaStats,
+} from '../services/api';
 
 export type Density = 'comfortable' | 'compact';
 
@@ -128,6 +136,12 @@ interface YmirState {
   live: boolean | null;
   runtime: RuntimeInfo | null;
   cron: CronInfo | null;
+  smidjaDb: string;
+  smidjaSessions: SmidjaSession[];
+  smidjaStats: SmidjaStats | null;
+  smidjaDecisions: SmidjaDecision[];
+  selectedSession: string | null;
+  sessionDetail: SmidjaDetail | null;
 
   agents: AgentCard[];
   tasks: Task[];
@@ -145,6 +159,8 @@ interface YmirState {
   signOut: () => void;
   enterDemo: () => void;
   loadLive: () => Promise<void>;
+  setSelectedSession: (id: string | null) => void;
+  loadSessionDetail: (id: string) => Promise<void>;
 
   setRealm: (realm: RealmId) => void;
   setGate: (gate: GateId) => void;
@@ -247,12 +263,18 @@ export const useYmir = create<YmirState>((set, get) => ({
   live: null,
   runtime: null,
   cron: null,
+  smidjaDb: 'absent',
+  smidjaSessions: [],
+  smidjaStats: null,
+  smidjaDecisions: [],
+  selectedSession: null,
+  sessionDetail: null,
   ...hydrate(initialRealm(initialSession)),
 
   loadLive: async () => {
     if (get().demo) return;
     try {
-      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron] =
+      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, smidjaHealth, smidjaSessions, smidjaStats, smidjaDecisions] =
         await Promise.all([
           gateApi.agents(),
           gateApi.tasks(),
@@ -263,11 +285,30 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.files(get().realm),
           gateApi.runtime(),
           gateApi.cron(),
+          gateApi.smidjaHealth().catch(() => ({ db: 'absent', sessions: 0 })),
+          gateApi.smidjaSessions().catch(() => []),
+          gateApi.smidjaStats().catch(() => null),
+          gateApi.smidjaDecisions().catch(() => ({ total_failed: 0, decisions: [] })),
         ]);
-      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, live: true });
+      set({
+        agents, tasks, runes, recall, processes, reviews, files, runtime, cron,
+        smidjaDb: smidjaHealth.db, smidjaSessions, smidjaStats,
+        smidjaDecisions: smidjaDecisions.decisions, live: true,
+      });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set({ live: false });
+    }
+  },
+
+  setSelectedSession: (id) => set({ selectedSession: id, sessionDetail: null }),
+  loadSessionDetail: async (id) => {
+    if (get().demo) return;
+    try {
+      const detail = await gateApi.smidjaSession(id);
+      set({ sessionDetail: detail, selectedSession: id });
+    } catch {
+      set({ sessionDetail: null });
     }
   },
 

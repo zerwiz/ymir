@@ -52,7 +52,7 @@ Verified in `~/.pi/agent/models.json` (the registry pi resolves):
 - **opencode-go surface (via the local bridge):** `opencode-go/deepseek-v4-flash` ·
   `deepseek-v4-pro` · `glm-5.1` · `deepseek-v4-flash-vision-exp` — pi reaches
   them through `scripts/opencode-go-bridge.py` (tmux `ogb`, port 4603), which
-  injects `OPENCODE_GO_API_KEY` from `~/command/.env` and proxies to
+  injects `OPENCODE_GO_API_KEY` from `~/Ymir/.env` and proxies to
   `https://opencode.ai/zen/go/v1`. Verified 2026-08-31: `pi --model
   opencode-go/deepseek-v4-flash` works. So the online chain now = opencode-go
   (bridge) ∪ google ∪ openrouter.

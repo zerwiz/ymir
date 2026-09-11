@@ -64,3 +64,10 @@ state/*
 config/*
 !config/*.example
 .pi/extensions/*.local.ts
+
+# smidja runtime
+smidja/smidja_data/sessions/
+smidja/smidja_data/smidja.db*
+.env
+__pycache__/
+*.pyc

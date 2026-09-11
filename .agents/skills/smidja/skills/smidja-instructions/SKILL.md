@@ -15,7 +15,7 @@ allowed-tools: read, write, edit, bash, grep, glob
   audit, stop, learn, missions.
 - **`smidja`** — smidja internals: cookbooks for install/create/update smidja and
   roster config.
-- **`command-repo`** — conventions when the work lands in `~/command`.
+- **`smidja`** — conventions when the work lands in `~/Ymir`.
 
 The smidja executes a request file (`requests/*.md`) through an smidja chain
 (builder, reviewer, orchestrator). A fuzzy ask produces a fuzzy run: agents
@@ -57,8 +57,8 @@ unambiguous to a stranger. One or two clarifying rounds is usually enough.
 ### 2. Pick the chain + service
 
 Match the answer to the smidja surface (`smidja modes` / `smidja services`).
-Standing reference for the stack: `docs/command docs/software-smidja-run.md`
-(how to run) and `docs/command docs/SmidjaAgentsAndModels.md` (roster + model
+Standing reference for the stack: `docs/software-smidja-run.md`
+(how to run) and `docs/SmidjaAgentsAndModels.md` (roster + model
 backends — the source of truth for which agents/models exist).
 
 **Key files (what they do):**
@@ -67,7 +67,7 @@ backends — the source of truth for which agents/models exist).
   `--roster <name>` / `SMIDJA_ROSTER=<name>` pick one), agent roles
   (`role_defaults:`), and the model catalog (`tiers:` — role × backend tier;
   swap surface for `--model`, `SMIDJA_*_MODEL`, `SMIDJA_MODEL_TIER`).
-- `justfile` — starter recipes from `~/command`: `just scout/sdlc/simple-sdlc/orchestrate`
+- `justfile` — starter recipes from `~/Ymir`: `just scout/sdlc/simple-sdlc/orchestrate`
   run chains; `just sessions/phases/tail` watch them. It resolves the same
   `SMIDJA_CONFIG` / `SMIDJA_ROSTER` / `SMIDJA_MODEL_TIER` env vars.
 
@@ -122,7 +122,7 @@ Rules that make smidja requests work (learned from real runs):
 2. **Done means is mechanical** — exit codes, file existence, HTTP status.
 3. **Out of scope is explicit** — the builder's `writes` are wide; only the
    request constrains it.
-4. **Name the repo absolutely** — the smidja runs from `~/command`; a request
+4. **Name the repo absolutely** — the smidja runs from `~/Ymir`; a request
    for `~/CodeP/courses` must say so.
 5. **Never put secrets in the request** — keys live in `.env`.
 6. **One objective** — a request that tries to do three things makes three
@@ -164,5 +164,5 @@ asking.**
 2. **The objective is one sentence.** Everything else hangs off it.
 3. **Verifiable beats descriptive.** "exits 0" > "works correctly".
 4. **Never assume the repo or paths** — ask or state them.
-5. **Never commit secrets in a request** — they live in `~/command/.env`.
+5. **Never commit secrets in a request** — they live in `~/Ymir/.env`.
 6. **Note the service/chain** so the run is reproducible by anyone.

@@ -74,6 +74,26 @@ export const GATE_META: Record<GateId, PageMeta> = {
     description:
       'The scheduled jobs of the Nornir, their times, and their health.',
   },
+  sessions: {
+    title: 'Sessions · Smiðja',
+    description:
+      'Every factory run — phases, status, tokens, and cost — read from the smithy’s own smidja.db.',
+  },
+  trace: {
+    title: 'Trace',
+    description:
+      'A run’s lanes, phases, agents, and tool calls; the span-nested execution path.',
+  },
+  decisions: {
+    title: 'Decisions',
+    description:
+      'Failures grouped by phase and model, with the fix to apply — what to change to make the system work.',
+  },
+  stats: {
+    title: 'Stats',
+    description:
+      'Runs, tokens, and cost — totals and by chain and model.',
+  },
 };
 
 function setMeta(attr: 'name' | 'property', key: string, content: string): void {
