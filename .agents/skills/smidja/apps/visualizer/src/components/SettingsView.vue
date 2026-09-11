@@ -5,8 +5,8 @@ import type { SettingInfo } from '../lib/types'
 const FIELDS = [
   {
     key: 'WAYOFTEAMS_MCP_TOKEN',
-    label: 'WayOfTeams MCP token',
-    hint: 'Per-user JWT from WayOfTeams → Settings → MCP. Stored locally in the repo .env (gitignored); the chat pi process uses it to load the full WayOfTeams MCP surface.',
+    label: 'Teams MCP token',
+    hint: 'Per-user JWT from Teams → Settings → MCP. Stored locally in the repo .env (gitignored); the chat pi process uses it to load the full teams MCP surface.',
     secret: true,
     placeholder: 'paste token (replaces current)',
   },
@@ -20,7 +20,7 @@ const FIELDS = [
   {
     key: 'WOTEAMS_AGENT_NAME',
     label: 'Orchestrator name (Kaia)',
-    hint: 'What your orchestrator registers as in the WayOfTeams work registry (agents_list / update_my_work). Default: kaia-chat.',
+    hint: 'What your orchestrator registers as in the Teams work registry (agents_list / update_my_work). Default: kaia-chat.',
     secret: false,
     placeholder: 'kaia-chat',
   },
@@ -77,7 +77,7 @@ onMounted(() => {
   <div class="settings">
     <div class="settings-head">
       <h1>Settings</h1>
-      <p class="sub">WayOfTeams MCP keys — stored locally in the repo <code>.env</code>, never echoed back.</p>
+      <p class="sub">Teams MCP keys — stored locally in the repo <code>.env</code>, never echoed back.</p>
     </div>
 
     <p v-if="error" class="err">{{ error }}</p>
@@ -107,7 +107,7 @@ onMounted(() => {
 
     <p class="note">
       Kaia (the orchestrator chat) gets these keys on every message — the chat's pi process
-      loads <code>@wayofmono/wayofteams-tools</code> directly, so it works even if your own
+      loads the teams MCP tools directly, so it works even if your own
       interactive pi doesn't have the package installed.
     </p>
   </div>
@@ -141,7 +141,7 @@ code { font-family: var(--mono); font-size: 12px; background: var(--panel-2); pa
 .save {
   font-size: 13px;
   color: var(--fg, #fff);
-  background: var(--accent, #ff6b35);
+  background: var(--accent, #38bdf8);
   border: none;
   border-radius: 8px;
   padding: 9px 18px;

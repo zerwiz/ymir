@@ -494,11 +494,11 @@ export interface StatsResponse {
   generated_at: string;
 }
 
-// ── Orchestrator chat (WayOfFactory `#/chat`) ────────────────────────────────
+// ── Orchestrator chat (Ymir `#/chat`) ────────────────────────────────
 
 /** One tool invocation inside a Kaia message — rendered as a collapsible card. */
 export interface ChatToolCall {
-  /** Tool name as Pi reported it, e.g. "tickets_create" or "wayofteams.tickets_create". */
+  /** Tool name as Pi reported it, e.g. "tickets_create" or "teams.tickets_create". */
   tool: string;
   /** Input arguments passed to the tool. */
   args: Record<string, unknown>;
@@ -508,7 +508,7 @@ export interface ChatToolCall {
   ok?: boolean;
   /** Execution time in ms when the agent reported it. */
   ms?: number;
-  /** Optional deep URL into WayOfTeams / the trace for the created resource. */
+  /** Optional deep URL into Teams / the trace for the created resource. */
   link?: string;
   /** Collapsed by default — user expands to see args + result. */
   expanded?: boolean;
@@ -613,7 +613,7 @@ export type RostersResponse = RosterInfo[];
 /** GET /api/models */
 export type ModelsResponse = ModelInfo[];
 
-/** One local setting (WayOfTeams MCP key). value is NEVER returned raw — only masked. */
+/** One local setting (Teams MCP key). value is NEVER returned raw — only masked. */
 export interface SettingInfo {
   key: string;
   set: boolean;

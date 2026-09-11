@@ -221,7 +221,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   cursor: text;
   outline: none;
 }
-.model-input:focus { border-color: var(--accent, #ff6b35); }
+.model-input:focus { border-color: var(--accent, #38bdf8); }
 .model-input::placeholder { color: var(--dim); }
 .model-dropdown {
   position: absolute;
@@ -247,7 +247,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   color: var(--text);
 }
 .model-opt:hover { background: var(--panel-2); }
-.model-opt.active { color: var(--accent, #ff6b35); font-weight: 600; }
+.model-opt.active { color: var(--accent, #38bdf8); font-weight: 600; }
 .model-opt .mo-name { font-family: var(--mono); }
 .model-opt .mo-meta { font-size: 11px; color: var(--dim); }
 .model-no { padding: 8px 12px; font-size: 11px; color: var(--dim); font-style: italic; }

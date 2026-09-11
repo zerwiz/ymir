@@ -60,11 +60,14 @@ function winControl(action: 'minimize' | 'maximize' | 'close') {
         <!-- Inline copy of public/logo.svg (the favicon) so the mark renders
              crisply with no fetch; keep the two in sync. -->
         <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-          <rect x="4" y="6" width="17" height="5" rx="2.5" fill="#FF6B35" />
-          <rect x="8" y="13.5" width="20" height="5" rx="2.5" fill="#FF8F5C" />
-          <rect x="4" y="21" width="13" height="5" rx="2.5" fill="#E25A26" />
+          <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+          <g fill="#38bdf8">
+            <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13" />
+            <polygon points="6,21 26,21 25.4,24 6.6,24" />
+            <polygon points="8,25 24,25 23.3,27.5 8.7,27.5" />
+          </g>
         </svg>
-        <span class="brand">WayOf Smidja</span>
+        <span class="brand">Smíðja</span>
         <span class="sep">›</span>
         <a :href="hrefFor()" :class="{ current: !route.adwId }">sessions</a>
         <span class="sep">›</span>
@@ -144,9 +147,9 @@ function winControl(action: 'minimize' | 'maximize' | 'close') {
   height: 1px;
   background: linear-gradient(
     90deg,
-    rgba(255, 107, 53, 0.4),
-    rgba(255, 143, 92, 0.3) 40%,
-    rgba(255, 143, 92, 0.06)
+    rgba(56, 189, 248, 0.4),
+    rgba(125, 211, 252, 0.3) 40%,
+    rgba(125, 211, 252, 0.06)
   );
 }
 
@@ -162,11 +165,11 @@ function winControl(action: 'minimize' | 'maximize' | 'close') {
   width: 28px;
   height: 28px;
   flex: none;
-  filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.3));
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.3));
 }
 
 .brand {
-  background: linear-gradient(90deg, var(--accent), #FF8F5C);
+  background: linear-gradient(90deg, var(--accent), #7dd3fc);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
