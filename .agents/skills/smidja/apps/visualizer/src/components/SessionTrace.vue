@@ -771,7 +771,7 @@ function selectPhase(p: Phase) {
 
 .stop-btn {
   background: transparent;
-  border: 1px solid rgba(255, 107, 53, 0.5);
+  border: 1px solid rgba(56, 189, 248, 0.5);
   border-radius: 8px;
   color: #7dd3fc;
   font-family: inherit;
@@ -784,8 +784,8 @@ function selectPhase(p: Phase) {
     color 0.15s ease;
 }
 .stop-btn:hover:not(:disabled) {
-  background: rgba(255, 107, 53, 0.16);
-  color: #ffb28a;
+  background: rgba(56, 189, 248, 0.16);
+  color: #7dd3fc;
 }
 .stop-btn:disabled {
   opacity: 0.5;

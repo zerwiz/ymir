@@ -102,7 +102,7 @@ function fmtRuns(runs: string[]): string {
 }
 .card {
   background: rgba(16, 21, 32, 0.6);
-  border: 1px solid rgba(255, 143, 92, 0.14);
+  border: 1px solid rgba(125, 211, 252, 0.14);
   border-radius: 12px;
   padding: 14px 16px;
   display: flex;
@@ -120,8 +120,8 @@ function fmtRuns(runs: string[]): string {
   letter-spacing: 0.03em;
   border-radius: 99px;
   padding: 3px 10px;
-  background: rgba(255, 143, 92, 0.12);
-  color: #ffb28a;
+  background: rgba(125, 211, 252, 0.12);
+  color: #7dd3fc;
 }
 .cls-warn {
   background: rgba(255, 111, 103, 0.16);
