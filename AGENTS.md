@@ -206,3 +206,12 @@ See `.agents/assets/agents/naming.md` for the full component map.
   powers **Utgard** sandboxes; **no-mistakes**
   (`github.com/kunchenguid/no-mistakes`) powers the **clean-PR gate** behind the
   `no-mistakes` posture (`.no-mistakes.yaml`). Norse shell over the OSS engine.
+
+## Hermes runtime (worker agents)
+
+- **Hermes** — the Nous Research agent runtime
+  (`hermes-agent.nousresearch.com`, `github.com/NousResearch/hermes-agent`, MIT)
+  — is an adopted **worker runtime** with its own brain, memory, skills, and
+  isolated subagents. `bin/hermes-ensure.sh` provisions it for any user who
+  lacks it (the `hermes` step of `bin/ymir-install.sh` installs it when absent).
+  Config/identity stays the user's own; Ymir only guarantees the runtime exists.
