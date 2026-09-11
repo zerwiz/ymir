@@ -28,10 +28,14 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# Record an asset as read (called after a read of an asset path).
+# Record an asset as read (called after a read of an asset path). Store BOTH the
+# path as given and its repo-relative form, so either spelling unlocks the gate.
 if [ -n "$NOTE" ]; then
   mkdir -p "$(dirname "$READS")" 2>/dev/null || true
   printf '%s\n' "$NOTE" >>"$READS" 2>/dev/null || true
+  case "$NOTE" in
+    "$ROOT"/*) printf '%s\n' "${NOTE#"$ROOT"/}" >>"$READS" 2>/dev/null || true ;;
+  esac
   exit 0
 fi
 
@@ -54,8 +58,17 @@ asset_for() {
 ASSET="$(asset_for "$TARGET")"
 [ -n "$ASSET" ] || exit 0   # not governed — allow
 
-# Already loaded this session?
-if [ -f "$READS" ] && grep -qxF "$ASSET" "$READS" 2>/dev/null; then exit 0; fi
+# Already loaded this session? Accept the asset recorded either as a repo-relative
+# path or as an absolute path (the harness records what it read, which may be
+# either); compare on a normalised suffix.
+if [ -f "$READS" ]; then
+  while IFS= read -r seen; do
+    [ -n "$seen" ] || continue
+    case "$seen" in
+      "$ASSET"|"$ROOT/$ASSET") exit 0 ;;
+    esac
+  done <"$READS"
+fi
 
 printf 'denied: %s is governed by %s\n' "$TARGET" "$ASSET" >&2
 printf 'help: read that asset first (the read is recorded automatically), then edit.\n' >&2

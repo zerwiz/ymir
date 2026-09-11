@@ -311,6 +311,11 @@ step_desktop() {
   if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
     add desktop SKIP "no display (headless) — run scripts/electron.sh start --both"; return
   fi
+  # On Omarchy, place each app on its OWN numbered desktop (preferring EMPTY
+  # ones) BEFORE launching, so they open separated instead of stacked.
+  if [ -x "$SCRIPT_DIR/desktop-place.sh" ] && [ -d /usr/share/omarchy ]; then
+    "$SCRIPT_DIR/desktop-place.sh" apply >/dev/null 2>&1 || true
+  fi
   if "$ROOT/scripts/electron.sh" start --both >/dev/null 2>&1; then
     add desktop OK "raised Hlidskjalf + Smíðja"
   else

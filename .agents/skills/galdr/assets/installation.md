@@ -35,12 +35,31 @@ install[15]{step,what,self-heals}:
   "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh"
   "register","workspace/INSTALL.md","writes the record"
   "services","gate API, SPA, Nornir, bridges, visualizer","raises via scripts/start.sh"
-  "desktop","Hlidskjalf + Smíðja desktop apps","scripts/electron.sh start --both (self-heals the Electron binary)"
+  "desktop","Hlidskjalf + Smíðja desktop apps","bin/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
 (In `--check` the runtime-only steps — services, desktop, validate — are skipped,
 so 12 rows are printed.)
+
+## Desktop placement (Omarchy desktops, not monitors)
+
+On Omarchy the numbered **desktops** (1 2 3 4 5 …) are the "screens" an operator
+switches between. `bin/desktop-place.sh` gives each Ymir app its **own** desktop,
+**preferring an empty one**, so the apps open separated and reachable with
+`Super+<n>` rather than stacking on the active desktop.
+
+```
+bin/desktop-place.sh plan            # which desktop each app would take
+bin/desktop-place.sh apply           # write the rules + hyprctl reload
+bin/desktop-place.sh status          # what is installed
+```
+
+It writes `~/.config/hypr/ymir-desktops.lua` using Omarchy's own idiom —
+`o.window({ class = "^ymir-hlidskjalf$" }, { workspace = "2" })` — and adds one
+`require("hypr.ymir-desktops")` line to the user's `hyprland.lua`. It **never**
+touches `/usr/share/omarchy/`. Verify with `hyprctl configerrors` (must be empty).
+On a non-Omarchy host the step is a clean SKIP.
 
 ## Consent
 
