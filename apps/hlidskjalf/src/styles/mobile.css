@@ -167,3 +167,98 @@
     max-width: 52vw;
   }
 }
+
+/* --- Phone navigation: bottom tab bar + More sheet ---------------------- */
+.m-nav { display: none; }
+.m-sheet { display: none; }
+
+@media (max-width: 780px) {
+  /* The rail and the desktop stream give way to the tab bar on phones. */
+  .rail { display: none; }
+  .stream { display: none; }
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--topbar-h) minmax(0, 1fr);
+    grid-template-areas:
+      'topbar'
+      'stage';
+  }
+  .stage { padding-bottom: 84px; }
+
+  .m-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    height: 58px;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: color-mix(in srgb, var(--ymir-bg-1) 94%, transparent);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--ymir-steel-1);
+  }
+  .m-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    color: var(--ymir-text-2);
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    padding: 6px 0;
+  }
+  .m-tab.on { color: var(--realm-tint); }
+  .m-tab .m-glyph { font-size: 18px; }
+
+  .m-sheet {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.55);
+  }
+  .m-sheet-inner {
+    width: 100%;
+    background: var(--ymir-bg-1);
+    border-top: 1px solid var(--ymir-steel-1);
+    border-radius: 16px 16px 0 0;
+    padding: 10px var(--ymir-space-4) calc(var(--ymir-space-4) + env(safe-area-inset-bottom));
+    box-shadow: var(--ymir-shadow-raise);
+  }
+  .m-sheet-grip {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ymir-steel-2);
+    margin: 0 auto 10px;
+  }
+  .m-sheet-head { font-weight: 600; margin-bottom: 10px; }
+  .m-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .m-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 4px;
+    border: 1px solid var(--ymir-steel-1);
+    border-radius: 10px;
+    background: var(--ymir-bg-2);
+    color: var(--ymir-text-1);
+    font-size: 11px;
+  }
+  .m-cell.on { border-color: var(--realm-tint); color: var(--ymir-text-0); }
+  .m-cell .m-glyph { font-size: 20px; }
+
+  /* Chat composer clears the home indicator. */
+  .chat-compose { padding-bottom: calc(var(--ymir-space-3) + env(safe-area-inset-bottom)); }
+}
