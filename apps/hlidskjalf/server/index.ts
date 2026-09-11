@@ -1363,24 +1363,42 @@ function isAuthed(req: Request): boolean {
   return !!t && SESSIONS.has(t);
 }
 
+const STATIC_TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.css': 'text/css',
+  '.map': 'application/json',
+  '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json',
+  '.xml': 'application/xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.wasm': 'application/wasm',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.apk': 'application/vnd.android.package-archive',
+};
+
 function serveStatic(pathname: string): Response {
   const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
   let file = join(DIST, rel);
   if (!file.startsWith(DIST) || !existsSync(file) || statSync(file).isDirectory()) file = join(DIST, 'index.html');
-  const type =
-    extname(file) === '.html' ? 'text/html; charset=utf-8'
-    : extname(file) === '.js' ? 'text/javascript'
-    : extname(file) === '.css' ? 'text/css'
-    : extname(file) === '.svg' ? 'image/svg+xml'
-    : extname(file) === '.json' ? 'application/json'
-    : extname(file) === '.webmanifest' ? 'application/manifest+json'
-    : extname(file) === '.woff2' ? 'font/woff2'
-    : extname(file) === '.png' ? 'image/png'
-    : extname(file) === '.webp' ? 'image/webp'
-    : extname(file) === '.ico' ? 'image/x-icon'
-    : 'application/octet-stream';
+  const ext = extname(file).toLowerCase();
+  const headers: Record<string, string> = { 'content-type': STATIC_TYPES[ext] ?? 'application/octet-stream' };
+  if (ext === '.apk') headers['content-disposition'] = 'attachment; filename="ymir.apk"';
+  if (ext === '.apk' || ext === '.woff' || ext === '.woff2' || ext === '.ttf') headers['cache-control'] = 'public, max-age=86400';
   try {
-    return new Response(readFileSync(file), { headers: { 'content-type': type } });
+    return new Response(readFileSync(file), { headers });
   } catch {
     return new Response('Not found', { status: 404 });
   }
