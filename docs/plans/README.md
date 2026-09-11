@@ -30,7 +30,7 @@ One planning document per subsystem, in suggested build order. Status legend:
 | 20 | Midgard Shared Workspace & Sync | `20-midgard-shared-workspace.md` | draft |
 | 21 | Company Houses & Entity Registry | `21-company-houses.md` | approved |
 | 22 | Hlidskjalf Portal (unified obs) | `22-hlidskjalf-portal.md` | proposed |
-| 23 | Ymir ↔ Command/Firstmate Observer | `23-ymir-command-observer.md` | proposed |
+| 23 | Ymir Runtime Observer (self-observation) | `23-ymir-observer.md` | proposed |
 | 24 | Cron Schedule & Briefings | `24-cron-schedule.md` | proposed |
 | 25 | **Ratatoskr A2A Backbone** | `25-ratatoskr-a2a.md` | **approved** |
 | 26 | **Firstmate Four-Layer Framework** | `26-firstmate-four-layer.md` | **active** |

@@ -88,6 +88,10 @@ export const GATES: GateDef[] = [
   { id: 'forge', label: 'Forge', glyph: 'ᚨ', hint: 'Create · edit · Eindri & skills' },
   { id: 'runtime', label: 'Runtime', glyph: 'ᛖ', hint: 'Sága digest · session seating' },
   { id: 'cron', label: 'Cron', glyph: 'ᛃ', hint: 'Nornir schedule · job health' },
+  { id: 'sessions', label: 'Sessions', glyph: 'ᛋ', hint: 'Smiðja runs · phase progress' },
+  { id: 'trace', label: 'Trace', glyph: 'ᛚ', hint: 'Lanes · phases · tool calls' },
+  { id: 'decisions', label: 'Decisions', glyph: 'ᚦ', hint: 'Failures grouped · the fix' },
+  { id: 'stats', label: 'Stats', glyph: 'ᛗ', hint: 'Tokens · cost · by chain & model' },
   { id: 'profile', label: 'Profile', glyph: 'ᛝ', hint: 'Personal & company settings' },
 ];
 

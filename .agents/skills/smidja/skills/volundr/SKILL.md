@@ -101,7 +101,7 @@ passed via `subagent_create(model=…)`.
 | **local** | `lmstudio/qwen3.5-9b` · `qwen3.5-4b` · `gemma-4-12b-it@q4_k_m` · `qwen3.6-35b-a3b@q2_k_xl` · `@iq3_s` · `frontend-design-expert-8b`* | ✅ registered + loaded (`*`: served by LM Studio, not listed in registry) |
 | **online** | `google/gemini-3-flash-preview` · `google/gemini-3.1-pro-preview` · `google/gemini-2.5-pro` · `openrouter/meta-llama/llama-3.3-70b-instruct` | ✅ keys present in registry |
 | **hybrid** | any mix of local + online above, per role | ✅ |
-| **opencode surface** | `opencode-go/deepseek-v4-flash`·`deepseek-v4-pro`·`glm-5.1`·`deepseek-v4-flash-vision-exp` | ✅ NOW pi-reachable via the **bridge** (`scripts/opencode-go-bridge.py`, tmux `ogb`, port 4603; key from `~/command/.env` `OPENCODE_GO_API_KEY` → gateway `https://opencode.ai/zen/go/v1`) |
+| **opencode surface** | `opencode-go/deepseek-v4-flash`·`deepseek-v4-pro`·`glm-5.1`·`deepseek-v4-flash-vision-exp` | ✅ NOW pi-reachable via the **bridge** (`scripts/opencode-go-bridge.py`, tmux `ogb`, port 4603; key from `~/Ymir/.env` `OPENCODE_GO_API_KEY` → gateway `https://opencode.ai/zen/go/v1`) |
 
 If Völundr must dispatch a cloud model, use `opencode-go/*` (via the bridge),
 `google/*`, or `openrouter/*`. The bridge injects the .env key — pi's registry
@@ -209,11 +209,11 @@ scripts/smidja run orchestrate "<ask>"
   audit, stop, learn, missions.
 - **`smidja-instructions`** — turn a fuzzy ask into a request file first.
 - **`smidja`** — smidja internals: cookbooks/references, roster config.
-- **`command-repo`** — conventions when working inside `~/command`.
+- **`smidja`** — conventions when working inside `~/Ymir`.
 
 Deep references: `MEMORY.md` (full memory-system deep dive) ·
-`docs/command docs/software-smidja-visualizer.md` (Völundr's memory UI) ·
-`docs/command docs/SmidjaAgentsAndModels.md` (agents/models source of truth) ·
+`docs/software-smidja-visualizer.md` (Völundr's memory UI) ·
+`docs/SmidjaAgentsAndModels.md` (agents/models source of truth) ·
 `smidja/smidja_data/prompt_engineering/orchestrator/{system,user}.md` ·
 `scripts/kaia-memory-bridge.py` (the bridge, endpoints
 `health / inspect / recall / observe`).

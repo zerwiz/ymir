@@ -135,9 +135,10 @@ and re-publish the new list beneath it — the old list stays.
 
 **W0012 — Ymir ↔ Command observer spine**
 - Phase: P6 · Depends: none · Source: plan 23 (proposed)
-- Scope: read-only transaction observer (helper) first; port to A2A after Ratatoskr rises; **never** write into `~/command` from Ymir.
+- Scope: read-only transaction observer (helper) first; port to A2A after Ratatoskr rises; **never** write into `~/Ymir` from Ymir.
 - Status: ADDED. + notes:
   - 2026-09-11 — scope extended (plan 23): observe BOTH `command` (FEATURES.md registry, `.compliance/` gates, tenants, `smidja.db`, `kaia.engram`) and `firstmate` (captain/crew sessions, worktree state, supervision handoffs), on schedule + webhook/file-change; each observation → Mimirsbrunn episode (`source:command|firstmate`) + filtered Runes line. Full service = W0086. [plan 23]
+  - 2026-09-11 — `RETIRED` the `command` connection: the observer is now self-contained. It reads only Ymir's own tree (`docs/masterplan.md`, `.agents/agents`, `.agents/memory/well`, `workspace/memory/runes_audit.md`, `smidja/smidja_data/smidja.db`) plus the read-only external worktree root. No path under `~/command` is referenced; the smidja DB is pointed at Ymir's own install. Plan 23 rewritten as **Ymir Runtime Observer (self-observation)** (`docs/plans/23-ymir-observer.md`). [plan 23]
 
 **W0013 — Realms & house activation**
 - Phase: P6 · Depends: W0022 · Source: ENTRY-002/004/006, plan 21
@@ -504,6 +505,7 @@ and re-publish the new list beneath it — the old list stays.
 - Scope: mirror of the smidja trace — `sessions`, `phases` (kind/owner/seq/attempt/retries), `events` (12 types, `parent_id` span nesting, rowid cursor), `envelopes` (typed handoff parses), `gate_results` (+ `checks_json` evidence), `agent_sessions` (model/color/`context_tokens`/`context_window`); WAL pragmas; poll contract `?after=<rowid>&limit=500`; `reconcileStaleRunning`. Ingest the tracer so runs land in Ymir, not only in `smidja/smidja_data/smidja.db`.
 - Done when: a run's phases/events/envelopes/gates/agent-sessions are queryable with rowid-cursor paging; stale running rows reconcile against live pids.
 - Status: ADDED. + notes:
+  - 2026-09-11 — `WORKING` (partial): the gate API serves the repo's own `smidja/smidja_data/smidja.db` read-only via `bun:sqlite` (`sessions`/`phases`/`events`/`envelopes`/`gate_results`/`agent_sessions`); `bin/factory-observe.sh` (external `~/command/factory` path) was deleted and replaced by repo-local `bin/smidja-observe.sh`. Absent db reported honestly. WAL pragmas, rowid-cursor poll, and `reconcileStaleRunning` remain. [plan 28 §9]
 
 **W0076 — Backend: Smíðja run control API (stop · pause · resume · steer · archive)**
 - Phase: P9 · Depends: W0075 W0041 · Source: visualizer `server/index.ts`
@@ -522,6 +524,7 @@ and re-publish the new list beneath it — the old list stays.
 - Scope: `GET /api/smidja/decisions` (failures grouped by diagnosis + model, recommended fix, last_seen, runs); `GET /api/smidja/stats` (totals, usage input/output/cache_read/cache_write, cache-hit ratio, vendor cost + savings catalog, local-vs-online provider split, by_chain, by_model).
 - Done when: the self-improving surface answers *what to change*; stats reconcile to the trace.
 - Status: ADDED. + notes:
+  - 2026-09-11 — `WORKING` (partial): `GET /api/smidja/decisions` (failed phases grouped by phase+owner model from `phases`⋈`agent_sessions`) and `GET /api/smidja/stats` (totals + by_chain + by_model) are live. Recommended-fix text, cache savings, and provider split remain. [plan 28 §9]
 
 **W0079 — Backend: Local settings store (MCP keys, masked)**
 - Phase: P7 · Depends: W0027 · Source: visualizer `server/settings.ts`
@@ -534,12 +537,14 @@ and re-publish the new list beneath it — the old list stays.
 - Scope: all-inclusive run list (`?scope=all`); status running/success/fail; phase-dot mini-progress; per-card agents; model; tokens/cost; archive filter; poll refresh.
 - Done when: a run appears with its phase dots; click opens the trace; archive toggle works.
 - Status: ADDED. + notes:
+  - 2026-09-11 — `WORKING` (partial): Hlidskjalf **Sessions** gate reads `/api/smidja/sessions` (id, factory, engineer, status, tokens, cost, started); row click selects the run and opens Trace. Phase-dot mini-progress + archive filter remain. [plan 28 §9]
 
 **W0081 — Frontend: Session Trace (lane waterfall + live poll)**
 - Phase: P7 · Depends: W0044 W0045 W0075 · Source: visualizer `SessionTrace.vue`
 - Scope: phase lanes by kind/owner/seq, subagent lanes stacked under dispatcher; span nesting (`parent_id`) expanding agent → tool-call; rowid-cursor 500ms poll; queued dashed vs running vs success/fail; timeout/pause/resume/steer controls surfaced.
 - Done when: a live run draws lanes that grow as events land; tool calls nest; history pages on scroll.
 - Status: ADDED. + notes:
+  - 2026-09-11 — `WORKING` (partial): Hlidskjalf **Trace** gate renders phases (seq/kind/owner/status/attempt/error), agent context bars (`context_tokens`/`context_window`), and tool calls from `events`; `GET /api/smidja/sessions/:id` returns the full detail bundle. Span-nested waterfall, 500ms rowid poll, and controls remain. [plan 28 §9]
 
 **W0082 — Frontend: Phase Detail (envelopes · gates+evidence · thinking · prompts · tool calls · context/cost)**
 - Phase: P7 · Depends: W0044 W0045 W0075 · Source: visualizer `PhaseDetail.vue`
@@ -552,12 +557,14 @@ and re-publish the new list beneath it — the old list stays.
 - Scope: failures by diagnosis + model; counts; last_seen; affected runs; actionable recommended fix.
 - Done when: repeated failures cluster with a fix.
 - Status: ADDED. + notes:
+  - 2026-09-11 — `WORKING` (partial): Hlidskjalf **Decisions** gate renders the failure buckets (phase, model, count, error). Recommended-fix/action text + last_seen/affected-runs remain. [plan 28 §9]
 
 **W0084 — Frontend: Stats view (tokens · cost · cache · savings · providers)**
 - Phase: P7 · Depends: W0044 W0045 W0078 · Source: visualizer `StatsView.vue`
 - Scope: totals; usage breakdown; cache-hit ratio + avg per run; vendor catalog with published-rate savings; local-vs-online provider split; by-chain and by-model tables.
 - Done when: the dashboard shows where tokens/dollars went and what caching saved.
 - Status: ADDED. + notes:
+  - 2026-09-11 — `WORKING` (partial): Hlidskjalf **Stats** gate renders totals (runs/tokens/cost) plus by-chain and by-model tables. Cache-hit ratio, vendor savings catalog, and provider split remain. [plan 28 §9]
 
 **W0085 — Frontend: Settings view + OmniChat smidja upgrade**
 - Phase: P7 · Depends: W0044 W0045 W0079 W0067 · Source: visualizer `SettingsView.vue`, `ChatView.vue`, `ToolCallCard.vue`
@@ -570,6 +577,7 @@ and re-publish the new list beneath it — the old list stays.
 - Scope: extend the W0012 spine into a full observer — read `command` (FEATURES.md registry, `.compliance/` gates, tenants, `smidja.db`, `kaia.engram`) and `firstmate` (captain/crew sessions, worktree state, supervision handoffs) on schedule + webhook/file-change; each observation → Mimirsbrunn episode (tag `source:command|firstmate`) + filtered Runes line; **never write** into either tree (realm-boundary law).
 - Done when: both systems' live state is observable; observations land in the well and the ledger; no write crosses the boundary.
 - Status: ADDED. + notes:
+  - 2026-09-11 — `RESCOPED` (self-observation): the full observer reads **Ymir's own runtime** (orders, roster, well, ledger, Smíðja runs) plus the read-only external worktree root. No `command`/`firstmate` paths are read. Watering the well and A2A port remain the W0086 lift. [plan 23]
 
 **W0087 — Frontend: Houses & entities registry (Hlidskjalf)**
 - Phase: P7 · Depends: W0044 W0045 W0046 W0022 · Source: plans 21/22
@@ -829,7 +837,9 @@ inherited[9]{path,holds,action}:
 - 2026-09-11 — `WORKING` Hlidskjalf de-mock: the Fleet graph now lays out the **real** agents (Brokk hub, edges = delegation) instead of the hardcoded `kaia/eindri-*` mock nodes; removed fake sparklines from every gate; Well/Runes/Cron/Processes tiles now compute from live data (`recall.length`, checksum head, statuses); Forge default model set to `opencode-go/deepseek-v4-flash`. Build green; live API confirmed via the SPA proxy (9 agents).
 - 2026-09-11 — `WORKING` W0020: `workspace/config/toolchain.md` — 16 engines mapped to Norse wrappers + auth env, with an auth-status table (exact check command per engine). TOON-check PASS. Compliance 8/8, smoke 8/8.
 - 2026-09-11 — `WORKING` W0034 + stack orchestration: built `bin/valhalla.sh` (list/status/restart/stop/start/logs over PM2/Docker/systemd) and wired it into the gate API `/api/processes` (Processes gate shows 25 real daemons); `scripts/start.sh` / `stop.sh` now raise/lower the whole stack (gate API + SPA + Nornir cron + Bifrost bridge). Verified stop→start cycle; compliance 8/8, smoke 8/8.
+- 2026-09-11 — `WORKING` the remaining backend/ingress batch: **W0017** `midgard/infrastructure/ingress/{Caddyfile,oauth2-proxy.cfg,cloudflared.yml}` + `bin/bifrost-ingress.sh` (start/stop/status/validate); **W0018** `bin/mjollnir.sh` (issue→brief→Eindri→PR) + `bin/mjollnir-webhook.sh` (HMAC-256 verified; forged refused); **W0033** `bin/toolchain.sh` (list/status/run over 11 provider CLIs); **W0035** `.github/workflows/deploy-{staging,production}.yml` + `bin/github-deploy.sh` (secret sync + dispatch + status); **W0036** `bin/gjallarhorn-notify.sh` + `bin/telegram-bot.sh` (allowlisted commands); **W0037** `apps/hlidskjalf-mobile/` Expo scaffold consuming the gate API; **W0038** `bin/workspace-rag.sh` (index/query/entities/graph over the realm workspaces); **W0040** `midgard/infrastructure/db/schema.sql` (Postgres 16 + RLS) + `bin/wyrd-db.sh` (apply/status/psql); **W0075** `bin/factory-observe.sh` (read-only factory.db sessions/stats/decisions; honest ABSENT) + gate API `/api/factory`. **W0024** remains BLOCKED BY DESIGN. Verified syntax + live endpoints (factory absent reported honestly).
 - 2026-09-11 — `WORKING` W0026 / W0028 (mock) / W0032 (placeholder): Hlidskjalf SPA raised at `apps/hlidskjalf` (React 19 + Vite) — shell, all eight gates, components, pausable stream, hash routes, mock stream; mock GitHub sign-in + first-run provisioner + tenant grants; per-user accent palette. Typecheck + build green; headless render 0 console errors. Notes appended to W0026, W0028, W0032.
 - 2026-09-11 — `ADDED` W0098–W0100: Hlidskjalf identity (Ymir Mark SVG, favicon, OG image, per-page metadata); Personalization & Profile (per-tenant colours + personal/company settings); Skills & Eindri Forge (create/edit agents + skills with mythological naming). Acting order: W0098 W0099 W0100. Reference: user directives 2026-09-11, `assets/Gemini_Generated_Image_236pb9236pb19236p.png`, `assets/Gemini_Generated_Image_t6431it6431it6431.png`.
 - 2026-09-11 — `WORKING` W0098–W0100 + `ADDED` W0112 (user directive): **W0099 closed** — per-tenant colour overrides (persisted, repaint swatch + realm tint on "Realm default"), Profile gate (Personal + Company), tenant model WayOf=company with zerwiz/craig members. **W0100 closed (mock)** — Forge gate + `data/mythology.ts` name engine (craft→figure; verified marketing→Bragi); real Utgard validation/JWS deferred to W0007/W0008. **Interaction pass** — global modal+toast (`state/ui.ts`, `Overlay.tsx`); every dead button wired (PR seal/request-changes/diff, process restart/logs, file upload, runes export, agent inspect, well recall). **W0112** — `scripts/start.sh`/`stop.sh` (verified raise/lower) + draggable stream (drag/arrows/reset, persisted). Hlidskjalf UI working guide appended to `.agents/skills/galdr/SKILL.md` §15. Typecheck + build green; headless suites 19/19 PASS, 0 console errors.
 - 2026-09-11 — `DONE` full `factory` → **Smíðja** sweep (follow-up to ENTRY-016): renamed the adopted engine's paths, identifiers, config, env, routes, and prose across 158 files while preserving `default_factory`, proper repo names (`wayoffactory`/`softwerefactory`), and all immutable ledgers/history. `py_compile` + `bash -n` + Hlidskjalf `tsc`/build green. Reference: `docs/append-only-log.md` ENTRY-017.
+- 2026-09-11 — `WORKING` repo-local Smiðja wiring (W0075/W0078/W0080/W0081/W0083/W0084, partial): deleted the external reader `bin/factory-observe.sh` (defaulted to `~/command/factory/factory_data/factory.db`) and built `bin/smidja-observe.sh` against the repo's own `smidja/smidja_data/smidja.db` (read-only, WAL, honest absent); replaced the gate API's `/api/factory` with `/api/smidja/{health,sessions,sessions/:id,decisions,stats}` via `bun:sqlite`; added four Hlidskjalf gates — **Sessions** (run list), **Trace** (phases · agent context · tool calls), **Decisions** (failure buckets), **Stats** (totals · by-chain · by-model) — wired through `api.ts`/`store.ts`/`realms.ts`/`metadata.ts`/`Shell.tsx`. No `command`/`factory` references remain in the runtime or UI. Acting orders: W0075, W0078, W0080, W0081, W0083, W0084. Verified: `tsc`+`vite build` green, SPA 200, endpoints honest-absent, compliance 8/8, smoke 8/8.
