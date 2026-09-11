@@ -16,6 +16,7 @@ import type {
   Task,
 } from '../types';
 import { realmDef, ACCENTS, GATES } from '../data/realms';
+import { seedGateFeed } from '../data/feeds';
 import {
   seedAgents,
   seedChat,
@@ -150,7 +151,7 @@ interface YmirState {
   agents: AgentCard[];
   tasks: Task[];
   runes: RuneEntry[];
-  stream: StreamEvent[];
+  streams: Record<string, StreamEvent[]>;
   recall: RecallEpisode[];
   processes: ProcessInfo[];
   reviews: PullRequest[];
@@ -208,6 +209,22 @@ const GATE_IDS: GateId[] = GATES.map((g) => g.id);
 // The chat keeps a rolling window of the last 40 messages in view and in context.
 const CHAT_WINDOW = 40;
 
+// Every page keeps its own rolling window of the last 40 stream messages.
+const STREAM_WINDOW = 40;
+
+/** Route a stream event to the gate it belongs to, so each page sees its own. */
+function gateForModule(module?: string): GateId | undefined {
+  const m = (module ?? '').toLowerCase();
+  if (/well|mimir|memory|engram/.test(m)) return 'well';
+  if (/smidja|session|trace|phase/.test(m)) return 'sessions';
+  if (/forge|gungnir|eindri|skill/.test(m)) return 'forge';
+  if (/rune|ledger|audit/.test(m)) return 'runes';
+  if (/cron|nornir/.test(m)) return 'cron';
+  if (/review|glitnir|pr\b/.test(m)) return 'reviews';
+  if (/process|valhalla|daemon/.test(m)) return 'processes';
+  return undefined;
+}
+
 export function gateFromHash(): GateId {
   const raw = window.location.hash.replace(/^#\/?/, '');
   return (GATE_IDS as string[]).includes(raw) ? (raw as GateId) : 'fleet';
@@ -218,7 +235,7 @@ function hydrate(realm: RealmId) {
     agents: seedAgents(realm),
     tasks: seedTasks(realm),
     runes: seedRunes(realm),
-    stream: seedStream(realm),
+    streams: { all: seedStream(realm) },
     recall: seedRecall(realm),
     processes: seedProcesses(realm),
     reviews: seedReviews(realm),
@@ -421,11 +438,13 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   setGate: (gate) =>
-    set(() => {
+    set((s) => {
       if (window.location.hash !== `#/${gate}`) {
         window.location.hash = `#/${gate}`;
       }
-      return { gate };
+      return s.streams[gate]?.length
+        ? { gate }
+        : { gate, streams: { ...s.streams, [gate]: seedGateFeed(gate) } };
     }),
 
   setDensity: (density) => set({ density }),
@@ -519,7 +538,20 @@ export const useYmir = create<YmirState>((set, get) => ({
   toggleStream: () => set((s) => ({ streamPaused: !s.streamPaused })),
   setQuery: (query) => set({ query }),
 
-  pushStream: (event) => set((s) => ({ stream: [event, ...s.stream].slice(0, 120) })),
+  pushStream: (event) =>
+    set((s) => {
+      const g = event.gate ?? gateForModule(event.module) ?? s.gate;
+      const tagged = { ...event, gate: g };
+      const cur = s.streams[g] ?? [];
+      const all = s.streams.all ?? [];
+      return {
+        streams: {
+          ...s.streams,
+          [g]: [tagged, ...cur].slice(0, STREAM_WINDOW),
+          all: [tagged, ...all].slice(0, STREAM_WINDOW),
+        },
+      };
+    }),
   pushChat: (message) =>
     set((s) => ({ chat: [...s.chat, message].slice(-CHAT_WINDOW) })),
 

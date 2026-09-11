@@ -37,7 +37,7 @@ Nornir jobs run, and how it is all verified. A runtime change not reflected in
 ## Routing (load one row)
 
 ```
-assets[19]{path,load_when}:
+assets[21]{path,load_when}:
   "assets/principles.md","the 10 CLI design principles (full doctrine)"
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -45,6 +45,7 @@ assets[19]{path,load_when}:
   "assets/brokk-distro-runtime.md","the runtime spec (home, digest, lock, supervision, cron)"
   "assets/runtime-components.md","every runtime component, interface, and env var"
   "assets/runtime-compliance.md","runtime acceptance gates + runnable checklist"
+  "assets/memory-well.md","Mimirsbrunn/engram: the well, bridge, MCP, harness wiring, laws"
   "assets/harness-integration/README.md","choosing a harness; adding one"
   "assets/harness-integration/opencode.md","OpenCode adapter"
   "assets/harness-integration/pi.md","Pi adapter"
@@ -54,6 +55,7 @@ assets[19]{path,load_when}:
   "assets/porting-upstream-to-norse.md","porting a validated upstream into Norse"
   "assets/eindri-orchestration.md","spawn/brief/supervise Eindri workers"
   "assets/nornir-jobs.md","the scheduler, jobs, and Runes ledger"
+  "assets/smidja.md","the smithy: install, roster/pi models, run, trace, visualizer ports, observer"
   "assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
   "assets/pi-boot-guide.md","the PI primary boot path"
   "assets/README.md","the full asset index"

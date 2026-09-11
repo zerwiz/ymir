@@ -16,14 +16,17 @@ function fmt(ts: string) {
 }
 
 export function BottomStream() {
-  const stream = useYmir((s) => s.stream);
+  const streams = useYmir((s) => s.streams);
+  const gate = useYmir((s) => s.gate);
   const paused = useYmir((s) => s.streamPaused);
   const toggle = useYmir((s) => s.toggleStream);
   const streamHeight = useYmir((s) => s.streamHeight);
   const setStreamHeight = useYmir((s) => s.setStreamHeight);
   const [filter, setFilter] = useState<'all' | StreamEvent['kind']>('all');
 
-  const shown = (filter === 'all' ? stream : stream.filter((e) => e.kind === filter)).slice(0, 60);
+  // Each page keeps its own rolling 40; fall back to the fleet-wide feed.
+  const page = streams[gate]?.length ? streams[gate] : streams.all ?? [];
+  const shown = (filter === 'all' ? page : page.filter((e) => e.kind === filter)).slice(0, 40);
 
   function beginResize(e: ReactPointerEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -74,7 +77,7 @@ export function BottomStream() {
         <span className={`live-dot ${paused ? 'paused' : ''}`} aria-hidden="true" />
         <span className="stream-title">The Stream</span>
         <span className="mono dim" style={{ fontSize: 10 }}>
-          ratatoskr · runes
+          {gate} · ratatoskr · runes · last 40
         </span>
 
         <div className="stream-tabs" role="group" aria-label="Stream filter">

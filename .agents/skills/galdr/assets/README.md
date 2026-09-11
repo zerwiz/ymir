@@ -8,7 +8,7 @@ galdr[1]{role}:
 ## Routing
 
 ```
-assets[21]{path,load_when}:
+assets[23]{path,load_when}:
   "principles.md","the 10 CLI design principles (full doctrine)"
   "build-method.md","building/maintaining the runtime; forging a new skill"
   "registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -22,12 +22,13 @@ assets[21]{path,load_when}:
   "harness-integration/claude-code.md","building/using the Claude Code adapter"
   "harness-integration/cursor.md","building/using the Cursor adapter"
   "harness-integration/codex.md","building/using the Codex adapter"
+  "smidja.md","the smithy: install, roster/pi models, run, trace, visualizer ports, observer"
   "porting-upstream-to-norse.md","porting a validated upstream into Norse form"
   "eindri-orchestration.md","spawning/briefing/supervising Eindri workers"
   "nornir-jobs.md","the scheduler, the jobs, and the Runes ledger"
   "hlidskjalf-ui.md","any change under apps/hlidskjalf"
   "pi-boot-guide.md","the PI primary boot path"
-  "eindri-profiles.md","Eindri role profiles (developer/marketer/researcher)"
+  "eindri-profiles.md","Einherjar fleet profiles (8 specialists)"
   "build-tool-categories.md","build tool categories for synthesis"
   "reference-adoption.md","reusing assets/data, reference skills/state/docs, state conventions"
 ```
@@ -47,6 +48,13 @@ Also available beside Galdr: `.agents/skills/galdr/schemas/toon-schemas.md` (TOO
 schemas per tool type), the scripts under `.agents/skills/galdr/scripts/` (TOON +
 compliance checks), and the same assets mirrored under
 `.agents/skills/tyr-check/assets/` for the judge.
+
+## Lore reference
+
+```
+lore[1]{path,load_when}:
+  "docs/lore.md","The Complete Frame — 30 sections (I-XXX), all Norse-named components"
+```
 
 ## Related manuals
 

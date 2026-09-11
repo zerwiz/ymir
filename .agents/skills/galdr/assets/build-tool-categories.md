@@ -31,7 +31,7 @@ Galdr needs to understand these build tool categories and their asset requiremen
 - Deterministic Python owns graph, agents bounded nodes
 - Typed JSON envelopes carry context
 - Everything streams into SQLite for the polled visualizer
-- Vue visualizer at port 4601
+- Vue visualizer served at port 8437 (API + built UI; `apps/visualizer/`)
 
 **Assets Galdr Needs**:
 - Smíðja script patterns

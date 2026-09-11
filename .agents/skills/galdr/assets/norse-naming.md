@@ -202,3 +202,76 @@ runtime_figures[7]{figure,role,path}:
   "Snotra","Eindri documenter (docs, changelogs)","`.agents/agents/snotra-documenter.md`"
   "Kvasir","Eindri scout (recon; changes nothing)","`.agents/agents/kvasir-scout.md`"
 ```
+
+### 7.1 Binding and watch figures (lore §XVI)
+
+```
+runtime_figures[3]{figure,role,path}:
+  "Gleipnir","Session lock — binds one session, one reins","bin/gleipnir-lock-lib.sh, bin/brokk-lease.sh"
+  "Skuld","Branch outcome tracker — sees the future of every branch","bin/skuld-branch-outcome.sh, bin/skuld-branch-prompt.sh"
+  "Valknut","Load mechanism — assembles agent config at boot","bin/valknut-load.sh"
+```
+
+### 7.2 Diagnostics and brief figures (lore §XVII)
+
+```
+runtime_figures[2]{figure,role,path}:
+  "Vor","Diagnostics — bootstrap + crew state","bin/vor-crew-state.sh, vor-diagnostics skill"
+  "Erindi","The errand — task brief format","bin/erindi-brief.sh"
+```
+
+### 7.3 Shape-changer and consent figures (lore §XVIII)
+
+```
+runtime_figures[2]{figure,role,path}:
+  "Hamr","Shape-changer — harness adapter","bin/hamr-harness.sh, hamr skill"
+  "Frigg","Consent gate — ask-user authority","frigg-consent skill"
+```
+
+### 7.4 Earth and decision-hold figures (lore §XIX)
+
+```
+runtime_figures[2]{figure,role,path}:
+  "Jörð","Earth goddess — project registry","jord-projects skill"
+  "Urðr","Decision-hold + captain-hold","urdh-decisions skill, urdh-hold skill"
+```
+
+### 7.5 Recovery and away-mode figures (lore §XX)
+
+```
+runtime_figures[2]{figure,role,path}:
+  "Sýn","Stuck-worker recovery","syn-recovery skill, syn-turnend-guard.sh, syn-watch-arm.sh"
+  "Hvíld","Away-mode — idle supervision","hvild-afk skill, saga-wake-drain.sh"
+```
+
+### 7.6 Update and relay figures (lore §XXI)
+
+```
+runtime_figures[2]{figure,role,path}:
+  "Ymir-update","Self-update mechanism","ymir-update skill"
+  "Gjallarhorn-relay","Public relay — X/Discord","gjallarhorn-relay skill, gjallarhorn-notify.sh"
+```
+
+### 7.7 Nornir array figures (lore §XXII)
+
+```
+runtime_figures[2]{figure,role,path}:
+  "Nornir-events","Process→event sources","nornir-events skill"
+  "Nornir-quota","Quota-aware dispatch array selection","nornir-quota skill"
+```
+
+### 7.8 Database and toolchain figures (lore §XXIV-XXV)
+
+```
+runtime_figures[2]{figure,role,path}:
+  "Wyrd","Workspace RAG database","bin/wyrd-db.sh, bin/workspace-rag.sh"
+  "Toolchain","Unified entry point for all Ymir operations","bin/toolchain.sh, justfile"
+```
+
+### 7.9 Veil and gate figures (lore §XXVII)
+
+```
+runtime_figures[2]{figure,role,path}:
+  "The Veil","Anti-hallucination gate — nothing passes without well evidence","kaia-veil gate"
+  "Glitnir","Human review gate — every PR/merge/deploy needs approval","glitnir gate"
+```
