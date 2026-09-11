@@ -30,6 +30,28 @@ siblings of this file (`eindri-orchestration.md`, `nornir-jobs.md`). The runtime
 | 9 | Cron idempotent + date-guarded | start twice; inspect stamps | One loop; one run per job per day. |
 | 10 | Observer read-only | confirm a run touches only `state/` + Runes | No writes to Ymir's tree or the read-only worktree root. |
 | 11 | Secrets never committed | secret scan + ignore audit | No secret literal; ignore rules cover env files. |
+| 12 | Governed assets current | `compliance-check.sh` (`assets` check) | A governed path changed in the working tree has its owning asset changed too. |
+
+### Governed paths — load the asset before you edit
+
+The `assets` gate and the `bin/syn-asset-pretool-check.sh` seatbelt both use this
+map. The seatbelt **denies the edit** until the asset was read this session
+(reads recorded in `state/asset-reads`); the gate **fails the run** when the code
+changed but the asset did not.
+
+```
+governed[6]{path,load_first}:
+  "bin/ymir-install.sh",".agents/skills/galdr/assets/installation.md"
+  "apps/hlidskjalf/**",".agents/skills/galdr/assets/hlidskjalf-ui.md"
+  "bin/mimir*",".agents/skills/galdr/assets/memory-well.md"
+  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr/assets/nornir-jobs.md"
+  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr/assets/harness-integration/README.md"
+  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr/assets/smidja.md"
+```
+
+The same routes appear in `AGENTS.md` (`governed[]`) and are printed in the
+session digest under `ASSET ROUTING`, so the mapping is reachable even when the
+galdr router itself is not loaded.
 
 ---
 

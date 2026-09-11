@@ -129,6 +129,39 @@ else
   add surfaces "Galdr agent+skill dual-surface" FAIL "agent and skill differ"
 fi
 
+# --- assets (governed paths) -------------------------------------------------
+# A governed file changed in the working tree must have its owning asset changed
+# in the same change, or the runtime has drifted from its documentation.
+asset_for() {
+  case "$1" in
+    *bin/ymir-install.sh)                      printf '%s' "$GALDR/assets/installation.md" ;;
+    *apps/hlidskjalf/*)                        printf '%s' "$GALDR/assets/hlidskjalf-ui.md" ;;
+    *bin/mimir*)                               printf '%s' "$GALDR/assets/memory-well.md" ;;
+    *bin/nornir-*|*config/cron.yaml)           printf '%s' "$GALDR/assets/nornir-jobs.md" ;;
+    *bin/valknut-load.sh|*/.pi/*|*/.opencode/*) printf '%s' "$GALDR/assets/harness-integration/README.md" ;;
+    *bin/smidja*|*.agents/skills/smidja/*)     printf '%s' "$GALDR/assets/smidja.md" ;;
+    *)                                         printf '' ;;
+  esac
+}
+if command -v git >/dev/null 2>&1 && git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  changed="$(git -C "$ROOT" diff --name-only HEAD 2>/dev/null || true)"
+  stale=""
+  for f in $changed; do
+    a="$(asset_for "/$f")"
+    [ -n "$a" ] || continue
+    # Stale only when the asset itself did NOT also change.
+    printf '%s\n' "$changed" | grep -qxF "${a#"$ROOT"/}" && continue
+    stale="$stale ${f##*/}"
+  done
+  if [ -z "$stale" ]; then
+    add assets "governed assets current" PASS "no stale governed paths"
+  else
+    add assets "governed assets current" FAIL "stale (asset not updated):$stale"
+  fi
+else
+  add assets "governed assets current" SKIP "not a git work tree"
+fi
+
 # --- duplicates -------------------------------------------------------------
 if [ -d "$ROOT/assets/skills/assets" ]; then
   add duplicates "no duplicate asset trees" FAIL "assets/skills/assets exists"

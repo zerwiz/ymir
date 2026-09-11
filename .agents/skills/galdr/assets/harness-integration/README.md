@@ -140,6 +140,33 @@ bin/syn-cd-pretool-check.sh  --command "<bash command>"   # denies a persistent 
 
 Both are **v0 inert-by-default** contracts: `syn-arm-pretool-check.sh` blocks only a command that backgrounds `syn-watch-arm.sh`; `syn-cd-pretool-check.sh` blocks only `cd .../../`. Owner scripts hold the policy; adapters only relay.
 
+**A third seatbelt guards the assets** — `bin/syn-asset-pretool-check.sh` denies an
+`edit`/`write` of a governed path until its owning asset has been read in the
+session (reads are recorded in `state/asset-reads`).
+
+```bash
+bin/syn-asset-pretool-check.sh --path "<file>"          # exit 2 when the asset is not loaded
+bin/syn-asset-pretool-check.sh --note "<asset path>"     # record an asset as read
+```
+
+Who governs what:
+
+```
+governed[6]{path,load_first}:
+  "bin/ymir-install.sh",".agents/skills/galdr/assets/installation.md"
+  "apps/hlidskjalf/**",".agents/skills/galdr/assets/hlidskjalf-ui.md"
+  "bin/mimir*",".agents/skills/galdr/assets/memory-well.md"
+  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr/assets/nornir-jobs.md"
+  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr/assets/harness-integration/README.md"
+  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr/assets/smidja.md"
+```
+
+The Pi extension `.pi/extensions/syn-turnend-guard.ts` relays it: `read` of an
+asset is recorded, and an `edit`/`write` of a governed path is blocked with the
+reason. The same routes are stated in `AGENTS.md` and printed in the session
+digest under `ASSET ROUTING`, and `compliance-check.sh` fails on a governed file
+changed without its asset (the `assets` gate).
+
 ### Part 5 (optional) — Re-arm / stop auto-arm
 
 Some harnesses cannot synchronously own the watcher at Stop. The supported pattern is an **async rewrite** hook (Claude Code `"asyncRewake": true`; Cursor `followup_message` loop) that re-runs the arm and surfaces actionable output on stderr. If the harness has no such mechanism, do not fake it — declare the harness **turn-end-only** (Codex, Cursor) and rely on `einherjar-spawn.sh` fail-closed dispatch.
