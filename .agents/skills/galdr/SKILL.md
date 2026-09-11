@@ -37,7 +37,7 @@ Nornir jobs run, and how it is all verified. A runtime change not reflected in
 ## Routing (load one row)
 
 ```
-assets[21]{path,load_when}:
+assets[22]{path,load_when}:
   "assets/principles.md","the 10 CLI design principles (full doctrine)"
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -46,6 +46,7 @@ assets[21]{path,load_when}:
   "assets/runtime-components.md","every runtime component, interface, and env var"
   "assets/runtime-compliance.md","runtime acceptance gates + runnable checklist"
   "assets/memory-well.md","Mimirsbrunn/engram: the well, bridge, MCP, harness wiring, laws"
+  "assets/installation.md","first setup / install: ymir-install, engines, hermes, workspaces"
   "assets/harness-integration/README.md","choosing a harness; adding one"
   "assets/harness-integration/opencode.md","OpenCode adapter"
   "assets/harness-integration/pi.md","Pi adapter"

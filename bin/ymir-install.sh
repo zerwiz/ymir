@@ -38,10 +38,15 @@ TOON="install[0]{step,status,detail}:"
 
 # ── 1. prereqs ───────────────────────────────────────────────────────────────
 step_prereqs() {
+  # Handle the fixable gaps for the user; only report the system-level ones.
+  if [ "$CHECK" = 0 ]; then
+    python3 -c "import engram" >/dev/null 2>&1 || python3 -m pip install --user --break-system-packages -q engram >/dev/null 2>&1 || true
+    python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1 || python3 -m pip install --user --break-system-packages -q 'mcp<2' >/dev/null 2>&1 || true
+  fi
   local miss=""
   for c in git python3 bun; do have "$c" || miss="$miss $c"; done
-  if ! python3 -c "import engram" >/dev/null 2>&1; then miss="$miss engram"; fi
-  if ! python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1; then miss="$miss mcp<2"; fi
+  python3 -c "import engram" >/dev/null 2>&1 || miss="$miss engram"
+  python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1 || miss="$miss mcp<2"
   have docker || miss="$miss docker"
   have gh || miss="$miss gh"
   if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "git python3 bun docker gh engram mcp<2"; fi
