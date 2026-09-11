@@ -29,7 +29,7 @@ const EMPTY_AGENT: AgentDraft = {
   role: '',
   capabilities: '',
   house: 'brokkforge',
-  model: 'hermes-3-8b',
+  model: 'opencode-go/deepseek-v4-flash',
 };
 
 export function Forge() {

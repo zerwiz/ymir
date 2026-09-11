@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""kaia-status.py — Kaia memory bridge: health + store inspect.
+"""volundr-status.py — Völundr memory bridge: health + store inspect.
 
 Usage:
-    kaia-status.py [--url http://127.0.0.1:4602]
+    volundr-status.py [--url http://127.0.0.1:4602]
 
 Prints bridge health (store path, episode/fact/entity counts) and a store
 summary from /inspect (recent episodes). Stdlib only.

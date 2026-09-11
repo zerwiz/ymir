@@ -75,7 +75,8 @@ case "$CMD" in
     ;;
 
   list)
-    printf 'worktrees[%s]{id,branch,path,head}:\n' "$(git -C "$REPO" worktree list | wc -l | tr -d ' ')"
+    n=$(git -C "$REPO" worktree list --porcelain 2>/dev/null | awk -v wt="$WT" '/^worktree /{ if ($2 ~ ("/" wt "/")) c++ } END { print c+0 }')
+    printf 'worktrees[%s]{id,branch,path,head}:\n' "$n"
     git -C "$REPO" worktree list --porcelain 2>/dev/null | awk -v repo="$REPO" -v wt="$WT" '
       /^worktree /{p=$2}
       /^branch /{b=$2; sub("refs/heads/","",b)}

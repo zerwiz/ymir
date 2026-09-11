@@ -250,3 +250,20 @@ Entity card fields: `name, type (company|personal), owner (zerwiz|craig), realm,
 - **NOT:** `Smíðja` is not a second platform name (the platform is Ymir); `factory` is not to be used as a Ymir component name. Upstream "Super Simple Software Factory" remains a provenance citation only.
 - **KEEP:** the upstream engine adopted as-is (borrowed anvil, per ENTRY-008); the sibling factory command verbs (`factory.config.yaml`, `factory-launcher`, `start-the-factory`) are unchanged pending a separate config/CLI rename pass.
 - **Files:** `.agents/skills/smidja/**`, `.agents/assets/agents/naming.md`, `.agents/skills/galdr/assets/norse-naming.md`, `docs/lore.md`, `docs/plans/28-frontend-backend-build.md`.
+
+## ENTRY 2026-09-11-017 — Full `factory` → **Smíðja** sweep (follow-up to ENTRY-016)
+
+- **Status:** DONE · **Owner:** Brokk · **Authority:** Allfather directive 2026-09-11 ("fix all").
+- **Context:** After ENTRY-016 (directory rename), ~2.7k `factory` references remained across 158 files (the adopted engine, visualizer, docs, `.pi` extensions, galDr/tyr-check assets).
+- **DECISION — all references to the software-factory subsystem are now Smíðja.** Sweep applied function-preserving, case-aware:
+  - **Paths renamed:** `templates/factory/` → `templates/smidja/`; `templates/factory/*.py` → `smidja_*.py`; `templates/factory.config.yaml` → `templates/smidja.config.yaml`; `scripts/make_factory.py` → `make_smidja.py`; `cookbooks/{create,update,run}_factory.md` → `*_smidja.md`; sibling skills `factory-launcher` → `smidja-launcher`, `start-the-factory` → `smidja-start`, `factory-instructions` → `smidja-instructions`.
+  - **Identifiers:** `factory_id` → `smidja_id`, `factoryConfig` → `smidjaConfig`, `factoryDb` → `smidjaDb`, `factoryDesktop` → `smidjaDesktop`, `factoryEntry` → `smidjaEntry`, `FACTORY_*` env → `SMIDJA_*`, `/api/factory/*` → `/api/smidja/*`, `factory.db` → `smidja.db`, `StartTheFactory` → `StartSmidja`; visualizer package `sssf-visualizer` → `smidja-visualizer`.
+  - **Prose:** "software factory"/"the factory" → "the smithy"/"Smíðja"; markdown capitalised form rendered **Smíðja**.
+- **NOT changed (deliberately):**
+  - Python's `default_factory` (dataclass API) — untouched.
+  - Proper nouns `wayoffactory`, `softwerefactory`, `WayOfFactory`, `runfactory` — real repo/house names, not the subsystem.
+  - `DefinitionFactory` — generic code-pattern term, not the subsystem.
+  - Immutable history: `docs/append-only-log.md`, `workspace/memory/runes_audit.md`, `svartalfaheim/*/workspace/memory/daily/*`, `.agents/memory/well/episodes.jsonl`, `state/observer.log`.
+  - Upstream reference dumps: `assets/reference/**`, `assets/Ymir.md` — provenance only.
+- **Verified:** `python3 -m py_compile` clean (scripts), `bash -n` clean (shell), `apps/hlidskjalf` `tsc --noEmit` + `vite build` green. Visualizer `node_modules` is a broken bun install (pre-existing) so `vue-tsc` could not run; identifier rename verified by grep (no old camelCase forms remain).
+- **Files:** entire tree (158 files) — see `docs/masterplan.md` §5 log.

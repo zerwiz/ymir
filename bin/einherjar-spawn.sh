@@ -409,7 +409,19 @@ if [ "$ISOLATION_EFFECTIVE" = on ]; then
 else
   LAUNCH_CWD=$WT
 fi
-BRIEF_REF=$BRIEF
+# --- pre-dispatch context injection (W0006): drink before you act -----------
+# Recall what the well remembers about this task and hand it to the worker with
+# the brief. A dry well never blocks; recall is a boost.
+CTX="$DATA/$ID/context.md"
+TITLE=$(grep -m1 -E '^#|title' "$BRIEF" 2>/dev/null | sed 's/^#* *//' || true)
+"$SCRIPT_DIR/mimir.sh" recall "${TITLE:-$ID}" --k 4 >"$CTX" 2>/dev/null || : >"$CTX"
+PROMPT="$DATA/$ID/prompt.md"
+{
+  cat "$BRIEF"
+  printf '\n\n---\n\n## Recalled context (the well — Mimirsbrunn)\n\n'
+  cat "$CTX"
+} >"$PROMPT" 2>/dev/null || cp "$BRIEF" "$PROMPT"
+BRIEF_REF=$PROMPT
 
 build_launch_command() {
   local brief_ref=$1 model_flag= effort_flag=
