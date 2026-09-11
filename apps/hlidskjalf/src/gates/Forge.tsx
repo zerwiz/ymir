@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useYmir } from '../state/store';
 import { useUI } from '../state/ui';
 import { HOUSES } from '../data/realms';
 import { AETTS_LIST, aettFor, suggestFigures } from '../data/mythology';
 import { StatusChip } from '../components/Status';
 import { RuneTag } from '../components/RuneTag';
+import { ModelPicker } from '../components/ModelPicker';
+import { gateApi, type PromptFile } from '../services/api';
 import type { AgentCard as AgentCardType, HouseId, SkillDef } from '../types';
 
-type Mode = 'agent' | 'skill';
+type Mode = 'agent' | 'skill' | 'prompt';
 
 const HOUSES_LIST = Object.keys(HOUSES) as HouseId[];
 
@@ -46,6 +48,57 @@ export function Forge() {
   const [mode, setMode] = useState<Mode>('agent');
   const [agent, setAgent] = useState<AgentDraft>(EMPTY_AGENT);
   const [skill, setSkill] = useState<SkillDef | null>(null);
+  const chatModels = useYmir((s) => s.chatModels);
+  const [promptFiles, setPromptFiles] = useState<PromptFile[]>([]);
+  const [prompt, setPrompt] = useState<PromptFile | null>(null);
+  const [promptBody, setPromptBody] = useState('');
+  const [promptDirty, setPromptDirty] = useState(false);
+
+  useEffect(() => {
+    if (mode !== 'prompt' || promptFiles.length) return;
+    void gateApi.prompts().then(setPromptFiles).catch(() => {});
+  }, [mode, promptFiles.length]);
+
+  function selectPrompt(p: PromptFile) {
+    setPrompt(p);
+    setPromptBody(p.body);
+    setPromptDirty(false);
+  }
+
+  /** Jump straight from an agent to its prompts (free-type name still helps). */
+  function openPromptsFor(name: string) {
+    const key = slug(name);
+    const pick = (rows: PromptFile[]) => {
+      const match =
+        rows.find((r) => r.agent.includes(key) || key.includes(r.agent)) ?? rows[0] ?? null;
+      if (match) selectPrompt(match);
+    };
+    setMode('prompt');
+    if (promptFiles.length) pick(promptFiles);
+    else
+      void gateApi
+        .prompts()
+        .then((rows) => {
+          setPromptFiles(rows);
+          pick(rows);
+        })
+        .catch(() => {});
+  }
+
+  async function savePromptFile() {
+    if (!prompt) return;
+    try {
+      const res = await gateApi.savePrompt(prompt.agent, prompt.kind, promptBody);
+      setPromptFiles((files) =>
+        files.map((f) => (f.agent === prompt.agent && f.kind === prompt.kind ? { ...f, body: promptBody } : f)),
+      );
+      setPromptDirty(false);
+      toast({ kind: 'ok', title: `${prompt.agent}/${prompt.kind}.md saved`, body: res.path });
+      emit(`prompt.save ${prompt.agent}/${prompt.kind}`);
+    } catch {
+      toast({ kind: 'danger', title: 'Prompt save failed', body: 'Check the gate API.' });
+    }
+  }
 
   const suggestions = useMemo(
     () => suggestFigures(`${agent.role} ${agent.capabilities}`, 4),
@@ -156,6 +209,9 @@ export function Forge() {
           <button className="stream-tab" aria-pressed={mode === 'skill'} onClick={() => setMode('skill')}>
             Skills · {skills.length}
           </button>
+          <button className="stream-tab" aria-pressed={mode === 'prompt'} onClick={() => setMode('prompt')}>
+            Prompts · {promptFiles.length}
+          </button>
         </div>
       </div>
 
@@ -180,30 +236,44 @@ export function Forge() {
                     <StatusChip status={a.status} />
                   </button>
                 ))
-              : skills.map((s) => (
-                  <button
-                    key={s.id}
-                    className="forge-item"
-                    aria-selected={skill?.id === s.id}
-                    onClick={() => setSkill(s)}
-                  >
-                    <span className="mono grow truncate">{s.name}</span>
-                    <RuneTag label={s.aett} glyph="ᛊ" color="var(--ymir-violet-1)" />
-                  </button>
-                ))}
-            <button
-              className="btn btn-primary"
-              style={{ margin: 'var(--ymir-space-3)' }}
-              onClick={() => {
-                if (mode === 'agent') {
-                  setAgent(EMPTY_AGENT);
-                } else {
-                  setSkill(newSkillDraft());
-                }
-              }}
-            >
-              <span aria-hidden="true">+</span> New {mode === 'agent' ? 'Eindri' : 'skill'}
-            </button>
+              : mode === 'skill'
+                ? skills.map((s) => (
+                    <button
+                      key={s.id}
+                      className="forge-item"
+                      aria-selected={skill?.id === s.id}
+                      onClick={() => setSkill(s)}
+                    >
+                      <span className="mono grow truncate">{s.name}</span>
+                      <RuneTag label={s.aett} glyph="ᛊ" color="var(--ymir-violet-1)" />
+                    </button>
+                  ))
+                : promptFiles.map((p) => (
+                    <button
+                      key={`${p.agent}/${p.kind}`}
+                      className="forge-item"
+                      aria-selected={prompt?.agent === p.agent && prompt?.kind === p.kind}
+                      onClick={() => selectPrompt(p)}
+                    >
+                      <span className="mono grow truncate">{p.agent}</span>
+                      <span className="dim">{p.kind}.md</span>
+                    </button>
+                  ))}
+            {mode !== 'prompt' ? (
+              <button
+                className="btn btn-primary"
+                style={{ margin: 'var(--ymir-space-3)' }}
+                onClick={() => {
+                  if (mode === 'agent') {
+                    setAgent(EMPTY_AGENT);
+                  } else {
+                    setSkill(newSkillDraft());
+                  }
+                }}
+              >
+                <span aria-hidden="true">+</span> New {mode === 'agent' ? 'Eindri' : 'skill'}
+              </button>
+            ) : null}
           </div>
         </section>
 
@@ -213,7 +283,9 @@ export function Forge() {
               <span className="glyph" aria-hidden="true">ᚨ</span>
               {mode === 'agent'
                 ? (agent.id ? `Edit ${agent.name}` : 'Forge a new Eindri')
-                : (skill ? `Edit ${skill.name || 'skill'}` : 'Forge a new skill')}
+                : mode === 'skill'
+                  ? (skill ? `Edit ${skill.name || 'skill'}` : 'Forge a new skill')
+                  : (prompt ? `Edit ${prompt.agent}/${prompt.kind}.md` : 'Agent prompts')}
             </div>
           </div>
 
@@ -273,10 +345,12 @@ export function Forge() {
                   </select>
                 </label>
                 <label className="field">
-                  <span className="eyebrow">Model</span>
-                  <input
+                  <span className="eyebrow">Model · connected, free-type</span>
+                  <ModelPicker
                     value={agent.model}
-                    onChange={(e) => setAgent({ ...agent, model: e.target.value })}
+                    onChange={(id) => setAgent({ ...agent, model: id })}
+                    models={chatModels}
+                    placeholder="model id"
                   />
                 </label>
               </div>
@@ -286,9 +360,12 @@ export function Forge() {
                   <span aria-hidden="true">ᛉ</span> {agent.id ? 'Save Eindri' : 'Forge Eindri'}
                 </button>
                 <button className="btn" onClick={() => setAgent(EMPTY_AGENT)}>Clear</button>
+                <button className="btn" onClick={() => openPromptsFor(agent.name || agent.role)}>
+                  <span aria-hidden="true">ᛊ</span> Edit prompts
+                </button>
               </div>
             </div>
-          ) : skill ? (
+          ) : mode === 'skill' && skill ? (
             <div className="panel-body col" style={{ gap: 'var(--ymir-space-4)' }}>
               <div className="form-grid">
                 <label className="field">
@@ -356,10 +433,50 @@ export function Forge() {
                 <button className="btn" onClick={() => setSkill(null)}>Cancel</button>
               </div>
             </div>
+          ) : prompt ? (
+            <div className="panel-body col" style={{ gap: 'var(--ymir-space-4)' }}>
+              <div className="row-between">
+                <div className="col" style={{ gap: 2 }}>
+                  <span className="eyebrow">Prompt file</span>
+                  <span className="mono">{prompt.path}</span>
+                </div>
+                <span className="chip on">{prompt.kind}</span>
+              </div>
+
+              <label className="field">
+                <span className="eyebrow">{prompt.kind === 'system' ? 'System prompt' : 'User prompt'}</span>
+                <textarea
+                  rows={18}
+                  className="prompt-editor"
+                  value={promptBody}
+                  onChange={(e) => {
+                    setPromptBody(e.target.value);
+                    setPromptDirty(true);
+                  }}
+                />
+              </label>
+
+              <div className="row">
+                <button className="btn btn-primary" onClick={savePromptFile} disabled={!promptDirty}>
+                  <span aria-hidden="true">ᛉ</span> Save prompt
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setPromptBody(prompt.body);
+                    setPromptDirty(false);
+                  }}
+                  disabled={!promptDirty}
+                >
+                  Revert
+                </button>
+                {promptDirty ? <span className="dim" style={{ alignSelf: 'center' }}>unsaved changes</span> : null}
+              </div>
+            </div>
           ) : (
             <div className="empty">
               <span className="glyph" aria-hidden="true">ᚨ</span>
-              <p>Select a skill to edit, or forge a new one.</p>
+              <p>Select a prompt file to edit.</p>
             </div>
           )}
         </section>

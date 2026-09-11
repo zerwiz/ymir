@@ -196,6 +196,10 @@ export interface ChatMessage {
   body: string;
   ts: string;
   recalling?: boolean;
+  thinking?: boolean;
+  error?: boolean;
+  model?: string;
+  agents?: string[];
 }
 
 export interface RealmDef {

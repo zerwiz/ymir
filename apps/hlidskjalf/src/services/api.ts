@@ -78,9 +78,38 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function del<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { method: 'DELETE', credentials: 'include' });
+  if (!res.ok) throw new Error(`${path} → ${res.status}`);
+  return (await res.json()) as T;
+}
+
 export interface ChatReply {
   reply: ChatMessage;
   live: boolean;
+}
+
+export interface ChatSession {
+  id: string;
+  messages: number;
+  updated_at: string | null;
+}
+export interface ChatModel {
+  id: string;
+  name: string;
+  provider: string;
+  kind: 'local' | 'online';
+}
+export interface ChatSendOptions {
+  session?: string;
+  model?: string;
+  agents?: string[];
+}
+export interface PromptFile {
+  agent: string;
+  kind: 'system' | 'user';
+  path: string;
+  body: string;
 }
 
 export interface SmidjaSession {
@@ -237,8 +266,14 @@ export const gateApi = {
   loaders: () => get<LoaderRow[]>('/api/loaders'),
   checks: () => get<CheckRow[]>('/api/checks'),
   orders: () => get<OrdersInfo>('/api/orders'),
-  chatHistory: () => get<ChatMessage[]>('/api/chat/history'),
-  chat: (content: string) => post<ChatReply>('/api/chat', { content }),
+  chatHistory: (session = 'default') => get<ChatMessage[]>(`/api/chat/history?session=${encodeURIComponent(session)}`),
+  chatSessions: () => get<ChatSession[]>('/api/chat/sessions'),
+  chatModels: () => get<ChatModel[]>('/api/chat/models'),
+  chat: (content: string, opts: ChatSendOptions = {}) => post<ChatReply>('/api/chat', { content, ...opts }),
+  deleteChatSession: (session: string) => del<{ ok: boolean }>(`/api/chat/session?session=${encodeURIComponent(session)}`),
+  prompts: () => get<PromptFile[]>('/api/prompts'),
+  savePrompt: (agent: string, kind: string, body: string) =>
+    post<{ ok: boolean; path: string }>('/api/prompts', { agent, kind, body }),
   smidjaHealth: () => get<{ db: string; sessions: number }>('/api/smidja/health'),
   smidjaSessions: () => get<SmidjaSession[]>('/api/smidja/sessions'),
   smidjaSession: (id: string) => get<SmidjaDetail>(`/api/smidja/sessions/${encodeURIComponent(id)}`),
