@@ -282,3 +282,17 @@
     margin: 0 auto;
   }
 }
+
+/* The login must always be able to scroll on a phone. */
+@media (max-width: 780px) {
+  .login {
+    display: block;
+    text-align: center;
+  }
+  .login .gate,
+  .login-card {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+  }
+}

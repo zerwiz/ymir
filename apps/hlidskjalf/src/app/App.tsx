@@ -23,6 +23,13 @@ export default function App() {
       .catch(() => setAuthed(true));
   }, [demo]);
 
+  // A 401 anywhere re-locks the gate.
+  useEffect(() => {
+    const lock = () => setAuthed(false);
+    window.addEventListener('ymir:unauthorized', lock);
+    return () => window.removeEventListener('ymir:unauthorized', lock);
+  }, []);
+
   useEffect(() => {
     if (!session) return;
     return startStream();
@@ -41,6 +48,11 @@ export default function App() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
+
+  // Hold until we know (no unauthenticated flash of the app), then hard-gate.
+  if (authed === null && !demo) {
+    return null;
+  }
 
   if (authed === false) {
     return (
