@@ -80,3 +80,7 @@ apps/hlidskjalf/android/local.properties
 
 # Large generated mobile artifact (build it — see README)
 apps/hlidskjalf/public/ymir.apk
+
+# Android release signing (never commit)
+apps/hlidskjalf/android/ymir-release.keystore
+apps/hlidskjalf/android/keystore.properties
