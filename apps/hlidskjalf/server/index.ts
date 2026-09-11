@@ -11,7 +11,7 @@
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, extname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 
 const PORT = Number(process.env.PORT ?? 3889);
@@ -1345,6 +1345,49 @@ function workspaceProvision(name: string, kind: string, domains: string) {
   return parseToon(run(['bash', 'bin/workspace-provision.sh', name, '--kind', kind, '--domains', domains]));
 }
 
+/* ---- tunnel gate (hardcoded for now) ------------------------------------- */
+// Temporary HTTP Basic Auth for the public tunnel. Override with
+// HLIDSKJALF_AUTH="user:pass"; replace with Heimdall (oauth2-proxy) later.
+const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? 'zerwiz:allfather';
+const DIST = join(ROOT, 'apps/hlidskjalf/dist');
+
+function authOk(req: Request): boolean {
+  const hdr = req.headers.get('authorization') ?? '';
+  if (!hdr.startsWith('Basic ')) return false;
+  let decoded = '';
+  try {
+    decoded = Buffer.from(hdr.slice(6), 'base64').toString('utf8');
+  } catch {
+    return false;
+  }
+  const i = decoded.indexOf(':');
+  if (i < 0) return false;
+  return `${decoded.slice(0, i)}:${decoded.slice(i + 1)}` === GATE_AUTH;
+}
+
+function serveStatic(pathname: string): Response {
+  const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+  let file = join(DIST, rel);
+  if (!file.startsWith(DIST) || !existsSync(file) || statSync(file).isDirectory()) file = join(DIST, 'index.html');
+  const type =
+    extname(file) === '.html' ? 'text/html; charset=utf-8'
+    : extname(file) === '.js' ? 'text/javascript'
+    : extname(file) === '.css' ? 'text/css'
+    : extname(file) === '.svg' ? 'image/svg+xml'
+    : extname(file) === '.json' ? 'application/json'
+    : extname(file) === '.webmanifest' ? 'application/manifest+json'
+    : extname(file) === '.woff2' ? 'font/woff2'
+    : extname(file) === '.png' ? 'image/png'
+    : extname(file) === '.webp' ? 'image/webp'
+    : extname(file) === '.ico' ? 'image/x-icon'
+    : 'application/octet-stream';
+  try {
+    return new Response(readFileSync(file), { headers: { 'content-type': type } });
+  } catch {
+    return new Response('Not found', { status: 404 });
+  }
+}
+
 /* ---- server -------------------------------------------------------------- */
 const server = Bun.serve({
   port: PORT,
@@ -1352,6 +1395,12 @@ const server = Bun.serve({
     const url = new URL(req.url);
     const p = url.pathname;
     try {
+      if (GATE_AUTH && !authOk(req)) {
+        return new Response('Ymir — authentication required', {
+          status: 401,
+          headers: { 'www-authenticate': 'Basic realm="Ymir"', 'content-type': 'text/plain' },
+        });
+      }
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
       if (p === '/api/me') return json({ login: 'Allfather', realm: 'work' });
       if (p === '/api/workspace') {
@@ -1420,7 +1469,7 @@ const server = Bun.serve({
         return json(await postChat(body.session ?? 'default', content, body.model, body.agents));
       }
       if (p.startsWith('/api/')) return json({ error: `no route ${p}` }, 404);
-      return new Response('Hlidskjalf gate API. Endpoints under /api/*.', { status: 200 });
+      return serveStatic(p);
     } catch (err) {
       return json({ error: (err as Error).message }, 500);
     }
