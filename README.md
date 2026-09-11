@@ -277,6 +277,38 @@ ymir/
 
 ---
 
+## Desktop & Mobile
+
+- **Desktop (Electron).** `scripts/electron.sh start` (or `npm run desktop` in
+  `apps/hlidskjalf`) opens Hlidskjalf + Smiðja as a native window — app icon and
+  a stable “Ymir · Hlidskjalf” title. It raises the stack if it is down.
+
+- **Android APK (Capacitor).** A thin native shell over the Hlidskjalf web app —
+  one codebase, pointed at your tunnel.
+
+  ```sh
+  cd apps/hlidskjalf
+  npm install
+  npm run build
+  npx cap sync android
+  cd android
+  JAVA_HOME=<jdk-17> ANDROID_HOME=<android-sdk> ./gradlew assembleDebug
+  # → android/app/build/outputs/apk/debug/app-debug.apk
+  ```
+
+  Change the server later **without touching code**:
+
+  ```sh
+  YMIR_SERVER_URL=https://your.server npx cap sync android
+  ```
+
+  Default target is `https://ymirdell.zerwiz.org` (`capacitor.config.ts`).
+
+- **PWA.** Open the tunnel URL on a phone and “Add to Home Screen” — the manifest
+  ships in `apps/hlidskjalf/public/manifest.webmanifest`.
+
+---
+
 ## Naming Law
 
 Every subsystem, component, and process is named for the figure whose role matches
