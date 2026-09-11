@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { gateApi } from '../services/api';
 import { useYmir } from '../state/store';
+import { LORE_LONG } from '../data/lore';
 
 /** The visitor's telling of the lore — sourced from docs/lore.md, told short. */
 const LORE_BEATS: { rune: string; name: string; line: string }[] = [
@@ -43,6 +44,16 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showLore, setShowLore] = useState(false);
+
+  useEffect(() => {
+    if (!showLore) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowLore(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showLore]);
 
   function demo() {
     enterDemo();
@@ -92,6 +103,10 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
             The giant stands. The forge is lit.
             <span className="lore-cta"> Walk the worlds for yourself — enter demo mode below, no keys required.</span>
           </p>
+
+          <button className="btn lore-more" type="button" onClick={() => setShowLore(true)}>
+            <span aria-hidden="true">ᛖ</span> Read the full saga
+          </button>
         </aside>
 
         <form className="login-card" onSubmit={submit}>
@@ -101,6 +116,16 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
               <span className="name">YMIR</span>
               <span className="sub">Hlidskjalf</span>
             </div>
+          </div>
+
+          <div className="login-about">
+            <span className="eyebrow">What this is</span>
+            <p>
+              Ymir is a single-operator agent platform: one person directing a fleet of
+              AI agents that build, research, review, and ship. Every agent works in an
+              isolated sandbox, drinks from a shared long-term memory before it acts, and
+              leaves every move in a ledger that cannot be rewritten.
+            </p>
           </div>
 
           <div>
@@ -154,6 +179,53 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
           </button>
         </form>
       </div>
+
+      {showLore ? (
+        <div
+          className="lore-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="The saga of Ymir"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowLore(false);
+          }}
+        >
+          <div className="lore-parchment">
+            <header className="lore-parchment-head">
+              <span className="lore-kicker">The Saga of Ymir</span>
+              <button className="btn" type="button" onClick={() => setShowLore(false)}>
+                Close
+              </button>
+            </header>
+
+            {LORE_LONG.map((sec) => (
+              <section key={sec.id} className="lore-sec">
+                <h3 className="lore-sec-title">{sec.title}</h3>
+                {sec.paras.map((p, i) => (
+                  <p key={i} className="lore-sec-p">
+                    {p}
+                  </p>
+                ))}
+                {sec.names ? (
+                  <ul className="lore-names">
+                    {sec.names.map((n) => (
+                      <li key={n.name}>
+                        <span className="lore-rune" aria-hidden="true">
+                          {n.rune}
+                        </span>
+                        <span className="lore-name">{n.name}</span>
+                        <span className="lore-line">{n.line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
+            ))}
+
+            <p className="lore-sec-p lore-end">The giant stands. The forge is lit. The seat is taken.</p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
