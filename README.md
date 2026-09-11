@@ -61,6 +61,29 @@ source first, always. The full tale: [`docs/lore.md`](docs/lore.md).
 
 ---
 
+## Host platforms — three first-class identities
+
+Ymir is not portable-in-theory; it is **native** to the machine it runs on. Three
+platforms are first-class, and each one is detected, used, and learned rather than
+merely tolerated.
+
+| Identity | What it means | Where it lives |
+|---|---|---|
+| **Omarchy-native** | The host desktop is Omarchy (Arch + Hyprland). Ymir reads monitors/scale, lets Hyprland own window placement, mitigates the amdgpu GPU crash, and **learns the user's setup** — packages, configs, Omarchy version — re-learning after every `omarchy update` via a `post-update` hook. | `bin/omarchy-sense.sh`, `bin/omarchy-hook-install.sh`, skill `ymir-omarchy` |
+| **herdr-first (Þjazi)** | Agent panes need a terminal backend. **herdr** is preferred (Þjazi protocol **14+**; presentation spaces at **0.8.0+**), **tmux** is the accepted reference backend. A missing backend is reported, never silently degraded. | `bin/herdr-ensure.sh`, skill `ymir-thjazi` |
+| **pi-native** | The [pi](https://pi.dev) coding harness is a first-class surface: extensions, skills, prompt templates, themes, custom providers, and **pi packages** (npm/git) are all live. This is where Ymir gains reach — a new capability can be a pi extension or a packaged bundle, not just a shell script. | `.pi/extensions/`, `.pi/settings.json`, `.pi/mcp.json` |
+
+**Why this matters.** The freedom runs both ways: because Ymir is pi-native it can
+ship **pi packages** — bundling extensions, skills, prompt templates, and themes
+for others to `pi install` — and because it is Omarchy-native it can help an
+Omarchy user set up and tune the whole machine, not just the repo.
+
+On a non-Omarchy host the Omarchy steps are a clean `SKIP`; Ymir still runs. On a
+host without herdr, tmux carries the panes. On a harness that is not pi, the
+runtime adapts through the harness adapters (see `hamr`).
+
+---
+
 ## System Map
 
 | Subsystem | Norse Name | Role |
@@ -88,6 +111,9 @@ source first, always. The full tale: [`docs/lore.md`](docs/lore.md).
 | Watch / supervision | **Sýn** | watcher, guard, seat continuity |
 | Session lock | **Gleipnir** | one live session per home |
 | Scheduled jobs | **Nornir** | the fates who govern time |
+| Host desktop (Omarchy) | **Omarchy** | the machine Ymir runs on: monitors, scale, themes, hooks |
+| Terminal backend | **Þjazi** | agent panes — herdr (protocol 14+) or tmux |
+| Harness surface | **pi** | extensions, skills, prompt templates, packages |
 
 ---
 
@@ -118,6 +144,8 @@ the master builder; Tyr judges compliance.
 | `eindri-homes` | Eindri | isolated worker homes |
 | `syn-recovery` | Sýn | stuck-worker recovery playbook |
 | `ymir-update` | Ymir | self-update the running system and workers |
+| `ymir-omarchy` | Ymir | Omarchy-native operation: host desktop, monitors, placement, GPU, host learning |
+| `ymir-thjazi` | Þjazi | the herdr/tmux terminal backend — protocol floors, panes |
 | `hamr` | Hamr | per-harness adapter reference (OpenCode, Pi, Claude, Cursor, Codex) |
 
 The Galdr family enforces the 10 ergonomic principles (TOON output, minimal schemas,
@@ -195,12 +223,21 @@ screen to explore without the runtime.
 git clone <this-repo> ~/Ymir && cd ~/Ymir
 cp .env.example .env.local          # fill in your keys (never committed)
 
-# 1) The control plane (live data)
+# 1) First setup — prints a plan, asks you to accept, then validates itself
+bin/ymir-install.sh                 # add --yes for non-interactive, or --check to preview
+
+# 2) The control plane (live data)
 scripts/start.sh                    # → http://127.0.0.1:3888/
 
-# 2) The agent seat (any supported harness)
+# 3) The agent seat (any supported harness)
 bin/saga-session-start.sh           # the digest (auto-runs on harness open)
 ```
+
+The installer is idempotent and self-healing: it provisions what it can in user
+space (`bun`, `uv`, `mcp`, the Þjazi backend), installs the OSS engines, and on an
+**Omarchy** host learns the machine and installs the post-update hook. It finishes
+by opening both desktop apps and running `bin/ymir-validate.sh` to prove the
+running system actually works.
 
 Point a harness (OpenCode, Pi, Claude Code, Cursor, Codex) at the repo and it takes
 the seat as **Brokk**. Read [`AGENTS.md`](AGENTS.md) for the operating laws and
