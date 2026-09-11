@@ -273,11 +273,28 @@ step_memory() {
 step_smidja() {
   if [ -x "$SCRIPT_DIR/smidja-bootstrap.sh" ]; then
     if [ "$CHECK" = 1 ]; then
-      if [ -f "$ROOT/smidja/smidja_data/smidja.db" ]; then add smidja OK "smidja.db present"; else add smidja WARN "smidja.db missing (run without --check)"; fi
+      local dbok vizok
+      [ -f "$ROOT/smidja/smidja_data/smidja.db" ] && dbok=present || dbok=missing
+      [ -d "$ROOT/.agents/skills/smidja/apps/visualizer/dist" ] && vizok=built || vizok=unbuilt
+      add smidja OK "smidja.db $dbok · visualizer UI $vizok"
     else
       if "$SCRIPT_DIR/smidja-bootstrap.sh" >/dev/null 2>&1; then add smidja OK "smidja.db ready (visualizer has data)"; else add smidja WARN "could not bootstrap smidja.db (visualizer stays empty)"; fi
     fi
   else add smidja SKIP "no smidja-bootstrap.sh"; fi
+  # The visualizer API serves its UI from ./dist — without a build it answers
+  # the API but shows "No ./dist build found". Build it once when absent.
+  local viz="$ROOT/.agents/skills/smidja/apps/visualizer"
+  [ -d "$viz" ] || return 0
+  if [ -d "$viz/dist" ]; then
+    add visualizer OK "UI built (served on :8437)"
+  elif [ "$CHECK" = 1 ]; then
+    add visualizer WARN "UI not built (run without --check)"
+  elif command -v bun >/dev/null 2>&1; then
+    [ -d "$viz/node_modules" ] || (cd "$viz" && bun install >/dev/null 2>&1 || true)
+    if (cd "$viz" && bun run build >/dev/null 2>&1); then add visualizer OK "UI built (served on :8437)"; else add visualizer WARN "UI build failed — (cd $viz && bun run build)"; fi
+  else
+    add visualizer WARN "no bun — cannot build the visualizer UI"
+  fi
 }
 
 # ── 6. loaders ───────────────────────────────────────────────────────────────
