@@ -1,10 +1,31 @@
-# Galdr Assets — Build Tools & Eindri Worker References
+# Galdr Assets — Build Tools & Worker References
 
-This directory contains the assets that Galdr needs to understand about different build tools and their requirements, including Eindri worker profiles and tool-specific configurations.
+This directory contains the assets that Galdr needs to understand about different build tools and their requirements, including worker profiles and tool-specific configurations.
 
-## Eindri Sub-Agent Profiles
+## The Einherjar — Agent Fleet
 
-Each Eindri worker operates inside Utgard containers on Yggdrasil worktrees with specific specializations:
+Eight specialists, one primary. Each is named for the figure whose role matches its work.
+
+| Agent | Norse | Role | Domain | File |
+|-------|-------|------|--------|------|
+| **Brokk** | Brokk | Primary agent — forge-master, dispatcher, supervisor | All | `.agents/agents/brokk.md` |
+| **Sindri** | Sindri (smith) | Code synthesis, refactoring, tests, CLI tools | Development | `.agents/agents/sindri-developer.md` |
+| **Bragi** | Bragi (skald) | Marketing, content, SEO, social copy | Marketing | `.agents/agents/bragi-marketer.md` |
+| **Huginn** | Huginn (sage) | Research, web search, analysis, knowledge discovery | Research | `.agents/agents/huginn-researcher.md` |
+| **Mimir** | Mimir | Planner — memory, recall, architecture sequencing | Planning | `.agents/agents/mimir-planner.md` |
+| **Kvasir** | Kvasir (wisest) | Scout — reconnaissance, investigation | Scout | `.agents/agents/kvasir-scout.md` |
+| **Forseti** | Forseti (reconciler) | Reviewer — QA, acceptance, compliance | Review | `.agents/agents/forseti-reviewer.md` |
+| **Snotra** | Snotra (modest) | Documenter — docs, changelogs, runbooks | Docs | `.agents/agents/snotra-documenter.md` |
+
+**Rule:** Every agent carries its rune of introduction (Agent Card). Every agent
+reports to Brokk. Brokk reports to the Allfather.
+
+## Legacy Sub-Agent Profiles (`.agents/subagents/*.md` — superseded)
+
+These profiles were superseded by the Einherjar fleet above. They remain for
+historical reference only.
+
+Each worker operates inside Utgard containers on Yggdrasil worktrees with specific specializations:
 
 ### developer (`.agents/subagents/developer.md`)
 - **Role**: Code synthesis, refactoring, test writing, CLI tools, package management
@@ -44,7 +65,7 @@ Galdr needs to know about these build tool categories and their asset requiremen
 
 ### 2. Command-Smíðja (Skill-based)
 - **Location**: Reuse `smidja` validated OSS project
-- **Features**: Smíðja: deterministic Python owns graph, agents bounded nodes, typed JSON envelopes, SQLite telemetry, Vue visualizer (`apps/visualizer/`, port 4601)
+- **Features**: Smíðja: deterministic Python owns graph, agents bounded nodes, typed JSON envelopes, SQLite telemetry, Vue visualizer (`apps/visualizer/`, served at port 8437)
 - **Assets**: Smíðja scripts, roster/config, visualizer
 
 ### 3. Brokk Crew Orchestration

@@ -3,6 +3,75 @@
 All significant runtime, policy, and architectural changes for the Ymir platform.
 Entries are appended chronologically; never rewritten.
 
+## 2026-09-11 — Hardcoded per-page feeds (header + stream)
+
+- **New:** every gate has its own hardcoded, domain-appropriate rolling feed
+  (16 pools, `src/data/feeds.ts`) — Fleet, Tasks, Well, Runes, Reviews,
+  Processes (Valhalla), Files, Chat, Forge, Runtime, Cron, Sessions, Trace,
+  Decisions, Stats, Profile. Extra Kaia “oracle by the well” lines for the chat
+  page.
+- **Header:** a live `PageFeed` now sits in the page header of every gate
+  (glyph + hint on the left, the current page's latest 3 messages on the
+  right), rolling.
+- **Stream:** the bottom Stream keeps each page's last **40** domain messages,
+  with the fleet-wide feed as fallback. A generator tops it up every 2.4s and
+  the page is seeded on first visit so it is never cold.
+- **Verified:** `tsc` + `vite build` green, SPA 200, compliance 8/8, smoke 8/8,
+  lint 4/4.
+
+## 2026-09-11 — Per-page rolling 40 message feeds
+
+- **Change:** the bottom stream is no longer one global 120-line feed. Every gate
+  keeps its own rolling window of the **last 40** messages, and events are routed
+  to the page they belong to (module → gate: `well`, `sessions`, `forge`,
+  `runes`, `cron`, `reviews`, `processes`), with the fleet-wide feed as fallback.
+  The stream header shows the current page. `STREAM_WINDOW = 40`, matching the
+  chat's `CHAT_WINDOW = 40`.
+- **Verified:** `tsc` + `vite build` green, SPA 200.
+
+## 2026-09-11 — Galdr/Tyr assets: symlink, not copies
+
+- **Fix:** `tyr-check/assets` is now a **symlink** to the canonical
+  `galdr/assets`, so the two can never drift. A background process had been
+  rewriting the registry, flipping the sync gate red; a symlink makes drift
+  structurally impossible. Compliance back to 8/8 stable.
+- **Verified:** compliance 8/8, smoke 8/8, lint 4/4.
+
+## 2026-09-11 — Chat uses the root Pi model catalog
+
+- **Fix:** the Kaia chat guessed a llama.cpp model id by regex and fell through
+  to the Bifrost bridge (`:4603` → 401) when the guess failed.
+- **Now:** the gate API reads the operator's root Pi catalog
+  (`~/.pi/agent/models.json`) for the exact provider → base URL, model id, and
+  key (llama.cpp router `:8080`, `sk-not-key-required`). A chosen local model
+  is tried only on its own base; the default is the operator's Pi default
+  (`qwen3.6-35b-a3b@iq3_s`). `/api/chat/models` lists the real connected set.
+- **Verified:** `gemma-4-12b@q3_k_s`, `qwen3.6-35b-a3b@iq3_s` (default), and
+  `qwen3.5-9b@q4_k_s` all answered live; no 401.
+
+## 2026-09-11 — Shared well for every harness; no mock; clickable memories
+
+- **Harnesses:** the engram MCP server is now registered for all four OpenCode
+  accounts (`opencode`, `opencode-rd`, `opencode-work`, `opencode-oczer`), Pi
+  (`~/.pi/agent/settings.json` + `mcp.json` + `.pi/mcp.json`), Claude, Cursor,
+  and Codex. Registered **unscoped** so every harness reads the one shared well
+  (per-call `agent_id` still attributes writes).
+- **No mock:** purged every test/mock episode (`smoke`/`Test observation`) from
+  both the engram store and `episodes.jsonl` → 367 true episodes. Test writes
+  never enter the well.
+- **UI:** Well memories are now **clickable** — `GET /api/well/episode?id=` and
+  a bridge `/episode` endpoint feed a modal with the full memory text.
+- **Bridge fix:** `/recent` and `/recall` restored; added `/episode`.
+- **Lifecycle fix:** `bifrost-bridge.sh` / `mimir-bridge.sh` now stop by process
+  match when the PID file is missing, and record the PID when the port is
+  already up — so `scripts/stop.sh` truly lowers the whole system and
+  `scripts/start.sh` truly raises it.
+- **Galdr:** new asset `.agents/skills/galdr/assets/memory-well.md` (store,
+  bridge, MCP, harness matrix, laws, verify), routed in `SKILL.md`; registry +
+  harness README updated; mirrored to tyr.
+- **Verified:** MCP recall 1.0 / stats 367, full stop→start cycle (3888/3889/
+  4602/4603/8437), compliance 8/8, smoke 8/8.
+
 ## 2026-09-11 — The well is real (Mimirsbrunn / engram)
 
 - **New:** `bin/mimir-bridge.py` + `bin/mimir-bridge.sh` — the `:4602` HTTP face

@@ -26,6 +26,7 @@ export function Well() {
   }));
 
   function onQuery(q: string) {
+    const hits = q.trim()
       ? recall.filter((e) =>
           [e.title, e.body, e.tags.join(' ')].join(' ').toLowerCase().includes(q.toLowerCase()),
         )
@@ -47,6 +48,24 @@ export function Well() {
       title: hits.length ? 'Well recalled' : 'Dry well',
       body: hits.length ? `${hits.length} episodes` : 'firing cold',
     });
+  }
+
+  /** Read one memory whole — click an episode and the well opens it. */
+  async function onOpen(id: string) {
+    try {
+      const { episode } = await gateApi.wellEpisode(id);
+      const when = episode.timestamp ? new Date(episode.timestamp).toLocaleString('en-GB', { hour12: false }) : '';
+      openModal({
+        variant: 'info',
+        tone: 'info',
+        glyph: 'ᛜ',
+        title: episode.tags[0] ? `#${episode.tags[0]}` : 'Memory',
+        body: `${when}${episode.actors?.length ? ` · ${episode.actors.join(', ')}` : ''}`,
+        content: episode.content,
+      });
+    } catch {
+      toast({ kind: 'warn', title: 'Recall failed', body: 'The well did not answer.' });
+    }
   }
 
   return (
@@ -73,7 +92,7 @@ export function Well() {
       </div>
 
       <div className="gate-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) 360px' }}>
-        <RecallPanel episodes={recall} onQuery={onQuery} />
+        <RecallPanel episodes={recall} onQuery={onQuery} onOpen={onOpen} />
 
         <section className="panel">
           <div className="panel-head">

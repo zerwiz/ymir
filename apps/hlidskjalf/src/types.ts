@@ -139,6 +139,7 @@ export interface StreamEvent {
   module?: string;
   message: string;
   checksum?: string;
+  gate?: GateId;
 }
 
 export interface RecallEpisode {

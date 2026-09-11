@@ -1065,3 +1065,62 @@
   color: var(--ymir-cyan-1);
   border-top: 1px solid var(--ymir-steel-1);
 }
+
+/* --- Well · clickable memories ------------------------------------------ */
+.episode-link {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.episode-link:hover {
+  background: var(--ymir-bg-3);
+}
+.episode-link:focus-visible {
+  outline: 2px solid var(--ymir-chisel);
+  outline-offset: -2px;
+}
+
+/* --- Header page feed — per-page rolling messages ----------------------- */
+.stage-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ymir-space-4);
+  margin-bottom: var(--ymir-space-4);
+  flex-wrap: wrap;
+}
+.page-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 260px;
+  max-width: 56%;
+  font-family: var(--ymir-font-mono);
+  font-size: 10.5px;
+  color: var(--ymir-text-2);
+  overflow: hidden;
+}
+.pf-line {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: pf-in 0.35s ease;
+}
+.pf-ts {
+  color: var(--ymir-text-3);
+  flex-shrink: 0;
+}
+.pf-from {
+  color: var(--ymir-cyan-1);
+  flex-shrink: 0;
+}
+.pf-msg {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@keyframes pf-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
