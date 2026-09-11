@@ -313,6 +313,9 @@ export const gateApi = {
   prompts: () => get<PromptFile[]>('/api/prompts'),
   savePrompt: (agent: string, kind: string, body: string) =>
     post<{ ok: boolean; path: string }>('/api/prompts', { agent, kind, body }),
+  session: () => get<{ authed: boolean }>('/api/session'),
+  login: (username: string, password: string) => post<{ ok: boolean }>('/api/login', { username, password }),
+  logout: () => post<{ ok: boolean }>('/api/logout', {}),
   smidjaHealth: () => get<{ db: string; sessions: number }>('/api/smidja/health'),
   smidjaSessions: () => get<SmidjaSession[]>('/api/smidja/sessions'),
   smidjaSession: (id: string) => get<SmidjaDetail>(`/api/smidja/sessions/${encodeURIComponent(id)}`),
