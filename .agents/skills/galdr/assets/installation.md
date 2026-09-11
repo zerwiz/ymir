@@ -5,29 +5,56 @@
 > page is the map.
 
 One command sets up the whole system for the user; it self-heals what it can and
-reports what it cannot.
+reports what it cannot. It **asks for consent first** (accept the plan, or pass
+`--yes` for non-interactive use), and it **validates at the end** that what it
+claims is actually running.
 
 ```
-bin/ymir-install.sh          # the first setup (idempotent)
-bin/ymir-install.sh --check  # report only, no writes
+bin/ymir-install.sh               # the first setup (idempotent; asks to proceed)
+bin/ymir-install.sh --check       # report only, no writes, no prompt
+bin/ymir-install.sh --yes         # non-interactive (accept the plan)
 bin/ymir-install.sh --skip-engines --skip-services
-bin/ymir-install.sh --status # alias of --check
+bin/ymir-install.sh --no-desktop  # don't open the desktop apps at the end
+bin/ymir-install.sh --status      # alias of --check
 ```
 
 ## The steps
 
 ```
-install[9]{step,what,self-heals}:
-  "prereqs","git python3 bun docker gh engram mcp<2","pip-installs engram + 'mcp<2'; the rest is reported"
+install[15]{step,what,self-heals}:
+  "prereqs","git python3 bun docker gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
+  "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml","creates if missing"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
-  "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build when absent"
+  "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
+  "omarchy","the host machine (Omarchy)","bin/omarchy-sense.sh learns the setup; bin/omarchy-hook-install.sh adds the post-update hook"
+  "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build; distinguishes docker-group permission from build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage"
+  "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh"
   "register","workspace/INSTALL.md","writes the record"
   "services","gate API, SPA, Nornir, bridges, visualizer","raises via scripts/start.sh"
+  "desktop","Hlidskjalf + Smíðja desktop apps","scripts/electron.sh start --both (self-heals the Electron binary)"
+  "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
+
+(In `--check` the runtime-only steps — services, desktop, validate — are skipped,
+so 12 rows are printed.)
+
+## Consent
+
+A real install prints its plan and waits for `[y/N]`. Declining changes nothing
+(exit 3). `--check` never prompts. A non-interactive caller without `--yes` is
+refused rather than silently proceeding.
+
+## Validation
+
+After the runtime is up, `bin/ymir-validate.sh` observes the result: prerequisites,
+the Utgard image, the gate API (`:3889`), the SPA (`:3888`), Bifrost (`:4603`),
+Nornir cron, `smidja.db`, the desktop apps, the well (`:4602`), and the audit
+ledger. A FAIL means the install is not usable; a WARN means a documented-optional
+part is off. `--json` for machine consumption.
 
 ## What the system adopts (engines)
 
@@ -40,12 +67,16 @@ install[9]{step,what,self-heals}:
 
 ## Missing dependencies
 
-- **Fixable in place:** `engram`, `mcp<2` (pip), `treehouse`, `no-mistakes`,
-  **Hermes** — the installer runs their official installers when absent.
-- **System-level** (reported, not auto-installed): `git`, `python3`, `bun`,
-  `docker`, `gh`. Install them with the platform package manager, then re-run.
-- **Offline:** engine/Hermes installers fail gracefully and are reported; re-run
-  when the network returns.
+- **Fixable in user space** (no sudo): `bun`, `uv`, `mcp<2>` — via
+  `bin/prereq-ensure.sh`. `treehouse`, `no-mistakes`, **Hermes**, and the **Þjazi
+  backend** (herdr, or tmux) are installed by their own ensure/steps.
+- **Needs a system package** (reported with the exact command): `git`,
+  `python3`, `docker`, `gh`.
+- **Optional, honest SKIP:** the `engram` memory engine. The published PyPI
+  `engram` is **not** Ymir's engine (it is an unrelated scientific package), so
+  the installer reports the well as off rather than installing the wrong thing.
+- **Offline:** engine/Hermes/herdr installers fail gracefully and are reported;
+  re-run when the network returns.
 
 ## Hermes specifically (`bin/hermes-ensure.sh`)
 
@@ -72,9 +103,16 @@ for a **work** workspace attaches it to the company container
 
 ```
 bin/ymir-install.sh --check          # all steps OK/WARN
+bin/ymir-validate.sh                 # the running system actually works
+bin/herdr-ensure.sh status           # the Þjazi backend and its protocol floor
+bin/omarchy-sense.sh status          # what Ymir has learnt about this host
 bin/saga-session-start.sh            # the session digest
 bash .agents/skills/galdr/scripts/compliance-check.sh
 ```
+
+On an **Omarchy** host the installer also learns the machine
+(`bin/omarchy-sense.sh`) and installs a `post-update` hook so Ymir re-learns it
+every time Omarchy updates. On a non-Omarchy host that step is a clean SKIP.
 
 Rule: the installer is **idempotent** — running it again changes nothing but
 fills gaps. It never overwrites real user data.
