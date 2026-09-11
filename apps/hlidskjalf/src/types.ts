@@ -205,8 +205,28 @@ export interface ChatMessage {
 
 export interface RealmDef {
   id: RealmId;
+  /** display name of the active workspace (kept as `tenant` for compatibility) */
   tenant: string;
-  house: HouseId;
+  name?: string;
+  kind?: 'work' | 'personal';
+  company?: string;
+  domains?: DomainId[];
+  /** brand label — display only, never isolation */
+  house?: HouseId;
+  tint: string;
+  tint2: string;
+  glyph: string;
+}
+
+/** Knowledge domains — the axes a workspace covers. */
+export type DomainId = 'company' | 'marketing' | 'development' | 'life' | 'me';
+
+export interface WorkspaceDef {
+  id: string;
+  name: string;
+  kind: 'work' | 'personal';
+  company?: string;
+  domains: DomainId[];
   tint: string;
   tint2: string;
   glyph: string;

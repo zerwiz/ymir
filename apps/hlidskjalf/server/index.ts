@@ -734,12 +734,22 @@ function reviews() {
   } catch {
     /* ignore */
   }
+  const lintOk = out.trim() === '';
+  const failing = !lintOk || gates.some((g) => g.status !== 'PASS');
+  const checks = [
+    { name: 'lint', state: lintOk ? 'nominal' : 'down' },
+    ...gates.map((g) => ({ name: g.id, state: g.status === 'PASS' ? 'nominal' : 'down' })),
+  ];
   return [
     {
       id: 'lint', number: 1, title: 'Brokk lint gate', repo: 'Ymir', author: 'brokk', realm: 'way-of',
-      state: out === '' ? 'approved' : 'changes',
-      checks: gates.map((g) => ({ name: g.id, state: g.status === 'PASS' ? 'nominal' : 'down' })),
-      checklist: gates.map((g) => ({ label: `${g.id}: ${g.detail}`, done: g.status === 'PASS' })),
+      // A gate with any failing check is never APPROVED — it awaits the captain's seal.
+      state: failing ? 'changes' : 'open',
+      checks,
+      checklist: [
+        { label: `lint: ${lintOk ? 'clean' : 'issues found'}`, done: lintOk },
+        ...gates.map((g) => ({ label: `${g.id}: ${g.detail}`, done: g.status === 'PASS' })),
+      ],
       additions: 0, deletions: 0, updatedAt: new Date().toISOString(),
     },
   ];
@@ -775,6 +785,39 @@ function files(realm: string) {
   };
   if (existsSync(base)) return walk(base, '', 0);
   return walk(join(ROOT, 'docs'), '', 0);
+}
+
+/* ---- /api/file — read one realm file, read-only, scoped ------------------ */
+function fileContent(realm: string, rel: string) {
+  const base = resolve(ROOT, 'svartalfaheim', realm);
+  const full = resolve(base, rel);
+  if (full !== base && !full.startsWith(base + '/')) return { error: 'outside realm' };
+  if (!existsSync(full)) return { error: 'not found' };
+  let st;
+  try {
+    st = statSync(full);
+  } catch {
+    return { error: 'unreadable' };
+  }
+  if (!st.isFile()) return { error: 'not a file' };
+  if (st.size > 512 * 1024) return { path: rel, size: st.size, body: '', note: 'file too large to preview' };
+  return { path: rel, size: st.size, updated: st.mtime.toISOString(), body: read(full) };
+}
+
+/* ---- /api/skills — the live skill index (read-only) ---------------------- */
+function skills() {
+  const dir = join(ROOT, '.agents/skills');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((d) => existsSync(join(dir, d, 'SKILL.md')) || existsSync(join(dir, d, 'AGENTS.md')))
+    .map((d) => {
+      const p = existsSync(join(dir, d, 'SKILL.md')) ? join(dir, d, 'SKILL.md') : join(dir, d, 'AGENTS.md');
+      const fm = frontmatter(read(p));
+      const name = String(fm.name ?? d);
+      const description = String(fm.description ?? '').slice(0, 240);
+      const aett = name.includes('-') ? name.split('-')[0] : 'galdr';
+      return { id: `skl-${d}`, name, aett, description, capabilities: [], validated: true, house: 'ymirlabs', createdAt: '' };
+    });
 }
 
 /* ---- /api/runtime -------------------------------------------------------- */
@@ -1247,6 +1290,45 @@ function savePrompt(agent: string, kind: string, body: string): { ok: boolean; p
   return { ok: true, path: `smidja/smidja_data/prompt_engineering/${agent}/${kind}.md` };
 }
 
+/* ---- /api/workspaces + /api/setup — single-tenant workspaces ------------ */
+function workspaces(): { id: string; name: string; kind: string; company?: string; domains: string[] }[] {
+  const txt = read(join(ROOT, 'workspace/workspaces.yaml'));
+  const out: { id: string; name: string; kind: string; company?: string; domains: string[] }[] = [];
+  let cur: { id: string; name: string; kind: string; company?: string; domains: string[] } | null = null;
+  for (const line of txt.split('\n')) {
+    const idm = line.match(/^\s*-\s+id:\s*(\S+)/);
+    if (idm) {
+      if (cur) out.push(cur);
+      cur = { id: idm[1], name: idm[1], kind: 'personal', domains: [] };
+      continue;
+    }
+    if (!cur) continue;
+    const nm = line.match(/^\s*name:\s*(.+)$/);
+    if (nm) cur.name = nm[1].trim();
+    const km = line.match(/^\s*kind:\s*(\S+)/);
+    if (km) cur.kind = km[1];
+    const cm = line.match(/^\s*company:\s*(\S+)/);
+    if (cm) cur.company = cm[1];
+    const dm = line.match(/^\s*domains:\s*\[(.*)\]/);
+    if (dm) cur.domains = dm[1].split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  if (cur) out.push(cur);
+  return out.length ? out : [
+    { id: 'work', name: 'Work', kind: 'work', company: 'wayof', domains: ['company', 'marketing', 'development', 'life'] },
+    { id: 'personal', name: 'Personal', kind: 'personal', domains: ['me', 'life', 'development'] },
+  ];
+}
+
+function setupStatus() {
+  return parseToon(run(['bash', 'bin/ymir-install.sh', '--check']));
+}
+function setupRun() {
+  return parseToon(run(['bash', 'bin/ymir-install.sh', '--skip-services']));
+}
+function workspaceProvision(name: string, kind: string, domains: string) {
+  return parseToon(run(['bash', 'bin/workspace-provision.sh', name, '--kind', kind, '--domains', domains]));
+}
+
 /* ---- server -------------------------------------------------------------- */
 const server = Bun.serve({
   port: PORT,
@@ -1267,6 +1349,8 @@ const server = Bun.serve({
       if (p === '/api/processes') return json(processes());
       if (p === '/api/reviews') return json(reviews());
       if (p === '/api/files') return json(files(url.searchParams.get('realm') ?? 'way-of'));
+      if (p === '/api/file') return json(fileContent(url.searchParams.get('realm') ?? 'way-of', url.searchParams.get('path') ?? ''));
+      if (p === '/api/skills') return json(skills());
       if (p === '/api/runtime') return json(runtime());
       if (p === '/api/cron') return json(cron());
       if (p === '/api/loaders') return json(loaders());
@@ -1281,6 +1365,17 @@ const server = Bun.serve({
         return detail ? json(detail) : json({ error: `no session ${id}` }, 404);
       }
       if (p === '/api/settings') return json(settings());
+      if (p === '/api/workspaces' && req.method === 'GET') return json(workspaces());
+      if (p === '/api/workspaces' && req.method === 'POST') {
+        const b = (await req.json().catch(() => ({}))) as { name?: string; kind?: string; domains?: string[] | string };
+        const name = (b.name ?? '').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/(^-|-$)/g, '');
+        if (!name) return json({ error: 'workspace needs a name' }, 400);
+        const kind = b.kind === 'work' ? 'work' : 'personal';
+        const domains = Array.isArray(b.domains) ? b.domains.join(',') : b.domains ?? '';
+        return json(workspaceProvision(name, kind, domains));
+      }
+      if (p === '/api/setup/status') return json(setupStatus());
+      if (p === '/api/setup/run' && req.method === 'POST') return json(setupRun());
       if (p === '/api/prompts' && req.method === 'GET') return json(prompts());
       if (p === '/api/prompts' && req.method === 'POST') {
         const body = (await req.json().catch(() => ({}))) as { agent?: string; kind?: string; body?: string };

@@ -4,7 +4,7 @@ Isolated container execution for untrusted code, dynamic skills, and sub-agent t
 
 ## Contents (to be implemented)
 - `Dockerfile.utgard` — hardened minimal execution container (exists)
-- `sandcastle.config.json` — CPU / RAM / timeout limits (exists)
+- `utgard.config.json` — CPU / RAM / timeout limits (exists)
 - `execute_utgard.ts` — Docker launcher skill for safe script execution
 
 ## Rules

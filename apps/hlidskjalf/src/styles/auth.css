@@ -168,6 +168,20 @@
   line-height: 16px;
 }
 
+/* hidden demo entry — present but not promoted */
+.demo-link {
+  align-self: flex-start;
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ymir-text-3);
+  text-decoration: underline dotted;
+  padding: 0;
+}
+.demo-link:hover {
+  color: var(--ymir-text-2);
+}
+
 /* --- Provisioning wizard -------------------------------------- */
 .house-grid {
   display: grid;

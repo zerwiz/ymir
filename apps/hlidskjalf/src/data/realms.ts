@@ -1,10 +1,41 @@
 import type { GateId, HouseDef, RealmDef, TaskState, AgentStatus } from '../types';
 
-export const REALMS: RealmDef[] = [
-  { id: 'way-of', tenant: 'WayOf', house: 'ymirlabs', tint: '#38bdf8', tint2: '#0ea5e9', glyph: 'ᛉ' },
-  { id: 'zerwiz', tenant: 'Zerwiz', house: 'muninn', tint: '#8b5cf6', tint2: '#6366f1', glyph: 'ᛗ' },
-  { id: 'craig', tenant: 'Craig', house: 'brokkforge', tint: '#f59e0b', tint2: '#d97706', glyph: 'ᛒ' },
+// Single tenant: the switchable unit is a WORKSPACE (personal | work), not a
+// tenant. Domains are knowledge areas inside a workspace. Houses are brands.
+export const WORKSPACES: RealmDef[] = [
+  {
+    id: 'work',
+    tenant: 'Work',
+    name: 'Work',
+    kind: 'work',
+    company: 'wayof',
+    domains: ['company', 'marketing', 'development', 'life'],
+    tint: '#38bdf8',
+    tint2: '#0ea5e9',
+    glyph: 'ᛉ',
+  },
+  {
+    id: 'personal',
+    tenant: 'Personal',
+    name: 'Personal',
+    kind: 'personal',
+    domains: ['me', 'life', 'development'],
+    tint: '#8b5cf6',
+    tint2: '#6366f1',
+    glyph: 'ᛗ',
+  },
 ];
+
+/** Back-compat alias — the active `realm` id is now a workspace id. */
+export const REALMS = WORKSPACES;
+
+export const DOMAIN_LABEL: Record<string, string> = {
+  company: 'Company',
+  marketing: 'Marketing',
+  development: 'Development',
+  life: 'Life',
+  me: 'Me',
+};
 
 export const HOUSES: Record<string, HouseDef> = {
   ymirlabs: { id: 'ymirlabs', name: 'Ymir Labs', accent: '#38bdf8', glyph: 'ᛦ' },
@@ -56,12 +87,13 @@ export function realmDef(
   id: string,
   grant?: { tenant?: string; house?: string; tint?: string; glyph?: string },
 ): RealmDef {
-  const known = REALMS.find((r) => r.id === id);
+  const known = WORKSPACES.find((r) => r.id === id);
   if (known) return known;
-  const house = HOUSES[grant?.house ?? 'mannheim'];
+  const house = HOUSES[grant?.house ?? 'ymirlabs'];
   return {
     id,
     tenant: grant?.tenant ?? id,
+    name: grant?.tenant ?? id,
     house: house.id,
     tint: grant?.tint ?? house.accent,
     tint2: grant?.tint ?? house.accent,
