@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""kaia-observe.py — write a lesson/episode into Kaia's engram memory.
+"""volundr-observe.py — write a lesson/episode into Völundr's engram memory.
 
 Usage:
-    kaia-observe.py "<content>" [--tags a,b,c] [--actors x,y] [--salience 0.7] \
+    volundr-observe.py "<content>" [--tags a,b,c] [--actors x,y] [--salience 0.7] \
                    [--url http://127.0.0.1:4602]
 
 POST /observe on the memory bridge. On success prints the new episode id.

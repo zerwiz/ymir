@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""kaia-teach.py — bulk-teach a project into Kaia's memory (wraps smidja teach).
+"""volundr-teach.py — bulk-teach a project into Völundr's memory (wraps smidja teach).
 
 Usage:
-    kaia-teach.py <project> [--recon] [--root /home/zerwiz/command]
+    volundr-teach.py <project> [--recon] [--root /home/zerwiz/command]
 
 Reads the project's key files (AGENTS.md, CHANGELOG.md, deploy/start/stop
 scripts, scripts/*.sh) and observes each into the engram — no agent tokens.
@@ -16,7 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-# skill lives at <root>/.agents/skills/smidja/skills/volundr/scripts/kaia-teach.py
+# skill lives at <root>/.agents/skills/smidja/skills/volundr/scripts/volundr-teach.py
 ROOT = Path(__file__).resolve().parents[4]
 
 

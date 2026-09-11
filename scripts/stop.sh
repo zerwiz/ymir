@@ -43,6 +43,14 @@ if [[ -f "$PID_FILE" ]]; then
   rm -f "$PID_FILE"
 fi
 
+# Runtime services: the Nornir schedule and the Bifrost model bridge.
+if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
+  "$ROOT/bin/nornir-cron-start.sh" --stop >/dev/null 2>&1 && { echo "Nornir cron stopped."; stopped=1; }
+fi
+if [ -x "$ROOT/bin/bifrost-bridge.sh" ]; then
+  "$ROOT/bin/bifrost-bridge.sh" --stop >/dev/null 2>&1 && { echo "Bifrost bridge stopped."; stopped=1; }
+fi
+
 # Belt and braces: reap anything still bound to our port.
 if command -v lsof >/dev/null 2>&1; then
   PORT_PIDS="$(lsof -ti "tcp:${PORT}" 2>/dev/null || true)"

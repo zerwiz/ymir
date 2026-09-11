@@ -53,10 +53,10 @@ export function Well() {
       </div>
 
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
-        <MetricTile label="Episodes observed" value={128} delta="+9 today" spark={[80, 92, 101, 110, 119, 128]} />
-        <MetricTile label="Recall latency" value="11ms" delta="hybrid" tone="var(--ymir-ok)" spark={[18, 15, 13, 12, 11]} />
-        <MetricTile label="Modes" value="3" delta="hybrid · cosine · spreading" spark={[3, 3, 3, 3, 3]} />
-        <MetricTile label="Well state" value="WARM" delta="boost, never blocker" tone="var(--ymir-ok)" spark={[1, 1, 1, 1, 1]} />
+        <MetricTile label="Episodes observed" value={recall.length} delta="in the well" />
+        <MetricTile label="Recall modes" value="3" delta="hybrid · cosine · spreading" />
+        <MetricTile label="Well state" value={recall.length ? 'WARM' : 'COLD'} tone={recall.length ? 'var(--ymir-ok)' : 'var(--ymir-warn)'} delta="boost, never blocker" />
+        <MetricTile label="Bridge" value=":4602" delta="Mimirsbrunn engram" />
       </div>
 
       <div className="gate-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) 360px' }}>

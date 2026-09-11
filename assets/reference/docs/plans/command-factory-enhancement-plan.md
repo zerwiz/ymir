@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The Command Factory is a **Super Simple Software Factory** — deterministic Python scripts own sequencing/retries/acceptance; coding agents (Pi/opencode) work inside bounded phases; typed JSON envelopes carry context; everything streams into SQLite for the polled visualizer.
+The smithy (Smíðja) is an **agent + code pipeline** — deterministic Python scripts own sequencing/retries/acceptance; coding agents (Pi/opencode) work inside bounded phases; typed JSON envelopes carry context; everything streams into SQLite for the polled visualizer.
 
 This plan identifies high-value enhancements across both surfaces, organized by impact and implementation complexity.
 

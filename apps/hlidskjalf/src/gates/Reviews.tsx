@@ -17,10 +17,10 @@ export function Reviews() {
       </div>
 
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
-        <MetricTile label="Open PRs" value={reviews.length} delta="awaiting the captain" spark={[1, 2, 2, 3, reviews.length]} />
-        <MetricTile label="Approved" value={reviews.filter((r) => r.state === 'approved').length} tone="var(--ymir-ok)" delta="ready to merge" spark={[0, 0, 1, 1, 1]} />
-        <MetricTile label="Changes requested" value={reviews.filter((r) => r.state === 'changes').length} tone="var(--ymir-warn)" delta="blocked" spark={[0, 1, 1, 1, 1]} />
-        <MetricTile label="CI failing" value={reviews.filter((r) => r.checks.some((c) => c.state === 'down')).length} tone="var(--ymir-danger)" delta="do not seal" spark={[0, 0, 1, 1, 1]} />
+        <MetricTile label="Open PRs" value={reviews.length} delta="awaiting the captain" />
+        <MetricTile label="Approved" value={reviews.filter((r) => r.state === 'approved').length} tone="var(--ymir-ok)" delta="ready to merge" />
+        <MetricTile label="Changes requested" value={reviews.filter((r) => r.state === 'changes').length} tone="var(--ymir-warn)" delta="blocked" />
+        <MetricTile label="CI failing" value={reviews.filter((r) => r.checks.some((c) => c.state === 'down')).length} tone="var(--ymir-danger)" delta="do not seal" />
       </div>
 
       <div className="gate-grid cols-2">
