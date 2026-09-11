@@ -91,7 +91,7 @@ function fmtRuns(runs: string[]): string {
 }
 .stat b {
   font-size: 20px;
-  color: #ff8f5c;
+  color: #7dd3fc;
   margin-right: 4px;
 }
 
@@ -134,7 +134,7 @@ function fmtRuns(runs: string[]): string {
 .count {
   font-size: 20px;
   font-weight: 700;
-  color: #ff8f5c;
+  color: #7dd3fc;
 }
 .model {
   font-family: var(--mono, monospace);

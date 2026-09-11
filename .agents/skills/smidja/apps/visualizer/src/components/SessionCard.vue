@@ -389,7 +389,7 @@ const hiddenRowCount = computed(() =>
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #ff8f5c;
+  color: #7dd3fc;
   font-family: inherit;
   font-size: 14px;
   line-height: 1;

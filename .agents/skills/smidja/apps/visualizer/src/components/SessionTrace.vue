@@ -244,10 +244,10 @@ const lanes = computed<Lane[]>(() => {
   const out: Lane[] = [
     {
       id: 'engineer',
-      label: session.value?.engineer ?? 'engineer',
+      label: session.value?.engineer ?? 'Allfather',
       model: null,
       context: null,
-      metaLines: ['engineer'],
+      metaLines: ['Allfather'],
       color: ENGINEER_COLOR,
       kind: 'engineer' as const,
       phases: ph.filter((p) => p.kind === 'engineer'),
@@ -773,7 +773,7 @@ function selectPhase(p: Phase) {
   background: transparent;
   border: 1px solid rgba(255, 107, 53, 0.5);
   border-radius: 8px;
-  color: #ff8f5c;
+  color: #7dd3fc;
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -844,7 +844,7 @@ function selectPhase(p: Phase) {
   font-size: 13px;
 }
 .steer-btn {
-  background: linear-gradient(90deg, #ff6b35, #ff8f5c);
+  background: linear-gradient(90deg, #38bdf8, #7dd3fc);
   border: none;
   border-radius: 999px;
   color: #0b0f18;
