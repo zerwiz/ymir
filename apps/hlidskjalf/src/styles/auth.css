@@ -106,6 +106,99 @@
   color: var(--ymir-cyan-1);
 }
 
+.lore-more {
+  align-self: flex-start;
+  margin-top: var(--ymir-space-1);
+}
+
+/* --- The full saga, opened over the gate ------------------------ */
+.lore-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(3, 7, 15, 0.82);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  padding: var(--ymir-space-6) var(--ymir-space-4);
+  overflow-y: auto;
+}
+.lore-parchment {
+  width: 100%;
+  max-width: 760px;
+  align-self: flex-start;
+  background: var(--ymir-bg-1);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius-panel);
+  box-shadow: var(--ymir-bevel), var(--ymir-shadow-raise);
+  padding: var(--ymir-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ymir-space-4);
+}
+.lore-parchment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ymir-space-3);
+  position: sticky;
+  top: calc(var(--ymir-space-6) * -1);
+  padding: var(--ymir-space-2) 0;
+  background: var(--ymir-bg-1);
+  border-bottom: 1px solid var(--ymir-steel-1);
+  z-index: 1;
+}
+.lore-sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ymir-space-2);
+}
+.lore-sec-title {
+  font-family: var(--ymir-font-head);
+  font-size: 17px;
+  letter-spacing: 0.04em;
+  color: var(--ymir-text-0);
+}
+.lore-sec-p {
+  color: var(--ymir-text-2);
+  font-size: 14px;
+  line-height: 22px;
+}
+.lore-end {
+  color: var(--ymir-text-1);
+  font-style: italic;
+  border-top: 1px solid var(--ymir-steel-1);
+  padding-top: var(--ymir-space-3);
+}
+.lore-names {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+.lore-names li {
+  display: grid;
+  grid-template-columns: 22px 150px 1fr;
+  align-items: baseline;
+  gap: var(--ymir-space-2);
+  padding: var(--ymir-space-2) 0;
+  border-top: 1px solid var(--ymir-steel-1);
+}
+.lore-names .lore-line {
+  font-size: 12.5px;
+}
+
+@media (max-width: 620px) {
+  .lore-names li {
+    grid-template-columns: 22px 1fr;
+  }
+  .lore-names .lore-line {
+    grid-column: 2;
+  }
+}
+
 @media (max-width: 960px) {
   .gate {
     grid-template-columns: 1fr;
@@ -152,6 +245,21 @@
   color: var(--ymir-text-2);
   font-size: 14px;
   line-height: 21px;
+}
+
+.login-about {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--ymir-space-3);
+  border-left: 2px solid var(--ymir-cyan-1);
+  background: var(--ymir-bg-2);
+  border-radius: 0 var(--ymir-radius) var(--ymir-radius) 0;
+}
+.login-about p {
+  color: var(--ymir-text-1);
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .mock-flag {
