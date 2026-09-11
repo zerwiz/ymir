@@ -399,10 +399,10 @@ export const useYmir = create<YmirState>((set, get) => ({
   enterDemo: () => {
     const session = githubAuthorize(MOCK_IDENTITIES[0]);
     saveSession(session);
-    document.documentElement.dataset.realm = 'way-of';
+    document.documentElement.dataset.realm = 'work';
     const { accentId, customAccent } = get();
     applyAccent(accentId, customAccent);
-    set({ session, realm: 'way-of', demo: true, live: false, runtime: null, cron: null, ...seedState('way-of') });
+    set({ session, realm: 'work', demo: true, live: false, runtime: null, cron: null, ...seedState('work') });
   },
 
   signIn: (identity) => {

@@ -71,3 +71,9 @@ smidja/smidja_data/smidja.db*
 .env
 __pycache__/
 *.pyc
+
+# Capacitor / Android build artifacts
+apps/hlidskjalf/android/app/build/
+apps/hlidskjalf/android/build/
+apps/hlidskjalf/android/.gradle/
+apps/hlidskjalf/android/local.properties
