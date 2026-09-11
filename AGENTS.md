@@ -187,3 +187,22 @@ Quick reference:
 The lore is not optional reading — it is the naming law. Every subsystem, every
 component, every process must be named for the figure whose role matches its work.
 See `.agents/assets/agents/naming.md` for the full component map.
+
+## GitHub & isolates
+
+- The operator is the **Allfather**; he works with his **own GitHub login**
+  (`gh` OAuth locally; a **GitHub App** per company/workspace on the server
+  later). Never a shared token.
+- Every project's `host/owner/repo/remote/default_branch/auth` is recorded in the
+  **master project registry** (`workspace/projects.yaml`, a `git{}` block) and
+  consumed by `bin/mjollnir.sh` (issue→PR), `bin/yggdrasil.sh` (worktree), and
+  `bin/github-deploy.sh` (deploy). Never guess a remote.
+- Auth is a **reference**, never a value — `GITHUB_TOKEN`, `GITHUB_APP_ID`,
+  `GITHUB_APP_PRIVATE_KEY`, `GITHUB_INSTALLATION_ID` — resolved from
+  `.env.local` / `.env.realm`. Never hardcode or commit a secret.
+- **Engines (open-source-first):** the validated worktree engine (named upstreams
+  in `porting-upstream-to-norse.md`, provenance) powers **Yggdrasil** worktrees;
+  **sandcastle** (`github.com/mattpocock/sandcastle`, `@ai-hero/sandcastle`)
+  powers **Utgard** sandboxes; **no-mistakes**
+  (`github.com/kunchenguid/no-mistakes`) powers the **clean-PR gate** behind the
+  `no-mistakes` posture (`.no-mistakes.yaml`). Norse shell over the OSS engine.

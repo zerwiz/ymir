@@ -567,3 +567,38 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
     justify-content: center;
   }
 }
+
+/* --- Topbar workspace switcher (single tenant) --------------------------- */
+.ws-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ws-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ymir-steel-1);
+  background: var(--ymir-bg-2);
+  color: var(--ymir-text-1);
+  font-size: 12px;
+  cursor: pointer;
+}
+.ws-chip:hover {
+  color: var(--ymir-text-0);
+  border-color: var(--ymir-chisel);
+}
+.ws-chip.on {
+  background: var(--realm-tint-dim);
+  border-color: var(--realm-tint);
+  color: var(--ymir-text-0);
+}
+.ws-chip.add {
+  padding: 5px 9px;
+  color: var(--ymir-text-2);
+}
+.ws-chip .house-glyph {
+  color: var(--realm-tint);
+}

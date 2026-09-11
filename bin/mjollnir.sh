@@ -45,6 +45,12 @@ if [ "$CMD" = status ]; then
 fi
 [ "$CMD" = run ] || { printf 'error: unknown command %s\nhelp: bin/mjollnir.sh [run|status|--version]\n' "$CMD" >&2; exit 2; }
 [ -n "$ISSUE" ] || { printf 'error: run needs --issue <n>\n' >&2; exit 2; }
+
+# The `no-mistakes` posture runs through the OSS clean-PR gate engine.
+if [ "$MODE" = "no-mistakes" ]; then
+  command -v no-mistakes >/dev/null 2>&1 || { printf 'error: no-mistakes engine not installed\nhelp: bin/ymir-install.sh (github.com/kunchenguid/no-mistakes)\n' >&2; exit 1; }
+  [ -f "$ROOT/.no-mistakes.yaml" ] || printf 'warn: .no-mistakes.yaml absent — the gate uses defaults\n' >&2
+fi
 [ -n "$REPO" ] || { printf 'error: run needs --repo <dir>\n' >&2; exit 2; }
 [ -d "$REPO" ] || { printf 'error: repo not found: %s\n' "$REPO" >&2; exit 1; }
 

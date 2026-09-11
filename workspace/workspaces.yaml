@@ -1,0 +1,16 @@
+# Workspace registry — single tenant. One operator, many workspaces.
+# kind: work | personal.  company: only for work.  domains: knowledge areas.
+workspaces:
+  - id: work
+    name: Work
+    kind: work
+    company: wayof
+    domains: [company, marketing, development, life]
+  - id: personal
+    name: Personal
+    kind: personal
+    domains: [me, life, development]
+  - id: side
+    name: Side
+    kind: personal
+    domains: [life, development]

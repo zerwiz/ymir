@@ -37,6 +37,14 @@ source first, always. The full tale: [`docs/lore.md`](docs/lore.md).
 
 ---
 
+## The Allfather's Chain
+
+The Allfather holds the only chain. If the Allfather does not draw it, Ymir walks
+the machine as the Allfather walks it — no gate between the agent and the tools,
+no second master but the Allfather's own hand.
+
+---
+
 ## What it is
 
 - **A distro, not an app.** Launch a supported harness in the repo and you take the

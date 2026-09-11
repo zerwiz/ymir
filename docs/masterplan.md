@@ -878,3 +878,143 @@ model[6]{axis,meaning,isolation}:
 **Build plan:** scaffold `workspace/{work,personal}/<domain>/`, `workspace/companies/`, `workspace/{workspaces,projects}.yaml`; data model `WorkspaceDef`; store `workspace` (active) replacing the tenant switcher; `Login.tsx` onboarding (name + kind + domains); `Topbar` workspace chip. `svartalfaheim/` retained as the future company/multi-user root.
 
 - 2026-09-11 — `DONE` mock purge (Hlidskjalf): synthetic stream feed + narration timer removed (Stream is live Runes only); live seed paths replaced with honest empty state; seeds confined to a hidden demo; real `/api/file` + `/api/skills` added; PR diff no longer fabricated; seed sources archived to `assets/mock/`. Note appended under W0026.
+
+## 7. Audit — treehouse/sandcastle renames + install gap + future hosting (2026-09-11)
+
+**Adopted renames (functional).**
+- upstream **treehouse** (worktree pool, `kunchenguid/treehouse`) → **Yggdrasil** — `bin/yggdrasil.sh` (create/list/status/merge/cleanup).
+- design **sandcastle** (Docker execution barrier) → **Utgard** — `bin/utgard.sh`, `.agents/sandbox/Dockerfile.utgard`, image `utgard-runner:latest` (built, 638 MB).
+
+**Residual literal references (cleanup list).**
+- `treehouse`: `assets/reference/**` (provenance, keep); `bin/nornir-job-observer.sh` reads `$HOME/.treehouse/*/treehouse-state.json` — the one live external read-only observer (naming-gate exception; keep, or move behind `BROKK_YGGDRASIL_ROOT` only).
+- `sandcastle`: `.agents/sandbox/sandcastle.config.json` (rename → `utgard.config.json`); `Structure.md:95`; `bin/einherjar-spawn.sh:405` (comment).
+
+**Install gap (answers "is it set up for the tenant?").** **No.** Yggdrasil and Utgard are **global** runtime tools, built once. The workspace/tenant install (`Login.tsx` → `provision()`) creates directories only — it does not create a worktree or verify the sandbox. Proposed per-workspace bootstrap: (1) create a Yggdrasil worktree for the workspace repo, (2) verify/build `utgard-runner`, (3) record both in the workspace registry.
+
+**Future hosting (decision pending).**
+- Host WayOf's **company container** on `zerwizserver`; expose **Gjallarhorn** (Cloudflare tunnel) so craig (USA) connects.
+- **GitHub OAuth** on the server (Heimdall / Bifrost) for over-internet login.
+- One **company docker** per company; work workspaces mount it, personal workspaces get their own. GitHub worktrees keep branch isolation inside.
+
+## 8. Requirement — per-project GitHub handled in the master registry (2026-09-11)
+
+**Why.** Today GitHub is single-token and repo-agnostic: one `GITHUB_TOKEN` in
+`.env.local`, and `bin/mjollnir.sh run --repo <dir>` trusts whatever remote the
+directory already has. `data/projects.md` has no GitHub columns. That is fine
+for Ymir itself, but **not** when a workspace codes on *other* projects — each
+project's owner/repo, remote, default branch, auth, and permissions must be
+first-class.
+
+**Decision.** Every project carries a **GitHub block in the master project
+registry**, and the runtime consumes it instead of guessing.
+
+```
+project[6]{field,example}:
+  "git.host","github.com"
+  "git.owner","Way-Of"
+  "git.repo","ymir"
+  "git.remote","origin"
+  "git.default_branch","main"
+  "git.auth","app | pat | ssh | gh  (secret referenced, never stored)"
+```
+
+- **Registry:** `workspace/projects.yaml` (per the single-tenant decision §6),
+  one entry per project: `id, name, workspace, company, domains[], repo, posture,
+  git{…}`.
+- **Secrets:** auth is a *reference* (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`,
+  `GITHUB_INSTALLATION_ID`, or `GITHUB_TOKEN`) resolved from `.env.local` /
+  `.env.realm` / a per-project env file — **never** in Markdown (security law).
+- **Consumers:** `bin/yggdrasil.sh` (worktree from the registered remote),
+  `bin/mjollnir.sh` (issue→PR against the registered owner/repo + auth),
+  `bin/github-deploy.sh` (sync/dispatch keyed to the registered repo),
+  `bin/mjollnir-webhook.sh` (verify against the project's webhook secret).
+- **Scaling to users (hosting §7):** one **GitHub App** per company/workspace;
+  installations bind projects to a user/company so remote users get scoped
+  access without sharing a token. `gh` OAuth remains the local-dev fallback.
+
+## 9. Engines adopted — treehouse (worktrees) + sandcastle (sandboxes) (2026-09-11)
+
+**Decision (open-source-first).** Use the validated OSS engines under the Norse
+shells rather than custom worktree/sandbox code.
+
+- **Yggdrasil → [treehouse](https://github.com/kunchenguid/treehouse)** — the
+  worktree engine. A Go CLI managing a **pool of reusable git worktrees** per
+  repo (default `~/.treehouse/`, or `--root .` for in-project `.treehouse/`).
+  Detached HEAD, in-use detection, durable leases, `prune`/`destroy`,
+  `treehouse.toml` (`root`, `base_branch`, `max_trees`). Install: `install.sh`,
+  `go install github.com/kunchenguid/treehouse@latest`, or nix.
+- **Utgard → [sandcastle](https://github.com/mattpocock/sandcastle)** — the
+  sandbox/orchestration engine (`@ai-hero/sandcastle`). A TypeScript library that
+  runs coding agents in isolated **Docker/Podman/Vercel** sandboxes:
+  `run()`, `createSandbox()`, `createWorktree()`, branch strategies
+  (head / merge-to-head / branch), lifecycle hooks, structured output.
+  Scaffold with `npx @ai-hero/sandcastle init` → `.sandcastle/`.
+
+**GitHub identity.** The developer is the **Allfather**, and he works with **his
+own GitHub login** — `gh` OAuth locally, a **GitHub App** per company/workspace
+on the server (§7). No shared token. Per-project owner/repo/remote/branch/auth
+is the master registry's `git{}` block (§8).
+
+**Pending:** install `treehouse` + `@ai-hero/sandcastle`, wrap them under
+`bin/yggdrasil.sh` / `bin/utgard.sh`, and add the per-workspace bootstrap (§7).
+
+## 10. Engine adopted — no-mistakes (the clean-PR gate) (2026-09-11)
+
+**Decision.** Adopt [no-mistakes](https://github.com/kunchenguid/no-mistakes)
+as the **delivery gate** behind the `no-mistakes` posture.
+
+- `git push no-mistakes` puts a **local git proxy in front of the real remote**:
+  it cuts a disposable worktree and runs an AI-driven pipeline
+  **review → test → docs → lint → push → PR → CI**, forwarding the branch to the
+  configured push target only after every gate is green, then opens a clean PR.
+- **Agent-agnostic**: `claude`, `codex`, `grok`, `rovodev`, `opencode`, `pi`,
+  `copilot`, `cursor`/`acp:<target>`, with ordered fallbacks.
+- **Agent-native**: the `/no-mistakes` skill (or `no-mistakes axi`, TOON) lets an
+  agent run a task and gate it, or gate committed work; safe fixes auto-apply,
+  judgement calls escalate to the Allfather.
+- **Config**: `.no-mistakes.yaml` (already present in this repo — lint →
+  `bin/brokk-lint.sh`). Posture value `no-mistakes` in `data/projects.md` /
+  company cards now maps to this engine.
+
+**Ymir mapping.** Mjollnir (issue→PR) and Glitnir (review) run through the
+no-mistakes gate; human approval is still required before merge.
+
+**Engine trio (open-source-first).**
+```
+engines[3]{oss,norse,role}:
+  "kunchenguid/treehouse","Yggdrasil","reusable worktree pool"
+  "mattpocock/sandcastle","Utgard","Docker/Podman/Vercel agent sandboxes"
+  "kunchenguid/no-mistakes","Mjollnir · Glitnir","clean-PR validation gate"
+```
+
+## 11. Audit — first-boot provisioning gap (2026-09-11)
+
+**Finding.** On first boot nothing real is provisioned. `Login.tsx` → `provision()`
+→ `provisionWorkspace()` (`services/auth.ts`) is a **client-side mock**: it builds
+a `Session` object and writes it to **localStorage** only. It still asks for a
+**house** and builds a `TenantGrant` — the retired multi-tenant model. No
+directories, engines, GitHub, or MCP are set up.
+
+**Boots that exist:** platform (`scripts/start.sh` — gate API, SPA, Nornir,
+Bifrost, Mimir, visualizer) and session seating
+(`bin/saga-session-start.sh` — Sága digest, lock, bridges, cron). A **user /
+workspace boot does not exist.**
+
+**Engines not yet installed:** treehouse (§9), sandcastle (§9), no-mistakes (§10)
+are decisions, not deployments.
+
+**Required (per §6–§10):**
+1. Workspace tree `workspace/{work,personal}/<domains>/`, `workspace/companies/`,
+   `workspaces.yaml`, `projects.yaml`.
+2. Install treehouse + `@ai-hero/sandcastle` + no-mistakes; build the sandbox
+   image; wrap under `bin/yggdrasil.sh` / `bin/utgard.sh` / the Mjollnir gate.
+3. Seed the company container `svartalfaheim/<company>/` and mount it for work
+   workspaces.
+4. GitHub: `gh auth` (Allfather's own login) or a GitHub App; write each
+   project's `git{}` block.
+5. Register the engram MCP + run the Valknut loaders for the workspace.
+6. Register the workspace and hand it to the UI.
+
+**Proposed entrypoints:** `bin/ymir-install.sh` (platform, once) and
+`bin/workspace-provision.sh <name> --kind work|personal --domains …` (per
+workspace), called for real from the Login provisioning step instead of the mock.

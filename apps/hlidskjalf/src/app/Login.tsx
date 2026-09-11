@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { HOUSES } from '../data/realms';
-import { MOCK_IDENTITIES, ROLE_LABEL, type MockIdentity } from '../services/auth';
+import { DOMAIN_LABEL } from '../data/realms';
+import { MOCK_IDENTITIES, type MockIdentity } from '../services/auth';
+import { gateApi } from '../services/api';
 import { useYmir } from '../state/store';
-import type { HouseId } from '../types';
 
 function GitHubMark({ size = 18 }: { size?: number }) {
   return (
@@ -12,28 +12,46 @@ function GitHubMark({ size = 18 }: { size?: number }) {
   );
 }
 
+const DOMAINS = ['company', 'marketing', 'development', 'life', 'me'] as const;
+const PRESET: Record<'work' | 'personal', string[]> = {
+  work: ['company', 'marketing', 'development', 'life'],
+  personal: ['me', 'life', 'development'],
+};
+
 export function Login() {
-  const signIn = useYmir((s) => s.signIn);
   const provision = useYmir((s) => s.provision);
   const enterDemo = useYmir((s) => s.enterDemo);
 
   const [phase, setPhase] = useState<'signin' | 'provision'>('signin');
   const [identity, setIdentity] = useState<MockIdentity | null>(null);
-  const [house, setHouse] = useState<HouseId>('ymirlabs');
-  const [cloneRepos, setCloneRepos] = useState(true);
+  const [name, setName] = useState('Work');
+  const [kind, setKind] = useState<'work' | 'personal'>('work');
+  const [domains, setDomains] = useState<string[]>(PRESET.work);
+  const [busy, setBusy] = useState(false);
 
   function choose(id: MockIdentity) {
-    if (id.firstRun || id.tenants.length === 0) {
-      setIdentity(id);
-      setPhase('provision');
-      return;
-    }
-    signIn(id);
+    setIdentity(id);
+    setPhase('provision');
   }
 
-  function finish() {
-    if (!identity) return;
-    provision({ login: identity.login, name: identity.name, house, cloneRepos });
+  function chooseKind(k: 'work' | 'personal') {
+    setKind(k);
+    setDomains(PRESET[k]);
+  }
+
+  function toggleDomain(d: string) {
+    setDomains((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]));
+  }
+
+  async function finish() {
+    if (!identity || busy) return;
+    setBusy(true);
+    try {
+      await gateApi.createWorkspace({ name, kind, domains }).catch(() => null);
+      await gateApi.setupRun().catch(() => null);
+    } finally {
+      provision({ login: identity.login, name, kind, domains });
+    }
   }
 
   return (
@@ -52,8 +70,8 @@ export function Login() {
             <div>
               <h1 className="login-title">Sign in</h1>
               <p className="login-deck" style={{ marginTop: 6 }}>
-                The gate opens with GitHub. Every realm is scoped to your grants —
-                boundaries are sacred.
+                One operator, one Ymir. Sign in with the Allfather’s own GitHub login —
+                a single tenant, many workspaces.
               </p>
             </div>
 
@@ -64,7 +82,7 @@ export function Login() {
               Continue with GitHub
             </button>
 
-            <div className="divider">or choose an identity</div>
+            <div className="divider">or</div>
 
             <button
               className="btn"
@@ -75,91 +93,62 @@ export function Login() {
               <span aria-hidden="true">ᛟ</span> Enter demo mode
             </button>
 
-            <div className="identity-list">
-              {MOCK_IDENTITIES.map((id) => (
-                <button key={id.login} className="identity" onClick={() => choose(id)}>
-                  <span className="gh-avatar">{id.login.slice(0, 2).toUpperCase()}</span>
-                  <span className="who">
-                    <div className="gh-login">{id.login}</div>
-                    <div className="meta">
-                      {id.firstRun
-                        ? 'first login — workspace will be provisioned'
-                        : id.tenants
-                            .map((t) => `${t.tenant} · ${ROLE_LABEL[t.role]}`)
-                            .join('  ·  ')}
-                    </div>
-                  </span>
-                  <span className="arrow" aria-hidden="true">
-                    →
-                  </span>
-                </button>
-              ))}
-            </div>
-
             <p className="legal">
               In production this is a GitHub App OAuth code flow → httpOnly JWT
-              session, tenant mapping, and JWS-signed Agent Cards. No secrets enter
-              the client.
+              session. No secrets enter the client.
             </p>
           </>
         ) : (
           <>
             <div>
-              <h1 className="login-title">Provision your workspace</h1>
+              <h1 className="login-title">Set up your workspace</h1>
               <p className="login-deck" style={{ marginTop: 6 }}>
-                First login. Choose the house you forge for; Ymir carves an isolated
-                realm under <span className="mono">svartalfaheim/</span>.
+                Carve a workspace: name it, choose personal or work, and pick the
+                knowledge domains it covers. Ymir stands the full system up.
               </p>
             </div>
 
             <div className="stepper">
               <span className="on">01 authenticate</span>
-              <span>→ 02 house</span>
-              <span>→ 03 repos</span>
+              <span>→ 02 workspace</span>
+              <span>→ 03 domains</span>
             </div>
 
-            <div className="house-grid" role="group" aria-label="House">
-              {Object.values(HOUSES).map((h) => (
-                <button
-                  key={h.id}
-                  className="house-opt"
-                  aria-pressed={house === h.id}
-                  onClick={() => setHouse(h.id)}
-                >
-                  <span className="seal" style={{ color: h.accent }} aria-hidden="true">
-                    {h.glyph}
-                  </span>
-                  {h.name}
+            <label className="field">
+              <span className="eyebrow">Workspace name</span>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Work" />
+            </label>
+
+            <div className="stream-tabs" role="group" aria-label="Workspace kind">
+              {(['work', 'personal'] as const).map((k) => (
+                <button key={k} className="stream-tab" aria-pressed={kind === k} onClick={() => chooseKind(k)}>
+                  {k}
                 </button>
               ))}
             </div>
 
-            <div className="stack-options">
-              <button
-                className="opt"
-                aria-pressed={cloneRepos}
-                onClick={() => setCloneRepos((v) => !v)}
-              >
-                <span className="box" aria-hidden="true">{cloneRepos ? '✓' : ''}</span>
-                Clone the GitHub App installation repos into the realm
-              </button>
+            <div className="chips">
+              {DOMAINS.map((d) => (
+                <button key={d} className="chip" aria-pressed={domains.includes(d)} onClick={() => toggleDomain(d)}>
+                  {domains.includes(d) ? '✓ ' : ''}
+                  {DOMAIN_LABEL[d]}
+                </button>
+              ))}
             </div>
 
             <div className="wizard-path">
-              {`svartalfaheim/${identity?.login ?? 'login'}/`}
+              workspace/{name.toLowerCase().replace(/[^a-z0-9-]+/g, '-') || 'workspace'}/
               <br />
-              ├─ companies/ · projects/ · workspace/
+              ├─ {domains.join(' · ') || '—'}
               <br />
-              ├─ workspace/{'{company,marketing,development,life,memory/daily}'}
-              <br />
-              └─ .env.realm · Brokk.md · .well-known/agent-card.json
+              └─ memory/ · workspaces.yaml · projects.yaml
             </div>
 
             <div className="row">
-              <button className="btn btn-primary grow" onClick={finish} style={{ justifyContent: 'center' }}>
-                <span aria-hidden="true">ᛉ</span> Provision & enter
+              <button className="btn btn-primary grow" onClick={finish} disabled={busy} style={{ justifyContent: 'center' }}>
+                <span aria-hidden="true">ᛉ</span> {busy ? 'Setting up Ymir…' : 'Set up & enter'}
               </button>
-              <button className="btn" onClick={() => setPhase('signin')}>
+              <button className="btn" onClick={() => setPhase('signin')} disabled={busy}>
                 Back
               </button>
             </div>
