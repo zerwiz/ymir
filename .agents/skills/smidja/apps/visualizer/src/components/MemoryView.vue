@@ -139,7 +139,7 @@ function tagClass(tag: string): string {
           <input
             v-model="recallQ"
             class="input"
-            placeholder="what works for building wayofteams?"
+            placeholder="what works for building ymir?"
             @keyup.enter="runRecall"
           />
           <select v-model="recallMode" class="input select">
@@ -181,7 +181,7 @@ function tagClass(tag: string): string {
           <input
             v-model="timelineEntity"
             class="input"
-            placeholder="entity — e.g. wayofteams"
+            placeholder="entity — e.g. ymir"
             @keyup.enter="runTimeline"
           />
           <button class="btn" :disabled="timelineLoading" @click="runTimeline">
@@ -205,7 +205,7 @@ function tagClass(tag: string): string {
           <input
             v-model="observeText"
             class="input grow"
-            placeholder="project=wayofteams task=coding mode=cloud-fast model=deepseek-v4-flash tool_calls_ok=1 gates_passed=3/3 outcome=success"
+            placeholder="project=ymir task=coding mode=cloud-fast model=deepseek-v4-flash tool_calls_ok=1 gates_passed=3/3 outcome=success"
             @keyup.enter="submitObserve"
           />
           <input
@@ -266,7 +266,7 @@ function tagClass(tag: string): string {
 }
 .stat b {
   font-size: 20px;
-  color: #ff8f5c;
+  color: #7dd3fc;
   margin-right: 4px;
 }
 .db {
@@ -309,7 +309,7 @@ function tagClass(tag: string): string {
   width: auto;
 }
 .btn {
-  background: linear-gradient(90deg, #ff6b35, #ff8f5c);
+  background: linear-gradient(90deg, #38bdf8, #7dd3fc);
   border: none;
   border-radius: 8px;
   color: #0b0f18;
