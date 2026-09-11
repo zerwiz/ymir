@@ -221,8 +221,9 @@ See `.agents/assets/agents/naming.md` for the full component map.
 - `scripts/start.sh` — raises the whole system: Hlidskjalf SPA (`:3888`), the
   gate API (`:3889`), Nornir cron, Bifrost (`:4603`), Mimir (`:4602`), and the
   **Smiðja visualizer** (`:8437`). `scripts/stop.sh` lowers it all.
-- `scripts/electron.sh start` — the desktop shell (Hlidskjalf + Smiðja in an
-  Electron window, with an app icon and a stable "Ymir" title).
+- `scripts/electron.sh start [--view hlidskjalf|smidja]` — the desktop shell
+  (an Electron window over Hlidskjalf by default, or the Smiðja visualizer with
+  `--view smidja`), app icon + stable "Ymir" title. `stop` / `status` too.
 - `bin/gjallarhorn-tunnel.sh start` — exposes Hlidskjalf at
   `https://ymirdell.zerwiz.org` (Cloudflare tunnel → `:3889`).
 - The **Smiðja visualizer** lives at
