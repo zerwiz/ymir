@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { HOUSES } from '../data/realms';
-import { ROLE_LABEL } from '../services/auth';
+import { WORKSPACES } from '../data/realms';
 import { useYmir } from '../state/store';
 
 export function AccountMenu() {
@@ -29,7 +28,7 @@ export function AccountMenu() {
   }, [open]);
 
   if (!session) return null;
-  const { user, tenants } = session;
+  const { user, tenants: workspaces } = session;
 
   return (
     <div className="menu-wrap" ref={ref}>
@@ -45,7 +44,7 @@ export function AccountMenu() {
         <span className="col" style={{ lineHeight: 1.25, textAlign: 'left' }}>
           <span style={{ fontSize: 13 }}>{user.login}</span>
           <span className="mono dim" style={{ fontSize: 10 }}>
-            {tenants.length} tenant{tenants.length === 1 ? '' : 's'}
+            {workspaces.length} workspace{workspaces.length === 1 ? '' : 's'}
           </span>
         </span>
       </button>
@@ -65,15 +64,15 @@ export function AccountMenu() {
           </div>
 
           <div className="popover-head" style={{ paddingTop: 0 }}>
-            <span>Tenant grants</span>
+            <span>Workspaces</span>
             <span className="mono dim" style={{ fontSize: 10 }}>
-              boundaries are sacred
+              single tenant · many scopes
             </span>
           </div>
 
           <div className="account-tenants">
-            {tenants.map((t) => {
-              const house = HOUSES[t.house];
+            {workspaces.map((t) => {
+              const def = WORKSPACES.find((w) => w.id === t.realm);
               const tint = tenantColors[t.realm] ?? t.tint;
               return (
                 <button
@@ -87,13 +86,14 @@ export function AccountMenu() {
                 >
                   <span className="realm-swatch" style={{ background: tint }} />
                   <span className="grow truncate" style={{ textAlign: 'left' }}>
-                    {t.tenant}
+                    {def?.name ?? t.tenant}
                     <span className="mono dim" style={{ fontSize: 10, marginLeft: 8 }}>
-                      {house.name}
+                      {def?.kind ?? 'workspace'}
+                      {def?.company ? ` · ${def.company}` : ''}
                     </span>
                   </span>
                   <span className="mono dim" style={{ fontSize: 10, textTransform: 'uppercase' }}>
-                    {ROLE_LABEL[t.role]}
+                    {def?.domains?.join(' · ') ?? ''}
                   </span>
                 </button>
               );

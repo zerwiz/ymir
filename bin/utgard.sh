@@ -9,7 +9,12 @@
 #   utgard.sh build [--tag <name>]
 #   utgard.sh status
 #   utgard.sh run <worktree> -- <command...> [--network none|on] [--cpus N] [--memory M] [--timeout S]
+#   utgard.sh sandcastle <args…>   # the sandcastle engine (Docker/Podman/Vercel)
 #   utgard.sh --version
+#
+# Engine: the isolated agent sandbox engine is **sandcastle**
+# (github.com/mattpocock/sandcastle, `@ai-hero/sandcastle`); this script is the
+# sealed Norse shell. `sandcastle` delegates to it; `run` uses utgard-runner.
 #
 # Exit: 0 ok, 1 error, 2 usage, 124 timeout.
 set -u
@@ -27,6 +32,13 @@ case "$CMD" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") usage; exit 0 ;;
 esac
+
+# `sandcastle` delegates to the sandbox engine (no docker-daemon requirement —
+# it may use podman or vercel).
+if [ "$CMD" = "sandcastle" ]; then
+  command -v npx >/dev/null 2>&1 || { printf 'error: npx not found\nhelp: install node/npm to use sandcastle\n' >&2; exit 1; }
+  exec npx --yes @ai-hero/sandcastle "$@"
+fi
 
 command -v docker >/dev/null 2>&1 || { printf 'error: docker not found\nhelp: install docker to use Utgard\n' >&2; exit 1; }
 docker info >/dev/null 2>&1 || { printf 'error: docker daemon not reachable\n' >&2; exit 1; }

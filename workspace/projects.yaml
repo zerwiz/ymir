@@ -1,0 +1,19 @@
+# Master project registry. Every project carries its GitHub block here; the
+# runtime reads it — never guesses a remote. auth is a REFERENCE, never a value.
+projects:
+  - id: ymir-platform
+    name: Ymir
+    workspace: work
+    company: wayof
+    domains: [development, company]
+    repo: .
+    posture: local-only
+    git: { host: github.com, owner: Way-Of, repo: ymir, remote: origin, default_branch: main, auth: gh }
+  - id: hlidskjalf
+    name: Hlidskjalf
+    workspace: work
+    company: wayof
+    domains: [development, company]
+    repo: apps/hlidskjalf
+    posture: direct-PR
+    git: { host: github.com, owner: Way-Of, repo: ymir, remote: origin, default_branch: main, auth: gh }

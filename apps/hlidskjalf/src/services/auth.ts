@@ -26,37 +26,19 @@ function grant(realm: string, tenant: string, role: TenantGrant['role'], house: 
 }
 
 /**
- * Tenant model:
- *   WayOf is the company. zerwiz (the captain) and craig are both members of
- *   WayOf; each also carries a personal realm. Boundaries are still sacred —
- *   a grant is required to enter any realm.
+ * Single-tenant model: one operator (the Allfather), many **workspaces**
+ * (work | personal) over knowledge **domains**. Houses are brands, not realms.
+ * A grant is now a workspace membership, kept for the UI's shape.
  */
 export const MOCK_IDENTITIES: MockIdentity[] = [
   {
-    login: 'zerwiz',
-    name: 'Josef (zerwiz)',
-    email: 'zerwiz@ymir.local',
+    login: 'allfather',
+    name: 'Allfather',
+    email: 'allfather@ymir.local',
     tenants: [
-      grant('way-of', 'WayOf', 'owner', 'ymirlabs'),
-      grant('zerwiz', 'Zerwiz', 'owner', 'muninn'),
-      grant('craig', 'Craig', 'admin', 'brokkforge'),
+      grant('work', 'Work', 'owner', 'ymirlabs'),
+      grant('personal', 'Personal', 'owner', 'muninn'),
     ],
-  },
-  {
-    login: 'craig',
-    name: 'Craig',
-    email: 'craig@ymir.local',
-    tenants: [
-      grant('way-of', 'WayOf', 'member', 'ymirlabs'),
-      grant('craig', 'Craig', 'owner', 'brokkforge'),
-    ],
-  },
-  {
-    login: 'newdev',
-    name: 'New Developer',
-    email: 'newdev@ymir.local',
-    tenants: [],
-    firstRun: true,
   },
 ];
 
@@ -113,25 +95,31 @@ export function githubAuthorize(identity: MockIdentity): Session {
   };
 }
 
-/** First-run workspace provisioning (mock of the W0029 provisioner). */
+/** Provision a workspace for the operator (single tenant). The real disk work
+ *  is done by the gate API (`/api/setup/run`); this shapes the session. */
 export function provisionWorkspace(input: {
   login: string;
   name: string;
-  house: HouseId;
-  cloneRepos: boolean;
+  kind: 'work' | 'personal';
+  domains: string[];
 }): Session {
-  const realm = input.login.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const id = input.name.toLowerCase().replace(/[^a-z0-9-]/g, '-') || 'workspace';
   const user: User = {
     login: input.login,
-    name: input.name,
+    name: 'Allfather',
     email: `${input.login}@ymir.local`,
     avatar: input.login.slice(0, 2).toUpperCase(),
   };
+  const house: HouseId = input.kind === 'work' ? 'ymirlabs' : 'muninn';
+  const base: TenantGrant[] = [
+    grant('work', 'Work', 'owner', 'ymirlabs'),
+    grant('personal', 'Personal', 'owner', 'muninn'),
+  ];
+  const exists = base.some((t) => t.realm === id);
+  const tenants = exists ? base : [...base, grant(id, input.name || id, 'owner', house)];
   return {
     user,
-    tenants: [
-      grant(realm, input.name || input.login, 'owner', input.house),
-    ],
+    tenants,
     method: 'github',
     issuedAt: new Date().toISOString(),
     token: mockJwt(user),
