@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+"""kaia-teach.py — bulk-teach a project into Kaia's memory (wraps factory teach).
+
+Usage:
+    kaia-teach.py <project> [--recon] [--root /home/zerwiz/command]
+
+Reads the project's key files (AGENTS.md, CHANGELOG.md, deploy/start/stop
+scripts, scripts/*.sh) and observes each into the engram — no agent tokens.
+`--recon` additionally sends the 9b scout to map the codebase and observes the
+findings. Thin wrapper around `scripts/factory teach` so it always uses the
+current launcher logic.
+"""
+import argparse
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+# skill lives at <root>/.agents/skills/smidja/skills/volundr/scripts/kaia-teach.py
+ROOT = Path(__file__).resolve().parents[4]
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("project", help="project name or path (prefers ~/CodeP/<name>)")
+    ap.add_argument("--recon", action="store_true",
+                    help="also run the 9b scout to map the codebase")
+    ap.add_argument("--root", default=str(ROOT), help="command repo root")
+    args = ap.parse_args()
+
+    factory = Path(args.root) / "scripts" / "factory"
+    if not factory.exists():
+        print(f"[kaia] no launcher at {factory}", file=sys.stderr)
+        return 1
+
+    cmd = [str(factory), "teach", args.project]
+    if args.recon:
+        cmd.append("--recon")
+    print(f"[kaia] running: {' '.join(cmd)}")
+    rc = subprocess.call(cmd)
+    if rc != 0:
+        print(f"[kaia] teach exited {rc}", file=sys.stderr)
+    return rc
+
+
+if __name__ == "__main__":
+    sys.exit(main())

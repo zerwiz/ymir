@@ -1,0 +1,254 @@
+/* ============================================================
+   HLIDSKJALF — Auth gate (mock GitHub / Heimdall stand-in)
+   ============================================================ */
+
+.login {
+  min-height: 100%;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: var(--ymir-space-6);
+  background:
+    radial-gradient(900px 500px at 50% -10%, var(--ymir-info-dim), transparent 60%),
+    radial-gradient(700px 500px at 100% 110%, rgba(139, 92, 246, 0.12), transparent 60%),
+    var(--ymir-bg-0);
+  overflow-y: auto;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--ymir-bg-1);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius-panel);
+  box-shadow: var(--ymir-bevel), var(--ymir-shadow-raise);
+  padding: var(--ymir-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ymir-space-4);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-3);
+}
+.login-brand .name {
+  font-family: var(--ymir-font-head);
+  font-size: 22px;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+}
+.login-brand .sub {
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ymir-cyan-1);
+}
+
+.login-title {
+  font-size: 26px;
+  line-height: 1.15;
+}
+.login-deck {
+  color: var(--ymir-text-2);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.mock-flag {
+  align-self: flex-start;
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ymir-warn);
+  background: var(--ymir-warn-dim);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.gh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ymir-space-3);
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--ymir-radius);
+  background: #e8edf6;
+  color: #0b101c;
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  transition: transform var(--ymir-dur-fast) var(--ymir-ease), background var(--ymir-dur-fast) var(--ymir-ease);
+}
+.gh-btn:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.identity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-3);
+  width: 100%;
+  padding: var(--ymir-space-3);
+  border-radius: var(--ymir-radius);
+  border: 1px solid var(--ymir-steel-1);
+  background: var(--ymir-bg-2);
+  text-align: left;
+  transition: border-color var(--ymir-dur-fast) var(--ymir-ease), background var(--ymir-dur-fast) var(--ymir-ease);
+}
+.identity:hover {
+  border-color: var(--ymir-steel-2);
+  background: var(--ymir-bg-3);
+}
+.identity .who {
+  flex: 1;
+  min-width: 0;
+}
+.identity .gh-login {
+  font-family: var(--ymir-font-mono);
+  font-size: 13px;
+  color: var(--ymir-text-0);
+}
+.identity .meta {
+  font-family: var(--ymir-font-mono);
+  font-size: 11px;
+  color: var(--ymir-text-2);
+}
+.identity .arrow {
+  color: var(--ymir-text-3);
+}
+
+.gh-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--ymir-cyan-1), var(--ymir-violet-1));
+  color: #06121f;
+  font-family: var(--ymir-font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-3);
+  color: var(--ymir-text-3);
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ymir-steel-1);
+}
+
+.legal {
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  color: var(--ymir-text-3);
+  line-height: 16px;
+}
+
+/* --- Provisioning wizard -------------------------------------- */
+.house-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.house-opt {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-2);
+  padding: var(--ymir-space-2) var(--ymir-space-3);
+  border-radius: var(--ymir-radius);
+  border: 1px solid var(--ymir-steel-1);
+  background: var(--ymir-bg-2);
+  font-size: 12px;
+  color: var(--ymir-text-1);
+  text-align: left;
+}
+.house-opt .seal {
+  font-family: var(--ymir-font-head);
+  font-size: 16px;
+}
+.house-opt[aria-pressed='true'] {
+  border-color: var(--ymir-chisel);
+  background: var(--ymir-bg-3);
+  color: var(--ymir-text-0);
+  box-shadow: var(--ymir-bevel);
+}
+
+.wizard-path {
+  font-family: var(--ymir-font-mono);
+  font-size: 12px;
+  color: var(--ymir-cyan-1);
+  background: var(--ymir-bg-0);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  padding: var(--ymir-space-3);
+  word-break: break-all;
+}
+
+.stack-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.opt {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-3);
+  padding: var(--ymir-space-3);
+  border-radius: var(--ymir-radius);
+  border: 1px solid var(--ymir-steel-1);
+  background: var(--ymir-bg-2);
+  font-size: 13px;
+  text-align: left;
+}
+.opt .box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--ymir-steel-2);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.opt[aria-pressed='true'] .box {
+  color: var(--ymir-ok);
+  border-color: rgba(52, 211, 153, 0.5);
+  background: var(--ymir-ok-dim);
+}
+
+.stepper {
+  display: flex;
+  gap: var(--ymir-space-2);
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ymir-text-3);
+}
+.stepper .on {
+  color: var(--ymir-cyan-1);
+}

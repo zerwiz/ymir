@@ -1,0 +1,75 @@
+# Hermóðr Profile — Hermóðr (herdr) Pane Configuration for Ymir PI
+
+[session]
+name = "ymir-pi"
+socket = "/tmp/herdr-ymir-pi.sock"
+protocol = "thjazi-14"  # Þjazi protocol 14+ required
+
+[layout]
+type = "vertical"
+pane_count = 5
+auto_rename = true
+focus_new = false
+
+[pane.brokk]
+label = "🔨 Brokk"
+command = ["opencode", "--agent", "brokk"]
+cwd = "/home/zerwiz/Ymir"
+env = {}
+shell = "/bin/bash"
+focus = true
+restart_policy = "on_failure"
+restart_delay = 5
+
+[pane.eindri_dev]
+label = "⚒️ Eindri-Dev"
+command = ["opencode", "--agent", "build"]
+cwd = "/home/zerwiz/Ymir/.yggdrasil/eindri-dev"
+env = {}
+shell = "/bin/bash"
+focus = false
+restart_policy = "on_failure"
+restart_delay = 5
+
+[pane.eindri_marketer]
+label = "📣 Eindri-Marketer"
+command = ["opencode", "--agent", "build"]
+cwd = "/home/zerwiz/Ymir/.yggdrasil/eindri-marketer"
+env = {}
+shell = "/bin/bash"
+focus = false
+restart_policy = "on_failure"
+restart_delay = 5
+
+[pane.eindri_researcher]
+label = "🔍 Eindri-Researcher"
+command = ["opencode", "--agent", "build"]
+cwd = "/home/zerwiz/Ymir/.yggdrasil/eindri-researcher"
+env = {}
+shell = "/bin/bash"
+focus = false
+restart_policy = "on_failure"
+restart_delay = 5
+
+[pane.valhalla]
+label = "⚖️ Valhalla"
+command = ["bash", "-c", "tail -f /home/zerwiz/Ymir/workspace/memory/runes_audit.md"]
+cwd = "/home/zerwiz/Ymir"
+env = {}
+shell = "/bin/bash"
+focus = false
+restart_policy = "never"
+
+[hooks]
+on_session_start = [
+  "echo 'Valhalla: Ymir PI session started' >> /home/zerwiz/Ymir/workspace/memory/runes_audit.md"
+]
+on_pane_exit = [
+  "echo 'Valhalla: Pane $PANE_NAME exited with code $EXIT_CODE' >> /home/zerwiz/Ymir/workspace/memory/runes_audit.md"
+]
+
+[thjazi]
+presentation_spaces = false  # opt-out per config/herdr-presentation-spaces
+protocol_floor = "0.7.5"  # minimum verified
+launcher_workspace = "ymir"
+label_collision_policy = "refuse"

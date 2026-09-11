@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "platform": "ymir",
+  "notes": "Brokk reads these rules before dispatching an Eindri and passes only concrete --harness/--model/--effort flags to bin/einherjar-spawn.sh. opencode is the primary Ymir harness; pi is the verified secondary harness. Model tokens must match a model opencode/pi can run on this host, or be omitted to use the harness default. effort values: low|medium|high|xhigh|max.",
+  "rules": [
+    {
+      "when": "General implementation, refactoring, or bug fixes in a codebase",
+      "use": [
+        { "harness": "opencode", "model": "opencode-go/deepseek-v4.1-flash", "effort": "medium" }
+      ],
+      "why": "opencode is the primary Ymir harness; the flash model is the verified build model for implementation work"
+    },
+    {
+      "when": "Deep investigation, diagnosis, planning, or ambiguous design work requiring deep reasoning",
+      "use": [
+        { "harness": "opencode", "model": "opencode-go/deepseek-v4.1-flash", "effort": "xhigh" }
+      ],
+      "why": "Maximum reasoning for open-ended investigation and design work on the primary harness"
+    },
+    {
+      "when": "Trivial mechanical edits such as rote renames, formatting sweeps, or simple file gathering",
+      "use": [
+        { "harness": "opencode", "model": "opencode-go/deepseek-v4.1-flash", "effort": "low" }
+      ],
+      "why": "Fast, cheap profile for narrow low-ambiguity tasks"
+    },
+    {
+      "when": "Long-running autonomous or background execution: supervision branches, unattended sweeps, or persistent workers",
+      "use": [
+        { "harness": "pi", "effort": "medium" }
+      ],
+      "why": "Pi is the verified secondary Ymir harness for persistent and background workers; omitting model uses Pi's configured default"
+    }
+  ],
+  "default": [
+    { "harness": "opencode", "model": "opencode-go/deepseek-v4.1-flash", "effort": "medium" }
+  ]
+}

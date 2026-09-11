@@ -1,0 +1,101 @@
+/* ============================================================
+   YMIR — Design Tokens · Canonical (forge/dark theme = default)
+   Source of truth: docs/design.md
+   Consume via CSS variables — never hardcode hex in components.
+   ============================================================ */
+
+:root {
+  /* --- Canvas: the forge chamber ---------------------------- */
+  --ymir-bg-0: #080c14;
+  --ymir-bg-1: #0b101c;
+  --ymir-bg-2: #101726;
+  --ymir-bg-3: #182334;
+
+  /* --- Accents: the two lights of Bifrost ------------------- */
+  --ymir-cyan-1: #38bdf8;
+  --ymir-cyan-2: #0ea5e9;
+  --ymir-violet-1: #818cf8;
+  --ymir-violet-2: #6366f1;
+
+  /* --- Structure: hammered steel ----------------------------- */
+  --ymir-steel-1: #334155;
+  --ymir-steel-2: #475569;
+  --ymir-steel-3: #94a3b8;
+  --ymir-chisel: #7dd3fc;
+
+  /* --- Semantics: state of the forge ------------------------- */
+  --ymir-ok: #34d399;
+  --ymir-warn: #fbbf24;
+  --ymir-danger: #f87171;
+  --ymir-info: #38bdf8;
+  --ymir-ok-dim: rgba(52, 211, 153, 0.15);
+  --ymir-warn-dim: rgba(251, 191, 36, 0.15);
+  --ymir-danger-dim: rgba(248, 113, 113, 0.15);
+  --ymir-info-dim: rgba(56, 189, 248, 0.15);
+
+  /* --- Text on forge ------------------------------------------ */
+  --ymir-text-0: #e8edf6;
+  --ymir-text-1: #b3c0d4;
+  --ymir-text-2: #7b8aa3;
+  --ymir-text-3: #4b5a73;
+
+  /* --- House accents (structural only) -------------------------- */
+  --ymir-house-ymirlabs: #38bdf8;
+  --ymir-house-brokkforge: #f59e0b;
+  --ymir-house-runestone: #f43f5e;
+  --ymir-house-muninn: #8b5cf6;
+  --ymir-house-dvalin: #94a3b8;
+  --ymir-house-utgard: #d946ef;
+  --ymir-house-askr: #34d399;
+  --ymir-house-mannheim: #64748b;
+
+  /* --- Type scale ---------------------------------------------- */
+  --ymir-font-head: 'Cinzel', serif;
+  --ymir-font-mono: 'JetBrains Mono', monospace;
+  --ymir-font-body: 'Inter', system-ui, sans-serif;
+
+  --ymir-s-mono-s: 12px / 16px;
+  --ymir-s-mono-m: 14px / 20px;
+  --ymir-s-mono-l: 18px / 24px;
+  --ymir-s-cinzel: clamp(28px, 4vw, 44px) / 1.1;
+  --ymir-s-body: 15px / 22px;
+  --ymir-s-caption: 13px / 18px;
+
+  /* --- Space & structure ----------------------------------------- */
+  --ymir-space-1: 4px;
+  --ymir-space-2: 8px;
+  --ymir-space-3: 12px;
+  --ymir-space-4: 16px;
+  --ymir-space-5: 24px;
+  --ymir-space-6: 32px;
+  --ymir-space-7: 48px;
+
+  --ymir-radius: 8px;
+  --ymir-radius-panel: 12px;
+  --ymir-border: 1px solid var(--ymir-steel-1);
+
+  /* Bevel: sell the carved edge */
+  --ymir-bevel: inset 0 0 0 1px rgba(125, 211, 252, 0.12);
+  --ymir-shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --ymir-shadow-raise: 0 8px 24px rgba(0, 0, 0, 0.55);
+
+  /* --- Motion ------------------------------------------------------- */
+  --ymir-dur-fast: 120ms;
+  --ymir-dur-task: 180ms;
+  --ymir-dur-hop: 220ms;
+  --ymir-dur-roll: 240ms;
+  --ymir-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Numeric safety for all telemetry */
+.tabular { font-variant-numeric: tabular-nums; font-family: var(--ymir-font-mono); }
+
+/* Status chips: color + rune + label — never color alone */
+.status-ok    { color: var(--ymir-ok);    background: var(--ymir-ok-dim); }
+.status-warn  { color: var(--ymir-warn);  background: var(--ymir-warn-dim); }
+.status-danger{ color: var(--ymir-danger); background: var(--ymir-danger-dim); }
+.status-info  { color: var(--ymir-info);  background: var(--ymir-info-dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 120ms !important; animation-duration: 120ms !important; }
+}

@@ -1,0 +1,6 @@
+{
+  "port": 80,
+  "baseURL": "/files",
+  "root": "/srv",
+  "address": "0.0.0.0"
+}

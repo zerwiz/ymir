@@ -1,0 +1,42 @@
+{
+  "schema": "fm-secondmate-home-summary.v1",
+  "generated": "2026-09-11T01:28:09Z",
+  "generated_epoch": 1789090089,
+  "home": "/home/zerwiz/firstmate",
+  "valid": false,
+  "reason": "missing structured backlog",
+  "invalidity": {
+    "kind": "missing_backlog",
+    "ids": []
+  },
+  "state": "unknown",
+  "active_children": [],
+  "decisions_open": [],
+  "holds": [],
+  "queued": [],
+  "landed": [],
+  "endpoints": [
+    {
+      "id": "server-knowledge",
+      "state": "unknown",
+      "source": "none",
+      "endpoint": {
+        "target": "default:wF:p6",
+        "exists": false,
+        "agent_alive": "not_checked",
+        "status": "absent",
+        "observed_at": "2026-09-11T01:28:09Z",
+        "freshness": "fresh"
+      }
+    }
+  ],
+  "counts": {
+    "active_children": 0,
+    "decisions_open": 0,
+    "holds": 0,
+    "queued": 0,
+    "landed": 0,
+    "endpoints": 1
+  },
+  "omitted": []
+}

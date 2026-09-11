@@ -1,0 +1,19 @@
+# UTGARD — Hardened Minimal Execution Container
+
+FROM node:20-alpine
+
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git \
+    bash \
+    curl
+
+RUN addgroup -S agentgroup && adduser -S agentuser -G agentgroup
+
+WORKDIR /sandbox
+
+USER agentuser
+
+CMD ["bash"]

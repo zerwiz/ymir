@@ -1,0 +1,74 @@
+{
+  "opencode": {
+    "provider": "llama.cpp",
+    "baseURL": "http://127.0.0.1:8090/v1",
+    "apiKey": "sk-not-key-required",
+    "models": ["auto"]
+  },
+  "zed": {
+    "language_models": {
+      "llama.cpp": {
+        "auto_discover": true,
+        "base_url": "http://127.0.0.1:8090/v1",
+        "api_key": "sk-not-key-required"
+      }
+    }
+  },
+  "direct_api": {
+    "base_url": "http://127.0.0.1:8090/v1",
+    "api_key": "sk-not-key-required"
+  },
+  "models": [
+    {"id": "qwen3.6-35b-a3b@q2_k_xl", "port": 8125, "launch": "model-host start q2-swap", "ctx": 155904, "reasoning": false},
+    {"id": "qwen3.6-35b-a3b@iq3_s", "port": 8125, "launch": "model-host start iq3-swap", "ctx": 100000, "reasoning": false},
+    {"id": "qwen3.6-35b-a3b@q4_k_s", "port": 8125, "launch": "model-host start q4-swap", "ctx": 120000, "reasoning": false},
+    {"id": "qwen3.6-35b-a3b@q5_k_m", "port": 8125, "launch": "model-host start q5-swap", "ctx": 120000, "reasoning": false},
+    {"id": "qwen3.6-35b-a3b@iq3_s-orch", "port": 8093, "launch": "model-host start q3", "ctx": 100000, "reasoning": true},
+    {"id": "qwen3.5-9b@q4_k_s", "port": 8081, "launch": "model-host start 9b-swap", "ctx": 262144, "reasoning": true},
+    {"id": "qwen3.5-9b-highctx@q4_k_s", "port": 8081, "launch": "model-host start 9b-highctx-swap", "ctx": 262144, "reasoning": true},
+    {"id": "qwen3.5-4b@q4_k_s", "port": 8084, "launch": "model-host start 4b-swap", "ctx": 262144, "reasoning": true},
+    {"id": "qwen3.5-9b-uncensored@q4_k_m", "port": 8081, "launch": "model-host start hauhau-9b-swap", "ctx": 262144, "reasoning": true},
+    {"id": "qwen3.8-27b@q3_k_xl", "port": 8083, "launch": "model-host start 27b-swap", "ctx": 100000, "reasoning": true},
+    {"id": "qwen3.8-27b-cpu@q3_k_xl", "port": 8083, "launch": "model-host start 27b-cpu-swap", "ctx": 120000, "reasoning": true},
+    {"id": "qwen3.8-flash-next@q3_k_xl", "port": 8095, "launch": "model-host start q3-flash-swap", "ctx": 100000, "reasoning": true},
+    {"id": "qwopus3.5-9b-coder@q8_0", "port": 8086, "launch": "model-host start qwopus-swap", "ctx": 131072, "reasoning": true},
+    {"id": "frontend-design-expert-8b@q4_k_m", "port": 8087, "launch": "model-host start frontend-swap", "ctx": 100000, "reasoning": false},
+    {"id": "gemma-4-26b-a4b@q5_k_xl", "port": 8085, "launch": "model-host start gemma-swap", "ctx": 120000, "reasoning": false},
+    {"id": "gemma-4-12b@q3_k_s", "port": 8088, "launch": "model-host start 12b-q3-swap", "ctx": 131072, "reasoning": false},
+    {"id": "gemma-4-12b@q4_k_m", "port": 8088, "launch": "model-host start 12b-q4-swap", "ctx": 131072, "reasoning": false},
+    {"id": "gemma4-12b-qat-uncensored@q4_k_m", "port": 8088, "launch": "model-host start hauhau-gemma-swap", "ctx": 131072, "reasoning": false},
+    {"id": "gemma4-12b-qat-uncensored@dual-chat", "port": 8098, "launch": "model-host start dualchat-gemma", "ctx": 131072, "reasoning": false},
+    {"id": "minicpm5-1b-agentic-tooluse@q8_0", "port": 8092, "launch": "model-host start minicpm-swap", "ctx": 131072, "reasoning": false},
+    {"id": "nomic-embed-text-v1.5@embed", "port": 8100, "launch": "model-host start embed-swap", "ctx": 8192, "reasoning": false},
+    {"id": "gpt-oss-20b@f16", "port": 8096, "launch": "model-host start gptoss20b-swap", "ctx": 100000, "reasoning": false}
+  ],
+  "ports": {
+    "gateway": 8090,
+    "dual_chat": 8098,
+    "swap_groups": {
+      "qwen35b": 8125,
+      "qwen9b": 8081,
+      "qwen4b": 8084,
+      "qwen27b": 8083,
+      "qwopus9b": 8086,
+      "frontend8b": 8087,
+      "gemma26b": 8085,
+      "gemma12b": 8088,
+      "minicpm1b": 8092,
+      "orchestrator": 8093,
+      "27b_cpu": 8094,
+      "q3flash": 8095,
+      "gptoss20b": 8096,
+      "hauhau9b": 8091,
+      "embeddings": 8100
+    }
+  },
+  "commands": {
+    "start_gateway": "scripts/swap-proxy start",
+    "stop_gateway": "scripts/swap-proxy stop",
+    "status_gateway": "curl -s http://127.0.0.1:8090/v1/models | jq '.data | length'",
+    "test_model": "model-host start 9b-swap",
+    "stop_all": "model-host stop",
+    "dual_chat": "model-host start dualchat-gemma"
+  }
+}
