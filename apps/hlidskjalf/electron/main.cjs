@@ -3,7 +3,7 @@
 // Raises the stack if it is down, then opens the control plane (Hlidskjalf) and
 // the smithy's visualizer (Smiðja) as app surfaces. The web app stays the UI;
 // this is the native window and menu around it.
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, screen } = require('electron');
 const { spawn } = require('node:child_process');
 const http = require('node:http');
 const path = require('node:path');
@@ -59,12 +59,66 @@ async function ensureStack() {
   return false;
 }
 
+// Place the window on a NON-primary display when one exists, so the dashboards
+// open on the Allfather's second screen and leave the primary for work. Falls
+// back to the primary when only one monitor is attached (the common laptop
+// case), and never goes off-screen. YMIR_DESKTOP_DISPLAY picks a display:
+//   other (default) | primary | <index 0..n>
+function targetDisplay() {
+  let displays = [];
+  try {
+    displays = screen.getAllDisplays();
+  } catch {
+    return null;
+  }
+  if (!displays.length) return null;
+  const primary = (() => {
+    try {
+      return screen.getPrimaryDisplay();
+    } catch {
+      return displays[0];
+    }
+  })();
+  const want = (process.env.YMIR_DESKTOP_DISPLAY || 'other').toLowerCase();
+
+  // Two dashboards on two screens should not stack on the same one.
+  const second = displays.filter((d) => d.id !== primary.id);
+  const preferOther = want === 'other' || want === '';
+
+  if (preferOther && second.length) {
+    // Hlidskjalf takes the first secondary; Smíðja the next, or the first again.
+    const idx = IS_SMIDJA ? Math.min(1, second.length - 1) : 0;
+    return second[idx];
+  }
+  if (/^\d+$/.test(want)) {
+    const d = displays[Number(want)];
+    if (d) return d;
+  }
+  if (want === 'primary') return primary;
+  return primary;
+}
+
+function centeredBounds(display) {
+  // All geometry is LOGICAL (Electron's screen API): physical / scale. Omarchy
+  // often uses a fractional scale (1920x1200 at 1.5 -> 1280x800 logical), so a
+  // 1440-wide default would overflow a scaled laptop panel.
+  const wantW = 1440;
+  const wantH = 900;
+  if (!display) return { width: wantW, height: wantH };
+  const wa = display.workArea || display.bounds;
+  const w = Math.max(800, Math.min(wantW, wa.width));
+  const h = Math.max(600, Math.min(wantH, wa.height));
+  const x = Math.round(wa.x + (wa.width - w) / 2);
+  const y = Math.round(wa.y + (wa.height - h) / 2);
+  return { width: w, height: h, x, y };
+}
+
 function openWindow(url, title) {
+  const bounds = centeredBounds(targetDisplay());
   win = new BrowserWindow({
-    width: 1440,
-    height: 900,
-    minWidth: 960,
-    minHeight: 640,
+    ...bounds,
+    minWidth: 800,
+    minHeight: 600,
     backgroundColor: '#080c14',
     icon: ICON,
     title,

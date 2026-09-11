@@ -65,6 +65,17 @@ config/*
 !config/*.example
 .pi/extensions/*.local.ts
 
+# Mimirsbrunn — the well is PER-MACHINE, never shared.
+# It is "one repo-local store shared by every agent" on THIS machine, not between
+# machines/users: a clone must never inherit another user's memory, and the
+# SQLite -wal/-shm sidecars are volatile runtime files that must never be
+# versioned (a stale WAL can corrupt a fresh clone's store).
+# The append log under memory/well/ is the same class of data. Only the
+# README (the contract) is tracked; the store is rebuilt per machine.
+.agents/memory/kaia.engram*
+.agents/memory/*.db
+.agents/memory/well/*.jsonl
+
 # smidja runtime
 smidja/smidja_data/sessions/
 smidja/smidja_data/smidja.db*
