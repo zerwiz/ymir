@@ -106,7 +106,10 @@ app.whenReady().then(async () => {
   buildMenu();
   const up = await ensureStack();
   app.setName('Ymir');
-  openWindow(HLIDSKJALF, up ? 'Ymir · Hlidskjalf' : 'Ymir · Hlidskjalf');
+  const view = (process.env.YMIR_DESKTOP_VIEW ?? 'hlidskjalf').toLowerCase();
+  const startUrl = view === 'smidja' ? SMIDJA : HLIDSKJALF;
+  const startTitle = view === 'smidja' ? 'Ymir · Smiðja' : 'Ymir · Hlidskjalf';
+  openWindow(startUrl, startTitle);
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) openWindow(HLIDSKJALF, 'Ymir · Hlidskjalf');
   });
