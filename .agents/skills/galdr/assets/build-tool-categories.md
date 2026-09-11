@@ -49,7 +49,7 @@ Galdr needs to understand these build tool categories and their asset requiremen
 - Project modes: no-mistakes/direct-PR/local-only/+yolo
 - Crew orchestration, worktree isolation (Yggdrasil/orca)
 - Restart-proof disk state, supervision watcher
-- X/Discord Relay, secondmates
+- X/Discord Relay, eindri-homes
 
 **Assets Galdr Needs**:
 - Worktree isolation patterns

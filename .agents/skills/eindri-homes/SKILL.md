@@ -2,7 +2,7 @@
 name: eindri-homes
 description: >-
   Agent-only reference for persistent Eindri-home setup and retirement.
-  Use when creating, seeding, validating, launching, recovering, handing backlog to, pushing inherited local material into, or retiring a Eindri-home home, or when editing data/secondmates.md.
+  Use when creating, seeding, validating, launching, recovering, handing backlog to, pushing inherited local material into, or retiring a Eindri-home home, or when editing data/eindri-homes.md.
   Covers local leases, whole-home remote routes, transactional seeding, record intake for an existing or inherited domain, project clone restrictions, Eindri-home harness pins, inherited local-material push, idle charter, handoff helper, and teardown safety.
 user-invocable: false
 metadata:
@@ -11,13 +11,13 @@ metadata:
 
 # Eindri-home-provisioning
 
-Use this reference before creating, seeding, validating, launching, handing backlog to, recovering, pushing inherited local material into, or retiring a persistent Eindri-home, and before editing `data/secondmates.md`.
+Use this reference before creating, seeding, validating, launching, handing backlog to, recovering, pushing inherited local material into, or retiring a persistent Eindri-home, and before editing `data/eindri-homes.md`.
 
-Keep the always-inline routing rules in `AGENTS.md` authoritative: route by natural-language `scope:`, local-only projects stay with the main Brokk, and secondmates are idle by default.
+Keep the always-inline routing rules in `AGENTS.md` authoritative: route by natural-language `scope:`, local-only projects stay with the main Brokk, and eindri-homes are idle by default.
 
 ## Routing table
 
-`data/secondmates.md` has one parser-compatible line per persistent second mate.
+`data/eindri-homes.md` has one parser-compatible line per persistent Eindri-home.
 A local route uses:
 
 ```markdown
@@ -34,9 +34,9 @@ Each registry entry stays concise and single-line: the summary is one sentence n
 Natural-language summary and `scope:` text may contain parentheses and semicolons; keep the generated `(home: ...; scope: ...; projects: ...; added ...)` suffix intact so operational consumers resolve its explicit field markers.
 The `home:` path points to the seeded home containing `data/charter.md`; no extra registry pointer field is needed.
 For a remote route, `host:` is an OpenSSH config alias and `root:` is that host's separate tracked Brokk code root.
-A remote second-mate agent always runs on the Herdr backend and every seed, launch, and liveness relaunch first gates its host on `bin/brokk-remote-doctor.sh` readiness, so an unready host refuses with that doctor's own gap text rather than half-creating a route; the workers that second mate supervises keep the home's ordinary backend selection.
+A remote Eindri-home agent always runs on the Herdr backend and every seed, launch, and liveness relaunch first gates its host on `bin/brokk-remote-doctor.sh` readiness, so an unready host refuses with that doctor's own gap text rather than half-creating a route; the workers that Eindri-home supervises keep the home's ordinary backend selection.
 This release places whole Eindri-home homes remotely and never individual workers.
-[`docs/remote-secondmates.md`](../../../docs/remote-secondmates.md) owns current operator setup and transport behavior.
+[`docs/remote-eindri-homes.md`](../../../docs/remote-eindri-homes.md) owns current operator setup and transport behavior.
 The home-seeded `data/charter.md` is the sole owner of boilerplate idle-by-default behavior, the normal delegation lifecycle, and standard escalation contracts, so point to that charter rather than restating those contracts in the registry entry.
 The `scope:` field is used during intake.
 The `projects:` field is a non-exclusive clone list, not ownership.
@@ -50,8 +50,8 @@ bin/erindi-brief.sh <id> --Eindri-home {<project>...|--no-projects}
 ```
 
 The scaffold writes a charter brief instead of a task brief.
-Set `BROKK_SECONDMATE_CHARTER='<charter>'` to fill the charter text and `BROKK_SECONDMATE_SCOPE='<scope>'` when the routing scope differs.
-If you scaffold without `BROKK_SECONDMATE_CHARTER`, replace the `{TASK}` placeholder before seeding.
+Set `BROKK_EINDRI_HOME_CHARTER='<charter>'` to fill the charter text and `BROKK_EINDRI_HOME_SCOPE='<scope>'` when the routing scope differs.
+If you scaffold without `BROKK_EINDRI_HOME_CHARTER`, replace the `{TASK}` placeholder before seeding.
 Pass `--no-projects` instead of a project list to scaffold a project-less charter for a domain whose subject is the Brokk repo itself, whose home is a Brokk worktree and whose crews take pooled worktrees of the same repo.
 `--no-projects` is mutually exclusive with a project list, and omitting both still fails loudly, so an accidental omission is never mistaken for a deliberate project-less seed.
 Re-seeding a populated home as project-less is refused non-destructively when the home contains project clones or `data/projects.md` entries.
@@ -75,7 +75,7 @@ bin/brokk-remote-home-seed.sh <id> <ssh-alias> <remote-root> <remote-home> {<pro
 You resolve each project's origin yourself - from the Allfather, the project registry, a clone that exists elsewhere, `gh-axi`, or an explicit paste - and name it as `<project>=<origin-url>`; the seed validates and transports what you supply.
 A remote seed therefore creates nothing in this home beyond the route, the charter brief, and a launch record once it is launched: never clone a project into `projects/`, initialize no-mistakes here, or run a fleet sync just to seed a remote Eindri-home.
 A bare `<project>` remains a convenience for a project this home already has cloned, whose configured origin is read instead.
-[`docs/remote-secondmates.md`](../../../docs/remote-secondmates.md#provision-a-route) owns the rest of the operator contract, and [`bin/brokk-project-origin-lib.sh`](../../../bin/brokk-project-origin-lib.sh) owns the accepted origin forms.
+[`docs/remote-eindri-homes.md`](../../../docs/remote-eindri-homes.md#provision-a-route) owns the rest of the operator contract, and [`bin/brokk-project-origin-lib.sh`](../../../bin/brokk-project-origin-lib.sh) owns the accepted origin forms.
 Pass `--no-projects` in the project position to seed the project-less home described above; the same mutual-exclusion and fail-loud-on-omission rules apply.
 It may only seed a home with no project clones or project-registry entries, and refuses conversion of populated homes without changing them.
 `-` durably leases a fresh Brokk worktree via `Yggdrasil get --lease` under the Eindri-home id.
@@ -99,7 +99,7 @@ This is Eindri-home-only: Eindri/scout model resolution is untouched by this fil
 
 This section is the single owner of the Eindri-home sync and inherited-local-material propagation contract; `AGENTS.md` sections 3 and 4 point here.
 Before a local launch, `einherjar-spawn.sh --Eindri-home` locally fast-forwards the home to the primary Brokk checkout's current default-branch commit when it is safe; dirty, diverged, or in-flight homes launch unchanged with a warning.
-The locked session-start deferred network stage runs the same bootstrap sweep for every live local Eindri-home home, discovered from `state/<id>.meta` records with `kind=Eindri-home` (`data/secondmates.md` only backfills `home=` for older records).
+The locked session-start deferred network stage runs the same bootstrap sweep for every live local Eindri-home home, discovered from `state/<id>.meta` records with `kind=Eindri-home` (`data/eindri-homes.md` only backfills `home=` for older records).
 That no-fetch path is a purely local fast-forward of tracked files, never an origin fetch, and it never touches the gitignored operational dirs, so a Eindri-home's backlog, projects, and in-flight work are never disturbed; a linked worktree advances immediately, while a standalone clone that lacks the target receives Brokk updates through `/updateBrokk`'s origin refresh.
 A remote launch and the deferred bootstrap sweep ask the configured host to fast-forward its persistent home to that host's code-root commit under the same clean and ancestry guards.
 `/updateBrokk` first updates the remote code root from its own origin, then runs that guarded home sync.
@@ -117,13 +117,13 @@ Its primary file header must state that the file is main-authoritative, read-onl
 Every propagation point converges the Eindri-home copy to the primary bytes; when the primary file is absent, any existing Eindri-home copy is quarantined and removed so absence converges too.
 The helper rejects unsafe directories, symlinked or nonordinary source or destination artifacts, and hardlinked destination files.
 Between propagation runs, the Eindri-home copy is filesystem read-only; the helper may make its owned destination writable only around a guarded update and restores read-only mode on success, unchanged bytes, and recoverable failure paths.
-Before replacing divergent Eindri-home bytes, the helper hash-compares source and destination, quarantines the Eindri-home-local version to a collision-safe private dated sibling file, and emits a `SECONDMATE_SYNC:` diagnostic naming the home and quarantine artifact.
+Before replacing divergent Eindri-home bytes, the helper hash-compares source and destination, quarantines the Eindri-home-local version to a collision-safe private dated sibling file, and emits a `EINDRI_HOME_SYNC:` diagnostic naming the home and quarantine artifact.
 Never copy any Eindri-home `data/Allfather-shared.md` back into the primary.
 Keep each home's `data/Allfather.md` domain-local.
 After first propagation to an existing home, trim that home's local `data/Allfather.md` by hand to domain-specific content plus pointers to `data/Allfather-shared.md`; do not automate or silently delete private content.
 Keep every `data/learnings.md` fully local by Allfather decision; route fleet-general machinery facts into tracked documentation through the normal Brokk repo path rather than inventing shared learnings propagation.
 No AGENTS.md reread nudge is needed at spawn or respawn because the agent reads instructions fresh on launch; only the bootstrap sweep's running-home instruction-surface advance needs that AGENTS.md re-read.
-Bootstrap reports successful AGENTS.md re-read sends as `BOOTSTRAP_INFO:` and only emits `NUDGE_SECONDMATES:` when that send fails and needs retry.
+Bootstrap reports successful AGENTS.md re-read sends as `BOOTSTRAP_INFO:` and only emits `NUDGE_EINDRI_HOMES:` when that send fails and needs retry.
 A separate, literal-content config reread is required whenever inherited `config/*` material changes under an already-running Eindri-home.
 For a local home, after each successful allowlisted config write, both the locked bootstrap convergence path and mid-session `bin/brokk-config-push.sh` use the shared propagation report to build one per-home generation-specific private instruction file from the validated destination post-write bytes for only the allowlisted config items that actually changed for that home (`config/crew-dispatch.json`, `config/eindri-harness`, `config/backlog-backend`, `config/backend`, `config/herdr-presentation-spaces`, `config/startup-memory-budget`), in deterministic allowlist order.
 Each changed path is printed with clear begin/end delimiters and the destination file's full exact new bytes unparsed, or the explicit token `ABSENT` when propagation removed the destination copy.
@@ -140,11 +140,11 @@ A remote home receives the same allowlisted bytes through `brokk-remote-inherit.
 The parent records that nudge before delivery, retains it after a failed send, and retries the exact same route during locked bootstrap convergence.
 It does not receive a pointer to a primary-local generation path that cannot exist on that host.
 These config values remain defaults and rules only; they must not harden `brokk-spawn` to reject a deliberate runtime choice that differs from the configured defaults.
-For already-live secondmates, use `bin/brokk-config-push.sh` to push a mid-session inherited local-material change without running the tracked-file fast-forward.
+For already-live eindri-homes, use `bin/brokk-config-push.sh` to push a mid-session inherited local-material change without running the tracked-file fast-forward.
 It uses the same live-home discovery and propagation helper as bootstrap, reports each item as `pushed`, `unchanged`, `skipped`, or `error`, and follows the config-reread contract above for changed or pending generations.
 `bin/brokk-home-seed.sh` refuses to copy a missing or placeholder charter.
 
-Direct seed without a preexisting brief requires `BROKK_SECONDMATE_CHARTER`.
+Direct seed without a preexisting brief requires `BROKK_EINDRI_HOME_CHARTER`.
 Run `bin/brokk-home-seed.sh validate` when checking registry integrity; its header owns the complete validation and refusal mechanics.
 
 Seeding is transactional.
@@ -187,13 +187,13 @@ bin/brokk-backlog-handoff.sh <Eindri-home-id> <item-key>...
 
 After seeding, run this handoff for the new Eindri-home's in-scope queued items.
 For an existing or inherited domain, complete record intake first so no already-shipped plan row is handed off as open work.
-For a local route, the helper resolves and validates the Eindri-home home from `data/secondmates.md`, then delegates the item move to `tasks-axi mv` (the single owner of the backlog format), which moves each named item - and a whole connected set, blocker plus dependents, atomically - from the main `data/backlog.md` into the Eindri-home home's `data/backlog.md`.
+For a local route, the helper resolves and validates the Eindri-home home from `data/eindri-homes.md`, then delegates the item move to `tasks-axi mv` (the single owner of the backlog format), which moves each named item - and a whole connected set, blocker plus dependents, atomically - from the main `data/backlog.md` into the Eindri-home home's `data/backlog.md`.
 For a remote route, the same helper first moves the dependency-closed set atomically from the main backlog into `data/handoff/<id>.outbox.md`, then transfers that backlog-format outbox through `brokk-on.sh` and lets the remote home's `brokk-backlog-receive.sh` move every not-already-present key under the destination lock.
 After a new local placement or a remote outbox receipt becomes durable, the helper sends one marked routed-work instruction through the receiving Eindri-home's recorded endpoint; missing or failed delivery makes the command fail loudly with the moved work intact, and the same handoff command retries known-undelivered wake intent without moving an already-present item again.
 An unresolved delivery attempt is never blindly resent.
 For a remote route, the outbox remains until both backlog receipt and receiver wake are confirmed; `--resume-pending` retries unfinished outboxes, while the script header owns its stable wake-correlation recovery state.
 There is no two-phase handoff journal and no tasks-axi release beyond the already-required atomic `mv` capability.
-Bootstrap retries pending outboxes when mutation is authorized and emits `SECONDMATE_HANDOFF:` for any that remain.
+Bootstrap retries pending outboxes when mutation is authorized and emits `EINDRI_HOME_HANDOFF:` for any that remain.
 This delegated route remains required when `config/backlog-backend=manual`, which controls only routine Brokk backlog edits.
 It moves each queued item's whole block - the `- [ ] <id> ...` header plus every following two-or-more-space-indented body line and blank separator, up to the next item or column-0 section heading - byte-exact under the same section, treating an indented `## ...` line as body rather than a section boundary, so neither the header nor its body is duplicated or orphaned.
 It refuses a selected item with a single-space or tab-indented continuation rather than risk leaving content orphaned in the main backlog.
@@ -214,11 +214,11 @@ bin/einherjar-spawn.sh <id> --Eindri-home
 ```
 
 Use the recorded `home=` in meta.
-If meta is missing but `data/secondmates.md` still registers the Eindri-home, respawn from the registry entry and its persistent home.
+If meta is missing but `data/eindri-homes.md` still registers the Eindri-home, respawn from the registry entry and its persistent home.
 For a remote route, the same command probes and relaunches only on the configured host.
 An SSH transport failure or unreadable remote endpoint remains unknown and must be reconciled on that host; never launch a local replacement.
 `stuck-Eindri-recovery`'s remote-Eindri-home note owns why the endpoint-dead and send-failed verdicts that seem to justify this are themselves unreliable.
-Respawn re-resolves the Eindri-home harness from current config, uses the same guarded pre-launch sync, and re-propagates inherited local material, so recovered secondmates converge inherited config items and shared Allfather preferences whenever their home validates; tracked-file sync remains guarded separately.
+Respawn re-resolves the Eindri-home harness from current config, uses the same guarded pre-launch sync, and re-propagates inherited local material, so recovered eindri-homes converge inherited config items and shared Allfather preferences whenever their home validates; tracked-file sync remains guarded separately.
 If the Eindri-home is already running and only inherited local material changed, prefer `bin/brokk-config-push.sh` over respawning.
 To move a live LOCAL Eindri-home onto a newly pinned harness, model, or effort without a full recovery, set `config/Eindri-home-harness` and then relaunch it with `bin/brokk-control.sh <id> relaunch`, which re-resolves that pin, stops the agent, and launches the replacement in the same home ([`docs/agent-control.md`](../../../docs/agent-control.md)).
 That plane refuses a remotely placed Eindri-home by name, because its agent runs on another host where none of the plane's postconditions can be read; use the remote route's own relaunch path for those.
@@ -233,13 +233,13 @@ It never initiates a survey or audit during recovery.
 
 A Eindri-home is persistent by default.
 An empty queue is healthy and does not trigger teardown.
-Run `bin/brokk-teardown.sh <id>` for `kind=Eindri-home` only when the Allfather or main Brokk explicitly decides to retire that persistent second mate.
+Run `bin/brokk-teardown.sh <id>` for `kind=Eindri-home` only when the Allfather or main Brokk explicitly decides to retire that persistent Eindri-home.
 
 The safety check is the Eindri-home's own home.
 Teardown refuses while its `state/*.meta` contains in-flight work.
 A remote route delegates the same guard to its configured host and additionally refuses while the primary has a pending handoff outbox or unresolved routed reply.
 SSH exit 255 preserves the route and local records because remote completion is unknown.
-When safe, teardown kills the direct endpoint, removes the `data/secondmates.md` route, clears the main home metadata, and removes the retired Eindri-home home.
+When safe, teardown kills the direct endpoint, removes the `data/eindri-homes.md` route, clears the main home metadata, and removes the retired Eindri-home home.
 Removing a leased home releases its durable Yggdrasil lease via `Yggdrasil return`, so the pool slot is freed for reuse rather than left leased forever.
 A plain-clone home with no pool slot is simply removed.
 If `Yggdrasil return` fails for a leased home, teardown stops with state intact rather than raw-removing the directory and hiding a held lease.

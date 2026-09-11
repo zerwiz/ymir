@@ -34,4 +34,4 @@ Use native resume only when both that reference and the recovery procedure call 
 Deterministic relaunch instead trusts instructions on disk, not a private session.
 
 `../stuck-Eindri-recovery/SKILL.md` owns worker recovery and `../Eindri-home-provisioning/SKILL.md` owns Eindri-home recovery; both preserve recorded work.
-The router's recovery scenarios select the additional common references for replacement profiles and secondmates.
+The router's recovery scenarios select the additional common references for replacement profiles and eindri-homes.

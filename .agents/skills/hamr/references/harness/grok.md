@@ -54,7 +54,7 @@ The spawn installs guarded global `brokk-turn-end.json` and `brokk-turn-end.sh`.
 They act only when workspace `.brokk-grok-turnend` matches the registry under `~/.grok/hooks/brokk-turn-end.d/`, then touch the task's `state/<id>.turn-ended` through always-set `GROK_WORKSPACE_ROOT`, which equals the worktree.
 This stays outside the worktree, needs no trust grant, and writes only Brokk files.
 `../../../bin/brokk-teardown.sh` removes the gitignored pointer before pooling.
-Secondmates skip it because idle is healthy and ordinary stale-pane detection does not apply.
+Eindri-homes skip it because idle is healthy and ordinary stale-pane detection does not apply.
 
 ## Primary integration
 
