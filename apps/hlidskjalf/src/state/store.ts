@@ -39,6 +39,8 @@ import {
 } from '../services/auth';
 import {
   gateApi,
+  type ChatModel,
+  type ChatSession,
   type CronInfo,
   type RuntimeInfo,
   type SmidjaDecision,
@@ -152,6 +154,12 @@ interface YmirState {
   reviews: PullRequest[];
   files: FileNode;
   chat: ChatMessage[];
+  chatSessions: ChatSession[];
+  chatSession: string;
+  chatModels: ChatModel[];
+  chatModel: string;
+  chatAgents: string[];
+  chatPending: boolean;
   skills: SkillDef[];
 
   signIn: (identity: MockIdentity) => void;
@@ -159,6 +167,7 @@ interface YmirState {
   signOut: () => void;
   enterDemo: () => void;
   loadLive: () => Promise<void>;
+  refreshSmidja: () => Promise<void>;
   setSelectedSession: (id: string | null) => void;
   loadSessionDetail: (id: string) => Promise<void>;
 
@@ -181,12 +190,21 @@ interface YmirState {
   pushStream: (event: StreamEvent) => void;
   pushChat: (message: ChatMessage) => void;
   sendChat: (body: string) => void;
+  loadChat: () => Promise<void>;
+  newChat: () => void;
+  switchChat: (id: string) => void;
+  deleteChat: (id: string) => void;
+  setChatModel: (id: string) => void;
+  toggleChatAgent: (name: string) => void;
   updateReview: (id: string, patch: Partial<PullRequest>) => void;
   updateProcess: (id: string, patch: Partial<ProcessInfo>) => void;
 }
 
 // Derived from the gate registry so adding a gate can never drift from routing.
 const GATE_IDS: GateId[] = GATES.map((g) => g.id);
+
+// The chat keeps a rolling window of the last 40 messages in view and in context.
+const CHAT_WINDOW = 40;
 
 export function gateFromHash(): GateId {
   const raw = window.location.hash.replace(/^#\/?/, '');
@@ -269,6 +287,12 @@ export const useYmir = create<YmirState>((set, get) => ({
   smidjaDecisions: [],
   selectedSession: null,
   sessionDetail: null,
+  chatSessions: [],
+  chatSession: 'default',
+  chatModels: [],
+  chatModel: '',
+  chatAgents: [],
+  chatPending: false,
   ...hydrate(initialRealm(initialSession)),
 
   loadLive: async () => {
@@ -276,15 +300,16 @@ export const useYmir = create<YmirState>((set, get) => ({
     try {
       const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, smidjaHealth, smidjaSessions, smidjaStats, smidjaDecisions] =
         await Promise.all([
-          gateApi.agents(),
-          gateApi.tasks(),
-          gateApi.runes(),
-          gateApi.well(''),
-          gateApi.processes(),
-          gateApi.reviews(),
-          gateApi.files(get().realm),
-          gateApi.runtime(),
-          gateApi.cron(),
+          // Each call degrades on its own — one bad endpoint must not blank the app.
+          gateApi.agents().catch(() => get().agents),
+          gateApi.tasks().catch(() => get().tasks),
+          gateApi.runes().catch(() => get().runes),
+          gateApi.well('').catch(() => get().recall),
+          gateApi.processes().catch(() => get().processes),
+          gateApi.reviews().catch(() => get().reviews),
+          gateApi.files(get().realm).catch(() => get().files),
+          gateApi.runtime().catch(() => get().runtime),
+          gateApi.cron().catch(() => get().cron),
           gateApi.smidjaHealth().catch(() => ({ db: 'absent', sessions: 0 })),
           gateApi.smidjaSessions().catch(() => []),
           gateApi.smidjaStats().catch(() => null),
@@ -298,6 +323,27 @@ export const useYmir = create<YmirState>((set, get) => ({
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set({ live: false });
+    }
+  },
+
+  refreshSmidja: async () => {
+    if (get().demo) return;
+    try {
+      const [health, sessions, stats, decisions] = await Promise.all([
+        gateApi.smidjaHealth().catch(() => ({ db: 'absent', sessions: 0 })),
+        gateApi.smidjaSessions().catch(() => []),
+        gateApi.smidjaStats().catch(() => null),
+        gateApi.smidjaDecisions().catch(() => ({ total_failed: 0, decisions: [] })),
+      ]);
+      set({
+        smidjaDb: health.db,
+        smidjaSessions: sessions,
+        smidjaStats: stats,
+        smidjaDecisions: decisions.decisions,
+        live: true,
+      });
+    } catch {
+      // keep the last good data
     }
   },
 
@@ -476,41 +522,110 @@ export const useYmir = create<YmirState>((set, get) => ({
   setQuery: (query) => set({ query }),
 
   pushStream: (event) => set((s) => ({ stream: [event, ...s.stream].slice(0, 120) })),
-  pushChat: (message) => set((s) => ({ chat: [...s.chat, message] })),
+  pushChat: (message) =>
+    set((s) => ({ chat: [...s.chat, message].slice(-CHAT_WINDOW) })),
 
   sendChat: (body) => {
     const text = body.trim();
     if (!text) return;
+    const { chatSession, chatModel, chatAgents } = get();
+    get().pushChat({ id: `u-${Date.now()}`, from: 'user', body: text, ts: new Date().toISOString() });
+    const pendingId = `k-${Date.now()}`;
     get().pushChat({
-      id: `u-${Date.now()}`,
-      from: 'user',
-      body: text,
+      id: pendingId,
+      from: 'kaia',
+      body: '',
       ts: new Date().toISOString(),
+      thinking: true,
     });
+    set({ chatPending: true });
+
+    const finish = (patch: Partial<ChatMessage>) =>
+      set((s) => ({
+        chat: s.chat.map((m) => (m.id === pendingId ? { ...m, thinking: false, ...patch } : m)),
+        chatPending: false,
+      }));
+    const refreshSessions = () => {
+      if (get().demo) return;
+      void gateApi.chatSessions().then((rows) => set({ chatSessions: rows })).catch(() => {});
+    };
+
     if (get().demo) {
       window.setTimeout(() => {
-        get().pushChat({
-          id: `k-${Date.now()}`,
-          from: 'kaia',
+        finish({
           body: 'Demo mode — the well is seeded locally and Bifrost is not called. Sign in live to speak with Kaia for real.',
-          ts: new Date().toISOString(),
           recalling: true,
         });
       }, 600);
       return;
     }
     void gateApi
-      .chat(text)
-      .then(({ reply }) => get().pushChat(reply))
+      .chat(text, {
+        session: chatSession,
+        model: chatModel || undefined,
+        agents: chatAgents.length ? chatAgents : undefined,
+      })
+      .then(({ reply }) => finish(reply))
       .catch(() =>
-        get().pushChat({
-          id: `k-${Date.now()}`,
-          from: 'kaia',
+        finish({
           body: 'The bridge did not answer. Check the gate API (npm run api) and Bifrost (bin/bifrost-bridge.sh).',
-          ts: new Date().toISOString(),
+          error: true,
         }),
-      );
+      )
+      .finally(refreshSessions);
   },
+
+  loadChat: async () => {
+    if (get().demo) return;
+    try {
+      const [history, sessions, models] = await Promise.all([
+        gateApi.chatHistory(get().chatSession).catch(() => [] as ChatMessage[]),
+        gateApi.chatSessions().catch(() => [] as ChatSession[]),
+        gateApi.chatModels().catch(() => [] as ChatModel[]),
+      ]);
+      set({ chat: history.slice(-CHAT_WINDOW), chatSessions: sessions, chatModels: models });
+    } catch {
+      /* stay on the seeded thread */
+    }
+  },
+  newChat: () => {
+    const id = `chat-${Date.now().toString(36)}`;
+    set((s) => ({
+      chatSession: id,
+      chat: [],
+      chatPending: false,
+      chatSessions: [{ id, messages: 0, updated_at: new Date().toISOString() }, ...s.chatSessions],
+    }));
+  },
+  switchChat: (id) => {
+    set({ chatSession: id, chat: [], chatPending: false });
+    if (get().demo) return;
+    void gateApi
+      .chatHistory(id)
+      .then((history) => set({ chat: history.slice(-CHAT_WINDOW) }))
+      .catch(() => {});
+  },
+  deleteChat: (id) => {
+    if (get().demo) {
+      set((s) => ({ chatSessions: s.chatSessions.filter((x) => x.id !== id) }));
+      return;
+    }
+    void gateApi
+      .deleteChatSession(id)
+      .catch(() => {})
+      .finally(() => {
+        const rest = get().chatSessions.filter((x) => x.id !== id);
+        set({ chatSessions: rest });
+        if (get().chatSession === id) get().switchChat(rest[0]?.id ?? 'default');
+      });
+  },
+  setChatModel: (id) => set({ chatModel: id }),
+  toggleChatAgent: (name) =>
+    set((s) => ({
+      chatAgents: s.chatAgents.includes(name)
+        ? s.chatAgents.filter((a) => a !== name)
+        : [...s.chatAgents, name],
+    })),
   updateReview: (id, patch) =>
     set((s) => ({ reviews: s.reviews.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
   updateProcess: (id, patch) =>

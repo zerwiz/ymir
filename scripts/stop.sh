@@ -50,6 +50,24 @@ fi
 if [ -x "$ROOT/bin/bifrost-bridge.sh" ]; then
   "$ROOT/bin/bifrost-bridge.sh" --stop >/dev/null 2>&1 && { echo "Bifrost bridge stopped."; stopped=1; }
 fi
+if [ -x "$ROOT/bin/mimir-bridge.sh" ]; then
+  "$ROOT/bin/mimir-bridge.sh" --stop >/dev/null 2>&1 && { echo "Mimir bridge stopped."; stopped=1; }
+fi
+
+# Smíðja visualizer (API + UI).
+for pair in "smidja-viz-api:Smíðja visualizer API" "smidja-viz-ui:Smíðja visualizer UI"; do
+  file="${pair%%:*}"; label="${pair##*:}"
+  pf="$RUN/$file.pid"
+  if [[ -f "$pf" ]]; then
+    pid="$(cat "$pf")"
+    if kill -0 "$pid" 2>/dev/null; then
+      kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+      echo "$label stopped (pid $pid)."
+      stopped=1
+    fi
+    rm -f "$pf"
+  fi
+done
 
 # Belt and braces: reap anything still bound to our port.
 if command -v lsof >/dev/null 2>&1; then
@@ -72,6 +90,18 @@ if command -v lsof >/dev/null 2>&1; then
     stopped=1
   fi
 fi
+
+# Reap the Smíðja visualizer ports (API :8437, UI :8438).
+for p in "${SMIDJA_VIZ_API_PORT:-8437}" "${SMIDJA_VIZ_UI_PORT:-8438}"; do
+  if command -v lsof >/dev/null 2>&1; then
+    VIZ_PIDS="$(lsof -ti "tcp:${p}" 2>/dev/null || true)"
+    if [[ -n "$VIZ_PIDS" ]]; then
+      # shellcheck disable=SC2086
+      kill -TERM $VIZ_PIDS 2>/dev/null || true
+      stopped=1
+    fi
+  fi
+done
 
 if [[ "$stopped" -eq 0 ]]; then
   echo "Hlidskjalf is not running."

@@ -1,6 +1,7 @@
 import { useYmir } from '../state/store';
 import { StatusChip } from '../components/Status';
 import { MetricTile } from '../components/MetricTile';
+import { VISUALIZER_URL } from '../data/metadata';
 
 function tone(status: string | null) {
   return status === 'success' ? 'nominal' : status === 'fail' ? 'down' : 'degraded';
@@ -34,6 +35,12 @@ export function Sessions() {
           <p className="stage-deck">Factory runs · phase progress · tokens &amp; cost · smidja.db ({db})</p>
         </div>
         <div className="row">
+          <button className="btn" onClick={() => void useYmir.getState().refreshSmidja()} title="Re-read smidja.db">
+            <span aria-hidden="true">⟳</span> Refresh
+          </button>
+          <a className="btn btn-primary" href={VISUALIZER_URL} target="_blank" rel="noreferrer">
+            <span aria-hidden="true">ᛋ</span> Open visualizer
+          </a>
           <StatusChip status={db === 'present' ? 'nominal' : live === false ? 'degraded' : 'down'} />
         </div>
       </div>
@@ -67,7 +74,7 @@ export function Sessions() {
                 <tr>
                   <th>Run</th>
                   <th>Factory</th>
-                  <th>Engineer</th>
+                  <th>Allfather</th>
                   <th>Status</th>
                   <th>Tokens</th>
                   <th>Cost</th>
