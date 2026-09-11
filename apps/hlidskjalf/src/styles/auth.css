@@ -32,7 +32,8 @@
 }
 
 /* --- The visitor's lore, beside the gate ------------------------ */
-.gate {
+/* Scoped to .login so it never collides with the rail's .gate nav buttons. */
+.login .gate {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 460px);
   gap: var(--ymir-space-6);
