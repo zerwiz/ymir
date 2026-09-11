@@ -1,6 +1,6 @@
 ---
 name: smidja-start
-description: Start the software-smidja agents for work — exactly how, on which team (roster), with which models (local/online/hybrid), which chain, and how to run the orchestrator (Kaia). Use when the user wants to "send the smidja", start agents on a task, pick local vs online models, launch a run, watch it, or run Kaia's orchestrator. Combines with smidja, smidja-launcher, smidja-instructions and command-repo skills; canonical playbooks are START_SMIDJA.md and docs/command docs/.
+description: Start the software-smidja agents for work — exactly how, on which team (roster), with which models (local/online/hybrid), which chain, and how to run the orchestrator (Kaia). Use when the user wants to "send the smidja", start agents on a task, pick local vs online models, launch a run, watch it, or run Kaia's orchestrator. Combines with smidja, smidja-launcher, smidja-instructions and smidja skills; canonical playbooks are START_SMIDJA.md and docs/.
 argument-hint: "[local | cloud | hybrid | orchestrate | sdlc | simple-sdlc | scout | service | mode]"
 allowed-tools: read, write, edit, bash, grep, glob
 ---
@@ -11,7 +11,7 @@ The single, exact way to put the smithy's agents to work. You
 **launch, converge, and observe — never implement**. The smidja's agents own
 the code.
 
-Canonical full playbook: `START_SMIDJA.md` (repo root of `~/command`).
+Canonical full playbook: `START_SMIDJA.md` (repo root of `~/Ymir`).
 Live ledger: `smidja/smidja_smidja_config/roster.yaml` — the ONE file (teams in
 `stacks:`, agent roles in `role_defaults:`, model catalog in `tiers:`),
 `tests/local-models/RESULTS.md` (what local models can/can't do — read before
@@ -27,11 +27,11 @@ The files that drive everything (what they do):
   Swap surface: `--model`, `SMIDJA_<ROLE>_MODEL=…` per role, `SMIDJA_MODEL_TIER=<tier>`
   for a whole stack.
 - **`justfile` (repo root)** — the starter recipes: `just scout/sdlc/
-  simple-sdlc/orchestrate` launch chains from `~/command`, `just sessions/
+  simple-sdlc/orchestrate` launch chains from `~/Ymir`, `just sessions/
   phases/tail/procs/obs` watch and open the UI; it honors the same
   `SMIDJA_CONFIG` → `SMIDJA_ROSTER` → `SMIDJA_MODEL_TIER` → `smidja.config.yaml` order.
 
-Deep-reference docs live in **`docs/command docs/`** (note the space):
+Deep-reference docs live in **`docs/`** (note the space):
 `software-smidja.md` (overview), `software-smidja-run.md` (how to run),
 `software-smidja-pi.md` / `software-smidja-opencode.md` (coding-agent
 setups), `software-smidja-visualizer.md` (trace UI), `SmidjaAgentsAndModels.md`
@@ -40,7 +40,7 @@ setups), `software-smidja-visualizer.md` (trace UI), `SmidjaAgentsAndModels.md`
 
 ## Sibling skills — load one if the task matches
 
-- **`command-repo`** — conventions for working inside `~/command` (docs/plans/
+- **`smidja`** — conventions for working inside `~/Ymir` (docs/plans/
   CHANGELOG, WayOfTeams routing).
 - **`smidja-launcher`** — the one-command launcher (`scripts/smidja`): run, watch,
   audit, stop, learn, missions.
@@ -51,7 +51,7 @@ setups), `software-smidja-visualizer.md` (trace UI), `SmidjaAgentsAndModels.md`
 ## 0. The flow — always
 
 ```bash
-cd /home/zerwiz/command
+cd /home/zerwiz/Ymir
 
 scripts/smidja up                 # ① converge: LM Studio model check + visualizer + tunnel
 scripts/smidja run --mode <name> "<tight ask>"   # ② pick a team+chain and launch
@@ -69,14 +69,14 @@ scripts/smidja learn <id>         #    write outcome into Kaia's memory
 
 Local backends: LM Studio `localhost:1234` (local models) · opencode (cloud
 models under the `ocrd` profile). `scripts/smidja` self-resolves its root — run
-from anywhere, or `cd ~/command` for `just` recipes.
+from anywhere, or `cd ~/Ymir` for `just` recipes.
 
 **Project-aware runs:** launch from the target repo (or set `SMIDJA_PROJECT_DIR`)
 so the trace DB + Kaia's memory live in that project's `smidja/smidja_data`:
 
 ```bash
-cd /home/zerwiz/CodeP/wayoffactoy && /home/zerwiz/command/scripts/smidja run --mode local-fast "…"
-SMIDJA_PROJECT_DIR=/home/zerwiz/CodeP/wayoffactoy /home/zerwiz/command/scripts/smidja run --mode cloud-fast "…"
+cd /home/zerwiz/CodeP/wayoffactoy && /home/zerwiz/Ymir/scripts/smidja run --mode local-fast "…"
+SMIDJA_PROJECT_DIR=/home/zerwiz/CodeP/wayoffactoy /home/zerwiz/Ymir/scripts/smidja run --mode cloud-fast "…"
 ```
 
 ## 2. Pick the team (roster) — local / online / hybrid
@@ -119,7 +119,7 @@ default builder), `gemma-4-12b-it@q4_k_m` (90k, reviewer), `qwen3.6-35b-a3b@q2_k
 (131k, planner), `@iq3_s` (alt quant), `frontend-design-expert-8b` (UI).
 **Online** — two surfaces: (a) `opencode-go/*` via the **local bridge**
 (`scripts/opencode-go-bridge.py`, tmux `ogb`, port 4603 → `https://opencode.ai/zen/go/v1`,
-key `OPENCODE_GO_API_KEY` in `~/command/.env`): `deepseek-v4-flash` (workhorse),
+key `OPENCODE_GO_API_KEY` in `~/Ymir/.env`): `deepseek-v4-flash` (workhorse),
 `deepseek-v4-pro`, `glm-5.1`, `deepseek-v4-flash-vision-exp` — **pi-reachable,
 so Kaia can dispatch them**; (b) opencode-agent (`ocrd` profile): `big-pickle`
 (free), `nemotron-3-ultra-free` (reasoning) — whole-chain runs, not pi subagents.
@@ -153,7 +153,7 @@ scripts/smidja run sdlc "…" --model lmstudio/qwen3.5-9b
 | build-review | `--mode review-gate` | build → review |
 | **orchestrate** | `just orchestrate` / `--service orchestrate` / `--mode orchestrate` | Kaia dispatches sub-agents |
 
-`just` recipes run only from `~/command` (justfile lives there); they read
+`just` recipes run only from `~/Ymir` (justfile lives there); they read
 `SMIDJA_CONFIG` / `SMIDJA_ROSTER` / `SMIDJA_MODEL_TIER` for the config.
 
 ## 4. Critical — launch detached for anything that may outlive a tool-call timeout
@@ -167,7 +167,7 @@ events — NO real failure, just a killed parent (audit: `sdlc-4027`/`sdlc-4271`
 ```bash
 tmux new-session -d -s ssf \
   "SMIDJA_PROJECT_DIR=/home/zerwiz/CodeP/wayoffactoy SMIDJA_MODEL_TIER=local \
-   /home/zerwiz/command/scripts/smidja run sdlc 'polish the homepage; done means it renders on localhost'"
+   /home/zerwiz/Ymir/scripts/smidja run sdlc 'polish the homepage; done means it renders on localhost'"
 # then watch with read-only calls:
 scripts/smidja sessions; scripts/smidja tail <smidja_id>; scripts/smidja phases <smidja_id>
 ```

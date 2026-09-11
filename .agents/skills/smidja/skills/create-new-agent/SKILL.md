@@ -11,7 +11,7 @@ allowed-tools: read, write, edit, bash, grep, glob
 - **`create-new-teams`** — teams (stacks) built from agent roles.
 - **`add-or-edit-ai-models`** — tuning an existing agent's model/prompt/injection.
 - **`smidja` / `smidja-launcher` / `smidja-start`** — running the team.
-- **`command-repo`** — conventions when work lands in `~/command`.
+- **`smidja`** — conventions when work lands in `~/Ymir`.
 
 ## The one mental model
 **An agent is a role, defined once; it carries no model of its own.** A role =

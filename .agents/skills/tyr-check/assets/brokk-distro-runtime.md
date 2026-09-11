@@ -182,7 +182,7 @@ Current schedule (`config/cron.yaml`):
 | Time | Command | Figure | Output |
 |---|---|---|---|
 | 07:00 | `bin/nornir-job-daily-briefing.sh` | Sága | `svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md` (deterministic, atomic re-run) |
-| 06:00 | `bin/nornir-job-observer.sh` | Huginn | read-only observation of `/home/zerwiz/command` and `/home/zerwiz/Brokk`; Runes + `state/observer.log`; `ABSENT` is never silence |
+| 06:00 | `bin/nornir-job-observer.sh` | Huginn | read-only, self-contained observation of the Ymir runtime; Runes + `state/observer.log`; `ABSENT` is never silence |
 | 00:30 | `bin/nornir-job-memory-housekeeping.sh` | Muninn | snapshot memory trees to `state/backups/` **before** any prune; engine state reported, not faked |
 | 00:00 | `bin/nornir-job-git-sync.sh` | Yggdrasil | `fetch` (safe, `--ff-only`) by default or opt-in `push`; never force, never discard unlanded work |
 
@@ -270,7 +270,7 @@ Restart is a non-event: **durable `data/` + `state/` + live backend inventory ar
 | `BROKK_BRIEF_DIR`, `_MAX_ORDERS`, `_MAX_RUNES` | Sága briefing | output dir and bounds |
 | `BROKK_GIT_SYNC_MODE` / `_REMOTE` / `_TARGETS` | Yggdrasil job | `fetch`/`push`, remote, repo list |
 | `BROKK_BACKUP_DIR`, `BROKK_MEMORY_ROOTS`, `BROKK_MIMIR_DB`, `BROKK_MEMORY_PRUNE`, `BROKK_MEMORY_PRUNE_DAYS` | Muninn | backup and prune controls |
-| `BROKK_COMMAND_ROOT`, `BROKK_FIRSTMATE_ROOT`, `BROKK_YGGDRASIL_ROOT` | Huginn | observation roots (`/home/zerwiz/command`, `/home/zerwiz/Brokk`, `~/.Yggdrasil`) |
+| `BROKK_YGGDRASIL_ROOT` | Huginn | external, read-only worktree root (`~/.Yggdrasil`) |
 | `VORDR_SESSIONSTART_SUPERVISOR_PID` | Vörðr | supervisor identity passed to the child |
 
 ## 12. Production acceptance criteria

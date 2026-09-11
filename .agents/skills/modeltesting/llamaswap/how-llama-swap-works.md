@@ -229,7 +229,7 @@ variants** so pi launches the swap model (which self-swaps on its port):
 - `llamacpp-27b-cpu` → `model-host start 27b-cpu-swap` (:8083)
 - `llamacpp-9b` → `9b-swap`, `llamacpp-4b` → `4b-swap`, etc.
 
-A copy lives at `~/command/.pi/models.json` (gitignored); the live one pi reads
+A copy lives at `~/Ymir/.pi/models.json` (gitignored); the live one pi reads
 is `~/.pi/agent/models.json`.
 
 ### 8.4 Built: real auto-swap proxy (`scripts/swap-proxy.cjs`)

@@ -113,20 +113,23 @@ BROKK_REALM=way-of bin/nornir-job-daily-briefing.sh
 
 ### 3.2 Huginn — observer (`bin/nornir-job-observer.sh`, 06:00)
 
-The raven of observation. Read-only bridge into the two external systems that already exist on
-this machine.
+The raven of observation. Read-only, and **self-contained**: every source lives inside Ymir
+(the only external read is the worktree root).
 
 | Source | Signals read |
 |---|---|
-| `~/command` | `FEATURES.md` registry, `.compliance/gates/check_*.sh` + `config/core_four.yaml`, `smidja/smidja_data/smidja.db` (read-only SQLite URI), `smidja_data/kaia.engram` |
-| `~/Brokk` | `state/home-summary.json`, `state/branch-outcomes.jsonl`, `state/*.meta` |
-| `~/.Yggdrasil` | worktree dirs + `Yggdrasil-state.json` |
+| `docs/masterplan.md` | open / working forge orders |
+| `.agents/agents/*.md` | the agent roster |
+| `.agents/memory/well/` | the well (episodes) |
+| `workspace/memory/runes_audit.md` | the ledger |
+| `smidja/smidja_data/smidja.db` | Smíðja runs (read-only SQLite URI) |
+| `~/.treehouse` | worktree dirs + `treehouse-state.json` |
 
 - Writes `state/observer.log` (timestamped lines), `state/observer.last`, and one Rune per
   observation (`huginn / observer.<source>`).
 - An absent source carves an explicit `ABSENT` line — silence is never mistaken for health.
 - SQLite is opened `file:<db>?mode=ro` with a 3s timeout; the observer never mutates it.
-- Overrides: `BROKK_COMMAND_ROOT`, `BROKK_FIRSTMATE_ROOT`, `BROKK_YGGDRASIL_ROOT`.
+- Overrides: `BROKK_YGGDRASIL_ROOT`.
 
 ### 3.3 Muninn — memory housekeeping (`bin/nornir-job-memory-housekeeping.sh`, 00:30)
 
@@ -261,11 +264,12 @@ PY
 
 Plan 23 is a hard contract:
 
-- **Never write into `~/command` or `~/Brokk`.** The observer only reads manifests, SQLite
-  in read-only mode, and small state files.
-- Every observation becomes a Mimirsbrunn episode (`source: command|Brokk`) and a filtered
-  Rune line.
-- Realm boundaries are sacred; external systems remain the owners of their domains.
+- **Never write outside `state/` and the Runes ledger.** The observer only reads manifests and
+  SQLite in read-only mode; Ymir is self-observing.
+- Every observation is carved as a Rune line (`huginn / observer.<source>`); the well is
+  watered by the memory jobs, not here.
+- Realm boundaries are sacred; the external worktree root stays read-only and Ymir owns only
+  its own tree.
 
 Violations are a runtime-compliance failure (see `runtime-compliance.md`).
 
@@ -340,8 +344,8 @@ git -C /home/zerwiz/Brokk status --porcelain    # must not contain observer edit
   `.agents/memory/` is not written by the default path.
 - **The chain is order-dependent.** Never hand-edit, reorder, or delete ledger lines; append
   only through `runes-append.sh`.
-- **Observer never writes outward.** Any change under `~/command` or `~/Brokk` attributable
-  to Ymir is a contract breach.
+- **Observer never writes outward.** The observer is self-contained: it reads only Ymir's own
+  tree (plus the read-only external worktree root) and writes only `state/` and Runes.
 - **`git-sync` is safe by default.** It will not force, reset, or discard; a diverged branch is
   reported, not fixed.
 - **Prune is opt-in and backup-gated.** `BROKK_MEMORY_PRUNE=0` is the default; a failed backup

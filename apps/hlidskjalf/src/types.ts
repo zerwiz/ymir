@@ -63,7 +63,11 @@ export type GateId =
   | 'forge'
   | 'profile'
   | 'runtime'
-  | 'cron';
+  | 'cron'
+  | 'sessions'
+  | 'trace'
+  | 'decisions'
+  | 'stats';
 
 export interface SkillDef {
   id: string;

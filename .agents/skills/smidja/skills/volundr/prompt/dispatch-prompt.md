@@ -79,7 +79,7 @@ on 2026-08-31** (registry ↓ = the subagent's model must resolve here):
 **opencode-go now pi-reachable via the bridge.** Registered in pi's registry
 (`~/.pi/agent/models.json` provider `opencode-go` → `http://127.0.0.1:4603/v1`);
 `scripts/opencode-go-bridge.py` (tmux `ogb`) injects `OPENCODE_GO_API_KEY`
-from `~/command/.env` and proxies to `https://opencode.ai/zen/go/v1` (bare
+from `~/Ymir/.env` and proxies to `https://opencode.ai/zen/go/v1` (bare
 model ids, e.g. `deepseek-v4-flash` — strip the `opencode-go/` prefix).
 Verified: `pi --model opencode-go/deepseek-v4-flash` answers. The standalone
 `opencode/*` free ids (`big-pickle`, `nemotron-3-ultra-free`) remain

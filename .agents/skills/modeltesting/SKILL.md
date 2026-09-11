@@ -133,6 +133,6 @@ PARAMETER top_p 0.95
 
 - `add-or-edit-ai-models` — tune models/prompts for a smidja **roster** file
   (different concern: roster, not backend bench).
-- `command-repo` — working conventions inside `~/command`.
+- `smidja` — working conventions inside `~/Ymir`.
 - `runfactory` / `smidja-launcher` — the software-smidja runtime (uses models;
   this skill benchmarks the backends those rosters point at).

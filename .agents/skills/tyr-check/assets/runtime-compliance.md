@@ -28,7 +28,7 @@ siblings of this file (`eindri-orchestration.md`, `nornir-jobs.md`). The runtime
 | 7 | Turn-end guard | run `syn-turnend-guard.sh` with/without arm marker | Inert (0) until armed; 2 when armed and stale. |
 | 8 | No mocks/examples/placeholders | grep the shipped runtime | No TODO/FIXME/MOCK/placeholder in `bin/`, live `config/`. |
 | 9 | Cron idempotent + date-guarded | start twice; inspect stamps | One loop; one run per job per day. |
-| 10 | Observer read-only | diff the external trees | No writes under `~/command` or `~/Brokk`. |
+| 10 | Observer read-only | confirm a run touches only `state/` + Runes | No writes to Ymir's tree or the read-only worktree root. |
 | 11 | Secrets never committed | secret scan + ignore audit | No secret literal; ignore rules cover env files. |
 
 ---
@@ -238,22 +238,18 @@ ls state/.cron-fired/ 2>/dev/null   # one date stamp per job
 
 ### G10 — observer read-only
 
-**Why:** plan 23 forbids writing into `~/command` or `~/Brokk`.
+**Why:** plan 23 makes the observer self-contained and read-only.
 
 ```bash
 bin/nornir-job-observer.sh >/dev/null
-for tree in /home/zerwiz/command /home/zerwiz/Brokk; do
-  if [ -d "$tree/.git" ]; then
-    changes=$(git -C "$tree" status --porcelain 2>/dev/null | wc -l)
-    echo "$tree: $changes working-tree changes (must be none attributable to Ymir)"
-  fi
-done
 # The observer must only mutate its own state and the ledger:
+git status --porcelain 2>/dev/null \
+  | grep -v -E '^.. (state/|workspace/memory/runes_audit\.md)' || true
 tail -n 5 state/observer.log
 ```
 
-**Pass:** no modifications under the external trees; observations land in `state/observer.log`
-and Runes. **Failure:** any write into the external trees.
+**Pass:** no changes outside `state/` and `workspace/memory/runes_audit.md`.
+**Failure:** any other file changes — the observer writes nothing into the runtime.
 
 ### G11 — secrets never committed
 

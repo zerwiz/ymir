@@ -270,7 +270,7 @@ train 262,144 unless the serving config actually runs 262K).
 
 ## 10. Serving it day-to-day (`model-host` + `llama-menu`)
 
-The native servers are managed by **`~/command/scripts/model-host.sh`** (the
+The native servers are managed by **`~/Ymir/scripts/model-host.sh`** (the
 launcher) and **`~/.local/bin/llama-menu`** (the interactive number-menu):
 
 ```

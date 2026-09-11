@@ -81,7 +81,7 @@ cause hypothesis (to confirm):
 
 - `~/.pi/agent/models.json` — windows restored to original round/92% values
   (the temporary 70% experiment was reverted per operator decision)
-- `~/command/.pi/models.json` (Telegram pi) — already had correct 92% windows,
+- `~/Ymir/.pi/models.json` (Telegram pi) — already had correct 92% windows,
   no change needed
 - This document
 

@@ -17,9 +17,9 @@ do smidja work yourself — you launch and observe.
   (incl. detached-launch rule below).
 - **`smidja-instructions`** — turn a fuzzy ask into a request file first.
 - **`smidja`** — internals: cookbooks for install/create/update smidja + configs.
-- **`command-repo`** — conventions when working inside `~/command`.
+- **`smidja`** — conventions when working inside `~/Ymir`.
 
-Deep-reference docs for the smidja live in **`docs/command docs/`**:
+Deep-reference docs for the smidja live in **`docs/`**:
 `software-smidja.md` (overview), `software-smidja-run.md` (how to run),
 `software-smidja-pi.md` / `software-smidja-opencode.md` (coding-agent
 setups), `software-smidja-visualizer.md` (the trace UI this launcher starts),
@@ -58,7 +58,7 @@ scripts/smidja model set|pin             # change a model (stack override or sha
 scripts/smidja doctor [--stack <name>]   # spawn-readiness check — must be green
 ```
 
-Run from the repo root (`~/command/`). Everything is idempotent; reads never
+Run from the repo root (`~/Ymir/`). Everything is idempotent; reads never
 block a running run (WAL db).
 
 The files that define what this launcher runs:
@@ -103,7 +103,7 @@ The files that define what this launcher runs:
    — audit of `sdlc-4027` / `sdlc-4271` (2026-08-31). For long runs:
    ```bash
    tmux new-session -d -s ssf \
-     "SMIDJA_PROJECT_DIR=<target-repo> /home/zerwiz/command/scripts/smidja run sdlc '<ask>'"
+     "SMIDJA_PROJECT_DIR=<target-repo> /home/zerwiz/Ymir/scripts/smidja run sdlc '<ask>'"
    # then watch with read-only calls:  smidja sessions / smidja tail <id>
    ```
 6. **Cloud models are three.** deepseek-v4-flash (workhorse), big-pickle,

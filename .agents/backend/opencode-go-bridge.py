@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """opencode-go-bridge.py — expose opencode-go (Zen Go) to pi via an
-OpenAI-compatible local endpoint, keyed from ~/command/.env.
+OpenAI-compatible local endpoint, keyed from ~/Ymir/.env.
 
 Why: pi resolves models from ~/.pi/agent/models.json, which cannot read the
 API key from the repo's .env. This bridge listens on 127.0.0.1, reads

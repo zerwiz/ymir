@@ -313,7 +313,7 @@ be added to BOTH:
 
 | File | What it owns | How to add a model |
 |---|---|---|
-| `~/command/scripts/model-host.sh` | the actual launcher (GGUF path, ctx, port, MoE flag, VRAM pre-check) | add a case in `register()` + a line in every `for m in …` list + `list()` |
+| `~/Ymir/scripts/model-host.sh` | the actual launcher (GGUF path, ctx, port, MoE flag, VRAM pre-check) | add a case in `register()` + a line in every `for m in …` list + `list()` |
 | `~/.local/bin/llama-menu` | the interactive number-menu on top | add a menu line + a `case` arm that calls `model-host start <name>` |
 
 **Checklist when a new model/quant lands (e.g. a new quant, a new arch):**
@@ -350,7 +350,7 @@ be added to BOTH:
 
 ## 11. Test record — swap-proxy + Qwen3.8 Flash Next (2026-09-07)
 
-### 11.1 The auto-swap proxy (`~/command/scripts/swap-proxy.cjs`)
+### 11.1 The auto-swap proxy (`~/Ymir/scripts/swap-proxy.cjs`)
 
 Built and verified end-to-end. Delivers "swap model in pi.dev/opencode →
 stop the running model, start the one I chose."

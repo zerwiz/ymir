@@ -10,7 +10,7 @@ allowed-tools: read, write, edit, bash, grep, glob
 ## Sibling skills
 - **`create-new-teams`** / **`create-new-agent`** — creating teams and roles.
 - **`smidja` / `smidja-launcher` / `smidja-start`** — running them.
-- **`command-repo`** — conventions when work lands in `~/command`.
+- **`smidja`** — conventions when work lands in `~/Ymir`.
 
 ## When to use
 - User says: "change the builder's model", "that agent is too weak/slow",

@@ -144,7 +144,7 @@ After adding, run `/login llama.cpp` in opencode — it will fetch all 64 models
 
 ### 4.3 pi (the model catalog)
 
-**File**: `~/.pi/agent/models.json` (mirror: `~/command/.pi/models.json`)
+**File**: `~/.pi/agent/models.json` (mirror: `~/Ymir/.pi/models.json`)
 
 pi uses per-model providers with `_launchCommand`. Already fixed to 22 full-name providers:
 
@@ -299,7 +299,7 @@ Models are tuned for RTX A5000 16 GB. Key flags in `llama-models.yaml`:
 | **opencode-oczer** | `/home/zerwiz/.config/opencode-oczer/opencode.json` |
 | **Zed IDE** | `/home/zerwiz/.config/zed/settings.json` |
 | **pi (model catalog)** | `/home/zerwiz/.pi/agent/models.json` |
-| **pi mirror (repo)** | `/home/zerwiz/command/.pi/models.json` |
+| **pi mirror (repo)** | `/home/zerwiz/Ymir/.pi/models.json` |
 
 ---
 
@@ -353,7 +353,7 @@ pkill -f "llama serve"
 llama-router start
 
 # Terminal 2: Swap-proxy for opencode/pi (port 8090)
-node /home/zerwiz/command/scripts/swap-proxy.cjs --port 8090 &
+node /home/zerwiz/Ymir/scripts/swap-proxy.cjs --port 8090 &
 # or use launcher: ./scripts/swap-proxy start
 ```
 
