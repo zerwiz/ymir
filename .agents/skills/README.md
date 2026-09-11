@@ -27,6 +27,8 @@ skills[21]{name,norse,purpose,origin}:
   "eindri-homes","Eindri","isolated worker homes (provisioning)","adopted"
   "syn-recovery","Sýn","stuck-worker recovery playbook","adopted"
   "ymir-update","Ymir","self-update the running system + workers","adopted"
+  "ymir-omarchy","Ymir","Omarchy-native operation: desktop, monitors, placement, GPU, host learning","new"
+  "ymir-thjazi","Þjazi","the herdr/tmux terminal backend — install, protocol floors, panes","new"
   "hamr","Hamr","per-harness adapter reference","adopted"
   "pr-ops","—","PR lifecycle — create, update, check status, request merge","new"
 ```

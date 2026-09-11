@@ -33,8 +33,30 @@ esac; done
 
 pid_file() { case "$1" in smidja) printf '%s/state/electron-smidja.pid' "$ROOT" ;; *) printf '%s/state/electron.pid' "$ROOT" ;; esac; }
 log_file() { case "$1" in smidja) printf '%s/state/electron-smidja.log' "$ROOT" ;; *) printf '%s/state/electron.log' "$ROOT" ;; esac; }
-is_running() { local f; f="$(pid_file "$1")"; [ -r "$f" ] && kill -0 "$(tr -d '[:space:]' <"$f")" 2>/dev/null; }
-pid_of() { tr -d '[:space:]' <"$(pid_file "$1")" 2>/dev/null; }
+
+# The `.bin/electron` shim is a node script that SPAWNS the real Electron, so its
+# pid (`$!`) is not the app. Track Electron by its own command line instead — the
+# per-view user-data-dir is a unique, stable identity — exactly as the Nornir
+# scheduler identifies itself. Without this, a stale/reused pid makes is_running
+# false while Electron is alive, and a second app launches on top of the first.
+view_mark() { case "$1" in smidja) printf '%s' 'ymir-smidja' ;; *) printf '%s' 'ymir-hlidskjalf' ;; esac; }
+view_pids() {  # all live Electron pids for a view
+  local mark; mark="$(view_mark "$1")"
+  pgrep -f "electron/dist/electron.*--user-data-dir=.*${mark}" 2>/dev/null || true
+}
+real_electron() { printf '%s' "$APP/node_modules/electron/dist/electron"; }
+is_running() {
+  local pids; pids="$(view_pids "$1")"
+  [ -n "$pids" ]
+}
+pid_of() {
+  # Prefer the recorded pid when it is one of the live Electron pids; else the first.
+  local rec pids; pids="$(view_pids "$1")"
+  [ -n "$pids" ] || { printf '0'; return; }
+  rec="$(tr -d '[:space:]' <"$(pid_file "$1")" 2>/dev/null || true)"
+  if [ -n "$rec" ] && printf '%s\n' "$pids" | grep -qx "$rec"; then printf '%s' "$rec"; return; fi
+  printf '%s' "$(printf '%s\n' "$pids" | head -1)"
+}
 
 case "$ACTION" in
   status)
@@ -45,7 +67,13 @@ case "$ACTION" in
     exit 0 ;;
   stop)
     for v in "${VIEWS[@]}"; do
-      if is_running "$v"; then p=$(pid_of "$v"); kill "$p" 2>/dev/null || true; rm -f "$(pid_file "$v")"; printf 'electron: stopped %s pid=%s\n' "$v" "$p"; fi
+      local pids; pids="$(view_pids "$v")"
+      if [ -n "$pids" ]; then
+        # Kill every live pid for this view (the shim era could leave several).
+        printf '%s\n' "$pids" | while IFS= read -r p; do [ -n "$p" ] && kill "$p" 2>/dev/null || true; done
+        printf 'electron: stopped %s pid(s)=%s\n' "$v" "$(printf '%s' "$pids" | tr '\n' ',' | sed 's/,$//')"
+      fi
+      rm -f "$(pid_file "$v")"
     done
     printf 'electron: stopped\n'
     exit 0 ;;
@@ -64,12 +92,57 @@ if [ ! -x "$APP/node_modules/.bin/electron" ]; then
   ( cd "$APP" && npm install ) >/dev/null 2>&1 || { printf 'error: npm install failed — see apps/hlidskjalf\n' >&2; exit 1; }
 fi
 
+# npm 11+ gates postinstall scripts (allowScripts), so Electron's binary is
+# often never downloaded even though the package installed. Heal that here:
+# run the package's own postinstall, and if it still yields no binary, extract
+# from the already-cached zip and write path.txt (what the postinstall does).
+ensure_electron_binary() {
+  local bin="$APP/node_modules/electron/dist/electron"
+  [ -x "$bin" ] && return 0
+  [ -d "$APP/node_modules/electron" ] || return 0   # nothing installed yet
+  if [ -f "$APP/node_modules/electron/install.js" ]; then
+    ( cd "$APP" && node node_modules/electron/install.js ) >/dev/null 2>&1 || true
+  fi
+  [ -x "$bin" ] && return 0
+  # Fall back to the download cache, which the postinstall populated.
+  local zip
+  zip="$(ls "$HOME"/.cache/electron/*/electron-v*-linux-*.zip 2>/dev/null | head -1)"
+  if [ -n "$zip" ] && command -v unzip >/dev/null 2>&1; then
+    mkdir -p "$APP/node_modules/electron/dist"
+    unzip -q -o "$zip" -d "$APP/node_modules/electron/dist" >/dev/null 2>&1 && \
+      printf 'electron' >"$APP/node_modules/electron/path.txt"
+  fi
+  [ -x "$bin" ] && return 0
+  return 1
+}
+
+if ! ensure_electron_binary; then
+  printf 'error: the Electron binary is missing (the package installed but its postinstall was blocked)\nhelp: cd apps/hlidskjalf && node node_modules/electron/install.js\nhelp: if npm blocks install scripts, run: npm install --foreground-scripts\n' >&2
+  exit 1
+fi
+
 start_one() {
   local v="$1" f l
   f="$(pid_file "$v")"; l="$(log_file "$v")"
   if is_running "$v"; then printf 'electron[1]{view,state,pid}:\n  "%s","already up",%s\n' "$v" "$(pid_of "$v")"; return 0; fi
-  nohup env YMIR_DESKTOP_VIEW="$v" "$APP/node_modules/.bin/electron" "$APP" >"$l" 2>&1 < /dev/null &
+  # Launch the REAL Electron binary, not the .bin node shim, so the recorded pid
+  # is the app itself (the shim spawns and would leave a stale/incorrect pid).
+  local bin; bin="$(real_electron)"
+  local -a extra=()
+  # GPU safety: on a small-VRAM iGPU a Wayland GPU process can die with
+  # "amdgpu: Not enough memory for command submission". These are dashboards,
+  # not 3D, so allow an opt-out (YMIR_DESKTOP_DISABLE_GPU=1) and default to
+  # software rendering only when the GPU reports very little VRAM.
+  if [ "${YMIR_DESKTOP_DISABLE_GPU:-0}" = 1 ]; then
+    extra+=(--disable-gpu --disable-gpu-compositing)
+  fi
+  nohup env YMIR_DESKTOP_VIEW="$v" "$bin" "$APP" \
+    --user-data-dir="$HOME/.config/$([ "$v" = smidja ] && echo ymir-smidja || echo ymir-hlidskjalf)" \
+    "${extra[@]}" >"$l" 2>&1 < /dev/null &
   echo $! >"$f"
+  # Wait briefly for the real process to appear, so a following call sees it.
+  local i
+  for i in $(seq 1 20); do [ -n "$(view_pids "$v")" ] && break; sleep 0.5; done
 }
 
 if [ "$VIEW" = both ]; then

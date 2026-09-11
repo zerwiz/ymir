@@ -5,7 +5,7 @@
 # the loaders, the registries, and the runtime services. Idempotent. Galdr TOON.
 #
 # Usage:
-#   bin/ymir-install.sh [--check] [--skip-engines] [--skip-services] [--yes]
+#   bin/ymir-install.sh [--check] [--skip-engines] [--skip-services] [--no-desktop] [--yes]
 #   bin/ymir-install.sh --status
 #   bin/ymir-install.sh --version
 #
@@ -21,16 +21,17 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKSPACE="$ROOT/workspace"
 DOMAINS="company marketing development life me"
 
-CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --check) CHECK=1; shift ;;
     --skip-engines) SKIP_ENGINES=1; shift ;;
     --skip-services) SKIP_SERVICES=1; shift ;;
+    --no-desktop) NO_DESKTOP=1; shift ;;
     --yes|-y) ASSUME_YES=1; shift ;;
     --status) exec "$SCRIPT_DIR/ymir-install.sh" --check ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/ymir-install.sh [--check|--skip-engines|--skip-services|--yes]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/ymir-install.sh [--check|--skip-engines|--skip-services|--no-desktop|--yes]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -60,6 +61,7 @@ Ymir first setup — this will make the following changes:
   • create the Smiðja database so the visualizer has data
   • load agents/skills and write workspace/INSTALL.md
   • raise the runtime services (Hlidskjalf SPA + gate API + bridges)
+  • open BOTH desktop apps so you see them: Hlidskjalf + Smíðja
 
 Nothing is deleted. Every step is idempotent.
 PLAN
@@ -195,6 +197,44 @@ step_hermes() {
   else add hermes SKIP "no hermes-ensure.sh"; fi
 }
 
+# ── 3c. Þjazi backend (herdr-first) ──────────────────────────────────────────
+# Ymir spawns agents into terminal panes, so a backend must exist. herdr is
+# preferred (protocol 14+, presentation spaces at 0.8.0+); tmux is an accepted
+# reference backend. Never a silent fallback — a missing backend is reported.
+step_backend() {
+  if [ ! -x "$SCRIPT_DIR/herdr-ensure.sh" ]; then add backend SKIP "no herdr-ensure.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if out="$("$SCRIPT_DIR/herdr-ensure.sh" status 2>&1)"; then
+      local b; b="$(printf '%s' "$out" | grep -oE '"(herdr|tmux|none)"' | head -1 | tr -d '"')"
+      add backend OK "$b"
+    else
+      add backend WARN "no terminal backend (install herdr or tmux)"
+    fi
+  else
+    if "$SCRIPT_DIR/herdr-ensure.sh" ensure --install >/dev/null 2>&1; then
+      local b; b="$( "$SCRIPT_DIR/herdr-ensure.sh" status 2>&1 | grep -oE '"(herdr|tmux|none)"' | head -1 | tr -d '"' )"
+      add backend OK "$b"
+    else
+      add backend WARN "no terminal backend — install herdr or tmux"
+    fi
+  fi
+}
+
+# ── 3d. Omarchy integration ──────────────────────────────────────────────────
+# On an Omarchy host, learn the machine and install the update hook so Ymir
+# stays current with the user's setup. On a non-Omarchy host this is a clean SKIP.
+step_omarchy() {
+  if [ ! -d /usr/share/omarchy ]; then add omarchy SKIP "not an Omarchy host"; return; fi
+  if [ ! -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then add omarchy WARN "no omarchy-sense.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    local snap; snap="$("$SCRIPT_DIR/omarchy-sense.sh" status 2>&1 | sed -n '2p' | sed -E 's/^ *//; s/^"//; s/"$//' | tr -d '\n' | cut -c1-80)"
+    add omarchy OK "${snap:-no snapshot yet}"; return
+  fi
+  "$SCRIPT_DIR/omarchy-sense.sh" observe --quiet >/dev/null 2>&1 || true
+  [ -x "$SCRIPT_DIR/omarchy-hook-install.sh" ] && "$SCRIPT_DIR/omarchy-hook-install.sh" install >/dev/null 2>&1 || true
+  add omarchy OK "learnt the host; post-update hook installed"
+}
+
 # ── 4. sandbox image ─────────────────────────────────────────────────────────
 step_sandbox() {
   if ! have docker; then add sandbox SKIP "docker absent"; return; fi
@@ -260,6 +300,24 @@ step_services() {
   if "$ROOT/scripts/start.sh" >/dev/null 2>&1; then add services OK "runtime raised"; else add services WARN "start.sh reported errors"; fi
 }
 
+# ── 7b. desktop (both Electron apps) ──────────────────────────
+# The operator should SEE the applications when the install finishes, so we
+# raise both desktop shells (Hlidskjalf + Smíðja) as separate processes.
+step_desktop() {
+  if [ "$NO_DESKTOP" = 1 ]; then add desktop SKIP "--no-desktop"; return; fi
+  if [ ! -x "$ROOT/scripts/electron.sh" ]; then add desktop SKIP "no scripts/electron.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then add desktop OK "would launch Hlidskjalf + Smíðja"; return; fi
+  # A headless host has no display; launching a window would only fail.
+  if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    add desktop SKIP "no display (headless) — run scripts/electron.sh start --both"; return
+  fi
+  if "$ROOT/scripts/electron.sh" start --both >/dev/null 2>&1; then
+    add desktop OK "raised Hlidskjalf + Smíðja"
+  else
+    add desktop WARN "could not raise the desktop apps — run scripts/electron.sh start --both"
+  fi
+}
+
 # ── 8. register ──────────────────────────────────────────────────────────────
 step_register() {
   if [ "$CHECK" = 1 ]; then add register OK "would write workspace/INSTALL.md"; return; fi
@@ -276,11 +334,27 @@ step_register() {
   add register OK "wrote workspace/INSTALL.md"
 }
 
+# ── 9. validate ───────────────────────────────────
+# Prove the installation actually works: live ports, readable stores, running
+# processes. The installer says what it did; this observes the result.
+step_validate() {
+  if [ ! -x "$SCRIPT_DIR/ymir-validate.sh" ]; then add validate SKIP "no ymir-validate.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then add validate OK "would verify the running system"; return; fi
+  if out="$("$SCRIPT_DIR/ymir-validate.sh" --quiet 2>&1)"; then
+    add validate OK "all required checks pass"
+  else
+    local nf; nf="$(printf '%s' "$out" | grep -oE '[0-9]+ required check\(s\) failed' | head -1)"
+    add validate WARN "${nf:-some checks} failed — run bin/ymir-validate.sh for detail"
+  fi
+}
+
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_prereqs; step_tree; step_engines; step_hermes; step_sandbox; step_memory; step_smidja; step_loaders; step_register
+step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_omarchy; step_sandbox; step_memory; step_smidja; step_loaders; step_register
 [ "$CHECK" = 0 ] && step_services
+[ "$CHECK" = 0 ] && step_desktop
+[ "$CHECK" = 0 ] && step_validate
 
 printf 'install[%d]{step,status,detail}:\n' "${#IDS[@]}"
 for i in "${!IDS[@]}"; do printf '  "%s","%s","%s"\n' "${IDS[$i]}" "${STATUS[$i]}" "${DETAIL[$i]}"; done
