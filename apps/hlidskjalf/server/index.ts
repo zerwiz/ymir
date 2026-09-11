@@ -756,8 +756,24 @@ function reviews() {
 }
 
 /* ---- /api/files (realm tree) --------------------------------------------- */
+/** Resolve a workspace id to its on-disk scope: a company container when the
+ *  workspace names one, else its repo-root workspace scope. */
+function workspaceRoot(realm: string): string {
+  const ws = workspaces().find((w) => w.id === realm);
+  if (ws?.company) {
+    const company = join(ROOT, 'svartalfaheim', ws.company);
+    if (existsSync(company)) return company;
+  }
+  const scope = join(ROOT, 'workspace', realm);
+  if (existsSync(scope)) return scope;
+  const slug = realm.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const legacy = join(ROOT, 'svartalfaheim', slug);
+  if (slug && slug !== realm && existsSync(legacy)) return legacy;
+  return join(ROOT, 'svartalfaheim', realm);
+}
+
 function files(realm: string) {
-  const base = join(ROOT, 'svartalfaheim', realm);
+  const base = workspaceRoot(realm);
   const walk = (dir: string, rel: string, depth: number): unknown => {
     const name = rel === '' ? (realm || 'svartalfaheim') : rel.split('/').pop()!;
     const node: Record<string, unknown> = { name, type: 'dir', path: rel || '/', children: [] as unknown[] };
@@ -789,7 +805,7 @@ function files(realm: string) {
 
 /* ---- /api/file — read one realm file, read-only, scoped ------------------ */
 function fileContent(realm: string, rel: string) {
-  const base = resolve(ROOT, 'svartalfaheim', realm);
+  const base = resolve(workspaceRoot(realm));
   const full = resolve(base, rel);
   if (full !== base && !full.startsWith(base + '/')) return { error: 'outside realm' };
   if (!existsSync(full)) return { error: 'not found' };
@@ -1337,8 +1353,11 @@ const server = Bun.serve({
     const p = url.pathname;
     try {
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
-      if (p === '/api/me') return json({ login: 'Allfather', realm: 'way-of' });
-      if (p === '/api/workspace') return json({ realm: 'way-of', path: join(ROOT, 'svartalfaheim/way-of') });
+      if (p === '/api/me') return json({ login: 'Allfather', realm: 'work' });
+      if (p === '/api/workspace') {
+        const realm = url.searchParams.get('realm') ?? 'work';
+        return json({ realm, path: workspaceRoot(realm) });
+      }
       if (p === '/api/agents') return json(agents());
       if (p === '/api/tasks') return json(tasks());
       if (p === '/api/orders') return json({ open: orders().filter((o) => o.status !== 'COMPLETED').length, orders: orders() });
@@ -1348,8 +1367,8 @@ const server = Bun.serve({
       if (p === '/api/mimir/health') return json(await mimirHealth());
       if (p === '/api/processes') return json(processes());
       if (p === '/api/reviews') return json(reviews());
-      if (p === '/api/files') return json(files(url.searchParams.get('realm') ?? 'way-of'));
-      if (p === '/api/file') return json(fileContent(url.searchParams.get('realm') ?? 'way-of', url.searchParams.get('path') ?? ''));
+      if (p === '/api/files') return json(files(url.searchParams.get('realm') ?? 'work'));
+      if (p === '/api/file') return json(fileContent(url.searchParams.get('realm') ?? 'work', url.searchParams.get('path') ?? ''));
       if (p === '/api/skills') return json(skills());
       if (p === '/api/runtime') return json(runtime());
       if (p === '/api/cron') return json(cron());
