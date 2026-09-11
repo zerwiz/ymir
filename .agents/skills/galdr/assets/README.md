@@ -8,7 +8,7 @@ galdr[1]{role}:
 ## Routing
 
 ```
-assets[23]{path,load_when}:
+assets[24]{path,load_when}:
   "principles.md","the 10 CLI design principles (full doctrine)"
   "build-method.md","building/maintaining the runtime; forging a new skill"
   "registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -16,6 +16,7 @@ assets[23]{path,load_when}:
   "brokk-distro-runtime.md","the runtime spec (home, digest, lock, supervision, cron)"
   "runtime-components.md","every runtime component, interface, and env var"
   "runtime-compliance.md","the runtime acceptance gates + runnable checklist"
+  "installation.md",  # first setup / install
   "memory-well.md","the well: Mimirsbrunn/engram store, bridge, MCP, laws"
   "harness-integration/README.md","choosing a harness; adding a new harness"
   "harness-integration/opencode.md","building/using the OpenCode adapter"
