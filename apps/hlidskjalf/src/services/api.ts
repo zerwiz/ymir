@@ -62,7 +62,14 @@ export interface OrdersInfo {
   orders: OrderRow[];
 }
 
+let API_DEMO = false;
+/** Demo mode never talks to a real session — suppress the re-lock. */
+export function setApiDemo(v: boolean): void {
+  API_DEMO = v;
+}
+
 function noteUnauthorized(path: string, status: number): void {
+  if (API_DEMO) return;
   if (status === 401 && !path.startsWith('/api/login') && !path.startsWith('/api/session')) {
     window.dispatchEvent(new Event('ymir:unauthorized'));
   }

@@ -39,6 +39,7 @@ import {
 } from '../services/auth';
 import {
   gateApi,
+  setApiDemo,
   type ChatModel,
   type ChatSession,
   type CronInfo,
@@ -397,6 +398,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   enterDemo: () => {
+    setApiDemo(true);
     const session = githubAuthorize(MOCK_IDENTITIES[0]);
     // Demo is anonymous — never the operator's name.
     session.user = { login: 'allfather', name: 'Allfather', email: 'allfather@ymir.local', avatar: 'AL' };
@@ -408,6 +410,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   signIn: (identity) => {
+    setApiDemo(false);
     const session = githubAuthorize(identity);
     saveSession(session);
     const realm = initialRealm(session);
@@ -423,6 +426,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   provision: (input) => {
+    setApiDemo(false);
     const session = provisionWorkspace(input);
     saveSession(session);
     const slug = input.name.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/(^-|-$)/g, '');
@@ -439,6 +443,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   signOut: () => {
+    setApiDemo(false);
     clearSession();
     set({ session: null, demo: false, live: null, query: '' });
   },
