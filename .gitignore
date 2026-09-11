@@ -84,3 +84,6 @@ apps/hlidskjalf/public/ymir.apk
 # Android release signing (never commit)
 apps/hlidskjalf/android/ymir-release.keystore
 apps/hlidskjalf/android/keystore.properties
+
+# Per-user Ró preference (moved to state/; never tracked)
+.agents/config/ro

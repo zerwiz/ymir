@@ -196,7 +196,7 @@ kept only so the migration is traceable. New tooling must still not reproduce an
 
 ```
 runtime_figures[7]{figure,role,path}:
-  "Ró","calm presentation (hides chrome; /ro)","`.pi/extensions/ro.ts` + `lib/ro-*.ts`, `config/ro`"
+  "Ró","calm presentation (hides chrome; /ro)","`.pi/extensions/ro.ts` + `lib/ro-*.ts`, `state/ro` (env `YMIR_RO`)"
   "Skuld","supervision branch (routine wakes; /skuld-model)","`.pi/extensions/skuld-branch-supervision.ts` + `lib/skuld-branch-*.ts`, `config/skuld-branch-*`"
   "Valknut","repo-local loader (binds agents into each tool)","`bin/valknut-load.sh`"
   "Mímir","Eindri planner (architecture, sequencing)","`.agents/agents/mimir-planner.md`"
