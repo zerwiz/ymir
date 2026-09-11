@@ -1351,18 +1351,16 @@ function workspaceProvision(name: string, kind: string, domains: string) {
 const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? 'zerwiz:allfather';
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
-function authOk(req: Request): boolean {
-  const hdr = req.headers.get('authorization') ?? '';
-  if (!hdr.startsWith('Basic ')) return false;
-  let decoded = '';
-  try {
-    decoded = Buffer.from(hdr.slice(6), 'base64').toString('utf8');
-  } catch {
-    return false;
-  }
-  const i = decoded.indexOf(':');
-  if (i < 0) return false;
-  return `${decoded.slice(0, i)}:${decoded.slice(i + 1)}` === GATE_AUTH;
+const SESSIONS = new Set<string>();
+
+function cookieToken(req: Request): string {
+  const c = req.headers.get('cookie') ?? '';
+  const m = c.match(/(?:^|;\s*)ymir_session=([^;]+)/);
+  return m ? m[1] : '';
+}
+function isAuthed(req: Request): boolean {
+  const t = cookieToken(req);
+  return !!t && SESSIONS.has(t);
 }
 
 function serveStatic(pathname: string): Response {
@@ -1395,12 +1393,28 @@ const server = Bun.serve({
     const url = new URL(req.url);
     const p = url.pathname;
     try {
-      if (GATE_AUTH && !authOk(req)) {
-        return new Response('Ymir — authentication required', {
-          status: 401,
-          headers: { 'www-authenticate': 'Basic realm="Ymir"', 'content-type': 'text/plain' },
+      if (p === '/api/login' && req.method === 'POST') {
+        const b = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
+        if (`${b.username ?? ''}:${b.password ?? ''}` === GATE_AUTH) {
+          const token = crypto.randomUUID();
+          SESSIONS.add(token);
+          return new Response(JSON.stringify({ ok: true }), {
+            headers: {
+              'content-type': 'application/json',
+              'set-cookie': `ymir_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
+            },
+          });
+        }
+        return json({ error: 'invalid credentials' }, 401);
+      }
+      if (p === '/api/session') return json({ authed: isAuthed(req) });
+      if (p === '/api/logout' && req.method === 'POST') {
+        SESSIONS.delete(cookieToken(req));
+        return new Response(JSON.stringify({ ok: true }), {
+          headers: { 'content-type': 'application/json', 'set-cookie': 'ymir_session=; Path=/; Max-Age=0' },
         });
       }
+      if (p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
       if (p === '/api/me') return json({ login: 'Allfather', realm: 'work' });
       if (p === '/api/workspace') {

@@ -1,13 +1,27 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Shell } from './Shell';
 import { Login } from './Login';
 import { Overlay } from '../components/Overlay';
+import { LoginModal } from '../components/LoginModal';
+import { gateApi } from '../services/api';
 import { startStream } from '../services/stream';
 import { gateFromHash, useYmir } from '../state/store';
 
 export default function App() {
   const session = useYmir((s) => s.session);
   const demo = useYmir((s) => s.demo);
+  const [authed, setAuthed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (demo) {
+      setAuthed(true);
+      return;
+    }
+    void gateApi
+      .session()
+      .then((r) => setAuthed(r.authed))
+      .catch(() => setAuthed(true));
+  }, [demo]);
 
   useEffect(() => {
     if (!session) return;
@@ -27,6 +41,20 @@ export default function App() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
+
+  if (authed === false) {
+    return (
+      <>
+        <LoginModal
+          onAuthed={() => {
+            setAuthed(true);
+            void useYmir.getState().loadLive();
+          }}
+        />
+        <Overlay />
+      </>
+    );
+  }
 
   return (
     <>
