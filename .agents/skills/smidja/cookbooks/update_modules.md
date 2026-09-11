@@ -1,16 +1,16 @@
 # Update Modules
 
-Extend `factory/factory_modules/` with new low-level logic.
+Extend `smidja/smidja_modules/` with new low-level logic.
 
 ## The rule
 
-**ALL low-level logic lives in `factory_modules/`; factory scripts stay thin.** An `factory_*.py` file declares agents, sequences phases, and returns an exit code. Anything else — subprocess handling, parsing, retry mechanics, git plumbing, reusable predicates — goes in a module.
+**ALL low-level logic lives in `smidja_modules/`; smidja scripts stay thin.** An `smidja_*.py` file declares agents, sequences phases, and returns an exit code. Anything else — subprocess handling, parsing, retry mechanics, git plumbing, reusable predicates — goes in a module.
 
 ## Where things go
 
 | Module | Owns |
 |---|---|
-| `data_types.py` | Every Pydantic model: `AgentCall`, `PhaseParams`, `Phase`, `EnvelopeBase` + one output type per agent call, the config models (`AgentConfig`, `factoryConfig`), `EventRecord`, and `PiRequest`/`PiResult` |
+| `data_types.py` | Every Pydantic model: `AgentCall`, `PhaseParams`, `Phase`, `EnvelopeBase` + one output type per agent call, the config models (`AgentConfig`, `smidjaConfig`), `EventRecord`, and `PiRequest`/`PiResult` |
 | `agents.py` | `load_config`, `validate`, resolving an entry → coding-agent interface + model + thinking + harness extensions |
 | `runner.py` | the `Run` object; `run.phase(PhaseParams)` context manager; `ph.call(AgentCall)` |
 | `agent_pi.py` | the Pi interface (v1) — non-interactive `pi -p --mode json`, JSONL stream tailed live, model resolved against `~/.pi/agent/models.json`; `--session-id` creates-or-continues, so running and continuing an agent are the same call |
@@ -18,8 +18,8 @@ Extend `factory/factory_modules/` with new low-level logic.
 | `gates.py` | validation gates over envelope claims |
 | `changes.py` | deterministic change capture: resolve the base ref, `git diff` into `context_handoff/changes.diff`, adapt the `ChangeSet` into an envelope an agent can be handed |
 | `prompts.py` | load system/user prompt refs from config, render placeholders |
-| `session.py` | mint or join `factory_id`, maintain `agent_map.json`, create session dirs incl. `context_handoff/` |
-| `tracer.py` | append JSONL **and** insert every event into `factory.db` as it happens |
+| `session.py` | mint or join `smidja_id`, maintain `agent_map.json`, create session dirs incl. `context_handoff/` |
+| `tracer.py` | append JSONL **and** insert every event into `smidja.db` as it happens |
 | `console.py` | the terminal narrative — every line printed also lands in the db as a `log` event, so the UI reads the same story; plain sequential lines, no spinners |
 | `console.py` | the rich stdout reporter — every line printed is ALSO traced as a `log` event (`{message, level}`) so the terminal and the swim-lane UI tell the same story |
 | `git_helper.py` | branch, status, diff, commit — the raw plumbing `changes.py` composes |
@@ -27,11 +27,11 @@ Extend `factory/factory_modules/` with new low-level logic.
 
 ## Never `print()`
 
-Modules report through `run.console` — never a bare `print()`. Each console method prints a rich line **and** writes it to `factory.db` as a `log` event with payload `{message, level}`, both from one `_emit` helper, so the terminal narrative and the swim-lane UI can't drift. New output means a new method on `Console`, not a print at the call site.
+Modules report through `run.console` — never a bare `print()`. Each console method prints a rich line **and** writes it to `smidja.db` as a `log` event with payload `{message, level}`, both from one `_emit` helper, so the terminal narrative and the swim-lane UI can't drift. New output means a new method on `Console`, not a print at the call site.
 
 ## The four-param rule
 
-**Any function taking more than 4 parameters gets them converted into a concrete data type in `data_types.py`.** `AgentCall` and `PhaseParams` are the pattern — `run.phase()` and `ph.call()` each take exactly one object. This is skill-wide: every module the factory generates obeys it.
+**Any function taking more than 4 parameters gets them converted into a concrete data type in `data_types.py`.** `AgentCall` and `PhaseParams` are the pattern — `run.phase()` and `ph.call()` each take exactly one object. This is skill-wide: every module the smidja generates obeys it.
 
 ```python
 class ReviewParams(BaseModel):
@@ -57,7 +57,7 @@ class ReviewOutput(EnvelopeBase):
 
 1. The type in `data_types.py` (the enforcer).
 2. The agent's `user.md` `## Report` section showing exactly that JSON (the ask).
-3. Every call site passing `output_type=` (the binding) — `grep -rn "ReviewOutput" factory/` to find them all.
+3. Every call site passing `output_type=` (the binding) — `grep -rn "ReviewOutput" smidja/` to find them all.
 
 If the type and the Report example drift, the agent produces what the prompt asked for, the parser rejects what the type expects, and every call burns correction round-trips before landing — a slow, silent tax. Renaming or removing a field is the same triad edit. Schema details: `references/handoff.md`.
 
@@ -66,7 +66,7 @@ If the type and the Report example drift, the agent produces what the prompt ask
 A gate is a callable — `gate(envelope, run) -> GateReport`. You record **one check per item you look at**, and the harness derives the verdict: any failed check is a violation, and no failed checks means pass.
 
 ```python
-from factory_modules.data_types import GateReport
+from smidja_modules.data_types import GateReport
 
 def tests_declared_passed(envelope, run) -> GateReport:
     """Verify the envelope's own test claims, after the fact."""
@@ -93,8 +93,8 @@ Rules that keep gates honest:
 
 A gate that returns a plain `list[str]` of violations still works — the harness adapts it — but it records no evidence for the items that passed, so prefer a `GateReport`.
 
-Reusable gates live in `gates.py`; genuine one-offs can be defined inline at the factory call site and passed in `gates=[...]`.
+Reusable gates live in `gates.py`; genuine one-offs can be defined inline at the smidja call site and passed in `gates=[...]`.
 
 ## Before you finish
 
-Run the smoke factory — `uv run factory/factory_prompt.py "ping"` — since every module change rides the same path a real run does.
+Run the smoke smidja — `uv run smidja/smidja_prompt.py "ping"` — since every module change rides the same path a real run does.

@@ -67,7 +67,7 @@ function onScroll() {
                 <div>
                   <div class="launch-title">Session launched</div>
                   <div class="launch-sub">
-                    <code>{{ m.session_launch.factory_id }}</code> · {{ m.session_launch.team }} ·
+                    <code>{{ m.session_launch.smidja_id }}</code> · {{ m.session_launch.team }} ·
                     {{ modelName(m.session_launch.model) }}
                   </div>
                 </div>
@@ -75,7 +75,7 @@ function onScroll() {
                   {{ m.session_launch.status ?? 'queued' }}
                 </span>
               </div>
-              <button class="launch-link" type="button" @click="emit('launch-click', m.session_launch!.factory_id)">
+              <button class="launch-link" type="button" @click="emit('launch-click', m.session_launch!.smidja_id)">
                 View in Trace UI →
               </button>
             </div>

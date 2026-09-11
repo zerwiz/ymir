@@ -61,7 +61,7 @@ cause hypothesis (to confirm):
 
 | # | Fix | Owner | Risk |
 |---|---|---|---|
-| 1 | **Lower pi `contextWindow`** to leave output room — but the user chose to keep ~92% (round numbers), so instead fix the SERVER side: raise `n_ctx` where VRAM allows (q2 155k already max; iq3/4/5 at their sweet spots) OR cap pi's `max_tokens` output | pi/factory | medium |
+| 1 | **Lower pi `contextWindow`** to leave output room — but the user chose to keep ~92% (round numbers), so instead fix the SERVER side: raise `n_ctx` where VRAM allows (q2 155k already max; iq3/4/5 at their sweet spots) OR cap pi's `max_tokens` output | pi/smidja | medium |
 | 2 | **Trim wayofteams MCP schemas**: the MCP server should return compact `inputSchema` (short descriptions) or pi should not re-fetch full schemas every tool call | wayofteams MCP | medium |
 | 3 | **Absolute compaction target**: pi should compact to a **fixed headroom below the ceiling** (e.g. leave 20k for output + MCP), not a % that leaves it near-full | pi | low |
 

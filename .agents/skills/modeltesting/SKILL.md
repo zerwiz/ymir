@@ -131,8 +131,8 @@ PARAMETER top_p 0.95
 
 ## Sibling skills
 
-- `add-or-edit-ai-models` — tune models/prompts for a factory **roster** file
+- `add-or-edit-ai-models` — tune models/prompts for a smidja **roster** file
   (different concern: roster, not backend bench).
 - `command-repo` — working conventions inside `~/command`.
-- `runfactory` / `factory-launcher` — the software-factory runtime (uses models;
+- `runfactory` / `smidja-launcher` — the software-smidja runtime (uses models;
   this skill benchmarks the backends those rosters point at).

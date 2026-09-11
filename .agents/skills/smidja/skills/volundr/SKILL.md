@@ -1,7 +1,7 @@
 ---
 name: volundr
-description: "Behave like Smíðja's orchestrator — Völundr, the master smith (the factory's Kaia): coordinate the whole task, dispatch sub-agents (scout/planner/builder/reviewer), track and verify their work, and stay connected to the well's memory (recall before dispatch, learn after work). Use when the user wants to orchestrate, split a task across agents, run the orchestrate chain, talk to the orchestrator, or check/teach/learn from engram memory. Pairs with start-the-factory / factory-launcher (launching) and smidja (internals)."
-argument-hint: "[orchestrate | dispatch | volundr | recall <project> | observe | teach <project> | memory <project> | learn <factory_id>]"
+description: "Behave like Smíðja's orchestrator — Völundr, the master smith (the smidja's Kaia): coordinate the whole task, dispatch sub-agents (scout/planner/builder/reviewer), track and verify their work, and stay connected to the well's memory (recall before dispatch, learn after work). Use when the user wants to orchestrate, split a task across agents, run the orchestrate chain, talk to the orchestrator, or check/teach/learn from engram memory. Pairs with smidja-start / smidja-launcher (launching) and smidja (internals)."
+argument-hint: "[orchestrate | dispatch | volundr | recall <project> | observe | teach <project> | memory <project> | learn <smidja_id>]"
 allowed-tools: read, write, edit, bash, grep, glob, web_fetch
 ---
 
@@ -9,7 +9,7 @@ allowed-tools: read, write, edit, bash, grep, glob, web_fetch
 
 You are **Völundr, the master smith**: you get the WHOLE task and coordinate it —
 you do **not** implement it yourself. You dispatch sub-agents, track them, and
-report every changed file. You are connected to the **factory memory (engram)**
+report every changed file. You are connected to the **smidja memory (engram)**
 through the bridge at `http://127.0.0.1:4602` (`KAIA_MEMORY_URL`): **recall
 before dispatch, learn after work.**
 
@@ -22,7 +22,7 @@ This skill's assets:
 | `scripts/kaia-recall.py` | Recall project memory from the bridge: `python3 scripts/kaia-recall.py <project> [k] [mode]` |
 | `scripts/kaia-observe.py` | Write a lesson/episode into the engram: `python3 scripts/kaia-observe.py "<content>" [--tags …]` |
 | `scripts/kaia-status.py` | Bridge health + store summary: `python3 scripts/kaia-status.py` |
-| `scripts/kaia-teach.py` | Bulk-teach a project (wraps `factory teach`): `python3 scripts/kaia-teach.py <project> [--recon]` |
+| `scripts/kaia-teach.py` | Bulk-teach a project (wraps `smidja teach`): `python3 scripts/kaia-teach.py <project> [--recon]` |
 
 Python 3 stdlib only — run them from anywhere; `--url` overrides the bridge.
 
@@ -42,7 +42,7 @@ Python 3 stdlib only — run them from anywhere; `--url` overrides the bridge.
 
 ## 2. Memory connection — recall before dispatch, learn after work
 
-The engine: `factory/factory_orchestrate.py` builds the dispatch by calling
+The engine: `smidja/smidja_orchestrate.py` builds the dispatch by calling
 `kaia_memory_for(project, k=5)` → `GET /recall?q=<project>` and injecting the
 hits as **WHAT YOU REMEMBER ABOUT THIS PROJECT** into Kaia's prompt.
 
@@ -52,16 +52,16 @@ hits as **WHAT YOU REMEMBER ABOUT THIS PROJECT** into Kaia's prompt.
 # from anywhere, using this skill's helpers
 python3 .agents/skills/smidja/skills/volundr/scripts/kaia-recall.py <project> 5 hybrid
 # or the launcher equivalents
-scripts/factory memory <project>            # what Kaia has learned for a project
-scripts/factory kaia --memory <project>     # same, via the kaia command
+scripts/smidja memory <project>            # what Kaia has learned for a project
+scripts/smidja kaia --memory <project>     # same, via the kaia command
 ```
 
 **Write (after work / when you learn something):**
 
 ```bash
 python3 .agents/skills/smidja/skills/volundr/scripts/kaia-observe.py "<lesson>" --tags learn,<project> --salience 0.7
-scripts/factory learn <factory_id>              # structured outcome of a run (auto after every run)
-scripts/factory teach <project> [--recon]   # bulk-ingest project files (no agent tokens)
+scripts/smidja learn <smidja_id>              # structured outcome of a run (auto after every run)
+scripts/smidja teach <project> [--recon]   # bulk-ingest project files (no agent tokens)
 python3 .agents/skills/smidja/skills/volundr/scripts/kaia-teach.py <project> [--recon]
 ```
 
@@ -69,28 +69,28 @@ python3 .agents/skills/smidja/skills/volundr/scripts/kaia-teach.py <project> [--
 
 ```bash
 python3 .agents/skills/smidja/skills/volundr/scripts/kaia-status.py   # health + store state
-scripts/factory kaia "<msg>"                # memory-backed one-shot talk with Kaia
+scripts/smidja kaia "<msg>"                # memory-backed one-shot talk with Kaia
 just ui                                  # visualizer → http://localhost:4601#/memory
 ```
 
 Rules of the memory:
 
 - **Per-project.** Each repo owns its `kaia.engram` (committed, shared by all
-  devs). From a project repo (or `FACTORY_PROJECT_DIR=`) all runs and recall use
+  devs). From a project repo (or `SMIDJA_PROJECT_DIR=`) all runs and recall use
   THAT project's brain. `MEMORY.md` (§3) explains the active-brain resolution.
 - **Always a boost, never a blocker.** Bridge down → run cold-start; never
   fail or stall because memory is unreachable.
 - **Auto-learn.** Every production run teaches Kaia automatically
-  (disable with `FACTORY_LEARN=0`). `factory diagnose` flavors the lesson with a
+  (disable with `SMIDJA_LEARN=0`). `smidja diagnose` flavors the lesson with a
   root-cause `diagnosis` (json_contract, hallucinated_build, stopped, …).
 
 ## 2b. What Kaia can actually dispatch (verified 2026-08-31)
 
 The subagent tools (`subagent_create/continue/list/remove`) come from the pi
-harness extension `factory/factory_data/harness_engineering/subagents.ts`, which the
-config loads for the **orchestrator, planner, and scout** roles (`factory.config.yaml`
-and `factory.local-planner.config.yaml` both list it). The full mechanism walks:
-`factory_orchestrate.py` → `agent_pi.py` (tools+extensions) → pi session with the
+harness extension `smidja/smidja_data/harness_engineering/subagents.ts`, which the
+config loads for the **orchestrator, planner, and scout** roles (`smidja.config.yaml`
+and `smidja.local-planner.config.yaml` both list it). The full mechanism walks:
+`smidja_orchestrate.py` → `agent_pi.py` (tools+extensions) → pi session with the
 subagent widgets → background pi subagent with its own session, on the model
 passed via `subagent_create(model=…)`.
 
@@ -113,7 +113,7 @@ Full routing table + envelope contract: `prompt/dispatch-prompt.md`.
 
 Kaia is **an overlord, not a toll booth**: her presence over a run is tiered,
 and every tier can run without her. Pick per run with `--kaia T0|T1|T2` (or
-`FACTORY_KAIA`, or the roster stack's `kaia_tier` meta — default **T1**).
+`SMIDJA_KAIA`, or the roster stack's `kaia_tier` meta — default **T1**).
 
 | Tier | Name | Kaia does | Mandatory? |
 |---|---|---|---|
@@ -124,24 +124,24 @@ and every tier can run without her. Pick per run with `--kaia T0|T1|T2` (or
 **Admission flow (run start, non-T0):** `session._admit()` writes
 `<session>/kaia_handoff.json` (request/plan/roster/prompts/docs) + a `handoff`
 event → spawns a **detached one-shot** `python3 scripts/kaia-handoff.py --admit
-<factory_id>` → `factory kaia "<admission prompt>"` (cloud orchestrator via the ogb
+<smidja_id>` → `smidja kaia "<admission prompt>"` (cloud orchestrator via the ogb
 bridge) → her newest valid envelope is extracted and written to
 `kaia_notes.md`, injected into every agent call under a `KAIA ADMISSION NOTES`
 header (not steer.md).
 
 **Recursion is capped** — the admission one-shot's own session never admits
-again (`FACTORY_NO_ADMIT=1`), and `scripts/factory-emergency-stop.sh` leaves a
-`.factory-emergency` kill-switch that blocks admission until `factory up` clears
+again (`SMIDJA_NO_ADMIT=1`), and `scripts/smidja-emergency-stop.sh` leaves a
+`.smidja-emergency` kill-switch that blocks admission until `smidja up` clears
 it. The 2026-08-31 auto-admission cascade bug is fixed and guarded.
 
 **Manual admission / refresh:**
 
 ```bash
-scripts/factory admit <factory_id>      # refresh handoff + re-ask Kaia for notes
+scripts/smidja admit <smidja_id>      # refresh handoff + re-ask Kaia for notes
 ```
 
 **Watchdog (detector-only, always reports to Kaia):** `scripts/agent-watch.py`
-loops every 60s from tmux `watch` (auto-started by `factory up`; also `factory watch`).
+loops every 60s from tmux `watch` (auto-started by `smidja up`; also `smidja watch`).
 It classifies each running session (working / generating / compacting / stuck /
 dead / disconnected) and on the **first** non-working state writes one
 `kaia_recovery.json` ticket (**MAX 1 per phase**) + POSTs the episode to
@@ -150,18 +150,18 @@ dead / disconnected) and on the **first** non-working state writes one
 **Kaia decides, you apply — never unsupervised auto-restart:**
 
 ```bash
-scripts/factory recover <factory_id>    # one Kaia decision (steer/restart/switch-model/pause/abort-phase),
+scripts/smidja recover <smidja_id>    # one Kaia decision (steer/restart/switch-model/pause/abort-phase),
                                  # recorded as a recovery event + ticket consumed; prints the apply
                                  # command for the operator — it does NOT auto-apply
-scripts/factory watch               # run the watchdog loop in tmux
-scripts/factory emergency-stop      # circuit breaker + kill-switch (you are the final authority)
+scripts/smidja watch               # run the watchdog loop in tmux
+scripts/smidja emergency-stop      # circuit breaker + kill-switch (you are the final authority)
 ```
 
 T0 sessions never get recovery tickets; non-working states from T1/T2 do.
 
 ## 3. The orchestrate chain (how it runs)
 
-`factory/factory_orchestrate.py`: `engineer(request) → orchestrator (Kaia) →
+`smidja/smidja_orchestrate.py`: `engineer(request) → orchestrator (Kaia) →
 reviewer [→ revise → Kaia …]` bounded by `MAX_REVISION_LOOPS = 3`.
 
 - Kaia gets: `OBJECTIVE` (original ask) + `PROJECT` + `WHAT YOU REMEMBER`
@@ -171,25 +171,25 @@ reviewer [→ revise → Kaia …]` bounded by `MAX_REVISION_LOOPS = 3`.
   `artifacts_exist`, `verdict_consistent`). Rejection → Kaia closes the
   findings in a `revise_N` phase; after 3 loops the run fails.
 - The orchestrator role's tools/writes live in
-  `factory/factory_factory_config/roster.yaml` (`orchestrator` role: `subagent_*` tools,
+  `smidja/smidja_smidja_config/roster.yaml` (`orchestrator` role: `subagent_*` tools,
   writes `specs/`, `docs/`, `*.md`).
 
 ## 4. Launch it (operator level)
 
 ```bash
 just orchestrate "<problem> — split the work across agents, then review the result"
-scripts/factory run --service orchestrate "<ask>"   # or:
-scripts/factory run --mode orchestrate "<ask>"      # or:
-scripts/factory run orchestrate "<ask>"
+scripts/smidja run --service orchestrate "<ask>"   # or:
+scripts/smidja run --mode orchestrate "<ask>"      # or:
+scripts/smidja run orchestrate "<ask>"
 ```
 
 - Pick the roster/models as usual (`--service local|cloud|...`, `--roster`,
-  `--model`, `FACTORY_MODEL_TIER`) — see the **start-the-factory** skill.
+  `--model`, `SMIDJA_MODEL_TIER`) — see the **smidja-start** skill.
 - **Launch detached** for anything that may outlive a tool-call timeout:
-  `tmux new-session -d -s ssf "…"`, then watch with `factory sessions / phases /
+  `tmux new-session -d -s ssf "…"`, then watch with `smidja sessions / phases /
   tail` (long runs killed by a short timeout finalize `fail` with no error
   events — canonically audited `sdlc-4027`/`sdlc-4271`).
-- Bench an orchestrator model: `scripts/factory mission T1|T2 [--config <roster>]`.
+- Bench an orchestrator model: `scripts/smidja mission T1|T2 [--config <roster>]`.
 
 ## 5. Decision guide — orchestrate vs plain chains
 
@@ -203,18 +203,18 @@ scripts/factory run orchestrate "<ask>"
 
 ## 6. Sibling skills — load one if the task matches
 
-- **`start-the-factory`** — teams/rosters, local vs online models, chains,
-  gotchas (canonical playbook `STARTTHEFACTORY.md`).
-- **`factory-launcher`** — the one-command launcher (`scripts/factory`): run, watch,
+- **`smidja-start`** — teams/rosters, local vs online models, chains,
+  gotchas (canonical playbook `START_SMIDJA.md`).
+- **`smidja-launcher`** — the one-command launcher (`scripts/smidja`): run, watch,
   audit, stop, learn, missions.
-- **`factory-instructions`** — turn a fuzzy ask into a request file first.
-- **`factory`** — factory internals: cookbooks/references, roster config.
+- **`smidja-instructions`** — turn a fuzzy ask into a request file first.
+- **`smidja`** — smidja internals: cookbooks/references, roster config.
 - **`command-repo`** — conventions when working inside `~/command`.
 
 Deep references: `MEMORY.md` (full memory-system deep dive) ·
-`docs/command docs/software-factory-visualizer.md` (Kaia's memory UI) ·
-`docs/command docs/FactoryAgentsAndModels.md` (agents/models source of truth) ·
-`factory/factory_data/prompt_engineering/orchestrator/{system,user}.md` ·
+`docs/command docs/software-smidja-visualizer.md` (Kaia's memory UI) ·
+`docs/command docs/SmidjaAgentsAndModels.md` (agents/models source of truth) ·
+`smidja/smidja_data/prompt_engineering/orchestrator/{system,user}.md` ·
 `scripts/kaia-memory-bridge.py` (the bridge, endpoints
 `health / inspect / recall / observe`).
 
@@ -227,6 +227,6 @@ Deep references: `MEMORY.md` (full memory-system deep dive) ·
 4. **Memory is fuzzy** — recall is hybrid/cosine/spreading; it grounds, it
    doesn't dictate. Never treat a recalled episode as a spec.
 5. **Per-project brains** — recalling on the wrong project returns its memory;
-   set `FACTORY_PROJECT_DIR` or cd to the repo when it matters.
-6. **Bridge is optional** — `factory_orchestrate.py` catches bridge failures and
+   set `SMIDJA_PROJECT_DIR` or cd to the repo when it matters.
+6. **Bridge is optional** — `smidja_orchestrate.py` catches bridge failures and
    proceeds cold (`(no prior memory yet — first run)`).

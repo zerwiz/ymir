@@ -10,9 +10,9 @@
 - Subagents (crewmates, scouts, secondmates) cannot run on local models — they require remote models.
 - When using local models, firstmate operates in single-agent mode only.
 
-## WayOf Command — Subagent Factory & Local Model Lab
+## WayOf Command — Subagent Smíðja & Local Model Lab
 
-- `/home/zerwiz/command` is the **subagent factory** — running multiple subagents concurrently for testing and operations.
+- `/home/zerwiz/command` is the **subagent smidja** — running multiple subagents concurrently for testing and operations.
 - Heavy **local model testing** happens here — evaluating models, architectures, and agent configurations.
-- The factory is part of the broader WayOf ecosystem (WayOfTeams, Software Factory, CloudSync, etc.).
+- The smidja is part of the broader WayOf ecosystem (WayOfTeams, Smíðja, CloudSync, etc.).
 - Local model testing and subagent experimentation are active, ongoing work surfaces.

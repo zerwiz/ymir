@@ -25,7 +25,7 @@ class EnvelopeBase(BaseModel):
 
 `status` is load-bearing: an envelope that parses but reports `status="fail"` raises, failing the phase. An agent declaring its own failure is not a successful phase.
 
-The starter types in `factory_modules/data_types.py`:
+The starter types in `smidja_modules/data_types.py`:
 
 ```python
 class GenericOutput(EnvelopeBase):
@@ -54,7 +54,7 @@ class DocumentOutput(EnvelopeBase):
 
 `commit_message` defaults to empty, so a git phase consuming it always needs a fallback — see `cookbooks/create_adw.md`.
 
-**Each `commit_message` describes its own agent's work product, never the next one's**: `PlanOutput`'s covers the spec file, `BuildOutput`'s the code, `DocumentOutput`'s the write-up. A chain that commits once can use whichever fits; a chain that commits per step (`factory_simple_sdlc.py`) needs all three, and reusing one agent's sentence for another's diff is how a commit log starts lying.
+**Each `commit_message` describes its own agent's work product, never the next one's**: `PlanOutput`'s covers the spec file, `BuildOutput`'s the code, `DocumentOutput`'s the write-up. A chain that commits once can use whichever fits; a chain that commits per step (`smidja_simple_sdlc.py`) needs all three, and reusing one agent's sentence for another's diff is how a commit log starts lying.
 
 There is no test output type: running the suite is a `kind="code"` phase, and its `QualityResult` reaches the next agent through `quality.as_envelope`.
 
@@ -71,7 +71,7 @@ plan = ph.call(AgentCall(output_type=PlanOutput, prompt=prompt,
                          gates=[gates.artifacts_exist]))
 ```
 
-The user prompt asks for the shape; the type enforces it. They always travel as a pair, which is what lets one agent serve many calls — same system prompt, different user prompt + output type per call site. Output types live in code, never in `factory.config.yaml`.
+The user prompt asks for the shape; the type enforces it. They always travel as a pair, which is what lets one agent serve many calls — same system prompt, different user prompt + output type per call site. Output types live in code, never in `smidja.config.yaml`.
 
 **Parse failure is not a restart.** If the response doesn't parse or doesn't validate, the harness re-prompts the **same session** with a correction naming the required fields — bounded by `JSON_FIX_ATTEMPTS` in `agents.py` (2). Gate violations use the identical mechanism, bounded instead by the phase's `retries`. A cold restart would throw away the context that produced the near-miss.
 
@@ -83,7 +83,7 @@ In v1 there is no separate continue call to make: `agent_pi.run()` passes `--ses
 
 | Placeholder | Value |
 |---|---|
-| `{{prompt}}` | the engineer's ask (or the factory's per-call prompt) |
+| `{{prompt}}` | the engineer's ask (or the smidja's per-call prompt) |
 | `{{previous_envelope}}` | the upstream envelope JSON, from `AgentCall(previous=...)` |
 | `{{context_handoff_dir}}` | absolute path to this session's `context_handoff/` |
 
@@ -131,7 +131,7 @@ The `## Report` section shows the exact JSON shape of the declared output type �
 ## Session directory layout
 
 ```
-factory/factory_data/sessions/{factory_id}/
+smidja/smidja_data/sessions/{smidja_id}/
 ├── agent_map.json          agent name → coding-agent session_id + model
 ├── context_handoff/        the ONE place agents write files for the agents that follow
 └── {agent_name}/
@@ -141,21 +141,21 @@ factory/factory_data/sessions/{factory_id}/
     └── envelope.json       the final valid-JSON response — captured, validated, persisted by code
 ```
 
-`session.ensure(cfg, factory_id)` mints or joins the id and creates these dirs. One `context_handoff/` per session, shared by every agent — the single location for cross-agent files.
+`session.ensure(cfg, smidja_id)` mints or joins the id and creates these dirs. One `context_handoff/` per session, shared by every agent — the single location for cross-agent files.
 
 ## agent_map.json and resuming
 
 ```json
 {
-  "planner": {"session_id": "factory-a1b2c3d4-planner-9f2e",
+  "planner": {"session_id": "smidja-a1b2c3d4-planner-9f2e",
               "model": "google/gemini-3.6-flash", "coding_agent": "pi"},
-  "builder": {"session_id": "factory-a1b2c3d4-builder-71ac",
+  "builder": {"session_id": "smidja-a1b2c3d4-builder-71ac",
               "model": "google/gemini-3.6-flash", "coding_agent": "pi"}
 }
 ```
 
-This map is the key that lets a later factory rejoin each agent's **existing context window**. Run `factory_build.py --factory-id a1b2c3d4` after `factory_plan.py` and the builder resumes its own session rather than starting cold.
+This map is the key that lets a later smidja rejoin each agent's **existing context window**. Run `smidja_build.py --smidja-id a1b2c3d4` after `smidja_plan.py` and the builder resumes its own session rather than starting cold.
 
-The map records the model each session was created with. If config drift changes an agent's model, that agent starts a **fresh** session and the map is updated — never a bad resume. `agent_sessions` in `factory.db` is the queryable mirror of this file.
+The map records the model each session was created with. If config drift changes an agent's model, that agent starts a **fresh** session and the map is updated — never a bad resume. `agent_sessions` in `smidja.db` is the queryable mirror of this file.
 
-**Files are the raw record; the db is the queryable mirror.** Losing `factory.db` loses nothing that can't be rebuilt from `raw_output.jsonl`, `envelope.json`, and `agent_map.json`.
+**Files are the raw record; the db is the queryable mirror.** Losing `smidja.db` loses nothing that can't be rebuilt from `raw_output.jsonl`, `envelope.json`, and `agent_map.json`.

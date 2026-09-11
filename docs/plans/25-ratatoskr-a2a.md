@@ -86,7 +86,7 @@ agent — discovers each other, delegates work, and streams results. Built on th
 | Auth / signing | **OAuth2-proxy / Authentik** + JWS card signing (Heimdall) |
 | Memory | **engram/engdbram** (Mimirsbrunn bridge, `:4602`) |
 | Tool access | **MCP servers** (every specialist) |
-| Existing systems | `a2a-bridge` skill · `command-factory` orchestration · `firstmate` supervision |
+| Existing systems | `a2a-bridge` skill · `smidja` orchestration · `firstmate` supervision |
 
 ## Acceptance criteria
 

@@ -64,9 +64,9 @@ async function stopRun() {
   stopping.value = true
   try {
     const res = await stopSession(props.adwId)
-    console.log(`[factory] stopped ${props.adwId} — ${res.stopped} process(es)`)
+    console.log(`[smidja] stopped ${props.adwId} — ${res.stopped} process(es)`)
   } catch (err) {
-    console.error(`[factory] stop failed:`, err)
+    console.error(`[smidja] stop failed:`, err)
   } finally {
     stopping.value = false
   }
@@ -84,7 +84,7 @@ async function togglePause() {
       paused.value = true
     }
   } catch (err) {
-    console.error(`[factory] pause/resume failed:`, err)
+    console.error(`[smidja] pause/resume failed:`, err)
   } finally {
     pausing.value = false
   }
@@ -391,7 +391,7 @@ const zonePct = computed(() => (requestPhase.value ? REQ_ZONE_PCT : 0))
  * Where the post-request timeline begins, in ms.
  *
  * The earliest non-engineer phase start, not the request phase's end: a later
- * factory joining the session pushes the request row's ended_at forward, which
+ * smidja joining the session pushes the request row's ended_at forward, which
  * would otherwise throw every already-finished phase behind the origin.
  */
 const originMs = computed(() => {

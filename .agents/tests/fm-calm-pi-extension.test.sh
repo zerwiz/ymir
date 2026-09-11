@@ -422,7 +422,7 @@ if (offRun.tools.length !== 0) {
 }
 
 // Calm-on (config/calm="on" for this home): registration must happen synchronously,
-// during this same factory call, exactly the timing /reload's pre-session_start
+// during this same smidja call, exactly the timing /reload's pre-session_start
 // transcript render depends on - not deferred to session_start or later.
 process.env.FM_HOME = process.env.HOME_ON;
 const onRun = fakePi();
@@ -545,7 +545,7 @@ try {
 } catch {
   threw = true;
 }
-if (threw) throw new Error("Calm's own factory threw while config/calm was absent and another extension already owned bash");
+if (threw) throw new Error("Calm's own smidja threw while config/calm was absent and another extension already owned bash");
 if (registry.size !== 1) {
   throw new Error(`Calm registered built-ins at load time despite config/calm being absent: ${JSON.stringify(Array.from(registry.keys()))}`);
 }

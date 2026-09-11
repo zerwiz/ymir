@@ -1,18 +1,18 @@
 /**
- * factory visualizer server — JSON API over a target repo's factory.db, plus the
+ * smidja visualizer server — JSON API over a target repo's smidja.db, plus the
  * built UI when ./dist exists. Reads are read-only; the single write is
- * POST /api/sessions/:factory_id/archive, which sets one review flag on a row.
+ * POST /api/sessions/:smidja_id/archive, which sets one review flag on a row.
  *
  * There is no ingest endpoint and no websocket. The data path is
  * agents → sqlite → web ui, and the UI gets there by polling.
  *
  *   bun run server/index.ts
- *   bun run server/index.ts --db /path/to/repo/factory/factory_data/factory.db
- *   CMD_DB=/path/to/factory.db PORT=8437 bun run server/index.ts
+ *   bun run server/index.ts --db /path/to/repo/smidja/smidja_data/smidja.db
+ *   CMD_DB=/path/to/smidja.db PORT=8437 bun run server/index.ts
  */
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
-import { factoryDb, resolveDbPath } from "./db.ts";
+import { smidjaDb, resolveDbPath } from "./db.ts";
 import type { AgentPrompts, ApiError, HealthResponse } from "../shared/types.ts";
 import * as rosterApi from "./roster-api.ts";
 import * as chat from "./chat.ts";
@@ -27,13 +27,13 @@ const MEMORY_BRIDGE = process.env.KAIA_MEMORY_URL ?? "http://127.0.0.1:4602";
 
 const dbPath = resolveDbPath();
 
-/** <repoRoot>/factory/factory_data/factory.db — three dirnames up is the repo root. */
+/** <repoRoot>/smidja/smidja_data/smidja.db — three dirnames up is the repo root. */
 const repoRoot = resolve(dirname(dirname(dirname(dbPath))));
-let db: factoryDb;
+let db: smidjaDb;
 try {
-  db = new factoryDb(dbPath);
+  db = new smidjaDb(dbPath);
 } catch (error) {
-  console.error(`[factory] ${(error as Error).message}`);
+  console.error(`[smidja] ${(error as Error).message}`);
   process.exit(1);
 }
 
@@ -59,14 +59,14 @@ function safely(
     try {
       return await handler(req);
     } catch (error) {
-      console.error(`[factory] ${req.method} ${new URL(req.url).pathname}:`, error);
+      console.error(`[smidja] ${req.method} ${new URL(req.url).pathname}:`, error);
       return json({ error: (error as Error).message } satisfies ApiError, 500);
     }
   };
 }
 
 /**
- * factory_ids and agent names are path segments on disk, so anything that isn't a
+ * smidja_ids and agent names are path segments on disk, so anything that isn't a
  * plain identifier is rejected outright rather than sanitized into something
  * that might still escape the sessions directory.
  */
@@ -115,7 +115,7 @@ async function serveStatic(req: Request): Promise<Response> {
 
   if (!existsSync(DIST_DIR)) {
     return new Response(
-      `factory visualizer API is running on :${PORT}.\n\n` +
+      `smidja visualizer API is running on :${PORT}.\n\n` +
         `No ./dist build found. Run "bun run dev" for the Vite dev server ` +
         `(it proxies /api here), or "bun run build" to serve the UI from this process.\n`,
       { status: 200, headers: { "content-type": "text/plain; charset=utf-8" } },
@@ -176,45 +176,45 @@ const server = Bun.serve({
     // Statistics: runs, tokens, cost, cache-hit ratio, commercial savings.
     "/api/stats": safely(() => json(db.stats())),
 
-    "/api/sessions/:factory_id": safely((req) => {
+    "/api/sessions/:smidja_id": safely((req) => {
       db.reconcileStaleRunning();
-      const detail = db.sessionDetail(param(req, "factory_id"));
-      return detail ? json(detail) : notFound(`no session ${param(req, "factory_id")}`);
+      const detail = db.sessionDetail(param(req, "smidja_id"));
+      return detail ? json(detail) : notFound(`no session ${param(req, "smidja_id")}`);
     }),
 
     // The one write. Archiving is review triage — it belongs to the reader, not
     // to the run — so it never touches anything a tracer wrote.
-    "/api/sessions/:factory_id/archive": {
+    "/api/sessions/:smidja_id/archive": {
       POST: safely(async (req) => {
-        const adwId = param(req, "factory_id");
+        const adwId = param(req, "smidja_id");
         if (!isSafeSegment(adwId)) {
-          return json({ error: "invalid factory_id" } satisfies ApiError, 400);
+          return json({ error: "invalid smidja_id" } satisfies ApiError, 400);
         }
         const body = (await req.json().catch(() => ({}))) as { archived?: unknown };
         const archived = body.archived === undefined ? true : Boolean(body.archived);
         return db.setArchived(adwId, archived)
-          ? json({ factory_id: adwId, archived })
+          ? json({ smidja_id: adwId, archived })
           : notFound(`no session ${adwId}`);
       }),
     },
 
     // The Stop button. Signals the run's live processes children-first so the
-    // factory's SIGTERM handler can finalize the trace as fail (session.py). Then,
+    // smidja's SIGTERM handler can finalize the trace as fail (session.py). Then,
     // whatever the outcome of the signal, it reconciles the db server-side so
     // a Stop always leaves the run closed: a pid may be gone before the signal
-    // (stale row), or the factory may be running code with no finalizer (crashed,
+    // (stale row), or the smidja may be running code with no finalizer (crashed,
     // SIGKILL, or predating the handler). `finalizeStopped` is idempotent, so
-    // it is safe to call even when the factory already settled the run itself.
-    "/api/sessions/:factory_id/stop": {
+    // it is safe to call even when the smidja already settled the run itself.
+    "/api/sessions/:smidja_id/stop": {
       POST: safely(async (req) => {
-        const adwId = param(req, "factory_id");
+        const adwId = param(req, "smidja_id");
         if (!isSafeSegment(adwId)) {
-          return json({ error: "invalid factory_id" } satisfies ApiError, 400);
+          return json({ error: "invalid smidja_id" } satisfies ApiError, 400);
         }
         if (!db.session(adwId)) return notFound(`no session ${adwId}`);
         const procs = db.liveProcesses(adwId); // only pids still alive
-        // children first, then the factory itself
-        const order = [...procs.filter((p) => p.kind === "agent"), ...procs.filter((p) => p.kind === "factory")];
+        // children first, then the smidja itself
+        const order = [...procs.filter((p) => p.kind === "agent"), ...procs.filter((p) => p.kind === "smidja")];
         let stopped = 0;
         for (const p of order) {
           try {
@@ -224,11 +224,11 @@ const server = Bun.serve({
             // gone between the liveness probe and the signal
           }
         }
-        // The factory's own finalizer runs on SIGTERM a moment later; if it does
+        // The smidja's own finalizer runs on SIGTERM a moment later; if it does
         // not (or already ran and the row is still open), close it from here.
         db.finalizeStopped(adwId);
         return json({
-          factory_id: adwId,
+          smidja_id: adwId,
           stopped,
           finalized: !db.liveProcesses(adwId).length,
           pids: order.map((p) => p.pid),
@@ -239,39 +239,39 @@ const server = Bun.serve({
     // Pause / resume — SIGSTOP / SIGCONT the live agent children so the run
     // can be held mid-flight while the engineer steers, then continued.
     // Only genuinely-live pids are signalled and only successes are counted.
-    "/api/sessions/:factory_id/pause": {
+    "/api/sessions/:smidja_id/pause": {
       POST: safely(async (req) => {
-        const adwId = param(req, "factory_id");
-        if (!isSafeSegment(adwId)) return json({ error: "invalid factory_id" } satisfies ApiError, 400);
+        const adwId = param(req, "smidja_id");
+        if (!isSafeSegment(adwId)) return json({ error: "invalid smidja_id" } satisfies ApiError, 400);
         const procs = db.liveProcesses(adwId).filter((p) => p.kind === "agent");
         let signalled = 0;
         for (const p of procs) {
           try { process.kill(p.pid, "SIGSTOP"); signalled += 1; } catch { /* gone */ }
         }
-        return json({ factory_id: adwId, paused: signalled, pids: procs.map((p) => p.pid) });
+        return json({ smidja_id: adwId, paused: signalled, pids: procs.map((p) => p.pid) });
       }),
     },
-    "/api/sessions/:factory_id/resume": {
+    "/api/sessions/:smidja_id/resume": {
       POST: safely(async (req) => {
-        const adwId = param(req, "factory_id");
-        if (!isSafeSegment(adwId)) return json({ error: "invalid factory_id" } satisfies ApiError, 400);
+        const adwId = param(req, "smidja_id");
+        if (!isSafeSegment(adwId)) return json({ error: "invalid smidja_id" } satisfies ApiError, 400);
         const procs = db.liveProcesses(adwId).filter((p) => p.kind === "agent");
         let signalled = 0;
         for (const p of procs) {
           try { process.kill(p.pid, "SIGCONT"); signalled += 1; } catch { /* gone */ }
         }
-        return json({ factory_id: adwId, resumed: signalled, pids: procs.map((p) => p.pid) });
+        return json({ smidja_id: adwId, resumed: signalled, pids: procs.map((p) => p.pid) });
       }),
     },
 
     // Engineer steering: inject a message into a running (or paused) run.
-    // The message is appended to the session's steer file; the factory's next
+    // The message is appended to the session's steer file; the smidja's next
     // agent call (or resume) reads it as standing guidance. Pause first for
     // the message to apply before the current agent's next turn.
-    "/api/sessions/:factory_id/steer": {
+    "/api/sessions/:smidja_id/steer": {
       POST: safely(async (req) => {
-        const adwId = param(req, "factory_id");
-        if (!isSafeSegment(adwId)) return json({ error: "invalid factory_id" } satisfies ApiError, 400);
+        const adwId = param(req, "smidja_id");
+        if (!isSafeSegment(adwId)) return json({ error: "invalid smidja_id" } satisfies ApiError, 400);
         if (!db.session(adwId)) return notFound(`no session ${adwId}`);
         const body = (await req.json().catch(() => ({}))) as { message?: unknown };
         const message = typeof body.message === "string" ? body.message.trim() : "";
@@ -288,33 +288,33 @@ const server = Bun.serve({
         } else {
           await Bun.file(steerFile).write(`# Engineer steering\n\n${append}`);
         }
-        return json({ factory_id: adwId, ok: true, note: "steer written — applies on the run's next agent call" });
+        return json({ smidja_id: adwId, ok: true, note: "steer written — applies on the run's next agent call" });
       }),
     },
 
-    "/api/sessions/:factory_id/events": safely((req) =>
+    "/api/sessions/:smidja_id/events": safely((req) =>
       json(
         db.events(
-          param(req, "factory_id"),
+          param(req, "smidja_id"),
           intQuery(req, "after", 0),
           intQuery(req, "limit", 500),
         ),
       ),
     ),
 
-    "/api/sessions/:factory_id/envelopes": safely((req) =>
-      json(db.envelopes(param(req, "factory_id"))),
+    "/api/sessions/:smidja_id/envelopes": safely((req) =>
+      json(db.envelopes(param(req, "smidja_id"))),
     ),
 
-    "/api/sessions/:factory_id/gates": safely((req) => json(db.gates(param(req, "factory_id")))),
+    "/api/sessions/:smidja_id/gates": safely((req) => json(db.gates(param(req, "smidja_id")))),
 
     // The exact prompts an agent was sent, read from the session dir. Files are
     // the raw record; the db has no copy of them.
-    "/api/sessions/:factory_id/agents/:agent/prompts": safely(async (req) => {
-      const adwId = param(req, "factory_id");
+    "/api/sessions/:smidja_id/agents/:agent/prompts": safely(async (req) => {
+      const adwId = param(req, "smidja_id");
       const agent = param(req, "agent");
       if (!isSafeSegment(adwId) || !isSafeSegment(agent)) {
-        return json({ error: "invalid factory_id or agent" } satisfies ApiError, 400);
+        return json({ error: "invalid smidja_id or agent" } satisfies ApiError, 400);
       }
       if (!db.session(adwId)) return notFound(`no session ${adwId}`);
 
@@ -340,11 +340,11 @@ const server = Bun.serve({
     // streams — the db only stores token counts, not text. Both coding agents
     // are covered: pi (`pi_sessions/*.jsonl` thinking blocks) and opencode
     // (`raw_output.jsonl` reasoning parts when the stream carries them).
-    "/api/sessions/:factory_id/agents/:agent/thinking": safely(async (req) => {
-      const adwId = param(req, "factory_id");
+    "/api/sessions/:smidja_id/agents/:agent/thinking": safely(async (req) => {
+      const adwId = param(req, "smidja_id");
       const agent = param(req, "agent");
       if (!isSafeSegment(adwId) || !isSafeSegment(agent)) {
-        return json({ error: "invalid factory_id or agent" } satisfies ApiError, 400);
+        return json({ error: "invalid smidja_id or agent" } satisfies ApiError, 400);
       }
       if (!db.session(adwId)) return notFound(`no session ${adwId}`);
 
@@ -436,7 +436,7 @@ const server = Bun.serve({
           if (t) blocks.push(t);
         }
       }
-      return json({ factory_id: adwId, agent, thinking: blocks });
+      return json({ smidja_id: adwId, agent, thinking: blocks });
     }),
 
     // ── Local settings (WayOfTeams MCP keys, stored in repo .env) ────────
@@ -573,14 +573,14 @@ const server = Bun.serve({
   },
 });
 
-console.log(`[factory] visualizer api  http://localhost:${server.port}`);
-console.log(`[factory] db              ${db.path}  [journal_mode=${db.journalMode}]`);
+console.log(`[smidja] visualizer api  http://localhost:${server.port}`);
+console.log(`[smidja] db              ${db.path}  [journal_mode=${db.journalMode}]`);
 const reconciled = db.reconcileStaleRunning();
-if (reconciled > 0) console.log(`[factory] reconciled ${reconciled} stale running session(s)`);
+if (reconciled > 0) console.log(`[smidja] reconciled ${reconciled} stale running session(s)`);
 console.log(
   existsSync(DIST_DIR)
-    ? `[factory] serving ui from  ${DIST_DIR}`
-    : `[factory] no ./dist — use "bun run dev" for the Vite dev server on :8438`,
+    ? `[smidja] serving ui from  ${DIST_DIR}`
+    : `[smidja] no ./dist — use "bun run dev" for the Vite dev server on :8438`,
 );
 
 process.on("SIGINT", () => {

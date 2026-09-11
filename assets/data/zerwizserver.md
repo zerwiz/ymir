@@ -52,7 +52,7 @@
 | `dojo-dual-chat` | — | — | Dojo dual chat (no routes) |
 | `dojo-fallback` | — | — | Dojo fallback (no routes) |
 | `dojo-prod` | — | — | Dojo prod (no routes) |
-| `linuxcommand` | `linuxcommand.zerwiz.org` | 4601 | Factory visualizer (bun) |
+| `linuxcommand` | `linuxcommand.zerwiz.org` | 4601 | Smíðja visualizer (bun) |
 | `masterplanhomepage` | `masterplan.zerwiz.org` | 3900 | Masterplan homepage (bun) |
 | `obsidian-livesync` | `obsidian-sync.zerwiz.org` | 5984 | Obsidian LiveSync (bun) |
 | `obsidian` | `obsidian.zerwiz.org` | 15323 | Obsidian (bun) |
@@ -86,7 +86,7 @@
 | `Temporal` (Docker) | Durable workflows | 7233 (Docker) |
 | `aigeeksandfreaks` (pm2) | Next.js marketing blog | 3800 |
 | `prdteams` (bun) | Prod teams app | 3910 |
-| `linuxcommand` (bun) | Factory visualizer | 4601 |
+| `linuxcommand` (bun) | Smíðja visualizer | 4601 |
 | `masterplanhomepage` (bun) | Masterplan homepage | 3900 |
 | `obsidian-livesync` (bun) | Obsidian sync | 5984 |
 | `opticat` (Python) | OptiCat web server | 8083 |

@@ -179,7 +179,7 @@ wears on tags and marks (design.md §2.2).
 | House | Name-sake | Seal | What the house does today |
 |---|---|---|---|
 | **Ymir Labs** | the primordial giant; the frame of the world | cyan `#38bdf8` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
-| **Brokk Forge** | the bellows-smith who drove the forging of Mjölnir | forge amber `#f59e0b` | engineering & build tooling: WayOf Command/Runecode, softwerefactory, wayofmono, the factory |
+| **Brokk Forge** | the bellows-smith who drove the forging of Mjölnir | forge amber `#f59e0b` | engineering & build tooling: WayOf Command/Runecode, softwerefactory, wayofmono, the smidja |
 | **Runestone Labs** (short: **Runir**) | the runes carved once, that cannot be un-carved | rune crimson `#f43f5e` | records & compliance: `.compliance` gates, rune auditing, docs, runbooks, research |
 | **Muninn Labs** | the raven *(memory)* that flew for Odin daily | raven violet `#8b5cf6` | memory & knowledge: Anchor/wayofteams-mcp anchor-memory, Mimirsbrunn/engram, vector RAG |
 | **Dvalin** | the dwarf smith of the finest crafted things | cold steel `#94a3b8` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
@@ -216,7 +216,7 @@ Norse name and a Norn-carved shell:
 | Docker (rootless, network-none) | **Utgard** |
 | MinIO/FileBrowser | **Skrymir** |
 | PM2/Docker | **Valhalla** |
-| `command-factory`, `firstmate`, `.compliance`, factory visualizer | the **library of the halls** — existing, adopted, not rebuilt |
+| `smidja`, `firstmate`, `.compliance`, smidja visualizer | the **library of the halls** — existing, adopted, not rebuilt |
 
 The rule: *does a validated OSS project already do this?* If yes, name it and
 use it. Only what differentiates Ymir is smithed in Ymir's own forge.
@@ -288,7 +288,7 @@ identity, never rebuilding from raw ore.
 | Docker (rootless, network-none) | **Utgard** | ephemeral sandboxes |
 | MinIO/FileBrowser | **Skrymir** | file browser |
 | PM2/Docker | **Valhalla** | process health monitor |
-| `command-factory`, `firstmate`, `.compliance`, factory visualizer | the **library of the halls** | existing, adopted, not rebuilt |
+| `smidja`, `firstmate`, `.compliance`, smidja visualizer | the **library of the halls** | existing, adopted, not rebuilt |
 | TOON (Token-Oriented Object Notation) | **Galdr** | token-efficient output format |
 | principles.yaml (10 design principles) | the **runes of ergonomics** | CLI standards |
 
@@ -360,7 +360,7 @@ plugin in `.config/opencode/plugins/`.
 
 ---
 
-## XI. Smíðja — the Smithy (the Software Factory)
+## XI. Smíðja — the Smithy (the Smíðja)
 
 Norse: **Smíðja** is the *smithy* — the workshop where the metal is actually worked.
 Ymir's smiths (Brokk, the Eindri) are the hands; **Smíðja is the shop floor they work
@@ -377,14 +377,14 @@ trace so it can be watched and learned from. The old rule holds:
 
 **Völundr** — Wayland the Smith, the craftiest smith in the Norse tales — is the master
 who runs the shop floor. Where **Kaia** is the eye by the well (Ymir-wide orchestration:
-recall, veil, dispatch), **Völundr** is the factory's own orchestrator: the smith who
+recall, veil, dispatch), **Völundr** is the smidja's own orchestrator: the smith who
 reads the roster, sets the chain, and drives each phase to its acceptance gate. Two
 seats, two roles: Kaia decides *what* is forged; Völundr decides *how* the smithy runs.
 
 | Aspect | Name | What it is |
 |---|---|---|
-| The workshop / engine | **Smíðja** | the software factory — rosters, phases, envelopes, retries, acceptance |
-| The master smith | **Völundr** | the factory orchestrator (the factory's Kaia) |
+| The workshop / engine | **Smíðja** | the smithy — rosters, phases, envelopes, retries, acceptance |
+| The master smith | **Völundr** | the smidja orchestrator (the smidja's Kaia) |
 | The observation window | **Smíðja's eye** | the trace visualizer — runs, lanes, phases, decisions, stats |
 
 ### Naming rationale
@@ -402,8 +402,8 @@ seats, two roles: Kaia decides *what* is forged; Völundr decides *how* the smit
 3. Context crosses phases only in **typed envelopes** — never by guessing.
 4. Every run is **observed** — the trace is the shop's memory (Mimirsbrunn) and its
    ledger (Runes). A run that is not watched cannot be trusted.
-5. **The smithy is borrowed, not rebuilt** — Smíðja adopts the validated factory
-   (the Super Simple Software Factory) and wears the Norse name, as every borrowed
+5. **The smithy is borrowed, not rebuilt** — Smíðja adopts the validated smidja
+   (the Smíðja) and wears the Norse name, as every borrowed
    anvil in §VII does.
 
 Smíðja can be watched *beside* Hlidskjalf, or from within it — the two seats of the

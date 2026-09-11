@@ -54,8 +54,8 @@ The law is restated in four authoritative places; keep them consistent:
 | Skill synthesis engine | **Gungnir** | Dynamic skill creation & validation | `.agents/skills/` |
 | Agent ergonomics standards | **Galdr** | TOON output, 10 design principles, skill synthesis | `.agents/skills/galdr/` |
 | MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal (agent↔agent) | `.agents/skills/galdr/assets/pi-boot/herdr-profile.toml` (pane layout) |
-| Software factory | **Smíðja** | Repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace | `.agents/skills/smidja/` |
-| Factory orchestrator | **Völundr** | The master smith who runs Smíðja — the factory's Kaia (Kaia's seat inside the factory) | `.agents/skills/smidja/skills/volundr/` |
+| Software smidja | **Smíðja** | Repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace | `.agents/skills/smidja/` |
+| Smíðja orchestrator | **Völundr** | The master smith who runs Smíðja — the smidja's Kaia (Kaia's seat inside the smidja) | `.agents/skills/smidja/skills/volundr/` |
 
 ### 3.2 Brokk distro runtime components (`docs/plans/29-brokk-distro-runtime.md:270-297`)
 
@@ -169,8 +169,8 @@ These terms must never name a Ymir subsystem, file, config key, environment vari
 | `saga` for a watcher | Inverse of the above | Sýn owns watch; Sága owns seeing/digest |
 | `valhalla` for cron | Collides with the process supervisor | **Nornir** owns the schedule; Valhalla supervises processes |
 | `ratatoskr` for the queue | Ratatoskr is the A2A bus; Redis is the queue engine | keep the split stated in `AGENTS.md:86` |
-| `command-factory` / `command factory` / `factory` (as a Ymir subsystem name) | Imported upstream project name; provenance only | **Smíðja** (the workshop); its orchestrator is **Völundr** |
-| `Smíðja` / `Smidjan` for the **platform** | The platform is the body | **Ymir** is the platform; **Smíðja** names only the software factory (the workshop inside it) |
+| `smidja` / `smidja` / `smidja` (as a Ymir subsystem name) | Imported upstream project name; provenance only | **Smíðja** (the workshop); its orchestrator is **Völundr** |
+| `Smíðja` / `Smidjan` for the **platform** | The platform is the body | **Ymir** is the platform; **Smíðja** names only the smithy (the workshop inside it) |
 
 ### 6.3 Legacy strings — RESOLVED (2026-09-11)
 

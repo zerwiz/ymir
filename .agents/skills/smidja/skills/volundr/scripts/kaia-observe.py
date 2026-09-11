@@ -6,7 +6,7 @@ Usage:
                    [--url http://127.0.0.1:4602]
 
 POST /observe on the memory bridge. On success prints the new episode id.
-This is the same write path `factory learn <factory_id>` and `factory teach <project>`
+This is the same write path `smidja learn <smidja_id>` and `smidja teach <project>`
 use — use it when YOU (as orchestrator) want to record a lesson directly.
 """
 import argparse

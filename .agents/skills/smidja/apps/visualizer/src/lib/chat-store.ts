@@ -6,7 +6,7 @@
  *   GET  /api/rosters  /api/models   → picker (teams + orchestrator models)
  *   GET  /api/chat/history          → conversation for the active session
  *   POST /api/chat/message          → send to Kaia (Pi)
- *   POST /api/chat/session          → launch a factory run
+ *   POST /api/chat/session          → launch a smidja run
  *   POST /api/chat/steer            → inject guidance mid-run
  */
 import { reactive, ref } from 'vue'
@@ -20,7 +20,7 @@ import {
   fetchRosters,
   fetchSessionSummaries,
   sendChatMessage,
-  startFactorySession,
+  startSmidjaSession,
   steerChatSession,
 } from './chat-api'
 import { fetchEvents, fetchSession } from './api'
@@ -71,7 +71,7 @@ export const liveStats = ref<{
 
 /** Poll the trace db for the active session's real cost/tokens/phases. */
 export async function refreshLiveStats(): Promise<void> {
-  const adwId = activeSession.value?.factory_id
+  const adwId = activeSession.value?.smidja_id
   if (!adwId) return
   try {
     const detail = (await fetchSession(adwId)) as unknown as SessionDetail
@@ -239,12 +239,12 @@ export async function sendMessage(content: string): Promise<void> {
   }
 }
 
-/** Launch a factory session from the start form. */
+/** Launch a smidja session from the start form. */
 export async function launchSession(req: SessionStartRequest): Promise<SessionLaunch> {
   error.value = null
-  const res = await startFactorySession(req)
+  const res = await startSmidjaSession(req)
   const launch: SessionLaunch = {
-    factory_id: res.factory_id,
+    smidja_id: res.smidja_id,
     team: res.roster,
     model: res.model,
     status: 'running',
@@ -259,7 +259,7 @@ export async function launchSession(req: SessionStartRequest): Promise<SessionLa
   })
   activeSession.value = launch
   side.panel = 'running'
-  side.adwId = launch.factory_id
+  side.adwId = launch.smidja_id
   return launch
 }
 
@@ -269,12 +269,12 @@ export async function loadPastSessions(): Promise<void> {
   error.value = null
   try {
     const all = await fetchSessionSummaries('all')
-    const activeId = activeSession.value?.factory_id
+    const activeId = activeSession.value?.smidja_id
     pastSessions.value = all
-      .filter((s) => s.factory_id !== activeId)
+      .filter((s) => s.smidja_id !== activeId)
       .map((s) => ({
-        factory_id: s.factory_id,
-        team: s.factory_name ?? 'factory',
+        smidja_id: s.smidja_id,
+        team: s.smidja_name ?? 'smidja',
         model: s.model ?? '',
         status: s.status,
       }))
@@ -285,7 +285,7 @@ export async function loadPastSessions(): Promise<void> {
 
 /** Stop / pause / resume the active live session via the trace-ui server. */
 export async function controlActive(action: 'stop' | 'pause' | 'resume'): Promise<void> {
-  const adwId = activeSession.value?.factory_id
+  const adwId = activeSession.value?.smidja_id
   if (!adwId) return
   error.value = null
   try {
@@ -309,21 +309,21 @@ export async function syncAutoAttach(): Promise<void> {
   error.value = null
   try {
     const all = await fetchSessionSummaries('all')
-    const live = all.find((s) => s.status === 'running' && s.factory_id !== activeSession.value?.factory_id)
+    const live = all.find((s) => s.status === 'running' && s.smidja_id !== activeSession.value?.smidja_id)
     await loadPastSessions()
     if (!live) return
     const launch: SessionLaunch = {
-      factory_id: live.factory_id,
-      team: live.factory_name ?? 'factory',
+      smidja_id: live.smidja_id,
+      team: live.smidja_name ?? 'smidja',
       model: live.model ?? '',
       status: 'running',
     }
-    if (!messages.value.some((m) => m.session_launch?.factory_id === live.factory_id)) {
+    if (!messages.value.some((m) => m.session_launch?.smidja_id === live.smidja_id)) {
       messages.value.push({
         id: `auto-${Date.now()}`,
         ts: new Date().toISOString(),
         role: 'kaia',
-        content: `Detected a running session **${live.factory_id}** on the trace db.`,
+        content: `Detected a running session **${live.smidja_id}** on the trace db.`,
         session_launch: launch,
         model: live.model ?? '',
       })
@@ -331,7 +331,7 @@ export async function syncAutoAttach(): Promise<void> {
     if (!activeSession.value) {
       activeSession.value = launch
       side.panel = 'running'
-      side.adwId = live.factory_id
+      side.adwId = live.smidja_id
     }
   } catch (e) {
     error.value = (e as Error).message
@@ -340,7 +340,7 @@ export async function syncAutoAttach(): Promise<void> {
 
 /** Inject guidance into the active running session. */
 export async function steerActive(message: string): Promise<void> {
-  const adwId = activeSession.value?.factory_id
+  const adwId = activeSession.value?.smidja_id
   if (!adwId || !message.trim()) return
   error.value = null
   try {

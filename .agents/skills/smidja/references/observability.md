@@ -4,13 +4,13 @@ The event schema, the seven SQLite tables, and the polling contract — the one 
 
 ## Two stores, one truth
 
-**Files are the raw record** (`raw_output.jsonl` streams, `envelope.json`, `agent_map.json`); **SQLite (`factory.db`) is the queryable mirror** the UI reads. `tracer.py` writes both. Losing the db loses nothing that can't be rebuilt from files.
+**Files are the raw record** (`raw_output.jsonl` streams, `envelope.json`, `agent_map.json`); **SQLite (`smidja.db`) is the queryable mirror** the UI reads. `tracer.py` writes both. Losing the db loses nothing that can't be rebuilt from files.
 
-Location comes from `observability.db` in `factory.config.yaml`, default `factory/factory_data/factory.db` — inside the **target** repo, gitignored.
+Location comes from `observability.db` in `smidja.config.yaml`, default `smidja/smidja_data/smidja.db` — inside the **target** repo, gitignored.
 
 ## Event schema
 
-`tracer.py` emits these types, every one logged against its `factory_id` **and** `phase_id`:
+`tracer.py` emits these types, every one logged against its `smidja_id` **and** `phase_id`:
 
 | Type | Emitted when |
 |---|---|
@@ -20,7 +20,7 @@ Location comes from `observability.db` in `factory.config.yaml`, default `factor
 | `handoff` | an envelope crosses from one agent to the next |
 | `gate_pass` | a gate found no failed checks — payload carries `attempt`, `checks` (the evidence), and an empty `violations` |
 | `gate_fail` | a gate found at least one failed check — payload carries `attempt`, `checks`, and `violations` |
-| `log` | an explicit `ph.log(...)` from the factory script |
+| `log` | an explicit `ph.log(...)` from the smidja script |
 | `agent_end` | the agent's run completes; envelope parsed or not — payload carries `cost`, `usage` (the per-component breakdown), `context_tokens`, `context_window` |
 | `phase_end` | the block exits; carries the resolved status |
 | `error` | a raise inside a phase block |
@@ -43,13 +43,13 @@ The gate event payload carries `attempt` too, so the `gate_results` table and th
 
 **A `tool_call` is the one event that spans time**, so it fills both `started_at` and `ended_at` on the row — the tool's real start and return. Every other type is a point in time: `started_at` is when it was recorded and `ended_at` stays NULL. Lay tool calls out on a time axis from those columns, never by parsing `payload_json` (`duration_ms` is in the payload too, as pi's own number, but it is a convenience, not the source for layout).
 
-**Streaming is solved by construction.** `agent_pi.py` tails pi's JSONL stdout line by line and the tracer inserts each event into `factory.db` **while the agent is still working** — never batched at phase end (verified in the first smoke run: tool calls visible mid-run). Everything downstream is a poll → render.
+**Streaming is solved by construction.** `agent_pi.py` tails pi's JSONL stdout line by line and the tracer inserts each event into `smidja.db` **while the agent is still working** — never batched at phase end (verified in the first smoke run: tool calls visible mid-run). Everything downstream is a poll → render.
 
 ## Tables
 
 ```sql
 sessions (
-  factory_id        TEXT PRIMARY KEY,
+  smidja_id        TEXT PRIMARY KEY,
   request       TEXT,              -- the engineer's ask
   status        TEXT,              -- running | success | fail
   engineer      TEXT,
@@ -59,7 +59,7 @@ sessions (
 
 phases (
   phase_id      TEXT PRIMARY KEY,
-  factory_id        TEXT REFERENCES sessions,
+  smidja_id        TEXT REFERENCES sessions,
   seq           INTEGER,
   name TEXT, kind TEXT, owner TEXT, description TEXT,
   status        TEXT DEFAULT 'fail',   -- success must be earned
@@ -70,8 +70,8 @@ phases (
 
 events (
   event_id      TEXT PRIMARY KEY,
-  factory_id        TEXT REFERENCES sessions,
-  phase_id      TEXT REFERENCES phases,   -- every event logs against factory + phase
+  smidja_id        TEXT REFERENCES sessions,
+  phase_id      TEXT REFERENCES phases,   -- every event logs against smidja + phase
   parent_id     TEXT,                     -- span nesting
   type          TEXT,   -- phase_start | phase_end | agent_start | agent_end | tool_call
                         -- | handoff | gate_pass | gate_fail | log | error
@@ -83,7 +83,7 @@ events (
 
 envelopes (
   envelope_id   TEXT PRIMARY KEY,
-  factory_id        TEXT REFERENCES sessions,
+  smidja_id        TEXT REFERENCES sessions,
   phase_id      TEXT REFERENCES phases,
   agent         TEXT,
   output_type   TEXT,              -- name of the data_types model it parsed against
@@ -95,7 +95,7 @@ envelopes (
 
 gate_results (
   id            INTEGER PRIMARY KEY,
-  factory_id        TEXT REFERENCES sessions,
+  smidja_id        TEXT REFERENCES sessions,
   phase_id      TEXT REFERENCES phases,
   attempt       INTEGER,
   gate          TEXT,
@@ -105,39 +105,39 @@ gate_results (
   created_at    TEXT
 );
 
-processes (                        -- factory_id → pid, so a stuck run can be stopped
+processes (                        -- smidja_id → pid, so a stuck run can be stopped
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  factory_id        TEXT REFERENCES sessions,
-  kind          TEXT,               -- 'factory' (the workflow process) | 'agent' (a coding-agent child)
-  name          TEXT,               -- '' for the factory, the agent name for a child
+  smidja_id        TEXT REFERENCES sessions,
+  kind          TEXT,               -- 'smidja' (the workflow process) | 'agent' (a coding-agent child)
+  name          TEXT,               -- '' for the smidja, the agent name for a child
   pid           INTEGER,
   command       TEXT,               -- what the pid WAS; pids get recycled, so verify before killing
   started_at    TEXT, ended_at TEXT -- ended_at NULL = believed alive
 );
 
 agent_sessions (                   -- the queryable mirror of agent_map.json
-  factory_id        TEXT REFERENCES sessions,
+  smidja_id        TEXT REFERENCES sessions,
   agent         TEXT,
   coding_agent  TEXT, model TEXT, color TEXT,   -- color: the config's lane swatch
   session_id    TEXT,
   context_tokens INTEGER,           -- window occupancy after the agent's last turn
   context_window INTEGER,           -- the model's ceiling, from the pi registry
   created_at    TEXT, last_used_at TEXT,
-  PRIMARY KEY (factory_id, agent)
+  PRIMARY KEY (smidja_id, agent)
 );
 ```
 
-**A hung agent emits nothing**, which is exactly when you need its pid: no events, no tokens, no output to read. `processes` is the only table that can answer "what is this run running, and how do I stop it" — `just procs <factory_id>` lists what is live, `just kill <factory_id>` stops children before the parent, and both verify the recorded `command` still matches the pid before signalling it. A killed run finalizes its own trace: SIGTERM and SIGINT are turned into `SystemExit` in `session.ensure`, so the session lands on `fail` with its process rows closed instead of reading `running` forever.
+**A hung agent emits nothing**, which is exactly when you need its pid: no events, no tokens, no output to read. `processes` is the only table that can answer "what is this run running, and how do I stop it" — `just procs <smidja_id>` lists what is live, `just kill <smidja_id>` stops children before the parent, and both verify the recorded `command` still matches the pid before signalling it. A killed run finalizes its own trace: SIGTERM and SIGINT are turned into `SystemExit` in `session.ensure`, so the session lands on `fail` with its process rows closed instead of reading `running` forever.
 
-**Every agent earns a lane the same way:** a `phases` row with `kind='agent'` and a non-null `owner`, plus its own spans. Manifest agents get this from `run.phase(...)`. An orchestrator subagent spawned via opencode's `task` tool gets it from `agents._materialize_subagent(run, phase, parent_agent, event)`: the `subagent_dispatch` forwarder branch writes that phase row + spans (`phase_start` → `agent_start` → `subagent_dispatch` → `agent_end` → `phase_end`) in the same shape as a manifest agent, so the visualizer draws it as its own lane stacked under the dispatcher. The subagent runs inside the dispatcher's opencode session, so its lane inherits the dispatcher's configured model/coding surface; its live `session_id` and context occupancy are unknown at completion, so they are omitted (no context bar, honest label). **No `agent_sessions` row is written for a dispatch** — that table's key is `(factory_id, agent)`, so a task-dispatched `scout` must never overwrite a same-named manifest scout. Because the dispatch event is terminal (opencode reports the task *result*), these lanes are written at completion with `started_at` ≈ `ended_at`; the UI's minimum block width keeps them readable. Subagent lane `seq = parent.seq + 1000 + <counter>` (per-run `_subagent_counter` in `runner.py`), so they sort after every manifest phase and never collide.
+**Every agent earns a lane the same way:** a `phases` row with `kind='agent'` and a non-null `owner`, plus its own spans. Manifest agents get this from `run.phase(...)`. An orchestrator subagent spawned via opencode's `task` tool gets it from `agents._materialize_subagent(run, phase, parent_agent, event)`: the `subagent_dispatch` forwarder branch writes that phase row + spans (`phase_start` → `agent_start` → `subagent_dispatch` → `agent_end` → `phase_end`) in the same shape as a manifest agent, so the visualizer draws it as its own lane stacked under the dispatcher. The subagent runs inside the dispatcher's opencode session, so its lane inherits the dispatcher's configured model/coding surface; its live `session_id` and context occupancy are unknown at completion, so they are omitted (no context bar, honest label). **No `agent_sessions` row is written for a dispatch** — that table's key is `(smidja_id, agent)`, so a task-dispatched `scout` must never overwrite a same-named manifest scout. Because the dispatch event is terminal (opencode reports the task *result*), these lanes are written at completion with `started_at` ≈ `ended_at`; the UI's minimum block width keeps them readable. Subagent lane `seq = parent.seq + 1000 + <counter>` (per-run `_subagent_counter` in `runner.py`), so they sort after every manifest phase and never collide.
 
 **Historical runs** (recorded before this fix) can be backfilled with
-`python3 scripts/backfill-subagent-lanes.py <factory.db> [--apply]` — it replays the
+`python3 scripts/backfill-subagent-lanes.py <smidja.db> [--apply]` — it replays the
 same materialization from stored `subagent_dispatch` events (idempotent, backs
 up first). It only fingerprints dispatches whose `phase_id` is a manifest phase
 (`NOT LIKE '%::%'`), so the backfill's own span events can never cascade.
 
-**Derived, never stored:** phase durations (`ended_at − started_at`), session phase-progress (query `phases` by `factory_id`), lane layout (`kind` + `owner`).
+**Derived, never stored:** phase durations (`ended_at − started_at`), session phase-progress (query `phases` by `smidja_id`), lane layout (`kind` + `owner`).
 
 Phase status invariants: `queued` only for manifest-declared phases not yet entered (dashed in the UI); `running` on enter; only a clean exit writes `success` — agent phases additionally need the envelope parsed and gates green; everything else resolves to `fail`.
 
@@ -151,7 +151,7 @@ PRAGMA synchronous=NORMAL;
 PRAGMA busy_timeout=5000;
 ```
 
-WAL allows readers during writes. Writers are the tracers of running factory processes; concurrent writers are fine given one small transaction per event plus `busy_timeout`. The visualizer reads on a readonly connection with exactly one exception: archiving a session (`POST /api/sessions/:factory_id/archive`) opens a second connection to set `sessions.archived`. That flag is review triage — it says a human has looked at the run — so it is the reader's state living on the row, and no tracer ever writes or reads it.
+WAL allows readers during writes. Writers are the tracers of running smidja processes; concurrent writers are fine given one small transaction per event plus `busy_timeout`. The visualizer reads on a readonly connection with exactly one exception: archiving a session (`POST /api/sessions/:smidja_id/archive`) opens a second connection to set `sessions.archived`. That flag is review triage — it says a human has looked at the run — so it is the reader's state living on the row, and no tracer ever writes or reads it.
 
 ## Polling contract
 
@@ -160,7 +160,7 @@ WAL allows readers during writes. Writers are the tracers of running factory pro
 Live view polls on a rowid cursor every `observability.poll_ms` (default 500):
 
 ```sql
-SELECT ... FROM events WHERE factory_id = ? AND rowid > ? ORDER BY rowid LIMIT 500;
+SELECT ... FROM events WHERE smidja_id = ? AND rowid > ? ORDER BY rowid LIMIT 500;
 ```
 
 Keep the highest `rowid` returned as the next cursor. History is **the same queries** with filters, lazy-paged as the engineer scrolls or drills in — one mechanism serves both live and past runs, which is why there is no separate replay path.

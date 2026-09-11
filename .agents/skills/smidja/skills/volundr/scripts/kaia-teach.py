@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""kaia-teach.py — bulk-teach a project into Kaia's memory (wraps factory teach).
+"""kaia-teach.py — bulk-teach a project into Kaia's memory (wraps smidja teach).
 
 Usage:
     kaia-teach.py <project> [--recon] [--root /home/zerwiz/command]
@@ -7,7 +7,7 @@ Usage:
 Reads the project's key files (AGENTS.md, CHANGELOG.md, deploy/start/stop
 scripts, scripts/*.sh) and observes each into the engram — no agent tokens.
 `--recon` additionally sends the 9b scout to map the codebase and observes the
-findings. Thin wrapper around `scripts/factory teach` so it always uses the
+findings. Thin wrapper around `scripts/smidja teach` so it always uses the
 current launcher logic.
 """
 import argparse
@@ -28,12 +28,12 @@ def main() -> int:
     ap.add_argument("--root", default=str(ROOT), help="command repo root")
     args = ap.parse_args()
 
-    factory = Path(args.root) / "scripts" / "factory"
-    if not factory.exists():
-        print(f"[kaia] no launcher at {factory}", file=sys.stderr)
+    smidja = Path(args.root) / "scripts" / "smidja"
+    if not smidja.exists():
+        print(f"[kaia] no launcher at {smidja}", file=sys.stderr)
         return 1
 
-    cmd = [str(factory), "teach", args.project]
+    cmd = [str(smidja), "teach", args.project]
     if args.recon:
         cmd.append("--recon")
     print(f"[kaia] running: {' '.join(cmd)}")

@@ -1,8 +1,8 @@
 /**
- * SQLite reader over a target repo's factory.db.
+ * SQLite reader over a target repo's smidja.db.
  *
  * The read connection is opened readonly and every query on it is a SELECT —
- * the writers are the tracers of running factory processes, and WAL lets us read
+ * the writers are the tracers of running smidja processes, and WAL lets us read
  * straight through their inserts.
  *
  * ONE exception, opened lazily on its own connection: `setArchived`. Archiving
@@ -32,7 +32,7 @@ import type {
   StatsResponse,
 } from "../shared/types.ts";
 
-const DEFAULT_DB_RELATIVE = "factory/factory_data/factory.db";
+const DEFAULT_DB_RELATIVE = "smidja/smidja_data/smidja.db";
 const MAX_LIMIT = 1000;
 const DEFAULT_LIMIT = 500;
 
@@ -121,14 +121,14 @@ const isLocalModel = (model: string) =>
 const FIXES: Record<string, string> = {
   JSON_CONTRACT: "use a stronger model for the agent (deepseek-v4-flash via ocrd), or harden its user.md: 'Respond with ONLY valid JSON matching <Type>'",
   EMPTY_COMMIT: "drop the redundant commit phase, or gate it on `git status --porcelain` being non-empty",
-  STOPPED: "run was killed (SIGTERM) — re-run with more time or resume with --factory-id",
+  STOPPED: "run was killed (SIGTERM) — re-run with more time or resume with --smidja-id",
   AGENT_EXIT: "agent process exited 1 — check the raw stream for the failing tool call",
   HALLUCINATED_BUILD: "builder must actually run tools before reporting — enforce the tool-use mandate in builder/system.md",
   HALLUCINATED_COORDINATION: "orchestrator must dispatch subagents before reporting — enforce in orchestrator/system.md",
-  UNKNOWN: "inspect the run with `factory audit` / `factory diagnose`",
+  UNKNOWN: "inspect the run with `smidja audit` / `smidja diagnose`",
 };
 
-/** Map a failed phase + error to a failure class (mirrors factory diagnose). */
+/** Map a failed phase + error to a failure class (mirrors smidja diagnose). */
 export function classifyFailure(phase: string, error: string | null): string {
   const err = error ?? "";
   if (err.includes("never produced valid") || err.includes("JSON")) return "JSON_CONTRACT";
@@ -141,7 +141,7 @@ export function classifyFailure(phase: string, error: string | null): string {
 }
 
 /**
- * Resolve the db path: --db arg wins, then CMD_DB, then <cwd>/factory/factory_data/factory.db.
+ * Resolve the db path: --db arg wins, then CMD_DB, then <cwd>/smidja/smidja_data/smidja.db.
  * The db lives in the TARGET repo, so cwd is the repo the visualizer is pointed at.
  */
 export function resolveDbPath(argv: string[] = Bun.argv): string {
@@ -156,32 +156,32 @@ export function resolveDbPath(argv: string[] = Bun.argv): string {
   return isAbsolute(raw) ? raw : resolve(process.cwd(), raw);
 }
 
-export class factoryDb {
+export class smidjaDb {
   readonly path: string;
   /**
-   * Where the factory session dirs live: `{data_dir}/sessions/{factory_id}/{agent}/`.
+   * Where the smidja session dirs live: `{data_dir}/sessions/{smidja_id}/{agent}/`.
    * The db sits in the same data_dir (config's `observability.db` defaults to
-   * `factory/factory_data/factory.db`), so deriving it as a sibling of the db file keeps
+   * `smidja/smidja_data/smidja.db`), so deriving it as a sibling of the db file keeps
    * working when the whole data_dir is relocated.
    */
   readonly sessionsDir: string;
   readonly journalMode: string;
   private readonly db: Database;
   /** Opened on first archive and kept; null until then. */
-  /// ghost: Kaia auto-admission one-shots (factory_prompt 'What Kaia already
-  /// remembers…' / 'You are admitting factory session…') are plumbing, already
+  /// ghost: Kaia auto-admission one-shots (smidja_prompt 'What Kaia already
+  /// remembers…' / 'You are admitting smidja session…') are plumbing, already
   /// recorded inside the parent run as handoff/admitted events. Hide them from
   /// the session list unless CMD_SHOW_ADMISSIONS=1.
   private admissionFilter(): string {
     if (process.env.CMD_SHOW_ADMISSIONS === "1") return "";
-    const isName = this.hasColumn("sessions", "factory_name");
+    const isName = this.hasColumn("sessions", "smidja_name");
     const nameCond = isName
-      ? "factory_name = 'factory_prompt' AND"
+      ? "smidja_name = 'smidja_prompt' AND"
       : "";
     return (
       " AND NOT COALESCE(" +
       nameCond +
-      " (request LIKE 'What Kaia already remembers%' OR request LIKE 'You are admitting factory session%'), 0)"
+      " (request LIKE 'What Kaia already remembers%' OR request LIKE 'You are admitting smidja session%'), 0)"
     );
   }
   private writer: Database | null = null;
@@ -191,7 +191,7 @@ export class factoryDb {
   constructor(path: string) {
     if (!existsSync(path)) {
       throw new Error(
-        `factory.db not found at ${path}\n` +
+        `smidja.db not found at ${path}\n` +
           `Point the visualizer at a target repo: --db <path> or CMD_DB=<path>, ` +
           `or run it from a repo root containing ${DEFAULT_DB_RELATIVE}`,
       );
@@ -271,22 +271,22 @@ export class factoryDb {
    */
   setArchived(adwId: string, archived: boolean): boolean {
     if (!this.hasColumn("sessions", "archived")) {
-      throw new Error("this db predates the archived column — run any factory once to migrate it");
+      throw new Error("this db predates the archived column — run any smidja once to migrate it");
     }
     if (!this.writer) {
       this.writer = new Database(this.path);
       this.writer.exec("PRAGMA busy_timeout=5000;");
     }
     this.writer
-      .query("UPDATE sessions SET archived = ? WHERE factory_id = ?")
+      .query("UPDATE sessions SET archived = ? WHERE smidja_id = ?")
       .run(archived ? 1 : 0, adwId);
     return this.session(adwId) !== null;
   }
 
   /** Live processes of a run — what a Stop button must SIGTERM, children first.
    *
-   * Rows keep `ended_at NULL` until the factory finalizes them; that does not
-   * happen if the factory was killed from code predating the SIGTERM handler,
+   * Rows keep `ended_at NULL` until the smidja finalizes them; that does not
+   * happen if the smidja was killed from code predating the SIGTERM handler,
    * crashed, or was SIGKILL'd. A still-open row can then point at a process
    * that is already dead, and dead pids must not be signalled (Stop/Pause
    * acting on ghosts). Each row is checked against the live process table. */
@@ -296,7 +296,7 @@ export class factoryDb {
         { kind: string; name: string; pid: number; command: string },
         [string]
       >(
-        "SELECT kind, name, pid, command FROM processes WHERE factory_id = ? AND ended_at IS NULL ORDER BY id",
+        "SELECT kind, name, pid, command FROM processes WHERE smidja_id = ? AND ended_at IS NULL ORDER BY id",
       )
       .all(adwId);
     return rows.filter((r) => pidAlive(r.pid));
@@ -304,17 +304,17 @@ export class factoryDb {
 
   /**
    * Server-side half of Stop: close a run's process rows and mark the session
-   * finished. The running factory does this itself on SIGTERM (session.py's
+   * finished. The running smidja does this itself on SIGTERM (session.py's
    * `_finalize_when_killed`), but only when it runs code with that handler and
    * the signal lands cleanly. When it does not (old code, crash, SIGKILL) the
    * rows would say "running" for ever. Idempotent: a run already settled by
-   * the factory (or a session already terminal) is left untouched. Phases that are
+   * the smidja (or a session already terminal) is left untouched. Phases that are
    * still `running` are closed as `fail` too, so a stopped run does not show a
    * phase that claims to be in flight long after its processes are gone.
    */
   finalizeStopped(adwId: string): void {
     const row = this.db
-      .query<{ status: string | null }, [string]>("SELECT status FROM sessions WHERE factory_id = ?")
+      .query<{ status: string | null }, [string]>("SELECT status FROM sessions WHERE smidja_id = ?")
       .get(adwId);
     if (!row) return;
     if (row.status === "success" || row.status === "fail") return;
@@ -323,16 +323,16 @@ export class factoryDb {
     this.writer!.exec("BEGIN");
     try {
       this.writer!
-        .query("UPDATE processes SET ended_at = ? WHERE factory_id = ? AND ended_at IS NULL")
+        .query("UPDATE processes SET ended_at = ? WHERE smidja_id = ? AND ended_at IS NULL")
         .run(now, adwId);
       this.writer!
         .query(
           "UPDATE phases SET status = 'fail', error = COALESCE(error, 'stopped'), ended_at = ? " +
-            "WHERE factory_id = ? AND status = 'running'",
+            "WHERE smidja_id = ? AND status = 'running'",
         )
         .run(now, adwId);
       this.writer!
-        .query("UPDATE sessions SET status = 'fail', ended_at = ? WHERE factory_id = ?")
+        .query("UPDATE sessions SET status = 'fail', ended_at = ? WHERE smidja_id = ?")
         .run(now, adwId);
       this.writer!.exec("COMMIT");
     } catch (error) {
@@ -353,38 +353,38 @@ export class factoryDb {
   /**
    * Reconcile stale `running` rows against reality before they are served.
    *
-   * A run is `running` until its factory finalizes it. If that factory was killed
+   * A run is `running` until its smidja finalizes it. If that smidja was killed
    * from code with no SIGTERM finalizer, crashed, or was SIGKILL'd, the row
    * stays `running` forever with open process rows — the trace claims work is
    * in flight that is already dead, and the L1 card keeps offering Stop/Pause
-   * that can only act on ghosts. A running session always has its own factory
+   * that can only act on ghosts. A running session always has its own smidja
    * process registered, so: for every session still marked running, if none of
    * its registered pids are alive any more, finalize it as failed. Idempotent
-   * and safe for genuinely-live runs (their factory pid is alive). Cheap: it only
+   * and safe for genuinely-live runs (their smidja pid is alive). Cheap: it only
    * scans the small set of non-terminal sessions. Called at startup and on the
    * L1 list route.
    */
   reconcileStaleRunning(): number {
     // A fresh/new db (0 bytes) has no tables yet — the tracer creates them on
     // its first run. Reading against an empty schema would crash the server
-    // ("no such table"), so a brand-new factory.db is treated as having
+    // ("no such table"), so a brand-new smidja.db is treated as having
     // nothing to reconcile. Tables appear as soon as the first agent runs.
     if (!this.hasTable("sessions")) return 0;
     const running = this.db
-      .query<{ factory_id: string }, []>(
-        "SELECT DISTINCT factory_id FROM sessions WHERE status = 'running'",
+      .query<{ smidja_id: string }, []>(
+        "SELECT DISTINCT smidja_id FROM sessions WHERE status = 'running'",
       )
       .all();
     let closed = 0;
-    for (const { factory_id } of running) {
+    for (const { smidja_id } of running) {
       const procs = this.db
         .query<{ pid: number }, [string]>(
-          "SELECT pid FROM processes WHERE factory_id = ? AND ended_at IS NULL",
+          "SELECT pid FROM processes WHERE smidja_id = ? AND ended_at IS NULL",
         )
-        .all(factory_id);
+        .all(smidja_id);
       if (procs.length === 0) continue; // no process rows — leave it for the winner
       if (procs.some((p) => pidAlive(p.pid))) continue; // still genuinely live
-      this.finalizeStopped(factory_id);
+      this.finalizeStopped(smidja_id);
       closed += 1;
     }
     // A session that is already terminal but still has `running` phases means a
@@ -398,8 +398,8 @@ export class factoryDb {
   /** Close any `running` phases whose session is already terminal (success/fail). */
   private closeOrphanPhases(): number {
     const orphans = this.db
-      .query<{ factory_id: string }, []>(
-        "SELECT ph.factory_id FROM phases ph JOIN sessions s ON s.factory_id = ph.factory_id " +
+      .query<{ smidja_id: string }, []>(
+        "SELECT ph.smidja_id FROM phases ph JOIN sessions s ON s.smidja_id = ph.smidja_id " +
           "WHERE ph.status = 'running' AND s.status IN ('success','fail')",
       )
       .all();
@@ -408,13 +408,13 @@ export class factoryDb {
     const now = new Date().toISOString();
     this.writer!.exec("BEGIN");
     try {
-      for (const { factory_id } of orphans) {
+      for (const { smidja_id } of orphans) {
         this.writer!
           .query(
             "UPDATE phases SET status = 'fail', error = COALESCE(error, 'stopped'), ended_at = ? " +
-              "WHERE factory_id = ? AND status = 'running'",
+              "WHERE smidja_id = ? AND status = 'running'",
           )
-          .run(now, factory_id);
+          .run(now, smidja_id);
       }
       this.writer!.exec("COMMIT");
     } catch (error) {
@@ -431,13 +431,13 @@ export class factoryDb {
    */
   liveRunIds(): string[] {
     const rows = this.db
-      .query<{ factory_id: string; pid: number }, []>(
-        "SELECT DISTINCT factory_id, pid FROM processes WHERE ended_at IS NULL",
+      .query<{ smidja_id: string; pid: number }, []>(
+        "SELECT DISTINCT smidja_id, pid FROM processes WHERE ended_at IS NULL",
       )
       .all();
     const seen = new Set<string>();
     for (const r of rows) {
-      if (pidAlive(r.pid)) seen.add(r.factory_id);
+      if (pidAlive(r.pid)) seen.add(r.smidja_id);
     }
     return [...seen];
   }
@@ -452,12 +452,12 @@ export class factoryDb {
       return { total_failed: 0, decisions: [], generated_at: new Date().toISOString() };
     }
     const failed = this.db
-      .query<{ factory_id: string; factory_name: string; model: string | null; phase: string; error: string; ran_at: string }, []>(
-        `SELECT s.factory_id, s.factory_name, ag.model, ph.name AS phase, ph.error,
+      .query<{ smidja_id: string; smidja_name: string; model: string | null; phase: string; error: string; ran_at: string }, []>(
+        `SELECT s.smidja_id, s.smidja_name, ag.model, ph.name AS phase, ph.error,
                 COALESCE(s.started_at, '') AS ran_at
          FROM sessions s
-         JOIN phases ph ON ph.factory_id = s.factory_id AND ph.status = 'fail'
-         LEFT JOIN agent_sessions ag ON ag.factory_id = s.factory_id AND ag.agent = ph.owner
+         JOIN phases ph ON ph.smidja_id = s.smidja_id AND ph.status = 'fail'
+         LEFT JOIN agent_sessions ag ON ag.smidja_id = s.smidja_id AND ag.agent = ph.owner
          WHERE s.status IN ('fail','running')
          ORDER BY s.started_at DESC`,
       )
@@ -479,7 +479,7 @@ export class factoryDb {
       }
       const b = buckets.get(key)!;
       b.count += 1;
-      b.runs.push(row.factory_id);
+      b.runs.push(row.smidja_id);
       if (row.ran_at > b.last_seen) b.last_seen = row.ran_at;
     }
     const decisions = [...buckets.values()].toSorted((a, b) => b.count - a.count);
@@ -513,8 +513,8 @@ export class factoryDb {
       };
     }
     const sessions = this.db
-      .query<{ factory_id: string; factory_name: string; status: string | null; engineer: string | null; total_tokens: number | null; total_cost: number | null; started_at: string | null }, []>(
-        `SELECT factory_id, factory_name, status, engineer, total_tokens, total_cost, started_at
+      .query<{ smidja_id: string; smidja_name: string; status: string | null; engineer: string | null; total_tokens: number | null; total_cost: number | null; started_at: string | null }, []>(
+        `SELECT smidja_id, smidja_name, status, engineer, total_tokens, total_cost, started_at
          FROM sessions ORDER BY started_at DESC`,
       )
       .all();
@@ -557,17 +557,17 @@ export class factoryDb {
       input: 0, output: 0, cache_read: 0, coding_agent: null,
     });
     for (const s of sessions) {
-      const evs = this.eventsRaw(s.factory_id);
+      const evs = this.eventsRaw(s.smidja_id);
       let r = 0, t = 0;
       for (const e of evs) {
         if (e.type === "agent_start") {
           const sp = e.payload as { model?: string; coding_agent?: string };
           if (sp?.model) {
-            const key = `${s.factory_id}|${e.name}`;
+            const key = `${s.smidja_id}|${e.name}`;
             if (!agentModel.has(key)) {
               const st = started.get(sp.model) ?? { events: 0, sessions: new Set<string>(), coding_agent: sp.coding_agent ?? null };
               st.events += 1;
-              st.sessions.add(s.factory_id);
+              st.sessions.add(s.smidja_id);
               st.coding_agent = sp.coding_agent ?? st.coding_agent;
               started.set(sp.model, st);
             }
@@ -587,18 +587,18 @@ export class factoryDb {
         usage.total += u.total_tokens ?? 0;
         r += u.cache_read_tokens ?? 0;
         t += (u.input_tokens ?? 0) + (u.cache_read_tokens ?? 0);
-        const model = e.name ? agentModel.get(`${s.factory_id}|${e.name}`) : undefined;
+        const model = e.name ? agentModel.get(`${s.smidja_id}|${e.name}`) : undefined;
         if (!model) continue;
         const usageCost = (u.input_cost ?? 0) + (u.output_cost ?? 0) + (u.cache_read_cost ?? 0) + (u.cache_write_cost ?? 0);
         const agg = modelAggs.get(model) ?? emptyAgg();
         agg.events += 1;
-        agg.sessions.add(s.factory_id);
+        agg.sessions.add(s.smidja_id);
         agg.tokens += u.total_tokens ?? 0;
         agg.cost += usageCost || (p.cost ?? 0);
         agg.input += u.input_tokens ?? 0;
         agg.output += u.output_tokens ?? 0;
         agg.cache_read += u.cache_read_tokens ?? 0;
-        const coding = e.name ? agentCoding.get(`${s.factory_id}|${e.name}`) : undefined;
+        const coding = e.name ? agentCoding.get(`${s.smidja_id}|${e.name}`) : undefined;
         agg.coding_agent = coding ?? agg.coding_agent;
         modelAggs.set(model, agg);
       }
@@ -679,7 +679,7 @@ export class factoryDb {
     const byChain = new Map<string, { runs: number; success: number; tokens: number; cost: number }>();
     const byModel = new Map<string, { runs: number; success: number; tokens: number; cost: number }>();
     for (const s of sessions) {
-      const chain = (s.factory_name ?? "factory").split(" + ")[0];
+      const chain = (s.smidja_name ?? "smidja").split(" + ")[0];
       const chainAgg = byChain.get(chain) ?? { runs: 0, success: 0, tokens: 0, cost: 0 };
       chainAgg.runs += 1;
       if (s.status === "success") chainAgg.success += 1;
@@ -687,12 +687,12 @@ export class factoryDb {
       chainAgg.cost += s.total_cost ?? 0;
       byChain.set(chain, chainAgg);
 
-      const modelAgg = byModel.get(s.factory_name ?? "?") ?? { runs: 0, success: 0, tokens: 0, cost: 0 };
+      const modelAgg = byModel.get(s.smidja_name ?? "?") ?? { runs: 0, success: 0, tokens: 0, cost: 0 };
       modelAgg.runs += 1;
       if (s.status === "success") modelAgg.success += 1;
       modelAgg.tokens += s.total_tokens ?? 0;
       modelAgg.cost += s.total_cost ?? 0;
-      byModel.set(s.factory_name ?? "?", modelAgg);
+      byModel.set(s.smidja_name ?? "?", modelAgg);
     }
 
     return {
@@ -730,7 +730,7 @@ export class factoryDb {
     const where = clean.length ? `WHERE ${clean.join(" AND ")}` : "";
     const rows = this.db
       .query<Session, [number]>(
-        `SELECT factory_id, ${this.optionalColumn("sessions", "factory_name")}, request,
+        `SELECT smidja_id, ${this.optionalColumn("sessions", "smidja_name")}, request,
                 status, engineer, started_at, ended_at,
                 total_tokens, total_cost,
                 ${this.optionalColumn("sessions", "archived")}
@@ -744,21 +744,21 @@ export class factoryDb {
     if (rows.length === 0) return [];
 
     // Embed each session's phases so the L1 progress dots cost no extra request.
-    const ids = rows.map((row) => row.factory_id);
+    const ids = rows.map((row) => row.smidja_id);
     const placeholders = ids.map(() => "?").join(", ");
     const phaseRows = this.db
       .query<Phase, string[]>(
-        `SELECT phase_id, factory_id, seq, name, kind, owner, description, status,
+        `SELECT phase_id, smidja_id, seq, name, kind, owner, description, status,
                 attempt, retries, error, started_at, ended_at
-           FROM phases WHERE factory_id IN (${placeholders}) ORDER BY seq, rowid`,
+           FROM phases WHERE smidja_id IN (${placeholders}) ORDER BY seq, rowid`,
       )
       .all(...ids);
 
     const byAdw = new Map<string, Phase[]>();
     for (const phase of phaseRows) {
-      const list = byAdw.get(phase.factory_id);
+      const list = byAdw.get(phase.smidja_id);
       if (list) list.push(phase);
-      else byAdw.set(phase.factory_id, [phase]);
+      else byAdw.set(phase.smidja_id, [phase]);
     }
 
     // Agents come along too: an L1 card draws a per-agent dot timeline, and its
@@ -767,15 +767,15 @@ export class factoryDb {
 
     const summaries: SessionSummary[] = [];
     for (const session of rows) {
-      const phases = byAdw.get(session.factory_id) ?? [];
+      const phases = byAdw.get(session.smidja_id) ?? [];
       summaries.push(
         Object.assign(session, {
           phases,
           phase_count: phases.length,
-          agents: agentsByAdw.get(session.factory_id) ?? [],
+          agents: agentsByAdw.get(session.smidja_id) ?? [],
           // Derived from the session's first agent for the chat sidebar's past
           // list (SessionLaunch.model) — null when the db predates the column.
-          model: agentsByAdw.get(session.factory_id)?.[0]?.model ?? null,
+          model: agentsByAdw.get(session.smidja_id)?.[0]?.model ?? null,
         }),
       );
     }
@@ -786,10 +786,10 @@ export class factoryDb {
     return (
       this.db
         .query<Session, [string]>(
-          `SELECT factory_id, ${this.optionalColumn("sessions", "factory_name")}, request,
+          `SELECT smidja_id, ${this.optionalColumn("sessions", "smidja_name")}, request,
                   status, engineer, started_at, ended_at,
                   total_tokens, total_cost
-             FROM sessions WHERE factory_id = ?`,
+             FROM sessions WHERE smidja_id = ?`,
         )
         .get(adwId) ?? null
     );
@@ -798,9 +798,9 @@ export class factoryDb {
   phases(adwId: string): Phase[] {
     return this.db
       .query<Phase, [string]>(
-        `SELECT phase_id, factory_id, seq, name, kind, owner, description, status,
+        `SELECT phase_id, smidja_id, seq, name, kind, owner, description, status,
                 attempt, retries, error, started_at, ended_at
-           FROM phases WHERE factory_id = ? ORDER BY seq, rowid`,
+           FROM phases WHERE smidja_id = ? ORDER BY seq, rowid`,
       )
       .all(adwId);
   }
@@ -835,27 +835,27 @@ export class factoryDb {
 
     const completed = this.db
       .query<AgentSession, string[]>(
-        `SELECT factory_id, agent, coding_agent, model, session_id, ${color},
+        `SELECT smidja_id, agent, coding_agent, model, session_id, ${color},
                 ${ctxUsed}, ${ctxWindow}, created_at, last_used_at
-           FROM agent_sessions WHERE factory_id IN (${placeholders})
+           FROM agent_sessions WHERE smidja_id IN (${placeholders})
           ORDER BY created_at, agent`,
       )
       .all(...adwIds);
-    for (const row of completed) append(row.factory_id, row);
+    for (const row of completed) append(row.smidja_id, row);
 
     const started = this.db
       .query<
         {
-          factory_id: string;
+          smidja_id: string;
           agent: string | null;
           payload_json: string | null;
           started_at: string | null;
         },
         string[]
       >(
-        `SELECT e.factory_id, p.owner AS agent, e.payload_json, e.started_at
+        `SELECT e.smidja_id, p.owner AS agent, e.payload_json, e.started_at
            FROM events e JOIN phases p ON p.phase_id = e.phase_id
-          WHERE e.factory_id IN (${placeholders}) AND e.type = 'agent_start'
+          WHERE e.smidja_id IN (${placeholders}) AND e.type = 'agent_start'
           ORDER BY e.rowid`,
       )
       .all(...adwIds);
@@ -863,15 +863,15 @@ export class factoryDb {
     for (const row of started) {
       if (!row.agent) continue;
       // A finished row is authoritative; only fill genuine gaps.
-      if (byAdw.get(row.factory_id)?.some((a) => a.agent === row.agent)) continue;
+      if (byAdw.get(row.smidja_id)?.some((a) => a.agent === row.agent)) continue;
       let payload: AgentStartPayload = {};
       try {
         payload = JSON.parse(row.payload_json ?? "{}") as AgentStartPayload;
       } catch {
         // A malformed payload just means no label — never a failed request.
       }
-      append(row.factory_id, {
-        factory_id: row.factory_id,
+      append(row.smidja_id, {
+        smidja_id: row.smidja_id,
         agent: row.agent,
         coding_agent: null,
         model: payload.model ?? null,
@@ -915,7 +915,7 @@ export class factoryDb {
   usage(adwId: string): SessionUsage {
     const rows = this.db
       .query<{ payload_json: string | null }, [string]>(
-        "SELECT payload_json FROM events WHERE factory_id = ? AND type = 'agent_end'",
+        "SELECT payload_json FROM events WHERE smidja_id = ? AND type = 'agent_end'",
       )
       .all(adwId);
 
@@ -950,7 +950,7 @@ export class factoryDb {
   eventsRaw(adwId: string): { type: string; name: string | null; payload: Record<string, unknown> }[] {
     const rows = this.db
       .query<{ type: string; name: string | null; payload_json: string | null }, [string]>(
-        "SELECT type, name, payload_json FROM events WHERE factory_id = ? ORDER BY rowid",
+        "SELECT type, name, payload_json FROM events WHERE smidja_id = ? ORDER BY rowid",
       )
       .all(adwId);
     return rows.map((r) => ({ type: r.type, name: r.name, payload: (r.payload_json ? JSON.parse(r.payload_json) : {}) as Record<string, unknown> }));
@@ -960,10 +960,10 @@ export class factoryDb {
     const cappedLimit = clamp(limit, 1, MAX_LIMIT);
     const events = this.db
       .query<Event, [string, number, number]>(
-        `SELECT rowid, event_id, factory_id, phase_id, parent_id, type, name,
+        `SELECT rowid, event_id, smidja_id, phase_id, parent_id, type, name,
                 payload_json, tokens, started_at, ended_at
            FROM events
-          WHERE factory_id = ? AND rowid > ?
+          WHERE smidja_id = ? AND rowid > ?
           ORDER BY rowid
           LIMIT ?`,
       )
@@ -979,9 +979,9 @@ export class factoryDb {
   envelopes(adwId: string): Envelope[] {
     return this.db
       .query<Envelope, [string]>(
-        `SELECT envelope_id, factory_id, phase_id, agent, output_type, payload_json,
+        `SELECT envelope_id, smidja_id, phase_id, agent, output_type, payload_json,
                 valid, attempt, created_at
-           FROM envelopes WHERE factory_id = ? ORDER BY created_at, rowid`,
+           FROM envelopes WHERE smidja_id = ? ORDER BY created_at, rowid`,
       )
       .all(adwId);
   }
@@ -990,9 +990,9 @@ export class factoryDb {
     const checks = this.optionalColumn("gate_results", "checks_json");
     return this.db
       .query<GateResult, [string]>(
-        `SELECT id, factory_id, phase_id, attempt, gate, passed, violations_json,
+        `SELECT id, smidja_id, phase_id, attempt, gate, passed, violations_json,
                 ${checks}, created_at
-           FROM gate_results WHERE factory_id = ? ORDER BY id`,
+           FROM gate_results WHERE smidja_id = ? ORDER BY id`,
       )
       .all(adwId);
   }

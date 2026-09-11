@@ -1,170 +1,287 @@
-# YMIR — Agent Operating System
+# YMIR — The Multi-Tenant Agent Operating System
 
-A lean, single-operator agentic OS. Run an entire business, development, and personal life from one repo — powered by an autonomous Norse-named agent fleet.
+> **One operator. One repo. A whole business, run by a Norse-named agent fleet.**
 
-## Lore (short version)
+![Ymir — the multi-tenant agent OS](assets/ymir-banner-03.png)
 
-Ymir is not a theme — the myths are **load-bearing allegory**. The platform is the
-primordial giant **Ymir**, slain so that the worlds could stand: **this** Ymir
-stands, and from it the realms are carved. The fleet is the dwarf brothers —
-**Brokk** at the bellows, **Eindri** at the craft — who out-forged the gods.
-**Mimirsbrunn** is the well of memory at the root of **Yggdrasil**: the well is
-engram (open-source, single-file vector memory), and **Kaia** is the oracle that
-speaks from it. Every action is carved into **Runes** — an append-only ledger — and
-the fleet forges for **houses**: Ymir Labs, Brokk Forge, Runestone (Runir), Muninn
-Labs, Dvalin, Utgard Studios, Askr, and Mannheim. Work runs through **seven
-gates** (Bifrost → Ratatoskr), built on **borrowed anvils** (open source first),
-forged first in light metals (TypeScript, Python, React, Vue) and re-forged in
-**Rut-steel** once the machine works end to end.
+Ymir is a lean, single-operator agentic OS. You are the **Allfather**; **Brokk** is
+your primary agent; **Eindri** are the isolated workers it dispatches. Everything —
+development, marketing, business strategy, life — runs from one repository, with an
+audit ledger, a memory well, seven realms, and a control plane you actually look at.
 
-Each house is a real venture; each subsystem name is chosen because the myth
-already describes the machine's job. The full tale, realm by realm: [`docs/lore.md`](docs/lore.md).
+---
+
+## The Lore (short version)
+
+Ymir is not a theme — the myths are **load-bearing allegory**. Every subsystem is
+named for the figure whose role matches the machine's job:
+
+The platform is the primordial giant **Ymir**, from whose body the worlds were
+carved. The smiths are **Brokk** (the bellows-smith, your primary agent) and
+**Eindri** (the workers who out-forged the gods). Memory is **Mimirsbrunn**, the
+well at the root of **Yggdrasil**, and **Kaia** is the oracle who speaks from it.
+Every significant action is carved into **Runes**, an append-only ledger. Work
+passes the **seven gates** and is built on **borrowed anvils** — validated open
+source first, always. The full tale: [`docs/lore.md`](docs/lore.md).
+
+| Realm | Role |
+|---|---|
+| **Ymir** | the platform / host daemon |
+| **Brokk** | the primary autonomous agent |
+| **Eindri** | isolated workers — Sindri, Bragi, Huginn, Mímir, Forseti, Snotra, Kvasir |
+| **Mimirsbrunn** | the memory well (engram) + Kaia's bridge |
+| **Yggdrasil** | git worktrees — zero-collision parallelism |
+| **Utgard** | ephemeral Docker sandboxes — the execution barrier |
+| **Runes** | the append-only audit ledger |
+| **Hlidskjalf** | the control plane / observability |
+
+---
+
+## What it is
+
+- **A distro, not an app.** Launch a supported harness in the repo and you take the
+  high seat: context is injected before your first turn, the model bridge is raised,
+  the scheduled jobs start.
+- **Isolation by default.** Complex work runs in **Yggdrasil** worktrees sealed by
+  **Utgard** sandboxes; a failed run never touches main.
+- **Audit everything.** **Runes** is an append-only, checksum-chained ledger.
+- **Memory that grounds.** **Mimirsbrunn** (engram) is drunk from before dispatch and
+  watered after; a dry well never blocks.
+- **Humans in the loop.** **Mjollnir** opens PRs; nothing force-merges.
+- **Open source first.** Ymir owns only three things — the UI, the runtime, and
+  A2A collaboration. Everything else wears a Norse name over a validated engine.
+
+---
 
 ## System Map
 
 | Subsystem | Norse Name | Role |
-|-----------|-----------|------|
-| Platform Root | **Ymir** | Master daemon, host OS |
-| Main Agent | **Brokk** | Autonomous worker |
-| Sub-Agent Workers | **Eindri** | Isolated sandboxed workers |
-| Git Worktrees | **Yggdrasil** | Zero-collision parallel edits |
-| Docker Sandbox | **Utgard** | Ephemeral execution barrier |
-| Gateway | **Bifrost** | Reverse proxy / HTTP routing |
-| OAuth Guard | **Heimdall** | GitHub OAuth authentication |
+|---|---|---|
+| Platform root | **Ymir** | master daemon / host OS |
+| Primary agent | **Brokk** | the autonomous operator's hand |
+| Sub-agent workers | **Eindri** | isolated sandboxed workers |
+| Git worktrees | **Yggdrasil** | zero-collision parallel edits |
+| Docker sandbox | **Utgard** | ephemeral execution barrier |
+| Gateway | **Bifrost** | reverse proxy / HTTP routing |
+| Model bridge | **Bifrost bridge** | local OpenAI-compatible endpoint for the fleet |
+| OAuth guard | **Heimdall** | GitHub OAuth / JWT |
 | Tunnel | **Gjallarhorn** | Cloudflare outbound tunnel |
-| Dashboard | **Hlidskjalf** | Observability & control plane |
-| File Browser | **Skrymir** | Web file explorer |
-| Tenants | **Svartalfaheim** | Scoped realm workspaces |
-| Shared Space | **Midgard** | Cross-tenant assets & repos |
-| Message Bus | **Ratatoskr** | **A2A 1.0 backbone** — agent cards, task lifecycle, Redis queue |
-| Vector Memory | **Mimirsbrunn** | **engram store** (SQLite + vec + FTS5) served by Kaia's bridge (`:4602`) |
-| Audit Ledger | **Runes** | Append-only system log |
-| Issue→PR Pipeline | **Mjollnir** | Autonomous bug fixes & PRs |
-| Process Monitor | **Valhalla** | PM2/Docker supervisor |
-| Þjazi Backend | **Experimental** | Terminal pane backend for sub-agent visibility (protocol 14+) |
-| Skill Synthesis | **Gungnir** | Dynamic skill creation |
+| Dashboard | **Hlidskjalf** | observability & control plane |
+| File browser | **Skrymir** | web file explorer |
+| Tenants | **Svartalfaheim** | scoped realm workspaces |
+| Shared space | **Midgard** | cross-tenant assets & repos |
+| Message bus | **Ratatoskr** | A2A 1.0 backbone (cards, lifecycle, Redis) |
+| Vector memory | **Mimirsbrunn** | engram store + Kaia's bridge (`:4602`) |
+| Audit ledger | **Runes** | append-only system log |
+| Issue→PR | **Mjollnir** | autonomous fixes & PRs |
+| Process monitor | **Valhalla** | PM2/Docker supervision |
+| Skill synthesis | **Gungnir** | dynamic skill creation |
+| Session digest | **Sága** | the context injected at session open |
+| Watch / supervision | **Sýn** | watcher, guard, seat continuity |
+| Session lock | **Gleipnir** | one live session per home |
+| Scheduled jobs | **Nornir** | the fates who govern time |
 
-## 7 Realms (Ymir Rut)
+---
 
-Seven interlinked daemons, one minting: **Bifrost** (ingress gateway) ·
-**Hlidskjalf** (control plane & observability) · **Svartalfaheim** (tenant realm
-isolation, `sandbox_isolated`) · **Brokk** (autonomous agent workers) ·
-**Utgard** (ephemeral sandboxes, `docker_ephemeral`) · **Yggdrasil** (git
-worktree manager, `.treehouses`) · **Ratatoskr** (event bus / A2A backbone).
+## Skills
+
+Every reusable capability is a skill in [`.agents/skills/`](.agents/skills/), each
+named for the figure whose role matches the work (the Gungnir naming law). Galdr is
+the master builder; Tyr judges compliance.
+
+| Skill | Norse | Purpose |
+|---|---|---|
+| `galdr` | Galdr | agent-CLI ergonomics + master builder/maintainer of the runtime |
+| `tyr-check` | Tyr | the judge — validates tools/skills/docs against the 10 principles |
+| `smidja` | Smiðja | the smithy: roster + bounded phases + typed envelopes |
+| `modeltesting` | — | model evaluation harness |
+| `hvild-afk` | Hvíld | away-mode supervision: routine wakes self-handled, escalations batched |
+| `saga-bearings` | Sága | fleet status digest / pick up where I left off |
+| `saga-recap` | Sága | recap of visible events + unresolved decisions |
+| `muninn-stow` | Muninn | session-knowledge curation, routing, and persistence |
+| `jord-projects` | Jörð | project registry + delivery posture |
+| `urdh-decisions` | Urðr | decision-hold lifecycle |
+| `urdh-hold` | Urðr | captain-hold reconciliation |
+| `frigg-consent` | Frigg | consent / ask-user authority gate |
+| `vor-diagnostics` | Vör | bootstrap + diagnostic reasoning |
+| `nornir-events` | Nornir | process→event sources |
+| `nornir-quota` | Nornir | quota-aware dispatch selection |
+| `gjallarhorn-relay` | Gjallarhorn | public relay replies (X / Discord) |
+| `eindri-homes` | Eindri | isolated worker homes |
+| `syn-recovery` | Sýn | stuck-worker recovery playbook |
+| `ymir-update` | Ymir | self-update the running system and workers |
+| `hamr` | Hamr | per-harness adapter reference (OpenCode, Pi, Claude, Cursor, Codex) |
+
+The Galdr family enforces the 10 ergonomic principles (TOON output, minimal schemas,
+self-correcting errors) and the runtime acceptance gates; run
+`bash .agents/skills/galdr/scripts/compliance-check.sh` before claiming done.
+
+---
+
+## Agents
+
+The **Eindri** take a mythic name whose craft matches the job, and each runs in an
+Utgard sandbox on a Yggdrasil worktree.
+
+| Eindri | Figure | Craft | Speciality |
+|---|---|---|---|
+| **Sindri** | the smith | developer | code synthesis, refactoring, tests, CLIs |
+| **Bragi** | the skald | marketer | content, SEO, social, campaigns |
+| **Huginn** | the sage | researcher | RAG, web search, analysis |
+| **Mímir** | the wise | planner | architecture, sequencing, risk |
+| **Forseti** | the just | reviewer | review, QA, acceptance — changes nothing |
+| **Snotra** | the wise-woman | documenter | docs, write-ups, changelogs |
+| **Kvasir** | the knowing | scout | reconnaissance — changes nothing |
+
+Profiles live in [`.agents/agents/`](.agents/agents/) and are bound to each tool by
+`bin/valknut-load.sh` (OpenCode reads `.opencode/agent/`; Pi links resolve under
+`.pi/agents/`).
+
+---
+
+## The Runtime — taking the seat
+
+When a harness opens in the repo, **Sága** speaks before the first turn: the seat is
+bound by **Gleipnir**, the model bridge is raised, the **Nornir** jobs start, and
+the fleet context is injected (hidden, by design). Run-tier harnesses run the digest
+and inject it; nudge-tier harnesses are asked.
+
+| Harness | Session-start surface |
+|---|---|
+| **OpenCode** | `.opencode/plugins/{saga-sessionstart,syn-watch-arm,syn-turnend-guard}.js` |
+| **Pi** | `.pi/extensions/{syn-turnend-guard,gna-pi-watch,ro,skuld-branch-supervision}.ts` |
+| **Claude Code** | `.claude/settings.json` — `SessionStart` + `Stop` |
+| **Cursor** | `.cursor/hooks.json` — `sessionStart` + `stop` + `preToolUse` |
+| **Codex** | `.codex/hooks.json` — `SessionStart` + `PreToolUse` + `Stop` |
+
+- **Seat:** `bin/saga-session-start.sh` — the one ordered digest.
+- **Lock:** `bin/gleipnir-lock-lib.sh` — bound to the live session pid.
+- **Bridge:** `bin/bifrost-bridge.sh` — raises the local model endpoint.
+- **Jobs:** `bin/nornir-cron-start.sh` — daily briefing 07:00, observer, housekeeping, git sync.
+- **Watch:** `bin/syn-watch-arm.sh` + the harness adapter.
+
+Details: [`docs/session-start.md`](docs/session-start.md).
+
+---
+
+## The Control Plane — Hlidskjalf
+
+[`apps/hlidskjalf`](apps/hlidskjalf) is the dashboard. It runs **live** against a
+small local gate API that reads the runtime, or in **demo mode** on seeded data.
+
+```bash
+scripts/start.sh     # raises the gate API (:3889) + the SPA (:3888)
+scripts/stop.sh
+```
+
+Views: Fleet · Tasks · Well · Runes · Reviews · Processes · Files · OmniChat ·
+Runtime · Cron · Forge · Profile. OmniChat speaks to **Kaia** for real (recall from
+the well, replies via the local model bridge). Press **Enter demo mode** on the sign-in
+screen to explore without the runtime.
+
+---
+
+## Quick Start
+
+```bash
+git clone <this-repo> ~/Ymir && cd ~/Ymir
+cp .env.example .env.local          # fill in your keys (never committed)
+
+# 1) The control plane (live data)
+scripts/start.sh                    # → http://127.0.0.1:3888/
+
+# 2) The agent seat (any supported harness)
+bin/saga-session-start.sh           # the digest (auto-runs on harness open)
+```
+
+Point a harness (OpenCode, Pi, Claude Code, Cursor, Codex) at the repo and it takes
+the seat as **Brokk**. Read [`AGENTS.md`](AGENTS.md) for the operating laws and
+[`docs/masterplan.md`](docs/masterplan.md) for the forge orders.
+
+---
 
 ## Stack — Today vs Target
 
-**Today (agent-proficient — what we build with):**
-
-| Layer | Choice |
+| Layer | Today (agent-proficient) |
 |---|---|
-| Control plane & daemons | **TypeScript** (Node 22) |
+| Control plane & daemons | **TypeScript** (Node 22) / **Bun** |
 | Agent orchestration | **Python 3.12+** + TypeScript |
-| UI / UX | **React + Vue** |
+| UI / UX | **React + Vite** (Hlidskjalf) |
 | Inter-agent | **A2A 1.0** (JSON-RPC 2.0 / SSE) + **Redis** |
-| Memory | **engram** (`engdbram`) — Mimirsbrunn well |
+| Memory | **engram** — the Mimirsbrunn well |
 | Gateway / Auth / Tunnel | Traefik/Caddy · OAuth2-proxy · cloudflared |
 | Sandbox | Docker (rootless, network-none) |
-| Reused systems | `command-factory` · `firstmate` · `.compliance` |
+| Runtime backend | Pi / OpenCode harnesses; herdr/tmux panes |
 
-**Target (Ymir Rut v2.6 — ported later, only after everything works end-to-end):**
-Rust (Edition 2024) + Tokio · NATS JetStream · gRPC/Protobuf v3 · libgit2
-`.treehouses` · cgroups v2 / seccomp · PostgreSQL 16 · MinIO/S3. One-for-one
-re-floor, never a redesign — see [`docs/ymir-rut.md`](docs/ymir-rut.md).
+**Target (Ymir Rut v2.6 — re-forged later, never redesigned):** Rust (Edition 2024) +
+Tokio · NATS JetStream · gRPC/Protobuf · libgit2 · cgroups v2 / seccomp · PostgreSQL
+16 · MinIO/S3. See [`docs/ymir-rut.md`](docs/ymir-rut.md).
+
+---
 
 ## Design Language
 
-**Carved, not skinned.** Cinzel (rune headings) · JetBrains Mono (code &
-telemetry) · Inter (body). Canvas: obsidian slate (`#080c14–#060911`). Accents:
-electric cyan (`#38bdf8`, `#0ea5e9`) for Bifrost beams, violet/indigo
-(`#818cf8`, `#6366f1`) for the realms, muted slate borders (`#1e293b`,
-`#334155`). Emblem: Algiz rune over a blacksmith anvil base, chiseled bevels.
-Full spec: [`docs/ymir-rut.md`](docs/ymir-rut.md).
+**Carved, not skinned.** Cinzel (rune headings) · JetBrains Mono (code & telemetry) ·
+Inter (body). Canvas: obsidian slate; accents: electric cyan for Bifrost, violet for
+the realms. Emblem: the Algiz rune over a blacksmith's anvil. Tokens are the single
+source of truth in [`midgard/design-system/tokens.css`](midgard/design-system/tokens.css);
+full spec in [`docs/design.md`](docs/design.md).
 
-## Docs
-
-- [`docs/lore.md`](docs/lore.md) — the mythos: giant, smiths, the well, the houses
-- [`docs/design.md`](docs/design.md) — the design system: carved, not skinned (tokens in [`midgard/design-system/tokens.css`](midgard/design-system/tokens.css))
-- [`docs/masterplan.md`](docs/masterplan.md) — the append-only masterplan: every forge order left (W0001–W0025)
-- [`docs/Architecture.md`](docs/Architecture.md) — master architecture (7 realms, A2A doctrine, memory, migration path)
-- [`docs/ymir-rut.md`](docs/ymir-rut.md) — Ymir Rut v2.6 target spec + reconciliation
-- [`docs/plans/README.md`](docs/plans/README.md) — feature plan index (01–25)
-- [`docs/append-only-log.md`](docs/append-only-log.md) — every decision, append-only
+---
 
 ## Folder Structure
 
 ```
 ymir/
-├── AGENTS.md                    # Core directives for Brokk
-├── .env.example                 # Secret template
-├── .env.local                   # Local keys (git-ignored)
-├── docker-compose.yml           # Master container manifest
-├── .gitignore
-│
-├── .agents/                     # AUTOMATION ENGINE
-│   ├── bus/                     # RATATOSKR (event bus)
-│   ├── filebrowser/             # SKRYMIR (file access config)
-│   ├── gateway/                 # BIFROST (reverse proxy)
-│   ├── github/                  # HEIMDALL & MJOLLNIR (webhooks/CI)
-│   │   ├── webhooks/
-│   │   └── workflows/
-│   ├── memory/                  # MIMIRSBRUNN (engram store + Kaia bridge `:4602`)
-│   ├── sandbox/                 # UTGARD (isolated execution)
-│   ├── skills/                  # GUNGNIR (reusable skills)
-│   └── tools/                   # YGGDRASIL (worktree harness)
-│
-├── midgard/                     # GLOBAL SHARED WORKSPACE
-│   ├── design-system/           # Design tokens (tokens.css), icons.md (TBD)
-│   ├── shared-packages/
-│   ├── infrastructure/
-│   ├── company_wiki/
-│   └── github_org_repos/
-│
-├── svartalfaheim/               # MULTI-TENANT REALMS
-│   ├── way-of/                   # Company tenant (WOMONO, WOW, OPT)
-│   │   ├── .env.realm.example
-│   │   ├── Brokk.md
-│   │   ├── projects/
-│   │   └── workspace/
-│   │       ├── company/
-│   │       ├── marketing/
-│   │       ├── development/
-│   │       ├── life/
-│   │       └── memory/
-│   │           ├── daily/
-│   │           └── entity_graph/
-│   ├── zerwiz/                   # Personal tenant — zerwiz (Josef)
-│   └── craig/                    # Member tenant — craig
-│
-├── workspace/                   # GLOBAL AUDIT & CONFIG
-│   ├── config/
-│   │   └── portfolio.md
-│   └── memory/
-│       └── runes_audit.md
-│
-├── docs/                        # PLATFORM KNOWLEDGE
-│   ├── lore.md                  # THE MYTHOS — the giant, the smiths, the well, the houses
-│   ├── Architecture.md          # Master architecture (7 realms, A2A, memory, port path)
-│   ├── ymir-rut.md              # Ymir Rut v2.6 target spec + current-stack reconciliation
-│   └── plans/                   # Per-feature planning docs (01–25)
-│
-└── apps/                        # USER INTERFACES
-    └── hlidskjalf/              # MASTER CONTROL DASHBOARD
-        └── src/
-            ├── components/
-            ├── services/
-            └── app/
+├── AGENTS.md                  # the always-loaded contract (Brokk)
+├── bin/                       # Norse runtime CLI: saga, syn, rodd, gleipnir, nornir, einherjar…
+├── .agents/
+│   ├── agents/                # Brokk + the Eindri profiles (and Galdr)
+│   ├── skills/                # Gungnir skills (galdr, tyr-check, hvild-afk, …)
+│   ├── backend/               # vendored fleet backend
+│   ├── config/                # ro, cron.yaml, eindri-dispatch, eindri-harness
+│   ├── memory/                # Mimirsbrunn well (episodes) + Runes
+│   ├── sandbox/               # Utgard Docker barrier
+│   └── bus/                   # Ratatoskr (A2A) protocol
+├── .pi/extensions/            # Pi adapters (Sýn, Gná, Ró, Skuld)
+├── .opencode/plugins/         # OpenCode adapters (Sága, Sýn, Rödd)
+├── apps/hlidskjalf/           # the control plane (React + Vite + gate API)
+├── midgard/                   # shared workspace + design tokens
+├── svartalfaheim/             # realms/tenants: way-of, zerwiz, craig
+├── workspace/                 # audit + config
+├── assets/                    # art, the OS diagram, reference material
+└── docs/                      # lore, architecture, masterplan, plans, session-start
 ```
 
-## Start Here
+---
 
-1. Read the lore — [`docs/lore.md`](docs/lore.md): the giant, the smiths, the well,
-   and the houses you're about to work for
-2. `cp .env.example .env.local` and fill in your keys
-3. Pick a tenant: `svartalfaheim/way-of`, `zerwiz`, or `craig`
-4. Read `AGENTS.md` for operational laws
-5. Point Brokk at a task — it routes through the appropriate subsystem
+## Naming Law
 
-## Architecture Trace
+Every subsystem, component, and process is named for the figure whose role matches
+its work; the operator is the **Allfather** (Odin). The house voice is Norse-natural;
+flavor may season a line, but an imported term never names a subsystem. The full
+component map lives in
+[`.agents/skills/galdr/assets/norse-naming.md`](.agents/skills/galdr/assets/norse-naming.md).
 
-> "A webhook hits Bifrost and is queued on Ratatoskr. Ymir allocates resources and launches Brokk. Brokk drinks from Mimirsbrunn (recalls what Kaia remembers about this project), creates a branch via Yggdrasil inside Svartalfaheim, hands execution to Eindri inside an Utgard container. Once tests pass, Mjollnir pushes a Pull Request, the outcome is observed back into the well, Runes logs the entry, and status renders on Hlidskjalf."
+---
+
+## Docs
+
+- [`docs/lore.md`](docs/lore.md) — the mythos, realm by realm
+- [`docs/session-start.md`](docs/session-start.md) — how the seat is taken
+- [`docs/Architecture.md`](docs/Architecture.md) — the 7 realms, A2A, memory, migration
+- [`docs/masterplan.md`](docs/masterplan.md) — the append-only forge orders
+- [`docs/plans/README.md`](docs/plans/README.md) — the feature plan index
+- [`docs/design.md`](docs/design.md) — the design system
+- [`docs/ymir-rut.md`](docs/ymir-rut.md) — the Rust re-forging spec
+- [`AGENTS.md`](AGENTS.md) — Brokk's always-loaded operating contract
+
+---
+
+> *“A webhook hits Bifrost and is queued on Ratatoskr. Ymir allocates resources and
+> launches Brokk. Brokk drinks from Mimirsbrunn, cuts a branch via Yggdrasil inside
+> Svartalfaheim, and hands execution to an Eindri inside Utgard. Tests pass, Mjollnir
+> raises the PR, the outcome is observed back into the well, Runes carves the entry,
+> and Hlidskjalf renders the state.”*
+
+*The bellows feed the flame; the smith reads the metal; the well remembers every blow.*

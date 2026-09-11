@@ -13,7 +13,7 @@ but never edits their trees (their own agents own those).
 
 | Source | Signal |
 |---|---|
-| `command` | FEATURES.md registry, `.compliance/` gates, tenants (josef, craig), factory runs (factory.db), Kaia's engram (`kaia.engram`) |
+| `command` | FEATURES.md registry, `.compliance/` gates, tenants (josef, craig), smidja runs (smidja.db), Kaia's engram (`kaia.engram`) |
 | `firstmate` | captain/crew sessions, worktree state, supervision handoffs |
 
 ## Mechanics
@@ -31,4 +31,4 @@ but never edits their trees (their own agents own those).
 
 - **ADD:** observer service, scheduled sync, portal tab, memory ingest.
 - **NOT:** edits or syncing changes back into command/firstmate.
-- **KEEP:** reuse over rebuild — command-factory & firstmate stay the owners of their domains.
+- **KEEP:** reuse over rebuild — smidja & firstmate stay the owners of their domains.

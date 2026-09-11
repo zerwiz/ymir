@@ -28,7 +28,7 @@ const FALLBACK_MODEL = "openrouter/google/gemini-3.5-flash";
 const THINKING_OVERRIDES = ["low", "medium", "high", "xhigh"] as const;
 type ThinkingOverride = (typeof THINKING_OVERRIDES)[number];
 
-// The factory's team roles (task-dispatch.ts contract). The synchronous `task`
+// The smidja's team roles (task-dispatch.ts contract). The synchronous `task`
 // tool below uses these names so the runner's lane materialization labels the
 // child by role (scout/planner/builder/reviewer/documenter), never "general".
 const SUBAGENT_TYPES = [
@@ -484,7 +484,7 @@ export default function (pi: ExtensionAPI) {
 			// dies at validation; lanes stay typed by inference.
 			const subagentType = inferSubagentType(args);
 
-			// The child session lands in /tmp under the factory's expected name
+			// The child session lands in /tmp under the smidja's expected name
 			// (the runner's _materialize_subagent copies it into the lane dir so
 			// the visualizer can render the child's thinking) AND under the
 			// persistent subagents path for /subcont resumption — both additive.
@@ -504,8 +504,8 @@ export default function (pi: ExtensionAPI) {
 			agents.set(id, state);
 			updateWidgets();
 
-			// Spawn with the factory's /tmp session naming so the runner sees it.
-			state.sessionFile = path.join(os.tmpdir(), `factory-task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jsonl`);
+			// Spawn with the smidja's /tmp session naming so the runner sees it.
+			state.sessionFile = path.join(os.tmpdir(), `smidja-task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jsonl`);
 			const spawnPromise = spawnAgent(state, String(args.prompt || ""), ctx, {
 				thinking: args.thinking,
 				noFollowUp: true,
@@ -515,7 +515,7 @@ export default function (pi: ExtensionAPI) {
 			// Mirror the /tmp session into the persistent subagents dir too, so
 			// the child remains resumable via /subcont after the sync call.
 			const persistentPath = state.sessionFile.replace(
-				path.join(os.tmpdir(), "factory-task-"),
+				path.join(os.tmpdir(), "smidja-task-"),
 				path.join(os.homedir(), ".pi", "agent", "sessions", "subagents", "subagent-task-"),
 			);
 			const persistentDir = path.dirname(persistentPath);

@@ -179,21 +179,21 @@ user-facing portals now cover web (Hlidskjalf) + mobile (Expo) + Telegram (Omnic
 ## 9. Gap audit — Smíðja `apps/visualizer` (append-only, 2026-09-11)
 
 Compared `apps/hlidskjalf` against the reference implementation shipped inside the
-Smíðja skill — formerly **command-factory** (`.agents/skills/smidja/apps/visualizer` —
+Smíðja skill — formerly **smidja** (`.agents/skills/smidja/apps/visualizer` —
 Vue 3 + Bun + SQLite). Hlidskjalf today is a **read-only, mock-seeded Ymir ops
-dashboard**; the visualizer is a **live, SQLite-backed factory control plane**.
+dashboard**; the visualizer is a **live, SQLite-backed smidja control plane**.
 
 **Verdict:** the eight Ymir gates (Fleet/Tasks/Well/Runes/Reviews/Processes/Files/
-OmniChat) are present, but the entire factory observability and run-control surface
+OmniChat) are present, but the entire smidja observability and run-control surface
 is missing. `src/services/stream.ts` still ships `MOCK = true`; `src/services/api.ts`
 is defined but has **no call sites**; state is reseeded by `hydrate()` on every realm
 switch (`src/state/store.ts:137`).
 
 ### 9.1 Architecture gap (root cause)
 
-| Layer | command-factory visualizer | Hlidskjalf |
+| Layer | smidja visualizer | Hlidskjalf |
 |---|---|---|
-| Data | Reads real `factory/factory_data/factory.db` (WAL) via Bun API (`server/db.ts`) | 100% seeded mocks — `hydrate()` reseeds on every realm switch |
+| Data | Reads real `smidja/smidja_data/smidja.db` (WAL) via Bun API (`server/db.ts`) | 100% seeded mocks — `hydrate()` reseeds on every realm switch |
 | Transport | 500ms rowid-cursor polling (`/api/sessions/:id/events?after=`) | Synthetic `setInterval` fake stream; `MOCK = true` |
 | API | Full REST server (`server/index.ts`, 589 lines) | `src/services/api.ts` defined but **never called** |
 | Persistence | 7 tables: sessions, phases, events, envelopes, gate_results, processes, agent_sessions | None |
@@ -203,7 +203,7 @@ switch (`src/state/store.ts:137`).
 
 | visualizer view | Purpose | Hlidskjalf |
 |---|---|---|
-| **Sessions list** | all factory runs, phase-dot progress, archive/review flags | absent |
+| **Sessions list** | all smidja runs, phase-dot progress, archive/review flags | absent |
 | **Session Trace** | lane waterfall, span nesting, live poll | absent |
 | **Phase Detail** | envelopes, gates+evidence, tool calls, thinking, prompts, context bars, cost table | absent (gates are cosmetic only) |
 | **Decisions** | failures grouped by diagnosis+model + recommended fix | absent |
@@ -242,23 +242,23 @@ Visualizer is a control plane; Hlidskjalf's buttons have no handlers
 
 | Gap | Order |
 |---|---|
-| Factory run-store & trace ingest (sessions/phases/events/envelopes/gates/agent_sessions) | **W0075** |
+| Smíðja run-store & trace ingest (sessions/phases/events/envelopes/gates/agent_sessions) | **W0075** |
 | Run control API (stop · pause · resume · steer · archive) | **W0076** |
 | Roster & model catalog + session launch | **W0077** |
 | Decisions (failure clustering) & Stats APIs | **W0078** |
 | Local settings store (MCP keys, masked) | **W0079** |
-| Sessions list (factory runs) | **W0080** |
+| Sessions list (smidja runs) | **W0080** |
 | Session Trace (lane waterfall + live poll) | **W0081** |
 | Phase Detail (envelopes · gates · thinking · prompts · tool calls · context/cost) | **W0082** |
 | Decisions view | **W0083** |
 | Stats view (tokens · cost · cache · savings · providers) | **W0084** |
-| Settings view + OmniChat factory upgrade | **W0085** |
+| Settings view + OmniChat smidja upgrade | **W0085** |
 
 ### 9.6 Scope notes
 
 The visualizer's Norse mapping is clean: Sessions → **Mjollnir** runs; Trace lanes →
 **Valhalla** supervision; Memory → **Mimirsbrunn**; Decisions → **Rungnir**; Chat →
-**Kaia**. The `Processes` and `Reviews` gates stay Ymir-native (no factory equivalent).
+**Kaia**. The `Processes` and `Reviews` gates stay Ymir-native (no smidja equivalent).
 **Out of scope:** the Electron desktop shell (`desktop/main.js`) and the future items
-in the factory `docs/enhancement-plan.md` (WebSocket/GraphQL, presence, comparative
+in the smidja `docs/enhancement-plan.md` (WebSocket/GraphQL, presence, comparative
 trace diff, token-flow Sankey, roster chain builder).

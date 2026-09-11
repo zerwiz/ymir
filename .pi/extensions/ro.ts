@@ -3,7 +3,7 @@
 // Verified against Pi 0.81.1, 0.82.0, and 0.84.4, which expose built-in ToolDefinitions, per-slot
 // renderers, renderShell: "self", session_start replacement reasons, agent_start and
 // agent_settled, ExtensionUIContext.setToolsExpanded(), setWorkingVisible(), setWidget()
-// with a disposable component factory, and setHiddenThinkingLabel().
+// with a disposable component smidja, and setHiddenThinkingLabel().
 // ./lib/ro-working-ship.ts owns the animated working presentation this file
 // installs. The focused tests pin those assumptions but never reject a
 // newer Pi solely for its version. The collapsed-thinking and operational-user
@@ -212,13 +212,13 @@ export default function (pi: ExtensionAPI) {
   };
 
   function wrapBuiltIn<TParams extends TSchema, TDetails, TState>(
-    factory: DefinitionFactory<TParams, TDetails, TState>,
+    smidja: DefinitionFactory<TParams, TDetails, TState>,
   ): ToolDefinition<TParams, TDetails, TState> {
     const definitions = new Map<string, ToolDefinition<TParams, TDetails, TState>>();
     const definitionFor = (cwd: string): ToolDefinition<TParams, TDetails, TState> => {
       let definition = definitions.get(cwd);
       if (!definition) {
-        definition = factory(cwd);
+        definition = smidja(cwd);
         definitions.set(cwd, definition);
       }
       return definition;
@@ -342,7 +342,7 @@ export default function (pi: ExtensionAPI) {
 
   // Which of the 7 built-ins are currently owned by a different, non-builtin
   // extension. Only safe to call once every extension has finished loading (see file
-  // header); never call this during the factory's own synchronous execution above.
+  // header); never call this during the smidja's own synchronous execution above.
   function contestedBuiltIns(): ToolDefinition<any, any, any>[] {
     let registered: ToolInfo[];
     try {

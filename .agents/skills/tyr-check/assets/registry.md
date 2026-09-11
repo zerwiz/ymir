@@ -36,8 +36,8 @@ All three declare the Utgard security posture: `runs_in_utgard: true`,
 
 ```
 build_tools[4]{category,role}:
-  "Python factory tools","deterministic Python orchestrators in `templates/factory/`"
-  "command-factory","validated OSS factory (agents + typed JSON envelopes + SQLite trace + Vue visualizer)"
+  "Python smidja tools","deterministic Python orchestrators in `templates/smidja/`"
+  "smidja","validated OSS smidja (agents + typed JSON envelopes + SQLite trace + Vue visualizer)"
   "Agent-distro orchestration","validated upstream distro pattern (see porting asset)"
   "Galdr skill assets","internal reference data under `assets/`"
 ```
@@ -46,7 +46,7 @@ build_tools[4]{category,role}:
 
 ```
 schemas[7]{schema,fields}:
-  "Factory orchestrator","status, phase, progress, next_action, utgard_sandbox, worktree, phase_complete"
+  "Smíðja orchestrator","status, phase, progress, next_action, utgard_sandbox, worktree, phase_complete"
   "Worker orchestration","status, agent_role, worktree, utgard, sandboxed, session_id"
   "Galdr skill generator","name, category, toon_output, principles, compliance_status, eindri_role, utgard_sandbox"
   "Eindri profile","capabilities, tools, workspace_patterns, security"

@@ -1,9 +1,9 @@
 {
-  "name": "factory-visualizer-desktop",
+  "name": "smidja-visualizer-desktop",
   "version": "0.1.0",
   "private": true,
   "type": "commonjs",
-  "description": "Electron shell for the factory trace UI (http://localhost:8438) — a native window, maximized so wide lanes fit on screen.",
+  "description": "Electron shell for the smidja trace UI (http://localhost:8438) — a native window, maximized so wide lanes fit on screen.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

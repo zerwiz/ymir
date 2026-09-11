@@ -29,7 +29,7 @@ aigeeks&freeks/
 │       └── archive/
 │           ├── W26-showcase-night-5.md
 │           ├── W25-mcp-deep-dive.md
-│           └── W24-factory-workshop.md
+│           └── W24-smidja-workshop.md
 ```
 
 ---
@@ -163,7 +163,7 @@ id: "weekly-tue-2am-bug-fix"
 title: "The 2 AM Bug Fix"
 kind: "weekly"
 description: "Live screen-share office hours every Tuesday at 2 AM CET. Bring a stuck agent, a half-built demo, or a bug that won't reproduce. We'll pair on it together."
-hostName: "The Factory"
+hostName: "The Smíðja"
 status: "upcoming"
 isRecurring: true
 recurrence: "weekly-tue"

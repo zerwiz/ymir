@@ -84,7 +84,7 @@ export function fetchModels(): Promise<ModelsResponse> {
   return getJson('/api/models')
 }
 
-export function startFactorySession(req: SessionStartRequest): Promise<SessionStartResponse> {
+export function startSmidjaSession(req: SessionStartRequest): Promise<SessionStartResponse> {
   return postJson('/api/chat/session', req)
 }
 

@@ -110,7 +110,7 @@ isolation[8]{id,rule}:
   (Brokk/Eindri/Kaia), and A2A collaboration (Ratatoskr).
 - Every other feature adopts a **validated OSS project** first (engram/mimirsbrunn,
   Redis, Traefik/Caddy, OAuth2-proxy, cloudflared, MinIO/FileBrowser, PM2/Docker,
-  MCP servers, `command-factory`, `a2aproject/a2a`), Norse-named shell over the OSS
+  MCP servers, `smidja`, `a2aproject/a2a`), Norse-named shell over the OSS
   engine. Never rebuild a subsystem that already exists on this machine.
 - **Þjazi integration**: sub-agents in terminal panes use the Þjazi backend
   (protocol 14+). Presentation spaces require Þjazi 0.8.0+; opt out via

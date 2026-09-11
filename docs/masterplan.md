@@ -132,7 +132,7 @@ and re-publish the new list beneath it — the old list stays.
 - Phase: P6 · Depends: none · Source: plan 23 (proposed)
 - Scope: read-only transaction observer (helper) first; port to A2A after Ratatoskr rises; **never** write into `~/command` from Ymir.
 - Status: ADDED. + notes:
-  - 2026-09-11 — scope extended (plan 23): observe BOTH `command` (FEATURES.md registry, `.compliance/` gates, tenants, `factory.db`, `kaia.engram`) and `firstmate` (captain/crew sessions, worktree state, supervision handoffs), on schedule + webhook/file-change; each observation → Mimirsbrunn episode (`source:command|firstmate`) + filtered Runes line. Full service = W0086. [plan 23]
+  - 2026-09-11 — scope extended (plan 23): observe BOTH `command` (FEATURES.md registry, `.compliance/` gates, tenants, `smidja.db`, `kaia.engram`) and `firstmate` (captain/crew sessions, worktree state, supervision handoffs), on schedule + webhook/file-change; each observation → Mimirsbrunn episode (`source:command|firstmate`) + filtered Runes line. Full service = W0086. [plan 23]
 
 **W0013 — Realms & house activation**
 - Phase: P6 · Depends: W0022 · Source: ENTRY-002/004/006, plan 21
@@ -147,7 +147,8 @@ and re-publish the new list beneath it — the old list stays.
 **W0015 — Rune-glyph icon map**
 - Phase: P7 · Depends: design.md · Source: design.md §4.4
 - Scope: `midgard/design-system/icons.md` + 16/24px glyph set; runes, not emoji; chisel bevel on primary.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — built `midgard/design-system/icons/*.svg` (21 Elder Futhark stroke glyphs, `currentColor`, 24px viewBox) and `midgard/design-system/icons.md` (TOON map: gate + subsystem rune, usage, verification). Glyphs: fehu, tiwaz, ingwaz, raidho, algiz, dagaz, sowilo, kaunan, ansuz, ehwaz, jera, berkana, midgard, utgard, yggdrasil, ratatoskr, mimirsbrunn, valhalla, gungnir, heimdall, gjallarhorn.
 
 **W0016 — House seals / realm tinting in UI**
 - Phase: P7 · Depends: W0014 · Source: ENTRY-004, lore.md §VI
@@ -169,7 +170,7 @@ and re-publish the new list beneath it — the old list stays.
 - Scope: PM2/Docker supervision, health runes, dead-process bring-back, dashboard surfacing.
 - Status: ADDED. + notes:
 
-**W0020 — Toolchain adoption: firstmate, factory, `.compliance`**
+**W0020 — Toolchain adoption: firstmate, smidja, `.compliance`**
 - Phase: P10 · Depends: none · Source: ENTRY-003/008
 - Scope: reuse the validated OSS + existing local engines; never rebuild what exists.
 - Status: ADDED. + notes:
@@ -453,7 +454,7 @@ and re-publish the new list beneath it — the old list stays.
 - Status: ADDED. + notes:
 
 **W0069 — Frontend: Memory explorer (Well recall UI)**
-- Phase: P7 · Depends: W0044 W0058 · Source: plan 28, factory visualizer `#/memory`
+- Phase: P7 · Depends: W0044 W0058 · Source: plan 28, smidja visualizer `#/memory`
 - Scope: recall search (query + mode + k); episode timeline; entity graph (cytoscape); fact table (SPO triples); salience decay viz; `as_of` time-travel slider; export to Markdown.
 - Done when: recall works; timeline scrolls; entity graph navigable; time-travel functional.
 - Status: ADDED. + notes:
@@ -488,27 +489,27 @@ and re-publish the new list beneath it — the old list stays.
 - Done when: Expo app works; push delivers; offline queues; biometric unlocks; deep links navigate.
 - Status: ADDED. + notes:
 
-**W0075 — Backend: Factory run-store & trace ingest (sessions · phases · events)**
-- Phase: P7/P9 · Depends: W0040 W0027 · Source: command-factory `references/observability.md`, visualizer `server/db.ts`
-- Scope: mirror of the factory trace — `sessions`, `phases` (kind/owner/seq/attempt/retries), `events` (12 types, `parent_id` span nesting, rowid cursor), `envelopes` (typed handoff parses), `gate_results` (+ `checks_json` evidence), `agent_sessions` (model/color/`context_tokens`/`context_window`); WAL pragmas; poll contract `?after=<rowid>&limit=500`; `reconcileStaleRunning`. Ingest the tracer so runs land in Ymir, not only in `factory/factory_data/factory.db`.
+**W0075 — Backend: Smíðja run-store & trace ingest (sessions · phases · events)**
+- Phase: P7/P9 · Depends: W0040 W0027 · Source: smidja `references/observability.md`, visualizer `server/db.ts`
+- Scope: mirror of the smidja trace — `sessions`, `phases` (kind/owner/seq/attempt/retries), `events` (12 types, `parent_id` span nesting, rowid cursor), `envelopes` (typed handoff parses), `gate_results` (+ `checks_json` evidence), `agent_sessions` (model/color/`context_tokens`/`context_window`); WAL pragmas; poll contract `?after=<rowid>&limit=500`; `reconcileStaleRunning`. Ingest the tracer so runs land in Ymir, not only in `smidja/smidja_data/smidja.db`.
 - Done when: a run's phases/events/envelopes/gates/agent-sessions are queryable with rowid-cursor paging; stale running rows reconcile against live pids.
 - Status: ADDED. + notes:
 
-**W0076 — Backend: Factory run control API (stop · pause · resume · steer · archive)**
+**W0076 — Backend: Smíðja run control API (stop · pause · resume · steer · archive)**
 - Phase: P9 · Depends: W0075 W0041 · Source: visualizer `server/index.ts`
-- Scope: `POST /api/factory/:id/{stop,pause,resume,steer,archive}` — children-first SIGTERM; SIGSTOP/SIGCONT only live agent pids; steer appended to `steer.md`; idempotent `finalizeStopped`; `processes` table (kind factory|agent, pid, command) as the only source of "what is this run running".
+- Scope: `POST /api/smidja/:id/{stop,pause,resume,steer,archive}` — children-first SIGTERM; SIGSTOP/SIGCONT only live agent pids; steer appended to `steer.md`; idempotent `finalizeStopped`; `processes` table (kind smidja|agent, pid, command) as the only source of "what is this run running".
 - Done when: a live run can be stopped/paused/resumed and steered from the gate; a Stop always leaves the session closed; archive is a review-only flag.
 - Status: ADDED. + notes:
 
 **W0077 — Backend: Roster & model catalog + session launch**
 - Phase: P7/P9 · Depends: W0075 · Source: visualizer `server/roster-api.ts`, `model-catalog.ts`, `chat.ts`
-- Scope: `GET /api/rosters · /api/rosters/:name · /api/models` (resolvable flags), `POST /api/factory/session` (roster + orchestrator model + task); `roster.yaml` resolution; weak-orchestrator guard (sub-9B refused).
-- Done when: pickers list real stacks/models; a task launches a run and returns its `factory_id`.
+- Scope: `GET /api/rosters · /api/rosters/:name · /api/models` (resolvable flags), `POST /api/smidja/session` (roster + orchestrator model + task); `roster.yaml` resolution; weak-orchestrator guard (sub-9B refused).
+- Done when: pickers list real stacks/models; a task launches a run and returns its `smidja_id`.
 - Status: ADDED. + notes:
 
 **W0078 — Backend: Decisions (failure clustering) & Stats APIs**
 - Phase: P7/P9 · Depends: W0075 · Source: visualizer `db.decisions()` / `db.stats()`
-- Scope: `GET /api/factory/decisions` (failures grouped by diagnosis + model, recommended fix, last_seen, runs); `GET /api/factory/stats` (totals, usage input/output/cache_read/cache_write, cache-hit ratio, vendor cost + savings catalog, local-vs-online provider split, by_chain, by_model).
+- Scope: `GET /api/smidja/decisions` (failures grouped by diagnosis + model, recommended fix, last_seen, runs); `GET /api/smidja/stats` (totals, usage input/output/cache_read/cache_write, cache-hit ratio, vendor cost + savings catalog, local-vs-online provider split, by_chain, by_model).
 - Done when: the self-improving surface answers *what to change*; stats reconcile to the trace.
 - Status: ADDED. + notes:
 
@@ -518,7 +519,7 @@ and re-publish the new list beneath it — the old list stays.
 - Done when: keys save to `.env`; GET returns masked state only.
 - Status: ADDED. + notes:
 
-**W0080 — Frontend: Sessions list (factory runs)**
+**W0080 — Frontend: Sessions list (smidja runs)**
 - Phase: P7 · Depends: W0044 W0045 W0075 · Source: visualizer `SessionsList.vue`, `SessionCard.vue`
 - Scope: all-inclusive run list (`?scope=all`); status running/success/fail; phase-dot mini-progress; per-card agents; model; tokens/cost; archive filter; poll refresh.
 - Done when: a run appears with its phase dots; click opens the trace; archive toggle works.
@@ -548,7 +549,7 @@ and re-publish the new list beneath it — the old list stays.
 - Done when: the dashboard shows where tokens/dollars went and what caching saved.
 - Status: ADDED. + notes:
 
-**W0085 — Frontend: Settings view + OmniChat factory upgrade**
+**W0085 — Frontend: Settings view + OmniChat smidja upgrade**
 - Phase: P7 · Depends: W0044 W0045 W0079 W0067 · Source: visualizer `SettingsView.vue`, `ChatView.vue`, `ToolCallCard.vue`
 - Scope: settings panel (MCP keys masked, save); chat upgrade to match the visualizer — multi-session switcher (new/switch/delete), model picker, streaming, inline tool-call cards, session-launch cards linking to the trace, roster picker.
 - Done when: keys save; chat keeps history across sessions; a launched run links to its trace; tool calls expand inline.
@@ -556,7 +557,7 @@ and re-publish the new list beneath it — the old list stays.
 
 **W0086 — Backend: Command/Firstmate observer service (read-only bridge)**
 - Phase: P6 · Depends: W0012 W0004 W0005 · Source: plan 23, W0031
-- Scope: extend the W0012 spine into a full observer — read `command` (FEATURES.md registry, `.compliance/` gates, tenants, `factory.db`, `kaia.engram`) and `firstmate` (captain/crew sessions, worktree state, supervision handoffs) on schedule + webhook/file-change; each observation → Mimirsbrunn episode (tag `source:command|firstmate`) + filtered Runes line; **never write** into either tree (realm-boundary law).
+- Scope: extend the W0012 spine into a full observer — read `command` (FEATURES.md registry, `.compliance/` gates, tenants, `smidja.db`, `kaia.engram`) and `firstmate` (captain/crew sessions, worktree state, supervision handoffs) on schedule + webhook/file-change; each observation → Mimirsbrunn episode (tag `source:command|firstmate`) + filtered Runes line; **never write** into either tree (realm-boundary law).
 - Done when: both systems' live state is observable; observations land in the well and the ledger; no write crosses the boundary.
 - Status: ADDED. + notes:
 
@@ -568,7 +569,7 @@ and re-publish the new list beneath it — the old list stays.
 
 **W0088 — Frontend: External systems view (Command/Firstmate)**
 - Phase: P7 · Depends: W0044 W0045 W0086 · Source: plan 23
-- Scope: Hlidskjalf tab listing `command` and `firstmate` with live process/repo/factory-run state (FEATURES registry, `.compliance/` gates, factory runs, captain/crew + worktree state); read-only; links to observer episodes in the well.
+- Scope: Hlidskjalf tab listing `command` and `firstmate` with live process/repo/smidja-run state (FEATURES registry, `.compliance/` gates, smidja runs, captain/crew + worktree state); read-only; links to observer episodes in the well.
 - Done when: both external systems show live state; click-through reaches the observed episode.
 - Status: ADDED. + notes:
 
@@ -801,7 +802,7 @@ inherited[9]{path,holds,action}:
 - 2026-09-11 — `ADDED` W0026–W0032 (plan 28, Hlidskjalf Rise): frontend SPA, backend API, GitHub login, workspace provisioning, Hermes worker runtime, PI primary boot, Skrymir Vue app. Reference UI = `assets/reference/index.html`.
 - 2026-09-11 — `ADDED` W0033–W0038 (gap audit, plan 28 §8 vs `assets/Yimir.md`): toolchain registry, app-fleet/process controller, zero-trust GitHub deploy, omnichannel gateway, Hlidskjalf Mobile (Expo), workspace RAG. Scope notes appended to W0008 (inter-agent audit→Runes) and W0030 (Hermes persona/config/tenant loader).
 - 2026-09-11 — `ADDED` W0026, W0027, W0028: AXI workflow port, Norse skill naming law, Eindri CI. Acting order: W0026 W0027 W0028. Reference: `kunchenguid/axi/.github/workflows/` fetch, user directives 2026-09-11.
-- 2026-09-11 — `ADDED` W0075–W0085 (gap audit, plan 28 §9 vs command-factory `apps/visualizer`): factory run-store/trace ingest, run control (stop/pause/resume/steer/archive), roster+model catalog & session launch, decisions/stats APIs, settings store; frontend Sessions list, Session Trace, Phase Detail, Decisions, Stats, Settings + OmniChat factory upgrade. Reference: command-factory `references/observability.md`, `shared/types.ts`, `apps/visualizer`.
+- 2026-09-11 — `ADDED` W0075–W0085 (gap audit, plan 28 §9 vs smidja `apps/visualizer`): smidja run-store/trace ingest, run control (stop/pause/resume/steer/archive), roster+model catalog & session launch, decisions/stats APIs, settings store; frontend Sessions list, Session Trace, Phase Detail, Decisions, Stats, Settings + OmniChat smidja upgrade. Reference: smidja `references/observability.md`, `shared/types.ts`, `apps/visualizer`.
 - 2026-09-11 — `ADDED` W0051–W0055: realm AGENTS.md unification, galdr internal registry, PI/firstmate integration, Brokk operational manual, galdr-crafter cleanup. Acting order: W0051 W0052 W0053 W0054 W0055. Reference: user directives 2026-09-11; single source of truth at root AGENTS.md.
 - 2026-09-11 — `ADDED` W0086–W0097 (plan 21–27 audit): full Command/Firstmate observer (W0086) + external-systems view (W0088) with W0012 scope note; Houses & entities registry view (W0087); cron completion — memory housekeeping + history API + status page (W0089/W0090, W0063 dedupe note); Hermóðr composition — `hermod-bridge` skill + `hermod_context` schema (W0091), Mimirsbrunn/Runes hermod paths (W0092), fleet indicators (W0093); cross-realm grants + A2A state mapping + W3C trace propagation (W0094); four-layer plan/execution gates (W0095); context-budget enforcement + visibility (W0096/W0097). Reference: `docs/plans/21-company-houses.md`, `22-hlidskjalf-portal.md`, `23-ymir-command-observer.md`, `24-cron-schedule.md`, `25-ratatoskr-a2a.md`, `26-a2a-planning.md`, `26-firstmate-four-layer.md`, `27-hermod-mcp-a2a-composition.md`, `27-firstmate-context-budget.md`.
 - 2026-09-11 — `ADDED` W0113–W0115, W0101–W0103 + Appendix A (user directive): repo-local distro layout + per-tool loaders (agents/skills/extensions/backend all under `/home/zerwiz/Ymir` + `.agents`); Galdr dual-surface (agent + skill); port firstmate `.pi/extensions` to Norse (Ró calm + Skuld supervision branch + re-port Sýn/Gná with those hooks); port `.agents/backend/` firstmate `bin/` to the Brokk Norse backend; expand the Eindri roster and make it loadable by OpenCode + Pi; Pi boot auto-start of the Nornir cron. Acting orders: W0113–W0115, W0101–W0103.
@@ -811,6 +812,7 @@ inherited[9]{path,holds,action}:
 - 2026-09-11 — `FIX` Pi 401: Pi's `opencode-go` provider points at a local OpenAI-compatible bridge (`:4603`) that was not running, so Pi fell back to anthropic and returned `401 invalid x-api-key`. Vendored the bridge to `.agents/backend/opencode-go-bridge.py`; added `bin/bifrost-bridge.sh` (Bifrost — start/stop/status, idempotent) and wired it into `bin/saga-session-start.sh` so the model bridge auto-starts on boot; key from `.env.local`; Pi default set to `opencode-go/deepseek-v4-flash` (global `~/.pi/agent/settings.json` + repo `.pi/settings.json`). Verified: bridge up, four models served, session start reports `model bridge: up`, compliance + smoke green.
 - 2026-09-11 — `WORKING` Hlidskjalf live wiring: built the gate API (`apps/hlidskjalf/server`, Bun :3889) reading the runtime (state, `.agents/config`, runes, well, agents, masterplan, status scripts); added live/demo modes with an **Enter demo mode** button; wired Fleet/Tasks/Well/Runes/Processes/Reviews/Files to real data and added **Runtime** (Sága digest) + **Cron** (Nornir) gates; built the one non-wireable surface — **OmniChat** (`POST /api/chat` + `/api/chat/history` via the first reachable OpenAI-compatible backend, local llama-server then Bifrost, recalling from the well, persisting to `state/chat.jsonl`); `scripts/start.sh` now raises the API + SPA and `stop.sh` lowers both. Verified: build green; endpoints live (agents 9, tasks/orders 117, well 60, runes, cron running 4 jobs, checks 8, loaders 4); Kaia replied live grounded in the well.
 - 2026-09-11 — `WORKING` W0107: adopted the mapped upstream reference skills into 16 Norse skills under `.agents/skills/` (`hvild-afk`, `saga-bearings`, `saga-recap`, `muninn-stow`, `jord-projects`, `urdh-decisions`, `urdh-hold`, `frigg-consent`, `vor-diagnostics`, `nornir-events`, `nornir-quota`, `gjallarhorn-relay`, `eindri-homes`, `syn-recovery`, `ymir-update`, `hamr`) and registered them in `.agents/skills/README.md`; `reference-adoption.md` `skill_map` updated to adopted/folded/reference-only. Verified: compliance 8/8, smoke 8/8.
+- 2026-09-11 — `WORKING` README + assets + W0015: rewrote `README.md` as the GitHub front door (banner `assets/ymir-banner-03.png`, lore, system map, all 20 skills, the Eindri roster, the runtime/session-start, the Hlidskjalf control plane, quick start, stack, structure) in human Markdown — no raw TOON. Renamed all Gemini-named art (`assets/ymir-banner-01..06.png`, `ymir-emblem-*.svg`, `ymir-mark-algiz-anvil.svg`, `ymir-stave.svg`). W0015 glyph set landed (`midgard/design-system/icons/` 21 runes + `icons.md`), TOON-check PASS.
 - 2026-09-11 — `WORKING` W0026 / W0028 (mock) / W0032 (placeholder): Hlidskjalf SPA raised at `apps/hlidskjalf` (React 19 + Vite) — shell, all eight gates, components, pausable stream, hash routes, mock stream; mock GitHub sign-in + first-run provisioner + tenant grants; per-user accent palette. Typecheck + build green; headless render 0 console errors. Notes appended to W0026, W0028, W0032.
 - 2026-09-11 — `ADDED` W0098–W0100: Hlidskjalf identity (Ymir Mark SVG, favicon, OG image, per-page metadata); Personalization & Profile (per-tenant colours + personal/company settings); Skills & Eindri Forge (create/edit agents + skills with mythological naming). Acting order: W0098 W0099 W0100. Reference: user directives 2026-09-11, `assets/Gemini_Generated_Image_236pb9236pb19236p.png`, `assets/Gemini_Generated_Image_t6431it6431it6431.png`.
 - 2026-09-11 — `WORKING` W0098–W0100 + `ADDED` W0112 (user directive): **W0099 closed** — per-tenant colour overrides (persisted, repaint swatch + realm tint on "Realm default"), Profile gate (Personal + Company), tenant model WayOf=company with zerwiz/craig members. **W0100 closed (mock)** — Forge gate + `data/mythology.ts` name engine (craft→figure; verified marketing→Bragi); real Utgard validation/JWS deferred to W0007/W0008. **Interaction pass** — global modal+toast (`state/ui.ts`, `Overlay.tsx`); every dead button wired (PR seal/request-changes/diff, process restart/logs, file upload, runes export, agent inspect, well recall). **W0112** — `scripts/start.sh`/`stop.sh` (verified raise/lower) + draggable stream (drag/arrows/reset, persisted). Hlidskjalf UI working guide appended to `.agents/skills/galdr/SKILL.md` §15. Typecheck + build green; headless suites 19/19 PASS, 0 console errors.

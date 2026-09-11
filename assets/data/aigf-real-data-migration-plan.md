@@ -40,7 +40,7 @@ The AIGeeks & Freaks homepage currently displays **all mock data** — hardcoded
 
 | Mock Element | Current Value | Real Source Needed |
 |---|---|---|
-| `EVENTS` array (3 items) | Hardcoded events: "The 2 AM Bug Fix", "Geek & Freak Showcases", "Factory Workshop: MCP Deep Dive" | `Event` model — recurring and one-off events with host, schedule, status |
+| `EVENTS` array (3 items) | Hardcoded events: "The 2 AM Bug Fix", "Geek & Freak Showcases", "Smíðja Workshop: MCP Deep Dive" | `Event` model — recurring and one-off events with host, schedule, status |
 | `ARCHIVE` array (8 items) | Static: "W26 Showcase night #5", view counts | `Event` model — past events with replay URLs and view counts |
 | `CHANNELS` array (8 items) | Static Discord channels with member counts | `DiscordChannel` model — synced from Discord API |
 | `BRING` array (4 items) | Static: "A stuck agent", "A half-built demo", etc. | **No change needed** — this is static marketing copy |
@@ -607,8 +607,8 @@ model Milestone {
 | Principles | `principles.tsx` | Static marketing copy |
 | The Loop | `the-loop.tsx` | Static marketing copy |
 | Tools | `tools.tsx` | Static marketing copy |
-| Factory Content | `factory-content.tsx` | Needs separate review |
-| Software Factory Content | `software-factory-content.tsx` | Needs separate review |
+| Smíðja Content | `smidja-content.tsx` | Needs separate review |
+| Smíðja Content | `software-smidja-content.tsx` | Needs separate review |
 | Way of Teams Content | `way-of-teams-content.tsx` | Needs separate review |
 | Login Content | `login-content.tsx` | Auth flow |
 

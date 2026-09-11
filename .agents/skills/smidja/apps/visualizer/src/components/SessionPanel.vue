@@ -88,7 +88,7 @@ async function steer() {
         <span class="pill running">active</span>
         <span class="panel-title">session</span>
       </div>
-      <code class="factory">{{ activeSession.factory_id }}</code>
+      <code class="smidja">{{ activeSession.smidja_id }}</code>
       <div class="meta">{{ teamLabel }} · {{ modelName(activeSession.model) }}</div>
 
       <div class="ladder">
@@ -125,7 +125,7 @@ async function steer() {
         <div v-if="steerSent" class="steer-ok">✓ queued for the next agent call</div>
       </div>
 
-      <button class="open-trace" type="button" @click="emit('open', activeSession.factory_id)">Open trace →</button>
+      <button class="open-trace" type="button" @click="emit('open', activeSession.smidja_id)">Open trace →</button>
     </template>
 
     <!-- ── Completed / idle: summary of last run + start form ─────────── -->
@@ -136,14 +136,14 @@ async function steer() {
       </div>
 
       <div v-if="activeSession && side.panel === 'completed'" class="summary">
-        <code class="factory">{{ activeSession.factory_id }}</code>
+        <code class="smidja">{{ activeSession.smidja_id }}</code>
         <div class="meta">{{ teamLabel }} · {{ modelName(activeSession.model) }}</div>
         <div class="sum-grid">
           <div class="sum"><span class="k">status</span><span class="v" :class="activeSession.status === 'fail' ? 'v-bad' : 'v ok'">{{ activeSession.status === 'fail' ? 'fail' : 'success' }}</span></div>
           <div class="sum"><span class="k">cost</span><span class="v">{{ liveCost }}</span></div>
           <div class="sum"><span class="k">tokens</span><span class="v">{{ liveTokens }}</span></div>
         </div>
-        <button class="open-trace" type="button" @click="emit('open', activeSession.factory_id)">Full trace →</button>
+        <button class="open-trace" type="button" @click="emit('open', activeSession.smidja_id)">Full trace →</button>
       </div>
 
       <SessionStartForm />
@@ -151,7 +151,7 @@ async function steer() {
       <div class="sep-line"></div>
       <div class="past-h">Past sessions</div>
       <div class="past">
-        <SessionMiniCard v-for="s in pastSessions" :key="s.factory_id" :launch="s" @open="emit('open', $event)" />
+        <SessionMiniCard v-for="s in pastSessions" :key="s.smidja_id" :launch="s" @open="emit('open', $event)" />
       </div>
     </template>
   </aside>
@@ -185,7 +185,7 @@ async function steer() {
 .pill.running { color: var(--blue); border-color: rgba(108, 182, 255, 0.4); background: rgba(108, 182, 255, 0.08); }
 .pill.complete { color: var(--green); border-color: rgba(74, 222, 128, 0.4); background: rgba(74, 222, 128, 0.08); }
 
-.factory { font-family: var(--mono); font-size: 14px; color: var(--text); }
+.smidja { font-family: var(--mono); font-size: 14px; color: var(--text); }
 .meta { font-size: 13px; color: var(--dim); }
 
 /* activity ladder */

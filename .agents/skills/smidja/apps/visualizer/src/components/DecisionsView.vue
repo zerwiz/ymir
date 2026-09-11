@@ -36,7 +36,7 @@ function fmtRuns(runs: string[]): string {
     <div v-if="apiError" class="error-bar">decisions unreachable — {{ apiError }}</div>
 
     <div class="head">
-      <div class="title">Decisions <span class="dim">— what to change to make the factory work</span></div>
+      <div class="title">Decisions <span class="dim">— what to change to make the smidja work</span></div>
       <div v-if="data" class="stat-row">
         <span class="stat"><b>{{ data.total_failed }}</b> failed runs</span>
         <span class="stat"><b>{{ data.decisions.length }}</b> diagnosis × model buckets</span>
@@ -45,7 +45,7 @@ function fmtRuns(runs: string[]): string {
     </div>
 
     <div v-if="data && !data.decisions.length" class="empty-state">
-      no failures recorded — the factory has nothing to improve yet
+      no failures recorded — the smidja has nothing to improve yet
     </div>
 
     <div v-if="data && data.decisions.length" class="cards">
