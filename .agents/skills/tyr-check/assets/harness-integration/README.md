@@ -396,3 +396,43 @@ The authoritative interface is always the code listed in [`../runtime-components
 ## 12. Provenance
 
 The adapter pattern is ported from the validated upstream **Brokk** agent-distro harness adapters (`bin/fm-harness.sh`, `bin/fm-sessionstart-run.sh`, `.opencode/plugins/fm-primary-*.js`, `.pi/extensions/fm-primary-*.ts`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.grok/hooks/*.json`). Ymir adopts the *mechanism* and renames every component per plan 29 §12 (Sága, Sýn, Gná, Vörðr, Rödd, Gleipnir, Hamr, Einherjar, Erindi, Vör, Nornir). The upstream names (`fm-*`, "Allfather") are provenance only and must never name a Ymir component.
+
+---
+
+## 13. The Well — memory for every harness (engram)
+
+The well is **Mimirsbrunn**, backed by the validated OSS engine **engram**. It is
+one repo-local store, `.agents/memory/kaia.engram`, reached two ways:
+
+**HTTP bridge (`:4602`)** — `bin/mimir-bridge.py`, raised by
+`bin/mimir-bridge.sh` (and by `scripts/start.sh` + `bin/saga-session-start.sh`).
+It wraps the engram library so the gate API, `bin/mimir.sh`, and
+`bin/mimir-ingest.sh` can drink over the small HTTP contract:
+
+```
+GET  /health                 -> {status, store, episodes, agents}
+GET  /recall?q&k&mode        -> {results:[{score, distance, episode}]}
+GET  /recent?limit           -> {episodes:[...]}
+GET  /timeline?entity        -> {facts:[...]}
+GET  /inspect                -> {episodes, agents, store}
+POST /observe {content,...}  -> {id}
+```
+
+**MCP server (stdio)** — `engram-mcp --db <store> --agent-id <harness>`, so any
+MCP-capable harness gets `remember`, `recall`, `why`, `forget`, `stats` with no
+integration code. Registered per harness (each writes under its own agent id):
+
+| Harness | Config | Agent id |
+|---|---|---|
+| OpenCode | `opencode.json` → `mcp.engram` (+ `~/.config/opencode/opencode.json`) | `opencode` |
+| Pi | `.pi/mcp.json` (pass `pi --mcp-config .pi/mcp.json`) | `pi` |
+| Claude Code | `~/.claude.json` → `mcpServers.engram` | `claude` |
+| Cursor | `~/.cursor/mcp.json` → `mcpServers.engram` | `cursor` |
+| Codex | `~/.codex/config.toml` → `[mcp_servers.engram]` | `codex` |
+
+The engine needs the `mcp<2` SDK for `engram-mcp` (v2 renamed `FastMCP` to
+`MCPServer`, which breaks engram 1.x/2.x):
+`python3 -m pip install --user --break-system-packages 'mcp<2'`.
+
+Rule: **drink before you act, water it after** — recall on the way in, and
+`POST /observe` (or the `remember` MCP tool) after a lesson lands.

@@ -146,7 +146,7 @@ export interface RecallEpisode {
   title: string;
   body: string;
   score: number;
-  mode: 'hybrid' | 'cosine' | 'spreading';
+  mode: 'hybrid' | 'cosine' | 'spreading' | 'recent';
   agentScope: string;
   ts: string;
   tags: string[];
