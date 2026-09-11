@@ -410,7 +410,52 @@ same Allfather: Hlidskjalf for the whole of Ymir, Smíðja for the work in the f
 
 *The bellows feed the flame; the smith reads the metal; the shop remembers every blow.*
 
-## XII. The Seating (the Sága digest at session open)
+## XII. Smíðja's Eye — the trace visualizer (ports & how it is raised)
+
+Smíðja's work is only as trustworthy as the sight of it. The observer (**Huginn**)
+keeps the ledger; **Smíðja's eye** is the live trace UI — a Vue + Bun app that
+polls the smithy's own SQLite trace and draws the run: sessions, phase lanes,
+envelopes, gates and their evidence, decisions, stats, and Völundr's memory.
+
+One trace, one face — plus an optional dev face:
+
+| Face | Port | What it is |
+|---|---|---|
+| API + built UI | `127.0.0.1:8437` | Bun server, read-only over `smidja/smidja_data/smidja.db` (`bun:sqlite`); serves the built Vue `dist/` on the same port |
+| Dev UI (optional) | `127.0.0.1:8438` | Vite dev server, only with `SMIDJA_VIZ_DEV=1`; proxies `/api` → `:8437` |
+
+Open the visualizer at **`http://127.0.0.1:8437/`**.
+
+- The trace DB is **repo-local**: `/home/zerwiz/Ymir/smidja/smidja_data/smidja.db`.
+  Any Smíðja run writes it; the Hlidskjalf gates (Sessions / Trace / Decisions /
+  Stats) and this visualizer both read it.
+- Ports are overridable: `SMIDJA_VIZ_API_PORT`, `SMIDJA_VIZ_UI_PORT`. The SPA's
+  link uses `VITE_VISUALIZER_URL` (default `http://127.0.0.1:8437`).
+
+### How it is raised
+
+`scripts/start.sh` raises the whole seat in one command, and `scripts/stop.sh`
+lowers it:
+
+1. Hlidskjalf SPA — `:3888`
+2. Hlidskjalf gate API — `:3889` (`apps/hlidskjalf/server`, reads the runtime)
+3. Smíðja visualizer — `:8437` (`CMD_DB=<repo>/smidja/smidja_data/smidja.db`; API + built UI)
+4. Nornir cron + Bifrost bridge
+
+```bash
+scripts/start.sh      # raise: SPA :3888 · gate API :3889 · visualizer :8437
+scripts/stop.sh       # lower them all
+```
+
+The **Sessions** gate (Hlidskjalf) carries **Open visualizer**, which opens
+`http://127.0.0.1:8437` in a new tab; it also has **Refresh**, and the app polls
+`smidja.db` every five seconds so a newly-finished run appears on its own.
+Hlidskjalf and the visualizer are two windows on the same smithy: the seat that
+sees all of Ymir, and the eye on the work in the fire. Open them side by side.
+
+*The seeress keeps the ledger; the eye keeps the fire in view.*
+
+## XIII. The Seating (the Sága digest at session open)
 
 When a harness opens inside Ymir, Brokk does not begin mid-thought. Before the
 first word, the seat is taken and the realm is read aloud.
@@ -440,7 +485,7 @@ stages, the means of proof — lives in [`docs/session-start.md`](session-start.
 *The seeress speaks before the smith lifts the hammer; the wise seat is taken
 before the first blow.*
 
-## XIII. The Open Forge (external contribution)
+## XIV. The Open Forge (external contribution)
 
 Ymir is not a closed hall. Anyone may fork the repo, work in their own copy, and
 send a pull request back to the main tree. The gate is open — the law is simple.
@@ -490,7 +535,7 @@ It carries:
 
 *The forge is open. The hammer falls for anyone who brings good metal.*
 
-## XIV. The Allfather's Seat (and the cloth of the halls)
+## XV. The Allfather's Seat (and the cloth of the halls)
 
 There is one operator, and it is the **Allfather**. The smithy was borrowed from
 an older shop and still calls the caller *engineer* in its ledgers — that is the
@@ -526,7 +571,7 @@ tint and steel, is a hall that was left unroofed. Three rules hold:
 *One seat, one cloth, one open anvil: the hall is built for the hand that
 calls.*
 
-## XV. The Binding and the Watch (Gleipnir, Skuld, Valknut)
+## XVI. The Binding and the Watch (Gleipnir, Skuld, Valknut)
 
 Three mechanisms hold the fleet together — a lock, a ledger of futures, and a
 knot that binds the load.
@@ -582,7 +627,7 @@ the fleet for this session — agents, models, memory budget, cron schedule.
 
 ---
 
-## XVI. The Diagnostics and the Brief (Vor, Erindi)
+## XVII. The Diagnostics and the Brief (Vor, Erindi)
 
 Two mechanisms govern how work enters the forge and how the fleet's health is
 monitored.
@@ -612,7 +657,7 @@ the constraints, and the expected output.
 
 ---
 
-## XVII. The Shape-Changer and the Consent Gate (Hamr, Frigg)
+## XVIII. The Shape-Changer and the Consent Gate (Hamr, Frigg)
 
 Two mechanisms govern how the fleet adapts and how consent is obtained.
 
@@ -642,7 +687,7 @@ without her consent.
 
 ---
 
-## XVIII. The Earth and the Decision-Hold (Jörð, Urðr)
+## XIX. The Earth and the Decision-Hold (Jörð, Urðr)
 
 Two mechanisms govern project tracking and decision lifecycle.
 
@@ -670,7 +715,7 @@ be silently overwritten; it must be explicitly closed or updated.
 
 ---
 
-## XIX. The Recovery and the Away Mode (Sýn, Hvíld)
+## XX. The Recovery and the Away Mode (Sýn, Hvíld)
 
 Two mechanisms govern worker health and idle supervision.
 
@@ -703,7 +748,7 @@ escalates.
 
 ---
 
-## XX. The Update and the Relay (Ymir-update, Gjallarhorn-relay)
+## XXI. The Update and the Relay (Ymir-update, Gjallarhorn-relay)
 
 Two mechanisms govern self-maintenance and external communication.
 
@@ -731,7 +776,7 @@ not originate; it broadcasts.
 
 ---
 
-## XXI. The Nornir's Array (Nornir-events, Nornir-quota)
+## XXII. The Nornir's Array (Nornir-events, Nornir-quota)
 
 The Nornir do not just schedule — they select and source.
 
@@ -745,7 +790,7 @@ select (present), and source (future).
 
 ---
 
-## XXII. The Agent Fleet (the Einherjar)
+## XXIII. The Agent Fleet (the Einherjar)
 
 The Einherjar are the gathered warriors — the agents who serve the Allfather.
 Each is named for the figure whose role matches its work.
@@ -767,7 +812,7 @@ agent reports to Brokk. Brokk reports to the Allfather.
 
 ---
 
-## XXIII. The Midgard Commons
+## XXIV. The Midgard Commons
 
 **Midgard** is the world of humans — the shared space between realms. It holds
 what belongs to all houses, nothing to one.
@@ -784,7 +829,7 @@ what belongs to all houses, nothing to one.
 
 ---
 
-## XXIV. The Wyrd Database
+## XXV. The Wyrd Database
 
 **Wyrd** is fate — the inescapable shape of what will be. In Ymir, Wyrd is the
 **workspace RAG database** — it indexes every file, every commit, every change,
@@ -797,7 +842,7 @@ so that recall is fast and accurate.
 
 ---
 
-## XXV. The Toolchain and the Justfile
+## XXVI. The Toolchain and the Justfile
 
 **The toolchain** is the unified entry point for all Ymir operations. It wraps
 individual scripts, validates arguments, and routes to the right tool.
@@ -809,7 +854,7 @@ individual scripts, validates arguments, and routes to the right tool.
 
 ---
 
-## XXVI. The Entity Graph
+## XXVII. The Entity Graph
 
 **The entity graph** is the knowledge graph of every company, project, and
 relationship in Svartalfaheim. It maps ownership, dependencies, and delivery
@@ -821,7 +866,7 @@ posture.
 
 ---
 
-## XXVII. The Veil and the Glitnir Gate
+## XXVIII. The Veil and the Glitnir Gate
 
 Two gates govern what passes and what is reviewed.
 
@@ -843,7 +888,7 @@ deploy must pass through Glitnir. The Allfather is the judge.
 
 ---
 
-## XXVIII. The Full Skill Index
+## XXIX. The Full Skill Index
 
 The complete index of all Norse-named skills in Ymir:
 
@@ -876,7 +921,7 @@ by a borrowed anvil (modeltesting, pr-ops).
 
 ---
 
-## XXIX. The Complete Frame
+## XXX. The Complete Frame
 
 How to read the full Ymir tree:
 
@@ -915,25 +960,25 @@ How to read the full Ymir tree:
 Rut steel after. The lock is bound, the bridge is up, the Nornir are at their
 loom. The seat is taken. The forge is lit.*
 
-## XIII. Smíðja's Eye — the trace visualizer (ports & how it is raised)
-
 Smíðja's work is only as trustworthy as the sight of it. The observer (**Huginn**)
 keeps the ledger; **Smíðja's eye** is the live trace UI — a Vue + Bun app that
 polls the smithy's own SQLite trace and draws the run: sessions, phase lanes,
 envelopes, gates and their evidence, decisions, stats, and Völundr's memory.
 
-One trace, two faces:
+One trace, one face — plus an optional dev face:
 
 | Face | Port | What it is |
 |---|---|---|
-| API | `127.0.0.1:8437` | Bun server, read-only over `smidja/smidja_data/smidja.db` (`bun:sqlite`) |
-| UI  | `127.0.0.1:8438` | Vue dev server (Vite), proxies `/api` → `:8437` |
+| API + built UI | `127.0.0.1:8437` | Bun server, read-only over `smidja/smidja_data/smidja.db` (`bun:sqlite`); serves the built Vue `dist/` on the same port |
+| Dev UI (optional) | `127.0.0.1:8438` | Vite dev server, only with `SMIDJA_VIZ_DEV=1`; proxies `/api` → `:8437` |
+
+Open the visualizer at **`http://127.0.0.1:8437/`**.
 
 - The trace DB is **repo-local**: `/home/zerwiz/Ymir/smidja/smidja_data/smidja.db`.
   Any Smíðja run writes it; the Hlidskjalf gates (Sessions / Trace / Decisions /
   Stats) and this visualizer both read it.
 - Ports are overridable: `SMIDJA_VIZ_API_PORT`, `SMIDJA_VIZ_UI_PORT`. The SPA's
-  link uses `VITE_VISUALIZER_URL` (default `http://127.0.0.1:8438`).
+  link uses `VITE_VISUALIZER_URL` (default `http://127.0.0.1:8437`).
 
 ### How it is raised
 
@@ -942,19 +987,16 @@ lowers it:
 
 1. Hlidskjalf SPA — `:3888`
 2. Hlidskjalf gate API — `:3889` (`apps/hlidskjalf/server`, reads the runtime)
-3. Smíðja visualizer API — `:8437` (`CMD_DB=<repo>/smidja/smidja_data/smidja.db`)
-4. Smíðja visualizer UI — `:8438`
-5. Nornir cron + Bifrost bridge
+3. Smíðja visualizer — `:8437` (`CMD_DB=<repo>/smidja/smidja_data/smidja.db`; API + built UI)
+4. Nornir cron + Bifrost bridge
 
 ```bash
-scripts/start.sh      # raise: SPA :3888 · gate API :3889 · visualizer :8437/:8438
+scripts/start.sh      # raise: SPA :3888 · gate API :3889 · visualizer :8437
 scripts/stop.sh       # lower them all
 ```
 
-### Seeing it from Hlidskjalf
-
 The **Sessions** gate (Hlidskjalf) carries **Open visualizer**, which opens
-`http://127.0.0.1:8438` in a new tab; it also has **Refresh**, and the app polls
+`http://127.0.0.1:8437` in a new tab; it also has **Refresh**, and the app polls
 `smidja.db` every five seconds so a newly-finished run appears on its own.
 Hlidskjalf and the visualizer are two windows on the same smithy: the seat that
 sees all of Ymir, and the eye on the work in the fire. Open them side by side.

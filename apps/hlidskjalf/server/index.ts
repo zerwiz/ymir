@@ -266,11 +266,23 @@ async function well(q = '') {
 async function mimirHealth() {
   try {
     const res = await fetch(`${MIMIR_URL}/health`, { signal: AbortSignal.timeout(4000) });
-    if (res.ok) return json(await res.json());
+    if (res.ok) return await res.json();
   } catch {
     /* down */
   }
   return { status: 'down', store: null, episodes: 0, agents: [] };
+}
+
+/** One full episode from the well — the Allfather reads the whole memory. */
+async function wellEpisode(id: string) {
+  if (!id) return null;
+  try {
+    const res = await fetch(`${MIMIR_URL}/episode?id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) return await res.json();
+  } catch {
+    /* bridge down */
+  }
+  return null;
 }
 
 /* ---- /api/processes ------------------------------------------------------ */
@@ -1175,6 +1187,7 @@ const server = Bun.serve({
       if (p === '/api/orders') return json({ open: orders().filter((o) => o.status !== 'COMPLETED').length, orders: orders() });
       if (p === '/api/runes') return json(runes());
       if (p === '/api/well') return json(await well(url.searchParams.get('q') ?? ''));
+      if (p === '/api/well/episode') return json((await wellEpisode(url.searchParams.get('id') ?? '')) ?? { error: 'not found' });
       if (p === '/api/mimir/health') return json(await mimirHealth());
       if (p === '/api/processes') return json(processes());
       if (p === '/api/reviews') return json(reviews());

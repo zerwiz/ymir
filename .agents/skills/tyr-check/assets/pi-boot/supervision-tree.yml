@@ -104,7 +104,7 @@ processes:
       timeout: 5
 
   - name: "mimirsbrunn-bridge"
-    command: "python3 -m engram.server --port 4602 --data-dir /home/zerwiz/Ymir/.agents/memory"
+    command: "python3 /home/zerwiz/Ymir/bin/mimir-bridge.py"
     directory: "/home/zerwiz/Ymir"
     user: "zerwiz"
     autostart: true
