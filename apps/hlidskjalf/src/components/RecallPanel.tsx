@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { RecallEpisode } from '../types';
+import { Markdown } from './Markdown';
 
 export function RecallPanel({
   episodes,
@@ -80,7 +81,9 @@ export function RecallPanel({
                 <span className="score-val">{ep.score.toFixed(2)}</span>
               </div>
             </div>
-            <p className="ep-body">{ep.body}</p>
+            <div className="ep-body">
+              <Markdown source={ep.body} />
+            </div>
             <div className="ep-foot">
               <span>{ep.mode}</span>
               <span>{ep.agentScope}</span>

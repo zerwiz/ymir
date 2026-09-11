@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useYmir } from '../state/store';
 import { gateApi } from '../services/api';
+import { Markdown } from '../components/Markdown';
 import type { FileNode } from '../types';
 
 interface FlatNode {
@@ -67,6 +68,12 @@ export function Files() {
           ? preview.body
           : (preview?.note ?? preview?.error ?? 'no content available');
 
+  const isMarkdown =
+    selectedNode?.type === 'file' &&
+    !loading &&
+    preview?.body != null &&
+    /\.(md|markdown)$/i.test(selectedNode.name);
+
   return (
     <>
       <div className="stage-head">
@@ -121,7 +128,9 @@ export function Files() {
               {selectedNode?.size ? `${selectedNode.size} bytes` : selectedNode?.type === 'dir' ? 'directory' : ''}
             </span>
           </div>
-          <div className="file-preview">{body}</div>
+          <div className={`file-preview${isMarkdown ? ' md-preview' : ''}`}>
+            {isMarkdown ? <Markdown source={body} /> : body}
+          </div>
         </section>
       </div>
     </>

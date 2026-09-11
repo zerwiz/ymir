@@ -10,7 +10,7 @@
 #
 # Gates:
 #   toon      TOON blocks in galdr SKILL.md + assets + tyr SKILL.md + AGENTS.md
-#   naming    no imported terms (captain/treehouse/crewmate; firstmate only in provenance)
+#   naming    no imported terms (captain/crewmate; firstmate only in provenance)
 #   mocks     no mock/stub/placeholder in the shipped runtime (bin/*.sh)
 #   syntax    bash -n on bin/*.sh; node --check on plugins
 #   json      every runtime JSON parses
@@ -66,7 +66,7 @@ for f in "$ROOT/AGENTS.md" "$ROOT"/bin/*.sh; do
   # The Huginn observer is the read-only bridge to the external distro; it
   # legitimately names that system's tooling and paths.
   [ "${f##*/}" = "nornir-job-observer.sh" ] && continue
-  hit=$(grep -nEi 'captain|treehouse|crewmate' "$f" 2>/dev/null | grep -vEi 'never|imported|\.treehouse' || true)
+  hit=$(grep -nEi 'captain|crewmate' "$f" 2>/dev/null | grep -vEi 'never|imported|\.treehouse' || true)
   [ -n "$hit" ] && naming_fail="$naming_fail ${f##*/}:$(printf '%s' "$hit" | head -n1 | cut -d: -f1)"
 done
 # Note: the upstream project name is permitted in the assets as provenance

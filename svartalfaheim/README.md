@@ -1,34 +1,27 @@
-# SVARTALFAHEIM — Multi-Tenant Domains (Nine Realms)
+# SVARTALFAHEIM — the company container root
 
-Isolated tenant domains. Each tenant has its own secrets, projects, and memory.
-**Tenant boundaries are sacred** — never read, write, or reference files outside the active tenant without explicit approval.
+**Single tenant.** There is one operator (the Allfather); there are no person
+realms here and no tenants. This tree is the **company's environment** — its
+data and, later, its Docker boundary.
 
-## Tenant Template
-Each tenant contains:
-- `.env.realm` — tenant-specific secrets (git-ignored, see `.env.realm.example`)
-- `Brokk.md` — tenant persona, directives, and system prompt
-- `projects/` — cloned GitHub repos (with `.yggdrasil/` worktrees)
-- `workspace/` — scoped operational memory
-  - `company/` — brand identity, offers, strategy
-  - `marketing/` — campaigns, copy, social calendars
-  - `development/` — specs, PRDs, architectural docs
-  - `life/` — personal goals, habits, health, finances
-  - `memory/` — daily logs, entity graph
+```
+svartalfaheim/<company>/        # e.g. wayof
+├── companies/                  # entity cards for the company's ventures/brands
+├── workspace/                  # company-scoped operational memory
+│   ├── company/ marketing/ development/ life/ memory/
+├── projects/                   # company project working dirs
+├── AGENTS.md                   # company persona / directives
+└── .env.realm.example          # company secrets template (git-ignored real)
+```
 
-## Tenants
-| Tenant | Type | Owner | Workspace focus |
-|--------|------|-------|-----------------|
-| `way-of` | Company / shared | zerwiz + craig | Business, product (WOMONO, WOW, OPT), marketing, client work |
-| `zerwiz` | Personal / operator | zerwiz (Josef) | Personal goals, life execution, solo ventures |
-| `craig` | Member | craig | Personal goals, live execution, solo ventures |
+- The **operator's** personal and work scopes live under `workspace/` at the repo
+  root (`workspace/work`, `workspace/personal`). A **work** workspace attaches to
+  its company container here.
+- **Houses** (Ymir Labs, Brokk Forge, …) are brand labels on company cards — not
+  isolation, not domains.
+- Retired: the multi-tenant realms `way-of`, `zerwiz`, `craig`. The company is
+  **WayOf** (`svartalfaheim/wayof`); personal is not a tenant.
+- Future: each company here becomes a container; a personalised copy is what a
+  new user downloads and runs for their own personal workspace.
 
-## Creating a New Tenant
-1. `cp -r way-of <new-tenant-slug>` (template is closest to an empty tenant)
-2. Edit `Brokk.md`, `workspace/README.md`, `.env.realm.example`
-3. Register it in `workspace/config/portfolio.md`
-4. Create `projects/` repos for the tenant
-
-## Naming Rules
-- Tenant slugs: lowercase, hyphens, descriptive of the domain (`way-of`, `zerwiz`, `craig`)
-- Never use `realm_*` placeholders — every tenant must have a real identity
-- Inter-tenant messaging always routes through Ratatoskr, never direct file access
+Naming: company slugs are lowercase (`wayof`). Never a person realm.

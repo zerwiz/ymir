@@ -32,9 +32,9 @@ function grant(realm: string, tenant: string, role: TenantGrant['role'], house: 
  */
 export const MOCK_IDENTITIES: MockIdentity[] = [
   {
-    login: 'allfather',
-    name: 'Allfather',
-    email: 'allfather@ymir.local',
+    login: 'zerwiz',
+    name: 'Allfather (zerwiz)',
+    email: 'zerwiz@ymir.local',
     tenants: [
       grant('work', 'Work', 'owner', 'ymirlabs'),
       grant('personal', 'Personal', 'owner', 'muninn'),
@@ -50,12 +50,23 @@ function mockJwt(user: User): string {
   return `${header}.${payload}.mock-signature`;
 }
 
+const LEGACY_REALMS = new Set(['way-of', 'zerwiz', 'craig']);
+
 export function loadSession(): Session | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Session;
     if (!parsed?.user?.login || !Array.isArray(parsed.tenants)) return null;
+    // Retire the multi-tenant realms: a legacy session migrates to the
+    // single-tenant canonical workspaces (work + personal). craig is gone.
+    if (parsed.tenants.some((t) => LEGACY_REALMS.has(t.realm))) {
+      parsed.tenants = [
+        grant('work', 'Work', 'owner', 'ymirlabs'),
+        grant('personal', 'Personal', 'owner', 'muninn'),
+      ];
+      saveSession(parsed);
+    }
     return parsed;
   } catch {
     return null;
