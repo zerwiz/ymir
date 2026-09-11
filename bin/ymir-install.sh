@@ -9,7 +9,10 @@
 #   bin/ymir-install.sh --status
 #   bin/ymir-install.sh --version
 #
-# Exit: 0 all good (or --check), 1 a step failed, 2 usage.
+# Consent: a real install (not --check) asks the operator to accept the plan
+# before any change is made. Non-interactive callers must pass --yes.
+#
+# Exit: 0 all good (or --check), 1 a step failed, 2 usage, 3 declined.
 set -u
 
 VERSION="1.0.0"
@@ -36,53 +39,52 @@ add() { IDS+=("$1"); STATUS+=("$2"); DETAIL+=("$3"); }
 have() { command -v "$1" >/dev/null 2>&1; }
 TOON="install[0]{step,status,detail}:"
 
+# ── consent ──────────────────────────────────────────────────────────────
+# Show exactly what will change and require explicit acceptance. A real
+# install touches the machine (packages, a docker image, raised services),
+# so it never proceeds on silence.
+confirm_install() {
+  [ "$ASSUME_YES" = 1 ] && return 0
+  if [ ! -t 0 ]; then
+    printf 'error: refusing a non-interactive install without --yes\nhelp: re-run with --yes to accept non-interactively, or --check to preview\n' >&2
+    exit 3
+  fi
+  cat <<'PLAN'
+Ymir first setup — this will make the following changes:
+
+  • install in USER SPACE (no sudo): bun, uv  — and 'mcp<2>' via pip
+  • create the workspace tree (work/ · personal/ · companies · registries)
+  • install the OSS engines: treehouse, no-mistakes (+ sandcastle if present)
+  • ensure the Hermes worker runtime
+  • build the Utgard sandbox image 'utgard-runner:latest' (needs docker access)
+  • create the Smiðja database so the visualizer has data
+  • load agents/skills and write workspace/INSTALL.md
+  • raise the runtime services (Hlidskjalf SPA + gate API + bridges)
+
+Nothing is deleted. Every step is idempotent.
+PLAN
+  printf '\nProceed with the install? [y/N] '
+  read -r reply || reply=""
+  case "$reply" in
+    y|Y|yes|YES) ;;
+    *) printf 'install declined — nothing was changed.\n'; exit 3 ;;
+  esac
+}
+
 # ── 1. prereqs ───────────────────────────────────────────────────────────────
 #
-# engram is OPTIONAL: it powers the memory well (Mimir) but the platform runs
-# without it. We try to install it and, when the interpreter is too new for the
-# published wheel, say so plainly instead of leaving a permanent WARN that
-# looks like a broken install.
+# Self-healing: `bin/prereq-ensure.sh` provisions what it can in user space
+# (bun, uv, mcp<2) with no sudo. Anything it cannot do is reported with an
+# exact command. engram is OPTIONAL and reported honestly, never as a failure.
 ENGRAM_PY=""
-find_engram_python() {
-  # Prefer an interpreter that satisfies engram's Requires-Python (>=3.12,<3.14).
-  for c in python3.12 python3.13 engram-python; do
-    have "$c" && { echo "$c"; return 0; }
-  done
-  return 1
-}
-install_pkg_hint() {
-  # Best-effort package install for a missing CLI, across common managers.
-  local pkg="$1"
-  if have pacman; then printf 'help: sudo pacman -S --needed %s\n' "$pkg" >&2
-  elif have apt-get; then printf 'help: sudo apt-get install -y %s\n' "$pkg" >&2
-  elif have dnf; then printf 'help: sudo dnf install -y %s\n' "$pkg" >&2
-  elif have brew; then printf 'help: brew install %s\n' "$pkg" >&2
-  fi
-}
 step_prereqs() {
-  if [ "$CHECK" = 0 ]; then
-    # bun: the runtime for the gate API and the Smiðja visualizer.
-    if ! have bun; then
-      # Try a user-space install first so we never need sudo here.
-      if curl -fsSL https://bun.sh/install 2>/dev/null | bash >/dev/null 2>&1; then
-        [ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
-      fi
-      have bun || install_pkg_hint bun
-    fi
-    # pip: the installer's own Python steps need it.
-    if ! python3 -m pip --version >/dev/null 2>&1; then
-      install_pkg_hint python-pip || true
-    fi
-    # mcp<2: the harness MCP server library.
-    python3 -m pip --version >/dev/null 2>&1 && \
-      { python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1 || \
-        python3 -m pip install --user --break-system-packages -q 'mcp<2' >/dev/null 2>&1 || true; }
-    # engram (optional): install if any compatible interpreter exists.
-    if ! python3 -c "import engram" >/dev/null 2>&1; then
-      if ENGRAM_PY="$(find_engram_python)"; then
-        "$ENGRAM_PY" -m pip install --user --break-system-packages -q engram >/dev/null 2>&1 || true
-      fi
-    fi
+  if [ "$CHECK" = 0 ] && [ -x "$SCRIPT_DIR/prereq-ensure.sh" ]; then
+    "$SCRIPT_DIR/prereq-ensure.sh" bun >/dev/null 2>&1 || true
+    "$SCRIPT_DIR/prereq-ensure.sh" uv  >/dev/null 2>&1 || true
+    "$SCRIPT_DIR/prereq-ensure.sh" mcp >/dev/null 2>&1 || true
+    # bun installs to ~/.bun/bin; adopt it for the rest of this run.
+    [ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
+    [ -x "$HOME/.local/bin/uv" ] && export PATH="$HOME/.local/bin:$PATH"
   fi
   local miss=""
   for c in git python3 bun; do have "$c" || miss="$miss $c"; done
@@ -91,13 +93,11 @@ step_prereqs() {
   have gh || miss="$miss gh"
   if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "git python3 bun docker gh mcp<2"; fi
   # engram is reported separately and never fails the step.
-  if python3 -c "import engram" >/dev/null 2>&1 || { [ -n "$ENGRAM_PY" ] && "$ENGRAM_PY" -c "import engram" >/dev/null 2>&1; }; then
+  if python3 -c "import engram" >/dev/null 2>&1; then
     add memory-well OK "engram present"
-  elif [ "$CHECK" = 1 ] && ! have python3; then
-    add memory-well SKIP "needs python3"
   else
     local pyv; pyv="$(python3 -c 'import sys;print("%d.%d"%sys.version_info[:2])' 2>/dev/null || echo '?')"
-    add memory-well SKIP "optional — engram needs Python >=3.12,<3.14 (have $pyv); Mimir stays off, platform fully runs"
+    add memory-well SKIP "optional — install engine then run bin/mimir-bridge.sh (have Python $pyv); platform fully runs without it"
   fi
 }
 
@@ -229,6 +229,17 @@ step_memory() {
   add memory OK "engram store $store · MCP in $mcp harness configs"
 }
 
+# ── 5b. smidja db (visualizer readiness) ─────────────────────────────
+step_smidja() {
+  if [ -x "$SCRIPT_DIR/smidja-bootstrap.sh" ]; then
+    if [ "$CHECK" = 1 ]; then
+      if [ -f "$ROOT/smidja/smidja_data/smidja.db" ]; then add smidja OK "smidja.db present"; else add smidja WARN "smidja.db missing (run without --check)"; fi
+    else
+      if "$SCRIPT_DIR/smidja-bootstrap.sh" >/dev/null 2>&1; then add smidja OK "smidja.db ready (visualizer has data)"; else add smidja WARN "could not bootstrap smidja.db (visualizer stays empty)"; fi
+    fi
+  else add smidja SKIP "no smidja-bootstrap.sh"; fi
+}
+
 # ── 6. loaders ───────────────────────────────────────────────────────────────
 step_loaders() {
   if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
@@ -265,7 +276,10 @@ step_register() {
   add register OK "wrote workspace/INSTALL.md"
 }
 
-step_prereqs; step_tree; step_engines; step_hermes; step_sandbox; step_memory; step_loaders; step_register
+# Ask before touching the machine; --check only previews and never asks.
+[ "$CHECK" = 0 ] && confirm_install
+
+step_prereqs; step_tree; step_engines; step_hermes; step_sandbox; step_memory; step_smidja; step_loaders; step_register
 [ "$CHECK" = 0 ] && step_services
 
 printf 'install[%d]{step,status,detail}:\n' "${#IDS[@]}"
