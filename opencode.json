@@ -38,7 +38,7 @@
     "builder": {
       "mode": "subagent",
       "model": "opencode-go/deepseek-v4.1-flash",
-      "description": "Builder — implement the plan exactly; report every changed file.",
+      "description": "Builder \u2014 implement the plan exactly; report every changed file.",
       "permission": {
         "read": "allow",
         "edit": "allow",
@@ -65,7 +65,7 @@
     "planner": {
       "mode": "subagent",
       "model": "opencode-go/deepseek-v4.1-flash",
-      "description": "Planner — turn a request into a plan the builder can implement without asking questions.",
+      "description": "Planner \u2014 turn a request into a plan the builder can implement without asking questions.",
       "permission": {
         "read": "allow",
         "edit": "deny",
@@ -78,7 +78,7 @@
     "reviewer": {
       "mode": "subagent",
       "model": "opencode-go/deepseek-v4.1-flash",
-      "description": "Reviewer — confirm what was built is what was asked for; change nothing.",
+      "description": "Reviewer \u2014 confirm what was built is what was asked for; change nothing.",
       "permission": {
         "read": "allow",
         "edit": "deny",
@@ -91,7 +91,7 @@
     "documenter": {
       "mode": "subagent",
       "model": "opencode-go/deepseek-v4.1-flash",
-      "description": "Documenter — write up the change from the diff; document only.",
+      "description": "Documenter \u2014 write up the change from the diff; document only.",
       "permission": {
         "read": "allow",
         "edit": "allow",
@@ -105,7 +105,7 @@
     "scout": {
       "mode": "subagent",
       "model": "opencode-go/deepseek-v4.1-flash",
-      "description": "Scout — find and report where things live, change nothing.",
+      "description": "Scout \u2014 find and report where things live, change nothing.",
       "permission": {
         "read": "allow",
         "edit": "deny",
@@ -117,6 +117,21 @@
     }
   },
   "skills": {
-    "paths": [".agents/skills"]
+    "paths": [
+      ".agents/skills"
+    ]
+  },
+  "mcp": {
+    "engram": {
+      "type": "local",
+      "command": [
+        "/home/zerwiz/.local/bin/engram-mcp",
+        "--db",
+        "/home/zerwiz/Ymir/.agents/memory/kaia.engram",
+        "--agent-id",
+        "opencode"
+      ],
+      "enabled": true
+    }
   }
 }

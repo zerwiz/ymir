@@ -743,7 +743,7 @@
 /* Chat */
 .chat-layout {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 220px 1fr 280px;
   gap: var(--ymir-space-4);
   height: 100%;
 }
@@ -880,3 +880,188 @@
 }
 .badge.local { color: var(--ymir-ok); background: color-mix(in srgb, var(--ymir-ok) 12%, transparent); border: 1px solid color-mix(in srgb, var(--ymir-ok) 30%, transparent); }
 .badge.online { color: var(--ymir-warn); background: color-mix(in srgb, var(--ymir-warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--ymir-warn) 30%, transparent); }
+
+/* --- Chat sessions, thinking, lanes ------------------------------------- */
+.field input {
+  background: var(--ymir-bg-0);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  padding: 10px 12px;
+  color: var(--ymir-text-0);
+  outline: none;
+  font-size: 14px;
+  font-family: var(--ymir-font-body);
+}
+.field input:focus {
+  border-color: var(--ymir-chisel);
+  box-shadow: var(--ymir-bevel);
+}
+.chat-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 460px;
+}
+.chat-side-list {
+  overflow-y: auto;
+  max-height: 520px;
+}
+.chat-session {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--ymir-steel-1);
+  font-size: 12px;
+  color: var(--ymir-text-1);
+}
+.chat-session:hover {
+  background: var(--ymir-bg-3);
+}
+.chat-session.active {
+  background: var(--realm-tint-dim);
+  box-shadow: inset 3px 0 0 var(--realm-tint);
+  color: var(--ymir-text-0);
+}
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--ymir-text-3);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.icon-btn:hover {
+  color: var(--ymir-danger);
+  background: var(--ymir-bg-0);
+}
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.bubble.err {
+  border-color: color-mix(in srgb, var(--ymir-danger) 45%, transparent);
+  color: var(--ymir-danger);
+}
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ymir-text-2);
+  font-style: italic;
+}
+.dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ymir-cyan-1);
+  animation: ydot 1.2s infinite ease-in-out;
+}
+.dots i:nth-child(2) { animation-delay: 0.15s; }
+.dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ydot {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+.lane-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  background: var(--ymir-bg-0);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: 999px;
+  color: var(--ymir-text-2);
+  font-size: 12px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.chip.on {
+  background: var(--realm-tint-dim);
+  border-color: var(--realm-tint);
+  color: var(--ymir-text-0);
+}
+
+/* --- Forge · prompt editor ---------------------------------------------- */
+.prompt-editor {
+  width: 100%;
+  font-family: var(--ymir-font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  resize: vertical;
+  background: var(--ymir-bg-0);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  color: var(--ymir-text-0);
+  padding: 12px;
+  outline: none;
+}
+.prompt-editor:focus {
+  border-color: var(--ymir-chisel);
+  box-shadow: var(--ymir-bevel);
+}
+
+/* --- Model picker — a themed combobox, held in the frame ----------------- */
+.model-picker {
+  position: relative;
+  width: 100%;
+}
+.model-picker input {
+  width: 100%;
+}
+.model-current {
+  margin-top: 5px;
+  font-family: var(--ymir-font-mono);
+  font-size: 11px;
+  color: var(--ymir-text-3);
+  word-break: break-all;
+  line-height: 1.4;
+}
+.model-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(420px, 88vw);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--ymir-bg-2);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+.model-menu li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ymir-text-1);
+  cursor: pointer;
+}
+.model-menu li .mono {
+  white-space: normal;
+  word-break: break-all;
+}
+.model-menu li:hover,
+.model-menu li.active {
+  background: var(--realm-tint-dim);
+  color: var(--ymir-text-0);
+}
+.model-menu li.free {
+  color: var(--ymir-cyan-1);
+  border-top: 1px solid var(--ymir-steel-1);
+}

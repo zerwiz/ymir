@@ -12,6 +12,10 @@ export const SITE = {
   twitter: '@ymir',
 };
 
+/** Smíðja's eye — the trace visualizer. The API on :8437 also serves the built UI. */
+export const VISUALIZER_URL =
+  (import.meta.env.VITE_VISUALIZER_URL as string | undefined) ?? 'http://127.0.0.1:8437';
+
 /** Per-gate metadata — every view is a page and declares its own story. */
 export const GATE_META: Record<GateId, PageMeta> = {
   fleet: {
