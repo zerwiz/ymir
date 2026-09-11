@@ -31,21 +31,21 @@ Each Eindri worker operates inside Utgard containers on Yggdrasil worktrees with
 
 Galdr needs to know about these build tool categories and their asset requirements:
 
-### 1. Python Factory Tools
-- **Location**: `templates/factory/` (deterministic Python scripts)
-- **Key files**: `factory_*.py` orchestrator scripts, `factory_modules/*.py`
-- **Data contracts**: Pydantic v2 data types in `factory_modules/data_types.py`
+### 1. Python Smíðja Tools
+- **Location**: `templates/smidja/` (deterministic Python scripts)
+- **Key files**: `smidja_*.py` orchestrator scripts, `smidja_modules/*.py`
+- **Data contracts**: Pydantic v2 data types in `smidja_modules/data_types.py`
 - **Agent runtime**: `agent_pi.py` (Pi), `agent_opencode.py` (opencode)
-- **Tracing**: SQLite WAL + JSONL events in `factory_modules/tracer.py`
-- **Quality gates**: Deterministic subprocess runs in `factory_modules/quality.py`
-- **Permissions**: Path-based write enforcement in `factory_modules/permissions.py`
-- **Context handoff**: File-based `context_handoff/` dir in `factory_modules/agents.py`
-- **Sub-agents**: Task-tool lane materialization (G2) in `factory_modules/agents.py`
+- **Tracing**: SQLite WAL + JSONL events in `smidja_modules/tracer.py`
+- **Quality gates**: Deterministic subprocess runs in `smidja_modules/quality.py`
+- **Permissions**: Path-based write enforcement in `smidja_modules/permissions.py`
+- **Context handoff**: File-based `context_handoff/` dir in `smidja_modules/agents.py`
+- **Sub-agents**: Task-tool lane materialization (G2) in `smidja_modules/agents.py`
 
-### 2. Command-Factory (Skill-based)
-- **Location**: Reuse `command-factory` validated OSS project
-- **Features**: Super Simple Software Factory: deterministic Python owns graph, agents bounded nodes, typed JSON envelopes, SQLite telemetry, Vue visualizer (`apps/visualizer/`, port 4601)
-- **Assets**: Factory scripts, roster/config, visualizer
+### 2. Command-Smíðja (Skill-based)
+- **Location**: Reuse `smidja` validated OSS project
+- **Features**: Smíðja: deterministic Python owns graph, agents bounded nodes, typed JSON envelopes, SQLite telemetry, Vue visualizer (`apps/visualizer/`, port 4601)
+- **Assets**: Smíðja scripts, roster/config, visualizer
 
 ### 3. Brokk Crew Orchestration
 - **Location**: External agent distro by kunchenguid

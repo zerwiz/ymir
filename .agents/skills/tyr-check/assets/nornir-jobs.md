@@ -118,7 +118,7 @@ this machine.
 
 | Source | Signals read |
 |---|---|
-| `~/command` | `FEATURES.md` registry, `.compliance/gates/check_*.sh` + `config/core_four.yaml`, `factory/factory_data/factory.db` (read-only SQLite URI), `factory_data/kaia.engram` |
+| `~/command` | `FEATURES.md` registry, `.compliance/gates/check_*.sh` + `config/core_four.yaml`, `smidja/smidja_data/smidja.db` (read-only SQLite URI), `smidja_data/kaia.engram` |
 | `~/Brokk` | `state/home-summary.json`, `state/branch-outcomes.jsonl`, `state/*.meta` |
 | `~/.Yggdrasil` | worktree dirs + `Yggdrasil-state.json` |
 

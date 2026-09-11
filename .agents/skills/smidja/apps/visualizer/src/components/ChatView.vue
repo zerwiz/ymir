@@ -92,7 +92,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <header class="chat-head">
       <div class="head-left">
         <span class="chat-title">Orchestrator Chat</span>
-        <span class="sub">talk to {{ chatAgentName || 'Kaia' }} · start factory sessions</span>
+        <span class="sub">talk to {{ chatAgentName || 'Kaia' }} · start smidja sessions</span>
       </div>
       <span class="model-picker" @mouseenter="modelPickerHover = true" @mouseleave="modelPickerHover = false">
         <input

@@ -128,7 +128,7 @@ function tagClass(tag: string): string {
 
     <div v-if="!health.ok && !apiError" class="empty-state">
       memory bridge offline — start it with <code>just kaia</code> or
-      <code>scripts/factory-ui.sh</code>
+      <code>scripts/smidja-ui.sh</code>
     </div>
 
     <template v-if="health.ok">

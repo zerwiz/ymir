@@ -1656,7 +1656,7 @@ let current = await replaceSession(startup, "new");
 current = await replaceSession(current, "resume");
 current = await replaceSession(current, "fork");
 
-// Same bound instance: ordinary shutdown then session_start without a fresh factory.
+// Same bound instance: ordinary shutdown then session_start without a fresh smidja.
 const sameInstanceArm = currentArm();
 await current.handlers.get("session_shutdown")?.({ type: "session_shutdown", reason: "new" }, {});
 await current.handlers.get("session_start")?.({ type: "session_start", reason: "new" }, {});

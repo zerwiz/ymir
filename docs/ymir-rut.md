@@ -245,7 +245,7 @@ Both stacks speak the same Norse module language; only the floors differ.
 | Rut module (target) | Current implementation (TypeScript · Python · React · Vue) |
 |---|---|
 | `crates/bifrost` (Envoy/gRPC) | TS gateway service — Traefik/Caddy + JSON-RPC routing; `auth::verifier` → Heimdall OAuth2-proxy |
-| `crates/hlidskjalf` (Rust dashboard) | **React/Vue** portal — factory visualizer paradigm, `#/memory`, `#/fleet`, `#/tasks`, Runes stream |
+| `crates/hlidskjalf` (Rust dashboard) | **React/Vue** portal — smidja visualizer paradigm, `#/memory`, `#/fleet`, `#/tasks`, Runes stream |
 | `crates/svartalfaheim` (tenant/cred vault) | TS tenant daemon — realm namespaces, `.env.realm`, scoped registries, per-realm A2A discovery |
 | `crates/ratatoskr` (NATS JetStream) | TS **A2A 1.0 backbone** + Redis queue under the task model (plan 25) |
 | `crates/yggdrasil` (libgit2 .treehouses) | TS worktree manager over git CLI — `.yggdrasil/<agent-id>/` branches |

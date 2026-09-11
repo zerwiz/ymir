@@ -1,15 +1,15 @@
 /**
- * factory trace UI — Electron shell.
+ * smidja trace UI — Electron shell.
  *
  * Loads the local visualizer (default http://localhost:8438, the Vite dev
- * server started by `just ui` / scripts/factory-ui.sh) in a native maximized
+ * server started by `just ui` / scripts/smidja-ui.sh) in a native maximized
  * window, so wide per-agent lanes and diagrams fit on screen.
  *
  *   electron .                                  # open the UI
- *   FACTORY_UI_URL=http://localhost:8438 electron . # point elsewhere
+ *   SMIDJA_UI_URL=http://localhost:8438 electron . # point elsewhere
  *
- * Cross-platform: Linux/macOS manage it with scripts/factory-electron.sh
- * (start|stop), Windows with scripts/factory-electron.ps1.
+ * Cross-platform: Linux/macOS manage it with scripts/smidja-electron.sh
+ * (start|stop), Windows with scripts/smidja-electron.ps1.
  *
  * The native frame is hidden (it follows the light system theme) and the
  * app's own dark topbar becomes the title bar, with window controls that talk
@@ -19,21 +19,21 @@
 const { app, BrowserWindow, shell, ipcMain, nativeTheme } = require("electron");
 const { join } = require("node:path");
 
-const UI_URL = process.env.FACTORY_UI_URL || "http://localhost:8438";
+const UI_URL = process.env.SMIDJA_UI_URL || "http://localhost:8438";
 
 // Force Chromium/GTK chrome to dark so nothing paints white around the page.
 nativeTheme.themeSource = "dark";
-app.setName("factory Trace UI");
+app.setName("smidja Trace UI");
 if (process.platform === "linux") {
   // Ties the window to the installed .desktop launcher, so the compositor
   // (GNOME/Wayland app_id, X11 WM_CLASS) shows our icon in the taskbar
   // instead of the generic electron one.
-  app.setDesktopName("factory-trace-ui.desktop");
+  app.setDesktopName("smidja-trace-ui.desktop");
 }
 if (process.platform === "win32") {
   // Windows taskbar groups/labels windows by AppUserModelId — set it to our
   // own id (must happen before 'ready') so the window gets its own icon.
-  app.setAppUserModelId("factory-trace-ui");
+  app.setAppUserModelId("smidja-trace-ui");
 }
 
 // Window controls: the renderer's topbar buttons arrive here over IPC.
@@ -55,7 +55,7 @@ ipcMain.on("win:close", (event) => {
 
 function createWindow() {
   const win = new BrowserWindow({
-    title: "factory Trace UI",
+    title: "smidja Trace UI",
     width: 1600,
     height: 1000,
     minWidth: 900,

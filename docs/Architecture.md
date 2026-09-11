@@ -86,7 +86,7 @@ repository, orchestrated by autonomous Norse-named agents.
 - Realm personae in `svartalfaheim/<realm>/Brokk.md`.
 
 ### 3.2 Memory — Mimirsbrunn (engram engine) + Runes
-Adopted from Kaia's proven factory memory (ENTRY-007): the well is **engram**
+Adopted from Kaia's proven smidja memory (ENTRY-007): the well is **engram**
 (`engdbram`, open source — single-file SQLite + sqlite-vec + FTS5 + local embeddings).
 
 | Tier | Name | Engine | Use |
@@ -291,7 +291,7 @@ On success: cleanup(merge=true) → merged to main, worktree removed
 | Layer | Choice | Norse shell |
 |-------|--------|-------------|
 | Control plane daemons | **TypeScript** (Node 22) | Bifrost, Svartalfaheim, Yggdrasil, Ratatoskr, Mjollnir, Valhalla |
-| Agent orchestration | **Python 3.12+** + TS | Brokk / Kaia / Eindri (mirrors factory harness) |
+| Agent orchestration | **Python 3.12+** + TS | Brokk / Kaia / Eindri (mirrors smidja harness) |
 | UI / UX | **React + Vue** | Hlidskjalf portal, Skrymir |
 | Inter-agent | **A2A 1.0** (JSON-RPC 2.0/SSE) + **Redis** | Ratatoskr |
 | Memory | **engram/engdbram** bridge `:4602` | Mimirsbrunn |
@@ -303,7 +303,7 @@ On success: cleanup(merge=true) → merged to main, worktree removed
 | Persistence | Postgres 16 (self-hosted) + engram/SQLite | Runes/Mimirsbrunn |
 | Process mgmt | PM2 / Docker | Valhalla |
 | CI/CD | GitHub Actions + gh CLI | Mjollnir / deploy |
-| Reused systems | `command-factory`, `firstmate`, `.compliance`, factory visualizer | — |
+| Reused systems | `smidja`, `firstmate`, `.compliance`, smidja visualizer | — |
 
 ### Target stack (Ymir Rut v2.6 — port AFTER end-to-end, ENTRY-009)
 

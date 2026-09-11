@@ -41,7 +41,7 @@ function onArchived(adwId: string) {
     void tick()
     return
   }
-  sessions.value = sessions.value.filter((s) => s.factory_id !== adwId)
+  sessions.value = sessions.value.filter((s) => s.smidja_id !== adwId)
 }
 
 const ordered = computed(() =>
@@ -58,13 +58,13 @@ const ordered = computed(() =>
     <div v-if="ordered.length" class="cards">
       <SessionCard
         v-for="s in ordered"
-        :key="s.factory_id"
+        :key="s.smidja_id"
         :session="s"
         :now-ms="nowMs"
         @archived="onArchived"
       />
     </div>
-    <div v-else-if="loaded" class="empty-state">no sessions yet — run an factory to see it here</div>
+    <div v-else-if="loaded" class="empty-state">no sessions yet — run an smidja to see it here</div>
     <div v-else-if="!apiError" class="empty-state">loading sessions…</div>
   </div>
 </template>

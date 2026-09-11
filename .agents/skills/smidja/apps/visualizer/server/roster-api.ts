@@ -5,7 +5,7 @@
  * Resolves the target repo's roster.yaml by shelling out to the companion
  * Python helper (server/roster_resolve.py), which mirrors scripts/resolve-config.py's
  * exact per-role model resolution. We shell out (not a YAML parser in TS) so the
- * picker always reflects what a real `factory run` would use, with no duplicated
+ * picker always reflects what a real `smidja run` would use, with no duplicated
  * resolution logic and no extra dependency.
  *
  * The result is cached per repo-root for a short window; roster.yaml changes are
@@ -16,9 +16,9 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import type { ModelInfo, RosterInfo, RostersResponse, ModelsResponse } from "../shared/types.ts";
 
-/** The visualizer itself sits in <repoRoot>/.agents/skills/factory/apps/visualizer. */
+/** The visualizer itself sits in <repoRoot>/.agents/skills/smidja/apps/visualizer. */
 function repoRoot(dbPath: string): string {
-  // dbPath is <repoRoot>/factory/factory_data/factory.db — three dirnames up is the repo root.
+  // dbPath is <repoRoot>/smidja/smidja_data/smidja.db — three dirnames up is the repo root.
   return resolve(dirname(dirname(dirname(dbPath))));
 }
 
