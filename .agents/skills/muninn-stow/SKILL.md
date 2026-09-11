@@ -272,7 +272,7 @@ It is never a claim that the home's durable records are correct, because this pa
 Do not hide an over-budget result behind a reset-safe claim.
 In a primary home the receipt is written after the cascade below, not instead of it.
 
-## Automatic cascade to secondmates
+## Automatic cascade to eindri-homes
 
 In a primary home, every `/stow` cascades to every registered Eindri-home after this home's own required pass and knowledge sweep are complete.
 In a Eindri-home home, `/stow` curates that home only and never cascades further.

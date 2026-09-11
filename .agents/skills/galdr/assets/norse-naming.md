@@ -10,7 +10,7 @@ Three clauses make the law enforceable:
 
 1. **Name for the role, never the mood.** A component is named for *what it does* — Sága is the seeress because she sees all that happens and therefore owns the session-start digest. Do not name a component after a figure you merely like.
 2. **Flavor may season a line; it must never name a subsystem or leak into docs.** Conversational Norse color ("the forge is hot") is permitted in a spoken reply. It is forbidden in file names, subsystem names, commits, briefs, PRs, and any Markdown the runtime or other agents read — including every file in `.agents/skills/galdr/assets/`.
-3. **The operator is the Allfather (Odin), never "Allfather."** Odin sees all realms from Hlidskjalf; the operator is the one who sits there. Brokk addresses the Allfather directly in every response and never sends a response with zero direct address. Nautical or imported terms (`Allfather`, `first mate`, `crew`, `ship`, `Eindri-home`) are rejected outright — see §6.
+3. **The operator is the Allfather (Odin), never the imported `captain`.** Odin sees all realms from Hlidskjalf; the operator is the one who sits there. Brokk addresses the Allfather directly in every response and never sends a response with zero direct address. Nautical or upstream terms (`captain`, `first mate`, `crew`, `ship`, `treehouse`) are rejected outright — see §6.
 
 The law is restated in four authoritative places; keep them consistent:
 `AGENTS.md:6` (SYSTEM MANDATE), `data/operator.md` (Voice), `docs/plans/29-brokk-distro-runtime.md:270-276` (Norse naming law), and this file.
@@ -144,17 +144,20 @@ These terms must never name a Ymir subsystem, file, config key, environment vari
 
 | Rejected term | Why | Norse replacement |
 |---|---|---|
-| `Allfather` / "the Allfather" | Imported nautical operator name | **Allfather** |
-| `first mate` / `Brokk` | Upstream project name; provenance only | **Brokk** |
-| `Super Simple Software Factory` / `SSSF` / `sssf` | Upstream project name; provenance only — must never appear as a Ymir name | **Smíðja** (the smithy) |
-| `crew` / `Eindri` | Imported worker term | **Eindri** (worker), **Einherjar** (the spawn act) |
-| `Eindri-home` / `secondmates` | Imported isolated-home concept | **dropped** — one Brokk home; realm homes handle scope |
+| `captain` | Imported nautical operator title | **Allfather** |
+| `first mate` / `firstmate` | Upstream project name; provenance only | **Brokk** (the primary) |
+| `second mate` / `secondmate` | Upstream isolated-home concept | **eindri-home** (realm/home scope) |
+| `crew` / `crewmate` | Imported worker terms | **Eindri** (worker), **Einherjar** (the spawn act) |
+| `ship` / `shipping` (as subsystem names) | Nautical metaphor | **Smíðja** / **Mjollnir** as appropriate |
+| `SSSF` / `sssf` | Upstream project name; provenance only | **Smíðja** (the smithy) |
+| `treehouse`, `worktree pool` (as a subsystem) | Imported OSS engine name | **Yggdrasil** (Norse shell over treehouse) |
+| `sandcastle` (as a subsystem) | Imported OSS engine name | **Utgard** (Norse shell over sandcastle) |
 | `FM_HOME`, `FM_*`, `fm-*` | Upstream env/file prefix | **`BROKK_HOME`, `BROKK_*`, `<figure>-*`** |
 | `calm` | Upstream presentation mode; deferred, not ported | (not named; presentation theming deferred) |
 | `harness-adapters`, `bootstrap-diagnostics`, `supervision-protocols` (as skill names) | Upstream skill names | Galdr aett name or runtime file |
 | `lavish`, `gh-axi`, `chrome-devtools-axi` (as Ymir names) | Upstream tooling names | reuse the OSS tool; do not rename into Ymir |
 | `stow`, `backlog-handoff`, `fleet-sync` | Upstream skill names | Galdr aett name |
-| `zellij`, `orca`, `cmux`, `codex-app` (as Ymir backend names) | Upstream spawn backends not ported | **tmux** | **herdr** only |
+| `zellij`, `orca`, `cmux`, `codex-app` (as Ymir backend names) | Upstream spawn backends not ported | **tmux** / **herdr** only |
 
 ### 6.2 Collision and ambiguity names
 
@@ -186,7 +189,7 @@ kept only so the migration is traceable. New tooling must still not reproduce an
 - **Owner:** Brokk. **Source of truth:** `AGENTS.md:6` (mandate) and `docs/plans/29-brokk-distro-runtime.md:270-297` (runtime table).
 - **Add a row** in §3 whenever a new component ships, with its real path. Add an aett row in §4 when an aett gains its first skill.
 - **Add a reject row** in §6 the moment an imported or colliding name is encountered, before it can spread.
-- **Audit periodically:** `grep -rniE 'Allfather|Brokk|Eindri|Eindri-home|fm-|Yggdrasil|calm' --include='*.sh' --include='*.ts' --include='*.js' --include='*.json' --include='*.md' bin .pi .opencode config data .agents docs/plans | grep -v Brokk-to-norse` should return only provenance citations in `porting-upstream-to-norse.md` and the legacy strings listed in §6.3.
+- **Audit periodically:** `grep -rniE 'captain|firstmate|crew|treehouse|sssf|fm-' --include='*.sh' --include='*.ts' --include='*.js' --include='*.json' --include='*.md' bin .pi .opencode config data .agents docs/plans | grep -v Brokk-to-norse` should return only provenance citations in `porting-upstream-to-norse.md` and the legacy strings listed in §6.3.
 - **Never rewrite §3.2 paths without updating `brokk-distro-runtime.md`**, which cites the same files.
 
 ## 7. Later runtime & worker figures (2026-09-11)
