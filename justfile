@@ -65,19 +65,19 @@ simple-sdlc *ARGS:
 
 # the last 10 runs
 sessions:
-    @sqlite3 {{db}} "select smidja_id, status, substr(request,1,50), total_tokens, round(total_cost,4) from sessions order by started_at desc limit 10;"
+    @python3 -c "import sqlite3;c=sqlite3.connect('file:{{db}}?mode=ro',uri=True);[print(*r) for r in c.execute(\"select smidja_id,status,substr(request,1,50),total_tokens,round(total_cost,4) from sessions order by started_at desc limit 10\")]"
 
 # phase status in sequence: just phases <smidja_id>
 phases smidja_id:
-    @sqlite3 {{db}} "select seq, name, kind, owner, status, attempt from phases where smidja_id='{{smidja_id}}' order by seq;"
+    @python3 -c "import sqlite3;c=sqlite3.connect('file:{{db}}?mode=ro',uri=True);[print(*r) for r in c.execute(\"select seq,name,kind,owner,status,attempt from phases where smidja_id='{{smidja_id}}' order by seq\")]"
 
 # the live event tail: just tail <smidja_id>
 tail smidja_id:
-    @sqlite3 {{db}} "select rowid, type, name, started_at from events where smidja_id='{{smidja_id}}' order by rowid desc limit 25;"
+    @python3 -c "import sqlite3;c=sqlite3.connect('file:{{db}}?mode=ro',uri=True);[print(*r) for r in c.execute(\"select rowid,type,name,started_at from events where smidja_id='{{smidja_id}}' order by rowid desc limit 25\")]"
 
 # what a run has alive right now, with pids: just procs <smidja_id>
 procs smidja_id:
-    @sqlite3 {{db}} "select kind, name, pid, command, started_at from processes where smidja_id='{{smidja_id}}' and ended_at is null order by id;"
+    @python3 -c "import sqlite3;c=sqlite3.connect('file:{{db}}?mode=ro',uri=True);[print(*r) for r in c.execute(\"select kind,name,pid,command,started_at from processes where smidja_id='{{smidja_id}}' and ended_at is null order by id\")]"
 
 # ── observability UI ────────────────────────────────────────────────────────
 

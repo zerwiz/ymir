@@ -138,10 +138,86 @@ export interface SmidjaDecision {
   model: string | null;
   count: number;
 }
+export interface StatsTotals {
+  runs: number;
+  success: number;
+  fail: number;
+  running: number;
+  tokens: number;
+  cost: number;
+}
+export interface StatsUsage {
+  input: number;
+  output: number;
+  cache_read: number;
+  cache_write: number;
+  total: number;
+}
+export interface VendorCost {
+  cached_cost: number;
+  total_cost: number;
+  savings: number;
+  savings_pct: number;
+}
+export interface VendorModelCost extends VendorCost {
+  id: string;
+  name: string;
+  provider: string;
+  tier: 1 | 2 | 3;
+  rank: number;
+  tier_label: string;
+  input_price: number;
+  output_price: number;
+  cache_price: number;
+}
+export type ModelKind = 'local' | 'online';
+export interface ProviderStat {
+  events: number;
+  sessions: number;
+  tokens: number;
+  cost: number;
+  input: number;
+  output: number;
+  cache_read: number;
+}
+export interface ModelProviderStat {
+  model: string;
+  kind: ModelKind;
+  coding_agent: string | null;
+  events: number;
+  tokens: number;
+  cost: number;
+}
+export interface ProviderBreakdown {
+  local: ProviderStat;
+  online: ProviderStat;
+  per_model: ModelProviderStat[];
+}
+export interface ChainStat {
+  chain: string;
+  runs: number;
+  success: number;
+  tokens: number;
+  cost: number;
+}
+export interface ModelStat {
+  model: string;
+  runs: number;
+  success: number;
+  tokens: number;
+  cost: number;
+}
 export interface SmidjaStats {
-  totals: { runs?: number; tokens?: number; cost?: number };
-  by_chain: { chain: string; runs: number; tokens: number; cost: number }[];
-  by_model: { model: string; runs: number; context_tokens: number }[];
+  totals: StatsTotals;
+  usage: StatsUsage;
+  cache_hit_ratio: number;
+  avg_cache_hit_per_run: number;
+  vendors: { gpt4o: VendorCost; gemini: VendorCost };
+  vendor_catalog: VendorModelCost[];
+  providers: ProviderBreakdown;
+  by_chain: ChainStat[];
+  by_model: ModelStat[];
+  generated_at: string;
 }
 
 export const gateApi = {
