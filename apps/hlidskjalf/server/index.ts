@@ -1349,6 +1349,8 @@ function workspaceProvision(name: string, kind: string, domains: string) {
 // Temporary HTTP Basic Auth for the public tunnel. Override with
 // HLIDSKJALF_AUTH="user:pass"; replace with Heimdall (oauth2-proxy) later.
 const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? 'zerwiz:allfather';
+const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
+const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? 'ymirsmidjadell.zerwiz.org').toLowerCase();
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
 const SESSIONS = new Set<string>();
@@ -1361,6 +1363,94 @@ function cookieToken(req: Request): string {
 function isAuthed(req: Request): boolean {
   const t = cookieToken(req);
   return !!t && SESSIONS.has(t);
+}
+
+/** The login screen for the Smíðja host — same gate, same credentials. */
+function smidjaLoginPage(): Response {
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smíðja — Sign in</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+    background: radial-gradient(900px 500px at 50% -10%, rgba(56,189,248,.12), transparent 60%), #080c14;
+    color: #e2e8f0; font: 15px/1.4 system-ui, sans-serif; }
+  form { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px;
+    background: #0d131f; border: 1px solid #23304a; border-radius: 14px; padding: 26px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand b { font-size: 20px; letter-spacing: .18em; }
+  .brand small { display: block; font: 10px/1 ui-monospace, monospace; letter-spacing: .28em;
+    text-transform: uppercase; color: #38bdf8; margin-top: 4px; }
+  h1 { font-size: 22px; margin: 0; }
+  p { margin: 0; color: #94a3b8; font-size: 13px; }
+  input { padding: 11px 12px; border-radius: 9px; border: 1px solid #23304a; background: #111a2b;
+    color: #e2e8f0; font-size: 15px; }
+  input:focus { outline: none; border-color: #38bdf8; }
+  button { padding: 11px 12px; border: none; border-radius: 9px; background: #38bdf8; color: #06121f;
+    font-weight: 700; font-size: 15px; cursor: pointer; }
+  .err { color: #f87171; font-size: 12px; min-height: 14px; }
+</style>
+</head>
+<body>
+<form id="gate">
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b"/>
+      <g fill="#38bdf8">
+        <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13"/>
+        <polygon points="6,21 26,21 25.4,24 6.6,24"/>
+        <polygon points="8,25 24,25 23.3,27.5 8.7,27.5"/>
+      </g>
+    </svg>
+    <span><b>SMÍÐJA</b><small>the smithy</small></span>
+  </div>
+  <h1>Sign in</h1>
+  <p>The gate is closed. Enter the Allfather’s credentials.</p>
+  <input name="username" placeholder="zerwiz" autocomplete="username" autofocus />
+  <input name="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+  <span class="err" id="err"></span>
+  <button type="submit">Enter</button>
+</form>
+<script>
+  const f = document.getElementById('gate');
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const b = new FormData(f);
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ username: b.get('username'), password: b.get('password') }),
+    });
+    if (r.ok) { location.reload(); return; }
+    document.getElementById('err').textContent = 'Wrong username or password';
+  });
+</script>
+</body>
+</html>`;
+  return new Response(html, {
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
+  });
+}
+
+/** Forward an authed Smíðja-host request to the visualizer on :8437. */
+async function proxySmidja(req: Request, url: URL): Promise<Response> {
+  const headers = new Headers(req.headers);
+  headers.delete('host');
+  headers.delete('cookie');
+  headers.delete('connection');
+  const init: RequestInit = { method: req.method, headers, redirect: 'manual' };
+  if (req.method !== 'GET' && req.method !== 'HEAD') init.body = await req.arrayBuffer();
+  try {
+    const up = await fetch(`${SMIDJA_URL}${url.pathname}${url.search}`, init);
+    return new Response(up.body, { status: up.status, headers: up.headers });
+  } catch (err) {
+    return json({ error: `smidja upstream unreachable: ${(err as Error).message}` }, 502);
+  }
 }
 
 const STATIC_TYPES: Record<string, string> = {
@@ -1395,6 +1485,7 @@ function serveStatic(pathname: string): Response {
   if (!file.startsWith(DIST) || !existsSync(file) || statSync(file).isDirectory()) file = join(DIST, 'index.html');
   const ext = extname(file).toLowerCase();
   const headers: Record<string, string> = { 'content-type': STATIC_TYPES[ext] ?? 'application/octet-stream' };
+  if (ext === '.html') headers['cache-control'] = 'no-cache, no-store, must-revalidate';
   if (ext === '.apk') headers['content-disposition'] = 'attachment; filename="ymir.apk"';
   if (ext === '.apk' || ext === '.woff' || ext === '.woff2' || ext === '.ttf') headers['cache-control'] = 'public, max-age=86400';
   try {
@@ -1431,6 +1522,16 @@ const server = Bun.serve({
         return new Response(JSON.stringify({ ok: true }), {
           headers: { 'content-type': 'application/json', 'set-cookie': 'ymir_session=; Path=/; Max-Age=0' },
         });
+      }
+      // The Smíðja host rides the same gate: sign in here, then every request
+      // is reverse-proxied to the visualizer on :8437.
+      const host = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
+      if (host === SMIDJA_HOST) {
+        if (!isAuthed(req)) {
+          if (p.startsWith('/api/')) return json({ error: 'unauthorized' }, 401);
+          return smidjaLoginPage();
+        }
+        return proxySmidja(req, url);
       }
       if (p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
