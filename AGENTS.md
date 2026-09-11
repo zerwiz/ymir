@@ -200,8 +200,8 @@ See `.agents/assets/agents/naming.md` for the full component map.
 - Auth is a **reference**, never a value — `GITHUB_TOKEN`, `GITHUB_APP_ID`,
   `GITHUB_APP_PRIVATE_KEY`, `GITHUB_INSTALLATION_ID` — resolved from
   `.env.local` / `.env.realm`. Never hardcode or commit a secret.
-- **Engines (open-source-first):** the validated worktree engine (named upstreams
-  in `porting-upstream-to-norse.md`, provenance) powers **Yggdrasil** worktrees;
+- **Engines (open-source-first):** **treehouse**
+  (`github.com/kunchenguid/treehouse`) powers **Yggdrasil** worktrees;
   **sandcastle** (`github.com/mattpocock/sandcastle`, `@ai-hero/sandcastle`)
   powers **Utgard** sandboxes; **no-mistakes**
   (`github.com/kunchenguid/no-mistakes`) powers the **clean-PR gate** behind the

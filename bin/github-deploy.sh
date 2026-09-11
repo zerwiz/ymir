@@ -4,9 +4,9 @@
 # Requires the `gh` CLI, authenticated. Galdr-style TOON.
 #
 # Usage:
-#   github-deploy.sh secrets [--env staging|production] [--repo owner/name]
-#   github-deploy.sh dispatch <staging|production> [--repo owner/name]
-#   github-deploy.sh status [--repo owner/name]
+#   github-deploy.sh secrets [--env staging|production] [--repo owner/name] [--project <id>]
+#   github-deploy.sh dispatch <staging|production> [--repo owner/name] [--project <id>]
+#   github-deploy.sh status [--repo owner/name] [--project <id>]
 #   github-deploy.sh --version
 #
 # Secrets synced (only those present in .env.local):
@@ -28,9 +28,17 @@ CMD="${1-}"; shift || true
 command -v gh >/dev/null 2>&1 || { printf 'error: gh not installed\nhelp: install the GitHub CLI\n' >&2; exit 1; }
 gh auth status >/dev/null 2>&1 || { printf 'error: gh not authenticated\nhelp: gh auth login\n' >&2; exit 1; }
 
-REPO=""; ENVIRONMENT=""
+REPO=""; ENVIRONMENT=""; PROJ=""
 ARGS=()
-while [ $# -gt 0 ]; do case "$1" in --repo) REPO=${2-}; shift 2 ;; --env) ENVIRONMENT=${2-}; shift 2 ;; *) ARGS+=("$1"); shift ;; esac; done
+while [ $# -gt 0 ]; do case "$1" in
+  --repo) REPO=${2-}; shift 2 ;;
+  --project) PROJ=${2-}; shift 2 ;;
+  --env) ENVIRONMENT=${2-}; shift 2 ;;
+  *) ARGS+=("$1"); shift ;;
+esac; done
+if [ -n "$PROJ" ] && [ -x "$SCRIPT_DIR/project-git.sh" ]; then
+  REPO="$("$SCRIPT_DIR/project-git.sh" "$PROJ" --field owner)/$("$SCRIPT_DIR/project-git.sh" "$PROJ" --field repo)"
+fi
 REPO_ARG=(); [ -n "$REPO" ] && REPO_ARG=(--repo "$REPO")
 
 case "$CMD" in

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ymir-install.sh — THE FIRST SETUP. Stand the full Ymir up for the operator:
-# prerequisites, the single-tenant workspace tree, the OSS engines (worktree /
+# prerequisites, the single-tenant workspace tree, the OSS engines (treehouse /
 # sandcastle / no-mistakes), the sandbox image, the well (engram) + harness MCP,
 # the loaders, the registries, and the runtime services. Idempotent. Galdr TOON.
 #

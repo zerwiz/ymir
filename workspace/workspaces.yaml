@@ -10,7 +10,3 @@ workspaces:
     name: Personal
     kind: personal
     domains: [me, life, development]
-  - id: side
-    name: Side
-    kind: personal
-    domains: [life, development]

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useUI, type ModalSpec, type Tone } from '../state/ui';
+import { Markdown } from './Markdown';
 
 const TONE_GLYPH: Record<Tone, string> = {
   ok: 'ᛟ',
@@ -51,7 +52,15 @@ function ModalCard({ modal }: { modal: ModalSpec }) {
 
         {modal.body ? <p className="modal-body">{modal.body}</p> : null}
 
-        {modal.content ? <pre className="modal-content mono">{modal.content}</pre> : null}
+        {modal.content ? (
+          modal.format === 'markdown' ? (
+            <div className="modal-content md-preview">
+              <Markdown source={modal.content} />
+            </div>
+          ) : (
+            <pre className="modal-content mono">{modal.content}</pre>
+          )
+        ) : null}
 
         {modal.fields?.length ? (
           <div className="modal-fields">
