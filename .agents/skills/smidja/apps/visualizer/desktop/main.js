@@ -23,7 +23,7 @@ const UI_URL = process.env.SMIDJA_UI_URL || "http://localhost:8438";
 
 // Force Chromium/GTK chrome to dark so nothing paints white around the page.
 nativeTheme.themeSource = "dark";
-app.setName("smidja Trace UI");
+app.setName("Smíðja · Trace");
 if (process.platform === "linux") {
   // Ties the window to the installed .desktop launcher, so the compositor
   // (GNOME/Wayland app_id, X11 WM_CLASS) shows our icon in the taskbar
@@ -55,7 +55,7 @@ ipcMain.on("win:close", (event) => {
 
 function createWindow() {
   const win = new BrowserWindow({
-    title: "smidja Trace UI",
+    title: "Smíðja · Trace",
     width: 1600,
     height: 1000,
     minWidth: 900,
