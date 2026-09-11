@@ -10,6 +10,7 @@ import './styles/auth.css';
 import './styles/menus.css';
 import './styles/overlays.css';
 import './styles/forge.css';
+import './styles/mobile.css';
 
 import App from './app/App';
 
