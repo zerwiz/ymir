@@ -1,0 +1,70 @@
+name: Daily briefing — Valhalla morning rune
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Force run despite schedule
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  daily-briefing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Write daily briefing
+        env:
+          BRANCH_CONTEXT: "all-active"
+          DATE_STR: ${{ format('{0}-{1}-{2}', github.event.schedule && '2026', '09', '11') }}
+        run: |
+          set -e
+          # Use real date
+          DATE_STR=$(date +%Y-%m-%d)
+
+          # List Yggdrasil worktrees
+          WORKTREES=$(git worktree list 2>/dev/null || echo "none")
+          echo "Yggdrasil worktrees: $WORKTREES"
+
+          # Gather sub-agent role profiles present
+          ROLES=$(ls .agents/subagents/ 2>/dev/null | tr '\n' ' ' || echo "none")
+          echo "Eindri role profiles: $ROLES"
+
+          mkdir -p "svartalfaheim/zerwiz/workspace/memory/daily/"
+          cat > "svartalfaheim/zerwiz/workspace/memory/daily/${DATE_STR}.md" << 'BRIEFING'
+# Daily Briefing — ${DATE}
+
+## Active Endri Fleet
+- **Yggdrasil worktrees:** ${WORKTREES}
+- **Eindri role profiles:** ${ROLES}
+
+## Active Forge Orders (masterplan.md)
+(summary of in-flight W-orders appended by the worker that runs the briefing.)
+
+## Status
+*Generated automatically at 07:00 by Valhalla. Full detail: Hlidskjalf dashboard.*
+BRIEFING
+          echo "Briefing written."
+
+      - name: Commit daily briefing
+        run: |
+          set -e
+          git config user.name "Valhalla Bot"
+          git config user.email "valhalla@ymir.local"
+          git add "svartalfaheim/zerwiz/workspace/memory/daily/$(date +%Y-%m-%d).md"
+          git commit -m "Daily briefing: $(date +%Y-%m-%d)" || echo "No changes to commit"
+          git push 2>/dev/null || echo "Push skipped (up to date or no remote)"

@@ -1,0 +1,492 @@
+import { create } from 'zustand';
+import type {
+  AgentCard,
+  ChatMessage,
+  FileNode,
+  GateId,
+  HouseId,
+  ProcessInfo,
+  PullRequest,
+  RecallEpisode,
+  RealmId,
+  RuneEntry,
+  Session,
+  SkillDef,
+  StreamEvent,
+  Task,
+} from '../types';
+import { realmDef, ACCENTS, GATES } from '../data/realms';
+import {
+  seedAgents,
+  seedChat,
+  seedFiles,
+  seedProcesses,
+  seedRecall,
+  seedReviews,
+  seedRunes,
+  seedSkills,
+  seedStream,
+  seedTasks,
+} from '../data/mock';
+import {
+  clearSession,
+  githubAuthorize,
+  loadSession,
+  MOCK_IDENTITIES,
+  provisionWorkspace,
+  saveSession,
+  type MockIdentity,
+} from '../services/auth';
+import { gateApi, type CronInfo, type RuntimeInfo } from '../services/api';
+
+export type Density = 'comfortable' | 'compact';
+
+/* --- Personal accent: paint your own seat ---------------------- */
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const n = Number.parseInt(full || '38bdf8', 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function applyAccent(
+  accentId: string,
+  custom: string | null,
+  realmTint?: string,
+): void {
+  const root = document.documentElement;
+  if (accentId === 'realm') {
+    if (realmTint) {
+      root.style.setProperty('--realm-tint', realmTint);
+      root.style.setProperty('--realm-tint-2', realmTint);
+      root.style.setProperty('--realm-tint-dim', hexToRgba(realmTint, 0.14));
+    } else {
+      root.style.removeProperty('--realm-tint');
+      root.style.removeProperty('--realm-tint-2');
+      root.style.removeProperty('--realm-tint-dim');
+    }
+    return;
+  }
+  let tint: string;
+  let tint2: string;
+  if (accentId === 'custom' && custom) {
+    tint = custom;
+    tint2 = custom;
+  } else {
+    const preset = ACCENTS.find((a) => a.id === accentId) ?? ACCENTS[0];
+    tint = preset.tint ?? '#38bdf8';
+    tint2 = preset.tint2 ?? tint;
+  }
+  root.style.setProperty('--realm-tint', tint);
+  root.style.setProperty('--realm-tint-2', tint2);
+  root.style.setProperty('--realm-tint-dim', hexToRgba(tint, 0.14));
+}
+
+function loadAccent(): { accentId: string; customAccent: string | null } {
+  try {
+    return {
+      accentId: localStorage.getItem('ymir.accent') ?? 'realm',
+      customAccent: localStorage.getItem('ymir.accent.custom'),
+    };
+  } catch {
+    return { accentId: 'realm', customAccent: null };
+  }
+}
+
+export const STREAM_MIN = 46;
+export const STREAM_MAX = 680;
+
+function loadStreamHeight(): number {
+  try {
+    const v = Number(localStorage.getItem('ymir.stream-height'));
+    if (Number.isFinite(v) && v >= STREAM_MIN) return Math.min(STREAM_MAX, v);
+  } catch {
+    /* ignore */
+  }
+  return 192;
+}
+
+interface YmirState {
+  session: Session | null;
+  realm: RealmId;
+  gate: GateId;
+  density: Density;
+  accentId: string;
+  customAccent: string | null;
+  tenantColors: Record<string, string>;
+  streamHeight: number;
+  companyName: string;
+  companyHouse: HouseId;
+  streamPaused: boolean;
+  query: string;
+  traceability: number;
+  /** demo mode keeps the seeded mocks; live mode reads the real runtime via the gate API */
+  demo: boolean;
+  live: boolean | null;
+  runtime: RuntimeInfo | null;
+  cron: CronInfo | null;
+
+  agents: AgentCard[];
+  tasks: Task[];
+  runes: RuneEntry[];
+  stream: StreamEvent[];
+  recall: RecallEpisode[];
+  processes: ProcessInfo[];
+  reviews: PullRequest[];
+  files: FileNode;
+  chat: ChatMessage[];
+  skills: SkillDef[];
+
+  signIn: (identity: MockIdentity) => void;
+  provision: (input: { login: string; name: string; house: HouseId; cloneRepos: boolean }) => void;
+  signOut: () => void;
+  enterDemo: () => void;
+  loadLive: () => Promise<void>;
+
+  setRealm: (realm: RealmId) => void;
+  setGate: (gate: GateId) => void;
+  setDensity: (density: Density) => void;
+  setAccent: (accentId: string) => void;
+  setCustomAccent: (hex: string) => void;
+  setTenantColor: (realm: string, hex: string) => void;
+  resetTenantColor: (realm: string) => void;
+  setStreamHeight: (height: number) => void;
+  setCompanyName: (name: string) => void;
+  setCompanyHouse: (house: HouseId) => void;
+  addAgent: (agent: AgentCard) => void;
+  updateAgent: (id: string, patch: Partial<AgentCard>) => void;
+  addSkill: (skill: SkillDef) => void;
+  updateSkill: (id: string, patch: Partial<SkillDef>) => void;
+  toggleStream: () => void;
+  setQuery: (query: string) => void;
+  pushStream: (event: StreamEvent) => void;
+  pushChat: (message: ChatMessage) => void;
+  sendChat: (body: string) => void;
+  updateReview: (id: string, patch: Partial<PullRequest>) => void;
+  updateProcess: (id: string, patch: Partial<ProcessInfo>) => void;
+}
+
+// Derived from the gate registry so adding a gate can never drift from routing.
+const GATE_IDS: GateId[] = GATES.map((g) => g.id);
+
+export function gateFromHash(): GateId {
+  const raw = window.location.hash.replace(/^#\/?/, '');
+  return (GATE_IDS as string[]).includes(raw) ? (raw as GateId) : 'fleet';
+}
+
+function hydrate(realm: RealmId) {
+  return {
+    agents: seedAgents(realm),
+    tasks: seedTasks(realm),
+    runes: seedRunes(realm),
+    stream: seedStream(realm),
+    recall: seedRecall(realm),
+    processes: seedProcesses(realm),
+    reviews: seedReviews(realm),
+    files: seedFiles(realm),
+    chat: seedChat(),
+    skills: seedSkills(),
+  };
+}
+
+function loadTenantColors(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem('ymir.tenant-colors') ?? '{}') as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+function loadCompany(): { companyName: string; companyHouse: HouseId } {
+  try {
+    return {
+      companyName: localStorage.getItem('ymir.company.name') ?? 'WayOf',
+      companyHouse: (localStorage.getItem('ymir.company.house') as HouseId) ?? 'ymirlabs',
+    };
+  } catch {
+    return { companyName: 'WayOf', companyHouse: 'ymirlabs' };
+  }
+}
+
+function realmTintOf(state: Pick<YmirState, 'session' | 'realm' | 'tenantColors'>): string | undefined {
+  return (
+    state.tenantColors[state.realm] ??
+    state.session?.tenants.find((t) => t.realm === state.realm)?.tint
+  );
+}
+
+const initialSession = loadSession();
+
+function initialRealm(session: Session | null): RealmId {
+  if (!session || session.tenants.length === 0) return 'way-of';
+  try {
+    const stored = localStorage.getItem('ymir.realm');
+    if (stored && session.tenants.some((t) => t.realm === stored)) return stored;
+  } catch {
+    /* ignore */
+  }
+  return session.tenants[0].realm;
+}
+
+export const useYmir = create<YmirState>((set, get) => ({
+  session: initialSession,
+  realm: initialRealm(initialSession),
+  gate: gateFromHash(),
+  density: 'comfortable',
+  ...loadAccent(),
+  tenantColors: loadTenantColors(),
+  streamHeight: loadStreamHeight(),
+  ...loadCompany(),
+  streamPaused: false,
+  query: '',
+  traceability: 0.984,
+  demo: false,
+  live: null,
+  runtime: null,
+  cron: null,
+  ...hydrate(initialRealm(initialSession)),
+
+  loadLive: async () => {
+    if (get().demo) return;
+    try {
+      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron] =
+        await Promise.all([
+          gateApi.agents(),
+          gateApi.tasks(),
+          gateApi.runes(),
+          gateApi.well(''),
+          gateApi.processes(),
+          gateApi.reviews(),
+          gateApi.files(get().realm),
+          gateApi.runtime(),
+          gateApi.cron(),
+        ]);
+      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, live: true });
+    } catch {
+      // Gate API unreachable — stay on the last good data and mark it.
+      set({ live: false });
+    }
+  },
+
+  enterDemo: () => {
+    const session = githubAuthorize(MOCK_IDENTITIES[0]);
+    saveSession(session);
+    document.documentElement.dataset.realm = 'way-of';
+    const { accentId, customAccent } = get();
+    applyAccent(accentId, customAccent);
+    set({ session, realm: 'way-of', demo: true, live: false, runtime: null, cron: null, ...hydrate('way-of') });
+  },
+
+  signIn: (identity) => {
+    const session = githubAuthorize(identity);
+    saveSession(session);
+    const realm = initialRealm(session);
+    document.documentElement.dataset.realm = realm;
+    const { accentId, customAccent, tenantColors } = get();
+    applyAccent(
+      accentId,
+      customAccent,
+      tenantColors[realm] ?? session.tenants.find((t) => t.realm === realm)?.tint,
+    );
+    set({ session, realm, demo: false, ...hydrate(realm) });
+    void get().loadLive();
+  },
+
+  provision: (input) => {
+    const session = provisionWorkspace(input);
+    saveSession(session);
+    const realm = session.tenants[0]?.realm ?? 'way-of';
+    document.documentElement.dataset.realm = realm;
+    const { accentId, customAccent, tenantColors } = get();
+    applyAccent(
+      accentId,
+      customAccent,
+      tenantColors[realm] ?? session.tenants.find((t) => t.realm === realm)?.tint,
+    );
+    set({ session, realm, demo: false, ...hydrate(realm) });
+    void get().loadLive();
+  },
+
+  signOut: () => {
+    clearSession();
+    set({ session: null, demo: false, live: null, query: '' });
+  },
+
+  setRealm: (realm) => {
+    const session = get().session;
+    // Tenant boundaries are sacred — never switch into a realm without a grant.
+    if (!session || !session.tenants.some((t) => t.realm === realm)) return;
+    try {
+      localStorage.setItem('ymir.realm', realm);
+      document.documentElement.dataset.realm = realm;
+    } catch {
+      /* ignore */
+    }
+    const { accentId, customAccent, tenantColors } = get();
+    applyAccent(
+      accentId,
+      customAccent,
+      tenantColors[realm] ?? session.tenants.find((t) => t.realm === realm)?.tint,
+    );
+    set({ realm, ...hydrate(realm) });
+    if (!get().demo) void get().loadLive();
+  },
+
+  setGate: (gate) =>
+    set(() => {
+      if (window.location.hash !== `#/${gate}`) {
+        window.location.hash = `#/${gate}`;
+      }
+      return { gate };
+    }),
+
+  setDensity: (density) => set({ density }),
+
+  setAccent: (accentId) => {
+    const { customAccent } = get();
+    try {
+      localStorage.setItem('ymir.accent', accentId);
+    } catch {
+      /* ignore */
+    }
+    applyAccent(accentId, customAccent, realmTintOf(get()));
+    set({ accentId });
+  },
+
+  setCustomAccent: (hex) => {
+    try {
+      localStorage.setItem('ymir.accent', 'custom');
+      localStorage.setItem('ymir.accent.custom', hex);
+    } catch {
+      /* ignore */
+    }
+    applyAccent('custom', hex);
+    set({ accentId: 'custom', customAccent: hex });
+  },
+
+  setTenantColor: (realm, hex) => {
+    const tenantColors = { ...get().tenantColors, [realm]: hex };
+    try {
+      localStorage.setItem('ymir.tenant-colors', JSON.stringify(tenantColors));
+    } catch {
+      /* ignore */
+    }
+    if (get().accentId === 'realm') {
+      applyAccent('realm', get().customAccent, hex);
+    }
+    set({ tenantColors });
+  },
+
+  resetTenantColor: (realm) => {
+    const next = { ...get().tenantColors };
+    delete next[realm];
+    try {
+      localStorage.setItem('ymir.tenant-colors', JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+    const session = get().session;
+    const fallback = session?.tenants.find((t) => t.realm === realm)?.tint;
+    if (get().accentId === 'realm') {
+      applyAccent('realm', get().customAccent, fallback);
+    }
+    set({ tenantColors: next });
+  },
+
+  setCompanyName: (name) => {
+    try {
+      localStorage.setItem('ymir.company.name', name);
+    } catch {
+      /* ignore */
+    }
+    set({ companyName: name });
+  },
+
+  setCompanyHouse: (house) => {
+    try {
+      localStorage.setItem('ymir.company.house', house);
+    } catch {
+      /* ignore */
+    }
+    set({ companyHouse: house });
+  },
+
+  setStreamHeight: (height) => {
+    const clamped = Math.min(STREAM_MAX, Math.max(STREAM_MIN, Math.round(height)));
+    try {
+      localStorage.setItem('ymir.stream-height', String(clamped));
+    } catch {
+      /* ignore */
+    }
+    set({ streamHeight: clamped });
+  },
+
+  addAgent: (agent) => set((s) => ({ agents: [...s.agents, agent] })),
+  updateAgent: (id, patch) =>
+    set((s) => ({ agents: s.agents.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
+  addSkill: (skill) => set((s) => ({ skills: [skill, ...s.skills] })),
+  updateSkill: (id, patch) =>
+    set((s) => ({ skills: s.skills.map((k) => (k.id === id ? { ...k, ...patch } : k)) })),
+
+  toggleStream: () => set((s) => ({ streamPaused: !s.streamPaused })),
+  setQuery: (query) => set({ query }),
+
+  pushStream: (event) => set((s) => ({ stream: [event, ...s.stream].slice(0, 120) })),
+  pushChat: (message) => set((s) => ({ chat: [...s.chat, message] })),
+
+  sendChat: (body) => {
+    const text = body.trim();
+    if (!text) return;
+    get().pushChat({
+      id: `u-${Date.now()}`,
+      from: 'user',
+      body: text,
+      ts: new Date().toISOString(),
+    });
+    if (get().demo) {
+      window.setTimeout(() => {
+        get().pushChat({
+          id: `k-${Date.now()}`,
+          from: 'kaia',
+          body: 'Demo mode — the well is seeded locally and Bifrost is not called. Sign in live to speak with Kaia for real.',
+          ts: new Date().toISOString(),
+          recalling: true,
+        });
+      }, 600);
+      return;
+    }
+    void gateApi
+      .chat(text)
+      .then(({ reply }) => get().pushChat(reply))
+      .catch(() =>
+        get().pushChat({
+          id: `k-${Date.now()}`,
+          from: 'kaia',
+          body: 'The bridge did not answer. Check the gate API (npm run api) and Bifrost (bin/bifrost-bridge.sh).',
+          ts: new Date().toISOString(),
+        }),
+      );
+  },
+  updateReview: (id, patch) =>
+    set((s) => ({ reviews: s.reviews.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
+  updateProcess: (id, patch) =>
+    set((s) => ({ processes: s.processes.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
+}));
+
+// Apply the saved accent before first paint.
+{
+  const a = loadAccent();
+  applyAccent(a.accentId, a.customAccent, realmTintOf(useYmir.getState()));
+}
+
+// A persisted session boots straight into live mode.
+if (initialSession) void useYmir.getState().loadLive();
+
+export const currentRealmDef = () => {
+  const { session, realm } = useYmir.getState();
+  const tenant = session?.tenants.find((t) => t.realm === realm);
+  return realmDef(realm, tenant);
+};

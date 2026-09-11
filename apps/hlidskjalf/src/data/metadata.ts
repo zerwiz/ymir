@@ -1,0 +1,109 @@
+import type { GateId } from '../types';
+
+export interface PageMeta {
+  title: string;
+  description: string;
+}
+
+export const SITE = {
+  name: 'Ymir · Hlidskjalf',
+  url: 'https://ymir.local',
+  image: '/og.png',
+  twitter: '@ymir',
+};
+
+/** Per-gate metadata — every view is a page and declares its own story. */
+export const GATE_META: Record<GateId, PageMeta> = {
+  fleet: {
+    title: 'Fleet',
+    description:
+      'Agent Cards, live status, and A2A hops across the realm — the forge stays hot.',
+  },
+  tasks: {
+    title: 'Tasks',
+    description:
+      'The A2A lifecycle board: SUBMITTED → WORKING → terminal states that never restart.',
+  },
+  well: {
+    title: 'The Well',
+    description:
+      'Mimirsbrunn recall, episodes, and timeline. Drink before you act, water it after.',
+  },
+  runes: {
+    title: 'Runes',
+    description:
+      'The append-only ledger — every significant action carved once, checksum-chained.',
+  },
+  reviews: {
+    title: 'Glitnir · Reviews',
+    description:
+      'Human-in-the-loop pull-request reviews. Mjollnir strikes and returns, but never force-merges.',
+  },
+  processes: {
+    title: 'Valhalla',
+    description:
+      'Process supervision across PM2, Docker, and systemd — dead daemons brought back.',
+  },
+  files: {
+    title: 'Skrymir',
+    description:
+      'The giant’s hand — a realm-scoped file browser served through Bifrost.',
+  },
+  chat: {
+    title: 'OmniChat',
+    description:
+      'Speak with Kaia, the oracle by the well. She recalls before she dispatches.',
+  },
+  forge: {
+    title: 'The Forge',
+    description:
+      'Create and edit Eindri agents and skills — every worker earns a mythological name that matches its craft.',
+  },
+  profile: {
+    title: 'Profile',
+    description:
+      'Personal and company settings — your accent, your tenants’ colours, the house seal, and members.',
+  },
+  runtime: {
+    title: 'Runtime',
+    description:
+      'The Sága session digest — lock, bridge, wakes, fleet, context, and the Nornir start, as injected at session open.',
+  },
+  cron: {
+    title: 'Cron · Nornir',
+    description:
+      'The scheduled jobs of the Nornir, their times, and their health.',
+  },
+};
+
+function setMeta(attr: 'name' | 'property', key: string, content: string): void {
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
+}
+
+/** Apply title + description + social tags for the active gate. */
+export function applyMeta(gate: GateId, tenant: string): void {
+  const m = GATE_META[gate] ?? GATE_META.fleet;
+  const title = `${m.title} · ${tenant} · ${SITE.name}`;
+  const url = `${SITE.url}/#/${gate}`;
+
+  document.title = title;
+
+  setMeta('name', 'description', m.description);
+  setMeta('property', 'og:site_name', SITE.name);
+  setMeta('property', 'og:type', 'website');
+  setMeta('property', 'og:title', title);
+  setMeta('property', 'og:description', m.description);
+  setMeta('property', 'og:image', SITE.image);
+  setMeta('property', 'og:url', url);
+  setMeta('name', 'twitter:card', 'summary_large_image');
+  setMeta('name', 'twitter:site', SITE.twitter);
+  setMeta('name', 'twitter:title', title);
+  setMeta('name', 'twitter:description', m.description);
+  setMeta('name', 'twitter:image', SITE.image);
+}

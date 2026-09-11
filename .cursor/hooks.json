@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "command": "digest=$(\"$CURSOR_PROJECT_DIR\"/bin/saga-sessionstart-run.sh --source startup </dev/null 2>/dev/null); [ -n \"$digest\" ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; jq -n --arg c \"$digest\" '{additional_context:$c}' 2>/dev/null || true",
+        "timeout": 180
+      }
+    ],
+    "stop": [
+      {
+        "type": "command",
+        "command": "guard=$(\"$CURSOR_PROJECT_DIR\"/bin/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?; [ \"$rc\" -eq 2 ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; jq -n --arg m \"$guard\" '{followup_message:$m}' 2>/dev/null || true",
+        "timeout": 30
+      }
+    ],
+    "preToolUse": [
+      {
+        "matcher": "Shell",
+        "type": "command",
+        "command": "\"$CURSOR_PROJECT_DIR\"/bin/syn-arm-pretool-check.sh --cursor",
+        "timeout": 10
+      },
+      {
+        "matcher": "Shell",
+        "type": "command",
+        "command": "\"$CURSOR_PROJECT_DIR\"/bin/syn-cd-pretool-check.sh --cursor",
+        "timeout": 10
+      }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Secrets - NEVER commit
+.env.local
+.env.realm
+*.env.local
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Runtime
+*.log
+logs/
+.pids
+*.pid
+.run/
+
+# Docker
+docker-compose.override.yml
+
+# Agent artifacts (generated)
+.agents/memory/*.db
+.agents/bus/messages.json
+.agents/filebrowser/filebrowser.db
+
+# Treehouse worktrees (ephemeral)
+.yggdrasil/
+.treehouses/
+
+# Tenants runtime secrets
+svartalfaheim/*/.env.realm
+
+# Certs
+certs/*.pem
+certs/*.key
+certs/*.crt
+
+# Portal
+apps/hlidskjalf/node_modules/
+apps/hlidskjalf/.expo/
+apps/hlidskjalf/dist/
+
+# Brokk runtime home — private (ship *.example templates only)
+data/*
+!data/*.example
+state/*
+!state/.gitkeep
+config/*
+!config/*.example
+.pi/extensions/*.local.ts

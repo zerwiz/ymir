@@ -1,0 +1,45 @@
+#!/usr/bin/env -S uv run
+# /// script
+# dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
+# ///
+"""factory Plan — one-shot planning workflow.
+
+Usage:
+    uv run factory/factory_plan.py "<prompt or path/to/prompt.md>" [--config factory/factory_factory_config/factory.config.yaml] [--factory-id a1b2c3d4]
+
+Phases: engineer(request) -> planner
+"""
+
+import argparse
+import sys
+
+from factory_modules import agents, gates, session, utils
+from factory_modules.data_types import AgentCall, PhaseParams, PlanOutput
+
+REQUIRED_AGENTS = ["planner"]
+
+
+def main(prompt: str, config: str = "factory/factory_factory_config/factory.config.yaml", factory_id: str | None = None) -> int:
+    cfg = agents.load_config(config)
+    agents.validate(cfg, REQUIRED_AGENTS)
+    run = session.ensure(cfg, factory_id)
+
+    with run.phase(PhaseParams(name="request", kind="engineer", owner=run.engineer,
+                               description="Capture the incoming ask")) as ph:
+        ph.log(input=prompt)
+
+    with run.phase(PhaseParams(name="plan", kind="agent", owner="planner",
+                               description="Turn the request into an implementable plan")) as ph:
+        ph.call(AgentCall(output_type=PlanOutput, prompt=prompt,
+                          gates=[gates.artifacts_exist, gates.files_non_empty]))
+
+    return run.finish()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("prompt", help="inline text or a path to a prompt file")
+    parser.add_argument("--config", default="factory/factory_factory_config/factory.config.yaml")
+    parser.add_argument("--factory-id", default=None, help="join or pin an existing session")
+    args = parser.parse_args()
+    sys.exit(main(utils.resolve_prompt(args.prompt), args.config, args.factory_id))

@@ -1,0 +1,203 @@
+/* ============================================================
+   HLIDSKJALF — Overlays: modal, toast, press feedback
+   ============================================================ */
+
+/* --- Press feedback on every interactive control -------------- */
+.btn,
+.icon-btn,
+.gate,
+.task-mini,
+.realm-opt,
+.identity,
+.house-opt,
+.opt,
+.gh-btn,
+.swatch,
+.user-trigger,
+.stream-tab,
+.account-tenant {
+  transition: transform 90ms var(--ymir-ease), background var(--ymir-dur-fast) var(--ymir-ease),
+    border-color var(--ymir-dur-fast) var(--ymir-ease), color var(--ymir-dur-fast) var(--ymir-ease);
+}
+.btn:active,
+.icon-btn:active,
+.task-mini:active,
+.realm-opt:active,
+.identity:active,
+.house-opt:active,
+.opt:active,
+.gh-btn:active,
+.swatch:active,
+.user-trigger:active,
+.stream-tab:active,
+.account-tenant:active {
+  transform: translateY(1px) scale(0.97);
+}
+.gate:active {
+  transform: scale(0.985);
+}
+
+@keyframes overlay-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* --- Modal ---------------------------------------------------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: var(--ymir-space-5);
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(4px);
+  animation: overlay-fade 150ms var(--ymir-ease);
+}
+.modal {
+  width: min(580px, 100%);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--ymir-bg-1);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius-panel);
+  box-shadow: var(--ymir-shadow-raise), var(--ymir-bevel);
+  animation: modal-reveal 180ms var(--ymir-ease);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-3);
+  padding: var(--ymir-space-4) var(--ymir-space-5);
+  border-bottom: 1px solid var(--ymir-steel-1);
+  position: sticky;
+  top: 0;
+  background: var(--ymir-bg-1);
+  z-index: 1;
+}
+.modal-title {
+  font-size: 18px;
+  line-height: 1.2;
+}
+.modal-body {
+  padding: var(--ymir-space-4) var(--ymir-space-5) 0;
+  color: var(--ymir-text-1);
+  font-size: 14px;
+  line-height: 21px;
+}
+.modal-content {
+  margin: var(--ymir-space-4) var(--ymir-space-5) 0;
+  padding: var(--ymir-space-4);
+  background: var(--ymir-bg-0);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  font-size: 12px;
+  line-height: 18px;
+  max-height: 44vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--ymir-text-1);
+}
+.modal-fields {
+  padding: var(--ymir-space-4) var(--ymir-space-5) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ymir-space-3);
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field input,
+.field textarea {
+  background: var(--ymir-bg-0);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  padding: 10px 12px;
+  color: var(--ymir-text-0);
+  outline: none;
+  font-size: 14px;
+  font-family: var(--ymir-font-body);
+  resize: vertical;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--ymir-chisel);
+  box-shadow: var(--ymir-bevel);
+}
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ymir-space-2);
+  padding: var(--ymir-space-5);
+}
+
+/* --- Toasts --------------------------------------------------- */
+.toast-host {
+  position: fixed;
+  right: var(--ymir-space-5);
+  bottom: var(--ymir-space-5);
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ymir-space-2);
+  width: min(370px, calc(100vw - 40px));
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ymir-space-3);
+  padding: var(--ymir-space-3) var(--ymir-space-4);
+  border-radius: var(--ymir-radius);
+  background: var(--ymir-bg-1);
+  border: 1px solid var(--ymir-steel-1);
+  box-shadow: var(--ymir-shadow-raise);
+  animation: toast-in 220ms var(--ymir-ease);
+}
+.toast strong {
+  font-size: 13px;
+  color: var(--ymir-text-0);
+}
+.toast-body {
+  font-size: 12px;
+  color: var(--ymir-text-2);
+  line-height: 17px;
+}
+.toast-glyph {
+  font-family: var(--ymir-font-head);
+  font-size: 17px;
+  line-height: 1.2;
+}
+.toast-x {
+  color: var(--ymir-text-3);
+  font-size: 12px;
+  padding: 2px 4px;
+}
+.toast-x:hover {
+  color: var(--ymir-text-0);
+}
