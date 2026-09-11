@@ -231,5 +231,5 @@ See `.agents/assets/agents/naming.md` for the full component map.
   (API + UI on `:8437`). Both it and Hlidskjalf come up together.
 
 Access: the gate shows an **in-app login** (no browser prompt) — user `zerwiz`,
-password in `HLIDSKJALF_AUTH` (currently `zerwiz:allfather`). Replace with
-Heimdall (oauth2-proxy) later; move the credential to `.env.local`.
+password in `HLIDSKJALF_AUTH` from `.env.local` (never inline). Replace the
+password login with Heimdall (oauth2-proxy) later.
