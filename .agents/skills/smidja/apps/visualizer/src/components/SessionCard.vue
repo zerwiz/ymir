@@ -406,8 +406,8 @@ const hiddenRowCount = computed(() =>
   color: #b3c0ff;
 }
 .card-stop:hover:not(:disabled) {
-  background: rgba(255, 107, 53, 0.2);
-  color: #ffb28a;
+  background: rgba(56, 189, 248, 0.2);
+  color: #7dd3fc;
 }
 .card-stop:nth-of-type(3):hover:not(:disabled) {
   background: rgba(148, 163, 255, 0.16);

@@ -61,10 +61,10 @@ body {
 }
 
 body {
-  /* Deep space with a faint orange tint — fixed so scrolling glides over it. */
+  /* Deep space with a faint forge-cyan tint — fixed so scrolling glides over it. */
   background:
-    radial-gradient(1100px 700px at 8% -10%, rgba(255, 107, 53, 0.06), transparent 62%),
-    radial-gradient(1000px 720px at 102% 108%, rgba(255, 143, 92, 0.05), transparent 60%),
+    radial-gradient(1100px 700px at 8% -10%, rgba(56, 189, 248, 0.06), transparent 62%),
+    radial-gradient(1000px 720px at 102% 108%, rgba(125, 211, 252, 0.05), transparent 60%),
     linear-gradient(180deg, #1A1A1A 0%, #0F0F0F 100%);
   background-attachment: fixed;
   color: var(--text);

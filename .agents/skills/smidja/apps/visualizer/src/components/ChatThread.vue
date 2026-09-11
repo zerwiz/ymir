@@ -131,8 +131,8 @@ function onScroll() {
   padding: 11px 15px;
 }
 .bubble.user {
-  background: linear-gradient(180deg, rgba(255, 107, 53, 0.18), rgba(255, 107, 53, 0.08));
-  border: 1px solid rgba(255, 107, 53, 0.35);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.18), rgba(56, 189, 248, 0.08));
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-top-right-radius: 4px;
 }
 .bubble.kaia {
