@@ -1,0 +1,166 @@
+---
+name: galdr-compliance
+description: Ymir Galdr compliance checker — validates that Ymir tools and skills follow the 10 Galdr design principles with TOON output. Use when building, modifying, or reviewing Ymir agent-facing tools.
+allowed-tools: read,write,bash,glob,grep
+disable-model-invocation: true
+---
+
+# Galdr Compliance Checker
+
+## Purpose
+
+This skill validates that Ymir tools, skills, and documentation follow the 10 Galdr design principles adapted for the Ymir Agent Operating System with TOON output format. Run this skill to ensure your changes maintain agent ergonomics and token efficiency.
+
+## Before You Start
+
+Understand Ymir's architecture: AGENTS.md governs all agent behavior. docs/Architecture.md is the master blueprint. docs/append-only-log.md records all decisions. TOON output should be used for all compliance reports.
+
+## 1. Token-efficient output with TOON
+
+Ymir tools should output in TOON (Token-Oriented Object Notation) format for ~40% token savings over equivalent JSON while remaining readable by agents. Convert to TOON at the output boundary — keep internal logic on JSON.
+
+### Assess
+Does your tool/output use TOON format? Is token savings ~40% compared to JSON?
+
+### Improve
+Convert stdout output to TOON format; maintain JSON for internal logic; measure token reduction versus JSON baseline.
+
+## 2. Minimal default schemas
+
+Every field in stdout costs tokens — multiplied by row count in collections. Default to the smallest schema that lets the agent decide what to do next: typically an identifier, a title, and a status.
+
+### Assess
+Does your tool/output use minimal schemas (3-4 fields) rather than 10+?
+
+### Improve
+Restrict to required fields only; add new fields only if essential; follow the "one change at a time" pattern.
+
+## 3. Content truncation
+
+Ymir's truncation convention (from append-only-log.md and daily logs):
+- Always show total size: "(truncated, N chars total)"
+- Never omit large fields entirely — include a truncated preview
+- Use help hints: "Run `docs view <id> --full` to see complete content"
+- Default truncation at 500 chars for previews
+
+### Assess
+Does your output follow Ymir's truncation convention?
+
+### Improve
+Use "(truncated, N chars total)" format; always show total size; add help hints for --full view; default to 500-char previews.
+
+## 4. Pre-computed aggregates
+
+Ymir includes aggregated counts in:
+- Plan doc status tables (proposed → approved → in-progress → done counts)
+- Appendix-only-log entry counts per realm
+- Runes audit entry counts
+- Talent/fleet registry counts (app_registry.json)
+
+### Assess
+Does your tool/include pre-computed counts, or does it require follow-up calls?
+
+### Improve
+Include total counts alongside page sizes; compute aggregates during creation; avoid requiring separate calls for "how many total".
+
+## 5. Definitive empty states
+
+Ymir's definitive empty states (from append-only-log.md):
+- "0 closed tasks found in this repository" (ENTRY-006 format)
+- Tenant separation notes when no tenants exist
+- "No files found" in skill searches
+- Empty state is always stated with context confirming the command succeeded
+
+### Assess
+Does your output use Ymir's definitive empty state format?
+
+### Improve
+Always state the zero with context confirming command success; never leave ambiguous empty output.
+
+## 6. Structured errors & exit codes
+
+Ymir error handling (from AGENTS.md and append-only-log.md):
+- Errors recorded in append-only-log.md with status and directive
+- Exit codes: success=0, user-blocked non-zero
+- No interactive prompts — all operations via flags/instruction
+- Structured error format: status + directive + files affected
+
+### Assess
+Does your tool/error handling follow Ymir's patterns?
+
+### Improve
+Record errors in append-only-log.md format; use defined exit codes; never prompt interactively; structure errors with status/directive/files.
+
+## 7. Ambient context via session integrations
+
+Ymir provides ambient context through:
+- Session start: AGENTS.md loads, realm context verified
+- Daily briefings at 07:00 written to svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md
+- Runes audit provides append-only context of all actions
+- Mimirsbrunn recall provides memory context before orchestration
+
+### Assess
+Does your tool/skill provide ambient context at session start?
+
+### Improve
+Load relevant context (AGENTS.md, realm env, active plans) before task execution; write to daily briefing on completion; recall Mimirsbrunn before orchestration.
+
+## 8. Content first
+
+Ymir's content-first approach:
+- README.md shows live system map, not usage manual
+- AGENTS.md is the root governance, not a "getting started" doc
+- Plan docs in docs/plans/ are the source of truth, not this skill
+- Daily logs in workspace/memory/daily/ are the active context
+
+### Assess
+Does your tool/show live data first, or help text first?
+
+### Improve
+Show live system state (active plans, active tickets, realm status) as the default view; keep help/patterns as secondary references.
+
+## 9. Contextual disclosure
+
+Ymir's contextual disclosure patterns:
+- After open item → suggest closing (e.g., "Run `tasks close <id>`")
+- After empty list → suggest creating (e.g., "No plans found. ADD: docs/plans/21-company-houses.md")
+- After list → suggest viewing (e.g., "View plan: docs/plans/25-ratatoskr-a2a.md")
+- Suggestions use placeholders: <id>, <title>, not concrete values
+- Guide discovery, not prescribed workflows
+
+### Assess
+Does your output include contextual next-step suggestions?
+
+### Improve
+After each output type (list, detail, error), add 1-2 relevant suggestions using Ymir's placeholder format; guide discovery without prescribing workflows.
+
+## 10. Consistent way to get help
+
+Ymir's help structure:
+- AGENTS.md: 126-line root governance (the "help")
+- --help always passes (per AGENTS.md law 8)
+- Plan docs have --status, --priority filters
+- Skills have SKILL.md with name + content required
+- Version-awareness: tools should verify against current AGENTS.md version
+
+### Assess
+Does your tool/provide consistent help access?
+
+### Improve
+Always include help reference in output; reference AGENTS.md as the primary help; use --status/--priority filters where applicable; verify against current AGENTS.md version.
+
+## SKILL USAGE
+
+Ymir Galdr Compliance Checker
+
+This skill validates that Ymir tools, skills, and documentation follow the 10 Galdr design principles adapted for the Ymir Agent Operating System with TOON output format. Run this skill during code reviews, plan doc creation, or skill synthesis to ensure agent ergonomics are maintained.
+
+### Invocation (via opencode or Ymir harness):
+- opencode: /skill galdr-compliance
+- Ymir harness: galdr-compliance skill
+
+### Output
+Compliance assessment per principle with "Assess" / "Improve" recommendations specific to Ymir's architecture and TOON output format.
+
+### Files referenced
+AGENTS.md, docs/Architecture.md, docs/append-only-log.md, docs/plans/*.md, .agents/skills/*.md

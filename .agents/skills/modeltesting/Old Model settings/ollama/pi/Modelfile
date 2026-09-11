@@ -1,0 +1,21 @@
+# Ollama Modelfile for Raspberry Pi (Resource Constrained)
+# Using smaller model suitable for Pi hardware limitations
+
+FROM qwen2.5-coder:7b
+
+# Optimized parameters for limited Pi resources
+PARAMETER temperature 0.5
+PARAMETER top_p 0.8
+PARAMETER num_ctx 2048
+PARAMETER repeat_penalty 1.1
+PARAMETER num_thread 4
+
+# System prompt optimized for Pi constraints
+SYSTEM """You are a helpful programming assistant optimized for Raspberry Pi.
+Provide concise, practical coding advice suitable for embedded systems.
+Focus on efficiency and resource-conscious solutions."""
+
+TEMPLATE """{{ if .System }}<|start_header_id|>system<|end_header_id|>
+{{ .System }}<|eot_id|>{{ end }}{{ if .Prompt }}<|start_header_id|>user<|end_header_id|>
+{{ .Prompt }}<|eot_id|>{{ end }}<|start_header_id|>assistant<|end_header_id|>
+{{ .Response }}<|eot_id|>"""
