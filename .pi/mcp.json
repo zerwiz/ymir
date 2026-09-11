@@ -4,9 +4,7 @@
       "command": "$HOME_SEAT/.local/bin/engram-mcp",
       "args": [
         "--db",
-        "$HOME_SEAT/Ymir/.agents/memory/kaia.engram",
-        "--agent-id",
-        "pi"
+        "$HOME_SEAT/Ymir/.agents/memory/kaia.engram"
       ]
     }
   }

@@ -73,6 +73,14 @@ if [ -x "$SCRIPT_DIR/bifrost-bridge.sh" ]; then
     printf 'model bridge: not up (see state/model-bridge.log)\n'
   fi
 fi
+# The well: keep the Mimirsbrunn (engram) bridge alive so recall never fires dry.
+if [ -x "$SCRIPT_DIR/mimir-bridge.sh" ]; then
+  if "$SCRIPT_DIR/mimir-bridge.sh" --start >/dev/null 2>&1; then
+    printf 'well bridge: up\n'
+  else
+    printf 'well bridge: not up (see state/mimir-bridge.log)\n'
+  fi
+fi
 if [ -r "$BROKK_HOME/svartalfaheim/$REALM/.env.realm" ]; then
   printf 'realm env: present\n'
 elif [ -r "$ROOT/svartalfaheim/$REALM/.env.realm" ]; then

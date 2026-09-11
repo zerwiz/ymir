@@ -62,9 +62,16 @@ export interface OrdersInfo {
 }
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { credentials: 'include' });
-  if (!res.ok) throw new Error(`${path} → ${res.status}`);
-  return (await res.json()) as T;
+  // Bound every call so one slow endpoint can never stall a combined load.
+  const ctrl = new AbortController();
+  const timer = window.setTimeout(() => ctrl.abort(), 10_000);
+  try {
+    const res = await fetch(`${BASE}${path}`, { credentials: 'include', signal: ctrl.signal });
+    if (!res.ok) throw new Error(`${path} → ${res.status}`);
+    return (await res.json()) as T;
+  } finally {
+    window.clearTimeout(timer);
+  }
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -110,6 +117,20 @@ export interface PromptFile {
   kind: 'system' | 'user';
   path: string;
   body: string;
+}
+export interface MimirHealth {
+  status: string;
+  store: string | null;
+  episodes: number;
+  agents: string[];
+}
+export interface WellEpisode {
+  id: string;
+  content: string;
+  timestamp: string;
+  tags: string[];
+  actors: string[];
+  agent_id: string | null;
 }
 
 export interface SmidjaSession {
@@ -279,4 +300,6 @@ export const gateApi = {
   smidjaSession: (id: string) => get<SmidjaDetail>(`/api/smidja/sessions/${encodeURIComponent(id)}`),
   smidjaDecisions: () => get<{ total_failed: number; decisions: SmidjaDecision[] }>('/api/smidja/decisions'),
   smidjaStats: () => get<SmidjaStats>('/api/smidja/stats'),
+  mimirHealth: () => get<MimirHealth>('/api/mimir/health'),
+  wellEpisode: (id: string) => get<{ episode: WellEpisode }>(`/api/well/episode?id=${encodeURIComponent(id)}`),
 };

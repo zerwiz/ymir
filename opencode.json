@@ -127,9 +127,7 @@
       "command": [
         "$HOME_SEAT/.local/bin/engram-mcp",
         "--db",
-        "$HOME_SEAT/Ymir/.agents/memory/kaia.engram",
-        "--agent-id",
-        "opencode"
+        "$HOME_SEAT/Ymir/.agents/memory/kaia.engram"
       ],
       "enabled": true
     }

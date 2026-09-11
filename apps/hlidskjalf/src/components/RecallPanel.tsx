@@ -4,9 +4,11 @@ import type { RecallEpisode } from '../types';
 export function RecallPanel({
   episodes,
   onQuery,
+  onOpen,
 }: {
   episodes: RecallEpisode[];
   onQuery?: (q: string) => void;
+  onOpen?: (id: string) => void;
 }) {
   const [q, setQ] = useState('');
   const [mode, setMode] = useState<RecallEpisode['mode']>('hybrid');
@@ -58,7 +60,17 @@ export function RecallPanel({
 
       <div className="panel-body flush">
         {shown.map((ep) => (
-          <article className="episode" key={ep.id}>
+          <article
+            className="episode episode-link"
+            key={ep.id}
+            role="button"
+            tabIndex={0}
+            title="Open the full memory"
+            onClick={() => onOpen?.(ep.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') onOpen?.(ep.id);
+            }}
+          >
             <div className="ep-head">
               <div className="ep-title">{ep.title}</div>
               <div className="row">
