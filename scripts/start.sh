@@ -17,13 +17,18 @@ mkdir -p "$RUN"
 
 if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
   echo "Hlidskjalf already running (pid $(cat "$PID_FILE")) → http://127.0.0.1:${PORT}/"
-  exit 0
+  SPA_UP=1
+else
+  SPA_UP=0
 fi
 
 if [[ ! -d "$APP/node_modules" ]]; then
   echo "Installing dependencies…"
   (cd "$APP" && npm install --no-audit --no-fund)
 fi
+
+# NOTE: when the SPA is already up we still raise the API and the services
+# below — the old early exit skipped them, leaving only :3888 listening.
 
 # Raise the gate API (real runtime data) when bun is available. Demo mode works
 # without it; live data needs it.
@@ -96,6 +101,12 @@ cd "$APP"
 
 if [[ "${1:-}" == "--foreground" ]]; then
   exec npm run dev
+fi
+
+# The SPA is already serving — nothing more for us to raise here.
+if [[ "$SPA_UP" == "1" ]]; then
+  echo "Hlidskjalf SPA already up → http://127.0.0.1:${PORT}/"
+  exit 0
 fi
 
 # New session so we can signal the whole process group on stop.
