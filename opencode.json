@@ -1,0 +1,122 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "",
+  "default_agent": "brokk",
+  "agent": {
+    "brokk": {
+      "description": "Primary autonomous agent of the Ymir Agent Operating System",
+      "mode": "primary",
+      "model": "",
+      "temperature": 0.7,
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "task": "allow",
+        "skill": "allow",
+        "question": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "external_directory": "allow"
+      }
+    },
+    "build": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Implementation subagent for Ymir forge orders",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "builder": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Builder — implement the plan exactly; report every changed file.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "write": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "plan": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Planning subagent for Ymir architecture",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "planner": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Planner — turn a request into a plan the builder can implement without asking questions.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "reviewer": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Reviewer — confirm what was built is what was asked for; change nothing.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "documenter": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Documenter — write up the change from the diff; document only.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "write": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "scout": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Scout — find and report where things live, change nothing.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    }
+  },
+  "skills": {
+    "paths": [".agents/skills"]
+  }
+}

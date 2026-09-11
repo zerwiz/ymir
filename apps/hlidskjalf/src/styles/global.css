@@ -1,0 +1,165 @@
+/* ============================================================
+   HLIDSKJALF — Global base
+   Tokens: midgard/design-system/tokens.css (imported in main.tsx)
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ymir-bg-0);
+  color: var(--ymir-text-0);
+  font-family: var(--ymir-font-body);
+  font-size: 15px;
+  line-height: 22px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--ymir-font-head);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ymir-text-0);
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--ymir-cyan-1);
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(56, 189, 248, 0.28);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ymir-bg-0), 0 0 0 4px var(--ymir-chisel);
+  border-radius: var(--ymir-radius);
+}
+
+.mono {
+  font-family: var(--ymir-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.cinzel {
+  font-family: var(--ymir-font-head);
+}
+
+.muted {
+  color: var(--ymir-text-2);
+}
+
+.dim {
+  color: var(--ymir-text-3);
+}
+
+.eyebrow {
+  font-family: var(--ymir-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ymir-text-2);
+}
+
+/* --- Scrollbars: forged, not floating ----------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ymir-steel-1) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ymir-steel-1);
+  border-radius: 8px;
+  border: 2px solid var(--ymir-bg-0);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ymir-steel-2);
+}
+
+/* --- Realm tints: structural, load-bearing ------------------- */
+:root,
+:root[data-realm='way-of'] {
+  --realm-tint: #38bdf8;
+  --realm-tint-2: #0ea5e9;
+  --realm-tint-dim: rgba(56, 189, 248, 0.14);
+}
+:root[data-realm='zerwiz'] {
+  --realm-tint: #8b5cf6;
+  --realm-tint-2: #6366f1;
+  --realm-tint-dim: rgba(139, 92, 246, 0.14);
+}
+:root[data-realm='craig'] {
+  --realm-tint: #f59e0b;
+  --realm-tint-2: #d97706;
+  --realm-tint-dim: rgba(245, 158, 11, 0.14);
+}
+
+/* --- Utilities ------------------------------------------------ */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-2);
+}
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ymir-space-2);
+}
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hidden {
+  display: none;
+}

@@ -1,0 +1,14 @@
+{
+  "image": "utgard-runner:latest",
+  "network": "none",
+  "cpus": "1.0",
+  "memory": "512m",
+  "timeoutMs": 30000,
+  "securityOptions": [
+    "no-new-privileges"
+  ],
+  "mount": {
+    "target": "/sandbox/workspace",
+    "readOnly": false
+  }
+}

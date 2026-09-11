@@ -1,0 +1,52 @@
+name: Eindri monitor — Valhalla oversight
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Yggdrasil branch to monitor (format: feat/eindri-...)
+        required: true
+        default: "feat/eindri"
+      check_interval:
+        description: Check interval in minutes (default: 10)
+        required: false
+        default: "10"
+
+permissions:
+  contents: read
+
+jobs:
+  monitor-eindri:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Yggdrasil worktree status
+        env:
+          BRANCH_NAME: ${{ inputs.branch }}
+          CHECK_INTERVAL: ${{ inputs.check_interval }}
+        run: |
+          set -e
+          echo "👁️ Valhalla monitoring Yggdrasil branch: $BRANCH_NAME"
+
+          if git worktree list | grep -q "$BRANCH_NAME"; then
+            echo "Worktree active: $BRANCH_NAME"
+          else
+            echo "⚠️ No active worktree found for $BRANCH_NAME"
+            exit 0
+          fi
+
+          WORKTREE=$(git worktree list | grep "$BRANCH_NAME" | awk '{print $1}')
+          CHANGES=$(git -C "$WORKTREE" status --porcelain 2>/dev/null | wc -l)
+          echo "Worktree: $WORKTREE"
+          echo "Uncommitted changes: $CHANGES"
+          echo "Check interval: $CHECK_INTERVAL min"
+
+          if [ "$CHANGES" -gt 0 ]; then
+            echo "⚠️ Eindri still working — $CHANGES uncommitted changes present."
+          else
+            echo "✅ Worktree clean — Eindri either done or idle."
+          fi
