@@ -251,7 +251,8 @@ ymir/
 ├── AGENTS.md                  # the always-loaded contract (Brokk)
 ├── bin/                       # Norse runtime: saga, syn, rodd, gleipnir, nornir, einherjar,
 │                              #   yggdrasil (treehouse), utgard (sandcastle), mimir-bridge,
-│                              #   ymir-install, workspace-provision, project-git, mjollnir
+│                              #   ymir-install, workspace-provision, project-git, mjollnir,
+│                              #   hermes-ensure (provision the Hermes worker runtime)
 ├── .agents/
 │   ├── agents/                # Brokk + the Eindri profiles (and Galdr)
 │   ├── skills/                # Gungnir skills (galdr, tyr-check, hvild-afk, …)
