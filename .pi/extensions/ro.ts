@@ -158,18 +158,26 @@ export default function (pi: ExtensionAPI) {
 
   const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
   const configDirectory = process.env.BROKK_CONFIG_OVERRIDE || resolve(fmHome, "config");
-  const calmPreferencePath = resolve(configDirectory, "ro");
-  // "max" is the legacy value written by the removed third presentation level, whose
-  // behavior is now ordinary Ró; a home upgraded from it restores as on rather than
-  // dropping to off. docs/configuration.md owns the persisted value schema.
+  const stateDirectory = process.env.BROKK_STATE_OVERRIDE || resolve(fmHome, "state");
+  // Ró is a PER-USER preference: it lives in the gitignored state dir so toggling
+  // it never dirties the tracked tree, and YMIR_RO/BROKK_RO may set the default.
+  // The legacy tracked `config/ro` is still read (upgrade path) but never written.
+  const calmPreferencePath = resolve(stateDirectory, "ro");
+  const legacyCalmPath = resolve(configDirectory, "ro");
+  const truthy = (v: string): boolean => v === "on" || v === "max";
   const loadCalmPreference = (): boolean => {
-    let stored: string;
-    try {
-      stored = readFileSync(calmPreferencePath, "utf8").trim();
-    } catch {
-      return false;
+    for (const p of [calmPreferencePath, legacyCalmPath]) {
+      try {
+        const stored = readFileSync(p, "utf8").trim();
+        if (stored) return truthy(stored);
+      } catch {
+        /* try the next source */
+      }
     }
-    return stored === "on" || stored === "max";
+    const env = (process.env.YMIR_RO || process.env.BROKK_RO || "").trim().toLowerCase();
+    if (env === "on" || env === "max") return true;
+    if (env === "off") return false;
+    return false;
   };
   const persistCalmPreference = (active: boolean): void => {
     mkdirSync(dirname(calmPreferencePath), { recursive: true });

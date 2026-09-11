@@ -167,3 +167,10 @@ Entries are appended chronologically; never rewritten.
 - **Credential law:** the gate login (`HLIDSKJALF_AUTH`) no longer has an inline
   default; it is read from `.env.local` (Bun auto-loads it). Server falls back to
   an open gate only when unset (dev), with the key added to `.env.example`.
+
+## 2026-09-12 — Ró preference moved out of the tracked tree
+
+- `.agents/config/ro` was a **git-tracked** per-user toggle (calm on/off); any
+  toggle dirtied the tree and made `bin/brokk-update.sh` refuse. It now lives in
+  the gitignored `state/ro`; `YMIR_RO`/`BROKK_RO` set a default; the legacy
+  `config/ro` is read once for upgrade then never written. Tracked file removed.
