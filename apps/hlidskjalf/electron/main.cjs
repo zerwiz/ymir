@@ -8,6 +8,7 @@ const { spawn } = require('node:child_process');
 const http = require('node:http');
 const path = require('node:path');
 
+const ICON = path.join(__dirname, 'icon.png');
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const HLIDSKJALF = process.env.HLIDSKJALF_URL || 'http://127.0.0.1:3888/';
 const SMIDJA = process.env.SMIDJA_URL || 'http://127.0.0.1:8437/';
@@ -51,6 +52,7 @@ function openWindow(url, title) {
     minWidth: 960,
     minHeight: 640,
     backgroundColor: '#080c14',
+    icon: ICON,
     title,
     autoHideMenuBar: false,
     webPreferences: {
@@ -60,6 +62,8 @@ function openWindow(url, title) {
     },
   });
   win.loadURL(url);
+  // The desktop header stays "Ymir" — never the current workspace/gate title.
+  win.on('page-title-updated', (e) => e.preventDefault());
   win.webContents.setWindowOpenHandler(({ url: u }) => {
     shell.openExternal(u);
     return { action: 'deny' };
@@ -101,6 +105,7 @@ function buildMenu() {
 app.whenReady().then(async () => {
   buildMenu();
   const up = await ensureStack();
+  app.setName('Ymir');
   openWindow(HLIDSKJALF, up ? 'Hlidskjalf — Ymir control plane' : 'Hlidskjalf — stack not answering');
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) openWindow(HLIDSKJALF, 'Hlidskjalf');

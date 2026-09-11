@@ -215,3 +215,20 @@ See `.agents/assets/agents/naming.md` for the full component map.
   isolated subagents. `bin/hermes-ensure.sh` provisions it for any user who
   lacks it (the `hermes` step of `bin/ymir-install.sh` installs it when absent).
   Config/identity stays the user's own; Ymir only guarantees the runtime exists.
+
+## Starting the system (for the Allfather)
+
+- `scripts/start.sh` — raises the whole system: Hlidskjalf SPA (`:3888`), the
+  gate API (`:3889`), Nornir cron, Bifrost (`:4603`), Mimir (`:4602`), and the
+  **Smiðja visualizer** (`:8437`). `scripts/stop.sh` lowers it all.
+- `scripts/electron.sh start` — the desktop shell (Hlidskjalf + Smiðja in an
+  Electron window, with an app icon and a stable "Ymir" title).
+- `bin/gjallarhorn-tunnel.sh start` — exposes Hlidskjalf at
+  `https://ymirdell.zerwiz.org` (Cloudflare tunnel → `:3889`).
+- The **Smiðja visualizer** lives at
+  `.agents/skills/smidja/apps/visualizer` and is started by `scripts/start.sh`
+  (API + UI on `:8437`). Both it and Hlidskjalf come up together.
+
+Access: the gate shows an **in-app login** (no browser prompt) — user `zerwiz`,
+password in `HLIDSKJALF_AUTH` (currently `zerwiz:allfather`). Replace with
+Heimdall (oauth2-proxy) later; move the credential to `.env.local`.

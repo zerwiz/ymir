@@ -1061,3 +1061,4 @@ launch contract; until then it is provisioned and available, not wired.
   `https://ymirdell.zerwiz.org` installs to a phone home screen. Recommended APK
   path: **Capacitor** thin shell over the tunnel URL (reuses the web app);
   the Expo app (`apps/hlidskjalf-mobile`) stays a separate-codebase option.
+- 2026-09-11 — `WORKING` surfaces: **in-app login** (session cookie; `/api/login`, `/api/session`, `/api/logout`; gate API protects `/api/*`, serves the SPA) replaces the browser Basic-auth prompt; **Electron** gets an app icon + a stable "Ymir" title (page-title updates suppressed) and the desktop shell; **Cloudflare tunnel** `ymirdell.zerwiz.org` → `:3889` via `bin/gjallarhorn-tunnel.sh`; **PWA manifest** for mobile. `scripts/start.sh` raises Hlidskjalf + the **Smiðja visualizer** (`:8437`) together; AGENTS.md documents starting both, the desktop, and the tunnel.
