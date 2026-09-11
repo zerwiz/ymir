@@ -4,9 +4,7 @@
       "command": "/home/zerwiz/.local/bin/engram-mcp",
       "args": [
         "--db",
-        "/home/zerwiz/Ymir/.agents/memory/kaia.engram",
-        "--agent-id",
-        "pi"
+        "/home/zerwiz/Ymir/.agents/memory/kaia.engram"
       ]
     }
   }

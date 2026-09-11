@@ -127,9 +127,7 @@
       "command": [
         "/home/zerwiz/.local/bin/engram-mcp",
         "--db",
-        "/home/zerwiz/Ymir/.agents/memory/kaia.engram",
-        "--agent-id",
-        "opencode"
+        "/home/zerwiz/Ymir/.agents/memory/kaia.engram"
       ],
       "enabled": true
     }

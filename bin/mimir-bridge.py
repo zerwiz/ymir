@@ -128,6 +128,31 @@ class Handler(BaseHTTPRequestHandler):
                 except Exception:
                     pass
                 return self._json(200, {"episodes": out})
+            if u.path == "/episode":
+                eid = (q.get("id") or [""])[0]
+                if not eid:
+                    return self._json(400, {"error": "episode needs id"})
+                rec = None
+                try:
+                    con = sqlite3.connect(f"file:{STORE}?mode=ro", uri=True)
+                    con.row_factory = sqlite3.Row
+                    try:
+                        rec = con.execute(
+                            "select id, content, timestamp, tags, actors, agent_id from episodes where id = ?",
+                            (eid,),
+                        ).fetchone()
+                    finally:
+                        con.close()
+                except Exception:
+                    rec = None
+                if not rec:
+                    return self._json(404, {"error": "no such episode"})
+                return self._json(200, {"episode": {
+                    "id": rec["id"], "content": rec["content"], "timestamp": rec["timestamp"],
+                    "tags": json.loads(rec["tags"] or "[]"),
+                    "actors": json.loads(rec["actors"] or "[]"),
+                    "agent_id": rec["agent_id"],
+                }})
             if u.path == "/recall":
                 query = (q.get("q") or [""])[0]
                 k = int((q.get("k") or ["5"])[0])

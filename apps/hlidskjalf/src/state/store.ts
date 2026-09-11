@@ -42,6 +42,7 @@ import {
   type ChatModel,
   type ChatSession,
   type CronInfo,
+  type MimirHealth,
   type RuntimeInfo,
   type SmidjaDecision,
   type SmidjaDetail,
@@ -138,6 +139,7 @@ interface YmirState {
   live: boolean | null;
   runtime: RuntimeInfo | null;
   cron: CronInfo | null;
+  mimir: MimirHealth | null;
   smidjaDb: string;
   smidjaSessions: SmidjaSession[];
   smidjaStats: SmidjaStats | null;
@@ -281,6 +283,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   live: null,
   runtime: null,
   cron: null,
+  mimir: null,
   smidjaDb: 'absent',
   smidjaSessions: [],
   smidjaStats: null,
@@ -297,8 +300,10 @@ export const useYmir = create<YmirState>((set, get) => ({
 
   loadLive: async () => {
     if (get().demo) return;
+    // Smíðja loads on its own track so a slow endpoint never holds its gates hostage.
+    void get().refreshSmidja();
     try {
-      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, smidjaHealth, smidjaSessions, smidjaStats, smidjaDecisions] =
+      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
           gateApi.agents().catch(() => get().agents),
@@ -310,16 +315,9 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.files(get().realm).catch(() => get().files),
           gateApi.runtime().catch(() => get().runtime),
           gateApi.cron().catch(() => get().cron),
-          gateApi.smidjaHealth().catch(() => ({ db: 'absent', sessions: 0 })),
-          gateApi.smidjaSessions().catch(() => []),
-          gateApi.smidjaStats().catch(() => null),
-          gateApi.smidjaDecisions().catch(() => ({ total_failed: 0, decisions: [] })),
+          gateApi.mimirHealth().catch(() => null),
         ]);
-      set({
-        agents, tasks, runes, recall, processes, reviews, files, runtime, cron,
-        smidjaDb: smidjaHealth.db, smidjaSessions, smidjaStats,
-        smidjaDecisions: smidjaDecisions.decisions, live: true,
-      });
+      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, live: true });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set({ live: false });
