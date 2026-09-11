@@ -1019,3 +1019,27 @@ are decisions, not deployments.
 `bin/workspace-provision.sh <name> --kind work|personal --domains …` (per
 workspace), called for real from the Login provisioning step instead of the mock.
 - 2026-09-11 — `WORKING` single-tenant workspaces shipped: first setup (`bin/ymir-install.sh`, `bin/workspace-provision.sh`) stands the full system up; the tree is `workspace/{work,personal,labs}/<domains>` + `companies/` + `workspaces.yaml` + `projects.yaml`. Data model `WorkspaceDef`/`WORKSPACES`/`DOMAIN_LABEL`; store persists `ymir.workspace`; Login onboarding is workspace name + kind + domains (house grid gone); Topbar workspace chip; AccountMenu/Profile relabelled to workspaces; single-owner Allfather session. Gate API: `/api/workspaces` (GET/POST), `/api/setup/status`, `/api/setup/run`. Engines wired: treehouse → `yggdrasil.sh pool`, sandcastle → `utgard.sh sandcastle`, no-mistakes → `mjollnir.sh` gate. GitHub: `bin/project-git.sh` resolves the `git{}` block; `github-deploy.sh --project`. Cleanup: `utgard.config.json` renamed; stale refs fixed. Deferred (external infra): GitHub App, zerwizserver hosting + Gjallarhorn tunnel, server OAuth, per-company Docker. Verified: build green, compliance 8/8, smoke 8/8, lint 4/4, SPA 200, endpoints live.
+
+## 12. Runtime adopted — Hermes (Nous Research) (2026-09-11)
+
+**Decision.** Adopt the **Hermes agent runtime**
+([hermes-agent.nousresearch.com](https://hermes-agent.nousresearch.com),
+`github.com/NousResearch/hermes-agent`, MIT, v0.21.x) as an external **worker
+runtime** — its own brain, config, memory, skills, scheduling, and isolated
+subagents. Like opencode / pi / treehouse / sandcastle, the product name is its
+own (no Norse rename); Ymir shells it.
+
+**Provisioning (the ask: a user gets Hermes if they don't have it).**
+- `bin/hermes-ensure.sh` — `status | ensure [--install] | install`. Detects
+  `hermes` on PATH / `~/.hermes/bin` / `~/.local/bin`, reads its version, and
+  installs from the official installer when missing.
+- `bin/ymir-install.sh` gains a **`hermes` step**: ensures the runtime, and
+  installs it when absent (skippable with `--skip-engines`). So the first setup
+  gives every user Hermes.
+- Config/identity (`hermes setup`, auth) stays the user's own — Ymir only
+  guarantees the runtime is present and reports it.
+
+**Worker integration.** Hermes exposes its own CLI (`hermes -z`, `--worktree`,
+subagents, sandbox backends: local/Docker/SSH/Singularity/Modal). It is not yet
+in `einherjar-spawn.sh`'s verified-harness set — adding it requires a tested
+launch contract; until then it is provisioned and available, not wired.
