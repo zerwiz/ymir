@@ -1,34 +1,35 @@
 #!/usr/bin/env bash
-# brokk-update.sh — update the Ymir world-tree from its remote, safely.
+# brokk-update.sh — update Brokk and every registered Eindri-home to the latest.
 #
-# Fast-forward only. Refuses a dirty or diverged tree unless `--yes` (then it
-# stashes, fast-forwards, and restores). Never force-pushes, never rewrites
-# history. Galdr-style TOON, idempotent.
+# Fast-forward only. Never forces, never stashes, never creates a merge commit.
+# Anything dirty, diverged, offline, or on a non-default branch is skipped and
+# reported. Touches only Brokk repos and their worktrees — never projects/.
+# Galdr-style TOON.
 #
 # Usage:
-#   brokk-update.sh [--check] [--yes] [--remote <name>] [--branch <name>]
+#   brokk-update.sh [--check] [--remote <name>] [--branch <name>]
 #   brokk-update.sh --version
 #
-# Exit: 0 ok (or --check), 1 error/refused, 2 usage.
+# Prints one row per target, then two action lines:
+#   reread-Brokk: yes|no
+#   nudge-eindri-homes: <id> ...|none
 set -u
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-REMOTE=""; BRANCH=""; CHECK=0; YES=0
+REG="${BROKK_EINDRI_HOMES:-$ROOT/data/eindri-homes.md}"
+REMOTE=""; BRANCH=""; CHECK=0
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --check) CHECK=1; shift ;;
-    --yes|-y) YES=1; shift ;;
     --remote) REMOTE=${2-}; shift 2 ;;
     --branch) BRANCH=${2-}; shift 2 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/brokk-update.sh [--check|--yes|--remote|--branch]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/brokk-update.sh [--check|--remote|--branch]\n' "$1" >&2; exit 2 ;;
   esac
 done
-
-git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { printf 'error: not a git repo: %s\n' "$ROOT" >&2; exit 1; }
 
 # Resolve remote/branch from the master registry when the resolver is present.
 if [ -x "$SCRIPT_DIR/project-git.sh" ] && "$SCRIPT_DIR/project-git.sh" list 2>/dev/null | grep -q 'ymir-platform'; then
@@ -38,59 +39,66 @@ fi
 REMOTE="${REMOTE:-origin}"
 BRANCH="${BRANCH:-main}"
 
-git -C "$ROOT" remote get-url "$REMOTE" >/dev/null 2>&1 || { printf 'error: unknown remote "%s"\nhelp: bin/brokk-update.sh --remote <name>\n' "$REMOTE" >&2; exit 1; }
+declare -a ROWS; NUDGE_IDS=""
+reread=no
+changed_surface=0
 
-# Guard: uncommitted changes.
-dirty="$(git -C "$ROOT" status --porcelain | wc -l | tr -d ' ')"
+# Guarded fast-forward of one Brokk home. Sets FF_STATE/FF_DETAIL.
+ff_home() { # <path> <label>
+  local p="$1" label="$2"
+  if [ ! -d "$p" ]; then FF_STATE="skipped"; FF_DETAIL="not found: $p"; return; fi
+  if ! git -C "$p" rev-parse --is-inside-work-tree >/dev/null 2>&1; then FF_STATE="skipped"; FF_DETAIL="not a git repo"; return; fi
+  local cur; cur="$(git -C "$p" branch --show-current 2>/dev/null || echo '')"
+  if [ -n "$cur" ] && [ "$cur" != "$BRANCH" ]; then FF_STATE="skipped"; FF_DETAIL="on branch $cur"; return; fi
+  local dirty; dirty="$(git -C "$p" status --porcelain | wc -l | tr -d ' ')"
+  if [ "$dirty" != "0" ]; then FF_STATE="skipped"; FF_DETAIL="dirty ($dirty)"; return; fi
+  git -C "$p" fetch --quiet --prune "$REMOTE" 2>/dev/null || { FF_STATE="skipped"; FF_DETAIL="offline ($REMOTE)"; return; }
+  local local_h target
+  local_h="$(git -C "$p" rev-parse HEAD)"
+  target="$(git -C "$p" rev-parse "$REMOTE/$BRANCH" 2>/dev/null)" || { FF_STATE="skipped"; FF_DETAIL="$REMOTE/$BRANCH missing"; return; }
+  if [ "$local_h" = "$target" ]; then FF_STATE="current"; FF_DETAIL="${local_h:0:8}"; return; fi
+  if ! git -C "$p" merge-base --is-ancestor "$local_h" "$target"; then FF_STATE="skipped"; FF_DETAIL="diverged"; return; fi
+  if [ "$CHECK" = 1 ]; then FF_STATE="behind"; FF_DETAIL="$(git -C "$p" rev-list --count "$local_h..$target") behind"; return; fi
+  if git -C "$p" merge --ff-only -q "$target" 2>/dev/null; then
+    FF_STATE="updated"; FF_DETAIL="${local_h:0:8}..$(git -C "$p" rev-parse --short HEAD)"
+    if [ -n "$(git -C "$p" diff --name-only "$local_h" "$target" -- AGENTS.md bin .agents/skills 2>/dev/null)" ]; then
+      [ "$label" = "$ROOT" ] && changed_surface=1
+    fi
+  else FF_STATE="skipped"; FF_DETAIL="fast-forward failed"; fi
+}
 
-git -C "$ROOT" fetch --quiet --prune "$REMOTE" || { printf 'error: git fetch %s failed\n' "$REMOTE" >&2; exit 1; }
-up="$REMOTE/$BRANCH"
-git -C "$ROOT" rev-parse --verify --quiet "$up" >/dev/null || { printf 'error: %s not found after fetch\n' "$up" >&2; exit 1; }
+add_row() { ROWS+=("$1"); }
 
-local="$(git -C "$ROOT" rev-parse HEAD)"
-target="$(git -C "$ROOT" rev-parse "$up")"
+# 1. This home.
+ff_home "$ROOT" "$ROOT"
+add_row "  \"$ROOT\",\"this Brokk home\",\"$FF_STATE\",\"$FF_DETAIL\""
 
-if [ "$local" = "$target" ]; then
-  printf 'update[1]{state,remote,branch,head,dirty}:\n  "up-to-date","%s","%s","%s",%s\n' "$REMOTE" "$BRANCH" "${local:0:8}" "$dirty"
-  exit 0
+# 2. Registered Eindri-homes.
+if [ -f "$REG" ]; then
+  while IFS= read -r line; do
+    case "$line" in '- '*) ;; *) continue ;; esac
+    id="$(printf '%s' "$line" | sed -nE 's/^- ([^ ]+).*/\1/p')"
+    host="$(printf '%s' "$line" | sed -nE 's/.*\(host: ([^;)]+).*/\1/p' | tr -d ' ')"
+    home="$(printf '%s' "$line" | sed -nE 's/.*\(.*home: ([^;)]+).*/\1/p' | sed -E 's/ *(host:.*)?$//' | tr -d ' ')"
+    [ -n "$id" ] || continue
+    if [ -n "$host" ]; then
+      root="$(printf '%s' "$line" | sed -nE 's/.*root: ([^;)]+).*/\1/p' | tr -d ' ')"
+      add_row "  \"$id\",\"remote $host:${root:-$home}\",\"skipped\",\"remote route — run bin/brokk-update.sh on $host\""
+      continue
+    fi
+    [ -n "$home" ] || home="$id"
+    ff_home "$home" "$home"
+    add_row "  \"$id\",\"$home\",\"$FF_STATE\",\"$FF_DETAIL\""
+    [ "$FF_STATE" = "updated" ] && NUDGE_IDS="$NUDGE_IDS $id"
+  done <"$REG"
+else
+  add_row "  \"-\",\"registry\",\"absent\",\"$REG (no Eindri-homes registered)\""
 fi
 
-if ! git -C "$ROOT" merge-base --is-ancestor "$local" "$target"; then
-  printf 'update[1]{state,remote,branch,head,dirty}:\n  "DIVERGED","%s","%s","%s",%s\n' "$REMOTE" "$BRANCH" "${local:0:8}" "$dirty"
-  printf 'help: the tree has local commits not on %s — merge or rebase by hand (never force)\n' "$up" >&2
-  exit 1
-fi
+# reread-Brokk: yes when this home's instruction surface advanced.
+[ "$changed_surface" = 1 ] && reread=yes
 
-behind="$(git -C "$ROOT" rev-list --count "$local..$target")"
-
-if [ "$CHECK" = 1 ]; then
-  printf 'update[1]{state,remote,branch,behind,head,dirty}:\n  "BEHIND",%s,"%s","%s",%s,%s\n' "$behind" "$REMOTE" "$BRANCH" "${local:0:8}" "$dirty"
-  exit 0
-fi
-
-if [ "$dirty" != "0" ] && [ "$YES" != "1" ]; then
-  printf 'update[1]{state,behind,head,dirty}:\n  "REFUSED",%s,"%s",%s\n' "$behind" "${local:0:8}" "$dirty"
-  printf 'help: %s uncommitted change(s). Commit them, or re-run with --yes to stash + restore.\n' "$dirty" >&2
-  exit 1
-fi
-
-stashed=0
-if [ "$dirty" != "0" ]; then
-  git -C "$ROOT" stash push -u -q -m "brokk-update $(date -u +%Y%m%dT%H%M%SZ)" && stashed=1
-fi
-
-if git -C "$ROOT" merge --ff-only -q "$target"; then
-  newhead="$(git -C "$ROOT" rev-parse --short HEAD)"
-  restored="n/a"
-  if [ "$stashed" = 1 ]; then
-    if git -C "$ROOT" stash pop -q; then restored="ok"; else restored="CONFLICT (see git stash list)"; fi
-  fi
-  printf 'update[1]{state,remote,branch,behind,head,stashed}:\n  "UPDATED",%s,"%s",%s,"%s","%s"\n' "$behind" "$REMOTE" "$BRANCH" "$newhead" "$restored"
-  printf 'next: bin/ymir-install.sh --check · bash .agents/skills/galdr/scripts/compliance-check.sh\n'
-  [ "$restored" = "ok" ] || [ "$restored" = "n/a" ] || exit 1
-  exit 0
-fi
-
-printf 'error: fast-forward failed — tree left unchanged\n' >&2
-[ "$stashed" = 1 ] && git -C "$ROOT" stash pop -q 2>/dev/null || true
-exit 1
+printf 'update[%d]{id,target,state,detail}:\n' "${#ROWS[@]}"
+printf '%s\n' "${ROWS[@]}"
+printf 'reread-Brokk: %s\n' "$reread"
+if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS# }"; else printf 'nudge-eindri-homes: none\n'; fi
