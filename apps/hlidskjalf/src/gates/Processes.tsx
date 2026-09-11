@@ -91,10 +91,10 @@ export function Processes() {
       </div>
 
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
-        <MetricTile label="Healthy" value={`${nominal}/${processes.length}`} tone="var(--ymir-ok)" delta="watched" spark={[6, 7, 7, 8, nominal]} />
-        <MetricTile label="CPU" value={`${processes.reduce((a, p) => a + p.cpu, 0).toFixed(1)}%`} delta="across fleet" spark={[8, 12, 15, 18, 21]} />
-        <MetricTile label="Memory" value={`${processes.reduce((a, p) => a + p.mem, 0)} MB`} delta="resident" spark={[900, 1100, 1200, 1300, 1360]} />
-        <MetricTile label="Restarts" value={processes.reduce((a, p) => a + p.restarts, 0)} tone="var(--ymir-warn)" delta="bring-back events" spark={[0, 2, 4, 6, 9]} />
+        <MetricTile label="Healthy" value={`${nominal}/${processes.length}`} tone="var(--ymir-ok)" delta="watched" />
+        <MetricTile label="CPU" value={`${processes.reduce((a, p) => a + p.cpu, 0).toFixed(1)}%`} delta="across fleet" />
+        <MetricTile label="Memory" value={`${processes.reduce((a, p) => a + p.mem, 0)} MB`} delta="resident" />
+        <MetricTile label="Restarts" value={processes.reduce((a, p) => a + p.restarts, 0)} tone="var(--ymir-warn)" delta="bring-back events" />
       </div>
 
       <section className="panel">

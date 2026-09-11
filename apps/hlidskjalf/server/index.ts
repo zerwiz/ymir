@@ -210,7 +210,6 @@ function processes() {
   const out: unknown[] = [];
   const cron = run(['bash', 'bin/nornir-cron-start.sh', '--status']);
   const bridge = run(['bash', 'bin/bifrost-bridge.sh', '--status']);
-  const pm2 = run(['pm2', 'jlist']);
   out.push({
     id: 'nornir-cron', name: 'Nornir cron', daemon: 'scheduler', manager: 'pm2',
     status: cron.includes('running') ? 'nominal' : 'down', cpu: 0, mem: 12, restarts: 0,
@@ -221,17 +220,25 @@ function processes() {
     status: bridge.includes('"up"') ? 'nominal' : 'down', cpu: 0, mem: 18, restarts: 0,
     uptime: 3600, realm: 'platform',
   });
-  try {
-    for (const p of JSON.parse(pm2)) {
-      out.push({
-        id: `pm2-${p.pm_id}`, name: p.name, daemon: p.pm2_env?.script ?? 'pm2', manager: 'pm2',
-        status: p.pm2_env?.status === 'online' ? 'nominal' : 'down', cpu: p.monit?.cpu ?? 0,
-        mem: Math.round((p.monit?.memory ?? 0) / 1e6), restarts: p.pm2_env?.restart_time ?? 0,
-        uptime: Math.round((Date.now() - (p.pm2_env?.pm_uptime ?? Date.now())) / 1000), realm: 'platform',
-      });
-    }
-  } catch {
-    /* pm2 absent */
+  // The fleet's daemons across PM2/Docker/systemd, read-only from Valhalla.
+  for (const r of parseToon(run(['bash', 'bin/valhalla.sh', 'list']))) {
+    const st = /running|active|online/i.test(r.status)
+      ? 'nominal'
+      : /exit|fail|inactive|dead|stop/i.test(r.status)
+        ? 'down'
+        : 'degraded';
+    out.push({
+      id: r.id,
+      name: r.name,
+      daemon: r.manager,
+      manager: r.manager,
+      status: st,
+      cpu: Number(r.cpu) || 0,
+      mem: Number(r.mem) || 0,
+      restarts: Number(r.restarts) || 0,
+      uptime: Number(r.uptime) || 0,
+      realm: 'platform',
+    });
   }
   return out;
 }

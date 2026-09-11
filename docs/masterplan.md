@@ -71,24 +71,28 @@ and re-publish the new list beneath it — the old list stays.
 - Phase: P1 · Depends: none · Source: ENTRY-003, Structure.md
 - Scope: `.yggdrasil/<agent-id>/` isolation, spawn/merge/cleanup, zero-collision.
 - Done when: `brokk agent spawn` creates an isolated worktree; merge is explicit; cleanup is automated.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — `bin/yggdrasil.sh` built (Galdr-style TOON): `create` (zero-collision, refuses dup ids), `list`, `status`, `merge` (refuses unlanded work; ff-only then no-ff), `cleanup` (refuses unlanded unless `--force`), `--version`. Verified end-to-end against a scratch repo: create → list → status → commit → merge (file landed) → cleanup → empty. einherjar-spawn already uses `.yggdrasil/<id>/`.
 
 **W0002 — Utgard rootless sandbox (execution barrier)**
 - Phase: P1 · Depends: none · Source: Structure.md, AGENTS.md laws 2/3/6
 - Scope: Docker/respawn with no host root, no network by default, CPU/RAM/timeout caps; a failed run never touches main branch.
 - Done when: an untrusted task runs sealed and leaves no trace on fail.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — `bin/utgard.sh` built (build/status/run; Galdr-style TOON). Run wraps `docker run --rm --network none --cpus 1.0 -m 512m --security-opt no-new-privileges --read-only --tmpfs /tmp --user <host-uid> -v <worktree>:/sandbox/workspace`, bounded by `timeout`. Verified: sealed run (uid 1000, writes only the mounted worktree), network blocked, no host root, read-only rootfs, and `--timeout` kills with exit 124. Image `utgard-runner:latest` ready.
 
 **W0003 — Brokk spawn CLI + worktree lifecycle DX**
 - Phase: P1 · Depends: W0001 · Source: Rut CLI (`ymir status`, `brokk agent spawn`, `ymir init`)
 - Done when: the three canonical CLI verbs exist and behave.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — `bin/brokk` built: `status` (lock/seat/cron/bridge/well), `agent spawn|list|status|merge|cleanup` (delegating to `einherjar-spawn.sh` + `yggdrasil.sh`), `recall|observe|timeline` (delegating to `mimir.sh`), `runes`. Verified: status, list, runes.
 
 **W0004 — Mimirsbrunn: engram bridge adoption (memory)**
 - Phase: P2 · Depends: none · Source: ENTRY-007, command MEMORY.md
 - Scope: recall (`GET /recall`) + observe (`POST /observe`) loops over the Kaia bridge `127.0.0.1:4602`; agent-scoped keys `agent://<realm>/<agent>`; recall modes hybrid/cosine.
 - Done when: Brokk drinks before dispatch and waters after; dry well never blocks.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — `bin/mimir.sh` built: `health`, `recall <q>` (bridge `/recall`, local well fallback), `observe <text>` (bridge `/observe`, local append), `timeline`. Reads `MIMIRSBRUNN_URL` (default `:4602`), falls back to `.agents/memory/well/episodes.jsonl` (367 entries). Verified health/recall/observe/timeline.
 
 **W0005 — Runes: append-only audit ledger**
 - Phase: P2 · Depends: none · Source: ENTRY-001/003, plan docs
@@ -100,7 +104,8 @@ and re-publish the new list beneath it — the old list stays.
 - Phase: P2 · Depends: W0004 · Source: plan 23/25, ANTI-hallucination gate
 - Scope: Kaia reads the well and passes grounded context + the veil verdict into each Eindri dispatch.
 - Done when: no dispatch starts silent.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — `bin/einherjar-spawn.sh` now recalls from the well before dispatch: writes `data/<id>/context.md` (`bin/mimir.sh recall`) and composes `data/<id>/prompt.md` (brief + recalled context) as the worker prompt. A dry well never blocks.
 
 **W0007 — Gungnir skill synthesis + validation**
 - Phase: P3 · Depends: W0002 · Source: AGENTS.md Skill Synthesis
@@ -173,17 +178,20 @@ and re-publish the new list beneath it — the old list stays.
 **W0020 — Toolchain adoption: firstmate, smidja, `.compliance`**
 - Phase: P10 · Depends: none · Source: ENTRY-003/008
 - Scope: reuse the validated OSS + existing local engines; never rebuild what exists.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — `workspace/config/toolchain.md` written: 16 engines mapped to Norse wrappers + auth env, plus an auth-status table with the exact check command per engine. TOON-check PASS.
 
 **W0021 — Individual plan docs 01–20**
 - Phase: P0 backlog · Source: `docs/plans/README.md` index rows
 - Scope: one file per index row; drafted as reference, not re-approved.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — wrote `docs/plans/01-…` through `20-…` (objective, scope, done-when), statuses marked to current reality (06/07/08/12/17 built; others draft).
 
 **W0022 — Company-house entity model**
 - Phase: P6 · Depends: none · Source: plan 21 (approved), ENTRY-002/005
 - Scope: per-tenant `svartalfaheim/<realm>/companies/` + `projects/` with entity-card template `.agents/assets/templates/company_entity.template.md`.
-- Status: ADDED (awaiting human "go"). + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — template written; 11 entity cards seeded: `way-of/companies/{wayof,ymirlabs,brokkforge,runestone,muninn,dvalin,utgard,askr,mannheim}` and personal `zerwiz/companies/zerwiz`, `craig/companies/craig`.
 
 **W0023 — Fediverse/community presence (Runestone, Muninn)**
 - Phase: P6 optional · Depends: none · Source: house mandates
@@ -197,7 +205,8 @@ and re-publish the new list beneath it — the old list stays.
 **W0025 — Realm onboarding runbook**
 - Phase: P6 · Depends: W0022 · Source: Structure.md
 - Scope: steps to stand up a new tenant, generate `.env.realm`, provision dirs.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — `docs/runbooks/realm-onboarding.md` written: tree, `.env.realm`, persona, entity cards, accents, verify.
 
 **W0026 — Frontend SPA (Hlidskjalf, React + Vite)**
 - Phase: P7 · Depends: W0027 · Source: plan 28, reference `assets/reference/index.html`, design.md
@@ -250,7 +259,8 @@ and re-publish the new list beneath it — the old list stays.
 **W0034 — App-Fleet registry + process controller**
 - Phase: P10 · Depends: none · Source: `assets/Yimir.md` (portfolio/process controller), plan 28 §8
 - Scope: `workspace/config/portfolio.md` (path, proc, deployMethod, repo/env); `register_foreign_app` skill (scan+enroll any user app); `process_controller.ts` deterministic start/stop/restart/log over PM2/Docker/systemd/npm.
-- Status: ADDED. + notes:
+- Status: WORKING. + notes:
+  - 2026-09-11 — `bin/valhalla.sh` built: `list` (PM2 + Docker + systemd, merged TOON), `status/restart/stop/start/logs <id>` dispatching to the owning manager (`pm2:<name>` / `docker:<name>` / `systemd:<unit>`). Wired into the gate API `/api/processes` — the Processes gate now shows the real fleet (25 daemons). `scripts/start.sh` / `stop.sh` now raise/lower the whole stack (gate API + SPA + Nornir cron + Bifrost bridge).
 
 **W0035 — Zero-trust GitHub deployments**
 - Phase: P9 · Depends: W0034 · Source: `assets/Yimir.md` (github_deploy), plan 28 §8
@@ -813,6 +823,13 @@ inherited[9]{path,holds,action}:
 - 2026-09-11 — `WORKING` Hlidskjalf live wiring: built the gate API (`apps/hlidskjalf/server`, Bun :3889) reading the runtime (state, `.agents/config`, runes, well, agents, masterplan, status scripts); added live/demo modes with an **Enter demo mode** button; wired Fleet/Tasks/Well/Runes/Processes/Reviews/Files to real data and added **Runtime** (Sága digest) + **Cron** (Nornir) gates; built the one non-wireable surface — **OmniChat** (`POST /api/chat` + `/api/chat/history` via the first reachable OpenAI-compatible backend, local llama-server then Bifrost, recalling from the well, persisting to `state/chat.jsonl`); `scripts/start.sh` now raises the API + SPA and `stop.sh` lowers both. Verified: build green; endpoints live (agents 9, tasks/orders 117, well 60, runes, cron running 4 jobs, checks 8, loaders 4); Kaia replied live grounded in the well.
 - 2026-09-11 — `WORKING` W0107: adopted the mapped upstream reference skills into 16 Norse skills under `.agents/skills/` (`hvild-afk`, `saga-bearings`, `saga-recap`, `muninn-stow`, `jord-projects`, `urdh-decisions`, `urdh-hold`, `frigg-consent`, `vor-diagnostics`, `nornir-events`, `nornir-quota`, `gjallarhorn-relay`, `eindri-homes`, `syn-recovery`, `ymir-update`, `hamr`) and registered them in `.agents/skills/README.md`; `reference-adoption.md` `skill_map` updated to adopted/folded/reference-only. Verified: compliance 8/8, smoke 8/8.
 - 2026-09-11 — `WORKING` README + assets + W0015: rewrote `README.md` as the GitHub front door (banner `assets/ymir-banner-03.png`, lore, system map, all 20 skills, the Eindri roster, the runtime/session-start, the Hlidskjalf control plane, quick start, stack, structure) in human Markdown — no raw TOON. Renamed all Gemini-named art (`assets/ymir-banner-01..06.png`, `ymir-emblem-*.svg`, `ymir-mark-algiz-anvil.svg`, `ymir-stave.svg`). W0015 glyph set landed (`midgard/design-system/icons/` 21 runes + `icons.md`), TOON-check PASS.
+- 2026-09-11 — `WORKING` W0001: built `bin/yggdrasil.sh` — the worktree manager (`create`/`list`/`status`/`merge`/`cleanup`, zero-collision, refuses unlanded merges and teardown without `--force`). Verified end-to-end on a scratch repo. Acting orders: W0015, W0001.
+- 2026-09-11 — `WORKING` W0002: built `bin/utgard.sh` — the sealed execution barrier (`build`/`status`/`run`; network-none, cpus/mem caps, read-only rootfs, no-new-privileges, host-uid, worktree-only mount, timeout). Verified sealed: network blocked, no host root, timeout kills (exit 124). Lore refreshed to current names (`tyr-check`, `brokk-craft`, `Allfather`, `Yggdrasil`). Compliance 8/8, smoke 8/8. Acting orders: W0002.
+- 2026-09-11 — `WORKING` W0003/W0004/W0006/W0021/W0022/W0025: built `bin/brokk` (status/agent/recall/observe/timeline/runes), `bin/mimir.sh` (the well: health/recall/observe/timeline, bridge `:4602` with local fallback), pre-dispatch recall in `einherjar-spawn.sh` (`context.md` + composed `prompt.md`), the 20 reference plan docs (`docs/plans/01–20`), the company-house entity model (template + 11 cards), and the realm-onboarding runbook. Acting orders: W0003, W0004, W0006, W0021, W0022, W0025.
+- 2026-09-11 — `WORKING` Hlidskjalf de-mock: the Fleet graph now lays out the **real** agents (Brokk hub, edges = delegation) instead of the hardcoded `kaia/eindri-*` mock nodes; removed fake sparklines from every gate; Well/Runes/Cron/Processes tiles now compute from live data (`recall.length`, checksum head, statuses); Forge default model set to `opencode-go/deepseek-v4-flash`. Build green; live API confirmed via the SPA proxy (9 agents).
+- 2026-09-11 — `WORKING` W0020: `workspace/config/toolchain.md` — 16 engines mapped to Norse wrappers + auth env, with an auth-status table (exact check command per engine). TOON-check PASS. Compliance 8/8, smoke 8/8.
+- 2026-09-11 — `WORKING` W0034 + stack orchestration: built `bin/valhalla.sh` (list/status/restart/stop/start/logs over PM2/Docker/systemd) and wired it into the gate API `/api/processes` (Processes gate shows 25 real daemons); `scripts/start.sh` / `stop.sh` now raise/lower the whole stack (gate API + SPA + Nornir cron + Bifrost bridge). Verified stop→start cycle; compliance 8/8, smoke 8/8.
 - 2026-09-11 — `WORKING` W0026 / W0028 (mock) / W0032 (placeholder): Hlidskjalf SPA raised at `apps/hlidskjalf` (React 19 + Vite) — shell, all eight gates, components, pausable stream, hash routes, mock stream; mock GitHub sign-in + first-run provisioner + tenant grants; per-user accent palette. Typecheck + build green; headless render 0 console errors. Notes appended to W0026, W0028, W0032.
 - 2026-09-11 — `ADDED` W0098–W0100: Hlidskjalf identity (Ymir Mark SVG, favicon, OG image, per-page metadata); Personalization & Profile (per-tenant colours + personal/company settings); Skills & Eindri Forge (create/edit agents + skills with mythological naming). Acting order: W0098 W0099 W0100. Reference: user directives 2026-09-11, `assets/Gemini_Generated_Image_236pb9236pb19236p.png`, `assets/Gemini_Generated_Image_t6431it6431it6431.png`.
 - 2026-09-11 — `WORKING` W0098–W0100 + `ADDED` W0112 (user directive): **W0099 closed** — per-tenant colour overrides (persisted, repaint swatch + realm tint on "Realm default"), Profile gate (Personal + Company), tenant model WayOf=company with zerwiz/craig members. **W0100 closed (mock)** — Forge gate + `data/mythology.ts` name engine (craft→figure; verified marketing→Bragi); real Utgard validation/JWS deferred to W0007/W0008. **Interaction pass** — global modal+toast (`state/ui.ts`, `Overlay.tsx`); every dead button wired (PR seal/request-changes/diff, process restart/logs, file upload, runes export, agent inspect, well recall). **W0112** — `scripts/start.sh`/`stop.sh` (verified raise/lower) + draggable stream (drag/arrows/reset, persisted). Hlidskjalf UI working guide appended to `.agents/skills/galdr/SKILL.md` §15. Typecheck + build green; headless suites 19/19 PASS, 0 console errors.
+- 2026-09-11 — `DONE` full `factory` → **Smíðja** sweep (follow-up to ENTRY-016): renamed the adopted engine's paths, identifiers, config, env, routes, and prose across 158 files while preserving `default_factory`, proper repo names (`wayoffactory`/`softwerefactory`), and all immutable ledgers/history. `py_compile` + `bash -n` + Hlidskjalf `tsc`/build green. Reference: `docs/append-only-log.md` ENTRY-017.

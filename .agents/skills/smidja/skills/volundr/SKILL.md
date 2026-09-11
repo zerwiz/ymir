@@ -1,6 +1,6 @@
 ---
 name: volundr
-description: "Behave like Smíðja's orchestrator — Völundr, the master smith (the smidja's Kaia): coordinate the whole task, dispatch sub-agents (scout/planner/builder/reviewer), track and verify their work, and stay connected to the well's memory (recall before dispatch, learn after work). Use when the user wants to orchestrate, split a task across agents, run the orchestrate chain, talk to the orchestrator, or check/teach/learn from engram memory. Pairs with smidja-start / smidja-launcher (launching) and smidja (internals)."
+description: "Behave like Smíðja's orchestrator — Völundr, the master smith (the smidja's Völundr): coordinate the whole task, dispatch sub-agents (scout/planner/builder/reviewer), track and verify their work, and stay connected to the well's memory (recall before dispatch, learn after work). Use when the user wants to orchestrate, split a task across agents, run the orchestrate chain, talk to the orchestrator, or check/teach/learn from engram memory. Pairs with smidja-start / smidja-launcher (launching) and smidja (internals)."
 argument-hint: "[orchestrate | dispatch | volundr | recall <project> | observe | teach <project> | memory <project> | learn <smidja_id>]"
 allowed-tools: read, write, edit, bash, grep, glob, web_fetch
 ---
@@ -17,12 +17,12 @@ This skill's assets:
 
 | Path (inside this skill) | What it is |
 |---|---|
-| `prompt/kaia-system.md` | The Kaia identity/system prompt (mirrors `prompt_engineering/orchestrator/system.md`) |
+| `prompt/volundr-system.md` | The Völundr identity/system prompt (mirrors `prompt_engineering/orchestrator/system.md`) |
 | `prompt/dispatch-prompt.md` | The dispatch template (OBJECTIVE / PROJECT / WHAT YOU REMEMBER) + OrchestratorOutput JSON contract |
-| `scripts/kaia-recall.py` | Recall project memory from the bridge: `python3 scripts/kaia-recall.py <project> [k] [mode]` |
-| `scripts/kaia-observe.py` | Write a lesson/episode into the engram: `python3 scripts/kaia-observe.py "<content>" [--tags …]` |
-| `scripts/kaia-status.py` | Bridge health + store summary: `python3 scripts/kaia-status.py` |
-| `scripts/kaia-teach.py` | Bulk-teach a project (wraps `smidja teach`): `python3 scripts/kaia-teach.py <project> [--recon]` |
+| `scripts/volundr-recall.py` | Recall project memory from the bridge: `python3 scripts/volundr-recall.py <project> [k] [mode]` |
+| `scripts/volundr-observe.py` | Write a lesson/episode into the engram: `python3 scripts/volundr-observe.py "<content>" [--tags …]` |
+| `scripts/volundr-status.py` | Bridge health + store summary: `python3 scripts/volundr-status.py` |
+| `scripts/volundr-teach.py` | Bulk-teach a project (wraps `smidja teach`): `python3 scripts/volundr-teach.py <project> [--recon]` |
 
 Python 3 stdlib only — run them from anywhere; `--url` overrides the bridge.
 
@@ -44,32 +44,32 @@ Python 3 stdlib only — run them from anywhere; `--url` overrides the bridge.
 
 The engine: `smidja/smidja_orchestrate.py` builds the dispatch by calling
 `kaia_memory_for(project, k=5)` → `GET /recall?q=<project>` and injecting the
-hits as **WHAT YOU REMEMBER ABOUT THIS PROJECT** into Kaia's prompt.
+hits as **WHAT YOU REMEMBER ABOUT THIS PROJECT** into Völundr's prompt.
 
 **Read (before dispatching/coordinating):**
 
 ```bash
 # from anywhere, using this skill's helpers
-python3 .agents/skills/smidja/skills/volundr/scripts/kaia-recall.py <project> 5 hybrid
+python3 .agents/skills/smidja/skills/volundr/scripts/volundr-recall.py <project> 5 hybrid
 # or the launcher equivalents
-scripts/smidja memory <project>            # what Kaia has learned for a project
+scripts/smidja memory <project>            # what Völundr has learned for a project
 scripts/smidja kaia --memory <project>     # same, via the kaia command
 ```
 
 **Write (after work / when you learn something):**
 
 ```bash
-python3 .agents/skills/smidja/skills/volundr/scripts/kaia-observe.py "<lesson>" --tags learn,<project> --salience 0.7
+python3 .agents/skills/smidja/skills/volundr/scripts/volundr-observe.py "<lesson>" --tags learn,<project> --salience 0.7
 scripts/smidja learn <smidja_id>              # structured outcome of a run (auto after every run)
 scripts/smidja teach <project> [--recon]   # bulk-ingest project files (no agent tokens)
-python3 .agents/skills/smidja/skills/volundr/scripts/kaia-teach.py <project> [--recon]
+python3 .agents/skills/smidja/skills/volundr/scripts/volundr-teach.py <project> [--recon]
 ```
 
 **Inspect:**
 
 ```bash
-python3 .agents/skills/smidja/skills/volundr/scripts/kaia-status.py   # health + store state
-scripts/smidja kaia "<msg>"                # memory-backed one-shot talk with Kaia
+python3 .agents/skills/smidja/skills/volundr/scripts/volundr-status.py   # health + store state
+scripts/smidja kaia "<msg>"                # memory-backed one-shot talk with Völundr
 just ui                                  # visualizer → http://localhost:4601#/memory
 ```
 
@@ -80,11 +80,11 @@ Rules of the memory:
   THAT project's brain. `MEMORY.md` (§3) explains the active-brain resolution.
 - **Always a boost, never a blocker.** Bridge down → run cold-start; never
   fail or stall because memory is unreachable.
-- **Auto-learn.** Every production run teaches Kaia automatically
+- **Auto-learn.** Every production run teaches Völundr automatically
   (disable with `SMIDJA_LEARN=0`). `smidja diagnose` flavors the lesson with a
   root-cause `diagnosis` (json_contract, hallucinated_build, stopped, …).
 
-## 2b. What Kaia can actually dispatch (verified 2026-08-31)
+## 2b. What Völundr can actually dispatch (verified 2026-08-31)
 
 The subagent tools (`subagent_create/continue/list/remove`) come from the pi
 harness extension `smidja/smidja_data/harness_engineering/subagents.ts`, which the
@@ -103,23 +103,23 @@ passed via `subagent_create(model=…)`.
 | **hybrid** | any mix of local + online above, per role | ✅ |
 | **opencode surface** | `opencode-go/deepseek-v4-flash`·`deepseek-v4-pro`·`glm-5.1`·`deepseek-v4-flash-vision-exp` | ✅ NOW pi-reachable via the **bridge** (`scripts/opencode-go-bridge.py`, tmux `ogb`, port 4603; key from `~/command/.env` `OPENCODE_GO_API_KEY` → gateway `https://opencode.ai/zen/go/v1`) |
 
-If Kaia must dispatch a cloud model, use `opencode-go/*` (via the bridge),
+If Völundr must dispatch a cloud model, use `opencode-go/*` (via the bridge),
 `google/*`, or `openrouter/*`. The bridge injects the .env key — pi's registry
 entry uses a placeholder and any request is answered with the real key.
 
 Full routing table + envelope contract: `prompt/dispatch-prompt.md`.
 
-## 2c. Kaia's session presence — tiers, admission, watchdog (admit · recover · watch)
+## 2c. Völundr's session presence — tiers, admission, watchdog (admit · recover · watch)
 
-Kaia is **an overlord, not a toll booth**: her presence over a run is tiered,
+Völundr is **an overlord, not a toll booth**: her presence over a run is tiered,
 and every tier can run without her. Pick per run with `--kaia T0|T1|T2` (or
 `SMIDJA_KAIA`, or the roster stack's `kaia_tier` meta — default **T1**).
 
-| Tier | Name | Kaia does | Mandatory? |
+| Tier | Name | Völundr does | Mandatory? |
 |---|---|---|---|
 | **T0** | silent | nothing — no handoff file, no one-shot, no ticket | no |
 | **T1** | informed | reads the session handoff and files admission notes into `kaia_notes.md` (injected into every agent call); watchdog still reports to her | no — **default** for any non-trivial run |
-| **T2** | orchestrator | T1 + Kaia is the coordinator/dispatcher during the run (recon-interval synthesize, orchestrate chain) | no |
+| **T2** | orchestrator | T1 + Völundr is the coordinator/dispatcher during the run (recon-interval synthesize, orchestrate chain) | no |
 
 **Admission flow (run start, non-T0):** `session._admit()` writes
 `<session>/kaia_handoff.json` (request/plan/roster/prompts/docs) + a `handoff`
@@ -137,20 +137,20 @@ it. The 2026-08-31 auto-admission cascade bug is fixed and guarded.
 **Manual admission / refresh:**
 
 ```bash
-scripts/smidja admit <smidja_id>      # refresh handoff + re-ask Kaia for notes
+scripts/smidja admit <smidja_id>      # refresh handoff + re-ask Völundr for notes
 ```
 
-**Watchdog (detector-only, always reports to Kaia):** `scripts/agent-watch.py`
+**Watchdog (detector-only, always reports to Völundr):** `scripts/agent-watch.py`
 loops every 60s from tmux `watch` (auto-started by `smidja up`; also `smidja watch`).
 It classifies each running session (working / generating / compacting / stuck /
 dead / disconnected) and on the **first** non-working state writes one
 `kaia_recovery.json` ticket (**MAX 1 per phase**) + POSTs the episode to
-`:4602/observe` (Kaia's memory).
+`:4602/observe` (Völundr's memory).
 
-**Kaia decides, you apply — never unsupervised auto-restart:**
+**Völundr decides, you apply — never unsupervised auto-restart:**
 
 ```bash
-scripts/smidja recover <smidja_id>    # one Kaia decision (steer/restart/switch-model/pause/abort-phase),
+scripts/smidja recover <smidja_id>    # one Völundr decision (steer/restart/switch-model/pause/abort-phase),
                                  # recorded as a recovery event + ticket consumed; prints the apply
                                  # command for the operator — it does NOT auto-apply
 scripts/smidja watch               # run the watchdog loop in tmux
@@ -161,14 +161,14 @@ T0 sessions never get recovery tickets; non-working states from T1/T2 do.
 
 ## 3. The orchestrate chain (how it runs)
 
-`smidja/smidja_orchestrate.py`: `engineer(request) → orchestrator (Kaia) →
-reviewer [→ revise → Kaia …]` bounded by `MAX_REVISION_LOOPS = 3`.
+`smidja/smidja_orchestrate.py`: `engineer(request) → orchestrator (Völundr) →
+reviewer [→ revise → Völundr …]` bounded by `MAX_REVISION_LOOPS = 3`.
 
-- Kaia gets: `OBJECTIVE` (original ask) + `PROJECT` + `WHAT YOU REMEMBER`
+- Völundr gets: `OBJECTIVE` (original ask) + `PROJECT` + `WHAT YOU REMEMBER`
   (memory recall) → dispatches sub-agents → returns `OrchestratorOutput`
   (`summary`, `subagents`, `changed_files`, `status`).
 - Reviewer rules on every requirement against disk (gates
-  `artifacts_exist`, `verdict_consistent`). Rejection → Kaia closes the
+  `artifacts_exist`, `verdict_consistent`). Rejection → Völundr closes the
   findings in a `revise_N` phase; after 3 loops the run fails.
 - The orchestrator role's tools/writes live in
   `smidja/smidja_smidja_config/roster.yaml` (`orchestrator` role: `subagent_*` tools,
@@ -195,7 +195,7 @@ scripts/smidja run orchestrate "<ask>"
 
 | Ask | Use |
 |---|---|
-| "split this across agents", "coordinate", many subtasks | **orchestrate** (Kaia dispatches) |
+| "split this across agents", "coordinate", many subtasks | **orchestrate** (Völundr dispatches) |
 | read-only recon | `scout` / `--mode recon` |
 | small well-understood change | `sdlc` / `--mode local-fast` / `cloud-free` |
 | big / fuzzy / needs plan+quality | `simple-sdlc` / `--mode local-planner` / `cloud-fast` |
@@ -212,7 +212,7 @@ scripts/smidja run orchestrate "<ask>"
 - **`command-repo`** — conventions when working inside `~/command`.
 
 Deep references: `MEMORY.md` (full memory-system deep dive) ·
-`docs/command docs/software-smidja-visualizer.md` (Kaia's memory UI) ·
+`docs/command docs/software-smidja-visualizer.md` (Völundr's memory UI) ·
 `docs/command docs/SmidjaAgentsAndModels.md` (agents/models source of truth) ·
 `smidja/smidja_data/prompt_engineering/orchestrator/{system,user}.md` ·
 `scripts/kaia-memory-bridge.py` (the bridge, endpoints

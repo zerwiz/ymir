@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).
+#
+# Runs an untrusted task inside an ephemeral container: no host root, no network,
+# CPU/RAM/timeout caps, a read-only rootfs, and only the task worktree mounted.
+# A failed run leaves no trace on main. Galdr-style TOON output.
+#
+# Usage:
+#   utgard.sh build [--tag <name>]
+#   utgard.sh status
+#   utgard.sh run <worktree> -- <command...> [--network none|on] [--cpus N] [--memory M] [--timeout S]
+#   utgard.sh --version
+#
+# Exit: 0 ok, 1 error, 2 usage, 124 timeout.
+set -u
+
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SANDBOX="$ROOT/.agents/sandbox"
+TAG="${UTGARD_TAG:-utgard-runner:latest}"
+
+usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; }
+
+CMD="${1-}"; shift || true
+case "$CMD" in
+  -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+  -h|--help|"") usage; exit 0 ;;
+esac
+
+command -v docker >/dev/null 2>&1 || { printf 'error: docker not found\nhelp: install docker to use Utgard\n' >&2; exit 1; }
+docker info >/dev/null 2>&1 || { printf 'error: docker daemon not reachable\n' >&2; exit 1; }
+
+case "$CMD" in
+  build)
+    while [ $# -gt 0 ]; do case "$1" in --tag) TAG=${2-}; shift 2 ;; *) shift ;; esac; done
+    [ -f "$SANDBOX/Dockerfile.utgard" ] || { printf 'error: Dockerfile.utgard missing\n' >&2; exit 1; }
+    if docker build -q -f "$SANDBOX/Dockerfile.utgard" -t "$TAG" "$SANDBOX" >/dev/null 2>&1; then
+      printf 'utgard[1]{image,status}:\n  "%s","built"\n' "$TAG"
+    else
+      printf 'error: build failed for %s\nhelp: run docker build -f .agents/sandbox/Dockerfile.utgard -t %s .agents/sandbox\n' "$TAG" "$TAG" >&2
+      exit 1
+    fi
+    ;;
+
+  status)
+    if docker image inspect "$TAG" >/dev/null 2>&1; then
+      printf 'utgard[1]{image,status,net_default,caps}:\n  "%s","ready","none","cpus+mem+timeout"\n' "$TAG"
+    else
+      printf 'utgard[1]{image,status,net_default,caps}:\n  "%s","missing","none","cpus+mem+timeout"\n' "$TAG"
+      printf 'help[1]: bin/utgard.sh build\n'
+    fi
+    ;;
+
+  run)
+    WT=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --) shift; break ;;
+        --network) NET=${2-none}; shift 2 ;;
+        --cpus) CPUS=${2-1.0}; shift 2 ;;
+        --memory) MEM=${2-512m}; shift 2 ;;
+        --timeout) TO=${2-30}; shift 2 ;;
+        *) WT=$1; shift ;;
+      esac
+    done
+    [ -n "$WT" ] || { printf 'error: run needs a worktree path\nhelp: bin/utgard.sh run <worktree> -- <command>\n' >&2; exit 2; }
+    [ -d "$WT" ] || { printf 'error: worktree not found: %s\n' "$WT" >&2; exit 1; }
+    [ "$#" -gt 0 ] || { printf 'error: run needs a command after --\n' >&2; exit 2; }
+    WT="$(cd "$WT" && pwd)"
+    NET="${NET:-none}"; CPUS="${CPUS:-1.0}"; MEM="${MEM:-512m}"; TO="${TO:-30}"
+    UID_GID="$(id -u):$(id -g)"
+    docker image inspect "$TAG" >/dev/null 2>&1 || { printf 'error: image %s missing\nhelp: bin/utgard.sh build\n' "$TAG" >&2; exit 1; }
+    timeout "$TO" docker run --rm \
+      --network "$NET" \
+      --cpus "$CPUS" -m "$MEM" \
+      --security-opt no-new-privileges \
+      --read-only --tmpfs /tmp:rw,size=64m \
+      --user "$UID_GID" \
+      -v "$WT":/sandbox/workspace -w /sandbox/workspace \
+      "$TAG" bash -lc "$*"
+    rc=$?
+    [ "$rc" = 124 ] && { printf 'error: utgard run exceeded %ss timeout (sealed)\n' "$TO" >&2; exit 124; }
+    exit "$rc"
+    ;;
+
+  *)
+    printf 'error: unknown command %s\nhelp: bin/utgard.sh [build|status|run|--version]\n' "$CMD" >&2
+    exit 2 ;;
+esac

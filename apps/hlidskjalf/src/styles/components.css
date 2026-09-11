@@ -520,13 +520,13 @@
 }
 .fleet-node {
   position: absolute;
+  /* the anchor point IS the ring centre, so A2A beams land on the circle;
+     the label floats below without shifting the anchor */
   transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 92px;
-  text-align: center;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
 }
 .fleet-node .node-ring {
   width: 46px;
@@ -551,14 +551,22 @@
   border-style: dashed;
 }
 .fleet-node .node-label {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-family: var(--ymir-font-mono);
   font-size: 10px;
   color: var(--ymir-text-1);
   line-height: 1.2;
+  pointer-events: none;
 }
 .fleet-edges {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 .fleet-edge {

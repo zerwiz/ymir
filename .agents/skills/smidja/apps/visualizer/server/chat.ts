@@ -1,7 +1,7 @@
 /**
  * /api/chat/* — the orchestrator chat endpoints.
  *
- *   POST /api/chat/message  → send a message to Pi (Kaia), capture the reply
+ *   POST /api/chat/message  → send a message to Pi (Völundr), capture the reply
  *   GET  /api/chat/history  → conversation for one session (JSONL on disk)
  *   POST /api/chat/session  → launch a smidja run for a team + task
  *   POST /api/chat/steer    → inject guidance into the active session
@@ -153,7 +153,7 @@ export async function debugSessions(dbPath: string): Promise<{
 
 /**
  * POST /api/chat/message — run Pi once in print mode against a persistent
- * session-scoped conversation, capture stdout as Kaia's reply, and persist both
+ * session-scoped conversation, capture stdout as Völundr's reply, and persist both
  * the user message and the reply to the session JSONL.
  */
 export async function sendMessage(req: ChatMessageRequest, dbPath: string): Promise<ChatMessageResponse> {
@@ -224,7 +224,7 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
     if (result === TIMED_OUT) {
       dbg(`  TIMED OUT after 120s (pid=${proc.pid}) — killing`);
       try { proc.kill(); } catch { /* ignore */ }
-      throw new Error("Kaia (Pi) took too long — try again");
+      throw new Error("Völundr (Pi) took too long — try again");
     }
     dbg(`  exit=${result.exit} stdout=${result.stdout.length}ch stderr=${result.stderr.length}ch`);
     if (result.exit !== 0) {
@@ -239,7 +239,7 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
         .slice(-3)
         .join(" | ");
       throw new Error(
-        `Kaia (Pi) failed (exit ${result.exit})${why ? ` — ${why.slice(0, 300)}` : ""}`,
+        `Völundr (Pi) failed (exit ${result.exit})${why ? ` — ${why.slice(0, 300)}` : ""}`,
       );
     }
     return result.stdout.trim() || "(no response)";
@@ -247,14 +247,14 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
 }
 
 /**
- * Kaia's prompt files (identity + full smidja capabilities/tools), appended
- * to pi's base system prompt so the chat replies as Kaia, not as a generic
+ * Völundr's prompt files (identity + full smidja capabilities/tools), appended
+ * to pi's base system prompt so the chat replies as Völundr, not as a generic
  * pi coding agent. Skips paths that don't exist in the target repo.
  */
 function kaiaPromptArgs(cwd: string): string[] {
   const candidates = [
     "smidja/smidja_data/prompt_engineering/orchestrator/system.md",
-    ".agents/skills/smidja/skills/volundr/prompt/kaia-system.md",
+    ".agents/skills/smidja/skills/volundr/prompt/volundr-system.md",
   ];
   const args: string[] = [];
   for (const rel of candidates) {
