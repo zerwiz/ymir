@@ -70,5 +70,5 @@ fi
 
 # 4. Record + report.
 printf '%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$ROLE" "$seat" "$REQ" >>"$SEATS"
-printf 'eindri-start[1]{role,seat,request,label}:\n'
-printf '  "%s","%s","%s","%s"\n' "$ROLE" "$seat" "$REQ" "$LABEL"
+printf 'eindri-start[1]{role,seat,a2a,request,label}:\n'
+printf '  "%s","%s","%s","%s","%s"\n' "$ROLE" "$seat" "${A2A_URL:-none}" "$REQ" "$LABEL"

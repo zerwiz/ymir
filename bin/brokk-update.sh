@@ -106,3 +106,6 @@ if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS#
 # Keep the whole fleet on the fleet preferences (writes each home's gitignored
 # state/; never touches a tracked tree).
 [ -x "$SCRIPT_DIR/fleet-apply.sh" ] && "$SCRIPT_DIR/fleet-apply.sh" >/dev/null 2>&1 || true
+
+# Heal this home forward (structure migrations) after every update.
+[ -x "$SCRIPT_DIR/ymir-migrate.sh" ] && "$SCRIPT_DIR/ymir-migrate.sh" apply >/dev/null 2>&1 || true
