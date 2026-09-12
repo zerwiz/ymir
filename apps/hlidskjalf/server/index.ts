@@ -82,26 +82,30 @@ function frontmatter(text: string): Record<string, unknown> {
 /* ---- /api/agents --------------------------------------------------------- */
 function agents() {
   const model = read(join(CONFIG_DIR, 'eindri-harness')).trim() || 'opencode-go/deepseek-v4-flash';
-  const files = existsSync(AGENTS_ALT) ? readdirSync(AGENTS_ALT).filter((f) => f.endsWith('.md')) : [];
-  return files.map((f, i) => {
+  const files = existsSync(AGENTS_ALT)
+    ? readdirSync(AGENTS_ALT).filter((f) => f.endsWith('.md') && f !== 'galdr.md')
+    : [];
+  return files.map((f) => {
     const text = read(join(AGENTS_ALT, f));
     const fm = frontmatter(text);
     const id = String(fm.name ?? f.replace(/\.md$/, ''));
     const norse = String(fm.norse_name ?? fm.name ?? id);
+    // Real, sourced fields only — no fabricated status/trace/tasks.
+    const registered = existsSync(join(ROOT, '.opencode/agent', `${id}.md`));
     return {
       id,
       name: norse.charAt(0).toUpperCase() + norse.slice(1),
       role: String(fm.descriptor ?? fm.role ?? 'agent'),
-      realm: 'way-of',
-      house: 'ymirlabs',
-      status: 'nominal',
+      realm: 'work',
+      house: String(fm.domain ?? 'ymirlabs'),
+      status: registered ? 'nominal' : 'degraded',
       capabilities: Array.isArray(fm.capabilities) ? fm.capabilities : [],
-      skills: existsSync(join(ROOT, '.opencode/agent', `${id}.md`)) ? ['opencode'] : [],
-      interface: { protocol: 'a2a/1.0', endpoint: '/.well-known/agent-card.json', signed: false },
-      model,
-      uptime: 60 * (i + 1),
+      skills: [],
+      interface: { protocol: 'a2a/1.0', endpoint: `local://${id}`, signed: false },
+      model: String(fm.model ?? '') || model,
+      uptime: 0,
       tasksDone: 0,
-      traceability: 0.984,
+      traceability: 0,
     };
   });
 }

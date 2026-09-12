@@ -1,4 +1,5 @@
 ---
+domain: muninn
 name: huginn
 description: "Eindri role profile — Huginn the Sage. RAG, web search, analysis, and knowledge discovery. Runs in Utgard on a Yggdrasil worktree."
 role: researcher

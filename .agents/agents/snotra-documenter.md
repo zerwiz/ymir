@@ -1,4 +1,5 @@
 ---
+domain: runestone
 name: snotra
 description: "Eindri role profile — Snotra the Wise-woman. Documentation, write-ups, and changelogs. Runs in Utgard on a Yggdrasil worktree."
 role: documenter
