@@ -264,3 +264,17 @@ Mac or on WSL those steps report a clean skip and the core still runs.
 
 When a core feature changes, this layer is updated in the same change
 (`RULES/05-platforms.md`). Details: `galdr/assets/installation.md`.
+
+### Electron GPU-process crashes on the shared-memory iGPU
+
+Both dashboards can look healthy while `coredumpctl` fills with SIGSEGV cores
+from `electron --type=gpu-process` and the kernel logs `amdgpu … Not enough
+memory for command submission`. Only the GPU process dies, so the failure is
+easy to miss.
+
+The iGPU backs its graphics memory with system RAM (GTT), and a local model
+served on that same iGPU holds several GiB of it — after which the driver fails
+the desktop's command submissions. `scripts/electron.sh` now detects a small VRAM
+carve-out (`igpu_vram_small()`, threshold `YMIR_IGPU_VRAM_SMALL_MIB`, default
+2048) and runs the dashboards on software rendering; `YMIR_DESKTOP_DISABLE_GPU`
+forces either path. Detail and the evidence: `galdr/assets/hlidskjalf-ui.md`.
