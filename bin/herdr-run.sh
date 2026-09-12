@@ -33,6 +33,11 @@
 #   YMIR_HERDR_SETTLE=300   seconds to wait for a step before declaring it hung
 set -u
 
+# The herdr CLI wrapper. Defaults to `hdr` (the Omarchy/Þjazi wrapper); a host
+# may set HDR=herdr, or a future `hdr` that exposes `agent start`/`pane run`.
+HDR="${HDR:-hdr}"
+hdr() { "$HDR" "$@"; }
+
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
