@@ -33,6 +33,9 @@ ACTION="${ACTION:-status}"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Expand a leading ~ locally (rsync/taildrop receive it literally otherwise).
+expand_path() { case "$1" in "~/"*) printf '%s' "$HOME/${1#\~/}" ;; *) printf '%s' "$1" ;; esac; }
+
 if [ "$ACTION" = status ]; then
   ts_state="absent"; ts_self=""
   if have tailscale; then
@@ -102,15 +105,31 @@ done
 
 rsync_flags=(-a --info=NAME --exclude 'sessions/' --exclude '*.log')
 [ "$DRY" = 1 ] && rsync_flags+=(--dry-run)
-# Tailscale moves the bytes; ssh is the transport. accept-new avoids the
-# first-connect host-key prompt. Prefer `tailscale ssh` (no keys) via YMIR_SSH.
+
+# Taildrop road: when the tailnet's SSH ACL forbids SSH (but Taildrop works),
+# send each path to a peer's inbox with `tailscale file cp` — no SSH at all.
+# The peer runs `tailscale file get <dir>` to receive.
+if [ "${YMIR_SYNC_VIA:-rsync}" = taildrop ]; then
+  [ "$ACTION" = push ] || { printf 'error: taildrop transport supports push only\n' >&2; exit 2; }
+  rc=0
+  for peer in "${PEERS[@]}"; do
+    for path in "${PATHS[@]}"; do
+      [ -n "$path" ] || continue
+      case "$path" in auth.json|*auth.json) [ "$include_auth" = 1 ] || continue ;; esac
+      printf 'tailscale-sync[1]{via,peer,path}:\n  "taildrop","%s","%s"\n' "$peer" "$path"
+      tailscale file cp "$(expand_path "$path")" "$peer:" || rc=1
+    done
+  done
+  exit "$rc"
+fi
+
 ssh_cmd="${YMIR_SSH:-ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10}"
 rc=0
 for peer in "${PEERS[@]}"; do
   for path in "${PATHS[@]}"; do
     [ -n "$path" ] || continue
     case "$path" in auth.json|*auth.json) [ "$include_auth" = 1 ] || continue ;; esac
-    if [ "$ACTION" = push ]; then src="$path"; dst="$peer:$path"; else src="$peer:$path"; dst="$path"; fi
+    if [ "$ACTION" = push ]; then src="$(expand_path "$path")"; dst="$peer:$path"; else src="$peer:$path"; dst="$(expand_path "$path")"; fi
     printf 'tailscale-sync[1]{dir,peer,path}:\n  "%s","%s","%s"\n' "$ACTION" "$peer" "$path"
     rsync "${rsync_flags[@]}" -e "$ssh_cmd" --mkpath "$src" "$dst" || rc=1
   done
