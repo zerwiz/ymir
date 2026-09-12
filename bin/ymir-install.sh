@@ -336,9 +336,17 @@ step_smidja() {
       local dbok vizok
       [ -f "$ROOT/smidja/smidja_data/smidja.db" ] && dbok=present || dbok=missing
       [ -d "$ROOT/.agents/skills/smidja/apps/visualizer/dist" ] && vizok=built || vizok=unbuilt
-      add smidja OK "smidja.db $dbok · visualizer UI $vizok"
+      if [ "$dbok" = missing ]; then
+        add smidja WARN "smidja.db missing — a full run (without --check) creates it and seeds one bootstrap session"
+      else
+        add smidja OK "smidja.db $dbok · visualizer UI $vizok"
+      fi
+    elif ! have uv; then
+      # The bootstrap creates the schema through the tracer, run under uv so the
+      # smidja deps resolve without a system install.
+      add smidja WARN "needs uv — bin/prereq-ensure.sh uv (the visualizer stays empty without it)"
     else
-      if "$SCRIPT_DIR/smidja-bootstrap.sh" >/dev/null 2>&1; then add smidja OK "smidja.db ready (visualizer has data)"; else add smidja WARN "could not bootstrap smidja.db (visualizer stays empty)"; fi
+      if "$SCRIPT_DIR/smidja-bootstrap.sh" >/dev/null 2>&1; then add smidja OK "smidja.db ready (visualizer has data)"; else add smidja WARN "could not bootstrap smidja.db — run bin/smidja-bootstrap.sh to see why"; fi
     fi
   else add smidja SKIP "no smidja-bootstrap.sh"; fi
   # The visualizer API serves its UI from ./dist — without a build it answers
@@ -350,10 +358,44 @@ step_smidja() {
   elif [ "$CHECK" = 1 ]; then
     add visualizer WARN "UI not built (run without --check)"
   elif command -v bun >/dev/null 2>&1; then
-    [ -d "$viz/node_modules" ] || (cd "$viz" && bun install >/dev/null 2>&1 || true)
-    if (cd "$viz" && bun run build >/dev/null 2>&1); then add visualizer OK "UI built (served on :8437)"; else add visualizer WARN "UI build failed — (cd $viz && bun run build)"; fi
+    if [ ! -d "$viz/node_modules" ] && ! (cd "$viz" && bun install >/dev/null 2>&1); then
+      add visualizer WARN "bun install failed — (cd $viz && bun install)"
+    elif (cd "$viz" && bun run build >/dev/null 2>&1); then
+      add visualizer OK "UI built (served on :8437)"
+    else
+      add visualizer WARN "UI build failed — (cd $viz && bun run build)"
+    fi
   else
     add visualizer WARN "no bun — cannot build the visualizer UI"
+  fi
+}
+
+# ── 5c. the SPA ──────────────────────────────────────────────────────────────
+# Hlidskjalf installs with npm (its own lockfile), not bun, and its API serves the
+# UI from ./dist. Without this step a fresh clone has no SPA and no build.
+step_spa() {
+  local app="$ROOT/apps/hlidskjalf"
+  [ -d "$app" ] || { add hlidskjalf SKIP "no apps/hlidskjalf"; return 0; }
+  if [ "$CHECK" = 0 ]; then
+    if ! have npm; then
+      add hlidskjalf WARN "no npm — cannot install the SPA"; return 0
+    fi
+    if [ ! -d "$app/node_modules" ] && ! (cd "$app" && npm install --no-audit --no-fund >/dev/null 2>&1); then
+      add hlidskjalf WARN "npm install failed — (cd $app && npm install --no-audit --no-fund)"; return 0
+    fi
+    if [ ! -d "$app/dist" ] && ! (cd "$app" && npm run build >/dev/null 2>&1); then
+      add hlidskjalf WARN "installed, build failed — (cd $app && npm run build)"; return 0
+    fi
+  fi
+  if [ ! -d "$app/node_modules" ] || [ ! -d "$app/dist" ]; then
+    add hlidskjalf WARN "not installed (run without --check)"; return 0
+  fi
+  # Electron's runtime comes from a gated postinstall. package.json pins the
+  # approval, but verify the binary so the desktop shell never fails silently.
+  if [ -x "$app/node_modules/electron/dist/electron" ] || [ ! -d "$app/electron" ]; then
+    add hlidskjalf OK "installed + built + electron (served on :3888)"
+  else
+    add hlidskjalf WARN "installed + built, but electron has no binary — npm rebuild electron"
   fi
 }
 
@@ -455,7 +497,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_loaders; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_loaders; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate
