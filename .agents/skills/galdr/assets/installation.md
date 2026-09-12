@@ -21,14 +21,15 @@ bin/ymir-install.sh --status      # alias of --check
 ## The steps
 
 ```
-install[16]{step,what,self-heals}:
+install[17]{step,what,self-heals}:
+  "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml","creates if missing"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
-  "omarchy","the host machine (Omarchy)","bin/omarchy-sense.sh learns the setup; bin/omarchy-hook-install.sh adds the post-update hook"
+  "host","this machine — learnt on EVERY host","bin/omarchy-sense.sh learns the setup, bin/desktop-place.sh places the apps, the Omarchy post-update hook (when Omarchy), and the wedge-alarm channel"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build; distinguishes docker-group permission from build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
@@ -102,7 +103,6 @@ Selection order for the running system: `config/backend` → `BROKK_BACKEND` →
 `HERDR_ENV=1` → else tmux. Full reference: the `ymir-thjazi` skill.
 
 ## Consent
-
 A real install prints its plan and waits for `[y/N]`. Declining changes nothing
 (exit 3). `--check` never prompts. A non-interactive caller without `--yes` is
 refused rather than silently proceeding.

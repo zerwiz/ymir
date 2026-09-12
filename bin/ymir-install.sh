@@ -257,10 +257,23 @@ step_host() {
     "$SCRIPT_DIR/omarchy-hook-install.sh" install >/dev/null 2>&1 && hooked=yes
   fi
 
+  # 4. The wedge-alarm channel: when an away-mode escalation cannot reach the
+  #    pane, the alarm must still reach the Allfather. Write the channel directive
+  #    so the supervisor's alarm has somewhere to land.
+  local wedged=no
+  if [ -x "$SCRIPT_DIR/wedge-notify.sh" ] && [ ! -e "$ROOT/config/wedge-alarm" ]; then
+    mkdir -p "$ROOT/config" 2>/dev/null || true
+    if printf '# The channel the away-mode wedge alarm fires on when an escalation\n# cannot be delivered into the pane. See bin/wedge-notify.sh.\ndesktop\n' >"$ROOT/config/wedge-alarm" 2>/dev/null; then
+      wedged=yes
+    fi
+  elif [ -e "$ROOT/config/wedge-alarm" ]; then
+    wedged=kept
+  fi
+
   if [ "$on_omarchy" = 1 ]; then
-    add host OK "learnt the host; desktops placed=${placed}; post-update hook=${hooked}"
+    add host OK "learnt the host; desktops placed=${placed}; post-update hook=${hooked}; wedge alarm=${wedged}"
   else
-    add host OK "learnt the host; desktops placed=${placed} (not an Omarchy host)"
+    add host OK "learnt the host; desktops placed=${placed}; wedge alarm=${wedged} (not an Omarchy host)"
   fi
 }
 
@@ -399,13 +412,38 @@ step_validate() {
   fi
 }
 
+# ── 0. herdr panes (visible when inside herdr) ──────────────
+# When the Allfather sits within herdr, the install should be SEEN: a pane is
+# raised for the run and the steps are executed within it. Outside herdr this is
+# a clean fall-through — the same steps, no panes. Nothing here can lose work:
+# if a pane cannot be made, the caller runs its command inline.
+step_panes() {
+  local runner="$SCRIPT_DIR/herdr-run.sh"
+  if [ ! -x "$runner" ]; then add panes SKIP "no herdr-run.sh"; return; fi
+  if ! "$runner" available >/dev/null 2>&1; then
+    add panes SKIP "no herdr session — steps run inline"
+    return
+  fi
+  if [ "$CHECK" = 1 ]; then
+    add panes OK "herdr present — steps would run in visible panes"
+    return
+  fi
+  # Keep the panes the run makes, so the Allfather can read them afterwards.
+  YMIR_HERDR_KEEP=1 "$runner" run "install" -- bash -c \
+    'echo "Ymir first setup begins $(date -u +%H:%M:%SZ)"; echo "the steps follow in this pane"; echo "repo: $PWD"' \
+    >/dev/null 2>&1 && add panes OK "run shown in a herdr pane" || add panes WARN "could not raise a herdr pane"
+}
+
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_loaders; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_loaders; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate
+
+# The panes were raised for the Allfather to read; leave them standing when we
+# made them, and close them only when the operator asks (herdr-run close-all).
 
 printf 'install[%d]{step,status,detail}:\n' "${#IDS[@]}"
 for i in "${!IDS[@]}"; do printf '  "%s","%s","%s"\n' "${IDS[$i]}" "${STATUS[$i]}" "${DETAIL[$i]}"; done

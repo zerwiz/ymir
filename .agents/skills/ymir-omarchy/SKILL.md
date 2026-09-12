@@ -149,6 +149,31 @@ and use `omarchy` commands rather than raw edits wherever one exists. Offer a
 backup before every config change, and never run `omarchy refresh <x>` (which
 resets config) without explicit confirmation.
 
+## Ymir speaks on the desktop
+
+Ymir works for hours unwatched, so when something is worth knowing it says so
+where the Allfather already is. `bin/ymir-say.sh` is the **single owner** of that
+manner — anything with news calls it, so the voice cannot drift.
+
+```
+bin/ymir-say.sh "<headline>" ["<body>"]            # a plain note
+bin/ymir-say.sh --mark-done  "<what>" ["<detail>"] # a job finished (low urgency)
+bin/ymir-say.sh --mark-alarm "<what>" ["<detail>"] # needs his word (critical)
+bin/ymir-say.sh --mark-fail  "<what>" ["<detail>"] # something broke (critical)
+bin/ymir-say.sh status                              # what has been said
+```
+
+It speaks through Omarchy's own notifier (`omarchy-notification-send`) when
+present, else `notify-send`, and always records the line in
+`state/ymir-said.log` — so a popup missed is a line still found. On a host with
+neither, the line is recorded and it says "record only"; a silent host is never a
+lost message.
+
+**Who speaks through it:** the wedge alarm (`bin/wedge-notify.sh`, when an
+escalation cannot reach a wedged pane) and the crash watcher (`bin/crash-sense.sh`, a
+new `coredumpctl` entry). Both route to `ymir-say.sh` so urgency, glyph, and app
+identity stay one voice.
+
 ## Maintaining this
 
 - **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md`.

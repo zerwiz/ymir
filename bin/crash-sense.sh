@@ -55,6 +55,13 @@ fingerprints() {
 notify() {  # <headline> <body> [urgency]
   local h="$1" b="$2" u="${3:-normal}"
   [ "$NOTIFY" = 1 ] || return 0
+  # One voice: bin/ymir-say.sh owns the desktop manner.
+  if [ -x "$ROOT/bin/ymir-say.sh" ]; then
+    local mark=note
+    [ "$u" = critical ] && mark=alarm
+    "$ROOT/bin/ymir-say.sh" --mark "$mark" "$h" "$b" >/dev/null 2>&1 || true
+    return 0
+  fi
   if have omarchy-notification-send; then
     omarchy-notification-send -u "$u" -g "" "$h" "$b" >/dev/null 2>&1 || true
   elif have notify-send; then

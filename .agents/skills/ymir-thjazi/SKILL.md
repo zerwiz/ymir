@@ -18,6 +18,97 @@ herdr-first system without breaking on a tmux-only host.
 
 **Router:** `.agents/skills/galdr/SKILL.md`.
 
+## Raising an Eindri (the two roads)
+
+An **Eindri** is a delegated hand (AGENTS.md; `docs/lore.md` §II — Brokk works the
+bellows, Eitri/Eindri works the craft). Two roads seat one, and each fits its own
+country. `bin/herdr-run.sh` is the runner; `bin/eindri-role.sh` names the smith.
+
+```
+herdr_roads[2]{road,shape,use_when}:
+  "tab","one tab in this home's workspace (durable, the default)","the work outlasts the moment — a task with an artifact"
+  "space","a disposable workspace holding exactly this one errand, gone when it ends","the errand should leave no trace in the workspace you are living in"
+```
+
+**A tab is a tab, not a pane split.** Firstmate's grain — and now ours — is that a
+worker takes its **own tab in the home's workspace**, never a slice of yours. Your
+pane keeps its width; the smith sits beside your tabs, reachable with a tab switch.
+
+```
+bin/herdr-run.sh available                      # reach herdr? which session/workspace?
+bin/herdr-run.sh worth-a-smith "<errand>"       # THE FIRST LAW (see below)
+bin/herdr-run.sh eindri -- "<task>"             # the RIGHT smith, seated in a TAB
+bin/herdr-run.sh eindri --space -- "<task>"     # ...or in a disposable WORKSPACE
+bin/herdr-run.sh eindri sindri -- "<task>"      # name the smith explicitly
+bin/herdr-run.sh eindri --role huginn -- "<task>"
+bin/herdr-run.sh run <name> -- <command...>     # a command in a tab (not an agent)
+bin/herdr-run.sh agent-status                   # who stands, and in what state
+bin/herdr-run.sh status                         # what seats we recorded
+bin/herdr-run.sh close-all                      # clear the tabs/workspaces we made
+```
+
+### The first law — a short errand is done in hand
+
+A smith costs a context, a seat, and the Allfather's attention. So an errand is
+weighed before it is seated:
+
+- **A question is answered in hand.** "What is the pid?" "Why did it fail?" —
+  answered directly, never seated.
+- **A one-line check is done in hand.** Brevity is not a task.
+- **A task earns a smith** — work with an artifact: build, fix, implement, port,
+  research, audit, plan, document, review.
+
+`worth-a-smith` decides, and `eindri` refuses to seat a smith for a question or a
+trifle. Ask it first when you are unsure.
+
+### The projection floor
+
+A disposable workspace needs **herdr 0.8.0+** (protocol 19). Below that floor a
+workspace-emptying close can steal the active workspace, so `--space` falls back
+to a tab and says so, rather than risking your focus. `available` reports
+`space_ok` for the running release.
+
+### The law of the runner
+
+Inside herdr the work is shown in its own tab or workspace; outside herdr it runs
+**inline — the same result, no seats** — and if a seat cannot be raised the
+command runs in place, so no work is ever lost to the theatre.
+`YMIR_HERDR_PANES=0` forces inline anywhere.
+
+### Session routing (a trap worth naming)
+
+`HERDR_SESSION` alone is **not** a reliable router: with another herdr server
+bound on the machine, a command silently reaches the wrong one. The runner always
+passes the trailing `--session <name>` flag, which routes correctly. (Firstmate's
+`docs/herdr-backend.md` owns the evidence.)
+
+## The right smith for the right task
+
+An Eindri is a delegated hand (AGENTS.md; `docs/lore.md` §II: Brokk works the
+bellows, Eitri/Eindri works the craft). The wrong smith for the metal produces
+bad work, so the role is chosen deliberately:
+
+```
+eindri_roles[8]{role,craft}:
+  "sindri","code — build, refactor, fix, test"
+  "bragi","content — marketing, SEO, social"
+  "huginn","research — search, analyse, discover"
+  "kvasir","scout — recon a codebase before work"
+  "mimir","plan — design the approach"
+  "snotra","document — prose, guides, references"
+  "forseti","review — judge the work"
+  "galdr","runtime — the Ymir distro itself"
+```
+
+```
+bin/eindri-role.sh list                 # the roster
+bin/eindri-role.sh choose "<task text>" # the craft that fits
+bin/eindri-role.sh for <role>           # exact lookup
+```
+
+A named role wins; otherwise the craft is read from the errand itself ("write a
+blog post" → `bragi`; "fix the login bug" → `sindri`). Several may stand at once.
+
 ## Ymir is herdr-first
 
 At install, Ymir guarantees a terminal backend exists. The order is:
