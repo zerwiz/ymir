@@ -3,7 +3,7 @@
 # (not Brokk's), loading only the skills it needs. Reusable for users.
 #
 #   bin/pi-agent.sh <agent> "<task>"
-#   bin/pi-agent.sh hnoss "design a hero" --skill .agents/skills/hnoss
+#   bin/pi-agent.sh hnoss "design a hero" --skill .agents/skills/hnoss-design
 #   bin/pi-agent.sh sindri "fix the bug" -m qwen3.6-35b-q4_k_s
 #
 # It loads the agent's canonical profile body as the system prompt, disables the

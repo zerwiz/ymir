@@ -76,7 +76,7 @@ fi
 # Smíðja's eye — the Vue trace visualizer (API :8437, UI :8438). Reads the repo's
 # own smidja.db and exposes the Sessions/Trace/Decisions/Stats views behind the
 # Hlidskjalf Sessions gate's "Open visualizer" button.
-VIZ_DIR="$ROOT/.agents/skills/smidja/apps/visualizer"
+VIZ_DIR="$ROOT/.agents/skills/smidja-factory-factory/apps/visualizer"
 VIZ_API_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 VIZ_UI_PORT="${SMIDJA_VIZ_UI_PORT:-8438}"
 VIZ_API_PID_FILE="$RUN/smidja-viz-api.pid"

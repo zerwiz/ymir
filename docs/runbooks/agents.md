@@ -38,7 +38,7 @@ OpenCode rejects `tools:` as a list — Ymir capabilities go under **`ymir_tools
 1. Write `.agents/agents/<name>-<craft>.md` (copy a neighbour).
 2. Give it a `model` (or leave it to inherit `default_model`) and a `domain`.
 3. `bin/valknut-load.sh --all` to bind it into OpenCode + Pi.
-4. Register it in `.agents/skills/galdr/assets/registry.md` if it is durable.
+4. Register it in `.agents/skills/galdr-cli-cli/assets/registry.md` if it is durable.
 
 ## Run an agent
 

@@ -9,11 +9,11 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 
 ### A0. Omarchy-native skill — DONE
 - **Asked:** build a skill so the system knows Omarchy, and load the omarchy skill.
-- **Done:** `.agents/skills/ymir/SKILL.md` — the two laws (never edit
+- **Done:** `.agents/skills/ymir-host-host/SKILL.md` — the two laws (never edit
   `/usr/share/omarchy/`; Hyprland owns placement), host detection, the
   monitor/scale coordinate trap, the amdgpu GPU crash + mitigation, desktop-app
   placement, safe-customisation table, discovery. Registered in the skill index.
-- **Also done:** `.agents/skills/ymir/SKILL.md` — Þjazi (herdr-first),
+- **Also done:** `.agents/skills/ymir-host-host/SKILL.md` — Þjazi (herdr-first),
   protocol floors (14+ panes, 0.8.0 spaces), install/verify.
 
 ### A1. Ymir learns the user's machine — DONE
@@ -154,7 +154,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 ### C1. Find the real engine — OPEN
 - **Finding:** `pip install engram` is the **wrong package** — PyPI's `engram` is
   Benjamin Beilharz's alpha scientific project (pulls torch/triton). The code needs
-  `from engram import Engram` (`.agents/skills/galdr/assets/memory-well.md`,
+  `from engram import Engram` (`.agents/skills/galdr-cli-cli/assets/memory-well.md`,
   `bin/mimir-bridge.py`).
 - The store exists (`kaia.engram`, 1.3 MB) and was seeded 2026-09-11 ("engram 1.30",
   370 episodes) — so the engine *did* exist once.

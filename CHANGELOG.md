@@ -193,7 +193,7 @@ Entries are appended chronologically; never rewritten.
   match when the PID file is missing, and record the PID when the port is
   already up — so `scripts/stop.sh` truly lowers the whole system and
   `scripts/start.sh` truly raises it.
-- **Galdr:** new asset `.agents/skills/galdr/assets/memory-well.md` (store,
+- **Galdr:** new asset `.agents/skills/galdr-cli-cli/assets/memory-well.md` (store,
   bridge, MCP, harness matrix, laws, verify), routed in `SKILL.md`; registry +
   harness README updated; mirrored to tyr.
 - **Verified:** MCP recall 1.0 / stats 367, full stop→start cycle (3888/3889/
