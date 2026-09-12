@@ -11,7 +11,7 @@ metadata:
   internal: true
 ---
 
-# NSR — WayOfNorthStarRules
+# nsr — WayOfNorthStarRules: scaffold/audit a repo + generate & run the deterministic .compliance/ harness
 
 The NorthStar doctrine and the compliance harness that enforces it, under one
 skill.

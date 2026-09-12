@@ -11,7 +11,7 @@ metadata:
   internal: true
 ---
 
-# Urðr — the hold lifecycle
+# urdh — Allfather-hold lifecycle: decisions held for the Allfather, reconciled
 
 Urðr is fate — what is woven and must be answered. This skill governs the calls
 held for the Allfather and the reconciliation that closes them.

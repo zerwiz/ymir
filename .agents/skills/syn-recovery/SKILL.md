@@ -9,7 +9,7 @@ metadata:
   internal: true
 ---
 
-# stuck-Eindri-recovery
+# syn-recovery — stuck-worker recovery playbook
 
 Use this playbook when the session-start digest reports an ordinary direct report's endpoint dead or its metadata has no window, or when a direct report is stale, looping, repeatedly confused, asking a question its brief already answers, unresponsive, or when a steer failed to land.
 

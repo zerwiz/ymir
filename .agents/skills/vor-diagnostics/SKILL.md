@@ -9,7 +9,7 @@ metadata:
   internal: true
 ---
 
-# bootstrap-diagnostics
+# vor-diagnostics — bootstrap + diagnostic reasoning
 
 Handle each printed line as below, before dispatching work that depends on it.
 The line formats themselves are owned by `bin/brokk-bootstrap.sh`'s header; this playbook owns the response to actionable lines.

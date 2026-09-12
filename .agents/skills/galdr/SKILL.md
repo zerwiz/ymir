@@ -4,7 +4,7 @@ description: Galdr — agent-CLI ergonomics and the master builder/maintainer of
 allowed-tools: read,write,bash,glob,grep
 ---
 
-# Galdr
+# galdr — agent-CLI ergonomics + master builder/maintainer of the runtime
 
 Lean TOON router. This file is a manifest — load only the asset that matches the
 task; never read the whole tree.
