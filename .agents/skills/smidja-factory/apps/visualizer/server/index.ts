@@ -103,7 +103,19 @@ async function memoryProxy(req: Request, path: string): Promise<Response> {
     body: req.method === "POST" ? await req.text() : undefined,
   });
   const raw = await upstream.text();
-  return new Response(raw, {
+  // Normalize health: the bridge reports `status: "up"`, but the UI checks
+  // `ok` — set it so a healthy bridge is never shown as offline.
+  let body = raw;
+  if (path === "/health") {
+    try {
+      const d = JSON.parse(raw);
+      if (d && typeof d === "object" && d.ok === undefined) d.ok = d.status === "up";
+      body = JSON.stringify(d);
+    } catch {
+      /* leave raw */
+    }
+  }
+  return new Response(body, {
     status: upstream.status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
