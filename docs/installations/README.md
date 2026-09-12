@@ -5,13 +5,14 @@ is a validated OSS project (or SDK) under a Norse shell, or a first-party tool t
 agents drive. Keys live in `.env.local` — **never inline**.
 
 ```
-installations[14]{tool,role,oss,install,used_by}:
+installations[15]{tool,role,oss,install,used_by}:
   "treehouse","worktree pool (Yggdrasil)","kunchenguid/treehouse","curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh","yggdrasil.sh · Eindri workers"
   "sandcastle","sandbox engine (Utgard)","mattpocock/sandcastle","npm i @ai-hero/sandcastle","utgard.sh · einherjar-spawn"
   "no-mistakes","clean-PR gate (Mjollnir/Glitnir)","kunchenguid/no-mistakes","curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh","mjollnir.sh (mode no-mistakes)"
   "hermes","worker agent runtime","NousResearch/hermes-agent","curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash","bin/hermes-ensure.sh"
   "opendesign","design engine (Hnoss)","nexu-io/open-design","od mcp install <agent>","skills/hnoss · design Eindri"
   "firecrawl","web crawl/scrape","firecrawl.dev","pip install firecrawl-py","skills/bragi (research/SEO)"
+  "scrapy","optional scraper (large/custom crawls)","scrapy.org","pip install scrapy","skills/bragi (optional)"
   "browser-use","agentic browser","browser-use/browser-use","pip install browser-use","skills/bragi (publish/post)"
   "chrome-devtools","browser debugging","developer.chrome.com/docs/devtools","Chrome DevTools MCP / built-in","Sindri (developer craft)"
   "engram","the well (Mimirsbrunn)","engram","pip install --user engram","bin/mimir-bridge.py · well"
