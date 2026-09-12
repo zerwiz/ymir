@@ -398,3 +398,22 @@ platform layer in the same change.
 Omarchy layer and is gated; if it is core, it must work on every platform. Do not
 blur the two — a branch of Hyprland logic inside a core script is how a portable
 runtime stops being portable.
+
+### A move must carry the memory, not just the code
+
+Rule 06 makes this explicit, because a home swap here dropped
+`docs/append-only-log.md`, `docs/masterplan.md`, `docs/plans/` and the private
+business set: the backup carried `state`, `.env.local`, `data`, the realm and
+`workspace` — but not `docs/` or `assets/`. The code arrived; the memory did not.
+
+Before and after any migration, re-clone or swap, check the sets **by name**:
+
+```bash
+for f in CHANGELOG.md docs/append-only-log.md workspace/memory/runes_audit.md; do
+  [ -e "$f" ] || echo "MISSING append-only artifact: $f"
+done
+ls "$YMIR_HOARD/docs" "$YMIR_HOARD/identity" 2>/dev/null    # the private set
+```
+
+A backup is only as good as its file list. If a directory is not named in the
+backup, it is not carried.
