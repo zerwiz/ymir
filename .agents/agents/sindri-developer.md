@@ -1,4 +1,14 @@
 ---
+mode: subagent
+model: opencode-go/deepseek-v4.1-flash
+permission:
+  read: allow
+  edit: allow
+  write: allow
+  glob: allow
+  grep: allow
+  bash: allow
+  skill: allow
 domain: brokkforge
 name: sindri
 description: "Eindri role profile — Sindri the Smith. Code synthesis, refactoring, test writing, CLI tools, and package management. Runs in Utgard on a Yggdrasil worktree."

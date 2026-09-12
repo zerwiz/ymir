@@ -1,4 +1,14 @@
 ---
+mode: subagent
+model: opencode-go/deepseek-v4.1-flash
+permission:
+  read: allow
+  edit: deny
+  write: deny
+  glob: allow
+  grep: allow
+  bash: allow
+  skill: allow
 domain: ymirlabs
 name: mimir
 description: "Eindri role profile — Mímir the Wise. Planning, architecture, sequencing, and risk. Runs in Utgard on a Yggdrasil worktree."
