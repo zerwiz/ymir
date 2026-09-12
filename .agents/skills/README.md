@@ -27,7 +27,7 @@ skills[23]{skill,does}:
   "herdr-panes","terminal panes — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)"
   "ratatoskr-a2a","A2A/MCP mesh — a2abridge + wayofteams; registration"
   "hlidskjalf-ui","control plane UI — SPA, gate API, auth, desktop, tunnel"
-  "hamr","harness adapters — per-harness reference"
+  "hamr-adapters","harness adapters — per-harness reference"
   "pr-ops","pull requests — create, update, check status, request merge"
   "hnoss-design","design — artifacts via OpenDesign (prototypes, decks, dashboards, image, video)"
   "bragi-marketing","marketing — research/crawl (Firecrawl), agentic browser (browser-use)"

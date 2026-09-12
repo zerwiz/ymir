@@ -9,7 +9,7 @@ metadata:
   internal: true
 ---
 
-# hamr — harness adapters — per-harness reference
+# hamr-adapters — harness adapters — per-harness reference
 
 This is the one skill, trigger, and routing owner for harness-specific Brokk operations.
 Load this router first, then exactly the common reference and one harness reference selected below.
