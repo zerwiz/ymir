@@ -136,3 +136,13 @@ Directory: `http://127.0.0.1:7777`. Config: `~/.pi/agent/mcp.json` → `a2abridg
 
 Rule: a successful `a2a_call` needs **transport + a live peer + delivery
 (injection) + return**. Missing any one shows up as a timeout/attempts error.
+
+## Tools this skill drives (in `bin/`)
+
+```
+tools[4]{tool,does}:
+  "bin/a2a-mcp.sh install","wire the a2abridge (+ wayofteams) MCP servers into pi + opencode"
+  "bin/ratatoskr.sh status|doctor|directory|service|cert","engine + directory front door"
+  "bin/a2a-talk.sh agents|send <peer> \"<text>\"","Brokk-side A2A talk"
+  "bin/a2a-serve.py <pane> <name> <port>","per-Eindri A2A server: inject task -> read reply"
+```

@@ -60,3 +60,13 @@ herdr agent list            # states: working · blocked · done · idle · unkn
 - One **local model at a time per machine** — see `bin/local-model-lock.sh` and
   `local_concurrency` in `config/agents.yaml`. Different machines, different
   models; local inference is serialized on a box.
+
+## Tools this skill drives (in `bin/`)
+
+```
+tools[4]{tool,does}:
+  "bin/eindri-start.sh \"<task>\" [--pane|--tab|--space]","one command to seat an Eindri visibly"
+  "bin/pi-seat.sh [-n name] [-m model] [--task]","seat a pi agent (local model) in a pane"
+  "bin/eindri-send.sh <agent> \"<text>\" · bin/eindri-control.sh ...","talk to / control a seated agent (data · control plane)"
+  "bin/herdr-run.sh","the seat engine that calls herdr agent start/prompt"
+```

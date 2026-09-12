@@ -268,3 +268,17 @@ Seating a worker is a chain, not a guess: role → **`bin/model-resolve.sh`** �
 harness rule (local→pi, online→opencode) → **`bin/herdr-run.sh eindri`** (pane)
 → **`bin/local-model-lock.sh`** → A2A register. Read
 `assets/dispatch.md` before dispatching, and never guess a model.
+
+## Tools this skill drives (in `bin/`)
+
+Use these — never hand-run herdr/tmux:
+
+```
+tools[6]{tool,plane}:
+  "bin/eindri-start.sh \"<task>\" [--role] [--model] [--pane|--tab|--space]","one command: role -> model-resolve -> seat -> serve"
+  "bin/herdr-run.sh eindri [--model] <role> -- \"<task>\"","the seat engine (pane/tab/space)"
+  "bin/eindri-send.sh <agent> \"<text>\"","DATA plane — talk to a running Eindri"
+  "bin/eindri-control.sh interrupt|exit|read <agent>","CONTROL plane — allowlisted lifecycle"
+  "bin/einherjar-spawn.sh <id> --Eindri-home","launch a persistent home (recovery/retire above)"
+  "bin/model-resolve.sh · bin/local-model-lock.sh","model choice + one-local-at-a-time"
+```
