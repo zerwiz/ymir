@@ -220,19 +220,44 @@ step_backend() {
   fi
 }
 
-# ── 3d. Omarchy integration ──────────────────────────────────────────────────
-# On an Omarchy host, learn the machine and install the update hook so Ymir
-# stays current with the user's setup. On a non-Omarchy host this is a clean SKIP.
-step_omarchy() {
-  if [ ! -d /usr/share/omarchy ]; then add omarchy SKIP "not an Omarchy host"; return; fi
-  if [ ! -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then add omarchy WARN "no omarchy-sense.sh"; return; fi
+# ── 3d. host integration ─────────────────────────────────────────────────
+# Learn the machine and place the desktop apps on EVERY host; the Omarchy-specific
+# extras (the post-update hook) apply only when Omarchy is present. A non-Omarchy
+# host still gets host learning and desktop placement — this is not a bonus for
+# Omarchy, it is part of a normal install.
+step_host() {
+  local on_omarchy=0
+  [ -d /usr/share/omarchy ] && on_omarchy=1
+  local learned=no placed=no hooked=no
+
   if [ "$CHECK" = 1 ]; then
-    local snap; snap="$("$SCRIPT_DIR/omarchy-sense.sh" status 2>&1 | sed -n '2p' | sed -E 's/^ *//; s/^"//; s/"$//' | tr -d '\n' | cut -c1-80)"
-    add omarchy OK "${snap:-no snapshot yet}"; return
+    if [ -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then
+      local snap; snap="$("$SCRIPT_DIR/omarchy-sense.sh" status 2>&1 | sed -n '2p' | sed -E 's/^ *//; s/^"//; s/"$//' | tr -d '\n' | cut -c1-70)"
+      learned="${snap:-no snapshot yet}"
+    fi
+    add host OK "${learned}; omarchy=${on_omarchy}"; return
   fi
-  "$SCRIPT_DIR/omarchy-sense.sh" observe --quiet >/dev/null 2>&1 || true
-  [ -x "$SCRIPT_DIR/omarchy-hook-install.sh" ] && "$SCRIPT_DIR/omarchy-hook-install.sh" install >/dev/null 2>&1 || true
-  add omarchy OK "learnt the host; post-update hook installed"
+
+  # 1. Learn the host (Omarchy version, packages, configs, monitors, scale).
+  if [ -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then
+    "$SCRIPT_DIR/omarchy-sense.sh" observe --quiet >/dev/null 2>&1 && learned=yes
+  fi
+
+  # 2. Place the desktop apps on their own desktops (Hyprland hosts).
+  if [ -x "$SCRIPT_DIR/desktop-place.sh" ]; then
+    "$SCRIPT_DIR/desktop-place.sh" apply >/dev/null 2>&1 && placed=yes
+  fi
+
+  # 3. Omarchy extras: re-learn after every `omarchy update`.
+  if [ "$on_omarchy" = 1 ] && [ -x "$SCRIPT_DIR/omarchy-hook-install.sh" ]; then
+    "$SCRIPT_DIR/omarchy-hook-install.sh" install >/dev/null 2>&1 && hooked=yes
+  fi
+
+  if [ "$on_omarchy" = 1 ]; then
+    add host OK "learnt the host; desktops placed=${placed}; post-update hook=${hooked}"
+  else
+    add host OK "learnt the host; desktops placed=${placed} (not an Omarchy host)"
+  fi
 }
 
 # ── 4. sandbox image ─────────────────────────────────────────────────────────
@@ -373,7 +398,7 @@ step_validate() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_omarchy; step_sandbox; step_memory; step_smidja; step_loaders; step_register
+step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_loaders; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate

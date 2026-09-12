@@ -82,6 +82,66 @@ On a non-Omarchy host the Omarchy steps are a clean `SKIP`; Ymir still runs. On 
 host without herdr, tmux carries the panes. On a harness that is not pi, the
 runtime adapts through the harness adapters (see `hamr`).
 
+### Omarchy-native
+
+Ymir treats the host desktop as part of itself. It **detects** Omarchy
+(`/usr/share/omarchy`), **reads** the real layout (`hyprctl monitors -j` — physical
+size *and* scale, because a 1920×1200 panel at scale 1.5 is a 1280×800 logical
+desktop, and mixing the two is the classic placement bug), and **lets Hyprland own
+placement** rather than fighting the compositor.
+
+- **Desktop placement.** On Omarchy the numbered **desktops** (`1 2 3 4 5 …`) are
+the operator's "screens". `bin/desktop-place.sh` gives each Ymir app its **own
+desktop, preferring an empty one**, via Omarchy's own rule idiom
+(`o.window({ class = "^ymir-hlidskjalf$" }, { workspace = "2" })`), and never
+edits `/usr/share/omarchy/`.
+- **It learns the machine.** `bin/omarchy-sense.sh` records a comparable snapshot
+(Omarchy version, explicit packages, config files, monitors, scale) and **diffs**
+it, so Ymir can advise on *this* setup. `bin/omarchy-hook-install.sh` installs a
+`post-update.d` hook, so **every `omarchy update` re-teaches it**.
+- **It survives the hardware.** On a small-VRAM iGPU the Wayland GPU process can
+die with `amdgpu: Not enough memory for command submission` (SIGSEGV, not an OOM);
+`YMIR_DESKTOP_DISABLE_GPU=1` runs the dashboards on software rendering.
+
+Full reference: the `ymir-omarchy` skill. Omarchy's own skill is authoritative for
+Omarchy itself; ours adds the Ymir integration.
+
+### herdr-first (Þjazi)
+
+Every Eindri worker lives in a terminal pane, so the backend matters. Ymir prefers
+**herdr** and accepts **tmux** — and never degrades silently.
+
+```
+backend_priority[3]{rank,backend,note}:
+  "1","herdr","preferred; protocol 14+ for panes, 0.8.0+ for presentation spaces"
+  "2","tmux","verified reference backend"
+  "3","none","spawn is refused with a plain reason"
+```
+
+`bin/herdr-ensure.sh` verifies the *version* (not just presence) and installs via
+the pinned, SHA-256-verified installer when herdr is absent. Selection order:
+`config/backend` → `BROKK_BACKEND` → `HERDR_ENV=1` → else tmux. Full reference:
+the `ymir-thjazi` skill.
+
+### pi-native
+
+[pi](https://pi.dev) is the harness Ymir runs in, and Ymir uses that fully rather
+than treating it as a shell to be wrapped:
+
+- **Extensions** — `.pi/extensions/` carries live behaviour (the watcher arm, the
+turn-end guard, the Ró presentation preference, the agent-state surface).
+- **Packages** — `pi install npm:<pkg>` / `git:<repo>` bundles extensions, skills,
+prompt templates, and themes. Ymir can **ship its own**, so a Ymir capability can
+be distributed and installed like any pi package, not only as a shell script.
+- **Model providers** — pi resolves models from `~/.pi/agent/models.json`, whose
+shape is `{"providers": {...}}`. Local servers (LM Studio, Ollama, vLLM) and the
+Bifrost bridge are configured the same way, so the fleet runs on local or cloud
+models by the operator's choice.
+
+This is the freedom you gain from being pi-native: a new capability has three
+possible homes — a shell script, a skill, or a **pi package** — and the last one is
+installable by anyone running pi.
+
 ---
 
 ## System Map
