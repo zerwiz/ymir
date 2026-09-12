@@ -1061,8 +1061,21 @@ async function resolveModel(base: string): Promise<string> {
 function resolveChatTarget(model?: string): ChatTarget[] {
   const cat = piCatalog();
   if (model) {
-    const exact = cat.find((e) => e.id === model || e.name === model);
-    if (exact) return [exact];
+    // One model name can be advertised by several engines (LM Studio :1234,
+    // the llama.cpp router :8080, Bifrost :4603). Return EVERY match — a dead
+    // engine then falls through to a live one instead of failing the chat.
+    // A provider-prefixed id (e.g. lmstudio/<m>) maps to the bare model name.
+    const bare = model.includes('/') ? model.slice(model.indexOf('/') + 1) : model;
+    const matches = cat.filter((e) => e.id === model || e.name === model || e.model === bare);
+    if (matches.length) {
+      const seen = new Set<string>();
+      return matches.filter((e) => {
+        const key = `${e.base}|${e.model}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
     if (/^(opencode-go|opencode)\//.test(model)) {
       return [{ base: 'http://127.0.0.1:4603/v1', model, label: model, kind: 'online' }];
     }

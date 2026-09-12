@@ -88,6 +88,12 @@ scripts/stop.sh     # lower them all
 smithy trace: `/api/smidja/{health,sessions,sessions/:id,decisions,stats}` and
 chat: `/api/chat/history`, `POST /api/chat`.
 
+`POST /api/chat` resolves the chosen model against the operator's Pi catalog and
+tries **every** engine that advertises it (LM Studio `:1234`, the llama.cpp
+router `:8080`, Bifrost `:4603`), never only the first — a dead engine falls
+through to a live one. Recall reads `.agents/memory/well/episodes.jsonl`
+directly, so restoring that file revives the chat's memory without a restart.
+
 ## Smíðja in the UI
 
 The smithy's trace (its own `smidja/smidja_data/smidja.db`) is rendered by four gates:
