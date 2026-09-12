@@ -1,0 +1,26 @@
+# config/tailscale-sync.example.yaml — TEMPLATE for the Allfather's machine mesh.
+#
+# Copies to the private, gitignored config/tailscale-sync.yaml on install, or
+# run: bin/tailscale-sync.sh init
+# Override the path with YMIR_TAILSCALE_SYNC.
+#
+# Sync is peer-to-peer over Tailscale (rsync over ssh, addressed by MagicDNS).
+# There is no central server and no relay unless the Allfather adds one.
+
+machine: this-machine
+
+# The allowlist: only these tailnet hosts may be synced with. Use the MagicDNS
+# name (e.g. `ymir-desktop`) or the tailnet IP.
+peers:
+  - host: my-other-machine
+
+# What may move. Paths are on both ends; ~ expands on each machine.
+paths:
+  - ~/.pi/agent/models.json
+  - ~/.pi/agent/models-store.json
+  - ~/.pi/agent/settings.json
+  - ~/.pi/agent/trust.json
+
+# auth.json holds live credentials. Leave false unless the Allfather trusts
+# every listed peer to hold them; Tailscale encrypts the wire, not the trust.
+include_auth: false
