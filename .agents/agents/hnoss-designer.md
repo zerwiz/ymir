@@ -1,6 +1,6 @@
 ---
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash
+model: llama.cpp/frontend-design-expert-8b@q4_k_m
 permission:
   read: allow
   edit: allow
