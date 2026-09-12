@@ -77,3 +77,12 @@ sandboxed: true
 ```
 
 All five are mandatory; a missing declaration fails the Galdr gate.
+
+## Developer tooling — Chrome DevTools
+
+Inspect, profile, and debug the running app with **Chrome DevTools**
+([developer.chrome.com/docs/devtools](https://developer.chrome.com/docs/devtools)):
+**Elements** (DOM/CSS), **Network** (requests, remotes), **Performance**
+(profiles/CPU), **Sources** (breakpoints), **Console**, **Application**
+(storage/service workers), **Lighthouse**, and the **Chrome DevTools MCP** for
+agent-driven inspection. Engage it before claiming a UI/behavior works.
