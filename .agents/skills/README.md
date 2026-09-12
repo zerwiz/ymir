@@ -24,6 +24,7 @@ skills[20]{name,norse,purpose,origin}:
   "eindri-homes","Eindri","isolated worker homes (provisioning)","adopted"
   "syn-recovery","Sýn","stuck-worker recovery playbook","adopted"
   "ymir","Ymir","operate the host: self-update · Omarchy desktop · Þjazi backend","new"
+  "herdr","Herdr","the pane backend — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)","new"
   "hamr","Hamr","per-harness adapter reference","adopted"
   "pr-ops","—","PR lifecycle — create, update, check status, request merge","new"
   "hnoss","Hnoss","design artifacts via the OpenDesign engine (prototypes, decks, dashboards, image, video)","new"
