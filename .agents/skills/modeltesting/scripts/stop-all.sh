@@ -1,43 +1,42 @@
 #!/usr/bin/env bash
-# stop-all.sh — stop every model on every backend, return GPU to baseline.
+# stop-all.sh — return the GPU to a clean baseline before/after a TEST.
 #
-# Unloads in order: llama.cpp (model-host) → LM Studio (all) → Ollama (each).
-# Confirms the 26 MiB VRAM baseline at the end (skill rule #1).
+# THE LAW: this skill TESTS. It does not run, stop, or manage the machine's
+# serving stack. So this script does exactly two things:
+#   1. kills the throwaway bench servers THIS SKILL started (their pids live in
+#      /tmp/opencode/bench.*/ ), and
+#   2. reports what is still holding VRAM, so you know whether your next
+#      measurement is clean — without pretending to own the answer.
+#
+# If something else holds the GPU (the machine's service, LM Studio, Ollama),
+# stopping it is that service's business, not a test script's. Its own docs say
+# how. This script only refuses to lie about the baseline.
 #
 # Usage: stop-all.sh
 set -uo pipefail
 
-echo "=== llama.cpp (model-host) ==="
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-"$ROOT/scripts/model-host.sh" stop 2>/dev/null | grep -E "stopped|not running" || echo "  none running"
-
-echo "=== Ollama ==="
-for m in $(ollama ps --format json 2>/dev/null | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(' '.join(x.get('Name','') for x in d.get('models', [])))
-except Exception:
-    print('')" 2>/dev/null); do
-  echo "  ollama stop $m"
-  ollama stop "$m" 2>/dev/null || true
+echo "=== bench servers this skill started ==="
+found=0
+for pidfile in /tmp/opencode/bench.*/server.pid; do
+  [ -e "$pidfile" ] || continue
+  pid=$(cat "$pidfile" 2>/dev/null || true)
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    kill "$pid" 2>/dev/null && echo "  stopped bench server pid $pid"
+    found=1
+  fi
 done
+# bench-one.sh keeps its server pid in memory and cleans up on exit; stray
+# single-model servers of ours are matched by their scratch-port range only.
+for p in $(pgrep -f "llama-server .*--port 9[0-9][0-9][0-9]" 2>/dev/null || true); do
+  kill "$p" 2>/dev/null && { echo "  stopped stray bench server pid $p"; found=1; }
+done
+[ "$found" = "0" ] && echo "  none running"
 
-echo "=== LM Studio (any spawned llama-server backends) ==="
-pids=$(pgrep -f "lmstudio.*llama-server" 2>/dev/null || true)
-if [ -n "$pids" ]; then
-  # ask LM Studio to unload via its API if up, else signal the backend processes
-  curl -s -X POST http://localhost:1234/api/v0/models/unload -H "Content-Type: application/json" -d '{}' >/dev/null 2>&1 \
-    && echo "  asked LM Studio to unload all" || {
-      echo "  no LM Studio API — killing $(echo $pids | wc -w) backend process(es)"
-      kill $pids 2>/dev/null || true
-    }
-else
-  echo "  none running"
-fi
-
-sleep 2
-echo ""
-echo "=== final VRAM ==="
-nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader
-echo "  (expect ~26 MiB used = clean baseline)"
+sleep 1
+echo
+echo "=== who holds the GPU now ==="
+nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv 2>/dev/null | sed 's/^/  /'
+echo
+echo "=== baseline ==="
+nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv,noheader | sed 's/^/  used/total/util: /'
+echo "  (a clean test baseline is the idle floor — a few MiB, depending on the desktop)"

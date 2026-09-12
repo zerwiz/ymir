@@ -12,6 +12,12 @@ folder). Every per-backend `TESTING.md` is a working guide grounded in it. This
 skill packages the **always-do-these** rules so any run is clean, recorded, and
 keeps the pi registry in sync.
 
+> **This skill TESTS. It does not run the service.** It installs the stack
+> ([`INSTALL.md`](./INSTALL.md)) and measures models against it
+> ([`scripts/bench-one.sh`](./scripts/bench-one.sh) starts its own throwaway
+> single-model server). Starting, stopping, or reconfiguring the serving stack
+> is machine property, documented with the machine — never here.
+
 ## Where things live
 
 | Path | What |
@@ -20,6 +26,31 @@ keeps the pi registry in sync.
 | `.agents/skills/modeltesting/<backend>/TESTING.md` | per-backend guide (llamacpp, lmstudio, ollama, colibri, unsloth, llamaswap, vllm, tabbyapi-yals) + its `§8 result` block |
 | `.agents/skills/modeltesting/README.md` | index of backends, bench models, shared rules |
 | `~/.pi/agent/models.json` | **pi model registry — MUST be updated with every accepted result** |
+| `~/.local/share/llama-router/scripts/llama-models.yaml` | **the serving registry — lives ON THE MACHINE, never here** (see the boundary below) |
+| [`INSTALL.md`](./INSTALL.md) | **how to install the stack on a machine** — prerequisites, the seat, the CUDA shim, the registry, autostart, verification checklist |
+| [`HOST-RUNBOOK.md`](./HOST-RUNBOOK.md) | **what a tester must know about THIS host** — the GPU, the CUDA-vs-CPU trap, warm-up, the verified reference windows, the traps |
+| [`DUAL-GPU.md`](./DUAL-GPU.md) | **running both GPUs at once** — the eGPU (CUDA) + internal AMD iGPU (Vulkan), measured solo vs concurrent, and the batch-size trap |
+
+## Boundary — the router is machine property, not skill property
+
+**This skill benchmarks and records. It does not own, host, or document the
+serving system.** The router (`llama-router`), the launcher/engine
+(`model-host.sh`), the TUI (`llama-menu`), the gateway (`swap-proxy`), the
+registry (`llama-models.yaml`), the generated router INI, and their operating
+docs live in the machine's own home **outside every git repo**
+— here `~/.local/share/llama-router/`. A repo may not hold them.
+
+Add, tune, or operate a model **there**, then record the bench result **here**:
+
+```
+boundary[3]{thing,where}:
+  "code + registry + config","the machine: ~/.local/share/llama-router/scripts/llama-models.yaml, model-host.sh, llama-router, gen-llama-router-config.py"
+  "operating docs","the machine: ~/.local/share/llama-router/docs/ (LLAMA_CPP_SERVER.md, SYSTEM.md, llama-menu.md, swap-proxy.md)"
+  "bench method + results","this skill: backends-benchmark.md, <backend>/TESTING.md"
+```
+
+A model table kept inside a skill goes stale and forks the truth. Never carry
+one here.
 
 ## The 8 shared rules — apply to EVERY run
 

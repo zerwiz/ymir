@@ -8,11 +8,25 @@ matrix §10, on-demand services §12).
 - Machine: **zerwiz** (RTX A5000 **16 GB VRAM**, 16 cores / 122 GiB RAM)
 - Date: 2026-09-04
 
+> **Boundary — this skill benchmarks; the machine serves.** The router
+> (`llama-router`), engine (`model-host.sh`), TUI (`llama-menu`), gateway
+> (`swap-proxy`), and the registry `llama-models.yaml` are **machine property,
+> not skill property — and not repo property**. They live outside every git
+> repo, in the machine's own home: `~/.local/share/llama-router/`
+> (`scripts/`, `config/`, `docs/`), with `bin/` symlinks on PATH. Add or tune
+> a model **there**; record the bench result **here**.
+>
+> What a tester must know about this host: [`HOST-RUNBOOK.md`](./HOST-RUNBOOK.md).
+> Installing the stack on a machine: [`INSTALL.md`](./INSTALL.md).
+>
+> Running both GPUs at once — eGPU (CUDA) + internal AMD iGPU (Vulkan):
+> [`DUAL-GPU.md`](./DUAL-GPU.md).
+
 ## The five primary backends (on-demand load/unload candidates)
 
 | Folder | Engine / role | On this box | Serving cents | Primary testing focus |
 |---|---|---|---|---|
-| [`llamacpp/`](./llamacpp/TESTING.md) | raw llama.cpp, **CUDA build**, native **router mode** | source clone `/home/zerwiz/llama.cpp`, CUDA build done `6703d78`; served via `model-host`/`llama-menu` (`:8125` + `:8081–8084`) | reference standard + fastest; the §9 MoE strategy lives here | build CUDA engine, router-mode INI, `--n-cpu-moe` sweep, §10 matrix, `TESTING.md` §10 model-host registration |
+| [`llamacpp/`](./llamacpp/TESTING.md) | raw llama.cpp, **CUDA build**, native **router mode** | source clone `/home/zerwiz/llama.cpp`, CUDA build done `6703d78`; served by the machine's router stack (`:8080`) | reference standard + fastest; the §9 MoE strategy lives here | build CUDA engine, router-mode INI, `--n-cpu-moe` sweep, §10 matrix, `TESTING.md` §15 host bench record |
 
 **llamacpp companion docs:** [`qwen36-35b-moe-coding-context.md`](./llamacpp/qwen36-35b-moe-coding-context.md)
 (pure-GPU 80–130K recipe) · [`moe-offload-research-2026-09-05.md`](./llamacpp/moe-offload-research-2026-09-05.md)

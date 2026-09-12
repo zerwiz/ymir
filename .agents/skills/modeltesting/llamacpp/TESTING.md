@@ -306,51 +306,33 @@ Glukhov (RTX 4080, 16 GB, llama.cpp) — A5000 is **slower**, treat as upper bou
 
 ---
 
-## 10. `model-host` + `llama-menu` — how to add a new model
+## 10. The host is not this skill's business
 
-The native CUDA servers are launched through two places, and a new model must
-be added to BOTH:
+This skill **tests**. It does not install, run, or reconfigure the serving
+stack: installing it on a machine is [`../INSTALL.md`](../INSTALL.md), and
+day-to-day operation belongs to the machine's own manuals
+(`~/.local/share/llama-router/docs/`).
 
-| File | What it owns | How to add a model |
-|---|---|---|
-| `~/Ymir/scripts/model-host.sh` | the actual launcher (GGUF path, ctx, port, MoE flag, VRAM pre-check) | add a case in `register()` + a line in every `for m in …` list + `list()` |
-| `~/.local/bin/llama-menu` | the interactive number-menu on top | add a menu line + a `case` arm that calls `model-host start <name>` |
+What concerns a tester here:
 
-**Checklist when a new model/quant lands (e.g. a new quant, a new arch):**
+- `scripts/bench-one.sh` starts its **own** throwaway single-model server on a
+  scratch port and kills it. It never calls `model-host`, `llama-router`, or
+  `swap-proxy`.
+- It reads the machine registry **read-only** (`llama-models get …`) only to
+  learn a model's `gguf`, `ctx`, `ngl`, `kv`, `cpu_moe`, `threads`, so the
+  measured configuration matches what the service would actually serve.
+- `ctx` is the **verified** window: the value read back from `/props`, never the
+  file's maximum and never simply what you asked for.
 
-1. **Bench it first** (this skill) — you must know ctx that fits, VRAM, and
-   whether it needs `--n-cpu-moe` before you can register it honestly.
-2. **Pick a free port** — don't collide with the existing ones:
-   `8125` (qwen3.6 quants) `8081` `8082` `8083` `8084`. If it shares a port with
-   another model, that's fine — `start` auto-stops the current owner.
-3. **`register()`** — add a line `name) echo "Label|/abs/path/to/model.gguf|CTX|PORT|CPU_MOE"`.
-   `CTX` = the *verified* context (not the file's max). `CPU_MOE` = `1` if it
-   needs `--n-cpu-moe 999` (doesn't fit 16 GB pure GPU), else `0`.
-4. **All model loops** — add the name to the `for m in q2 iq3 q4 q5 9b 4b 35b
-   9b-highctx` lists in `start()` (port-freedom loop) and `stop()` and
-   `status()`, plus the `case` in the VRAM pre-check if it needs a different
-   `need_mib`.
-5. **`list()`** — add the row so `model-host list` shows it.
-6. **`llama-menu`** — add the menu line(s) and the `case` arm
-   (`name) model-host start <name> ;;`). Keep the label short enough to fit the
-   box.
-7. **`~/.pi/agent/models.json`** — if pi should use it, add it under the
-   `llamacpp` provider (`baseUrl` `http://127.0.0.1:PORT/v1`) with the verified
-   `contextWindow`, `reasoning: false`, and the GGUF id. `_launch: true` lets
-   pi start it via model-host.
-8. **Verify** — `model-host list`, then `model-host start <name>`, confirm
-   `✓ loaded`, `curl http://localhost:PORT/v1/models` → `200`, then
-   `model-host stop` and confirm VRAM returns to ~26 MiB baseline.
-
-> Keep `need_mib` honest in the VRAM pre-check: 16 GB total, so two big
-> pure-GPU models (~14–15 GB each) can never run at once — the check refuses
-> with a clear message instead of an opaque OOM.
+So the add-a-model procedure is not written here. When an operator adds a model
+to the service, the tester's job is to measure it on this box and record the
+result in the three places listed in [`../HOST-RUNBOOK.md`](../HOST-RUNBOOK.md) §6.
 
 ---
 
 ## 11. Test record — swap-proxy + Qwen3.8 Flash Next (2026-09-07)
 
-### 11.1 The auto-swap proxy (`~/Ymir/scripts/swap-proxy.cjs`)
+### 11.1 The auto-swap proxy (legacy :8090 gateway — see HOST-RUNBOOK §7)
 
 Built and verified end-to-end. Delivers "swap model in pi.dev/opencode →
 stop the running model, start the one I chose."
@@ -365,7 +347,7 @@ Verified on zerwiz:
 | opencode alias routing | ✅ `minicpm5-1b-agentic-tooluse` → `...@q8_0` |
 | Launcher start/stop/status | ✅ |
 
-See [`../llamaswap/swap-proxy.md`](../llamaswap/swap-proxy.md) for ops.
+Ops live on the machine: `~/.local/share/llama-router/docs/swap-proxy.md`.
 
 ### 11.2 Qwen3.8-Flash-Next — the offload fix that made it load
 
@@ -409,15 +391,15 @@ Change (registry + launcher + router generator, per-model knob):
 | `scripts/model-host.sh` | new `model_threads()` reader; `-t "$threads"` (default **8**, per-model override) |
 | `scripts/gen-llama-router-config.py` | **per-model `threads` emitted into each INI section** (overrides the `[*]` default `threads = 8`) |
 
-Launch line now: `-t 16` for the flash model on BOTH paths (`model-host start`
-**and** the router `--models-preset`). Since expert decode is CPU-bound,
+Launch line now: `-t 16` for the flash model on both serving paths (the
+launcher and the router preset). Since expert decode is CPU-bound,
 doubling threads 8 → 16 should roughly double token throughput (subject to the
 system-RAM bandwidth cap — §9.3.7).
 
 Verified 2026-09-08 (router path — the live serving path):
 
 ```bash
-# after `llama-router restart` + a request to qwen3.8-flash-next@q3_k_xl:
+# after the machine's router restarts + a request to qwen3.8-flash-next@q3_k_xl:
 #   /v1/models -> status.args contains --threads 16  (was --threads 8)
 #   VRAM ~13.2 GB (100K ctx, n-cpu-moe 999)
 ```
@@ -499,9 +481,274 @@ The process to reproduce on this box:
 
 ---
 
+## 15. The LM Studio models on the Linux host — 80K on a 3080 Laptop (2026-09-12)
+
+The GGUFs live where LM Studio puts them: `~/.lmstudio/models` (`settings.json`
+→ `downloadsFolder`). That is now the registry's `models_dir`, so every `gguf:`
+in `llama-models.yaml` is relative to it.
+
+**Getting a CUDA server was the whole battle.** `/usr/bin/llama-server` on this
+host is CPU-only (`--list-devices` → `none`), and a CPU-only server "loads"
+fine — it just runs 10× slow. LM Studio keeps a CUDA12 llama.cpp build *and* its
+CUDA12 runtime in separate packs; the binary needs `LD_LIBRARY_PATH` at both:
+
+```
+~/.lmstudio/extensions/backends/llama.cpp-linux-x86_64-nvidia-cuda12-avx2-2.34.0   # the build
+~/.lmstudio/extensions/backends/vendor/linux-llama-cuda12-vendor-v1                # libcudart.so.12, libcublas.so.12
+```
+
+Shim (machine property, outside every repo):
+`~/.local/share/llama-router/scripts/llama-server-cuda`. The registry's
+`defaults.server` points at the shim, so `model-host` and `llama-router` never
+pick the CPU-only binary again.
+
+**Measured — `27b` (Qwen3.8-27B-UD-IQ3_XXS, dense 27B, 10.2 GB):**
+
+| Context | KV | VRAM | decode t/s | GPU | notes |
+|---|---|---|---|---|---|
+| 81,920 | iq4_nl | 13,602 MiB | **21.1** | 92-95% @114 W | `/props` n_ctx 81,920; load 12 s; ~2.2 GB headroom |
+
+**Measured — `30b-coder` (Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_M, MoE 30B/3B, 10.1 GB):**
+
+| Context | KV | VRAM | decode t/s | GPU | notes |
+|---|---|---|---|---|---|
+| 81,920 | iq4_nl | 13,140 MiB | **46.6** | 92-95% | `/props` n_ctx 81,920; load 12 s; measured through the router (:8080), which autoloaded it in 5 s |
+
+**The clock-ramp trap (cost me a bogus number).** The 27B's first timed run read
+prefill 28.2 / decode 8.2 t/s with `nvidia-smi` showing **0 % util**. Same model,
+warmed: **92-95 % util, 114 W, decode 21.1 t/s**. This GPU idles at 210 MHz and
+boosts lazily; `bench-one.sh` step [6/7] restarts the model to clear the KV cache,
+which throws away the boost too. **Warm the GPU after the restart, before timing.**
+And never quote prefill t/s from a ~30-token prompt — that is overhead, not
+throughput.
+
+- **Context scaling (2026-09-12).** Same `27b` server, same power state, only
+  prompt length changed: at a 19-token prompt prefill **64.7** / decode **21.2**
+  t/s (peak 53 W, 9% util); at a 7,940-token prompt prefill **14.5** / decode
+  **4.6** t/s (peak 113 W, 100% util). Decode falls **4.6x** while drawing
+  *more* power — KV-cache traffic, not a power cap. **All decode figures above
+  are short-context upper bounds.**
+
+**Registered + wired:** `llama-models.yaml` (`27b*` → IQ3_XXS at 81,920; `30b-coder`
++ new `30b-coder-swap` on :8129, group `qwen30b`), `model-host verify`, and pi's
+`contextWindow` set to the verified 81,920.
+
+Two more downloads were still in flight at the time of writing and are **not**
+registered yet: `Qwen3.5-4B-Q4_K_S` (6 %) and `Qwen3.6-35B-A3B-UD-IQ2_XXS` (17 %).
+Register them only once the `.part` files complete.
+
+---
+
 ## Related
 
 - [`../backends-benchmark.md`](../backends-benchmark.md) — §3 methodology, §9 MoE,
   §10 matrix+command shapes, §12.5 router mode, §12.4 build flags
 - [`../../LLAMA_CPP_SERVER.md`](../../LLAMA_CPP_SERVER.md) — llama.cpp server notes
 - `~/Models/unsloth/` — the GGUF catalog this bench self-hosts
+
+---
+
+## 16. KV cache type — the silent 20-30x prefill trap (2026-09-12)
+
+Everything in §15 above was measured with `kv: iq4_nl`, which is the wrong KV
+type for a CUDA build: the flash-attention kernel rejects it and the scheduler
+moves the whole attention op to the **CPU** without any error. See
+[`../backends-benchmark.md`](../backends-benchmark.md) §10.5.10 for the source
+(llama.cpp issue #27109), the mechanism, and the memory table.
+
+The rule for any bench or registry entry on a CUDA box:
+
+- KV type must be `f16`, `q8_0`, `q4_0` (or `bf16`); **never `iq4_nl`, `q4_1`,
+  `q5_0`, `q5_1`** on a default build.
+- **K must equal V.** Mixed types also fail the kernel check.
+- If you need a smaller KV for more context, build with
+  `-DGGML_CUDA_FA_ALL_QUANTS=ON` rather than guessing at a 4-bit type.
+
+Quick check after any config change — if prefill is near CPU numbers while the
+GPU shows high utilisation and near-limit wattage, suspect this fallback:
+compare a multi-thousand-token prefill against the ~1,000 t/s class recorded in
+§15/§10.5.x, and confirm the KV types with:
+
+```bash
+grep -E "cache-type-k|cache-type-v" /tmp/opencode/llama-router.log | tail -4
+```
+
+
+---
+
+## 17. Maximum context per model on this card — measured, not guessed (2026-09-12)
+
+After the §16 correction, every model was re-measured at its own ceiling with a
+real ~8K-token request (a warm-up, then a timed run, `n_ctx` read back from
+`/props`):
+
+| Model | quant | ctx | prefill t/s | decode t/s | peak VRAM |
+|---|---|---|---|---|---|
+| Qwen3.5-4B | Q4_K_S | 262,144 | 2,705 | 91.3 | 9,337 MiB |
+| Qwen3.6-35B-A3B (MoE) | IQ2_XXS | 262,144 | 2,057 | 89.4 | 14,763 MiB |
+| Qwen3-Coder-30B-A3B (MoE) | IQ2_M | 90,112 | 2,251 | 67.0 | 15,673 MiB |
+| Qwen3.8-27B (dense) | IQ3_XXS | 114,688 | 495 | 20.7 | 15,345 MiB |
+
+**A successful load is not a working ceiling.** The 27B loads at 131,072 and
+then dies on the first real request; 114,688 is what survives. Always finish a
+ceiling search with an actual prompt.
+
+**Why the MoE and hybrid models reach 256K and the dense one does not:** context
+is bought with a small KV cache. Only 8 of the 4B's 32 blocks and 10 of the
+35B-A3B's 40 blocks are full-attention (the rest are Gated DeltaNet linear
+layers with a fixed-size state), so their q8_0 KV is 17.0 and 10.6 KiB/token
+against 32 KiB/token for the dense 27B and 51 KiB/token for the pure-attention
+30B coder.
+
+Budget the next one as:
+`KV_layers x 2 x kv_heads x head_dim x bytes_per_elem x ctx`, then fit it plus
+the weights plus ~0.9 GiB of compute buffer inside the card's ~15,812 MiB free.
+
+---
+
+## 18. Full measurement appendix — every run on this host (2026-09-12)
+
+Consolidated record of every measurement taken on this machine. Configurations
+that were rejected are included, because the failures are the useful part.
+
+### 18.1 Machine and method
+
+| | |
+|---|---|
+| GPU (serving) | NVIDIA RTX 3080 Laptop 16 GB — the XG Mobile eGPU, **PCIe 3.0 x4** |
+| GPU (internal) | AMD Cezanne Radeon Vega iGPU — Vulkan, **no VRAM**, borrows system RAM |
+| RAM | **30 GiB** (not the 122 GiB carried over from the earlier A5000 box) |
+| Driver / CUDA build | 610.57.04 / LM Studio cuda12-avx2-2.34.0 |
+| Prompt | 7,937 tokens unless stated; temp 0, seed 42, `-np 1`, flash-attn on |
+
+Method: a throwaway single-model server (or the router for the concurrent runs),
+a discarded warm-up request, then a timed run; `n_ctx` read back from `/props`;
+VRAM sampled during the run. Peak VRAM is the maximum observed, not the allocation.
+
+### 18.2 The KV-type fix — before and after (the single biggest change)
+
+`kv: iq4_nl` is not accepted by a default CUDA build's flash-attention kernel, so
+the whole attention op ran on the **CPU**, silently (llama.cpp issue #27109).
+After switching to `q8_0` on both K and V:
+
+| Model | ctx | KV | prefill t/s | decode t/s | verdict |
+|---|---|---|---|---|---|
+| Qwen3.8-27B IQ3_XXS | 80,000 | `iq4_nl` | **14.5** | **4.6** | CPU fallback |
+| Qwen3.8-27B IQ3_XXS | 114,688 | `q8_0` | **495.2** | **20.7** | fixed (34x prefill) |
+| Qwen3-Coder-30B-A3B IQ2_M | 80,000 | `iq4_nl` | **17.4** | **6.2** | CPU fallback |
+| Qwen3-Coder-30B-A3B IQ2_M | 90,112 | `q8_0` | **2,250.5** | **67.0** | fixed (129x prefill) |
+
+### 18.3 Context ceiling sweep, per model
+
+Each row is a real ~8K request against the stated configuration.
+
+**Qwen3.8-27B IQ3_XXS — dense, 11.05 GiB weights, 32 KiB/token at q8_0**
+
+| ctx | prefill t/s | decode t/s | peak VRAM | result |
+|---|---|---|---|---|
+| 81,920 | 488.7 | 20.5 | 14,001 MiB | ok |
+| 98,304 | 497.7 | 20.8 | 14,673 MiB | ok |
+| **114,688** | **495.2** | **20.7** | 15,345 MiB | **chosen — largest that survives a request** |
+| 131,072 | — | — | 15,741 MiB | **loads, then core-dumps on the first real request** |
+
+**Qwen3-Coder-30B-A3B IQ2_M — MoE 30B/3B, 10.09 GiB weights, 51 KiB/token**
+
+| ctx | prefill t/s | decode t/s | peak VRAM | result |
+|---|---|---|---|---|
+| 81,920 | 2,265.7 | 66.7 | 15,217 MiB | ok |
+| **90,112** | **2,250.5** | **67.0** | 15,673 MiB | **chosen — largest that fits** |
+| 98,304 | — | — | — | load fails: out of memory |
+| 131,072 | — | — | — | load fails: out of memory |
+
+**Qwen3.5-4B Q4_K_S — 2.41 GiB weights, 17 KiB/token**
+
+| ctx | prefill t/s | decode t/s | VRAM at load | result |
+|---|---|---|---|---|
+| **100,000** | **2,702.6** | **90.9** | **5,358 MiB** | light variant (`4b-100k`) |
+| **262,144** | **2,693.5** | **90.9** | 9,316 MiB | **chosen — native max** |
+
+**Qwen3.6-35B-A3B IQ2_XXS — hybrid MoE, 10.02 GiB weights, 10.6 KiB/token**
+
+| ctx | prefill t/s | decode t/s | peak VRAM | result |
+|---|---|---|---|---|
+| **262,144** | **2,057.0** | **89.4** | 14,763 MiB | **chosen — full native window** |
+
+### 18.4 The internal GPU (AMD iGPU, Vulkan)
+
+Same 4B, `--device Vulkan0`, `ngl 999`, q8_0 KV, batch 512:
+
+| ctx configured | prefill t/s | decode t/s | wall | RAM |
+|---|---|---|---|---|
+| 32,768 | 129.3 | 11.7 | 73 s | — |
+| 262,144 | 128.0 | 11.7 | 73 s | 15 GiB of 30 GiB |
+
+Roughly **8x slower decode and 21x slower prefill** than the same model on the
+eGPU (91.3 / 2,705). Configuring more context costs nothing in speed — only RAM.
+
+### 18.5 Both GPUs at once
+
+Same prompt fired at `:8080` (eGPU) and `:8097` (iGPU) simultaneously:
+
+| Where | model | prefill t/s | decode t/s | note |
+|---|---|---|---|---|
+| eGPU :8080 | Qwen3.6-35B-A3B @ 262,144 | 1,858 | **92.7** | peak 14,764 MiB / 16,384, 95% util |
+| iGPU :8097 | Qwen3.5-4B @ 262,144 | 8.2 | **9.0** | concurrent with the above |
+
+**Decode coexists; prefill contends.** The eGPU's decode was unaffected (92.7 vs
+89.4 solo) while the iGPU's prefill collapsed **128 → 8.2 t/s (15x)** — it reads
+weights and KV from system RAM and competes with the eGPU model's CPU threads.
+
+### 18.6 Two things that do NOT change speed
+
+- **The configured context ceiling.** The 4B measured *identically* at 100,000
+  and at 262,144 (decode 90.9 both, prefill 2,702.6 vs 2,693.5). A smaller
+  ceiling buys ~4 GiB of memory, nothing else. Attention cost follows the context
+  actually in use.
+- **Concurrency, for the eGPU.** Running the internal-GPU server alongside it did
+  not slow the 3080's decode.
+
+### 18.7 Failures and traps observed on this host
+
+| Symptom | Cause | Resolution |
+|---|---|---|
+| Prefill at CPU speed with the GPU at 100% and 115 W | `iq4_nl` KV → attention op silently scheduled to the CPU | use `q8_0`/`q8_0`; K must equal V |
+| 131,072 "works" then the model core-dumps | load succeeded at 15,741 MiB, no headroom for compute | treat 114,688 as the real ceiling |
+| `CUDA error: out of memory` at 15,976 MiB on a 262,144-ctx model | the router preset INI defaulted to batch/ubatch **4096** while every verified config used **2048** | INI defaults are now 2048/2048, threads 16 |
+| A model "present" per the registry fails to load | an unfinished `.part` download, or `models_dir` not pointing at LM Studio's folder | check for `.part`; `llama-models defaults` |
+| Numbers far below a recorded value | measured at a different context, or on a validated-but-wrong KV config | compare at equal context; check the KV types in the router log |
+| A launcher dies between commands | the shell that spawned it was torn down with its process group | run it under systemd (`llama-igpu.service`) |
+
+### 18.8 Two misdiagnoses worth remembering
+
+While chasing the slowness I first blamed **battery power capping**, then
+**context length**. Both were wrong, and the second was the more dangerous kind
+of wrong — plausible, arithmetically tidy, and unsupported. The actual cause was
+the silent KV-type fallback in §18.2. The context-length effect is real but
+secondary; the battery reading was a single `/sys/class/power_supply` status
+string I never tested against an alternative.
+
+Record the mechanism, not the correlation.
+
+### 18.9 Qwen3.5-9B Q4_K_S — the model that arrived later the same day
+
+Weights **5.02 GiB**. Geometry: **32 blocks, only 8 KV-bearing, 4 KV heads x
+256** — a hybrid, so its q8_0 KV is **17.0 KiB/token**, the same rate as the 4B.
+
+| Where | ctx | prefill t/s | decode t/s | VRAM / RAM | note |
+|---|---|---|---|---|---|
+| eGPU 3080 | **262,144** | **1,797.8** | **61.5** | 11,470 MiB at load | native window, chosen |
+| eGPU 3080 | 100,000 | 1,783.0 | 61.8 | 7,512 MiB at load | light variant |
+| internal iGPU (Vulkan) | 262,144 | 80.8 | 7.1 | ~9 GiB RAM (load 10 s) | works; a better quality/size fit there than the 4B |
+
+The 9B repeats the pattern exactly: the ceiling changes memory (~4 GiB between
+100,000 and 262,144) and nothing else — decode 61.5 vs 61.8 t/s.
+
+**Registry:** `9b`, `9b-swap`, `9b-highctx`, `9b-highctx-swap` all point at this
+file and now all carry the verified **262,144** window with `kv: q8_0`,
+`batch: 2048`, `threads: 16`. The legacy `9b-highctx` identity has been collapsed
+into `qwen3.5-9b@q4_k_s` — it existed to offer a second context size, and a
+second context size is not a second capability. The light option is now an
+explicit pair, `9b-100k` / `9b-100k-swap` -> `qwen3.5-9b-100k@q4_k_s`.
+
+**Total on this host:** nine router aliases over six real models, every one
+measured, every window read back from `/props`.

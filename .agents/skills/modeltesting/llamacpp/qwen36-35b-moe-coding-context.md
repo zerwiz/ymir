@@ -268,18 +268,9 @@ If you serve it via llama.cpp directly, add it under the `llamacpp`/local
 provider with the `:8125` endpoint and the contextWindow above (do NOT set the
 train 262,144 unless the serving config actually runs 262K).
 
-## 10. Serving it day-to-day (`model-host` + `llama-menu`)
+## 10. Serving it day-to-day
 
-The native servers are managed by **`~/Ymir/scripts/model-host.sh`** (the
-launcher) and **`~/.local/bin/llama-menu`** (the interactive number-menu):
-
-```
-llama-menu        # pick with a keypress: [a] Q2 ⚡ [b] IQ3 [c] Q4 [d] Q5 … [e] stop
-model-host status # or the CLI: start/stop/status/list per model
-```
-
-Both map the qwen3.6 quants to **port 8125** (the pi `llamacpp` provider) and
-the classic roles to 8081–8084. Adding a new model to the menu is documented in
-`llamacpp/TESTING.md` **§10** — bench it, pick a free port, add a `register()`
-line, the model loops, `list()`, and a menu arm, then verify. Never register a
-model with an unverified context or VRAM number.
+Not this skill's business — the serving stack is machine property. To install it
+see [`../INSTALL.md`](../INSTALL.md); to operate it see the machine's own docs at
+`~/.local/share/llama-router/docs/`. What this file records is the **model**
+facts (context, offload, speed) that a benchmark needs.

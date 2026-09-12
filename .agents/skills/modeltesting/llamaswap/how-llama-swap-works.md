@@ -159,122 +159,30 @@ router mode is the cleaner, one-process answer.
 
 ---
 
-## 7. Relevance to the WayOf model-host setup
+## 7. Where the adopted system lives (NOT in this skill)
 
-Current `model-host.sh` is a **manual launcher**: you must run
-`model-host start <model>` yourself, and it only swaps models that share the
-same **swap group + port**. Two gaps the research highlights:
+The operative system this research fed — `llama-router`, `model-host`,
+`llama-menu`, `swap-proxy`, the registry `llama-models.yaml`, the router INI —
+is **machine property, not skill property**. It lives on the serving host:
 
-1. **No automatic stop/start on client model change.** pi.dev/opencode point at
-   a fixed URL; changing the model doesn't tell `model-host` to swap.
-   → A router/proxy (native router mode **or** llama-swap) is what delivers
-   "swap from the client" transparently.
-2. **Same-port parallel twin not swapped out.** The parallel variant (empty
-   group) on the same port as a swap group was not stopped by the old
-   same-group-only logic. Already patched in `model-host.sh` to stop **any**
-   model sharing the port.
-
-**Options going forward:**
-
-| Path | Effort | Delivers "swap from client"? |
-|---|---|---|
-| Keep `model-host.sh` (patched) | Low | No — still manual |
-| Native llama.cpp router mode | Medium | ✅ one port, real eviction |
-| llama-swap proxy | Medium | ✅ one port, YAML control, multi-engine |
-
-**Recommendation:** for a pure-llama.cpp box, prefer **native router mode**.
-Revisit llama-swap only if per-model process isolation from a mixed engine
-stack becomes a requirement.
-
----
-
-## 8. What we're setting up now — auto-swap
-
-Current state (2026-09-07): we are wiring the **auto-swap** behavior so that
-changing the model from a client (pi.dev, opencode, etc.) **stops the running
-llama.cpp model and starts the one chosen** — no manual `model-host start X`.
-
-### 8.1 The swap rule we're enforcing
-
-> **All swap models MUST SWAP.** A swap-group variant owns its endpoint
-> exclusively: starting it stops *any* other model on the same port — including
-> the "parallel" twin that shares the port (which has an empty group and so was
-> never stopped by the old same-group-only logic).
-
-### 8.2 What changed in `model-host.sh`
-
-The swap stop-loop in `start()` was patched from:
-
-```bash
-# OLD: only stop models in the SAME swap group
-[ "$(spec "$m" | cut -d'|' -f6)" = "$group" ] && stop_one "$m"
-```
-
-to:
-
-```bash
-# NEW: stop ANY model sharing the port (group or parallel twin)
-[ "$(spec "$m" | cut -d'|' -f5)" = "$port" ] && stop_one "$m"
-```
-
-So a swap start reliably frees the shared port before binding the new server.
-
-### 8.3 The `~/.pi/agent/models.json` sync
-
-The llama.cpp providers in pi's registry now point at the **`-swap` launch
-variants** so pi launches the swap model (which self-swaps on its port):
-
-- `llamacpp-q3-flash` → `model-host start q3-flash-swap` (Qwen3.8 Flash Next, :8095)
-- `llamacpp-27b` → `model-host start 27b-swap` (:8083)
-- `llamacpp-27b-cpu` → `model-host start 27b-cpu-swap` (:8083)
-- `llamacpp-9b` → `9b-swap`, `llamacpp-4b` → `4b-swap`, etc.
-
-A copy lives at `~/Ymir/.pi/models.json` (gitignored); the live one pi reads
-is `~/.pi/agent/models.json`.
-
-### 8.4 Built: real auto-swap proxy (`scripts/swap-proxy.cjs`)
-
-**Status: IMPLEMENTED + VERIFIED (2026-09-07).** A real auto-swap proxy now
-exists and is tested end-to-end. It delivers the exact requirement — "swap
-model in pi.dev/opencode → stop the running model, start the one I chose".
-
-**How it works:**
-
-- One stable endpoint: `http://127.0.0.1:8090` (`node scripts/swap-proxy.cjs`).
-- Model map is built from TWO sources (merged):
-  1. the llama.cpp registry (`llama-models.yaml` via the `llama-models` CLI) —
-     all 40 native ids;
-  2. pi's launchable models (`~/.pi/agent/models.json`) — the 20 @-variants.
-  → `/v1/models` serves all **60**; every id routes to `model-host start <id>`.
-- On a request naming model M:
-  1. If M is already the loaded model on its port → forward (no reload).
-  2. Else → call `model-host start <M>`, which **stops ANY running model** (the
-     one-at-a-time swap rule) and starts M.
-  3. Wait for the port to accept, then forward the request.
-- `GET /v1/models` returns the catalog (HTTP 200) so `/login llama.cpp` in
-  pi/opencode validates with no API key.
-
-**Launcher:** `scripts/swap-proxy {start|stop|status|restart}` (pid
-`/tmp/opencode/swap-proxy.pid`, log `/tmp/opencode/swap-proxy.log`).
-
-**Verified behaviors (RTX A5000, 2026-09-07):**
-
-| Test | Result |
+| Thing | Path |
 |---|---|
-| Request `minicpm5-1b-agentic-tooluse@q8_0` (nothing running) | ✅ auto-started on :8092, served completion |
-| Request `gemma-4-12b@q3_k_s` then `gemma-4-12b@q4_k_m` (same port 8088) | ✅ Q3 stopped (old pid killed), Q4 started, served |
-| Re-request already-loaded Q4 | ✅ fast path — no reload, no new swap |
-| `swap-proxy` start/stop/status launcher | ✅ works |
-| One-at-a-time across ports | ✅ pick A → A unloads when B requested (1 llama-server) |
-| `GET /v1/models` | ✅ HTTP 200, 60 models (40 registry + 20 pi @-ids) |
-| Registry id via gateway (`minicpm-swap`) | ✅ routes + swaps |
+| Registry (single source of truth) | `~/.local/share/llama-router/scripts/llama-models.yaml` |
+| Launcher / engine | `~/.local/share/llama-router/scripts/model-host.sh` |
+| Router (+ INI generator) | `~/.local/share/llama-router/scripts/llama-router`, `~/.local/share/llama-router/scripts/gen-llama-router-config.py` |
+| TUI | `~/.local/share/llama-router/scripts/llama-menu` |
+| Gateway | `~/.local/share/llama-router/scripts/swap-proxy.cjs` |
+| System docs | `~/.local/share/llama-router/docs/llama-router/`, `~/.local/share/llama-router/docs/LLAMA_CPP_SERVER.md` |
+| Router config snapshot | `~/.local/share/llama-router/config/llama-router-config.json` |
 
-**Integration:** RESOLVED — pi and the 4 opencode accounts point at the proxy
-`:8090`; pi's `.pi/agent/models.json` holds all 60 launchable models.
+To add or operate a model, edit the registry **on the machine** and run
+`model-host verify` — never carry the model table inside a skill. This skill
+keeps only the bench method and its results (sections 1-6, `TESTING.md`,
+`backends-benchmark.md`).
 
 ---
 
-## 9. Sources
+## 8. Sources
 
 - github.com/mostlygeek/llama-swap — README, wiki, config overview
 - DeepWiki: mostlygeek/llama-swap — multi-model scenarios, groups, matrix

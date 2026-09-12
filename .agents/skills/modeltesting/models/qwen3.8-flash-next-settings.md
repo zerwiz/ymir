@@ -67,7 +67,7 @@ Registry block (`scripts/llama-models.yaml`, id `q3-flash` / `q3-flash-swap`):
   vram_mib: 9000
 ```
 
-Launched via: `model-host start q3-flash-swap` (or through the swap proxy).
+Served from the machine registry as `q3-flash` / `q3-flash-swap` (see `../HOST-RUNBOOK.md`).
 
 Equivalent raw command:
 
