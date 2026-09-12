@@ -295,3 +295,26 @@ rules[3]{file,governs}:
 
 A change that contradicts a rule must change the rule first (append-only). The
 eight Labs are **domains**, not houses; **WayOf** is the house.
+
+## Private data — Hodd (Rule 04)
+
+Everything private lives in **one** place: `hodd/` (secrets · docs · tenants ·
+identity), tracked only as its guard and README. Secrets are **referenced by
+path** (`YMIR_HOARD`; `bin/hodd.sh emit <file>`), never inlined. Outer ward:
+`bin/secret-guard.sh` (pre-commit + CI); inner ward: `hodd/.gitignore`. Realm
+boundaries hold — `hodd/tenants/<tenant>/` loads only into that tenant's work.
+Law: `RULES/04-hoard.md`.
+
+## Keeping a home current
+
+- **Structure updates:** `bin/ymir-migrate.sh status|apply` — versioned,
+  idempotent migrations in `.agents/migrations/` heal an old home forward
+  (e.g. `0001-hodd-layout`). Run after an update; `bin/ymir-install.sh` and
+  `bin/brokk-update.sh` call it.
+- **Your agent set:** `config/agents.yaml` (template `.example`, private) picks
+  each agent's harness + model; `bin/agents-config.sh show|apply`, and
+  `bin/agent-run.sh <agent> "<task>"`. Rule: local models → **pi**, hosted →
+  **opencode**.
+- **Skills:** one galdr-style skill per figure (a `SKILL.md` router + `assets/`);
+  same-figure split pairs are consolidated (`ymir · urdh · saga · nornir · nsr`).
+  Registry: `.agents/skills/README.md`.
