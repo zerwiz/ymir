@@ -149,3 +149,9 @@ All private material lives in `hodd/` (secrets · docs · tenants · identity),
 untracked but for its guard and README. Read secrets by path with
 `bin/hodd.sh emit <file>` (`YMIR_HOARD`), never inline a value. When a governed
 path needs a secret, resolve it through Hodd. Law: `RULES/04-hoard.md`.
+
+## Operator runbooks
+
+Task-oriented guides live in `docs/runbooks/` (models · agents · Tailscale sync ·
+updates/migrations · secrets/Hodd), indexed by the `ymir` skill asset
+`assets/runbooks.md` and listed in `assets/registry.md`.
