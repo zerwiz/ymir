@@ -64,30 +64,30 @@ manual[8]{asset,path,load_when}:
   "registry",".agents/assets/agents/registry.md","skills, assets, tools, commands inventories"
   "runtime",".agents/assets/agents/runtime.md","how Ymir boots / supervises the primary"
   "toon-tasks",".agents/assets/agents/toon-tasks-cli.md","building agent-facing output / tasks-cli"
-  "installation",".agents/skills/galdr/assets/installation.md","changing bin/ymir-install.sh, engines, first setup"
-  "ui",".agents/skills/galdr/assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
-  "runtime-spec",".agents/skills/galdr/assets/brokk-distro-runtime.md","the runtime, digest, lock, supervision, cron"
-  "harness",".agents/skills/galdr/assets/harness-integration/README.md","the Pi/OpenCode surfaces: extensions, commands, shortcuts"
+  "installation",".agents/skills/galdr-cli-cli/assets/installation.md","changing bin/ymir-install.sh, engines, first setup"
+  "ui",".agents/skills/galdr-cli-cli/assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
+  "runtime-spec",".agents/skills/galdr-cli-cli/assets/brokk-distro-runtime.md","the runtime, digest, lock, supervision, cron"
+  "harness",".agents/skills/galdr-cli-cli/assets/harness-integration/README.md","the Pi/OpenCode surfaces: extensions, commands, shortcuts"
 ```
 
 **Governed paths — load the asset before you edit the code.** Every subsystem
 below has an owning asset; a code change not reflected in its asset is an
-incomplete change. The router is `.agents/skills/galdr/SKILL.md` (its `assets[]`
+incomplete change. The router is `.agents/skills/galdr-cli-cli/SKILL.md` (its `assets[]`
 table maps every task to its file).
 
 ```
 governed[6]{path,load_first}:
-  "bin/ymir-install.sh",".agents/skills/galdr/assets/installation.md"
-  "apps/hlidskjalf/**",".agents/skills/galdr/assets/hlidskjalf-ui.md"
-  "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr/assets/memory-well.md"
-  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr/assets/nornir-jobs.md"
-  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr/assets/harness-integration/README.md"
-  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr/assets/smidja.md"
+  "bin/ymir-install.sh",".agents/skills/galdr-cli-cli/assets/installation.md"
+  "apps/hlidskjalf/**",".agents/skills/galdr-cli-cli/assets/hlidskjalf-ui.md"
+  "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr-cli-cli/assets/memory-well.md"
+  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli-cli/assets/nornir-jobs.md"
+  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-cli-cli/assets/harness-integration/README.md"
+  "bin/smidja* | .agents/skills/smidja-factory-factory/**",".agents/skills/galdr-cli-cli/assets/smidja.md"
 ```
 
-Deep doctrine and the full asset index: `.agents/skills/galdr/SKILL.md` and
-`.agents/skills/galdr/assets/README.md`. Run
-`bash .agents/skills/galdr/scripts/compliance-check.sh` before claiming done.
+Deep doctrine and the full asset index: `.agents/skills/galdr-cli-cli/SKILL.md` and
+`.agents/skills/galdr-cli-cli/assets/README.md`. Run
+`bash .agents/skills/galdr-cli-cli/scripts/compliance-check.sh` before claiming done.
 
 ## Operational laws
 
@@ -179,7 +179,7 @@ security[4]{rule}:
 
 - A missing capability may be synthesized into a new skill under `.agents/skills/`.
 - Every synthesized skill MUST be validated inside Utgard before production use, and
-  registered in the skill index. Galdr governance: `.agents/skills/galdr/SKILL.md`.
+  registered in the skill index. Galdr governance: `.agents/skills/galdr-cli-cli/SKILL.md`.
 
 ## Issue-to-PR (Mjollnir) · Cron · Portal
 
@@ -199,7 +199,7 @@ security[4]{rule}:
 +  These jobs are started at session start via `bin/nornir-cron-start.sh`.
 +- **Portal (Hlidskjalf)**: the single control plane; auth via Heimdall
 +  through Bifrost; tenant isolation enforced at the proxy. UI guide:
-+  `.agents/skills/galdr/assets/hlidskjalf-ui.md`.
++  `.agents/skills/galdr-cli-cli/assets/hlidskjalf-ui.md`.
 
 ## The Lore (load-bearing allegory)
 
@@ -276,7 +276,7 @@ See `.agents/assets/agents/naming.md` for the full component map.
 - `bin/gjallarhorn-tunnel.sh start` — exposes Hlidskjalf at
   `https://ymirdell.zerwiz.org` (Cloudflare tunnel → `:3889`).
 - The **Smiðja visualizer** lives at
-  `.agents/skills/smidja/apps/visualizer` and is started by `scripts/start.sh`
+  `.agents/skills/smidja-factory-factory/apps/visualizer` and is started by `scripts/start.sh`
   (API + UI on `:8437`). Both it and Hlidskjalf come up together.
 
 Access: the gate shows an **in-app login** (no browser prompt) — user `zerwiz`,

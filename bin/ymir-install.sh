@@ -332,7 +332,7 @@ step_smidja() {
     if [ "$CHECK" = 1 ]; then
       local dbok vizok
       [ -f "$ROOT/smidja/smidja_data/smidja.db" ] && dbok=present || dbok=missing
-      [ -d "$ROOT/.agents/skills/smidja/apps/visualizer/dist" ] && vizok=built || vizok=unbuilt
+      [ -d "$ROOT/.agents/skills/smidja-factory-factory/apps/visualizer/dist" ] && vizok=built || vizok=unbuilt
       if [ "$dbok" = missing ]; then
         add smidja WARN "smidja.db missing — a full run (without --check) creates it and seeds one bootstrap session"
       else
@@ -348,7 +348,7 @@ step_smidja() {
   else add smidja SKIP "no smidja-bootstrap.sh"; fi
   # The visualizer API serves its UI from ./dist — without a build it answers
   # the API but shows "No ./dist build found". Build it once when absent.
-  local viz="$ROOT/.agents/skills/smidja/apps/visualizer"
+  local viz="$ROOT/.agents/skills/smidja-factory-factory/apps/visualizer"
   [ -d "$viz" ] || return 0
   if [ -d "$viz/dist" ]; then
     add visualizer OK "UI built (served on :8437)"
