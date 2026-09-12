@@ -286,6 +286,24 @@ runtime_figures[2]{figure,role,path}:
 - In code: `DOMAINS` / `DomainId` / `DomainDef`; agents carry `domain`.
 - Full law: `RULES/01-domains.md`, `RULES/02-agents.md`, `RULES/03-houses.md`.
 
+### 7.3 Local-model operation (2026-09-12)
+
+```
+runtime_figures[1]{figure,role,path}:
+  "Vog","local models on this machine — the scales: which engine, how to wire the runtime to it, and how to weigh it honestly","`.agents/skills/galdr/assets/local-models.md`, `.agents/skills/galdr/scripts/bench-one.sh`"
+```
+
+**Vog** is the scales. The capability that puts a local model on the balance and
+reads its true weight — prefill, decode, peak device memory, and the context it
+actually survives — rather than trusting a specification. It is named for the
+*role*: an instrument, in the same pattern as Mjollnir (hammer), Gungnir
+(spear), Gleipnir (chain), and Valknut (knot).
+
+**Vog weighs, Hodd keeps.** Vog measures on the machine; the results are private
+to that machine and go to the Hoard (`hodd/docs/vog/`, Rule 04). Vog is not a
+figure of judgement (that is Týr, and Forseti reviews) and never names a model's
+worth — only what it measurably does.
+
 ## 8. Reserved figures (claimed, not yet built)
 
 A figure reserved here is spoken for: do not use it for other work. Add a row

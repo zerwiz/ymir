@@ -1,6 +1,7 @@
-# Local models — operating the runtime on models that run on this machine
+# Vog — local models: operating the runtime on models that run on this machine
 
-Load this when the setup serves **local** models: when pi, opencode, or an agent
+**Vog** is the scales: the capability that weighs a local model on this machine
+and reports what it truly weighs. Load this when the setup serves **local** models: when pi, opencode, or an agent
 roster points at a local endpoint, when a model's context window or speed has to
 be decided, or when a local backend is chosen, installed, or suspected of
 misbehaving. If every model in the setup is hosted, this asset does not apply.
@@ -10,7 +11,7 @@ misbehaving. If every model in the setup is hosted, this asset does not apply.
 >    facts about *this* machine. Take them, do not inherit them.
 > 2. **The numbers are private.** Devices, model inventories, memory and speeds
 >    describe the operator's hardware. They belong in **Hodd**
->    (`hodd/docs/modeltesting/`, `RULES/04-hoard.md`), never in a tracked skill.
+>    (**Hodd**, `hodd/docs/vog/`, `RULES/04-hoard.md`), never in a tracked skill.
 
 ## 1. The engines galdr must recognise
 
@@ -136,7 +137,7 @@ the host-specific traps, and the operational notes for that stack.
 
 ```bash
 export YMIR_HOARD="${YMIR_HOARD:-$PWD/hodd}"
-ls "$YMIR_HOARD/docs/modeltesting/"
+ls "$YMIR_HOARD/docs/vog/"
 ```
 
 Shape to follow: `assets/local-models/HOST-DATA.example.md`.

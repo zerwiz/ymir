@@ -1,7 +1,9 @@
-# HOST-DATA.example — the shape of a host record
+# HOST-DATA.example — the shape of a host record (Vog)
+
+Vog weighs a local model on a machine; this is the shape of the record it keeps.
 
 A host record is **private to the machine it describes** and lives in that
-machine's Hoard: `hodd/docs/modeltesting/`. This file is the tracked `*.example`
+machine's Hoard: `hodd/docs/vog/`. This file is the tracked `*.example`
 shape (Rule 04) so a new operator knows what belongs there without inheriting
 anyone's data.
 
