@@ -57,6 +57,21 @@ if [ ! -d "$AGENTS" ]; then
   exit 1
 fi
 
+# ── machine config, rendered from its example ────────────────────────────────
+# opencode.json and .pi/mcp.json must contain ABSOLUTE paths, so they cannot be
+# tracked — a tracked copy would hand every operator the previous one's home.
+# They are rendered from the shipped *.example with the real $HOME and root.
+# Idempotent: identical content is left alone.
+render_config() {  # <example> <target>
+  local ex=$1 out=$2 tmp
+  [ -r "$ex" ] || return 0
+  tmp=$(mktemp) || return 1
+  sed -e "s|__YMIR_HOME__|$HOME|g" -e "s|__YMIR_ROOT__|$ROOT|g" "$ex" >"$tmp" || { rm -f "$tmp"; return 1; }
+  if [ -f "$out" ] && cmp -s "$tmp" "$out"; then rm -f "$tmp"; printf 'unchanged'; return 0; fi
+  mkdir -p "$(dirname "$out")" 2>/dev/null
+  mv "$tmp" "$out" && printf 'rendered'
+}
+
 declare -a T P S
 add() { T+=("$1"); P+=("$2"); S+=("$3"); }
 
@@ -83,6 +98,7 @@ if [ "$MODE_STATUS" = 1 ]; then
 fi
 
 if [ "$MODE_OPENCODE" = 1 ]; then
+  add opencode-config "$ROOT/opencode.json" "$(render_config "$ROOT/opencode.json.example" "$ROOT/opencode.json")"
   if [ -d "$OC_LOCAL" ]; then
     n=$(ls "$OC_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ')
     add opencode "$OC_LOCAL" "native ($n agents)"
@@ -92,6 +108,7 @@ if [ "$MODE_OPENCODE" = 1 ]; then
 fi
 
 if [ "$MODE_PI" = 1 ]; then
+  add pi-mcp "$ROOT/.pi/mcp.json" "$(render_config "$ROOT/.pi/mcp.json.example" "$ROOT/.pi/mcp.json")"
   n=$(link_agent_dir "$PI_LOCAL" "../../.agents/agents") && add pi-local "$PI_LOCAL" "bound ($n links)" || add pi-local "$PI_LOCAL" "ERROR"
   if [ "$MODE_GLOBAL" = 1 ]; then
     g=$(link_agent_dir "$PI_GLOBAL" "$AGENTS") && add pi-global "$PI_GLOBAL" "bound ($g links)" || add pi-global "$PI_GLOBAL" "ERROR"
