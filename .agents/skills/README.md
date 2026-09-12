@@ -7,7 +7,7 @@ matches its work (Gungnir naming law).
 ## Registry (`.agents/skills/`)
 
 ```
-skills[21]{name,norse,purpose,origin}:
+skills[24]{name,norse,purpose,origin}:
   "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer of the runtime","core"
   "tyr-check","Tyr","the judge — 10 principles + runtime gates","core"
   "smidja","Smiðja","the smithy (roster + phases + envelopes)","core"
@@ -31,6 +31,7 @@ skills[21]{name,norse,purpose,origin}:
   "ymir-thjazi","Þjazi","the herdr/tmux terminal backend — install, protocol floors, panes","new"
   "hamr","Hamr","per-harness adapter reference","adopted"
   "pr-ops","—","PR lifecycle — create, update, check status, request merge","new"
+  "hnoss","Hnoss","design artifacts via the OpenDesign engine (prototypes, decks, dashboards, image, video)","new"
 ```
 
 Not adopted as standalone skills: `firstmate-coding-guidelines` (folded into Galdr),
