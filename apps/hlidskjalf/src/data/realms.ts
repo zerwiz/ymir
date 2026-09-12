@@ -121,6 +121,7 @@ export const GATES: GateDef[] = [
   { id: 'runtime', label: 'Runtime', glyph: 'ᛖ', hint: 'Sága digest · session seating' },
   { id: 'cron', label: 'Cron', glyph: 'ᛃ', hint: 'Nornir schedule · job health' },
   { id: 'sessions', label: 'Sessions', glyph: 'ᛋ', hint: 'Smiðja runs · phase progress' },
+  { id: 'worktrees', label: 'Worktrees', glyph: 'ᛥ', hint: 'Yggdrasil worktrees · branch · owning agent' },
   { id: 'trace', label: 'Trace', glyph: 'ᛚ', hint: 'Lanes · phases · tool calls' },
   { id: 'decisions', label: 'Decisions', glyph: 'ᚦ', hint: 'Failures grouped · the fix' },
   { id: 'stats', label: 'Stats', glyph: 'ᛗ', hint: 'Tokens · cost · by chain & model' },

@@ -54,6 +54,27 @@ function run(cmd: string[]): string {
   }
 }
 
+/* ---- Yggdrasil worktrees ------------------------------------------------- */
+function worktrees(): Array<{ id: string; branch: string; path: string; head: string; agent: string }> {
+  const out = run(['git', 'worktree', 'list', '--porcelain']);
+  const rows: Array<{ id: string; branch: string; path: string; head: string; agent: string }> = [];
+  let cur: { path?: string; head?: string; branch?: string } = {};
+  const push = () => {
+    if (!cur.path) return;
+    const p = cur.path;
+    const id = p.includes('/.yggdrasil/') ? p.split('/.yggdrasil/')[1] : '(main)';
+    rows.push({ id, branch: cur.branch ?? '-', path: p, head: (cur.head ?? '').slice(0, 8), agent: id === '(main)' ? '-' : id });
+  };
+  for (const line of out.split('\n')) {
+    if (line.startsWith('worktree ')) { push(); cur = { path: line.slice(9).trim() }; }
+    else if (line.startsWith('HEAD ')) cur.head = line.slice(5).trim();
+    else if (line.startsWith('branch ')) cur.branch = line.slice(7).trim().replace('refs/heads/', '');
+    else if (line.trim() === 'detached') cur.branch = 'detached';
+  }
+  push();
+  return rows;
+}
+
 /* ---- frontmatter (YAML subset) ------------------------------------------- */
 function frontmatter(text: string): Record<string, unknown> {
   const m = text.match(/^---\n([\s\S]*?)\n---/);
@@ -1542,6 +1563,7 @@ const server = Bun.serve({
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
+      if (p === '/api/worktrees') return json(worktrees());
       if (p === '/api/me') return json({ login: 'Allfather', realm: 'work' });
       if (p === '/api/workspace') {
         const realm = url.searchParams.get('realm') ?? 'work';
