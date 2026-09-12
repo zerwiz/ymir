@@ -121,3 +121,18 @@ send[1]:    a2a_call agent_url="http://127.0.0.1:7777/" text="…"
   the reply is read back with `herdr agent read <agent>` and attached to the task.
 
 Directory: `http://127.0.0.1:7777`. Config: `~/.pi/agent/mcp.json` → `a2abridge`.
+
+## Troubleshooting
+
+- **`Invalid URL`** — you passed a peer *name*. Resolve with `a2a-agents`, then
+  `a2a_call` the `url`.
+- **`Task … exceeded max attempts (N)`** — the call was addressed correctly and
+  the mesh created the task, but it never **completed**: the peer/bridge could
+  not deliver to a live receiving agent, or delivery-by-injection is not wired.
+  Check (a) the peer appears in `a2a-agents`, and (b) a receiving agent is
+  running its bridge so it can read the injected task and answer.
+- **No reply at all** — the transport carried it; the **return path** is missing
+  (the peer's answer was not captured onto the task result).
+
+Rule: a successful `a2a_call` needs **transport + a live peer + delivery
+(injection) + return**. Missing any one shows up as a timeout/attempts error.
