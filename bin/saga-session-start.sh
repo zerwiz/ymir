@@ -28,6 +28,7 @@ DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
 CONFIG="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"
 # shellcheck source=bin/gleipnir-lock-lib.sh
 . "$SCRIPT_DIR/gleipnir-lock-lib.sh"
+gleipnir_lock_reap
 
 REALM="${BROKK_REALM:-}"
 if [ -z "$REALM" ] && [ -r "$DATA/realm.md" ]; then
