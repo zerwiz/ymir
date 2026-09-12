@@ -124,7 +124,7 @@ a {
   --realm-tint-2: #0ea5e9;
   --realm-tint-dim: rgba(56, 189, 248, 0.14);
 }
-:root[data-realm='zerwiz'] {
+:root[data-realm='personal'] {
   --realm-tint: #8b5cf6;
   --realm-tint-2: #6366f1;
   --realm-tint-dim: rgba(139, 92, 246, 0.14);

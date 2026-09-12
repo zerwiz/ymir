@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { gateApi } from '../services/api';
-import { useYmir } from '../state/store';
 import { LORE_LONG } from '../data/lore';
 
 /** The visitor's telling of the lore — sourced from docs/lore.md, told short. */
@@ -39,7 +38,6 @@ const LORE_BEATS: { rune: string; name: string; line: string }[] = [
 
 /** The gate login — shown when the tunnel origin has not authenticated. */
 export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: string }) {
-  const enterDemo = useYmir((s) => s.enterDemo);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [invite, setInvite] = useState('');
@@ -70,9 +68,28 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
     return () => window.removeEventListener('keydown', onKey);
   }, [showLore]);
 
-  function demo() {
-    enterDemo();
-    onAuthed();
+  /**
+   * Sign in with GitHub — the same gate, a second door.
+   *
+   * The gate returns the authorize URL when it is configured; when it is not, it
+   * says exactly what is missing rather than pretending.
+   */
+  async function github() {
+    if (busy) return;
+    setBusy(true);
+    setErr('');
+    try {
+      const r = await gateApi.githubStart();
+      if (r.url) {
+        window.location.href = r.url;
+        return;
+      }
+      setErr(r.error ?? 'GitHub sign-in is not available');
+    } catch (e2) {
+      setErr((e2 as { message?: string })?.message ?? 'GitHub sign-in is not available');
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -120,7 +137,7 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
 
           <p className="lore-close">
             The giant stands. The forge is lit.
-            <span className="lore-cta"> Walk the worlds for yourself — enter demo mode below, no keys required.</span>
+            <span className="lore-cta"> Walk the worlds for yourself — ask for an invite code, and the gate will let you in.</span>
           </p>
 
           <button className="btn lore-more" type="button" onClick={() => setShowLore(true)}>
@@ -224,14 +241,17 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
 
           <div className="divider">or</div>
 
+          {/* GitHub is a second door to the SAME gate: the account must exist
+              (an invite made it), so this never becomes an open door. */}
           <button
             className="btn"
             type="button"
-            onClick={demo}
-            title="Explore Hlidskjalf with seeded data — no runtime required"
+            onClick={github}
+            disabled={busy}
+            title="Sign in with GitHub"
             style={{ justifyContent: 'center' }}
           >
-            <span aria-hidden="true">ᛟ</span> Enter demo mode
+            <span aria-hidden="true">ᚷ</span> Continue with GitHub
           </button>
         </form>
       </div>

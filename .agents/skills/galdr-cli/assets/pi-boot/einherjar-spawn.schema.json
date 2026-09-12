@@ -25,7 +25,7 @@
         },
         "realm": {
           "type": "string",
-          "enum": ["way-of", "zerwiz", "craig"],
+          "enum": ["work", "personal"],
           "description": "Target tenant realm"
         }
       }

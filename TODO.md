@@ -185,8 +185,8 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 ## E. Repo / remote hygiene — OPEN
 
 ### E1. Remote mismatch
-- `pr-ops` documents `zerwiz/ymir`; this checkout's `origin` is `zerwiz/ymir`.
-  Pushes have gone to `zerwiz/ymir`. **Remains:** confirm the intended remote.
+- `pr-ops` documents the upstream repo; this checkout's `origin` is the same.
+  **Remains:** confirm the intended remote.
 
 ### E2. Operational files are tracked and always dirty
 - `.agents/memory/kaia.engram{,-shm,-wal}` are tracked but mutate at runtime, so

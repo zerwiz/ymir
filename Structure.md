@@ -148,7 +148,7 @@ ymir/
 │   │       └── memory/
 │   │           ├── daily/          # Auto-generated YYYY-MM-DD.md logs
 │   │           └── entity_graph/   # Entity relationship notes
-│   ├── zerwiz/                     # Personal tenant — zerwiz (Josef)
+│   ├── <tenant>/                   # one directory per tenant
 │   │   └── (same layout as way-of)
 │   └── craig/                      # Member tenant — craig
 │       └── (same layout as way-of)

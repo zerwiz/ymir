@@ -42,7 +42,7 @@ tools:
     - "*": "allow"
 
 workspace:
-  root: "$HOME_SEAT/Ymir"
+  root: "$YMIR_ROOT"
   realm: "auto"
   paths:
     skills: ".agents/skills"

@@ -3,8 +3,8 @@ import { StatusChip } from '../components/Status';
 import { MetricTile } from '../components/MetricTile';
 
 /**
- * Cron — the Nornir schedule (plan 24). Live mode reads `/api/cron`; demo mode
- * shows no jobs. Read-only.
+ * Cron — the Nornir schedule (plan 24). Reads `/api/cron`; says `offline`
+ * when the gate API has nothing to report. Read-only.
  */
 export function Cron() {
   const cron = useYmir((s) => s.cron);
@@ -39,7 +39,7 @@ export function Cron() {
             Schedule
           </div>
           <span className="mono dim" style={{ fontSize: 10 }}>
-            {cron ? 'live · nornir-cron-start.sh' : 'demo / offline'}
+            {cron ? 'live · nornir-cron-start.sh' : 'offline'}
           </span>
         </div>
         <div className="panel-body flush">

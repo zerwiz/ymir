@@ -6,7 +6,7 @@
 #   bin/hodd.sh ls                   # what the Hoard holds (names, not contents)
 #   bin/hodd.sh load secrets/platform.env   # source a hoard env (quoted, safely)
 #   eval "$(bin/hodd.sh emit secrets/platform.env)"   # set them in YOUR shell
-#   bin/hodd.sh tenant josef         # source a tenant's .env (that tenant only)
+#   bin/hodd.sh tenant acme          # source a tenant's .env (that tenant only)
 #
 # Secrets are REFERENCED by path (YMIR_HOARD, default <repo>/hodd) — never inlined.
 set -u

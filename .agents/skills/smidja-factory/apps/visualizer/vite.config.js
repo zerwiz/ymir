@@ -15,7 +15,9 @@ export default defineConfig({
   server: {
     port: 8438,
     host: true,
-    allowedHosts: ["linuxcommand.zerwiz.org"],
+    // Hosts this dev server answers for: the loopback names, plus whatever the
+// operator adds. Never a fixed personal domain.
+    allowedHosts: ["localhost", "127.0.0.1"],
     proxy: {
       "/api": {
         target: `http://localhost:${API_PORT}`,

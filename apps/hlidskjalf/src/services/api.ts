@@ -16,8 +16,8 @@ import type {
  *
  * Points at the local Hlidskjalf gate server (`apps/hlidskjalf/server`, default
  * :3889). In dev, Vite proxies `/api` to it, so an empty BASE works. Set
- * `VITE_API_URL` to override. This client is only used in live mode; demo mode
- * uses the seeded mocks.
+ * `VITE_API_URL` to override. Every call carries the session cookie; a 401
+ * re-locks the gate.
  */
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
@@ -62,14 +62,8 @@ export interface OrdersInfo {
   orders: OrderRow[];
 }
 
-let API_DEMO = false;
-/** Demo mode never talks to a real session — suppress the re-lock. */
-export function setApiDemo(v: boolean): void {
-  API_DEMO = v;
-}
-
+/** A 401 from a real endpoint re-locks the gate; the login/session calls must not. */
 function noteUnauthorized(path: string, status: number): void {
-  if (API_DEMO) return;
   if (status === 401 && !path.startsWith('/api/login') && !path.startsWith('/api/session')) {
     window.dispatchEvent(new Event('ymir:unauthorized'));
   }
@@ -358,6 +352,11 @@ export const gateApi = {
   desktop: (view: 'hlidskjalf' | 'smidja') =>
     post<{ view: string; ok: boolean; output: string }>('/api/desktop', { view }),
   logout: () => post<{ ok: boolean }>('/api/logout', {}),
+  /**
+   * Begin GitHub sign-in. The gate answers with an authorize URL when it is
+   * configured, and with the exact reason when it is not.
+   */
+  githubStart: () => get<{ url?: string; error?: string }>('/api/auth/github'),
   smidjaHealth: () => get<{ db: string; sessions: number }>('/api/smidja/health'),
   smidjaSessions: () => get<SmidjaSession[]>('/api/smidja/sessions'),
   smidjaSession: (id: string) => get<SmidjaDetail>(`/api/smidja/sessions/${encodeURIComponent(id)}`),

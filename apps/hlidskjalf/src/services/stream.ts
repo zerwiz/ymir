@@ -13,7 +13,7 @@ export function startStream(): () => void {
   started = true;
 
   let close = () => {};
-  if (!useYmir.getState().demo) {
+    {
     const base = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
     const source = new EventSource(`${base}/api/stream`);
     source.onmessage = (e) => {

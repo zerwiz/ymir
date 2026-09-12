@@ -3,18 +3,15 @@ import { StatusChip } from '../components/Status';
 
 /**
  * Runtime — the Sága session digest as injected at session open (plan 29).
- * Live mode reads `/api/runtime` (bin/saga-session-start.sh); demo mode shows a
- * placeholder. Read-only: the digest is what Brokk received, not an editor.
+ * Reads `/api/runtime` (bin/saga-session-start.sh); when nothing is loaded it
+ * says so. Read-only: the digest is what Brokk received, not an editor.
  */
 export function Runtime() {
   const runtime = useYmir((s) => s.runtime);
-  const demo = useYmir((s) => s.demo);
 
   const digest =
     runtime?.digest ||
-    (demo
-      ? 'BROKK SESSION START — demo mode\n\n(Demo data. Sign in live, or run `bin/saga-session-start.sh`, to see the real digest: lock, Bifrost bridge, wakes, fleet, context, and the Nornir start.)'
-      : 'Digest not loaded — start the gate API (`npm run api`) and sign in live.');
+      'Digest not loaded — start the gate API (`npm run api`) and sign in live.';
 
   const m = runtime?.markers;
 
@@ -28,7 +25,7 @@ export function Runtime() {
           </p>
         </div>
         <div className="row">
-          <StatusChip status={runtime ? 'nominal' : demo ? 'degraded' : 'down'} />
+          <StatusChip status={runtime ? 'nominal' : 'down'} />
         </div>
       </div>
 
@@ -40,7 +37,7 @@ export function Runtime() {
               Session digest
             </div>
             <span className="mono dim" style={{ fontSize: 10 }}>
-              {runtime ? 'live · saga-session-start.sh' : demo ? 'demo' : 'offline'}
+              {runtime ? 'live · saga-session-start.sh' : 'offline'}
             </span>
           </div>
           <div className="panel-body flush">

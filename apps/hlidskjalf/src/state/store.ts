@@ -17,29 +17,14 @@ import type {
 } from '../types';
 import { realmDef, ACCENTS, GATES } from '../data/realms';
 import {
-  seedAgents,
-  seedChat,
-  seedFiles,
-  seedProcesses,
-  seedRecall,
-  seedReviews,
-  seedRunes,
-  seedSkills,
-  seedStream,
-  seedTasks,
-} from '../data/mock';
-import {
   clearSession,
-  githubAuthorize,
   loadSession,
-  MOCK_IDENTITIES,
   provisionWorkspace,
+  sessionFor,
   saveSession,
-  type MockIdentity,
 } from '../services/auth';
 import {
   gateApi,
-  setApiDemo,
   type ChatModel,
   type ChatSession,
   type CronInfo,
@@ -141,8 +126,6 @@ interface YmirState {
   streamPaused: boolean;
   query: string;
   traceability: number;
-  /** demo mode keeps the seeded mocks; live mode reads the real runtime via the gate API */
-  demo: boolean;
   live: boolean | null;
   runtime: RuntimeInfo | null;
   cron: CronInfo | null;
@@ -171,10 +154,10 @@ interface YmirState {
   chatPending: boolean;
   skills: SkillDef[];
 
-  signIn: (identity: MockIdentity) => void;
+  /** Establish the UI session for a login the gate has verified. */
+  establishSession: (login: string) => void;
   provision: (input: { login: string; name: string; kind: 'work' | 'personal'; domains: string[] }) => void;
   signOut: () => void;
-  enterDemo: () => void;
   loadLive: () => Promise<void>;
   refreshSmidja: () => Promise<void>;
   setSelectedSession: (id: string | null) => void;
@@ -252,22 +235,6 @@ function emptyState() {
   };
 }
 
-/** Seeded state — used ONLY by the hidden demo (never by a live boot). */
-function seedState(realm: RealmId) {
-  return {
-    agents: seedAgents(realm),
-    tasks: seedTasks(realm),
-    runes: seedRunes(realm),
-    streams: { all: seedStream(realm) },
-    recall: seedRecall(realm),
-    processes: seedProcesses(realm),
-    reviews: seedReviews(realm),
-    files: seedFiles(realm),
-    chat: seedChat(),
-    skills: seedSkills(),
-  };
-}
-
 function loadTenantColors(): Record<string, string> {
   try {
     return JSON.parse(localStorage.getItem('ymir.tenant-colors') ?? '{}') as Record<string, string>;
@@ -319,7 +286,6 @@ export const useYmir = create<YmirState>((set, get) => ({
   streamPaused: false,
   query: '',
   traceability: 0.984,
-  demo: false,
   live: null,
   runtime: null,
   cron: null,
@@ -339,7 +305,6 @@ export const useYmir = create<YmirState>((set, get) => ({
   ...emptyState(),
 
   loadLive: async () => {
-    if (get().demo) return;
     // Smíðja loads on its own track so a slow endpoint never holds its gates hostage.
     void get().refreshSmidja();
     try {
@@ -366,7 +331,6 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   refreshSmidja: async () => {
-    if (get().demo) return;
     try {
       const [health, sessions, stats, decisions] = await Promise.all([
         gateApi.smidjaHealth().catch(() => ({ db: 'absent', sessions: 0 })),
@@ -388,7 +352,6 @@ export const useYmir = create<YmirState>((set, get) => ({
 
   setSelectedSession: (id) => set({ selectedSession: id, sessionDetail: null }),
   loadSessionDetail: async (id) => {
-    if (get().demo) return;
     try {
       const detail = await gateApi.smidjaSession(id);
       set({ sessionDetail: detail, selectedSession: id });
@@ -397,21 +360,9 @@ export const useYmir = create<YmirState>((set, get) => ({
     }
   },
 
-  enterDemo: () => {
-    setApiDemo(true);
-    const session = githubAuthorize(MOCK_IDENTITIES[0]);
-    // Demo is anonymous — never the operator's name.
-    session.user = { login: 'allfather', name: 'Allfather', email: 'allfather@ymir.local', avatar: 'AL' };
-    saveSession(session);
-    document.documentElement.dataset.realm = 'work';
-    const { accentId, customAccent } = get();
-    applyAccent(accentId, customAccent);
-    set({ session, realm: 'work', demo: true, live: false, runtime: null, cron: null, ...seedState('work') });
-  },
-
-  signIn: (identity) => {
-    setApiDemo(false);
-    const session = githubAuthorize(identity);
+  establishSession: (login) => {
+    // The gate already decided; this only shapes what the UI renders.
+    const session = sessionFor(login);
     saveSession(session);
     const realm = initialRealm(session);
     document.documentElement.dataset.realm = realm;
@@ -419,14 +370,13 @@ export const useYmir = create<YmirState>((set, get) => ({
     applyAccent(
       accentId,
       customAccent,
-      tenantColors[realm] ?? session.tenants.find((t) => t.realm === realm)?.tint,
+      tenantColors[realm] ?? session.tenants.find((x) => x.realm === realm)?.tint,
     );
-    set({ session, realm, demo: false, ...emptyState() });
+    set({ session, realm, ...emptyState() });
     void get().loadLive();
   },
 
   provision: (input) => {
-    setApiDemo(false);
     const session = provisionWorkspace(input);
     saveSession(session);
     const slug = input.name.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/(^-|-$)/g, '');
@@ -438,14 +388,13 @@ export const useYmir = create<YmirState>((set, get) => ({
       customAccent,
       tenantColors[realm] ?? session.tenants.find((t) => t.realm === realm)?.tint,
     );
-    set({ session, realm, demo: false, ...emptyState() });
+    set({ session, realm, ...emptyState() });
     void get().loadLive();
   },
 
   signOut: () => {
-    setApiDemo(false);
     clearSession();
-    set({ session: null, demo: false, live: null, query: '' });
+    set({ session: null, live: null, query: '' });
   },
 
   setRealm: (realm) => {
@@ -459,7 +408,7 @@ export const useYmir = create<YmirState>((set, get) => ({
     const { accentId, customAccent, tenantColors } = get();
     applyAccent(accentId, customAccent, tenantColors[realm] ?? realmDef(realm).tint);
     set({ realm, ...emptyState() });
-    if (!get().demo) void get().loadLive();
+    void get().loadLive();
   },
 
   setGate: (gate) =>
@@ -600,19 +549,9 @@ export const useYmir = create<YmirState>((set, get) => ({
         chatPending: false,
       }));
     const refreshSessions = () => {
-      if (get().demo) return;
-      void gateApi.chatSessions().then((rows) => set({ chatSessions: rows })).catch(() => {});
+        void gateApi.chatSessions().then((rows) => set({ chatSessions: rows })).catch(() => {});
     };
 
-    if (get().demo) {
-      window.setTimeout(() => {
-        finish({
-          body: 'Demo mode — the well is seeded locally and Bifrost is not called. Sign in live to speak with Kaia for real.',
-          recalling: true,
-        });
-      }, 600);
-      return;
-    }
     void gateApi
       .chat(text, {
         session: chatSession,
@@ -630,7 +569,6 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
 
   loadChat: async () => {
-    if (get().demo) return;
     try {
       const [history, sessions, models] = await Promise.all([
         gateApi.chatHistory(get().chatSession).catch(() => [] as ChatMessage[]),
@@ -653,17 +591,12 @@ export const useYmir = create<YmirState>((set, get) => ({
   },
   switchChat: (id) => {
     set({ chatSession: id, chat: [], chatPending: false });
-    if (get().demo) return;
     void gateApi
       .chatHistory(id)
       .then((history) => set({ chat: history.slice(-CHAT_WINDOW) }))
       .catch(() => {});
   },
   deleteChat: (id) => {
-    if (get().demo) {
-      set((s) => ({ chatSessions: s.chatSessions.filter((x) => x.id !== id) }));
-      return;
-    }
     void gateApi
       .deleteChatSession(id)
       .catch(() => {})

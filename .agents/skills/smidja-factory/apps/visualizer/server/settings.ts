@@ -12,7 +12,7 @@ import { join } from "node:path";
 /** Keys the settings page may read/write. Everything else is rejected. */
 export const SETTING_KEYS = [
   "WAYOFTEAMS_MCP_TOKEN", // WayOfTeams per-user JWT (MCP bearer)
-  "WOTEAMS_MCP_URL",      // base endpoint (default https://teamsapp.zerwiz.org)
+  "WOTEAMS_MCP_URL",      // base endpoint (no default — the operator sets their own)
   "WOTEAMS_AGENT_NAME",   // identity in the work registry
   "WOTEAMS_AGENT_ID",
 ] as const;
