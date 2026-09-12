@@ -78,3 +78,15 @@ assets[2]{path,holds}:
   "assets/herdr-backend.md","the Herdr runtime backend: setup, protocol floor, presentation spaces, capabilities"
   "assets/tmux-backend.md","the tmux runtime backend: setup, capabilities"
 ```
+
+## HARD CONTRACT — seat, inject, verify
+
+```
+hard[3]{step,command,proof}:
+  "seat","bin/eindri-start.sh \"<task>\" | bin/herdr-run.sh eindri","agent in a pane"
+  "inject","bin/eindri-send.sh <agent> \"<task>\"","the task is in the agent's chat"
+  "verify","herdr agent list -> agent_status working","it is doing the work"
+```
+Seating without injecting leaves an idle agent — not a dispatch. If the agent is
+`idle` right after seating, re-send; if it is gone, re-seat. Only report success
+once the agent is `working`.
