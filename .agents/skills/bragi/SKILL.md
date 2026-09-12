@@ -45,6 +45,12 @@ artifact** grounded in **real sources**, never invented.
   agent = Agent(task="Post the launch thread to X", llm=<model from Bifrost / Pi catalog>)
   await agent.run()
   ```
+- **Scrapy** *(optional)* — [scrapy.org](https://www.scrapy.org/): a Python
+  scraping framework for **large or custom crawls** where Firecrawl is not the
+  right tool (many pages, structured pipelines, scheduling). `pip install scrapy`.
+  ```sh
+  scrapy startproject research && cd research && scrapy crawl sources -o out.jsonl
+  ```
 
 ## 2. The craft (the loop)
 
