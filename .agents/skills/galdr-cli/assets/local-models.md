@@ -215,3 +215,41 @@ visibly busy at full wattage while throughput sat at CPU level turned out to be
 the attention operation being scheduled onto the CPU because the requested KV
 cache type had no kernel in that build — no error, no log line. It was found by
 reading the upstream issue tracker, not by tuning flags. See §4, first trap.
+
+## 10. Driving pi with a local model — what was actually measured
+
+The integration works end to end, tools included. What decides success is **not**
+the endpoint — it is how much context the harness injects.
+
+| Test | Model | Context | Result | Time |
+|---|---|---|---|---|
+| Follow a literal instruction | `qwen3.5-4b@q4_k_s` (GPU) | **none** (run outside the repo) | exact reply | 3.6s |
+| The *same* instruction, inside the repo | `qwen3.5-4b@q4_k_s` | full Ymir inject | **ignored it** — answered the context instead | 17.4s |
+| Follow a literal instruction, inside the repo | `qwen3.6-35b-a3b@iq2_xxs` | full Ymir inject | exact reply | 30.1s |
+| **Use a tool** (read a file, report an unguessable token) | `qwen3.6-35b-a3b@iq2_xxs` | full Ymir inject | exact token back | 3.9s |
+| Follow a literal instruction | `qwen3.5-4b@q4_k_s` (iGPU :8097) | none | exact reply | 57.0s |
+| The *same* instruction + tool, inside the repo | `qwen3.5-4b@q4_k_s` (iGPU) | full Ymir inject | **ignored it** | — |
+
+```
+model_vs_context[3]{finding,evidence,rule}:
+  "a small model drowns in the injected prompt","the same 4B obeyed exactly outside the repo (3.6s) and rambled about 'arming supervision' inside it (17.4s)","test a suspect local model OUTSIDE the repo first; it separates 'cannot follow instructions' from 'the context swamped it'"
+  "a MoE absorbs it","35B-A3B (~3B active) followed every instruction and drove the read tool to an unguessable token in 3.9s","prefer a sparse MoE for agent work on a local model — the active parameters decide the speed, the total decides the capacity"
+  "tool calling needs no special wiring","the tool call succeeded through pi's normal path; nothing local-specific was configured","a local endpoint that answers /v1 is enough; if tools fail, suspect the model's tool syntax, not the transport"
+```
+
+**The rule for agents.** When a local model misbehaves in the harness, do not
+conclude the model is weak and do not start tuning flags. Run the identical
+prompt from outside the repo. If it obeys there, the model is fine and the
+*context* is the problem — pick a larger model for that errand, or give it a
+leaner instruction set.
+
+**How to run the test yourself** (non-interactive, one prompt):
+
+```bash
+pi -p --model "llamacpp/qwen3.6-35b-a3b@iq2_xxs" "Reply with exactly: LOCAL MODEL OK"
+pi -p --model "llamacpp-igpu/qwen3.5-4b@q4_k_s" "Reply with exactly: IGPU OK"
+```
+
+`--model` takes `provider/id`, matching the static entries in
+`.pi/agent/models.json` (§2). Screen the result by hand — a model that answers a
+question you did not ask has told you more than one that answers yours.
