@@ -195,3 +195,19 @@ misconfiguration, not a mystery.
 - Source of truth for the backend spec: `assets/brokk-distro-runtime.md` (backends)
   and `assets/pi-boot-guide.md` (pane supervision). Keep this skill's floors in
   sync with those when the protocol advances.
+
+## The seat hierarchy (panes · tabs · spaces)
+
+herdr is `Session > Workspace > Tab > Pane`. An Eindri can be seated at each rung,
+chosen by `bin/eindri-start.sh` / `bin/herdr-run.sh eindri`:
+
+| flag | rung | road | when |
+|------|------|------|------|
+| *(default)* | **pane** | `herdr pane split <pane> --direction right` | the companion — an Eindri beside the work; splits the current pane inside herdr, else this home's active pane |
+| `--tab` | **tab** | `herdr tab create` | a separate view in this workspace |
+| `--space` | **workspace** | `herdr workspace create` | a disposable space for one errand (needs the 0.8.0 floor) |
+
+All three roads then `herdr agent start <name> --kind <kind> --pane <pane>` and
+`herdr agent prompt`. Use panes by default so agents are visible side by side,
+tabs to group parallel work, spaces to isolate an errand. `herdr-run.sh close-all`
+tears the recorded seats down.

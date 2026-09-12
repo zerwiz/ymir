@@ -182,6 +182,42 @@ except Exception:
     pass' 2>/dev/null
 }
 
+# A pane to split when we are NOT sitting inside herdr: the active pane of this
+# home's workspace. Inside herdr, the current pane is used directly.
+home_pane() {
+  local ws at
+  ws="$(home_workspace)"; [ -n "$ws" ] || return 1
+  at="$(hdr workspace list 2>/dev/null | python3 -c '
+import json,sys
+ws=sys.argv[1]
+try:
+    d=json.load(sys.stdin); wss=(d.get("result",{}) or {}).get("workspaces",[])
+    for w in wss:
+        if w.get("workspace_id")==ws:
+            print(w.get("active_tab_id") or ""); break
+except Exception:
+    pass' "$ws" 2>/dev/null)"
+  [ -n "$at" ] || return 1
+  first_pane_of_tab "$at"
+}
+
+# Seat an Eindri in a PANE SPLIT — the companion road, so an Eindri sits beside
+# the work rather than hidden in a tab. Splits the current pane (inside herdr)
+# or this home's active pane. Prints "<tab_id> <pane_id>".
+seat_pane() {  # <name> <cwd>
+  local cwd=$2 target out
+  target="$(current_pane)"; [ -n "$target" ] || target="$(home_pane)"
+  [ -n "$target" ] || return 1
+  out="$(hdr pane split "$target" --direction right --cwd "$cwd" 2>/dev/null)"
+  printf '%s' "$out" | python3 -c '
+import json,sys
+try:
+    d=json.load(sys.stdin); p=(d.get("result",{}) or {}).get("pane",{})
+    print(p.get("tab_id") or "", p.get("pane_id") or "")
+except Exception:
+    pass' 2>/dev/null
+}
+
 case "$ACTION" in
   available)
     if can_use_herdr; then
@@ -211,12 +247,14 @@ case "$ACTION" in
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
     exit "$rc" ;;
   agent|eindri)
-    NAME=""; ROLE=""; SPACE=0
+    NAME=""; ROLE=""; SPACE=0; TAB=0
     while [ $# -gt 0 ]; do
       case "$1" in
         --role) ROLE=${2-}; shift 2 ;;
         --role=*) ROLE=${1#--role=}; shift ;;
         --space) SPACE=1; shift ;;
+        --tab) TAB=1; shift ;;
+        --pane) SPACE=0; TAB=0; shift ;;
         --) shift; break ;;
         -*) shift ;;
         *) if [ -z "$NAME" ]; then NAME="$1"; shift; else break; fi ;;
@@ -243,15 +281,26 @@ case "$ACTION" in
     [ -n "$NAME" ] || NAME="${ROLE:-eindri}"
     KIND="${YMIR_HERDR_KIND:-pi}"
 
-    # A space was asked for; if herdr is below the floor, fall back to a tab
-    # rather than steal the active workspace on teardown.
-    seat_note="tab"
+    # Where the Eindri sits, in herdr's hierarchy (workspace > tab > pane):
+    #   --space  a disposable workspace (one errand, torn down)
+    #   --tab    a new tab in this home's workspace
+    #   default  a PANE SPLIT beside the work (the companion road)
+    seat_note="pane"
     if [ "$SPACE" = 1 ]; then
       if space_supported; then
         read -r ws tab pane <<<"$(seat_space "$NAME" "$PWD")"
         [ -n "$ws" ] && seat_note="space $ws" && printf '%s\t%s\tspace:%s\n' "$tab" "$NAME" "$ws" >>"$TAB_LOG" 2>/dev/null || true
       else
         seat_note="tab (space floor not met)"
+      fi
+    elif [ "$TAB" = 1 ]; then
+      seat_note="tab"
+    else
+      read -r tab pane <<<"$(seat_pane "$NAME" "$PWD")"
+      if [ -n "$tab" ]; then
+        printf '%s\t%s\tpane\n' "$tab" "$NAME" >>"$TAB_LOG" 2>/dev/null || true
+      else
+        seat_note="tab (pane split unavailable)"
       fi
     fi
     if [ -z "${tab:-}" ]; then

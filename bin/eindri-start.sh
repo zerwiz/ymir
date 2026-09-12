@@ -8,7 +8,7 @@
 # verified sibling — so an agent always starts. Galdr-style TOON.
 #
 # Usage:
-#   eindri-start.sh "<request>" [--role <name>] [--space] [--kind pi|opencode]
+#   eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]
 #   eindri-start.sh --version
 set -u
 
@@ -21,13 +21,15 @@ SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; SPACE=0; KIND="${YMIR_HERDR_KIND:-pi}"
+REQ=""; ROLE=""; SEAT=""; KIND="${YMIR_HERDR_KIND:-pi}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --role) ROLE=${2-}; shift 2 ;;
     --kind) KIND=${2-}; shift 2 ;;
-    --space) SPACE=1; shift ;;
-    -*) printf 'error: unknown flag %s\nhelp: bin/eindri-start.sh "<request>" [--role <name>] [--space] [--kind pi|opencode]\n' "$1" >&2; exit 2 ;;
+    --space) SEAT="--space"; shift ;;
+    --tab) SEAT="--tab"; shift ;;
+    --pane) SEAT="--pane"; shift ;;
+    -*) printf 'error: unknown flag %s\nhelp: bin/eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]\n' "$1" >&2; exit 2 ;;
     *) [ -z "$REQ" ] && REQ="$1" || REQ="$REQ $1"; shift ;;
   esac
 done
@@ -48,7 +50,7 @@ mkdir -p "$STATE"
 
 # 3. Seat: herdr first, tmux fallback — always produce a seat.
 seat="none"
-if [ -x "$SCRIPT_DIR/herdr-run.sh" ] && "$SCRIPT_DIR/herdr-run.sh" eindri ${SPACE:+--space} "$ROLE" -- "$REQ" >/dev/null 2>&1; then
+if [ -x "$SCRIPT_DIR/herdr-run.sh" ] && "$SCRIPT_DIR/herdr-run.sh" eindri $SEAT "$ROLE" -- "$REQ" >/dev/null 2>&1; then
   seat="herdr"
 else
   command -v tmux >/dev/null 2>&1 || { printf 'eindri-start[1]{role,seat,request}:\n  "%s","none","%s"\n' "$ROLE" "$REQ"; printf 'error: no seat — herdr cannot seat and tmux is absent\n' >&2; exit 1; }
