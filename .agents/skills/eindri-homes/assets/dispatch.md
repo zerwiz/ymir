@@ -48,3 +48,25 @@ bin/eindri-start.sh "do marketing research"        # role + seat; add --model to
 4. `ask_user_question` wiring on unresolved/ambiguous.
 5. `eindri-start.sh --model` passthrough.
 6. No dedicated A2A/MCP skill (`ratatoskr`) or Hlidskjalf-UI skill yet.
+
+## HARD CONTRACT — a seat is not a dispatch (do not skip)
+
+Three steps, in order, every time. A missing step is a failed dispatch — never
+report success after only step 1.
+
+```
+dispatch-hard[3]{step,tool,proof}:
+  "1 seat","bin/eindri-start.sh | bin/herdr-run.sh eindri","the agent exists in a pane"
+  "2 INJECT the task","bin/eindri-send.sh <agent> \"<task>\"","the agent's chat received it"
+  "3 VERIFY","herdr agent list shows agent_status working/busy","it is actually doing the work"
+```
+
+Rules:
+- **A seat without injection is not a dispatch.** Starting an agent and leaving
+  it idle is a bug — the task must be delivered to its chat (`eindri-send`).
+- **Seat then inject, then verify.** If right after seating the agent is `idle`,
+  the injection did not land — send again. If `agent_status` is empty/gone, re-seat.
+- **Injection is retried until the agent is `working`.** An agent that never
+  starts working is a failed dispatch; report it, do not claim success.
+- **`eindri-start.sh <task>` must end with the task injected and the agent
+  working** — verify it does; if not, fix the seat path, not just the run.
