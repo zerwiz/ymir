@@ -1,9 +1,9 @@
 ---
 name: Utgard Studios
-type: company
+type: domain
 owner: zerwiz
 realm: way-of
-house: utgard
+domain: utgard
 products:
   - WhyNot-Productions
   - AiPic

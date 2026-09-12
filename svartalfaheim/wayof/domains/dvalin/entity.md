@@ -1,9 +1,9 @@
 ---
 name: Dvalin
-type: company
+type: domain
 owner: zerwiz
 realm: way-of
-house: dvalin
+domain: dvalin
 products:
   - OptiCat
   - Linkable

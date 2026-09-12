@@ -1,9 +1,9 @@
 ---
 name: Ymir Labs
-type: company
+type: domain
 owner: zerwiz
 realm: way-of
-house: ymirlabs
+domain: ymirlabs
 products:
   - Ymir-OS
   - Hlidskjalf
