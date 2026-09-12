@@ -50,6 +50,22 @@ const isLinuxDesktop = isDesktop && (window as { smidjaDesktop?: { platform?: st
 function winControl(action: 'minimize' | 'maximize' | 'close') {
   ;(window as { smidjaDesktop?: { windowControl?: (a: string) => void } }).smidjaDesktop?.windowControl?.(action)
 }
+
+/**
+ * Raise the other app (or start it), through this API's /api/desktop route.
+ * Silent on failure: a convenience control must never break the view it sits in.
+ */
+async function raiseApp(view: 'hlidskjalf' | 'smidja') {
+  try {
+    await fetch('/api/desktop', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ view }),
+    })
+  } catch {
+    /* the launcher is unreachable — say nothing, change nothing */
+  }
+}
 </script>
 
 <template>
@@ -106,6 +122,11 @@ function winControl(action: 'minimize' | 'maximize' | 'close') {
           <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
         </button>
       </span>
+      <!-- A speed-start from the UI: raise Hlidskjalf (or start it). The same
+           launcher the Omarchy key bindings use, so there is one way in. -->
+      <button class="win-btn" title="Open Hlidskjalf" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')">
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 8.5h8M2 8.5V3l3-2 3 2v5.5" stroke="currentColor" stroke-width="1.1" fill="none" /></svg>
+      </button>
     </header>
     <main id="main-content">
       <StatsView v-if="isStats" />

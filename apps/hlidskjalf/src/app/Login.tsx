@@ -81,8 +81,8 @@ export function Login() {
             <div>
               <h1 className="login-title">Sign in</h1>
               <p className="login-deck" style={{ marginTop: 6 }}>
-                One operator, one Ymir. Sign in with the Allfather’s own GitHub login —
-                a single tenant, many workspaces.
+                One operator, one Ymir. Sign in with your own credentials — a single
+                tenant, many workspaces. Invited? Enter your code to make an account.
               </p>
             </div>
 

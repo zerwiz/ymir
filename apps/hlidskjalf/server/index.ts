@@ -13,6 +13,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statS
 import { Database } from 'bun:sqlite';
 import { dirname, extname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
+import { invitesOpen, listAccounts, listInvites, register, verify as verifyAccount } from './accounts.ts';
 
 const PORT = Number(process.env.PORT ?? 3889);
 const HERE = import.meta.dir;
@@ -1381,7 +1382,8 @@ const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
 const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? 'ymirsmidjadell.zerwiz.org').toLowerCase();
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
-const SESSIONS = new Set<string>();
+/** token → login. A session must know *who* it is, not merely that it exists. */
+const SESSIONS = new Map<string, string>();
 
 function cookieToken(req: Request): string {
   const c = req.headers.get('cookie') ?? '';
@@ -1391,6 +1393,23 @@ function cookieToken(req: Request): string {
 function isAuthed(req: Request): boolean {
   const t = cookieToken(req);
   return !!t && SESSIONS.has(t);
+}
+
+/** The login behind a request's session, if any. */
+function loginOf(req: Request): string | null {
+  return SESSIONS.get(cookieToken(req)) ?? null;
+}
+
+/** Begin a session and hand back the cookie. */
+function sessionResponse(login: string): Response {
+  const token = crypto.randomUUID();
+  SESSIONS.set(token, login);
+  return new Response(JSON.stringify({ ok: true, login }), {
+    headers: {
+      'content-type': 'application/json',
+      'set-cookie': `ymir_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
+    },
+  });
 }
 
 /** The login screen for the Smíðja host — same gate, same credentials. */
@@ -1438,9 +1457,10 @@ function smidjaLoginPage(): Response {
     <span><b>SMÍÐJA</b><small>the smithy</small></span>
   </div>
   <h1>Sign in</h1>
-  <p>The gate is closed. Enter the Allfather’s credentials.</p>
+  <p>The gate is closed. Sign in, or enter an invite code to make your own account.</p>
   <input name="username" placeholder="username" autocomplete="username" autofocus />
   <input name="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+  <input name="invite" placeholder="invite code (only to create an account)" autocomplete="off" />
   <span class="err" id="err"></span>
   <button type="submit">Enter</button>
 </form>
@@ -1449,13 +1469,17 @@ function smidjaLoginPage(): Response {
   f.addEventListener('submit', async (e) => {
     e.preventDefault();
     const b = new FormData(f);
-    const r = await fetch('/api/login', {
+    const invite = String(b.get('invite') || '').trim();
+    // An invite in the field means "make me an account"; without one this is an
+    // ordinary sign-in. A bad or spent code is refused by the gate either way.
+    const r = await fetch(invite ? '/api/register' : '/api/login', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ username: b.get('username'), password: b.get('password') }),
+      body: JSON.stringify({ username: b.get('username'), password: b.get('password'), invite }),
     });
     if (r.ok) { location.reload(); return; }
-    document.getElementById('err').textContent = 'Wrong username or password';
+    const said = await r.json().catch(() => ({}));
+    document.getElementById('err').textContent = said.error || 'Wrong username or password';
   });
 </script>
 </body>
@@ -1532,19 +1556,42 @@ const server = Bun.serve({
     try {
       if (p === '/api/login' && req.method === 'POST') {
         const b = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
-        if (GATE_AUTH && `${b.username ?? ''}:${b.password ?? ''}` === GATE_AUTH) {
-          const token = crypto.randomUUID();
-          SESSIONS.add(token);
-          return new Response(JSON.stringify({ ok: true }), {
-            headers: {
-              'content-type': 'application/json',
-              'set-cookie': `ymir_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
-            },
-          });
-        }
+        const user = b.username ?? '';
+        const pass = b.password ?? '';
+        // Two ways in: the operator's own credentials (HLIDSKJALF_AUTH), or an
+        // account minted with an invite code.
+        let login: string | null = null;
+        if (GATE_AUTH && `${user}:${pass}` === GATE_AUTH) login = user;
+        else if (user && pass) login = await verifyAccount(user, pass);
+        if (login) return sessionResponse(login);
         return json({ error: 'invalid credentials' }, 401);
       }
-      if (p === '/api/session') return json({ authed: GATE_AUTH ? isAuthed(req) : true });
+      if (p === '/api/register' && req.method === 'POST') {
+        const b = (await req.json().catch(() => ({}))) as {
+          username?: string;
+          password?: string;
+          invite?: string;
+        };
+        const made = await register(b.username ?? '', b.password ?? '', b.invite ?? '');
+        if (!made.ok) return json({ error: made.reason }, 403);
+        return sessionResponse(made.login);
+      }
+      if (p === '/api/invites' && req.method === 'GET' && isAuthed(req)) {
+        // The operator's own view of who may still be let in.
+        return json({
+          invites: listInvites().map((i) => ({ ...i, code: i.code })),
+          accounts: listAccounts(),
+        });
+      }
+      if (p === '/api/session') {
+        return json({
+          authed: GATE_AUTH ? isAuthed(req) : true,
+          login: loginOf(req),
+          // The login surface shows "create an account" only while a live invite
+          // exists — a newcomer with a code can enter, and nobody else can.
+          registration: invitesOpen(),
+        });
+      }
       if (p === '/api/logout' && req.method === 'POST') {
         SESSIONS.delete(cookieToken(req));
         return new Response(JSON.stringify({ ok: true }), {
@@ -1564,7 +1611,7 @@ const server = Bun.serve({
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
       if (p === '/api/worktrees') return json(worktrees());
-      if (p === '/api/me') return json({ login: 'Allfather', realm: 'work' });
+      if (p === '/api/me') return json({ login: loginOf(req) ?? 'operator', realm: 'work' });
       if (p === '/api/workspace') {
         const realm = url.searchParams.get('realm') ?? 'work';
         return json({ realm, path: workspaceRoot(realm) });
@@ -1582,6 +1629,24 @@ const server = Bun.serve({
       if (p === '/api/file') return json(fileContent(url.searchParams.get('realm') ?? 'work', url.searchParams.get('path') ?? ''));
       if (p === '/api/skills') return json(skills());
       if (p === '/api/runtime') return json(runtime());
+      // A speed-start from the UI. It calls the same launcher the Omarchy key
+      // bindings use, so the app is raised when it is already up and started
+      // when it is not — one way to raise a Ymir window, not two.
+      if (p === '/api/desktop' && req.method === 'POST') {
+        const body = (await req.json().catch(() => ({}))) as { view?: string };
+        const view = body?.view;
+        if (view !== 'hlidskjalf' && view !== 'smidja') {
+          return json({ error: 'view must be hlidskjalf or smidja' }, 400);
+        }
+        const proc = Bun.spawn(['bash', join(ROOT, 'scripts', 'electron.sh'), 'start', '--view', view], {
+          stdout: 'pipe',
+          stderr: 'pipe',
+          env: process.env,
+        });
+        const out = await new Response(proc.stdout).text();
+        await proc.exited;
+        return json({ view, ok: proc.exitCode === 0, output: out.trim().slice(-400) });
+      }
       if (p === '/api/cron') return json(cron());
       if (p === '/api/loaders') return json(loaders());
       if (p === '/api/checks') return json(checks());

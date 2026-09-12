@@ -198,4 +198,44 @@ the password comes from `HLIDSKJALF_AUTH` in `.env.local`, never inline. A
 hardcoded name here is both a leak into the public tree and wrong for any other
 operator — `bin/public-guard.sh` exists to catch exactly that class of mistake.
 
+### Accounts and invites — how someone else gets in (added 2026-09-12)
+
+One operator owns an instance. `HLIDSKJALF_AUTH` is that operator. Everyone else
+enters through an **invite code**: registration is closed unless a live code is
+presented, and a code carries its own ceiling, so a shared link cannot quietly
+become an open door.
+
+```
+POST /api/register {username,password,invite}   → 201 + session   (403 when refused)
+POST /api/login    {username,password}          → 200 + session   (operator OR account)
+GET  /api/session                               → {authed,login,registration}
+GET  /api/invites                               → {invites,accounts}   (authed)
+```
+
+- **Store:** `apps/hlidskjalf/server/accounts.ts` owns accounts and invites.
+  `SESSIONS` is a `Map<token,login>` — a session knows *who* it is, and
+  `/api/me` reports that login, never a hardcoded one.
+- **Where it lives:** `~/.config/ymir/accounts.json`, mode `0600`
+  (`YMIR_CONFIG_DIR` overrides, for tests). Machine state, never in the repo.
+- **Passwords:** `Bun.password` argon2id via `Bun.password.hash/verify`. The
+  plaintext is never written; only the hash lands.
+- **The operator's own tool:** `bin/ymir-invite.sh {mint,list,revoke,where,ensure}`.
+  `ensure` mints only when nothing is live, so the installer stays idempotent.
+- **The UI:** `LoginModal` offers "I have an invite code" **only while
+  `/api/session.registration` is true**. A spent or revoked code removes the
+offer, because the gate is what decides — the surface merely reports it.
+- **Refusals are spoken:** the gate's own sentence ("that invite code has been
+  used up") is carried to the caller by `services/api.ts` (`errorText`), so the
+  login surface says what is actually wrong instead of a bare status.
+
+### Speed-starts inside the apps (added 2026-09-12)
+
+Each app's own UI can raise the other one — `POST /api/desktop {view}`, valid for
+`hlidskjalf` and `smidja`. Both servers implement it by calling
+`scripts/electron.sh start --view <view>`, the same launcher the Omarchy key
+bindings use, so there is **one** way to raise a Ymir window: it raises the app
+when it is already up, and starts it when it is not. The visualizer finds the
+checkout by walking up to the directory holding `scripts/electron.sh`, so it
+works wherever the app is served from.
+
 **rename sweep (2026-09-12).** The `galdr` -> `galdr-cli` rename corrected a stale path reference inside `apps/hlidskjalf/server/index.ts` as well; behaviour unchanged.

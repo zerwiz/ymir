@@ -21,7 +21,7 @@ bin/ymir-install.sh --status      # alias of --check
 ## The steps
 
 ```
-install[17]{step,what,self-heals}:
+install[18]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -35,16 +35,22 @@ install[17]{step,what,self-heals}:
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
   "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh"
+  "invite","the way in for anyone else — an invite code","bin/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
   "register","workspace/INSTALL.md","writes the record"
   "services","gate API, SPA, Nornir, bridges, visualizer","raises via scripts/start.sh (which builds the visualizer UI when ./dist is absent)"
   "desktop","Hlidskjalf + Smíðja desktop apps","bin/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-A real run prints **16** rows. `--check` prints **13** — it skips the
-runtime-only steps (`services`, `desktop`, `validate`), which have nothing to
-report when the runtime is not raised. (`memory-well` is emitted by the
-`prereqs` step, so the row count exceeds the step count.)
+**18** steps are defined. A step is not a row: `--check` on this machine printed
+**17** rows, because `prereqs` also emits `memory-well` and `host` also emits
+`agents-config`. `--check` skips the runtime-only steps (`services`, `desktop`,
+`validate`), which have nothing to report when the runtime is not raised, so a
+real run prints those three in addition. The exact set:
+
+```bash
+bash bin/ymir-install.sh --check | grep -cE '^  "'   # the honest count, on your host
+```
 
 ## The visualizer UI
 
@@ -133,6 +139,25 @@ refused rather than silently proceeding.
 The plan names every change, including the terminal backend (herdr/tmux), the
 host learning, and the desktop placement — so the operator accepts what is
 actually done, not a shorter list that drifted behind the code.
+
+## Letting someone else in (invites)
+
+One operator owns the instance. The installer mints an **invite code**
+(`step_invite`) and prints it at the end of the run; share that code and someone
+else can create their own account at the gate login screen. Registration is
+closed unless a live code exists, so an instance is never accidentally open.
+
+```bash
+bin/ymir-invite.sh mint [--limit N]   # a new code (default ceiling 5 accounts)
+bin/ymir-invite.sh list               # every code, what is spent, who is in
+bin/ymir-invite.sh revoke <CODE>      # take one back, now
+bin/ymir-invite.sh where              # where the accounts live on this machine
+```
+
+Accounts are stored in `~/.config/ymir/accounts.json` (mode `0600`), machine
+state that never enters the repo, with argon2id hashes only. The operator's own
+credentials stay `HLIDSKJALF_AUTH` in `.env.local` — invites are for everyone
+*else*. Full surface: the galdr `hlidskjalf-ui.md` asset.
 
 ## Validation
 

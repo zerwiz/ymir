@@ -155,6 +155,34 @@ const server = Bun.serve({
         } satisfies HealthResponse),
     ),
 
+      // A speed-start from the UI: the same launcher the key bindings use. The
+      // repo root is found by walking up to the checkout holding
+      // scripts/electron.sh, so it works wherever the app is served from.
+      "/api/desktop": safely(async (req) => {
+        const body = (await req.json().catch(() => ({}))) as { view?: string };
+        const view = body?.view;
+        if (view !== "hlidskjalf" && view !== "smidja") {
+          return json({ error: "view must be hlidskjalf or smidja" }, 400);
+        }
+        let dir = import.meta.dir;
+        let launcher: string | null = null;
+        for (let i = 0; i < 8; i++) {
+          const candidate = join(dir, "scripts", "electron.sh");
+          if (existsSync(candidate)) {
+            launcher = candidate;
+            break;
+          }
+          dir = dirname(dir);
+        }
+        if (!launcher) return json({ error: "could not find scripts/electron.sh above the visualizer" }, 500);
+        const proc = Bun.spawn(["bash", launcher, "start", "--view", view], {
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        const out = await new Response(proc.stdout).text();
+        await proc.exited;
+        return json({ view, ok: proc.exitCode === 0, output: out.trim().slice(-400) });
+      }),
     "/api/sessions": safely((req) => {
       // A run that died without finalizing its own session (killed from old
       // code, crashed, SIGKILL) would otherwise stay "running" and keep
