@@ -494,7 +494,7 @@ send a pull request back to the main tree. The gate is open — the law is simpl
 
 1. **Fork** the repo on GitHub.
 2. **Clone** your fork, make changes on a feature branch.
-3. **Open a PR** against `Way-Of/ymir:main` (or `zerwiz/ymir:main` if you
+3. **Open a PR** against `zerwiz/ymir:main` (or `zerwiz/ymir:main` if you
    cloned from the personal fork).
 4. **One thing per PR.** A PR does one focused thing — a fix, a feature, a
    refactor.
