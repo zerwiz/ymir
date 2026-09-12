@@ -7,7 +7,21 @@ permission:
   write: deny
   glob: allow
   grep: allow
-  bash: allow
+  bash:
+    "*": ask
+    "ls *": allow
+    "rg *": allow
+    "grep *": allow
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "wc *": allow
+    "fd *": allow
+    "find *": allow
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "git show*": allow
   skill: allow
 domain: muninn
 name: huginn
