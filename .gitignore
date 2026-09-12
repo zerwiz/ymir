@@ -119,3 +119,9 @@ assets/reference/state/
 # Per-machine agent/model overlays (private); track only the .example shape.
 .agents/config/agents.*.yaml
 !*.example
+
+# machine config rendered from opencode.json.example (holds absolute paths)
+/opencode.json
+
+# machine config rendered from .pi/mcp.json.example (holds absolute paths)
+.pi/mcp.json

@@ -329,3 +329,24 @@ fi
 Standalone tools that ship outside a Ymir checkout (for example
 `.agents/skills/galdr/scripts/bench-one.sh`) carry their own small portable
 helpers instead of sourcing the library, so they run anywhere on their own.
+
+### Machine config is rendered, never shipped
+
+Two files must contain **absolute** paths (the engram MCP server's binary and its
+database), so a tracked copy would hand every operator the previous one's home —
+exactly what `/home/zerwiz/...` did in this tree. They follow the `.env.example`
+pattern instead:
+
+| Shipped (tracked) | Rendered (gitignored) |
+|---|---|
+| `opencode.json.example` | `opencode.json` |
+| `.pi/mcp.json.example` | `.pi/mcp.json` |
+
+Placeholders `__YMIR_HOME__` and `__YMIR_ROOT__` are substituted with `$HOME` and
+the checkout root by `bin/valknut-load.sh` (its `render_config`, run for both
+`--pi` and `--opencode`). It is idempotent: identical content is left alone and
+reported as `unchanged`.
+
+Rule: **if a config must hold an absolute path, it is generated from an
+`.example`, not committed.** The same applies to launchers — a `.desktop` file
+is one OS's answer and must be produced for the host, not shipped for all.
