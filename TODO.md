@@ -9,11 +9,11 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 
 ### A0. Omarchy-native skill — DONE
 - **Asked:** build a skill so the system knows Omarchy, and load the omarchy skill.
-- **Done:** `.agents/skills/ymir-omarchy/SKILL.md` — the two laws (never edit
+- **Done:** `.agents/skills/ymir/SKILL.md` — the two laws (never edit
   `/usr/share/omarchy/`; Hyprland owns placement), host detection, the
   monitor/scale coordinate trap, the amdgpu GPU crash + mitigation, desktop-app
   placement, safe-customisation table, discovery. Registered in the skill index.
-- **Also done:** `.agents/skills/ymir-thjazi/SKILL.md` — Þjazi (herdr-first),
+- **Also done:** `.agents/skills/ymir/SKILL.md` — Þjazi (herdr-first),
   protocol floors (14+ panes, 0.8.0 spaces), install/verify.
 
 ### A1. Ymir learns the user's machine — DONE

@@ -15,7 +15,7 @@
 # one-line check, a lookup — those are answered directly. Only a TASK earns a
 # smith, because a smith costs a context, a seat, and your attention.
 #
-# Hermes' skill is `ymir-thjazi`; the role chooser is `bin/eindri-role.sh`.
+# Hermes' skill is the `ymir` thjazi asset; the role chooser is `bin/eindri-role.sh`.
 #
 # Usage:
 #   bin/herdr-run.sh available                      # can we use herdr right now?

@@ -707,8 +707,6 @@ is consulted.
 **Urðr** is the eldest Norn — she who *was*. She measures the past, holds
 decisions, and reconciles the captain's hold.
 
-- `urdh-decisions` skill — decision-hold lifecycle
-- `urdh-hold` skill — captain-hold reconciliation
 
 **Rule:** Urðr holds what has been decided. A decision held by Urðr cannot
 be silently overwritten; it must be explicitly closed or updated.
@@ -899,16 +897,13 @@ The complete index of all Norse-named skills in Ymir:
 | `smidja` | Smiðja | The smithy — roster, phases, envelopes, factory |
 | `modeltesting` | — | Model evaluation harness (Ollama, LM Studio, llama.cpp) |
 | `hvild-afk` | Hvíld | Away-mode supervision — routine wakes, batched escalations |
-| `saga-bearings` | Sága | Fleet status digest — pick-up-where-I-left-off report |
-| `saga-recap` | Sága | Recap visible events + unresolved Allfather decisions |
+| `saga` | Sága | session bearings: fleet digest (/bearings) + recap (/ahoy) |
 | `muninn-stow` | Muninn | Session-knowledge curation, routing, persistence |
 | `jord-projects` | Jörð | Project registry + delivery posture |
-| `urdh-decisions` | Urðr | Decision-hold lifecycle |
-| `urdh-hold` | Urðr | Captain-hold reconciliation |
+| `urdh` | Urðr | Allfather-hold lifecycle |
 | `frigg-consent` | Frigg | Consent / ask-user authority gate |
 | `vor-diagnostics` | Vör | Bootstrap + diagnostic reasoning |
-| `nornir-events` | Nornir | Process→event sources |
-| `nornir-quota` | Nornir | Quota-aware dispatch array selection |
+| `nornir` | Nornir | fate & schedule: events + quota |
 | `gjallarhorn-relay` | Gjallarhorn | Public relay replies (X/Discord) |
 | `eindri-homes` | Eindri | Isolated worker homes (provisioning) |
 | `syn-recovery` | Sýn | Stuck-worker recovery playbook |
