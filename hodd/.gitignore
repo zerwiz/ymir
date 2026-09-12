@@ -1,0 +1,6 @@
+# Hodd guard — track only this file, the README, and *.example shapes.
+# Everything else beneath Hodd is private and must never be committed.
+*
+!.gitignore
+!README.md
+!*.example
