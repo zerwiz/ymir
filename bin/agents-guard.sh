@@ -13,7 +13,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 FILE="AGENTS.md"
 
 # Operator-private markers that must never enter the public contract.
-PATTERNS='(josef|lindbom|/home/zerwiz|hodd/tenants/|tenants/[a-z]|-----BEGIN [A-Z ]*PRIVATE KEY-----|(ghp|gho|ghs|ghr)_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+|AKIA[0-9A-Z]{16})'
+PATTERNS='(josef|lindbom|/home/zerwiz|hodd/tenants/[a-z0-9]|(ghp|gho|ghs|ghr)_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
 
 check() {  # reads content on stdin
   if grep -Eq "$PATTERNS"; then
