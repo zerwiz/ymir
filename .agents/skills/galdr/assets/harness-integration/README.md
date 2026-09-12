@@ -522,6 +522,21 @@ Rule: **one home per extension.**
   `syn-turnend-guard.ts`, `lib/`).
 - Never copy a shared extension back into the repo; that re-arms the collision.
 
+**Shipping the shared extensions (added 2026-09-12).** A rule that keeps the
+extensions outside the repo would also keep them from every new operator, so the
+repo carries their **source** at `.pi/shared/extensions/` — a path pi does not
+load, therefore collision-free — and the loader deploys it into the single home:
+
+```bash
+bin/valknut-load.sh --pi      # deploys .pi/shared/extensions/*.ts -> ~/.pi/agent/extensions/
+```
+
+The deploy copies (never links: a broken link would silently disable a tool),
+skips files that are already identical, and reports what it placed. It runs
+whenever the Pi surface is bound, with or without `--global`. Adding a shared
+extension is therefore two steps: put the source in `.pi/shared/extensions/`, and
+let the loader place it — **never** place it in `.pi/extensions/`.
+
 ## OpenCode agent `tools` key (2026-09-12)
 
 OpenCode requires the frontmatter `tools:` key to be an **object** of its own

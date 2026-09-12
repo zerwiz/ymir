@@ -19,6 +19,13 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 AGENTS="$ROOT/.agents/agents"
 PI_LOCAL="$ROOT/.pi/agents"
 PI_GLOBAL="${HOME}/.pi/agent/agents"
+# Shared Pi extensions have ONE home: ${HOME}/.pi/agent/extensions/ (see
+# galdr/assets/harness-integration/README.md). The repo keeps their SOURCE at
+# .pi/shared/extensions/ — never at .pi/extensions/, because an extension present
+# in both load paths makes pi exit with a tool-name conflict and no agent can be
+# seated. This loader DEPLOYS that source into the single home.
+PI_EXT_SRC="$ROOT/.pi/shared/extensions"
+PI_EXT_HOME="${HOME}/.pi/agent/extensions"
 OC_LOCAL="$ROOT/.opencode/agent"
 
 usage() {
@@ -88,6 +95,20 @@ if [ "$MODE_PI" = 1 ]; then
   n=$(link_agent_dir "$PI_LOCAL" "../../.agents/agents") && add pi-local "$PI_LOCAL" "bound ($n links)" || add pi-local "$PI_LOCAL" "ERROR"
   if [ "$MODE_GLOBAL" = 1 ]; then
     g=$(link_agent_dir "$PI_GLOBAL" "$AGENTS") && add pi-global "$PI_GLOBAL" "bound ($g links)" || add pi-global "$PI_GLOBAL" "ERROR"
+  fi
+  # Deploy the shared extensions into their single home. Copy, not link: a
+  # broken link would silently disable a tool, and pi reads the file directly.
+  # Idempotent — identical files are left untouched.
+  if [ -d "$PI_EXT_SRC" ]; then
+    mkdir -p "$PI_EXT_HOME" 2>/dev/null
+    dep_n=0
+    for f in "$PI_EXT_SRC"/*.ts; do
+      [ -e "$f" ] || continue
+      b=$(basename "$f")
+      if [ -f "$PI_EXT_HOME/$b" ] && cmp -s "$f" "$PI_EXT_HOME/$b"; then continue; fi
+      cp -f "$f" "$PI_EXT_HOME/$b" && dep_n=$((dep_n+1))
+    done
+    add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home)"
   fi
 fi
 
