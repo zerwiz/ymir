@@ -302,6 +302,16 @@ case "$ACTION" in
       esac
     fi
 
+    # No explicit model: use the AGENT'S configured harness+model from
+    # config/agents.yaml (local->pi, online->opencode) — never default silently.
+    if [ -z "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/agents-config.sh" ]; then
+      _h="$("$SCRIPT_DIR/agents-config.sh" get "$ROLE" harness 2>/dev/null)"
+      _m="$("$SCRIPT_DIR/agents-config.sh" get "$ROLE" model 2>/dev/null)"
+      [ -n "$_h" ] && KIND="$_h"
+      [ -n "$_m" ] && MODEL_ARGS=(-- --model "$_m")
+      printf 'herdr-run[1]{agent,harness,model}:\n  "%s","%s","%s"\n' "$ROLE" "${_h:-?}" "${_m:-?}" >&2
+    fi
+
     # Where the Eindri sits, in herdr's hierarchy (workspace > tab > pane):
     #   --space  a disposable workspace (one errand, torn down)
     #   --tab    a new tab in this home's workspace
