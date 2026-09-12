@@ -14,7 +14,7 @@ set -u
 VERSION="1.0.0"
 PROVIDER="${PI_LOCAL_PROVIDER:-llama-cpp}"
 MODEL="${PI_LOCAL_MODEL:-frontend-design-expert-8b@q4_k_m}"
-NAME="pi-local"; TASK=""; WHERE="--current"; DIR="$PWD"
+NAME="pi-local"; TASK=""; WHERE="--current"; DIR="$PWD"; MAIN=0
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
@@ -27,6 +27,7 @@ while [ $# -gt 0 ]; do
     --task) TASK=${2-}; shift 2 ;;
     --dir) DIR=${2-}; shift 2 ;;
     --tab) WHERE="--tab"; shift ;;
+    --main) MAIN=1; shift ;;
     *) printf 'error: unknown arg %s\n' "$1" >&2; exit 2 ;;
   esac
 done
@@ -34,6 +35,14 @@ done
 have() { command -v "$1" >/dev/null 2>&1; }
 [ "${HERDR_ENV:-}" = "1" ] || { printf 'error: not inside herdr (HERDR_ENV unset)\nhelp: run this from a herdr pane\n' >&2; exit 1; }
 have herdr || { printf 'error: herdr not on PATH\n' >&2; exit 1; }
+
+# Isolation is standard: seat in a Yggdrasil worktree, not the main tree, unless
+# the Allfather explicitly asks for main (--main).
+if [ "${MAIN:-0}" != 1 ] && [ -x "$SCRIPT_DIR/yggdrasil.sh" ] && git -C "$PWD" rev-parse --show-toplevel >/dev/null 2>&1; then
+  wt="$(git -C "$PWD" rev-parse --show-toplevel)/.yggdrasil/$NAME"
+  [ -d "$wt" ] || "$SCRIPT_DIR/yggdrasil.sh" create "$NAME" >/dev/null 2>&1
+  [ -d "$wt" ] && { DIR="$wt"; printf 'pi-seat[1]{isolation,worktree}:\n  "on","%s"\n' "$DIR" >&2; }
+fi
 
 # 1. a place to sit — a new tab, or a split beside the caller.
 if [ "$WHERE" = "--tab" ]; then
