@@ -319,3 +319,6 @@ Law: `RULES/04-hoard.md`.
 - **Skills:** one galdr-style skill per figure (a `SKILL.md` router + `assets/`);
   same-figure split pairs are consolidated (`ymir · urdh · saga · nornir · nsr`).
   Registry: `.agents/skills/README.md`.
+
+**This file is the public user contract.** The operator's own private contract
+lives in `hodd/AGENTS.md` (untracked); its shape is `hodd/AGENTS.example.md`.
