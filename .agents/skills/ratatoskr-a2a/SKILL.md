@@ -48,3 +48,28 @@ heartbeat + deregister, and `cert` (ed25519) before federation. Cards are
 UNSIGNED until then. Realm boundaries hold.
 
 Plan + registration spec: `hodd/docs/ratatoskr.md` and `hodd/docs/a2a-runs.md`.
+
+## Joining the mesh and talking (skill-driven, no code)
+
+A seated Eindri joins and talks **by loading this skill** — the pi adaptor
+(`a2a-send` / `a2a-discover`) and the `a2abridge` MCP provide the tools; this
+skill says how to use them.
+
+**Every pi agent already carries the tools** (pi loads `Way-Of/pi-a2a-adaptor` +
+the `a2abridge` MCP). So inside a session:
+
+- `a2a-agents` / `a2a-discover` — list peers registered with the directory.
+- `a2a-send <peer> "<text>"` — task a peer; the reply comes back as a task.
+- `a2a-broadcast "<text>"` — FYI to the mesh.
+
+**To be reachable**, the agent's bridge must announce to the directory
+(`~/.pi/agent/mcp.json` → `a2abridge`, `A2A_DIRECTORY`). If a peer does not
+appear in `a2a-agents`, the bridge announced to the wrong directory — the fix is
+in the **skill/config**, not new code: point the bridge at
+`http://127.0.0.1:7777` with `-advertise-host <tailnet-ip>` and `-name <agent>`.
+
+**Outside a session** (Brokk, scripts): `bin/a2a-talk.sh agents` and
+`bin/a2a-talk.sh send <peer> "<text>"`.
+
+Rule: the mesh is used through the **skill's tools**, not bespoke code — if a
+capability is missing, extend this skill.
