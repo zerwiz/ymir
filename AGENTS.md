@@ -288,10 +288,11 @@ password login with Heimdall (oauth2-proxy) later.
 `RULES/` holds the numbered house law. Read the rule that governs the task:
 
 ```
-rules[3]{file,governs}:
+rules[4]{file,governs}:
   "RULES/01-domains.md","domains (Greinar) · houses · Eindri"
   "RULES/02-agents.md","agents: .agents/agents is canonical; harness dirs are symlinks; no mock"
   "RULES/03-houses.md","a house is a company (WayOf); domains are never houses"
+  "RULES/05-platforms.md","one portable core, per-OS installation layers; a core change updates every layer"
 ```
 
 A change that contradicts a rule must change the rule first (append-only). The
@@ -305,6 +306,20 @@ path** (`YMIR_HOARD`; `bin/hodd.sh emit <file>`), never inlined. Outer ward:
 `bin/secret-guard.sh` (pre-commit + CI); inner ward: `hodd/.gitignore`. Realm
 boundaries hold — `hodd/tenants/<tenant>/` loads only into that tenant's work.
 Law: `RULES/04-hoard.md`.
+
+## Platform installations (Rule 05)
+
+Ymir is **Omarchy-first**. The **core is portable** — Linux, macOS, Windows
+(WSL2) — and each platform may add its own **installation layer**: the Omarchy
+layer is first-class (host sensing, numbered-desktop placement, launcher entries,
+shell plugins, post-update hook); macOS and Windows bring their own. A layer is
+gated on its host and reports a clean skip elsewhere, never assumed.
+
+**The duty:** when a core feature changes, **every platform layer is updated in
+the same change**. A layer still installing the old shape is drift, and drift
+means a machine expecting a runtime it no longer has. Never let a core change be
+called verified because one platform's install passed.
+Law: `RULES/05-platforms.md`.
 
 ## Keeping a home current
 

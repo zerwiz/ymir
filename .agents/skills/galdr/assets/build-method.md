@@ -58,7 +58,15 @@ defer the rest, then verify. Never rename our components after the upstream.
 
 ## Maintenance rule
 
-When the runtime changes, update the owning asset in the same pass. Galdr assets are
+When the runtime changes, update the owning asset in the same pass.
+
+**Every platform layer moves with the core.** Ymir is Omarchy-first but the core
+is portable (Linux, macOS, Windows/WSL2), and each platform may carry its own
+installation layer — see `RULES/05-platforms.md`. A core change is not complete
+until each layer has been checked against it and either updated in the same
+change or explicitly recorded as unaffected. A layer still installing the old
+shape is drift: a machine that boots expecting a runtime it no longer has.
+ Galdr assets are
 the system's memory: a runtime change that is not reflected in `assets/` is an
 incomplete change. Tyr judges both the code and the asset for drift.
 

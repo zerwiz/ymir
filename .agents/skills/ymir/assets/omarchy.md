@@ -254,3 +254,13 @@ identity stay one voice.
   integration facts and this machine's hard-won lessons here.
 - When the desktop behaviour changes, update this asset and
   `assets/hlidskjalf-ui.md` together.
+
+## Platform layers (Rule 05)
+
+Ymir is **Omarchy-first**, not Omarchy-only. The core is portable; Omarchy is the
+first-class installation layer on top of it. Anything below that assumes Hyprland
+or `/usr/share/omarchy` is this layer's business and is gated on the host — on a
+Mac or on WSL those steps report a clean skip and the core still runs.
+
+When a core feature changes, this layer is updated in the same change
+(`RULES/05-platforms.md`). Details: `galdr/assets/installation.md`.

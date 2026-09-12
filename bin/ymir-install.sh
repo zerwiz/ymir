@@ -15,6 +15,15 @@
 # Exit: 0 all good (or --check), 1 a step failed, 2 usage, 3 declined.
 set -u
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+    [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_dir _ymir_c
+fi
+
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -427,7 +436,9 @@ step_desktop() {
   if [ ! -x "$ROOT/scripts/electron.sh" ]; then add desktop SKIP "no scripts/electron.sh"; return; fi
   if [ "$CHECK" = 1 ]; then add desktop OK "would launch Hlidskjalf + Smíðja"; return; fi
   # A headless host has no display; launching a window would only fail.
-  if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+  # DISPLAY/WAYLAND_DISPLAY are X11/Wayland variables — macOS has a display and
+  # neither of them, so testing only those would wrongly skip every Mac.
+  if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && [ "$(ymir_os)" != macos ]; then
     add desktop SKIP "no display (headless) — run scripts/electron.sh start --both"; return
   fi
   # On Omarchy, place each app on its OWN numbered desktop (preferring EMPTY
