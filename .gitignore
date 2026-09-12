@@ -101,3 +101,14 @@ apps/hlidskjalf/android/keystore.properties
 # The Allfather's personal agent/harness/model setup — private, from the
 # tracked template .agents/config/agents.yaml.example. Push it to a private repo.
 .agents/config/agents.yaml
+
+# workspace/ — the operator's private world-tree. A clone must never inherit
+# another operator's work, personal, memory, or company data. Only the scaffold
+# (README/INSTALL/*.yaml) and config examples are tracked.
+workspace/work/
+workspace/personal/
+workspace/memory/
+workspace/companies/
+
+# Session logs can carry live credentials and prompts — never tracked.
+assets/reference/state/
