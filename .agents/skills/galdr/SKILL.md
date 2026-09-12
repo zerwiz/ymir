@@ -141,3 +141,10 @@ acceptance[7]{id,gate}:
   6,"Verified — bash -n, JSON parse, smoke, compliance checklist"
   7,"No drift — plan, code, and assets agree (Tyr judges)"
 ```
+
+## Private data — Hodd (Rule 04)
+
+All private material lives in `hodd/` (secrets · docs · tenants · identity),
+untracked but for its guard and README. Read secrets by path with
+`bin/hodd.sh emit <file>` (`YMIR_HOARD`), never inline a value. When a governed
+path needs a secret, resolve it through Hodd. Law: `RULES/04-hoard.md`.
