@@ -337,3 +337,18 @@ consolidated[5]{skill,absorbed,assets}:
 **Ruling (2026-09-12):** `frigg-consent` + `hvild-afk` and `syn-recovery` +
 `vor-diagnostics` stay **separate** — each names a distinct figure, and the
 naming law keeps one figure per skill. Only same-figure split pairs consolidate.
+
+## Operator runbooks — `docs/runbooks/` (indexed by the `ymir` skill)
+
+Task-oriented, operator-facing guides. The `ymir` skill carries the index at
+`assets/runbooks.md`; when a capability gains an operator procedure, add a
+runbook here and a row there.
+
+```
+runbooks[5]{file,subject}:
+  "models.md","models per agent (local llama.cpp / hosted); per-machine overlays"
+  "agents.md","Eindri profiles: home, add, run, dispatch"
+  "tailscale-sync.md","sync pi data across your machines over Tailscale"
+  "updates-and-migrations.md","update the runtime; heal old homes"
+  "secrets-and-hoard.md","Hodd: secrets, secret-guard, rotation + scrub"
+```
