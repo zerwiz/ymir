@@ -247,11 +247,13 @@ case "$ACTION" in
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
     exit "$rc" ;;
   agent|eindri)
-    NAME=""; ROLE=""; SPACE=0; TAB=0
+    NAME=""; ROLE=""; SPACE=0; TAB=0; MODEL_REQ=""
     while [ $# -gt 0 ]; do
       case "$1" in
         --role) ROLE=${2-}; shift 2 ;;
         --role=*) ROLE=${1#--role=}; shift ;;
+        --model) MODEL_REQ=${2-}; shift 2 ;;
+        --model=*) MODEL_REQ=${1#--model=}; shift ;;
         --space) SPACE=1; shift ;;
         --tab) TAB=1; shift ;;
         --pane) SPACE=0; TAB=0; shift ;;
@@ -280,6 +282,25 @@ case "$ACTION" in
     fi
     [ -n "$NAME" ] || NAME="${ROLE:-eindri}"
     KIND="${YMIR_HERDR_KIND:-pi}"
+
+    # Resolve a model request (friendly or exact) to harness+provider+model.
+    # local -> pi, online -> opencode. Unresolved -> report and continue default.
+    MODEL_ARGS=()
+    if [ -n "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/model-resolve.sh" ]; then
+      r="$("$SCRIPT_DIR/model-resolve.sh" resolve "$MODEL_REQ" 2>/dev/null | sed -n '2p')"
+      case "$r" in
+        ""|*unresolved*)
+          printf 'herdr-run[1]{model,state}:\n  "%s","unresolved — ask the Allfather"\n' "$MODEL_REQ" >&2 ;;
+        *)
+          loc="$(printf '%s' "$r" | cut -d'"' -f4)"
+          h="$(printf '%s' "$r"   | cut -d'"' -f6)"
+          pv="$(printf '%s' "$r"  | cut -d'"' -f8)"
+          md="$(printf '%s' "$r"  | cut -d'"' -f10)"
+          [ -n "$h" ] && KIND="$h"
+          [ -n "$md" ] && MODEL_ARGS=(-- --model "$pv/$md")
+          printf 'herdr-run[1]{model,harness,provider,model_id}:\n  "%s","%s","%s","%s"\n' "$MODEL_REQ" "$h" "$pv" "$md" >&2 ;;
+      esac
+    fi
 
     # Where the Eindri sits, in herdr's hierarchy (workspace > tab > pane):
     #   --space  a disposable workspace (one errand, torn down)
@@ -310,7 +331,7 @@ case "$ACTION" in
     [ -n "$tab" ] || { printf 'error: could not seat the Eindri\n' >&2; exit 1; }
     [ -n "$pane" ] || { printf 'error: the tab has no pane\n' >&2; exit 1; }
 
-    if ! hdr agent start "$NAME" --kind "$KIND" --pane "$pane" >/dev/null 2>&1; then
+    if ! hdr agent start "$NAME" --kind "$KIND" --pane "$pane" "${MODEL_ARGS[@]}" >/dev/null 2>&1; then
       printf 'error: could not start a %s Eindri in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$KIND" "$pane" >&2
       exit 1
     fi

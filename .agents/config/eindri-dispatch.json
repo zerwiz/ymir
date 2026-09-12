@@ -6,33 +6,62 @@
     {
       "when": "General implementation, refactoring, or bug fixes in a codebase",
       "use": [
-        { "harness": "opencode", "model": "opencode-go/deepseek-v4.1-flash", "effort": "medium" }
+        {
+          "harness": "opencode",
+          "model": "opencode-go/deepseek-v4.1-flash",
+          "effort": "medium"
+        }
       ],
       "why": "opencode is the primary Ymir harness; the flash model is the verified build model for implementation work"
     },
     {
       "when": "Deep investigation, diagnosis, planning, or ambiguous design work requiring deep reasoning",
       "use": [
-        { "harness": "opencode", "model": "opencode-go/deepseek-v4.1-flash", "effort": "xhigh" }
+        {
+          "harness": "opencode",
+          "model": "opencode-go/deepseek-v4.1-flash",
+          "effort": "xhigh"
+        }
       ],
       "why": "Maximum reasoning for open-ended investigation and design work on the primary harness"
     },
     {
       "when": "Trivial mechanical edits such as rote renames, formatting sweeps, or simple file gathering",
       "use": [
-        { "harness": "opencode", "model": "opencode-go/deepseek-v4.1-flash", "effort": "low" }
+        {
+          "harness": "opencode",
+          "model": "opencode-go/deepseek-v4.1-flash",
+          "effort": "low"
+        }
       ],
       "why": "Fast, cheap profile for narrow low-ambiguity tasks"
     },
     {
       "when": "Long-running autonomous or background execution: supervision branches, unattended sweeps, or persistent workers",
       "use": [
-        { "harness": "pi", "effort": "medium" }
+        {
+          "harness": "pi",
+          "effort": "medium"
+        }
       ],
       "why": "Pi is the verified secondary Ymir harness for persistent and background workers; omitting model uses Pi's configured default"
+    },
+    {
+      "when": "The Allfather names a model, a family/quant, or a locality (local/online)",
+      "use": [
+        {
+          "resolve": "bin/model-resolve.sh resolve \"<request>\"",
+          "then": "pass the returned --harness/--model to bin/einherjar-spawn.sh"
+        }
+      ],
+      "why": "Resolve a friendly request to an exact servable id: local -> pi, online -> opencode. If it returns unresolved (or the requested quant is unavailable, e.g. 'iq2' -> nearest), ASK the Allfather with ask_user_question; never guess. Local runs are serialized by bin/local-model-lock.sh."
     }
   ],
   "default": [
-    { "harness": "opencode", "model": "opencode-go/deepseek-v4.1-flash", "effort": "medium" }
+    {
+      "harness": "opencode",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "effort": "medium"
+    }
   ]
 }
