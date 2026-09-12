@@ -202,3 +202,69 @@ every time Omarchy updates. On a non-Omarchy host that step is a clean SKIP.
 
 Rule: the installer is **idempotent** — running it again changes nothing but
 fills gaps. It never overwrites real user data.
+
+## Node dependencies in a fresh clone — the postinstall trap
+
+A clone never carries `node_modules`. Two components need them, and each has its
+own package manager:
+
+```bash
+# Hlidskjalf (npm + package-lock.json) — what scripts/start.sh runs
+cd apps/hlidskjalf && npm install --no-audit --no-fund
+npm run typecheck && npm run build          # dist/ is what the SPA serves
+
+# Smiðja visualizer (bun + bun.lock)
+cd .agents/skills/smidja/apps/visualizer && bun install && bun run build
+```
+
+The visualizer's `dist/` is not optional: its API serves the UI from `./dist`,
+and without a build it answers the API but prints *"No ./dist build found"*.
+
+### The trap: install scripts can be skipped silently
+
+Newer npm versions gate package install scripts (`allowScripts`). When a script
+is not approved the install still reports success, so you get a **half-broken
+tree that passes its own build**:
+
+```
+2 packages have install scripts not yet covered by allowScripts:
+  electron@33.4.11 (postinstall: node install.js)
+  esbuild@0.25.12  (postinstall: node install.js)
+```
+
+- `esbuild` survives it (its binary arrives through the platform-specific
+  package), so `npm run build` succeeds and everything looks healthy.
+- **`electron` does not.** Its postinstall downloads the ~100 MB runtime; without
+  it `node_modules/electron/dist/` is left partial and `path.txt` is never
+  written, so the desktop shell cannot start — while the web app builds perfectly.
+
+Detect it:
+
+```bash
+npm install-scripts ls                                        # what is unapproved
+node_modules/electron/dist/electron --version                  # fails if skipped
+cat node_modules/electron/path.txt                             # absent if skipped
+```
+
+Fix it:
+
+```bash
+npm install-scripts approve electron esbuild
+npm rebuild electron
+```
+
+If the rebuild still exits **silently** and `dist/` stays partial, the download
+is cached but was not re-extracted — complete it by hand, which is all the
+package's own installer does:
+
+```bash
+ZIP=$(ls ~/.cache/electron/*/electron-v*-linux-x64.zip | head -1)
+rm -rf node_modules/electron/dist && mkdir -p node_modules/electron/dist
+unzip -q -o "$ZIP" -d node_modules/electron/dist
+printf 'electron' > node_modules/electron/path.txt     # the linux binary name
+chmod +x node_modules/electron/dist/electron
+```
+
+**Verify the install as a whole**, not just that a build passed: the electron and
+esbuild binaries report versions, both `dist/` directories exist, and
+`bin/ymir-install.sh --check` reports the visualizer and smidja green.
