@@ -51,3 +51,6 @@ agents:
   snotra:  { model: opencode-go/deepseek-v4.1-flash }
   forseti: { model: opencode-go/deepseek-v4.1-flash }
   galdr:   { model: opencode-go/deepseek-v4.1-flash }
+
+# How many LOCAL models this machine may run at once (most boxes: 1).
+local_concurrency: 1
