@@ -1418,7 +1418,7 @@ function smidjaLoginPage(): Response {
   </div>
   <h1>Sign in</h1>
   <p>The gate is closed. Enter the Allfather’s credentials.</p>
-  <input name="username" placeholder="zerwiz" autocomplete="username" autofocus />
+  <input name="username" placeholder="username" autocomplete="username" autofocus />
   <input name="password" type="password" placeholder="••••••••" autocomplete="current-password" />
   <span class="err" id="err"></span>
   <button type="submit">Enter</button>

@@ -15,7 +15,7 @@ installations[15]{tool,role,oss,install,used_by}:
   "scrapy","optional scraper (large/custom crawls)","scrapy.org","pip install scrapy","skills/bragi (optional)"
   "browser-use","agentic browser","browser-use/browser-use","pip install browser-use","skills/bragi (publish/post)"
   "chrome-devtools","browser debugging","developer.chrome.com/docs/devtools","Chrome DevTools MCP / built-in","Sindri (developer craft)"
-  "engram","the well (Mimirsbrunn)","engram","pip install --user engram","bin/mimir-bridge.py · well"
+  "engdbram","the well (Mimirsbrunn) — module name is engram","engdbram","bin/prereq-ensure.sh engram (pip install --user engdbram; NOT the PyPI 'engram', which is a renderer)","bin/mimir-bridge.py · well"
   "mcp","MCP SDK (engram-mcp needs <2)","modelcontextprotocol","pip install --user --break-system-packages 'mcp<2'","engram MCP for all harnesses"
   "electron","desktop shell","electron","npm i -D electron@^33","apps/hlidskjalf/electron · scripts/electron.sh"
   "capacitor","mobile APK shell","capacitor","npm i @capacitor/core @capacitor/android @capacitor/cli","apps/hlidskjalf/android"

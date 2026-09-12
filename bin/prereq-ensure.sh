@@ -29,6 +29,51 @@ add_path() { case ":$PATH:" in *":$1:"*) ;; *) PATH="$1:$PATH" ;; esac; }
 have() { command -v "$1" >/dev/null 2>&1; }
 say()  { printf 'prereq[1]{name,state,detail}:\n  "%s","%s","%s"\n' "$1" "$2" "$3"; }
 
+# ── the memory engine (engram) ───────────────────────────────────────────────
+# engram needs Python >=3.12,<3.14. A modern distro may ship something newer
+# (this box: 3.14), so the engine is installed into a COMPATIBLE interpreter and
+# that interpreter is recorded for the bridge to reuse. uv can supply one.
+ENGRAM_PY_FILE="${YMIR_ENGRAM_PY:-$HOME/.config/ymir/engram-python}"
+
+engram_python() {  # echo an interpreter that can (or could) run engram
+  local p
+  for p in "${YMIR_ENGRAM_PYTHON:-}" python3.12 python3.13; do
+    [ -n "$p" ] || continue
+    command -v "$p" >/dev/null 2>&1 && { printf '%s' "$p"; return 0; }
+  done
+  if command -v uv >/dev/null 2>&1; then
+    p="$(uv python find 3.12 2>/dev/null || uv python find 3.13 2>/dev/null || true)"
+    [ -n "$p" ] && { printf '%s' "$p"; return 0; }
+  fi
+  printf 'python3'
+}
+
+ensure_engram() {
+  local py; py="$(engram_python)"
+  if "$py" -c 'import engram' >/dev/null 2>&1; then
+    mkdir -p "$(dirname "$ENGRAM_PY_FILE")" 2>/dev/null
+    printf '%s\n' "$py" >"$ENGRAM_PY_FILE" 2>/dev/null
+    say engram present "importable under $py"
+    return 0
+  fi
+  # is the chosen interpreter even in engram's supported range?
+  if ! "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)' >/dev/null 2>&1; then
+    if command -v uv >/dev/null 2>&1 && uv python install 3.12 >/dev/null 2>&1; then
+      py="$(uv python find 3.12 2>/dev/null || printf '%s' "$py")"
+    fi
+  fi
+  if "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)' >/dev/null 2>&1 \
+     && "$py" -m pip install --user --break-system-packages -q engdbram >/dev/null 2>&1 \
+     && "$py" -c 'import engram' >/dev/null 2>&1; then
+    mkdir -p "$(dirname "$ENGRAM_PY_FILE")" 2>/dev/null
+    printf '%s\n' "$(command -v "$py" 2>/dev/null || printf '%s' "$py")" >"$ENGRAM_PY_FILE" 2>/dev/null
+    say engram installed "$py"
+    return 0
+  fi
+  say engram absent "install failed (engdbram needs Python >=3.11) — try: uv python install 3.12"
+  return 1
+}
+
 ensure_bun() {
   add_path "$BUN_HOME/bin"
   if have bun; then say bun present "$(bun --version 2>/dev/null)"; return 0; fi
@@ -96,6 +141,7 @@ case "$1" in
   bun)    ensure_bun ;;
   uv)     ensure_uv ;;
   mcp)    ensure_mcp ;;
+  engram) ensure_engram ;;
   python) ensure_python "${2:?usage: prereq-ensure.sh python <X.Y>}" ;;
   status)
     printf 'prereq[5]{name,state,detail}:\n'
@@ -110,5 +156,5 @@ case "$1" in
     ensure_uv  || rc=1
     ensure_mcp || rc=1
     exit $rc ;;
-  *) printf 'error: unknown target %s\nhelp: bin/prereq-ensure.sh [bun|uv|mcp|python X.Y|status|all]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown target %s\nhelp: bin/prereq-ensure.sh [bun|uv|mcp|engram|python X.Y|status|all]\n' "$1" >&2; exit 2 ;;
 esac

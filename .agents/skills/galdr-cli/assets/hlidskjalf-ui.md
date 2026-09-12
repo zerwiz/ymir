@@ -188,3 +188,12 @@ gpu-process runs SwiftShader instead of the hardware path.
 
 If the crash returns, check GTT before anything else — `mem_info_gtt_used` on the
 render device, next to whatever is serving a model on that GPU.
+
+### The login surface carries no operator name
+
+The in-app login (the gate shows it; there is no browser prompt) renders its
+fields from the server template in `apps/hlidskjalf/server/index.ts`. Neither the
+placeholder nor any default may name the operator: the field says `username`, and
+the password comes from `HLIDSKJALF_AUTH` in `.env.local`, never inline. A
+hardcoded name here is both a leak into the public tree and wrong for any other
+operator — `bin/public-guard.sh` exists to catch exactly that class of mistake.

@@ -5,8 +5,13 @@
 > registrations, the laws, and the UI. The **code is authoritative**; this page
 > explains the whole of it.
 
-The well is **Mimirsbrunn**, backed by the validated OSS engine **engram**
-(`pip install engram`). It is **one repo-local store** shared by every agent and
+The well is **Mimirsbrunn**, backed by the validated OSS engine **engdbram**
+(`pip install engdbram`) — the *module* it provides is `engram`.
+
+> **The name trap.** PyPI's `engram` is an unrelated *rendering* library
+> (mitsuba/drjit/torch). Installing it pulls gigabytes of CUDA wheels and still
+> leaves Ymir with no memory engine. The distribution is **`engdbram`**;
+> `bin/prereq-ensure.sh engram` installs the right one. It is **one repo-local store** shared by every agent and
 every harness. Motto: **drink before you act, water it after** — recall on the
 way in, observe on the way out.
 

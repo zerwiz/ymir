@@ -417,3 +417,27 @@ ls "$YMIR_HOARD/docs" "$YMIR_HOARD/identity" 2>/dev/null    # the private set
 
 A backup is only as good as its file list. If a directory is not named in the
 backup, it is not carried.
+
+### The memory engine is provisioned, not hinted (2026-09-12)
+
+`bin/ymir-install.sh` used to *check* for the well engine and, failing, print
+`SKIP "optional — install engine then run bin/mimir-bridge.sh"`. A SKIP never
+blocks, so the well was silently down on every install — and the hint named the
+wrong package, so following it made things worse.
+
+Now the installer provisions it: `bin/prereq-ensure.sh engram` installs
+**`engdbram`** (the distribution; the *module* is `engram`) into an interpreter
+that can run it (>=3.11; uv supplies 3.12 when the distro's Python is unsuitable),
+and records that interpreter in `~/.config/ymir/engram-python`. `bin/mimir-bridge.sh`
+reads the same file, so the installer and the bridge always agree.
+
+```bash
+bin/prereq-ensure.sh engram        # install and record the interpreter
+bin/mimir-bridge.sh --start        # the :4602 face over the engine
+curl -s 127.0.0.1:4602/health      # {"status": "up", "store": ".agents/memory/kaia.engram"}
+```
+
+**Never `pip install engram`.** PyPI's `engram` is an unrelated rendering library
+(mitsuba/drjit/torch) whose install pulls gigabytes of CUDA wheels and still
+leaves Ymir with no engine. The prerequisite target exists so nobody has to know
+that: `bin/prereq-ensure.sh engram`.
