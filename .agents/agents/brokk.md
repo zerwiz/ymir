@@ -1,4 +1,5 @@
 ---
+domain: ymirlabs
 description: Primary autonomous agent of the Ymir Agent Operating System
 mode: primary
 model: 

@@ -1,4 +1,5 @@
 ---
+domain: runestone
 name: forseti
 description: "Eindri role profile — Forseti the Just. Review, QA, acceptance, and drift. Changes nothing. Runs in Utgard on a Yggdrasil worktree."
 role: reviewer

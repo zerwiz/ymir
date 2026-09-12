@@ -1,4 +1,5 @@
 ---
+domain: ymirlabs
 name: kvasir
 description: "Eindri role profile — Kvasir the Knowing. Reconnaissance: find where things live and report. Changes nothing. Runs in Utgard on a Yggdrasil worktree."
 role: scout

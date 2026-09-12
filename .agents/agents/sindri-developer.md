@@ -1,4 +1,5 @@
 ---
+domain: brokkforge
 name: sindri
 description: "Eindri role profile — Sindri the Smith. Code synthesis, refactoring, test writing, CLI tools, and package management. Runs in Utgard on a Yggdrasil worktree."
 role: developer

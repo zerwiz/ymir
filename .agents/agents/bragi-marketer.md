@@ -1,4 +1,5 @@
 ---
+domain: utgard
 name: bragi
 description: "Eindri role profile — Bragi the Skald. Content creation, SEO, social copy, and marketing campaigns. Runs in Utgard on a Yggdrasil worktree."
 role: marketer

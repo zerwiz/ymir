@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { AgentCard as AgentCardType } from '../types';
 import { HOUSES } from '../data/realms';
+import { useYmir } from '../state/store';
 import { StatusChip } from './Status';
 import { RuneTag } from './RuneTag';
 
@@ -13,7 +14,13 @@ export function AgentCard({
   onSelect?: (id: string) => void;
   selected?: boolean;
 }) {
-  const house = HOUSES[agent.house];
+  const house = HOUSES[agent.house] ?? HOUSES.ymirlabs;
+  const demo = useYmir((s) => s.demo);
+  const runes = useYmir((s) => s.runes);
+  // Live cards show only real, sourced figures; the seeded stats stay in demo.
+  const tasks = demo
+    ? agent.tasksDone
+    : runes.filter((r) => r.agent === agent.name || r.agent === agent.id).length;
   return (
     <article
       className="agent-card"
@@ -52,11 +59,13 @@ export function AgentCard({
           model <b>{agent.model}</b>
         </span>
         <span>
-          tasks <b>{agent.tasksDone}</b>
+          tasks <b>{tasks}</b>
         </span>
-        <span>
-          trace <b>{agent.traceability.toFixed(3)}</b>
-        </span>
+        {demo ? (
+          <span>
+            trace <b>{agent.traceability.toFixed(3)}</b>
+          </span>
+        ) : null}
       </div>
 
       {onSelect ? (

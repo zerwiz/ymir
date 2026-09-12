@@ -1,4 +1,5 @@
 ---
+domain: ymirlabs
 name: mimir
 description: "Eindri role profile — Mímir the Wise. Planning, architecture, sequencing, and risk. Runs in Utgard on a Yggdrasil worktree."
 role: planner
