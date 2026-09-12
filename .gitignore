@@ -43,7 +43,14 @@ docker-compose.override.yml
 .yggdrasil/
 .treehouses/
 
-# Tenants runtime secrets
+# Realm & company secrets — the real files never leave the machine; the
+# *.example templates are the tracked copies (see svartalfaheim/wayof/SECRETS.md).
+svartalfaheim/*/.env
+svartalfaheim/*/.env.*
+svartalfaheim/*/*/.env
+svartalfaheim/*/*/.env.*
+!svartalfaheim/*/.env*.example
+!svartalfaheim/*/*/.env*.example
 svartalfaheim/*/.env.realm
 
 # Certs

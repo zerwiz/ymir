@@ -273,3 +273,11 @@ checkout by walking up to the directory holding `scripts/electron.sh`, so it
 works wherever the app is served from.
 
 **rename sweep (2026-09-12).** The `galdr` -> `galdr-cli` rename corrected a stale path reference inside `apps/hlidskjalf/server/index.ts` as well; behaviour unchanged.
+
+### The gate's default realm is `wayof` (2026-09-12)
+
+Three places in `apps/hlidskjalf/server/index.ts` defaulted to the retired name
+`way-of` (the fleet event realm, the reviews realm, and a seeded lint review).
+They now default to `wayof`, matching `svartalfaheim/README.md`: one company
+container, no person realms. A retired realm name in a default is not cosmetic —
+it sends an event to a directory the platform does not have.

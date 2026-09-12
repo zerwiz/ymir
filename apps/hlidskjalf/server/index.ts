@@ -170,7 +170,7 @@ function tasks() {
     id: o.id,
     title: o.title,
     state: o.status === 'COMPLETED' ? 'COMPLETED' : o.status === 'BLOCKED' ? 'INPUT_REQUIRED' : 'WORKING',
-    realm: 'way-of',
+    realm: 'wayof',
     agent: 'Brokk',
     agentId: 'brokk',
     order: o.phase,
@@ -198,7 +198,7 @@ function runes() {
           module: e.event ?? '',
           event: e.message ?? '',
           checksum: String(e.checksum ?? '').slice(0, 12),
-          realm: e.realm || 'way-of',
+          realm: e.realm || 'wayof',
           order: e.order ?? '',
           level,
         };
@@ -775,7 +775,7 @@ function reviews() {
   ];
   return [
     {
-      id: 'lint', number: 1, title: 'Brokk lint gate', repo: 'Ymir', author: 'brokk', realm: 'way-of',
+      id: 'lint', number: 1, title: 'Brokk lint gate', repo: 'Ymir', author: 'brokk', realm: 'wayof',
       // A gate with any failing check is never APPROVED — it awaits the captain's seal.
       state: failing ? 'changes' : 'open',
       checks,

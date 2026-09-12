@@ -34,7 +34,7 @@ REALM="${BROKK_REALM:-}"
 if [ -z "$REALM" ] && [ -r "$DATA/realm.md" ]; then
   REALM=$(head -n 1 "$DATA/realm.md" 2>/dev/null | tr -d '[:space:]')
 fi
-REALM="${REALM:-way-of}"
+REALM="${REALM:-wayof}"
 
 section() { printf '\n== %s ==\n' "$1"; }
 

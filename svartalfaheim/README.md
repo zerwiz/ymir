@@ -11,7 +11,9 @@ svartalfaheim/<company>/        # e.g. wayof
 │   ├── company/ marketing/ development/ life/ memory/
 ├── projects/                   # company project working dirs
 ├── AGENTS.md                   # company persona / directives
-└── .env.realm.example          # company secrets template (git-ignored real)
+  ├── .env.realm.example        # TRACKED company-secret template
+  ├── .env.realm                # IGNORED — the real values, machine-local
+  └── SECRETS.md                # how company secrets are set up and kept out of git
 ```
 
 - The **operator's** personal and work scopes live under `workspace/` at the repo

@@ -360,3 +360,18 @@ git -C $BROKK_UPSTREAM status --porcelain    # must not contain observer edits
 - Change scheduler state file names → update §1.2 and the smoke commands in §7.
 - Keep the observer's source list in §3.2 aligned with `bin/nornir-job-observer.sh`; the plan-23
   read-only law is non-negotiable.
+
+### The realm default is `wayof` again, and the realm's secrets live with it (2026-09-12)
+
+The stale multi-tenant name `way-of` was still the hardcoded fallback in the
+Nornir jobs (`REALM="${REALM:-way-of}"`), so a job whose realm was not supplied
+looked in a directory the platform had already retired — and the operator's real
+`svartalfaheim/way-of/.env.realm` lived there, so it worked by accident while the
+directory was the wrong one. Both now say `wayof`, the company container named in
+`svartalfaheim/README.md`.
+
+Realm secrets are read from `svartalfaheim/<realm>/.env.realm` (active realm, or
+`BROKK_REALM`). The tracked file is `.env.realm.example`; the real one is ignored
+(`.gitignore`: `svartalfaheim/*/.env*`, with `!*.example` so templates stay
+tracked). The full how-to for a company's secrets — realm-level and per-venture —
+is `svartalfaheim/wayof/SECRETS.md`.

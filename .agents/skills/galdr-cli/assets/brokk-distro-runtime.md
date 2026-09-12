@@ -351,3 +351,15 @@ pattern, so the smidja rule stopped matching and protected nothing, silently.
 Corrected here and in six other files. A `governed` check now resolves every
 path in the table (`compliance-check.sh`), because a governed path that does not
 exist fails open — the worst shape a guard can fail in.
+
+### The realm default is `wayof` (2026-09-12)
+
+`bin/saga-session-start.sh` derived the realm from `data/realm.md` and then fell
+back to `way-of` — a retired multi-tenant name. It now falls back to `wayof`, the
+company container this platform actually has, so the digest reads
+`svartalfaheim/wayof/.env.realm` for the realm's environment rather than a
+directory that no longer exists.
+
+The digest reports the realm env as either present or `ABSENT`; it never prints
+the values. Where those values come from and how to set them:
+`svartalfaheim/wayof/SECRETS.md`.
