@@ -28,7 +28,7 @@ fi
 if [[ -f "$PID_FILE" ]]; then
   PID="$(cat "$PID_FILE")"
   if kill -0 "$PID" 2>/dev/null; then
-    # Kill the whole process group (setup with setsid in start.sh).
+    # Kill the whole process group (detached in start.sh via the platform shim).
     kill -TERM -- "-$PID" 2>/dev/null || kill -TERM "$PID" 2>/dev/null || true
     for _ in $(seq 1 20); do
       kill -0 "$PID" 2>/dev/null || break

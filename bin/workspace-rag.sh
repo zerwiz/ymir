@@ -21,6 +21,15 @@ REALM_FILE="$ROOT/data/realm.md"
 DEFAULT_REALM="$(head -n1 "$REALM_FILE" 2>/dev/null | tr -d '[:space:]')"
 DEFAULT_REALM="${DEFAULT_REALM:-way-of}"
 
+# Portable xargs: GNU's -r (skip the command on empty input) does not exist in
+# BSD/macOS xargs. Read the input first, then run only when there is something.
+xargs_skip_empty() {  # <args...>
+  local input
+  input=$(cat)
+  [ -n "$input" ] || return 0
+  printf '%s\n' "$input" | xargs "$@"
+}
+
 usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1-}"; shift || true
@@ -106,14 +115,14 @@ PY
 entity_files() { find "$ROOT/workspace" "$ROOT/svartalfaheim/$DEFAULT_REALM/workspace" -path '*/entity_graph/*' -name '*.md' 2>/dev/null; }
 
 entities_cmd() {
-  printf 'entities[%s]{entity,source}:\n' "$(entity_files | xargs -r -I{} sh -c "grep -ohE '\[\[[^]]+\]\]' '{}' 2>/dev/null" | sed 's/\[\[//;s/\]\]//' | sort -u | wc -l | tr -d ' ')"
-  entity_files | xargs -r -I{} sh -c "grep -ohE '\[\[[^]]+\]\]' '{}' 2>/dev/null" | sed 's/\[\[//;s/\]\]//' | sort -u | while read -r e; do [ -n "$e" ] && printf '  "%s","entity_graph"\n' "$e"; done
+  printf 'entities[%s]{entity,source}:\n' "$(entity_files | xargs_skip_empty -I{} sh -c "grep -ohE '\[\[[^]]+\]\]' '{}' 2>/dev/null" | sed 's/\[\[//;s/\]\]//' | sort -u | wc -l | tr -d ' ')"
+  entity_files | xargs_skip_empty -I{} sh -c "grep -ohE '\[\[[^]]+\]\]' '{}' 2>/dev/null" | sed 's/\[\[//;s/\]\]//' | sort -u | while read -r e; do [ -n "$e" ] && printf '  "%s","entity_graph"\n' "$e"; done
 }
 
 graph_cmd() {
   local ent=""; while [ $# -gt 0 ]; do case "$1" in --entity) ent=${2-}; shift 2 ;; *) shift ;; esac; done
-  printf 'graph[%s]{from,to}:\n' "$(entity_files | xargs -r -I{} sh -c "grep -ohE '\[\[[^]]+\]\] *[-=]> *\[\[[^]]+\]\]' '{}' 2>/dev/null" | wc -l | tr -d ' ')"
-  entity_files | xargs -r -I{} sh -c "grep -ohE '\[\[[^]]+\]\] *[-=]> *\[\[[^]]+\]\]' '{}' 2>/dev/null" | while IFS= read -r line; do
+  printf 'graph[%s]{from,to}:\n' "$(entity_files | xargs_skip_empty -I{} sh -c "grep -ohE '\[\[[^]]+\]\] *[-=]> *\[\[[^]]+\]\]' '{}' 2>/dev/null" | wc -l | tr -d ' ')"
+  entity_files | xargs_skip_empty -I{} sh -c "grep -ohE '\[\[[^]]+\]\] *[-=]> *\[\[[^]]+\]\]' '{}' 2>/dev/null" | while IFS= read -r line; do
     from=$(printf '%s' "$line" | sed -E 's/\[\[([^]]+)\]\].*/\1/')
     to=$(printf '%s' "$line" | sed -E 's/.*\[\[([^]]+)\]\]/\1/')
     [ -n "$ent" ] && { [ "$from" = "$ent" ] || [ "$to" = "$ent" ] || continue; }

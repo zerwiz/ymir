@@ -268,3 +268,64 @@ chmod +x node_modules/electron/dist/electron
 **Verify the install as a whole**, not just that a build passed: the electron and
 esbuild binaries report versions, both `dist/` directories exist, and
 `bin/ymir-install.sh --check` reports the visualizer and smidja green.
+
+## Platform support — Linux, macOS, Windows
+
+Ymir runs on Linux (native), macOS (native) and Windows (through **WSL2**, with
+MSYS/Git Bash as best-effort). The runtime is bash, so Windows means a POSIX
+shell: WSL2 is the supported path, and it is also the only one where the Linux
+GPU and service paths behave normally.
+
+### One place knows the difference
+
+`bin/ymir-platform.sh` is the portability layer. It defines functions only and is
+sourced, never executed:
+
+```bash
+. "$ROOT/bin/ymir-platform.sh"     # scripts already do this via the shim block
+```
+
+| Need | Function | Why it exists |
+|---|---|---|
+| Which OS | `ymir_os` → `linux` \| `macos` \| `wsl` \| `msys` | branching, once |
+| CPU count | `ymir_nproc` | `nproc` is GNU; macOS uses `sysctl -n hw.ncpu` |
+| Resolve a path | `ymir_readlink_f` | BSD `readlink` has no `-f`; mirrors GNU semantics including the "parent must exist" rule |
+| File facts | `ymir_stat_mtime`, `ymir_stat_size`, `ymir_stat_id`, `ymir_stat_birth`, `ymir_stat_mode` | GNU `stat -c` vs BSD `stat -f`, and birth time exists on both but differently |
+| Timing | `ymir_epoch_ns` | BSD `date` has no `%N` |
+| A pid's command line | `ymir_pid_cmdline`, `ymir_pid_matches` | `/proc` is Linux-only; falls back to `ps -o command=` |
+| Detach a process | `ymir_detach` | `setsid` is absent on macOS; falls back to `nohup` |
+| Exclusive lock | `ymir_lock` | `flock` is Linux; falls back to an atomic `mkdir` lock |
+| Services | `ymir_service_backend`, `ymir_service_active` | `systemd` on Linux, `launchd` on macOS, neither elsewhere |
+| GPUs | `ymir_gpu_name`, `ymir_gpu_mem_used` | never assume NVIDIA: `nvidia-smi`, then `rocm-smi`, then Apple's unified memory |
+| Paths | `ymir_tmp`, `ymir_expand_tilde` | `TMPDIR`/`TEMP` vary; a leading `~` must be expanded explicitly |
+
+Scripts that need any of these carry a short shim block near the top that finds
+and sources the library, then marks it loaded so a second source is a no-op:
+
+```bash
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+    [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_dir _ymir_c
+fi
+```
+
+### Rules for new code
+
+1. **Never call `readlink -f`, `stat -c`, `nproc`, `setsid`, `flock`, `date +%N`
+   or read `/proc` directly.** Use the shim.
+2. **Never assume NVIDIA.** Ask the shim; a machine may be AMD, Intel or Apple.
+3. **Never hardcode a home directory.** Use `$HOME`, or `ymir_expand_tilde` for a
+   user-supplied path, and keep machine-specific values in generated config
+   rather than in the tree.
+4. **Never assume a desktop.** `.desktop` files, `systemctl` and window managers
+   are Linux-shaped; a launcher must be generated for the host, not shipped as
+   one file for all.
+5. **Test the fallback, not just the happy path.** Most of these functions exist
+   because the Linux path already worked; the risk is the other branch.
+
+Standalone tools that ship outside a Ymir checkout (for example
+`.agents/skills/galdr/scripts/bench-one.sh`) carry their own small portable
+helpers instead of sourcing the library, so they run anywhere on their own.

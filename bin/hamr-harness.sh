@@ -27,6 +27,16 @@
 # Record each newly verified env marker here.
 set -u
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+# One place knows the OS differences (readlink -f, /proc, setsid, stat, nproc).
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+    [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_dir _ymir_c
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BROKK_ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$BROKK_ROOT}}"
@@ -45,7 +55,7 @@ hamr_cursor_canonical_path() {  # <path>
   local path=$1 resolved
   [ -n "$path" ] || return 1
   if command -v readlink >/dev/null 2>&1; then
-    resolved=$(readlink -f -- "$path" 2>/dev/null || true)
+    resolved=$(ymir_readlink_f "$path" 2>/dev/null || true)
     [ -n "$resolved" ] && { printf '%s\n' "$resolved"; return 0; }
   fi
   printf '%s\n' "$path"
