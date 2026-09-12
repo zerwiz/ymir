@@ -34,4 +34,4 @@ PROMPT="${*:-}"
 command -v pi >/dev/null 2>&1 || { printf 'error: pi is not on PATH\n' >&2; exit 1; }
 
 printf 'pi-local[1]{provider,model}:\n  "%s","%s"\n' "$PROVIDER" "$MODEL" >&2
-exec pi --print --model "$PROVIDER/$MODEL" "$PROMPT"
+exec "$SCRIPT_DIR/local-model-lock.sh" pi --print --model "$PROVIDER/$MODEL" "$PROMPT"

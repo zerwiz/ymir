@@ -61,4 +61,5 @@ for s in "${SKILLS[@]:-}"; do [ -n "$s" ] && args+=(--skill "$s"); done
 
 printf 'pi-agent[1]{agent,provider,model,skills}:\n  "%s","%s","%s","%s"\n' \
   "$AGENT" "$PROVIDER" "$MODEL" "$(IFS=,; echo "${SKILLS[*]:-none}")" >&2
-exec pi "${args[@]}" "$TASK"
+# Local inference is serialized per host (one model at a time by default).
+exec "$SCRIPT_DIR/local-model-lock.sh" pi "${args[@]}" "$TASK"
