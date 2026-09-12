@@ -277,11 +277,3 @@ runtime_figures[2]{figure,role,path}:
   "The Veil","Anti-hallucination gate — nothing passes without well evidence","kaia-veil gate"
   "Glitnir","Human review gate — every PR/merge/deploy needs approval","glitnir gate"
 ```
-
-## 7. Organisation (Rule 01/03) — house, domain (Grein), Eindri
-
-- **House = company** (WayOf). Never a field of knowledge.
-- **Domain = Grein / Greinar** — the eight Labs are *domains*, not houses.
-- **Eindri = specialists**; each names its domain and craft.
-- In code: `DOMAINS` / `DomainId` / `DomainDef`; agents carry `domain`.
-- Full law: `RULES/01-domains.md`, `RULES/02-agents.md`, `RULES/03-houses.md`.
