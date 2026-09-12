@@ -36,13 +36,14 @@ Nornir jobs run, and how it is all verified. A runtime change not reflected in
 ## Routing (load one row)
 
 ```
-assets[22]{path,load_when}:
+assets[23]{path,load_when}:
   "assets/principles.md","the 10 CLI design principles (full doctrine)"
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
   "assets/norse-naming.md","naming any component; the naming law + component map"
   "assets/brokk-distro-runtime.md","the runtime spec (home, digest, lock, supervision, cron)"
   "assets/runtime-components.md","every runtime component, interface, and env var"
+  "assets/local-models.md","operating the runtime on local models (llama.cpp, LM Studio, Ollama): engines, detection, harness wiring, measuring"
   "assets/runtime-compliance.md","runtime acceptance gates + runnable checklist"
   "assets/memory-well.md","Mimirsbrunn/engram: the well, bridge, MCP, harness wiring, laws"
   "assets/installation.md","first setup / install: ymir-install, engines, hermes, workspaces"

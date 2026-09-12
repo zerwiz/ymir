@@ -21,7 +21,7 @@ skills[33]{name,norse,purpose,path,status}:
   "create-new-teams","—","Create a new smithy team (roster stack)",".agents/skills/smidja/skills/create-new-teams/SKILL.md","live"
   "git-ops","—","Branch creation, safe commits, sync upstream",".agents/skills/smidja/skills/git-ops/SKILL.md","live"
   "pr-ops","—","PR lifecycle — create, update, status, merge",".agents/skills/pr-ops/SKILL.md","live"
-  "modeltesting","—","Model evaluation harness (Ollama, LM Studio, llama.cpp)",".agents/skills/modeltesting/","live"
+  "local-models","—","Local-model operation (llama.cpp, LM Studio, Ollama) + measurement",".agents/skills/galdr/assets/local-models.md","asset"
   "hamr","Hamr","Per-harness adapter reference",".agents/skills/hamr/AGENTS.md","live"
   "frigg-consent","Frigg","Consent / ask-user authority gate",".agents/skills/frigg-consent/AGENTS.md","live"
   "jord-projects","Jörð","Project registry + delivery posture",".agents/skills/jord-projects/AGENTS.md","live"
