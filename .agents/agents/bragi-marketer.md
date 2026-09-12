@@ -7,7 +7,33 @@ permission:
   write: allow
   glob: allow
   grep: allow
-  bash: allow
+  bash:
+    "*": ask
+    "ls *": allow
+    "rg *": allow
+    "grep *": allow
+    "cat *": allow
+    "find *": allow
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "git show*": allow
+    "git add*": allow
+    "git commit*": allow
+    "git checkout*": allow
+    "git switch*": allow
+    "npm *": allow
+    "bun *": allow
+    "npx *": allow
+    "node *": allow
+    "tsc*": allow
+    "just *": allow
+    "make *": allow
+    "bash -n *": allow
+    "shellcheck *": allow
+    "mkdir *": allow
+    "mv *": allow
+    "cp *": allow
   skill: allow
 domain: utgard
 name: bragi
