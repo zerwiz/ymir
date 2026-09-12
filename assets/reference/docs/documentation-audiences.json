@@ -26,8 +26,8 @@
   "readmeSetupTargets": [
     "docs/configuration.md",
     "docs/wedge-alarm.md",
-    "docs/tmux-backend.md",
-    "docs/herdr-backend.md",
+    ".agents/skills/herdr-panes/assets/tmux-backend.md",
+    ".agents/skills/herdr-panes/assets/herdr-backend.md",
     "docs/zellij-backend.md",
     "docs/orca-backend.md",
     "docs/cmux-backend.md",
@@ -79,11 +79,11 @@
       "target": "docs/verification/supervision.md"
     },
     {
-      "source": "docs/tmux-backend.md",
+      "source": ".agents/skills/herdr-panes/assets/tmux-backend.md",
       "target": "docs/verification/runtime-backends.md"
     },
     {
-      "source": "docs/herdr-backend.md",
+      "source": ".agents/skills/herdr-panes/assets/herdr-backend.md",
       "target": "docs/verification/runtime-backends.md"
     },
     {
@@ -265,7 +265,7 @@
       "audience": "public-product"
     },
     {
-      "path": "docs/agent-control.md",
+      "path": ".agents/skills/eindri-homes/assets/control-plane.md",
       "audience": "maintainer-architecture"
     },
     {
@@ -345,7 +345,7 @@
       "audience": "maintainer-verification"
     },
     {
-      "path": "docs/herdr-backend.md",
+      "path": ".agents/skills/herdr-panes/assets/herdr-backend.md",
       "audience": "operator-current"
     },
     {
@@ -401,7 +401,7 @@
       "audience": "agent-runtime"
     },
     {
-      "path": "docs/tmux-backend.md",
+      "path": ".agents/skills/herdr-panes/assets/tmux-backend.md",
       "audience": "operator-current"
     },
     {

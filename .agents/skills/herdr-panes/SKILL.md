@@ -70,3 +70,11 @@ tools[4]{tool,does}:
   "bin/eindri-send.sh <agent> \"<text>\" · bin/eindri-control.sh ...","talk to / control a seated agent (data · control plane)"
   "bin/herdr-run.sh","the seat engine that calls herdr agent start/prompt"
 ```
+
+## Assets
+
+```
+assets[2]{path,holds}:
+  "assets/herdr-backend.md","the Herdr runtime backend: setup, protocol floor, presentation spaces, capabilities"
+  "assets/tmux-backend.md","the tmux runtime backend: setup, capabilities"
+```

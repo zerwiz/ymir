@@ -26,7 +26,7 @@ While OpenCode 1.18.4 is mid-turn, its composer accepts Enter as a "send when th
 Without a conversion, every typed-plane send to a busy OpenCode pane falsely reports "Enter swallowed", and a daemon escalation that lands while the primary is mid-turn appears wedged.
 
 Tmux and Herdr delegate this exception to the one `fm_composer_queued_enter_verdict` policy in `../../../bin/fm-composer-lib.sh`.
-Backend-specific signals are documented in `../../../docs/tmux-backend.md` and `../../../docs/herdr-backend.md`.
+Backend-specific signals are documented in `../../../.agents/skills/herdr-panes/assets/tmux-backend.md` and `../../../.agents/skills/herdr-panes/assets/herdr-backend.md`.
 Regression coverage is `../../../tests/fm-tmux-submit-busy.test.sh`, `../../../tests/fm-composer-lib.test.sh`, and `../../../tests/fm-backend-herdr.test.sh`.
 The live Herdr guard is `FM_HERDR_SUBMIT_CONFIRM_LIVE=1 ../../../tests/fm-herdr-submit-confirm-live-e2e.test.sh`.
 

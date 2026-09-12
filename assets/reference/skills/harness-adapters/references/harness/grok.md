@@ -29,7 +29,7 @@ The shared classifier keeps that text pending, and retry sends the second Enter 
 On 2026-07-03 two Grok 0.2.82 Herdr workers left `/no-mistakes` typed for minutes while send returned success.
 Old Herdr logic treated any pane delta as submission, including popup closure and placeholder fill.
 Tmux and Herdr now route captures through `../../../bin/fm-composer-lib.sh`, which classifies real text on every proven content row.
-`../../../docs/herdr-backend.md` owns the boundary and `../../../tests/fm-backend-herdr.test.sh` covers it.
+`../../../.agents/skills/herdr-panes/assets/herdr-backend.md` owns the boundary and `../../../tests/fm-backend-herdr.test.sh` covers it.
 
 The "Run Grok Build in a project directory?" picker appears only outside a project, such as home, Desktop, Downloads, or `/tmp`.
 The spawn starts in the isolated git root, so Grok trusts it and needs no key.
