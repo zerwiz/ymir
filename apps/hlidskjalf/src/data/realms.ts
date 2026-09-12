@@ -1,4 +1,4 @@
-import type { GateId, HouseDef, RealmDef, TaskState, AgentStatus } from '../types';
+import type { GateId, DomainDef, RealmDef, TaskState, AgentStatus } from '../types';
 
 // Single tenant: the switchable unit is a WORKSPACE (personal | work), not a
 // tenant. Domains are knowledge areas inside a workspace. Houses are brands.
@@ -37,7 +37,7 @@ export const DOMAIN_LABEL: Record<string, string> = {
   me: 'Me',
 };
 
-export const HOUSES: Record<string, HouseDef> = {
+export const DOMAINS: Record<string, DomainDef> = {
   ymirlabs: { id: 'ymirlabs', name: 'Ymir Labs', accent: '#38bdf8', glyph: 'ᛦ' },
   brokkforge: { id: 'brokkforge', name: 'Brokk Forge', accent: '#f59e0b', glyph: 'ᛒ' },
   runestone: { id: 'runestone', name: 'Runestone Labs', accent: '#f43f5e', glyph: 'ᚱ' },
@@ -85,16 +85,16 @@ export const ACCENTS: AccentPreset[] = [
  */
 export function realmDef(
   id: string,
-  grant?: { tenant?: string; house?: string; tint?: string; glyph?: string },
+  grant?: { tenant?: string; domain?: string; tint?: string; glyph?: string },
 ): RealmDef {
   const known = WORKSPACES.find((r) => r.id === id);
   if (known) return known;
-  const house = HOUSES[grant?.house ?? 'ymirlabs'];
+  const house = DOMAINS[grant?.domain ?? 'ymirlabs'];
   return {
     id,
     tenant: grant?.tenant ?? id,
     name: grant?.tenant ?? id,
-    house: house.id,
+    domain: house.id,
     tint: grant?.tint ?? house.accent,
     tint2: grant?.tint ?? house.accent,
     glyph: grant?.glyph ?? house.glyph,

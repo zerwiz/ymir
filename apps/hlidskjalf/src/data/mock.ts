@@ -23,7 +23,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
       name: 'Brokk',
       role: 'Primary — the bellows',
       realm: 'way-of',
-      house: 'ymirlabs',
+      domain: 'ymirlabs',
       status: 'nominal',
       capabilities: ['orchestration', 'code', 'marketing', 'strategy', 'life'],
       skills: ['brokk-craft', 'galdr', 'a2a-bridge', 'workspace_rag'],
@@ -38,7 +38,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
       name: 'Kaia',
       role: 'Orchestrator — the eye by the well',
       realm: 'way-of',
-      house: 'muninn',
+      domain: 'muninn',
       status: 'nominal',
       capabilities: ['recall', 'dispatch', 'veil', 'memory'],
       skills: ['a2a-bridge', 'tyr-check', 'workspace_rag'],
@@ -53,7 +53,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
       name: 'Eindri-01',
       role: 'Smith — frontend',
       realm: 'way-of',
-      house: 'brokkforge',
+      domain: 'brokkforge',
       status: 'nominal',
       capabilities: ['react', 'vite', 'design-system', 'a11y'],
       skills: ['galdr-crafter', 'galdr-compliance'],
@@ -68,7 +68,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
       name: 'Eindri-02',
       role: 'Smith — backend',
       realm: 'way-of',
-      house: 'runestone',
+      domain: 'runestone',
       status: 'degraded',
       capabilities: ['fastify', 'zod', 'sqlite', 'a2a'],
       skills: ['tyr-check'],
@@ -83,7 +83,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
       name: 'Eindri-03',
       role: 'Smith — memory',
       realm: 'way-of',
-      house: 'muninn',
+      domain: 'muninn',
       status: 'nominal',
       capabilities: ['engram', 'embeddings', 'rag', 'fts5'],
       skills: ['workspace_rag'],
@@ -98,7 +98,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
       name: 'Eindri-04',
       role: 'Smith — isolation',
       realm: 'way-of',
-      house: 'utgard',
+      domain: 'utgard',
       status: 'down',
       capabilities: ['docker', 'cgroups', 'yggdrasil', 'seccomp'],
       skills: ['a2a-bridge'],
@@ -113,7 +113,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
   // Re-scope the platform crew to the active realm, and swap the primary house.
   return base.map((a) =>
     a.id === 'brokk' || a.id === 'kaia'
-      ? { ...a, realm, house: realm === 'zerwiz' ? 'muninn' : realm === 'craig' ? 'brokkforge' : a.house }
+      ? { ...a, realm, domain: realm === 'zerwiz' ? 'muninn' : realm === 'craig' ? 'brokkforge' : a.domain }
       : { ...a, realm },
   );
 }
@@ -391,11 +391,11 @@ export function seedFiles(realm: RealmId): FileNode {
 
 export function seedSkills(): SkillDef[] {
   return [
-    { id: 'skl-galdr', name: 'galdr', aett: 'galdr', description: 'Agent experience incantation standards — TOON output, 10 principles.', capabilities: ['cli', 'toon', 'ergonomics'], validated: true, house: 'ymirlabs', createdAt: iso(48 * 60 * min) },
-    { id: 'skl-tyr', name: 'tyr-check', aett: 'galdr', description: 'The judge — validates tools, skills, and docs against Galdr.', capabilities: ['validation', 'compliance'], validated: true, house: 'runestone', createdAt: iso(40 * 60 * min) },
-    { id: 'skl-brokk', name: 'brokk-craft', aett: 'galdr', description: 'The forger — generates Galdr-compliant skills in TOON.', capabilities: ['synthesis', 'skills'], validated: true, house: 'brokkforge', createdAt: iso(36 * 60 * min) },
-    { id: 'skl-a2a', name: 'a2a-bridge', aett: 'rat', description: 'Canonical collaboration skill — inbox per turn, complete tasks, FYI peers.', capabilities: ['a2a', 'collaboration'], validated: true, house: 'ymirlabs', createdAt: iso(30 * 60 * min) },
-    { id: 'skl-rag', name: 'workspace_rag', aett: 'mimir', description: 'Hybrid Markdown + vector recall across the workspace.', capabilities: ['rag', 'memory'], validated: false, house: 'muninn', createdAt: iso(20 * 60 * min) },
+    { id: 'skl-galdr', name: 'galdr', aett: 'galdr', description: 'Agent experience incantation standards — TOON output, 10 principles.', capabilities: ['cli', 'toon', 'ergonomics'], validated: true, domain: 'ymirlabs', createdAt: iso(48 * 60 * min) },
+    { id: 'skl-tyr', name: 'tyr-check', aett: 'galdr', description: 'The judge — validates tools, skills, and docs against Galdr.', capabilities: ['validation', 'compliance'], validated: true, domain: 'runestone', createdAt: iso(40 * 60 * min) },
+    { id: 'skl-brokk', name: 'brokk-craft', aett: 'galdr', description: 'The forger — generates Galdr-compliant skills in TOON.', capabilities: ['synthesis', 'skills'], validated: true, domain: 'brokkforge', createdAt: iso(36 * 60 * min) },
+    { id: 'skl-a2a', name: 'a2a-bridge', aett: 'rat', description: 'Canonical collaboration skill — inbox per turn, complete tasks, FYI peers.', capabilities: ['a2a', 'collaboration'], validated: true, domain: 'ymirlabs', createdAt: iso(30 * 60 * min) },
+    { id: 'skl-rag', name: 'workspace_rag', aett: 'mimir', description: 'Hybrid Markdown + vector recall across the workspace.', capabilities: ['rag', 'memory'], validated: false, domain: 'muninn', createdAt: iso(20 * 60 * min) },
   ];
 }
 

@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { useYmir } from '../state/store';
 import { useUI } from '../state/ui';
 import { useTenantDef } from '../hooks/useTenantDef';
-import { HOUSES, TERMINAL_STATES } from '../data/realms';
+import { DOMAINS, TERMINAL_STATES } from '../data/realms';
 import type { AgentCard as AgentCardType } from '../types';
 import { MetricTile } from '../components/MetricTile';
 import { AgentCard } from '../components/AgentCard';
@@ -56,7 +56,7 @@ export function Fleet() {
         {
           name: a.name,
           status: a.status,
-          house: a.house,
+          domain: a.domain,
           capabilities: a.capabilities,
           skills: a.skills,
           interface: a.interface,
@@ -125,7 +125,7 @@ export function Fleet() {
               {agents.map((a) => {
                 const p = pos[a.id];
                 if (!p) return null;
-                const house = HOUSES[a.house];
+                const house = DOMAINS[a.domain];
                 return (
                   <div key={a.id} className="fleet-node" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
                     <div

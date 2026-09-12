@@ -97,7 +97,7 @@ function agents() {
       name: norse.charAt(0).toUpperCase() + norse.slice(1),
       role: String(fm.descriptor ?? fm.role ?? 'agent'),
       realm: 'work',
-      house: String(fm.domain ?? 'ymirlabs'),
+      domain: String(fm.domain ?? 'ymirlabs'),
       status: registered ? 'nominal' : 'degraded',
       capabilities: Array.isArray(fm.capabilities) ? fm.capabilities : [],
       skills: [],
@@ -836,7 +836,7 @@ function skills() {
       const name = String(fm.name ?? d);
       const description = String(fm.description ?? '').slice(0, 240);
       const aett = name.includes('-') ? name.split('-')[0] : 'galdr';
-      return { id: `skl-${d}`, name, aett, description, capabilities: [], validated: true, house: 'ymirlabs', createdAt: '' };
+      return { id: `skl-${d}`, name, aett, description, capabilities: [], validated: true, domain: 'ymirlabs', createdAt: '' };
     });
 }
 

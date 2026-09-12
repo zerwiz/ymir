@@ -1,5 +1,5 @@
-import type { HouseId, Session, TenantGrant, User } from '../types';
-import { HOUSES } from '../data/realms';
+import type { DomainId, Session, TenantGrant, User } from '../types';
+import { DOMAINS } from '../data/realms';
 
 /**
  * MOCK GitHub auth (Heimdall / W0028 stand-in).
@@ -20,9 +20,9 @@ export interface MockIdentity {
   firstRun?: boolean;
 }
 
-function grant(realm: string, tenant: string, role: TenantGrant['role'], house: HouseId): TenantGrant {
-  const h = HOUSES[house];
-  return { realm, tenant, role, house, tint: h.accent, glyph: h.glyph };
+function grant(realm: string, tenant: string, role: TenantGrant['role'], domain: DomainId): TenantGrant {
+  const d = DOMAINS[domain];
+  return { realm, tenant, role, domain, tint: d.accent, glyph: d.glyph };
 }
 
 /**
@@ -121,13 +121,13 @@ export function provisionWorkspace(input: {
     email: `${input.login}@ymir.local`,
     avatar: input.login.slice(0, 2).toUpperCase(),
   };
-  const house: HouseId = input.kind === 'work' ? 'ymirlabs' : 'muninn';
+  const domain: DomainId = input.kind === 'work' ? 'ymirlabs' : 'muninn';
   const base: TenantGrant[] = [
     grant('work', 'Work', 'owner', 'ymirlabs'),
     grant('personal', 'Personal', 'owner', 'muninn'),
   ];
   const exists = base.some((t) => t.realm === id);
-  const tenants = exists ? base : [...base, grant(id, input.name || id, 'owner', house)];
+  const tenants = exists ? base : [...base, grant(id, input.name || id, 'owner', domain)];
   return {
     user,
     tenants,

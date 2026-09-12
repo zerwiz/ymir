@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useYmir } from '../state/store';
 import { useUI } from '../state/ui';
-import { HOUSES } from '../data/realms';
+import { DOMAINS } from '../data/realms';
 import { AETTS_LIST, aettFor, suggestFigures } from '../data/mythology';
 import { StatusChip } from '../components/Status';
 import { RuneTag } from '../components/RuneTag';
 import { ModelPicker } from '../components/ModelPicker';
 import { gateApi, type PromptFile } from '../services/api';
-import type { AgentCard as AgentCardType, HouseId, SkillDef } from '../types';
+import type { AgentCard as AgentCardType, DomainId, SkillDef } from '../types';
 
 type Mode = 'agent' | 'skill' | 'prompt';
 
-const HOUSES_LIST = Object.keys(HOUSES) as HouseId[];
+const DOMAINS_LIST = Object.keys(DOMAINS) as DomainId[];
 
 function slug(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -22,7 +22,7 @@ interface AgentDraft {
   name: string;
   role: string;
   capabilities: string;
-  house: HouseId;
+  domain: DomainId;
   model: string;
 }
 
@@ -30,7 +30,7 @@ const EMPTY_AGENT: AgentDraft = {
   name: '',
   role: '',
   capabilities: '',
-  house: 'brokkforge',
+  domain: 'brokkforge',
   model: 'opencode-go/deepseek-v4-flash',
 };
 
@@ -128,7 +128,7 @@ export function Forge() {
       .map((c) => c.trim())
       .filter(Boolean);
     if (agent.id) {
-      updateAgent(agent.id, { name, role: agent.role, capabilities, house: agent.house, model: agent.model });
+      updateAgent(agent.id, { name, role: agent.role, capabilities, domain: agent.domain, model: agent.model });
       toast({ kind: 'ok', title: `${name} updated`, body: 'Agent Card re-published (mock).' });
       emit(`agent.update ${slug(name)}`);
     } else {
@@ -138,7 +138,7 @@ export function Forge() {
         name,
         role: agent.role || 'Eindri worker',
         realm,
-        house: agent.house,
+        domain: agent.domain,
         status: 'nominal',
         capabilities: capabilities.length ? capabilities : ['general'],
         skills: [],
@@ -163,7 +163,7 @@ export function Forge() {
       name: a.name,
       role: a.role,
       capabilities: a.capabilities.join(', '),
-      house: a.house,
+      domain: a.domain,
       model: a.model,
     });
   }
@@ -176,7 +176,7 @@ export function Forge() {
       description: '',
       capabilities: [],
       validated: false,
-      house: 'ymirlabs',
+      domain: 'ymirlabs',
       createdAt: new Date().toISOString(),
     };
   }
@@ -334,13 +334,13 @@ export function Forge() {
 
               <div className="form-grid">
                 <label className="field">
-                  <span className="eyebrow">House</span>
+                  <span className="eyebrow">Domain</span>
                   <select
-                    value={agent.house}
-                    onChange={(e) => setAgent({ ...agent, house: e.target.value as HouseId })}
+                    value={agent.domain}
+                    onChange={(e) => setAgent({ ...agent, domain: e.target.value as DomainId })}
                   >
-                    {HOUSES_LIST.map((h) => (
-                      <option key={h} value={h}>{HOUSES[h].name}</option>
+                    {DOMAINS_LIST.map((h) => (
+                      <option key={h} value={h}>{DOMAINS[h].name}</option>
                     ))}
                   </select>
                 </label>
@@ -406,13 +406,13 @@ export function Forge() {
               </label>
 
               <label className="field">
-                <span className="eyebrow">House</span>
+                <span className="eyebrow">Domain</span>
                 <select
-                  value={skill.house}
-                  onChange={(e) => setSkill({ ...skill, house: e.target.value as HouseId })}
+                  value={skill.domain}
+                  onChange={(e) => setSkill({ ...skill, domain: e.target.value as DomainId })}
                 >
-                  {HOUSES_LIST.map((h) => (
-                    <option key={h} value={h}>{HOUSES[h].name}</option>
+                  {DOMAINS_LIST.map((h) => (
+                    <option key={h} value={h}>{DOMAINS[h].name}</option>
                   ))}
                 </select>
               </label>
