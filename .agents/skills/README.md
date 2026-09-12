@@ -7,7 +7,7 @@ matches its work (Gungnir naming law).
 ## Registry (`.agents/skills/`)
 
 ```
-skills[21]{name,norse,purpose,origin}:
+skills[20]{name,norse,purpose,origin}:
   "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer of the runtime","core"
   "tyr-check","Tyr","the judge — 10 principles + runtime gates","core"
   "smidja","Smiðja","the smithy (roster + phases + envelopes)","core"
@@ -19,8 +19,7 @@ skills[21]{name,norse,purpose,origin}:
   "urdh","Urðr","Allfather-hold lifecycle: decisions held for the Allfather, reconciled","adopted"
   "frigg-consent","Frigg","consent / ask-user authority gate","adopted"
   "vor-diagnostics","Vör","bootstrap + diagnostic reasoning","adopted"
-  "nornir-events","Nornir","process→event sources","adopted"
-  "nornir-quota","Nornir","quota-aware dispatch array selection","adopted"
+  "nornir","Nornir","fate & schedule: process→event sources (events) + quota-aware dispatch (quota)","adopted"
   "gjallarhorn-relay","Gjallarhorn","public relay replies (X/Discord)","adopted"
   "eindri-homes","Eindri","isolated worker homes (provisioning)","adopted"
   "syn-recovery","Sýn","stuck-worker recovery playbook","adopted"
