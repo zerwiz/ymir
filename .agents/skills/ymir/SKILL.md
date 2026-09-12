@@ -26,3 +26,8 @@ assets[4]{path,load_when}:
 ```
 
 A change that adds a host capability adds a row here, not a new skill.
+
+Rule 06 (append-only) governs the memory: the Runes ledger, the
+changelog, `docs/append-only-log.md` and the rules are appended to, never
+rewritten — and a move must carry every one of them plus the hoard.
+Law: `RULES/06-append-only.md`.
