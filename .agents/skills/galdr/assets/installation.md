@@ -107,6 +107,10 @@ A real install prints its plan and waits for `[y/N]`. Declining changes nothing
 (exit 3). `--check` never prompts. A non-interactive caller without `--yes` is
 refused rather than silently proceeding.
 
+The plan names every change, including the terminal backend (herdr/tmux), the
+host learning, and the desktop placement — so the operator accepts what is
+actually done, not a shorter list that drifted behind the code.
+
 ## Validation
 
 After the runtime is up, `bin/ymir-validate.sh` observes the result: prerequisites,

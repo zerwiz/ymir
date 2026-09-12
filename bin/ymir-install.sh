@@ -57,11 +57,15 @@ Ymir first setup — this will make the following changes:
   • create the workspace tree (work/ · personal/ · companies · registries)
   • install the OSS engines: treehouse, no-mistakes (+ sandcastle if present)
   • ensure the Hermes worker runtime
+  • ensure a terminal backend (herdr — Þjazi — preferred, else tmux)
+  • learn this machine (Omarchy version, packages, configs, monitors, scale)
+  • place the desktop apps on their own numbered desktops
   • build the Utgard sandbox image 'utgard-runner:latest' (needs docker access)
-  • create the Smiðja database so the visualizer has data
+  • create the Smiðja database and build the visualizer UI
   • load agents/skills and write workspace/INSTALL.md
   • raise the runtime services (Hlidskjalf SPA + gate API + bridges)
   • open BOTH desktop apps so you see them: Hlidskjalf + Smíðja
+  • verify the running system and report what stands
 
 Nothing is deleted. Every step is idempotent.
 PLAN

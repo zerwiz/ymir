@@ -30,6 +30,10 @@ Stamps `smidja/` (the starter smithies + `smidja_modules/`), the prompt and harn
 engineering dirs, `smidja/smidja_smidja_config/smidja.config.yaml`, `.env.sample`,
 `justfile`, and `.gitignore` entries. Existing files are skipped unless `--force`.
 
+Not writable, it fails plainly: a `PermissionError` never escapes as a traceback —
+the script checks the target and returns exit 1 with the reason, so a failed
+stamp is legible rather than a stack of Python.
+
 There is **no separate CLI install**: the launcher `scripts/smidja` belongs to the
 `~/command` provenance repo; in Ymir use the `justfile` recipes or `uv run
 smidja/smidja_*.py` directly.

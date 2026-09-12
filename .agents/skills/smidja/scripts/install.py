@@ -14,6 +14,7 @@ Existing files are skipped unless --force.
 """
 
 import argparse
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -66,20 +67,31 @@ def main() -> int:
     root = Path.cwd()
     stamped, skipped = [], []
 
-    stamp(TEMPLATES / "smidja", root / "smidja", args.force, stamped, skipped)
-    stamp(TEMPLATES / "prompt_engineering",
-          root / "smidja" / "smidja_data" / "prompt_engineering", args.force, stamped, skipped)
-    stamp(TEMPLATES / "harness_engineering",
-          root / "smidja" / "smidja_data" / "harness_engineering", args.force, stamped, skipped)
-    stamp(TEMPLATES / "smidja.config.yaml",
-          root / "smidja" / "smidja_smidja_config" / "smidja.config.yaml",
-          args.force, stamped, skipped)
-    stamp(TEMPLATES / "env.sample", root / ".env.sample", args.force, stamped, skipped)
-    # The recipes are part of the operating experience, and several cookbooks
-    # plus the run banner tell you to use them, so a stamped repo has to have
-    # them. Skipped like any other file if the repo already has a justfile.
-    stamp(TEMPLATES / "justfile", root / "justfile", args.force, stamped, skipped)
-    ensure_gitignore(root, stamped)
+    # Fail with a plain reason when the target cannot be written, rather than an
+    # os.mkdir traceback mid-stamp.
+    if not os.access(root, os.W_OK):
+        print(f"error: {root} is not writable — run install.py from a writable repo root",
+              file=sys.stderr)
+        return 1
+
+    try:
+        stamp(TEMPLATES / "smidja", root / "smidja", args.force, stamped, skipped)
+        stamp(TEMPLATES / "prompt_engineering",
+              root / "smidja" / "smidja_data" / "prompt_engineering", args.force, stamped, skipped)
+        stamp(TEMPLATES / "harness_engineering",
+              root / "smidja" / "smidja_data" / "harness_engineering", args.force, stamped, skipped)
+        stamp(TEMPLATES / "smidja.config.yaml",
+              root / "smidja" / "smidja_smidja_config" / "smidja.config.yaml",
+              args.force, stamped, skipped)
+        stamp(TEMPLATES / "env.sample", root / ".env.sample", args.force, stamped, skipped)
+        # The recipes are part of the operating experience, and several cookbooks
+        # plus the run banner tell you to use them, so a stamped repo has to have
+        # them. Skipped like any other file if the repo already has a justfile.
+        stamp(TEMPLATES / "justfile", root / "justfile", args.force, stamped, skipped)
+        ensure_gitignore(root, stamped)
+    except PermissionError as exc:
+        print(f"error: cannot write {exc.filename} — {exc.strerror}", file=sys.stderr)
+        return 1
 
     print(f"smidja installed into {root}")
     print(f"  stamped: {len(stamped)} file(s)")
