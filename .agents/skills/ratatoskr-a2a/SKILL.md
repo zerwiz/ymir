@@ -73,3 +73,25 @@ in the **skill/config**, not new code: point the bridge at
 
 Rule: the mesh is used through the **skill's tools**, not bespoke code — if a
 capability is missing, extend this skill.
+
+## Delivering a message = injection into the chat
+
+An A2A task that only reaches the bridge is **never read**. The missing function
+is **injection**: the inbound text must be placed into the seated agent's chat.
+
+- **Talk to (deliver to) an Eindri:** `herdr agent prompt <agent-or-pane> "<text>"`
+  — the agent reads it as a new turn and answers in its pane.
+- **Capture the reply:** `herdr agent read <agent-or-pane>` (or pane read) and
+  attach it to the A2A task result.
+- **The rule:** A2A carries the task; **herdr injection makes the target agent
+  read it.** Without injection, an Eindri will not read the a2a.
+
+So the two halves are inseparable:
+```
+a2a-deliver[2]{half,mechanism}:
+  "transport","A2A message/send -> the bridge (JSON-RPC, SSE)"
+  "delivery","inject into the agent's chat via `herdr agent prompt`; read the reply back"
+```
+
+Any agent that can *send* over A2A must also *deliver* by injection on receipt.
+Extend this skill (not code) when the delivery path changes.
