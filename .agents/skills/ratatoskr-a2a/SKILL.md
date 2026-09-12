@@ -95,3 +95,16 @@ a2a-deliver[2]{half,mechanism}:
 
 Any agent that can *send* over A2A must also *deliver* by injection on receipt.
 Extend this skill (not code) when the delivery path changes.
+
+## Peer addressing — names are NOT URLs
+
+The A2A tools take an **agent URL** (`a2a_call(agent_url, ...)`). A peer *name*
+like `hermes-zerwiz` is **not** a URL and fails with `Invalid URL`.
+
+**Always resolve first:** call `a2a-agents` (or `a2a-discover`) → find the peer →
+use its **`url`** field. Then `a2a_call(agent_url="<url>", text="…")`.
+
+```
+resolve[1]: a2a-agents -> [{"name":"hermes-zerwiz","url":"http://127.0.0.1:7777/"}, …]
+send[1]:    a2a_call agent_url="http://127.0.0.1:7777/" text="…"
+```
