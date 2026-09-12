@@ -29,7 +29,7 @@ install[17]{step,what,self-heals}:
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
-  "host","this machine — learnt on EVERY host","bin/omarchy-sense.sh learns the setup, bin/desktop-place.sh places the apps, the Omarchy post-update hook (when Omarchy), and the wedge-alarm channel"
+  "host","this machine — learnt on EVERY host","bin/omarchy-sense.sh learns the setup, bin/desktop-place.sh places the apps, the Omarchy post-update hook (when Omarchy), the wedge-alarm channel, and (on Omarchy) an OFFER of the suggested shell plugins — listed, never installed unbidden"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build; distinguishes docker-group permission from build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
@@ -101,6 +101,29 @@ bin/herdr-ensure.sh ensure --install  # install via the pinned, SHA-verified ins
 protocol check), and falls back to reporting `tmux` when herdr cannot be fetched.
 Selection order for the running system: `config/backend` → `BROKK_BACKEND` →
 `HERDR_ENV=1` → else tmux. Full reference: the `ymir-thjazi` skill.
+
+## Suggested Omarchy plugins (offered, never forced)
+
+Omarchy's shell is plugin-shaped, and a few registry plugins are Ymir's own organs
+rendered on the desktop. `bin/omarchy-plugins.sh` suggests them and installs only
+what the Allfather accepts.
+
+```
+bin/omarchy-plugins.sh list        # what Ymir suggests, and why
+bin/omarchy-plugins.sh installed   # reads omarchy's own plugin list
+bin/omarchy-plugins.sh suggest     # the offer (no install)
+bin/omarchy-plugins.sh add <id>    # install one, with consent
+```
+
+The core three are Ymir's organs: **Herdr Watch** (Þjazi in the bar), **Hermes
+Deck** (our worker runtime), **Skill Manager** (the Galdr family across harnesses).
+Installation uses Omarchy's own verb — `omarchy plugin add <repo> --enable` — never
+a raw clone.
+
+**These run unsandboxed inside the shell.** The registry "validates listings, not
+plugin security", so nothing installs without an explicit yes (`--yes` for
+non-interactive callers; without it a non-interactive `add` refuses with exit 3).
+The installer only *offers*.
 
 ## Consent
 A real install prints its plan and waits for `[y/N]`. Declining changes nothing

@@ -270,8 +270,18 @@ step_host() {
     wedged=kept
   fi
 
+  # 5. Suggest Omarchy plugins that render Ymir's own organs on the desktop
+  #    (herdr, Hermes, skills). Offered and listed, never installed unbidden —
+  #    they are third-party code running inside the shell.
+  local plugged=offered
+  if [ "$on_omarchy" = 1 ] && [ -x "$SCRIPT_DIR/omarchy-plugins.sh" ]; then
+    "$SCRIPT_DIR/omarchy-plugins.sh" suggest >/dev/null 2>&1 || true
+  elif [ "$on_omarchy" != 1 ]; then
+    plugged="n/a"
+  fi
+
   if [ "$on_omarchy" = 1 ]; then
-    add host OK "learnt the host; desktops placed=${placed}; post-update hook=${hooked}; wedge alarm=${wedged}"
+    add host OK "learnt the host; desktops placed=${placed}; post-update hook=${hooked}; wedge alarm=${wedged}; plugins=${plugged}"
   else
     add host OK "learnt the host; desktops placed=${placed}; wedge alarm=${wedged} (not an Omarchy host)"
   fi
