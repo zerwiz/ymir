@@ -59,7 +59,7 @@ mandate{operator,eindri}:
 ## Manual (load the row the task needs)
 
 ```
-manual[7]{asset,path,load_when}:
+manual[8]{asset,path,load_when}:
   "naming",".agents/assets/agents/naming.md","naming any subsystem / component map"
   "registry",".agents/assets/agents/registry.md","skills, assets, tools, commands inventories"
   "runtime",".agents/assets/agents/runtime.md","how Ymir boots / supervises the primary"
@@ -67,6 +67,7 @@ manual[7]{asset,path,load_when}:
   "installation",".agents/skills/galdr/assets/installation.md","changing bin/ymir-install.sh, engines, first setup"
   "ui",".agents/skills/galdr/assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
   "runtime-spec",".agents/skills/galdr/assets/brokk-distro-runtime.md","the runtime, digest, lock, supervision, cron"
+  "harness",".agents/skills/galdr/assets/harness-integration/README.md","the Pi/OpenCode surfaces: extensions, commands, shortcuts"
 ```
 
 **Governed paths — load the asset before you edit the code.** Every subsystem

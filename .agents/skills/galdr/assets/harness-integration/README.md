@@ -198,6 +198,10 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 | `.opencode/plugins/lib/rodd-operational-input.js` | `encodeRoddOperationalInput(root, kind, content)` | shared wire |
 | `.pi/extensions/syn-turnend-guard.ts` | `export default function (pi: ExtensionAPI)` | 1, 3, 4 |
 | `.pi/extensions/gna-pi-watch.ts` | `export default function (pi: ExtensionAPI)` | 2 |
+| `.pi/extensions/ro.ts` | Ró — the calm presentation preference (`/calm`), state/ro | user |
+| `.pi/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor (`$VISUAL`→`$EDITOR`→`vi`); strictly user-facing, no LLM tool | user |
+| `.pi/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
+| `.pi/extensions/todo.ts` | the todo surface | user |
 | `.pi/extensions/lib/rodd-operational-input.ts` | `encodeRoddOperationalInput`, `classifyRoddOperationalText`, `classifyRoddCurrentOperationalText` | shared wire |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` | detached child supervisor (Vörðr) | 1 (transport) |
 | `.claude/settings.json` | `hooks.SessionStart[]`, `hooks.Stop[]` | 1, 3, 5 |
