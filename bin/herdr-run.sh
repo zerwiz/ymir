@@ -345,7 +345,15 @@ case "$ACTION" in
       printf 'error: could not start a %s Eindri in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$KIND" "$pane" >&2
       exit 1
     fi
-    hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1
+    # Inject the task — retry until it lands. `agent start` can return before the
+    # harness accepts input (opencode is slower than pi), and a single swallowed
+    # prompt is the "it started but nothing was injected" bug.
+    injected=no
+    for _try in 1 2 3 4 5 6 7 8 9 10; do
+      if hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1; then injected=yes; break; fi
+      sleep 3
+    done
+    printf 'herdr-run[1]{eindri,injected,attempts}:\n  "%s","%s",%s\n' "$NAME" "$injected" "${_try:-0}" >&2
     if [ "${YMIR_HERDR_AGENT_WAIT:-1}" = "1" ]; then
       hdr agent wait "$NAME" --until done --until idle --timeout $((SETTLE * 1000)) >/dev/null 2>&1 || true
     fi
