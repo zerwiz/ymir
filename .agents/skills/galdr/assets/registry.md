@@ -333,3 +333,7 @@ consolidated[5]{skill,absorbed,assets}:
   "saga","saga-bearings + saga-recap","bearings · recap · board-template.html"
   "nornir","nornir-events + nornir-quota","events · quota"
   "nsr","NSR + NSRcompliance","nsr/ · nsrcompliance/"
+
+**Ruling (2026-09-12):** `frigg-consent` + `hvild-afk` and `syn-recovery` +
+`vor-diagnostics` stay **separate** — each names a distinct figure, and the
+naming law keeps one figure per skill. Only same-figure split pairs consolidate.
