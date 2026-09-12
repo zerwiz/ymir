@@ -1,5 +1,5 @@
-# Workspace registry — single tenant. One operator, many workspaces.
-# kind: work | personal.  company: only for work.  domains: knowledge areas.
+# Workspace registry — the SHAPE only. The real registry lives in the Hoard:
+#   hodd/identity/workspaces.yaml   (private; see RULES/04-hoard.md)
 workspaces:
   - id: work
     name: Work

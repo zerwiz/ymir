@@ -109,9 +109,10 @@ step_prereqs() {
 
 # ── 2. workspace tree ────────────────────────────────────────────────────────
 step_tree() {
+  local HOARD="${YMIR_HOARD:-$ROOT/hodd}"
   if [ "$CHECK" = 1 ]; then
     local ok=1
-    [ -d "$WORKSPACE/work" ] && [ -d "$WORKSPACE/personal" ] && [ -f "$WORKSPACE/workspaces.yaml" ] && [ -f "$WORKSPACE/projects.yaml" ] || ok=0
+    [ -d "$WORKSPACE/work" ] && [ -d "$WORKSPACE/personal" ] && [ -f "$HOARD/identity/workspaces.yaml" ] && [ -f "$HOARD/identity/projects.yaml" ] || ok=0
     if [ "$ok" = 1 ]; then add tree OK "workspace tree present"; else add tree WARN "workspace tree incomplete"; fi
     return
   fi
@@ -122,9 +123,9 @@ step_tree() {
       [ -d "$WORKSPACE/$name/$d" ] || { mkdir -p "$WORKSPACE/$name/$d"; created=$((created+1)); }
     done
   done
-  mkdir -p "$WORKSPACE/companies" "$WORKSPACE/memory/daily"
-  if [ ! -f "$WORKSPACE/workspaces.yaml" ]; then
-    cat >"$WORKSPACE/workspaces.yaml" <<'YAML'
+  mkdir -p "$WORKSPACE/companies" "$WORKSPACE/memory/daily" "$HOARD/identity"
+  if [ ! -f "$HOARD/identity/workspaces.yaml" ]; then
+    cat >"$HOARD/identity/workspaces.yaml" <<'YAML'
 # Workspace registry — single tenant. One operator, many workspaces.
 # kind: work | personal.  company: only for work.  domains: knowledge areas.
 workspaces:
@@ -140,8 +141,8 @@ workspaces:
 YAML
     created=$((created+1))
   fi
-  if [ ! -f "$WORKSPACE/projects.yaml" ]; then
-    cat >"$WORKSPACE/projects.yaml" <<'YAML'
+  if [ ! -f "$HOARD/identity/projects.yaml" ]; then
+    cat >"$HOARD/identity/projects.yaml" <<'YAML'
 # Master project registry. Every project carries its GitHub block here; the
 # runtime reads it — never guesses a remote. auth is a REFERENCE, never a value.
 projects:
@@ -409,7 +410,7 @@ step_register() {
     printf '## Workspaces\n\n'; printf -- '- work (company: wayof)\n- personal\n\n'
     printf '## Engines\n\n- Yggdrasil → treehouse\n- Utgard → sandcastle\n- Mjollnir/Glitnir → no-mistakes\n\n'
     printf '## Next\n\n1. `gh auth login` (the Allfather\x27s own GitHub login).\n'
-    printf '2. Fill each project\x27s `git{}` block in `workspace/projects.yaml`.\n'
+    printf '2. Fill each project\x27s `git{}` block in `hodd/identity/projects.yaml`.\n'
     printf '3. `scripts/start.sh` then open http://127.0.0.1:3888/.\n'
   } >"$out"
   add register OK "wrote workspace/INSTALL.md"
@@ -464,7 +465,7 @@ step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_backend; st
 
 printf 'install[%d]{step,status,detail}:\n' "${#IDS[@]}"
 for i in "${!IDS[@]}"; do printf '  "%s","%s","%s"\n' "${IDS[$i]}" "${STATUS[$i]}" "${DETAIL[$i]}"; done
-printf '\nnext: gh auth login · fill workspace/projects.yaml git{} · open http://127.0.0.1:3888/\n'
+printf '\nnext: gh auth login · fill hodd/identity/projects.yaml git{} · open http://127.0.0.1:3888/\n'
 
 for s in "${STATUS[@]}"; do [ "$s" = FAIL ] && exit 1; done
 exit 0
