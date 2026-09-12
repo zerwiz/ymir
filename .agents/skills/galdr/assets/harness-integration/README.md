@@ -530,3 +530,16 @@ built-in tools. Our profiles list Ymir capabilities (`vector_db`,
 `chrome_devtools`), which are not OpenCode tools and which OpenCode rejects as
 `Expected object | undefined, got [...] tools`. Those lists are therefore carried
 under **`ymir_tools:`**; permission is expressed by the `permission:` block.
+
+## Asking the Allfather — `ask_user_question` (2026-09-12)
+
+The system can ask the Allfather instead of guessing. Adopted (open-source-first)
+from `@juicesharp/rpiv-ask-user-question` (MIT), pinned **project-locally** in
+`.pi/settings.json` so every machine/user that has the repo gets it.
+
+- Gives Pi one tool, `ask_user_question`: a terminal dialog of up to four
+  questions with authored options (+ descriptions/previews), a free-text row,
+  per-question and global notes, and a Submit review tab.
+- Non-interactive runs simply don't see the tool (never a failing call).
+- Config (read-only): `~/.config/rpiv-ask-user-question/config.json`.
+- Use it at real decision points — where a wrong assumption costs a rework.
