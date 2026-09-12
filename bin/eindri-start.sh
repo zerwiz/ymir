@@ -68,7 +68,17 @@ fi
 [ "$refuse" = 1 ] && { printf 'eindri-start[1]{role,seat,verdict}:\n  "%s","none","too brief — answer it in hand"\n' "$ROLE"; exit 0; }
 [ "$seat" != "none" ] || { printf 'error: could not seat %s\n' "$ROLE" >&2; exit 1; }
 
-# 4. Record + report.
+# 4. Serve the Eindri over A2A (best effort): its tasks are delivered by
+#    injection into the seated agent's chat; reachable at A2A_URL.
+A2A_URL=""
+if [ "$seat" = herdr ] && [ -f "$SCRIPT_DIR/a2a-serve.py" ]; then
+  PORT=$((7800 + (RANDOM % 100)))
+  mkdir -p "$STATE"
+  nohup python3 "$SCRIPT_DIR/a2a-serve.py" "$ROLE" "$ROLE" "$PORT" >"$STATE/a2a-$ROLE.log" 2>&1 &
+  A2A_URL="http://127.0.0.1:$PORT/"
+fi
+
+# 5. Record + report.
 printf '%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$ROLE" "$seat" "$REQ" >>"$SEATS"
 printf 'eindri-start[1]{role,seat,a2a,request,label}:\n'
 printf '  "%s","%s","%s","%s","%s"\n' "$ROLE" "$seat" "${A2A_URL:-none}" "$REQ" "$LABEL"
