@@ -316,10 +316,25 @@ case "$ACTION" in
     #   --space  a disposable workspace (one errand, torn down)
     #   --tab    a new tab in this home's workspace
     #   default  a PANE SPLIT beside the work (the companion road)
+    # ISOLATION (law ygg1): never seat an Eindri in the main tree. Create or
+    # reuse a Yggdrasil worktree and seat there.
+    SEAT_CWD="$PWD"
+    if [ -x "$SCRIPT_DIR/yggdrasil.sh" ]; then
+      wt_out="$("$SCRIPT_DIR/yggdrasil.sh" create "$NAME" 2>/dev/null)"
+      wt_path="$(printf '%s' "$wt_out" | sed -n '2p' | cut -d'"' -f6)"
+      if [ -n "$wt_path" ] && [ -d "$wt_path" ]; then
+        SEAT_CWD="$(cd "$wt_path" && pwd)"
+        printf 'herdr-run[1]{isolation,worktree}:\n  "on","%s"\n' "$SEAT_CWD" >&2
+      else
+        printf 'error: isolation — could not create a Yggdrasil worktree; refusing to seat in the main tree\nhelp: bin/yggdrasil.sh create %s\n' "$NAME" >&2
+        exit 4
+      fi
+    fi
+
     seat_note="pane"
     if [ "$SPACE" = 1 ]; then
       if space_supported; then
-        read -r ws tab pane <<<"$(seat_space "$NAME" "$PWD")"
+        read -r ws tab pane <<<"$(seat_space "$NAME" "$SEAT_CWD")"
         [ -n "$ws" ] && seat_note="space $ws" && printf '%s\t%s\tspace:%s\n' "$tab" "$NAME" "$ws" >>"$TAB_LOG" 2>/dev/null || true
       else
         seat_note="tab (space floor not met)"
@@ -327,7 +342,7 @@ case "$ACTION" in
     elif [ "$TAB" = 1 ]; then
       seat_note="tab"
     else
-      read -r tab pane <<<"$(seat_pane "$NAME" "$PWD")"
+      read -r tab pane <<<"$(seat_pane "$NAME" "$SEAT_CWD")"
       if [ -n "$tab" ]; then
         printf '%s\t%s\tpane\n' "$tab" "$NAME" >>"$TAB_LOG" 2>/dev/null || true
       else
@@ -335,7 +350,7 @@ case "$ACTION" in
       fi
     fi
     if [ -z "${tab:-}" ]; then
-      read -r tab pane <<<"$(seat_tab "$NAME" "$PWD")"
+      read -r tab pane <<<"$(seat_tab "$NAME" "$SEAT_CWD")"
       [ -n "$tab" ] && printf '%s\t%s\n' "$tab" "$NAME" >>"$TAB_LOG" 2>/dev/null || true
     fi
     [ -n "$tab" ] || { printf 'error: could not seat the Eindri\n' >&2; exit 1; }

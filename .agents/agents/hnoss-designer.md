@@ -1,6 +1,6 @@
 ---
 mode: all
-model: llama.cpp/frontend-design-expert-8b@q4_k_m
+model: llama.cpp/qwen3.6-35b-a3b@q2_k_xl
 permission:
   read: allow
   edit: allow
