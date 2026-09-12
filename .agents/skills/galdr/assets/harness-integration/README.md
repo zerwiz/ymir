@@ -483,3 +483,23 @@ duplicates:
 `bin/valknut-load.sh` creates the symlinks (`--opencode`, `--pi`, `--global`).
 To change an agent, edit `.agents/agents/*.md` and re-run the loader; never edit
 `.opencode/agent` or `.pi/agents` (they are links).
+
+## 15. The Eindri roster (bound agents)
+
+Canonical profiles in `.agents/agents/*.md`, bound as symlinks:
+
+```
+eindri[9]{figure,craft,domain,engine}:
+  "Brokk","primary — the bellows","ymirlabs","—"
+  "Sindri","developer / smith","brokkforge","Chrome DevTools"
+  "Bragi","marketer / skald","utgard","Firecrawl + browser-use (+ Scrapy)"
+  "Hnoss","designer / shaper","utgard","OpenDesign"
+  "Huginn","researcher / sage","muninn","—"
+  "Mímir","planner / the wise","ymirlabs","—"
+  "Forseti","reviewer / the just","runestone","—"
+  "Snotra","documenter / the wise-woman","runestone","—"
+  "Kvasir","scout / the knowing","ymirlabs","—"
+```
+
+Bind with `bin/valknut-load.sh --all` (OpenCode: `.opencode/agent/<name>.md`; Pi:
+`.pi/agents/<profile>.md`) — never edit the harness dirs.
