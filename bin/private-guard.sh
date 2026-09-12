@@ -13,9 +13,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Private roots — nothing here is public.
-FORBID='^(hodd/|state/|data/|workspace/(work|personal|memory|companies)/|assets/reference/state/|\.a2a/|\.env)'
+FORBID='^(hodd/|svartalfaheim/|state/|data/|workspace/(work|personal|memory|companies)/|assets/reference/state/|\.a2a/|\.env)'
 # Allowed tracked exceptions inside those roots.
-ALLOW='^(hodd/(README\.md|\.gitignore|AGENTS\.example\.md|[^/]+\.example(\.md)?)$|state/\.gitkeep$|data/[^/]+\.example$|assets/reference/state/[^/]+\.example$|\.env\.example|\.env\.sample)$'
+ALLOW='^(hodd/(README\.md|\.gitignore|AGENTS\.example\.md|[^/]+\.example(\.md)?)$|svartalfaheim/.*(README\.md|\.gitkeep|\.gitignore|\.example(\.md)?)$|state/\.gitkeep$|data/[^/]+\.example$|assets/reference/state/[^/]+\.example$|\.env\.example|\.env\.sample)$'
 
 scan_list() {
   local hit=0 f
