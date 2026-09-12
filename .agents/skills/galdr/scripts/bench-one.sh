@@ -73,7 +73,35 @@ if [ ! -f "$GGUF" ]; then
   fi
 fi
 [ -f "$GGUF" ] || { echo "✗ not a file and not a known model id: $MODEL" >&2; exit 2; }
-[ -n "$THREADS" ] || THREADS=$( (command -v nproc >/dev/null && nproc) || echo 8 )
+# --- portable primitives -----------------------------------------------------
+# This script ships standalone, so it carries its own OS handling rather than
+# depending on a Ymir checkout. macOS/BSD differ on all three counts below.
+cpu_count() {
+  if command -v nproc >/dev/null 2>&1; then nproc
+  elif command -v sysctl >/dev/null 2>&1 && sysctl -n hw.ncpu >/dev/null 2>&1; then sysctl -n hw.ncpu
+  elif command -v getconf >/dev/null 2>&1; then getconf _NPROCESSORS_ONLN 2>/dev/null || printf '4'
+  else printf '4'; fi
+}
+now_ns() {  # epoch milliseconds*1e6; BSD date has no %N
+  local s n
+  s=$(date +%s 2>/dev/null) || s=0
+  n=$(date +%N 2>/dev/null)
+  case "$n" in ''|*[!0-9]*) n=000000000 ;; esac
+  printf '%s%s' "$s" "$n"
+}
+gpu_tool() {  # nvidia | rocm | none
+  if command -v nvidia-smi >/dev/null 2>&1; then printf 'nvidia'
+  elif command -v rocm-smi >/dev/null 2>&1; then printf 'rocm'
+  else printf 'none'; fi
+}
+gpu_name() {
+  case "$(gpu_tool)" in
+    nvidia) nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1 ;;
+    rocm)   rocm-smi --showproductname 2>/dev/null | head -2 | tr '\n' ' ' ;;
+    *)      uname -s 2>/dev/null | grep -q Darwin && printf 'Apple (unified memory)' || printf 'cpu-only' ;;
+  esac
+}
+[ -n "$THREADS" ] || THREADS=$(cpu_count)
 [ -n "$PORT" ] || PORT=$(( (RANDOM % 800) + 9200 ))
 
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/bench.XXXXXX")
@@ -90,9 +118,12 @@ cleanup() {
 trap cleanup EXIT
 command -v curl >/dev/null || { echo "✗ curl is required" >&2; exit 1; }
 
-gpu_mem() {  # peak VRAM in MiB, if this host exposes it
-  command -v nvidia-smi >/dev/null 2>&1 || { echo "?"; return; }
-  nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1 || echo "?"
+gpu_mem() {  # device memory in use (MiB), or "?" when the host does not expose it
+  case "$(gpu_tool)" in
+    nvidia) nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1 || printf '?' ;;
+    rocm)   rocm-smi --showmemuse 2>/dev/null | grep -oE '[0-9]+' | head -1 || printf '?' ;;
+    *)      printf '?' ;;
+  esac
 }
 
 echo "=== [1/7] server ==="
@@ -160,16 +191,19 @@ echo "=== [6/7] warm the GPU, then time a cold-context run ==="
 python3 -c "
 import json; json.dump({'model':'local','messages':[{'role':'user','content':'hi'}],'max_tokens':8,'temperature':0}, open('$TMP/warm.json','w'))"
 curl -s "http://127.0.0.1:$PORT/v1/chat/completions" -H 'Content-Type: application/json' -d @"$TMP/warm.json" -o /dev/null
-if command -v nvidia-smi >/dev/null 2>&1; then
-  nvidia-smi --query-gpu=clocks.sm,power.draw --format=csv,noheader | sed 's/^/  after warm: /'
-fi
-( command -v nvidia-smi >/dev/null 2>&1 && for i in $(seq 1 120); do
-    nvidia-smi --query-gpu=utilization.gpu,power.draw,memory.used --format=csv,noheader >> "$TMP/gpu.txt"
-    sleep 1
-  done ) & SAMPLER=$!
-T0=$(date +%s.%N)
+case "$(gpu_tool)" in
+  nvidia) nvidia-smi --query-gpu=clocks.sm,power.draw --format=csv,noheader | sed 's/^/  after warm: /' ;;
+  *)      echo "  (no NVIDIA telemetry on this host — util/power will be omitted)" ;;
+esac
+( case "$(gpu_tool)" in
+    nvidia) for i in $(seq 1 120); do
+              nvidia-smi --query-gpu=utilization.gpu,power.draw,memory.used --format=csv,noheader >> "$TMP/gpu.txt"
+              sleep 1
+            done ;;
+  esac ) & SAMPLER=$!
+T0=$(now_ns)
 curl -s -m 1800 "http://127.0.0.1:$PORT/v1/chat/completions" -H 'Content-Type: application/json' -d @"$REQ" -o "$TMP/out.json"
-T1=$(date +%s.%N)
+T1=$(now_ns)
 kill "$SAMPLER" 2>/dev/null || true; wait "$SAMPLER" 2>/dev/null || true
 
 echo "=== [7/7] results ==="
@@ -183,7 +217,7 @@ except Exception:
 if "error" in d:
     print("  ✗ server error:", str(d["error"])[:300]); raise SystemExit(0)
 t = d.get("timings", {}) or {}
-wall = float(t1) - float(t0)
+wall = (float(t1) - float(t0)) / 1e9
 pt = (d.get("usage") or {}).get("prompt_tokens")
 print(f"  wall           : {wall:.1f}s")
 print(f"  prompt_tokens  : {pt}")

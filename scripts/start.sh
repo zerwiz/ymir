@@ -6,6 +6,16 @@
 # ============================================================
 set -euo pipefail
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+# One place knows the OS differences (readlink -f, /proc, setsid, stat, nproc).
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+    [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_dir _ymir_c
+fi
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="$ROOT/apps/hlidskjalf"
 RUN="$ROOT/.run"
@@ -39,7 +49,7 @@ if command -v bun >/dev/null 2>&1; then
   if [[ -f "$API_PID_FILE" ]] && kill -0 "$(cat "$API_PID_FILE")" 2>/dev/null; then
     echo "Gate API already running (pid $(cat "$API_PID_FILE")) → http://127.0.0.1:${API_PORT}/api/health"
   else
-    setsid bun run "$APP/server/index.ts" >"$API_LOG" 2>&1 < /dev/null &
+    ymir_detach bun run "$APP/server/index.ts" >"$API_LOG" 2>&1
     echo $! > "$API_PID_FILE"
     for _ in $(seq 1 20); do
       curl -s -o /dev/null "http://127.0.0.1:${API_PORT}/api/health" && break
@@ -83,7 +93,7 @@ if command -v bun >/dev/null 2>&1 && [ -d "$VIZ_DIR" ]; then
   if [ -f "$VIZ_API_PID_FILE" ] && kill -0 "$(cat "$VIZ_API_PID_FILE")" 2>/dev/null; then
     echo "Smíðja visualizer API already running (pid $(cat "$VIZ_API_PID_FILE")) → http://127.0.0.1:${VIZ_API_PORT}/"
   else
-    setsid env CMD_DB="$SMIDJA_DB_PATH" PORT="$VIZ_API_PORT" bun run "$VIZ_DIR/server/index.ts" >"$RUN/smidja-viz-api.log" 2>&1 < /dev/null &
+    ymir_detach env CMD_DB="$SMIDJA_DB_PATH" PORT="$VIZ_API_PORT" bun run "$VIZ_DIR/server/index.ts" >"$RUN/smidja-viz-api.log" 2>&1
     echo $! > "$VIZ_API_PID_FILE"
     for _ in $(seq 1 20); do curl -s -o /dev/null "http://127.0.0.1:${VIZ_API_PORT}/api/health" && break; sleep 0.5; done
     echo "Smíðja visualizer API raised (pid $(cat "$VIZ_API_PID_FILE")) → http://127.0.0.1:${VIZ_API_PORT}/"
@@ -92,7 +102,7 @@ if command -v bun >/dev/null 2>&1 && [ -d "$VIZ_DIR" ]; then
     echo "Smíðja visualizer dev UI already running (pid $(cat "$VIZ_UI_PID_FILE")) → http://127.0.0.1:${VIZ_UI_PORT}/"
   elif [ "${SMIDJA_VIZ_DEV:-0}" = "1" ]; then
     # Opt-in Vite dev server for working on the visualizer itself.
-    setsid bash -c "cd '$VIZ_DIR' && exec bunx vite --port ${VIZ_UI_PORT} --strictPort" >"$RUN/smidja-viz-ui.log" 2>&1 < /dev/null &
+    ymir_detach bash -c "cd '$VIZ_DIR' && exec bunx vite --port ${VIZ_UI_PORT} --strictPort" >"$RUN/smidja-viz-ui.log" 2>&1
     echo $! > "$VIZ_UI_PID_FILE"
     for _ in $(seq 1 30); do curl -s -o /dev/null "http://127.0.0.1:${VIZ_UI_PORT}/" && break; sleep 0.5; done
     echo "Smíðja visualizer dev UI raised (pid $(cat "$VIZ_UI_PID_FILE")) → http://127.0.0.1:${VIZ_UI_PORT}/"
@@ -116,7 +126,7 @@ if [[ "$SPA_UP" == "1" ]]; then
 fi
 
 # New session so we can signal the whole process group on stop.
-setsid npm run dev >"$LOG" 2>&1 < /dev/null &
+ymir_detach npm run dev >"$LOG" 2>&1
 PID=$!
 echo "$PID" > "$PID_FILE"
 

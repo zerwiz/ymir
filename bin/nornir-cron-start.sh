@@ -20,6 +20,16 @@
 #   BROKK_CRON_LOG_MAX_BYTES  rotation threshold for state/cron.log (default 1 MiB)
 set -u
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+# One place knows the OS differences (readlink -f, /proc, setsid, stat, nproc).
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+    [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_dir _ymir_c
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
@@ -49,8 +59,9 @@ running_pid() {
     ''|*[!0-9]*) return 1 ;;
   esac
   kill -0 "$pid" 2>/dev/null || return 1
-  if [ -r "/proc/$pid/cmdline" ]; then
-    tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | grep -q "$IDENTITY_MARK" || return 1
+  # /proc is Linux-only; the shim falls back to `ps -o command=`.
+  if ymir_pid_alive "$pid"; then
+    ymir_pid_cmdline "$pid" 2>/dev/null | grep -q "$IDENTITY_MARK" || return 1
   fi
   printf '%s' "$pid"
 }
