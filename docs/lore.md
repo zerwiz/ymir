@@ -895,7 +895,6 @@ The complete index of all Norse-named skills in Ymir:
 | `galdr` | Galdr | Agent-CLI ergonomics + master builder of the runtime |
 | `tyr-check` | Tyr | The judge — 10 Galdr principles + runtime gates |
 | `smidja` | Smiðja | The smithy — roster, phases, envelopes, factory |
-| `modeltesting` | — | Model evaluation harness (Ollama, LM Studio, llama.cpp) |
 | `hvild-afk` | Hvíld | Away-mode supervision — routine wakes, batched escalations |
 | `saga` | Sága | session bearings: fleet digest (/bearings) + recap (/ahoy) |
 | `muninn-stow` | Muninn | Session-knowledge curation, routing, persistence |
@@ -911,8 +910,9 @@ The complete index of all Norse-named skills in Ymir:
 | `hamr` | Hamr | Per-harness adapter reference |
 | `pr-ops` | — | PR lifecycle — create, update, check status, request merge |
 
-**Total: 22 skills.** All Norse-named except where the name was already taken
-by a borrowed anvil (modeltesting, pr-ops).
+**Total: 21 skills.** All Norse-named except where the name was already taken
+by a borrowed anvil (pr-ops). Local-model operation is a galdr asset, not a skill:
+`assets/local-models.md`.
 
 ---
 

@@ -254,7 +254,7 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 | `galdr` | Galdr | Agent-CLI ergonomics + master builder/maintainer of the runtime | `.agents/skills/galdr/SKILL.md` |
 | `tyr-check` | Tyr | The judge — 10 Galdr principles + runtime gates | `.agents/skills/tyr-check/SKILL.md` |
 | `smidja` | Smiðja | The smithy — rosters, phases, envelopes, runs, trace | `.agents/skills/smidja/SKILL.md` |
-| `modeltesting` | — | Model evaluation harness (Ollama, LM Studio, llama.cpp, Unsloth) | `.agents/skills/modeltesting/SKILL.md` |
+| `galdr` → `local-models` | — | operating on local models: engines, wiring, honest measurement | `.agents/skills/galdr/assets/local-models.md` |
 
 ### Adopted skills (operational)
 

@@ -188,7 +188,6 @@ the master builder; Tyr judges compliance.
 | `galdr` | Galdr | agent-CLI ergonomics + master builder/maintainer of the runtime |
 | `tyr-check` | Tyr | the judge — validates tools/skills/docs against the 10 principles |
 | `smidja` | Smiðja | the smithy: roster + bounded phases + typed envelopes |
-| `modeltesting` | — | model evaluation harness |
 | `hvild-afk` | Hvíld | away-mode supervision: routine wakes self-handled, escalations batched |
 | `saga` | Sága | session bearings: fleet digest (/bearings) + recap (/ahoy) |
 | `muninn-stow` | Muninn | session-knowledge curation, routing, and persistence |
