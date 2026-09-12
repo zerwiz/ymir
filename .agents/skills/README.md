@@ -7,7 +7,7 @@ matches its work (Gungnir naming law).
 ## Registry (`.agents/skills/`)
 
 ```
-skills[25]{name,norse,purpose,origin}:
+skills[23]{name,norse,purpose,origin}:
   "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer of the runtime","core"
   "tyr-check","Tyr","the judge — 10 principles + runtime gates","core"
   "smidja","Smiðja","the smithy (roster + phases + envelopes)","core"
@@ -26,9 +26,7 @@ skills[25]{name,norse,purpose,origin}:
   "gjallarhorn-relay","Gjallarhorn","public relay replies (X/Discord)","adopted"
   "eindri-homes","Eindri","isolated worker homes (provisioning)","adopted"
   "syn-recovery","Sýn","stuck-worker recovery playbook","adopted"
-  "ymir-update","Ymir","self-update the running system + workers","adopted"
-  "ymir-omarchy","Ymir","Omarchy-native operation: desktop, monitors, placement, GPU, host learning","new"
-  "ymir-thjazi","Þjazi","the herdr/tmux terminal backend — install, protocol floors, panes","new"
+  "ymir","Ymir","operate the host: self-update · Omarchy desktop · Þjazi backend","new"
   "hamr","Hamr","per-harness adapter reference","adopted"
   "pr-ops","—","PR lifecycle — create, update, check status, request merge","new"
   "hnoss","Hnoss","design artifacts via the OpenDesign engine (prototypes, decks, dashboards, image, video)","new"
