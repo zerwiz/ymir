@@ -7,7 +7,7 @@ commands, or compliance assets.
 ## Internal skills registry
 
 ```
-skills[33]{name,norse,purpose,path,status}:
+skills[30]{name,norse,purpose,path,status}:
   "galdr","Galdr","AXI incantation standards + master builder/maintainer",".agents/skills/galdr/SKILL.md","live"
   "tyr-check","Tyr","The judge — validates tools/skills/docs against the 10 principles",".agents/skills/tyr-check/SKILL.md","live"
   "smidja","Smíðja","The smithy — roster, phases, envelopes, trace",".agents/skills/smidja/AGENTS.md","live"

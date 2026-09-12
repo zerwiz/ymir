@@ -78,7 +78,9 @@ else
 fi
 
 # --- mocks ------------------------------------------------------------------
-mock_hits=$(grep -rniE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null || true)
+# A legitimate filename is not a stub: TODO.md appears in an allowlist in
+# bin/public-guard.sh, so ignore that filename (not the word) here.
+mock_hits=$(grep -rniE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null | grep -v 'PUBLIC=' || true)
 if [ -z "$mock_hits" ]; then
   add mocks "no mocks in shipped runtime" PASS "bin/ clean"
 else

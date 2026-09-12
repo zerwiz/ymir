@@ -51,12 +51,23 @@ if listening; then
   exit 0
 fi
 [ -e "$BRIDGE" ] || { printf 'error: bridge not found: %s\nhelp: expected bin/mimir-bridge.py\n' "$BRIDGE" >&2; exit 1; }
-if ! python3 -c "import engram" 2>/dev/null; then
-  printf 'error: engram not installed\nhelp: python3 -m pip install --user engram\n' >&2; exit 1
+# engram needs Python >=3.12,<3.14, which the system python may not be. Prefer a
+# recorded interpreter, then a compatible one on PATH, and only then python3.
+PY="${YMIR_ENGRAM_PYTHON:-}"
+if [ -z "$PY" ] && [ -r "${YMIR_ENGRAM_PY:-$HOME/.config/ymir/engram-python}" ]; then
+  PY="$(cat "${YMIR_ENGRAM_PY:-$HOME/.config/ymir/engram-python}" 2>/dev/null)"
+fi
+if [ -z "$PY" ]; then
+  for c in python3.12 python3.13; do command -v "$c" >/dev/null 2>&1 && { PY="$c"; break; }; done
+fi
+[ -n "$PY" ] || PY=python3
+
+if ! "$PY" -c "import engram" 2>/dev/null; then
+  printf 'error: engram not installed for %s\nhelp: bin/prereq-ensure.sh engram   (installs it into a compatible Python)\n' "$PY" >&2; exit 1
 fi
 
 mkdir -p "$ROOT/state" "$(dirname "$DB")"
-ENGRAM_DB="$DB" MIMIRSBRUNN_PORT="$PORT" nohup python3 "$BRIDGE" >"$LOG_FILE" 2>&1 &
+ENGRAM_DB="$DB" MIMIRSBRUNN_PORT="$PORT" nohup "$PY" "$BRIDGE" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 sleep 3
 if listening; then

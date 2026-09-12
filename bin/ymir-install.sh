@@ -107,12 +107,17 @@ step_prereqs() {
   have docker || miss="$miss docker"
   have gh || miss="$miss gh"
   if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "git python3 bun docker gh mcp<2"; fi
-  # engram is reported separately and never fails the step.
-  if python3 -c "import engram" >/dev/null 2>&1; then
-    add memory-well OK "engram present"
+  # The well engine: attempt to provision it rather than leaving a hint. engram
+  # needs Python 3.12/3.13, so prereq-ensure installs it into a compatible
+  # interpreter and records which one — the bridge then reuses it.
+  if [ -x "$SCRIPT_DIR/prereq-ensure.sh" ]; then
+    if "$SCRIPT_DIR/prereq-ensure.sh" engram >/dev/null 2>&1; then
+      add memory-well OK "engram installed for the engine's Python"
+    else
+      add memory-well WARN "engram could not be installed — bin/prereq-ensure.sh engram (needs Python 3.12/3.13)"
+    fi
   else
-    local pyv; pyv="$(python3 -c 'import sys;print("%d.%d"%sys.version_info[:2])' 2>/dev/null || echo '?')"
-    add memory-well SKIP "optional — install engine then run bin/mimir-bridge.sh (have Python $pyv); platform fully runs without it"
+    add memory-well SKIP "no prereq-ensure.sh"
   fi
 }
 
