@@ -261,3 +261,10 @@ registered home's gitignored `state/` (for `ro`: `state/ro`), and
 `bin/brokk-update.sh` re-applies them on every sweep — so one fleet setting
 reaches every home without dirtying any tracked tree. Remote routes are reported,
 not written. Keys: `ro: on | off` (Ró calm presentation).
+
+## Dispatch (full chain)
+
+Seating a worker is a chain, not a guess: role → **`bin/model-resolve.sh`** →
+harness rule (local→pi, online→opencode) → **`bin/herdr-run.sh eindri`** (pane)
+→ **`bin/local-model-lock.sh`** → A2A register. Read
+`assets/dispatch.md` before dispatching, and never guess a model.
