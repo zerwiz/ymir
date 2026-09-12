@@ -1,0 +1,13 @@
+core_four:
+  context:
+    default: "docs/features/*.md"
+    routing: "AGENTS.md, STRUCTURE.md, FEATURES.md"
+  model:
+    coding: "fast-cheap-model"
+    planning: "large-reasoning-model"
+  prompt:
+    system: "Follow AGENTS.md. No ad-hoc shell commands."
+  tools:
+    allowed_scripts: ".agents/skills/**"
+    forbidden: ["npm test", "git commit -m", "kill -9"]
+    handoff_format: "JSON/YAML typed envelopes"

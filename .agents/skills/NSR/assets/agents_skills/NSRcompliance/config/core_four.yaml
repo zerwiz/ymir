@@ -1,0 +1,16 @@
+core_four:
+  context:
+    default: "docs/features/*.md"
+    routing: "AGENTS.md, STRUCTURE.md, FEATURES.md"
+    scoped: ".agents/skills/**/SKILL.md"
+  model:
+    coding: "fast-cheap-model"
+    planning: "large-reasoning-model"
+    default: "default-model"
+  prompt:
+    system: "Follow WayOfNorthstarRules.md and AGENTS.md. No ad-hoc shell commands."
+    per_feature: ".agents/skills/features/<feature>/SKILL.md"
+  tools:
+    allowed_scripts: ".agents/skills/**"
+    forbidden: ["npm test", "git commit -m", "kill -9"]
+    handoff_format: "JSON/YAML typed envelopes"

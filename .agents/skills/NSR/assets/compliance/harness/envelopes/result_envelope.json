@@ -1,0 +1,14 @@
+{
+  "envelope": "result",
+  "version": "1.0",
+  "description": "Run verdict envelope written by the harness into envelopes/. Success must be earned: status flips to success only when every gate and phase passed.",
+  "fields": {
+    "task_id": { "type": "string", "required": true },
+    "status": { "enum": ["success", "fail", "retry", "noop", "escalate"], "required": true },
+    "gates": { "type": "object", "required": true },
+    "evidence": { "type": "array", "items": { "type": "string" }, "required": false },
+    "artifacts": { "type": "array", "items": { "type": "string" }, "required": false },
+    "ts": { "type": "number", "required": true },
+    "error": { "type": "string", "required": false }
+  }
+}
