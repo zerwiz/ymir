@@ -7,7 +7,7 @@ matches its work (Gungnir naming law).
 ## Registry (`.agents/skills/`)
 
 ```
-skills[20]{name,norse,purpose,origin}:
+skills[23]{name,norse,purpose,origin}:
   "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer of the runtime","core"
   "tyr-check","Tyr","the judge — 10 principles + runtime gates","core"
   "smidja","Smiðja","the smithy (roster + phases + envelopes)","core"
