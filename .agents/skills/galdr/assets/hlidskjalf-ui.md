@@ -140,7 +140,7 @@ line (the per-view `--user-data-dir` is stable), which is what `electron.sh` doe
 **GPU.** On a small-VRAM iGPU the Wayland `--type=gpu-process` can die with
 `amdgpu: Not enough memory for command submission` (SIGSEGV, not an OOM).
 `YMIR_DESKTOP_DISABLE_GPU=1` adds `--disable-gpu --disable-gpu-compositing` —
-these are dashboards, not 3D apps. See `assets/ymir-omarchy` / the `ymir-omarchy`
+these are dashboards, not 3D apps. See the `ymir` skill (its omarchy asset)
 skill for the full native story.
 
 ## Verification

@@ -100,7 +100,7 @@ bin/herdr-ensure.sh ensure --install  # install via the pinned, SHA-verified ins
 `ensure` installs through `.agents/backend/fm-install-herdr.sh` (exact version +
 protocol check), and falls back to reporting `tmux` when herdr cannot be fetched.
 Selection order for the running system: `config/backend` → `BROKK_BACKEND` →
-`HERDR_ENV=1` → else tmux. Full reference: the `ymir-thjazi` skill.
+`HERDR_ENV=1` → else tmux. Full reference: the `ymir` skill, `assets/thjazi.md`.
 
 ## Suggested Omarchy plugins (offered, never forced)
 

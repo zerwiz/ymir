@@ -235,7 +235,7 @@ runtime_figures[2]{figure,role,path}:
 ```
 runtime_figures[2]{figure,role,path}:
   "Jörð","Earth goddess — project registry","jord-projects skill"
-  "Urðr","Decision-hold + captain-hold","urdh-decisions skill, urdh-hold skill"
+  "Urðr","Allfather-hold lifecycle","the `urdh` skill (assets/decisions.md, assets/hold.md)"
 ```
 
 ### 7.5 Recovery and away-mode figures (lore §XX)
@@ -250,7 +250,7 @@ runtime_figures[2]{figure,role,path}:
 
 ```
 runtime_figures[2]{figure,role,path}:
-  "Ymir-update","Self-update mechanism","ymir-update skill"
+  "Ymir","Self-update mechanism","the `ymir` skill (assets/update.md)"
   "Gjallarhorn-relay","Public relay — X/Discord","gjallarhorn-relay skill, gjallarhorn-notify.sh"
 ```
 
@@ -258,8 +258,8 @@ runtime_figures[2]{figure,role,path}:
 
 ```
 runtime_figures[2]{figure,role,path}:
-  "Nornir-events","Process→event sources","nornir-events skill"
-  "Nornir-quota","Quota-aware dispatch array selection","nornir-quota skill"
+  "Nornir","Process→event sources + quota dispatch","the `nornir` skill"
+  "Nornir","Process→event sources + quota dispatch","the `nornir` skill"
 ```
 
 ### 7.8 Database and toolchain figures (lore §XXIV-XXV)

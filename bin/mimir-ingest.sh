@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).
 #
-# Mímir drinks from `assets/data/`: each Markdown section becomes an episode with
+# Mímir drinks from the operator's business material — the hoard's
+# `docs/business/` (moved there from `assets/data/` by the hoard migration):
+# each Markdown section becomes an episode with
 # a content hash, tags, source, and timestamp. Episodes are appended to the local
 # well store (`.agents/memory/well/episodes.jsonl`) and POSTed to the engram
 # bridge (`MIMIRSBRUNN_URL`, default http://127.0.0.1:4602/observe) when it is
@@ -14,7 +16,11 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DATA="${BROKK_DATA_SOURCE:-$ROOT/assets/data}"
+HOARD="${YMIR_HOARD:-$ROOT/hodd}"
+# The business material lives in the hoard (private, untracked). Keep the old
+# location as a fallback so a pre-migration home still works.
+DATA="${BROKK_DATA_SOURCE:-$HOARD/docs/business}"
+[ -e "$DATA" ] || DATA="$ROOT/assets/data"
 STORE_DIR="$ROOT/.agents/memory/well"
 STORE="$STORE_DIR/episodes.jsonl"
 BRIDGE="${MIMIRSBRUNN_URL:-http://127.0.0.1:4602}"
@@ -31,7 +37,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-[ -e "$SRC" ] || { printf 'error: data path not found: %s\nhelp: pass --path or create assets/data/\n' "$SRC"; exit 1; }
+[ -e "$SRC" ] || { printf 'error: data path not found: %s\nhelp: pass --path, or put material in \$YMIR_HOARD/docs/business/\n' "$SRC"; exit 1; }
 
 mkdir -p "$STORE_DIR"
 [ -e "$STORE" ] || : >"$STORE"
