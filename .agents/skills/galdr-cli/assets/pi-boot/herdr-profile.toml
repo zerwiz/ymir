@@ -14,7 +14,7 @@ focus_new = false
 [pane.brokk]
 label = "🔨 Brokk"
 command = ["opencode", "--agent", "brokk"]
-cwd = "/home/zerwiz/Ymir"
+cwd = "$YMIR_ROOT"
 env = {}
 shell = "/bin/bash"
 focus = true
@@ -24,7 +24,7 @@ restart_delay = 5
 [pane.eindri_dev]
 label = "⚒️ Eindri-Dev"
 command = ["opencode", "--agent", "build"]
-cwd = "/home/zerwiz/Ymir/.yggdrasil/eindri-dev"
+cwd = "$YMIR_ROOT/.yggdrasil/eindri-dev"
 env = {}
 shell = "/bin/bash"
 focus = false
@@ -34,7 +34,7 @@ restart_delay = 5
 [pane.eindri_marketer]
 label = "📣 Eindri-Marketer"
 command = ["opencode", "--agent", "build"]
-cwd = "/home/zerwiz/Ymir/.yggdrasil/eindri-marketer"
+cwd = "$YMIR_ROOT/.yggdrasil/eindri-marketer"
 env = {}
 shell = "/bin/bash"
 focus = false
@@ -44,7 +44,7 @@ restart_delay = 5
 [pane.eindri_researcher]
 label = "🔍 Eindri-Researcher"
 command = ["opencode", "--agent", "build"]
-cwd = "/home/zerwiz/Ymir/.yggdrasil/eindri-researcher"
+cwd = "$YMIR_ROOT/.yggdrasil/eindri-researcher"
 env = {}
 shell = "/bin/bash"
 focus = false
@@ -53,8 +53,8 @@ restart_delay = 5
 
 [pane.valhalla]
 label = "⚖️ Valhalla"
-command = ["bash", "-c", "tail -f /home/zerwiz/Ymir/workspace/memory/runes_audit.md"]
-cwd = "/home/zerwiz/Ymir"
+command = ["bash", "-c", "tail -f $YMIR_ROOT/workspace/memory/runes_audit.md"]
+cwd = "$YMIR_ROOT"
 env = {}
 shell = "/bin/bash"
 focus = false
@@ -62,10 +62,10 @@ restart_policy = "never"
 
 [hooks]
 on_session_start = [
-  "echo 'Valhalla: Ymir PI session started' >> /home/zerwiz/Ymir/workspace/memory/runes_audit.md"
+  "echo 'Valhalla: Ymir PI session started' >> $YMIR_ROOT/workspace/memory/runes_audit.md"
 ]
 on_pane_exit = [
-  "echo 'Valhalla: Pane $PANE_NAME exited with code $EXIT_CODE' >> /home/zerwiz/Ymir/workspace/memory/runes_audit.md"
+  "echo 'Valhalla: Pane $PANE_NAME exited with code $EXIT_CODE' >> $YMIR_ROOT/workspace/memory/runes_audit.md"
 ]
 
 [thjazi]

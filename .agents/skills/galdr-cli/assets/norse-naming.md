@@ -21,7 +21,7 @@ The law is restated in four authoritative places; keep them consistent:
 |---|---|---|
 | **Allfather** (Odin) | The single human operator. Sees all realms from Hlidskjalf; talks only to Brokk. Never a subsystem — an address. | `AGENTS.md:6`, `data/operator.md` |
 | **Brokk** | The primary autonomous agent. The smith who keeps the forge hot; the single point of contact, dispatcher, and supervisor. | `AGENTS.md` (header), `opencode.json` → `default_agent: "brokk"`, `.agents/agents/brokk.md` |
-| **Ymir** | The platform itself: base host OS, master daemon, the root the whole system is named for. | repository root `/home/zerwiz/Ymir`, `AGENTS.md:24` |
+| **Ymir** | The platform itself: base host OS, master daemon, the root the whole system is named for. | repository root `$YMIR_ROOT`, `AGENTS.md:24` |
 
 **Addressing rule.** Every Brokk response opens to or includes the Allfather directly ("Allfather, …"). Broken address is a contract violation, not a style preference.
 
@@ -31,7 +31,7 @@ The law is restated in four authoritative places; keep them consistent:
 
 | Subsystem | Norse figure | Role | File / path |
 |---|---|---|---|
-| Master platform root | **Ymir** | Base host OS, master daemon | `/home/zerwiz/Ymir` |
+| Master platform root | **Ymir** | Base host OS, master daemon | `$YMIR_ROOT` |
 | Primary agent | **Brokk** | Main autonomous worker; forge-master | `AGENTS.md`, `opencode.json`, `.agents/agents/brokk.md` |
 | Sub-agent worker | **Eindri** | Isolated sandboxed worker ("the one who runs the errand") | `.agents/subagents/*.md`, `bin/einherjar-spawn.sh` |
 | Eindri specialist — code | **Sindri** (smith) | Code synthesis, refactoring, development | `.agents/subagents/developer.md` |

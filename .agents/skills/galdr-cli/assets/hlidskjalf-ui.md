@@ -198,6 +198,40 @@ the password comes from `HLIDSKJALF_AUTH` in `.env.local`, never inline. A
 hardcoded name here is both a leak into the public tree and wrong for any other
 operator — `bin/public-guard.sh` exists to catch exactly that class of mistake.
 
+### One login, and it is the one with the lore (2026-09-12)
+
+There used to be **two** ways in, and the second was a mistake:
+
+| | what it was | fate |
+|---|---|---|
+| `components/LoginModal.tsx` | the gate's login, beside the saga panel | **kept** — the only login |
+| `app/Login.tsx` | a mock identity picker (`MOCK_IDENTITIES`), "Mock · Heimdall W0028 pending", demo mode | **deleted** |
+
+The mock was wrong in a way that mattered: `App` rendered it as the fallback
+whenever the store had no session, so a *correct* sign-in could land on a screen
+offering a hardcoded identity — the operator's own name and email among them. The
+demo scaffolding went with it (`demo` flag, `setApiDemo`, `data/mock.ts`,
+`enterDemo`/`signIn`, the fake chat reply that claimed the well was seeded), and
+with it every branch that could invent data in a live session.
+
+What replaced it:
+
+- **One session shaper.** `services/auth.ts` exports `sessionFor(login)` — the
+  gate decides *who*, the UI only shapes what it renders. `App` calls
+  `gateApi.session()` at boot and establishes the session from the login the gate
+  reports; `establishSession(login)` replaced `signIn`/`enterDemo` in the store.
+- **A GitHub door on the same gate.** `LoginModal` carries *Continue with GitHub*
+  → `GET /api/auth/github`, which returns the authorize URL when
+  `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set, and the exact reason when
+  they are not. The callback (`/api/auth/github/callback`) exchanges the code,
+  reads `/user`, and then **requires an account for that login** — accounts come
+  from an invite, so GitHub never becomes an open door.
+- **A 401 still re-locks.** `noteUnauthorized` is the only thing the demo switch
+  was suppressing, and it survives without it.
+
+Verified: `tsc --noEmit` and `npm run build` green, and the served SPA renders the
+lore login with the invite affordance and no baked-in identity.
+
 ### Accounts and invites — how someone else gets in (added 2026-09-12)
 
 One operator owns an instance. `HLIDSKJALF_AUTH` is that operator. Everyone else

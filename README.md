@@ -459,7 +459,7 @@ repo. Your own credentials stay `HLIDSKJALF_AUTH` in `.env.local`.
   YMIR_SERVER_URL=https://your.server npx cap sync android
   ```
 
-  Default target is `https://ymirdell.zerwiz.org` (`capacitor.config.ts`).
+  Default target is `https://<your-host>` (`capacitor.config.ts`).
 
 - **PWA.** Open the tunnel URL on a phone and “Add to Home Screen” — the manifest
   ships in `apps/hlidskjalf/public/manifest.webmanifest`.

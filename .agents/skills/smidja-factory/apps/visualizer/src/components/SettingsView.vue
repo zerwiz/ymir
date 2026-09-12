@@ -13,9 +13,9 @@ const FIELDS = [
   {
     key: 'WOTEAMS_MCP_URL',
     label: 'MCP endpoint',
-    hint: 'Base endpoint. Default https://teamsapp.zerwiz.org — the client auto-probes /mcp/v2 → legacy /mcp → REST.',
+    hint: 'Base endpoint for your Teams MCP. The client auto-probes /mcp/v2 → legacy /mcp → REST.',
     secret: false,
-    placeholder: 'https://teamsapp.zerwiz.org',
+    placeholder: 'https://teams.example.org',
   },
   {
     key: 'WOTEAMS_AGENT_NAME',

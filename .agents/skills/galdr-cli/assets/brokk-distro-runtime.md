@@ -8,7 +8,7 @@ Companion docs: `norse-naming.md` (the component law and map), `porting-upstream
 
 A **distro** is not a model, harness, CLI, or app. It is a **directory of instructions, skills, tooling, policies, and state conventions that turns a general-purpose agent into a specialized one**. Launching a supported harness inside the clone *instantiates the primary agent and makes the user the operator*.
 
-The upstream distro this was ported from states the mechanism at `README.md:36-41` of `/home/zerwiz/Brokk`:
+The upstream distro this was ported from states the mechanism at `README.md:36-41` of `$BROKK_UPSTREAM`:
 
 > "Brokk is an agent distro for running a crew of agents. An agent distro is a portable directory of instructions, skills, tooling, policies, and state conventions that turns a general-purpose agent into a specialized one. There is no app to install: the cloned repo is the distro — `AGENTS.md`, bundled Brokk skills, and helper scripts that any terminal coding agent can follow. Launching a supported harness inside it instantiates your first mate — and makes you the Allfather."
 
@@ -27,10 +27,10 @@ Ymir adopts the identical shape, retargeted:
 
 ## 2. Home layout — tracked vs private
 
-`BROKK_HOME` selects an *instance's private* `data/`, `state/`, and `config/`, while scripts continue to come from the tracked code root (`BROKK_ROOT_OVERRIDE`, defaulting to the repo root). This is the upstream `FM_HOME` separation (`/home/zerwiz/Brokk/AGENTS.md:42-54`) mapped onto Ymir.
+`BROKK_HOME` selects an *instance's private* `data/`, `state/`, and `config/`, while scripts continue to come from the tracked code root (`BROKK_ROOT_OVERRIDE`, defaulting to the repo root). This is the upstream `FM_HOME` separation (`$BROKK_UPSTREAM/AGENTS.md:42-54`) mapped onto Ymir.
 
 ```text
-BROKK_HOME = repo root (/home/zerwiz/Ymir)  ── platform home
+BROKK_HOME = repo root ($YMIR_ROOT)  ── platform home
            = svartalfaheim/<realm>/         ── realm home (when provisioned)
 
 tracked (shared, committed)            private (gitignored)

@@ -1,6 +1,6 @@
 // Known realms autocomplete; arbitrary realm ids are allowed so a freshly
 // provisioned tenant (first GitHub login) can exist without a rebuild.
-export type RealmId = 'way-of' | 'zerwiz' | 'craig' | (string & {});
+export type RealmId = 'work' | 'personal' | (string & {});
 
 export type TenantRole = 'owner' | 'admin' | 'member';
 
@@ -23,7 +23,8 @@ export interface User {
 export interface Session {
   user: User;
   tenants: TenantGrant[];
-  method: 'github';
+  /** How the session was established. `github` is OAuth through the gate. */
+  method: 'github' | 'gate';
   issuedAt: string;
   /** mock JWS — replaced by Heimdall-issued httpOnly JWT once W0028 lands */
   token: string;

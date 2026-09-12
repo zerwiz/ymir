@@ -3,7 +3,7 @@
 -- reads. Realm isolation is enforced by RLS on every tenant table.
 
 CREATE TABLE IF NOT EXISTS realms (
-  id          TEXT PRIMARY KEY,               -- way-of, zerwiz, craig, …
+  id          TEXT PRIMARY KEY,               -- one row per tenant
   tenant      TEXT NOT NULL,
   house       TEXT NOT NULL,
   tint        TEXT,

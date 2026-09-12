@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Shell } from './Shell';
-import { Login } from './Login';
 import { Overlay } from '../components/Overlay';
 import { LoginModal } from '../components/LoginModal';
 import { gateApi } from '../services/api';
@@ -9,19 +8,26 @@ import { gateFromHash, useYmir } from '../state/store';
 
 export default function App() {
   const session = useYmir((s) => s.session);
-  const demo = useYmir((s) => s.demo);
   const [authed, setAuthed] = useState<boolean | null>(null);
 
+  /**
+   * One question at boot: has the gate let this browser in?
+   *
+   * There is exactly one login — the gate's own (`LoginModal`). An earlier build
+   * fell through to a second, mock identity picker when the store had no session
+   * yet, which meant signing in correctly could land you on a screen offering
+   * somebody else's name. The gate's answer now names the operator, and the UI
+   * session is built from it.
+   */
   useEffect(() => {
-    if (demo) {
-      setAuthed(true);
-      return;
-    }
     void gateApi
       .session()
-      .then((r) => setAuthed(r.authed))
+      .then((r) => {
+        setAuthed(r.authed);
+        if (r.authed && r.login) useYmir.getState().establishSession(r.login);
+      })
       .catch(() => setAuthed(true));
-  }, [demo]);
+  }, []);
 
   // A 401 anywhere re-locks the gate.
   useEffect(() => {
@@ -38,10 +44,10 @@ export default function App() {
   // Smíðja runs land in smidja.db at any time; poll so the Sessions/Trace/Stats
   // gates pick up a newly-written run without a page reload.
   useEffect(() => {
-    if (!session || demo) return;
+    if (!session) return;
     const id = window.setInterval(() => void useYmir.getState().refreshSmidja(), 5000);
     return () => window.clearInterval(id);
-  }, [session, demo]);
+  }, [session]);
 
   useEffect(() => {
     const onHash = () => useYmir.getState().setGate(gateFromHash());
@@ -49,28 +55,36 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  // Hold until we know (no unauthenticated flash of the app), then hard-gate.
-  if (authed === null && !demo) {
-    return null;
-  }
+  /** After the gate admits us, take its word for who we are. */
+  const admitted = () => {
+    setAuthed(true);
+    void gateApi
+      .session()
+      .then((r) => {
+        if (r.login) useYmir.getState().establishSession(r.login);
+      })
+      .catch(() => setAuthed(false));
+  };
 
-  if (authed === false) {
+  // Hold until we know (no unauthenticated flash of the app).
+  if (authed === null) return null;
+
+  if (!authed) {
     return (
       <>
-        <LoginModal
-          onAuthed={() => {
-            setAuthed(true);
-            void useYmir.getState().loadLive();
-          }}
-        />
+        <LoginModal onAuthed={admitted} />
         <Overlay />
       </>
     );
   }
 
+  // Auth in flight: the gate admitted us a moment ago and the session is
+  // being established. Hold rather than flash the login again.
+  if (!session) return null;
+
   return (
     <>
-      {session ? <Shell /> : <Login />}
+      <Shell />
       <Overlay />
     </>
   );

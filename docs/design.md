@@ -1,6 +1,6 @@
 # YMIR — Design Document
 
-> **Status:** v1.0 · owner: zerwiz · applies to Hlidskjalf (React/Vue), all Norse
+> **Status:** v1.0 · owner: Brokk · applies to Hlidskjalf (React/Vue), all Norse
 > surfaces, and the houses.
 > Sources: Ymir Rut v2.6 (`docs/ymir-rut.md` Part 3), the mythos (`docs/lore.md`),
 > the UI/UX-is-a-differentiator doctrine (ENTRY-008), and the stack ruling

@@ -274,14 +274,16 @@ See `.agents/assets/agents/naming.md` for the full component map.
   (an Electron window over Hlidskjalf by default, or the Smiðja visualizer with
   `--view smidja`), app icon + stable "Ymir" title. `stop` / `status` too.
 - `bin/gjallarhorn-tunnel.sh start` — exposes Hlidskjalf at
-  `https://ymirdell.zerwiz.org` (Cloudflare tunnel → `:3889`).
+  the operator's own hostname (Cloudflare tunnel → `:3889`).
 - The **Smiðja visualizer** lives at
   `.agents/skills/smidja-factory/apps/visualizer` and is started by `scripts/start.sh`
   (API + UI on `:8437`). Both it and Hlidskjalf come up together.
 
-Access: the gate shows an **in-app login** (no browser prompt) — user `zerwiz`,
-password in `HLIDSKJALF_AUTH` from `.env.local` (never inline). Replace the
-password login with Heimdall (oauth2-proxy) later.
+Access: the gate shows an **in-app login** (no browser prompt; there is no
+browser prompt and no operator name baked in). The operator's own credentials
+come from `HLIDSKJALF_AUTH` in `.env.local`, never inline, and everyone else is
+let in with an invite code (`bin/ymir-invite.sh`). GitHub sign-in is the same
+gate by another door, once `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set.
 
 ## The rules (law)
 

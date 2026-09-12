@@ -12,8 +12,9 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="${BROKK_ENV_FILE:-$ROOT/.env.local}"
-DOMAIN="${YMIR_DOMAIN:-ymirdell.zerwiz.org}"
-ZONE_NAME="${CLOUDFLARE_ZONE_NAME:-zerwiz.org}"
+DOMAIN="${YMIR_DOMAIN:-${YMIR_TUNNEL_HOST:-}}"
+[ -n "$DOMAIN" ] || { printf 'gjallarhorn-purge: set YMIR_DOMAIN (or YMIR_TUNNEL_HOST)\n' >&2; exit 2; }
+ZONE_NAME="${CLOUDFLARE_ZONE_NAME:-}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 HOST="${1:-$DOMAIN}"; [ "$HOST" = "--everything" ] && HOST=""

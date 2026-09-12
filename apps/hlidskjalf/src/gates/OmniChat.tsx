@@ -18,7 +18,6 @@ export function OmniChat() {
   const toggleChatAgent = useYmir((s) => s.toggleChatAgent);
   const agents = useYmir((s) => s.agents);
   const realm = useYmir((s) => s.realm);
-  const demo = useYmir((s) => s.demo);
   const [draft, setDraft] = useState('');
 
   useEffect(() => {
@@ -154,7 +153,7 @@ export function OmniChat() {
                   value={chatModel}
                   onChange={setChatModel}
                   models={chatModels}
-                  placeholder={demo ? 'demo · seeded' : 'default (auto-detect)'}
+                  placeholder="default (auto-detect)"
                 />
               </label>
               <div className="row-between">

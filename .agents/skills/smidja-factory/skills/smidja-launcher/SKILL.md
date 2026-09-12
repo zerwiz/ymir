@@ -103,7 +103,7 @@ The files that define what this launcher runs:
    — audit of `sdlc-4027` / `sdlc-4271` (2026-08-31). For long runs:
    ```bash
    tmux new-session -d -s ssf \
-     "SMIDJA_PROJECT_DIR=<target-repo> /home/zerwiz/Ymir/scripts/smidja run sdlc '<ask>'"
+     "SMIDJA_PROJECT_DIR=<target-repo> $YMIR_ROOT/scripts/smidja run sdlc '<ask>'"
    # then watch with read-only calls:  smidja sessions / smidja tail <id>
    ```
 6. **Cloud models are three.** deepseek-v4-flash (workhorse), big-pickle,

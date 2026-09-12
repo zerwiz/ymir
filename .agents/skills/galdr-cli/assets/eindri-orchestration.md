@@ -9,7 +9,7 @@ Purpose: the complete, production-grade reference for how Brokk gathers an **Ein
 > cannot drift: both carry the same `Delivery contract: mode=<mode>` line.
 >
 > Provenance: the upstream agent-distro spawn/brief/state pattern
-> (`/home/zerwiz/Brokk/bin/fm-spawn.sh`, `fm-brief.sh`, `fm-crew-state.sh`) is the source
+> (`$BROKK_UPSTREAM/bin/fm-spawn.sh`, `fm-brief.sh`, `fm-crew-state.sh`) is the source
 > of the pattern; Ymir's runtime is `bin/einherjar-spawn.sh`, `bin/erindi-brief.sh`, and
 > `bin/vor-crew-state.sh`, retargeted for plan 29. Upstream nautical labels are provenance
 > only — the Ymir names are Norse.
@@ -390,7 +390,7 @@ herdr pane list --workspace <ws>
 bin/erindi-brief.sh W0123 my-repo --mode direct-PR
 # 2. Brokk replaces {TASK} in data/W0123/brief.md
 # 3. Spawn with an explicit dispatch-resolved harness
-bin/einherjar-spawn.sh W0123 /home/zerwiz/repos/my-repo \
+bin/einherjar-spawn.sh W0123 /home/<user>/repos/my-repo \
     --mode direct-PR --harness opencode \
     --model opencode-go/deepseek-v4.1-flash --effort medium \
     --backend tmux --isolation auto
@@ -402,7 +402,7 @@ bin/vor-crew-state.sh W0123
 
 ```bash
 bin/erindi-brief.sh W0124 my-repo --scout
-bin/einherjar-spawn.sh W0124 /home/zerwiz/repos/my-repo --scout \
+bin/einherjar-spawn.sh W0124 /home/<user>/repos/my-repo --scout \
     --harness opencode --effort xhigh
 ```
 
@@ -487,7 +487,7 @@ git -C <project-dir> worktree list | grep .yggdrasil/<id>
 
 ## 12. Gotchas
 
-- **Ymir itself is not a git repo.** `git -C /home/zerwiz/Ymir rev-parse` fails; a spawn's
+- **Ymir itself is not a git repo.** `git -C $YMIR_ROOT rev-parse` fails; a spawn's
   `<project-dir>` must be a real git working tree or Yggdrasil cannot create the worktree.
 - **`config/eindri-dispatch.json` active ⇒ no implicit harness.** Omitting `--harness` is a
   hard error, not a fallback.

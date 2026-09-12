@@ -7,10 +7,10 @@ if (keystorePropsFile.exists()) {
 }
 
 android {
-    namespace "org.zerwiz.ymir"
+    namespace "org.ymir.hlidskjalf"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "org.zerwiz.ymir"
+        applicationId "org.ymir.hlidskjalf"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

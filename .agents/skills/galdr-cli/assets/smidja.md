@@ -22,7 +22,7 @@ can be watched. *Agent proposes, code disposes.*
 ## Install into a repo (idempotent)
 
 ```bash
-cd <repo-root>            # e.g. /home/zerwiz/Ymir
+cd <repo-root>            # e.g. $YMIR_ROOT
 uv run .agents/skills/smidja/scripts/install.py
 ```
 

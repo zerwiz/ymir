@@ -42,7 +42,7 @@ tools:
     - "*": "allow"
 
 workspace:
-  root: "/home/zerwiz/Ymir"
+  root: "$YMIR_ROOT"
   realm: "auto"
   paths:
     skills: ".agents/skills"

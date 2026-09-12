@@ -21,7 +21,7 @@ surfaces[5]{part,where,note}:
   "gate API",":3889 (bun apps/hlidskjalf/server/index.ts)","auth + /api/* + serves dist/; static types + caching"
   "login","in-app modal → /api/login → session cookie","user/pass from .env.local HLIDSKJALF_AUTH; Heimdall (oauth2-proxy) is the target"
   "desktop","apps/hlidskjalf/electron/main.cjs + scripts/electron.sh","single instance + one window (never stack); see the ymir skill assets/desktop.md"
-  "tunnel","gjallarhorn → ymirdell.zerwiz.org → :3889","outbound only; `bin/gjallarhorn-tunnel.sh`"
+  "tunnel","gjallarhorn → your hostname → :3889","outbound only; `bin/gjallarhorn-tunnel.sh`"
 ```
 
 ## Rules

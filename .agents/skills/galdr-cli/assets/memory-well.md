@@ -59,7 +59,7 @@ which agent wrote it.
 
 ## 3. MCP for harnesses (the shared well)
 
-`engram-mcp --db /home/zerwiz/Ymir/.agents/memory/kaia.engram` — **unscoped**, so
+`engram-mcp --db $YMIR_ROOT/.agents/memory/kaia.engram` — **unscoped**, so
 every harness reads the one well. (A scoped `--agent-id` filters reads to that
 agent and would hide the seeded `well` episodes; pass `agent_id` per `remember`
 call instead when attribution is wanted.)

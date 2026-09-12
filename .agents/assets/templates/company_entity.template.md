@@ -8,7 +8,7 @@
 name: <Venture name>
 type: <company | personal>
 owner: <operator login>
-realm: <way-of | zerwiz | craig | …>
+realm: <work | personal | …>
 house: <ymirlabs | brokkforge | runestone | muninn | dvalin | utgard | askr | mannheim>
 products:
   - <product>

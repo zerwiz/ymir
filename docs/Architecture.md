@@ -69,7 +69,7 @@ repository, orchestrated by autonomous Norse-named agents.
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Svartalfaheim** holds the realms (way-of, zerwiz, craig) and per-tenant
+- **Svartalfaheim** holds the realms (one directory per tenant) and per-tenant
   A2A discovery; **Midgard** is the shared cross-tenant space; **Runes** is the
   immutable ledger; **Valhalla** supervises the processes.
 

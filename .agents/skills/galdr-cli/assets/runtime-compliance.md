@@ -320,11 +320,11 @@ referenced by variable name only. **Failure:** a literal key/token, or an env fi
 
 ## 3. One runnable checklist
 
-Run from the Ymir root (`BROKK_HOME=/home/zerwiz/Ymir`). Non-zero output is the signal to stop.
+Run from the Ymir root (`BROKK_HOME=$YMIR_ROOT`). Non-zero output is the signal to stop.
 
 ```bash
 set -u
-ROOT="${BROKK_HOME:-/home/zerwiz/Ymir}"
+ROOT="${BROKK_HOME:-$YMIR_ROOT}"
 cd "$ROOT"
 rc=0
 
@@ -398,7 +398,7 @@ exit "$rc"
 - **The turn-end guard is inert without `state/.supervision-armed`.** A guard that fires before
   the first arm is a bug, not diligence.
 - **Cron stamps are written before the run**, so a failed job does not retry that day.
-- **`/home/zerwiz/Ymir` is not a git repo.** `git-sync` correctly reports no targets; do not
+- **`$YMIR_ROOT` is not a git repo.** `git-sync` correctly reports no targets; do not
   treat that as a failure of G10.
 - **Secret scanning is heuristic.** G11 catches common literals; the real law is that secrets
   live only in gitignored `.env.local` / `.env.realm` and are referenced by variable name.

@@ -176,7 +176,7 @@ The world-tree kept in order. Two modes, both non-destructive:
 | `BROKK_GIT_SYNC_REMOTE` | `origin` |
 | `BROKK_GIT_SYNC_TARGETS` | auto-discover |
 
-> In this checkout, `git-sync` reports `no git targets found under /home/zerwiz/Ymir` because
+> In this checkout, `git-sync` reports `no git targets found under $YMIR_ROOT` because
 > the platform root is not itself a git repository. That is a correct, reported outcome.
 
 ---
@@ -227,7 +227,7 @@ runes_append "nornir" "briefing.written" --realm way-of --message "daily briefin
 ### 4.5 Entry shape
 
 ```json
-{"timestamp":"2026-09-11T13:47:00Z","actor":"yggdrasil","order":"","realm":"way-of","event":"git.sync","message":"no git targets found under /home/zerwiz/Ymir (mode=fetch)","prev":"","checksum":"3fe78c…"}
+{"timestamp":"2026-09-11T13:47:00Z","actor":"yggdrasil","order":"","realm":"way-of","event":"git.sync","message":"no git targets found under $YMIR_ROOT (mode=fetch)","prev":"","checksum":"3fe78c…"}
 ```
 
 Every significant runtime action is carved: job runs, spawns, observer observations, git sync,
@@ -327,7 +327,7 @@ tail -n 3 workspace/memory/runes_audit.md
 tail -n 20 state/cron.log
 
 # 7. Observer left no writes in the external trees (read-only proof)
-git -C /home/zerwiz/Brokk status --porcelain    # must not contain observer edits
+git -C $BROKK_UPSTREAM status --porcelain    # must not contain observer edits
 ```
 
 ---

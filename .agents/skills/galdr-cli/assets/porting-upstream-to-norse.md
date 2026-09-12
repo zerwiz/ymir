@@ -2,11 +2,11 @@
 
 > Purpose: the reproducible record of how Ymir adopted the validated **Brokk** agent distro and retargeted it to the Brokk runtime — copy-then-edit, the coupling audit, the mechanical rename rules, the two critical invariants, what was deferred, and the verification protocol.
 
-Reference is read-only: the upstream distro lives at `/home/zerwiz/Brokk` and is cited here by path as **provenance**, never as a Ymir component name. Ymir follows the **open-source-first** law (`AGENTS.md:91-97`): reuse the validated OSS pattern, do not rebuild it. This document is the porting record, not a second architecture.
+Reference is read-only: the upstream distro lives at `$BROKK_UPSTREAM` and is cited here by path as **provenance**, never as a Ymir component name. Ymir follows the **open-source-first** law (`AGENTS.md:91-97`): reuse the validated OSS pattern, do not rebuild it. This document is the porting record, not a second architecture.
 
 ## 1. Why adopt rather than rebuild
 
-`/home/zerwiz/Brokk` is an **agent distro** (`README.md:36-41`): a directory of instructions, skills, tooling, policies, and state conventions that turns a general-purpose agent into a specialized one. Its mechanism is exactly the function Ymir needed — a harness opened in the repo instantiates the primary and injects context before the first turn.
+`$BROKK_UPSTREAM` is an **agent distro** (`README.md:36-41`): a directory of instructions, skills, tooling, policies, and state conventions that turns a general-purpose agent into a specialized one. Its mechanism is exactly the function Ymir needed — a harness opened in the repo instantiates the primary and injects context before the first turn.
 
 | What Brokk proved | What Ymir inherited |
 |---|---|
@@ -25,7 +25,7 @@ Reference is read-only: the upstream distro lives at `/home/zerwiz/Brokk` and is
 
 The method is deliberately mechanical:
 
-1. **Copy the generic mechanism**, file for file, from `/home/zerwiz/Brokk` into the Ymir tree at the same role position.
+1. **Copy the generic mechanism**, file for file, from `$BROKK_UPSTREAM` into the Ymir tree at the same role position.
 2. **Preserve the contract shape** (argument grammar, exit codes, environment overrides, output lines) so the ported scripts remain behaviorally identical where the mechanism is generic.
 3. **Retarget the labels** with a fixed rename table (§4). The retarget is a find-and-replace over names, not a redesign.
 4. **Trim to the Ymir surface.** Drop features that have no Ymir owner (Eindri-home homes, extra backends, presentation theming, relays).
@@ -293,9 +293,9 @@ the historical record.
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Reference:** `/home/zerwiz/Brokk` (read-only). **Plan:** `docs/plans/29-brokk-distro-runtime.md`.
+- **Owner:** Brokk. **Reference:** `$BROKK_UPSTREAM` (read-only). **Plan:** `docs/plans/29-brokk-distro-runtime.md`.
 - **When adding a ported file**, add a row to §8 with its upstream origin and verification status.
 - **When a §9 disagreement is resolved, remove its row** and note the fix in `data/learnings.md`.
-- **Never edit `/home/zerwiz/Brokk`.** It is provenance; Ymir reads it and never writes to it (`AGENTS.md:96`, plan 29 §9 "NOT").
+- **Never edit `$BROKK_UPSTREAM`.** It is provenance; Ymir reads it and never writes to it (`AGENTS.md:96`, plan 29 §9 "NOT").
 - **Re-run §7 gates** after any change to a ported script, and keep the naming audit (§7.5) clean of new imported terms.
 - **Keep the coupling audit (§3) current:** a new upstream mechanism is generic or coupled, and this document must say which before it is copied.

@@ -51,7 +51,7 @@ setups), `software-smidja-visualizer.md` (trace UI), `SmidjaAgentsAndModels.md`
 ## 0. The flow — always
 
 ```bash
-cd /home/zerwiz/Ymir
+cd $YMIR_ROOT
 
 scripts/smidja up                 # ① converge: LM Studio model check + visualizer + tunnel
 scripts/smidja run --mode <name> "<tight ask>"   # ② pick a team+chain and launch
@@ -75,8 +75,8 @@ from anywhere, or `cd ~/Ymir` for `just` recipes.
 so the trace DB + Kaia's memory live in that project's `smidja/smidja_data`:
 
 ```bash
-cd /home/zerwiz/CodeP/wayoffactoy && /home/zerwiz/Ymir/scripts/smidja run --mode local-fast "…"
-SMIDJA_PROJECT_DIR=/home/zerwiz/CodeP/wayoffactoy /home/zerwiz/Ymir/scripts/smidja run --mode cloud-fast "…"
+cd /home/<user>/CodeP/wayoffactoy && $YMIR_ROOT/scripts/smidja run --mode local-fast "…"
+SMIDJA_PROJECT_DIR=/home/<user>/CodeP/wayoffactoy $YMIR_ROOT/scripts/smidja run --mode cloud-fast "…"
 ```
 
 ## 2. Pick the team (roster) — local / online / hybrid
@@ -166,8 +166,8 @@ events — NO real failure, just a killed parent (audit: `sdlc-4027`/`sdlc-4271`
 
 ```bash
 tmux new-session -d -s ssf \
-  "SMIDJA_PROJECT_DIR=/home/zerwiz/CodeP/wayoffactoy SMIDJA_MODEL_TIER=local \
-   /home/zerwiz/Ymir/scripts/smidja run sdlc 'polish the homepage; done means it renders on localhost'"
+  "SMIDJA_PROJECT_DIR=/home/<user>/CodeP/wayoffactoy SMIDJA_MODEL_TIER=local \
+   $YMIR_ROOT/scripts/smidja run sdlc 'polish the homepage; done means it renders on localhost'"
 # then watch with read-only calls:
 scripts/smidja sessions; scripts/smidja tail <smidja_id>; scripts/smidja phases <smidja_id>
 ```

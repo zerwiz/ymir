@@ -2,7 +2,7 @@
 """volundr-teach.py — bulk-teach a project into Völundr's memory (wraps smidja teach).
 
 Usage:
-    volundr-teach.py <project> [--recon] [--root /home/zerwiz/Ymir]
+    volundr-teach.py <project> [--recon] [--root $YMIR_ROOT]
 
 Reads the project's key files (AGENTS.md, CHANGELOG.md, deploy/start/stop
 scripts, scripts/*.sh) and observes each into the engram — no agent tokens.

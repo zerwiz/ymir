@@ -4,19 +4,19 @@ supervision:
   name: "ymir-pi-supervision"
   description: "Valhalla supervision branch for PI primary boot under firstmate"
   backend: "supervisord"  # or pm2/docker/systemd/npm
-  config_file: "/home/zerwiz/Ymir/.config/supervisord/ymir-pi.conf"
+  config_file: "$YMIR_ROOT/.config/supervisord/ymir-pi.conf"
 
 processes:
   - name: "brokk-primary"
     command: "opencode --agent brokk"
-    directory: "/home/zerwiz/Ymir"
-    user: "zerwiz"
+    directory: "$YMIR_ROOT"
+    user: "<user>"
     autostart: true
     autorestart: "unexpected"
     startsecs: 10
     startretries: 3
-    stderr_logfile: "/home/zerwiz/Ymir/logs/brokk.err.log"
-    stdout_logfile: "/home/zerwiz/Ymir/logs/brokk.out.log"
+    stderr_logfile: "$YMIR_ROOT/logs/brokk.err.log"
+    stdout_logfile: "$YMIR_ROOT/logs/brokk.out.log"
     environment:
       OPENCODE_AGENT: "brokk"
       YMIR_REALM: "auto"
@@ -27,19 +27,19 @@ processes:
 
   - name: "eindri-dev-worker"
     command: "opencode --agent build"
-    directory: "/home/zerwiz/Ymir/.yggdrasil/eindri-dev"
-    user: "zerwiz"
+    directory: "$YMIR_ROOT/.yggdrasil/eindri-dev"
+    user: "<user>"
     autostart: false
     autorestart: "unexpected"
     startsecs: 15
     startretries: 2
-    stderr_logfile: "/home/zerwiz/Ymir/logs/eindri-dev.err.log"
-    stdout_logfile: "/home/zerwiz/Ymir/logs/eindri-dev.out.log"
+    stderr_logfile: "$YMIR_ROOT/logs/eindri-dev.err.log"
+    stdout_logfile: "$YMIR_ROOT/logs/eindri-dev.out.log"
     environment:
       OPENCODE_AGENT: "build"
       YMIR_REALM: "auto"
       EINDRI_ROLE: "developer"
-      YGGDRASIL_WORKTREE: "/home/zerwiz/Ymir/.yggdrasil/eindri-dev"
+      YGGDRASIL_WORKTREE: "$YMIR_ROOT/.yggdrasil/eindri-dev"
     health_check:
       endpoint: "http://localhost:8081/health/eindri-dev"
       interval: 30
@@ -47,19 +47,19 @@ processes:
 
   - name: "eindri-marketer-worker"
     command: "opencode --agent build"
-    directory: "/home/zerwiz/Ymir/.yggdrasil/eindri-marketer"
-    user: "zerwiz"
+    directory: "$YMIR_ROOT/.yggdrasil/eindri-marketer"
+    user: "<user>"
     autostart: false
     autorestart: "unexpected"
     startsecs: 15
     startretries: 2
-    stderr_logfile: "/home/zerwiz/Ymir/logs/eindri-marketer.err.log"
-    stdout_logfile: "/home/zerwiz/Ymir/logs/eindri-marketer.out.log"
+    stderr_logfile: "$YMIR_ROOT/logs/eindri-marketer.err.log"
+    stdout_logfile: "$YMIR_ROOT/logs/eindri-marketer.out.log"
     environment:
       OPENCODE_AGENT: "build"
       YMIR_REALM: "auto"
       EINDRI_ROLE: "marketer"
-      YGGDRASIL_WORKTREE: "/home/zerwiz/Ymir/.yggdrasil/eindri-marketer"
+      YGGDRASIL_WORKTREE: "$YMIR_ROOT/.yggdrasil/eindri-marketer"
     health_check:
       endpoint: "http://localhost:8082/health/eindri-marketer"
       interval: 30
@@ -67,34 +67,34 @@ processes:
 
   - name: "eindri-researcher-worker"
     command: "opencode --agent build"
-    directory: "/home/zerwiz/Ymir/.yggdrasil/eindri-researcher"
-    user: "zerwiz"
+    directory: "$YMIR_ROOT/.yggdrasil/eindri-researcher"
+    user: "<user>"
     autostart: false
     autorestart: "unexpected"
     startsecs: 15
     startretries: 2
-    stderr_logfile: "/home/zerwiz/Ymir/logs/eindri-researcher.err.log"
-    stdout_logfile: "/home/zerwiz/Ymir/logs/eindri-researcher.out.log"
+    stderr_logfile: "$YMIR_ROOT/logs/eindri-researcher.err.log"
+    stdout_logfile: "$YMIR_ROOT/logs/eindri-researcher.out.log"
     environment:
       OPENCODE_AGENT: "build"
       YMIR_REALM: "auto"
       EINDRI_ROLE: "researcher"
-      YGGDRASIL_WORKTREE: "/home/zerwiz/Ymir/.yggdrasil/eindri-researcher"
+      YGGDRASIL_WORKTREE: "$YMIR_ROOT/.yggdrasil/eindri-researcher"
     health_check:
       endpoint: "http://localhost:8083/health/eindri-researcher"
       interval: 30
       timeout: 5
 
   - name: "herdr-multiplexer"
-    command: "herdr start --config /home/zerwiz/Ymir/.agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml"
-    directory: "/home/zerwiz/Ymir"
-    user: "zerwiz"
+    command: "herdr start --config $YMIR_ROOT/.agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml"
+    directory: "$YMIR_ROOT"
+    user: "<user>"
     autostart: true
     autorestart: "always"
     startsecs: 5
     startretries: 5
-    stderr_logfile: "/home/zerwiz/Ymir/logs/herdr.err.log"
-    stdout_logfile: "/home/zerwiz/Ymir/logs/herdr.out.log"
+    stderr_logfile: "$YMIR_ROOT/logs/herdr.err.log"
+    stdout_logfile: "$YMIR_ROOT/logs/herdr.out.log"
     environment:
       HERDR_SESSION: "ymir-pi"
       THJAZI_PROTOCOL: "14"
@@ -104,33 +104,33 @@ processes:
       timeout: 5
 
   - name: "mimirsbrunn-bridge"
-    command: "python3 /home/zerwiz/Ymir/bin/mimir-bridge.py"
-    directory: "/home/zerwiz/Ymir"
-    user: "zerwiz"
+    command: "python3 $YMIR_ROOT/bin/mimir-bridge.py"
+    directory: "$YMIR_ROOT"
+    user: "<user>"
     autostart: true
     autorestart: "always"
     startsecs: 10
     startretries: 3
-    stderr_logfile: "/home/zerwiz/Ymir/logs/mimirsbrunn.err.log"
-    stdout_logfile: "/home/zerwiz/Ymir/logs/mimirsbrunn.out.log"
+    stderr_logfile: "$YMIR_ROOT/logs/mimirsbrunn.err.log"
+    stdout_logfile: "$YMIR_ROOT/logs/mimirsbrunn.out.log"
     environment:
       ENGRAM_PORT: "4602"
-      ENGRAM_DATA_DIR: "/home/zerwiz/Ymir/.agents/memory"
+      ENGRAM_DATA_DIR: "$YMIR_ROOT/.agents/memory"
     health_check:
       endpoint: "http://localhost:4602/health"
       interval: 30
       timeout: 5
 
   - name: "ratatoskr-bus"
-    command: "node /home/zerwiz/Ymir/.agents/bus/ratatoskr_server.js"
-    directory: "/home/zerwiz/Ymir"
-    user: "zerwiz"
+    command: "node $YMIR_ROOT/.agents/bus/ratatoskr_server.js"
+    directory: "$YMIR_ROOT"
+    user: "<user>"
     autostart: true
     autorestart: "always"
     startsecs: 5
     startretries: 3
-    stderr_logfile: "/home/zerwiz/Ymir/logs/ratatoskr.err.log"
-    stdout_logfile: "/home/zerwiz/Ymir/logs/ratatoskr.out.log"
+    stderr_logfile: "$YMIR_ROOT/logs/ratatoskr.err.log"
+    stdout_logfile: "$YMIR_ROOT/logs/ratatoskr.out.log"
     environment:
       RATATOSKR_PORT: "4603"
       REDIS_URL: "redis://localhost:6379"
@@ -154,10 +154,10 @@ groups:
 
 lifecycle:
   on_start:
-    - "mkdir -p /home/zerwiz/Ymir/logs"
-    - "mkdir -p /home/zerwiz/Ymir/.yggdrasil"
-    - "mkdir -p /home/zerwiz/Ymir/workspace/memory"
+    - "mkdir -p $YMIR_ROOT/logs"
+    - "mkdir -p $YMIR_ROOT/.yggdrasil"
+    - "mkdir -p $YMIR_ROOT/workspace/memory"
   on_stop:
-    - "echo 'Valhalla: PI supervision branch stopped' >> /home/zerwiz/Ymir/workspace/memory/runes_audit.md"
+    - "echo 'Valhalla: PI supervision branch stopped' >> $YMIR_ROOT/workspace/memory/runes_audit.md"
   on_restart:
-    - "echo 'Valhalla: Process $PROCESS_NAME restarted at $(date)' >> /home/zerwiz/Ymir/workspace/memory/runes_audit.md"
+    - "echo 'Valhalla: Process $PROCESS_NAME restarted at $(date)' >> $YMIR_ROOT/workspace/memory/runes_audit.md"

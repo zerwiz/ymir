@@ -1,6 +1,6 @@
 # Session Start & Seating — Sága, the digest
 
-When a harness opens in `/home/zerwiz/Ymir`, Brokk must take the high seat
+When a harness opens in `$YMIR_ROOT`, Brokk must take the high seat
 **before the first turn**: the session context is injected, the model bridge is
 raised, the Nornir jobs start, and the session lock binds to the live process.
 This document records how that mechanism works, how it compares to the validated

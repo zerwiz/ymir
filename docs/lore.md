@@ -57,7 +57,7 @@ The nine worlds of the myth map onto Ymir's spaces:
 
 | Realm of the myth | What it is in Ymir |
 |---|---|
-| **Svartalfaheim / Nidavellir** — the dwarf-halls under the earth | tenant workspaces: `way-of`, `zerwiz`, `craig` — the shop floors |
+| **Svartalfaheim / Nidavellir** — the dwarf-halls under the earth | tenant workspaces — the shop floors |
 | **Midgard** — the world of humans, middle, shared | cross-tenant shared assets & repos |
 | **Utgard (Jötunheim)** — outside the wall, where giants dwell | the sandbox barrier — untrusted code runs *there*, never in the halls |
 | **Yggdrasil** — the tree that binds all realms | git worktree isolation, zero-collision parallel edits |
@@ -426,7 +426,7 @@ One trace, one face — plus an optional dev face:
 
 Open the visualizer at **`http://127.0.0.1:8437/`**.
 
-- The trace DB is **repo-local**: `/home/zerwiz/Ymir/smidja/smidja_data/smidja.db`.
+- The trace DB is **repo-local**: `$YMIR_ROOT/smidja/smidja_data/smidja.db`.
   Any Smíðja run writes it; the Hlidskjalf gates (Sessions / Trace / Decisions /
   Stats) and this visualizer both read it.
 - Ports are overridable: `SMIDJA_VIZ_API_PORT`, `SMIDJA_VIZ_UI_PORT`. The SPA's
@@ -969,7 +969,7 @@ One trace, one face — plus an optional dev face:
 
 Open the visualizer at **`http://127.0.0.1:8437/`**.
 
-- The trace DB is **repo-local**: `/home/zerwiz/Ymir/smidja/smidja_data/smidja.db`.
+- The trace DB is **repo-local**: `$YMIR_ROOT/smidja/smidja_data/smidja.db`.
   Any Smíðja run writes it; the Hlidskjalf gates (Sessions / Trace / Decisions /
   Stats) and this visualizer both read it.
 - Ports are overridable: `SMIDJA_VIZ_API_PORT`, `SMIDJA_VIZ_UI_PORT`. The SPA's

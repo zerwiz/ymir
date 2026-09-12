@@ -13,11 +13,18 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statS
 import { Database } from 'bun:sqlite';
 import { dirname, extname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { invitesOpen, listAccounts, listInvites, register, verify as verifyAccount } from './accounts.ts';
+import {
+  findAccount,
+  invitesOpen,
+  listAccounts,
+  listInvites,
+  register,
+  verify as verifyAccount,
+} from './accounts.ts';
 
 const PORT = Number(process.env.PORT ?? 3889);
 const HERE = import.meta.dir;
-const ROOT = resolve(HERE, '../../..'); // /home/zerwiz/Ymir
+const ROOT = resolve(HERE, '../../..'); // the checkout this app is served from
 const AGENTS_DIR = join(ROOT, '.agents/agents');
 const SUBAGENTS_DIR = join(ROOT, '.agents/subagents');
 const AGENTS_ALT = existsSync(AGENTS_DIR) ? AGENTS_DIR : SUBAGENTS_DIR;
@@ -1379,7 +1386,8 @@ function workspaceProvision(name: string, kind: string, domains: string) {
 // HLIDSKJALF_AUTH="user:pass"; replace with Heimdall (oauth2-proxy) later.
 const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? '';
 const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
-const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? 'ymirsmidjadell.zerwiz.org').toLowerCase();
+// No default host: which hostname serves the smithy is the machine's fact.
+const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? '').toLowerCase();
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
 /** token → login. A session must know *who* it is, not merely that it exists. */
@@ -1575,6 +1583,70 @@ const server = Bun.serve({
         const made = await register(b.username ?? '', b.password ?? '', b.invite ?? '');
         if (!made.ok) return json({ error: made.reason }, 403);
         return sessionResponse(made.login);
+      }
+      /* ---- GitHub: the same gate, a second door ---------------------------- *
+       * Sign-in with GitHub never creates access on its own. It names a login,
+       * and that login must already hold an account — accounts come from an
+       * invite, so the door stays closed to strangers however they arrive. */
+      if (p === '/api/auth/github' && req.method === 'GET') {
+        const clientId = process.env.GITHUB_CLIENT_ID ?? '';
+        const clientSecret = process.env.GITHUB_CLIENT_SECRET ?? '';
+        if (!clientId || !clientSecret) {
+          return json(
+            {
+              error:
+                'GitHub sign-in is not configured. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in .env.local (a GitHub OAuth app) and restart the gate.',
+            },
+            503,
+          );
+        }
+        const state = crypto.randomUUID();
+        const redirect = `${url.origin}/api/auth/github/callback`;
+        const authorize =
+          'https://github.com/login/oauth/authorize' +
+          `?client_id=${encodeURIComponent(clientId)}` +
+          `&redirect_uri=${encodeURIComponent(redirect)}` +
+          '&scope=read:user&state=' +
+          encodeURIComponent(state);
+        return new Response(JSON.stringify({ url: authorize }), {
+          headers: {
+            'content-type': 'application/json',
+            'set-cookie': `ymir_oauth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`,
+          },
+        });
+      }
+      if (p === '/api/auth/github/callback' && req.method === 'GET') {
+        const clientId = process.env.GITHUB_CLIENT_ID ?? '';
+        const clientSecret = process.env.GITHUB_CLIENT_SECRET ?? '';
+        const code = url.searchParams.get('code') ?? '';
+        const state = url.searchParams.get('state') ?? '';
+        const expected = (req.headers.get('cookie') ?? '').match(/ymir_oauth_state=([^;]+)/)?.[1] ?? '';
+        if (!code) return json({ error: 'GitHub returned no code' }, 400);
+        if (!state || state !== expected) return json({ error: 'OAuth state did not match' }, 400);
+        const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code }),
+        });
+        const tok = (await tokenRes.json().catch(() => ({}))) as { access_token?: string };
+        if (!tok.access_token) return json({ error: 'GitHub refused the code' }, 502);
+        const userRes = await fetch('https://api.github.com/user', {
+          headers: {
+            authorization: `Bearer ${tok.access_token}`,
+            accept: 'application/vnd.github+json',
+            'user-agent': 'ymir-gate',
+          },
+        });
+        const gh = (await userRes.json().catch(() => ({}))) as { login?: string };
+        const login = (gh.login ?? '').trim().toLowerCase();
+        if (!login) return json({ error: 'GitHub returned no login' }, 502);
+        if (!findAccount(login)) {
+          return json(
+            { error: `No account is held for the GitHub login '${login}'. Ask for an invite code, then register.` },
+            403,
+          );
+        }
+        return sessionResponse(login);
       }
       if (p === '/api/invites' && req.method === 'GET' && isAuthed(req)) {
         // The operator's own view of who may still be let in.

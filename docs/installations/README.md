@@ -49,7 +49,7 @@ bin/ymir-install.sh          # prereqs, tree, engines, hermes, sandbox, memory, 
   (`apps/hlidskjalf/android`); rebuild with `./gradlew assembleDebug` (needs
   JDK 17 + Android SDK — see `docs/installations/`).
 - **Electron** is the desktop shell (`scripts/electron.sh`).
-- **cloudflared** exposes Hlidskjalf at `ymirdell.zerwiz.org`
+- **cloudflared** exposes Hlidskjalf at your own hostname (`YMIR_TUNNEL_HOST`)
   (`bin/gjallarhorn-tunnel.sh`); cache purge needs `CLOUDFLARE_API_TOKEN`.
 
 ## Rules

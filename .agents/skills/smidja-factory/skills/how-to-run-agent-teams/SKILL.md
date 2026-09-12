@@ -22,9 +22,9 @@ in the team's place.
 ## The one command
 
 ```bash
-cd /home/zerwiz/CodeP/<project> && \
-SMIDJA_PROJECT_DIR=/home/zerwiz/CodeP/<project> \
-  /home/zerwiz/Ymir/scripts/smidja run --mode nemotron-team <ask-path-or-string>
+cd /home/<user>/CodeP/<project> && \
+SMIDJA_PROJECT_DIR=/home/<user>/CodeP/<project> \
+  $YMIR_ROOT/scripts/smidja run --mode nemotron-team <ask-path-or-string>
 ```
 
 That runs the full 6-agent team (orchestrator/Kaia, planner, builder, scout,
@@ -62,7 +62,7 @@ the surface per agent (a `✓ pi` column means it runs through the pi harness).
    `cd`s to its own ROOT before launching, so cwd-based project detection
    (git toplevel) fails — a wayoffactoy ask launched from anywhere lands in
    `~/Ymir`'s data dir and agents work on the wrong repo. Always set
-   `SMIDJA_PROJECT_DIR=/home/zerwiz/CodeP/<project>` so sessions, the trace db,
+   `SMIDJA_PROJECT_DIR=/home/<user>/CodeP/<project>` so sessions, the trace db,
    and gates all live in the project (e.g. `…/wayoffactoy/smidja/smidja_data/`).
    Confirm with the header of `session/*/raw_output.jsonl` — `"cwd"` must be
    the project, and `kaia_handoff.json`'s `repo_root` must be the project.
@@ -71,7 +71,7 @@ the surface per agent (a `✓ pi` column means it runs through the pi harness).
    from the smidja ROOT, but prompts/extensions resolve from the project cwd:
    `smidja/smidja_data/prompt_engineering/` and `smidja/smidja_data/harness_engineering/`
    must exist in the project. If missing, symlink them from `~/Ymir`:
-   `ln -s /home/zerwiz/Ymir/smidja/smidja_data/{prompt_engineering,harness_engineering} smidja/smidja_data/`.
+   `ln -s $YMIR_ROOT/smidja/smidja_data/{prompt_engineering,harness_engineering} smidja/smidja_data/`.
 
 4. **Thinking is only visible on the pi surface.** The opencode CLI
    (`--format json`) does NOT stream reasoning/text parts into the NDJSON —

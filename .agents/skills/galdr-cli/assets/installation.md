@@ -360,7 +360,7 @@ helpers instead of sourcing the library, so they run anywhere on their own.
 
 Two files must contain **absolute** paths (the engram MCP server's binary and its
 database), so a tracked copy would hand every operator the previous one's home —
-exactly what `/home/zerwiz/...` did in this tree. They follow the `.env.example`
+exactly what `/home/<user>/...` did in this tree. They follow the `.env.example`
 pattern instead:
 
 | Shipped (tracked) | Rendered (gitignored) |
