@@ -108,3 +108,16 @@ use its **`url`** field. Then `a2a_call(agent_url="<url>", text="…")`.
 resolve[1]: a2a-agents -> [{"name":"hermes-zerwiz","url":"http://127.0.0.1:7777/"}, …]
 send[1]:    a2a_call agent_url="http://127.0.0.1:7777/" text="…"
 ```
+
+## Tool reference (as shipped in pi)
+
+- **`a2a_call`** — args: `agent_url` (a URL string), `text`. Sends a task and
+  returns the reply. **`agent_url` must be a URL** — a name fails `Invalid URL`.
+- **`a2a-agents` / `a2a-discover`** — list peers as `{name, url, skills}`; use
+  the `url` to address one.
+- **`a2a-send-async`**, **`a2a-pending`**, **`a2a-conversations`** — long tasks.
+- **`a2a-broadcast`**, **`a2a-chain`** — fan-out to the mesh.
+- **Delivery on receipt** is injection (`herdr agent prompt <agent> "<text>"`);
+  the reply is read back with `herdr agent read <agent>` and attached to the task.
+
+Directory: `http://127.0.0.1:7777`. Config: `~/.pi/agent/mcp.json` → `a2abridge`.
