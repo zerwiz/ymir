@@ -467,3 +467,23 @@ curl -s 127.0.0.1:4602/health      # {"status": "up", "store": ".agents/memory/k
 (mitsuba/drjit/torch) whose install pulls gigabytes of CUDA wheels and still
 leaves Ymir with no engine. The prerequisite target exists so nobody has to know
 that: `bin/prereq-ensure.sh engram`.
+
+### The rename sweep broke governed paths, not just prose (2026-09-12)
+
+The `smidja` → `smidja-factory` rename left `smidja-factory-factory` behind in
+**seven** places — `scripts/start.sh` (`VIZ_DIR`), `bin/ymir-validate.sh`,
+`bin/ymir-install.sh` (twice: the dist probe and the build dir),
+`bin/saga-session-start.sh` (the governed-path TOON row), `AGENTS.md` (the
+`governed[]` table, twice) and the guard's own `asset_for` pattern.
+
+The damage was not cosmetic: a governed path that does not exist makes the
+pretool guard stop matching, so the smidja rule protected nothing while every
+check still passed. A `governed` check now exists in
+`compliance-check.sh` for exactly this class (see `runtime-compliance.md` §G13);
+it reports `all 25 governed paths exist`.
+
+`bin/ymir-install.sh` and `bin/ymir-validate.sh` are the two files of this asset
+that the sweep corrected. The visualizer path is
+`.agents/skills/smidja-factory/apps/visualizer` — **not** a doubled
+`smidja-factory-factory`, and not the abandoned `.agents/skills/smidja/` tree
+(stale build output, moved aside).

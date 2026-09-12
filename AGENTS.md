@@ -82,7 +82,7 @@ governed[6]{path,load_first}:
   "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr-cli/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli/assets/nornir-jobs.md"
   "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-cli/assets/harness-integration/README.md"
-  "bin/smidja* | .agents/skills/smidja-factory-factory/**",".agents/skills/galdr-cli/assets/smidja.md"
+  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-cli/assets/smidja.md"
 ```
 
 Deep doctrine and the full asset index: `.agents/skills/galdr-cli/SKILL.md` and
@@ -276,7 +276,7 @@ See `.agents/assets/agents/naming.md` for the full component map.
 - `bin/gjallarhorn-tunnel.sh start` — exposes Hlidskjalf at
   `https://ymirdell.zerwiz.org` (Cloudflare tunnel → `:3889`).
 - The **Smiðja visualizer** lives at
-  `.agents/skills/smidja-factory-factory/apps/visualizer` and is started by `scripts/start.sh`
+  `.agents/skills/smidja-factory/apps/visualizer` and is started by `scripts/start.sh`
   (API + UI on `:8437`). Both it and Hlidskjalf come up together.
 
 Access: the gate shows an **in-app login** (no browser prompt) — user `zerwiz`,

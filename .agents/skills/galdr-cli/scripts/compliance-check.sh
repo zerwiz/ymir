@@ -142,7 +142,7 @@ asset_for() {
     *bin/gleipnir-lock-lib.sh|*bin/saga-session-start.sh|*state/.lock) printf '%s' "$GALDR/assets/brokk-distro-runtime.md" ;;
     *bin/nornir-*|*config/cron.yaml)           printf '%s' "$GALDR/assets/nornir-jobs.md" ;;
     *bin/valknut-load.sh|*/.pi/*|*/.opencode/*) printf '%s' "$GALDR/assets/harness-integration/README.md" ;;
-    *bin/smidja*|*.agents/skills/smidja/*)     printf '%s' "$GALDR/assets/smidja.md" ;;
+    *bin/smidja*|*.agents/skills/smidja-factory/*) printf '%s' "$GALDR/assets/smidja.md" ;;
     *)                                         printf '' ;;
   esac
 }
@@ -170,6 +170,40 @@ if [ -d "$ROOT/assets/skills/assets" ]; then
   add duplicates "no duplicate asset trees" FAIL "assets/skills/assets exists"
 else
   add duplicates "no duplicate asset trees" PASS "single canonical tree"
+fi
+
+# --- governed paths exist ---------------------------------------------------
+# A governed path that does not exist is worse than a missing rule: the pretool
+# guard stops matching silently, so the protection is gone and nothing fails.
+# (A rename left `smidja-factory-factory` in AGENTS.md and in the guard's own
+# pattern, which disabled the smidja rule without a single error.)
+gov_missing=""
+gov_count=0
+while IFS= read -r spec; do
+  [ -n "$spec" ] || continue
+  old_ifs="$IFS"; IFS='|'
+  for alt in $spec; do
+    alt="$(printf '%s' "$alt" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+    [ -n "$alt" ] || continue
+    gov_count=$((gov_count + 1))
+    [ -e "$ROOT/$alt" ] && continue
+    case "$alt" in
+      *'*'*|*'?'*|*'['*)
+        compgen -G "$ROOT/$alt" >/dev/null 2>&1 || gov_missing="$gov_missing $alt" ;;
+      *)
+        gov_missing="$gov_missing $alt" ;;
+    esac
+  done
+  IFS="$old_ifs"
+done <<EOF
+$(awk '/^governed\[/{f=1;next} f&&/^```/{exit} f{print}' "$ROOT/AGENTS.md" 2>/dev/null | sed -E 's/^ *"([^"]*)".*/\1/')
+EOF
+if [ "$gov_count" = 0 ]; then
+  add governed "governed paths resolve" SKIP "no governed table found in AGENTS.md"
+elif [ -z "$gov_missing" ]; then
+  add governed "governed paths resolve" PASS "all $gov_count governed paths exist"
+else
+  add governed "governed paths resolve" FAIL "missing:$gov_missing"
 fi
 
 # --- output -----------------------------------------------------------------

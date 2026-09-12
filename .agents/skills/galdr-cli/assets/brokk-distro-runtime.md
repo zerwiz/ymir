@@ -340,3 +340,14 @@ bash bin/runes-append.sh brokk order.completed --order W0031 --realm way-of --me
 - **Cross-check:** `norse-naming.md` §3.2 must list exactly the runtime figures this doc describes.
 
 **rename sweep (2026-09-12).** The `galdr` -> `galdr-cli` rename corrected a stale compliance path inside `bin/saga-session-start.sh`; behaviour unchanged.
+
+### The rename sweep broke governed paths, not just prose (2026-09-12)
+
+`bin/saga-session-start.sh` prints the governed-path map, and it carried
+`smidja-factory-factory` — a rename artifact. The same wrong token sat in
+`AGENTS.md`'s `governed[]` table and in the pretool guard's own `asset_for`
+pattern, so the smidja rule stopped matching and protected nothing, silently.
+
+Corrected here and in six other files. A `governed` check now resolves every
+path in the table (`compliance-check.sh`), because a governed path that does not
+exist fails open — the worst shape a guard can fail in.

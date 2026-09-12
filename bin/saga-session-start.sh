@@ -136,7 +136,7 @@ printf '  "apps/hlidskjalf/**",".agents/skills/galdr-cli/assets/hlidskjalf-ui.md
 printf '  "bin/mimir*",".agents/skills/galdr-cli/assets/memory-well.md"\n'
 printf '  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli/assets/nornir-jobs.md"\n'
 printf '  "bin/valknut-load.sh | .pi/**",".agents/skills/galdr-cli/assets/harness-integration/README.md"\n'
-printf '  "bin/smidja* | .agents/skills/smidja-factory-factory/**",".agents/skills/galdr-cli/assets/smidja.md"\n'
+printf '  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-cli/assets/smidja.md"\n'
 printf 'rule: load the asset, then change the code, then update the asset in the same change.\n'
 
 section "TOOL SURFACE"

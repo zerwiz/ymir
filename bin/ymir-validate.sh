@@ -101,7 +101,7 @@ else
 fi
 
 # ── 7b. visualizer UI (the API serves it from ./dist) ───────────────────
-VIZ="$ROOT/.agents/skills/smidja-factory-factory/apps/visualizer"
+VIZ="$ROOT/.agents/skills/smidja-factory/apps/visualizer"
 if [ -d "$VIZ/dist" ]; then
   add visualizer PASS "UI built and served on :8437"
 elif [ -d "$VIZ" ]; then
