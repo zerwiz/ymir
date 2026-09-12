@@ -4,8 +4,15 @@
 # The visualizer reads `smidja/smidja_data/smidja.db`. On a fresh install that
 # file does not exist yet, so the visualizer has nothing to show. This creates
 # the DB (via the tracer's own schema — the single owner of the format) and
-# seeds one bootstrap session, so the Sessions/Trace/Stats views are live from
-# the very first install. Idempotent: an existing DB is left untouched.
+# seeds one bootstrap session, so the Sessions and Stats views are live from the
+# very first install.
+#
+# Scope, stated honestly: the seed writes a row in `sessions` only. Trace events
+# come from phase and agent activity (`phase_*` / `agent_*` record them), so the
+# Trace view stays empty until the first real run. A seeded session is proof the
+# schema and the read path work — it is not a demo of a run.
+#
+# Idempotent: an existing DB is left untouched.
 #
 # Usage:
 #   bin/smidja-bootstrap.sh [--check] [--db <path>]
