@@ -239,68 +239,56 @@ step_backend() {
 # extras (the post-update hook) apply only when Omarchy is present. A non-Omarchy
 # host still gets host learning and desktop placement — this is not a bonus for
 # Omarchy, it is part of a normal install.
-step_host() {
-  local on_omarchy=0
-  [ -d /usr/share/omarchy ] && on_omarchy=1
-  local learned=no placed=no hooked=no
+# ── 3b. the Omarchy installation layer (Rule 05) ─────────────────────────────
+# Ymir is Omarchy-first: the desktop integration is a LAYER beside the portable
+# core, and it owns its own installer. The core calls it here and reports one
+# line; everything inside is the layer's business.
+step_omarchy() {
+  if [ ! -x "$SCRIPT_DIR/omarchy-install.sh" ]; then add omarchy SKIP "no omarchy-install.sh"; return 0; fi
+  if [ "$CHECK" = 1 ]; then
+    "$SCRIPT_DIR/omarchy-install.sh" --check >/dev/null 2>&1
+  else
+    "$SCRIPT_DIR/omarchy-install.sh" >/dev/null 2>&1
+  fi
+  rc=$?
+  if [ "$rc" = 0 ]; then
+    if [ -d /usr/share/omarchy ]; then add omarchy OK "layer applied (sense · hook · plugins · desktops · editor · alarm · backend)"
+    else add omarchy SKIP "not an Omarchy host — the core runs without this layer"; fi
+  else
+    add omarchy WARN "layer reported a failing step — run bin/omarchy-install.sh to see which"
+  fi
+}
 
+step_host() {
+  # Core host learning: record THIS machine so the agent helps with the real one.
+  # The Omarchy-specific extras (desktop placement, the post-update hook, the
+  # plugin offer, the desktop alarm channel) belong to the Omarchy layer and are
+  # applied by step_omarchy; nothing here assumes Omarchy.
+  local learned=no
   if [ "$CHECK" = 1 ]; then
     if [ -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then
-      local snap; snap="$("$SCRIPT_DIR/omarchy-sense.sh" status 2>&1 | sed -n '2p' | sed -E 's/^ *//; s/^"//; s/"$//' | tr -d '\n' | cut -c1-70)"
+      local snap; snap="$("$SCRIPT_DIR/omarchy-sense.sh" status 2>&1 | sed -n '2p' | tr -d '"' | cut -c1-60)"
       learned="${snap:-no snapshot yet}"
     fi
-    add host OK "${learned}; omarchy=${on_omarchy}"; return
-  fi
-
-  # 1. Learn the host (Omarchy version, packages, configs, monitors, scale).
-  if [ -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then
-    "$SCRIPT_DIR/omarchy-sense.sh" observe --quiet >/dev/null 2>&1 && learned=yes
-  fi
-
-  # 2. Place the desktop apps on their own desktops (Hyprland hosts).
-  if [ -x "$SCRIPT_DIR/desktop-place.sh" ]; then
-    "$SCRIPT_DIR/desktop-place.sh" apply >/dev/null 2>&1 && placed=yes
-  fi
-
-  # 3. Omarchy extras: re-learn after every `omarchy update`.
-  if [ "$on_omarchy" = 1 ] && [ -x "$SCRIPT_DIR/omarchy-hook-install.sh" ]; then
-    "$SCRIPT_DIR/omarchy-hook-install.sh" install >/dev/null 2>&1 && hooked=yes
-  fi
-
-  # 4. The wedge-alarm channel: when an away-mode escalation cannot reach the
-  #    pane, the alarm must still reach the Allfather. Write the channel directive
-  #    so the supervisor's alarm has somewhere to land.
-  local wedged=no
-  if [ -x "$SCRIPT_DIR/wedge-notify.sh" ] && [ ! -e "$ROOT/config/wedge-alarm" ]; then
-    mkdir -p "$ROOT/config" 2>/dev/null || true
-    if printf '# The channel the away-mode wedge alarm fires on when an escalation\n# cannot be delivered into the pane. See bin/wedge-notify.sh.\ndesktop\n' >"$ROOT/config/wedge-alarm" 2>/dev/null; then
-      wedged=yes
-    fi
-  elif [ -e "$ROOT/config/wedge-alarm" ]; then
-    wedged=kept
-  fi
-
-  # 5. Suggest Omarchy plugins that render Ymir's own organs on the desktop
-  #    (herdr, Hermes, skills). Offered and listed, never installed unbidden —
-  #    they are third-party code running inside the shell.
-  local plugged=offered
-  if [ "$on_omarchy" = 1 ] && [ -x "$SCRIPT_DIR/omarchy-plugins.sh" ]; then
-    "$SCRIPT_DIR/omarchy-plugins.sh" suggest >/dev/null 2>&1 || true
-  elif [ "$on_omarchy" != 1 ]; then
-    plugged="n/a"
-  fi
-
-  # 6. Seed the private agent setup from the tracked template (idempotent):
-  #    config/agents.yaml is the Allfather's own — never overwritten once set.
-  local agents_cfg=kept
-  if [ ! -e "$ROOT/config/agents.yaml" ] && [ -r "$ROOT/config/agents.yaml.example" ]; then
-    cp "$ROOT/config/agents.yaml.example" "$ROOT/config/agents.yaml" 2>/dev/null && agents_cfg=seeded
-  fi
-
-  if [ "$on_omarchy" = 1 ]; then
-    add host OK "learnt the host; desktops placed=${placed}; post-update hook=${hooked}; wedge alarm=${wedged}; plugins=${plugged}; agent setup=${agents_cfg}"
+    add host OK "host snapshot: ${learned}"
   else
-    add host OK "learnt the host; desktops placed=${placed}; wedge alarm=${wedged}; agent setup=${agents_cfg} (not an Omarchy host)"
+    if [ -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then
+      "$SCRIPT_DIR/omarchy-sense.sh" observe --quiet >/dev/null 2>&1 && learned=yes
+    fi
+    add host OK "host learnt=${learned}"
+  fi
+
+  # The Allfather's own agent setup, seeded from the tracked template. Idempotent:
+  # config/agents.yaml is private and is never overwritten once set. --check never
+  # writes, so it only reports.
+  if [ -e "$ROOT/config/agents.yaml" ]; then
+    add agents-config OK "kept (private, never overwritten)"
+  elif [ "$CHECK" = 1 ]; then
+    add agents-config WARN "not seeded (run without --check)"
+  elif [ -r "$ROOT/config/agents.yaml.example" ] && cp "$ROOT/config/agents.yaml.example" "$ROOT/config/agents.yaml" 2>/dev/null; then
+    add agents-config OK "seeded from the template"
+  else
+    add agents-config WARN "could not seed config/agents.yaml"
   fi
 }
 
@@ -441,11 +429,8 @@ step_desktop() {
   if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && [ "$(ymir_os)" != macos ]; then
     add desktop SKIP "no display (headless) — run scripts/electron.sh start --both"; return
   fi
-  # On Omarchy, place each app on its OWN numbered desktop (preferring EMPTY
-  # ones) BEFORE launching, so they open separated instead of stacked.
-  if [ -x "$SCRIPT_DIR/desktop-place.sh" ] && [ -d /usr/share/omarchy ]; then
-    "$SCRIPT_DIR/desktop-place.sh" apply >/dev/null 2>&1 || true
-  fi
+  # Placement is the Omarchy layer's job and has already run (step_omarchy runs
+  # before this step), so here we only launch.
   if "$ROOT/scripts/electron.sh" start --both >/dev/null 2>&1; then
     add desktop OK "raised Hlidskjalf + Smíðja"
   else
@@ -508,7 +493,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_loaders; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate
