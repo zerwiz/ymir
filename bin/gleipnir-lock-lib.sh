@@ -98,6 +98,7 @@ gleipnir_lock_acquire() {
   gleipnir_state_dir state
   mkdir -p "$state"
   lock="$state/.lock"
+  gleipnir_lock_reap   # a dead owner's lock is not a lock — clear it first
   gleipnir_session_pid want
   gleipnir_lock_owner owner
   if [ -n "$owner" ] && [ "$owner" != "$want" ] && gleipnir_pid_alive "$owner"; then
@@ -105,6 +106,21 @@ gleipnir_lock_acquire() {
   fi
   printf '%s\n' "$want" >"$lock"
   GLEIPNIR_LOCK_ACQUIRED=1
+  return 0
+}
+
+# A lock whose owner is dead is NOT a lock. Remove it so an abnormal session
+# close (crash, kill, closing the terminal) can never leave a stale .lock
+# holding supervision and lighting the blind turn-end guard.
+gleipnir_lock_reap() {
+  local lock owner
+  gleipnir_lock_path lock
+  [ -e "$lock" ] || return 0
+  gleipnir_lock_owner owner
+  if [ -n "$owner" ] && ! gleipnir_pid_alive "$owner"; then
+    rm -f "$lock"
+    printf 'gleipnir: reaped stale lock (dead pid %s)\n' "$owner" >&2
+  fi
   return 0
 }
 
