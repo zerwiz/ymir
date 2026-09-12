@@ -108,6 +108,6 @@ Full gates and runnable checks: `assets/runtime-compliance.md`.
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
 - **Mirror:** `.agents/skills/tyr-check/assets/build-method.md`.
 - Update the asset map and harness matrix whenever a component or harness changes.

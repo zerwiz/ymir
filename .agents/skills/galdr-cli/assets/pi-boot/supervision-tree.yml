@@ -86,7 +86,7 @@ processes:
       timeout: 5
 
   - name: "herdr-multiplexer"
-    command: "herdr start --config /home/zerwiz/Ymir/.agents/skills/galdr/assets/pi-boot/herdr-profile.toml"
+    command: "herdr start --config /home/zerwiz/Ymir/.agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml"
     directory: "/home/zerwiz/Ymir"
     user: "zerwiz"
     autostart: true

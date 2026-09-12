@@ -9,7 +9,7 @@
 Three clauses make the law enforceable:
 
 1. **Name for the role, never the mood.** A component is named for *what it does* — Sága is the seeress because she sees all that happens and therefore owns the session-start digest. Do not name a component after a figure you merely like.
-2. **Flavor may season a line; it must never name a subsystem or leak into docs.** Conversational Norse color ("the forge is hot") is permitted in a spoken reply. It is forbidden in file names, subsystem names, commits, briefs, PRs, and any Markdown the runtime or other agents read — including every file in `.agents/skills/galdr/assets/`.
+2. **Flavor may season a line; it must never name a subsystem or leak into docs.** Conversational Norse color ("the forge is hot") is permitted in a spoken reply. It is forbidden in file names, subsystem names, commits, briefs, PRs, and any Markdown the runtime or other agents read — including every file in `.agents/skills/galdr-cli/assets/`.
 3. **The operator is the Allfather (Odin), never the imported `captain`.** Odin sees all realms from Hlidskjalf; the operator is the one who sits there. Brokk addresses the Allfather directly in every response and never sends a response with zero direct address. Nautical or upstream terms (`captain`, `first mate`, `crew`, `ship`, `treehouse`) are rejected outright — see §6.
 
 The law is restated in four authoritative places; keep them consistent:
@@ -52,8 +52,8 @@ The law is restated in four authoritative places; keep them consistent:
 | Issue-to-PR pipeline | **Mjollnir** | Autonomous bug-fix and PR creation | `.agents/github/webhooks/issue_listener.ts` |
 | Process health monitor | **Valhalla** | PM2/Docker process supervisor | platform services |
 | Skill synthesis engine | **Gungnir** | Dynamic skill creation & validation | `.agents/skills/` |
-| Agent ergonomics standards | **Galdr** | TOON output, 10 design principles, skill synthesis | `.agents/skills/galdr/` |
-| MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal (agent↔agent) | `.agents/skills/galdr/assets/pi-boot/herdr-profile.toml` (pane layout) |
+| Agent ergonomics standards | **Galdr** | TOON output, 10 design principles, skill synthesis | `.agents/skills/galdr-cli/` |
+| MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal (agent↔agent) | `.agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml` (pane layout) |
 | Software smidja | **Smíðja** | Repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace | `.agents/skills/smidja/` |
 | Smíðja orchestrator | **Völundr** | The master smith who runs Smíðja — the smidja's Kaia (Kaia's seat inside the smidja) | `.agents/skills/smidja/skills/volundr/` |
 
@@ -90,11 +90,11 @@ These are the figures the port actually wired into `bin/` and the harness adapte
 
 | Skill | Norse | Role | Path |
 |---|---|---|---|
-| `galdr` | Galdr | AXI incantation standards — ergonomic CLI for agents | `.agents/skills/galdr/SKILL.md` |
-| `tyr-check` | Tyr | The judge — validates tools/skills/docs against the 10 Galdr principles | `.agents/skills/galdr/tyr-check/SKILL.md` |
-| `brokk-craft` | Brokk | The forger — generates new Galdr-compliant skills in TOON | `.agents/skills/galdr/brokk-craft/SKILL.md` |
-| `galdr-compliance` | (legacy) | Superseded by `tyr-check` | `.agents/skills/galdr/galdr-compliance/SKILL.md` |
-| `galdr-crafter` | (legacy) | Superseded by `brokk-craft` | `.agents/skills/galdr/galdr-crafter/SKILL.md` |
+| `galdr` | Galdr | AXI incantation standards — ergonomic CLI for agents | `.agents/skills/galdr-cli/SKILL.md` |
+| `tyr-check` | Tyr | The judge — validates tools/skills/docs against the 10 Galdr principles | `.agents/skills/galdr-cli/tyr-check/SKILL.md` |
+| `brokk-craft` | Brokk | The forger — generates new Galdr-compliant skills in TOON | `.agents/skills/galdr-cli/brokk-craft/SKILL.md` |
+| `galdr-compliance` | (legacy) | Superseded by `tyr-check` | `.agents/skills/galdr-cli/galdr-compliance/SKILL.md` |
+| `galdr-crafter` | (legacy) | Superseded by `brokk-craft` | `.agents/skills/galdr-cli/galdr-crafter/SKILL.md` |
 
 ### 3.4 Figure reuse — one name, two roles
 
@@ -290,7 +290,7 @@ runtime_figures[2]{figure,role,path}:
 
 ```
 runtime_figures[1]{figure,role,path}:
-  "Vog","local models on this machine — the scales: which engine, how to wire the runtime to it, and how to weigh it honestly","`.agents/skills/galdr/assets/local-models.md`, `.agents/skills/galdr/scripts/bench-one.sh`"
+  "Vog","local models on this machine — the scales: which engine, how to wire the runtime to it, and how to weigh it honestly","`.agents/skills/galdr-cli/assets/local-models.md`, `.agents/skills/galdr-cli/scripts/bench-one.sh`"
 ```
 
 **Vog** is the scales. The capability that puts a local model on the balance and

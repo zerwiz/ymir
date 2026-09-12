@@ -47,8 +47,8 @@ support[5]{path,load_when}:
   "README.md","this index"
 ```
 
-Also available beside Galdr: `.agents/skills/galdr/schemas/toon-schemas.md` (TOON output
-schemas per tool type), the scripts under `.agents/skills/galdr/scripts/` (TOON +
+Also available beside Galdr: `.agents/skills/galdr-cli/schemas/toon-schemas.md` (TOON output
+schemas per tool type), the scripts under `.agents/skills/galdr-cli/scripts/` (TOON +
 compliance checks), and the same assets mirrored under
 `.agents/skills/tyr-check/assets/` for the judge.
 
@@ -68,6 +68,6 @@ related[1]{path,load_when}:
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
 - Add a row here the moment an asset is created; remove one only when superseded.
 - Keep the mirror under `tyr-check/assets/` in sync (`diff -rq` must be clean).

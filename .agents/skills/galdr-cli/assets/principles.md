@@ -379,7 +379,7 @@ if (!tryFastPath(process.argv.slice(2), { version: VERSION })) {
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md` (lean TOON).
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md` (lean TOON).
 - **Mirror:** `.agents/skills/tyr-check/assets/principles.md`.
 - When a principle changes, update the manifest block at the top and this body in
   the same edit; Tyr judges the pair for drift.

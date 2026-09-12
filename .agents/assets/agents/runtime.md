@@ -1,7 +1,7 @@
 # Runtime — PI primary boot (loaded from AGENTS.md)
 
 AGENTS.md loads this when a task touches how Ymir boots or supervises the primary.
-The full runtime spec is `.agents/skills/galdr/assets/brokk-distro-runtime.md`.
+The full runtime spec is `.agents/skills/galdr-cli/assets/brokk-distro-runtime.md`.
 
 ## Boot stack
 
@@ -26,7 +26,7 @@ pi_cli[5]{id,requirement}:
   5,"Observe into Mimirsbrunn on dispatch (`POST /observe`)"
 ```
 
-PI boot assets: `.agents/skills/galdr/assets/pi-boot/` (pi-profile.yml,
+PI boot assets: `.agents/skills/galdr-cli/assets/pi-boot/` (pi-profile.yml,
 herdr-profile.toml, einherjar-spawn.schema.json, supervision-tree.yml).
 
 ## Seating

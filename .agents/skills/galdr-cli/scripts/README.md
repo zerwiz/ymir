@@ -12,8 +12,8 @@ scripts[2]{file,purpose}:
 ## Usage
 
 ```
-python3 .agents/skills/galdr/scripts/toon-check.py <file-or-dir> [...] [--quiet] [--json]
-bash    .agents/skills/galdr/scripts/compliance-check.sh [--quiet] [--json]
+python3 .agents/skills/galdr-cli/scripts/toon-check.py <file-or-dir> [...] [--quiet] [--json]
+bash    .agents/skills/galdr-cli/scripts/compliance-check.sh [--quiet] [--json]
 ```
 
 Exit codes: `0` success, `1` violations, `2` usage error.
@@ -27,7 +27,7 @@ checks[8]{id,what}:
   "mocks","no mock/stub/placeholder/TODO in the shipped runtime (bin/)"
   "syntax","bash -n on bin/*.sh; node --check on .opencode/plugins/*.js"
   "json","every runtime JSON parses"
-  "sync","galdr/assets mirrors tyr-check/assets"
+  "sync","galdr-cli/assets mirrors tyr-check/assets"
 ```
 
 ## TOON block convention
@@ -41,5 +41,5 @@ A row of `...` marks an elided excerpt and is reported `ELIDED` (not a failure).
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
 - Extend a gate by adding to `compliance-check.sh` and a row to its `checks` block.

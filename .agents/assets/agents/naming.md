@@ -1,7 +1,7 @@
 # Naming — platform map (loaded from AGENTS.md)
 
 The full Norse component map. AGENTS.md loads this when a task names a subsystem.
-Deep doctrine (law, aetts, reject list): `.agents/skills/galdr/assets/norse-naming.md`.
+Deep doctrine (law, aetts, reject list): `.agents/skills/galdr-cli/assets/norse-naming.md`.
 
 ```
 platform[26]{subsystem,norse,role}:

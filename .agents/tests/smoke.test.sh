@@ -69,7 +69,7 @@ else
 fi
 
 # 7. Galdr/Tyr compliance
-if bash "$ROOT/.agents/skills/galdr/scripts/compliance-check.sh" >/dev/null 2>&1; then
+if bash "$ROOT/.agents/skills/galdr-cli/scripts/compliance-check.sh" >/dev/null 2>&1; then
   add "galdr compliance" OK
 else
   add "galdr compliance" FAIL

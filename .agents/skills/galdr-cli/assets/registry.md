@@ -8,7 +8,7 @@ commands, or compliance assets.
 
 ```
 skills[30]{name,norse,purpose,path,status}:
-  "galdr","Galdr","AXI incantation standards + master builder/maintainer",".agents/skills/galdr/SKILL.md","live"
+  "galdr","Galdr","AXI incantation standards + master builder/maintainer",".agents/skills/galdr-cli/SKILL.md","live"
   "tyr-check","Tyr","The judge — validates tools/skills/docs against the 10 principles",".agents/skills/tyr-check/SKILL.md","live"
   "smidja","Smíðja","The smithy — roster, phases, envelopes, trace",".agents/skills/smidja/AGENTS.md","live"
   "volundr","Völundr","The master smith — Smíðja orchestrator (Kaia's seat inside the factory)",".agents/skills/smidja/skills/volundr/SKILL.md","live"
@@ -21,7 +21,7 @@ skills[30]{name,norse,purpose,path,status}:
   "create-new-teams","—","Create a new smithy team (roster stack)",".agents/skills/smidja/skills/create-new-teams/SKILL.md","live"
   "git-ops","—","Branch creation, safe commits, sync upstream",".agents/skills/smidja/skills/git-ops/SKILL.md","live"
   "pr-ops","—","PR lifecycle — create, update, status, merge",".agents/skills/pr-ops/SKILL.md","live"
-  "vog","Vog","Local-model operation (llama.cpp, LM Studio, Ollama): engines, wiring, honest measurement",".agents/skills/galdr/assets/local-models.md","asset"
+  "vog","Vog","Local-model operation (llama.cpp, LM Studio, Ollama): engines, wiring, honest measurement",".agents/skills/galdr-cli/assets/local-models.md","asset"
   "hamr","Hamr","Per-harness adapter reference",".agents/skills/hamr/AGENTS.md","live"
   "frigg-consent","Frigg","Consent / ask-user authority gate",".agents/skills/frigg-consent/AGENTS.md","live"
   "jord-projects","Jörð","Project registry + delivery posture",".agents/skills/jord-projects/AGENTS.md","live"
@@ -36,8 +36,8 @@ skills[30]{name,norse,purpose,path,status}:
   "hvild-afk","Hvíld","Away-mode supervision",".agents/skills/hvild-afk/AGENTS.md","live"
   "muninn-stow","Muninn","Session-knowledge curation, routing, persistence",".agents/skills/muninn-stow/AGENTS.md","live"
   "open-design","—","OpenDesign CLI — prototypes, pages, dashboards, decks, video",".agents/skills/open-design/SKILL.md","live"
-  "galdr-compliance","(legacy)","Older compliance checker — superseded by tyr-check",".agents/skills/galdr/galdr-compliance/SKILL.md","legacy"
-  "galdr-crafter","(legacy)","Older skill crafter — superseded by brokk-craft",".agents/skills/galdr/galdr-crafter/SKILL.md","legacy"
+  "galdr-compliance","(legacy)","Older compliance checker — superseded by tyr-check",".agents/skills/galdr-cli/galdr-compliance/SKILL.md","legacy"
+  "galdr-crafter","(legacy)","Older skill crafter — superseded by brokk-craft",".agents/skills/galdr-cli/galdr-crafter/SKILL.md","legacy"
 ```
 
 **Loading:** Skills auto-load from `.agents/skills/` via `opencode.json` →
@@ -79,7 +79,7 @@ All three declare the Utgard security posture: `runs_in_utgard: true`,
 `utgard_network: none`, `utgard_resource_caps: true`, `yggdrasil_worktree: true`,
 `sandboxed: true`.
 
-## Build tool categories (`.agents/skills/galdr/assets/build-tool-categories.md`)
+## Build tool categories (`.agents/skills/galdr-cli/assets/build-tool-categories.md`)
 
 ```
 build_tools[4]{category,role}:
@@ -89,7 +89,7 @@ build_tools[4]{category,role}:
   "Galdr skill assets","internal reference data under `assets/`"
 ```
 
-## TOON output schemas (`.agents/skills/galdr/schemas/toon-schemas.md`)
+## TOON output schemas (`.agents/skills/galdr-cli/schemas/toon-schemas.md`)
 
 ```
 schemas[7]{schema,fields}:
@@ -162,7 +162,7 @@ exists on this machine. These are the adopted tools, each wearing a Norse name:
 | cloudflared | **Gjallarhorn** | Cloudflare tunnel | platform service |
 | MinIO / FileBrowser | **Skrymir** | File browser | platform service |
 | PM2 / Docker | **Valhalla** | Process supervisor | platform service |
-| MCP servers | **Hermóðr** | Tool composition | `.agents/skills/galdr/assets/pi-boot/herdr-profile.toml` |
+| MCP servers | **Hermóðr** | Tool composition | `.agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml` |
 | — (Ymir-owned) | **Gungnir** | Dynamic skill creation | `.agents/skills/` |
 | OpenDesign CLI | **Od** | Design engine (HTML/PDF/PPTX/video) | `od` CLI |
 | Þjazi backend | **Þjazi** | Terminal pane presentation | `config/herdr-presentation-spaces` |
@@ -240,7 +240,7 @@ Full spec: [`smidja.md`](smidja.md). Lore: `docs/lore.md` §XI / §XIII.
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
 - **Mirror:** `.agents/skills/tyr-check/assets/registry.md`.
 - Update a registry row whenever a skill, tool, command, or profile changes.
 

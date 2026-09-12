@@ -21,7 +21,7 @@ agent (a symlink, so the two can never drift).
 
 ```
 surfaces[2]{path,kind}:
-  ".agents/skills/galdr/SKILL.md","skill (canonical)"
+  ".agents/skills/galdr-cli/SKILL.md","skill (canonical)"
   ".agents/agents/galdr.md","agent (symlink → the skill)"
 ```
 
@@ -70,7 +70,7 @@ scripts[2]{path,purpose}:
   "scripts/compliance-check.sh","run all gates: toon, naming, mocks, syntax, json, sync"
 ```
 
-Run `bash .agents/skills/galdr/scripts/compliance-check.sh` before claiming any
+Run `bash .agents/skills/galdr-cli/scripts/compliance-check.sh` before claiming any
 runtime or asset change done. Exit `1` on any FAIL.
 
 ## The 10 principles (manifest)
