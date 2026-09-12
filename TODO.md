@@ -185,7 +185,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 ## E. Repo / remote hygiene — OPEN
 
 ### E1. Remote mismatch
-- `pr-ops` documents `Way-Of/ymir`; this checkout's `origin` is `zerwiz/ymir`.
+- `pr-ops` documents `zerwiz/ymir`; this checkout's `origin` is `zerwiz/ymir`.
   Pushes have gone to `zerwiz/ymir`. **Remains:** confirm the intended remote.
 
 ### E2. Operational files are tracked and always dirty
