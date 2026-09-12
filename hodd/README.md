@@ -35,7 +35,7 @@ export YMIR_HOARD="${YMIR_HOARD:-$PWD/hodd}"
 # secrets
 set -a; . "$YMIR_HOARD/secrets/platform.env"; set +a
 # a tenant (into that tenant's work only)
-set -a; . "$YMIR_HOARD/tenants/josef/.env"; set +a
+eval "$(bin/hodd.sh emit tenants/josef/.env)"
 ```
 
 ## Migrating private material in

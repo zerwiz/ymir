@@ -5,6 +5,7 @@
 #   bin/hodd.sh init                 # create the layout
 #   bin/hodd.sh ls                   # what the Hoard holds (names, not contents)
 #   bin/hodd.sh load secrets/platform.env   # source a hoard env (quoted, safely)
+#   eval "$(bin/hodd.sh emit secrets/platform.env)"   # set them in YOUR shell
 #   bin/hodd.sh tenant josef         # source a tenant's .env (that tenant only)
 #
 # Secrets are REFERENCED by path (YMIR_HOARD, default <repo>/hodd) — never inlined.
@@ -52,8 +53,22 @@ case "$ACTION" in
     f="${1:-}"; [ -n "$f" ] || { printf 'error: load needs a path under the Hoard\n' >&2; exit 2; }
     case "$f" in /*) ;; *) f="$HOARD/$f" ;; esac
     load_env "$f" ;;
+  emit)
+    # Print `export KEY=value` lines (quoting-safe) for the CALLER to eval, so
+    # `eval "$(bin/hodd.sh emit <file>)"` sets the vars in the invoking shell.
+    f="${1:-}"; [ -n "$f" ] || { printf 'error: emit needs a path under the Hoard\n' >&2; exit 2; }
+    case "$f" in /*) ;; *) f="$HOARD/$f" ;; esac
+    [ -r "$f" ] || { printf 'error: not readable: %s\n' "$f" >&2; exit 1; }
+    python3 - "$f" <<'PY'
+import re, shlex, sys
+for line in open(sys.argv[1]):
+    m = re.match(r'^([A-Za-z_][A-Za-z0-9_]*)=(.*)$', line.rstrip("\n"))
+    if m:
+        print(f"export {m.group(1)}={shlex.quote(m.group(2))}")
+PY
+    ;;
   tenant)
     t="${1:-}"; [ -n "$t" ] || { printf 'error: tenant needs a name\n' >&2; exit 2; }
     load_env "$HOARD/tenants/$t/.env" ;;
-  *) printf 'error: unknown action %s\nhelp: bin/hodd.sh [path|init|ls|load|tenant]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/hodd.sh [path|init|ls|load|emit|tenant]\n' "$ACTION" >&2; exit 2 ;;
 esac
