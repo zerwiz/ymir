@@ -1,4 +1,14 @@
 ---
+mode: subagent
+model: opencode-go/deepseek-v4.1-flash
+permission:
+  read: allow
+  edit: allow
+  write: allow
+  glob: allow
+  grep: allow
+  bash: allow
+  skill: allow
 domain: utgard
 name: bragi
 description: "Eindri role profile — Bragi the Skald. Content creation, SEO, social copy, and marketing campaigns. Runs in Utgard on a Yggdrasil worktree."

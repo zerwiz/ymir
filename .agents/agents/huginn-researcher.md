@@ -1,4 +1,14 @@
 ---
+mode: subagent
+model: opencode-go/deepseek-v4.1-flash
+permission:
+  read: allow
+  edit: deny
+  write: deny
+  glob: allow
+  grep: allow
+  bash: allow
+  skill: allow
 domain: muninn
 name: huginn
 description: "Eindri role profile — Huginn the Sage. RAG, web search, analysis, and knowledge discovery. Runs in Utgard on a Yggdrasil worktree."

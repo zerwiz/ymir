@@ -1,4 +1,14 @@
 ---
+mode: subagent
+model: opencode-go/deepseek-v4.1-flash
+permission:
+  read: allow
+  edit: deny
+  write: deny
+  glob: allow
+  grep: allow
+  bash: allow
+  skill: allow
 domain: runestone
 name: forseti
 description: "Eindri role profile — Forseti the Just. Review, QA, acceptance, and drift. Changes nothing. Runs in Utgard on a Yggdrasil worktree."

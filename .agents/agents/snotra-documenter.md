@@ -1,4 +1,14 @@
 ---
+mode: subagent
+model: opencode-go/deepseek-v4.1-flash
+permission:
+  read: allow
+  edit: allow
+  write: allow
+  glob: allow
+  grep: allow
+  bash: allow
+  skill: allow
 domain: runestone
 name: snotra
 description: "Eindri role profile — Snotra the Wise-woman. Documentation, write-ups, and changelogs. Runs in Utgard on a Yggdrasil worktree."
