@@ -125,3 +125,6 @@ assets/reference/state/
 
 # machine config rendered from .pi/mcp.json.example (holds absolute paths)
 .pi/mcp.json
+
+# The away-mode alarm channel: written per machine by the Omarchy layer.
+.agents/config/wedge-alarm
