@@ -312,3 +312,11 @@ file hardcodes a model for him.
 - **Updating this registry:** when a new provider or model is added to
   `config/agents.yaml`, add its id here and (if it is a new server) to the
   external-tools inventory.
+
+## Hodd — the private hoard (Rule 04)
+
+`hodd/` is the ONE private place: `secrets/ · docs/ · tenants/ · identity/`.
+`hodd/.gitignore` tracks only itself, the README, and `*.example`; every other
+file beneath is untracked on every clone. Secrets are **referenced by path**
+(`YMIR_HOARD`; `bin/hodd.sh path|init|ls|load|emit|tenant`), never inlined. The
+outer ward is `bin/secret-guard.sh` (pre-commit + CI). Law: `RULES/04-hoard.md`.
