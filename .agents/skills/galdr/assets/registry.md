@@ -136,9 +136,10 @@ in sync when an aett gains its first real skill.
 ## Internal tools inventory
 
 ```
-tools[8]{tool,path,purpose,status}:
+tools[9]{tool,path,purpose,status}:
   "tasks-cli",".agents/tools/bin/tasks-cli","AXI task manager (list/view/create/close), TOON output","live"
   "tasks-cli.ts",".agents/tools/tasks-cli.ts","TypeScript source","live"
+  "agents-config.sh","bin/agents-config.sh","Show/apply the personal agent→model combination (config/agents.yaml)","live"
   "yggdrasil.ts",".agents/tools/yggdrasil.ts","Worktree CLI harness","planned"
   "hermes_runner.ts",".agents/tools/hermes_runner.ts","Realm agent CLI orchestrator","planned"
   "herder.ts",".agents/tools/herder.ts","Terminal multiplexer / pane state tracker","planned"
@@ -277,3 +278,29 @@ The house law lives in `RULES/`; Galdr must know it (Rule 01/02/03):
 is labelled **Domain**. `svartalfaheim/<company>/companies/` holds the house
 card(s); the eight domain cards live under `.../domains/`. The workspace-folder
 union is `TopicId`.
+
+## The personal agent/model combination — `config/agents.yaml`
+
+The Allfather chooses **which smith runs on which model** in one YAML; no other
+file hardcodes a model for him.
+
+- **Source of truth:** `config/agents.yaml` — `default_model` (the fallback),
+  `providers` (local, keyless servers), and `agents` (name → `provider/model`).
+- **Applier:** `bin/agents-config.sh show` prints the live combination (TOON);
+  `apply` writes `model:` into the canonical `.agents/agents/*.md` (matched by
+  their `name:`) **and** into project `opencode.json` (`provider` + `agent.*`).
+  It is idempotent and safe to re-run.
+- **Local servers.** A local llama.cpp **router needs the exact served id** —
+  including the quant suffix, e.g. `frontend-design-expert-8b@q4_k_m`; the bare
+  alias returns `model not found`. Declared under `providers:` so `apply` places
+  it in project `opencode.json`.
+- **Current choice:** Hnoss the designer runs
+  `llama.cpp/frontend-design-expert-8b@q4_k_m` on `127.0.0.1:8080` (no cloud
+  key); the rest inherit `opencode-go/deepseek-v4.1-flash`.
+- **Subagent caveat:** a `mode: subagent` profile (Hnoss) cannot be run with
+  `opencode run --agent`; the lowercased model is taken from its profile when a
+  primary dispatches it. A thin **primary** alias is the way to prove it end to
+  end.
+- **Updating this registry:** when a new provider or model is added to
+  `config/agents.yaml`, add its id here and (if it is a new server) to the
+  external-tools inventory.
