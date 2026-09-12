@@ -58,8 +58,11 @@ bad=0
 for s in "${S[@]:-}"; do [ "$s" = FAIL ] && bad=1; done
 if [ "$bad" = 1 ]; then
   printf 'commit[1]{state,detail}:\n  "refused","a gate failed — nothing was committed"\n'
-  printf 'gates[%s]{gate,status}:\n' "${#G[@]}"
-  for i in "${!G[@]}"; do printf '  "%s","%s"\n' "${G[$i]}" "${S[$i]}"; done
+  ng=${#G[@]}
+  printf 'gates[%s]{gate,status}:\n' "$ng"
+  if [ "$ng" -gt 0 ]; then
+    for i in $(seq 0 $((ng - 1))); do printf '  "%s","%s"\n' "${G[$i]}" "${S[$i]}"; done
+  fi
   printf 'help[1]{do}\n  "fix the failing gate, or pass --no-gates to commit anyway (say why in the message)"\n' >&2
   exit 1
 fi
@@ -70,7 +73,10 @@ if ! git commit -q -m "$MSG"; then
 fi
 printf 'commit[1]{sha,paths,message}:\n  "%s",%s,"%s"\n' \
   "$(git rev-parse --short HEAD)" "$STAGED" "$(printf '%s' "$MSG" | head -1 | cut -c1-60)"
-printf 'gates[%s]{gate,status}:\n' "${#G[@]:-0}"
-for i in "${!G[@]:-}"; do printf '  "%s","%s"\n' "${G[$i]}" "${S[$i]}"; done
+ng=${#G[@]}
+printf 'gates[%s]{gate,status}:\n' "$ng"
+if [ "$ng" -gt 0 ]; then
+  for i in $(seq 0 $((ng - 1))); do printf '  "%s","%s"\n' "${G[$i]}" "${S[$i]}"; done
+fi
 printf 'next[1]{step,command}:\n  "land","git-ops/sync_upstream.sh — pushes through the no-mistakes gate"\n'
 exit 0
