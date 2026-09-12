@@ -282,3 +282,10 @@ tools[6]{tool,plane}:
   "bin/einherjar-spawn.sh <id> --Eindri-home","launch a persistent home (recovery/retire above)"
   "bin/model-resolve.sh · bin/local-model-lock.sh","model choice + one-local-at-a-time"
 ```
+
+## Assets
+
+```
+assets[1]{path,holds}:
+  "assets/control-plane.md","agent lifecycle control plane (from firstmate): DATA plane (conversational send) vs CONTROL plane (allowlisted verbs interrupt/exit/relaunch), per-harness mechanics, per-backend capability"
+```
