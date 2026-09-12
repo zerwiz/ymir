@@ -98,3 +98,6 @@ apps/hlidskjalf/android/keystore.properties
 
 # Per-user Ró preference (moved to state/; never tracked)
 .agents/config/ro
+# The Allfather's personal agent/harness/model setup — private, from the
+# tracked template .agents/config/agents.yaml.example. Push it to a private repo.
+.agents/config/agents.yaml

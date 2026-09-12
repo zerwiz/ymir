@@ -29,7 +29,7 @@ install[17]{step,what,self-heals}:
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
-  "host","this machine — learnt on EVERY host","bin/omarchy-sense.sh learns the setup, bin/desktop-place.sh places the apps, the Omarchy post-update hook (when Omarchy), the wedge-alarm channel, and (on Omarchy) an OFFER of the suggested shell plugins — listed, never installed unbidden"
+  "host","this machine — learnt on EVERY host","bin/omarchy-sense.sh learns the setup, bin/desktop-place.sh places the apps, the Omarchy post-update hook (when Omarchy), the wedge-alarm channel, and (on Omarchy) an OFFER of the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build; distinguishes docker-group permission from build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
