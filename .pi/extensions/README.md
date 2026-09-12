@@ -31,7 +31,7 @@ Pi process, not the short-lived digest helper.
 
 OpenCode, Claude Code, Codex, and Cursor adapters are wired too; see
 `docs/plans/29-brokk-distro-runtime.md` §7 and
-`.agents/skills/galdr/assets/harness-integration/`. Grok is not yet implemented.
+`.agents/skills/galdr-cli/assets/harness-integration/`. Grok is not yet implemented.
 
 ## Agents
 

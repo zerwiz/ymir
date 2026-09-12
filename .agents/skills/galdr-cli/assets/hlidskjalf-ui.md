@@ -154,7 +154,7 @@ npm run build            # must be green
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
 - **Mirror:** `.agents/skills/tyr-check/assets/hlidskjalf-ui.md`.
 - When the shell, tokens, gates, or the gate API change, update this asset and
   `docs/design.md` together.

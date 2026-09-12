@@ -219,7 +219,7 @@ node --check .opencode/plugins/*.js .opencode/plugins/lib/*.js 2>/dev/null
 
 ```bash
 grep -rniE 'Allfather|Brokk|Eindri|Eindri-home|fm-|Yggdrasil|calm' \
-  bin .pi .opencode config data .agents/skills/galdr/assets/*.md \
+  bin .pi .opencode config data .agents/skills/galdr-cli/assets/*.md \
   | grep -v 'porting-upstream-to-norse.md'
 ```
 

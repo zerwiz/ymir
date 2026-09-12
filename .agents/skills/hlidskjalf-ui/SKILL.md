@@ -33,5 +33,5 @@ surfaces[5]{part,where,note}:
 - Raise/repair: `scripts/start.sh`; if the window is gone but ports answer, the
   shell must be restarted (backend ≠ window).
 
-Full reference: `.agents/skills/galdr/assets/hlidskjalf-ui.md` and the private
+Full reference: `.agents/skills/galdr-cli/assets/hlidskjalf-ui.md` and the private
 plan `hodd/docs/electron-auth.md`.

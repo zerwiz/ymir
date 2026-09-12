@@ -1,1 +1,1 @@
-../skills/galdr/SKILL.md
+../skills/galdr-cli/SKILL.md

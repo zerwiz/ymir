@@ -44,5 +44,5 @@ Not adopted as standalone skills: `firstmate-coding-guidelines` (folded into Gal
 4. **Norse-name every new skill** at synthesis: choose the figure whose role
    matches the work and let the skill inherit that name (`<figure>-<what>`).
 
-Governance: `.agents/skills/galdr/SKILL.md`; adopted-skill provenance is recorded in
-`.agents/skills/galdr/assets/reference-adoption.md`.
+Governance: `.agents/skills/galdr-cli/SKILL.md`; adopted-skill provenance is recorded in
+`.agents/skills/galdr-cli/assets/reference-adoption.md`.

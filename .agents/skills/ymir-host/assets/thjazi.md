@@ -16,7 +16,7 @@ that carries Ymir's agents across terminal panes. In the code it is **herdr** (a
 its verified reference sibling **tmux**). This skill is how Ymir is a
 herdr-first system without breaking on a tmux-only host.
 
-**Router:** `.agents/skills/galdr/SKILL.md`.
+**Router:** `.agents/skills/galdr-cli/SKILL.md`.
 
 ## Raising an Eindri (the two roads)
 
@@ -191,7 +191,7 @@ misconfiguration, not a mystery.
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
 - Source of truth for the backend spec: `assets/brokk-distro-runtime.md` (backends)
   and `assets/pi-boot-guide.md` (pane supervision). Keep this skill's floors in
   sync with those when the protocol advances.

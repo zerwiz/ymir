@@ -13,7 +13,7 @@ Tyr validates that Ymir tools, skills, and documentation follow the 10 Galdr des
 
 Tyr is the Norse god of law and justice — he judges whether a tool is fit for agent consumption.
 
-Tyr also judges the **runtime** and its **Galdr assets** for drift. Galdr is the master builder and maintainer (see `.agents/skills/galdr/SKILL.md`); Tyr is the one-handed judge that confirms what Galdr built matches what the plan, the code, and the assets claim. When code, plan, and asset disagree, that is a Tyr violation even if every test passes.
+Tyr also judges the **runtime** and its **Galdr assets** for drift. Galdr is the master builder and maintainer (see `.agents/skills/galdr-cli/SKILL.md`); Tyr is the one-handed judge that confirms what Galdr built matches what the plan, the code, and the assets claim. When code, plan, and asset disagree, that is a Tyr violation even if every test passes.
 
 ## Before You Start
 
@@ -22,8 +22,8 @@ Understand Ymir's architecture: AGENTS.md governs all agent behavior. docs/Archi
 Run the gates as one command when you can:
 
 ```
-bash .agents/skills/galdr/scripts/compliance-check.sh        # TOON output, exit 1 on any FAIL
-python3 .agents/skills/galdr/scripts/toon-check.py <path>    # TOON blocks only
+bash .agents/skills/galdr-cli/scripts/compliance-check.sh        # TOON output, exit 1 on any FAIL
+python3 .agents/skills/galdr-cli/scripts/toon-check.py <path>    # TOON blocks only
 ```
 
 ## The 10 Judgments of Tyr
@@ -125,11 +125,11 @@ Ymir's help structure:
 ## The Runtime Judgments of Tyr (11–18)
 
 These judge the Brokk distro runtime and its Galdr assets. Full detail and runnable checks
-live in `.agents/skills/galdr/assets/runtime-compliance.md`.
+live in `.agents/skills/galdr-cli/assets/runtime-compliance.md`.
 
 ### 11. Norse naming law
 Every subsystem, component, and process is named for the figure whose role matches its work; the operator is the **Allfather**, never "Allfather"; no imported or Brokk term names a component. Flavor may season a line; it must never name a subsystem or leak into docs.
-**Assess:** Does every new/changed component follow `galdr/assets/norse-naming.md`? Any imported term used as a name? Any stale legacy string in code or docs?
+**Assess:** Does every new/changed component follow `galdr-cli/assets/norse-naming.md`? Any imported term used as a name? Any stale legacy string in code or docs?
 **Improve:** Rename to the role-matched figure; record the mapping; scrub stale legacy names from code and docs in the same pass.
 
 ### 12. Runtime syntax & format validity
@@ -138,7 +138,7 @@ All runtime shell scripts pass `bash -n`; all config/JSON parses; the smoke comm
 **Improve:** Fix syntax/parse errors; add verification commands to the owning asset; never ship an unverified script.
 
 ### 13. Harness adapters fail-closed and documented
-Each supported harness has a guide under `galdr/assets/harness-integration/`, an adapter on disk, a run/nudge tier, and a fail-closed dispatch (never launch on an unverified harness; a missing dependency is a blocker, not a silent fallback).
+Each supported harness has a guide under `galdr-cli/assets/harness-integration/`, an adapter on disk, a run/nudge tier, and a fail-closed dispatch (never launch on an unverified harness; a missing dependency is a blocker, not a silent fallback).
 **Assess:** Does every supported harness have adapter + guide? Does the adapter fail closed? Is the tier accurate?
 **Improve:** Add the missing guide/adapter; enforce verification before spawn; never guess a fallback.
 
@@ -163,14 +163,14 @@ Nornir jobs are idempotent and once-per-day date-guarded; the Huginn observer is
 **Improve:** Add the date guard; make external access read-only; append, never rewrite.
 
 ### 18. Galdr assets complete and drift-free
-The runtime change is reflected in the owning Galdr asset in the same pass; `galdr/assets/README.md` routes the task; code, plan, and asset agree. `tyr-check/assets/` mirrors `galdr/assets/`; Galdr's agent surface (`.agents/agents/galdr.md`) resolves to its skill.
+The runtime change is reflected in the owning Galdr asset in the same pass; `galdr-cli/assets/README.md` routes the task; code, plan, and asset agree. `tyr-check/assets/` mirrors `galdr-cli/assets/`; Galdr's agent surface (`.agents/agents/galdr.md`) resolves to its skill.
 **Assess:** Is there an asset for the changed subsystem? Does it match the code? Are the mirrored copies in sync? Does Galdr's agent symlink resolve? Does `assets/README.md` list it?
 **Improve:** Write/update the asset now; reconcile plan vs code vs asset; re-mirror into `tyr-check/assets/`.
 
 ## Runtime compliance checklist
 
 Run this against any runtime change (expected outputs and per-check commands are owned by
-`.agents/skills/galdr/assets/runtime-compliance.md`):
+`.agents/skills/galdr-cli/assets/runtime-compliance.md`):
 
 ```
 [ ] bash -n clean on every bin/*.sh
@@ -190,7 +190,7 @@ Run this against any runtime change (expected outputs and per-check commands are
 
 - opencode: /skill tyr-check
 - Ymir harness: tyr-check skill
-- One command: `bash .agents/skills/galdr/scripts/compliance-check.sh`
+- One command: `bash .agents/skills/galdr-cli/scripts/compliance-check.sh`
 
 ## Output
 
@@ -200,19 +200,19 @@ Compliance assessment per principle and per runtime gate, with "Assess" / "Impro
 
 - Governance: `AGENTS.md`, `docs/Architecture.md`, `docs/append-only-log.md`, `docs/plans/*.md`
 - Skills: `.agents/skills/*/SKILL.md`
-- Scripts: `.agents/skills/galdr/scripts/compliance-check.sh`, `.agents/skills/galdr/scripts/toon-check.py`
+- Scripts: `.agents/skills/galdr-cli/scripts/compliance-check.sh`, `.agents/skills/galdr-cli/scripts/toon-check.py`
 - Galdr assets (also mirrored at `tyr-check/assets/`):
-  - `galdr/assets/README.md` — routing table
-  - `galdr/assets/principles.md` — the 10 principles (full doctrine)
-  - `galdr/assets/build-method.md` — build/forge procedure
-  - `galdr/assets/registry.md` — skills, tools, commands, profiles, aett
-  - `galdr/assets/norse-naming.md` — naming law + component map
-  - `galdr/assets/brokk-distro-runtime.md` — runtime spec
-  - `galdr/assets/runtime-components.md` — component inventory
-  - `galdr/assets/runtime-compliance.md` — runtime acceptance gates
-  - `galdr/assets/harness-integration/` — per-harness adapters
-  - `galdr/assets/porting-upstream-to-norse.md` — port methodology
-  - `galdr/assets/eindri-orchestration.md` — worker orchestration
-  - `galdr/assets/nornir-jobs.md` — scheduler, jobs, Runes
-  - `galdr/assets/hlidskjalf-ui.md` — UI working guide
-  - `galdr/assets/pi-boot-guide.md` — PI primary boot
+  - `galdr-cli/assets/README.md` — routing table
+  - `galdr-cli/assets/principles.md` — the 10 principles (full doctrine)
+  - `galdr-cli/assets/build-method.md` — build/forge procedure
+  - `galdr-cli/assets/registry.md` — skills, tools, commands, profiles, aett
+  - `galdr-cli/assets/norse-naming.md` — naming law + component map
+  - `galdr-cli/assets/brokk-distro-runtime.md` — runtime spec
+  - `galdr-cli/assets/runtime-components.md` — component inventory
+  - `galdr-cli/assets/runtime-compliance.md` — runtime acceptance gates
+  - `galdr-cli/assets/harness-integration/` — per-harness adapters
+  - `galdr-cli/assets/porting-upstream-to-norse.md` — port methodology
+  - `galdr-cli/assets/eindri-orchestration.md` — worker orchestration
+  - `galdr-cli/assets/nornir-jobs.md` — scheduler, jobs, Runes
+  - `galdr-cli/assets/hlidskjalf-ui.md` — UI working guide
+  - `galdr-cli/assets/pi-boot-guide.md` — PI primary boot

@@ -41,12 +41,12 @@ changed but the asset did not.
 
 ```
 governed[6]{path,load_first}:
-  "bin/ymir-install.sh",".agents/skills/galdr/assets/installation.md"
-  "apps/hlidskjalf/**",".agents/skills/galdr/assets/hlidskjalf-ui.md"
-  "bin/mimir*",".agents/skills/galdr/assets/memory-well.md"
-  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr/assets/nornir-jobs.md"
-  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr/assets/harness-integration/README.md"
-  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr/assets/smidja.md"
+  "bin/ymir-install.sh",".agents/skills/galdr-cli/assets/installation.md"
+  "apps/hlidskjalf/**",".agents/skills/galdr-cli/assets/hlidskjalf-ui.md"
+  "bin/mimir*",".agents/skills/galdr-cli/assets/memory-well.md"
+  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli/assets/nornir-jobs.md"
+  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-cli/assets/harness-integration/README.md"
+  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-cli/assets/smidja.md"
 ```
 
 The same routes appear in `AGENTS.md` (`governed[]`) and are printed in the
@@ -229,7 +229,7 @@ Allowed exceptions (documented, not defects):
 
 - Template fixtures are allowed **only** as committed `*.example` scaffolding
   (`data/*.example`, `config/*.example`); the live `data/` and `config/` must hold real files.
-- Reference-configuration assets inside `.agents/skills/galdr/assets/pi-boot/` are documentation
+- Reference-configuration assets inside `.agents/skills/galdr-cli/assets/pi-boot/` are documentation
   templates, not runtime.
 
 **Pass:** no markers in `bin/`, `config/`, `.agents/sandbox/`. **Failure:** a mock or
@@ -380,7 +380,7 @@ exit "$rc"
 - **Secret scanning is heuristic.** G11 catches common literals; the real law is that secrets
   live only in gitignored `.env.local` / `.env.realm` and are referenced by variable name.
 - **Reference-config assets are not runtime.** Files under
-  `.agents/skills/galdr/assets/pi-boot/` are documentation; G8 does not fail on them.
+  `.agents/skills/galdr-cli/assets/pi-boot/` are documentation; G8 does not fail on them.
 
 ## 6. Maintaining this
 
