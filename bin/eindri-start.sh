@@ -21,12 +21,13 @@ SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; SEAT=""; MODEL=""; KIND="${YMIR_HERDR_KIND:-pi}"
+REQ=""; ROLE=""; SEAT=""; MODEL=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --role) ROLE=${2-}; shift 2 ;;
     --kind) KIND=${2-}; shift 2 ;;
     --model) MODEL=${2-}; shift 2 ;;
+    --main) MAIN="--main"; shift ;;
     --space) SEAT="--space"; shift ;;
     --tab) SEAT="--tab"; shift ;;
     --pane) SEAT="--pane"; shift ;;
@@ -53,7 +54,7 @@ mkdir -p "$STATE"
 #    rc 3 from herdr-run means "not worth a smith" — report it, do NOT fake a seat.
 seat="none"; refuse=0; rc=0
 if [ -x "$SCRIPT_DIR/herdr-run.sh" ]; then
-  "$SCRIPT_DIR/herdr-run.sh" eindri $SEAT ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
+  "$SCRIPT_DIR/herdr-run.sh" eindri $SEAT $MAIN ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
 fi
 if [ "$rc" = 0 ]; then
   seat="herdr"
