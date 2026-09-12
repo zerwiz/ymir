@@ -83,6 +83,7 @@ export const GATE_META: Record<GateId, PageMeta> = {
     description:
       'Every factory run — phases, status, tokens, and cost — read from the smithy’s own smidja.db.',
   },
+  worktrees: { title: 'Worktrees', description: 'Yggdrasil isolated worktrees — id, branch, owning agent, head.' },
   trace: {
     title: 'Trace',
     description:

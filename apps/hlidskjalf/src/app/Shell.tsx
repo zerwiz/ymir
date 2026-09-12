@@ -19,6 +19,7 @@ import { Profile } from '../gates/Profile';
 import { Runtime } from '../gates/Runtime';
 import { Cron } from '../gates/Cron';
 import { Sessions } from '../gates/Sessions';
+import { Worktrees } from '../gates/Worktrees';
 import { Trace } from '../gates/Trace';
 import { Decisions } from '../gates/Decisions';
 import { Stats } from '../gates/Stats';
@@ -52,6 +53,8 @@ function Stage() {
       return <Cron />;
     case 'sessions':
       return <Sessions />;
+    case 'worktrees':
+      return <Worktrees />;
     case 'trace':
       return <Trace />;
     case 'decisions':

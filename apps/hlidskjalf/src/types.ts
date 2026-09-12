@@ -65,6 +65,7 @@ export type GateId =
   | 'runtime'
   | 'cron'
   | 'sessions'
+  | 'worktrees'
   | 'trace'
   | 'decisions'
   | 'stats';
