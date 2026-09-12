@@ -1,0 +1,4 @@
+# Master project registry — the SHAPE only. The real registry lives in the Hoard:
+#   hodd/identity/projects.yaml   (private; see RULES/04-hoard.md)
+# Every project carries its GitHub block; auth is a REFERENCE, never a value.
+projects: []
