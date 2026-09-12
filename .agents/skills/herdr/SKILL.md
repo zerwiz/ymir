@@ -9,7 +9,7 @@ description: >-
 allowed-tools: read,write,bash,glob,grep
 ---
 
-# Herdr — the pane backend
+# herdr — the pane backend — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)
 
 Herdr is a mouse-first, agent-aware terminal multiplexer: a background server
 owns the terminals, clients attach, and it recognises coding agents in panes.

@@ -12,7 +12,7 @@ metadata:
   internal: true
 ---
 
-# Ymir — operating the host
+# ymir — operate the host: self-update · Omarchy desktop · Þjazi backend
 
 One skill for running the machine Ymir lives on. Read the row the task needs,
 then the asset it points to.

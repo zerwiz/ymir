@@ -5,7 +5,7 @@ version: "1.0"
 allowed-tools: bash, read, write, edit
 ---
 
-# pr-ops — Pull Request Operations
+# pr-ops — PR lifecycle — create, update, check status, request merge
 
 Every agent in Ymir should have this skill. It handles the full PR lifecycle
 to the main repo at `Way-Of/ymir`.

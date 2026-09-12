@@ -9,7 +9,7 @@ metadata:
   internal: true
 ---
 
-# Eindri-home-provisioning
+# eindri-homes — isolated worker homes (provisioning)
 
 Use this reference before creating, seeding, validating, launching, handing backlog to, recovering, pushing inherited local material into, or retiring a persistent Eindri-home, and before editing `data/eindri-homes.md`.
 

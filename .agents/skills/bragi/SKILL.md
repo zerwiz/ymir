@@ -10,7 +10,7 @@ description: >-
 argument-hint: "[research | seo | content | campaign | competitor | post]"
 ---
 
-# Bragi — the skald (marketing)
+# bragi — marketing — research/crawl with Firecrawl, agentic browser with browser-use
 
 > **Norse name:** **Bragi** (the skald, poetry's god). The marketing craft.
 

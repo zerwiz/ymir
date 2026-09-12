@@ -8,7 +8,7 @@ description: >-
 allowed-tools: read,write,bash,glob,grep
 ---
 
-# Hlidskjalf — the control plane
+# hlidskjalf — the control plane UI: SPA · gate API · auth · desktop · tunnel
 
 The single control plane: a React SPA + a Bun gate API, opened in the browser or
 the Electron desktop shell. Odin sees all realms from here.
