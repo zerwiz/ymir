@@ -42,9 +42,24 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
   const enterDemo = useYmir((s) => s.enterDemo);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [invite, setInvite] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [showLore, setShowLore] = useState(false);
+  /** 'login' for the operator, 'register' for someone let in by invitation. */
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  /**
+   * Whether registration is open at all. The gate answers this: no live invite
+   * code means no way in, so the offer is not even shown.
+   */
+  const [registration, setRegistration] = useState(false);
+
+  useEffect(() => {
+    gateApi
+      .session()
+      .then((s) => setRegistration(!!s.registration))
+      .catch(() => setRegistration(false));
+  }, []);
 
   useEffect(() => {
     if (!showLore) return;
@@ -66,10 +81,14 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
     setBusy(true);
     setErr('');
     try {
-      await gateApi.login(username, password);
+      if (mode === 'register') await gateApi.register(username, password, invite);
+      else await gateApi.login(username, password);
       onAuthed();
-    } catch {
-      setErr('Wrong username or password');
+    } catch (e2) {
+      // The gate's own words are better than a generic guess (a spent code, a
+      // taken username, a short password all say exactly what is wrong).
+      const said = (e2 as { message?: string })?.message ?? '';
+      setErr(said.trim() || (mode === 'register' ? 'Could not create the account' : 'Wrong username or password'));
     } finally {
       setBusy(false);
     }
@@ -129,11 +148,26 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
           </div>
 
           <div>
-            <h1 className="login-title">Sign in</h1>
+            <h1 className="login-title">{mode === 'register' ? 'Create an account' : 'Sign in'}</h1>
             <p className="login-deck" style={{ marginTop: 6 }}>
-              {hint ?? 'The gate is closed. Enter the Allfather’s credentials.'}
+              {hint ??
+                (mode === 'register'
+                  ? 'You need an invite code to enter. Ask whoever runs this Ymir for one.'
+                  : 'The gate is closed. Sign in, or enter an invite code to make your own account.')}
             </p>
           </div>
+
+          {mode === 'register' ? (
+            <label className="field">
+              <span className="eyebrow">Invite code</span>
+              <input
+                value={invite}
+                onChange={(e) => setInvite(e.target.value)}
+                autoComplete="off"
+                placeholder="YMIR-XXXX-XXXX"
+              />
+            </label>
+          ) : null}
 
           <label className="field">
             <span className="eyebrow">Username</span>
@@ -141,7 +175,7 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
-              placeholder="zerwiz"
+              placeholder="username"
             />
           </label>
 
@@ -151,7 +185,7 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
               placeholder="••••••••"
             />
           </label>
@@ -163,8 +197,30 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
           ) : null}
 
           <button className="btn btn-primary" type="submit" disabled={busy} style={{ justifyContent: 'center' }}>
-            <span aria-hidden="true">ᛉ</span> {busy ? 'Opening the gate…' : 'Enter'}
+            <span aria-hidden="true">ᛉ</span>
+            {busy
+              ? mode === 'register'
+                ? 'Forging the account…'
+                : 'Opening the gate…'
+              : mode === 'register'
+                ? 'Create account'
+                : 'Enter'}
           </button>
+
+          {/* Offered only while a live invite code exists — the gate decides. */}
+          {registration ? (
+            <button
+              className="btn"
+              type="button"
+              onClick={() => {
+                setMode(mode === 'register' ? 'login' : 'register');
+                setErr('');
+              }}
+              style={{ justifyContent: 'center' }}
+            >
+              {mode === 'register' ? 'I already have an account' : 'I have an invite code'}
+            </button>
+          ) : null}
 
           <div className="divider">or</div>
 

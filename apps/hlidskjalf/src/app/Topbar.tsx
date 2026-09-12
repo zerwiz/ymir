@@ -40,6 +40,19 @@ export function Topbar() {
     if (slug) setRealm(slug);
   }
 
+  /**
+   * Raise the other app (or start it). Silent on failure: this is a convenience
+   * control, and a dashboard that breaks when an app is down is worse than one
+   * that simply does not move.
+   */
+  async function raiseApp(view: 'hlidskjalf' | 'smidja') {
+    try {
+      await gateApi.desktop(view);
+    } catch {
+      /* the launcher is unreachable — say nothing, change nothing */
+    }
+  }
+
   return (
     <header className="topbar">
       <div className="ws-switch" role="group" aria-label="Workspace">
@@ -91,6 +104,17 @@ export function Topbar() {
       </label>
 
       <div className="topbar-spacer" />
+
+      {/* A speed-start from the UI: raise the other app (or start it). The same
+          launcher the Omarchy key bindings use, so there is one way in. */}
+      <button
+        className="icon-btn"
+        onClick={() => void raiseApp('smidja')}
+        title="Open Smíðja — the smithy's visualizer"
+        aria-label="Open Smíðja"
+      >
+        ᛊ
+      </button>
 
       <AccentPicker />
 

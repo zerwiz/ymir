@@ -402,9 +402,35 @@ Each app window opens on **its own numbered desktop** (the placement rules in
 keeps it off the desktop you are working on. `/edit [path]` is the same editor
 surface as a slash command, with tab-completion over the directory.
 
+Each app also offers the same speed-start **in its own UI** (`POST /api/desktop`),
+so the keyboard is a convenience for the operator's hands, not the only way in.
+
 > The editor is the Allfather's own surface: it registers no LLM tool, because
 > agents already have `read` and `edit`. Name it when he would reach for it;
 > never try to drive it.
+
+---
+
+## Inviting someone else in
+
+Ymir is single-operator by design: one person directs the fleet. Someone else can
+try yours without being handed your account. The installer mints an **invite
+code** and prints it at the end of the run:
+
+```bash
+bin/ymir-invite.sh mint --limit 3   # a code that admits 3 accounts
+bin/ymir-invite.sh list             # every code, what is spent, who is in
+bin/ymir-invite.sh revoke CODE      # take one back, now
+```
+
+They open the gate and choose **“I have an invite code”**, then pick their own
+username and password. Registration stays **closed** unless a live code exists,
+and each code stops admitting accounts once its ceiling is spent — so an instance
+is never accidentally open, and a link that leaks is not a door.
+
+Accounts live in `~/.config/ymir/accounts.json` (mode `0600`) as argon2id
+hashes; no plaintext password is ever written, and nothing about them enters the
+repo. Your own credentials stay `HLIDSKJALF_AUTH` in `.env.local`.
 
 ---
 

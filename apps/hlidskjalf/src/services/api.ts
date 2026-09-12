@@ -97,8 +97,22 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   noteUnauthorized(path, res.status);
-  if (!res.ok) throw new Error(`${path} → ${res.status}`);
+  // The gate explains refusals in its own words (a spent invite code, a taken
+  // username, a short password). Carry that sentence to the caller rather than a
+  // bare status, so the surface can say what is actually wrong.
+  if (!res.ok) throw new Error(await errorText(res, path));
   return (await res.json()) as T;
+}
+
+/** The server's own error sentence when it sent one; a plain status when not. */
+async function errorText(res: Response, path: string): Promise<string> {
+  try {
+    const body = (await res.clone().json()) as { error?: string };
+    if (body?.error) return body.error;
+  } catch {
+    /* not JSON — fall through to the status */
+  }
+  return `${path} → ${res.status}`;
 }
 
 async function del<T>(path: string): Promise<T> {
@@ -329,8 +343,20 @@ export const gateApi = {
   prompts: () => get<PromptFile[]>('/api/prompts'),
   savePrompt: (agent: string, kind: string, body: string) =>
     post<{ ok: boolean; path: string }>('/api/prompts', { agent, kind, body }),
-  session: () => get<{ authed: boolean }>('/api/session'),
+  session: () => get<{ authed: boolean; login?: string | null; registration?: boolean }>('/api/session'),
   login: (username: string, password: string) => post<{ ok: boolean }>('/api/login', { username, password }),
+  /**
+   * Create an account from an invite code. Registration is refused unless the
+   * code is live — the gate, not this call, is what decides.
+   */
+  register: (username: string, password: string, invite: string) =>
+    post<{ ok: boolean }>('/api/register', { username, password, invite }),
+  /**
+   * Raise a desktop app (Hlidskjalf or Smiðja) from inside the UI — the same
+   * launcher the key bindings use, so it raises what is up and starts what is not.
+   */
+  desktop: (view: 'hlidskjalf' | 'smidja') =>
+    post<{ view: string; ok: boolean; output: string }>('/api/desktop', { view }),
   logout: () => post<{ ok: boolean }>('/api/logout', {}),
   smidjaHealth: () => get<{ db: string; sessions: number }>('/api/smidja/health'),
   smidjaSessions: () => get<SmidjaSession[]>('/api/smidja/sessions'),
