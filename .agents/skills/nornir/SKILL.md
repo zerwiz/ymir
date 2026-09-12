@@ -11,7 +11,7 @@ metadata:
   internal: true
 ---
 
-# nornir — fate & schedule: process→event sources (events) + quota-aware dispatch (quota)
+# nornir — schedule — event sources + quota-aware dispatch
 
 The Norns spin what will come: the watches that wake Brokk, and the quota that
 governs which smith is dispatched.

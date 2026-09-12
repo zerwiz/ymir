@@ -11,7 +11,7 @@ description: >-
 argument-hint: "[prototype | deck | dashboard | image | video | design-system | install]"
 ---
 
-# hnoss — design artifacts via the OpenDesign engine (prototypes, decks, dashboards, image, video)
+# hnoss — design — artifacts via OpenDesign (prototypes, decks, dashboards, image, video)
 
 > **Norse name:** **Hnoss** (beauty, treasure). The design craft's figure.
 

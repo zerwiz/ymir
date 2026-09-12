@@ -11,7 +11,7 @@ metadata:
   internal: true
 ---
 
-# saga — session bearings: fleet status digest (/bearings) + recap & unresolved decisions (/ahoy)
+# saga — bearings — fleet status digest (/bearings) + recap (/ahoy)
 
 Sága sees and tells. This skill is how Brokk reports where things stand and
 closes unanswered calls.

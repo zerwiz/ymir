@@ -10,7 +10,7 @@ metadata:
   internal: true
 ---
 
-# jord-projects — project registry + delivery posture
+# jord-projects — projects — registry + delivery posture
 
 Use this procedure before adding, creating, removing, or initializing a project.
 Cloning or registering a project is add intake and uses the same trigger.

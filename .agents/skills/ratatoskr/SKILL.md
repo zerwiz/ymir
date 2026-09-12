@@ -8,7 +8,7 @@ description: >-
 allowed-tools: read,write,bash,glob,grep
 ---
 
-# ratatoskr — the A2A/MCP mesh: a2abridge + wayofteams; registration
+# ratatoskr — A2A/MCP mesh — a2abridge + wayofteams; registration
 
 The squirrel runs the World Tree. Agents collaborate over **A2A 1.0** (JSON-RPC +
 SSE, Agent Cards) via the **`a2abridge`** engine, and coordinate through the
