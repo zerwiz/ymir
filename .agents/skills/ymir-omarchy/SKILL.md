@@ -163,11 +163,61 @@ editor_surface[2]{key,what}:
   "ctrl+shift+e","file picker over cwd"
 ```
 
-**How the editor resolves:** `$VISUAL` → `$EDITOR` → `vi`. On this Omarchy host
-`$EDITOR` is **`omarchy-launch-editor --inline`** — Omarchy's own launcher, which
-picks the right window for the file. A **terminal** editor (nvim, vim, helix,
-nano, emacs) blocks Pi while open — the TUI suspends and resumes on exit. A **GUI**
+**How the editor resolves:** `$VISUAL` → `$EDITOR` → **the first editor that
+actually exists** on the host, tried in this order: `code cursor zed subl nvim vim
+hx helix nano micro emacs vi`. A **terminal** editor (nvim, vim, helix, nano,
+emacs) blocks Pi while open — the TUI suspends and resumes on exit. A **GUI**
 editor (code, cursor, zed, subl) launches detached, so Pi stays interactive.
+
+**Why the existence check matters off Omarchy:** the old fallback was a bare `vi`,
+and `vi` is **absent on this very machine** — as it is on many minimal hosts. A
+configured editor that is not installed no longer poisons the chain: the extension
+probes `$PATH` and falls through to one that is real. So `/edit` works on a plain
+Arch box, a Debian box, or anything else where Omarchy's launcher does not exist.
+
+### Choosing the editor (Omarchy forces its own)
+
+Omarchy **hard-sets** `EDITOR` twice — `${EDITOR:-omarchy-launch-editor --inline}`
+in `default/bash/envs`, and a forced value in `default/uwsm/default`. A user
+override therefore goes in the uwsm user dir, which is sourced **after** the
+defaults:
+
+```
+~/.config/uwsm/env.d/10-ymir-editor:
+  export EDITOR="code"       # a GUI editor, so no --wait: it launches detached
+  export VISUAL="code"
+```
+
+(`--wait` is wrong for a GUI editor — VS Code hands the file to the running
+instance and exits, so waiting holds nothing.) Changes need a session restart.
+
+### The editor gets its own desktop
+
+The editor must not open on the desktop the Allfather is reading. Hyprland applies
+window rules **at map time**, so the window never appears there at all:
+
+```
+bin/editor-place.sh plan      # which desktop it would take
+bin/editor-place.sh apply     # write the rule + hyprctl reload
+```
+
+It writes into the SAME `~/.config/hypr/ymir-desktops.lua` the apps use (so one
+file owns every Ymir window placement) and re-derives the app rules rather than
+clobbering them:
+
+```lua
+o.window({ class = "^code$" }, { workspace = "7", no_focus = true })
+```
+
+**`no_focus = true` is the load-bearing half.** Without it the window is placed on
+the right desktop but **the focus follows it** — the Allfather is dragged off his
+own desk. Omarchy's own `default/hypr/windows.lua` uses the same idiom. Always
+verify with `hyprctl configerrors` (must be empty) after a reload.
+
+**The dispatch road does NOT work here.** This Hyprland (0.56) replaced the classic
+dispatch interface with a Lua API: `hyprctl dispatch movetoworkspacesilent
+5,class:...` fails outright, and `keyword` reports "can't work with non-legacy
+parsers — use eval". The map-time rule file is the road that holds.
 
 When the Allfather wants to *look at* a file rather than have it read aloud, the
 answer is `/edit <path>` — say so plainly instead of pasting its contents.

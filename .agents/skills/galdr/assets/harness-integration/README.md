@@ -199,7 +199,7 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 | `.pi/extensions/syn-turnend-guard.ts` | `export default function (pi: ExtensionAPI)` | 1, 3, 4 |
 | `.pi/extensions/gna-pi-watch.ts` | `export default function (pi: ExtensionAPI)` | 2 |
 | `.pi/extensions/ro.ts` | Ró — the calm presentation preference (`/calm`), state/ro | user |
-| `.pi/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor (`$VISUAL`→`$EDITOR`→`vi`); strictly user-facing, no LLM tool | user |
+| `.pi/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor; strictly user-facing, no LLM tool. **Resolution:** `$VISUAL` → `$EDITOR` → the first editor that exists (`code cursor zed subl nvim vim hx helix nano micro emacs vi`), so a host that is not Omarchy — where Omarchy's own launcher or a bare `vi` may be absent — still gets a working editor instead of an ENOENT | user |
 | `.pi/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
 | `.pi/extensions/todo.ts` | the todo surface | user |
 | `.pi/extensions/lib/rodd-operational-input.ts` | `encodeRoddOperationalInput`, `classifyRoddOperationalText`, `classifyRoddCurrentOperationalText` | shared wire |
