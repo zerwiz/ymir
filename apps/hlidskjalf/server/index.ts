@@ -1312,7 +1312,10 @@ function savePrompt(agent: string, kind: string, body: string): { ok: boolean; p
 
 /* ---- /api/workspaces + /api/setup — single-tenant workspaces ------------ */
 function workspaces(): { id: string; name: string; kind: string; company?: string; domains: string[] }[] {
-  const txt = read(join(ROOT, 'workspace/workspaces.yaml'));
+  let regPath = join(ROOT, 'workspace/workspaces.yaml');
+  const hoardReg = join(process.env.YMIR_HOARD || join(ROOT, 'hodd'), 'identity/workspaces.yaml');
+  try { read(hoardReg); regPath = hoardReg; } catch { /* fall back to the tracked scaffold */ }
+  const txt = read(regPath);
   const out: { id: string; name: string; kind: string; company?: string; domains: string[] }[] = [];
   let cur: { id: string; name: string; kind: string; company?: string; domains: string[] } | null = null;
   for (const line of txt.split('\n')) {

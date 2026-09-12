@@ -43,7 +43,8 @@ done
 mkdir -p "$WORKSPACE/$NAME/memory/daily"
 
 # Register (idempotent) in workspaces.yaml.
-reg="$WORKSPACE/workspaces.yaml"
+reg="${YMIR_HOARD:-$ROOT/hodd}/identity/workspaces.yaml"
+[ -f "$reg" ] || reg="$WORKSPACE/workspaces.yaml"
 if [ ! -f "$reg" ]; then printf 'workspaces:\n' >"$reg"; fi
 if grep -qE "^  - id: ${NAME}$" "$reg" 2>/dev/null; then
   registered="exists"
