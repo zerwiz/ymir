@@ -41,6 +41,24 @@ const GUI_EDITORS = new Set([
 	"zed",
 ]);
 
+// Editors tried in order when neither $VISUAL nor $EDITOR names one that exists.
+// Ordered by fitness for a terminal session: GUI first (detached, never blocks
+// pi), then the common terminal editors, with plain `vi` last.
+const FALLBACK_EDITORS = [
+	"code",
+	"cursor",
+	"zed",
+	"subl",
+	"nvim",
+	"vim",
+	"hx",
+	"helix",
+	"nano",
+	"micro",
+	"emacs",
+	"vi",
+];
+
 // Directories skipped by the non-git file walk fallback.
 const EXCLUDED_DIRS = new Set([
 	"node_modules",
@@ -74,14 +92,54 @@ interface ResolvedEditor {
 }
 
 function resolveEditor(): ResolvedEditor {
-	const raw = (process.env.VISUAL || process.env.EDITOR || "vi").trim();
-	// Simple whitespace split. Covers `EDITOR="nvim -R"`, `EDITOR="code --wait"`.
-	// Does not honor POSIX shell quoting — documented limitation.
-	const parts = raw.split(/\s+/).filter(Boolean);
-	const command = parts[0] || "vi";
-	const argv = parts.slice(1);
-	const isGui = GUI_EDITORS.has(basename(command).toLowerCase());
-	return { command, argv, isGui };
+	for (const raw of [process.env.VISUAL, process.env.EDITOR, "vi"]) {
+		if (!raw || !raw.trim()) continue;
+		// The configured command must actually exist: this extension runs on hosts
+		// that are not Omarchy, where `$EDITOR` may name a binary that is absent
+		// (Omarchy's own `omarchy-launch-editor`, or a bare `vi` on a box that only
+		// has `nvim`). Never spawn into an ENOENT — fall through to a real editor.
+		const parts = raw.trim().split(/\s+/).filter(Boolean);
+		const command = parts[0] || "";
+		if (!command) continue;
+		const found = findOnPath(command);
+		if (!found) continue;
+		const argv = parts.slice(1);
+		const isGui = GUI_EDITORS.has(basename(found).toLowerCase());
+		return { command: found, argv, isGui };
+	}
+	// Nothing configured and nothing found: pick the first editor that exists.
+	for (const candidate of FALLBACK_EDITORS) {
+		const found = findOnPath(candidate);
+		if (found) {
+			return { command: found, argv: [], isGui: GUI_EDITORS.has(candidate) };
+		}
+	}
+	// Truly nothing: keep the historical shape so the caller's error is familiar.
+	return { command: "vi", argv: [], isGui: false };
+}
+
+// Resolve <name> on PATH, returning the absolute path or null. Handles a name
+// that is already a path (`/usr/bin/nvim`).
+function findOnPath(name: string): string | null {
+	if (name.includes("/")) {
+		try {
+			statSync(name);
+			return name;
+		} catch {
+			return null;
+		}
+	}
+	const dirs = (process.env.PATH || "").split(":").filter(Boolean);
+	for (const dir of dirs) {
+		try {
+			const full = join(dir, name);
+			const st = statSync(full);
+			if (st.isFile()) return full;
+		} catch {
+			// try the next directory
+		}
+	}
+	return null;
 }
 
 // ──────────────────────────────────────────────────────────────────────
