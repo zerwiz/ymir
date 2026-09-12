@@ -33,10 +33,6 @@
 #   YMIR_HERDR_SETTLE=300   seconds to wait for a step before declaring it hung
 set -u
 
-# The herdr CLI wrapper. Defaults to `hdr` (the Omarchy/Þjazi wrapper); a host
-# may set HDR=herdr, or a future `hdr` that exposes `agent start`/`pane run`.
-HDR="${HDR:-hdr}"
-hdr() { "$HDR" "$@"; }
 
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -56,8 +52,8 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # herdr --session is the ONLY reliable router: HERDR_SESSION alone silently
 # falls back to whichever server is already bound (firstmate docs/herdr-backend.md,
 # "Session targeting"). We always pass the flag explicitly.
-HDR_SESSION="${HERDR_SESSION:-default}"
-hdr() { herdr "$@" --session "$HDR_SESSION"; }
+HDR_SESSION="${HERDR_SESSION:-}"
+hdr() { if [ -n "$HDR_SESSION" ]; then herdr --session "$HDR_SESSION" "$@"; else herdr "$@"; fi; }
 
 can_use_herdr() {
   [ "${YMIR_HERDR_PANES:-1}" = "1" ] || return 1
