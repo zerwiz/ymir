@@ -1,7 +1,7 @@
 # Contributing to Ymir
 
 Ymir is an open agent runtime. Anyone can fork, modify, and submit PRs to the
-main tree at [Way-Of/ymir](https://github.com/Way-Of/ymir).
+main tree at [zerwiz/ymir](https://github.com/zerwiz/ymir).
 
 ## Quick start
 
@@ -22,7 +22,7 @@ main tree at [Way-Of/ymir](https://github.com/Way-Of/ymir).
    git commit -m "feat: describe your change"
    git push -u origin feat/your-feature
    ```
-5. **Open a PR** against `Way-Of/ymir:main`.
+5. **Open a PR** against `zerwiz/ymir:main`.
 
 ## PR guidelines
 
