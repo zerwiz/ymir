@@ -21,7 +21,7 @@ capabilities:
   - social_copy
   - campaign_planning
   - market_research
-tools:
+ymir_tools:
   - vector_db
   - supabase
   - hermes_runner

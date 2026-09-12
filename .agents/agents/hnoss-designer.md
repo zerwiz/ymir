@@ -21,7 +21,7 @@ capabilities:
   - prototyping
   - layout
   - typography
-tools:
+ymir_tools:
   - opendesign
   - chrome_devtools
 ---

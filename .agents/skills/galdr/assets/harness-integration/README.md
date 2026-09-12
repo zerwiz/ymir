@@ -503,3 +503,30 @@ eindri[9]{figure,craft,domain,engine}:
 
 Bind with `bin/valknut-load.sh --all` (OpenCode: `.opencode/agent/<name>.md`; Pi:
 `.pi/agents/<profile>.md`) — never edit the harness dirs.
+
+## Pi extension single-home (2026-09-12)
+
+Pi loads **both** the project `.pi/extensions/` and the global
+`~/.pi/agent/extensions/` directories; because it does not de-duplicate by
+extension or tool name, an extension present in both makes `pi` exit with
+`Tool "<name>" conflicts with …` and **no agent can be seated** (herdr reports
+"the pane must sit at an interactive shell prompt", a confusing symptom).
+
+Rule: **one home per extension.**
+
+- Shared extensions (`todo.ts`, `herdr-agent-state.ts`, `open-editor.ts`) live
+  **only** in `~/.pi/agent/extensions/` — used by every project, Ymir and
+  Omarchy alike.
+- The repo `.pi/extensions/` holds **only Ymir-unique** extensions
+  (`gna-pi-watch.ts`, `ro.ts`, `skuld-branch-supervision.ts`,
+  `syn-turnend-guard.ts`, `lib/`).
+- Never copy a shared extension back into the repo; that re-arms the collision.
+
+## OpenCode agent `tools` key (2026-09-12)
+
+OpenCode requires the frontmatter `tools:` key to be an **object** of its own
+built-in tools. Our profiles list Ymir capabilities (`vector_db`,
+`hermes_runner`, `herder`, `yggdrasil`, `supabase`, `opendesign`,
+`chrome_devtools`), which are not OpenCode tools and which OpenCode rejects as
+`Expected object | undefined, got [...] tools`. Those lists are therefore carried
+under **`ymir_tools:`**; permission is expressed by the `permission:` block.

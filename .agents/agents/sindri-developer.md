@@ -21,7 +21,7 @@ capabilities:
   - test_writing
   - cli_tools
   - package_management
-tools:
+ymir_tools:
   - yggdrasil
   - herder
   - hermes_runner

@@ -21,7 +21,7 @@ capabilities:
   - acceptance
   - drift_detection
   - test_audit
-tools:
+ymir_tools:
   - vector_db
   - hermes_runner
   - herder

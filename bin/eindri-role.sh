@@ -32,7 +32,7 @@ roles() {
 sindri|code — build, refactor, fix, test|code build refactor fix bug implement feature test compile script forge api backend frontend function class module
 bragi|content — marketing, SEO, social|content write copy marketing seo social post article blog campaign brand announcement newsletter
 huginn|research — search, analyse, discover|research search analyse analyze investigate find discover compare benchmark source docs look up
-kvasir|scout — recon a codebase before work|scout recon survey map explore inventory reconnaissance lay of the land
+kvasir|scout — recon a codebase before work|scout recon survey map explore inventory reconnaissance terrain reconnoiter
 hnoss|design — UI/UX, prototypes, decks, dashboards|design ui ux prototype landing dashboard deck slide visual layout figma design-system
 mimir|plan — design the approach|plan design architect approach strategy spec breakdown sequence decompose
 snotra|document — prose, guides, references|document docs guide reference readme manual explain describe prose
@@ -67,7 +67,9 @@ case "$ACTION" in
     while IFS='|' read -r r craft words; do
       s=0
       for w in $words; do
-        case "$text" in *"$w"*) s=$((s+1));; esac
+        [ -n "$w" ] || continue
+        case "$w" in of|the|and|a|to) continue ;; esac
+        printf '%s\n' "$text" | grep -Eqw -- "$w" && s=$((s+1))
       done
       if [ "$s" -gt "$bestscore" ]; then bestscore=$s; best="$r"; bestcraft="$craft"; fi
     done < <(roles)
