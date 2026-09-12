@@ -6,9 +6,11 @@ cd "$ROOT"
 
 violations=0
 for ext in sh py yaml yml json; do
-  for f in $(find . -type f -name "*.$ext" -not -path './.git/*' -not -path './.compliance/telemetry/*'); do
+  for f in $(find . -type f -name "*.$ext" -not -path './.git/*' -not -path './.yggdrasil/*' -not -path '*/node_modules/*' -not -path './.agents/skills/nsr-compliance/assets/*' -not -path './.compliance/telemetry/*'); do
     while IFS= read -r line; do
       case "$line" in
+        # `// text` is a JS/TS comment; a UNC path is `//host/share` (no space).
+        //\ *) continue ;;
         /*|C:*|D:*) echo "[check_paths] ABSOLUTE PATH: $f -> $line"; violations=1 ;;
       esac
     done < "$f"

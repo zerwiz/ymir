@@ -55,4 +55,4 @@ rg -n "[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]" apps/hlidskjalf/src || echo "no e
 
 - **Owner:** Brokk. **Tokens:** `midgard/design-system/tokens.css`.
 - Add a rune here and its glyph in `icons/` in the same pass; keep the count in the
-  `icons[N]` block true (Galdr TOON check: `.agents/skills/galdr-cli-cli/scripts/toon-check.py`).
+  `icons[N]` block true (Galdr TOON check: `.agents/skills/galdr-cli/scripts/toon-check.py`).

@@ -15,5 +15,5 @@ runbooks[7]{file,subject}:
   "realm-onboarding.md","onboarding a realm/tenant"
 ```
 
-Related: `.agents/skills/galdr-cli-cli/assets/installation.md` (first setup),
-`.agents/skills/galdr-cli-cli/assets/registry.md` (inventory).
+Related: `.agents/skills/galdr-cli/assets/installation.md` (first setup),
+`.agents/skills/galdr-cli/assets/registry.md` (inventory).

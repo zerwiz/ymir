@@ -7,9 +7,10 @@ matches its work (Gungnir naming law).
 ## Registry (`.agents/skills/`)
 
 ```
-skills[23]{skill,does}:
+skills[24]{skill,does}:
   "galdr-cli","agent-CLI ergonomics — the master builder/maintainer of the runtime"
   "tyr-check","the judge — galdr principles + runtime gates"
+  "no-mistakes","the clean-PR gate — vendored engine skill: validate, push, PR, CI"
   "smidja-factory","the smithy — agent factory: roster, phases, envelopes, visualizer"
   "hvild-afk","away-mode — supervision of routine wakes and batched escalations"
   "saga-bearings","bearings — fleet status digest (/bearings) + recap (/ahoy)"

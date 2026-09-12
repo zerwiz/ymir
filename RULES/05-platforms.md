@@ -64,4 +64,4 @@ does not. A rule that contradicts this rule must change the rule first
 (append-only; never silently rewritten).
 
 **Related:** `RULES/04-hoard.md` (what is private), `AGENTS.md` (the contract),
-`.agents/skills/galdr-cli-cli/assets/installation.md` (the install procedure).
+`.agents/skills/galdr-cli/assets/installation.md` (the install procedure).

@@ -9,6 +9,14 @@
 #        bin/bifrost-ingress.sh --version
 set -u
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  for _ymir_c in "$(git rev-parse --show-toplevel 2>/dev/null)/bin/ymir-platform.sh"                  "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/ymir-platform.sh"; do
+    [ -n "$_ymir_c" ] && [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_c
+fi
+
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -60,8 +68,8 @@ case "$ACTION" in
 
   stop)
     has caddy && caddy stop >/dev/null 2>&1 && echo "Bifrost: lowered"
-    pkill -f 'oauth2-proxy --config' >/dev/null 2>&1 && echo "Heimdall: lowered"
-    pkill -f 'cloudflared tunnel' >/dev/null 2>&1 && echo "Gjallarhorn: lowered"
+    ymir_kill_matching 'oauth2-proxy --config' >/dev/null 2>&1 && echo "Heimdall: lowered"
+    ymir_kill_matching 'cloudflared tunnel' >/dev/null 2>&1 && echo "Gjallarhorn: lowered"
     printf 'ingress: down\n'
     ;;
 

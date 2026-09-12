@@ -7,6 +7,14 @@
 #   gjallarhorn-tunnel.sh --version
 set -u
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  for _ymir_c in "$(git rev-parse --show-toplevel 2>/dev/null)/bin/ymir-platform.sh"                  "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/ymir-platform.sh"; do
+    [ -n "$_ymir_c" ] && [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_c
+fi
+
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -29,7 +37,7 @@ case "$ACTION" in
     command -v cloudflared >/dev/null 2>&1 && cloudflared tunnel info "$TUNNEL" 2>/dev/null | rg -m1 "CONNECTOR|does not have" || true
     exit 0 ;;
   stop)
-    if running; then pid=$(tr -d '[:space:]' <"$PID_FILE"); kill "$pid" 2>/dev/null || true; rm -f "$PID_FILE"; printf 'gjallarhorn: stopped pid=%s\n' "$pid"; else pkill -f "config-ymir.yml" 2>/dev/null && printf 'gjallarhorn: stopped (matched process)\n' || printf 'gjallarhorn: already stopped\n'; fi
+    if running; then pid=$(tr -d '[:space:]' <"$PID_FILE"); kill "$pid" 2>/dev/null || true; rm -f "$PID_FILE"; printf 'gjallarhorn: stopped pid=%s\n' "$pid"; else ymir_kill_matching "config-ymir.yml" 2>/dev/null && printf 'gjallarhorn: stopped (matched process)\n' || printf 'gjallarhorn: already stopped\n'; fi
     exit 0 ;;
   start) ;;
   *) printf 'error: unknown action %s\nhelp: gjallarhorn-tunnel.sh [start|stop|status]\n' "$ACTION" >&2; exit 2 ;;

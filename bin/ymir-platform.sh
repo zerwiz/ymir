@@ -143,6 +143,20 @@ ymir_pid_matches() {  # 0 when the pid is alive AND its cmdline contains the mar
   ymir_pid_cmdline "$pid" 2>/dev/null | grep -q -- "$mark"
 }
 
+ymir_kill_matching() {  # <pattern> [signal] — signal processes whose cmdline matches
+  local pat=${1:-} sig=${2:-TERM}
+  [ -n "$pat" ] || return 1
+  if command -v pkill >/dev/null 2>&1; then
+    pkill -"$sig" -f -- "$pat" 2>/dev/null || true
+    return 0
+  fi
+  # No pkill (some MSYS/WSL images): ps + kill, never matching our own line.
+  local pids
+  pids=$(ps -eo pid=,args= 2>/dev/null | grep -F -- "$pat" | grep -v -e grep -e ymir_kill_matching | awk '{print $1}')
+  [ -n "$pids" ] && kill -s "$sig" $pids 2>/dev/null || true
+  return 0
+}
+
 ymir_detach() {  # run a command detached from this shell's lifetime
   # setsid where available (Linux/WSL); MSYS has it; macOS does not.
   if command -v setsid >/dev/null 2>&1; then

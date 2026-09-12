@@ -45,12 +45,12 @@ fi
 # Map a governed path to its owning asset. Order matters — first match wins.
 asset_for() {
   case "$1" in
-    *bin/ymir-install.sh)                         printf '%s' ".agents/skills/galdr-cli-cli/assets/installation.md" ;;
-    *apps/hlidskjalf/*)                           printf '%s' ".agents/skills/galdr-cli-cli/assets/hlidskjalf-ui.md" ;;
-    *bin/mimir*)                                  printf '%s' ".agents/skills/galdr-cli-cli/assets/memory-well.md" ;;
-    *bin/nornir-*|*config/cron.yaml)              printf '%s' ".agents/skills/galdr-cli-cli/assets/nornir-jobs.md" ;;
-    *bin/valknut-load.sh|*/.pi/*|*/.opencode/*)   printf '%s' ".agents/skills/galdr-cli-cli/assets/harness-integration/README.md" ;;
-    *bin/smidja*|*.agents/skills/smidja-factory-factory/*)        printf '%s' ".agents/skills/galdr-cli-cli/assets/smidja.md" ;;
+    *bin/ymir-install.sh)                         printf '%s' ".agents/skills/galdr-cli/assets/installation.md" ;;
+    *apps/hlidskjalf/*)                           printf '%s' ".agents/skills/galdr-cli/assets/hlidskjalf-ui.md" ;;
+    *bin/mimir*)                                  printf '%s' ".agents/skills/galdr-cli/assets/memory-well.md" ;;
+    *bin/nornir-*|*config/cron.yaml)              printf '%s' ".agents/skills/galdr-cli/assets/nornir-jobs.md" ;;
+    *bin/valknut-load.sh|*/.pi/*|*/.opencode/*)   printf '%s' ".agents/skills/galdr-cli/assets/harness-integration/README.md" ;;
+    *bin/smidja*|*.agents/skills/smidja-factory-factory/*)        printf '%s' ".agents/skills/galdr-cli/assets/smidja.md" ;;
     *)                                            printf '' ;;
   esac
 }

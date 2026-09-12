@@ -31,7 +31,7 @@ bin/ymir-install.sh          # prereqs, tree, engines, hermes, sandbox, memory, 
 
 `bin/ymir-install.sh` self-heals the fixable gaps (`engram`, `mcp<2`, `treehouse`,
 `no-mistakes`, **Hermes**) and reports the system-level ones (`git`, `python3`,
-`bun`, `docker`, `gh`). See [`../.agents/skills/galdr-cli-cli/assets/installation.md`].
+`bun`, `docker`, `gh`). See [`../.agents/skills/galdr-cli/assets/installation.md`].
 
 ## Per-skill engines
 

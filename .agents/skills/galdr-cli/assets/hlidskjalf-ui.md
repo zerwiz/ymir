@@ -197,3 +197,5 @@ placeholder nor any default may name the operator: the field says `username`, an
 the password comes from `HLIDSKJALF_AUTH` in `.env.local`, never inline. A
 hardcoded name here is both a leak into the public tree and wrong for any other
 operator — `bin/public-guard.sh` exists to catch exactly that class of mistake.
+
+**rename sweep (2026-09-12).** The `galdr` -> `galdr-cli` rename corrected a stale path reference inside `apps/hlidskjalf/server/index.ts` as well; behaviour unchanged.
