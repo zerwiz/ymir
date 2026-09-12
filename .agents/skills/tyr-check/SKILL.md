@@ -5,7 +5,7 @@ allowed-tools: read,write,bash,glob,grep
 disable-model-invocation: true
 ---
 
-# tyr-check — the judge — 10 principles + runtime gates
+# tyr-check — the judge — galdr principles + runtime gates
 
 ## Purpose
 

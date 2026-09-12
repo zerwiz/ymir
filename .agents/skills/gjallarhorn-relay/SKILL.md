@@ -12,7 +12,7 @@ metadata:
   internal: true
 ---
 
-# gjallarhorn-relay — public relay replies (X/Discord)
+# gjallarhorn-relay — relay — public replies (X/Discord)
 
 Relay lets a Brokk instance answer and act on public mentions routed through the shared `@myBrokk` relay.
 A mention arrives through the watcher as a `check:` wake whose payload is `x-mention <request_id>`.

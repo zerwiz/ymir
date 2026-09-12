@@ -8,7 +8,7 @@ metadata:
   internal: true
 ---
 
-# hvild-afk — away-mode supervision (routine wakes self-handled, batched escalations)
+# hvild-afk — away-mode — supervision of routine wakes and batched escalations
 
 Away-mode supervision. When invoked, `/hvild` makes the daemon's token-saving
 tradeoff **consented** and **explicit**: the Allfather is stepping away, so the

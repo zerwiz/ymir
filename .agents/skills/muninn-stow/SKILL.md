@@ -8,7 +8,7 @@ metadata:
 
 <!-- maintainers: this is the Brokk-internal skill. The public, installer-facing counterpart lives at skills/stow/SKILL.md - deliberately a separate file with no shared code or environment branching. Keep them independent. -->
 
-# muninn-stow — session-knowledge curation, routing, and persistence
+# muninn-stow — memory — session-knowledge curation, routing, persistence
 
 Sweep this session for durable knowledge and open-work record state that exist only in conversation, then leave the next session with a compact current operating map rather than an accumulating journal.
 Memory entries are tiered and decay between passes, and stale material retires to a cold archive instead of being deleted.

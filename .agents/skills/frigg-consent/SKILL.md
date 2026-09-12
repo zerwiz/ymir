@@ -10,7 +10,7 @@ metadata:
   internal: true
 ---
 
-# frigg-consent — consent / ask-user authority gate
+# frigg-consent — consent — ask-user authority gate
 
 This skill is the single owner of the decision policy for no-mistakes ask-user findings.
 `AGENTS.md` section 7 points here and does not restate this procedure.
