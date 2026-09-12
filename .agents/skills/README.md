@@ -25,6 +25,8 @@ skills[20]{name,norse,purpose,origin}:
   "syn-recovery","Sýn","stuck-worker recovery playbook","adopted"
   "ymir","Ymir","operate the host: self-update · Omarchy desktop · Þjazi backend","new"
   "herdr","Herdr","the pane backend — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)","new"
+  "ratatoskr","Ratatoskr","the A2A/MCP mesh: a2abridge + wayofteams; registration","new"
+  "hlidskjalf","Hlidskjalf","the control plane UI: SPA · gate API · auth · desktop · tunnel","new"
   "hamr","Hamr","per-harness adapter reference","adopted"
   "pr-ops","—","PR lifecycle — create, update, check status, request merge","new"
   "hnoss","Hnoss","design artifacts via the OpenDesign engine (prototypes, decks, dashboards, image, video)","new"

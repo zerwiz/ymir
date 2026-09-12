@@ -97,16 +97,21 @@ for t in rt:
     if t in ("local",): want_provider = "local"
     if t in ("online","cloud","hosted"): want_provider = "online"
 
-best = None; best_score = 0
+best = None; best_score = 0.0
 for p, m in catalog:
     if not is_local_provider(p): continue
     mt = tokens(m)
-    score = sum(1 for t in rt if t in mt)
+    score = float(sum(1 for t in rt if t in mt))
     # quant proximity
     if want_quant and want_quant.replace("_","") in m.replace("_",""):
         score += 2
     # family hints
     if "qwen" in rt and "qwen" in m: score += 2
+    # tie-breaks: prefer newer version, then larger size (a more capable model)
+    ver = re.search(r"(\d+\.\d+)", m)
+    sz  = re.search(r"(\d+)b", m)
+    if ver: score += min(float(ver.group(1)), 9.0) / 100.0
+    if sz:  score += min(int(sz.group(1)), 100) / 1000.0
     if score > best_score:
         best_score = score; best = (p, m)
 
