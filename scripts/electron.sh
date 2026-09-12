@@ -14,6 +14,15 @@
 #   electron.sh --version
 set -u
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  for _ymir_c in "$(dirname "$_ymir_dir")/bin/ymir-platform.sh" "$_ymir_dir/bin/ymir-platform.sh"; do
+    [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_dir _ymir_c
+fi
+
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -44,6 +53,23 @@ view_pids() {  # all live Electron pids for a view
   local mark; mark="$(view_mark "$1")"
   pgrep -f "electron/dist/electron.*--user-data-dir=.*${mark}" 2>/dev/null || true
 }
+# An integrated GPU backs its graphics memory with system RAM: a small VRAM
+# carve-out plus a large shared aperture (GTT). When a local model is served
+# on that same iGPU it can hold several GiB of GTT, and the amdgpu driver then
+# fails command submissions for the desktop's GPU process — which Electron
+# turns into a NULL dereference, killing the GPU process while the window
+# survives. These are dashboards, not 3D, so software rendering costs nothing.
+IGPU_VRAM_SMALL_MIB="${YMIR_IGPU_VRAM_SMALL_MIB:-2048}"
+igpu_vram_small() {
+  local d total
+  for d in /sys/class/drm/card*/device; do
+    [ -r "$d/mem_info_vram_total" ] || continue
+    total=$(( $(cat "$d/mem_info_vram_total" 2>/dev/null || echo 0) / 1048576 ))
+    [ "$total" -gt 0 ] && [ "$total" -lt "$IGPU_VRAM_SMALL_MIB" ] && return 0
+  done
+  return 1
+}
+
 real_electron() { printf '%s' "$APP/node_modules/electron/dist/electron"; }
 is_running() {
   local pids; pids="$(view_pids "$1")"
@@ -129,13 +155,18 @@ start_one() {
   # is the app itself (the shim spawns and would leave a stale/incorrect pid).
   local bin; bin="$(real_electron)"
   local -a extra=()
-  # GPU safety: on a small-VRAM iGPU a Wayland GPU process can die with
-  # "amdgpu: Not enough memory for command submission". These are dashboards,
-  # not 3D, so allow an opt-out (YMIR_DESKTOP_DISABLE_GPU=1) and default to
-  # software rendering only when the GPU reports very little VRAM.
-  if [ "${YMIR_DESKTOP_DISABLE_GPU:-0}" = 1 ]; then
-    extra+=(--disable-gpu --disable-gpu-compositing)
-  fi
+  # GPU safety — see igpu_vram_small() above for why this exists.
+  #   YMIR_DESKTOP_DISABLE_GPU=1  force software rendering
+  #   YMIR_DESKTOP_DISABLE_GPU=0  force the GPU path
+  #   unset (auto)                decide from the device's VRAM carve-out
+  case "${YMIR_DESKTOP_DISABLE_GPU:-auto}" in
+    1|true|yes) extra+=(--disable-gpu --disable-gpu-compositing) ;;
+    0|false|no) : ;;
+    *)
+      if [ "$(ymir_os 2>/dev/null)" = linux ] && igpu_vram_small; then
+        extra+=(--disable-gpu --disable-gpu-compositing)
+      fi ;;
+  esac
   nohup env YMIR_DESKTOP_VIEW="$v" "$bin" "$APP" \
     --user-data-dir="$HOME/.config/$([ "$v" = smidja ] && echo ymir-smidja || echo ymir-hlidskjalf)" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &

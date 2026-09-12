@@ -166,3 +166,25 @@ The eight Labs are **domains (Greinar)** — the knowledge axes — not houses. 
 **domain** (`agent.domain` via the `DOMAINS` map in `src/data/realms.ts`); the
 Forge picker is labelled **Domain**. `svartalfaheim/<company>/companies/` holds
 the house card(s); the eight domain cards live under `.../domains/`.
+
+### The GPU-process crash on a shared-memory iGPU (fixed 2026-09-12)
+
+Symptom: both dashboards appear and work, while `coredumpctl` fills with SIGSEGV
+cores from `electron --type=gpu-process`, and the kernel logs `amdgpu … Not enough
+memory for command submission` immediately before each one. The window survives
+because only the **GPU process** dies; Electron retries it, then falls back.
+
+Cause: an iGPU has a small VRAM carve-out and backs the rest with system RAM
+(GTT). A local model served on that same iGPU can hold several GiB of GTT, after
+which the driver fails the desktop's command submissions. Electron's error path
+dereferences NULL — a segfault at a constant offset, not memory corruption.
+
+`scripts/electron.sh` now decides for itself: `igpu_vram_small()` reads
+`/sys/class/drm/card*/device/mem_info_vram_total` and switches the dashboards to
+software rendering when the carve-out is under `YMIR_IGPU_VRAM_SMALL_MIB`
+(default 2048). `YMIR_DESKTOP_DISABLE_GPU=1` forces software, `=0` forces the GPU
+path. Verified: with the fix the amdgpu submission errors stop and the
+gpu-process runs SwiftShader instead of the hardware path.
+
+If the crash returns, check GTT before anything else — `mem_info_gtt_used` on the
+render device, next to whatever is serving a model on that GPU.
