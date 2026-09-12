@@ -138,6 +138,15 @@ printf '  "bin/valknut-load.sh | .pi/**",".agents/skills/galdr/assets/harness-in
 printf '  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr/assets/smidja.md"\n'
 printf 'rule: load the asset, then change the code, then update the asset in the same change.\n'
 
+section "TOOL SURFACE"
+# The Allfather's own handles into this machine. Know them; name them when he
+# would reach for one.
+printf 'tools[4]{handle,what}:\n'
+printf '  "/edit <path>","open a file in his own editor (ctrl+shift+e for the picker)"\n'
+printf '  "bin/ymir-say.sh","Ymir speaks on the desktop (done/alarm/fail/note)"\n'
+printf '  "bin/omarchy-plugins.sh","the suggested Omarchy shell plugins; add/list"\n'
+printf '  "bin/herdr-run.sh","seat an Eindri in a herdr tab, or a disposable space"\n'
+
 section "CRON START"
 if [ -x "$SCRIPT_DIR/nornir-cron-start.sh" ]; then
   BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/nornir-cron-start.sh" || printf 'cron: start reported a failure (see above)\n'

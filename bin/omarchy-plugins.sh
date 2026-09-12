@@ -155,11 +155,16 @@ case "$ACTION" in
       read -r reply || reply=""
       case "$reply" in y|Y|yes|YES) ;; *) printf 'skipped.\n'; exit 0 ;; esac
     fi
-    if omarchy plugin add "$repo" --enable >/dev/null 2>&1; then
+    # Omarchy's own installer demands consent too (`--yes` to it). We already took
+    # the Allfather's consent above, so pass it through.
+    if omarchy plugin add "$repo" --enable --yes >/tmp/omarchy-plugin-add.$$ 2>&1; then
+      rm -f /tmp/omarchy-plugin-add.$$
       printf 'omarchy-plugins[1]{id,state,repo}:\n  "%s","installed","%s"\n' "$id" "$repo"
     else
       printf 'omarchy-plugins[1]{id,state}:\n  "%s","install failed"\n' "$id"
-      printf 'help: run manually: omarchy plugin add %s --enable\n' "$repo" >&2
+      printf 'help: omarchy said:\n' >&2
+      tail -5 /tmp/omarchy-plugin-add.$$ >&2 2>/dev/null || true
+      rm -f /tmp/omarchy-plugin-add.$$
       exit 1
     fi
     ;;
