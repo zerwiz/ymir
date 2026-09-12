@@ -28,6 +28,20 @@ if (process.platform === 'linux') {
 }
 
 let win = null;
+
+// Single instance per app identity: a second launch focuses the existing
+// window instead of opening a new one (this is what stacked windows on agent
+// starts). Must run before app 'ready'.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (win && !win.isDestroyed()) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
+    }
+  });
+}
 let raised = false;
 
 function reachable(url) {
@@ -114,6 +128,8 @@ function centeredBounds(display) {
 }
 
 function openWindow(url, title) {
+  // Never stack: reuse the window we already have.
+  if (win && !win.isDestroyed()) { if (win.isMinimized()) win.restore(); win.focus(); return win; }
   const bounds = centeredBounds(targetDisplay());
   win = new BrowserWindow({
     ...bounds,
