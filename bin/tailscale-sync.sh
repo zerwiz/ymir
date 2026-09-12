@@ -24,7 +24,7 @@ for a in "$@"; do
     -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
     -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --dry-run|-n) DRY=1 ;;
-    status|push|pull|init) ACTION="$a" ;;
+    status|push|pull|init|receive) ACTION="$a" ;;
     -*) printf 'error: unknown flag %s\n' "$a" >&2; exit 2 ;;
     *) PEER="$a" ;;
   esac
@@ -107,18 +107,38 @@ rsync_flags=(-a --info=NAME --exclude 'sessions/' --exclude '*.log')
 [ "$DRY" = 1 ] && rsync_flags+=(--dry-run)
 
 # Taildrop road: when the tailnet's SSH ACL forbids SSH (but Taildrop works),
-# send each path to a peer's inbox with `tailscale file cp` — no SSH at all.
-# The peer runs `tailscale file get <dir>` to receive.
+# bundle the configured paths into ONE tarball and send that — Taildrop carries
+# files, not folders. The peer runs `receive` to fetch and unpack.
 if [ "${YMIR_SYNC_VIA:-rsync}" = taildrop ]; then
-  [ "$ACTION" = push ] || { printf 'error: taildrop transport supports push only\n' >&2; exit 2; }
+  [ "$ACTION" = push ] || { printf 'error: taildrop transport supports push (and receive on the peer)\n' >&2; exit 2; }
+  rel=()
+  for path in "${PATHS[@]}"; do
+    [ -n "$path" ] || continue
+    case "$path" in auth.json|*auth.json) [ "$include_auth" = 1 ] || continue ;; esac
+    case "$path" in "~/"*) rel+=("${path#\~/}") ;; *) rel+=("$path") ;; esac
+  done
+  tmp="$(mktemp -d)"; bundle="$tmp/ymir-sync-$(hostname -s)-$(date +%Y%m%d-%H%M%S).tar.gz"
+  tar -czf "$bundle" -C "$HOME" "${rel[@]}" 2>/dev/null || { printf 'error: could not bundle paths\n' >&2; exit 1; }
   rc=0
   for peer in "${PEERS[@]}"; do
-    for path in "${PATHS[@]}"; do
-      [ -n "$path" ] || continue
-      case "$path" in auth.json|*auth.json) [ "$include_auth" = 1 ] || continue ;; esac
-      printf 'tailscale-sync[1]{via,peer,path}:\n  "taildrop","%s","%s"\n' "$peer" "$path"
-      tailscale file cp "$(expand_path "$path")" "$peer:" || rc=1
-    done
+    printf 'tailscale-sync[1]{via,peer,bundle}:\n  "taildrop","%s","%s"\n' "$peer" "$(basename "$bundle")"
+    tailscale file cp "$bundle" "$peer:" || rc=1
+  done
+  rm -rf "$tmp"
+  exit "$rc"
+fi
+
+# receive — on the peer: fetch the Taildrop inbox and unpack any ymir-sync bundle
+# into $HOME (paths were stored relative to HOME).
+if [ "$ACTION" = receive ]; then
+  dir="${PEER:-$HOME/Downloads}"; mkdir -p "$dir"
+  tailscale file get "$dir" || exit 1
+  rc=0
+  for b in "$dir"/ymir-sync-*.tar.gz; do
+    [ -e "$b" ] || continue
+    printf 'tailscale-sync[1]{action,bundle}:\n  "receive","%s"\n' "$(basename "$b")"
+    tar -xzf "$b" -C "$HOME" || rc=1
+    rm -f "$b"
   done
   exit "$rc"
 fi
