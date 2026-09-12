@@ -269,3 +269,11 @@ Entries are appended chronologically; never rewritten.
   (into each home's gitignored `state/`; remote routes reported).
 - `bin/brokk-update.sh` re-applies fleet preferences on every sweep — one setting
   reaches the whole fleet, no tracked tree dirtied.
+
+## 2026-09-12 — House law (RULES/) and the Grein naming
+
+- New `RULES/` (the house law): `01-domains.md` (house = company; domain = a
+  **Grein**/**Greinar**; Eindri = specialists), `02-agents.md` (agents live only
+  in `.agents/agents`; harness dirs are symlinks; no mock agents), `03-houses.md`
+  (a house is a company — WayOf; the eight Labs are domains, never houses).
+- Live Fleet de-mocked (real domain/model/status; seeded stats only in demo).
