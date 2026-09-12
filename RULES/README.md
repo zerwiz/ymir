@@ -6,7 +6,7 @@ the rule (append-only; never silently rewritten).
 
 ```
 rules_index[4]{file,subject}:
-  "01-domains.md","domains · houses · Eindri"
+  "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
   "README.md","this index"

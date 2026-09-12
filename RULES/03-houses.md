@@ -52,7 +52,7 @@ becomes the company's Docker boundary. A work workspace mounts that container.
 
 ```
 house   = company            (WayOf)
-domain  = field of knowledge (the eight Labs)
+domain  = field of knowledge, a Grein (the eight Labs)
 workspace = a running scope  (personal | work)
 brand   = a domain's label   (Ymir Labs, Brokk Forge, …)
 ```

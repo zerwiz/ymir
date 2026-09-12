@@ -11,8 +11,10 @@ field of knowledge.
 
 ## 2. A domain is a field of knowledge
 
-A **domain** is an area of knowledge, named for the figure whose craft it is.
-There are eight:
+A **domain** is an area of knowledge. The Norse word for a domain is **Grein**
+(plural **Greinar**) — a *branch* or *discipline*; one grein, many greinar. Use
+“domain” and “Grein” interchangeably. A domain is named for the figure whose
+craft it is. There are eight Greinar:
 
 | Domain | Id | Covers |
 |---|---|---|
