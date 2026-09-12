@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { AgentCard as AgentCardType } from '../types';
-import { HOUSES } from '../data/realms';
+import { DOMAINS } from '../data/realms';
 import { useYmir } from '../state/store';
 import { StatusChip } from './Status';
 import { RuneTag } from './RuneTag';
@@ -14,7 +14,7 @@ export function AgentCard({
   onSelect?: (id: string) => void;
   selected?: boolean;
 }) {
-  const house = HOUSES[agent.house] ?? HOUSES.ymirlabs;
+  const house = DOMAINS[agent.domain] ?? DOMAINS.ymirlabs;
   const demo = useYmir((s) => s.demo);
   const runes = useYmir((s) => s.runes);
   // Live cards show only real, sourced figures; the seeded stats stay in demo.

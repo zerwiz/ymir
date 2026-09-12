@@ -1,26 +1,26 @@
 import { useState } from 'react';
 import { useYmir } from '../state/store';
 import { useUI } from '../state/ui';
-import { ACCENTS, HOUSES } from '../data/realms';
+import { ACCENTS, DOMAINS } from '../data/realms';
 import { ROLE_LABEL } from '../services/auth';
 import { useTenantDef } from '../hooks/useTenantDef';
-import type { HouseId } from '../types';
+import type { DomainId } from '../types';
 
-const HOUSES_LIST = Object.keys(HOUSES) as HouseId[];
+const DOMAINS_LIST = Object.keys(DOMAINS) as DomainId[];
 
-function TenantColorRow({ realm, tenant, role, house, glyph }: {
+function TenantColorRow({ realm, tenant, role, domain, glyph }: {
   realm: string;
   tenant: string;
   role: keyof typeof ROLE_LABEL;
-  house: HouseId;
+  domain: DomainId;
   glyph: string;
 }) {
   const colors = useYmir((s) => s.tenantColors);
   const setTenantColor = useYmir((s) => s.setTenantColor);
   const resetTenantColor = useYmir((s) => s.resetTenantColor);
-  const def = useTenantDef(realm, { realm, tenant, role, house, tint: '#38bdf8', glyph });
+  const def = useTenantDef(realm, { realm, tenant, role, domain, tint: '#38bdf8', glyph });
   const override = colors[realm];
-  const houseDef = HOUSES[house];
+  const houseDef = DOMAINS[domain];
 
   return (
     <div className="tenant-row">
@@ -148,7 +148,7 @@ export function Profile() {
                 realm={t.realm}
                 tenant={t.tenant}
                 role={t.role}
-                house={t.house}
+                domain={t.domain}
                 glyph={t.glyph}
               />
             ))}
@@ -176,9 +176,9 @@ export function Profile() {
               </label>
               <label className="field">
                 <span className="eyebrow">House seal</span>
-                <select value={companyHouse} onChange={(e) => setCompanyHouse(e.target.value as HouseId)}>
-                  {HOUSES_LIST.map((h) => (
-                    <option key={h} value={h}>{HOUSES[h].name}</option>
+                <select value={companyHouse} onChange={(e) => setCompanyHouse(e.target.value as DomainId)}>
+                  {DOMAINS_LIST.map((h) => (
+                    <option key={h} value={h}>{DOMAINS[h].name}</option>
                   ))}
                 </select>
               </label>
@@ -205,7 +205,7 @@ export function Profile() {
                 className="btn btn-primary"
                 onClick={() => {
                   setCompanyName(draftName.trim() || 'WayOf');
-                  toast({ kind: 'ok', title: 'Company saved', body: `${draftName} · ${HOUSES[companyHouse].name}` });
+                  toast({ kind: 'ok', title: 'Company saved', body: `${draftName} · ${DOMAINS[companyHouse].name}` });
                 }}
               >
                 <span aria-hidden="true">ᛉ</span> Save company

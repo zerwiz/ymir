@@ -8,7 +8,7 @@ export interface TenantGrant {
   realm: RealmId;
   tenant: string;
   role: TenantRole;
-  house: HouseId;
+  domain: DomainId;
   tint: string;
   glyph: string;
 }
@@ -29,7 +29,7 @@ export interface Session {
   token: string;
 }
 
-export type HouseId =
+export type DomainId =
   | 'ymirlabs'
   | 'brokkforge'
   | 'runestone'
@@ -77,7 +77,7 @@ export interface SkillDef {
   description: string;
   capabilities: string[];
   validated: boolean;
-  house: HouseId;
+  domain: DomainId;
   createdAt: string;
 }
 
@@ -86,7 +86,7 @@ export interface AgentCard {
   name: string;
   role: string;
   realm: RealmId;
-  house: HouseId;
+  domain: DomainId;
   status: AgentStatus;
   capabilities: string[];
   skills: string[];
@@ -210,16 +210,16 @@ export interface RealmDef {
   name?: string;
   kind?: 'work' | 'personal';
   company?: string;
-  domains?: DomainId[];
+  domains?: TopicId[];
   /** brand label — display only, never isolation */
-  house?: HouseId;
+  domain?: DomainId;
   tint: string;
   tint2: string;
   glyph: string;
 }
 
 /** Knowledge domains — the axes a workspace covers. */
-export type DomainId = 'company' | 'marketing' | 'development' | 'life' | 'me';
+export type TopicId = 'company' | 'marketing' | 'development' | 'life' | 'me';
 
 export interface WorkspaceDef {
   id: string;
@@ -232,8 +232,8 @@ export interface WorkspaceDef {
   glyph: string;
 }
 
-export interface HouseDef {
-  id: HouseId;
+export interface DomainDef {
+  id: DomainId;
   name: string;
   accent: string;
   glyph: string;

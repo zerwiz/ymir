@@ -4,7 +4,7 @@ import type {
   ChatMessage,
   FileNode,
   GateId,
-  HouseId,
+  DomainId,
   ProcessInfo,
   PullRequest,
   RecallEpisode,
@@ -137,7 +137,7 @@ interface YmirState {
   tenantColors: Record<string, string>;
   streamHeight: number;
   companyName: string;
-  companyHouse: HouseId;
+  companyHouse: DomainId;
   streamPaused: boolean;
   query: string;
   traceability: number;
@@ -189,7 +189,7 @@ interface YmirState {
   resetTenantColor: (realm: string) => void;
   setStreamHeight: (height: number) => void;
   setCompanyName: (name: string) => void;
-  setCompanyHouse: (house: HouseId) => void;
+  setCompanyHouse: (domain: DomainId) => void;
   addAgent: (agent: AgentCard) => void;
   updateAgent: (id: string, patch: Partial<AgentCard>) => void;
   addSkill: (skill: SkillDef) => void;
@@ -276,11 +276,11 @@ function loadTenantColors(): Record<string, string> {
   }
 }
 
-function loadCompany(): { companyName: string; companyHouse: HouseId } {
+function loadCompany(): { companyName: string; companyHouse: DomainId } {
   try {
     return {
       companyName: localStorage.getItem('ymir.company.name') ?? 'WayOf',
-      companyHouse: (localStorage.getItem('ymir.company.house') as HouseId) ?? 'ymirlabs',
+      companyHouse: (localStorage.getItem('ymir.company.domain') as DomainId) ?? 'ymirlabs',
     };
   } catch {
     return { companyName: 'WayOf', companyHouse: 'ymirlabs' };
@@ -534,7 +534,7 @@ export const useYmir = create<YmirState>((set, get) => ({
 
   setCompanyHouse: (house) => {
     try {
-      localStorage.setItem('ymir.company.house', house);
+      localStorage.setItem('ymir.company.domain', house);
     } catch {
       /* ignore */
     }

@@ -158,3 +158,11 @@ npm run build            # must be green
 - **Mirror:** `.agents/skills/tyr-check/assets/hlidskjalf-ui.md`.
 - When the shell, tokens, gates, or the gate API change, update this asset and
   `docs/design.md` together.
+
+## Domains, not houses (Rule 01/03)
+
+The eight Labs are **domains (Greinar)** — the knowledge axes — not houses. A
+**house is a company** (WayOf). In the UI the eight render as an agent's
+**domain** (`agent.domain` via the `DOMAINS` map in `src/data/realms.ts`); the
+Forge picker is labelled **Domain**. `svartalfaheim/<company>/companies/` holds
+the house card(s); the eight domain cards live under `.../domains/`.
