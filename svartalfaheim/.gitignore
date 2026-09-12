@@ -1,0 +1,11 @@
+# svartalfaheim — the realms are PRIVATE (like the Hoard). Track only the
+# scaffold and *.example shapes; every realm's data stays on disk, untracked.
+*
+!.gitignore
+!README.md
+!*/README.md
+!**/README.md
+!*.example
+!*.example.md
+!.gitkeep
+!**/.gitkeep
