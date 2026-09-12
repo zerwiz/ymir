@@ -33,6 +33,7 @@ sindri|code — build, refactor, fix, test|code build refactor fix bug implement
 bragi|content — marketing, SEO, social|content write copy marketing seo social post article blog campaign brand announcement newsletter
 huginn|research — search, analyse, discover|research search analyse analyze investigate find discover compare benchmark source docs look up
 kvasir|scout — recon a codebase before work|scout recon survey map explore inventory reconnaissance lay of the land
+hnoss|design — UI/UX, prototypes, decks, dashboards|design ui ux prototype landing dashboard deck slide visual layout figma design-system
 mimir|plan — design the approach|plan design architect approach strategy spec breakdown sequence decompose
 snotra|document — prose, guides, references|document docs guide reference readme manual explain describe prose
 forseti|review — judge the work|review judge audit critique verify assess check inspect quality gate
