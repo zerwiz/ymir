@@ -50,7 +50,7 @@ asset_for() {
     *bin/mimir*)                                  printf '%s' ".agents/skills/galdr-cli/assets/memory-well.md" ;;
     *bin/nornir-*|*config/cron.yaml)              printf '%s' ".agents/skills/galdr-cli/assets/nornir-jobs.md" ;;
     *bin/valknut-load.sh|*/.pi/*|*/.opencode/*)   printf '%s' ".agents/skills/galdr-cli/assets/harness-integration/README.md" ;;
-    *bin/smidja*|*.agents/skills/smidja-factory-factory/*)        printf '%s' ".agents/skills/galdr-cli/assets/smidja.md" ;;
+    *bin/smidja*|*.agents/skills/smidja-factory/*)        printf '%s' ".agents/skills/galdr-cli/assets/smidja.md" ;;
     *)                                            printf '' ;;
   esac
 }

@@ -31,6 +31,7 @@ siblings of this file (`eindri-orchestration.md`, `nornir-jobs.md`). The runtime
 | 10 | Observer read-only | confirm a run touches only `state/` + Runes | No writes to Ymir's tree or the read-only worktree root. |
 | 11 | Secrets never committed | secret scan + ignore audit | No secret literal; ignore rules cover env files. |
 | 12 | Governed assets current | `compliance-check.sh` (`assets` check) | A governed path changed in the working tree has its owning asset changed too. |
+| 13 | **Governed paths resolve** | `compliance-check.sh` (`governed` check) | Every path in `AGENTS.md`'s `governed[]` table exists (or its glob matches something). |
 
 ### Governed paths — load the asset before you edit
 
@@ -56,6 +57,28 @@ galdr router itself is not loaded.
 ---
 
 ## 2. Gate detail
+
+### G13 — every governed path resolves (the silent-failure guard)
+
+A governed path that does not exist is **worse than a missing rule**: the pretool
+guard's `asset_for` stops matching, so the protection is gone and nothing fails,
+warns, or logs. This was not hypothetical — the `smidja` → `smidja-factory`
+rename left `smidja-factory-factory` in seven places, including `AGENTS.md`'s own
+`governed[]` table and the guard's pattern, and the smidja rule quietly stopped
+protecting anything.
+
+The check reads the `governed[]` table out of `AGENTS.md`, splits each row on
+`|` (a row may name alternatives), and resolves every entry — a plain path with
+`-e`, a glob with `compgen -G` — counting all of them:
+
+```bash
+bash .agents/skills/galdr-cli/scripts/compliance-check.sh | grep governed
+# "governed","governed paths resolve","PASS","all 25 governed paths exist"
+```
+
+**Rule for a rename:** `grep -rn '<old>' --include='*.sh' --include='*.md'` across
+`bin/`, `AGENTS.md`, and `.agents/skills/*/assets/` — including the *patterns* that
+name governed paths, not just the prose. Then re-run this check.
 
 ### G1 — every shell script is `bash -n` clean
 
