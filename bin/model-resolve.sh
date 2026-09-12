@@ -115,7 +115,7 @@ for p, m in catalog:
     if score > best_score:
         best_score = score; best = (p, m)
 
-if best and (best_score >= 3 or (best_score >= 2 and want_provider == "local")):
+if best and best_score >= 2:
     conf = "high" if best_score >= 5 else "medium"
     print(f'model-resolve[1]{{request,locality,harness,provider,model,confidence}}:\n  "{req}","local","{LOCAL_H}","{best[0]}","{best[1]}","{conf}"')
     sys.exit(0)
