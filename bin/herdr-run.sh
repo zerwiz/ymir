@@ -320,8 +320,12 @@ case "$ACTION" in
     # reuse a Yggdrasil worktree and seat there.
     SEAT_CWD="$PWD"
     if [ -x "$SCRIPT_DIR/yggdrasil.sh" ]; then
-      wt_out="$("$SCRIPT_DIR/yggdrasil.sh" create "$NAME" 2>/dev/null)"
-      wt_path="$(printf '%s' "$wt_out" | sed -n '2p' | cut -d'"' -f6)"
+      # Reuse an existing worktree for this id; create only when absent.
+      wt_path="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)/.yggdrasil/$NAME"
+      if [ ! -d "$wt_path" ]; then
+        wt_out="$("$SCRIPT_DIR/yggdrasil.sh" create "$NAME" 2>/dev/null)"
+        wt_path="$(printf '%s' "$wt_out" | sed -n '2p' | cut -d'"' -f6)"
+      fi
       if [ -n "$wt_path" ] && [ -d "$wt_path" ]; then
         SEAT_CWD="$(cd "$wt_path" && pwd)"
         printf 'herdr-run[1]{isolation,worktree}:\n  "on","%s"\n' "$SEAT_CWD" >&2
