@@ -112,3 +112,6 @@ workspace/companies/
 
 # Session logs can carry live credentials and prompts — never tracked.
 assets/reference/state/
+
+# The private machine mesh (from config/tailscale-sync.example.yaml).
+.agents/config/tailscale-sync.yaml
