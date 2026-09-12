@@ -273,7 +273,7 @@ case "$ACTION" in
     # The first law: short errands are done in hand.
     if ! worth_a_smith "$PROMPT" >/dev/null 2>&1; then
       printf 'herdr-run[1]{eindri,verdict}:\n  "none","short errand — answer it in hand"\n'
-      exit 0
+      exit 3
     fi
 
     # The right smith for the right metal.

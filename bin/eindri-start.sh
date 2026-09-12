@@ -50,15 +50,22 @@ LABEL="${ROLE}-${SLUG:-task}"
 mkdir -p "$STATE"
 
 # 3. Seat: herdr first, tmux fallback — always produce a seat.
-seat="none"
-if [ -x "$SCRIPT_DIR/herdr-run.sh" ] && "$SCRIPT_DIR/herdr-run.sh" eindri $SEAT ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1; then
+#    rc 3 from herdr-run means "not worth a smith" — report it, do NOT fake a seat.
+seat="none"; refuse=0; rc=0
+if [ -x "$SCRIPT_DIR/herdr-run.sh" ]; then
+  "$SCRIPT_DIR/herdr-run.sh" eindri $SEAT ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
+fi
+if [ "$rc" = 0 ]; then
   seat="herdr"
+elif [ "$rc" = 3 ]; then
+  seat="none"; refuse=1
 else
   command -v tmux >/dev/null 2>&1 || { printf 'eindri-start[1]{role,seat,request}:\n  "%s","none","%s"\n' "$ROLE" "$REQ"; printf 'error: no seat — herdr cannot seat and tmux is absent\n' >&2; exit 1; }
   tmux has-session -t "$SESSION" 2>/dev/null || tmux new-session -d -s "$SESSION" -n shell
   tmux new-window -t "$SESSION" -n "$LABEL" "bash -lc 'printf \"\\n  %s — Eindri of Ymir\\n  request: %s\\n\\n\"; case \"$KIND\" in pi) exec pi \"$REQ\" ;; *) exec \"$KIND\" ;; esac'" 2>/dev/null \
     && seat="tmux:$SESSION:$LABEL"
 fi
+[ "$refuse" = 1 ] && { printf 'eindri-start[1]{role,seat,verdict}:\n  "%s","none","too brief — answer it in hand"\n' "$ROLE"; exit 0; }
 [ "$seat" != "none" ] || { printf 'error: could not seat %s\n' "$ROLE" >&2; exit 1; }
 
 # 4. Record + report.
