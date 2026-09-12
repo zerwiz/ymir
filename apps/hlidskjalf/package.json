@@ -31,5 +31,9 @@
     "typescript": "^5.7.2",
     "vite": "^6.0.5"
   },
-  "main": "electron/main.cjs"
+  "main": "electron/main.cjs",
+  "allowScripts": {
+    "electron@33.4.11": true,
+    "esbuild@0.25.12": true
+  }
 }
