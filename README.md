@@ -190,22 +190,17 @@ the master builder; Tyr judges compliance.
 | `smidja` | Smiðja | the smithy: roster + bounded phases + typed envelopes |
 | `modeltesting` | — | model evaluation harness |
 | `hvild-afk` | Hvíld | away-mode supervision: routine wakes self-handled, escalations batched |
-| `saga-bearings` | Sága | fleet status digest / pick up where I left off |
-| `saga-recap` | Sága | recap of visible events + unresolved decisions |
+| `saga` | Sága | session bearings: fleet digest (/bearings) + recap (/ahoy) |
 | `muninn-stow` | Muninn | session-knowledge curation, routing, and persistence |
 | `jord-projects` | Jörð | project registry + delivery posture |
-| `urdh-decisions` | Urðr | decision-hold lifecycle |
-| `urdh-hold` | Urðr | captain-hold reconciliation |
+| `urdh` | Urðr | Allfather-hold lifecycle |
 | `frigg-consent` | Frigg | consent / ask-user authority gate |
 | `vor-diagnostics` | Vör | bootstrap + diagnostic reasoning |
-| `nornir-events` | Nornir | process→event sources |
-| `nornir-quota` | Nornir | quota-aware dispatch selection |
+| `nornir` | Nornir | fate & schedule: events + quota |
 | `gjallarhorn-relay` | Gjallarhorn | public relay replies (X / Discord) |
 | `eindri-homes` | Eindri | isolated worker homes |
 | `syn-recovery` | Sýn | stuck-worker recovery playbook |
-| `ymir-update` | Ymir | self-update the running system and workers |
-| `ymir-omarchy` | Ymir | Omarchy-native operation: host desktop, monitors, placement, GPU, host learning |
-| `ymir-thjazi` | Þjazi | the herdr/tmux terminal backend — protocol floors, panes |
+| `ymir` | Ymir | operate the host: update · Omarchy · Þjazi |
 | `hamr` | Hamr | per-harness adapter reference (OpenCode, Pi, Claude, Cursor, Codex) |
 
 The Galdr family enforces the 10 ergonomic principles (TOON output, minimal schemas,

@@ -320,3 +320,16 @@ file hardcodes a model for him.
 file beneath is untracked on every clone. Secrets are **referenced by path**
 (`YMIR_HOARD`; `bin/hodd.sh path|init|ls|load|emit|tenant`), never inlined. The
 outer ward is `bin/secret-guard.sh` (pre-commit + CI). Law: `RULES/04-hoard.md`.
+
+## Consolidated skills — galdr-style routers (2026-09-12)
+
+Split pairs were merged into one `SKILL.md` router + `assets/` (a change edits an
+asset, not a new skill). Same-figure split pairs only — merging distinct figures
+is held pending the naming law.
+
+consolidated[5]{skill,absorbed,assets}:
+  "ymir","ymir-update + ymir-omarchy + ymir-thjazi","update · omarchy · thjazi"
+  "urdh","urdh-decisions + urdh-hold","hold · decisions"
+  "saga","saga-bearings + saga-recap","bearings · recap · board-template.html"
+  "nornir","nornir-events + nornir-quota","events · quota"
+  "nsr","NSR + NSRcompliance","nsr/ · nsrcompliance/"
