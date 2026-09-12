@@ -51,8 +51,11 @@ print("---".join(parts[2:]).strip() if len(parts) >= 3 else t)
 PY
 )"
 
-# 3. the agent's own skill, if it has one, plus any explicit --skill.
-[ -f "$ROOT/.agents/skills/$AGENT/SKILL.md" ] && SKILLS+=("$ROOT/.agents/skills/$AGENT")
+# 3. the agent's own skill, if it has one (folder is now figure-function,
+#    e.g. hnoss-design), plus any explicit --skill.
+for sk in "$ROOT/.agents/skills/$AGENT" "$ROOT"/.agents/skills/"$AGENT"-*; do
+  [ -f "$sk/SKILL.md" ] && { SKILLS+=("$sk"); break; }
+done
 
 command -v pi >/dev/null 2>&1 || { printf 'error: pi is not on PATH\n' >&2; exit 1; }
 
