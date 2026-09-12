@@ -150,7 +150,22 @@ fi
 start_one() {
   local v="$1" f l
   f="$(pid_file "$v")"; l="$(log_file "$v")"
-  if is_running "$v"; then printf 'electron[1]{view,state,pid}:\n  "%s","already up",%s\n' "$v" "$(pid_of "$v")"; return 0; fi
+  if is_running "$v"; then
+    # A speed-start must RAISE the app, not report that it is already up. The
+    # window lives on its own numbered desktop by design, so "nothing happens"
+    # is exactly what a bound key must not do. focuswindow also switches to that
+    # desktop when the window is elsewhere.
+    local cls state=already-up
+    cls="$(view_mark "$v")"   # the window class, from the one place that defines it
+    if command -v hyprctl >/dev/null 2>&1; then
+      # Omarchy configures Hyprland in Lua, so `hyprctl dispatch` evaluates the
+      # remainder as a Lua expression — the classic `focuswindow class:...`
+      # string form is a syntax error there. This is the working idiom.
+      hyprctl dispatch "hl.dsp.focus({window=\"class:^${cls}\$\"})" >/dev/null 2>&1 && state=raised
+    fi
+    printf 'electron[1]{view,state,pid}:\n  "%s","%s",%s\n' "$v" "$state" "$(pid_of "$v")"
+    return 0
+  fi
   # Launch the REAL Electron binary, not the .bin node shim, so the recorded pid
   # is the app itself (the shim spawns and would leave a stale/incorrect pid).
   local bin; bin="$(real_electron)"
