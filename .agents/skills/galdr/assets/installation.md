@@ -40,8 +40,10 @@ install[16]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-(In `--check` the runtime-only steps — services, desktop, validate — are skipped,
-so 13 rows are printed.)
+A real run prints **16** rows. `--check` prints **13** — it skips the
+runtime-only steps (`services`, `desktop`, `validate`), which have nothing to
+report when the runtime is not raised. (`memory-well` is emitted by the
+`prereqs` step, so the row count exceeds the step count.)
 
 ## The visualizer UI
 
@@ -75,6 +77,29 @@ It writes `~/.config/hypr/ymir-desktops.lua` using Omarchy's own idiom —
 `require("hypr.ymir-desktops")` line to the user's `hyprland.lua`. It **never**
 touches `/usr/share/omarchy/`. Verify with `hyprctl configerrors` (must be empty).
 On a non-Omarchy host the step is a clean SKIP.
+
+## The Þjazi backend (herdr-first)
+
+Ymir spawns agents into terminal panes, so a terminal backend must exist. Ymir is
+**herdr-first**: `herdr` (Þjazi) is preferred, `tmux` is the accepted reference
+backend, and a missing backend is reported — never a silent fallback.
+
+```
+backend_priority[3]{rank,backend,note}:
+  "1","herdr","preferred; protocol 14+ for panes, 0.8.0+ for presentation spaces"
+  "2","tmux","verified reference backend; always acceptable"
+  "3","none","spawn is refused with a plain reason"
+```
+
+```
+bin/herdr-ensure.sh status            # what is present, and does it meet the floor
+bin/herdr-ensure.sh ensure --install  # install via the pinned, SHA-verified installer
+```
+
+`ensure` installs through `.agents/backend/fm-install-herdr.sh` (exact version +
+protocol check), and falls back to reporting `tmux` when herdr cannot be fetched.
+Selection order for the running system: `config/backend` → `BROKK_BACKEND` →
+`HERDR_ENV=1` → else tmux. Full reference: the `ymir-thjazi` skill.
 
 ## Consent
 
