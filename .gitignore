@@ -115,3 +115,7 @@ assets/reference/state/
 
 # The private machine mesh (from config/tailscale-sync.example.yaml).
 .agents/config/tailscale-sync.yaml
+
+# Per-machine agent/model overlays (private); track only the .example shape.
+.agents/config/agents.*.yaml
+!*.example
