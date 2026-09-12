@@ -19,7 +19,11 @@ VERSION="1.0.0"
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || { printf 'error: not a git repository\n' >&2; exit 1; }
 cd "$ROOT" || exit 1
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+# no args means "land this branch"; only an explicit flag asks for help
+case "${1-}" in
+  -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+  -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 
 CHECK=0; DIRECT=0; BRANCH=""
 while [ $# -gt 0 ]; do
