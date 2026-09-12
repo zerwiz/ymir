@@ -467,3 +467,19 @@ The engine needs the `mcp<2` SDK for `engram-mcp` (v2 renamed `FastMCP` to
 
 Rule: **drink before you act, water it after** — recall on the way in, and
 `POST /observe` (or the `remember` MCP tool) after a lesson lands.
+
+---
+
+## 14. Agent locations — `.agents/agents` is the source of truth
+
+Agent profiles live **only** in `.agents/agents/*.md` (the canonical, with the
+harness config like `mode`/`model`/`permission` in their frontmatter). The
+harness directories **bind** them by symlink — they are never hand-written
+duplicates:
+
+- OpenCode: `.opencode/agent/<name>.md` → `../../.agents/agents/<profile>.md`
+- Pi: `.pi/agents/<profile>.md` → the same canonical files
+
+`bin/valknut-load.sh` creates the symlinks (`--opencode`, `--pi`, `--global`).
+To change an agent, edit `.agents/agents/*.md` and re-run the loader; never edit
+`.opencode/agent` or `.pi/agents` (they are links).
