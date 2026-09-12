@@ -757,7 +757,7 @@ Two mechanisms govern self-maintenance and external communication.
 **Ymir-update** is the **self-update mechanism** — it updates the running
 system and its workers without human intervention, within bounds.
 
-- `ymir-update` skill — self-update the running system + workers
+- `ymir` skill (update asset) — self-update the running system + workers
 
 **Rule:** Ymir-update is safe. It never breaks the forge; it only sharpens
 the tools.
@@ -912,7 +912,7 @@ The complete index of all Norse-named skills in Ymir:
 | `gjallarhorn-relay` | Gjallarhorn | Public relay replies (X/Discord) |
 | `eindri-homes` | Eindri | Isolated worker homes (provisioning) |
 | `syn-recovery` | Sýn | Stuck-worker recovery playbook |
-| `ymir-update` | Ymir | Self-update the running system + workers |
+| `ymir` (update) | Ymir | Self-update the running system + workers |
 | `hamr` | Hamr | Per-harness adapter reference |
 | `pr-ops` | — | PR lifecycle — create, update, check status, request merge |
 
