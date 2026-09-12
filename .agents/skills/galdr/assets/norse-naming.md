@@ -285,3 +285,20 @@ runtime_figures[2]{figure,role,path}:
 - **Eindri = specialists**; each names its domain and craft.
 - In code: `DOMAINS` / `DomainId` / `DomainDef`; agents carry `domain`.
 - Full law: `RULES/01-domains.md`, `RULES/02-agents.md`, `RULES/03-houses.md`.
+
+## 8. Reserved figures (claimed, not yet built)
+
+A figure reserved here is spoken for: do not use it for other work. Add a row
+the moment a reservation is made, and move the row into §3 or §7 when the
+component ships.
+
+```
+reserved[1]{figure,role,path,claimed}:
+  "Máni","the calendar — who counts the months: the Nornir schedule and the Hlidskjalf calendar view","bin/nornir-* calendar surface + apps/hlidskjalf calendar","2026-09-12"
+```
+
+**Máni** is reserved deliberately and must not be spent elsewhere. Máni is the
+measurer of *time* — he counts the months and governs the course of the moon —
+which is exactly the role of a calendar: the schedule that Nornir keeps and the
+calendar the Allfather reads in Hlidskjalf. Do not use it for benchmarking or
+for anything that merely reports a rate per second.
