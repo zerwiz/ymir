@@ -294,10 +294,26 @@ bin/saga-session-start.sh           # the digest (auto-runs on harness open)
 ```
 
 The installer is idempotent and self-healing: it provisions what it can in user
-space (`bun`, `uv`, `mcp`, the Þjazi backend), installs the OSS engines, and on an
-**Omarchy** host learns the machine and installs the post-update hook. It finishes
-by opening both desktop apps and running `bin/ymir-validate.sh` to prove the
-running system actually works.
+space (`bun`, `uv`, `mcp`, the Þjazi backend), installs the OSS engines, learns
+the machine, places the desktop apps, and — on an **Omarchy** host — sets the
+update hook that re-teaches it after every `omarchy update`. It ends by opening
+both desktop apps and running `bin/ymir-validate.sh` to prove what stands.
+
+### What each platform buys you
+
+The installer serves all three of Ymir's native homes on **every** run — a
+non-Omarchy host loses only the Omarchy-specific hook, never the logic.
+
+```
+platform_gifts[3]{platform,what_the_install_does,what_you_gain}:
+  "Omarchy","detects the host, reads hyprctl monitors+scale, writes o.window desktop rules, snapshots the setup, installs the post-update hook","your dashboards land on their own numbered desktops; Ymir knows THIS machine and relearns it when Omarchy moves"
+  "herdr (Þjazi)","bin/herdr-ensure.sh verifies the version against the floors and installs via the pinned, SHA-verified installer; tmux is the accepted reference","every Eindri worker gets a real pane in a real terminal; presentation spaces at 0.8.0+, panes at protocol 14+"
+  "pi","registers the harness surfaces, the MCP servers, and the model providers (local LM Studio / Ollama or the Bifrost bridge)","extensions, skills, prompt templates, themes, and pi PACKAGES are all live — a new Ymir capability can ship as an installable pi package"
+```
+
+A new capability therefore has three possible homes — a shell script, a skill, or
+a **pi package** — and on Omarchy it can also reach the desktop itself. That is the
+freedom of being native to all three rather than portable to none.
 
 Point a harness (OpenCode, Pi, Claude Code, Cursor, Codex) at the repo and it takes
 the seat as **Brokk**. Read [`AGENTS.md`](AGENTS.md) for the operating laws and
