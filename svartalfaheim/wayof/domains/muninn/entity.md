@@ -1,9 +1,9 @@
 ---
 name: Muninn Labs
-type: company
+type: domain
 owner: zerwiz
 realm: way-of
-house: muninn
+domain: muninn
 products:
   - Anchor
   - Mimirsbrunn

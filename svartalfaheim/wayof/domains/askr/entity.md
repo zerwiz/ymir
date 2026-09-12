@@ -1,9 +1,9 @@
 ---
 name: Askr
-type: company
+type: domain
 owner: zerwiz
 realm: way-of
-house: askr
+domain: askr
 products:
   - Relocation-Copilot
   - onboarding

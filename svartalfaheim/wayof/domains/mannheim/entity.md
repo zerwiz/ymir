@@ -1,9 +1,9 @@
 ---
 name: Mannheim
-type: company
+type: domain
 owner: zerwiz
 realm: way-of
-house: mannheim
+domain: mannheim
 products:
   []
 repo: $HOME_SEAT/Ymir

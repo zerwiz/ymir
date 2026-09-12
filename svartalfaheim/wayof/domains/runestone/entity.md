@@ -1,9 +1,9 @@
 ---
 name: Runestone Labs
-type: company
+type: domain
 owner: zerwiz
 realm: way-of
-house: runestone
+domain: runestone
 products:
   - compliance
   - rune-auditing

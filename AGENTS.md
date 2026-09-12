@@ -281,3 +281,17 @@ See `.agents/assets/agents/naming.md` for the full component map.
 Access: the gate shows an **in-app login** (no browser prompt) — user `zerwiz`,
 password in `HLIDSKJALF_AUTH` from `.env.local` (never inline). Replace the
 password login with Heimdall (oauth2-proxy) later.
+
+## The rules (law)
+
+`RULES/` holds the numbered house law. Read the rule that governs the task:
+
+```
+rules[3]{file,governs}:
+  "RULES/01-domains.md","domains (Greinar) · houses · Eindri"
+  "RULES/02-agents.md","agents: .agents/agents is canonical; harness dirs are symlinks; no mock"
+  "RULES/03-houses.md","a house is a company (WayOf); domains are never houses"
+```
+
+A change that contradicts a rule must change the rule first (append-only). The
+eight Labs are **domains**, not houses; **WayOf** is the house.

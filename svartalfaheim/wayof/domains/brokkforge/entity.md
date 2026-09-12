@@ -1,9 +1,9 @@
 ---
 name: Brokk Forge
-type: company
+type: domain
 owner: zerwiz
 realm: way-of
-house: brokkforge
+domain: brokkforge
 products:
   - WayOf-Command
   - Runecode
