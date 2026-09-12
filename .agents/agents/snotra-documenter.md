@@ -21,7 +21,7 @@ capabilities:
   - changelog
   - api_reference
   - knowledge_placement
-tools:
+ymir_tools:
   - vector_db
   - hermes_runner
   - herder

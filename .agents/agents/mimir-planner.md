@@ -21,7 +21,7 @@ capabilities:
   - sequencing
   - risk_analysis
   - dependency_mapping
-tools:
+ymir_tools:
   - vector_db
   - hermes_runner
   - herder

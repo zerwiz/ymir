@@ -56,9 +56,20 @@ status() {
   return 0
 }
 
+# One backend, two names: upstream ships `herdr`, the Omarchy/Þjazi layer calls
+# the same binary `hdr`. Alias them so either name reaches the same tool and
+# every script (Ymir, Omarchy) shares one code path — never two.
+link_hdr() {
+  have hdr && return 0
+  local bin
+  bin="$(command -v herdr 2>/dev/null)" || return 0
+  mkdir -p "$HOME/.local/bin" || return 1
+  ln -sf "$bin" "$HOME/.local/bin/hdr" 2>/dev/null || return 1
+}
+
 ensure() {
   local install="${1:-}"
-  if have herdr; then status; return $?; fi
+  if have herdr; then link_hdr; status; return $?; fi
   if [ "$install" != "--install" ]; then
     status
     printf 'help: bin/herdr-ensure.sh ensure --install  (or install tmux as a fallback)\n'
@@ -68,6 +79,7 @@ ensure() {
   if [ -x "$PINNED_INSTALLER" ]; then
     mkdir -p "$HOME/.local/bin"
     if "$PINNED_INSTALLER" "$HOME/.local/bin" >/dev/null 2>&1 && have herdr; then
+      link_hdr
       status; return $?
     fi
   fi

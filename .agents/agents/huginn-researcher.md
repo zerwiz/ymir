@@ -21,7 +21,7 @@ capabilities:
   - analysis
   - summarization
   - entity_extraction
-tools:
+ymir_tools:
   - vector_db
   - hermes_runner
   - herder

@@ -53,12 +53,15 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # falls back to whichever server is already bound (firstmate docs/herdr-backend.md,
 # "Session targeting"). We always pass the flag explicitly.
 HDR_SESSION="${HERDR_SESSION:-}"
-hdr() { if [ -n "$HDR_SESSION" ]; then herdr --session "$HDR_SESSION" "$@"; else herdr "$@"; fi; }
+# One backend, two names: upstream ships `herdr`, the Omarchy/Þjazi layer calls
+# the same binary `hdr`. Resolve once so both hosts share this code path.
+HDR_BIN="${HDR:-$(command -v herdr || command -v hdr || printf 'herdr')}"
+hdr() { if [ -n "$HDR_SESSION" ]; then "$HDR_BIN" --session "$HDR_SESSION" "$@"; else "$HDR_BIN" "$@"; fi; }
 
 can_use_herdr() {
   [ "${YMIR_HERDR_PANES:-1}" = "1" ] || return 1
   [ "${HERDR_ENV:-}" = "1" ] || return 1
-  have herdr || return 1
+  have herdr || have hdr || return 1
   return 0
 }
 

@@ -21,7 +21,7 @@ capabilities:
   - dependency_discovery
   - ownership_mapping
   - summarization
-tools:
+ymir_tools:
   - vector_db
   - hermes_runner
   - herder
