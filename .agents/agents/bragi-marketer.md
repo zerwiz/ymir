@@ -77,3 +77,9 @@ sandboxed: true
 ```
 
 All five are mandatory; a missing declaration fails the Galdr gate.
+
+## Engines (skill `bragi`)
+
+- **Firecrawl** (firecrawl.dev) — scrape/crawl/search/map to markdown (research, SEO).
+- **browser-use** (github.com/browser-use/browser-use) — LLM browser agent (publish, post).
+Keys from `.env.local` (`FIRECRAWL_API_KEY`); visuals via **Hnoss** (OpenDesign).
