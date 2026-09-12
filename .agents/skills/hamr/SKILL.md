@@ -93,3 +93,31 @@ A new tool remains undispatchable until the `verify` plan, its harness entry, ev
   }
 }
 ```
+
+## Organisation law (RULES/) — domains, houses, agents
+
+Hamr binds the harnesses; the house law governs *who* they run. The source of
+truth is `RULES/`:
+
+- **A house is a company** — and only that. **WayOf** is the house.
+- **A domain is a field of knowledge — a *Grein* (pl. *Greinar*).** The eight:
+  `ymirlabs` (the system itself) · `brokkforge` (engineering) · `runestone`
+  (records/compliance) · `muninn` (memory) · `dvalin` (crafted tools) ·
+  `utgard` (creative) · `askr` (human products) · `mannheim` (holding).
+- **Eindri are the specialists** (marketer, builder, researcher, planner,
+  reviewer, documenter, scout, …); each names its **domain** and its **craft**.
+
+**Agent binding (Rule 02) — Hamr's own concern:**
+
+- Canonical profiles live **only** in `.agents/agents/*.md`.
+- Every harness directory is a **symlink** to them — never a copy:
+  - OpenCode: `.opencode/agent/<name>.md` → `../../.agents/agents/<profile>.md`
+  - Pi: `.pi/agents/<profile>.md` → the same canonical files
+- Never edit `.opencode/agent/` or `.pi/agents/`; edit `.agents/agents/<profile>.md`
+  and run `bin/valknut-load.sh --all` to rebind. `bin/hamr-harness.sh` only
+  *detects* the harness shape; it never writes agents.
+- **No mock agents:** ids, names, domains, models, and status are real and
+  sourced. The demo roster is the single, labelled mock (demo mode only).
+
+In the code the eight are `DOMAINS` (`DomainId`/`DomainDef`) and an agent carries
+`domain` (not `house`) — see `src/data/realms.ts` and `AgentCard`.
