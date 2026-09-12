@@ -1,0 +1,53 @@
+# config/agents.yaml.example — TEMPLATE for the Allfather's personal setup.
+#
+# Installation copies this to config/agents.yaml when none exists
+# (bin/ymir-install.sh step: host) — or run: bin/agents-config.sh init
+# Edit config/agents.yaml, then: bin/agents-config.sh apply
+# config/agents.yaml is gitignored: it is YOURS, private, and pushable to a
+# private repo. Override its path with YMIR_AGENTS_YAML=/path/to/yours.yaml.
+# Any agent without its own `model:` inherits `default_model`.
+
+version: 1
+
+# The harness is chosen by where the model lives — local through pi, online
+# through opencode. An agent may still name `harness:` to override the rule.
+harness:
+  local: pi              # a model on a local provider runs through pi
+  online: opencode       # a hosted model runs through opencode
+  local_providers: [llama.cpp, llama-cpp, lmstudio]
+  # The same local server is named differently per harness; translate on the way.
+  providers:
+    llama.cpp: { pi: llama-cpp }
+
+# The fallback smith for any agent that does not name a model.
+default_model: opencode-go/deepseek-v4.1-flash
+
+# Local, keyless model servers. `apply` writes these into the project harness
+# config (opencode.json) so a model listed here is immediately usable. A bare
+# alias (no @quant) is auto-resolved against the server's /v1/models.
+providers:
+  llama.cpp:
+    npm: "@ai-sdk/openai-compatible"
+    name: "llama-server (local)"
+    base_url: "http://127.0.0.1:8080/v1"
+    models:
+      # A local llama.cpp router needs the EXACT served id (the @quant suffix);
+      # `apply` resolves the bare alias below to the id the server reports.
+      - frontend-design-expert-8b
+
+# agent name -> { model, harness?, primary? }. Omit model to inherit
+# default_model. Omit harness to follow the local/online rule above.
+# `primary: true` marks the agent runnable directly (mode: all), not only
+# dispatchable by another agent.
+agents:
+  brokk:   { model: opencode-go/deepseek-v4.1-flash }
+  # Hnoss the Shaper runs local (no cloud key) -> pi, and is directly runnable.
+  hnoss:   { model: "llama.cpp/frontend-design-expert-8b", primary: true }
+  sindri:  { model: opencode-go/deepseek-v4.1-flash }
+  bragi:   { model: opencode-go/deepseek-v4.1-flash }
+  huginn:  { model: opencode-go/deepseek-v4.1-flash }
+  kvasir:  { model: opencode-go/deepseek-v4.1-flash }
+  mimir:   { model: opencode-go/deepseek-v4.1-flash }
+  snotra:  { model: opencode-go/deepseek-v4.1-flash }
+  forseti: { model: opencode-go/deepseek-v4.1-flash }
+  galdr:   { model: opencode-go/deepseek-v4.1-flash }

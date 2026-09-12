@@ -301,6 +301,14 @@ file hardcodes a model for him.
   `opencode run --agent`; the lowercased model is taken from its profile when a
   primary dispatches it. A thin **primary** alias is the way to prove it end to
   end.
+- **Template & privacy:** `config/agents.yaml.example` is tracked; installation
+  (step `host`) or `bin/agents-config.sh init` copies it to the private,
+  gitignored `config/agents.yaml` — push that to a private repo. Override its
+  path with `YMIR_AGENTS_YAML`.
+- **Harness rule:** the harness is chosen by where the model lives — a local
+  provider runs through **`pi`**, a hosted model through **`opencode`** — unless
+  an agent names `harness:`. The same server is renamed per harness
+  (`llama.cpp` → `llama-cpp` for pi).
 - **Updating this registry:** when a new provider or model is added to
   `config/agents.yaml`, add its id here and (if it is a new server) to the
   external-tools inventory.

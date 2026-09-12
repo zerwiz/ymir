@@ -280,10 +280,17 @@ step_host() {
     plugged="n/a"
   fi
 
+  # 6. Seed the private agent setup from the tracked template (idempotent):
+  #    config/agents.yaml is the Allfather's own — never overwritten once set.
+  local agents_cfg=kept
+  if [ ! -e "$ROOT/config/agents.yaml" ] && [ -r "$ROOT/config/agents.yaml.example" ]; then
+    cp "$ROOT/config/agents.yaml.example" "$ROOT/config/agents.yaml" 2>/dev/null && agents_cfg=seeded
+  fi
+
   if [ "$on_omarchy" = 1 ]; then
-    add host OK "learnt the host; desktops placed=${placed}; post-update hook=${hooked}; wedge alarm=${wedged}; plugins=${plugged}"
+    add host OK "learnt the host; desktops placed=${placed}; post-update hook=${hooked}; wedge alarm=${wedged}; plugins=${plugged}; agent setup=${agents_cfg}"
   else
-    add host OK "learnt the host; desktops placed=${placed}; wedge alarm=${wedged} (not an Omarchy host)"
+    add host OK "learnt the host; desktops placed=${placed}; wedge alarm=${wedged}; agent setup=${agents_cfg} (not an Omarchy host)"
   fi
 }
 

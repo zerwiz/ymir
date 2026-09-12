@@ -114,6 +114,11 @@
         "bash": "allow",
         "skill": "allow"
       }
+    },
+    "hnoss": {
+      "mode": "primary",
+      "model": "llama.cpp/frontend-design-expert-8b@q4_k_m",
+      "description": "hnoss \u2014 primary (from config/agents.yaml)"
     }
   },
   "skills": {

@@ -1,5 +1,5 @@
 ---
-mode: subagent
+mode: all
 model: llama.cpp/frontend-design-expert-8b@q4_k_m
 permission:
   read: allow
