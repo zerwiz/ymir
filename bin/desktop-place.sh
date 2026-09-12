@@ -17,6 +17,15 @@
 #   bin/desktop-place.sh --version
 set -u
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+    [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_dir _ymir_c
+fi
+
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -26,6 +35,27 @@ RULE_FILE="$HYPR_DIR/ymir-desktops.lua"
 APPS=(hlidskjalf smidja)
 CLASS_hlidskjalf="ymir-hlidskjalf"
 CLASS_smidja="ymir-smidja"
+
+# ── launcher entries (Omarchy / Linux desktop only) ──────────────────────────
+# The .desktop files are templates (__YMIR_ROOT__, not an absolute path), because
+# where this checkout lives is a fact about the machine, not about Ymir. They are
+# rendered into the user's applications directory. This is DESKTOP INTEGRATION —
+# Omarchy/Hyprland is the supported environment; another OS needs its own launcher,
+# not a branch of this one.
+install_entries() {
+  local src="$ROOT/apps/hlidskjalf/electron" dst="$HOME/.local/share/applications" n=0
+  if [ "$(ymir_os)" != linux ] && [ "$(ymir_os)" != wsl ]; then
+    printf 'skip: desktop entries are Omarchy/Linux-shaped; this host is %s\n' "$(ymir_os)" >&2
+    return 0
+  fi
+  [ -d "$src" ] || { printf 'error: no launcher templates in %s\n' "$src" >&2; return 1; }
+  mkdir -p "$dst" || return 1
+  for f in "$src"/*.desktop.in; do
+    [ -e "$f" ] || continue
+    sed -e "s|__YMIR_ROOT__|$ROOT|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
+  done
+  printf 'entries[%s]{installed_to}\:\n  "%s","%s"\n' "$n" "$n" "$dst"
+}
 
 have() { command -v "$1" >/dev/null 2>&1; }
 is_omarchy() { [ -d /usr/share/omarchy ]; }
@@ -129,6 +159,10 @@ case "$ACTION" in
     write_rules "$plan"
     include_rule_file
     reload_hypr
+    # The launcher entries are part of the same desktop integration: render the
+    # templates (they hold __YMIR_ROOT__, not an absolute path) into the user's
+    # applications directory.
+    [ "$DRY" = 1 ] || install_entries >/dev/null 2>&1 || true
     if [ "$DRY" = 1 ]; then
       printf 'desktop-place[1]{state,file}:\n  "dry-run","%s"\n' "$RULE_FILE"
     else

@@ -350,3 +350,51 @@ reported as `unchanged`.
 Rule: **if a config must hold an absolute path, it is generated from an
 `.example`, not committed.** The same applies to launchers — a `.desktop` file
 is one OS's answer and must be produced for the host, not shipped for all.
+
+## Omarchy-first: the core is portable, the desktop is Omarchy's
+
+Ymir is an **Omarchy-first** system. That is a design statement, not a
+restriction — it says which desktop integration is first-class, not which
+machines may run the runtime.
+
+**Two layers, deliberately separate:**
+
+| Layer | Runs on | What it owns |
+|---|---|---|
+| **Portable core** | Linux, macOS, Windows (WSL2; MSYS best-effort) | the runtime — session digest, lock, watch, cron, skills — the installer's user-space prerequisites, the capability shim, generated machine config |
+| **Omarchy layer** | Omarchy only | learning the host (`omarchy-sense`), placing each app on its own numbered Hyprland desktop (`desktop-place`), the launcher entries (`.desktop`), the suggested shell plugins, the post-update hook |
+
+The core never grows a Hyprland branch, and the Omarchy layer is never stretched
+into pretending it is portable. An Omarchy-specific step is gated on the host and
+reports a clean skip anywhere else:
+
+```bash
+[ -d /usr/share/omarchy ] && ... || add host OK "... (not an Omarchy host)"
+```
+
+That is why `step_host` and `step_desktop` are the only steps that mention
+Omarchy: everywhere else, the same code path runs on any host.
+
+### What the Omarchy layer installs
+
+```bash
+bin/omarchy-sense.sh observe          # learn packages, configs, Omarchy version
+bin/omarchy-plugins.sh add            # the suggested shell plugins (never forced)
+bin/omarchy-hook-install.sh install   # re-learn after every `omarchy update`
+bin/desktop-place.sh apply            # Hyprland desktops + launcher entries
+```
+
+`desktop-place.sh apply` does both halves of the desktop integration: it writes
+the Hyprland window rules that give each Ymir app its own numbered desktop, and
+it renders the launcher templates into `~/.local/share/applications/`. The
+templates (`apps/hlidskjalf/electron/*.desktop.in`) carry `__YMIR_ROOT__` rather
+than an absolute path, because where the checkout lives is a fact about the
+machine, not about Ymir.
+
+**Rule:** `RULES/05-platforms.md` — a core change updates every
+platform layer in the same change.
+
+**Rule for a new desktop feature:** if it is Omarchy-specific, it belongs in the
+Omarchy layer and is gated; if it is core, it must work on every platform. Do not
+blur the two — a branch of Hyprland logic inside a core script is how a portable
+runtime stops being portable.
