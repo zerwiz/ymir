@@ -149,7 +149,7 @@ isolation[8]{id,rule}:
 - Redis pub/sub is the queue *under* the A2A task model (A2A = semantics, Redis =
   throughput). Messages follow `.agents/bus/protocol.ts`.
 - Every A2A message is observed into **Mimirsbrunn** and logged to **Runes**.
-- **Status:** the native backbone is **planned, not built** — see `docs/ratatoskr.md`. Today an external `a2abridge` daemon (A2A + MCP over Tailscale) is what runs; `.agents/bus/` is a stub. Way of Teams (`~/CodeP/wayofteams`) is the sold control plane; Ymir's daemon must also work standalone.
+- **Status:** the native backbone is **planned, not built** — the plan is private at `hodd/docs/ratatoskr.md`. Today an external `a2abridge` daemon (A2A + MCP over Tailscale) is what runs; `.agents/bus/` is a stub. Way of Teams (`~/CodeP/wayofteams`) is the sold control plane; Ymir's daemon must also work standalone.
 - Kaia orchestrates: dispatch Eindri as A2A tasks, recall memory before dispatch,
   honour the anti-hallucination gate; specialists reach tools via MCP.
 

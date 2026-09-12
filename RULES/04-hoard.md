@@ -27,3 +27,13 @@ Every private thing the Allfather holds lives in **one** place: **Hodd**
   and `*.example` shapes.
 - A change that contradicts this rule must change the rule first (append-only;
   never silently rewritten).
+
+## docs/ is public — plans are not
+
+`docs/` is the **public, user-facing** tree: it holds what a user of Ymir may
+read. Operator-private documents — plans, strategy, roadmaps, the masterplan,
+`append-only-log`, and project planning — belong in `hodd/docs/`, never `docs/`.
+
+`bin/docs-guard.sh` blocks a commit that stages such a document under `docs/`
+(wired into the pre-commit hook beside `secret-guard.sh`). When it fires, move
+the file to `hodd/docs/`.
