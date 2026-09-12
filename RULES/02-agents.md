@@ -59,3 +59,20 @@ mode/model/permission   the harness binding (OpenCode) — from the canonical
 2. Run `bin/valknut-load.sh --all` to rebind the harness symlinks.
 3. If a governed path changed, update the owning Galdr asset in the same change
    (compliance gate `assets`).
+
+## Permissions — bash is the hole
+
+- A profile's `permission:` block is law for that agent over the tools.
+- **A flat `bash: allow` is a total shell and overrides every `edit`/`write`
+  deny.** A read-only agent with `edit: deny` but `bash: allow` can still write,
+  delete, and reach the network. Never give a read-only agent a flat
+  `bash: allow`; give it a **pattern map** — only the read commands it needs are
+  `allow`, everything else is `ask` or `deny`.
+- Network commands (`curl`, `wget`, `ssh`, arbitrary binaries) are `ask` at
+  least. Code you do not fully trust belongs in **Utgard** (no host root, no
+  network), not on the host behind a permissive shell.
+- `mode: all` (runnable) plus a full shell is the widest door — usually not what
+  you want.
+- `bin/perm-guard.sh` flags any profile with a flat `bash: allow`
+  (`--strict` exits 1). Run it before claiming an agent change done; see the
+  runbook `docs/runbooks/agent-permissions.md`.
