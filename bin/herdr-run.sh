@@ -247,7 +247,7 @@ case "$ACTION" in
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
     exit "$rc" ;;
   agent|eindri)
-    NAME=""; ROLE=""; SPACE=0; TAB=0; MODEL_REQ=""
+    NAME=""; ROLE=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0
     while [ $# -gt 0 ]; do
       case "$1" in
         --role) ROLE=${2-}; shift 2 ;;
@@ -257,6 +257,7 @@ case "$ACTION" in
         --space) SPACE=1; shift ;;
         --tab) TAB=1; shift ;;
         --pane) SPACE=0; TAB=0; shift ;;
+        --main) MAIN=1; shift ;;
         --) shift; break ;;
         -*) shift ;;
         *) if [ -z "$NAME" ]; then NAME="$1"; shift; else break; fi ;;
@@ -319,7 +320,9 @@ case "$ACTION" in
     # ISOLATION (law ygg1): never seat an Eindri in the main tree. Create or
     # reuse a Yggdrasil worktree and seat there.
     SEAT_CWD="$PWD"
-    if [ -x "$SCRIPT_DIR/yggdrasil.sh" ]; then
+    if [ "${MAIN:-0}" = 1 ]; then
+      printf 'herdr-run[1]{isolation,worktree}:\n  "off (main tree — Allfather chose --main)"\n' >&2
+    elif [ -x "$SCRIPT_DIR/yggdrasil.sh" ]; then
       # Reuse an existing worktree for this id; create only when absent.
       wt_path="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)/.yggdrasil/$NAME"
       if [ ! -d "$wt_path" ]; then

@@ -70,3 +70,11 @@ Rules:
   starts working is a failed dispatch; report it, do not claim success.
 - **`eindri-start.sh <task>` must end with the task injected and the agent
   working** — verify it does; if not, fix the seat path, not just the run.
+
+## Isolation is standard; main is explicit
+
+Every Eindri is seated in a **secure Yggdrasil worktree** by default
+(`.yggdrasil/<id>`), never the main tree. Work in the main tree only when the
+Allfather explicitly asks to help in main — pass `--main` to
+`bin/eindri-start.sh` / `bin/herdr-run.sh`. Anything else that seats an agent
+(`pi-seat.sh`, the tmux fallback) must isolate the same way.
