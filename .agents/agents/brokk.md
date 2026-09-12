@@ -261,20 +261,17 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 | Skill | Norse | Purpose | Path |
 |-------|-------|---------|------|
 | `hvild-afk` | Hvíld | Away-mode supervision — routine wakes, batched escalations | `.agents/skills/hvild-afk/SKILL.md` |
-| `saga-bearings` | Sága | Fleet status digest — pick-up-where-I-left-off report | `.agents/skills/saga-bearings/SKILL.md` |
-| `saga-recap` | Sága | Recap visible events + unresolved Allfather decisions | `.agents/skills/saga-recap/SKILL.md` |
+| `saga` | Sága | session bearings (`/bearings`) + recap and unresolved decisions (`/ahoy`) | `.agents/skills/saga/SKILL.md` |
 | `muninn-stow` | Muninn | Session-knowledge curation, routing, persistence | `.agents/skills/muninn-stow/SKILL.md` |
 | `jord-projects` | Jörð | Project registry + delivery posture | `.agents/skills/jord-projects/SKILL.md` |
-| `urdh-decisions` | Urðr | Decision-hold lifecycle | `.agents/skills/urdh-decisions/SKILL.md` |
-| `urdh-hold` | Urðr | Captain-hold reconciliation | `.agents/skills/urdh-hold/SKILL.md` |
+| `urdh` | Urðr | Allfather-hold lifecycle: decisions held for the Allfather, reconciled | `.agents/skills/urdh/SKILL.md` |
 | `frigg-consent` | Frigg | Consent / ask-user authority gate | `.agents/skills/frigg-consent/SKILL.md` |
 | `vor-diagnostics` | Vör | Bootstrap + diagnostic reasoning | `.agents/skills/vor-diagnostics/SKILL.md` |
-| `nornir-events` | Nornir | Process→event sources | `.agents/skills/nornir-events/SKILL.md` |
-| `nornir-quota` | Nornir | Quota-aware dispatch array selection | `.agents/skills/nornir-quota/SKILL.md` |
+| `nornir` | Nornir | fate & schedule: process→event sources + quota-aware dispatch | `.agents/skills/nornir/SKILL.md` |
 | `gjallarhorn-relay` | Gjallarhorn | Public relay replies (X/Discord) | `.agents/skills/gjallarhorn-relay/SKILL.md` |
 | `eindri-homes` | Eindri | Isolated worker homes (provisioning) | `.agents/skills/eindri-homes/SKILL.md` |
 | `syn-recovery` | Sýn | Stuck-worker recovery playbook | `.agents/skills/syn-recovery/SKILL.md` |
-| `ymir-update` | Ymir | Self-update the running system + workers | `.agents/skills/ymir-update/SKILL.md` |
+| `ymir` | Ymir | self-update · Omarchy-native operation · the Þjazi backend | `.agents/skills/ymir/SKILL.md` |
 | `hamr` | Hamr | Per-harness adapter reference | `.agents/skills/hamr/SKILL.md` |
 
 **Loading:** Skills auto-load from `.agents/skills/` via `opencode.json` → `skills.paths: [".agents/skills"]`. Use the `skill` tool: `skill <name>`.
