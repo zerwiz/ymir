@@ -6,7 +6,7 @@
     "brokk": {
       "description": "Primary autonomous agent of the Ymir Agent Operating System",
       "mode": "primary",
-      "model": "",
+      "model": "opencode-go/deepseek-v4.1-flash",
       "temperature": 0.7,
       "permission": {
         "read": "allow",
@@ -130,6 +130,20 @@
         "/home/zerwiz/Ymir/.agents/memory/kaia.engram"
       ],
       "enabled": true
+    }
+  },
+  "provider": {
+    "llama.cpp": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "llama-server (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:8080/v1"
+      },
+      "models": {
+        "frontend-design-expert-8b@q4_k_m": {
+          "name": "frontend-design-expert-8b@q4_k_m"
+        }
+      }
     }
   }
 }
