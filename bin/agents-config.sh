@@ -54,6 +54,21 @@ except Exception:
     print('error: python3 has no PyYAML'); sys.exit(1)
 
 cfg = yaml.safe_load(open(cfg_path)) or {}
+
+# Per-machine overlay: config/agents.<hostname>.yaml (private) deep-merges over
+# the base, so one repo runs different models/harness on different machines.
+import socket
+_host = (os.environ.get("YMIR_AGENTS_MACHINE") or socket.gethostname()).split(".")[0]
+_overlay = os.path.join(os.path.dirname(cfg_path), f"agents.{_host}.yaml")
+if os.path.exists(_overlay):
+    def _merge(a, b):
+        for k, v in (b or {}).items():
+            if isinstance(v, dict) and isinstance(a.get(k), dict):
+                _merge(a[k], v)
+            else:
+                a[k] = v
+        return a
+    cfg = _merge(cfg, yaml.safe_load(open(_overlay)) or {})
 default_model   = cfg.get("default_model") or ""
 default_harness = cfg.get("default_harness") or "opencode"
 agents    = cfg.get("agents") or {}
