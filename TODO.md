@@ -154,7 +154,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 ### C1. Find the real engine — OPEN
 - **Finding:** `pip install engram` is the **wrong package** — PyPI's `engram` is
   Benjamin Beilharz's alpha scientific project (pulls torch/triton). The code needs
-  `from engram import Engram` (`.agents/skills/galdr-cli-cli/assets/memory-well.md`,
+  `from engram import Engram` (`.agents/skills/galdr-cli/assets/memory-well.md`,
   `bin/mimir-bridge.py`).
 - The store exists (`kaia.engram`, 1.3 MB) and was seeded 2026-09-11 ("engram 1.30",
   370 episodes) — so the engine *did* exist once.

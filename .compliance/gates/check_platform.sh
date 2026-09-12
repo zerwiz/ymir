@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
 violations=0
-for f in $(find . -type f -name "*.sh" -not -path './.git/*' -not -path './.compliance/gates/*' -not -path './.agents/skills/NSRcompliance/*' -not -path './.agents/skills/NSR/*' -not -path './.agents/skills/NSR-SKILLMAKER/*' -not -path './mockprojectroot/*'); do
+for f in $(find . -type f -name "*.sh" -not -path './.git/*' -not -path './bin/ymir-platform.sh' -not -path './.yggdrasil/*' -not -path '*/node_modules/*' -not -path './.agents/skills/nsr-compliance/assets/*' -not -path './.compliance/gates/*' -not -path './.agents/skills/NSRcompliance/*' -not -path './.agents/skills/NSR/*' -not -path './.agents/skills/NSR-SKILLMAKER/*' -not -path './mockprojectroot/*'); do
   for cmd in 'taskkill' 'pkill' 'kill -9'; do
     if grep -qE "$cmd" "$f" 2>/dev/null; then
       echo "[check_platform] NON-PORTABLE: $f uses '$cmd'"

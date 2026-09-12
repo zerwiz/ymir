@@ -144,3 +144,7 @@ hardcoded timeline is gone.
   writes are instant.
 - **Bridge down / `COLD`** → `bin/mimir-bridge.sh --start`; check
   `state/mimir-bridge.log`.
+
+**Portability.** The bridge signals processes through `ymir_kill_matching` from
+`bin/ymir-platform.sh` rather than calling `pkill` directly, because `pkill` is
+absent on some MSYS/WSL images (Rule 05, one place knows the difference).

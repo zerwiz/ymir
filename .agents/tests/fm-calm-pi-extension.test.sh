@@ -3550,7 +3550,7 @@ JS
     chrome_reap_wait=$((chrome_reap_wait + 1))
   done
   if kill -0 "$chrome_pid" 2>/dev/null; then
-    kill -9 "$chrome_pid" 2>/dev/null || true
+    kill "$chrome_pid" 2>/dev/null || true
   fi
   wait "$chrome_pid" 2>/dev/null || true
   grep -Fq '</html>' "$export_dom" 2>/dev/null \

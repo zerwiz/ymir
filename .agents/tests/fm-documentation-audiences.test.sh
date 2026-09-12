@@ -118,7 +118,7 @@ test_local_links_and_no_keyword_heuristic() {
 # Incident verification on 2026-07-23
 
 ```sh
-/tmp/task-worktree/bin/tool --version
+./task-worktree/bin/tool --version
 ```
 
 Observed version 1.2.3 on branch `fm/example`.

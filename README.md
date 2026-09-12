@@ -204,7 +204,7 @@ the master builder; Tyr judges compliance.
 
 The Galdr family enforces the 10 ergonomic principles (TOON output, minimal schemas,
 self-correcting errors) and the runtime acceptance gates; run
-`bash .agents/skills/galdr-cli-cli/scripts/compliance-check.sh` before claiming done.
+`bash .agents/skills/galdr-cli/scripts/compliance-check.sh` before claiming done.
 
 ---
 
@@ -422,7 +422,7 @@ Every subsystem, component, and process is named for the figure whose role match
 its work; the operator is the **Allfather** (Odin). The house voice is Norse-natural;
 flavor may season a line, but an imported term never names a subsystem. The full
 component map lives in
-[`.agents/skills/galdr-cli-cli/assets/norse-naming.md`](.agents/skills/galdr-cli-cli/assets/norse-naming.md).
+[`.agents/skills/galdr-cli/assets/norse-naming.md`](.agents/skills/galdr-cli/assets/norse-naming.md).
 
 ---
 

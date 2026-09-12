@@ -752,7 +752,7 @@ function smidjaStats() {
 /* ---- /api/reviews (compliance as checks) --------------------------------- */
 function reviews() {
   const out = run(['bash', 'bin/brokk-lint.sh', '--quiet']);
-  const compliance = run(['bash', '.agents/skills/galdr-cli-cli/scripts/compliance-check.sh', '--json']);
+  const compliance = run(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json']);
   let gates: { id: string; status: string; detail: string }[] = [];
   try {
     gates = JSON.parse(compliance).checks ?? [];
@@ -909,7 +909,7 @@ function loaders() {
 }
 function checks() {
   try {
-    return (JSON.parse(run(['bash', '.agents/skills/galdr-cli-cli/scripts/compliance-check.sh', '--json'])).checks ?? []) as unknown[];
+    return (JSON.parse(run(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json'])).checks ?? []) as unknown[];
   } catch {
     return [];
   }

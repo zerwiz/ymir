@@ -293,6 +293,7 @@ sourced, never executed:
 | File facts | `ymir_stat_mtime`, `ymir_stat_size`, `ymir_stat_id`, `ymir_stat_birth`, `ymir_stat_mode` | GNU `stat -c` vs BSD `stat -f`, and birth time exists on both but differently |
 | Timing | `ymir_epoch_ns` | BSD `date` has no `%N` |
 | A pid's command line | `ymir_pid_cmdline`, `ymir_pid_matches` | `/proc` is Linux-only; falls back to `ps -o command=` |
+| Signal a process by pattern | `ymir_kill_matching` | `pkill` is absent on some MSYS/WSL images; falls back to `ps` + `kill` |
 | Detach a process | `ymir_detach` | `setsid` is absent on macOS; falls back to `nohup` |
 | Exclusive lock | `ymir_lock` | `flock` is Linux; falls back to an atomic `mkdir` lock |
 | Services | `ymir_service_backend`, `ymir_service_active` | `systemd` on Linux, `launchd` on macOS, neither elsewhere |

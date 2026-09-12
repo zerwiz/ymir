@@ -45,7 +45,7 @@ boundaries.
    test -d svartalfaheim/"$realm"/workspace && echo tree-ok
    bash bin/valknut-load.sh --status
    bin/brokk status
-   bash .agents/skills/galdr-cli-cli/scripts/compliance-check.sh
+   bash .agents/skills/galdr-cli/scripts/compliance-check.sh
    ```
 
 ## Rules

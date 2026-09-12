@@ -66,4 +66,4 @@ a key. Models named `opencode-go/...` run through `opencode`.
 ## Adding a model
 
 Add it under `providers.<name>.models` (or a new `providers` entry). If it's a
-new server, add the id to `.agents/skills/galdr-cli-cli/assets/registry.md`.
+new server, add the id to `.agents/skills/galdr-cli/assets/registry.md`.

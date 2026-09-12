@@ -8,6 +8,14 @@
 # Empirical harness evidence lives in docs/arm-pretool-check.md.
 set -u
 
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  for _ymir_c in "$(git rev-parse --show-toplevel 2>/dev/null)/bin/ymir-platform.sh"                  "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/ymir-platform.sh"; do
+    [ -n "$_ymir_c" ] && [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_c
+fi
+
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
@@ -56,8 +64,8 @@ matrix_case R09 allow "tmux send-keys -t isolated-pi-lab 'bin/fm-watch-arm.sh &'
 matrix_case R10 allow "tmux send-keys -t isolated-pi-lab \"printf '%s\\n' 'bin/fm-watch-arm.sh &'\"; tmux send-keys -t isolated-pi-lab Enter"
 matrix_case R11 allow "python3 -c 'print(\"bin/fm-watch-arm.sh; echo data\")'"
 matrix_case R12 allow "bash -lc \"rg -n 'fm-watch-arm.sh &' docs\""
-matrix_case R13 allow "echo 'pkill -f fm-watch'"
-matrix_case R14 allow "rg -n 'pkill -f fm-watch' docs tests"
+matrix_case R13 allow "echo 'ymir_kill_matching fm-watch'"
+matrix_case R14 allow "rg -n 'ymir_kill_matching fm-watch' docs tests"
 matrix_case R15 allow "echo ok # bin/fm-watch-arm.sh &"
 matrix_case R16 allow $'# bin/fm-watch-arm.sh &\necho ok'
 matrix_case R17 allow "printf '%s\\n' 'fm-watch.sh; a && b || c > out' | sed -n '1p'"
@@ -82,10 +90,10 @@ matrix_case D15 deny 'bin/fm-watch-checkpoint.sh --seconds 180; echo after'
 matrix_case D16 deny 'true && bin/fm-watch-arm.sh'
 matrix_case D17 deny 'bin/fm-watch-checkpoint.sh --seconds 180 || true'
 matrix_case D18 deny $'bin/fm-watch-arm.sh\nbin/fm-watch-checkpoint.sh --seconds 180'
-matrix_case D19 deny "pkill -f '/bin/fm-watch.sh'"
-matrix_case D20 deny "command pkill -f '/bin/fm-watch.sh'"
-matrix_case D21 deny "/usr/bin/pkill -f '/bin/fm-watch.sh'"
-matrix_case D22 deny "sudo pkill -f '/bin/fm-watch.sh'"
+matrix_case D19 deny "ymir_kill_matching '/bin/fm-watch.sh'"
+matrix_case D20 deny "command ymir_kill_matching '/bin/fm-watch.sh'"
+matrix_case D21 deny "/usr/bin/ymir_kill_matching '/bin/fm-watch.sh'"
+matrix_case D22 deny "sudo ymir_kill_matching '/bin/fm-watch.sh'"
 matrix_case D23 deny 'kill "$(pgrep -f '\''/bin/fm-watch.sh'\'')"'
 matrix_case D24 deny $'bin/fm-watc\\\nh-arm.sh &'
 matrix_case D25 deny 'sudo -u root bin/fm-watch-arm.sh &'
@@ -107,7 +115,7 @@ matrix_case D40 deny 'timeout 30 bin/fm-watch-arm.sh &'
 matrix_case D41 deny 'gtimeout 30 bin/fm-watch-arm.sh &'
 matrix_case D42 deny 'bin/fm-watch-{arm,checkpoint}.sh &'
 matrix_case D43 deny 'bin/fm-watch-arm.sh* &'
-matrix_case D44 deny "pattern='fm-watch'; pkill -f \"\$pattern\""
+matrix_case D44 deny "pattern='fm-watch'; ymir_kill_matching \"\$pattern\""
 matrix_case D45 deny "p=\$(pgrep -f '/bin/fm-watch.sh'); q=\$p; kill \$q"
 matrix_case D46 deny '$FM_HOME/bin/fm-watch-arm.sh &'
 matrix_case D47 deny '$HOME/firstmate/bin/fm-watch-arm.sh | cat'
@@ -118,9 +126,9 @@ matrix_case D51 deny '~/firstmate/bin/fm-watch.sh --restart'
 matrix_case D52 deny "bin/fm-\$'\x77'atch-arm.sh &"
 matrix_case D53 deny 'bin/fm-$"watch"-arm.sh &'
 matrix_case D54 deny 'bin/fm-watch-$"arm".sh &'
-matrix_case D55 deny 'while true; do pkill -f fm-watch; done'
-matrix_case D56 deny 'for x in 1; do pkill -f fm-watch; done'
-matrix_case D57 deny 'case x in x) pkill -f fm-watch ;; esac'
+matrix_case D55 deny 'while true; do ymir_kill_matching fm-watch; done'
+matrix_case D56 deny 'for x in 1; do ymir_kill_matching fm-watch; done'
+matrix_case D57 deny 'case x in x) ymir_kill_matching fm-watch ;; esac'
 matrix_case D58 deny 'until false; do kill $(pgrep -f fm-watch); done'
 
 matrix_case E01 allow "bin/fm-watch-checkpoint.sh --seconds '180;still-one-arg'"
@@ -216,9 +224,9 @@ assert_policy() {
 
 test_direct_policy_contract() {
   local heredoc_data heredoc_watcher
-  assert_policy direct-data-pkill allow "echo 'pkill -f fm-watch'"
-  assert_policy direct-broad-pkill $'deny\tbroad-watcher-kill' "pkill -f '/bin/fm-watch.sh'"
-  assert_policy direct-loop-broad-pkill $'deny\tbroad-watcher-kill' 'while true; do pkill -f fm-watch; done'
+  assert_policy direct-data-ymir_kill_matching allow "echo 'ymir_kill_matching fm-watch'"
+  assert_policy direct-broad-ymir_kill_matching $'deny\tbroad-watcher-kill' "ymir_kill_matching '/bin/fm-watch.sh'"
+  assert_policy direct-loop-broad-ymir_kill_matching $'deny\tbroad-watcher-kill' 'while true; do ymir_kill_matching fm-watch; done'
   assert_policy direct-loop-broad-kill-pgrep $'deny\tbroad-watcher-kill' 'until false; do kill $(pgrep -f fm-watch); done'
   assert_policy direct-loop-no-kill-allowed allow 'for f in 1; do echo fm-watch; done'
   assert_policy direct-pipeline $'deny\twatcher-pipeline' 'bin/fm-watch-arm.sh | cat'
@@ -312,7 +320,7 @@ test_prefilter_is_strict_superset() {
   rc=$?
   [ "$rc" -eq 2 ] || fail "prefilter must delegate a deniable fm-watch command, not fast-allow it, got exit $rc"
   # A broad watcher kill also contains the fm-watch bytes and must still deny.
-  "$CHECK" --command "pkill -f '/bin/fm-watch.sh'" >/dev/null 2>&1
+  "$CHECK" --command "ymir_kill_matching '/bin/fm-watch.sh'" >/dev/null 2>&1
   rc=$?
   [ "$rc" -eq 2 ] || fail "prefilter must delegate a broad watcher kill, not fast-allow it, got exit $rc"
   # Obfuscated protected paths lose the literal fm-watch bytes (a line
@@ -345,7 +353,7 @@ test_prefilter_is_strict_superset() {
   [ "$rc" -eq 0 ] || fail "a benign \$HOME command must still fast-allow, got exit $rc"
   # A benign command that only mentions fm-watch as data still reaches the
   # classifier and is allowed there, proving the prefilter owns no verdict.
-  "$CHECK" --command "echo 'pkill -f fm-watch'" >/dev/null 2>&1
+  "$CHECK" --command "echo 'ymir_kill_matching fm-watch'" >/dev/null 2>&1
   rc=$?
   [ "$rc" -eq 0 ] || fail "a benign fm-watch-substring command must be classified and allowed, got exit $rc"
   pass "transport prefilter is a strict superset: non-fm-watch fast-allows, every fm-watch and quoting-decoder-marker command reaches the classifier"
