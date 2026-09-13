@@ -1,4 +1,4 @@
-# YMIR — The Lore (v2)
+# YMIR — The Lore
 
 > The system carries Norse names not as decoration but as **load-bearing allegory** — every name is chosen because the myth already explains the machine's job. The visual language is the same rule made visible: **carved, not skinned**. ([`docs/design.md`](design.md))
 
