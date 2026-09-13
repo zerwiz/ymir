@@ -199,10 +199,10 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 | `.pi/extensions/syn-turnend-guard.ts` | `export default function (pi: ExtensionAPI)` | 1, 3, 4 |
 | `.pi/extensions/gna-pi-watch.ts` | `export default function (pi: ExtensionAPI)` | 2 |
 | `.pi/extensions/ro.ts` | Ró — the calm presentation preference (`/calm`), state/ro | user |
-| `.pi/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor; strictly user-facing, no LLM tool. **Resolution:** `$VISUAL` → `$EDITOR` → the first editor that exists (`code cursor zed subl nvim vim hx helix nano micro emacs vi`), so a host that is not Omarchy — where Omarchy's own launcher or a bare `vi` may be absent — still gets a working editor instead of an ENOENT | user |
-| `.pi/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
-| `.pi/extensions/todo.ts` | the todo surface | user |
-| `.pi/extensions/lib/rodd-operational-input.ts` | `encodeRoddOperationalInput`, `classifyRoddOperationalText`, `classifyRoddCurrentOperationalText` | shared wire |
+| `.pi/shared/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor; strictly user-facing, no LLM tool. **Resolution:** `$VISUAL` → `$EDITOR` → the first editor that exists (`code cursor zed subl nvim vim hx helix nano micro emacs vi`), so a host that is not Omarchy — where Omarchy's own launcher or a bare `vi` may be absent — still gets a working editor instead of an ENOENT | user |
+| `.pi/shared/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
+| `.pi/shared/extensions/todo.ts` | the todo surface | user |
+| `.pi/shared/extensions/lib/rodd-operational-input.ts` | `encodeRoddOperationalInput`, `classifyRoddOperationalText`, `classifyRoddCurrentOperationalText` | shared wire |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` | detached child supervisor (Vörðr) | 1 (transport) |
 | `.claude/settings.json` | `hooks.SessionStart[]`, `hooks.Stop[]` | 1, 3, 5 |
 | `.codex/hooks.json` | `hooks.SessionStart[]`, `hooks.PreToolUse[]`, `hooks.Stop[]` | 1, 3, 4 |
@@ -579,3 +579,15 @@ from `@juicesharp/rpiv-ask-user-question` (MIT), pinned **project-locally** in
 - Non-interactive runs simply don't see the tool (never a failing call).
 - Config (read-only): `~/.config/rpiv-ask-user-question/config.json`.
 - Use it at real decision points — where a wrong assumption costs a rework.
+
+**Two extension paths, and they are not interchangeable** (2026-09-12):
+
+| Path | Loaded by | Holds |
+|---|---|---|
+| `.pi/extensions/` | pi, as **project-local** extensions | the governance set: `syn-turnend-guard.ts`, `gna-pi-watch.ts`, `ro.ts`, `skuld-branch-supervision.ts` |
+| `.pi/shared/extensions/` | **deployed** by `bin/valknut-load.sh --pi` into `${HOME}/.pi/agent/extensions/` | the user-facing trio: `open-editor.ts`, `herdr-agent-state.ts`, `todo.ts` |
+
+The same extension in **both** paths makes pi exit with a tool-name conflict and
+no agent can be seated — which is why the shared trio has exactly one home and is
+deployed, never duplicated. Editing a path from the table above without checking
+which of the two it is will edit a file that is not there.
