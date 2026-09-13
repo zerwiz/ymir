@@ -29,6 +29,16 @@ view_pids() {
 }
 is_running() { [ -n "$(view_pids)" ]; }
 
+# Raise the running window. The desktop-placement rule may have opened it on its
+# own numbered desktop (desktop-place.sh), so a launch from elsewhere would
+# otherwise show nothing — the focus dispatch also switches to where it sits.
+# Omarchy configures Hyprland in Lua, so the dispatch is a Lua expression (the
+# classic `focuswindow class:...` form does not parse).
+focus_window() {
+  command -v hyprctl >/dev/null 2>&1 || return 0
+  hyprctl dispatch "hl.dsp.focus({window=\"class:^sessrumnir\$\"})" >/dev/null 2>&1 || true
+}
+
 case "$ACTION" in
   status)
     if is_running; then
@@ -52,6 +62,7 @@ case "$ACTION" in
 esac
 
 if is_running; then
+  focus_window
   printf 'sessrumnir[1]{state,pid}:\n  "already up",%s\n' "$(view_pids | head -1)"
   exit 0
 fi
@@ -72,6 +83,7 @@ i=0
 for i in $(seq 1 30); do [ -n "$(view_pids)" ] && break; sleep 0.5; done
 
 if is_running; then
+  focus_window
   printf 'sessrumnir[1]{state,pid}:\n  "up",%s\n' "$(view_pids | head -1)"
 else
   printf 'error: Sessrúmnir failed to start; see %s\n' "${LOG_FILE#"$ROOT"/}" >&2
