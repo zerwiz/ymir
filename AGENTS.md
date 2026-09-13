@@ -257,6 +257,16 @@ See `.agents/assets/agents/naming.md` for the full component map.
   powers **Utgard** sandboxes; **no-mistakes**
   (`github.com/kunchenguid/no-mistakes`) powers the **clean-PR gate** behind the
   `no-mistakes` posture (`.no-mistakes.yaml`). Norse shell over the OSS engine.
+- **The delivery gate — every change leaves by PR, never by a local merge.**
+  Work is done in a Yggdrasil worktree, committed on a branch, pushed, and opened
+  as a **pull request** (`gh pr create`) against the default branch. That PR is
+  what **Glitnir's Reviews** surface seals; the Allfather's approval *is* the
+  merge, and Mjollnir never force-merges. Do **not** merge into `main` or push to
+  it directly: a local merge on a verbal "word" is a decision, not a delivery, and
+  it leaves Glitnir with nothing to review — the gate is only fed by a PR.
+  Concretely: branch → worktree → tests → `gh pr create` → Glitnir review → the
+  Allfather seals → merge. If work is already sitting on local `main`, ship it as
+  a PR (a branch at that commit) before doing anything else.
 
 ## Hermes runtime (worker agents)
 
