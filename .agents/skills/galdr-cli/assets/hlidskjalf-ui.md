@@ -287,3 +287,32 @@ Three places in `apps/hlidskjalf/server/index.ts` defaulted to the retired name
 They now default to `wayof`, matching `svartalfaheim/README.md`: one company
 container, no person realms. A retired realm name in a default is not cosmetic —
 it sends an event to a directory the platform does not have.
+
+### Reviews now reads real pull requests (added 2026-09-13)
+
+`/api/reviews` built exactly one synthetic card (`id: 'lint'`, `number: 1`,
+"Brokk lint gate") from the lint + compliance checks — it **never read a pull
+request**, so a delivered change had no Glitnir card and Mjollnir's PR leg had
+nowhere to land. `reviews()` now first lists the repo's **open PRs** via
+`gh pr list --json …` (mapping `statusCheckRollup` to the card's checks; a
+failing check sets `state: 'changes'`), then appends the lint + compliance card
+(now `number: 0`). Real PRs lead the list; the compile-and-lint card stays.
+
+### One seat, three halls (added 2026-09-13)
+
+- **Post-login chooser** (`src/components/Halls.tsx`): `App.tsx` shows it once
+  after the gate admits the session — three cards explaining Hlidskjalf, Smíðja,
+  and Sessrúmnir, each raising its hall.
+- **Switcher**: `Halls.tsx` also exports `HallsSwitcher` (three rune buttons),
+  which replaces the lone Smíðja speed-start button in the Topbar. Smíðja's own
+  topbar and Sessrúmnir's menu carry matching switchers; all route through the
+  gate's `/api/desktop`, which now raises Sessrúmnir too (`bin/sessrumnir.sh`).
+- **Search box**: `.topbar .search` `min-width` was 120px — narrower than the
+  text "Search work workspace…", so the placeholder clipped. Raised to 280px;
+  the input may shrink (`min-width: 0`).
+- **One login, Sign out everywhere**: the gate mirrors the session to
+  `state/.gate-session` and accepts `X-Ymir-Session` / `Bearer`; the shell menu
+  and (already) the AccountMenu sign out.
+
+Rule: a Hlidskjalf code change updates this asset in the same pass — the
+compliance gate (`assets/governed assets current`) fails otherwise.

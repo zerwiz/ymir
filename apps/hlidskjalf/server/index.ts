@@ -757,8 +757,61 @@ function smidjaStats() {
   }
 }
 
-/* ---- /api/reviews (compliance as checks) --------------------------------- */
+/* ---- /api/reviews (real PRs + compliance as checks) ---------------------- */
 function reviews() {
+  const cards: unknown[] = [];
+
+  // 1. Real pull requests from the repo's remote — the Glitnir gate. A delivered
+  //    change must appear here so the Allfather can review and seal it; without
+  //    this the surface showed only the synthetic lint card and no PR ever landed.
+  try {
+    const list = JSON.parse(
+      run([
+        'gh', 'pr', 'list', '--state', 'open', '--limit', '50',
+        '--json', 'number,title,author,headRefName,isDraft,updatedAt,additions,deletions,statusCheckRollup',
+      ]) || '[]',
+    ) as Array<{
+      number: number;
+      title: string;
+      author?: { login?: string };
+      headRefName?: string;
+      isDraft?: boolean;
+      updatedAt?: string;
+      additions?: number;
+      deletions?: number;
+      statusCheckRollup?: Array<{ name?: string; context?: string; status?: string; conclusion?: string }>;
+    }>;
+    for (const pr of list) {
+      const checks = (pr.statusCheckRollup ?? []).map((c) => ({
+        name: c.name ?? c.context ?? 'check',
+        state:
+          c.conclusion === 'SUCCESS' || c.status === 'IN_PROGRESS' || c.status === 'QUEUED'
+            ? 'nominal'
+            : c.conclusion
+              ? 'down'
+              : 'nominal',
+      }));
+      const failing = checks.some((c) => c.state === 'down');
+      cards.push({
+        id: `pr-${pr.number}`,
+        number: pr.number,
+        title: pr.title,
+        repo: 'origin',
+        author: pr.author?.login ?? 'unknown',
+        realm: 'work',
+        state: pr.isDraft ? 'open' : failing ? 'changes' : 'open',
+        checks,
+        checklist: [{ label: `branch ${pr.headRefName ?? '?'}`, done: true }],
+        additions: pr.additions ?? 0,
+        deletions: pr.deletions ?? 0,
+        updatedAt: pr.updatedAt ?? new Date().toISOString(),
+      });
+    }
+  } catch {
+    /* gh unavailable or offline — the compliance card below still stands */
+  }
+
+  // 2. The compliance card (lint + governed-path checks) always stands.
   const out = run(['bash', 'bin/brokk-lint.sh', '--quiet']);
   const compliance = run(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json']);
   let gates: { id: string; status: string; detail: string }[] = [];
@@ -769,23 +822,21 @@ function reviews() {
   }
   const lintOk = out.trim() === '';
   const failing = !lintOk || gates.some((g) => g.status !== 'PASS');
-  const checks = [
-    { name: 'lint', state: lintOk ? 'nominal' : 'down' },
-    ...gates.map((g) => ({ name: g.id, state: g.status === 'PASS' ? 'nominal' : 'down' })),
-  ];
-  return [
-    {
-      id: 'lint', number: 1, title: 'Brokk lint gate', repo: 'Ymir', author: 'brokk', realm: 'wayof',
-      // A gate with any failing check is never APPROVED — it awaits the captain's seal.
-      state: failing ? 'changes' : 'open',
-      checks,
-      checklist: [
-        { label: `lint: ${lintOk ? 'clean' : 'issues found'}`, done: lintOk },
-        ...gates.map((g) => ({ label: `${g.id}: ${g.detail}`, done: g.status === 'PASS' })),
-      ],
-      additions: 0, deletions: 0, updatedAt: new Date().toISOString(),
-    },
-  ];
+  cards.push({
+    id: 'lint', number: 0, title: 'Brokk lint + compliance gate', repo: 'Ymir', author: 'brokk', realm: 'work',
+    // A gate with any failing check is never APPROVED — it awaits the captain's seal.
+    state: failing ? 'changes' : 'open',
+    checks: [
+      { name: 'lint', state: lintOk ? 'nominal' : 'down' },
+      ...gates.map((g) => ({ name: g.id, state: g.status === 'PASS' ? 'nominal' : 'down' })),
+    ],
+    checklist: [
+      { label: `lint: ${lintOk ? 'clean' : 'issues found'}`, done: lintOk },
+      ...gates.map((g) => ({ label: `${g.id}: ${g.detail}`, done: g.status === 'PASS' })),
+    ],
+    additions: 0, deletions: 0, updatedAt: new Date().toISOString(),
+  });
+  return cards;
 }
 
 /* ---- /api/files (realm tree) --------------------------------------------- */
