@@ -1406,25 +1406,66 @@ const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 /** token → login. A session must know *who* it is, not merely that it exists. */
 const SESSIONS = new Map<string, string>();
 
+// The active session is mirrored to a machine-local file so the OTHER Ymir
+// surfaces (Sessrúmnir, which is not a gate-origin app) can join the same login
+// without sharing a Chromium profile. It holds one token+login, 0600, gitignored.
+const GATE_SESSION_FILE = join(ROOT, 'state/.gate-session');
+
+function persistSession(token: string, login: string): void {
+  try {
+    mkdirSync(join(ROOT, 'state'), { recursive: true });
+    writeFileSync(GATE_SESSION_FILE, `${token}\t${login}\n`, { mode: 0o600 });
+  } catch {
+    /* non-fatal: the cookie still works for gate-origin surfaces */
+  }
+}
+function clearPersistedSession(token: string): void {
+  try {
+    const [held] = readFileSync(GATE_SESSION_FILE, 'utf8').split('\t');
+    if (!token || held === token) unlinkSync(GATE_SESSION_FILE);
+  } catch {
+    /* absent — nothing to clear */
+  }
+}
+function loadPersistedSession(): void {
+  try {
+    const [token, login] = readFileSync(GATE_SESSION_FILE, 'utf8').trim().split('\t');
+    if (token && login) SESSIONS.set(token, login);
+  } catch {
+    /* no session persisted */
+  }
+}
+
+/** The token a request carries: cookie, `X-Ymir-Session`, or `Bearer`. */
+function requestToken(req: Request): string {
+  const header = req.headers.get('x-ymir-session');
+  if (header) return header.trim();
+  const authorization = req.headers.get('authorization') ?? '';
+  const bearer = authorization.match(/^Bearer\s+(.+)$/i);
+  if (bearer) return bearer[1].trim();
+  return cookieToken(req);
+}
+
 function cookieToken(req: Request): string {
   const c = req.headers.get('cookie') ?? '';
   const m = c.match(/(?:^|;\s*)ymir_session=([^;]+)/);
   return m ? m[1] : '';
 }
 function isAuthed(req: Request): boolean {
-  const t = cookieToken(req);
+  const t = requestToken(req);
   return !!t && SESSIONS.has(t);
 }
 
 /** The login behind a request's session, if any. */
 function loginOf(req: Request): string | null {
-  return SESSIONS.get(cookieToken(req)) ?? null;
+  return SESSIONS.get(requestToken(req)) ?? null;
 }
 
-/** Begin a session and hand back the cookie. */
+/** Begin a session and hand back the cookie (and mirror it for the other apps). */
 function sessionResponse(login: string): Response {
   const token = crypto.randomUUID();
   SESSIONS.set(token, login);
+  persistSession(token, login);
   return new Response(JSON.stringify({ ok: true, login }), {
     headers: {
       'content-type': 'application/json',
@@ -1569,6 +1610,9 @@ function serveStatic(pathname: string): Response {
 }
 
 /* ---- server -------------------------------------------------------------- */
+// A session persisted by an earlier run (or minted by another surface) is still
+// valid, so a gate restart does not log everyone out.
+loadPersistedSession();
 const server = Bun.serve({
   port: PORT,
   async fetch(req) {
@@ -1678,7 +1722,9 @@ const server = Bun.serve({
         });
       }
       if (p === '/api/logout' && req.method === 'POST') {
-        SESSIONS.delete(cookieToken(req));
+        const token = requestToken(req);
+        SESSIONS.delete(token);
+        clearPersistedSession(token);
         return new Response(JSON.stringify({ ok: true }), {
           headers: { 'content-type': 'application/json', 'set-cookie': 'ymir_session=; Path=/; Max-Age=0' },
         });
