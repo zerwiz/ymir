@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Shell } from './Shell';
 import { Overlay } from '../components/Overlay';
 import { LoginModal } from '../components/LoginModal';
+import { HallsChooser } from '../components/Halls';
 import { gateApi } from '../services/api';
 import { startStream } from '../services/stream';
 import { gateFromHash, useYmir } from '../state/store';
@@ -9,6 +10,8 @@ import { gateFromHash, useYmir } from '../state/store';
 export default function App() {
   const session = useYmir((s) => s.session);
   const [authed, setAuthed] = useState<boolean | null>(null);
+  // After the gate admits us, offer the three halls once per login.
+  const [choosing, setChoosing] = useState(true);
 
   /**
    * One question at boot: has the gate let this browser in?
@@ -86,6 +89,7 @@ export default function App() {
     <>
       <Shell />
       <Overlay />
+      {choosing && <HallsChooser onClose={() => setChoosing(false)} />}
     </>
   );
 }

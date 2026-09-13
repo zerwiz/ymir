@@ -1766,14 +1766,15 @@ const server = Bun.serve({
       if (p === '/api/desktop' && req.method === 'POST') {
         const body = (await req.json().catch(() => ({}))) as { view?: string };
         const view = body?.view;
-        if (view !== 'hlidskjalf' && view !== 'smidja') {
-          return json({ error: 'view must be hlidskjalf or smidja' }, 400);
+        if (view !== 'hlidskjalf' && view !== 'smidja' && view !== 'sessrumnir') {
+          return json({ error: 'view must be hlidskjalf, smidja, or sessrumnir' }, 400);
         }
-        const proc = Bun.spawn(['bash', join(ROOT, 'scripts', 'electron.sh'), 'start', '--view', view], {
-          stdout: 'pipe',
-          stderr: 'pipe',
-          env: process.env,
-        });
+        // Hlidskjalf and Smíðja are views of the one Electron shell; Sessrúmnir
+        // is its own app with its own launcher.
+        const argv = view === 'sessrumnir'
+          ? ['bash', join(ROOT, 'bin', 'sessrumnir.sh'), 'start']
+          : ['bash', join(ROOT, 'scripts', 'electron.sh'), 'start', '--view', view];
+        const proc = Bun.spawn(argv, { stdout: 'pipe', stderr: 'pipe', env: process.env });
         const out = await new Response(proc.stdout).text();
         await proc.exited;
         return json({ view, ok: proc.exitCode === 0, output: out.trim().slice(-400) });

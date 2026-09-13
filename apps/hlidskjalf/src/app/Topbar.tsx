@@ -4,6 +4,7 @@ import { WORKSPACES } from '../data/realms';
 import { gateApi, type WorkspaceRow } from '../services/api';
 import { AccentPicker } from '../components/AccentPicker';
 import { AccountMenu } from '../components/AccountMenu';
+import { HallsSwitcher } from '../components/Halls';
 
 export function Topbar() {
   const realm = useYmir((s) => s.realm);
@@ -38,19 +39,6 @@ export function Topbar() {
     }
     setAdding(false);
     if (slug) setRealm(slug);
-  }
-
-  /**
-   * Raise the other app (or start it). Silent on failure: this is a convenience
-   * control, and a dashboard that breaks when an app is down is worse than one
-   * that simply does not move.
-   */
-  async function raiseApp(view: 'hlidskjalf' | 'smidja') {
-    try {
-      await gateApi.desktop(view);
-    } catch {
-      /* the launcher is unreachable — say nothing, change nothing */
-    }
   }
 
   return (
@@ -105,16 +93,9 @@ export function Topbar() {
 
       <div className="topbar-spacer" />
 
-      {/* A speed-start from the UI: raise the other app (or start it). The same
-          launcher the Omarchy key bindings use, so there is one way in. */}
-      <button
-        className="icon-btn"
-        onClick={() => void raiseApp('smidja')}
-        title="Open Smíðja — the smithy's visualizer"
-        aria-label="Open Smíðja"
-      >
-        ᛊ
-      </button>
+      {/* The three halls: raise Hlidskjalf, Smíðja, or Sessrúmnir from anywhere.
+          The same gate launcher the Omarchy key bindings and the chooser use. */}
+      <HallsSwitcher current="hlidskjalf" />
 
       <AccentPicker />
 
