@@ -330,6 +330,19 @@ function showMainWindow(): void {
 
 // ─── Application Menu ────────────────────────────────────────────────────────
 
+// One identity covers every Ymir surface: the shared session lives at the gate,
+// so signing out here clears it for Hlidskjalf, Smiðja, and Sessrúmnir alike.
+const YMIR_GATE = process.env.YMIR_GATE_URL ?? 'http://127.0.0.1:3889'
+
+async function signOutOfYmir(): Promise<void> {
+  try {
+    await fetch(`${YMIR_GATE}/api/logout`, { method: 'POST' })
+  } catch {
+    // gate down — nothing to clear server-side
+  }
+  BrowserWindow.getAllWindows().forEach((w) => w.reload())
+}
+
 function createApplicationMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     {
@@ -359,6 +372,8 @@ function createApplicationMenu(): void {
             focusedWindow?.webContents.send('menu:open-project')
           },
         },
+        { type: 'separator' },
+        { label: 'Sign out of Ymir', click: () => { void signOutOfYmir() } },
         { type: 'separator' },
         { role: 'quit' },
       ],
