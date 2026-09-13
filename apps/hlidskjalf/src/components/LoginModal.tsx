@@ -51,12 +51,20 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
    * code means no way in, so the offer is not even shown.
    */
   const [registration, setRegistration] = useState(false);
+  /** GitHub is a second door only when the gate has an OAuth app configured. */
+  const [githubOn, setGithubOn] = useState(false);
 
   useEffect(() => {
     gateApi
       .session()
-      .then((s) => setRegistration(!!s.registration))
-      .catch(() => setRegistration(false));
+      .then((s) => {
+        setRegistration(!!s.registration);
+        setGithubOn(!!s.github);
+      })
+      .catch(() => {
+        setRegistration(false);
+        setGithubOn(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -239,20 +247,24 @@ export function LoginModal({ onAuthed, hint }: { onAuthed: () => void; hint?: st
             </button>
           ) : null}
 
-          <div className="divider">or</div>
+          {githubOn ? (
+            <>
+              <div className="divider">or</div>
 
-          {/* GitHub is a second door to the SAME gate: the account must exist
-              (an invite made it), so this never becomes an open door. */}
-          <button
-            className="btn"
-            type="button"
-            onClick={github}
-            disabled={busy}
-            title="Sign in with GitHub"
-            style={{ justifyContent: 'center' }}
-          >
-            <span aria-hidden="true">ᚷ</span> Continue with GitHub
-          </button>
+              {/* GitHub is a second door to the SAME gate: the account must exist
+                  (an invite made it), so this never becomes an open door. */}
+              <button
+                className="btn"
+                type="button"
+                onClick={github}
+                disabled={busy}
+                title="Sign in with GitHub"
+                style={{ justifyContent: 'center' }}
+              >
+                <span aria-hidden="true">ᚷ</span> Continue with GitHub
+              </button>
+            </>
+          ) : null}
         </form>
       </div>
 

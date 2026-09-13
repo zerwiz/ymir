@@ -337,7 +337,7 @@ export const gateApi = {
   prompts: () => get<PromptFile[]>('/api/prompts'),
   savePrompt: (agent: string, kind: string, body: string) =>
     post<{ ok: boolean; path: string }>('/api/prompts', { agent, kind, body }),
-  session: () => get<{ authed: boolean; login?: string | null; registration?: boolean }>('/api/session'),
+  session: () => get<{ authed: boolean; login?: string | null; registration?: boolean; github?: boolean }>('/api/session'),
   login: (username: string, password: string) => post<{ ok: boolean }>('/api/login', { username, password }),
   /**
    * Create an account from an invite code. Registration is refused unless the

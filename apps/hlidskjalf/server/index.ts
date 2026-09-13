@@ -1770,6 +1770,9 @@ const server = Bun.serve({
           // The login surface shows "create an account" only while a live invite
           // exists — a newcomer with a code can enter, and nobody else can.
           registration: invitesOpen(),
+          // GitHub is a second door only when an OAuth app is configured; the
+          // login surface hides the button otherwise (it would 503).
+          github: !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET),
         });
       }
       if (p === '/api/logout' && req.method === 'POST') {
