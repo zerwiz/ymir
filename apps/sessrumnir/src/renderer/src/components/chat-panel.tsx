@@ -26,7 +26,7 @@ import { TerminalPanel } from './terminal'
 import { useChatScroll, useGlobalWorkflowOpen } from '../hooks'
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { clsx } from 'clsx'
-import piLogo from '../assets/pi-logo.svg'
+import ymirMark from '../assets/ymir-mark.svg'
 import {
   FolderTree,
   GitCompare,
@@ -263,7 +263,7 @@ export function ChatPanel(): React.JSX.Element {
                   <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-10">
                     <div className="mb-8 text-center">
                       <img
-                        src={piLogo}
+                        src={ymirMark}
                         alt="Sessrúmnir"
                         className="mx-auto mb-4 block h-14 w-14"
                       />

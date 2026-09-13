@@ -343,6 +343,20 @@ async function signOutOfYmir(): Promise<void> {
   BrowserWindow.getAllWindows().forEach((w) => w.reload())
 }
 
+// Move to another hall through the gate's one launcher, as the Omarchy key
+// bindings and Hlidskjalf's switcher do.
+async function raiseHall(view: 'hlidskjalf' | 'smidja' | 'sessrumnir'): Promise<void> {
+  try {
+    await fetch(`${YMIR_GATE}/api/desktop`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ view }),
+    })
+  } catch {
+    // launcher unreachable — stay where we are
+  }
+}
+
 function createApplicationMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     {
@@ -372,6 +386,9 @@ function createApplicationMenu(): void {
             focusedWindow?.webContents.send('menu:open-project')
           },
         },
+        { type: 'separator' },
+        { label: 'Go to Hlidskjalf', click: () => { void raiseHall('hlidskjalf') } },
+        { label: 'Go to Smiðja', click: () => { void raiseHall('smidja') } },
         { type: 'separator' },
         { label: 'Sign out of Ymir', click: () => { void signOutOfYmir() } },
         { type: 'separator' },
