@@ -223,6 +223,9 @@ step_models() {
     fi
     printf 'models: local-model testing is first-class — load the modeltesting skill; llama.cpp (llama-server/llama-swap) is fastest on the GPU; research your hardware best settings online; for coding use >= 80000 context.\n'
   fi
+  if [ -x "$SCRIPT_DIR/model-hardware.sh" ]; then
+    "$SCRIPT_DIR/model-hardware.sh" >/dev/null 2>&1 && add models OK "profiled this machine (data/local-models.md; online research left for Brokk)"
+  fi
 }
 
 # ── 3b. hermes runtime ───────────────────────────────────────────────────────
