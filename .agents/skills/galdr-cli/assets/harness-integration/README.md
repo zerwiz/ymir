@@ -179,7 +179,7 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 
 | Harness | Session-open injection | Watch arm owner | Turn-end guard | Pretool (arm) | Pretool (cd) | Re-arm |
 |---|---|---|---|---|---|---|
-| **OpenCode** | ✅ `.opencode/plugins/saga-sessionstart.js` | ✅ `.opencode/plugins/syn-watch-arm.js` (`session.idle`, coordinator key) | ✅ `.opencode/plugins/syn-turnend-guard.js` | ✅ `syn-pretool-check.js` | ✅ `syn-cd-check.js` | ✅ plugin-owned retries |
+| **OpenCode** | ✅ `.agents/harness/opencode/plugins/saga-sessionstart.js` | ✅ `.agents/harness/opencode/plugins/syn-watch-arm.js` (`session.idle`, coordinator key) | ✅ `.agents/harness/opencode/plugins/syn-turnend-guard.js` | ✅ `syn-pretool-check.js` | ✅ `syn-cd-check.js` | ✅ plugin-owned retries |
 | **Pi** | ✅ `.pi/extensions/syn-turnend-guard.ts` (`before_agent_start`) | ✅ `.pi/extensions/gna-pi-watch.ts` (`gna_watch_arm` tool) | ✅ same extension (`agent_settled`) | ✅ same extension (`tool_call`) | ✅ same extension (`tool_call`) | ✅ Gná retry/backoff |
 | **Claude Code** | ✅ `.claude/settings.json` `SessionStart` | ✅ `Stop` + `syn-watch-arm.sh --restart` (`asyncRewake`) | ✅ `Stop` + `syn-turnend-guard.sh --claude` | ❌ | ❌ | ✅ async rewake |
 | **Codex** | ✅ `.codex/hooks.json` `SessionStart` | ⚠️ no long-lived arm | ✅ `Stop` + `syn-turnend-guard.sh` | ✅ `PreToolUse` matcher `Bash` | ✅ `PreToolUse` matcher `Bash` | ❌ |
@@ -190,12 +190,12 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 
 | Path | Exports / shape | Contract parts |
 |---|---|---|
-| `.opencode/plugins/saga-sessionstart.js` | `export const SagaSessionstart` | 1 |
-| `.opencode/plugins/syn-watch-arm.js` | `export const SynWatchArm` | 2 |
-| `.opencode/plugins/syn-turnend-guard.js` | `export const SynTurnendGuard` | 2 (consult coordinator), 3 |
-| `.opencode/plugins/syn-pretool-check.js` | `export const SynPretoolCheck` | 4 (arm) |
-| `.opencode/plugins/syn-cd-check.js` | `export const SynCdCheck` | 4 (cd) |
-| `.opencode/plugins/lib/rodd-operational-input.js` | `encodeRoddOperationalInput(root, kind, content)` | shared wire |
+| `.agents/harness/opencode/plugins/saga-sessionstart.js` | `export const SagaSessionstart` | 1 |
+| `.agents/harness/opencode/plugins/syn-watch-arm.js` | `export const SynWatchArm` | 2 |
+| `.agents/harness/opencode/plugins/syn-turnend-guard.js` | `export const SynTurnendGuard` | 2 (consult coordinator), 3 |
+| `.agents/harness/opencode/plugins/syn-pretool-check.js` | `export const SynPretoolCheck` | 4 (arm) |
+| `.agents/harness/opencode/plugins/syn-cd-check.js` | `export const SynCdCheck` | 4 (cd) |
+| `.agents/harness/opencode/plugins/lib/rodd-operational-input.js` | `encodeRoddOperationalInput(root, kind, content)` | shared wire |
 | `.pi/extensions/syn-turnend-guard.ts` | `export default function (pi: ExtensionAPI)` | 1, 3, 4 |
 | `.pi/extensions/gna-pi-watch.ts` | `export default function (pi: ExtensionAPI)` | 2 |
 | `.pi/extensions/ro.ts` | Ró — the calm presentation preference (`/calm`), state/ro | user |
@@ -225,7 +225,7 @@ Every adapter and script resolves the same runtime roots. The overrides exist so
 | `BROKK_SESSION_PID` | **live harness PID** bound by the session lock | `${BROKK_SESSION_PID:-$$}` |
 | `BROKK_SESSIONSTART_INELIGIBLE` | `1` makes Pi's prerequisite exit 3 | unset |
 
-`BROKK_SESSION_PID` is the load-bearing variable. The lock must bind to the **live harness process**, not the short-lived digest helper: Pi/OpenCode adapters pass `BROKK_SESSION_PID=String(process.pid)` into the spawned digest/arm child (`.pi/extensions/syn-turnend-guard.ts:277`, `.opencode/plugins/syn-watch-arm.js:428`). `bin/gleipnir-lock-lib.sh` writes it to `state/.lock`.
+`BROKK_SESSION_PID` is the load-bearing variable. The lock must bind to the **live harness process**, not the short-lived digest helper: Pi/OpenCode adapters pass `BROKK_SESSION_PID=String(process.pid)` into the spawned digest/arm child (`.pi/extensions/syn-turnend-guard.ts:277`, `.agents/harness/opencode/plugins/syn-watch-arm.js:428`). `bin/gleipnir-lock-lib.sh` writes it to `state/.lock`.
 
 Full variable inventory: [`../runtime-components.md`](../runtime-components.md) §5.
 
@@ -401,9 +401,9 @@ bin/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-ONLY
 - **Never background the arm from the model's bash tool.** `syn-arm-pretool-check.sh` denies it; the adapter owns continuity. The arm is a plugin/extension child, not a tool call.
 - **Exit-code semantics differ by host.** Claude's `SessionStart` exit 2 blocks initialization, so the run wrapper always exits 0 on the transport path; Pi's prerequisite uses exit 3 internally so preflight can distinguish a stand-down from a silent failure.
 - **`hamr-harness.sh` has no `crew` subcommand — its subcommand is `eindri`.** `bin/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, which falls through to `detect_own` (`bin/hamr-harness.sh:231-236`); see §11. Until that call is fixed, `config/eindri-harness` is only honoured by the inline fallback, not the Hamr path.
-- **Plugin auto-loading is path-based, not declared.** OpenCode loads `.opencode/plugins/*.js` automatically; there is no `plugin` array in `opencode.json`. The `package.json` only declares `"type": "module"`.
+- **Plugin auto-loading is path-based, not declared.** OpenCode loads `.agents/harness/opencode/plugins/*.js` automatically; there is no `plugin` array in `opencode.json`. The `package.json` only declares `"type": "module"`.
 - **Grok is not wired in Ymir.** Upstream Brokk ships `.grok/hooks/*.json`; Ymir has no `.grok/`. Treat Grok as unverified (see §11).
-- **Windows timing.** OpenCode and Pi raise the arm-ready budget to 35s on `win32` so a slow Git Bash cold start is not SIGTERMed mid-confirmation (`.opencode/plugins/syn-watch-arm.js:17-19`, `.pi/extensions/gna-pi-watch.ts:91-94`).
+- **Windows timing.** OpenCode and Pi raise the arm-ready budget to 35s on `win32` so a slow Git Bash cold start is not SIGTERMed mid-confirmation (`.agents/harness/opencode/plugins/syn-watch-arm.js:17-19`, `.pi/extensions/gna-pi-watch.ts:91-94`).
 
 ---
 
@@ -411,8 +411,8 @@ bin/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-ONLY
 
 | Plan 29 says | Code says (truth) |
 |---|---|
-| `.opencode/plugins/syn-sessionstart.js` | actual file is `.opencode/plugins/saga-sessionstart.js` |
-| `.opencode/plugins/gna-watch-arm.js` (plan §1) | actual file is `.opencode/plugins/syn-watch-arm.js` (OpenCode's watcher is **Sýn**, not Gná; Gná exists only on Pi) |
+| `.agents/harness/opencode/plugins/syn-sessionstart.js` | actual file is `.agents/harness/opencode/plugins/saga-sessionstart.js` |
+| `.agents/harness/opencode/plugins/gna-watch-arm.js` (plan §1) | actual file is `.agents/harness/opencode/plugins/syn-watch-arm.js` (OpenCode's watcher is **Sýn**, not Gná; Gná exists only on Pi) |
 | Plan §13 "still to build: `bin/hamr-harness.sh`; the `.opencode`/Claude/Codex/Cursor adapters; `bin/einherjar-spawn.sh`; …" | all of these are **now landed**; plan §13 is stale |
 | Digest §6 lists 9 stages including **NETWORK CHECKS** and **FLEET DIGEST from `data/backlog.md`** | `bin/saga-session-start.sh` currently prints **8** sections (LOCK, BOOTSTRAP, WAKE QUEUE, SUPERVISION, FLEET DIGEST, CONTEXT DIGEST, CRON START, NEXT STEP); there is **no NETWORK CHECKS section**, and the fleet digest counts `state/*.meta` + `docs/masterplan.md` orders, not `data/backlog.md` |
 | Plan §7 "Cursor … run interactive only (no headless turn-end)" | `.cursor/hooks.json` **does** implement `sessionStart` (`additional_context`) and `stop` (`followup_message`) |
@@ -426,7 +426,7 @@ The authoritative interface is always the code listed in [`../runtime-components
 
 ## 12. Provenance
 
-The adapter pattern is ported from the validated upstream **Brokk** agent-distro harness adapters (`bin/fm-harness.sh`, `bin/fm-sessionstart-run.sh`, `.opencode/plugins/fm-primary-*.js`, `.pi/extensions/fm-primary-*.ts`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.grok/hooks/*.json`). Ymir adopts the *mechanism* and renames every component per plan 29 §12 (Sága, Sýn, Gná, Vörðr, Rödd, Gleipnir, Hamr, Einherjar, Erindi, Vör, Nornir). The upstream names (`fm-*`, "Allfather") are provenance only and must never name a Ymir component.
+The adapter pattern is ported from the validated upstream **Brokk** agent-distro harness adapters (`bin/fm-harness.sh`, `bin/fm-sessionstart-run.sh`, `.agents/harness/opencode/plugins/fm-primary-*.js`, `.pi/extensions/fm-primary-*.ts`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.grok/hooks/*.json`). Ymir adopts the *mechanism* and renames every component per plan 29 §12 (Sága, Sýn, Gná, Vörðr, Rödd, Gleipnir, Hamr, Einherjar, Erindi, Vör, Nornir). The upstream names (`fm-*`, "Allfather") are provenance only and must never name a Ymir component.
 
 ---
 
