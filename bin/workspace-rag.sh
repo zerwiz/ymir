@@ -19,7 +19,8 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 STORE="$ROOT/.agents/memory/well/workspace.jsonl"
 REALM_FILE="$ROOT/data/realm.md"
 DEFAULT_REALM="$(head -n1 "$REALM_FILE" 2>/dev/null | tr -d '[:space:]')"
-DEFAULT_REALM="${DEFAULT_REALM:-wayof}"
+# Never assume the company's slug: resolve the operator's realm neutrally.
+if [ -z "$DEFAULT_REALM" ]; then . "$SCRIPT_DIR/realm-lib.sh"; ymir_active_realm "$ROOT" DEFAULT_REALM; fi
 
 # Portable xargs: GNU's -r (skip the command on empty input) does not exist in
 # BSD/macOS xargs. Read the input first, then run only when there is something.

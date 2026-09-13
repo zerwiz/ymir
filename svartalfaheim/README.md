@@ -1,29 +1,32 @@
-# SVARTALFAHEIM — the company container root
+# SVARTALFAHEIM — the tenant-container root
 
-**Single tenant.** There is one operator (the Allfather); there are no person
-realms here and no tenants. This tree is the **company's environment** — its
-data and, later, its Docker boundary.
+**One operator.** There is one operator (the Allfather); there are no person
+realms here. This tree holds the operator's own environment(s) — data and, later,
+a Docker boundary per tenant.
 
 ```
-svartalfaheim/<company>/        # e.g. wayof
-├── companies/                  # entity cards for the company's ventures/brands
-├── workspace/                  # company-scoped operational memory
+svartalfaheim/<tenant>/          # YOUR tenant — create it for yourself
+├── companies/                  # entity cards for ventures/brands
+├── workspace/                  # tenant-scoped operational memory
 │   ├── company/ marketing/ development/ life/ memory/
-├── projects/                   # company project working dirs
-├── AGENTS.md                   # company persona / directives
-  ├── .env.realm.example        # TRACKED company-secret template
+├── projects/                   # project working dirs
+├── AGENTS.md                   # tenant persona / directives
+  ├── .env.realm.example        # TRACKED tenant-secret template
   ├── .env.realm                # IGNORED — the real values, machine-local
-  └── SECRETS.md                # how company secrets are set up and kept out of git
+  └── SECRETS.md                # how tenant secrets are set up and kept out of git
+
+svartalfaheim/examples/         # shipped examples to copy — never the default
+└── wayof/                      # the reference tenant the distro was built for
 ```
 
 - The **operator's** personal and work scopes live under `workspace/` at the repo
   root (`workspace/work`, `workspace/personal`). A **work** workspace attaches to
-  its company container here.
-- **Houses** (Ymir Labs, Brokk Forge, …) are brand labels on company cards — not
-  isolation, not domains.
-- Retired: the multi-tenant realms `way-of`, `zerwiz`, `craig`. The company is
-  **WayOf** (`svartalfaheim/wayof`); personal is not a tenant.
-- Future: each company here becomes a container; a personalised copy is what a
-  new user downloads and runs for their own personal workspace.
+  its tenant container here.
+- **No tenant is the default.** The runtime resolves the active realm from
+  `data/realm.md`, else the first non-example tenant under `svartalfaheim/`, else
+  `default` (`bin/realm-lib.sh`). A fresh install ships no tenant of its own —
+  only the example under `examples/` to copy.
+- **Houses** are brand labels on company cards — not isolation, not domains.
+- Future: each tenant here becomes a container.
 
-Naming: company slugs are lowercase (`wayof`). Never a person realm.
+Naming: tenant slugs are lowercase. Never a person realm.

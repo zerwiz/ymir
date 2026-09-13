@@ -30,7 +30,13 @@ while [ $# -gt 0 ]; do
     *) printf 'error: unknown flag %s\n' "$1" >&2; exit 2 ;;
   esac
 done
-case "$KIND" in work) COMPANY=${COMPANY:-wayof}; DOMAINS=${DOMAINS:-$DEFAULT_WORK} ;; personal) DOMAINS=${DOMAINS:-$DEFAULT_PERSONAL} ;; *) printf 'error: --kind must be work or personal\n' >&2; exit 2 ;; esac
+case "$KIND" in
+  work)
+    [ -n "$COMPANY" ] || { printf 'error: --kind work needs --company <slug>\nhelp: the company is yours to name; Ymir ships no default\n' >&2; exit 2; }
+    DOMAINS=${DOMAINS:-$DEFAULT_WORK} ;;
+  personal) DOMAINS=${DOMAINS:-$DEFAULT_PERSONAL} ;;
+  *) printf 'error: --kind must be work or personal\n' >&2; exit 2 ;;
+esac
 
 mkdir -p "$WORKSPACE"
 made=0

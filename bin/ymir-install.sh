@@ -145,12 +145,13 @@ step_tree() {
     cat >"$HOARD/identity/workspaces.yaml" <<'YAML'
 # Workspace registry — single tenant. One operator, many workspaces.
 # kind: work | personal.  company: only for work.  domains: knowledge areas.
+# Add a work workspace of your own, e.g.:
+#   - id: work
+#     name: Work
+#     kind: work
+#     company: your-company
+#     domains: [company, development]
 workspaces:
-  - id: work
-    name: Work
-    kind: work
-    company: wayof
-    domains: [company, marketing, development, life]
   - id: personal
     name: Personal
     kind: personal
@@ -162,27 +163,19 @@ YAML
     cat >"$HOARD/identity/projects.yaml" <<'YAML'
 # Master project registry. Every project carries its GitHub block here; the
 # runtime reads it — never guesses a remote. auth is a REFERENCE, never a value.
-projects:
-  - id: ymir-platform
-    name: Ymir
-    workspace: work
-    company: wayof
-    domains: [development, company]
-    repo: .
-    posture: local-only
-    git: { host: github.com, owner: Way-Of, repo: ymir, remote: origin, default_branch: main, auth: gh }
-  - id: hlidskjalf
-    name: Hlidskjalf
-    workspace: work
-    company: wayof
-    domains: [development, company]
-    repo: apps/hlidskjalf
-    posture: direct-PR
-    git: { host: github.com, owner: Way-Of, repo: ymir, remote: origin, default_branch: main, auth: gh }
+# Register your own projects, e.g.:
+#   - id: my-project
+#     name: My Project
+#     workspace: personal
+#     domains: [development]
+#     repo: projects/my-project
+#     posture: local-only
+#     git: { host: github.com, owner: <you>, repo: my-project, remote: origin, default_branch: main, auth: gh }
+projects: []
 YAML
     created=$((created+1))
   fi
-  add tree OK "workspace/{work,personal} · companies · registries (created $created)"
+  add tree OK "workspace/{personal} · companies · registries (created $created)"
 }
 
 # ── 3. engines ───────────────────────────────────────────────────────────────
@@ -482,10 +475,10 @@ step_register() {
   {
     printf '# Ymir — first setup\n\n'
     printf 'Provisioned by `bin/ymir-install.sh` at %s.\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    printf '## Workspaces\n\n'; printf -- '- work (company: wayof)\n- personal\n\n'
+    printf '## Workspaces\n\n'; printf -- '- personal\n\n'
     printf '## Engines\n\n- Yggdrasil → treehouse\n- Utgard → sandcastle\n- Mjollnir/Glitnir → no-mistakes\n- Hermes → hermes-agent (worker runtime)\n- Sessrúmnir → pi-desktop (desktop GUI, vendored at apps/sessrumnir)\n\n'
     printf '## Next\n\n1. `gh auth login` (your own GitHub login).\n'
-    printf '2. Fill each project\x27s `git{}` block in `hodd/identity/projects.yaml`.\n'
+    printf '2. Register your projects and their `git{}` blocks in `hoard/identity/projects.yaml`.\n'
     printf '3. `scripts/start.sh` then open http://127.0.0.1:3888/.\n'
     printf '4. To let someone else try it, share the invite code printed above\n'
     printf '   (or mint another: `bin/ymir-invite.sh mint <n>`). They register at the\n'
@@ -543,7 +536,7 @@ step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_sessrumnir;
 
 printf 'install[%d]{step,status,detail}:\n' "${#IDS[@]}"
 for i in "${!IDS[@]}"; do printf '  "%s","%s","%s"\n' "${IDS[$i]}" "${STATUS[$i]}" "${DETAIL[$i]}"; done
-printf '\nnext: gh auth login · fill hodd/identity/projects.yaml git{} · open http://127.0.0.1:3888/\n'
+printf '\nnext: gh auth login · register your projects in hoard/identity/projects.yaml · open http://127.0.0.1:3888/\n'
 [ -n "$INVITE_CODE" ] && printf 'invite: %s — share it to let someone register (bin/ymir-invite.sh list shows what is spent)\n' "$INVITE_CODE"
 
 for s in "${STATUS[@]}"; do [ "$s" = FAIL ] && exit 1; done

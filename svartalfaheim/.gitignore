@@ -24,7 +24,7 @@
 !**/*.example.md
 
 # Belt and braces: whatever the exceptions above, a real env file is never
-# tracked. See wayof/SECRETS.md for how a company's secrets are set up.
+# tracked. See examples/wayof/SECRETS.md for how a company's secrets are set up.
 .env
 .env.*
 **/.env
