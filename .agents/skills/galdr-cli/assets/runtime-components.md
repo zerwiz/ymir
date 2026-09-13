@@ -54,9 +54,10 @@ Per-component variable lists appear in each section below.
 | `bin/saga-wake-drain.sh` | **Sága** | present durable wakes + open decisions | `saga-wake-drain.sh` | 0 |
 | `bin/syn-watch-arm.sh` | **Sýn** | arm one watcher cycle | `syn-watch-arm.sh --restart` / `--handling-delivered <g> --watcher-pid <p>` | 0 |
 | `bin/syn-turnend-guard.sh` | **Sýn** | refuse a blind turn end | `syn-turnend-guard.sh [--claude]` | 0 healthy/inert; 2 off |
-| `bin/syn-arm-pretool-check.sh` | **Sýn** | deny backgrounding the arm | `... --command <cmd>` | 0 allow; 2 block |
+| `bin/syn-arm-pretool-check.sh` | **Sýn** | deny backgrounding/detaching the arm (real `&`/nohup/setsid/disown; `&&` and `bash -n` allowed) | `... --command <cmd>` | 0 allow; 2 block |
 | `bin/syn-cd-pretool-check.sh` | **Sýn** | deny escaping `cd` | `... --command <cmd>` | 0 allow; 2 block |
-| `bin/gleipnir-lock-lib.sh` | **Gleipnir** | per-home session lock library | source only | fn return 0/1 |
+| `bin/syn-guard-pretool-check.sh` | **Sýn** | deny destructive shapes against the lock, supervision markers, the append-only Runes ledger, the guard machinery, secrets, and the fleet registries | `... --command <cmd>` | 0 allow; 2 block |
+| `bin/gleipnir-lock-lib.sh` | **Gleipnir** | session lock library: machine-global for the primary, per-home for an Eindri-home (`state/.lock-path` pointer) | source only | fn return 0/1 |
 | `bin/rodd-operational-input.sh` | **Rödd** | operational wire encode/kind/classify/body | `... encode <kind>` \| `kind` \| `classify` \| `body` \| `--help` | 0; 1 non-match; 2 usage |
 | `bin/hamr-harness.sh` | **Hamr** | detect harness identity | `hamr-harness.sh` \| `eindri` \| `eindri-model` \| `eindri-effort` | 0 |
 | `bin/einherjar-spawn.sh` | **Einherjar** | spawn an Eindri worker | `einherjar-spawn.sh <id> <project> --mode <m> [flags]` | 0; 1 error; 2 usage |
@@ -77,7 +78,7 @@ Sections, in order:
 
 | # | Section | Content |
 |---|---|---|
-| 1 | `LOCK` | acquire the per-home lock; on refusal print `READ-ONLY: session lock held by pid N` |
+| 1 | `LOCK` | acquire the session lock (machine-global for the primary, per-home for an Eindri-home); on refusal print `READ-ONLY: session lock held by pid N` |
 | 2 | `BOOTSTRAP` | detect-only: `git bash node` present, `svartalfaheim/<realm>/.env.realm` present/ABSENT |
 | 3 | `WAKE QUEUE` | calls `bin/saga-wake-drain.sh`; prints pending wakes and `open decisions: N` |
 | 4 | `SUPERVISION` | static instruction: arm via the harness adapter, never run `syn-watch-arm.sh` by hand |
@@ -137,6 +138,7 @@ Arms one supervision cycle. `--restart` prints `watcher: started pid=<pid> recov
 
 - Refuses with exit 0 + stderr `watcher: read-only - no live session holds the lock` when no live lock owner.
 - Writes `state/.watch.heartbeat` each loop iteration (every `BROKK_WATCH_POLL_SECONDS`).
+- **Re-verifies the lock every poll** (not only at arm): when the owner dies it retires silently (`watcher: retired - session lock is no longer held`, **not** an actionable line) so an orphaned watcher cannot keep the arm marker fresh for a dead session and silence the turn-end guard.
 - `--handling-delivered <generation> --watcher-pid <pid>` prints `watcher: handling delivered ...` and exits 0 (ack path used by Gná/Sýn plugins).
 - Env: `BROKK_ROOT_OVERRIDE`, `BROKK_HOME`, `BROKK_STATE_OVERRIDE`, `BROKK_WATCH_POLL_SECONDS` (5), `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (60), `BROKK_WATCH_PREDECESSOR_ARM_PID`.
 - Sources `gleipnir-lock-lib.sh`.

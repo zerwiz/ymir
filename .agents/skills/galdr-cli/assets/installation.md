@@ -215,17 +215,33 @@ sessrumnir.sh status | stop
 Deps are never committed; the ensure step installs them on first run, exactly as
 `scripts/electron.sh` does for the other desktop apps. The external engine keeps
 its product name `pi-desktop`; the GUI the user sees is Sessrúmnir, themed with
-the Ymir way-of palette.
+Ymir's deep-navy palette. The Omarchy launcher entry is rendered from
+`apps/sessrumnir/resources/ymir-sessrumnir.desktop.in` by `bin/desktop-place.sh`
+(placement + `SUPER+B`).
+
+## Neutral tenant defaults — a fresh Ymir is a distro, not the company
+
+A fresh install ships **no company of its own**. `bin/ymir-install.sh` seeds one
+`personal` workspace and an **empty** projects registry (a commented example
+only); it never writes a company slug, a company remote, or a `work (company: …)`
+line. The runtime resolves the active realm **neutrally** through
+`bin/realm-lib.sh` (`ymir_active_realm`): `data/realm.md` (first line) → the first
+non-example tenant under `svartalfaheim/` → `default`. **No script may fall back
+to a company slug.** The reference tenant the distro was built for lives at
+`svartalfaheim/examples/wayof/` — an example to copy, never the default. A `work`
+workspace must name its own company: `workspace-provision.sh` requires
+`--company <slug>`.
 
 ## Per-workspace provisioning
 
 ```
-bin/workspace-provision.sh <name> --kind work|personal [--domains a,b,c] [--company wayof]
+bin/workspace-provision.sh <name> --kind work|personal [--domains a,b,c] [--company <slug>]
 ```
 
 Creates `workspace/<name>/<domains>/`, registers it in `workspaces.yaml`, and
-for a **work** workspace attaches it to the company container
-`svartalfaheim/<company>/`.
+for a **work** workspace attaches it to the tenant container
+`svartalfaheim/<company>/`. `--company` is required for a work workspace — the
+company is the operator's to name; Ymir ships no default.
 
 ## Verify
 
