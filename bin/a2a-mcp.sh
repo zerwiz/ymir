@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# a2a-mcp.sh — install/verify the two A2A MCP servers into the harnesses so
-# every agent can use the mesh AND the control plane at once.
+# a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every
+# agent can use the mesh, the memory well, and the control plane at once.
 #
-#   bin/a2a-mcp.sh install     # add a2abridge (+wayofteams if present) to pi + opencode
+#   bin/a2a-mcp.sh install     # add a2abridge + engram (+wayofteams if present) to pi + opencode
 #   bin/a2a-mcp.sh show        # what is wired
 #   bin/a2a-mcp.sh --version
 set -u
@@ -22,10 +22,12 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
 ACTION="${1:-show}"
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
+ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
+ENGRAM_DB="${ENGRAM_DB:-$ROOT/.agents/memory/kaia.engram}"
 
-python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" <<'PY'
+python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" <<'PY'
 import sys, os, json
-root, pi_path, oc_path, a2ab, durl, advert, wotes, action = sys.argv[1:9]
+root, pi_path, oc_path, a2ab, durl, advert, wotes, action, engram_bin, engram_db = sys.argv[1:11]
 
 def load(p, default):
     try: return json.load(open(p))
@@ -37,7 +39,11 @@ ones = {
                 "env": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
         "oc":  {"type": "local", "command": [a2ab, "bridge"],
                 "environment": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
-    }
+    },
+    "engram": {
+        "pi":  {"command": engram_bin, "args": ["--db", engram_db]},
+        "oc":  {"type": "local", "command": [engram_bin, "--db", engram_db], "environment": {}},
+    },
 }
 if wotes:
     ones["wayofteams"] = {
@@ -48,7 +54,7 @@ if wotes:
 if action == "show":
     pi = load(pi_path, {}).get("mcpServers", {})
     oc = load(oc_path, {}).get("mcp", {})
-    print("a2a-mcp[2]{server,in_pi,in_opencode}:")
+    print(f"a2a-mcp[{len(ones)}]{{server,in_pi,in_opencode}}:")
     for name in ones:
         print(f'  "{name}","{"yes" if name in pi else "no"}","{"yes" if name in oc else "no"}"')
     if not wotes:

@@ -200,6 +200,31 @@ step_engines() {
   if [ -z "$got" ]; then add engines WARN "none installed (offline?) — install manually"; else add engines OK "installed:$got"; fi
 }
 
+# ── 3a2. the Pi agent + local models ────────────────────────────────────────
+# Ensure pi and the Pi packages Ymir needs (pi-mcp-adapter, pi-web-access,
+# pi-lmstudio — Pi has no native MCP/web/local-model support), detect the LOCAL
+# model runtimes actually here (never assume llama.cpp), and seed
+# ~/.pi/agent/models.json only when the operator has none.
+step_models() {
+  [ "$SKIP_ENGINES" = 1 ] && { add models SKIP "--skip-engines"; return; }
+  if [ "$CHECK" = 1 ]; then add models OK "would ensure pi + packages and detect local models"; return; fi
+  if [ -x "$SCRIPT_DIR/pi-ensure.sh" ]; then
+    if "$SCRIPT_DIR/pi-ensure.sh" ensure --install >/dev/null 2>&1; then add models OK "pi + packages present";
+    else add models WARN "pi or a Pi package missing — run bin/pi-ensure.sh install"; fi
+  else
+    add models SKIP "no pi-ensure.sh"
+  fi
+  if [ -x "$SCRIPT_DIR/models-detect.sh" ]; then
+    local detected
+    detected="$("$SCRIPT_DIR/models-detect.sh" --json 2>/dev/null | python3 -c 'import json,sys;print(",".join(json.load(sys.stdin).get("providers",{}).keys()))' 2>/dev/null)"
+    add models OK "local runtimes: ${detected:-none}"
+    if [ ! -f "$HOME/.pi/agent/models.json" ]; then
+      "$SCRIPT_DIR/models-detect.sh" --write >/dev/null 2>&1 && add models OK "seeded ~/.pi/agent/models.json (was absent)"
+    fi
+    printf 'models: local-model testing is first-class — load the modeltesting skill; llama.cpp (llama-server/llama-swap) is fastest on the GPU; research your hardware best settings online; for coding use >= 80000 context.\n'
+  fi
+}
+
 # ── 3b. hermes runtime ───────────────────────────────────────────────────────
 step_hermes() {
   [ "$SKIP_ENGINES" = 1 ] && { add hermes SKIP "--skip-engines"; return; }
@@ -550,7 +575,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate
