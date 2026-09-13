@@ -546,6 +546,27 @@ built-in tools. Our profiles list Ymir capabilities (`vector_db`,
 `Expected object | undefined, got [...] tools`. Those lists are therefore carried
 under **`ymir_tools:`**; permission is expressed by the `permission:` block.
 
+## Canonical layout — the ONE remap (authoritative; do not redo)
+
+**Source of truth is `.agents/`. Harness directories are symlinks, never copies.**
+
+```
+canonical[3]{kind,canonical,load_path}:
+  "agent profiles",".agents/agents/<profile>.md",".opencode/agent/<name>.md · .pi/agents/<name>.md (symlinks)"
+  "OpenCode plugins",".agents/harness/opencode/plugins/",".opencode/plugins (symlink)"
+  "skills",".agents/skills/","loaded via opencode.json skills.paths"
+```
+
+Rules:
+- **Edit only `.agents/`.** Never edit a file under `.opencode/` or `.pi/` — those are
+  symlinks to `.agents/` (e.g. `.opencode/agent/bragi.md` links to
+  `.agents/agents/bragi-marketer.md`).
+- After any change: `bin/valknut-load.sh --all` to rebind.
+- **OpenCode requires REAL `.opencode/{node_modules,package.json,.gitignore}`** — the
+  dependency store. Symlinking them hit ELOOP + untracked files and was reverted.
+- So `.opencode` holds: symlinked `agent/` + `plugins`, and the real dep store. It
+  cannot be deleted; it is already minimized. No agent/profile content lives there.
+
 ## Asking the Allfather — `ask_user_question` (2026-09-12)
 
 The system can ask the Allfather instead of guessing. Adopted (open-source-first)
