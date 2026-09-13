@@ -173,8 +173,8 @@ const server = Bun.serve({
       "/api/desktop": safely(async (req) => {
         const body = (await req.json().catch(() => ({}))) as { view?: string };
         const view = body?.view;
-        if (view !== "hlidskjalf" && view !== "smidja") {
-          return json({ error: "view must be hlidskjalf or smidja" }, 400);
+        if (view !== "hlidskjalf" && view !== "smidja" && view !== "sessrumnir") {
+          return json({ error: "view must be hlidskjalf, smidja, or sessrumnir" }, 400);
         }
         let dir = import.meta.dir;
         let launcher: string | null = null;
@@ -187,7 +187,12 @@ const server = Bun.serve({
           dir = dirname(dir);
         }
         if (!launcher) return json({ error: "could not find scripts/electron.sh above the visualizer" }, 500);
-        const proc = Bun.spawn(["bash", launcher, "start", "--view", view], {
+        // Hlidskjalf and Smíðja are views of one shell; Sessrúmnir is its own app.
+        const repoRoot = dirname(dir); // dir is <root>/scripts
+        const argv = view === "sessrumnir"
+          ? ["bash", join(repoRoot, "bin", "sessrumnir.sh"), "start"]
+          : ["bash", launcher, "start", "--view", view];
+        const proc = Bun.spawn(argv, {
           stdout: "pipe",
           stderr: "pipe",
         });
