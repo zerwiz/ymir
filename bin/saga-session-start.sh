@@ -34,7 +34,9 @@ REALM="${BROKK_REALM:-}"
 if [ -z "$REALM" ] && [ -r "$DATA/realm.md" ]; then
   REALM=$(head -n 1 "$DATA/realm.md" 2>/dev/null | tr -d '[:space:]')
 fi
-REALM="${REALM:-wayof}"
+REALM="${REALM:-}"
+# Never assume the company's slug: resolve the operator's realm neutrally.
+if [ -z "$REALM" ]; then . "$SCRIPT_DIR/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
 
 section() { printf '\n== %s ==\n' "$1"; }
 
