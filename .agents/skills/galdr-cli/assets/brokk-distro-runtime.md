@@ -87,7 +87,8 @@ Resolution order used by every script (all overridable):
 | `state/cron.pid`, `state/cron.log` | Nornir scheduler loop + log | managed by `bin/nornir-cron-start.sh` |
 | `state/.cron-fired/`, `state/.cron-locks/` | once-a-day date guards + per-job flock | chronological edge protection |
 | `state/.wake-queue` | durable Sága wakes | drained, stay until acknowledged |
-| `state/.supervision-armed`, `state/.watch.heartbeat` | Sýn arm marker + liveness | guard is inert until first arm |
+| `state/.supervision-armed`, `state/.watch.heartbeat` | Sýn arm marker + liveness | guard is inert until first arm; the watcher re-verifies the lock every poll and retires silently when the owner dies |
+| `state/.lock-path` | resolved session-lock path | pointer the harness extensions read; written by `gleipnir_lock_acquire` |
 | `state/backups/` | Muninn memory snapshots | written before any prune |
 | `state/observer.log`, `state/observer.last` | Huginn observation output | read-only bridge |
 | `workspace/memory/runes_audit.md` | Runes chained JSONL ledger | append-only, never rewritten |
@@ -98,7 +99,7 @@ Resolution order used by every script (all overridable):
 
 | # | Stage | What it emits | Source / helper |
 |---|---|---|---|
-| 1 | **LOCK** | `session lock held (pid N)` or `READ-ONLY: session lock held by pid N - no spawn, steer, merge, drain, or repair this session` | `bin/gleipnir-lock-lib.sh` → `state/.lock` |
+| 1 | **LOCK** | `session lock held (pid N)` or `READ-ONLY: session lock held by pid N - no spawn, steer, merge, drain, or repair this session` | `bin/gleipnir-lock-lib.sh` → machine-global `brokk.lock` for the primary, per-home `state/.lock` for an Eindri-home |
 | 2 | **BOOTSTRAP** | `tool floors OK` or `MISSING: …`; `realm env: present` or `realm env: ABSENT (svartalfaheim/<realm>/.env.realm)` | checks `git bash node`; checks `.env.realm` in `$BROKK_HOME` then `$ROOT` |
 | 3 | **WAKE QUEUE** | `wake queue: N pending`, each `WAKE <record>`, `WAKE_ACK_REQUIRED`, `open decisions: N` | `bin/saga-wake-drain.sh` → `state/.wake-queue`, `state/*.decision` |
 | 4 | **SUPERVISION** | one operating block: `harness next step: arm supervision via the installed harness adapter; never run bin/syn-watch-arm.sh by hand.` | Sýn/Gná per-harness protocols |
@@ -148,6 +149,7 @@ Gleipnir is the impossible chain that binds one live Brokk session per home so a
 - **Why the walk matters:** running `bin/saga-session-start.sh` **manually** leaves `BROKK_SESSION_PID` unset. Writing `$$` recorded the digest helper's pid, which is dead a second later — an orphan lock that reads as "no live session" and silently blocks supervision from arming. The ancestry walk is the fix; a helper's pid is never authoritative.
 - `gleipnir_lock_owned` walks up to 8 ancestry levels so a helper can prove the session owns the lock.
 - **Refused lock ⇒ read-only session.** No spawn, steer, merge, drain, or repair. The digest says so in stage 1.
+- **One lock per machine (primary).** The primary's lock is machine-global — `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/brokk.lock` (override `BROKK_MACHINE_STATE_DIR`) — so a second checkout of the same host is read-only and cannot masquerade as its own home. **Eindri-homes are exempt:** an Eindri-home holds its own `<home>/state/.lock` so workers run in parallel with the primary (and on remote hosts). `data/eindri-home` or `BROKK_HOME_KIND=eindri` marks a home as an Eindri-home. `gleipnir_lock_acquire` writes `state/.lock-path` (the resolved path) for the non-bash harness readers, and the extensions fall back to the legacy `state/.lock` for a session that started before this contract.
 - **Reclaim:** a lock whose pid is not alive is reclaimable; a live foreign pid is never overridden. The guard's `lockOwnership()` treats missing / other / pid 1 as non-owned.
 
 ## 5. Sýn / Gná — supervision model
@@ -165,7 +167,7 @@ Mechanics:
 
 - `bin/syn-watch-arm.sh --restart` verifies a live lock owner **at arm and on every poll**, writes `state/.supervision-armed`, touches `state/.watch.heartbeat` each cycle, polls `BROKK_WATCH_POLL_SECONDS` (default 5), and exits on a `signal:`/`stale:`/`check:`/`heartbeat:` line. The per-cycle re-check retires an orphaned watcher silently (`watcher: retired - session lock is no longer held`, not actionable) once its home's lock owner dies, so a leftover checkout cannot keep `state/.supervision-armed` fresh for a dead session and silence the turn-end guard. The harness extension owns continuity and re-arms.
 - `bin/syn-turnend-guard.sh` is **inert until the first successful arm** (it returns 0 unless `state/.supervision-armed` exists). When armed, if the heartbeat is missing or older than `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60), it prints the recovery instruction and exits 2 so the adapter re-prompts.
-- **Do not arm before the first successful arm** and **never run `bin/syn-watch-arm.sh` by hand** — the Pi/OpenCode extensions own continuity. The seatbelts `bin/syn-arm-pretool-check.sh` and `bin/syn-cd-pretool-check.sh` exist so the extension can deny a bash command that backgrounds the arm or `cd`s out of the home; v0 is inert (allow) with the contract in place.
+- **Do not arm before the first successful arm** and **never run `bin/syn-watch-arm.sh` by hand** — the Pi/OpenCode extensions own continuity. The PreToolUse seatbelts exist so the extension can deny a bash command that violates an invariant: `bin/syn-arm-pretool-check.sh` blocks backgrounding/detaching the arm (a real `&` or nohup/setsid/disown; `&&` chaining and `bash -n` are allowed), and `bin/syn-guard-pretool-check.sh` blocks destructive shapes against the session lock, the supervision markers, the append-only Runes ledger, the guard/extension machinery itself, secrets, and the fleet-steering registries. They are best-effort guardrails, not a security boundary.
 - **Calm presentation** and the **Pi supervision branch** were deliberately dropped from the port; they are deferred (see `porting-upstream-to-norse.md` §6).
 
 ## 6. Nornir — the cron spine

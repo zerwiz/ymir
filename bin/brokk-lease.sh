@@ -124,7 +124,11 @@ case "$CMD" in
     HOLDER_PID=${BROKK_LEASE_HOLDER_PID:-}
     case "$HOLDER_PID" in *[!0-9]*) HOLDER_PID= ;; esac
     if [ -z "$HOLDER_PID" ]; then
-      HOLDER_PID=$(head -n 1 "$STATE/.lock" 2>/dev/null | tr -cd '0-9' || true)
+      # state/.lock-path records the resolved session lock (machine-global for
+      # the primary, per-home for an Eindri-home); fall back to the legacy path.
+      lock_file="$STATE/.lock"
+      [ -r "$STATE/.lock-path" ] && lock_file=$(tr -d '[:space:]' <"$STATE/.lock-path")
+      HOLDER_PID=$(head -n 1 "$lock_file" 2>/dev/null | tr -cd '0-9' || true)
     fi
     [ -n "$HOLDER_PID" ] || HOLDER_PID=$$
     TMP=$(mktemp "$STATE/.brokk-lease-tmp.XXXXXX")

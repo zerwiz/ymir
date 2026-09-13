@@ -83,6 +83,7 @@ bin[99]{file,does}:
   "syn-arm-pretool-check.sh","syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash commands."
   "syn-asset-pretool-check.sh","syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths."
   "syn-cd-pretool-check.sh","syn-cd-pretool-check.sh - PreToolUse seatbelt for directory-changing commands."
+  "syn-guard-pretool-check.sh","syn-guard-pretool-check.sh — PreToolUse seatbelt for the runtime's load-bearing invariants."
   "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind."
   "syn-watch-arm.sh","syn-watch-arm.sh - arm one Brokk supervision watcher cycle."
   "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over"
