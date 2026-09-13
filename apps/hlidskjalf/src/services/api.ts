@@ -349,7 +349,7 @@ export const gateApi = {
    * Raise a desktop app (Hlidskjalf or Smiðja) from inside the UI — the same
    * launcher the key bindings use, so it raises what is up and starts what is not.
    */
-  desktop: (view: 'hlidskjalf' | 'smidja') =>
+  desktop: (view: 'hlidskjalf' | 'smidja' | 'sessrumnir') =>
     post<{ view: string; ok: boolean; output: string }>('/api/desktop', { view }),
   logout: () => post<{ ok: boolean }>('/api/logout', {}),
   /**
