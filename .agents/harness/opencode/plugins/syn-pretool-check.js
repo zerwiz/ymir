@@ -52,11 +52,17 @@ export const SynPretoolCheck = async ({ directory, worktree }) => {
       const command = output?.args?.command;
       if (!command || typeof command !== "string") return;
 
-      const result = await runProcess(`${root}/bin/syn-arm-pretool-check.sh`, ["--command", command]);
-      if (result.code !== 2) return;
-
-      const reason = result.stderr.trim() || "denied by the watcher-arm PreToolUse seatbelt";
-      throw new Error(reason);
+      // One seatbelt per invariant family; the first denial blocks the command.
+      const checks = [
+        ["syn-arm-pretool-check.sh", "the watcher-arm PreToolUse seatbelt"],
+        ["syn-guard-pretool-check.sh", "the runtime-invariant PreToolUse seatbelt"],
+      ];
+      for (const [script, fallback] of checks) {
+        const result = await runProcess(`${root}/bin/${script}`, ["--command", command]);
+        if (result.code === 2) {
+          throw new Error(result.stderr.trim() || `denied by ${fallback}`);
+        }
+      }
     },
   };
 };
