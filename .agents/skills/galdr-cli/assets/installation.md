@@ -141,6 +141,25 @@ The plan names every change, including the terminal backend (herdr/tmux), the
 host learning, and the desktop placement — so the operator accepts what is
 actually done, not a shorter list that drifted behind the code.
 
+## The operator's way in (auth) — `bin/ymir-setup-auth.sh`
+
+A fresh checkout seeds **no credential**, so the gate has no way in until the
+operator sets one. `step_auth` (interactive install prompts; `--yes`/non-tty
+defers) covers two doors:
+
+```bash
+bin/ymir-setup-auth.sh status            # which door (if any) is configured
+bin/ymir-setup-auth.sh set [--user U]    # a local password -> HLIDSKJALF_AUTH in .env.local
+bin/ymir-setup-auth.sh github            # GitHub sign-in -> GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET
+```
+
+Both write `.env.local` (0600, gitignored); a secret is never printed or put in a
+child process's argv. The gate reads `HLIDSKJALF_AUTH` (`user:pass`) and the
+GitHub OAuth keys (`/api/auth/github`; sign-in names a login but never grants
+access on its own — an account/invite is still required). Restart the gate after
+setting a credential. One login is meant to cover every surface — see the shared
+session below.
+
 ## Letting someone else in (invites)
 
 One operator owns the instance. The installer mints an **invite code**
