@@ -72,6 +72,18 @@ actionable() {
 
 touch_heartbeat
 while :; do
+  # The lock is a live-session contract, not an arm-time snapshot. If the
+  # harness that held this home's lock has exited — or a replacement never took
+  # it — this watcher is an orphan and must retire rather than beat forever for
+  # a dead session (which would also strand `state/.supervision-armed` with a
+  # fresh-enough heartbeat and silence the turn-end guard). Retiring is not
+  # actionable: it prints no `signal:`/`stale:`/`check:` line, so it never wakes
+  # a session.
+  lock_owner=$(gleipnir_lock_owner _lo 2>/dev/null; printf '%s' "${_lo:-}")
+  if [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; then
+    printf 'watcher: retired - session lock is no longer held\n' >&2
+    exit 0
+  fi
   if actionable; then
     exit 0
   fi

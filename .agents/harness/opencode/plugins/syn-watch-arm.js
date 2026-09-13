@@ -114,10 +114,13 @@ function shouldArm(paths) {
   if (existsSync(`${paths.state}/.afk`)) return false;
   if (existsSync(`${paths.config}/x-mode.env`)) return true;
   try {
-    return readdirSync(paths.state).some((name) => name.endsWith(".meta"));
+    if (readdirSync(paths.state).some((name) => name.endsWith(".meta"))) return true;
   } catch {
     return false;
   }
+  // Continuity: supervision was armed before, so the guard expects a live
+  // watcher even when no task metadata remains. Re-arm rather than go blind.
+  return existsSync(`${paths.state}/.supervision-armed`);
 }
 
 async function sessionOwnsLock(paths) {

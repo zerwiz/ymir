@@ -21,13 +21,14 @@ bin/ymir-install.sh --status      # alias of --check
 ## The steps
 
 ```
-install[18]{step,what,self-heals}:
+install[19]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml","creates if missing"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
+  "sessrumnir","the Sessrúmnir desktop GUI (vendored pi-desktop at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — learnt on EVERY host","bin/omarchy-sense.sh learns the setup, bin/desktop-place.sh places the apps, the Omarchy post-update hook (when Omarchy), the wedge-alarm channel, and (on Omarchy) an OFFER of the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build; distinguishes docker-group permission from build failure"
@@ -42,8 +43,8 @@ install[18]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**18** steps are defined. A step is not a row: `--check` on this machine printed
-**17** rows, because `prereqs` also emits `memory-well` and `host` also emits
+**19** steps are defined. A step is not a row: `--check` on this machine printed
+**18** rows, because `prereqs` also emits `memory-well` and `host` also emits
 `agents-config`. `--check` skips the runtime-only steps (`services`, `desktop`,
 `validate`), which have nothing to report when the runtime is not raised, so a
 real run prints those three in addition. The exact set:
@@ -175,6 +176,7 @@ part is off. `--json` for machine consumption.
 | **sandcastle** (`mattpocock/sandcastle`) | Utgard | Docker/Podman/Vercel sandboxes |
 | **no-mistakes** (`kunchenguid/no-mistakes`) | Mjollnir · Glitnir | clean-PR validation gate |
 | **Hermes** (`NousResearch/hermes-agent`, MIT) | — (product name) | worker agent runtime: own brain, memory, skills, subagents, sandbox backends |
+| **pi-desktop** (`FaqFirebase/pi-desktop`, Apache-2.0) | **Sessrúmnir** (vendored at `apps/sessrumnir`) | desktop GUI for the Pi/OMP coding agents — the seat-hall, themed with the Ymir way-of palette |
 
 ## Missing dependencies
 
@@ -199,6 +201,21 @@ hermes-ensure.sh install          # curl -fsSL https://hermes-agent.nousresearch
 
 A user who lacks Hermes gets it at setup (`hermes` step). Config/identity
 (`hermes setup`, auth) stays the user's own; Ymir guarantees only the runtime.
+
+## Sessrúmnir specifically (`bin/sessrumnir-ensure.sh`, `bin/sessrumnir.sh`)
+
+```
+sessrumnir-ensure.sh status           # sessrumnir[1]{dir,deps,built,electron}
+sessrumnir-ensure.sh ensure --install # install deps + build when absent, then report
+sessrumnir-ensure.sh install          # npm install + electron-binary heal + npm run build
+sessrumnir.sh start [path]            # launch the seat-hall (deps installed on first run)
+sessrumnir.sh status | stop
+```
+
+Deps are never committed; the ensure step installs them on first run, exactly as
+`scripts/electron.sh` does for the other desktop apps. The external engine keeps
+its product name `pi-desktop`; the GUI the user sees is Sessrúmnir, themed with
+the Ymir way-of palette.
 
 ## Per-workspace provisioning
 

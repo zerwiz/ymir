@@ -219,6 +219,21 @@ step_hermes() {
   else add hermes SKIP "no hermes-ensure.sh"; fi
 }
 
+# ── 3b2. Sessrúmnir desktop GUI ──────────────────────────────────────────────
+# The seat-hall: a vendored, re-themed fork of pi-desktop (Apache-2.0) at
+# apps/sessrumnir. Deps are never committed; the ensure step installs them on
+# first run, exactly as scripts/electron.sh does for the other desktop apps.
+step_sessrumnir() {
+  [ "$SKIP_ENGINES" = 1 ] && { add sessrumnir SKIP "--skip-engines"; return; }
+  if [ -x "$SCRIPT_DIR/sessrumnir-ensure.sh" ]; then
+    if [ "$CHECK" = 1 ]; then
+      if "$SCRIPT_DIR/sessrumnir-ensure.sh" status >/dev/null 2>&1; then add sessrumnir OK "ready"; else add sessrumnir WARN "not ready (run bin/sessrumnir-ensure.sh install)"; fi
+    else
+      if "$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; then add sessrumnir OK "ready"; else add sessrumnir WARN "not ready — run bin/sessrumnir-ensure.sh install"; fi
+    fi
+  else add sessrumnir SKIP "no sessrumnir-ensure.sh"; fi
+}
+
 # ── 3c. Þjazi backend (herdr-first) ──────────────────────────────────────────
 # Ymir spawns agents into terminal panes, so a backend must exist. herdr is
 # preferred (protocol 14+, presentation spaces at 0.8.0+); tmux is an accepted
@@ -468,7 +483,7 @@ step_register() {
     printf '# Ymir — first setup\n\n'
     printf 'Provisioned by `bin/ymir-install.sh` at %s.\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     printf '## Workspaces\n\n'; printf -- '- work (company: wayof)\n- personal\n\n'
-    printf '## Engines\n\n- Yggdrasil → treehouse\n- Utgard → sandcastle\n- Mjollnir/Glitnir → no-mistakes\n\n'
+    printf '## Engines\n\n- Yggdrasil → treehouse\n- Utgard → sandcastle\n- Mjollnir/Glitnir → no-mistakes\n- Hermes → hermes-agent (worker runtime)\n- Sessrúmnir → pi-desktop (desktop GUI, vendored at apps/sessrumnir)\n\n'
     printf '## Next\n\n1. `gh auth login` (your own GitHub login).\n'
     printf '2. Fill each project\x27s `git{}` block in `hodd/identity/projects.yaml`.\n'
     printf '3. `scripts/start.sh` then open http://127.0.0.1:3888/.\n'
@@ -518,7 +533,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_invite; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_invite; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate
