@@ -7,9 +7,16 @@ An Electron desktop application that acts as a GUI frontend for the Pi and OMP c
 > v0.1.7-alpha) rebranded **Sessrúmnir** — the seat-hall where the Allfather
 > converses with the machine. Keep `LICENSE` and the upstream attribution; add
 > changes to `NOTICE` when they land. The external engine keeps its product name
-> `pi-desktop`; the GUI the user sees is `Sessrúmnir`, themed with the Ymir
-> way-of palette (sky `#38bdf8` on deep navy). Dependencies are never committed —
-> `npm install` on first launch.
+> `pi-desktop`; the GUI the user sees is `Sessrúmnir`, wearing **the carved cloth
+> of the halls** — the stone/bone/bronze/blood palette and the
+> Cormorant/Newsreader/IBM Plex Mono type of the landing page
+> (`CodeP/ymir-homepage/src/lore.html` `:root`), cut into `src/renderer/src/index.css`
+> `@theme` and shipped as the built-in themes `sessrumnir` (the seat's default)
+> and `fensalir` (Fensalir, the weaving halls). The cloth is the **default, not a
+> cage**: every other built-in theme, any user theme, and `high-contrast` stay
+> selectable and win when chosen. Components read the semantic `--color-*` tokens
+> (or `text-inverse` on an accent plate) — never a literal colour. Dependencies
+> are never committed — `npm install` on first launch.
 
 ## Version
 
@@ -311,6 +318,7 @@ src/
 
 - CodeMirror 6-backed editor for opening and editing project files
 - Theme-aware syntax highlighting via a custom `HighlightStyle` (in `code-editor-highlight.ts`) whose token colors are CSS variables. The theme resolver (`shared/theme/resolve.ts`) emits each theme's `--cm-*` palette from the theme file's `syntax` block (or `syntax-defaults.ts`), so the editor restyles when the user switches themes — no editor logic needed.
+- The carved cloth's syntax palette (bronze keyword, steel string, bone-faint comment) is pinned in `themes/fensalir.json`; the same `--cm-*` variables drive the chat's markdown code blocks, so editor and chat are one cloth.
 - 15+ languages: JS/TS/JSX/TSX, JSON, Markdown, HTML, CSS/SCSS/Less, Python, Rust, Go, Java, PHP, XML/SVG, SQL, YAML, C/C++/C#
 - Save/Revert/Close controls with dirty-state tracking and 2s "saved" feedback
 - Debounced onChange (150ms) and race-safe file switching

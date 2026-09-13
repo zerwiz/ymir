@@ -340,7 +340,7 @@ function HomeScreenInfo(): React.JSX.Element {
 
         <div className="mb-6 flex flex-col items-center text-center">
           <img src={ymirMark} alt="Sessrúmnir" className="h-16 w-16" />
-          <h1 className="mt-4 text-2xl font-semibold text-primary">Sessrúmnir</h1>
+          <h1 className="font-display mt-4 text-3xl font-semibold text-primary">Sessrúmnir</h1>
           <p className="mt-1 text-sm text-dim">Take your seat. Open a workspace, or take up the last thread.</p>
         </div>
 

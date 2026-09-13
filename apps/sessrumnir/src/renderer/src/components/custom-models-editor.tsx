@@ -299,7 +299,7 @@ export function CustomModelsEditor(): React.JSX.Element {
       <div className="flex items-center gap-3">
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover transition-colors"
+          className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm text-inverse hover:bg-accent-hover transition-colors"
         >
           <Save size={14} />
           Save {modelsFileName}

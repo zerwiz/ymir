@@ -116,7 +116,7 @@ export function NotePicker(): React.JSX.Element | null {
                   </p>
                   <button
                     onClick={openNotesTab}
-                    className="mt-3 rounded-md bg-accent px-3 py-1.5 text-xs text-white hover:bg-accent-hover transition-colors"
+                    className="mt-3 rounded-md bg-accent px-3 py-1.5 text-xs text-inverse hover:bg-accent-hover transition-colors"
                   >
                     Create a note
                   </button>

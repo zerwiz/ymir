@@ -68,7 +68,7 @@ export function CodeEditor({
             height: '100%',
           },
           '.cm-scroller': {
-            fontFamily: "'JetBrains Mono Variable', 'JetBrains Mono', 'OpenMoji Color', 'Fira Code', 'Cascadia Code', monospace",
+            fontFamily: "'IBM Plex Mono', 'JetBrains Mono Variable', 'OpenMoji Color', 'Fira Code', 'Cascadia Code', monospace",
           },
           '.cm-content': {
             caretColor: 'var(--color-primary)',

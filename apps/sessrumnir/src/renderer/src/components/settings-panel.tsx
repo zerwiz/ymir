@@ -1061,7 +1061,7 @@ export function SettingsPanel(): React.JSX.Element {
         <div className="mt-8 flex gap-3">
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover transition-colors"
+            className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm text-inverse hover:bg-accent-hover transition-colors"
           >
             {saved ? <Check size={14} /> : <Save size={14} />}
             {saved ? 'Saved!' : 'Save Settings'}
@@ -1117,7 +1117,7 @@ export function SettingsPanel(): React.JSX.Element {
                   setShowCouncilWarning(false)
                   void saveCouncil({ enabled: true })
                 }}
-                className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover transition-colors"
+                className="rounded-md bg-accent px-4 py-2 text-sm text-inverse hover:bg-accent-hover transition-colors"
               >
                 Enable
               </button>
@@ -1199,8 +1199,8 @@ function Toggle({
       }`}
     >
       <span
-        className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
-          checked ? 'translate-x-4' : 'translate-x-1'
+        className={`inline-block h-3.5 w-3.5 rounded-full transition-transform ${
+          checked ? 'translate-x-4 bg-inverse' : 'translate-x-1 bg-primary'
         }`}
       />
     </button>

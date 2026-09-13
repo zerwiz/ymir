@@ -182,7 +182,7 @@ function InstallBar(): React.JSX.Element {
           type="button"
           onClick={handleInstall}
           disabled={installing || !installInput.trim()}
-          className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm text-white hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm text-inverse hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {installing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
           Install
@@ -418,7 +418,7 @@ const CatalogTab = memo(function CatalogTab({
                     <button
                       type="button"
                       onClick={() => onInstall(pkg.installCommand)}
-                      className="flex items-center gap-1 rounded bg-accent px-2.5 py-1 text-xs text-white hover:bg-accent-hover transition-colors"
+                      className="flex items-center gap-1 rounded bg-accent px-2.5 py-1 text-xs text-inverse hover:bg-accent-hover transition-colors"
                     >
                       <Download size={12} />
                       Install
