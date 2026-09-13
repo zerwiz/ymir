@@ -288,10 +288,10 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 | Build tool categories | `.agents/skills/galdr-cli/assets/build-tool-categories.md` | 7 tool categories for synthesis |
 | TOON schemas | `.agents/skills/galdr-cli/schemas/toon-schemas.md` | 7 schema types for validation |
 | Compliance requirements | `.agents/skills/galdr-cli/assets/compliance-requirements.md` | 5 Utgard gates + PI gate |
-| Firstmate/PI config | `.agents/skills/galdr-cli/assets/firstmate/pi-profile.yml` | PI harness profile |
-|  | `.agents/skills/galdr-cli/assets/firstmate/herdr-profile.toml` | Hermóðr pane layout |
-|  | `.agents/skills/galdr-cli/assets/firstmate/fm-spawn.schema.json` | Dispatch payload schema |
-|  | `.agents/skills/galdr-cli/assets/firstmate/supervision-tree.yml` | Valhalla supervision |
+| Brokk/PI config | `.agents/skills/galdr-cli/assets/pi-boot/pi-profile.yml` | PI harness profile |
+|  | `.agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml` | Hermóðr pane layout |
+|  | `.agents/skills/galdr-cli/assets/pi-boot/einherjar-spawn.schema.json` | Dispatch payload schema |
+|  | `.agents/skills/galdr-cli/assets/pi-boot/supervision-tree.yml` | Valhalla supervision |
 | Templates | `.agents/assets/templates/PRD_template.md` | PRD boilerplate |
 |  | `.agents/assets/templates/env.template` | Environment template |
 |  | `.agents/assets/templates/system_prompt.template` | System prompt template |
@@ -333,20 +333,20 @@ Available as `/command-name` in OpenCode:
 
 ---
 
-## 17. PI / FIRSTMATE INTEGRATION (W0031)
+## 17. PI PRIMARY BOOT (W0031)
 
-Ymir's system primary boots as **PI** exactly like firstmate:
+Ymir's system primary boots as **PI** with the same boot contract:
 
-- **fm-harness** — resolution (`pi` default profile)
-- **fm-spawn** — dispatch Eindri workers via crew orchestration
+- **Hamr** — resolution (`pi` default profile)
+- **Einherjar** — dispatch Eindri workers
 - **Runtime backend** — herdr/tmux (Þjazi protocol 14+)
 - **Pi supervision branch** — Valhalla supervision tree
-- **Worktrees** — treehouse (Yggdrasil) for isolation
+- **Worktrees** — Yggdrasil for isolation
 - **Command observer** — read-only (W0012) until Ratatoskr two-way
 
-PI CLI must: support `fm-harness` profile, emit TOON with `firstmate_crew` schema, declare Utgard compliance, integrate with herdr, observe into Mimirsbrunn on dispatch.
+PI CLI must: support the `Hamr` profile, emit TOON with the `rodd` operational schema, declare Utgard compliance, integrate with herdr, observe into Mimirsbrunn on dispatch.
 
-Firstmate assets: `.agents/skills/galdr-cli/assets/firstmate/` (pi-profile.yml, herdr-profile.toml, fm-spawn.schema.json, supervision-tree.yml)
+PI boot assets: `.agents/skills/galdr-cli/assets/pi-boot/` (pi-profile.yml, herdr-profile.toml, einherjar-spawn.schema.json, supervision-tree.yml)
 
 ---
 

@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 2026-09-13 — the imported names leave the halls (Norse naming purge)
+
+- **"firstmate" retargeted to Ymir's own names across every Ymir-owned surface.**
+  The upstream distro's nautical vocabulary is gone from the docs, skills, `bin/`,
+  config, and the Hlidskjalf review copy: `firstmate` → **Brokk**, `secondmate` →
+  **Eindri-home**, `crew`/`crewmate` → **Eindri**, `captain` → **Allfather**
+  (`docs/lore.md`, `docs/Architecture.md`, `.agents/agents/brokk.md`,
+  `.agents/skills/herdr-panes/assets/{herdr,tmux}-backend.md`,
+  `.agents/skills/eindri-homes/assets/control-plane.md`,
+  `.agents/skills/saga-bearings/assets/board-template.html`,
+  `.agents/skills/ymir-host/assets/thjazi.md`, `bin/README.md`,
+  `workspace/config/toolchain.md`, `apps/hlidskjalf/**`).
+- **Engine literals kept.** Every real upstream identifier stays verbatim — the
+  Herdr labels (`firstmate`, `2ndmate-<id>`, `firstmate-<id>`), the home marker
+  `.fm-secondmate-home`, the envelope `FIRSTMATE_OP: ` and `[fm-from-firstmate]`,
+  and all `FM_*`/`fm-*` names — because `.agents/backend/` (the vendored engine)
+  and `assets/reference/` (provenance) are untouched.
+- **Licensing.** `NOTICE` now records the upstream **firstmate** distro
+  (`github.com/kunchenguid/firstmate`, MIT, © kunchenguid) and a README "Built on"
+  section points to it; the MIT copyright/permission notice is retained.
+- **Governed asset:** `galdr-cli/assets/hlidskjalf-ui.md` records the Allfather
+  review copy in the same change. `compliance-check.sh` 10/10 PASS.
+
 ## 2026-09-13 — the new tree, the mesh, the seat-hall
 
 - **Everything in the new tree:** the Sessrúmnir work plus the orphaned fixes

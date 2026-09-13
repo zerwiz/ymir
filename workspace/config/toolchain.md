@@ -22,7 +22,7 @@ toolchain[16]{domain,engine,norse,wrapper,auth_env}:
   "cloud models","opencode-go bridge","Bifrost bridge","bin/bifrost-bridge.sh","OPENCODE_GO_API_KEY"
   "harnesses","OpenCode / Pi / Claude / Codex / Cursor","Hamr","bin/hamr-harness.sh","—"
   "backlog","tasks-axi","Nornir","(.agents/config/cron.yaml)","—"
-  "library of the halls","command-factory / firstmate / .compliance","—","—","—"
+  "library of the halls","command-factory / firstmate (upstream) / .compliance","—","—","—"
 ```
 
 ## Auth status

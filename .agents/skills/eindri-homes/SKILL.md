@@ -52,7 +52,7 @@ bin/erindi-brief.sh <id> --Eindri-home {<project>...|--no-projects}
 The scaffold writes a charter brief instead of a task brief.
 Set `BROKK_EINDRI_HOME_CHARTER='<charter>'` to fill the charter text and `BROKK_EINDRI_HOME_SCOPE='<scope>'` when the routing scope differs.
 If you scaffold without `BROKK_EINDRI_HOME_CHARTER`, replace the `{TASK}` placeholder before seeding.
-Pass `--no-projects` instead of a project list to scaffold a project-less charter for a domain whose subject is the Brokk repo itself, whose home is a Brokk worktree and whose crews take pooled worktrees of the same repo.
+Pass `--no-projects` instead of a project list to scaffold a project-less charter for a domain whose subject is the Brokk repo itself, whose home is a Brokk worktree and whose Eindri take pooled worktrees of the same repo.
 `--no-projects` is mutually exclusive with a project list, and omitting both still fails loudly, so an accidental omission is never mistaken for a deliberate project-less seed.
 Re-seeding a populated home as project-less is refused non-destructively when the home contains project clones or `data/projects.md` entries.
 Retire or clean that home first, and re-scaffold a stale project-bearing charter with `--no-projects` before seeding.
@@ -287,5 +287,5 @@ tools[6]{tool,plane}:
 
 ```
 assets[1]{path,holds}:
-  "assets/control-plane.md","agent lifecycle control plane (from firstmate): DATA plane (conversational send) vs CONTROL plane (allowlisted verbs interrupt/exit/relaunch), per-harness mechanics, per-backend capability"
+  "assets/control-plane.md","agent lifecycle control plane (from the upstream distro): DATA plane (conversational send) vs CONTROL plane (allowlisted verbs interrupt/exit/relaunch), per-harness mechanics, per-backend capability"
 ```
