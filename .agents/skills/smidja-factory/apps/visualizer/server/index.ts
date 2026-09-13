@@ -167,6 +167,21 @@ const server = Bun.serve({
         } satisfies HealthResponse),
     ),
 
+      // The shared login, verified LIVE: forward the browser's cookie to the one
+      // authority (the gate). No token is read from disk — a file that claims a
+      // session is exactly "logged in when you are not".
+      "/api/auth": safely(async (req) => {
+        const gate = process.env.YMIR_GATE_URL ?? "http://127.0.0.1:3889";
+        const cookie = req.headers.get("cookie") ?? "";
+        try {
+          const r = await fetch(`${gate}/api/session`, { headers: cookie ? { cookie } : {} });
+          const s = (await r.json()) as { authed?: boolean; login?: string | null };
+          return json({ authed: !!s.authed, login: s.login ?? null });
+        } catch {
+          return json({ authed: false, login: null });
+        }
+      }),
+
       // A speed-start from the UI: the same launcher the key bindings use. The
       // repo root is found by walking up to the checkout holding
       // scripts/electron.sh, so it works wherever the app is served from.

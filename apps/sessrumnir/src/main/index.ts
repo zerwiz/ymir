@@ -390,6 +390,9 @@ function createApplicationMenu(): void {
         { label: 'Go to Hlidskjalf', click: () => { void raiseHall('hlidskjalf') } },
         { label: 'Go to Smiðja', click: () => { void raiseHall('smidja') } },
         { type: 'separator' },
+        // The gate holds the one session; Sessrúmnir has no gate cookie, so it
+        // signs in through the gate rather than claiming a session it lacks.
+        { label: 'Sign in to Ymir…', click: () => { void shell.openExternal(`${YMIR_GATE.replace(/:3889$/, ':3888')}/`) } },
         { label: 'Sign out of Ymir', click: () => { void signOutOfYmir() } },
         { type: 'separator' },
         { role: 'quit' },

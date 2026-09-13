@@ -256,8 +256,11 @@ All components read tokens from `tokens.css`; color-only states are forbidden
   is minted when nothing is live (idempotent) and printed at the end of an
   install. `register` re-checks the invite under a re-read of the store, so two
   simultaneous registrations cannot both spend the last use. Account passwords
-  are argon2id-hashed and land in `state/accounts.json` (mode 0600,
-  gitignored); sessions in `state/gate-sessions.json`.
+  are argon2id-hashed and land in `state/accounts.json` (mode 0600, gitignored).
+  **Sessions are in-memory only** (a `token → login` map) and exist solely as the
+  httpOnly `ymir_session` cookie — no session file and no header credential, so
+  there is no bearer at rest to replay and no file that can claim a session; a
+  gate restart ends them. Other surfaces verify live against the gate.
 - **GitHub sign-in** is the same gate by another door, once
   `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set (`ymir_oauth_state` cookie,
   10-minute window).

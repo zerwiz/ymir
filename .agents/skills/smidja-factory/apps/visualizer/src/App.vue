@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, hrefFor, hrefForMemory, hrefForDecisions, hrefForStats, hrefForChat, hrefForSettings, phaseCrumb } from './lib/router'
 import SessionsList from './components/SessionsList.vue'
 import SessionTrace from './components/SessionTrace.vue'
@@ -15,6 +15,19 @@ const isDecisions = computed(() => route.value.adwId === 'decisions')
 const isStats = computed(() => route.value.adwId === 'stats')
 const isChat = computed(() => route.value.adwId === 'chat')
 const isSettings = computed(() => route.value.adwId === 'settings')
+
+// The shared login, verified LIVE by the gate (server /api/auth forwards the
+// browser cookie). We never read a file that *claims* a session — that is how a
+// user looks logged in when they are not.
+const auth = ref<{ authed: boolean; login: string | null }>({ authed: false, login: null })
+const gateUrl = 'http://127.0.0.1:3889'
+onMounted(async () => {
+  try {
+    auth.value = await (await fetch('/api/auth')).json()
+  } catch {
+    auth.value = { authed: false, login: null }
+  }
+})
 const isMeta = computed(() => isMemory.value || isDecisions.value || isStats.value || isChat.value || isSettings.value)
 
 // ── Theme toggle: the neutral theme is the default; data-theme="classic"
@@ -108,6 +121,8 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
         </template>
       </nav>
       <span class="live-hint"><span class="live-dot" /> live</span>
+      <a v-if="auth.authed" :href="gateUrl" target="_blank" rel="noreferrer" title="Signed in to the gate" style="margin-right:6px;color:inherit;text-decoration:none;font-size:12px;opacity:.85">ᛉ {{ auth.login }}</a>
+      <a v-else :href="gateUrl" target="_blank" rel="noreferrer" title="Sign in to Ymir" style="margin-right:6px;color:inherit;text-decoration:none;font-size:12px;opacity:.85">Sign in</a>
       <div role="group" aria-label="Switch hall" style="display:flex;gap:2px;margin-right:6px">
         <button type="button" title="Hlidskjalf — the control plane" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᚺ</button>
         <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:#38bdf8;cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>

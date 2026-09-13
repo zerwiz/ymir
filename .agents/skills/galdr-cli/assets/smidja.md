@@ -96,6 +96,11 @@ installed on this machine) — do not reintroduce `sqlite3`.
   `SMIDJA_VIZ_API_PORT`.
 - Served under Hlidskjalf's **Sessions** gate via **Open visualizer**
   (`VITE_VISUALIZER_URL`, default `http://127.0.0.1:8437`).
+- **Shared login, verified live (added 2026-09-13).** The server exposes
+  `GET /api/auth`, which forwards the browser's cookie to the gate's
+  `/api/session` and returns `{authed, login}`; `App.vue` shows a "Sign in" link
+  (to the gate) or "ᛉ <login>" from that live answer. It **never** reads a
+  session file — a token on disk would let a user look logged in when they are not.
 - See `docs/lore.md` §XIII.
 
 ## In Hlidskjalf (the gate API)
