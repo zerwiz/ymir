@@ -112,20 +112,20 @@ export function App(): React.JSX.Element {
         </div>
       )}
       {showUpdateBanner && updateInfo && (
-        <div className="flex shrink-0 items-center justify-center gap-3 bg-accent px-4 py-1.5 text-xs text-white">
+        <div className="flex shrink-0 items-center justify-center gap-3 bg-accent px-4 py-1.5 text-xs text-inverse">
           <ArrowUpCircle size={14} className="shrink-0" />
           <span>
             Sessrúmnir <strong>v{updateInfo.latestVersion}</strong> is available — you&apos;re on v{updateInfo.currentVersion}.
           </span>
           <button
             onClick={() => window.piDesktop.system.openExternal(updateInfo.url)}
-            className="rounded bg-white/20 px-2 py-0.5 font-medium hover:bg-white/30 transition-colors"
+            className="rounded bg-inverse/20 px-2 py-0.5 font-medium hover:bg-inverse/30 transition-colors"
           >
             Download
           </button>
           <button
             onClick={dismissUpdate}
-            className="rounded p-0.5 text-white/80 hover:bg-white/20 hover:text-white transition-colors"
+            className="rounded p-0.5 text-inverse/80 hover:bg-inverse/20 hover:text-inverse transition-colors"
             aria-label="Dismiss update notification"
             title="Dismiss"
           >

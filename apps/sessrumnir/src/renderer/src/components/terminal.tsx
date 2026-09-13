@@ -69,7 +69,7 @@ export function TerminalPanel(): React.JSX.Element | null {
     const terminal = new XTerm({
       cursorBlink: true,
       convertEol: true,
-      fontFamily: "'JetBrains Mono Variable', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+      fontFamily: "'IBM Plex Mono', 'JetBrains Mono Variable', 'Fira Code', 'Cascadia Code', monospace",
       // Use the Terminal Font Size setting (or the unsaved settings draft),
       // read once at creation. Applied on the next mount — i.e. when the user
       // returns to chat — rather than live, to avoid resizing a hidden pty.

@@ -11,7 +11,7 @@ import { BUILTIN_THEME_IDS as SHARED_BUILTIN_THEME_IDS } from '../../../shared/t
 
 const themesDir = dirname(fileURLToPath(import.meta.url))
 const EXPECTED_IDS = [
-  'sessrumnir', 'dark', 'light', 'nord', 'gruvbox', 'breeze-dark', 'breeze-light', 'breeze-claudius',
+  'sessrumnir', 'fensalir', 'dark', 'light', 'nord', 'gruvbox', 'breeze-dark', 'breeze-light', 'breeze-claudius',
 ]
 
 test('renderer and shared built-in theme id lists never diverge', () => {
@@ -21,7 +21,7 @@ test('renderer and shared built-in theme id lists never diverge', () => {
   )
 })
 
-test('all 8 built-in themes exist, validate, and fully resolve', () => {
+test('all 9 built-in themes exist, validate, and fully resolve', () => {
   const files = readdirSync(themesDir).filter((f) => f.endsWith('.json')).sort()
   assert.deepEqual(files, [...EXPECTED_IDS].sort().map((id) => `${id}.json`))
   for (const file of files) {
@@ -49,5 +49,38 @@ test('ported themes pin every token in overrides (parity guarantee)', () => {
       if (seedBacked.has(token) || derivedOnly.has(token)) continue
       assert.ok(theme.overrides?.[token], `${id}: token ${token} not pinned`)
     }
+  }
+})
+
+// The cloth is one. `sessrumnir` (the seat's own default) and `fensalir` (the
+// weaving halls, named) are the same carved palette: the seat cannot drift from
+// the halls, and a name/description change is the only difference permitted.
+test('the cloth is one: Sessrúmnir and Fensalir resolve identically', () => {
+  const read = (id: string) =>
+    resolveThemeVars(validateThemeFile(
+      JSON.parse(readFileSync(join(themesDir, `${id}.json`), 'utf8')),
+    ))
+  assert.deepEqual(read('sessrumnir'), read('fensalir'))
+})
+
+// The CSS base in index.css is the first paint (before the ThemeEngine writes
+// the resolved vars onto <html>) and the Tailwind `@theme` surface. It must be
+// the same cloth as the theme file, or the app would flash one palette and
+// settle into another.
+test('the CSS @theme base and the cloth theme never drift', () => {
+  const css = readFileSync(join(themesDir, '..', 'index.css'), 'utf8')
+  const block = /@theme\s*\{([\s\S]*?)\n\}/.exec(css)
+  assert.ok(block, 'index.css has no @theme block')
+  const declared = new Map<string, string>()
+  for (const line of block[1].split('\n')) {
+    const match = /^\s*(--color-[a-z-]+)\s*:\s*([^;]+);/.exec(line)
+    if (match) declared.set(match[1], match[2].trim())
+  }
+  const cloth = resolveThemeVars(validateThemeFile(
+    JSON.parse(readFileSync(join(themesDir, 'fensalir.json'), 'utf8')),
+  ))
+  for (const token of TOKEN_NAMES) {
+    const key = cssVarForToken(token)
+    assert.equal(declared.get(key), cloth[key], `@theme ${key} drifted from the cloth`)
   }
 })
