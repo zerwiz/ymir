@@ -270,6 +270,7 @@
 }
 .search input {
   flex: 1;
+  min-width: 0;
   background: none;
   border: none;
   outline: none;
@@ -608,5 +609,5 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
   flex-shrink: 0;
 }
 .topbar .search {
-  min-width: 120px;
+  min-width: 280px;
 }
