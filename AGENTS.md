@@ -232,6 +232,8 @@ Quick reference:
 | **Muninn** | Memory — session-knowledge curation, routing, persistence |
 | **Huginn** | Observation — the raven that flies daily for Odin |
 | **Þjazi** | Terminal backend — sub-agent panes, protocol 14+ |
+| **Gróa** | Updater shaman — the völva who renews: fast-forwards Brokk and its homes, then mends forward |
+| **Eir** | The healer — diagnoses every surface, then mends what is broken |
 
 The lore is not optional reading — it is the naming law. Every subsystem, every
 component, every process must be named for the figure whose role matches its work.
@@ -340,7 +342,16 @@ Law: `RULES/06-append-only.md`.
 - **Structure updates:** `bin/ymir-migrate.sh status|apply` — versioned,
   idempotent migrations in `.agents/migrations/` heal an old home forward
   (e.g. `0001-hodd-layout`). Run after an update; `bin/ymir-install.sh` and
-  `bin/brokk-update.sh` call it.
+  `bin/groa-update.sh` call it.
+- **Update — Gróa (the updater shaman):** `bin/groa-update.sh [--check]`
+  fast-forwards Brokk and every registered Eindri-home (never forced), then
+  mends forward; `bin/brokk-update.sh` is her alias. Her door is the
+  `groa-update` skill (`/updateBrokk`). She reports `reread-Brokk` and
+  `galdr-reread` — when the instruction surface moved, re-read `AGENTS.md` and
+  reflect it in the owning Galdr asset.
+- **Repair — Eir (the healer):** `bin/eir-doctor.sh [check|fix]` composes every
+  `*-ensure.sh` surface, diagnoses the system, and mends the broken. Gróa keeps
+  it current; Eir makes it work.
 - **Your agent set:** `config/agents.yaml` (template `.example`, private) picks
   each agent's harness + model; `bin/agents-config.sh show|apply`, and
   `bin/agent-run.sh <agent> "<task>"`. Rule: local models → **pi**, hosted →

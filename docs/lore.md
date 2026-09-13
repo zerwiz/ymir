@@ -997,3 +997,35 @@ Hlidskjalf and the visualizer are two windows on the same smithy: the seat that
 sees all of Ymir, and the eye on the work in the fire. Open them side by side.
 
 *The seeress keeps the ledger; the eye keeps the fire in view.*
+
+---
+
+## XVII. The Renewal and the Healing (Gróa, Eir)
+
+The tree does not stay young on its own. Two figures tend it when the work is
+not going forward but must still be made right: one who **renews**, and one who
+**heals**.
+
+**Gróa** is the *völva* — the shamaness whose name means *to grow*. In the old
+tales she comes to mend what battle has left broken. In Ymir she is the
+**updater shaman**: she fast-forwards Brokk and every registered Eindri-home to
+the latest from origin — never forcing, never stashing, advancing only a clean
+fast-forward, and skipping anything dirty, diverged, or offline — then mends the
+tree forward through its migrations and fleet preferences. **Brokk** runs her;
+**Galdr** owns the assets she must be reflected in the moment the instruction
+surface moves (`galdr-reread`); the `groa-update` skill (`/updateBrokk`) is her
+door. She lives in `bin/groa-update.sh`; `bin/brokk-update.sh` is her old name,
+kept as an alias.
+
+**Eir** is the goddess of healing, counted the best of physicians — she who
+mends and spares. In Ymir she is the **doctor**: she composes every surface that
+owns its own health (the `*-ensure.sh` tools, the memory well, the MCP wiring,
+the session lock, the migrations), tells the Allfather plainly which are whole
+and which are broken, and — on `fix` — mends what can be mended safely. Gróa
+keeps the tree *current*; Eir makes it *work*. She lives in `bin/eir-doctor.sh`.
+
+Where **Gleipnir** binds one session to the reins and **Sýn** keeps the watch,
+Gróa and Eir keep the machine itself alive between those sessions: the one
+renewing, the other healing.
+
+*The völva renews the tree; the healer mends what breaks under it.*
