@@ -89,7 +89,7 @@ const host = window.location.host
 const hallUrl =
   host.startsWith('localhost') || host.startsWith('127.0.0.1')
     ? 'http://localhost:4322'
-    : 'https://hall.ymir.zerw.org'
+    : 'https://hall.ymir.zerwiz.org'
 </script>
 
 <template>
