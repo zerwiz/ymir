@@ -244,6 +244,27 @@ All components read tokens from `tokens.css`; color-only states are forbidden
   activity; node ring = status.
 - Trace/timeline: JetBrains Mono; branch/merge glyphs reused from Yggdrasil theme.
 
+### 5.4 Identity & accounts (the gate)
+
+- The gate is closed by default once a credential or account exists: every
+  `/api/*` route (and the Smíðja host) needs an httpOnly `ymir_session` cookie.
+  Only `/api/login`, `/api/register`, `/api/session`, `/api/logout` and
+  `/api/health` ride outside it.
+- **Operator credential** (`HLIDSKJALF_AUTH="user:pass"` from `.env.local`,
+  never inline) opens the gate and seeds the allfather account row.
+- **Invite-gated registration** (`bin/ymir-invite.sh`): a code with a use-limit
+  is minted when nothing is live (idempotent) and printed at the end of an
+  install. `register` re-checks the invite under a re-read of the store, so two
+  simultaneous registrations cannot both spend the last use. Account passwords
+  are argon2id-hashed and land in `state/accounts.json` (mode 0600,
+  gitignored); sessions in `state/gate-sessions.json`.
+- **GitHub sign-in** is the same gate by another door, once
+  `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set (`ymir_oauth_state` cookie,
+  10-minute window).
+- Sessions are httpOnly `ymir_session` cookies, SameSite=Lax, 30-day Max-Age.
+- Heimdall (oauth2-proxy) remains the production road: httpOnly session cookie
+  with the same shape, so the client swap is mechanical.
+
 ---
 
 ## 6. Content & voice

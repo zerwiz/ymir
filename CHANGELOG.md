@@ -1,5 +1,65 @@
 # CHANGELOG
 
+## 2026-09-13 — the new tree, the mesh, the seat-hall
+
+- **Everything in the new tree:** the Sessrúmnir work plus the orphaned fixes
+  were migrated from the `ymir-old` working tree into this canonical tree —
+  `apps/sessrumnir/` (deps vendored locally, never committed), the two
+  `bin/sessrumnir-*.sh` scripts, `step_sessrumnir` in `bin/ymir-install.sh`,
+  the Hoard registry entry, the `installation.md` asset, and the
+  `syn-watch-arm.js` continuity fix (re-arm when `.supervision-armed` exists
+  even with no task metadata). The superseded self-service register-gate work
+  was **not** ported — this tree's committed invite-gate is canonical.
+- **Full install ran green** in the new tree: every step OK, invite minted
+  (`YMIR-DBN4-FXEX`), all five services up, `bin/ymir-validate.sh` 11/11 PASS.
+- **Ratatoskr mesh healed:** the `a2abridge` engine (MIT,
+  `vbcherepanov/a2abridge` v3.0.0) is installed at `~/.a2abridge/bin/`, its
+  directory daemon runs on `127.0.0.1:7777`, and `bin/ratatoskr.sh
+  status|doctor` pass. Forged `bin/a2abridge-ensure.sh` (installs the engine,
+  patches the systemd unit's unwritable `/var/log` log paths to journal,
+  keeps the directory up) and wired it into migration `0002-a2a-mcp.sh`, so
+  every install/update heals the mesh instead of leaving a dangling MCP path.
+- **MCP bridges fixed:** `engram-mcp` failed at startup (its Python env
+  lacked the `mcp` SDK; mcp 2.x renamed FastMCP, so it is pinned to `mcp<2`)
+  — the server now initializes against the `kaia.engram` store. `a2abridge`
+  MCP is wired into both pi and opencode via `bin/a2a-mcp.sh install`.
+- **Docs:** `docs/design.md` §5.4 documents the gate exactly as committed
+  (operator credential + invite-gated registration + GitHub door + httpOnly
+  30-day session); the hlidskjalf-ui skill gained the `register` surface row.
+
+## 2026-09-13 — Sessrúmnir, the seat-hall
+
+- **Sessrúmnir adopted:** the Apache-2.0 **pi-desktop** GUI
+  (`FaqFirebase/pi-desktop`, v0.1.7-alpha) is vendored at `apps/sessrumnir/`
+  and rebranded **Sessrúmnir** — the seat-hall where the Allfather converses
+  with the machine. The external engine keeps its product name; the GUI the
+  user sees is Sessrúmnir, themed with the way-of palette (sky `#38bdf8` on
+  deep navy) as the new default built-in theme. Window titles, launcher,
+  package identity, tray/autostart strings, data-dir name, and the Pi logo
+  (now a Sowilo rune bolt) are rebranded; upstream `LICENSE` is preserved and
+  `NOTICE` records the adoption.
+- **Forge scripts:** `bin/sessrumnir-ensure.sh` (status/ensure/install — deps
+  are never committed, installed on first run with the electron-binary heal
+  `scripts/electron.sh` already uses) and `bin/sessrumnir.sh`
+  (start/status/stop with a workspace argument).
+- **Install wiring:** `bin/ymir-install.sh` gains a `sessrumnir` step (after
+  `hermes`) and lists Sessrúmnir in `workspace/INSTALL.md`; the
+  `installation.md` asset's step table, adopted-engines table, and Hermes-style
+  section are updated in the same change.
+- **Registry & audit:** the Hoard registry (`hodd/identity/projects.yaml`)
+  gains the `sessrumnir` project (upstream remote); the adoption is inscribed
+  in Runes.
+- **Not yet installed:** `apps/sessrumnir/node_modules` is absent — run
+  `bin/sessrumnir-ensure.sh install` when ready.
+
+### 2026-09-13 — the seat-hall raised
+
+- `bin/sessrumnir-ensure.sh install` completed: deps + Electron binary + build
+  all green; full test suite **989/989 pass**, typecheck and lint clean (the
+  `autostart-linux` test was updated for the new brand name). `bin/sessrumnir.sh
+  start` raised the window — Hyprland reports class `sessrumnir`, title
+  `Sessrúmnir`, data under `~/.config/sessrumnir`.
+
 ## 2026-09-12 — The well actually installs (it never did)
 
 - **The memory engine was never installed by the installer.** `bin/prereq-ensure.sh`

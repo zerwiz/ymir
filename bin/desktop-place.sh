@@ -31,10 +31,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 HYPR_DIR="$HOME/.config/hypr"
 RULE_FILE="$HYPR_DIR/ymir-desktops.lua"
-# The two Ymir surfaces, in the order they should claim desktops.
-APPS=(hlidskjalf smidja)
+# The three Ymir surfaces, in the order they should claim desktops.
+APPS=(hlidskjalf smidja sessrumnir)
 CLASS_hlidskjalf="ymir-hlidskjalf"
 CLASS_smidja="ymir-smidja"
+CLASS_sessrumnir="sessrumnir"
 
 # ── launcher entries (Omarchy / Linux desktop only) ──────────────────────────
 # The .desktop files are templates (__YMIR_ROOT__, not an absolute path), because
@@ -43,17 +44,23 @@ CLASS_smidja="ymir-smidja"
 # Omarchy/Hyprland is the supported environment; another OS needs its own launcher,
 # not a branch of this one.
 install_entries() {
-  local src="$ROOT/apps/hlidskjalf/electron" dst="$HOME/.local/share/applications" n=0
+  local dst="$HOME/.local/share/applications" n=0
+  local dirs=("$ROOT/apps/hlidskjalf/electron" "$ROOT/apps/sessrumnir/resources")
   if [ "$(ymir_os)" != linux ] && [ "$(ymir_os)" != wsl ]; then
     printf 'skip: desktop entries are Omarchy/Linux-shaped; this host is %s\n' "$(ymir_os)" >&2
     return 0
   fi
-  [ -d "$src" ] || { printf 'error: no launcher templates in %s\n' "$src" >&2; return 1; }
   mkdir -p "$dst" || return 1
-  for f in "$src"/*.desktop.in; do
-    [ -e "$f" ] || continue
-    sed -e "s|__YMIR_ROOT__|$ROOT|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
+  local src found=0
+  for src in "${dirs[@]}"; do
+    [ -d "$src" ] || continue
+    found=1
+    for f in "$src"/*.desktop.in; do
+      [ -e "$f" ] || continue
+      sed -e "s|__YMIR_ROOT__|$ROOT|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
+    done
   done
+  [ "$found" = 1 ] || { printf 'error: no launcher templates found\n' >&2; return 1; }
   printf 'entries[%s]{installed_to}\:\n  "%s","%s"\n' "$n" "$n" "$dst"
 }
 
@@ -116,6 +123,7 @@ write_rules() {
     case "$app" in
       hlidskjalf) cls="$CLASS_hlidskjalf" ;;
       smidja)     cls="$CLASS_smidja" ;;
+      sessrumnir) cls="$CLASS_sessrumnir" ;;
       *)          cls="$app" ;;
     esac
     out+="o.window({ class = \"^${cls}\$\" }, { workspace = \"${d}\" })"$'\n'
@@ -155,6 +163,7 @@ write_launchers() {
   out+="-- Regenerate with: bin/desktop-place.sh apply"$'\n\n'
   out+="o.bind(\"SUPER + Y\", \"Ymir Hlidskjalf\", \"bash $ROOT/scripts/electron.sh start --view hlidskjalf\")"$'\n'
   out+="o.bind(\"SUPER + M\", \"Ymir Smiðja\", \"bash $ROOT/scripts/electron.sh start --view smidja\")"$'\n'
+  out+="o.bind(\"SUPER + B\", \"Ymir Sessrúmnir\", \"bash $ROOT/bin/sessrumnir.sh start\")"$'\n'
   if [ "$DRY" = 1 ]; then printf '%s' "$out"; return 0; fi
   if [ -f "$file" ] && [ "$(cat "$file")" = "$out" ]; then return 0; fi
   mkdir -p "$HYPR_DIR"
@@ -166,7 +175,7 @@ include_launchers_file() {
   [ -f "$main" ] || return 0
   grep -qxF "$line" "$main" && return 0
   [ "$DRY" = 1 ] && { printf 'would add to %s: %s\n' "$main" "$line"; return 0; }
-  printf '\n-- Ymir: one key per Ymir app (SUPER+Y Hlidskjalf, SUPER+M Smiðja).\n%s\n' "$line" >>"$main"
+  printf '\n-- Ymir: one key per Ymir app (SUPER+Y Hlidskjalf, SUPER+M Smiðja, SUPER+B Sessrúmnir).\n%s\n' "$line" >>"$main"
 }
 
 case "$ACTION" in
