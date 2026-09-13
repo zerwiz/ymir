@@ -150,7 +150,7 @@ Usage: `python3 .agents/tools/bin/tasks-cli <command>`. All tools emit TOON.
 ### Runtime components added 2026-09-13 (seat-hall · machine lock · guard families)
 
 ```
-added[7]{component,path,purpose}:
+added[10]{component,path,purpose}:
   "Sessrúmnir GUI","apps/sessrumnir/","vendored pi-desktop fork rebranded: the seat-hall; width-responsive Home/models/modals, narrative agent surfaces (Brokk/Eindri)"
   "seat-hall launchers","bin/sessrumnir.sh, bin/sessrumnir-ensure.sh","raise/ensure the Sessrúmnir desktop app (deps+build on first run)"
   "machine lock","bin/gleipnir-lock-lib.sh","ONE primary session lock per machine; Eindri-homes keep a per-home lock; state/.lock-path pointer"
@@ -158,6 +158,9 @@ added[7]{component,path,purpose}:
   "neutral realm resolver","bin/realm-lib.sh","active realm: data/realm.md → first non-example tenant → default (never a company slug)"
   "A2A bridge ensure","bin/a2abridge-ensure.sh","install/verify the a2abridge engine + directory daemon (Ratatoskr mesh)"
   "desktop entry","apps/sessrumnir/resources/ymir-sessrumnir.desktop.in","Omarchy launcher entry rendered by bin/desktop-place.sh"
+  "Gróa (updater shaman)","bin/groa-update.sh","fast-forward Brokk + Eindri-homes, mend forward; the groa-update skill's door (alias bin/brokk-update.sh)"
+  "Eir (doctor)","bin/eir-doctor.sh","diagnose every surface, then mend the broken (composes the *-ensure.sh surfaces)"
+  "install auth","bin/ymir-setup-auth.sh","set the operator credential at install (password or GitHub) into .env.local"
 ```
 
 The reference tenant moved to `svartalfaheim/examples/wayof/`; a fresh install

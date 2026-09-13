@@ -85,6 +85,9 @@ These are the figures the port actually wired into `bin/` and the harness adapte
 | Session wake drain | **Sága** | The seeress who sees the queue | `bin/saga-wake-drain.sh` → `state/.wake-queue` |
 | Arm-path seatbelt | **Sýn** | Guards the arm command | `bin/syn-arm-pretool-check.sh` |
 | Directory seatbelt | **Sýn** | Guards the working directory | `bin/syn-cd-pretool-check.sh` |
+| Invariant seatbelt | **Sýn** | Guards the load-bearing invariants (lock, markers, Runes, machinery, secrets, registries) | `bin/syn-guard-pretool-check.sh` |
+| Updater shaman | **Gróa** | The völva who renews — fast-forwards Brokk and its homes, then mends forward | `bin/groa-update.sh` (alias `bin/brokk-update.sh`), `.agents/skills/groa-update/` |
+| Doctor / healer | **Eir** | The goddess of healing — diagnoses every surface, then mends the broken | `bin/eir-doctor.sh` |
 
 ### 3.3 The Galdr skill family
 
