@@ -297,6 +297,9 @@ nowhere to land. `reviews()` now first lists the repo's **open PRs** via
 `gh pr list --json …` (mapping `statusCheckRollup` to the card's checks; a
 failing check sets `state: 'changes'`), then appends the lint + compliance card
 (now `number: 0`). Real PRs lead the list; the compile-and-lint card stays.
+The review surface's operator copy now names the **Allfather** throughout — the
+seal prompt, the rune emit string, the "awaiting the Allfather" tile, and the
+gate comment — retiring the imported `captain` term.
 
 ### One seat, three halls (added 2026-09-13)
 
