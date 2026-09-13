@@ -5,6 +5,7 @@
 /* --- Press feedback on every interactive control -------------- */
 .btn,
 .icon-btn,
+.hall-btn,
 .gate,
 .task-mini,
 .realm-opt,
@@ -21,6 +22,7 @@
 }
 .btn:active,
 .icon-btn:active,
+.hall-btn:active,
 .task-mini:active,
 .realm-opt:active,
 .identity:active,
