@@ -54,6 +54,16 @@ export function FileTree(): React.JSX.Element {
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [pathExists, setPathExists] = useState(true)
   const activeWorkspace = useAppStore((state) => state.activeWorkspace)
+  // Fast access to Ymir's own trees (the Hoard, the realms, the workspaces),
+  // which live under the repo root, not necessarily the active workspace.
+  const openFolderAsWorkspace = useAppStore((state) => state.openFolderAsWorkspace)
+  const [ymirRoot, setYmirRoot] = useState<string | null>(null)
+  useEffect(() => {
+    void window.piDesktop.system
+      .getPath('ymirRoot')
+      .then((p) => setYmirRoot(p || null))
+      .catch(() => setYmirRoot(null))
+  }, [])
   // Path included: "Change folder…" repoints a workspace without changing its
   // id, and the tree must reload for that too.
   const workspaceKey = activeWorkspace ? `${activeWorkspace.id}:${activeWorkspace.path}` : null
@@ -186,6 +196,26 @@ export function FileTree(): React.JSX.Element {
         <div className="flex items-center gap-1.5 px-3 py-2 text-xs text-dim border-b border-border">
           <GitBranch size={12} />
           <span>{gitBranch}</span>
+        </div>
+      )}
+
+      {/* Fast access to Ymir's own trees — the Hoard, the realms, the workspaces. */}
+      {ymirRoot && (
+        <div className="flex flex-wrap items-center gap-1 border-b border-border px-3 py-1.5 text-[11px]">
+          <span className="mr-0.5 text-faint">Ymir</span>
+          {([['Hoard', 'hodd'], ['Realms', 'svartalfaheim'], ['Workspaces', 'workspace']] as const).map(
+            ([label, dir]) => (
+              <button
+                key={dir}
+                type="button"
+                onClick={() => void openFolderAsWorkspace(`${ymirRoot}/${dir}`)}
+                className="rounded px-1.5 py-0.5 text-dim transition-colors hover:bg-surface-hover hover:text-secondary"
+                title={`Open ${ymirRoot}/${dir}`}
+              >
+                {label}
+              </button>
+            )
+          )}
         </div>
       )}
 

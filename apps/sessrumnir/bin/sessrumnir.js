@@ -139,6 +139,8 @@ function launch() {
 
   // Pass workspace path via environment variable
   const env = { ...process.env }
+  // The repo root, so the renderer can reach hodd/, svartalfaheim/, workspace/.
+  env.YMIR_ROOT = resolve(__dirname, '..', '..', '..')
   if (workspacePath) {
     env.PI_DESKTOP_WORKSPACE = workspacePath
   }
