@@ -313,6 +313,12 @@ failing check sets `state: 'changes'`), then appends the lint + compliance card
 - **One login, Sign out everywhere**: the gate mirrors the session to
   `state/.gate-session` and accepts `X-Ymir-Session` / `Bearer`; the shell menu
   and (already) the AccountMenu sign out.
+- **The GitHub door is offered only when it can open**: `/api/auth/github`
+  returns 503 when no OAuth app is configured, so `/api/session` now carries
+  `github: !!(GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET)` and `LoginModal` renders
+  the "Continue with GitHub" button (and its `or` divider) only when true. The
+  password door (`HLIDSKJALF_AUTH`) is always present. Configure GitHub with
+  `bin/ymir-setup-auth.sh github`.
 
 Rule: a Hlidskjalf code change updates this asset in the same pass — the
 compliance gate (`assets/governed assets current`) fails otherwise.
