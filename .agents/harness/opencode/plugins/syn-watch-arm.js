@@ -120,10 +120,23 @@ function shouldArm(paths) {
   }
 }
 
+// The resolved session-lock path (machine-global for the primary, per-home for
+// an Eindri-home). gleipnir-lock-lib.sh records it in state/.lock-path; a
+// pre-contract session still lives at the legacy state/.lock.
+function resolvedLockPath(paths) {
+  try {
+    const pointer = readFileSync(`${paths.state}/.lock-path`, "utf8").trim();
+    if (pointer) return pointer;
+  } catch {
+    // no pointer yet — pre-machine-lock session
+  }
+  return `${paths.state}/.lock`;
+}
+
 async function sessionOwnsLock(paths) {
   let lockPid = "";
   try {
-    lockPid = readFileSync(`${paths.state}/.lock`, "utf8").trim();
+    lockPid = readFileSync(resolvedLockPath(paths), "utf8").trim();
   } catch {
     return false;
   }
