@@ -58,6 +58,12 @@ export function registerSystemHandlers(ctx: IpcContext): void {
 
   ipcMain.handle(IPC_CHANNELS.SYSTEM_GET_PATH, async (_event, name: unknown) => {
     if (!isString(name)) throw new Error('name must be a string')
+    if (name === 'ymirRoot') {
+      // The Ymir repo root: the launcher sets it; else derive it (dev layout is
+      // <root>/apps/sessrumnir, so three levels up).
+      const fromEnv = process.env.YMIR_ROOT
+      return fromEnv && fromEnv.length > 0 ? fromEnv : resolve(app.getAppPath(), '..', '..', '..')
+    }
     const validPaths = ['home', 'appData', 'userData', 'temp', 'desktop', 'documents'] as const
     if (validPaths.includes(name as (typeof validPaths)[number])) {
       return app.getPath(name as 'home' | 'appData' | 'userData' | 'temp' | 'desktop' | 'documents')
