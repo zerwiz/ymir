@@ -469,6 +469,30 @@ step_invite() {
   if [ -n "$INVITE_CODE" ]; then add invite OK "invite ${INVITE_CODE} — share it to let someone register"; else add invite WARN "no code found"; fi
 }
 
+# ── 8a. the operator's way in ────────────────────────────────────────────────
+# The gate has two doors — a local password (HLIDSKJALF_AUTH) or GitHub sign-in
+# (a GitHub OAuth app). Neither is seeded by a checkout, so a fresh instance has
+# no way in until the operator sets one. Interactive installs prompt; --yes and
+# non-tty leave it to bin/ymir-setup-auth.sh.
+step_auth() {
+  if [ ! -x "$ROOT/bin/ymir-setup-auth.sh" ]; then add auth SKIP "bin/ymir-setup-auth.sh not executable"; return; fi
+  local door
+  door=$(bash "$ROOT/bin/ymir-setup-auth.sh" status 2>/dev/null | sed -n '2p' | cut -d, -f1 | tr -d ' "')
+  if [ -n "$door" ] && [ "$door" != none ]; then add auth OK "operator credential present ($door)"; return; fi
+  if [ "$CHECK" = 1 ]; then add auth WARN "no operator credential — run bin/ymir-setup-auth.sh set|github"; return; fi
+  if [ "$ASSUME_YES" = 1 ] || [ ! -t 0 ]; then
+    add auth WARN "no operator credential — set one: bin/ymir-setup-auth.sh set (or github)"
+    return
+  fi
+  printf '\nSet the operator credential now? [p]assword / [g]ithub / [s]kip: '
+  local choice; IFS= read -r choice || true
+  case "${choice:-s}" in
+    p|P) bash "$ROOT/bin/ymir-setup-auth.sh" set && add auth OK "operator password set" || add auth WARN "password setup failed" ;;
+    g|G) bash "$ROOT/bin/ymir-setup-auth.sh" github && add auth OK "GitHub sign-in configured" || add auth WARN "GitHub setup failed" ;;
+    *)   add auth SKIP "left unset — run bin/ymir-setup-auth.sh set|github later" ;;
+  esac
+}
+
 step_register() {
   if [ "$CHECK" = 1 ]; then add register OK "would write workspace/INSTALL.md"; return; fi
   local out="$WORKSPACE/INSTALL.md"
@@ -526,7 +550,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_invite; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate
