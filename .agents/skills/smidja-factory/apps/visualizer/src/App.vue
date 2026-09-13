@@ -55,7 +55,7 @@ function winControl(action: 'minimize' | 'maximize' | 'close') {
  * Raise the other app (or start it), through this API's /api/desktop route.
  * Silent on failure: a convenience control must never break the view it sits in.
  */
-async function raiseApp(view: 'hlidskjalf' | 'smidja') {
+async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
   try {
     await fetch('/api/desktop', {
       method: 'POST',
@@ -108,6 +108,11 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja') {
         </template>
       </nav>
       <span class="live-hint"><span class="live-dot" /> live</span>
+      <div role="group" aria-label="Switch hall" style="display:flex;gap:2px;margin-right:6px">
+        <button type="button" title="Hlidskjalf — the control plane" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᚺ</button>
+        <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:#38bdf8;cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>
+        <button type="button" title="Sessrúmnir — the seat-hall" aria-label="Open Sessrúmnir" @click="raiseApp('sessrumnir')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᛋ</button>
+      </div>
       <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'neutral'} (click to switch)`" @click="toggleTheme">
         {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'neutral' }}
       </button>
