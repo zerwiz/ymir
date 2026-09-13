@@ -26,7 +26,7 @@ export const HALL_URL = (() => {
   if (override) return override;
   const host = typeof window === 'undefined' ? '' : window.location.host;
   const local = host.startsWith('localhost') || host.startsWith('127.0.0.1');
-  return local ? 'http://localhost:4322' : 'https://hall.ymir.zerw.org';
+  return local ? 'http://localhost:4322' : 'https://hall.ymir.zerwiz.org';
 })();
 
 /** Per-gate metadata — every view is a page and declares its own story. */
