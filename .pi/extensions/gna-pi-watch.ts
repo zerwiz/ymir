@@ -131,10 +131,24 @@ function pidAlive(pid: string): boolean {
   }
 }
 
+// The resolved session-lock path. The primary holds a machine-global lock; an
+// Eindri-home holds a per-home one. gleipnir-lock-lib.sh records whichever it
+// resolved in state/.lock-path; a session that started before that contract is
+// still on the legacy state/.lock, so fall back to it.
+function resolvedLockPath(): string {
+  try {
+    const pointer = readFileSync(`${state}/.lock-path`, "utf8").trim();
+    if (pointer) return pointer;
+  } catch {
+    // no pointer yet — pre-machine-lock session
+  }
+  return `${state}/.lock`;
+}
+
 function lockOwnership(): LockOwnership {
   let lockPid = "";
   try {
-    lockPid = readFileSync(`${state}/.lock`, "utf8").trim();
+    lockPid = readFileSync(resolvedLockPath(), "utf8").trim();
   } catch {
     return "missing";
   }

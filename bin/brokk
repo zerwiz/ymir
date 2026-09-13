@@ -27,8 +27,12 @@ case "$CMD" in
 esac
 
 status() {
-  local lock started cron bridge well
-  lock=$(tr -d '[:space:]' <"$B/../state/.lock" 2>/dev/null || echo '—')
+  local lock started cron bridge well lock_file
+  # The primary's lock is machine-global; an Eindri-home's is per-home. The
+  # resolved path is recorded in state/.lock-path by gleipnir_lock_acquire.
+  lock_file="$B/../state/.lock"
+  [ -r "$B/../state/.lock-path" ] && lock_file=$(tr -d '[:space:]' <"$B/../state/.lock-path")
+  lock=$(tr -d '[:space:]' <"$lock_file" 2>/dev/null || echo '—')
   [ -e "$B/../state/.session-start-complete" ] && started=yes || started=no
   cron=$(bash "$B/nornir-cron-start.sh" --status 2>/dev/null | sed 's/^cron: //')
   bridge=$(bash "$B/bifrost-bridge.sh" --status 2>/dev/null | tail -1 | sed 's/.*,"//; s/"$//')

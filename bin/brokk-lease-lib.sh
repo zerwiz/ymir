@@ -145,7 +145,11 @@ fm_lease_live() {
   [ -n "$BROKK_LEASE_ACTOR" ] || return 1
   [ -n "$BROKK_LEASE_PID" ] || return 1
   kill -0 "$BROKK_LEASE_PID" 2>/dev/null || return 1
-  lock_pid=$(head -n 1 "$STATE/.lock" 2>/dev/null || true)
+  # The session lock is machine-global for the primary; state/.lock-path records
+  # the resolved path (per-home for an Eindri-home, legacy state/.lock otherwise).
+  local lock_file="$STATE/.lock"
+  [ -r "$STATE/.lock-path" ] && lock_file=$(tr -d '[:space:]' <"$STATE/.lock-path")
+  lock_pid=$(head -n 1 "$lock_file" 2>/dev/null || true)
   case "$lock_pid" in ''|0|1|*[!0-9]*) return 1 ;; esac
   [ "$BROKK_LEASE_PID" = "$lock_pid" ]
 }
