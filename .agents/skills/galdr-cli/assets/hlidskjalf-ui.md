@@ -310,9 +310,16 @@ failing check sets `state: 'changes'`), then appends the lint + compliance card
 - **Search box**: `.topbar .search` `min-width` was 120px — narrower than the
   text "Search work workspace…", so the placeholder clipped. Raised to 280px;
   the input may shrink (`min-width: 0`).
-- **One login, Sign out everywhere**: the gate mirrors the session to
-  `state/.gate-session` and accepts `X-Ymir-Session` / `Bearer`; the shell menu
-  and (already) the AccountMenu sign out.
+- **One login, Sign out everywhere — verified live, never a file.** The gate is
+  the one authority: a session is an in-memory `token → login` map, handed out as
+  the httpOnly `ymir_session` cookie. There is **no bearer on disk** and **no
+  header credential** (`X-Ymir-Session`/`Bearer` are rejected): a persisted token
+  is a credential at rest any local process could replay, and a session read from
+  a file is "logged in when you are not". A gate restart ends sessions (nothing
+  revives one). Other surfaces verify live: the Smíðja visualizer server forwards
+  the browser's cookie to the gate's `/api/session`; Sessrúmnir, having no gate
+  cookie, shows a Sign-in link rather than claiming a session. Sign out clears the
+  cookie and the in-memory token (shell menu; AccountMenu).
 - **The GitHub door is offered only when it can open**: `/api/auth/github`
   returns 503 when no OAuth app is configured, so `/api/session` now carries
   `github: !!(GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET)` and `LoginModal` renders
