@@ -79,6 +79,17 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
     /* the launcher is unreachable — say nothing, change nothing */
   }
 }
+
+/**
+ * The Óðrerir Live Hall — the landing's live board, a page of its own rather
+ * than one of the three apps the gate raises. On this machine the hall answers
+ * on :4322; anywhere else, the public hall.
+ */
+const host = window.location.host
+const hallUrl =
+  host.startsWith('localhost') || host.startsWith('127.0.0.1')
+    ? 'http://localhost:4322'
+    : 'https://hall.ymir.zerw.org'
 </script>
 
 <template>
@@ -128,6 +139,15 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
         <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:#38bdf8;cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>
         <button type="button" title="Sessrúmnir — the seat-hall" aria-label="Open Sessrúmnir" @click="raiseApp('sessrumnir')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᛋ</button>
       </div>
+      <!-- The Óðrerir Live Hall — the landing's live board, a page of its own
+           (the three apps above are raised through the gate; this one is a tab). -->
+      <a
+        class="hall-btn"
+        :href="hallUrl"
+        target="_blank"
+        rel="noreferrer"
+        title="The Óðrerir Live Hall — the landing's carved board"
+      >ᛟ To the Hall</a>
       <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'neutral'} (click to switch)`" @click="toggleTheme">
         {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'neutral' }}
       </button>
@@ -278,8 +298,34 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
 .crumbs a,
 .live-hint,
 .theme-toggle,
+.hall-btn,
 .win-controls {
   -webkit-app-region: no-drag;
+}
+
+/* The Hall door — a pill in the topbar, its own tab. The glyph is Othala, the
+   ancestral hall; the accent keeps it legible in every theme. */
+.hall-btn {
+  margin-left: 12px;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.hall-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.hall-btn:active {
+  transform: translateY(1px) scale(0.97);
 }
 
 /* Desktop window controls — right-aligned, dark, hover to close is red. */
