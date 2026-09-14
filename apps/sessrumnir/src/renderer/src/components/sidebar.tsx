@@ -467,7 +467,7 @@ export function Sidebar(): React.JSX.Element {
           >
             <Home size={16} />
           </button>
-          <span className="text-sm font-medium text-primary">Sessrúmnir</span>
+          <span className="font-display text-base font-medium tracking-wide text-primary">Sessrúmnir</span>
         </div>
         <button
           onClick={toggleSidebar}
@@ -499,12 +499,12 @@ export function Sidebar(): React.JSX.Element {
             type="button"
             onClick={() => void startNewSession()}
             disabled={!activeWorkspace}
-            className="group flex w-full items-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-white shadow-sm shadow-accent/20 transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:cursor-not-allowed disabled:opacity-50"
+            className="group flex w-full items-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-inverse shadow-sm shadow-accent/20 transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:cursor-not-allowed disabled:opacity-50"
             title={activeWorkspace ? 'Start a new session in this project (Ctrl/Cmd+N)' : 'Open a project first'}
           >
             <Plus size={15} className="shrink-0 transition-transform group-hover:rotate-90" />
             <span className="flex-1 text-left">New session</span>
-            <kbd className="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white/75">Ctrl N</kbd>
+            <kbd className="rounded border border-inverse/25 bg-inverse/10 px-1.5 py-0.5 text-[10px] font-medium text-inverse/75">Ctrl N</kbd>
           </button>
           <div className="mt-1.5 px-1 text-[11px] text-faint">
             {activeWorkspace ? `Starts in ${activeWorkspace.name}` : 'Open a project to begin'}

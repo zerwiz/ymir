@@ -13,6 +13,7 @@ import {
   Loader2,
   GitBranch,
   Workflow as WorkflowIcon,
+  ExternalLink,
 } from 'lucide-react'
 
 export function StatusBar(): React.JSX.Element {
@@ -72,6 +73,17 @@ export function StatusBar(): React.JSX.Element {
       window.removeEventListener('focus', onFocus)
     }
   }, [activeWorkspace?.id])
+
+  // The Hall — the public landing page. On this machine the site is usually
+  // served locally (:4322); the main process probes for it and falls back to the
+  // public hostname, so the button always lands somewhere real.
+  const openHall = async (): Promise<void> => {
+    try {
+      await window.piDesktop.system.openExternal(await window.piDesktop.system.hallUrl())
+    } catch {
+      await window.piDesktop.system.openExternal('https://hall.ymir.zerwiz.org').catch(() => {})
+    }
+  }
 
   return (
     <div className="flex h-7 items-center justify-between border-t border-border bg-app px-3 text-xs">
@@ -216,6 +228,17 @@ export function StatusBar(): React.JSX.Element {
           aria-label={terminalOpen ? 'Hide terminal' : 'Show terminal'}
         >
           <Terminal size={12} />
+        </button>
+
+        {/* To the Hall — the landing page, raised in the browser */}
+        <button
+          onClick={() => { void openHall() }}
+          className="flex items-center gap-1 rounded border border-border-strong px-1.5 text-accent-fg transition-colors hover:bg-surface-hover hover:text-primary"
+          title="To the Hall — open the Ymir landing page"
+          aria-label="To the Hall"
+        >
+          <ExternalLink size={11} />
+          <span>To the Hall</span>
         </button>
 
         {/* Settings */}

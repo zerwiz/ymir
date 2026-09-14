@@ -44,6 +44,81 @@
   still holds it until that app is closed or its own session arms; that is the
   law (one live primary per machine), but it now releases and hands off
   correctly.
+## 2026-09-13 — the cloth reaches all three halls (Hlidskjalf · Smíðja · the seat)
+
+- **One look, one source.** The carved cloth (the landing page's `:root`) now
+  dresses every hall, each through its own thin adapter, and `docs/design.md`
+  gained §0 *The cloth* plus the re-cut §4.1/§4.2 tables — the contract, not a
+  wish. `midgard/design-system/tokens.css` keeps every `--ymir-*` **name** and
+  changes only the values: stone `#0e0c09`/`#151209`/`#1a1610`/`#221d14`, bone
+  text `#cfc3a9`/`#9a8f75`/`#6b6250`, bronze `#c9973f` accent with `#7d5f2a` as
+  the brass rule, blood `#c2584a` danger, steel `#96a0a8` ok, brass bevel
+  `inset 0 0 0 1px rgba(201,151,79,.12)`.
+- **Type.** Cormorant (display), Newsreader (body), IBM Plex Mono (data) — the
+  landing's three faces — with Noto Sans Runic appended to every stack so runes
+  fall through to the rune family. Hlidskjalf loads them from Google Fonts; the
+  visualizer bundles them from `@fontsource` (its `@fontsource/play` is gone).
+- **Hlidskjalf:** 24 old-palette `rgba()` literals and every role hex in the
+  stylesheets now read tokens (`color-mix(… var(--ymir-ok) …)`); workspace tints
+  are cloth (work bronze, personal steel); the `HallsChooser` cards no longer name
+  two tokens that never existed (`--ymir-line`/`--ymir-panel`); the login's GitHub
+  button is a bone plate; the realm-tint fallbacks in `global.css` follow.
+- **Smíðja's eye:** the default theme is **fensalir** (the titlebar toggle cycles
+  fensalir → classic → high-contrast, both overrides still winning); 77 hexes and
+  62 `rgba()`s across the components were recast onto the theme's own tokens; the
+  categorical event/lane palettes (`src/lib/events.ts`) were re-cut onto the cloth
+  while staying mutually distinct.
+- **Sessrúmnir:** text selection is now a **theme token**
+  (`--color-selection-bg`/`-fg`) — the landing's amber `#57411a` on pale bone
+  `#f0e6cd` — carried in `fensalir`/`sessrumnir` and derived per theme for
+  everyone else; the global rule sits in `@layer base`, and the CodeMirror editor
+  needs a second unlayered rule because CodeMirror paints its selection layer with
+  unlayered CSS that beats any layered rule. A **To the Hall** button joins the
+  status bar (local `:4322` when it answers, else `hall.ymir.zerw.org`, resolved in
+  the main process).
+- **Heraldry is not chrome:** the eight house/domain seals and the Emblem keep
+  their own colours — exactly as the landing page keeps its house seals.
+- **Geometry is untouched** (radius, spacing, the shell): the carved-slate
+  squaring remains an open question for the Allfather.
+- **Verified:** `tsc` clean and `npm run build` green in Hlidskjalf; the
+  visualizer builds under `vue-tsc`; Sessrúmnir's build, lint, theme tests and
+  semantic-colour check green. Headless passes: Hlidskjalf's gates render with
+  **0 console errors** (login, fleet, tasks, processes, reviews, runtime, cron,
+  stats), and the visualizer loads with 0 console problems.
+
+## 2026-09-13 — the carved cloth reaches the seat-hall (Sessrúmnir)
+
+- **The landing's cloth is now the seat's own look.** Every semantic token in
+  `apps/sessrumnir/src/renderer/src/index.css` `@theme` was mapped to its carved
+  twin from the landing page's `:root` (`CodeP/ymir-homepage/src/lore.html`):
+  stone `#0e0c09` (app) with panels `#151209`/`#1a1610`/`#14100b`, bone text
+  `#cfc3a9`/`#9a8f75`/`#6b6250` (faint/ghost as bone washes), bronze
+  `#c9973f` accent and `#7d5f2a` brass rule for `border-strong`, blood
+  `#c2584a`/`#7c3a30` for error, steel `#96a0a8` for success. Semantic names are
+  unchanged — only the values moved.
+- **Fensalir** (the weaving halls) is registered as a built-in theme
+  (`themes/fensalir.json`, id `fensalir`, appended to `BUILTIN_THEME_IDS` — an
+  additive change that keeps every persisted id resolving). The seat's own
+  built-in `sessrumnir` theme was carved to the same cloth, so the default look
+  of an existing profile is the cloth on restart. A new test holds the two
+  together (`the cloth is one`) and another holds the CSS `@theme` base to the
+  theme file (`never drift`).
+- **Cloth is the default, not a cage:** the ThemeEngine's ordering is untouched —
+  every other built-in theme, any user theme, and `high-contrast` still win when
+  chosen.
+- **Type:** Cormorant (display), Newsreader (body), IBM Plex Mono (mono) bundled
+  from `@fontsource*` (offline, `font-src 'self'`), with Inter/JetBrains Mono
+  kept as glyph fallbacks; the landing's carved syntax palette (`--cm-*`) rides
+  along in the theme files.
+- **Honest repairs on the way:** 29 raw `text-white` literals sat on token
+  fills where white cannot be read on bronze (2.6:1). They now read the token
+  that means "the rune on the filled plate" — `text-inverse` on `bg-accent`,
+  `text-primary` on the dark blood `bg-error` — and the settings toggle knob is
+  carved (stone when lit, bone when unlit). No colour literals remain in
+  components.
+- **Paper:** `apps/sessrumnir/AGENTS.md` and `README.md` no longer claim the old
+  sky-on-navy palette; they describe the cloth and its rules.
+
 ## 2026-09-13 — the new tree, the mesh, the seat-hall
 
 - **Everything in the new tree:** the Sessrúmnir work plus the orphaned fixes

@@ -18,6 +18,8 @@ export const TOKEN_NAMES = [
   // misc
   'chat-column', 'chat-column-border', 'scrollbar', 'scrollbar-hover',
   'md-code', 'md-pre-bg',
+  // the text selection (the global ::selection, not the editor's --cm-*)
+  'selection-bg', 'selection-fg',
 ] as const
 export type TokenName = (typeof TOKEN_NAMES)[number]
 
@@ -76,4 +78,9 @@ export const DERIVED_TOKENS: Record<string, string> = {
   'scrollbar-hover': 'var(--color-elevated)',
   'md-code': 'var(--color-accent-fg)',
   'md-pre-bg': 'var(--color-surface)',
+  // A selected run of text takes the theme's own accent, darkened toward the
+  // ground; the text stays at full strength. The cloth themes pin the landing's
+  // exact amber (#57411a on #f0e6cd) instead.
+  'selection-bg': MIX('accent', 'app', 55),
+  'selection-fg': 'var(--color-primary)',
 }

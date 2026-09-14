@@ -118,12 +118,12 @@ onMounted(() => {
 .settings-head h1 { font-size: 22px; margin: 0 0 4px; color: var(--text); }
 .sub { color: var(--dim); margin: 0 0 18px; font-size: 13px; }
 code { font-family: var(--mono); font-size: 12px; background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
-.err { color: var(--danger, #f87171); font-size: 13px; }
-.ok { color: var(--green, #4ade80); font-size: 13px; }
+.err { color: var(--danger, var(--red)); font-size: 13px; }
+.ok { color: var(--green, var(--green)); font-size: 13px; }
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
 .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .card-top h2 { font-size: 14px; margin: 0; color: var(--text); }
-.badge { font-family: var(--mono); font-size: 11px; color: var(--green, #4ade80); background: rgba(74, 222, 128, 0.1); padding: 2px 8px; border-radius: 999px; }
+.badge { font-family: var(--mono); font-size: 11px; color: var(--green, var(--green)); background: color-mix(in srgb, var(--green) 10%, transparent); padding: 2px 8px; border-radius: 999px; }
 .badge.off { color: var(--dim); background: var(--panel-2); }
 .hint { color: var(--dim); font-size: 12px; margin: 8px 0 12px; line-height: 1.5; }
 .row { display: flex; gap: 10px; }
@@ -140,8 +140,8 @@ code { font-family: var(--mono); font-size: 12px; background: var(--panel-2); pa
 }
 .save {
   font-size: 13px;
-  color: var(--fg, #fff);
-  background: var(--accent, #38bdf8);
+  color: var(--fg, var(--text));
+  background: var(--accent, var(--accent));
   border: none;
   border-radius: 8px;
   padding: 9px 18px;

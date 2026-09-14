@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useYmir } from '../state/store';
 import { useUI } from '../state/ui';
-import { ACCENTS, DOMAINS } from '../data/realms';
+import { ACCENTS, DOMAINS, realmById } from '../data/realms';
 import { ROLE_LABEL } from '../services/auth';
 import { useTenantDef } from '../hooks/useTenantDef';
 import type { DomainId } from '../types';
@@ -18,7 +18,7 @@ function TenantColorRow({ realm, tenant, role, domain, glyph }: {
   const colors = useYmir((s) => s.tenantColors);
   const setTenantColor = useYmir((s) => s.setTenantColor);
   const resetTenantColor = useYmir((s) => s.resetTenantColor);
-  const def = useTenantDef(realm, { realm, tenant, role, domain, tint: '#38bdf8', glyph });
+  const def = useTenantDef(realm, { realm, tenant, role, domain, tint: realmById(realm).tint, glyph });
   const override = colors[realm];
   const houseDef = DOMAINS[domain];
 
@@ -102,7 +102,7 @@ export function Profile() {
                     aria-pressed={accentId === a.id}
                     title={a.name}
                     onClick={() => setAccent(a.id)}
-                    style={a.tint ? { background: a.tint } : { background: 'linear-gradient(135deg,#38bdf8,#8b5cf6,#f59e0b)' }}
+                    style={a.tint ? { background: a.tint } : { background: 'linear-gradient(135deg,#c9973f,#96a0a8,#7c3a30)' }}
                   >
                     {a.id === 'realm' ? <span className="swatch-realm" aria-hidden="true">ᛉ</span> : null}
                     {accentId === a.id ? <span className="swatch-check" aria-hidden="true">✓</span> : null}
@@ -116,7 +116,7 @@ export function Profile() {
               <div className="row">
                 <input
                   type="color"
-                  value={custom ?? '#38bdf8'}
+                  value={custom ?? 'var(--ymir-cyan-1)'}
                   onChange={(e) => setCustom(e.target.value)}
                   style={{ width: 44, height: 34, border: '1px solid var(--ymir-steel-1)', borderRadius: 8, background: 'none' }}
                 />

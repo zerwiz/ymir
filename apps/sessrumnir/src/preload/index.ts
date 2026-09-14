@@ -266,6 +266,12 @@ interface PiDesktopAPI {
     /** Whether a path exists and is a directory (folder open). */
     pathKind(path: string): Promise<PathKindResult>
     openExternal(url: string): Promise<void>
+    /**
+     * The Hall's URL — the local site when it is served on this machine,
+     * otherwise the public hostname. Resolved in the main process (the
+     * renderer's CSP allows no cross-origin probe).
+     */
+    hallUrl(): Promise<string>
     getVersion(): Promise<string>
     /**
      * Host OS platform from the preload process polyfill. Sync — sandboxed
@@ -517,6 +523,7 @@ const api: PiDesktopAPI = {
     // Sandboxed preload still has a process polyfill with platform.
     platform: process.platform,
     openExternal: (url) => ipcRenderer.invoke(IPC_CHANNELS.SYSTEM_OPEN_EXTERNAL, url),
+    hallUrl: () => ipcRenderer.invoke(IPC_CHANNELS.SYSTEM_HALL_URL),
     getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.SYSTEM_GET_VERSION),
   },
 
