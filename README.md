@@ -528,7 +528,7 @@ follow them, star them, learn from them.
 | Project | Who made it | Licence | What it powers in Ymir |
 |---|---|---|---|
 | [treehouse](https://github.com/kunchenguid/treehouse) | kunchenguid | MIT | Yggdrasil — git worktrees |
-| [sandcastle](https://github.com/mattpocock/sandcastle) | Matt Pocock | MIT | Utgard — sealed sandboxes |
+| [sandcastle](https://github.com/mattpocock/sandcastle) | [Matt Pocock](https://www.youtube.com/@mattpocockuk) | MIT | Utgard — sealed sandboxes |
 | [no-mistakes](https://github.com/kunchenguid/no-mistakes) | kunchenguid | MIT | the clean-PR gate |
 | [pi](https://github.com/earendil-works/pi) | Earendil Works | MIT | the coding harness |
 | [oh-my-pi](https://github.com/can1357/oh-my-pi) | can1357 | MIT | prior art for the pi surface |
@@ -542,3 +542,7 @@ If we have benefited from your work and missed you here, tell us — we will fix
 loudly.
 
 Thank you all. The forge is hot because you lit it.
+
+_Where a maker teaches on YouTube we link the channel — Matt Pocock's is
+[youtube.com/@mattpocockuk](https://www.youtube.com/@mattpocockuk). If you make a
+tutorial for a project we use, tell us and we will link yours too._
