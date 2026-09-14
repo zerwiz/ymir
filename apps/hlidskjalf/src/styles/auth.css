@@ -18,8 +18,8 @@
   justify-items: center;
   padding: var(--ymir-space-6);
   background:
-    radial-gradient(900px 500px at 50% -10%, var(--ymir-info-dim), transparent 60%),
-    radial-gradient(700px 500px at 100% 110%, color-mix(in srgb, var(--ymir-violet-1) 12%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 50% -10%, color-mix(in srgb, var(--ymir-cyan-1) 14%, transparent), transparent 60%),
+    radial-gradient(700px 500px at 100% 110%, color-mix(in srgb, var(--ymir-cyan-1) 9%, transparent), transparent 60%),
     var(--ymir-bg-0);
   overflow-y: auto;
 }

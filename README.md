@@ -515,3 +515,22 @@ One day, one loom. Everything below lives in this main and in the world:
 
 The lore runs to **XXXI — The Weaving of the Halls**; the masterplan carries
 the full day's ledger.
+
+## Credits
+
+Ymir stands on open-source work, adopted under its own Norse shells. Our thanks to
+the authors of each — their licences are honoured in [NOTICE](NOTICE) and audited in
+[docs/third-party-audit.md](docs/third-party-audit.md).
+
+| Project | Licence | Powers in Ymir |
+|---|---|---|
+| [treehouse](https://github.com/kunchenguid/treehouse) | MIT | Yggdrasil — git worktrees |
+| [sandcastle](https://github.com/mattpocock/sandcastle) | MIT | Utgard — sealed sandboxes |
+| [no-mistakes](https://github.com/kunchenguid/no-mistakes) | MIT | the clean-PR gate |
+| [pi](https://github.com/earendil-works/pi) | MIT | the coding harness |
+| [hermes-agent](https://github.com/NousResearch/hermes-agent) | MIT | the Hermes worker runtime |
+| [pi-desktop](https://github.com/FaqFirebase/pi-desktop) | Apache-2.0 | Sessrúmnir (vendored, re-themed fork) |
+| [a2aproject/a2a](https://github.com/a2aproject/a2a) | Apache-2.0 | the A2A 1.0 protocol |
+
+Ymir itself is Apache-2.0. Nothing here is copyleft; we adopt, we credit, we do
+not relicense.
