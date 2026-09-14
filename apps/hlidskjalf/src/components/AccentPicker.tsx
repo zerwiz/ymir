@@ -75,7 +75,7 @@ export function AccentPicker() {
 
   const currentTint =
     accentId === 'custom'
-      ? custom ?? '#38bdf8'
+      ? custom ?? 'var(--ymir-cyan-1)'
       : accentId === 'realm'
         ? 'var(--realm-tint)'
         : ACCENTS.find((a) => a.id === accentId)?.tint ?? 'var(--ymir-cyan-1)';
@@ -119,7 +119,7 @@ export function AccentPicker() {
                 style={
                   a.tint
                     ? { background: a.tint }
-                    : { background: 'linear-gradient(135deg,#38bdf8,#8b5cf6,#f59e0b)' }
+                    : { background: 'linear-gradient(135deg,#c9973f,#96a0a8,#7c3a30)' }
                 }
               >
                 {a.id === 'realm' ? (
@@ -140,7 +140,7 @@ export function AccentPicker() {
             <span className="eyebrow">Custom</span>
             <input
               type="color"
-              value={custom ?? '#38bdf8'}
+              value={custom ?? 'var(--ymir-cyan-1)'}
               onChange={(e) => setCustomAccent(e.target.value)}
               aria-label="Custom accent colour"
             />
@@ -167,7 +167,7 @@ export function AccentPicker() {
                 style={
                   b.hex
                     ? { background: b.hex, borderColor: 'var(--ymir-steel-2)' }
-                    : { background: 'linear-gradient(135deg,#080c14,#101726,#182334)' }
+                    : { background: 'linear-gradient(135deg,#0e0c09,#151209,#1a1610)' }
                 }
               >
                 {b.hex === null ? (
@@ -188,7 +188,7 @@ export function AccentPicker() {
             <span className="eyebrow">Custom bg</span>
             <input
               type="color"
-              value={bg || '#101726'}
+              value={bg || '#151209'}
               onChange={(e) => setBg(e.target.value)}
               aria-label="Custom background colour"
             />

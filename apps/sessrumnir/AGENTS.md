@@ -281,6 +281,30 @@ src/
 - Thinking level selector (off/minimal/low/medium/high/xhigh, plus max when the engine offers it)
 - Token usage and cost tracking in status bar
 
+### To the Hall
+
+- The status bar carries one **To the Hall** button (carved: brass rule, bone
+  rune, bronze on hover) that opens the Ymir landing page in the browser.
+- Where it lands is resolved in the **main** process (`SYSTEM_HALL_URL`): the
+  local site (`http://127.0.0.1:4322`, overridable with `YMIR_HALL_URL`) when it
+  answers, otherwise `https://hall.ymir.zerwiz.org`. The probe lives there
+  because the renderer's CSP (`connect-src 'self'`) forbids a cross-origin fetch.
+- Opening is the same `system:open-external` door the update banner uses —
+  http(s) only.
+
+### Text selection
+
+- `::selection` is a **theme token** (`--color-selection-bg` / `--color-selection-fg`,
+  pi-theme/v1): the cloth themes pin the landing's amber `#57411a` on pale bone
+  `#f0e6cd`; any other theme derives its own tint from its accent, so a user theme
+  still wins.
+- The global rule lives in `index.css` `@layer base`; the CodeMirror editor needs
+  a second, **unlayered** rule (`.cm-editor .cm-selectionLayer .cm-selectionBackground`)
+  because CodeMirror's own base theme paints its selection layer with unlayered
+  rules, which beat any layered rule whatever the specificity.
+- The terminal's selection rides the same cloth through `--cm-selection-bg`
+  (`components/terminal.tsx` reads it into the xterm theme).
+
 ### Command Palette / Quick Switcher
 
 - Open with `Ctrl/Cmd+K` (works with Pi stopped), or by typing `/` at the start of the composer

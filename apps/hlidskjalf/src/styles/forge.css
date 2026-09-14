@@ -25,7 +25,7 @@
   align-items: center;
   gap: var(--ymir-space-3);
   padding: var(--ymir-space-3) var(--ymir-space-4);
-  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  border-bottom: 1px solid color-mix(in srgb, var(--ymir-steel-2) 40%, transparent);
   color: var(--ymir-text-1);
   text-align: left;
 }

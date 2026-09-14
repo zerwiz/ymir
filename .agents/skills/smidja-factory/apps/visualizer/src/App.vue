@@ -30,23 +30,24 @@ onMounted(async () => {
 })
 const isMeta = computed(() => isMemory.value || isDecisions.value || isStats.value || isChat.value || isSettings.value)
 
-// ── Theme toggle: the neutral theme is the default; data-theme="classic"
-   //    preserves the OLD deep-space visualizer look (added 2026-09-01, G7 —
-   //    nothing removed, the old styling is kept as an option).
-   //    data-theme="high-contrast" adds a WCAG AAA compliant high contrast mode.
-   //    Choice is persisted locally. ──
+// ── Theme toggle: fensalir (the carved cloth of the halls) is the default;
+   //    data-theme="classic" preserves the OLD deep-space visualizer look
+   //    (added 2026-09-01, G7 — nothing removed, the old styling is kept as an
+   //    option). data-theme="high-contrast" adds a WCAG AAA compliant high
+   //    contrast mode. Both are deliberate overrides and win when chosen.
+   //    Choice is persisted locally; a saved "neutral" resolves to fensalir. ──
   const savedTheme = localStorage.getItem('smidja-theme')
   if (savedTheme === 'classic' || savedTheme === 'high-contrast') {
     document.documentElement.dataset.theme = savedTheme
   }
-  const theme = ref<'neutral' | 'classic' | 'high-contrast'>(
-    (savedTheme === 'classic' || savedTheme === 'high-contrast') ? savedTheme : 'neutral'
+  const theme = ref<'fensalir' | 'classic' | 'high-contrast'>(
+    (savedTheme === 'classic' || savedTheme === 'high-contrast') ? savedTheme : 'fensalir'
   )
   function toggleTheme() {
-    const order: Array<'neutral' | 'classic' | 'high-contrast'> = ['neutral', 'classic', 'high-contrast']
+    const order: Array<'fensalir' | 'classic' | 'high-contrast'> = ['fensalir', 'classic', 'high-contrast']
     const idx = order.indexOf(theme.value)
     theme.value = order[(idx + 1) % order.length]
-    if (theme.value === 'neutral') {
+    if (theme.value === 'fensalir') {
       delete document.documentElement.dataset.theme
     } else {
       document.documentElement.dataset.theme = theme.value
@@ -125,11 +126,11 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
       <a v-else :href="gateUrl" target="_blank" rel="noreferrer" title="Sign in to Ymir" style="margin-right:6px;color:inherit;text-decoration:none;font-size:12px;opacity:.85">Sign in</a>
       <div role="group" aria-label="Switch hall" style="display:flex;gap:2px;margin-right:6px">
         <button type="button" title="Hlidskjalf — the control plane" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᚺ</button>
-        <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:#38bdf8;cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>
+        <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:var(--accent);cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>
         <button type="button" title="Sessrúmnir — the seat-hall" aria-label="Open Sessrúmnir" @click="raiseApp('sessrumnir')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᛋ</button>
       </div>
-      <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'neutral'} (click to switch)`" @click="toggleTheme">
-        {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'neutral' }}
+      <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'fensalir — the carved cloth'} (click to switch)`" @click="toggleTheme">
+        {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'fensalir' }}
       </button>
       <span v-if="isLinuxDesktop" class="win-controls">
         <button class="win-btn" title="Minimize" @click="winControl('minimize')" aria-label="Minimize">
@@ -188,9 +189,9 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
   height: 1px;
   background: linear-gradient(
     90deg,
-    rgba(56, 189, 248, 0.4),
-    rgba(125, 211, 252, 0.3) 40%,
-    rgba(125, 211, 252, 0.06)
+    color-mix(in srgb, var(--accent) 40%, transparent),
+    color-mix(in srgb, var(--accent) 30%, transparent) 40%,
+    color-mix(in srgb, var(--accent) 6%, transparent)
   );
 }
 
@@ -206,11 +207,11 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
   width: 28px;
   height: 28px;
   flex: none;
-  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.3));
+  filter: drop-shadow(0 0 8px rgba(201, 151, 79, 0.3));
 }
 
 .brand {
-  background: linear-gradient(90deg, var(--accent), #7dd3fc);
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

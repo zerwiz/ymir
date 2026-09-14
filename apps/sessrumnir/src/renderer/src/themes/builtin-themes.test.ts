@@ -43,8 +43,12 @@ test('ported themes pin every token in overrides (parity guarantee)', () => {
     // error-hover and border-strong-hover have no legacy CSS counterpart to
     // reproduce (no theme ever remapped the red-500/600 or neutral-600 shades),
     // so they derive via MIX(..., 15) / MIX(..., 35) instead of pinning the
-    // raw value that would carry the theme-blind bug forward.
-    const derivedOnly = new Set(['error-hover', 'border-strong-hover'])
+    // raw value that would carry the theme-blind bug forward. selection-bg and
+    // selection-fg are the same case: a ported theme's selection should follow
+    // that theme's own accent (the cloth themes pin the landing's amber).
+    const derivedOnly = new Set([
+      'error-hover', 'border-strong-hover', 'selection-bg', 'selection-fg',
+    ])
     for (const token of TOKEN_NAMES) {
       if (seedBacked.has(token) || derivedOnly.has(token)) continue
       assert.ok(theme.overrides?.[token], `${id}: token ${token} not pinned`)

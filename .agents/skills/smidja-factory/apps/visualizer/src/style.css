@@ -1,31 +1,38 @@
 :root {
-  --bg: #1A1A1A;
-  --panel: #222222;
-  --panel-2: #2A2A2A;
-  --panel-3: #222222;
-  --border: #444444;
-  --border-soft: #333333;
-  --text: #FFFFFF;
-  --dim: #AAAAAA;
-  --faint: #666666;
-  --green: #22C55E;
-  --red: #EF4444;
-  --blue: #3B82F6;
-  --amber: #F59E0B;
-  --purple: #8B5CF6;
-  --cyan: #5AD2DD;
-  --violet: #8B5CF6;
-  --accent: #38bdf8;
-  /* Play carries the UI voice; mono is reserved for data (ids, times, code). */
-  --sans: 'Play', 'Helvetica Neue', system-ui, sans-serif;
-  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, 'Cascadia Mono',
-    'Roboto Mono', monospace;
+  /* ── The carved cloth of the halls (the default) ──────────────────────────
+     Cut from the landing page (CodeP/ymir-homepage/src/lore.html :root):
+     stone, bone, bronze and blood. `data-theme="classic"` restores the old
+     deep-space look and `data-theme="high-contrast"` the WCAG AAA mode — both
+     are deliberate overrides and win when chosen. ── */
+  --bg: #0e0c09;
+  --panel: #151209;
+  --panel-2: #1a1610;
+  --panel-3: #14100b;
+  --border: #7d5f2a;
+  --border-soft: #2b241a;
+  --text: #cfc3a9;
+  --dim: #9a8f75;
+  --faint: #6b6250;
+  --green: #96a0a8;
+  --red: #c2584a;
+  --blue: #5f686e;
+  --amber: #c9973f;
+  --purple: #9a8f75;
+  --cyan: #96a0a8;
+  --violet: #7d5f2a;
+  --accent: #c9973f;
+  /* Cormorant carries the display voice, Newsreader the UI voice; mono is
+     reserved for data (ids, times, code). Runes fall through to Noto Sans Runic. */
+  --sans: 'Newsreader', Georgia, 'Noto Sans Runic', system-ui, serif;
+  --display: 'Cormorant', Georgia, 'Noto Sans Runic', serif;
+  --mono: 'IBM Plex Mono', 'Noto Sans Runic', ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco,
+    'Cascadia Mono', 'Roboto Mono', monospace;
   /* Surface gradient shared by cards and panels — one recipe, everywhere. */
-  --surface: linear-gradient(180deg, #222222 0%, #1A1A1A 100%);
+  --surface: linear-gradient(180deg, #1a1610 0%, #151209 100%);
 }
 
 /* ── Classic deep-space theme (PRESERVED from the earlier smithy
-   visualizer, 2026-09-01). Nothing was removed: the neutral theme above is the
+   visualizer, 2026-09-01). Nothing was removed: the carved cloth above is the
    default, and data-theme="classic" restores the original deep-space look with
    its violet/cyan aurora. Set on <html> (e.g. via the shell titlebar toggle) —
    the overrides below win because they come later in the cascade. ── */
@@ -61,11 +68,12 @@ body {
 }
 
 body {
-  /* Deep space with a faint forge-cyan tint — fixed so scrolling glides over it. */
+  /* The stone, with a faint bronze light at the top-left and bone at the
+     bottom-right — fixed so scrolling glides over it. */
   background:
-    radial-gradient(1100px 700px at 8% -10%, rgba(56, 189, 248, 0.06), transparent 62%),
-    radial-gradient(1000px 720px at 102% 108%, rgba(125, 211, 252, 0.05), transparent 60%),
-    linear-gradient(180deg, #1A1A1A 0%, #0F0F0F 100%);
+    radial-gradient(1100px 700px at 8% -10%, rgba(201, 151, 79, 0.05), transparent 62%),
+    radial-gradient(1000px 720px at 102% 108%, rgba(207, 195, 169, 0.04), transparent 60%),
+    linear-gradient(180deg, #0e0c09 0%, #0b0906 100%);
   background-attachment: fixed;
   color: var(--text);
   font-family: var(--sans);
@@ -299,6 +307,15 @@ pre {
   font-size: 16px;
   line-height: 1.6;
   color: var(--text);
+}
+
+.md h1,
+.md h2,
+.md h3,
+.md h4 {
+  /* Headings speak in the cloth's display face. */
+  font-family: var(--display);
+  font-weight: 600;
 }
 
 .md h1 {

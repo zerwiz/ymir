@@ -52,7 +52,9 @@
     "scrollbar": "#2b241a",
     "scrollbar-hover": "#7d5f2a",
     "md-code": "#c9973f",
-    "md-pre-bg": "#14100b"
+    "md-pre-bg": "#14100b",
+    "selection-bg": "#57411a",
+    "selection-fg": "#f0e6cd"
   },
   "syntax": {
     "keyword": "#c9973f",
@@ -74,7 +76,7 @@
     "mark": "#c9973f",
     "invalid": "#c2584a",
     "active-line-bg": "rgba(207, 195, 169, 0.04)",
-    "selection-bg": "rgba(201, 151, 79, 0.28)",
+    "selection-bg": "#57411a",
     "selection-match-bg": "rgba(207, 195, 169, 0.08)"
   }
 }

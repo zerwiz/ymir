@@ -63,6 +63,9 @@
   --color-scrollbar-hover: #7d5f2a;
   --color-md-code: #c9973f;
   --color-md-pre-bg: #14100b;
+  /* A selected run of text — the landing's own selection: amber on pale bone. */
+  --color-selection-bg: #57411a;
+  --color-selection-fg: #f0e6cd;
 
   /* The cloth's type: Cormorant speaks (display), Newsreader reads (body),
      IBM Plex Mono counts (code) — the landing page's own three families. */
@@ -82,6 +85,13 @@
     color: var(--color-primary);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Text selection wears the cloth, never the browser's blue. The values come
+     from the theme engine (a user theme derives its own tint from its accent). */
+  ::selection {
+    background-color: var(--color-selection-bg);
+    color: var(--color-selection-fg);
   }
 
   * {
@@ -400,3 +410,16 @@
    Highlight API) are injected at runtime from chat-search.tsx — Tailwind's
    Lightning CSS transformer drops the unrecognized ::highlight() pseudo-element
    at build time, so they can't live here. */
+
+/* ─── Selection inside the code editor ────────────────────────────────────────
+   The global ::selection lives in @layer base; CodeMirror's own base theme
+   paints its selection layer with *unlayered* rules (a dark slate), and an
+   unlayered rule always beats a layered one whatever the specificity. So this
+   rule is unlayered too, and scoped deep enough to win on merit. The cloth's
+   selection is the landing's own amber. */
+.cm-editor .cm-selectionLayer .cm-selectionBackground,
+.cm-editor.cm-focused .cm-selectionLayer .cm-selectionBackground,
+.cm-editor ::selection {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+}
