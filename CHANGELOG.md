@@ -1,5 +1,49 @@
 # CHANGELOG
 
+## 2026-09-13 — The realm seat, carved (wayof)
+
+- **Problem:** the realm tree was bare (only the shipped example), no tenant
+  was seated, and the session digest resolved the Allfather's realm to
+  `default` — his company and private holdings unreachable by the map.
+- **Seat:** `svartalfaheim/wayof/` carved from the example — `.env.realm`,
+  `SECRETS.md`, `AGENTS.md` (persona), `domains/`, `projects/`, the five
+  workspace branches, and the 9 company cards seeded from the identity hoard
+  (askr · brokkforge · dvalin · mannheim · muninn · runestone · utgard · wayof ·
+  ymirlabs), realm field unified to `wayof`, repo paths corrected to this
+  machine. `data/realm.md` now pins `wayof` (was drifting between `way-of`,
+  `wayof`, and `default`; hoard cards + persona updated to match).
+- **Hood:** `svartalfaheim/wayof/HOOD.md` is the map of the hoard and the
+  seat; `bin/saga-session-start.sh` stage 6 (context digest) now prints
+  `--- hood ---` whole from the realm seat, so a session opens knowing the
+  operator's holdings. Living overviews: `workspace/company/wayof-overview.md`
+  and `workspace/company/aigf.md` (hodd stays the private store; the realm
+  points at it).
+- **Verified:** `bash -n` green; realm-lib resolves `wayof`; `realm env:
+  present`.
+
+## 2026-09-13 — Gleipnir sees when an agent is turned off
+
+- **Problem:** the machine lock stuck “held by another Brokk session” forever.
+  Nothing released it ( `gleipnir_lock_release` had zero callers; Pi's exit
+  hook only stopped the arm child), and liveness was `kill(0)` alone — which
+  reports a zombie (dead but unreaped) and a recycled pid as alive, so an
+  agent you turned off kept the helm until its pid happened to look gone.
+  Worse, the Sessrúmnir desktop RPC session holds the live lock yet never
+  arms supervision (no turn ever calls `gna_watch_arm`), stranding every
+  other session read-only.
+- **Fix:** `bin/gleipnir-lock-lib.sh` now records the owner's starttime in a
+  `brokk.lock.starttime` sidecar and reaps a holder whose `/proc/<pid>/stat`
+  state is `Z`/`X` or whose starttime no longer matches (pid reuse) — dead,
+  zombie, and recycled holders are cleared at session start/acquire. Gná
+  (`gna-pi-watch.ts`) mirrors that liveness, reclaims a stale lock directly in
+  `gna_watch_arm` (`missing` no longer punts to saga-session-start.sh), and
+  drops its own lock on real process exit (`releaseLockIfOwned`); the turn-end
+  guard (`syn-turnend-guard.ts`) uses the same zombie-aware check.
+- **Impact:** turning an agent off — cleanly, by kill (zombie), or after pid
+  reuse — frees the machine lock for the next session. The live desktop seat
+  still holds it until that app is closed or its own session arms; that is the
+  law (one live primary per machine), but it now releases and hands off
+  correctly.
 ## 2026-09-13 — the new tree, the mesh, the seat-hall
 
 - **Everything in the new tree:** the Sessrúmnir work plus the orphaned fixes
@@ -387,3 +431,68 @@ Entries are appended chronologically; never rewritten.
   in `.agents/agents`; harness dirs are symlinks; no mock agents), `03-houses.md`
   (a house is a company — WayOf; the eight Labs are domains, never houses).
 - Live Fleet de-mocked (real domain/model/status; seeded stats only in demo).
+
+## 2026-09-14 — A vacant helm is entered, not punted (watcher wake repair)
+
+- **Problem:** a watcher wake reported the Pi extension could not restore
+  continuity — "this session no longer owns the lock". Root cause found by
+  inspection: an **empty/truncated** machine lock (`~/.local/state/ymir/brokk.lock`)
+  was classified by `gna-pi-watch.ts` `lockOwnership()` as `other` (another
+  live session) and by `bin/syn-watch-arm.sh`'s gate as read-only — so a helm
+  with *no verifiably-live holder* was refused and punted to a manual
+  `saga-session-start.sh` reclaim.
+- **Fix (both seams in one change):** the extension now classifies an empty
+  lock as `missing`, so `gna_watch_arm`'s reclaim takes the helm in place; the
+  arm script, on finding no owner (or an owner verifiably gone), runs
+  `gleipnir_lock_acquire` itself — which refuses only a genuinely live other
+  session — instead of printing read-only. The "run saga-session-start.sh"
+  punt is gone; a vacant helm is entered by the watcher's own hand.
+- **Verified:** scratch-state test — empty machine lock → `watcher: started`,
+  lock bound to the session pid + starttime sidecar, `.supervision-armed`
+  touched; `gleipnir-machine-lock.test.sh` ALL PASS (zombie, recycled,
+  migration); compliance 10/10; harness-integration asset updated in the same
+  change (the governed rule).
+
+## 2026-09-14 — The Eindri→Brokk wake bridge (they can talk back now)
+
+- **Ask:** the seated smiths' reports lived in their panes only; the Allfather
+  wanted a feature that wakes Brokk when an Eindri reports, so the fleet's
+  doings reach the primary's session — "we are in control, Brokk".
+- **Built:** `bin/eindri-seen.sh` (condition — a report file landed or herdr
+  shows the smith left `working`), `bin/eindri-acclaim.sh` (action — files the
+  report durably under state/eindri-reports/, marks done under
+  state/eindri-done/, appends the wake to state/.wake-queue for Sága's drain,
+  sounds the desktop note), and `bin/eindri-watch.sh` (the control door —
+  `arm | retire | list | reconcile`, one when-source per smith on the Norns'
+  loom via fm-procevent-when.sh, action hash-bound, fires once on a stable
+  true, terminal, re-armable).
+- **Armed live:** when-odrerir (already fired — his report was filed) and
+  when-sessrumnir-cloth (still working). `fm-procement.sh reconcile` started=2.
+- **First report delivered through the wire:** odrerir's Óðrerir saga — deck
+  green at :4322, 52 Chromium checks, commit 38a326b on yggdrasil/odrerir, main
+  untouched, plus the hall.ymir.zerwiz.org server story (setup-hall.sh) and
+  three asks awaiting the Allfather (go live, landing mobile wart, PLAN log).
+
+## 2026-09-14 — Óðrerir forged (Eindri odrerir, pane w3:p7)
+
+- The Live Hall carved on the landing per PLAN.md §14: dealt slate pile,
+  choices + recommended marks, freeform, queue + limit guard, thread ledger,
+  live tally, four empty states, fail-closed, keyboard, reveal, mobile (390px,
+  zero overflow); cloth check green; §12 scan clean. Deployed plan for the
+  public hall: hall.ymir.zerwiz.org via a second Caddy site :4322 (deploy/
+  setup-hall.sh + tunnel-ingress.sh, idempotent, live provisioning untested).
+
+## 2026-09-14 — The echo guard: no wake flood through Gná's door
+
+- **Problem:** during a loud stretch (stale wake lines + the FM runner's
+  durable queue holding ten old check-wakes), the watcher re-armed and
+  re-signalled "signal: wake queue" across many generations; every actionable
+  close queued one pi follow-up wake (`sendWake`, no dedup), which then
+  dripped at the Allfather one per prompt — a long echo flood after the
+  sources were drained.
+- **Fix:** `gna-pi-watch.ts` `sendWake` is **echo-guarded**: an identical
+  watcher message is delivered at most once per drained state — when both
+  durable doors (`state/.wake-queue` and the FM runner's
+  `.agents/state/.wake-queue`) are empty, a repeat carry is the same drained
+  news and is skipped. Genuine new content (different message, or a door with
+  a line) always delivers. Harness asset updated in the same change.

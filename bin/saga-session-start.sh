@@ -12,7 +12,7 @@
 #   3. wake queue      present durable wakes (Ratatoskr inbox + approvals)
 #   4. supervision     the operating block for the detected harness
 #   5. fleet digest    Eindri tasks / open forge orders / state metadata
-#   6. context digest  realm, operator, projects, learnings (ABSENT explicit)
+#   6. context digest  realm, operator, projects, learnings, hood (ABSENT explicit)
 #   7. cron start      ensure the scheduled jobs are running (idempotent)
 #   8. next step       closing pointer
 #
@@ -128,6 +128,11 @@ printf -- '--- realm ---\n%s\n' "$REALM"
 emit_context "$DATA/operator.md" "operator"
 emit_context "$DATA/projects.md" "projects"
 emit_context "$DATA/learnings.md" "learnings"
+# The hood: the map of the Allfather's private + company holdings. Printed
+# whole from the realm seat so a session opens knowing the lay of the land.
+HOOD_FILE="$ROOT/svartalfaheim/$REALM/HOOD.md"
+[ -r "$BROKK_HOME/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="$BROKK_HOME/svartalfaheim/$REALM/HOOD.md"
+emit_context "$HOOD_FILE" "hood"
 
 section "ASSET ROUTING"
 # Load the owning asset BEFORE editing a governed path. A code change not

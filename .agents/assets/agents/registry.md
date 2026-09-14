@@ -76,6 +76,16 @@ commands[8]{command,purpose}:
   "/validate-plan","validate plan before implementation"
 ```
 
+## Brokk commands — the Eindri wake bridge (control)
+
+```
+commands[4]{command,purpose}:
+  "bin/eindri-watch.sh","the bridge's door: arm/retire/list/reconcile a when-source per smith (Norns' loom)"
+  "bin/eindri-seen.sh","bridge condition: has the smith reported? (report file, or herdr left working)"
+  "bin/eindri-acclaim.sh","bridge action: file the report, mark done, append the wake queue + desktop note"
+  "bin/hall-snapshot.sh","the planning feed: real system state -> public-safe livehall.json for the Óðrerir Hall"
+```
+
 ## Maintaining this
 
 - **Owner:** Brokk. **Loaded by:** `AGENTS.md`. **Mirror:** `.agents/skills/galdr-cli/assets/registry.md`.

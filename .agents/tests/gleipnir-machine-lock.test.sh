@@ -70,5 +70,61 @@ BROKK_HOME="$TMP/home" BROKK_MACHINE_STATE_DIR="$TMP/machine" \
 [ -e "$TMP/machine/brokk.lock" ] && bad "stale machine lock not reaped" \
   || ok "a dead machine lock is reaped"
 
+# --- acquire records a starttime sidecar --------------------------------------
+
+BROKK_HOME="$TMP/home" BROKK_MACHINE_STATE_DIR="$TMP/machine" BROKK_SESSION_PID="$$" \
+  bash -c '. "$0"; gleipnir_lock_acquire' "$LIB" >/dev/null 2>&1
+[ -s "$TMP/machine/brokk.lock.starttime" ] && ok "acquire records a starttime sidecar" \
+  || bad "starttime sidecar missing after acquire"
+
+# --- reap clears a lock whose recorded starttime no longer matches (pid reuse) --
+
+# Use a live unrelated process (this shell) with a deliberately wrong starttime:
+# liveness sees the pid "alive" via kill(0) but the recorded starttime belongs
+# to a process that is no longer the owner — i.e. the kernel recycled the pid.
+mkdir -p "$TMP/machine"; printf '%s\n' "$$" > "$TMP/machine/brokk.lock"
+printf '0\n' > "$TMP/machine/brokk.lock.starttime"
+BROKK_HOME="$TMP/home" BROKK_MACHINE_STATE_DIR="$TMP/machine" \
+  bash -c '. "$0"; gleipnir_lock_reap' "$LIB" >/dev/null 2>&1
+[ -e "$TMP/machine/brokk.lock" ] && bad "recycled-pid lock not reaped" \
+  || ok "a lock whose pid was recycled is reaped"
+
+# --- reap clears a lock held by a real zombie ---------------------------------
+
+# Fork a child, kill it, and keep the parent alive WITHOUT waiting: the child
+# becomes a zombie. kill(0) on a zombie succeeds — the old liveness checked
+# only that and missed the death; reap must now see the Z state and clear it.
+python3 -c '
+import os, signal, sys, time
+p = os.fork()
+if p == 0:
+    time.sleep(10); os._exit(0)
+else:
+    time.sleep(0.3)
+    os.kill(p, signal.SIGKILL)
+    time.sleep(0.3)
+    with open(sys.argv[1], "w") as h:
+        h.write(str(p))
+    time.sleep(30)
+' "$TMP/zombie.pid" &
+zombie_keeper=$!
+for _i in 1 2 3 4 5 6 7 8 9 10; do
+  [ -s "$TMP/zombie.pid" ] && break
+  sleep 0.2
+done
+zombie_pid=$(cat "$TMP/zombie.pid" 2>/dev/null || true)
+state=$(awk '{print $3}' "/proc/$zombie_pid/stat" 2>/dev/null)
+if [ -n "$zombie_pid" ] && [ "$state" = "Z" ]; then
+  printf '%s\n' "$zombie_pid" > "$TMP/machine/brokk.lock"
+  rm -f "$TMP/machine/brokk.lock.starttime"
+  BROKK_HOME="$TMP/home" BROKK_MACHINE_STATE_DIR="$TMP/machine" \
+    bash -c '. "$0"; gleipnir_lock_reap' "$LIB" >/dev/null 2>&1
+  [ -e "$TMP/machine/brokk.lock" ] && bad "zombie-held lock not reaped" \
+    || ok "a zombie-held lock is reaped (kill(0) alone cannot see this)"
+else
+  bad "test setup: expected a zombie child (got state ${state:-none})"
+fi
+kill "$zombie_keeper" 2>/dev/null || true
+
 [ "$fail" = 0 ] && echo "ALL PASS" || echo "FAILURES"
 exit "$fail"
