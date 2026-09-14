@@ -1,3 +1,13 @@
+/**
+ * OLD LOGIN — retired, kept, not wired.
+ *
+ * This is the original Hlidskjalf login modal, and with it the lore telling
+ * (`LORE_BEATS` / `LORE_LONG`). It is no longer the door; the live login is a
+ * standalone forge page served elsewhere.
+ *
+ * KEEP FOR THE LORE — the beats and the long telling are wanted for the future.
+ * Do not delete, and do not re-wire it as the gate without an explicit decision.
+ */
 import { useEffect, useState } from 'react';
 import { gateApi } from '../services/api';
 import { LORE_LONG } from '../data/lore';
