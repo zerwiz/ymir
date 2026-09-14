@@ -29,6 +29,45 @@ scripts/stop.sh     # lower them all
   `--realm-tint-dim` on `:root`, set per realm via `data-realm` and overridable by
   the user (`state/store.ts` → `applyAccent`). Tenant overrides live in
   `tenantColors`.
+- **Fonts** are the cloth's three faces, loaded from Google Fonts in `index.html`:
+  Cormorant (display/runes), Newsreader (body), IBM Plex Mono (data), with Noto
+  Sans Runic appended to every stack so a rune glyph falls through to the rune
+  family.
+
+### The cloth (2026-09-13)
+
+The token *values* are the **carved cloth of the halls** — the landing page's own
+palette (`CodeP/ymir-homepage/src/lore.html` `:root`), so Hlidskjalf, Smíðja and
+Sessrúmnir are one look (`docs/design.md` §0/§4.2 is the contract):
+
+```
+canvas   bg-0 #0e0c09 · bg-1 #151209 · bg-2 #1a1610 · bg-3 #221d14   (stone)
+accent   cyan-1 #c9973f bronze · cyan-2 #7d5f2a bronze-deep
+         violet-1 #96a0a8 steel · violet-2 #5f686e steel-dim
+lines    steel-1 #2b241a (line) · steel-2 #7d5f2a (brass rule) · chisel #c9973f
+text     text-0 #cfc3a9 bone · text-1 rgba(207,195,169,.82) · text-2 #9a8f75 · text-3 #6b6250
+state    ok #96a0a8 steel · warn #c9973f · danger #c2584a blood-lit · info #9a8f75
+bevel    inset 0 0 0 1px rgba(201,151,79,.12)
+```
+
+Rules that hold it honest:
+
+- **The cloth is the default, not a cage** — a user accent/background choice wins
+  (`AccentPicker`), and the eight **house/domain seals keep their heraldry**
+  (`DOMAINS`), exactly as the landing page keeps its house seals. Chrome is the
+  cloth; heraldry is not chrome.
+- The **workspace tints** are cloth too: `work` = bronze `#c9973f`, `personal` =
+  steel `#96a0a8` (`src/data/realms.ts` → `WORKSPACES`, mirrored by the
+  `data-realm` fallbacks in `styles/global.css`).
+- The **Emblem** (`components/Emblem.tsx`, `midgard/design-system/ymir-mark.svg`)
+  is brand, not cloth — it keeps its own colours on the stone.
+- The login's GitHub button is a bone plate with a dark rune (the old white/navy
+  literal is gone), and the `HallsChooser` cards read real tokens (they used to
+  name two tokens that never existed, `--ymir-line`/`--ymir-panel`).
+- Role-coloured literals in the stylesheets are now `color-mix(… var(--token) …)`,
+  so a token change re-themes them.
+- Geometry did not move: radius, spacing and the shell are unchanged by the cloth
+  (the carved-slate squaring is still an open question).
 
 ## The shell (structural, do not redesign)
 
@@ -47,11 +86,12 @@ scripts/stop.sh     # lower them all
 
 1. **Color-only states are forbidden** — every status carries glyph + colour + text
    (`StatusChip`, `TaskChip`).
-2. **Runecoded, not emoji** — use the rune family (Cinzel); never an emoji as an icon.
+2. **Runecoded, not emoji** — use the rune family (runic glyphs fall through to
+   Noto Sans Runic inside the Cormorant/mono stacks); never an emoji as an icon.
 3. **Every button must act** — no dead controls. Wire to a state change, a modal, or
    a toast.
 4. **Motion explains** — 120–240ms, no bounce; honour `prefers-reduced-motion`.
-5. **Metrics are JetBrains Mono, tabular** (`.mono`, `.tabular`).
+5. **Metrics are IBM Plex Mono, tabular** (`.mono`, `.tabular`).
 6. **Metadata per page** — a gate declares its title/description/OG tags in
    `src/data/metadata.ts`; `Shell` applies them on gate/realm change.
 

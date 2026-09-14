@@ -1,9 +1,9 @@
 {
   "$schema": "pi-theme/v1",
-  "name": "Sessrúmnir",
+  "name": "Fensalir",
   "kind": "dark",
   "author": "Ymir",
-  "description": "The seat's own cloth — the carved stone, bone, bronze and blood of the landing page. The default look of the seat; a user theme chosen still wins over it.",
+  "description": "Fensalir — the weaving halls: the carved cloth of the halls, taken whole from the landing page's stone, bone, bronze and blood. The default cloth of the seat; any user theme chosen still wins over it.",
   "seeds": {
     "app": "#0e0c09",
     "surface": "#151209",

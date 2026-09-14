@@ -266,7 +266,7 @@ function tagClass(tag: string): string {
 }
 .stat b {
   font-size: 20px;
-  color: #7dd3fc;
+  color: var(--accent);
   margin-right: 4px;
 }
 .db {
@@ -276,7 +276,7 @@ function tagClass(tag: string): string {
 
 .panel {
   background: rgba(16, 21, 32, 0.6);
-  border: 1px solid rgba(125, 211, 252, 0.12);
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
   border-radius: 12px;
   padding: 14px 16px;
 }
@@ -292,7 +292,7 @@ function tagClass(tag: string): string {
 }
 .input {
   background: rgba(11, 15, 24, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
   border-radius: 8px;
   color: inherit;
   padding: 8px 12px;
@@ -309,10 +309,10 @@ function tagClass(tag: string): string {
   width: auto;
 }
 .btn {
-  background: linear-gradient(90deg, #38bdf8, #7dd3fc);
+  background: linear-gradient(90deg, var(--accent), var(--accent));
   border: none;
   border-radius: 8px;
-  color: #0b0f18;
+  color: var(--panel-3);
   font-weight: 600;
   padding: 8px 16px;
   cursor: pointer;
@@ -355,34 +355,34 @@ function tagClass(tag: string): string {
 }
 .tag {
   font-size: 11px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
   border-radius: 99px;
   padding: 1px 8px;
-  color: #bbb;
+  color: var(--faint);
 }
 .tag-success {
-  border-color: rgba(74, 222, 128, 0.5);
-  color: #86efac;
+  border-color: color-mix(in srgb, var(--green) 50%, transparent);
+  color: var(--green);
 }
 .tag-fail {
   border-color: rgba(251, 113, 133, 0.5);
-  color: #fda4af;
+  color: var(--red);
 }
 .fact {
   font-size: 13px;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
 }
 .ok {
   margin-top: 8px;
-  color: #86efac;
+  color: var(--green);
   font-size: 13px;
 }
 .dim {
-  color: #8a93a6;
+  color: var(--dim);
 }
 .empty-state {
-  color: #8a93a6;
+  color: var(--dim);
   font-size: 13px;
   padding: 14px 2px;
 }
@@ -390,7 +390,7 @@ function tagClass(tag: string): string {
   background: rgba(251, 113, 133, 0.12);
   border: 1px solid rgba(251, 113, 133, 0.4);
   border-radius: 8px;
-  color: #fda4af;
+  color: var(--red);
   padding: 10px 14px;
   font-size: 13px;
 }

@@ -183,7 +183,7 @@ async function steer() {
   color: var(--dim);
 }
 .pill.running { color: var(--blue); border-color: rgba(108, 182, 255, 0.4); background: rgba(108, 182, 255, 0.08); }
-.pill.complete { color: var(--green); border-color: rgba(74, 222, 128, 0.4); background: rgba(74, 222, 128, 0.08); }
+.pill.complete { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
 
 .smidja { font-family: var(--mono); font-size: 14px; color: var(--text); }
 .meta { font-size: 13px; color: var(--dim); }
@@ -216,8 +216,8 @@ async function steer() {
   cursor: pointer;
 }
 .ctl:hover { color: var(--text); border-color: var(--border); }
-.ctl.stop { color: var(--red); border-color: rgba(255, 111, 103, 0.4); }
-.ctl.stop:hover { background: rgba(255, 111, 103, 0.1); }
+.ctl.stop { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
+.ctl.stop:hover { background: color-mix(in srgb, var(--red) 10%, transparent); }
 
 .steer { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .lab { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); }
@@ -231,7 +231,7 @@ async function steer() {
   font-size: 13px;
   padding: 7px 9px;
 }
-.steer-row input:focus { outline: none; border-color: rgba(56, 189, 248, 0.55); }
+.steer-row input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
 .s-btn {
   display: inline-flex;
   align-items: center;
@@ -240,7 +240,7 @@ async function steer() {
   border-radius: 8px;
   border: none;
   background: var(--accent);
-  color: #1A1A1A;
+  color: var(--bg);
   cursor: pointer;
 }
 .s-btn:hover { filter: brightness(1.08); }

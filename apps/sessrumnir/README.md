@@ -4,7 +4,8 @@ A desktop GUI for the [Pi](https://pi.dev) and [oh-my-pi](https://github.com/can
 
 > **Ymir adoption:** this is a vendored fork of the Apache-2.0 **pi-desktop**
 > project (`github.com/FaqFirebase/pi-desktop`, v0.1.7-alpha), rebranded
-> **Sessrúmnir** and themed with the Ymir way-of palette. See `AGENTS.md` for the
+> **Sessrúmnir** and wearing the carved cloth of the halls (stone, bone, bronze
+> and blood — the landing page's own palette and type). See `AGENTS.md` for the
 > adoption notes; upstream provenance and license are preserved.
 
 ![Pi Desktop — Home launcher screen](docs/screenshots/Screenshot_20260824_181929.png)

@@ -191,7 +191,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .sub { font-size: 13px; color: var(--dim); }
 
 .live { display: inline-flex; align-items: center; gap: 8px; color: var(--dim); font-size: 14px; white-space: nowrap; }
-.live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px rgba(74, 222, 128, 0.7); animation: pulse 1.6s ease-in-out infinite; }
+.live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px color-mix(in srgb, var(--green) 70%, transparent); animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.4; } }
 
 .body {
@@ -221,7 +221,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   cursor: text;
   outline: none;
 }
-.model-input:focus { border-color: var(--accent, #38bdf8); }
+.model-input:focus { border-color: var(--accent, var(--accent)); }
 .model-input::placeholder { color: var(--dim); }
 .model-dropdown {
   position: absolute;
@@ -247,7 +247,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   color: var(--text);
 }
 .model-opt:hover { background: var(--panel-2); }
-.model-opt.active { color: var(--accent, #38bdf8); font-weight: 600; }
+.model-opt.active { color: var(--accent, var(--accent)); font-weight: 600; }
 .model-opt .mo-name { font-family: var(--mono); }
 .model-opt .mo-meta { font-size: 11px; color: var(--dim); }
 .model-no { padding: 8px 12px; font-size: 11px; color: var(--dim); font-style: italic; }
@@ -319,7 +319,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   border-radius: 5px;
   cursor: pointer;
 }
-.pick-del:hover { color: var(--red); background: rgba(248, 113, 113, 0.12); }
+.pick-del:hover { color: var(--red); background: color-mix(in srgb, var(--red) 12%, transparent); }
 .pick-new {
   width: 100%;
   margin-top: 6px;

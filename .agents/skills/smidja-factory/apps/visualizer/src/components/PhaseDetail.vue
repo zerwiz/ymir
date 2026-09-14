@@ -1010,7 +1010,7 @@ h3:first-child {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #b3c0ff;
+  color: var(--violet);
 }
 .think-text {
   margin: 0;
@@ -1018,7 +1018,7 @@ h3:first-child {
   background: transparent;
   font-size: 12.5px;
   line-height: 1.55;
-  color: var(--text-soft, #c7ccd6);
+  color: var(--text-soft, var(--dim));
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -1109,7 +1109,7 @@ h3:first-child {
 }
 
 .tag-fail {
-  border-color: rgba(255, 111, 103, 0.55);
+  border-color: color-mix(in srgb, var(--red) 55%, transparent);
 }
 
 .tag-fail .tag-v {

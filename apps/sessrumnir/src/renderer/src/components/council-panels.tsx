@@ -175,7 +175,7 @@ export function CouncilPanels(): React.JSX.Element | null {
             </button>
             <button
               disabled={isStreaming}
-              className="rounded bg-accent px-3 py-1 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
+              className="rounded bg-accent px-3 py-1 text-sm text-inverse hover:bg-accent-hover disabled:opacity-50"
               onClick={() => void approve()}
             >
               Implement this

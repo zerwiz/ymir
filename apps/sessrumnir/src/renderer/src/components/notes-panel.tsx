@@ -110,7 +110,7 @@ export function NotesPanel(): React.JSX.Element {
         </div>
         <button
           onClick={() => setEditing('new')}
-          className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs text-white hover:bg-accent-hover transition-colors"
+          className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs text-inverse hover:bg-accent-hover transition-colors"
         >
           <Plus size={13} />
           New Note
@@ -393,7 +393,7 @@ function NoteForm({
         <button
           onClick={handleSubmit}
           disabled={!canSave}
-          className="rounded-md bg-accent px-4 py-1.5 text-sm text-white hover:bg-accent-hover disabled:opacity-50 transition-colors"
+          className="rounded-md bg-accent px-4 py-1.5 text-sm text-inverse hover:bg-accent-hover disabled:opacity-50 transition-colors"
         >
           {saving ? 'Saving...' : 'Save'}
         </button>

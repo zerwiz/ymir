@@ -7,9 +7,11 @@ import breezeDark from './breeze-dark.json'
 import breezeLight from './breeze-light.json'
 import breezeClaudius from './breeze-claudius.json'
 import sessrumnir from './sessrumnir.json'
+import fensalir from './fensalir.json'
 
 export const BUILTIN_THEMES: ReadonlyArray<{ id: string; file: ThemeFile }> = [
   { id: 'sessrumnir', file: sessrumnir as ThemeFile },
+  { id: 'fensalir', file: fensalir as ThemeFile },
   { id: 'dark', file: dark as ThemeFile },
   { id: 'light', file: light as ThemeFile },
   { id: 'nord', file: nord as ThemeFile },

@@ -62,7 +62,7 @@ a {
 }
 
 ::selection {
-  background: rgba(56, 189, 248, 0.28);
+  background: color-mix(in srgb, var(--ymir-cyan-1) 28%, transparent);
 }
 
 :focus-visible {
@@ -118,21 +118,23 @@ a {
 }
 
 /* --- Realm tints: structural, load-bearing ------------------- */
+/* The chrome accent is the cloth's bronze (work) and steel (personal) — the
+   landing's own accent. House/domain seals keep their heraldry; these do not. */
 :root,
 :root[data-realm='way-of'] {
-  --realm-tint: #38bdf8;
-  --realm-tint-2: #0ea5e9;
-  --realm-tint-dim: rgba(56, 189, 248, 0.14);
+  --realm-tint: #c9973f;
+  --realm-tint-2: #7d5f2a;
+  --realm-tint-dim: rgba(201, 151, 79, 0.14);
 }
 :root[data-realm='personal'] {
-  --realm-tint: #8b5cf6;
-  --realm-tint-2: #6366f1;
-  --realm-tint-dim: rgba(139, 92, 246, 0.14);
+  --realm-tint: #96a0a8;
+  --realm-tint-2: #5f686e;
+  --realm-tint-dim: rgba(150, 160, 168, 0.14);
 }
 :root[data-realm='craig'] {
-  --realm-tint: #f59e0b;
-  --realm-tint-2: #d97706;
-  --realm-tint-dim: rgba(245, 158, 11, 0.14);
+  --realm-tint: #7d5f2a;
+  --realm-tint-2: #6b6250;
+  --realm-tint-dim: rgba(125, 95, 42, 0.14);
 }
 
 /* --- Utilities ------------------------------------------------ */

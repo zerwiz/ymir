@@ -80,7 +80,7 @@ const resultPreview = computed(() => {
   font-size: 15px;
   text-align: left;
 }
-.head:hover { background: rgba(255, 255, 255, 0.03); }
+.head:hover { background: color-mix(in srgb, var(--text) 3%, transparent); }
 
 .t-icon { display: inline-flex; color: var(--violet); flex: none; }
 .tool-card.ok .t-icon { color: var(--green); }
@@ -121,7 +121,7 @@ const resultPreview = computed(() => {
   font-family: var(--mono);
   font-size: 12.5px;
   line-height: 1.5;
-  color: #cfdded;
+  color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -139,8 +139,8 @@ const resultPreview = computed(() => {
   padding: 6px 12px 8px;
   font-size: 13px;
   color: var(--green);
-  background: rgba(34, 197, 94, 0.08);
-  border-top: 1px solid rgba(34, 197, 94, 0.2);
+  background: color-mix(in srgb, var(--green) 8%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--green) 20%, transparent);
   border-radius: 0 0 8px 8px;
   font-family: var(--mono);
   white-space: pre-wrap;
@@ -150,7 +150,7 @@ const resultPreview = computed(() => {
 }
 .inline-preview.fail {
   color: var(--red);
-  background: rgba(239, 68, 68, 0.08);
-  border-top-color: rgba(239, 68, 68, 0.2);
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  border-top-color: color-mix(in srgb, var(--red) 20%, transparent);
 }
 </style>

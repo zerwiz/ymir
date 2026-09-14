@@ -117,8 +117,8 @@ function onScroll() {
 }
 .sys.err .sys-pill {
   color: var(--red);
-  border-color: rgba(255, 111, 103, 0.4);
-  background: rgba(255, 111, 103, 0.08);
+  border-color: color-mix(in srgb, var(--red) 40%, transparent);
+  background: color-mix(in srgb, var(--red) 8%, transparent);
 }
 
 .row { display: flex; }
@@ -131,8 +131,8 @@ function onScroll() {
   padding: 11px 15px;
 }
 .bubble.user {
-  background: linear-gradient(180deg, rgba(56, 189, 248, 0.18), rgba(56, 189, 248, 0.08));
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, transparent), color-mix(in srgb, var(--accent) 8%, transparent));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   border-top-right-radius: 4px;
 }
 .bubble.kaia {
@@ -204,8 +204,8 @@ function onScroll() {
   color: var(--amber);
 }
 .launch-status.running { color: var(--blue); border-color: rgba(108, 182, 255, 0.4); }
-.launch-status.success { color: var(--green); border-color: rgba(74, 222, 128, 0.4); }
-.launch-status.fail { color: var(--red); border-color: rgba(255, 111, 103, 0.4); }
+.launch-status.success { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, transparent); }
+.launch-status.fail { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
 .launch-link {
   margin-top: 9px;
   background: transparent;
