@@ -23,6 +23,9 @@ engines[6]{project,used_for,licence,demand}:
   "NousResearch/hermes-agent","worker runtime","MIT","retain copyright + licence text"
   "earendil-works/pi","coding harness","MIT","retain copyright + licence text"
   "a2aproject/a2a","A2A 1.0 protocol","Apache-2.0","NOTICE + attribution + change statement"
+  "kunchenguid/firstmate","the fleet","MIT","retain copyright + licence text"
+  "kunchenguid/axi","agent ergonomics","MIT","retain copyright + licence text"
+  "kunchenguid/lavish-axi","HTML-artifact editor","MIT","retain copyright + licence text"
 ```
 
 ## Vendored code (we ship it — highest obligation)
