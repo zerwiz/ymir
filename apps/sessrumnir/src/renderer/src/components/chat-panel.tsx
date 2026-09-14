@@ -184,7 +184,7 @@ export function ChatPanel(): React.JSX.Element {
     <div ref={panelRef} className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 overflow-hidden">
         {/* Main chat area */}
-        <div className="chat-center relative flex flex-1 flex-col overflow-hidden">
+        <div className="chat-center relative z-0 flex flex-1 flex-col overflow-hidden">
           {/* The hearth — the landing's fire-dots behind the chat column */}
           <EmberBackground className="pointer-events-none absolute inset-0 -z-10" />
           {/* Toolbar */}
