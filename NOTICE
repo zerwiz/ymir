@@ -49,4 +49,4 @@ Studied as reference only (no code shipped): oh-my-pi, microsoft/agent-framework
 langchain-ai/langgraph, crewAIInc/crewAI, anthropics/claude-code, openai/openai-python,
 stanfordnlp/dspy.
 
-Full audit, demands and compliance status: docs/third-party-audit.md
+Full licence texts and compliance status: THIRD-PARTY-LICENSES
