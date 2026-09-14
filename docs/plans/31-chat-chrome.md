@@ -47,3 +47,39 @@
   session stream — the work is showing and keeping them, not inventing them.
 - Plan only, by the Allfather's order. Morning word opens it. Masterplan
   row: `OPEN — The Chat Chrome (see docs/plans/31-chat-chrome.md)`.
+## Findings — 2026-09-14 (investigation done, by the Allfather's word)
+
+### Issue 1 — the typing hides behind the chat box: MECHANISM FOUND
+- The composer floats: `chat-panel.tsx` renders it `absolute inset-x-0 bottom-0 z-10
+  pb-3 pt-8` over a fade gradient (`from-chat-column … to-transparent`).
+- The message scroller's bottom padding (`paddingBottom: composerPadPx`) is what
+  clears the tail above the glass — but it is measured **once** on mount
+  (`useEffect(..., [])` on `composerWrapRef`), while the panel swaps render
+  branches between the empty-state and the messages layout. When the observed
+  node is the wrong branch or null, the pad stays `DEFAULT_COMPOSER_PAD_PX`
+  (144) while the live composer — CouncilPanels + the "still working" banner +
+  project picker — is taller. The stream's newest lines then scroll **under the
+  glass and into the fade**: the typing disappears behind the chat box.
+- FIX: measure every mount — re-run the composer-height observer whenever the
+  messages branch becomes active (and on `isStreaming` + `reattachedMidTurn`
+  growth); guard the floor at the live height + margin. Optional stronger cure:
+  put the composer in normal flow (flex column) so hiding is physically
+  impossible. Meanwhile a stale-144 pad is the smallest honest fix.
+
+### Issue 2 — the thinking: MECHANISM FOUND
+- The thinking IS wired: `streamingThinking` renders live in `StreamingBubble`
+  and `message.thinking` renders as collapsible blocks — both gated by the
+  **Show Thinking** settings toggle (`settings-panel.tsx`), which defaults
+  off. So the reasoning vanishes by default, and the toggle sits buried in
+  Settings.
+- There is **no storage**: nothing writes the thinking to a file; a session's
+  thoughts die with the stream.
+- FIX: (a) keep the toggle but surface it where the eye lands (chat toolbar),
+  remember the choice; (b) add **store thinking**: when on, append the
+  thinking segments to a per-session artifact (e.g. `<session>.thinking.md`
+  beside the session record) reopenable after the fact; (c) live parity: the
+  streaming thought already follows the tail when at-bottom — keep that.
+
+### Verdict
+Both wants are reachable with honest fixes; nothing needs invention — the
+thinking stream exists and the layout is one pad-measure away from honesty.
