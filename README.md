@@ -516,21 +516,29 @@ One day, one loom. Everything below lives in this main and in the world:
 The lore runs to **XXXI — The Weaving of the Halls**; the masterplan carries
 the full day's ledger.
 
-## Credits
+---
 
-Ymir stands on open-source work, adopted under its own Norse shells. Our thanks to
-the authors of each — their licences are honoured in [NOTICE](NOTICE) and audited in
-[docs/third-party-audit.md](docs/third-party-audit.md).
+## With gratitude — the people we stand on
 
-| Project | Licence | Powers in Ymir |
-|---|---|---|
-| [treehouse](https://github.com/kunchenguid/treehouse) | MIT | Yggdrasil — git worktrees |
-| [sandcastle](https://github.com/mattpocock/sandcastle) | MIT | Utgard — sealed sandboxes |
-| [no-mistakes](https://github.com/kunchenguid/no-mistakes) | MIT | the clean-PR gate |
-| [pi](https://github.com/earendil-works/pi) | MIT | the coding harness |
-| [hermes-agent](https://github.com/NousResearch/hermes-agent) | MIT | the Hermes worker runtime |
-| [pi-desktop](https://github.com/FaqFirebase/pi-desktop) | Apache-2.0 | Sessrúmnir (vendored, re-themed fork) |
-| [a2aproject/a2a](https://github.com/a2aproject/a2a) | Apache-2.0 | the A2A 1.0 protocol |
+Ymir is a Norse shell over other people's excellent work. We did not build the
+engines; we built the hall around them. Every project below is theirs, kept under
+their own licence, and we are glad to name them. Go and look at what they made —
+follow them, star them, learn from them.
 
-Ymir itself is Apache-2.0. Nothing here is copyleft; we adopt, we credit, we do
-not relicense.
+| Project | Who made it | Licence | What it powers in Ymir |
+|---|---|---|---|
+| [treehouse](https://github.com/kunchenguid/treehouse) | kunchenguid | MIT | Yggdrasil — git worktrees |
+| [sandcastle](https://github.com/mattpocock/sandcastle) | Matt Pocock | MIT | Utgard — sealed sandboxes |
+| [no-mistakes](https://github.com/kunchenguid/no-mistakes) | kunchenguid | MIT | the clean-PR gate |
+| [pi](https://github.com/earendil-works/pi) | Earendil Works | MIT | the coding harness |
+| [oh-my-pi](https://github.com/can1357/oh-my-pi) | can1357 | MIT | prior art for the pi surface |
+| [hermes-agent](https://github.com/NousResearch/hermes-agent) | Nous Research | MIT | the Hermes worker runtime |
+| [pi-desktop](https://github.com/FaqFirebase/pi-desktop) | FaqFirebase and the Pi Desktop contributors | Apache-2.0 | Sessrúmnir (our re-themed fork) |
+| [A2A protocol](https://github.com/a2aproject/a2a) | the A2A project | Apache-2.0 | the agent-to-agent backbone |
+
+Their full licence texts are bundled in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES),
+and the audit of every demand is in [docs/third-party-audit.md](docs/third-party-audit.md).
+If we have benefited from your work and missed you here, tell us — we will fix it,
+loudly.
+
+Thank you all. The forge is hot because you lit it.
