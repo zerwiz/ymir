@@ -1,6 +1,6 @@
 ---
 name: pr-ops
-description: "Create and manage pull requests to the Way-Of/ymir main repo. Use when an agent needs to open a PR, update a PR description, or check PR status. Pairs with git-ops (branches/commits/sync) — pr-ops owns the PR lifecycle after the branch is ready."
+description: "Create and manage pull requests to the zerwiz/ymir main repo. Use when an agent needs to open a PR, update a PR description, or check PR status. Pairs with git-ops (branches/commits/sync) — pr-ops owns the PR lifecycle after the branch is ready."
 version: "1.0"
 allowed-tools: bash, read, write, edit
 ---
@@ -8,13 +8,13 @@ allowed-tools: bash, read, write, edit
 # pr-ops — pull requests — create, update, check status, request merge
 
 Every agent in Ymir should have this skill. It handles the full PR lifecycle
-to the main repo at `Way-Of/ymir`.
+to the main repo at `zerwiz/ymir`.
 
 ## Prerequisites
 
 - `gh` CLI authenticated (`gh auth status` must show ✓)
 - A feature branch already pushed (`git-ops` skill handles branch creation)
-- The repo remote is set to `https://github.com/Way-Of/ymir.git`
+- The repo remote is set to `https://github.com/zerwiz/ymir.git`
 
 ## Commands
 
@@ -24,7 +24,7 @@ to the main repo at `Way-Of/ymir`.
 pr-create <branch> [--title "Title"] [--body "Body"] [--reviewer <user>]
 ```
 
-Creates a PR from `<branch>` → `main` on `Way-Of/ymir`.
+Creates a PR from `<branch>` → `main` on `zerwiz/ymir`.
 
 - If no `--title` is given, derives one from the branch name.
 - If no `--body` is given, generates one from the commit messages.
