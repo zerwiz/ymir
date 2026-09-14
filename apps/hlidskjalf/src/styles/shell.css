@@ -54,7 +54,7 @@
   width: 34px;
   height: 34px;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 8px rgba(125, 211, 252, 0.25));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--ymir-chisel) 25%, transparent));
 }
 
 .brand-mark {
@@ -62,7 +62,7 @@
   height: 34px;
   border-radius: 9px;
   flex-shrink: 0;
-  box-shadow: var(--ymir-bevel), 0 0 14px rgba(125, 211, 252, 0.18);
+  box-shadow: var(--ymir-bevel), 0 0 14px color-mix(in srgb, var(--ymir-chisel) 18%, transparent);
 }
 .login-brand .brand-mark {
   width: 44px;
@@ -200,7 +200,7 @@
   height: 10px;
   border-radius: 3px;
   flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ymir-text-0) 15%, transparent);
 }
 
 .rail-node {
@@ -355,7 +355,7 @@
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, var(--realm-tint), var(--realm-tint-2));
-  color: #06121f;
+  color: var(--ymir-bg-0);
   font-family: var(--ymir-font-mono);
   font-weight: 700;
   font-size: 12px;
@@ -401,7 +401,7 @@
   min-height: 0;
   background: linear-gradient(180deg, var(--ymir-bg-1), var(--ymir-bg-0));
   border-top: 1px solid var(--ymir-steel-1);
-  box-shadow: inset 0 1px 0 rgba(125, 211, 252, 0.06);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ymir-chisel) 6%, transparent);
   position: relative;
 }
 
@@ -432,7 +432,7 @@
 body:has(.stream-resizer:active) .stream-resizer .grip {
   width: 84px;
   background: var(--ymir-chisel);
-  box-shadow: 0 0 10px rgba(125, 211, 252, 0.6);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ymir-chisel) 60%, transparent);
 }
 .stream-resizer:focus-visible {
   outline: none;
@@ -486,13 +486,13 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ymir-ok) 50%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--ymir-ok) 0%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ymir-ok) 0%, transparent);
   }
 }
 
@@ -509,7 +509,7 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
   grid-template-columns: 74px 132px 1fr auto;
   gap: var(--ymir-space-3);
   padding: 3px 0;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.35);
+  border-bottom: 1px solid color-mix(in srgb, var(--ymir-steel-2) 35%, transparent);
   align-items: baseline;
 }
 .stream-line .ts {

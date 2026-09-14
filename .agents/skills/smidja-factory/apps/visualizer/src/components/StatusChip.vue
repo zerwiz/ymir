@@ -37,16 +37,16 @@ const ICONS: Record<string, unknown> = {
 
 .chip.success {
   color: var(--green);
-  border-color: rgba(74, 222, 128, 0.45);
-  background: rgba(74, 222, 128, 0.09);
-  box-shadow: 0 0 12px rgba(74, 222, 128, 0.12);
+  border-color: color-mix(in srgb, var(--green) 45%, transparent);
+  background: color-mix(in srgb, var(--green) 9%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--green) 12%, transparent);
 }
 
 .chip.fail {
   color: var(--red);
-  border-color: rgba(255, 111, 103, 0.45);
-  background: rgba(255, 111, 103, 0.09);
-  box-shadow: 0 0 12px rgba(255, 111, 103, 0.12);
+  border-color: color-mix(in srgb, var(--red) 45%, transparent);
+  background: color-mix(in srgb, var(--red) 9%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--red) 12%, transparent);
 }
 
 .chip.running {

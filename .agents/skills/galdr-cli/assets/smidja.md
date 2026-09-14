@@ -91,6 +91,16 @@ installed on this machine) — do not reintroduce `sqlite3`.
   API (`bun:sqlite` over the trace db) **and** the built Vue UI from
   `apps/visualizer/dist`. A Vite dev server on `:8438` is opt-in
   (`SMIDJA_VIZ_DEV=1`) and is not needed for use.
+- **The carved cloth (2026-09-13).** The default theme is **fensalir** — the
+  landing page's stone/bone/bronze/blood and its three faces (Cormorant display,
+  Newsreader UI, IBM Plex Mono data), cut into `src/style.css` `:root` and into the
+  components' role colours (`var(--accent)`, `var(--green)`, `color-mix(…)`). The
+  titlebar toggle cycles **fensalir → classic → high-contrast**; `classic` (the
+  preserved deep-space look) and `high-contrast` (WCAG AAA) are deliberate
+  overrides and **win when chosen** — the cloth is the default, not a cage. A
+  saved `neutral` from an older build resolves to fensalir. The categorical
+  palettes (event dots, agent lanes in `src/lib/events.ts`) are data, not chrome,
+  and were re-cut onto the cloth while staying mutually distinct.
 - `scripts/start.sh` raises it (`CMD_DB=<repo>/smidja/smidja_data/smidja.db`,
   `PORT=8437`); `scripts/stop.sh` lowers it. Port overrides:
   `SMIDJA_VIZ_API_PORT`.

@@ -229,7 +229,7 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .panel {
   background: rgba(16, 21, 32, 0.6);
-  border: 1px solid rgba(125, 211, 252, 0.12);
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
   border-radius: 12px;
   padding: 14px 16px;
 }
@@ -244,7 +244,7 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .stat {
   background: rgba(11, 15, 24, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid color-mix(in srgb, var(--text) 7%, transparent);
   border-radius: 10px;
   padding: 12px;
   display: flex;
@@ -253,18 +253,18 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .stat b {
   font-size: 22px;
-  color: #7dd3fc;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 .stat span {
   font-size: 12px;
-  color: #8a93a6;
+  color: var(--dim);
 }
-.stat.ok b { color: #86efac; }
-.stat.bad b { color: #fda4af; }
-.stat.live b { color: #7dd3fc; }
-.stat.good b { color: #86efac; }
-.good { color: #86efac; }
+.stat.ok b { color: var(--green); }
+.stat.bad b { color: var(--red); }
+.stat.live b { color: var(--accent); }
+.stat.good b { color: var(--green); }
+.good { color: var(--green); }
 
 .vendor-pick {
   display: flex;
@@ -276,7 +276,7 @@ const providerShare = (kind: 'local' | 'online') => {
 .vendor-pick label {
   font-size: 12px;
   font-weight: 600;
-  color: #8a93a6;
+  color: var(--dim);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -285,9 +285,9 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .vendor-select {
   background: rgba(11, 15, 24, 0.8);
-  border: 1px solid rgba(125, 211, 252, 0.25);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
   border-radius: 8px;
-  color: #e5e9f0;
+  color: var(--text);
   font-size: 13px;
   padding: 7px 10px;
   min-width: 300px;
@@ -295,7 +295,7 @@ const providerShare = (kind: 'local' | 'online') => {
 }
 .vendor-select:focus {
   outline: none;
-  border-color: #7dd3fc;
+  border-color: var(--accent);
 }
 
 .split-bar {
@@ -303,22 +303,22 @@ const providerShare = (kind: 'local' | 'online') => {
   height: 10px;
   border-radius: 6px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.07);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   margin: 2px 0 8px;
 }
 .split-local {
-  background: linear-gradient(90deg, #34d399, #86efac);
+  background: linear-gradient(90deg, var(--green), var(--green));
   transition: width 0.3s ease;
 }
 .split-online {
-  background: linear-gradient(90deg, #38bdf8, #fda4af);
+  background: linear-gradient(90deg, var(--accent), var(--red));
   transition: width 0.3s ease;
 }
 .split-legend {
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: #8a93a6;
+  color: var(--dim);
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
@@ -329,8 +329,8 @@ const providerShare = (kind: 'local' | 'online') => {
   border-radius: 50%;
   margin-right: 4px;
 }
-.dot-local { background: #34d399; }
-.dot-online { background: #38bdf8; }
+.dot-local { background: var(--green); }
+.dot-online { background: var(--accent); }
 .provider-tbl { margin-top: 4px; }
 .badge {
   display: inline-block;
@@ -341,9 +341,9 @@ const providerShare = (kind: 'local' | 'online') => {
   border-radius: 999px;
   padding: 2px 8px;
 }
-.badge.local { color: #86efac; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.3); }
-.badge.online { color: #38bdf8; background: rgba(251, 146, 60, 0.12); border: 1px solid rgba(251, 146, 60, 0.3); }
-.badge.unknown { color: #8a93a6; background: rgba(138, 147, 166, 0.12); border: 1px solid rgba(138, 147, 166, 0.3); }
+.badge.local { color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); border: 1px solid color-mix(in srgb, var(--green) 30%, transparent); }
+.badge.online { color: var(--accent); background: color-mix(in srgb, var(--amber) 12%, transparent); border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent); }
+.badge.unknown { color: var(--dim); background: color-mix(in srgb, var(--dim) 12%, transparent); border: 1px solid color-mix(in srgb, var(--dim) 30%, transparent); }
 
 .tbl {
   width: 100%;
@@ -353,11 +353,11 @@ const providerShare = (kind: 'local' | 'online') => {
 .tbl th, .tbl td {
   text-align: left;
   padding: 7px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
   vertical-align: top;
 }
 .tbl th {
-  color: #8a93a6;
+  color: var(--dim);
   font-weight: 600;
   font-size: 12px;
   text-transform: uppercase;
@@ -369,13 +369,13 @@ const providerShare = (kind: 'local' | 'online') => {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.dim { color: #8a93a6; }
-.empty-state { color: #8a93a6; font-size: 13px; padding: 14px 2px; }
+.dim { color: var(--dim); }
+.empty-state { color: var(--dim); font-size: 13px; padding: 14px 2px; }
 .error-bar {
   background: rgba(251, 113, 133, 0.12);
   border: 1px solid rgba(251, 113, 133, 0.4);
   border-radius: 8px;
-  color: #fda4af;
+  color: var(--red);
   padding: 10px 14px;
   font-size: 13px;
 }
