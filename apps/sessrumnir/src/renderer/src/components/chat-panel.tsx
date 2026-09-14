@@ -1,6 +1,7 @@
 import { useAppStore } from '../store'
 import { agentEngineLabel } from '../../../shared/agent-engine-label'
 import { ChatInput } from './chat-input'
+import { EmberBackground } from './ember-background'
 import { ChatProjectPicker } from './chat-project-picker'
 import { CouncilPanels } from './council-panels'
 import { MessageBubble, ToolGroupBubble } from './message-bubble'
@@ -183,7 +184,9 @@ export function ChatPanel(): React.JSX.Element {
     <div ref={panelRef} className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 overflow-hidden">
         {/* Main chat area */}
-        <div className="chat-center flex flex-1 flex-col overflow-hidden">
+        <div className="chat-center relative flex flex-1 flex-col overflow-hidden">
+          {/* The hearth — the landing's fire-dots behind the chat column */}
+          <EmberBackground className="pointer-events-none absolute inset-0 -z-10" />
           {/* Toolbar */}
           <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
             <div className="flex items-center gap-0.5">
