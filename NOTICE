@@ -28,6 +28,13 @@ MIT
   oh-my-pi             https://github.com/can1357/oh-my-pi
                        prior art for the pi surface (studied)
 
+  firstmate            https://github.com/kunchenguid/firstmate
+                       the fleet — one agent, a crew
+  axi                  https://github.com/kunchenguid/axi
+                       agent-ergonomics design principles
+  lavish-axi           https://github.com/kunchenguid/lavish-axi
+                       the HTML-artifact editor (Lavish)
+
 Apache License 2.0
   pi-desktop           https://github.com/FaqFirebase/pi-desktop  (v0.1.7-alpha,
                        commit 4a5601b)

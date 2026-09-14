@@ -43,6 +43,9 @@ mit[6]{component,copyright,used_for}:
   "pi","Copyright (c) Earendil Works","coding harness"
   "oh-my-pi","Copyright (c) can1357","prior art for the pi surface"
   "hermes-agent","Copyright (c) Nous Research","worker runtime"
+  "firstmate","Copyright (c) kunchenguid","the fleet"
+  "axi","Copyright (c) kunchenguid","agent ergonomics"
+  "lavish-axi","Copyright (c) kunchenguid","HTML-artifact editor"
 ```
 
 ---
