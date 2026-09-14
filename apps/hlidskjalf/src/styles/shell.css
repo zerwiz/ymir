@@ -341,6 +341,34 @@
   color: var(--realm-tint);
 }
 
+/* The Hall door — the Óðrerir Live Hall is outside the three apps, so it opens
+   as a page in its own tab; the glyph is Othala, the ancestral hall. */
+.hall-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--realm-tint) 35%, transparent);
+  background: var(--realm-tint-dim);
+  color: var(--realm-tint);
+  font-family: var(--ymir-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.hall-btn .glyph {
+  font-family: var(--ymir-font-head);
+  font-size: 13px;
+}
+.hall-btn:hover {
+  background: color-mix(in srgb, var(--realm-tint) 22%, transparent);
+  border-color: var(--realm-tint);
+  color: var(--ymir-text-0);
+}
+
 .user-menu {
   display: flex;
   align-items: center;

@@ -256,7 +256,9 @@ Honor `prefers-reduced-motion`: all transforms collapse to fades ≤120ms.
 - Left rail: emblem + the **7 realm gates** (click = realm switch), collapsed to
   rune-only at <900px.
 - Top bar: current realm chip (house accent + tenant name), global search
-  (realm-scoped), traceability index chip (live), user menu.
+  (realm-scoped), traceability index chip (live), the three-hall switcher, the
+  **To the Hall** door to the Óðrerir Live Hall (new tab: local `:4322` when the
+  host starts with `localhost`/`127.0.0.1`, else the public hall), user menu.
 - Main stage: modal-free; views are full panels with a persistent **bottom stream**:
   Ratatoskr messages + Runes entries in one mono stream (pausable).
 
