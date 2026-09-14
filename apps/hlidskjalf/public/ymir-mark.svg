@@ -27,7 +27,7 @@
       <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
 
       <!-- 4. Apply 3D Lighting (Cyan/Blue Specular Highlight) -->
-      <feSpecularLighting in="blur" surfaceScale="6" specularConstant="1.2" specularExponent="25" lighting-color="#bae6fd" result="specOut">
+      <feSpecularLighting in="blur" surfaceScale="6" specularConstant="1.2" specularExponent="25" lighting-color="#cfc3a9" result="specOut">
         <!-- Light Source Positioned Top-Left -->
         <fePointLight x="-100" y="-100" z="300" />
       </feSpecularLighting>
