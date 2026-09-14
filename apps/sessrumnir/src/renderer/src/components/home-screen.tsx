@@ -13,6 +13,7 @@ import {
   Play,
 } from 'lucide-react'
 import { useAppStore } from '../store'
+import { EmberBackground } from './ember-background'
 import ymirMark from '../assets/ymir-mark.svg'
 import { formatGitStatus } from './review-rail'
 import { StatsPanel } from './stats-panel'
@@ -131,7 +132,9 @@ export function HomeInfoSummary({ compact }: { compact?: boolean }): React.JSX.E
   }
 
   return (
-    <div className={clsx(busy && 'pointer-events-none opacity-60', compact && 'space-y-4')}>
+    <div className={clsx(busy && 'pointer-events-none opacity-60', compact && 'space-y-4', 'relative z-0')}>
+      {/* The hearth — the landing's fire-dots behind the high seat too */}
+      <EmberBackground className="pointer-events-none absolute inset-0 -z-10" />
       <StatsPanel />
 
       <div className="grid min-w-0 gap-6 md:grid-cols-2">
