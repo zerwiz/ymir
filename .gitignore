@@ -136,3 +136,4 @@ assets/reference/state/
 # The away-mode alarm channel: written per machine by the Omarchy layer.
 .agents/config/wedge-alarm
 *.tsbuildinfo
+.agents/state/
