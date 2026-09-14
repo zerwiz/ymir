@@ -18,7 +18,7 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 STATE="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
-OUT="${1:-$HOME/CodeP/ymir-homepage/.yggdrasil/odrerir/public/livehall.json}"
+OUT="${1:-$HOME/CodeP/ymir-homepage/public/livehall.json}"
 
 runes_file="$ROOT/workspace/memory/runes_audit.md"
 projects_file="$ROOT/hodd/identity/projects.yaml"
