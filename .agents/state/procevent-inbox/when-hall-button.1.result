@@ -1,0 +1,8 @@
+when: when-hall-button
+status: fired
+detail: the condition held and the action exited 0
+condition_polls: 2
+action_exit: 0
+output:
+eindri-acclaim[1]{agent,detail}:
+  "hall-button","report filed at state/eindri-reports/hall-button.md"

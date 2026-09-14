@@ -1,0 +1,8 @@
+when: when-odrerir
+status: fired
+detail: the condition held and the action exited 0
+condition_polls: 59
+action_exit: 0
+output:
+eindri-acclaim[1]{agent,detail}:
+  "odrerir","left working (herdr state flipped; read the pane: herdr agent read odrerir)"

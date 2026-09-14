@@ -1,0 +1,5 @@
+when: when-odrerir
+status: ambiguous
+detail: the action was already claimed but its outcome was never captured; verify its effect manually before retiring
+condition_polls: 0
+output:
