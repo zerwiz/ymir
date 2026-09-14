@@ -1,5 +1,15 @@
 # YMIR — The Single-Tenant Agent Operating System
 
+
+---
+
+<p align="center">
+  <strong>created by zerwiz</strong> · <a href="https://zerwiz.org">https://zerwiz.org</a> · whynotproductions<br>
+  <em>a hobby project, made for the love of the craft. use it, fork it, enjoy it.</em>
+</p>
+
+---
+
 > **One operator. One repo. A whole business, run by a Norse-named agent fleet.**
 
 ![Ymir — the single-tenant agent OS](assets/ymir-banner-03.png)
@@ -372,7 +382,7 @@ ymir/
 ├── .opencode/plugins/         # OpenCode adapters (Sága, Sýn, Rödd)
 ├── apps/hlidskjalf/           # the control plane (React + Vite + Bun gate API)
 ├── midgard/                   # shared assets, design tokens, icons
-├── svartalfaheim/             # company container root (WayOf) — future multi-user
+├── svartalfaheim/             # company container root (zerwiz) — future multi-user
 ├── workspace/                 # THE SINGLE TENANT: work/ · personal/ · companies/ ·
 │                              #   workspaces.yaml · projects.yaml · memory/ · INSTALL.md
 ├── smidja/                    # the smithy engine + smidja.db (runs, stats, trace)
@@ -540,7 +550,7 @@ follow them, star them, learn from them.
 | [lavish-axi](https://github.com/kunchenguid/lavish-axi) | kunchenguid | MIT | the HTML-artifact editor |
 
 Their full licence texts are bundled in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES),
-and the audit of every demand is in [docs/third-party-audit.md](docs/third-party-audit.md).
+and their attribution in [NOTICE](NOTICE).
 If we have benefited from your work and missed you here, tell us — we will fix it,
 loudly.
 
