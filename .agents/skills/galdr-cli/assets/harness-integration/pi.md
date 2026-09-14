@@ -153,7 +153,9 @@ Sýn therefore treats the **result message** as the completion signal, not the `
 
 ### `BROKK_SESSION_PID` lock binding
 
-The digest child is launched with `env.BROKK_SESSION_PID = String(process.pid)` — the **live Pi process**. `bin/gleipnir-lock-lib.sh` writes that pid to `state/.lock` (`gleipnir_lock_acquire`, `bin/gleipnir-lock-lib.sh:65-76`), so the lock survives the short-lived digest helper. Both Sýn and Gná verify ownership by walking `ps -o ppid=` ancestry up to 8 levels and comparing to the `.lock` pid (`lockOwnership()` in both files). `other` means read-only; `missing` means the lock is gone/stale.
+The digest child is launched with `env.BROKK_SESSION_PID = String(process.pid)` — the **live Pi process**. `bin/gleipnir-lock-lib.sh` writes that pid to `state/.lock` (`gleipnir_lock_acquire`), so the lock survives the short-lived digest helper. Both Sýn and Gná verify ownership by walking `ps -o ppid=` ancestry up to 8 levels and comparing to the `.lock` pid (`lockOwnership()` in both files). `other` means read-only; `missing` means the lock is gone/stale.
+
+Liveness sees real death (`gleipnir_pid_alive` / `pidAlive`). `kill(0)` alone reports a zombie (dead but unreaped) and a recycled pid as “alive”, which stranded the machine lock after an agent was turned off. The lock therefore also records the owner's starttime in a sidecar (`brokk.lock.starttime`, `/proc/<pid>/stat` field 22) and rejects a holder whose state is `Z`/`X` or whose recorded starttime no longer matches. `gleipnir_lock_reap` (session start) and `gleipnir_lock_acquire` clear such locks, and Gná releases its own lock on real process exit (`releaseLockIfOwned` in the `exit` hook) so a clean quit never leaves the helm behind.
 
 ### Delivery cap and truncation
 
@@ -186,11 +188,13 @@ Arm spawn (`.pi/extensions/gna-pi-watch.ts:397-434`):
 ```ts
 const ownership = lockOwnership();
 if (ownership === "other")  return { ok:false, message:"watcher: read-only - session lock is held by another Brokk session" };
-if (ownership === "missing") return { ok:false, message:"watcher: not armed - no live session holds the lock; run bin/saga-session-start.sh ..." };
+if (ownership === "missing") { reclaimStaleLock(resolvedLockPath()); return startArm(owner, predecessorArmPid); }
 const env = { ...process.env, BROKK_HOME, BROKK_ROOT_OVERRIDE, BROKK_CONFIG_OVERRIDE,
               BROKK_WATCH_ARM_SCRIPT, BROKK_WATCH_PREDECESSOR_ARM_PID, BROKK_SESSION_PID: String(process.pid) };
 const armChild = spawn("bash", ["-lc", 'exec "$BROKK_WATCH_ARM_SCRIPT" --restart'], { cwd: brokkRoot, env, ... });
 ```
+
+`missing` (recorded holder dead / zombie / pid reused) no longer punts to `bin/saga-session-start.sh`: Gná reclaims the helm directly (`reclaimStaleLock`, mirroring `gleipnir_lock_acquire` — pid + starttime sidecar + `state/.lock-path` pointer) and arms immediately, so a leftover lock can never strand supervision.
 
 Continuity: `classifyClose` separates **actionable** (`signal:`/`stale:`/`check:`/`heartbeat:` line) from **failure**. Actionable → `restoreAfterActionableClose` (retries with backoff) then `deliverActionableWake` (encodes a `watcher` Rödd message and `pi.sendUserMessage(..., {deliverAs:"followUp"})`). Failure → `scheduleRetry`. Retry knobs: `BROKK_WATCH_REARM_RETRY_BASE_MS` (250), `..._MAX_MS` (4000), `..._LIMIT` (5); readiness `BROKK_PI_ARM_READY_TIMEOUT_MS` (12s, 35s on win32); retire `BROKK_WATCH_ARM_RETIRE_TIMEOUT_MS` (1000).
 

@@ -27,7 +27,23 @@ function parentPid(pid: string): string {
   return result.stdout.trim();
 }
 
+// Liveness that actually sees death: a zombie (killed but unreaped) or a
+// recycled pid must not pass for a live lock holder. /proc/<pid>/stat field 3
+// is the state character (Z/X = zombie/dead); when /proc is unavailable we
+// fall back to kill(0).
 function pidAlive(pid: string): boolean {
+  if (/^[0-9]+$/.test(pid) && pid !== "1") {
+    try {
+      const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+      const close = stat.lastIndexOf(")");
+      if (close >= 0) {
+        const state = stat.slice(close + 2).trim().split(/\s+/)[0];
+        if (state === "Z" || state === "X") return false;
+      }
+    } catch {
+      // no /proc (non-Linux) — rely on kill(0)
+    }
+  }
   try {
     process.kill(Number(pid), 0);
     return true;

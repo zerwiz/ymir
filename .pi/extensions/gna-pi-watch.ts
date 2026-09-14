@@ -10,7 +10,7 @@
 // callbacks from a prior generation are no-ops against the active replacement.
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
@@ -122,7 +122,40 @@ function parentPid(pid: string): string {
   return result.stdout.trim();
 }
 
-function pidAlive(pid: string): boolean {
+// Liveness that actually sees death: process.kill(pid, 0) alone "succeeds" for
+// a zombie (dead but unreaped) and for a recycled pid. /proc/<pid>/stat resolves
+// both — the state character (field 3: Z = zombie, X = dead) and the process
+// starttime (field 22), which is stable for a pid's whole life. A mismatch with
+// the starttime recorded at acquire means the original holder is gone and the
+// kernel handed the pid to an unrelated process.
+function procStatParts(pid: string): string[] | null {
+  if (!/^[0-9]+$/.test(pid) || pid === "1") return null;
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+    const close = stat.lastIndexOf(")");
+    if (close < 0) return null;
+    const parts = stat.slice(close + 2).trim().split(/\s+/);
+    return parts[0] === "" ? parts.slice(1) : parts;
+  } catch {
+    return null;
+  }
+}
+
+function procStarttime(pid: string): string {
+  const parts = procStatParts(pid);
+  // Field 22 sits at index 19 after the comm field (remaining fields start at 3).
+  return parts && parts.length > 19 ? parts[19] : "";
+}
+
+function pidAlive(pid: string, starttime = ""): boolean {
+  const parts = procStatParts(pid);
+  if (parts) {
+    if (parts[0] === "Z" || parts[0] === "X") return false;
+    if (starttime) {
+      const current = parts.length > 19 ? parts[19] : "";
+      if (current && current !== starttime) return false;
+    }
+  }
   try {
     process.kill(Number(pid), 0);
     return true;
@@ -146,12 +179,18 @@ function resolvedLockPath(): string {
 }
 
 function lockOwnership(): LockOwnership {
+  const lockPath = resolvedLockPath();
   let lockPid = "";
   try {
-    lockPid = readFileSync(resolvedLockPath(), "utf8").trim();
+    lockPid = readFileSync(lockPath, "utf8").trim();
   } catch {
     return "missing";
   }
+  // An empty lock carries no verifiably-live holder — a vacant helm, not
+  // another session's. Classify it missing so the reclaim takes the helm in
+  // place; a truncated/empty lock must never strand supervision or punt to a
+  // manual session start.
+  if (!lockPid) return "missing";
   if (!/^[0-9]+$/.test(lockPid) || lockPid === "1") return "other";
   let pid = String(process.pid);
   for (let i = 0; i < 8; i += 1) {
@@ -159,7 +198,54 @@ function lockOwnership(): LockOwnership {
     pid = parentPid(pid);
     if (!pid || pid === "1") break;
   }
-  return pidAlive(lockPid) ? "other" : "missing";
+  let recordedStarttime = "";
+  try {
+    recordedStarttime = readFileSync(`${lockPath}.starttime`, "utf8").trim();
+  } catch {
+    // lock predates the starttime sidecar — liveness falls back to the
+    // state/zombie check and kill(0)
+  }
+  // pidAlive rejects zombies and recycled pids, so "missing" truly means the
+  // recorded holder is verifiably gone — never a live "other" session.
+  return pidAlive(lockPid, recordedStarttime) ? "other" : "missing";
+}
+
+// A stale lock (owner dead / zombie / pid reused) is cleared and the helm is
+// taken directly, so a leftover lock can never strand supervision. This mirrors
+// gleipnir_lock_acquire in bin/gleipnir-lock-lib.sh (pid + starttime sidecar +
+// state/.lock-path pointer; the legacy state/.lock is dropped).
+function reclaimStaleLock(lockPath: string): void {
+  mkdirSync(dirname(lockPath), { recursive: true });
+  writeFileSync(lockPath, `${process.pid}\n`);
+  const starttime = procStarttime(String(process.pid));
+  if (starttime) writeFileSync(`${lockPath}.starttime`, `${starttime}\n`);
+  const legacyPath = `${state}/.lock`;
+  if (legacyPath !== lockPath) {
+    try {
+      const legacyOwner = readFileSync(legacyPath, "utf8").trim();
+      if (legacyOwner === String(process.pid) || !pidAlive(legacyOwner)) {
+        rmSync(legacyPath, { force: true });
+      }
+    } catch {
+      // no legacy lock to clear
+    }
+  }
+  writeFileSync(`${state}/.lock-path`, `${lockPath}\n`);
+}
+
+// On real process exit (never on in-process /new resets, which reuse the same
+// pid and keep the lock), drop the lock this session owns so a dying or killed
+// agent cannot leave the helm for everyone after it. A hard kill that skips
+// this hook is covered by the next session's reap (zombie/pid-reuse aware).
+function releaseLockIfOwned(): void {
+  if (lockOwnership() !== "owned") return;
+  const lockPath = resolvedLockPath();
+  try {
+    rmSync(lockPath, { force: true });
+    rmSync(`${lockPath}.starttime`, { force: true });
+  } catch {
+    // best-effort: the next session's reap covers a leftover lock
+  }
 }
 
 function markLoaded(): void {
@@ -234,6 +320,7 @@ function stopGeneration(generation: SessionGeneration): void {
 
 const cleanupOnProcessExit = () => {
   if (activeGeneration) stopGeneration(activeGeneration);
+  releaseLockIfOwned();
 };
 process.once("exit", cleanupOnProcessExit);
 
@@ -257,11 +344,32 @@ export default function (pi: ExtensionAPI) {
     !calmPresentation.stockExportRendering &&
     !roTranscriptClassIsVisible(itemClass);
 
+  let lastWatcherWake = "";
+
+  function queueHasFreshContent(): boolean {
+    // A wake is fresh only while one of the durable doors still carries a line;
+    // with both empty, a repeated identical wake is an echo of one already
+    // drained (the loud-stretch flood came from exactly this re-presentation).
+    for (const p of [`${state}/.wake-queue`, `${fmHome}/.agents/state/.wake-queue`]) {
+      try {
+        if (readFileSync(p, "utf8").trim().length > 0) return true;
+      } catch {
+        // absent queue reads as empty
+      }
+    }
+    return false;
+  }
+
   async function sendWake(
     owner: SessionGeneration,
     message: string,
   ): Promise<void> {
     if (!generationIsLive(owner)) return;
+    // Deliver an identical wake at most once per drained state: a repeat with
+    // no fresh queue content is the same news the primary already handled, and
+    // re-sending it floods the follow-up queue one-per-prompt.
+    if (message === lastWatcherWake && !queueHasFreshContent()) return;
+    lastWatcherWake = message;
     const content = encodeRoddOperationalInput(
       "watcher",
       `BROKK WATCHER WAKE: ${message}\n\nRun bin/saga-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.`,
@@ -457,10 +565,11 @@ export default function (pi: ExtensionAPI) {
     const ownership = lockOwnership();
     if (ownership === "other") return { ok: false, message: "watcher: read-only - session lock is held by another brokk session" };
     if (ownership === "missing") {
-      return {
-        ok: false,
-        message: "watcher: not armed - no live session holds the lock; run bin/saga-session-start.sh to reclaim it, then call gna_watch_arm to re-arm",
-      };
+      // No verifiably-live holder: the recorded owner is dead, a zombie, or a
+      // recycled pid. Reclaim the helm directly (was: punt to
+      // saga-session-start.sh) so a leftover lock never strands supervision.
+      reclaimStaleLock(resolvedLockPath());
+      return startArm(owner, predecessorArmPid);
     }
     markLoaded();
     if (owner.child) {

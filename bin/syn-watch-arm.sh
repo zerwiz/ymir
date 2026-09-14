@@ -32,8 +32,15 @@ fi
 
 lock_owner=$(gleipnir_lock_owner _lo 2>/dev/null; printf '%s' "${_lo:-}")
 if [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; then
-  printf 'watcher: read-only - no live session holds the lock\n' >&2
-  exit 0
+  # The helm is vacant: no owner, or an owner verifiably gone (dead, zombie,
+  # recycled, or a truncated/empty lock). Enter through the lib's acquire,
+  # which refuses only a genuinely live other session — so a vacant helm is
+  # taken here, never punted to a manual session start.
+  if ! gleipnir_lock_acquire; then
+    printf 'watcher: read-only - the session helm is held by another live session\n' >&2
+    exit 0
+  fi
+  lock_owner=$(gleipnir_lock_owner _lo 2>/dev/null; printf '%s' "${_lo:-}")
 fi
 
 GENERATION="${BROKK_WATCH_PREDECESSOR_ARM_PID:-arm}-$$"
