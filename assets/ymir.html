@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ymir — The Creation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..500&family=IBM+Plex+Mono:wght@300;400;500&family=Noto+Sans+Runic&display=swap" rel="stylesheet">
+<style>
+/* ============ tokens — obsidian, bone, bronze, blood ============ */
+:root{
+  --bg:#0e0c09; --panel:#151209; --panel3:#14100b;
+  --line:#2b241a; --line-soft:#221d14;
+  --bone:#cfc3a9; --bone-dim:#9a8f75; --bone-faint:#6b6250;
+  --steel:#96a0a8; --steel-dim:#5f686e;
+  --bronze:#c9973f; --bronze-deep:#7d5f2a;
+  --blood:#7c3a30; --blood-lit:#c2584a;
+  --disp:'Cormorant',serif; --serif:'Newsreader',Georgia,serif;
+  --mono:'IBM Plex Mono',monospace; --run:'Noto Sans Runic','Segoe UI Historic',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--bone);font-family:var(--serif);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:#57411a;color:#f0e6cd}
+:focus-visible{outline:1px solid var(--bronze);outline-offset:3px}
+
+/* stone grain + vignette */
+body::before{content:'';position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.055;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+body::after{content:'';position:fixed;inset:0;z-index:59;pointer-events:none;
+  box-shadow:inset 0 0 170px 30px rgba(0,0,0,.5)}
+#gap{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+main,footer{position:relative;z-index:2}
+
+/* ============ topbar ============ */
+.topbar{position:fixed;inset:0 0 auto 0;height:46px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 clamp(1rem,3vw,2rem);z-index:50;background:rgba(13,11,8,.78);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:.58rem;
+  letter-spacing:.3em;color:var(--bone-dim);text-transform:uppercase}
+.topbar .rn{color:var(--bronze);margin-right:.6em;font-size:.85rem}
+main{padding-top:46px}
+
+/* ============ stage ============ */
+.stage{min-height:calc(100svh - 46px);display:flex;align-items:center;justify-content:center;
+  position:relative;padding:74px 1rem 2rem;animation:fadeUp 1s .05s both}
+.scenewrap{width:min(94vw, calc(78svh * .628), 600px);aspect-ratio:760/1210}
+#scene{width:100%;height:100%;display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.anno{position:absolute;top:96px;max-width:250px;line-height:1.95;font-size:.92rem;z-index:3}
+.anno-l{left:clamp(1rem,4vw,3.2rem);font-style:italic;color:var(--bone-faint)}
+.anno-r{right:clamp(1rem,4vw,3.2rem);text-align:right;font-family:var(--mono);font-size:.56rem;
+  letter-spacing:.26em;color:var(--steel-dim);text-transform:uppercase;line-height:2.5}
+@media(max-width:900px){.anno{display:none}}
+
+/* ============ SVG — the carving ============ */
+#scene text{font-family:var(--mono);user-select:none}
+g[data-part]{cursor:pointer;outline:none}
+.wgroup{transition:opacity .45s}
+#scene.focus g.wgroup:not(.lit){opacity:.5}
+
+/* world defaults (slightly cooler stone than the body) */
+.wgroup .gs{stroke:#4a4232;fill:#12100b;transition:stroke .4s,fill .4s}
+.wgroup .wvault{fill:none;stroke-width:2}
+.wgroup .star{fill:#4f4530;stroke:none;animation:tw 4.5s ease-in-out infinite}
+.wgroup .tree{fill:none;stroke:#4a4232;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s}
+.wgroup .wave{fill:none;stroke:#3b3222;stroke-width:1.8;transition:stroke .4s}
+.wgroup .gline{fill:none;stroke:#4a4232;stroke-width:2.5}
+.wgroup .hatch{fill:none;stroke:#2c251a;stroke-width:1.2;transition:stroke .4s}
+.lab{font-size:17px;letter-spacing:4.2px;fill:#6f6650;opacity:.9;paint-order:stroke;
+  stroke:#0e0c09;stroke-width:5;stroke-linejoin:round;transition:fill .4s}
+@keyframes tw{50%{opacity:.25}}
+
+/* body defaults */
+.bpart .gs{stroke:#4a3d2a;fill:#161009;stroke-width:2;transition:stroke .4s,fill .4s}
+.bpart .arm-o{fill:none;stroke:#4a3d2a;stroke-width:50;stroke-linecap:round;transition:stroke .4s}
+.bpart .arm-i{fill:none;stroke:#161009;stroke-width:41;stroke-linecap:round}
+.bpart .leg-o{fill:none;stroke:#4a3d2a;stroke-width:46;stroke-linecap:round;transition:stroke .4s}
+.bpart .leg-i{fill:none;stroke:#161009;stroke-width:37;stroke-linecap:round}
+.bpart .det{fill:none;stroke:#2e261a;stroke-linecap:round;transition:stroke .4s}
+.chest{font-family:var(--run);font-size:38px;fill:#6d5426;transition:fill .4s;animation:rp 6.8s ease-in-out infinite}
+@keyframes rp{0%,100%{opacity:.45}50%{opacity:.85}}
+
+/* the blood keeps its own color — a rune apart */
+#bloodG .gs{fill:none;stroke:#7c3a30;stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s}
+#bloodG .bl{fill:#7c3a30;stroke:none;transition:fill .4s}
+.bflow{fill:none;stroke:#e08a6a;stroke-width:2.6;stroke-dasharray:5 11;opacity:0;transition:opacity .4s}
+.hit{fill:none;stroke:#000;stroke-opacity:0}
+
+/* lit states */
+.wgroup.lit .gs{stroke:var(--bronze);fill:#231b10}
+.wgroup.lit .tree{stroke:var(--bronze)}
+.wgroup.lit .wave{stroke:var(--bronze)}
+.wgroup.lit .hatch{stroke:#8a6a34}
+.wgroup.lit .star{fill:var(--bronze)}
+.wgroup.lit .lab{fill:var(--bone)}
+.bpart.lit .gs{stroke:var(--bronze)}
+.bpart.lit .fillable{fill:#241b0e}
+.bpart.lit .arm-o{stroke:var(--bronze)}
+.bpart.lit .leg-o{stroke:var(--bronze)}
+.bpart.lit .det{stroke:var(--bronze)}
+.bpart.lit .chest{fill:var(--bronze)}
+#bloodG.lit .gs{stroke:var(--blood-lit)}
+#bloodG.lit .bl{fill:var(--blood-lit)}
+#bloodG.lit .bflow{opacity:.9;animation:march2 1s linear infinite}
+
+/* connectors — hidden until the part is lit */
+.lnk{fill:none;stroke:var(--bronze);stroke-width:1.6;stroke-dasharray:3 8;opacity:0;transition:opacity .4s}
+.lnk.lit{opacity:.75;animation:march 1.1s linear infinite}
+@keyframes march{to{stroke-dashoffset:-22}}
+@keyframes march2{to{stroke-dashoffset:-32}}
+
+/* the giant breathes — barely */
+#figure{transform-box:fill-box;transform-origin:50% 100%;animation:breathe 6.8s ease-in-out infinite}
+@keyframes breathe{50%{transform:scaleY(1.005) translateY(-2px)}}
+
+/* ============ caption + plinth ============ */
+.plate{max-width:780px;margin:0 auto;padding:0 1.4rem 3rem;animation:fadeUp 1s .35s both}
+.cap{text-align:center;font-family:var(--mono);font-size:.62rem;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--bone-faint);line-height:2.6}
+.cap button{background:none;border:none;cursor:pointer;font:inherit;color:var(--bone-dim);
+  letter-spacing:inherit;padding:.2em .1em;border-bottom:1px solid transparent;
+  transition:color .25s,border-color .25s}
+.cap button:hover,.cap button.on{color:var(--bronze);border-bottom-color:var(--bronze-deep)}
+.cap i{font-style:normal;color:var(--bone-faint);margin:0 .3em}
+
+.carved{background:var(--panel3);border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,244,214,.03),inset 0 -1px 0 rgba(0,0,0,.5),0 2px 16px rgba(0,0,0,.35)}
+.plinth{margin-top:1.7rem;padding:1.7rem clamp(1.2rem,4vw,2.1rem) 1.9rem}
+.pl-head{display:flex;align-items:center;gap:1.3rem;padding-bottom:1.2rem;border-bottom:1px solid var(--line)}
+#pRune{font-family:var(--run);font-size:2.6rem;color:var(--bronze);line-height:1}
+.pl-k{font-family:var(--mono);font-size:.56rem;letter-spacing:.34em;color:var(--steel-dim);text-transform:uppercase}
+#pName{font-family:var(--disp);font-weight:600;font-size:1.3rem;letter-spacing:.14em;color:var(--bone);margin-top:.35rem}
+.prow{display:grid;grid-template-columns:5.4rem 1fr;gap:1.2rem;padding:1.05rem 0;
+  border-bottom:1px dashed var(--line-soft)}
+.prow:last-of-type{border-bottom:none}
+.ptag{font-family:var(--mono);font-size:.56rem;letter-spacing:.26em;color:var(--bronze);
+  text-transform:uppercase;padding-top:.4rem}
+.pmyth{font-family:var(--serif);font-style:italic;font-size:1.07rem;color:var(--bone);line-height:1.75}
+.pymir{font-family:var(--mono);font-size:.72rem;color:var(--steel);line-height:1.85}
+.pl-head,.prow{transition:opacity .18s}
+.plinth.swap .pl-head,.plinth.swap .prow{opacity:.06}
+@media(max-width:560px){.prow{grid-template-columns:1fr;gap:.3rem}.ptag{padding-top:0}}
+
+.pl-actions{text-align:center;margin-top:1.9rem}
+.btn-carv{font-family:var(--mono);font-size:.64rem;letter-spacing:.32em;text-indent:.32em;text-transform:uppercase;
+  color:var(--bone);background:var(--panel);border:1px solid var(--line);padding:.95rem 1.9rem;cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,244,214,.05),inset 0 -1px 0 rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.4);
+  transition:border-color .3s,color .3s,transform .1s}
+.btn-carv .rn{color:var(--bronze);margin-right:.7em;font-size:.85rem;letter-spacing:0;text-indent:0}
+.btn-carv:hover{border-color:var(--bronze-deep);color:#e6dcc2}
+.btn-carv:active{transform:translateY(1px)}
+.btn-carv.busy{opacity:.55;pointer-events:none}
+
+/* ============ footer ============ */
+footer{border-top:1px solid var(--line);padding:3.6rem 1.5rem 4rem;text-align:center;animation:fadeUp 1s .55s both}
+.frule{display:flex;align-items:center;gap:1.4rem;max-width:640px;margin:0 auto 2.8rem}
+.frule::before,.frule::after{content:'';flex:1;height:1px;background:var(--line-soft)}
+.frule span{font-family:var(--run);font-size:.7rem;letter-spacing:.42em;color:var(--bone-faint);white-space:nowrap}
+.f-big{font-family:var(--disp);font-weight:600;font-size:clamp(1.15rem,2.6vw,1.65rem);
+  letter-spacing:.14em;color:var(--bone);text-shadow:0 -1px 0 rgba(0,0,0,.8)}
+.f-mono{font-family:var(--mono);font-size:.56rem;letter-spacing:.3em;color:var(--steel-dim);
+  margin-top:1.7rem;text-transform:uppercase;line-height:2.3}
+.f-repo{font-family:var(--mono);font-size:.58rem;color:var(--bone-faint);letter-spacing:.16em;margin-top:1.2rem}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span><span class="rn">ᚢ</span>YMIR · THE CREATION</span>
+  <span>carved, not skinned</span>
+</div>
+
+<canvas id="gap" aria-hidden="true"></canvas>
+
+<main>
+  <!-- ============ THE STANDING GIANT ============ -->
+  <section class="stage">
+    <p class="anno anno-l">Ymir (Aurgelmir) — the primordial giant, the ancestor of
+    everything. The gods slew him and made the world from his body: flesh, blood,
+    bones, hair, skull.</p>
+    <p class="anno anno-r">substrate — one repo<br>one machine<br>all realms carved from it</p>
+
+    <div class="scenewrap">
+      <svg id="scene" viewBox="0 0 760 1210" role="group" aria-label="The standing giant Ymir, and the world made from his body">
+
+        <defs>
+          <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#20180e" stop-opacity=".5"/>
+            <stop offset="1" stop-color="#20180e" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="380" cy="600" rx="330" ry="560" fill="url(#halo)" pointer-events="none"/>
+
+        <!-- THE SKY (from the skull) -->
+        <g id="skyG" class="wgroup" data-part="skull" tabindex="0" role="button"
+           aria-label="the sky — made from his skull">
+          <path class="hit" d="M92 202 Q380 -96 668 202 Z" pointer-events="all"/>
+          <path class="gs wvault" d="M92 202 Q380 -96 668 202"/>
+          <g id="dwarfMarks"></g>
+          <g id="starG"></g>
+          <text class="lab" x="380" y="34" text-anchor="middle">THE SKY</text>
+        </g>
+
+        <!-- THE MOUNTAINS (from the bones) -->
+        <g id="mtnG" class="wgroup" data-part="bones" tabindex="0" role="button"
+           aria-label="the mountains — made from his bones">
+          <path class="gs fillable" d="M468 1050 L508 936 L534 970 L568 874 L598 928 L634 844 L664 900 L698 868 L732 948 L746 1050 Z"/>
+          <path class="gs" d="M568 874 L578 902 M634 844 L644 874 M698 868 L706 896" fill="none"/>
+          <path class="gs fillable" d="M28 1050 L76 948 L104 984 L140 918 L176 976 L208 936 L232 1050 Z"/>
+          <path class="gs" d="M140 918 L148 944" fill="none"/>
+          <text class="lab" x="634" y="812" text-anchor="middle">THE MOUNTAINS</text>
+        </g>
+
+        <!-- THE FORESTS (from the hair) -->
+        <g id="forG" class="wgroup" data-part="hair" tabindex="0" role="button"
+           aria-label="the forests — made from his hair">
+          <g id="trees"></g>
+          <rect class="hit" x="56" y="896" width="192" height="154" pointer-events="all"/>
+          <rect class="hit" x="660" y="952" width="90" height="98" pointer-events="all"/>
+          <text class="lab" x="162" y="906" text-anchor="middle">THE FORESTS</text>
+        </g>
+
+        <!-- THE EARTH (from the flesh) -->
+        <g id="earthG" class="wgroup" data-part="flesh" tabindex="0" role="button"
+           aria-label="the earth — made from his flesh">
+          <rect class="hit" x="42" y="1044" width="676" height="46" pointer-events="all"/>
+          <path class="gline" d="M40 1050 L720 1050"/>
+          <path id="hatch" class="hatch" d=""/>
+          <path class="hatch" d="M56 1088 L704 1088" style="stroke-width:1.2"/>
+          <text class="lab" x="150" y="1076" text-anchor="middle">THE EARTH</text>
+        </g>
+
+        <!-- THE SEAS (from the blood) -->
+        <g id="seaG" class="wgroup" data-part="blood" tabindex="0" role="button"
+           aria-label="the seas — made from his blood">
+          <rect class="hit" x="56" y="1094" width="648" height="62" pointer-events="all"/>
+          <g id="waves"></g>
+          <text class="lab" x="380" y="1182" text-anchor="middle">THE SEAS</text>
+        </g>
+
+        <!-- ============ THE GIANT, STANDING ============ -->
+        <g id="figure">
+
+          <!-- bones : the legs he stands on -->
+          <g id="bonesG" class="bpart" data-part="bones" tabindex="0" role="button"
+             aria-label="the bones — they became the mountains">
+            <path class="leg-o" d="M324 692 C314 756 312 818 314 878"/>
+            <path class="leg-i" d="M324 692 C314 756 312 818 314 878"/>
+            <path class="leg-o" d="M436 692 C446 756 448 818 446 878"/>
+            <path class="leg-i" d="M436 692 C446 756 448 818 446 878"/>
+            <path class="leg-o" d="M312 894 C310 940 308 988 306 1026" style="stroke-width:38"/>
+            <path class="leg-i" d="M312 894 C310 940 308 988 306 1026" style="stroke-width:30"/>
+            <path class="leg-o" d="M448 894 C450 940 452 988 454 1026" style="stroke-width:38"/>
+            <path class="leg-i" d="M448 894 C450 940 452 988 454 1026" style="stroke-width:30"/>
+            <circle class="gs" cx="324" cy="694" r="11"/>
+            <circle class="gs" cx="436" cy="694" r="11"/>
+            <path class="gs" d="M314 870 L327 884 L314 898 L301 884 Z"/>
+            <path class="gs" d="M446 870 L459 884 L446 898 L433 884 Z"/>
+            <circle class="gs" cx="306" cy="1030" r="8"/>
+            <circle class="gs" cx="454" cy="1030" r="8"/>
+            <path class="gs" d="M344 1050 L346 1028 L306 1016 L268 1024 L258 1050 Z"/>
+            <path class="gs" d="M416 1050 L414 1028 L454 1016 L492 1024 L502 1050 Z"/>
+          </g>
+
+          <!-- flesh : the mighty mass of him -->
+          <g id="fleshG" class="bpart" data-part="flesh" tabindex="0" role="button"
+             aria-label="the flesh — it became the earth">
+            <path class="gs" d="M354 268 L406 268 L412 302 L348 302 Z"/>
+            <path class="gs fillable" d="M232 336 L300 300 L350 294 L410 294 L460 300 L528 336 L536 372
+              C526 452 508 532 486 612 C478 646 458 664 430 672 L330 672 C302 664 282 646 274 612
+              C252 532 234 452 224 372 Z"/>
+            <path class="arm-o" d="M250 358 C202 390 174 432 162 480 C150 528 140 570 134 610"/>
+            <path class="arm-i" d="M250 358 C202 390 174 432 162 480 C150 528 140 570 134 610"/>
+            <path class="arm-o" d="M510 358 C558 390 586 432 598 480 C610 528 620 570 626 610"/>
+            <path class="arm-i" d="M510 358 C558 390 586 432 598 480 C610 528 620 570 626 610"/>
+            <path class="gs" d="M100 616 L158 606 L172 650 L152 674 L104 670 Z"/>
+            <path class="gs" d="M660 616 L602 606 L588 650 L608 674 L656 670 Z"/>
+            <path class="det" d="M118 640 L146 636 M642 640 L614 636" stroke-width="2"/>
+            <path class="det" d="M262 374 C298 358 338 356 372 368 M498 374 C462 358 422 356 388 368" stroke-width="2"/>
+            <path class="det" d="M318 462 C350 474 410 474 442 462 M310 542 C346 558 414 558 450 542" stroke-width="2"/>
+            <text class="chest" x="380" y="434" text-anchor="middle">ᚢ</text>
+          </g>
+
+          <!-- hair : the wild mane -->
+          <g id="hairG" class="bpart" data-part="hair" tabindex="0" role="button"
+             aria-label="the hair — it became the forests">
+            <path class="gs fillable" d="M266 175 L278 146 L339 156 L340 94 L380 141 L420 94 L421 156 L482 146
+              L494 175 L474 210 L452 222 L308 222 L286 210 Z"/>
+            <path class="gs fillable" d="M280 240 L312 208 L298 268 L320 324 L294 374 L266 318 L274 252 Z"/>
+            <path class="gs fillable" d="M480 240 L448 208 L462 268 L440 324 L466 374 L494 318 L486 252 Z"/>
+          </g>
+
+          <!-- skull : the head held high -->
+          <g id="skullG" class="bpart" data-part="skull" tabindex="0" role="button"
+             aria-label="the skull — it became the sky">
+            <path class="gs fillable" d="M336 150 L424 150 L442 188 L436 238 L412 268 L348 268 L324 238 L320 188 Z"/>
+            <path class="det" d="M380 152 L380 194" stroke-width="1"/>
+            <path class="det" d="M340 194 L420 194" stroke-width="2"/>
+            <path class="det" d="M350 210 L376 206 M384 206 L410 210" stroke-width="4.5"/>
+            <path class="gs" d="M380 206 L372 244 L388 244 Z"/>
+            <path class="det" d="M360 258 L400 258" stroke-width="3"/>
+          </g>
+
+          <!-- blood : the running vein of him -->
+          <g id="bloodG" class="bpart" data-part="blood" tabindex="0" role="button"
+             aria-label="the blood — it ran out and became the seas">
+            <path class="hit" stroke-width="46" pointer-events="stroke"
+              d="M470 474 C486 500 488 536 478 574 C466 616 448 640 452 678 C458 716 480 740 484 786
+                 C488 834 476 884 482 934 C488 990 506 1012 512 1046 C530 1058 568 1062 608 1068
+                 C648 1074 670 1082 690 1096"/>
+            <path class="gs"
+              d="M470 474 C486 500 488 536 478 574 C466 616 448 640 452 678 C458 716 480 740 484 786
+                 C488 834 476 884 482 934 C488 990 506 1012 512 1046 C530 1058 568 1062 608 1068
+                 C648 1074 670 1082 690 1096"/>
+            <path class="bl" d="M460 460 L482 470 L476 488 L456 480 Z"/>
+            <circle class="bl" cx="482" cy="560" r="3"/>
+            <circle class="bl" cx="484" cy="764" r="2.5"/>
+            <circle class="bl" cx="478" cy="886" r="3"/>
+            <ellipse class="bl" cx="566" cy="1054" rx="30" ry="5"/>
+            <path class="bflow"
+              d="M470 474 C486 500 488 536 478 574 C466 616 448 640 452 678 C458 716 480 740 484 786
+                 C488 834 476 884 482 934 C488 990 506 1012 512 1046 C530 1058 568 1062 608 1068
+                 C648 1074 670 1082 690 1096"/>
+          </g>
+        </g>
+
+        <!-- connectors : part → world -->
+        <g id="links">
+          <path class="lnk" data-part="skull"  d="M400 154 C424 118 432 90 426 58"/>
+          <path class="lnk" data-part="hair"   d="M270 354 C180 380 108 470 88 588 C72 700 88 820 108 878"/>
+          <path class="lnk" data-part="flesh"  d="M380 676 L380 1040"/>
+          <path class="lnk" data-part="bones"  d="M462 876 C502 866 534 884 560 926"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============ caption + the plinth ============ -->
+  <section class="plate">
+    <p class="cap">hover or touch the carving —
+      <button data-p="skull">skull</button><i>·</i>
+      <button data-p="hair">hair</button><i>·</i>
+      <button data-p="flesh">flesh</button><i>·</i>
+      <button data-p="bones">bones</button><i>·</i>
+      <button data-p="blood">blood</button>
+    </p>
+
+    <div class="plinth carved" id="plinth" aria-live="polite">
+      <div class="pl-head">
+        <span id="pRune" class="rn">ᚢ</span>
+        <div>
+          <p class="pl-k">The carving speaks</p>
+          <p id="pName">the giant, whole</p>
+        </div>
+      </div>
+      <div class="prow">
+        <span class="ptag">The myth</span>
+        <p class="pmyth" id="pMyth">Run your hand over the giant — every part of him became a part of the world.</p>
+      </div>
+      <div class="prow">
+        <span class="ptag">In Ymir</span>
+        <p class="pymir" id="pYmir">The same body is the substrate: one repo, one machine, all realms carved from it.</p>
+      </div>
+    </div>
+
+    <div class="pl-actions">
+      <button class="btn-carv" id="tourBtn"><span class="rn">ᛏ</span><span id="tourLabel">carve the worlds</span></button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="frule"><span>ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</span></div>
+  <p class="f-big">The giant stands — and from it, the worlds are carved.</p>
+  <p class="f-mono">light metal first · rut steel after</p>
+  <p class="f-repo">zerwiz/ymir · docs/design.md · the lore v2 · §I</p>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const NS = 'http://www.w3.org/2000/svg';
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- generated texture: stars, dwarves, hatch, waves, trees ---------- */
+const STARS = [[150,120],[210,78],[258,150],[176,182],[506,150],[552,80],[612,124],[588,184]];
+STARS.forEach(([x,y],i)=>{
+  const s = 5 + (i % 3);
+  const d = `M${x} ${y-s} L${x+s*.33} ${y-s*.33} L${x+s} ${y} L${x+s*.33} ${y+s*.33}
+             L${x} ${y+s} L${x-s*.33} ${y+s*.33} L${x-s} ${y} L${x-s*.33} ${y-s*.33} Z`;
+  const p = document.createElementNS(NS,'path');
+  p.setAttribute('d', d.replace(/\s+/g,' '));
+  p.setAttribute('class','star');
+  p.style.animationDelay = (-(i*0.85)) + 's';
+  p.style.animationDuration = (3.4 + (i%4)*.9) + 's';
+  $('#starG').appendChild(p);
+});
+/* the four dwarves holding the sky at its corners */
+[[178,126],[236,90],[524,90],[582,126]].forEach(([x,y])=>{
+  const p = document.createElementNS(NS,'path');
+  p.setAttribute('d', `M${x} ${y-5} L${x+5} ${y} L${x} ${y+5} L${x-5} ${y} Z`);
+  p.setAttribute('class','gs');
+  $('#dwarfMarks').appendChild(p);
+});
+/* earth hatching */
+(()=>{ let d='';
+  for(let x=64; x<=712; x+=26) d += `M${x} 1053 l-9 11 `;
+  $('#hatch').setAttribute('d', d);
+})();
+/* the seas */
+function wave(y, x0, x1, dir){
+  let d = `M${x0} ${y} Q${x0+20} ${y-9*dir} ${x0+40} ${y}`;
+  for(let x=x0+80; x<=x1; x+=40) d += ` T${x} ${y}`;
+  return d;
+}
+[[1102,60,700,1],[1126,80,680,-1],[1150,100,660,1]].forEach(([y,a,b,dir])=>{
+  const p = document.createElementNS(NS,'path');
+  p.setAttribute('d', wave(y,a,b,dir));
+  p.setAttribute('class','wave');
+  $('#waves').appendChild(p);
+});
+/* the forests */
+function tree(x, b, h){
+  const w = h*0.42;
+  return `M${x-w} ${b} L${x} ${b-h} L${x+w} ${b}` +
+         `M${x-w*.72} ${b-h*.34} L${x} ${b-h*.78} L${x+w*.72} ${b-h*.34}` +
+         `M${x-w*.45} ${b-h*.6} L${x} ${b-h} L${x+w*.45} ${b-h*.6}`;
+}
+[[88,1050,90],[126,1050,122],[168,1050,98],[208,1050,76],[688,1050,88],[718,1050,66]]
+.forEach(([x,b,h])=>{
+  const p = document.createElementNS(NS,'path');
+  p.setAttribute('d', tree(x,b,h));
+  p.setAttribute('class','tree');
+  $('#trees').appendChild(p);
+});
+
+/* ---------- the carving speaks ---------- */
+const PARTS = {
+  skull:{ rune:'ᚼ', name:'the skull',
+    myth:'His skull was lifted up and made the sky — held at its corners by four dwarves.',
+    ymir:'The ceiling every hall lives under — Hlidskjalf watches all realms from beneath it.'},
+  hair:{ rune:'ᛇ', name:'the hair',
+    myth:'His hair became the forests.',
+    ymir:'The worktrees of Yggdrasil — branching, parallel, alive without collision.'},
+  flesh:{ rune:'ᛜ', name:'the flesh',
+    myth:'His flesh became the earth — the ground every hall stands on.',
+    ymir:'The substrate itself — one repo, one machine; every realm of work is carved from it.'},
+  bones:{ rune:'ᛒ', name:'the bones',
+    myth:'His bones became the mountains — the load-bearing heights.',
+    ymir:'The seven gates — the structure every realm hangs from.'},
+  blood:{ rune:'ᛚ', name:'the blood',
+    myth:'His blood ran out and became the seas.',
+    ymir:'The event stream — Ratatoskr\u2019s words carried between every realm.'}
+};
+
+const plinth = $('#plinth');
+let swapT = null, pinned = null, touring = false;
+
+function light(p){
+  $$('g[data-part], .lnk').forEach(el =>
+    el.classList.toggle('lit', !!p && el.dataset.part === p));
+  $('#scene').classList.toggle('focus', !!p);
+  $$('.cap button').forEach(b => b.classList.toggle('on', !!p && b.dataset.p === p));
+  plinth.classList.add('swap');
+  clearTimeout(swapT);
+  swapT = setTimeout(() => {
+    $('#pRune').textContent = p ? PARTS[p].rune : 'ᚢ';
+    $('#pName').textContent = p ? PARTS[p].name : 'the giant, whole';
+    $('#pMyth').textContent = p ? PARTS[p].myth :
+      'Run your hand over the giant — every part of him became a part of the world.';
+    $('#pYmir').textContent = p ? PARTS[p].ymir :
+      'The same body is the substrate: one repo, one machine, all realms carved from it.';
+    plinth.classList.remove('swap');
+  }, 170);
+}
+
+function hook(el, p){
+  el.addEventListener('mouseenter', () => { if(!touring) light(p); });
+  el.addEventListener('mouseleave', () => { if(!touring) light(pinned); });
+  const act = () => { pinned = (pinned === p) ? null : p; light(pinned); };
+  el.addEventListener('click', act);
+  el.addEventListener('keydown', e => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); act(); }
+  });
+  el.addEventListener('focus', () => { if(!touring) light(p); });
+  el.addEventListener('blur',  () => { if(!touring) light(pinned); });
+}
+ $$('#scene g[data-part]').forEach(g => hook(g, g.dataset.part));
+ $$('.cap button').forEach(b => hook(b, b.dataset.p));
+
+/* ---------- the carving tour ---------- */
+ $('#tourBtn').addEventListener('click', () => {
+  if(touring) return;
+  touring = true; pinned = null;
+  const btn = $('#tourBtn');
+  btn.classList.add('busy');
+  $('#tourLabel').textContent = 'the hammer falls';
+  const order = ['skull','hair','flesh','bones','blood'];
+  let i = 0;
+  (function step(){
+    if(i < order.length){ light(order[i++]); setTimeout(step, 2150); }
+    else{
+      light(null); touring = false;
+      btn.classList.remove('busy');
+      $('#tourLabel').textContent = 'carve the worlds';
+    }
+  })();
+});
+
+/* ---------- ambience: cold mist meets embers ---------- */
+(function(){
+  const cv = $('#gap'), ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let W = 0, H = 0, mist = [], embers = [], t = 0;
+  function size(){
+    W = innerWidth; H = innerHeight;
+    cv.width = W*dpr; cv.height = H*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function init(){
+    mist = []; embers = [];
+    for(let i=0;i<5;i++) mist.push({ x:Math.random()*W, y:H*.2+Math.random()*H*.7,
+      r:160+Math.random()*220, v:(Math.random()-.5)*.15, cold:Math.random()<.65 });
+    for(let i=0;i<16;i++) embers.push({ x:Math.random()*W, y:Math.random()*H,
+      r:.6+Math.random()*1.1, v:.1+Math.random()*.25, ph:Math.random()*6.28, sp:.5+Math.random() });
+  }
+  function frame(){
+    t += .016; ctx.clearRect(0,0,W,H);
+    for(const m of mist){
+      m.x += m.v;
+      if(m.x < -m.r) m.x = W+m.r;
+      if(m.x > W+m.r) m.x = -m.r;
+      const a = m.cold ? .045 : .028;
+      const g = ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,m.r);
+      g.addColorStop(0, m.cold?`rgba(96,110,128,${a})`:`rgba(214,138,64,${a})`);
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(m.x,m.y,m.r,0,6.283); ctx.fill();
+    }
+    for(const e of embers){
+      e.y -= e.v; e.x += Math.sin(t*e.sp+e.ph)*.15;
+      if(e.y < -6){ e.y = H+6; e.x = Math.random()*W; }
+      const a = .12 + .3*(.5+.5*Math.sin(t*e.sp*2+e.ph));
+      ctx.fillStyle = `rgba(236,166,84,${a.toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,6.283); ctx.fill();
+    }
+  }
+  addEventListener('resize', () => { size(); init(); if(RM) frame(); });
+  size(); init();
+  if(RM) frame(); else (function loop(){ frame(); requestAnimationFrame(loop); })();
+})();
+})();
+</script>
+</body>
+</html>
