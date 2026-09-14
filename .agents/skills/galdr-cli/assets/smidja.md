@@ -111,6 +111,13 @@ installed on this machine) — do not reintroduce `sqlite3`.
   `/api/session` and returns `{authed, login}`; `App.vue` shows a "Sign in" link
   (to the gate) or "ᛉ <login>" from that live answer. It **never** reads a
   session file — a token on disk would let a user look logged in when they are not.
+- **The Hall door (added 2026-09-13).** `App.vue`'s topbar carries a **To the
+  Hall** pill (rune Othala ᛟ, `.hall-btn`) beside the theme toggle: a new tab to
+  the Óðrerir Live Hall — `http://localhost:4322` when
+  `window.location.host` starts with `localhost`/`127.0.0.1`, otherwise
+  `https://hall.ymir.zerw.org`. It is a **plain anchor, not a `/api/desktop`**
+  launcher: the Hall is the landing's live board, not one of the three apps the
+  gate raises. Same door in Hlidskjalf's and Sessrúmnir's chrome.
 - See `docs/lore.md` §XIII.
 
 ## In Hlidskjalf (the gate API)
