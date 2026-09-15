@@ -125,6 +125,7 @@ write_rules() {
       hlidskjalf) cls="$CLASS_hlidskjalf" ;;
       smidja)     cls="$CLASS_smidja" ;;
       sessrumnir) cls="$CLASS_sessrumnir" ;;
+      odrerir)     cls="$CLASS_odrerir" ;;
       *)          cls="$app" ;;
     esac
     out+="o.window({ class = \"^${cls}\$\" }, { workspace = \"${d}\" })"$'\n'
@@ -165,6 +166,7 @@ write_launchers() {
   out+="o.bind(\"SUPER + Y\", \"Ymir Hlidskjalf\", \"bash $ROOT/scripts/electron.sh start --view hlidskjalf\")"$'\n'
   out+="o.bind(\"SUPER + M\", \"Ymir Smiðja\", \"bash $ROOT/scripts/electron.sh start --view smidja\")"$'\n'
   out+="o.bind(\"SUPER + B\", \"Ymir Sessrúmnir\", \"bash $ROOT/bin/sessrumnir.sh start\")"$'\n'
+  out+="o.bind(\"SUPER + O\", \"Ymir Óðrerir\", \"bash $ROOT/scripts/electron.sh start --view odrerir\")"$'\n'
   if [ "$DRY" = 1 ]; then printf '%s' "$out"; return 0; fi
   if [ -f "$file" ] && [ "$(cat "$file")" = "$out" ]; then return 0; fi
   mkdir -p "$HYPR_DIR"
