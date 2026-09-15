@@ -4,6 +4,27 @@ Ymir's own surface (one of the three things Ymir owns: the UI, the runtime, A2A)
 Load this when touching `apps/hlidskjalf`. The design contract is `docs/design.md`;
 the tokens are the single source of truth.
 
+## Surfaces
+
+```
+surfaces[6]{part,where,note}:
+  "SPA",":3888 (vite) / built dist served by the gate","React app; gates: Fleet, Chat, Runes, …"
+  "gate API",":3889 (bun apps/hlidskjalf/server/index.ts)","auth + /api/* + serves dist/; static types + caching"
+  "login","in-app modal → /api/login → session cookie","user/pass from .env.local HLIDSKJALF_AUTH; Heimdall (oauth2-proxy) is the target"
+  "register","in-app modal → /api/register → spends an invite code","bin/ymir-invite.sh mints a limited-use code when nothing is live; argon2id account in state/accounts.json (0600, gitignored)"
+  "desktop","apps/hlidskjalf/electron/main.cjs + scripts/electron.sh","single instance + one window (never stack); see the ymir skill assets/desktop.md"
+  "tunnel","gjallarhorn → your hostname → :3889","outbound only; `bin/gjallarhorn-tunnel.sh`"
+```
+
+Quick rules:
+
+- **One login, one window** — no GitHub hop before Heimdall; auth stays in-window.
+- **Gate API protects `/api/*`** and serves the SPA; 401 → `ymir:unauthorized`.
+- **No secrets inline** — `HLIDSKJALF_AUTH` from `.env.local`.
+- **Electron:** single-instance lock; `openWindow` reuses the live window.
+- Raise/repair: `scripts/start.sh`; if the window is gone but ports answer, the
+  shell must be restarted (backend ≠ window).
+
 ## Location & stack
 
 - App: `apps/hlidskjalf` — **React 19 + Vite + TypeScript**, state via **Zustand**.
@@ -37,7 +58,8 @@ scripts/stop.sh     # lower them all
 ### The cloth (2026-09-13)
 
 The token *values* are the **carved cloth of the halls** — the landing page's own
-palette (`CodeP/ymir-homepage/src/lore.html` `:root`), so Hlidskjalf, Smíðja and
+palette (`CodeP/ymir-homepage/src/lore.html` `:root`; the hall carries its own
+locked copy at `apps/odrerir/src/styles/cloth.css`), so Hlidskjalf, Smíðja and
 Sessrúmnir are one look (`docs/design.md` §0/§4.2 is the contract):
 
 ```
@@ -372,15 +394,23 @@ compliance gate (`assets/governed assets current`) fails otherwise.
 
 ### The Hall door — one button out of the three halls (added 2026-09-13)
 
-The **Óðrerir Live Hall** (the landing's carved stone/bronze board;
-`~/CodeP/ymir-homepage`, PLAN.md §14) is **not** one of the three apps. The gate
-raises those (`/api/desktop` → `scripts/electron.sh`); the Hall is a page of its
-own, so its door is a plain anchor in a new tab and **never** a launcher call.
+The **Óðrerir Live Hall** (the fleet's carved stone/bronze board; now its own
+app at `apps/odrerir`, migrated from `~/CodeP/ymir-homepage` on 2026-09-15) is
+**not** one of the gate's three apps but it IS its own desktop app since the
+migration. The gate raises Hlidskjalf/Smíðja/Sessrúmnir (`/api/desktop` →
+`scripts/electron.sh`); Óðrerir is raised with them by `scripts/start.sh` on
+`:4322`, opens in its own window via `scripts/electron.sh start --view odrerir`
+(native app identity `ymir-odrerir`), and its in-app door is a plain anchor in a
+new tab — **never** a launcher call.
 
 - **Where:** `app/Topbar.tsx` carries it beside `HallsSwitcher` — `.hall-btn`, the
   rune **Othala (ᛟ)** plus "To the Hall", tinted with the active realm accent so
   it reads as the same chrome as the chips around it. Styled in `styles/shell.css`
   (tokens only, no raw hex), press feedback in `styles/overlays.css`.
+- **The hall app:** `apps/odrerir` — an Astro board (the Óðrerir Live Hall) that
+  serves `:4322` and reads `public/livehall.json`, written by
+  `bin/hall-snapshot.sh` (planning glass; public-safe). Its own Electron shell:
+  `apps/odrerir/electron/main.cjs`, raised by `scripts/electron.sh --view odrerir`.
 - **Target rule — one rule for all of Ymir's apps:** `HALL_URL` in
   `src/data/metadata.ts`. `window.location.host` starting with `localhost` or
   `127.0.0.1` → `http://localhost:4322`; any other host → the public
@@ -390,4 +420,5 @@ own, so its door is a plain anchor in a new tab and **never** a launcher call.
 - **Same door** in the Smíðja visualizer's topbar and in Sessrúmnir, so every
   app's chrome has one way to the Hall.
 - Verified: both branches of the rule in both apps (headless Chromium DOM probe),
-  `tsc --noEmit && vite build` green, 0 console errors.
+  `tsc --noEmit && vite build` green, 0 console errors; `apps/odrerir` builds
+  standalone and the hall answers `:4322` from `scripts/start.sh`.

@@ -12,11 +12,17 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Private document shapes that must never be published under docs/.
 PATTERNS='(^docs/plans/|^docs/masterplan|^docs/append-only-log|^docs/ratatoskr\.md|^docs/.*-plan\.md$|^docs/.*(plan|strategy|roadmap|backlog|proposal|private)\.md$)'
+# Exception: public transformation plans (about separating private data for
+# open-source release). These are operational, not operator-private.
+PATTERN_ALLOW='(^docs/plans/0003-private-data-separation\.md$)'
 
 scan_list() {
   local hit=0 f
   while IFS= read -r f; do
     [ -n "$f" ] || continue
+    if printf '%s\n' "$f" | grep -Eq "$PATTERN_ALLOW"; then
+      continue
+    fi
     if printf '%s\n' "$f" | grep -Eq "$PATTERNS"; then
       printf 'docs-guard: private document under docs/: %s\n' "$f" >&2
       hit=1

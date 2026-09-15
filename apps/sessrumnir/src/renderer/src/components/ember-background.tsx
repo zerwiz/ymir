@@ -16,11 +16,13 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    const cv = canvasRef.current
-    if (!cv) return
-    const ctx = cv.getContext('2d')
+    const el = canvasRef.current
+    if (!el) return
+    const ctx = el.getContext('2d')
     if (!ctx) return
-    const host = cv.parentElement
+    const canvas: HTMLCanvasElement = el
+    const context: CanvasRenderingContext2D = ctx
+    const host = canvas.parentElement
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     let W = 0
     let H = 0
@@ -33,9 +35,9 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
       const rect = host.getBoundingClientRect()
       W = rect.width
       H = rect.height
-      cv.width = Math.max(1, W * dpr)
-      cv.height = Math.max(1, H * dpr)
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      canvas.width = Math.max(1, W * dpr)
+      canvas.height = Math.max(1, H * dpr)
+      context.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     function init() {
       embers = []
@@ -61,18 +63,18 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
     }
     function frame() {
       t += 0.016
-      ctx.clearRect(0, 0, W, H)
+      context.clearRect(0, 0, W, H)
       for (const ha of haze) {
         ha.x += ha.v
         if (ha.x < -ha.r) ha.x = W + ha.r
         if (ha.x > W + ha.r) ha.x = -ha.r
-        const g = ctx.createRadialGradient(ha.x, ha.y, 0, ha.x, ha.y, ha.r)
+        const g = context.createRadialGradient(ha.x, ha.y, 0, ha.x, ha.y, ha.r)
         g.addColorStop(0, 'rgba(214,138,64,0.030)')
         g.addColorStop(1, 'rgba(0,0,0,0)')
-        ctx.fillStyle = g
-        ctx.beginPath()
-        ctx.arc(ha.x, ha.y, ha.r, 0, 6.283)
-        ctx.fill()
+        context.fillStyle = g
+        context.beginPath()
+        context.arc(ha.x, ha.y, ha.r, 0, 6.283)
+        context.fill()
       }
       for (const e of embers) {
         e.y -= e.v
@@ -82,10 +84,10 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
           e.x = Math.random() * W
         }
         const a = 0.26 + 0.4 * (0.5 + 0.5 * Math.sin(t * e.sp * 2 + e.ph))
-        ctx.fillStyle = 'rgba(236,166,84,' + a.toFixed(3) + ')'
-        ctx.beginPath()
-        ctx.arc(e.x, e.y, e.r, 0, 6.283)
-        ctx.fill()
+        context.fillStyle = 'rgba(236,166,84,' + a.toFixed(3) + ')'
+        context.beginPath()
+        context.arc(e.x, e.y, e.r, 0, 6.283)
+        context.fill()
       }
     }
     function loop() {

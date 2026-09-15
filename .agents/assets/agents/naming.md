@@ -4,7 +4,7 @@ The full Norse component map. AGENTS.md loads this when a task names a subsystem
 Deep doctrine (law, aetts, reject list): `.agents/skills/galdr-cli/assets/norse-naming.md`.
 
 ```
-platform[26]{subsystem,norse,role}:
+platform[27]{subsystem,norse,role}:
   "Master platform root","Ymir","base host OS, master daemon"
   "Primary agent","Brokk","main autonomous worker"
   "Sub-agent worker","Eindri","isolated sandboxed workers"
@@ -14,6 +14,7 @@ platform[26]{subsystem,norse,role}:
   "OAuth / security","Heimdall","authentication guardian"
   "Cloudflare tunnel","Gjallarhorn","outbound encrypted tunnel"
   "User dashboard","Hlidskjalf","observability, monitoring, control panel"
+  "Live hall board","Óðrerir","fleet planning glass (:4322); app of its own at apps/odrerir"
   "Web file browser","Skrymir","web-based file explorer"
   "Multi-tenant domains","Svartalfaheim","scoped tenant workspaces"
   "Global shared workspace","Midgard","cross-tenant shared repos & assets"
