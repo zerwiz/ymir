@@ -530,3 +530,21 @@ export YMIR_DATA_DIR="$YMIR_HOME/data"
 5. ❌ Age keys not needed
 
 **Core requirement implemented:** Users share data between machines via **private GitHub repos**. The `$YMIR_HOME` git repo pushes to a user-owned private GitHub repo. Secrets (`platform.env`) live in that private repo — safe because only the user has access.
+
+---
+
+## Amendment 3 — 2026-09-15: Implementation Complete
+
+**What was actually done in the repo:**
+
+1. **Private data untracked from git** — `smidja/smidja_data/` (52 files), `workspace/config/portfolio.md`, `workspace/config/toolchain.md`, `workspace/marketing/` (2 files), `workspace/INSTALL.md` all removed from git index via `git rm --cached`
+2. **`.gitignore` hardened** — `smidja/smidja_data/` now covers ALL of smidja_data (was only sessions/ + smidja.db*). Added `workspace/config/`, `workspace/marketing/`, `workspace/INSTALL.md`
+3. **Scripts updated to `$YMIR_HOME`** — `bin/hodd.sh`, `bin/agents-config.sh`, `bin/ymir-install.sh`, `bin/realm-lib.sh`, `bin/ymir-migrate.sh`, `bin/eir-doctor.sh`, `bin/groa-update.sh`, `bin/mimir-bridge.sh`, `bin/mimir.sh`, `bin/a2a-mcp.sh` all prefer `$YMIR_HOME` (default `~/Documents/Ymir`)
+4. **Guards updated** — `private-guard.sh` expanded FORBID to include workspace/config/, workspace/marketing/, workspace/INSTALL.md. `public-guard.sh` removed `svartalfaheim/` from APPEND_ONLY. `docs-guard.sh` added PATTERN_ALLOW exception for `0003-private-data-separation.md`
+5. **Plan document** — this file at `docs/plans/0003-private-data-separation.md`
+
+**Not yet done (next session):**
+- Create migration `0003-private-data-separation.sh` in `.agents/migrations/`
+- Update remaining scripts: `nornir-job-observer.sh`, `smidja-bootstrap.sh`, `ymir-validate.sh`
+- Update hodd/legacy paths in `bin/hodd.sh` for full backwards compat
+- Document the `$YMIR_HOME` env var contract in docs/installations/
