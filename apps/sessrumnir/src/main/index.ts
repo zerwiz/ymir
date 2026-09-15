@@ -26,6 +26,10 @@ const WORKSPACE_ENV_VAR = 'PI_DESKTOP_WORKSPACE'
 // which makes the taskbar and notification identity use Electron branding.
 app.setName('Sessrúmnir')
 if (process.platform === 'win32') app.setAppUserModelId('org.ymir.sessrumnir')
+if (process.platform === 'linux') {
+  app.setDesktopName('sessrumnir.desktop');
+  app.commandLine.appendSwitch('class', 'sessrumnir');
+}
 
 // Suppress EPIPE errors from closed subprocess pipes
 process.on('uncaughtException', (err) => {
