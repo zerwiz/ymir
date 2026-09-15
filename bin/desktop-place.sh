@@ -32,10 +32,11 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 HYPR_DIR="$HOME/.config/hypr"
 RULE_FILE="$HYPR_DIR/ymir-desktops.lua"
 # The three Ymir surfaces, in the order they should claim desktops.
-APPS=(hlidskjalf smidja sessrumnir)
+APPS=(hlidskjalf smidja sessrumnir odrerir)
 CLASS_hlidskjalf="ymir-hlidskjalf"
 CLASS_smidja="ymir-smidja"
 CLASS_sessrumnir="sessrumnir"
+CLASS_odrerir="ymir-odrerir"
 
 # ── launcher entries (Omarchy / Linux desktop only) ──────────────────────────
 # The .desktop files are templates (__YMIR_ROOT__, not an absolute path), because
@@ -45,7 +46,7 @@ CLASS_sessrumnir="sessrumnir"
 # not a branch of this one.
 install_entries() {
   local dst="$HOME/.local/share/applications" n=0
-  local dirs=("$ROOT/apps/hlidskjalf/electron" "$ROOT/apps/sessrumnir/resources")
+  local dirs=("$ROOT/apps/hlidskjalf/electron" "$ROOT/apps/sessrumnir/resources" "$ROOT/apps/odrerir/electron")
   if [ "$(ymir_os)" != linux ] && [ "$(ymir_os)" != wsl ]; then
     printf 'skip: desktop entries are Omarchy/Linux-shaped; this host is %s\n' "$(ymir_os)" >&2
     return 0

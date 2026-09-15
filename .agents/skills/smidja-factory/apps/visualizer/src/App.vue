@@ -102,7 +102,7 @@ const hallUrl =
              crisply with no fetch; keep the two in sync. -->
         <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
           <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
-          <g fill="#38bdf8">
+          <g fill="currentColor">
             <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13" />
             <polygon points="6,21 26,21 25.4,24 6.6,24" />
             <polygon points="8,25 24,25 23.3,27.5 8.7,27.5" />
@@ -227,6 +227,7 @@ const hallUrl =
   width: 28px;
   height: 28px;
   flex: none;
+  color: var(--accent);
   filter: drop-shadow(0 0 8px rgba(201, 151, 79, 0.3));
 }
 
