@@ -548,3 +548,23 @@ export YMIR_DATA_DIR="$YMIR_HOME/data"
 - Update remaining scripts: `nornir-job-observer.sh`, `smidja-bootstrap.sh`, `ymir-validate.sh`
 - Update hodd/legacy paths in `bin/hodd.sh` for full backwards compat
 - Document the `$YMIR_HOME` env var contract in docs/installations/
+
+---
+
+## Amendment 4 — 2026-09-15: All Amendment 3 Items Complete
+
+**All four "Not yet done" items from Amendment 3 are now complete:**
+
+1. ✅ **Migration script** — `.agents/migrations/0003-private-data-separation.sh` created. Copy-only, idempotent, creates `.gitignore`, initializes git repo, prompts for GitHub remote, writes `.ymir-layout.yaml`.
+2. ✅ **Remaining scripts updated** — `bin/nornir-job-observer.sh` (SMIDJA_DB, RUNES_LEDGER prefer YMIR_HOME), `bin/smidja-bootstrap.sh` (DB prefers YMIR_HOME), `bin/ymir-validate.sh` (smidja-db and runes checks prefer YMIR_HOME) all updated.
+3. ✅ **Hodd backwards compat** — `bin/hodd.sh` already had `HOARD="${YMIR_HOARD:-${YMIR_HOME:-$ROOT/hodd}}"` — falls back to repo hodd/ when YMIR_HOME unset.
+4. ✅ **YMIR_HOME documentation** — `docs/installations/ymir-home.md` created with full env var contract, layout, and sourcing convention. `docs/installations/README.md` updated to reference `$YMIR_HOME/secrets/platform.env`.
+
+**Additional changes this session:**
+- `AGENTS.md` updated for YMIR_HOME architecture (directory rules, private data section, append-only, security, GitHub & isolates, agent set, private contract path).
+
+**Total commits on `sync/sessrumnir-pi-desktop-v0.1.8`:**
+- `2eb4def` — chore: separate private data from open-source repo
+- `fbadf91` — docs: Amendment 3 to plan 0003
+- `cd99b5e` — docs: update AGENTS.md for YMIR_HOME architecture
+- `43641dc` — chore: finish private data separation — scripts, migration, docs
