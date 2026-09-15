@@ -63,6 +63,11 @@ apps/hlidskjalf/node_modules/
 apps/hlidskjalf/.expo/
 apps/hlidskjalf/dist/
 
+# Óðrerir — the Live Hall
+apps/odrerir/node_modules/
+apps/odrerir/dist/
+apps/odrerir/public/livehall.json
+
 # Brokk runtime home — private (ship *.example templates only)
 data/*
 !data/*.example
@@ -83,9 +88,9 @@ config/*
 .agents/memory/*.db
 .agents/memory/well/*.jsonl
 
-# smidja runtime
-smidja/smidja_data/sessions/
-smidja/smidja_data/smidja.db*
+# smidja runtime — ALL of smidja_data/ is runtime data, never tracked
+smidja/smidja_data/
+smidja/smidja.db*
 .env
 __pycache__/
 *.pyc
@@ -111,11 +116,14 @@ apps/hlidskjalf/android/keystore.properties
 
 # workspace/ — the operator's private world-tree. A clone must never inherit
 # another operator's work, personal, memory, or company data. Only the scaffold
-# (README/INSTALL/*.yaml) and config examples are tracked.
+# (README.md, projects.yaml.example, workspaces.yaml.example) is tracked.
 workspace/work/
 workspace/personal/
 workspace/memory/
 workspace/companies/
+workspace/config/
+workspace/marketing/
+workspace/INSTALL.md
 
 # Session logs can carry live credentials and prompts — never tracked.
 assets/reference/state/

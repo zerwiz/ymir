@@ -8,7 +8,7 @@ galdr[1]{role}:
 ## Routing
 
 ```
-assets[25]{path,load_when}:
+assets[26]{path,load_when}:
   "principles.md","the 10 CLI design principles (full doctrine)"
   "build-method.md","building/maintaining the runtime; forging a new skill"
   "registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -29,7 +29,8 @@ assets[25]{path,load_when}:
   "porting-upstream-to-norse.md","porting a validated upstream into Norse form"
   "eindri-orchestration.md","spawning/briefing/supervising Eindri workers"
   "nornir-jobs.md","the scheduler, the jobs, and the Runes ledger"
-  "hlidskjalf-ui.md","any change under apps/hlidskjalf"
+  "hlidskjalf-ui.md","this portal: control plane UI — SPA, gate API, auth, desktop, tunnel"
+  "odrerir-hall.md","the Óðrerir Live Hall: apps/odrerir board, :4322, its own window, the planning feed bin/hall-snapshot.sh"
   "pi-boot-guide.md","the PI primary boot path"
   "eindri-profiles.md","Einherjar fleet profiles (8 specialists)"
   "build-tool-categories.md","build tool categories for synthesis"

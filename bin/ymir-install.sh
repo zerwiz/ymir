@@ -27,7 +27,9 @@ fi
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-WORKSPACE="$ROOT/workspace"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
+HOARD="${YMIR_HOARD:-$YMIR_HOME}"
 DOMAINS="company marketing development life me"
 
 CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0
@@ -126,7 +128,6 @@ step_prereqs() {
 
 # ── 2. workspace tree ────────────────────────────────────────────────────────
 step_tree() {
-  local HOARD="${YMIR_HOARD:-$ROOT/hodd}"
   if [ "$CHECK" = 1 ]; then
     local ok=1
     [ -d "$WORKSPACE/work" ] && [ -d "$WORKSPACE/personal" ] && [ -f "$HOARD/identity/workspaces.yaml" ] && [ -f "$HOARD/identity/projects.yaml" ] || ok=0
@@ -361,7 +362,7 @@ step_sandbox() {
 
 # ── 5. memory (well + harness MCP) ───────────────────────────────────────────
 step_memory() {
-  local db="$ROOT/.agents/memory/kaia.engram" mcp=0
+  local db="$YMIR_HOME/memory/kaia.engram" mcp=0
   [ "$CHECK" = 0 ] && "$SCRIPT_DIR/mimir-bridge.sh" --start >/dev/null 2>&1 || true
   for f in "$ROOT/opencode.json" "$HOME/.config/opencode/opencode.json" "$HOME/.pi/agent/settings.json" "$HOME/.claude.json" "$HOME/.cursor/mcp.json"; do
     [ -f "$f" ] && grep -q '"engram"' "$f" 2>/dev/null && mcp=$((mcp+1))
@@ -375,7 +376,7 @@ step_smidja() {
   if [ -x "$SCRIPT_DIR/smidja-bootstrap.sh" ]; then
     if [ "$CHECK" = 1 ]; then
       local dbok vizok
-      [ -f "$ROOT/smidja/smidja_data/smidja.db" ] && dbok=present || dbok=missing
+      [ -f "$YMIR_HOME/smidja/smidja.db" ] && dbok=present || dbok=missing
       [ -d "$ROOT/.agents/skills/smidja-factory/apps/visualizer/dist" ] && vizok=built || vizok=unbuilt
       if [ "$dbok" = missing ]; then
         add smidja WARN "smidja.db missing — a full run (without --check) creates it and seeds one bootstrap session"

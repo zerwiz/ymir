@@ -36,7 +36,7 @@ Nornir jobs run, and how it is all verified. A runtime change not reflected in
 ## Routing (load one row)
 
 ```
-assets[23]{path,load_when}:
+assets[24]{path,load_when}:
   "assets/principles.md","the 10 CLI design principles (full doctrine)"
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -58,6 +58,7 @@ assets[23]{path,load_when}:
   "assets/nornir-jobs.md","the scheduler, jobs, and Runes ledger"
   "assets/smidja.md","the smithy: install, roster/pi models, run, trace, visualizer ports, observer"
   "assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
+  "assets/odrerir-hall.md","the Óðrerir Live Hall — apps/odrerir, :4322, its window, the planning snapshot feed (bin/hall-snapshot.sh)"
   "assets/pi-boot-guide.md","the PI primary boot path"
   "assets/README.md","the full asset index"
 ```

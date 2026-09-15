@@ -12,13 +12,13 @@
 #
 # Usage:
 #   bin/hall-snapshot.sh [<output.json>]
-#   default output: ~/CodeP/ymir-homepage/.yggdrasil/odrerir/public/livehall.json
-#   (the Local Hall; the merged site takes the same file from its own build).
+#   default output: apps/odrerir/public/livehall.json
+#   (the Live Hall's own deck; the merged public site takes it from its build).
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 STATE="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
-OUT="${1:-$HOME/CodeP/ymir-homepage/public/livehall.json}"
+OUT="${1:-$ROOT/apps/odrerir/public/livehall.json}"
 
 runes_file="$ROOT/workspace/memory/runes_audit.md"
 projects_file="$ROOT/hodd/identity/projects.yaml"

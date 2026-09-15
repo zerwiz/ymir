@@ -59,13 +59,14 @@ mandate{operator,eindri}:
 ## Manual (load the row the task needs)
 
 ```
-manual[8]{asset,path,load_when}:
+manual[9]{asset,path,load_when}:
   "naming",".agents/assets/agents/naming.md","naming any subsystem / component map"
   "registry",".agents/assets/agents/registry.md","skills, assets, tools, commands inventories"
   "runtime",".agents/assets/agents/runtime.md","how Ymir boots / supervises the primary"
   "toon-tasks",".agents/assets/agents/toon-tasks-cli.md","building agent-facing output / tasks-cli"
   "installation",".agents/skills/galdr-cli/assets/installation.md","changing bin/ymir-install.sh, engines, first setup"
   "ui",".agents/skills/galdr-cli/assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
+  "hall",".agents/skills/galdr-cli/assets/odrerir-hall.md","any change under apps/odrerir"
   "runtime-spec",".agents/skills/galdr-cli/assets/brokk-distro-runtime.md","the runtime, digest, lock, supervision, cron"
   "harness",".agents/skills/galdr-cli/assets/harness-integration/README.md","the Pi/OpenCode surfaces: extensions, commands, shortcuts"
 ```
@@ -76,9 +77,10 @@ incomplete change. The router is `.agents/skills/galdr-cli/SKILL.md` (its `asset
 table maps every task to its file).
 
 ```
-governed[6]{path,load_first}:
+governed[7]{path,load_first}:
   "bin/ymir-install.sh",".agents/skills/galdr-cli/assets/installation.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-cli/assets/hlidskjalf-ui.md"
+  "apps/odrerir/**",".agents/skills/galdr-cli/assets/odrerir-hall.md"
   "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr-cli/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli/assets/nornir-jobs.md"
   "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-cli/assets/harness-integration/README.md"
