@@ -6,6 +6,12 @@
 # after the fact. This guard refuses a push whose range never touches it, so the
 # record can never lag silently behind the code.
 #
+# Two tiers, so a follow-up commit needs no micro-entry:
+#   1. the pushed range (remote..local) touches CHANGELOG.md, or
+#   2. the branch's whole range since it left the trunk does — the record is
+#      already told, and this push merely lands a file it describes.
+# What can never pass is a branch whose entire range leaves with no entry.
+#
 #   bin/changelog-guard.sh                 # pre-push: refs on stdin (hook mode)
 #   bin/changelog-guard.sh --range A..B    # check one explicit range
 #   bin/changelog-guard.sh --install       # wire pre-push (branch + changelog)
@@ -40,6 +46,21 @@ changes_touch_changelog() {
   return 1
 }
 
+# branch_touches_changelog <sha> — the branch's own range since it left the trunk.
+# The fallback for a follow-up push: a commit that merely lands a file already
+# told by an earlier entry is not a new untold change. What must never happen is
+# a branch whose whole range leaves without an entry.
+branch_touches_changelog() {
+  local sha=${1-} default_ref base
+  [ -n "$sha" ] || return 1
+  for default_ref in "origin/HEAD" "origin/main" "origin/master"; do
+    git -C "$ROOT" rev-parse --verify --quiet "$default_ref" >/dev/null 2>&1 || continue
+    base="$(git -C "$ROOT" merge-base "$sha" "$default_ref" 2>/dev/null || true)"
+    [ -n "$base" ] && { changes_touch_changelog "$base" "$sha" && return 0; return 1; }
+  done
+  return 1
+}
+
 # check_ref <local_sha> <remote_sha> — resolve the range and test it
 check_ref() {
   local local_sha=${1-} remote_sha=${2-} base="" default_ref=""
@@ -56,7 +77,9 @@ check_ref() {
       [ -n "$base" ] && break
     done
   fi
-  changes_touch_changelog "$base" "$local_sha"
+  changes_touch_changelog "$base" "$local_sha" && return 0
+  # Nothing in THIS push told the record; the branch may yet have told it.
+  branch_touches_changelog "$local_sha"
 }
 
 verdict() {  # <ok|blocked>

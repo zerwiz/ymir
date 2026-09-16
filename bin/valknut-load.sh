@@ -62,15 +62,64 @@ fi
 # opencode.json and .pi/mcp.json must contain ABSOLUTE paths, so they cannot be
 # tracked — a tracked copy would hand every operator the previous one's home.
 # They are rendered from the shipped *.example with the real $HOME and root.
-# Idempotent: identical content is left alone.
-render_config() {  # <example> <target>
-  local ex=$1 out=$2 tmp
-  [ -r "$ex" ] || return 0
-  tmp=$(mktemp) || return 1
-  sed -e "s|__YMIR_HOME__|$HOME|g" -e "s|__YMIR_ROOT__|$ROOT|g" "$ex" >"$tmp" || { rm -f "$tmp"; return 1; }
-  if [ -f "$out" ] && cmp -s "$tmp" "$out"; then rm -f "$tmp"; printf 'unchanged'; return 0; fi
-  mkdir -p "$(dirname "$out")" 2>/dev/null
-  mv "$tmp" "$out" && printf 'rendered'
+#
+# TWO WRITERS touch opencode.json: this loader, and `bin/agents-config.sh apply`
+# (which owns the ROSTER — providers and per-agent models, from
+# config/agents.yaml). A blind render here DELETED the roster's work: the Apodex
+# provider lived only in the live file and vanished on the next loader run. So
+# this merges and never overwrites: missing keys are added, existing ones are
+# left alone, and the skills tree is ensured. A live value is never lost, from
+# either writer. Seeding happens only when the target is absent.
+#
+# Returns one of: seeded | merged(<what>) | unchanged | kept | absent.
+config_out() {  # <rendered-json-or-text> <target>
+  local ex=$1 out=$2
+  [ -r "$ex" ] || { printf 'absent'; return 0; }
+  python3 - "$ex" "$out" "$HOME" "$ROOT" <<'PY'
+import json, os, sys
+
+ex, out, home, root = sys.argv[1:5]
+raw = open(ex).read().replace("__YMIR_HOME__", home).replace("__YMIR_ROOT__", root)
+
+def write(text):
+    with open(out, "w") as fh:
+        fh.write(text)
+
+try:
+    want = json.loads(raw)
+except Exception:
+    # Not JSON (or not yet): seed a missing file, but never overwrite a live one.
+    if os.path.exists(out):
+        print("kept")
+    else:
+        write(raw); print("seeded")
+    raise SystemExit
+
+if not os.path.exists(out):
+    write(json.dumps(want, indent=2) + "\n"); print("seeded"); raise SystemExit
+
+cur = json.load(open(out))
+added = []
+
+def merge(cur, want, path=""):
+    for k, v in want.items():
+        if k not in cur:
+            cur[k] = v; added.append(path + k)
+        elif isinstance(v, dict) and isinstance(cur[k], dict):
+            merge(cur[k], v, path + k + ".")
+
+merge(cur, want)
+
+# This loader's own contract: the ONE skills tree must stay reachable.
+paths = cur.setdefault("skills", {}).setdefault("paths", [])
+if ".agents/skills" not in paths:
+    paths.append(".agents/skills"); added.append("skills.paths")
+
+if not added:
+    print("unchanged"); raise SystemExit
+write(json.dumps(cur, indent=2) + "\n")
+print("merged(%s)" % ",".join(added[:4]))
+PY
 }
 
 declare -a T P S
@@ -117,7 +166,7 @@ if [ "$MODE_STATUS" = 1 ]; then
 fi
 
 if [ "$MODE_OPENCODE" = 1 ]; then
-  add opencode-config "$ROOT/opencode.json" "$(render_config "$ROOT/opencode.json.example" "$ROOT/opencode.json")"
+  add opencode-config "$ROOT/opencode.json" "$(config_out "$ROOT/opencode.json.example" "$ROOT/opencode.json")"
   if [ -d "$OC_LOCAL" ]; then
     n=$(ls "$OC_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ')
     add opencode "$OC_LOCAL" "native ($n agents)"
@@ -133,7 +182,7 @@ if [ "$MODE_OPENCODE" = 1 ]; then
 fi
 
 if [ "$MODE_PI" = 1 ]; then
-  add pi-mcp "$ROOT/.pi/mcp.json" "$(render_config "$ROOT/.pi/mcp.json.example" "$ROOT/.pi/mcp.json")"
+  add pi-mcp "$ROOT/.pi/mcp.json" "$(config_out "$ROOT/.pi/mcp.json.example" "$ROOT/.pi/mcp.json")"
   n=$(link_agent_dir "$PI_LOCAL" "../../.agents/agents") && add pi-local "$PI_LOCAL" "bound ($n links)" || add pi-local "$PI_LOCAL" "ERROR"
   if [ "$MODE_GLOBAL" = 1 ]; then
     g=$(link_agent_dir "$PI_GLOBAL" "$AGENTS") && add pi-global "$PI_GLOBAL" "bound ($g links)" || add pi-global "$PI_GLOBAL" "ERROR"
