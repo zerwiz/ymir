@@ -86,7 +86,17 @@ VIZ_API_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 VIZ_UI_PORT="${SMIDJA_VIZ_UI_PORT:-8438}"
 VIZ_API_PID_FILE="$RUN/smidja-viz-api.pid"
 VIZ_UI_PID_FILE="$RUN/smidja-viz-ui.pid"
-SMIDJA_DB_PATH="${SMIDJA_DB:-$ROOT/apps/smidja/smidja_data/smidja.db}"
+SMIDJA_DB_PATH="${SMIDJA_DB:-}"
+# The smithy DB follows the HOME: 0003-private-data-separation moved it to
+# $YMIR_HOME/smidja/smidja.db. Prefer an existing DB there, then an in-repo copy
+# for a checkout that keeps its own; SMIDJA_DB overrides either.
+if [ -z "$SMIDJA_DB_PATH" ]; then
+  for _db in "${YMIR_HOME:-$HOME/Documents/Ymir}/smidja/smidja.db" \
+             "$ROOT/apps/smidja/smidja_data/smidja.db"; do
+    [ -f "$_db" ] && { SMIDJA_DB_PATH="$_db"; break; }
+  done
+  SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-${YMIR_HOME:-$HOME/Documents/Ymir}/smidja/smidja.db}"
+fi
 if command -v bun >/dev/null 2>&1 && [ -d "$VIZ_DIR" ]; then
   [ -d "$VIZ_DIR/node_modules" ] || (cd "$VIZ_DIR" && bun install >/dev/null 2>&1 || true)
   # The API serves the UI from ./dist. Without a build it answers the API but
