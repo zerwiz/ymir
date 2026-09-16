@@ -30,7 +30,7 @@ EnvironmentFile=%h/.config/ymir/ymir.env
 # the env file and keep these in step). The well/Bifrost stay internal.
 PublishPort=38889:38889
 PublishPort=38888:38888
-PublishPort=84370:84370
+PublishPort=54370:54370
 
 # Hardening: rootless, no new privileges, drop every capability. Ymir needs none.
 NoNewPrivileges=true
