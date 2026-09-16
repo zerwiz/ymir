@@ -31,7 +31,7 @@ APPS=(
   "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane|ymir-hlidskjalf|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf|Ymir · Hlidskjalf"
   "apps/hlidskjalf-mobile|raidho|#c9973f|the road — the seat carried, Hlidskjalf on a phone|ymir-hlidskjalf-mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile|Ymir · Hlidskjalf Mobile"
   "apps/odrerir|valhalla|#c9973f|the hall — Óðrerir, the Live Hall|ymir-odrerir|scripts/electron.sh start --view odrerir|ymir-odrerir|Ymir · Óðrerir"
-  "apps/sessrumnir|sowilo|#8b5cf6|the sun — Sessrúmnir, the seat that shows the cloth|ymir-sessrumnir|bin/sessrumnir.sh start|ymir-sessrumnir|Ymir · Sessrúmnir"
+  "apps/sessrumnir|othala|#c9973f|the hall — Sessrúmnir, the seat that holds the cloth|ymir-sessrumnir|bin/sessrumnir.sh start|ymir-sessrumnir|Ymir · Sessrúmnir"
   "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-visualizer|scripts/electron.sh start --view smidja|ymir-smidja|Ymir · Smíðja"
 )
 

@@ -15,6 +15,7 @@ icons[21]{glyph,name,unicode,figure,used_for}:
   "tiwaz","Tiwaz","ᛏ","Týr (justice)","Tasks — the A2A lifecycle board"
   "ingwaz","Ingwaz","ᛜ","Ing (the well)","Well — Mimirsbrunn recall"
   "raidho","Raidho","ᚱ","ride/journey","Runes — the ledger (a road carved)"
+  "othala","Othala","ᛟ","inheritance, the hall","Óðrerir / Sessrúmnir — what is kept"
   "algiz","Algiz","ᛉ","protection","Reviews / Glitnir — the protective gate; the Ymir emblem"
   "dagaz","Dagaz","ᛞ","day/dawn","Processes — Valhalla supervision"
   "sowilo","Sowilo","ᛊ","sun","Files — Skrymir (light on the tree)"
