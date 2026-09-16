@@ -502,6 +502,23 @@ duplicates:
 To change an agent, edit `.agents/agents/*.md` and re-run the loader; never edit
 `.opencode/agent` or `.pi/agents` (they are links).
 
+### Skill location — the same law, one tree
+
+Skills have **one** tree too: `.agents/skills/`. Every harness reaches it, each
+by the mechanism that harness actually reads — and a harness that silently
+loads nothing is invisible from the code, so `compliance-check.sh`'s `harnesses`
+gate asserts all four:
+
+| Harness | How it reaches `.agents/skills` |
+|---|---|
+| **opencode** | `skills.paths: [".agents/skills"]` in `opencode.json` (tracked in `opencode.json.example`, so a re-render cannot drop it) |
+| **pi** | **native discovery** — it walks up from the cwd to `.agents/skills` (and `~/.agents/skills`). No link, no config: a second root under `.pi/` would invite double-loading, exactly as the extensions rule warns |
+| **claude · codex · cursor** | `<harness>/skills -> ../.agents/skills`, created by `bin/valknut-load.sh` (their project scope is their own directory) |
+
+**Do not** copy a `SKILL.md` into a harness directory: a copy is drift, and a
+nested `SKILL.md` carrying frontmatter is loaded as a *second, phantom* skill by
+every recursive scanner (the `harnesses` gate refuses it).
+
 ## 15. The Eindri roster (bound agents)
 
 Canonical profiles in `.agents/agents/*.md`, bound as symlinks:
