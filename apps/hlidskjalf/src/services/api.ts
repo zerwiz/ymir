@@ -63,6 +63,14 @@ export interface YmirUsage {
   sources: Record<string, { messages?: number; input?: number; output?: number; cache_read?: number; cache_write?: number; error?: string }>;
   totals: { messages: number; input: number; output: number; cache_read: number; cache_write: number; total: number; cache_hit_ratio: number };
   by_model: Array<{ source: string; model: string; messages: number; input: number; output: number }>;
+  /** The same numbers under the names the Statistics gate renders. */
+  gate?: {
+    totals: { runs: number; success: number; fail: number; running: number; tokens: number; cost: number };
+    usage: { input: number; output: number; cache_read: number; cache_write: number; total: number };
+    providers: { local: any; online: any; per_model: any[] };
+    by_chain: any[];
+    by_model: any[];
+  };
 }
 
 export interface OrdersInfo {
