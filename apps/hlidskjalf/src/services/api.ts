@@ -57,6 +57,14 @@ export interface OrderRow {
   phase: string;
   status: string;
 }
+/** What the HARNESSES spent (opencode, pi) — not only the smithy's runs. */
+export interface YmirUsage {
+  window_days: number;
+  sources: Record<string, { messages?: number; input?: number; output?: number; cache_read?: number; cache_write?: number; error?: string }>;
+  totals: { messages: number; input: number; output: number; cache_read: number; cache_write: number; total: number; cache_hit_ratio: number };
+  by_model: Array<{ source: string; model: string; messages: number; input: number; output: number }>;
+}
+
 export interface OrdersInfo {
   open: number;
   orders: OrderRow[];
