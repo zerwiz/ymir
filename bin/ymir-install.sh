@@ -323,23 +323,18 @@ step_omarchy() {
 }
 
 step_host() {
-  # Core host learning: record THIS machine so the agent helps with the real one.
-  # The Omarchy-specific extras (desktop placement, the post-update hook, the
-  # plugin offer, the desktop alarm channel) belong to the Omarchy layer and are
-  # applied by step_omarchy; nothing here assumes Omarchy.
-  local learned=no
-  if [ "$CHECK" = 1 ]; then
-    if [ -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then
-      local snap; snap="$("$SCRIPT_DIR/omarchy-sense.sh" status 2>&1 | sed -n '2p' | tr -d '"' | cut -c1-60)"
-      learned="${snap:-no snapshot yet}"
-    fi
-    add host OK "host snapshot: ${learned}"
-  else
-    if [ -x "$SCRIPT_DIR/omarchy-sense.sh" ]; then
-      "$SCRIPT_DIR/omarchy-sense.sh" observe --quiet >/dev/null 2>&1 && learned=yes
-    fi
-    add host OK "host learnt=${learned}"
+  # Core host learning: sense THIS machine on EVERY host with the portable
+  # sensor (Rule 05). The Omarchy-specific RECORDING (omarchy-sense observe), the
+  # post-update hook, desktop placement, the plugin offer, and the desktop alarm
+  # channel belong to the Omarchy layer and are applied by step_omarchy; nothing
+  # here assumes Omarchy.
+  local seen="unknown"
+  if [ -x "$SCRIPT_DIR/host-sense.sh" ]; then
+    # host-sense TOON row 2 is: os, id, family, session, desktop
+    local row; row="$("$SCRIPT_DIR/host-sense.sh" 2>/dev/null | sed -n '2p')"
+    [ -n "$row" ] && seen="$(printf '%s' "$row" | sed -E 's/^[[:space:]]*"//; s/"[[:space:]]*$//; s/","/ \/ /g')"
   fi
+  add host OK "host sensed: ${seen}"
 
   # The Allfather's own agent setup, seeded from the tracked template. Idempotent:
   # config/agents.yaml is private and is never overwritten once set. --check never
