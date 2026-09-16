@@ -59,8 +59,24 @@ export default function App() {
   }, []);
 
   /** After the gate admits us, take its word for who we are. */
+  /**
+   * One login for every app: an app host sends its visitors here with ?next=,
+   * so after the gate admits us we hand them back where they were going.
+   */
+  const returnToNext = () => {
+    const next = new URLSearchParams(window.location.search).get('next');
+    if (!next) return;
+    try {
+      const t = new URL(next);
+      if (t.origin !== window.location.origin) window.location.replace(t.toString());
+    } catch {
+      /* a malformed next is ignored, never followed */
+    }
+  };
+
   const admitted = () => {
     setAuthed(true);
+    returnToNext();
     void gateApi
       .session()
       .then((r) => {
