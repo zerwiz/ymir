@@ -203,17 +203,54 @@ if [ "$MODE_PI" = 1 ]; then
   fi
 fi
 
-# Skills for the CLIs whose project scope is their own directory. Pi needs no
-# link (it discovers `.agents/skills` by walking up); opencode reaches the tree
-# through `skills.paths`. claude, codex and cursor each get one link, so all of
-# them read the ONE skills tree.
+# Agents for every harness: `.agents/agents/` is canonical, and each harness dir
+# is a directory of symlinks into it (Rule 02). Pi and opencode have their own
+# bindings above; claude, codex and cursor are bound here, so no harness is left
+# holding a hand-made subset. opencode names an agent by its `name:` frontmatter
+# (bragi.md -> bragi-marketer.md), the others by the profile file name.
+agent_name_of() {  # <profile> -> the frontmatter `name:`
+  sed -n 's/^name:[[:space:]]*//p' "$1" 2>/dev/null | head -1 | tr -d '[:space:]'
+}
+link_agents() {  # <harness-dir> [short]
+  local dir=$1 short=${2:-} made=0 f base want
+  [ -d "$(dirname "$dir")" ] || return 1
+  mkdir -p "$dir" || return 1
+  for f in "$AGENTS"/*.md; do
+    [ -e "$f" ] || continue
+    base=$(basename "$f")
+    if [ "$short" = "short" ]; then
+      want="$(agent_name_of "$f")"; [ -n "$want" ] || continue; want="$want.md"
+    else
+      want="$base"
+    fi
+    ln -sfn "../../.agents/agents/$base" "$dir/$want" 2>/dev/null || return 1
+    made=$((made + 1))
+  done
+  printf '%s' "$made"
+}
 if [ "$MODE_STATUS" = 0 ]; then
+  # Skills for the CLIs whose project scope is their own directory. Pi needs no
+  # link (it discovers `.agents/skills` by walking up); opencode reaches that
+  # tree through `skills.paths`. claude, codex and cursor each get one link, so
+  # all of them read the ONE skills tree.
   linked=""
   for hd in .claude .codex .cursor; do
     [ -d "$ROOT/$hd" ] || continue
     link_skills "$ROOT/$hd" >/dev/null 2>&1 && linked="$linked $hd"
   done
   [ -n "$linked" ] && add harness-skills "$SKILLS" "linked into:$linked"
+
+  # …and AGENTS for the same harnesses, plus opencode, so every tool loads every
+  # agent — never a hand-made subset.
+  for hd in .claude .codex .cursor; do
+    [ -d "$ROOT/$hd" ] || continue
+    n=$(link_agents "$ROOT/$hd/agents") || n=0
+    add "${hd#.}-agents" "$ROOT/$hd/agents" "bound ($n)"
+  done
+  if [ -d "$ROOT/.opencode" ]; then
+    n=$(link_agents "$ROOT/.opencode/agent" short) || n=0
+    add opencode-agents "$ROOT/.opencode/agent" "bound ($n)"
+  fi
 fi
 
 printf 'loaders[%s]{tool,path,status}:\n' "${#T[@]}"
