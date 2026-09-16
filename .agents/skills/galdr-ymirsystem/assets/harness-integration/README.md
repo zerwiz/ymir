@@ -168,12 +168,12 @@ Who governs what:
 
 ```
 governed[6]{path,load_first}:
-  "bin/ymir-install.sh",".agents/skills/galdr-cli/assets/installation.md"
-  "apps/hlidskjalf/**",".agents/skills/galdr-cli/assets/hlidskjalf-ui.md"
-  "bin/mimir*",".agents/skills/galdr-cli/assets/memory-well.md"
-  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli/assets/nornir-jobs.md"
-  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-cli/assets/harness-integration/README.md"
-  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-cli/assets/smidja.md"
+  "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
+  "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
+  "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
+  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
+  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
+  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
 
 The Pi extension `.pi/extensions/syn-turnend-guard.ts` relays it: `read` of an

@@ -124,6 +124,6 @@ files[5]{path,what}:
 
 Door plumbing that reaches the hall from other apps: `HALL_URL` in
 `apps/hlidskjalf/src/data/metadata.ts` (`localhost|127.0.0.1` → `:4322`, else the
-public hall), surface rules in `.agents/skills/galdr-cli/assets/hlidskjalf-ui.md`
+public hall), surface rules in `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md`
 ("The Hall door" section). Everything the hall renders lives only under
 `apps/odrerir/`; nothing else in the tree is its feed but `bin/hall-snapshot.sh`.

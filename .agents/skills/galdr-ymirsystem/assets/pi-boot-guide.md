@@ -31,7 +31,7 @@ pi_cli[5]{id,requirement}:
 
 ## Boot asset directory
 
-`.agents/skills/galdr-cli/assets/pi-boot/`
+`.agents/skills/galdr-ymirsystem/assets/pi-boot/`
 
 ```
 pi_boot_assets[4]{file,purpose}:
@@ -45,14 +45,14 @@ pi_boot_assets[4]{file,purpose}:
 
 ```
 bash -n bin/hamr-harness.sh bin/einherjar-spawn.sh
-python3 -m json.tool .agents/skills/galdr-cli/assets/pi-boot/einherjar-spawn.schema.json
+python3 -m json.tool .agents/skills/galdr-ymirsystem/assets/pi-boot/einherjar-spawn.schema.json
 bash bin/hamr-harness.sh            # prints the current harness
 bash bin/hamr-harness.sh eindri     # prints the effective Eindri harness
 ```
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - **Mirror:** `.agents/skills/tyr-check/assets/pi-boot-guide.md`.
 - The runtime itself is specified in `assets/brokk-distro-runtime.md`; this asset is
   the PI boot view only.
