@@ -90,7 +90,7 @@ Galdr needs to know about these build tool categories and their asset requiremen
 ### Norse Naming Convention
 - All new skills must follow Norse mythology naming (aett pattern)
 - galdr aett: incantation / chant standards
-- Examples: galdr, galdr-compliance, galdr-crafter, valhalla, skrymir, bifrost, heimdall
+- Examples: galdr, tyr-check, smidja-factory, valhalla, skrymir, bifrost, heimdall
 
 ### Utgard Sandbox Requirements
 - All agent-facing tools must specify: runs_in_utgard: true
@@ -109,7 +109,7 @@ Galdr needs to know about these build tool categories and their asset requiremen
 Before a new Galdr skill is considered "forged", it must pass:
 
 1. **TOON output test** — all stdout output uses TOON format, measured ~40% smaller than equivalent JSON across 3 sample outputs
-2. **Principle compliance** — all 10 design principles assessed via galdr-compliance
+2. **Principle compliance** — all 10 design principles assessed via tyr-check
 3. **Norse name validity** — skill name follows the aett pattern, not a random label
 4. **Frame integration** — SKILL.md placed in `.agents/skills/<name>/`, referenced in `.agents/skills/README.md`
 5. **Mimirsbrunn observation** — the skill's creation is observed into the well (`POST /observe`) before it is deemed "live"
@@ -129,8 +129,8 @@ Before a new Galdr skill is considered "forged", it must pass:
 ## Usage
 
 Galdr references these assets when:
-- Synthesizing new skills via `galdr-crafter`
-- Validating existing skills via `galdr-compliance`
+- Synthesizing new skills via `brokk-craft` (planned) against `galdr`'s build-method
+- Validating existing skills via `tyr-check`
 - Ensuring new CLI tools adhere to Ymir ergonomic standards
 - Maintaining Norse naming convention and aett pattern consistency
 - Verifying Utgard sandbox compliance for all agent-facing tools
