@@ -154,7 +154,7 @@ Measured: `/api/checks` 442ms → 4ms warm; `/api/runtime` 312ms → 5ms warm;
 `HLIDSKJALF_PORT` (default `3888`) and `HLIDSKJALF_API_PORT` (default `3889`);
 `scripts/start.sh` passes the API port to the server as `PORT`, and the visualizer
 uses `SMIDJA_VIZ_API_PORT`. A deployment should use 5-digit ports (the Quadlet/
-Compose examples publish `38888`/`38889`/`84370`) to avoid colliding with other
+Compose examples publish `38888`/`38889`/`54370`) to avoid colliding with other
 services on a shared host; the defaults are unchanged for bare local dev.
 
 ## Smíðja in the UI
