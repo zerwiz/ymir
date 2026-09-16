@@ -21,13 +21,17 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # The public tree scanned for private markers: shipped code, agent surfaces, docs.
 PUBLIC='^(apps/|bin/|scripts/|config/|midgard/|\.agents/|\.pi/|\.opencode/|AGENTS\.md|README\.md|TODO\.md|Structure\.md|CONTRIBUTING\.md|SECURITY\.md|NOTICE|docs/)'
 # Append-only records and archived reference material: history, never rewritten.
-APPEND_ONLY='(^CHANGELOG\.md$|^docs/append-only-log\.md$|^docs/plans/|^assets/reference/|^svartalfaheim/)'
+APPEND_ONLY='(^CHANGELOG\.md$|^docs/append-only-log\.md$|^docs/plans/|^assets/reference/|^.agents/state/)'
 # Operator-private markers that must never appear in a public file.
-PATTERNS='(josef|lindbom|/home/zerwiz|zerwiz\.org|(^|[^a-z0-9.-])zerwiz([^a-z0-9.-]|$)|hodd/tenants/[a-z0-9]|(ghp|gho|ghs|ghr)_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
+# Note: the public owner identity — "zerwiz" the repo holder, its public domains,
+# and the project's own repo forms — is intentionally NOT private. What stays
+# guarded: other personal names, real /home paths, tenants, and secret shapes.
+PATTERNS='(josef|lindbom|/home/zerwiz|hodd/tenants/[a-z0-9]|(ghp|gho|ghs|ghr)_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
 # Legitimate exceptions, named explicitly rather than by widening the pattern:
-#   - the project's own repository (its full URL, and the short owner/repo form);
+#   - the public owner identity (the repo's full URL, the short owner/repo form,
+#     and the owner's public homepage — the copyright holder on every licence);
 #   - AWS's documented dummy key, which is a fixture, not a credential.
-ALLOW='github\.com/zerwiz/|zerwiz/ymir|AKIAIOSFODNN7EXAMPLE|AKIA[A-Z0-9]*EXAMPLE'
+ALLOW='github\.com/zerwiz/|zerwiz/ymir|zerwiz\.org|akka://|AKIAIOSFODNN7EXAMPLE|AKIA[A-Z0-9]*EXAMPLE'
 
 leaks() {  # stdin → prints masked hits, returns 1 on any
   grep -En "$PATTERNS" \

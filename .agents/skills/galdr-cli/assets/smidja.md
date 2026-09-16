@@ -91,6 +91,16 @@ installed on this machine) — do not reintroduce `sqlite3`.
   API (`bun:sqlite` over the trace db) **and** the built Vue UI from
   `apps/visualizer/dist`. A Vite dev server on `:8438` is opt-in
   (`SMIDJA_VIZ_DEV=1`) and is not needed for use.
+- **The carved cloth (2026-09-13).** The default theme is **fensalir** — the
+  landing page's stone/bone/bronze/blood and its three faces (Cormorant display,
+  Newsreader UI, IBM Plex Mono data), cut into `src/style.css` `:root` and into the
+  components' role colours (`var(--accent)`, `var(--green)`, `color-mix(…)`). The
+  titlebar toggle cycles **fensalir → classic → high-contrast**; `classic` (the
+  preserved deep-space look) and `high-contrast` (WCAG AAA) are deliberate
+  overrides and **win when chosen** — the cloth is the default, not a cage. A
+  saved `neutral` from an older build resolves to fensalir. The categorical
+  palettes (event dots, agent lanes in `src/lib/events.ts`) are data, not chrome,
+  and were re-cut onto the cloth while staying mutually distinct.
 - `scripts/start.sh` raises it (`CMD_DB=<repo>/smidja/smidja_data/smidja.db`,
   `PORT=8437`); `scripts/stop.sh` lowers it. Port overrides:
   `SMIDJA_VIZ_API_PORT`.
@@ -101,6 +111,13 @@ installed on this machine) — do not reintroduce `sqlite3`.
   `/api/session` and returns `{authed, login}`; `App.vue` shows a "Sign in" link
   (to the gate) or "ᛉ <login>" from that live answer. It **never** reads a
   session file — a token on disk would let a user look logged in when they are not.
+- **The Hall door (added 2026-09-13).** `App.vue`'s topbar carries a **To the
+  Hall** pill (rune Othala ᛟ, `.hall-btn`) beside the theme toggle: a new tab to
+  the Óðrerir Live Hall — `http://localhost:4322` when
+  `window.location.host` starts with `localhost`/`127.0.0.1`, otherwise
+  `https://hall.ymir.zerw.org`. It is a **plain anchor, not a `/api/desktop`**
+  launcher: the Hall is the landing's live board, not one of the three apps the
+  gate raises. Same door in Hlidskjalf's and Sessrúmnir's chrome.
 - See `docs/lore.md` §XIII.
 
 ## In Hlidskjalf (the gate API)

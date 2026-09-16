@@ -44,7 +44,11 @@ fi
 command -v git-filter-repo >/dev/null 2>&1 || { printf 'error: git-filter-repo not installed\nhelp: pipx install git-filter-repo  (or pacman -S git-filter-repo)\n' >&2; exit 1; }
 [ -z "$(git -C "$ROOT" status --porcelain)" ] || { printf 'error: working tree not clean — commit or stash first\n' >&2; exit 1; }
 
-backup="/tmp/ymir-scrub-backup-$(date +%Y%m%d-%H%M%S).git"
+# A private, unpredictable backup dir — never a predictable path in world-writable
+# /tmp (a symlink/race there could capture or clobber the pre-scrub mirror).
+backup_dir="$(mktemp -d "${TMPDIR:-/tmp}/ymir-scrub-XXXXXX")" || { printf 'error: could not create backup dir\n' >&2; exit 1; }
+chmod 700 "$backup_dir"
+backup="$backup_dir/ymir-backup.git"
 git clone --mirror "$ROOT" "$backup" >/dev/null 2>&1 || { printf 'error: backup clone failed\n' >&2; exit 1; }
 
 args=(); for p in "${PATHS[@]}"; do args+=(--path "$p"); done

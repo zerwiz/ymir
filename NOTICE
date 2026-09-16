@@ -1,5 +1,5 @@
 Ymir
-Copyright 2026 WayOf
+Copyright 2026 zerwiz
 
 This product includes software developed by the Ymir project
 (https://github.com/zerwiz/ymir).
@@ -14,3 +14,48 @@ retained here as that license requires. Firstmate's own names survive only as
 provenance (see .agents/skills/galdr-cli/assets/porting-upstream-to-norse.md).
 
 Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+--------------------------------------------------------------------------
+Third-party components
+--------------------------------------------------------------------------
+
+Ymir adopts validated open-source engines under its own Norse shells. Each
+component below remains under its own licence; its copyright belongs to its
+authors. Ymir does not relicense them.
+
+MIT
+  treehouse            https://github.com/kunchenguid/treehouse
+                       powers Yggdrasil (git worktrees)
+  sandcastle           https://github.com/mattpocock/sandcastle
+                       powers Utgard (ephemeral sandboxes)
+  no-mistakes          https://github.com/kunchenguid/no-mistakes
+                       powers the clean-PR gate
+  hermes-agent         https://github.com/NousResearch/hermes-agent
+                       the Hermes worker runtime
+  pi                   https://github.com/earendil-works/pi
+                       the coding harness surface
+  oh-my-pi             https://github.com/can1357/oh-my-pi
+                       prior art for the pi surface (studied)
+
+  firstmate            https://github.com/kunchenguid/firstmate
+                       the fleet — one agent, a crew
+  axi                  https://github.com/kunchenguid/axi
+                       agent-ergonomics design principles
+  lavish-axi           https://github.com/kunchenguid/lavish-axi
+                       the HTML-artifact editor (Lavish)
+
+Apache License 2.0
+  pi-desktop           https://github.com/FaqFirebase/pi-desktop  (v0.1.7-alpha,
+                       commit 4a5601b)
+                       vendored and re-themed as apps/sessrumnir (Sessrumnir).
+                       Copyright 2026 Pi Desktop GUI Contributors.
+                       This is a MODIFIED fork; the changes and the upstream
+                       notice are recorded in apps/sessrumnir/NOTICE.
+  a2aproject/a2a       https://github.com/a2aproject/a2a
+                       the A2A 1.0 protocol (Apache-2.0); see its LICENSE.
+
+Studied as reference only (no code shipped): oh-my-pi, microsoft/agent-framework,
+langchain-ai/langgraph, crewAIInc/crewAI, anthropics/claude-code, openai/openai-python,
+stanfordnlp/dspy.
+
+Full licence texts and compliance status: THIRD-PARTY-LICENSES

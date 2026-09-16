@@ -15,53 +15,85 @@
 @custom-variant hover (&:hover);
 
 @theme {
-  /* Semantic tokens — pi-theme/v1. Values here are the base dark defaults;
-     the ThemeEngine overrides them on <html> at runtime. */
-  --color-app: #0a0a0a;
-  --color-surface: #171717;
-  --color-surface-hover: #262626;
-  --color-card: #262626;
-  --color-elevated: #404040;
-  --color-highlight: #171717;
-  --color-highlight-strong: #262626;
-  --color-primary: #f5f5f5;
-  --color-secondary: #d4d4d4;
-  --color-muted: #a3a3a3;
-  --color-dim: #737373;
-  --color-faint: #525252;
-  --color-ghost: #404040;
-  --color-inverse: #0a0a0a;
-  --color-border: #262626;
-  --color-border-strong: #404040;
-  --color-border-strong-hover: #525252;
-  --color-focus: #3b82f6;
-  --color-accent: #2563eb;
-  --color-accent-hover: #1d4ed8;
-  --color-accent-fg: #60a5fa;
-  --color-accent-bg: rgba(30, 58, 138, 0.3);
-  --color-success: #34d399;
-  --color-success-bg: rgba(6, 78, 59, 0.3);
-  --color-warning: #facc15;
-  --color-warning-bg: rgba(113, 63, 18, 0.3);
-  --color-error: #f87171;
-  --color-error-hover: #ef4444;
-  --color-error-bg: rgba(127, 29, 29, 0.3);
-  --color-info: #60a5fa;
-  --color-info-bg: rgba(30, 58, 138, 0.3);
-  --color-special: #c084fc;
-  --color-special-bg: rgba(88, 28, 135, 0.3);
-  --color-chat-column: var(--color-app);
-  --color-chat-column-border: var(--color-border);
-  --color-scrollbar: #2a2a2a;
-  --color-scrollbar-hover: #3a3a3a;
-  --color-md-code: #60a5fa;
-  --color-md-pre-bg: #0d1117;
+  /* Semantic tokens — pi-theme/v1. Values here are the carved cloth of the
+     halls: the stone/metal palette cut into the landing page's :root
+     (CodeP/ymir-homepage/src/lore.html), carried into the seat. The
+     ThemeEngine overrides them on <html> at runtime, so these defaults are the
+     first paint and the fallback — a user theme or `high-contrast` still wins
+     when chosen. Kept byte-identical to themes/fensalir.json by
+     themes/builtin-themes.test.ts (`the CSS base and the cloth never drift`).
+     Colour is stone (bg/panels), bone (text), bronze (light/edges) and blood
+     (heat); never a literal at a call site. */
+  --color-app: #0e0c09;
+  --color-surface: #151209;
+  --color-surface-hover: #1a1610;
+  --color-card: #151209;
+  --color-elevated: #1a1610;
+  --color-highlight: #14100b;
+  --color-highlight-strong: #1a1610;
+  --color-primary: #cfc3a9;
+  --color-secondary: rgba(207, 195, 169, 0.82);
+  --color-muted: #9a8f75;
+  --color-dim: #6b6250;
+  --color-faint: rgba(207, 195, 169, 0.38);
+  --color-ghost: rgba(207, 195, 169, 0.26);
+  --color-inverse: #0e0c09;
+  --color-border: #2b241a;
+  --color-border-strong: #7d5f2a;
+  --color-border-strong-hover: #c9973f;
+  --color-focus: #c9973f;
+  --color-accent: #c9973f;
+  --color-accent-hover: #7d5f2a;
+  --color-accent-fg: #cfc3a9;
+  --color-accent-bg: rgba(201, 151, 79, 0.14);
+  --color-success: #96a0a8;
+  --color-success-bg: rgba(150, 160, 168, 0.14);
+  --color-warning: #c9973f;
+  --color-warning-bg: rgba(201, 151, 79, 0.18);
+  --color-error: #c2584a;
+  --color-error-hover: #7c3a30;
+  --color-error-bg: rgba(124, 58, 48, 0.24);
+  --color-info: #9a8f75;
+  --color-info-bg: rgba(154, 143, 117, 0.14);
+  --color-special: #7d5f2a;
+  --color-special-bg: rgba(125, 95, 42, 0.18);
+  --color-chat-column: #0e0c09;
+  --color-chat-column-border: #2b241a;
+  --color-scrollbar: #2b241a;
+  --color-scrollbar-hover: #7d5f2a;
+  --color-md-code: #c9973f;
+  --color-md-pre-bg: #14100b;
+  /* A selected run of text — the landing's own selection: amber on pale bone. */
+  --color-selection-bg: #57411a;
+  --color-selection-fg: #f0e6cd;
+
+  /* The cloth's type: Cormorant speaks (display), Newsreader reads (body),
+     IBM Plex Mono counts (code) — the landing page's own three families. */
+  --font-display: 'Cormorant', Georgia, serif;
+  --font-sans: 'Newsreader Variable', 'Newsreader', Georgia, 'Inter Variable', system-ui, serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono Variable', ui-monospace, 'Cascadia Mono', monospace;
 }
 
 /* ─── Scrollbars ─────────────────────────────────────────────────────────── */
 /* Structural rules only; colors come from the token vars the engine writes. */
 
 @layer base {
+  /* First paint wears the cloth before the ThemeEngine writes <html> — the
+     colours and the body face are the carved defaults, never the browser's. */
+  body {
+    background-color: var(--color-app);
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Text selection wears the cloth, never the browser's blue. The values come
+     from the theme engine (a user theme derives its own tint from its accent). */
+  ::selection {
+    background-color: var(--color-selection-bg);
+    color: var(--color-selection-fg);
+  }
+
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--color-scrollbar) transparent;
@@ -89,16 +121,18 @@
 /* ─── Markdown Rendering ─────────────────────────────────────────────────── */
 
 @layer components {
-  /* Bundled Inter for chat text (prompts + model responses). Sizes stay in rem
-     so they keep scaling with the UI font-size setting. Monospace code/pre
-     inside markdown is re-overridden below. */
+  /* Bundled Newsreader for chat text (prompts + model responses) — the
+     landing's body face. Sizes stay in rem so they keep scaling with the UI
+     font-size setting. Monospace code/pre inside markdown is re-overridden
+     below. */
   .font-chat {
-    font-family: 'Inter Variable', 'OpenMoji Color', system-ui, sans-serif;
+    font-family: 'Newsreader Variable', 'Newsreader', Georgia, 'OpenMoji Color', 'Inter Variable', system-ui, serif;
   }
 
-  /* Bundled JetBrains Mono for command bodies and tool results. */
+  /* Bundled IBM Plex Mono for command bodies and tool results — the landing's
+     mono. */
   .font-jetbrains {
-    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', 'OpenMoji Color', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-family: 'IBM Plex Mono', 'JetBrains Mono Variable', 'OpenMoji Color', ui-monospace, 'Cascadia Mono', Consolas, monospace;
   }
 
   /* Chat center column: themable via tokens; defaults track the app background
@@ -135,7 +169,7 @@
   }
 
   .markdown-body {
-    font-family: 'Inter Variable', 'OpenMoji Color', system-ui, sans-serif;
+    font-family: 'Newsreader Variable', 'Newsreader', Georgia, 'OpenMoji Color', 'Inter Variable', system-ui, serif;
     font-size: 0.9375rem;
     line-height: 1.6;
     color: var(--color-primary);
@@ -177,7 +211,7 @@
   }
 
   .markdown-body code {
-    font-family: 'Inter Variable', system-ui, sans-serif;
+    font-family: 'IBM Plex Mono', 'JetBrains Mono Variable', ui-monospace, monospace;
     font-size: 1em;
     color: var(--color-md-code);
   }
@@ -207,7 +241,7 @@
     padding: 0.875em 1em;
     background: transparent;
     color: var(--color-primary);
-    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', 'OpenMoji Color', 'Fira Code', 'Cascadia Code', monospace;
+    font-family: 'IBM Plex Mono', 'JetBrains Mono Variable', 'OpenMoji Color', 'Fira Code', 'Cascadia Code', monospace;
     font-size: 0.75rem;
     line-height: 1.6;
   }
@@ -376,3 +410,16 @@
    Highlight API) are injected at runtime from chat-search.tsx — Tailwind's
    Lightning CSS transformer drops the unrecognized ::highlight() pseudo-element
    at build time, so they can't live here. */
+
+/* ─── Selection inside the code editor ────────────────────────────────────────
+   The global ::selection lives in @layer base; CodeMirror's own base theme
+   paints its selection layer with *unlayered* rules (a dark slate), and an
+   unlayered rule always beats a layered one whatever the specificity. So this
+   rule is unlayered too, and scoped deep enough to win on merit. The cloth's
+   selection is the landing's own amber. */
+.cm-editor .cm-selectionLayer .cm-selectionBackground,
+.cm-editor.cm-focused .cm-selectionLayer .cm-selectionBackground,
+.cm-editor ::selection {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+}

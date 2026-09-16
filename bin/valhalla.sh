@@ -27,11 +27,12 @@ esac
 id_status() { # id -> "status"
   local id=$1 mgr=${1%%:*} name=${1#*:}
   case "$mgr" in
-    pm2) pm2 jlist 2>/dev/null | python3 -c "import json,sys
+    pm2) pm2 jlist 2>/dev/null | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)
 except: d=[]
+name=sys.argv[1]
 for p in d:
-    if p.get('name')=='$name': print(p.get('pm2_env',{}).get('status','?')); break" ;;
+    if p.get("name")==name: print(p.get("pm2_env",{}).get("status","?")); break' "$name" ;;
     docker) docker inspect -f '{{.State.Status}}' "$name" 2>/dev/null | head -1 ;;
     systemd) systemctl is-active "$name" 2>/dev/null ;;
   esac

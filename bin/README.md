@@ -3,7 +3,7 @@
 Auto-generated from each script's header. One line per tool. Ported scripts are
 credited to the upstream `firstmate` distro (port record: `.agents/skills/galdr-cli/assets/porting-upstream-to-norse.md`); the rest are Ymir's own.
 
-bin[99]{file,does}:
+bin[101]{file,does}:
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the two A2A MCP servers into the harnesses so"
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:"
   "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri."
@@ -38,6 +38,7 @@ bin[99]{file,does}:
   "gjallarhorn-tunnel.sh","gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn)."
   "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh - per-home session lock for the Brokk runtime."
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on."
+  "heimdall-ssh-keys.sh","heimdall-ssh-keys.sh — Heimdall's SSH-keys surface."
   "herdr-agents.py","(no header description)"
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs."
   "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand."

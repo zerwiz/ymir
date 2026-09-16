@@ -1,0 +1,68 @@
+# Third-party licences
+
+Ymir (Apache-2.0) bundles or adopts the components below. This file carries their
+licence texts and copyright notices in full, so that Ymir can be distributed
+without separating any component from its terms.
+
+---
+
+## MIT License — text
+
+The following components are used under the MIT License. Each is listed with its
+copyright holder.
+
+```
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+Applied to:
+
+```
+mit[6]{component,copyright,used_for}:
+  "treehouse","Copyright (c) kunchenguid","Yggdrasil git worktrees"
+  "sandcastle","Copyright (c) Matt Pocock","Utgard sandboxes"
+  "no-mistakes","Copyright (c) kunchenguid","clean-PR gate"
+  "pi","Copyright (c) Earendil Works","coding harness"
+  "oh-my-pi","Copyright (c) can1357","prior art for the pi surface"
+  "hermes-agent","Copyright (c) Nous Research","worker runtime"
+  "firstmate","Copyright (c) kunchenguid","the fleet"
+  "axi","Copyright (c) kunchenguid","agent ergonomics"
+  "lavish-axi","Copyright (c) kunchenguid","HTML-artifact editor"
+```
+
+---
+
+## Apache License 2.0
+
+```
+apache[2]{component,copyright,note}:
+  "pi-desktop","Copyright 2026 Pi Desktop GUI Contributors","vendored and re-themed as apps/sessrumnir (Sessrumnir) — a MODIFIED fork; changes and upstream commit recorded in apps/sessrumnir/NOTICE"
+  "a2aproject/a2a","The A2A Project","the A2A 1.0 protocol; no a2a source is redistributed here"
+```
+
+The full Apache License, Version 2.0 text is shipped at the repository root
+(`LICENSE`) and, for the vendored fork, at `apps/sessrumnir/LICENSE` together with
+its `apps/sessrumnir/NOTICE`.
+
+---
+
+*Corrections welcome: if a component is missing or mis-credited, open an issue and
+we will fix it. See `NOTICE`.*

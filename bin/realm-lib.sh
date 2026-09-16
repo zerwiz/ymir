@@ -14,6 +14,9 @@ ymir_active_realm() {  # <root> [result-var]
   if [ -z "$root" ]; then
     root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
   fi
+  if [ -n "${YMIR_HOME:-}" ]; then
+    root="$YMIR_HOME"
+  fi
   realm="$(head -n1 "$root/data/realm.md" 2>/dev/null | tr -d '[:space:]')"
   if [ -z "$realm" ] && [ -d "$root/svartalfaheim" ]; then
     realm="$(find "$root/svartalfaheim" -mindepth 1 -maxdepth 1 -type d \

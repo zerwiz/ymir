@@ -1,5 +1,15 @@
 # YMIR — The Single-Tenant Agent Operating System
 
+
+---
+
+<p align="center">
+  <strong>created by zerwiz</strong> · <a href="https://zerwiz.org">https://zerwiz.org</a> · whynotproductions<br>
+  <em>a hobby project, made for the love of the craft. use it, fork it, enjoy it.</em>
+</p>
+
+---
+
 > **One operator. One repo. A whole business, run by a Norse-named agent fleet.**
 
 ![Ymir — the single-tenant agent OS](assets/ymir-banner-03.png)
@@ -372,7 +382,7 @@ ymir/
 ├── .opencode/plugins/         # OpenCode adapters (Sága, Sýn, Rödd)
 ├── apps/hlidskjalf/           # the control plane (React + Vite + Bun gate API)
 ├── midgard/                   # shared assets, design tokens, icons
-├── svartalfaheim/             # company container root (WayOf) — future multi-user
+├── svartalfaheim/             # company container root (zerwiz) — future multi-user
 ├── workspace/                 # THE SINGLE TENANT: work/ · personal/ · companies/ ·
 │                              #   workspaces.yaml · projects.yaml · memory/ · INSTALL.md
 ├── smidja/                    # the smithy engine + smidja.db (runs, stats, trace)
@@ -506,3 +516,56 @@ its open-source-first law; upstream names survive only as provenance. See
 > and Hlidskjalf renders the state.”*
 
 *The bellows feed the flame; the smith reads the metal; the well remembers every blow.*
+
+## What was wrought — 2026-09-14
+
+One day, one loom. Everything below lives in this main and in the world:
+
+- **The cloth** — Hlidskjalf, Smiðja and Sessrúmnir wear one carved look (stone,
+  bronze, bone, blood; Cormorant · Newsreader · IBM Plex Mono); Smiðja's default
+  theme is **Fensalir**; text highlighting is carved amber — the blue is dead.
+- **Óðrerir, the Live Hall** — the landing's live board: a dealt slate pile, a
+  carved ledger (underway · landed · charted), and a planning glass fed by real
+  machine state. See it at the landing repo: `zerwiz/ymir-homepage` (local:
+  `:4321`), with the `To the Hall` rune in every app's chrome.
+- **The wake bridge** — every smith's finish files a saga and wakes the
+  primary; the echo-guard keeps the wire honest.
+- **The mark** — recoloured into the cloth, and the anvil-bars bug found and
+  fixed (the metal was always there; now it is seen).
+
+The lore runs to **XXXI — The Weaving of the Halls**; the masterplan carries
+the full day's ledger.
+
+---
+
+## With gratitude — the people we stand on
+
+Ymir is a Norse shell over other people's excellent work. We did not build the
+engines; we built the hall around them. Every project below is theirs, kept under
+their own licence, and we are glad to name them. Go and look at what they made —
+follow them, star them, learn from them.
+
+| Project | Who made it | Licence | What it powers in Ymir |
+|---|---|---|---|
+| [treehouse](https://github.com/kunchenguid/treehouse) | kunchenguid | MIT | Yggdrasil — git worktrees |
+| [sandcastle](https://github.com/mattpocock/sandcastle) | [Matt Pocock](https://www.youtube.com/@mattpocockuk) | MIT | Utgard — sealed sandboxes |
+| [no-mistakes](https://github.com/kunchenguid/no-mistakes) | kunchenguid | MIT | the clean-PR gate |
+| [pi](https://github.com/earendil-works/pi) | Earendil Works | MIT | the coding harness |
+| [oh-my-pi](https://github.com/can1357/oh-my-pi) | can1357 | MIT | prior art for the pi surface |
+| [hermes-agent](https://github.com/NousResearch/hermes-agent) | Nous Research | MIT | the Hermes worker runtime |
+| [pi-desktop](https://github.com/FaqFirebase/pi-desktop) | FaqFirebase and the Pi Desktop contributors | Apache-2.0 | Sessrúmnir (our re-themed fork) |
+| [A2A protocol](https://github.com/a2aproject/a2a) | the A2A project | Apache-2.0 | the agent-to-agent backbone |
+| [firstmate](https://github.com/kunchenguid/firstmate) | kunchenguid | MIT | the fleet |
+| [axi](https://github.com/kunchenguid/axi) | kunchenguid | MIT | agent-ergonomics principles |
+| [lavish-axi](https://github.com/kunchenguid/lavish-axi) | kunchenguid | MIT | the HTML-artifact editor |
+
+Their full licence texts are bundled in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES),
+and their attribution in [NOTICE](NOTICE).
+If we have benefited from your work and missed you here, tell us — we will fix it,
+loudly.
+
+Thank you all. The forge is hot because you lit it.
+
+_Where a maker teaches on YouTube we link the channel — Matt Pocock's is
+[youtube.com/@mattpocockuk](https://www.youtube.com/@mattpocockuk). If you make a
+tutorial for a project we use, tell us and we will link yours too._

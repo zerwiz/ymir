@@ -15,7 +15,8 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-STATE="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+STATE="${BROKK_STATE_OVERRIDE:-$YMIR_HOME/state}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-check}"; shift || true

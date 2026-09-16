@@ -91,7 +91,7 @@ function fmtRuns(runs: string[]): string {
 }
 .stat b {
   font-size: 20px;
-  color: #7dd3fc;
+  color: var(--accent);
   margin-right: 4px;
 }
 
@@ -102,7 +102,7 @@ function fmtRuns(runs: string[]): string {
 }
 .card {
   background: rgba(16, 21, 32, 0.6);
-  border: 1px solid rgba(125, 211, 252, 0.14);
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
   border-radius: 12px;
   padding: 14px 16px;
   display: flex;
@@ -120,26 +120,26 @@ function fmtRuns(runs: string[]): string {
   letter-spacing: 0.03em;
   border-radius: 99px;
   padding: 3px 10px;
-  background: rgba(125, 211, 252, 0.12);
-  color: #7dd3fc;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
 }
 .cls-warn {
-  background: rgba(255, 111, 103, 0.16);
-  color: #ff9a94;
+  background: color-mix(in srgb, var(--red) 16%, transparent);
+  color: var(--red);
 }
 .cls-mild {
   background: rgba(148, 163, 255, 0.14);
-  color: #b3c0ff;
+  color: var(--violet);
 }
 .count {
   font-size: 20px;
   font-weight: 700;
-  color: #7dd3fc;
+  color: var(--accent);
 }
 .model {
   font-family: var(--mono, monospace);
   font-size: 13px;
-  color: #8a93a6;
+  color: var(--dim);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -154,15 +154,15 @@ function fmtRuns(runs: string[]): string {
 .runs {
   font-family: var(--mono, monospace);
   font-size: 11px;
-  color: #8a93a6;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--dim);
+  border-top: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
   padding-top: 8px;
 }
 .dim {
-  color: #8a93a6;
+  color: var(--dim);
 }
 .empty-state {
-  color: #8a93a6;
+  color: var(--dim);
   font-size: 13px;
   padding: 14px 2px;
 }
@@ -170,7 +170,7 @@ function fmtRuns(runs: string[]): string {
   background: rgba(251, 113, 133, 0.12);
   border: 1px solid rgba(251, 113, 133, 0.4);
   border-radius: 8px;
-  color: #fda4af;
+  color: var(--red);
   padding: 10px 14px;
   font-size: 13px;
 }

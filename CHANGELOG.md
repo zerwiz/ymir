@@ -11,7 +11,7 @@
   `.agents/skills/eindri-homes/assets/control-plane.md`,
   `.agents/skills/saga-bearings/assets/board-template.html`,
   `.agents/skills/ymir-host/assets/thjazi.md`, `bin/README.md`,
-  `workspace/config/toolchain.md`, `apps/hlidskjalf/**`).
+  `apps/hlidskjalf/**`).
 - **Engine literals kept.** Every real upstream identifier stays verbatim — the
   Herdr labels (`firstmate`, `2ndmate-<id>`, `firstmate-<id>`), the home marker
   `.fm-secondmate-home`, the envelope `FIRSTMATE_OP: ` and `[fm-from-firstmate]`,
@@ -22,6 +22,125 @@
   section points to it; the MIT copyright/permission notice is retained.
 - **Governed asset:** `galdr-cli/assets/hlidskjalf-ui.md` records the Allfather
   review copy in the same change. `compliance-check.sh` 10/10 PASS.
+
+## 2026-09-13 — The realm seat, carved (wayof)
+
+- **Problem:** the realm tree was bare (only the shipped example), no tenant
+  was seated, and the session digest resolved the Allfather's realm to
+  `default` — his company and private holdings unreachable by the map.
+- **Seat:** `svartalfaheim/wayof/` carved from the example — `.env.realm`,
+  `SECRETS.md`, `AGENTS.md` (persona), `domains/`, `projects/`, the five
+  workspace branches, and the 9 company cards seeded from the identity hoard
+  (askr · brokkforge · dvalin · mannheim · muninn · runestone · utgard · wayof ·
+  ymirlabs), realm field unified to `wayof`, repo paths corrected to this
+  machine. `data/realm.md` now pins `wayof` (was drifting between `way-of`,
+  `wayof`, and `default`; hoard cards + persona updated to match).
+- **Hood:** `svartalfaheim/wayof/HOOD.md` is the map of the hoard and the
+  seat; `bin/saga-session-start.sh` stage 6 (context digest) now prints
+  `--- hood ---` whole from the realm seat, so a session opens knowing the
+  operator's holdings. Living overviews: `workspace/company/wayof-overview.md`
+  and `workspace/company/aigf.md` (hodd stays the private store; the realm
+  points at it).
+- **Verified:** `bash -n` green; realm-lib resolves `wayof`; `realm env:
+  present`.
+
+## 2026-09-13 — Gleipnir sees when an agent is turned off
+
+- **Problem:** the machine lock stuck “held by another Brokk session” forever.
+  Nothing released it ( `gleipnir_lock_release` had zero callers; Pi's exit
+  hook only stopped the arm child), and liveness was `kill(0)` alone — which
+  reports a zombie (dead but unreaped) and a recycled pid as alive, so an
+  agent you turned off kept the helm until its pid happened to look gone.
+  Worse, the Sessrúmnir desktop RPC session holds the live lock yet never
+  arms supervision (no turn ever calls `gna_watch_arm`), stranding every
+  other session read-only.
+- **Fix:** `bin/gleipnir-lock-lib.sh` now records the owner's starttime in a
+  `brokk.lock.starttime` sidecar and reaps a holder whose `/proc/<pid>/stat`
+  state is `Z`/`X` or whose starttime no longer matches (pid reuse) — dead,
+  zombie, and recycled holders are cleared at session start/acquire. Gná
+  (`gna-pi-watch.ts`) mirrors that liveness, reclaims a stale lock directly in
+  `gna_watch_arm` (`missing` no longer punts to saga-session-start.sh), and
+  drops its own lock on real process exit (`releaseLockIfOwned`); the turn-end
+  guard (`syn-turnend-guard.ts`) uses the same zombie-aware check.
+- **Impact:** turning an agent off — cleanly, by kill (zombie), or after pid
+  reuse — frees the machine lock for the next session. The live desktop seat
+  still holds it until that app is closed or its own session arms; that is the
+  law (one live primary per machine), but it now releases and hands off
+  correctly.
+## 2026-09-13 — the cloth reaches all three halls (Hlidskjalf · Smíðja · the seat)
+
+- **One look, one source.** The carved cloth (the landing page's `:root`) now
+  dresses every hall, each through its own thin adapter, and `docs/design.md`
+  gained §0 *The cloth* plus the re-cut §4.1/§4.2 tables — the contract, not a
+  wish. `midgard/design-system/tokens.css` keeps every `--ymir-*` **name** and
+  changes only the values: stone `#0e0c09`/`#151209`/`#1a1610`/`#221d14`, bone
+  text `#cfc3a9`/`#9a8f75`/`#6b6250`, bronze `#c9973f` accent with `#7d5f2a` as
+  the brass rule, blood `#c2584a` danger, steel `#96a0a8` ok, brass bevel
+  `inset 0 0 0 1px rgba(201,151,79,.12)`.
+- **Type.** Cormorant (display), Newsreader (body), IBM Plex Mono (data) — the
+  landing's three faces — with Noto Sans Runic appended to every stack so runes
+  fall through to the rune family. Hlidskjalf loads them from Google Fonts; the
+  visualizer bundles them from `@fontsource` (its `@fontsource/play` is gone).
+- **Hlidskjalf:** 24 old-palette `rgba()` literals and every role hex in the
+  stylesheets now read tokens (`color-mix(… var(--ymir-ok) …)`); workspace tints
+  are cloth (work bronze, personal steel); the `HallsChooser` cards no longer name
+  two tokens that never existed (`--ymir-line`/`--ymir-panel`); the login's GitHub
+  button is a bone plate; the realm-tint fallbacks in `global.css` follow.
+- **Smíðja's eye:** the default theme is **fensalir** (the titlebar toggle cycles
+  fensalir → classic → high-contrast, both overrides still winning); 77 hexes and
+  62 `rgba()`s across the components were recast onto the theme's own tokens; the
+  categorical event/lane palettes (`src/lib/events.ts`) were re-cut onto the cloth
+  while staying mutually distinct.
+- **Sessrúmnir:** text selection is now a **theme token**
+  (`--color-selection-bg`/`-fg`) — the landing's amber `#57411a` on pale bone
+  `#f0e6cd` — carried in `fensalir`/`sessrumnir` and derived per theme for
+  everyone else; the global rule sits in `@layer base`, and the CodeMirror editor
+  needs a second unlayered rule because CodeMirror paints its selection layer with
+  unlayered CSS that beats any layered rule. A **To the Hall** button joins the
+  status bar (local `:4322` when it answers, else `hall.ymir.zerw.org`, resolved in
+  the main process).
+- **Heraldry is not chrome:** the eight house/domain seals and the Emblem keep
+  their own colours — exactly as the landing page keeps its house seals.
+- **Geometry is untouched** (radius, spacing, the shell): the carved-slate
+  squaring remains an open question for the Allfather.
+- **Verified:** `tsc` clean and `npm run build` green in Hlidskjalf; the
+  visualizer builds under `vue-tsc`; Sessrúmnir's build, lint, theme tests and
+  semantic-colour check green. Headless passes: Hlidskjalf's gates render with
+  **0 console errors** (login, fleet, tasks, processes, reviews, runtime, cron,
+  stats), and the visualizer loads with 0 console problems.
+
+## 2026-09-13 — the carved cloth reaches the seat-hall (Sessrúmnir)
+
+- **The landing's cloth is now the seat's own look.** Every semantic token in
+  `apps/sessrumnir/src/renderer/src/index.css` `@theme` was mapped to its carved
+  twin from the landing page's `:root` (`CodeP/ymir-homepage/src/lore.html`):
+  stone `#0e0c09` (app) with panels `#151209`/`#1a1610`/`#14100b`, bone text
+  `#cfc3a9`/`#9a8f75`/`#6b6250` (faint/ghost as bone washes), bronze
+  `#c9973f` accent and `#7d5f2a` brass rule for `border-strong`, blood
+  `#c2584a`/`#7c3a30` for error, steel `#96a0a8` for success. Semantic names are
+  unchanged — only the values moved.
+- **Fensalir** (the weaving halls) is registered as a built-in theme
+  (`themes/fensalir.json`, id `fensalir`, appended to `BUILTIN_THEME_IDS` — an
+  additive change that keeps every persisted id resolving). The seat's own
+  built-in `sessrumnir` theme was carved to the same cloth, so the default look
+  of an existing profile is the cloth on restart. A new test holds the two
+  together (`the cloth is one`) and another holds the CSS `@theme` base to the
+  theme file (`never drift`).
+- **Cloth is the default, not a cage:** the ThemeEngine's ordering is untouched —
+  every other built-in theme, any user theme, and `high-contrast` still win when
+  chosen.
+- **Type:** Cormorant (display), Newsreader (body), IBM Plex Mono (mono) bundled
+  from `@fontsource*` (offline, `font-src 'self'`), with Inter/JetBrains Mono
+  kept as glyph fallbacks; the landing's carved syntax palette (`--cm-*`) rides
+  along in the theme files.
+- **Honest repairs on the way:** 29 raw `text-white` literals sat on token
+  fills where white cannot be read on bronze (2.6:1). They now read the token
+  that means "the rune on the filled plate" — `text-inverse` on `bg-accent`,
+  `text-primary` on the dark blood `bg-error` — and the settings toggle knob is
+  carved (stone when lit, bone when unlit). No colour literals remain in
+  components.
+- **Paper:** `apps/sessrumnir/AGENTS.md` and `README.md` no longer claim the old
+  sky-on-navy palette; they describe the cloth and its rules.
 
 ## 2026-09-13 — the new tree, the mesh, the seat-hall
 
@@ -410,3 +529,68 @@ Entries are appended chronologically; never rewritten.
   in `.agents/agents`; harness dirs are symlinks; no mock agents), `03-houses.md`
   (a house is a company — WayOf; the eight Labs are domains, never houses).
 - Live Fleet de-mocked (real domain/model/status; seeded stats only in demo).
+
+## 2026-09-14 — A vacant helm is entered, not punted (watcher wake repair)
+
+- **Problem:** a watcher wake reported the Pi extension could not restore
+  continuity — "this session no longer owns the lock". Root cause found by
+  inspection: an **empty/truncated** machine lock (`~/.local/state/ymir/brokk.lock`)
+  was classified by `gna-pi-watch.ts` `lockOwnership()` as `other` (another
+  live session) and by `bin/syn-watch-arm.sh`'s gate as read-only — so a helm
+  with *no verifiably-live holder* was refused and punted to a manual
+  `saga-session-start.sh` reclaim.
+- **Fix (both seams in one change):** the extension now classifies an empty
+  lock as `missing`, so `gna_watch_arm`'s reclaim takes the helm in place; the
+  arm script, on finding no owner (or an owner verifiably gone), runs
+  `gleipnir_lock_acquire` itself — which refuses only a genuinely live other
+  session — instead of printing read-only. The "run saga-session-start.sh"
+  punt is gone; a vacant helm is entered by the watcher's own hand.
+- **Verified:** scratch-state test — empty machine lock → `watcher: started`,
+  lock bound to the session pid + starttime sidecar, `.supervision-armed`
+  touched; `gleipnir-machine-lock.test.sh` ALL PASS (zombie, recycled,
+  migration); compliance 10/10; harness-integration asset updated in the same
+  change (the governed rule).
+
+## 2026-09-14 — The Eindri→Brokk wake bridge (they can talk back now)
+
+- **Ask:** the seated smiths' reports lived in their panes only; the Allfather
+  wanted a feature that wakes Brokk when an Eindri reports, so the fleet's
+  doings reach the primary's session — "we are in control, Brokk".
+- **Built:** `bin/eindri-seen.sh` (condition — a report file landed or herdr
+  shows the smith left `working`), `bin/eindri-acclaim.sh` (action — files the
+  report durably under state/eindri-reports/, marks done under
+  state/eindri-done/, appends the wake to state/.wake-queue for Sága's drain,
+  sounds the desktop note), and `bin/eindri-watch.sh` (the control door —
+  `arm | retire | list | reconcile`, one when-source per smith on the Norns'
+  loom via fm-procevent-when.sh, action hash-bound, fires once on a stable
+  true, terminal, re-armable).
+- **Armed live:** when-odrerir (already fired — his report was filed) and
+  when-sessrumnir-cloth (still working). `fm-procement.sh reconcile` started=2.
+- **First report delivered through the wire:** odrerir's Óðrerir saga — deck
+  green at :4322, 52 Chromium checks, commit 38a326b on yggdrasil/odrerir, main
+  untouched, plus the hall.ymir.zerwiz.org server story (setup-hall.sh) and
+  three asks awaiting the Allfather (go live, landing mobile wart, PLAN log).
+
+## 2026-09-14 — Óðrerir forged (Eindri odrerir, pane w3:p7)
+
+- The Live Hall carved on the landing per PLAN.md §14: dealt slate pile,
+  choices + recommended marks, freeform, queue + limit guard, thread ledger,
+  live tally, four empty states, fail-closed, keyboard, reveal, mobile (390px,
+  zero overflow); cloth check green; §12 scan clean. Deployed plan for the
+  public hall: hall.ymir.zerwiz.org via a second Caddy site :4322 (deploy/
+  setup-hall.sh + tunnel-ingress.sh, idempotent, live provisioning untested).
+
+## 2026-09-14 — The echo guard: no wake flood through Gná's door
+
+- **Problem:** during a loud stretch (stale wake lines + the FM runner's
+  durable queue holding ten old check-wakes), the watcher re-armed and
+  re-signalled "signal: wake queue" across many generations; every actionable
+  close queued one pi follow-up wake (`sendWake`, no dedup), which then
+  dripped at the Allfather one per prompt — a long echo flood after the
+  sources were drained.
+- **Fix:** `gna-pi-watch.ts` `sendWake` is **echo-guarded**: an identical
+  watcher message is delivered at most once per drained state — when both
+  durable doors (`state/.wake-queue` and the FM runner's
+  `.agents/state/.wake-queue`) are empty, a repeat carry is the same drained
+  news and is skipped. Genuine new content (different message, or a door with
+  a line) always delivers. Harness asset updated in the same change.

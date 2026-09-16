@@ -18,8 +18,9 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CFG="${YMIR_AGENTS_YAML:-$ROOT/config/agents.yaml}"
-RESOLVED="$ROOT/state/agents-resolved.json"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+CFG="${YMIR_AGENTS_YAML:-$YMIR_HOME/config/agents.yaml}"
+RESOLVED="${YMIR_STATE_DIR:-$YMIR_HOME/state}/agents-resolved.json"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;

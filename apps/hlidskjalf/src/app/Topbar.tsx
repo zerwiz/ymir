@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useYmir } from '../state/store';
 import { WORKSPACES } from '../data/realms';
+import { HALL_URL } from '../data/metadata';
 import { gateApi, type WorkspaceRow } from '../services/api';
 import { AccentPicker } from '../components/AccentPicker';
 import { AccountMenu } from '../components/AccountMenu';
@@ -96,6 +97,21 @@ export function Topbar() {
       {/* The three halls: raise Hlidskjalf, Smíðja, or Sessrúmnir from anywhere.
           The same gate launcher the Omarchy key bindings and the chooser use. */}
       <HallsSwitcher current="hlidskjalf" />
+
+      {/* The Óðrerir Live Hall — the landing's live board, not one of the three
+          apps: it opens as a page in its own tab. The rune is Othala, the hall. */}
+      <a
+        className="hall-btn"
+        href={HALL_URL}
+        target="_blank"
+        rel="noreferrer"
+        title="The Óðrerir Live Hall — the landing's carved board"
+      >
+        <span className="glyph" aria-hidden="true">
+          ᛟ
+        </span>
+        To the Hall
+      </a>
 
       <AccentPicker />
 
