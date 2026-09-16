@@ -14,14 +14,19 @@ export function Stats() {
   const [selectedModel, setSelectedModel] = useState('');
   const harnessUsage = useYmir((st) => st.usage);
 
-  const totals = stats?.totals ?? { runs: 0, success: 0, fail: 0, running: 0, tokens: 0, cost: 0 };
-  const usage = stats?.usage ?? { input: 0, output: 0, cache_read: 0, cache_write: 0, total: 0 };
-  const providers = stats?.providers ?? {
+  // THE GATE REPORTS THE HARNESSES (pi + opencode). The smithy keeps its own.
+  const harness = harnessUsage?.gate ?? null;
+
+  const totals = harness?.totals ?? stats?.totals ?? { runs: 0, success: 0, fail: 0, running: 0, tokens: 0, cost: 0 };
+  const usage = harness?.usage ?? stats?.usage ?? { input: 0, output: 0, cache_read: 0, cache_write: 0, total: 0 };
+  const providers = harness?.providers ?? stats?.providers ?? {
     local: { events: 0, sessions: 0, tokens: 0, cost: 0, input: 0, output: 0, cache_read: 0 },
     online: { events: 0, sessions: 0, tokens: 0, cost: 0, input: 0, output: 0, cache_read: 0 },
     per_model: [],
   };
   const catalog = stats?.vendor_catalog ?? [];
+  const byChain = harness?.by_chain ?? stats?.by_chain ?? [];
+  const byModel = harness?.by_model ?? stats?.by_model ?? [];
   const chosen =
     catalog.find((m) => m.id === selectedModel) ?? catalog[0] ?? null;
 
@@ -41,7 +46,7 @@ export function Stats() {
       <div className="stage-head">
         <div>
           <h1 className="stage-title">Statistics</h1>
-          <p className="stage-deck">Every run, tokens, cost, savings · smidja.db + the harnesses</p>
+          <p className="stage-deck">Every harness run — pi &amp; opencode · tokens, cost, savings</p>
         </div>
       </div>
 
@@ -205,13 +210,13 @@ export function Stats() {
             <div className="panel-title"><span className="glyph" aria-hidden="true">ᛚ</span> By chain</div>
           </div>
           <div className="panel-body flush">
-            {stats?.by_chain.length ? (
+            {byChain.length ? (
               <table className="data-table">
                 <thead>
                   <tr><th>Chain</th><th>Runs</th><th>Success</th><th>Rate</th><th>Tokens</th><th>Cost</th></tr>
                 </thead>
                 <tbody>
-                  {stats.by_chain.map((c) => (
+                  {byChain.map((c) => (
                     <tr key={c.chain}>
                       <td className="mono">{c.chain}</td>
                       <td className="num">{c.runs}</td>
@@ -234,13 +239,13 @@ export function Stats() {
             <div className="panel-title"><span className="glyph" aria-hidden="true">ᛗ</span> By workflow</div>
           </div>
           <div className="panel-body flush">
-            {stats?.by_model.length ? (
+            {byModel.length ? (
               <table className="data-table">
                 <thead>
                   <tr><th>Workflow</th><th>Runs</th><th>Success</th><th>Rate</th><th>Tokens</th><th>Cost</th></tr>
                 </thead>
                 <tbody>
-                  {stats.by_model.map((m) => (
+                  {byModel.map((m) => (
                     <tr key={m.model}>
                       <td className="mono">{m.model}</td>
                       <td className="num">{m.runs}</td>

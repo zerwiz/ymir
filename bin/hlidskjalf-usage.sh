@@ -144,12 +144,48 @@ out["runs"] = {
     "by_source": {"opencode": int(oc.get("messages") or 0), "pi": int(pi.get("messages") or 0)},
 }
 out["by_chain"] = [
-    {"chain": m.get("source", "harness"), "runs": int(m.get("messages") or 0),
-     "tokens": int(m.get("input") or 0) + int(m.get("output") or 0), "cost": 0}
+    {"chain": m.get("source", "harness"), "workflow": m.get("source", "harness"),
+     "runs": int(m.get("messages") or 0), "success": int(m.get("messages") or 0),
+     "rate": 100.0, "tokens": int(m.get("input") or 0) + int(m.get("output") or 0), "cost": 0}
     for m in out["by_model"][:12]
 ]
 
 tot["cache_hit_ratio"] = round(tot["cache_read"] / prompt, 4) if prompt else 0.0
 out["totals"] = tot
+
+# THE GATE'S OWN NAMES, filled from the harnesses - so Statistics reports pi and
+# opencode, and the smithy's runs stay the smithy's.
+out["gate"] = {
+    "totals": {
+        "runs": int(tot["messages"]), "success": int(tot["messages"]), "fail": 0,
+        "running": 0, "tokens": int(tot["input"]) + int(tot["output"]), "cost": 0,
+    },
+    "usage": {
+        "input": int(tot["input"]), "output": int(tot["output"]),
+        "cache_read": int(tot["cache_read"]), "cache_write": int(tot["cache_write"]),
+        "total": int(tot["input"]) + int(tot["output"]),
+    },
+    "providers": {
+        "local":  {"events": lo["local"]["calls"],  "sessions": lo["local"]["calls"],
+                   "tokens": lo["local"]["tokens"],  "cost": 0,
+                   "input": lo["local"]["tokens"],  "output": 0, "cache_read": 0},
+        "online": {"events": lo["online"]["calls"], "sessions": lo["online"]["calls"],
+                   "tokens": lo["online"]["tokens"], "cost": 0,
+                   "input": lo["online"]["input"],  "output": lo["online"]["output"], "cache_read": lo["online"]["cache_read"]},
+        "per_model": [
+            {"model": m["model"], "agent": m.get("source", "harness"), "kind": m.get("kind", "online"),
+             "cells": int(m.get("messages") or 0), "tokens": int(m.get("input") or 0) + int(m.get("output") or 0), "cost": 0}
+            for m in out["by_model"]
+        ],
+    },
+    "by_chain": out["by_chain"],
+    "by_model": [
+        {"model": m["model"], "agent": m.get("source", "harness"), "kind": m.get("kind", "online"),
+         "cells": int(m.get("messages") or 0),
+         "tokens": int(m.get("input") or 0) + int(m.get("output") or 0), "cost": 0}
+        for m in out["by_model"]
+    ],
+}
+
 print(json.dumps(out))
 PY
