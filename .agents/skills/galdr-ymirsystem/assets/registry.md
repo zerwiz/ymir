@@ -45,15 +45,27 @@ skills[26]{name,norse,purpose,path,status}:
 Eight specialists, one primary. Each is named for the figure whose role matches its work.
 
 ```
-einherjar[8]{agent,norse,role,domain,file}:
-  "Brokk","Brokk","Primary agent — forge-master, dispatcher, supervisor",".agents/agents/brokk.md",".agents/agents/brokk.md"
-  "Sindri","Sindri (smith)","Code synthesis, refactoring, tests, CLI tools",".agents/agents/sindri-developer.md",".agents/agents/sindri-developer.md"
-  "Bragi","Bragi (skald)","Marketing, content, SEO, social copy",".agents/agents/bragi-marketer.md",".agents/agents/bragi-marketer.md"
-  "Huginn","Huginn (sage)","Research, web search, analysis, knowledge discovery",".agents/agents/huginn-researcher.md",".agents/agents/huginn-researcher.md"
-  "Mimir","Mimir","Planner — memory, recall, architecture sequencing",".agents/agents/mimir-planner.md",".agents/agents/mimir-planner.md"
-  "Kvasir","Kvasir (wisest)","Scout — reconnaissance, investigation",".agents/agents/kvasir-scout.md",".agents/agents/kvasir-scout.md"
-  "Forseti","Forseti (reconciler)","Reviewer — QA, acceptance, compliance",".agents/agents/forseti-reviewer.md",".agents/agents/forseti-reviewer.md"
-  "Snotra","Snotra (modest)","Documenter — docs, changelogs, runbooks",".agents/agents/snotra-documenter.md",".agents/agents/snotra-documenter.md"
+einherjar[20]{agent,norse,role,file}:
+  "Brokk","Brokk","Primary — forge-master, dispatcher, supervisor",".agents/agents/brokk.md"
+  "Sindri","Sindri","Developer — code synthesis, refactoring, tests, CLI tools",".agents/agents/sindri-developer.md"
+  "Bragi","Bragi","Marketer — content, SEO, social copy, campaigns",".agents/agents/bragi-marketer.md"
+  "Huginn","Huginn","Researcher — RAG, web search, analysis",".agents/agents/huginn-researcher.md"
+  "Mimir","Mimir","Planner — memory, recall, architecture sequencing",".agents/agents/mimir-planner.md"
+  "Kvasir","Kvasir","Scout — reconnaissance, investigation",".agents/agents/kvasir-scout.md"
+  "Forseti","Forseti","Reviewer — QA, acceptance, compliance",".agents/agents/forseti-reviewer.md"
+  "Snotra","Snotra","Documenter — docs, changelogs, runbooks",".agents/agents/snotra-documenter.md"
+  "Hnoss","Hnoss","Designer — UI/UX, prototypes, decks, visual assets",".agents/agents/hnoss-designer.md"
+  "Galdr","Galdr","Builder — agent-CLI ergonomics, the runtime's master builder",".agents/agents/galdr.md"
+  "Týr","Týr","Judge — the 10 principles + the runtime gates",".agents/agents/tyr-check.md"
+  "Sága","Sága","Seeress — bearings + recap",".agents/agents/saga-bearings.md"
+  "Muninn","Muninn","Rememberer — memory curation",".agents/agents/muninn-stow.md"
+  "Urðr","Urðr","Fate — the hold lifecycle",".agents/agents/urdh-hold.md"
+  "Frigg","Frigg","Knowing — the consent gate",".agents/agents/frigg-consent.md"
+  "Vör","Vör","Aware — diagnostics",".agents/agents/vor-diagnostics.md"
+  "Sýn","Sýn","Seeing — stuck-worker recovery",".agents/agents/syn-recovery.md"
+  "Jörð","Jörð","Grounded — the project registry",".agents/agents/jord-projects.md"
+  "Gróa","Gróa","Renewer — self-update",".agents/agents/groa-update.md"
+  "Völundr","Völundr","Master smith — Smíðja's orchestrator seat",".agents/agents/volundr-smith.md"
 ```
 
 **Rule:** Every agent carries its rune of introduction (Agent Card). Every agent
