@@ -451,3 +451,23 @@ new tab — **never** a launcher call.
 - Verified: both branches of the rule in both apps (headless Chromium DOM probe),
   `tsc --noEmit && vite build` green, 0 console errors; `apps/odrerir` builds
   standalone and the hall answers `:4322` from `scripts/start.sh`.
+
+## Packaging (Amendment C)
+
+Each app is meant to ship as its own published package under the `@ymir` scope,
+and `apps/hlidskjalf/package.json` carries the metadata that makes that legal:
+`license`, `repository`, `publishConfig.access: public`, a `files` surface, and
+`prepublishOnly` where a build exists.
+
+Two facts worth keeping:
+
+- **The APK is not in the tarball.** `apps/hlidskjalf/dist/ymir.apk` (~13.6 MB)
+  is built for Android, not for npm; `files` excludes it with `!dist/*.apk`.
+  Including it took the package from 1.3 MB to 14.5 MB — npm is not an APK
+  distribution channel.
+- **`private: true` is the safety catch.** It stays set until the Allfather
+  publishes deliberately, so no accidental `npm publish` can push a half-built
+  artefact to a public registry.
+
+Measured with `npm pack --dry-run --ignore-scripts` (see the app's `files` for
+the exact surface).
