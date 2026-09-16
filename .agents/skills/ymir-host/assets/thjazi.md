@@ -16,7 +16,7 @@ that carries Ymir's agents across terminal panes. In the code it is **herdr** (a
 its verified reference sibling **tmux**). This skill is how Ymir is a
 herdr-first system without breaking on a tmux-only host.
 
-**Router:** `.agents/skills/galdr-cli/SKILL.md`.
+**Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 
 ## Raising an Eindri (the two roads)
 
@@ -46,6 +46,13 @@ bin/herdr-run.sh agent-status                   # who stands, and in what state
 bin/herdr-run.sh status                         # what seats we recorded
 bin/herdr-run.sh close-all                      # clear the tabs/workspaces we made
 ```
+
+**Quoting into a pane.** A pane runs its command through a *shell*, so `run`
+quotes every argument on the way in (`printf '%q'`). Without that, an argument
+containing spaces reached the pane as separate words and the command died on its
+own second word — `--brief "the whole task"` arrived as `--brief the whole task`
+and the worker answered `error: unknown arg: the`. Quote normally at the call
+site; the bridge preserves it.
 
 ### The first law — a short errand is done in hand
 
@@ -191,7 +198,7 @@ misconfiguration, not a mystery.
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - Source of truth for the backend spec: `assets/brokk-distro-runtime.md` (backends)
   and `assets/pi-boot-guide.md` (pane supervision). Keep this skill's floors in
   sync with those when the protocol advances.

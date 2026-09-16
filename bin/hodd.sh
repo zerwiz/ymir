@@ -8,14 +8,17 @@
 #   eval "$(bin/hodd.sh emit secrets/platform.env)"   # set them in YOUR shell
 #   bin/hodd.sh tenant acme          # source a tenant's .env (that tenant only)
 #
-# Secrets are REFERENCED by path (YMIR_HOARD, default YMIR_HOME or <repo>/hodd) — never inlined.
+# Secrets are REFERENCED by path — `$YMIR_HOARD`, else `$YMIR_HOME`, else
+# `$HOME/Documents/Ymir`. The hoard is NEVER inside the repo (Rule 04); the
+# repo's `hodd/` keeps only the guard, the README and *.example scaffolds.
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
-HOARD="${YMIR_HOARD:-${YMIR_HOME:-$ROOT/hodd}}"
+# shellcheck source=bin/hoard-lib.sh
+. "$SCRIPT_DIR/hoard-lib.sh"
+hoard_root HOARD
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac

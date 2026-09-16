@@ -55,4 +55,4 @@ backup, it is not carried — and this rule says the append-only and private set
 are always named.
 
 **Related:** `RULES/04-hoard.md` (where private records live), `AGENTS.md`,
-`.agents/skills/galdr-cli/assets/installation.md` (the move procedure).
+`.agents/skills/galdr-ymirsystem/assets/installation.md` (the move procedure).
