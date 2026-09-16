@@ -138,6 +138,8 @@ interface YmirState {
   sessionDetail: SmidjaDetail | null;
 
   agents: AgentCard[];
+  /** Harness usage: opencode and pi sessions, not only the smithy's runs. */
+  usage: import('../services/api').YmirUsage | null;
   tasks: Task[];
   runes: RuneEntry[];
   streams: Record<string, StreamEvent[]>;
@@ -225,6 +227,7 @@ export function gateFromHash(): GateId {
 function emptyState() {
   return {
     agents: [] as YmirState['agents'],
+    usage: null,
     tasks: [] as YmirState['tasks'],
     runes: [] as YmirState['runes'],
     streams: { all: [] } as YmirState['streams'],
@@ -310,10 +313,11 @@ export const useYmir = create<YmirState>((set, get) => ({
     // Smíðja loads on its own track so a slow endpoint never holds its gates hostage.
     void get().refreshSmidja();
     try {
-      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills] =
+      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills, usage] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
           gateApi.agents().catch(() => get().agents),
+          gateApi.usage().catch(() => get().usage),
           gateApi.tasks().catch(() => get().tasks),
           gateApi.runes().catch(() => get().runes),
           gateApi.well('').catch(() => get().recall),
@@ -325,7 +329,7 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.mimirHealth().catch(() => null),
           gateApi.skills().catch(() => get().skills),
         ]);
-      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills, live: true });
+      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills, usage, live: true });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set({ live: false });

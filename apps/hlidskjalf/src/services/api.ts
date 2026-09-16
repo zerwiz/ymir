@@ -344,6 +344,7 @@ export const gateApi = {
   loaders: () => get<LoaderRow[]>('/api/loaders'),
   checks: () => get<CheckRow[]>('/api/checks'),
   orders: () => get<OrdersInfo>('/api/orders'),
+    usage: () => get<YmirUsage>('/api/usage'),
   chatHistory: (session = 'default') => get<ChatMessage[]>(`/api/chat/history?session=${encodeURIComponent(session)}`),
   chatSessions: () => get<ChatSession[]>('/api/chat/sessions'),
   chatModels: () => get<ChatModel[]>('/api/chat/models'),
