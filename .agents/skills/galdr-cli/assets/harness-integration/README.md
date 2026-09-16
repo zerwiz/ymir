@@ -102,9 +102,15 @@ check: <name>
 stale: watcher stopped by operator
 ```
 
-It refuses to arm with exit 0 and a `watcher: read-only - no live session holds the lock` message when no live session owns `state/.lock`.
+It refuses to arm with exit 0 and a `watcher: read-only - the session helm is held by
+another live session` message **only** when a genuinely live other session holds the helm.
+A **vacant** helm — no owner, a dead/zombie/recycled owner, or a truncated/empty
+lock — is entered in place: the arm script runs `gleipnir_lock_acquire` (which
+refuses only a verifiably live owner), and the Pi extension classifies an empty
+lock as `missing` so `gna_watch_arm`'s reclaim takes it directly. A vacant helm
+is never punted to a manual session start; only a real live contender is refused.
 
-- **Pi** owns continuity in `gna-pi-watch.ts` (Gná); the model gets a **tool** `gna_watch_arm` and a command `/gna-watch-arm` for the first cycle or a repair, never for ordinary re-arms.
+- **Pi** owns continuity in `gna-pi-watch.ts` (Gná); the model gets a **tool** `gna_watch_arm` and a command `/gna-watch-arm` for the first cycle or a repair, never for ordinary re-arms. Gná's liveness is **zombie-aware**: `kill(pid, 0)` alone passes a zombie and a recycled pid, so the watcher reads `/proc/<pid>/stat` — the state character (Z/X = dead) and the starttime recorded at lock acquire (field 22; a mismatch means the kernel handed the pid to an unrelated process) — answers every ordinary wake: a **vacant** helm is taken (arm script via `gleipnir_lock_acquire`; Gná classifies an empty lock as `missing` so the reclaim takes it in place), while only a verifiably live other owner is refused as read-only. It drops its own lock on real process exit (`releaseLockIfOwned`). Gná's wake delivery is **echo-guarded**: an identical watcher message is sent at most once per drained state — when both durable queues (`state/.wake-queue` and the FM runner's `.agents/state/.wake-queue`) are empty, a repeat is the same news the primary already drained and is not re-delivered, so a long stale window cannot flood the follow-up queue.
 - **OpenCode** owns continuity in `syn-watch-arm.js` (Sýn); the coordinator is published under `globalThis.__brokkOpenCodeWatchArm` so the turn-end guard can consult it first.
 - **Claude Code** uses the `Stop` hook with `"asyncRewake": true` and a long timeout to keep the arm running out of band.
 - **Codex / Cursor** run `syn-turnend-guard.sh` at Stop; they do **not** own a long-lived arm (no auto re-arm).
@@ -163,7 +169,10 @@ governed[6]{path,load_first}:
 
 The Pi extension `.pi/extensions/syn-turnend-guard.ts` relays it: `read` of an
 asset is recorded, and an `edit`/`write` of a governed path is blocked with the
-reason. The same routes are stated in `AGENTS.md` and printed in the session
+reason. The guard's own liveness check is **zombie-aware** too — `/proc/<pid>/stat`
+field 3 (Z/X = a killed-but-unreaped or dead holder) fails a stale lock even when
+`kill(0)` would report the pid alive, with `kill(0)` as the fallback when `/proc`
+is unavailable. The same routes are stated in `AGENTS.md` and printed in the session
 digest under `ASSET ROUTING`, and `compliance-check.sh` fails on a governed file
 changed without its asset (the `assets` gate).
 

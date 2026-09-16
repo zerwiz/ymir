@@ -171,8 +171,8 @@ watchEffect(() => {
 
 // ── Lanes ────────────────────────────────────────────────────────────────────
 
-const ENGINEER_COLOR = '#e8b64a'
-const CODE_COLOR = '#5ad2dd'
+const ENGINEER_COLOR = 'var(--amber)'
+const CODE_COLOR = 'var(--cyan)'
 
 const KIND_ICONS = { engineer: UserRound, code: SquareTerminal, agent: Bot }
 
@@ -494,7 +494,7 @@ function blockStyle(p: Phase, lane: Lane): Record<string, string> {
     width: geom.width,
     background: isCritical ? criticalBg : baseBg,
     borderColor: p.status === 'fail'
-      ? 'rgba(255, 111, 103, 0.8)'
+      ? 'color-mix(in srgb, var(--red) 80%, transparent)'
       : isCritical
         ? `${hexAlpha(lane.color, 0.9)}`
         : hexAlpha(lane.color, 0.55),
@@ -771,9 +771,9 @@ function selectPhase(p: Phase) {
 
 .stop-btn {
   background: transparent;
-  border: 1px solid rgba(56, 189, 248, 0.5);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
   border-radius: 8px;
-  color: #7dd3fc;
+  color: var(--accent);
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -784,8 +784,8 @@ function selectPhase(p: Phase) {
     color 0.15s ease;
 }
 .stop-btn:hover:not(:disabled) {
-  background: rgba(56, 189, 248, 0.16);
-  color: #7dd3fc;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
 }
 .stop-btn:disabled {
   opacity: 0.5;
@@ -793,24 +793,24 @@ function selectPhase(p: Phase) {
 }
 .stop-btn.pause {
   border-color: rgba(148, 163, 255, 0.5);
-  color: #b3c0ff;
+  color: var(--violet);
 }
 .stop-btn.pause:hover:not(:disabled) {
   background: rgba(148, 163, 255, 0.14);
-  color: #cdd6ff;
+  color: var(--violet);
 }
 .engineer {
   font-family: var(--mono, monospace);
   font-size: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--text) 5%, transparent);
   border-radius: 6px;
   padding: 2px 8px;
 }
 .chat-link-btn {
-  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+  background: linear-gradient(90deg, var(--purple), var(--violet));
   border: none;
   border-radius: 999px;
-  color: #0b0f18;
+  color: var(--panel-3);
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -819,7 +819,7 @@ function selectPhase(p: Phase) {
   transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 .chat-link-btn:hover {
-  background: linear-gradient(90deg, #9d6cff, #b89dff);
+  background: linear-gradient(90deg, var(--violet), var(--violet));
   transform: translateY(-1px);
 }
 .chat-link-btn:active {
@@ -836,7 +836,7 @@ function selectPhase(p: Phase) {
 .steer-input {
   flex: 1 1 360px;
   background: rgba(11, 15, 24, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
   border-radius: 8px;
   color: inherit;
   padding: 8px 12px;
@@ -844,10 +844,10 @@ function selectPhase(p: Phase) {
   font-size: 13px;
 }
 .steer-btn {
-  background: linear-gradient(90deg, #38bdf8, #7dd3fc);
+  background: linear-gradient(90deg, var(--accent), var(--accent));
   border: none;
   border-radius: 999px;
-  color: #0b0f18;
+  color: var(--panel-3);
   font-weight: 600;
   padding: 8px 16px;
   cursor: pointer;
@@ -859,7 +859,7 @@ function selectPhase(p: Phase) {
   cursor: default;
 }
 .steer-done {
-  color: #86efac;
+  color: var(--green);
   font-size: 12px;
 }
 

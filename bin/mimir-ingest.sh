@@ -42,6 +42,13 @@ done
 mkdir -p "$STORE_DIR"
 [ -e "$STORE" ] || : >"$STORE"
 
+# Load every hash already in the store once, so dedupe is O(1) per section
+# instead of rescanning the whole store for each chunk (O(chunks x store)).
+declare -A SEEN_HASH
+while IFS= read -r _h; do [ -n "$_h" ] && SEEN_HASH["$_h"]=1; done < <(
+  grep -o '"hash":"[^"]*"' "$STORE" 2>/dev/null | cut -d'"' -f4
+)
+
 have_bridge=0
 if command -v curl >/dev/null 2>&1 && curl -fsS --max-time 2 "$BRIDGE/health" >/dev/null 2>&1; then
   have_bridge=1
@@ -60,9 +67,10 @@ ingest_file() {
           content=$(printf '%s\n\n%s' "$heading" "$para" | sed -e 's/[[:space:]]*$//')
           if [ -n "$para" ]; then
             hash=$(printf '%s' "$content" | sha256sum | cut -d' ' -f1)
-            if grep -q "\"hash\":\"$hash\"" "$STORE" 2>/dev/null; then
+            if [ -n "${SEEN_HASH[$hash]:-}" ]; then
               skipped=$((skipped + 1))
             else
+              SEEN_HASH[$hash]=1
               added=$((added + 1))
               if [ "$DRY" = 0 ]; then
                 ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -88,7 +96,8 @@ ingest_file() {
   if [ -n "$para" ]; then
     content=$(printf '%s\n\n%s' "$heading" "$para" | sed -e 's/[[:space:]]*$//')
     hash=$(printf '%s' "$content" | sha256sum | cut -d' ' -f1)
-    if grep -q "\"hash\":\"$hash\"" "$STORE" 2>/dev/null; then skipped=$((skipped + 1)); else
+    if [ -n "${SEEN_HASH[$hash]:-}" ]; then skipped=$((skipped + 1)); else
+      SEEN_HASH[$hash]=1
       added=$((added + 1))
       if [ "$DRY" = 0 ]; then
         ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)

@@ -24,7 +24,7 @@ for a in "$@"; do
     -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
     -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --dry-run|-n) DRY=1 ;;
-    status|push|pull|init|receive) ACTION="$a" ;;
+    status|push|pull|check|init|receive) ACTION="$a" ;;
     -*) printf 'error: unknown flag %s\n' "$a" >&2; exit 2 ;;
     *) PEER="$a" ;;
   esac
@@ -104,6 +104,39 @@ done
 [ "$include_auth" = 1 ] || PATHS=("${PATHS[@]/~\/.pi\/agent\/auth.json/}")
 
 rsync_flags=(-a --info=NAME --exclude 'sessions/' --exclude '*.log')
+if [ "$ACTION" = check ]; then
+  # verify: parity-only walk. --checksum compares content, not just size/time;
+  # --dry-run moves nothing; --itemize-changes names what WOULD differ. Exit 0
+  # when the far end already mirrors the near end, 1 when anything drifts
+  # (added/changed/missing/deleted) — the hoard's collision and loss alarm.
+  check_flags=(-a -c --dry-run --itemize-changes --exclude 'sessions/' --exclude '*.log')
+  [ "$DRY" = 1 ] && check_flags+=(--dry-run)
+  rc=0
+  ssh_cmd="${YMIR_SSH:-ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10}"
+  for peer in "${PEERS[@]}"; do
+    for path in "${PATHS[@]}"; do
+      [ -n "$path" ] || continue
+      case "$path" in auth.json|*auth.json) [ "$include_auth" = 1 ] || continue ;; esac
+      src="$(expand_path "$path")"; dst="$peer:$path"
+      printf 'tailscale-sync[1]{action,peer,path}:
+  "check","%s","%s"\n' "$peer" "$path"
+      out=$(rsync "${check_flags[@]}" -e "$ssh_cmd" --mkpath "$src" "$dst" 2>&1) || rc=1
+      changes=$(printf '%s\n' "$out" | grep -cE '^[<>ch.*]' || true)
+      if [ "${changes:-0}" -gt 0 ]; then
+        printf 'tailscale-sync[1]{state,path,drift}:
+  "DRIFT","%s","%s lines differ"\n' "$path" "$changes"
+      else
+        printf 'tailscale-sync[1]{state,path,parity}:
+  "IN SYNC","%s"\n' "$path"
+      fi
+    done
+  done
+  [ "$rc" = 0 ] && printf 'tailscale-sync[1]{verdict}:
+  "hoard mirrors the far end"\n' || printf 'tailscale-sync[1]{verdict}:
+  "DRIFT — run push to reconcile"\n'
+  exit "$rc"
+fi
+
 [ "$DRY" = 1 ] && rsync_flags+=(--dry-run)
 
 # Taildrop road: when the tailnet's SSH ACL forbids SSH (but Taildrop works),

@@ -116,6 +116,26 @@ else
   echo "Smíðja visualizer skipped (needs bun + $VIZ_DIR)." >&2
 fi
 
+# Óðrerir — the Live Hall. Its own Astro board on :4322, the carved planning
+# glass every hall door opens. Raised before the SPA so a window never waits.
+HALL_DIR="$ROOT/apps/odrerir"
+HALL_PORT="${ODRERIR_PORT:-4322}"
+HALL_PID_FILE="$RUN/odrerir.pid"
+HALL_LOG="$RUN/odrerir.log"
+if [ -d "$HALL_DIR" ]; then
+  [ -d "$HALL_DIR/node_modules" ] || (cd "$HALL_DIR" && npm install --no-audit --no-fund >/dev/null 2>&1 || true)
+  if [ -f "$HALL_PID_FILE" ] && kill -0 "$(cat "$HALL_PID_FILE")" 2>/dev/null; then
+    echo "Óðrerir — Live Hall already running (pid $(cat "$HALL_PID_FILE")) → http://127.0.0.1:${HALL_PORT}/"
+  else
+    ymir_detach bash -c "cd '$HALL_DIR' && exec npm run dev -- --port '$HALL_PORT' --host" >"$HALL_LOG" 2>&1
+    echo $! > "$HALL_PID_FILE"
+    for _ in $(seq 1 30); do curl -s -o /dev/null "http://127.0.0.1:${HALL_PORT}/" && break; sleep 0.5; done
+    echo "Óðrerir — Live Hall raised (pid $(cat "$HALL_PID_FILE")) → http://127.0.0.1:${HALL_PORT}/"
+  fi
+else
+  echo "Óðrerir — Live Hall skipped (missing apps/odrerir)." >&2
+fi
+
 cd "$APP"
 
 if [[ "${1:-}" == "--foreground" ]]; then

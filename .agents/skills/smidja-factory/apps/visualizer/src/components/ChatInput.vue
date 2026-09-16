@@ -95,8 +95,8 @@ defineExpose({ focus })
   padding: 9px 10px;
 }
 .box:focus-within {
-  border-color: rgba(56, 189, 248, 0.55);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .field {
   flex: 1 1 auto;
@@ -125,9 +125,9 @@ defineExpose({ focus })
   cursor: pointer;
 }
 .icon-btn:disabled { color: var(--faint); cursor: not-allowed; opacity: 0.6; }
-.icon-btn:not(:disabled):hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+.icon-btn:not(:disabled):hover { background: color-mix(in srgb, var(--text) 5%, transparent); color: var(--text); }
 .icon-btn.stop { color: var(--red); }
-.icon-btn.stop:hover { background: rgba(255, 111, 103, 0.12); }
+.icon-btn.stop:hover { background: color-mix(in srgb, var(--red) 12%, transparent); }
 
 .send {
   flex: none;
@@ -139,7 +139,7 @@ defineExpose({ focus })
   border-radius: 9px;
   border: none;
   background: var(--accent);
-  color: #1A1A1A;
+  color: var(--bg);
   cursor: pointer;
 }
 .send:disabled { background: var(--panel-2); color: var(--faint); cursor: not-allowed; }

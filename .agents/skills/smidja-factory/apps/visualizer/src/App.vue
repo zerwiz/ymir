@@ -30,23 +30,24 @@ onMounted(async () => {
 })
 const isMeta = computed(() => isMemory.value || isDecisions.value || isStats.value || isChat.value || isSettings.value)
 
-// ── Theme toggle: the neutral theme is the default; data-theme="classic"
-   //    preserves the OLD deep-space visualizer look (added 2026-09-01, G7 —
-   //    nothing removed, the old styling is kept as an option).
-   //    data-theme="high-contrast" adds a WCAG AAA compliant high contrast mode.
-   //    Choice is persisted locally. ──
+// ── Theme toggle: fensalir (the carved cloth of the halls) is the default;
+   //    data-theme="classic" preserves the OLD deep-space visualizer look
+   //    (added 2026-09-01, G7 — nothing removed, the old styling is kept as an
+   //    option). data-theme="high-contrast" adds a WCAG AAA compliant high
+   //    contrast mode. Both are deliberate overrides and win when chosen.
+   //    Choice is persisted locally; a saved "neutral" resolves to fensalir. ──
   const savedTheme = localStorage.getItem('smidja-theme')
   if (savedTheme === 'classic' || savedTheme === 'high-contrast') {
     document.documentElement.dataset.theme = savedTheme
   }
-  const theme = ref<'neutral' | 'classic' | 'high-contrast'>(
-    (savedTheme === 'classic' || savedTheme === 'high-contrast') ? savedTheme : 'neutral'
+  const theme = ref<'fensalir' | 'classic' | 'high-contrast'>(
+    (savedTheme === 'classic' || savedTheme === 'high-contrast') ? savedTheme : 'fensalir'
   )
   function toggleTheme() {
-    const order: Array<'neutral' | 'classic' | 'high-contrast'> = ['neutral', 'classic', 'high-contrast']
+    const order: Array<'fensalir' | 'classic' | 'high-contrast'> = ['fensalir', 'classic', 'high-contrast']
     const idx = order.indexOf(theme.value)
     theme.value = order[(idx + 1) % order.length]
-    if (theme.value === 'neutral') {
+    if (theme.value === 'fensalir') {
       delete document.documentElement.dataset.theme
     } else {
       document.documentElement.dataset.theme = theme.value
@@ -79,6 +80,17 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
     /* the launcher is unreachable — say nothing, change nothing */
   }
 }
+
+/**
+ * The Óðrerir Live Hall — the landing's live board, a page of its own rather
+ * than one of the three apps the gate raises. On this machine the hall answers
+ * on :4322; anywhere else, the public hall.
+ */
+const host = window.location.host
+const hallUrl =
+  host.startsWith('localhost') || host.startsWith('127.0.0.1')
+    ? 'http://localhost:4322'
+    : 'https://hall.ymir.zerwiz.org'
 </script>
 
 <template>
@@ -90,7 +102,7 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
              crisply with no fetch; keep the two in sync. -->
         <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
           <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
-          <g fill="#38bdf8">
+          <g fill="currentColor">
             <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13" />
             <polygon points="6,21 26,21 25.4,24 6.6,24" />
             <polygon points="8,25 24,25 23.3,27.5 8.7,27.5" />
@@ -125,11 +137,20 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
       <a v-else :href="gateUrl" target="_blank" rel="noreferrer" title="Sign in to Ymir" style="margin-right:6px;color:inherit;text-decoration:none;font-size:12px;opacity:.85">Sign in</a>
       <div role="group" aria-label="Switch hall" style="display:flex;gap:2px;margin-right:6px">
         <button type="button" title="Hlidskjalf — the control plane" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᚺ</button>
-        <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:#38bdf8;cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>
+        <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:var(--accent);cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>
         <button type="button" title="Sessrúmnir — the seat-hall" aria-label="Open Sessrúmnir" @click="raiseApp('sessrumnir')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᛋ</button>
       </div>
-      <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'neutral'} (click to switch)`" @click="toggleTheme">
-        {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'neutral' }}
+      <!-- The Óðrerir Live Hall — the landing's live board, a page of its own
+           (the three apps above are raised through the gate; this one is a tab). -->
+      <a
+        class="hall-btn"
+        :href="hallUrl"
+        target="_blank"
+        rel="noreferrer"
+        title="The Óðrerir Live Hall — the landing's carved board"
+      >ᛟ To the Hall</a>
+      <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'fensalir — the carved cloth'} (click to switch)`" @click="toggleTheme">
+        {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'fensalir' }}
       </button>
       <span v-if="isLinuxDesktop" class="win-controls">
         <button class="win-btn" title="Minimize" @click="winControl('minimize')" aria-label="Minimize">
@@ -188,9 +209,9 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
   height: 1px;
   background: linear-gradient(
     90deg,
-    rgba(56, 189, 248, 0.4),
-    rgba(125, 211, 252, 0.3) 40%,
-    rgba(125, 211, 252, 0.06)
+    color-mix(in srgb, var(--accent) 40%, transparent),
+    color-mix(in srgb, var(--accent) 30%, transparent) 40%,
+    color-mix(in srgb, var(--accent) 6%, transparent)
   );
 }
 
@@ -206,11 +227,12 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
   width: 28px;
   height: 28px;
   flex: none;
-  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.3));
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px rgba(201, 151, 79, 0.3));
 }
 
 .brand {
-  background: linear-gradient(90deg, var(--accent), #7dd3fc);
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -278,8 +300,34 @@ async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
 .crumbs a,
 .live-hint,
 .theme-toggle,
+.hall-btn,
 .win-controls {
   -webkit-app-region: no-drag;
+}
+
+/* The Hall door — a pill in the topbar, its own tab. The glyph is Othala, the
+   ancestral hall; the accent keeps it legible in every theme. */
+.hall-btn {
+  margin-left: 12px;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.hall-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.hall-btn:active {
+  transform: translateY(1px) scale(0.97);
 }
 
 /* Desktop window controls — right-aligned, dark, hover to close is red. */

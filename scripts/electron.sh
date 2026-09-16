@@ -27,9 +27,10 @@ VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 APP="$ROOT/apps/hlidskjalf"
+Odrerir_app="$ROOT/apps/odrerir"
 NO_INSTALL=0
 VIEW="${YMIR_DESKTOP_VIEW:-hlidskjalf}"
-VIEWS=(hlidskjalf smidja)
+VIEWS=(hlidskjalf smidja odrerir)
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-start}"; shift || true
@@ -40,15 +41,15 @@ while [ $# -gt 0 ]; do case "$1" in
   *) shift ;;
 esac; done
 
-pid_file() { case "$1" in smidja) printf '%s/state/electron-smidja.pid' "$ROOT" ;; *) printf '%s/state/electron.pid' "$ROOT" ;; esac; }
-log_file() { case "$1" in smidja) printf '%s/state/electron-smidja.log' "$ROOT" ;; *) printf '%s/state/electron.log' "$ROOT" ;; esac; }
+pid_file() { case "$1" in smidja) printf '%s/state/electron-smidja.pid' "$ROOT" ;; odrerir) printf '%s/state/electron-odrerir.pid' "$ROOT" ;; *) printf '%s/state/electron.pid' "$ROOT" ;; esac; }
+log_file() { case "$1" in smidja) printf '%s/state/electron-smidja.log' "$ROOT" ;; odrerir) printf '%s/state/electron-odrerir.log' "$ROOT" ;; *) printf '%s/state/electron.log' "$ROOT" ;; esac; }
 
 # The `.bin/electron` shim is a node script that SPAWNS the real Electron, so its
 # pid (`$!`) is not the app. Track Electron by its own command line instead — the
 # per-view user-data-dir is a unique, stable identity — exactly as the Nornir
 # scheduler identifies itself. Without this, a stale/reused pid makes is_running
 # false while Electron is alive, and a second app launches on top of the first.
-view_mark() { case "$1" in smidja) printf '%s' 'ymir-smidja' ;; *) printf '%s' 'ymir-hlidskjalf' ;; esac; }
+view_mark() { case "$1" in smidja) printf '%s' 'ymir-smidja' ;; odrerir) printf '%s' 'ymir-odrerir' ;; *) printf '%s' 'ymir-hlidskjalf' ;; esac; }
 view_pids() {  # all live Electron pids for a view
   local mark; mark="$(view_mark "$1")"
   pgrep -f "electron/dist/electron.*--user-data-dir=.*${mark}" 2>/dev/null || true
@@ -103,7 +104,7 @@ case "$ACTION" in
     done
     printf 'electron: stopped\n'
     exit 0 ;;
-  start|hlidskjalf|smidja) [ "$ACTION" = smidja ] && VIEW=smidja ;;
+  start|hlidskjalf|smidja|odrerir) [ "$ACTION" = smidja ] && VIEW=smidja; [ "$ACTION" = odrerir ] && VIEW=odrerir ;;
   *) printf 'error: unknown action %s\nhelp: electron.sh [start|stop|status]\n' "$ACTION" >&2; exit 2 ;;
 esac
 
@@ -147,6 +148,9 @@ if ! ensure_electron_binary; then
   exit 1
 fi
 
+app_dir() { case "$1" in odrerir) printf '%s' "$Odrerir_app" ;; *) printf '%s' "$APP" ;; esac; }
+view_host() { case "$1" in smidja) printf '%s' 'http://127.0.0.1:8437/' ;; odrerir) printf '%s' 'http://127.0.0.1:4322/' ;; *) printf '%s' 'http://127.0.0.1:3888/' ;; esac; }
+
 start_one() {
   local v="$1" f l
   f="$(pid_file "$v")"; l="$(log_file "$v")"
@@ -182,8 +186,8 @@ start_one() {
         extra+=(--disable-gpu --disable-gpu-compositing)
       fi ;;
   esac
-  nohup env YMIR_DESKTOP_VIEW="$v" "$bin" "$APP" \
-    --user-data-dir="$HOME/.config/$([ "$v" = smidja ] && echo ymir-smidja || echo ymir-hlidskjalf)" \
+  nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron)" "$(app_dir "$v")" \
+    --user-data-dir="$HOME/.config/$(view_mark "$v")" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &
   echo $! >"$f"
   # Wait briefly for the real process to appear, so a following call sees it.
@@ -194,12 +198,13 @@ start_one() {
 if [ "$VIEW" = both ]; then
   start_one hlidskjalf
   start_one smidja
+  start_one odrerir
   sleep 2
   for v in "${VIEWS[@]}"; do
-    if is_running "$v"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$v" "$(pid_of "$v")" "$([ "$v" = smidja ] && echo http://127.0.0.1:8437/ || echo http://127.0.0.1:3888/)"; else printf 'error: electron %s failed to start; see %s\n' "$v" "${log_file "$v"#"$ROOT"/}" >&2; exit 1; fi
+    if is_running "$v"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$v" "$(pid_of "$v")" "$(view_host "$v")"; else printf 'error: electron %s failed to start; see %s\n' "$v" "${log_file "$v"#"$ROOT"/}" >&2; exit 1; fi
   done
 else
   start_one "$VIEW"
   sleep 2
-  if is_running "$VIEW"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$VIEW" "$(pid_of "$VIEW")" "$([ "$VIEW" = smidja ] && echo http://127.0.0.1:8437/ || echo http://127.0.0.1:3888/)"; else printf 'error: electron failed to start; see %s\n' "${log_file "$VIEW"#"$ROOT"/}" >&2; exit 1; fi
+  if is_running "$VIEW"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$VIEW" "$(pid_of "$VIEW")" "$(view_host "$VIEW")"; else printf 'error: electron failed to start; see %s\n' "${log_file "$VIEW"#"$ROOT"/}" >&2; exit 1; fi
 fi

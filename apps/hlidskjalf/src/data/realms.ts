@@ -10,8 +10,8 @@ export const WORKSPACES: RealmDef[] = [
     kind: 'work',
     company: 'wayof',
     domains: ['company', 'marketing', 'development', 'life'],
-    tint: '#38bdf8',
-    tint2: '#0ea5e9',
+    tint: '#c9973f',
+    tint2: '#7d5f2a',
     glyph: 'ᛉ',
   },
   {
@@ -20,8 +20,8 @@ export const WORKSPACES: RealmDef[] = [
     name: 'Personal',
     kind: 'personal',
     domains: ['me', 'life', 'development'],
-    tint: '#8b5cf6',
-    tint2: '#6366f1',
+    tint: '#96a0a8',
+    tint2: '#5f686e',
     glyph: 'ᛗ',
   },
 ];

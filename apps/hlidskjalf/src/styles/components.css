@@ -72,12 +72,12 @@
 }
 .btn-seal {
   color: var(--ymir-ok);
-  border-color: rgba(52, 211, 153, 0.4);
+  border-color: color-mix(in srgb, var(--ymir-ok) 40%, transparent);
   background: var(--ymir-ok-dim);
 }
 .btn-danger {
   color: var(--ymir-danger);
-  border-color: rgba(248, 113, 113, 0.4);
+  border-color: color-mix(in srgb, var(--ymir-danger) 40%, transparent);
   background: var(--ymir-danger-dim);
 }
 .btn[disabled] {
@@ -270,7 +270,7 @@
   grid-template-columns: 128px 112px minmax(150px, 220px) minmax(0, 1fr) 96px;
   gap: var(--ymir-space-3);
   padding: 7px var(--ymir-space-4);
-  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  border-bottom: 1px solid color-mix(in srgb, var(--ymir-steel-2) 40%, transparent);
   font-family: var(--ymir-font-mono);
   font-size: 12px;
   align-items: center;
@@ -435,7 +435,7 @@
 }
 .check-item.done .box {
   color: var(--ymir-ok);
-  border-color: rgba(52, 211, 153, 0.45);
+  border-color: color-mix(in srgb, var(--ymir-ok) 45%, transparent);
   background: var(--ymir-ok-dim);
 }
 .pr-actions {
@@ -653,7 +653,7 @@
   font-size: 12px;
   color: var(--ymir-text-1);
   padding: 5px 0;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.35);
+  border-bottom: 1px solid color-mix(in srgb, var(--ymir-steel-2) 35%, transparent);
   display: flex;
   gap: var(--ymir-space-2);
 }
@@ -681,7 +681,7 @@
 }
 .data-table td {
   padding: var(--ymir-space-3) var(--ymir-space-4);
-  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  border-bottom: 1px solid color-mix(in srgb, var(--ymir-steel-2) 40%, transparent);
   vertical-align: middle;
 }
 .data-table tbody tr:hover {

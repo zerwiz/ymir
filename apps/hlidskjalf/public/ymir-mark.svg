@@ -2,15 +2,15 @@
   <defs>
     <!-- Background Dark Steel Gradient -->
     <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#020617" />
+      <stop offset="0%" stop-color="#0e0c09" />
+      <stop offset="100%" stop-color="#0e0c09" />
     </linearGradient>
 
     <!-- Base Metal Color for the Rune -->
     <linearGradient id="metal-base" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="50%" stop-color="#475569" />
-      <stop offset="100%" stop-color="#1e293b" />
+      <stop offset="0%" stop-color="#c9973f" />
+      <stop offset="50%" stop-color="#7d5f2a" />
+      <stop offset="100%" stop-color="#2b241a" />
     </linearGradient>
 
     <!-- Advanced 3D Forge Filter -->
@@ -27,7 +27,7 @@
       <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
 
       <!-- 4. Apply 3D Lighting (Cyan/Blue Specular Highlight) -->
-      <feSpecularLighting in="blur" surfaceScale="6" specularConstant="1.2" specularExponent="25" lighting-color="#bae6fd" result="specOut">
+      <feSpecularLighting in="blur" surfaceScale="6" specularConstant="1.2" specularExponent="25" lighting-color="#cfc3a9" result="specOut">
         <!-- Light Source Positioned Top-Left -->
         <fePointLight x="-100" y="-100" z="300" />
       </feSpecularLighting>
@@ -39,12 +39,12 @@
       <feComposite operator="arithmetic" k1="0" k2="1" k3="1" k4="0" in="specularMasked" in2="baseTex" result="litModel" />
 
       <!-- 7. Heavy Drop Shadow for Canvas Depth -->
-      <feDropShadow in="litModel" dx="0" dy="16" stdDeviation="12" flood-opacity="0.85" flood-color="#000000" result="finalShadow" />
+      <feDropShadow in="litModel" dx="0" dy="16" stdDeviation="12" flood-opacity="0.85" flood-color="#0e0c09" result="finalShadow" />
     </filter>
   </defs>
 
   <!-- Canvas -->
-  <rect width="512" height="512" rx="40" fill="url(#bg-grad)" stroke="#1e293b" stroke-width="4"/>
+  <rect width="512" height="512" rx="40" fill="url(#bg-grad)" stroke="#2b241a" stroke-width="4"/>
 
   <!-- Master Group with 3D Rendering Filter Applied -->
   <g filter="url(#heavy-metal-3d)" fill="url(#metal-base)">

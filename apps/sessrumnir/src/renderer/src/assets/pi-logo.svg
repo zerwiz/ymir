@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <!-- Deep navy rounded seat -->
-  <rect width="512" height="512" rx="77" fill="#0a1020"/>
-  <rect x="6" y="6" width="500" height="500" rx="71" stroke="#1e293b" stroke-width="12" fill="none"/>
+  <rect width="512" height="512" rx="77" fill="#0e0c09"/>
+  <rect x="6" y="6" width="500" height="500" rx="71" stroke="#2b241a" stroke-width="12" fill="none"/>
 
   <!-- Sowilo rune bolt — the sign of Sessrúmnir, sky-blue on the hall's dark -->
-  <path fill="#38bdf8" d="
+  <path fill="#c9973f" d="
     M256 96
     L144 288
     L272 288
