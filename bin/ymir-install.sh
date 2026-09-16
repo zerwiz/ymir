@@ -641,7 +641,11 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
+# Migrations MOVE private data — that is a write, and `--check` promises none.
+# Only a real run heals the home forward; the preview leaves it untouched.
+if [ "$CHECK" = 0 ]; then bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; fi
+step_auth; step_invite; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate
