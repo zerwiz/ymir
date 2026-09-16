@@ -155,7 +155,10 @@ Measured: `/api/checks` 442ms → 4ms warm; `/api/runtime` 312ms → 5ms warm;
 `scripts/start.sh` passes the API port to the server as `PORT`, and the visualizer
 uses `SMIDJA_VIZ_API_PORT`. A deployment should use 5-digit ports (the Quadlet/
 Compose examples publish `38888`/`38889`/`54370`) to avoid colliding with other
-services on a shared host; the defaults are unchanged for bare local dev.
+services on a shared host; the defaults are unchanged for bare local dev. The SPA
+bind host is `HLIDSKJALF_HOST` (default `127.0.0.1`); inside a container set it to
+`0.0.0.0` so the published port reaches it, and pin the host-side publish to
+`127.0.0.1` so the surface stays private.
 
 ## Smíðja in the UI
 

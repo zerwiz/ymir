@@ -6,12 +6,16 @@ import react from '@vitejs/plugin-react';
 // reads the same names (scripts/start.sh passes them through).
 const SPA_PORT = Number(process.env.HLIDSKJALF_PORT ?? 3888);
 const API_PORT = Number(process.env.HLIDSKJALF_API_PORT ?? 3889);
+// Bind host: 127.0.0.1 for bare local dev. Inside a container the published port
+// is forwarded to the container's interface, so a deployment sets this to 0.0.0.0
+// (and pins the host-side publish to loopback where the surface must stay private).
+const SPA_HOST = process.env.HLIDSKJALF_HOST ?? '127.0.0.1';
 const API_ORIGIN = `http://127.0.0.1:${API_PORT}`;
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '127.0.0.1',
+    host: SPA_HOST,
     port: SPA_PORT,
     strictPort: false,
     // Tunnelled hostnames (Cloudflare -> gate API -> vite) must be allowed or
@@ -32,7 +36,7 @@ export default defineConfig({
     },
   },
   preview: {
-    host: '127.0.0.1',
+    host: SPA_HOST,
     port: SPA_PORT,
     proxy: {
       '/api': API_ORIGIN,
