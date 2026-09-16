@@ -23,7 +23,7 @@ bin/ymir-install.sh --status      # alias of --check
 ```
 install[19]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
-  "prereqs","git python3 bun docker gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
+  "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml","creates if missing"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
@@ -31,7 +31,7 @@ install[19]{step,what,self-heals}:
   "sessrumnir","the Sessrúmnir desktop GUI (vendored pi-desktop at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — learnt on EVERY host","bin/omarchy-sense.sh learns the setup, bin/desktop-place.sh places the apps, the Omarchy post-update hook (when Omarchy), the wedge-alarm channel, and (on Omarchy) an OFFER of the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
-  "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build; distinguishes docker-group permission from build failure"
+  "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
@@ -52,6 +52,25 @@ real run prints those three in addition. The exact set:
 ```bash
 bash bin/ymir-install.sh --check | grep -cE '^  "'   # the honest count, on your host
 ```
+
+## Container engine: Docker **or** rootless Podman
+
+The core never assumes an engine binary. `bin/ymir-platform.sh` resolves whichever
+this host can reach (`YMIR_CONTAINER_ENGINE` forces one) and exposes:
+
+- `ymir_container_engine` / `ymir_container_engine_name` — `docker` or `podman`.
+- `ymir_engine_is_podman` — true even when a `docker` binary fronts Podman (the
+  podman-docker shim).
+- `ymir_volume_suffix` — `:Z` whenever SELinux is enforcing (Docker and Podman
+  both need the relabel), else empty.
+- `ymir_rootless_podman` — rootless Podman needs `--userns=keep-id` so a bind
+  mount lands owned by the invoking user.
+
+`bin/utgard.sh`, `bin/einherjar-spawn.sh`, `bin/valhalla.sh`, `bin/ymir-validate.sh`,
+this installer, and `bin/prereq-ensure.sh` all use these; none names an engine
+directly. **Quadlet**-managed containers (Podman + systemd) surface as
+`systemd --user` units, which the process hall lists. A host-managed deployment
+layer (Quadlet, compose, bare) sits **over** this agnostic core — never inside it.
 
 ## The visualizer UI
 

@@ -202,6 +202,73 @@ ymir_service_active() {  # <name> -> 0 when running
   esac
 }
 
+# ── containers: Docker or rootless Podman ───────────────────────────────────
+
+# Which container engine to use. Fedora ships rootless Podman and frequently has
+# no `docker` at all; Debian/Ubuntu usually have Docker. YMIR_CONTAINER_ENGINE
+# forces one. Prints the engine name and returns 0, or returns 1 when none of
+# them can actually be reached.
+ymir_container_engine() {
+  local e
+  for e in ${YMIR_CONTAINER_ENGINE:-} docker podman; do
+    [ -n "$e" ] || continue
+    command -v "$e" >/dev/null 2>&1 || continue
+    # podman answers `info` with no daemon; docker needs one running. Accept either.
+    if "$e" info >/dev/null 2>&1; then printf '%s' "$e"; return 0; fi
+  done
+  return 1
+}
+
+# The engine binary that exists, even if its daemon is not reachable. Useful for
+# diagnostics that want to name the engine rather than run it.
+ymir_container_engine_name() {
+  local e
+  for e in ${YMIR_CONTAINER_ENGINE:-} docker podman; do
+    [ -n "$e" ] || continue
+    command -v "$e" >/dev/null 2>&1 && { printf '%s' "$e"; return 0; }
+  done
+  return 1
+}
+
+# true when SELinux is enforcing (Fedora). A bind mount into a container then
+# needs the :Z relabel, or the container is denied access to the host path.
+ymir_selinux_enforcing() {
+  if [ -r /sys/fs/selinux/enforce ]; then
+    [ "$(cat /sys/fs/selinux/enforce 2>/dev/null)" = 1 ]
+  elif command -v getenforce >/dev/null 2>&1; then
+    [ "$(getenforce 2>/dev/null)" = "Enforcing" ]
+  else
+    return 1
+  fi
+}
+
+# true when the resolved engine is Podman — including when the `docker` binary is
+# really Podman (the podman-docker shim), which names itself in `info`.
+ymir_engine_is_podman() {
+  local e
+  e="$(ymir_container_engine 2>/dev/null || ymir_container_engine_name 2>/dev/null)" || return 1
+  [ -n "$e" ] || return 1
+  [ "$e" = podman ] && return 0
+  "$e" info 2>/dev/null | grep -qi podman
+}
+
+# true when rootless Podman: bind-mount ownership then needs --userns=keep-id so
+# files land owned by the invoking user. Docker (and rootful Podman) do not.
+ymir_rootless_podman() {
+  ymir_engine_is_podman && [ "$(id -u)" -ne 0 ]
+}
+
+# true when Ymir itself is running inside a container (podman or docker).
+ymir_in_container() {
+  [ -e /run/.containerenv ] || [ -e /.dockerenv ] || [ -n "${container:-}" ]
+}
+
+# The `-v` suffix for a bind mount: `:Z` whenever SELinux is enforcing — Docker
+# and Podman both need the relabel there — else empty. Append to `<host>:<ctr>`.
+ymir_volume_suffix() {
+  ymir_selinux_enforcing && printf ':Z'
+}
+
 # ── GPUs: report what exists, without assuming NVIDIA ───────────────────────
 
 ymir_gpu_name() {  # best-effort device name, or empty
