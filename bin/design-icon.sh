@@ -25,19 +25,20 @@ case "${1-}" in
 esac
 ACTION="${1:-list}"; shift || true
 
-# app-dir | glyph | house tint | what the rune says
+# dir|glyph|tint|says|icon-name|exec|wm-class
+# FIVE UI surfaces, FIVE DIFFERENT glyphs — no app borrows another's rune.
 APPS=(
-  "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane"
-  "apps/odrerir|valhalla|#c9973f|the hall — Óðrerir, the Live Hall"
-  "apps/sessrumnir|sowilo|#8b5cf6|the sun — Sessrúmnir, the seat that shows the cloth"
-  "apps/smidja-factory/apps/visualizer|ansuz|#f59e0b|Odin's breath — Smíðja, the forge"
-  "apps/hlidskjalf-mobile|ehwaz|#c9973f|the seat, carried — Hlidskjalf on a phone"
+  "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane|ymir-hlidskjalf|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf"
+  "apps/hlidskjalf-mobile|raidho|#c9973f|the road — the seat carried, Hlidskjalf on a phone|ymir-hlidskjalf-mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile"
+  "apps/odrerir|valhalla|#c9973f|the hall — Óðrerir, the Live Hall|ymir-odrerir|scripts/electron.sh start --view odrerir|ymir-odrerir"
+  "apps/sessrumnir|sowilo|#8b5cf6|the sun — Sessrúmnir, the seat that shows the cloth|ymir-sessrumnir|bin/sessrumnir.sh start|ymir-sessrumnir"
+  "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-visualizer|scripts/electron.sh start --view smidja|ymir-smidja"
 )
 
 list() {
   printf 'app_icons[%d]{app,rune,tint,says}:\n' "${#APPS[@]}"
   for row in "${APPS[@]}"; do
-    IFS='|' read -r dir glyph tint says <<<"$row"
+    IFS='|' read -r dir glyph tint says _icon _exec _klass <<<"$row"
     printf '  "%s","%s","%s","%s"\n' "$(basename "$dir")" "$glyph" "$tint" "$says"
   done
   printf 'runes[6]{glyph,name,meaning}:\n'
@@ -94,30 +95,36 @@ ENTRIES=(
 )
 install_all() {
   mkdir -p "$icons_dir" "$apps_dir" || { printf 'error: cannot write %s / %s\n' "$icons_dir" "$apps_dir" >&2; exit 1; }
-  printf 'installed[%d]{app,icon,entry}:
-' "${#ENTRIES[@]}"
-  local row app label exec klass src icon dest entry
-  for row in "${ENTRIES[@]}"; do
-    IFS='|' read -r app label exec klass <<<"$row"
-    src="$ROOT/apps/$app/icon.svg"
-    [ -f "$src" ] || src="$ROOT/apps/$app/public/icon.svg"          # the visualizer keeps its icon under public/
-    [ -f "$src" ] || src="$ROOT/apps/hlidskjalf/public/icon.svg"    # mobile borrows the seat's rune until it earns its own
-    icon="ymir-$app"
-    cp -f "$src" "$icons_dir/$icon.svg" || { printf '  "%s","-","-"\n' "$app"; continue; }
-    entry="$apps_dir/$icon.desktop"
+  printf 'installed[%d]{app,icon,entry}:\n' "${#APPS[@]}"
+  local row dir glyph tint says iconname exec klass src
+  for row in "${APPS[@]}"; do
+    IFS='|' read -r dir glyph tint says iconname exec klass <<<"$row"
+    src="$ROOT/$dir/public/icon.svg"
+    if [ ! -f "$src" ]; then
+      # mint it first — the icon is defined by this table, so it is never absent
+      if [ -r "$ICONS/$glyph.svg" ]; then
+        mkdir -p "$(dirname "$src")" 2>/dev/null
+        path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$ICONS/$glyph.svg" | head -1)"
+        { printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="%s">\n' "$says"
+          printf '  <title>%s</title>\n  <rect width="32" height="32" rx="7" fill="%s"/>\n' "$says" "$STONE"
+          printf '  <g transform="translate(4 4)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">\n' "$tint"
+          printf '    <path d="%s"/>\n  </g>\n</svg>\n' "$path"
+        } >"$src" 2>/dev/null || true
+      fi
+    fi
+    cp -f "$src" "$icons_dir/$iconname.svg" 2>/dev/null || { printf '  "%s","FAILED","-","no icon at %s"\n' "$dir" "${src#"$ROOT"/}"; continue; }
     {
       printf '[Desktop Entry]\nType=Application\nVersion=1.0\n'
-      printf 'Name=%s\n' "$label"
-      printf 'Comment=Ymir — the agent operating system\n'
+      printf 'Name=%s\n' "$(printf '%s' "$says" | sed 's/ — .*//')"
+      printf 'Comment=%s\n' "$says"
       printf 'Exec=bash %s/%s\n' "$ROOT" "$exec"
-      printf 'Icon=%s\n' "$icon"
+      printf 'Icon=%s\n' "$iconname"
       printf 'Terminal=false\nCategories=Development;Utility;\n'
       printf 'StartupWMClass=%s\nStartupNotify=true\n' "$klass"
-    } >"$entry"
-    printf '  "%s","%s.svg","%s.desktop"\n' "$app" "$icon" "$icon"
+    } >"$apps_dir/$iconname.desktop"
+    printf '  "%s","%s.svg","%s.desktop"\n' "$iconname" "$iconname" "$iconname"
   done
-  # the Smidja shelf's older entry name is folded into the rune's own
-  [ -f "$apps_dir/ymir-visualizer.desktop" ] && rm -f "$apps_dir/ymir-smidja.desktop"
+  [ -f "$apps_dir/ymir-smidja.desktop" ] && rm -f "$apps_dir/ymir-smidja.desktop"
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
 }
 
@@ -127,12 +134,12 @@ case "$ACTION" in
   mint)
     if [ "${1:-}" = "--all" ]; then
       printf 'minted[%d]{app,rune,file,link}:\n' "${#APPS[@]}"
-      for row in "${APPS[@]}"; do IFS='|' read -r d g t l <<<"$row"; mint "$d" "$g" "$t" "$l"; done
+      for row in "${APPS[@]}"; do IFS='|' read -r d g t l _i _e _k <<<"$row"; mint "$d" "$g" "$t" "$l"; done
     else
       want="${1:-}"; found=0
       printf 'minted[1]{app,rune,file,link}:\n'
       for row in "${APPS[@]}"; do
-        IFS='|' read -r d g t l <<<"$row"
+        IFS='|' read -r d g t l _i _e _k <<<"$row"
         case "$(basename "$d")" in "$want") mint "$d" "$g" "$t" "$l"; found=1 ;; esac
       done
       [ "$found" = 1 ] || { printf 'error: unknown app %s\nhelp: bin/design-icon.sh list\n' "$want" >&2; exit 2; }
