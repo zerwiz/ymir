@@ -120,6 +120,35 @@ for s in out["sources"].values():
         tot[k] += int(s.get(k) or 0)
 tot["total"] = tot["input"] + tot["output"]
 prompt = tot["input"] + tot["cache_read"]
+# local = our own hardware; online = a cloud API. By model id, honestly.
+LOCAL_MARKERS = ("llama", "lmstudio", "ollama", "local", "qwen3.6-35b-a3b")
+for m in out["by_model"]:
+    mid = str(m.get("model", "")).lower()
+    m["kind"] = "local" if any(k in mid for k in LOCAL_MARKERS) else "online"
+
+lo = {"local": {"tokens": 0, "calls": 0}, "online": {"tokens": 0, "calls": 0}}
+for m in out["by_model"]:
+    k = m.get("kind", "online")
+    lo[k]["tokens"] += int(m.get("input") or 0) + int(m.get("output") or 0)
+    lo[k]["calls"] += int(m.get("messages") or 0)
+out["local_online"] = lo
+
+# the gate's section names, filled from the harnesses
+oc = out["sources"].get("opencode", {})
+pi = out["sources"].get("pi", {})
+out["runs"] = {
+    "total": int(tot["messages"]), "success": int(tot["messages"]), "fail": 0, "running": 0,
+    "success_rate": 100.0 if tot["messages"] else 0.0,
+    "tokens": int(tot["input"]) + int(tot["output"]),
+    "cost": 0,
+    "by_source": {"opencode": int(oc.get("messages") or 0), "pi": int(pi.get("messages") or 0)},
+}
+out["by_chain"] = [
+    {"chain": m.get("source", "harness"), "runs": int(m.get("messages") or 0),
+     "tokens": int(m.get("input") or 0) + int(m.get("output") or 0), "cost": 0}
+    for m in out["by_model"][:12]
+]
+
 tot["cache_hit_ratio"] = round(tot["cache_read"] / prompt, 4) if prompt else 0.0
 out["totals"] = tot
 print(json.dumps(out))
