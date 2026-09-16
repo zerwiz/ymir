@@ -133,8 +133,14 @@ if port_open 4602; then add memory PASS "Mimir bridge up on :4602"
 else add memory WARN "well off (:4602) — needs the engram engine; platform runs without it"; fi
 
 # ── 10. audit ledger intact ─────────────────────────────────────────────────
-RUNES_LEDGER="${YMIR_HOME:+$YMIR_HOME/memory/runes_audit.md}"
-RUNES_LEDGER="${RUNES_LEDGER:-$ROOT/workspace/memory/runes_audit.md}"
+RUNES_LEDGER=""
+# The ledger follows the hoard (Rule 06): 0004-hoard-and-realms moved it under
+# hodd/memory/. Try the hoard first, then the pre-move locations.
+for c in "${YMIR_HOME:+${YMIR_HOARD:-$YMIR_HOME/hodd}/memory/runes_audit.md}" \
+         "${YMIR_HOME:+$YMIR_HOME/memory/runes_audit.md}" \
+         "$ROOT/workspace/memory/runes_audit.md"; do
+  [ -n "$c" ] && [ -r "$c" ] && { RUNES_LEDGER="$c"; break; }
+done
 if [ -r "$RUNES_LEDGER" ]; then
   add runes PASS "audit ledger readable ($(wc -l <"$RUNES_LEDGER" | tr -d ' ') lines)"
 else
