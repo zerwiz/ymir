@@ -122,7 +122,7 @@ The raven of observation. Read-only, and **self-contained**: every source lives 
 | `.agents/agents/*.md` | the agent roster |
 | `.agents/memory/well/` | the well (episodes) |
 | `workspace/memory/runes_audit.md` | the ledger |
-| `smidja/smidja_data/smidja.db` | Smíðja runs (read-only SQLite URI) |
+| `apps/smidja/smidja_data/smidja.db` (or `$YMIR_HOME/smidja/smidja.db`) | Smíðja runs (read-only SQLite URI) |
 | `~/.treehouse` | worktree dirs + `treehouse-state.json` |
 
 - Writes `state/observer.log` (timestamped lines), `state/observer.last`, and one Rune per

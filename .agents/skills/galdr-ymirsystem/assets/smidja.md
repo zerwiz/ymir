@@ -12,6 +12,14 @@ running a chain, reading its trace, or wiring it into Hlidskjalf.
   references + `apps/visualizer/` + sibling skills `smidja-launcher`, `smidja-start`,
   `smidja-instructions`, `volundr`).
 
+**Two layouts, one smithy — do not confuse them.** A *target* repo the smithy is
+installed into gets the stamped `smidja/` tree (what `install.py` writes). **In
+Ymir itself the instance lives at `apps/smidja/`** — it moved out of the repo root
+so the smithy sits with the other apps, and its runtime data
+(`apps/smidja/smidja_data/`, gitignored) may also live at `$YMIR_HOME/smidja/`,
+which the runtime prefers when it exists. Every path in *this* repo points at
+`apps/smidja/`.
+
 ## What it is
 
 *Agents plus code*: deterministic Python scripts own sequencing, retries, and
@@ -67,8 +75,8 @@ just tail   <smidja_id>         # live event tail
 just procs  <smidja_id>         # live pids
 
 # raw
-uv run smidja/smidja_prompt.py --agent scout "…"
-uv run smidja/smidja_scout.py "…"
+uv run apps/smidja/smidja_prompt.py --agent scout "…"
+uv run apps/smidja/smidja_scout.py "…"
 ```
 
 The watch recipes use **`python3 -c`** over the SQLite db (the `sqlite3` CLI is not
@@ -76,7 +84,9 @@ installed on this machine) — do not reintroduce `sqlite3`.
 
 ## The trace
 
-- DB: **`smidja/smidja_data/smidja.db`** (WAL; read-only readers never block a run).
+- DB: **`apps/smidja/smidja_data/smidja.db`** (WAL; read-only readers never block a run).
+  The runtime prefers `$YMIR_HOME/smidja/smidja.db` when it exists (the data
+  belongs outside the repo); the app path is the fallback.
   Created at the first run.
 - Tables: `sessions` (`smidja_id, smidja_name, request, status, engineer,
   started_at, ended_at, total_tokens, total_cost, archived`), `phases`
@@ -101,7 +111,7 @@ installed on this machine) — do not reintroduce `sqlite3`.
   saved `neutral` from an older build resolves to fensalir. The categorical
   palettes (event dots, agent lanes in `src/lib/events.ts`) are data, not chrome,
   and were re-cut onto the cloth while staying mutually distinct.
-- `scripts/start.sh` raises it (`CMD_DB=<repo>/smidja/smidja_data/smidja.db`,
+- `scripts/start.sh` raises it (`CMD_DB=<repo>/apps/smidja/smidja_data/smidja.db`,
   `PORT=8437`); `scripts/stop.sh` lowers it. Port overrides:
   `SMIDJA_VIZ_API_PORT`.
 - Served under Hlidskjalf's **Sessions** gate via **Open visualizer**
@@ -132,7 +142,7 @@ every 5s, so a finished run appears without a reload.
 
 `bin/nornir-job-observer.sh` runs on the Nornir schedule (06:00). It reads **only
 Ymir's own runtime** — `docs/masterplan.md`, `.agents/agents`, `.agents/memory/well`,
-`workspace/memory/runes_audit.md`, **`smidja/smidja_data/smidja.db`**, and the
+`workspace/memory/runes_audit.md`, **`apps/smidja/smidja_data/smidja.db`**, and the
 read-only external worktree root — and writes only `state/observer.log` + Runes.
 There is **no `~/command` connection** anywhere in Ymir. Rune sources:
 `ymir.orders · ymir.agents · ymir.well · ymir.runes · smidja.runs ·
@@ -142,7 +152,7 @@ yggdrasil.worktrees`. See `assets/nornir-jobs.md`.
 
 ```bash
 SMIDJA_LOCAL_MODEL=llama-cpp/qwen3.6-35b-a3b@iq3_s \
-  uv run smidja/smidja_prompt.py --agent scout \
+  uv run apps/smidja/smidja_prompt.py --agent scout \
   "Reply with a single line: which top-level directories exist in this repo. Change nothing."
 ```
 
