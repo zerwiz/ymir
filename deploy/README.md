@@ -15,7 +15,7 @@ contract[6]{needs,example}:
   "a runtime","git · python3 · curl · bun (the core runs on any of Docker/Podman/bare)"
   "env","HLIDSKJALF_AUTH + realm/env from .env.local (never inline, never committed)"
   "persistent state","state/, workspace/, .agents/memory/, agents/, apps/*/dist — writable and durable"
-  "ports","gate :3889 · SPA :3888 · Smíðja visualizer :8437 · well bridge :4602 · Bifrost :4603"
+  "ports","SPA :38888 · gate :38889 · Smíðja visualizer :84370 (5-digit, env-driven: HLIDSKJALF_PORT · HLIDSKJALF_API_PORT · SMIDJA_VIZ_API_PORT) · well :4602 · Bifrost :4603 internal"
   "a raise command","scripts/start.sh (lower with scripts/stop.sh)"
 ```
 
