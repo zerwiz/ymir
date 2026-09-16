@@ -6,34 +6,38 @@ matches its work (Gungnir naming law).
 
 ## Registry (`.agents/skills/`)
 
+Every skill has an **owner agent** (`.agents/agents/<name>.md`): the seat Brokk
+dispatches for that work. A skill owned by `brokk` means the primary keeps it in
+hand — a dedicated seat is added when the work earns one.
+
 ```
-skills[26]{skill,does}:
-  "galdr-ymirsystem","agent-CLI ergonomics — the master builder/maintainer of the runtime"
-  "tyr-check","the judge — galdr principles + runtime gates"
-  "rules-check-drift","rules-file drift — keeps AGENTS.md true after code changes"
-  "no-mistakes","the clean-PR gate — vendored engine skill: validate, push, PR, CI"
-  "smidja-factory","the smithy — agent factory: roster, phases, envelopes, visualizer"
-  "hvild-afk","away-mode — supervision of routine wakes and batched escalations"
-  "saga-bearings","bearings — fleet status digest (/bearings) + recap (/ahoy)"
-  "muninn-stow","memory — session-knowledge curation, routing, persistence"
-  "jord-projects","projects — registry + delivery posture"
-  "urdh-hold","hold lifecycle — decisions held for the Allfather, reconciled"
-  "frigg-consent","consent — ask-user authority gate"
-  "vor-diagnostics","diagnostics — bootstrap + diagnostic reasoning"
-  "nornir-schedule","schedule — event sources + quota-aware dispatch"
-  "nsr-compliance","compliance — NorthStar scaffold/audit + the .compliance/ harness"
-  "lifecycle","lifecycle — start/stop/status/smoke-test wiring contract"
-  "gjallarhorn-relay","relay — public replies (X/Discord)"
-  "eindri-homes","worker homes — provisioning and upkeep of Eindri homes"
-  "syn-recovery","recovery — stuck-worker playbook"
-  "ymir-host","host ops — self-update, Omarchy desktop, Þjazi backend"
-  "groa-update","the updater shaman — self-update Brokk + every Eindri-home (/updateBrokk)"
-  "herdr-panes","terminal panes — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)"
-  "ratatoskr-a2a","A2A/MCP mesh — a2abridge + wayofteams; registration"
-  "hamr-adapters","harness adapters — per-harness reference"
-  "pr-ops","pull requests — create, update, check status, request merge"
-  "hnoss-design","design — artifacts via OpenDesign (prototypes, decks, dashboards, image, video)"
-  "bragi-marketing","marketing — research/crawl (Firecrawl), agentic browser (browser-use)"
+skills[26]{skill,does,owner}:
+  "galdr-ymirsystem","agent-CLI ergonomics — the master builder/maintainer of the runtime","galdr"
+  "tyr-check","the judge — galdr principles + runtime gates","tyr"
+  "rules-check-drift","rules-file drift — keeps AGENTS.md true after code changes","tyr"
+  "no-mistakes","the clean-PR gate — vendored engine skill: validate, push, PR, CI","brokk"
+  "smidja-factory","the smithy — agent factory: roster, phases, envelopes, visualizer","volundr"
+  "hvild-afk","away-mode — supervision of routine wakes and batched escalations","brokk"
+  "saga-bearings","bearings — fleet status digest (/bearings) + recap (/ahoy)","saga"
+  "muninn-stow","memory — session-knowledge curation, routing, persistence","muninn"
+  "jord-projects","projects — registry + delivery posture","jord"
+  "urdh-hold","hold lifecycle — decisions held for the Allfather, reconciled","urdh"
+  "frigg-consent","consent — ask-user authority gate","frigg"
+  "vor-diagnostics","diagnostics — bootstrap + diagnostic reasoning","vor"
+  "nornir-schedule","schedule — event sources + quota-aware dispatch","brokk"
+  "nsr-compliance","compliance — NorthStar scaffold/audit + the .compliance/ harness","brokk"
+  "lifecycle","lifecycle — start/stop/status/smoke-test wiring contract","brokk"
+  "gjallarhorn-relay","relay — public replies (X/Discord)","brokk"
+  "eindri-homes","worker homes — provisioning and upkeep of Eindri homes","brokk"
+  "syn-recovery","recovery — stuck-worker playbook","syn"
+  "ymir-host","host ops — self-update, Omarchy desktop, Þjazi backend","brokk"
+  "groa-update","the updater shaman — self-update Brokk + every Eindri-home (/updateBrokk)","groa"
+  "herdr-panes","terminal panes — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)","brokk"
+  "ratatoskr-a2a","A2A/MCP mesh — a2abridge + wayofteams; registration","brokk"
+  "hamr-adapters","harness adapters — per-harness reference","brokk"
+  "pr-ops","pull requests — create, update, check status, request merge","brokk"
+  "hnoss-design","design — artifacts via OpenDesign (prototypes, decks, dashboards, image, video)","hnoss"
+  "bragi-marketing","marketing — research/crawl (Firecrawl), agentic browser (browser-use)","bragi"
 ```
 
 The control-plane UI guide is not a standalone skill: **hlidskjalf-ui** and its
