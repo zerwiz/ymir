@@ -23,6 +23,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 STATE_DIR="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
 SNAP="$STATE_DIR/omarchy-setup.json"
+
+# Rule 05: this is the OMARCHY layer's sensor, so it is gated on its host. Ymir
+# is Omarchy-first — that layer is first-class — but first is not only: this
+# script observes an Omarchy machine, and on any other host it skips cleanly
+# and points at the portable sensor instead of recording the wrong machine.
+if ! { command -v omarchy >/dev/null 2>&1 || [ -d "$HOME/.local/share/omarchy" ]; }; then
+  printf 'omarchy-sense[1]{step,status,detail}:\n'
+  printf '  "sensor","SKIP","not an Omarchy host — this layer applies where Omarchy is; run bin/host-sense.sh for THIS machine"\n'
+  exit 0
+fi
 QUIET=0
 
 case "${1-}" in
