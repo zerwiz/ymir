@@ -46,8 +46,8 @@ gitignored — the user owns it and shares it between computers:
   value never enters a tracked file, a commit, or a document.
 - **Two wards.** `bin/secret-guard.sh` is the outer ward (pre-commit + CI);
   `hodd/.gitignore` is the inner one. Nothing leaves without passing both.
-- **Realm boundaries are sacred.** `hodd/tenants/<tenant>/` is loaded only into
-  that tenant's work — never across realms.
+- **Realm boundaries are sacred.** Private data at YMIR_HOME is
+  scoped per operator; a clone must never inherit another's hoard.
 - **The public tree keeps only the framework** (lore, architecture, scaffold)
   and `*.example` shapes.
 - A change that contradicts this rule must change the rule first (append-only;
@@ -62,4 +62,4 @@ read. Operator-private documents — plans, strategy, roadmaps, the masterplan,
 
 `bin/docs-guard.sh` blocks a commit that stages such a document under `docs/`
 (wired into the pre-commit hook beside `secret-guard.sh`). When it fires, move
-the file to `hodd/docs/` at the repo or to `$YMIR_HOME/docs/` in the private repo.
+the file to `$YMIR_HOME/docs/` in the private repo.

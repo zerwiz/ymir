@@ -44,7 +44,7 @@ docker-compose.override.yml
 .treehouses/
 
 # Realm & company secrets — the real files never leave the machine; the
-# *.example templates are the tracked copies (see svartalfaheim/wayof/SECRETS.md).
+# *.example templates are the tracked copies (see svartalfaheim/examples/SECRETS.md).
 svartalfaheim/*/.env
 svartalfaheim/*/.env.*
 svartalfaheim/*/*/.env
