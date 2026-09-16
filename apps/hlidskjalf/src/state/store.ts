@@ -313,21 +313,25 @@ export const useYmir = create<YmirState>((set, get) => ({
     // Smíðja loads on its own track so a slow endpoint never holds its gates hostage.
     void get().refreshSmidja();
     try {
+      // An endpoint that answers with {error} has FAILED: keep the last good value
+      // rather than handing the panel a shape it cannot read.
+      const ok = <T,>(x: T | null | undefined, prev: T): T =>
+        x && !(x as unknown as { error?: unknown }).error ? (x as T) : prev;
       const [agents, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
-          gateApi.agents().catch(() => get().agents),
-          gateApi.usage().catch(() => get().usage),
-          gateApi.tasks().catch(() => get().tasks),
-          gateApi.runes().catch(() => get().runes),
-          gateApi.well('').catch(() => get().recall),
-          gateApi.processes().catch(() => get().processes),
-          gateApi.reviews().catch(() => get().reviews),
-          gateApi.files(get().realm).catch(() => get().files),
-          gateApi.runtime().catch(() => get().runtime),
-          gateApi.cron().catch(() => get().cron),
+          gateApi.agents().then((v) => ok(v, get().agents)).catch(() => get().agents),
+          gateApi.usage().then((v) => ok(v, get().usage)).catch(() => get().usage),
+          gateApi.tasks().then((v) => ok(v, get().tasks)).catch(() => get().tasks),
+          gateApi.runes().then((v) => ok(v, get().runes)).catch(() => get().runes),
+          gateApi.well('').then((v) => ok(v, get().recall)).catch(() => get().recall),
+          gateApi.processes().then((v) => ok(v, get().processes)).catch(() => get().processes),
+          gateApi.reviews().then((v) => ok(v, get().reviews)).catch(() => get().reviews),
+          gateApi.files(get().realm).then((v) => ok(v, get().files)).catch(() => get().files),
+          gateApi.runtime().then((v) => ok(v, get().runtime)).catch(() => get().runtime),
+          gateApi.cron().then((v) => ok(v, get().cron)).catch(() => get().cron),
           gateApi.mimirHealth().catch(() => null),
-          gateApi.skills().catch(() => get().skills),
+          gateApi.skills().then((v) => ok(v, get().skills)).catch(() => get().skills),
         ]);
       set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills, usage, live: true });
     } catch {
