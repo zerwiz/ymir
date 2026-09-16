@@ -172,6 +172,11 @@ The plan names every change, including the terminal backend (herdr/tmux), the
 host learning, and the desktop placement — so the operator accepts what is
 actually done, not a shorter list that drifted behind the code.
 
+`--check` writes nothing — and that includes the migrations. `bin/ymir-migrate.sh
+apply` **moves private data**, so the step chain runs it only on a real run;
+a preview leaves the home exactly as it found it. (It used to apply them even
+under `--check`, which moved a home during a "report only" pass.)
+
 ## The operator's way in (auth) — `bin/ymir-setup-auth.sh`
 
 A fresh checkout seeds **no credential**, so the gate has no way in until the
