@@ -107,6 +107,20 @@ export function registerSystemHandlers(ctx: IpcContext): void {
     return process.env.YMIR_HALL_URL ?? 'http://127.0.0.1:4322'
   })
 
+  ipcMain.handle(IPC_CHANNELS.FLEET_LIST, async () => {
+    // Who is standing, from the ONE source: the control plane's connector reads
+    // herdr's live panes. Nothing is inferred here; if it cannot answer, the
+    // seat says empty rather than inventing a fleet.
+    try {
+      const { execFileSync } = await import('node:child_process');
+      const out = execFileSync(process.env.YMIR_ROOT ? `${process.env.YMIR_ROOT}/bin/hlidskjalf-agents.sh` : 'hlidskjalf-agents.sh',
+        [], { timeout: 4000 }).toString().trim();
+      return out.startsWith('[') ? JSON.parse(out) : [];
+    } catch {
+      return [];
+    }
+  })
+
   ipcMain.handle(IPC_CHANNELS.SYSTEM_GET_VERSION, async () => {
     return app.getVersion()
   })
