@@ -216,7 +216,7 @@ Norse name and a Norn-carved shell:
 | Docker (rootless, network-none) | **Utgard** |
 | MinIO/FileBrowser | **Skrymir** |
 | PM2/Docker | **Valhalla** |
-| `firstmate`, `.compliance`, the **Smíðja visualizer** | the **library of the halls** — existing, adopted, not rebuilt |
+| the upstream `firstmate` distro, `.compliance`, the **Smíðja visualizer** | the **library of the halls** — existing, adopted, not rebuilt |
 
 The rule: *does a validated OSS project already do this?* If yes, name it and
 use it. Only what differentiates Ymir is smithed in Ymir's own forge.
@@ -288,7 +288,7 @@ identity, never rebuilding from raw ore.
 | Docker (rootless, network-none) | **Utgard** | ephemeral sandboxes |
 | MinIO/FileBrowser | **Skrymir** | file browser |
 | PM2/Docker | **Valhalla** | process health monitor |
-| `firstmate`, `.compliance`, the **Smíðja visualizer** | the **library of the halls** | existing, adopted, not rebuilt |
+| the upstream `firstmate` distro, `.compliance`, the **Smíðja visualizer** | the **library of the halls** | existing, adopted, not rebuilt |
 | TOON (Token-Oriented Object Notation) | **Galdr** | token-efficient output format |
 | principles.yaml (10 design principles) | the **runes of ergonomics** | CLI standards |
 
@@ -612,11 +612,11 @@ the branch's durable store and observed into Mimirsbrunn.
 
 **Valknut** is the knot of the slain — three interlocking triangles, the mark
 of Odin's choice. In Ymir, Valknut is the **load mechanism** — it assembles
-the agent config, the crew dispatch, the harness settings, and the startup
+the agent config, the Eindri dispatch, the harness settings, and the startup
 memory budget into a single coherent payload before the first turn.
 
 - `bin/valknut-load.sh` — load the full agent configuration
-- `.agents/config/crew-dispatch.json` — crew dispatch schema
+- upstream `crew-dispatch.json` dispatch schema (provenance; Ymir ships `eindri-dispatch.json`)
 - `.agents/config/eindri-dispatch.json` — Eindri dispatch schema
 - `.agents/config/cron.yaml` — Nornir schedule
 - `.agents/config/startup-memory-budget` — memory limits at boot
@@ -635,13 +635,13 @@ monitored.
 ### Vor — the vigilant one
 
 **Vör** is the goddess who sees everything — she has a memory so sharp that
-nothing escapes her. In Ymir, Vor is the **diagnostics and crew state** engine.
-She bootstraps the fleet, checks crew state, and reports health.
+nothing escapes her. In Ymir, Vor is the **diagnostics and Eindri state** engine.
+She bootstraps the fleet, checks Eindri state, and reports health.
 
-- `bin/vor-crew-state.sh` — check the state of all crew members
+- `bin/vor-crew-state.sh` — check the state of all Eindri workers
 - `vor-diagnostics` skill — bootstrap + diagnostic reasoning
 
-**Rule:** Vor runs before every dispatch. If the crew is unhealthy, the dispatch
+**Rule:** Vor runs before every dispatch. If the Eindri are unhealthy, the dispatch
 is delayed or rerouted.
 
 ### Erindi — the errand
@@ -705,7 +705,7 @@ is consulted.
 ### Urðr — the decision-hold
 
 **Urðr** is the eldest Norn — she who *was*. She measures the past, holds
-decisions, and reconciles the captain's hold.
+decisions, and reconciles the Allfather's hold.
 
 
 **Rule:** Urðr holds what has been decided. A decision held by Urðr cannot
@@ -933,7 +933,7 @@ How to read the full Ymir tree:
 10. **Gleipnir** is the lock — one session, one reins.
 11. **Skuld** is the outcome — every branch has a verdict.
 12. **Valknut** is the load — config assembled once at boot.
-13. **Vor** is the watch — crew state checked before dispatch.
+13. **Vor** is the watch — Eindri state checked before dispatch.
 14. **Erindi** is the brief — every task enters structured.
 15. **Hamr** is the shape — harness adapter, unified interface.
 16. **Frigg** is the consent — no irreversible action without her word.

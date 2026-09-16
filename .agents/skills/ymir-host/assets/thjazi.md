@@ -30,7 +30,7 @@ herdr_roads[2]{road,shape,use_when}:
   "space","a disposable workspace holding exactly this one errand, gone when it ends","the errand should leave no trace in the workspace you are living in"
 ```
 
-**A tab is a tab, not a pane split.** Firstmate's grain — and now ours — is that a
+**A tab is a tab, not a pane split.** Brokk's grain — and now ours — is that a
 worker takes its **own tab in the home's workspace**, never a slice of yours. Your
 pane keeps its width; the smith sits beside your tabs, reachable with a tab switch.
 
@@ -79,7 +79,7 @@ command runs in place, so no work is ever lost to the theatre.
 
 `HERDR_SESSION` alone is **not** a reliable router: with another herdr server
 bound on the machine, a command silently reaches the wrong one. The runner always
-passes the trailing `--session <name>` flag, which routes correctly. (Firstmate's
+passes the trailing `--session <name>` flag, which routes correctly. (Brokk's
 `docs/herdr-backend.md` owns the evidence.)
 
 ## The right smith for the right task

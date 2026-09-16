@@ -4,6 +4,15 @@ Copyright 2026 zerwiz
 This product includes software developed by the Ymir project
 (https://github.com/zerwiz/ymir).
 
+Provenance — firstmate
+Ymir is a Norse-named derivative of the "firstmate" agent distro
+(https://github.com/kunchenguid/firstmate), Copyright (c) kunchenguid and
+contributors, licensed under the MIT License
+(https://github.com/kunchenguid/firstmate/blob/main/LICENSE). Portions of this
+product are derived from firstmate; its copyright and permission notice are
+retained here as that license requires. Firstmate's own names survive only as
+provenance (see .agents/skills/galdr-cli/assets/porting-upstream-to-norse.md).
+
 Licensed under the Apache License, Version 2.0 (see LICENSE).
 
 --------------------------------------------------------------------------

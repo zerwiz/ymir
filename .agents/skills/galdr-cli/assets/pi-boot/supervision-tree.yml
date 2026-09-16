@@ -2,7 +2,7 @@
 
 supervision:
   name: "ymir-pi-supervision"
-  description: "Valhalla supervision branch for PI primary boot under firstmate"
+  description: "Valhalla supervision branch for PI primary boot under Brokk"
   backend: "supervisord"  # or pm2/docker/systemd/npm
   config_file: "$YMIR_ROOT/.config/supervisord/ymir-pi.conf"
 
