@@ -1,14 +1,15 @@
 /**
- * NOT AN EXTENSION — a tombstone.
+ * A no-op extension, kept only so nothing loads TWICE.
  *
- * This file used to hold a second copy of an extension that already lives in the
- * shared source (`.pi/shared/extensions/`) and is deployed to the ONE global home,
- * `~/.pi/agent/extensions/`. pi auto-discovers extensions from BOTH the global home
- * and the project tree, so the two copies registered the same tools twice and pi
- * refused the second: `Tool "gna_watch_arm" conflicts with …`. Every pi start in
- * every worktree died on it, and a seated worker fell through to a bare shell.
+ * An extension that registers the same tools as one already loaded from the global
+ * home makes pi refuse the duplicate — `Tool "gna_watch_arm" conflicts with …`. But a
+ * file that exports no factory at all is its own error:
+ *   "Extension does not export a valid factory function".
+ * So this exports a valid factory that registers nothing.
  *
- * It exports no default factory, so pi registers nothing from it. The extension is
- * `gna-pi-watch` — edit that one, in the shared source, and deploy it.
+ * The real extension is `gna-pi-watch`, in the shared source
+ * (`.pi/shared/extensions/`), deployed to the one global home.
  */
-export {};
+export default function well(): void {
+  // deliberately empty: this seat is not the extension's home.
+}

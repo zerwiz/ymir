@@ -49,7 +49,10 @@ else
   herd_n="unknown"
 fi
 [ "$src_n" = "$ui_n" ] || { verdict="FAIL"; details="$details fleet:connector=$src_n,served=$ui_n"; }
-[ "$herd_n" = "unknown" ] || [ "$src_n" = "$herd_n" ] || { verdict="FAIL"; details="$details fleet:connector=$src_n,herdr=$herd_n"; }
+# The connector is ROSTER-FIRST: it reports the agents (the who) and the seats (the
+# where), so its total legitimately exceeds the pane count. What must not happen is
+# FEWER entries than panes - a standing seat hidden from the board. Panes are a subset.
+[ "$herd_n" = "unknown" ] || [ "$src_n" -ge "$herd_n" ] || { verdict="FAIL"; details="$details fleet:connector=$src_n,herdr=$herd_n"; }
 
 # ── the ledger: the hoard's, against what the gate serves ─────────────────────
 hoard_root _hoard
