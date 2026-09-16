@@ -21,7 +21,8 @@ STATE="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
 OUT="${1:-$ROOT/apps/odrerir/public/livehall.json}"
 
 runes_file="$ROOT/workspace/memory/runes_audit.md"
-projects_file="$ROOT/hodd/identity/projects.yaml"
+PROJECTS_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/identity/projects.yaml"
+projects_file="$PROJECTS_FILE"
 cron_file="$ROOT/config/cron.yaml"
 
 # --- tally the pieces ---
