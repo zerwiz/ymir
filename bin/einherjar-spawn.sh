@@ -33,6 +33,12 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=bin/ymir-platform.sh
+. "$SCRIPT_DIR/ymir-platform.sh"
+# Docker or rootless Podman (Fedora). Empty when neither is reachable.
+ENGINE="$(ymir_container_engine 2>/dev/null || true)"
+VOL_SUFFIX="$(ymir_volume_suffix)"
+USERNS_FLAG="$(ymir_rootless_podman 2>/dev/null && printf -- '--userns=keep-id')"
 
 usage() {
   awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
@@ -339,16 +345,16 @@ fi
 ISOLATION_EFFECTIVE=off
 case "$ISOLATION" in
   on)
-    command -v docker >/dev/null 2>&1 || { echo "error: --isolation on requires docker on PATH" >&2; exit 1; }
-    docker image inspect utgard-runner:latest >/dev/null 2>&1 || {
-      echo "error: --isolation on requires the Utgard image 'utgard-runner:latest'; build it: docker build -f .agents/sandbox/Dockerfile.utgard -t utgard-runner:latest .agents/sandbox" >&2
+    [ -n "$ENGINE" ] || { echo "error: --isolation on requires docker or podman on PATH" >&2; exit 1; }
+    "$ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1 || {
+      echo "error: --isolation on requires the Utgard image 'utgard-runner:latest'; build it: bin/utgard.sh build" >&2
       exit 1
     }
     ISOLATION_EFFECTIVE=on
     ;;
   off) ISOLATION_EFFECTIVE=off ;;
   auto)
-    if command -v docker >/dev/null 2>&1 && docker image inspect utgard-runner:latest >/dev/null 2>&1; then
+    if [ -n "$ENGINE" ] && "$ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1; then
       ISOLATION_EFFECTIVE=on
       echo "isolation: on (Utgard image present; pass --isolation off to run in the worktree)" >&2
     else
@@ -480,7 +486,10 @@ state_mount=$STATE:$STATE
 data_mount=$DATA:$DATA
 launch=$LAUNCH_SCRIPT
 EOF
-  PANE_CMD="docker run --rm -it --network none --cpus 1.0 --memory 512m --security-opt no-new-privileges --user $(shell_quote "$(id -u):$(id -g)") -e HOME=/tmp -v $(shell_quote "$WT:/sandbox/workspace")$GIT_MOUNT_ARGS -v $(shell_quote "$STATE:$STATE") -v $(shell_quote "$DATA:$DATA") -w /sandbox/workspace utgard-runner:latest bash $(shell_quote "$LAUNCH_SCRIPT")"
+  # Rootless Podman: keep-id maps the host user so the mounted worktree stays
+  # writable; Docker keeps an explicit --user. Both get :Z under enforcing SELinux.
+  if [ -n "$USERNS_FLAG" ]; then USER_ARG=""; else USER_ARG="--user $(shell_quote "$(id -u):$(id -g)")"; fi
+  PANE_CMD="$ENGINE run --rm -it --network none --cpus 1.0 --memory 512m --security-opt no-new-privileges $USERNS_FLAG $USER_ARG -e HOME=/tmp -v $(shell_quote "$WT:/sandbox/workspace$VOL_SUFFIX")$GIT_MOUNT_ARGS -v $(shell_quote "$STATE:$STATE$VOL_SUFFIX") -v $(shell_quote "$DATA:$DATA$VOL_SUFFIX") -w /sandbox/workspace utgard-runner:latest bash $(shell_quote "$LAUNCH_SCRIPT")"
 else
   rm -f "$STATE/$ID.utgard"
   PANE_CMD="bash $(shell_quote "$LAUNCH_SCRIPT")"
