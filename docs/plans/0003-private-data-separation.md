@@ -18,12 +18,12 @@ Ymir is preparing for open-source release via `npm`, `curl`, and direct installa
 | Project registries (git remotes, auth refs) | `workspace/projects.yaml` (in Hoard) | User's Documents/Ymir/projects.yaml |
 | Workspace registry | `workspace/workspaces.yaml` (in Hoard) | User's Documents/Ymir/workspaces.yaml |
 | Personal/work memory | `workspace/memory/`, `workspace/work/`, `workspace/personal/` | User's Documents/Ymir/memory/, work/, personal/ |
-| Company-specific domains/projects | `svartalfaheim/wayof/` | User's Documents/Ymir/companies/ |
+| Company-specific domains/projects | **Removed** (single tenant) | N/A |
 | Agent/harness config | `config/agents.yaml` | User's Documents/Ymir/config/agents.yaml |
 | Per-machine state | `state/`, `data/` | User's Documents/Ymir/state/, data/ |
 | Engram memory well | `.agents/memory/kaia.engram*` | User's Documents/Ymir/memory/kaia.engram* |
 | Smidja database | `smidja/smidja_data/smidja.db*` | User's Documents/Ymir/smidja/smidja.db* |
-| Private docs (masterplan, append-only log) | `hodd/docs/` | User's Documents/Ymir/docs/ |
+| Private docs (masterplan, append-only log) | `$YMIR_HOME/docs/` | User's Documents/Ymir/docs/ |
 
 **Only public artifacts should remain in the repo:**
 - Source code (`bin/`, `apps/`, `.agents/skills/`, `.agents/assets/`)
@@ -470,8 +470,8 @@ export YMIR_DATA_DIR="$YMIR_HOME/data"
 ## Appendix: Current Private Data Inventory (Audit Results)
 
 ### Tracked in Repo (MUST BE REMOVED)
-- `hodd/` — entire directory (private hoard)
-- `svartalfaheim/wayof/` — company/tenant data
+- `hodd/` — entire directory (private hoard → now at `$YMIR_HOME/`)
+- `svartalfaheim/wayof/` — **REMOVED** (single tenant; company data lives in Way of Teams product)
 - `workspace/work/`, `workspace/personal/`, `workspace/memory/`, `workspace/companies/`
 - `config/agents.yaml` (gitignored but exists locally)
 - `state/` (gitignored but exists locally)
