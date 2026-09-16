@@ -14,7 +14,7 @@ version: 1
 harness:
   local: pi              # a model on a local provider runs through pi
   online: opencode       # a hosted model runs through opencode
-  local_providers: [llama.cpp, llama-cpp, lmstudio]
+  local_providers: [llama.cpp, llama-cpp, lmstudio, apodex]
   # The same local server is named differently per harness; translate on the way.
   providers:
     llama.cpp: { pi: llama-cpp }
@@ -34,6 +34,12 @@ providers:
       # A local llama.cpp router needs the EXACT served id (the @quant suffix);
       # `apply` resolves the bare alias below to the id the server reports.
       - frontend-design-expert-8b
+  apodex:
+    npm: "@ai-sdk/openai-compatible"
+    name: "apodex-mini (local)"
+    base_url: "http://127.0.0.1:1234/v1"
+    models:
+      - apodex-mini-q4
 
 # agent name -> { model, harness?, primary? }. Omit model to inherit
 # default_model. Omit harness to follow the local/online rule above.

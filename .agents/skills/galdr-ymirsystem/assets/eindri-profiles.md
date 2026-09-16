@@ -75,7 +75,7 @@ Galdr needs to know about these build tool categories and their asset requiremen
 - **Assets**: Crew orchestration, worktree isolation (yggdrasil/orca), restart-proof disk state, supervision watcher, X/Discord Relay, eindri-homes
 
 ### 4. Galdr Skill Assets
-- **Location**: `.agents/skills/galdr-cli/assets/`
+- **Location**: `.agents/skills/galdr-ymirsystem/assets/`
 - **Purpose**: Reference data for skill synthesis and compliance checking
 - **Contents**: Tool schemas, template patterns, Eindri profile references
 

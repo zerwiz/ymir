@@ -251,10 +251,10 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 
 | Skill | Norse | Purpose | Path |
 |-------|-------|---------|------|
-| `galdr` | Galdr | Agent-CLI ergonomics + master builder/maintainer of the runtime | `.agents/skills/galdr-cli/SKILL.md` |
+| `galdr` | Galdr | Agent-CLI ergonomics + master builder/maintainer of the runtime | `.agents/skills/galdr-ymirsystem/SKILL.md` |
 | `tyr-check` | Tyr | The judge — 10 Galdr principles + runtime gates | `.agents/skills/tyr-check/SKILL.md` |
 | `smidja` | Smiðja | The smithy — rosters, phases, envelopes, runs, trace | `.agents/skills/smidja/SKILL.md` |
-| `galdr` → `local-models` | — | operating on local models: engines, wiring, honest measurement | `.agents/skills/galdr-cli/assets/local-models.md` |
+| `galdr` → `local-models` | — | operating on local models: engines, wiring, honest measurement | `.agents/skills/galdr-ymirsystem/assets/local-models.md` |
 
 ### Adopted skills (operational)
 
@@ -285,13 +285,13 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 | Eindri profiles | `.agents/subagents/developer.md` | Code synthesis, refactoring, test writing |
 |  | `.agents/subagents/marketer.md` | Content, SEO, social, campaigns |
 |  | `.agents/subagents/researcher.md` | RAG, web search, analysis |
-| Build tool categories | `.agents/skills/galdr-cli/assets/build-tool-categories.md` | 7 tool categories for synthesis |
-| TOON schemas | `.agents/skills/galdr-cli/schemas/toon-schemas.md` | 7 schema types for validation |
-| Compliance requirements | `.agents/skills/galdr-cli/assets/compliance-requirements.md` | 5 Utgard gates + PI gate |
-| Brokk/PI config | `.agents/skills/galdr-cli/assets/pi-boot/pi-profile.yml` | PI harness profile |
-|  | `.agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml` | Hermóðr pane layout |
-|  | `.agents/skills/galdr-cli/assets/pi-boot/einherjar-spawn.schema.json` | Dispatch payload schema |
-|  | `.agents/skills/galdr-cli/assets/pi-boot/supervision-tree.yml` | Valhalla supervision |
+| Build tool categories | `.agents/skills/galdr-ymirsystem/assets/build-tool-categories.md` | 7 tool categories for synthesis |
+| TOON schemas | `.agents/skills/galdr-ymirsystem/schemas/toon-schemas.md` | 7 schema types for validation |
+| Compliance requirements | `.agents/skills/galdr-ymirsystem/assets/compliance-requirements.md` | 5 Utgard gates + PI gate |
+| Brokk/PI config | `.agents/skills/galdr-ymirsystem/assets/pi-boot/pi-profile.yml` | PI harness profile |
+|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/herdr-profile.toml` | Hermóðr pane layout |
+|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/einherjar-spawn.schema.json` | Dispatch payload schema |
+|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/supervision-tree.yml` | Valhalla supervision |
 | Templates | `.agents/assets/templates/PRD_template.md` | PRD boilerplate |
 |  | `.agents/assets/templates/env.template` | Environment template |
 |  | `.agents/assets/templates/system_prompt.template` | System prompt template |
@@ -346,7 +346,7 @@ Ymir's system primary boots as **PI** with the same boot contract:
 
 PI CLI must: support the `Hamr` profile, emit TOON with the `rodd` operational schema, declare Utgard compliance, integrate with herdr, observe into Mimirsbrunn on dispatch.
 
-PI boot assets: `.agents/skills/galdr-cli/assets/pi-boot/` (pi-profile.yml, herdr-profile.toml, einherjar-spawn.schema.json, supervision-tree.yml)
+PI boot assets: `.agents/skills/galdr-ymirsystem/assets/pi-boot/` (pi-profile.yml, herdr-profile.toml, einherjar-spawn.schema.json, supervision-tree.yml)
 
 ---
 
