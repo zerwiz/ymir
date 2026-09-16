@@ -84,10 +84,10 @@ installed on this machine) — do not reintroduce `sqlite3`.
 
 ## The trace
 
-- DB: **`apps/smidja/smidja_data/smidja.db`** (WAL; read-only readers never block a run).
-  The runtime prefers `$YMIR_HOME/smidja/smidja.db` when it exists (the data
-  belongs outside the repo); the app path is the fallback.
-  Created at the first run.
+- DB: **`$YMIR_HOME/smidja/smidja.db`** (WAL; read-only readers never block a run).
+  `0003-private-data-separation` moved it out of the checkout; an in-repo
+  `apps/smidja/smidja_data/smidja.db` is the fallback. Created at the first run
+  (`bin/smidja-bootstrap.sh`); `scripts/start.sh` resolves the same pair.
 - Tables: `sessions` (`smidja_id, smidja_name, request, status, engineer,
   started_at, ended_at, total_tokens, total_cost, archived`), `phases`
   (`phase_id, smidja_id, seq, name, kind, owner, description, status, attempt,
@@ -111,8 +111,8 @@ installed on this machine) — do not reintroduce `sqlite3`.
   saved `neutral` from an older build resolves to fensalir. The categorical
   palettes (event dots, agent lanes in `src/lib/events.ts`) are data, not chrome,
   and were re-cut onto the cloth while staying mutually distinct.
-- `scripts/start.sh` raises it (`CMD_DB=<repo>/apps/smidja/smidja_data/smidja.db`,
-  `PORT=8437`); `scripts/stop.sh` lowers it. Port overrides:
+- `scripts/start.sh` raises it (`CMD_DB=$YMIR_HOME/smidja/smidja.db`, else the
+  in-repo fallback; `PORT=8437`); `scripts/stop.sh` lowers it. Port overrides:
   `SMIDJA_VIZ_API_PORT`.
 - Served under Hlidskjalf's **Sessions** gate via **Open visualizer**
   (`VITE_VISUALIZER_URL`, default `http://127.0.0.1:8437`).
@@ -142,7 +142,7 @@ every 5s, so a finished run appears without a reload.
 
 `bin/nornir-job-observer.sh` runs on the Nornir schedule (06:00). It reads **only
 Ymir's own runtime** — `docs/masterplan.md`, `.agents/agents`, `.agents/memory/well`,
-`workspace/memory/runes_audit.md`, **`apps/smidja/smidja_data/smidja.db`**, and the
+`workspace/memory/runes_audit.md`, **`$YMIR_HOME/smidja/smidja.db`**, and the
 read-only external worktree root — and writes only `state/observer.log` + Runes.
 There is **no `~/command` connection** anywhere in Ymir. Rune sources:
 `ymir.orders · ymir.agents · ymir.well · ymir.runes · smidja.runs ·
