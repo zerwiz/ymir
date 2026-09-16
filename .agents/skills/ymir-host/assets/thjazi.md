@@ -47,6 +47,13 @@ bin/herdr-run.sh status                         # what seats we recorded
 bin/herdr-run.sh close-all                      # clear the tabs/workspaces we made
 ```
 
+**Quoting into a pane.** A pane runs its command through a *shell*, so `run`
+quotes every argument on the way in (`printf '%q'`). Without that, an argument
+containing spaces reached the pane as separate words and the command died on its
+own second word — `--brief "the whole task"` arrived as `--brief the whole task`
+and the worker answered `error: unknown arg: the`. Quote normally at the call
+site; the bridge preserves it.
+
 ### The first law — a short errand is done in hand
 
 A smith costs a context, a seat, and the Allfather's attention. So an errand is
