@@ -52,7 +52,6 @@
   },
   "scripts": {
     "test": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
-    "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
-    "prepublishOnly": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
+    "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
   }
 }

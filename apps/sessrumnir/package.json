@@ -1,5 +1,5 @@
 {
-  "name": "@ymir/sessrumnir",
+  "name": "@zerwiz/sessrumnir",
   "version": "0.1.8-alpha",
   "description": "Sessr\u00famnir \u2014 the desktop seat of Ymir, a GUI frontend for the Pi and OMP coding agents",
   "main": "out/main/index.js",
@@ -43,7 +43,7 @@
     "package:win:portable": "electron-vite build && electron-builder --win portable",
     "package:all": "electron-vite build && electron-builder --linux --mac --win",
     "postinstall": "node scripts/postinstall.js",
-    "prepublishOnly": "npm run build"
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",
@@ -178,5 +178,6 @@
     "bin",
     "resources",
     "README.md"
-  ]
+  ],
+  "private": false
 }

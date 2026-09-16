@@ -1,7 +1,7 @@
 {
-  "name": "@ymir/hlidskjalf-mobile",
+  "name": "@zerwiz/hlidskjalf-mobile",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "main": "index.ts",
   "scripts": {
     "start": "expo start",

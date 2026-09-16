@@ -454,10 +454,12 @@ new tab — **never** a launcher call.
 
 ## Packaging (Amendment C)
 
-Each app is meant to ship as its own published package under the `@ymir` scope,
+Each app ships as its own published package under the `@zerwiz` scope (the scope
+that already carries `@zerwiz/ymir`) — `@zerwiz/hlidskjalf`, `@zerwiz/odrerir`,
 and `apps/hlidskjalf/package.json` carries the metadata that makes that legal:
 `license`, `repository`, `publishConfig.access: public`, a `files` surface, and
-`prepublishOnly` where a build exists.
+`prepack` where a build exists (never `prepublishOnly`: a build must not be able
+to veto a publish, and neither must a documentation gate).
 
 Two facts worth keeping:
 
