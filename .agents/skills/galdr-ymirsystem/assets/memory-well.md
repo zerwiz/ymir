@@ -39,6 +39,12 @@ dedupe is O(1) per section rather than rescanning the whole store each time (was
 O(sections × store)); `bin/workspace-rag.sh index` reads the store once and walks
 all files in a single Python pass (was a store read + process spawn per file).
 
+**Where ingest reads from.** Its source is the hoard's `docs/business`, and the
+hoard root resolves through `bin/hoard-lib.sh` (`$YMIR_HOARD`, else `$YMIR_HOME`,
+else `$HOME/Documents/Ymir`) — the same one default every other script uses, and
+never the repo's `hodd/`, which holds only the guard, README and `*.example`
+scaffolds (Rule 04).
+
 ---
 
 ## 2. HTTP bridge (`:4602`)
