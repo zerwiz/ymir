@@ -39,7 +39,7 @@ providers:
     name: "apodex-mini (local)"
     base_url: "http://127.0.0.1:1234/v1"
     models:
-      - apodex-mini-q4
+      - apodex-1.0-mini
 
 # agent name -> { model, harness?, primary? }. Omit model to inherit
 # default_model. Omit harness to follow the local/online rule above.
@@ -51,7 +51,7 @@ agents:
   hnoss:   { model: "llama.cpp/frontend-design-expert-8b", primary: true }
   sindri:  { model: opencode-go/deepseek-v4.1-flash }
   bragi:   { model: opencode-go/deepseek-v4.1-flash }
-  huginn:  { model: opencode-go/deepseek-v4.1-flash }
+  huginn:  { model: "apodex/apodex-1.0-mini" }
   kvasir:  { model: opencode-go/deepseek-v4.1-flash }
   mimir:   { model: opencode-go/deepseek-v4.1-flash }
   snotra:  { model: opencode-go/deepseek-v4.1-flash }

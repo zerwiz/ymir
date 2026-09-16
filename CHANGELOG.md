@@ -1,5 +1,61 @@
 # CHANGELOG
 
+## 2026-09-16 — Apodex seat verified; the Weave mended
+
+- **Correction (cites the entry below, never rewrites it).** The earlier
+  entry said *"LM Studio is retired; its :1234 port belongs to Apodex now."*
+  That was false as carved. LM Studio still holds `:1234` and is what serves
+  the Apodex GGUF; Apodex took the **model seat**, not the server.
+- **Live verification.** `bin/apodex-smoke-test.sh` → PASS (valid tool-capable
+  response, exit 0). `bin/huginn-research-worker.sh` with **bare defaults** →
+  `status: completed`, verdict written, observed into Mimirsbrunn. The Apodex
+  seat (`http://127.0.0.1:1234/v1`) is live.
+- **One model id, everywhere.** The seat serves **`apodex-1.0-mini`**; the
+  worker, smoke test, `.env.example`, `opencode.json`, `config/agents.yaml.example`
+  and Huginn's profile now all say so. Previously three names drifted
+  (`apodex/Apodex-1.0-mini-Q4_K_M`, `apodex/apodex-mini-q4`, the served id) and
+  the default worker call failed with `No models loaded`.
+- **Four defects mended.** `bin/huginn-research-worker.sh` made executable
+  (was 644 — bare invocation died with `Permission denied`); the smoke test's
+  `--serve` GGUF path corrected to
+  `~/Models/FlameF0X/Apodex-1.0-mini-Q4_K_M-GGUF/apodex-1.0-mini-q4_k_m.gguf`;
+  `bin/models-detect.sh` env var renamed from the typo `APEDEX_URL` to
+  `APODEX_URL`.
+- **Weight truth.** The Apodex Q4_K_M weights are **21.7 GB**, not the ~4–6 GB
+  the plan assumed — it cannot sit beside a coding model. `AGENTS.md` now says
+  so: one local model at a time, by weight.
+- **Smiðja relocated.** `.agents/skills/smidja-factory` is now a symlink to the
+  app tree at `apps/smidja-factory/`, which is where the smithy's real files
+  live (Amendment A/C of the Apodex plan).
+- Plan (private hoard): `$YMIR_HOME/docs/plans/apodex-integration-into-ymir.md`
+  — Amendment E records the live pass, the mended defects, and the one open
+  item: the herdr-seat verification (Phase 3), which needs a spawn.
+
+## 2026-09-16 — Apodex joins the Weave (research/planning provider)
+
+- **Apodex provider.** Apodex-1.0-mini-Q4_K_M climbs into the machine as
+  the research/planning GGUF on `http://127.0.0.1:1234/v1`, seated
+  alongside llama.cpp coding models on :8080. LM Studio is retired; its
+  :1234 port belongs to Apodex now.
+- **Env template.** `.env.example` gains the `APODEX_*` block; the LM
+  Studio block is marked RETIRED with its port claim corrected.
+- **Smoke test.** `bin/apodex-smoke-test.sh` — probe or serve-and-test an
+  Apodex seat; exits 0=pass, 1=fail, 2=unavailable. Never mutates config.
+- **Research worker.** `bin/huginn-research-worker.sh` (Apodex-powered
+  Eindri): takes a brief, recalls from Mimirsbrunn, dispatches to the
+  Apodex chat/completions seat, writes a structured verdict, observes it
+  back into the well. Wears the name **Huginn** per the naming law (the
+  research seat; Gungnir stays the skill-synthesis engine).
+- **Agents hall.** `.agents/agents/huginn-researcher.md` binds Huginn to
+  the apodex model; `config/agents.yaml.example` registers the apodex
+  provider and Huginn's seat; `opencode.json` carries the apodex provider
+  block alongside llama.cpp; `bin/models-detect.sh` probes and emits the
+  apodex provider for the Pi model file (`~/.pi/agent/models.json`).
+- **Install seams.** Apodex rides the existing seams: models-detect merges
+  it into the Pi models file at install; agents-config applies it into
+  opencode.json. Model provider selection documented in AGENTS.md
+  (`## Model Provider Selection`), Apache 2.0 licence noted.
+
 ## 2026-09-16 — Gunnlöð joins the hall (SkillOpt integration)
 
 - **SkillOpt integration.** `pip install skillopt` into `.venv/`; training
