@@ -315,6 +315,10 @@ See `.agents/assets/agents/naming.md` for the full component map.
   Concretely: branch → worktree → tests → `gh pr create` → Glitnir review → the
   Allfather seals → merge. If work is already sitting on local `main`, ship it as
   a PR (a branch at that commit) before doing anything else.
+  The gate is enforced in git hooks, seated by the install step `gates`:
+  `bin/branch-guard.sh` refuses a push to a protected branch, and
+  `bin/changelog-guard.sh` refuses a push whose range never touches
+  `CHANGELOG.md` (`YMIR_SKIP_CHANGELOG_GUARD=1` is the loud override).
 
 ## Hermes runtime (worker agents)
 

@@ -5,13 +5,15 @@ AGENTS.md loads this when a task needs the live inventories.
 ## Skills registry (`.agents/skills/`)
 
 ```
-skills[5]{name,norse,purpose,path,status}:
+skills[3]{name,norse,purpose,path,status}:
   "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer",".agents/skills/galdr-ymirsystem/SKILL.md","live"
   "tyr-check","Tyr","the judge — 10 principles + runtime gates",".agents/skills/tyr-check/SKILL.md","live"
-  "brokk-craft","Brokk","the forger — generates Galdr-compliant skills in TOON","(planned) .agents/skills/galdr-ymirsystem/brokk-craft/SKILL.md","planned"
-  "galdr-compliance","(legacy)","older compliance checker — superseded by tyr-check",".agents/skills/galdr-ymirsystem/galdr-compliance/SKILL.md","legacy"
-  "galdr-crafter","(legacy)","older skill crafter — superseded by brokk-craft",".agents/skills/galdr-ymirsystem/galdr-crafter/SKILL.md","legacy"
+  "brokk-craft","Brokk","the forger — generates Galdr-compliant skills in TOON","(planned) .agents/skills/brokk-craft/SKILL.md","planned"
 ```
+
+The **canonical, complete** skill index is `.agents/skills/README.md` — read it for
+the live set. The two removed legacy skills (`galdr-compliance`, `galdr-crafter`)
+are superseded by `tyr-check` and the planned `brokk-craft`; their files are gone.
 
 Loading: auto-load from `.agents/skills/` via `opencode.json` →
 `skills.paths: [".agents/skills"]`. Use `skill galdr`, `skill tyr-check`.

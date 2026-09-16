@@ -15,6 +15,14 @@
 #   syntax    bash -n on bin/*.sh; node --check on plugins
 #   json      every runtime JSON parses
 #   sync      galdr-ymirsystem/assets mirrors tyr-check/assets
+#   surfaces  Galdr agent+skill dual-surface
+#   harnesses every harness agent dir resolves into .agents/agents (Rule 02);
+#             no nested SKILL.md carried as a phantom skill
+#   skillindex every real skill is indexed in .agents/skills/README.md, and every
+#             .agents/skills/<name> path cited by the assets resolves
+#   assets    a governed path changed without its owning asset
+#   duplicates no duplicate asset trees
+#   governed  every governed path exists
 #
 # Exit: 0 = all pass, 1 = one or more FAIL, 2 = usage error.
 set -u
@@ -129,6 +137,94 @@ elif diff -q "$ROOT/.agents/agents/galdr.md" "$GALDR/SKILL.md" >/dev/null 2>&1; 
   add surfaces "Galdr agent+skill dual-surface" PASS "agent mirrors the skill"
 else
   add surfaces "Galdr agent+skill dual-surface" FAIL "agent and skill differ"
+fi
+
+# --- harnesses --------------------------------------------------------------
+# Every harness reads agents through its own directory (.claude/agents,
+# .codex/agents, .cursor/agents, .pi/agents, .opencode/agent) and skills through
+# .agents/skills. Two failure classes hide there, and neither is visible from
+# the code: a symlink that no longer resolves (Rule 02 — .agents/agents is
+# canonical, harness dirs are symlinks), and a nested SKILL.md that a recursive
+# scanner loads as a second, phantom skill. Both have bitten this tree: the
+# galdr-cli rename left .agents/agents/galdr.md dangling for days, and three
+# superseded SKILL.md files were being loaded as live skills.
+harness_problems=""; harness_links=0
+for hd in .claude/agents .codex/agents .cursor/agents .pi/agents .opencode/agent; do
+  [ -d "$ROOT/$hd" ] || continue
+  for entry in "$ROOT/$hd"/*; do
+    [ -e "$entry" ] || [ -L "$entry" ] || continue
+    if [ ! -L "$entry" ]; then
+      harness_problems="$harness_problems ${hd}/$(basename "$entry")(real-file-not-symlink)"
+    elif [ ! -e "$entry" ]; then
+      harness_problems="$harness_problems ${hd}/$(basename "$entry")(dangling)"
+    else
+      harness_links=$((harness_links+1))
+      # One hop only: the link must land in the canonical tree. It may then be a
+      # symlink onward (Galdr's agent IS the skill, by design) — following the
+      # whole chain here would wrongly call that off-tree. normpath is textual,
+      # so the final symlink is deliberately left unresolved.
+      hop_target="$(readlink "$entry")"
+      case "$hop_target" in
+        /*) hop_abs="$hop_target" ;;
+        *)  hop_abs="$(dirname "$entry")/$hop_target" ;;
+      esac
+      hop="$(python3 -c 'import os,sys; print(os.path.normpath(sys.argv[1]))' "$hop_abs" 2>/dev/null || printf '%s' "$hop_abs")"
+      case "$hop" in
+        "$ROOT/.agents/agents/"*) : ;;
+        *) harness_problems="$harness_problems ${hd}/$(basename "$entry")(off-canonical-tree)" ;;
+      esac
+    fi
+  done
+done
+# A nested SKILL.md that carries YAML frontmatter is loaded by every recursive
+# scanner as a phantom skill. A nested SKILL.md WITHOUT frontmatter is an inert
+# template (the NSR scaffolding layer) and is left alone.
+phantom=""
+while IFS= read -r sk; do
+  [ -n "$sk" ] || continue
+  rel="${sk#"$ROOT"/}"
+  [ "$(printf '%s' "$rel" | awk -F/ '{print NF}')" -gt 4 ] || continue
+  [ "$(head -1 "$sk")" = "---" ] && phantom="$phantom ${rel#.agents/skills/}"
+done < <(find "$ROOT/.agents/skills" -name SKILL.md 2>/dev/null | sort)
+harness_detail=""
+[ -n "$harness_problems" ] && harness_detail="broken agent links:$harness_problems"
+[ -n "$phantom" ] && harness_detail="$harness_detail phantom skills:$phantom"
+if [ -z "$harness_detail" ]; then
+  add harnesses "harness surfaces + skill discovery" PASS "$harness_links agent links resolve; no phantom skills"
+else
+  add harnesses "harness surfaces + skill discovery" FAIL "$harness_detail"
+fi
+
+# --- skillindex -------------------------------------------------------------
+# The canonical index is .agents/skills/README.md. Every real skill must be named
+# there, and every skill path the Galdr assets cite must resolve. This is the
+# check that would have caught the drift by hand: three superseded skills stayed
+# "live" in the registry long after their files were gone, and the registry table
+# pointed at a whole layout (smidja/, gunnlod, hamr, saga, ymir, open-design)
+# that no longer existed. A line marked planned/legacy/superseded is exempt by
+# intent — an index may name what is coming or gone, but not what never was.
+real_skills="$(find -L "$ROOT/.agents/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -printf '%h\n' 2>/dev/null | while read -r d; do basename "$d"; done | sort)"
+indexed="$(grep -oE '^  "[A-Za-z0-9._-]+"' "$ROOT/.agents/skills/README.md" 2>/dev/null | tr -d ' "' | sort -u)"
+missing_index="$(comm -23 <(printf '%s\n' "$real_skills") <(printf '%s\n' "$indexed") | tr '\n' ' ')"
+extra_index="$(comm -13 <(printf '%s\n' "$real_skills") <(printf '%s\n' "$indexed") | tr '\n' ' ')"
+dead_refs=""
+while IFS= read -r line; do
+  case "$line" in
+    *planned*|*Planned*|*legacy*|*Legacy*|*superseded*|*Superseded*|*removed*|*Removed*|*abandoned*|*retired*|*former*) continue ;;
+  esac
+  for ref in $(printf '%s' "$line" | grep -oE '\.agents/skills/[A-Za-z0-9._-]+' | sort -u); do
+    case "$ref" in *.md) continue ;; esac   # a file in the tree, not a skill dir
+    [ -d "$ROOT/$ref" ] || dead_refs="$dead_refs $ref"
+  done
+done < <(cat "$GALDR"/assets/*.md "$ROOT/.agents/agents/brokk.md" 2>/dev/null)
+skill_detail=""
+[ -n "$(printf '%s' "$missing_index" | tr -d ' ')" ] && skill_detail="unindexed skills:$missing_index"
+[ -n "$(printf '%s' "$extra_index" | tr -d ' ')" ] && skill_detail="$skill_detail indexed-but-absent:$extra_index"
+[ -n "$(printf '%s' "$dead_refs" | tr -d ' ')" ] && skill_detail="$skill_detail dead skill paths:$dead_refs"
+if [ -z "$skill_detail" ]; then
+  add skillindex "skill index + cited skill paths" PASS "$(printf '%s\n' "$real_skills" | grep -c .) skills, all indexed and cited paths resolve"
+else
+  add skillindex "skill index + cited skill paths" FAIL "$skill_detail"
 fi
 
 # --- assets (governed paths) -------------------------------------------------
