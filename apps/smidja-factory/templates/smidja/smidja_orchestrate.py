@@ -60,8 +60,14 @@ def kaia_observe(content: str, tags: str = "run,lesson", actors: str = "",
     import urllib.request
 
     try:
-        body = json.dumps({"content": content, "tags": tags, "actors": actors,
-                           "salience": salience}).encode()
+        # LISTS, never comma-strings: the store keeps a string as an array of
+        # CHARACTERS, and a later recall then reads "r,u,n" as tags.
+        def _list(v):
+            if isinstance(v, (list, tuple)):
+                return [str(x) for x in v if str(x)]
+            return [x.strip() for x in str(v or "").split(",") if x.strip()]
+        body = json.dumps({"content": content, "tags": _list(tags),
+                           "actors": _list(actors), "salience": salience}).encode()
         req = urllib.request.Request(f"{KAIA_MEMORY_URL}/observe", data=body,
                                      headers={"Content-Type": "application/json"},
                                      method="POST")

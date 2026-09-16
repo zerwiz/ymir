@@ -216,8 +216,8 @@ export function Stats() {
                   <tr><th>Chain</th><th>Runs</th><th>Success</th><th>Rate</th><th>Tokens</th><th>Cost</th></tr>
                 </thead>
                 <tbody>
-                  {byChain.map((c) => (
-                    <tr key={c.chain}>
+                  {byChain.map((c, i) => (
+                    <tr key={`${c.chain}-${i}`}>
                       <td className="mono">{c.chain}</td>
                       <td className="num">{c.runs}</td>
                       <td className="num">{c.success}</td>
