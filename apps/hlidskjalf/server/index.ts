@@ -62,9 +62,67 @@ function run(cmd: string[]): string {
   }
 }
 
+/* ---- caches: a request must never re-scan a growing file or re-spawn ------- *
+ * The gate reads append-only ledgers and probes live runtime scripts on every
+ * request. Both grow without bound, so an uncached read is O(file) per request.
+ * These two helpers memoise the reads and move the probes off the event loop. */
+const MEMO = new Map<string, { t: number; v: unknown }>();
+const INFLIGHT = new Map<string, Promise<unknown>>();
+
+/** Serve a repeated pure read from memory for `ttlMs`. */
+function memo<T>(key: string, ttlMs: number, fn: () => T): T {
+  const hit = MEMO.get(key);
+  const now = Date.now();
+  if (hit && now - hit.t < ttlMs) return hit.v as T;
+  const v = fn();
+  MEMO.set(key, { t: now, v });
+  return v;
+}
+
+/** Async memo: concurrent callers share one in-flight promise, never a throng. */
+function memoAsync<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
+  const hit = MEMO.get(key);
+  const now = Date.now();
+  if (hit && now - hit.t < ttlMs) return Promise.resolve(hit.v as T);
+  const running = INFLIGHT.get(key);
+  if (running) return running as Promise<T>;
+  const p = fn()
+    .then((v) => {
+      MEMO.set(key, { t: Date.now(), v });
+      INFLIGHT.delete(key);
+      return v;
+    })
+    .catch((e) => {
+      INFLIGHT.delete(key);
+      throw e;
+    });
+  INFLIGHT.set(key, p);
+  return p;
+}
+
+/** Read-only subprocess probe, off the event loop. `timeout` still bounds a
+ *  stuck script, but the loop is never blocked waiting on it, and a brief cache
+ *  means concurrent polls share one spawn. Mutating actions keep `run()`. */
+async function runAsync(cmd: string[], ttlMs = 3000): Promise<string> {
+  return memoAsync('run:' + cmd.join('\u0000'), ttlMs, async () => {
+    try {
+      const proc = Bun.spawn(['timeout', '12', ...cmd], {
+        cwd: ROOT,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      });
+      const out = await new Response(proc.stdout).text();
+      await proc.exited;
+      return out.trim();
+    } catch {
+      return '';
+    }
+  });
+}
+
 /* ---- Yggdrasil worktrees ------------------------------------------------- */
-function worktrees(): Array<{ id: string; branch: string; path: string; head: string; agent: string }> {
-  const out = run(['git', 'worktree', 'list', '--porcelain']);
+async function worktrees(): Promise<Array<{ id: string; branch: string; path: string; head: string; agent: string }>> {
+  const out = await runAsync(['git', 'worktree', 'list', '--porcelain']);
   const rows: Array<{ id: string; branch: string; path: string; head: string; agent: string }> = [];
   let cur: { path?: string; head?: string; branch?: string } = {};
   const push = () => {
@@ -140,7 +198,7 @@ function agents() {
 }
 
 /* ---- /api/tasks (forge orders) ------------------------------------------- */
-function orders() {
+function orders_uncached() {
   const text = read(MASTERPLAN);
   const out: { id: string; title: string; phase: string; status: string }[] = [];
   const lines = text.split('\n');
@@ -164,6 +222,10 @@ function orders() {
   return out;
 }
 
+function orders() {
+  return memo('orders', 2000, orders_uncached);
+}
+
 function tasks() {
   const now = new Date().toISOString();
   return orders().map((o, i) => ({
@@ -183,7 +245,7 @@ function tasks() {
 }
 
 /* ---- /api/runes ---------------------------------------------------------- */
-function runes() {
+function runes_uncached() {
   return read(RUNES)
     .split('\n')
     .filter((l) => l.trim().startsWith('{'))
@@ -208,6 +270,10 @@ function runes() {
     })
     .filter(Boolean)
     .reverse();
+}
+
+function runes() {
+  return memo('runes', 3000, runes_uncached);
 }
 
 /* ---- /api/well ----------------------------------------------------------- */
@@ -320,10 +386,10 @@ async function wellEpisode(id: string) {
 }
 
 /* ---- /api/processes ------------------------------------------------------ */
-function processes() {
+async function processes() {
   const out: unknown[] = [];
-  const cron = run(['bash', 'bin/nornir-cron-start.sh', '--status']);
-  const bridge = run(['bash', 'bin/bifrost-bridge.sh', '--status']);
+  const cron = await runAsync(['bash', 'bin/nornir-cron-start.sh', '--status']);
+  const bridge = await runAsync(['bash', 'bin/bifrost-bridge.sh', '--status']);
   out.push({
     id: 'nornir-cron', name: 'Nornir cron', daemon: 'scheduler', manager: 'pm2',
     status: cron.includes('running') ? 'nominal' : 'down', cpu: 0, mem: 12, restarts: 0,
@@ -335,7 +401,7 @@ function processes() {
     uptime: 3600, realm: 'platform',
   });
   // The fleet's daemons across PM2/Docker/systemd, read-only from Valhalla.
-  for (const r of parseToon(run(['bash', 'bin/valhalla.sh', 'list']))) {
+  for (const r of parseToon(await runAsync(['bash', 'bin/valhalla.sh', 'list']))) {
     const st = /running|active|online/i.test(r.status)
       ? 'nominal'
       : /exit|fail|inactive|dead|stop/i.test(r.status)
@@ -526,7 +592,7 @@ function emptyStats() {
 /** Statistics — runs, tokens, cost, cache-hit ratio, and commercial savings.
  *  Ported 1:1 from the Smiðja visualizer `db.ts` `stats()`: usage comes from
  *  `agent_end` event payloads, model attribution from `agent_start` events. */
-function smidjaStats() {
+function smidjaStats_uncached() {
   const db = smidja();
   if (!db) return emptyStats();
   try {
@@ -757,8 +823,12 @@ function smidjaStats() {
   }
 }
 
+function smidjaStats() {
+  return memo('smidjaStats', 3000, smidjaStats_uncached);
+}
+
 /* ---- /api/reviews (real PRs + compliance as checks) ---------------------- */
-function reviews() {
+async function reviews() {
   const cards: unknown[] = [];
 
   // 1. Real pull requests from the repo's remote — the Glitnir gate. A delivered
@@ -766,10 +836,10 @@ function reviews() {
   //    this the surface showed only the synthetic lint card and no PR ever landed.
   try {
     const list = JSON.parse(
-      run([
+      (await runAsync([
         'gh', 'pr', 'list', '--state', 'open', '--limit', '50',
         '--json', 'number,title,author,headRefName,isDraft,updatedAt,additions,deletions,statusCheckRollup',
-      ]) || '[]',
+      ], 15000)) || '[]',
     ) as Array<{
       number: number;
       title: string;
@@ -812,8 +882,8 @@ function reviews() {
   }
 
   // 2. The compliance card (lint + governed-path checks) always stands.
-  const out = run(['bash', 'bin/brokk-lint.sh', '--quiet']);
-  const compliance = run(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json']);
+  const out = await runAsync(['bash', 'bin/brokk-lint.sh', '--quiet'], 60000);
+  const compliance = await runAsync(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json'], 60000);
   let gates: { id: string; status: string; detail: string }[] = [];
   try {
     gates = JSON.parse(compliance).checks ?? [];
@@ -921,8 +991,8 @@ function skills() {
 }
 
 /* ---- /api/runtime -------------------------------------------------------- */
-function runtime() {
-  const digest = run(['bash', 'bin/saga-session-start.sh']);
+async function runtime() {
+  const digest = await runAsync(['bash', 'bin/saga-session-start.sh'], 10000);
   const markers = {
     lock: read(join(STATE_DIR, '.lock')).trim(),
     started: existsSync(join(STATE_DIR, '.session-start-complete')),
@@ -932,13 +1002,13 @@ function runtime() {
 }
 
 /* ---- /api/cron ----------------------------------------------------------- */
-function cron() {
+async function cron() {
   const cfg = read(join(CONFIG_DIR, 'cron.yaml'));
   const jobs = cfg
     .split('\n')
     .filter((l) => /^\d{2}:\d{2}\s+/.test(l))
     .map((l) => ({ at: l.slice(0, 5), command: l.slice(6).trim() }));
-  const status = run(['bash', 'bin/nornir-cron-start.sh', '--status']);
+  const status = await runAsync(['bash', 'bin/nornir-cron-start.sh', '--status']);
   const running = status.includes('running');
   const pid = (status.match(/pid=(\d+)/) ?? [])[1] ?? '';
   return { running, pid, jobs: jobs.map((j) => ({ ...j, status: running ? 'scheduled' : 'stopped' })) };
@@ -963,12 +1033,12 @@ function parseToon(text: string): Record<string, string>[] {
   return rows;
 }
 
-function loaders() {
-  return parseToon(run(['bash', 'bin/valknut-load.sh', '--status']));
+async function loaders() {
+  return parseToon(await runAsync(['bash', 'bin/valknut-load.sh', '--status']));
 }
-function checks() {
+async function checks() {
   try {
-    return (JSON.parse(run(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json'])).checks ?? []) as unknown[];
+    return (JSON.parse(await runAsync(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json'], 60000)).checks ?? []) as unknown[];
   } catch {
     return [];
   }
@@ -1285,7 +1355,7 @@ function deleteChatSession(session: string): { ok: boolean } {
 
 /** A bounded recall from the well — Kaia drinks before every dispatch.
  *  Relevance to the query first, recency as the tie-break. */
-function chatRecall(query: string, limit = 6): { text: string; count: number } {
+function chatRecall_uncached(query: string, limit = 6): { text: string; count: number } {
   const lines = read(WELL).split('\n').filter((l) => l.trim().startsWith('{'));
   const terms = query
     .toLowerCase()
@@ -1312,6 +1382,10 @@ function chatRecall(query: string, limit = 6): { text: string; count: number } {
     text: picks.map((p) => `- (${p.source}) ${p.head.slice(0, 140)}`).join('\n'),
     count: picks.length,
   };
+}
+
+function chatRecall(query: string, limit = 6): { text: string; count: number } {
+  return memo(`chatRecall:${query}:${limit}`, 3000, () => chatRecall_uncached(query, limit));
 }
 
 async function postChat(
@@ -1435,8 +1509,8 @@ function workspaces(): { id: string; name: string; kind: string; company?: strin
   ];
 }
 
-function setupStatus() {
-  return parseToon(run(['bash', 'bin/ymir-install.sh', '--check']));
+async function setupStatus() {
+  return parseToon(await runAsync(['bash', 'bin/ymir-install.sh', '--check'], 30000));
 }
 function setupRun() {
   return parseToon(run(['bash', 'bin/ymir-install.sh', '--skip-services']));
@@ -1758,7 +1832,7 @@ const server = Bun.serve({
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
-      if (p === '/api/worktrees') return json(worktrees());
+      if (p === '/api/worktrees') return json(await worktrees());
       if (p === '/api/me') return json({ login: loginOf(req) ?? 'operator', realm: 'work' });
       if (p === '/api/workspace') {
         const realm = url.searchParams.get('realm') ?? 'work';
@@ -1771,12 +1845,12 @@ const server = Bun.serve({
       if (p === '/api/well') return json(await well(url.searchParams.get('q') ?? ''));
       if (p === '/api/well/episode') return json((await wellEpisode(url.searchParams.get('id') ?? '')) ?? { error: 'not found' });
       if (p === '/api/mimir/health') return json(await mimirHealth());
-      if (p === '/api/processes') return json(processes());
-      if (p === '/api/reviews') return json(reviews());
+      if (p === '/api/processes') return json(await processes());
+      if (p === '/api/reviews') return json(await reviews());
       if (p === '/api/files') return json(files(url.searchParams.get('realm') ?? 'work'));
       if (p === '/api/file') return json(fileContent(url.searchParams.get('realm') ?? 'work', url.searchParams.get('path') ?? ''));
       if (p === '/api/skills') return json(skills());
-      if (p === '/api/runtime') return json(runtime());
+      if (p === '/api/runtime') return json(await runtime());
       // A speed-start from the UI. It calls the same launcher the Omarchy key
       // bindings use, so the app is raised when it is already up and started
       // when it is not — one way to raise a Ymir window, not two.
@@ -1796,9 +1870,9 @@ const server = Bun.serve({
         await proc.exited;
         return json({ view, ok: proc.exitCode === 0, output: out.trim().slice(-400) });
       }
-      if (p === '/api/cron') return json(cron());
-      if (p === '/api/loaders') return json(loaders());
-      if (p === '/api/checks') return json(checks());
+      if (p === '/api/cron') return json(await cron());
+      if (p === '/api/loaders') return json(await loaders());
+      if (p === '/api/checks') return json(await checks());
       if (p === '/api/smidja/health') return json(smidjaHealth());
       if (p === '/api/smidja/sessions') return json(smidjaSessions());
       if (p === '/api/smidja/decisions') return json(smidjaDecisions());
@@ -1818,7 +1892,7 @@ const server = Bun.serve({
         const domains = Array.isArray(b.domains) ? b.domains.join(',') : b.domains ?? '';
         return json(workspaceProvision(name, kind, domains));
       }
-      if (p === '/api/setup/status') return json(setupStatus());
+      if (p === '/api/setup/status') return json(await setupStatus());
       if (p === '/api/setup/run' && req.method === 'POST') return json(setupRun());
       if (p === '/api/prompts' && req.method === 'GET') return json(prompts());
       if (p === '/api/prompts' && req.method === 'POST') {

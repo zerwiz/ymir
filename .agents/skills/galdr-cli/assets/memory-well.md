@@ -34,6 +34,11 @@ The upstream engine ships a **CLI + MCP stdio server only** — there is no
 `engram.server` HTTP module. `bin/mimir-bridge.py` is Ymir's own face, because
 the gate API, `mimir.sh`, and `mimir-ingest.sh` speak HTTP on `:4602`.
 
+`bin/mimir-ingest.sh` loads every stored hash once into an associative array, so
+dedupe is O(1) per section rather than rescanning the whole store each time (was
+O(sections × store)); `bin/workspace-rag.sh index` reads the store once and walks
+all files in a single Python pass (was a store read + process spawn per file).
+
 ---
 
 ## 2. HTTP bridge (`:4602`)
