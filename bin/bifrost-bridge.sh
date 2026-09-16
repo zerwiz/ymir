@@ -40,8 +40,8 @@ ACTION="start"
 while [ $# -gt 0 ]; do
   case "$1" in
     --start|"") ACTION=start; shift ;;
-    --stop) ACTION=stop; shift ;;
-    --status) ACTION=status; shift ;;
+    --stop|stop) ACTION=stop; shift ;;
+    --status|status) ACTION=status; shift ;;
     --port) PORT=${2-}; shift 2 ;;
     --provider) PROVIDER=${2-}; shift 2 ;;
     *) printf 'error: unknown flag %s\nhelp: bin/bifrost-bridge.sh [--start|--stop|--status|--port|--provider]\n' "$1" >&2; exit 2 ;;

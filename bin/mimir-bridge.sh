@@ -18,11 +18,12 @@ fi
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 BRIDGE="$ROOT/bin/mimir-bridge.py"
-DB="${ENGRAM_DB:-$ROOT/.agents/memory/kaia.engram}"
+DB="${ENGRAM_DB:-$YMIR_HOME/memory/kaia.engram}"
 PORT="${MIMIRSBRUNN_PORT:-4602}"
-PID_FILE="$ROOT/state/mimir-bridge.pid"
-LOG_FILE="$ROOT/state/mimir-bridge.log"
+PID_FILE="${YMIR_STATE_DIR:-$YMIR_HOME/state}/mimir-bridge.pid"
+LOG_FILE="${YMIR_STATE_DIR:-$YMIR_HOME/state}/mimir-bridge.log"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;

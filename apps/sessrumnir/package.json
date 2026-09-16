@@ -1,7 +1,7 @@
 {
-  "name": "sessrumnir",
-  "version": "0.1.7-alpha",
-  "description": "Sessrúmnir — the desktop seat of Ymir, a GUI frontend for the Pi and OMP coding agents",
+  "name": "@zerwiz/sessrumnir",
+  "version": "0.1.8-alpha",
+  "description": "Sessr\u00famnir \u2014 the desktop seat of Ymir, a GUI frontend for the Pi and OMP coding agents",
   "main": "out/main/index.js",
   "desktopName": "sessrumnir.desktop",
   "author": "Pi Desktop GUI Contributors",
@@ -30,7 +30,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc -b --noEmit",
-    "lint": "eslint src bin scripts resources && node scripts/check-semantic-colors.mjs",
+    "lint": "eslint src bin scripts resources && node scripts/check-semantic-colors.mjs && i18next-cli lint && i18next-cli extract --ci --dry-run",
     "package": "electron-vite build && electron-builder",
     "package:linux": "electron-vite build && electron-builder --linux",
     "package:linux:appimage": "electron-vite build && electron-builder --linux AppImage",
@@ -42,7 +42,8 @@
     "package:win:nsis": "electron-vite build && electron-builder --win nsis",
     "package:win:portable": "electron-vite build && electron-builder --win portable",
     "package:all": "electron-vite build && electron-builder --linux --mac --win",
-    "postinstall": "node scripts/postinstall.js"
+    "postinstall": "node scripts/postinstall.js",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",
@@ -73,10 +74,12 @@
     "chokidar": "^5.0.0",
     "clsx": "^2.1.1",
     "codemirror": "^6.0.2",
+    "i18next": "^26.4.2",
     "lucide-react": "^0.511.0",
     "node-pty": "^1.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-i18next": "^17.0.14",
     "react-markdown": "^10.1.0",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
@@ -96,6 +99,7 @@
     "eslint": "^10.6.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.7.0",
+    "i18next-cli": "^1.73.2",
     "tailwindcss": "^4.1.7",
     "tsx": "^4.23.8",
     "typescript": "^5.8.3",
@@ -104,7 +108,7 @@
   },
   "build": {
     "appId": "org.ymir.sessrumnir",
-    "productName": "Sessrúmnir",
+    "productName": "Sessr\u00famnir",
     "copyright": "Copyright 2026 Pi Desktop GUI Contributors. Licensed under the Apache License, Version 2.0.",
     "files": [
       "out/**/*",
@@ -130,7 +134,7 @@
       "syncDesktopName": true,
       "category": "Development",
       "icon": "resources/icons",
-      "synopsis": "Desktop seat of Ymir — GUI for the Pi and OMP coding agents",
+      "synopsis": "Desktop seat of Ymir \u2014 GUI for the Pi and OMP coding agents",
       "description": "An Electron desktop application that provides a GUI frontend for the Pi and OMP coding agents.",
       "maintainer": "Pi Desktop GUI Contributors",
       "artifactName": "Sessrumnir-${version}-${os}-${arch}.${ext}"
@@ -160,10 +164,20 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Sessrúmnir",
+      "shortcutName": "Sessr\u00famnir",
       "installerIcon": "resources/icons/icon.ico",
       "uninstallerIcon": "resources/icons/icon.ico",
       "artifactName": "Pi-Desktop-${version}-${os}-${arch}-setup.${ext}"
     }
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "out",
+    "bin",
+    "resources",
+    "README.md"
+  ],
+  "private": false
 }

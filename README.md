@@ -177,10 +177,18 @@ installable by anyone running pi.
 | Issue→PR | **Mjollnir** | autonomous fixes & PRs |
 | Process monitor | **Valhalla** | PM2/Docker supervision |
 | Skill synthesis | **Gungnir** | dynamic skill creation |
+| Skill optimization | **Gunnlöð** | trajectory-driven skill refinement |
+| Smíðja | **Smíðja** | the smithy — roster, phases, trace |
 | Session digest | **Sága** | the context injected at session open |
 | Watch / supervision | **Sýn** | watcher, guard, seat continuity |
 | Session lock | **Gleipnir** | one live session per home |
 | Scheduled jobs | **Nornir** | the fates who govern time |
+| Control-plane hub | **Vingólf** | coordination, identity, sync across substrates |
+| Live hall board | **Óðrerir** | fleet planning glass (:4322) |
+| Multi-tenant domains | **Svartalfaheim** | scoped tenant workspaces |
+| Agent ergonomics | **Galdr** | TOON output, 10 design principles |
+| Smíðja orchestrator | **Völundr** | runs Smíðja (Kaia's seat inside) |
+| MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal |
 | Host desktop (Omarchy) | **Omarchy** | the machine Ymir runs on: monitors, scale, themes, hooks |
 | Terminal backend | **Þjazi** | agent panes — herdr (protocol 14+) or tmux |
 | Harness surface | **pi** | extensions, skills, prompt templates, packages |
@@ -211,10 +219,11 @@ the master builder; Tyr judges compliance.
 | `syn-recovery` | Sýn | stuck-worker recovery playbook |
 | `ymir` | Ymir | operate the host: update · Omarchy · Þjazi |
 | `hamr` | Hamr | per-harness adapter reference (OpenCode, Pi, Claude, Cursor, Codex) |
+| `gunnlod` | Gunnlöð | skill optimization — trajectory-driven refinement via SkillOpt |
 
 The Galdr family enforces the 10 ergonomic principles (TOON output, minimal schemas,
 self-correcting errors) and the runtime acceptance gates; run
-`bash .agents/skills/galdr-cli/scripts/compliance-check.sh` before claiming done.
+`bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh` before claiming done.
 
 ---
 
@@ -321,7 +330,44 @@ freedom of being native to all three rather than portable to none.
 
 Point a harness (OpenCode, Pi, Claude Code, Cursor, Codex) at the repo and it takes
 the seat as **Brokk**. Read [`AGENTS.md`](AGENTS.md) for the operating laws and
-[`docs/masterplan.md`](docs/masterplan.md) for the forge orders.
+`$YMIR_HOME/docs/masterplan.md` for the forge orders.
+
+### Bringing your own machine — Windows, macOS, Linux
+
+Ymir is **Omarchy-first**: the Omarchy layer is first-class. But *first* is not
+*only*. The core is portable, and every other host gets a layer of its own.
+`bin/host-sense.sh` is the one place that looks before anything acts — distro,
+kernel, session (Wayland/X11), desktop, and what that desktop can actually do:
+
+```bash
+bin/host-sense.sh                     # THIS machine, as TOON
+bin/host-sense.sh capability tray     # yes | partial | no — for scripting
+```
+
+```
+hosts[4]{host,how_you_get_it,what_it_is}:
+  "Omarchy","bin/ymir-install.sh","the first-class layer: numbered desktops, launcher entries, the post-update hook"
+  "other Linux (Ubuntu · Fedora · Debian · Arch)","bin/ymir-install.sh","the portable core; the Omarchy layer skips cleanly, never faked"
+  "Windows","Ymir-Setup.exe — or bin/bootstrap-windows.ps1","Ubuntu on WSL2 is the host; Ymir installs inside it"
+  "macOS","Ymir Installer.command (or the .pkg) — or bin/bootstrap-macos.sh","Ubuntu in a Lima VM is the host; Ymir installs inside it"
+```
+
+Windows and macOS do not run Ymir natively: what Ymir installs is a Linux
+runtime, so those layers raise a Linux host and hand the work to
+`bin/ymir-install.sh` inside it. Each is gated on its host and skips cleanly
+everywhere else — no layer asserts a machine it is not standing on.
+
+**Build the installers** — neither needs a matching host:
+
+```bash
+packaging/build.sh --check     # what this machine can build, and with what
+packaging/build.sh --exe       # Ymir-Setup-<version>.exe   (NSIS: apt-get install nsis)
+packaging/build.sh --mac       # Ymir-<version>.pkg         (pkgbuild — Apple-only)
+```
+
+CI builds both (`.github/workflows/ymir-installers.yml`): NSIS on an Ubuntu
+runner, pkgbuild on a macOS runner. Signing and notarisation need the operator's
+own Apple and Windows credentials, so the artefacts ship unsigned.
 
 ---
 
@@ -385,7 +431,7 @@ ymir/
 ├── svartalfaheim/             # company container root (zerwiz) — future multi-user
 ├── workspace/                 # THE SINGLE TENANT: work/ · personal/ · companies/ ·
 │                              #   workspaces.yaml · projects.yaml · memory/ · INSTALL.md
-├── smidja/                    # the smithy engine + smidja.db (runs, stats, trace)
+├── apps/smidja/                 # the smithy engine + smidja.db (runs, stats, trace)
 ├── state/                     # runtime state: lock, chat/, bridges, cron
 ├── scripts/start.sh stop.sh   # raise/lower the whole system
 ├── assets/                    # art, the OS diagram, reference material
@@ -482,7 +528,17 @@ Every subsystem, component, and process is named for the figure whose role match
 its work; the operator is the **Allfather** (Odin). The house voice is Norse-natural;
 flavor may season a line, but an imported term never names a subsystem. The full
 component map lives in
-[`.agents/skills/galdr-cli/assets/norse-naming.md`](.agents/skills/galdr-cli/assets/norse-naming.md).
+[`.agents/skills/galdr-ymirsystem/assets/norse-naming.md`](.agents/skills/galdr-ymirsystem/assets/norse-naming.md).
+
+---
+
+## Built on
+
+Ymir is a Norse-named derivative of the **firstmate** agent distro
+([github.com/kunchenguid/firstmate](https://github.com/kunchenguid/firstmate),
+MIT License, © kunchenguid). Ymir adopts and retargets firstmate's mechanism under
+its open-source-first law; upstream names survive only as provenance. See
+[`NOTICE`](NOTICE).
 
 ---
 
@@ -548,6 +604,7 @@ follow them, star them, learn from them.
 | [firstmate](https://github.com/kunchenguid/firstmate) | kunchenguid | MIT | the fleet |
 | [axi](https://github.com/kunchenguid/axi) | kunchenguid | MIT | agent-ergonomics principles |
 | [lavish-axi](https://github.com/kunchenguid/lavish-axi) | kunchenguid | MIT | the HTML-artifact editor |
+| [SkillOpt](https://github.com/zerwiz/SkillOpt) | zerwiz | MIT | **Gunnlöð** — skill optimization (trajectory-driven refinement) |
 
 Their full licence texts are bundled in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES),
 and their attribution in [NOTICE](NOTICE).
@@ -559,3 +616,53 @@ Thank you all. The forge is hot because you lit it.
 _Where a maker teaches on YouTube we link the channel — Matt Pocock's is
 [youtube.com/@mattpocockuk](https://www.youtube.com/@mattpocockuk). If you make a
 tutorial for a project we use, tell us and we will link yours too._
+
+---
+
+## GitHub
+
+The public repository lives at **zerwiz/ymir** on GitHub:
+[github.com/zerwiz/ymir](https://github.com/zerwiz/ymir).
+
+- **Issues** — report bugs, request features, or ask questions.
+- **Pull Requests** — all changes ship via PR; every PR requires
+  explicit Allfather approval before merge. No force-pushes. No auto-merge.
+- **Projects** — the board tracks every workstream across the hall.
+- **Actions** — CI runs `bin/secret-guard.sh` and `bin/docs-guard.sh`
+  on every push and PR. A violation blocks the build.
+
+Your own login is always your own: **never** share a token, never
+commit credentials, never use a shared account. All secrets are
+resolved from `$YMIR_HOME/secrets/platform.env` at runtime.
+
+---
+
+## Install — the four doors
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash
+npx @zerwiz/ymir install          # no global install
+git clone https://github.com/zerwiz/ymir.git ~/Ymir && cd ~/Ymir && bin/ymir-install.sh
+npm install -g @zerwiz/ymir       # the CLI, global
+```
+
+**Who can install this today.** The Ymir distro is private while it is young —
+so `curl`, `npx` and `git clone` work for the author and invited users, not for
+the public (an unknown clone returns 404). If you would like access, ask:
+**zerwiz.org**. When the distro opens, this note goes away and the four commands
+above become open to everyone.
+
+**Early adopters and contributors can install now — but it is rough.** Expect
+sharp edges: the installer is honest about what it cannot do, and says so rather
+than pretending. Bring a Linux host (or let the Windows/macOS bootstraps give
+you one — see *Bringing your own machine* above), and read what the installer
+prints before you trust it.
+
+The npm package carries the runtime's `bin/` scripts and the installer; every
+`npm update -g @zerwiz/ymir` re-runs the same self-healing setup that provisions
+prerequisites, engines, and the Hlidskjalf seat. `@zerwiz/*` are the app
+packages (Hlidskjalf, Óðrerir, Sessrúmnir, Smíðja) — one per app.
+
+Private data never touches npm — all user data lives at `$YMIR_HOME` (the hoard
+at `hodd/` and the realms at `svartalfaheim/`) and syncs via the user's
+**private** GitHub repo, never a public one.

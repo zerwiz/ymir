@@ -8,7 +8,7 @@
 #   .agents/agents/*.md              the agent roster
 #   .agents/memory/well/             the well (episodes)
 #   workspace/memory/runes_audit.md  the ledger
-#   smidja/smidja_data/smidja.db     Smíðja runs (read-only SQLite URI)
+#   apps/smidja/smidja_data/smidja.db     Smíðja runs (read-only SQLite URI)
 #   ~/.treehouse                     external worktrees (read-only)
 #
 # CONTRACT: this job NEVER writes anywhere but state/observer.log and the Runes
@@ -29,11 +29,14 @@ STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 . "$SCRIPT_DIR/runes-append.sh"
 
 WORKTREE_ROOT="${BROKK_YGGDRASIL_ROOT:-$HOME/.treehouse}"
-SMIDJA_DB="$ROOT/smidja/smidja_data/smidja.db"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+SMIDJA_DB="${YMIR_HOME:+$YMIR_HOME/smidja/smidja.db}"
+[ -z "${SMIDJA_DB:-}" ] || [ ! -f "$SMIDJA_DB" ] && SMIDJA_DB="$ROOT/apps/smidja/smidja_data/smidja.db"
 MASTERPLAN="$ROOT/docs/masterplan.md"
 WELL_DIR="$ROOT/.agents/memory/well"
 AGENTS_DIR="$ROOT/.agents/agents"
-RUNES_LEDGER="$ROOT/workspace/memory/runes_audit.md"
+RUNES_LEDGER="${YMIR_HOME:+$YMIR_HOME/memory/runes_audit.md}"
+[ -z "${RUNES_LEDGER:-}" ] || [ ! -r "$RUNES_LEDGER" ] && RUNES_LEDGER="$ROOT/workspace/memory/runes_audit.md"
 OBS_LOG="$STATE/observer.log"
 OBS_LAST="$STATE/observer.last"
 

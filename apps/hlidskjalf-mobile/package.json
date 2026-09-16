@@ -1,7 +1,7 @@
 {
-  "name": "@ymir/hlidskjalf-mobile",
+  "name": "@zerwiz/hlidskjalf-mobile",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -18,5 +18,18 @@
   "devDependencies": {
     "@types/react": "~18.3.12",
     "typescript": "~5.3.3"
-  }
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zerwiz/hlidskjalf-mobile.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "App.tsx",
+    "app.json",
+    "index.ts"
+  ]
 }

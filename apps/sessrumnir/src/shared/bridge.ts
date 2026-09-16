@@ -25,6 +25,7 @@ import type {
   InstalledPackage,
   InstalledSkill,
   CatalogPackage,
+  PackageUpdate,
   FileTreeNode,
   FileSearchResult,
   FileChangeEvent,
@@ -43,6 +44,7 @@ import type {
   CouncilRunRequest,
   CouncilRunResult,
   CouncilArbiterRequest,
+  CouncilArbiterResult,
   CouncilProgressEvent,
   AttachmentReadResult,
   OpenDialogOptions,
@@ -77,6 +79,7 @@ import type {
   GitConveyorCommitOptions,
   GitConveyorPullRequestOptions,
   GitConveyorPullRequestResult,
+  I18nEnvironment,
 } from './ipc-contracts'
 import type { ThemeFile } from './theme/theme-file'
 
@@ -195,6 +198,8 @@ export interface PiDesktopAPI {
     install(spec: string): Promise<{ success: boolean; output: string }>
     remove(spec: string): Promise<{ success: boolean; output: string }>
     update(spec?: string): Promise<{ success: boolean; output: string }>
+    updateAll(): Promise<{ success: boolean; output: string }>
+    checkUpdates(): Promise<PackageUpdate[]>
     fetchCatalog(query?: string): Promise<CatalogPackage[]>
   }
 
@@ -266,6 +271,8 @@ export interface PiDesktopAPI {
     pathKind(path: string): Promise<PathKindResult>
     openExternal(url: string): Promise<void>
     hallUrl(): Promise<string>
+    /** Who is standing: every opencode/pi session, live. */
+    fleet(): Promise<unknown[]>
     getVersion(): Promise<string>
     platform: NodeJS.Platform
   }
@@ -291,6 +298,11 @@ export interface PiDesktopAPI {
   // ── Update check ────────────────────────────────────────────────────────
   updates: {
     check(): Promise<UpdateCheckResult>
+  }
+
+  // ── i18n environment ────────────────────────────────────────────────────
+  i18n: {
+    getEnvironment(): Promise<I18nEnvironment>
   }
 
   // ── Terminal ────────────────────────────────────────────────────────────

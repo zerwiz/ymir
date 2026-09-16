@@ -2,7 +2,9 @@
 
 Extra installations beyond the base runtime. **Open-source first:** every entry
 is a validated OSS project (or SDK) under a Norse shell, or a first-party tool the
-agents drive. Keys live in `.env.local` — **never inline**.
+agents drive. Keys live at `$YMIR_HOME/secrets/platform.env` — **never inline**.
+
+See [`ymir-home.md`](ymir-home.md) for the `$YMIR_HOME` data layout and env var contract.
 
 ```
 installations[15]{tool,role,oss,install,used_by}:
@@ -31,7 +33,7 @@ bin/ymir-install.sh          # prereqs, tree, engines, hermes, sandbox, memory, 
 
 `bin/ymir-install.sh` self-heals the fixable gaps (`engram`, `mcp<2`, `treehouse`,
 `no-mistakes`, **Hermes**) and reports the system-level ones (`git`, `python3`,
-`bun`, `docker`, `gh`). See [`../.agents/skills/galdr-cli/assets/installation.md`].
+`bun`, `docker`, `gh`). See [`../.agents/skills/galdr-ymirsystem/assets/installation.md`].
 
 ## Per-skill engines
 
@@ -56,6 +58,6 @@ bin/ymir-install.sh          # prereqs, tree, engines, hermes, sandbox, memory, 
 
 1. **OSS first.** Adopt the validated engine; never rebuild what exists.
 2. **Keys via env.** `FIRECRAWL_API_KEY`, `OD_API_TOKEN`, `CLOUDFLARE_API_TOKEN`,
-   provider keys — `.env.local` / `.env.realm` only.
+   provider keys — `$YMIR_HOME/secrets/platform.env` only.
 3. **No mock.** A tool reported present must be real; `bin/ymir-install.sh --check`
    tells the truth.

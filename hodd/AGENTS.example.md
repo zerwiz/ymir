@@ -7,14 +7,13 @@
 ## Operator
 
 - **Name / handle:** …
-- **Tenant(s):** …            # hodd/tenants/<tenant>/
-- **Machines:** …             # tailnet names; see hodd/docs/tailscale-sync.md
+- **Private plans, secrets:** `$YMIR_HOME/` — never inline; reference by path.
 
 ## Private material
 
-- Plans & strategy: `hodd/docs/` (never `docs/` — Rule 04).
-- Secrets: `hodd/secrets/`; load with `eval "$(bin/hodd.sh emit <file>)"`.
-- Identity/portfolio: `hodd/identity/`.
+- Plans & strategy: `$YMIR_HOME/docs/` (never `docs/` — Rule 04).
+- Secrets: `$YMIR_HOME/secrets/`; load with `eval "$(bin/secret-guard.sh emit <file>)"`.
+- Identity/portfolio: `$YMIR_HOME/identity/`.
 
 ## Personal setup
 
