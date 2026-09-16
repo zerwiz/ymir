@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # docs-guard.sh — docs/ is the PUBLIC, user-facing tree. Block operator-private
 # documents (plans, strategy, roadmaps, the masterplan) before they are staged.
-# Those live in hodd/docs/ (Rule 04-hoard.md).
+# Those live at $YMIR_HOME/docs/ (Rule 04-hoard.md).
 #
 #   bin/docs-guard.sh            # scan the staged change (used as pre-commit)
 #   bin/docs-guard.sh --all      # scan every tracked file
@@ -35,5 +35,5 @@ if [ "${1:-}" = "--all" ]; then
   scan_list < <(git -C "$ROOT" ls-files)
 else
   scan_list < <(git -C "$ROOT" diff --cached --name-only --diff-filter=ACM)
-fi || { printf 'docs-guard: blocked — docs/ is public; move it to hodd/docs/ (Rule 04)\n' >&2; exit 1; }
+fi || { printf 'docs-guard: blocked — docs/ is public; move it to $YMIR_HOME/docs/ (Rule 04)\n' >&2; exit 1; }
 exit 0
