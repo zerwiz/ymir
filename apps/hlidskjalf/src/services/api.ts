@@ -57,9 +57,40 @@ export interface OrderRow {
   phase: string;
   status: string;
 }
+/** What the HARNESSES spent (opencode, pi) — not only the smithy's runs. */
+export interface YmirUsage {
+  window_days: number;
+  sources: Record<string, { messages?: number; input?: number; output?: number; cache_read?: number; cache_write?: number; error?: string }>;
+  totals: { messages: number; input: number; output: number; cache_read: number; cache_write: number; total: number; cache_hit_ratio: number };
+  by_model: Array<{ source: string; model: string; messages: number; input: number; output: number }>;
+  /** The same numbers under the names the Statistics gate renders. */
+  gate?: {
+    totals: { runs: number; success: number; fail: number; running: number; tokens: number; cost: number };
+    usage: { input: number; output: number; cache_read: number; cache_write: number; total: number };
+    providers: { local: any; online: any; per_model: any[] };
+    by_chain: any[];
+    by_model: any[];
+  };
+}
+
 export interface OrdersInfo {
   open: number;
   orders: OrderRow[];
+}
+
+/**
+ * The desktop seat (Electron) marks its requests, and the gate then never asks it
+ * to log in: the shell is a local, trusted seat, while the web door keeps its
+ * lock. The marker is only honoured by the gate when the request really arrives
+ * over loopback, so a web caller cannot borrow it.
+ */
+export function isDesktopSeat(): boolean {
+  const w = window as unknown as { ymirDesktop?: { desktop?: boolean } };
+  return w.ymirDesktop?.desktop === true;
+}
+
+export function desktopHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return isDesktopSeat() ? { 'x-ymir-surface': 'desktop', ...extra } : extra;
 }
 
 /** A 401 from a real endpoint re-locks the gate; the login/session calls must not. */
@@ -74,7 +105,7 @@ async function get<T>(path: string): Promise<T> {
   const ctrl = new AbortController();
   const timer = window.setTimeout(() => ctrl.abort(), 10_000);
   try {
-    const res = await fetch(`${BASE}${path}`, { credentials: 'include', signal: ctrl.signal });
+    const res = await fetch(`${BASE}${path}`, { credentials: 'include', headers: desktopHeaders(), signal: ctrl.signal });
     noteUnauthorized(path, res.status);
     if (!res.ok) throw new Error(`${path} → ${res.status}`);
     return (await res.json()) as T;
@@ -87,7 +118,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
     credentials: 'include',
-    headers: { 'content-type': 'application/json' },
+    headers: desktopHeaders({ 'content-type': 'application/json' }),
     body: JSON.stringify(body),
   });
   noteUnauthorized(path, res.status);
@@ -110,7 +141,7 @@ async function errorText(res: Response, path: string): Promise<string> {
 }
 
 async function del<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { method: 'DELETE', credentials: 'include' });
+  const res = await fetch(`${BASE}${path}`, { method: 'DELETE', credentials: 'include', headers: desktopHeaders() });
   noteUnauthorized(path, res.status);
   if (!res.ok) throw new Error(`${path} → ${res.status}`);
   return (await res.json()) as T;
@@ -329,6 +360,7 @@ export const gateApi = {
   loaders: () => get<LoaderRow[]>('/api/loaders'),
   checks: () => get<CheckRow[]>('/api/checks'),
   orders: () => get<OrdersInfo>('/api/orders'),
+    usage: () => get<YmirUsage>('/api/usage'),
   chatHistory: (session = 'default') => get<ChatMessage[]>(`/api/chat/history?session=${encodeURIComponent(session)}`),
   chatSessions: () => get<ChatSession[]>('/api/chat/sessions'),
   chatModels: () => get<ChatModel[]>('/api/chat/models'),

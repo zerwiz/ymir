@@ -37,9 +37,9 @@ export function Fleet() {
   const { openModal } = useUI();
   const def = useTenantDef(realm, session?.tenants.find((t) => t.realm === realm));
 
-  const online = agents.filter((a) => a.status === 'nominal').length;
+  const online = agents.filter((a) => a.status === 'nominal' && a.live?.state !== 'working').length;
   const active = tasks.filter((t) => !TERMINAL_STATES.includes(t.state)).length;
-  const working = agents.filter((a) => a.status === 'degraded').length;
+  const working = agents.filter((a) => a.live?.state === 'working').length;
   const sealed = agents.filter((a) => a.status === 'down').length;
   const { pos, edges } = layout(agents);
 
@@ -51,7 +51,7 @@ export function Fleet() {
       tone: a.status === 'nominal' ? 'ok' : a.status === 'degraded' ? 'warn' : 'danger',
       glyph: 'ᚠ',
       title: `${a.name} — Agent Card`,
-      body: a.role,
+      body: a.live?.task || a.role,
       content: JSON.stringify(
         {
           name: a.name,

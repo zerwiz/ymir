@@ -2,6 +2,16 @@ import { useState } from 'react';
 import type { RecallEpisode } from '../types';
 import { Markdown } from './Markdown';
 
+/** The store can hand back tags as a comma-string split into CHARACTERS — a
+ *  string written where a list was wanted reads as ['r','u','n']. Re-join, then
+ *  split, so the panel shows words rather than letters. */
+const tagList = (v: unknown): string[] => {
+  const arr = Array.isArray(v) ? v.map(String) : String(v ?? '').split(',');
+  const joined = arr.join('');
+  const parts = joined.includes(',') ? joined.split(',') : arr;
+  return parts.map((x) => x.trim()).filter(Boolean);
+};
+
 export function RecallPanel({
   episodes,
   onQuery,
@@ -88,7 +98,7 @@ export function RecallPanel({
               <span>{ep.mode}</span>
               <span>{ep.agentScope}</span>
               <span>{new Date(ep.ts).toLocaleString('en-GB', { hour12: false })}</span>
-              {ep.tags.map((t) => (
+              {tagList(ep.tags).map((t) => (
                 <span key={t}>#{t}</span>
               ))}
             </div>

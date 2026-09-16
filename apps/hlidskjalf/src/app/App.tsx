@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Shell } from './Shell';
 import { Overlay } from '../components/Overlay';
 import { LoginModal } from '../components/LoginModal';
+import { EmberBackground } from '../components/EmberBackground';
 import { HallsChooser } from '../components/Halls';
-import { gateApi } from '../services/api';
+import { gateApi, isDesktopSeat } from '../services/api';
 import { startStream } from '../services/stream';
 import { gateFromHash, useYmir } from '../state/store';
 
@@ -11,7 +12,9 @@ export default function App() {
   const session = useYmir((s) => s.session);
   const [authed, setAuthed] = useState<boolean | null>(null);
   // After the gate admits us, offer the three halls once per login.
-  const [choosing, setChoosing] = useState(true);
+  // A desktop shell is a SEAT, not a lobby: it does not ask which hall you
+  // want, it opens the one you are in. The picker belongs to the web door.
+  const [choosing, setChoosing] = useState(!isDesktopSeat());
 
   /**
    * One question at boot: has the gate let this browser in?
@@ -48,7 +51,7 @@ export default function App() {
   // gates pick up a newly-written run without a page reload.
   useEffect(() => {
     if (!session) return;
-    const id = window.setInterval(() => void useYmir.getState().refreshSmidja(), 5000);
+    const id = window.setInterval(() => { void useYmir.getState().refreshSmidja(); void useYmir.getState().refreshAgents(); }, 5000);
     return () => window.clearInterval(id);
   }, [session]);
 
@@ -59,8 +62,24 @@ export default function App() {
   }, []);
 
   /** After the gate admits us, take its word for who we are. */
+  /**
+   * One login for every app: an app host sends its visitors here with ?next=,
+   * so after the gate admits us we hand them back where they were going.
+   */
+  const returnToNext = () => {
+    const next = new URLSearchParams(window.location.search).get('next');
+    if (!next) return;
+    try {
+      const t = new URL(next);
+      if (t.origin !== window.location.origin) window.location.replace(t.toString());
+    } catch {
+      /* a malformed next is ignored, never followed */
+    }
+  };
+
   const admitted = () => {
     setAuthed(true);
+    returnToNext();
     void gateApi
       .session()
       .then((r) => {
@@ -75,6 +94,7 @@ export default function App() {
   if (!authed) {
     return (
       <>
+        <EmberBackground />
         <LoginModal onAuthed={admitted} />
         <Overlay />
       </>
@@ -87,6 +107,7 @@ export default function App() {
 
   return (
     <>
+      <EmberBackground />
       <Shell />
       <Overlay />
       {choosing && <HallsChooser onClose={() => setChoosing(false)} />}
