@@ -342,7 +342,7 @@ bash bin/runes-append.sh brokk order.completed --order W0031 --realm way-of --me
 - **Verification loop:** `for f in bin/*.sh; do bash -n "$f" || echo "FAIL $f"; done` for syntax; `jq . config/eindri-dispatch.json` and `jq .` on each adapter JSON for parse; then a live session start to confirm stage 7 reports the cron running.
 - **Cross-check:** `norse-naming.md` §3.2 must list exactly the runtime figures this doc describes.
 
-**rename sweep (2026-09-12).** The `galdr` -> `galdr-cli` rename corrected a stale compliance path inside `bin/saga-session-start.sh`; behaviour unchanged.
+**rename sweep (2026-09-12).** The `galdr` -> `galdr-ymirsystem` rename corrected a stale compliance path inside `bin/saga-session-start.sh`; behaviour unchanged.
 
 ### The rename sweep broke governed paths, not just prose (2026-09-12)
 

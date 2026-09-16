@@ -248,7 +248,7 @@ npm run build            # must be green
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - **Mirror:** `.agents/skills/tyr-check/assets/hlidskjalf-ui.md`.
 - When the shell, tokens, gates, or the gate API change, update this asset and
   `docs/design.md` together.
@@ -366,7 +366,7 @@ when it is already up, and starts it when it is not. The visualizer finds the
 checkout by walking up to the directory holding `scripts/electron.sh`, so it
 works wherever the app is served from.
 
-**rename sweep (2026-09-12).** The `galdr` -> `galdr-cli` rename corrected a stale path reference inside `apps/hlidskjalf/server/index.ts` as well; behaviour unchanged.
+**rename sweep (2026-09-12).** The `galdr` -> `galdr-ymirsystem` rename corrected a stale path reference inside `apps/hlidskjalf/server/index.ts` as well; behaviour unchanged.
 
 ### The gate's default realm is `wayof` (2026-09-12)
 

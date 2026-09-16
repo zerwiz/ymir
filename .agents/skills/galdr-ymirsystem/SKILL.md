@@ -4,7 +4,7 @@ description: Galdr — agent-CLI ergonomics and the master builder/maintainer of
 allowed-tools: read,write,bash,glob,grep
 ---
 
-# galdr-cli — agent-CLI ergonomics — the master builder/maintainer of the runtime
+# galdr-ymirsystem — agent-CLI ergonomics — the master builder/maintainer of the runtime
 
 Lean TOON router. This file is a manifest — load only the asset that matches the
 task; never read the whole tree.
@@ -21,7 +21,7 @@ agent (a symlink, so the two can never drift).
 
 ```
 surfaces[2]{path,kind}:
-  ".agents/skills/galdr-cli/SKILL.md","skill (canonical)"
+  ".agents/skills/galdr-ymirsystem/SKILL.md","skill (canonical)"
   ".agents/agents/galdr.md","agent (symlink → the skill)"
 ```
 
@@ -71,7 +71,7 @@ scripts[2]{path,purpose}:
   "scripts/compliance-check.sh","run all gates: toon, naming, mocks, syntax, json, sync"
 ```
 
-Run `bash .agents/skills/galdr-cli/scripts/compliance-check.sh` before claiming any
+Run `bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh` before claiming any
 runtime or asset change done. Exit `1` on any FAIL.
 
 ## The 10 principles (manifest)
