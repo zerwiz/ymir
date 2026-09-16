@@ -30,7 +30,7 @@ install[21]{step,what,self-heals}:
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "sessrumnir","the Sessrúmnir desktop GUI (vendored pi-desktop at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
-  "host","this machine — learnt on EVERY host","bin/omarchy-sense.sh learns the setup, bin/desktop-place.sh places the apps, the Omarchy post-update hook (when Omarchy), the wedge-alarm channel, and (on Omarchy) an OFFER of the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
+  "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
@@ -304,14 +304,16 @@ company is the operator's to name; Ymir ships no default.
 bin/ymir-install.sh --check          # all steps OK/WARN
 bin/ymir-validate.sh                 # the running system actually works
 bin/herdr-ensure.sh status           # the Þjazi backend and its protocol floor
-bin/omarchy-sense.sh status          # what Ymir has learnt about this host
+bin/host-sense.sh                    # sense THIS machine (any host)
+bin/omarchy-sense.sh status          # the Omarchy recording (Omarchy hosts)
 bin/saga-session-start.sh            # the session digest
 bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh
 ```
 
-On an **Omarchy** host the installer also learns the machine
-(`bin/omarchy-sense.sh`) and installs a `post-update` hook so Ymir re-learns it
-every time Omarchy updates. On a non-Omarchy host that step is a clean SKIP.
+On **every** host the installer senses the machine with `bin/host-sense.sh`. On
+an **Omarchy** host the layer also *records* it (`bin/omarchy-sense.sh observe`)
+and installs a `post-update` hook so Ymir re-learns it every time Omarchy
+updates. On a non-Omarchy host that layer step is a clean SKIP.
 
 Rule: the installer is **idempotent** — running it again changes nothing but
 fills gaps. It never overwrites real user data.
@@ -476,7 +478,7 @@ machines may run the runtime.
 | Layer | Runs on | What it owns |
 |---|---|---|
 | **Portable core** | Linux, macOS, Windows (WSL2; MSYS best-effort) | the runtime — session digest, lock, watch, cron, skills — the installer's user-space prerequisites, the capability shim, generated machine config |
-| **Omarchy layer** | Omarchy only | learning the host (`omarchy-sense`), placing each app on its own numbered Hyprland desktop (`desktop-place`), the launcher entries (`.desktop`), the suggested shell plugins, the post-update hook |
+| **Omarchy layer** | Omarchy only | recording the host (`omarchy-sense observe`), placing each app on its own numbered Hyprland desktop (`desktop-place`), the launcher entries (`.desktop`), the suggested shell plugins, the post-update hook |
 
 The core never grows a Hyprland branch, and the Omarchy layer is never stretched
 into pretending it is portable. An Omarchy-specific step is gated on the host and
@@ -486,8 +488,10 @@ reports a clean skip anywhere else:
 [ -d /usr/share/omarchy ] && ... || add host OK "... (not an Omarchy host)"
 ```
 
-That is why `step_host` and `step_desktop` are the only steps that mention
-Omarchy: everywhere else, the same code path runs on any host.
+That is why the only Omarchy branches left in the core installer are the ones
+that call the layer (`step_omarchy`) and desktop placement (`step_desktop`):
+`step_host` senses the host portably with `host-sense`, and everywhere else the
+same code path runs on any host.
 
 ### What the Omarchy layer installs
 
