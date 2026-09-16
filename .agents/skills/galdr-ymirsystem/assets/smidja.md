@@ -8,7 +8,7 @@ running a chain, reading its trace, or wiring it into Hlidskjalf.
   *what* is forged; Völundr decides *how* the smithy runs). Its trace UI is
   **Smíðja's eye**.
 - **Registry:** `.agents/assets/agents/naming.md`, `docs/lore.md` §XI/§XIII.
-- **Skill (adopted upstream):** `.agents/skills/smidja/` (internals + cookbooks +
+- **Skill (adopted upstream):** `.agents/skills/smidja-factory/` (internals + cookbooks +
   references + `apps/visualizer/` + sibling skills `smidja-launcher`, `smidja-start`,
   `smidja-instructions`, `volundr`).
 
@@ -23,7 +23,7 @@ can be watched. *Agent proposes, code disposes.*
 
 ```bash
 cd <repo-root>            # e.g. $YMIR_ROOT
-uv run .agents/skills/smidja/scripts/install.py
+uv run .agents/skills/smidja-factory/scripts/install.py
 ```
 
 Stamps `smidja/` (the starter smithies + `smidja_modules/`), the prompt and harness

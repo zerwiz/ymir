@@ -111,7 +111,7 @@ All new Galdr skills follow this naming aett (family of eight):
 
 | Aett Name | Pattern | Examples |
 |-----------|---------|--------|
-| **galdr-** | incantation / chant standards | `galdr`, `galdr-compliance`, `galdr-crafter` |
+| **galdr-** | incantation / chant standards | `galdr`, `tyr-check` |
 | **val-** | hall / health | `valhalla` (process monitor) |
 | **skyr-** | giant / file scope | `skrymir` (file browser) |
 | **bifr-** | bridge / gateway | `bifrost` (gateway/proxy) |
@@ -169,10 +169,10 @@ agent receives this as initial context and can act immediately
 
 ## Usage in Skill Synthesis
 
-When `galdr-crafter` generates a new skill, it:
+When a skill is forged, it:
 1. References Eindri profiles from `.agents/subagents/*.md`
 2. Assigns appropriate aett naming from the Norse pattern table
 3. Generates TOON output schema based on tool category
 4. Includes Utgard sandbox compliance declarations
 5. Adds session integration hook recommendations
-6. Validates against `galdr-compliance` principles checklist
+6. Validates against `tyr-check`'s principles checklist

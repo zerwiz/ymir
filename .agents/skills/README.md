@@ -7,9 +7,10 @@ matches its work (Gungnir naming law).
 ## Registry (`.agents/skills/`)
 
 ```
-skills[23]{skill,does}:
+skills[26]{skill,does}:
   "galdr-ymirsystem","agent-CLI ergonomics — the master builder/maintainer of the runtime"
   "tyr-check","the judge — galdr principles + runtime gates"
+  "rules-check-drift","rules-file drift — keeps AGENTS.md true after code changes"
   "no-mistakes","the clean-PR gate — vendored engine skill: validate, push, PR, CI"
   "smidja-factory","the smithy — agent factory: roster, phases, envelopes, visualizer"
   "hvild-afk","away-mode — supervision of routine wakes and batched escalations"
@@ -21,10 +22,12 @@ skills[23]{skill,does}:
   "vor-diagnostics","diagnostics — bootstrap + diagnostic reasoning"
   "nornir-schedule","schedule — event sources + quota-aware dispatch"
   "nsr-compliance","compliance — NorthStar scaffold/audit + the .compliance/ harness"
+  "lifecycle","lifecycle — start/stop/status/smoke-test wiring contract"
   "gjallarhorn-relay","relay — public replies (X/Discord)"
   "eindri-homes","worker homes — provisioning and upkeep of Eindri homes"
   "syn-recovery","recovery — stuck-worker playbook"
   "ymir-host","host ops — self-update, Omarchy desktop, Þjazi backend"
+  "groa-update","the updater shaman — self-update Brokk + every Eindri-home (/updateBrokk)"
   "herdr-panes","terminal panes — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)"
   "ratatoskr-a2a","A2A/MCP mesh — a2abridge + wayofteams; registration"
   "hamr-adapters","harness adapters — per-harness reference"

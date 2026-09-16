@@ -193,3 +193,5 @@ GROK_AGENT=1 bash -c '[ -z "${GROK_AGENT:-}${GROK_HOOK_EVENT:-}" ] || exit 0; ec
 | (implicit: same four contract parts as other harnesses) | **no `PreToolUse`** arm/cd seatbelts are registered |
 
 Upstream Brokk registers two `PreToolUse` entries (`Bash` matcher → `fm-arm-pretool-check.sh --claude`, `fm-cd-pretool-check.sh --claude`). To close the gap, add the equivalent `PreToolUse` block calling `bin/syn-arm-pretool-check.sh --claude` and `bin/syn-cd-pretool-check.sh --claude`. Do not assume the seatbelt is active until it is added and smoke-tested.
+
+**Skills.** This harness reads project skills from `.claude/skills/`; `bin/valknut-load.sh` binds it to the one tree (`.claude/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.
