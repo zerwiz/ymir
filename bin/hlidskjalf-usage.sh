@@ -126,11 +126,16 @@ for m in out["by_model"]:
     mid = str(m.get("model", "")).lower()
     m["kind"] = "local" if any(k in mid for k in LOCAL_MARKERS) else "online"
 
-lo = {"local": {"tokens": 0, "calls": 0}, "online": {"tokens": 0, "calls": 0}}
+def _empty():
+    return {"tokens": 0, "calls": 0, "input": 0, "output": 0, "cache_read": 0}
+lo = {"local": _empty(), "online": _empty()}
 for m in out["by_model"]:
     k = m.get("kind", "online")
     lo[k]["tokens"] += int(m.get("input") or 0) + int(m.get("output") or 0)
     lo[k]["calls"] += int(m.get("messages") or 0)
+    lo[k]["input"] += int(m.get("input") or 0)
+    lo[k]["output"] += int(m.get("output") or 0)
+    lo[k]["cache_read"] += int(m.get("cache_read") or 0)
 out["local_online"] = lo
 
 # the gate's section names, filled from the harnesses
