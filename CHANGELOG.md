@@ -947,3 +947,108 @@ chat"* — used by its home screen and chat panel. It stays. Next: one shared
 ember (a framework-neutral `midgard/design-system/ember.js` with a
 `prefers-reduced-motion` guard) so Hlidskjalf's shell, the login screen,
 Óðrerir's hall and the Smíðja chrome can warm the same fire.
+
+## 2026-09-16 — the hearth spreads: one fire, three more surfaces
+
+Sessrúmnir's fire is now shared rather than copied. `midgard/design-system/ember.js`
+is the framework-neutral original (the land page's Ginnungagap embers: 30 rising
+with a gentle sway over six drifting haze pools), with `ember.d.ts` for TypeScript
+consumers and a reader who asked for less motion gets a **still frame** instead of
+an animation.
+
+Wired, and built:
+
+- **Hlidskjalf** — `src/components/EmberBackground.tsx` imports the shared module;
+  mounted behind the *login* and behind the *shell*, so the door and the hall burn
+  over one hearth.
+- **Smíðja visualizer** — a `<canvas class="ember-bg">` behind every view.
+- **Óðrerir** — a `data-ember` canvas in its shell, so the hall warms too.
+- Sessrúmnir keeps its own React port untouched (two ports of one fire, the same
+  physics; consolidating them on the shared module is the next tidy).
+
+And the reference for the missing furniture: **Óðrerir already carries it all** —
+four favicons, `mask-icon` in bronze, `site.webmanifest`, canonical, description,
+theme-colour and Open Graph. The other apps should be brought up to *it*.
+
+## 2026-09-16 — icons the operator can pin, and one pair of hands for the shells
+
+**"Fail, no icons" — and the cause was a trap I had already been bitten by.**
+`bin/design-icon.sh install` writes an app's rune into the icon theme and a
+`.desktop` entry into the applications dir. It used `XDG_DATA_HOME`, and this
+agent session exports that as a **sandbox** (`…/opencode-rd`), so the icons went
+somewhere no desktop can see. It now targets the operator's real data dir
+(`$HOME/.local/share`, with `YMIR_DESKTOP_DATA_HOME` for a throwaway test) — the
+same class of bug that once hid `gh` from this session.
+
+Installed now, for **every** app: hlidskjalf, **odrerir**, **sessrumnir**, the
+Smíðja visualizer and hlidskjalf-mobile — each with its rune icon and a dockable
+entry. Óðrerir and Sessrúmnir had **none**, which is exactly why they could not
+be pinned. The stale `ymir-smidja.desktop` (pointing at a repo PNG) is folded
+into the rune's own entry.
+
+**One pair of hands for two lifecycles.** `scripts/start.sh` and
+`scripts/stop.sh` manage the web; `scripts/electron.sh` manages the shells — and
+they never met, which is why "the electrons are not running" was true while 28
+processes stood, and why a restart could leave a shell watching a dead port.
+`scripts/raise.sh` / `scripts/lower.sh` own both: lower takes the windows down
+**first**, so none is left watching a port that just vanished.
+
+**A bug the restart surfaced:** `scripts/electron.sh stop` used `local` outside a
+function — it worked only because the assignment happened to be harmless, and it
+printed a shell error on every stop. Fixed.
+
+**And the inventory is a tool:** `bin/feature-inventory.sh` — 132 tools, 5 jobs,
+26 skills, 20 agents, 8 workflows, 6 apps, 4 migrations, 6 registered projects,
+each with the way it must be proven written beside it.
+
+## 2026-09-16 — the icons are real runes now (eight of them were drawings)
+
+The Allfather looked at the icons and said what no check had: *"the icons must be
+based on real runes."* He was right, and the fault was in the **glyph set**, not
+just in the two icons I had minted.
+
+`midgard/design-system/icons.md` claims every glyph is an Elder Futhark rune and
+gives each its unicode. **Eight of the twenty-one files were drawings** — a hall
+(`valhalla`, which Óðrerir was wearing), a horn, a shield, a spear, a well, a
+squirrel, a gate, a world-tree. Replaced with the real runes their own rows
+declare:
+
+```
+gjallarhorn ᚷ Gebo · gungnir ᚦ Thurisaz · heimdall ᚺ Hagall · mimirsbrunn ᛜ Ingwaz
+ratatoskr ᛒ Berkanan · utgard ᚢ Uruz · valhalla ᚹ Wunjo · yggdrasil ᛃ Jera
+```
+
+Gungnir was claiming Gebo, which Gjallarhorn already holds, so it takes
+**Thurisaz** (the thorn — the spear) and `icons.md` is corrected to match.
+
+**Five apps, five different runes:** Hlidskjalf `ehwaz`, mobile `raidho` (the
+road), Óðrerir `valhalla`→ now genuinely `ᚹ Wunjo`, Sessrúmnir `sowilo`, Smíðja
+`kaunan` (the torch). The install table drives both mint and install now — it had
+been guessing paths, which is why the Smíðja visualizer had been given
+Hlidskjalf's icon.
+
+Also this pass: the visualizer gained its furniture (description, canonical,
+manifest, OG + Twitter), Óðrerir's Electron shell asks for a window icon, and the
+apple-touch PNGs are rasterised (ImageMagick is present).
+
+## 2026-09-16 — the desktop never dials out: Cloudflare stays outside Electron
+
+The Allfather's rule: **"electron should never have anything with cloudflare to
+do."** It was not quite true — three doors stood open:
+
+- **Sessrúmnir's "To the Hall"** preferred the local hall and, when it did not
+  answer, fell back to `https://hall.ymir.zerwiz.org`. A desktop seat that
+  reaches for a public hostname when its own machine is quiet is a seat that
+  leaves the building to do its errands. It is now **local only** — when the hall
+  is not running, the seat says so.
+- **Hlidskjalf's shell** took `HLIDSKJALF_URL` and `SMIDJA_URL` from the
+  environment, and **Óðrerir's** took `HALL_URL` — each able to point a desktop
+  window at a tunnel with one exported variable.
+- Both now pass their URL through a **loopback guard**: anything that is not
+  `127.0.0.1`, `localhost` or `::1` is refused with a warning and replaced by the
+  local default. The shell loads the machine, never the internet.
+
+**Why this is the same fight as the bridge:** a desktop app that dials out is a
+desktop app whose failures belong to somebody else's edge. The bridge disguised a
+cloud endpoint as `127.0.0.1` and cost a night; these three would have disguised a
+tunnel as a local seat.

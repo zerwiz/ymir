@@ -160,6 +160,8 @@ interface YmirState {
   signOut: () => void;
   loadLive: () => Promise<void>;
   refreshSmidja: () => Promise<void>;
+  /** Re-read the LIVE fleet: the dead leave, and the count follows the source. */
+  refreshAgents: () => Promise<void>;
   setSelectedSession: (id: string | null) => void;
   loadSessionDetail: (id: string) => Promise<void>;
 
@@ -330,6 +332,10 @@ export const useYmir = create<YmirState>((set, get) => ({
     }
   },
 
+  refreshAgents: async () => {
+    const agents = await gateApi.agents().catch(() => undefined);
+    if (agents) set({ agents });
+  },
   refreshSmidja: async () => {
     try {
       const [health, sessions, stats, decisions] = await Promise.all([

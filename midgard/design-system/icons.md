@@ -15,6 +15,7 @@ icons[21]{glyph,name,unicode,figure,used_for}:
   "tiwaz","Tiwaz","ᛏ","Týr (justice)","Tasks — the A2A lifecycle board"
   "ingwaz","Ingwaz","ᛜ","Ing (the well)","Well — Mimirsbrunn recall"
   "raidho","Raidho","ᚱ","ride/journey","Runes — the ledger (a road carved)"
+  "othala","Othala","ᛟ","inheritance, the hall","Óðrerir / Sessrúmnir — what is kept"
   "algiz","Algiz","ᛉ","protection","Reviews / Glitnir — the protective gate; the Ymir emblem"
   "dagaz","Dagaz","ᛞ","day/dawn","Processes — Valhalla supervision"
   "sowilo","Sowilo","ᛊ","sun","Files — Skrymir (light on the tree)"
@@ -29,7 +30,7 @@ icons[21]{glyph,name,unicode,figure,used_for}:
   "ratatoskr","Ratatoskr","ᛒ","the squirrel","Ratatoskr — the A2A bus"
   "mimirsbrunn","Mimirsbrunn","ᛜ","the well of wisdom","Mimirsbrunn — memory"
   "valhalla","Valhalla","ᚹ","the hall of the slain","Valhalla — process health"
-  "gungnir","Gungnir","ᚷ","Odin's spear","Gungnir — skill synthesis"
+  "gungnir","Gungnir","ᚦ","Odin's spear","Gungnir — skill synthesis"
   "heimdall","Heimdall","ᚺ","the watchman","Heimdall — auth / the gate"
   "gjallarhorn","Gjallarhorn","ᚷ","the horn","Gjallarhorn — the tunnel and its call"
 ```

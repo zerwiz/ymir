@@ -53,6 +53,14 @@
 </head>
 <body>
 
+<!-- the hearth — the landing page's fire, warming the hall (shared midgard/design-system/ember.js) -->
+<canvas data-ember aria-hidden="true"
+  style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
+<script type="module">
+  import { startAllEmbers } from '../../../midgard/design-system/ember.js';
+  startAllEmbers();
+</script>
+
 <!-- ======= TOPBAR — the hall's own deck ======= -->
 <div class="hall-top">
   <span><span class="rn">ᛈ</span>YMIR · ÓÐRERIR — THE LIVE HALL</span>

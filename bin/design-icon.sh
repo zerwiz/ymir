@@ -25,19 +25,20 @@ case "${1-}" in
 esac
 ACTION="${1:-list}"; shift || true
 
-# app-dir | glyph | house tint | what the rune says
+# dir|glyph|tint|says|icon-name|exec|wm-class
+# FIVE UI surfaces, FIVE DIFFERENT glyphs — no app borrows another's rune.
 APPS=(
-  "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane"
-  "apps/odrerir|valhalla|#c9973f|the hall — Óðrerir, the Live Hall"
-  "apps/sessrumnir|sowilo|#8b5cf6|the sun — Sessrúmnir, the seat that shows the cloth"
-  "apps/smidja-factory/apps/visualizer|ansuz|#f59e0b|Odin's breath — Smíðja, the forge"
-  "apps/hlidskjalf-mobile|ehwaz|#c9973f|the seat, carried — Hlidskjalf on a phone"
+  "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane|ymir-hlidskjalf|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf|Ymir · Hlidskjalf"
+  "apps/hlidskjalf-mobile|raidho|#c9973f|the road — the seat carried, Hlidskjalf on a phone|ymir-hlidskjalf-mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile|Ymir · Hlidskjalf Mobile"
+  "apps/odrerir|valhalla|#c9973f|the hall — Óðrerir, the Live Hall|ymir-odrerir|scripts/electron.sh start --view odrerir|ymir-odrerir|Ymir · Óðrerir"
+  "apps/sessrumnir|othala|#c9973f|the hall — Sessrúmnir, the seat that holds the cloth|ymir-sessrumnir|bin/sessrumnir.sh start|ymir-sessrumnir|Ymir · Sessrúmnir"
+  "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-visualizer|scripts/electron.sh start --view smidja|ymir-smidja|Ymir · Smíðja"
 )
 
 list() {
   printf 'app_icons[%d]{app,rune,tint,says}:\n' "${#APPS[@]}"
   for row in "${APPS[@]}"; do
-    IFS='|' read -r dir glyph tint says <<<"$row"
+    IFS='|' read -r dir glyph tint says _icon _exec _klass _name <<<"$row"
     printf '  "%s","%s","%s","%s"\n' "$(basename "$dir")" "$glyph" "$tint" "$says"
   done
   printf 'runes[6]{glyph,name,meaning}:\n'
@@ -71,17 +72,79 @@ mint() {  # <app-dir> <glyph> <tint> <label>
     "$(basename "$dir")" "$glyph" "${outdir#"$ROOT"/}/icon.svg"
 }
 
+
+# ── install into the user's system ───────────────────────────────────────────
+# An icon that only exists in the checkout is an icon the operator cannot pin.
+# This writes the rune into the user's icon theme and a .desktop entry per app,
+# rendered with THIS machine's root (never a hardcoded home), so every app is
+# dockable and carries the house mark. Idempotent.
+# The DESKTOP the operator actually sees, not whatever a session happened to
+# export: an agent harness may set XDG_DATA_HOME to a sandbox (this one does),
+# and an icon written there is an icon nobody can pin. YMIR_DESKTOP_DATA_HOME
+# exists for a test that genuinely wants a throwaway target.
+data_home="${YMIR_DESKTOP_DATA_HOME:-$HOME/.local/share}"
+icons_dir="$data_home/icons/hicolor/scalable/apps"
+apps_dir="$data_home/applications"
+# app | entry name | Exec | StartupWMClass
+ENTRIES=(
+  "hlidskjalf|Ymir · Hlidskjalf|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf"
+  "odrerir|Ymir · Óðrerir|scripts/electron.sh start --view odrerir|ymir-odrerir"
+  "sessrumnir|Ymir · Sessrúmnir|bin/sessrumnir.sh start|ymir-sessrumnir"
+  "visualizer|Ymir · Smíðja|scripts/electron.sh start --view smidja|ymir-smidja"
+  "hlidskjalf-mobile|Ymir · Hlidskjalf Mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile"
+)
+install_all() {
+  # A phone app gets an icon for its own bundle, never a desktop entry.
+  local EXCLUDE=" hlidskjalf-mobile "
+
+  mkdir -p "$icons_dir" "$apps_dir" || { printf 'error: cannot write %s / %s\n' "$icons_dir" "$apps_dir" >&2; exit 1; }
+  printf 'installed[%d]{app,icon,entry}:\n' "${#APPS[@]}"
+  local row dir glyph tint says iconname exec klass src
+  for row in "${APPS[@]}"; do
+    IFS='|' read -r dir glyph tint says iconname exec klass display <<<"$row"
+    case "$EXCLUDE" in *" $(basename "$dir") "*) continue ;; esac
+    src="$ROOT/$dir/public/icon.svg"
+    if [ ! -f "$src" ]; then
+      # mint it first — the icon is defined by this table, so it is never absent
+      if [ -r "$ICONS/$glyph.svg" ]; then
+        mkdir -p "$(dirname "$src")" 2>/dev/null
+        path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$ICONS/$glyph.svg" | head -1)"
+        { printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="%s">\n' "$says"
+          printf '  <title>%s</title>\n  <rect width="32" height="32" rx="7" fill="%s"/>\n' "$says" "$STONE"
+          printf '  <g transform="translate(4 4)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">\n' "$tint"
+          printf '    <path d="%s"/>\n  </g>\n</svg>\n' "$path"
+        } >"$src" 2>/dev/null || true
+      fi
+    fi
+    cp -f "$src" "$icons_dir/$iconname.svg" 2>/dev/null || { printf '  "%s","FAILED","-","no icon at %s"\n' "$dir" "${src#"$ROOT"/}"; continue; }
+    {
+      printf '[Desktop Entry]\nType=Application\nVersion=1.0\n'
+      printf 'Name=%s\n' "$display"
+      printf 'Comment=%s\n' "$says"
+      printf 'Exec=bash %s/%s\n' "$ROOT" "$exec"
+      printf 'Icon=%s\n' "$iconname"
+      printf 'Terminal=false\nCategories=Development;Utility;\n'
+      printf 'StartupWMClass=%s\nStartupNotify=true\n' "$klass"
+    } >"$apps_dir/$iconname.desktop"
+    printf '  "%s","%s.svg","%s.desktop"\n' "$iconname" "$iconname" "$iconname"
+  done
+  [ -f "$apps_dir/ymir-smidja.desktop" ] && rm -f "$apps_dir/ymir-smidja.desktop"
+  for stale in ymir-hlidskjalf-mobile; do rm -f "$apps_dir/$stale.desktop" "$icons_dir/$stale.svg"; done
+  command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
+}
+
 case "$ACTION" in
   list) list ;;
+  install) install_all ;;
   mint)
     if [ "${1:-}" = "--all" ]; then
       printf 'minted[%d]{app,rune,file,link}:\n' "${#APPS[@]}"
-      for row in "${APPS[@]}"; do IFS='|' read -r d g t l <<<"$row"; mint "$d" "$g" "$t" "$l"; done
+      for row in "${APPS[@]}"; do IFS='|' read -r d g t l _i _e _k _n <<<"$row"; mint "$d" "$g" "$t" "$l"; done
     else
       want="${1:-}"; found=0
       printf 'minted[1]{app,rune,file,link}:\n'
       for row in "${APPS[@]}"; do
-        IFS='|' read -r d g t l <<<"$row"
+        IFS='|' read -r d g t l _i _e _k _n <<<"$row"
         case "$(basename "$d")" in "$want") mint "$d" "$g" "$t" "$l"; found=1 ;; esac
       done
       [ "$found" = 1 ] || { printf 'error: unknown app %s\nhelp: bin/design-icon.sh list\n' "$want" >&2; exit 2; }

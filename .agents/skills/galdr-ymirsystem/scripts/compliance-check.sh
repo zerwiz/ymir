@@ -21,6 +21,7 @@
 #   skillindex every real skill is indexed in .agents/skills/README.md, and every
 #             .agents/skills/<name> path cited by the assets resolves
 #   assets    a governed path changed without its owning asset
+#   design    the two carriers of the cloth (CSS tokens, Sessrumnir seeds) agree
 #   duplicates no duplicate asset trees
 #   governed  every governed path exists
 #
@@ -284,6 +285,22 @@ if command -v git >/dev/null 2>&1 && git -C "$ROOT" rev-parse --is-inside-work-t
   fi
 else
   add assets "governed assets current" SKIP "not a git work tree"
+fi
+
+# --- design -----------------------------------------------------------------
+# The cloth has TWO carriers on purpose: the CSS tokens every web surface imports
+# (midgard/design-system/tokens.css) and the seven seeds Sessrúmnir derives ~40
+# tokens from (themes/fensalir.json, the reference form). Two carriers of one
+# identity drift the moment someone edits one, so they are checked against each
+# other here: a colour may not change in one place only.
+if [ -x "$ROOT/bin/design-check.sh" ]; then
+  if "$ROOT/bin/design-check.sh" >/dev/null 2>&1; then
+    add design "one cloth (tokens = seeds)" PASS "the 7 pairs agree — stone, bone, bronze, blood"
+  else
+    add design "one cloth (tokens = seeds)" FAIL "drifted — run bin/design-check.sh to see which pair"
+  fi
+else
+  add design "one cloth (tokens = seeds)" SKIP "bin/design-check.sh absent"
 fi
 
 # --- duplicates -------------------------------------------------------------

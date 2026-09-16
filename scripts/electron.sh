@@ -94,7 +94,7 @@ case "$ACTION" in
     exit 0 ;;
   stop)
     for v in "${VIEWS[@]}"; do
-      local pids; pids="$(view_pids "$v")"
+      pids="$(view_pids "$v")"
       if [ -n "$pids" ]; then
         # Kill every live pid for this view (the shim era could leave several).
         printf '%s\n' "$pids" | while IFS= read -r p; do [ -n "$p" ] && kill "$p" 2>/dev/null || true; done

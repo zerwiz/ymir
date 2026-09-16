@@ -102,6 +102,7 @@ done
 HOSTMAP="$ROOT/state/gjallarhorn-hosts.env"
 {
   printf '# Written by bin/gjallarhorn-expose.sh — the gate routes these hosts.\n'
+  printf 'YMIR_PRIMARY_HOST=ymir%s.%s\n' "$SUFFIX" "$DOMAIN"
   printf 'SMIDJA_HOST=smidja%s.%s\n' "$SUFFIX" "$DOMAIN"
   printf 'ODRERIR_HOST=odrerir%s.%s\n' "$SUFFIX" "$DOMAIN"
 } >"$HOSTMAP"

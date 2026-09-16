@@ -9,7 +9,18 @@ const http = require('node:http');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
-const HALL = process.env.HALL_URL || 'http://127.0.0.1:4322/';
+// A desktop shell is a LOCAL seat: it never wears a tunnel. A non-loopback URL
+// (a *.zerwiz.org hostname, say) is refused, not honoured - Cloudflare has no
+// business inside an Electron window.
+function localOnly(url, fallback) {
+  try {
+    const h = new URL(url).hostname;
+    if (h === '127.0.0.1' || h === 'localhost' || h === '::1') return url;
+  } catch { /* not a URL at all: fall through */ }
+  console.warn('[ymir] refusing a non-local URL for a desktop shell: ' + url);
+  return fallback;
+}
+const HALL = localOnly(process.env.HALL_URL || 'http://127.0.0.1:4322/', 'http://127.0.0.1:4322/');
 
 // One window, one app identity: Óðrerir is its own desktop app so it never
 // stacks in the taskbar and carries its own icon.
