@@ -38,7 +38,7 @@ export const DOMAIN_LABEL: Record<string, string> = {
 };
 
 export const DOMAINS: Record<string, DomainDef> = {
-  ymirlabs: { id: 'ymirlabs', name: 'Ymir Labs', accent: '#38bdf8', glyph: 'ᛦ' },
+  ymirlabs: { id: 'ymirlabs', name: 'Ymir Labs', accent: '#c9973f', glyph: 'ᛦ' },
   brokkforge: { id: 'brokkforge', name: 'Brokk Forge', accent: '#f59e0b', glyph: 'ᛒ' },
   runestone: { id: 'runestone', name: 'Runestone Labs', accent: '#f43f5e', glyph: 'ᚱ' },
   muninn: { id: 'muninn', name: 'Muninn Labs', accent: '#8b5cf6', glyph: 'ᛗ' },
@@ -64,7 +64,7 @@ export interface AccentPreset {
  */
 export const ACCENTS: AccentPreset[] = [
   { id: 'realm', name: 'Realm default', tint: null, tint2: null },
-  { id: 'azure', name: 'Azure', tint: '#38bdf8', tint2: '#0ea5e9' },
+  { id: 'azure', name: 'Azure', tint: '#c9973f', tint2: '#0ea5e9' },
   { id: 'indigo', name: 'Indigo', tint: '#818cf8', tint2: '#6366f1' },
   { id: 'violet', name: 'Violet', tint: '#a855f7', tint2: '#7c3aed' },
   { id: 'magenta', name: 'Magenta', tint: '#d946ef', tint2: '#c026d3' },

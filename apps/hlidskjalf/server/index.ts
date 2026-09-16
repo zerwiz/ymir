@@ -1527,6 +1527,9 @@ const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
 // No default host: which hostname serves the smithy is the machine's fact.
 const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? '').toLowerCase();
 const ODRERIR_HOST = (process.env.ODRERIR_HOST ?? '').toLowerCase();
+/** The one door: the primary host that carries Hlidskjalf's own login. Every app
+ *  host redirects its unauthenticated visitors here, with where they were going. */
+const PRIMARY_HOST = (process.env.YMIR_PRIMARY_HOST ?? '').toLowerCase();
 const ODRERIR_URL = process.env.ODRERIR_URL ?? 'http://127.0.0.1:4322';
 /** Every app host the gate fronts: unauthenticated visitors get the login, never
  *  the app. Add a row when an app earns a public hostname. */
@@ -1622,7 +1625,7 @@ function appLoginPage(name = 'Smíðja'): Response {
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
-    background: radial-gradient(900px 500px at 50% -10%, rgba(56,189,248,.12), transparent 60%), #080c14;
+    background: radial-gradient(900px 500px at 50% -10%, rgba(226,232,240,.07), transparent 60%), #080c14;
     color: #e2e8f0; font: 15px/1.4 system-ui, sans-serif; }
   form { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px;
     background: #0d131f; border: 1px solid #23304a; border-radius: 14px; padding: 26px;
@@ -1630,13 +1633,13 @@ function appLoginPage(name = 'Smíðja'): Response {
   .brand { display: flex; align-items: center; gap: 12px; }
   .brand b { font-size: 20px; letter-spacing: .18em; }
   .brand small { display: block; font: 10px/1 ui-monospace, monospace; letter-spacing: .28em;
-    text-transform: uppercase; color: #38bdf8; margin-top: 4px; }
+    text-transform: uppercase; color: #e2e8f0; margin-top: 4px; }
   h1 { font-size: 22px; margin: 0; }
   p { margin: 0; color: #94a3b8; font-size: 13px; }
   input { padding: 11px 12px; border-radius: 9px; border: 1px solid #23304a; background: #111a2b;
     color: #e2e8f0; font-size: 15px; }
-  input:focus { outline: none; border-color: #38bdf8; }
-  button { padding: 11px 12px; border: none; border-radius: 9px; background: #38bdf8; color: #06121f;
+  input:focus { outline: none; border-color: #e2e8f0; }
+  button { padding: 11px 12px; border: none; border-radius: 9px; background: #e2e8f0; color: #06121f;
     font-weight: 700; font-size: 15px; cursor: pointer; }
   .err { color: #f87171; font-size: 12px; min-height: 14px; }
 </style>
@@ -1646,7 +1649,7 @@ function appLoginPage(name = 'Smíðja'): Response {
   <div class="brand">
     <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true">
       <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b"/>
-      <g fill="#38bdf8">
+      <g fill="#e2e8f0">
         <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13"/>
         <polygon points="6,21 26,21 25.4,24 6.6,24"/>
         <polygon points="8,25 24,25 23.3,27.5 8.7,27.5"/>
@@ -1874,8 +1877,14 @@ const server = Bun.serve({
       const app = APP_HOSTS.find((a) => a.host === host);
       if (app) {
         if (!isAuthed(req)) {
+          // No dead login page: send them to the one login, remembering the app.
           if (p.startsWith('/api/')) return json({ error: 'unauthorized' }, 401);
-          return appLoginPage(app.name);
+          const scheme = (req.headers.get('x-forwarded-proto') ?? 'https').split(',')[0];
+          const door = PRIMARY_HOST || host;
+          return new Response(null, {
+            status: 302,
+            headers: { location: `${scheme}://${door}/?next=${encodeURIComponent(url.toString())}` },
+          });
         }
         return proxyApp(req, url, app.base, app.name);
       }

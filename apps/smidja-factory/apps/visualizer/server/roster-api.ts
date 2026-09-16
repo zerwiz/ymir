@@ -13,7 +13,7 @@
  * on every keystroke either.
  */
 import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { join } from "node:path";
 import { repoRootOf as repoRoot } from "./db.ts";
 import type { ModelInfo, RosterInfo, RostersResponse, ModelsResponse } from "../shared/types.ts";
 

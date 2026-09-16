@@ -13,7 +13,7 @@
  * about spawning, and everything wrapped by `safely` in the caller.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { repoRootOf } from "./db.ts";
 import { piCommand } from "./model-catalog.ts";
 import type {
