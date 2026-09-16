@@ -1526,6 +1526,14 @@ const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? '';
 const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
 // No default host: which hostname serves the smithy is the machine's fact.
 const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? '').toLowerCase();
+const ODRERIR_HOST = (process.env.ODRERIR_HOST ?? '').toLowerCase();
+const ODRERIR_URL = process.env.ODRERIR_URL ?? 'http://127.0.0.1:4322';
+/** Every app host the gate fronts: unauthenticated visitors get the login, never
+ *  the app. Add a row when an app earns a public hostname. */
+const APP_HOSTS: Array<{ host: string; base: string; name: string }> = [
+  { host: SMIDJA_HOST, base: SMIDJA_URL, name: 'Smíðja' },
+  { host: ODRERIR_HOST, base: ODRERIR_URL, name: 'Óðrerir' },
+].filter((a) => a.host !== '');
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
 /** token → login. A session must know *who* it is, not merely that it exists. */
@@ -1602,14 +1610,14 @@ function sessionResponse(login: string): Response {
   });
 }
 
-/** The login screen for the Smíðja host — same gate, same credentials. */
-function smidjaLoginPage(): Response {
+/** The login screen for an app host — same gate, same credentials. */
+function appLoginPage(name = 'Smíðja'): Response {
   const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Smíðja — Sign in</title>
+<title>${name} — Sign in</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -1644,7 +1652,7 @@ function smidjaLoginPage(): Response {
         <polygon points="8,25 24,25 23.3,27.5 8.7,27.5"/>
       </g>
     </svg>
-    <span><b>SMÍÐJA</b><small>the smithy</small></span>
+    <span><b>${name.toUpperCase()}</b><small>Ymir</small></span>
   </div>
   <h1>Sign in</h1>
   <p>The gate is closed. Sign in, or enter an invite code to make your own account.</p>
@@ -1680,7 +1688,7 @@ function smidjaLoginPage(): Response {
 }
 
 /** Forward an authed Smíðja-host request to the visualizer on :8437. */
-async function proxySmidja(req: Request, url: URL): Promise<Response> {
+async function proxyApp(req: Request, url: URL, base = SMIDJA_URL, label = 'smidja'): Promise<Response> {
   const headers = new Headers(req.headers);
   headers.delete('host');
   headers.delete('cookie');
@@ -1688,10 +1696,10 @@ async function proxySmidja(req: Request, url: URL): Promise<Response> {
   const init: RequestInit = { method: req.method, headers, redirect: 'manual' };
   if (req.method !== 'GET' && req.method !== 'HEAD') init.body = await req.arrayBuffer();
   try {
-    const up = await fetch(`${SMIDJA_URL}${url.pathname}${url.search}`, init);
+    const up = await fetch(`${base}${url.pathname}${url.search}`, init);
     return new Response(up.body, { status: up.status, headers: up.headers });
   } catch (err) {
-    return json({ error: `smidja upstream unreachable: ${(err as Error).message}` }, 502);
+    return json({ error: `${label} upstream unreachable: ${(err as Error).message}` }, 502);
   }
 }
 
@@ -1863,12 +1871,13 @@ const server = Bun.serve({
       // The Smíðja host rides the same gate: sign in here, then every request
       // is reverse-proxied to the visualizer on :8437.
       const host = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
-      if (host === SMIDJA_HOST) {
+      const app = APP_HOSTS.find((a) => a.host === host);
+      if (app) {
         if (!isAuthed(req)) {
           if (p.startsWith('/api/')) return json({ error: 'unauthorized' }, 401);
-          return smidjaLoginPage();
+          return appLoginPage(app.name);
         }
-        return proxySmidja(req, url);
+        return proxyApp(req, url, app.base, app.name);
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
