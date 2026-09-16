@@ -44,6 +44,19 @@ docker compose -f deploy/compose/compose.yaml up -d
 # or: podman-compose -f deploy/compose/compose.yaml up -d
 ```
 
+## Baked image (optional)
+
+Prefer an immutable release to a bind-mounted checkout? Build `deploy/Containerfile`
+with either engine and point the Quadlet/Compose `Image=` at your tag:
+
+```bash
+podman build -f deploy/Containerfile -t ymir:0.1.0 .   # or: docker build …
+```
+
+Durable state still needs volumes (`state/`, `workspace/`, `.agents/memory/`,
+`agents/`, `apps/*/dist`) — the image bakes only code. Validated: the Quadlet unit
+passes Podman's own generator (`/usr/libexec/podman/quadlet -dryrun -user`).
+
 ## Isolation on a **shared** server
 
 When Ymir shares a machine with other services, the **container is the boundary**:
