@@ -149,6 +149,18 @@
           "name": "frontend-design-expert-8b@q4_k_m"
         }
       }
+    },
+    "apodex": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "apodex-mini (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:1234/v1"
+      },
+      "models": {
+        "apodex-1.0-mini": {
+          "name": "apodex-1.0-mini (Q4_K_M)"
+        }
+      }
     }
   },
   "lsp": false

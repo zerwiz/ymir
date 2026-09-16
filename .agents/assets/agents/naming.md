@@ -1,10 +1,10 @@
 # Naming — platform map (loaded from AGENTS.md)
 
 The full Norse component map. AGENTS.md loads this when a task names a subsystem.
-Deep doctrine (law, aetts, reject list): `.agents/skills/galdr-cli/assets/norse-naming.md`.
+Deep doctrine (law, aetts, reject list): `.agents/skills/galdr-ymirsystem/assets/norse-naming.md`.
 
 ```
-platform[27]{subsystem,norse,role}:
+platform[29]{subsystem,norse,role}:
   "Master platform root","Ymir","base host OS, master daemon"
   "Primary agent","Brokk","main autonomous worker"
   "Sub-agent worker","Eindri","isolated sandboxed workers"
@@ -24,6 +24,7 @@ platform[27]{subsystem,norse,role}:
   "Issue-to-PR pipeline","Mjollnir","autonomous bug-fix and PR creation"
   "Process health monitor","Valhalla","PM2/Docker process supervisor"
   "Skill synthesis engine","Gungnir","dynamic skill creation & validation"
+  "Skill optimization/refinement","Gunnlöð","keeper of the mead of poetry; distills trajectories into refined skill artifacts"
   "Agent ergonomics standards","Galdr","TOON output, 10 design principles, master builder"
   "MCP/A2A composition","Hermóðr","MCP vertical (agent→tools) + A2A horizontal (agent↔agent)"
   "Session-start digest","Sága","the seeress who sees all; boots the session"

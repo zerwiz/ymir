@@ -1,9 +1,9 @@
 {
-  "name": "@ymir/hlidskjalf",
-  "private": true,
+  "name": "@zerwiz/hlidskjalf",
+  "private": false,
   "version": "0.1.0",
   "type": "module",
-  "description": "Hlidskjalf — Odin's high seat. The Ymir master control dashboard.",
+  "description": "Hlidskjalf \u2014 Odin's high seat. The Ymir master control dashboard.",
   "scripts": {
     "dev": "vite",
     "api": "bun run server/index.ts",
@@ -11,7 +11,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "desktop": "electron ."
+    "desktop": "electron .",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.2",
@@ -35,5 +36,20 @@
   "allowScripts": {
     "electron@33.4.11": true,
     "esbuild@0.25.12": true
-  }
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zerwiz/hlidskjalf.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "!dist/*.apk",
+    "server",
+    "README.md",
+    "electron"
+  ]
 }

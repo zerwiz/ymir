@@ -1,7 +1,7 @@
 # TOON output + tasks-cli (loaded from AGENTS.md)
 
 AGENTS.md loads this when a task builds an agent-facing tool or uses tasks-cli.
-Full doctrine: `.agents/skills/galdr-cli/assets/principles.md`.
+Full doctrine: `.agents/skills/galdr-ymirsystem/assets/principles.md`.
 
 ## TOON output format
 
@@ -23,7 +23,7 @@ toon_rules[5]{rule,detail}:
   "Errors","`error: <message>` + `help: <fix>` on stdout, exit 1 or 2"
 ```
 
-Validate any TOON with `.agents/skills/galdr-cli/scripts/toon-check.py`.
+Validate any TOON with `.agents/skills/galdr-ymirsystem/scripts/toon-check.py`.
 
 ## tasks-cli — AXI task manager
 

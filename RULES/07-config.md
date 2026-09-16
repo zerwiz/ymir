@@ -33,7 +33,7 @@ deploy manifests, and generated config.
 
 ## Enforcement
 
-- Review, plus `bash .agents/skills/galdr-cli/scripts/compliance-check.sh`.
+- Review, plus `bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh`.
 - The portability layer is the **one** place that knows an environment difference
   (Rule 05). A hardcoded value is a Rule 05 violation as well as a Rule 07 one.
 

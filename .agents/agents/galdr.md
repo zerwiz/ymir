@@ -1,1 +1,1 @@
-../skills/galdr-cli/SKILL.md
+../skills/galdr-ymirsystem/SKILL.md

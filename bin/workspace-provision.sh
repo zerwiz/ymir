@@ -11,6 +11,8 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=bin/hoard-lib.sh
+. "$SCRIPT_DIR/hoard-lib.sh"
 WORKSPACE="$ROOT/workspace"
 DEFAULT_WORK="company,marketing,development,life"
 DEFAULT_PERSONAL="me,life,development"
@@ -49,7 +51,8 @@ done
 mkdir -p "$WORKSPACE/$NAME/memory/daily"
 
 # Register (idempotent) in workspaces.yaml.
-reg="${YMIR_HOARD:-$ROOT/hodd}/identity/workspaces.yaml"
+hoard_root _hoard
+reg="$_hoard/identity/workspaces.yaml"
 [ -f "$reg" ] || reg="$WORKSPACE/workspaces.yaml"
 if [ ! -f "$reg" ]; then printf 'workspaces:\n' >"$reg"; fi
 if grep -qE "^  - id: ${NAME}$" "$reg" 2>/dev/null; then
