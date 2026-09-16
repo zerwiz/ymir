@@ -427,7 +427,18 @@ async function processes() {
 }
 
 /* ---- /api/smidja (the smithy's own trace, read-only) --------------------- */
-const SMIDJA_DB = resolve(ROOT, process.env.SMIDJA_DB ?? 'smidja/smidja_data/smidja.db');
+// The smithy's db lives where the RUNTIME keeps it: $YMIR_HOME first (the data
+// belongs outside the repo), else the app tree it moved into. It sat at the repo
+// root's old path for a year; when the tree moved, this reader quietly opened
+// nothing and every statistic showed zero - a gate with nothing to say.
+const SMIDJA_DB = (() => {
+  if (process.env.SMIDJA_DB) return process.env.SMIDJA_DB;
+  const candidates = [
+    join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'smidja', 'smidja.db'),
+    join(ROOT, 'apps', 'smidja', 'smidja_data', 'smidja.db'),
+  ];
+  return candidates.find((c) => existsSync(c)) ?? candidates[1];
+})();
 
 function smidja(): Database | null {
   try {
