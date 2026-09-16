@@ -49,6 +49,35 @@ def engine(agent: str | None) -> Engram:
         return _pool[key]
 
 
+def layers():
+    """What the well actually holds, layer by layer - the record a UI reads."""
+    out = {"facts": 0, "facts_active": 0, "facts_superseded": 0, "entities": 0,
+           "edges": 0, "reflections": 0, "last_reflection": None, "vec_index": 0}
+    try:
+        con = sqlite3.connect(f"file:{STORE}?mode=ro", uri=True)
+        for key, sql in (
+            ("facts", "select count(*) from facts"),
+            ("facts_active", "select count(*) from facts where superseded_at is null"),
+            ("facts_superseded", "select count(*) from facts where superseded_at is not null"),
+            ("entities", "select count(*) from entities"),
+            ("edges", "select count(*) from edges"),
+            ("reflections", "select count(*) from reflections"),
+            ("vec_index", "select count(*) from vec_episodes_rowids"),
+        ):
+            try:
+                out[key] = int(con.execute(sql).fetchone()[0])
+            except Exception:
+                pass
+        try:
+            out["last_reflection"] = con.execute(
+                "select max(finished_at) from reflections").fetchone()[0]
+        except Exception:
+            pass
+    except Exception as e:
+        out["error"] = str(e)
+    return out
+
+
 def count_episodes() -> int:
     try:
         con = sqlite3.connect(f"file:{STORE}?mode=ro", uri=True)
@@ -98,10 +127,14 @@ class Handler(BaseHTTPRequestHandler):
                     "agents": engine(None).list_agents(),
                 })
             if u.path == "/inspect":
+                # THE LAYERS, not just the count. The smithy shows what it is told,
+                # and it was told three fields while the well holds six: a panel that
+                # reads only episodes cannot show that facts and entities exist.
                 return self._json(200, {
                     "store": str(STORE),
                     "episodes": count_episodes(),
                     "agents": engine(None).list_agents(),
+                    **layers(),
                 })
             if u.path == "/recent":
                 limit = int((q.get("limit") or ["60"])[0])
