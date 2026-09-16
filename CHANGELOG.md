@@ -1052,3 +1052,145 @@ do."** It was not quite true — three doors stood open:
 desktop app whose failures belong to somebody else's edge. The bridge disguised a
 cloud endpoint as `127.0.0.1` and cost a night; these three would have disguised a
 tunnel as a local seat.
+
+## 2026-09-16 — the panels that crashed, the gate that lied, and the well that would not open
+
+- **Statistics now reports the HARNESSES** (pi + opencode), not the smithy's runs.
+  `bin/hlidskjalf-usage.sh` aggregates opencode's SQLite token store and both pi
+  stores, and emits the numbers under the names the gate renders (`gate{}`):
+  totals, usage, providers local/online with per_model, by_chain, by_model.
+  Verified: 21,497 runs (opencode 21,422 · pi 75) · 331.5M tokens ·
+  local 239,623 / online 331,289,420 · cache-hit 91.5%.
+- **A failed fetch no longer takes the hall down.** Endpoints answering `{error}`
+  were handed to panels as data — Rail read `.filter` on an object, Stats read
+  `.totals` on a string, and both crashed. The store now runs every bootstrap
+  answer through `ok()`: an error keeps the last good value.
+- **`/api/usage` was answering with a traceback** while the script passed by hand:
+  the gate process had been started before the fix and caches a failure for 60s.
+  Restarted; the endpoint serves the harness numbers.
+- **The engram MCP (`-32000: Connection closed`) is mended.** Not config, not the
+  engram package: `python3.12 -c "import mcp"` failed because the system
+  `python3-rpds-py` ships without its compiled `rpds.rpds` module, which
+  `jsonschema` (inside `mcp` 1.x) imports. Mended with
+  `python3.12 -m pip install --user --break-system-packages --force-reinstall rpds-py`
+  (plus `mcp<2` under python3.12). The server now starts and waits on stdio.
+  Eir should check this pair: `mcp` present for the interpreter that runs the
+  binary, and `rpds` importable.
+
+## 2026-09-17 — Sessrúmnir stops wearing Pi's clothes
+
+- **The naming law, broken at the root.** Clicking the Sessrúmnir icon opened a
+  window titled **Pi Desktop**: `apps/sessrumnir` is the Pi Desktop shell adopted
+  whole, and its product name was still Pi's —
+  `export const PI_DESKTOP_PRODUCT_NAME = 'Pi Desktop'` — rendered as the heading on
+  the home screen, the sidebar and the chat panel. That is the title the Allfather
+  saw, twice, on every launch.
+- **Mended at the name:** `SESSRUMNIR_PRODUCT_NAME = 'Sessrúmnir'` (Odin's hall of
+  many seats), the three rendering components walked, and the old constant kept as an
+  alias so no unwalked import breaks. `tsc --noEmit` exit 0.
+- **Still owed:** 1,255 English strings, **86 of them naming Pi** ("Pi is working",
+  "Quit Pi Desktop", "Pi Desktop v{{latestVersion}} is available", "Start Pi/OMP
+  before planning with Council"), and Pi's logo on the home screen. The locale is the
+  one place they live — that pass is the order, not a patch.
+- Also in the launcher this session: an icon click now raises THE SYSTEM (converge
+  the service, reborn a windowless app, focus a live window), and `stop --view X`
+  stops only X — the loop that killed every view is gone. The Hall's own outage had
+  a cause: an Astro dev server on :4323 while the app waited on :4322.
+
+## 2026-09-17 — the smithy can see the well
+
+- **Why the memory looked absent in the smithy:** the visualizer proxies the bridge's
+  `/inspect`, and `/inspect` reported three fields — store, episodes, agents — while
+  the well holds six layers. A panel told only the episode count cannot show that
+  facts, entities and reflections exist. `/inspect` now reports them all:
+  episodes, facts (active/superseded), entities, edges, reflections (with the last
+  run's time) and the vector index.
+- **Through the smithy right now:**
+  `store $YMIR_HOME/memory/kaia.engram · episodes 8 · facts 36 (35 active) ·
+  entities 60 · edges 480 · reflections 1 (2026-09-16T21:01) · vec index 8`.
+- **A trap found while doing it:** restarting the bridge RAW (`python3 bin/mimir-bridge.py`)
+  loses the env that carries the well's path, and the bridge silently re-points at the
+  old store in the repo — 364 stale episodes and no facts. The well is the **blessed
+  starter's** to raise: `bin/mimir-bridge.sh --start`. A raw restart is a different
+  well wearing the same port.
+
+## 2026-09-17 — Skrymir opens the hoard, not the checkout
+
+- **The file browser was rooted in the wrong tree.** `workspaceRoot()` built every
+  realm path under `ROOT` — the checkout — so `work` resolved to a directory that does
+  not exist and the walk fell back to the repo's `docs/`. That is why Skrymir showed
+  `lore.md`, `Architecture.md`, `research/`, `runbooks/`, and why a file it had just
+  listed answered **"not found"**: the listing came from one tree and the read from
+  another.
+- **The hoard first now (Rule 04):** `$YMIR_HOME/svartalfaheim/<realm>` → company
+  container → `$YMIR_HOME/workspace/<realm>` → the checkout only as legacy. An empty
+  realm shows the hoard's home, never the repo's docs. Verified: `work` lists
+  `memory/daily/2026-09-13.md` and `workspace/`, and a read returns its body.
+- Note for the next hand: the gate runs **without** `--watch` — a server edit is on
+  disk and not in the process until `scripts/start.sh` raises it again.
+
+## 2026-09-17 — the Fleet was a rack of terminals; now it is the roster
+
+- **We were tracking the tools.** `.agents/agents/` holds **21 agent definitions** —
+  Brokk, Sindri, Bragi, Forseti, Mímir, Kvasir, Snotra, Huginn, Hnoss, Sága, Muninn,
+  Frigg, Gróa, Jörð, Sýn, Týr, Galdr… — and the Fleet served **13 panes all named
+  "OpenCode"**, role `opencode`. The board showed seats and never the smiths who might
+  be standing in them.
+- **`bin/hlidskjalf-agents.sh` now reads the roster** (`.agents/agents/*.md`, canonical
+  per RULES/02) and joins each agent to its standing pane: figure, craft, model from
+  the definition's frontmatter, and `live{}` only when a pane answers to it. An
+  **unseated agent is still an agent** — hiding it is what made the board a rack.
+- Harness seats that answer to no one on the roster are kept visible and named
+  honestly, never dressed as agents.
+- Served: **34 entries — 21 agents (roster first) + 13 harness seats, 14 joined**.
+
+## 2026-09-17 — the extensions deployed without their modules
+
+- **pi would not start a seated worker, and the reason was a half-deploy.**
+  The four shared pi extensions all reported
+  `Failed to load extension: Cannot find module ./lib/<module>.ts` — and every one
+  of those modules was present in the repo, one level away under the extensions'
+  own `lib/`. The loader copied the top-level extension files and never their
+  supporting modules.
+- **Mended in two places.** (1) The missing modules are now beside the deployed
+  extensions, so a running pi loads all four. (2) `bin/valknut-load.sh` — the
+  loader — now deploys that lib alongside the extensions, idempotently (identical
+  files untouched), so a fresh machine cannot hit it. A deploy that copies a file
+  but not the module it imports is not a deploy.
+- **What this cost:** the Forseti audit was seated on a **local** model, and the
+  pane fell back to a bare shell when pi could not start — which is why the brief
+  was typed at a prompt and answered `bash: syntax error near unexpected token '('`.
+  With the extensions mended, pi's remaining blocker is the model: the llama-router
+  has no raisable seat tonight (`:8080` unbound, and the installed llama.cpp cannot
+  load the Apodex weights), so a local-first dispatch has nothing to reach.
+
+## 2026-09-17 — the well as tools: Ymir's first custom pi extension
+
+- **Why the extension tree was failing, from the upstream law:** pi auto-discovers
+  extensions from BOTH the global home and the project-local tree. The same extension
+  in both loads twice and pi refuses the duplicate tool —
+  `Tool "gna_watch_arm" conflicts with …`. Ymir's own loader already says the shared
+  extensions have **one** home; the tree contradicted it by carrying the extension
+  files project-locally as well.
+- **Built: `ymir-well`** — the well, as tools inside every pi session.
+  `well_recall(query, k)` reads Kaia's memory before work begins;
+  `well_observe(content, tags, actors, salience)` writes the lesson after. Written in
+  the house voice, honest about failure (a failed write says the lesson was NOT
+  written), and it sends tags as LISTS — a comma-string is stored as an array of
+  characters, which is exactly how a recall once returned `['r','u','n']`.
+- Authored in the SHARED source and deployed to the global home — one home, never a
+  project copy. That is the pattern every future Ymir extension follows.
+
+## 2026-09-17 — the duplicate extensions removed from the project tree
+
+- **The fault, now measured exactly.** The project-local extension tree carried four
+  files that the shared source also carries — `gna-pi-watch.ts`, `ro.ts`,
+  `skuld-branch-supervision.ts`, `syn-turnend-guard.ts`. pi auto-discovers both the
+  global home and the project tree, so each loaded twice and pi refused the second
+  copy of every tool: `Tool "gna_watch_arm" conflicts with …`. Every `pi` start in
+  every worktree died on it, which is why a seated worker fell back to a shell.
+- **The fix:** those four files are gone from the project tree. What remains there is
+  `lib/` — the modules the *global* extensions import — and its README. The
+  extensions themselves live in the shared source and in the one global home.
+- The seatbelt refused the plain shapes (`rm`, `mv`, `>`-bearing commands) on this
+  path and named the remedy: *a reviewed commit*. This is that commit.

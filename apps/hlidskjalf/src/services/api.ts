@@ -57,6 +57,22 @@ export interface OrderRow {
   phase: string;
   status: string;
 }
+/** What the HARNESSES spent (opencode, pi) — not only the smithy's runs. */
+export interface YmirUsage {
+  window_days: number;
+  sources: Record<string, { messages?: number; input?: number; output?: number; cache_read?: number; cache_write?: number; error?: string }>;
+  totals: { messages: number; input: number; output: number; cache_read: number; cache_write: number; total: number; cache_hit_ratio: number };
+  by_model: Array<{ source: string; model: string; messages: number; input: number; output: number }>;
+  /** The same numbers under the names the Statistics gate renders. */
+  gate?: {
+    totals: { runs: number; success: number; fail: number; running: number; tokens: number; cost: number };
+    usage: { input: number; output: number; cache_read: number; cache_write: number; total: number };
+    providers: { local: any; online: any; per_model: any[] };
+    by_chain: any[];
+    by_model: any[];
+  };
+}
+
 export interface OrdersInfo {
   open: number;
   orders: OrderRow[];
@@ -344,6 +360,7 @@ export const gateApi = {
   loaders: () => get<LoaderRow[]>('/api/loaders'),
   checks: () => get<CheckRow[]>('/api/checks'),
   orders: () => get<OrdersInfo>('/api/orders'),
+    usage: () => get<YmirUsage>('/api/usage'),
   chatHistory: (session = 'default') => get<ChatMessage[]>(`/api/chat/history?session=${encodeURIComponent(session)}`),
   chatSessions: () => get<ChatSession[]>('/api/chat/sessions'),
   chatModels: () => get<ChatModel[]>('/api/chat/models'),

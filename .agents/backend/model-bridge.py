@@ -261,17 +261,43 @@ def _auth_headers(stream: bool = False) -> dict:
 
 
 
+class _CurlResponse:
+    """What urlopen's callers actually use: .status, .read(), iteration.
+
+    My first curl transport returned a bare BytesIO, so the proxy died on
+    '.status' - a bridge that answers 500 looks like a broken model when it is a
+    broken wrapper. This presents the shape the callers expect.
+    """
+
+    def __init__(self, body: bytes, status: int):
+        self._body = body
+        self.status = status
+        self.headers = {"content-type": "application/json"}
+
+    def read(self, *_a) -> bytes:
+        return self._body
+
+    def __iter__(self):
+        return iter(self._body.splitlines(True))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_a):
+        return False
+
+
 def _curl_open(req, timeout: int = 60):
     """Perform an upstream request with curl's fingerprint.
 
-    Cloudflare at the gateway bans a scripted client's TLS shape outright (error
-    1010, browser_signature_banned) whatever User-Agent it claims - measured:
-    urllib 403, curl 200 on the same request. So the bridge speaks through curl
-    and presents the response as a file-like object, which is all urlopen's
-    callers use.
+    Cloudflare at the gateway bans a scripted client's TLS shape (error 1010,
+    browser_signature_banned) whatever User-Agent it claims - measured: urllib 403,
+    curl 200 on the same request. So the bridge speaks through curl and hands the
+    caller a response-shaped object.
     """
-    import io, subprocess
-    argv = ["curl", "-sS", "--max-time", str(timeout), "-X", (req.get_method() or "GET")]
+    import json as _json, subprocess
+    argv = ["curl", "-sS", "--max-time", str(timeout), "-w", "\n%{http_code}",
+            "-X", (req.get_method() or "GET")]
     for k, v in (req.header_items() or []):
         argv += ["-H", f"{k}: {v}"]
     data = req.data
@@ -279,9 +305,15 @@ def _curl_open(req, timeout: int = 60):
         argv += ["--data-binary", data.decode() if isinstance(data, bytes) else data]
     argv.append(req.full_url)
     out = subprocess.run(argv, capture_output=True)
-    if out.returncode != 0 and not out.stdout:
-        raise OSError(out.stderr.decode()[:300] or "curl failed")
-    return io.BytesIO(out.stdout)
+    raw = out.stdout
+    body, _, tail = raw.rpartition(b"\n")
+    try:
+        status = int(tail.strip() or b"0")
+    except ValueError:
+        body, status = raw, 0
+    if status == 0 and out.returncode != 0:
+        raise OSError((out.stderr or b"curl failed").decode()[:300])
+    return _CurlResponse(body, status or 200)
 
 
 def main() -> int:

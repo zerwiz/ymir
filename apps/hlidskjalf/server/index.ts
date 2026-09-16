@@ -30,7 +30,12 @@ const SUBAGENTS_DIR = join(ROOT, '.agents/subagents');
 const AGENTS_ALT = existsSync(AGENTS_DIR) ? AGENTS_DIR : SUBAGENTS_DIR;
 const CONFIG_DIR = join(ROOT, '.agents/config');
 const STATE_DIR = join(ROOT, 'state');
-const RUNES = join(ROOT, 'workspace/memory/runes_audit.md');
+// The ledger lives in the HOARD, never in the checkout (Rule 04 / migration
+// 0004): $YMIR_HOARD, else $YMIR_HOME/hodd, else ~/Documents/Ymir/hodd.
+/** $YMIR_HOME — the hoard's home: where a realm's real tree lives. */
+const HOME_DIR = process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir');
+const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'hodd');
+const RUNES = join(HOARD, 'memory/runes_audit.md');
 const WELL = join(ROOT, '.agents/memory/well/episodes.jsonl');
 const MASTERPLAN = join(ROOT, 'docs/masterplan.md');
 
@@ -424,7 +429,18 @@ async function processes() {
 }
 
 /* ---- /api/smidja (the smithy's own trace, read-only) --------------------- */
-const SMIDJA_DB = resolve(ROOT, process.env.SMIDJA_DB ?? 'smidja/smidja_data/smidja.db');
+// The smithy's db lives where the RUNTIME keeps it: $YMIR_HOME first (the data
+// belongs outside the repo), else the app tree it moved into. It sat at the repo
+// root's old path for a year; when the tree moved, this reader quietly opened
+// nothing and every statistic showed zero - a gate with nothing to say.
+const SMIDJA_DB = (() => {
+  if (process.env.SMIDJA_DB) return process.env.SMIDJA_DB;
+  const candidates = [
+    join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'smidja', 'smidja.db'),
+    join(ROOT, 'apps', 'smidja', 'smidja_data', 'smidja.db'),
+  ];
+  return candidates.find((c) => existsSync(c)) ?? candidates[1];
+})();
 
 function smidja(): Database | null {
   try {
@@ -913,17 +929,25 @@ async function reviews() {
 /** Resolve a workspace id to its on-disk scope: a company container when the
  *  workspace names one, else its repo-root workspace scope. */
 function workspaceRoot(realm: string): string {
+  // THE HOARD FIRST (Rule 04). A realm's tree lives at $YMIR_HOME/svartalfaheim/
+  // <realm>; the checkout is only a legacy fallback for a home not yet migrated.
+  // Skrymir was browsing the repo's own directories and reading files whose links
+  // point into the hoard — which is why a listed file answered "not found".
   const ws = workspaces().find((w) => w.id === realm);
   if (ws?.company) {
-    const company = join(ROOT, 'svartalfaheim', ws.company);
+    const company = join(HOME_DIR, 'svartalfaheim', ws.company);
     if (existsSync(company)) return company;
   }
-  const scope = join(ROOT, 'workspace', realm);
+  const realmTree = join(HOME_DIR, 'svartalfaheim', realm);
+  if (existsSync(realmTree)) return realmTree;
+  const scope = join(HOME_DIR, 'workspace', realm);
   if (existsSync(scope)) return scope;
   const slug = realm.toLowerCase().replace(/[^a-z0-9]/g, '');
   const legacy = join(ROOT, 'svartalfaheim', slug);
   if (slug && slug !== realm && existsSync(legacy)) return legacy;
-  return join(ROOT, 'svartalfaheim', realm);
+  const legacyScope = join(ROOT, 'workspace', realm);
+  if (existsSync(legacyScope)) return legacyScope;
+  return realmTree; // the hoard, even when empty: a home is never the repo's
 }
 
 function files(realm: string) {
@@ -954,7 +978,7 @@ function files(realm: string) {
     return node;
   };
   if (existsSync(base)) return walk(base, '', 0);
-  return walk(join(ROOT, 'docs'), '', 0);
+  return walk(HOME_DIR, '', 0); // the hoard's home, not the checkout's docs
 }
 
 /* ---- /api/file — read one realm file, read-only, scoped ------------------ */
@@ -1237,7 +1261,7 @@ async function chatCompletion(
       const res = await fetch(`${t.base}/chat/completions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: 700 }),
+        body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: Number(process.env.YMIR_CHAT_MAX_TOKENS ?? 4096) }),   // deepseek-v4.1 spends budget on reasoning FIRST: 700 gave an empty answer
       });
       if (!res.ok) {
         lastErr = `${t.base} → ${res.status}`;
@@ -1480,7 +1504,7 @@ function savePrompt(agent: string, kind: string, body: string): { ok: boolean; p
 /* ---- /api/workspaces + /api/setup — single-tenant workspaces ------------ */
 function workspaces(): { id: string; name: string; kind: string; company?: string; domains: string[] }[] {
   let regPath = join(ROOT, 'workspace/workspaces.yaml');
-  const hoardReg = join(process.env.YMIR_HOARD || join(ROOT, 'hodd'), 'identity/workspaces.yaml');
+  const hoardReg = join(HOARD, 'identity/workspaces.yaml');
   try { read(hoardReg); regPath = hoardReg; } catch { /* fall back to the tracked scaffold */ }
   const txt = read(regPath);
   const out: { id: string; name: string; kind: string; company?: string; domains: string[] }[] = [];
@@ -1890,6 +1914,21 @@ const server = Bun.serve({
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
+      if (p === '/api/usage') {
+        // What the HARNESSES spent — opencode and pi — not only the smithy's runs.
+        // Memoised for a minute: the aggregate is one bounded SQL statement over a
+        // 37 GB store, and a panel must not pay for it on every poll.
+        return json(await memoAsync('usage', 60_000, async () => {
+          try {
+            const { execFileSync } = await import('node:child_process');
+            const script = new URL('../../../bin/hlidskjalf-usage.sh', import.meta.url).pathname;
+            const out = execFileSync(script, ['--days', process.env.YMIR_USAGE_DAYS ?? '30'], { timeout: 60_000 }).toString().trim();
+            return JSON.parse(out);
+          } catch (e) {
+            return { error: String(e).slice(0, 120) };
+          }
+        }));
+      }
       if (p === '/api/worktrees') return json(await worktrees());
       if (p === '/api/me') return json({ login: loginOf(req) ?? 'operator', realm: 'work' });
       if (p === '/api/workspace') {
