@@ -86,10 +86,16 @@ mkdir -p "$(dirname "$CONFIG")"
 } >"$CONFIG"
 
 # 2. the routes (idempotent: an existing record is left alone)
+# Route by the tunnel's own UUID, never by its name. `route dns <name> <host>`
+# resolves the name through the account certificate, which can point at a
+# DIFFERENT (even deleted) tunnel: every hostname then answers 530 while the
+# named tunnel runs happily beside it. Resolve the UUID first, then route.
+TUNNEL_ID="$(cloudflared tunnel info "$TUNNEL" 2>/dev/null | grep -m1 -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')"
+[ -n "$TUNNEL_ID" ] || TUNNEL_ID="$TUNNEL"
 made=0
 for row in "${APPS[@]}"; do
   app="${row%%:*}"
-  cloudflared tunnel route dns "$TUNNEL" "$app$SUFFIX.$DOMAIN" >/dev/null 2>&1 && made=$((made+1))
+  cloudflared tunnel route dns --overwrite-dns "$TUNNEL_ID" "$app$SUFFIX.$DOMAIN" >/dev/null 2>&1 && made=$((made+1))
 done
 
 # 2b. the gate must know which host belongs to which app (it routes by host)
