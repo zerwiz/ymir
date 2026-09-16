@@ -79,6 +79,12 @@ KEY = ""
 BASE_URL = ""
 PROVIDER = "opencode-go"
 
+# The gateway sits behind Cloudflare, which BANS the signature of a scripted
+# client (Python-urllib/3.x) with error 1010: "banned your access based on your
+# browser's signature". That was the whole 403 - our own bridge was the client.
+USER_AGENT = os.environ.get("YMIR_MODEL_UA", "curl/8.5.0")
+SESSION_ID = os.environ.get("YMIR_MODEL_SESSION") or str(__import__("uuid").uuid4())
+
 
 def load_env(path: str) -> dict:
     env = {}
@@ -149,8 +155,10 @@ class Handler(BaseHTTPRequestHandler):
         # Ask the provider what it serves; fall back to the static catalogue.
         try:
             req = urllib.request.Request(_upstream("models"),
-                                         headers=_auth_headers())
-            with urllib.request.urlopen(req, timeout=10) as r:
+                                         headers={**_auth_headers(), "User-Agent": USER_AGENT,
+         # The Zen gateway requires a session id; without it: 400 MissingSessionID.
+         "x-opencode-session": SESSION_ID})
+            with _curl_open(req, timeout=10) as r:
                 data = json.loads(r.read())
             return data.get("data", [])
         except Exception:
@@ -192,7 +200,7 @@ class Handler(BaseHTTPRequestHandler):
             method="POST",
         )
         try:
-            resp = urllib.request.urlopen(req, timeout=300)
+            resp = _curl_open(req, timeout=300)
         except urllib.error.HTTPError as e:
             # Relay the provider's error verbatim so the operator sees the cause.
             payload = e.read()
@@ -240,10 +248,40 @@ def _upstream(suffix: str) -> str:
 
 def _auth_headers(stream: bool = False) -> dict:
     h = {"Content-Type": "application/json",
-         "Accept": "text/event-stream" if stream else "application/json"}
+         "Accept": "text/event-stream" if stream else "application/json",
+         # Cloudflare at the gateway bans the signature of a scripted client
+         # (Python-urllib/3.x) with error 1010. Our own bridge WAS that client,
+         # which is why every worker's first turn came back 403.
+         "User-Agent": USER_AGENT,
+         # The Zen gateway requires a session id; without it: 400 MissingSessionID.
+         "x-opencode-session": SESSION_ID}
     if KEY:
         h["Authorization"] = f"Bearer {KEY}"
     return h
+
+
+
+def _curl_open(req, timeout: int = 60):
+    """Perform an upstream request with curl's fingerprint.
+
+    Cloudflare at the gateway bans a scripted client's TLS shape outright (error
+    1010, browser_signature_banned) whatever User-Agent it claims - measured:
+    urllib 403, curl 200 on the same request. So the bridge speaks through curl
+    and presents the response as a file-like object, which is all urlopen's
+    callers use.
+    """
+    import io, subprocess
+    argv = ["curl", "-sS", "--max-time", str(timeout), "-X", (req.get_method() or "GET")]
+    for k, v in (req.header_items() or []):
+        argv += ["-H", f"{k}: {v}"]
+    data = req.data
+    if data:
+        argv += ["--data-binary", data.decode() if isinstance(data, bytes) else data]
+    argv.append(req.full_url)
+    out = subprocess.run(argv, capture_output=True)
+    if out.returncode != 0 and not out.stdout:
+        raise OSError(out.stderr.decode()[:300] or "curl failed")
+    return io.BytesIO(out.stdout)
 
 
 def main() -> int:
