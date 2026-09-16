@@ -127,15 +127,15 @@ esac
 moved=no
 for _ in $(seq 1 20); do
   sleep 0.25
-  if hyprctl clients -j 2>/dev/null | python3 -c "
+  if hyprctl clients -j 2>/dev/null | python3 -c '
 import json,sys
-cls='$CLASS'
+cls=sys.argv[1]
 try:
     cs=json.load(sys.stdin)
 except Exception:
     sys.exit(1)
-sys.exit(0 if any(cls.lower() in (c.get('class') or '').lower() for c in cs) else 1)
-" 2>/dev/null; then
+sys.exit(0 if any(cls.lower() in (c.get("class") or "").lower() for c in cs) else 1)
+' "$CLASS" 2>/dev/null; then
     move_window_to "$DEST" "^($CLASS)\$" && moved=yes
     break
   fi
