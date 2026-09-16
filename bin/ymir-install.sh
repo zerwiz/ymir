@@ -29,7 +29,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
-HOARD="${YMIR_HOARD:-$YMIR_HOME}"
+# The hoard resolves through the shared lib, so the installer can never disagree
+# with bin/hodd.sh about where private data lives — and never points inside the
+# repo (Rule 04).
+# shellcheck source=bin/hoard-lib.sh
+. "$SCRIPT_DIR/hoard-lib.sh"
+hoard_root HOARD
 DOMAINS="company marketing development life me"
 
 CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0
@@ -145,6 +150,16 @@ step_tree() {
     done
   done
   mkdir -p "$WORKSPACE/companies" "$WORKSPACE/memory/daily" "$HOARD/identity"
+  # The hoard is OUTSIDE the repo (Rule 04): this creates its layout at the
+  # resolved root, never in the checkout. Idempotent.
+  "$SCRIPT_DIR/hodd.sh" init >/dev/null 2>&1 || true
+  # A missing platform env makes `bin/hodd.sh emit secrets/platform.env` fail on a
+  # fresh machine; seed an empty one (0600) so the reference always resolves.
+  if [ ! -f "$HOARD/secrets/platform.env" ]; then
+    mkdir -p "$HOARD/secrets"
+    ( umask 077; : >"$HOARD/secrets/platform.env" )
+    created=$((created+1))
+  fi
   if [ ! -f "$HOARD/identity/workspaces.yaml" ]; then
     cat >"$HOARD/identity/workspaces.yaml" <<'YAML'
 # Workspace registry — single tenant. One operator, many workspaces.
@@ -179,7 +194,7 @@ projects: []
 YAML
     created=$((created+1))
   fi
-  add tree OK "workspace/{personal} · companies · registries (created $created)"
+  add tree OK "workspace/{personal} · companies · registries · hoard (outside the repo) (created $created)"
 }
 
 # ── 3. engines ───────────────────────────────────────────────────────────────

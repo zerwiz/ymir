@@ -25,7 +25,7 @@ install[20]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
-  "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml","creates if missing"
+  "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at $YMIR_HOARD, else $YMIR_HOME)","creates if missing; hoard_root resolves through bin/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/hodd.sh emit resolves"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "sessrumnir","the Sessrúmnir desktop GUI (vendored pi-desktop at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
