@@ -242,7 +242,12 @@ case "$ACTION" in
     read -r tab pane <<<"$(seat_tab "ymir:$NAME" "$PWD")"
     if [ -z "$pane" ]; then "$@"; exit $?; fi
     printf '%s\t%s\n' "$tab" "$NAME" >>"$TAB_LOG" 2>/dev/null || true
-    hdr pane run "$pane" "$@" >/dev/null 2>&1; rc=$?
+    # A pane runs its command through a shell, so every argument must be quoted
+    # on the way in. Unquoted, a multi-word argument (`--brief "the whole task"`)
+    # arrives as separate words and the command dies on its own second word.
+    cmd=""
+    for a in "$@"; do cmd="$cmd$(printf '%q ' "$a")"; done
+    hdr pane run "$pane" "$cmd" >/dev/null 2>&1; rc=$?
     hdr pane wait-output "$pane" --idle-ms 800 --timeout-secs "$SETTLE" >/dev/null 2>&1 || true
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
     exit "$rc" ;;
