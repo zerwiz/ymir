@@ -271,6 +271,8 @@ export interface PiDesktopAPI {
     pathKind(path: string): Promise<PathKindResult>
     openExternal(url: string): Promise<void>
     hallUrl(): Promise<string>
+    /** Who is standing: every opencode/pi session, live. */
+    fleet(): Promise<unknown[]>
     getVersion(): Promise<string>
     platform: NodeJS.Platform
   }
