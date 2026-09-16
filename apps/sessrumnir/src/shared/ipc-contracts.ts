@@ -9,6 +9,8 @@ import type { PermissionRule } from '../../resources/permission-rules'
 // ─── IPC Channel Names ──────────────────────────────────────────────────────
 
 export const IPC_CHANNELS = {
+  /** The live fleet, read from herdr's panes - the same source the control plane uses. */
+  FLEET_LIST: 'fleet:list',
   // Pi process lifecycle
   PI_START: 'pi:start',
   PI_STOP: 'pi:stop',

@@ -28,6 +28,8 @@ export function MissionControl(): React.JSX.Element {
   const sessionRuntimes = useAppStore((state) => state.sessionRuntimes)
   const workflowRuns = useAppStore((state) => state.workflowRuns)
   const refreshWorkflowRuns = useAppStore((state) => state.refreshWorkflowRuns)
+  const fleet = useAppStore((state) => state.fleet)
+  const refreshFleet = useAppStore((state) => state.refreshFleet)
   const openSessionItem = useAppStore((state) => state.openSessionItem)
   const activateWorkspace = useAppStore((state) => state.activateWorkspace)
   const switchSession = useAppStore((state) => state.switchSession)
@@ -39,7 +41,8 @@ export function MissionControl(): React.JSX.Element {
 
   useEffect(() => {
     void refreshWorkflowRuns()
-    const timer = window.setInterval(() => void refreshWorkflowRuns(), 5000)
+    void refreshFleet()
+    const timer = window.setInterval(() => { void refreshWorkflowRuns(); void refreshFleet() }, 5000)
     return () => window.clearInterval(timer)
   }, [refreshWorkflowRuns])
 
@@ -99,6 +102,38 @@ export function MissionControl(): React.JSX.Element {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-5xl px-6 py-7">
+        {/* The fleet — every opencode/pi session, read from the machine itself
+            (the same source the control plane reads), never inferred. */}
+        {fleet.length > 0 && (
+          <section className="mb-6">
+            <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+              The fleet · {fleet.length}
+            </h2>
+            <div className="grid gap-2 md:grid-cols-2">
+              {fleet.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-surface/50 px-3 py-3"
+                >
+                  <span
+                    className={clsx(
+                      'h-2.5 w-2.5 shrink-0 rounded-full',
+                      a.live?.state === 'working' ? 'bg-success' : 'bg-warning',
+                    )}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm text-primary">{a.name}</div>
+                    <div className="truncate text-[11px] text-faint">
+                      {[a.live?.kind ?? a.status, a.live?.state, a.live?.task || a.live?.cwd]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
         <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">

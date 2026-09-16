@@ -220,6 +220,7 @@ function createBridge(): PiDesktopAPI {
         platform: process.platform,
         openExternal: (url) => ipcRenderer.invoke(IPC_CHANNELS.SYSTEM_OPEN_EXTERNAL, url),
         hallUrl: () => ipcRenderer.invoke(IPC_CHANNELS.SYSTEM_HALL_URL),
+      fleet: () => ipcRenderer.invoke(IPC_CHANNELS.FLEET_LIST),
         getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.SYSTEM_GET_VERSION),
       },
 
