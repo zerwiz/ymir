@@ -1896,7 +1896,22 @@ const server = Bun.serve({
         const realm = url.searchParams.get('realm') ?? 'work';
         return json({ realm, path: workspaceRoot(realm) });
       }
-      if (p === '/api/agents') return json(agents());
+      if (p === '/api/agents') {
+        // WHO IS STANDING, not who could be. The connector reads herdr's live
+        // pane list, so every opencode and pi session appears on the board with
+        // its kind, state and task. The roster is the fallback, never the answer.
+        try {
+          const { execFileSync } = await import('node:child_process');
+          const script = new URL('../../../bin/hlidskjalf-agents.sh', import.meta.url).pathname;
+          const out = execFileSync(script, [], { timeout: 4000 }).toString().trim();
+          if (out.startsWith('[')) {
+            return new Response(out, { headers: { 'content-type': 'application/json' } });
+          }
+        } catch {
+          // herdr absent or the connector failed: fall through to the roster
+        }
+        return json(agents());
+      }
       if (p === '/api/tasks') return json(tasks());
       if (p === '/api/orders') return json({ open: orders().filter((o) => o.status !== 'COMPLETED').length, orders: orders() });
       if (p === '/api/runes') return json(runes());

@@ -27,7 +27,7 @@ const WORKSPACE_ENV_VAR = 'PI_DESKTOP_WORKSPACE'
 app.setName('Sessrúmnir')
 if (process.platform === 'win32') app.setAppUserModelId('org.ymir.sessrumnir')
 if (process.platform === 'linux') {
-  app.setDesktopName('sessrumnir.desktop');
+  app.setDesktopName('ymir-sessrumnir.desktop');
   app.commandLine.appendSwitch('class', 'sessrumnir');
 }
 

@@ -495,6 +495,28 @@ step_gates() {
   else add gates WARN "could not write .git/hooks — gates are dormant"; fi
 }
 
+# ── 6c. desktop marks (the rune, the entry, the contract) ────────────────────
+#
+# Every app wears its OWN rune in the operator's desktop: the icon into the icon
+# theme, the .desktop entry into their applications dir (so every app is
+# dockable and pinnable), and the Ymir contract deployed into pi's agent home so
+# every session - in ANY folder - loads Brokk. Idempotent, and it writes to the
+# operator's real data dir, never a sandbox one.
+step_marks() {
+  if [ ! -x "$SCRIPT_DIR/design-icon.sh" ]; then add marks SKIP "no design-icon.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    n=$(ls "$HOME/.local/share"/applications/ymir-*.desktop 2>/dev/null | wc -l | tr -d ' ')
+    add marks OK "$n desktop app marks installed"
+    return
+  fi
+  "$SCRIPT_DIR/design-icon.sh" mint --all >/dev/null 2>&1 || true
+  n=$("$SCRIPT_DIR/design-icon.sh" install 2>/dev/null | grep -c '"ymir-') || n=0
+  [ -r "$HOME/.pi/agent/AGENTS.md" ] || [ -d "$HOME/.pi/agent" ] && {
+    ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null || true
+  }
+  add marks OK "$n app marks (rune icon + entry) · Ymir contract in the pi agent home"
+}
+
 # ── 7. services ──────────────────────────────────────────────────────────────
 step_services() {
   [ "$SKIP_SERVICES" = 1 ] && { add services SKIP "--skip-services"; return; }
@@ -624,7 +646,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate

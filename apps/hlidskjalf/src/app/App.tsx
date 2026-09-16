@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Shell } from './Shell';
 import { Overlay } from '../components/Overlay';
 import { LoginModal } from '../components/LoginModal';
+import { EmberBackground } from '../components/EmberBackground';
 import { HallsChooser } from '../components/Halls';
 import { gateApi } from '../services/api';
 import { startStream } from '../services/stream';
@@ -48,7 +49,7 @@ export default function App() {
   // gates pick up a newly-written run without a page reload.
   useEffect(() => {
     if (!session) return;
-    const id = window.setInterval(() => void useYmir.getState().refreshSmidja(), 5000);
+    const id = window.setInterval(() => { void useYmir.getState().refreshSmidja(); void useYmir.getState().refreshAgents(); }, 5000);
     return () => window.clearInterval(id);
   }, [session]);
 
@@ -91,6 +92,7 @@ export default function App() {
   if (!authed) {
     return (
       <>
+        <EmberBackground />
         <LoginModal onAuthed={admitted} />
         <Overlay />
       </>
@@ -103,6 +105,7 @@ export default function App() {
 
   return (
     <>
+      <EmberBackground />
       <Shell />
       <Overlay />
       {choosing && <HallsChooser onClose={() => setChoosing(false)} />}

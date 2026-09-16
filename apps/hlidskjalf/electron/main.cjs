@@ -9,8 +9,19 @@ const http = require('node:http');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
-const HLIDSKJALF = process.env.HLIDSKJALF_URL || 'http://127.0.0.1:3888/';
-const SMIDJA = process.env.SMIDJA_URL || 'http://127.0.0.1:8437/';
+// A desktop shell is a LOCAL seat: it never wears a tunnel. A non-loopback URL
+// (a *.zerwiz.org hostname, say) is refused, not honoured - Cloudflare has no
+// business inside an Electron window.
+function localOnly(url, fallback) {
+  try {
+    const h = new URL(url).hostname;
+    if (h === '127.0.0.1' || h === 'localhost' || h === '::1') return url;
+  } catch { /* not a URL at all: fall through */ }
+  console.warn('[ymir] refusing a non-local URL for a desktop shell: ' + url);
+  return fallback;
+}
+const HLIDSKJALF = localOnly(process.env.HLIDSKJALF_URL || 'http://127.0.0.1:3888/', 'http://127.0.0.1:3888/');
+const SMIDJA = localOnly(process.env.SMIDJA_URL || 'http://127.0.0.1:8437/', 'http://127.0.0.1:8437/');
 // The gate is the one identity: signing out here clears the shared session for
 // every Ymir surface (Hlidskjalf, Smiðja, Sessrúmnir).
 const GATE = process.env.YMIR_GATE_URL || 'http://127.0.0.1:3889';
