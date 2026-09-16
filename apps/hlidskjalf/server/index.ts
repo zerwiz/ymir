@@ -1504,7 +1504,7 @@ function workspaces(): { id: string; name: string; kind: string; company?: strin
   }
   if (cur) out.push(cur);
   return out.length ? out : [
-    { id: 'work', name: 'Work', kind: 'work', company: 'wayof', domains: ['company', 'marketing', 'development', 'life'] },
+    { id: 'work', name: 'Work', kind: 'work', domains: ['company', 'marketing', 'development', 'life'] },
     { id: 'personal', name: 'Personal', kind: 'personal', domains: ['me', 'life', 'development'] },
   ];
 }
