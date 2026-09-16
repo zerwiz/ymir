@@ -1,6 +1,6 @@
 import { useAppStore } from '../store'
 import { agentEngineLabel } from '../../../shared/agent-engine-label'
-import { PI_DESKTOP_PRODUCT_NAME } from '../../../shared/product-name'
+import { SESSRUMNIR_PRODUCT_NAME } from '../../../shared/product-name'
 import piLogo from '../assets/pi-logo.svg'
 import { ChatInput } from './chat-input'
 import { EmberBackground } from './ember-background'
@@ -273,7 +273,7 @@ export function ChatPanel(): React.JSX.Element {
                     <div className="mb-8 text-center">
                       <img
                         src={piLogo}
-                        alt={PI_DESKTOP_PRODUCT_NAME}
+                        alt={SESSRUMNIR_PRODUCT_NAME}
                         className="mx-auto mb-4 block h-14 w-14"
                       />
                       <h2 className="text-2xl font-semibold text-primary">
