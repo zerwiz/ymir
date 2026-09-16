@@ -24,7 +24,9 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DB="${SMIDJA_DB:-$ROOT/smidja/smidja_data/smidja.db}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+DB="${SMIDJA_DB:-$YMIR_HOME/smidja/smidja.db}"
+DB="${DB:-$ROOT/smidja/smidja_data/smidja.db}"
 CHECK=0
 
 case "${1-}" in

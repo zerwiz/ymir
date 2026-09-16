@@ -20,7 +20,6 @@ import { ArchivedSessionsManager } from './main/archived-sessions'
 import { TerminalService } from './main/terminal-service'
 import { NotesManager } from './main/notes-manager'
 import { loadAppSettings, saveAppSettings } from './main/settings-logic'
-import { IPC_CHANNELS } from './shared/ipc-contracts'
 import type { IpcContext } from './main/ipc/context'
 import type { PiRpcManager } from './main/pi-rpc-manager'
 import type { AppSettings } from './shared/ipc-contracts'
@@ -52,7 +51,6 @@ function createWebIpcContext(workspaceManager: WorkspaceManager): IpcContext {
 
   // Broadcast to all connected WebSocket clients instead of Electron windows
   function broadcast(channel: string, data: unknown): void {
-    const payload = JSON.stringify(data)
     for (const client of clients) {
       if (client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(JSON.stringify({ channel, data }))
@@ -177,15 +175,12 @@ async function routeToHandler(channel: string, args: unknown[]): Promise<unknown
     throw new Error('Server not initialized')
   }
 
-  const { workspaceManager: wm, broadcast } = ipcContext
+  const { workspaceManager: wm } = ipcContext
 
   // ── Pi process lifecycle ───────────────────────────────────────────────
   if (channel === 'pi:start') {
-    const opts = args[0] as { cwd?: string; model?: string; provider?: string }
-    const settings = await loadAppSettings(wm)
     const activeWs = wm.getActiveWorkspace()
     if (!activeWs) throw new Error('No active workspace')
-    // Simplified: just return status
     const pi = wm.getActivePiManager()
     if (!pi) throw new Error('No Pi manager')
     return pi.getStatus()
@@ -252,7 +247,7 @@ async function routeToHandler(channel: string, args: unknown[]): Promise<unknown
 
   // ── File operations ────────────────────────────────────────────────────
   if (channel === 'file:tree') {
-    const maxDepth = (args[0] as number) || 2
+    const _maxDepth = (args[0] as number) || 2
     // Simplified: return empty tree
     return { name: '', path: '', type: 'directory' as const, children: [] }
   }
@@ -263,17 +258,17 @@ async function routeToHandler(channel: string, args: unknown[]): Promise<unknown
 
 // ─── WebSocket handler ──────────────────────────────────────────────────────
 
-function handleWebSocket(ws: WebSocket): void {
+function _handleWebSocket(_ws: WebSocket): void {
   const id = crypto.randomUUID()
-  clients.push({ ws, id })
+  clients.push({ ws: _ws, id })
 
-  ws.addEventListener('close', () => {
+  _ws.addEventListener('close', () => {
     const idx = clients.findIndex((c) => c.id === id)
     if (idx >= 0) clients.splice(idx, 1)
   })
 
-  ws.addEventListener('message', (event) => {
-    const msg = JSON.parse(event.data.toString())
+  _ws.addEventListener('message', (_event) => {
+    const _msg = JSON.parse(_event.data.toString())
     // Forward messages to the appropriate handler
     // This is a simplified approach for now
   })
@@ -297,7 +292,7 @@ export async function startWebServer(port: number = 3890): Promise<void> {
       port,
       fetch: handleRequest,
       websocket: {
-        message(ws, message) {
+        message(_ws, _message) {
           // Handle WebSocket messages
         },
       },

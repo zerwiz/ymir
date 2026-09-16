@@ -62,9 +62,5 @@ export async function saveAppSettings(settings: Partial<AppSettings>): Promise<v
   }
 
   const merged = { ...existing, ...settings }
-  try {
-    await writeFile(settingsPath, JSON.stringify(merged, null, 2), 'utf-8')
-  } catch (err) {
-    throw err
-  }
+  await writeFile(settingsPath, JSON.stringify(merged, null, 2), 'utf-8')
 }
