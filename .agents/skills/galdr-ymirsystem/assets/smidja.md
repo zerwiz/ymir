@@ -167,9 +167,11 @@ Expected: `2/2 phases passed`, a `smidja_id`, and the DB written. Then
    `llama-cpp/<id>`; LM Studio `:1234` may be down. Confirm with `pi --list-models`.
 3. **The visualizer's local `node_modules` may be a partial bun install** — the API
    still serves the prebuilt `dist/`, so open `:8437`, not `:8438`.
-4. **Never edit `smidja/smidja_data/sessions/`** — it is the run record.
-5. **Protected files** (`smidja/smidja_modules/`, `smidja/smidja_*.py`, the config)
+4. **Never edit `apps/smidja/smidja_data/sessions/`** — it is the run record.
+5. **Protected files** (`apps/smidja/smidja_modules/`, `apps/smidja/smidja_*.py`, the config)
    are enforced by `smidja_modules/permissions.py`; agents roll back unauthorized
-   changes.
+   changes. The smithy moved from the repo root `smidja/` to `apps/smidja/`
+   (Amendment C); `bin/smidja-bootstrap.sh` searches both so a stale layout cannot
+   break the DB seed again.
 6. New skills synthesized for the smithy are validated in Utgard (Gungnir, W0007)
    before production.

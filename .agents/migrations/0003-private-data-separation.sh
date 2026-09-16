@@ -15,10 +15,20 @@ echo "  target:  $YMIR_HOME"
 mkdir -p "$YMIR_HOME"/{config,secrets,identity,workspaces/{work,personal},memory/{daily,well},smidja,state,data}
 
 # 2. Migrate hodd/ (Hoard) → YMIR_HOME/
+# Non-destructive: never overwrites an existing file, and MERGES a directory
+# into its target. The target dirs are pre-created above, so a naive
+# `[ -e "$2" ] && return` skipped every directory source — `data/` among them,
+# which silently dropped the realm declaration and made 0004 fall back to a
+# neutral realm.
 copy() {  # <src> <dest>
   [ -e "$1" ] || return 0
-  mkdir -p "$(dirname "$2")" || return 0
+  if [ -d "$1" ]; then
+    mkdir -p "$2" || return 0
+    cp -rn "$1"/. "$2"/ 2>/dev/null && printf '  copied %s\n' "${1#$ROOT/}"
+    return 0
+  fi
   if [ -e "$2" ]; then return 0; fi
+  mkdir -p "$(dirname "$2")" || return 0
   cp -rn "$1" "$2" 2>/dev/null && printf '  copied %s\n' "${1#$ROOT/}"
 }
 
