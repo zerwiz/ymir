@@ -27,7 +27,7 @@ Ymir is preparing for open-source release via `npm`, `curl`, and direct installa
 
 **Only public artifacts should remain in the repo:**
 - Source code (`bin/`, `apps/`, `.agents/skills/`, `.agents/assets/`)
-- Public documentation (`docs/`, `README.md`, `CHANGELOG.md`, `LICENSE`, `Structure.md`, `CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`)
+- Public documentation (`docs/`, `README.md`, `CHANGELOG.md`, `LICENSE`, `STRUCTURE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`)
 - Example configs (`*.example`, `*.sample`)
 - RULES/ (house law)
 - Midgard/ (shared company assets — public by design)
@@ -493,7 +493,7 @@ export YMIR_DATA_DIR="$YMIR_HOME/data"
 - All `apps/` source code (not build artifacts)
 - `docs/` (public documentation)
 - `midgard/` (shared company assets)
-- `RULES/`, `README.md`, `CHANGELOG.md`, `LICENSE`, `Structure.md`, `CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`
+- `RULES/`, `README.md`, `CHANGELOG.md`, `LICENSE`, `STRUCTURE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`
 - All `*.example`, `*.sample` files
 
 ---

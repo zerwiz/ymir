@@ -6,7 +6,7 @@ Legend: `[d]` = file tracked in git (doc/config/template) · `[g]` = git-ignored
 ```
 ymir/
 ├── AGENTS.md                      # [d] Core directives, routing & operational laws for Brokk
-├── Structure.md                   # [d] This document — authoritative tree
+├── STRUCTURE.md                   # [d] This document — authoritative tree
 ├── README.md                      # [d] Project overview & quickstart
 ├── .env.example                   # [d] Secret template (keys, URLs, tokens)
 ├── .env.local                     # [g] Local git-ignored secrets (master keys)
