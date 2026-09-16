@@ -330,10 +330,9 @@ YMIR_HOME/                    ← git repo (pushed to user's private GitHub repo
 ├── secrets/                   # platform.env — safe in private repo
 ├── identity/                  # workspaces.yaml, projects.yaml, companies/
 ├── workspaces/                # work/, personal/
-├── memory/                    # daily/, well/
-├── smidja/                    # gitignored — rebuilt per machine
-├── state/                     # gitignored — runtime only
-└── data/                      # operational data
+├── memory/                    # daily/, well/, tenants/
+├── secrets/                   # platform.env — safe in private repo
+├── identity/                  # workspaces.yaml, projects.yaml, companies/
 ```
 
 All scripts reference `$YMIR_HOME` (with `YMIR_HOARD`, `YMIR_STATE_DIR`,

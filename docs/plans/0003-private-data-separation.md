@@ -568,3 +568,65 @@ export YMIR_DATA_DIR="$YMIR_HOME/data"
 - `fbadf91` — docs: Amendment 3 to plan 0003
 - `cd99b5e` — docs: update AGENTS.md for YMIR_HOME architecture
 - `43641dc` — chore: finish private data separation — scripts, migration, docs
+
+---
+
+## Amendment 5 — Post-release session: data moved out of repo, YMIR_HOME populated
+
+**What was done this session:**
+
+1. **`data/` → `$YMIR_HOME/data/`** — All 7 operational data files
+   (backlog.md, eindri-homes.md, fleet.md, learnings.md, operator.md,
+   projects.md, realm.md) moved from repo root to `$YMIR_HOME/data/`.
+   `data/*` was already in `.gitignore`; the directory is now removed
+   from the repo entirely.
+
+2. **`memory/` → `$YMIR_HOME/memory/`** — All engram runtime files
+   (kaia.engram, kaia.engram-shm, kaia.engram-wal) moved from repo
+   root to `$YMIR_HOME/memory/`. `memory/` directory removed from repo.
+
+3. **`hodd/` private data → `$YMIR_HOME/`** — All private hodd/
+   contents copied to their YMIR_HOME destinations:
+   - `hodd/docs/` → `$YMIR_HOME/docs/`
+   - `hodd/identity/` → `$YMIR_HOME/identity/`
+   - `hodd/secrets/` → `$YMIR_HOME/secrets/`
+   - `hodd/tenants/` → `$YMIR_HOME/tenants/`
+   - `hodd/AGENTS.md` → `$YMIR_HOME/AGENTS.md`
+   - hodd/.gitignore, hodd/README.md, hodd/AGENTS.example.md remain
+     at repo as scaffolds and guards.
+
+4. **`$YMIR_HOME` is now fully populated** — The private git repo
+   at `$YMIR_HOME` has real data: docs/, identity/, secrets/,
+   tenants/, data/, memory/, config/, workspaces/.
+
+5. **Private data is NOT gitignored** — The user's YMIR_HOME git
+   repo commits all private data (except smidja/, state/, *.wal,
+   *.shm). This enables sharing between machines via the private
+   GitHub repo.
+
+6. **RULES/ updated:**
+   - `RULES/04-hoard.md` — rewritten to reflect two-tier hoard:
+     scaffolds at repo (`hodd/`), real data at YMIR_HOME (committed,
+     shareable). Added YMIR_HOME mapping table and clarified that
+     user data is NOT gitignored.
+   - `RULES/06-append-only.md` — updated paths:
+     `workspace/memory/runes_audit.md` → `$YMIR_HOME/memory/runes_audit.md`;
+     `docs/append-only-log.md` → `$YMIR_HOME/docs/append-only-log.md`;
+     `hodd/**` → `$YMIR_HOME/**`; updated move-check script to use
+     YMIR_HOME paths.
+
+7. **CONTRIBUTING.md** — added Members section listing zerwiz (Allfather)
+   and craig (member contributor), with reminder about realm boundaries.
+
+8. **README.md** — added GitHub section (repo link, PR flow, CI guards,
+   secret handling) and npm section (global install, npx one-shot, private
+   data note).
+
+**Not yet done (next session):**
+- Verify `$YMIR_HOME/tenants/` and `$YMIR_HOME/secrets/` have real data
+  (currently some dirs may be empty: secrets/, tenants/)
+- Remove hodd/ private data from repo working tree (currently still on disk
+  but untracked): `rm -rf hodd/docs hodd/identity hodd/secrets hodd/tenants hodd/AGENTS.md`
+- Update `bin/hodd.sh` and other scripts that reference `hodd/` paths
+  to prefer `$YMIR_HOME` equivalents
+- Add `$YMIR_HOME/tenants/` to AGENTS.md YMIR_HOME tree

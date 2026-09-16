@@ -569,3 +569,47 @@ Thank you all. The forge is hot because you lit it.
 _Where a maker teaches on YouTube we link the channel — Matt Pocock's is
 [youtube.com/@mattpocockuk](https://www.youtube.com/@mattpocockuk). If you make a
 tutorial for a project we use, tell us and we will link yours too._
+
+---
+
+## GitHub
+
+The public repository lives at **zerwiz/ymir** on GitHub:
+[github.com/zerwiz/ymir](https://github.com/zerwiz/ymir).
+
+- **Issues** — report bugs, request features, or ask questions.
+- **Pull Requests** — all changes ship via PR; every PR requires
+  explicit Allfather approval before merge. No force-pushes. No auto-merge.
+- **Projects** — the board tracks every workstream across the hall.
+- **Actions** — CI runs `bin/secret-guard.sh` and `bin/docs-guard.sh`
+  on every push and PR. A violation blocks the build.
+
+Your own login is always your own: **never** share a token, never
+commit credentials, never use a shared account. All secrets are
+resolved from `$YMIR_HOME/secrets/platform.env` at runtime.
+
+---
+
+## npm
+
+Ymir can be installed and updated via npm:
+
+```bash
+npm install -g @ymir/ymir        # the CLI, global
+ymir --version                    # verify
+ymir install                      # full first setup
+```
+
+Or pull the latest runtime directly:
+
+```bash
+npx @ymir/ymir install            # one-shot, no global install
+```
+
+The npm package mirrors the repo's `bin/` scripts and the installer
+(`bin/ymir-install.sh`). Every `npm update -g @ymir/ymir` runs the
+same self-healing installer that provisions prerequisites, engines,
+and the Hlidskjalf seat.
+
+Private data never touches npm — all user data lives at `$YMIR_HOME`
+and syncs via the user's **private** GitHub repo, never the public one.

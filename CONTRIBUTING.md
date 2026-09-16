@@ -57,3 +57,15 @@ with gates, and opening PRs to the main repo. See `.agents/skills/pr-ops/SKILL.m
 ## Questions?
 
 Open an issue on the repo or reach out through the Ymir portal.
+
+## Members
+
+The Allfather's hall has more than one set of hands. Current
+contributors who may access the private repo and YMIR_HOME data:
+
+- **zerwiz** — the Allfather, primary operator
+- **craig** — member contributor
+
+Members with private-data access must keep realm boundaries
+sacred and never share another operator's secrets, tokens, or
+tenant material (Rule 04).
