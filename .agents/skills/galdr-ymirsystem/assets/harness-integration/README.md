@@ -502,6 +502,41 @@ duplicates:
 To change an agent, edit `.agents/agents/*.md` and re-run the loader; never edit
 `.opencode/agent` or `.pi/agents` (they are links).
 
+### Skill location — the same law, one tree
+
+Skills have **one** tree too: `.agents/skills/`. Every harness reaches it, each
+by the mechanism that harness actually reads — and a harness that silently
+loads nothing is invisible from the code, so `compliance-check.sh`'s `harnesses`
+gate asserts all four:
+
+| Harness | How it reaches `.agents/skills` |
+|---|---|
+| **opencode** | `skills.paths: [".agents/skills"]` in `opencode.json` (the loader merges it in and re-asserts it on every run) |
+| **pi** | **native discovery** — it walks up from the cwd to `.agents/skills` (and `~/.agents/skills`). No link, no config: a second root under `.pi/` would invite double-loading, exactly as the extensions rule warns |
+| **claude · codex · cursor** | `<harness>/skills -> ../.agents/skills`, created by `bin/valknut-load.sh` (their project scope is their own directory) |
+
+**Do not** copy a `SKILL.md` into a harness directory: a copy is drift, and a
+nested `SKILL.md` carrying frontmatter is loaded as a *second, phantom* skill by
+every recursive scanner (the `harnesses` gate refuses it).
+
+### opencode.json has two writers — and neither may overwrite
+
+`opencode.json` is untracked (it carries absolute paths) and two things write it:
+
+```
+writers[2]{writer,owns}:
+  "bin/valknut-load.sh","STRUCTURE — the base keys, the agent blocks, the skills path; rendered from opencode.json.example"
+  "bin/agents-config.sh apply","the ROSTER — providers and per-agent models, from config/agents.yaml"
+```
+
+**Both merge; neither overwrites.** The loader's `config_out` adds missing keys (
+deep, `setdefault`-style), ensures `skills.paths`, and re-asserts nothing else;
+`agents-config` does the same for providers and models. This is not tidiness —
+the loader used to re-render from the example with `sed` + `mv`, and because the
+example carried only `llama.cpp`, **every loader run deleted the Apodex
+provider**, which lived only in the live file. A blind render of a file two
+writers share is a silent data loss; the merge is the fix.
+
 ## 15. The Eindri roster (bound agents)
 
 Canonical profiles in `.agents/agents/*.md`, bound as symlinks:

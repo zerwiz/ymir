@@ -7,39 +7,33 @@ commands, or compliance assets.
 ## Internal skills registry
 
 ```
-skills[32]{name,norse,purpose,path,status}:
+skills[26]{name,norse,purpose,path,status}:
   "galdr","Galdr","AXI incantation standards + master builder/maintainer",".agents/skills/galdr-ymirsystem/SKILL.md","live"
   "tyr-check","Tyr","The judge — validates tools/skills/docs against the 10 principles",".agents/skills/tyr-check/SKILL.md","live"
   "rules-check-drift","Tyr","Rules-file drift checker — keeps AGENTS.md true after code changes",".agents/skills/rules-check-drift/SKILL.md","live"
-  "smidja","Smíðja","The smithy — roster, phases, envelopes, trace",".agents/skills/smidja/AGENTS.md","live"
-  "volundr","Völundr","The master smith — Smíðja orchestrator (Kaia's seat inside the factory)",".agents/skills/smidja/skills/volundr/SKILL.md","live"
-  "smidja-launcher","Smíðja","One command to start/watch/audit/stop the smithy",".agents/skills/smidja/skills/smidja-launcher/SKILL.md","live"
-  "smidja-instructions","Smíðja","Turn a vague request into a runnable request file",".agents/skills/smidja/skills/smidja-instructions/SKILL.md","live"
-  "smidja-start","Smíðja","Start the smithy's agents for work (teams/models/chains)",".agents/skills/smidja/skills/smidja-start/SKILL.md","live"
-  "how-to-run-agent-teams","—","Run a full agent team with the smithy",".agents/skills/smidja/skills/how-to-run-agent-teams/SKILL.md","live"
-  "add-or-edit-ai-models","—","Tune model/prompt/injected context for agents",".agents/skills/smidja/skills/add-or-edit-ai-models/SKILL.md","live"
-  "gunnlod","Gunnlöð","Skill optimization — trajectory-driven skill refinement via SkillOpt",".agents/skills/gunnlod/SKILL.md","live"
-  "create-new-agent","—","Create a new agent role",".agents/skills/smidja/skills/create-new-agent/SKILL.md","live"
-  "create-new-teams","—","Create a new smithy team (roster stack)",".agents/skills/smidja/skills/create-new-teams/SKILL.md","live"
-  "git-ops","—","Branch creation, safe commits, sync upstream",".agents/skills/smidja/skills/git-ops/SKILL.md","live"
-  "pr-ops","—","PR lifecycle — create, update, status, merge",".agents/skills/pr-ops/SKILL.md","live"
-  "vog","Vog","Local-model operation (llama.cpp, LM Studio, Ollama): engines, wiring, honest measurement",".agents/skills/galdr-ymirsystem/assets/local-models.md","asset"
-  "hamr","Hamr","Per-harness adapter reference",".agents/skills/hamr/AGENTS.md","live"
-  "frigg-consent","Frigg","Consent / ask-user authority gate",".agents/skills/frigg-consent/AGENTS.md","live"
-  "jord-projects","Jörð","Project registry + delivery posture",".agents/skills/jord-projects/AGENTS.md","live"
-  "urdh","Urðr","Allfather-hold lifecycle: decisions held for the Allfather, reconciled",".agents/skills/urdh/SKILL.md","live"
-  "nornir","Nornir","fate & schedule: process→event sources + quota-aware dispatch",".agents/skills/nornir/SKILL.md","live"
-  "saga","Sága","session bearings (/bearings) + recap and unresolved decisions (/ahoy)",".agents/skills/saga/SKILL.md","live"
-  "ymir","Ymir","self-update · Omarchy-native operation · the Þjazi backend",".agents/skills/ymir/SKILL.md","live"
-  "vor-diagnostics","Vör","Bootstrap + diagnostic reasoning",".agents/skills/vor-diagnostics/AGENTS.md","live"
-  "gjallarhorn-relay","Gjallarhorn","Public relay replies (X/Discord)",".agents/skills/gjallarhorn-relay/AGENTS.md","live"
-  "eindri-homes","Eindri","Isolated worker homes (provisioning)",".agents/skills/eindri-homes/AGENTS.md","live"
-  "syn-recovery","Sýn","Stuck-worker recovery playbook",".agents/skills/syn-recovery/AGENTS.md","live"
-  "hvild-afk","Hvíld","Away-mode supervision",".agents/skills/hvild-afk/AGENTS.md","live"
-  "muninn-stow","Muninn","Session-knowledge curation, routing, persistence",".agents/skills/muninn-stow/AGENTS.md","live"
-  "open-design","—","OpenDesign CLI — prototypes, pages, dashboards, decks, video",".agents/skills/open-design/SKILL.md","live"
-  "galdr-compliance","(legacy)","Older compliance checker — superseded by tyr-check",".agents/skills/galdr-ymirsystem/galdr-compliance/SKILL.md","legacy"
-  "galdr-crafter","(legacy)","Older skill crafter — superseded by brokk-craft",".agents/skills/galdr-ymirsystem/galdr-crafter/SKILL.md","legacy"
+  "smidja-factory","Smíðja","The smithy — agent factory: roster, phases, envelopes, visualizer",".agents/skills/smidja-factory/SKILL.md","live"
+  "no-mistakes","—","The clean-PR gate — vendored engine skill: validate, push, PR, CI",".agents/skills/no-mistakes/SKILL.md","live"
+  "hvild-afk","Hvíld","Away-mode supervision — routine wakes, batched escalations",".agents/skills/hvild-afk/SKILL.md","live"
+  "saga-bearings","Sága","Bearings (/bearings) + recap and unresolved decisions (/ahoy)",".agents/skills/saga-bearings/SKILL.md","live"
+  "muninn-stow","Muninn","Session-knowledge curation, routing, persistence",".agents/skills/muninn-stow/SKILL.md","live"
+  "jord-projects","Jörð","Project registry + delivery posture",".agents/skills/jord-projects/SKILL.md","live"
+  "urdh-hold","Urðr","Allfather-hold lifecycle: decisions held for the Allfather, reconciled",".agents/skills/urdh-hold/SKILL.md","live"
+  "frigg-consent","Frigg","Consent / ask-user authority gate",".agents/skills/frigg-consent/SKILL.md","live"
+  "vor-diagnostics","Vör","Bootstrap + diagnostic reasoning",".agents/skills/vor-diagnostics/SKILL.md","live"
+  "nornir-schedule","Nornir","Fate & schedule: process→event sources + quota-aware dispatch",".agents/skills/nornir-schedule/SKILL.md","live"
+  "nsr-compliance","—","NorthStar scaffold/audit + the .compliance/ harness",".agents/skills/nsr-compliance/SKILL.md","live"
+  "lifecycle","—","Start/stop/status/smoke-test wiring contract",".agents/skills/lifecycle/SKILL.md","live"
+  "gjallarhorn-relay","Gjallarhorn","Public relay replies (X/Discord)",".agents/skills/gjallarhorn-relay/SKILL.md","live"
+  "eindri-homes","Eindri","Isolated worker homes (provisioning)",".agents/skills/eindri-homes/SKILL.md","live"
+  "syn-recovery","Sýn","Stuck-worker recovery playbook",".agents/skills/syn-recovery/SKILL.md","live"
+  "ymir-host","Ymir","Self-update · Omarchy-native operation · the Þjazi backend",".agents/skills/ymir-host/SKILL.md","live"
+  "groa-update","Gróa","The updater shaman — self-update Brokk + every Eindri-home",".agents/skills/groa-update/SKILL.md","live"
+  "herdr-panes","Þjazi","Terminal panes — seat/control panes, tabs, workspaces, agents",".agents/skills/herdr-panes/SKILL.md","live"
+  "ratatoskr-a2a","Ratatoskr","A2A/MCP mesh — a2abridge + wayofteams; registration",".agents/skills/ratatoskr-a2a/SKILL.md","live"
+  "hamr-adapters","Hamr","Per-harness adapter reference",".agents/skills/hamr-adapters/SKILL.md","live"
+  "pr-ops","—","PR lifecycle — create, update, status, request merge",".agents/skills/pr-ops/SKILL.md","live"
+  "hnoss-design","Hnoss","Design artifacts via OpenDesign (prototypes, decks, dashboards, video)",".agents/skills/hnoss-design/SKILL.md","live"
+  "bragi-marketing","Bragi","Marketing — research/crawl (Firecrawl), agentic browser (browser-use)",".agents/skills/bragi-marketing/SKILL.md","live"
 ```
 
 **Loading:** Skills auto-load from `.agents/skills/` via `opencode.json` →
@@ -175,7 +169,7 @@ exists on this machine. These are the adopted tools, each wearing a Norse name:
 
 | OSS Project | Norse Name | Purpose | Path |
 |---|---|---|---|
-| adopted upstream smithy (provenance: `command-factory`) | **Smíðja** | Deterministic agent pipeline + trace | `.agents/skills/smidja/` |
+| adopted upstream smithy (provenance: `command-factory`) | **Smíðja** | Deterministic agent pipeline + trace | `.agents/skills/smidja-factory/` |
 | `a2aproject/a2a` | **Ratatoskr** | Agent-to-agent collaboration | `.agents/bus/protocol.ts` |
 | Redis | **Ratatoskr queue** | Pub/sub message queue | platform service |
 | Traefik / Caddy | **Bifrost** | Reverse proxy / routing | platform service |
@@ -253,7 +247,7 @@ Full spec: [`memory-well.md`](memory-well.md). Law: **no mock data in the well**
 | Trace DB | `smidja/smidja_data/smidja.db` | sessions/phases/events/gates/envelopes/agent_sessions (WAL, read-only readers) |
 | Roster / config | `smidja/smidja_smidja_config/smidja.config.yaml` | teams, roles, `provider/id` models resolved by **pi** (`~/.pi/agent/models.json`) |
 | Run | `justfile` (`just demo/scout/sdlc`), `uv run smidja/smidja_*.py` | chains |
-| Visualizer (**Smíðja's eye**) | `.agents/skills/smidja/apps/visualizer/`, served at **`:8437`** (API + built UI) | sessions / trace / decisions / stats / chat |
+| Visualizer (**Smíðja's eye**) | `.agents/skills/smidja-factory/apps/visualizer/`, served at **`:8437`** (API + built UI) | sessions / trace / decisions / stats / chat |
 | Gate API | `apps/hlidskjalf/server/index.ts` → `/api/smidja/*` | read-only trace for the Hlidskjalf gates |
 | Observer (**Huginn**) | `bin/nornir-job-observer.sh` | self-contained Runes lines, incl. `smidja.runs` |
 | Start / stop | `scripts/start.sh` / `scripts/stop.sh` | raises/lowers SPA `:3888`, gate API `:3889`, visualizer `:8437`, Nornir cron, Bifrost bridge |
