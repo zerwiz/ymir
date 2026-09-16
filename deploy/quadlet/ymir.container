@@ -25,10 +25,12 @@ Volume=%h/dev/Way-Of/ymir:/opt/ymir:Z
 WorkingDir=/opt/ymir
 EnvironmentFile=%h/.config/ymir/ymir.env
 
-# Host ports: gate API, SPA, Smíðja visualizer. The well/Bifrost stay internal.
-PublishPort=3888:3888
-PublishPort=3889:3889
-PublishPort=8437:8437
+# Host ports: gate API, SPA, Smíðja visualizer. 5-digit by default so a shared host
+# is unlikely to collide (override HLIDSKJALF_PORT/API_PORT/SMIDJA_VIZ_API_PORT in
+# the env file and keep these in step). The well/Bifrost stay internal.
+PublishPort=38889:38889
+PublishPort=38888:38888
+PublishPort=84370:84370
 
 # Hardening: rootless, no new privileges, drop every capability. Ymir needs none.
 NoNewPrivileges=true
