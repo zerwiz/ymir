@@ -100,14 +100,11 @@ export function registerSystemHandlers(ctx: IpcContext): void {
    * renderer: the renderer's CSP allows no cross-origin fetch.
    */
   ipcMain.handle(IPC_CHANNELS.SYSTEM_HALL_URL, async () => {
-    const local = process.env.YMIR_HALL_URL ?? 'http://127.0.0.1:4322'
-    try {
-      const res = await fetch(local, { method: 'HEAD', signal: AbortSignal.timeout(700) })
-      if (res.ok) return local
-    } catch {
-      // Not served here — the public hall it is.
-    }
-    return 'https://hall.ymir.zerwiz.org'
+    // LOCAL ONLY. The hall is served on this machine; when it is not running the
+    // seat says so. It must never reach for a public hostname - an Electron window
+    // has no business with Cloudflare, and a desktop app that dials out is a
+    // desktop app that leaks its errands.
+    return process.env.YMIR_HALL_URL ?? 'http://127.0.0.1:4322'
   })
 
   ipcMain.handle(IPC_CHANNELS.SYSTEM_GET_VERSION, async () => {
