@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useAppStore, countPromptsWaitingElsewhere, formatPromptsWaiting } from '../store'
 import { summarizeBackgroundActivity, workspaceActivityIndicator } from './sidebar-activity'
 import { pathGroupKey, pathsEqual } from '../../../shared/path-compare'
-import { PI_DESKTOP_PRODUCT_NAME } from '../../../shared/product-name'
+import { SESSRUMNIR_PRODUCT_NAME } from '../../../shared/product-name'
 import { clsx } from 'clsx'
 import {
   Home,
@@ -472,7 +472,7 @@ export function Sidebar(): React.JSX.Element {
           >
             <Home size={16} />
           </button>
-          <span className="text-sm font-medium text-primary">{PI_DESKTOP_PRODUCT_NAME}</span>
+          <span className="text-sm font-medium text-primary">{SESSRUMNIR_PRODUCT_NAME}</span>
         </div>
         <button
           onClick={toggleSidebar}

@@ -48,6 +48,51 @@ def kaia_memory_for(project: str, k: int = 5) -> str:
         return ""
 
 
+def kaia_observe(content: str, tags: str = "run,lesson", actors: str = "",
+                 salience: float = 0.7) -> str:
+    """WRITE this run's lesson into Kaia's memory.
+
+    The orchestrator reads before dispatch (kaia_memory_for); this is the write
+    that closes the loop. Without it the well stays empty, recollection returns
+    nothing, and every run learns the same lesson again from scratch.
+    """
+    import json
+    import urllib.request
+
+    try:
+        # LISTS, never comma-strings: the store keeps a string as an array of
+        # CHARACTERS, and a later recall then reads "r,u,n" as tags.
+        def _list(v):
+            if isinstance(v, (list, tuple)):
+                return [str(x) for x in v if str(x)]
+            return [x.strip() for x in str(v or "").split(",") if x.strip()]
+        body = json.dumps({"content": content, "tags": _list(tags),
+                           "actors": _list(actors), "salience": salience}).encode()
+        req = urllib.request.Request(f"{KAIA_MEMORY_URL}/observe", data=body,
+                                     headers={"Content-Type": "application/json"},
+                                     method="POST")
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return str(json.load(r).get("id", ""))
+    except Exception as e:  # a lost lesson must be loud, never silent
+        print(f"[kaia] MEMORY WRITE FAILED (this lesson is lost): {e}", file=sys.stderr)
+        return ""
+
+
+def lesson_from(project: str, accepted: bool, review, previous, loops: int,
+                files: list | None = None) -> str:
+    """The lesson, in the shape a later recall can use."""
+    verdict = "ACCEPTED" if accepted else "REJECTED"
+    names = [str(f) for f in (files or [])][:12]
+    try:
+        findings = [(getattr(f, "note", "") or getattr(f, "requirement", "") or str(f))
+                    for f in (getattr(review, "findings", None) or [])][:5]
+    except Exception:
+        findings = []
+    return (f"run on {project}: {verdict} after {loops} review loop(s). "
+            f"changed: {', '.join(names) if names else 'nothing recorded'}. "
+            f"findings: {'; '.join(str(x) for x in findings) if findings else 'none'}")
+
+
 def main(prompt: str, config: str = "smidja/smidja_smidja_config/smidja.config.yaml", smidja_id: str | None = None) -> int:
     cfg = agents.load_config(config)
     agents.validate(cfg, REQUIRED_AGENTS)
@@ -94,7 +139,17 @@ def main(prompt: str, config: str = "smidja/smidja_smidja_config/smidja.config.y
                                          gates=[gates.orchestrator_dispatched,
                                                 gates.diff_matches_claims]))
 
-    return run.finish(accepted=review is not None and review.approved,
+    accepted = review is not None and review.approved
+    # CLOSE THE LOOP: the orchestrator read before dispatch, so it must write after.
+    changed = []
+    try:
+        changed = [getattr(f, "path", None) or str(f)
+                   for f in (getattr(previous, "changed_files", None) or [])]
+    except Exception:
+        changed = []
+    kaia_observe(lesson_from(project, accepted, review, previous, i, changed),
+                 tags="run,lesson", actors=project, salience=0.7)
+    return run.finish(accepted=accepted,
                       reason=f"the reviewer never approved after {MAX_REVISION_LOOPS} revision(s)")
 
 

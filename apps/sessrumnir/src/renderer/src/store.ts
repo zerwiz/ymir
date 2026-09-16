@@ -474,6 +474,9 @@ interface AppActions {
   setWorkflowPanelOpen: (open: boolean) => void
   openWorkflowRunsForSession: (sessionId: string) => void
   openWorkflowRunsForWorkspace: (workspaceId: string | null) => void
+  /** The live fleet: every opencode/pi session, from the machine itself. */
+  fleet: Array<{ id: string; name: string; status: string; live?: { kind?: string; state?: string; task?: string; cwd?: string } }>
+  refreshFleet: () => Promise<void>
   refreshWorkflowRuns: () => Promise<void>
   requestChatScrollToBottom: () => void
   // Resolves false when a dirty-editor discard was declined (diff pane only).
@@ -915,6 +918,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   pendingPromptCounts: {},
   workspaceActivity: {},
   workflowRuns: [],
+  fleet: [],
   extensionStatuses: {},
   subagentProgress: [],
   confirmRequest: null,
@@ -1856,6 +1860,16 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     workflowPanelFilter: null,
     workflowPanelWorkspaceId: workspaceId,
   }),
+  refreshFleet: async () => {
+    // Read the same source the control plane reads; empty on failure rather than
+    // a stale fleet, because a ghost card is worse than an empty board.
+    try {
+      const rows = (await window.piDesktop.system.fleet()) as Array<{ id: string; name: string; status: string; live?: { kind?: string; state?: string; task?: string; cwd?: string } }>
+      set({ fleet: Array.isArray(rows) ? rows : [] })
+    } catch {
+      set({ fleet: [] })
+    }
+  },
   refreshWorkflowRuns: async () => {
     try {
       const workflowRuns = await window.piDesktop.workflows.list()
