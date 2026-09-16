@@ -21,7 +21,7 @@ bin/ymir-install.sh --status      # alias of --check
 ## The steps
 
 ```
-install[19]{step,what,self-heals}:
+install[20]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -36,6 +36,7 @@ install[19]{step,what,self-heals}:
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
   "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh"
+  "gates","the git delivery gates — secret-guard (pre-commit), branch-guard + changelog-guard (pre-push)","bin/secret-guard.sh --install and bin/changelog-guard.sh --install seat the versioned guards into .git/hooks, so the gate is live from the first commit of a fresh clone; idempotent"
   "invite","the way in for anyone else — an invite code","bin/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
   "register","workspace/INSTALL.md","writes the record"
   "services","gate API, SPA, Nornir, bridges, visualizer","raises via scripts/start.sh (which builds the visualizer UI when ./dist is absent)"
@@ -43,11 +44,13 @@ install[19]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**19** steps are defined. A step is not a row: `--check` on this machine printed
-**18** rows, because `prereqs` also emits `memory-well` and `host` also emits
-`agents-config`. `--check` skips the runtime-only steps (`services`, `desktop`,
-`validate`), which have nothing to report when the runtime is not raised, so a
-real run prints those three in addition. The exact set:
+**22** `step_*` functions are defined. A step is not a row: one step may emit
+several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
+`smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. `--check`
+skips the runtime-only steps (`services`, `desktop`, `validate`), which have
+nothing to report when the runtime is not raised, so a real run prints those
+three in addition. The exact set is whatever the host honestly has — never
+assume the count:
 
 ```bash
 bash bin/ymir-install.sh --check | grep -cE '^  "'   # the honest count, on your host

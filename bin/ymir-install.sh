@@ -77,6 +77,7 @@ Ymir first setup — this will make the following changes:
   • build the Utgard sandbox image 'utgard-runner:latest' (needs docker access)
   • create the Smiðja database and build the visualizer UI
   • load agents/skills and write workspace/INSTALL.md
+  • install the git delivery gates (secret · branch · changelog)
   • raise the runtime services (Hlidskjalf SPA + gate API + bridges)
   • open BOTH desktop apps so you see them: Hlidskjalf + Smíðja
   • verify the running system and report what stands
@@ -455,6 +456,30 @@ step_loaders() {
   else add loaders SKIP "no valknut-load.sh"; fi
 }
 
+# ── 6b. delivery gates (git hooks) ───────────────────────────────────────────
+#
+# Rule 08: work leaves by PR, and every push carries a CHANGELOG entry. The
+# guards live in bin/ (branch-guard, changelog-guard, secret-guard) but git
+# only reads .git/hooks, so the install seats them there — the gate is live
+# from the first commit of a fresh clone. Idempotent: each --install rewrites
+# its own hook.
+step_gates() {
+  local hooks="$ROOT/.git/hooks" pre_commit="$ROOT/.git/hooks/pre-commit" pre_push="$ROOT/.git/hooks/pre-push"
+  if [ ! -d "$hooks" ]; then add gates SKIP "not a git checkout"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then
+      add gates OK "pre-commit + pre-push installed"
+    else
+      add gates WARN "hooks not installed — bin/secret-guard.sh --install && bin/changelog-guard.sh --install"
+    fi
+    return
+  fi
+  [ -x "$SCRIPT_DIR/secret-guard.sh" ] && "$SCRIPT_DIR/secret-guard.sh" --install >/dev/null 2>&1 || true
+  [ -x "$SCRIPT_DIR/changelog-guard.sh" ] && "$SCRIPT_DIR/changelog-guard.sh" --install >/dev/null 2>&1 || true
+  if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then add gates OK "pre-commit + pre-push installed"
+  else add gates WARN "could not write .git/hooks — gates are dormant"; fi
+}
+
 # ── 7. services ──────────────────────────────────────────────────────────────
 step_services() {
   [ "$SKIP_SERVICES" = 1 ] && { add services SKIP "--skip-services"; return; }
@@ -584,7 +609,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate
