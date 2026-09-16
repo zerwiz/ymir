@@ -43,6 +43,11 @@ fi
 # Raise the gate API (real runtime data) when bun is available. Demo mode works
 # without it; live data needs it.
 API_PORT="${HLIDSKJALF_API_PORT:-3889}"
+# The public hostnames the gate fronts (written by bin/gjallarhorn-expose.sh):
+# without them the gate cannot route a host to its app, and the login page for
+# that app would never be reached.
+[ -r "$ROOT/state/gjallarhorn-hosts.env" ] && . "$ROOT/state/gjallarhorn-hosts.env" && \
+  export SMIDJA_HOST ODRERIR_HOST YMIR_PRIMARY_HOST
 API_PID_FILE="$RUN/hlidskjalf-api.pid"
 API_LOG="$RUN/hlidskjalf-api.log"
 if command -v bun >/dev/null 2>&1; then
@@ -81,7 +86,7 @@ VIZ_API_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 VIZ_UI_PORT="${SMIDJA_VIZ_UI_PORT:-8438}"
 VIZ_API_PID_FILE="$RUN/smidja-viz-api.pid"
 VIZ_UI_PID_FILE="$RUN/smidja-viz-ui.pid"
-SMIDJA_DB_PATH="${SMIDJA_DB:-$ROOT/smidja/smidja_data/smidja.db}"
+SMIDJA_DB_PATH="${SMIDJA_DB:-$ROOT/apps/smidja/smidja_data/smidja.db}"
 if command -v bun >/dev/null 2>&1 && [ -d "$VIZ_DIR" ]; then
   [ -d "$VIZ_DIR/node_modules" ] || (cd "$VIZ_DIR" && bun install >/dev/null 2>&1 || true)
   # The API serves the UI from ./dist. Without a build it answers the API but

@@ -30,7 +30,12 @@ const SUBAGENTS_DIR = join(ROOT, '.agents/subagents');
 const AGENTS_ALT = existsSync(AGENTS_DIR) ? AGENTS_DIR : SUBAGENTS_DIR;
 const CONFIG_DIR = join(ROOT, '.agents/config');
 const STATE_DIR = join(ROOT, 'state');
-const RUNES = join(ROOT, 'workspace/memory/runes_audit.md');
+// The ledger lives in the HOARD, never in the checkout (Rule 04 / migration
+// 0004): $YMIR_HOARD, else $YMIR_HOME/hodd, else ~/Documents/Ymir/hodd.
+/** $YMIR_HOME — the hoard's home: where a realm's real tree lives. */
+const HOME_DIR = process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir');
+const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'hodd');
+const RUNES = join(HOARD, 'memory/runes_audit.md');
 const WELL = join(ROOT, '.agents/memory/well/episodes.jsonl');
 const MASTERPLAN = join(ROOT, 'docs/masterplan.md');
 
@@ -424,7 +429,18 @@ async function processes() {
 }
 
 /* ---- /api/smidja (the smithy's own trace, read-only) --------------------- */
-const SMIDJA_DB = resolve(ROOT, process.env.SMIDJA_DB ?? 'smidja/smidja_data/smidja.db');
+// The smithy's db lives where the RUNTIME keeps it: $YMIR_HOME first (the data
+// belongs outside the repo), else the app tree it moved into. It sat at the repo
+// root's old path for a year; when the tree moved, this reader quietly opened
+// nothing and every statistic showed zero - a gate with nothing to say.
+const SMIDJA_DB = (() => {
+  if (process.env.SMIDJA_DB) return process.env.SMIDJA_DB;
+  const candidates = [
+    join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'smidja', 'smidja.db'),
+    join(ROOT, 'apps', 'smidja', 'smidja_data', 'smidja.db'),
+  ];
+  return candidates.find((c) => existsSync(c)) ?? candidates[1];
+})();
 
 function smidja(): Database | null {
   try {
@@ -883,7 +899,7 @@ async function reviews() {
 
   // 2. The compliance card (lint + governed-path checks) always stands.
   const out = await runAsync(['bash', 'bin/brokk-lint.sh', '--quiet'], 60000);
-  const compliance = await runAsync(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json'], 60000);
+  const compliance = await runAsync(['bash', '.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh', '--json'], 60000);
   let gates: { id: string; status: string; detail: string }[] = [];
   try {
     gates = JSON.parse(compliance).checks ?? [];
@@ -913,17 +929,25 @@ async function reviews() {
 /** Resolve a workspace id to its on-disk scope: a company container when the
  *  workspace names one, else its repo-root workspace scope. */
 function workspaceRoot(realm: string): string {
+  // THE HOARD FIRST (Rule 04). A realm's tree lives at $YMIR_HOME/svartalfaheim/
+  // <realm>; the checkout is only a legacy fallback for a home not yet migrated.
+  // Skrymir was browsing the repo's own directories and reading files whose links
+  // point into the hoard — which is why a listed file answered "not found".
   const ws = workspaces().find((w) => w.id === realm);
   if (ws?.company) {
-    const company = join(ROOT, 'svartalfaheim', ws.company);
+    const company = join(HOME_DIR, 'svartalfaheim', ws.company);
     if (existsSync(company)) return company;
   }
-  const scope = join(ROOT, 'workspace', realm);
+  const realmTree = join(HOME_DIR, 'svartalfaheim', realm);
+  if (existsSync(realmTree)) return realmTree;
+  const scope = join(HOME_DIR, 'workspace', realm);
   if (existsSync(scope)) return scope;
   const slug = realm.toLowerCase().replace(/[^a-z0-9]/g, '');
   const legacy = join(ROOT, 'svartalfaheim', slug);
   if (slug && slug !== realm && existsSync(legacy)) return legacy;
-  return join(ROOT, 'svartalfaheim', realm);
+  const legacyScope = join(ROOT, 'workspace', realm);
+  if (existsSync(legacyScope)) return legacyScope;
+  return realmTree; // the hoard, even when empty: a home is never the repo's
 }
 
 function files(realm: string) {
@@ -954,7 +978,7 @@ function files(realm: string) {
     return node;
   };
   if (existsSync(base)) return walk(base, '', 0);
-  return walk(join(ROOT, 'docs'), '', 0);
+  return walk(HOME_DIR, '', 0); // the hoard's home, not the checkout's docs
 }
 
 /* ---- /api/file — read one realm file, read-only, scoped ------------------ */
@@ -1038,7 +1062,7 @@ async function loaders() {
 }
 async function checks() {
   try {
-    return (JSON.parse(await runAsync(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json'], 60000)).checks ?? []) as unknown[];
+    return (JSON.parse(await runAsync(['bash', '.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh', '--json'], 60000)).checks ?? []) as unknown[];
   } catch {
     return [];
   }
@@ -1237,7 +1261,7 @@ async function chatCompletion(
       const res = await fetch(`${t.base}/chat/completions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: 700 }),
+        body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: Number(process.env.YMIR_CHAT_MAX_TOKENS ?? 4096) }),   // deepseek-v4.1 spends budget on reasoning FIRST: 700 gave an empty answer
       });
       if (!res.ok) {
         lastErr = `${t.base} → ${res.status}`;
@@ -1480,7 +1504,7 @@ function savePrompt(agent: string, kind: string, body: string): { ok: boolean; p
 /* ---- /api/workspaces + /api/setup — single-tenant workspaces ------------ */
 function workspaces(): { id: string; name: string; kind: string; company?: string; domains: string[] }[] {
   let regPath = join(ROOT, 'workspace/workspaces.yaml');
-  const hoardReg = join(process.env.YMIR_HOARD || join(ROOT, 'hodd'), 'identity/workspaces.yaml');
+  const hoardReg = join(HOARD, 'identity/workspaces.yaml');
   try { read(hoardReg); regPath = hoardReg; } catch { /* fall back to the tracked scaffold */ }
   const txt = read(regPath);
   const out: { id: string; name: string; kind: string; company?: string; domains: string[] }[] = [];
@@ -1526,6 +1550,17 @@ const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? '';
 const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
 // No default host: which hostname serves the smithy is the machine's fact.
 const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? '').toLowerCase();
+const ODRERIR_HOST = (process.env.ODRERIR_HOST ?? '').toLowerCase();
+/** The one door: the primary host that carries Hlidskjalf's own login. Every app
+ *  host redirects its unauthenticated visitors here, with where they were going. */
+const PRIMARY_HOST = (process.env.YMIR_PRIMARY_HOST ?? '').toLowerCase();
+const ODRERIR_URL = process.env.ODRERIR_URL ?? 'http://127.0.0.1:4322';
+/** Every app host the gate fronts: unauthenticated visitors get the login, never
+ *  the app. Add a row when an app earns a public hostname. */
+const APP_HOSTS: Array<{ host: string; base: string; name: string }> = [
+  { host: SMIDJA_HOST, base: SMIDJA_URL, name: 'Smíðja' },
+  { host: ODRERIR_HOST, base: ODRERIR_URL, name: 'Óðrerir' },
+].filter((a) => a.host !== '');
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
 /** token → login. A session must know *who* it is, not merely that it exists. */
@@ -1544,8 +1579,45 @@ function cookieToken(req: Request): string {
   return m ? m[1] : '';
 }
 function isAuthed(req: Request): boolean {
+  if (isDesktopSeat(req)) return true;
   const t = cookieToken(req);
   return !!t && SESSIONS.has(t);
+}
+
+/** The peer address per request: Bun's Request has no socket, so it is recorded
+ *  at the top of the handler. */
+const REQUEST_IP = new WeakMap<Request, string>();
+
+/**
+ * The desktop seat (Electron) is local and trusted, so it is never asked to log
+ * in: the shell loads this app from 127.0.0.1 and its preload marks every
+ * request with `x-ymir-surface: desktop`. The marker alone proves nothing — a
+ * web caller could send the header too — so it is honoured ONLY when the request
+ * genuinely arrives over loopback, which a remote client never does. The web
+ * door keeps its lock.
+ */
+function isDesktopSeat(req: Request): boolean {
+  // A header where the client can set one; a query marker where it cannot —
+  // EventSource (the live Runes stream) sends no custom headers.
+  const marked =
+    (req.headers.get('x-ymir-surface') ?? '') === 'desktop' ||
+    new URL(req.url).searchParams.get('surface') === 'desktop';
+  if (!marked) return false;
+  const ip =
+    REQUEST_IP.get(req) ??
+    (req as Request & { socket?: { remoteAddress?: string } }).socket?.remoteAddress ??
+    '';
+  const bare = ip.startsWith('::ffff:') ? ip.slice('::ffff:'.length) : ip;
+  return bare === '127.0.0.1' || bare === '::1';
+}
+
+/** Who the gate says you are: the desktop seat wears the operator's own name. */
+function seatOf(req: Request): string {
+  if (isDesktopSeat(req)) {
+    const user = (GATE_AUTH || '').split(':')[0];
+    return user || 'operator';
+  }
+  return loginOf(req);
 }
 
 /** The login behind a request's session, if any. */
@@ -1565,19 +1637,19 @@ function sessionResponse(login: string): Response {
   });
 }
 
-/** The login screen for the Smíðja host — same gate, same credentials. */
-function smidjaLoginPage(): Response {
+/** The login screen for an app host — same gate, same credentials. */
+function appLoginPage(name = 'Smíðja'): Response {
   const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Smíðja — Sign in</title>
+<title>${name} — Sign in</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
-    background: radial-gradient(900px 500px at 50% -10%, rgba(56,189,248,.12), transparent 60%), #080c14;
+    background: radial-gradient(900px 500px at 50% -10%, rgba(226,232,240,.07), transparent 60%), #080c14;
     color: #e2e8f0; font: 15px/1.4 system-ui, sans-serif; }
   form { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px;
     background: #0d131f; border: 1px solid #23304a; border-radius: 14px; padding: 26px;
@@ -1585,13 +1657,13 @@ function smidjaLoginPage(): Response {
   .brand { display: flex; align-items: center; gap: 12px; }
   .brand b { font-size: 20px; letter-spacing: .18em; }
   .brand small { display: block; font: 10px/1 ui-monospace, monospace; letter-spacing: .28em;
-    text-transform: uppercase; color: #38bdf8; margin-top: 4px; }
+    text-transform: uppercase; color: #e2e8f0; margin-top: 4px; }
   h1 { font-size: 22px; margin: 0; }
   p { margin: 0; color: #94a3b8; font-size: 13px; }
   input { padding: 11px 12px; border-radius: 9px; border: 1px solid #23304a; background: #111a2b;
     color: #e2e8f0; font-size: 15px; }
-  input:focus { outline: none; border-color: #38bdf8; }
-  button { padding: 11px 12px; border: none; border-radius: 9px; background: #38bdf8; color: #06121f;
+  input:focus { outline: none; border-color: #e2e8f0; }
+  button { padding: 11px 12px; border: none; border-radius: 9px; background: #e2e8f0; color: #06121f;
     font-weight: 700; font-size: 15px; cursor: pointer; }
   .err { color: #f87171; font-size: 12px; min-height: 14px; }
 </style>
@@ -1601,13 +1673,13 @@ function smidjaLoginPage(): Response {
   <div class="brand">
     <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true">
       <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b"/>
-      <g fill="#38bdf8">
+      <g fill="#e2e8f0">
         <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13"/>
         <polygon points="6,21 26,21 25.4,24 6.6,24"/>
         <polygon points="8,25 24,25 23.3,27.5 8.7,27.5"/>
       </g>
     </svg>
-    <span><b>SMÍÐJA</b><small>the smithy</small></span>
+    <span><b>${name.toUpperCase()}</b><small>Ymir</small></span>
   </div>
   <h1>Sign in</h1>
   <p>The gate is closed. Sign in, or enter an invite code to make your own account.</p>
@@ -1643,7 +1715,7 @@ function smidjaLoginPage(): Response {
 }
 
 /** Forward an authed Smíðja-host request to the visualizer on :8437. */
-async function proxySmidja(req: Request, url: URL): Promise<Response> {
+async function proxyApp(req: Request, url: URL, base = SMIDJA_URL, label = 'smidja'): Promise<Response> {
   const headers = new Headers(req.headers);
   headers.delete('host');
   headers.delete('cookie');
@@ -1651,10 +1723,10 @@ async function proxySmidja(req: Request, url: URL): Promise<Response> {
   const init: RequestInit = { method: req.method, headers, redirect: 'manual' };
   if (req.method !== 'GET' && req.method !== 'HEAD') init.body = await req.arrayBuffer();
   try {
-    const up = await fetch(`${SMIDJA_URL}${url.pathname}${url.search}`, init);
+    const up = await fetch(`${base}${url.pathname}${url.search}`, init);
     return new Response(up.body, { status: up.status, headers: up.headers });
   } catch (err) {
-    return json({ error: `smidja upstream unreachable: ${(err as Error).message}` }, 502);
+    return json({ error: `${label} upstream unreachable: ${(err as Error).message}` }, 502);
   }
 }
 
@@ -1705,9 +1777,12 @@ function serveStatic(pathname: string): Response {
 // revive one. That is the point — no bearer is kept at rest.
 const server = Bun.serve({
   port: PORT,
-  async fetch(req) {
+  async fetch(req, srv) {
     const url = new URL(req.url);
     const p = url.pathname;
+    // Bun's Request carries no socket; the peer address comes from the server.
+    // Recorded per request (a WeakMap, so concurrent requests cannot mix).
+    REQUEST_IP.set(req, srv.requestIP(req)?.address ?? '');
     try {
       if (p === '/api/login' && req.method === 'POST') {
         const b = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
@@ -1805,7 +1880,7 @@ const server = Bun.serve({
       if (p === '/api/session') {
         return json({
           authed: GATE_AUTH ? isAuthed(req) : true,
-          login: loginOf(req),
+          login: seatOf(req),
           // The login surface shows "create an account" only while a live invite
           // exists — a newcomer with a code can enter, and nobody else can.
           registration: invitesOpen(),
@@ -1823,22 +1898,59 @@ const server = Bun.serve({
       // The Smíðja host rides the same gate: sign in here, then every request
       // is reverse-proxied to the visualizer on :8437.
       const host = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
-      if (host === SMIDJA_HOST) {
+      const app = APP_HOSTS.find((a) => a.host === host);
+      if (app) {
         if (!isAuthed(req)) {
+          // No dead login page: send them to the one login, remembering the app.
           if (p.startsWith('/api/')) return json({ error: 'unauthorized' }, 401);
-          return smidjaLoginPage();
+          const scheme = (req.headers.get('x-forwarded-proto') ?? 'https').split(',')[0];
+          const door = PRIMARY_HOST || host;
+          return new Response(null, {
+            status: 302,
+            headers: { location: `${scheme}://${door}/?next=${encodeURIComponent(url.toString())}` },
+          });
         }
-        return proxySmidja(req, url);
+        return proxyApp(req, url, app.base, app.name);
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
+      if (p === '/api/usage') {
+        // What the HARNESSES spent — opencode and pi — not only the smithy's runs.
+        // Memoised for a minute: the aggregate is one bounded SQL statement over a
+        // 37 GB store, and a panel must not pay for it on every poll.
+        return json(await memoAsync('usage', 60_000, async () => {
+          try {
+            const { execFileSync } = await import('node:child_process');
+            const script = new URL('../../../bin/hlidskjalf-usage.sh', import.meta.url).pathname;
+            const out = execFileSync(script, ['--days', process.env.YMIR_USAGE_DAYS ?? '30'], { timeout: 60_000 }).toString().trim();
+            return JSON.parse(out);
+          } catch (e) {
+            return { error: String(e).slice(0, 120) };
+          }
+        }));
+      }
       if (p === '/api/worktrees') return json(await worktrees());
       if (p === '/api/me') return json({ login: loginOf(req) ?? 'operator', realm: 'work' });
       if (p === '/api/workspace') {
         const realm = url.searchParams.get('realm') ?? 'work';
         return json({ realm, path: workspaceRoot(realm) });
       }
-      if (p === '/api/agents') return json(agents());
+      if (p === '/api/agents') {
+        // WHO IS STANDING, not who could be. The connector reads herdr's live
+        // pane list, so every opencode and pi session appears on the board with
+        // its kind, state and task. The roster is the fallback, never the answer.
+        try {
+          const { execFileSync } = await import('node:child_process');
+          const script = new URL('../../../bin/hlidskjalf-agents.sh', import.meta.url).pathname;
+          const out = execFileSync(script, [], { timeout: 4000 }).toString().trim();
+          if (out.startsWith('[')) {
+            return new Response(out, { headers: { 'content-type': 'application/json' } });
+          }
+        } catch {
+          // herdr absent or the connector failed: fall through to the roster
+        }
+        return json(agents());
+      }
       if (p === '/api/tasks') return json(tasks());
       if (p === '/api/orders') return json({ open: orders().filter((o) => o.status !== 'COMPLETED').length, orders: orders() });
       if (p === '/api/runes') return json(runes());

@@ -20,7 +20,7 @@ export function Emblem({ size = 34 }: { size?: number }) {
         </linearGradient>
         <linearGradient id="ymir-rune" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#7dd3fc" />
-          <stop offset="1" stopColor="#38bdf8" />
+          <stop offset="1" stopColor="#c9973f" />
         </linearGradient>
       </defs>
       {/* anvil base */}
