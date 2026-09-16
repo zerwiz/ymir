@@ -4,7 +4,7 @@ import { Overlay } from '../components/Overlay';
 import { LoginModal } from '../components/LoginModal';
 import { EmberBackground } from '../components/EmberBackground';
 import { HallsChooser } from '../components/Halls';
-import { gateApi } from '../services/api';
+import { gateApi, isDesktopSeat } from '../services/api';
 import { startStream } from '../services/stream';
 import { gateFromHash, useYmir } from '../state/store';
 
@@ -12,7 +12,9 @@ export default function App() {
   const session = useYmir((s) => s.session);
   const [authed, setAuthed] = useState<boolean | null>(null);
   // After the gate admits us, offer the three halls once per login.
-  const [choosing, setChoosing] = useState(true);
+  // A desktop shell is a SEAT, not a lobby: it does not ask which hall you
+  // want, it opens the one you are in. The picker belongs to the web door.
+  const [choosing, setChoosing] = useState(!isDesktopSeat());
 
   /**
    * One question at boot: has the gate let this browser in?
