@@ -1,0 +1,27 @@
+# Ymir baked image — an OPTIONAL alternative to bind-mounting the checkout.
+#
+# Build with either engine (the core resolves engines; this file does not care):
+#   podman build -f deploy/Containerfile -t ymir:local .
+#   docker build -f deploy/Containerfile -t ymir:local .
+#
+# The bind-mount examples in deploy/quadlet and deploy/compose are simpler for a
+# self-host box (updates are `git pull`). Use this image when you want an
+# immutable release: pin a tag, roll back by tag.
+#
+# Durable state still needs volumes: state/, workspace/, .agents/memory/,
+# agents/, and apps/*/dist. The image bakes only code.
+
+FROM docker.io/oven/bun:1
+
+# The core needs git, python3 (the memory well/CLI), curl, and TLS roots.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      git python3 python3-venv curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/ymir
+COPY . /opt/ymir
+ENV YMIR_ROOT=/opt/ymir
+
+EXPOSE 3888 3889 8437
+CMD ["bash", "-lc", "cd /opt/ymir && bash scripts/start.sh"]
