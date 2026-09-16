@@ -22,7 +22,7 @@ services:
       # HLIDSKJALF_PORT / HLIDSKJALF_API_PORT / SMIDJA_VIZ_API_PORT.
       - "38888:38888"   # SPA
       - "38889:38889"   # gate API
-      - "84370:84370"   # Smíðja visualizer
+      - "54370:54370"   # Smíðja visualizer
     env_file:
       - ${YMIR_ENV:-../../.env.local}
     environment:
