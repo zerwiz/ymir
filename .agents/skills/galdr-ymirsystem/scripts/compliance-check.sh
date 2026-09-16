@@ -142,7 +142,7 @@ fi
 
 # --- harnesses --------------------------------------------------------------
 # Every harness reads agents through its own directory (.claude/agents,
-# .codex/agents, .cursor/agents, .pi/agents, .opencode/agent) and skills through
+# .codex/agents, .cursor/agents, .pi/agents, .opencode/agents) and skills through
 # .agents/skills. Two failure classes hide there, and neither is visible from
 # the code: a symlink that no longer resolves (Rule 02 — .agents/agents is
 # canonical, harness dirs are symlinks), and a nested SKILL.md that a recursive
@@ -150,7 +150,7 @@ fi
 # galdr-cli rename left .agents/agents/galdr.md dangling for days, and three
 # superseded SKILL.md files were being loaded as live skills.
 harness_problems=""; harness_links=0
-for hd in .claude/agents .codex/agents .cursor/agents .pi/agents .opencode/agent; do
+for hd in .claude/agents .codex/agents .cursor/agents .pi/agents .opencode/agents; do
   [ -d "$ROOT/$hd" ] || continue
   for entry in "$ROOT/$hd"/*; do
     [ -e "$entry" ] || [ -L "$entry" ] || continue
@@ -219,6 +219,64 @@ if [ -z "$harness_detail" ]; then
   add harnesses "harness surfaces + skill discovery" PASS "$harness_links agent links resolve; skills bound (opencode config · pi native · claude/codex/cursor linked); no phantom skills"
 else
   add harnesses "harness surfaces + skill discovery" FAIL "$harness_detail"
+fi
+
+# --- roster -----------------------------------------------------------------
+# The roster (config/agents.yaml.example) and the canonical tree
+# (.agents/agents/*.md) must name the SAME figures. A figure in the tree but not
+# in the roster falls to `default_model` and is never declared to the harness; a
+# figure in the roster with no profile is a phantom the roster promises and the
+# tree cannot seat. This is the check that would have caught the real failure:
+# twenty profiles existed, the roster named ten, and only the hand-declared names
+# in opencode.json ever loaded — so eighteen figures were unreachable while every
+# other gate stayed green.
+roster_gaps=""
+if [ -f "$ROOT/config/agents.yaml.example" ]; then
+  # One python block, not shell text-munging: the tree side needs a per-file
+  # `name:`, and the roster side needs a real YAML read. Both in shell produced
+  # a collapsed single-line list and a mangled heredoc, so the comparison lied.
+  roster_report="$(python3 - "$ROOT" <<'PY' 2>/dev/null
+import sys, os, re, glob
+root = sys.argv[1]
+tree = set()
+for f in glob.glob(os.path.join(root, ".agents/agents/*.md")):
+    for line in open(f, encoding="utf-8", errors="replace"):
+        if line.startswith("name:"):
+            n = line.split(":", 1)[1].strip()
+            if n:
+                tree.add(n)
+            break
+roster = set()
+try:
+    import yaml
+    doc = yaml.safe_load(open(os.path.join(root, "config/agents.yaml.example")))
+    roster = set((doc.get("agents") or {}).keys())
+except Exception:
+    # yaml may be absent; fall back to a strict two-space-indent scan
+    txt = open(os.path.join(root, "config/agents.yaml.example")).read()
+    m = re.search(r"^agents:[ \t]*\n((?:[ \t]+.*\n|\n)*)", txt, re.M)
+    if m:
+        for line in m.group(1).splitlines():
+            mm = re.match(r"[ \t]{2}([A-Za-z0-9_-]+)[ \t]*:", line)
+            if mm:
+                roster.add(mm.group(1))
+unrostered = sorted(tree - roster)
+phantom = sorted(roster - tree)
+print(len(tree))
+print(" ".join(unrostered))
+print(" ".join(phantom))
+PY
+)"
+  tree_count="$(printf '%s\n' "$roster_report" | sed -n '1p')"
+  unrostered="$(printf '%s\n' "$roster_report" | sed -n '2p')"
+  phantom_roster="$(printf '%s\n' "$roster_report" | sed -n '3p')"
+  [ -n "$unrostered" ] && roster_gaps="$roster_gaps in-tree-but-not-rostered:$unrostered"
+  [ -n "$phantom_roster" ] && roster_gaps="$roster_gaps rostered-but-no-profile:$phantom_roster"
+  if [ -z "$roster_gaps" ]; then
+    add roster "roster and canonical tree agree" PASS "${tree_count:-0} figures, every one rostered and seated"
+  else
+    add roster "roster and canonical tree agree" FAIL "$roster_gaps"
+  fi
 fi
 
 # --- skillindex -------------------------------------------------------------

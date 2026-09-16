@@ -6,7 +6,7 @@ symlinked into each harness.
 ## Where agents live
 
 - **Canonical:** `.agents/agents/<name>-<craft>.md` (edit these only).
-- **Bindings:** `.opencode/agent/*.md` and `.pi/agents/*.md` are symlinks.
+- **Bindings:** `.opencode/agents/*.md` and `.pi/agents/*.md` are symlinks.
 
 Rebind after any change:
 

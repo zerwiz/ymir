@@ -496,7 +496,7 @@ harness config like `mode`/`model`/`permission` in their frontmatter). The
 harness directories **bind** them by symlink — they are never hand-written
 duplicates:
 
-- OpenCode: `.opencode/agent/<name>.md` → `../../.agents/agents/<profile>.md`
+- OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
 - Pi: `.pi/agents/<profile>.md` → the same canonical files
 
 `bin/valknut-load.sh` creates the symlinks (`--opencode`, `--pi`, `--global`,
@@ -506,7 +506,7 @@ hand-made subset. Naming differs by harness and must be respected:
 
 ```
 agent_binding[5]{harness,dir,name_rule}:
-  "opencode",".opencode/agent/","the frontmatter `name:` — bragi.md -> bragi-marketer.md"
+  "opencode",".opencode/agents/","the frontmatter `name:` — bragi.md -> bragi-marketer.md"
   "pi",".pi/agents/","the profile file name — bragi-marketer.md"
   "claude",".claude/agents/","the profile file name"
   "codex",".codex/agents/","the profile file name"
@@ -582,7 +582,7 @@ einherjar[20]{figure,craft,domain,engine}:
   "Völundr","master smith — Smíðja's orchestrator","brokkforge","—"
 ```
 
-Bind with `bin/valknut-load.sh --all` (OpenCode: `.opencode/agent/<name>.md`; Pi:
+Bind with `bin/valknut-load.sh --all` (OpenCode: `.opencode/agents/<name>.md`; Pi:
 `.pi/agents/<profile>.md`) — never edit the harness dirs.
 
 ## Pi has no agent loader (2026-09-17)
@@ -686,14 +686,14 @@ under **`ymir_tools:`**; permission is expressed by the `permission:` block.
 
 ```
 canonical[3]{kind,canonical,load_path}:
-  "agent profiles",".agents/agents/<profile>.md",".opencode/agent/<name>.md · .pi/agents/<name>.md (symlinks)"
+  "agent profiles",".agents/agents/<profile>.md",".opencode/agents/<name>.md · .pi/agents/<name>.md (symlinks)"
   "OpenCode plugins",".agents/harness/opencode/plugins/",".opencode/plugins (symlink)"
   "skills",".agents/skills/","loaded via opencode.json skills.paths"
 ```
 
 Rules:
 - **Edit only `.agents/`.** Never edit a file under `.opencode/` or `.pi/` — those are
-  symlinks to `.agents/` (e.g. `.opencode/agent/bragi.md` links to
+  symlinks to `.agents/` (e.g. `.opencode/agents/bragi.md` links to
   `.agents/agents/bragi-marketer.md`).
 - After any change: `bin/valknut-load.sh --all` to rebind.
 - **OpenCode requires REAL `.opencode/{node_modules,package.json,.gitignore}`** — the

@@ -243,7 +243,7 @@ Utgard sandbox on a Yggdrasil worktree.
 | **Kvasir** | the knowing | scout | reconnaissance — changes nothing |
 
 Profiles live in [`.agents/agents/`](.agents/agents/) and are bound to each tool by
-`bin/valknut-load.sh` (OpenCode reads `.opencode/agent/`; Pi links resolve under
+`bin/valknut-load.sh` (OpenCode reads `.opencode/agents/`; Pi links resolve under
 `.pi/agents/`).
 
 ---
