@@ -1,0 +1,54 @@
+# Ymir as a rootless Podman Quadlet (systemd --user).
+#
+# Install (per-user, rootless):
+#   mkdir -p ~/.config/containers/systemd ~/.config/ymir
+#   cp deploy/quadlet/ymir.container ~/.config/containers/systemd/
+#   cp deploy/env.example ~/.config/ymir/ymir.env      # then edit (0600)
+#   systemctl --user daemon-reload && systemctl --user start ymir.service
+#
+# The container is the isolation boundary against other services on the host.
+# bwrap inside the container is OFF by default (see deploy/README.md).
+
+[Unit]
+Description=Ymir substrate — Hlidskjalf, gate API, memory well
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=docker.io/oven/bun:1
+ContainerName=ymir
+
+# The checkout, bind-mounted; state lives with it, so updates are `git pull`.
+# `:Z` relabels for SELinux (harmless where SELinux is off).
+Volume=%h/dev/Way-Of/ymir:/opt/ymir:Z
+
+WorkingDir=/opt/ymir
+EnvironmentFile=%h/.config/ymir/ymir.env
+
+# Host ports: gate API, SPA, Smíðja visualizer. The well/Bifrost stay internal.
+PublishPort=3888:3888
+PublishPort=3889:3889
+PublishPort=8437:8437
+
+# Hardening: rootless, no new privileges, drop every capability. Ymir needs none.
+NoNewPrivileges=true
+DropCapability=ALL
+Tmpfs=/tmp
+
+# Map the host user so the bind-mounted checkout stays owned by you.
+UserNS=keep-id
+
+# --- bwrap inside the container (OPTIONAL; loosens the boundary) --------------
+# Enable only if you want per-command bwrap confinement. Uncommenting grants the
+# container the ability to create nested namespaces.
+# AddCapability=SYS_ADMIN
+# SecurityOpt=seccomp=unconfined
+
+Exec=bash -lc 'cd /opt/ymir && bash scripts/start.sh'
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target

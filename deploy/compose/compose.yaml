@@ -1,0 +1,42 @@
+# Ymir via Compose — works with `docker compose` and `podman-compose`.
+#
+#   cp deploy/env.example .env      # then edit; never commit
+#   docker compose -f deploy/compose/compose.yaml up -d
+#   podman-compose -f deploy/compose/compose.yaml up -d
+#
+# YMIR_ROOT is the host path to the checkout (default: this repo). The core
+# resolves the container engine itself; this file never names one beyond the
+# compose driver you invoke.
+
+services:
+  ymir:
+    image: docker.io/oven/bun:1
+    container_name: ymir
+    working_dir: /opt/ymir
+    command: ["bash", "-lc", "cd /opt/ymir && bash scripts/start.sh"]
+    volumes:
+      # `:Z` relabels for SELinux hosts; harmless elsewhere.
+      - ${YMIR_ROOT:-../..}:/opt/ymir:Z
+    ports:
+      - "3888:3888"   # SPA
+      - "3889:3889"   # gate API
+      - "8437:8437"   # Smíðja visualizer
+    env_file:
+      - ${YMIR_ENV:-../../.env.local}
+    environment:
+      # Override durable state if you keep it outside the checkout.
+      YMIR_ROOT: /opt/ymir
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+    # Podman rootless: keep the host user so the bind mount stays yours.
+    # Docker users: comment this out (Docker only accepts `host`/`private`).
+    userns_mode: keep-id
+    restart: unless-stopped
+
+    # --- bwrap inside the container (OPTIONAL; loosens the boundary) ----------
+    # cap_add: [SYS_ADMIN]
+    # security_opt: ["no-new-privileges:true", "seccomp=unconfined"]
