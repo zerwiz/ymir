@@ -77,7 +77,12 @@ if os.path.exists(oc):
     except Exception as e:
         out["sources"]["opencode"] = {"error": str(e)[:120]}
 
-pi_files = glob.glob(os.path.expanduser("~/.pi/agent/sessions/**/*.jsonl"), recursive=True)
+# pi keeps TWO stores: the agent home and the older tree beside it. Scanning only
+# one under-reported the harness by an order of magnitude (75 messages against 657
+# session files), which is how a "small number" masks a missing source.
+pi_files = []
+for root in ("~/.pi/agent/sessions", "~/.pi/sessions"):
+    pi_files += glob.glob(os.path.expanduser(root + "/**/*.jsonl"), recursive=True)
 if pi_files:
     agg = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "messages": 0}
     models = {}
