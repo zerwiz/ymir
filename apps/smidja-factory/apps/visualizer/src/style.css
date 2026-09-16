@@ -1,3 +1,14 @@
+/* The hearth — the landing page's fire, behind every view (shared ember.js). */
+.ember-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.9;
+}
+
 :root {
   /* ── The carved cloth of the halls (the default) ──────────────────────────
      Cut from the landing page (CodeP/ymir-homepage/src/lore.html :root):
