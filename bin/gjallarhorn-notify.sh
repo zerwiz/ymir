@@ -34,8 +34,12 @@ send() {
   local text=$1
   if [ "$DRY" = 1 ]; then printf 'notify[1]{channel,target,status}:\n  "telegram","%s","dry-run"\n' "${CHAT:-unset}"; return 0; fi
   [ -n "$TOKEN" ] && [ -n "$CHAT" ] || { printf 'error: TELEGRAM_BOT_TOKEN / TELEGRAM_OWNER_ID unset in .env.local\n' >&2; return 1; }
-  resp=$(curl -fsS --max-time 10 "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-    -d "chat_id=${CHAT}" --data-urlencode "text=${text}" 2>/dev/null) || { printf 'error: telegram send failed\n' >&2; return 1; }
+  # The bot token rides in the URL path; a stdin config keeps it out of argv.
+  resp=$(curl -fsS --max-time 10 --config - \
+    -d "chat_id=${CHAT}" --data-urlencode "text=${text}" 2>/dev/null <<EOF
+url = "https://api.telegram.org/bot${TOKEN}/sendMessage"
+EOF
+) || { printf 'error: telegram send failed\n' >&2; return 1; }
   printf '%s' "$resp" | python3 -c 'import json,sys
 try: d=json.load(sys.stdin); ok=d.get("ok",False)
 except: ok=False
