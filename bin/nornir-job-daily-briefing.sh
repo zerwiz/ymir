@@ -36,7 +36,7 @@ REALM="${REALM:-}"
 if [ -z "$REALM" ]; then . "$SCRIPT_DIR/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
 
 DATE=$(date +%Y-%m-%d)
-BRIEF_DIR="${BROKK_BRIEF_DIR:-$BROKK_HOME/svartalfaheim/$REALM/workspace/memory/daily}"
+BRIEF_DIR="${BROKK_BRIEF_DIR:-${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/workspace/memory/daily}"
 BRIEF_FILE="$BRIEF_DIR/$DATE.md"
 MAX_ORDERS="${BROKK_BRIEF_MAX_ORDERS:-15}"
 MAX_RUNES="${BROKK_BRIEF_MAX_RUNES:-12}"
@@ -137,7 +137,7 @@ if [ "$meta_count" != "0" ]; then
     emit "  - $(basename "$m"): $(head -n 1 "$m" 2>/dev/null)"
   done
 fi
-if [ -r "$BROKK_HOME/svartalfaheim/$REALM/.env.realm" ]; then
+if [ -r "${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/.env.realm" ]; then
   emit "- realm env: present"
 else
   emit "- realm env: ABSENT (svartalfaheim/$REALM/.env.realm)"
