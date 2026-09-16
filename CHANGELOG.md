@@ -1,5 +1,313 @@
 # CHANGELOG
 
+## 2026-09-16 — Omarchy-first, host-aware: Windows and macOS get a door
+
+- **`bin/host-sense.sh`** — the one place that looks before anything acts. It
+  reports THIS machine: distro and family, kernel, arch, platform (linux · wsl ·
+  macos · windows), session (Wayland/X11), desktop, compositor, package manager,
+  and what the desktop can actually *do* — `placement`, `launcher`, `tray`. No
+  layer may assert a machine it is not standing on.
+- **Omarchy stays first-class, and is now gated.** `bin/omarchy-sense.sh` opens
+  by asserting *"Ymir runs on an Omarchy host"*; on any other host it now skips
+  cleanly and points at `bin/host-sense.sh`, rather than recording the wrong
+  machine. That is Rule 05's own rule: a layer is gated on its host.
+- **Windows has a door:** `bin/bootstrap-windows.ps1` — enables WSL2, installs
+  Ubuntu, then hands the work to `bin/ymir-install.sh` inside the distro. It is
+  honest about needing elevation and about the one reboot a fresh machine needs.
+- **macOS has a door:** `bin/bootstrap-macos.sh` — raises Ubuntu in a Lima VM and
+  installs Ymir inside it, plus `packaging/macos/Ymir Installer.command`, a
+  double-clickable launcher for an operator who should not need a terminal.
+- **The installers themselves:** `packaging/build.sh --exe|--mac|--check`, the
+  NSIS script `packaging/windows/ymir-setup.nsi` (→ `Ymir-Setup.exe`), and
+  `.github/workflows/ymir-installers.yml`, which builds the exe on an Ubuntu
+  runner (NSIS is a compiler, not a Windows VM) and the .pkg on a macOS runner
+  (pkgbuild is Apple-only). Signing/notarisation stay with the operator, so the
+  artefacts ship unsigned.
+- `README.md` gains "Bringing your own machine" — the host table and the build
+  commands; its `docs/masterplan.md` pointer is corrected to `$YMIR_HOME/docs/`.
+
+## 2026-09-16 — app packaging prepared under the @ymir scope (Amendment C, part one)
+
+- **Scoped names.** `apps/odrerir` was `ymir-odrerir` and `apps/sessrumnir` was
+  bare `sessrumnir`; both are now `@ymir/odrerir` and `@ymir/sessrumnir`.
+- **Publishable metadata on all four apps** (hlidskjalf, hlidskjalf-mobile,
+  odrerir, sessrumnir): `license`, `repository`, `publishConfig.access: public`,
+  a `files` surface, and `prepublishOnly` where a build exists.
+- **Measured with `npm pack --dry-run --ignore-scripts`:** hlidskjalf 1.3 MB /
+  21 files, odrerir 2.3 MB / 15, sessrumnir 4.0 MB / 116, hlidskjalf-mobile
+  2.0 kB / 4 (source only — it has no build script). `dist/ymir.apk` is excluded
+  by `!dist/*.apk`: it took the hlidskjalf tarball from 1.3 MB to 14.5 MB, and
+  npm is not an APK channel.
+- **`private: true` stays until the Allfather's word** — nothing can publish by
+  accident; the flip is one line per app.
+- The app repos were already registered in `$YMIR_HOME/identity/projects.yaml`
+  (`zerwiz/{hlidskjalf,hlidskjalf-mobile,odrerir,sessrumnir,smidja}`).
+- `no-mistakes` is initialized for this repo (`no-mistakes init`): the clean-PR
+  gate now has its local remote. The vendored skill copy stays — it is the
+  canonical tree the skill index names.
+
+## 2026-09-16 — the loader stops deleting: merge, never overwrite
+
+- **Root cause of the Apodex-provider loss, mended at the source.** Two writers
+  share the untracked `opencode.json`: `bin/valknut-load.sh` (structure, from
+  `opencode.json.example`) and `bin/agents-config.sh apply` (the roster —
+  providers and per-agent models, from `config/agents.yaml`). The loader
+  re-rendered with `sed` + `mv`, so because the example carried only
+  `llama.cpp`, **every loader run silently deleted the Apodex provider** that
+  lived only in the live file. `config_out` now merges deep and
+  `setdefault`-style: missing keys are added, existing ones are never
+  overwritten, and the skills path is ensured. Verified by wiping the provider
+  by hand: the next run reports `merged(provider.apodex)` and restores it, while
+  an unrelated hand-added key survives untouched. Seeding happens only when the
+  file is absent.
+- **The changelog guard still bites, without punishing a follow-up.** The
+  pre-push guard now accepts either the pushed range touching `CHANGELOG.md` or
+  the branch's whole range since it left the trunk touching it — a commit that
+  merely lands a file the record already tells needs no micro-entry. A branch
+  whose entire range leaves untold is still refused.
+- `bin/valknut-load.sh --status` reports the config outcome
+  (`seeded` · `merged(…)` · `unchanged` · `kept`), so a silent stomp can never
+  hide behind a "rendered" line again.
+- `harness-integration/README.md` records the two-writer boundary.
+
+## 2026-09-16 — one skills tree, every harness; the config stomp mended
+
+- **Every harness now reaches `.agents/skills`.** Pi was already right — its own
+  code walks up from the cwd to `.agents/skills` (and `~/.agents/skills`), so it
+  discovers Ymir's skills natively with no link and no config; a second root
+  under `.pi/` would only double-load. Claude Code, Codex and Cursor read project
+  skills from their own directory, so `bin/valknut-load.sh` now binds
+  `.claude/skills`, `.codex/skills` and `.cursor/skills` to `../.agents/skills`.
+  opencode reaches the tree through `skills.paths`. The install step `loaders`
+  runs the loader, so a fresh install gets all of it.
+- **The `harnesses` gate (G14) now asserts the skills surfaces too** — opencode's
+  config, Pi's native root, and the three links — so a harness silently loading
+  nothing can no longer pass.
+- **Defect mended: the loader was stomping `opencode.json`.** `bin/valknut-load.sh`
+  renders `opencode.json` from `opencode.json.example`, and that example carried
+  only `llama.cpp` — so a loader run silently **deleted the Apodex provider**,
+  which had only ever lived in the generated file. The example now carries Apodex
+  as well, with the served id `apodex-1.0-mini`, so a re-render cannot drop it.
+- `bin/valknut-load.sh --status` now reports every surface (agents *and* skills)
+  with a true row count instead of a hardcoded header.
+- Assets: `harness-integration/README.md` gains the skill-location table, and
+  each per-harness file states its own mechanism.
+
+## 2026-09-16 — Hodd lives outside the repo, and the installer makes it so
+
+- **One resolver.** `bin/hoard-lib.sh` (`hoard_root`) is now the single answer to
+  *where private data lives*: `$YMIR_HOARD`, else `$YMIR_HOME`, else
+  `$HOME/Documents/Ymir` — never the checkout. Rule 07's one documented default,
+  in one place.
+- **The inward default is gone.** `bin/mimir-ingest.sh`, `bin/project-git.sh` and
+  `bin/workspace-provision.sh` each fell back to `$ROOT/hodd`, so on a machine
+  with neither `YMIR_HOARD` nor `YMIR_HOME` exported, memory ingest, the project
+  registry and workspace provisioning wrote private data **inside the repo**.
+  All three (plus `bin/hodd.sh` and the installer) now resolve through the lib.
+- **The misplaced document is out.** `0003-private-data-separation.md`, which had
+  come to rest in the repo at `hodd/docs/plans/`, now lives in the hoard at
+  `$YMIR_HOME/docs/plans/`. The repo's `hodd/` holds exactly the guard, the
+  README and `AGENTS.example.md` — Rule 04's scaffold set, and nothing else.
+- **Installed, not assumed.** `bin/ymir-install.sh` step `tree` now raises the
+  hoard layout *outside* the repo (`bin/hodd.sh init`) and seeds an empty
+  `secrets/platform.env` (mode 0600), so `bin/hodd.sh emit secrets/platform.env`
+  resolves on a fresh machine instead of failing with "not readable".
+  `assets/installation.md` and `assets/memory-well.md` updated in the same change.
+
+## 2026-09-16 — the pane bridge keeps its quoting; Phase 3 verified
+
+- **The Apodex plan's last open verification is closed.** Run in a herdr pane —
+  `bin/herdr-run.sh run huginn-research -- bin/huginn-research-worker.sh --brief
+  "…" --output-dir …` — the worker recalled, dispatched to the Apodex seat, wrote
+  its verdict, and observed it into Mimirsbrunn (`status: completed`, verdict
+  *"The capital of Norway is Oslo."*). Phase 3 needed a spawn, which the
+  read-only session lock had forbidden; it was run once the lock was this
+  session's.
+- **Defect found and mended — `bin/herdr-run.sh run` lost its quoting.** A pane
+  runs its command through a *shell*, but the bridge handed herdr the raw argv.
+  An argument containing spaces reached the pane as separate words, so
+  `--brief "In one sentence: …"` arrived as `--brief In one sentence: …` and the
+  worker died with `error: unknown arg: one`. Every real brief is multi-word, so
+  the documented invocation could never have worked. `run` now quotes each
+  argument on the way in (`printf '%q'`), verified by re-running it.
+- Asset updated in the same change: `.agents/skills/ymir-host/assets/thjazi.md`
+  carries the quoting rule.
+
+## 2026-09-16 — the skill-loading audit: wrong skills unloaded, the index made true
+
+- **Three phantom skills stopped loading.** opencode was loading `galdr-compliance`
+  and `galdr-crafter` — both superseded, their work long since moved to
+  `tyr-check` — and `NSR`, the NSR scaffolding spec, which sat at
+  `assets/nsr/SKILL.md` carrying frontmatter. A recursive scanner walks
+  `skills.paths` to *any* depth, so all three were announced to every agent as
+  live skills. The two galdr crafters are removed; the NSR spec is renamed
+  `assets/nsr/scaffold-spec.md` and stays a document (its sibling templates
+  carry no frontmatter and were already inert).
+- **Two gates added, one per failure class** (`compliance-check.sh`):
+  - **`harnesses` (G14)** — every link in `.claude/agents`, `.codex/agents`,
+    `.cursor/agents`, `.pi/agents`, `.opencode/agent` must land, one hop, in the
+    canonical `.agents/agents/` tree (Rule 02), and no nested `SKILL.md` may
+    carry frontmatter. One hop deliberately: Galdr's agent file *is* the skill,
+    by the dual-surface rule.
+  - **`skillindex` (G15)** — every real skill dir must be named in
+    `.agents/skills/README.md`, and every `.agents/skills/<name>` path the assets
+    cite must exist. Lines marked planned/legacy/superseded/removed/abandoned/
+    retired are exempt by intent.
+- **The drift they exposed, mended:** the canonical index listed 23 skills while
+  26 existed (`groa-update`, `lifecycle`, `rules-check-drift` were missing); the
+  Galdr and `.agents/assets/agents` registries still described a layout that no
+  longer existed (`smidja/`, `gunnlod`, `hamr`, `saga`, `ymir`, `open-design`),
+  pointing the agent at files that were not there; dead paths corrected to the
+  real names (`smidja-factory`, `saga-bearings`, `urdh-hold`, `nornir-schedule`,
+  `ymir-host`, `hamr-adapters`); `brokk-craft` marked planned rather than
+  presented as a working command.
+- **`AGENTS.md` gains the invariant:** the delivery gate is enforced in git
+  hooks seated by the install step `gates` — `branch-guard` refuses a protected
+  branch, `changelog-guard` refuses a push whose range never touches
+  `CHANGELOG.md`.
+
+## 2026-09-16 — the delivery gates install themselves; rename drift mended
+
+- **Install seam.** `bin/ymir-install.sh` gains step **`gates`** (after
+  `loaders`): `bin/secret-guard.sh --install` seats the pre-commit guard and
+  `bin/changelog-guard.sh --install` the pre-push (branch + changelog). A fresh
+  clone now gets the delivery gate without a manual step — `--check` reports it
+  as `gates OK|WARN`, the consent preamble names it, and
+  `assets/installation.md` carries the row in the same change.
+- **Drift mended — found by the compliance gate, not by me.** Two symlinks
+  still pointed at the retired `galdr-cli` skill, so the last rename was not in
+  fact complete: `.agents/agents/galdr.md` (Galdr's agent surface was a **dead
+  link**) and `.agents/skills/tyr-check/assets`. Both repointed at
+  `galdr-ymirsystem`, which is where the skill and its assets live.
+- **`AGENTS.md` TOON mend.** The `security[4]` block carried a rule wrapped
+  across two lines, which the checker counted as a fifth row. Joined to one
+  line; the block now declares and holds exactly four.
+- **Compliance.** All ten Galdr gates green: toon · naming · mocks · syntax ·
+  json · sync · surfaces · assets · duplicates · governed.
+
+## 2026-09-16 — Smiðja moves into the app tree
+
+- **The smithy is an app.** Its 148 source files moved from
+  `.agents/skills/smidja-factory/` to `apps/smidja-factory/`, joining
+  hlidskjalf, odrerir and sessrumnir under `apps/`.
+- **Path-transparent.** `.agents/skills/smidja-factory` is now a symlink to
+  `../../apps/smidja-factory`, so every existing path resolves unchanged —
+  `scripts/start.sh`, `bin/ymir-install.sh`, `bin/ymir-validate.sh`, and the
+  skill loader (`.agents/skills` is a skills path). `node_modules/` stays
+  gitignored and is not carried.
+- **Still open** (recorded, not done): the root `smidja/` runtime tree
+  Amendment A would move to `apps/smidja/`, and Amendment C's per-app GitHub
+  repos and npm publishing.
+
+## 2026-09-16 — the changelog guard: no push ships untold
+
+- **Every push carries a CHANGELOG entry.** `bin/changelog-guard.sh` installs a
+  pre-push hook that reads the refs git hands it, resolves the range being
+  pushed, and refuses the push when `CHANGELOG.md` is untouched in that range.
+  A change that ships is a change that was told; the record can no longer lag
+  silently behind the code.
+- **Rule 08 extracted and versioned.** The protected-branch check that lived
+  only inside the ad-hoc `.git/hooks/pre-push` is now `bin/branch-guard.sh`, so
+  the delivery gate is reproducible: `bin/changelog-guard.sh --install` writes
+  the pre-push that runs both guards.
+- **Escape hatch, deliberate and loud.** `YMIR_SKIP_CHANGELOG_GUARD=1 git push`
+  when an entry truly does not belong.
+- Checks by hand: `bin/changelog-guard.sh --range A..B`,
+  `bin/branch-guard.sh --branch main`.
+
+## 2026-09-16 — Apodex seat verified; the Weave mended
+
+- **Correction (cites the entry below, never rewrites it).** The earlier
+  entry said *"LM Studio is retired; its :1234 port belongs to Apodex now."*
+  That was false as carved. LM Studio still holds `:1234` and is what serves
+  the Apodex GGUF; Apodex took the **model seat**, not the server.
+- **Live verification.** `bin/apodex-smoke-test.sh` → PASS (valid tool-capable
+  response, exit 0). `bin/huginn-research-worker.sh` with **bare defaults** →
+  `status: completed`, verdict written, observed into Mimirsbrunn. The Apodex
+  seat (`http://127.0.0.1:1234/v1`) is live.
+- **One model id, everywhere.** The seat serves **`apodex-1.0-mini`**; the
+  worker, smoke test, `.env.example`, `opencode.json`, `config/agents.yaml.example`
+  and Huginn's profile now all say so. Previously three names drifted
+  (`apodex/Apodex-1.0-mini-Q4_K_M`, `apodex/apodex-mini-q4`, the served id) and
+  the default worker call failed with `No models loaded`.
+- **Four defects mended.** `bin/huginn-research-worker.sh` made executable
+  (was 644 — bare invocation died with `Permission denied`); the smoke test's
+  `--serve` GGUF path corrected to
+  `~/Models/FlameF0X/Apodex-1.0-mini-Q4_K_M-GGUF/apodex-1.0-mini-q4_k_m.gguf`;
+  `bin/models-detect.sh` env var renamed from the typo `APEDEX_URL` to
+  `APODEX_URL`.
+- **Weight truth.** The Apodex Q4_K_M weights are **21.7 GB**, not the ~4–6 GB
+  the plan assumed — it cannot sit beside a coding model. `AGENTS.md` now says
+  so: one local model at a time, by weight.
+- **Smiðja relocated.** `.agents/skills/smidja-factory` is now a symlink to the
+  app tree at `apps/smidja-factory/`, which is where the smithy's real files
+  live (Amendment A/C of the Apodex plan).
+- Plan (private hoard): `$YMIR_HOME/docs/plans/apodex-integration-into-ymir.md`
+  — Amendment E records the live pass, the mended defects, and the one open
+  item: the herdr-seat verification (Phase 3), which needs a spawn.
+
+## 2026-09-16 — Apodex joins the Weave (research/planning provider)
+
+- **Apodex provider.** Apodex-1.0-mini-Q4_K_M climbs into the machine as
+  the research/planning GGUF on `http://127.0.0.1:1234/v1`, seated
+  alongside llama.cpp coding models on :8080. LM Studio is retired; its
+  :1234 port belongs to Apodex now.
+- **Env template.** `.env.example` gains the `APODEX_*` block; the LM
+  Studio block is marked RETIRED with its port claim corrected.
+- **Smoke test.** `bin/apodex-smoke-test.sh` — probe or serve-and-test an
+  Apodex seat; exits 0=pass, 1=fail, 2=unavailable. Never mutates config.
+- **Research worker.** `bin/huginn-research-worker.sh` (Apodex-powered
+  Eindri): takes a brief, recalls from Mimirsbrunn, dispatches to the
+  Apodex chat/completions seat, writes a structured verdict, observes it
+  back into the well. Wears the name **Huginn** per the naming law (the
+  research seat; Gungnir stays the skill-synthesis engine).
+- **Agents hall.** `.agents/agents/huginn-researcher.md` binds Huginn to
+  the apodex model; `config/agents.yaml.example` registers the apodex
+  provider and Huginn's seat; `opencode.json` carries the apodex provider
+  block alongside llama.cpp; `bin/models-detect.sh` probes and emits the
+  apodex provider for the Pi model file (`~/.pi/agent/models.json`).
+- **Install seams.** Apodex rides the existing seams: models-detect merges
+  it into the Pi models file at install; agents-config applies it into
+  opencode.json. Model provider selection documented in AGENTS.md
+  (`## Model Provider Selection`), Apache 2.0 licence noted.
+
+## 2026-09-16 — Gunnlöð joins the hall (SkillOpt integration)
+
+- **SkillOpt integration.** `pip install skillopt` into `.venv/`; training
+  loop (`skillopt-train`), eval (`skillopt-eval`), and nightly
+  self-evolution (`skillopt-sleep`) available for Smíðja prompts and
+  Ymir skills. Nightly Nornir job at 00:30 (bin/nornir-job-skillopt-sleep.sh),
+  staged artifacts only — Allfather approves before adopt. One-time setup:
+  `bin/skillopt-setup.sh`.
+- **Naming.** SkillOpt adopted the name **Gunnlöð** (keeper of the mead of
+  poetry — distills trajectories into refined skill artifacts). Added to
+  `.agents/assets/agents/naming.md` (platform map, 28 subsystems),
+  `.agents/skills/galdr-ymirsystem/assets/registry.md` (skills + external tools),
+  `README.md` (System Map + Skills + gratitude), `NOTICE` (MIT attribution).
+
+## 2026-09-13 — the imported names leave the halls (Norse naming purge)
+
+- **"firstmate" retargeted to Ymir's own names across every Ymir-owned surface.**
+  The upstream distro's nautical vocabulary is gone from the docs, skills, `bin/`,
+  config, and the Hlidskjalf review copy: `firstmate` → **Brokk**, `secondmate` →
+  **Eindri-home**, `crew`/`crewmate` → **Eindri**, `captain` → **Allfather**
+  (`docs/lore.md`, `docs/Architecture.md`, `.agents/agents/brokk.md`,
+  `.agents/skills/herdr-panes/assets/{herdr,tmux}-backend.md`,
+  `.agents/skills/eindri-homes/assets/control-plane.md`,
+  `.agents/skills/saga-bearings/assets/board-template.html`,
+  `.agents/skills/ymir-host/assets/thjazi.md`, `bin/README.md`,
+  `apps/hlidskjalf/**`).
+- **Engine literals kept.** Every real upstream identifier stays verbatim — the
+  Herdr labels (`firstmate`, `2ndmate-<id>`, `firstmate-<id>`), the home marker
+  `.fm-secondmate-home`, the envelope `FIRSTMATE_OP: ` and `[fm-from-firstmate]`,
+  and all `FM_*`/`fm-*` names — because `.agents/backend/` (the vendored engine)
+  and `assets/reference/` (provenance) are untouched.
+- **Licensing.** `NOTICE` now records the upstream **firstmate** distro
+  (`github.com/kunchenguid/firstmate`, MIT, © kunchenguid) and a README "Built on"
+  section points to it; the MIT copyright/permission notice is retained.
+- **Governed asset:** `galdr-ymirsystem/assets/hlidskjalf-ui.md` records the Allfather
+  review copy in the same change. `compliance-check.sh` 10/10 PASS.
+
 ## 2026-09-13 — The realm seat, carved (wayof)
 
 - **Problem:** the realm tree was bare (only the shipped example), no tenant
@@ -392,7 +700,7 @@ Entries are appended chronologically; never rewritten.
   match when the PID file is missing, and record the PID when the port is
   already up — so `scripts/stop.sh` truly lowers the whole system and
   `scripts/start.sh` truly raises it.
-- **Galdr:** new asset `.agents/skills/galdr-cli/assets/memory-well.md` (store,
+- **Galdr:** new asset `.agents/skills/galdr-ymirsystem/assets/memory-well.md` (store,
   bridge, MCP, harness matrix, laws, verify), routed in `SKILL.md`; registry +
   harness README updated; mirrored to tyr.
 - **Verified:** MCP recall 1.0 / stats 367, full stop→start cycle (3888/3889/
@@ -571,3 +879,335 @@ Entries are appended chronologically; never rewritten.
   `.agents/state/.wake-queue`) are empty, a repeat carry is the same drained
   news and is skipped. Genuine new content (different message, or a door with
   a line) always delivers. Harness asset updated in the same change.
+
+## 2026-09-16 — one login for every app on the web; the gate fronts them all
+
+- **Every app host is gated**, not just Smíðja. The gate now routes by host from
+  an `APP_HOSTS` table and fronts each one: unauthenticated visitors get that
+  app's own sign-in page, an API path gets 401, and the desktop seat (loopback +
+  marker) walks straight in. Verified: `smidjadell…` → *Smíðja — Sign in*,
+  `odrerirdell…` → *Óðrerir — Sign in*, API 401, desktop seat 200 (the hall).
+- **Every public hostname points at the gate (:3889)** — never at an app's own
+  port. That was a hole straight past the login: `gjallarhorn-expose.sh` had been
+  exposing each app on its own port, so the app answered the world directly.
+- **The gate learns the host map at start** (`state/gjallarhorn-hosts.env`,
+  written by the expose script and sourced by `scripts/start.sh`), so routing is
+  not an accident of whoever launched it last.
+- **No guessed credentials.** The generated tunnel config wrote
+  `credentials-file: …/ymir.json`; cloudflared names that file for the tunnel's
+  UUID, so it refused to start and the world got 530. The line is gone —
+  cloudflared resolves a named tunnel's own credentials.
+- Verified through the tunnel: `https://ymirdell.zerwiz.org/` → 200. The app
+  hostnames still answer 530: their DNS routes were made against an earlier
+  tunnel and need re-creating (`cloudflared tunnel route dns ymir <host>`).
+
+## 2026-09-16 — NO BLUE: the forge language replaces the old blue
+
+The blue had a name. It was the platform's own house tint, `--ymir-house-ymirlabs:
+#38bdf8`, carried into every surface that wears Ymir's colours — the login, the
+emblem, the realm data, the Smíðja chrome. The design doctrine (homepage repo,
+`DESIGN-UNIFICATION-PLAN.md`) says the landing page **is** the language, and that
+language is **forge**: stone ground (`#0e0c09`), bronze accent (`#c9973f`), bone
+text (`#cfc3a9`).
+
+- `midgard/design-system/tokens.css` — the house tint is bronze now, with the
+  reason recorded in the token itself.
+- The blue's footprints removed: `Emblem.tsx`, `state/store.ts`, `data/realms.ts`
+  (Hlidskjalf), `style.css` (Smíðja visualizer), and Sessrúmnir's terminal accent
+  fallback.
+- Both built stylesheets rebuilt and verified: **zero blue** in the CSS the browser
+  actually receives (`apps/hlidskjalf/dist`, the visualizer's `dist`).
+- The visualizer's build was failing on my own earlier edit (unused imports left
+  when I moved `repoRootOf` into `db.ts`) — fixed, so `bun run build` is green.
+
+The canonical token home is answered by what already exists: `midgard/design-system/`
+(tokens, icons, `ymir-mark.svg`, `icons.md`) — one source the apps import, so a
+colour changes once.
+
+## 2026-09-16 — every app wears its own rune
+
+The icon set is runecoded (`midgard/design-system/icons.md`): an Elder Futhark
+rune, stroked at the chisel bevel, tinted by the app's house colour. The apps were
+wearing the generic Ymir mark — or, worse, the old **blue** logo.
+
+- **`bin/design-icon.sh`** mints an app's icon from a glyph plus a house tint: a
+  stone tile with the rune stroked in bronze. `list` shows the mapping.
+- Minted and wired: **Hlidskjalf** `ehwaz` ᛖ (the seat), **Óðrerir** `valhalla` ᚹ
+  (the hall), **Sessrúmnir** `sowilo` ᛊ (the sun), **Smíðja** `ansuz` ᚨ (Odin's
+  breath — the forge). Óðrerir already carried a forge-coloured favicon set.
+- **The blue logo is retired**: `public/logo.svg` removed, and Smíðja's *inline*
+  copy in `App.vue` — the mark in its own header, still `#0f172a`/`#1e293b` —
+  replaced with the ansuz rune in bronze. Rebuilt; no blue in the bundle.
+
+### The hearth stays, and spreads
+
+Sessrúmnir's background fire is **`EmberBackground`** — 26 embers rising with a
+gentle sway on a canvas, *"the hearth of the landing page, carried into the
+chat"* — used by its home screen and chat panel. It stays. Next: one shared
+ember (a framework-neutral `midgard/design-system/ember.js` with a
+`prefers-reduced-motion` guard) so Hlidskjalf's shell, the login screen,
+Óðrerir's hall and the Smíðja chrome can warm the same fire.
+
+## 2026-09-16 — the hearth spreads: one fire, three more surfaces
+
+Sessrúmnir's fire is now shared rather than copied. `midgard/design-system/ember.js`
+is the framework-neutral original (the land page's Ginnungagap embers: 30 rising
+with a gentle sway over six drifting haze pools), with `ember.d.ts` for TypeScript
+consumers and a reader who asked for less motion gets a **still frame** instead of
+an animation.
+
+Wired, and built:
+
+- **Hlidskjalf** — `src/components/EmberBackground.tsx` imports the shared module;
+  mounted behind the *login* and behind the *shell*, so the door and the hall burn
+  over one hearth.
+- **Smíðja visualizer** — a `<canvas class="ember-bg">` behind every view.
+- **Óðrerir** — a `data-ember` canvas in its shell, so the hall warms too.
+- Sessrúmnir keeps its own React port untouched (two ports of one fire, the same
+  physics; consolidating them on the shared module is the next tidy).
+
+And the reference for the missing furniture: **Óðrerir already carries it all** —
+four favicons, `mask-icon` in bronze, `site.webmanifest`, canonical, description,
+theme-colour and Open Graph. The other apps should be brought up to *it*.
+
+## 2026-09-16 — icons the operator can pin, and one pair of hands for the shells
+
+**"Fail, no icons" — and the cause was a trap I had already been bitten by.**
+`bin/design-icon.sh install` writes an app's rune into the icon theme and a
+`.desktop` entry into the applications dir. It used `XDG_DATA_HOME`, and this
+agent session exports that as a **sandbox** (`…/opencode-rd`), so the icons went
+somewhere no desktop can see. It now targets the operator's real data dir
+(`$HOME/.local/share`, with `YMIR_DESKTOP_DATA_HOME` for a throwaway test) — the
+same class of bug that once hid `gh` from this session.
+
+Installed now, for **every** app: hlidskjalf, **odrerir**, **sessrumnir**, the
+Smíðja visualizer and hlidskjalf-mobile — each with its rune icon and a dockable
+entry. Óðrerir and Sessrúmnir had **none**, which is exactly why they could not
+be pinned. The stale `ymir-smidja.desktop` (pointing at a repo PNG) is folded
+into the rune's own entry.
+
+**One pair of hands for two lifecycles.** `scripts/start.sh` and
+`scripts/stop.sh` manage the web; `scripts/electron.sh` manages the shells — and
+they never met, which is why "the electrons are not running" was true while 28
+processes stood, and why a restart could leave a shell watching a dead port.
+`scripts/raise.sh` / `scripts/lower.sh` own both: lower takes the windows down
+**first**, so none is left watching a port that just vanished.
+
+**A bug the restart surfaced:** `scripts/electron.sh stop` used `local` outside a
+function — it worked only because the assignment happened to be harmless, and it
+printed a shell error on every stop. Fixed.
+
+**And the inventory is a tool:** `bin/feature-inventory.sh` — 132 tools, 5 jobs,
+26 skills, 20 agents, 8 workflows, 6 apps, 4 migrations, 6 registered projects,
+each with the way it must be proven written beside it.
+
+## 2026-09-16 — the icons are real runes now (eight of them were drawings)
+
+The Allfather looked at the icons and said what no check had: *"the icons must be
+based on real runes."* He was right, and the fault was in the **glyph set**, not
+just in the two icons I had minted.
+
+`midgard/design-system/icons.md` claims every glyph is an Elder Futhark rune and
+gives each its unicode. **Eight of the twenty-one files were drawings** — a hall
+(`valhalla`, which Óðrerir was wearing), a horn, a shield, a spear, a well, a
+squirrel, a gate, a world-tree. Replaced with the real runes their own rows
+declare:
+
+```
+gjallarhorn ᚷ Gebo · gungnir ᚦ Thurisaz · heimdall ᚺ Hagall · mimirsbrunn ᛜ Ingwaz
+ratatoskr ᛒ Berkanan · utgard ᚢ Uruz · valhalla ᚹ Wunjo · yggdrasil ᛃ Jera
+```
+
+Gungnir was claiming Gebo, which Gjallarhorn already holds, so it takes
+**Thurisaz** (the thorn — the spear) and `icons.md` is corrected to match.
+
+**Five apps, five different runes:** Hlidskjalf `ehwaz`, mobile `raidho` (the
+road), Óðrerir `valhalla`→ now genuinely `ᚹ Wunjo`, Sessrúmnir `sowilo`, Smíðja
+`kaunan` (the torch). The install table drives both mint and install now — it had
+been guessing paths, which is why the Smíðja visualizer had been given
+Hlidskjalf's icon.
+
+Also this pass: the visualizer gained its furniture (description, canonical,
+manifest, OG + Twitter), Óðrerir's Electron shell asks for a window icon, and the
+apple-touch PNGs are rasterised (ImageMagick is present).
+
+## 2026-09-16 — the desktop never dials out: Cloudflare stays outside Electron
+
+The Allfather's rule: **"electron should never have anything with cloudflare to
+do."** It was not quite true — three doors stood open:
+
+- **Sessrúmnir's "To the Hall"** preferred the local hall and, when it did not
+  answer, fell back to `https://hall.ymir.zerwiz.org`. A desktop seat that
+  reaches for a public hostname when its own machine is quiet is a seat that
+  leaves the building to do its errands. It is now **local only** — when the hall
+  is not running, the seat says so.
+- **Hlidskjalf's shell** took `HLIDSKJALF_URL` and `SMIDJA_URL` from the
+  environment, and **Óðrerir's** took `HALL_URL` — each able to point a desktop
+  window at a tunnel with one exported variable.
+- Both now pass their URL through a **loopback guard**: anything that is not
+  `127.0.0.1`, `localhost` or `::1` is refused with a warning and replaced by the
+  local default. The shell loads the machine, never the internet.
+
+**Why this is the same fight as the bridge:** a desktop app that dials out is a
+desktop app whose failures belong to somebody else's edge. The bridge disguised a
+cloud endpoint as `127.0.0.1` and cost a night; these three would have disguised a
+tunnel as a local seat.
+
+## 2026-09-16 — the panels that crashed, the gate that lied, and the well that would not open
+
+- **Statistics now reports the HARNESSES** (pi + opencode), not the smithy's runs.
+  `bin/hlidskjalf-usage.sh` aggregates opencode's SQLite token store and both pi
+  stores, and emits the numbers under the names the gate renders (`gate{}`):
+  totals, usage, providers local/online with per_model, by_chain, by_model.
+  Verified: 21,497 runs (opencode 21,422 · pi 75) · 331.5M tokens ·
+  local 239,623 / online 331,289,420 · cache-hit 91.5%.
+- **A failed fetch no longer takes the hall down.** Endpoints answering `{error}`
+  were handed to panels as data — Rail read `.filter` on an object, Stats read
+  `.totals` on a string, and both crashed. The store now runs every bootstrap
+  answer through `ok()`: an error keeps the last good value.
+- **`/api/usage` was answering with a traceback** while the script passed by hand:
+  the gate process had been started before the fix and caches a failure for 60s.
+  Restarted; the endpoint serves the harness numbers.
+- **The engram MCP (`-32000: Connection closed`) is mended.** Not config, not the
+  engram package: `python3.12 -c "import mcp"` failed because the system
+  `python3-rpds-py` ships without its compiled `rpds.rpds` module, which
+  `jsonschema` (inside `mcp` 1.x) imports. Mended with
+  `python3.12 -m pip install --user --break-system-packages --force-reinstall rpds-py`
+  (plus `mcp<2` under python3.12). The server now starts and waits on stdio.
+  Eir should check this pair: `mcp` present for the interpreter that runs the
+  binary, and `rpds` importable.
+
+## 2026-09-17 — Sessrúmnir stops wearing Pi's clothes
+
+- **The naming law, broken at the root.** Clicking the Sessrúmnir icon opened a
+  window titled **Pi Desktop**: `apps/sessrumnir` is the Pi Desktop shell adopted
+  whole, and its product name was still Pi's —
+  `export const PI_DESKTOP_PRODUCT_NAME = 'Pi Desktop'` — rendered as the heading on
+  the home screen, the sidebar and the chat panel. That is the title the Allfather
+  saw, twice, on every launch.
+- **Mended at the name:** `SESSRUMNIR_PRODUCT_NAME = 'Sessrúmnir'` (Odin's hall of
+  many seats), the three rendering components walked, and the old constant kept as an
+  alias so no unwalked import breaks. `tsc --noEmit` exit 0.
+- **Still owed:** 1,255 English strings, **86 of them naming Pi** ("Pi is working",
+  "Quit Pi Desktop", "Pi Desktop v{{latestVersion}} is available", "Start Pi/OMP
+  before planning with Council"), and Pi's logo on the home screen. The locale is the
+  one place they live — that pass is the order, not a patch.
+- Also in the launcher this session: an icon click now raises THE SYSTEM (converge
+  the service, reborn a windowless app, focus a live window), and `stop --view X`
+  stops only X — the loop that killed every view is gone. The Hall's own outage had
+  a cause: an Astro dev server on :4323 while the app waited on :4322.
+
+## 2026-09-17 — the smithy can see the well
+
+- **Why the memory looked absent in the smithy:** the visualizer proxies the bridge's
+  `/inspect`, and `/inspect` reported three fields — store, episodes, agents — while
+  the well holds six layers. A panel told only the episode count cannot show that
+  facts, entities and reflections exist. `/inspect` now reports them all:
+  episodes, facts (active/superseded), entities, edges, reflections (with the last
+  run's time) and the vector index.
+- **Through the smithy right now:**
+  `store $YMIR_HOME/memory/kaia.engram · episodes 8 · facts 36 (35 active) ·
+  entities 60 · edges 480 · reflections 1 (2026-09-16T21:01) · vec index 8`.
+- **A trap found while doing it:** restarting the bridge RAW (`python3 bin/mimir-bridge.py`)
+  loses the env that carries the well's path, and the bridge silently re-points at the
+  old store in the repo — 364 stale episodes and no facts. The well is the **blessed
+  starter's** to raise: `bin/mimir-bridge.sh --start`. A raw restart is a different
+  well wearing the same port.
+
+## 2026-09-17 — Skrymir opens the hoard, not the checkout
+
+- **The file browser was rooted in the wrong tree.** `workspaceRoot()` built every
+  realm path under `ROOT` — the checkout — so `work` resolved to a directory that does
+  not exist and the walk fell back to the repo's `docs/`. That is why Skrymir showed
+  `lore.md`, `Architecture.md`, `research/`, `runbooks/`, and why a file it had just
+  listed answered **"not found"**: the listing came from one tree and the read from
+  another.
+- **The hoard first now (Rule 04):** `$YMIR_HOME/svartalfaheim/<realm>` → company
+  container → `$YMIR_HOME/workspace/<realm>` → the checkout only as legacy. An empty
+  realm shows the hoard's home, never the repo's docs. Verified: `work` lists
+  `memory/daily/2026-09-13.md` and `workspace/`, and a read returns its body.
+- Note for the next hand: the gate runs **without** `--watch` — a server edit is on
+  disk and not in the process until `scripts/start.sh` raises it again.
+
+## 2026-09-17 — the Fleet was a rack of terminals; now it is the roster
+
+- **We were tracking the tools.** `.agents/agents/` holds **21 agent definitions** —
+  Brokk, Sindri, Bragi, Forseti, Mímir, Kvasir, Snotra, Huginn, Hnoss, Sága, Muninn,
+  Frigg, Gróa, Jörð, Sýn, Týr, Galdr… — and the Fleet served **13 panes all named
+  "OpenCode"**, role `opencode`. The board showed seats and never the smiths who might
+  be standing in them.
+- **`bin/hlidskjalf-agents.sh` now reads the roster** (`.agents/agents/*.md`, canonical
+  per RULES/02) and joins each agent to its standing pane: figure, craft, model from
+  the definition's frontmatter, and `live{}` only when a pane answers to it. An
+  **unseated agent is still an agent** — hiding it is what made the board a rack.
+- Harness seats that answer to no one on the roster are kept visible and named
+  honestly, never dressed as agents.
+- Served: **34 entries — 21 agents (roster first) + 13 harness seats, 14 joined**.
+
+## 2026-09-17 — the extensions deployed without their modules
+
+- **pi would not start a seated worker, and the reason was a half-deploy.**
+  The four shared pi extensions all reported
+  `Failed to load extension: Cannot find module ./lib/<module>.ts` — and every one
+  of those modules was present in the repo, one level away under the extensions'
+  own `lib/`. The loader copied the top-level extension files and never their
+  supporting modules.
+- **Mended in two places.** (1) The missing modules are now beside the deployed
+  extensions, so a running pi loads all four. (2) `bin/valknut-load.sh` — the
+  loader — now deploys that lib alongside the extensions, idempotently (identical
+  files untouched), so a fresh machine cannot hit it. A deploy that copies a file
+  but not the module it imports is not a deploy.
+- **What this cost:** the Forseti audit was seated on a **local** model, and the
+  pane fell back to a bare shell when pi could not start — which is why the brief
+  was typed at a prompt and answered `bash: syntax error near unexpected token '('`.
+  With the extensions mended, pi's remaining blocker is the model: the llama-router
+  has no raisable seat tonight (`:8080` unbound, and the installed llama.cpp cannot
+  load the Apodex weights), so a local-first dispatch has nothing to reach.
+
+## 2026-09-17 — the well as tools: Ymir's first custom pi extension
+
+- **Why the extension tree was failing, from the upstream law:** pi auto-discovers
+  extensions from BOTH the global home and the project-local tree. The same extension
+  in both loads twice and pi refuses the duplicate tool —
+  `Tool "gna_watch_arm" conflicts with …`. Ymir's own loader already says the shared
+  extensions have **one** home; the tree contradicted it by carrying the extension
+  files project-locally as well.
+- **Built: `ymir-well`** — the well, as tools inside every pi session.
+  `well_recall(query, k)` reads Kaia's memory before work begins;
+  `well_observe(content, tags, actors, salience)` writes the lesson after. Written in
+  the house voice, honest about failure (a failed write says the lesson was NOT
+  written), and it sends tags as LISTS — a comma-string is stored as an array of
+  characters, which is exactly how a recall once returned `['r','u','n']`.
+- Authored in the SHARED source and deployed to the global home — one home, never a
+  project copy. That is the pattern every future Ymir extension follows.
+
+## 2026-09-17 — the duplicate extensions removed from the project tree
+
+- **The fault, now measured exactly.** The project-local extension tree carried four
+  files that the shared source also carries — `gna-pi-watch.ts`, `ro.ts`,
+  `skuld-branch-supervision.ts`, `syn-turnend-guard.ts`. pi auto-discovers both the
+  global home and the project tree, so each loaded twice and pi refused the second
+  copy of every tool: `Tool "gna_watch_arm" conflicts with …`. Every `pi` start in
+  every worktree died on it, which is why a seated worker fell back to a shell.
+- **The fix:** those four files are gone from the project tree. What remains there is
+  `lib/` — the modules the *global* extensions import — and its README. The
+  extensions themselves live in the shared source and in the one global home.
+- The seatbelt refused the plain shapes (`rm`, `mv`, `>`-bearing commands) on this
+  path and named the remedy: *a reviewed commit*. This is that commit.
+
+## 2026-09-17 — smoke test all UI: two checks that lied about their own subjects
+
+- **The truth gate failed on my own change.** It demanded the connector's total equal
+  the herdr pane count; the connector is roster-first now, so it legitimately reports
+  agents AND seats (33 vs 13 panes). Panes are a subset of what the board must show.
+  Corrected: a FAIL now means FEWER entries than panes — a standing seat hidden from
+  the board — which is the fault worth catching. **Verdict: PASS.**
+- **The smoke test reported a present database absent.** It looked for the smithy's db
+  at the repo path; the runtime keeps it under `$YMIR_HOME/smidja/`, which is where
+  the bootstrap and the gate both resolve it. Same wound as Skrymir and the well: the
+  check and the owner disagreeing about where the record lives. **Now: OK, 8 tables.**
+- **Smoke test all UI: 5/5 OK** — spa, api, well, smidja-db, loaders. Truth gate: PASS.
+
+Also mended in the same pass: `StatusChip` read `STATUS_META[status].tone`, and the
+fleet now reports a status it was never taught (`seated`), so an unknown status threw
+and killed the gate. An unknown status can no longer take a panel down.

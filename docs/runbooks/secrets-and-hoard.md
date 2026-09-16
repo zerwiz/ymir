@@ -1,7 +1,9 @@
 # Runbook — secrets and the Hoard (Hodd)
 
-Everything private lives in **one** place: `hodd/` (secrets · docs · tenants ·
-identity). The repo tracks only its guard and README. Law: `RULES/04-hoard.md`.
+Everything private lives in **one** place: **YMIR_HOME**
+(`$HOME/Documents/Ymir` — secrets · docs · tenants · identity).
+The repo tracks only the guard and README at `hodd/`.
+Law: `RULES/04-hoard.md`.
 
 ## Load a secret (never inline it)
 
@@ -29,7 +31,8 @@ eval "$(bin/hodd.sh emit tenants/<tenant>/.env)"   # or: bin/hodd.sh tenant <ten
   ```
   Test fixtures that contain fake secret-shaped strings go in
   `.secret-guardignore`.
-- **Inner ward** — `hodd/.gitignore` (tracks only the guard + README + `*.example`).
+- **Inner ward** — `hodd/.gitignore` at the repo (tracks only the guard + README + `*.example`).
+  The real data lives at `$YMIR_HOME` (committed, shareable).
 
 ## If a secret reaches a commit
 
@@ -51,7 +54,7 @@ Force-push rewrites the remote — any other clone must be re-cloned.
 
 | Path | Holds |
 |------|-------|
-| `hodd/secrets/` | env files, keys, tunnel tokens |
-| `hodd/docs/` | private strategy, plans |
-| `hodd/tenants/<t>/` | per-tenant private trees |
-| `hodd/identity/` | company/domain cards, portfolio, project registry |
+| `$YMIR_HOME/secrets/` | env files, keys, tunnel tokens |
+| `$YMIR_HOME/docs/` | private strategy, plans |
+| `$YMIR_HOME/tenants/<t>/` | per-tenant private trees |
+| `$YMIR_HOME/identity/` | company/domain cards, portfolio, project registry |

@@ -16,7 +16,9 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-HOARD="${YMIR_HOARD:-$ROOT/hodd}"
+# shellcheck source=bin/hoard-lib.sh
+. "$SCRIPT_DIR/hoard-lib.sh"
+hoard_root HOARD
 # The business material lives in the hoard (private, untracked). Keep the old
 # location as a fallback so a pre-migration home still works.
 DATA="${BROKK_DATA_SOURCE:-$HOARD/docs/business}"

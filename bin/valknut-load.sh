@@ -27,6 +27,7 @@ PI_GLOBAL="${HOME}/.pi/agent/agents"
 PI_EXT_SRC="$ROOT/.pi/shared/extensions"
 PI_EXT_HOME="${HOME}/.pi/agent/extensions"
 OC_LOCAL="$ROOT/.opencode/agent"
+SKILLS="$ROOT/.agents/skills"
 
 usage() {
   sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
@@ -61,15 +62,64 @@ fi
 # opencode.json and .pi/mcp.json must contain ABSOLUTE paths, so they cannot be
 # tracked — a tracked copy would hand every operator the previous one's home.
 # They are rendered from the shipped *.example with the real $HOME and root.
-# Idempotent: identical content is left alone.
-render_config() {  # <example> <target>
-  local ex=$1 out=$2 tmp
-  [ -r "$ex" ] || return 0
-  tmp=$(mktemp) || return 1
-  sed -e "s|__YMIR_HOME__|$HOME|g" -e "s|__YMIR_ROOT__|$ROOT|g" "$ex" >"$tmp" || { rm -f "$tmp"; return 1; }
-  if [ -f "$out" ] && cmp -s "$tmp" "$out"; then rm -f "$tmp"; printf 'unchanged'; return 0; fi
-  mkdir -p "$(dirname "$out")" 2>/dev/null
-  mv "$tmp" "$out" && printf 'rendered'
+#
+# TWO WRITERS touch opencode.json: this loader, and `bin/agents-config.sh apply`
+# (which owns the ROSTER — providers and per-agent models, from
+# config/agents.yaml). A blind render here DELETED the roster's work: the Apodex
+# provider lived only in the live file and vanished on the next loader run. So
+# this merges and never overwrites: missing keys are added, existing ones are
+# left alone, and the skills tree is ensured. A live value is never lost, from
+# either writer. Seeding happens only when the target is absent.
+#
+# Returns one of: seeded | merged(<what>) | unchanged | kept | absent.
+config_out() {  # <rendered-json-or-text> <target>
+  local ex=$1 out=$2
+  [ -r "$ex" ] || { printf 'absent'; return 0; }
+  python3 - "$ex" "$out" "$HOME" "$ROOT" <<'PY'
+import json, os, sys
+
+ex, out, home, root = sys.argv[1:5]
+raw = open(ex).read().replace("__YMIR_HOME__", home).replace("__YMIR_ROOT__", root)
+
+def write(text):
+    with open(out, "w") as fh:
+        fh.write(text)
+
+try:
+    want = json.loads(raw)
+except Exception:
+    # Not JSON (or not yet): seed a missing file, but never overwrite a live one.
+    if os.path.exists(out):
+        print("kept")
+    else:
+        write(raw); print("seeded")
+    raise SystemExit
+
+if not os.path.exists(out):
+    write(json.dumps(want, indent=2) + "\n"); print("seeded"); raise SystemExit
+
+cur = json.load(open(out))
+added = []
+
+def merge(cur, want, path=""):
+    for k, v in want.items():
+        if k not in cur:
+            cur[k] = v; added.append(path + k)
+        elif isinstance(v, dict) and isinstance(cur[k], dict):
+            merge(cur[k], v, path + k + ".")
+
+merge(cur, want)
+
+# This loader's own contract: the ONE skills tree must stay reachable.
+paths = cur.setdefault("skills", {}).setdefault("paths", [])
+if ".agents/skills" not in paths:
+    paths.append(".agents/skills"); added.append("skills.paths")
+
+if not added:
+    print("unchanged"); raise SystemExit
+write(json.dumps(cur, indent=2) + "\n")
+print("merged(%s)" % ",".join(added[:4]))
+PY
 }
 
 declare -a T P S
@@ -88,27 +138,51 @@ link_agent_dir() {  # <target-dir> <rel-prefix>
   printf '%s' "$made"
 }
 
+# Skills are ONE tree (`.agents/skills/`). Each harness reaches it its own way:
+#   opencode — `skills.paths: [".agents/skills"]` in opencode.json (rendered below)
+#   pi       — discovery, natively: it walks up from the cwd looking for
+#              `.agents/skills` (and `~/.agents/skills`), so it needs NO link,
+#              and a second root under `.pi/` would only invite double-loading
+#   claude · codex · cursor — project skills live under the harness dir, so each
+#              gets `<harness>/skills -> ../.agents/skills`
+link_skills() {  # <harness-dir>  → binds <harness-dir>/skills
+  local dir=$1
+  [ -d "$dir" ] || return 1
+  ln -sfn ../.agents/skills "$dir/skills" 2>/dev/null || return 1
+  printf 'bound'
+}
+
 if [ "$MODE_STATUS" = 1 ]; then
-  printf 'loaders[4]{tool,path,status}:\n'
-  [ -d "$OC_LOCAL" ] && printf '  "opencode","%s","%s files"\n' "$OC_LOCAL" "$(ls "$OC_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ')" || printf '  "opencode","%s","absent"\n' "$OC_LOCAL"
-  [ -d "$PI_LOCAL" ] && printf '  "pi-local","%s","%s links"\n' "$PI_LOCAL" "$(ls "$PI_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ')" || printf '  "pi-local","%s","absent"\n' "$PI_LOCAL"
-  [ -d "$PI_GLOBAL" ] && printf '  "pi-global","%s","%s links"\n' "$PI_GLOBAL" "$(ls "$PI_GLOBAL"/*.md 2>/dev/null | wc -l | tr -d ' ')" || printf '  "pi-global","%s","absent"\n' "$PI_GLOBAL"
-  printf '  "agents-source","%s","%s files"\n' "$AGENTS" "$(ls "$AGENTS"/*.md 2>/dev/null | wc -l | tr -d ' ')"
-  exit 0
+  [ -d "$OC_LOCAL" ] && add opencode "$OC_LOCAL" "$(ls "$OC_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ') files" || add opencode "$OC_LOCAL" absent
+  [ -d "$PI_LOCAL" ] && add pi-local "$PI_LOCAL" "$(ls "$PI_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ') links" || add pi-local "$PI_LOCAL" absent
+  [ -d "$PI_GLOBAL" ] && add pi-global "$PI_GLOBAL" "$(ls "$PI_GLOBAL"/*.md 2>/dev/null | wc -l | tr -d ' ') links" || add pi-global "$PI_GLOBAL" absent
+  add agents-source "$AGENTS" "$(ls "$AGENTS"/*.md 2>/dev/null | wc -l | tr -d ' ') files"
+  add opencode-skills "$SKILLS" "$(grep -q '\.agents/skills' "$ROOT/opencode.json" 2>/dev/null && printf 'via skills.paths' || printf 'absent')"
+  add pi-skills "$SKILLS" "native discovery (walks up to .agents/skills)"
+  for hd in .claude .codex .cursor; do
+    [ -d "$ROOT/$hd" ] || continue
+    [ -L "$ROOT/$hd/skills" ] && add "$hd-skills" "$ROOT/$hd/skills" linked || add "$hd-skills" "$ROOT/$hd/skills" absent
+  done
 fi
 
 if [ "$MODE_OPENCODE" = 1 ]; then
-  add opencode-config "$ROOT/opencode.json" "$(render_config "$ROOT/opencode.json.example" "$ROOT/opencode.json")"
+  add opencode-config "$ROOT/opencode.json" "$(config_out "$ROOT/opencode.json.example" "$ROOT/opencode.json")"
   if [ -d "$OC_LOCAL" ]; then
     n=$(ls "$OC_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ')
     add opencode "$OC_LOCAL" "native ($n agents)"
   else
     add opencode "$OC_LOCAL" "ERROR absent"
   fi
+  # The skills tree reaches opencode through its config, not a link.
+  if [ -f "$ROOT/opencode.json" ] && grep -q '\.agents/skills' "$ROOT/opencode.json"; then
+    add opencode-skills "$SKILLS" "via skills.paths"
+  else
+    add opencode-skills "$SKILLS" "ERROR not in opencode.json"
+  fi
 fi
 
 if [ "$MODE_PI" = 1 ]; then
-  add pi-mcp "$ROOT/.pi/mcp.json" "$(render_config "$ROOT/.pi/mcp.json.example" "$ROOT/.pi/mcp.json")"
+  add pi-mcp "$ROOT/.pi/mcp.json" "$(config_out "$ROOT/.pi/mcp.json.example" "$ROOT/.pi/mcp.json")"
   n=$(link_agent_dir "$PI_LOCAL" "../../.agents/agents") && add pi-local "$PI_LOCAL" "bound ($n links)" || add pi-local "$PI_LOCAL" "ERROR"
   if [ "$MODE_GLOBAL" = 1 ]; then
     g=$(link_agent_dir "$PI_GLOBAL" "$AGENTS") && add pi-global "$PI_GLOBAL" "bound ($g links)" || add pi-global "$PI_GLOBAL" "ERROR"
@@ -116,6 +190,17 @@ if [ "$MODE_PI" = 1 ]; then
   # Deploy the shared extensions into their single home. Copy, not link: a
   # broken link would silently disable a tool, and pi reads the file directly.
   # Idempotent — identical files are left untouched.
+  # The CONTRACT, deployed globally: pi reads an AGENTS.md from its agent home in
+  # every session, whatever the workspace. Without this, Sessrumnir (or any pi
+  # session) started in another project loads THAT project's rules and knows
+  # nothing of Ymir - no Brokk, no laws, no lore. Symlink, so the tree stays the
+  # single source and an update is picked up with no re-install.
+  if [ -d "$HOME/.pi/agent" ]; then
+    ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null \
+      && add pi-global-contract "$HOME/.pi/agent/AGENTS.md" "the Ymir contract, loaded in every pi session" \
+      || add pi-global-contract "$HOME/.pi/agent/AGENTS.md" "ERROR"
+  fi
+
   if [ -d "$PI_EXT_SRC" ]; then
     mkdir -p "$PI_EXT_HOME" 2>/dev/null
     dep_n=0
@@ -125,7 +210,72 @@ if [ "$MODE_PI" = 1 ]; then
       if [ -f "$PI_EXT_HOME/$b" ] && cmp -s "$f" "$PI_EXT_HOME/$b"; then continue; fi
       cp -f "$f" "$PI_EXT_HOME/$b" && dep_n=$((dep_n+1))
     done
-    add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home)"
+    # Their supporting modules are one level away, under the extensions' own lib:
+    # the shared extensions require sibling lib modules, and deploying the
+    # top-level files ALONE ships extensions that cannot load. That is exactly
+    # what pi reported: Failed to load extension, Cannot find module ./lib/....
+    # A deploy that copies a file but not the module it imports is not a deploy.
+    PI_EXT_LIB="$ROOT/.pi/extensions/lib"
+    if [ -d "$PI_EXT_LIB" ]; then
+      mkdir -p "$PI_EXT_HOME/lib" 2>/dev/null
+      for f in "$PI_EXT_LIB"/*; do
+        [ -e "$f" ] || continue
+        b=$(basename "$f")
+        if [ -f "$PI_EXT_HOME/lib/$b" ] && cmp -s "$f" "$PI_EXT_HOME/lib/$b"; then continue; fi
+        cp -f "$f" "$PI_EXT_HOME/lib/$b" && dep_n=$((dep_n+1))
+      done
+    fi
+    add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home, lib included)"
+  fi
+fi
+
+# Agents for every harness: `.agents/agents/` is canonical, and each harness dir
+# is a directory of symlinks into it (Rule 02). Pi and opencode have their own
+# bindings above; claude, codex and cursor are bound here, so no harness is left
+# holding a hand-made subset. opencode names an agent by its `name:` frontmatter
+# (bragi.md -> bragi-marketer.md), the others by the profile file name.
+agent_name_of() {  # <profile> -> the frontmatter `name:`
+  sed -n 's/^name:[[:space:]]*//p' "$1" 2>/dev/null | head -1 | tr -d '[:space:]'
+}
+link_agents() {  # <harness-dir> [short]
+  local dir=$1 short=${2:-} made=0 f base want
+  [ -d "$(dirname "$dir")" ] || return 1
+  mkdir -p "$dir" || return 1
+  for f in "$AGENTS"/*.md; do
+    [ -e "$f" ] || continue
+    base=$(basename "$f")
+    if [ "$short" = "short" ]; then
+      want="$(agent_name_of "$f")"; [ -n "$want" ] || continue; want="$want.md"
+    else
+      want="$base"
+    fi
+    ln -sfn "../../.agents/agents/$base" "$dir/$want" 2>/dev/null || return 1
+    made=$((made + 1))
+  done
+  printf '%s' "$made"
+}
+if [ "$MODE_STATUS" = 0 ]; then
+  # Skills for the CLIs whose project scope is their own directory. Pi needs no
+  # link (it discovers `.agents/skills` by walking up); opencode reaches that
+  # tree through `skills.paths`. claude, codex and cursor each get one link, so
+  # all of them read the ONE skills tree.
+  linked=""
+  for hd in .claude .codex .cursor; do
+    [ -d "$ROOT/$hd" ] || continue
+    link_skills "$ROOT/$hd" >/dev/null 2>&1 && linked="$linked $hd"
+  done
+  [ -n "$linked" ] && add harness-skills "$SKILLS" "linked into:$linked"
+
+  # …and AGENTS for the same harnesses, plus opencode, so every tool loads every
+  # agent — never a hand-made subset.
+  for hd in .claude .codex .cursor; do
+    [ -d "$ROOT/$hd" ] || continue
+    n=$(link_agents "$ROOT/$hd/agents") || n=0
+    add "${hd#.}-agents" "$ROOT/$hd/agents" "bound ($n)"
+  done
+  if [ -d "$ROOT/.opencode" ]; then
+    n=$(link_agents "$ROOT/.opencode/agent" short) || n=0
+    add opencode-agents "$ROOT/.opencode/agent" "bound ($n)"
   fi
 fi
 

@@ -46,7 +46,7 @@
   --ymir-text-3: #6b6250; /* bone-faint — placeholder */
 
   /* --- House accents (structural only, never chrome) ---------- */
-  --ymir-house-ymirlabs: #38bdf8;
+  --ymir-house-ymirlabs: #c9973f; /* bronze — the platform's own house wears the forge accent (was blue) */
   --ymir-house-brokkforge: #f59e0b;
   --ymir-house-runestone: #f43f5e;
   --ymir-house-muninn: #8b5cf6;

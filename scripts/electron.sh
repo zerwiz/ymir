@@ -27,9 +27,10 @@ VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 APP="$ROOT/apps/hlidskjalf"
+Odrerir_app="$ROOT/apps/odrerir"
 NO_INSTALL=0
 VIEW="${YMIR_DESKTOP_VIEW:-hlidskjalf}"
-VIEWS=(hlidskjalf smidja)
+VIEWS=(hlidskjalf smidja odrerir)
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-start}"; shift || true
@@ -40,15 +41,15 @@ while [ $# -gt 0 ]; do case "$1" in
   *) shift ;;
 esac; done
 
-pid_file() { case "$1" in smidja) printf '%s/state/electron-smidja.pid' "$ROOT" ;; *) printf '%s/state/electron.pid' "$ROOT" ;; esac; }
-log_file() { case "$1" in smidja) printf '%s/state/electron-smidja.log' "$ROOT" ;; *) printf '%s/state/electron.log' "$ROOT" ;; esac; }
+pid_file() { case "$1" in smidja) printf '%s/state/electron-smidja.pid' "$ROOT" ;; odrerir) printf '%s/state/electron-odrerir.pid' "$ROOT" ;; *) printf '%s/state/electron.pid' "$ROOT" ;; esac; }
+log_file() { case "$1" in smidja) printf '%s/state/electron-smidja.log' "$ROOT" ;; odrerir) printf '%s/state/electron-odrerir.log' "$ROOT" ;; *) printf '%s/state/electron.log' "$ROOT" ;; esac; }
 
 # The `.bin/electron` shim is a node script that SPAWNS the real Electron, so its
 # pid (`$!`) is not the app. Track Electron by its own command line instead — the
 # per-view user-data-dir is a unique, stable identity — exactly as the Nornir
 # scheduler identifies itself. Without this, a stale/reused pid makes is_running
 # false while Electron is alive, and a second app launches on top of the first.
-view_mark() { case "$1" in smidja) printf '%s' 'ymir-smidja' ;; *) printf '%s' 'ymir-hlidskjalf' ;; esac; }
+view_mark() { case "$1" in smidja) printf '%s' 'ymir-smidja' ;; odrerir) printf '%s' 'ymir-odrerir' ;; *) printf '%s' 'ymir-hlidskjalf' ;; esac; }
 view_pids() {  # all live Electron pids for a view
   local mark; mark="$(view_mark "$1")"
   pgrep -f "electron/dist/electron.*--user-data-dir=.*${mark}" 2>/dev/null || true
@@ -84,6 +85,23 @@ pid_of() {
   printf '%s' "$(printf '%s\n' "$pids" | head -1)"
 }
 
+stop_view() {  # stop ONE view's pids - and only that view's
+  local v="$1" pids
+  pids="$(view_pids "$v")"
+  if [ -z "$pids" ]; then
+    printf 'electron: %s already stopped\n' "$v"
+    rm -f "$(pid_file "$v")"
+    return 0
+  fi
+  local list; list="$(printf '%s' "$pids" | tr '\n' ',')"
+  printf '%s\n' "$pids" | xargs -r kill 2>/dev/null || true
+  sleep 0.5
+  local left; left="$(view_pids "$v")"
+  [ -z "$left" ] || printf '%s\n' "$left" | xargs -r kill -9 2>/dev/null || true
+  rm -f "$(pid_file "$v")"
+  printf 'electron: stopped %s pid(s)=%s\n' "$v" "${list%,}"
+}
+
 case "$ACTION" in
   status)
     printf 'electron[%s]{view,state,pid}:\n' "${#VIEWS[@]}"
@@ -92,18 +110,16 @@ case "$ACTION" in
     done
     exit 0 ;;
   stop)
-    for v in "${VIEWS[@]}"; do
-      local pids; pids="$(view_pids "$v")"
-      if [ -n "$pids" ]; then
-        # Kill every live pid for this view (the shim era could leave several).
-        printf '%s\n' "$pids" | while IFS= read -r p; do [ -n "$p" ] && kill "$p" 2>/dev/null || true; done
-        printf 'electron: stopped %s pid(s)=%s\n' "$v" "$(printf '%s' "$pids" | tr '\n' ',' | sed 's/,$//')"
-      fi
-      rm -f "$(pid_file "$v")"
-    done
+    # ONLY the view asked for. Walking every view here is why `stop --view odrerir`
+    # used to take the smithy's window down with it.
+    if [ "$VIEW" = both ]; then
+      for v in "${VIEWS[@]}"; do stop_view "$v"; done
+    else
+      stop_view "$VIEW"
+    fi
     printf 'electron: stopped\n'
     exit 0 ;;
-  start|hlidskjalf|smidja) [ "$ACTION" = smidja ] && VIEW=smidja ;;
+  start|hlidskjalf|smidja|odrerir) [ "$ACTION" = smidja ] && VIEW=smidja; [ "$ACTION" = odrerir ] && VIEW=odrerir ;;
   *) printf 'error: unknown action %s\nhelp: electron.sh [start|stop|status]\n' "$ACTION" >&2; exit 2 ;;
 esac
 
@@ -147,14 +163,42 @@ if ! ensure_electron_binary; then
   exit 1
 fi
 
+app_dir() { case "$1" in odrerir) printf '%s' "$Odrerir_app" ;; *) printf '%s' "$APP" ;; esac; }
+view_host() { case "$1" in smidja) printf '%s' 'http://127.0.0.1:8437/' ;; odrerir) printf '%s' 'http://127.0.0.1:4322/' ;; *) printf '%s' 'http://127.0.0.1:3888/' ;; esac; }
+
+service_up() { curl -s -o /dev/null --max-time 3 "$1" 2>/dev/null; }
+wait_for_service() {
+  local u="$1" i
+  for i in $(seq 1 120); do service_up "$u" && return 0; sleep 0.5; done
+  return 1
+}
+# Does the compositor hold a window of this class at all? A process with no window
+# cannot be focused, and focusing nothing is exactly the silence a click must not get.
+window_present() {
+  command -v hyprctl >/dev/null 2>&1 || return 0   # no compositor to ask: assume yes
+  hyprctl clients 2>/dev/null | grep -qi "$1"
+}
+
 start_one() {
   local v="$1" f l
   f="$(pid_file "$v")"; l="$(log_file "$v")"
+  # THE SYSTEM FIRST. A shell whose backing service is down draws an empty window,
+  # and a window that never mapped cannot be focused. Clicking an icon must raise
+  # THE SYSTEM, so the service is converged before the window is judged.
+  local host; host="$(view_host "$v")"
+  if ! service_up "$host"; then
+    printf 'electron: %s has no service at %s — raising the system\n' "$v" "$host" >&2
+    ( nohup bash "$ROOT/scripts/start.sh" >/dev/null 2>&1 </dev/null & )
+    if ! wait_for_service "$host"; then
+      printf 'electron: %s still does not answer at %s — see $ROOT/state/\n' "$v" "$host" >&2
+    fi
+    # A process that lived through the outage is windowless; it must be reborn.
+    if is_running "$v"; then stop_view "$v"; fi
+  fi
   if is_running "$v"; then
-    # A speed-start must RAISE the app, not report that it is already up. The
+    # A bound key must RAISE the app, never report that it is already up. The
     # window lives on its own numbered desktop by design, so "nothing happens"
-    # is exactly what a bound key must not do. focuswindow also switches to that
-    # desktop when the window is elsewhere.
+    # is exactly what a click must not do. focuswindow also switches desktops.
     local cls state=already-up
     cls="$(view_mark "$v")"   # the window class, from the one place that defines it
     if command -v hyprctl >/dev/null 2>&1; then
@@ -163,8 +207,14 @@ start_one() {
       # string form is a syntax error there. This is the working idiom.
       hyprctl dispatch "hl.dsp.focus({window=\"class:^${cls}\$\"})" >/dev/null 2>&1 && state=raised
     fi
-    printf 'electron[1]{view,state,pid}:\n  "%s","%s",%s\n' "$v" "$state" "$(pid_of "$v")"
-    return 0
+    # A process whose window is gone cannot be focused — reborn, not silent.
+    if [ "$state" = already-up ] && ! window_present "$cls"; then
+      printf 'electron: %s is running without a window — restarting it\n' "$v" >&2
+      stop_view "$v"
+    else
+      printf 'electron[1]{view,state,pid}:\n  "%s","%s",%s\n' "$v" "$state" "$(pid_of "$v")"
+      return 0
+    fi
   fi
   # Launch the REAL Electron binary, not the .bin node shim, so the recorded pid
   # is the app itself (the shim spawns and would leave a stale/incorrect pid).
@@ -182,8 +232,8 @@ start_one() {
         extra+=(--disable-gpu --disable-gpu-compositing)
       fi ;;
   esac
-  nohup env YMIR_DESKTOP_VIEW="$v" "$bin" "$APP" \
-    --user-data-dir="$HOME/.config/$([ "$v" = smidja ] && echo ymir-smidja || echo ymir-hlidskjalf)" \
+  nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron)" "$(app_dir "$v")" \
+    --user-data-dir="$HOME/.config/$(view_mark "$v")" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &
   echo $! >"$f"
   # Wait briefly for the real process to appear, so a following call sees it.
@@ -194,12 +244,13 @@ start_one() {
 if [ "$VIEW" = both ]; then
   start_one hlidskjalf
   start_one smidja
+  start_one odrerir
   sleep 2
   for v in "${VIEWS[@]}"; do
-    if is_running "$v"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$v" "$(pid_of "$v")" "$([ "$v" = smidja ] && echo http://127.0.0.1:8437/ || echo http://127.0.0.1:3888/)"; else printf 'error: electron %s failed to start; see %s\n' "$v" "${log_file "$v"#"$ROOT"/}" >&2; exit 1; fi
+    if is_running "$v"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$v" "$(pid_of "$v")" "$(view_host "$v")"; else printf 'error: electron %s failed to start; see %s\n' "$v" "${log_file "$v"#"$ROOT"/}" >&2; exit 1; fi
   done
 else
   start_one "$VIEW"
   sleep 2
-  if is_running "$VIEW"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$VIEW" "$(pid_of "$VIEW")" "$([ "$VIEW" = smidja ] && echo http://127.0.0.1:8437/ || echo http://127.0.0.1:3888/)"; else printf 'error: electron failed to start; see %s\n' "${log_file "$VIEW"#"$ROOT"/}" >&2; exit 1; fi
+  if is_running "$VIEW"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$VIEW" "$(pid_of "$VIEW")" "$(view_host "$VIEW")"; else printf 'error: electron failed to start; see %s\n' "${log_file "$VIEW"#"$ROOT"/}" >&2; exit 1; fi
 fi

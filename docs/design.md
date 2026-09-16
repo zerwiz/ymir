@@ -23,6 +23,7 @@ thin adapters, never by hand-copying a colour:
 | Surface | Adapter | Where the values live |
 |---|---|---|
 | Landing page | the source | `CodeP/ymir-homepage/src/lore.html` `:root` |
+| Óðrerir (Live Hall) | locked copy | `apps/odrerir/src/styles/cloth.css` (extracted; stands alone) |
 | Hlidskjalf | `--ymir-*` token names | `midgard/design-system/tokens.css` |
 | Smíðja's eye | `--bg/--panel/--text/--accent…` | `apps/visualizer/src/style.css` (`:root`) |
 | Sessrúmnir | semantic `--color-*` (pi-theme/v1) | `src/renderer/src/index.css` `@theme` + `themes/fensalir.json` |

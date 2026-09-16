@@ -65,9 +65,15 @@ done
 [ -d "$HOME/.lmstudio/models" ] && LMSTUDIO_TREE=1
 have ollama && OLLAMA=1
 
+# Apodex — the research/planning lodge (same machine, separate seat).
+# Reads APODEX_BASE_URL or falls back to http://127.0.0.1:${APODEX_PORT:-1234}/v1.
+APODEX_URL="${APODEX_BASE_URL:-http://127.0.0.1:${APODEX_PORT:-1234}/v1}"
+http_ids "$APODEX_URL/models" >/dev/null 2>&1 && APODEX_URL="${APODEX_URL%/}" || APODEX_URL=""
+
 # ── fragment ──────────────────────────────────────────────────────────────────
 FRAGMENT="$(MODELS_JSON="$MODELS_JSON" CODING_CTX="$CODING_CTX" \
   LLAMACPP_URL="${LLAMACPP_URL:-http://127.0.0.1:8080/v1}" LMSTUDIO_TREE="$LMSTUDIO_TREE" OLLAMA="$OLLAMA" \
+  APODEX_URL="$APODEX_URL" \
   python3 <<'PY'
 import json, os, subprocess
 
@@ -77,6 +83,7 @@ providers = {}
 llama_url = os.environ.get("LLAMACPP_URL", "")
 lm_tree = os.environ.get("LMSTUDIO_TREE") == "1"
 ollama = os.environ.get("OLLAMA") == "1"
+apodex_url = os.environ.get("APODEX_URL", "")
 
 def served(url):
     try:
@@ -111,6 +118,20 @@ if ollama:
         "baseUrl": "http://127.0.0.1:11434/v1",
         "api": "openai-completions", "apiKey": "sk-not-key-required",
         "models": [{"id": n, "name": n, "contextWindow": ctx, "maxTokens": 16384} for n in names],
+    }
+
+if apodex_url:
+    apodex_ids = served(apodex_url) if apodex_url else []
+    models = [{"id": i, "name": i, "contextWindow": 4096, "maxTokens": 16384,
+                "reasoning": False,
+                "samplingParams": {"temperature": 0.7, "top_p": 0.95}}
+               for i in apodex_ids] or [{"id": "apodex-1.0-mini", "name": "apodex-1.0-mini",
+                                          "contextWindow": 4096, "maxTokens": 16384}]
+    providers["apodex"] = {
+        "baseUrl": apodex_url or "http://127.0.0.1:1234/v1",
+        "api": "openai-completions", "apiKey": "not-needed-for-local",
+        "compat": {"supportsDeveloperRole": False, "supportsReasoningEffort": False},
+        "models": models,
     }
 
 print(json.dumps({"providers": providers}, indent=2))
@@ -148,6 +169,7 @@ runtimes=""
 [ -n "$LLAMACPP_URL" ] && runtimes="$runtimes llama.cpp@${LLAMACPP_URL#http://}"
 [ "$LMSTUDIO_TREE" = 1 ] && runtimes="$runtimes lmstudio-tree"
 [ "$OLLAMA" = 1 ] && runtimes="$runtimes ollama"
+[ -n "$APODEX_URL" ] && runtimes="$runtimes apodex@${APODEX_URL#http://}"
 printf 'models-detect[1]{runtimes,coding_ctx,models_json}:\n  "%s","%s","%s"\n' "${runtimes:- none}" "$CODING_CTX" "$MODELS_JSON"
 printf '%s\n' "$FRAGMENT"
 if [ -z "$runtimes" ]; then

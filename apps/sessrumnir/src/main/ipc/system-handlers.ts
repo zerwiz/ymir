@@ -6,6 +6,7 @@ import { stat } from 'fs/promises'
 import { resolve } from 'path'
 import { isString, isObject } from './validation'
 import type { IpcContext } from './context'
+import { t } from '../../shared/i18n'
 
 type OpenDialogMode = NonNullable<OpenDialogOptions['mode']>
 
@@ -87,7 +88,7 @@ export function registerSystemHandlers(ctx: IpcContext): void {
   ipcMain.handle(IPC_CHANNELS.SYSTEM_OPEN_EXTERNAL, async (_event, url: unknown) => {
     if (!isString(url)) throw new Error('url must be a string')
     if (!url.startsWith('https://') && !url.startsWith('http://')) {
-      throw new Error('Only http(s) URLs are allowed')
+      throw new Error(t('errors.system.externalUrlHttpOnly'))
     }
     await shell.openExternal(url)
   })
@@ -99,14 +100,25 @@ export function registerSystemHandlers(ctx: IpcContext): void {
    * renderer: the renderer's CSP allows no cross-origin fetch.
    */
   ipcMain.handle(IPC_CHANNELS.SYSTEM_HALL_URL, async () => {
-    const local = process.env.YMIR_HALL_URL ?? 'http://127.0.0.1:4322'
+    // LOCAL ONLY. The hall is served on this machine; when it is not running the
+    // seat says so. It must never reach for a public hostname - an Electron window
+    // has no business with Cloudflare, and a desktop app that dials out is a
+    // desktop app that leaks its errands.
+    return process.env.YMIR_HALL_URL ?? 'http://127.0.0.1:4322'
+  })
+
+  ipcMain.handle(IPC_CHANNELS.FLEET_LIST, async () => {
+    // Who is standing, from the ONE source: the control plane's connector reads
+    // herdr's live panes. Nothing is inferred here; if it cannot answer, the
+    // seat says empty rather than inventing a fleet.
     try {
-      const res = await fetch(local, { method: 'HEAD', signal: AbortSignal.timeout(700) })
-      if (res.ok) return local
+      const { execFileSync } = await import('node:child_process');
+      const out = execFileSync(process.env.YMIR_ROOT ? `${process.env.YMIR_ROOT}/bin/hlidskjalf-agents.sh` : 'hlidskjalf-agents.sh',
+        [], { timeout: 4000 }).toString().trim();
+      return out.startsWith('[') ? JSON.parse(out) : [];
     } catch {
-      // Not served here — the public hall it is.
+      return [];
     }
-    return 'https://hall.ymir.zerwiz.org'
   })
 
   ipcMain.handle(IPC_CHANNELS.SYSTEM_GET_VERSION, async () => {

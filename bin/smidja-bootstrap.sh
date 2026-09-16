@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh install.
 #
-# The visualizer reads `smidja/smidja_data/smidja.db`. On a fresh install that
+# The visualizer reads `apps/smidja/smidja_data/smidja.db`. On a fresh install that
 # file does not exist yet, so the visualizer has nothing to show. This creates
 # the DB (via the tracer's own schema — the single owner of the format) and
 # seeds one bootstrap session, so the Sessions and Stats views are live from the
@@ -24,7 +24,9 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DB="${SMIDJA_DB:-$ROOT/smidja/smidja_data/smidja.db}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+DB="${SMIDJA_DB:-$YMIR_HOME/smidja/smidja.db}"
+DB="${DB:-$ROOT/apps/smidja/smidja_data/smidja.db}"
 CHECK=0
 
 case "${1-}" in
@@ -59,7 +61,7 @@ PY=""
 for c in python3; do command -v "$c" >/dev/null 2>&1 && PY="$c"; done
 [ -n "$PY" ] || { printf 'error: python3 not found\n' >&2; exit 1; }
 
-mkdir -p "$(dirname "$DB")" "$ROOT/smidja/smidja_data/sessions/bootstrap"
+mkdir -p "$(dirname "$DB")" "$ROOT/apps/smidja/smidja_data/sessions/bootstrap"
 
 if command -v uv >/dev/null 2>&1; then
   ( cd "$ROOT" && SMIDJA_BS_DB="$DB" uv run --quiet \

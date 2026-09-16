@@ -36,7 +36,8 @@ if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp.json"; else PI_MCP="$HOME/.pi/
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
 ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
-ENGRAM_DB="${ENGRAM_DB:-$ROOT/.agents/memory/kaia.engram}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+ENGRAM_DB="${ENGRAM_DB:-$YMIR_HOME/memory/kaia.engram}"
 
 python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" <<'PY'
 import sys, os, json

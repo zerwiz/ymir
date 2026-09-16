@@ -27,7 +27,14 @@ fi
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-WORKSPACE="$ROOT/workspace"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
+# The hoard resolves through the shared lib, so the installer can never disagree
+# with bin/hodd.sh about where private data lives — and never points inside the
+# repo (Rule 04).
+# shellcheck source=bin/hoard-lib.sh
+. "$SCRIPT_DIR/hoard-lib.sh"
+hoard_root HOARD
 DOMAINS="company marketing development life me"
 
 CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0
@@ -75,6 +82,7 @@ Ymir first setup — this will make the following changes:
   • build the Utgard sandbox image 'utgard-runner:latest' (needs docker access)
   • create the Smiðja database and build the visualizer UI
   • load agents/skills and write workspace/INSTALL.md
+  • install the git delivery gates (secret · branch · changelog)
   • raise the runtime services (Hlidskjalf SPA + gate API + bridges)
   • open BOTH desktop apps so you see them: Hlidskjalf + Smíðja
   • verify the running system and report what stands
@@ -128,7 +136,6 @@ step_prereqs() {
 
 # ── 2. workspace tree ────────────────────────────────────────────────────────
 step_tree() {
-  local HOARD="${YMIR_HOARD:-$ROOT/hodd}"
   if [ "$CHECK" = 1 ]; then
     local ok=1
     [ -d "$WORKSPACE/work" ] && [ -d "$WORKSPACE/personal" ] && [ -f "$HOARD/identity/workspaces.yaml" ] && [ -f "$HOARD/identity/projects.yaml" ] || ok=0
@@ -143,6 +150,16 @@ step_tree() {
     done
   done
   mkdir -p "$WORKSPACE/companies" "$WORKSPACE/memory/daily" "$HOARD/identity"
+  # The hoard is OUTSIDE the repo (Rule 04): this creates its layout at the
+  # resolved root, never in the checkout. Idempotent.
+  "$SCRIPT_DIR/hodd.sh" init >/dev/null 2>&1 || true
+  # A missing platform env makes `bin/hodd.sh emit secrets/platform.env` fail on a
+  # fresh machine; seed an empty one (0600) so the reference always resolves.
+  if [ ! -f "$HOARD/secrets/platform.env" ]; then
+    mkdir -p "$HOARD/secrets"
+    ( umask 077; : >"$HOARD/secrets/platform.env" )
+    created=$((created+1))
+  fi
   if [ ! -f "$HOARD/identity/workspaces.yaml" ]; then
     cat >"$HOARD/identity/workspaces.yaml" <<'YAML'
 # Workspace registry — single tenant. One operator, many workspaces.
@@ -177,7 +194,7 @@ projects: []
 YAML
     created=$((created+1))
   fi
-  add tree OK "workspace/{personal} · companies · registries (created $created)"
+  add tree OK "workspace/{personal} · companies · registries · hoard (outside the repo) (created $created)"
 }
 
 # ── 3. engines ───────────────────────────────────────────────────────────────
@@ -366,7 +383,7 @@ step_sandbox() {
 
 # ── 5. memory (well + harness MCP) ───────────────────────────────────────────
 step_memory() {
-  local db="$ROOT/.agents/memory/kaia.engram" mcp=0
+  local db="$YMIR_HOME/memory/kaia.engram" mcp=0
   [ "$CHECK" = 0 ] && "$SCRIPT_DIR/mimir-bridge.sh" --start >/dev/null 2>&1 || true
   for f in "$ROOT/opencode.json" "$HOME/.config/opencode/opencode.json" "$HOME/.pi/agent/settings.json" "$HOME/.claude.json" "$HOME/.cursor/mcp.json"; do
     [ -f "$f" ] && grep -q '"engram"' "$f" 2>/dev/null && mcp=$((mcp+1))
@@ -380,7 +397,7 @@ step_smidja() {
   if [ -x "$SCRIPT_DIR/smidja-bootstrap.sh" ]; then
     if [ "$CHECK" = 1 ]; then
       local dbok vizok
-      [ -f "$ROOT/smidja/smidja_data/smidja.db" ] && dbok=present || dbok=missing
+      [ -f "$YMIR_HOME/smidja/smidja.db" ] && dbok=present || dbok=missing
       [ -d "$ROOT/.agents/skills/smidja-factory/apps/visualizer/dist" ] && vizok=built || vizok=unbuilt
       if [ "$dbok" = missing ]; then
         add smidja WARN "smidja.db missing — a full run (without --check) creates it and seeds one bootstrap session"
@@ -452,6 +469,52 @@ step_loaders() {
       "$SCRIPT_DIR/valknut-load.sh" >/dev/null 2>&1 && add loaders OK "agents/skills loaded" || add loaders WARN "loader reported errors"
     fi
   else add loaders SKIP "no valknut-load.sh"; fi
+}
+
+# ── 6b. delivery gates (git hooks) ───────────────────────────────────────────
+#
+# Rule 08: work leaves by PR, and every push carries a CHANGELOG entry. The
+# guards live in bin/ (branch-guard, changelog-guard, secret-guard) but git
+# only reads .git/hooks, so the install seats them there — the gate is live
+# from the first commit of a fresh clone. Idempotent: each --install rewrites
+# its own hook.
+step_gates() {
+  local hooks="$ROOT/.git/hooks" pre_commit="$ROOT/.git/hooks/pre-commit" pre_push="$ROOT/.git/hooks/pre-push"
+  if [ ! -d "$hooks" ]; then add gates SKIP "not a git checkout"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then
+      add gates OK "pre-commit + pre-push installed"
+    else
+      add gates WARN "hooks not installed — bin/secret-guard.sh --install && bin/changelog-guard.sh --install"
+    fi
+    return
+  fi
+  [ -x "$SCRIPT_DIR/secret-guard.sh" ] && "$SCRIPT_DIR/secret-guard.sh" --install >/dev/null 2>&1 || true
+  [ -x "$SCRIPT_DIR/changelog-guard.sh" ] && "$SCRIPT_DIR/changelog-guard.sh" --install >/dev/null 2>&1 || true
+  if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then add gates OK "pre-commit + pre-push installed"
+  else add gates WARN "could not write .git/hooks — gates are dormant"; fi
+}
+
+# ── 6c. desktop marks (the rune, the entry, the contract) ────────────────────
+#
+# Every app wears its OWN rune in the operator's desktop: the icon into the icon
+# theme, the .desktop entry into their applications dir (so every app is
+# dockable and pinnable), and the Ymir contract deployed into pi's agent home so
+# every session - in ANY folder - loads Brokk. Idempotent, and it writes to the
+# operator's real data dir, never a sandbox one.
+step_marks() {
+  if [ ! -x "$SCRIPT_DIR/design-icon.sh" ]; then add marks SKIP "no design-icon.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    n=$(ls "$HOME/.local/share"/applications/ymir-*.desktop 2>/dev/null | wc -l | tr -d ' ')
+    add marks OK "$n desktop app marks installed"
+    return
+  fi
+  "$SCRIPT_DIR/design-icon.sh" mint --all >/dev/null 2>&1 || true
+  n=$("$SCRIPT_DIR/design-icon.sh" install 2>/dev/null | grep -c '"ymir-') || n=0
+  [ -r "$HOME/.pi/agent/AGENTS.md" ] || [ -d "$HOME/.pi/agent" ] && {
+    ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null || true
+  }
+  add marks OK "$n app marks (rune icon + entry) · Ymir contract in the pi agent home"
 }
 
 # ── 7. services ──────────────────────────────────────────────────────────────
@@ -583,7 +646,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
+step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks; bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; step_auth; step_invite; step_register
 [ "$CHECK" = 0 ] && step_services
 [ "$CHECK" = 0 ] && step_desktop
 [ "$CHECK" = 0 ] && step_validate

@@ -6,6 +6,8 @@ import { workspaceTrustStore } from './workspace-trust'
 import { WorkspaceManager } from './workspace-manager'
 import { registerIpcHandlers, loadAppSettings, saveAppSettings } from './ipc-handlers'
 import { setPiExecutableOverride, cleanupPiChildTempDir } from './pi-rpc-manager'
+import { applyLanguageSetting } from './i18n'
+import { i18n, t } from '../shared/i18n'
 import { fetchAllCatalogPackages } from './package-catalog'
 import { activityStatsStore } from './activity-stats'
 import { configureGuiDataDir, getCanonicalUserDataDir, getExternalGuiDataDir, migrateLegacyGuiData } from './app-data-paths'
@@ -24,6 +26,10 @@ const WORKSPACE_ENV_VAR = 'PI_DESKTOP_WORKSPACE'
 // which makes the taskbar and notification identity use Electron branding.
 app.setName('Sessrúmnir')
 if (process.platform === 'win32') app.setAppUserModelId('org.ymir.sessrumnir')
+if (process.platform === 'linux') {
+  app.setDesktopName('ymir-sessrumnir.desktop');
+  app.commandLine.appendSwitch('class', 'sessrumnir');
+}
 
 // Suppress EPIPE errors from closed subprocess pipes
 process.on('uncaughtException', (err) => {
@@ -104,9 +110,9 @@ async function confirmEditorDiscard(window: BrowserWindow | null): Promise<boole
   if (window && !window.isDestroyed() && !window.isVisible()) window.show()
   const options = {
     type: 'warning' as const,
-    title: 'Unsaved changes',
+    title: t('editorGuard.title'),
     message: editorGuard.promptMessage(),
-    buttons: ['Discard changes', 'Keep editing'],
+    buttons: [t('editorGuard.discardButton'), t('editorGuard.keepEditing')],
     defaultId: 1,
     cancelId: 1,
   }
@@ -360,10 +366,10 @@ async function raiseHall(view: 'hlidskjalf' | 'smidja' | 'sessrumnir'): Promise<
 function createApplicationMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     {
-      label: 'File',
+      label: t('menu.file'),
       submenu: [
         {
-          label: 'New Session',
+          label: t('common.newSession'),
           accelerator: 'CmdOrCtrl+N',
           click: () => {
             const focusedWindow = BrowserWindow.getFocusedWindow()
@@ -371,7 +377,7 @@ function createApplicationMenu(): void {
           },
         },
         {
-          label: 'New Workspace...',
+          label: t('menu.newWorkspace'),
           accelerator: 'CmdOrCtrl+Shift+N',
           click: () => {
             const focusedWindow = BrowserWindow.getFocusedWindow()
@@ -379,7 +385,7 @@ function createApplicationMenu(): void {
           },
         },
         {
-          label: 'Open Project...',
+          label: t('menu.openProject'),
           accelerator: 'CmdOrCtrl+O',
           click: () => {
             const focusedWindow = BrowserWindow.getFocusedWindow()
@@ -387,7 +393,7 @@ function createApplicationMenu(): void {
           },
         },
         { type: 'separator' },
-        { label: 'Go to Hlidskjalf', click: () => { void raiseHall('hlidskjalf') } },
+{ label: 'Go to Hlidskjalf', click: () => { void raiseHall('hlidskjalf') } },
         { label: 'Go to Smiðja', click: () => { void raiseHall('smidja') } },
         { type: 'separator' },
         // The gate holds the one session; Sessrúmnir has no gate cookie, so it
@@ -395,49 +401,54 @@ function createApplicationMenu(): void {
         { label: 'Sign in to Ymir…', click: () => { void shell.openExternal(`${YMIR_GATE.replace(/:3889$/, ':3888')}/`) } },
         { label: 'Sign out of Ymir', click: () => { void signOutOfYmir() } },
         { type: 'separator' },
-        { role: 'quit' },
+        // Role items get explicit labels: Electron's own role labels are English.
+        { role: 'quit', label: t('app.quit') },
       ],
     },
     {
-      label: 'Edit',
+      label: t('menu.edit'),
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { role: 'undo', label: t('menu.undo') },
+        { role: 'redo', label: t('menu.redo') },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
+        { role: 'cut', label: t('common.cut') },
+        { role: 'copy', label: t('common.copy') },
+        { role: 'paste', label: t('common.paste') },
+        { role: 'selectAll', label: t('common.selectAll') },
       ],
     },
     {
-      label: 'View',
+      label: t('menu.view'),
       submenu: [
         // Not the bare roles: a reload destroys the renderer and its unsaved
         // editor buffer, so both run through the same discard guard as
         // close/quit before touching webContents.
         {
-          label: 'Reload',
+          label: t('menu.reload'),
           accelerator: 'CmdOrCtrl+R',
           click: () => void reloadMainWindowWithGuard(false),
         },
         {
-          label: 'Force Reload',
+          label: t('menu.forceReload'),
           accelerator: 'Shift+CmdOrCtrl+R',
           click: () => void reloadMainWindowWithGuard(true),
         },
-        { role: 'toggleDevTools' },
+        { role: 'toggleDevTools', label: t('menu.toggleDevTools') },
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { role: 'resetZoom', label: t('menu.actualSize') },
+        { role: 'zoomIn', label: t('menu.zoomIn') },
+        { role: 'zoomOut', label: t('menu.zoomOut') },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
+        { role: 'togglefullscreen', label: t('menu.toggleFullScreen') },
       ],
     },
     {
-      label: 'Window',
-      submenu: [{ role: 'minimize' }, { role: 'zoom' }, { role: 'close' }],
+      label: t('menu.window'),
+      submenu: [
+        { role: 'minimize', label: t('menu.minimize') },
+        { role: 'zoom', label: t('menu.zoom') },
+        { role: 'close', label: t('menu.close') },
+      ],
     },
   ]
 
@@ -454,8 +465,11 @@ app.whenReady().then(async () => {
     })
   }
 
-  // Set macOS dock icon (no-op on other platforms)
-  if (process.platform === 'darwin' && app.dock) {
+  // Set the macOS dock icon in development only. A packaged app already gets its
+  // dock icon from the bundled .icns (correct macOS geometry with padding). The
+  // raw icon.png is full-bleed, so calling setIcon in a packaged build overrode
+  // the .icns with a wrongly sized icon once the app started (issue #66).
+  if (process.platform === 'darwin' && app.dock && !app.isPackaged) {
     app.dock.setIcon(nativeImage.createFromPath(getAppIconPath()))
   }
 
@@ -475,6 +489,9 @@ app.whenReady().then(async () => {
   const settings = await loadAppSettings(workspaceManager)
   setPiExecutableOverride(settings.piExecutablePath, settings.piEngine)
 
+  // Before the menu, window, and tray exist, so they are built in the saved language.
+  applyLanguageSetting(settings.language)
+
   // Register IPC handlers before creating windows. The window getter is a
   // lazy closure — mainWindow is created later and the notification wiring
   // only dereferences it at event time. showMainWindow recreates the window
@@ -490,8 +507,10 @@ app.whenReady().then(async () => {
     editorGuard.setDirty(dirty === true, typeof fileName === 'string' ? fileName : null)
   })
 
-  // Create application menu
+  // Create the application menu, and build it again in the new language
+  // whenever the language setting changes.
   createApplicationMenu()
+  i18n.on('languageChanged', () => createApplicationMenu())
 
   // Create main window
   createMainWindow()

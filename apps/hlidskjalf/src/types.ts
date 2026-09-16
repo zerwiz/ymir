@@ -100,6 +100,15 @@ export interface AgentCard {
   model: string;
   uptime: number;
   tasksDone: number;
+  /** Live facts from the agent's own pane, when it is genuinely standing. */
+  live?: {
+    kind: string;
+    state: string;
+    pane: string;
+    workspace: string;
+    cwd: string;
+    task: string;
+  };
   traceability: number;
 }
 

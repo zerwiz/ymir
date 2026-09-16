@@ -24,7 +24,8 @@ set -u
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-REG="${BROKK_EINDRI_HOMES:-$ROOT/data/eindri-homes.md}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+REG="${BROKK_EINDRI_HOMES:-$YMIR_HOME/data/eindri-homes.md}"
 REMOTE=""; BRANCH=""; CHECK=0
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac

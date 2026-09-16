@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { desktopHeaders } from '../services/api';
 
 type WT = { id: string; branch: string; path: string; head: string; agent: string };
 
@@ -8,7 +9,7 @@ export function Worktrees() {
 
   useEffect(() => {
     let live = true;
-    fetch('/api/worktrees')
+    fetch('/api/worktrees', { credentials: 'include', headers: desktopHeaders() })
       .then((r) => r.json())
       .then((d) => { if (live) setRows(Array.isArray(d) ? d : []); })
       .catch((e) => { if (live) setErr(String(e)); });

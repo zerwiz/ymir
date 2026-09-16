@@ -1,0 +1,112 @@
+/* ============================================================
+   ÓÐRERIR — the cloth of the hall.
+
+   The Hall does not paint itself. The tokens below are *extracted* from the
+   landing's own :root (src/styles/global.css) by scripts/extract-cloth.mjs — the
+   landing is the reference and this file is re-taken from it. The Hall's build
+   runs `extract-cloth.mjs --check`, so if a token ever drifts from the landing,
+   the Hall fails to build.
+
+   The primitives that follow (the stone surface, the carvings, the rune-led
+   eyebrows, the prose, the reveal) are carried over from the landing's own
+   base, so the two pages are one cloth. The Hall's own chrome comes last.
+   ============================================================ */
+
+/* >>> generated:tokens — extracted from the landing :root (src/styles/global.css) >>> */
+:root{
+  --bg:#0e0c09; --panel:#151209; --panel2:#1a1610; --panel3:#14100b;
+  --line:#2b241a; --line-soft:#221d14;
+  --bone:#cfc3a9; --bone-dim:#9a8f75; --bone-faint:#6b6250;
+  --steel:#96a0a8; --steel-dim:#5f686e;
+  --bronze:#c9973f; --bronze-deep:#7d5f2a;
+  --blood:#7c3a30; --blood-lit:#c2584a;
+  --disp:'Cormorant',serif; --serif:'Newsreader',Georgia,serif;
+  --mono:'IBM Plex Mono',monospace;
+  --run:'Noto Sans Runic','Segoe UI Historic',serif;
+}
+/* <<< generated:tokens <<< */
+
+/* ============ THE BASE — the surface everything is cut into ============ */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--bone);font-family:var(--serif);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:#57411a;color:#f0e6cd}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:#0b0906}
+::-webkit-scrollbar-thumb{background:#2c241a;border:2px solid #0b0906}
+:focus-visible{outline:1px solid var(--bronze);outline-offset:3px}
+a{color:inherit}
+.rn{font-family:var(--run)}
+
+/* stone grain + vignette — the surface everything is cut into */
+body::before{
+  content:'';position:fixed;inset:0;z-index:2000;pointer-events:none;opacity:.055;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+body::after{content:'';position:fixed;inset:0;z-index:1999;pointer-events:none;box-shadow:inset 0 0 170px 30px rgba(0,0,0,.5)}
+
+/* ============ THE CARVINGS — the landing's own header and prose ============ */
+.shead{position:relative;margin-bottom:3rem}
+.snum{position:absolute;right:-.4rem;top:-3.2rem;font-family:var(--disp);font-weight:700;
+  font-size:clamp(5.5rem,13vw,10rem);line-height:1;color:rgba(207,195,169,.05);pointer-events:none;user-select:none;
+  -webkit-text-stroke:1px rgba(207,195,169,.08)}
+@media(max-width:640px){.snum{font-size:4.5rem;top:-2.2rem}}
+.skicker{font-family:var(--mono);font-size:.58rem;letter-spacing:.42em;color:var(--steel-dim);text-transform:uppercase;margin-bottom:1.1rem}
+.skicker .rn{color:var(--bronze);font-size:.85rem;letter-spacing:0;margin-right:.5em}
+.shead h1,.shead h2{font-family:var(--disp);font-weight:600;font-size:clamp(1.7rem,3.6vw,2.55rem);letter-spacing:.14em;color:var(--bone);
+  text-shadow:0 -1px 0 rgba(0,0,0,.8)}
+.ssub{font-family:var(--mono);font-size:.64rem;letter-spacing:.2em;color:var(--bone-dim);margin-top:.85rem;text-transform:uppercase}
+
+.prose{max-width:66ch;color:var(--bone-dim);font-size:1.05rem;line-height:1.95}
+.prose+.prose{margin-top:1.3rem}
+.prose .nm{font-family:var(--disp);letter-spacing:.07em;color:var(--bone)}
+.prose code{font-family:var(--mono);font-size:.76em;color:var(--steel);background:#171410;border:1px solid var(--line-soft);padding:.08em .45em;border-radius:2px}
+.prose>p:first-of-type::first-letter{font-family:var(--disp);font-size:3.3em;float:left;line-height:.82;padding:.05em .14em 0 0;color:var(--bronze)}
+
+.pull{font-family:var(--disp);font-size:clamp(1.05rem,2vw,1.32rem);letter-spacing:.06em;line-height:1.8;color:var(--bone);
+  border-left:2px solid var(--bronze-deep);padding:.3rem 0 .3rem 1.6rem;margin:2.8rem 0;max-width:58ch}
+.pull small{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.3em;color:var(--steel-dim);margin-top:.9rem;text-transform:uppercase}
+
+.carved{background:var(--panel3);border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,244,214,.03),inset 0 -1px 0 rgba(0,0,0,.5),0 2px 16px rgba(0,0,0,.35)}
+
+.frule{display:flex;align-items:center;gap:1.6rem;max-width:1180px;margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem)}
+.frule::before,.frule::after{content:'';flex:1;height:1px;background:var(--line-soft)}
+.frule span{font-family:var(--run);font-size:.72rem;letter-spacing:.42em;color:var(--bone-faint);white-space:nowrap}
+/* narrow screens: the futhark may wrap rather than widen the whole deck */
+@media(max-width:640px){
+  .frule{gap:.8rem}
+  .frule span{white-space:normal;text-align:center;font-size:.62rem;letter-spacing:.22em;line-height:1.9}
+}
+
+/* reveal on scroll — the landing's own rhythm */
+.rv{opacity:1;transform:none;transition:opacity .8s ease,transform .8s ease}
+html.js .rv{opacity:0;transform:translateY(20px)}
+html.js .rv.in{opacity:1;transform:none}
+
+/* ============ THE HALL'S OWN CHROME ============ */
+.hall-top{position:fixed;inset:0 0 auto 0;height:48px;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:0 clamp(1rem,3vw,2rem);z-index:120;background:rgba(13,11,8,.8);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:.58rem;letter-spacing:.3em;
+  color:var(--bone-dim);text-transform:uppercase}
+.hall-top>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hall-top .rn{color:var(--bronze);margin-right:.7em;font-size:.85rem}
+.hall-back{color:var(--bone-dim);text-decoration:none;letter-spacing:.26em;border-bottom:1px solid transparent;
+  white-space:nowrap;flex:none;transition:color .25s,border-color .25s}
+.hall-back:hover{color:var(--bronze);border-bottom-color:var(--bronze-deep)}
+@media(max-width:560px){.hall-top{font-size:.5rem;letter-spacing:.2em}.hall-back{letter-spacing:.18em}}
+
+.hall-wrap{max-width:1180px;margin:0 auto;padding:0 clamp(1.25rem,4vw,2.5rem)}
+main.hall-wrap{padding-top:clamp(4.5rem,9vh,6.5rem)}
+
+.hall-foot{margin-top:5rem;border-top:1px solid var(--line);padding:3.5rem 1.5rem 4.5rem;text-align:center}
+.hall-foot .frule{margin-bottom:3rem}
+.hall-foot-big{font-family:var(--disp);font-size:clamp(1.15rem,2.6vw,1.7rem);letter-spacing:.15em;color:var(--bone);
+  text-shadow:0 -1px 0 rgba(0,0,0,.8)}
+.hall-foot-close{font-family:var(--mono);font-size:.6rem;letter-spacing:.3em;color:var(--steel-dim);line-height:2.3;
+  margin-top:2rem;text-transform:uppercase}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  .rv{opacity:1;transform:none}
+}

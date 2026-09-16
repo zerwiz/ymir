@@ -16,7 +16,7 @@ that carries Ymir's agents across terminal panes. In the code it is **herdr** (a
 its verified reference sibling **tmux**). This skill is how Ymir is a
 herdr-first system without breaking on a tmux-only host.
 
-**Router:** `.agents/skills/galdr-cli/SKILL.md`.
+**Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 
 ## Raising an Eindri (the two roads)
 
@@ -30,7 +30,7 @@ herdr_roads[2]{road,shape,use_when}:
   "space","a disposable workspace holding exactly this one errand, gone when it ends","the errand should leave no trace in the workspace you are living in"
 ```
 
-**A tab is a tab, not a pane split.** Firstmate's grain — and now ours — is that a
+**A tab is a tab, not a pane split.** Brokk's grain — and now ours — is that a
 worker takes its **own tab in the home's workspace**, never a slice of yours. Your
 pane keeps its width; the smith sits beside your tabs, reachable with a tab switch.
 
@@ -46,6 +46,13 @@ bin/herdr-run.sh agent-status                   # who stands, and in what state
 bin/herdr-run.sh status                         # what seats we recorded
 bin/herdr-run.sh close-all                      # clear the tabs/workspaces we made
 ```
+
+**Quoting into a pane.** A pane runs its command through a *shell*, so `run`
+quotes every argument on the way in (`printf '%q'`). Without that, an argument
+containing spaces reached the pane as separate words and the command died on its
+own second word — `--brief "the whole task"` arrived as `--brief the whole task`
+and the worker answered `error: unknown arg: the`. Quote normally at the call
+site; the bridge preserves it.
 
 ### The first law — a short errand is done in hand
 
@@ -79,7 +86,7 @@ command runs in place, so no work is ever lost to the theatre.
 
 `HERDR_SESSION` alone is **not** a reliable router: with another herdr server
 bound on the machine, a command silently reaches the wrong one. The runner always
-passes the trailing `--session <name>` flag, which routes correctly. (Firstmate's
+passes the trailing `--session <name>` flag, which routes correctly. (Brokk's
 `docs/herdr-backend.md` owns the evidence.)
 
 ## The right smith for the right task
@@ -191,7 +198,7 @@ misconfiguration, not a mystery.
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - Source of truth for the backend spec: `assets/brokk-distro-runtime.md` (backends)
   and `assets/pi-boot-guide.md` (pane supervision). Keep this skill's floors in
   sync with those when the protocol advances.

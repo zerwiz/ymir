@@ -84,7 +84,7 @@ if [ -x "$SCRIPT_DIR/mimir-bridge.sh" ]; then
     printf 'well bridge: not up (see state/mimir-bridge.log)\n'
   fi
 fi
-if [ -r "$BROKK_HOME/svartalfaheim/$REALM/.env.realm" ]; then
+if [ -r "${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/.env.realm" ]; then
   printf 'realm env: present\n'
 elif [ -r "$ROOT/svartalfaheim/$REALM/.env.realm" ]; then
   printf 'realm env: present\n'
@@ -131,19 +131,19 @@ emit_context "$DATA/learnings.md" "learnings"
 # The hood: the map of the Allfather's private + company holdings. Printed
 # whole from the realm seat so a session opens knowing the lay of the land.
 HOOD_FILE="$ROOT/svartalfaheim/$REALM/HOOD.md"
-[ -r "$BROKK_HOME/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="$BROKK_HOME/svartalfaheim/$REALM/HOOD.md"
+[ -r "${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/HOOD.md"
 emit_context "$HOOD_FILE" "hood"
 
 section "ASSET ROUTING"
 # Load the owning asset BEFORE editing a governed path. A code change not
 # reflected in its asset is an incomplete change. Router: galdr/SKILL.md.
 printf 'governed[6]{path,load_first}:\n'
-printf '  "bin/ymir-install.sh",".agents/skills/galdr-cli/assets/installation.md"\n'
-printf '  "apps/hlidskjalf/**",".agents/skills/galdr-cli/assets/hlidskjalf-ui.md"\n'
-printf '  "bin/mimir*",".agents/skills/galdr-cli/assets/memory-well.md"\n'
-printf '  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli/assets/nornir-jobs.md"\n'
-printf '  "bin/valknut-load.sh | .pi/**",".agents/skills/galdr-cli/assets/harness-integration/README.md"\n'
-printf '  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-cli/assets/smidja.md"\n'
+printf '  "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"\n'
+printf '  "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"\n'
+printf '  "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"\n'
+printf '  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"\n'
+printf '  "bin/valknut-load.sh | .pi/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"\n'
+printf '  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"\n'
 printf 'rule: load the asset, then change the code, then update the asset in the same change.\n'
 
 section "TOOL SURFACE"

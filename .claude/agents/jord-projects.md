@@ -1,0 +1,1 @@
+../../.agents/agents/jord-projects.md

@@ -99,7 +99,10 @@ else
 fi
 
 # ── 7. smidja db (visualizer readiness) ─────────────────────────────────────
-if [ -f "$ROOT/smidja/smidja_data/smidja.db" ]; then
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+SMIDJA_DB_PATH="${YMIR_HOME:+$YMIR_HOME/smidja/smidja.db}"
+SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-$ROOT/apps/smidja/smidja_data/smidja.db}"
+if [ -f "$SMIDJA_DB_PATH" ]; then
   add smidja-db PASS "smidja.db present"
 else
   add smidja-db FAIL "smidja.db missing — run bin/smidja-bootstrap.sh"
@@ -130,8 +133,10 @@ if port_open 4602; then add memory PASS "Mimir bridge up on :4602"
 else add memory WARN "well off (:4602) — needs the engram engine; platform runs without it"; fi
 
 # ── 10. audit ledger intact ─────────────────────────────────────────────────
-if [ -r "$ROOT/workspace/memory/runes_audit.md" ]; then
-  add runes PASS "audit ledger readable ($(wc -l <"$ROOT/workspace/memory/runes_audit.md" | tr -d ' ') lines)"
+RUNES_LEDGER="${YMIR_HOME:+$YMIR_HOME/memory/runes_audit.md}"
+RUNES_LEDGER="${RUNES_LEDGER:-$ROOT/workspace/memory/runes_audit.md}"
+if [ -r "$RUNES_LEDGER" ]; then
+  add runes PASS "audit ledger readable ($(wc -l <"$RUNES_LEDGER" | tr -d ' ') lines)"
 else
   add runes FAIL "audit ledger unreadable"
 fi

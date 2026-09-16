@@ -88,4 +88,4 @@ a2a-today[3]{piece,state}:
   "delivery (injection)","works (an agent reads an injected task and answers)"
   "directory registration + return","OPEN — a served Eindri is not yet listed in the directory"
 ```
-See the private plan `hodd/docs/ratatoskr.md` for the registration spec.
+See the private plan `$YMIR_HOME/docs/ratatoskr.md` for the registration spec.
