@@ -10,8 +10,8 @@ set positional-arguments
 
 # Every recipe passes this through, so `SMIDJA_CONFIG=other.yaml just sdlc "..."`
 # swaps the whole roster for one run.
-config := env_var_or_default("SMIDJA_CONFIG", "smidja/smidja_smidja_config/smidja.config.yaml")
-db     := "smidja/smidja_data/smidja.db"
+config := env_var_or_default("SMIDJA_CONFIG", "apps/smidja/smidja_smidja_config/smidja.config.yaml")
+db     := "apps/smidja/smidja_data/smidja.db"
 
 # list every recipe
 default:
@@ -28,9 +28,9 @@ default:
 # start here: two cheap read-only runs, end to end
 demo:
     @echo "1/2  smidja_prompt: one agent, one prompt"
-    uv run smidja/smidja_prompt.py --config {{config}} --agent scout "reply with a one-line summary of this repo"
+    uv run apps/smidja/smidja_prompt.py --config {{config}} --agent scout "reply with a one-line summary of this repo"
     @echo "\n2/2  smidja_scout: read-only recon"
-    uv run smidja/smidja_scout.py --config {{config}} "list the top-level directories in this repo and what each is for. change nothing."
+    uv run apps/smidja/smidja_scout.py --config {{config}} "list the top-level directories in this repo and what each is for. change nothing."
     @echo "\nboth done. now run:  just sessions    (or: just obs)"
 
 # ── run a workflow ──────────────────────────────────────────────────────────
@@ -38,27 +38,27 @@ demo:
 
 # one agent, one prompt: just prompt "summarize this repo"
 prompt *ARGS:
-    uv run smidja/smidja_prompt.py --config {{config}} "$@"
+    uv run apps/smidja/smidja_prompt.py --config {{config}} "$@"
 
 # read-only recon: just scout "where is auth handled"
 scout *ARGS:
-    uv run smidja/smidja_scout.py --config {{config}} "$@"
+    uv run apps/smidja/smidja_scout.py --config {{config}} "$@"
 
 # plan only: just plan "add a /health endpoint"
 plan *ARGS:
-    uv run smidja/smidja_plan.py --config {{config}} "$@"
+    uv run apps/smidja/smidja_plan.py --config {{config}} "$@"
 
 # planner, builder, commit: just plan-build "add a /health endpoint"
 plan-build *ARGS:
-    uv run smidja/smidja_plan_build.py --config {{config}} "$@"
+    uv run apps/smidja/smidja_plan_build.py --config {{config}} "$@"
 
 # plan, build, test, commit: just sdlc "add a /health endpoint"
 sdlc *ARGS:
-    uv run smidja/smidja_plan_build_test.py --config {{config}} "$@"
+    uv run apps/smidja/smidja_plan_build_test.py --config {{config}} "$@"
 
 # the full chain, plus review and docs: just simple-sdlc "add a /health endpoint"
 simple-sdlc *ARGS:
-    uv run smidja/smidja_simple_sdlc.py --config {{config}} "$@"
+    uv run apps/smidja/smidja_simple_sdlc.py --config {{config}} "$@"
 
 # ── watch it ────────────────────────────────────────────────────────────────
 # Reads never block a running workflow, the db is WAL. Poll as hard as you like.
@@ -86,4 +86,4 @@ procs smidja_id:
 
 # boot the trace UI, http://localhost:8438 (api on :8437)
 obs:
-    cd .claude/skills/smidja/apps/visualizer && bun install && (SMIDJA_DB={{justfile_directory()}}/{{db}} bun run server/index.ts &) && bunx vite
+    cd .claude/skills/smidja-factory/apps/visualizer && bun install && (SMIDJA_DB={{justfile_directory()}}/{{db}} bun run server/index.ts &) && bunx vite
