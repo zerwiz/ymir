@@ -16,6 +16,10 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=bin/ymir-platform.sh
+. "$SCRIPT_DIR/ymir-platform.sh"
+# Docker or rootless Podman (Fedora), whichever is present.
+CONTAINER_ENGINE="$(ymir_container_engine_name 2>/dev/null || true)"
 JSON=0; QUIET=0
 
 case "${1-}" in
@@ -41,17 +45,18 @@ port_open() { (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
 
 # ── 1. prerequisites present ────────────────────────────────────────────────
 miss=""
-for c in git python3 bun docker gh; do command -v "$c" >/dev/null 2>&1 || miss="$miss $c"; done
-if [ -z "$miss" ]; then add prereqs PASS "git python3 bun docker gh present"
+for c in git python3 bun gh; do command -v "$c" >/dev/null 2>&1 || miss="$miss $c"; done
+[ -n "$CONTAINER_ENGINE" ] || miss="$miss docker/podman"
+if [ -z "$miss" ]; then add prereqs PASS "git python3 bun $CONTAINER_ENGINE gh present"
 else add prereqs FAIL "missing:$miss"; fi
 
 # ── 2. Utgard sandbox image ─────────────────────────────────────────────────
-if ! command -v docker >/dev/null 2>&1; then
-  add sandbox WARN "docker absent — sandbox unavailable"
-elif docker image inspect utgard-runner:latest >/dev/null 2>&1; then
-  add sandbox PASS "utgard-runner:latest present"
-elif ! docker info >/dev/null 2>&1; then
-  add sandbox WARN "docker not reachable (log out/in for the docker group)"
+if [ -z "$CONTAINER_ENGINE" ]; then
+  add sandbox WARN "no container engine (docker/podman) — sandbox unavailable"
+elif "$CONTAINER_ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1; then
+  add sandbox PASS "utgard-runner:latest present ($CONTAINER_ENGINE)"
+elif ! "$CONTAINER_ENGINE" info >/dev/null 2>&1; then
+  add sandbox WARN "$CONTAINER_ENGINE not reachable (rootless podman: check login session; docker: check group)"
 else
   add sandbox FAIL "utgard-runner:latest missing — run bin/utgard.sh build"
 fi

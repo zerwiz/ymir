@@ -23,5 +23,5 @@ WORKDIR /opt/ymir
 COPY . /opt/ymir
 ENV YMIR_ROOT=/opt/ymir
 
-EXPOSE 3888 3889 8437
+EXPOSE 38888 38889 54370
 CMD ["bash", "-lc", "cd /opt/ymir && bash scripts/start.sh"]

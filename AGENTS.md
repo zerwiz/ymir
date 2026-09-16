@@ -305,12 +305,13 @@ gate by another door, once `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set.
 `RULES/` holds the numbered house law. Read the rule that governs the task:
 
 ```
-rules[5]{file,governs}:
+rules[6]{file,governs}:
   "RULES/01-domains.md","domains (Greinar) · houses · Eindri"
   "RULES/02-agents.md","agents: .agents/agents is canonical; harness dirs are symlinks; no mock"
   "RULES/03-houses.md","a house is a company (WayOf); domains are never houses"
   "RULES/05-platforms.md","one portable core, per-OS installation layers; a core change updates every layer"
   "RULES/06-append-only.md","the ledger, the changelog, the log and the rules: append, never rewrite, never lose on a move"
+  "RULES/07-config.md","configuration is never hardcoded: ports, hosts, paths, credentials resolve from env/config with one documented default"
 ```
 
 A change that contradicts a rule must change the rule first (append-only). The
