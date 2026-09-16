@@ -1904,6 +1904,21 @@ const server = Bun.serve({
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
+      if (p === '/api/usage') {
+        // What the HARNESSES spent — opencode and pi — not only the smithy's runs.
+        // Memoised for a minute: the aggregate is one bounded SQL statement over a
+        // 37 GB store, and a panel must not pay for it on every poll.
+        return json(await memoAsync('usage', 60_000, async () => {
+          try {
+            const { execFileSync } = await import('node:child_process');
+            const script = new URL('../../../bin/hlidskjalf-usage.sh', import.meta.url).pathname;
+            const out = execFileSync(script, ['--days', process.env.YMIR_USAGE_DAYS ?? '30'], { timeout: 60_000 }).toString().trim();
+            return JSON.parse(out);
+          } catch (e) {
+            return { error: String(e).slice(0, 120) };
+          }
+        }));
+      }
       if (p === '/api/worktrees') return json(await worktrees());
       if (p === '/api/me') return json({ login: loginOf(req) ?? 'operator', realm: 'work' });
       if (p === '/api/workspace') {
