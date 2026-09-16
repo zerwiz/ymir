@@ -29,10 +29,15 @@ if curl -fsS -m 5 http://127.0.0.1:4602/health >/dev/null 2>&1; then ok well "we
 else bad well "well bridge not answering — see state/mimir-bridge.log"; fi
 
 # 4. the Smiðja database exists and has the schema
-if [ -f "$ROOT/smidja/smidja_data/smidja.db" ]; then
+# The smithy's db lives where the RUNTIME keeps it: $YMIR_HOME first, the repo path
+# only as a legacy fallback. The check and the owner must agree, or a present
+# database is reported absent - which is exactly what happened.
+SMIDJA_DB="${YMIR_SMIDJA_DB:-${YMIR_HOME:-$HOME/Documents/Ymir}/smidja/smidja.db}"
+[ -f "$SMIDJA_DB" ] || SMIDJA_DB="$SMIDJA_DB"
+if [ -f "$SMIDJA_DB" ]; then
   t=$(python3 -c "
 import sqlite3,sys
-try: print(sqlite3.connect('$ROOT/smidja/smidja_data/smidja.db').execute(\"select count(*) from sqlite_master where type='table'\").fetchone()[0])
+try: print(sqlite3.connect('$SMIDJA_DB').execute(\"select count(*) from sqlite_master where type='table'\").fetchone()[0])
 except Exception: print(0)" 2>/dev/null || echo 0)
   if [ "${t:-0}" -ge 5 ]; then ok smidja-db "$t tables"
   else bad smidja-db "database present but schema looks empty ($t tables) — bin/smidja-bootstrap.sh"; fi

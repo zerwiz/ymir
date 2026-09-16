@@ -1,12 +1,11 @@
 /**
- * NOT AN EXTENSION — a tombstone.
+ * A no-op extension, kept only so nothing loads TWICE.
  *
- * A second copy of an extension that already lives in the shared source
- * (`.pi/shared/extensions/`) and deploys to the ONE global home. pi auto-discovers
- * both, so both copies loaded and pi refused the duplicate tool registration —
- * `Tool "brokk_branch_outcomes" conflicts with …`. Every pi start died on it.
- *
- * It exports no default factory, so pi registers nothing from it. The real
- * extension is `skuld-branch-supervision` — edit that one, in the shared source.
+ * The real extension is `skuld-branch-supervision`, in the shared source
+ * (`.pi/shared/extensions/`), deployed to the one global home. Two copies made pi
+ * refuse the duplicate tool; no factory at all is an error. This is neither: a valid
+ * factory that registers nothing.
  */
-export {};
+export default function skuldBranchSupervision(): void {
+  // deliberately empty: this seat is not the extension's home.
+}
