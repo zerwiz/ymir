@@ -313,7 +313,7 @@ export const useYmir = create<YmirState>((set, get) => ({
     // Smíðja loads on its own track so a slow endpoint never holds its gates hostage.
     void get().refreshSmidja();
     try {
-      const [agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills, usage] =
+      const [agents, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
           gateApi.agents().catch(() => get().agents),
