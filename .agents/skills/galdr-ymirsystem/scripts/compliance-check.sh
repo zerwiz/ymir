@@ -186,11 +186,36 @@ while IFS= read -r sk; do
   [ "$(printf '%s' "$rel" | awk -F/ '{print NF}')" -gt 4 ] || continue
   [ "$(head -1 "$sk")" = "---" ] && phantom="$phantom ${rel#.agents/skills/}"
 done < <(find "$ROOT/.agents/skills" -name SKILL.md 2>/dev/null | sort)
+# The ONE skills tree (`.agents/skills`) must reach EVERY harness, each by its
+# own mechanism — and a harness silently loading nothing is invisible from the
+# code, so it is asserted here:
+#   opencode  — `skills.paths: [".agents/skills"]` in the tracked example
+#   pi        — native discovery: it walks up from the cwd to `.agents/skills`
+#               (and `~/.agents/skills`), so it needs no link and no config
+#   claude · codex · cursor — project scope is their own dir: each gets
+#               `<harness>/skills -> ../.agents/skills`
+skills_gaps=""
+grep -q '\.agents/skills' "$ROOT/opencode.json.example" 2>/dev/null \
+  || skills_gaps="$skills_gaps opencode(skills.paths missing from opencode.json.example)"
+[ -d "$ROOT/.agents/skills" ] || skills_gaps="$skills_gaps .agents/skills(missing tree)"
+for hd in .claude .codex .cursor; do
+  [ -d "$ROOT/$hd" ] || continue
+  if [ ! -L "$ROOT/$hd/skills" ]; then
+    skills_gaps="$skills_gaps ${hd}/skills(absent)"
+  else
+    case "$(readlink "$ROOT/$hd/skills")" in
+      ../.agents/skills) : ;;
+      *) skills_gaps="$skills_gaps ${hd}/skills(wrong target)" ;;
+    esac
+  fi
+done
+
 harness_detail=""
 [ -n "$harness_problems" ] && harness_detail="broken agent links:$harness_problems"
 [ -n "$phantom" ] && harness_detail="$harness_detail phantom skills:$phantom"
+[ -n "$skills_gaps" ] && harness_detail="$harness_detail skills not bound:$skills_gaps"
 if [ -z "$harness_detail" ]; then
-  add harnesses "harness surfaces + skill discovery" PASS "$harness_links agent links resolve; no phantom skills"
+  add harnesses "harness surfaces + skill discovery" PASS "$harness_links agent links resolve; skills bound (opencode config · pi native · claude/codex/cursor linked); no phantom skills"
 else
   add harnesses "harness surfaces + skill discovery" FAIL "$harness_detail"
 fi
