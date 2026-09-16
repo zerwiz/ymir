@@ -68,11 +68,7 @@ Skills live in `.agents/skills/`. Each has a `SKILL.md` with frontmatter.
 
 **`galdr/tyr-check`** — The judge. Validates tools/skills/docs follow the 10 Galdr principles. Run during code reviews, plan doc creation, or skill synthesis. Outputs compliance assessment per principle.
 
-**`galdr/brokk-craft`** — The forger. Generates new Galdr-compliant skills with Norse naming, TOON output, and all 10 principles baked in. Usage: `brokk-craft <skill-name> [--category <category>]`.
-
-**`galdr/galdr-compliance`** — Older compliance checker (superseded by tyr-check).
-
-**`galdr/galdr-crafter`** — Older skill crafter (superseded by brokk-craft).
+**`galdr/brokk-craft`** — The forger (planned). Generates new Galdr-compliant skills with Norse naming, TOON output, and all 10 principles baked in. Until it is forged, new skills are written by hand against `galdr`'s build-method asset.
 
 ### Skill Synthesis Rules (Gungnir)
 1. Gap identified → write skill doc + script to `.agents/skills/`
@@ -253,7 +249,7 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 |-------|-------|---------|------|
 | `galdr` | Galdr | Agent-CLI ergonomics + master builder/maintainer of the runtime | `.agents/skills/galdr-ymirsystem/SKILL.md` |
 | `tyr-check` | Tyr | The judge — 10 Galdr principles + runtime gates | `.agents/skills/tyr-check/SKILL.md` |
-| `smidja` | Smiðja | The smithy — rosters, phases, envelopes, runs, trace | `.agents/skills/smidja/SKILL.md` |
+| `smidja` | Smiðja | The smithy — rosters, phases, envelopes, runs, trace | `.agents/skills/smidja-factory/SKILL.md` |
 | `galdr` → `local-models` | — | operating on local models: engines, wiring, honest measurement | `.agents/skills/galdr-ymirsystem/assets/local-models.md` |
 
 ### Adopted skills (operational)
@@ -261,18 +257,18 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 | Skill | Norse | Purpose | Path |
 |-------|-------|---------|------|
 | `hvild-afk` | Hvíld | Away-mode supervision — routine wakes, batched escalations | `.agents/skills/hvild-afk/SKILL.md` |
-| `saga` | Sága | session bearings (`/bearings`) + recap and unresolved decisions (`/ahoy`) | `.agents/skills/saga/SKILL.md` |
+| `saga` | Sága | session bearings (`/bearings`) + recap and unresolved decisions (`/ahoy`) | `.agents/skills/saga-bearings/SKILL.md` |
 | `muninn-stow` | Muninn | Session-knowledge curation, routing, persistence | `.agents/skills/muninn-stow/SKILL.md` |
 | `jord-projects` | Jörð | Project registry + delivery posture | `.agents/skills/jord-projects/SKILL.md` |
-| `urdh` | Urðr | Allfather-hold lifecycle: decisions held for the Allfather, reconciled | `.agents/skills/urdh/SKILL.md` |
+| `urdh` | Urðr | Allfather-hold lifecycle: decisions held for the Allfather, reconciled | `.agents/skills/urdh-hold/SKILL.md` |
 | `frigg-consent` | Frigg | Consent / ask-user authority gate | `.agents/skills/frigg-consent/SKILL.md` |
 | `vor-diagnostics` | Vör | Bootstrap + diagnostic reasoning | `.agents/skills/vor-diagnostics/SKILL.md` |
-| `nornir` | Nornir | fate & schedule: process→event sources + quota-aware dispatch | `.agents/skills/nornir/SKILL.md` |
+| `nornir` | Nornir | fate & schedule: process→event sources + quota-aware dispatch | `.agents/skills/nornir-schedule/SKILL.md` |
 | `gjallarhorn-relay` | Gjallarhorn | Public relay replies (X/Discord) | `.agents/skills/gjallarhorn-relay/SKILL.md` |
 | `eindri-homes` | Eindri | Isolated worker homes (provisioning) | `.agents/skills/eindri-homes/SKILL.md` |
 | `syn-recovery` | Sýn | Stuck-worker recovery playbook | `.agents/skills/syn-recovery/SKILL.md` |
-| `ymir` | Ymir | self-update · Omarchy-native operation · the Þjazi backend | `.agents/skills/ymir/SKILL.md` |
-| `hamr` | Hamr | Per-harness adapter reference | `.agents/skills/hamr/SKILL.md` |
+| `ymir` | Ymir | self-update · Omarchy-native operation · the Þjazi backend | `.agents/skills/ymir-host/SKILL.md` |
+| `hamr` | Hamr | Per-harness adapter reference | `.agents/skills/hamr-adapters/SKILL.md` |
 
 **Loading:** Skills auto-load from `.agents/skills/` via `opencode.json` → `skills.paths: [".agents/skills"]`. Use the `skill` tool: `skill <name>`.
 

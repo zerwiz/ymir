@@ -32,6 +32,8 @@ siblings of this file (`eindri-orchestration.md`, `nornir-jobs.md`). The runtime
 | 11 | Secrets never committed | secret scan + ignore audit | No secret literal; ignore rules cover env files. |
 | 12 | Governed assets current | `compliance-check.sh` (`assets` check) | A governed path changed in the working tree has its owning asset changed too. |
 | 13 | **Governed paths resolve** | `compliance-check.sh` (`governed` check) | Every path in `AGENTS.md`'s `governed[]` table exists (or its glob matches something). |
+| 14 | **Harness surfaces resolve** | `compliance-check.sh` (`harnesses` check) | Every link in `.claude/agents`, `.codex/agents`, `.cursor/agents`, `.pi/agents`, `.opencode/agent` lands (one hop) in `.agents/agents/`, and no nested `SKILL.md` carries frontmatter — a phantom skill. |
+| 15 | **Skill index true** | `compliance-check.sh` (`skillindex` check) | Every real skill dir is named in `.agents/skills/README.md`, and every `.agents/skills/<name>` path the assets cite exists. |
 
 ### Governed paths — load the asset before you edit
 
@@ -47,7 +49,7 @@ governed[6]{path,load_first}:
   "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
-  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
+  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
 
 The same routes appear in `AGENTS.md` (`governed[]`) and are printed in the
@@ -79,6 +81,51 @@ bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh | grep governed
 **Rule for a rename:** `grep -rn '<old>' --include='*.sh' --include='*.md'` across
 `bin/`, `AGENTS.md`, and `.agents/skills/*/assets/` — including the *patterns* that
 name governed paths, not just the prose. Then re-run this check.
+
+### G14 — harness surfaces resolve, and no phantom skills (the loading guard)
+
+Two failures hide in the harness layer, and neither is visible from the code:
+
+1. **A symlink that no longer resolves.** Rule 02 says `.agents/agents` is
+   canonical and every harness dir (`.claude/agents`, `.codex/agents`,
+   `.cursor/agents`, `.pi/agents`, `.opencode/agent`) is a link into it. The
+   `galdr-cli` → `galdr-ymirsystem` rename left `.agents/agents/galdr.md`
+   dangling, so Galdr's agent surface did not exist in *any* harness — and
+   nothing failed loudly; the harness simply had no such agent.
+2. **A nested `SKILL.md` carried as a phantom skill.** A recursive scanner
+   (opencode, pi, claude) walks `skills.paths` to any depth. A `SKILL.md` below
+   `.agents/skills/<skill>/` that carries YAML frontmatter is loaded as a second,
+   real skill. Three were live this way: two superseded galdr crafters, and the
+   NSR scaffolding spec. A nested `SKILL.md` *without* frontmatter is an inert
+   template (the NSR `agents_skills/` layer) and is left alone.
+
+The link check resolves **one hop**, deliberately: Galdr's canonical agent file
+is itself a symlink into the skill (the dual-surface rule), so following the
+whole chain would wrongly call it off-tree.
+
+```bash
+bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh | grep harnesses
+# "harnesses","harness surfaces + skill discovery","PASS","50 agent links resolve; no phantom skills"
+```
+
+### G15 — the skill index is true (the registry guard)
+
+`.agents/skills/README.md` is the canonical index. It drifted to 23 entries
+while 26 skills existed, and the mirrored registries cited a layout that no
+longer existed (`smidja/`, `gunnlod`, `hamr`, `saga`, `ymir`, `open-design`).
+An index that names a skill which is gone sends the agent to a file that is not
+there.
+
+The check compares the real skill dirs against the index (both directions) and
+resolves every `.agents/skills/<name>` path cited by the Galdr assets and
+`.agents/agents/brokk.md`. A line marked *planned*, *legacy*, *superseded*,
+*removed*, *abandoned*, *retired* or *former* is exempt by intent — an index may
+name what is coming or gone, but never what never was.
+
+```bash
+bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh | grep skillindex
+# "skillindex","skill index + cited skill paths","PASS","26 skills, all indexed and cited paths resolve"
+```
 
 ### G1 — every shell script is `bash -n` clean
 

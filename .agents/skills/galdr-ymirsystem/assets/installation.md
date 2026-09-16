@@ -91,7 +91,7 @@ The Smíðja visualizer **API** runs on `:8437` and serves its **UI** from
 now build it when absent:
 
 ```bash
-(cd .agents/skills/smidja/apps/visualizer && bun run build)   # vue-tsc + vite
+(cd .agents/skills/smidja-factory/apps/visualizer && bun run build)   # vue-tsc + vite
 ```
 
 `bin/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing, so the
@@ -321,7 +321,7 @@ cd apps/hlidskjalf && npm install --no-audit --no-fund
 npm run typecheck && npm run build          # dist/ is what the SPA serves
 
 # Smiðja visualizer (bun + bun.lock)
-cd .agents/skills/smidja/apps/visualizer && bun install && bun run build
+cd .agents/skills/smidja-factory/apps/visualizer && bun install && bun run build
 ```
 
 The visualizer's `dist/` is not optional: its API serves the UI from `./dist`,
