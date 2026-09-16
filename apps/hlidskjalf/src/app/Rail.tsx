@@ -9,7 +9,7 @@ function gateCount(id: GateId, s: ReturnType<typeof useYmir.getState>): number |
     case 'fleet':
       return s.agents.length;
     case 'tasks':
-      return s.tasks.filter((t) => !TERMINAL_STATES.includes(t.state)).length;
+      return (Array.isArray(s.tasks) ? s.tasks : []).filter((t) => !TERMINAL_STATES.includes(t.state)).length;
     case 'well':
       return s.recall.length;
     case 'runes':

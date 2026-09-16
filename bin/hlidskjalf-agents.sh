@@ -34,60 +34,126 @@ import json, os, sys
 mode = os.environ.get("MODE", "json")
 raw = os.environ.get("RAW", "")
 
-def live():
+ROSTER_DIR = os.environ.get("ROSTER_DIR", ".agents/agents")
+
+def panes():
+    """The STANDING seats: a herdr pane an agent runs in. A pane is the WHERE."""
     try:
         d = json.loads(raw)
     except Exception:
         return []
-    panes = (d.get("result") or {}).get("panes") or d.get("panes") or []
+    pl = (d.get("result") or {}).get("panes") or d.get("panes") or []
     out = []
-    for p in panes:
-        # an agent pane is one herdr names an agent for; a bare shell is not on
-        # the fleet board (it is a terminal, not a worker)
+    for p in pl:
         agent = p.get("agent") or ""
         if not agent and p.get("agent_status") in (None, "", "unknown"):
             continue
         title = (p.get("terminal_title_stripped") or p.get("terminal_title") or "").strip()
-        cwd = p.get("foreground_cwd") or p.get("cwd") or ""
-        state = p.get("agent_status") or "unknown"
-        # a task reads as "OC | <task>" in the pane title; keep it, it is the
-        # agent's own word for what it is doing
-        task = title.split("|", 1)[1].strip() if "|" in title else ""
-        # The UI's AgentCard shape, so the board RENDERS rather than carrying
-        # fields it does not know. Live facts come from the pane; the identity
-        # fields it cannot know (role, domain, model) stay honest and empty
-        # rather than invented - a card may show "-", never a false name.
-        status = {"working": "nominal", "idle": "nominal"}.get(state, "degraded")
         out.append({
             "id": p.get("pane_id", ""),
             "name": title.split("|")[0].strip() or agent or p.get("pane_id", ""),
-            "role": agent or "agent",
-            "realm": "work",
-            "domain": "ymirlabs",
-            "status": status,
-            "capabilities": [],
-            "skills": [],
-            "interface": {
-                "protocol": "a2a/1.0",
-                "endpoint": "local://%s" % p.get("pane_id", ""),
-                "signed": False,
-            },
-            "model": "",
-            "uptime": 0,
-            "tasksDone": 0,
-            # live facts the board can show beyond the card contract
-            "live": {
-                "kind": agent or "unknown",
-                "state": state,
-                "pane": p.get("pane_id", ""),
-                "workspace": p.get("workspace_id", ""),
-                "cwd": cwd,
-                "task": task,
-            },
+            "harness": agent or "agent",
+            "state": p.get("agent_status") or "unknown",
+            "title": title,
+            "cwd": p.get("foreground_cwd") or p.get("cwd") or "",
+            "workspace": p.get("workspace_id", ""),
+            "task": title.split("|", 1)[1].strip() if "|" in title else "",
+            "matched": False,
         })
     return out
 
-rows = live()
+
+def roster():
+    """The AGENTS, from the canonical roster (.agents/agents/*.md).
+
+    A pane is the where; this is the WHO. Emitting panes alone is why the Fleet
+    showed thirteen OpenCode terminals and not one of the smiths who might be
+    standing in them. The roster is canonical (RULES/02); a harness seat is not an
+    agent, and an agent is not its seat.
+    """
+    try:
+        files = sorted(f for f in os.listdir(ROSTER_DIR) if f.endswith(".md"))
+    except Exception:
+        return []
+    out = []
+    for f in files:
+        stem = f[:-3]
+        parts = stem.split("-")
+        model = mode = ""
+        try:
+            with open(os.path.join(ROSTER_DIR, f)) as fh:
+                txt = fh.read(6000)
+            if txt.startswith("---"):
+                for line in txt.split("---", 2)[1].splitlines():
+                    if line.startswith("model:") and not model:
+                        model = line.split(":", 1)[1].strip()
+                    if line.startswith("mode:") and not mode:
+                        mode = line.split(":", 1)[1].strip()
+        except Exception:
+            pass
+        out.append({
+            "stem": stem,
+            "figure": parts[0],
+            "craft": parts[1] if len(parts) > 1 else "agent",
+            "model": model,
+            "mode": mode,
+        })
+    return out
+
+
+ps = panes()
+rs = roster()
+rows = []
+
+def card(name, role, model, state, pane=None, task="", where=""):
+    status = {"working": "nominal", "idle": "nominal", "unseated": "seated"}.get(state, "degraded")
+    return {
+        "id": pane["id"] if pane else "roster:" + name,
+        "name": name,
+        "role": role,
+        "realm": "work",
+        "domain": "ymirlabs",
+        "status": status,
+        "capabilities": [],
+        "skills": [],
+        "interface": {
+            "protocol": "a2a/1.0",
+            "endpoint": ("local://%s" % pane["id"]) if pane else "",
+            "signed": False,
+        },
+        "model": model or (pane["harness"] if pane else ""),
+        "uptime": 0,
+        "tasksDone": 0,
+        "kind": role,
+        "state": state,
+        "pane": pane["id"] if pane else "",
+        "cwd": (pane["cwd"] if pane else where),
+        "task": task,
+        "live": ({
+            "kind": pane["harness"], "state": state, "pane": pane["id"],
+            "workspace": pane["workspace"], "cwd": pane["cwd"], "task": pane["task"],
+        } if pane else None),
+    }
+
+# THE AGENTS FIRST — every smith on the roster, seated or not. An unseated agent is
+# still an agent; hiding it made the board look like a rack of terminals.
+for a in rs:
+    hit = None
+    for p in ps:
+        hay = ("%s %s %s" % (p["name"], p["harness"], p["title"])).lower()
+        if a["figure"] and a["figure"] in hay:
+            p["matched"] = True
+            hit = p
+            break
+    rows.append(card(a["figure"], a["craft"], a["model"],
+                     hit["state"] if hit else "unseated",
+                     pane=hit, task=hit["task"] if hit else ""))
+
+# Harness seats that answer to no one on the roster: kept visible, named honestly.
+for p in ps:
+    if not p["matched"]:
+        rows.append(card(p["name"], p["harness"], p["harness"], p["state"], pane=p,
+                         task=p["task"]))
 
 if mode == "json":
     print(json.dumps(rows))

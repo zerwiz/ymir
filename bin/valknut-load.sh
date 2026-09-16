@@ -210,7 +210,22 @@ if [ "$MODE_PI" = 1 ]; then
       if [ -f "$PI_EXT_HOME/$b" ] && cmp -s "$f" "$PI_EXT_HOME/$b"; then continue; fi
       cp -f "$f" "$PI_EXT_HOME/$b" && dep_n=$((dep_n+1))
     done
-    add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home)"
+    # Their supporting modules are one level away, under the extensions' own lib:
+    # the shared extensions require sibling lib modules, and deploying the
+    # top-level files ALONE ships extensions that cannot load. That is exactly
+    # what pi reported: Failed to load extension, Cannot find module ./lib/....
+    # A deploy that copies a file but not the module it imports is not a deploy.
+    PI_EXT_LIB="$ROOT/.pi/extensions/lib"
+    if [ -d "$PI_EXT_LIB" ]; then
+      mkdir -p "$PI_EXT_HOME/lib" 2>/dev/null
+      for f in "$PI_EXT_LIB"/*; do
+        [ -e "$f" ] || continue
+        b=$(basename "$f")
+        if [ -f "$PI_EXT_HOME/lib/$b" ] && cmp -s "$f" "$PI_EXT_HOME/lib/$b"; then continue; fi
+        cp -f "$f" "$PI_EXT_HOME/lib/$b" && dep_n=$((dep_n+1))
+      done
+    fi
+    add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home, lib included)"
   fi
 fi
 
