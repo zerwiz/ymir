@@ -116,14 +116,16 @@ PY
 entity_files() { find "$ROOT/workspace" "$ROOT/svartalfaheim/$DEFAULT_REALM/workspace" -path '*/entity_graph/*' -name '*.md' 2>/dev/null; }
 
 entities_cmd() {
-  printf 'entities[%s]{entity,source}:\n' "$(entity_files | xargs_skip_empty -I{} sh -c "grep -ohE '\[\[[^]]+\]\]' '{}' 2>/dev/null" | sed 's/\[\[//;s/\]\]//' | sort -u | wc -l | tr -d ' ')"
-  entity_files | xargs_skip_empty -I{} sh -c "grep -ohE '\[\[[^]]+\]\]' '{}' 2>/dev/null" | sed 's/\[\[//;s/\]\]//' | sort -u | while read -r e; do [ -n "$e" ] && printf '  "%s","entity_graph"\n' "$e"; done
+  # Filenames are passed to grep as argv by xargs (never through a shell), so a
+  # path containing quotes or $(…) can never become code.
+  printf 'entities[%s]{entity,source}:\n' "$(entity_files | xargs_skip_empty -I{} grep -ohE '\[\[[^]]+\]\]' {} 2>/dev/null | sed 's/\[\[//;s/\]\]//' | sort -u | wc -l | tr -d ' ')"
+  entity_files | xargs_skip_empty -I{} grep -ohE '\[\[[^]]+\]\]' {} 2>/dev/null | sed 's/\[\[//;s/\]\]//' | sort -u | while read -r e; do [ -n "$e" ] && printf '  "%s","entity_graph"\n' "$e"; done
 }
 
 graph_cmd() {
   local ent=""; while [ $# -gt 0 ]; do case "$1" in --entity) ent=${2-}; shift 2 ;; *) shift ;; esac; done
-  printf 'graph[%s]{from,to}:\n' "$(entity_files | xargs_skip_empty -I{} sh -c "grep -ohE '\[\[[^]]+\]\] *[-=]> *\[\[[^]]+\]\]' '{}' 2>/dev/null" | wc -l | tr -d ' ')"
-  entity_files | xargs_skip_empty -I{} sh -c "grep -ohE '\[\[[^]]+\]\] *[-=]> *\[\[[^]]+\]\]' '{}' 2>/dev/null" | while IFS= read -r line; do
+  printf 'graph[%s]{from,to}:\n' "$(entity_files | xargs_skip_empty -I{} grep -ohE '\[\[[^]]+\]\] *[-=]> *\[\[[^]]+\]\]' {} 2>/dev/null | wc -l | tr -d ' ')"
+  entity_files | xargs_skip_empty -I{} grep -ohE '\[\[[^]]+\]\] *[-=]> *\[\[[^]]+\]\]' {} 2>/dev/null | while IFS= read -r line; do
     from=$(printf '%s' "$line" | sed -E 's/\[\[([^]]+)\]\].*/\1/')
     to=$(printf '%s' "$line" | sed -E 's/.*\[\[([^]]+)\]\]/\1/')
     [ -n "$ent" ] && { [ "$from" = "$ent" ] || [ "$to" = "$ent" ] || continue; }
