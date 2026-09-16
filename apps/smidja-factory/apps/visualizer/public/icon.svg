@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Odin's breath — Smíðja, the forge">
+  <title>Odin's breath — Smíðja, the forge</title>
+  <rect width="32" height="32" rx="7" fill="#0e0c09"/>
+  <g transform="translate(4 4) scale(1.0)" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M12 4V20 M12 9L7 4 M12 9L17 4"/>
+  </g>
+</svg>
