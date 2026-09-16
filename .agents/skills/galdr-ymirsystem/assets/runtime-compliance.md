@@ -32,7 +32,7 @@ siblings of this file (`eindri-orchestration.md`, `nornir-jobs.md`). The runtime
 | 11 | Secrets never committed | secret scan + ignore audit | No secret literal; ignore rules cover env files. |
 | 12 | Governed assets current | `compliance-check.sh` (`assets` check) | A governed path changed in the working tree has its owning asset changed too. |
 | 13 | **Governed paths resolve** | `compliance-check.sh` (`governed` check) | Every path in `AGENTS.md`'s `governed[]` table exists (or its glob matches something). |
-| 14 | **Harness surfaces resolve** | `compliance-check.sh` (`harnesses` check) | Every link in `.claude/agents`, `.codex/agents`, `.cursor/agents`, `.pi/agents`, `.opencode/agent` lands (one hop) in `.agents/agents/`, and no nested `SKILL.md` carries frontmatter — a phantom skill. |
+| 14 | **Harness surfaces resolve** | `compliance-check.sh` (`harnesses` check) | Every link in `.claude/agents`, `.codex/agents`, `.cursor/agents`, `.pi/agents`, `.opencode/agents` lands (one hop) in `.agents/agents/`, and no nested `SKILL.md` carries frontmatter — a phantom skill. |
 | 15 | **Skill index true** | `compliance-check.sh` (`skillindex` check) | Every real skill dir is named in `.agents/skills/README.md`, and every `.agents/skills/<name>` path the assets cite exists. |
 
 ### Governed paths — load the asset before you edit
@@ -88,7 +88,7 @@ Two failures hide in the harness layer, and neither is visible from the code:
 
 1. **A symlink that no longer resolves.** Rule 02 says `.agents/agents` is
    canonical and every harness dir (`.claude/agents`, `.codex/agents`,
-   `.cursor/agents`, `.pi/agents`, `.opencode/agent`) is a link into it. The
+   `.cursor/agents`, `.pi/agents`, `.opencode/agents`) is a link into it. The
    `galdr-cli` → `galdr-ymirsystem` rename left `.agents/agents/galdr.md`
    dangling, so Galdr's agent surface did not exist in *any* harness — and
    nothing failed loudly; the harness simply had no such agent.
