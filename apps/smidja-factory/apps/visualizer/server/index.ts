@@ -7,12 +7,12 @@
  * agents → sqlite → web ui, and the UI gets there by polling.
  *
  *   bun run server/index.ts
- *   bun run server/index.ts --db /path/to/repo/smidja/smidja_data/smidja.db
+ *   bun run server/index.ts --db /path/to/repo/apps/smidja/smidja_data/smidja.db
  *   CMD_DB=/path/to/smidja.db PORT=8437 bun run server/index.ts
  */
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
-import { smidjaDb, resolveDbPath } from "./db.ts";
+import { smidjaDb, resolveDbPath, repoRootOf } from "./db.ts";
 import type { AgentPrompts, ApiError, HealthResponse } from "../shared/types.ts";
 import * as rosterApi from "./roster-api.ts";
 import * as chat from "./chat.ts";
@@ -27,8 +27,7 @@ const MEMORY_BRIDGE = process.env.KAIA_MEMORY_URL ?? "http://127.0.0.1:4602";
 
 const dbPath = resolveDbPath();
 
-/** <repoRoot>/smidja/smidja_data/smidja.db — three dirnames up is the repo root. */
-const repoRoot = resolve(dirname(dirname(dirname(dbPath))));
+const repoRoot = repoRootOf(dbPath);
 let db: smidjaDb;
 try {
   db = new smidjaDb(dbPath);

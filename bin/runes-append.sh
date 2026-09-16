@@ -49,8 +49,9 @@ runes_file_path() {  # <result-var>
     printf -v "$result_var" '%s' "$BROKK_RUNES_FILE"
     return 0
   fi
-  runes_home home
-  printf -v "$result_var" '%s' "${BROKK_RUNES_DIR:-$home/workspace/memory}/runes_audit.md"
+  # The ledger lives with the hoard (the operator's private root), never beside
+  # the scripts: an installed runtime may sit in a read-only package directory.
+  printf -v "$result_var" '%s' "${BROKK_RUNES_DIR:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/memory}/runes_audit.md"
 }
 
 runes_lock_path() {  # <result-var>

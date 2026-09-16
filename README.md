@@ -330,7 +330,44 @@ freedom of being native to all three rather than portable to none.
 
 Point a harness (OpenCode, Pi, Claude Code, Cursor, Codex) at the repo and it takes
 the seat as **Brokk**. Read [`AGENTS.md`](AGENTS.md) for the operating laws and
-[`docs/masterplan.md`](docs/masterplan.md) for the forge orders.
+`$YMIR_HOME/docs/masterplan.md` for the forge orders.
+
+### Bringing your own machine — Windows, macOS, Linux
+
+Ymir is **Omarchy-first**: the Omarchy layer is first-class. But *first* is not
+*only*. The core is portable, and every other host gets a layer of its own.
+`bin/host-sense.sh` is the one place that looks before anything acts — distro,
+kernel, session (Wayland/X11), desktop, and what that desktop can actually do:
+
+```bash
+bin/host-sense.sh                     # THIS machine, as TOON
+bin/host-sense.sh capability tray     # yes | partial | no — for scripting
+```
+
+```
+hosts[4]{host,how_you_get_it,what_it_is}:
+  "Omarchy","bin/ymir-install.sh","the first-class layer: numbered desktops, launcher entries, the post-update hook"
+  "other Linux (Ubuntu · Fedora · Debian · Arch)","bin/ymir-install.sh","the portable core; the Omarchy layer skips cleanly, never faked"
+  "Windows","Ymir-Setup.exe — or bin/bootstrap-windows.ps1","Ubuntu on WSL2 is the host; Ymir installs inside it"
+  "macOS","Ymir Installer.command (or the .pkg) — or bin/bootstrap-macos.sh","Ubuntu in a Lima VM is the host; Ymir installs inside it"
+```
+
+Windows and macOS do not run Ymir natively: what Ymir installs is a Linux
+runtime, so those layers raise a Linux host and hand the work to
+`bin/ymir-install.sh` inside it. Each is gated on its host and skips cleanly
+everywhere else — no layer asserts a machine it is not standing on.
+
+**Build the installers** — neither needs a matching host:
+
+```bash
+packaging/build.sh --check     # what this machine can build, and with what
+packaging/build.sh --exe       # Ymir-Setup-<version>.exe   (NSIS: apt-get install nsis)
+packaging/build.sh --mac       # Ymir-<version>.pkg         (pkgbuild — Apple-only)
+```
+
+CI builds both (`.github/workflows/ymir-installers.yml`): NSIS on an Ubuntu
+runner, pkgbuild on a macOS runner. Signing and notarisation need the operator's
+own Apple and Windows credentials, so the artefacts ship unsigned.
 
 ---
 
@@ -600,26 +637,32 @@ resolved from `$YMIR_HOME/secrets/platform.env` at runtime.
 
 ---
 
-## npm
-
-Ymir can be installed and updated via npm:
+## Install — the four doors
 
 ```bash
-npm install -g @ymir/ymir        # the CLI, global
-ymir --version                    # verify
-ymir install                      # full first setup
+curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash
+npx @zerwiz/ymir install          # no global install
+git clone https://github.com/zerwiz/ymir.git ~/Ymir && cd ~/Ymir && bin/ymir-install.sh
+npm install -g @zerwiz/ymir       # the CLI, global
 ```
 
-Or pull the latest runtime directly:
+**Who can install this today.** The Ymir distro is private while it is young —
+so `curl`, `npx` and `git clone` work for the author and invited users, not for
+the public (an unknown clone returns 404). If you would like access, ask:
+**zerwiz.org**. When the distro opens, this note goes away and the four commands
+above become open to everyone.
 
-```bash
-npx @ymir/ymir install            # one-shot, no global install
-```
+**Early adopters and contributors can install now — but it is rough.** Expect
+sharp edges: the installer is honest about what it cannot do, and says so rather
+than pretending. Bring a Linux host (or let the Windows/macOS bootstraps give
+you one — see *Bringing your own machine* above), and read what the installer
+prints before you trust it.
 
-The npm package mirrors the repo's `bin/` scripts and the installer
-(`bin/ymir-install.sh`). Every `npm update -g @ymir/ymir` runs the
-same self-healing installer that provisions prerequisites, engines,
-and the Hlidskjalf seat.
+The npm package carries the runtime's `bin/` scripts and the installer; every
+`npm update -g @zerwiz/ymir` re-runs the same self-healing setup that provisions
+prerequisites, engines, and the Hlidskjalf seat. `@zerwiz/*` are the app
+packages (Hlidskjalf, Óðrerir, Sessrúmnir, Smíðja) — one per app.
 
-Private data never touches npm — all user data lives at `$YMIR_HOME`
-and syncs via the user's **private** GitHub repo, never the public one.
+Private data never touches npm — all user data lives at `$YMIR_HOME` (the hoard
+at `hodd/` and the realms at `svartalfaheim/`) and syncs via the user's
+**private** GitHub repo, never a public one.

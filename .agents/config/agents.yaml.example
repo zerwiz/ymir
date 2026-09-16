@@ -57,6 +57,16 @@ agents:
   snotra:  { model: opencode-go/deepseek-v4.1-flash }
   forseti: { model: opencode-go/deepseek-v4.1-flash }
   galdr:   { model: opencode-go/deepseek-v4.1-flash }
+  tyr:     { model: opencode-go/deepseek-v4.1-flash }
+  saga:    { model: opencode-go/deepseek-v4.1-flash }
+  muninn:  { model: opencode-go/deepseek-v4.1-flash }
+  urdh:    { model: opencode-go/deepseek-v4.1-flash }
+  frigg:   { model: opencode-go/deepseek-v4.1-flash }
+  vor:     { model: opencode-go/deepseek-v4.1-flash }
+  syn:     { model: opencode-go/deepseek-v4.1-flash }
+  jord:    { model: opencode-go/deepseek-v4.1-flash }
+  groa:    { model: opencode-go/deepseek-v4.1-flash }
+  volundr: { model: opencode-go/deepseek-v4.1-flash }
 
 # How many LOCAL models this machine may run at once (most boxes: 1).
 local_concurrency: 1

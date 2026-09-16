@@ -98,14 +98,13 @@ const hallUrl =
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="topbar">
       <nav class="crumbs">
-        <!-- Inline copy of public/logo.svg (the favicon) so the mark renders
-             crisply with no fetch; keep the two in sync. -->
+        <!-- Inline copy of public/icon.svg — the ansuz rune, the forge's glyph,
+             in the house bronze on stone. Keep the two in sync. -->
         <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-          <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
-          <g fill="currentColor">
-            <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13" />
-            <polygon points="6,21 26,21 25.4,24 6.6,24" />
-            <polygon points="8,25 24,25 23.3,27.5 8.7,27.5" />
+          <rect width="32" height="32" rx="7" fill="#0e0c09" />
+          <g transform="translate(4 4)" fill="none" stroke="#c9973f" stroke-width="1.8"
+             stroke-linecap="square" stroke-linejoin="miter">
+            <path d="M12 4V20 M12 9L7 4 M12 9L17 4" />
           </g>
         </svg>
         <span class="brand">Smíðja</span>

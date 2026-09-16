@@ -74,7 +74,7 @@ export function applyAccent(
     tint2 = custom;
   } else {
     const preset = ACCENTS.find((a) => a.id === accentId) ?? ACCENTS[0];
-    tint = preset.tint ?? '#38bdf8';
+    tint = preset.tint ?? '#c9973f';
     tint2 = preset.tint2 ?? tint;
   }
   root.style.setProperty('--realm-tint', tint);

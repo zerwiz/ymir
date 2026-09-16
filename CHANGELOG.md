@@ -1,5 +1,51 @@
 # CHANGELOG
 
+## 2026-09-16 — Omarchy-first, host-aware: Windows and macOS get a door
+
+- **`bin/host-sense.sh`** — the one place that looks before anything acts. It
+  reports THIS machine: distro and family, kernel, arch, platform (linux · wsl ·
+  macos · windows), session (Wayland/X11), desktop, compositor, package manager,
+  and what the desktop can actually *do* — `placement`, `launcher`, `tray`. No
+  layer may assert a machine it is not standing on.
+- **Omarchy stays first-class, and is now gated.** `bin/omarchy-sense.sh` opens
+  by asserting *"Ymir runs on an Omarchy host"*; on any other host it now skips
+  cleanly and points at `bin/host-sense.sh`, rather than recording the wrong
+  machine. That is Rule 05's own rule: a layer is gated on its host.
+- **Windows has a door:** `bin/bootstrap-windows.ps1` — enables WSL2, installs
+  Ubuntu, then hands the work to `bin/ymir-install.sh` inside the distro. It is
+  honest about needing elevation and about the one reboot a fresh machine needs.
+- **macOS has a door:** `bin/bootstrap-macos.sh` — raises Ubuntu in a Lima VM and
+  installs Ymir inside it, plus `packaging/macos/Ymir Installer.command`, a
+  double-clickable launcher for an operator who should not need a terminal.
+- **The installers themselves:** `packaging/build.sh --exe|--mac|--check`, the
+  NSIS script `packaging/windows/ymir-setup.nsi` (→ `Ymir-Setup.exe`), and
+  `.github/workflows/ymir-installers.yml`, which builds the exe on an Ubuntu
+  runner (NSIS is a compiler, not a Windows VM) and the .pkg on a macOS runner
+  (pkgbuild is Apple-only). Signing/notarisation stay with the operator, so the
+  artefacts ship unsigned.
+- `README.md` gains "Bringing your own machine" — the host table and the build
+  commands; its `docs/masterplan.md` pointer is corrected to `$YMIR_HOME/docs/`.
+
+## 2026-09-16 — app packaging prepared under the @ymir scope (Amendment C, part one)
+
+- **Scoped names.** `apps/odrerir` was `ymir-odrerir` and `apps/sessrumnir` was
+  bare `sessrumnir`; both are now `@ymir/odrerir` and `@ymir/sessrumnir`.
+- **Publishable metadata on all four apps** (hlidskjalf, hlidskjalf-mobile,
+  odrerir, sessrumnir): `license`, `repository`, `publishConfig.access: public`,
+  a `files` surface, and `prepublishOnly` where a build exists.
+- **Measured with `npm pack --dry-run --ignore-scripts`:** hlidskjalf 1.3 MB /
+  21 files, odrerir 2.3 MB / 15, sessrumnir 4.0 MB / 116, hlidskjalf-mobile
+  2.0 kB / 4 (source only — it has no build script). `dist/ymir.apk` is excluded
+  by `!dist/*.apk`: it took the hlidskjalf tarball from 1.3 MB to 14.5 MB, and
+  npm is not an APK channel.
+- **`private: true` stays until the Allfather's word** — nothing can publish by
+  accident; the flip is one line per app.
+- The app repos were already registered in `$YMIR_HOME/identity/projects.yaml`
+  (`zerwiz/{hlidskjalf,hlidskjalf-mobile,odrerir,sessrumnir,smidja}`).
+- `no-mistakes` is initialized for this repo (`no-mistakes init`): the clean-PR
+  gate now has its local remote. The vendored skill copy stays — it is the
+  canonical tree the skill index names.
+
 ## 2026-09-16 — the loader stops deleting: merge, never overwrite
 
 - **Root cause of the Apodex-provider loss, mended at the source.** Two writers
@@ -833,3 +879,71 @@ Entries are appended chronologically; never rewritten.
   `.agents/state/.wake-queue`) are empty, a repeat carry is the same drained
   news and is skipped. Genuine new content (different message, or a door with
   a line) always delivers. Harness asset updated in the same change.
+
+## 2026-09-16 — one login for every app on the web; the gate fronts them all
+
+- **Every app host is gated**, not just Smíðja. The gate now routes by host from
+  an `APP_HOSTS` table and fronts each one: unauthenticated visitors get that
+  app's own sign-in page, an API path gets 401, and the desktop seat (loopback +
+  marker) walks straight in. Verified: `smidjadell…` → *Smíðja — Sign in*,
+  `odrerirdell…` → *Óðrerir — Sign in*, API 401, desktop seat 200 (the hall).
+- **Every public hostname points at the gate (:3889)** — never at an app's own
+  port. That was a hole straight past the login: `gjallarhorn-expose.sh` had been
+  exposing each app on its own port, so the app answered the world directly.
+- **The gate learns the host map at start** (`state/gjallarhorn-hosts.env`,
+  written by the expose script and sourced by `scripts/start.sh`), so routing is
+  not an accident of whoever launched it last.
+- **No guessed credentials.** The generated tunnel config wrote
+  `credentials-file: …/ymir.json`; cloudflared names that file for the tunnel's
+  UUID, so it refused to start and the world got 530. The line is gone —
+  cloudflared resolves a named tunnel's own credentials.
+- Verified through the tunnel: `https://ymirdell.zerwiz.org/` → 200. The app
+  hostnames still answer 530: their DNS routes were made against an earlier
+  tunnel and need re-creating (`cloudflared tunnel route dns ymir <host>`).
+
+## 2026-09-16 — NO BLUE: the forge language replaces the old blue
+
+The blue had a name. It was the platform's own house tint, `--ymir-house-ymirlabs:
+#38bdf8`, carried into every surface that wears Ymir's colours — the login, the
+emblem, the realm data, the Smíðja chrome. The design doctrine (homepage repo,
+`DESIGN-UNIFICATION-PLAN.md`) says the landing page **is** the language, and that
+language is **forge**: stone ground (`#0e0c09`), bronze accent (`#c9973f`), bone
+text (`#cfc3a9`).
+
+- `midgard/design-system/tokens.css` — the house tint is bronze now, with the
+  reason recorded in the token itself.
+- The blue's footprints removed: `Emblem.tsx`, `state/store.ts`, `data/realms.ts`
+  (Hlidskjalf), `style.css` (Smíðja visualizer), and Sessrúmnir's terminal accent
+  fallback.
+- Both built stylesheets rebuilt and verified: **zero blue** in the CSS the browser
+  actually receives (`apps/hlidskjalf/dist`, the visualizer's `dist`).
+- The visualizer's build was failing on my own earlier edit (unused imports left
+  when I moved `repoRootOf` into `db.ts`) — fixed, so `bun run build` is green.
+
+The canonical token home is answered by what already exists: `midgard/design-system/`
+(tokens, icons, `ymir-mark.svg`, `icons.md`) — one source the apps import, so a
+colour changes once.
+
+## 2026-09-16 — every app wears its own rune
+
+The icon set is runecoded (`midgard/design-system/icons.md`): an Elder Futhark
+rune, stroked at the chisel bevel, tinted by the app's house colour. The apps were
+wearing the generic Ymir mark — or, worse, the old **blue** logo.
+
+- **`bin/design-icon.sh`** mints an app's icon from a glyph plus a house tint: a
+  stone tile with the rune stroked in bronze. `list` shows the mapping.
+- Minted and wired: **Hlidskjalf** `ehwaz` ᛖ (the seat), **Óðrerir** `valhalla` ᚹ
+  (the hall), **Sessrúmnir** `sowilo` ᛊ (the sun), **Smíðja** `ansuz` ᚨ (Odin's
+  breath — the forge). Óðrerir already carried a forge-coloured favicon set.
+- **The blue logo is retired**: `public/logo.svg` removed, and Smíðja's *inline*
+  copy in `App.vue` — the mark in its own header, still `#0f172a`/`#1e293b` —
+  replaced with the ansuz rune in bronze. Rebuilt; no blue in the bundle.
+
+### The hearth stays, and spreads
+
+Sessrúmnir's background fire is **`EmberBackground`** — 26 embers rising with a
+gentle sway on a canvas, *"the hearth of the landing page, carried into the
+chat"* — used by its home screen and chat panel. It stays. Next: one shared
+ember (a framework-neutral `midgard/design-system/ember.js` with a
+`prefers-reduced-motion` guard) so Hlidskjalf's shell, the login screen,
+Óðrerir's hall and the Smíðja chrome can warm the same fire.

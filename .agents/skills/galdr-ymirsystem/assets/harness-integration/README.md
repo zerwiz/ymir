@@ -498,9 +498,22 @@ duplicates:
 - OpenCode: `.opencode/agent/<name>.md` → `../../.agents/agents/<profile>.md`
 - Pi: `.pi/agents/<profile>.md` → the same canonical files
 
-`bin/valknut-load.sh` creates the symlinks (`--opencode`, `--pi`, `--global`).
+`bin/valknut-load.sh` creates the symlinks (`--opencode`, `--pi`, `--global`,
+`--all`). **Every harness gets EVERY agent** — claude, codex, cursor and opencode
+are bound by the same loader pass as pi, so no harness is left holding a
+hand-made subset. Naming differs by harness and must be respected:
+
+```
+agent_binding[5]{harness,dir,name_rule}:
+  "opencode",".opencode/agent/","the frontmatter `name:` — bragi.md -> bragi-marketer.md"
+  "pi",".pi/agents/","the profile file name — bragi-marketer.md"
+  "claude",".claude/agents/","the profile file name"
+  "codex",".codex/agents/","the profile file name"
+  "cursor",".cursor/agents/","the profile file name"
+```
+
 To change an agent, edit `.agents/agents/*.md` and re-run the loader; never edit
-`.opencode/agent` or `.pi/agents` (they are links).
+a harness directory (they are all links).
 
 ### Skill location — the same law, one tree
 
@@ -539,10 +552,13 @@ writers share is a silent data loss; the merge is the fix.
 
 ## 15. The Eindri roster (bound agents)
 
+Every skill names an owner agent in `.agents/skills/README.md`; the fleet below
+is the full set of canonical profiles, all bound into all five harnesses.
+
 Canonical profiles in `.agents/agents/*.md`, bound as symlinks:
 
 ```
-eindri[9]{figure,craft,domain,engine}:
+einherjar[20]{figure,craft,domain,engine}:
   "Brokk","primary — the bellows","ymirlabs","—"
   "Sindri","developer / smith","brokkforge","Chrome DevTools"
   "Bragi","marketer / skald","utgard","Firecrawl + browser-use (+ Scrapy)"
@@ -552,6 +568,17 @@ eindri[9]{figure,craft,domain,engine}:
   "Forseti","reviewer / the just","runestone","—"
   "Snotra","documenter / the wise-woman","runestone","—"
   "Kvasir","scout / the knowing","ymirlabs","—"
+  "Galdr","builder — CLI ergonomics","ymirlabs","—"
+  "Týr","judge — the 10 principles + the gates","runestone","—"
+  "Sága","seeress — bearings + recap","ymirlabs","—"
+  "Muninn","rememberer — memory curation","muninn","—"
+  "Urðr","fate — the hold lifecycle","ymirlabs","—"
+  "Frigg","knowing — consent gate","ymirlabs","—"
+  "Vör","aware — diagnostics","ymirlabs","—"
+  "Sýn","seeing — stuck-worker recovery","ymirlabs","—"
+  "Jörð","grounded — project registry","ymirlabs","—"
+  "Gróa","renewer — self-update","ymirlabs","—"
+  "Völundr","master smith — Smíðja's orchestrator","brokkforge","—"
 ```
 
 Bind with `bin/valknut-load.sh --all` (OpenCode: `.opencode/agent/<name>.md`; Pi:

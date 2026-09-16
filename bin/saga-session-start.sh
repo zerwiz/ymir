@@ -84,7 +84,7 @@ if [ -x "$SCRIPT_DIR/mimir-bridge.sh" ]; then
     printf 'well bridge: not up (see state/mimir-bridge.log)\n'
   fi
 fi
-if [ -r "$BROKK_HOME/svartalfaheim/$REALM/.env.realm" ]; then
+if [ -r "${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/.env.realm" ]; then
   printf 'realm env: present\n'
 elif [ -r "$ROOT/svartalfaheim/$REALM/.env.realm" ]; then
   printf 'realm env: present\n'
@@ -131,7 +131,7 @@ emit_context "$DATA/learnings.md" "learnings"
 # The hood: the map of the Allfather's private + company holdings. Printed
 # whole from the realm seat so a session opens knowing the lay of the land.
 HOOD_FILE="$ROOT/svartalfaheim/$REALM/HOOD.md"
-[ -r "$BROKK_HOME/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="$BROKK_HOME/svartalfaheim/$REALM/HOOD.md"
+[ -r "${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/HOOD.md"
 emit_context "$HOOD_FILE" "hood"
 
 section "ASSET ROUTING"

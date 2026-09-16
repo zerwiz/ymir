@@ -14,7 +14,7 @@ set -u
 hoard_root() {  # <result-var> — the hoard root (may not exist yet)
   local result_var=${1-}
   [ -n "$result_var" ] || return 2
-  printf -v "$result_var" '%s' "${YMIR_HOARD:-${YMIR_HOME:-$HOME/Documents/Ymir}}"
+  printf -v "$result_var" '%s' "${YMIR_HOARD:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd}"
 }
 
 hoard_env() {  # <result-var> — the platform env file inside the hoard

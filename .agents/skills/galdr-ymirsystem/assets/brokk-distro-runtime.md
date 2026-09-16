@@ -366,3 +366,25 @@ directory that no longer exists.
 The digest reports the realm env as either present or `ABSENT`; it never prints
 the values. Where those values come from and how to set them:
 `svartalfaheim/wayof/SECRETS.md`.
+
+## Where the runtime looks (after migration 0004)
+
+The home is split in two, and every resolver follows it:
+
+```
+$YMIR_HOME/
+├── hodd/            secrets · identity · docs · data · memory (the ledger) · AGENTS.md
+└── svartalfaheim/   <realm>/{workspace/{personal,company/…},memory,runs}
+```
+
+- `bin/hoard-lib.sh` → `hoard_root` = `$YMIR_HOARD`, else `$YMIR_HOME/hodd`.
+- `bin/realm-lib.sh` → root `$YMIR_HOME`; the realm marker is read from
+  `hodd/data/realm.md`, and the realms live under `svartalfaheim/`.
+- The Sága digest reads the realm env and the realm's HOOD file from
+  `$YMIR_HOME/svartalfaheim/<realm>/`, never from the checkout.
+- The daily briefing writes into the realm's `workspace/memory/daily/`; memory
+  housekeeping walks `.agents/memory`, the hoard's `memory`, and the realm's.
+
+Why it matters: an installed runtime (npm) may live in a read-only package
+directory, so **nothing private or writable may be resolved relative to the
+scripts**. Both resolvers are home-based for exactly that reason.

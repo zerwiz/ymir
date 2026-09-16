@@ -1526,6 +1526,17 @@ const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? '';
 const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
 // No default host: which hostname serves the smithy is the machine's fact.
 const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? '').toLowerCase();
+const ODRERIR_HOST = (process.env.ODRERIR_HOST ?? '').toLowerCase();
+/** The one door: the primary host that carries Hlidskjalf's own login. Every app
+ *  host redirects its unauthenticated visitors here, with where they were going. */
+const PRIMARY_HOST = (process.env.YMIR_PRIMARY_HOST ?? '').toLowerCase();
+const ODRERIR_URL = process.env.ODRERIR_URL ?? 'http://127.0.0.1:4322';
+/** Every app host the gate fronts: unauthenticated visitors get the login, never
+ *  the app. Add a row when an app earns a public hostname. */
+const APP_HOSTS: Array<{ host: string; base: string; name: string }> = [
+  { host: SMIDJA_HOST, base: SMIDJA_URL, name: 'Smíðja' },
+  { host: ODRERIR_HOST, base: ODRERIR_URL, name: 'Óðrerir' },
+].filter((a) => a.host !== '');
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
 /** token → login. A session must know *who* it is, not merely that it exists. */
@@ -1544,8 +1555,45 @@ function cookieToken(req: Request): string {
   return m ? m[1] : '';
 }
 function isAuthed(req: Request): boolean {
+  if (isDesktopSeat(req)) return true;
   const t = cookieToken(req);
   return !!t && SESSIONS.has(t);
+}
+
+/** The peer address per request: Bun's Request has no socket, so it is recorded
+ *  at the top of the handler. */
+const REQUEST_IP = new WeakMap<Request, string>();
+
+/**
+ * The desktop seat (Electron) is local and trusted, so it is never asked to log
+ * in: the shell loads this app from 127.0.0.1 and its preload marks every
+ * request with `x-ymir-surface: desktop`. The marker alone proves nothing — a
+ * web caller could send the header too — so it is honoured ONLY when the request
+ * genuinely arrives over loopback, which a remote client never does. The web
+ * door keeps its lock.
+ */
+function isDesktopSeat(req: Request): boolean {
+  // A header where the client can set one; a query marker where it cannot —
+  // EventSource (the live Runes stream) sends no custom headers.
+  const marked =
+    (req.headers.get('x-ymir-surface') ?? '') === 'desktop' ||
+    new URL(req.url).searchParams.get('surface') === 'desktop';
+  if (!marked) return false;
+  const ip =
+    REQUEST_IP.get(req) ??
+    (req as Request & { socket?: { remoteAddress?: string } }).socket?.remoteAddress ??
+    '';
+  const bare = ip.startsWith('::ffff:') ? ip.slice('::ffff:'.length) : ip;
+  return bare === '127.0.0.1' || bare === '::1';
+}
+
+/** Who the gate says you are: the desktop seat wears the operator's own name. */
+function seatOf(req: Request): string {
+  if (isDesktopSeat(req)) {
+    const user = (GATE_AUTH || '').split(':')[0];
+    return user || 'operator';
+  }
+  return loginOf(req);
 }
 
 /** The login behind a request's session, if any. */
@@ -1565,19 +1613,19 @@ function sessionResponse(login: string): Response {
   });
 }
 
-/** The login screen for the Smíðja host — same gate, same credentials. */
-function smidjaLoginPage(): Response {
+/** The login screen for an app host — same gate, same credentials. */
+function appLoginPage(name = 'Smíðja'): Response {
   const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Smíðja — Sign in</title>
+<title>${name} — Sign in</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
-    background: radial-gradient(900px 500px at 50% -10%, rgba(56,189,248,.12), transparent 60%), #080c14;
+    background: radial-gradient(900px 500px at 50% -10%, rgba(226,232,240,.07), transparent 60%), #080c14;
     color: #e2e8f0; font: 15px/1.4 system-ui, sans-serif; }
   form { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px;
     background: #0d131f; border: 1px solid #23304a; border-radius: 14px; padding: 26px;
@@ -1585,13 +1633,13 @@ function smidjaLoginPage(): Response {
   .brand { display: flex; align-items: center; gap: 12px; }
   .brand b { font-size: 20px; letter-spacing: .18em; }
   .brand small { display: block; font: 10px/1 ui-monospace, monospace; letter-spacing: .28em;
-    text-transform: uppercase; color: #38bdf8; margin-top: 4px; }
+    text-transform: uppercase; color: #e2e8f0; margin-top: 4px; }
   h1 { font-size: 22px; margin: 0; }
   p { margin: 0; color: #94a3b8; font-size: 13px; }
   input { padding: 11px 12px; border-radius: 9px; border: 1px solid #23304a; background: #111a2b;
     color: #e2e8f0; font-size: 15px; }
-  input:focus { outline: none; border-color: #38bdf8; }
-  button { padding: 11px 12px; border: none; border-radius: 9px; background: #38bdf8; color: #06121f;
+  input:focus { outline: none; border-color: #e2e8f0; }
+  button { padding: 11px 12px; border: none; border-radius: 9px; background: #e2e8f0; color: #06121f;
     font-weight: 700; font-size: 15px; cursor: pointer; }
   .err { color: #f87171; font-size: 12px; min-height: 14px; }
 </style>
@@ -1601,13 +1649,13 @@ function smidjaLoginPage(): Response {
   <div class="brand">
     <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true">
       <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b"/>
-      <g fill="#38bdf8">
+      <g fill="#e2e8f0">
         <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13"/>
         <polygon points="6,21 26,21 25.4,24 6.6,24"/>
         <polygon points="8,25 24,25 23.3,27.5 8.7,27.5"/>
       </g>
     </svg>
-    <span><b>SMÍÐJA</b><small>the smithy</small></span>
+    <span><b>${name.toUpperCase()}</b><small>Ymir</small></span>
   </div>
   <h1>Sign in</h1>
   <p>The gate is closed. Sign in, or enter an invite code to make your own account.</p>
@@ -1643,7 +1691,7 @@ function smidjaLoginPage(): Response {
 }
 
 /** Forward an authed Smíðja-host request to the visualizer on :8437. */
-async function proxySmidja(req: Request, url: URL): Promise<Response> {
+async function proxyApp(req: Request, url: URL, base = SMIDJA_URL, label = 'smidja'): Promise<Response> {
   const headers = new Headers(req.headers);
   headers.delete('host');
   headers.delete('cookie');
@@ -1651,10 +1699,10 @@ async function proxySmidja(req: Request, url: URL): Promise<Response> {
   const init: RequestInit = { method: req.method, headers, redirect: 'manual' };
   if (req.method !== 'GET' && req.method !== 'HEAD') init.body = await req.arrayBuffer();
   try {
-    const up = await fetch(`${SMIDJA_URL}${url.pathname}${url.search}`, init);
+    const up = await fetch(`${base}${url.pathname}${url.search}`, init);
     return new Response(up.body, { status: up.status, headers: up.headers });
   } catch (err) {
-    return json({ error: `smidja upstream unreachable: ${(err as Error).message}` }, 502);
+    return json({ error: `${label} upstream unreachable: ${(err as Error).message}` }, 502);
   }
 }
 
@@ -1705,9 +1753,12 @@ function serveStatic(pathname: string): Response {
 // revive one. That is the point — no bearer is kept at rest.
 const server = Bun.serve({
   port: PORT,
-  async fetch(req) {
+  async fetch(req, srv) {
     const url = new URL(req.url);
     const p = url.pathname;
+    // Bun's Request carries no socket; the peer address comes from the server.
+    // Recorded per request (a WeakMap, so concurrent requests cannot mix).
+    REQUEST_IP.set(req, srv.requestIP(req)?.address ?? '');
     try {
       if (p === '/api/login' && req.method === 'POST') {
         const b = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
@@ -1805,7 +1856,7 @@ const server = Bun.serve({
       if (p === '/api/session') {
         return json({
           authed: GATE_AUTH ? isAuthed(req) : true,
-          login: loginOf(req),
+          login: seatOf(req),
           // The login surface shows "create an account" only while a live invite
           // exists — a newcomer with a code can enter, and nobody else can.
           registration: invitesOpen(),
@@ -1823,12 +1874,19 @@ const server = Bun.serve({
       // The Smíðja host rides the same gate: sign in here, then every request
       // is reverse-proxied to the visualizer on :8437.
       const host = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
-      if (host === SMIDJA_HOST) {
+      const app = APP_HOSTS.find((a) => a.host === host);
+      if (app) {
         if (!isAuthed(req)) {
+          // No dead login page: send them to the one login, remembering the app.
           if (p.startsWith('/api/')) return json({ error: 'unauthorized' }, 401);
-          return smidjaLoginPage();
+          const scheme = (req.headers.get('x-forwarded-proto') ?? 'https').split(',')[0];
+          const door = PRIMARY_HOST || host;
+          return new Response(null, {
+            status: 302,
+            headers: { location: `${scheme}://${door}/?next=${encodeURIComponent(url.toString())}` },
+          });
         }
-        return proxySmidja(req, url);
+        return proxyApp(req, url, app.base, app.name);
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
