@@ -43,6 +43,11 @@ fi
 # Raise the gate API (real runtime data) when bun is available. Demo mode works
 # without it; live data needs it.
 API_PORT="${HLIDSKJALF_API_PORT:-3889}"
+# The public hostnames the gate fronts (written by bin/gjallarhorn-expose.sh):
+# without them the gate cannot route a host to its app, and the login page for
+# that app would never be reached.
+[ -r "$ROOT/state/gjallarhorn-hosts.env" ] && . "$ROOT/state/gjallarhorn-hosts.env" && \
+  export SMIDJA_HOST ODRERIR_HOST
 API_PID_FILE="$RUN/hlidskjalf-api.pid"
 API_LOG="$RUN/hlidskjalf-api.log"
 if command -v bun >/dev/null 2>&1; then
