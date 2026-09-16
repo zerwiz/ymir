@@ -33,6 +33,7 @@ stripe|stripe|payments|stripe config --list
 github|gh|SCM, PRs, secrets|gh auth status
 cloudflare|cloudflared|tunnel, DNS|cloudflared --version
 docker|docker|sandboxes, images|docker info
+podman|podman|sandboxes, images|podman info
 pm2|pm2|process supervision|pm2 pid all
 "
 
