@@ -22,6 +22,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=bin/ymir-platform.sh
+[ -r "$SCRIPT_DIR/ymir-platform.sh" ] && . "$SCRIPT_DIR/ymir-platform.sh"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUN_HOME="${BUN_INSTALL:-$HOME/.bun}"
 
@@ -144,11 +146,15 @@ case "$1" in
   engram) ensure_engram ;;
   python) ensure_python "${2:?usage: prereq-ensure.sh python <X.Y>}" ;;
   status)
-    printf 'prereq[5]{name,state,detail}:\n'
-    for c in git python3 bun docker gh uv; do
+    engine="$(ymir_container_engine_name 2>/dev/null || true)"
+    printf 'prereq[6]{name,state,detail}:\n'
+    for c in git python3 bun gh uv; do
       if have "$c"; then printf '  "%s","present","%s"\n' "$c" "$(command -v "$c")"
       else printf '  "%s","absent","-"\n' "$c"; fi
     done
+    # Docker or Podman — the one this host actually has.
+    if [ -n "$engine" ]; then printf '  "%s","present","%s"\n' "$engine" "$(command -v "$engine")"
+    else printf '  "docker/podman","absent","-"\n'; fi
     ;;
   all)
     rc=0
