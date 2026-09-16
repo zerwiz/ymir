@@ -111,9 +111,9 @@ truth is `RULES/`:
 
 - Canonical profiles live **only** in `.agents/agents/*.md`.
 - Every harness directory is a **symlink** to them — never a copy:
-  - OpenCode: `.opencode/agent/<name>.md` → `../../.agents/agents/<profile>.md`
+  - OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
   - Pi: `.pi/agents/<profile>.md` → the same canonical files
-- Never edit `.opencode/agent/` or `.pi/agents/`; edit `.agents/agents/<profile>.md`
+- Never edit `.opencode/agents/` or `.pi/agents/`; edit `.agents/agents/<profile>.md`
   and run `bin/valknut-load.sh --all` to rebind. `bin/hamr-harness.sh` only
   *detects* the harness shape; it never writes agents.
 - **No mock agents:** ids, names, domains, models, and status are real and
