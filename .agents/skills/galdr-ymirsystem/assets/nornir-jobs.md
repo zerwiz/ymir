@@ -95,10 +95,10 @@ Deterministic, **no model call**. Reads four grounded inputs and writes one file
 
 | Reads | Writes |
 |---|---|
-| `docs/masterplan.md` (open forge orders + Active Queue) | `svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md` (atomic `mv`) |
+| `docs/masterplan.md` (open forge orders + Active Queue) | `$YMIR_HOME/svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md` (atomic `mv`) |
 | `state/` (cron status, `.lock`, `*.meta`, `*.status`) | Rune `nornir / briefing.written` |
 | `docs/plans/*.md` (active plan status) | |
-| `workspace/memory/runes_audit.md` (today's tail) | |
+| `$YMIR_HOME/hodd/memory/runes_audit.md` (today's tail) | |
 
 - Realm resolution: `BROKK_REALM` → first line of `data/realm.md` → `way-of`.
 - Safe to re-run within a day: the file is rebuilt atomically from the same inputs.
@@ -121,8 +121,8 @@ The raven of observation. Read-only, and **self-contained**: every source lives 
 | `docs/masterplan.md` | open / working forge orders |
 | `.agents/agents/*.md` | the agent roster |
 | `.agents/memory/well/` | the well (episodes) |
-| `workspace/memory/runes_audit.md` | the ledger |
-| `smidja/smidja_data/smidja.db` | Smíðja runs (read-only SQLite URI) |
+| `$YMIR_HOME/hodd/memory/runes_audit.md` | the ledger — it lives with the hoard, never beside the scripts |
+| `apps/smidja/smidja_data/smidja.db` (or `$YMIR_HOME/smidja/smidja.db`) | Smíðja runs (read-only SQLite URI) |
 | `~/.treehouse` | worktree dirs + `treehouse-state.json` |
 
 - Writes `state/observer.log` (timestamped lines), `state/observer.last`, and one Rune per

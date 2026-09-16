@@ -13,14 +13,9 @@
  * on every keystroke either.
  */
 import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { join } from "node:path";
+import { repoRootOf as repoRoot } from "./db.ts";
 import type { ModelInfo, RosterInfo, RostersResponse, ModelsResponse } from "../shared/types.ts";
-
-/** The visualizer itself sits in <repoRoot>/.agents/skills/smidja/apps/visualizer. */
-function repoRoot(dbPath: string): string {
-  // dbPath is <repoRoot>/smidja/smidja_data/smidja.db — three dirnames up is the repo root.
-  return resolve(dirname(dirname(dirname(dbPath))));
-}
 
 /** Where the python helper lives, relative to this server dir. */
 function helperPath(): string {
