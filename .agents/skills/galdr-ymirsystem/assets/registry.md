@@ -292,7 +292,7 @@ The house law lives in `RULES/`; Galdr must know it (Rule 01/02/03):
 
 - **Eindri are the specialists** (marketer, builder, researcher, planner,
   reviewer, documenter, scout, …); each names its **domain** and its **craft**.
-- **Agents live only in `.agents/agents/*.md`.** `.opencode/agent` and
+- **Agents live only in `.agents/agents/*.md`.** `.opencode/agents` and
   `.pi/agents` are **symlinks** to the canonical profiles — never edit them;
   edit `.agents/agents/<profile>.md` and run `bin/valknut-load.sh --all`.
 - **No mock agents.** Ids, names, domains, models, status are real and sourced;

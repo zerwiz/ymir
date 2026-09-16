@@ -212,11 +212,15 @@ if os.path.exists(oc):
     ablock = d.setdefault("agent", {})
     for a in agents:
         m = resolve_model(model_of(a))
-        if a in ablock:
-            if ablock[a].get("model") != m:
-                ablock[a]["model"] = m; changed.append(f"oc:{a}")
+        # The roster DECLARES every figure it names. Before this, `apply` only
+        # touched an agent already present in opencode.json (`if a in ablock`),
+        # so a figure the roster knew but the config had never seen stayed
+        # undeclared — and OpenCode never loaded it. The roster is the source of
+        # truth; a name in it must reach the harness config.
+        entry = ablock.setdefault(a, {})
+        if entry.get("model") != m:
+            entry["model"] = m; changed.append(f"oc:{a}")
         if spec_of(a).get("primary"):
-            entry = ablock.setdefault(a, {})
             entry["mode"] = "primary"
             entry["model"] = m
             entry.setdefault("description", f"{a} — primary (from config/agents.yaml)")

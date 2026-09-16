@@ -26,7 +26,7 @@ PI_GLOBAL="${HOME}/.pi/agent/agents"
 # seated. This loader DEPLOYS that source into the single home.
 PI_EXT_SRC="$ROOT/.pi/shared/extensions"
 PI_EXT_HOME="${HOME}/.pi/agent/extensions"
-OC_LOCAL="$ROOT/.opencode/agent"
+OC_LOCAL="$ROOT/.opencode/agents"
 SKILLS="$ROOT/.agents/skills"
 
 usage() {
@@ -167,6 +167,18 @@ fi
 
 if [ "$MODE_OPENCODE" = 1 ]; then
   add opencode-config "$ROOT/opencode.json" "$(config_out "$ROOT/opencode.json.example" "$ROOT/opencode.json")"
+  # OpenCode reads `.opencode/agents/` (PLURAL). The singular `.opencode/agent/`
+  # was never read by the harness at all — twenty correct symlinks in a directory
+  # no loader opens, which is why only the agents declared by hand in
+  # opencode.json ever appeared. Migrate a legacy singular dir forward so an old
+  # home heals instead of silently keeping its agents invisible.
+  if [ -d "$ROOT/.opencode/agent" ] && [ ! -e "$ROOT/.opencode/agents" ]; then
+    mv "$ROOT/.opencode/agent" "$ROOT/.opencode/agents" 2>/dev/null \
+      && add opencode-migrate "$ROOT/.opencode/agents" "legacy .opencode/agent/ moved to .opencode/agents/" \
+      || add opencode-migrate "$ROOT/.opencode/agents" "ERROR could not migrate"
+  fi
+  # Count what is bound here; the binding itself happens further down, after
+  # `link_agents` is defined (this block runs before that definition).
   if [ -d "$OC_LOCAL" ]; then
     n=$(ls "$OC_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ')
     add opencode "$OC_LOCAL" "native ($n agents)"
@@ -274,8 +286,8 @@ if [ "$MODE_STATUS" = 0 ]; then
     add "${hd#.}-agents" "$ROOT/$hd/agents" "bound ($n)"
   done
   if [ -d "$ROOT/.opencode" ]; then
-    n=$(link_agents "$ROOT/.opencode/agent" short) || n=0
-    add opencode-agents "$ROOT/.opencode/agent" "bound ($n)"
+    n=$(link_agents "$OC_LOCAL" short) || n=0
+    add opencode-agents "$OC_LOCAL" "bound ($n)"
   fi
 fi
 

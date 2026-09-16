@@ -253,6 +253,17 @@ npm run build            # must be green
 - When the shell, tokens, gates, or the gate API change, update this asset and
   `docs/design.md` together.
 
+### The agent path the Fleet gate reads (2026-09-17)
+
+`server/index.ts` decides whether a figure is *registered* by testing for its
+profile in the OpenCode agent directory. That directory is **`.opencode/agents/`
+— PLURAL**, which is what OpenCode actually loads. The singular
+`.opencode/agent/` was never read by the harness, so twenty correct symlinks sat
+in a directory no loader opened and the gate reported figures unregistered while
+the tree held them all. Any code that resolves an agent profile must use the
+plural path; the loader (`bin/valknut-load.sh`) migrates a legacy singular dir
+forward and binds the plural one.
+
 ## Domains, not houses (Rule 01/03)
 
 The eight Labs are **domains (Greinar)** — the knowledge axes — not houses. A

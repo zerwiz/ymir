@@ -183,7 +183,7 @@ function agents() {
     const id = String(fm.name ?? f.replace(/\.md$/, ''));
     const norse = String(fm.norse_name ?? fm.name ?? id);
     // Real, sourced fields only — no fabricated status/trace/tasks.
-    const registered = existsSync(join(ROOT, '.opencode/agent', `${id}.md`));
+    const registered = existsSync(join(ROOT, '.opencode/agents', `${id}.md`));
     return {
       id,
       name: norse.charAt(0).toUpperCase() + norse.slice(1),

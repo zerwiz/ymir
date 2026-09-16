@@ -8,9 +8,9 @@ Agent profiles live **only** in **`.agents/agents/*.md`**. That directory is the
 source of truth; everything else binds to it.
 
 - Harness directories are **symlinks**, never copies:
-  - OpenCode: `.opencode/agent/<name>.md` → `../../.agents/agents/<profile>.md`
+  - OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
   - Pi: `.pi/agents/<profile>.md` → the same canonical files
-- **Never edit** `.opencode/agent` or `.pi/agents` — they are links. Edit
+- **Never edit** `.opencode/agents` or `.pi/agents` — they are links. Edit
   `.agents/agents/<profile>.md` and re-run `bin/valknut-load.sh --all`.
 
 ## 2. The two kinds of agent
