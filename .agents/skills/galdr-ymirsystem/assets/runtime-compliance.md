@@ -42,12 +42,12 @@ changed but the asset did not.
 
 ```
 governed[6]{path,load_first}:
-  "bin/ymir-install.sh",".agents/skills/galdr-cli/assets/installation.md"
-  "apps/hlidskjalf/**",".agents/skills/galdr-cli/assets/hlidskjalf-ui.md"
-  "bin/mimir*",".agents/skills/galdr-cli/assets/memory-well.md"
-  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli/assets/nornir-jobs.md"
-  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-cli/assets/harness-integration/README.md"
-  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-cli/assets/smidja.md"
+  "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
+  "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
+  "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
+  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
+  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
+  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
 
 The same routes appear in `AGENTS.md` (`governed[]`) and are printed in the
@@ -72,7 +72,7 @@ The check reads the `governed[]` table out of `AGENTS.md`, splits each row on
 `-e`, a glob with `compgen -G` — counting all of them:
 
 ```bash
-bash .agents/skills/galdr-cli/scripts/compliance-check.sh | grep governed
+bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh | grep governed
 # "governed","governed paths resolve","PASS","all 25 governed paths exist"
 ```
 
@@ -252,7 +252,7 @@ Allowed exceptions (documented, not defects):
 
 - Template fixtures are allowed **only** as committed `*.example` scaffolding
   (`data/*.example`, `config/*.example`); the live `data/` and `config/` must hold real files.
-- Reference-configuration assets inside `.agents/skills/galdr-cli/assets/pi-boot/` are documentation
+- Reference-configuration assets inside `.agents/skills/galdr-ymirsystem/assets/pi-boot/` are documentation
   templates, not runtime.
 
 **Pass:** no markers in `bin/`, `config/`, `.agents/sandbox/`. **Failure:** a mock or
@@ -403,7 +403,7 @@ exit "$rc"
 - **Secret scanning is heuristic.** G11 catches common literals; the real law is that secrets
   live only in gitignored `.env.local` / `.env.realm` and are referenced by variable name.
 - **Reference-config assets are not runtime.** Files under
-  `.agents/skills/galdr-cli/assets/pi-boot/` are documentation; G8 does not fail on them.
+  `.agents/skills/galdr-ymirsystem/assets/pi-boot/` are documentation; G8 does not fail on them.
 
 ## 6. Maintaining this
 

@@ -177,10 +177,18 @@ installable by anyone running pi.
 | Issue→PR | **Mjollnir** | autonomous fixes & PRs |
 | Process monitor | **Valhalla** | PM2/Docker supervision |
 | Skill synthesis | **Gungnir** | dynamic skill creation |
+| Skill optimization | **Gunnlöð** | trajectory-driven skill refinement |
+| Smíðja | **Smíðja** | the smithy — roster, phases, trace |
 | Session digest | **Sága** | the context injected at session open |
 | Watch / supervision | **Sýn** | watcher, guard, seat continuity |
 | Session lock | **Gleipnir** | one live session per home |
 | Scheduled jobs | **Nornir** | the fates who govern time |
+| Control-plane hub | **Vingólf** | coordination, identity, sync across substrates |
+| Live hall board | **Óðrerir** | fleet planning glass (:4322) |
+| Multi-tenant domains | **Svartalfaheim** | scoped tenant workspaces |
+| Agent ergonomics | **Galdr** | TOON output, 10 design principles |
+| Smíðja orchestrator | **Völundr** | runs Smíðja (Kaia's seat inside) |
+| MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal |
 | Host desktop (Omarchy) | **Omarchy** | the machine Ymir runs on: monitors, scale, themes, hooks |
 | Terminal backend | **Þjazi** | agent panes — herdr (protocol 14+) or tmux |
 | Harness surface | **pi** | extensions, skills, prompt templates, packages |
@@ -211,10 +219,11 @@ the master builder; Tyr judges compliance.
 | `syn-recovery` | Sýn | stuck-worker recovery playbook |
 | `ymir` | Ymir | operate the host: update · Omarchy · Þjazi |
 | `hamr` | Hamr | per-harness adapter reference (OpenCode, Pi, Claude, Cursor, Codex) |
+| `gunnlod` | Gunnlöð | skill optimization — trajectory-driven refinement via SkillOpt |
 
 The Galdr family enforces the 10 ergonomic principles (TOON output, minimal schemas,
 self-correcting errors) and the runtime acceptance gates; run
-`bash .agents/skills/galdr-cli/scripts/compliance-check.sh` before claiming done.
+`bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh` before claiming done.
 
 ---
 
@@ -385,7 +394,7 @@ ymir/
 ├── svartalfaheim/             # company container root (zerwiz) — future multi-user
 ├── workspace/                 # THE SINGLE TENANT: work/ · personal/ · companies/ ·
 │                              #   workspaces.yaml · projects.yaml · memory/ · INSTALL.md
-├── smidja/                    # the smithy engine + smidja.db (runs, stats, trace)
+├── apps/smidja/                 # the smithy engine + smidja.db (runs, stats, trace)
 ├── state/                     # runtime state: lock, chat/, bridges, cron
 ├── scripts/start.sh stop.sh   # raise/lower the whole system
 ├── assets/                    # art, the OS diagram, reference material
@@ -482,7 +491,7 @@ Every subsystem, component, and process is named for the figure whose role match
 its work; the operator is the **Allfather** (Odin). The house voice is Norse-natural;
 flavor may season a line, but an imported term never names a subsystem. The full
 component map lives in
-[`.agents/skills/galdr-cli/assets/norse-naming.md`](.agents/skills/galdr-cli/assets/norse-naming.md).
+[`.agents/skills/galdr-ymirsystem/assets/norse-naming.md`](.agents/skills/galdr-ymirsystem/assets/norse-naming.md).
 
 ---
 
@@ -558,6 +567,7 @@ follow them, star them, learn from them.
 | [firstmate](https://github.com/kunchenguid/firstmate) | kunchenguid | MIT | the fleet |
 | [axi](https://github.com/kunchenguid/axi) | kunchenguid | MIT | agent-ergonomics principles |
 | [lavish-axi](https://github.com/kunchenguid/lavish-axi) | kunchenguid | MIT | the HTML-artifact editor |
+| [SkillOpt](https://github.com/zerwiz/SkillOpt) | zerwiz | MIT | **Gunnlöð** — skill optimization (trajectory-driven refinement) |
 
 Their full licence texts are bundled in [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES),
 and their attribution in [NOTICE](NOTICE).
