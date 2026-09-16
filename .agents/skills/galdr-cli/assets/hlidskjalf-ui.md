@@ -134,6 +134,22 @@ router `:8080`, Bifrost `:4603`), never only the first — a dead engine falls
 through to a live one. Recall reads `.agents/memory/well/episodes.jsonl`
 directly, so restoring that file revives the chat's memory without a restart.
 
+### The gate API reads cheaply (added 2026-09-16)
+
+The gate reads append-only ledgers (Runes, the well's `episodes.jsonl`, masterplan
+orders) and probes live runtime scripts on every request. Both grow without bound,
+so the hot readers are memoised and the probes now run off the event loop:
+
+- `runAsync()` — read-only subprocess probes via `Bun.spawn` (was `spawnSync`,
+  which could block the single Bun event loop for up to 12s); results cached ~3s
+  and concurrent callers share one in-flight spawn. Sync `run()` stays for
+  **mutating** actions only (`setupRun`, `workspaceProvision`).
+- `memo()` — `orders`, `runes`, `smidjaStats`, `chatRecall` are cached (2–3s), so a
+  request never re-parses the whole ledger or well.
+
+Measured: `/api/checks` 442ms → 4ms warm; `/api/runtime` 312ms → 5ms warm;
+20 parallel `/api/runes` in 8ms.
+
 ## Smíðja in the UI
 
 The smithy's trace (its own `smidja/smidja_data/smidja.db`) is rendered by four gates:
