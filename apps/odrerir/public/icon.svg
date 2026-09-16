@@ -2,6 +2,6 @@
   <title>the hall — Óðrerir, the Live Hall</title>
   <rect width="32" height="32" rx="7" fill="#0e0c09"/>
   <g transform="translate(4 4) scale(1.0)" fill="none" stroke="#c9973f" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">
-    <path d="M4 20L12 4L20 20 M8 14H16"/>
+    <path d="M7 20V4 M7 4L17 8L7 12"/>
   </g>
 </svg>
