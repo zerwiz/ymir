@@ -30,7 +30,10 @@ const SUBAGENTS_DIR = join(ROOT, '.agents/subagents');
 const AGENTS_ALT = existsSync(AGENTS_DIR) ? AGENTS_DIR : SUBAGENTS_DIR;
 const CONFIG_DIR = join(ROOT, '.agents/config');
 const STATE_DIR = join(ROOT, 'state');
-const RUNES = join(ROOT, 'workspace/memory/runes_audit.md');
+// The ledger lives in the HOARD, never in the checkout (Rule 04 / migration
+// 0004): $YMIR_HOARD, else $YMIR_HOME/hodd, else ~/Documents/Ymir/hodd.
+const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'hodd');
+const RUNES = join(HOARD, 'memory/runes_audit.md');
 const WELL = join(ROOT, '.agents/memory/well/episodes.jsonl');
 const MASTERPLAN = join(ROOT, 'docs/masterplan.md');
 
@@ -1480,7 +1483,7 @@ function savePrompt(agent: string, kind: string, body: string): { ok: boolean; p
 /* ---- /api/workspaces + /api/setup — single-tenant workspaces ------------ */
 function workspaces(): { id: string; name: string; kind: string; company?: string; domains: string[] }[] {
   let regPath = join(ROOT, 'workspace/workspaces.yaml');
-  const hoardReg = join(process.env.YMIR_HOARD || join(ROOT, 'hodd'), 'identity/workspaces.yaml');
+  const hoardReg = join(HOARD, 'identity/workspaces.yaml');
   try { read(hoardReg); regPath = hoardReg; } catch { /* fall back to the tracked scaffold */ }
   const txt = read(regPath);
   const out: { id: string; name: string; kind: string; company?: string; domains: string[] }[] = [];
