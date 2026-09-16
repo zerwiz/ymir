@@ -121,7 +121,7 @@ and starting the other, or re-point the router.
 | Provider | Model | Endpoint | Use Case |
 |----------|-------|----------|----------|
 | llama.cpp | qwen3.6-35b-a3b | http://127.0.0.1:8080/v1 | Default coding tasks |
-| apodex | Apodex-1.0-mini-Q4_K_M | http://127.0.0.1:1234/v1 | Research, planning, multi-step tasks |
+| apodex | apodex-1.0-mini | http://127.0.0.1:1234/v1 | Research, planning, multi-step tasks |
 
 ### Swapping Providers
 
@@ -142,11 +142,13 @@ No licence conflict.
 | Mode | Local model | Local endpoint | Online via pi.dev | Purpose |
 |------|------------|----------------|-------------------|---------|
 | Coding | qwen3.6-35b-a3b | :8080 | yes | Default coding tasks |
-| Research/Planning | Apodex-1.0-mini-Q4_K_M | :1234 | yes | Research, planning, multi-step tasks |
+| Research/Planning | apodex-1.0-mini | :1234 | yes | Research, planning, multi-step tasks |
 
 pi.dev is the primary agent harness — drives both online models AND
-local qwen. Switch local model by stopping one llama.cpp server and
-starting the other on its port. Brokk stays a private yagent — not
+local qwen. One local model at a time: the Apodex Q4_K_M weights are
+~21.7 GB, so it and a coding model cannot both sit resident — swap by
+re-pointing the llama-router, or by raising the other seat and lowering
+this one. Brokk stays a private yagent — not
 routed through any provider.
 
 ## Directory rules

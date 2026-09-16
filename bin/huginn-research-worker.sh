@@ -33,7 +33,7 @@ for f in "$ROOT/.env.local" "${YMIR_HOARD:-$HOME/Documents/Ymir}/.env.local"; do
 done
 
 BASE="${APODEX_BASE_URL:-http://localhost:1234/v1}"
-MODEL="${MODEL:-${APODEX_MODEL:-apodex/Apodex-1.0-mini-Q4_K_M}}"
+MODEL="${MODEL:-${APODEX_MODEL:-apodex-1.0-mini}}"
 KEY="${APODEX_API_KEY:-not-needed-for-local}"
 
 # 1. Recall context from Mimirsbrunn (boost, never blocker).

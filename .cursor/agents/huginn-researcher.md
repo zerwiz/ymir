@@ -1,0 +1,1 @@
+../../.agents/agents/huginn-researcher.md

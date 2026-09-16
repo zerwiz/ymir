@@ -2,7 +2,7 @@
 domain: ymirlabs
 description: Primary autonomous agent of the Ymir Agent Operating System
 mode: primary
-model: 
+model: opencode-go/deepseek-v4.1-flash
 ---
 
 # BROKK — SYSTEM OPERATING MANUAL
