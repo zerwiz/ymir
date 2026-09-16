@@ -1958,7 +1958,10 @@ const server = Bun.serve({
       if (p === '/api/well/episode') return json((await wellEpisode(url.searchParams.get('id') ?? '')) ?? { error: 'not found' });
       if (p === '/api/mimir/health') return json(await mimirHealth());
       if (p === '/api/processes') return json(await processes());
-      if (p === '/api/reviews') return json(await reviews());
+      // The reviews gate shells out twice (lint + compliance), each with a 60s cap,
+      // so an unmemoised poll leaves Glitnir hanging for a minute and reads as a
+      // dead surface. One answer per minute is what a human review board needs.
+      if (p === '/api/reviews') return json(await memoAsync('reviews', 60_000, reviews));
       if (p === '/api/files') return json(files(url.searchParams.get('realm') ?? 'work'));
       if (p === '/api/file') return json(fileContent(url.searchParams.get('realm') ?? 'work', url.searchParams.get('path') ?? ''));
       if (p === '/api/skills') return json(skills());
