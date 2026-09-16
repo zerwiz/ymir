@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+// The hearth lives in the design system, not here: one fire, every surface.
+import { startEmbers } from '../../../../../midgard/design-system/ember.js'
 import { useRoute, hrefFor, hrefForMemory, hrefForDecisions, hrefForStats, hrefForChat, hrefForSettings, phaseCrumb } from './lib/router'
 import SessionsList from './components/SessionsList.vue'
 import SessionTrace from './components/SessionTrace.vue'
@@ -8,6 +10,13 @@ import DecisionsView from './components/DecisionsView.vue'
 import StatsView from './components/StatsView.vue'
 import ChatView from './components/ChatView.vue'
 import SettingsView from './components/SettingsView.vue'
+
+const emberEl = ref<HTMLCanvasElement | null>(null)
+let stopEmbers: (() => void) | undefined
+onMounted(() => {
+  if (emberEl.value) stopEmbers = startEmbers(emberEl.value)
+})
+onBeforeUnmount(() => stopEmbers?.())
 
 const route = useRoute()
 const isMemory = computed(() => route.value.adwId === 'memory')
@@ -95,6 +104,7 @@ const hallUrl =
 
 <template>
   <div class="app">
+    <canvas ref="emberEl" class="ember-bg" aria-hidden="true" />
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="topbar">
       <nav class="crumbs">
