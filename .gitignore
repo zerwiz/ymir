@@ -2,6 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
+.venv/
 
 # Secrets - NEVER commit
 .env.local

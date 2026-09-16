@@ -136,9 +136,9 @@ times a cold-context run, samples the device, and tears down. It never touches a
 running service, and needs only a `llama-server` binary and a `.gguf`.
 
 ```bash
-.agents/skills/galdr-cli/scripts/bench-one.sh /path/to/model.gguf --ctx 32768
-.agents/skills/galdr-cli/scripts/bench-one.sh /path/to/model.gguf --ctx 131072 --kv q8_0
-.agents/skills/galdr-cli/scripts/bench-one.sh /path/to/model.gguf --ctx 8192 --ngl 0   # pure CPU
+.agents/skills/galdr-ymirsystem/scripts/bench-one.sh /path/to/model.gguf --ctx 32768
+.agents/skills/galdr-ymirsystem/scripts/bench-one.sh /path/to/model.gguf --ctx 131072 --kv q8_0
+.agents/skills/galdr-ymirsystem/scripts/bench-one.sh /path/to/model.gguf --ctx 8192 --ngl 0   # pure CPU
 ```
 
 Point it at the right server with `--server` (or `$LLAMA_SERVER`); a build that

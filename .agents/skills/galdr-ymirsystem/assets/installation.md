@@ -297,7 +297,7 @@ bin/ymir-validate.sh                 # the running system actually works
 bin/herdr-ensure.sh status           # the Þjazi backend and its protocol floor
 bin/omarchy-sense.sh status          # what Ymir has learnt about this host
 bin/saga-session-start.sh            # the session digest
-bash .agents/skills/galdr-cli/scripts/compliance-check.sh
+bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh
 ```
 
 On an **Omarchy** host the installer also learns the machine
@@ -432,7 +432,7 @@ fi
    because the Linux path already worked; the risk is the other branch.
 
 Standalone tools that ship outside a Ymir checkout (for example
-`.agents/skills/galdr-cli/scripts/bench-one.sh`) carry their own small portable
+`.agents/skills/galdr-ymirsystem/scripts/bench-one.sh`) carry their own small portable
 helpers instead of sourcing the library, so they run anywhere on their own.
 
 ### Machine config is rendered, never shipped

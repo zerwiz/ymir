@@ -47,7 +47,7 @@ done
 add "json parse" "$json"
 
 # 4. Galdr/Tyr compliance gates
-if bash "$ROOT/.agents/skills/galdr-cli/scripts/compliance-check.sh" >/dev/null 2>&1; then
+if bash "$ROOT/.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh" >/dev/null 2>&1; then
   add "galdr compliance" OK
 else
   add "galdr compliance" FAIL

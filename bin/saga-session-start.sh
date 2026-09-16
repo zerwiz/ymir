@@ -138,12 +138,12 @@ section "ASSET ROUTING"
 # Load the owning asset BEFORE editing a governed path. A code change not
 # reflected in its asset is an incomplete change. Router: galdr/SKILL.md.
 printf 'governed[6]{path,load_first}:\n'
-printf '  "bin/ymir-install.sh",".agents/skills/galdr-cli/assets/installation.md"\n'
-printf '  "apps/hlidskjalf/**",".agents/skills/galdr-cli/assets/hlidskjalf-ui.md"\n'
-printf '  "bin/mimir*",".agents/skills/galdr-cli/assets/memory-well.md"\n'
-printf '  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-cli/assets/nornir-jobs.md"\n'
-printf '  "bin/valknut-load.sh | .pi/**",".agents/skills/galdr-cli/assets/harness-integration/README.md"\n'
-printf '  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-cli/assets/smidja.md"\n'
+printf '  "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"\n'
+printf '  "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"\n'
+printf '  "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"\n'
+printf '  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"\n'
+printf '  "bin/valknut-load.sh | .pi/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"\n'
+printf '  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"\n'
 printf 'rule: load the asset, then change the code, then update the asset in the same change.\n'
 
 section "TOOL SURFACE"
