@@ -78,8 +78,8 @@ import {
 import { Box, Container, fuzzyFilter, Input, SelectList, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import {
-  type CalmPresentationState,
-  calmTranscriptClassIsVisible,
+  type RoPresentationState,
+  roTranscriptClassIsVisible,
   RO_PRESENTATION_EVENT,
 } from "./lib/ro-visibility.ts";
 import {
@@ -1364,21 +1364,21 @@ ${context.command}
     return applied === pin ? `Effort: ${pin}.` : `Effort: ${pin}, which this model runs at ${applied}.`;
   }
 
-  let calmPresentation: CalmPresentationState = {
+  let calmPresentation: RoPresentationState = {
     active: false,
     stockExportRendering: false,
   };
   pi.events?.on?.(RO_PRESENTATION_EVENT, (data) => {
-    const next = data as Partial<CalmPresentationState>;
+    const next = data as Partial<RoPresentationState>;
     calmPresentation = {
       active: next.active === true,
       stockExportRendering: next.stockExportRendering === true,
     };
   });
-  const calmHides = (itemClass: Parameters<typeof calmTranscriptClassIsVisible>[0]): boolean =>
+  const calmHides = (itemClass: Parameters<typeof roTranscriptClassIsVisible>[0]): boolean =>
     calmPresentation.active &&
     !calmPresentation.stockExportRendering &&
-    !calmTranscriptClassIsVisible(itemClass);
+    !roTranscriptClassIsVisible(itemClass);
 
   const outcomesToolAnsiPattern = new RegExp(
     "(?:\\u001B\\][\\s\\S]*?(?:\\u0007|\\u001B\\u005C|\\u009C))|[\\u001B\\u009B][[\\]\\()#;?]*(?:\\d{1,4}(?:[;:]\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]",
