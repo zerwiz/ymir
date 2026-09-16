@@ -92,6 +92,25 @@ its context is not a measurement.
 | **Context-blind comparison** | two runs "differing by config" | they also differed in context; attention cost tracks the context in use |
 | **Asserted > observed** | a tidy explanation for a slow run | the explanation was never tested against an alternative |
 
+### The fifth trap — model-host port drift
+
+| Trap | Reads as | Is |
+|---|---|---|
+| **Router port ≠ model port** | `:8080` dead or wrong model answers | **model-host** runs each variant (swap/parallel/orchestrator) on its **own port** from `llama-models.yaml`; the router `:8080` may be empty. The catalog (`~/.pi/agent/models.json` or `.pi/agent/models.json`) must point at the **variant's true port**, not the router's. |
+
+**Procedure to align the door:**
+
+1. `model-host status` — read the running variant's port (e.g. `iq3-s` swap → `:8125`).
+2. Check `llama-models.yaml` for the canonical port (`port:` under the variant's block).
+3. Edit the provider's `baseUrl` in `models.json` to match that port (`http://127.0.0.1:<port>/v1`).
+4. Verify: `curl http://127.0.0.1:<port>/v1/models` returns the model; a test completion works.
+
+**Example (this platform, 2026-09-15):**
+- `model-host start iq3-swap` → model runs at `:8125`.
+- `llama-models.yaml` confirms swap `port: 8125`.
+- `~/.pi/agent/models.json` provider `llamacpp-qwen3-6-35b-a3b-iq3_s` had `baseUrl: "http://127.0.0.1:8080/v1"` → corrected to `:8125/v1`.
+- The chat's `hi` went from "Connection error" to a real reply.
+
 ### Budgeting context
 
 ```

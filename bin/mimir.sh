@@ -15,7 +15,8 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-WELL="$ROOT/.agents/memory/well/episodes.jsonl"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+WELL="${YMIR_MEMORY_DIR:-$YMIR_HOME/memory/well}/episodes.jsonl"
 BRIDGE="${MIMIRSBRUNN_URL:-http://127.0.0.1:4602}"
 
 usage() { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; }
