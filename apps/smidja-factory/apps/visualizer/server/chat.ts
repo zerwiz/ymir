@@ -14,6 +14,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { repoRootOf } from "./db.ts";
 import { piCommand } from "./model-catalog.ts";
 import type {
   ChatHistoryResponse,
@@ -253,7 +254,7 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
  */
 function kaiaPromptArgs(cwd: string): string[] {
   const candidates = [
-    "smidja/smidja_data/prompt_engineering/orchestrator/system.md",
+    "apps/smidja/smidja_data/prompt_engineering/orchestrator/system.md",
     ".agents/skills/smidja/skills/volundr/prompt/volundr-system.md",
   ];
   const args: string[] = [];
@@ -390,11 +391,6 @@ export async function steer(dbPath: string, adwId: string, message: string): Pro
     throw new Error(`session ${adwId} not found (no steer file yet)`);
   }
   return { ok: true };
-}
-
-function repoRootOf(dbPath: string): string {
-  // dbPath is <repoRoot>/smidja/smidja_data/smidja.db — three dirnames up is the repo root.
-  return resolve(dirname(dirname(dirname(dbPath))));
 }
 
 /**

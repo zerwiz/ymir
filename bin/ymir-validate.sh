@@ -101,7 +101,7 @@ fi
 # ── 7. smidja db (visualizer readiness) ─────────────────────────────────────
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 SMIDJA_DB_PATH="${YMIR_HOME:+$YMIR_HOME/smidja/smidja.db}"
-SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-$ROOT/smidja/smidja_data/smidja.db}"
+SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-$ROOT/apps/smidja/smidja_data/smidja.db}"
 if [ -f "$SMIDJA_DB_PATH" ]; then
   add smidja-db PASS "smidja.db present"
 else

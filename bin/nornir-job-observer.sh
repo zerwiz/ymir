@@ -8,7 +8,7 @@
 #   .agents/agents/*.md              the agent roster
 #   .agents/memory/well/             the well (episodes)
 #   workspace/memory/runes_audit.md  the ledger
-#   smidja/smidja_data/smidja.db     Smíðja runs (read-only SQLite URI)
+#   apps/smidja/smidja_data/smidja.db     Smíðja runs (read-only SQLite URI)
 #   ~/.treehouse                     external worktrees (read-only)
 #
 # CONTRACT: this job NEVER writes anywhere but state/observer.log and the Runes
@@ -31,7 +31,7 @@ STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 WORKTREE_ROOT="${BROKK_YGGDRASIL_ROOT:-$HOME/.treehouse}"
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 SMIDJA_DB="${YMIR_HOME:+$YMIR_HOME/smidja/smidja.db}"
-[ -z "${SMIDJA_DB:-}" ] || [ ! -f "$SMIDJA_DB" ] && SMIDJA_DB="$ROOT/smidja/smidja_data/smidja.db"
+[ -z "${SMIDJA_DB:-}" ] || [ ! -f "$SMIDJA_DB" ] && SMIDJA_DB="$ROOT/apps/smidja/smidja_data/smidja.db"
 MASTERPLAN="$ROOT/docs/masterplan.md"
 WELL_DIR="$ROOT/.agents/memory/well"
 AGENTS_DIR="$ROOT/.agents/agents"
