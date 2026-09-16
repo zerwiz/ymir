@@ -242,10 +242,20 @@ ymir_selinux_enforcing() {
   fi
 }
 
-# true when the engine is rootless Podman (Fedora's default): bind-mount
-# ownership then needs --userns=keep-id so files land owned by the invoking user.
+# true when the resolved engine is Podman — including when the `docker` binary is
+# really Podman (the podman-docker shim), which names itself in `info`.
+ymir_engine_is_podman() {
+  local e
+  e="$(ymir_container_engine 2>/dev/null || ymir_container_engine_name 2>/dev/null)" || return 1
+  [ -n "$e" ] || return 1
+  [ "$e" = podman ] && return 0
+  "$e" info 2>/dev/null | grep -qi podman
+}
+
+# true when rootless Podman: bind-mount ownership then needs --userns=keep-id so
+# files land owned by the invoking user. Docker (and rootful Podman) do not.
 ymir_rootless_podman() {
-  [ "$(ymir_container_engine 2>/dev/null)" = podman ] && [ "$(id -u)" -ne 0 ]
+  ymir_engine_is_podman && [ "$(id -u)" -ne 0 ]
 }
 
 # true when Ymir itself is running inside a container (podman or docker).
@@ -253,12 +263,10 @@ ymir_in_container() {
   [ -e /run/.containerenv ] || [ -e /.dockerenv ] || [ -n "${container:-}" ]
 }
 
-# The `-v` suffix for a bind mount: `:Z` under enforcing SELinux + Podman, else
-# empty. Append to `<host>:<container>`.
+# The `-v` suffix for a bind mount: `:Z` whenever SELinux is enforcing — Docker
+# and Podman both need the relabel there — else empty. Append to `<host>:<ctr>`.
 ymir_volume_suffix() {
-  if [ "$(ymir_container_engine 2>/dev/null)" = podman ] && ymir_selinux_enforcing; then
-    printf ':Z'
-  fi
+  ymir_selinux_enforcing && printf ':Z'
 }
 
 # ── GPUs: report what exists, without assuming NVIDIA ───────────────────────

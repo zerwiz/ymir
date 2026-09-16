@@ -43,7 +43,7 @@ fi
 # shellcheck source=bin/ymir-platform.sh
 . "$SCRIPT_DIR/ymir-platform.sh"
 ENGINE="$(ymir_container_engine)" || {
-  printf 'error: no container engine (docker/podman) reachable\nhelp: Fedora — `sudo dnf install podman`; Debian — install docker; or set YMIR_CONTAINER_ENGINE\n' >&2
+  printf 'error: no container engine (docker/podman) reachable\nhelp: install Docker or Podman, or set YMIR_CONTAINER_ENGINE to the one you use\n' >&2
   exit 1
 }
 
