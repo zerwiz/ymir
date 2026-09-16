@@ -4,7 +4,7 @@ The full Norse component map. AGENTS.md loads this when a task names a subsystem
 Deep doctrine (law, aetts, reject list): `.agents/skills/galdr-cli/assets/norse-naming.md`.
 
 ```
-platform[26]{subsystem,norse,role}:
+platform[27]{subsystem,norse,role}:
   "Master platform root","Ymir","base host OS, master daemon"
   "Primary agent","Brokk","main autonomous worker"
   "Sub-agent worker","Eindri","isolated sandboxed workers"
@@ -31,6 +31,7 @@ platform[26]{subsystem,norse,role}:
   "Scheduled jobs","Nornir","the fates who govern time"
   "Software smidja","Smíðja","repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace"
   "Smíðja orchestrator","Völundr","the master smith who runs Smíðja (Kaia's seat inside the smidja)"
+  "Control-plane hub / federation & sync","Vingólf","the assembly hall: coordination, identity, and sync across substrates; never executes code"
 ```
 
 ```
