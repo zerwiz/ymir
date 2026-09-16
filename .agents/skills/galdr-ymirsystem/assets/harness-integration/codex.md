@@ -187,3 +187,5 @@ bin/syn-cd-pretool-check.sh  --command 'cd ../..';             echo "cd  -> $? (
 - **No `PreToolUse` matcher for non-Bash tools.** Only `Bash` is guarded; other tool calls bypass the seatbelts by design.
 - **Payload shape is assumed JSON.** A hook with empty stdin no-ops (`[ -n "$payload" ]`).
 - **Do not simplify the preamble.** Each guard (`AGENTS.md`, `.codex/hooks.json`, executable bit, registration self-check) exists to keep the adapter from running in a foreign or partially installed home.
+
+**Skills.** This harness reads project skills from `.codex/skills/`; `bin/valknut-load.sh` binds it to the one tree (`.codex/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.

@@ -27,6 +27,7 @@ PI_GLOBAL="${HOME}/.pi/agent/agents"
 PI_EXT_SRC="$ROOT/.pi/shared/extensions"
 PI_EXT_HOME="${HOME}/.pi/agent/extensions"
 OC_LOCAL="$ROOT/.opencode/agent"
+SKILLS="$ROOT/.agents/skills"
 
 usage() {
   sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
@@ -88,13 +89,31 @@ link_agent_dir() {  # <target-dir> <rel-prefix>
   printf '%s' "$made"
 }
 
+# Skills are ONE tree (`.agents/skills/`). Each harness reaches it its own way:
+#   opencode — `skills.paths: [".agents/skills"]` in opencode.json (rendered below)
+#   pi       — discovery, natively: it walks up from the cwd looking for
+#              `.agents/skills` (and `~/.agents/skills`), so it needs NO link,
+#              and a second root under `.pi/` would only invite double-loading
+#   claude · codex · cursor — project skills live under the harness dir, so each
+#              gets `<harness>/skills -> ../.agents/skills`
+link_skills() {  # <harness-dir>  → binds <harness-dir>/skills
+  local dir=$1
+  [ -d "$dir" ] || return 1
+  ln -sfn ../.agents/skills "$dir/skills" 2>/dev/null || return 1
+  printf 'bound'
+}
+
 if [ "$MODE_STATUS" = 1 ]; then
-  printf 'loaders[4]{tool,path,status}:\n'
-  [ -d "$OC_LOCAL" ] && printf '  "opencode","%s","%s files"\n' "$OC_LOCAL" "$(ls "$OC_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ')" || printf '  "opencode","%s","absent"\n' "$OC_LOCAL"
-  [ -d "$PI_LOCAL" ] && printf '  "pi-local","%s","%s links"\n' "$PI_LOCAL" "$(ls "$PI_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ')" || printf '  "pi-local","%s","absent"\n' "$PI_LOCAL"
-  [ -d "$PI_GLOBAL" ] && printf '  "pi-global","%s","%s links"\n' "$PI_GLOBAL" "$(ls "$PI_GLOBAL"/*.md 2>/dev/null | wc -l | tr -d ' ')" || printf '  "pi-global","%s","absent"\n' "$PI_GLOBAL"
-  printf '  "agents-source","%s","%s files"\n' "$AGENTS" "$(ls "$AGENTS"/*.md 2>/dev/null | wc -l | tr -d ' ')"
-  exit 0
+  [ -d "$OC_LOCAL" ] && add opencode "$OC_LOCAL" "$(ls "$OC_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ') files" || add opencode "$OC_LOCAL" absent
+  [ -d "$PI_LOCAL" ] && add pi-local "$PI_LOCAL" "$(ls "$PI_LOCAL"/*.md 2>/dev/null | wc -l | tr -d ' ') links" || add pi-local "$PI_LOCAL" absent
+  [ -d "$PI_GLOBAL" ] && add pi-global "$PI_GLOBAL" "$(ls "$PI_GLOBAL"/*.md 2>/dev/null | wc -l | tr -d ' ') links" || add pi-global "$PI_GLOBAL" absent
+  add agents-source "$AGENTS" "$(ls "$AGENTS"/*.md 2>/dev/null | wc -l | tr -d ' ') files"
+  add opencode-skills "$SKILLS" "$(grep -q '\.agents/skills' "$ROOT/opencode.json" 2>/dev/null && printf 'via skills.paths' || printf 'absent')"
+  add pi-skills "$SKILLS" "native discovery (walks up to .agents/skills)"
+  for hd in .claude .codex .cursor; do
+    [ -d "$ROOT/$hd" ] || continue
+    [ -L "$ROOT/$hd/skills" ] && add "$hd-skills" "$ROOT/$hd/skills" linked || add "$hd-skills" "$ROOT/$hd/skills" absent
+  done
 fi
 
 if [ "$MODE_OPENCODE" = 1 ]; then
@@ -104,6 +123,12 @@ if [ "$MODE_OPENCODE" = 1 ]; then
     add opencode "$OC_LOCAL" "native ($n agents)"
   else
     add opencode "$OC_LOCAL" "ERROR absent"
+  fi
+  # The skills tree reaches opencode through its config, not a link.
+  if [ -f "$ROOT/opencode.json" ] && grep -q '\.agents/skills' "$ROOT/opencode.json"; then
+    add opencode-skills "$SKILLS" "via skills.paths"
+  else
+    add opencode-skills "$SKILLS" "ERROR not in opencode.json"
   fi
 fi
 
@@ -127,6 +152,19 @@ if [ "$MODE_PI" = 1 ]; then
     done
     add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home)"
   fi
+fi
+
+# Skills for the CLIs whose project scope is their own directory. Pi needs no
+# link (it discovers `.agents/skills` by walking up); opencode reaches the tree
+# through `skills.paths`. claude, codex and cursor each get one link, so all of
+# them read the ONE skills tree.
+if [ "$MODE_STATUS" = 0 ]; then
+  linked=""
+  for hd in .claude .codex .cursor; do
+    [ -d "$ROOT/$hd" ] || continue
+    link_skills "$ROOT/$hd" >/dev/null 2>&1 && linked="$linked $hd"
+  done
+  [ -n "$linked" ] && add harness-skills "$SKILLS" "linked into:$linked"
 fi
 
 printf 'loaders[%s]{tool,path,status}:\n' "${#T[@]}"

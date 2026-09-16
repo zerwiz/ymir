@@ -291,3 +291,5 @@ bin/syn-watch-arm.sh --handling-delivered test-gen --watcher-pid 12345
 - **Trust is per clone.** A fresh clone or a copied home that never approved the prompt has no loaded extensions. Restart with explicit `-e` flags only to diagnose.
 - **`.pi/extensions/README.md:36-38` is stale.** It claims "the `.opencode` plugins and Claude/Grok/Codex/Cursor/adapters … are still to come." They are landed; see [`opencode.md`](opencode.md), [`claude-code.md`](claude-code.md), [`codex.md`](codex.md), [`cursor.md`](cursor.md). Grok remains unimplemented in Ymir.
 - **`vordr` and `rodd` use different extensions** (`.mjs` vs `.ts`) deliberately: Vörðr is a plain Node child, so it cannot import the Pi TypeScript lib.
+
+**Skills.** Pi discovers skills **natively** — it walks up from the cwd to `.agents/skills` (and `~/.agents/skills`), and `--skill <path>` adds more; `--no-skills` disables discovery. No link and no config: a second root under `.pi/` would double-load the same skill.
