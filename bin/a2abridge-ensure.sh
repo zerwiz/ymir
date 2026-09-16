@@ -45,7 +45,9 @@ directory_up() { curl -s --max-time 3 -o /dev/null "$DIR_URL"; }
 install_engine() {
   local tmp
   tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' RETURN
+  # Guard the var: a RETURN trap can fire after the function's locals are gone,
+  # and `set -u` would then abort with "tmp: unbound variable".
+  trap 'rm -rf "${tmp:-}"' RETURN
   if ! curl -fsSL "https://raw.githubusercontent.com/vbcherepanov/a2abridge/main/install.sh" -o "$tmp/install.sh" 2>/dev/null; then
     return 1
   fi
@@ -59,7 +61,8 @@ patch_unit_logs() {
   # systemd --user service cannot touch — the daemon dies at STDOUT setup.
   # Point both at the journal unless they are already user-safe.
   [ -f "$UNIT" ] || return 0
-  if rg -q '^StandardOutput=file:/var/log' "$UNIT" 2>/dev/null || rg -q '^StandardError=file:/var/log' "$UNIT" 2>/dev/null; then
+  # grep, not rg: the patch must apply on any host, and ripgrep is not guaranteed.
+  if grep -qE '^Standard(Output|Error)=file:/var/log' "$UNIT" 2>/dev/null; then
     sed -i 's|^StandardOutput=file:.*|StandardOutput=journal|; s|^StandardError=file:.*|StandardError=journal|' "$UNIT"
     systemctl --user daemon-reload >/dev/null 2>&1 || true
     systemctl --user restart a2abridge-directory >/dev/null 2>&1 || true
