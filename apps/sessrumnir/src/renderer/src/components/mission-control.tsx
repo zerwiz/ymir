@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertCircle, ArrowUpRight, CheckCircle2, Circle, Inbox, Loader2, Play, RefreshCw, XCircle } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAppStore } from '../store'
@@ -7,14 +8,28 @@ import { getSessionTitle } from '../utils/session-title'
 import { pathsEqual } from '../../../shared/path-compare'
 import { canResumeRun } from '../utils/workflow-runs'
 import { SessionRuntimeIndicator } from './session-runtime-indicator'
-import type { SessionRuntimeInfo, WorkflowRunSummary } from '../../../shared/ipc-contracts'
+import type { SessionRuntimeInfo, WorkflowRunStatus, WorkflowRunSummary } from '../../../shared/ipc-contracts'
+import type { Translate } from '../../../shared/i18n'
+
+const WORKFLOW_STATUS_KEYS = {
+  pending: 'missionControl.workflowStatus.pending',
+  running: 'missionControl.workflowStatus.running',
+  paused: 'missionControl.workflowStatus.paused',
+  completed: 'missionControl.workflowStatus.completed',
+  failed: 'missionControl.workflowStatus.failed',
+  aborted: 'missionControl.workflowStatus.aborted',
+  unknown: 'missionControl.workflowStatus.unknown',
+} as const satisfies Record<WorkflowRunStatus, string>
 
 export function MissionControl(): React.JSX.Element {
+  const { t } = useTranslation()
   const workspaces = useAppStore((state) => state.workspaces)
   const sessionList = useAppStore((state) => state.sessionList)
   const sessionRuntimes = useAppStore((state) => state.sessionRuntimes)
   const workflowRuns = useAppStore((state) => state.workflowRuns)
   const refreshWorkflowRuns = useAppStore((state) => state.refreshWorkflowRuns)
+  const fleet = useAppStore((state) => state.fleet)
+  const refreshFleet = useAppStore((state) => state.refreshFleet)
   const openSessionItem = useAppStore((state) => state.openSessionItem)
   const activateWorkspace = useAppStore((state) => state.activateWorkspace)
   const switchSession = useAppStore((state) => state.switchSession)
@@ -26,7 +41,8 @@ export function MissionControl(): React.JSX.Element {
 
   useEffect(() => {
     void refreshWorkflowRuns()
-    const timer = window.setInterval(() => void refreshWorkflowRuns(), 5000)
+    void refreshFleet()
+    const timer = window.setInterval(() => { void refreshWorkflowRuns(); void refreshFleet() }, 5000)
     return () => window.clearInterval(timer)
   }, [refreshWorkflowRuns])
 
@@ -49,10 +65,16 @@ export function MissionControl(): React.JSX.Element {
     setControlError(null)
     try {
       const result = await window.piDesktop.workflows.control(run.workspaceId, run.runId, 'resume')
-      if (!result.ok) setControlError(`Could not proceed with ${run.workflowName}: ${result.reason ?? 'control unavailable'}`)
-      else await refreshWorkflowRuns()
+      if (!result.ok) {
+        setControlError(
+          t('missionControl.resumeFailed', {
+            workflow: run.workflowName,
+            reason: result.reason ?? t('missionControl.controlUnavailable'),
+          })
+        )
+      } else await refreshWorkflowRuns()
     } catch {
-      setControlError(`Could not proceed with ${run.workflowName}. Open the run for details.`)
+      setControlError(t('missionControl.resumeFailedGeneric', { workflow: run.workflowName }))
     } finally {
       setControlBusy(null)
     }
@@ -80,28 +102,60 @@ export function MissionControl(): React.JSX.Element {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-5xl px-6 py-7">
+        {/* The fleet — every opencode/pi session, read from the machine itself
+            (the same source the control plane reads), never inferred. */}
+        {fleet.length > 0 && (
+          <section className="mb-6">
+            <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+              The fleet · {fleet.length}
+            </h2>
+            <div className="grid gap-2 md:grid-cols-2">
+              {fleet.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-surface/50 px-3 py-3"
+                >
+                  <span
+                    className={clsx(
+                      'h-2.5 w-2.5 shrink-0 rounded-full',
+                      a.live?.state === 'working' ? 'bg-success' : 'bg-warning',
+                    )}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm text-primary">{a.name}</div>
+                    <div className="truncate text-[11px] text-faint">
+                      {[a.live?.kind ?? a.status, a.live?.state, a.live?.task || a.live?.cwd]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
         <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <Inbox size={19} className="text-accent-fg" />
-              <h1 className="text-lg font-semibold text-primary">Mission Control</h1>
+              <h1 className="text-lg font-semibold text-primary">{t('missionControl.title')}</h1>
               {attentionCount > 0 && (
                 <span className="rounded-full bg-warning-bg px-2 py-0.5 text-[10px] font-medium text-warning">
-                  {attentionCount} needs attention
+                  {t('missionControl.needsAttention', { count: attentionCount })}
                 </span>
               )}
             </div>
-            <p className="mt-1 text-xs text-dim">Background sessions and workflow runs, from every project.</p>
+            <p className="mt-1 text-xs text-dim">{t('missionControl.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => void refreshWorkflowRuns()}
               className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted transition-colors hover:bg-surface-hover hover:text-primary"
-              title="Refresh workflow runs"
+              title={t('missionControl.refreshWorkflowRuns')}
             >
               <RefreshCw size={12} />
-              Refresh
+              {t('common.refresh')}
             </button>
             <button
               type="button"
@@ -109,15 +163,15 @@ export function MissionControl(): React.JSX.Element {
               className="flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1.5 text-xs font-medium text-inverse transition-colors hover:bg-accent-hover"
             >
               <Play size={12} />
-              New task
+              {t('missionControl.newTask')}
             </button>
           </div>
         </div>
 
         <section className="mb-6">
-          <SectionHeading title="Live sessions" count={runtimes.length} />
+          <SectionHeading title={t('missionControl.liveSessions')} count={runtimes.length} />
           {runtimes.length === 0 ? (
-            <EmptyState>No live session runtimes yet. Start a task to put Brokk to work in the background.</EmptyState>
+            <EmptyState>{t('missionControl.noLiveRuntimes')}</EmptyState>
           ) : (
             <div className="grid gap-2 md:grid-cols-2">
               {runtimes.map((runtime) => {
@@ -127,15 +181,24 @@ export function MissionControl(): React.JSX.Element {
                   : undefined
                 const title = session
                   ? getSessionTitle(session.name, session.sessionId, session.preview)
-                  : runtime.sessionId ?? 'Starting session'
+                  : runtime.sessionId ?? t('missionControl.startingSession')
                 const canOpen = !!runtime.sessionPath && !!workspace
                 return (
                   <div key={runtime.runtimeId} className="flex items-center gap-3 rounded-lg border border-border bg-surface/50 px-3 py-3">
                     <SessionRuntimeIndicator runtime={runtime} />
-                    {!runtime.activity && runtime.status === 'running' && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-success" title={`${agentEngineLabel(runtime.engine) ?? DEFAULT_AGENT_ENGINE_LABEL} is idle`} />}
+                    {!runtime.activity && runtime.status === 'running' && (
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full bg-success"
+                        title={t('missionControl.idle', {
+                          agent: agentEngineLabel(runtime.engine) ?? DEFAULT_AGENT_ENGINE_LABEL,
+                        })}
+                      />
+                    )}
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm text-primary">{title}</div>
-                      <div className="truncate text-[11px] text-faint">{workspace?.name ?? 'Unknown project'} · {runtimeState(runtime)}</div>
+                      <div className="truncate text-[11px] text-faint">
+                        {workspace?.name ?? t('missionControl.unknownProject')} · {runtimeState(runtime, t)}
+                      </div>
                     </div>
                     {canOpen && (
                       <div className="flex shrink-0 items-center gap-1">
@@ -144,7 +207,7 @@ export function MissionControl(): React.JSX.Element {
                           onClick={() => void openRuntime(runtime)}
                           className="flex items-center gap-1 rounded px-2 py-1 text-[11px] text-muted transition-colors hover:bg-highlight hover:text-primary"
                         >
-                          Open <ArrowUpRight size={11} />
+                          {t('missionControl.open')} <ArrowUpRight size={11} />
                         </button>
                         {(runtime.activity === 'completed' || workspace?.kind === 'worktree') && (
                           <button
@@ -152,7 +215,7 @@ export function MissionControl(): React.JSX.Element {
                             onClick={() => void reviewRuntime(runtime)}
                             className="rounded border border-accent/40 px-2 py-1 text-[10px] text-accent-fg transition-colors hover:bg-accent-bg/20"
                           >
-                            Review
+                            {t('missionControl.review')}
                           </button>
                         )}
                       </div>
@@ -166,17 +229,17 @@ export function MissionControl(): React.JSX.Element {
 
         <section>
           <div className="mb-2 flex items-center justify-between">
-            <SectionHeading title="Workflow activity" count={workflowRuns.length} />
+            <SectionHeading title={t('missionControl.workflowActivity')} count={workflowRuns.length} />
             <button
               type="button"
               onClick={() => openWorkflowRunsForWorkspace(null)}
               className="text-[11px] text-muted transition-colors hover:text-accent-fg"
             >
-              Open all workflows
+              {t('missionControl.openAllWorkflows')}
             </button>
           </div>
           {recentRuns.length === 0 ? (
-            <EmptyState>No workflow runs yet.</EmptyState>
+            <EmptyState>{t('missionControl.noWorkflowRuns')}</EmptyState>
           ) : (
             <>
               {controlError && <div className="mb-2 rounded border border-error/40 bg-error-bg/20 px-3 py-2 text-[11px] text-error" role="status">{controlError}</div>}
@@ -210,6 +273,7 @@ function WorkflowRow({
   onResume: () => void
   resumeBusy: boolean
 }): React.JSX.Element {
+  const { t } = useTranslation()
   const Icon = run.status === 'completed'
     ? CheckCircle2
     : run.status === 'failed' || run.status === 'aborted'
@@ -234,9 +298,9 @@ function WorkflowRow({
         <Icon size={14} className={clsx('shrink-0', iconClass)} />
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm text-primary">{run.workflowName}</div>
-          <div className="truncate text-[11px] text-faint">{run.workspaceName} · {run.currentPhase ?? run.status}</div>
+          <div className="truncate text-[11px] text-faint">{run.workspaceName} · {run.currentPhase ?? t(WORKFLOW_STATUS_KEYS[run.status])}</div>
         </div>
-        <span className="shrink-0 text-[11px] capitalize text-muted">{run.status}</span>
+        <span className="shrink-0 text-[11px] capitalize text-muted">{t(WORKFLOW_STATUS_KEYS[run.status])}</span>
       </button>
       {canResumeRun(run.status) && (
         <button
@@ -244,10 +308,10 @@ function WorkflowRow({
           onClick={onResume}
           disabled={resumeBusy}
           className="flex shrink-0 items-center gap-1 rounded border border-success/40 px-2 py-1 text-[10px] font-medium text-success transition-colors hover:bg-success-bg/20 disabled:cursor-not-allowed disabled:opacity-50"
-          title={run.status === 'paused' ? 'Proceed with this workflow' : 'Retry this workflow'}
+          title={run.status === 'paused' ? t('missionControl.proceedWithWorkflow') : t('missionControl.retryWithWorkflow')}
         >
           {resumeBusy ? <Loader2 size={11} className="animate-spin" /> : <Play size={11} />}
-          {run.status === 'paused' ? 'Proceed' : 'Retry'}
+          {run.status === 'paused' ? t('missionControl.proceed') : t('common.retry')}
         </button>
       )}
     </div>
@@ -267,10 +331,11 @@ function EmptyState({ children }: { children: React.ReactNode }): React.JSX.Elem
   return <div className="rounded-lg border border-dashed border-border px-4 py-5 text-center text-xs text-faint">{children}</div>
 }
 
-function runtimeState(runtime: SessionRuntimeInfo): string {
-  if (runtime.activity === 'needs-approval') return 'needs approval'
-  if (runtime.activity === 'working' || runtime.status === 'starting') return 'working'
-  if (runtime.activity === 'failed' || runtime.status === 'error') return 'failed'
-  if (runtime.activity === 'completed') return 'completed'
-  return runtime.status === 'running' ? 'idle' : runtime.status
+function runtimeState(runtime: SessionRuntimeInfo, t: Translate): string {
+  if (runtime.activity === 'needs-approval') return t('missionControl.runtimeState.needsApproval')
+  if (runtime.activity === 'working' || runtime.status === 'starting') return t('missionControl.runtimeState.working')
+  if (runtime.activity === 'failed' || runtime.status === 'error') return t('missionControl.runtimeState.failed')
+  if (runtime.activity === 'completed') return t('missionControl.runtimeState.completed')
+  if (runtime.status === 'running') return t('missionControl.runtimeState.idle')
+  return t('missionControl.runtimeState.stopped')
 }

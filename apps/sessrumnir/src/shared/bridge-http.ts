@@ -14,68 +14,14 @@
 import type { PiDesktopAPI } from './bridge'
 import type {
   PiRpcEvent,
-  PiStatus,
-  SessionListItem,
-  SessionDeleteResult,
-  ArchivedSessionsMap,
-  AppSettings,
-  AgentDetectionOptions,
-  AgentInstallationsResult,
-  Workspace,
-  WorkspaceRemoveResult,
-  InstalledPackage,
-  InstalledSkill,
-  CatalogPackage,
-  FileTreeNode,
-  FileSearchResult,
-  FileChangeEvent,
-  TerminalExitEvent,
-  TerminalStartResult,
-  Note,
-  UpdateCheckResult,
-  SessionLineageRecord,
-  ModelsConfig,
-  ModelsReadResult,
-  CouncilDetectResult,
-  CouncilRunRequest,
-  CouncilRunResult,
-  CouncilArbiterRequest,
-  CouncilProgressEvent,
-  AttachmentReadResult,
-  OpenDialogOptions,
-  PathKindResult,
-  PromptImage,
-  ActivityStatsResult,
-  DiagnosticsReport,
-  ThemesListResult,
-  ThemeImportResult,
-  ThemeExportResult,
-  ThemeGalleryResult,
-  ThemeGalleryImageResult,
-  PermissionRule,
-  PermissionRulesScope,
-  PermissionRulesGetResult,
-  PermissionRulesSetResult,
-  PermissionRulesImportResult,
-  PermissionRulesExportResult,
-  PermissionRulesWorkspaceStatus,
-  PermissionRulesRemoveResult,
   PendingPromptCounts,
   WorkspaceActivityMap,
-  WorkflowRunSummary,
-  WorkflowRunDetail,
-  WorkflowControlAction,
-  WorkflowControlResult,
   SessionRuntimeInfo,
-  SessionRuntimeCloseResult,
-  SessionLaunchTaskOptions,
   WorkspaceActivationIntent,
-  GitConveyorStatus,
-  GitConveyorCommitOptions,
-  GitConveyorPullRequestOptions,
-  GitConveyorPullRequestResult,
+  FileChangeEvent,
+  CouncilProgressEvent,
+  TerminalExitEvent,
 } from './ipc-contracts'
-import type { ThemeFile } from './theme/theme-file'
 
 // ─── HTTP Bridge Client ─────────────────────────────────────────────────────
 
@@ -87,10 +33,12 @@ const WS_BASE = '' // relative to the web server origin
  * WebSocket connection for event subscriptions.
  */
 export function createHttpBridge(): PiDesktopAPI {
-  const subscriptions = new Map<string, Array<(...args: unknown[]) => void>>()
+  type SubscriptionEntry = { ws: WebSocket; handler: (event: MessageEvent) => void }
+  const subscriptions = new Map<string, SubscriptionEntry[]>()
 
   // ── Helper: HTTP POST to /api/<channel> ────────────────────────────────
-  async function invoke(channel: string, ...args: unknown[]): Promise<unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function invoke(channel: string, ...args: unknown[]): Promise<any> {
     const body = args.length === 1 ? args[0] : args
     const res = await fetch(`${BASE}/api/${channel}`, {
       method: 'POST',
@@ -112,11 +60,14 @@ export function createHttpBridge(): PiDesktopAPI {
       callback(data)
     }
     ws.addEventListener('message', handler)
-    subscriptions.set(channel, [...(subscriptions.get(channel) || []), { ws, handler }])
+    const entry: SubscriptionEntry = { ws, handler }
+    const existing = subscriptions.get(channel) || []
+    existing.push(entry)
+    subscriptions.set(channel, existing)
     return () => {
       const subs = subscriptions.get(channel)
       if (subs) {
-        const idx = subs.findIndex((s) => s.handler === handler)
+        const idx = subs.indexOf(entry)
         if (idx >= 0) subs.splice(idx, 1)
         ws.close()
       }
@@ -125,103 +76,103 @@ export function createHttpBridge(): PiDesktopAPI {
 
   // ── Pi process lifecycle ───────────────────────────────────────────────
   const pi = {
-    start: (options) => invoke('pi:start', options) as Promise<PiStatus>,
-    stop: () => invoke('pi:stop') as Promise<PiStatus>,
-    restart: (options) => invoke('pi:restart', options) as Promise<PiStatus>,
-    getStatus: () => invoke('pi:status') as Promise<PiStatus>,
-    detectInstallations: (options) => invoke('pi:detect-installations', options) as Promise<AgentInstallationsResult>,
+    start: (options?: Parameters<PiDesktopAPI['pi']['start']>[0]) => invoke('pi:start', options),
+    stop: () => invoke('pi:stop'),
+    restart: (options?: Parameters<PiDesktopAPI['pi']['restart']>[0]) => invoke('pi:restart', options),
+    getStatus: () => invoke('pi:status'),
+    detectInstallations: (options?: Parameters<PiDesktopAPI['pi']['detectInstallations']>[0]) => invoke('pi:detect-installations', options),
   }
 
   // ── Pi commands ────────────────────────────────────────────────────────
   const commands = {
-    prompt: (message, options) => invoke('pi:prompt', message, options),
-    steer: (message, images) => invoke('pi:steer', message, images),
-    followUp: (message) => invoke('pi:follow-up', message),
+    prompt: (message: string, options?: { images?: unknown[]; streamingBehavior?: string }) => invoke('pi:prompt', message, options),
+    steer: (message: string, images?: unknown[]) => invoke('pi:steer', message, images),
+    followUp: (message: string) => invoke('pi:follow-up', message),
     abort: () => invoke('pi:abort'),
-    bash: (command) => invoke('pi:bash', command),
+    bash: (command: string) => invoke('pi:bash', command),
     abortBash: () => invoke('pi:abort-bash'),
   }
 
   // ── Session management ─────────────────────────────────────────────────
   const session = {
     createNew: () => invoke('session:new'),
-    launchTask: (options) => invoke('session:launch-task', options),
-    closeRuntime: (runtimeId) => invoke('session:close-runtime', runtimeId),
-    switch: (sessionPath, cwd) => invoke('session:switch', sessionPath, cwd),
+    launchTask: (options: Parameters<PiDesktopAPI['session']['launchTask']>[0]) => invoke('session:launch-task', options),
+    closeRuntime: (runtimeId: string) => invoke('session:close-runtime', runtimeId),
+    switch: (sessionPath: string, cwd?: string) => invoke('session:switch', sessionPath, cwd),
     listRuntimes: () => invoke('session:list-runtimes'),
-    fork: (entryId) => invoke('session:fork', entryId),
+    fork: (entryId?: string) => invoke('session:fork', entryId),
     clone: () => invoke('session:clone'),
-    list: (cwd) => invoke('session:list', cwd),
-    listAll: (cwd) => invoke('session:list-all', cwd),
+    list: (cwd?: string) => invoke('session:list', cwd),
+    listAll: (cwd?: string) => invoke('session:list-all', cwd),
     getState: () => invoke('session:get-state'),
     getMessages: () => invoke('session:get-messages'),
     getStats: () => invoke('session:get-stats'),
-    setName: (name) => invoke('session:set-name', name),
-    exportHtml: (outputPath) => invoke('session:export-html', outputPath),
+    setName: (name: string) => invoke('session:set-name', name),
+    exportHtml: (outputPath?: string) => invoke('session:export-html', outputPath),
     getForkMessages: () => invoke('session:get-fork-messages'),
-    delete: (sessionPath) => invoke('session:delete', sessionPath),
-    archive: (sessionId) => invoke('session:archive', sessionId),
-    unarchive: (sessionId) => invoke('session:unarchive', sessionId),
+    delete: (sessionPath: string) => invoke('session:delete', sessionPath),
+    archive: (sessionId: string) => invoke('session:archive', sessionId),
+    unarchive: (sessionId: string) => invoke('session:unarchive', sessionId),
     listArchived: () => invoke('session:list-archived'),
     getLineage: () => invoke('session:get-lineage'),
-    compact: (customInstructions) => invoke('session:compact', customInstructions),
+    compact: (customInstructions?: string) => invoke('session:compact', customInstructions),
   }
 
   // ── Model management ───────────────────────────────────────────────────
   const model = {
-    set: (provider, modelId) => invoke('model:set', provider, modelId),
+    set: (provider: string, modelId: string) => invoke('model:set', provider, modelId),
     cycle: () => invoke('model:cycle'),
     listAvailable: () => invoke('model:list-available'),
   }
 
   // ── Thinking ───────────────────────────────────────────────────────────
   const thinking = {
-    setLevel: (level) => invoke('thinking:set-level', level),
+    setLevel: (level: string) => invoke('thinking:set-level', level),
     cycleLevel: () => invoke('thinking:cycle-level'),
   }
 
   // ── Settings ───────────────────────────────────────────────────────────
   const settings = {
     getAll: () => invoke('settings:get-all'),
-    save: (settings) => invoke('settings:save', settings),
+    save: (s: Parameters<PiDesktopAPI['settings']['save']>[0]) => invoke('settings:save', s),
   }
 
   // ── Permission rules ───────────────────────────────────────────────────
   const permissionRules = {
-    get: (scope) => invoke('permission-rules:get', scope),
-    set: (scope, rules) => invoke('permission-rules:set', scope, rules),
+    get: (scope: Parameters<PiDesktopAPI['permissionRules']['get']>[0]) => invoke('permission-rules:get', scope),
+    set: (scope: Parameters<PiDesktopAPI['permissionRules']['set']>[0], rules: Parameters<PiDesktopAPI['permissionRules']['set']>[1]) => invoke('permission-rules:set', scope, rules),
     importFromFile: () => invoke('permission-rules:import'),
-    exportToFile: (rules) => invoke('permission-rules:export', rules),
+    exportToFile: (rules: Parameters<PiDesktopAPI['permissionRules']['exportToFile']>[0]) => invoke('permission-rules:export', rules),
     workspaceStatus: () => invoke('permission-rules:workspace-status'),
     removeWorkspace: () => invoke('permission-rules:remove-workspace'),
-    setWorkspaceTrust: (trusted) => invoke('permission-rules:set-workspace-trust', trusted),
+    setWorkspaceTrust: (trusted: boolean) => invoke('permission-rules:set-workspace-trust', trusted),
   }
 
   // ── Themes ─────────────────────────────────────────────────────────────
   const themes = {
     list: () => invoke('themes:list'),
-    save: (file, existingId) => invoke('themes:save', file, existingId),
-    delete: (id) => invoke('themes:delete', id),
-    installFromUrl: (url) => invoke('themes:install-from-url', url),
-    export: (file) => invoke('themes:export', file),
+    save: (file: Parameters<PiDesktopAPI['themes']['save']>[0], existingId?: string) => invoke('themes:save', file, existingId),
+    delete: (id: string) => invoke('themes:delete', id),
+    installFromUrl: (url: string) => invoke('themes:install-from-url', url),
+    export: (file: Parameters<PiDesktopAPI['themes']['export']>[0]) => invoke('themes:export', file),
     import: () => invoke('themes:import'),
     gallery: () => invoke('themes:gallery-list'),
-    galleryImage: (url) => invoke('themes:gallery-image', url),
+    galleryImage: (url: string) => invoke('themes:gallery-image', url),
   }
 
   // ── Workspace management ───────────────────────────────────────────────
   const workspace = {
     list: () => invoke('workspace:list'),
-    create: (name, path) => invoke('workspace:create', name, path),
-    remove: (workspaceId) => invoke('workspace:remove', workspaceId),
-    rename: (workspaceId, name) => invoke('workspace:rename', workspaceId, name),
-    changePath: (workspaceId, newPath) => invoke('workspace:change-path', workspaceId, newPath),
+    create: (name: string, path: string) => invoke('workspace:create', name, path),
+    createTab: (options?: Parameters<PiDesktopAPI['workspace']['createTab']>[0]) => invoke('workspace:create-tab', options),
+    remove: (workspaceId: string) => invoke('workspace:remove', workspaceId),
+    rename: (workspaceId: string, name: string) => invoke('workspace:rename', workspaceId, name),
+    changePath: (workspaceId: string, newPath: string) => invoke('workspace:change-path', workspaceId, newPath),
     pathExists: () => invoke('workspace:path-exists'),
-    setActive: (workspaceId) => invoke('workspace:set-active', workspaceId),
+    setActive: (workspaceId: string) => invoke('workspace:set-active', workspaceId),
     getActive: () => invoke('workspace:get-active'),
-    startPi: (workspaceId, options) => invoke('workspace:start-pi', workspaceId, options),
-    stopPi: (workspaceId) => invoke('workspace:stop-pi', workspaceId),
-    createTab: (options) => invoke('workspace:create-tab', options),
+    startPi: (workspaceId: string, options?: Parameters<PiDesktopAPI['workspace']['startPi']>[1]) => invoke('workspace:start-pi', workspaceId, options),
+    stopPi: (workspaceId: string) => invoke('workspace:stop-pi', workspaceId),
     getActivity: () => invoke('workspace:activity'),
     takePendingActivation: () => invoke('workspace:take-pending-activation'),
   }
@@ -229,24 +180,26 @@ export function createHttpBridge(): PiDesktopAPI {
   // ── Package management ─────────────────────────────────────────────────
   const packages = {
     listInstalled: () => invoke('package:list-installed'),
-    install: (spec) => invoke('package:install', spec),
-    remove: (spec) => invoke('package:remove', spec),
-    update: (spec) => invoke('package:update', spec),
-    fetchCatalog: (query) => invoke('package:catalog-fetch', query),
+    install: (spec: string) => invoke('package:install', spec),
+    remove: (spec: string) => invoke('package:remove', spec),
+    update: (spec?: string) => invoke('package:update', spec),
+    updateAll: () => invoke('package:update-all'),
+    checkUpdates: () => invoke('package:check-updates'),
+    fetchCatalog: (query?: string) => invoke('package:catalog-fetch', query),
   }
 
   // ── Models config ──────────────────────────────────────────────────────
   const models = {
     read: () => invoke('models:read'),
-    write: (config) => invoke('models:write', config),
+    write: (config: Parameters<PiDesktopAPI['models']['write']>[0]) => invoke('models:write', config),
   }
 
   // ── Council ────────────────────────────────────────────────────────────
   const council = {
     detect: () => invoke('council:detect'),
-    runConsultants: (payload) => invoke('council:run-consultants', payload),
-    arbiter: (payload) => invoke('council:arbiter', payload),
-    onProgress: (callback) => subscribe('event:council-progress', callback as (...args: unknown[]) => void),
+    runConsultants: (payload: Parameters<PiDesktopAPI['council']['runConsultants']>[0]) => invoke('council:run-consultants', payload),
+    arbiter: (payload: Parameters<PiDesktopAPI['council']['arbiter']>[0]) => invoke('council:arbiter', payload),
+    onProgress: (callback: (event: CouncilProgressEvent) => void) => subscribe('event:council-progress', callback as (...args: unknown[]) => void),
   }
 
   // ── Skills, Commands, MCP, Tags ────────────────────────────────────────
@@ -254,54 +207,54 @@ export function createHttpBridge(): PiDesktopAPI {
   const piCommands = { list: () => invoke('commands:list') }
   const mcpServers = { list: () => invoke('mcp:servers-list') }
   const tags = {
-    get: (sessionId) => invoke('tag:get', sessionId),
-    set: (sessionId, tags) => invoke('tag:set', sessionId, tags),
-    add: (sessionId, tag) => invoke('tag:add', sessionId, tag),
-    remove: (sessionId, tag) => invoke('tag:remove', sessionId, tag),
+    get: (sessionId: string) => invoke('tag:get', sessionId),
+    set: (sessionId: string, tags: string[]) => invoke('tag:set', sessionId, tags),
+    add: (sessionId: string, tag: string) => invoke('tag:add', sessionId, tag),
+    remove: (sessionId: string, tag: string) => invoke('tag:remove', sessionId, tag),
     getAll: () => invoke('tag:get-all'),
     getAllUsed: () => invoke('tag:get-all-used'),
     autoGetAll: () => invoke('tag:auto-get-all'),
-    autoEnsure: (sessions) => invoke('tag:auto-ensure', sessions),
-    autoRemove: (sessionId) => invoke('tag:auto-remove', sessionId),
+    autoEnsure: (sessions: Array<{ sessionId: string; path: string }>) => invoke('tag:auto-ensure', sessions),
+    autoRemove: (sessionId: string) => invoke('tag:auto-remove', sessionId),
   }
 
   // ── Git conveyor ───────────────────────────────────────────────────────
   const git = {
     status: () => invoke('git:conveyor-status'),
-    commit: (options) => invoke('git:conveyor-commit', options),
+    commit: (options: Parameters<PiDesktopAPI['git']['commit']>[0]) => invoke('git:conveyor-commit', options),
     push: () => invoke('git:conveyor-push'),
-    createPullRequest: (options) => invoke('git:conveyor-create-pr', options),
+    createPullRequest: (options: Parameters<PiDesktopAPI['git']['createPullRequest']>[0]) => invoke('git:conveyor-create-pr', options),
   }
 
   // ── Notes ──────────────────────────────────────────────────────────────
   const notes = {
     list: () => invoke('notes:list'),
-    create: (input) => invoke('notes:create', input),
-    update: (id, patch) => invoke('notes:update', id, patch),
-    remove: (id) => invoke('notes:remove', id),
+    create: (input: Parameters<PiDesktopAPI['notes']['create']>[0]) => invoke('notes:create', input),
+    update: (id: string, patch: Parameters<PiDesktopAPI['notes']['update']>[1]) => invoke('notes:update', id, patch),
+    remove: (id: string) => invoke('notes:remove', id),
   }
 
   // ── File operations ────────────────────────────────────────────────────
   const files = {
-    getTree: (maxDepth) => invoke('file:tree', maxDepth),
-    search: (query) => invoke('file:search', query),
-    searchContent: (query) => invoke('file:search-content', query),
-    read: (path) => invoke('file:read', path),
-    readAttachment: (path) => invoke('file:read-attachment', path),
-    write: (path, content) => invoke('file:write', path, content),
-    getDiff: (filePath) => invoke('file:diff', filePath),
-    getStagedDiff: (filePath) => invoke('file:staged-diff', filePath),
+    getTree: (maxDepth?: number) => invoke('file:tree', maxDepth),
+    search: (query: string) => invoke('file:search', query),
+    searchContent: (query: string) => invoke('file:search-content', query),
+    read: (path: string) => invoke('file:read', path),
+    readAttachment: (path: string) => invoke('file:read-attachment', path),
+    write: (path: string, content: string) => invoke('file:write', path, content),
+    getDiff: (filePath?: string) => invoke('file:diff', filePath),
+    getStagedDiff: (filePath?: string) => invoke('file:staged-diff', filePath),
     getGitStatus: () => invoke('git:status'),
     getGitBranch: () => invoke('git:branch'),
   }
 
   // ── System ─────────────────────────────────────────────────────────────
   const system = {
-    openDialog: (options) => invoke('system:open-dialog', options),
-    getPath: (name) => invoke('system:get-path', name),
-    getPathForFile: (_file) => '', // NOT PORTABLE: requires webUtils.getPathForFile
-    pathKind: (path) => invoke('system:path-kind', path),
-    openExternal: (url) => invoke('system:open-external', url),
+    openDialog: (options?: Parameters<PiDesktopAPI['system']['openDialog']>[0]) => invoke('system:open-dialog', options),
+    getPath: (name: string) => invoke('system:get-path', name),
+    getPathForFile: (_file: File) => '', // NOT PORTABLE: requires webUtils.getPathForFile
+    pathKind: (path: string) => invoke('system:path-kind', path),
+    openExternal: (url: string) => invoke('system:open-external', url),
     hallUrl: () => invoke('system:hall-url'),
     getVersion: () => invoke('system:get-version'),
     get platform() { return 'linux' as NodeJS.Platform }, // stub: web has no process.platform
@@ -315,9 +268,9 @@ export function createHttpBridge(): PiDesktopAPI {
   // ── Workflow run monitoring ────────────────────────────────────────────
   const workflows = {
     list: () => invoke('workflow:list'),
-    getRun: (workspaceId, runId) => invoke('workflow:get-run', workspaceId, runId),
-    control: (workspaceId, runId, action) => invoke('workflow:control', workspaceId, runId, action),
-    setPersistAgentSessions: (enabled) => invoke('workflow:set-persistence', enabled),
+    getRun: (workspaceId: string, runId: string) => invoke('workflow:get-run', workspaceId, runId),
+    control: (workspaceId: string, runId: string, action: Parameters<PiDesktopAPI['workflows']['control']>[2]) => invoke('workflow:control', workspaceId, runId, action),
+    setPersistAgentSessions: (enabled: boolean) => invoke('workflow:set-persistence', enabled),
   }
 
   // ── Diagnostics ────────────────────────────────────────────────────────
@@ -330,25 +283,30 @@ export function createHttpBridge(): PiDesktopAPI {
     check: () => invoke('update:check'),
   }
 
+  // ── i18n environment ───────────────────────────────────────────────────
+  const i18n = {
+    getEnvironment: () => invoke('i18n:get-environment'),
+  }
+
   // ── Terminal ───────────────────────────────────────────────────────────
   const terminal = {
-    start: (options) => invoke('terminal:start', options),
-    input: (data) => invoke('terminal:input', data),
-    resize: (cols, rows) => invoke('terminal:resize', { cols, rows }),
+    start: (options?: Parameters<PiDesktopAPI['terminal']['start']>[0]) => invoke('terminal:start', options),
+    input: (data: string) => invoke('terminal:input', data),
+    resize: (cols: number, rows: number) => invoke('terminal:resize', { cols, rows }),
     stop: () => invoke('terminal:stop'),
-    onData: (callback) => subscribe('event:terminal-data', callback as (...args: unknown[]) => void),
-    onExit: (callback) => subscribe('event:terminal-exit', callback as (...args: unknown[]) => void),
+    onData: (callback: (data: string) => void) => subscribe('event:terminal-data', callback as (...args: unknown[]) => void),
+    onExit: (callback: (event: TerminalExitEvent) => void) => subscribe('event:terminal-exit', callback as (...args: unknown[]) => void),
   }
 
   // ── Extension UI responses ─────────────────────────────────────────────
   const ui = {
-    respondSelect: (id, value) => invoke('ui:select-response', id, value),
-    respondConfirm: (id, confirmed) => invoke('ui:confirm-response', id, confirmed),
-    respondInput: (id, value) => invoke('ui:input-response', id, value),
-    respondEditor: (id, value) => invoke('ui:editor-response', id, value),
-    flushPendingPrompts: (workspaceId) => invoke('ui:pending-flush', workspaceId),
+    respondSelect: (id: string, value: string) => invoke('ui:select-response', id, value),
+    respondConfirm: (id: string, confirmed: boolean) => invoke('ui:confirm-response', id, confirmed),
+    respondInput: (id: string, value: string) => invoke('ui:input-response', id, value),
+    respondEditor: (id: string, value: string) => invoke('ui:editor-response', id, value),
+    flushPendingPrompts: (workspaceId: string) => invoke('ui:pending-flush', workspaceId),
     getPendingPrompts: () => invoke('ui:pending-get'),
-    setEditorDirty: (_dirty, _fileName) => {
+    setEditorDirty: (_dirty: boolean, _fileName: string | null) => {
       // NOT PORTABLE: requires ipcRenderer.send (fire-and-forget IPC)
       // The web server tracks dirty state via a separate endpoint
     },
@@ -376,7 +334,7 @@ export function createHttpBridge(): PiDesktopAPI {
     pi, commands, session, model, thinking, settings, permissionRules,
     themes, workspace, packages, models, council, skills, piCommands,
     mcpServers, tags, git, notes, files, system, activity, workflows,
-    diagnostics, updates, terminal, ui,
+    diagnostics, updates, i18n, terminal, ui,
     onEvent, onPendingPrompts, onWorkspaceActivity, onSessionRuntime,
     onActivateWorkspace, onFileChange, onMenuAction,
   }

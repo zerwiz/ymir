@@ -110,7 +110,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
     },
   ];
 
-  // Re-scope the platform crew to the active realm, and swap the primary house.
+  // Re-scope the platform Eindri to the active realm, and swap the primary house.
   return base.map((a) =>
     a.id === 'brokk' || a.id === 'kaia'
       ? { ...a, realm, house: realm === 'zerwiz' ? 'muninn' : realm === 'craig' ? 'brokkforge' : a.house }
@@ -153,7 +153,7 @@ export function seedTasks(realm: RealmId): Task[] {
       artifacts: ['services/heimdall/oauth.ts'],
       log: [
         'GitHub App client id resolved from .env.local',
-        'awaiting: callback URL from the captain',
+        'awaiting: callback URL from the Allfather',
         'well recall: 3 prior auth episodes found (hybrid, 0.81)',
       ],
     },

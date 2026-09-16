@@ -11,8 +11,8 @@ the structure migrations below.
 ## Structure migrations (old homes heal forward)
 
 Versioned, idempotent scripts in `.agents/migrations/` transform an older home
-into the current layout (e.g. `0001-hodd-layout` moves private material into
-`hodd/`).
+into the current layout (e.g. `0001-ymir-home` moves private material into
+`$YMIR_HOME`).
 
 ```bash
 bin/ymir-migrate.sh status            # what exists / what is applied
@@ -49,7 +49,7 @@ move into it; do not try to reconcile the histories.
 |---|---|
 | `.env.local`, `state/`, `data/` | secrets and runtime state — the home cannot boot without them |
 | the realm tree, `workspace/` | the operator's private world (untracked by design) |
-| `hodd/` | the private hoard — untracked on every clone, by law |
+| `YMIR_HOME` | the private hoard — committed to the private git repo, shareable |
 | local-only branches | **anything never pushed exists only here.** Check with `git branch` and compare against `git branch -r` |
 | `.yggdrasil/` worktrees | each is registered by **absolute path** to this home's `.git` |
 | `node_modules` | rebuildable — see `installation.md` for the postinstall trap |

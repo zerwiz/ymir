@@ -4,6 +4,15 @@ Copyright 2026 zerwiz
 This product includes software developed by the Ymir project
 (https://github.com/zerwiz/ymir).
 
+Provenance — firstmate
+Ymir is a Norse-named derivative of the "firstmate" agent distro
+(https://github.com/kunchenguid/firstmate), Copyright (c) kunchenguid and
+contributors, licensed under the MIT License
+(https://github.com/kunchenguid/firstmate/blob/main/LICENSE). Portions of this
+product are derived from firstmate; its copyright and permission notice are
+retained here as that license requires. Firstmate's own names survive only as
+provenance (see .agents/skills/galdr-ymirsystem/assets/porting-upstream-to-norse.md).
+
 Licensed under the Apache License, Version 2.0 (see LICENSE).
 
 --------------------------------------------------------------------------
@@ -28,12 +37,14 @@ MIT
   oh-my-pi             https://github.com/can1357/oh-my-pi
                        prior art for the pi surface (studied)
 
-  firstmate            https://github.com/kunchenguid/firstmate
-                       the fleet — one agent, a crew
-  axi                  https://github.com/kunchenguid/axi
-                       agent-ergonomics design principles
-  lavish-axi           https://github.com/kunchenguid/lavish-axi
-                       the HTML-artifact editor (Lavish)
+   firstmate            https://github.com/kunchenguid/firstmate
+                        the fleet — one agent, a crew
+   axi                  https://github.com/kunchenguid/axi
+                        agent-ergonomics design principles
+   lavish-axi           https://github.com/kunchenguid/lavish-axi
+                        the HTML-artifact editor (Lavish)
+   SkillOpt             https://github.com/zerwiz/SkillOpt
+                        **Gunnlöð** — skill optimization (MIT, © zerwiz)
 
 Apache License 2.0
   pi-desktop           https://github.com/FaqFirebase/pi-desktop  (v0.1.7-alpha,

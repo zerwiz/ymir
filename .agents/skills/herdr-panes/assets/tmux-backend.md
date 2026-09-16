@@ -1,6 +1,6 @@
 # tmux runtime backend
 
-tmux is Firstmate's verified reference runtime backend and the fully supported baseline for secondmate homes.
+tmux is Brokk's verified reference runtime backend and the fully supported baseline for Eindri-homes.
 [`configuration.md`](configuration.md#runtime-backend-configbackend--fm_backend) owns shared backend selection and metadata semantics.
 
 ## Setup
@@ -9,12 +9,12 @@ Install tmux with `brew install tmux` or your platform package manager.
 The universal harness and toolchain requirements are in [`configuration.md`](configuration.md#toolchain).
 
 tmux is the hard default when no explicit setting or runtime auto-detection selects another backend.
-Select it explicitly with local `config/backend` containing `tmux`, with `FM_BACKEND=tmux` for one launch, or by asking Firstmate to use tmux.
+Select it explicitly with local `config/backend` containing `tmux`, with `FM_BACKEND=tmux` for one launch, or by asking Brokk to use tmux.
 An explicit selection is also the opt-out from Herdr or cmux runtime auto-detection.
 
 No provisioning is required before the first task.
 
-## Watching the crew
+## Watching the Eindri
 
 For the best visible experience, launch the primary harness inside a tmux session:
 
@@ -22,9 +22,9 @@ For the best visible experience, launch the primary harness inside a tmux sessio
 tmux new -s firstmate
 ```
 
-Crew tasks become windows in that session.
+Eindri tasks become windows in that session.
 `tmux display-message -p '#S'` prints its name.
-If the primary harness runs outside tmux, Firstmate creates or reuses a detached session named `firstmate`:
+If the primary harness runs outside tmux, Brokk creates or reuses a detached session named `firstmate`:
 
 ```sh
 tmux attach -t firstmate
@@ -62,7 +62,7 @@ Direct executable identities `pi`, `pi-signed`, and `Pi` remain accepted exactly
 Muse is likewise anchored to the exact `muse` launcher identity or the installed `muse-bin-<version>` prefix, so unrelated names such as `musescore` and `amuse` remain ambiguous.
 Cursor is identified from its exact `cursor-agent` identity or versioned install tree in the foreground process path or structured argv[0]; a bare `node` or unrelated `agent` remains ambiguous.
 
-The CI-enforced portable regression and opt-in real-harness drift guard follow the split owned by `.agents/skills/firstmate-coding-guidelines/SKILL.md`.
+The CI-enforced portable regression and opt-in real-harness drift guard follow the split owned by `.agents/skills/galdr-ymirsystem/SKILL.md`.
 Run the real-harness guard after any harness upgrade and before trusting refreshed evidence.
 
 ### Composer, busy state, and delivery
@@ -98,7 +98,7 @@ Without that baseline, an `unknown` verdict is preserved untouched, so a busy-lo
 
 ## Limits and regression entry points
 
-- tmux is the reference path and supports secondmate homes.
+- tmux is the reference path and supports Eindri-homes.
 
 ```sh
 tests/fm-backend-tmux-smoke.test.sh

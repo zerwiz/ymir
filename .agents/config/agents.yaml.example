@@ -14,7 +14,7 @@ version: 1
 harness:
   local: pi              # a model on a local provider runs through pi
   online: opencode       # a hosted model runs through opencode
-  local_providers: [llama.cpp, llama-cpp, lmstudio]
+  local_providers: [llama.cpp, llama-cpp, lmstudio, apodex]
   # The same local server is named differently per harness; translate on the way.
   providers:
     llama.cpp: { pi: llama-cpp }
@@ -34,6 +34,12 @@ providers:
       # A local llama.cpp router needs the EXACT served id (the @quant suffix);
       # `apply` resolves the bare alias below to the id the server reports.
       - frontend-design-expert-8b
+  apodex:
+    npm: "@ai-sdk/openai-compatible"
+    name: "apodex-mini (local)"
+    base_url: "http://127.0.0.1:1234/v1"
+    models:
+      - apodex-1.0-mini
 
 # agent name -> { model, harness?, primary? }. Omit model to inherit
 # default_model. Omit harness to follow the local/online rule above.
@@ -45,12 +51,22 @@ agents:
   hnoss:   { model: "llama.cpp/frontend-design-expert-8b", primary: true }
   sindri:  { model: opencode-go/deepseek-v4.1-flash }
   bragi:   { model: opencode-go/deepseek-v4.1-flash }
-  huginn:  { model: opencode-go/deepseek-v4.1-flash }
+  huginn:  { model: "apodex/apodex-1.0-mini" }
   kvasir:  { model: opencode-go/deepseek-v4.1-flash }
   mimir:   { model: opencode-go/deepseek-v4.1-flash }
   snotra:  { model: opencode-go/deepseek-v4.1-flash }
   forseti: { model: opencode-go/deepseek-v4.1-flash }
   galdr:   { model: opencode-go/deepseek-v4.1-flash }
+  tyr:     { model: opencode-go/deepseek-v4.1-flash }
+  saga:    { model: opencode-go/deepseek-v4.1-flash }
+  muninn:  { model: opencode-go/deepseek-v4.1-flash }
+  urdh:    { model: opencode-go/deepseek-v4.1-flash }
+  frigg:   { model: opencode-go/deepseek-v4.1-flash }
+  vor:     { model: opencode-go/deepseek-v4.1-flash }
+  syn:     { model: opencode-go/deepseek-v4.1-flash }
+  jord:    { model: opencode-go/deepseek-v4.1-flash }
+  groa:    { model: opencode-go/deepseek-v4.1-flash }
+  volundr: { model: opencode-go/deepseek-v4.1-flash }
 
 # How many LOCAL models this machine may run at once (most boxes: 1).
 local_concurrency: 1

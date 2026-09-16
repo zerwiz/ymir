@@ -5,18 +5,20 @@ AGENTS.md loads this when a task needs the live inventories.
 ## Skills registry (`.agents/skills/`)
 
 ```
-skills[5]{name,norse,purpose,path,status}:
-  "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer",".agents/skills/galdr-cli/SKILL.md","live"
+skills[3]{name,norse,purpose,path,status}:
+  "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer",".agents/skills/galdr-ymirsystem/SKILL.md","live"
   "tyr-check","Tyr","the judge — 10 principles + runtime gates",".agents/skills/tyr-check/SKILL.md","live"
-  "brokk-craft","Brokk","the forger — generates Galdr-compliant skills in TOON","(planned) .agents/skills/galdr-cli/brokk-craft/SKILL.md","planned"
-  "galdr-compliance","(legacy)","older compliance checker — superseded by tyr-check",".agents/skills/galdr-cli/galdr-compliance/SKILL.md","legacy"
-  "galdr-crafter","(legacy)","older skill crafter — superseded by brokk-craft",".agents/skills/galdr-cli/galdr-crafter/SKILL.md","legacy"
+  "brokk-craft","Brokk","the forger — generates Galdr-compliant skills in TOON","(planned) .agents/skills/brokk-craft/SKILL.md","planned"
 ```
+
+The **canonical, complete** skill index is `.agents/skills/README.md` — read it for
+the live set. The two removed legacy skills (`galdr-compliance`, `galdr-crafter`)
+are superseded by `tyr-check` and the planned `brokk-craft`; their files are gone.
 
 Loading: auto-load from `.agents/skills/` via `opencode.json` →
 `skills.paths: [".agents/skills"]`. Use `skill galdr`, `skill tyr-check`.
 
-## Galdr assets (`.agents/skills/galdr-cli/assets/`)
+## Galdr assets (`.agents/skills/galdr-ymirsystem/assets/`)
 
 ```
 galdr_assets[6]{path,load_when}:
@@ -36,12 +38,12 @@ Galdr scripts: `scripts/toon-check.py` (TOON validation) and
 ```
 assets[9]{asset,path,purpose}:
   "Eindri profiles",".agents/subagents/*.md","Sindri/Bragi/Huginn role profiles"
-  "Build tool categories",".agents/skills/galdr-cli/assets/build-tool-categories.md","tool categories for synthesis"
-  "TOON schemas",".agents/skills/galdr-cli/schemas/toon-schemas.md","schema types for validation"
-  "Compliance requirements",".agents/skills/galdr-cli/assets/runtime-compliance.md","runtime + Utgard gates"
-  "PI boot profile",".agents/skills/galdr-cli/assets/pi-boot/pi-profile.yml","PI harness profile"
-  "PI herdr profile",".agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml","pane layout / Þjazi"
-  "PI dispatch schema",".agents/skills/galdr-cli/assets/pi-boot/einherjar-spawn.schema.json","dispatch payload"
+  "Build tool categories",".agents/skills/galdr-ymirsystem/assets/build-tool-categories.md","tool categories for synthesis"
+  "TOON schemas",".agents/skills/galdr-ymirsystem/schemas/toon-schemas.md","schema types for validation"
+  "Compliance requirements",".agents/skills/galdr-ymirsystem/assets/runtime-compliance.md","runtime + Utgard gates"
+  "PI boot profile",".agents/skills/galdr-ymirsystem/assets/pi-boot/pi-profile.yml","PI harness profile"
+  "PI herdr profile",".agents/skills/galdr-ymirsystem/assets/pi-boot/herdr-profile.toml","pane layout / Þjazi"
+  "PI dispatch schema",".agents/skills/galdr-ymirsystem/assets/pi-boot/einherjar-spawn.schema.json","dispatch payload"
   "Templates",".agents/assets/templates/*","PRD, env, system-prompt boilerplate"
   "Tool manifest schema",".agents/assets/schemas/tool_manifest.json","tool manifest"
 ```
@@ -88,4 +90,4 @@ commands[4]{command,purpose}:
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Loaded by:** `AGENTS.md`. **Mirror:** `.agents/skills/galdr-cli/assets/registry.md`.
+- **Owner:** Brokk. **Loaded by:** `AGENTS.md`. **Mirror:** `.agents/skills/galdr-ymirsystem/assets/registry.md`.
