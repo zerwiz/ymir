@@ -252,3 +252,30 @@ ymir_expand_tilde() {  # expand a leading ~ in a user-supplied path
     *)     printf '%s' "$1" ;;
   esac
 }
+
+# ── isolation: is bwrap usable here? ─────────────────────────────────────────
+
+# True when bubblewrap can actually create the namespaces it needs. This is a
+# real probe, not a presence check: inside a hardened container (rootless Podman
+# Quadlet), nested user namespaces are often denied and bwrap fails with
+# "Creating new namespace failed: Operation not permitted". Callers must degrade,
+# never assume.
+ymir_bwrap_available() {
+  command -v bwrap >/dev/null 2>&1 || return 1
+  bwrap --unshare-all --die-with-parent --ro-bind / / true >/dev/null 2>&1
+}
+
+# True when Ymir itself is running inside a container (podman or docker).
+ymir_in_container() {
+  [ -e /run/.containerenv ] || [ -e /.dockerenv ] || [ -n "${container:-}" ]
+}
+
+# The isolation layers available here, outermost first. Prints a csv of any of
+# `container,bwrap,none` — the caller picks, never assumes bwrap.
+ymir_isolation_layers() {
+  local out=""
+  ymir_in_container && out="container"
+  if ymir_bwrap_available; then out="${out:+$out,}bwrap"; fi
+  [ -n "$out" ] || out="none"
+  printf '%s' "$out"
+}
