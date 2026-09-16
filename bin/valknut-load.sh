@@ -190,6 +190,17 @@ if [ "$MODE_PI" = 1 ]; then
   # Deploy the shared extensions into their single home. Copy, not link: a
   # broken link would silently disable a tool, and pi reads the file directly.
   # Idempotent — identical files are left untouched.
+  # The CONTRACT, deployed globally: pi reads an AGENTS.md from its agent home in
+  # every session, whatever the workspace. Without this, Sessrumnir (or any pi
+  # session) started in another project loads THAT project's rules and knows
+  # nothing of Ymir - no Brokk, no laws, no lore. Symlink, so the tree stays the
+  # single source and an update is picked up with no re-install.
+  if [ -d "$HOME/.pi/agent" ]; then
+    ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null \
+      && add pi-global-contract "$HOME/.pi/agent/AGENTS.md" "the Ymir contract, loaded in every pi session" \
+      || add pi-global-contract "$HOME/.pi/agent/AGENTS.md" "ERROR"
+  fi
+
   if [ -d "$PI_EXT_SRC" ]; then
     mkdir -p "$PI_EXT_HOME" 2>/dev/null
     dep_n=0
