@@ -1211,3 +1211,15 @@ tunnel as a local seat.
 Also mended in the same pass: `StatusChip` read `STATUS_META[status].tone`, and the
 fleet now reports a status it was never taught (`seated`), so an unknown status threw
 and killed the gate. An unknown status can no longer take a panel down.
+
+## 2026-09-17 — Glitnir stops hanging, and one process is one row
+
+- **`/api/reviews` ran two 60-second shell checks on every poll**, so the review board
+  hung for a minute and read as a dead surface. It is memoised for a minute now, the
+  same discipline the usage endpoint already follows: a board a human reads does not
+  need an answer fresher than its own usefulness.
+- **`/api/processes` returns the same id twice** — `systemd:dbus` arrives from two
+  sources, 45 entries for 44 processes. The panel dedupes by id, so a repeated process
+  renders as the one process it is, and React is no longer handed a duplicate key.
+  The duplicate at the source is recorded, not hidden.
+- `/api/stream` answers 200; the live stream is not broken, it was the window.
