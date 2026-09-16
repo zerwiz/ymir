@@ -157,14 +157,16 @@ case "$ACTION" in
     fi
     # Omarchy's own installer demands consent too (`--yes` to it). We already took
     # the Allfather's consent above, so pass it through.
-    if omarchy plugin add "$repo" --enable --yes >/tmp/omarchy-plugin-add.$$ 2>&1; then
-      rm -f /tmp/omarchy-plugin-add.$$
+    # Private tempfile (was a predictable /tmp/<name>.$$ path — a symlink/race risk).
+    log="$(mktemp)" || { printf 'error: could not create a temp file\n' >&2; exit 1; }
+    if omarchy plugin add "$repo" --enable --yes >"$log" 2>&1; then
+      rm -f "$log"
       printf 'omarchy-plugins[1]{id,state,repo}:\n  "%s","installed","%s"\n' "$id" "$repo"
     else
       printf 'omarchy-plugins[1]{id,state}:\n  "%s","install failed"\n' "$id"
       printf 'help: omarchy said:\n' >&2
-      tail -5 /tmp/omarchy-plugin-add.$$ >&2 2>/dev/null || true
-      rm -f /tmp/omarchy-plugin-add.$$
+      tail -5 "$log" >&2 2>/dev/null || true
+      rm -f "$log"
       exit 1
     fi
     ;;
