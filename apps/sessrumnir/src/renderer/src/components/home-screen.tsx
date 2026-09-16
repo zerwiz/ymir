@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSessionTitle } from '../utils/session-title'
 import { DEFAULT_AGENT_ENGINE_LABEL, agentEngineLabel } from '../../../shared/agent-engine-label'
-import { PI_DESKTOP_PRODUCT_NAME } from '../../../shared/product-name'
+import { SESSRUMNIR_PRODUCT_NAME } from '../../../shared/product-name'
 import piLogo from '../assets/pi-logo.svg'
 import { clsx } from 'clsx'
 import {
@@ -347,8 +347,8 @@ function HomeScreenInfo(): React.JSX.Element {
         <PiErrorBanner />
 
         <div className="mb-6 flex flex-col items-center text-center">
-          <img src={piLogo} alt={PI_DESKTOP_PRODUCT_NAME} className="h-16 w-16" />
-          <h1 className="mt-4 text-2xl font-semibold text-primary">{PI_DESKTOP_PRODUCT_NAME}</h1>
+          <img src={piLogo} alt={SESSRUMNIR_PRODUCT_NAME} className="h-16 w-16" />
+          <h1 className="mt-4 text-2xl font-semibold text-primary">{SESSRUMNIR_PRODUCT_NAME}</h1>
           <p className="mt-1 text-sm text-dim">{t('home.subtitle')}</p>
         </div>
 
