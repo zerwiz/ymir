@@ -1,7 +1,7 @@
 # `bin/` — what every file does
 
-Auto-generated from each script's header. One line per tool. `fm-*` files are
-ported from firstmate (the agent control plane); the rest are Ymir's own.
+Auto-generated from each script's header. One line per tool. Ported scripts are
+credited to the upstream `firstmate` distro (port record: `.agents/skills/galdr-cli/assets/porting-upstream-to-norse.md`); the rest are Ymir's own.
 
 bin[101]{file,does}:
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the two A2A MCP servers into the harnesses so"

@@ -894,7 +894,7 @@ async function reviews() {
   const failing = !lintOk || gates.some((g) => g.status !== 'PASS');
   cards.push({
     id: 'lint', number: 0, title: 'Brokk lint + compliance gate', repo: 'Ymir', author: 'brokk', realm: 'work',
-    // A gate with any failing check is never APPROVED — it awaits the captain's seal.
+    // A gate with any failing check is never APPROVED — it awaits the Allfather's seal.
     state: failing ? 'changes' : 'open',
     checks: [
       { name: 'lint', state: lintOk ? 'nominal' : 'down' },

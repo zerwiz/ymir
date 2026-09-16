@@ -486,6 +486,16 @@ component map lives in
 
 ---
 
+## Built on
+
+Ymir is a Norse-named derivative of the **firstmate** agent distro
+([github.com/kunchenguid/firstmate](https://github.com/kunchenguid/firstmate),
+MIT License, © kunchenguid). Ymir adopts and retargets firstmate's mechanism under
+its open-source-first law; upstream names survive only as provenance. See
+[`NOTICE`](NOTICE).
+
+---
+
 ## Docs
 
 - [`docs/lore.md`](docs/lore.md) — the mythos, realm by realm
