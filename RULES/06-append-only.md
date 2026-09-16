@@ -7,11 +7,11 @@ never truncated, never reordered — and **never lost in a move**.
 
 ```
 append_only[6]{artifact,why}:
-  "workspace/memory/runes_audit.md","the Runes ledger — each entry folds the previous checksum, so a rewritten line breaks every later line"
-  "docs/append-only-log.md","the decision log: what was decided, when, and why"
+  "$YMIR_HOME/memory/runes_audit.md","the Runes ledger — each entry folds the previous checksum, so a rewritten line breaks every later line"
+  "$YMIR_HOME/docs/append-only-log.md","the decision log: what was decided, when, and why"
   "CHANGELOG.md","chronological entries; Brokk appends and never rewrites"
   "RULES/*.md","house law: a rule that contradicts another is changed first, never silently edited"
-  "hodd/**","the private record — the operator's hoard, untracked on every clone"
+  "$YMIR_HOME/**","the private record — the operator's hoard, committed to the private git repo, never gitignored"
   "*.jsonl / branch outcomes / session logs","event streams; a re-run is a new file, not a shorter one"
 ```
 
@@ -43,11 +43,11 @@ So the check is explicit, and it is part of the move:
 
 ```bash
 # the append-only set must exist on both sides of a move
-for f in CHANGELOG.md docs/append-only-log.md workspace/memory/runes_audit.md; do
+for f in CHANGELOG.md docs/append-only-log.md; do
   [ -e "$f" ] || echo "MISSING append-only artifact: $f"
 done
-# and the private set must be in the hoard, not merely in the old home
-ls "$YMIR_HOARD/docs" "$YMIR_HOARD/identity" 2>/dev/null
+# and the private set must be in YMIR_HOME, not merely in the old home
+ls "$YMIR_HOME/docs" "$YMIR_HOME/identity" "$YMIR_HOME/data" 2>/dev/null
 ```
 
 A backup is only as good as its file list. If a directory is not named in the
