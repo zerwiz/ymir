@@ -2,24 +2,37 @@
 # a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every
 # agent can use the mesh, the memory well, and the control plane at once.
 #
-#   bin/a2a-mcp.sh install     # add a2abridge + engram (+wayofteams if present) to pi + opencode
-#   bin/a2a-mcp.sh show        # what is wired
+#   bin/a2a-mcp.sh install            # add a2abridge + engram (+wayofteams if present) to pi + opencode
+#   bin/a2a-mcp.sh install --project  # scoped: write the REPO's .pi/mcp.json + opencode.json, never ~/.pi
+#   bin/a2a-mcp.sh show [--project]   # what is wired, in the chosen scope
 #   bin/a2a-mcp.sh --version
+#
+# Scope: default writes Pi's GLOBAL MCP list (~/.pi/agent/mcp.json). `--project`
+# keeps everything inside the repo (`.pi/mcp.json` + `opencode.json`) so a Pi used
+# in other areas is left untouched — launch it with `pi --mcp-config .pi/mcp.json`
+# to pick the repo up.
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-PI_MCP="$HOME/.pi/agent/mcp.json"
 OC="$ROOT/opencode.json"
 A2AB="${A2ABRIDGE_BIN:-$HOME/.a2abridge/bin/a2abridge}"
 DIR="${A2A_DIRECTORY:-http://127.0.0.1:7777}"
 ADVERT="${A2A_ADVERTISE_HOST:-$(tailscale ip -4 2>/dev/null | head -1)}"
 [ -n "$ADVERT" ] || ADVERT="127.0.0.1"
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
-ACTION="${1:-show}"
+PROJECT=0; ACTION="show"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --project) PROJECT=1 ;;
+    -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+    -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) ACTION="$1" ;;
+  esac
+  shift
+done
+if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp.json"; else PI_MCP="$HOME/.pi/agent/mcp.json"; fi
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
 ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"

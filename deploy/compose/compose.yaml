@@ -18,9 +18,12 @@ services:
       # `:Z` relabels for SELinux hosts; harmless elsewhere.
       - ${YMIR_ROOT:-../..}:/opt/ymir:Z
     ports:
-      - "3888:3888"   # SPA
-      - "3889:3889"   # gate API
-      - "8437:8437"   # Smíðja visualizer
+      # Loopback-only (127.0.0.1) so Ymir is never exposed externally; 5-digit to
+      # avoid collisions on a shared host. Keep in step with HLIDSKJALF_PORT /
+      # HLIDSKJALF_API_PORT / SMIDJA_VIZ_API_PORT.
+      - "127.0.0.1:38888:38888"   # SPA
+      - "127.0.0.1:38889:38889"   # gate API
+      - "127.0.0.1:54370:54370"   # Smíðja visualizer
     env_file:
       - ${YMIR_ENV:-../../.env.local}
     environment:

@@ -106,12 +106,14 @@ step_prereqs() {
     [ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
     [ -x "$HOME/.local/bin/uv" ] && export PATH="$HOME/.local/bin:$PATH"
   fi
-  local miss=""
+  local miss="" engine
   for c in git python3 bun; do have "$c" || miss="$miss $c"; done
   python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1 || miss="$miss mcp<2"
-  have docker || miss="$miss docker"
+  # Docker or Podman — whichever this host has; never assume the binary name.
+  engine="$(ymir_container_engine_name 2>/dev/null || true)"
+  [ -n "$engine" ] || miss="$miss docker/podman"
   have gh || miss="$miss gh"
-  if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "git python3 bun docker gh mcp<2"; fi
+  if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "git python3 bun $engine gh mcp<2"; fi
   # The well engine: attempt to provision it rather than leaving a hint. engram
   # needs Python 3.12/3.13, so prereq-ensure installs it into a compatible
   # interpreter and records which one — the bridge then reuses it.
@@ -339,24 +341,27 @@ step_host() {
 
 # ── 4. sandbox image ─────────────────────────────────────────────────────────
 step_sandbox() {
-  if ! have docker; then add sandbox SKIP "docker absent"; return; fi
-  if docker image inspect utgard-runner:latest >/dev/null 2>&1; then
-    add sandbox OK "utgard-runner:latest present"
+  local engine; engine="$(ymir_container_engine_name 2>/dev/null || true)"
+  if [ -z "$engine" ]; then add sandbox SKIP "no container engine (docker/podman)"; return; fi
+  if "$engine" image inspect utgard-runner:latest >/dev/null 2>&1; then
+    add sandbox OK "utgard-runner:latest present ($engine)"
   elif [ "$CHECK" = 1 ]; then
     add sandbox WARN "utgard-runner:latest missing (run without --check)"
   else
-    # Distinguish "no daemon access" from "build failed" so the operator gets
+    # Distinguish "engine not reachable" from "build failed" so the operator gets
     # an actionable message instead of a blanket failure.
-    if ! docker info >/dev/null 2>&1; then
+    if ! "$engine" info >/dev/null 2>&1; then
       local who; who="$(id -un)"
-      if id -nG "$who" 2>/dev/null | grep -qw docker; then
+      if ymir_engine_is_podman 2>/dev/null; then
+        add sandbox WARN "rootless podman unreachable — ensure a login session (loginctl enable-linger) and XDG_RUNTIME_DIR are set"
+      elif id -nG "$who" 2>/dev/null | grep -qw docker; then
         add sandbox WARN "docker daemon unreachable — log out and back in so the docker group applies"
       else
         add sandbox WARN "docker permission denied — add $who to the docker group, then re-login"
       fi
       return
     fi
-    if "$SCRIPT_DIR/utgard.sh" build >/dev/null 2>&1; then add sandbox OK "utgard-runner:latest built"; else add sandbox WARN "image build failed (see docker)"; fi
+    if "$SCRIPT_DIR/utgard.sh" build >/dev/null 2>&1; then add sandbox OK "utgard-runner:latest built ($engine)"; else add sandbox WARN "image build failed (see $engine)"; fi
   fi
 }
 
