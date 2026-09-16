@@ -1,0 +1,58 @@
+{
+  "name": "@zerwiz/ymir",
+  "version": "0.1.5",
+  "description": "Ymir \u2014 the single-tenant agent operating system. Omarchy-first, host-aware, self-healing.",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/zerwiz/ymir",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zerwiz/ymir.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zerwiz/ymir/issues"
+  },
+  "keywords": [
+    "agent",
+    "agents",
+    "ymir",
+    "brokk",
+    "omarchy",
+    "wsl",
+    "a2a",
+    "mcp"
+  ],
+  "bin": {
+    "ymir": "bin/ymir.js",
+    "ymir-install": "bin/ymir-install.sh"
+  },
+  "files": [
+    "bin/",
+    ".agents/",
+    "scripts/",
+    "config/",
+    "RULES/",
+    "docs/",
+    "packaging/",
+    "AGENTS.md",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE",
+    "!**/node_modules/**"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "linux",
+    "darwin"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
+    "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
+    "prepublishOnly": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
+  }
+}

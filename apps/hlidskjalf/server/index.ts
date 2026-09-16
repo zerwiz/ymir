@@ -1544,8 +1544,45 @@ function cookieToken(req: Request): string {
   return m ? m[1] : '';
 }
 function isAuthed(req: Request): boolean {
+  if (isDesktopSeat(req)) return true;
   const t = cookieToken(req);
   return !!t && SESSIONS.has(t);
+}
+
+/** The peer address per request: Bun's Request has no socket, so it is recorded
+ *  at the top of the handler. */
+const REQUEST_IP = new WeakMap<Request, string>();
+
+/**
+ * The desktop seat (Electron) is local and trusted, so it is never asked to log
+ * in: the shell loads this app from 127.0.0.1 and its preload marks every
+ * request with `x-ymir-surface: desktop`. The marker alone proves nothing — a
+ * web caller could send the header too — so it is honoured ONLY when the request
+ * genuinely arrives over loopback, which a remote client never does. The web
+ * door keeps its lock.
+ */
+function isDesktopSeat(req: Request): boolean {
+  // A header where the client can set one; a query marker where it cannot —
+  // EventSource (the live Runes stream) sends no custom headers.
+  const marked =
+    (req.headers.get('x-ymir-surface') ?? '') === 'desktop' ||
+    new URL(req.url).searchParams.get('surface') === 'desktop';
+  if (!marked) return false;
+  const ip =
+    REQUEST_IP.get(req) ??
+    (req as Request & { socket?: { remoteAddress?: string } }).socket?.remoteAddress ??
+    '';
+  const bare = ip.startsWith('::ffff:') ? ip.slice('::ffff:'.length) : ip;
+  return bare === '127.0.0.1' || bare === '::1';
+}
+
+/** Who the gate says you are: the desktop seat wears the operator's own name. */
+function seatOf(req: Request): string {
+  if (isDesktopSeat(req)) {
+    const user = (GATE_AUTH || '').split(':')[0];
+    return user || 'operator';
+  }
+  return loginOf(req);
 }
 
 /** The login behind a request's session, if any. */
@@ -1705,9 +1742,12 @@ function serveStatic(pathname: string): Response {
 // revive one. That is the point — no bearer is kept at rest.
 const server = Bun.serve({
   port: PORT,
-  async fetch(req) {
+  async fetch(req, srv) {
     const url = new URL(req.url);
     const p = url.pathname;
+    // Bun's Request carries no socket; the peer address comes from the server.
+    // Recorded per request (a WeakMap, so concurrent requests cannot mix).
+    REQUEST_IP.set(req, srv.requestIP(req)?.address ?? '');
     try {
       if (p === '/api/login' && req.method === 'POST') {
         const b = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
@@ -1805,7 +1845,7 @@ const server = Bun.serve({
       if (p === '/api/session') {
         return json({
           authed: GATE_AUTH ? isAuthed(req) : true,
-          login: loginOf(req),
+          login: seatOf(req),
           // The login surface shows "create an account" only while a live invite
           // exists — a newcomer with a code can enter, and nobody else can.
           registration: invitesOpen(),

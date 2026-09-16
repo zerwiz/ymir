@@ -20,8 +20,8 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 STATE="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
 OUT="${1:-$ROOT/apps/odrerir/public/livehall.json}"
 
-runes_file="$ROOT/workspace/memory/runes_audit.md"
-PROJECTS_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/identity/projects.yaml"
+runes_file="${BROKK_RUNES_FILE:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/memory/runes_audit.md}"
+PROJECTS_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/identity/projects.yaml"
 projects_file="$PROJECTS_FILE"
 cron_file="$ROOT/config/cron.yaml"
 
