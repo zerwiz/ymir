@@ -69,7 +69,11 @@ if command -v uv >/dev/null 2>&1; then
       python3 -c '
 import os, sys
 from pathlib import Path
-sys.path.insert(0, str(Path.cwd() / "smidja"))
+root = Path.cwd()
+for sub in ("apps/smidja", "smidja"):
+    p = root / sub
+    if (p / "smidja_modules").is_dir():
+        sys.path.insert(0, str(p)); break
 from smidja_modules.tracer import Tracer
 db = os.environ["SMIDJA_BS_DB"]
 events = str(Path(db).parent / "sessions" / "bootstrap" / "events.jsonl")
