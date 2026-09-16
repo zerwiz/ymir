@@ -53,15 +53,37 @@ def live():
         # a task reads as "OC | <task>" in the pane title; keep it, it is the
         # agent's own word for what it is doing
         task = title.split("|", 1)[1].strip() if "|" in title else ""
+        # The UI's AgentCard shape, so the board RENDERS rather than carrying
+        # fields it does not know. Live facts come from the pane; the identity
+        # fields it cannot know (role, domain, model) stay honest and empty
+        # rather than invented - a card may show "-", never a false name.
+        status = {"working": "nominal", "idle": "nominal"}.get(state, "degraded")
         out.append({
             "id": p.get("pane_id", ""),
             "name": title.split("|")[0].strip() or agent or p.get("pane_id", ""),
-            "kind": agent or "unknown",
-            "state": state,
-            "pane": p.get("pane_id", ""),
-            "workspace": p.get("workspace_id", ""),
-            "cwd": cwd,
-            "task": task,
+            "role": agent or "agent",
+            "realm": "work",
+            "domain": "ymirlabs",
+            "status": status,
+            "capabilities": [],
+            "skills": [],
+            "interface": {
+                "protocol": "a2a/1.0",
+                "endpoint": "local://%s" % p.get("pane_id", ""),
+                "signed": False,
+            },
+            "model": "",
+            "uptime": 0,
+            "tasksDone": 0,
+            # live facts the board can show beyond the card contract
+            "live": {
+                "kind": agent or "unknown",
+                "state": state,
+                "pane": p.get("pane_id", ""),
+                "workspace": p.get("workspace_id", ""),
+                "cwd": cwd,
+                "task": task,
+            },
         })
     return out
 
