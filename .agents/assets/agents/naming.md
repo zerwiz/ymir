@@ -32,6 +32,7 @@ platform[27]{subsystem,norse,role}:
   "Scheduled jobs","Nornir","the fates who govern time"
   "Software smidja","Smíðja","repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace"
   "Smíðja orchestrator","Völundr","the master smith who runs Smíðja (Kaia's seat inside the smidja)"
+  "Control-plane hub / federation & sync","Vingólf","the assembly hall: coordination, identity, and sync across substrates; never executes code"
 ```
 
 ```
