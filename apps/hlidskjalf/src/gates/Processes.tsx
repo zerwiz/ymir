@@ -120,7 +120,12 @@ export function Processes() {
               </tr>
             </thead>
             <tbody>
-              {processes.map((p) => (
+              {/* The gate can hand back the same id twice (systemd:dbus appears
+                  from two sources), and a duplicate React key duplicates or drops
+                  rows. Dedupe by id here; a repeated process is one process. */}
+              {processes
+                .filter((p, i, all) => all.findIndex((q) => q.id === p.id) === i)
+                .map((p) => (
                 <tr key={p.id}>
                   <td className="mono" style={{ color: 'var(--ymir-text-0)' }}>
                     {p.name}
