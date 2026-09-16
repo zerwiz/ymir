@@ -32,6 +32,8 @@ const CONFIG_DIR = join(ROOT, '.agents/config');
 const STATE_DIR = join(ROOT, 'state');
 // The ledger lives in the HOARD, never in the checkout (Rule 04 / migration
 // 0004): $YMIR_HOARD, else $YMIR_HOME/hodd, else ~/Documents/Ymir/hodd.
+/** $YMIR_HOME — the hoard's home: where a realm's real tree lives. */
+const HOME_DIR = process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir');
 const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'hodd');
 const RUNES = join(HOARD, 'memory/runes_audit.md');
 const WELL = join(ROOT, '.agents/memory/well/episodes.jsonl');
@@ -927,17 +929,25 @@ async function reviews() {
 /** Resolve a workspace id to its on-disk scope: a company container when the
  *  workspace names one, else its repo-root workspace scope. */
 function workspaceRoot(realm: string): string {
+  // THE HOARD FIRST (Rule 04). A realm's tree lives at $YMIR_HOME/svartalfaheim/
+  // <realm>; the checkout is only a legacy fallback for a home not yet migrated.
+  // Skrymir was browsing the repo's own directories and reading files whose links
+  // point into the hoard — which is why a listed file answered "not found".
   const ws = workspaces().find((w) => w.id === realm);
   if (ws?.company) {
-    const company = join(ROOT, 'svartalfaheim', ws.company);
+    const company = join(HOME_DIR, 'svartalfaheim', ws.company);
     if (existsSync(company)) return company;
   }
-  const scope = join(ROOT, 'workspace', realm);
+  const realmTree = join(HOME_DIR, 'svartalfaheim', realm);
+  if (existsSync(realmTree)) return realmTree;
+  const scope = join(HOME_DIR, 'workspace', realm);
   if (existsSync(scope)) return scope;
   const slug = realm.toLowerCase().replace(/[^a-z0-9]/g, '');
   const legacy = join(ROOT, 'svartalfaheim', slug);
   if (slug && slug !== realm && existsSync(legacy)) return legacy;
-  return join(ROOT, 'svartalfaheim', realm);
+  const legacyScope = join(ROOT, 'workspace', realm);
+  if (existsSync(legacyScope)) return legacyScope;
+  return realmTree; // the hoard, even when empty: a home is never the repo's
 }
 
 function files(realm: string) {
@@ -968,7 +978,7 @@ function files(realm: string) {
     return node;
   };
   if (existsSync(base)) return walk(base, '', 0);
-  return walk(join(ROOT, 'docs'), '', 0);
+  return walk(HOME_DIR, '', 0); // the hoard's home, not the checkout's docs
 }
 
 /* ---- /api/file — read one realm file, read-only, scoped ------------------ */
