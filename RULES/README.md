@@ -18,3 +18,5 @@ rules_index[9]{file,subject}:
 ```
 
 Keep each rule short and unambiguous; reference it from code where it bites.
+
+| 09 | `09-electron.md` | Electron is a local seat: local connections only, no login, the rune icon and entry installed, one lifecycle with the web. |
