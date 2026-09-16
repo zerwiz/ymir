@@ -20,6 +20,15 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 
 ## 1. What a harness adapter is
 
+> **MCP scope (Ymir's well + A2A mesh).** `bin/a2a-mcp.sh install` wires the
+> `engram` (memory well) and `a2abridge` (A2A mesh) MCP servers into OpenCode's
+> repo `opencode.json` **and** Pi. By default the Pi side writes the **global**
+> `~/.pi/agent/mcp.json`; `bin/a2a-mcp.sh install --project` writes the repo's
+> `.pi/mcp.json` instead, leaving a Pi used elsewhere untouched (launch with
+> `pi --mcp-config .pi/mcp.json`). Prefer `--project` when integrating Ymir into
+> an existing workflow.
+
+
 The Ymir runtime is a **distro**: a directory of instructions, skills, tooling and conventions that turns a general-purpose agent into a specialized one. Launching a supported harness inside `BROKK_HOME` is supposed to instantiate **Brokk** and address the operator as the **Allfather** *before the model's first turn*.
 
 A harness will not do that on its own. Each harness exposes a different set of lifecycle hooks, and each adapter is a thin, harness-specific shim that binds those hooks to **harness-agnostic runtime scripts** in `bin/`. The shim never re-implements runtime logic: it only decides *when* to call a script and *how* to deliver the result.
