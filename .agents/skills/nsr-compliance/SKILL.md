@@ -18,7 +18,7 @@ skill.
 
 ```
 assets[2]{path,load_when}:
-  "assets/nsr/SKILL.md","scaffold a new NSR repo · convert a legacy repo · audit compliance (master spec, templates, scripts)"
+  "assets/nsr/scaffold-spec.md","scaffold a new NSR repo · convert a legacy repo · audit compliance (master spec, templates, scripts)"
   "assets/nsrcompliance/SKILL.md","generate and run the .compliance/ harness: danger, wiring, env, path gates + telemetry"
 ```
 

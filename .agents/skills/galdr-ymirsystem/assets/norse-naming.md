@@ -54,8 +54,8 @@ The law is restated in four authoritative places; keep them consistent:
 | Skill synthesis engine | **Gungnir** | Dynamic skill creation & validation | `.agents/skills/` |
 | Agent ergonomics standards | **Galdr** | TOON output, 10 design principles, skill synthesis | `.agents/skills/galdr-ymirsystem/` |
 | MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal (agent↔agent) | `.agents/skills/galdr-ymirsystem/assets/pi-boot/herdr-profile.toml` (pane layout) |
-| Software smidja | **Smíðja** | Repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace | `.agents/skills/smidja/` |
-| Smíðja orchestrator | **Völundr** | The master smith who runs Smíðja — the smidja's Kaia (Kaia's seat inside the smidja) | `.agents/skills/smidja/skills/volundr/` |
+| Software smidja | **Smíðja** | Repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace | `.agents/skills/smidja-factory/` |
+| Smíðja orchestrator | **Völundr** | The master smith who runs Smíðja — the smidja's Kaia (Kaia's seat inside the smidja) | `.agents/skills/smidja-factory/skills/volundr/` |
 
 ### 3.2 Brokk distro runtime components (`docs/plans/29-brokk-distro-runtime.md:270-297`)
 
@@ -94,10 +94,10 @@ These are the figures the port actually wired into `bin/` and the harness adapte
 | Skill | Norse | Role | Path |
 |---|---|---|---|
 | `galdr` | Galdr | AXI incantation standards — ergonomic CLI for agents | `.agents/skills/galdr-ymirsystem/SKILL.md` |
-| `tyr-check` | Tyr | The judge — validates tools/skills/docs against the 10 Galdr principles | `.agents/skills/galdr-ymirsystem/tyr-check/SKILL.md` |
-| `brokk-craft` | Brokk | The forger — generates new Galdr-compliant skills in TOON | `.agents/skills/galdr-ymirsystem/brokk-craft/SKILL.md` |
-| `galdr-compliance` | (legacy) | Superseded by `tyr-check` | `.agents/skills/galdr-ymirsystem/galdr-compliance/SKILL.md` |
-| `galdr-crafter` | (legacy) | Superseded by `brokk-craft` | `.agents/skills/galdr-ymirsystem/galdr-crafter/SKILL.md` |
+| `tyr-check` | Tyr | The judge — validates tools/skills/docs against the 10 Galdr principles | `.agents/skills/tyr-check/SKILL.md` |
+| `brokk-craft` | Brokk | The forger — generates new Galdr-compliant skills in TOON | (planned) `.agents/skills/brokk-craft/SKILL.md` |
+| `galdr-compliance` | (legacy) | Superseded by `tyr-check` — removed | — |
+| `galdr-crafter` | (legacy) | Superseded by `brokk-craft` — removed | — |
 
 ### 3.4 Figure reuse — one name, two roles
 
@@ -118,7 +118,7 @@ New Galdr-family skills inherit one of eight aett (family) prefixes, each bound 
 
 | Aett prefix | Domain | Examples in use |
 |---|---|---|
-| `galdr-` | incantation / chant standards | `galdr`, `galdr-compliance`, `galdr-crafter` |
+| `galdr-` | incantation / chant standards | `galdr`, `tyr-check` |
 | `val-` | hall / health | `valhalla` |
 | `skyr-` | giant / file scope | `skrymir` |
 | `bifr-` | bridge / gateway | `bifrost` |

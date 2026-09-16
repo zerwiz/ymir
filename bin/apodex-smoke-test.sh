@@ -23,8 +23,8 @@ done
 PORT="${APODEX_PORT:-1234}"
 BASE="${APODEX_BASE_URL:-http://localhost:$PORT/v1}"
 BASE="${BASE%/}"
-MODEL="${APODEX_MODEL:-apodex/Apodex-1.0-mini-Q4_K_M}"
-GGUF="${APODEX_GGUF:-$HOME/models/Apodex-1.0-mini-Q4_K_M-GGUF/Q4_K_M.gguf}"
+MODEL="${APODEX_MODEL:-apodex-1.0-mini}"
+GGUF="${APODEX_GGUF:-$HOME/Models/FlameF0X/Apodex-1.0-mini-Q4_K_M-GGUF/apodex-1.0-mini-q4_k_m.gguf}"
 SERVE=0
 
 case "${1-}" in

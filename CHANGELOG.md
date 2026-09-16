@@ -1,5 +1,230 @@
 # CHANGELOG
 
+## 2026-09-16 — the loader stops deleting: merge, never overwrite
+
+- **Root cause of the Apodex-provider loss, mended at the source.** Two writers
+  share the untracked `opencode.json`: `bin/valknut-load.sh` (structure, from
+  `opencode.json.example`) and `bin/agents-config.sh apply` (the roster —
+  providers and per-agent models, from `config/agents.yaml`). The loader
+  re-rendered with `sed` + `mv`, so because the example carried only
+  `llama.cpp`, **every loader run silently deleted the Apodex provider** that
+  lived only in the live file. `config_out` now merges deep and
+  `setdefault`-style: missing keys are added, existing ones are never
+  overwritten, and the skills path is ensured. Verified by wiping the provider
+  by hand: the next run reports `merged(provider.apodex)` and restores it, while
+  an unrelated hand-added key survives untouched. Seeding happens only when the
+  file is absent.
+- **The changelog guard still bites, without punishing a follow-up.** The
+  pre-push guard now accepts either the pushed range touching `CHANGELOG.md` or
+  the branch's whole range since it left the trunk touching it — a commit that
+  merely lands a file the record already tells needs no micro-entry. A branch
+  whose entire range leaves untold is still refused.
+- `bin/valknut-load.sh --status` reports the config outcome
+  (`seeded` · `merged(…)` · `unchanged` · `kept`), so a silent stomp can never
+  hide behind a "rendered" line again.
+- `harness-integration/README.md` records the two-writer boundary.
+
+## 2026-09-16 — one skills tree, every harness; the config stomp mended
+
+- **Every harness now reaches `.agents/skills`.** Pi was already right — its own
+  code walks up from the cwd to `.agents/skills` (and `~/.agents/skills`), so it
+  discovers Ymir's skills natively with no link and no config; a second root
+  under `.pi/` would only double-load. Claude Code, Codex and Cursor read project
+  skills from their own directory, so `bin/valknut-load.sh` now binds
+  `.claude/skills`, `.codex/skills` and `.cursor/skills` to `../.agents/skills`.
+  opencode reaches the tree through `skills.paths`. The install step `loaders`
+  runs the loader, so a fresh install gets all of it.
+- **The `harnesses` gate (G14) now asserts the skills surfaces too** — opencode's
+  config, Pi's native root, and the three links — so a harness silently loading
+  nothing can no longer pass.
+- **Defect mended: the loader was stomping `opencode.json`.** `bin/valknut-load.sh`
+  renders `opencode.json` from `opencode.json.example`, and that example carried
+  only `llama.cpp` — so a loader run silently **deleted the Apodex provider**,
+  which had only ever lived in the generated file. The example now carries Apodex
+  as well, with the served id `apodex-1.0-mini`, so a re-render cannot drop it.
+- `bin/valknut-load.sh --status` now reports every surface (agents *and* skills)
+  with a true row count instead of a hardcoded header.
+- Assets: `harness-integration/README.md` gains the skill-location table, and
+  each per-harness file states its own mechanism.
+
+## 2026-09-16 — Hodd lives outside the repo, and the installer makes it so
+
+- **One resolver.** `bin/hoard-lib.sh` (`hoard_root`) is now the single answer to
+  *where private data lives*: `$YMIR_HOARD`, else `$YMIR_HOME`, else
+  `$HOME/Documents/Ymir` — never the checkout. Rule 07's one documented default,
+  in one place.
+- **The inward default is gone.** `bin/mimir-ingest.sh`, `bin/project-git.sh` and
+  `bin/workspace-provision.sh` each fell back to `$ROOT/hodd`, so on a machine
+  with neither `YMIR_HOARD` nor `YMIR_HOME` exported, memory ingest, the project
+  registry and workspace provisioning wrote private data **inside the repo**.
+  All three (plus `bin/hodd.sh` and the installer) now resolve through the lib.
+- **The misplaced document is out.** `0003-private-data-separation.md`, which had
+  come to rest in the repo at `hodd/docs/plans/`, now lives in the hoard at
+  `$YMIR_HOME/docs/plans/`. The repo's `hodd/` holds exactly the guard, the
+  README and `AGENTS.example.md` — Rule 04's scaffold set, and nothing else.
+- **Installed, not assumed.** `bin/ymir-install.sh` step `tree` now raises the
+  hoard layout *outside* the repo (`bin/hodd.sh init`) and seeds an empty
+  `secrets/platform.env` (mode 0600), so `bin/hodd.sh emit secrets/platform.env`
+  resolves on a fresh machine instead of failing with "not readable".
+  `assets/installation.md` and `assets/memory-well.md` updated in the same change.
+
+## 2026-09-16 — the pane bridge keeps its quoting; Phase 3 verified
+
+- **The Apodex plan's last open verification is closed.** Run in a herdr pane —
+  `bin/herdr-run.sh run huginn-research -- bin/huginn-research-worker.sh --brief
+  "…" --output-dir …` — the worker recalled, dispatched to the Apodex seat, wrote
+  its verdict, and observed it into Mimirsbrunn (`status: completed`, verdict
+  *"The capital of Norway is Oslo."*). Phase 3 needed a spawn, which the
+  read-only session lock had forbidden; it was run once the lock was this
+  session's.
+- **Defect found and mended — `bin/herdr-run.sh run` lost its quoting.** A pane
+  runs its command through a *shell*, but the bridge handed herdr the raw argv.
+  An argument containing spaces reached the pane as separate words, so
+  `--brief "In one sentence: …"` arrived as `--brief In one sentence: …` and the
+  worker died with `error: unknown arg: one`. Every real brief is multi-word, so
+  the documented invocation could never have worked. `run` now quotes each
+  argument on the way in (`printf '%q'`), verified by re-running it.
+- Asset updated in the same change: `.agents/skills/ymir-host/assets/thjazi.md`
+  carries the quoting rule.
+
+## 2026-09-16 — the skill-loading audit: wrong skills unloaded, the index made true
+
+- **Three phantom skills stopped loading.** opencode was loading `galdr-compliance`
+  and `galdr-crafter` — both superseded, their work long since moved to
+  `tyr-check` — and `NSR`, the NSR scaffolding spec, which sat at
+  `assets/nsr/SKILL.md` carrying frontmatter. A recursive scanner walks
+  `skills.paths` to *any* depth, so all three were announced to every agent as
+  live skills. The two galdr crafters are removed; the NSR spec is renamed
+  `assets/nsr/scaffold-spec.md` and stays a document (its sibling templates
+  carry no frontmatter and were already inert).
+- **Two gates added, one per failure class** (`compliance-check.sh`):
+  - **`harnesses` (G14)** — every link in `.claude/agents`, `.codex/agents`,
+    `.cursor/agents`, `.pi/agents`, `.opencode/agent` must land, one hop, in the
+    canonical `.agents/agents/` tree (Rule 02), and no nested `SKILL.md` may
+    carry frontmatter. One hop deliberately: Galdr's agent file *is* the skill,
+    by the dual-surface rule.
+  - **`skillindex` (G15)** — every real skill dir must be named in
+    `.agents/skills/README.md`, and every `.agents/skills/<name>` path the assets
+    cite must exist. Lines marked planned/legacy/superseded/removed/abandoned/
+    retired are exempt by intent.
+- **The drift they exposed, mended:** the canonical index listed 23 skills while
+  26 existed (`groa-update`, `lifecycle`, `rules-check-drift` were missing); the
+  Galdr and `.agents/assets/agents` registries still described a layout that no
+  longer existed (`smidja/`, `gunnlod`, `hamr`, `saga`, `ymir`, `open-design`),
+  pointing the agent at files that were not there; dead paths corrected to the
+  real names (`smidja-factory`, `saga-bearings`, `urdh-hold`, `nornir-schedule`,
+  `ymir-host`, `hamr-adapters`); `brokk-craft` marked planned rather than
+  presented as a working command.
+- **`AGENTS.md` gains the invariant:** the delivery gate is enforced in git
+  hooks seated by the install step `gates` — `branch-guard` refuses a protected
+  branch, `changelog-guard` refuses a push whose range never touches
+  `CHANGELOG.md`.
+
+## 2026-09-16 — the delivery gates install themselves; rename drift mended
+
+- **Install seam.** `bin/ymir-install.sh` gains step **`gates`** (after
+  `loaders`): `bin/secret-guard.sh --install` seats the pre-commit guard and
+  `bin/changelog-guard.sh --install` the pre-push (branch + changelog). A fresh
+  clone now gets the delivery gate without a manual step — `--check` reports it
+  as `gates OK|WARN`, the consent preamble names it, and
+  `assets/installation.md` carries the row in the same change.
+- **Drift mended — found by the compliance gate, not by me.** Two symlinks
+  still pointed at the retired `galdr-cli` skill, so the last rename was not in
+  fact complete: `.agents/agents/galdr.md` (Galdr's agent surface was a **dead
+  link**) and `.agents/skills/tyr-check/assets`. Both repointed at
+  `galdr-ymirsystem`, which is where the skill and its assets live.
+- **`AGENTS.md` TOON mend.** The `security[4]` block carried a rule wrapped
+  across two lines, which the checker counted as a fifth row. Joined to one
+  line; the block now declares and holds exactly four.
+- **Compliance.** All ten Galdr gates green: toon · naming · mocks · syntax ·
+  json · sync · surfaces · assets · duplicates · governed.
+
+## 2026-09-16 — Smiðja moves into the app tree
+
+- **The smithy is an app.** Its 148 source files moved from
+  `.agents/skills/smidja-factory/` to `apps/smidja-factory/`, joining
+  hlidskjalf, odrerir and sessrumnir under `apps/`.
+- **Path-transparent.** `.agents/skills/smidja-factory` is now a symlink to
+  `../../apps/smidja-factory`, so every existing path resolves unchanged —
+  `scripts/start.sh`, `bin/ymir-install.sh`, `bin/ymir-validate.sh`, and the
+  skill loader (`.agents/skills` is a skills path). `node_modules/` stays
+  gitignored and is not carried.
+- **Still open** (recorded, not done): the root `smidja/` runtime tree
+  Amendment A would move to `apps/smidja/`, and Amendment C's per-app GitHub
+  repos and npm publishing.
+
+## 2026-09-16 — the changelog guard: no push ships untold
+
+- **Every push carries a CHANGELOG entry.** `bin/changelog-guard.sh` installs a
+  pre-push hook that reads the refs git hands it, resolves the range being
+  pushed, and refuses the push when `CHANGELOG.md` is untouched in that range.
+  A change that ships is a change that was told; the record can no longer lag
+  silently behind the code.
+- **Rule 08 extracted and versioned.** The protected-branch check that lived
+  only inside the ad-hoc `.git/hooks/pre-push` is now `bin/branch-guard.sh`, so
+  the delivery gate is reproducible: `bin/changelog-guard.sh --install` writes
+  the pre-push that runs both guards.
+- **Escape hatch, deliberate and loud.** `YMIR_SKIP_CHANGELOG_GUARD=1 git push`
+  when an entry truly does not belong.
+- Checks by hand: `bin/changelog-guard.sh --range A..B`,
+  `bin/branch-guard.sh --branch main`.
+
+## 2026-09-16 — Apodex seat verified; the Weave mended
+
+- **Correction (cites the entry below, never rewrites it).** The earlier
+  entry said *"LM Studio is retired; its :1234 port belongs to Apodex now."*
+  That was false as carved. LM Studio still holds `:1234` and is what serves
+  the Apodex GGUF; Apodex took the **model seat**, not the server.
+- **Live verification.** `bin/apodex-smoke-test.sh` → PASS (valid tool-capable
+  response, exit 0). `bin/huginn-research-worker.sh` with **bare defaults** →
+  `status: completed`, verdict written, observed into Mimirsbrunn. The Apodex
+  seat (`http://127.0.0.1:1234/v1`) is live.
+- **One model id, everywhere.** The seat serves **`apodex-1.0-mini`**; the
+  worker, smoke test, `.env.example`, `opencode.json`, `config/agents.yaml.example`
+  and Huginn's profile now all say so. Previously three names drifted
+  (`apodex/Apodex-1.0-mini-Q4_K_M`, `apodex/apodex-mini-q4`, the served id) and
+  the default worker call failed with `No models loaded`.
+- **Four defects mended.** `bin/huginn-research-worker.sh` made executable
+  (was 644 — bare invocation died with `Permission denied`); the smoke test's
+  `--serve` GGUF path corrected to
+  `~/Models/FlameF0X/Apodex-1.0-mini-Q4_K_M-GGUF/apodex-1.0-mini-q4_k_m.gguf`;
+  `bin/models-detect.sh` env var renamed from the typo `APEDEX_URL` to
+  `APODEX_URL`.
+- **Weight truth.** The Apodex Q4_K_M weights are **21.7 GB**, not the ~4–6 GB
+  the plan assumed — it cannot sit beside a coding model. `AGENTS.md` now says
+  so: one local model at a time, by weight.
+- **Smiðja relocated.** `.agents/skills/smidja-factory` is now a symlink to the
+  app tree at `apps/smidja-factory/`, which is where the smithy's real files
+  live (Amendment A/C of the Apodex plan).
+- Plan (private hoard): `$YMIR_HOME/docs/plans/apodex-integration-into-ymir.md`
+  — Amendment E records the live pass, the mended defects, and the one open
+  item: the herdr-seat verification (Phase 3), which needs a spawn.
+
+## 2026-09-16 — Apodex joins the Weave (research/planning provider)
+
+- **Apodex provider.** Apodex-1.0-mini-Q4_K_M climbs into the machine as
+  the research/planning GGUF on `http://127.0.0.1:1234/v1`, seated
+  alongside llama.cpp coding models on :8080. LM Studio is retired; its
+  :1234 port belongs to Apodex now.
+- **Env template.** `.env.example` gains the `APODEX_*` block; the LM
+  Studio block is marked RETIRED with its port claim corrected.
+- **Smoke test.** `bin/apodex-smoke-test.sh` — probe or serve-and-test an
+  Apodex seat; exits 0=pass, 1=fail, 2=unavailable. Never mutates config.
+- **Research worker.** `bin/huginn-research-worker.sh` (Apodex-powered
+  Eindri): takes a brief, recalls from Mimirsbrunn, dispatches to the
+  Apodex chat/completions seat, writes a structured verdict, observes it
+  back into the well. Wears the name **Huginn** per the naming law (the
+  research seat; Gungnir stays the skill-synthesis engine).
+- **Agents hall.** `.agents/agents/huginn-researcher.md` binds Huginn to
+  the apodex model; `config/agents.yaml.example` registers the apodex
+  provider and Huginn's seat; `opencode.json` carries the apodex provider
+  block alongside llama.cpp; `bin/models-detect.sh` probes and emits the
+  apodex provider for the Pi model file (`~/.pi/agent/models.json`).
+- **Install seams.** Apodex rides the existing seams: models-detect merges
+  it into the Pi models file at install; agents-config applies it into
+  opencode.json. Model provider selection documented in AGENTS.md
+  (`## Model Provider Selection`), Apache 2.0 licence noted.
+
 ## 2026-09-16 — Gunnlöð joins the hall (SkillOpt integration)
 
 - **SkillOpt integration.** `pip install skillopt` into `.venv/`; training
