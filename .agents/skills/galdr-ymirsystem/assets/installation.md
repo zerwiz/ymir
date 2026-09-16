@@ -21,7 +21,7 @@ bin/ymir-install.sh --status      # alias of --check
 ## The steps
 
 ```
-install[20]{step,what,self-heals}:
+install[21]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -37,6 +37,7 @@ install[20]{step,what,self-heals}:
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
   "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh"
   "gates","the git delivery gates — secret-guard (pre-commit), branch-guard + changelog-guard (pre-push)","bin/secret-guard.sh --install and bin/changelog-guard.sh --install seat the versioned guards into .git/hooks, so the gate is live from the first commit of a fresh clone; idempotent"
+  "marks","each app's rune icon + .desktop entry into the operator's own desktop, and the Ymir contract into pi's agent home","bin/design-icon.sh mint --all + install writes to $HOME/.local/share (never a session sandbox), so every app is dockable and pinnable; the contract symlink means every pi session, in ANY folder, loads Brokk"
   "invite","the way in for anyone else — an invite code","bin/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
   "register","workspace/INSTALL.md","writes the record"
   "services","gate API, SPA, Nornir, bridges, visualizer","raises via scripts/start.sh (which builds the visualizer UI when ./dist is absent)"
@@ -44,7 +45,7 @@ install[20]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**22** `step_*` functions are defined. A step is not a row: one step may emit
+**23** `step_*` functions are defined. A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 `smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. `--check`
 skips the runtime-only steps (`services`, `desktop`, `validate`), which have
