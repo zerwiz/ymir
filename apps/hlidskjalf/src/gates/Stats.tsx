@@ -12,6 +12,7 @@ const usd2 = (n: number) => `$${n.toFixed(2)}`;
 export function Stats() {
   const stats = useYmir((s) => s.smidjaStats);
   const [selectedModel, setSelectedModel] = useState('');
+  const usage = useYmir((st) => st.usage);
 
   const totals = stats?.totals ?? { runs: 0, success: 0, fail: 0, running: 0, tokens: 0, cost: 0 };
   const usage = stats?.usage ?? { input: 0, output: 0, cache_read: 0, cache_write: 0, total: 0 };
@@ -40,9 +41,41 @@ export function Stats() {
       <div className="stage-head">
         <div>
           <h1 className="stage-title">Statistics</h1>
-          <p className="stage-deck">Every run, tokens, cost, savings · smidja.db</p>
+          <p className="stage-deck">Every run, tokens, cost, savings · smidja.db + the harnesses</p>
         </div>
       </div>
+
+      {usage && (
+        <section className="panel" style={{ marginTop: 12, padding: 12 }}>
+          <h2 style={{ fontSize: 13, opacity: 0.8, margin: '0 0 6px' }}>
+            Harnesses · opencode &amp; pi
+          </h2>
+          <p className="pf-line dim" style={{ margin: '0 0 8px' }}>
+            {usage.totals.messages.toLocaleString()} messages ·{' '}
+            {(usage.totals.input / 1e6).toFixed(1)}M in / {(usage.totals.output / 1e6).toFixed(1)}M out ·
+            cache-hit {(usage.totals.cache_hit_ratio * 100).toFixed(1)}% · last {usage.window_days} days
+          </p>
+          <table className="pf-table">
+            <thead>
+              <tr><th>Model</th><th>Source</th><th>Messages</th><th>In</th><th>Out</th></tr>
+            </thead>
+            <tbody>
+              {usage.by_model.slice(0, 8).map((m) => (
+                <tr key={m.source + m.model}>
+                  <td>{m.model}</td>
+                  <td>{m.source}</td>
+                  <td>{m.messages.toLocaleString()}</td>
+                  <td>{(m.input / 1e6).toFixed(1)}M</td>
+                  <td>{(m.output / 1e6).toFixed(1)}M</td>
+                </tr>
+              ))}
+              {usage.by_model.length === 0 && (
+                <tr><td colSpan={5} style={{ padding: 6, opacity: 0.6 }}>no harness usage in the window</td></tr>
+              )}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       <section className="panel" style={{ marginBottom: 'var(--ymir-space-4)' }}>
         <div className="panel-head">
