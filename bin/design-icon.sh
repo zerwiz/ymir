@@ -94,11 +94,15 @@ ENTRIES=(
   "hlidskjalf-mobile|Ymir · Hlidskjalf Mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile"
 )
 install_all() {
+  # A phone app gets an icon for its own bundle, never a desktop entry.
+  local EXCLUDE=" hlidskjalf-mobile "
+
   mkdir -p "$icons_dir" "$apps_dir" || { printf 'error: cannot write %s / %s\n' "$icons_dir" "$apps_dir" >&2; exit 1; }
   printf 'installed[%d]{app,icon,entry}:\n' "${#APPS[@]}"
   local row dir glyph tint says iconname exec klass src
   for row in "${APPS[@]}"; do
     IFS='|' read -r dir glyph tint says iconname exec klass display <<<"$row"
+    case "$EXCLUDE" in *" $(basename "$dir") "*) continue ;; esac
     src="$ROOT/$dir/public/icon.svg"
     if [ ! -f "$src" ]; then
       # mint it first — the icon is defined by this table, so it is never absent
@@ -125,6 +129,7 @@ install_all() {
     printf '  "%s","%s.svg","%s.desktop"\n' "$iconname" "$iconname" "$iconname"
   done
   [ -f "$apps_dir/ymir-smidja.desktop" ] && rm -f "$apps_dir/ymir-smidja.desktop"
+  for stale in ymir-hlidskjalf-mobile; do rm -f "$apps_dir/$stale.desktop" "$icons_dir/$stale.svg"; done
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
 }
 
