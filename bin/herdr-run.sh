@@ -50,7 +50,7 @@ ACTION="${1:-available}"; shift || true
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # herdr --session is the ONLY reliable router: HERDR_SESSION alone silently
-# falls back to whichever server is already bound (firstmate .agents/skills/herdr-panes/assets/herdr-backend.md,
+# falls back to whichever server is already bound (Brokk .agents/skills/herdr-panes/assets/herdr-backend.md,
 # "Session targeting"). We always pass the flag explicitly.
 HDR_SESSION="${HERDR_SESSION:-}"
 # One backend, two names: upstream ships `herdr`, the Omarchy/Þjazi layer calls

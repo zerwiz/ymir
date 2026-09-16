@@ -45,15 +45,15 @@ export function PRCard({ pr }: { pr: PullRequest }) {
       glyph: 'ᛉ',
       title: `Seal PR #${pr.number}?`,
       body: failing
-        ? 'CI is failing on at least one rune. The captain may still seal — human judgement overrides the gate — but Mjollnir will not force-merge.'
-        : 'A rune seals every approval. Mjollnir strikes and returns, but never force-merges without the captain.',
+        ? 'CI is failing on at least one rune. The Allfather may still seal — human judgement overrides the gate — but Mjollnir will not force-merge.'
+        : 'A rune seals every approval. Mjollnir strikes and returns, but never force-merges without the Allfather.',
       confirmLabel: 'Seal — approve',
       onSubmit: () => {
         updateReview(pr.id, {
           state: 'approved',
           checklist: pr.checklist.map((c) => ({ ...c, done: true })),
         });
-        emit('rune', `pr.sealed #${pr.number} — captain approved`);
+        emit('rune', `pr.sealed #${pr.number} — Allfather approved`);
         toast({ kind: 'ok', title: `PR #${pr.number} sealed`, body: 'Observed into the well; rune carved.' });
       },
     });

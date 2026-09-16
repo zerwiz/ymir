@@ -171,9 +171,9 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
 - **Push events**: Protocol 16 can subscribe to `pane.agent_status_changed` over a bounded Unix-socket reader. Polling runs every cycle and remains the permanent fallback when protocol 16, the event schema, Python, connection, subscription, or repeated reader execution is unavailable.
 - **Away-mode supervisor**: Supports tmux and Þjazi supervisor panes only. Refuses Zellij, Orca, and cmux. For Þjazi, target existence, native state, capture, composer state, and verified submit all route through the shared backend dispatcher and the explicit named-session CLI owner.
 - **Destructive lab safety**: `bin/fm-herdr-lab.sh` is the sole supported lifecycle helper for isolated verification. It provisions only non-default names beginning with `fm-lab-`, appends an explicit `--session` to allowed task commands, refuses caller-supplied session flags and server/session lifecycle subcommands, and performs destructive stop/delete only through its guarded lifecycle actions.
-- **Active limits**: Þjazi remains experimental; presentation ordering needs protocol 16 and Python and is best-effort only; mutable labels can collide and are never placement or destructive authority; a Firstmate outside Þjazi cannot resolve a launcher workspace, so a colliding home label refuses new spawns until the collision is cleared; ghost and placeholder recognition uses ANSI de-emphasis when available.
+- **Active limits**: Þjazi remains experimental; presentation ordering needs protocol 16 and Python and is best-effort only; mutable labels can collide and are never placement or destructive authority; a Brokk outside Þjazi cannot resolve a launcher workspace, so a colliding home label refuses new spawns until the collision is cleared; ghost and placeholder recognition uses ANSI de-emphasis when available.
 - **Regression test suite**: 18+ test scripts covering presentation, cleanup, prune safety, focus, respawn, workspace-per-home, launcher workspace, and event wait smoke tests.
-- **Sub-agent orchestration**: When the Captain orchestrates sub-agents, Þjazi opens visible terminal panes/windows via `herdr run --pane-name "<role>-<branch>"` pointing to Treehouse worktrees. The user can see the sub-agent typing, executing CLI tools, and running tests live in real time. Þjazi panes are non-blocking—the main agent remains open to answer user inputs or supervise other sub-agents.
+- **Sub-agent orchestration**: When Brokk orchestrates sub-agents, Þjazi opens visible terminal panes/windows via `herdr run --pane-name "<role>-<branch>"` pointing to Treehouse worktrees. The user can see the sub-agent typing, executing CLI tools, and running tests live in real time. Þjazi panes are non-blocking—the main agent remains open to answer user inputs or supervise other sub-agents.
 
 ### 3.11 Company System — Houses (ENTRY-004)
 - The fleet forges for **houses**: Ymir Labs, Brokk Forge, Runestone (Runir),
@@ -181,7 +181,7 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
   a myth that names it (`docs/lore.md` §VI).
 - Per-tenant `companies/` entity cards + `projects/` (plan 21).
 
-## 3.12 Agentic Engineering Workflow Integration (Firstmate)
+## 3.12 Agentic Engineering Workflow Integration (Brokk)
 
 ### Four-Layer Program Design Framework
 Integrated from Dex Horthy's agentic engineering framework (YouTube `xgkjtF89-44`, August 2026). Ymir incorporates the four-layer system alongside its existing seven realms, reinforcing the OSS-first doctrine (ENTRY-008).
@@ -210,7 +210,7 @@ Integrated from Dex Horthy's agentic engineering framework (YouTube `xgkjtF89-44
 - **Tracer bullet approach**: Mock API → stub FE → wire together → then add migrations/logic
 - **Dex's observation**: *"I have never seen a model do this without a human telling it the order."*
 
-### Context Engineering Principles (from Firstmate Research)
+### Context Engineering Principles (from upstream research)
 - **"Dumb zone" at ~50% context**: Real for models AND humans — structural decisions early when cheap
 - **Right tokens, not more tokens**: One 43k-token planning session > re-steering 3,000-line diff later
 - **Victor Tali trick**: *"Which choices are you not confident about?"* — pre-mortem before run, not post-hoc
@@ -224,7 +224,7 @@ Integrated from Dex Horthy's agentic engineering framework (YouTube `xgkjtF89-44
 - **Mjollnir issue→PR pipeline**: Incident-to-agent patterns integrated (classifier → brief → PR)
 - **Valhalla process supervisor**: Context budget tracking and phase transitions
 
-### Acceptance Criteria (Ymir + Firstmate Integration)
+### Acceptance Criteria (Ymir + Brokk Integration)
 - [x] Every ship task has all 4 layers documented before spawn
 - [x] Zero horizontal-first builds (Slice 1 e2e testable first)
 - [x] 100% of ship tasks have measurable goals
@@ -303,7 +303,7 @@ On success: cleanup(merge=true) → merged to main, worktree removed
 | Persistence | Postgres 16 (self-hosted) + engram/SQLite | Runes/Mimirsbrunn |
 | Process mgmt | PM2 / Docker | Valhalla |
 | CI/CD | GitHub Actions + gh CLI | Mjollnir / deploy |
-| Reused systems | `smidja`, `firstmate`, `.compliance`, smidja visualizer | — |
+| Reused systems | `smidja`, the upstream `firstmate` distro, `.compliance`, smidja visualizer | — |
 
 ### Target stack (Ymir Rut v2.6 — port AFTER end-to-end, ENTRY-009)
 
