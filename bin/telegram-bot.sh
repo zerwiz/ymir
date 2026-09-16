@@ -43,7 +43,12 @@ handle() { # <text>
 offset=0
 printf 'telegram_bot[1]{owner,status}:\n  "%s","polling"\n' "$OWNER"
 while :; do
-  resp=$(curl -fsS --max-time 40 "https://api.telegram.org/bot${TOKEN}/getUpdates?timeout=30&offset=${offset}" 2>/dev/null) || { sleep 3; continue; }
+  # The bot token rides in the URL path; feeding curl a config on stdin keeps it
+  # out of argv, so `ps`/`/proc/*/cmdline` cannot read it.
+  resp=$(curl -fsS --max-time 40 --config - 2>/dev/null <<EOF
+url = "https://api.telegram.org/bot${TOKEN}/getUpdates?timeout=30&offset=${offset}"
+EOF
+) || { sleep 3; continue; }
   read -r next < <(printf '%s' "$resp" | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)
 except: d={}
