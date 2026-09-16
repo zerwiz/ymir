@@ -40,23 +40,27 @@ if [ "$CMD" = "sandcastle" ]; then
   exec npx --yes @ai-hero/sandcastle "$@"
 fi
 
-command -v docker >/dev/null 2>&1 || { printf 'error: docker not found\nhelp: install docker to use Utgard\n' >&2; exit 1; }
-docker info >/dev/null 2>&1 || { printf 'error: docker daemon not reachable\n' >&2; exit 1; }
+# shellcheck source=bin/ymir-platform.sh
+. "$SCRIPT_DIR/ymir-platform.sh"
+ENGINE="$(ymir_container_engine)" || {
+  printf 'error: no container engine (docker/podman) reachable\nhelp: install Docker or Podman, or set YMIR_CONTAINER_ENGINE to the one you use\n' >&2
+  exit 1
+}
 
 case "$CMD" in
   build)
     while [ $# -gt 0 ]; do case "$1" in --tag) TAG=${2-}; shift 2 ;; *) shift ;; esac; done
     [ -f "$SANDBOX/Dockerfile.utgard" ] || { printf 'error: Dockerfile.utgard missing\n' >&2; exit 1; }
-    if docker build -q -f "$SANDBOX/Dockerfile.utgard" -t "$TAG" "$SANDBOX" >/dev/null 2>&1; then
+    if "$ENGINE" build -q -f "$SANDBOX/Dockerfile.utgard" -t "$TAG" "$SANDBOX" >/dev/null 2>&1; then
       printf 'utgard[1]{image,status}:\n  "%s","built"\n' "$TAG"
     else
-      printf 'error: build failed for %s\nhelp: run docker build -f .agents/sandbox/Dockerfile.utgard -t %s .agents/sandbox\n' "$TAG" "$TAG" >&2
+      printf 'error: build failed for %s\nhelp: run %s build -f .agents/sandbox/Dockerfile.utgard -t %s .agents/sandbox\n' "$TAG" "$ENGINE" "$TAG" >&2
       exit 1
     fi
     ;;
 
   status)
-    if docker image inspect "$TAG" >/dev/null 2>&1; then
+    if "$ENGINE" image inspect "$TAG" >/dev/null 2>&1; then
       printf 'utgard[1]{image,status,net_default,caps}:\n  "%s","ready","none","cpus+mem+timeout"\n' "$TAG"
     else
       printf 'utgard[1]{image,status,net_default,caps}:\n  "%s","missing","none","cpus+mem+timeout"\n' "$TAG"
@@ -82,15 +86,20 @@ case "$CMD" in
     WT="$(cd "$WT" && pwd)"
     NET="${NET:-none}"; CPUS="${CPUS:-1.0}"; MEM="${MEM:-512m}"; TO="${TO:-30}"
     UID_GID="$(id -u):$(id -g)"
-    docker image inspect "$TAG" >/dev/null 2>&1 || { printf 'error: image %s missing\nhelp: bin/utgard.sh build\n' "$TAG" >&2; exit 1; }
-    timeout "$TO" docker run --rm \
-      --network "$NET" \
-      --cpus "$CPUS" -m "$MEM" \
-      --security-opt no-new-privileges \
-      --read-only --tmpfs /tmp:rw,size=64m \
-      --user "$UID_GID" \
-      -v "$WT":/sandbox/workspace -w /sandbox/workspace \
-      "$TAG" bash -lc "$*"
+    "$ENGINE" image inspect "$TAG" >/dev/null 2>&1 || { printf 'error: image %s missing\nhelp: bin/utgard.sh build\n' "$TAG" >&2; exit 1; }
+    # Rootless Podman maps the host user differently: use --userns=keep-id so the
+    # mounted worktree stays writable by the invoking user; Docker keeps --user.
+    ARGS=(run --rm --network "$NET" --cpus "$CPUS" -m "$MEM"
+          --security-opt no-new-privileges
+          --read-only --tmpfs /tmp:rw,size=64m)
+    if ymir_rootless_podman; then
+      ARGS+=(--userns=keep-id)
+    else
+      ARGS+=(--user "$UID_GID")
+    fi
+    # `:Z` relabels the bind mount on enforcing-SELinux hosts (Fedora), else empty.
+    ARGS+=(-v "$WT":/sandbox/workspace"$(ymir_volume_suffix)" -w /sandbox/workspace "$TAG" bash -lc "$*")
+    timeout "$TO" "$ENGINE" "${ARGS[@]}"
     rc=$?
     [ "$rc" = 124 ] && { printf 'error: utgard run exceeded %ss timeout (sealed)\n' "$TO" >&2; exit 124; }
     exit "$rc"
