@@ -14,7 +14,7 @@
 #   mocks     no mock/stub/placeholder in the shipped runtime (bin/*.sh)
 #   syntax    bash -n on bin/*.sh; node --check on plugins
 #   json      every runtime JSON parses
-#   sync      galdr-cli/assets mirrors tyr-check/assets
+#   sync      galdr-ymirsystem/assets mirrors tyr-check/assets
 #
 # Exit: 0 = all pass, 1 = one or more FAIL, 2 = usage error.
 set -u
@@ -22,7 +22,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
-GALDR="$ROOT/.agents/skills/galdr-cli"
+GALDR="$ROOT/.agents/skills/galdr-ymirsystem"
 TYR="$ROOT/.agents/skills/tyr-check"
 TOON_CHECK="$SCRIPT_DIR/toon-check.py"
 
@@ -106,7 +106,7 @@ fi
 json_fail=""
 while IFS= read -r f; do
   python3 -m json.tool "$f" >/dev/null 2>&1 || json_fail="$json_fail ${f##*/}"
-done < <(find "$ROOT/config" "$ROOT/.claude" "$ROOT/.codex" "$ROOT/.cursor" "$ROOT/.agents/skills/galdr-cli/assets/pi-boot" "$ROOT/.agents/sandbox" \
+done < <(find "$ROOT/config" "$ROOT/.claude" "$ROOT/.codex" "$ROOT/.cursor" "$ROOT/.agents/skills/galdr-ymirsystem/assets/pi-boot" "$ROOT/.agents/sandbox" \
   -maxdepth 1 -name '*.json' 2>/dev/null; [ -f "$ROOT/opencode.json" ] && echo "$ROOT/opencode.json")
 if [ -z "$json_fail" ]; then
   add json "runtime JSON parses" PASS "all parse"
@@ -123,7 +123,7 @@ fi
 
 # --- surfaces ---------------------------------------------------------------
 # Galdr is dual-surface: the agent must resolve to the canonical skill.
-if [ -L "$ROOT/.agents/agents/galdr.md" ] && [ "$(readlink "$ROOT/.agents/agents/galdr.md")" = "../skills/galdr-cli/SKILL.md" ]; then
+if [ -L "$ROOT/.agents/agents/galdr.md" ] && [ "$(readlink "$ROOT/.agents/agents/galdr.md")" = "../skills/galdr-ymirsystem/SKILL.md" ]; then
   add surfaces "Galdr agent+skill dual-surface" PASS "agent symlinks the skill"
 elif diff -q "$ROOT/.agents/agents/galdr.md" "$GALDR/SKILL.md" >/dev/null 2>&1; then
   add surfaces "Galdr agent+skill dual-surface" PASS "agent mirrors the skill"

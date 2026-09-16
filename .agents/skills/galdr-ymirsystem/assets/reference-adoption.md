@@ -81,11 +81,11 @@ Sixteen skills adopted under `.agents/skills/`; see the registry in
 
 ```
 doc_map[8]{upstream,adopt_as}:
-  "supervision-protocols/*","`.agents/skills/galdr-cli/assets/harness-integration/` (per-harness tier)"
+  "supervision-protocols/*","`.agents/skills/galdr-ymirsystem/assets/harness-integration/` (per-harness tier)"
   "turnend-guard.md","`bin/syn-turnend-guard.sh` + `.pi/extensions/syn-turnend-guard.ts`"
   "trace-context.md","W3C trace propagation (W0094)"
   "subagent-guard.md","Eindri pretool seatbelts (syn-*-pretool-check.sh)"
-  "architecture.md","`.agents/skills/galdr-cli/assets/brokk-distro-runtime.md`"
+  "architecture.md","`.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`"
   "configuration.md","`.agents/config/` keys (W0104)"
   "tmux-backend.md / herdr-backend.md","`bin/` runtime backends (Valhalla)"
   "calm.md","`.pi/extensions/ro.ts` (Ró)"
@@ -93,7 +93,7 @@ doc_map[8]{upstream,adopt_as}:
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - Move a `skill_map` row's `status` to a real `.agents/skills/<name>/SKILL.md`
   when converted (`adopted`), or `folded` when its content lands elsewhere; keep
   `assets/reference/` provenance-only.

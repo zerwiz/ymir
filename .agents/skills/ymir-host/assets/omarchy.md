@@ -18,7 +18,7 @@ Omarchy host, the desktop is not a detail: it decides where our windows land, ho
 they render, and whether the GPU process survives. This skill is how Ymir is a
 good citizen of that machine.
 
-**Router:** `.agents/skills/galdr-cli/SKILL.md`. **Upstream skill (authoritative for
+**Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`. **Upstream skill (authoritative for
 Omarchy itself):** `/usr/share/omarchy/default/agents/skills/omarchy/SKILL.md` and
 `~/.pi/agent/skills/omarchy/`. Read that one for pure Omarchy work; this one adds
 the Ymir integration and the hard-won facts below.
@@ -249,7 +249,7 @@ identity stay one voice.
 
 ## Maintaining this
 
-- **Owner:** Brokk. **Router:** `.agents/skills/galdr-cli/SKILL.md`.
+- **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - Upstream Omarchy skill is authoritative for Omarchy itself; keep only Ymir's
   integration facts and this machine's hard-won lessons here.
 - When the desktop behaviour changes, update this asset and
@@ -263,7 +263,7 @@ or `/usr/share/omarchy` is this layer's business and is gated on the host — on
 Mac or on WSL those steps report a clean skip and the core still runs.
 
 When a core feature changes, this layer is updated in the same change
-(`RULES/05-platforms.md`). Details: `galdr-cli/assets/installation.md`.
+(`RULES/05-platforms.md`). Details: `galdr-ymirsystem/assets/installation.md`.
 
 ### Electron GPU-process crashes on the shared-memory iGPU
 
@@ -277,7 +277,7 @@ served on that same iGPU holds several GiB of it — after which the driver fail
 the desktop's command submissions. `scripts/electron.sh` now detects a small VRAM
 carve-out (`igpu_vram_small()`, threshold `YMIR_IGPU_VRAM_SMALL_MIB`, default
 2048) and runs the dashboards on software rendering; `YMIR_DESKTOP_DISABLE_GPU`
-forces either path. Detail and the evidence: `galdr-cli/assets/hlidskjalf-ui.md`.
+forces either path. Detail and the evidence: `galdr-ymirsystem/assets/hlidskjalf-ui.md`.
 
 ### Speed-starts for the Ymir apps
 

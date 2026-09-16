@@ -883,7 +883,7 @@ async function reviews() {
 
   // 2. The compliance card (lint + governed-path checks) always stands.
   const out = await runAsync(['bash', 'bin/brokk-lint.sh', '--quiet'], 60000);
-  const compliance = await runAsync(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json'], 60000);
+  const compliance = await runAsync(['bash', '.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh', '--json'], 60000);
   let gates: { id: string; status: string; detail: string }[] = [];
   try {
     gates = JSON.parse(compliance).checks ?? [];
@@ -1038,7 +1038,7 @@ async function loaders() {
 }
 async function checks() {
   try {
-    return (JSON.parse(await runAsync(['bash', '.agents/skills/galdr-cli/scripts/compliance-check.sh', '--json'], 60000)).checks ?? []) as unknown[];
+    return (JSON.parse(await runAsync(['bash', '.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh', '--json'], 60000)).checks ?? []) as unknown[];
   } catch {
     return [];
   }

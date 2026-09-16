@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-09-16 — Gunnlöð joins the hall (SkillOpt integration)
+
+- **SkillOpt integration.** `pip install skillopt` into `.venv/`; training
+  loop (`skillopt-train`), eval (`skillopt-eval`), and nightly
+  self-evolution (`skillopt-sleep`) available for Smíðja prompts and
+  Ymir skills. Nightly Nornir job at 00:30 (bin/nornir-job-skillopt-sleep.sh),
+  staged artifacts only — Allfather approves before adopt. One-time setup:
+  `bin/skillopt-setup.sh`.
+- **Naming.** SkillOpt adopted the name **Gunnlöð** (keeper of the mead of
+  poetry — distills trajectories into refined skill artifacts). Added to
+  `.agents/assets/agents/naming.md` (platform map, 28 subsystems),
+  `.agents/skills/galdr-ymirsystem/assets/registry.md` (skills + external tools),
+  `README.md` (System Map + Skills + gratitude), `NOTICE` (MIT attribution).
+
 ## 2026-09-13 — the imported names leave the halls (Norse naming purge)
 
 - **"firstmate" retargeted to Ymir's own names across every Ymir-owned surface.**
@@ -20,7 +34,7 @@
 - **Licensing.** `NOTICE` now records the upstream **firstmate** distro
   (`github.com/kunchenguid/firstmate`, MIT, © kunchenguid) and a README "Built on"
   section points to it; the MIT copyright/permission notice is retained.
-- **Governed asset:** `galdr-cli/assets/hlidskjalf-ui.md` records the Allfather
+- **Governed asset:** `galdr-ymirsystem/assets/hlidskjalf-ui.md` records the Allfather
   review copy in the same change. `compliance-check.sh` 10/10 PASS.
 
 ## 2026-09-13 — The realm seat, carved (wayof)
@@ -415,7 +429,7 @@ Entries are appended chronologically; never rewritten.
   match when the PID file is missing, and record the PID when the port is
   already up — so `scripts/stop.sh` truly lowers the whole system and
   `scripts/start.sh` truly raises it.
-- **Galdr:** new asset `.agents/skills/galdr-cli/assets/memory-well.md` (store,
+- **Galdr:** new asset `.agents/skills/galdr-ymirsystem/assets/memory-well.md` (store,
   bridge, MCP, harness matrix, laws, verify), routed in `SKILL.md`; registry +
   harness README updated; mirrored to tyr.
 - **Verified:** MCP recall 1.0 / stats 367, full stop→start cycle (3888/3889/

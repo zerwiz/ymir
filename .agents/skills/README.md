@@ -8,7 +8,7 @@ matches its work (Gungnir naming law).
 
 ```
 skills[23]{skill,does}:
-  "galdr-cli","agent-CLI ergonomics — the master builder/maintainer of the runtime"
+  "galdr-ymirsystem","agent-CLI ergonomics — the master builder/maintainer of the runtime"
   "tyr-check","the judge — galdr principles + runtime gates"
   "no-mistakes","the clean-PR gate — vendored engine skill: validate, push, PR, CI"
   "smidja-factory","the smithy — agent factory: roster, phases, envelopes, visualizer"
@@ -34,8 +34,8 @@ skills[23]{skill,does}:
 ```
 
 The control-plane UI guide is not a standalone skill: **hlidskjalf-ui** and its
-hall **Óðrerir** (odrerir-hall) are assets under **galdr-cli** (the master
-builder), loaded from `.agents/skills/galdr-cli/assets/` — see the galdr router.
+hall **Óðrerir** (odrerir-hall) are assets under **galdr-ymirsystem** (the master
+builder), loaded from `.agents/skills/galdr-ymirsystem/assets/` — see the galdr router.
 
 Not adopted as standalone skills: `firstmate-coding-guidelines` (folded into Galdr),
 `firstmate-orca` / `firstmate-codexapp` (backend reference docs only).
@@ -48,5 +48,5 @@ Not adopted as standalone skills: `firstmate-coding-guidelines` (folded into Gal
 4. **Norse-name every new skill** at synthesis: choose the figure whose role
    matches the work and let the skill inherit that name (`<figure>-<what>`).
 
-Governance: `.agents/skills/galdr-cli/SKILL.md`; adopted-skill provenance is recorded in
-`.agents/skills/galdr-cli/assets/reference-adoption.md`.
+Governance: `.agents/skills/galdr-ymirsystem/SKILL.md`; adopted-skill provenance is recorded in
+`.agents/skills/galdr-ymirsystem/assets/reference-adoption.md`.

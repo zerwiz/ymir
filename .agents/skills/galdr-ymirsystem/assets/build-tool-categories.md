@@ -59,7 +59,7 @@ Galdr needs to understand these build tool categories and their asset requiremen
 
 ## 4. Galdr Skill Assets (Internal)
 
-**Location**: `.agents/skills/galdr-cli/assets/`
+**Location**: `.agents/skills/galdr-ymirsystem/assets/`
 
 **Purpose**: Reference data for skill synthesis and compliance checking
 
@@ -162,10 +162,10 @@ agent receives this as initial context and can act immediately
 | Asset File | Path | Purpose |
 |------------|------|---------|
 | Eindri profiles | `.agents/subagents/*.md` | Sub-agent role definitions |
-| Tool schemas | `.agents/skills/galdr-cli/schemas/` | TOON output formats per tool |
-| Workspace patterns | `.agents/skills/galdr-cli/assets/` | Workspace directory conventions |
-| Aett pattern | `.agents/skills/galdr-cli/assets/` | Norse naming convention |
-| Compliance requirements | `.agents/skills/galdr-cli/assets/compliance-requirements.md` | Five Utgard sandbox gates |
+| Tool schemas | `.agents/skills/galdr-ymirsystem/schemas/` | TOON output formats per tool |
+| Workspace patterns | `.agents/skills/galdr-ymirsystem/assets/` | Workspace directory conventions |
+| Aett pattern | `.agents/skills/galdr-ymirsystem/assets/` | Norse naming convention |
+| Compliance requirements | `.agents/skills/galdr-ymirsystem/assets/compliance-requirements.md` | Five Utgard sandbox gates |
 
 ## Usage in Skill Synthesis
 
