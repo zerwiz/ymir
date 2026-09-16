@@ -49,7 +49,7 @@ if command -v bun >/dev/null 2>&1; then
   if [[ -f "$API_PID_FILE" ]] && kill -0 "$(cat "$API_PID_FILE")" 2>/dev/null; then
     echo "Gate API already running (pid $(cat "$API_PID_FILE")) → http://127.0.0.1:${API_PORT}/api/health"
   else
-    ymir_detach bun run "$APP/server/index.ts" >"$API_LOG" 2>&1
+    ymir_detach env PORT="$API_PORT" bun run "$APP/server/index.ts" >"$API_LOG" 2>&1
     echo $! > "$API_PID_FILE"
     for _ in $(seq 1 20); do
       curl -s -o /dev/null "http://127.0.0.1:${API_PORT}/api/health" && break

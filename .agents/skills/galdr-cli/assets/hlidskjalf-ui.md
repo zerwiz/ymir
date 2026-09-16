@@ -150,6 +150,13 @@ so the hot readers are memoised and the probes now run off the event loop:
 Measured: `/api/checks` 442ms → 4ms warm; `/api/runtime` 312ms → 5ms warm;
 20 parallel `/api/runes` in 8ms.
 
+**Ports are environment-driven.** The SPA (Vite) and the gate API read
+`HLIDSKJALF_PORT` (default `3888`) and `HLIDSKJALF_API_PORT` (default `3889`);
+`scripts/start.sh` passes the API port to the server as `PORT`, and the visualizer
+uses `SMIDJA_VIZ_API_PORT`. A deployment should use 5-digit ports (the Quadlet/
+Compose examples publish `38888`/`38889`/`84370`) to avoid colliding with other
+services on a shared host; the defaults are unchanged for bare local dev.
+
 ## Smíðja in the UI
 
 The smithy's trace (its own `smidja/smidja_data/smidja.db`) is rendered by four gates:
