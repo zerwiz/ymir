@@ -131,27 +131,10 @@ ymir/
 │           ├── .yggdrasil/        # [g] Ephemeral worktree branches
 │           └── .gitkeep
 │
-├── svartalfaheim/                 # MULTI-TENANT DOMAINS (Nine Realms)
-│   ├── README.md                  # [d] Templates & realm rules
-│   ├── way-of/                     # Company tenant (WOMONO, WOW, OPT)
-│   │   ├── Brokk.md                # [d] Tenant persona & directives
-│   │   ├── .env.realm              # [g] Tenant-specific secrets
-│   │   ├── .env.realm.example      # [d] Secret template
-│   │   ├── projects/               # Local root for tenant GitHub repos
-│   │   │   └── .gitkeep            # Cloned repos land here (with .yggdrasil/)
-│   │   └── workspace/              # Scoped operational memory
-│   │       ├── README.md
-│   │       ├── company/            # Brand identity, offers, strategy
-│   │       ├── marketing/          # Campaigns, copy, social calendars
-│   │       ├── development/        # Specs, PRDs, architectural docs
-│   │       ├── life/               # Personal goals, habits, finances
-│   │       └── memory/
-│   │           ├── daily/          # Auto-generated YYYY-MM-DD.md logs
-│   │           └── entity_graph/   # Entity relationship notes
-│   ├── <tenant>/                   # one directory per tenant
-│   │   └── (same layout as way-of)
-│   └── craig/                      # Member tenant — craig
-│       └── (same layout as way-of)
+├── svartalfaheim/                 # REALM DOMAINS (scoped per operator)
+│   ├── README.md                  # [d] Realm templates & rules
+│   ├── examples/                  # [d] Public example realms (never real data)
+│   └── work/                      # [d] Operator workspace scaffold
 │
 ├── workspace/                     # GLOBAL / PERSONAL STATE & AUDIT
 │   ├── README.md

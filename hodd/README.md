@@ -9,21 +9,24 @@ tracks the guard and this map, never the treasure.
 
 - **Hodd is private by default.** `hodd/.gitignore` tracks only this README and
   the guard file; everything beneath is untracked, on every clone.
-- **Secrets are referenced, never inlined.** Scripts read from Hodd by path
-  (`YMIR_HOARD`, default `<repo>/hodd`) — a value never enters a tracked file.
+- **Secrets are referenced, never inlined.** Scripts read secrets from
+  `$YMIR_HOME/secrets/` (`YMIR_HOARD`, default `$HOME/Documents/Ymir`);
+  a value never enters a tracked file.
 - **`bin/secret-guard.sh` is the outer ward** (pre-commit + CI); Hodd is the
   inner one. Nothing leaves without passing both.
-- **Realm boundaries hold.** `hodd/tenants/<tenant>/` is loaded only into that
-  tenant's work.
+- **Realm boundaries hold.** Data at `$YMIR_HOME` is scoped per operator;
+  a clone must never inherit another's secrets.
 
 ## Layout
 
 | Path | Holds |
 |------|-------|
-| `hodd/secrets/` | env files, keys, tunnel tokens (`*.env`, `*.key`) |
-| `hodd/docs/` | private strategy: masterplan, `plans/`, notebooks |
-| `hodd/tenants/` | per-tenant private trees (e.g. `tenants/josef/`) |
-| `hodd/identity/` | company + domain entity cards, portfolio, project registry |
+| `hodd/` (this file) | Map of the Hoard |
+| `hodd/.gitignore` | Inner ward — tracks only this README + the guard |
+| `hodd/AGENTS.example.md` | Template for the operator's private contract |
+| `$YMIR_HOME/docs/` | Private strategy: masterplan, plans, notebooks |
+| `$YMIR_HOME/secrets/` | env files, keys, tunnel tokens |
+| `$YMIR_HOME/identity/` | company + domain entity cards, portfolio |
 
 Each directory keeps a tracked `*.example` where a shape is useful, so a new
 operator knows what belongs without seeing another's contents.
@@ -31,16 +34,13 @@ operator knows what belongs without seeing another's contents.
 ## Loading
 
 ```bash
-export YMIR_HOARD="${YMIR_HOARD:-$PWD/hodd}"
+export YMIR_HOARD="${YMIR_HOARD:-$HOME/Documents/Ymir}"
 # secrets
 set -a; . "$YMIR_HOARD/secrets/platform.env"; set +a
-# a tenant (into that tenant's work only)
-eval "$(bin/hodd.sh emit tenants/josef/.env)"
 ```
 
 ## Migrating private material in
 
-Anything currently tracked that is private belongs here instead, then dropped
-from git (kept on disk): `docs/masterplan.md`, `docs/plans/*`,
-`docs/append-only-log.md`, `svartalfaheim/*/entity.md` + `AGENTS.md`,
-`assets/data/aigf-*`, `workspace/projects.yaml`, daily memory notes.
+Anything currently tracked that is private belongs at `$YMIR_HOME/` instead,
+then dropped from git (kept on disk): `docs/masterplan.md`, `docs/plans/*`,
+`docs/append-only-log.md`, `identity/*`, `data/*`, `memory/*`.
