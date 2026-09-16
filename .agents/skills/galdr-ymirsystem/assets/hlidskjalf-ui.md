@@ -471,3 +471,24 @@ Two facts worth keeping:
 
 Measured with `npm pack --dry-run --ignore-scripts` (see the app's `files` for
 the exact surface).
+
+## The two doors — web logs in, the desktop seat does not
+
+There is **one** login surface (`LoginModal` → `POST /api/login`), and it belongs
+to the **web** door. The desktop shell (Electron) is a local, trusted seat and is
+never asked to log in.
+
+The mechanism is deliberately narrow, because a marker a client can send is not
+proof of anything:
+
+- the Electron preload exposes `window.ymirDesktop = { desktop: true }`;
+- the SPA sends `x-ymir-surface: desktop` on every request, and
+  `?surface=desktop` on the SSE stream (EventSource cannot set headers);
+- the gate (`server/index.ts`) honours that marker **only when the request
+  arrives over loopback** — `REQUEST_IP`, recorded per request from Bun's
+  `server.requestIP(req)`, because Bun's `Request` carries no socket. A remote
+  web caller can send the header and still be refused.
+
+Verified both ways: `GET /api/session` without a cookie is `authed:false` and
+`/api/orders` is 401; the same calls with the marker from 127.0.0.1 are
+`authed:true` (login = the operator) and 200.
