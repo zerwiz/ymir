@@ -1,6 +1,6 @@
 ---
 mode: subagent
-model: llama.cpp/qwen3.6-35b-a3b@q2_k_xl
+model: opencode-go/deepseek-v4.1-flash
 permission:
   read: allow
   edit: deny
