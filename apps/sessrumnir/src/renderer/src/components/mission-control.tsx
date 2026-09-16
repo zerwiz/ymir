@@ -28,6 +28,8 @@ export function MissionControl(): React.JSX.Element {
   const sessionRuntimes = useAppStore((state) => state.sessionRuntimes)
   const workflowRuns = useAppStore((state) => state.workflowRuns)
   const refreshWorkflowRuns = useAppStore((state) => state.refreshWorkflowRuns)
+  const fleet = useAppStore((state) => state.fleet)
+  const refreshFleet = useAppStore((state) => state.refreshFleet)
   const openSessionItem = useAppStore((state) => state.openSessionItem)
   const activateWorkspace = useAppStore((state) => state.activateWorkspace)
   const switchSession = useAppStore((state) => state.switchSession)
@@ -39,7 +41,8 @@ export function MissionControl(): React.JSX.Element {
 
   useEffect(() => {
     void refreshWorkflowRuns()
-    const timer = window.setInterval(() => void refreshWorkflowRuns(), 5000)
+    void refreshFleet()
+    const timer = window.setInterval(() => { void refreshWorkflowRuns(); void refreshFleet() }, 5000)
     return () => window.clearInterval(timer)
   }, [refreshWorkflowRuns])
 
