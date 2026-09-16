@@ -6,6 +6,7 @@ import { stat } from 'fs/promises'
 import { resolve } from 'path'
 import { isString, isObject } from './validation'
 import type { IpcContext } from './context'
+import { t } from '../../shared/i18n'
 
 type OpenDialogMode = NonNullable<OpenDialogOptions['mode']>
 
@@ -87,9 +88,26 @@ export function registerSystemHandlers(ctx: IpcContext): void {
   ipcMain.handle(IPC_CHANNELS.SYSTEM_OPEN_EXTERNAL, async (_event, url: unknown) => {
     if (!isString(url)) throw new Error('url must be a string')
     if (!url.startsWith('https://') && !url.startsWith('http://')) {
-      throw new Error('Only http(s) URLs are allowed')
+      throw new Error(t('errors.system.externalUrlHttpOnly'))
     }
     await shell.openExternal(url)
+  })
+
+  /**
+   * Where the Hall — the public landing page — lives. On this machine the site
+   * is usually served locally (:4322), so prefer that when it answers and fall
+   * back to the public hostname otherwise. The probe lives here, not in the
+   * renderer: the renderer's CSP allows no cross-origin fetch.
+   */
+  ipcMain.handle(IPC_CHANNELS.SYSTEM_HALL_URL, async () => {
+    const local = process.env.YMIR_HALL_URL ?? 'http://127.0.0.1:4322'
+    try {
+      const res = await fetch(local, { method: 'HEAD', signal: AbortSignal.timeout(700) })
+      if (res.ok) return local
+    } catch {
+      // Not served here — the public hall it is.
+    }
+    return 'https://hall.ymir.zerwiz.org'
   })
 
   ipcMain.handle(IPC_CHANNELS.SYSTEM_GET_VERSION, async () => {

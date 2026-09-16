@@ -7,7 +7,7 @@ matches its work (Gungnir naming law).
 ## Registry (`.agents/skills/`)
 
 ```
-skills[24]{skill,does}:
+skills[23]{skill,does}:
   "galdr-cli","agent-CLI ergonomics — the master builder/maintainer of the runtime"
   "tyr-check","the judge — galdr principles + runtime gates"
   "no-mistakes","the clean-PR gate — vendored engine skill: validate, push, PR, CI"
@@ -27,12 +27,15 @@ skills[24]{skill,does}:
   "ymir-host","host ops — self-update, Omarchy desktop, Þjazi backend"
   "herdr-panes","terminal panes — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)"
   "ratatoskr-a2a","A2A/MCP mesh — a2abridge + wayofteams; registration"
-  "hlidskjalf-ui","control plane UI — SPA, gate API, auth, desktop, tunnel"
   "hamr-adapters","harness adapters — per-harness reference"
   "pr-ops","pull requests — create, update, check status, request merge"
   "hnoss-design","design — artifacts via OpenDesign (prototypes, decks, dashboards, image, video)"
   "bragi-marketing","marketing — research/crawl (Firecrawl), agentic browser (browser-use)"
 ```
+
+The control-plane UI guide is not a standalone skill: **hlidskjalf-ui** and its
+hall **Óðrerir** (odrerir-hall) are assets under **galdr-cli** (the master
+builder), loaded from `.agents/skills/galdr-cli/assets/` — see the galdr router.
 
 Not adopted as standalone skills: `firstmate-coding-guidelines` (folded into Galdr),
 `firstmate-orca` / `firstmate-codexapp` (backend reference docs only).

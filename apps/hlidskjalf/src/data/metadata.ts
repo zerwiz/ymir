@@ -16,6 +16,19 @@ export const SITE = {
 export const VISUALIZER_URL =
   (import.meta.env.VITE_VISUALIZER_URL as string | undefined) ?? 'http://127.0.0.1:8437';
 
+/**
+ * The Óðrerir Live Hall — the landing's carved stone/bronze board. It is not one
+ * of the three apps (those the gate raises), so its door is a plain page in a new
+ * tab. On this machine the hall answers on :4322; anywhere else, the public hall.
+ */
+export const HALL_URL = (() => {
+  const override = import.meta.env.VITE_HALL_URL as string | undefined;
+  if (override) return override;
+  const host = typeof window === 'undefined' ? '' : window.location.host;
+  const local = host.startsWith('localhost') || host.startsWith('127.0.0.1');
+  return local ? 'http://localhost:4322' : 'https://hall.ymir.zerwiz.org';
+})();
+
 /** Per-gate metadata — every view is a page and declares its own story. */
 export const GATE_META: Record<GateId, PageMeta> = {
   fleet: {

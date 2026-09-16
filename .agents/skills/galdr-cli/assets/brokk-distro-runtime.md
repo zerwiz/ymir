@@ -221,10 +221,11 @@ At stage 6 the digest injects, each delimited with an explicit `ABSENT` marker:
 
 | Source | Purpose | Absent means |
 |---|---|---|
-| `data/realm.md` | active realm | digest defaults realm to `way-of` |
+| `data/realm.md` | active realm | digest defaults realm to `wayof` (when the tenant is seated) |
 | `data/operator.md` | Allfather voice, working style, standing rules | use built-in defaults |
 | `data/projects.md` | realm project registry | rebuild from realm `projects/` |
 | `data/learnings.md` | curated operational facts | no curated facts yet |
+| `svartalfaheim/<realm>/HOOD.md` | the holdings map (private hoard + realm seat) | `hood` printed ABSENT; seat not carved yet |
 | `docs/masterplan.md` | open forge orders (counted, not dumped) | `open forge orders` omitted |
 
 Absence is meaningful: **an absent file is never confused with an empty-but-present one.** The fleet digest additionally reads `state/*.meta` and the bounded `state/*.status` tail; the wake drain reads `state/.wake-queue` and `state/*.decision`.

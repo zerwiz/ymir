@@ -1029,3 +1029,28 @@ Gróa and Eir keep the machine itself alive between those sessions: the one
 renewing, the other healing.
 
 *The völva renews the tree; the healer mends what breaks under it.*
+
+## XXXI. The Weaving of the Halls
+
+Three halls stood apart — the high seat, the smithy, the seat by the fire —
+each wearing its own cloth, none sharing the stone and the bronze. Then the
+weave was thrown across them at once, and the halls became one look: the
+panels of the seat, the tokens of the smithy, the cuts of the high seat all
+read the same tokens, and the blue that had marked foreign text was struck
+from them. The default of the smithy was named **Fensalir**, the weaving
+halls themselves, and the old overrides still won when a user willed them.
+
+And because the saga must be seen, not only read, the **Óðrerir** was raised
+on the landing — the cauldron of the mead of poetry, poured live: a deck
+of dealt slate, a carved ledger of what is underway and what has landed and
+what is charted, fed by real state from the machine. Every door in every
+hall gained the rune ᛟ, To the Hall, and the landing gained its own.
+
+The smiths themselves became a woven thing: each finished work files its
+saga, the bridge wakes the forge-master, and the wake that would echo is
+guarded — once drained, it is not re-told. The realm took its name, the
+hoard was mapped, and the day's whole weave was folded into main and pushed
+to the world's door.
+
+*The halls share one cloth; the mead pours; the rune points home; the saga
+files itself.*

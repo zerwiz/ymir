@@ -4,6 +4,27 @@ Ymir's own surface (one of the three things Ymir owns: the UI, the runtime, A2A)
 Load this when touching `apps/hlidskjalf`. The design contract is `docs/design.md`;
 the tokens are the single source of truth.
 
+## Surfaces
+
+```
+surfaces[6]{part,where,note}:
+  "SPA",":3888 (vite) / built dist served by the gate","React app; gates: Fleet, Chat, Runes, …"
+  "gate API",":3889 (bun apps/hlidskjalf/server/index.ts)","auth + /api/* + serves dist/; static types + caching"
+  "login","in-app modal → /api/login → session cookie","user/pass from .env.local HLIDSKJALF_AUTH; Heimdall (oauth2-proxy) is the target"
+  "register","in-app modal → /api/register → spends an invite code","bin/ymir-invite.sh mints a limited-use code when nothing is live; argon2id account in state/accounts.json (0600, gitignored)"
+  "desktop","apps/hlidskjalf/electron/main.cjs + scripts/electron.sh","single instance + one window (never stack); see the ymir skill assets/desktop.md"
+  "tunnel","gjallarhorn → your hostname → :3889","outbound only; `bin/gjallarhorn-tunnel.sh`"
+```
+
+Quick rules:
+
+- **One login, one window** — no GitHub hop before Heimdall; auth stays in-window.
+- **Gate API protects `/api/*`** and serves the SPA; 401 → `ymir:unauthorized`.
+- **No secrets inline** — `HLIDSKJALF_AUTH` from `.env.local`.
+- **Electron:** single-instance lock; `openWindow` reuses the live window.
+- Raise/repair: `scripts/start.sh`; if the window is gone but ports answer, the
+  shell must be restarted (backend ≠ window).
+
 ## Location & stack
 
 - App: `apps/hlidskjalf` — **React 19 + Vite + TypeScript**, state via **Zustand**.
@@ -29,6 +50,46 @@ scripts/stop.sh     # lower them all
   `--realm-tint-dim` on `:root`, set per realm via `data-realm` and overridable by
   the user (`state/store.ts` → `applyAccent`). Tenant overrides live in
   `tenantColors`.
+- **Fonts** are the cloth's three faces, loaded from Google Fonts in `index.html`:
+  Cormorant (display/runes), Newsreader (body), IBM Plex Mono (data), with Noto
+  Sans Runic appended to every stack so a rune glyph falls through to the rune
+  family.
+
+### The cloth (2026-09-13)
+
+The token *values* are the **carved cloth of the halls** — the landing page's own
+palette (`CodeP/ymir-homepage/src/lore.html` `:root`; the hall carries its own
+locked copy at `apps/odrerir/src/styles/cloth.css`), so Hlidskjalf, Smíðja and
+Sessrúmnir are one look (`docs/design.md` §0/§4.2 is the contract):
+
+```
+canvas   bg-0 #0e0c09 · bg-1 #151209 · bg-2 #1a1610 · bg-3 #221d14   (stone)
+accent   cyan-1 #c9973f bronze · cyan-2 #7d5f2a bronze-deep
+         violet-1 #96a0a8 steel · violet-2 #5f686e steel-dim
+lines    steel-1 #2b241a (line) · steel-2 #7d5f2a (brass rule) · chisel #c9973f
+text     text-0 #cfc3a9 bone · text-1 rgba(207,195,169,.82) · text-2 #9a8f75 · text-3 #6b6250
+state    ok #96a0a8 steel · warn #c9973f · danger #c2584a blood-lit · info #9a8f75
+bevel    inset 0 0 0 1px rgba(201,151,79,.12)
+```
+
+Rules that hold it honest:
+
+- **The cloth is the default, not a cage** — a user accent/background choice wins
+  (`AccentPicker`), and the eight **house/domain seals keep their heraldry**
+  (`DOMAINS`), exactly as the landing page keeps its house seals. Chrome is the
+  cloth; heraldry is not chrome.
+- The **workspace tints** are cloth too: `work` = bronze `#c9973f`, `personal` =
+  steel `#96a0a8` (`src/data/realms.ts` → `WORKSPACES`, mirrored by the
+  `data-realm` fallbacks in `styles/global.css`).
+- The **Emblem** (`components/Emblem.tsx`, `midgard/design-system/ymir-mark.svg`)
+  is brand, not cloth — it keeps its own colours on the stone.
+- The login's GitHub button is a bone plate with a dark rune (the old white/navy
+  literal is gone), and the `HallsChooser` cards read real tokens (they used to
+  name two tokens that never existed, `--ymir-line`/`--ymir-panel`).
+- Role-coloured literals in the stylesheets are now `color-mix(… var(--token) …)`,
+  so a token change re-themes them.
+- Geometry did not move: radius, spacing and the shell are unchanged by the cloth
+  (the carved-slate squaring is still an open question).
 
 ## The shell (structural, do not redesign)
 
@@ -47,11 +108,12 @@ scripts/stop.sh     # lower them all
 
 1. **Color-only states are forbidden** — every status carries glyph + colour + text
    (`StatusChip`, `TaskChip`).
-2. **Runecoded, not emoji** — use the rune family (Cinzel); never an emoji as an icon.
+2. **Runecoded, not emoji** — use the rune family (runic glyphs fall through to
+   Noto Sans Runic inside the Cormorant/mono stacks); never an emoji as an icon.
 3. **Every button must act** — no dead controls. Wire to a state change, a modal, or
    a toast.
 4. **Motion explains** — 120–240ms, no bounce; honour `prefers-reduced-motion`.
-5. **Metrics are JetBrains Mono, tabular** (`.mono`, `.tabular`).
+5. **Metrics are IBM Plex Mono, tabular** (`.mono`, `.tabular`).
 6. **Metadata per page** — a gate declares its title/description/OG tags in
    `src/data/metadata.ts`; `Shell` applies them on gate/realm change.
 
@@ -93,6 +155,22 @@ tries **every** engine that advertises it (LM Studio `:1234`, the llama.cpp
 router `:8080`, Bifrost `:4603`), never only the first — a dead engine falls
 through to a live one. Recall reads `.agents/memory/well/episodes.jsonl`
 directly, so restoring that file revives the chat's memory without a restart.
+
+### The gate API reads cheaply (added 2026-09-16)
+
+The gate reads append-only ledgers (Runes, the well's `episodes.jsonl`, masterplan
+orders) and probes live runtime scripts on every request. Both grow without bound,
+so the hot readers are memoised and the probes now run off the event loop:
+
+- `runAsync()` — read-only subprocess probes via `Bun.spawn` (was `spawnSync`,
+  which could block the single Bun event loop for up to 12s); results cached ~3s
+  and concurrent callers share one in-flight spawn. Sync `run()` stays for
+  **mutating** actions only (`setupRun`, `workspaceProvision`).
+- `memo()` — `orders`, `runes`, `smidjaStats`, `chatRecall` are cached (2–3s), so a
+  request never re-parses the whole ledger or well.
+
+Measured: `/api/checks` 442ms → 4ms warm; `/api/runtime` 312ms → 5ms warm;
+20 parallel `/api/runes` in 8ms.
 
 ## Smíðja in the UI
 
@@ -332,3 +410,34 @@ gate comment — retiring the imported `captain` term.
 
 Rule: a Hlidskjalf code change updates this asset in the same pass — the
 compliance gate (`assets/governed assets current`) fails otherwise.
+
+### The Hall door — one button out of the three halls (added 2026-09-13)
+
+The **Óðrerir Live Hall** (the fleet's carved stone/bronze board; now its own
+app at `apps/odrerir`, migrated from `~/CodeP/ymir-homepage` on 2026-09-15) is
+**not** one of the gate's three apps but it IS its own desktop app since the
+migration. The gate raises Hlidskjalf/Smíðja/Sessrúmnir (`/api/desktop` →
+`scripts/electron.sh`); Óðrerir is raised with them by `scripts/start.sh` on
+`:4322`, opens in its own window via `scripts/electron.sh start --view odrerir`
+(native app identity `ymir-odrerir`), and its in-app door is a plain anchor in a
+new tab — **never** a launcher call.
+
+- **Where:** `app/Topbar.tsx` carries it beside `HallsSwitcher` — `.hall-btn`, the
+  rune **Othala (ᛟ)** plus "To the Hall", tinted with the active realm accent so
+  it reads as the same chrome as the chips around it. Styled in `styles/shell.css`
+  (tokens only, no raw hex), press feedback in `styles/overlays.css`.
+- **The hall app:** `apps/odrerir` — an Astro board (the Óðrerir Live Hall) that
+  serves `:4322` and reads `public/livehall.json`, written by
+  `bin/hall-snapshot.sh` (planning glass; public-safe). Its own Electron shell:
+  `apps/odrerir/electron/main.cjs`, raised by `scripts/electron.sh --view odrerir`.
+- **Target rule — one rule for all of Ymir's apps:** `HALL_URL` in
+  `src/data/metadata.ts`. `window.location.host` starting with `localhost` or
+  `127.0.0.1` → `http://localhost:4322`; any other host → the public
+  `https://hall.ymir.zerw.org`. `VITE_HALL_URL` overrides it, exactly as
+  `VISUALIZER_URL` does. Each app computes this inline — the Vite builds are
+  separate, so there is no shared module to hang it on.
+- **Same door** in the Smíðja visualizer's topbar and in Sessrúmnir, so every
+  app's chrome has one way to the Hall.
+- Verified: both branches of the rule in both apps (headless Chromium DOM probe),
+  `tsc --noEmit && vite build` green, 0 console errors; `apps/odrerir` builds
+  standalone and the hall answers `:4322` from `scripts/start.sh`.

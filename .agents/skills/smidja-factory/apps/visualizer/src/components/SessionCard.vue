@@ -374,8 +374,8 @@ const hiddenRowCount = computed(() =>
 }
 
 .card-archive:hover {
-  background: rgba(255, 111, 103, 0.16);
-  color: #ff6f67;
+  background: color-mix(in srgb, var(--red) 16%, transparent);
+  color: var(--red);
 }
 
 /* Stop: only while a run is live, and visible without hovering — a running
@@ -389,7 +389,7 @@ const hiddenRowCount = computed(() =>
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #7dd3fc;
+  color: var(--accent);
   font-family: inherit;
   font-size: 14px;
   line-height: 1;
@@ -403,15 +403,15 @@ const hiddenRowCount = computed(() =>
 }
 .card-stop:nth-of-type(3) {
   right: 66px;
-  color: #b3c0ff;
+  color: var(--violet);
 }
 .card-stop:hover:not(:disabled) {
-  background: rgba(56, 189, 248, 0.2);
-  color: #7dd3fc;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--accent);
 }
 .card-stop:nth-of-type(3):hover:not(:disabled) {
   background: rgba(148, 163, 255, 0.16);
-  color: #cdd6ff;
+  color: var(--violet);
 }
 .card-stop:disabled {
   opacity: 0.5;
@@ -430,7 +430,7 @@ const hiddenRowCount = computed(() =>
 }
 
 .card.fail {
-  border-color: rgba(255, 111, 103, 0.6);
+  border-color: color-mix(in srgb, var(--red) 60%, transparent);
 }
 
 /* Text rows must never absorb flex shrink — the fixed-height card squeezes

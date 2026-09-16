@@ -8,7 +8,7 @@
 
 - **Name / handle:** …
 - **Tenant(s):** …            # hodd/tenants/<tenant>/
-- **Machines:** …             # tailnet names; see docs/runbooks/tailscale-sync.md
+- **Machines:** …             # tailnet names; see hodd/docs/tailscale-sync.md
 
 ## Private material
 

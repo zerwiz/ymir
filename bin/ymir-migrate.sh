@@ -14,8 +14,9 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 MIG_DIR="$ROOT/.agents/migrations"
-STATE_DIR="$ROOT/state"
+STATE_DIR="${YMIR_STATE_DIR:-$YMIR_HOME/state}"
 APPLIED="$STATE_DIR/migrations"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;

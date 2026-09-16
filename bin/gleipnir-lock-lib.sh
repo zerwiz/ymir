@@ -39,11 +39,54 @@ gleipnir_state_dir() {  # <result-var>
   printf -v "$result_var" '%s' "${BROKK_STATE_OVERRIDE:-$home/state}"
 }
 
-gleipnir_pid_alive() {  # <pid>
-  case "${1-}" in
+# /proc/<pid>/stat fields after the closing paren of the comm field: state,
+# then the remaining fields so field N (1-indexed) sits at index N-3.
+gleipnir_proc_stat_rest() {  # <pid> <result-var>  (empty when /proc unavailable)
+  local result_var=${2-} __gleipnir_rest
+  [ -r "/proc/$1/stat" ] || { printf -v "$result_var" ''; return 1; }
+  __gleipnir_rest=$(tr ')' '\n' <"/proc/$1/stat" | tail -n 1)
+  printf -v "$result_var" '%s' "$__gleipnir_rest"
+}
+
+# Starttime (field 22) is clock ticks since boot, stable for a pid's whole
+# life: a mismatch with the starttime recorded at acquire means the original
+# lock owner is gone and the kernel has recycled the pid to another process.
+gleipnir_proc_starttime() {  # <pid> <result-var>  (empty when unavailable)
+  local result_var=${2-} _rest
+  gleipnir_proc_stat_rest "$1" _rest
+  if [ -n "$_rest" ]; then
+    local __gleipnir_fields=()
+    read -r -a __gleipnir_fields <<<"$_rest" || true
+    if [ "${#__gleipnir_fields[@]}" -ge 20 ]; then
+      printf -v "$result_var" '%s' "${__gleipnir_fields[19]}"
+      return 0
+    fi
+  fi
+  printf -v "$result_var" ''
+  return 1
+}
+
+# A pid is alive to Gleipnir only when the process genuinely exists. kill -0
+# alone is blind: it also "succeeds" for a zombie (dead but unreaped) and for a
+# pid the kernel has since recycled. /proc/<pid>/stat resolves both — the state
+# character (Z/X = zombie/dead) and the starttime (see gleipnir_proc_starttime).
+gleipnir_pid_alive() {  # <pid> [<recorded-starttime>]
+  local pid=${1-} expect=${2-} rest state current
+  case "$pid" in
     ''|*[!0-9]*) return 1 ;;
   esac
-  kill -0 "$1" 2>/dev/null
+  gleipnir_proc_stat_rest "$pid" rest
+  if [ -n "$rest" ]; then
+    state=$(printf '%s' "$rest" | awk '{print substr($1,1,1)}')
+    case "$state" in
+      Z|X) return 1 ;;
+    esac
+    if [ -n "$expect" ]; then
+      gleipnir_proc_starttime "$pid" current
+      [ -n "$current" ] && [ "$current" != "$expect" ] && return 1
+    fi
+  fi
+  kill -0 "$pid" 2>/dev/null
 }
 
 # The session pid to record. The lock must bind to the LIVE HARNESS process, not
@@ -166,7 +209,7 @@ gleipnir_lock_drop_legacy() {  # <want-pid>
 }
 
 gleipnir_lock_acquire() {
-  local state lock owner want dir
+  local state lock owner want dir expect starttime
   GLEIPNIR_LOCK_ACQUIRED=0
   gleipnir_state_dir state
   mkdir -p "$state"
@@ -174,12 +217,24 @@ gleipnir_lock_acquire() {
   gleipnir_lock_reap   # a dead owner's lock is not a lock — clear it first
   gleipnir_session_pid want
   gleipnir_lock_owner owner
-  if [ -n "$owner" ] && [ "$owner" != "$want" ] && gleipnir_pid_alive "$owner"; then
+  expect=""
+  if [ -n "$owner" ] && [ -r "$lock.starttime" ]; then
+    expect=$(tr -d '[:space:]' <"$lock.starttime")
+  fi
+  if [ -n "$owner" ] && [ "$owner" != "$want" ] && gleipnir_pid_alive "$owner" "$expect"; then
     return 1
   fi
   dir=$(dirname "$lock")
   mkdir -p "$dir" || return 1
   printf '%s\n' "$want" >"$lock" || return 1
+  # Record the owner's starttime beside the lock so a later pid reuse is
+  # visible as death instead of a live (but unrelated) holder.
+  gleipnir_proc_starttime "$want" starttime
+  if [ -n "$starttime" ]; then
+    printf '%s\n' "$starttime" >"$lock.starttime"
+  else
+    rm -f "$lock.starttime"
+  fi
   gleipnir_write_lock_pointer "$lock"
   gleipnir_lock_drop_legacy "$want"
   GLEIPNIR_LOCK_ACQUIRED=1
@@ -190,14 +245,20 @@ gleipnir_lock_acquire() {
 # close (crash, kill, closing the terminal) can never leave a stale lock —
 # resolved or legacy — holding supervision and lighting the blind turn-end guard.
 gleipnir_lock_reap() {
-  local lock legacy owner p
+  local lock legacy owner p expect
   gleipnir_lock_path lock
   gleipnir_legacy_lock_path legacy
   for p in "$lock" "$legacy"; do
     [ -n "$p" ] && [ -e "$p" ] || continue
     owner=$(tr -d '[:space:]' <"$p" 2>/dev/null || true)
-    if [ -n "$owner" ] && ! gleipnir_pid_alive "$owner"; then
-      rm -f "$p"
+    [ -n "$owner" ] || continue
+    expect=""
+    [ -r "$p.starttime" ] && expect=$(tr -d '[:space:]' <"$p.starttime" 2>/dev/null || true)
+    # A lock whose owner is verifiably gone — dead, a zombie (killed but not
+    # yet reaped), or a pid the kernel reused — is NOT a lock. Gleipnir only
+    # refuses a holder that is genuinely alive.
+    if ! gleipnir_pid_alive "$owner" "$expect"; then
+      rm -f "$p" "$p.starttime"
       printf 'gleipnir: reaped stale lock (dead pid %s)\n' "$owner" >&2
     fi
   done
@@ -211,8 +272,8 @@ gleipnir_lock_release() {
   gleipnir_session_pid want
   gleipnir_lock_owner owner
   if [ "$owner" = "$want" ]; then
-    rm -f "$lock"
-    [ "$legacy" != "$lock" ] && rm -f "$legacy"
+    rm -f "$lock" "$lock.starttime"
+    [ "$legacy" != "$lock" ] && rm -f "$legacy" "$legacy.starttime"
     gleipnir_lock_pointer_path ptr
     rm -f "$ptr"
     GLEIPNIR_LOCK_ACQUIRED=0

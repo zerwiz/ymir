@@ -30,7 +30,9 @@ if [ -z "$TOKEN" ]; then
   exit 1
 fi
 
-api() { curl -fsS -H "Authorization: Bearer $TOKEN" -H 'content-type: application/json' "$@"; }
+# The bearer token is fed to curl as a header read from stdin (`-H @-`), so it is
+# never an argv element visible in `ps`/`/proc/*/cmdline`.
+api() { printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -fsS -H @- -H 'content-type: application/json' "$@"; }
 
 ZONE="${CLOUDFLARE_ZONE_ID:-}"
 if [ -z "$ZONE" ]; then
