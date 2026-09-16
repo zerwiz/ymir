@@ -43,49 +43,57 @@ esac
 index_cmd() {
   local realm=$DEFAULT_REALM
   while [ $# -gt 0 ]; do case "$1" in --realm) realm=${2-}; shift 2 ;; *) shift ;; esac; done
-  local n=0
-  while IFS= read -r f; do
-    [ -n "$f" ] || continue
-    add=$(python3 - "$f" "$ROOT" "$realm" "$STORE" <<'PY'
-import sys, os, re, json, hashlib, datetime
-f, root, realm, store = sys.argv[1:5]
-try: text=open(f, encoding='utf-8', errors='ignore').read()
-except: sys.exit(0)
-rel=os.path.relpath(f, root)
+  local n
+  # One pass, one Python process: the store is read into `seen` a single time and
+  # every file is walked here, so dedupe is O(entries) not O(files x store).
+  n=$(python3 - "$ROOT" "$realm" "$STORE" <<'PY'
+import sys, os, json, hashlib, datetime
+root, realm, store = sys.argv[1:4]
 seen=set()
 try:
     for line in open(store, encoding='utf-8', errors='ignore'):
-        try: seen.add(json.loads(line).get('hash'))
+        try:
+            h=json.loads(line).get('hash')
+            if h: seen.add(h)
         except: pass
 except FileNotFoundError: pass
-# chunk by heading
-chunks=[]; head=''; buf=[]
-def flush():
-    if buf:
-        body='\n'.join(buf).strip()
-        if body: chunks.append((head,body))
-for line in text.split('\n'):
-    if line.startswith('#'):
-        flush(); head=line.lstrip('# ').strip(); buf=[]
-    else: buf.append(line)
-flush()
+roots=[os.path.join(root,'workspace'),
+       os.path.join(root,'svartalfaheim',realm,'workspace'),
+       os.path.join(root,'midgard')]
+files=[]
+for r in roots:
+    for dp,_,fns in os.walk(r):
+        for fn in fns:
+            if fn.endswith('.md'): files.append(os.path.join(dp,fn))
+files.sort()
+now=datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 added=0
 with open(store,'a',encoding='utf-8') as out:
-    for head,body in chunks:
-        content=(head+'\n'+body).strip()
-        if len(content)<40: continue
-        h=hashlib.sha256(content.encode()).hexdigest()
-        if h in seen: continue
-        seen.add(h)
-        rec={'timestamp':datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
-             'source':rel,'tags':['workspace',realm],'content':content[:2000],'hash':h}
-        out.write(json.dumps(rec)+'\n'); added+=1
+    for f in files:
+        try: text=open(f, encoding='utf-8', errors='ignore').read()
+        except: continue
+        rel=os.path.relpath(f, root)
+        chunks=[]; head=''; buf=[]
+        for line in text.split('\n'):
+            if line.startswith('#'):
+                body='\n'.join(buf).strip()
+                if body: chunks.append((head,body))
+                head=line.lstrip('# ').strip(); buf=[]
+            else: buf.append(line)
+        body='\n'.join(buf).strip()
+        if body: chunks.append((head,body))
+        for head,body in chunks:
+            content=(head+'\n'+body).strip()
+            if len(content)<40: continue
+            h=hashlib.sha256(content.encode()).hexdigest()
+            if h in seen: continue
+            seen.add(h)
+            rec={'timestamp':now,'source':rel,'tags':['workspace',realm],'content':content[:2000],'hash':h}
+            out.write(json.dumps(rec)+'\n'); added+=1
 print(added)
 PY
 )
-    add=${add:-0}
-    n=$((n + add))
-  done < <(find "$ROOT/workspace" "$ROOT/svartalfaheim/$realm/workspace" "$ROOT/midgard" -name '*.md' 2>/dev/null | sort)
+  n=${n:-0}
   printf 'indexed[1]{realm,store,added,entries}:\n  "%s","%s",%s,%s\n' "$realm" "${STORE#"$ROOT"/}" "$n" "$(wc -l <"$STORE" | tr -d ' ')"
 }
 
