@@ -2,7 +2,8 @@
 domain: ymirlabs
 description: Primary autonomous agent of the Ymir Agent Operating System
 mode: primary
-model: 
+name: brokk
+model: opencode-go/deepseek-v4.1-flash
 ---
 
 # BROKK — SYSTEM OPERATING MANUAL
@@ -68,11 +69,7 @@ Skills live in `.agents/skills/`. Each has a `SKILL.md` with frontmatter.
 
 **`galdr/tyr-check`** — The judge. Validates tools/skills/docs follow the 10 Galdr principles. Run during code reviews, plan doc creation, or skill synthesis. Outputs compliance assessment per principle.
 
-**`galdr/brokk-craft`** — The forger. Generates new Galdr-compliant skills with Norse naming, TOON output, and all 10 principles baked in. Usage: `brokk-craft <skill-name> [--category <category>]`.
-
-**`galdr/galdr-compliance`** — Older compliance checker (superseded by tyr-check).
-
-**`galdr/galdr-crafter`** — Older skill crafter (superseded by brokk-craft).
+**`galdr/brokk-craft`** — The forger (planned). Generates new Galdr-compliant skills with Norse naming, TOON output, and all 10 principles baked in. Until it is forged, new skills are written by hand against `galdr`'s build-method asset.
 
 ### Skill Synthesis Rules (Gungnir)
 1. Gap identified → write skill doc + script to `.agents/skills/`
@@ -251,28 +248,28 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 
 | Skill | Norse | Purpose | Path |
 |-------|-------|---------|------|
-| `galdr` | Galdr | Agent-CLI ergonomics + master builder/maintainer of the runtime | `.agents/skills/galdr-cli/SKILL.md` |
+| `galdr` | Galdr | Agent-CLI ergonomics + master builder/maintainer of the runtime | `.agents/skills/galdr-ymirsystem/SKILL.md` |
 | `tyr-check` | Tyr | The judge — 10 Galdr principles + runtime gates | `.agents/skills/tyr-check/SKILL.md` |
-| `smidja` | Smiðja | The smithy — rosters, phases, envelopes, runs, trace | `.agents/skills/smidja/SKILL.md` |
-| `galdr` → `local-models` | — | operating on local models: engines, wiring, honest measurement | `.agents/skills/galdr-cli/assets/local-models.md` |
+| `smidja` | Smiðja | The smithy — rosters, phases, envelopes, runs, trace | `.agents/skills/smidja-factory/SKILL.md` |
+| `galdr` → `local-models` | — | operating on local models: engines, wiring, honest measurement | `.agents/skills/galdr-ymirsystem/assets/local-models.md` |
 
 ### Adopted skills (operational)
 
 | Skill | Norse | Purpose | Path |
 |-------|-------|---------|------|
 | `hvild-afk` | Hvíld | Away-mode supervision — routine wakes, batched escalations | `.agents/skills/hvild-afk/SKILL.md` |
-| `saga` | Sága | session bearings (`/bearings`) + recap and unresolved decisions (`/ahoy`) | `.agents/skills/saga/SKILL.md` |
+| `saga` | Sága | session bearings (`/bearings`) + recap and unresolved decisions (`/ahoy`) | `.agents/skills/saga-bearings/SKILL.md` |
 | `muninn-stow` | Muninn | Session-knowledge curation, routing, persistence | `.agents/skills/muninn-stow/SKILL.md` |
 | `jord-projects` | Jörð | Project registry + delivery posture | `.agents/skills/jord-projects/SKILL.md` |
-| `urdh` | Urðr | Allfather-hold lifecycle: decisions held for the Allfather, reconciled | `.agents/skills/urdh/SKILL.md` |
+| `urdh` | Urðr | Allfather-hold lifecycle: decisions held for the Allfather, reconciled | `.agents/skills/urdh-hold/SKILL.md` |
 | `frigg-consent` | Frigg | Consent / ask-user authority gate | `.agents/skills/frigg-consent/SKILL.md` |
 | `vor-diagnostics` | Vör | Bootstrap + diagnostic reasoning | `.agents/skills/vor-diagnostics/SKILL.md` |
-| `nornir` | Nornir | fate & schedule: process→event sources + quota-aware dispatch | `.agents/skills/nornir/SKILL.md` |
+| `nornir` | Nornir | fate & schedule: process→event sources + quota-aware dispatch | `.agents/skills/nornir-schedule/SKILL.md` |
 | `gjallarhorn-relay` | Gjallarhorn | Public relay replies (X/Discord) | `.agents/skills/gjallarhorn-relay/SKILL.md` |
 | `eindri-homes` | Eindri | Isolated worker homes (provisioning) | `.agents/skills/eindri-homes/SKILL.md` |
 | `syn-recovery` | Sýn | Stuck-worker recovery playbook | `.agents/skills/syn-recovery/SKILL.md` |
-| `ymir` | Ymir | self-update · Omarchy-native operation · the Þjazi backend | `.agents/skills/ymir/SKILL.md` |
-| `hamr` | Hamr | Per-harness adapter reference | `.agents/skills/hamr/SKILL.md` |
+| `ymir` | Ymir | self-update · Omarchy-native operation · the Þjazi backend | `.agents/skills/ymir-host/SKILL.md` |
+| `hamr` | Hamr | Per-harness adapter reference | `.agents/skills/hamr-adapters/SKILL.md` |
 
 **Loading:** Skills auto-load from `.agents/skills/` via `opencode.json` → `skills.paths: [".agents/skills"]`. Use the `skill` tool: `skill <name>`.
 
@@ -285,13 +282,13 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 | Eindri profiles | `.agents/subagents/developer.md` | Code synthesis, refactoring, test writing |
 |  | `.agents/subagents/marketer.md` | Content, SEO, social, campaigns |
 |  | `.agents/subagents/researcher.md` | RAG, web search, analysis |
-| Build tool categories | `.agents/skills/galdr-cli/assets/build-tool-categories.md` | 7 tool categories for synthesis |
-| TOON schemas | `.agents/skills/galdr-cli/schemas/toon-schemas.md` | 7 schema types for validation |
-| Compliance requirements | `.agents/skills/galdr-cli/assets/compliance-requirements.md` | 5 Utgard gates + PI gate |
-| Brokk/PI config | `.agents/skills/galdr-cli/assets/pi-boot/pi-profile.yml` | PI harness profile |
-|  | `.agents/skills/galdr-cli/assets/pi-boot/herdr-profile.toml` | Hermóðr pane layout |
-|  | `.agents/skills/galdr-cli/assets/pi-boot/einherjar-spawn.schema.json` | Dispatch payload schema |
-|  | `.agents/skills/galdr-cli/assets/pi-boot/supervision-tree.yml` | Valhalla supervision |
+| Build tool categories | `.agents/skills/galdr-ymirsystem/assets/build-tool-categories.md` | 7 tool categories for synthesis |
+| TOON schemas | `.agents/skills/galdr-ymirsystem/schemas/toon-schemas.md` | 7 schema types for validation |
+| Compliance requirements | `.agents/skills/galdr-ymirsystem/assets/compliance-requirements.md` | 5 Utgard gates + PI gate |
+| Brokk/PI config | `.agents/skills/galdr-ymirsystem/assets/pi-boot/pi-profile.yml` | PI harness profile |
+|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/herdr-profile.toml` | Hermóðr pane layout |
+|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/einherjar-spawn.schema.json` | Dispatch payload schema |
+|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/supervision-tree.yml` | Valhalla supervision |
 | Templates | `.agents/assets/templates/PRD_template.md` | PRD boilerplate |
 |  | `.agents/assets/templates/env.template` | Environment template |
 |  | `.agents/assets/templates/system_prompt.template` | System prompt template |
@@ -346,7 +343,7 @@ Ymir's system primary boots as **PI** with the same boot contract:
 
 PI CLI must: support the `Hamr` profile, emit TOON with the `rodd` operational schema, declare Utgard compliance, integrate with herdr, observe into Mimirsbrunn on dispatch.
 
-PI boot assets: `.agents/skills/galdr-cli/assets/pi-boot/` (pi-profile.yml, herdr-profile.toml, einherjar-spawn.schema.json, supervision-tree.yml)
+PI boot assets: `.agents/skills/galdr-ymirsystem/assets/pi-boot/` (pi-profile.yml, herdr-profile.toml, einherjar-spawn.schema.json, supervision-tree.yml)
 
 ---
 

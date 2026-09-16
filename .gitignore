@@ -2,6 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
+.venv/
 
 # Secrets - NEVER commit
 .env.local
@@ -89,8 +90,8 @@ config/*
 .agents/memory/well/*.jsonl
 
 # smidja runtime — ALL of smidja_data/ is runtime data, never tracked
-smidja/smidja_data/
-smidja/smidja.db*
+apps/smidja/smidja_data/
+apps/smidja/smidja.db*
 .env
 __pycache__/
 *.pyc

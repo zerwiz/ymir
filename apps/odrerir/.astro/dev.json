@@ -1,16 +1,16 @@
 {
-	"pid": 1493275,
-	"port": 4322,
-	"url": "http://localhost:4322",
+	"pid": 1465001,
+	"port": 4323,
+	"url": "http://localhost:4323",
 	"urls": {
 		"local": [
-			"http://localhost:4322/"
+			"http://localhost:4323/"
 		],
 		"network": [
-			"http://192.168.68.110:4322/",
-			"http://100.100.93.103:4322/",
-			"http://172.20.0.1:4322/",
-			"http://172.17.0.1:4322/"
+			"http://192.168.68.110:4323/",
+			"http://100.100.93.103:4323/",
+			"http://172.20.0.1:4323/",
+			"http://172.17.0.1:4323/"
 		],
 		"networkInterfaceNames": [
 			"wlp147s0",
@@ -20,5 +20,5 @@
 		]
 	},
 	"background": true,
-	"startedAt": "2026-09-15T10:34:48.766Z"
+	"startedAt": "2026-09-16T21:32:45.249Z"
 }

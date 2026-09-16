@@ -4,5 +4,6 @@
 
 07:00 bin/nornir-job-daily-briefing.sh
 06:00 bin/nornir-job-observer.sh
-00:30 bin/nornir-job-memory-housekeeping.sh
+00:30 bin/nornir-job-skillopt-sleep.sh
+00:15 bin/nornir-job-memory-housekeeping.sh
 00:00 bin/nornir-job-git-sync.sh

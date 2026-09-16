@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # smidja-observe.sh — the smithy's trace, read-only (W0075). Reads the REPO's own
-# smidja.db (SQLite, WAL) at `smidja/smidja_data/smidja.db` — never any external
+# smidja.db (SQLite, WAL) at `apps/smidja/smidja_data/smidja.db` — never any external
 # repo. If no db is present it says so plainly. Galdr-style TOON.
 #
 # Usage:
@@ -15,7 +15,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DEFAULT_DB="${SMIDJA_DB:-$ROOT/smidja/smidja_data/smidja.db}"
+DEFAULT_DB="${SMIDJA_DB:-$ROOT/apps/smidja/smidja_data/smidja.db}"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;

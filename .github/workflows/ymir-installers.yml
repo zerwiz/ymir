@@ -1,0 +1,50 @@
+name: ymir-installers
+
+# Builds the Windows and macOS installers. Neither needs a matching host:
+#   • the .exe is an NSIS installer — NSIS is a compiler, so Ubuntu builds it;
+#   • the .pkg needs Apple's pkgbuild, so it builds on a macos runner.
+# Signing/notarisation need the operator's own Apple/Windows credentials and are
+# deliberately left to the operator (the artefacts here are unsigned).
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  exe:
+    name: windows .exe (NSIS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install NSIS
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq nsis
+      - name: Build
+        run: bash packaging/build.sh --exe
+        env:
+          YMIR_REPO: ${{ github.server_url }}/${{ github.repository }}.git
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ymir-windows-installer
+          path: packaging/out/*.exe
+          if-no-files-found: error
+
+  pkg:
+    name: macos .pkg (pkgbuild)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: bash packaging/build.sh --mac
+        env:
+          YMIR_REPO: ${{ github.server_url }}/${{ github.repository }}.git
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ymir-macos-installer
+          path: packaging/out/*.pkg
+          if-no-files-found: error
