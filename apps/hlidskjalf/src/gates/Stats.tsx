@@ -12,15 +12,21 @@ const usd2 = (n: number) => `$${n.toFixed(2)}`;
 export function Stats() {
   const stats = useYmir((s) => s.smidjaStats);
   const [selectedModel, setSelectedModel] = useState('');
+  const harnessUsage = useYmir((st) => st.usage);
 
-  const totals = stats?.totals ?? { runs: 0, success: 0, fail: 0, running: 0, tokens: 0, cost: 0 };
-  const usage = stats?.usage ?? { input: 0, output: 0, cache_read: 0, cache_write: 0, total: 0 };
-  const providers = stats?.providers ?? {
+  // THE GATE REPORTS THE HARNESSES (pi + opencode). The smithy keeps its own.
+  const harness = harnessUsage?.gate ?? null;
+
+  const totals = harness?.totals ?? stats?.totals ?? { runs: 0, success: 0, fail: 0, running: 0, tokens: 0, cost: 0 };
+  const usage = harness?.usage ?? stats?.usage ?? { input: 0, output: 0, cache_read: 0, cache_write: 0, total: 0 };
+  const providers = harness?.providers ?? stats?.providers ?? {
     local: { events: 0, sessions: 0, tokens: 0, cost: 0, input: 0, output: 0, cache_read: 0 },
     online: { events: 0, sessions: 0, tokens: 0, cost: 0, input: 0, output: 0, cache_read: 0 },
     per_model: [],
   };
   const catalog = stats?.vendor_catalog ?? [];
+  const byChain = harness?.by_chain ?? stats?.by_chain ?? [];
+  const byModel = harness?.by_model ?? stats?.by_model ?? [];
   const chosen =
     catalog.find((m) => m.id === selectedModel) ?? catalog[0] ?? null;
 
@@ -40,9 +46,41 @@ export function Stats() {
       <div className="stage-head">
         <div>
           <h1 className="stage-title">Statistics</h1>
-          <p className="stage-deck">Every run, tokens, cost, savings · smidja.db</p>
+          <p className="stage-deck">Every harness run — pi &amp; opencode · tokens, cost, savings</p>
         </div>
       </div>
+
+      {harnessUsage && (
+        <section className="panel" style={{ marginTop: 12, padding: 12 }}>
+          <h2 style={{ fontSize: 13, opacity: 0.8, margin: '0 0 6px' }}>
+            Harnesses · opencode &amp; pi
+          </h2>
+          <p className="pf-line dim" style={{ margin: '0 0 8px' }}>
+            {harnessUsage.totals.messages.toLocaleString()} messages ·{' '}
+            {(harnessUsage.totals.input / 1e6).toFixed(1)}M in / {(harnessUsage.totals.output / 1e6).toFixed(1)}M out ·
+            cache-hit {(harnessUsage.totals.cache_hit_ratio * 100).toFixed(1)}% · last {harnessUsage.window_days} days
+          </p>
+          <table className="pf-table">
+            <thead>
+              <tr><th>Model</th><th>Source</th><th>Messages</th><th>In</th><th>Out</th></tr>
+            </thead>
+            <tbody>
+              {harnessUsage.by_model.slice(0, 8).map((m) => (
+                <tr key={m.source + m.model}>
+                  <td>{m.model}</td>
+                  <td>{m.source}</td>
+                  <td>{m.messages.toLocaleString()}</td>
+                  <td>{(m.input / 1e6).toFixed(1)}M</td>
+                  <td>{(m.output / 1e6).toFixed(1)}M</td>
+                </tr>
+              ))}
+              {harnessUsage.by_model.length === 0 && (
+                <tr><td colSpan={5} style={{ padding: 6, opacity: 0.6 }}>no harness usage in the window</td></tr>
+              )}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       <section className="panel" style={{ marginBottom: 'var(--ymir-space-4)' }}>
         <div className="panel-head">
@@ -172,14 +210,14 @@ export function Stats() {
             <div className="panel-title"><span className="glyph" aria-hidden="true">ᛚ</span> By chain</div>
           </div>
           <div className="panel-body flush">
-            {stats?.by_chain.length ? (
+            {byChain.length ? (
               <table className="data-table">
                 <thead>
                   <tr><th>Chain</th><th>Runs</th><th>Success</th><th>Rate</th><th>Tokens</th><th>Cost</th></tr>
                 </thead>
                 <tbody>
-                  {stats.by_chain.map((c) => (
-                    <tr key={c.chain}>
+                  {byChain.map((c, i) => (
+                    <tr key={`${c.chain}-${i}`}>
                       <td className="mono">{c.chain}</td>
                       <td className="num">{c.runs}</td>
                       <td className="num">{c.success}</td>
@@ -201,13 +239,13 @@ export function Stats() {
             <div className="panel-title"><span className="glyph" aria-hidden="true">ᛗ</span> By workflow</div>
           </div>
           <div className="panel-body flush">
-            {stats?.by_model.length ? (
+            {byModel.length ? (
               <table className="data-table">
                 <thead>
                   <tr><th>Workflow</th><th>Runs</th><th>Success</th><th>Rate</th><th>Tokens</th><th>Cost</th></tr>
                 </thead>
                 <tbody>
-                  {stats.by_model.map((m) => (
+                  {byModel.map((m) => (
                     <tr key={m.model}>
                       <td className="mono">{m.model}</td>
                       <td className="num">{m.runs}</td>
