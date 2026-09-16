@@ -1240,7 +1240,7 @@ async function chatCompletion(
       const res = await fetch(`${t.base}/chat/completions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: 700 }),
+        body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: Number(process.env.YMIR_CHAT_MAX_TOKENS ?? 4096) }),   // deepseek-v4.1 spends budget on reasoning FIRST: 700 gave an empty answer
       });
       if (!res.ok) {
         lastErr = `${t.base} → ${res.status}`;
