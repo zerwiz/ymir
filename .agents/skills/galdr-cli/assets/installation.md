@@ -53,6 +53,14 @@ real run prints those three in addition. The exact set:
 bash bin/ymir-install.sh --check | grep -cE '^  "'   # the honest count, on your host
 ```
 
+## Configuration is never hardcoded (Rule 07)
+
+Every port, host, endpoint, path, and credential is resolved from env/config with
+**one documented default** — never a literal in shipped runtime. Ports read
+`HLIDSKJALF_PORT` / `HLIDSKJALF_API_PORT` / `SMIDJA_VIZ_API_PORT`, the SPA bind
+host reads `HLIDSKJALF_HOST`, and a deployment overrides them in its env file
+(Quadlet/Compose), never by patching the core. Law: `RULES/07-config.md`.
+
 ## Container engine: Docker **or** rootless Podman
 
 The core never assumes an engine binary. `bin/ymir-platform.sh` resolves whichever
