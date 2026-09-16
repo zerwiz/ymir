@@ -71,8 +71,59 @@ mint() {  # <app-dir> <glyph> <tint> <label>
     "$(basename "$dir")" "$glyph" "${outdir#"$ROOT"/}/icon.svg"
 }
 
+
+# ── install into the user's system ───────────────────────────────────────────
+# An icon that only exists in the checkout is an icon the operator cannot pin.
+# This writes the rune into the user's icon theme and a .desktop entry per app,
+# rendered with THIS machine's root (never a hardcoded home), so every app is
+# dockable and carries the house mark. Idempotent.
+# The DESKTOP the operator actually sees, not whatever a session happened to
+# export: an agent harness may set XDG_DATA_HOME to a sandbox (this one does),
+# and an icon written there is an icon nobody can pin. YMIR_DESKTOP_DATA_HOME
+# exists for a test that genuinely wants a throwaway target.
+data_home="${YMIR_DESKTOP_DATA_HOME:-$HOME/.local/share}"
+icons_dir="$data_home/icons/hicolor/scalable/apps"
+apps_dir="$data_home/applications"
+# app | entry name | Exec | StartupWMClass
+ENTRIES=(
+  "hlidskjalf|Ymir · Hlidskjalf|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf"
+  "odrerir|Ymir · Óðrerir|scripts/electron.sh start --view odrerir|ymir-odrerir"
+  "sessrumnir|Ymir · Sessrúmnir|bin/sessrumnir.sh start|ymir-sessrumnir"
+  "visualizer|Ymir · Smíðja|scripts/electron.sh start --view smidja|ymir-smidja"
+  "hlidskjalf-mobile|Ymir · Hlidskjalf Mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile"
+)
+install_all() {
+  mkdir -p "$icons_dir" "$apps_dir" || { printf 'error: cannot write %s / %s\n' "$icons_dir" "$apps_dir" >&2; exit 1; }
+  printf 'installed[%d]{app,icon,entry}:
+' "${#ENTRIES[@]}"
+  local row app label exec klass src icon dest entry
+  for row in "${ENTRIES[@]}"; do
+    IFS='|' read -r app label exec klass <<<"$row"
+    src="$ROOT/apps/$app/icon.svg"
+    [ -f "$src" ] || src="$ROOT/apps/$app/public/icon.svg"          # the visualizer keeps its icon under public/
+    [ -f "$src" ] || src="$ROOT/apps/hlidskjalf/public/icon.svg"    # mobile borrows the seat's rune until it earns its own
+    icon="ymir-$app"
+    cp -f "$src" "$icons_dir/$icon.svg" || { printf '  "%s","-","-"\n' "$app"; continue; }
+    entry="$apps_dir/$icon.desktop"
+    {
+      printf '[Desktop Entry]\nType=Application\nVersion=1.0\n'
+      printf 'Name=%s\n' "$label"
+      printf 'Comment=Ymir — the agent operating system\n'
+      printf 'Exec=bash %s/%s\n' "$ROOT" "$exec"
+      printf 'Icon=%s\n' "$icon"
+      printf 'Terminal=false\nCategories=Development;Utility;\n'
+      printf 'StartupWMClass=%s\nStartupNotify=true\n' "$klass"
+    } >"$entry"
+    printf '  "%s","%s.svg","%s.desktop"\n' "$app" "$icon" "$icon"
+  done
+  # the Smidja shelf's older entry name is folded into the rune's own
+  [ -f "$apps_dir/ymir-visualizer.desktop" ] && rm -f "$apps_dir/ymir-smidja.desktop"
+  command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
+}
+
 case "$ACTION" in
   list) list ;;
+  install) install_all ;;
   mint)
     if [ "${1:-}" = "--all" ]; then
       printf 'minted[%d]{app,rune,file,link}:\n' "${#APPS[@]}"
