@@ -13,7 +13,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DEFAULT_PATHS=(assets/reference/state workspace/memory)
+DEFAULT_PATHS=(assets/reference/state "${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/memory")   # the ledger moved into the hoard
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
