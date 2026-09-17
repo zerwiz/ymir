@@ -26,6 +26,19 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
 YES=0
 
 case "${1-}" in
@@ -77,7 +90,7 @@ is_installed() {  # <id>
 }
 
 repo_for() {  # <id> — read the repo from the registry's own catalog when reachable
-  local id=$1 cache="$ROOT/state/omarchy-catalog.json"
+  local id=$1 cache="$YMIR_STATE_DIR/omarchy-catalog.json"
   if [ -r "$cache" ]; then
     python3 - "$cache" "$id" <<'PY' 2>/dev/null
 import json,sys
@@ -135,7 +148,7 @@ case "$ACTION" in
       printf 'omarchy-plugins[1]{id,state}:\n  "%s","already installed"\n' "$id"; exit 0
     fi
     # Resolve the repo from the registry catalog; refresh it if absent.
-    cache="$ROOT/state/omarchy-catalog.json"
+    cache="$YMIR_STATE_DIR/omarchy-catalog.json"
     if [ ! -r "$cache" ] && have curl; then
       mkdir -p "$(dirname "$cache")"
       curl -fsS --max-time 25 https://plugins.omarchy.org/catalog.json -o "$cache" 2>/dev/null || true

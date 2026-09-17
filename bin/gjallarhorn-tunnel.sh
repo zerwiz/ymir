@@ -19,10 +19,23 @@ fi
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
 CONFIG="${YMIR_TUNNEL_CONFIG:-$HOME/.cloudflared/config-ymir.yml}"
 TUNNEL="${YMIR_TUNNEL_NAME:-ymir}"
-PID_FILE="$ROOT/state/gjallarhorn.pid"
-LOG_FILE="$ROOT/state/gjallarhorn.log"
+PID_FILE="$YMIR_STATE_DIR/gjallarhorn.pid"
+LOG_FILE="$YMIR_STATE_DIR/gjallarhorn.log"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-status}"; shift || true
@@ -59,7 +72,7 @@ esac
 
 command -v cloudflared >/dev/null 2>&1 || { printf 'error: cloudflared not found\nhelp: install cloudflared\n' >&2; exit 1; }
 [ -r "$CONFIG" ] || { printf 'error: tunnel config not found: %s\nhelp: cp midgard/infrastructure/ingress/cloudflared-ymir.yml ~/.cloudflared/config-ymir.yml\n' "$CONFIG" >&2; exit 1; }
-mkdir -p "$ROOT/state"
+mkdir -p "$YMIR_STATE_DIR"
 if running; then printf 'gjallarhorn[1]{state,host}:\n  "already up","%s"\n' "$HOST"; exit 0; fi
 
 nohup cloudflared tunnel --config "$CONFIG" run "$TUNNEL" >"$LOG_FILE" 2>&1 &
