@@ -1,3 +1,595 @@
+
+## 2026-09-17 — the house gains an unpublish door
+
+- **`bin/npm-publish.sh --unpublish @scope/name@<version>`.** Publishing had a
+  door in this house and unpublishing had none, so the act was done by hand on a
+  machine whose `~/.npmrc` holds a stale token — the very reason the door exists.
+  The new mode resolves the token from the hoard exactly as publishing does,
+  demands a spec that names the version (a whole package is not a one-word act),
+  supports `--dry-run`, and says plainly that the registry's CDN may serve the
+  tarball for a while after the removal.
+- **The window is 72 hours.** npm allows one version back within 72 hours of its
+  publication; past that only npm support can remove it. The help text says so,
+  because a door that does not name its own clock invites a late knock.
+- **`@zerwiz/ymir@0.1.5` was unpublished** — the version that carried the memory
+  well. Publishing the clean 0.1.7 moves the `latest` tag off the tainted build at
+  once, which is the half of the repair that does not wait for propagation.
+
+## 2026-09-17 — the plan learns the smithy's package name, and the install forwards its flags
+
+Two defects the first real end-to-end npm install surfaced — which is what an
+end-to-end test is for.
+
+- **A surface's name is not its package's name.** The plan looked for
+  `apps/smidja` or `@zerwiz/smidja`, but npm serves the smithy as
+  `@zerwiz/smidja-factory` — so the row read `BLOCKED` on a machine where the
+  smithy was installed and standing. `app_dir`/`app_row` now take the surface
+  name and the package name separately, and the row tells the truth: installed,
+  with the visualizer's UI still to build (the tarball ships its source, never a
+  stale build).
+- **`ymir install --plan` forwarded only `--json`.** `--phase` and `--blocked`
+  were dropped on the way through the installer's door, so `--blocked` answered
+  *unknown flag*. Every plan flag is forwarded now.
+
+**The install this came out of:** `npm install -g @zerwiz/ymir` from the registry
+— `@zerwiz/ymir@0.1.7`, 331 packages, and all four surfaces
+(`hlidskjalf` · `odrerir` · `sessrumnir` · `smidja-factory`) arrived inside the
+distro. The tarball carries no memory store — the leak is closed in the artefact
+as well as in the repo.
+
+## 2026-09-17 — the package shipped the memory well (one version, now excluded)
+
+- **The exposure.** `@zerwiz/ymir@0.1.5` carries five files that are nobody's but
+  the operator's: `.agents/memory/kaia.engram`, its `-shm` and `-wal` sidecars, and
+  `.agents/memory/well/{episodes,workspace}.jsonl`. A public npm tarball contained
+  the live memory well — the store and the episodes. Verified by fetching the
+  published artefact and listing it; `0.1.0`–`0.1.4` are clean, and this branch's
+  build is clean.
+- **The cause, and it is a trap worth naming.** `.gitignore` excludes
+  `.agents/memory/kaia.engram*` and `.agents/memory/well/*.jsonl`, and the repo is
+  clean — but **npm does not consult `.gitignore` when `files[]` names a whole
+  directory.** `files: [".agents/"]` packs that subtree *including* the ignored
+  files. Nothing warned: the leak travelled in the artefact, not the repo.
+- **The fix.** The manifest excludes them explicitly, because a `files[]` list
+  cannot rely on the ignore file it overrides:
+  `!.agents/memory/kaia.engram*`, `!.agents/memory/well/*.jsonl`,
+  `!.agents/memory/*.db`, plus `!**/__pycache__/` and `!**/*.pyc` for the compiled
+  junk that was travelling the same way. Verified: `npm pack --dry-run` carries
+  864 files and **no** memory store — the memory README and the ledger's scaffold
+  header are all that remain, as they should be.
+- **The rule for every future package:** a `files[]` entry that names a directory
+  overrides `.gitignore` for everything beneath it. Name what ships, or exclude
+  what must not — and verify with a dry-run pack, never by assumption.
+- **Remediation.** `@zerwiz/ymir@0.1.5` should be unpublished (it is inside npm's
+  window); the clean build publishes as 0.1.7 and supersedes it.
+
+## 2026-09-17 — the house gains an unpublish door
+
+- **`bin/npm-publish.sh --unpublish @scope/name@<version>`.** Publishing had a
+  door in this house and unpublishing had none, so the act was done by hand on a
+  machine whose `~/.npmrc` holds a stale token — the very reason the door exists.
+  The new mode resolves the token from the hoard exactly as publishing does,
+  demands a spec that names the version (a whole package is not a one-word act),
+  supports `--dry-run`, and says plainly that the registry's CDN may serve the
+  tarball for a while after the removal.
+- **The window is 72 hours.** npm allows one version back within 72 hours of its
+  publication; past that only npm support can remove it. The help text says so,
+  because a door that does not name its own clock invites a late knock.
+- **`@zerwiz/ymir@0.1.5` was unpublished** — the version that carried the memory
+  well. Publishing the clean 0.1.7 moves the `latest` tag off the tainted build at
+  once, which is the half of the repair that does not wait for propagation.
+
+## 2026-09-17 — the package shipped the memory well (one version, now excluded)
+
+- **The exposure.** `@zerwiz/ymir@0.1.5` carries five files that are nobody's but
+  the operator's: `.agents/memory/kaia.engram`, its `-shm` and `-wal` sidecars, and
+  `.agents/memory/well/{episodes,workspace}.jsonl`. A public npm tarball contained
+  the live memory well — the store and the episodes. Verified by fetching the
+  published artefact and listing it; `0.1.0`–`0.1.4` are clean, and this branch's
+  build is clean.
+- **The cause, and it is a trap worth naming.** `.gitignore` excludes
+  `.agents/memory/kaia.engram*` and `.agents/memory/well/*.jsonl`, and the repo is
+  clean — but **npm does not consult `.gitignore` when `files[]` names a whole
+  directory.** `files: [".agents/"]` packs that subtree *including* the ignored
+  files. Nothing warned: the leak travelled in the artefact, not the repo.
+- **The fix.** The manifest excludes them explicitly, because a `files[]` list
+  cannot rely on the ignore file it overrides:
+  `!.agents/memory/kaia.engram*`, `!.agents/memory/well/*.jsonl`,
+  `!.agents/memory/*.db`, plus `!**/__pycache__/` and `!**/*.pyc` for the compiled
+  junk that was travelling the same way. Verified: `npm pack --dry-run` carries
+  864 files and **no** memory store — the memory README and the ledger's scaffold
+  header are all that remain, as they should be.
+- **The rule for every future package:** a `files[]` entry that names a directory
+  overrides `.gitignore` for everything beneath it. Name what ships, or exclude
+  what must not — and verify with a dry-run pack, never by assumption.
+- **Remediation.** `@zerwiz/ymir@0.1.5` should be unpublished (it is inside npm's
+  window); the clean build publishes as 0.1.7 and supersedes it.
+
+## 2026-09-17 — the smithy's dependency names the package npm will actually serve
+
+- **`@zerwiz/smidja` is published and not served.** npm accepted it twice (0.1.0,
+  then 0.1.1): the tarball and the version document existed, the package document
+  never did, and a republish of 0.1.0 was refused as *"previously published"*. The
+  name answers `404`, the website `403`, while `@zerwiz/hlidskjalf`,
+  `@zerwiz/odrerir` and `@zerwiz/sessrumnir` resolve normally and always have.
+- **A second free name failed identically.** `@zerwiz/smidja-factory` was published
+  and shows the same shape — version served, package document withheld. Two names,
+  one behaviour, while packages published yesterday serve fine: the withholding is
+  npm's, not the name's, and the CLI does not report it.
+- **The distro depends on the name that can resolve.** `optionalDependencies` now
+  names `@zerwiz/smidja-factory`, so the moment npm serves that package the smithy
+  arrives with the rest. Being optional, it is skipped silently until then — the
+  plan's phase-5 row is what says so out loud.
+- **`@zerwiz/ymir` 0.1.7** — the version published once this lands.
+
+## 2026-09-17 — the four surfaces arrive by npm, and an old tree gives up what it holds
+
+- **The app packages arrive with the distro.** `@zerwiz/ymir` now depends on the
+  surfaces as their own packages — `@zerwiz/hlidskjalf`, `@zerwiz/odrerir`,
+  `@zerwiz/sessrumnir` (live on the registry) and `@zerwiz/smiddja` (published at
+  0.1.0 today). They are **optionalDependencies**, deliberately: a broken app
+  package must never stop the core from installing, and a package not yet on the
+  registry is skipped by npm and starts arriving the moment it is published.
+  **Proven**: a global install from the packed tarball lands the core plus all
+  three live apps, 330 packages, and the bin answers `0.1.6`. A local install
+  hoists them to `node_modules/@zerwiz/<app>`; a global one nests them under the
+  distro's own `node_modules` — the plan checks both shapes.
+- **The plan tells the shapes apart.** "Declared as a dependency but not fetched"
+  is a `DO`; "no package and no dependency" is a `BLOCKED`. All four surfaces read
+  `DO` on a machine that has the distro but not yet the apps.
+- **Migration 0005 — the operator's things leave the code tree.** It carries this
+  machine's records, the runtime state (pids · logs · locks · the applied-marker),
+  the operator's credentials, and the settings git does not track. Run on the
+  Allfather's machine: **44 carried, 3 stale twins kept, 1 identical duplicate
+  removed, 0 refused** — the tree left holding `.gitkeep` and the distro's own
+  tracked defaults.
+- **A collision is decided by evidence, never assumption.** Two files, one name:
+  identical content means the tree's copy goes (the content is provably at home);
+  different content means both are real, so the home's keeps the name and the
+  tree's is carried beside it as `<name>.stale-<UTC>`. Never merged, never
+  discarded. A template is not only `*.example` — `agents.machine.example.yaml`
+  matched none of the old guards and was carried off as if it were the operator's;
+  it is back, and the pattern now covers `*.example.*`.
+- **The plan's `purity` row applies the same law.** A settings file git *tracks* is
+  the distro's shipped default, not the operator's — and the check asks git about
+  the real path, because the tree's `config` is a symlink into `.agents/config`
+  and the index holds the real name. Asking about the link reported "untracked" and
+  flagged the distro's own `cron.yaml`. It now reads: *nothing of the operator's is
+  written into the code tree*.
+- **`bin/npm-publish.sh --all` learns the smithy** — the registry maps `smidja` to
+  `apps/smidja-factory`, so it is a publish target like any other app.
+- **The smithy gets a front page.** `zerwiz/smidja`'s README was a three-line stub;
+  it now says what Smíðja is, how to install it, how to run the visualizer on
+  `:8437`, what the tree holds, and the shape of a run. The tarball also carries
+  `LICENSE` and `NOTICE` — npm attaches the licence and the readme on its own, but
+  **not the notice**.
+
+## 2026-09-17 — the install asks with a plan, and the operator's things leave the code tree
+
+- **The consent a real install asks for is now computed, not recited.** The old
+  prompt was a hardcoded paragraph, and a paragraph cannot know the host: it named
+  an Omarchy version on a Mac, promised a workspace tree that already stood, and
+  never mentioned that no application had been installed at all. `bin/ymir-plan.sh`
+  probes this machine and prints one row per step with its state and the reason —
+  `DO · SKIP · INFO · BLOCKED · CONSENT` — across nine phases (resolve · code ·
+  home · runtimes · engines · apps · wire · raise · verify). `ymir-install.sh`
+  prints it at the consent prompt; `--plan` / `--dry-run` prints it and writes
+  nothing; `--json`, `--phase N` and `--blocked` are there for automation and for
+  reading what is holding an install back.
+- **The four app surfaces are named in the plan.** hlidskjalf, odrerir, sessrumnir
+  and smidja each get a row: whether the source is present, whether the web build
+  exists, and — when it is absent — the honest reason (`no apps/<name> and no
+  @zerwiz/<name> package`). The Electron shells are a `CONSENT` row, not a silent
+  download: three shells each pull a ~100 MB runtime the web surfaces do not need.
+- **The home is the operator's to choose.** `step_home` asks once, records the
+  answer as machine state under `~/.config/ymir/home`, and every later script
+  resolves it through `bin/hoard-lib.sh` (`$YMIR_HOME` → the recorded choice → one
+  documented default). `--check` never writes; `--yes` takes what is recorded.
+- **The roots law, applied across the tree.** The package is the **code that runs
+  the programs**; everything the operator owns lives in the home. Two resolvers
+  were added (`hoard_data_dir`, `hoard_state_dir`, `hoard_settings_dir`,
+  `hoard_local_env`) and **42 call sites** converted: `$ROOT/data` and
+  `$ROOT/state` (25 scripts), then `$ROOT/.env.local` and `$ROOT/config/*`
+  (17 scripts). A credential no longer sits in a tree that ships, and machine
+  records no longer sit where npm will erase them on upgrade.
+- **The plan is the ward for that law.** Its phase-1 `purity` row names anything of
+  the operator's found in the code tree — `data/`, `state/`, `config/*.yaml`,
+  `.env.local` — so drift is reported on every run instead of discovered after an
+  upgrade.
+- **The install no longer lectures about local models.** The `step_models` console
+  line told the operator to "load the modeltesting skill" — a skill that does not
+  exist anywhere in the tree — mid-install. It is gone; the real method is named in
+  the one place it belongs, the Galdr asset `assets/local-models.md`. `step_models`
+  still ensures the Pi harness and seeds `~/.pi/agent/models.json`.
+- **The package no longer claims to ship `config/`.** `config` is a symlink to
+  `.agents/config`, which npm cannot carry; the tarball now declares what it
+  actually contains (147 bin scripts, the agent-set template under `.agents/`).
+  Settings are seeded into `$YMIR_HOME/config/agents.yaml` from the tracked
+  template, falling back to `.agents/config/` when the symlink is absent.
+- **A corrupted TOON block in `AGENTS.md`** — `outputs[7]` carrying eight rows and
+  duplicate `midgard/` lines — is mended; the compliance gate reports 84 valid
+  blocks again.
+## 2026-09-17 — the registry says where a repo lives and what it is for
+
+- **A project entry can now name its machine.** `machine:` records the host
+  where a checkout lives; `data/machines.md` holds the fleet (omarchy-1,
+  zerwiz, zerwizserver live on the tailnet). A repo is no longer assumed to be
+  on the box you happen to be standing on.
+- **A project entry can now say what it is for.** `about:` is one plain
+  sentence per repo. `bin/project-git.sh list --field about` prints the whole
+  inventory without opening the YAML.
+- **`project-git.sh` resolves more of the block.** `--field` now accepts
+  `machine`, `company`, `workspace` and `about` alongside the git fields, and
+  non-git keys read from the project block rather than the `git:` line.
+- **One registry, not two.** The live registry is `hodd/identity/projects.yaml`
+  (what the runtime reads). A stale duplicate at `Documents/Ymir/identity/` had
+  been drifting apart from it — different GitHub owners, different project sets
+  — and is retired, with a backup kept in `hodd/state/`.
+
+## 2026-09-17 — the private home gets the ward it never had
+
+- **Six guards watched the public repo; the home had none — yet the home is where
+  every private byte lives.** The one real leak of this day (`platform.env.prev-fill`,
+  44 credentials) happened *there*, in a scratch backup swept up by `git add -A`,
+  with nothing watching. `bin/hoard-guard.sh` closes that.
+- **It is a hook, not a script.** Seated as `$YMIR_HOME/.git/hooks/pre-commit`,
+  **git runs it on every commit** — including one made in a hurry, by a loop, or by
+  an agent that has never heard of it. Verified by attempting a real `git commit`
+  with no guard invoked: git refused, exit 1.
+- **It catches what actually leaked**, verified by planting each: a scratch-backup
+  name (`*.prev-*`, `*.bak`, `*.orig`), a plaintext secret filename, a secret shape,
+  and — the evasion that would have hidden a key — **a base64 blob whose decode
+  contains a PEM header**, under an innocent filename.
+- **`bin/ymir-install.sh` seats it at both repos** (the `hoard-gate` step reports
+  the home separately, so a dormant vault is visible), on every install layer.
+- **A bypass is logged, not silent.** `hoard-guard.sh --log-bypass` appends to the
+  Runes ledger when a `--no-verify` commit is detected.
+- **Two stale flat paths fixed in the guards themselves.** `bin/docs-guard.sh` told
+  an operator to move private docs to `$YMIR_HOME/docs/` — a path that no longer
+  exists — and `bin/groa-update.sh` read `$YMIR_HOME/data/eindri-homes.md` instead of
+  the hoard's. A guard pointing at the wrong door teaches the drift it exists to stop;
+  `groa-update.sh` now resolves through `hoard_root`.
+
+## 2026-09-17 — the NorthStar gate runs nightly; the platform door it caught is mended
+
+- **`bin/nornir-job-nsr-compliance.sh` (02:30)** runs every
+  `.compliance/gates/check_*.sh` (danger · env · paths · platform · wiring)
+  and carves the verdict — `nsr.compliance` clean, or `nsr.compliance.failed`
+  (exit 1) naming the broken gate, so the 07:00 briefing reads it at sunrise.
+- **The gate it caught, mended:** `scripts/electron.sh` used `kill -9`, which
+  the platform gate rightly refuses as non-portable. It now uses `kill -KILL`
+  (the house idiom already in `scripts/stop.sh`) — the NSR round is 5/5 green.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — new
+§3.5 (hall snapshot) and §3.6 (NSR round) rows.
+
+## 2026-09-17 — the Live Hall's board becomes true: the snapshot lands on the loom
+
+- **The Hall was a glass with nothing behind it.** The Óðrerir page reads
+  `apps/odrerir/public/livehall.json` same-origin, but nothing wrote it on a
+  schedule — the board showed the saga's own static count and said so.
+  `bin/nornir-job-hall-snapshot.sh` (08:00, after the 06:00 observer and the
+  07:00 briefing) now drives `bin/hall-snapshot.sh` from real state — runes,
+  projects, the cron gauge, the wake queue, standing smiths, armed when-
+  sources, landed errands — and carves Rune `odrerir / hall.snapshot`.
+- The snapshot is runtime, never repo: `apps/odrerir/public/livehall.json` is
+  gitignored, so the job never dirties a branch.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — new
+§3.5 row (reads/writes table, idempotence note).
+
+## 2026-09-17 — the hoard gets a guard, and Rule 04 stops contradicting the disk
+
+- **Eir gains a `hoard` surface.** Private data drifting outside the hoard is
+  now caught rather than discovered by asking "where did that go?". The check
+  fails on two things: a `.ymir-layout.yaml` entry naming a directory that does
+  not exist (a stale map is what lets private work land outside the hoard), and
+  a flat `$YMIR_HOME/{identity,data,docs,secrets,tenants}` sitting beside
+  `hodd/`. `fix` merges a flat duplicate into the hoard without clobbering, then
+  repoints any stale layout entry at the hoard.
+- **Rule 04 corrected, append-only.** The rule's mapping table read as if
+  `hodd/x/` and `$YMIR_HOME/x/` were two locations; on a real home that produced
+  two parallel stores which drifted. The appended correction states the truth:
+  `$YMIR_HOME/hodd/` **is** the private data path, `bin/hoard-lib.sh` is the one
+  source of truth for it, and `.ymir-layout.yaml` must name only paths that
+  exist. Nothing above the correction was rewritten.
+
+## 2026-09-17 — the hoard encrypts its secrets at rest
+
+- **`bin/hodd.sh` decrypts transparently.** `load`, `emit`, and `tenant` now
+  accept a plaintext file *or* an `.age` ciphertext with the sibling plaintext
+  absent. A shared `resolve_secret` finds the readable form; when it decrypts,
+  it uses a mode-600 temp and removes it afterward. An agent asks for the
+  resolved path and never handles ciphertext directly.
+- **Secrets stay encrypted at rest.** `hodd/secrets/platform.env.age` is the
+  committed form; the plaintext is scratch and gitignored. Round-trip verified
+  byte-identical before the plaintext was untracked.
+- **The vault invariant, written down.** The age key and the ciphertext travel
+  together in the private `ymirhome` repo, so a dead disk loses nothing — and
+  `ymirhome` **must never be made public**. Stated in `hodd/docs/secrets-vault.md`.
+- **The honest limit.** This is encryption-at-rest, not encryption-against-yourself:
+  on a single-user machine, a process running as the operator can read what the
+  operator can read. What it buys is the *file* and the *repo*, not the *account*.
+
+## 2026-09-17 — the Forge speaks: each skill's own text in the index
+
+- **The Forge listed skills as bare names.** `Forge.tsx` rendered only
+  `{s.name}` + the aett rune, while the live `/api/skills` index carries every
+  skill's `description` (240-char truncation) — the data was there, the
+  surface never showed it. The skill list items are now two-line cards: name +
+  aett on the head row, the description beneath (`forge-item-desc`, dimmed
+  until hover), scoped to the skill variant so the Eindri rows keep their
+  side-by-side name+status shape.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+Forge gate bullet (skill list shows name + aett + description).
+
+## 2026-09-17 — the feed follows Brokk's thinking past the composer
+
+- **Sessrúmnir's auto-scroll never counted streamed THINKING as growth.**
+  `useChatScroll` watched `messages` and `streamingContent` only, so a
+  reasoning-heavy turn (thinking before any visible content) grew the feed
+  without moving it — the thinking block ended up below the floating composer,
+  behind it, and the Allfather had to scroll down to read it.
+- **The growth signal now also includes `streamingThinking` and streaming tool
+  calls.** While Brokk reasons, the feed keeps the thinking tail in view above
+  the composer (still only when Auto Scroll is on and the reader is at the
+  bottom — scrolling up to re-read never gets yanked).
+- Live hall updated: rebuilt renderer delivered to the running Sessrúmnir and
+  the app restarted via `bin/sessrumnir.sh` (window back on workspace 8).
+
+## 2026-09-17 — the editor stops being banished to its own desktop
+
+- **`bin/editor-place.sh` pinned the editor to its own desktop with
+  `no_focus = true`** — VS Code mapped onto a different workspace than the one
+  the Allfather worked on and never took focus, so nothing inside it was
+  clickable. The rule was written by Ymir itself into
+  `~/.config/hypr/ymir-desktops.lua`.
+- **The editor is now UNMANAGED by default**: it opens on the active desktop,
+  focused and clickable, like any other app. The old pin remains reachable
+  explicitly with `YMIR_EDITOR_PIN=1 bin/editor-place.sh apply`.
+- Live desk healed: the `code` windowrule was removed from
+  `~/.config/hypr/ymir-desktops.lua` (backup kept alongside), Hyprland reloaded
+  with no config errors, and the stranded VS Code windows were moved to the
+  active desktop and focused.
+
+## 2026-09-17 — models, providers, and paths are the user's — and the gate says so
+
+- **The law, amended (Rule 07).** Two clauses appended, the rule itself untouched:
+  - **A. Models and providers live in the hoard, per user, read from YAML.**
+    Every operator's differ, so there is **no global model or provider** — a
+    shipped default naming a model is a claim about someone else's machine. The
+    user's own live in `$YMIR_HOME/hodd/`, read from a YAML file there; the repo
+    ships a template.
+  - **B. No hardcoded absolute file paths.** No `/home/<user>/…`, no
+    `/Users/<user>/…`, no `C:\Users\…`. A path is relative to a resolved root or
+    comes from env/config with one documented default.
+- **The gate, `config`.** `compliance-check.sh` gains a check that fails on a
+  model id or provider name used as a **value** in shipped code or a tracked
+  config, and on an absolute path naming a user. Comments, `*.example` templates,
+  `CHANGELOG*`, and `assets/reference/` are exempt by intent — they document,
+  they do not configure. **192 files clean.**
+- **Three real violations found and fixed:**
+  - `.agents/config/eindri-dispatch.json` — three dispatch rules named
+    `opencode-go/deepseek-v4.1-flash`. Now a template with `<your-model-id>`.
+  - `.agents/skills/galdr-ymirsystem/assets/pi-boot/pi-profile.yml` — the PI boot
+    profile named `lmstudio/qwen3.6-35b-a3b`. Now a placeholder.
+  - `bin/bootstrap-macos.sh` — `/home/ubuntu/Documents/Ymir`. Now resolved from
+    `YMIR_VM_USER` with one documented default.
+- **Two false positives found and fixed in the gates themselves.** The `mocks`
+  gate flagged a prose comment explaining why a guard exists; the new `config`
+  gate first flagged a sentence mentioning `llama.cpp/llama-swap`. Both now
+  exclude comments and require a value position — a gate that cries wolf is a
+  gate that gets ignored.
+- **Four pre-existing failures on main mended** so the gate could be added to a
+  green tree: a duplicated `midgard/` row in `AGENTS.md` (a bad merge left three),
+  the `mocks` false positive, `smidja-factory` indexed but app-provided, and the
+  seat's cloth read from an app repo that is absent until `step_apps` runs
+  (`design-check` now skips cleanly rather than failing every worktree).
+
+## 2026-09-17 — midgard holds public assets only; the company wiki is gone
+
+- **`midgard/company_wiki/` did not belong in this repo.** It was an empty
+  placeholder (one `.gitkeep`), but a company wiki is *tenant data* — policies,
+  vision, specs, client names — and this repo is public. Removed, with every
+  reference to it corrected in `midgard/README.md`, `STRUCTURE.md`, `docs/lore.md`
+  and `assets/Ymir.md`.
+- **`midgard/` is now described precisely.** It was called "shared company
+  assets" in one place and "cross-tenant" in another; a wiki is neither. The
+  contract says **public assets**, and `midgard/README.md` names what does *not*
+  belong: company knowledge, which lives at `$YMIR_HOME/hodd/identity/companies/`.
+- **`bin/private-guard.sh` gains a tenant-document rule** so the shape cannot
+  return: a `company_wiki/`, `wiki/`, `policies/`, `handbook/` or `vision`/
+  `strategy`/`roadmap` document staged in the public tree is refused, with a
+  message naming where it belongs. Verified by planting `midgard/company_wiki/policies.md`.
+- **Nothing had leaked.** A full sweep of every tracked midgard file for personal
+  handles, home paths, key shapes, tunnel UUIDs and LAN/tailnet addresses found
+  no hits — the ingress configs use `${VARS}` and `example.org` throughout, and
+  the DB schema is generic with row-level security on every tenant table.
+
+## 2026-09-17 — AGENTS.md states the one law: no private data in the public repo
+
+- **The law is now first.** A `first_law` block sits directly under the mandate
+  in `AGENTS.md`: never store personal or private data in this repo — not a
+  secret, a key, a name, a plan, a schedule, a client, a credential, or a note.
+  The repo is public; private data lives at `$YMIR_HOME`, under `hodd/`.
+- **The private-data section was rebuilt against the disk.** It had duplicated
+  `secrets/` and `identity/` lines, no `hodd/` level, and a layout that no longer
+  matched the home. It now shows the real tree, names `$YMIR_HOME/hodd/` as *the*
+  private data path, and records that `bin/hoard-lib.sh` is the one source of
+  truth for it.
+- **Every `$YMIR_HOME/...` path in the file was corrected** to `$YMIR_HOME/hodd/...`
+  — the directory rules table, the registry reference, the secrets reference, and
+  the append-only ledger path all pointed at the old flat layout.
+- **Two wards are now documented**: `bin/secret-guard.sh` (a secret entering the
+  repo) and Eir's `hoard` surface (private data drifting outside the hoard, or a
+  `.ymir-layout.yaml` naming a path that does not exist).
+- **Staging discipline is written down.** Stage named files in the home, never
+  `git add -A` — a scratch file written seconds earlier gets swept into a commit
+  and pushed. This happened this day and cost a history rewrite.
+- **`hodd/AGENTS.example.md`** carried the same stale flat paths and a wrong
+  command (`secret-guard.sh emit`, which does not exist); both corrected.
+
+## 2026-09-16 — the validator stops calling a dead visualizer healthy
+
+`bin/ymir-validate.sh` reported `visualizer PASS "UI built and served on :8437"`
+by looking at `./dist` alone. When the API had crashed on a bad `CMD_DB` and
+nothing was listening on `:8437`, the validator still said PASS — the false-pass
+class this night kept surfacing, in the very tool meant to catch it.
+
+- **The check now probes the port as well as the build.** `dist` missing → FAIL;
+  built but nothing on `:8437` → FAIL with the fix (`run scripts/start.sh`);
+  built and listening → PASS. A PASS now means the thing is actually up.
+- **The smidja-db check resolves the same DB pair** `scripts/start.sh` and
+  `bin/smidja-bootstrap.sh` do (an existing `$YMIR_HOME/smidja/smidja.db` first,
+  then an in-repo copy, `SMIDJA_DB` override) — previously it named the home path
+  only, so an in-repo DB read as missing.
+- `galdr-reread`: `assets/installation.md` — a `visualizer` PASS means built *and*
+  listening.
+
+## 2026-09-16 — the roster's effect lands, and the backend pin stops being committable
+
+Applying the private roster (`bin/agents-config.sh apply`) writes the resolved
+model into each agent's canonical profile. Flipping the two local agents to Pi
+made that visible — and surfaced a small ignore hole.
+
+- **Profiles follow the roster.** `sindri-developer.md` and `kvasir-scout.md`
+  now carry their **Pi** ids (`llamacpp-coder/qwen3-coder-30b`,
+  `llamacpp/qwen3.5-9b`), and `huginn-researcher.md` its declared model — the
+  output of `apply` against the operator's roster. These profiles are what the
+  harnesses load, so the local agents now run on Pi rather than through OpenCode.
+- **`.agents/config/backend` is ignored.** The pinned terminal backend is
+  machine-local, but `config` is a **symlink** to `.agents/config`, so the
+  `config/*` rule never matched it and the pin was committable. The file is named
+  in `.gitignore` instead.
+
+## 2026-09-16 — the roster can finally run an agent on Pi
+
+`bin/agents-config.sh apply` wrote **every** agent's model into `opencode.json`'s
+agent block, whatever harness that agent used. So an agent set to run on **Pi**
+(native local models) would have had its Pi model id —
+`llamacpp/qwen3.5-9b` — written into OpenCode's config, which cannot resolve it.
+That is why the roster's two local agents were pinned to `harness: opencode` with
+opencode-style ids: there was no working way to put an agent on Pi.
+
+- **`apply` is now harness-aware.** Only `opencode`-harness agents are written
+  into `opencode.json`; a `pi` (or `hermes`) agent is left out, its model id going
+  to the resolve cache that `bin/agent-run.sh` reads. The providers block is
+  unchanged — a provider's endpoint is a real fact OpenCode may still want.
+- The way this is meant to be used: declare a local agent's model as its **Pi**
+  id (`llamacpp/qwen3.5-9b`, `llamacpp-coder/qwen3-coder-30b` — the ids `pi
+  --list-models` reports) with `harness: pi`; the roster is then Pi-driven with no
+  per-machine hand-editing.
+- `galdr-reread`: `assets/harness-integration/README.md` — the two writers of
+  `opencode.json`, and the rule that only OpenCode agents belong in it.
+
+## 2026-09-16 — the mesh reaches Teams and Anchor, and `show` stops guessing
+
+`bin/a2a-mcp.sh` wired only the well (`engram`) and the mesh (`a2abridge`). The
+**Teams** plane and **Anchor** memory existed only in the operator's personal
+harness config, so no agent *inside* Ymir could see tickets or anchored memory —
+and `a2a-mcp.sh show` insisted on a **fixed** server list, reporting
+`wayofteams-mcp not on PATH` even when the plane was wired and working.
+
+- **Remote MCP servers, URL-driven.** `bin/a2a-mcp.sh` now wires `wayofteams`
+  (from `WAYOFTEAMS_MCP_URL`) and `way-of-anchor-sse` (from `ANCHOR_MCP_URL`).
+  OpenCode gets them natively (`type: remote`); Pi, which has no remote
+  transport, gets them through the `mcp-remote` stdio bridge. A URL wins over a
+  local `wayofteams-mcp` binary when both exist. The URLs are credential-ish and
+  live in the private platform env — never the tracked tree.
+- **`show` reports what is actually wired.** It enumerates every key present in
+  Pi's `mcpServers` and OpenCode's `mcp` (union with what this run would add), so
+  a hand-added or previously-installed server is visible, and the hint only fires
+  when Teams/Anchor is genuinely absent.
+- `galdr-reread`: `assets/harness-integration/README.md` — the MCP scope is now
+  well · mesh · Teams · Anchor, with the two env keys named.
+
+## 2026-09-16 — the credential reaches the gate, and the hall stops leaking an IP
+
+Setting the operator password had **no effect**. This is the bug that made that
+true, and the runtime state that leaked a private address.
+
+- **`scripts/start.sh` never loaded the platform env for the gate.** The gate is
+  `bun run apps/hlidskjalf/server/index.ts`, and the server reads
+  `process.env.HLIDSKJALF_AUTH` — but the launcher passed only `PORT`, and nothing
+  sourced `.env.local`. So a credential written by `bin/ymir-setup-auth.sh`
+  (correctly: `0600`, gitignored) never arrived, and because the gate treats an
+  empty `GATE_AUTH` as authenticated (`authed: GATE_AUTH ? … : true`) the gate
+  stayed **open**. `start.sh` now loads `.env.local` once, before the ports, for
+  every service it raises — the gate, Bifrost and Mimir.
+- **`apps/odrerir/.astro/dev.json` was tracked.** Astro rewrites it on every
+  start with the live `pid` and the host's own addresses (LAN + tailnet) — a
+  private-IP leak into a public tree. It is now untracked and gitignored; the
+  generated types beside it stay tracked.
+- `galdr-reread`: `assets/hlidskjalf-ui.md` (the gate must receive the credential)
+  and `assets/odrerir-hall.md` (`.astro/dev.json` is runtime state).
+
+## 2026-09-17 — the fragment convention is enforced where GitHub runs it
+
+- **The gap, found by doing it.** The pre-push hook folds fragments before a
+  push — but a **GitHub merge bypasses the local hook entirely**. PR #43 merged
+  and left its own fragment unfolded on `main`, so the ledger silently fell
+  behind what the fragments already told. `bin/changelog-assemble.sh --check`
+  catches exactly that state; nothing was calling it.
+- **The gate, at the layer that runs.** `.github/workflows/ymir-changelog-fragments.yml`:
+  - **on `push` to main** — `bin/changelog-assemble.sh --check` fails when any
+    fragment is unfolded, so the ledger can never fall behind a merge.
+  - **on a PR** — a change touching code or docs must add a fragment, edit
+    `CHANGELOG.md`, or carry the `no-changelog` label. The label records the
+    deliberate decision that no entry belongs, rather than letting it be
+    forgotten.
+- **The pattern is the standard one.** This is the well-trodden "news fragments"
+  design (towncrier — Twisted, pytest, pip, attrs; changesets; CPython). The
+  zeroc-ice proposal states the root cause exactly: *"PRs edit one shared file.
+  Better merge discipline doesn't fix it; not editing the shared file does."*
+- **`merge=union` was considered and rejected on evidence.** The Rigor ADR-105
+  tried it and measured it: *"GitHub's PR-mergeability and merge computation
+  ignore `.gitattributes` merge drivers, union included."* It works against local
+  git and does nothing on GitHub — a trap already falsified.
+- **Main's own pending fragment is folded in this change**, so the ledger and the
+  fragments agree from here on.
+
+## 2026-09-17 — the changelog stops conflicting: fragments, folded by a script
+
+- **The problem, measured.** `CHANGELOG.md` is one file and every branch appends
+  at the same position — the top. Git sees two branches inserting different lines
+  at the same spot and calls it a conflict, so **every merge re-conflicts every
+  open branch**. Sixteen open PRs were each resolved by hand for this reason
+  alone, and each merge re-conflicted the rest: O(N²) meaningless conflicts.
+- **The fix — `CHANGELOG.d/`.** A change adds **one file with a unique name**
+  (`<YYYY-MM-DD>-<slug>.md`) instead of editing the ledger. Two branches never
+  touch the same fragment, so the collision cannot occur.
+- **`bin/changelog-assemble.sh`** folds fragments into `CHANGELOG.md` — newest
+  first, above everything already recorded. Folding is an **append**: existing
+  entries are copied verbatim, never reordered, never rewritten. `--dry-run`
+  shows what would fold; `--check` exits 1 when fragments are unfolded.
+- **The pre-push hook folds first.** `bin/changelog-guard.sh --install` now
+  writes a hook that runs the assembler before the guards, so a push never leaves
+  fragments unfolded; if folding changes the ledger the push is refused until the
+  fold is committed.
+- **The guard accepts either form.** A push satisfies the duty by appending to
+  `CHANGELOG.md` **or** by adding a fragment. The refusal message now names both.
+- **Rule 06 is amended, append-only** — the clause stands; the amendment records
+  fragments, and `CHANGELOG.d/` joins the append-only set so a move must carry it.
+
+## 2026-09-17 — the hearth re-seeds on its container: Sessrúmnir's chat fire returns
+
+- **The ember glow was gone from the chat because the canvas sized itself once
+  at mount and only re-seeded on `window.resize`.** Sessrúmnir's split panes
+  (file tree · editor · image) resize the chat column without any window resize,
+  so the hearth kept a stale or zero-sized canvas — invisible. Both the shared
+  hearth (`midgard/design-system/ember.js`) and Sessrúmnir's React port
+  (`ember-background.tsx`) now watch their container with a ResizeObserver and
+  re-seed only when the measured size actually changes (never per-frame).
+  Hlidskjalf inherits the same mend through the shared module.
+- **Verified live**: Sessrúmnir restarted on the fresh build; a screen capture
+  of the running window shows the fire drawing (ember + warm-glow pixels across
+  the hearth area). The running app had been serving a stale bundle (missing
+  `react-i18next` — deps installed, rebuilt).
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+EmberBackground hearth section (shared module + ResizeObserver mend).
+
 # CHANGELOG
 
 ## 2026-09-16 — a sandboxed worker cannot think: `auto` stops killing agents
@@ -116,6 +708,64 @@ None failed loudly — each reported a clean PASS, a wrong SKIP, or a silent los
 - `galdr-reread`: `.agents/skills/galdr-ymirsystem/assets/smidja.md` — the
   protected-paths gotcha and the `smidja/` → `apps/smidja/` move.
 
+## 2026-09-17 — Pi gets its agents, and a dead extension comes back
+
+- **Pi has no agent loader.** Agent loading in Pi is a *package* (`pi-agents`,
+  `pi-agent-mode`, `pi-simple-agents`), never a core feature — and Ymir installs
+  none. So `.pi/agents/` held twenty correct profile links that **nothing in Pi
+  ever read**. The same failure as OpenCode's singular `.opencode/agent/`,
+  arrived at from the other side.
+- **The fix ships in this repo, not a root-pi package.**
+  `.pi/shared/extensions/ymir-subagents.ts` discovers the canonical
+  `.agents/agents/*.md` tree itself and registers a `subagent` tool. A call runs
+  the chosen figure as a nested model call in the current session: the figure's
+  markdown body is its system prompt, its frontmatter `model:` picks the model
+  where the machine serves it. `subagent({})` and `/subagents` list the roster.
+- **It imports nothing.** `@earendil-works/pi-coding-agent` is not installed as a
+  package, so an extension importing its types cannot load at all. This one takes
+  `pi` as `any` and declares `parameters` as a plain JSON schema — the pattern
+  every working extension in the tree already uses.
+- **A rename that left a reader behind.** `skuld-branch-supervision.ts` imported
+  `calmTranscriptClassIsVisible` / `CalmPresentationState` from
+  `./lib/ro-visibility.ts`, but that module exports `roTranscriptClassIsVisible` /
+  `RoPresentationState`. Pi refuses the **whole extension** at load, so Skuld's
+  supervision branch was dead in every session and nothing reported it. Fixed.
+- **The check that catches it** is now recorded in the owning asset: import every
+  deployed extension with `node --input-type=module` and confirm it loads — a
+  module that cannot resolve is invisible from the file listing.
+## 2026-09-17 — every figure loads: the agent directory was never read
+
+- **The bug, stated plainly.** Twenty agent profiles existed, twenty symlinks
+  pointed at them, and every gate was green — yet OpenCode loaded **three**
+  agents. The symlinks lived in `.opencode/agent/` (SINGULAR). OpenCode reads
+  `.opencode/agents/` (PLURAL). Twenty correct links sat in a directory no loader
+  opened, so only `brokk` and `hnoss` — the two declared by hand in
+  `opencode.json` — ever appeared.
+- **The directory is fixed and migrated.** `.opencode/agent/` → `.opencode/agents/`
+  (20 links, all resolving). `bin/valknut-load.sh` now writes the plural path and
+  **migrates a legacy singular dir forward**, so an old home heals instead of
+  silently keeping its agents invisible.
+- **The roster now declares what it names.** `bin/agents-config.sh apply` only
+  touched an agent already present in `opencode.json` (`if a in ablock`), so a
+  figure the roster knew but the config had never seen stayed undeclared. The
+  roster is the source of truth; a name in it now reaches the harness config.
+- **A new gate catches the class.** `compliance-check.sh` gains **`roster`**: the
+  roster (`config/agents.yaml.example`) and the canonical tree
+  (`.agents/agents/*.md`) must name the same figures. A figure in the tree but not
+  the roster falls to `default_model` and is never declared; a figure in the
+  roster with no profile is a phantom. This is the check that would have caught
+  the real failure while every other gate stayed green.
+- **Verified, not assumed.** `opencode agent list` in the worktree reports all
+  twenty figures (bragi … vor) plus Ymir's own subagents — 33 agents, up from 3.
+  Compliance: 14/14 PASS.
+- **References swept.** Every `.opencode/agent/` reference in code and docs moved
+  to the plural path: `bin/valknut-load.sh`, `bin/agents-config.sh`,
+  `apps/hlidskjalf/server/index.ts`, `RULES/02-agents.md`, `README.md`,
+  `docs/runbooks/agents.md`, `.pi/extensions/README.md`, and the Galdr assets
+  (`harness-integration`, `runtime-compliance`, `registry`, `hlidskjalf-ui`).
+  `CHANGELOG.md`'s own historical entry is left as written — append-only.
+
+
 ## 2026-09-16 — the core senses the real host, not Omarchy's shadow
 
 - **`bin/ymir-install.sh` `step_host` ran the wrong sensor.** The core host step
@@ -135,6 +785,50 @@ None failed loudly — each reported a clean PASS, a wrong SKIP, or a silent los
   `.agents/skills/galdr-ymirsystem/assets/installation.md` — the `host` step row,
   the Verify list, the two-layer table (recording, not learning), and the
   "Omarchy branches" note.
+## 2026-09-16 — the visualizer finds its DB, and the seat-hall actually builds
+
+Two more readers left behind — both discovered by *starting the apps*, not by any
+gate. Each failed silently in its own way.
+
+- **`scripts/start.sh` pointed the smithy at a repo path that no longer holds the
+  DB.** `0003-private-data-separation` moved it to `$YMIR_HOME/smidja/smidja.db`,
+  but the starter still passed `CMD_DB=<repo>/apps/smidja/smidja_data/smidja.db`
+  — so the visualizer API died on boot with `smidja.db not found` and `:8437`
+  answered nothing. It now resolves the same pair `bin/smidja-bootstrap.sh` does
+  (home first, in-repo fallback, `SMIDJA_DB` override). The asset already
+  *described* this resolution; the code now implements it.
+- **`bin/sessrumnir-ensure.sh` never built the app.** `[ "$built_present" ]` tests
+  a **literal, non-empty string** — always true — so `ensure --install` skipped
+  `build_app` and reported `built: no` with exit 0. Sessrúmnir only built when the
+  build was run by hand. Now `built_present` (the function) is called.
+- `galdr-reread`: `.agents/skills/galdr-ymirsystem/assets/smidja.md` — the DB
+  path, the `scripts/start.sh` DB resolution, and the observer's read list.
+
+## 2026-09-16 — four readers that still pointed at the pre-split world
+
+The app split and the hoard migration moved things; four readers never followed.
+None failed loudly — each reported a clean PASS, a wrong SKIP, or a silent loss.
+
+- **`bin/ymir-install.sh` wrote during `--check`.** The step chain ran
+  `bin/ymir-migrate.sh apply` unconditionally, so a preview that promises *"report
+  only, no writes"* actually **moved private data**. Migrations now apply only on
+  a real run: `if [ "$CHECK" = 0 ]; then ... apply; fi`.
+- **`.agents/migrations/0003-private-data-separation.sh` skipped every directory.**
+  It pre-creates its target dirs, then its `copy` refused any target that already
+  existed — so `data/` (and every other directory source) was silently dropped.
+  The realm declaration never arrived and `0004` fell back to a neutral realm.
+  `copy` now **merges** a directory into its target (never overwriting a file) and
+  copies a single file only when it is absent.
+- **`bin/smidja-bootstrap.sh` looked for the smithy at the old root.** `sys.path`
+  pointed at `smidja/`, but the split moved it to `apps/smidja/`, so the DB seed
+  died with `ModuleNotFoundError: No module named 'smidja_modules'`. It now
+  searches `apps/smidja` then `smidja`, so either layout works.
+- **`bin/ymir-validate.sh` read the ledger from the pre-move path.** It looked at
+  `$YMIR_HOME/memory/`, but `0004-hoard-and-realms` put the ledger at
+  `$YMIR_HOME/hodd/memory/` — a false `runes FAIL` on a healthy home. It now tries
+  the hoard first, then the pre-move locations.
+- `galdr-reread`: `.agents/skills/galdr-ymirsystem/assets/smidja.md` — the
+  protected-paths gotcha and the `smidja/` → `apps/smidja/` move.
 
 ## 2026-09-16 — Omarchy-first, host-aware: Windows and macOS get a door
 
@@ -769,7 +1463,6 @@ subsystem was never loaded before the code changed. Five layers now prevent it:
 - **GitHub:** `bin/project-git.sh` reads `workspace/projects.yaml` `git{}`.
 - **Verified:** build green, compliance 8/8, smoke 8/8, lint 4/4.
 
-
 All significant runtime, policy, and architectural changes for the Ymir platform.
 Entries are appended chronologically; never rewritten.
 
@@ -1347,3 +2040,53 @@ tunnel as a local seat.
 Also mended in the same pass: `StatusChip` read `STATUS_META[status].tone`, and the
 fleet now reports a status it was never taught (`seated`), so an unknown status threw
 and killed the gate. An unknown status can no longer take a panel down.
+
+## 2026-09-17 — Glitnir stops hanging, and one process is one row
+
+- **`/api/reviews` ran two 60-second shell checks on every poll**, so the review board
+  hung for a minute and read as a dead surface. It is memoised for a minute now, the
+  same discipline the usage endpoint already follows: a board a human reads does not
+  need an answer fresher than its own usefulness.
+- **`/api/processes` returns the same id twice** — `systemd:dbus` arrives from two
+  sources, 45 entries for 44 processes. The panel dedupes by id, so a repeated process
+  renders as the one process it is, and React is no longer handed a duplicate key.
+  The duplicate at the source is recorded, not hidden.
+- `/api/stream` answers 200; the live stream is not broken, it was the window.
+
+## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
+
+- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
+  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
+  20 roster cards the rings and labels overlapped into an unreadable pile.
+  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
+  rows pitched past ring+label), so 20 agents render separated.
+- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
+  `domain: ymirlabs` for every card and its roster parser never read the
+  `domain:` frontmatter each figure carries — so all twenty cards wore the
+  anonymous ᛦ. The roster now parses `domain:` and passes it through;
+  `galdr.md` names its house (`brokkforge`); the graph falls back to
+  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
+  — and the `AgentCard` already fell back safely.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+Fleet graph paragraph (grid fan, roster domains, fallback).
+
+## 2026-09-17 — the apps leave the monorepo; installation pulls them from their own repos
+
+- **The app split lands in the installer.** The five apps (hlidskjalf,
+  hlidskjalf-mobile, odrerir, sessrumnir, smidja) now live in their own repos
+  registered in the home registry (`$HOARD/identity/projects.yaml`) — the
+  monorepo never tracks them, and **`step_apps`** clones or fast-forwards each
+  `apps/<path>` from its registered `git{}` block (never guessing a remote,
+  always reading the registry). The smithy engine (`apps/smidja`) is stamped
+  from the cloned factory's `templates/smidja`, exactly as `install.py` does
+  for a target repo — so a fresh clone still gets a working smithy.
+- **The vendored app trees leave the index.** `apps/{hlidskjalf,
+  hlidskjalf-mobile,odrerir,sessrumnir,smidja,smidja-factory}` are gitignored
+  and `git rm --cached`-ed (751 files, 135k lines); `apps/README.md` stays.
+  A dir present that is not a git clone is reported (`move it aside and
+  re-run`) rather than silently replaced.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/installation.md` — the
+step table (`22 steps`, `24` `step_*` functions), the new `apps` row, and the
+Sessrúmnir rows now say "its own repo", not "vendored".

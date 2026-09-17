@@ -16,7 +16,7 @@ skills[26]{skill,does,owner}:
   "tyr-check","the judge — galdr principles + runtime gates","tyr"
   "rules-check-drift","rules-file drift — keeps AGENTS.md true after code changes","tyr"
   "no-mistakes","the clean-PR gate — vendored engine skill: validate, push, PR, CI","brokk"
-  "smidja-factory","the smithy — agent factory: roster, phases, envelopes, visualizer","volundr"
+  "smidja-factory","the smithy — agent factory: roster, phases, envelopes, visualizer (app-provided: cloned by step_apps from its own repo, absent until then)","volundr"
   "hvild-afk","away-mode — supervision of routine wakes and batched escalations","brokk"
   "saga-bearings","bearings — fleet status digest (/bearings) + recap (/ahoy)","saga"
   "muninn-stow","memory — session-knowledge curation, routing, persistence","muninn"

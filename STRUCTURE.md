@@ -125,7 +125,6 @@ ymir/
 │   ├── design-system/             # Shared UI components & assets
 │   ├── shared-packages/           # Internal npm/cargo/python libs
 │   ├── infrastructure/            # Terraform, Docker, K8s base configs
-│   ├── company_wiki/              # Policies, vision, specs
 │   └── github_org_repos/          # Central company repositories
 │       └── shared-core-api/       # Example shared repo (cloned)
 │           ├── .yggdrasil/        # [g] Ephemeral worktree branches

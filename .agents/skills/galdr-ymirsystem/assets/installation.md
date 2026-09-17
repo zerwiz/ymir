@@ -5,12 +5,13 @@
 > page is the map.
 
 One command sets up the whole system for the user; it self-heals what it can and
-reports what it cannot. It **asks for consent first** (accept the plan, or pass
-`--yes` for non-interactive use), and it **validates at the end** that what it
+reports what it cannot. It **asks for consent first** — with a plan it computes on
+this host, not a recited paragraph — and it **validates at the end** that what it
 claims is actually running.
 
 ```
 bin/ymir-install.sh               # the first setup (idempotent; asks to proceed)
+bin/ymir-install.sh --plan        # the plan, probed — changes nothing (--json too)
 bin/ymir-install.sh --check       # report only, no writes, no prompt
 bin/ymir-install.sh --yes         # non-interactive (accept the plan)
 bin/ymir-install.sh --skip-engines --skip-services
@@ -18,17 +19,189 @@ bin/ymir-install.sh --no-desktop  # don't open the desktop apps at the end
 bin/ymir-install.sh --status      # alias of --check
 ```
 
+## The plan comes first — `bin/ymir-plan.sh`
+
+The consent a real install asks for is a **computed plan**, one row per step, each
+carrying its state and the reason for it. A hardcoded paragraph cannot know the
+host: the old one named an Omarchy version on a Mac, promised a workspace tree that
+already stood, and never mentioned that no application had been installed at all.
+
+```
+bin/ymir-plan.sh              # the plan (TOON)
+bin/ymir-plan.sh --json       # the same, for automation
+bin/ymir-plan.sh --phase 5    # one phase
+bin/ymir-plan.sh --blocked    # only what cannot proceed, and why
+```
+
+```
+plan_states[5]{state,means}:
+  "DO","a change will be made"
+  "SKIP","already satisfied — nothing to do"
+  "INFO","a fact about this host, discovered; no change implied"
+  "BLOCKED","cannot run — the reason names what is missing"
+  "CONSENT","needs the operator's word (a credential, an invite, the shells)"
+```
+
+```
+plan_phases[9]{n,name,gate}:
+  "0","resolve","this host, the container engine, the code root, and the home"
+  "1","code","the tree is intact — and holds nothing of the operator's"
+  "2","home","the operator's world, outside the tree"
+  "3","runtimes","git/python3 · bun/uv/mcp<2> · pi · hermes · the terminal backend"
+  "4","engines","treehouse · no-mistakes · sandcastle · the Utgard image"
+  "5","apps","hlidskjalf · odrerir · sessrumnir · smidja — web build required, shell gated"
+  "6","wire","the way in (auth · invite) and the launcher entries"
+  "7","raise","every port listening, then the desktop apps"
+  "8","verify","what stands, honestly"
+```
+
+`ymir-install.sh` prints the plan at the consent prompt; `--plan`/`--dry-run` prints
+it and exits without writing. The plan is recomputed on every run, so it cannot
+drift behind the code the way a paragraph did. `bin/ymir-plan.sh` is the ward for
+the law below: its phase-1 `purity` row names any of the operator's things found in
+the code tree.
+
+## Where things live — the package is code, the home is the operator's
+
+**Law (Rule 04):** the package carries the **core systems** — everything needed to
+run the programs. Everything the **operator** owns goes to `$YMIR_HOME`: their
+info, their records, their documents, their settings, their state, their
+credentials. A packaged install (npm) treats its tree as read-only; the next
+upgrade replaces it, so anything of theirs kept there is kept at its peril.
+
+```
+roots[5]{root,resolves_from,holds}:
+  "ymir_home_root","$YMIR_HOME → the choice recorded at installation → one documented default","everything private the operator owns"
+  "hoard_root","$YMIR_HOARD → <home>/hodd","docs · secrets · identity · tenants · memory"
+  "hoard_data_dir","$YMIR_DATA_DIR → <hoard>/data","this machine's records: operator, fleet, machines, the host profile"
+  "hoard_state_dir","$YMIR_STATE_DIR → <home>/state","runtime state: pids, logs, locks, caches"
+  "hoard_settings_dir","$YMIR_SETTINGS_DIR → <home>/config","settings: agents.yaml, cron.yaml, tailscale-sync, the wedge channel"
+```
+
+Plus `hoard_local_env` → `$YMIR_HOME/.env.local`: the operator's **credentials**
+(`HLIDSKJALF_AUTH`, OAuth keys, tokens), never in the tree.
+
+**The home is chosen, not assumed.** A real interactive install asks once
+(`step_home`), records the answer as machine state under `~/.config/ymir/home`
+(the same place `engram-python` and `accounts.json` live), and every later script
+resolves it through `bin/hoard-lib.sh`. `--check` never writes; `--yes` takes what
+is recorded, else the documented default.
+
+```bash
+bin/hoard-lib.sh                     # the lib (source-safe; functions only)
+ymir_home_root   HOME                # → the home
+hoard_settings_dir SETTINGS          # → <home>/config
+hoard_local_env  ENVFILE             # → <home>/.env.local
+```
+
+**Rule for new code:** never write `$ROOT/data`, `$ROOT/state`, `$ROOT/config`,
+`$ROOT/.env.local` or `$ROOT/workspace`. Resolve the root through the lib. A script
+that points an operator's thing into the tree is the bug the `purity` row exists to
+catch.
+
+### Carrying an existing tree home — migration 0005
+
+Every *writer* resolves the home now, but an installation made before this change
+still holds the operator's things in the tree. `.agents/migrations/0005-roots-out-of-tree.sh`
+carries them:
+
+```
+what moves           from                    to
+------------------   ---------------------   ----------------------------
+this machine's       data/                   <hoard>/data
+  records
+runtime state        state/                  <home>/state
+  (pids · logs ·     (including the          (running services keep their open
+   locks · the        applied-migrations      fds across the move — `mv` keeps
+   applied-marker)    marker)                 the inode)
+credentials          the local env file      $YMIR_HOME/.env.local (0600)
+settings             .agents/config/*        <home>/config
+                     that git does NOT track
+```
+
+One name, two files — the migration decides by evidence, never by assumption:
+
+```
+collision[3]{case,what_happens,nothing_lost}:
+  "identical content","the tree's copy is removed","the content is provably at home already"
+  "different content","the home's keeps the name; the tree's is carried beside it as <name>.stale-<UTC>","both are real, so both are kept — never merged, never discarded"
+  "not a plain file","left in place and reported","a directory is not silently swallowed"
+```
+
+Templates and defaults never move: `*.example` (and `*.example.*`), `.gitkeep`, and
+any settings file **git tracks** — that is the distro's shipped default, not the
+operator's. The plan's `purity` row applies the same rule, asking git about the
+real path (the tree's `config` is a symlink into `.agents/config`, and git tracks
+what the index holds, not the link). Idempotent: a second run changes nothing.
+
+```bash
+bin/ymir-migrate.sh status            # pending / applied
+bin/ymir-migrate.sh apply --dry-run   # name the migration, touch nothing
+bin/ymir-migrate.sh apply             # carry it
+```
+
+Stop the runtime first if you want no stale pid files; nothing is lost either way.
+
+## The app packages — how the four surfaces arrive
+
+The distro depends on the surfaces as their own npm packages, so one
+`npm install -g @zerwiz/ymir` fetches them into the tree:
+
+```
+app_packages[4]{package,repo,what}:
+  "@zerwiz/hlidskjalf","zerwiz/hlidskjalf","the control plane — dist/ ships built, served on :3888"
+  "@zerwiz/odrerir","zerwiz/odrerir","the live hall — dist/ ships built"
+  "@zerwiz/sessrumnir","zerwiz/sessrumnir","the seat-hall desktop — out/ ships built (a fork of pi-desktop)"
+  "@zerwiz/smidja-factory","zerwiz/smidja","the smithy and its visualizer — the factory plus the UI's source, built at install"
+```
+
+They are **optionalDependencies**, deliberately: a broken app package must never
+stop the CORE from installing, and a package not yet on the registry is skipped by
+npm and starts arriving the moment it is published. The plan's phase-5 rows report
+each surface separately — installed, declared-but-not-fetched, or no package at all
+— so a silent skip cannot hide.
+
+A global install nests them under the distro's own `node_modules`
+(`<prefix>/lib/node_modules/@zerwiz/ymir/node_modules/@zerwiz/<app>`); a local one
+hoists them to `node_modules/@zerwiz/<app>`. The plan checks both shapes.
+
+```
+bin/npm-publish.sh                       # the platform only
+bin/npm-publish.sh --all                 # the platform + every app package
+bin/npm-publish.sh --dry-run --all       # what would go out, and from where
+bin/npm-publish.sh --unpublish @zerwiz/ymir@0.1.5   # take ONE version back
+```
+
+**A version can be taken back, and the window is short.** npm permits unpublishing
+**one version for 72 hours** after it was published; past that it is npm support's
+door. So `--unpublish` demands a spec that names the version — never a bare name —
+and the row says where the CDN may still serve the tarball for a while afterwards.
+Publishing a newer version is the other half of the repair: it moves the `latest`
+tag off the bad build at once, even before the removal propagates.
+
+**A `files[]` entry that names a directory overrides `.gitignore`.** This is how
+`@zerwiz/ymir@0.1.5` shipped the memory well: `files: [".agents/"]` packed that
+subtree *including* the gitignored stores, and the repo stayed clean while the
+artefact did not. Name what ships, exclude what must not, and prove it with
+`npm pack --dry-run` — the repo's cleanliness says nothing about the tarball.
+
+The app repos are cloned into `apps/` by the install's `apps` step (from the
+registry's `repo: apps/<path>` blocks), which is where `--all` reads their
+manifests. The token comes from the hoard, never from `~/.npmrc`.
+
 ## The steps
 
 ```
-install[21]{step,what,self-heals}:
+install[23]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
-  "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at $YMIR_HOARD, else $YMIR_HOME)","creates if missing; hoard_root resolves through bin/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/hodd.sh emit resolves"
+  "home","the home the operator CHOOSES, recorded under ~/.config/ymir/home","asks once, records the answer; --check never writes, --yes takes what is recorded, else the documented default"
+  "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at the hoard root under the chosen home)","creates if missing; hoard_root resolves through bin/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/hodd.sh emit resolves"
+  "apps","the app repos (the app split) — hlidskjalf · hlidskjalf-mobile · odrerir · sessrumnir · smidja","reads $HOARD/identity/projects.yaml (never guesses a remote); clones a missing apps/<path> from its registered git{} block, fast-forwards a present one, and stamps the smithy engine (apps/smidja) from the cloned factory's templates"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
-  "sessrumnir","the Sessrúmnir desktop GUI (vendored pi-desktop at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
+  "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
@@ -45,7 +218,7 @@ install[21]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**23** `step_*` functions are defined. A step is not a row: one step may emit
+**25** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 `smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. `--check`
 skips the runtime-only steps (`services`, `desktop`, `validate`), which have
@@ -95,8 +268,10 @@ now build it when absent:
 (cd .agents/skills/smidja-factory/apps/visualizer && bun run build)   # vue-tsc + vite
 ```
 
-`bin/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing, so the
-gap cannot silently return.
+`bin/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing **and**
+when the build exists but nothing is listening on `:8437`. A PASS means the UI is
+built *and* the API is up — so a built-but-dead visualizer (a bad `CMD_DB`, a
+crashed API) can no longer read as green.
 
 ## Desktop placement (Omarchy desktops, not monitors)
 
@@ -164,13 +339,20 @@ non-interactive callers; without it a non-interactive `add` refuses with exit 3)
 The installer only *offers*.
 
 ## Consent
-A real install prints its plan and waits for `[y/N]`. Declining changes nothing
-(exit 3). `--check` never prompts. A non-interactive caller without `--yes` is
-refused rather than silently proceeding.
+A real install prints **the plan it computed** (`bin/ymir-plan.sh`) and waits for
+`[y/N]`. Declining changes nothing (exit 3). `--check` and `--plan` never prompt.
+A non-interactive caller without `--yes` is refused rather than silently
+proceeding.
 
-The plan names every change, including the terminal backend (herdr/tmux), the
-host learning, and the desktop placement — so the operator accepts what is
-actually done, not a shorter list that drifted behind the code.
+The plan names every step with its state and the reason for it — including the
+home the operator is asked to choose, the four app surfaces and whether each can
+be installed at all, the terminal backend, and what will be skipped and why. The
+state vocabulary is `DO · SKIP · INFO · BLOCKED · CONSENT`.
+
+`--check` writes nothing — and that includes the migrations. `bin/ymir-migrate.sh
+apply` **moves private data**, so the step chain runs it only on a real run;
+a preview leaves the home exactly as it found it. (It used to apply them even
+under `--check`, which moved a home during a "report only" pass.)
 
 `--check` writes nothing — and that includes the migrations. `bin/ymir-migrate.sh
 apply` **moves private data**, so the step chain runs it only on a real run;
@@ -231,7 +413,7 @@ part is off. `--json` for machine consumption.
 | **sandcastle** (`mattpocock/sandcastle`) | Utgard | Docker/Podman/Vercel sandboxes |
 | **no-mistakes** (`kunchenguid/no-mistakes`) | Mjollnir · Glitnir | clean-PR validation gate |
 | **Hermes** (`NousResearch/hermes-agent`, MIT) | — (product name) | worker agent runtime: own brain, memory, skills, subagents, sandbox backends |
-| **pi-desktop** (`FaqFirebase/pi-desktop`, Apache-2.0) | **Sessrúmnir** (vendored at `apps/sessrumnir`) | desktop GUI for the Pi/OMP coding agents — the seat-hall, themed with the Ymir way-of palette |
+| **pi-desktop** (`FaqFirebase/pi-desktop`, Apache-2.0) | **Sessrúmnir** (cloned from its own repo to `apps/sessrumnir` at install) | desktop GUI for the Pi/OMP coding agents — the seat-hall, themed with the Ymir way-of palette |
 
 ## Missing dependencies
 
@@ -492,6 +674,11 @@ That is why the only Omarchy branches left in the core installer are the ones
 that call the layer (`step_omarchy`) and desktop placement (`step_desktop`):
 `step_host` senses the host portably with `host-sense`, and everywhere else the
 same code path runs on any host.
+
+The **consent preamble** the installer prints before it acts says the same thing —
+*"learn this machine (OS, desktop, packages, configs, monitors, scale — Omarchy
+hosts recorded first-class)"* — so the operator is told what will happen in the
+portable terms the code now uses, not the Omarchy-only terms it used before.
 
 ### What the Omarchy layer installs
 

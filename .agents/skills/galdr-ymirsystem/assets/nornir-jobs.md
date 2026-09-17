@@ -62,7 +62,7 @@ same day. That is deliberate: cron is idempotent-by-date, not retrying-by-failur
 |---|---|---|
 | `BROKK_ROOT_OVERRIDE` | script's parent | Root when `BROKK_HOME` unset. |
 | `BROKK_HOME` | `$ROOT` | Home owning the jobs and state. |
-| `BROKK_STATE_OVERRIDE` | `$BROKK_HOME/state` | Scheduler state directory. |
+| `BROKK_STATE_OVERRIDE` | `$YMIR_STATE_DIR` (`<home>/state`, via `bin/hoard-lib.sh`) | Scheduler state directory — in the home the operator chose, never in the code tree. |
 | `BROKK_CONFIG_OVERRIDE` | `$BROKK_HOME/config` | Where `cron.yaml` lives. |
 | `BROKK_CRON_LOG_MAX_BYTES` | `1048576` | Rotation threshold. |
 | `BROKK_REALM` | `""` | Realm exported to jobs (jobs also fall back to `data/realm.md`). |
@@ -152,6 +152,44 @@ removed and the failure is reported plainly.
 | `BROKK_MIMIR_DB` | `.agents/memory/mimirsbrunn.db` |
 | `BROKK_MEMORY_PRUNE` | `0` (disabled) |
 | `BROKK_MEMORY_PRUNE_DAYS` | `7` |
+
+### 3.5 Óðrerir — Live Hall snapshot (`bin/nornir-job-hall-snapshot.sh`, 08:00)
+
+The Live Hall is a glass: it reads `apps/odrerir/public/livehall.json`
+(same-origin, `cache: no-store`). This job writes that snapshot from real state
+via `bin/hall-snapshot.sh` — runes, the project registry, the cron gauge, the
+wake queue, standing smiths, armed `when-` sources, and the landed errands —
+then carves Rune `odrerir / hall.snapshot`. Scheduled at 08:00 so it follows
+the 06:00 observer and the 07:00 briefing: the morning board carries the day's
+fresh runes.
+
+| Reads | Writes |
+|---|---|
+| runes ledger · `hodd/identity/projects.yaml` · `config/cron.yaml` · `state/.wake-queue` · herdr agent list · armed when-sources · `state/eindri-reports/archive/` | `apps/odrerir/public/livehall.json` (gitignored runtime) · Rune `odrerir / hall.snapshot` |
+
+- The snapshot is **runtime, never repo**: `apps/odrerir/public/livehall.json`
+  is gitignored, so the job never dirties a branch.
+- Absent `livehall.json` on the Hall is *not* a build failure — the page paints
+  the saga's own count and says so. This job is what makes the board true.
+- Idempotent by nature: each run rewrites the same snapshot from the same
+  inputs; the cron date-guard suppresses repeat dispatch within a day.
+
+### 3.6 Tyr — NSR compliance round (`bin/nornir-job-nsr-compliance.sh`, 02:30)
+
+The NorthStar deterministic gate, run nightly in the quiet hours so sunrise
+finds the doors mended or the Rune already says which broke. Runs every
+`.compliance/gates/check_*.sh` (danger · env · paths · platform · wiring)
+and carves one Rune with the verdict — `nornir / nsr.compliance` on a clean
+round, `nornir / nsr.compliance.failed` (exit 1) naming the failed gates.
+
+| Reads | Writes |
+|---|---|
+| `.compliance/gates/check_*.sh` (deterministic, no network) | Rune `nornir / nsr.compliance[.failed]` · `state/last` line |
+
+- The morning briefing reads the ledger, so a FAIL is seen at 07:00, not
+  found by accident.
+- Idempotent: gates are pure checks; the cron date-guard suppresses repeat
+  dispatch within a day; safe to invoke by hand (`bash bin/nornir-job-nsr-compliance.sh`).
 
 ### 3.4 Yggdrasil — git sync (`bin/nornir-job-git-sync.sh`, 00:00)
 
