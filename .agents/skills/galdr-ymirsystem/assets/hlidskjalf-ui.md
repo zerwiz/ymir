@@ -325,6 +325,13 @@ the password comes from `HLIDSKJALF_AUTH` in `.env.local`, never inline. A
 hardcoded name here is both a leak into the public tree and wrong for any other
 operator — `bin/public-guard.sh` exists to catch exactly that class of mistake.
 
+**The gate must actually receive it.** `scripts/start.sh` loads `.env.local`
+(mode `0600`, gitignored) into the environment before raising the gate, because
+the bun process reads `process.env.HLIDSKJALF_AUTH` and nothing else was loading
+it — so a credential set by `bin/ymir-setup-auth.sh` never took effect, and an
+empty `GATE_AUTH` makes the gate treat every request as authenticated. After
+setting a credential, restart the gate: `scripts/stop.sh; scripts/start.sh`.
+
 ### One login, and it is the one with the lore (2026-09-12)
 
 There used to be **two** ways in, and the second was a mistake:

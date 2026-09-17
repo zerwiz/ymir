@@ -21,6 +21,22 @@ APP="$ROOT/apps/hlidskjalf"
 RUN="$ROOT/.run"
 PID_FILE="$RUN/hlidskjalf.pid"
 LOG="$RUN/hlidskjalf.log"
+
+# Load the platform env once (Rule 04): the gate, the Bifrost bridge and Mimir
+# all read their credentials from .env.local — 0600, gitignored, never printed.
+# The bun gate reads process.env, and nothing loaded the file for it, so a
+# credential set by bin/ymir-setup-auth.sh never reached it — and the gate treats
+# an empty GATE_AUTH as "open". Loaded before the ports below so those may be
+# overridden from it too.
+if [ -r "$ROOT/.env.local" ]; then
+  set +eu
+  set -a
+  # shellcheck disable=SC1090,SC1091
+  . "$ROOT/.env.local" || true
+  set +a
+  set -eu
+fi
+
 PORT="${HLIDSKJALF_PORT:-3888}"
 
 mkdir -p "$RUN"
