@@ -20,20 +20,21 @@ SMIDJA_SURFACE="smidja"
 SMIDJA_PACKAGE="smidja-factory"
 
 smidja_factory_dir() {  # <result-var> — the smithy's directory, or empty
-  local result_var=${1-} root="${YMIR_ROOT_DIR:-}" c
-  [ -n "$result_var" ] || return 2
-  if [ -z "$root" ]; then
-    root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  # The general resolver (bin/app-lib.sh) knows both shapes; the smithy is one
+  # surface among them. The old skill symlink is the last resort, and a dangling
+  # one is not a home — the visualizer must be readable there.
+  local _smd_rv=${1-} _smd_c
+  [ -n "$_smd_rv" ] || return 2
+  if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
+    local _sl; _sl="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    [ -r "$_sl/app-lib.sh" ] && { . "$_sl/app-lib.sh"; YMIR_APP_LIB_LOADED=1; }
   fi
-  for c in \
-    "$root/apps/$SMIDJA_PACKAGE" \
-    "$root/node_modules/@zerwiz/$SMIDJA_PACKAGE" \
-    "$root/.agents/skills/$SMIDJA_PACKAGE"
-  do
-    # A dangling symlink is not a home: the visualizer must be readable there.
-    [ -d "$c/apps/visualizer" ] && { printf -v "$result_var" '%s' "$c"; return 0; }
-  done
-  printf -v "$result_var" '%s' ""
+  if app_dir smidja _smd_c 2>/dev/null && [ -d "$_smd_c/apps/visualizer" ]; then
+    printf -v "$_smd_rv" '%s' "$_smd_c"; return 0
+  fi
+  _smd_c="${YMIR_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}/.agents/skills/$SMIDJA_PACKAGE"
+  [ -d "$_smd_c/apps/visualizer" ] && { printf -v "$_smd_rv" '%s' "$_smd_c"; return 0; }
+  printf -v "$_smd_rv" '%s' ""
   return 1
 }
 

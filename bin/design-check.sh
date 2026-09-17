@@ -19,8 +19,19 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
+# npm install — both shapes, one resolver (bin/app-lib.sh).
+if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
+  _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+    [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
+  done
+  unset _ya _yac
+fi
+app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
+
 TOKENS="$ROOT/midgard/design-system/tokens.css"
-SEEDS="$ROOT/apps/sessrumnir/src/renderer/src/themes/fensalir.json"
+SEEDS="$APP_SESSRUMNIR/src/renderer/src/themes/fensalir.json"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
