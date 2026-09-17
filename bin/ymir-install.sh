@@ -304,7 +304,12 @@ step_apps() {
   esac
   local reg="$HOARD/identity/projects.yaml"
   if [ ! -r "$reg" ]; then
-    add apps SKIP "no registry — no app repos to pull ($reg)"
+    # The fork path: no private hoard — fall back to the PUBLIC app map so a
+    # fresh clone still pulls the five surfaces (config/app-repos.yaml).
+    reg="$ROOT/config/app-repos.yaml"
+  fi
+  if [ ! -r "$reg" ]; then
+    add apps SKIP "no app registry — neither the hoard's projects.yaml nor config/app-repos.yaml"
     return 0
   fi
   # Parse blocks that carry `repo: apps/<path>` and a `git:` inline dict.
