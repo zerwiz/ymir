@@ -6,7 +6,7 @@
 # readable "Delivery contract: mode=<mode>" line, the worktree-isolation
 # assertion, the status protocol, and the steering-inbox receive/ack section.
 # Ported from the upstream distro brief scaffold for plan 29
-# (docs/plans/29-brokk-distro-runtime.md).
+# (memory/plans/core/29-brokk-distro-runtime.md).
 #
 # Usage:
 #   erindi-brief.sh <task-id> <repo-name> --mode <no-mistakes|direct-PR|local-only>

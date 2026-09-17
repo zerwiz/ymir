@@ -35,5 +35,5 @@ if [ "${1:-}" = "--all" ]; then
   scan_list < <(git -C "$ROOT" ls-files)
 else
   scan_list < <(git -C "$ROOT" diff --cached --name-only --diff-filter=ACM)
-fi || { printf 'docs-guard: blocked — docs/ is public; move it to $YMIR_HOME/hodd/docs/ (Rule 04)\n' >&2; exit 1; }
+fi || { printf 'docs-guard: blocked — docs/ is public; move it to $YMIR_HOME/hodd/docs/ (or $YMIR_HOME/memory/plans/ for plans) (Rule 04)\n' >&2; exit 1; }
 exit 0

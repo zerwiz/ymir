@@ -27,8 +27,8 @@ Every output must land in the correct path. No exceptions.
 | Personal / Schedules | `svartalfaheim/<realm>/workspace/life/` |
 | Daily logs | `svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md` |
 | Shared company assets | `midgard/` |
-| Global audit entries | `workspace/memory/runes_audit.md` |
-| Architecture & plans | `docs/plans/` |
+| Global audit entries | `hodd/memory/runes_audit.md` (in `$YMIR_HOME`) |
+| Architecture & plans | `$YMIR_HOME/memory/plans/<domain>/` |
 | Skills (new) | `.agents/skills/<norse-name>/SKILL.md` |
 | Sub-agent roles | `.agents/subagents/<role>.md` |
 
@@ -40,14 +40,14 @@ Every output must land in the correct path. No exceptions.
 
 Two files are sacred — you APPEND, never rewrite:
 
-### `docs/masterplan.md`
+### `$YMIR_HOME/hodd/docs/masterplan.md`
 - Forge orders live here (W0001, W0002, …)
 - New work: append at end of Backlog with next W-number
 - Close work: append `+ <date> COMPLETED — <what>` under the order
 - Never rewrite a status in place
 - Queue is the one exception — republish with a move note
 
-### `docs/append-only-log.md`
+### `$YMIR_HOME/hodd/docs/append-only-log.md`
 - Every significant action gets an ENTRY
 - Format: `## ENTRY YYYY-MM-DD-NNN — <title>`
 - Fields: Status, Owner, Context, ADD, NOT, KEEP, Files
@@ -148,18 +148,19 @@ Output is TOON format. Exit codes: 0=success, 1=error, 2=usage error.
 
 ## 8. PLAN DOCS — How to Read and Write Plans
 
-Plans live in `docs/plans/`. Each is a markdown file with:
+Plans live in `$YMIR_HOME/memory/plans/<domain>/` (live working plans in
+`$YMIR_HOME/hodd/plans/`). Each is a markdown file with:
 - Title and status (proposed → approved → in-progress → done)
 - Scope, dependencies, acceptance criteria
 - Source references (ENTRY numbers, Architecture.md sections)
 
-The plan index is at `docs/plans/README.md`.
+The plan index is at `$YMIR_HOME/memory/plans/README.md`.
 
 When creating a new plan:
-1. Use the next available number (currently plans 01–27 exist)
+1. File it under the right domain folder in `memory/plans/` (core, mesh, portal, …)
 2. Follow the template in `.agents/assets/templates/`
-3. Reference relevant ENTRY numbers from append-only-log.md
-4. Update `docs/plans/README.md` index
+3. Reference relevant ENTRY numbers from the append-only log
+4. Update the §'index' row in `memory/plans/README.md`
 
 ---
 
