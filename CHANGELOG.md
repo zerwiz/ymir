@@ -9,6 +9,15 @@
   hlidskjalf/odrerir/sessrumnir/smidja all `DO`). The hoard registry stays
   authoritative when present.
 
+
+## 2026-09-17 — the phantom optional pins, cut
+
+- The platform's stale \`optionalDependencies\` (sessrumnir pinned at the broken
+  0.1.9) shadowed the required \`^0.1.10\` — npm never fetched the good seat.
+  Removed; the required deps now resolve to latest (0.1.18).
+
+=======
+
 ## 2026-09-17 — the packaged seat carries the watch
 
 - **The @zerwiz/ymir tarball now ships every surface the runtime reads**: the
