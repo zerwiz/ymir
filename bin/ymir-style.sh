@@ -95,6 +95,19 @@ style_line() {  # <state> <name> <detail> — the one line per thing
 
 style_heading() { printf '\n%s%s%s\n' "$C_BRONZE" "$1" "$C_OFF" >&2; }
 
+# For a long hour: say what is happening and why it takes a while. A user who
+# knows the halls are being set right waits; a user watching a silent cursor
+# wonders whether it has broken.
+style_patience() {  # [what is being set right]
+  local what="${1:-the halls are being set right}"
+  printf '\n' >&2
+  style_line DO "much moves" "$what"
+  style_hint "      this hour is long, and nothing of yours is lost in it —"
+  style_hint "      roots come home, shapes are re-cut, names are set true again."
+  style_hint "      Your patience is noted, and it is earned."
+  printf '\n' >&2
+}
+
 # The ending: what stands, then exactly what to type next. Every CLI deserves
 # to leave the operator with the next step and nothing else to guess.
 style_next() {  # one command per line, as "verb — what it does"
