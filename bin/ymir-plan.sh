@@ -71,9 +71,12 @@ port_up() {  # <port>
 }
 # An app is ours by one of two shapes: a source checkout under apps/, or a
 # published package under node_modules/@zerwiz/. Neither is guessed.
-app_dir() {  # <name> -> path, or empty
-  local n="$1" c
-  for c in "$ROOT/apps/$n" "$ROOT/node_modules/@zerwiz/$n"; do
+# A surface has a name the operator knows and a PACKAGE has a name npm serves;
+# they are not always the same (the smithy is `smidja` to us and
+# `@zerwiz/smidja-factory` on the registry). <surface> [<package>]
+app_dir() {
+  local n="$1" pkg="${2:-$1}" c
+  for c in "$ROOT/apps/$n" "$ROOT/node_modules/@zerwiz/$pkg"; do
     [ -d "$c" ] && { printf '%s' "$c"; return 0; }
   done
   return 1
@@ -234,27 +237,27 @@ engines_phase() {
 # ── phase 5 · apps — the surfaces the operator actually sees ────────────────
 # Four surfaces, one shape each: web build required, Electron shell gated.
 # The apps are their own packages (@zerwiz/<app>) — the distro depends on them.
-app_row() {  # <name> <about>
-  local name="$1" about="$2" dir
-  if dir="$(app_dir "$name")"; then
+app_row() {  # <surface> <about> [<package>]
+  local name="$1" about="$2" pkg="${3:-$1}" dir
+  if dir="$(app_dir "$name" "$pkg")"; then
     if [ -d "$dir/dist" ] || [ -d "$dir/out" ]; then
       emit 5 apps "$name" SKIP "$about — installed, and its build shipped with it"
     else
       emit 5 apps "$name" DO "$about — installed from source; the web build is still to make"
     fi
-  elif grep -q "\"@zerwiz/$name\"" "$ROOT/package.json" 2>/dev/null; then
+  elif grep -q "\"@zerwiz/$pkg\"" "$ROOT/package.json" 2>/dev/null; then
     # Declared as a dependency of the distro but not present: the package exists,
     # the tree simply has not fetched it. That is a DO, not a dead end.
     emit 5 apps "$name" DO "$about — declared as a dependency but not fetched (npm i -g @zerwiz/ymir fetches it)"
   else
-    emit 5 apps "$name" BLOCKED "$about — no apps/$name, no @zerwiz/$name package, and the distro does not depend on it"
+    emit 5 apps "$name" BLOCKED "$about — no apps/$name, no @zerwiz/$pkg package, and the distro does not depend on it"
   fi
 }
 apps_phase() {
   app_row hlidskjalf "the control plane (the high seat), served on :3888"
   app_row odrerir "the live hall (chat + council)"
   app_row sessrumnir "the seat-hall desktop"
-  app_row smidja "the smithy and its visualizer (:8437)"
+  app_row smidja "the smithy and its visualizer (:8437)" smidja-factory
 
   local shells=0 d
   for d in hlidskjalf odrerir sessrumnir; do
