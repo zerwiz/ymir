@@ -3,7 +3,7 @@
 #
 # Rödd ("voice") is the structured message wire between the Brokk primary and
 # Ymir's workers. Ported from the upstream agent-distro reference for the Brokk
-# distro runtime (docs/plans/29-brokk-distro-runtime.md). This file is both a
+# distro runtime (memory/plans/core/29-brokk-distro-runtime.md). This file is both a
 # source-safe shell library and the cross-language CLI used by the .pi / .opencode
 # integrations.
 #

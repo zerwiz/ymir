@@ -4,7 +4,7 @@
 # Sága ("the seeress", who sees all that happens) collapses the Brokk runtime's
 # session start into ONE ordered digest, so a harness opens in one or two turns
 # instead of many reads. Ported from the upstream agent-distro reference for plan 29
-# (docs/plans/29-brokk-distro-runtime.md).
+# (memory/plans/core/29-brokk-distro-runtime.md).
 #
 # Stages, in order:
 #   1. lock            acquire the per-home session lock first
@@ -109,8 +109,9 @@ if [ -d "$STATE" ]; then
 else
   printf 'task metadata records: 0\n'
 fi
-if [ -r "$ROOT/docs/masterplan.md" ]; then
-  open=$(grep -c '^- Status: ADDED' "$ROOT/docs/masterplan.md" 2>/dev/null || echo 0)
+MP="${BROKK_MASTERPLAN:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/docs/masterplan.md}"
+if [ -r "$MP" ]; then
+  open=$(grep -c '^- Status: ADDED' "$MP" 2>/dev/null || echo 0)
   printf 'open forge orders: %s\n' "${open:-0}"
 fi
 

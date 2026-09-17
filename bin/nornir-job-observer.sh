@@ -4,7 +4,7 @@
 # Read-only observation of the Ymir runtime into Runes. This job touches nothing
 # outside Ymir; every source below lives inside the repo (or the external worktree
 # root, which is read-only):
-#   docs/masterplan.md               open forge orders
+#   hodd/docs/masterplan.md           open forge orders
 #   .agents/agents/*.md              the agent roster
 #   .agents/memory/well/             the well (episodes)
 #   workspace/memory/runes_audit.md  the ledger
@@ -32,10 +32,11 @@ WORKTREE_ROOT="${BROKK_YGGDRASIL_ROOT:-$HOME/.treehouse}"
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 SMIDJA_DB="${YMIR_HOME:+$YMIR_HOME/smidja/smidja.db}"
 [ -z "${SMIDJA_DB:-}" ] || [ ! -f "$SMIDJA_DB" ] && SMIDJA_DB="$ROOT/apps/smidja/smidja_data/smidja.db"
-MASTERPLAN="$ROOT/docs/masterplan.md"
-WELL_DIR="$ROOT/.agents/memory/well"
+MASTERPLAN="${BROKK_MASTERPLAN:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/docs/masterplan.md}"
+WELL_DIR="${BROKK_WELL_DIR:-${YMIR_HOME:+$YMIR_HOME/hodd/memory/well}}"
+[ -n "$WELL_DIR" ] && [ -d "$WELL_DIR" ] || WELL_DIR="$ROOT/.agents/memory/well"
 AGENTS_DIR="$ROOT/.agents/agents"
-RUNES_LEDGER="${YMIR_HOME:+$YMIR_HOME/memory/runes_audit.md}"
+RUNES_LEDGER="${YMIR_HOME:+$YMIR_HOME/hodd/memory/runes_audit.md}"
 [ -z "${RUNES_LEDGER:-}" ] || [ ! -r "$RUNES_LEDGER" ] && RUNES_LEDGER="$ROOT/workspace/memory/runes_audit.md"
 OBS_LOG="$STATE/observer.log"
 OBS_LAST="$STATE/observer.last"

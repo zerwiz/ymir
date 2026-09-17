@@ -17,7 +17,7 @@ Tyr also judges the **runtime** and its **Galdr assets** for drift. Galdr is the
 
 ## Before You Start
 
-Understand Ymir's architecture: AGENTS.md governs all agent behavior. docs/Architecture.md is the master blueprint. docs/append-only-log.md records all decisions. TOON output should be used for all compliance reports.
+Understand Ymir's architecture: AGENTS.md governs all agent behavior. docs/Architecture.md is the master blueprint. $YMIR_HOME/hodd/docs/append-only-log.md records all decisions. TOON output should be used for all compliance reports.
 
 Run the gates as one command when you can:
 
@@ -94,7 +94,7 @@ Ymir provides ambient context through:
 Ymir's content-first approach:
 - README.md shows live system map, not usage manual
 - AGENTS.md is the root governance, not a "getting started" doc
-- Plan docs in docs/plans/ are the source of truth
+- Plan docs in `$YMIR_HOME/memory/plans/` are the source of truth
 - Daily logs in workspace/memory/daily/ are the active context
 
 **Assess:** Does your tool/show live data first, or help text first?
@@ -103,8 +103,8 @@ Ymir's content-first approach:
 ### 9. Contextual disclosure
 Ymir's contextual disclosure patterns:
 - After open item → suggest closing (e.g., "Run `tasks close <id>`")
-- After empty list → suggest creating (e.g., "No plans found. ADD: docs/plans/21-company-houses.md")
-- After list → suggest viewing (e.g., "View plan: docs/plans/25-ratatoskr-a2a.md")
+- After empty list → suggest creating (e.g., "No plans found. ADD: memory/plans/<domain>/<name>.md")
+- After list → suggest viewing (e.g., "View plan: memory/plans/mesh/25-ratatoskr-a2a.md")
 - Suggestions use placeholders: <id>, <title>, not concrete values
 - Guide discovery, not prescribed workflows
 
@@ -198,7 +198,7 @@ Compliance assessment per principle and per runtime gate, with "Assess" / "Impro
 
 ## Files referenced
 
-- Governance: `AGENTS.md`, `docs/Architecture.md`, `docs/append-only-log.md`, `docs/plans/*.md`
+- Governance: `AGENTS.md`, `docs/Architecture.md`, `$YMIR_HOME/hodd/docs/append-only-log.md`, `$YMIR_HOME/memory/plans/*.md`
 - Skills: `.agents/skills/*/SKILL.md`
 - Scripts: `.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh`, `.agents/skills/galdr-ymirsystem/scripts/toon-check.py`
 - Galdr assets (also mirrored at `tyr-check/assets/`):
