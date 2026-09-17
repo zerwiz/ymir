@@ -154,7 +154,9 @@ hardcoded timeline is gone.
 - **First `observe` slow (~20–30 s)** → the embedding model is warming; later
   writes are instant.
 - **Bridge down / `COLD`** → `bin/mimir-bridge.sh --start`; check
-  `state/mimir-bridge.log`.
+  `$YMIR_STATE_DIR/mimir-bridge.log` — runtime state lives in the home the
+  operator chose (`hoard_state_dir` via `bin/hoard-lib.sh`), never in the code
+  tree: a packaged install replaces its tree on upgrade.
 
 **Portability.** The bridge signals processes through `ymir_kill_matching` from
 `bin/ymir-platform.sh` rather than calling `pkill` directly, because `pkill` is

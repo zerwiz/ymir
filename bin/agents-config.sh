@@ -18,9 +18,21 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
-CFG="${YMIR_AGENTS_YAML:-$YMIR_HOME/config/agents.yaml}"
-RESOLVED="${YMIR_STATE_DIR:-$YMIR_HOME/state}/agents-resolved.json"
+
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+CFG="${YMIR_AGENTS_YAML:-$YMIR_SETTINGS_DIR/agents.yaml}"
+RESOLVED="${YMIR_STATE_DIR}/agents-resolved.json"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -35,6 +47,7 @@ if [ "$ACTION" = init ]; then
     exit 0
   fi
   TPL="$ROOT/config/agents.yaml.example"
+  [ -r "$TPL" ] || TPL="$ROOT/.agents/config/agents.yaml.example"
   [ -r "$TPL" ] || { printf 'error: template missing: %s\n' "$TPL" >&2; exit 1; }
   mkdir -p "$(dirname "$CFG")" 2>/dev/null || true
   cp "$TPL" "$CFG" || { printf 'error: could not write %s\n' "$CFG" >&2; exit 1; }

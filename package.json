@@ -29,7 +29,6 @@
     "bin/",
     ".agents/",
     "scripts/",
-    "config/",
     "RULES/",
     "docs/",
     "packaging/",

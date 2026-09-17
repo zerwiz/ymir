@@ -62,7 +62,7 @@ same day. That is deliberate: cron is idempotent-by-date, not retrying-by-failur
 |---|---|---|
 | `BROKK_ROOT_OVERRIDE` | script's parent | Root when `BROKK_HOME` unset. |
 | `BROKK_HOME` | `$ROOT` | Home owning the jobs and state. |
-| `BROKK_STATE_OVERRIDE` | `$BROKK_HOME/state` | Scheduler state directory. |
+| `BROKK_STATE_OVERRIDE` | `$YMIR_STATE_DIR` (`<home>/state`, via `bin/hoard-lib.sh`) | Scheduler state directory — in the home the operator chose, never in the code tree. |
 | `BROKK_CONFIG_OVERRIDE` | `$BROKK_HOME/config` | Where `cron.yaml` lives. |
 | `BROKK_CRON_LOG_MAX_BYTES` | `1048576` | Rotation threshold. |
 | `BROKK_REALM` | `""` | Realm exported to jobs (jobs also fall back to `data/realm.md`). |
