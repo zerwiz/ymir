@@ -232,6 +232,8 @@ export function useChatScroll(active: boolean): {
   const sessionId = useAppStore((state) => state.sessionState?.sessionId ?? null)
   const messages = useAppStore((state) => state.messages)
   const streamingContent = useAppStore((state) => state.streamingContent)
+  const streamingThinking = useAppStore((state) => state.streamingThinking)
+  const streamingToolCalls = useAppStore((state) => state.streamingToolCalls)
   const scrollBottomNonce = useAppStore((state) => state.chatScrollBottomNonce)
 
   const positions = useRef<Map<string, ScrollAnchor>>(new Map())
@@ -248,6 +250,8 @@ export function useChatScroll(active: boolean): {
   // re-renders (e.g. re-showing the panel), so returning to chat doesn't scroll.
   const prevMsgCount = useRef(0)
   const prevStreamLen = useRef(0)
+  const prevThinkingLen = useRef(0)
+  const prevToolCount = useRef(0)
 
   // Whether the viewport is at (or within a hair of) the bottom. `atBottom` (state)
   // drives the jump-to-bottom button; `atBottomRef` is read synchronously in the
@@ -291,12 +295,23 @@ export function useChatScroll(active: boolean): {
   useLayoutEffect(() => {
     const el = ref.current
 
-    // Did content actually grow (new message or streamed text)? Tracked even
-    // while hidden so re-showing the panel isn't mistaken for new content.
+    // Did content actually grow (new message or streamed text/thinking/tools)?
+    // Tracked even while hidden so re-showing the panel isn't mistaken for new
+    // content. Thinking is streamed text too — a reasoning-heavy turn with no
+    // visible content yet would otherwise never move the feed, leaving the
+    // thinking block to grow out of sight below the floating composer.
     const messagesGrew = messages.length > prevMsgCount.current
-    const grew = messagesGrew || streamingContent.length > prevStreamLen.current
+    const thinkingGrew = streamingThinking.length > prevThinkingLen.current
+    const toolsGrew = streamingToolCalls.size > prevToolCount.current
+    const grew =
+      messagesGrew ||
+      streamingContent.length > prevStreamLen.current ||
+      thinkingGrew ||
+      toolsGrew
     prevMsgCount.current = messages.length
     prevStreamLen.current = streamingContent.length
+    prevThinkingLen.current = streamingThinking.length
+    prevToolCount.current = streamingToolCalls.size
 
     // Defer scrolling while hidden: a display:none element has no layout, so
     // scrollHeight is 0 and any positioning would be wrong.
@@ -372,7 +387,7 @@ export function useChatScroll(active: boolean): {
     }
 
     syncAtBottom()
-  }, [active, sessionId, messages, streamingContent, scrollBottomNonce, autoScroll, syncAtBottom])
+  }, [active, sessionId, messages, streamingContent, streamingThinking, streamingToolCalls, scrollBottomNonce, autoScroll, syncAtBottom])
 
   return { scrollRef: ref, onScroll, atBottom, scrollToBottom }
 }
