@@ -31,6 +31,7 @@ if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   unset _ya _yac
 fi
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
+app_dir odrerir HALL_DIR || HALL_DIR=""
 
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
 # @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
@@ -196,7 +197,7 @@ fi
 
 # Óðrerir — the Live Hall. Its own Astro board on :4322, the carved planning
 # glass every hall door opens. Raised before the SPA so a window never waits.
-HALL_DIR="$ROOT/apps/odrerir"
+app_dir odrerir HALL_DIR || HALL_DIR=""
 HALL_PORT="${ODRERIR_PORT:-4322}"
 HALL_PID_FILE="$RUN/odrerir.pid"
 HALL_LOG="$RUN/odrerir.log"
@@ -211,13 +212,14 @@ if [ -d "$HALL_DIR" ]; then
     echo "Óðrerir — Live Hall raised (pid $(cat "$HALL_PID_FILE")) → http://127.0.0.1:${HALL_PORT}/"
   fi
 else
-  echo "Óðrerir — Live Hall skipped (missing apps/odrerir)." >&2
+  echo "Óðrerir — Live Hall skipped (the odrerir surface is not present)." >&2
 fi
 
 cd "$APP"
 
 if [[ "${1:-}" == "--foreground" ]]; then
-  exec npm run dev
+  if [ -d "$APP/dist" ]; then exec npx --no-install vite preview --port "$PORT" --strictPort --host
+  else exec npm run dev -- --port "$PORT" --strictPort --host; fi
 fi
 
 # The SPA is already serving — nothing more for us to raise here.
@@ -227,11 +229,18 @@ if [[ "$SPA_UP" == "1" ]]; then
 fi
 
 # New session so we can signal the whole process group on stop.
-ymir_detach npm run dev >"$LOG" 2>&1
+# The port is OUR decision, not Vite's: a bare `npm run dev` takes 5173 and the
+# hall never answers on the port every other door expects. A packaged install
+# ships ./dist, so it is served; a clone gets the dev server — both on $PORT.
+if [ -d "$APP/dist" ]; then
+  ymir_detach bash -c "cd '$APP' && exec npx --no-install vite preview --port '$PORT' --strictPort --host" >"$LOG" 2>&1
+else
+  ymir_detach bash -c "cd '$APP' && exec npm run dev -- --port '$PORT' --strictPort --host" >"$LOG" 2>&1
+fi
 PID=$!
 echo "$PID" > "$PID_FILE"
 
-# Wait for the port to answer (max ~15s).
+# Wait for the port to answer (max ~15s), then say what is true.
 for _ in $(seq 1 30); do
   if curl -s -o /dev/null "http://127.0.0.1:${PORT}/"; then
     echo "Hlidskjalf raised (pid $PID) → http://127.0.0.1:${PORT}/"
@@ -241,5 +250,6 @@ for _ in $(seq 1 30); do
   sleep 0.5
 done
 
-echo "Hlidskjalf started (pid $PID) but the port did not answer yet — check $LOG" >&2
+echo "Hlidskjalf started (pid $PID) but :${PORT} did not answer — see $LOG" >&2
+tail -5 "$LOG" >&2 2>/dev/null || true
 exit 1

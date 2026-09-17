@@ -51,12 +51,17 @@ CLASS_smidja="ymir-smidja"
 CLASS_sessrumnir="sessrumnir"
 CLASS_odrerir="ymir-odrerir"
 
-# ── launcher entries (Omarchy / Linux desktop only) ──────────────────────────
+# ── launcher entries (ANY Linux desktop — GNOME, KDE, Hyprland) ──────────────
+# Two halves live in this file, and they are not the same kind of thing:
+#   · the WINDOW RULES are Hyprland's (Omarchy) — numbered desktops, a Lua rule;
+#   · the LAUNCHER ENTRIES and the app icons are the freedesktop standard, which
+#     GNOME, KDE and Hyprland all read from the same place.
+# A GNOME operator gets entries and icons and no window rules, which is the
+# correct answer — and the reason a packaged install on GNOME had no icons at
+# all, because both halves lived behind the Omarchy gate.
+#
 # The .desktop files are templates (__YMIR_ROOT__, not an absolute path), because
-# where this checkout lives is a fact about the machine, not about Ymir. They are
-# rendered into the user's applications directory. This is DESKTOP INTEGRATION —
-# Omarchy/Hyprland is the supported environment; another OS needs its own launcher,
-# not a branch of this one.
+# where this checkout lives is a fact about the machine, not about Ymir.
 install_entries() {
   local dst="$HOME/.local/share/applications" n=0
   local dirs=("$APP_HLIDSKJALF/electron" "$APP_SESSRUMNIR/resources" "$APP_ODRERIR/electron")
@@ -195,6 +200,16 @@ include_launchers_file() {
 }
 
 case "$ACTION" in
+  entries)
+    # The launcher half on its own: any Linux desktop, no Hyprland required.
+    install_entries
+    if command -v update-desktop-database >/dev/null 2>&1; then
+      update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1 || true
+    fi
+    if command -v gtk-update-icon-cache >/dev/null 2>&1 && [ -d "$HOME/.local/share/icons/hicolor" ]; then
+      gtk-update-icon-cache -q -t -f "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+    fi
+    ;;
   plan)
     plan="$(plan_desktops)"
     printf 'desktop-place[%d]{app,desktop}:\n' "$(printf '%s\n' "$plan" | grep -c .)"
