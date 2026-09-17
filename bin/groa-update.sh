@@ -25,7 +25,15 @@ VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
-REG="${BROKK_EINDRI_HOMES:-$YMIR_HOME/data/eindri-homes.md}"
+# The registry lives in the hoard (RULES/04-hoard.md; correction 2026-09-17).
+# Resolve through hoard-lib so the path can never drift again.
+if [ -r "$SCRIPT_DIR/hoard-lib.sh" ]; then
+  # shellcheck source=bin/hoard-lib.sh
+  . "$SCRIPT_DIR/hoard-lib.sh"; hoard_root _hoard
+else
+  _hoard="${YMIR_HOARD:-$YMIR_HOME/hodd}"
+fi
+REG="${BROKK_EINDRI_HOMES:-$_hoard/data/eindri-homes.md}"
 REMOTE=""; BRANCH=""; CHECK=0
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
