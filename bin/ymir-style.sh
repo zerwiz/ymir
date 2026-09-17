@@ -38,6 +38,10 @@ style_init() {
   fi
   C_OFF=""
   [ "$STYLE_ON" = 1 ] && C_OFF=$'\033[0m'
+  # A sourced library must never end a function on a FAILING test: callers run
+  # under `set -e` (scripts/start.sh does), and the last command's status becomes
+  # the function's — so a caller raised the whole hall and died at the cloth.
+  return 0
 }
 
 # The forge's marks, one per state a thing can be in.
@@ -62,6 +66,23 @@ style_colour() {  # <state> → the colour for it
     FAIL|BLOCKED|fail|blocked)       printf '%s' "$C_BLOOD" ;;
     *)                               printf '%s' "$C_FAINT" ;;
   esac
+}
+
+# --- preferences: a user must be able to say "not again", once --------------
+# The store is the operator's settings (see bin/ymir-config.sh); absent means on.
+notice_state() {  # <key> → on|off
+  local key="$1" store line
+  if [ -n "${YMIR_SETTINGS_DIR:-}" ]; then store="$YMIR_SETTINGS_DIR/notices.conf"
+  else store="${YMIR_HOME:-$HOME/Documents/Ymir}/config/notices.conf"; fi
+  [ -r "$store" ] || { printf 'on'; return 0; }
+  line="$(grep -m1 "^${key}=" "$store" 2>/dev/null || true)"
+  [ -n "$line" ] && printf '%s' "${line#*=}" || printf 'on'
+}
+notice_wanted() { [ "$(notice_state "${1-}")" != off ]; }
+notice_hint() {  # <key> — said once, and never when the hints are silenced
+  [ "$(notice_state hints)" = off ] && return 0
+  printf '%s
+' "${C_FAINT}      (not again: ymir config notice ${1-} off)${C_OFF}" >&2
 }
 
 # --- the pieces -------------------------------------------------------------
@@ -99,18 +120,21 @@ style_heading() { printf '\n%s%s%s\n' "$C_BRONZE" "$1" "$C_OFF" >&2; }
 # knows the halls are being set right waits; a user watching a silent cursor
 # wonders whether it has broken.
 style_patience() {  # [what is being set right]
+  notice_wanted patience || return 0
   local what="${1:-the halls are being set right}"
   printf '\n' >&2
   style_line DO "much moves" "$what"
   style_hint "      this hour is long, and nothing of yours is lost in it —"
   style_hint "      roots come home, shapes are re-cut, names are set true again."
   style_hint "      Your patience is noted, and it is earned."
+  notice_hint patience
   printf '\n' >&2
 }
 
 # The ending: what stands, then exactly what to type next. Every CLI deserves
 # to leave the operator with the next step and nothing else to guess.
 style_next() {  # one command per line, as "verb — what it does"
+  notice_wanted next || return 0
   printf '\n%s\n' "${C_BOLD}Where to go from here${C_OFF}" >&2
   while [ $# -gt 0 ]; do
     local cmd="${1%% — *}" what="${1#* — }"
