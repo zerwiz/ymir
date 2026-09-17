@@ -90,11 +90,11 @@ if [ -r "$MASTERPLAN" ]; then
   done
   if [ "${total:-0}" -gt "$MAX_ORDERS" ]; then
     emit ""
-    emit "_(truncated — ${total} open orders total; see docs/masterplan.md §3)_"
+    emit "_(truncated — ${total} open orders total; see hodd/docs/masterplan.md §3)_"
   fi
   rm -f "$orders_tmp"
 else
-  emit "ABSENT: docs/masterplan.md not readable"
+  emit "ABSENT: hodd/docs/masterplan.md not readable"
 fi
 emit ""
 
@@ -105,7 +105,7 @@ if [ -r "$MASTERPLAN" ]; then
   awk '/^## 2\. Active Queue/ {on=1; next} /^## 3\./ {on=0} on && /^[0-9]+\. / {print}' "$MASTERPLAN" \
     | while IFS= read -r q; do emit "- ${q#* }"; done
 else
-  emit "ABSENT: docs/masterplan.md not readable"
+  emit "ABSENT: hodd/docs/masterplan.md not readable"
 fi
 emit ""
 

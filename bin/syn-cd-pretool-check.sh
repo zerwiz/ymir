@@ -4,7 +4,7 @@
 # Sýn guards the working directory. v0 is inert (always allow); the contract
 # exists so the Sýn Pi extension can deny a bash invocation that would strand
 # the primary outside its checkout. Owner: plan 29
-# (docs/plans/29-brokk-distro-runtime.md).
+# (memory/plans/core/29-brokk-distro-runtime.md).
 #
 # Usage: syn-cd-pretool-check.sh --command <bash command>
 # Exit:  0 = allow, 2 = block (stderr carries the reason)

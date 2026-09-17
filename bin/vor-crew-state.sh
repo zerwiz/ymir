@@ -14,7 +14,7 @@
 # from a tail alone, and is read-only.
 #
 # Ported from the upstream distro crew-state reconciliation for plan 29
-# (docs/plans/29-brokk-distro-runtime.md).
+# (memory/plans/core/29-brokk-distro-runtime.md).
 #
 # Usage: vor-crew-state.sh <task-id>
 # Exits 0 on any successful read regardless of state; exit 2 on a usage error.
