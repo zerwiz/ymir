@@ -66,3 +66,36 @@ its `apps/sessrumnir/NOTICE`.
 
 *Corrections welcome: if a component is missing or mis-credited, open an issue and
 we will fix it. See `NOTICE`.*
+
+---
+
+## Additional licence families — the adopted & named anvils
+
+The hall names and uses the engines below (the homepage's "borrowed anvils").
+Those that are **separate services** (talked to over the wire, never bundled
+into Ymir's tarballs) keep their own terms; Ymir's distribution does not
+include their code, so no copyleft obligation travels in the ship. They are
+credited here because the hall names them.
+
+```
+adopted[7]{component,licence,role}:
+  "engram (Mimirsbrunn)","MIT","the memory well engine"
+  "Redis","BSD-3-Clause","queue under the A2A task model"
+  "Traefik / Caddy","MIT / Apache-2.0","Bifrost, the gateway"
+  "OAuth2-proxy","MIT","Heimdall (Authentik variant: GPL-3.0)"
+  "cloudflared","Apache-2.0","Gjallarhorn, the tunnel"
+  "MinIO / FileBrowser","AGPL-3.0 / Apache-2.0","Skrymir, the file door (MinIO runs as a separate service; its AGPL terms attach to MinIO itself, not to Ymir)"
+  "PM2 / Docker","AGPL-3.0 / Apache-2.0","Valhalla, the process watch (PM2 likewise separate-service; AGPL attaches to PM2, not to Ymir)"
+  "MkDocs / Docusaurus","BSD-2-Clause / MIT","the library of the halls"
+  "SkillOpt","MIT (c) zerwiz","Gunnlöð, skill optimization"
+```
+
+The MIT text above covers SkillOpt and engram; the Apache-2.0 text covers
+pi-desktop, the A2A project, Caddy, cloudflared, FileBrowser and Docker (full
+Apache text at `LICENSE`). BSD-3-Clause, BSD-2-Clause, AGPL-3.0 and GPL-3.0
+ride the respective separate services, which carry their own texts when you
+run them.
+
+npm-installed dependencies (react, vite, electron, astro, the editors, …)
+ship inside their own packages, each with its licence text beside it — npm
+carries their terms automatically.
