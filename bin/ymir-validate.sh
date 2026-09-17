@@ -99,21 +99,35 @@ else
 fi
 
 # ── 7. smidja db (visualizer readiness) ─────────────────────────────────────
+# The same pair scripts/start.sh and bin/smidja-bootstrap.sh resolve: an existing
+# $YMIR_HOME/smidja/smidja.db first, then an in-repo copy.
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
-SMIDJA_DB_PATH="${YMIR_HOME:+$YMIR_HOME/smidja/smidja.db}"
-SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-$ROOT/apps/smidja/smidja_data/smidja.db}"
+SMIDJA_DB_PATH="${SMIDJA_DB:-}"
+if [ -z "$SMIDJA_DB_PATH" ]; then
+  for c in "$YMIR_HOME/smidja/smidja.db" "$ROOT/apps/smidja/smidja_data/smidja.db"; do
+    [ -f "$c" ] && { SMIDJA_DB_PATH="$c"; break; }
+  done
+  SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-$YMIR_HOME/smidja/smidja.db}"
+fi
 if [ -f "$SMIDJA_DB_PATH" ]; then
   add smidja-db PASS "smidja.db present"
 else
   add smidja-db FAIL "smidja.db missing — run bin/smidja-bootstrap.sh"
 fi
 
-# ── 7b. visualizer UI (the API serves it from ./dist) ───────────────────
+# ── 7b. visualizer (built ./dist AND its API actually listening) ────────────
+# A PASS must mean the thing is UP. Probe the port, not just the build: a
+# built-but-dead visualizer (a bad CMD_DB, a crashed API) is a FAIL, not green.
 VIZ="$ROOT/.agents/skills/smidja-factory/apps/visualizer"
-if [ -d "$VIZ/dist" ]; then
-  add visualizer PASS "UI built and served on :8437"
-elif [ -d "$VIZ" ]; then
+VIZ_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
+if [ ! -d "$VIZ" ]; then
+  add visualizer SKIP "no visualizer tree at $VIZ"
+elif [ ! -d "$VIZ/dist" ]; then
   add visualizer FAIL "UI not built (./dist missing) — (cd $VIZ && bun run build)"
+elif port_open "$VIZ_PORT"; then
+  add visualizer PASS "UI built and served on :$VIZ_PORT"
+else
+  add visualizer FAIL "UI built but no API listening on :$VIZ_PORT — run scripts/start.sh"
 fi
 
 # ── 8. desktop apps (both Electron windows) ─────────────────────────────────

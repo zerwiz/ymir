@@ -96,8 +96,10 @@ now build it when absent:
 (cd .agents/skills/smidja-factory/apps/visualizer && bun run build)   # vue-tsc + vite
 ```
 
-`bin/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing, so the
-gap cannot silently return.
+`bin/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing **and**
+when the build exists but nothing is listening on `:8437`. A PASS means the UI is
+built *and* the API is up — so a built-but-dead visualizer (a bad `CMD_DB`, a
+crashed API) can no longer read as green.
 
 ## Desktop placement (Omarchy desktops, not monitors)
 
