@@ -43,8 +43,17 @@ ENGRAM_DB="${ENGRAM_DB:-$YMIR_HOME/memory/kaia.engram}"
 # URL. The URL is credential-ish, so it comes from the environment — never the
 # tracked tree. Pi has no remote transport, so it reaches them through the
 # `mcp-remote` stdio bridge; OpenCode speaks `type: remote` natively.
-TEAMS_URL="${WAYOFTEAMS_MCP_URL:-}"
-ANCHOR_URL="${ANCHOR_MCP_URL:-}"
+# The environment wins; else the private platform env, so no caller must export.
+platform_env_val() {  # <KEY>
+  local k=$1 f v
+  for f in "${YMIR_HOARD:-$YMIR_HOME/hodd}/secrets/platform.env" "$YMIR_HOME/hodd/secrets/platform.env" "$YMIR_HOME/secrets/platform.env"; do
+    [ -r "$f" ] || continue
+    v="$(grep -E "^$k=" "$f" 2>/dev/null | tail -1 | cut -d= -f2-)"
+    [ -n "$v" ] && { printf '%s' "$v"; return 0; }
+  done
+}
+TEAMS_URL="${WAYOFTEAMS_MCP_URL:-}";  [ -n "$TEAMS_URL" ]  || TEAMS_URL="$(platform_env_val WAYOFTEAMS_MCP_URL)"
+ANCHOR_URL="${ANCHOR_MCP_URL:-}";     [ -n "$ANCHOR_URL" ] || ANCHOR_URL="$(platform_env_val ANCHOR_MCP_URL)"
 
 python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" "$TEAMS_URL" "$ANCHOR_URL" <<'PY'
 import sys, os, json
