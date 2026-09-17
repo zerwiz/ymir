@@ -26,6 +26,19 @@ fi
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
+# npm install — both shapes, one resolver (bin/app-lib.sh).
+if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
+  _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+    [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
+  done
+  unset _ya _yac
+fi
+app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
+app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
+app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
+
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -39,8 +52,8 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
-APP="$ROOT/apps/hlidskjalf"
-Odrerir_app="$ROOT/apps/odrerir"
+APP="$APP_HLIDSKJALF"
+Odrerir_app="$APP_ODRERIR"
 NO_INSTALL=0
 VIEW="${YMIR_DESKTOP_VIEW:-hlidskjalf}"
 VIEWS=(hlidskjalf smidja odrerir)
