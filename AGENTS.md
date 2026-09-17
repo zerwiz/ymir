@@ -171,9 +171,13 @@ outputs[7]{kind,path}:
   "Personal / schedules","$YMIR_HOME/hodd/workspaces/life/"
   "Daily logs","$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md"
 
+  "Shared company assets","midgard/"
+
+
   "Shared PUBLIC assets","midgard/"
 
   "Shared company assets","midgard/"
+
 
   "Global audit entries","$YMIR_HOME/hodd/memory/runes_audit.md"
 ```
