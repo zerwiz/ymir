@@ -26,19 +26,12 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_settings_dir YMIR_SETTINGS_DIR
 hoard_local_env YMIR_ENV_FILE
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
-if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
-    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
-  done
-  unset _yr _yc
-fi
-hoard_state_dir YMIR_STATE_DIR
-hoard_data_dir YMIR_DATA_DIR
 ENV_FILE="${BROKK_ENV_FILE:-$YMIR_ENV_FILE}"
 
 usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; }

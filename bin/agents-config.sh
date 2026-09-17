@@ -47,6 +47,7 @@ if [ "$ACTION" = init ]; then
     exit 0
   fi
   TPL="$ROOT/config/agents.yaml.example"
+  [ -r "$TPL" ] || TPL="$ROOT/.agents/config/agents.yaml.example"
   [ -r "$TPL" ] || { printf 'error: template missing: %s\n' "$TPL" >&2; exit 1; }
   mkdir -p "$(dirname "$CFG")" 2>/dev/null || true
   cp "$TPL" "$CFG" || { printf 'error: could not write %s\n' "$CFG" >&2; exit 1; }
