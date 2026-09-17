@@ -67,6 +67,101 @@ EmberBackground hearth section (shared module + ResizeObserver mend).
 
 # CHANGELOG
 
+## 2026-09-17 — Pi gets its agents, and a dead extension comes back
+
+- **Pi has no agent loader.** Agent loading in Pi is a *package* (`pi-agents`,
+  `pi-agent-mode`, `pi-simple-agents`), never a core feature — and Ymir installs
+  none. So `.pi/agents/` held twenty correct profile links that **nothing in Pi
+  ever read**. The same failure as OpenCode's singular `.opencode/agent/`,
+  arrived at from the other side.
+- **The fix ships in this repo, not a root-pi package.**
+  `.pi/shared/extensions/ymir-subagents.ts` discovers the canonical
+  `.agents/agents/*.md` tree itself and registers a `subagent` tool. A call runs
+  the chosen figure as a nested model call in the current session: the figure's
+  markdown body is its system prompt, its frontmatter `model:` picks the model
+  where the machine serves it. `subagent({})` and `/subagents` list the roster.
+- **It imports nothing.** `@earendil-works/pi-coding-agent` is not installed as a
+  package, so an extension importing its types cannot load at all. This one takes
+  `pi` as `any` and declares `parameters` as a plain JSON schema — the pattern
+  every working extension in the tree already uses.
+- **A rename that left a reader behind.** `skuld-branch-supervision.ts` imported
+  `calmTranscriptClassIsVisible` / `CalmPresentationState` from
+  `./lib/ro-visibility.ts`, but that module exports `roTranscriptClassIsVisible` /
+  `RoPresentationState`. Pi refuses the **whole extension** at load, so Skuld's
+  supervision branch was dead in every session and nothing reported it. Fixed.
+- **The check that catches it** is now recorded in the owning asset: import every
+  deployed extension with `node --input-type=module` and confirm it loads — a
+  module that cannot resolve is invisible from the file listing.
+## 2026-09-17 — every figure loads: the agent directory was never read
+
+- **The bug, stated plainly.** Twenty agent profiles existed, twenty symlinks
+  pointed at them, and every gate was green — yet OpenCode loaded **three**
+  agents. The symlinks lived in `.opencode/agent/` (SINGULAR). OpenCode reads
+  `.opencode/agents/` (PLURAL). Twenty correct links sat in a directory no loader
+  opened, so only `brokk` and `hnoss` — the two declared by hand in
+  `opencode.json` — ever appeared.
+- **The directory is fixed and migrated.** `.opencode/agent/` → `.opencode/agents/`
+  (20 links, all resolving). `bin/valknut-load.sh` now writes the plural path and
+  **migrates a legacy singular dir forward**, so an old home heals instead of
+  silently keeping its agents invisible.
+- **The roster now declares what it names.** `bin/agents-config.sh apply` only
+  touched an agent already present in `opencode.json` (`if a in ablock`), so a
+  figure the roster knew but the config had never seen stayed undeclared. The
+  roster is the source of truth; a name in it now reaches the harness config.
+- **A new gate catches the class.** `compliance-check.sh` gains **`roster`**: the
+  roster (`config/agents.yaml.example`) and the canonical tree
+  (`.agents/agents/*.md`) must name the same figures. A figure in the tree but not
+  the roster falls to `default_model` and is never declared; a figure in the
+  roster with no profile is a phantom. This is the check that would have caught
+  the real failure while every other gate stayed green.
+- **Verified, not assumed.** `opencode agent list` in the worktree reports all
+  twenty figures (bragi … vor) plus Ymir's own subagents — 33 agents, up from 3.
+  Compliance: 14/14 PASS.
+- **References swept.** Every `.opencode/agent/` reference in code and docs moved
+  to the plural path: `bin/valknut-load.sh`, `bin/agents-config.sh`,
+  `apps/hlidskjalf/server/index.ts`, `RULES/02-agents.md`, `README.md`,
+  `docs/runbooks/agents.md`, `.pi/extensions/README.md`, and the Galdr assets
+  (`harness-integration`, `runtime-compliance`, `registry`, `hlidskjalf-ui`).
+  `CHANGELOG.md`'s own historical entry is left as written — append-only.
+
+## 2026-09-16 — the core senses the real host, not Omarchy's shadow
+
+- **`bin/ymir-install.sh` `step_host` ran the wrong sensor.** The core host step
+  called `bin/omarchy-sense.sh` — the **Omarchy-only** sensor — so on any
+  non-Omarchy host it learnt nothing and printed the sensor's own SKIP row as a
+  host snapshot: `host snapshot:   sensor,SKIP,not an Omarchy host…`. On a Fedora
+  workstation that is the whole discovery step, reporting a skip as fact.
+- **Now it senses THIS machine with `bin/host-sense.sh`** — the portable sensor
+  (the same one behind `ymir sense`) — on **every** host (Rule 05). Recording
+  stays the Omarchy layer's job: `omarchy-sense observe`, the post-update hook,
+  desktop placement, the plugin offer, and the alarm channel remain gated behind
+  `step_omarchy`. Nothing here assumes Omarchy; nothing here skips the core
+  machine either.
+- `step_host` no longer branches on `--check`; it senses once and reports once:
+  `host sensed: <os> / <id> / <family> / <session> / <desktop>`.
+- The owning asset reflects it in the same change:
+  `.agents/skills/galdr-ymirsystem/assets/installation.md` — the `host` step row,
+  the Verify list, the two-layer table (recording, not learning), and the
+  "Omarchy branches" note.
+## 2026-09-16 — the visualizer finds its DB, and the seat-hall actually builds
+
+Two more readers left behind — both discovered by *starting the apps*, not by any
+gate. Each failed silently in its own way.
+
+- **`scripts/start.sh` pointed the smithy at a repo path that no longer holds the
+  DB.** `0003-private-data-separation` moved it to `$YMIR_HOME/smidja/smidja.db`,
+  but the starter still passed `CMD_DB=<repo>/apps/smidja/smidja_data/smidja.db`
+  — so the visualizer API died on boot with `smidja.db not found` and `:8437`
+  answered nothing. It now resolves the same pair `bin/smidja-bootstrap.sh` does
+  (home first, in-repo fallback, `SMIDJA_DB` override). The asset already
+  *described* this resolution; the code now implements it.
+- **`bin/sessrumnir-ensure.sh` never built the app.** `[ "$built_present" ]` tests
+  a **literal, non-empty string** — always true — so `ensure --install` skipped
+  `build_app` and reported `built: no` with exit 0. Sessrúmnir only built when the
+  build was run by hand. Now `built_present` (the function) is called.
+- `galdr-reread`: `.agents/skills/galdr-ymirsystem/assets/smidja.md` — the DB
+  path, the `scripts/start.sh` DB resolution, and the observer's read list.
+
 ## 2026-09-16 — four readers that still pointed at the pre-split world
 
 The app split and the hoard migration moved things; four readers never followed.
@@ -1316,6 +1411,24 @@ and killed the gate. An unknown status can no longer take a panel down.
   The duplicate at the source is recorded, not hidden.
 - `/api/stream` answers 200; the live stream is not broken, it was the window.
 
+## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
+
+- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
+  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
+  20 roster cards the rings and labels overlapped into an unreadable pile.
+  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
+  rows pitched past ring+label), so 20 agents render separated.
+- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
+  `domain: ymirlabs` for every card and its roster parser never read the
+  `domain:` frontmatter each figure carries — so all twenty cards wore the
+  anonymous ᛦ. The roster now parses `domain:` and passes it through;
+  `galdr.md` names its house (`brokkforge`); the graph falls back to
+  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
+  — and the `AgentCard` already fell back safely.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+Fleet graph paragraph (grid fan, roster domains, fallback).
+
 ## 2026-09-17 — the apps leave the monorepo; installation pulls them from their own repos
 
 - **The app split lands in the installer.** The five apps (hlidskjalf,
@@ -1335,122 +1448,3 @@ and killed the gate. An unknown status can no longer take a panel down.
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/installation.md` — the
 step table (`22 steps`, `24` `step_*` functions), the new `apps` row, and the
 Sessrúmnir rows now say "its own repo", not "vendored".
-
-## 2026-09-17 — Pi gets its agents, and a dead extension comes back
-
-- **Pi has no agent loader.** Agent loading in Pi is a *package* (`pi-agents`,
-  `pi-agent-mode`, `pi-simple-agents`), never a core feature — and Ymir installs
-  none. So `.pi/agents/` held twenty correct profile links that **nothing in Pi
-  ever read**. The same failure as OpenCode's singular `.opencode/agent/`,
-  arrived at from the other side.
-- **The fix ships in this repo, not a root-pi package.**
-  `.pi/shared/extensions/ymir-subagents.ts` discovers the canonical
-  `.agents/agents/*.md` tree itself and registers a `subagent` tool. A call runs
-  the chosen figure as a nested model call in the current session: the figure's
-  markdown body is its system prompt, its frontmatter `model:` picks the model
-  where the machine serves it. `subagent({})` and `/subagents` list the roster.
-- **It imports nothing.** `@earendil-works/pi-coding-agent` is not installed as a
-  package, so an extension importing its types cannot load at all. This one takes
-  `pi` as `any` and declares `parameters` as a plain JSON schema — the pattern
-  every working extension in the tree already uses.
-- **A rename that left a reader behind.** `skuld-branch-supervision.ts` imported
-  `calmTranscriptClassIsVisible` / `CalmPresentationState` from
-  `./lib/ro-visibility.ts`, but that module exports `roTranscriptClassIsVisible` /
-  `RoPresentationState`. Pi refuses the **whole extension** at load, so Skuld's
-  supervision branch was dead in every session and nothing reported it. Fixed.
-- **The check that catches it** is now recorded in the owning asset: import every
-  deployed extension with `node --input-type=module` and confirm it loads — a
-  module that cannot resolve is invisible from the file listing.
-
-
-## 2026-09-17 — every figure loads: the agent directory was never read
-
-- **The bug, stated plainly.** Twenty agent profiles existed, twenty symlinks
-  pointed at them, and every gate was green — yet OpenCode loaded **three**
-  agents. The symlinks lived in `.opencode/agent/` (SINGULAR). OpenCode reads
-  `.opencode/agents/` (PLURAL). Twenty correct links sat in a directory no loader
-  opened, so only `brokk` and `hnoss` — the two declared by hand in
-  `opencode.json` — ever appeared.
-- **The directory is fixed and migrated.** `.opencode/agent/` → `.opencode/agents/`
-  (20 links, all resolving). `bin/valknut-load.sh` now writes the plural path and
-  **migrates a legacy singular dir forward**, so an old home heals instead of
-  silently keeping its agents invisible.
-- **The roster now declares what it names.** `bin/agents-config.sh apply` only
-  touched an agent already present in `opencode.json` (`if a in ablock`), so a
-  figure the roster knew but the config had never seen stayed undeclared. The
-  roster is the source of truth; a name in it now reaches the harness config.
-- **A new gate catches the class.** `compliance-check.sh` gains **`roster`**: the
-  roster (`config/agents.yaml.example`) and the canonical tree
-  (`.agents/agents/*.md`) must name the same figures. A figure in the tree but not
-  the roster falls to `default_model` and is never declared; a figure in the
-  roster with no profile is a phantom. This is the check that would have caught
-  the real failure while every other gate stayed green.
-- **Verified, not assumed.** `opencode agent list` in the worktree reports all
-  twenty figures (bragi … vor) plus Ymir's own subagents — 33 agents, up from 3.
-  Compliance: 14/14 PASS.
-- **References swept.** Every `.opencode/agent/` reference in code and docs moved
-  to the plural path: `bin/valknut-load.sh`, `bin/agents-config.sh`,
-  `apps/hlidskjalf/server/index.ts`, `RULES/02-agents.md`, `README.md`,
-  `docs/runbooks/agents.md`, `.pi/extensions/README.md`, and the Galdr assets
-  (`harness-integration`, `runtime-compliance`, `registry`, `hlidskjalf-ui`).
-  `CHANGELOG.md`'s own historical entry is left as written — append-only.
-
-
-## 2026-09-16 — the core senses the real host, not Omarchy's shadow
-
-- **`bin/ymir-install.sh` `step_host` ran the wrong sensor.** The core host step
-  called `bin/omarchy-sense.sh` — the **Omarchy-only** sensor — so on any
-  non-Omarchy host it learnt nothing and printed the sensor's own SKIP row as a
-  host snapshot: `host snapshot:   sensor,SKIP,not an Omarchy host…`. On a Fedora
-  workstation that is the whole discovery step, reporting a skip as fact.
-- **Now it senses THIS machine with `bin/host-sense.sh`** — the portable sensor
-  (the same one behind `ymir sense`) — on **every** host (Rule 05). Recording
-  stays the Omarchy layer's job: `omarchy-sense observe`, the post-update hook,
-  desktop placement, the plugin offer, and the alarm channel remain gated behind
-  `step_omarchy`. Nothing here assumes Omarchy; nothing here skips the core
-  machine either.
-- `step_host` no longer branches on `--check`; it senses once and reports once:
-  `host sensed: <os> / <id> / <family> / <session> / <desktop>`.
-- The owning asset reflects it in the same change:
-  `.agents/skills/galdr-ymirsystem/assets/installation.md` — the `host` step row,
-  the Verify list, the two-layer table (recording, not learning), and the
-  "Omarchy branches" note.
-
-
-## 2026-09-16 — the visualizer finds its DB, and the seat-hall actually builds
-
-Two more readers left behind — both discovered by *starting the apps*, not by any
-gate. Each failed silently in its own way.
-
-- **`scripts/start.sh` pointed the smithy at a repo path that no longer holds the
-  DB.** `0003-private-data-separation` moved it to `$YMIR_HOME/smidja/smidja.db`,
-  but the starter still passed `CMD_DB=<repo>/apps/smidja/smidja_data/smidja.db`
-  — so the visualizer API died on boot with `smidja.db not found` and `:8437`
-  answered nothing. It now resolves the same pair `bin/smidja-bootstrap.sh` does
-  (home first, in-repo fallback, `SMIDJA_DB` override). The asset already
-  *described* this resolution; the code now implements it.
-- **`bin/sessrumnir-ensure.sh` never built the app.** `[ "$built_present" ]` tests
-  a **literal, non-empty string** — always true — so `ensure --install` skipped
-  `build_app` and reported `built: no` with exit 0. Sessrúmnir only built when the
-  build was run by hand. Now `built_present` (the function) is called.
-- `galdr-reread`: `.agents/skills/galdr-ymirsystem/assets/smidja.md` — the DB
-  path, the `scripts/start.sh` DB resolution, and the observer's read list.
-
-
-## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
-
-- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
-  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
-  20 roster cards the rings and labels overlapped into an unreadable pile.
-  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
-  rows pitched past ring+label), so 20 agents render separated.
-- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
-  `domain: ymirlabs` for every card and its roster parser never read the
-  `domain:` frontmatter each figure carries — so all twenty cards wore the
-  anonymous ᛦ. The roster now parses `domain:` and passes it through;
-  `galdr.md` names its house (`brokkforge`); the graph falls back to
-  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
-  — and the `AgentCard` already fell back safely.
-
-galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
-Fleet graph paragraph (grid fan, roster domains, fallback).
