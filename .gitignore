@@ -155,3 +155,13 @@ assets/reference/state/
 .agents/config/wedge-alarm
 *.tsbuildinfo
 .agents/state/
+
+# Apps live in their own repos (registered in the home registry), pulled by the
+# installer's step_apps — never tracked in the monorepo.
+apps/hlidskjalf/
+apps/hlidskjalf-mobile/
+apps/odrerir/
+apps/sessrumnir/
+apps/smidja/
+apps/smidja-factory/
+!apps/README.md

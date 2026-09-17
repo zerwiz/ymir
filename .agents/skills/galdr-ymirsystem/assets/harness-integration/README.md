@@ -20,13 +20,19 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 
 ## 1. What a harness adapter is
 
-> **MCP scope (Ymir's well + A2A mesh).** `bin/a2a-mcp.sh install` wires the
+> **MCP scope (well · mesh · Teams · Anchor).** `bin/a2a-mcp.sh install` wires the
 > `engram` (memory well) and `a2abridge` (A2A mesh) MCP servers into OpenCode's
-> repo `opencode.json` **and** Pi. By default the Pi side writes the **global**
+> repo `opencode.json` **and** Pi. The **Teams** plane (`wayofteams`) and
+> **Anchor** memory are **remote** MCP servers named by URL: set
+> `WAYOFTEAMS_MCP_URL` / `ANCHOR_MCP_URL` in the private platform env, then run
+> `bin/a2a-mcp.sh install`. OpenCode speaks `type: remote` natively; Pi has no
+> remote transport, so it reaches them through the `mcp-remote` stdio bridge. The
+> URLs never enter the tracked tree. By default the Pi side writes the **global**
 > `~/.pi/agent/mcp.json`; `bin/a2a-mcp.sh install --project` writes the repo's
 > `.pi/mcp.json` instead, leaving a Pi used elsewhere untouched (launch with
 > `pi --mcp-config .pi/mcp.json`). Prefer `--project` when integrating Ymir into
-> an existing workflow.
+> an existing workflow. `bin/a2a-mcp.sh show` reports what is **actually** wired —
+> every key present, not a fixed list.
 
 
 The Ymir runtime is a **distro**: a directory of instructions, skills, tooling and conventions that turns a general-purpose agent into a specialized one. Launching a supported harness inside `BROKK_HOME` is supposed to instantiate **Brokk** and address the operator as the **Allfather** *before the model's first turn*.
@@ -220,6 +226,7 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 | `.pi/shared/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor; strictly user-facing, no LLM tool. **Resolution:** `$VISUAL` → `$EDITOR` → the first editor that exists (`code cursor zed subl nvim vim hx helix nano micro emacs vi`), so a host that is not Omarchy — where Omarchy's own launcher or a bare `vi` may be absent — still gets a working editor instead of an ENOENT | user |
 | `.pi/shared/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
 | `.pi/shared/extensions/todo.ts` | the todo surface | user |
+| `.pi/shared/extensions/ymir-subagents.ts` | **the Eindri roster as a Pi tool** — reads the canonical `.agents/agents/*.md` tree and exposes every figure through a `subagent` tool (and a `/subagents` command). See "Pi has no agent loader" below | user |
 | `.pi/shared/extensions/lib/rodd-operational-input.ts` | `encodeRoddOperationalInput`, `classifyRoddOperationalText`, `classifyRoddCurrentOperationalText` | shared wire |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` | detached child supervisor (Vörðr) | 1 (transport) |
 | `.claude/settings.json` | `hooks.SessionStart[]`, `hooks.Stop[]` | 1, 3, 5 |
@@ -495,7 +502,7 @@ harness config like `mode`/`model`/`permission` in their frontmatter). The
 harness directories **bind** them by symlink — they are never hand-written
 duplicates:
 
-- OpenCode: `.opencode/agent/<name>.md` → `../../.agents/agents/<profile>.md`
+- OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
 - Pi: `.pi/agents/<profile>.md` → the same canonical files
 
 `bin/valknut-load.sh` creates the symlinks (`--opencode`, `--pi`, `--global`,
@@ -505,7 +512,7 @@ hand-made subset. Naming differs by harness and must be respected:
 
 ```
 agent_binding[5]{harness,dir,name_rule}:
-  "opencode",".opencode/agent/","the frontmatter `name:` — bragi.md -> bragi-marketer.md"
+  "opencode",".opencode/agents/","the frontmatter `name:` — bragi.md -> bragi-marketer.md"
   "pi",".pi/agents/","the profile file name — bragi-marketer.md"
   "claude",".claude/agents/","the profile file name"
   "codex",".codex/agents/","the profile file name"
@@ -584,10 +591,63 @@ einherjar[20]{figure,craft,domain,engine}:
   "Völundr","master smith — Smíðja's orchestrator","brokkforge","—"
 ```
 
-Bind with `bin/valknut-load.sh --all` (OpenCode: `.opencode/agent/<name>.md`; Pi:
+Bind with `bin/valknut-load.sh --all` (OpenCode: `.opencode/agents/<name>.md`; Pi:
 `.pi/agents/<profile>.md`) — never edit the harness dirs.
 
-## Pi extension single-home (2026-09-12)
+## Pi has no agent loader (2026-09-17)
+
+**Pi core does not load `.pi/agents/`.** Agent loading in Pi is a *package*
+(`pi-agents`, `pi-agent-mode`, `pi-simple-agents`), not a core feature, and Ymir
+installs none of them. So `.pi/agents/` held twenty correct profile links that
+**nothing in Pi ever read** — the same failure as OpenCode's singular
+`.opencode/agent/`, arrived at from the other side.
+
+The fix lives in the repo, not in a root-pi package: **`.pi/shared/extensions/ymir-subagents.ts`**
+discovers the canonical `.agents/agents/*.md` tree itself and registers a
+`subagent` tool. A call runs the chosen figure as a nested model call in the
+current session — the figure's markdown body is its system prompt, its
+frontmatter `model:` picks the model where the machine serves it.
+
+```
+subagent({ agent: "kvasir", task: "find every AGENTS.md" })   # dispatch
+subagent({})                                                   # list the roster
+/subagents                                                     # list the roster
+```
+
+Rules this extension follows, learned the hard way:
+
+- **No imports.** `@earendil-works/pi-coding-agent` is **not installed as a
+  package**, so an extension that imports its types cannot load at all. Every
+  working extension in this tree takes `pi` as `any` and declares tool
+  `parameters` as a plain JSON schema object. `typebox` *is* installed, but the
+  plain object needs nothing.
+- **One home.** It lives in `.pi/shared/extensions/` (deployed), never in
+  `.pi/extensions/` — a copy in both makes pi refuse the duplicate tool.
+- **The canonical tree is the source.** It reads `.agents/agents/`; it never
+  copies from it (Rule 02).
+
+### A rename that left a reader behind (same day)
+
+`skuld-branch-supervision.ts` imported `calmTranscriptClassIsVisible` and
+`CalmPresentationState` from `./lib/ro-visibility.ts`, but that module exports
+`roTranscriptClassIsVisible` and `RoPresentationState` — the names were renamed
+and the importer was not. Pi refuses the **whole extension** at load with
+`does not provide an export named …`, so Skuld's supervision branch was dead in
+every session while nothing reported it. Fixed in the same change.
+
+**Check every extension actually loads**, not just that its file exists:
+
+```bash
+cd ~/.pi/agent/extensions
+for f in *.ts; do
+  node --input-type=module --eval "import('file://$PWD/$f').then(()=>console.log('$f LOADS')).catch(e=>console.log('$f FAIL: '+e.message.split('\n')[0]))"
+done
+```
+
+Run it after every deploy. A module that cannot resolve is invisible from the
+file listing, and pi reports it only as a startup line that scrolls away.
+
+
 
 Pi loads **both** the project `.pi/extensions/` and the global
 `~/.pi/agent/extensions/` directories; because it does not de-duplicate by
@@ -635,14 +695,14 @@ under **`ymir_tools:`**; permission is expressed by the `permission:` block.
 
 ```
 canonical[3]{kind,canonical,load_path}:
-  "agent profiles",".agents/agents/<profile>.md",".opencode/agent/<name>.md · .pi/agents/<name>.md (symlinks)"
+  "agent profiles",".agents/agents/<profile>.md",".opencode/agents/<name>.md · .pi/agents/<name>.md (symlinks)"
   "OpenCode plugins",".agents/harness/opencode/plugins/",".opencode/plugins (symlink)"
   "skills",".agents/skills/","loaded via opencode.json skills.paths"
 ```
 
 Rules:
 - **Edit only `.agents/`.** Never edit a file under `.opencode/` or `.pi/` — those are
-  symlinks to `.agents/` (e.g. `.opencode/agent/bragi.md` links to
+  symlinks to `.agents/` (e.g. `.opencode/agents/bragi.md` links to
   `.agents/agents/bragi-marketer.md`).
 - After any change: `bin/valknut-load.sh --all` to rebind.
 - **OpenCode requires REAL `.opencode/{node_modules,package.json,.gitignore}`** — the

@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# editor-place.sh — the editor opens on its OWN desktop, never on yours.
+# editor-place.sh — the editor is UNMANAGED by default: it opens on the
+# desktop you are on, focused and clickable, like any other app.
 #
-# The Allfather reads and works on a desktop. An editor that maps on top of that
-# steals the place he was in. So the editor gets a desktop of its own, exactly as
-# the Ymir apps do (bin/desktop-place.sh) — and it uses the SAME mechanism, which
-# is the one proven on this machine:
+# It CAN pin the editor to its own desktop — never on yours — the same way the
+# Ymir apps do (bin/desktop-place.sh), the mechanism proven on this machine:
+#   YMIR_EDITOR_PIN=1 bin/editor-place.sh apply
+# The pin is opt-in because the old always-on behavior made the editor
+# un-focusable (no_focus) and dropped it onto a different desktop, which the
+# Allfather found unusable.
 #
 #   Hyprland applies window rules at MAP time, so the window never appears on the
 #   working desktop at all. Writing `o.window({ class = ... }, { workspace = ... })`
@@ -22,6 +25,7 @@
 #   bin/editor-place.sh --version
 #
 # Env: YMIR_EDITOR_CLASS (default: the resolved editor, else `code`)
+#      YMIR_EDITOR_PIN  (1 = pin the editor to its own desktop; default unmanaged)
 set -u
 
 VERSION="1.0.0"
@@ -142,12 +146,13 @@ write_rule() {  # <desktop>
       done
     )"
   fi
-  local editorline
-  # `no_focus = true` is Omarchy's own idiom (default/hypr/windows.lua) for mapping
-  # a window without stealing focus. `workspace` sends it to its own desktop; the
-  # pair means the editor appears where it belongs and the Allfather keeps the
-  # desk he was reading at.
-  editorline="$(printf 'o.window({ class = "^%s$" }, { workspace = "%s", no_focus = true })\n' "$cls" "$d")"
+  local editorline=""
+  # Unmanaged by default: the editor opens on the active desktop, focused and
+  # clickable. Only pin it away (the old `no_focus` behavior) when the operator
+  # opts in with YMIR_EDITOR_PIN=1.
+  if [ "${YMIR_EDITOR_PIN:-0}" = "1" ]; then
+    editorline="$(printf 'o.window({ class = "^%s$" }, { workspace = "%s", no_focus = true })\n' "$cls" "$d")"
+  fi
   if [ "$DRY" = 1 ]; then
     printf '%s' "$header"
     [ -n "$applines" ] && printf '%s\n' "$applines"
@@ -174,8 +179,13 @@ include_rule_file() {
 
 case "$ACTION" in
   plan)
-    cls="$(editor_class)"; d="$(plan_desktop)"
-    printf 'editor-place[1]{class,desktop}:\n  "%s",%s\n' "$cls" "$d"
+    cls="$(editor_class)"
+    if [ "${YMIR_EDITOR_PIN:-0}" = "1" ]; then
+      d="$(plan_desktop)"
+      printf 'editor-place[1]{class,desktop}:\n  "%s",%s\n' "$cls" "$d"
+    else
+      printf 'editor-place[1]{class,desktop}:\n  "%s","unmanaged (YMIR_EDITOR_PIN=1 to pin)"\n' "$cls"
+    fi
     ;;
   apply)
     have hyprctl || { printf 'editor-place[1]{state}:\n  "skipped — no hyprctl (not a Hyprland host)"\n'; exit 0; }
@@ -190,9 +200,17 @@ case "$ACTION" in
         printf 'editor-place[1]{state,desktop,configerrors}:\n  "written, but Hyprland reported errors","%s","%s"\n' "$d" "$(printf '%s' "$errs" | tr '\n' ' ')"
         exit 1
       fi
-      printf 'editor-place[1]{state,class,desktop}:\n  "written","%s","%s"\n' "$(editor_class)" "$d"
+      if [ "${YMIR_EDITOR_PIN:-0}" = "1" ]; then
+        printf 'editor-place[1]{state,class,desktop}:\n  "written","%s","%s"\n' "$(editor_class)" "$d"
+      else
+        printf 'editor-place[1]{state,class}:\n  "written (editor unmanaged)","%s"\n' "$(editor_class)"
+      fi
     else
-      printf 'editor-place[1]{state,desktop}:\n  "dry-run","%s"\n' "$d"
+      if [ "${YMIR_EDITOR_PIN:-0}" = "1" ]; then
+        printf 'editor-place[1]{state,desktop}:\n  "dry-run","%s"\n' "$d"
+      else
+        printf 'editor-place[1]{state}:\n  "dry-run (editor unmanaged)"\n'
+      fi
     fi
     ;;
   status)
