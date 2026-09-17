@@ -228,12 +228,16 @@ app_row() {  # <name> <about>
   local name="$1" about="$2" dir
   if dir="$(app_dir "$name")"; then
     if [ -d "$dir/dist" ] || [ -d "$dir/out" ]; then
-      emit 5 apps "$name" SKIP "$about — source and web build present"
+      emit 5 apps "$name" SKIP "$about — installed, and its build shipped with it"
     else
-      emit 5 apps "$name" DO "$about — source present, web build to make"
+      emit 5 apps "$name" DO "$about — installed from source; the web build is still to make"
     fi
+  elif grep -q "\"@zerwiz/$name\"" "$ROOT/package.json" 2>/dev/null; then
+    # Declared as a dependency of the distro but not present: the package exists,
+    # the tree simply has not fetched it. That is a DO, not a dead end.
+    emit 5 apps "$name" DO "$about — declared as a dependency but not fetched (npm i -g @zerwiz/ymir fetches it)"
   else
-    emit 5 apps "$name" BLOCKED "$about — not installed: no apps/$name and no @zerwiz/$name package"
+    emit 5 apps "$name" BLOCKED "$about — no apps/$name, no @zerwiz/$name package, and the distro does not depend on it"
   fi
 }
 apps_phase() {
