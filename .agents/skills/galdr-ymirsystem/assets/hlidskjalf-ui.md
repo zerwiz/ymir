@@ -201,7 +201,10 @@ API on the same port (`scripts/start.sh` raises it). Details: `assets/smidja.md`
 ## Agents, skills & mythological naming
 
 - The Forge gate (`src/gates/Forge.tsx`) creates/edits **Eindri** and **skills**,
-  and reads/edits the smithy's prompts.
+  and reads/edits the smithy's prompts. The skill list shows each skill's own
+  text: the name + aett rune on the head row, and the description line
+  underneath (`forge-item-desc`, dimmed until hover) — the description comes
+  from the live `/api/skills` index, truncated to 240 chars by the gate API.
 - Naming law: `src/data/mythology.ts` maps a craft/capability → the Norse figure
   whose myth matches it (smith→Sindri, skald→Bragi, sage→Huginn, judge→Tyr,
   forger→Brokk …). Skills take an **aett** prefix.
