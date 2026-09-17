@@ -14,8 +14,11 @@
 
 ![Ymir — the single-tenant agent OS](assets/ymir-banner-03.png)
 
-Ymir is a lean, single-operator agentic OS. You are the **Allfather**; **Brokk** is
-your primary agent; **Eindri** are the isolated workers it dispatches. Everything —
+Ymir is not lean. It is a single-operator agentic **distro**: a fleet of named
+agents, sealed sandboxes, a memory well, an audit ledger, and a control plane
+you actually look at — running from one repository. You are the **Allfather**;
+**Brokk** is your primary agent; **Eindri** are the isolated workers it dispatches.
+Everything —
 development, marketing, business strategy, life — runs from one repository, with an
 audit ledger, a memory well, one tenant and its workspaces, and a control plane you actually look at.
 
