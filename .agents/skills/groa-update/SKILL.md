@@ -62,6 +62,15 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
    Summarize what landed without internal vocabulary: which parts of the fleet are now on the latest, and which were left as-is and why.
    Surface any skipped target whose reason needs the Allfather's attention (a home with un-landed changes, local edits).
 
+5. **Re-check where the apps live — an update can move the shape.**
+   `bin/app-lib.sh` resolves a surface in a clone (`apps/<surface>`) or in a
+   package (`node_modules/@zerwiz/<package>`); `bin/smidja-lib.sh` and
+   `bin/electron-lib.sh` do the same for the smithy and a shell's runtime. After a
+   fast-forward, run `bin/ymir-plan.sh --phase 5` — if a surface that stood
+   installed now reads `BLOCKED`, the layout assumption moved and the resolver
+   needs the new shape. A long update should also say so: `style_patience` from
+   `bin/ymir-style.sh` opens the slow part in the house's own voice.
+
 5. **Read the plan after an update — the new version may expect more of this host.**
    A tracked change can add a step, a root, or a setting the running machine has not
    met yet. After a fast-forward that moved the instruction surface, ask what the
