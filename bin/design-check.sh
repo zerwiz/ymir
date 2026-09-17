@@ -28,7 +28,16 @@ case "${1-}" in
 esac
 
 [ -r "$TOKENS" ] || { printf 'error: tokens not found: %s\n' "${TOKENS#"$ROOT"/}" >&2; exit 1; }
-[ -r "$SEEDS" ]  || { printf 'error: the seat'"'"'s cloth not found: %s\n' "${SEEDS#"$ROOT"/}" >&2; exit 1; }
+# The seat's cloth lives in the Sessrúmnir app repo (the apps split moved it out
+# of the monorepo; `step_apps` clones it). In a fresh clone or a worktree it is
+# absent until that step runs — so an absent seat is a clean SKIP, not a failure.
+# Two carriers can only be compared when both are present; demanding the app's
+# file would fail every worktree for a reason that is not drift.
+if [ ! -r "$SEEDS" ]; then
+  printf 'design[1]{state,reason}:\n'
+  printf '  "SKIP","the seat'"'"'s cloth is app-provided (%s) — run bin/ymir-install.sh step_apps"\n' "${SEEDS#"$ROOT"/}"
+  exit 0
+fi
 
 # the pairs that MUST agree: CSS token <-> seed
 python3 - "$TOKENS" "$SEEDS" <<'PY'

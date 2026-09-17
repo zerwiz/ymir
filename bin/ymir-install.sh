@@ -77,7 +77,7 @@ Ymir first setup — this will make the following changes:
   • install the OSS engines: treehouse, no-mistakes (+ sandcastle if present)
   • ensure the Hermes worker runtime
   • ensure a terminal backend (herdr — Þjazi — preferred, else tmux)
-  • learn this machine (Omarchy version, packages, configs, monitors, scale)
+  • learn this machine (OS, desktop, packages, configs, monitors, scale — Omarchy hosts recorded first-class)
   • place the desktop apps on their own numbered desktops
   • build the Utgard sandbox image 'utgard-runner:latest' (needs docker access)
   • create the Smiðja database and build the visualizer UI
