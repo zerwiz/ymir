@@ -1,5 +1,14 @@
 
 
+## 2026-09-17 — the seat's name and the visualizer's home
+
+- **omarchy, not omarchy-1** — the machine is `omarchy`; the fleet config docs
+  and the tailscale-sync map say so.
+- **The Smíðja visualizer's home is the smidja repo clone** —
+  `apps/smidja-factory/apps/visualizer`; the skill tree carries no copy (the
+  stale build was moved aside). `smidja.md` (the governed asset), the smithy
+  SKILL, and the install asset all point at the clone.
+
 ## 2026-09-17 — the layout swept: every reader taught the new doors
 
 - **bin/nornir-job-observer.sh** — masterplan, runes ledger, and the well now
