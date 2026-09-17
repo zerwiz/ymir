@@ -39,9 +39,17 @@ ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 ENGRAM_DB="${ENGRAM_DB:-$YMIR_HOME/memory/kaia.engram}"
 
-python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" <<'PY'
+# The Teams plane (WayOfTeams) and Anchor memory are REMOTE MCP servers, named by
+# URL. The URL is credential-ish, so it comes from the environment — never the
+# tracked tree. Pi has no remote transport, so it reaches them through the
+# `mcp-remote` stdio bridge; OpenCode speaks `type: remote` natively.
+TEAMS_URL="${WAYOFTEAMS_MCP_URL:-}"
+ANCHOR_URL="${ANCHOR_MCP_URL:-}"
+
+python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" "$TEAMS_URL" "$ANCHOR_URL" <<'PY'
 import sys, os, json
-root, pi_path, oc_path, a2ab, durl, advert, wotes, action, engram_bin, engram_db = sys.argv[1:11]
+(root, pi_path, oc_path, a2ab, durl, advert, wotes, action, engram_bin, engram_db,
+ teams_url, anchor_url) = sys.argv[1:13]
 
 def load(p, default):
     try: return json.load(open(p))
@@ -59,20 +67,38 @@ ones = {
         "oc":  {"type": "local", "command": [engram_bin, "--db", engram_db], "environment": {}},
     },
 }
-if wotes:
+# The Teams plane: a URL (remote) wins over a local `wayofteams-mcp` binary.
+if teams_url:
+    ones["wayofteams"] = {
+        "pi":  {"command": "npx", "args": ["-y", "mcp-remote", teams_url]},
+        "oc":  {"type": "remote", "url": teams_url},
+    }
+elif wotes:
     ones["wayofteams"] = {
         "pi":  {"command": wotes, "args": ["--stdio"], "env": {"WOTEAMS_URL": os.environ.get("WOTEAMS_URL","")}},
         "oc":  {"type": "local", "command": [wotes, "--stdio"], "environment": {"WOTEAMS_URL": os.environ.get("WOTEAMS_URL","")}},
     }
 
+# Anchor — the memory plane, remote by URL.
+if anchor_url:
+    ones["way-of-anchor-sse"] = {
+        "pi":  {"command": "npx", "args": ["-y", "mcp-remote", anchor_url]},
+        "oc":  {"type": "remote", "url": anchor_url},
+    }
+
 if action == "show":
     pi = load(pi_path, {}).get("mcpServers", {})
     oc = load(oc_path, {}).get("mcp", {})
-    print(f"a2a-mcp[{len(ones)}]{{server,in_pi,in_opencode}}:")
-    for name in ones:
+    # Report what is ACTUALLY wired, not a fixed list: a key may come from an
+    # earlier install, a hand edit, or a server this script does not itself add.
+    names = sorted(set(ones) | set(pi) | set(oc))
+    print(f"a2a-mcp[{len(names)}]{{server,in_pi,in_opencode}}:")
+    for name in names:
         print(f'  "{name}","{"yes" if name in pi else "no"}","{"yes" if name in oc else "no"}"')
-    if not wotes:
-        print('help: wayofteams-mcp not on PATH — install it to enable the Teams plane')
+    if not wotes and not teams_url:
+        print('help: set WAYOFTEAMS_MCP_URL (or install wayofteams-mcp) to enable the Teams plane')
+    if not anchor_url:
+        print('help: set ANCHOR_MCP_URL to enable the Anchor memory plane')
     sys.exit(0)
 
 if action != "install":
