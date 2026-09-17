@@ -79,7 +79,7 @@ def roster():
     for f in files:
         stem = f[:-3]
         parts = stem.split("-")
-        model = mode = ""
+        model = mode = domain = ""
         try:
             with open(os.path.join(ROSTER_DIR, f)) as fh:
                 txt = fh.read(6000)
@@ -89,6 +89,8 @@ def roster():
                         model = line.split(":", 1)[1].strip()
                     if line.startswith("mode:") and not mode:
                         mode = line.split(":", 1)[1].strip()
+                    if line.startswith("domain:") and not domain:
+                        domain = line.split(":", 1)[1].strip()
         except Exception:
             pass
         out.append({
@@ -97,6 +99,7 @@ def roster():
             "craft": parts[1] if len(parts) > 1 else "agent",
             "model": model,
             "mode": mode,
+            "domain": domain,
         })
     return out
 
@@ -105,14 +108,14 @@ ps = panes()
 rs = roster()
 rows = []
 
-def card(name, role, model, state, pane=None, task="", where=""):
+def card(name, role, model, state, domain="ymirlabs", pane=None, task="", where=""):
     status = {"working": "nominal", "idle": "nominal", "unseated": "seated"}.get(state, "degraded")
     return {
         "id": pane["id"] if pane else "roster:" + name,
         "name": name,
         "role": role,
         "realm": "work",
-        "domain": "ymirlabs",
+        "domain": domain,
         "status": status,
         "capabilities": [],
         "skills": [],
@@ -147,6 +150,7 @@ for a in rs:
             break
     rows.append(card(a["figure"], a["craft"], a["model"],
                      hit["state"] if hit else "unseated",
+                     domain=a["domain"] or "ymirlabs",
                      pane=hit, task=hit["task"] if hit else ""))
 
 # Harness seats that answer to no one on the roster: kept visible, named honestly.
