@@ -89,7 +89,13 @@ fi
 # --- mocks ------------------------------------------------------------------
 # A legitimate filename is not a stub: TODO.md appears in an allowlist in
 # bin/public-guard.sh, so ignore that filename (not the word) here.
-mock_hits=$(grep -rniE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null | grep -v 'PUBLIC=' || true)
+#
+# Comments are excluded: a header that explains WHY a guard exists may use the
+# word ("it was an empty placeholder, but the shape invited the leak"), and that
+# is documentation, not a stub. The gate is about shipped BEHAVIOUR.
+mock_hits=$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
+  | grep -viE '^[^:]+:[0-9]+:[[:space:]]*#' \
+  | grep -v 'PUBLIC=' || true)
 if [ -z "$mock_hits" ]; then
   add mocks "no mocks in shipped runtime" PASS "bin/ clean"
 else
@@ -288,7 +294,14 @@ fi
 # that no longer existed. A line marked planned/legacy/superseded is exempt by
 # intent — an index may name what is coming or gone, but not what never was.
 real_skills="$(find -L "$ROOT/.agents/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -printf '%h\n' 2>/dev/null | while read -r d; do basename "$d"; done | sort)"
-indexed="$(grep -oE '^  "[A-Za-z0-9._-]+"' "$ROOT/.agents/skills/README.md" 2>/dev/null | tr -d ' "' | sort -u)"
+# An entry marked planned/legacy/superseded/… is exempt by intent, and so is one
+# marked `app-provided`: the smithy's skill lives in its own app repo, cloned by
+# step_apps — absent in a fresh clone or worktree until that step runs, present in
+# a working tree. Exempting the MARKED entry keeps the index honest without
+# demanding a path that only exists after the app clone.
+indexed="$(grep -E '^  "[A-Za-z0-9._-]+"' "$ROOT/.agents/skills/README.md" 2>/dev/null \
+  | grep -viE 'planned|legacy|superseded|removed|abandoned|retired|former|app-provided' \
+  | grep -oE '^  "[A-Za-z0-9._-]+"' | tr -d ' "' | sort -u)"
 missing_index="$(comm -23 <(printf '%s\n' "$real_skills") <(printf '%s\n' "$indexed") | tr '\n' ' ')"
 extra_index="$(comm -13 <(printf '%s\n' "$real_skills") <(printf '%s\n' "$indexed") | tr '\n' ' ')"
 dead_refs=""
@@ -400,6 +413,61 @@ elif [ -z "$gov_missing" ]; then
   add governed "governed paths resolve" PASS "all $gov_count governed paths exist"
 else
   add governed "governed paths resolve" FAIL "missing:$gov_missing"
+fi
+
+# --- config (Rule 07) -------------------------------------------------------
+# Two classes of hardcoding that only appear on someone else's machine, and that
+# no other gate catches:
+#
+#   models/providers — every user's differ, so a model id or provider name used
+#     as a VALUE in shipped code or a tracked config is a claim about a machine
+#     the author does not own. The user's own live in $YMIR_HOME/hodd/, read from
+#     a YAML file there; the repo ships only a template.
+#   absolute paths — a path naming a user (/home/<user>, /Users/<user>,
+#     C:\Users\<user>) is not portable. Paths are relative to a resolved root or
+#     come from env/config.
+#
+# Exempt by intent: comments (documentation may name an example), templates
+# (*.example — placeholders are the point), CHANGELOG* (the record), and
+# assets/reference/ (provenance — it records what was, not what runs).
+config_bad=""
+config_checked=0
+
+# Shipped surfaces: the runtime, the skills' tools, the tracked configs.
+config_files=$(git -C "$ROOT" ls-files -- 'bin/*.sh' 'scripts/*.sh' \
+  '.agents/skills/*/scripts/*' 'config/*' '*.json' '*.yaml' '*.yml' 2>/dev/null \
+  | grep -vE '(^|/)(CHANGELOG|assets/reference/|node_modules/|\.yggdrasil/)' \
+  | grep -vE '\.example$|\.template$' || true)
+
+# A model id or provider name as a VALUE. The pattern is deliberately narrow: a
+# known provider prefix followed by a model token, in a VALUE POSITION only —
+# after `:`, `=`, or a JSON/YAML key. Prose that merely mentions
+# "llama.cpp/llama-swap" in a sentence is documentation, not configuration, and
+# must not trip the gate.
+for f in $config_files; do
+  [ -f "$ROOT/$f" ] || continue
+  config_checked=$((config_checked + 1))
+  hits=$(sed -E 's/(^|[[:space:]])#.*$//' "$ROOT/$f" 2>/dev/null \
+    | grep -nE '(^|[[:space:]])(model|models|default_model|provider|providers)[[:space:]]*[:=][[:space:]]*"?[A-Za-z0-9._-]+/(llama\.cpp|llamacpp|opencode-go|apodex|openrouter|lmstudio)/|[":=][[:space:]]*"(llama\.cpp|llamacpp|opencode-go|apodex|openrouter|lmstudio)/[A-Za-z0-9._@-]+"' \
+    | head -3)
+  [ -n "$hits" ] && config_bad="$config_bad ${f}(model)"
+done
+
+# An absolute path naming a user.
+for f in $config_files; do
+  [ -f "$ROOT/$f" ] || continue
+  hits=$(sed -E 's/(^|[[:space:]])#.*$//' "$ROOT/$f" 2>/dev/null \
+    | grep -nE '/home/[a-z][a-z0-9_-]+/|/Users/[A-Za-z][A-Za-z0-9_-]+/|[Cc]:\\Users\\' \
+    | head -3)
+  [ -n "$hits" ] && config_bad="$config_bad ${f}(path)"
+done
+
+if [ -z "$config_bad" ]; then
+  add config "no hardcoded models, providers, or user paths (Rule 07)" PASS \
+    "$config_checked files clean; models/providers resolve from \$YMIR_HOME/hodd/"
+else
+  add config "no hardcoded models, providers, or user paths (Rule 07)" FAIL \
+    "hardcoded:$config_bad"
 fi
 
 # --- output -----------------------------------------------------------------

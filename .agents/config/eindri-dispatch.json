@@ -1,14 +1,14 @@
 {
   "version": 1,
   "platform": "ymir",
-  "notes": "Brokk reads these rules before dispatching an Eindri and passes only concrete --harness/--model/--effort flags to bin/einherjar-spawn.sh. opencode is the primary Ymir harness; pi is the verified secondary harness. Model tokens must match a model opencode/pi can run on this host, or be omitted to use the harness default. effort values: low|medium|high|xhigh|max.",
+  "notes": "TEMPLATE \u2014 copy to $YMIR_HOME/hodd/config/eindri-dispatch.json and fill in YOUR models. Brokk reads these rules before dispatching an Eindri and passes only concrete --harness/--model/--effort flags to bin/einherjar-spawn.sh. Model tokens must match a model your harness can run on your host, or be omitted to use the harness default. effort values: low|medium|high|xhigh|max.",
   "rules": [
     {
       "when": "General implementation, refactoring, or bug fixes in a codebase",
       "use": [
         {
           "harness": "opencode",
-          "model": "opencode-go/deepseek-v4.1-flash",
+          "model": "<your-model-id>",
           "effort": "medium"
         }
       ],
@@ -19,7 +19,7 @@
       "use": [
         {
           "harness": "opencode",
-          "model": "opencode-go/deepseek-v4.1-flash",
+          "model": "<your-model-id>",
           "effort": "xhigh"
         }
       ],
@@ -30,7 +30,7 @@
       "use": [
         {
           "harness": "opencode",
-          "model": "opencode-go/deepseek-v4.1-flash",
+          "model": "<your-model-id>",
           "effort": "low"
         }
       ],
@@ -60,7 +60,7 @@
   "default": [
     {
       "harness": "opencode",
-      "model": "opencode-go/deepseek-v4.1-flash",
+      "model": "<your-model-id>",
       "effort": "medium"
     }
   ]
