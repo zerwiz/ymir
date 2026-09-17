@@ -8,7 +8,7 @@
 # the extension. Reading it, or merely checking its syntax, is fine.
 #
 # Exit: 0 = allow, 2 = block (stderr carries the reason).
-# Owner: plan 29 (docs/plans/29-brokk-distro-runtime.md).
+# Owner: plan 29 (memory/plans/core/29-brokk-distro-runtime.md).
 set -u
 
 command_text=""

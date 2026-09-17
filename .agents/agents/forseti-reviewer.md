@@ -42,7 +42,7 @@ ymir_tools:
   - yggdrasil
 workspace_patterns:
   - development/
-  - docs/plans/
+  - $YMIR_HOME/memory/plans/
   - .agents/skills/
 security:
   runs_in_utgard: true
@@ -78,7 +78,7 @@ witness them.
 
 ## Workspace patterns
 
-`development/` · `docs/plans/` · `.agents/skills/`
+`development/` · `$YMIR_HOME/memory/plans/` · `.agents/skills/`
 
 ## Security posture
 
