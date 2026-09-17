@@ -90,7 +90,7 @@ case "$CMD" in
     if [ "$DO_INSTALL" = 1 ]; then
       npm_install || true
       ensure_electron_binary || true
-      [ "$built_present" ] || build_app || true
+      built_present || build_app || true
       status
       exit $?
     fi
