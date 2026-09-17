@@ -226,6 +226,50 @@ scripts looking in `apps/`, so `ymir raise` died on
 `cd …/apps/hlidskjalf: No such file or directory` while every package had in fact
 arrived. A shape assumption is a bug that only shows itself on the *other* shape.
 
+### The hall answers on the port it was given
+
+`scripts/start.sh` raises the SPA, and the SPA must listen on
+`$HLIDSKJALF_PORT` (3888 by default) — every other door looks for it there. Two
+rules came out of a packaged install where it listened nowhere:
+
+```
+spa_serving[2]{shape,how}:
+  "a packaged install","serves its built ./dist with `vite preview --port $PORT --strictPort`"
+  "a clone","serves the dev server, but STILL on $PORT — `npm run dev -- --port $PORT --strictPort`"
+```
+
+A bare `npm run dev` lets Vite take 5173 and the hall silently answers on the
+wrong port; the raise now prints the log's last lines when the port stays silent
+rather than claiming success. Óðrerir resolves through `bin/app-lib.sh` like every
+other surface (it read as `missing apps/odrerir` on a packaged install).
+
+### The marks land on any desktop — not only Omarchy's
+
+`bin/desktop-place.sh` holds **two kinds of thing**, and they were behind one gate:
+
+```
+desktop_halves[2]{half,who_reads_it}:
+  "the window rules (numbered desktops, the Lua rule)","Hyprland / Omarchy only"
+  "the launcher entries and the rune icons","the freedesktop standard — GNOME, KDE, Hyprland alike"
+```
+
+A GNOME operator gets entries and icons and no window rules, which is the correct
+answer — and the reason a packaged install on GNOME placed *nothing* while the
+clone's marks already existed. `bin/desktop-place.sh entries` is the launcher half
+alone (any Linux desktop), the installer's `marks` step calls it, and both the
+desktop database and the icon cache are refreshed after.
+
+### What a user went from, and to
+
+`npm install -g` prints *"changed 266 packages"* and no versions. The CLI records
+the version it last ran in the home's state (`state/version`) and says the
+transition **once**, on the first run after an update:
+
+```
+  the tree moved  0.1.7 → 0.1.9
+  run `ymir eir` to see what stands, `ymir raise` to lift the hall
+```
+
 ### The patience words — `style_patience`
 
 A long hour must say what it is doing. `bin/ymir-style.sh` carries the line, and
