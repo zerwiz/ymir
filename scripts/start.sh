@@ -98,7 +98,21 @@ fi
 if [[ ! -d "$APP/node_modules" ]]; then
   style_patience "the seat's own dependencies are being fetched, then the hall is raised"
 echo "Installing dependencies…"
-  (cd "$APP" && npm install --no-audit --no-fund)
+  (# Sessrúmnir — the seat-hall. Its own Electron app (not a browser surface), so it
+# rises here rather than with the SPA: four surfaces, one raise.
+if [ -x "$ROOT/bin/sessrumnir.sh" ]; then
+  if app_dir sessrumnir APP_SESSRUMNIR; then
+    if "$ROOT/bin/sessrumnir.sh" start >/dev/null 2>&1; then
+      echo "Sessrúmnir — the seat-hall raised → (its own window)"
+    else
+      echo "Sessrúmnir — the seat-hall did not rise (run: bin/sessrumnir.sh start)" >&2
+    fi
+  else
+    echo "Sessrúmnir — skipped (the sessrumnir surface is not present)" >&2
+  fi
+fi
+
+cd "$APP" && npm install --no-audit --no-fund)
 fi
 
 # NOTE: when the SPA is already up we still raise the API and the services
@@ -201,15 +215,45 @@ app_dir odrerir HALL_DIR || HALL_DIR=""
 HALL_PORT="${ODRERIR_PORT:-4322}"
 HALL_PID_FILE="$RUN/odrerir.pid"
 HALL_LOG="$RUN/odrerir.log"
-if [ -d "$HALL_DIR" ]; then
-  [ -d "$HALL_DIR/node_modules" ] || (cd "$HALL_DIR" && npm install --no-audit --no-fund >/dev/null 2>&1 || true)
+if [ -d "$HALL_DIR" ] && [ -n "$HALL_DIR" ]; then
+  # Its dependencies are not optional and their absence is not silent: an Astro
+  # dev server without them dies with MODULE_NOT_FOUND while the raise claims it
+  # was "raised" — the failure the truth-telling above exists to prevent.
+  if [ ! -d "$HALL_DIR/node_modules" ]; then
+    echo "Óðrerir — fetching its dependencies…"
+    if ! (cd "$HALL_DIR" && npm install --no-audit --no-fund >/dev/null 2>&1); then
+      echo "Óðrerir — Live Hall NOT raised: its dependencies could not be installed" >&2
+      echo "help: (cd ${HALL_DIR#"$ROOT"/} && npm install)" >&2
+      HALL_DIR=""
+    fi
+  fi
+fi
+if [ -n "$HALL_DIR" ] && [ -d "$HALL_DIR" ]; then
   if [ -f "$HALL_PID_FILE" ] && kill -0 "$(cat "$HALL_PID_FILE")" 2>/dev/null; then
     echo "Óðrerir — Live Hall already running (pid $(cat "$HALL_PID_FILE")) → http://127.0.0.1:${HALL_PORT}/"
   else
-    ymir_detach bash -c "cd '$HALL_DIR' && exec npm run dev -- --port '$HALL_PORT' --host" >"$HALL_LOG" 2>&1
+    # A packaged app ships a BUILD (odrerir's tarball carries dist/, and its dev
+    # command calls a script the tarball does not carry — so `npm run dev` could
+    # never work from a package). Serve the build where there is one; develop
+    # where there is not.
+    if [ -d "$HALL_DIR/dist" ]; then
+      ymir_detach bash -c "cd '$HALL_DIR' && exec npx --no-install astro preview --port '$HALL_PORT' --host" >"$HALL_LOG" 2>&1
+    else
+      ymir_detach bash -c "cd '$HALL_DIR' && exec npm run dev -- --port '$HALL_PORT' --host" >"$HALL_LOG" 2>&1
+    fi
     echo $! > "$HALL_PID_FILE"
-    for _ in $(seq 1 30); do curl -s -o /dev/null "http://127.0.0.1:${HALL_PORT}/" && break; sleep 0.5; done
-    echo "Óðrerir — Live Hall raised (pid $(cat "$HALL_PID_FILE")) → http://127.0.0.1:${HALL_PORT}/"
+    _hall_up=0
+    for _ in $(seq 1 40); do
+      curl -s -o /dev/null "http://127.0.0.1:${HALL_PORT}/" && { _hall_up=1; break; }
+      kill -0 "$(cat "$HALL_PID_FILE")" 2>/dev/null || break
+      sleep 0.5
+    done
+    if [ "$_hall_up" = 1 ]; then
+      echo "Óðrerir — Live Hall raised (pid $(cat "$HALL_PID_FILE")) → http://127.0.0.1:${HALL_PORT}/"
+    else
+      echo "Óðrerir — Live Hall started (pid $(cat "$HALL_PID_FILE")) but :${HALL_PORT} did not answer — see $HALL_LOG" >&2
+      tail -5 "$HALL_LOG" >&2 2>/dev/null || true
+    fi
   fi
 else
   echo "Óðrerir — Live Hall skipped (the odrerir surface is not present)." >&2

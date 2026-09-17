@@ -54,8 +54,20 @@ const bold = wrap('1');
 // cannot see what moved. We can: record the version we last ran, and say the
 // transition once, on the first run after an update.
 const STATE_DIR = process.env.YMIR_STATE_DIR || path.join(process.env.YMIR_HOME || path.join(require('node:os').homedir(), 'Documents', 'Ymir'), 'state');
+function noticeState(key) {
+  try {
+    const s = process.env.YMIR_SETTINGS_DIR
+      || path.join(process.env.YMIR_HOME || path.join(require('node:os').homedir(), 'Documents', 'Ymir'), 'config');
+    const f = path.join(s, 'notices.conf');
+    if (!fs.existsSync(f)) return 'on';
+    const line = fs.readFileSync(f, 'utf8').split('\n').find((l) => l.startsWith(key + '='));
+    return line ? line.slice(key.length + 1).trim() : 'on';
+  } catch { return 'on'; }
+}
+
 function versionNotice() {
   try {
+    if (noticeState('version') === 'off') return;
     const f = path.join(STATE_DIR, 'version');
     const seen = fs.existsSync(f) ? fs.readFileSync(f, 'utf8').trim() : '';
     if (seen === pkg.version) return;
@@ -64,7 +76,9 @@ function versionNotice() {
     if (!seen) return;                       // a first install has nothing to compare
     process.stderr.write(
       bone(`  the tree moved  `) + faint(`${seen} → `) + bronze(`${pkg.version}`) + '\n' +
-      faint(`  run \`ymir eir\` to see what stands, \`ymir raise\` to lift the hall\n\n`));
+      faint(`  run \`ymir eir\` to see what stands, \`ymir raise\` to lift the hall\n`) +
+      (noticeState('hints') === 'off' ? '' : faint(`      (not again: ymir config notice version off)\n`)) +
+      '\n');
   } catch { /* a version notice must never break a door */ }
 }
 
@@ -83,6 +97,7 @@ const DOORS = {
   hlidskjalf: { script: 'scripts/electron.sh',    about: "the high seat's window", args: ['start', '--view', 'hlidskjalf'] },
   sessrumnir: { script: 'scripts/electron.sh',    about: "the seat-hall's window", args: ['start', '--view', 'sessrumnir'] },
   mimir:      { script: 'bin/mimir.sh',           about: 'the memory well' },
+  config:     { script: 'bin/ymir-config.sh',     about: 'your preferences — which notices are shown (stay silent with `notice <key> off`)' },
   sense:      { script: 'bin/host-sense.sh',      about: 'what THIS machine is' },
   plan:       { script: 'bin/ymir-plan.sh',       about: 'what an install would do here — writes nothing' },
   migrate:    { script: 'bin/ymir-migrate.sh',    about: "heal this home's structure forward (Gr\u00f3a's mend)" },

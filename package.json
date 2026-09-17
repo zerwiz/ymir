@@ -30,6 +30,7 @@
     ".agents/",
     "scripts/",
     "RULES/",
+    "midgard/design-system/",
     "docs/",
     "packaging/",
     "AGENTS.md",
