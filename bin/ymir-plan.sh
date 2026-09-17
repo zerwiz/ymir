@@ -46,7 +46,7 @@ YMIR_HOME_WAS_SET=0; [ -n "${YMIR_HOME:-}" ] && YMIR_HOME_WAS_SET=1
 ymir_home_root YMIR_HOME
 hoard_root HOARD
 
-JSON=0; ONLY_PHASE=""; ONLY_BLOCKED=0
+JSON=0; COLOUR=0; ONLY_PHASE=""; ONLY_BLOCKED=0
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -54,9 +54,10 @@ esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --json) JSON=1; shift ;;
+    --colour|--color) COLOUR=1; shift ;;
     --phase) ONLY_PHASE="${2-}"; shift 2 ;;
     --blocked) ONLY_BLOCKED=1; shift ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/ymir-plan.sh [--json] [--phase N] [--blocked]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/ymir-plan.sh [--json|--colour] [--phase N] [--blocked]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -259,13 +260,26 @@ apps_phase() {
   app_row sessrumnir "the seat-hall desktop"
   app_row smidja "the smithy and its visualizer (:8437)" smidja-factory
 
-  local shells=0 d
+  # A shell is ready only when its runtime VERIFIES: npm gates install scripts,
+  # and a skipped Electron postinstall leaves a partial runtime that still builds
+  # the web app and still reports success (bin/electron-lib.sh).
+  if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ]; then
+    for c in "$SCRIPT_DIR/electron-lib.sh"; do [ -r "$c" ] && { . "$c"; YMIR_ELECTRON_LIB_LOADED=1; }; done
+  fi
+  local shells=0 partial="" missing=0 d
   for d in hlidskjalf odrerir sessrumnir; do
     dir="$(app_dir "$d" 2>/dev/null || true)"
-    if [ -n "$dir" ] && [ -d "$dir/node_modules/electron/dist" ]; then shells=$((shells+1)); fi
+    if [ -z "$dir" ]; then missing=$((missing+1)); continue; fi
+    case "$(electron_runtime_state "$dir" 2>/dev/null || true)" in
+      ok) shells=$((shells+1)) ;;
+      partial) partial="$partial $d" ;;
+      *) missing=$((missing+1)) ;;
+    esac
   done
   if [ "$shells" -ge 3 ]; then
-    emit 5 apps electron SKIP "the three desktop shells are built (electron runtime present)"
+    emit 5 apps electron SKIP "the three desktop shells' runtimes verify"
+  elif [ -n "$partial" ]; then
+    emit 5 apps electron DO "the runtime is PARTIAL for:$partial — npm skipped the Electron postinstall; the web surfaces stand, the shells will not launch"
   elif [ "${YMIR_NO_DESKTOP:-0}" = 1 ]; then
     emit 5 apps electron SKIP "declined (--no-desktop) — the web surfaces stand without the shells"
   else
@@ -348,6 +362,23 @@ if [ "$shown" -eq 0 ]; then
   if [ "$ONLY_BLOCKED" = 1 ]; then printf 'plan: 0 blocked steps — nothing is holding the install back\n'
   else printf 'plan: 0 rows for phase %s\n' "$ONLY_PHASE"; fi
   exit 0
+fi
+
+# A human sees the same rows, rendered in the cloth, on stderr — the TOON below
+# stays the data on stdout, so a pipeline never parses a decoration.
+if [ "$COLOUR" = 1 ]; then
+  . "$SCRIPT_DIR/ymir-style.sh"
+  style_init
+  last_phase=""
+  for i in "${!P_STEP[@]}"; do
+    [ -n "$ONLY_PHASE" ] && [ "${P_N[$i]}" != "$ONLY_PHASE" ] && continue
+    [ "$ONLY_BLOCKED" = 1 ] && [ "${P_STATE[$i]}" != BLOCKED ] && continue
+    if [ "${P_N[$i]}" != "$last_phase" ]; then
+      style_heading "${P_NAME[$i]}"
+      last_phase="${P_N[$i]}"
+    fi
+    style_line "${P_STATE[$i]}" "${P_STEP[$i]}" "${P_WHY[$i]}"
+  done
 fi
 
 printf 'plan[%d]{phase,name,step,state,why}:\n' "$shown"
