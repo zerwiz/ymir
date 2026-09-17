@@ -342,6 +342,12 @@ else
 fi
 
 # --- isolation resolution ----------------------------------------------------
+# A spawned Eindri is a MODEL-DRIVEN worker: it must reach a model endpoint to
+# think at all. Utgard runs with `--network none`, so a sandboxed agent cannot
+# reach either a cloud model (OpenCode Go) or a local one (llama.cpp) — it dies
+# silently at launch, leaving an empty pane and no status line. Utgard is for
+# untrusted CODE, not for the agent's own brain. So `auto` keeps the worker in
+# its worktree, and `on` is an explicit choice that warns.
 ISOLATION_EFFECTIVE=off
 case "$ISOLATION" in
   on)
@@ -351,14 +357,14 @@ case "$ISOLATION" in
       exit 1
     }
     ISOLATION_EFFECTIVE=on
+    echo "warning: Utgard runs with --network none — the worker's model endpoint must be reachable INSIDE the sandbox, or the agent dies silently. Pass --isolation off to run in the worktree." >&2
     ;;
   off) ISOLATION_EFFECTIVE=off ;;
   auto)
+    ISOLATION_EFFECTIVE=off
     if [ -n "$ENGINE" ] && "$ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1; then
-      ISOLATION_EFFECTIVE=on
-      echo "isolation: on (Utgard image present; pass --isolation off to run in the worktree)" >&2
+      echo "isolation: off (Utgard image present, but a model-driven worker needs its endpoint and Utgard has no network — pass --isolation on only for a sandbox that can reach a model)" >&2
     else
-      ISOLATION_EFFECTIVE=off
       echo "isolation: off (no Utgard image; pass --isolation on after building it)" >&2
     fi
     ;;
