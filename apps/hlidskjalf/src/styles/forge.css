@@ -29,6 +29,28 @@
   color: var(--ymir-text-1);
   text-align: left;
 }
+/* The skill list carries a description line under the name+aett row. */
+.forge-item-skill {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+.forge-item-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-3);
+  min-width: 0;
+}
+.forge-item-desc {
+  display: block;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ymir-text-2);
+}
+.forge-item:hover .forge-item-desc {
+  color: var(--ymir-text-1);
+}
 .forge-item:hover {
   background: var(--ymir-bg-3);
   color: var(--ymir-text-0);
