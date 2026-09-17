@@ -17,6 +17,21 @@ if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
 fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# The cloth (bin/ymir-style.sh) — colour and words for the human watching.
+if [ -z "${YMIR_STYLE_LOADED:-}" ] && [ -r "$ROOT/bin/ymir-style.sh" ]; then
+  . "$ROOT/bin/ymir-style.sh"; YMIR_STYLE_LOADED=1; style_init
+fi
+# Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
+# npm install — both shapes, one resolver (bin/app-lib.sh).
+if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
+  _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+    [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
+  done
+  unset _ya _yac
+fi
+app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
+
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
 # @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
@@ -48,7 +63,7 @@ hoard_data_dir YMIR_DATA_DIR
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
-APP="$ROOT/apps/hlidskjalf"
+APP="$APP_HLIDSKJALF"
 RUN="$ROOT/.run"
 PID_FILE="$RUN/hlidskjalf.pid"
 LOG="$RUN/hlidskjalf.log"
@@ -80,7 +95,8 @@ else
 fi
 
 if [[ ! -d "$APP/node_modules" ]]; then
-  echo "Installing dependencies…"
+  style_patience "the seat's own dependencies are being fetched, then the hall is raised"
+echo "Installing dependencies…"
   (cd "$APP" && npm install --no-audit --no-fund)
 fi
 

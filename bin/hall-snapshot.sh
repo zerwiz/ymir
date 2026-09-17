@@ -16,6 +16,17 @@
 #   (the Live Hall's own deck; the merged public site takes it from its build).
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
+# npm install — both shapes, one resolver (bin/app-lib.sh).
+if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
+  _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+    [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
+  done
+  unset _ya _yac
+fi
+app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
+
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 # The operator's settings and secrets live in the home they chose, never in the
@@ -37,7 +48,7 @@ hoard_data_dir YMIR_DATA_DIR
 # runtime state belong to the home the operator chose at installation, never in
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
-OUT="${1:-$ROOT/apps/odrerir/public/livehall.json}"
+OUT="${1:-$APP_ODRERIR/public/livehall.json}"
 
 runes_file="${BROKK_RUNES_FILE:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/memory/runes_audit.md}"
 PROJECTS_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/identity/projects.yaml"

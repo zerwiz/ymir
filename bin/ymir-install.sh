@@ -53,6 +53,8 @@ hoard_local_env YMIR_ENV_FILE
 # repo (Rule 04).
 # shellcheck source=bin/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
+# shellcheck source=bin/app-lib.sh
+. "$SCRIPT_DIR/app-lib.sh"
 ymir_home_root YMIR_HOME
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
 # @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
@@ -585,7 +587,8 @@ step_smidja() {
 # Hlidskjalf installs with npm (its own lockfile), not bun, and its API serves the
 # UI from ./dist. Without this step a fresh clone has no SPA and no build.
 step_spa() {
-  local app="$ROOT/apps/hlidskjalf"
+  local app; app_dir hlidskjalf app || app=""
+  local app_ok="$app"
   [ -d "$app" ] || { add hlidskjalf SKIP "no apps/hlidskjalf"; return 0; }
   if [ "$CHECK" = 0 ]; then
     if ! have npm; then
@@ -708,8 +711,8 @@ step_desktop() {
   fi
   local shell partial=""
   for shell in hlidskjalf odrerir sessrumnir; do
-    local dir="$ROOT/apps/$shell" d
-    [ -d "$dir" ] || dir="$(cd "$ROOT" && npm root 2>/dev/null)/@zerwiz/$shell"
+    local dir d
+    app_dir "$shell" dir || continue
     d="$(electron_runtime_state "$dir" 2>/dev/null || true)"
     [ "$d" = partial ] && partial="$partial $shell"
   done
@@ -819,6 +822,7 @@ step_panes() {
 
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
+[ "$CHECK" = 0 ] && style_patience "the halls are being stood up for the first time"
 
 step_panes; step_prereqs; step_home; step_tree; step_apps; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
 # Migrations MOVE private data — that is a write, and `--check` promises none.
