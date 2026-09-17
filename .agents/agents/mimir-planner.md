@@ -42,7 +42,7 @@ ymir_tools:
   - yggdrasil
 workspace_patterns:
   - development/
-  - docs/plans/
+  - $YMIR_HOME/memory/plans/
   - .agents/assets/templates/
 security:
   runs_in_utgard: true
@@ -77,7 +77,7 @@ sequencing, and risks. Mímir changes no code; the builder executes the plan.
 
 ## Workspace patterns
 
-`development/` · `docs/plans/` · `.agents/assets/templates/`
+`development/` · `$YMIR_HOME/memory/plans/` · `.agents/assets/templates/`
 
 ## Security posture
 
