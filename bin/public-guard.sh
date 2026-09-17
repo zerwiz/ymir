@@ -43,8 +43,9 @@ leaks() {  # stdin → prints masked hits, returns 1 on any
 scan_one() {  # $1 = path in the index; prints a finding, returns 1 when clean
   local f="$1" out
   # This file necessarily contains the patterns it looks for; scanning it would
-  # always fail. Exempt by name, and keep the patterns here honest.
-  case "$f" in bin/public-guard.sh|bin/secret-guard.sh) return 0 ;; esac
+  # always fail. The same is true of every guard whose job is to name a secret
+  # shape, so all three are exempt by name — and the patterns in them stay honest.
+  case "$f" in bin/public-guard.sh|bin/secret-guard.sh|bin/hoard-guard.sh) return 0 ;; esac
   printf '%s\n' "$f" | grep -Eq "$PUBLIC" || return 0
   printf '%s\n' "$f" | grep -Eq "$APPEND_ONLY" && return 0
   out="$(git -C "$ROOT" show ":$f" 2>/dev/null | leaks)" || true
