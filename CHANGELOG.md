@@ -1,3 +1,52 @@
+
+## 2026-09-17 — the fragment convention is enforced where GitHub runs it
+
+- **The gap, found by doing it.** The pre-push hook folds fragments before a
+  push — but a **GitHub merge bypasses the local hook entirely**. PR #43 merged
+  and left its own fragment unfolded on `main`, so the ledger silently fell
+  behind what the fragments already told. `bin/changelog-assemble.sh --check`
+  catches exactly that state; nothing was calling it.
+- **The gate, at the layer that runs.** `.github/workflows/ymir-changelog-fragments.yml`:
+  - **on `push` to main** — `bin/changelog-assemble.sh --check` fails when any
+    fragment is unfolded, so the ledger can never fall behind a merge.
+  - **on a PR** — a change touching code or docs must add a fragment, edit
+    `CHANGELOG.md`, or carry the `no-changelog` label. The label records the
+    deliberate decision that no entry belongs, rather than letting it be
+    forgotten.
+- **The pattern is the standard one.** This is the well-trodden "news fragments"
+  design (towncrier — Twisted, pytest, pip, attrs; changesets; CPython). The
+  zeroc-ice proposal states the root cause exactly: *"PRs edit one shared file.
+  Better merge discipline doesn't fix it; not editing the shared file does."*
+- **`merge=union` was considered and rejected on evidence.** The Rigor ADR-105
+  tried it and measured it: *"GitHub's PR-mergeability and merge computation
+  ignore `.gitattributes` merge drivers, union included."* It works against local
+  git and does nothing on GitHub — a trap already falsified.
+- **Main's own pending fragment is folded in this change**, so the ledger and the
+  fragments agree from here on.
+
+## 2026-09-17 — the changelog stops conflicting: fragments, folded by a script
+
+- **The problem, measured.** `CHANGELOG.md` is one file and every branch appends
+  at the same position — the top. Git sees two branches inserting different lines
+  at the same spot and calls it a conflict, so **every merge re-conflicts every
+  open branch**. Sixteen open PRs were each resolved by hand for this reason
+  alone, and each merge re-conflicted the rest: O(N²) meaningless conflicts.
+- **The fix — `CHANGELOG.d/`.** A change adds **one file with a unique name**
+  (`<YYYY-MM-DD>-<slug>.md`) instead of editing the ledger. Two branches never
+  touch the same fragment, so the collision cannot occur.
+- **`bin/changelog-assemble.sh`** folds fragments into `CHANGELOG.md` — newest
+  first, above everything already recorded. Folding is an **append**: existing
+  entries are copied verbatim, never reordered, never rewritten. `--dry-run`
+  shows what would fold; `--check` exits 1 when fragments are unfolded.
+- **The pre-push hook folds first.** `bin/changelog-guard.sh --install` now
+  writes a hook that runs the assembler before the guards, so a push never leaves
+  fragments unfolded; if folding changes the ledger the push is refused until the
+  fold is committed.
+- **The guard accepts either form.** A push satisfies the duty by appending to
+  `CHANGELOG.md` **or** by adding a fragment. The refusal message now names both.
+- **Rule 06 is amended, append-only** — the clause stands; the amendment records
+  fragments, and `CHANGELOG.d/` joins the append-only set so a move must carry it.
+
 ## 2026-09-17 — the hearth re-seeds on its container: Sessrúmnir's chat fire returns
 
 - **The ember glow was gone from the chat because the canvas sized itself once
@@ -16,9 +65,7 @@
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
 EmberBackground hearth section (shared module + ResizeObserver mend).
 
-
 # CHANGELOG
-
 
 ## 2026-09-17 — Pi gets its agents, and a dead extension comes back
 
@@ -774,7 +821,6 @@ subsystem was never loaded before the code changed. Five layers now prevent it:
 - **GitHub:** `bin/project-git.sh` reads `workspace/projects.yaml` `git{}`.
 - **Verified:** build green, compliance 8/8, smoke 8/8, lint 4/4.
 
-
 All significant runtime, policy, and architectural changes for the Ymir platform.
 Entries are appended chronologically; never rewritten.
 
@@ -1382,7 +1428,6 @@ and killed the gate. An unknown status can no longer take a panel down.
 
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
 Fleet graph paragraph (grid fan, roster domains, fallback).
-
 
 ## 2026-09-17 — the apps leave the monorepo; installation pulls them from their own repos
 
