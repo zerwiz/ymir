@@ -18,6 +18,19 @@ fi
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 BRIDGE="$ROOT/bin/mimir-bridge.py"
 DB="${ENGRAM_DB:-$YMIR_HOME/memory/kaia.engram}"
@@ -75,7 +88,7 @@ if ! "$PY" -c "import engram" 2>/dev/null; then
   printf 'error: engram not installed for %s\nhelp: bin/prereq-ensure.sh engram   (installs it into a compatible Python)\n' "$PY" >&2; exit 1
 fi
 
-mkdir -p "$ROOT/state" "$(dirname "$DB")"
+mkdir -p "$YMIR_STATE_DIR" "$(dirname "$DB")"
 ENGRAM_DB="$DB" MIMIRSBRUNN_PORT="$PORT" nohup "$PY" "$BRIDGE" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 sleep 3

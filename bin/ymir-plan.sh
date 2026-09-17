@@ -1,0 +1,341 @@
+#!/usr/bin/env bash
+# ymir-plan.sh — THE INSTALL PLAN. Probe this machine, print what would change,
+# change nothing.
+#
+# The consent a real install asks for used to be a hardcoded paragraph, and a
+# paragraph cannot know the host: it named an Omarchy version on a Mac, promised
+# a workspace tree that already stood, and never mentioned that no application
+# had been installed at all. This is the replacement: a plan COMPUTED from the
+# same host the install will act on, one row per step, each row carrying its
+# state and the reason for it.
+#
+#   DO        a change will be made
+#   SKIP      already satisfied — nothing to do
+#   DO ·      (with a note) the step is available but conditional
+#   BLOCKED   cannot run; the reason names what is missing
+#   CONSENT   needs the operator's word before it may run
+#   INFO      a fact about this host, discovered — no change implied
+#
+# Usage:
+#   bin/ymir-plan.sh                 # the plan (TOON)
+#   bin/ymir-plan.sh --json          # the same, as JSON, for automation
+#   bin/ymir-plan.sh --phase 5       # one phase
+#   bin/ymir-plan.sh --blocked       # only what cannot proceed, and why
+#
+# Exit: 0 the plan was printed (a BLOCKED row is a fact, not a failure), 1 error,
+# 2 usage.
+set -u
+
+# --- portability shim: bin/ymir-platform.sh --------------------------------
+if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
+  _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+    [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
+  done
+  unset _ymir_dir _ymir_c
+fi
+
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Whether the home was named explicitly matters: a home that was chosen is not
+# the same as one we defaulted to, and the plan says which.
+YMIR_HOME_WAS_SET=0; [ -n "${YMIR_HOME:-}" ] && YMIR_HOME_WAS_SET=1
+# shellcheck source=bin/hoard-lib.sh
+. "$SCRIPT_DIR/hoard-lib.sh"
+ymir_home_root YMIR_HOME
+hoard_root HOARD
+
+JSON=0; ONLY_PHASE=""; ONLY_BLOCKED=0
+case "${1-}" in
+  -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+  -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json) JSON=1; shift ;;
+    --phase) ONLY_PHASE="${2-}"; shift 2 ;;
+    --blocked) ONLY_BLOCKED=1; shift ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/ymir-plan.sh [--json] [--phase N] [--blocked]\n' "$1" >&2; exit 2 ;;
+  esac
+done
+
+declare -a P_N P_NAME P_STEP P_STATE P_WHY
+emit() { P_N+=("$1"); P_NAME+=("$2"); P_STEP+=("$3"); P_STATE+=("$4"); P_WHY+=("$5"); }
+
+have() { command -v "$1" >/dev/null 2>&1; }
+port_up() {  # <port>
+  if have curl; then curl -s -o /dev/null --max-time 1 "http://127.0.0.1:$1/" 2>/dev/null && return 0; fi
+  if have ss; then ss -ltn 2>/dev/null | grep -q ":$1 " && return 0; fi
+  return 1
+}
+# An app is ours by one of two shapes: a source checkout under apps/, or a
+# published package under node_modules/@zerwiz/. Neither is guessed.
+app_dir() {  # <name> -> path, or empty
+  local n="$1" c
+  for c in "$ROOT/apps/$n" "$ROOT/node_modules/@zerwiz/$n"; do
+    [ -d "$c" ] && { printf '%s' "$c"; return 0; }
+  done
+  return 1
+}
+
+# ── phase 0 · resolve — where this runs, and against what ────────────────────
+resolve_phase() {
+  local os="" desk="terminal"
+  os="$(ymir_os 2>/dev/null || printf unknown)"
+  [ -n "${WAYLAND_DISPLAY:-}" ] && desk="wayland"
+  [ -n "${DISPLAY:-}" ] && desk="x11"
+  [ -d /usr/share/omarchy ] && desk="$desk · omarchy first-class"
+  case "$os" in
+    wsl) desk="$desk · wsl2" ;;
+    msys) desk="$desk · msys (best-effort)" ;;
+  esac
+  emit 0 resolve os INFO "$os · $desk"
+
+  local eng=""
+  if command -v ymir_container_engine >/dev/null 2>&1; then eng="$(ymir_container_engine_name 2>/dev/null || true)"; fi
+  [ -z "$eng" ] && have docker && eng=docker
+  [ -z "$eng" ] && have podman && eng=podman
+  if [ -n "$eng" ]; then emit 0 resolve engine INFO "$eng"
+  else emit 0 resolve engine BLOCKED "no docker or podman on PATH — the Utgard image cannot be built"; fi
+
+  case "$ROOT" in
+    */node_modules/*) emit 0 resolve code INFO "$ROOT — a package install (read-only at runtime)" ;;
+    *) emit 0 resolve code INFO "$ROOT — a source checkout" ;;
+  esac
+
+  case "$HOARD" in
+    "$ROOT"/*) emit 0 resolve home BLOCKED "the home ($HOARD) sits inside the code tree — private data would live in the package" ;;
+    *) emit 0 resolve home INFO "$HOARD (the home = $YMIR_HOME)" ;;
+  esac
+
+  # The home is the OPERATOR's to choose. Until they have, it is only a default,
+  # and the install will ask — so the plan says so rather than pretending.
+  local rec=""
+  ymir_home_record rec
+  if [ -n "$rec" ]; then
+    emit 0 resolve chosen SKIP "the home was chosen at installation: $rec"
+  elif [ "$YMIR_HOME_WAS_SET" = 1 ]; then
+    emit 0 resolve chosen SKIP "the home is set by \$YMIR_HOME: $YMIR_HOME"
+  else
+    emit 0 resolve chosen CONSENT "no home chosen yet — the install asks, then records it (default $YMIR_HOME_DEFAULT)"
+  fi
+}
+
+# ── phase 1 · code — the tree itself, and its purity ────────────────────────
+code_phase() {
+  local n=0
+  [ -x "$ROOT/bin/ymir-install.sh" ] && n=$(find "$ROOT/bin" -maxdepth 1 -name '*.sh' 2>/dev/null | wc -l)
+  if [ "$n" -gt 0 ] && [ -d "$ROOT/.agents/skills" ] && [ -d "$ROOT/RULES" ]; then
+    emit 1 code integrity SKIP "tree intact — $n scripts, .agents/skills, RULES/"
+  else
+    emit 1 code integrity BLOCKED "bin/, .agents/skills or RULES/ is missing — reinstall the package or re-clone"
+  fi
+
+  # The law this row enforces: the package is the code that RUNS the programs.
+  # Everything the operator owns — their records, their state, their settings,
+  # their credentials — lives in the home they chose. A packaged install replaces
+  # its tree on upgrade, so anything of theirs kept here is kept at its peril.
+  local leaked="" f n
+  n="$(ls -A "$ROOT/data" 2>/dev/null | grep -vc '^\.gitkeep$' || true)"
+  [ -d "$ROOT/data" ] && [ "${n:-0}" -gt 0 ] && leaked="$leaked data/"
+  n="$(ls -A "$ROOT/state" 2>/dev/null | grep -vc '^\.gitkeep$' || true)"
+  [ -d "$ROOT/state" ] && [ "${n:-0}" -gt 0 ] && leaked="$leaked state/"
+  for f in config/agents.yaml config/cron.yaml config/tailscale-sync.yaml config/wedge-alarm .env.local; do
+    [ -e "$ROOT/$f" ] && leaked="$leaked $f"
+  done
+  if [ -n "$leaked" ]; then
+    emit 1 code purity DO "the operator's own things sit in the code tree ($leaked) — they belong in $YMIR_HOME, or the next upgrade will erase them"
+  else
+    emit 1 code purity SKIP "nothing of the operator's is written into the code tree"
+  fi
+}
+
+# ── phase 2 · home — the operator's world, outside the tree ─────────────────
+home_phase() {
+  if [ -d "$HOARD/identity" ] && [ -d "$HOARD/secrets" ]; then
+    emit 2 home hoard SKIP "hodd/{identity,secrets,memory} present"
+  else
+    emit 2 home hoard DO "create hodd/{identity,secrets,docs,tenants,memory} — all private data lives here"
+  fi
+  if [ -d "$YMIR_HOME/workspaces" ]; then
+    emit 2 home workspaces SKIP "$YMIR_HOME/workspaces present"
+  else
+    emit 2 home workspaces DO "create workspaces/{work,personal} and the registries"
+  fi
+  local cfg="$ROOT/config/agents.yaml"; [ -e "$cfg" ] || cfg="$ROOT/.agents/config/agents.yaml"
+  if [ -e "$cfg" ]; then
+    emit 2 home agents-config SKIP "the agent set is seeded"
+  else
+    emit 2 home agents-config DO "seed the private agent set from its example (harness + model per agent)"
+  fi
+}
+
+# ── phase 3 · runtimes — every one proven by a probe, never assumed ─────────
+runtimes_phase() {
+  local missing=""
+  for c in git python3; do have "$c" || missing="$missing $c"; done
+  if [ -n "$missing" ]; then
+    emit 3 runtimes system BLOCKED "missing$missing — a system package (apt/dnf/brew), not user space"
+  else
+    emit 3 runtimes system SKIP "git and python3 present"
+  fi
+
+  local user=""
+  for c in bun uv; do have "$c" || user="$user $c"; done
+  if [ -n "$user" ]; then emit 3 runtimes userspace DO "install in user space (no sudo):$user"
+  else emit 3 runtimes userspace SKIP "bun and uv present"; fi
+
+  if have mcp; then emit 3 runtimes mcp SKIP "mcp<2> present"; else emit 3 runtimes mcp DO "install mcp<2> via pip"; fi
+  if have pi; then emit 3 runtimes pi SKIP "the Pi harness present"; else emit 3 runtimes pi DO "install the Pi harness"; fi
+  if have hermes; then emit 3 runtimes hermes SKIP "the Hermes worker runtime present"; else emit 3 runtimes hermes DO "install the Hermes worker runtime"; fi
+
+  if have herdr; then emit 3 runtimes backend SKIP "herdr — Þjazi (the preferred terminal backend)"
+  elif have tmux; then emit 3 runtimes backend SKIP "tmux — the accepted reference backend"
+  else emit 3 runtimes backend DO "install herdr (Þjazi), else tmux — without a backend no Eindri can be seated"; fi
+}
+
+# ── phase 4 · engines — the OSS anvils Ymir wraps ───────────────────────────
+engine_row() {  # <bin> <label>
+  if have "$1"; then emit 4 engines "$1" SKIP "$2 present"
+  else emit 4 engines "$1" DO "install $2 ($1)"; fi
+}
+engines_phase() {
+  engine_row treehouse "Yggdrasil (the worktree engine)"
+  engine_row no-mistakes "the clean-PR gate (Mjollnir · Glitnir)"
+  if have sandcastle; then emit 4 engines sandcastle SKIP "Utgard present"
+  else emit 4 engines sandcastle DO "install sandcastle (Utgard) if available"; fi
+
+  if have docker || have podman; then
+    local img
+    if have docker && docker image inspect utgard-runner:latest >/dev/null 2>&1; then
+      emit 4 engines utgard-image SKIP "utgard-runner:latest present"
+    elif have podman && podman image exists utgard-runner:latest >/dev/null 2>&1; then
+      emit 4 engines utgard-image SKIP "utgard-runner:latest present (podman)"
+    else
+      emit 4 engines utgard-image DO "build the sandbox image utgard-runner:latest"
+    fi
+  else
+    emit 4 engines utgard-image BLOCKED "no container engine — the sandbox cannot be built"
+  fi
+}
+
+# ── phase 5 · apps — the surfaces the operator actually sees ────────────────
+# Four surfaces, one shape each: web build required, Electron shell gated.
+# The apps are their own packages (@zerwiz/<app>) — the distro depends on them.
+app_row() {  # <name> <about>
+  local name="$1" about="$2" dir
+  if dir="$(app_dir "$name")"; then
+    if [ -d "$dir/dist" ] || [ -d "$dir/out" ]; then
+      emit 5 apps "$name" SKIP "$about — source and web build present"
+    else
+      emit 5 apps "$name" DO "$about — source present, web build to make"
+    fi
+  else
+    emit 5 apps "$name" BLOCKED "$about — not installed: no apps/$name and no @zerwiz/$name package"
+  fi
+}
+apps_phase() {
+  app_row hlidskjalf "the control plane (the high seat), served on :3888"
+  app_row odrerir "the live hall (chat + council)"
+  app_row sessrumnir "the seat-hall desktop"
+  app_row smidja "the smithy and its visualizer (:8437)"
+
+  local shells=0 d
+  for d in hlidskjalf odrerir sessrumnir; do
+    dir="$(app_dir "$d" 2>/dev/null || true)"
+    if [ -n "$dir" ] && [ -d "$dir/node_modules/electron/dist" ]; then shells=$((shells+1)); fi
+  done
+  if [ "$shells" -ge 3 ]; then
+    emit 5 apps electron SKIP "the three desktop shells are built (electron runtime present)"
+  elif [ "${YMIR_NO_DESKTOP:-0}" = 1 ]; then
+    emit 5 apps electron SKIP "declined (--no-desktop) — the web surfaces stand without the shells"
+  else
+    emit 5 apps electron CONSENT "build the desktop shells? each pulls a ~100 MB Electron runtime — the web surfaces need none of it"
+  fi
+}
+
+# ── phase 6 · wire — the way in, and the agent set ──────────────────────────
+wire_phase() {
+  local door="none"
+  if [ -x "$ROOT/bin/ymir-setup-auth.sh" ]; then
+    door="$(bash "$ROOT/bin/ymir-setup-auth.sh" status 2>/dev/null | sed -n '2p' | cut -d, -f1 | tr -d ' "')"
+  fi
+  if [ -n "$door" ] && [ "$door" != none ]; then
+    emit 6 wire auth SKIP "an operator credential is set ($door)"
+  else
+    emit 6 wire auth CONSENT "no credential — a password or GitHub sign-in; without it the gate has no door"
+  fi
+
+  local codes=""
+  [ -x "$ROOT/bin/ymir-invite.sh" ] && codes="$(bash "$ROOT/bin/ymir-invite.sh" list 2>/dev/null | grep -c '^  "' || true)"
+  if [ "${codes:-0}" -gt 0 ]; then emit 6 wire invite SKIP "a live invite code exists"
+  else emit 6 wire invite CONSENT "mint an invite code — how anyone else is let in (registration stays closed without one)"; fi
+
+  if [ -d /usr/share/omarchy ]; then
+    emit 6 wire launchers DO "place each app on its own numbered desktop + write the launcher entries"
+  else
+    emit 6 wire launchers SKIP "not an Omarchy host — the Omarchy layer skips cleanly (Rule 05)"
+  fi
+}
+
+# ── phase 7 · raise — the services, then what the operator sees ─────────────
+raise_phase() {
+  local down="" p
+  for p in 3888:Hlidskjalf 3889:gate-API 4603:Bifrost 8437:Smidja-visualizer; do
+    port_up "${p%%:*}" || down="$down ${p#*:}"
+  done
+  if [ -n "$down" ]; then emit 7 raise services DO "raise:$down"
+  else emit 7 raise services SKIP "every service is listening (SPA · gate API · Bifrost · visualizer)"; fi
+  if have hermes; then emit 7 raise well INFO "the memory well (engram) is provisioned by its own step"; fi
+  emit 7 raise desktop CONSENT "open the desktop apps so they are seen, not merely installed"
+}
+
+# ── phase 8 · verify — what stands, honestly ────────────────────────────────
+verify_phase() {
+  if [ -x "$SCRIPT_DIR/ymir-validate.sh" ]; then
+    emit 8 verify validate DO "observe the result: ports, stores, processes, the sandbox image"
+  else
+    emit 8 verify validate BLOCKED "bin/ymir-validate.sh is absent — the install could not be proven"
+  fi
+}
+
+resolve_phase; code_phase; home_phase; runtimes_phase; engines_phase; apps_phase; wire_phase; raise_phase; verify_phase
+
+# ── output ──────────────────────────────────────────────────────────────────
+if [ "$JSON" = 1 ]; then
+  printf '['
+  local_i=0
+  for i in "${!P_STEP[@]}"; do
+    [ -n "$ONLY_PHASE" ] && [ "${P_N[$i]}" != "$ONLY_PHASE" ] && continue
+    [ "$ONLY_BLOCKED" = 1 ] && [ "${P_STATE[$i]}" != BLOCKED ] && continue
+    [ "$local_i" -gt 0 ] && printf ','
+    printf '\n  {"phase":%s,"name":"%s","step":"%s","state":"%s","why":"%s"}' \
+      "${P_N[$i]}" "${P_NAME[$i]}" "${P_STEP[$i]}" "${P_STATE[$i]}" "${P_WHY[$i]}"
+    local_i=$((local_i+1))
+  done
+  [ "$local_i" -gt 0 ] && printf '\n'
+  printf ']\n'
+  exit 0
+fi
+
+shown=0
+for i in "${!P_STEP[@]}"; do
+  [ -n "$ONLY_PHASE" ] && [ "${P_N[$i]}" != "$ONLY_PHASE" ] && continue
+  [ "$ONLY_BLOCKED" = 1 ] && [ "${P_STATE[$i]}" != BLOCKED ] && continue
+  shown=$((shown+1))
+done
+
+if [ "$shown" -eq 0 ]; then
+  if [ "$ONLY_BLOCKED" = 1 ]; then printf 'plan: 0 blocked steps — nothing is holding the install back\n'
+  else printf 'plan: 0 rows for phase %s\n' "$ONLY_PHASE"; fi
+  exit 0
+fi
+
+printf 'plan[%d]{phase,name,step,state,why}:\n' "$shown"
+for i in "${!P_STEP[@]}"; do
+  [ -n "$ONLY_PHASE" ] && [ "${P_N[$i]}" != "$ONLY_PHASE" ] && continue
+  [ "$ONLY_BLOCKED" = 1 ] && [ "${P_STATE[$i]}" != BLOCKED ] && continue
+  printf '  "%s","%s","%s","%s","%s"\n' "${P_N[$i]}" "${P_NAME[$i]}" "${P_STEP[$i]}" "${P_STATE[$i]}" "${P_WHY[$i]}"
+done
+exit 0

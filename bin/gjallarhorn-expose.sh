@@ -17,6 +17,19 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
 TUNNEL="${YMIR_TUNNEL_NAME:-ymir}"
 DOMAIN="${YMIR_TUNNEL_DOMAIN:-zerwiz.org}"
 SUFFIX="${YMIR_TUNNEL_SUFFIX:-dell}"
@@ -99,7 +112,7 @@ for row in "${APPS[@]}"; do
 done
 
 # 2b. the gate must know which host belongs to which app (it routes by host)
-HOSTMAP="$ROOT/state/gjallarhorn-hosts.env"
+HOSTMAP="$YMIR_STATE_DIR/gjallarhorn-hosts.env"
 {
   printf '# Written by bin/gjallarhorn-expose.sh — the gate routes these hosts.\n'
   printf 'YMIR_PRIMARY_HOST=ymir%s.%s\n' "$SUFFIX" "$DOMAIN"
@@ -110,7 +123,7 @@ HOSTMAP="$ROOT/state/gjallarhorn-hosts.env"
 # 3. raise it
 started="already"
 if ! pgrep -f "cloudflared.*tunnel.*--config $CONFIG" >/dev/null 2>&1; then
-  nohup cloudflared tunnel --config "$CONFIG" run "$TUNNEL" >"$ROOT/state/gjallarhorn.log" 2>&1 &
+  nohup cloudflared tunnel --config "$CONFIG" run "$TUNNEL" >"$YMIR_STATE_DIR/gjallarhorn.log" 2>&1 &
   started="pid $!"
   sleep 4
 fi
