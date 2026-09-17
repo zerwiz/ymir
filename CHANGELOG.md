@@ -1,4 +1,12 @@
 
+
+## 2026-09-17 — the installer has a design of its own
+
+- **The result is rendered, not dumped.** The plan got the cloth and the install did not: twenty-nine raw TOON rows and a poem, which the Allfather rightly called zero design. Now the same rows are rendered for the eye on stderr — a rule, a verdict (*"it stands — 22 steps done · 7 warned · 1 skipped"*), every warning with its reason, and the skips in one line. The TOON stays the data on stdout; the design is for the person.
+- **The consent shows the plan again.** `--colour` renders on stderr and I had sent *both* streams to `/dev/null`, so the plan was invisible at the very moment it was being accepted.
+- **The seat can mend its own runtime**, and says why when it cannot — npm gates Electron postinstall, so a fresh install otherwise ends with a window that cannot open.
+
+
 ## 2026-09-17 — one well, in the hoard: every reader of Kaia's memory resolves the hoard store
 
 - **The memory is ONE store and it lives in the hoard** —
@@ -58,7 +66,7 @@ galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — §3.7
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — §2
 rewritten (the schedule is the user's; example template; the four-inputs
 contract unchanged).
-=======
+
 ## 2026-09-17 — 0.1.14: the panels reach the gate, and the fourth window ships
 
 - **`@zerwiz/hlidskjalf` 0.1.1** — the package now declares its own `name`, `files` and the absence of `private`, and ships **`vite.config.ts`**. Without that config a packaged SPA is served by `vite preview` with **no `/api` proxy**, so every panel answered `index.html` and died on `Unexpected token '<'<`. That was the whole panel fault.
