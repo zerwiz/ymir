@@ -167,8 +167,8 @@ them may ever be written inside this repo** (see "Private data — YMIR_HOME").
 outputs[7]{kind,path}:
   "Business / strategy","$YMIR_HOME/hodd/identity/companies/"
   "Marketing / social","$YMIR_HOME/hodd/workspaces/marketing/"
-  "Software specs","$YMIR_HOME/hodd/workspaces/development/"
-  "Personal / schedules","$YMIR_HOME/hodd/workspaces/life/"
+  "Software specs","$YMIR_HOME/hodd/workspaces/work/"
+  "Personal / schedules","$YMIR_HOME/hodd/workspaces/personal/"
   "Daily logs","$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md"
   "Shared PUBLIC assets","midgard/"
   "Global audit entries","$YMIR_HOME/hodd/memory/runes_audit.md"
@@ -207,7 +207,7 @@ isolation[8]{id,rule}:
 - Redis pub/sub is the queue *under* the A2A task model (A2A = semantics, Redis =
   throughput). Messages follow `.agents/bus/protocol.ts`.
 - Every A2A message is observed into **Mimirsbrunn** and logged to **Runes**.
-- **Status:** the native backbone is **planned, not built** — the plan is private at `hodd/docs/ratatoskr.md`. Today an external `a2abridge` daemon (A2A + MCP over Tailscale) is what runs; `.agents/bus/` is a stub. Way of Teams (`~/CodeP/wayofteams`) is the sold control plane; Ymir's daemon must also work standalone.
+- **Status:** the native backbone is **planned, not built** — the plan is private at `memory/plans/mesh/25-ratatoskr-a2a.md` (in `$YMIR_HOME`). Today an external `a2abridge` daemon (A2A + MCP over Tailscale) is what runs; `.agents/bus/` is a stub. Way of Teams (`~/CodeP/wayofteams`) is the sold control plane; Ymir's daemon must also work standalone.
 - Kaia orchestrates: dispatch Eindri as A2A tasks, recall memory before dispatch,
   honour the anti-hallucination gate; specialists reach tools via MCP.
 
@@ -389,20 +389,27 @@ env-driven, **never** in this repo. The real layout:
 
 ```
 YMIR_HOME/                          ← private git repo (pushed to the user's private GitHub)
+├── README.md / AGENTS.md           # home map + the private home contract
 ├── hodd/                           ← THE HOARD: all private data lives under here
-│   ├── identity/                   # projects.yaml, workspaces.yaml, companies/, realms
 │   ├── data/                       # operator, fleet, machines, inventories
-│   ├── docs/                       # masterplan, plans/, runbooks, incidents
+│   ├── docs/                       # masterplan.md, business/, daily/, server-knowledge/
+│   ├── identity/                   # companies/, realms, entity cards
+│   ├── memory/                     # well, daily logs, runes audit ledger
+│   ├── plans/                      # live working plans
 │   ├── secrets/                    # platform.env.age + age.key (the vault)
-│   ├── tenants/                    # per-tenant private trees
-│   └── memory/                     # well, daily logs, audit ledger
+│   ├── state/                      # runtime state; stale-* backups
+│   └── workspaces/                 # marketing/ · personal/ · work/
+├── memory/plans/<domain>/          # plan archive, domain-sorted (tracked)
 ├── config/                         # agents.yaml and per-machine overlays
-├── memory/                         # the live engram (kaia.engram)
 ├── state/                          # runtime state (ephemeral)
 ├── smidja/                         # factory databases (ephemeral)
-├── workspaces/                     # work/, personal/, companies/
 └── svartalfaheim/                  # per-realm scoped material
 ```
+
+> 2026-09-17: the home was re-laid out — plans moved from `hodd/docs/plans/`
+> to `memory/plans/<domain>/`, workspaces moved under `hodd/workspaces/`, and
+> dropped-from-git material rests in `hodd/state/stale-*`. The hodd example
+> (`hodd/AGENTS.example.md`) teaches the shape.
 
 `$YMIR_HOME/hodd/` **is** the private data path — there is no second, flat copy.
 `bin/hoard-lib.sh` resolves it (`hoard_root`), and it is the single source of
