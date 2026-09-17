@@ -646,14 +646,14 @@ git clone https://github.com/zerwiz/ymir.git ~/Ymir && cd ~/Ymir && bin/ymir-ins
 npm install -g @zerwiz/ymir       # the CLI, global
 ```
 
-**Who can install this today.** The Ymir distro is private while it is young —
-so `curl`, `npx` and `git clone` work for the author and invited users, not for
-the public (an unknown clone returns 404). If you would like access, ask:
-**zerwiz.org**. When the distro opens, this note goes away and the four commands
-above become open to everyone.
+**Who can install this today — everyone.** The distro is public; the four
+commands above are open, and the npm road is the smoothest: `npm i -g
+@zerwiz/ymir` stands the platform and its four surfaces (Hlidskjalf, Óðrerir,
+Sessrúmnir, Smíðja), and `ymir raise` lifts the hall. The ship is measured:
+the seat wears the cloth of the halls — stone and bone, bronze and blood —
+with no remnant of the fork it grew from.
 
-**Early adopters and contributors can install now — but it is rough.** Expect
-sharp edges: the installer is honest about what it cannot do, and says so rather
+**Install now.** The installer is honest about what it cannot do, and says so the installer is honest about what it cannot do, and says so rather
 than pretending. Bring a Linux host (or let the Windows/macOS bootstraps give
 you one — see *Bringing your own machine* above), and read what the installer
 prints before you trust it.
