@@ -1,4 +1,9 @@
 
+## 2026-09-17 — 0.1.13: the re-voiced seat arrives, and the packages are listed
+
+- **`@zerwiz/sessrumnir` 0.1.9** — the seat that says Sessrúmnir and "Brokk is working", with the fork`s name gone from its source, its bundles, its installer and its package identity. Pinned so a fresh install receives it.
+- **The README lists every package** on npm, and why the smithy is `@zerwiz/smidja-factory`.
+
 ## 2026-09-17 — the README lists the packages, and the pin moves to the re-voiced seat
 
 - **The README says what is on npm.** Five packages serve — `@zerwiz/ymir` (the
