@@ -110,6 +110,10 @@ snapshot[1]{command,out}:
 - **Ports are sacred:** `:4322` is Óðrerir's alone. Do not move it into a
   Hlidskjalf route or a launcher call — its door is a plain anchor in a new tab
   (`.hall-btn`, rune **ᛟ**, "To the Hall") and its own window.
+- **`.astro/dev.json` is runtime state, never tracked.** Astro rewrites it on
+  every start with the live `pid` and the host's own addresses (LAN + tailnet),
+  so committing it leaks a private IP per run. It is gitignored; the generated
+  types beside it (`content.d.ts`, `types.d.ts`) stay tracked.
 
 ## 5. Files you will touch
 

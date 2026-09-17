@@ -92,6 +92,11 @@ config/*
 # smidja runtime — ALL of smidja_data/ is runtime data, never tracked
 apps/smidja/smidja_data/
 apps/smidja/smidja.db*
+
+# Óðrerir's Astro dev-server state: rewritten on every start with a live pid and
+# the host's own addresses (a private-IP leak in a public tree). Runtime data —
+# never tracked. The generated types beside it stay tracked.
+apps/odrerir/.astro/dev.json
 .env
 __pycache__/
 *.pyc
