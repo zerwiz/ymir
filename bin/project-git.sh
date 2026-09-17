@@ -4,12 +4,12 @@
 # remote. Auth is a REFERENCE (app|pat|ssh|gh), never a value.
 #
 # Usage:
-#   project-git.sh <project-id> [--field host|owner|repo|remote|default_branch|auth]
+#   project-git.sh <project-id> [--field host|owner|repo|remote|default_branch|auth|machine]
 #   project-git.sh list
 #   project-git.sh --version
 set -u
 
-VERSION="1.0.0"
+VERSION="1.2.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=bin/hoard-lib.sh
@@ -26,6 +26,14 @@ while [ $# -gt 0 ]; do case "$1" in --field) FIELD=${2-}; shift 2 ;; *) shift ;;
 
 if [ "$ID" = "list" ]; then
   n=$(grep -cE '^\s*-\s+id:' "$REG" 2>/dev/null || echo 0)
+  if [ "$FIELD" = "about" ]; then
+    printf 'projects[%s]{id,about}:\n' "$n"
+    awk '
+      /^[[:space:]]*-[[:space:]]+id:/ { sub(/^[[:space:]]*-[[:space:]]+id:[[:space:]]*/, ""); id=$0 }
+      /^[[:space:]]*about:/ { sub(/^[[:space:]]*about:[[:space:]]*"/, ""); sub(/"[[:space:]]*$/, ""); if (id != "") printf "  \"%s\",\"%s\"\n", id, $0 }
+    ' "$REG"
+    exit 0
+  fi
   printf 'projects[%s]{id}:\n' "$n"
   grep -E '^\s*-\s+id:' "$REG" | sed -E 's/^\s*-\s+id:\s*/  "/; s/\s*$/" /'
   exit 0
@@ -41,15 +49,21 @@ block="$(awk -v id="$ID" '
 
 gitline="$(printf '%s\n' "$block" | grep -m1 'git:')"
 val() { printf '%s' "$gitline" | sed -nE "s/.*[ {,]?$1:[[:space:]]*([^,}]+).*/\1/p" | tr -d ' '; }
+# non-git top-level keys resolve from the block itself, not the git line
+blockval() { printf '%s' "$block" | sed -nE "s/^[[:space:]]*$1:[[:space:]]*([^,}]+).*/\1/p" | head -1 | tr -d ' '; }
 
 host="$(val host)"; owner="$(val owner)"; repo="$(val repo)"; remote="$(val remote)"; br="$(val default_branch)"; auth="$(val auth)"
+machine="$(blockval machine)"; company="$(blockval company)"; workspace="$(blockval workspace)"
+about="$(printf '%s' "$block" | sed -nE 's/^[[:space:]]*about:[[:space:]]*"(.*)"[[:space:]]*$/\1/p' | head -1)"
 if [ -n "$FIELD" ]; then
   case "$FIELD" in
     host) printf '%s\n' "$host" ;; owner) printf '%s\n' "$owner" ;; repo) printf '%s\n' "$repo" ;;
     remote) printf '%s\n' "$remote" ;; default_branch) printf '%s\n' "$br" ;; auth) printf '%s\n' "$auth" ;;
+    machine) printf '%s\n' "$machine" ;; company) printf '%s\n' "$company" ;; workspace) printf '%s\n' "$workspace" ;;
+    about) printf '%s\n' "$about" ;;
     *) printf 'error: unknown field %s\n' "$FIELD" >&2; exit 2 ;;
   esac
   exit 0
 fi
-printf 'project[1]{id,host,owner,repo,remote,default_branch,auth}:\n'
-printf '  "%s","%s","%s","%s","%s","%s","%s"\n' "$ID" "$host" "$owner" "$repo" "$remote" "$br" "$auth"
+printf 'project[1]{id,host,owner,repo,remote,default_branch,auth,machine,company,workspace}:\n'
+printf '  "%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' "$ID" "$host" "$owner" "$repo" "$remote" "$br" "$auth" "$machine" "$company" "$workspace"
