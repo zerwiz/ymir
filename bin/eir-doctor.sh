@@ -18,6 +18,11 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_HOME/state}"
 
+# The cloth: colour and marks for the human reading this report; the TOON rows on
+# stdout stay the data (bin/ymir-style.sh).
+if [ -z "${YMIR_STYLE_LOADED:-}" ]; then . "$SCRIPT_DIR/ymir-style.sh"; YMIR_STYLE_LOADED=1; fi
+style_init
+
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-check}"; shift || true
 
@@ -25,7 +30,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes sessrumnir well mcp lock migrations hoard)
+SURFACES=(floors herdr a2abridge hermes sessrumnir shells well mcp lock migrations hoard)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -37,6 +42,34 @@ s_hermes()    { [ -x "$SCRIPT_DIR/hermes-ensure.sh" ] && "$SCRIPT_DIR/hermes-ens
 f_hermes()    { "$SCRIPT_DIR/hermes-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+# The desktop shells: absent is healthy (the web surfaces stand alone), PARTIAL is
+# not — npm gated the Electron postinstall, so the window cannot open while every
+# build still passes (bin/electron-lib.sh).
+shell_dirs() {
+  local a d
+  for a in hlidskjalf odrerir sessrumnir; do
+    for d in "$ROOT/apps/$a" "$ROOT/node_modules/@zerwiz/$a"; do
+      [ -d "$d" ] && { printf '%s\n' "$d"; break; }
+    done
+  done
+}
+s_shells() {
+  local d state
+  while IFS= read -r d; do
+    state="$(electron_runtime_state "$d" 2>/dev/null || true)"
+    [ "$state" = partial ] && return 1
+  done < <(shell_dirs)
+  return 0
+}
+f_shells() {
+  printf 'eir: the shells need YOUR hand — npm gated the runtime download:\n' >&2
+  electron_remedy >&2
+  return 1
+}
+if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/electron-lib.sh" ]; then
+  . "$SCRIPT_DIR/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
+fi
+
 s_well()      { [ -x "$SCRIPT_DIR/mimir.sh" ] && "$SCRIPT_DIR/mimir.sh" health >/dev/null 2>&1; }
 f_well()      { "$SCRIPT_DIR/mimir.sh" start >/dev/null 2>&1; }
 # MCP: both A2A servers wired into opencode + pi.
@@ -126,6 +159,7 @@ detail() { # <name> -> one short fact
     mcp)       "echo 'a2abridge + engram'" ;;
     lock)      "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)"echo 'structure'" ;;
+    shells)    'shell_dirs | while IFS= read -r d; do printf "%s %s; " "$(basename "$d")" "$(electron_runtime_state "$d" 2>/dev/null || true)"; done' ;;
     hoard)     "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
   esac
 }
@@ -151,6 +185,14 @@ done
 printf 'eir[1]{action,root,broken}:\n  "%s","%s",%s\n' "$ACTION" "$ROOT" "$broken"
 printf 'health[%d]{surface,state,detail}:\n' "$count"
 printf '%b' "$rows"
+# For the eye, on stderr: marks and colour; for the pipe, the TOON above.
+if [ -t 2 ]; then
+  printf '\n' >&2
+  while IFS='|' read -r surface state detail; do
+    [ -n "$surface" ] || continue
+    style_line "$state" "$surface" "$detail"
+  done <<<"$(printf '%b' "$rows" | sed 's/^  //; s/"//g; s/,/|/; s/,/|/')"
+fi
 if [ "$broken" != 0 ]; then
   printf 'eir: %s surface(s) need mending — run: bin/eir-doctor.sh fix\n' "$broken"
   exit 1

@@ -14,12 +14,14 @@
 set -u
 
 VERSION="1.0.0"
-# The cloth: colour and marks for the human reading this report; the TOON row on
-# stdout stays the data (bin/ymir-style.sh).
-. "$SCRIPT_DIR/ymir-style.sh"
-style_init
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# The cloth: colour and marks for the human reading this report; the TOON rows on
+# stdout stay the data (bin/ymir-style.sh).
+if [ -z "${YMIR_STYLE_LOADED:-}" ]; then
+  . "$SCRIPT_DIR/ymir-style.sh"; YMIR_STYLE_LOADED=1
+fi
+style_init
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
 # @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
@@ -198,12 +200,27 @@ else
   for i in "${!IDS[@]}"; do
     say "  \"${IDS[$i]}\",\"${STATES[$i]}\",\"${DETAILS[$i]}\""
   done
+  # The same rows, rendered for the eye, on stderr: a human reads marks and
+  # colour, a pipeline reads the TOON above, and neither parses the other.
+  if [ "$QUIET" != 1 ]; then
+    printf '\n' >&2
+    for i in "${!IDS[@]}"; do
+      style_line "${STATES[$i]}" "${IDS[$i]}" "${DETAILS[$i]}"
+    done
+  fi
 fi
 
 if [ "$fails" -gt 0 ]; then
-  [ "$QUIET" = 1 ] || printf '\n%s required check(s) failed — the install is not fully usable\n' "$fails"
+  [ "$QUIET" = 1 ] || {
+    style_rule 52
+    style_line FAIL "not usable" "$fails required check(s) failed, $warns warning(s)"
+    style_hint "mend it: ymir eir   (diagnose every surface, then mend what is broken)"
+  }
   printf 'help: %s required check(s) failed, %s warning(s)\n' "$fails" "$warns" >&2
   exit 1
 fi
-[ "$QUIET" = 1 ] || printf '\nall required checks pass (%s warning(s))\n' "$warns"
+[ "$QUIET" = 1 ] || {
+  style_rule 52
+  style_line OK "stands" "every required check passes ($warns warning(s))"
+}
 exit 0
