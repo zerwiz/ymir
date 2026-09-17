@@ -1,6 +1,6 @@
 {
   "name": "@zerwiz/ymir",
-  "version": "0.1.12",
+  "version": "0.1.14",
   "description": "Ymir \u2014 the single-tenant agent operating system. Omarchy-first, host-aware, self-healing.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/zerwiz/ymir",
@@ -60,9 +60,9 @@
     "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
   },
   "optionalDependencies": {
-    "@zerwiz/hlidskjalf": "^0.1.0",
-    "@zerwiz/odrerir": "^0.1.0",
-    "@zerwiz/sessrumnir": "0.1.8-alpha",
+    "@zerwiz/hlidskjalf": "0.1.1",
+    "@zerwiz/odrerir": "0.1.1",
+    "@zerwiz/sessrumnir": "0.1.9",
     "@zerwiz/smidja-factory": "^0.1.0"
   }
 }
