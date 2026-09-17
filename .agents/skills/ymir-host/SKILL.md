@@ -18,8 +18,9 @@ One skill for running the machine Ymir lives on. Read the row the task needs,
 then the asset it points to.
 
 ```
-assets[5]{path,load_when}:
+assets[6]{path,load_when}:
   "assets/update.md","self-update Brokk + every Eindri-home (updateBrokk / /updateBrokk)"
+  "assets/install.md","install/plan this host: read the computed plan, choose the home, know which root holds what"
   "assets/omarchy.md","Omarchy host: Hyprland, shell/bar, monitors, placement, GPU, ~/.config"
   "assets/thjazi.md","the terminal backend: herdr/tmux, protocol floors, panes, spaces"
   "assets/runbooks.md","operator runbooks: models · agents · Tailscale sync · updates/migrations · secrets/Hodd"

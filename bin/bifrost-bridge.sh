@@ -25,11 +25,30 @@ fi
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
 BRIDGE="$ROOT/.agents/backend/model-bridge.py"
-ENV_FILE="${BROKK_ENV_FILE:-$ROOT/.env.local}"
+ENV_FILE="${BROKK_ENV_FILE:-$YMIR_ENV_FILE}"
 PORT="${OPENCODE_GO_BRIDGE_PORT:-4603}"
-PID_FILE="$ROOT/state/model-bridge.pid"
-LOG_FILE="$ROOT/state/model-bridge.log"
+PID_FILE="$YMIR_STATE_DIR/model-bridge.pid"
+LOG_FILE="$YMIR_STATE_DIR/model-bridge.log"
 PROVIDER="${YMIR_MODEL_PROVIDER:-}"
 
 case "${1-}" in
@@ -95,7 +114,7 @@ if [ -z "$PROVIDER" ]; then
 fi
 
 # A missing env file is fine for keyless providers; the bridge reads what it can.
-mkdir -p "$ROOT/state"
+mkdir -p "$YMIR_STATE_DIR"
 nohup python3 "$BRIDGE" --port "$PORT" --env "$ENV_FILE" --provider "$PROVIDER" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 sleep 2

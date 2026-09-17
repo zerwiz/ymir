@@ -13,7 +13,26 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-ENV_FILE="${BROKK_ENV_FILE:-$ROOT/.env.local}"
+
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
+ENV_FILE="${BROKK_ENV_FILE:-$YMIR_ENV_FILE}"
 
 usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; }
 CMD="${1-}"; shift || true
@@ -40,7 +59,7 @@ done
 if [ "$CMD" = status ]; then
   printf 'mjollnir[2]{field,value}:\n'
   printf '  "repo","%s"\n' "${REPO:-$ROOT}"
-  printf '  "pending","%s"\n' "$(find "$ROOT/data" -maxdepth 2 -name 'brief.md' -path '*issue-*' 2>/dev/null | wc -l | tr -d ' ')"
+  printf '  "pending","%s"\n' "$(find "$YMIR_DATA_DIR" -maxdepth 2 -name 'brief.md' -path '*issue-*' 2>/dev/null | wc -l | tr -d ' ')"
   exit 0
 fi
 [ "$CMD" = run ] || { printf 'error: unknown command %s\nhelp: bin/mjollnir.sh [run|status|--version]\n' "$CMD" >&2; exit 2; }
@@ -69,7 +88,7 @@ printf 'mjollnir[1]{issue,task,mode,repo}:\n  "%s","%s","%s","%s"\n' "$ISSUE" "$
 
 # 2. Scaffold the brief (the worker's contract).
 "$SCRIPT_DIR/erindi-brief.sh" "$ID" "$(basename "$REPO")" --mode "$MODE" >/dev/null 2>&1 || true
-BRIEF="$ROOT/data/$ID/brief.md"
+BRIEF="$YMIR_DATA_DIR/$ID/brief.md"
 if [ -f "$BRIEF" ]; then
   { printf '\n\n## Issue #%s — %s\n\n%s\n' "$ISSUE" "$TITLE" "$BODY"; } >>"$BRIEF"
 fi

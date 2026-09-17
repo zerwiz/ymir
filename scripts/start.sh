@@ -17,6 +17,25 @@ if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
 fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
 APP="$ROOT/apps/hlidskjalf"
 RUN="$ROOT/.run"
 PID_FILE="$RUN/hlidskjalf.pid"
@@ -28,11 +47,11 @@ LOG="$RUN/hlidskjalf.log"
 # credential set by bin/ymir-setup-auth.sh never reached it — and the gate treats
 # an empty GATE_AUTH as "open". Loaded before the ports below so those may be
 # overridden from it too.
-if [ -r "$ROOT/.env.local" ]; then
+if [ -r "$YMIR_ENV_FILE" ]; then
   set +eu
   set -a
   # shellcheck disable=SC1090,SC1091
-  . "$ROOT/.env.local" || true
+  . "$YMIR_ENV_FILE" || true
   set +a
   set -eu
 fi
@@ -62,7 +81,7 @@ API_PORT="${HLIDSKJALF_API_PORT:-3889}"
 # The public hostnames the gate fronts (written by bin/gjallarhorn-expose.sh):
 # without them the gate cannot route a host to its app, and the login page for
 # that app would never be reached.
-[ -r "$ROOT/state/gjallarhorn-hosts.env" ] && . "$ROOT/state/gjallarhorn-hosts.env" && \
+[ -r "$YMIR_STATE_DIR/gjallarhorn-hosts.env" ] && . "$YMIR_STATE_DIR/gjallarhorn-hosts.env" && \
   export SMIDJA_HOST ODRERIR_HOST YMIR_PRIMARY_HOST
 API_PID_FILE="$RUN/hlidskjalf-api.pid"
 API_LOG="$RUN/hlidskjalf-api.log"
@@ -87,7 +106,7 @@ if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
   if "$ROOT/bin/nornir-cron-start.sh" >/dev/null 2>&1; then echo "Nornir cron: started"; else echo "Nornir cron: start failed" >&2; fi
 fi
 if [ -x "$ROOT/bin/bifrost-bridge.sh" ]; then
-  if BROKK_ENV_FILE="$ROOT/.env.local" "$ROOT/bin/bifrost-bridge.sh" --start >/dev/null 2>&1; then echo "Bifrost bridge: up"; else echo "Bifrost bridge: not up (needs OPENCODE_GO_API_KEY)" >&2; fi
+  if BROKK_ENV_FILE="$YMIR_ENV_FILE" "$ROOT/bin/bifrost-bridge.sh" --start >/dev/null 2>&1; then echo "Bifrost bridge: up"; else echo "Bifrost bridge: not up (needs OPENCODE_GO_API_KEY)" >&2; fi
 fi
 # The well — Mimirsbrunn (engram) on :4602; the gate API and mimir.sh drink here.
 if [ -x "$ROOT/bin/mimir-bridge.sh" ]; then

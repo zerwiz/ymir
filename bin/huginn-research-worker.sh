@@ -12,6 +12,19 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+
 BRIEF="" OUTDIR="" MODEL=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -28,7 +41,7 @@ done
 mkdir -p "$OUTDIR"
 
 # Resolve env — source .env.local if present.
-for f in "$ROOT/.env.local" "${YMIR_HOARD:-$HOME/Documents/Ymir}/.env.local"; do
+for f in "$YMIR_ENV_FILE" "${YMIR_HOARD:-$HOME/Documents/Ymir}/.env.local"; do
   [ -f "$f" ] && . "$f" 2>/dev/null || true
 done
 

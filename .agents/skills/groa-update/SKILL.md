@@ -62,6 +62,26 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
    Summarize what landed without internal vocabulary: which parts of the fleet are now on the latest, and which were left as-is and why.
    Surface any skipped target whose reason needs the Allfather's attention (a home with un-landed changes, local edits).
 
+5. **Read the plan after an update — the new version may expect more of this host.**
+   A tracked change can add a step, a root, or a setting the running machine has not
+   met yet. After a fast-forward that moved the instruction surface, ask what the
+   new code expects:
+   ```sh
+   bin/ymir-plan.sh --blocked     # what the new version cannot do yet, and why
+   bin/ymir-plan.sh               # the whole plan: DO · SKIP · INFO · BLOCKED · CONSENT
+   ```
+   A `DO` row means the update wrote code this host has not yet applied — run
+   `bin/ymir-install.sh` when the Allfather wants it applied. A `BLOCKED` row is a
+   fact to report, never a failure to hide. The plan is computed from this host, so
+   it never drifts behind the code the way a recited list does.
+
+   The **roots law** is the one to watch across an update: the package is the code
+   that runs the programs; the operator's info, documents, state, settings and
+   credentials live in the home they chose (`bin/hoard-lib.sh` resolves it). If the
+   plan's `purity` row reports anything of the operator's inside the code tree,
+   that is drift the update should have carried out — name it to the Allfather.
+   Owning asset: `.agents/skills/galdr-ymirsystem/assets/installation.md`.
+
 ## Safety
 
 - **Fast-forward only.** Dirty, diverged, offline, or non-default-branch targets are skipped and reported, never forced or stashed. Nothing with unlanded work is ever discarded.

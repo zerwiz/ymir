@@ -15,7 +15,20 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CFG="${YMIR_AGENTS_YAML:-$ROOT/config/agents.yaml}"
+
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+CFG="${YMIR_AGENTS_YAML:-$YMIR_SETTINGS_DIR/agents.yaml}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
