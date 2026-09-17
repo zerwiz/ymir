@@ -9,8 +9,10 @@ running a chain, reading its trace, or wiring it into Hlidskjalf.
   **Smíðja's eye**.
 - **Registry:** `.agents/assets/agents/naming.md`, `docs/lore.md` §XI/§XIII.
 - **Skill (adopted upstream):** `.agents/skills/smidja-factory/` (internals + cookbooks +
-  references + `apps/visualizer/` + sibling skills `smidja-launcher`, `smidja-start`,
-  `smidja-instructions`, `volundr`).
+  references + sibling skills `smidja-launcher`, `smidja-start`,
+  `smidja-instructions`, `volundr`). The **visualizer's home is the smidja repo**
+  (`apps/smidja-factory/apps/visualizer` in a clone; the skill tree carries no
+  copy — dropped 2026-09-17).
 
 **Two layouts, one smithy — do not confuse them.** A *target* repo the smithy is
 installed into gets the stamped `smidja/` tree (what `install.py` writes). **In
@@ -102,7 +104,7 @@ installed on this machine) — do not reintroduce `sqlite3`.
 
 - **Open at `http://127.0.0.1:8437/`.** One Bun server serves both the read-only
   API (`bun:sqlite` over the trace db) **and** the built Vue UI from
-  `apps/visualizer/dist`. A Vite dev server on `:8438` is opt-in
+  `apps/smidja-factory/apps/visualizer/dist`. A Vite dev server on `:8438` is opt-in
   (`SMIDJA_VIZ_DEV=1`) and is not needed for use.
 - **The carved cloth (2026-09-13).** The default theme is **fensalir** — the
   landing page's stone/bone/bronze/blood and its three faces (Cormorant display,
