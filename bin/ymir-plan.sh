@@ -136,13 +136,23 @@ code_phase() {
   # Everything the operator owns — their records, their state, their settings,
   # their credentials — lives in the home they chose. A packaged install replaces
   # its tree on upgrade, so anything of theirs kept here is kept at its peril.
+  # A settings file GIT TRACKS is not theirs: that is the distro's shipped
+  # default, and it stays where the code ships it.
   local leaked="" f n
   n="$(ls -A "$ROOT/data" 2>/dev/null | grep -vc '^\.gitkeep$' || true)"
   [ -d "$ROOT/data" ] && [ "${n:-0}" -gt 0 ] && leaked="$leaked data/"
   n="$(ls -A "$ROOT/state" 2>/dev/null | grep -vc '^\.gitkeep$' || true)"
   [ -d "$ROOT/state" ] && [ "${n:-0}" -gt 0 ] && leaked="$leaked state/"
   for f in config/agents.yaml config/cron.yaml config/tailscale-sync.yaml config/wedge-alarm .env.local; do
-    [ -e "$ROOT/$f" ] && leaked="$leaked $f"
+    [ -e "$ROOT/$f" ] || continue
+    # `config` is a symlink into .agents/config, and git tracks the REAL path —
+    # ask it about the name the index holds, not the link the tree shows.
+    local ask="$f"
+    case "$f" in config/*) [ -L "$ROOT/config" ] && ask=".agents/config/${f#config/}" ;; esac
+    if command -v git >/dev/null 2>&1 && git -C "$ROOT" ls-files --error-unmatch "$ask" >/dev/null 2>&1; then
+      continue    # the distro ships this one — code, not the operator's own
+    fi
+    leaked="$leaked $f"
   done
   if [ -n "$leaked" ]; then
     emit 1 code purity DO "the operator's own things sit in the code tree ($leaked) — they belong in $YMIR_HOME, or the next upgrade will erase them"
@@ -228,12 +238,16 @@ app_row() {  # <name> <about>
   local name="$1" about="$2" dir
   if dir="$(app_dir "$name")"; then
     if [ -d "$dir/dist" ] || [ -d "$dir/out" ]; then
-      emit 5 apps "$name" SKIP "$about — source and web build present"
+      emit 5 apps "$name" SKIP "$about — installed, and its build shipped with it"
     else
-      emit 5 apps "$name" DO "$about — source present, web build to make"
+      emit 5 apps "$name" DO "$about — installed from source; the web build is still to make"
     fi
+  elif grep -q "\"@zerwiz/$name\"" "$ROOT/package.json" 2>/dev/null; then
+    # Declared as a dependency of the distro but not present: the package exists,
+    # the tree simply has not fetched it. That is a DO, not a dead end.
+    emit 5 apps "$name" DO "$about — declared as a dependency but not fetched (npm i -g @zerwiz/ymir fetches it)"
   else
-    emit 5 apps "$name" BLOCKED "$about — not installed: no apps/$name and no @zerwiz/$name package"
+    emit 5 apps "$name" BLOCKED "$about — no apps/$name, no @zerwiz/$name package, and the distro does not depend on it"
   fi
 }
 apps_phase() {

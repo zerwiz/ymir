@@ -37,7 +37,10 @@ for a in "$@"; do
     *) TARGETS+=("$a") ;;
   esac
 done
-[ "$ALL" = 1 ] && TARGETS=("$ROOT" "$ROOT/apps/hlidskjalf" "$ROOT/apps/hlidskjalf-mobile" "$ROOT/apps/odrerir" "$ROOT/apps/sessrumnir")
+# --all is the platform plus every app package. The smithy's own repo is
+# cloned at apps/smidja-factory (the registry maps smidja there), so it is a
+# target like any other app: it publishes as @zerwiz/smidja.
+[ "$ALL" = 1 ] && TARGETS=("$ROOT" "$ROOT/apps/hlidskjalf" "$ROOT/apps/hlidskjalf-mobile" "$ROOT/apps/odrerir" "$ROOT/apps/sessrumnir" "$ROOT/apps/smidja-factory")
 [ "${#TARGETS[@]}" -eq 0 ] && [ "$WHO" = 0 ] && TARGETS=("$ROOT")
 
 # ── the token, from the hoard ────────────────────────────────────────────────

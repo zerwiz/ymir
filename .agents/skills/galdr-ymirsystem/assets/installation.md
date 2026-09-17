@@ -99,6 +99,82 @@ hoard_local_env  ENVFILE             # → <home>/.env.local
 that points an operator's thing into the tree is the bug the `purity` row exists to
 catch.
 
+### Carrying an existing tree home — migration 0005
+
+Every *writer* resolves the home now, but an installation made before this change
+still holds the operator's things in the tree. `.agents/migrations/0005-roots-out-of-tree.sh`
+carries them:
+
+```
+what moves           from                    to
+------------------   ---------------------   ----------------------------
+this machine's       data/                   <hoard>/data
+  records
+runtime state        state/                  <home>/state
+  (pids · logs ·     (including the          (running services keep their open
+   locks · the        applied-migrations      fds across the move — `mv` keeps
+   applied-marker)    marker)                 the inode)
+credentials          the local env file      $YMIR_HOME/.env.local (0600)
+settings             .agents/config/*        <home>/config
+                     that git does NOT track
+```
+
+One name, two files — the migration decides by evidence, never by assumption:
+
+```
+collision[3]{case,what_happens,nothing_lost}:
+  "identical content","the tree's copy is removed","the content is provably at home already"
+  "different content","the home's keeps the name; the tree's is carried beside it as <name>.stale-<UTC>","both are real, so both are kept — never merged, never discarded"
+  "not a plain file","left in place and reported","a directory is not silently swallowed"
+```
+
+Templates and defaults never move: `*.example` (and `*.example.*`), `.gitkeep`, and
+any settings file **git tracks** — that is the distro's shipped default, not the
+operator's. The plan's `purity` row applies the same rule, asking git about the
+real path (the tree's `config` is a symlink into `.agents/config`, and git tracks
+what the index holds, not the link). Idempotent: a second run changes nothing.
+
+```bash
+bin/ymir-migrate.sh status            # pending / applied
+bin/ymir-migrate.sh apply --dry-run   # name the migration, touch nothing
+bin/ymir-migrate.sh apply             # carry it
+```
+
+Stop the runtime first if you want no stale pid files; nothing is lost either way.
+
+## The app packages — how the four surfaces arrive
+
+The distro depends on the surfaces as their own npm packages, so one
+`npm install -g @zerwiz/ymir` fetches them into the tree:
+
+```
+app_packages[4]{package,repo,what}:
+  "@zerwiz/hlidskjalf","zerwiz/hlidskjalf","the control plane — dist/ ships built, served on :3888"
+  "@zerwiz/odrerir","zerwiz/odrerir","the live hall — dist/ ships built"
+  "@zerwiz/sessrumnir","zerwiz/sessrumnir","the seat-hall desktop — out/ ships built (a fork of pi-desktop)"
+  "@zerwiz/smidja","zerwiz/smidja","the smithy and its visualizer — the factory plus the UI's source, built at install"
+```
+
+They are **optionalDependencies**, deliberately: a broken app package must never
+stop the CORE from installing, and a package not yet on the registry is skipped by
+npm and starts arriving the moment it is published. The plan's phase-5 rows report
+each surface separately — installed, declared-but-not-fetched, or no package at all
+— so a silent skip cannot hide.
+
+A global install nests them under the distro's own `node_modules`
+(`<prefix>/lib/node_modules/@zerwiz/ymir/node_modules/@zerwiz/<app>`); a local one
+hoists them to `node_modules/@zerwiz/<app>`. The plan checks both shapes.
+
+```
+bin/npm-publish.sh                 # the platform only
+bin/npm-publish.sh --all           # the platform + every app package
+bin/npm-publish.sh --dry-run --all # what would go out, and from where
+```
+
+The app repos are cloned into `apps/` by the install's `apps` step (from the
+registry's `repo: apps/<path>` blocks), which is where `--all` reads their
+manifests. The token comes from the hoard, never from `~/.npmrc`.
+
 ## The steps
 
 ```
