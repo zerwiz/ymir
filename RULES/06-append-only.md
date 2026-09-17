@@ -56,3 +56,53 @@ are always named.
 
 **Related:** `RULES/04-hoard.md` (where private records live), `AGENTS.md`,
 `.agents/skills/galdr-ymirsystem/assets/installation.md` (the move procedure).
+
+## Amendment — the changelog writes through fragments (2026-09-17)
+
+Appended, not rewritten; the clause above stands.
+
+**The problem this amendment answers.** `CHANGELOG.md` is one file, and every
+branch appends at the same position — the top. Git sees two branches inserting
+different lines at the same spot and calls it a conflict, so **every merge
+re-conflicts every open branch**. With N branches that is O(N²) conflicts, all of
+them meaningless: both entries belong, and neither is wrong. Sixteen open PRs
+were each resolved by hand for this reason alone.
+
+**The amendment.** A change tells its story through a **fragment**:
+
+```
+CHANGELOG.d/<YYYY-MM-DD>-<slug>.md     the entry, beginning with its `## YYYY-MM-DD — title` heading
+```
+
+- **A fragment is a new file with a unique name.** Two branches never touch the
+  same one, so the collision cannot occur. This is the whole point.
+- **`bin/changelog-assemble.sh` folds fragments into `CHANGELOG.md`** — newest
+  first, above everything already recorded. Folding is an **append**: the ledger's
+  existing entries are copied verbatim, never reordered, never rewritten.
+- **The pre-push hook runs the assembler first**, so the ledger is never behind
+  what the fragments already tell. A push that would leave unfolded fragments
+  behind is refused with the instruction to commit the fold and push again.
+- **The guard accepts either form.** A push satisfies the duty by appending to
+  `CHANGELOG.md` **or** by adding a fragment. Appending directly still works and
+  is still valid; the fragment is simply the form that cannot conflict.
+
+**Why this obeys the clause above, not contradicts it.** Append, never rewrite —
+a fragment is a *new file*, and the ledger only ever grows. Never truncate —
+fragments are folded in, never dropped. Never lose one in a move — **`CHANGELOG.d/`
+joins the append-only set**, so a move must carry it exactly as it carries
+`CHANGELOG.md`. A correction is a new entry citing the old — a fragment may cite;
+nothing is edited.
+
+**The append-only set is now:**
+
+```
+append_only[7]{artifact,why}:
+  "$YMIR_HOME/memory/runes_audit.md","the Runes ledger — checksum-chained"
+  "$YMIR_HOME/docs/append-only-log.md","the decision log"
+  "CHANGELOG.md","the assembled chronological ledger; folded from fragments, never hand-rewritten"
+  "CHANGELOG.d/","pending entries — one file per change; folded in, never dropped"
+  "RULES/*.md","house law"
+  "$YMIR_HOME/**","the private record"
+  "*.jsonl / branch outcomes / session logs","event streams"
+```
+
