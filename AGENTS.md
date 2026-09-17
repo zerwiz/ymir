@@ -173,8 +173,6 @@ outputs[7]{kind,path}:
   "Shared PUBLIC assets","midgard/"
   "Global audit entries","$YMIR_HOME/hodd/memory/runes_audit.md"
 ```
-  "Global audit entries","$YMIR_HOME/hodd/memory/runes_audit.md"
-```
 
 ## Realm routing
 

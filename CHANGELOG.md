@@ -44,6 +44,320 @@
 - **A corrupted TOON block in `AGENTS.md`** — `outputs[7]` carrying eight rows and
   duplicate `midgard/` lines — is mended; the compliance gate reports 84 valid
   blocks again.
+## 2026-09-17 — the registry says where a repo lives and what it is for
+
+- **A project entry can now name its machine.** `machine:` records the host
+  where a checkout lives; `data/machines.md` holds the fleet (omarchy-1,
+  zerwiz, zerwizserver live on the tailnet). A repo is no longer assumed to be
+  on the box you happen to be standing on.
+- **A project entry can now say what it is for.** `about:` is one plain
+  sentence per repo. `bin/project-git.sh list --field about` prints the whole
+  inventory without opening the YAML.
+- **`project-git.sh` resolves more of the block.** `--field` now accepts
+  `machine`, `company`, `workspace` and `about` alongside the git fields, and
+  non-git keys read from the project block rather than the `git:` line.
+- **One registry, not two.** The live registry is `hodd/identity/projects.yaml`
+  (what the runtime reads). A stale duplicate at `Documents/Ymir/identity/` had
+  been drifting apart from it — different GitHub owners, different project sets
+  — and is retired, with a backup kept in `hodd/state/`.
+
+## 2026-09-17 — the private home gets the ward it never had
+
+- **Six guards watched the public repo; the home had none — yet the home is where
+  every private byte lives.** The one real leak of this day (`platform.env.prev-fill`,
+  44 credentials) happened *there*, in a scratch backup swept up by `git add -A`,
+  with nothing watching. `bin/hoard-guard.sh` closes that.
+- **It is a hook, not a script.** Seated as `$YMIR_HOME/.git/hooks/pre-commit`,
+  **git runs it on every commit** — including one made in a hurry, by a loop, or by
+  an agent that has never heard of it. Verified by attempting a real `git commit`
+  with no guard invoked: git refused, exit 1.
+- **It catches what actually leaked**, verified by planting each: a scratch-backup
+  name (`*.prev-*`, `*.bak`, `*.orig`), a plaintext secret filename, a secret shape,
+  and — the evasion that would have hidden a key — **a base64 blob whose decode
+  contains a PEM header**, under an innocent filename.
+- **`bin/ymir-install.sh` seats it at both repos** (the `hoard-gate` step reports
+  the home separately, so a dormant vault is visible), on every install layer.
+- **A bypass is logged, not silent.** `hoard-guard.sh --log-bypass` appends to the
+  Runes ledger when a `--no-verify` commit is detected.
+- **Two stale flat paths fixed in the guards themselves.** `bin/docs-guard.sh` told
+  an operator to move private docs to `$YMIR_HOME/docs/` — a path that no longer
+  exists — and `bin/groa-update.sh` read `$YMIR_HOME/data/eindri-homes.md` instead of
+  the hoard's. A guard pointing at the wrong door teaches the drift it exists to stop;
+  `groa-update.sh` now resolves through `hoard_root`.
+
+## 2026-09-17 — the NorthStar gate runs nightly; the platform door it caught is mended
+
+- **`bin/nornir-job-nsr-compliance.sh` (02:30)** runs every
+  `.compliance/gates/check_*.sh` (danger · env · paths · platform · wiring)
+  and carves the verdict — `nsr.compliance` clean, or `nsr.compliance.failed`
+  (exit 1) naming the broken gate, so the 07:00 briefing reads it at sunrise.
+- **The gate it caught, mended:** `scripts/electron.sh` used `kill -9`, which
+  the platform gate rightly refuses as non-portable. It now uses `kill -KILL`
+  (the house idiom already in `scripts/stop.sh`) — the NSR round is 5/5 green.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — new
+§3.5 (hall snapshot) and §3.6 (NSR round) rows.
+
+## 2026-09-17 — the Live Hall's board becomes true: the snapshot lands on the loom
+
+- **The Hall was a glass with nothing behind it.** The Óðrerir page reads
+  `apps/odrerir/public/livehall.json` same-origin, but nothing wrote it on a
+  schedule — the board showed the saga's own static count and said so.
+  `bin/nornir-job-hall-snapshot.sh` (08:00, after the 06:00 observer and the
+  07:00 briefing) now drives `bin/hall-snapshot.sh` from real state — runes,
+  projects, the cron gauge, the wake queue, standing smiths, armed when-
+  sources, landed errands — and carves Rune `odrerir / hall.snapshot`.
+- The snapshot is runtime, never repo: `apps/odrerir/public/livehall.json` is
+  gitignored, so the job never dirties a branch.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — new
+§3.5 row (reads/writes table, idempotence note).
+
+## 2026-09-17 — the hoard gets a guard, and Rule 04 stops contradicting the disk
+
+- **Eir gains a `hoard` surface.** Private data drifting outside the hoard is
+  now caught rather than discovered by asking "where did that go?". The check
+  fails on two things: a `.ymir-layout.yaml` entry naming a directory that does
+  not exist (a stale map is what lets private work land outside the hoard), and
+  a flat `$YMIR_HOME/{identity,data,docs,secrets,tenants}` sitting beside
+  `hodd/`. `fix` merges a flat duplicate into the hoard without clobbering, then
+  repoints any stale layout entry at the hoard.
+- **Rule 04 corrected, append-only.** The rule's mapping table read as if
+  `hodd/x/` and `$YMIR_HOME/x/` were two locations; on a real home that produced
+  two parallel stores which drifted. The appended correction states the truth:
+  `$YMIR_HOME/hodd/` **is** the private data path, `bin/hoard-lib.sh` is the one
+  source of truth for it, and `.ymir-layout.yaml` must name only paths that
+  exist. Nothing above the correction was rewritten.
+
+## 2026-09-17 — the hoard encrypts its secrets at rest
+
+- **`bin/hodd.sh` decrypts transparently.** `load`, `emit`, and `tenant` now
+  accept a plaintext file *or* an `.age` ciphertext with the sibling plaintext
+  absent. A shared `resolve_secret` finds the readable form; when it decrypts,
+  it uses a mode-600 temp and removes it afterward. An agent asks for the
+  resolved path and never handles ciphertext directly.
+- **Secrets stay encrypted at rest.** `hodd/secrets/platform.env.age` is the
+  committed form; the plaintext is scratch and gitignored. Round-trip verified
+  byte-identical before the plaintext was untracked.
+- **The vault invariant, written down.** The age key and the ciphertext travel
+  together in the private `ymirhome` repo, so a dead disk loses nothing — and
+  `ymirhome` **must never be made public**. Stated in `hodd/docs/secrets-vault.md`.
+- **The honest limit.** This is encryption-at-rest, not encryption-against-yourself:
+  on a single-user machine, a process running as the operator can read what the
+  operator can read. What it buys is the *file* and the *repo*, not the *account*.
+
+## 2026-09-17 — the Forge speaks: each skill's own text in the index
+
+- **The Forge listed skills as bare names.** `Forge.tsx` rendered only
+  `{s.name}` + the aett rune, while the live `/api/skills` index carries every
+  skill's `description` (240-char truncation) — the data was there, the
+  surface never showed it. The skill list items are now two-line cards: name +
+  aett on the head row, the description beneath (`forge-item-desc`, dimmed
+  until hover), scoped to the skill variant so the Eindri rows keep their
+  side-by-side name+status shape.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+Forge gate bullet (skill list shows name + aett + description).
+
+## 2026-09-17 — the feed follows Brokk's thinking past the composer
+
+- **Sessrúmnir's auto-scroll never counted streamed THINKING as growth.**
+  `useChatScroll` watched `messages` and `streamingContent` only, so a
+  reasoning-heavy turn (thinking before any visible content) grew the feed
+  without moving it — the thinking block ended up below the floating composer,
+  behind it, and the Allfather had to scroll down to read it.
+- **The growth signal now also includes `streamingThinking` and streaming tool
+  calls.** While Brokk reasons, the feed keeps the thinking tail in view above
+  the composer (still only when Auto Scroll is on and the reader is at the
+  bottom — scrolling up to re-read never gets yanked).
+- Live hall updated: rebuilt renderer delivered to the running Sessrúmnir and
+  the app restarted via `bin/sessrumnir.sh` (window back on workspace 8).
+
+## 2026-09-17 — the editor stops being banished to its own desktop
+
+- **`bin/editor-place.sh` pinned the editor to its own desktop with
+  `no_focus = true`** — VS Code mapped onto a different workspace than the one
+  the Allfather worked on and never took focus, so nothing inside it was
+  clickable. The rule was written by Ymir itself into
+  `~/.config/hypr/ymir-desktops.lua`.
+- **The editor is now UNMANAGED by default**: it opens on the active desktop,
+  focused and clickable, like any other app. The old pin remains reachable
+  explicitly with `YMIR_EDITOR_PIN=1 bin/editor-place.sh apply`.
+- Live desk healed: the `code` windowrule was removed from
+  `~/.config/hypr/ymir-desktops.lua` (backup kept alongside), Hyprland reloaded
+  with no config errors, and the stranded VS Code windows were moved to the
+  active desktop and focused.
+
+## 2026-09-17 — models, providers, and paths are the user's — and the gate says so
+
+- **The law, amended (Rule 07).** Two clauses appended, the rule itself untouched:
+  - **A. Models and providers live in the hoard, per user, read from YAML.**
+    Every operator's differ, so there is **no global model or provider** — a
+    shipped default naming a model is a claim about someone else's machine. The
+    user's own live in `$YMIR_HOME/hodd/`, read from a YAML file there; the repo
+    ships a template.
+  - **B. No hardcoded absolute file paths.** No `/home/<user>/…`, no
+    `/Users/<user>/…`, no `C:\Users\…`. A path is relative to a resolved root or
+    comes from env/config with one documented default.
+- **The gate, `config`.** `compliance-check.sh` gains a check that fails on a
+  model id or provider name used as a **value** in shipped code or a tracked
+  config, and on an absolute path naming a user. Comments, `*.example` templates,
+  `CHANGELOG*`, and `assets/reference/` are exempt by intent — they document,
+  they do not configure. **192 files clean.**
+- **Three real violations found and fixed:**
+  - `.agents/config/eindri-dispatch.json` — three dispatch rules named
+    `opencode-go/deepseek-v4.1-flash`. Now a template with `<your-model-id>`.
+  - `.agents/skills/galdr-ymirsystem/assets/pi-boot/pi-profile.yml` — the PI boot
+    profile named `lmstudio/qwen3.6-35b-a3b`. Now a placeholder.
+  - `bin/bootstrap-macos.sh` — `/home/ubuntu/Documents/Ymir`. Now resolved from
+    `YMIR_VM_USER` with one documented default.
+- **Two false positives found and fixed in the gates themselves.** The `mocks`
+  gate flagged a prose comment explaining why a guard exists; the new `config`
+  gate first flagged a sentence mentioning `llama.cpp/llama-swap`. Both now
+  exclude comments and require a value position — a gate that cries wolf is a
+  gate that gets ignored.
+- **Four pre-existing failures on main mended** so the gate could be added to a
+  green tree: a duplicated `midgard/` row in `AGENTS.md` (a bad merge left three),
+  the `mocks` false positive, `smidja-factory` indexed but app-provided, and the
+  seat's cloth read from an app repo that is absent until `step_apps` runs
+  (`design-check` now skips cleanly rather than failing every worktree).
+
+## 2026-09-17 — midgard holds public assets only; the company wiki is gone
+
+- **`midgard/company_wiki/` did not belong in this repo.** It was an empty
+  placeholder (one `.gitkeep`), but a company wiki is *tenant data* — policies,
+  vision, specs, client names — and this repo is public. Removed, with every
+  reference to it corrected in `midgard/README.md`, `STRUCTURE.md`, `docs/lore.md`
+  and `assets/Ymir.md`.
+- **`midgard/` is now described precisely.** It was called "shared company
+  assets" in one place and "cross-tenant" in another; a wiki is neither. The
+  contract says **public assets**, and `midgard/README.md` names what does *not*
+  belong: company knowledge, which lives at `$YMIR_HOME/hodd/identity/companies/`.
+- **`bin/private-guard.sh` gains a tenant-document rule** so the shape cannot
+  return: a `company_wiki/`, `wiki/`, `policies/`, `handbook/` or `vision`/
+  `strategy`/`roadmap` document staged in the public tree is refused, with a
+  message naming where it belongs. Verified by planting `midgard/company_wiki/policies.md`.
+- **Nothing had leaked.** A full sweep of every tracked midgard file for personal
+  handles, home paths, key shapes, tunnel UUIDs and LAN/tailnet addresses found
+  no hits — the ingress configs use `${VARS}` and `example.org` throughout, and
+  the DB schema is generic with row-level security on every tenant table.
+
+## 2026-09-17 — AGENTS.md states the one law: no private data in the public repo
+
+- **The law is now first.** A `first_law` block sits directly under the mandate
+  in `AGENTS.md`: never store personal or private data in this repo — not a
+  secret, a key, a name, a plan, a schedule, a client, a credential, or a note.
+  The repo is public; private data lives at `$YMIR_HOME`, under `hodd/`.
+- **The private-data section was rebuilt against the disk.** It had duplicated
+  `secrets/` and `identity/` lines, no `hodd/` level, and a layout that no longer
+  matched the home. It now shows the real tree, names `$YMIR_HOME/hodd/` as *the*
+  private data path, and records that `bin/hoard-lib.sh` is the one source of
+  truth for it.
+- **Every `$YMIR_HOME/...` path in the file was corrected** to `$YMIR_HOME/hodd/...`
+  — the directory rules table, the registry reference, the secrets reference, and
+  the append-only ledger path all pointed at the old flat layout.
+- **Two wards are now documented**: `bin/secret-guard.sh` (a secret entering the
+  repo) and Eir's `hoard` surface (private data drifting outside the hoard, or a
+  `.ymir-layout.yaml` naming a path that does not exist).
+- **Staging discipline is written down.** Stage named files in the home, never
+  `git add -A` — a scratch file written seconds earlier gets swept into a commit
+  and pushed. This happened this day and cost a history rewrite.
+- **`hodd/AGENTS.example.md`** carried the same stale flat paths and a wrong
+  command (`secret-guard.sh emit`, which does not exist); both corrected.
+
+## 2026-09-16 — the validator stops calling a dead visualizer healthy
+
+`bin/ymir-validate.sh` reported `visualizer PASS "UI built and served on :8437"`
+by looking at `./dist` alone. When the API had crashed on a bad `CMD_DB` and
+nothing was listening on `:8437`, the validator still said PASS — the false-pass
+class this night kept surfacing, in the very tool meant to catch it.
+
+- **The check now probes the port as well as the build.** `dist` missing → FAIL;
+  built but nothing on `:8437` → FAIL with the fix (`run scripts/start.sh`);
+  built and listening → PASS. A PASS now means the thing is actually up.
+- **The smidja-db check resolves the same DB pair** `scripts/start.sh` and
+  `bin/smidja-bootstrap.sh` do (an existing `$YMIR_HOME/smidja/smidja.db` first,
+  then an in-repo copy, `SMIDJA_DB` override) — previously it named the home path
+  only, so an in-repo DB read as missing.
+- `galdr-reread`: `assets/installation.md` — a `visualizer` PASS means built *and*
+  listening.
+
+## 2026-09-16 — the roster's effect lands, and the backend pin stops being committable
+
+Applying the private roster (`bin/agents-config.sh apply`) writes the resolved
+model into each agent's canonical profile. Flipping the two local agents to Pi
+made that visible — and surfaced a small ignore hole.
+
+- **Profiles follow the roster.** `sindri-developer.md` and `kvasir-scout.md`
+  now carry their **Pi** ids (`llamacpp-coder/qwen3-coder-30b`,
+  `llamacpp/qwen3.5-9b`), and `huginn-researcher.md` its declared model — the
+  output of `apply` against the operator's roster. These profiles are what the
+  harnesses load, so the local agents now run on Pi rather than through OpenCode.
+- **`.agents/config/backend` is ignored.** The pinned terminal backend is
+  machine-local, but `config` is a **symlink** to `.agents/config`, so the
+  `config/*` rule never matched it and the pin was committable. The file is named
+  in `.gitignore` instead.
+
+## 2026-09-16 — the roster can finally run an agent on Pi
+
+`bin/agents-config.sh apply` wrote **every** agent's model into `opencode.json`'s
+agent block, whatever harness that agent used. So an agent set to run on **Pi**
+(native local models) would have had its Pi model id —
+`llamacpp/qwen3.5-9b` — written into OpenCode's config, which cannot resolve it.
+That is why the roster's two local agents were pinned to `harness: opencode` with
+opencode-style ids: there was no working way to put an agent on Pi.
+
+- **`apply` is now harness-aware.** Only `opencode`-harness agents are written
+  into `opencode.json`; a `pi` (or `hermes`) agent is left out, its model id going
+  to the resolve cache that `bin/agent-run.sh` reads. The providers block is
+  unchanged — a provider's endpoint is a real fact OpenCode may still want.
+- The way this is meant to be used: declare a local agent's model as its **Pi**
+  id (`llamacpp/qwen3.5-9b`, `llamacpp-coder/qwen3-coder-30b` — the ids `pi
+  --list-models` reports) with `harness: pi`; the roster is then Pi-driven with no
+  per-machine hand-editing.
+- `galdr-reread`: `assets/harness-integration/README.md` — the two writers of
+  `opencode.json`, and the rule that only OpenCode agents belong in it.
+
+## 2026-09-16 — the mesh reaches Teams and Anchor, and `show` stops guessing
+
+`bin/a2a-mcp.sh` wired only the well (`engram`) and the mesh (`a2abridge`). The
+**Teams** plane and **Anchor** memory existed only in the operator's personal
+harness config, so no agent *inside* Ymir could see tickets or anchored memory —
+and `a2a-mcp.sh show` insisted on a **fixed** server list, reporting
+`wayofteams-mcp not on PATH` even when the plane was wired and working.
+
+- **Remote MCP servers, URL-driven.** `bin/a2a-mcp.sh` now wires `wayofteams`
+  (from `WAYOFTEAMS_MCP_URL`) and `way-of-anchor-sse` (from `ANCHOR_MCP_URL`).
+  OpenCode gets them natively (`type: remote`); Pi, which has no remote
+  transport, gets them through the `mcp-remote` stdio bridge. A URL wins over a
+  local `wayofteams-mcp` binary when both exist. The URLs are credential-ish and
+  live in the private platform env — never the tracked tree.
+- **`show` reports what is actually wired.** It enumerates every key present in
+  Pi's `mcpServers` and OpenCode's `mcp` (union with what this run would add), so
+  a hand-added or previously-installed server is visible, and the hint only fires
+  when Teams/Anchor is genuinely absent.
+- `galdr-reread`: `assets/harness-integration/README.md` — the MCP scope is now
+  well · mesh · Teams · Anchor, with the two env keys named.
+
+## 2026-09-16 — the credential reaches the gate, and the hall stops leaking an IP
+
+Setting the operator password had **no effect**. This is the bug that made that
+true, and the runtime state that leaked a private address.
+
+- **`scripts/start.sh` never loaded the platform env for the gate.** The gate is
+  `bun run apps/hlidskjalf/server/index.ts`, and the server reads
+  `process.env.HLIDSKJALF_AUTH` — but the launcher passed only `PORT`, and nothing
+  sourced `.env.local`. So a credential written by `bin/ymir-setup-auth.sh`
+  (correctly: `0600`, gitignored) never arrived, and because the gate treats an
+  empty `GATE_AUTH` as authenticated (`authed: GATE_AUTH ? … : true`) the gate
+  stayed **open**. `start.sh` now loads `.env.local` once, before the ports, for
+  every service it raises — the gate, Bifrost and Mimir.
+- **`apps/odrerir/.astro/dev.json` was tracked.** Astro rewrites it on every
+  start with the live `pid` and the host's own addresses (LAN + tailnet) — a
+  private-IP leak into a public tree. It is now untracked and gitignored; the
+  generated types beside it stay tracked.
+- `galdr-reread`: `assets/hlidskjalf-ui.md` (the gate must receive the credential)
+  and `assets/odrerir-hall.md` (`.astro/dev.json` is runtime state).
 
 ## 2026-09-17 — the fragment convention is enforced where GitHub runs it
 
