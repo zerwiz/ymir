@@ -21,7 +21,7 @@ way in, observe on the way out.
 
 | Component | Path | Role |
 |---|---|---|
-| Store | `.agents/memory/kaia.engram` | the single SQLite memory (episodes, facts, entities) |
+| Store | `$YMIR_HOME/hodd/memory/kaia.engram` | THE single SQLite memory (episodes, facts, entities) — one well, always in the hoard (Rule 04/07); resolved via `hoard_memory_store` (hoard-lib) or the `ENGRAM_DB` override |
 | Append log | `.agents/memory/well/episodes.jsonl` | the raw episode log (source of truth for re-seeding) |
 | HTTP bridge | `bin/mimir-bridge.py` (+ `bin/mimir-bridge.sh`) | the `:4602` face over the engram library |
 | CLI | `bin/mimir.sh` | operator CLI: `health` `recall` `observe` `timeline` |
@@ -70,7 +70,7 @@ which agent wrote it.
 
 ## 3. MCP for harnesses (the shared well)
 
-`engram-mcp --db $YMIR_ROOT/.agents/memory/kaia.engram` — **unscoped**, so
+`engram-mcp --db $YMIR_HOME/hodd/memory/kaia.engram` — **unscoped**, so
 every harness reads the one well. (A scoped `--agent-id` filters reads to that
 agent and would hide the seeded `well` episodes; pass `agent_id` per `remember`
 call instead when attribution is wanted.)
@@ -99,7 +99,7 @@ well_laws[5]{id,law}:
   1,"No mock data — the well holds only true observations; test writes are purged"
   2,"Drink before you act — recall on the way in; never answer the Allfather dry"
   3,"Water it after — observe a lesson once it lands"
-  4,"Repo-local — the store is .agents/memory/kaia.engram; never an external repo"
+  4,"Hoarded — the store is $YMIR_HOME/hodd/memory/kaia.engram (one well, never a duplicated migrated copy)"
   5,"One well — every harness shares it; scope per-call, never per-server"
 ```
 
@@ -125,8 +125,8 @@ python3 - <<'PY'
 import json
 from datetime import datetime
 from engram import Engram
-eng = Engram(path=".agents/memory/kaia.engram", agent_id="well")
-for l in open(".agents/memory/well/episodes.jsonl"):
+eng = Engram(path="~/Documents/Ymir/hodd/memory/kaia.engram", agent_id="well")
+for l in open("~/Documents/Ymir/hodd/memory/well/episodes.jsonl"):
     if not l.strip().startswith("{"): continue
     e = json.loads(l); ts = e.get("timestamp")
     when = datetime.fromisoformat(ts.replace("Z","+00:00")) if ts else None

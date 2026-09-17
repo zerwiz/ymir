@@ -396,7 +396,7 @@ install[23]{step,what,self-heals}:
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
-  "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage"
+  "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage — the store is ONE well in the hoard ($YMIR_HOME/hodd/memory/kaia.engram), resolved via hoard-lib or ENGRAM_DB"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
   "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh"

@@ -36,8 +36,15 @@ if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp.json"; else PI_MCP="$HOME/.pi/
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
 ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
-ENGRAM_DB="${ENGRAM_DB:-$YMIR_HOME/memory/kaia.engram}"
+# The well is ONE memory and it lives in the hoard — always. An explicit
+# ENGRAM_DB is the operator's escape hatch; without it the hoard decides.
+if [ -n "${ENGRAM_DB:-}" ]; then
+  ENGRAM_DB_ABS="$ENGRAM_DB"
+else
+  . "$SCRIPT_DIR/hoard-lib.sh" 2>/dev/null || true
+  hoard_memory_store ENGRAM_DB_ABS
+fi
+ENGRAM_DB="$ENGRAM_DB_ABS"
 
 # The Teams plane (WayOfTeams) and Anchor memory are REMOTE MCP servers, named by
 # URL. The URL is credential-ish, so it comes from the environment — never the

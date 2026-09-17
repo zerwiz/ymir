@@ -56,10 +56,10 @@ copy "$ROOT/state" "$YMIR_HOME/state"
 # 7. Migrate data/ → YMIR_HOME/data/
 copy "$ROOT/data" "$YMIR_HOME/data"
 
-# 8. Migrate .agents/memory/kaia.engram* → YMIR_HOME/memory/
-copy "$ROOT/.agents/memory/kaia.engram"       "$YMIR_HOME/memory/kaia.engram"
-copy "$ROOT/.agents/memory/kaia.engram-wal"   "$YMIR_HOME/memory/kaia.engram-wal"
-copy "$ROOT/.agents/memory/kaia.engram-shm"   "$YMIR_HOME/memory/kaia.engram-shm"
+# 8. Migrate .agents/memory/kaia.engram* → the HOARD's memory (the one store)
+copy "$ROOT/.agents/memory/kaia.engram"       "$YMIR_HOME/hodd/memory/kaia.engram"
+copy "$ROOT/.agents/memory/kaia.engram-wal"   "$YMIR_HOME/hodd/memory/kaia.engram-wal"
+copy "$ROOT/.agents/memory/kaia.engram-shm"   "$YMIR_HOME/hodd/memory/kaia.engram-shm"
 
 # 9. Migrate smidja/smidja_data/smidja.db* → YMIR_HOME/smidja/
 copy "$ROOT/smidja/smidja_data/smidja.db"          "$YMIR_HOME/smidja/smidja.db"
