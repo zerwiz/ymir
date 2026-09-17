@@ -211,6 +211,12 @@ if os.path.exists(oc):
         changed.append(f"provider:{name}")
     ablock = d.setdefault("agent", {})
     for a in agents:
+        # opencode.json is OpenCode's file: only OpenCode agents belong in it. A
+        # pi (or hermes) agent's model is that harness's id — e.g.
+        # `llamacpp/qwen3.5-9b` — which OpenCode cannot resolve, so writing it
+        # here would hand OpenCode an agent it cannot run. Skip them.
+        if harness_of(a) != "opencode":
+            continue
         m = resolve_model(model_of(a))
         if a in ablock:
             if ablock[a].get("model") != m:
