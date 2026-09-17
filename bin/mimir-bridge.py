@@ -29,7 +29,14 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
-STORE = Path(os.environ.get("ENGRAM_DB", str(ROOT / ".agents/memory/kaia.engram")))
+# The well is ONE memory and it lives in the hoard — never in the tree and
+# never in a migrated copy. The shell bridge passes ENGRAM_DB; this default
+# (hoard | legacy-local) keeps a hand-started bridge honest either way.
+_home = Path(os.environ.get("YMIR_HOME", str(Path.home() / "Documents/Ymir")))
+STORE = Path(os.environ.get(
+    "ENGRAM_DB",
+    str(_home / "hodd/memory/kaia.engram")
+)).expanduser()
 HOST = os.environ.get("MIMIRSBRUNN_HOST", "127.0.0.1")
 PORT = int(os.environ.get("MIMIRSBRUNN_PORT", os.environ.get("ENGRAM_PORT", "4602")))
 DEFAULT_AGENT = os.environ.get("ENGRAM_AGENT_ID", "kaia")
