@@ -1,9 +1,71 @@
 
+
 ## 2026-09-17 — the installer has a design of its own
 
 - **The result is rendered, not dumped.** The plan got the cloth and the install did not: twenty-nine raw TOON rows and a poem, which the Allfather rightly called zero design. Now the same rows are rendered for the eye on stderr — a rule, a verdict (*"it stands — 22 steps done · 7 warned · 1 skipped"*), every warning with its reason, and the skips in one line. The TOON stays the data on stdout; the design is for the person.
 - **The consent shows the plan again.** `--colour` renders on stderr and I had sent *both* streams to `/dev/null`, so the plan was invisible at the very moment it was being accepted.
 - **The seat can mend its own runtime**, and says why when it cannot — npm gates Electron postinstall, so a fresh install otherwise ends with a window that cannot open.
+
+
+## 2026-09-17 — one well, in the hoard: every reader of Kaia's memory resolves the hoard store
+
+- **The memory is ONE store and it lives in the hoard** —
+  `$YMIR_HOME/hodd/memory/kaia.engram` — never in the tree, never in a
+  migrated copy. `bin/hoard-lib.sh` gains `hoard_memory_store` (the one
+  resolver); every reader honors it or an explicit `ENGRAM_DB`:
+  `mimir-bridge.sh`/`mimir-bridge.py`, `mimir-reflect.sh`, `a2a-mcp.sh`,
+  `ymir-install.sh` step_memory, and the rendered `.pi/mcp.json.example`
+  (`__YMIR_HOME__/hodd/memory/kaia.engram`).
+- **The duplicate is dead.** The old store (`$YMIR_HOME/memory/kaia.engram`,
+  plus the migration seed copy) is struck from this machine and the vault;
+  its 8 episodes were seeded into the hoard store first. The public ymir
+  repo's `.agents/memory/kaia.engram*` leftovers are deleted (already guarded
+  by `.gitignore`) and the 0003 migration now copies INTO the hoard.
+- The Allfather's decision, accepted and recorded everywhere: the well must
+  travel between his computers, so it rides the private vault as one store.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/memory-well.md` — the
+Store row, MCP command, law #4, and the Python recipe now name the hoard path.
+
+## 2026-09-17 — the local git round joins the loom; the stack's doors are in the registry
+
+- **`bin/nornir-job-forgejo-git.sh` (02:45)** — reads the local forge's open
+  issues each night (`$YMIR_HOME/config/forge.env` names the door; token
+  optional), writes a daily digest to the hoard, carves Rune
+  `forgejo / git.issues` — or `git.door-down` (exit 1) when the tunnel is
+  closed, so a dead door is seen at sunrise. Unarmed without a URL, honestly.
+- **The marketing stack's doors are now in the registry** —
+  `marketing_doors[6]` (Mautic · Postiz · Activepieces · Forgejo · SearXNG ·
+  Grafana) with reach notes, mirrored to the Galdr asset. Agents (Bragi ·
+  Sindri) provision the stack for any user via
+  `bin/ymir-marketing-stack.sh`, or reach the Allfather's live server stack.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — §3.7
+(Forgejo round) and §3.8 (marketing stack provisioner); registry mirrored.
+
+## 2026-09-17 — the schedule is the user's: cron leaves the tree, lives in the home
+
+- **The tracked tree no longer carries the live cron schedule.** The Nornir
+  scheduler now resolves the schedule in this order: `BROKK_CONFIG_OVERRIDE`
+  (explicit) → **the home's own `$YMIR_HOME/config/cron.yaml`** (users set
+  their jobs there) → the repo's `config/cron.yaml.example` (a template, never
+  the live list). `bin/nornir-cron-start.sh` resolves the home through
+  `bin/hoard-lib.sh`, the one answer the whole runtime shares.
+- `config/cron.yaml` → `config/cron.yaml.example` (the tracked template stays;
+  the live schedule lives in the operator's home).
+- **The marketing stack can be provisioned on any computer** —
+  `bin/ymir-marketing-stack.sh up|status|down|doors` stands Mautic + Postiz +
+  Activepieces (+ optionally Forgejo) from the same OSS engines the server
+  runs, env-driven, ports virtualized, secrets generated once into the home
+  (never inline); agents (Bragi · Sindri) provision it for any user.
+- **Bragi's scrape round, honest to Firecrawl** — `bin/nornir-job-bragi-scrape.sh`
+  reads the operator's `config/scrape-sources.yaml` and scrapes with the real
+  Firecrawl SDK (scrape/search + markdown, BYOK key from the home's secrets),
+  landing clean markdown in the marketing workspace and carving a Rune.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — §2
+rewritten (the schedule is the user's; example template; the four-inputs
+contract unchanged).
 
 ## 2026-09-17 — 0.1.14: the panels reach the gate, and the fourth window ships
 
@@ -28,6 +90,7 @@
   its own name rather than the fork's. A fresh install was still receiving the
   old voice through the `0.1.8-alpha` pin.
 - **`@zerwiz/ymir@0.1.13`** is the packet that carries them.
+
 
 ## 2026-09-17 — 0.1.12: the icons reach the live tree, and a missing surface is a failure
 

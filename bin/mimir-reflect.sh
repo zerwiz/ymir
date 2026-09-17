@@ -11,7 +11,14 @@
 #   YMIR_ROUTER_URL=http://127.0.0.1:8080/v1 YMIR_REFLECT_MODEL=qwen3.6-35b-a3b bin/mimir-reflect.sh
 set -euo pipefail
 
-WELL="${YMIR_WELL:-${YMIR_HOME:-$HOME/Documents/Ymir}/memory/kaia.engram}"
+# The well is ONE memory and it lives in the hoard — always (Rule 04/07).
+# An explicit YMIR_WELL/ENGRAM_DB is the operator's escape hatch.
+if [ -n "${YMIR_WELL:-}" ] || [ -n "${ENGRAM_DB:-}" ]; then
+  WELL="${YMIR_WELL:-${ENGRAM_DB:-}}"
+else
+  . "$SCRIPT_DIR/hoard-lib.sh" 2>/dev/null || true
+  hoard_memory_store WELL
+fi
 BASE="${YMIR_ROUTER_URL:-http://127.0.0.1:1234/v1}"
 MODEL="${YMIR_REFLECT_MODEL:-apodex-1.0-mini}"
 

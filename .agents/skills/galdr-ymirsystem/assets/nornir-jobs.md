@@ -63,16 +63,37 @@ same day. That is deliberate: cron is idempotent-by-date, not retrying-by-failur
 | `BROKK_ROOT_OVERRIDE` | script's parent | Root when `BROKK_HOME` unset. |
 | `BROKK_HOME` | `$ROOT` | Home owning the jobs and state. |
 | `BROKK_STATE_OVERRIDE` | `$YMIR_STATE_DIR` (`<home>/state`, via `bin/hoard-lib.sh`) | Scheduler state directory — in the home the operator chose, never in the code tree. |
-| `BROKK_CONFIG_OVERRIDE` | `$BROKK_HOME/config` | Where `cron.yaml` lives. |
+| `BROKK_CONFIG_OVERRIDE` | — (see §2) | Where `cron.yaml` lives — an explicit override always wins. |
 | `BROKK_CRON_LOG_MAX_BYTES` | `1048576` | Rotation threshold. |
 | `BROKK_REALM` | `""` | Realm exported to jobs (jobs also fall back to `data/realm.md`). |
 
 ---
 
-## 2. `config/cron.yaml` format
+## 2. The schedule is the user's — `$YMIR_HOME/config/cron.yaml`
+
+**The tracked tree ships a template, never the live job list.** The scheduler
+resolves the schedule in this order:
+
+1. `BROKK_CONFIG_OVERRIDE` (explicit, unmistakeable);
+2. the **home's own** `$YMIR_HOME/config/cron.yaml` — where an operator edits
+   their real jobs (`$YMIR_HOME` resolves through `bin/hoard-lib.sh`, the one
+   answer the whole runtime shares);
+3. the repo's `config/cron.yaml.example` — a template a fresh install copies,
+   **never** a live schedule. A tracked `config/cron.yaml` is not consulted.
+
+To take charge of your schedule:
+
+```bash
+cp ~/ymir/config/cron.yaml.example ~/Documents/Ymir/config/cron.yaml
+# edit ~/Documents/Ymir/config/cron.yaml, then:
+bin/nornir-cron-start.sh --status   # jobs=<n> from YOUR schedule
+bin/nornir-cron-start.sh            # resolve + start (idempotent)
+```
+
+### The format
 
 ```
-# Nornir cron schedule — real jobs
+# Nornir cron schedule — the user's own jobs
 # Format: HH:MM <command>. Started idempotently by bin/nornir-cron-start.sh.
 07:00 bin/nornir-job-daily-briefing.sh
 06:00 bin/nornir-job-observer.sh
@@ -83,7 +104,8 @@ same day. That is deliberate: cron is idempotent-by-date, not retrying-by-failur
 - One job per line: `HH:MM <command>` (24-hour, zero-padded).
 - Blank lines and lines starting with `#` are ignored.
 - Commands are run with `bash -lc` from `$BROKK_HOME`, so relative `bin/...` paths resolve.
-- `cron.yaml` is private/gitignored (`config/*` in `.gitignore`).
+- The example template lives at `config/cron.yaml.example` in the tracked tree;
+  an operator's real schedule is private in their home (`$YMIR_HOME/config/`).
 
 ---
 
@@ -188,6 +210,39 @@ round, `nornir / nsr.compliance.failed` (exit 1) naming the failed gates.
 
 - The morning briefing reads the ledger, so a FAIL is seen at 07:00, not
   found by accident.
+
+### 3.7 Forgejo — the local git round (`bin/nornir-job-forgejo-git.sh`, 02:45)
+
+The issue-to-PR loop, read each night: lists the local forge's open issues and
+carves one Rune with the tally, so a growing queue (or a dead tunnel) is seen
+at sunrise. The forge address is the user's, from the home — never the tree:
+`$YMIR_HOME/config/forge.env` (`FORGEJO_URL`, optional `FORGEJO_TOKEN`).
+
+| Reads | Writes |
+|---|---|
+| `$YMIR_HOME/config/forge.env` · `GET {forge}/api/v1/repos/issues/search?state=open` | digest `$_HOME/memory/daily/forgejo-YYYY-MM-DD.md` · Rune `forgejo / git.issues` |
+
+- No `FORGEJO_URL` configured → clean exit (the loop is not armed); a closed
+  door (tunnel down) → exit 1 and Rune `forgejo / git.door-down`.
+- The forge may be the server's (`forgejo.zerwiz.org` → :3030) or a locally
+  provisioned one (`bin/ymir-marketing-stack.sh --with-forgejo`).
+
+### 3.8 The marketing stack (`bin/ymir-marketing-stack.sh`)
+
+Not a cron job — a **provisioner**: stands Mautic + Postiz + Activepieces
+(+ optional Forgejo) on ANY computer, the same OSS engines the server runs.
+Env-driven (ports virtualized), secrets generated once into the home, never
+inline. Agents (Bragi for marketing, Sindri for git) run it for any user.
+
+```
+bin/ymir-marketing-stack.sh up|status|down|doors
+# doors: Mautic :8001 · Postiz :8003 · Activepieces :8005 · Forgejo :8007 (defaults)
+```
+
+- Rune `marketing / stack.<action>` carved on each provision action.
+- The Allfather's live stack is the server's (`zerwizserver`); its public
+  doors are tunnel-driven (`cloudflared`) — see the registry's
+  `marketing_doors[]` table.
 - Idempotent: gates are pure checks; the cron date-guard suppresses repeat
   dispatch within a day; safe to invoke by hand (`bash bin/nornir-job-nsr-compliance.sh`).
 
