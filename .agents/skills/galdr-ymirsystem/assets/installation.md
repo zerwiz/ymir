@@ -259,6 +259,35 @@ clone's marks already existed. `bin/desktop-place.sh entries` is the launcher ha
 alone (any Linux desktop), the installer's `marks` step calls it, and both the
 desktop database and the icon cache are refreshed after.
 
+### Every notice can be silenced — `ymir config`
+
+Some lines are information the first time and noise the tenth. A user must be able
+to say **not again**, once, and be believed. The preferences live in the operator's
+settings (`<home>/config/notices.conf`, one `key=on|off` per name) and the door is:
+
+```
+ymir config                          # what is shown, and what is not
+ymir config notice version off       # silence one; `on` restores it
+judgment[4]{key,what}:
+  "version","the line that says which version moved to which"
+  "patience","the long-hour words before a slow install or build"
+  "next","the where-to-go-from-here block at the end"
+  "hints","the one-line helpers that say how to hide a notice"
+```
+
+Every notice that can be silenced **says so once**, in the cloth's faint voice —
+`(not again: ymir config notice version off)` — so the way out is discoverable
+without a manual. Absent means on; a preference is honoured by the shell cloth
+(`notice_wanted`, `notice_hint`) and by the CLI alike. `ymir-install.sh`'s marks
+and the raise path honour it too.
+
+### Four surfaces, one raise
+
+`ymir raise` lifts the whole hall — the SPA (`:3888`), Óðrerir (`:4322`), the
+board (`:8437`), and the commit-hall Sessrúmnir rises in the same motion (it is an
+Electron app of its own, not a browser surface). `ymir-install.sh`'s desktop step
+opens **one window per surface** rather than a single "both".
+
 ### What a user went from, and to
 
 `npm install -g` prints *"changed 266 packages"* and no versions. The CLI records
