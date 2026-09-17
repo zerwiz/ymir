@@ -56,7 +56,7 @@ bin/agent-run.sh hnoss "design a hero section"
 
 Keep a per-machine overlay `config/agents.<hostname>.yaml`; it deep-merges over
 the base. Example: `config/agents.machine.example.yaml`. Override the host with
-`YMIR_AGENTS_MACHINE=omarchy-1`.
+`YMIR_AGENTS_MACHINE=omarchy`.
 
 ## Hosted models
 
