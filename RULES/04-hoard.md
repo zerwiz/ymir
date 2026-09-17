@@ -63,3 +63,35 @@ read. Operator-private documents — plans, strategy, roadmaps, the masterplan,
 `bin/docs-guard.sh` blocks a commit that stages such a document under `docs/`
 (wired into the pre-commit hook beside `secret-guard.sh`). When it fires, move
 the file to `$YMIR_HOME/docs/` in the private repo.
+
+---
+
+## Correction — 2026-09-17: hodd/ *is* the YMIR_HOME data path
+
+*Appended, citing the sections above; nothing above is rewritten.*
+
+The mapping table above ("What lives at YMIR_HOME") implies a **flat** layout —
+`hodd/identity/` → `$YMIR_HOME/identity/`, `data/` → `$YMIR_HOME/data/` — i.e.
+that the repo-side `hodd/` and the data path are two different locations. On a
+real home that reading produced **two parallel stores**: a flat
+`$YMIR_HOME/identity/` and `$YMIR_HOME/data/` alongside `$YMIR_HOME/hodd/identity/`
+and `$YMIR_HOME/hodd/data/`. They drifted, and the flat pair went stale.
+
+The truth on a live home, and the intent of this rule:
+
+- **`$YMIR_HOME/hodd/` *is* the private data path.** There is no second, flat
+  copy. `identity/`, `data/`, `docs/`, `secrets/`, `tenants/`, and the memory
+  well live **under `hodd/`**.
+- **`bin/hoard-lib.sh` is the single source of truth** for that path: it
+  resolves `${YMIR_HOARD:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd}`. A script
+  that needs the hoard calls `hoard_root`, never a hardcoded path.
+- **`.ymir-layout.yaml` records the real layout** and must name only paths that
+  exist. A layout entry pointing at a nonexistent directory is stale, and a
+  stale map is what let private work land outside the hoard.
+- The three-way reading in the section above (`hodd/x/` → `$YMIR_HOME/x/`) is
+  **superseded**: read every row as `$YMIR_HOME/hodd/x/`.
+- The "docs/ is public" section's closing line ("move the file to
+  `$YMIR_HOME/docs/`") is likewise read as **`$YMIR_HOME/hodd/docs/`**.
+
+Confirmed by the Allfather 2026-09-17. Drift of this kind is caught by
+`bin/eir-doctor.sh`'s hoard placement check.
