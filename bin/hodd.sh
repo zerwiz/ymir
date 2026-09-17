@@ -42,6 +42,24 @@ PY
   printf 'hodd[1]{action,file}:\n  "load","%s"\n' "$f"
 }
 
+# Resolve a secrets path: if the plaintext is absent but an .age sibling and the
+# hoard key exist, decrypt to stdout. Prints a path to a readable file (a temp
+# when decrypted) via the result var. Secrets stay encrypted at rest; the agent
+# never reads ciphertext directly — it asks for the resolved path.
+resolve_secret() {  # <file> <result-var>
+  local f=$1 var=$2 tmp key
+  if [ -r "$f" ]; then printf -v "$var" '%s' "$f"; return 0; fi
+  if [ -r "$f.age" ]; then
+    key="$HOARD/secrets/age.key"
+    command -v age >/dev/null 2>&1 || { printf 'error: %s is encrypted but age is not installed\nhelp: sudo pacman -S age\n' "$f.age" >&2; return 1; }
+    [ -r "$key" ] || { printf 'error: encrypted %s but no key at %s\n' "$f.age" "$key" >&2; return 1; }
+    tmp="$(mktemp)"; chmod 600 "$tmp"
+    age -d -i "$key" "$f.age" >"$tmp" 2>/dev/null || { rm -f "$tmp"; printf 'error: cannot decrypt %s\n' "$f.age" >&2; return 1; }
+    printf -v "$var" '%s' "$tmp"; return 0
+  fi
+  printf 'error: not readable: %s (and no %s.age)\n' "$f" "$f" >&2; return 1
+}
+
 case "$ACTION" in
   path)  printf '%s\n' "$HOARD" ;;
   init)
@@ -56,23 +74,29 @@ case "$ACTION" in
   load)
     f="${1:-}"; [ -n "$f" ] || { printf 'error: load needs a path under the Hoard\n' >&2; exit 2; }
     case "$f" in /*) ;; *) f="$HOARD/$f" ;; esac
-    load_env "$f" ;;
+    resolve_secret "$f" rf || exit 1
+    load_env "$rf"
+    case "$rf" in "$f") ;; *) rm -f "$rf" ;; esac ;;
   emit)
     # Print `export KEY=value` lines (quoting-safe) for the CALLER to eval, so
     # `eval "$(bin/hodd.sh emit <file>)"` sets the vars in the invoking shell.
+    # Transparently decrypts an .age sibling when the plaintext is absent.
     f="${1:-}"; [ -n "$f" ] || { printf 'error: emit needs a path under the Hoard\n' >&2; exit 2; }
     case "$f" in /*) ;; *) f="$HOARD/$f" ;; esac
-    [ -r "$f" ] || { printf 'error: not readable: %s\n' "$f" >&2; exit 1; }
-    python3 - "$f" <<'PY'
+    resolve_secret "$f" rf || exit 1
+    python3 - "$rf" <<'PY'
 import re, shlex, sys
 for line in open(sys.argv[1]):
     m = re.match(r'^([A-Za-z_][A-Za-z0-9_]*)=(.*)$', line.rstrip("\n"))
     if m:
         print(f"export {m.group(1)}={shlex.quote(m.group(2))}")
 PY
+    case "$rf" in "$f") ;; *) rm -f "$rf" ;; esac
     ;;
   tenant)
     t="${1:-}"; [ -n "$t" ] || { printf 'error: tenant needs a name\n' >&2; exit 2; }
-    load_env "$HOARD/tenants/$t/.env" ;;
+    resolve_secret "$HOARD/tenants/$t/.env" rf || exit 1
+    load_env "$rf"
+    case "$rf" in "$HOARD/tenants/$t/.env") ;; *) rm -f "$rf" ;; esac ;;
   *) printf 'error: unknown action %s\nhelp: bin/hodd.sh [path|init|ls|load|emit|tenant]\n' "$ACTION" >&2; exit 2 ;;
 esac
