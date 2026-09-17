@@ -197,6 +197,70 @@ YAML
   add tree OK "workspace/{personal} · companies · registries · hoard (outside the repo) (created $created)"
 }
 
+# ── 2b. app repos (the app split) ────────────────────────────────────────────
+# The apps live in their OWN repos (zerwiz/hlidskjalf · hlidskjalf-mobile ·
+# odrerir · sessrumnir · smidja), registered in the home registry with a
+# `repo: apps/<path>` block. The monorepo never tracks them; installation
+# clones each into the tree — never guessing a remote, always reading the
+# registry. A present repo is fast-forwarded; a missing one cloned. The smithy
+# engine (apps/smidja) is stamped from the cloned factory's templates, exactly
+# as install.py does for a target repo.
+step_apps() {
+  local reg="$HOARD/identity/projects.yaml"
+  if [ ! -r "$reg" ]; then
+    add apps SKIP "no registry — no app repos to pull ($reg)"
+    return 0
+  fi
+  # Parse blocks that carry `repo: apps/<path>` and a `git:` inline dict.
+  local entries
+  entries=$(awk '
+    /^  - id:/ { repo="" }
+    /^    repo: apps\// { repo=substr($2, 6) }
+    /^    git: / {
+      line=$0; host=""; owner=""; grepo=""
+      if (match(line, /host: [A-Za-z0-9._-]+/)) host=substr(line, RSTART+6, RLENGTH-6)
+      if (match(line, /owner: [A-Za-z0-9_-]+/)) owner=substr(line, RSTART+7, RLENGTH-7)
+      if (match(line, /repo: [A-Za-z0-9._-]+/)) grepo=substr(line, RSTART+6, RLENGTH-6)
+      if (repo != "" && owner != "" && grepo != "") print repo "|" host "|" owner "|" grepo
+      repo=""
+    }' "$reg")
+  if [ -z "$entries" ]; then
+    add apps OK "no apps/ projects registered — nothing to pull"
+    return 0
+  fi
+  local ok=0 skip=0 fail=0 missing=0
+  while IFS='|' read -r rel host owner grepo; do
+    [ -n "$rel" ] || continue
+    local path="$ROOT/apps/$rel"
+    if [ "$CHECK" = 1 ]; then
+      if [ -d "$path/.git" ]; then add apps OK "$rel present ($owner/$grepo)"; ok=$((ok+1));
+      elif [ -d "$path" ]; then add apps WARN "$rel present but not a git clone — re-install to replace"; skip=$((skip+1));
+      else add apps WARN "$rel absent — a full run clones $owner/$grepo"; missing=$((missing+1)); fi
+      continue
+    fi
+    if [ -d "$path/.git" ]; then
+      if (cd "$path" && git fetch origin 2>/dev/null && git merge --ff-only origin/main >/dev/null 2>&1); then add apps OK "$rel up to date ($owner/$grepo)"; ok=$((ok+1));
+      else add apps OK "$rel present ($owner/$grepo; pull refused — local changes?)"; skip=$((skip+1)); fi
+    elif [ -d "$path" ]; then
+      add apps WARN "$rel present but not a git clone — move $path aside and re-run"; skip=$((skip+1))
+    else
+      local url="https://github.com/$owner/$grepo.git"
+      if git clone -q "$url" "$path" 2>/dev/null; then add apps OK "$rel cloned ($owner/$grepo)"; ok=$((ok+1));
+      else add apps WARN "$rel clone failed — run: git clone $url $path"; fail=$((fail+1)); fi
+    fi
+  done <<< "$entries"
+  # The smithy engine: apps/smidja is stamped from the cloned factory's
+  # templates (the monorepo tracks neither). The config template follows.
+  local factory="$ROOT/apps/smidja-factory" eng="$ROOT/apps/smidja"
+  if [ "$CHECK" = 0 ] && [ -d "$factory/templates/smidja" ] && [ ! -e "$eng/smidja_modules" ]; then
+    mkdir -p "$eng"
+    cp -rn "$factory/templates/smidja/." "$eng/" 2>/dev/null
+    [ -f "$factory/templates/smidja.config.yaml" ] && { mkdir -p "$eng/smidja_smidja_config"; cp -n "$factory/templates/smidja.config.yaml" "$eng/smidja_smidja_config/smidja.config.yaml" 2>/dev/null; }
+    add apps OK "smidja engine stamped into apps/smidja"
+  fi
+  if [ "$fail" -gt 0 ]; then add apps WARN "$fail app clone(s) failed (offline?)"; fi
+}
+
 # ── 3. engines ───────────────────────────────────────────────────────────────
 step_engines() {
   [ "$SKIP_ENGINES" = 1 ] && { add engines SKIP "--skip-engines"; return; }
@@ -641,7 +705,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
+step_panes; step_prereqs; step_tree; step_apps; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
 # Migrations MOVE private data — that is a write, and `--check` promises none.
 # Only a real run heals the home forward; the preview leaves it untouched.
 if [ "$CHECK" = 0 ]; then bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; fi
