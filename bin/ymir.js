@@ -49,6 +49,25 @@ const faint = wrap('38;2;107;98;80');
 const blood = wrap('38;2;194;88;74');
 const bold = wrap('1');
 
+// ── what a user went from, and to ────────────────────────────────────────────
+// `npm install -g` prints "changed 266 packages" and no versions, so an operator
+// cannot see what moved. We can: record the version we last ran, and say the
+// transition once, on the first run after an update.
+const STATE_DIR = process.env.YMIR_STATE_DIR || path.join(process.env.YMIR_HOME || path.join(require('node:os').homedir(), 'Documents', 'Ymir'), 'state');
+function versionNotice() {
+  try {
+    const f = path.join(STATE_DIR, 'version');
+    const seen = fs.existsSync(f) ? fs.readFileSync(f, 'utf8').trim() : '';
+    if (seen === pkg.version) return;
+    fs.mkdirSync(STATE_DIR, { recursive: true });
+    fs.writeFileSync(f, pkg.version + '\n');
+    if (!seen) return;                       // a first install has nothing to compare
+    process.stderr.write(
+      bone(`  the tree moved  `) + faint(`${seen} → `) + bronze(`${pkg.version}`) + '\n' +
+      faint(`  run \`ymir eir\` to see what stands, \`ymir raise\` to lift the hall\n\n`));
+  } catch { /* a version notice must never break a door */ }
+}
+
 // ── the doors ────────────────────────────────────────────────────────────────
 // verb → { script, args } — args are prepended to whatever the operator passes,
 // so a verb can be a doorway to a sub-verb of a script that has several.
@@ -108,6 +127,7 @@ function run(script, args) {
 const argv = process.argv.slice(2);
 const first = argv[0];
 
+versionNotice();
 if (!first) run(DOORS.install.script, []);
 if (first === '--version' || first === '-v' || first === '-V') {
   process.stdout.write(`${pkg.version}\n`);

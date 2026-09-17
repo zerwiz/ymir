@@ -672,6 +672,13 @@ step_marks() {
   fi
   "$SCRIPT_DIR/design-icon.sh" mint --all >/dev/null 2>&1 || true
   n=$("$SCRIPT_DIR/design-icon.sh" install 2>/dev/null | grep -c '"ymir-') || n=0
+  # The launcher entries are the freedesktop half of desktop integration, and they
+  # belong to ANY Linux desktop — not only to Omarchy's window rules. A GNOME
+  # operator gets entries and icons and no window rules; before this, both halves
+  # sat behind the Omarchy gate and a packaged install placed nothing at all.
+  if [ -x "$SCRIPT_DIR/desktop-place.sh" ]; then
+    "$SCRIPT_DIR/desktop-place.sh" entries >/dev/null 2>&1 || true
+  fi
   [ -r "$HOME/.pi/agent/AGENTS.md" ] || [ -d "$HOME/.pi/agent" ] && {
     ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null || true
   }
