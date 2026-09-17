@@ -240,12 +240,17 @@ export function Forge() {
                 ? skills.map((s) => (
                     <button
                       key={s.id}
-                      className="forge-item"
+                      className="forge-item forge-item-skill"
                       aria-selected={skill?.id === s.id}
                       onClick={() => setSkill(s)}
                     >
-                      <span className="mono grow truncate">{s.name}</span>
-                      <RuneTag label={s.aett} glyph="ᛊ" color="var(--ymir-violet-1)" />
+                      <span className="forge-item-head">
+                        <span className="mono grow truncate">{s.name}</span>
+                        <RuneTag label={s.aett} glyph="ᛊ" color="var(--ymir-violet-1)" />
+                      </span>
+                      {s.description && (
+                        <span className="forge-item-desc truncate">{s.description}</span>
+                      )}
                     </button>
                   ))
                 : promptFiles.map((p) => (
