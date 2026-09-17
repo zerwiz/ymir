@@ -98,6 +98,13 @@ Rules that hold it honest:
 
 - `.shell` grid: `236px rail | 1fr`; rows `56px topbar · stage · stream`
   (the stream height is draggable, persisted in `streamHeight`).
+- The **Fleet graph** (`gates/Fleet.tsx`) lays the roster on a 100×100 canvas:
+  Brokk as the hub, everyone else in a square-ish grid fan (`cols =
+  ceil(sqrt(n))`, pitch ≥ one ring + label) so 20 agents never collide; rings
+  carry the house glyph from `DOMAINS[agent.domain]` with a `ymirlabs`
+  fallback, and the live cards come from `bin/hlidskjalf-agents.sh` — which
+  reads each figure's `domain:` frontmatter (never a hardcoded `ymirlabs` for
+  everyone).
 - `.rail` (brand · gates · tenants · status), `.topbar` (realm chip · search ·
   accent · density · trace index · account), `main.stage` (the gate), `.stream`
   (Ratatoskr + Runes, pausable).
