@@ -5,7 +5,7 @@
 # briefing — no model call — from four grounded inputs:
 #   1. open forge orders parsed from docs/masterplan.md (append-only source)
 #   2. live fleet/state under state/ (cron, metas, status, session lock)
-#   3. active plan status from docs/plans/*.md
+#   3. active plan status from memory/plans/*.md
 #   4. today's Runes tail from workspace/memory/runes_audit.md
 #
 # Output: svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md
@@ -40,8 +40,8 @@ BRIEF_DIR="${BROKK_BRIEF_DIR:-${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$
 BRIEF_FILE="$BRIEF_DIR/$DATE.md"
 MAX_ORDERS="${BROKK_BRIEF_MAX_ORDERS:-15}"
 MAX_RUNES="${BROKK_BRIEF_MAX_RUNES:-12}"
-MASTERPLAN="$ROOT/docs/masterplan.md"
-PLANS_DIR="$ROOT/docs/plans"
+MASTERPLAN="${BROKK_MASTERPLAN:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/docs/masterplan.md}"
+PLANS_DIR="${BROKK_PLANS_DIR:-${YMIR_HOME:-$HOME/Documents/Ymir}/memory/plans}"
 
 mkdir -p "$BRIEF_DIR" || { printf 'error: cannot create %s\n' "$BRIEF_DIR"; exit 1; }
 TMP="$BRIEF_DIR/.$DATE.md.tmp.$$"
@@ -90,11 +90,11 @@ if [ -r "$MASTERPLAN" ]; then
   done
   if [ "${total:-0}" -gt "$MAX_ORDERS" ]; then
     emit ""
-    emit "_(truncated — ${total} open orders total; see docs/masterplan.md §3)_"
+    emit "_(truncated — ${total} open orders total; see hodd/docs/masterplan.md §3)_"
   fi
   rm -f "$orders_tmp"
 else
-  emit "ABSENT: docs/masterplan.md not readable"
+  emit "ABSENT: hodd/docs/masterplan.md not readable"
 fi
 emit ""
 
@@ -105,7 +105,7 @@ if [ -r "$MASTERPLAN" ]; then
   awk '/^## 2\. Active Queue/ {on=1; next} /^## 3\./ {on=0} on && /^[0-9]+\. / {print}' "$MASTERPLAN" \
     | while IFS= read -r q; do emit "- ${q#* }"; done
 else
-  emit "ABSENT: docs/masterplan.md not readable"
+  emit "ABSENT: hodd/docs/masterplan.md not readable"
 fi
 emit ""
 
@@ -156,7 +156,7 @@ if [ -d "$PLANS_DIR" ]; then
     emit "- \`$pname\` — ${pstatus:-unknown}"
   done
 else
-  emit "ABSENT: docs/plans/ not readable"
+  emit "ABSENT: memory/plans/ not readable"
 fi
 emit ""
 

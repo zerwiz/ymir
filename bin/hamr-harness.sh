@@ -5,7 +5,7 @@
 # runtime the process tree is wearing so Brokk can choose the correct adapter,
 # launch flags, and dispatch profile. Ported from the upstream agent-distro
 # reference (bin/hamr-harness.sh) and retargeted to the Brokk runtime
-# (docs/plans/29-brokk-distro-runtime.md).
+# (memory/plans/core/29-brokk-distro-runtime.md).
 #
 # Usage:
 #   hamr-harness.sh                 print own harness:

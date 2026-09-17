@@ -5,7 +5,7 @@
 # actionable `signal:`/`stale:`/`check:`/`heartbeat:` line when something needs
 # the primary. The Pi extension (gna-pi-watch.ts) owns continuity and re-arms.
 # Ported/trimmed from the upstream agent-distro reference for plan 29
-# (docs/plans/29-brokk-distro-runtime.md).
+# (memory/plans/core/29-brokk-distro-runtime.md).
 #
 # Usage: syn-watch-arm.sh --restart
 #        syn-watch-arm.sh --handling-delivered <generation> --watcher-pid <pid>

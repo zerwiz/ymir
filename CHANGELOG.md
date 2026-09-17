@@ -1,5 +1,40 @@
 
 
+## 2026-09-17 — the layout swept: every reader taught the new doors
+
+- **bin/nornir-job-observer.sh** — masterplan, runes ledger, and the well now
+  resolve to the hoard homes (`hodd/docs/masterplan.md`,
+  `hodd/memory/runes_audit.md`, `hodd/memory/well`), overridable via
+  `BROKK_MASTERPLAN`/`BROKK_WELL_DIR`.
+- **bin/saga-session-start.sh** — the Sága digest's open-orders read follows
+  the home (`hodd/docs/masterplan.md`).
+- **bin/nornir-job-daily-briefing.sh** — message/comment paths updated to the
+  same doors.
+- **bin/docs-guard.sh** — block message names both new homes (hodd/docs,
+  memory/plans).
+- **.agents/agents/{brokk,forseti-reviewer,mimir-planner}.md** — the plan
+  shelf, masterplan, and append-only log pointers moved to their hoard
+  homes (`memory/plans/<domain>/`, `hodd/docs/*`).
+- **.agents/skills/{tyr-check,ymir-host,ratatoskr-a2a}/SKILL.md** — the same
+  pointers, plus the Ratatoskr spec → `memory/plans/mesh/25-ratatoskr-a2a.md`
+  and `hodd/docs/a2a-runs.md`.
+- **docs/workspaces.md** — status note: workspaces settled under
+  `hodd/workspaces/` (2026-09-17).
+
+## 2026-09-17 — the home's re-laid layout taught to the system
+
+- **The layout changed (2026-09-17):** plans filed by domain under
+  `$YMIR_HOME/memory/plans/<domain>/`, live plans in `hodd/plans/`,
+  workspaces under `hodd/workspaces/`, dropped-from-git material in
+  `hodd/state/stale-*`. The hodd example (`hodd/AGENTS.example.md`) now
+  teaches the new shape.
+- **AGENTS.md** — the private-home tree block, the outputs table
+  (`hodd/workspaces/work/`, `hodd/workspaces/personal/`), and the Ratatoskr
+  plan pointer updated to the new homes.
+- **bin/nornir-job-daily-briefing.sh** — the morning brief's masterplan and
+  plan-status reads follow the new layout (`hodd/docs/masterplan.md`,
+  `memory/plans`) with `BROKK_MASTERPLAN`/`BROKK_PLANS_DIR` overrides.
+
 ## 2026-09-17 — the installer has a design of its own
 
 - **The result is rendered, not dumped.** The plan got the cloth and the install did not: twenty-nine raw TOON rows and a poem, which the Allfather rightly called zero design. Now the same rows are rendered for the eye on stderr — a rule, a verdict (*"it stands — 22 steps done · 7 warned · 1 skipped"*), every warning with its reason, and the skips in one line. The TOON stays the data on stdout; the design is for the person.
