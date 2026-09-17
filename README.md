@@ -666,3 +666,57 @@ packages (Hlidskjalf, Óðrerir, Sessrúmnir, Smíðja) — one per app.
 Private data never touches npm — all user data lives at `$YMIR_HOME` (the hoard
 at `hodd/` and the realms at `svartalfaheim/`) and syncs via the user's
 **private** GitHub repo, never a public one.
+
+### After it installs — the doors
+
+`npm install -g @zerwiz/ymir` puts **two** commands on your PATH: `ymir` and
+`ymir-install`. Everything else is a door on `ymir`, named for the figure whose
+work it does — because a great many doors either open or they do not, and a name
+that says whose hand is on it is the difference between guessing and knowing.
+
+```
+ymir                     first setup: the plan, then your word
+ymir raise | lower       lift the hall, or lay it down
+ymir hlidskjalf          the high seat's window
+ymir smidja              the smithy's board (:8437) — build · start · stop · status
+ymir sessrumnir          the seat-hall's window
+ymir heimdall            the way in — your credential (status · set · github)
+ymir invite              let someone else in — mint · list · revoke
+ymir eir                 what stands, and mend what does not
+ymir groa [migrate]      take the latest, and mend this home forward
+ymir mimir · sense · plan
+```
+
+A name the law has not given a home still answers, once, and tells you the name
+that has it: `ymir doctor` replies *the door is named `ymir eir` now*.
+
+**A long hour says so, in its own voice.** The installer opens with the plan and,
+when the work will take a while, tells you plainly:
+
+```
+◆ much moves   the halls are being stood up for the first time
+      this hour is long, and nothing of yours is lost in it —
+      roots come home, shapes are re-cut, names are set true again.
+      Your patience is noted, and it is earned.
+```
+
+### Both shapes — a clone and a package are one tree
+
+Ymir runs the same whether you **cloned** it or **installed** it from npm. The
+apps are the difference, and only in where they live:
+
+| | a clone | an npm install |
+|---|---|---|
+| the surfaces | `apps/hlidskjalf` · `odrerir` · `sessrumnir` · `smidja-factory` | `node_modules/@zerwiz/hlidskjalf` · `odrerir` · `sessrumnir` · `smidja-factory` |
+| how they got there | the registry's `repo: apps/<path>` block clones each | declared as dependencies of the distro |
+
+One resolver (`bin/app-lib.sh`) answers for both, so a script never has to care
+which shape it woke in — and the same is true of the smithy (`bin/smidja-lib.sh`)
+and of a desktop shell's runtime (`bin/electron-lib.sh`). The plan tells you which
+surfaces are present, which are declared but not yet fetched, and which have no
+package at all.
+
+**Colour is for the eye, never for the pipe.** `bin/ymir-style.sh` renders in the
+halls' own cloth — bone for words, bronze for what acts, steel for what stands,
+blood for what is wrong — and only when a human is watching (a terminal, no
+`NO_COLOR`). What a pipeline reads on stdout stays plain TOON.
