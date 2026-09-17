@@ -49,7 +49,14 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
     "$_apd_root/node_modules/@zerwiz/$_apd_pkg" \
     "$(dirname "$_apd_root")/$_apd_pkg"
   do
-    [ -d "$_apd_c" ] && { printf -v "$_apd_rv" '%s' "$_apd_c"; return 0; }
+    # A hollow directory is not an app. An install step used to `mkdir` — or a
+    # clone used to fail — leaving `apps/<name>` empty, and that empty shell
+    # shadowed the real package beside it until the SPA could not be served and
+    # nobody knew why. An app declares itself: a manifest, a build, or sources.
+    if [ -d "$_apd_c" ] \
+       && { [ -f "$_apd_c/package.json" ] || [ -d "$_apd_c/dist" ] || [ -d "$_apd_c/src" ]; }; then
+      printf -v "$_apd_rv" '%s' "$_apd_c"; return 0
+    fi
   done
   printf -v "$_apd_rv" '%s' ""
   return 1
