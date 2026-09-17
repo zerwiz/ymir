@@ -8,18 +8,28 @@ import { MetricTile } from '../components/MetricTile';
 import { AgentCard } from '../components/AgentCard';
 import { StatusChip } from '../components/Status';
 
-/** Lay the real fleet out: the primary (Brokk) as the hub, everyone else fanned below. */
+/** Lay the real fleet out: the primary (Brokk) as the hub, everyone else fanned
+ * below in a grid that fits N nodes without ring/label collision. A single-line
+ * fan collides past ~8 agents — 20 fit in a 5-wide grid, tighter when fewer. */
 function layout(agents: AgentCardType[]): { pos: Record<string, { x: number; y: number }>; edges: [string, string][] } {
   const hub = agents.find((a) => a.id === 'brokk') ?? agents[0];
   const others = agents.filter((a) => a !== hub);
   const pos: Record<string, { x: number; y: number }> = {};
-  if (hub) pos[hub.id] = { x: 50, y: 18 };
+  if (hub) pos[hub.id] = { x: 50, y: 12 };
   const n = others.length;
-  others.forEach((a, i) => {
-    const x = n <= 1 ? 50 : 8 + (i / (n - 1)) * 84;
-    const y = 62 + (i % 2 === 0 ? 0 : 14);
-    pos[a.id] = { x, y };
-  });
+  if (n > 0) {
+    // Fit a square-ish grid: rings are 46px and labels hang below, so each
+    // column needs ~21 units of pitch and each row ~13 (of the 100-unit canvas).
+    const cols = Math.min(n, Math.max(2, Math.ceil(Math.sqrt(n))));
+    const rows = Math.ceil(n / cols);
+    others.forEach((a, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = cols === 1 ? 50 : 8 + (col / (cols - 1)) * 84;
+      const y = 48 + (row / Math.max(rows - 1, 1)) * 46;
+      pos[a.id] = { x, y };
+    });
+  }
   const edges: [string, string][] = hub
     ? others.map((o) => [hub.id, o.id] as [string, string])
     : others.slice(1).map((o, i) => [others[i].id, o.id] as [string, string]);
@@ -125,7 +135,7 @@ export function Fleet() {
               {agents.map((a) => {
                 const p = pos[a.id];
                 if (!p) return null;
-                const house = DOMAINS[a.domain];
+                const house = DOMAINS[a.domain] ?? DOMAINS.ymirlabs;
                 return (
                   <div key={a.id} className="fleet-node" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
                     <div
