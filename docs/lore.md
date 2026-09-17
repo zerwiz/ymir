@@ -818,9 +818,13 @@ what belongs to all houses, nothing to one.
 | Path | What it holds |
 |------|---------------|
 | `midgard/design-system/` | Theme tokens, icons, rune glyphs, component rules |
-| `midgard/company_wiki/` | Cross-tenant company knowledge |
 | `midgard/github_org_repos/` | GitHub organization repo inventory |
 | `midgard/shared-packages/` | Shared npm/Python packages |
+
+Midgard holds **public-by-design** cross-tenant assets only. Company knowledge —
+policies, vision, specs, client names — is **tenant data** and lives at
+`$YMIR_HOME/hodd/identity/companies/`. A company wiki here would publish that
+company's internals in a public repo.
 | `midgard/infrastructure/` | DB schemas, Caddyfile, cloudflared, oauth2-proxy |
 
 **Rule:** Midgard is shared. No realm may mutate another realm's Midgard assets.

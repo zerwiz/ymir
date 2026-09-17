@@ -1,11 +1,16 @@
-# MIDGARD — Global Shared Workspace
+# MIDGARD — Shared Design Assets
 
-Cross-tenant shared assets, repositories, and documentation.
+Cross-tenant assets that are **public by design**: the design system and the
+shared libraries any realm may pull.
+
+**What does NOT belong here.** Company knowledge — policies, vision, specs,
+client names, wiki pages. That is tenant data, scoped per company, and lives at
+`$YMIR_HOME/hodd/identity/companies/`. This repo is public; a company wiki in it
+would publish that company's internals.
 
 ## Contents
-- `design-system/` — shared UI components & design assets
-- `shared-packages/` — internal npm/cargo/python libraries
+- `design-system/` — shared UI components, design tokens, icon set
+- `shared-packages/` — internal npm/cargo/python libraries (public)
 - `infrastructure/` — shared Terraform / Docker / Kubernetes configs
-- `company_wiki/` — company policies, vision, specs
-- `github_org_repos/` — central company repositories
+- `github_org_repos/` — central repositories
   - `shared-core-api/` — example shared repo (with `.yggdrasil/` worktrees)
