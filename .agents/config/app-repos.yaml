@@ -1,0 +1,38 @@
+# App repositories — PUBLIC map (the five surfaces)
+#
+# The fork path: a fresh clone has no private hoard (no
+# `$YMIR_HOME/hodd/identity/projects.yaml`), so bin/ymir-install.sh's `apps`
+# step falls back to THIS file to clone the five app repos. The hoard registry
+# stays authoritative when present; this file is the fork's road.
+#
+# Block shape must match the installer's awk (repo: apps/<path> + git: dict).
+
+- id: hlidskjalf
+  name: Hlidskjalf
+  repo: apps/hlidskjalf
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: hlidskjalf, remote: origin, default_branch: main, auth: gh }
+
+- id: hlidskjalf-mobile
+  name: Hlidskjalf Mobile
+  repo: apps/hlidskjalf-mobile
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: hlidskjalf-mobile, remote: origin, default_branch: main, auth: gh }
+
+- id: odrerir
+  name: Óðrerir
+  repo: apps/odrerir
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: odrerir, remote: origin, default_branch: main, auth: gh }
+
+- id: sessrumnir
+  name: Sessrúmnir
+  repo: apps/sessrumnir
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: sessrumnir, remote: origin, default_branch: main, auth: gh }
+
+- id: smidja
+  name: Smíðja factory
+  repo: apps/smidja-factory
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: smidja, remote: origin, default_branch: main, auth: gh }
