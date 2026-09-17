@@ -1,6 +1,6 @@
 ---
 mode: subagent
-model: qwen3-coder-30b/Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf
+model: llamacpp-coder/qwen3-coder-30b
 permission:
   read: allow
   edit: allow
