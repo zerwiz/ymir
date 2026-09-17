@@ -34,8 +34,28 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
-CONFIG="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"
+# The schedule is the USER'S, not the distro's: an explicit BROKK_CONFIG_OVERRIDE
+# wins, then the home's own config/cron.yaml, then the repo's example (which
+# ships what a fresh hour suggests but never claims to be the live schedule).
+if [ -n "${BROKK_CONFIG_OVERRIDE:-}" ]; then
+  CONFIG="$BROKK_CONFIG_OVERRIDE"
+else
+  . "$SCRIPT_DIR/hoard-lib.sh"  # ymir_home_root — one answer, never drift
+  ymir_home_root _h
+  if [ -r "$_h/config/cron.yaml" ]; then
+    CONFIG="$_h/config"
+  elif [ -r "$BROKK_HOME/config/cron.yaml" ] && [ "$BROKK_HOME" != "$_h" ]; then
+    CONFIG="$BROKK_HOME/config"
+  else
+    CONFIG="$BROKK_HOME/config"
+  fi
+fi
 CRON_CONFIG="$CONFIG/cron.yaml"
+# Fall back to the shipped example ONLY when no user schedule exists yet — the
+# example is a template, never the live job list.
+if [ ! -r "$CRON_CONFIG" ] && [ -r "$BROKK_HOME/config/cron.yaml.example" ]; then
+  CRON_CONFIG="$BROKK_HOME/config/cron.yaml.example"
+fi
 PID_FILE="$STATE/cron.pid"
 LOG_FILE="$STATE/cron.log"
 STAMP_DIR="$STATE/.cron-fired"

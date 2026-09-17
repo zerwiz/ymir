@@ -89,7 +89,7 @@ governed[7]{path,load_first}:
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
   "apps/odrerir/**",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md"
   "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
-  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
+  "bin/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
   "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
