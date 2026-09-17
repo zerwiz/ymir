@@ -103,9 +103,31 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
     init()
     raf = requestAnimationFrame(loop)
     window.addEventListener('resize', onResize)
+    // The hearth warms the chat column *and* the home screen, and both resize
+    // when panes split or panels toggle — a window resize alone never re-seeds
+    // a canvas that already sized itself. Watch the host container and re-seed
+    // only when its dimensions actually changed.
+    let ro: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined' && host) {
+      let lastW = 0
+      let lastH = 0
+      ro = new ResizeObserver((entries) => {
+        const e = entries[0]
+        if (!e) return
+        const w = e.contentRect?.width ?? 0
+        const h = e.contentRect?.height ?? 0
+        if (Math.abs(w - lastW) > 0.5 || Math.abs(h - lastH) > 0.5) {
+          lastW = w
+          lastH = h
+          onResize()
+        }
+      })
+      ro.observe(host)
+    }
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', onResize)
+      ro?.disconnect()
     }
   }, [])
 
