@@ -7,6 +7,7 @@
 # Usage:
 #   bin/ymir-install.sh [--check] [--skip-engines] [--skip-services] [--no-desktop] [--yes]
 #   bin/ymir-install.sh --plan [--json]     # the plan, computed — changes nothing
+#   bin/ymir-install.sh --yes | --non-interactive | --accept-all-defaults
 #   bin/ymir-install.sh --status
 #   bin/ymir-install.sh --version
 #
@@ -75,11 +76,12 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --check) CHECK=1; shift ;;
     --plan|--dry-run) PLAN_ONLY=1; shift ;;
-    --json|--phase|--blocked) PLAN_ARGS+=("$1"); shift ;;
+    --json|--blocked) PLAN_ARGS+=("$1"); shift ;;
+    --phase) PLAN_ARGS+=("$1" "${2-}"); shift 2 ;;   # --phase carries its number
     --skip-engines) SKIP_ENGINES=1; shift ;;
     --skip-services) SKIP_SERVICES=1; shift ;;
     --no-desktop) NO_DESKTOP=1; shift ;;
-    --yes|-y) ASSUME_YES=1; shift ;;
+    --yes|-y|--non-interactive|--accept-all-defaults) ASSUME_YES=1; shift ;;
     --status) exec "$SCRIPT_DIR/ymir-install.sh" --check ;;
     *) printf 'error: unknown flag %s\nhelp: bin/ymir-install.sh [--check|--plan|--skip-engines|--skip-services|--no-desktop|--yes]\n' "$1" >&2; exit 2 ;;
   esac
@@ -818,11 +820,7 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
-<
-step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
-
 step_panes; step_prereqs; step_home; step_tree; step_apps; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
-
 # Migrations MOVE private data — that is a write, and `--check` promises none.
 # Only a real run heals the home forward; the preview leaves it untouched.
 if [ "$CHECK" = 0 ]; then bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; fi
