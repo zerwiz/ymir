@@ -1,4 +1,5 @@
 
+
 ## 2026-09-17 — the schedule is the user's: cron leaves the tree, lives in the home
 
 - **The tracked tree no longer carries the live cron schedule.** The Nornir
@@ -22,6 +23,31 @@
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — §2
 rewritten (the schedule is the user's; example template; the four-inputs
 contract unchanged).
+=======
+## 2026-09-17 — 0.1.14: the panels reach the gate, and the fourth window ships
+
+- **`@zerwiz/hlidskjalf` 0.1.1** — the package now declares its own `name`, `files` and the absence of `private`, and ships **`vite.config.ts`**. Without that config a packaged SPA is served by `vite preview` with **no `/api` proxy**, so every panel answered `index.html` and died on `Unexpected token '<'<`. That was the whole panel fault.
+- **`@zerwiz/odrerir` 0.1.1** — ships its **`electron/`** half, so the fourth hall can have a window; its name is `@zerwiz/odrerir` and it is no longer marked private (npm refuses those, EPRIVATE).
+- Both apps declared what ships **in their own repos**, instead of a manifest rewritten at publish time — which is how the wrong things shipped in the first place.
+
+## 2026-09-17 — 0.1.13: the re-voiced seat arrives, and the packages are listed
+
+- **`@zerwiz/sessrumnir` 0.1.9** — the seat that says Sessrúmnir and "Brokk is working", with the fork`s name gone from its source, its bundles, its installer and its package identity. Pinned so a fresh install receives it.
+- **The README lists every package** on npm, and why the smithy is `@zerwiz/smidja-factory`.
+
+## 2026-09-17 — the README lists the packages, and the pin moves to the re-voiced seat
+
+- **The README says what is on npm.** Five packages serve — `@zerwiz/ymir` (the
+  distro) and the four surfaces it depends on — and the section says so with a
+  table, plus the one line that matters to a reader: *why the smithy is not
+  `@zerwiz/smiddja`*. That name was accepted twice and served never (package
+  document 404, website 403, republish refused as already published); it was
+  renamed to `@zerwiz/smidja-factory`, which resolves.
+- **The distro's pin moves to `@zerwiz/sessrumnir@0.1.9`** — the seat that speaks
+  its own name rather than the fork's. A fresh install was still receiving the
+  old voice through the `0.1.8-alpha` pin.
+- **`@zerwiz/ymir@0.1.13`** is the packet that carries them.
+
 
 ## 2026-09-17 — 0.1.12: the icons reach the live tree, and a missing surface is a failure
 
