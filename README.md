@@ -14,13 +14,22 @@
 
 ![Ymir — the single-tenant agent OS](assets/ymir-banner-03.png)
 
-Ymir is not lean. It is a single-operator agentic **distro**: a fleet of named
-agents, sealed sandboxes, a memory well, an audit ledger, and a control plane
-you actually look at — running from one repository. You are the **Allfather**;
-**Brokk** is your primary agent; **Eindri** are the isolated workers it dispatches.
-Everything —
-development, marketing, business strategy, life — runs from one repository, with an
-audit ledger, a memory well, one tenant and its workspaces, and a control plane you actually look at.
+Before the worlds there was nothing but cold mist and embers of fire. From
+their meeting in the Void — Ginnungagap — came the first being: **Ymir**, the
+ancestor of everything. The gods slew him and made the world from his body.
+
+That is what this platform is. **Ymir is the substrate** — a single machine, a
+single repo — the primordial body from which every realm of work is carved.
+Every service, every tool this fleet ships is shaped from Ymir's frame and
+lives on it; nothing is painted onto Ymir, everything is cut *from* him.
+
+It is not lean. It is a single-operator agentic **distro**: a fleet of named
+agents (Brokk at the bellows, **Eindri** in sealed sandboxes), a memory well at
+the root, an audit ledger a rune cannot un-carve, one tenant and its
+workspaces, and a control plane you actually look at. You are the
+**Allfather**; every agent reports to Brokk; Brokk reports to you.
+Everything — development, marketing, business strategy, life — runs from one
+repository.
 
 ---
 
