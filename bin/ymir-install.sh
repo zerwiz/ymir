@@ -544,7 +544,14 @@ step_sandbox() {
 
 # ── 5. memory (well + harness MCP) ───────────────────────────────────────────
 step_memory() {
-  local db="$YMIR_HOME/memory/kaia.engram" mcp=0
+  # The well is ONE memory and it lives in the hoard — always.
+  if [ -n "${ENGRAM_DB:-}" ]; then
+    local db="$ENGRAM_DB"
+  else
+    . "$SCRIPT_DIR/hoard-lib.sh" 2>/dev/null || true
+    hoard_memory_store db
+  fi
+  local mcp=0
   [ "$CHECK" = 0 ] && "$SCRIPT_DIR/mimir-bridge.sh" --start >/dev/null 2>&1 || true
   for f in "$ROOT/opencode.json" "$HOME/.config/opencode/opencode.json" "$HOME/.pi/agent/settings.json" "$HOME/.claude.json" "$HOME/.cursor/mcp.json"; do
     [ -f "$f" ] && grep -q '"engram"' "$f" 2>/dev/null && mcp=$((mcp+1))

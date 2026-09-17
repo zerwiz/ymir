@@ -103,3 +103,13 @@ hoard_local_env() {  # <result-var> — the operator's env file (secrets, ports)
   ymir_home_root home
   printf -v "$result_var" '%s' "${YMIR_ENV_FILE:-$home/.env.local}"
 }
+
+hoard_memory_store() {  # <result-var> — Kaia's engram store, ALWAYS in the hoard
+  # The well is one memory and it lives in the hoard (hodd/memory) — never in
+  # the tree, never in a migrated copy. Everything that reads the store resolves
+  # through here so no script can point the well at a duplicate (Rule 04/07).
+  local result_var=${1-} home
+  [ -n "$result_var" ] || return 2
+  ymir_home_root home
+  printf -v "$result_var" '%s' "$home/hodd/memory/kaia.engram"
+}

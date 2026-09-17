@@ -47,7 +47,7 @@ governed[6]{path,load_first}:
   "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
   "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
-  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
+  "bin/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
   "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
