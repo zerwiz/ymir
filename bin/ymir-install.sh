@@ -63,7 +63,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --check) CHECK=1; shift ;;
     --plan|--dry-run) PLAN_ONLY=1; shift ;;
-    --json) PLAN_ARGS+=(--json); shift ;;
+    --json|--phase|--blocked) PLAN_ARGS+=("$1"); shift ;;
     --skip-engines) SKIP_ENGINES=1; shift ;;
     --skip-services) SKIP_SERVICES=1; shift ;;
     --no-desktop) NO_DESKTOP=1; shift ;;
