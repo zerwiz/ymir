@@ -63,6 +63,113 @@ as well as in the repo.
 - **Remediation.** `@zerwiz/ymir@0.1.5` should be unpublished (it is inside npm's
   window); the clean build publishes as 0.1.7 and supersedes it.
 
+## 2026-09-17 — the doors, the cloth, and the icons that were not there
+
+Four things the operator met and could not use: doors that never opened, output
+with no design, a board that could not be built from a package, and an icon map
+that named a glyph nobody had drawn.
+
+- **The doors are named for the figure who does the work.** `ymir` put two
+  commands on PATH and could neither start the app nor raise the board. It now
+  carries the doors: **raise · lower · eir** (heal) · **groa** (renew) ·
+  **heimdall** (the way in) · **invite** · **smidja** (the board) ·
+  **hlidskjalf** · **sessrumnir** · **mimir** · **sense** · **plan**. A name the
+  law has not given a home — `doctor`, `validate`, `auth` — still answers, once,
+  with the name that has it.
+- **The cloth: `bin/ymir-style.sh`.** Ymir had correct output and no design. The
+  palette is cut from the halls' own tokens — bone for words, bronze for what
+  acts, steel for what stands, blood for what is wrong — with a mark per state
+  (`◆ · — ✕ ? ✓`). Colour and marks appear only where a human is watching
+  (stderr a TTY, `NO_COLOR` unset); the data on stdout stays TOON, and **the
+  words are never conditional, only the colour is**. The plan renders in the
+  cloth on stderr while the TOON stays pipeable; the installer opens with it and
+  ends with the next steps.
+- **The packaged tree is told apart from a clone.** `bin/smidja-lib.sh` resolves
+  the smithy — `apps/smidja-factory` in a clone, `node_modules/@zerwiz/smidja-factory`
+  in a package — and four call sites that assumed the clone now resolve through
+  it. `bin/smidja-board.sh` is the board's own door (`build · start · stop ·
+  status`), which `ymir smidja` runs; built and served end to end from an npm
+  install: `{"ok":true,"sessions":1}`, `GET / → 200`.
+- **A shell's runtime is verified, never assumed.** npm gates install scripts, so
+  a skipped Electron postinstall leaves a partial runtime that still builds the
+  web app and still reports success. `bin/electron-lib.sh` answers `ok · partial
+  · absent`, the plan's `electron` row says **PARTIAL** with the exact remedy, and
+  `step_desktop` refuses to claim a launch it cannot make.
+- **The icons now name glyphs that exist.** Three maps disagreed: `runes.md` gave
+  Óðrerir the rune `wunjo` — **a glyph nobody had drawn** — and tinted Sessrúmnir
+  with a violet that is not in the tokens; `icons.md` gave `othala` to Óðrerir
+  *and* Sessrúmnir; `design-icon.sh` minted `valhalla` for Óðrerir. One truth now:
+  **Óðrerir → ansuz** (Odin's breath, the mead of poetry — what Óðrerir *is*),
+  Sessrúmnir → othala, Valhalla keeps `ᚹ` (drawn in `valhalla.svg`, named Wunjo),
+  Sowilo no longer claimed twice, every tint a house accent from the tokens, and
+  the smithy's icon named `ymir-smidja` rather than `ymir-visualizer`. All 22
+  glyphs parse; every claim resolves to a file. `docs/design.md` stopped calling
+  a living map *"to create"*.
+
+## 2026-09-17 — the house gains an unpublish door
+
+- **`bin/npm-publish.sh --unpublish @scope/name@<version>`.** Publishing had a
+  door in this house and unpublishing had none, so the act was done by hand on a
+  machine whose `~/.npmrc` holds a stale token — the very reason the door exists.
+  The new mode resolves the token from the hoard exactly as publishing does,
+  demands a spec that names the version (a whole package is not a one-word act),
+  supports `--dry-run`, and says plainly that the registry's CDN may serve the
+  tarball for a while after the removal.
+- **The window is 72 hours.** npm allows one version back within 72 hours of its
+  publication; past that only npm support can remove it. The help text says so,
+  because a door that does not name its own clock invites a late knock.
+- **`@zerwiz/ymir@0.1.5` was unpublished** — the version that carried the memory
+  well. Publishing the clean 0.1.7 moves the `latest` tag off the tainted build at
+  once, which is the half of the repair that does not wait for propagation.
+
+## 2026-09-17 — the plan learns the smithy's package name, and the install forwards its flags
+
+Two defects the first real end-to-end npm install surfaced — which is what an
+end-to-end test is for.
+
+- **A surface's name is not its package's name.** The plan looked for
+  `apps/smidja` or `@zerwiz/smidja`, but npm serves the smithy as
+  `@zerwiz/smidja-factory` — so the row read `BLOCKED` on a machine where the
+  smithy was installed and standing. `app_dir`/`app_row` now take the surface
+  name and the package name separately, and the row tells the truth: installed,
+  with the visualizer's UI still to build (the tarball ships its source, never a
+  stale build).
+- **`ymir install --plan` forwarded only `--json`.** `--phase` and `--blocked`
+  were dropped on the way through the installer's door, so `--blocked` answered
+  *unknown flag*. Every plan flag is forwarded now.
+
+**The install this came out of:** `npm install -g @zerwiz/ymir` from the registry
+— `@zerwiz/ymir@0.1.7`, 331 packages, and all four surfaces
+(`hlidskjalf` · `odrerir` · `sessrumnir` · `smidja-factory`) arrived inside the
+distro. The tarball carries no memory store — the leak is closed in the artefact
+as well as in the repo.
+
+## 2026-09-17 — the package shipped the memory well (one version, now excluded)
+
+- **The exposure.** `@zerwiz/ymir@0.1.5` carries five files that are nobody's but
+  the operator's: `.agents/memory/kaia.engram`, its `-shm` and `-wal` sidecars, and
+  `.agents/memory/well/{episodes,workspace}.jsonl`. A public npm tarball contained
+  the live memory well — the store and the episodes. Verified by fetching the
+  published artefact and listing it; `0.1.0`–`0.1.4` are clean, and this branch's
+  build is clean.
+- **The cause, and it is a trap worth naming.** `.gitignore` excludes
+  `.agents/memory/kaia.engram*` and `.agents/memory/well/*.jsonl`, and the repo is
+  clean — but **npm does not consult `.gitignore` when `files[]` names a whole
+  directory.** `files: [".agents/"]` packs that subtree *including* the ignored
+  files. Nothing warned: the leak travelled in the artefact, not the repo.
+- **The fix.** The manifest excludes them explicitly, because a `files[]` list
+  cannot rely on the ignore file it overrides:
+  `!.agents/memory/kaia.engram*`, `!.agents/memory/well/*.jsonl`,
+  `!.agents/memory/*.db`, plus `!**/__pycache__/` and `!**/*.pyc` for the compiled
+  junk that was travelling the same way. Verified: `npm pack --dry-run` carries
+  864 files and **no** memory store — the memory README and the ledger's scaffold
+  header are all that remain, as they should be.
+- **The rule for every future package:** a `files[]` entry that names a directory
+  overrides `.gitignore` for everything beneath it. Name what ships, or exclude
+  what must not — and verify with a dry-run pack, never by assumption.
+- **Remediation.** `@zerwiz/ymir@0.1.5` should be unpublished (it is inside npm's
+  window); the clean build publishes as 0.1.7 and supersedes it.
+
 ## 2026-09-17 — the house gains an unpublish door
 
 - **`bin/npm-publish.sh --unpublish @scope/name@<version>`.** Publishing had a
