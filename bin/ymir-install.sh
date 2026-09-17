@@ -131,7 +131,9 @@ Each row is a phase, a step, its state, and why.
 Nothing is deleted. Every step is idempotent.
 PLAN
   printf '\n'
-  bash "$SCRIPT_DIR/ymir-plan.sh" --colour >/dev/null 2>&1 || true
+  # The rendering lives on stderr (the cloth); the TOON on stdout is data and is
+  # dropped here. Sending BOTH to /dev/null is how the plan became invisible.
+  bash "$SCRIPT_DIR/ymir-plan.sh" --colour >/dev/null || true
   printf '\nProceed with the install? [y/N] '
   read -r reply || reply=""
   case "$reply" in
@@ -291,6 +293,15 @@ step_home() {
 # engine (apps/smidja) is stamped from the cloned factory's templates, exactly
 # as install.py does for a target repo.
 step_apps() {
+  # A packaged install has no apps/ of its own on purpose: the surfaces arrive as
+  # dependencies. Cloning the repos into node_modules/@zerwiz/ymir/apps/ is how a
+  # hollow directory shadowed a real package, so a package tree clones nothing.
+  # A CLONE still clones — that is the shape this step exists for.
+  case "$ROOT" in
+    */node_modules/*)
+      add apps SKIP "a package install — the surfaces are dependencies (npm i -g @zerwiz/ymir)"
+      return 0 ;;
+  esac
   local reg="$HOARD/identity/projects.yaml"
   if [ ! -r "$reg" ]; then
     add apps SKIP "no registry — no app repos to pull ($reg)"
@@ -851,6 +862,33 @@ step_auth; step_invite; step_register
 
 printf 'install[%d]{step,status,detail}:\n' "${#IDS[@]}"
 for i in "${!IDS[@]}"; do printf '  "%s","%s","%s"\n' "${IDS[$i]}" "${STATUS[$i]}" "${DETAIL[$i]}"; done
+# The same rows, rendered for the eye (stderr) — the TOON above is the data a
+# script reads, this is what a person gets. An install that ends in a raw table
+# has no design, and design here is not decoration: it is whether a reader can
+# see, at a glance, what stands, what warned, and what was skipped and why.
+if [ "${STYLE_ON:-0}" = 1 ]; then
+  ok=0; warn=0; skip=0; fail=0
+  for s_ in "${STATUS[@]}"; do
+    case "$s_" in OK) ok=$((ok+1)) ;; WARN) warn=$((warn+1)) ;; SKIP) skip=$((skip+1)) ;; FAIL) fail=$((fail+1)) ;; esac
+  done
+  style_rule 56
+  if [ "$fail" -gt 0 ]; then
+    style_line FAIL "not usable" "$fail step(s) failed — nothing below it can be trusted"
+  elif [ "$warn" -gt 0 ]; then
+    style_line OK   "it stands" "$ok steps done · $warn warned · $skip skipped"
+  else
+    style_line OK   "it stands" "$ok steps done · $skip skipped — nothing warned"
+  fi
+  # the warnings carry the why; they are the rows a person must read
+  for i in "${!IDS[@]}"; do
+    [ "${STATUS[$i]}" = WARN ] && style_line WARN "${IDS[$i]}" "${DETAIL[$i]}"
+    [ "${STATUS[$i]}" = FAIL ] && style_line FAIL "${IDS[$i]}" "${DETAIL[$i]}"
+  done
+  # and the skips as one line, with their reasons, since they are decisions not faults
+  skips=""
+  for i in "${!IDS[@]}"; do [ "${STATUS[$i]}" = SKIP ] && skips="$skips ${IDS[$i]}"; done
+  [ -n "$skips" ] && style_hint "skipped:$skips — each with its reason in the table above"
+fi
 printf '\nnext: gh auth login · register your projects in hoard/identity/projects.yaml · open http://127.0.0.1:3888/\n'
 [ -n "$INVITE_CODE" ] && printf 'invite: %s — share it to let someone register (bin/ymir-invite.sh list shows what is spent)\n' "$INVITE_CODE"
 
