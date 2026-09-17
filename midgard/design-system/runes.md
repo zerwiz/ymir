@@ -19,11 +19,11 @@ runes[24]{glyph,name,sound,meaning,ymir_use,file}:
   "ᚠ","Fehu","f","cattle, wealth","Fleet — the herd of agents","fehu"
   "ᚢ","Uruz","u","aurochs, strength","Utgard — the sandbox barrier","utgard"
   "ᚦ","Thurisaz","th","thorn, giant","Gungnir — skill synthesis","gungnir"
-  "ᚨ","Ansuz","a","Odin's breath","Forge — creation","ansuz"
+  "ᚨ","Ansuz","a","Odin's breath","Óðrerir — the mead of poetry, the Live Hall","ansuz"
   "ᚱ","Raido","r","ride, journey","Runes — the ledger (a road carved)","raidho"
   "ᚲ","Kaunan","k","torch, ulcer","Smíðja's eye — the trace of the forge, OmniChat's flame","kaunan"
   "ᚷ","Gebo","g","gift","Gjallarhorn — the tunnel and its call","gjallarhorn"
-  "ᚹ","Wunjo","w","joy","Óðrerir — the Live Hall","valhalla"
+  "ᚹ","Wunjo","w","joy","Valhalla — the hall of the supervisor","valhalla"
   "ᚺ","Hagall","h","hail","Heimdall — auth, the gate","heimdall"
   "ᚾ","Naudiz","n","need, constraint","(no glyph yet)","—"
   "ᛁ","Isaz","i","ice","(no glyph yet)","—"
@@ -31,7 +31,7 @@ runes[24]{glyph,name,sound,meaning,ymir_use,file}:
   "ᛇ","Eihwaz","ï","yew","(no glyph yet)","—"
   "ᛈ","Perthro","p","lot, fate","(no glyph yet)","—"
   "ᛉ","Algiz","z","protection","Glitnir's reviews — the protective gate; **the Ymir emblem**","algiz"
-  "ᛊ","Sowilo","s","sun","Skrymir — files (light on the tree); Sessrúmnir — the seat that shows the cloth","sowilo"
+  "ᛊ","Sowilo","s","sun","Skrymir — files (light on the tree)","sowilo"
   "ᛏ","Tiwaz","t","Týr, justice","Tasks — the A2A lifecycle board","tiwaz"
   "ᛒ","Berkanan","b","birch","Profile — the self; Ratatoskr — the messenger","berkana"
   "ᛖ","Ehwaz","e","horse","Runtime — the seat and its transit; Hlidskjalf","ehwaz"
@@ -59,8 +59,8 @@ Five UI surfaces, five different glyphs — no app borrows another's rune:
 app_runes[5]{app,glyph,rune,house_tint}:
   "Hlidskjalf","ᛖ","ehwaz — the seat","#c9973f bronze (ymirlabs)"
   "Hlidskjalf Mobile","ᚱ","raidho — the road, the seat carried","#c9973f bronze"
-  "Óðrerir","ᚹ","wunjo — joy, the hall","#c9973f bronze"
-  "Sessrúmnir","ᛊ","sowilo — the sun, the cloth shown","#8b5cf6 violet (muninn)"
+  "Óðrerir","ᚨ","ansuz — Odin's breath, the mead of poetry","#c9973f bronze (ymirlabs)"
+  "Sessrúmnir","ᛟ","othala — inheritance, the hall that holds what is kept","#c9973f bronze (ymirlabs)"
   "Smíðja (visualizer)","ᚲ","kaunan — the torch, the forge's eye","#f59e0b amber (brokkforge)"
 ```
 

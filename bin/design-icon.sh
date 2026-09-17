@@ -30,16 +30,19 @@ ACTION="${1:-list}"; shift || true
 APPS=(
   "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane|ymir-hlidskjalf|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf|Ymir · Hlidskjalf"
   "apps/hlidskjalf-mobile|raidho|#c9973f|the road — the seat carried, Hlidskjalf on a phone|ymir-hlidskjalf-mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile|Ymir · Hlidskjalf Mobile"
-  "apps/odrerir|valhalla|#c9973f|the hall — Óðrerir, the Live Hall|ymir-odrerir|scripts/electron.sh start --view odrerir|ymir-odrerir|Ymir · Óðrerir"
+  "apps/odrerir|ansuz|#c9973f|the mead — Óðrerir, the Live Hall (Odin's breath, inspiration)|ymir-odrerir|scripts/electron.sh start --view odrerir|ymir-odrerir|Ymir · Óðrerir"
   "apps/sessrumnir|othala|#c9973f|the hall — Sessrúmnir, the seat that holds the cloth|ymir-sessrumnir|bin/sessrumnir.sh start|ymir-sessrumnir|Ymir · Sessrúmnir"
-  "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-visualizer|scripts/electron.sh start --view smidja|ymir-smidja|Ymir · Smíðja"
+  "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-smidja|scripts/electron.sh start --view smidja|ymir-smidja|Ymir · Smíðja"
 )
 
 list() {
   printf 'app_icons[%d]{app,rune,tint,says}:\n' "${#APPS[@]}"
   for row in "${APPS[@]}"; do
-    IFS='|' read -r dir glyph tint says _icon _exec _klass _name <<<"$row"
-    printf '  "%s","%s","%s","%s"\n' "$(basename "$dir")" "$glyph" "$tint" "$says"
+    IFS='|' read -r dir glyph tint says icon _exec _klass _name <<<"$row"
+    # The surface's name is the one the desktop knows it by (ymir-smidja →
+    # smidja), never the directory's leaf — a path is not a name (the naming law).
+    surface="${icon#ymir-}"
+    printf '  "%s","%s","%s","%s"\n' "$surface" "$glyph" "$tint" "$says"
   done
   printf 'runes[6]{glyph,name,meaning}:\n'
   printf '  "algiz","ᛉ","the Ymir emblem — the platform itself"\n'
