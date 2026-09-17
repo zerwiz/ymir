@@ -49,7 +49,7 @@ hoard_state_dir RUNTIME
 hoard_settings_dir SETTINGS
 hoard_local_env ENVFILE
 
-moved=0; kept=0; refused=0; rows=0
+moved=0; kept=0; refused=0; merged=0; rows=0
 # The row buffers are written as they happen and printed at the end, so the TOON
 # header can carry the true count. `rows` is kept beside them: under `set -u`,
 # bash older than 4.4 reads an empty `declare -a` array as unbound.
@@ -64,17 +64,33 @@ tracked_by_git() {
 
 # carry <src> <dst-dir> — move one entry home, unless the home already holds it
 carry() {
-  local src="$1" dst="$2" base
+  local src="$1" dst="$2" base stale
   base="$(basename "$src")"
   mkdir -p "$dst" 2>/dev/null || { refused=$((refused+1)); row refuse "$src" "cannot write $dst"; return 0; }
-  if [ -e "$dst/$base" ]; then
-    kept=$((kept+1)); row kept "$src" "home already holds $base — left in place, nothing overwritten"
+  if [ ! -e "$dst/$base" ]; then
+    if mv "$src" "$dst/$base" 2>/dev/null; then
+      moved=$((moved+1)); row moved "$src" "$dst/$base"
+    else
+      refused=$((refused+1)); row refuse "$src" "could not move to $dst/$base"
+    fi
     return 0
   fi
-  if mv "$src" "$dst/$base" 2>/dev/null; then
-    moved=$((moved+1)); row moved "$src" "$dst/$base"
+  # The home already holds this name. Two files, one name — decide by evidence,
+  # never by assumption: identical content means the tree's copy can go (nothing
+  # is lost, and the content is at home); different content means BOTH are real,
+  # so the home's wins the name and the tree's is carried beside it as `.stale-*`
+  # rather than merged or discarded.
+  if [ -f "$src" ] && [ -f "$dst/$base" ] && cmp -s "$src" "$dst/$base"; then
+    rm -f "$src" && { merged=$((merged+1)); row merged "$src" "identical to $dst/$base — the tree's copy removed, nothing lost"; }
+  elif [ -f "$src" ]; then
+    stale="$dst/$base.stale-$(date -u +%Y%m%dT%H%M%SZ)"
+    if mv "$src" "$stale" 2>/dev/null; then
+      moved=$((moved+1)); row kept-as "$src" "$stale — differs from the home's copy, so both are kept"
+    else
+      refused=$((refused+1)); row refuse "$src" "differs from the home's copy and could not be carried"
+    fi
   else
-    refused=$((refused+1)); row refuse "$src" "could not move to $dst/$base"
+    kept=$((kept+1)); row kept "$src" "home already holds $base — left in place, nothing overwritten"
   fi
 }
 
@@ -82,7 +98,7 @@ carry() {
 if [ -d "$R/data" ]; then
   for f in "$R"/data/* "$R"/data/.[!.]*; do
     [ -e "$f" ] || continue
-    case "$(basename "$f")" in .gitkeep|*.example) kept=$((kept+1)); continue ;; esac
+    case "$(basename "$f")" in .gitkeep|*.example|*.example.*) kept=$((kept+1)); continue ;; esac
     carry "$f" "$RECORDS"
   done
 fi
@@ -123,7 +139,7 @@ if [ -d "$cfgdir" ]; then
   for f in "$cfgdir"/* "$cfgdir"/.[!.]*; do
     [ -e "$f" ] || continue
     base="$(basename "$f")"
-    case "$base" in .gitkeep|*.example) kept=$((kept+1)); continue ;; esac
+    case "$base" in .gitkeep|*.example|*.example.*) kept=$((kept+1)); continue ;; esac
     if tracked_by_git "$f"; then
       kept=$((kept+1)); row kept "config/$base" "the distro ships this one — it is a default, not the operator's own"
       continue
@@ -138,5 +154,5 @@ if [ "$rows" -gt 0 ]; then
     printf '  "%s","%s","%s"\n' "${ROW_ACT[$i]}" "${ROW_FROM[$i]}" "${ROW_TO[$i]}"
   done
 fi
-printf 'ymir-migrate-0005[1]{moved,kept,refused}:\n  "%s",%s,%s\n' "$moved" "$kept" "$refused"
+printf 'ymir-migrate-0005[1]{moved,merged,kept,refused}:\n  "%s",%s,%s,%s\n' "$moved" "$merged" "$kept" "$refused"
 exit 0

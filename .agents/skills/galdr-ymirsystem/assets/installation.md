@@ -119,10 +119,20 @@ settings             .agents/config/*        <home>/config
                      that git does NOT track
 ```
 
-Refusals are deliberate and reported: a destination that already exists is left
-alone (the home always wins), `*.example` and `.gitkeep` never move, and a settings
-file that git tracks stays — that is the distro's shipped default, not the
-operator's. Idempotent: a second run moves nothing.
+One name, two files — the migration decides by evidence, never by assumption:
+
+```
+collision[3]{case,what_happens,nothing_lost}:
+  "identical content","the tree's copy is removed","the content is provably at home already"
+  "different content","the home's keeps the name; the tree's is carried beside it as <name>.stale-<UTC>","both are real, so both are kept — never merged, never discarded"
+  "not a plain file","left in place and reported","a directory is not silently swallowed"
+```
+
+Templates and defaults never move: `*.example` (and `*.example.*`), `.gitkeep`, and
+any settings file **git tracks** — that is the distro's shipped default, not the
+operator's. The plan's `purity` row applies the same rule, asking git about the
+real path (the tree's `config` is a symlink into `.agents/config`, and git tracks
+what the index holds, not the link). Idempotent: a second run changes nothing.
 
 ```bash
 bin/ymir-migrate.sh status            # pending / applied
