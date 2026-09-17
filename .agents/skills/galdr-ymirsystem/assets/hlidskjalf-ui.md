@@ -223,7 +223,10 @@ API on the same port (`scripts/start.sh` raises it). Details: `assets/smidja.md`
 ## Agents, skills & mythological naming
 
 - The Forge gate (`src/gates/Forge.tsx`) creates/edits **Eindri** and **skills**,
-  and reads/edits the smithy's prompts.
+  and reads/edits the smithy's prompts. The skill list shows each skill's own
+  text: the name + aett rune on the head row, and the description line
+  underneath (`forge-item-desc`, dimmed until hover) — the description comes
+  from the live `/api/skills` index, truncated to 240 chars by the gate API.
 - Naming law: `src/data/mythology.ts` maps a craft/capability → the Norse figure
   whose myth matches it (smith→Sindri, skald→Bragi, sage→Huginn, judge→Tyr,
   forger→Brokk …). Skills take an **aett** prefix.
@@ -324,6 +327,13 @@ placeholder nor any default may name the operator: the field says `username`, an
 the password comes from `HLIDSKJALF_AUTH` in `.env.local`, never inline. A
 hardcoded name here is both a leak into the public tree and wrong for any other
 operator — `bin/public-guard.sh` exists to catch exactly that class of mistake.
+
+**The gate must actually receive it.** `scripts/start.sh` loads `.env.local`
+(mode `0600`, gitignored) into the environment before raising the gate, because
+the bun process reads `process.env.HLIDSKJALF_AUTH` and nothing else was loading
+it — so a credential set by `bin/ymir-setup-auth.sh` never took effect, and an
+empty `GATE_AUTH` makes the gate treat every request as authenticated. After
+setting a credential, restart the gate: `scripts/stop.sh; scripts/start.sh`.
 
 ### One login, and it is the one with the lore (2026-09-12)
 

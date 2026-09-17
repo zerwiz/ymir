@@ -211,6 +211,12 @@ if os.path.exists(oc):
         changed.append(f"provider:{name}")
     ablock = d.setdefault("agent", {})
     for a in agents:
+        # opencode.json is OpenCode's file: only OpenCode agents belong in it. A
+        # pi (or hermes) agent's model is that harness's id — e.g.
+        # `llamacpp/qwen3.5-9b` — which OpenCode cannot resolve, so writing it
+        # here would hand OpenCode an agent it cannot run. Skip them.
+        if harness_of(a) != "opencode":
+            continue
         m = resolve_model(model_of(a))
         # The roster DECLARES every figure it names. Before this, `apply` only
         # touched an agent already present in opencode.json (`if a in ablock`),

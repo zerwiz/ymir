@@ -1,6 +1,6 @@
 ---
 mode: subagent
-model: apodex/apodex-1.0-mini
+model: opencode-go/deepseek-v4.1-flash
 permission:
   read: allow
   edit: deny
