@@ -142,9 +142,32 @@ export function startEmbers(host) {
   };
   window.addEventListener('resize', onResize);
 
+  // The hearth warms a *container*, and containers change without a window
+  // resize (a split pane, a toggled sidebar). Watch the host: re-size and
+  // re-seed only when its dimensions actually changed, never per-frame.
+  let ro = null;
+  if (typeof ResizeObserver !== 'undefined' && canvas.parentElement) {
+    const host = canvas.parentElement;
+    let lastW = 0;
+    let lastH = 0;
+    ro = new ResizeObserver((entries) => {
+      const e = entries[0];
+      if (!e) return;
+      const w = e.contentRect?.width ?? e.contentBoxSize?.[0]?.inlineSize ?? 0;
+      const h = e.contentRect?.height ?? e.contentBoxSize?.[0]?.blockSize ?? 0;
+      if (Math.abs(w - lastW) > 0.5 || Math.abs(h - lastH) > 0.5) {
+        lastW = w;
+        lastH = h;
+        onResize();
+      }
+    });
+    ro.observe(host);
+  }
+
   return () => {
     if (raf) cancelAnimationFrame(raf);
     window.removeEventListener('resize', onResize);
+    if (ro) ro.disconnect();
   };
 }
 
