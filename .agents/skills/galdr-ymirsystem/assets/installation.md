@@ -21,14 +21,15 @@ bin/ymir-install.sh --status      # alias of --check
 ## The steps
 
 ```
-install[21]{step,what,self-heals}:
+install[22]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at $YMIR_HOARD, else $YMIR_HOME)","creates if missing; hoard_root resolves through bin/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/hodd.sh emit resolves"
+  "apps","the app repos (the app split) — hlidskjalf · hlidskjalf-mobile · odrerir · sessrumnir · smidja","reads $HOARD/identity/projects.yaml (never guesses a remote); clones a missing apps/<path> from its registered git{} block, fast-forwards a present one, and stamps the smithy engine (apps/smidja) from the cloned factory's templates"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
-  "sessrumnir","the Sessrúmnir desktop GUI (vendored pi-desktop at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
+  "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
@@ -45,7 +46,7 @@ install[21]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**23** `step_*` functions are defined. A step is not a row: one step may emit
+**24** `step_*` functions are defined. A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 `smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. `--check`
 skips the runtime-only steps (`services`, `desktop`, `validate`), which have
@@ -231,7 +232,7 @@ part is off. `--json` for machine consumption.
 | **sandcastle** (`mattpocock/sandcastle`) | Utgard | Docker/Podman/Vercel sandboxes |
 | **no-mistakes** (`kunchenguid/no-mistakes`) | Mjollnir · Glitnir | clean-PR validation gate |
 | **Hermes** (`NousResearch/hermes-agent`, MIT) | — (product name) | worker agent runtime: own brain, memory, skills, subagents, sandbox backends |
-| **pi-desktop** (`FaqFirebase/pi-desktop`, Apache-2.0) | **Sessrúmnir** (vendored at `apps/sessrumnir`) | desktop GUI for the Pi/OMP coding agents — the seat-hall, themed with the Ymir way-of palette |
+| **pi-desktop** (`FaqFirebase/pi-desktop`, Apache-2.0) | **Sessrúmnir** (cloned from its own repo to `apps/sessrumnir` at install) | desktop GUI for the Pi/OMP coding agents — the seat-hall, themed with the Ymir way-of palette |
 
 ## Missing dependencies
 
