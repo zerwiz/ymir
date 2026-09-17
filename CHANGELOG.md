@@ -1,4 +1,67 @@
 
+## 2026-09-17 — the house gains an unpublish door
+
+- **`bin/npm-publish.sh --unpublish @scope/name@<version>`.** Publishing had a
+  door in this house and unpublishing had none, so the act was done by hand on a
+  machine whose `~/.npmrc` holds a stale token — the very reason the door exists.
+  The new mode resolves the token from the hoard exactly as publishing does,
+  demands a spec that names the version (a whole package is not a one-word act),
+  supports `--dry-run`, and says plainly that the registry's CDN may serve the
+  tarball for a while after the removal.
+- **The window is 72 hours.** npm allows one version back within 72 hours of its
+  publication; past that only npm support can remove it. The help text says so,
+  because a door that does not name its own clock invites a late knock.
+- **`@zerwiz/ymir@0.1.5` was unpublished** — the version that carried the memory
+  well. Publishing the clean 0.1.7 moves the `latest` tag off the tainted build at
+  once, which is the half of the repair that does not wait for propagation.
+
+## 2026-09-17 — the plan learns the smithy's package name, and the install forwards its flags
+
+Two defects the first real end-to-end npm install surfaced — which is what an
+end-to-end test is for.
+
+- **A surface's name is not its package's name.** The plan looked for
+  `apps/smidja` or `@zerwiz/smidja`, but npm serves the smithy as
+  `@zerwiz/smidja-factory` — so the row read `BLOCKED` on a machine where the
+  smithy was installed and standing. `app_dir`/`app_row` now take the surface
+  name and the package name separately, and the row tells the truth: installed,
+  with the visualizer's UI still to build (the tarball ships its source, never a
+  stale build).
+- **`ymir install --plan` forwarded only `--json`.** `--phase` and `--blocked`
+  were dropped on the way through the installer's door, so `--blocked` answered
+  *unknown flag*. Every plan flag is forwarded now.
+
+**The install this came out of:** `npm install -g @zerwiz/ymir` from the registry
+— `@zerwiz/ymir@0.1.7`, 331 packages, and all four surfaces
+(`hlidskjalf` · `odrerir` · `sessrumnir` · `smidja-factory`) arrived inside the
+distro. The tarball carries no memory store — the leak is closed in the artefact
+as well as in the repo.
+
+## 2026-09-17 — the package shipped the memory well (one version, now excluded)
+
+- **The exposure.** `@zerwiz/ymir@0.1.5` carries five files that are nobody's but
+  the operator's: `.agents/memory/kaia.engram`, its `-shm` and `-wal` sidecars, and
+  `.agents/memory/well/{episodes,workspace}.jsonl`. A public npm tarball contained
+  the live memory well — the store and the episodes. Verified by fetching the
+  published artefact and listing it; `0.1.0`–`0.1.4` are clean, and this branch's
+  build is clean.
+- **The cause, and it is a trap worth naming.** `.gitignore` excludes
+  `.agents/memory/kaia.engram*` and `.agents/memory/well/*.jsonl`, and the repo is
+  clean — but **npm does not consult `.gitignore` when `files[]` names a whole
+  directory.** `files: [".agents/"]` packs that subtree *including* the ignored
+  files. Nothing warned: the leak travelled in the artefact, not the repo.
+- **The fix.** The manifest excludes them explicitly, because a `files[]` list
+  cannot rely on the ignore file it overrides:
+  `!.agents/memory/kaia.engram*`, `!.agents/memory/well/*.jsonl`,
+  `!.agents/memory/*.db`, plus `!**/__pycache__/` and `!**/*.pyc` for the compiled
+  junk that was travelling the same way. Verified: `npm pack --dry-run` carries
+  864 files and **no** memory store — the memory README and the ledger's scaffold
+  header are all that remain, as they should be.
+- **The rule for every future package:** a `files[]` entry that names a directory
+  overrides `.gitignore` for everything beneath it. Name what ships, or exclude
+  what must not — and verify with a dry-run pack, never by assumption.
+- **Remediation.** `@zerwiz/ymir@0.1.5` should be unpublished (it is inside npm's
+  window); the clean build publishes as 0.1.7 and supersedes it.
 
 ## 2026-09-17 — the house gains an unpublish door
 
@@ -58,7 +121,6 @@
   arrives with the rest. Being optional, it is skipped silently until then — the
   plan's phase-5 row is what says so out loud.
 - **`@zerwiz/ymir` 0.1.7** — the version published once this lands.
-
 
 ## 2026-09-17 — the four surfaces arrive by npm, and an old tree gives up what it holds
 
