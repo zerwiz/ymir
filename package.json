@@ -37,7 +37,12 @@
     "CHANGELOG.md",
     "LICENSE",
     "NOTICE",
-    "!**/node_modules/**"
+    "!**/node_modules/**",
+    "!.agents/memory/kaia.engram*",
+    "!.agents/memory/well/*.jsonl",
+    "!.agents/memory/*.db",
+    "!**/__pycache__/",
+    "!**/*.pyc"
   ],
   "engines": {
     "node": ">=20"
