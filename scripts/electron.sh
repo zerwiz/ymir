@@ -184,9 +184,25 @@ ensure_electron_binary() {
   return 1
 }
 
+# npm gates install scripts by default (11.16+ warns, 12 refuses), and Electron's
+# postinstall is what downloads the runtime — so a fresh install can build the web
+# app perfectly and still have no window. Before refusing, do the mending a user
+# would otherwise be told to do by hand: approve the script and rebuild.
+repair_electron() {  # <app-dir>
+  local dir="$1"
+  command -v npm >/dev/null 2>&1 || return 1
+  ( cd "$dir" && npm install-scripts approve electron >/dev/null 2>&1 || true
+    cd "$dir" && npm rebuild electron >/dev/null 2>&1 )
+}
 if ! ensure_electron_binary; then
-  printf 'error: the Electron binary is missing (the package installed but its postinstall was blocked)\nhelp: cd apps/hlidskjalf && node node_modules/electron/install.js\nhelp: if npm blocks install scripts, run: npm install --foreground-scripts\n' >&2
-  exit 1
+  # Try the mending ourselves before telling the user to do it by hand: npm's
+  # gating is the cause, and the cure is one command we can run.
+  echo "the Electron runtime is partial — mending it (npm rebuild electron)…" >&2
+  repair_electron "$APP" >/dev/null 2>&1 || true
+  ensure_electron_binary || {
+    printf 'error: the Electron runtime could not be mended\nhelp: cd <the app> && npm install-scripts approve electron && npm rebuild electron\nhelp: or run the web surfaces only: ymir install --no-desktop\n' >&2
+    exit 1
+  }
 fi
 
 app_dir() { case "$1" in odrerir) printf '%s' "$Odrerir_app" ;; *) printf '%s' "$APP" ;; esac; }

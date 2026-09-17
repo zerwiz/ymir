@@ -75,8 +75,18 @@ mint() {  # <app-dir> <glyph> <tint> <label>
   local path
   path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$g" | head -1)"
   [ -n "$path" ] || { printf 'error: %s carries no <path> to reuse\n' "$glyph" >&2; return 1; }
-  local outdir="$ROOT/$dir/public"
-  [ -d "$(dirname "$outdir")" ] || { printf '  "%s","SKIP (no such app)"\n' "$dir"; return 0; }
+  # A clone keeps the app at $ROOT/apps/<name>; a package keeps it under
+  # node_modules/@zerwiz/<package>. The mint resolves both, so a packaged install
+  # gets its favicon too — the same resolver every other script uses.
+  local base outdir surface
+  base="$ROOT/$dir"
+  if [ ! -d "$base" ]; then
+    surface="$(basename "$dir")"
+    case "$surface" in smidja-factory) surface=smidja ;; esac
+    app_dir "$surface" base 2>/dev/null || base=""
+  fi
+  [ -n "$base" ] && [ -d "$base" ] || { printf '  "%s","SKIP (no such app)"\n' "$dir"; return 0; }
+  outdir="$base/public"
   mkdir -p "$outdir"
   {
     printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="%s">\n' "$label"
@@ -147,7 +157,12 @@ install_all() {
     printf '  "%s","%s.svg","%s.desktop"\n' "$iconname" "$iconname" "$iconname"
   done
   [ -f "$apps_dir/ymir-smidja.desktop" ] && rm -f "$apps_dir/ymir-smidja.desktop"
-  for stale in ymir-hlidskjalf-mobile; do rm -f "$apps_dir/$stale.desktop" "$icons_dir/$stale.svg"; done
+  # Names we have retired, swept on every install: a launcher entry that points at
+  # an icon nobody ships is a blank square, and the naming law does not let an old
+  # name linger beside the new one. (ymir-visualizer → ymir-smidja.)
+  for stale in ymir-hlidskjalf-mobile ymir-visualizer; do
+    rm -f "$apps_dir/$stale.desktop" "$icons_dir/$stale.svg"
+  done
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
 }
 
