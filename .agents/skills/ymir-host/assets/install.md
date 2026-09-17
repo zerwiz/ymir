@@ -48,6 +48,35 @@ To move an existing home to a new place, re-run the install with the new value:
 YMIR_HOME=/path/to/new-home bin/ymir-install.sh
 ```
 
+## The doors — what the operator types afterwards
+
+Two commands land on PATH (`ymir`, `ymir-install`); everything else is a door on
+`ymir`, named for the figure who does the work. `ymir --help` lists them all.
+
+```
+ymir raise | lower        lift the hall, or lay it down
+ymir hlidskjalf | sessrumnir   the two windows
+ymir smidja               the board on :8437 — build · start · stop · status
+ymir heimdall [invite]    the way in, and letting someone else in
+ymir eir                  what stands, and mend what does not
+ymir groa [migrate]       take the latest, and mend this home forward
+ymir mimir · sense · plan
+```
+
+## Both shapes — a clone and an npm install
+
+The operator may have cloned the tree or installed the package; the scripts must
+not care. `bin/app-lib.sh` resolves a surface either way (`apps/<surface>`, else
+`node_modules/@zerwiz/<package>`), `bin/smidja-lib.sh` resolves the smithy, and
+`bin/electron-lib.sh` verifies a shell's runtime. To exercise the *other* shape
+without a second machine:
+
+```bash
+YMIR_ROOT_DIR=/path/to/an/npm/@zerwiz/ymir bash bin/app-lib.sh   # resolve against it
+```
+
+That variable is how a resolver is tested against a package from a clone.
+
 ## Which root holds what
 
 ```
