@@ -2274,7 +2274,6 @@ agent-hq/
 │   ├── design-system/                 # Shared UI components & design assets
 │   ├── shared-packages/               # Internal npm/cargo/python libraries used by all teams
 │   ├── infrastructure/                # Shared Terraform / Kubernetes / Docker base configs
-│   ├── company_wiki/                  # High-level company policies, vision, & specs
 │   └── github_org_repos/              # Central repos shared across all departments
 │       └── company-core-utils/        # Shared core utilities repo
 │
@@ -3146,7 +3145,6 @@ agent-hq/
 │   ├── design-system/                 # Shared UI components & design assets
 │   ├── shared-packages/               # Internal npm/cargo/python packages used by all teams
 │   ├── infrastructure/                # Shared Terraform, Docker, & Kubernetes configs
-│   ├── company_wiki/                  # Central documentation, policies, & specs
 │   └── github_org_repos/              # Central company-wide GitHub repositories
 │       └── shared-core-api/           # Cloned Shared Repo
 │           ├── .git/                  # Shared Git database
