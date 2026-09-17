@@ -16,8 +16,19 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MODULE="$ROOT/apps/hlidskjalf/server/accounts.ts"
-STORE="$ROOT/apps/hlidskjalf/server/accounts.ts" # absolute: one definition of an account, wherever this is run from
+# Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
+# npm install — both shapes, one resolver (bin/app-lib.sh).
+if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
+  _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+    [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
+  done
+  unset _ya _yac
+fi
+app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
+
+MODULE="$APP_HLIDSKJALF/server/accounts.ts"
+STORE="$APP_HLIDSKJALF/server/accounts.ts" # absolute: one definition of an account, wherever this is run from
 
 die() { printf 'ymir-invite: %s\n' "$1" >&2; exit 1; }
 
@@ -25,7 +36,7 @@ command -v bun >/dev/null 2>&1 || die "bun is required (bin/ymir-install.sh inst
 
 # A tiny bun program per action — the module is the single source of truth.
 accounts() {
-  ( cd "$ROOT/apps/hlidskjalf" && bun -e "$1" )
+  ( cd "$APP_HLIDSKJALF" && bun -e "$1" )
 }
 
 [ -f "$MODULE" ] || die "the account store module is missing: $MODULE"
