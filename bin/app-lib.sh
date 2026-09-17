@@ -38,7 +38,17 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
   _apd_root="${YMIR_ROOT_DIR:-}"
   if [ -z "$_apd_root" ]; then _apd_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; fi
   _apd_pkg="$(app_pkg "$_apd_surface")"
-  for _apd_c in "$_apd_root/apps/$_apd_surface" "$_apd_root/node_modules/@zerwiz/$_apd_pkg"; do
+  # Three shapes, and npm uses the third more than anyone expects:
+  #   a clone            apps/<surface>
+  #   a nested package   <pkg>/node_modules/@zerwiz/<package>
+  #   a SIBLING package  <prefix>/lib/node_modules/@zerwiz/<package> — beside ymir,
+  #                      where a global install puts a dependency it hoists out
+  # (the sibling is found through dirname, so no parent-climbing path is written)
+  for _apd_c in \
+    "$_apd_root/apps/$_apd_surface" \
+    "$_apd_root/node_modules/@zerwiz/$_apd_pkg" \
+    "$(dirname "$_apd_root")/$_apd_pkg"
+  do
     [ -d "$_apd_c" ] && { printf -v "$_apd_rv" '%s' "$_apd_c"; return 0; }
   done
   printf -v "$_apd_rv" '%s' ""
