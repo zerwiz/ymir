@@ -153,6 +153,27 @@ removed and the failure is reported plainly.
 | `BROKK_MEMORY_PRUNE` | `0` (disabled) |
 | `BROKK_MEMORY_PRUNE_DAYS` | `7` |
 
+### 3.5 Óðrerir — Live Hall snapshot (`bin/nornir-job-hall-snapshot.sh`, 08:00)
+
+The Live Hall is a glass: it reads `apps/odrerir/public/livehall.json`
+(same-origin, `cache: no-store`). This job writes that snapshot from real state
+via `bin/hall-snapshot.sh` — runes, the project registry, the cron gauge, the
+wake queue, standing smiths, armed `when-` sources, and the landed errands —
+then carves Rune `odrerir / hall.snapshot`. Scheduled at 08:00 so it follows
+the 06:00 observer and the 07:00 briefing: the morning board carries the day's
+fresh runes.
+
+| Reads | Writes |
+|---|---|
+| runes ledger · `hodd/identity/projects.yaml` · `config/cron.yaml` · `state/.wake-queue` · herdr agent list · armed when-sources · `state/eindri-reports/archive/` | `apps/odrerir/public/livehall.json` (gitignored runtime) · Rune `odrerir / hall.snapshot` |
+
+- The snapshot is **runtime, never repo**: `apps/odrerir/public/livehall.json`
+  is gitignored, so the job never dirties a branch.
+- Absent `livehall.json` on the Hall is *not* a build failure — the page paints
+  the saga's own count and says so. This job is what makes the board true.
+- Idempotent by nature: each run rewrites the same snapshot from the same
+  inputs; the cron date-guard suppresses repeat dispatch within a day.
+
 ### 3.4 Yggdrasil — git sync (`bin/nornir-job-git-sync.sh`, 00:00)
 
 The world-tree kept in order. Two modes, both non-destructive:

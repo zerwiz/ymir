@@ -1411,23 +1411,6 @@ and killed the gate. An unknown status can no longer take a panel down.
   The duplicate at the source is recorded, not hidden.
 - `/api/stream` answers 200; the live stream is not broken, it was the window.
 
-## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
-
-- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
-  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
-  20 roster cards the rings and labels overlapped into an unreadable pile.
-  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
-  rows pitched past ring+label), so 20 agents render separated.
-- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
-  `domain: ymirlabs` for every card and its roster parser never read the
-  `domain:` frontmatter each figure carries — so all twenty cards wore the
-  anonymous ᛦ. The roster now parses `domain:` and passes it through;
-  `galdr.md` names its house (`brokkforge`); the graph falls back to
-  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
-  — and the `AgentCard` already fell back safely.
-
-galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
-Fleet graph paragraph (grid fan, roster domains, fallback).
 
 ## 2026-09-17 — the apps leave the monorepo; installation pulls them from their own repos
 
@@ -1448,3 +1431,37 @@ Fleet graph paragraph (grid fan, roster domains, fallback).
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/installation.md` — the
 step table (`22 steps`, `24` `step_*` functions), the new `apps` row, and the
 Sessrúmnir rows now say "its own repo", not "vendored".
+
+## 2026-09-17 — the Live Hall's board becomes true: the snapshot lands on the loom
+
+- **The Hall was a glass with nothing behind it.** The Óðrerir page reads
+  `apps/odrerir/public/livehall.json` same-origin, but nothing wrote it on a
+  schedule — the board showed the saga's own static count and said so.
+  `bin/nornir-job-hall-snapshot.sh` (08:00, after the 06:00 observer and the
+  07:00 briefing) now drives `bin/hall-snapshot.sh` from real state — runes,
+  projects, the cron gauge, the wake queue, standing smiths, armed when-
+  sources, landed errands — and carves Rune `odrerir / hall.snapshot`.
+- The snapshot is runtime, never repo: `apps/odrerir/public/livehall.json` is
+  gitignored, so the job never dirties a branch.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — new
+§3.5 row (reads/writes table, idempotence note).
+
+
+## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
+
+- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
+  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
+  20 roster cards the rings and labels overlapped into an unreadable pile.
+  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
+  rows pitched past ring+label), so 20 agents render separated.
+- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
+  `domain: ymirlabs` for every card and its roster parser never read the
+  `domain:` frontmatter each figure carries — so all twenty cards wore the
+  anonymous ᛦ. The roster now parses `domain:` and passes it through;
+  `galdr.md` names its house (`brokkforge`); the graph falls back to
+  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
+  — and the `AgentCard` already fell back safely.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+Fleet graph paragraph (grid fan, roster domains, fallback).
