@@ -1411,6 +1411,23 @@ and killed the gate. An unknown status can no longer take a panel down.
   The duplicate at the source is recorded, not hidden.
 - `/api/stream` answers 200; the live stream is not broken, it was the window.
 
+## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
+
+- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
+  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
+  20 roster cards the rings and labels overlapped into an unreadable pile.
+  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
+  rows pitched past ring+label), so 20 agents render separated.
+- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
+  `domain: ymirlabs` for every card and its roster parser never read the
+  `domain:` frontmatter each figure carries — so all twenty cards wore the
+  anonymous ᛦ. The roster now parses `domain:` and passes it through;
+  `galdr.md` names its house (`brokkforge`); the graph falls back to
+  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
+  — and the `AgentCard` already fell back safely.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+Fleet graph paragraph (grid fan, roster domains, fallback).
 
 ## 2026-09-17 — the apps leave the monorepo; installation pulls them from their own repos
 
@@ -1431,73 +1448,3 @@ and killed the gate. An unknown status can no longer take a panel down.
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/installation.md` — the
 step table (`22 steps`, `24` `step_*` functions), the new `apps` row, and the
 Sessrúmnir rows now say "its own repo", not "vendored".
-
-## 2026-09-17 — the hoard gets a guard, and Rule 04 stops contradicting the disk
-
-- **Eir gains a `hoard` surface.** Private data drifting outside the hoard is
-  now caught rather than discovered by asking "where did that go?". The check
-  fails on two things: a `.ymir-layout.yaml` entry naming a directory that does
-  not exist (a stale map is what lets private work land outside the hoard), and
-  a flat `$YMIR_HOME/{identity,data,docs,secrets,tenants}` sitting beside
-  `hodd/`. `fix` merges a flat duplicate into the hoard without clobbering, then
-  repoints any stale layout entry at the hoard.
-- **Rule 04 corrected, append-only.** The rule's mapping table read as if
-  `hodd/x/` and `$YMIR_HOME/x/` were two locations; on a real home that produced
-  two parallel stores which drifted. The appended correction states the truth:
-  `$YMIR_HOME/hodd/` **is** the private data path, `bin/hoard-lib.sh` is the one
-  source of truth for it, and `.ymir-layout.yaml` must name only paths that
-  exist. Nothing above the correction was rewritten.
-
-## 2026-09-17 — the hoard encrypts its secrets at rest
-
-- **`bin/hodd.sh` decrypts transparently.** `load`, `emit`, and `tenant` now
-  accept a plaintext file *or* an `.age` ciphertext with the sibling plaintext
-  absent. A shared `resolve_secret` finds the readable form; when it decrypts,
-  it uses a mode-600 temp and removes it afterward. An agent asks for the
-  resolved path and never handles ciphertext directly.
-- **Secrets stay encrypted at rest.** `hodd/secrets/platform.env.age` is the
-  committed form; the plaintext is scratch and gitignored. Round-trip verified
-  byte-identical before the plaintext was untracked.
-- **The vault invariant, written down.** The age key and the ciphertext travel
-  together in the private `ymirhome` repo, so a dead disk loses nothing — and
-  `ymirhome` **must never be made public**. Stated in `hodd/docs/secrets-vault.md`.
-- **The honest limit.** This is encryption-at-rest, not encryption-against-yourself:
-  on a single-user machine, a process running as the operator can read what the
-  operator can read. What it buys is the *file* and the *repo*, not the *account*.
-
-
-## 2026-09-17 — the registry says where a repo lives and what it is for
-
-- **A project entry can now name its machine.** `machine:` records the host
-  where a checkout lives; `data/machines.md` holds the fleet (omarchy-1,
-  zerwiz, zerwizserver live on the tailnet). A repo is no longer assumed to be
-  on the box you happen to be standing on.
-- **A project entry can now say what it is for.** `about:` is one plain
-  sentence per repo. `bin/project-git.sh list --field about` prints the whole
-  inventory without opening the YAML.
-- **`project-git.sh` resolves more of the block.** `--field` now accepts
-  `machine`, `company`, `workspace` and `about` alongside the git fields, and
-  non-git keys read from the project block rather than the `git:` line.
-- **One registry, not two.** The live registry is `hodd/identity/projects.yaml`
-  (what the runtime reads). A stale duplicate at `Documents/Ymir/identity/` had
-  been drifting apart from it — different GitHub owners, different project sets
-  — and is retired, with a backup kept in `hodd/state/`.
-
-
-## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
-
-- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
-  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
-  20 roster cards the rings and labels overlapped into an unreadable pile.
-  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
-  rows pitched past ring+label), so 20 agents render separated.
-- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
-  `domain: ymirlabs` for every card and its roster parser never read the
-  `domain:` frontmatter each figure carries — so all twenty cards wore the
-  anonymous ᛦ. The roster now parses `domain:` and passes it through;
-  `galdr.md` names its house (`brokkforge`); the graph falls back to
-  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
-  — and the `AgentCard` already fell back safely.
-
-galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
-Fleet graph paragraph (grid fan, roster domains, fallback).
