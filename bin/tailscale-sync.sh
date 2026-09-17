@@ -16,7 +16,20 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CFG="${YMIR_TAILSCALE_SYNC:-$ROOT/config/tailscale-sync.yaml}"
+
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+CFG="${YMIR_TAILSCALE_SYNC:-$YMIR_SETTINGS_DIR/tailscale-sync.yaml}"
 DRY=0; ACTION=""; PEER=""
 
 for a in "$@"; do
@@ -62,7 +75,7 @@ except Exception: pass' 2>/dev/null)"
 fi
 
 if [ "$ACTION" = init ]; then
-  TPL="$ROOT/config/tailscale-sync.example.yaml"
+  TPL="$YMIR_SETTINGS_DIR/tailscale-sync.example.yaml"
   if [ -r "$CFG" ]; then printf 'tailscale-sync[1]{action,state}:\n  "init","kept — %s exists"\n' "$CFG"; exit 0; fi
   [ -r "$TPL" ] || { printf 'error: template missing: %s\n' "$TPL" >&2; exit 1; }
   cp "$TPL" "$CFG" && printf 'tailscale-sync[1]{action,path}:\n  "init","%s"\n' "$CFG"

@@ -17,7 +17,20 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-OUT="${YMIR_LOCAL_MODELS_DOC:-$ROOT/data/local-models.md}"
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
+OUT="${YMIR_LOCAL_MODELS_DOC:-$YMIR_DATA_DIR/local-models.md}"
 PRINT_ONLY=0
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
@@ -53,8 +66,9 @@ block="<!-- model-hardware:begin -->
   build/run the CUDA build; keep K and V the same KV type (q8_0).
 - **Coding wants >= 80000 context.** Measure the real ceiling: load more until a
   request OOMs, then drop one step (ctx is per-model).
-- **Bench to the maximum:** load the \`.agents/skills/modeltesting\` skill, then
-  \`bin/models-detect.sh --write\` to register what serves.
+- **The method** — engines, wiring, and honest measurement — is the Galdr asset
+  \`.agents/skills/galdr-ymirsystem/assets/local-models.md\`. Then
+  \`bin/models-detect.sh --write\` registers what serves.
 <!-- model-hardware:end -->"
 
 # The researched settings are NOT in the managed block, so a re-run never clobbers

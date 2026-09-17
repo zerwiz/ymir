@@ -17,13 +17,39 @@
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
-STATE="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
+
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
+STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 OUT="${1:-$ROOT/apps/odrerir/public/livehall.json}"
 
 runes_file="${BROKK_RUNES_FILE:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/memory/runes_audit.md}"
 PROJECTS_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/identity/projects.yaml"
 projects_file="$PROJECTS_FILE"
-cron_file="$ROOT/config/cron.yaml"
+cron_file="$YMIR_SETTINGS_DIR/cron.yaml"
 
 # --- tally the pieces ---
 runes=$(grep -c '^{' "$runes_file" 2>/dev/null || echo 0)

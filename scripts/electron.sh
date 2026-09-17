@@ -26,6 +26,19 @@ fi
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# The roots that live OUTSIDE the code tree: this machine's records and the
+# runtime state belong to the home the operator chose at installation, never in
+# the tree — a packaged install replaces its tree on upgrade (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_state_dir YMIR_STATE_DIR
+hoard_data_dir YMIR_DATA_DIR
 APP="$ROOT/apps/hlidskjalf"
 Odrerir_app="$ROOT/apps/odrerir"
 NO_INSTALL=0
@@ -124,7 +137,7 @@ case "$ACTION" in
 esac
 
 command -v npm >/dev/null 2>&1 || { printf 'error: npm not found\nhelp: install node/npm to run the desktop shell\n' >&2; exit 1; }
-mkdir -p "$ROOT/state"
+mkdir -p "$YMIR_STATE_DIR"
 
 if [ ! -x "$APP/node_modules/.bin/electron" ]; then
   if [ "$NO_INSTALL" = 1 ]; then
@@ -190,7 +203,7 @@ start_one() {
     printf 'electron: %s has no service at %s — raising the system\n' "$v" "$host" >&2
     ( nohup bash "$ROOT/scripts/start.sh" >/dev/null 2>&1 </dev/null & )
     if ! wait_for_service "$host"; then
-      printf 'electron: %s still does not answer at %s — see $ROOT/state/\n' "$v" "$host" >&2
+      printf 'electron: %s still does not answer at %s — see $YMIR_STATE_DIR/\n' "$v" "$host" >&2
     fi
     # A process that lived through the outage is windowless; it must be reborn.
     if is_running "$v"; then stop_view "$v"; fi

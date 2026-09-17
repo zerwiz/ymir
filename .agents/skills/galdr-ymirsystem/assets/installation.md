@@ -5,12 +5,13 @@
 > page is the map.
 
 One command sets up the whole system for the user; it self-heals what it can and
-reports what it cannot. It **asks for consent first** (accept the plan, or pass
-`--yes` for non-interactive use), and it **validates at the end** that what it
+reports what it cannot. It **asks for consent first** — with a plan it computes on
+this host, not a recited paragraph — and it **validates at the end** that what it
 claims is actually running.
 
 ```
 bin/ymir-install.sh               # the first setup (idempotent; asks to proceed)
+bin/ymir-install.sh --plan        # the plan, probed — changes nothing (--json too)
 bin/ymir-install.sh --check       # report only, no writes, no prompt
 bin/ymir-install.sh --yes         # non-interactive (accept the plan)
 bin/ymir-install.sh --skip-engines --skip-services
@@ -18,14 +19,95 @@ bin/ymir-install.sh --no-desktop  # don't open the desktop apps at the end
 bin/ymir-install.sh --status      # alias of --check
 ```
 
+## The plan comes first — `bin/ymir-plan.sh`
+
+The consent a real install asks for is a **computed plan**, one row per step, each
+carrying its state and the reason for it. A hardcoded paragraph cannot know the
+host: the old one named an Omarchy version on a Mac, promised a workspace tree that
+already stood, and never mentioned that no application had been installed at all.
+
+```
+bin/ymir-plan.sh              # the plan (TOON)
+bin/ymir-plan.sh --json       # the same, for automation
+bin/ymir-plan.sh --phase 5    # one phase
+bin/ymir-plan.sh --blocked    # only what cannot proceed, and why
+```
+
+```
+plan_states[5]{state,means}:
+  "DO","a change will be made"
+  "SKIP","already satisfied — nothing to do"
+  "INFO","a fact about this host, discovered; no change implied"
+  "BLOCKED","cannot run — the reason names what is missing"
+  "CONSENT","needs the operator's word (a credential, an invite, the shells)"
+```
+
+```
+plan_phases[9]{n,name,gate}:
+  "0","resolve","this host, the container engine, the code root, and the home"
+  "1","code","the tree is intact — and holds nothing of the operator's"
+  "2","home","the operator's world, outside the tree"
+  "3","runtimes","git/python3 · bun/uv/mcp<2> · pi · hermes · the terminal backend"
+  "4","engines","treehouse · no-mistakes · sandcastle · the Utgard image"
+  "5","apps","hlidskjalf · odrerir · sessrumnir · smidja — web build required, shell gated"
+  "6","wire","the way in (auth · invite) and the launcher entries"
+  "7","raise","every port listening, then the desktop apps"
+  "8","verify","what stands, honestly"
+```
+
+`ymir-install.sh` prints the plan at the consent prompt; `--plan`/`--dry-run` prints
+it and exits without writing. The plan is recomputed on every run, so it cannot
+drift behind the code the way a paragraph did. `bin/ymir-plan.sh` is the ward for
+the law below: its phase-1 `purity` row names any of the operator's things found in
+the code tree.
+
+## Where things live — the package is code, the home is the operator's
+
+**Law (Rule 04):** the package carries the **core systems** — everything needed to
+run the programs. Everything the **operator** owns goes to `$YMIR_HOME`: their
+info, their records, their documents, their settings, their state, their
+credentials. A packaged install (npm) treats its tree as read-only; the next
+upgrade replaces it, so anything of theirs kept there is kept at its peril.
+
+```
+roots[5]{root,resolves_from,holds}:
+  "ymir_home_root","$YMIR_HOME → the choice recorded at installation → one documented default","everything private the operator owns"
+  "hoard_root","$YMIR_HOARD → <home>/hodd","docs · secrets · identity · tenants · memory"
+  "hoard_data_dir","$YMIR_DATA_DIR → <hoard>/data","this machine's records: operator, fleet, machines, the host profile"
+  "hoard_state_dir","$YMIR_STATE_DIR → <home>/state","runtime state: pids, logs, locks, caches"
+  "hoard_settings_dir","$YMIR_SETTINGS_DIR → <home>/config","settings: agents.yaml, cron.yaml, tailscale-sync, the wedge channel"
+```
+
+Plus `hoard_local_env` → `$YMIR_HOME/.env.local`: the operator's **credentials**
+(`HLIDSKJALF_AUTH`, OAuth keys, tokens), never in the tree.
+
+**The home is chosen, not assumed.** A real interactive install asks once
+(`step_home`), records the answer as machine state under `~/.config/ymir/home`
+(the same place `engram-python` and `accounts.json` live), and every later script
+resolves it through `bin/hoard-lib.sh`. `--check` never writes; `--yes` takes what
+is recorded, else the documented default.
+
+```bash
+bin/hoard-lib.sh                     # the lib (source-safe; functions only)
+ymir_home_root   HOME                # → the home
+hoard_settings_dir SETTINGS          # → <home>/config
+hoard_local_env  ENVFILE             # → <home>/.env.local
+```
+
+**Rule for new code:** never write `$ROOT/data`, `$ROOT/state`, `$ROOT/config`,
+`$ROOT/.env.local` or `$ROOT/workspace`. Resolve the root through the lib. A script
+that points an operator's thing into the tree is the bug the `purity` row exists to
+catch.
+
 ## The steps
 
 ```
-install[22]{step,what,self-heals}:
+install[23]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
-  "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at $YMIR_HOARD, else $YMIR_HOME)","creates if missing; hoard_root resolves through bin/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/hodd.sh emit resolves"
+  "home","the home the operator CHOOSES, recorded under ~/.config/ymir/home","asks once, records the answer; --check never writes, --yes takes what is recorded, else the documented default"
+  "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at the hoard root under the chosen home)","creates if missing; hoard_root resolves through bin/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/hodd.sh emit resolves"
   "apps","the app repos (the app split) — hlidskjalf · hlidskjalf-mobile · odrerir · sessrumnir · smidja","reads $HOARD/identity/projects.yaml (never guesses a remote); clones a missing apps/<path> from its registered git{} block, fast-forwards a present one, and stamps the smithy engine (apps/smidja) from the cloned factory's templates"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
@@ -46,7 +128,7 @@ install[22]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**24** `step_*` functions are defined. A step is not a row: one step may emit
+**25** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 `smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. `--check`
 skips the runtime-only steps (`services`, `desktop`, `validate`), which have
@@ -167,13 +249,15 @@ non-interactive callers; without it a non-interactive `add` refuses with exit 3)
 The installer only *offers*.
 
 ## Consent
-A real install prints its plan and waits for `[y/N]`. Declining changes nothing
-(exit 3). `--check` never prompts. A non-interactive caller without `--yes` is
-refused rather than silently proceeding.
+A real install prints **the plan it computed** (`bin/ymir-plan.sh`) and waits for
+`[y/N]`. Declining changes nothing (exit 3). `--check` and `--plan` never prompt.
+A non-interactive caller without `--yes` is refused rather than silently
+proceeding.
 
-The plan names every change, including the terminal backend (herdr/tmux), the
-host learning, and the desktop placement — so the operator accepts what is
-actually done, not a shorter list that drifted behind the code.
+The plan names every step with its state and the reason for it — including the
+home the operator is asked to choose, the four app surfaces and whether each can
+be installed at all, the terminal backend, and what will be skipped and why. The
+state vocabulary is `DO · SKIP · INFO · BLOCKED · CONSENT`.
 
 `--check` writes nothing — and that includes the migrations. `bin/ymir-migrate.sh
 apply` **moves private data**, so the step chain runs it only on a real run;

@@ -1,4 +1,50 @@
 
+## 2026-09-17 — the install asks with a plan, and the operator's things leave the code tree
+
+- **The consent a real install asks for is now computed, not recited.** The old
+  prompt was a hardcoded paragraph, and a paragraph cannot know the host: it named
+  an Omarchy version on a Mac, promised a workspace tree that already stood, and
+  never mentioned that no application had been installed at all. `bin/ymir-plan.sh`
+  probes this machine and prints one row per step with its state and the reason —
+  `DO · SKIP · INFO · BLOCKED · CONSENT` — across nine phases (resolve · code ·
+  home · runtimes · engines · apps · wire · raise · verify). `ymir-install.sh`
+  prints it at the consent prompt; `--plan` / `--dry-run` prints it and writes
+  nothing; `--json`, `--phase N` and `--blocked` are there for automation and for
+  reading what is holding an install back.
+- **The four app surfaces are named in the plan.** hlidskjalf, odrerir, sessrumnir
+  and smidja each get a row: whether the source is present, whether the web build
+  exists, and — when it is absent — the honest reason (`no apps/<name> and no
+  @zerwiz/<name> package`). The Electron shells are a `CONSENT` row, not a silent
+  download: three shells each pull a ~100 MB runtime the web surfaces do not need.
+- **The home is the operator's to choose.** `step_home` asks once, records the
+  answer as machine state under `~/.config/ymir/home`, and every later script
+  resolves it through `bin/hoard-lib.sh` (`$YMIR_HOME` → the recorded choice → one
+  documented default). `--check` never writes; `--yes` takes what is recorded.
+- **The roots law, applied across the tree.** The package is the **code that runs
+  the programs**; everything the operator owns lives in the home. Two resolvers
+  were added (`hoard_data_dir`, `hoard_state_dir`, `hoard_settings_dir`,
+  `hoard_local_env`) and **42 call sites** converted: `$ROOT/data` and
+  `$ROOT/state` (25 scripts), then `$ROOT/.env.local` and `$ROOT/config/*`
+  (17 scripts). A credential no longer sits in a tree that ships, and machine
+  records no longer sit where npm will erase them on upgrade.
+- **The plan is the ward for that law.** Its phase-1 `purity` row names anything of
+  the operator's found in the code tree — `data/`, `state/`, `config/*.yaml`,
+  `.env.local` — so drift is reported on every run instead of discovered after an
+  upgrade.
+- **The install no longer lectures about local models.** The `step_models` console
+  line told the operator to "load the modeltesting skill" — a skill that does not
+  exist anywhere in the tree — mid-install. It is gone; the real method is named in
+  the one place it belongs, the Galdr asset `assets/local-models.md`. `step_models`
+  still ensures the Pi harness and seeds `~/.pi/agent/models.json`.
+- **The package no longer claims to ship `config/`.** `config` is a symlink to
+  `.agents/config`, which npm cannot carry; the tarball now declares what it
+  actually contains (147 bin scripts, the agent-set template under `.agents/`).
+  Settings are seeded into `$YMIR_HOME/config/agents.yaml` from the tracked
+  template, falling back to `.agents/config/` when the symlink is absent.
+- **A corrupted TOON block in `AGENTS.md`** — `outputs[7]` carrying eight rows and
+  duplicate `midgard/` lines — is mended; the compliance gate reports 84 valid
+  blocks again.
+
 ## 2026-09-17 — the fragment convention is enforced where GitHub runs it
 
 - **The gap, found by doing it.** The pre-push hook folds fragments before a
