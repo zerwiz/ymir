@@ -545,7 +545,10 @@ writers[2]{writer,owns}:
 
 **Both merge; neither overwrites.** The loader's `config_out` adds missing keys (
 deep, `setdefault`-style), ensures `skills.paths`, and re-asserts nothing else;
-`agents-config` does the same for providers and models. This is not tidiness —
+`agents-config` does the same for providers and models — and it writes **only
+OpenCode agents** into `opencode.json`. A `pi` (or `hermes`) agent's model is that
+harness's own id (e.g. `llamacpp/qwen3.5-9b`), which OpenCode cannot resolve, so
+those agents are deliberately left out rather than handed to OpenCode broken. This is not tidiness —
 the loader used to re-render from the example with `sed` + `mv`, and because the
 example carried only `llama.cpp`, **every loader run deleted the Apodex
 provider**, which lived only in the live file. A blind render of a file two
