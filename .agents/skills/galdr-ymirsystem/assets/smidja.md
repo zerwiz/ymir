@@ -18,7 +18,10 @@ Ymir itself the instance lives at `apps/smidja/`** — it moved out of the repo 
 so the smithy sits with the other apps, and its runtime data
 (`apps/smidja/smidja_data/`, gitignored) may also live at `$YMIR_HOME/smidja/`,
 which the runtime prefers when it exists. Every path in *this* repo points at
-`apps/smidja/`.
+`apps/smidja/`. The monorepo tracks neither the factory nor the engine: the
+factory is cloned from `zerwiz/smidja` into `apps/smidja-factory` by the
+installer's `apps` step, and the engine is stamped into `apps/smidja` from that
+clone's `templates/smidja` — exactly as `install.py` does for a target repo.
 
 ## What it is
 

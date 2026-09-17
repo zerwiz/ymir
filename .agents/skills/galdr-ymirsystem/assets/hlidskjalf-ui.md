@@ -28,6 +28,9 @@ Quick rules:
 ## Location & stack
 
 - App: `apps/hlidskjalf` — **React 19 + Vite + TypeScript**, state via **Zustand**.
+- The app lives in **its own repo** (`zerwiz/hlidskjalf`, registered in the home
+  registry) — the monorepo never tracks it; `bin/ymir-install.sh`'s `apps` step
+  clones it into `apps/hlidskjalf` at install, or fast-forwards a present clone.
 - Gate API: `apps/hlidskjalf/server/index.ts` — **Bun + `bun:sqlite`**, read-only,
   bound to the runtime and the smithy trace; Vite proxies `/api` → `:3889`.
 - Raise everything with the scripts (do not hand-start each process):
