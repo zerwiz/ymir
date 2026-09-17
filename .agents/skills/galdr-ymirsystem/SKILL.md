@@ -1,6 +1,7 @@
 ---
 name: galdr
 description: Galdr — agent-CLI ergonomics and the master builder/maintainer of the Ymir (Brokk distro) runtime. Use when building, modifying, or reviewing any agent-facing CLI, or when building/maintaining any Ymir subsystem across harnesses (OpenCode, Pi, Claude Code, Cursor, Codex). Load its assets[] row for the task before editing a governed path.
+domain: brokkforge
 allowed-tools: read,write,bash,glob,grep
 ---
 
@@ -46,7 +47,7 @@ assets[24]{path,load_when}:
   "assets/local-models.md","Vog — local models: engines (llama.cpp, LM Studio, Ollama), detection, harness wiring, honest measurement"
   "assets/runtime-compliance.md","runtime acceptance gates + runnable checklist"
   "assets/memory-well.md","Mimirsbrunn/engram: the well, bridge, MCP, harness wiring, laws"
-  "assets/installation.md","first setup / install: ymir-install, engines, hermes, workspaces"
+  "assets/installation.md","first setup / install: the computed plan (bin/ymir-plan.sh), the home the operator chooses, the roots law (code in the package, the operator's things in the home), engines, hermes"
   "assets/harness-integration/README.md","choosing a harness; adding one"
   "assets/harness-integration/opencode.md","OpenCode adapter"
   "assets/harness-integration/pi.md","Pi adapter"

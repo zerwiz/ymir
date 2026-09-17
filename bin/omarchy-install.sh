@@ -24,6 +24,19 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+
 # portability shim (bin/ymir-platform.sh)
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
   _ymir_dir="$SCRIPT_DIR"
@@ -122,15 +135,15 @@ else
 fi
 
 # ── 6. the away-mode alarm channel + the crash sensor ────────────────────────
-if [ -e "$ROOT/config/wedge-alarm" ]; then
+if [ -e "$YMIR_SETTINGS_DIR/wedge-alarm" ]; then
   add alarm OK "channel kept"
 elif [ "$CHECK" = 1 ]; then
   add alarm WARN "channel not written (run without --check)"
-elif mkdir -p "$ROOT/config" 2>/dev/null && \
-     printf '# The channel the away-mode wedge alarm fires on when an escalation\n# cannot be delivered into the pane. See bin/wedge-notify.sh.\ndesktop\n' >"$ROOT/config/wedge-alarm" 2>/dev/null; then
-  add alarm OK "channel written (config/wedge-alarm)"
+elif mkdir -p "$YMIR_SETTINGS_DIR" 2>/dev/null && \
+     printf '# The channel the away-mode wedge alarm fires on when an escalation\n# cannot be delivered into the pane. See bin/wedge-notify.sh.\ndesktop\n' >"$YMIR_SETTINGS_DIR/wedge-alarm" 2>/dev/null; then
+  add alarm OK "channel written ($YMIR_SETTINGS_DIR/wedge-alarm)"
 else
-  add alarm WARN "could not write config/wedge-alarm"
+  add alarm WARN "could not write $YMIR_SETTINGS_DIR/wedge-alarm"
 fi
 
 # ── 7. the terminal backend Ymir needs ───────────────────────────────────────

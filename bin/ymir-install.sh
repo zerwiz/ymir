@@ -6,13 +6,16 @@
 #
 # Usage:
 #   bin/ymir-install.sh [--check] [--skip-engines] [--skip-services] [--no-desktop] [--yes]
+#   bin/ymir-install.sh --plan [--json]     # the plan, computed — changes nothing
 #   bin/ymir-install.sh --status
 #   bin/ymir-install.sh --version
 #
-# Consent: a real install (not --check) asks the operator to accept the plan
-# before any change is made. Non-interactive callers must pass --yes.
+# The consent a real install asks for is not a recited paragraph: it is the PLAN
+# printed by bin/ymir-plan.sh — probed on THIS host, one row per step, each with
+# its state and the reason for it. A paragraph drifts behind the code; a plan is
+# computed from it every run.
 #
-# Exit: 0 all good (or --check), 1 a step failed, 2 usage, 3 declined.
+# Exit: 0 all good (or --check/--plan), 1 a step failed, 2 usage, 3 declined.
 set -u
 
 # --- portability shim: bin/ymir-platform.sh --------------------------------
@@ -27,29 +30,53 @@ fi
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
-WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
+
+# The operator's settings and secrets live in the home they chose, never in the
+# code tree — a packaged install replaces its tree on upgrade, and a credential
+# must never sit in a tree that ships (Rule 04).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yr _yc
+fi
+hoard_settings_dir YMIR_SETTINGS_DIR
+hoard_local_env YMIR_ENV_FILE
+# The home is the OPERATOR's to choose, never ours to assume. Resolution:
+# $YMIR_HOME (explicit) → the choice recorded at a previous installation →
+# the one documented default. An interactive run ASKS and RECORDS the answer
+# (step_home); --check never writes, --yes takes what is recorded.
 # The hoard resolves through the shared lib, so the installer can never disagree
 # with bin/hodd.sh about where private data lives — and never points inside the
 # repo (Rule 04).
 # shellcheck source=bin/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
+ymir_home_root YMIR_HOME
+WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
 hoard_root HOARD
 DOMAINS="company marketing development life me"
 
-CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0; PLAN_ONLY=0; PLAN_ARGS=()
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --check) CHECK=1; shift ;;
+    --plan|--dry-run) PLAN_ONLY=1; shift ;;
+    --json|--phase|--blocked) PLAN_ARGS+=("$1"); shift ;;
     --skip-engines) SKIP_ENGINES=1; shift ;;
     --skip-services) SKIP_SERVICES=1; shift ;;
     --no-desktop) NO_DESKTOP=1; shift ;;
     --yes|-y) ASSUME_YES=1; shift ;;
     --status) exec "$SCRIPT_DIR/ymir-install.sh" --check ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/ymir-install.sh [--check|--skip-engines|--skip-services|--no-desktop|--yes]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/ymir-install.sh [--check|--plan|--skip-engines|--skip-services|--no-desktop|--yes]\n' "$1" >&2; exit 2 ;;
   esac
 done
+
+# The plan is a question, not a change: it prints and exits without writing.
+if [ "$PLAN_ONLY" = 1 ]; then
+  exec "$SCRIPT_DIR/ymir-plan.sh" ${PLAN_ARGS[@]+"${PLAN_ARGS[@]}"}
+fi
 
 declare -a IDS STATUS DETAIL
 # The code minted for this install, reported at the end so it is not lost in the
@@ -62,33 +89,28 @@ TOON="install[0]{step,status,detail}:"
 # ── consent ──────────────────────────────────────────────────────────────
 # Show exactly what will change and require explicit acceptance. A real
 # install touches the machine (packages, a docker image, raised services),
-# so it never proceeds on silence.
+# so it never proceeds on silence. The plan is COMPUTED here (bin/ymir-plan.sh
+# probes this host) — never a paragraph that can drift behind the code.
 confirm_install() {
   [ "$ASSUME_YES" = 1 ] && return 0
   if [ ! -t 0 ]; then
-    printf 'error: refusing a non-interactive install without --yes\nhelp: re-run with --yes to accept non-interactively, or --check to preview\n' >&2
+    printf 'error: refusing a non-interactive install without --yes\nhelp: re-run with --yes to accept non-interactively, or --plan / --check to preview\n' >&2
     exit 3
   fi
   cat <<'PLAN'
-Ymir first setup — this will make the following changes:
+Ymir first setup — the plan below is probed on THIS machine, not recited.
+Each row is a phase, a step, its state, and why.
 
-  • install in USER SPACE (no sudo): bun, uv  — and 'mcp<2>' via pip
-  • create the workspace tree (work/ · personal/ · companies · registries)
-  • install the OSS engines: treehouse, no-mistakes (+ sandcastle if present)
-  • ensure the Hermes worker runtime
-  • ensure a terminal backend (herdr — Þjazi — preferred, else tmux)
-  • learn this machine (Omarchy version, packages, configs, monitors, scale)
-  • place the desktop apps on their own numbered desktops
-  • build the Utgard sandbox image 'utgard-runner:latest' (needs docker access)
-  • create the Smiðja database and build the visualizer UI
-  • load agents/skills and write workspace/INSTALL.md
-  • install the git delivery gates (secret · branch · changelog)
-  • raise the runtime services (Hlidskjalf SPA + gate API + bridges)
-  • open BOTH desktop apps so you see them: Hlidskjalf + Smíðja
-  • verify the running system and report what stands
+  DO        a change will be made
+  SKIP      already satisfied — nothing to do
+  INFO      a fact about this host; no change implied
+  BLOCKED   cannot run — the reason names what is missing
+  CONSENT   needs your word (a credential, an invite, the desktop shells)
 
 Nothing is deleted. Every step is idempotent.
 PLAN
+  printf '\n'
+  bash "$SCRIPT_DIR/ymir-plan.sh" 2>&1 || true
   printf '\nProceed with the install? [y/N] '
   read -r reply || reply=""
   case "$reply" in
@@ -197,6 +219,112 @@ YAML
   add tree OK "workspace/{personal} · companies · registries · hoard (outside the repo) (created $created)"
 }
 
+# ── 2a. the home the operator chooses ────────────────────────────────────────
+# Everything private — docs, secrets, identity, projects, workspaces, memory —
+# lives in ONE place the operator owns, and it is the operator's to name. A real
+# interactive run asks once and records the answer under ~/.config/ymir/home, so
+# every later script resolves the same home without being told again. --check
+# never writes; --yes takes what is already recorded (or the documented default).
+step_home() {
+  local rec="" chosen=""
+  ymir_home_record rec
+  if [ -n "${YMIR_HOME:-}" ] && [ "$CHECK" = 1 ]; then add home OK "home: $YMIR_HOME"; return; fi
+  if [ -n "$rec" ]; then
+    add home OK "home: $YMIR_HOME (the choice recorded at installation)"
+    return
+  fi
+  if [ "$ASSUME_YES" = 1 ] || [ ! -t 0 ]; then
+    if ymir_home_record_set "$YMIR_HOME" 2>/dev/null; then
+      add home OK "home: $YMIR_HOME (default recorded — change it any time with YMIR_HOME=<path> bin/ymir-install.sh)"
+    else
+      add home WARN "home: $YMIR_HOME (could not record the choice under $YMIR_CONFIG_DIR — pass YMIR_HOME=<path> to every run)"
+    fi
+    return
+  fi
+  printf '\nWhere shall your home live?\n'
+  printf 'Everything private is kept there — docs, secrets, identity, projects,\n'
+  printf 'workspaces, memory — never in the code tree, never in this package.\n'
+  printf 'Home [%s]: ' "$YMIR_HOME"
+  IFS= read -r chosen || true
+  [ -n "$chosen" ] && YMIR_HOME="${chosen/#\~/$HOME}"
+  if [ -e "$YMIR_HOME" ]; then
+    printf 'using %s — what is already there is kept; nothing is deleted.\n' "$YMIR_HOME"
+  fi
+  # Re-resolve the roots the choice moved: the hoard within the home, and the
+  # workspace tree beneath it. A second run finds the record and never asks again.
+  hoard_root HOARD
+  WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
+  if ymir_home_record_set "$YMIR_HOME"; then
+    add home OK "home: $YMIR_HOME (recorded — later runs need not ask)"
+  else
+    add home WARN "home: $YMIR_HOME (could not record the choice; pass YMIR_HOME=<path> to every run)"
+  fi
+}
+
+# ── 2b. app repos (the app split) ────────────────────────────────────────────
+# The apps live in their OWN repos (zerwiz/hlidskjalf · hlidskjalf-mobile ·
+# odrerir · sessrumnir · smidja), registered in the home registry with a
+# `repo: apps/<path>` block. The monorepo never tracks them; installation
+# clones each into the tree — never guessing a remote, always reading the
+# registry. A present repo is fast-forwarded; a missing one cloned. The smithy
+# engine (apps/smidja) is stamped from the cloned factory's templates, exactly
+# as install.py does for a target repo.
+step_apps() {
+  local reg="$HOARD/identity/projects.yaml"
+  if [ ! -r "$reg" ]; then
+    add apps SKIP "no registry — no app repos to pull ($reg)"
+    return 0
+  fi
+  # Parse blocks that carry `repo: apps/<path>` and a `git:` inline dict.
+  local entries
+  entries=$(awk '
+    /^  - id:/ { repo="" }
+    /^    repo: apps\// { repo=substr($2, 6) }
+    /^    git: / {
+      line=$0; host=""; owner=""; grepo=""
+      if (match(line, /host: [A-Za-z0-9._-]+/)) host=substr(line, RSTART+6, RLENGTH-6)
+      if (match(line, /owner: [A-Za-z0-9_-]+/)) owner=substr(line, RSTART+7, RLENGTH-7)
+      if (match(line, /repo: [A-Za-z0-9._-]+/)) grepo=substr(line, RSTART+6, RLENGTH-6)
+      if (repo != "" && owner != "" && grepo != "") print repo "|" host "|" owner "|" grepo
+      repo=""
+    }' "$reg")
+  if [ -z "$entries" ]; then
+    add apps OK "no apps/ projects registered — nothing to pull"
+    return 0
+  fi
+  local ok=0 skip=0 fail=0 missing=0
+  while IFS='|' read -r rel host owner grepo; do
+    [ -n "$rel" ] || continue
+    local path="$ROOT/apps/$rel"
+    if [ "$CHECK" = 1 ]; then
+      if [ -d "$path/.git" ]; then add apps OK "$rel present ($owner/$grepo)"; ok=$((ok+1));
+      elif [ -d "$path" ]; then add apps WARN "$rel present but not a git clone — re-install to replace"; skip=$((skip+1));
+      else add apps WARN "$rel absent — a full run clones $owner/$grepo"; missing=$((missing+1)); fi
+      continue
+    fi
+    if [ -d "$path/.git" ]; then
+      if (cd "$path" && git fetch origin 2>/dev/null && git merge --ff-only origin/main >/dev/null 2>&1); then add apps OK "$rel up to date ($owner/$grepo)"; ok=$((ok+1));
+      else add apps OK "$rel present ($owner/$grepo; pull refused — local changes?)"; skip=$((skip+1)); fi
+    elif [ -d "$path" ]; then
+      add apps WARN "$rel present but not a git clone — move $path aside and re-run"; skip=$((skip+1))
+    else
+      local url="https://github.com/$owner/$grepo.git"
+      if git clone -q "$url" "$path" 2>/dev/null; then add apps OK "$rel cloned ($owner/$grepo)"; ok=$((ok+1));
+      else add apps WARN "$rel clone failed — run: git clone $url $path"; fail=$((fail+1)); fi
+    fi
+  done <<< "$entries"
+  # The smithy engine: apps/smidja is stamped from the cloned factory's
+  # templates (the monorepo tracks neither). The config template follows.
+  local factory="$ROOT/apps/smidja-factory" eng="$ROOT/apps/smidja"
+  if [ "$CHECK" = 0 ] && [ -d "$factory/templates/smidja" ] && [ ! -e "$eng/smidja_modules" ]; then
+    mkdir -p "$eng"
+    cp -rn "$factory/templates/smidja/." "$eng/" 2>/dev/null
+    [ -f "$factory/templates/smidja.config.yaml" ] && { mkdir -p "$eng/smidja_smidja_config"; cp -n "$factory/templates/smidja.config.yaml" "$eng/smidja_smidja_config/smidja.config.yaml" 2>/dev/null; }
+    add apps OK "smidja engine stamped into apps/smidja"
+  fi
+  if [ "$fail" -gt 0 ]; then add apps WARN "$fail app clone(s) failed (offline?)"; fi
+}
+
 # ── 3. engines ───────────────────────────────────────────────────────────────
 step_engines() {
   [ "$SKIP_ENGINES" = 1 ] && { add engines SKIP "--skip-engines"; return; }
@@ -240,7 +368,6 @@ step_models() {
     if [ ! -f "$HOME/.pi/agent/models.json" ]; then
       "$SCRIPT_DIR/models-detect.sh" --write >/dev/null 2>&1 && add models OK "seeded ~/.pi/agent/models.json (was absent)"
     fi
-    printf 'models: local-model testing is first-class — load the modeltesting skill; llama.cpp (llama-server/llama-swap) is fastest on the GPU; research your hardware best settings online; for coding use >= 80000 context.\n'
   fi
   if [ -x "$SCRIPT_DIR/model-hardware.sh" ]; then
     "$SCRIPT_DIR/model-hardware.sh" >/dev/null 2>&1 && add models OK "profiled this machine (data/local-models.md; online research left for Brokk)"
@@ -336,17 +463,24 @@ step_host() {
   fi
   add host OK "host sensed: ${seen}"
 
-  # The Allfather's own agent setup, seeded from the tracked template. Idempotent:
-  # config/agents.yaml is private and is never overwritten once set. --check never
-  # writes, so it only reports.
-  if [ -e "$ROOT/config/agents.yaml" ]; then
+  # The operator's own agent setup, seeded from the tracked template into the
+  # home's settings dir — settings are the operator's, never the package's.
+  # Idempotent: the seeded file is private and is never overwritten once set.
+  # --check writes nothing, so it only reports. The template is code, so it is
+  # read from wherever the tree keeps it: `config/` in a clone (a symlink the
+  # npm tarball cannot carry), else `.agents/config/`.
+  if [ -e "$YMIR_SETTINGS_DIR/agents.yaml" ]; then
     add agents-config OK "kept (private, never overwritten)"
-  elif [ "$CHECK" = 1 ]; then
-    add agents-config WARN "not seeded (run without --check)"
-  elif [ -r "$ROOT/config/agents.yaml.example" ] && cp "$ROOT/config/agents.yaml.example" "$ROOT/config/agents.yaml" 2>/dev/null; then
-    add agents-config OK "seeded from the template"
+    return 0
+  fi
+  local tpl="$ROOT/config/agents.yaml.example"
+  [ -r "$tpl" ] || tpl="$ROOT/.agents/config/agents.yaml.example"
+  if [ "$CHECK" = 1 ]; then
+    add agents-config WARN "not seeded yet — a real run writes $YMIR_SETTINGS_DIR/agents.yaml"
+  elif [ -r "$tpl" ] && mkdir -p "$YMIR_SETTINGS_DIR" && cp "$tpl" "$YMIR_SETTINGS_DIR/agents.yaml" 2>/dev/null; then
+    add agents-config OK "seeded $YMIR_SETTINGS_DIR/agents.yaml from the template"
   else
-    add agents-config WARN "could not seed config/agents.yaml"
+    add agents-config WARN "could not seed $YMIR_SETTINGS_DIR/agents.yaml"
   fi
 }
 
@@ -482,12 +616,22 @@ step_gates() {
     else
       add gates WARN "hooks not installed — bin/secret-guard.sh --install && bin/changelog-guard.sh --install"
     fi
+    # The home repo is where the private data lives, so its ward matters more
+    # than this repo's four. Report it separately so a dormant vault is visible.
+    local hh; hh="${YMIR_HOME:-$HOME/Documents/Ymir}/.git/hooks/pre-commit"
+    if [ -x "$hh" ]; then add hoard-gate OK "home pre-commit seated";
+    else add hoard-gate WARN "home hooks not installed — bin/hoard-guard.sh --install"; fi
     return
   fi
   [ -x "$SCRIPT_DIR/secret-guard.sh" ] && "$SCRIPT_DIR/secret-guard.sh" --install >/dev/null 2>&1 || true
   [ -x "$SCRIPT_DIR/changelog-guard.sh" ] && "$SCRIPT_DIR/changelog-guard.sh" --install >/dev/null 2>&1 || true
+  # Seat the ward on the PRIVATE home too — every install layer, every machine.
+  [ -x "$SCRIPT_DIR/hoard-guard.sh" ] && "$SCRIPT_DIR/hoard-guard.sh" --install >/dev/null 2>&1 || true
   if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then add gates OK "pre-commit + pre-push installed"
   else add gates WARN "could not write .git/hooks — gates are dormant"; fi
+  local hh; hh="${YMIR_HOME:-$HOME/Documents/Ymir}/.git/hooks/pre-commit"
+  if [ -x "$hh" ]; then add hoard-gate OK "home pre-commit seated";
+  else add hoard-gate WARN "home hooks not seated — bin/hoard-guard.sh --install"; fi
 }
 
 # ── 6c. desktop marks (the rune, the entry, the contract) ────────────────────
@@ -641,7 +785,11 @@ step_panes() {
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
 
+<
 step_panes; step_prereqs; step_tree; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
+
+step_panes; step_prereqs; step_home; step_tree; step_apps; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
+
 # Migrations MOVE private data — that is a write, and `--check` promises none.
 # Only a real run heals the home forward; the preview leaves it untouched.
 if [ "$CHECK" = 0 ]; then bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; fi

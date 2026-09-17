@@ -28,6 +28,9 @@ Quick rules:
 ## Location & stack
 
 - App: `apps/hlidskjalf` — **React 19 + Vite + TypeScript**, state via **Zustand**.
+- The app lives in **its own repo** (`zerwiz/hlidskjalf`, registered in the home
+  registry) — the monorepo never tracks it; `bin/ymir-install.sh`'s `apps` step
+  clones it into `apps/hlidskjalf` at install, or fast-forwards a present clone.
 - Gate API: `apps/hlidskjalf/server/index.ts` — **Bun + `bun:sqlite`**, read-only,
   bound to the runtime and the smithy trace; Vite proxies `/api` → `:3889`.
 - Raise everything with the scripts (do not hand-start each process):
@@ -95,6 +98,13 @@ Rules that hold it honest:
 
 - `.shell` grid: `236px rail | 1fr`; rows `56px topbar · stage · stream`
   (the stream height is draggable, persisted in `streamHeight`).
+- The **Fleet graph** (`gates/Fleet.tsx`) lays the roster on a 100×100 canvas:
+  Brokk as the hub, everyone else in a square-ish grid fan (`cols =
+  ceil(sqrt(n))`, pitch ≥ one ring + label) so 20 agents never collide; rings
+  carry the house glyph from `DOMAINS[agent.domain]` with a `ymirlabs`
+  fallback, and the live cards come from `bin/hlidskjalf-agents.sh` — which
+  reads each figure's `domain:` frontmatter (never a hardcoded `ymirlabs` for
+  everyone).
 - `.rail` (brand · gates · tenants · status), `.topbar` (realm chip · search ·
   accent · density · trace index · account), `main.stage` (the gate), `.stream`
   (Ratatoskr + Runes, pausable).
@@ -156,6 +166,18 @@ router `:8080`, Bifrost `:4603`), never only the first — a dead engine falls
 through to a live one. Recall reads `.agents/memory/well/episodes.jsonl`
 directly, so restoring that file revives the chat's memory without a restart.
 
+### The EmberBackground hearth (the shared fire)
+
+The animated glow behind the shell, the login, and Sessrúmnir's chat comes from
+**one** hearth, not four copies: `midgard/design-system/ember.js` (`startEmbers`),
+with Sessrúmnir's `ember-background.tsx` as its React port. Both draw the same
+embers + haze, respect reduced-motion, and — since the Sep 17 mend — re-seed
+via **ResizeObserver on the container**, not just `window.resize`: a split pane
+or toggled sidebar changes the chat column's size without a window resize, and a
+canvas that sized itself once at a stale dimension never shows the fire. The
+shared module watches the host; the port watches its parent; re-seeding fires
+only when the measured size actually changed (never per-frame).
+
 ### The gate API reads cheaply (added 2026-09-16)
 
 The gate reads append-only ledgers (Runes, the well's `episodes.jsonl`, masterplan
@@ -201,7 +223,10 @@ API on the same port (`scripts/start.sh` raises it). Details: `assets/smidja.md`
 ## Agents, skills & mythological naming
 
 - The Forge gate (`src/gates/Forge.tsx`) creates/edits **Eindri** and **skills**,
-  and reads/edits the smithy's prompts.
+  and reads/edits the smithy's prompts. The skill list shows each skill's own
+  text: the name + aett rune on the head row, and the description line
+  underneath (`forge-item-desc`, dimmed until hover) — the description comes
+  from the live `/api/skills` index, truncated to 240 chars by the gate API.
 - Naming law: `src/data/mythology.ts` maps a craft/capability → the Norse figure
   whose myth matches it (smith→Sindri, skald→Bragi, sage→Huginn, judge→Tyr,
   forger→Brokk …). Skills take an **aett** prefix.
@@ -252,6 +277,17 @@ npm run build            # must be green
 - **Mirror:** `.agents/skills/tyr-check/assets/hlidskjalf-ui.md`.
 - When the shell, tokens, gates, or the gate API change, update this asset and
   `docs/design.md` together.
+
+### The agent path the Fleet gate reads (2026-09-17)
+
+`server/index.ts` decides whether a figure is *registered* by testing for its
+profile in the OpenCode agent directory. That directory is **`.opencode/agents/`
+— PLURAL**, which is what OpenCode actually loads. The singular
+`.opencode/agent/` was never read by the harness, so twenty correct symlinks sat
+in a directory no loader opened and the gate reported figures unregistered while
+the tree held them all. Any code that resolves an agent profile must use the
+plural path; the loader (`bin/valknut-load.sh`) migrates a legacy singular dir
+forward and binds the plural one.
 
 ## Domains, not houses (Rule 01/03)
 

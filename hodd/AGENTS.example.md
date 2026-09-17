@@ -7,13 +7,27 @@
 ## Operator
 
 - **Name / handle:** …
-- **Private plans, secrets:** `$YMIR_HOME/` — never inline; reference by path.
+- **Machines:** …
 
-## Private material
+## The one law
 
-- Plans & strategy: `$YMIR_HOME/docs/` (never `docs/` — Rule 04).
-- Secrets: `$YMIR_HOME/secrets/`; load with `eval "$(bin/secret-guard.sh emit <file>)"`.
-- Identity/portfolio: `$YMIR_HOME/identity/`.
+**Never store personal or private data in the public repo.** Not a secret, a
+key, a name, a plan, a schedule, a client, a credential, or a note. Private data
+lives at `$YMIR_HOME`, under `hodd/`, and nowhere else.
+
+## Private material (never in the public tree — Rule 04)
+
+**`$YMIR_HOME/hodd/` IS the private data path** — there is no flat second copy.
+`bin/hoard-lib.sh` (`hoard_root`) resolves it and is the single source of truth.
+
+- Plans & strategy: `$YMIR_HOME/hodd/docs/` (never `docs/` — Rule 04).
+- Identity / portfolio / registries: `$YMIR_HOME/hodd/identity/`.
+- Operator data (machines, fleet, inventories): `$YMIR_HOME/hodd/data/`.
+- Secrets: `$YMIR_HOME/hodd/secrets/` — encrypted (`platform.env.age` + `age.key`).
+  Read by path, never inline: `eval "$(bin/hodd.sh emit secrets/platform.env)"`.
+
+**Staging discipline:** stage named files in the home; **never `git add -A`** —
+a scratch file will be swept into a commit and pushed.
 
 ## Personal setup
 

@@ -25,7 +25,12 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VM="ymir"; CHECK=0; REPO=""
-VM_HOME="${YMIR_HOME:-/home/ubuntu/Documents/Ymir}"
+# The VM's home is resolved, never assumed (Rule 07B). Inside the Lima VM the
+# operator is `ubuntu`, but that is the VM's fact, not this script's — it comes
+# from env with one documented default, and the guest user is overridable so a
+# host that provisions a different user still works.
+VM_USER="${YMIR_VM_USER:-ubuntu}"
+VM_HOME="${YMIR_HOME:-/home/${VM_USER}/Documents/Ymir}"
 
 while [ $# -gt 0 ]; do
   case "$1" in

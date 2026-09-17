@@ -1,6 +1,6 @@
 {
   "name": "@zerwiz/ymir",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "Ymir \u2014 the single-tenant agent operating system. Omarchy-first, host-aware, self-healing.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/zerwiz/ymir",
@@ -29,7 +29,6 @@
     "bin/",
     ".agents/",
     "scripts/",
-    "config/",
     "RULES/",
     "docs/",
     "packaging/",
@@ -38,7 +37,12 @@
     "CHANGELOG.md",
     "LICENSE",
     "NOTICE",
-    "!**/node_modules/**"
+    "!**/node_modules/**",
+    "!.agents/memory/kaia.engram*",
+    "!.agents/memory/well/*.jsonl",
+    "!.agents/memory/*.db",
+    "!**/__pycache__/",
+    "!**/*.pyc"
   ],
   "engines": {
     "node": ">=20"
@@ -53,5 +57,11 @@
   "scripts": {
     "test": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
     "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
+  },
+  "optionalDependencies": {
+    "@zerwiz/hlidskjalf": "^0.1.0",
+    "@zerwiz/odrerir": "^0.1.0",
+    "@zerwiz/sessrumnir": "^0.1.8-alpha",
+    "@zerwiz/smidja-factory": "^0.1.0"
   }
 }
