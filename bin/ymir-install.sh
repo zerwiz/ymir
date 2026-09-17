@@ -670,15 +670,15 @@ step_marks() {
     add marks OK "$n desktop app marks installed"
     return
   fi
-  "$SCRIPT_DIR/design-icon.sh" mint --all >/dev/null 2>&1 || true
-  n=$("$SCRIPT_DIR/design-icon.sh" install 2>/dev/null | grep -c '"ymir-') || n=0
-  # The launcher entries are the freedesktop half of desktop integration, and they
-  # belong to ANY Linux desktop — not only to Omarchy's window rules. A GNOME
-  # operator gets entries and icons and no window rules; before this, both halves
-  # sat behind the Omarchy gate and a packaged install placed nothing at all.
+  # The apps' own launcher templates land first (the freedesktop half of desktop
+  # integration, for ANY Linux desktop), and the rune marks are minted and
+  # installed over them — so the themed rune name wins for the surfaces that have
+  # one, instead of a template's absolute .png.
   if [ -x "$SCRIPT_DIR/desktop-place.sh" ]; then
     "$SCRIPT_DIR/desktop-place.sh" entries >/dev/null 2>&1 || true
   fi
+  "$SCRIPT_DIR/design-icon.sh" mint --all >/dev/null 2>&1 || true
+  n=$("$SCRIPT_DIR/design-icon.sh" install 2>/dev/null | grep -c '"ymir-') || n=0
   [ -r "$HOME/.pi/agent/AGENTS.md" ] || [ -d "$HOME/.pi/agent" ] && {
     ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null || true
   }
@@ -727,10 +727,16 @@ step_desktop() {
     add desktop WARN "the Electron runtime is PARTIAL for:$partial — the web surfaces stand; approve and rebuild to launch the shells"
     return 0
   fi
-  if "$ROOT/scripts/electron.sh" start --both >/dev/null 2>&1; then
-    add desktop OK "raised Hlidskjalf + Smíðja"
+  # One window per surface that is here: the halls are not one app.
+  raised=0
+  for _v in hlidskjalf smidja odrerir; do
+    "$ROOT/scripts/electron.sh" start --view "$_v" >/dev/null 2>&1 && raised=$((raised+1))
+  done
+  [ -x "$ROOT/bin/sessrumnir.sh" ] && "$ROOT/bin/sessrumnir.sh" start >/dev/null 2>&1 && raised=$((raised+1))
+  if [ "$raised" -ge 2 ]; then
+    add desktop OK "raised $raised window(s) — Hlidskjalf · Smíðja · Óðrerir · Sessrúmnir"
   else
-    add desktop WARN "could not raise the desktop apps — run scripts/electron.sh start --both"
+    add desktop WARN "could not raise the desktop apps — ymir hlidskjalf | smidja | sessrumnir"
   fi
 }
 
