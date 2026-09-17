@@ -289,10 +289,10 @@ if [ "$VIEW" = both ]; then
   start_one odrerir
   sleep 2
   for v in "${VIEWS[@]}"; do
-    if is_running "$v"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$v" "$(pid_of "$v")" "$(view_host "$v")"; else printf 'error: electron %s failed to start; see %s\n' "$v" "${log_file "$v"#"$ROOT"/}" >&2; exit 1; fi
+    if is_running "$v"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$v" "$(pid_of "$v")" "$(view_host "$v")"; else printf 'error: electron %s failed to start; see %s\n' "$v" "$(log_file "$v")" >&2; exit 1; fi
   done
 else
   start_one "$VIEW"
   sleep 2
-  if is_running "$VIEW"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$VIEW" "$(pid_of "$VIEW")" "$(view_host "$VIEW")"; else printf 'error: electron failed to start; see %s\n' "${log_file "$VIEW"#"$ROOT"/}" >&2; exit 1; fi
+  if is_running "$VIEW"; then printf 'electron[1]{view,state,pid,url}:\n  "%s","up",%s,"%s"\n' "$VIEW" "$(pid_of "$VIEW")" "$(view_host "$VIEW")"; else printf 'error: electron failed to start; see %s\n' "$(log_file "$VIEW")" >&2; exit 1; fi
 fi
