@@ -108,7 +108,8 @@ if [ -x "$ROOT/bin/sessrumnir.sh" ]; then
       echo "Sessrúmnir — the seat-hall did not rise (run: bin/sessrumnir.sh start)" >&2
     fi
   else
-    echo "Sessrúmnir — skipped (the sessrumnir surface is not present)" >&2
+    echo "Sessrúmnir — NOT raised: the sessrumnir surface is missing from this install" >&2
+    echo "help: npm i -g @zerwiz/ymir (it is a dependency), or from a clone: bin/sessrumnir-ensure.sh install" >&2
   fi
 fi
 
@@ -256,7 +257,8 @@ if [ -n "$HALL_DIR" ] && [ -d "$HALL_DIR" ]; then
     fi
   fi
 else
-  echo "Óðrerir — Live Hall skipped (the odrerir surface is not present)." >&2
+  echo "Óðrerir — NOT raised: the odrerir surface is missing from this install" >&2
+  echo "help: npm i -g @zerwiz/ymir (it is a dependency)" >&2
 fi
 
 cd "$APP"

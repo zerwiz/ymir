@@ -62,7 +62,7 @@
   "optionalDependencies": {
     "@zerwiz/hlidskjalf": "^0.1.0",
     "@zerwiz/odrerir": "^0.1.0",
-    "@zerwiz/sessrumnir": "^0.1.8-alpha",
+    "@zerwiz/sessrumnir": "0.1.8-alpha",
     "@zerwiz/smidja-factory": "^0.1.0"
   }
 }
