@@ -1,6 +1,6 @@
 {
   "name": "@zerwiz/ymir",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "Ymir \u2014 the single-tenant agent operating system. Omarchy-first, host-aware, self-healing.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/zerwiz/ymir",
