@@ -1411,23 +1411,6 @@ and killed the gate. An unknown status can no longer take a panel down.
   The duplicate at the source is recorded, not hidden.
 - `/api/stream` answers 200; the live stream is not broken, it was the window.
 
-## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
-
-- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
-  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
-  20 roster cards the rings and labels overlapped into an unreadable pile.
-  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
-  rows pitched past ring+label), so 20 agents render separated.
-- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
-  `domain: ymirlabs` for every card and its roster parser never read the
-  `domain:` frontmatter each figure carries — so all twenty cards wore the
-  anonymous ᛦ. The roster now parses `domain:` and passes it through;
-  `galdr.md` names its house (`brokkforge`); the graph falls back to
-  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
-  — and the `AgentCard` already fell back safely.
-
-galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
-Fleet graph paragraph (grid fan, roster domains, fallback).
 
 ## 2026-09-17 — the apps leave the monorepo; installation pulls them from their own repos
 
@@ -1448,3 +1431,39 @@ Fleet graph paragraph (grid fan, roster domains, fallback).
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/installation.md` — the
 step table (`22 steps`, `24` `step_*` functions), the new `apps` row, and the
 Sessrúmnir rows now say "its own repo", not "vendored".
+
+## 2026-09-17 — the registry says where a repo lives and what it is for
+
+- **A project entry can now name its machine.** `machine:` records the host
+  where a checkout lives; `data/machines.md` holds the fleet (omarchy-1,
+  zerwiz, zerwizserver live on the tailnet). A repo is no longer assumed to be
+  on the box you happen to be standing on.
+- **A project entry can now say what it is for.** `about:` is one plain
+  sentence per repo. `bin/project-git.sh list --field about` prints the whole
+  inventory without opening the YAML.
+- **`project-git.sh` resolves more of the block.** `--field` now accepts
+  `machine`, `company`, `workspace` and `about` alongside the git fields, and
+  non-git keys read from the project block rather than the `git:` line.
+- **One registry, not two.** The live registry is `hodd/identity/projects.yaml`
+  (what the runtime reads). A stale duplicate at `Documents/Ymir/identity/` had
+  been drifting apart from it — different GitHub owners, different project sets
+  — and is retired, with a backup kept in `hodd/state/`.
+
+
+## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
+
+- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
+  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
+  20 roster cards the rings and labels overlapped into an unreadable pile.
+  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
+  rows pitched past ring+label), so 20 agents render separated.
+- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
+  `domain: ymirlabs` for every card and its roster parser never read the
+  `domain:` frontmatter each figure carries — so all twenty cards wore the
+  anonymous ᛦ. The roster now parses `domain:` and passes it through;
+  `galdr.md` names its house (`brokkforge`); the graph falls back to
+  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
+  — and the `AgentCard` already fell back safely.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+Fleet graph paragraph (grid fan, roster domains, fallback).
