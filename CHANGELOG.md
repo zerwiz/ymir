@@ -592,6 +592,122 @@ EmberBackground hearth section (shared module + ResizeObserver mend).
 
 # CHANGELOG
 
+## 2026-09-16 — a sandboxed worker cannot think: `auto` stops killing agents
+
+Spawning an Eindri with the default `--isolation auto` produced an **empty pane
+and no status line**. The cause: `auto` chose Utgard whenever the image existed,
+and Utgard runs with `--network none` — so the worker could reach neither its
+cloud model (OpenCode Go) nor a local one (llama.cpp) and died at launch, silently.
+
+- **`auto` now keeps the worker in its worktree.** A spawned Eindri is a
+  model-driven worker: it must reach a model endpoint to think. Utgard is for
+  untrusted *code*, not for the agent's own brain, so the automatic choice is
+  `off`, and it says why.
+- **`--isolation on` warns loudly.** It stays available for a sandbox that can
+  actually reach a model, but it now prints that Utgard has no network and the
+  agent will die silently without one.
+
+## 2026-09-16 — the roster's effect lands, and the backend pin stops being committable
+
+Applying the private roster (`bin/agents-config.sh apply`) writes the resolved
+model into each agent's canonical profile. Flipping the two local agents to Pi
+made that visible — and surfaced a small ignore hole.
+
+- **Profiles follow the roster.** `sindri-developer.md` and `kvasir-scout.md`
+  now carry their **Pi** ids (`llamacpp-coder/qwen3-coder-30b`,
+  `llamacpp/qwen3.5-9b`), and `huginn-researcher.md` its declared model — the
+  output of `apply` against the operator's roster. These profiles are what the
+  harnesses load, so the local agents now run on Pi rather than through OpenCode.
+- **`.agents/config/backend` is ignored.** The pinned terminal backend is
+  machine-local, but `config` is a **symlink** to `.agents/config`, so the
+  `config/*` rule never matched it and the pin was committable. The file is named
+  in `.gitignore` instead.
+
+## 2026-09-16 — the roster can finally run an agent on Pi
+
+`bin/agents-config.sh apply` wrote **every** agent's model into `opencode.json`'s
+agent block, whatever harness that agent used. So an agent set to run on **Pi**
+(native local models) would have had its Pi model id —
+`llamacpp/qwen3.5-9b` — written into OpenCode's config, which cannot resolve it.
+That is why the roster's two local agents were pinned to `harness: opencode` with
+opencode-style ids: there was no working way to put an agent on Pi.
+
+- **`apply` is now harness-aware.** Only `opencode`-harness agents are written
+  into `opencode.json`; a `pi` (or `hermes`) agent is left out, its model id going
+  to the resolve cache that `bin/agent-run.sh` reads. The providers block is
+  unchanged — a provider's endpoint is a real fact OpenCode may still want.
+- The way this is meant to be used: declare a local agent's model as its **Pi**
+  id (`llamacpp/qwen3.5-9b`, `llamacpp-coder/qwen3-coder-30b` — the ids `pi
+  --list-models` reports) with `harness: pi`; the roster is then Pi-driven with no
+  per-machine hand-editing.
+- `galdr-reread`: `assets/harness-integration/README.md` — the two writers of
+  `opencode.json`, and the rule that only OpenCode agents belong in it.
+
+## 2026-09-16 — the visualizer finds its DB, and the seat-hall actually builds
+
+Two more readers left behind — both discovered by *starting the apps*, not by any
+gate. Each failed silently in its own way.
+
+- **`scripts/start.sh` pointed the smithy at a repo path that no longer holds the
+  DB.** `0003-private-data-separation` moved it to `$YMIR_HOME/smidja/smidja.db`,
+  but the starter still passed `CMD_DB=<repo>/apps/smidja/smidja_data/smidja.db`
+  — so the visualizer API died on boot with `smidja.db not found` and `:8437`
+  answered nothing. It now resolves the same pair `bin/smidja-bootstrap.sh` does
+  (home first, in-repo fallback, `SMIDJA_DB` override). The asset already
+  *described* this resolution; the code now implements it.
+- **`bin/sessrumnir-ensure.sh` never built the app.** `[ "$built_present" ]` tests
+  a **literal, non-empty string** — always true — so `ensure --install` skipped
+  `build_app` and reported `built: no` with exit 0. Sessrúmnir only built when the
+  build was run by hand. Now `built_present` (the function) is called.
+- `galdr-reread`: `.agents/skills/galdr-ymirsystem/assets/smidja.md` — the DB
+  path, the `scripts/start.sh` DB resolution, and the observer's read list.
+
+## 2026-09-16 — the credential reaches the gate, and the hall stops leaking an IP
+
+Setting the operator password had **no effect**. This is the bug that made that
+true, and the runtime state that leaked a private address.
+
+- **`scripts/start.sh` never loaded the platform env for the gate.** The gate is
+  `bun run apps/hlidskjalf/server/index.ts`, and the server reads
+  `process.env.HLIDSKJALF_AUTH` — but the launcher passed only `PORT`, and nothing
+  sourced `.env.local`. So a credential written by `bin/ymir-setup-auth.sh`
+  (correctly: `0600`, gitignored) never arrived, and because the gate treats an
+  empty `GATE_AUTH` as authenticated (`authed: GATE_AUTH ? … : true`) the gate
+  stayed **open**. `start.sh` now loads `.env.local` once, before the ports, for
+  every service it raises — the gate, Bifrost and Mimir.
+- **`apps/odrerir/.astro/dev.json` was tracked.** Astro rewrites it on every
+  start with the live `pid` and the host's own addresses (LAN + tailnet) — a
+  private-IP leak into a public tree. It is now untracked and gitignored; the
+  generated types beside it stay tracked.
+- `galdr-reread`: `assets/hlidskjalf-ui.md` (the gate must receive the credential)
+  and `assets/odrerir-hall.md` (`.astro/dev.json` is runtime state).
+
+## 2026-09-16 — four readers that still pointed at the pre-split world
+
+The app split and the hoard migration moved things; four readers never followed.
+None failed loudly — each reported a clean PASS, a wrong SKIP, or a silent loss.
+
+- **`bin/ymir-install.sh` wrote during `--check`.** The step chain ran
+  `bin/ymir-migrate.sh apply` unconditionally, so a preview that promises *"report
+  only, no writes"* actually **moved private data**. Migrations now apply only on
+  a real run: `if [ "$CHECK" = 0 ]; then ... apply; fi`.
+- **`.agents/migrations/0003-private-data-separation.sh` skipped every directory.**
+  It pre-creates its target dirs, then its `copy` refused any target that already
+  existed — so `data/` (and every other directory source) was silently dropped.
+  The realm declaration never arrived and `0004` fell back to a neutral realm.
+  `copy` now **merges** a directory into its target (never overwriting a file) and
+  copies a single file only when it is absent.
+- **`bin/smidja-bootstrap.sh` looked for the smithy at the old root.** `sys.path`
+  pointed at `smidja/`, but the split moved it to `apps/smidja/`, so the DB seed
+  died with `ModuleNotFoundError: No module named 'smidja_modules'`. It now
+  searches `apps/smidja` then `smidja`, so either layout works.
+- **`bin/ymir-validate.sh` read the ledger from the pre-move path.** It looked at
+  `$YMIR_HOME/memory/`, but `0004-hoard-and-realms` put the ledger at
+  `$YMIR_HOME/hodd/memory/` — a false `runes FAIL` on a healthy home. It now tries
+  the hoard first, then the pre-move locations.
+- `galdr-reread`: `.agents/skills/galdr-ymirsystem/assets/smidja.md` — the
+  protected-paths gotcha and the `smidja/` → `apps/smidja/` move.
+
 ## 2026-09-17 — Pi gets its agents, and a dead extension comes back
 
 - **Pi has no agent loader.** Agent loading in Pi is a *package* (`pi-agents`,
@@ -648,6 +764,7 @@ EmberBackground hearth section (shared module + ResizeObserver mend).
   `docs/runbooks/agents.md`, `.pi/extensions/README.md`, and the Galdr assets
   (`harness-integration`, `runtime-compliance`, `registry`, `hlidskjalf-ui`).
   `CHANGELOG.md`'s own historical entry is left as written — append-only.
+
 
 ## 2026-09-16 — the core senses the real host, not Omarchy's shadow
 

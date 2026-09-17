@@ -47,11 +47,19 @@ LOG="$RUN/hlidskjalf.log"
 # credential set by bin/ymir-setup-auth.sh never reached it — and the gate treats
 # an empty GATE_AUTH as "open". Loaded before the ports below so those may be
 # overridden from it too.
+
+if [ -r "$ROOT/.env.local" ]; then
+  set +eu
+  set -a
+  # shellcheck disable=SC1090,SC1091
+  . "$ROOT/.env.local" || true
+
 if [ -r "$YMIR_ENV_FILE" ]; then
   set +eu
   set -a
   # shellcheck disable=SC1090,SC1091
   . "$YMIR_ENV_FILE" || true
+
   set +a
   set -eu
 fi

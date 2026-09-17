@@ -354,6 +354,11 @@ apply` **moves private data**, so the step chain runs it only on a real run;
 a preview leaves the home exactly as it found it. (It used to apply them even
 under `--check`, which moved a home during a "report only" pass.)
 
+`--check` writes nothing — and that includes the migrations. `bin/ymir-migrate.sh
+apply` **moves private data**, so the step chain runs it only on a real run;
+a preview leaves the home exactly as it found it. (It used to apply them even
+under `--check`, which moved a home during a "report only" pass.)
+
 ## The operator's way in (auth) — `bin/ymir-setup-auth.sh`
 
 A fresh checkout seeds **no credential**, so the gate has no way in until the
