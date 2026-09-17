@@ -25,7 +25,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes sessrumnir well mcp lock migrations)
+SURFACES=(floors herdr a2abridge hermes sessrumnir well mcp lock migrations hoard)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -69,6 +69,51 @@ f_lock() {
 }
 s_migrations(){ [ ! -x "$SCRIPT_DIR/ymir-migrate.sh" ] || "$SCRIPT_DIR/ymir-migrate.sh" status >/dev/null 2>&1; }
 f_migrations(){ [ -x "$SCRIPT_DIR/ymir-migrate.sh" ] && "$SCRIPT_DIR/ymir-migrate.sh" apply >/dev/null 2>&1; }
+# Hoard: private data sits under the hoard, and .ymir-layout.yaml tells the truth.
+# Two failures this catches: (1) a declared layout path that does not exist — a
+# stale map is what lets private work land outside the hoard; (2) a flat
+# $YMIR_HOME/{identity,data,docs,secrets,tenants} duplicate beside hodd/ — the
+# drift that RULES/04-hoard.md (correction 2026-09-17) forbids.
+_hoard_root() { local r; if [ -x "$SCRIPT_DIR/hoard-lib.sh" ]; then . "$SCRIPT_DIR/hoard-lib.sh"; hoard_root r; printf '%s' "$r"; else printf '%s' "${YMIR_HOARD:-$YMIR_HOME/hodd}"; fi; }
+s_hoard() {
+  local h; h="$(_hoard_root)"
+  [ -d "$h" ] || return 1
+  local lay="$YMIR_HOME/.ymir-layout.yaml" k p
+  if [ -f "$lay" ]; then
+    for k in config secrets identity workspaces memory smidja state data; do
+      p="$(sed -nE "s/^  $k: \"([^\"]+)\".*/\1/p" "$lay" | head -1)"
+      [ -n "$p" ] && [ ! -d "$p" ] && return 1
+    done
+  fi
+  for k in identity data docs secrets tenants; do
+    [ -d "$YMIR_HOME/$k" ] && return 1
+  done
+  return 0
+}
+f_hoard() {
+  local h; h="$(_hoard_root)"
+  mkdir -p "$h" 2>/dev/null || return 1
+  # A flat duplicate beside hodd/ is the drift: merge it in, never clobber.
+  local k
+  for k in identity data docs secrets tenants; do
+    local src="$YMIR_HOME/$k"
+    [ -d "$src" ] || continue
+    mkdir -p "$h/$k" 2>/dev/null || continue
+    cp -an "$src/." "$h/$k/" 2>/dev/null || true
+    rm -rf "$src" 2>/dev/null || true
+  done
+  # A layout entry naming a nonexistent dir is repointed at the hoard.
+  local lay="$YMIR_HOME/.ymir-layout.yaml" k2 p
+  if [ -f "$lay" ] && [ -d "$h" ]; then
+    for k2 in identity data secrets docs tenants; do
+      p="$(sed -nE "s/^  $k2: \"([^\"]+)\".*/\1/p" "$lay" | head -1)"
+      if [ -n "$p" ] && [ ! -d "$p" ]; then
+        sed -i "s|^  $k2: .*|  $k2: \"$h/$k2\"|" "$lay"
+      fi
+    done
+  fi
+  s_hoard
+}
 
 detail() { # <name> -> one short fact
   case "$1" in
@@ -81,6 +126,7 @@ detail() { # <name> -> one short fact
     mcp)       "echo 'a2abridge + engram'" ;;
     lock)      "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)"echo 'structure'" ;;
+    hoard)     "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
   esac
 }
 
