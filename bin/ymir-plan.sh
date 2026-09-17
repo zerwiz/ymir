@@ -163,11 +163,12 @@ home_phase() {
   else
     emit 2 home workspaces DO "create workspaces/{work,personal} and the registries"
   fi
-  local cfg="$ROOT/config/agents.yaml"; [ -e "$cfg" ] || cfg="$ROOT/.agents/config/agents.yaml"
-  if [ -e "$cfg" ]; then
-    emit 2 home agents-config SKIP "the agent set is seeded"
+  # Settings are the operator's: they live in the home, never in the package.
+  local settings; hoard_settings_dir settings
+  if [ -e "$settings/agents.yaml" ]; then
+    emit 2 home agents-config SKIP "the agent set is seeded ($settings/agents.yaml)"
   else
-    emit 2 home agents-config DO "seed the private agent set from its example (harness + model per agent)"
+    emit 2 home agents-config DO "seed the private agent set into $settings/agents.yaml (harness + model per agent)"
   fi
 }
 

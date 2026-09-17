@@ -139,11 +139,11 @@ if [ -e "$YMIR_SETTINGS_DIR/wedge-alarm" ]; then
   add alarm OK "channel kept"
 elif [ "$CHECK" = 1 ]; then
   add alarm WARN "channel not written (run without --check)"
-elif mkdir -p "$ROOT/config" 2>/dev/null && \
+elif mkdir -p "$YMIR_SETTINGS_DIR" 2>/dev/null && \
      printf '# The channel the away-mode wedge alarm fires on when an escalation\n# cannot be delivered into the pane. See bin/wedge-notify.sh.\ndesktop\n' >"$YMIR_SETTINGS_DIR/wedge-alarm" 2>/dev/null; then
-  add alarm OK "channel written (config/wedge-alarm)"
+  add alarm OK "channel written ($YMIR_SETTINGS_DIR/wedge-alarm)"
 else
-  add alarm WARN "could not write config/wedge-alarm"
+  add alarm WARN "could not write $YMIR_SETTINGS_DIR/wedge-alarm"
 fi
 
 # ── 7. the terminal backend Ymir needs ───────────────────────────────────────
