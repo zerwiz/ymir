@@ -456,7 +456,7 @@ The Smíðja visualizer **API** runs on `:8437` and serves its **UI** from
 now build it when absent:
 
 ```bash
-(cd .agents/skills/smidja-factory/apps/visualizer && bun run build)   # vue-tsc + vite
+(cd apps/smidja-factory/apps/visualizer && bun run build)   # vue-tsc + vite
 ```
 
 `bin/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing **and**
@@ -702,7 +702,7 @@ cd apps/hlidskjalf && npm install --no-audit --no-fund
 npm run typecheck && npm run build          # dist/ is what the SPA serves
 
 # Smiðja visualizer (bun + bun.lock)
-cd .agents/skills/smidja-factory/apps/visualizer && bun install && bun run build
+cd apps/smidja-factory/apps/visualizer && bun install && bun run build
 ```
 
 The visualizer's `dist/` is not optional: its API serves the UI from `./dist`,
@@ -954,6 +954,7 @@ it reports `all 25 governed paths exist`.
 
 `bin/ymir-install.sh` and `bin/ymir-validate.sh` are the two files of this asset
 that the sweep corrected. The visualizer path is
-`.agents/skills/smidja-factory/apps/visualizer` — **not** a doubled
+`apps/smidja-factory/apps/visualizer` (the smidja repo clone) — **not** the
+skill tree (dropped 2026-09-17, the skill carries no copy), not a doubled
 `smidja-factory-factory`, and not the abandoned `.agents/skills/smidja/` tree
 (stale build output, moved aside).
