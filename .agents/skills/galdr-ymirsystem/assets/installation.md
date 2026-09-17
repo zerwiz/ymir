@@ -142,6 +142,75 @@ bin/ymir-migrate.sh apply             # carry it
 
 Stop the runtime first if you want no stale pid files; nothing is lost either way.
 
+## Operating it afterwards — the doors, the cloth, and the shapes
+
+### The doors (the CLI), named for the figure who does the work
+
+`npm install -g @zerwiz/ymir` puts **two** commands on PATH: `ymir` (the front
+door) and `ymir-install` (the bare installer). Everything else the operator
+needs is a door on `ymir` — never a script path inside `node_modules`.
+
+```
+doors[14]{verb,door,what}:
+  "ymir","first setup (a bare call installs)","the plan, then consent, then the work"
+  "ymir install [...]","bin/ymir-install.sh","the same, said out loud"
+  "ymir plan","bin/ymir-plan.sh","what an install would do here — writes nothing"
+  "ymir raise / lower","scripts/start.sh · stop.sh","lift the hall, or lay it down"
+  "ymir eir","bin/eir-doctor.sh","what stands, and mend what does not (the healer)"
+  "ymir groa","bin/groa-update.sh","take the latest, then mend this home forward"
+  "ymir groa migrate","bin/ymir-migrate.sh","heal this home's structure"
+  "ymir heimdall","bin/ymir-setup-auth.sh","the way in — status · set · github (the guardian)"
+  "ymir invite","bin/ymir-invite.sh","let someone else in — mint · list · revoke"
+  "ymir smidja","bin/smidja-board.sh","the smithy's board on :8437 — build · start · stop · status"
+  "ymir hlidskjalf","scripts/electron.sh start --view hlidskjalf","the high seat's window"
+  "ymir sessrumnir","scripts/electron.sh start --view sessrumnir","the seat-hall's window"
+  "ymir mimir","bin/mimir.sh","the memory well"
+  "ymir sense","bin/host-sense.sh","what THIS machine is"
+```
+
+A name the law has not given a home is still answered, once, with the name that
+has it: `ymir doctor` → *the door is named `ymir eir` now*. Colour appears only
+where a human watches.
+
+### The cloth — `bin/ymir-style.sh`
+
+Ymir had correct output and no design. The cloth is cut from the same stone as
+the halls (`midgard/design-system/tokens.css`): **bone** `#cfc3a9` for words,
+**bronze** `#c9973f` for what acts, **steel** `#96a0a8` for what stands, **blood**
+`#c2584a` for what is wrong, and a mark per state (`◆` do · `·` already · `—`
+fact · `✕` blocked · `?` needs your word · `✓` proved).
+
+```
+cloth_rules[4]{rule,why}:
+  "colour and marks only when stderr is a terminal and NO_COLOR is unset","a pipeline never parses a decoration"
+  "data on stdout, the human rendering on stderr","the TOON row is the data; the coloured line is for the eye"
+  "the words are never conditional — only the colour is","hiding information to save colour is the wrong trade"
+  "no banner over four lines, no rule longer than its text","density first (Monoline TUI · cli-guidelines)"
+```
+
+`bin/ymir-plan.sh --colour` renders the plan in the cloth on stderr while the
+TOON stays on stdout. The installer prints it at the consent, and ends with the
+next steps — *a reaction for every action, a next step for every ending*.
+
+### Two libs the packaged tree needs
+
+```
+libs[2]{path,resolves}:
+  "bin/smidja-lib.sh","the smithy: apps/smidja-factory in a clone, node_modules/@zerwiz/smidja-factory in a package — `smidja_factory_dir`, `smidja_visualizer_dir`"
+  "bin/electron-lib.sh","whether a shell's runtime VERIFIES: `electron_runtime_state` (ok · partial · absent) and the exact remedy"
+```
+
+**Why they exist.** A packaged tree has no `apps/`: the smithy arrives as a
+dependency and the skill symlink dangles. Four call sites assumed the clone's
+layout, so the visualizer read as unbuildable in a package. They resolve through
+`bin/smidja-lib.sh` now.
+
+**And a shell is never declared ready on a directory's presence.** npm gates
+install scripts; a skipped Electron postinstall leaves `dist/` partial and
+`path.txt` unwritten, so the web app builds, every check passes, and the window
+never opens. `electron_runtime_state` verifies, and the plan's `electron` row
+says *the runtime is PARTIAL* with the command that mends it.
+
 ## The app packages — how the four surfaces arrive
 
 The distro depends on the surfaces as their own npm packages, so one

@@ -226,7 +226,7 @@ everywhere; never put bronze text on bronze.
 - **Runecoded, not emoji.** A minimal, hand-drawn-style rune set replaces emoji
   in all UI: 16×16 and 24×24 grid, 2px stroke, chisel bevel on primary.
 - System subsystems each carry one rune-glyph (reuse Algiz-family geometry:
-  Bifrost gate, Ratatoskr squirrel, the Well). Map is in `midgard/design-system/icons.md` (TBD) — created from this doc.
+  Bifrost gate, Ratatoskr squirrel, the Well). Map is in `midgard/design-system/icons.md` and the library in `midgard/design-system/runes.md`.
 - Status dot: filled rune ring (ok) / half-ring (warn) / broken ring (danger), never color-only.
 
 ### 4.5 Surface & texture
@@ -345,7 +345,7 @@ All components read tokens from `tokens.css`; color-only states are forbidden
 
 - `docs/design.md` — this document (master).
 - `midgard/design-system/tokens.css` — the consumable design tokens.
-- `midgard/design-system/icons.md` — rune-glyph map (to create).
+- `midgard/design-system/icons.md` — rune-glyph map (21 glyphs, drawn in `icons/*.svg`).
 - `docs/ymir-rut.md` Part 3 — the original Rut design-system specification this
   document implements.
 - `docs/lore.md` §VI — house lineage behind the house accents.
