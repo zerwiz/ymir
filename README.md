@@ -700,6 +700,33 @@ when the work will take a while, tells you plainly:
       Your patience is noted, and it is earned.
 ```
 
+### The packages — what is on npm
+
+Six names were published; five serve. The distro **depends on the four
+surfaces**, so one command brings the whole platform — and each can be installed
+alone if you want only that hall.
+
+```
+packages[5]{package,what,live}:
+  "@zerwiz/ymir","the distro — the runtime, the doors, the installer, the plan","0.1.12"
+  "@zerwiz/hlidskjalf","the high seat — the control plane, the gate and the landing","0.1.0"
+  "@zerwiz/odrerir","the live hall — the board on :4322","0.1.0"
+  "@zerwiz/smidja-factory","the smithy — the agent factory, its skills and the visualizer on :8437","0.1.1"
+  "@zerwiz/sessrumnir","the seat-hall — the desktop where you speak with Brokk","0.1.9"
+```
+
+```bash
+npm install -g @zerwiz/ymir          # the distro AND the four surfaces (dependencies)
+npm install -g @zerwiz/hlidskjalf    # or one hall on its own
+```
+
+**Why the smithy's name is not `@zerwiz/smidja`.** It was published under that
+name and the registry accepted it twice — `0.1.0`, then `0.1.1` — while serving
+neither: the package document answered 404, the website 403, and a republish was
+refused as *already published*. The name was retired and the smithy ships as
+**`@zerwiz/smidja-factory`**, which resolves. A second look before publishing
+costs less than explaining a name that never worked.
+
 ### Both shapes — a clone and a package are one tree
 
 Ymir runs the same whether you **cloned** it or **installed** it from npm. The
