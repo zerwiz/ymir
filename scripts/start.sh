@@ -17,6 +17,18 @@ if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
 fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Where the smithy's parts live: apps/smidja-factory in a clone, or the
+# @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
+if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
+  _ys="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/smidja-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_SMIDJA_LIB_LOADED=1; break; }
+  done
+  unset _ys _yc
+fi
+smidja_visualizer_dir SMIDJA_VIZ
+smidja_factory_dir SMIDJA_FACTORY
+
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -116,7 +128,7 @@ fi
 # Smíðja's eye — the Vue trace visualizer (API :8437, UI :8438). Reads the repo's
 # own smidja.db and exposes the Sessions/Trace/Decisions/Stats views behind the
 # Hlidskjalf Sessions gate's "Open visualizer" button.
-VIZ_DIR="$ROOT/.agents/skills/smidja-factory/apps/visualizer"
+VIZ_DIR="${SMIDJA_VIZ:-}"
 VIZ_API_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 VIZ_UI_PORT="${SMIDJA_VIZ_UI_PORT:-8438}"
 VIZ_API_PID_FILE="$RUN/smidja-viz-api.pid"
