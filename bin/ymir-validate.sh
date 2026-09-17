@@ -14,8 +14,24 @@
 set -u
 
 VERSION="1.0.0"
+# The cloth: colour and marks for the human reading this report; the TOON row on
+# stdout stays the data (bin/ymir-style.sh).
+. "$SCRIPT_DIR/ymir-style.sh"
+style_init
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Where the smithy's parts live: apps/smidja-factory in a clone, or the
+# @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
+if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
+  _ys="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/smidja-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_SMIDJA_LIB_LOADED=1; break; }
+  done
+  unset _ys _yc
+fi
+smidja_visualizer_dir SMIDJA_VIZ
+smidja_factory_dir SMIDJA_FACTORY
+
 # shellcheck source=bin/ymir-platform.sh
 . "$SCRIPT_DIR/ymir-platform.sh"
 # Docker or rootless Podman (Fedora), whichever is present.
@@ -118,7 +134,7 @@ fi
 # ── 7b. visualizer (built ./dist AND its API actually listening) ────────────
 # A PASS must mean the thing is UP. Probe the port, not just the build: a
 # built-but-dead visualizer (a bad CMD_DB, a crashed API) is a FAIL, not green.
-VIZ="$ROOT/.agents/skills/smidja-factory/apps/visualizer"
+VIZ="${SMIDJA_VIZ:-}"
 VIZ_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 if [ ! -d "$VIZ" ]; then
   add visualizer SKIP "no visualizer tree at $VIZ"

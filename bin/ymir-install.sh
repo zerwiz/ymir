@@ -53,6 +53,18 @@ hoard_local_env YMIR_ENV_FILE
 # shellcheck source=bin/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
 ymir_home_root YMIR_HOME
+# Where the smithy's parts live: apps/smidja-factory in a clone, or the
+# @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
+if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
+  _ys="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/smidja-lib.sh"; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_SMIDJA_LIB_LOADED=1; break; }
+  done
+  unset _ys _yc
+fi
+smidja_visualizer_dir SMIDJA_VIZ
+smidja_factory_dir SMIDJA_FACTORY
+
 WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
 hoard_root HOARD
 DOMAINS="company marketing development life me"
@@ -78,6 +90,11 @@ if [ "$PLAN_ONLY" = 1 ]; then
   exec "$SCRIPT_DIR/ymir-plan.sh" ${PLAN_ARGS[@]+"${PLAN_ARGS[@]}"}
 fi
 
+# The cloth (bin/ymir-style.sh): colour, marks and spacing for the human, while
+# every row of data stays TOON on stdout.
+. "$SCRIPT_DIR/ymir-style.sh"
+style_init
+
 declare -a IDS STATUS DETAIL
 # The code minted for this install, reported at the end so it is not lost in the
 # step table. Empty on --check, and when no code could be minted.
@@ -97,8 +114,8 @@ confirm_install() {
     printf 'error: refusing a non-interactive install without --yes\nhelp: re-run with --yes to accept non-interactively, or --plan / --check to preview\n' >&2
     exit 3
   fi
+  style_title "Ymir first setup" "the plan below is probed on this machine, not recited"
   cat <<'PLAN'
-Ymir first setup — the plan below is probed on THIS machine, not recited.
 Each row is a phase, a step, its state, and why.
 
   DO        a change will be made
@@ -110,7 +127,7 @@ Each row is a phase, a step, its state, and why.
 Nothing is deleted. Every step is idempotent.
 PLAN
   printf '\n'
-  bash "$SCRIPT_DIR/ymir-plan.sh" 2>&1 || true
+  bash "$SCRIPT_DIR/ymir-plan.sh" --colour >/dev/null 2>&1 || true
   printf '\nProceed with the install? [y/N] '
   read -r reply || reply=""
   case "$reply" in
@@ -527,7 +544,7 @@ step_smidja() {
     if [ "$CHECK" = 1 ]; then
       local dbok vizok
       [ -f "$YMIR_HOME/smidja/smidja.db" ] && dbok=present || dbok=missing
-      [ -d "$ROOT/.agents/skills/smidja-factory/apps/visualizer/dist" ] && vizok=built || vizok=unbuilt
+      [ -n "${SMIDJA_VIZ:-}" ] && [ -d "$SMIDJA_VIZ/dist" ] && vizok=built || vizok=unbuilt
       if [ "$dbok" = missing ]; then
         add smidja WARN "smidja.db missing — a full run (without --check) creates it and seeds one bootstrap session"
       else
@@ -543,7 +560,7 @@ step_smidja() {
   else add smidja SKIP "no smidja-bootstrap.sh"; fi
   # The visualizer API serves its UI from ./dist — without a build it answers
   # the API but shows "No ./dist build found". Build it once when absent.
-  local viz="$ROOT/.agents/skills/smidja-factory/apps/visualizer"
+  local viz="${SMIDJA_VIZ:-}"; [ -n "$viz" ] || return 0
   [ -d "$viz" ] || return 0
   if [ -d "$viz/dist" ]; then
     add visualizer OK "UI built (served on :8437)"
@@ -682,6 +699,22 @@ step_desktop() {
   fi
   # Placement is the Omarchy layer's job and has already run (step_omarchy runs
   # before this step), so here we only launch.
+  # Verify the runtime before claiming anything: a skipped Electron postinstall
+  # leaves a partial runtime that fails to launch while every build still passes.
+  if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/electron-lib.sh" ]; then
+    . "$SCRIPT_DIR/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
+  fi
+  local shell partial=""
+  for shell in hlidskjalf odrerir sessrumnir; do
+    local dir="$ROOT/apps/$shell" d
+    [ -d "$dir" ] || dir="$(cd "$ROOT" && npm root 2>/dev/null)/@zerwiz/$shell"
+    d="$(electron_runtime_state "$dir" 2>/dev/null || true)"
+    [ "$d" = partial ] && partial="$partial $shell"
+  done
+  if [ -n "$partial" ]; then
+    add desktop WARN "the Electron runtime is PARTIAL for:$partial — the web surfaces stand; approve and rebuild to launch the shells"
+    return 0
+  fi
   if "$ROOT/scripts/electron.sh" start --both >/dev/null 2>&1; then
     add desktop OK "raised Hlidskjalf + Smíðja"
   else
