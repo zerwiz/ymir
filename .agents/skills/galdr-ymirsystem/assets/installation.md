@@ -496,6 +496,11 @@ that call the layer (`step_omarchy`) and desktop placement (`step_desktop`):
 `step_host` senses the host portably with `host-sense`, and everywhere else the
 same code path runs on any host.
 
+The **consent preamble** the installer prints before it acts says the same thing —
+*"learn this machine (OS, desktop, packages, configs, monitors, scale — Omarchy
+hosts recorded first-class)"* — so the operator is told what will happen in the
+portable terms the code now uses, not the Omarchy-only terms it used before.
+
 ### What the Omarchy layer installs
 
 ```bash
