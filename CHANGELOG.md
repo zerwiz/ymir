@@ -1,24 +1,5 @@
 # CHANGELOG
 
-## 2026-09-17 — the apps leave the monorepo; installation pulls them from their own repos
-
-- **The app split lands in the installer.** The five apps (hlidskjalf,
-  hlidskjalf-mobile, odrerir, sessrumnir, smidja) now live in their own repos
-  registered in the home registry (`$HOARD/identity/projects.yaml`) — the
-  monorepo never tracks them, and **`step_apps`** clones or fast-forwards each
-  `apps/<path>` from its registered `git{}` block (never guessing a remote,
-  always reading the registry). The smithy engine (`apps/smidja`) is stamped
-  from the cloned factory's `templates/smidja`, exactly as `install.py` does
-  for a target repo — so a fresh clone still gets a working smithy.
-- **The vendored app trees leave the index.** `apps/{hlidskjalf,
-  hlidskjalf-mobile,odrerir,sessrumnir,smidja,smidja-factory}` are gitignored
-  and `git rm --cached`-ed (751 files, 135k lines); `apps/README.md` stays.
-  A dir present that is not a git clone is reported (`move it aside and
-  re-run`) rather than silently replaced.
-
-galdr-reread: `.agents/skills/galdr-ymirsystem/assets/installation.md` — the
-step table (`22 steps`, `24` `step_*` functions), the new `apps` row, and the
-Sessrúmnir rows now say "its own repo", not "vendored".
 
 ## 2026-09-17 — Pi gets its agents, and a dead extension comes back
 
@@ -1364,3 +1345,42 @@ and killed the gate. An unknown status can no longer take a panel down.
   renders as the one process it is, and React is no longer handed a duplicate key.
   The duplicate at the source is recorded, not hidden.
 - `/api/stream` answers 200; the live stream is not broken, it was the window.
+
+## 2026-09-17 — the fleet stops colliding: a grid fan, and each smith's own house
+
+- **The Fleet graph collided above ~8 agents.** `Fleet.tsx` fanned every
+  non-hub agent into a single two-row line at ~4.4% pitch on 46px rings — with
+  20 roster cards the rings and labels overlapped into an unreadable pile.
+  `layout()` now fans a square-ish grid (`cols = ceil(sqrt(n))`, hub at top,
+  rows pitched past ring+label), so 20 agents render separated.
+- **Every ring showed the same rune.** `bin/hlidskjalf-agents.sh` hardcoded
+  `domain: ymirlabs` for every card and its roster parser never read the
+  `domain:` frontmatter each figure carries — so all twenty cards wore the
+  anonymous ᛦ. The roster now parses `domain:` and passes it through;
+  `galdr.md` names its house (`brokkforge`); the graph falls back to
+  `DOMAINS.ymirlabs` only when a domain is genuinely unknown (was a crash)
+  — and the `AgentCard` already fell back safely.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` — the
+Fleet graph paragraph (grid fan, roster domains, fallback).
+
+
+## 2026-09-17 — the apps leave the monorepo; installation pulls them from their own repos
+
+- **The app split lands in the installer.** The five apps (hlidskjalf,
+  hlidskjalf-mobile, odrerir, sessrumnir, smidja) now live in their own repos
+  registered in the home registry (`$HOARD/identity/projects.yaml`) — the
+  monorepo never tracks them, and **`step_apps`** clones or fast-forwards each
+  `apps/<path>` from its registered `git{}` block (never guessing a remote,
+  always reading the registry). The smithy engine (`apps/smidja`) is stamped
+  from the cloned factory's `templates/smidja`, exactly as `install.py` does
+  for a target repo — so a fresh clone still gets a working smithy.
+- **The vendored app trees leave the index.** `apps/{hlidskjalf,
+  hlidskjalf-mobile,odrerir,sessrumnir,smidja,smidja-factory}` are gitignored
+  and `git rm --cached`-ed (751 files, 135k lines); `apps/README.md` stays.
+  A dir present that is not a git clone is reported (`move it aside and
+  re-run`) rather than silently replaced.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/installation.md` — the
+step table (`22 steps`, `24` `step_*` functions), the new `apps` row, and the
+Sessrúmnir rows now say "its own repo", not "vendored".
