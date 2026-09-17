@@ -43,11 +43,11 @@ ACTION="${1:-list}"; shift || true
 # dir|glyph|tint|says|icon-name|exec|wm-class
 # FIVE UI surfaces, FIVE DIFFERENT glyphs — no app borrows another's rune.
 APPS=(
-  "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane|ymir-hlidskjalf|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf|Ymir · Hlidskjalf"
-  "apps/hlidskjalf-mobile|raidho|#c9973f|the road — the seat carried, Hlidskjalf on a phone|ymir-hlidskjalf-mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile|Ymir · Hlidskjalf Mobile"
-  "apps/odrerir|ansuz|#c9973f|the mead — Óðrerir, the Live Hall (Odin's breath, inspiration)|ymir-odrerir|scripts/electron.sh start --view odrerir|ymir-odrerir|Ymir · Óðrerir"
-  "apps/sessrumnir|othala|#c9973f|the hall — Sessrúmnir, the seat that holds the cloth|ymir-sessrumnir|bin/sessrumnir.sh start|ymir-sessrumnir|Ymir · Sessrúmnir"
-  "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-smidja|scripts/electron.sh start --view smidja|ymir-smidja|Ymir · Smíðja"
+  "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane|ymir-hlidskjalf|ymir hlidskjalf|ymir-hlidskjalf|Ymir · Hlidskjalf"
+  "apps/hlidskjalf-mobile|raidho|#c9973f|the road — the seat carried, Hlidskjalf on a phone|ymir-hlidskjalf-mobile|ymir hlidskjalf|ymir-hlidskjalf-mobile|Ymir · Hlidskjalf Mobile"
+  "apps/odrerir|ansuz|#c9973f|the mead — Óðrerir, the Live Hall (Odin's breath, inspiration)|ymir-odrerir|ymir odrerir|ymir-odrerir|Ymir · Óðrerir"
+  "apps/sessrumnir|othala|#c9973f|the hall — Sessrúmnir, the seat that holds the cloth|ymir-sessrumnir|ymir sessrumnir|ymir-sessrumnir|Ymir · Sessrúmnir"
+  "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-smidja|ymir smidja|ymir-smidja|Ymir · Smíðja"
 )
 
 list() {
@@ -115,11 +115,11 @@ icons_dir="$data_home/icons/hicolor/scalable/apps"
 apps_dir="$data_home/applications"
 # app | entry name | Exec | StartupWMClass
 ENTRIES=(
-  "hlidskjalf|Ymir · Hlidskjalf|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf"
-  "odrerir|Ymir · Óðrerir|scripts/electron.sh start --view odrerir|ymir-odrerir"
-  "sessrumnir|Ymir · Sessrúmnir|bin/sessrumnir.sh start|ymir-sessrumnir"
-  "visualizer|Ymir · Smíðja|scripts/electron.sh start --view smidja|ymir-smidja"
-  "hlidskjalf-mobile|Ymir · Hlidskjalf Mobile|scripts/electron.sh start --view hlidskjalf|ymir-hlidskjalf-mobile"
+  "hlidskjalf|Ymir · Hlidskjalf|ymir hlidskjalf|ymir-hlidskjalf"
+  "odrerir|Ymir · Óðrerir|ymir odrerir|ymir-odrerir"
+  "sessrumnir|Ymir · Sessrúmnir|ymir sessrumnir|ymir-sessrumnir"
+  "visualizer|Ymir · Smíðja|ymir smidja|ymir-smidja"
+  "hlidskjalf-mobile|Ymir · Hlidskjalf Mobile|ymir hlidskjalf|ymir-hlidskjalf-mobile"
 )
 install_all() {
   # A phone app gets an icon for its own bundle, never a desktop entry.
@@ -149,7 +149,10 @@ install_all() {
       printf '[Desktop Entry]\nType=Application\nVersion=1.0\n'
       printf 'Name=%s\n' "$display"
       printf 'Comment=%s\n' "$says"
-      printf 'Exec=bash %s/%s\n' "$ROOT" "$exec"
+      # The door, never a path: a launcher entry outlives the tree that wrote it,
+      # and `ymir <door>` reaches whichever install is live. (The CLI is on PATH
+      # from npm's global bin, and from bin/ in a clone — ymir.js is a bin entry.)
+      printf 'Exec=%s\n' "$exec"
       printf 'Icon=%s\n' "$iconname"
       printf 'Terminal=false\nCategories=Development;Utility;\n'
       printf 'StartupWMClass=%s\nStartupNotify=true\n' "$klass"
