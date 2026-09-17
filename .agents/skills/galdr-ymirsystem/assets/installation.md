@@ -166,10 +166,24 @@ A global install nests them under the distro's own `node_modules`
 hoists them to `node_modules/@zerwiz/<app>`. The plan checks both shapes.
 
 ```
-bin/npm-publish.sh                 # the platform only
-bin/npm-publish.sh --all           # the platform + every app package
-bin/npm-publish.sh --dry-run --all # what would go out, and from where
+bin/npm-publish.sh                       # the platform only
+bin/npm-publish.sh --all                 # the platform + every app package
+bin/npm-publish.sh --dry-run --all       # what would go out, and from where
+bin/npm-publish.sh --unpublish @zerwiz/ymir@0.1.5   # take ONE version back
 ```
+
+**A version can be taken back, and the window is short.** npm permits unpublishing
+**one version for 72 hours** after it was published; past that it is npm support's
+door. So `--unpublish` demands a spec that names the version — never a bare name —
+and the row says where the CDN may still serve the tarball for a while afterwards.
+Publishing a newer version is the other half of the repair: it moves the `latest`
+tag off the bad build at once, even before the removal propagates.
+
+**A `files[]` entry that names a directory overrides `.gitignore`.** This is how
+`@zerwiz/ymir@0.1.5` shipped the memory well: `files: [".agents/"]` packed that
+subtree *including* the gitignored stores, and the repo stayed clean while the
+artefact did not. Name what ships, exclude what must not, and prove it with
+`npm pack --dry-run` — the repo's cleanliness says nothing about the tarball.
 
 The app repos are cloned into `apps/` by the install's `apps` step (from the
 registry's `repo: apps/<path>` blocks), which is where `--all` reads their
