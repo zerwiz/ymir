@@ -25,6 +25,11 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CHANGELOG="CHANGELOG.md"
+# A change may tell its story either way: an entry appended to the ledger, or a
+# fragment in CHANGELOG.d/ that the assembler will fold in. The fragment is the
+# preferred form — two branches never touch the same fragment file, so the duty
+# is met without the O(N^2) conflict every branch appending to one file causes.
+FRAGMENT_DIR="CHANGELOG.d"
 ZERO="0000000000000000000000000000000000000000"
 
 usage() {
@@ -32,7 +37,8 @@ usage() {
   exit 2
 }
 
-# changes_touch_changelog <base> <head> — exit 0 when CHANGELOG.md differs
+# changes_touch_changelog <base> <head> — exit 0 when the change TELLS ITS STORY,
+# either by appending to CHANGELOG.md or by adding a CHANGELOG.d/ fragment.
 changes_touch_changelog() {
   local base=${1-} head=${2-} f
   [ -n "$head" ] || return 1
@@ -40,9 +46,16 @@ changes_touch_changelog() {
     # No base to compare against (root commit range): look at every commit.
     f="$(git -C "$ROOT" ls-tree -r --name-only "$head" -- "$CHANGELOG" 2>/dev/null)"
     [ -n "$f" ] && return 0
+    f="$(git -C "$ROOT" ls-tree -r --name-only "$head" -- "$FRAGMENT_DIR" 2>/dev/null | grep -v '/README.md$' | grep '\.md$')"
+    [ -n "$f" ] && return 0
     return 1
   fi
   git -C "$ROOT" diff --name-only "$base" "$head" -- "$CHANGELOG" 2>/dev/null | grep -q . && return 0
+  # A fragment ADDED in the range satisfies the duty. A fragment merely deleted
+  # (the assembler folding it into the ledger) does not count on its own — but in
+  # that same push the ledger changed, which the test above already caught.
+  git -C "$ROOT" diff --name-only --diff-filter=A "$base" "$head" -- "$FRAGMENT_DIR" 2>/dev/null \
+    | grep -v '/README.md$' | grep -q '\.md$' && return 0
   return 1
 }
 
@@ -90,15 +103,22 @@ verdict() {  # <ok|blocked>
   cat >&2 <<'EOF'
 changelog-guard: blocked — this push carries no CHANGELOG entry.
 
-  Every change that ships is a change that was told. Append an entry to
-  CHANGELOG.md under the current date (append-only — never rewrite an
-  existing entry; RULES/06-append-only.md), commit it, and push again.
+  Every change that ships is a change that was told. Tell it either way:
+
+    PREFERRED — add a fragment (no conflict with any other branch):
+      CHANGELOG.d/<YYYY-MM-DD>-<slug>.md   starting with "## YYYY-MM-DD — title"
+      bin/changelog-assemble.sh folds it into CHANGELOG.md
+
+    OR — append an entry to CHANGELOG.md under the current date
+    (append-only — never rewrite an existing entry; RULES/06-append-only.md).
+
+  Commit it, and push again.
 
   Deliberate override, when an entry truly does not belong:
     YMIR_SKIP_CHANGELOG_GUARD=1 git push ...
 EOF
-  printf 'error: changelog-guard blocked the push (no CHANGELOG.md change in range)\n' >&2
-  printf 'help: append a CHANGELOG entry, or set YMIR_SKIP_CHANGELOG_GUARD=1\n' >&2
+  printf 'error: changelog-guard blocked the push (no CHANGELOG entry or fragment in range)\n' >&2
+  printf 'help: add a CHANGELOG.d/ fragment (preferred), or append to CHANGELOG.md; override with YMIR_SKIP_CHANGELOG_GUARD=1\n' >&2
   exit 1
 }
 
@@ -111,12 +131,24 @@ case "${1:-}" in
     cat >"$hook" <<EOF
 #!/usr/bin/env bash
 # pre-push hook — the delivery gate. Installed by bin/changelog-guard.sh --install.
+#   0. changelog-assemble — fold CHANGELOG.d/ fragments into CHANGELOG.md, so the
+#      ledger is never behind what the fragments already tell. Folding is an
+#      append: existing entries are copied verbatim, never reordered.
 #   1. branch-guard   — Rule 08: never push a protected branch
-#   2. changelog-guard — every push carries a CHANGELOG entry
+#   2. changelog-guard — every push carries a CHANGELOG entry (or a fragment)
 set -u
 refs="\$(mktemp)"
 trap 'rm -f "\$refs"' EXIT
 cat >"\$refs"
+if [ -x "$SCRIPT_DIR/changelog-assemble.sh" ]; then
+  "$SCRIPT_DIR/changelog-assemble.sh" >/dev/null 2>&1 || true
+  # If folding changed the ledger, it is now a working-tree change the push does
+  # not carry. Say so loudly rather than pushing a ledger the fragments are not in.
+  if ! git -C "$ROOT" diff --quiet -- "$CHANGELOG" 2>/dev/null; then
+    printf 'changelog-assemble[1]{state}:\n  "folded fragments into %s — commit it, then push again"\n' "$CHANGELOG" >&2
+    exit 1
+  fi
+fi
 "$SCRIPT_DIR/branch-guard.sh" <"\$refs" || exit 1
 "$SCRIPT_DIR/changelog-guard.sh" <"\$refs" || exit 1
 exit 0
