@@ -192,6 +192,55 @@ cloth_rules[4]{rule,why}:
 TOON stays on stdout. The installer prints it at the consent, and ends with the
 next steps — *a reaction for every action, a next step for every ending*.
 
+### A clone and a package are one tree — `bin/app-lib.sh`
+
+The apps are the only thing that differs between the two shapes, and only in
+where they live:
+
+```
+surface            a clone                  an npm install
+---------------    ----------------------   ------------------------------------
+hlidskjalf         apps/hlidskjalf          node_modules/@zerwiz/hlidskjalf
+hlidskjalf-mobile  apps/hlidskjalf-mobile   node_modules/@zerwiz/hlidskjalf-mobile
+odrerir            apps/odrerir             node_modules/@zerwiz/odrerir
+sessrumnir         apps/sessrumnir          node_modules/@zerwiz/sessrumnir
+smidja             apps/smidja-factory      node_modules/@zerwiz/smidja-factory
+```
+
+`bin/app-lib.sh` answers for both — `app_dir <surface> <var>`, `app_pkg
+<surface>` — and **eighteen files** were converted to it: the raise path
+(`scripts/start.sh`), the windows (`scripts/electron.sh`), the invite door, the
+seat-hall trio, Eir, the icon mint, the desktop placement, the hall snapshot, and
+the installer's own SPA and shell steps. `bin/smidja-lib.sh` delegates to it, so
+there is **one** truth about where things live.
+
+**The trap that named itself.** `printf -v <name>` writes to the *function's*
+scope. A helper whose scratch variable shares the caller's requested name
+swallows the answer — `app_dir hlidskjalf c` returned nothing because the
+helper's own `local c` held the path. Every scratch name in the resolvers is
+function-prefixed (`_apd_c`, `_smd_c`, `_apr_root`) for exactly that reason, and a
+new resolver must follow the rule.
+
+**Why it matters beyond tidiness:** a packaged install shipped with eighteen
+scripts looking in `apps/`, so `ymir raise` died on
+`cd …/apps/hlidskjalf: No such file or directory` while every package had in fact
+arrived. A shape assumption is a bug that only shows itself on the *other* shape.
+
+### The patience words — `style_patience`
+
+A long hour must say what it is doing. `bin/ymir-style.sh` carries the line, and
+the installer's long chain and the raise path's build open with it:
+
+```
+◆ much moves   the halls are being stood up for the first time
+      this hour is long, and nothing of yours is lost in it —
+      roots come home, shapes are re-cut, names are set true again.
+      Your patience is noted, and it is earned.
+```
+
+Written in the house voice, kept under four lines (density), and shown on stderr
+with everything else the cloth renders.
+
 ### Two libs the packaged tree needs
 
 ```
