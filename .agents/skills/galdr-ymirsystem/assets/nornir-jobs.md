@@ -210,6 +210,39 @@ round, `nornir / nsr.compliance.failed` (exit 1) naming the failed gates.
 
 - The morning briefing reads the ledger, so a FAIL is seen at 07:00, not
   found by accident.
+
+### 3.7 Forgejo — the local git round (`bin/nornir-job-forgejo-git.sh`, 02:45)
+
+The issue-to-PR loop, read each night: lists the local forge's open issues and
+carves one Rune with the tally, so a growing queue (or a dead tunnel) is seen
+at sunrise. The forge address is the user's, from the home — never the tree:
+`$YMIR_HOME/config/forge.env` (`FORGEJO_URL`, optional `FORGEJO_TOKEN`).
+
+| Reads | Writes |
+|---|---|
+| `$YMIR_HOME/config/forge.env` · `GET {forge}/api/v1/repos/issues/search?state=open` | digest `$_HOME/memory/daily/forgejo-YYYY-MM-DD.md` · Rune `forgejo / git.issues` |
+
+- No `FORGEJO_URL` configured → clean exit (the loop is not armed); a closed
+  door (tunnel down) → exit 1 and Rune `forgejo / git.door-down`.
+- The forge may be the server's (`forgejo.zerwiz.org` → :3030) or a locally
+  provisioned one (`bin/ymir-marketing-stack.sh --with-forgejo`).
+
+### 3.8 The marketing stack (`bin/ymir-marketing-stack.sh`)
+
+Not a cron job — a **provisioner**: stands Mautic + Postiz + Activepieces
+(+ optional Forgejo) on ANY computer, the same OSS engines the server runs.
+Env-driven (ports virtualized), secrets generated once into the home, never
+inline. Agents (Bragi for marketing, Sindri for git) run it for any user.
+
+```
+bin/ymir-marketing-stack.sh up|status|down|doors
+# doors: Mautic :8001 · Postiz :8003 · Activepieces :8005 · Forgejo :8007 (defaults)
+```
+
+- Rune `marketing / stack.<action>` carved on each provision action.
+- The Allfather's live stack is the server's (`zerwizserver`); its public
+  doors are tunnel-driven (`cloudflared`) — see the registry's
+  `marketing_doors[]` table.
 - Idempotent: gates are pure checks; the cron date-guard suppresses repeat
   dispatch within a day; safe to invoke by hand (`bash bin/nornir-job-nsr-compliance.sh`).
 
