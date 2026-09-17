@@ -174,6 +174,23 @@ fresh runes.
 - Idempotent by nature: each run rewrites the same snapshot from the same
   inputs; the cron date-guard suppresses repeat dispatch within a day.
 
+### 3.6 Tyr — NSR compliance round (`bin/nornir-job-nsr-compliance.sh`, 02:30)
+
+The NorthStar deterministic gate, run nightly in the quiet hours so sunrise
+finds the doors mended or the Rune already says which broke. Runs every
+`.compliance/gates/check_*.sh` (danger · env · paths · platform · wiring)
+and carves one Rune with the verdict — `nornir / nsr.compliance` on a clean
+round, `nornir / nsr.compliance.failed` (exit 1) naming the failed gates.
+
+| Reads | Writes |
+|---|---|
+| `.compliance/gates/check_*.sh` (deterministic, no network) | Rune `nornir / nsr.compliance[.failed]` · `state/last` line |
+
+- The morning briefing reads the ledger, so a FAIL is seen at 07:00, not
+  found by accident.
+- Idempotent: gates are pure checks; the cron date-guard suppresses repeat
+  dispatch within a day; safe to invoke by hand (`bash bin/nornir-job-nsr-compliance.sh`).
+
 ### 3.4 Yggdrasil — git sync (`bin/nornir-job-git-sync.sh`, 00:00)
 
 The world-tree kept in order. Two modes, both non-destructive:
