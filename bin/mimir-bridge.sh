@@ -33,7 +33,13 @@ hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 BRIDGE="$ROOT/bin/mimir-bridge.py"
-DB="${ENGRAM_DB:-$YMIR_HOME/memory/kaia.engram}"
+# The well is ONE memory and it lives in the hoard — always. An explicit
+# ENGRAM_DB is the operator's escape hatch; without it the hoard decides.
+if [ -n "${ENGRAM_DB:-}" ]; then
+  DB="$ENGRAM_DB"
+else
+  hoard_memory_store DB
+fi
 PORT="${MIMIRSBRUNN_PORT:-4602}"
 PID_FILE="${YMIR_STATE_DIR:-$YMIR_HOME/state}/mimir-bridge.pid"
 LOG_FILE="${YMIR_STATE_DIR:-$YMIR_HOME/state}/mimir-bridge.log"
