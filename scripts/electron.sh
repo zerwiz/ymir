@@ -97,7 +97,7 @@ stop_view() {  # stop ONE view's pids - and only that view's
   printf '%s\n' "$pids" | xargs -r kill 2>/dev/null || true
   sleep 0.5
   local left; left="$(view_pids "$v")"
-  [ -z "$left" ] || printf '%s\n' "$left" | xargs -r kill -9 2>/dev/null || true
+  [ -z "$left" ] || printf '%s\n' "$left" | xargs -r kill -KILL 2>/dev/null || true
   rm -f "$(pid_file "$v")"
   printf 'electron: stopped %s pid(s)=%s\n' "$v" "${list%,}"
 }
