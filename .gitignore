@@ -119,6 +119,10 @@ apps/hlidskjalf/android/keystore.properties
 # The Allfather's personal agent/harness/model setup — private, from the
 # tracked template .agents/config/agents.yaml.example. Push it to a private repo.
 .agents/config/agents.yaml
+# The pinned terminal backend (herdr/tmux/zellij/cmux) — machine-local, never
+# tracked. `config` is a symlink to `.agents/config`, so a `config/*` rule does
+# not match these files; they are named here instead.
+.agents/config/backend
 
 # workspace/ — the operator's private world-tree. A clone must never inherit
 # another operator's work, personal, memory, or company data. Only the scaffold
