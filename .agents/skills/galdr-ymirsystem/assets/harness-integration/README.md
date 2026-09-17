@@ -458,7 +458,12 @@ The adapter pattern is ported from the validated upstream **Brokk** agent-distro
 ## 13. The Well — memory for every harness (engram)
 
 The well is **Mimirsbrunn**, backed by the validated OSS engine **engram**. It is
-one repo-local store, `.agents/memory/kaia.engram`, reached two ways:
+ONE store and it lives in the hoard — `$YMIR_HOME/hodd/memory/kaia.engram` —
+reached two ways. Every reader resolves it through `hoard_memory_store`
+(bin/hoard-lib.sh) or an explicit `ENGRAM_DB`; the rendered `.pi/mcp.json`
+carries the hoard path (`__YMIR_HOME__/hodd/memory/kaia.engram`). The well
+rides the private vault between the Allfather's computers as one store — the
+legacy `memory/kaia.engram` duplicates are struck.
 
 **HTTP bridge (`:4602`)** — `bin/mimir-bridge.py`, raised by
 `bin/mimir-bridge.sh` (and by `scripts/start.sh` + `bin/saga-session-start.sh`).
