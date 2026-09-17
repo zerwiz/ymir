@@ -20,13 +20,19 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 
 ## 1. What a harness adapter is
 
-> **MCP scope (Ymir's well + A2A mesh).** `bin/a2a-mcp.sh install` wires the
+> **MCP scope (well · mesh · Teams · Anchor).** `bin/a2a-mcp.sh install` wires the
 > `engram` (memory well) and `a2abridge` (A2A mesh) MCP servers into OpenCode's
-> repo `opencode.json` **and** Pi. By default the Pi side writes the **global**
+> repo `opencode.json` **and** Pi. The **Teams** plane (`wayofteams`) and
+> **Anchor** memory are **remote** MCP servers named by URL: set
+> `WAYOFTEAMS_MCP_URL` / `ANCHOR_MCP_URL` in the private platform env, then run
+> `bin/a2a-mcp.sh install`. OpenCode speaks `type: remote` natively; Pi has no
+> remote transport, so it reaches them through the `mcp-remote` stdio bridge. The
+> URLs never enter the tracked tree. By default the Pi side writes the **global**
 > `~/.pi/agent/mcp.json`; `bin/a2a-mcp.sh install --project` writes the repo's
 > `.pi/mcp.json` instead, leaving a Pi used elsewhere untouched (launch with
 > `pi --mcp-config .pi/mcp.json`). Prefer `--project` when integrating Ymir into
-> an existing workflow.
+> an existing workflow. `bin/a2a-mcp.sh show` reports what is **actually** wired —
+> every key present, not a fixed list.
 
 
 The Ymir runtime is a **distro**: a directory of instructions, skills, tooling and conventions that turns a general-purpose agent into a specialized one. Launching a supported harness inside `BROKK_HOME` is supposed to instantiate **Brokk** and address the operator as the **Allfather** *before the model's first turn*.
