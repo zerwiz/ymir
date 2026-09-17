@@ -152,7 +152,7 @@ app_packages[4]{package,repo,what}:
   "@zerwiz/hlidskjalf","zerwiz/hlidskjalf","the control plane — dist/ ships built, served on :3888"
   "@zerwiz/odrerir","zerwiz/odrerir","the live hall — dist/ ships built"
   "@zerwiz/sessrumnir","zerwiz/sessrumnir","the seat-hall desktop — out/ ships built (a fork of pi-desktop)"
-  "@zerwiz/smidja","zerwiz/smidja","the smithy and its visualizer — the factory plus the UI's source, built at install"
+  "@zerwiz/smidja-factory","zerwiz/smidja","the smithy and its visualizer — the factory plus the UI's source, built at install"
 ```
 
 They are **optionalDependencies**, deliberately: a broken app package must never
