@@ -166,6 +166,18 @@ router `:8080`, Bifrost `:4603`), never only the first — a dead engine falls
 through to a live one. Recall reads `.agents/memory/well/episodes.jsonl`
 directly, so restoring that file revives the chat's memory without a restart.
 
+### The EmberBackground hearth (the shared fire)
+
+The animated glow behind the shell, the login, and Sessrúmnir's chat comes from
+**one** hearth, not four copies: `midgard/design-system/ember.js` (`startEmbers`),
+with Sessrúmnir's `ember-background.tsx` as its React port. Both draw the same
+embers + haze, respect reduced-motion, and — since the Sep 17 mend — re-seed
+via **ResizeObserver on the container**, not just `window.resize`: a split pane
+or toggled sidebar changes the chat column's size without a window resize, and a
+canvas that sized itself once at a stale dimension never shows the fire. The
+shared module watches the host; the port watches its parent; re-seeding fires
+only when the measured size actually changed (never per-frame).
+
 ### The gate API reads cheaply (added 2026-09-16)
 
 The gate reads append-only ledgers (Runes, the well's `episodes.jsonl`, masterplan
