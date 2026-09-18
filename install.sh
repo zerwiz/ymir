@@ -33,16 +33,10 @@ mkdir -p "$PREFIX/bin"
 npm config set prefix "$PREFIX" >/dev/null 2>&1 || true
 export PATH="$PREFIX/bin:$PATH"
 
-# 2. the package
-say "installing $PKG into $PREFIX …"
-# `@latest` AND --prefer-online: a stale cached `latest` is how an install
-# succeeds while changing nothing, and the user is left on an old build.
-npm install -g "$PKG@latest" --prefer-online "${@:-}" || {
-  say "error: the install failed — see npm's output above."
-  exit 1
-}
-
-# 3. the path, into the shell's own files, so it survives this session
+# 2. the PATH FIRST — so a failed install still leaves the command reachable, and
+#    the user can simply run it again. (It used to be written after the install,
+#    and `"${@:-}"` handed npm an EMPTY argument, so the install failed and the
+#    script exited before any shell file was touched: "it never writes to .bashrc".)
 rc_written=""
 for rc in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.profile"; do
   [ -e "$rc" ] || continue
@@ -51,6 +45,20 @@ for rc in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.profile";
     rc_written="$rc_written ${rc##*/}"
   fi
 done
+export PATH="$PREFIX/bin:$PATH"
+
+# 3. the package
+say "installing $PKG into $PREFIX …"
+# `@latest` AND --prefer-online: a stale cached `latest` is how an install
+# succeeds while changing nothing, and the user is left on an old build.
+install_args=(-g "$PKG@latest" --prefer-online)
+[ "$#" -gt 0 ] && install_args+=("$@")
+if ! npm install "${install_args[@]}"; then
+  say "error: the install failed — see npm's output above."
+  say "note: your PATH is already set, so a second run picks up where this left off."
+  exit 1
+fi
+
 
 # 4. the FIRST SETUP — the whole platform, not just a command
 # pi.dev and opencode finish here by running their own onboarding; an installer
