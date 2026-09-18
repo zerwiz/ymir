@@ -1,5 +1,43 @@
 
 
+## 2026-09-17 — the model that raised itself, and the workhorse that replaced it
+
+- **A model raised itself at login and killed the session.** `qwen3-6-35b-a3b`
+  carried `[Install] WantedBy=default.target`, so systemd started it at
+  12:36:33; with `--no-mmap` on a unified-memory APU the weights were
+  unreclaimable, memory and swap drained, and the kernel's global OOM killer took
+  `gnome-shell` — and the Ymir stack with it. `local-models.md` §4 gains
+  **three traps** from this (anonymous load on unified memory; backend chosen by
+  reputation rather than measurement; reasoning configured through the chat
+  template), and a new **§12** states the rule: a model service unit must never
+  raise itself.
+- **`§11 — Reasoning is a resource you must configure`** is new. Unbounded
+  reasoning fails *totally* — no answer at all — not merely worse. The same model
+  on the same request produced clean, degenerate (repetition), or unterminated
+  output depending only on how reasoning was configured. Prefer the engine's
+  native budget flag; the chat-template keyword is a different mechanism.
+- **Seated a new local workhorse** (a 176B-parameter MoE, Vulkan backend, MTP
+  speculative decoding, file-backed load). Measured before seating: prefill and
+  decode both at parity with the reference stack for this silicon. The per-host
+  record belongs in the hoard, not here — §6.
+- **Ran a 32-run A/B on guidance during reasoning** (counsel at the moment of
+  failure vs counsel up front vs pause alone vs bare). Result: counsel delivered
+  *at the failure point* more than doubled rule-adherence over the pause-only
+  control and completed work that bare and up-front-counsel arms abandoned
+  entirely. Caveats, scoring traps, and the full table live in the private
+  record; the *generic* lesson — the artifact must be extracted, scoring must be
+  comment-aware, and the thought must be closed on resume — is recorded where the
+  product work lives.
+- **Proposed, not applied:** a boot-cmdline correction to bring the TTM page pool
+  below system RAM (it is currently set *above* it, which the reference stack for
+  this silicon names as the cause of an unkillable driver deadlock). Needs root
+  and a reboot; runbook with rollback and post-reboot verification is in the hoard.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/local-models.md` — §4's
+trap table grew from four to seven and its heading no longer claims a count;
+**§11** (reasoning as a configured resource) and **§12** (a model unit must never
+raise itself) are new sections.
+
 ## 2026-09-17 — the seat's name and the visualizer's home
 
 - **omarchy, not omarchy-1** — the machine is `omarchy`; the fleet config docs
