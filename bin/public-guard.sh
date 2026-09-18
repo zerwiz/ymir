@@ -26,7 +26,7 @@ APPEND_ONLY='(^CHANGELOG\.md$|^docs/append-only-log\.md$|^docs/plans/|^assets/re
 # Note: the public owner identity — "zerwiz" the repo holder, its public domains,
 # and the project's own repo forms — is intentionally NOT private. What stays
 # guarded: other personal names, real /home paths, tenants, and secret shapes.
-PATTERNS='(josef|lindbom|/home/zerwiz|(ghp|gho|ghs|ghr)_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
+PATTERNS='(josef|lindbom|$HOME|(ghp|gho|ghs|ghr)_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
 # Legitimate exceptions, named explicitly rather than by widening the pattern:
 #   - the public owner identity (the repo's full URL, the short owner/repo form,
 #     and the owner's public homepage — the copyright holder on every licence);
@@ -36,7 +36,7 @@ ALLOW='github\.com/zerwiz/|zerwiz/ymir|zerwiz\.org|akka://|AKIAIOSFODNN7EXAMPLE|
 leaks() {  # stdin → prints masked hits, returns 1 on any
   grep -En "$PATTERNS" \
     | grep -Ev "$ALLOW" \
-    | sed -E 's/(sk-|ghp_|AKIA|xox[a-z]*-)[A-Za-z0-9-]+/\1…/g; s#/home/zerwiz#/home/<user>#g' \
+    | sed -E 's/(sk-|ghp_|AKIA|xox[a-z]*-)[A-Za-z0-9-]+/\1…/g; s#$HOME#/home/<user>#g' \
     | head -5
 }
 
