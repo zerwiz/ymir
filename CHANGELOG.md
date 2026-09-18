@@ -38,6 +38,43 @@ trap table grew from four to seven and its heading no longer claims a count;
 **§11** (reasoning as a configured resource) and **§12** (a model unit must never
 raise itself) are new sections.
 
+## 2026-09-17 — the fork stands the machine
+
+- **`config/app-repos.yaml` (public)** — the five app repos, the fork's road:
+  a fresh clone with no hoard registry falls back to this map in the installer's
+  `apps` step, so `git clone` + `bin/ymir-install.sh` pull the four surfaces as
+  they would on the author's seat. Verified on a clean clone (`ymir-plan.sh`:
+  hlidskjalf/odrerir/sessrumnir/smidja all `DO`). The hoard registry stays
+  authoritative when present.
+
+
+## 2026-09-17 — the phantom optional pins, cut
+
+- The platform's stale \`optionalDependencies\` (sessrumnir pinned at the broken
+  0.1.9) shadowed the required \`^0.1.10\` — npm never fetched the good seat.
+  Removed; the required deps now resolve to latest (0.1.18).
+
+
+
+## 2026-09-17 — the packaged seat carries the watch
+
+- **The @zerwiz/ymir tarball now ships every surface the runtime reads**: the
+  harness surfaces (`.pi/`, `.opencode/`, `.claude/`, `.codex/`, `.cursor/`),
+  `assets/`, `data/`, `deploy/` — so an npm-installed seat has the watchers,
+  the session-start hooks and the extensions, not only the repo clone (0.1.16
+  → 0.1.17).
+
+## 2026-09-17 — the npm door stands the surfaces
+
+- **`@zerwiz/ymir` now depends on its surfaces**: `@zerwiz/{hlidskjalf,
+  odrerir, sessrumnir, smidja-factory}` are declared dependencies (bump
+  `0.1.14` → `0.1.15`), so `npm i -g @zerwiz/ymir` (or a packaged install)
+  delivers the app shells under `node_modules/@zerwiz/*`, which `app-lib`
+  resolves. The audit's one gap — the platform carried no apps — is closed.
+- **`@zerwiz/smidja-factory` `0.1.1` → `0.1.2`**: the visualizer's nanoid fix
+  and the eye's-home SKILL line reach npm.
+
+
 ## 2026-09-17 — the seat's name and the visualizer's home
 
 - **omarchy, not omarchy-1** — the machine is `omarchy`; the fleet config docs
