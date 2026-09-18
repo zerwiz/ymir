@@ -82,6 +82,40 @@ function versionNotice() {
   } catch { /* a version notice must never break a door */ }
 }
 
+// ── is this copy current? ────────────────────────────────────────────────────
+// An install can succeed and change NOTHING: npm resolves a cached `latest`, sees
+// the same version, and says "changed 200 packages" while the old build stays. A
+// user cannot tell — so the tool says it, once a day, where a human is watching.
+function checkForUpdate() {
+  if (!process.stderr.isTTY || process.env.YMIR_NO_UPDATE_CHECK === '1') return;
+  if (noticeState('version') === 'off') return;
+  try {
+    const os = require('node:os');
+    const stamp = path.join(STATE_DIR, 'update-check');
+    const today = new Date().toISOString().slice(0, 10);
+    if (fs.existsSync(stamp) && fs.readFileSync(stamp, 'utf8').trim() === today) return;
+    fs.mkdirSync(STATE_DIR, { recursive: true });
+    fs.writeFileSync(stamp, today + '\n');
+    const https = require('node:https');
+    const req = https.get('https://registry.npmjs.org/@zerwiz/ymir/latest', { timeout: 1500 }, (res) => {
+      let body = '';
+      res.on('data', (d) => { body += d; });
+      res.on('end', () => {
+        try {
+          const latest = JSON.parse(body).version;
+          if (latest && latest !== pkg.version) {
+            process.stderr.write('\n' + bronze('  a newer Ymir is on npm  ') + faint(`${pkg.version} → `) + bronze(latest) + '\n' +
+              faint('  update:  npm i -g @zerwiz/ymir    (no PATH? npx @zerwiz/ymir)') + '\n' +
+              (noticeState('hints') === 'off' ? '' : faint('      (not again: ymir config notice version off)') + '\n'));
+          }
+        } catch { /* a notice must never break a door */ }
+      });
+    });
+    req.on('error', () => {});
+    req.on('timeout', () => req.destroy());
+  } catch { /* never break a door */ }
+}
+
 // ── the doors ────────────────────────────────────────────────────────────────
 // verb → { script, args } — args are prepended to whatever the operator passes,
 // so a verb can be a doorway to a sub-verb of a script that has several.
@@ -143,6 +177,7 @@ const argv = process.argv.slice(2);
 const first = argv[0];
 
 versionNotice();
+checkForUpdate();
 if (!first) run(DOORS.install.script, []);
 if (first === '--version' || first === '-v' || first === '-V') {
   process.stdout.write(`${pkg.version}\n`);
