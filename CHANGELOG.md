@@ -1,3 +1,8 @@
+> **Frozen 2026-09-18.** This file is the historical record and is no longer
+> written to (Rule 06: a record is never rewritten). New work is recorded as fix
+> notes — one file per fix, per component — under `docs/fixes/`, written with
+> `bin/fixes.sh record` and guarded by `bin/fixes-guard.sh`.
+
 ## 2026-09-18 — the README leads with the doors that work
 
 - **The npm page and GitHub both render `README.md`**, so a user meets it first — and
