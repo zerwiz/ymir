@@ -1,6 +1,14 @@
+## 2026-09-18 — the seat s chat left the repo, and no file names a home
+
+- **`chat/` was TRACKED in a public repo** — the seat s own conversations. It lives in the
+  home now (`$YMIR_HOME/state/chat/`, where the runtime reads it) and is gitignored: the
+  operator s words are the operator s (Rule 04).
+- **Seven files carried `/home/<user>`** — a username, in public. All seven read `$HOME` now,
+  verified by name: *zero* tracked files name a home path.
+
 ## 2026-09-18 — a username was in a tracked file (corrected, not rewritten)
 
-- Two entries carried `/home/zerwiz/Ymir` — the operator s own username, in a public file.
+- Two entries carried `$HOME/Ymir` — the operator s own username, in a public file.
   They now read `$HOME`. The rule is absolute and already in the changelog: **no hardcoded
   absolute file paths**, ever — a home path names a person, and this repo is public.
 
@@ -436,7 +444,7 @@ npm path alone to be true.
   directory` — every package had arrived, and eighteen scripts were looking in the
   clone's `apps/`. `bin/app-lib.sh` resolves a surface in either shape now.
 - **A clone and a package are one tree to the scripts.** Proven against both: the
-  five surfaces resolve from `/home/zerwiz/Ymir` and from an npm-installed
+  five surfaces resolve from `$HOME/Ymir` and from an npm-installed
   package, and `ymir raise` against a packaged tree fetches the app's
   dependencies, raises the gate API, starts Nornir cron, and brings up Bifrost and
   the well.
@@ -456,7 +464,7 @@ npm path alone to be true.
   the invite door, the seat-hall, Eir, the icons, the placement, the hall snapshot
   and the installer's own SPA and shell steps. `bin/smidja-lib.sh` delegates to it
   now, so there is one truth about where things live.
-- **Proven in both trees**: all five surfaces resolve from `/home/zerwiz/Ymir`
+- **Proven in both trees**: all five surfaces resolve from `$HOME/Ymir`
   (a clone) and from an npm-installed package. And `ymir raise` run against the
   packaged tree no longer dies — it fetches the app's dependencies, raises the
   gate API, **starts Nornir cron**, and brings up Bifrost and the well.

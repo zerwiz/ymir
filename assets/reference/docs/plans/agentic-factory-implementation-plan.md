@@ -158,7 +158,7 @@
 ## Phase 1: Planning & Execution Pipeline Updates (Week 2)
 
 ### 1.1 Update `create-plan` Skill
-**File**: `/home/zerwiz/firstmate/.agents/skills/create-plan/` (or wherever it lives)
+**File**: `$HOME/firstmate/.agents/skills/create-plan/` (or wherever it lives)
 
 **Changes**:
 - Add **Layer 1 (Product)** section template: problem, metrics, announcement post, HTML mockups
@@ -177,7 +177,7 @@
 ---
 
 ### 1.2 Update `ticket-executor` Skill
-**File**: `/home/zerwiz/firstmate/.agents/skills/ticket-executor/`
+**File**: `$HOME/firstmate/.agents/skills/ticket-executor/`
 
 **Changes**:
 - **Phase 0 (NEW)**: Program Design + Vertical Slice Definition
@@ -198,7 +198,7 @@
 ---
 
 ### 1.3 Update `validate-implementation` Skill
-**File**: `/home/zerwiz/firstmate/.agents/skills/validate-implementation/`
+**File**: `$HOME/firstmate/.agents/skills/validate-implementation/`
 
 **Changes**:
 - **Live dev environment testing**: integrate with orbs/portals/preview deployments
@@ -265,7 +265,7 @@
   **Timeframe**: [e.g., 14 days post-deploy]
   **Rollback Threshold**: [e.g., < 11% for 48h]
   ```
-- `bin/measurable-goal-validate.sh` — checks goal is quantitative, not descriptive (at `/home/zerwiz/CodeP/wayofmono/bin/measurable-goal-validate.sh`)
+- `bin/measurable-goal-validate.sh` — checks goal is quantitative, not descriptive (at `$HOME/CodeP/wayofmono/bin/measurable-goal-validate.sh`)
 
 **Integration Points (DONE)**:
 - `ticket-manager`: Added `measurable_goal` to frontmatter schema + Production-Ready Standard
@@ -283,7 +283,7 @@
 ### 2.3 `logic-retention-guard` Skill (NEW)
 **Purpose**: Periodic codebase logic quizzes / agent-educates-human during long tasks
 
-**Location**: `/home/zerwiz/firstmate/.agents/skills/logic-retention-guard/`
+**Location**: `$HOME/firstmate/.agents/skills/logic-retention-guard/`
 
 **Deliverables**:
 - `SKILL.md` — trigger: long-running tasks (>30 min), after major structural changes
@@ -304,7 +304,7 @@
 ### 2.4 `multi-model-review` Skill (NEW)
 **Purpose**: Parallel Codex + Opus review for high-stakes changes
 
-**Location**: `/home/zerwiz/firstmate/.agents/skills/multi-model-review/`
+**Location**: `$HOME/firstmate/.agents/skills/multi-model-review/`
 
 **Deliverables**:
 - `SKILL.md` — trigger: PR validation for high-stakes changes (configurable: security, payments, core infra)
@@ -325,7 +325,7 @@
 ## Phase 3: Factory-Wide Integration & Polish (Week 4)
 
 ### 3.1 Update `fm-brief.sh` — Master Scaffold
-**File**: `/home/zerwiz/firstmate/bin/fm-brief.sh`
+**File**: `$HOME/firstmate/bin/fm-brief.sh`
 
 **Changes**:
 - Scaffold includes ALL four layers as mandatory sections:
@@ -344,7 +344,7 @@
 ---
 
 ### 3.2 Update `fm-session-start.sh` — Context Budget Init
-**File**: `/home/zerwiz/firstmate/bin/fm-session-start.sh`
+**File**: `$HOME/firstmate/bin/fm-session-start.sh`
 
 **Changes**:
 - Initialize context budget tracking per task
@@ -354,7 +354,7 @@
 ---
 
 ### 3.3 Update `fm-teardown.sh` — Goal Validation
-**File**: `/home/zerwiz/firstmate/bin/fm-teardown.sh`
+**File**: `$HOME/firstmate/bin/fm-teardown.sh`
 
 **Changes**:
 - Require measurable goal validation before teardown (for ship tasks)
@@ -364,7 +364,7 @@
 ---
 
 ### 3.4 Update `data/backlog.md` Schema
-**File**: `/home/zerwiz/firstmate/.tasks.toml` + backlog items
+**File**: `$HOME/firstmate/.tasks.toml` + backlog items
 
 **Changes**:
 - Add fields to task metadata:

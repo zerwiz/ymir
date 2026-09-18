@@ -13,7 +13,7 @@ Dex Horthy: "An agent given a number to move will go much further than one given
 
 ## Current State
 
-- Ticket template at `/home/zerwiz/.pi/thoughts/global/templates/ticket-template.md` has Acceptance Criteria (checkboxes)
+- Ticket template at `$HOME/.pi/thoughts/global/templates/ticket-template.md` has Acceptance Criteria (checkboxes)
 - Ticket frontmatter in `ticket-manager/SKILL.md` has no `measurable_goal` field
 - Plans have "Success Criteria" but they're descriptive, not quantitative
 - No validation that goals are measurable vs descriptive
