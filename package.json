@@ -1,6 +1,6 @@
 {
   "name": "@zerwiz/ymir",
-  "version": "0.1.31",
+  "version": "0.1.34",
   "description": "Ymir — the single-tenant agent operating system. One command: curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash  ·  or: npx @zerwiz/ymir  ·  or: npm i -g @zerwiz/ymir (if `ymir` is not found, the README has the three-line PATH cure)",
   "license": "Apache-2.0",
   "homepage": "https://github.com/zerwiz/ymir",
@@ -51,7 +51,8 @@
     ".cursor/",
     "assets/",
     "data/",
-    "deploy/"
+    "deploy/",
+    "install.sh"
   ],
   "engines": {
     "node": ">=20"
