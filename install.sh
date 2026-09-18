@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# install.sh — the one-liner. Ymir into the operator's OWN prefix, with PATH set,
+# so `ymir` works in the shell they are standing in and every shell after it.
+#
+#   curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash
+#
+# Why this exists, and why `npm install -g @zerwiz/ymir` alone is not enough: npm
+# puts a global command in its global prefix's bin directory, and on an ordinary
+# machine that directory is not on PATH. The command is installed and the shell
+# cannot see it — the most common "it does not work" in the whole Node ecosystem.
+# This script removes that class of failure:
+#
+#   · a prefix the user owns (no sudo, no EACCES on /usr/lib/node_modules)
+#   · the export written into the shell's rc, so it survives the session
+#   · and then it proves the door: `ymir --version`
+#
+# Env: YMIR_NPM_PREFIX (default ~/.npm-global), YMIR_PKG (default @zerwiz/ymir).
+set -eu
+
+PREFIX="${YMIR_NPM_PREFIX:-$HOME/.npm-global}"
+PKG="${YMIR_PKG:-@zerwiz/ymir}"
+
+say() { printf '%s\n' "$*" >&2; }
+
+command -v npm >/dev/null 2>&1 || {
+  say "error: npm is not installed, and this script does not install Node."
+  say "help: install Node 20+ (https://nodejs.org), then run this again."
+  exit 1
+}
+
+# 1. a prefix the user owns — every later install is painless
+mkdir -p "$PREFIX/bin"
+npm config set prefix "$PREFIX" >/dev/null 2>&1 || true
+export PATH="$PREFIX/bin:$PATH"
+
+# 2. the package
+say "installing $PKG into $PREFIX …"
+npm install -g "$PKG" "${@:-}" || {
+  say "error: the install failed — see npm's output above."
+  exit 1
+}
+
+# 3. the path, into the shell's own files, so it survives this session
+rc_written=""
+for rc in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.profile"; do
+  [ -e "$rc" ] || continue
+  if ! grep -q "$PREFIX/bin" "$rc" 2>/dev/null; then
+    printf '\n# Ymir — the npm global bin, so `ymir` is found\ncase ":$PATH:" in *":%s/bin:"*) ;; *) export PATH="%s/bin:$PATH" ;; esac\n' "$PREFIX" "$PREFIX" >>"$rc"
+    rc_written="$rc_written ${rc##*/}"
+  fi
+done
+
+# 4. prove the door rather than promise it
+if command -v ymir >/dev/null 2>&1; then
+  say ""
+  say "ymir $(ymir --version 2>/dev/null || printf '?') — installed."
+  say "next:  ymir plan      # what an install would do here, writing nothing"
+  say "       ymir           # the first setup"
+else
+  say "error: the package is installed but \`ymir\` is still not on PATH."
+  say "help: export PATH=\"$PREFIX/bin:\$PATH\"   (then open a new shell)"
+  exit 1
+fi
+[ -n "$rc_written" ] && say "PATH written into:$rc_written — open a new shell for other terminals."
