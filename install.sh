@@ -35,7 +35,9 @@ export PATH="$PREFIX/bin:$PATH"
 
 # 2. the package
 say "installing $PKG into $PREFIX …"
-npm install -g "$PKG" "${@:-}" || {
+# `@latest` AND --prefer-online: a stale cached `latest` is how an install
+# succeeds while changing nothing, and the user is left on an old build.
+npm install -g "$PKG@latest" --prefer-online "${@:-}" || {
   say "error: the install failed — see npm's output above."
   exit 1
 }
