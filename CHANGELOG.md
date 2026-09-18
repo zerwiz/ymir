@@ -1,4 +1,9 @@
 
+## 2026-09-17 — 0.1.26: published, and the vault door named
+
+- **@zerwiz/ymir@0.1.26 is on the registry** — the latest main, published as `zerwiz`. The token was in the encrypted vault all along; `age` was missing from this machine, and `bin/hodd.sh emit` returns empty, so every reader reported the token absent. The door is the fix, not the key.
+- **The bump clears the registry**: main carried 0.1.18 while the registry served 0.1.25 (other sessions published past main).
+
 ## 2026-09-17 — "ymir: command not found" is a PATH fault, and here is the cure
 
 - **The command is installed; the shell is not looking.** The published manifest carries `bin: {ymir, ymir-install}`, so the file is there — in npm's global bin directory, which an ordinary Linux install puts under `~/.npm-global` and a shell profile often never adds.
