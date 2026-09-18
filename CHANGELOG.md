@@ -1,3 +1,10 @@
+## 2026-09-18 — the publish discipline, written into Gróa (this cannot happen again)
+
+- Seven publishes in an hour cost a version: npm accepted 0.1.32 and never created it
+  (404). Four laws are hers now: one version per sitting; verify by the VERSION document;
+  unpack the TARBALL before calling a release done (0.1.31 was tagged latest and did not
+  carry the installer fix); move the TAG rather than republishing.
+
 ## 2026-09-18 — the one-liner writes the PATH first (it never reached .bashrc)
 
 - **The bug, exactly:** install.sh passed `"${@:-}"` to npm, which with no arguments is an

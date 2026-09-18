@@ -121,6 +121,23 @@ npm_renewal[6]{step,how,why}:
   rewrite a manifest at publish time (that is how `vite.config.ts` went missing and
   every panel died on `Unexpected token '<'`).
 
+## The publish discipline — this cannot happen again
+
+Tonight cost seven publishes in an hour, one version thrown away, and a tag left on a
+build that did not carry the fix. Gróa holds four laws now:
+
+```
+publish_laws[4]{law,what_it_cost_us}:
+  "ONE version per sitting, at most","npm accepted 0.1.32 and never created it (404) — rapid publishes read as abuse, and a dropped publish looks exactly like a successful one"
+  "verify by the VERSION DOCUMENT","curl -s -o /dev/null -w '%{http_code}' …/@zerwiz/ymir/<version> — 200 or it did not happen; npm's success line is not evidence"
+  "unpack the TARBALL before calling it released","npm pack <version> and read install.sh / README.md from it: 0.1.31 was tagged latest and did NOT carry the installer fix"
+  "move the TAG, do not republish","npm dist-tag add @zerwiz/ymir@<good> latest — no new version, and every next install gets it"
+```
+
+**Why they are law:** the registry serves what was **published**, not what is on `main`.
+A publish that appears to succeed may reach no user at all; every check above tests the
+artefact — the only thing a user ever touches.
+
 ## Safety
 
 - **Fast-forward only.** Dirty, diverged, offline, or non-default-branch targets are skipped and reported, never forced or stashed. Nothing with unlanded work is ever discarded.
