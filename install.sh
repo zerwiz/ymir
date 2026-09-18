@@ -50,12 +50,26 @@ for rc in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.profile";
   fi
 done
 
-# 4. prove the door rather than promise it
+# 4. the FIRST SETUP — the whole platform, not just a command
+# pi.dev and opencode finish here by running their own onboarding; an installer
+# that stops at a binary leaves the user with a tool that does nothing yet, and
+# with eight things still to go wrong. YMIR_SKIP_SETUP=1 installs the command only.
+if [ "${YMIR_SKIP_SETUP:-0}" != 1 ]; then
+  say ""
+  say "the first setup — the plan, then the work. This takes a few minutes."
+  if ! ymir install --yes; then
+    say "warn: the setup did not finish cleanly — nothing is lost; run \`ymir\` again to continue."
+  fi
+fi
+
+# 5. prove the doors rather than promise them
 if command -v ymir >/dev/null 2>&1; then
   say ""
   say "ymir $(ymir --version 2>/dev/null || printf '?') — installed."
-  say "next:  ymir plan      # what an install would do here, writing nothing"
-  say "       ymir           # the first setup"
+  say "what stands:"
+  ymir validate --quiet 2>/dev/null | grep -E "^  \"" | head -12 | sed 's/^/  /' >&2 || true
+  say "next:  ymir raise      # lift the hall (SPA :3888, the board :8437, the windows)"
+  say "       ymir --help     # every door"
 else
   say "error: the package is installed but \`ymir\` is still not on PATH."
   say "help: export PATH=\"$PREFIX/bin:\$PATH\"   (then open a new shell)"
