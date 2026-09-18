@@ -1,3 +1,9 @@
+## 2026-09-18 — the mend must approve before it rebuilds
+
+- rebuilt dependencies successfully is gated too: without `npm install-scripts approve electron` first it
+  silently changes nothing, and the window still never opens. The mend now approves, rebuilds,
+  and only then reports.
+
 ## 2026-09-18 — the seat s chat left the repo, and no file names a home
 
 - **`chat/` was TRACKED in a public repo** — the seat s own conversations. It lives in the
