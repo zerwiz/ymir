@@ -700,6 +700,34 @@ when the work will take a while, tells you plainly:
       Your patience is noted, and it is earned.
 ```
 
+### "`ymir`: command not found" — it is almost always PATH
+
+The command is installed; npm puts it in a directory your shell may not look in.
+The package declares it (`bin: {ymir, ymir-install}`), so this is not a missing
+file — it is a missing path.
+
+```bash
+npm prefix -g                      # where npm puts global packages (e.g. ~/.npm-global)
+ls "$(npm prefix -g)/bin/ymir"     # the command is there
+export PATH="$(npm prefix -g)/bin:$PATH"            # this session
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.bashrc   # every session after
+```
+
+On macOS with Homebrew, npm's prefix is usually `/opt/homebrew` and already on
+the path; on Linux a global install as an ordinary user lands under `~/.npm-global`
+(or whatever `npm config get prefix` says), which is exactly the directory that is
+easy to miss. Windows uses `%APPDATA%\npm`.
+
+**And if the install itself is refused** — a `EACCES` on `/usr/lib/node_modules` —
+do not reach for `sudo`: point npm at a prefix you own once, and every Ymir
+install afterwards is painless.
+
+```bash
+npm config set prefix "$HOME/.npm-global"
+export PATH="$HOME/.npm-global/bin:$PATH"
+npm install -g @zerwiz/ymir
+```
+
 ### The packages — what is on npm
 
 Six names were published; five serve. The distro **depends on the four
