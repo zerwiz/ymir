@@ -50,7 +50,7 @@ repair_runtime() {
   [ -f "$dir/node_modules/electron/path.txt" ] && return 0
   command -v npm >/dev/null 2>&1 || return 1
   echo "Sessrúmnir — its Electron runtime is absent; fetching it (this is the gated postinstall)…" >&2
-  ( cd "$dir" && npm rebuild electron >/dev/null 2>&1 ) && [ -f "$dir/node_modules/electron/path.txt" ]
+  ( cd "$dir" && npm rebuild electron >/dev/null 2>&1 ) || { [ -r "$(dirname "$0")/electron-lib.sh" ] && . "$(dirname "$0")/electron-lib.sh"; electron_fetch_runtime "$dir"; } && [ -f "$dir/node_modules/electron/path.txt" ]
 }
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac

@@ -195,6 +195,9 @@ repair_electron() {  # <app-dir>
     cd "$dir" && npm rebuild electron >/dev/null 2>&1 )
 }
 if ! ensure_electron_binary; then
+  # npm-independent: fetch the release as the postinstall would (bin/electron-lib.sh)
+  [ -r "$ROOT/bin/electron-lib.sh" ] && { . "$ROOT/bin/electron-lib.sh"; }
+  command -v electron_fetch_runtime >/dev/null 2>&1 && electron_fetch_runtime "$APP" || true
   # Try the mending ourselves before telling the user to do it by hand: npm's
   # gating is the cause, and the cure is one command we can run.
   echo "the Electron runtime is partial — mending it (npm rebuild electron)…" >&2
