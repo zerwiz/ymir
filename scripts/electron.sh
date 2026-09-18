@@ -191,8 +191,9 @@ ensure_electron_binary() {
 repair_electron() {  # <app-dir>
   local dir="$1"
   command -v npm >/dev/null 2>&1 || return 1
-  ( cd "$dir" && npm install-scripts approve electron >/dev/null 2>&1 || true
-    cd "$dir" && npm rebuild electron >/dev/null 2>&1 )
+  # npm gates the rebuild as well as the postinstall: approve first, or the mend
+  # silently changes nothing and the window still never opens.
+  ( cd "$dir" && { npm install-scripts approve electron >/dev/null 2>&1 || true; npm rebuild electron >/dev/null 2>&1; } )
 }
 if ! ensure_electron_binary; then
   # npm-independent: fetch the release as the postinstall would (bin/electron-lib.sh)
