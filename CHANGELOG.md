@@ -1,4 +1,8 @@
 
+## 2026-09-17 — "ymir: command not found" is a PATH fault, and here is the cure
+
+- **The command is installed; the shell is not looking.** The published manifest carries `bin: {ymir, ymir-install}`, so the file is there — in npm's global bin directory, which an ordinary Linux install puts under `~/.npm-global` and a shell profile often never adds.
+- **The README answers it where a stuck user looks**: `npm prefix -g`, the `ls` that proves the command exists, the one-line `export PATH`, and the `EACCES` cure that sets a prefix the user owns instead of reaching for `sudo`.
 
 ## 2026-09-17 — the model that raised itself, and the workhorse that replaced it
 
@@ -47,14 +51,11 @@ raise itself) are new sections.
   hlidskjalf/odrerir/sessrumnir/smidja all `DO`). The hoard registry stays
   authoritative when present.
 
-
 ## 2026-09-17 — the phantom optional pins, cut
 
 - The platform's stale \`optionalDependencies\` (sessrumnir pinned at the broken
   0.1.9) shadowed the required \`^0.1.10\` — npm never fetched the good seat.
   Removed; the required deps now resolve to latest (0.1.18).
-
-
 
 ## 2026-09-17 — the packaged seat carries the watch
 
@@ -73,7 +74,6 @@ raise itself) are new sections.
   resolves. The audit's one gap — the platform carried no apps — is closed.
 - **`@zerwiz/smidja-factory` `0.1.1` → `0.1.2`**: the visualizer's nanoid fix
   and the eye's-home SKILL line reach npm.
-
 
 ## 2026-09-17 — the seat's name and the visualizer's home
 
@@ -124,7 +124,6 @@ raise itself) are new sections.
 - **The result is rendered, not dumped.** The plan got the cloth and the install did not: twenty-nine raw TOON rows and a poem, which the Allfather rightly called zero design. Now the same rows are rendered for the eye on stderr — a rule, a verdict (*"it stands — 22 steps done · 7 warned · 1 skipped"*), every warning with its reason, and the skips in one line. The TOON stays the data on stdout; the design is for the person.
 - **The consent shows the plan again.** `--colour` renders on stderr and I had sent *both* streams to `/dev/null`, so the plan was invisible at the very moment it was being accepted.
 - **The seat can mend its own runtime**, and says why when it cannot — npm gates Electron postinstall, so a fresh install otherwise ends with a window that cannot open.
-
 
 ## 2026-09-17 — one well, in the hoard: every reader of Kaia's memory resolves the hoard store
 
@@ -209,7 +208,6 @@ contract unchanged).
   its own name rather than the fork's. A fresh install was still receiving the
   old voice through the `0.1.8-alpha` pin.
 - **`@zerwiz/ymir@0.1.13`** is the packet that carries them.
-
 
 ## 2026-09-17 — 0.1.12: the icons reach the live tree, and a missing surface is a failure
 
