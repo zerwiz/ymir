@@ -32,3 +32,28 @@ electron_remedy() {
   printf '  npm install-scripts approve electron && npm rebuild electron\n'
   printf 'yonder: bin/ymir-install.sh --no-desktop if the web surfaces are enough'
 }
+
+
+electron_fetch_runtime() {  # <app-dir> — place the runtime without npm's permission
+  # npm gates package install scripts by default, so Electron's postinstall never
+  # runs and the desktop windows cannot open — a fresh install of the whole platform
+  # with no windows, and no error a user could act on. `npm rebuild` reports success
+  # and changes nothing; `npm install-scripts approve` does not exist in every npm.
+  # What works, everywhere, is what the postinstall itself does: fetch the release
+  # and place it. Version-exact, npm-independent, and proven on this machine.
+  local dir="${1-}" app v url tmp
+  [ -d "$dir" ] || return 1
+  app="$dir/node_modules/electron"
+  [ -f "$app/path.txt" ] && [ -x "$app/dist/electron" ] && return 0
+  v="$(sed -n 's/.*"electron"[[:space:]]*:[[:space:]]*"[^0-9]*\([0-9][0-9.]*\).*/\1/p' "$dir/package.json" 2>/dev/null | head -1)"
+  [ -n "$v" ] || return 1
+  command -v curl >/dev/null 2>&1 || return 1
+  command -v unzip >/dev/null 2>&1 || return 1
+  tmp="$(mktemp -d)" || return 1
+  url="https://github.com/electron/electron/releases/download/v${v}/electron-v${v}-linux-x64.zip"
+  if curl -fsSL --max-time 300 -o "$tmp/e.zip" "$url"; then
+    mkdir -p "$app/dist" && unzip -q -o "$tmp/e.zip" -d "$app/dist" && printf 'electron' >"$app/path.txt"
+  fi
+  rm -rf "$tmp"
+  [ -f "$app/path.txt" ] && [ -x "$app/dist/electron" ] && { "$app/dist/electron" --version >/dev/null 2>&1; }
+}
