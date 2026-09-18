@@ -637,14 +637,53 @@ resolved from `$YMIR_HOME/secrets/platform.env` at runtime.
 
 ---
 
-## Install — the four doors
+## Install
+
+**One command. It installs into a prefix you own, writes the PATH into your shell,
+runs the first setup, and then proves it.**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash
-npx @zerwiz/ymir install          # no global install
-git clone https://github.com/zerwiz/ymir.git ~/Ymir && cd ~/Ymir && bin/ymir-install.sh
-npm install -g @zerwiz/ymir       # the CLI, global
 ```
+
+**No PATH, no prefix, nothing to configure — run it without installing:**
+
+```bash
+npx @zerwiz/ymir
+```
+
+**Already manage Node and npm yourself:**
+
+```bash
+npm install -g @zerwiz/ymir      # then: ymir
+```
+
+### If `ymir` is "command not found"
+
+The command **is** installed — npm put it in its global bin directory, and your
+shell does not look there. This is npm's behaviour, not Ymir's, and it is the most
+common *"it does not work"* in the whole Node ecosystem.
+
+```bash
+npm prefix -g                                  # where npm puts global commands
+ls "$(npm prefix -g)/bin/ymir"                 # the command is there
+export PATH="$(npm prefix -g)/bin:$PATH"       # this shell
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.bashrc   # every shell after
+```
+
+**Or skip the question entirely** — `npx @zerwiz/ymir` works with no PATH at all,
+and the one-liner above sets it once.
+
+### If the version never changes
+
+An install can *succeed* and change nothing: npm may resolve a cached `latest` and
+report success while the old build stays. Clear it once:
+
+```bash
+npm cache clean --force && npm i -g @zerwiz/ymir@latest --prefer-online
+```
+
+The CLI itself now says when it is out of date, once a day.
 
 **Who can install this today.** The Ymir distro is private while it is young —
 so `curl`, `npx` and `git clone` work for the author and invited users, not for
