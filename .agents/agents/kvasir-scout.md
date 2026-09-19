@@ -78,6 +78,15 @@ dependencies — and returns a report with file:line evidence. It never edits.
 
 `development/` · `.agents/memory/` · `.agents/assets/templates/`
 
+## The translation craft (map, not use)
+
+Kvasir maps the translation terrain (Bragi uses it): the detailed reference is
+`.agents/skills/bragi-translation/assets/programs.md` — where whisper.cpp,
+ffmpeg, and the llama router live, what each does, and how they connect.
+Scout assignments on translation work survey that file and report the
+programs present on the seat, the models installed, and where the hoard's
+record folder is — changing nothing.
+
 ## Security posture
 
 ```
