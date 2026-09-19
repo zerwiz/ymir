@@ -302,6 +302,13 @@ step_apps() {
       add apps SKIP "a package install — the surfaces are dependencies (npm i -g @zerwiz/ymir)"
       return 0 ;;
   esac
+  # One repo (plan 35): when the surfaces ship IN this tree there is nothing to
+  # clone — the resolver's first shape (`<root>/apps/<surface>`) is already true.
+  if [ -f "$ROOT/apps/hlidskjalf/package.json" ] && [ -f "$ROOT/apps/odrerir/package.json" ] \
+     && [ -f "$ROOT/apps/sessrumnir/package.json" ]; then
+    add apps PASS "in-tree — apps/ ships with the package (plan 35)"
+    return 0
+  fi
   local reg="$HOARD/identity/projects.yaml"
   if [ ! -r "$reg" ]; then
     # The fork path: no private hoard — fall back to the PUBLIC app map so a
