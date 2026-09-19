@@ -708,11 +708,32 @@ step_marks() {
     "$SCRIPT_DIR/desktop-place.sh" entries >/dev/null 2>&1 || true
   fi
   "$SCRIPT_DIR/design-icon.sh" mint --all >/dev/null 2>&1 || true
-  n=$("$SCRIPT_DIR/design-icon.sh" install 2>/dev/null | grep -c '"ymir-') || n=0
-  [ -r "$HOME/.pi/agent/AGENTS.md" ] || [ -d "$HOME/.pi/agent" ] && {
-    ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null || true
-  }
-  add marks OK "$n app marks (rune icon + entry) · Ymir contract in the pi agent home"
+    "$SCRIPT_DIR/design-icon.sh" install >/dev/null 2>&1 || true
+    [ -r "$HOME/.pi/agent/AGENTS.md" ] || [ -d "$HOME/.pi/agent" ] && {
+      ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null || true
+    }
+    # VERIFY, never claim. This step once reported four marks while Smidja's entry had
+    # never been written: it counted what design-icon.sh PRINTED, not what landed. A
+    # mark is present when its file is on disk, executable, with an Exec that resolves
+    # and an Icon the theme carries.
+    local want=(hlidskjalf odrerir sessrumnir smidja) missing=0 weak=0 gone=""
+    for v in "${want[@]}"; do
+      f="$HOME/.local/share/applications/ymir-$v.desktop"
+      if [ ! -f "$f" ]; then missing=$((missing+1)); gone="$gone $v"; continue; fi
+      [ -x "$f" ] || chmod +x "$f" 2>/dev/null || true
+      exe="$(sed -n 's/^Exec=//p' "$f" | head -1 | awk '{print $1}')"
+      ico="$(sed -n 's/^Icon=//p' "$f" | head -1)"
+      { [ -n "$exe" ] && [ -x "$exe" ]; } || weak=$((weak+1))
+      [ -f "$HOME/.local/share/icons/hicolor/scalable/apps/$ico.svg" ] || weak=$((weak+1))
+    done
+    local total=${#want[@]}
+    if [ "$missing" -gt 0 ]; then
+      add marks WARN "$((total-missing))/$total marks - MISSING:$gone (checked the files, not a log line)"
+    elif [ "$weak" -gt 0 ]; then
+      add marks WARN "$total marks present but $weak do not resolve (Exec or Icon)"
+    else
+      add marks OK "$total marks verified - entry + glyph + resolvable Exec, each hall"
+    fi
 }
 
 # ── 7. services ──────────────────────────────────────────────────────────────
