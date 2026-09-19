@@ -1,0 +1,131 @@
+import { ipcMain, dialog, shell, app } from 'electron'
+import type { ActivityStatsResult, OpenDialogOptions } from '../../shared/ipc-contracts'
+import { IPC_CHANNELS } from '../../shared/ipc-contracts'
+import { activityStatsStore } from '../activity-stats'
+import { stat } from 'fs/promises'
+import { resolve } from 'path'
+import { isString, isObject } from './validation'
+import type { IpcContext } from './context'
+import { t } from '../../shared/i18n'
+
+type OpenDialogMode = NonNullable<OpenDialogOptions['mode']>
+
+/**
+ * Only macOS shows one dialog that accepts a file OR a directory. Windows and
+ * Linux silently turn `['openFile', 'openDirectory']` into a directory-only
+ * selector, which would take the file half of `mode: 'either'` away from every
+ * platform this app actually ships to. Degrade to the file half there instead:
+ * a directory is reachable by asking for `mode: 'directory'`, an executable
+ * inside one is not reachable from a directory picker at all.
+ */
+const SUPPORTS_COMBINED_DIALOG = process.platform === 'darwin'
+
+function dialogProperties(mode: OpenDialogMode): Electron.OpenDialogOptions['properties'] {
+  if (mode === 'directory') return ['openDirectory']
+  if (mode === 'either' && SUPPORTS_COMBINED_DIALOG) return ['openFile', 'openDirectory']
+  return ['openFile']
+}
+
+export function registerSystemHandlers(ctx: IpcContext): void {
+  const { approvedAttachmentPaths } = ctx
+
+  // ─── System ─────────────────────────────────────────────────────────────
+
+  ipcMain.handle(IPC_CHANNELS.SYSTEM_OPEN_DIALOG, async (_event, options?: unknown) => {
+    // Default to directory selection for back-compat with workspace pickers.
+    const mode: OpenDialogMode = isObject(options) && (options.mode === 'file' || options.mode === 'either')
+      ? options.mode
+      : 'directory'
+    // Only the explicit attachment mode widens the attachment allowlist; a
+    // path chosen for a settings field is never read back as file content.
+    const pickFile = mode === 'file'
+    const dialogOptions: Electron.OpenDialogOptions = {
+      properties: dialogProperties(mode),
+    }
+    if (isObject(options)) {
+      if (isString(options.title)) dialogOptions.title = options.title
+      if (Array.isArray(options.filters)) {
+        dialogOptions.filters = options.filters as Electron.FileFilter[]
+      }
+    }
+    const result = await dialog.showOpenDialog(dialogOptions)
+    if (result.canceled || result.filePaths.length === 0) return null
+    const picked = result.filePaths[0]
+    // Remember file picks so the attachment reader will accept this exact path
+    // even when it lives outside the workspace.
+    if (pickFile) approvedAttachmentPaths.add(resolve(picked))
+    return picked
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SYSTEM_GET_PATH, async (_event, name: unknown) => {
+    if (!isString(name)) throw new Error('name must be a string')
+    if (name === 'ymirRoot') {
+      // The Ymir repo root: the launcher sets it; else derive it (dev layout is
+      // <root>/apps/sessrumnir, so three levels up).
+      const fromEnv = process.env.YMIR_ROOT
+      return fromEnv && fromEnv.length > 0 ? fromEnv : resolve(app.getAppPath(), '..', '..', '..')
+    }
+    const validPaths = ['home', 'appData', 'userData', 'temp', 'desktop', 'documents'] as const
+    if (validPaths.includes(name as (typeof validPaths)[number])) {
+      return app.getPath(name as 'home' | 'appData' | 'userData' | 'temp' | 'desktop' | 'documents')
+    }
+    throw new Error(`Invalid path name: ${name}`)
+  })
+
+  /** Classify a filesystem path for drag-drop (folder → open as workspace). */
+  ipcMain.handle(IPC_CHANNELS.SYSTEM_PATH_KIND, async (_event, filePath: unknown) => {
+    if (!isString(filePath) || filePath.trim().length === 0) {
+      return { exists: false, isDirectory: false }
+    }
+    try {
+      const st = await stat(filePath)
+      return { exists: true, isDirectory: st.isDirectory() }
+    } catch {
+      return { exists: false, isDirectory: false }
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SYSTEM_OPEN_EXTERNAL, async (_event, url: unknown) => {
+    if (!isString(url)) throw new Error('url must be a string')
+    if (!url.startsWith('https://') && !url.startsWith('http://')) {
+      throw new Error(t('errors.system.externalUrlHttpOnly'))
+    }
+    await shell.openExternal(url)
+  })
+
+  /**
+   * Where the Hall — the public landing page — lives. On this machine the site
+   * is usually served locally (:4322), so prefer that when it answers and fall
+   * back to the public hostname otherwise. The probe lives here, not in the
+   * renderer: the renderer's CSP allows no cross-origin fetch.
+   */
+  ipcMain.handle(IPC_CHANNELS.SYSTEM_HALL_URL, async () => {
+    // LOCAL ONLY. The hall is served on this machine; when it is not running the
+    // seat says so. It must never reach for a public hostname - an Electron window
+    // has no business with Cloudflare, and a desktop app that dials out is a
+    // desktop app that leaks its errands.
+    return process.env.YMIR_HALL_URL ?? 'http://127.0.0.1:4322'
+  })
+
+  ipcMain.handle(IPC_CHANNELS.FLEET_LIST, async () => {
+    // Who is standing, from the ONE source: the control plane's connector reads
+    // herdr's live panes. Nothing is inferred here; if it cannot answer, the
+    // seat says empty rather than inventing a fleet.
+    try {
+      const { execFileSync } = await import('node:child_process');
+      const out = execFileSync(process.env.YMIR_ROOT ? `${process.env.YMIR_ROOT}/bin/hlidskjalf-agents.sh` : 'hlidskjalf-agents.sh',
+        [], { timeout: 4000 }).toString().trim();
+      return out.startsWith('[') ? JSON.parse(out) : [];
+    } catch {
+      return [];
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SYSTEM_GET_VERSION, async () => {
+    return app.getVersion()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.ACTIVITY_GET_STATS, async (): Promise<ActivityStatsResult> => {
+    return activityStatsStore.computeStats()
+  })
+}

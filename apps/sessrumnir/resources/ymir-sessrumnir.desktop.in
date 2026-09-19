@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Ymir · Sessrúmnir
+GenericName=Ymir Seat-Hall
+Comment=The seat-hall — where the Allfather converses with Brokk
+Exec=bash __YMIR_ROOT__/bin/sessrumnir.sh start
+Icon=__YMIR_ROOT__/apps/sessrumnir/resources/icons/icon.png
+Terminal=false
+Categories=Development;Utility;
+StartupWMClass=sessrumnir
+StartupNotify=true

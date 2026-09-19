@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Ymir · Smíðja
+GenericName=Ymir Smithy
+Comment=The smithy — the trace view on the work in the fire
+Exec=bash __YMIR_ROOT__/scripts/electron.sh start --view smidja
+Icon=__YMIR_ROOT__/apps/hlidskjalf/electron/smidja-icon.png
+Terminal=false
+Categories=Development;Utility;
+StartupWMClass=ymir-smidja
+StartupNotify=true
