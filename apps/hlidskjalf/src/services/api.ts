@@ -378,10 +378,10 @@ export const gateApi = {
   register: (username: string, password: string, invite: string) =>
     post<{ ok: boolean }>('/api/register', { username, password, invite }),
   /**
-   * Raise a desktop app (Hlidskjalf or Smiðja) from inside the UI — the same
+   * Raise a desktop app (Hlidskjalf, Smíðja, Sessrúmnir, or Óðrerir) from inside the UI — the same
    * launcher the key bindings use, so it raises what is up and starts what is not.
    */
-  desktop: (view: 'hlidskjalf' | 'smidja' | 'sessrumnir') =>
+  desktop: (view: 'hlidskjalf' | 'smidja' | 'sessrumnir' | 'odrerir') =>
     post<{ view: string; ok: boolean; output: string }>('/api/desktop', { view }),
   logout: () => post<{ ok: boolean }>('/api/logout', {}),
   /**
