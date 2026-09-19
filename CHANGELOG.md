@@ -1,3 +1,73 @@
+## 2026-09-19 — the install speaks while it works
+- Progress renders two ways, both proven: a terminal rewrites one line in place
+  (`[ 3/19] apps … → [ 3/19] apps — 12s`), a pipe or a log gets one plain line each with
+  no escapes. Verified by running the real function against dummy steps and counting the
+  clear-line escapes when piped: 0.
+
+- After the user accepts with `y`, the installer says how many steps follow, then each
+  step announces itself (`[ 3/19] apps …`) and reports its elapsed time. Silence during a
+  minutes-long step read as a hang: "the user don't know if something are happening".
+- Progress goes to **stderr**, so the TOON report on stdout stays clean for anything that
+  parses it. Without a terminal the lines are printed whole instead of rewritten in place.
+
+## 2026-09-19 — the window tells the desktop its name; the marks step checks its work
+
+- The seat's window class was `sessrumnir` while its entry said `ymir-sessrumnir`, so nothing
+  could match and the dock showed a generic icon although the glyph sat in the theme. Now
+  `ymir-sessrumnir`. The other two were already right (`ymir-hlidskjalf`, `ymir-odrerir`).
+- `step_marks` **verifies instead of claiming**: for each hall it checks the entry file
+  exists, is executable, its `Exec` resolves and its `Icon` is in the theme — and it reports
+  `WARN` naming what is missing. It once reported four marks while Smíðja's entry had never
+  been written, because it counted what `design-icon.sh` *printed*.
+
+## 2026-09-19 — plan 35 published: 0.1.35 serves the app sources
+
+- **The registry now serves `@zerwiz/ymir@0.1.35`** (version document 200, `latest` moved).
+  The tarball carries the app **sources**: `apps/hlidskjalf/src/app/App.tsx`, the seat's
+  `src/main` (128 files), `install.sh`, `bin/app-build.sh` — 2059 files, 31 MB, no
+  `node_modules`. Gróa's three laws satisfied: one version, verified by the version
+  document, and the **published** tarball unpacked and read.
+- The fixes that had been written but never shipped now ship: the seat picker's
+  `choosing = !isDesktopSeat()` (which explains "Take your seat" greeting every hall —
+  the installed hlidskjalf was 0.1.1 and carried none of it), the seat's rename away from
+  "Pi Desktop", its `appId`, and the deletion of the fork's postinstall.
+- `@zerwiz/smidja-factory` ^0.1.3 → ^0.1.7, the version the registry serves.
+
+## 2026-09-19 — the seat stops wearing the fork's name (plan 35 folds it in)
+
+- `apps/sessrumnir` carried "Pi Desktop" in 25 files and a `scripts/postinstall.js` whose
+  job was to install a *Pi Desktop* launcher — so every install re-planted the fork's
+  identity. All 25 renamed; the postinstall deleted and unwired from `package.json`.
+- `appId: com.zerwiz.sessrumnir` set — with no appId the window class matches nothing and
+  the dock cannot find the icon, which is why the glyph was in the theme and never used.
+- Verified: **0 files** under `apps/sessrumnir` still name the fork.
+
+## 2026-09-19 — one repo, step 2: the package ships what it builds
+
+- `files[]` gains `apps/`; `@zerwiz/hlidskjalf`, `@zerwiz/odrerir` and `@zerwiz/sessrumnir`
+  retire as dependencies (npm workspaces link them instead). The smithy stays a package:
+  `apps/smidja` is Python and carries no manifest.
+- `bin/app-build.sh` builds every in-tree app (wired as `prepack`), so a publish cannot
+  carry an unbuilt surface — the fault class of 2026-09-18, an artefact published without
+  the file it needed.
+- Pack hygiene, measured on the real tarball: **154 MB → 31 MB**, `node_modules` 113 → 0,
+  the fork's `fork/` directory gone. The first pack leaked the workspace's own
+  `node_modules/electron/dist/` (154 MB) because a root `files[]` negation does not reach a
+  nested workspace — hence explicit `!apps/*/node_modules/**`.
+- Proven by unpacking: 856 files under `apps/`, the seat's built `out/`, hlidskjalf's and
+  odrerir's `dist/`, `install.sh` and `bin/app-build.sh` all present.
+
+## 2026-09-19 — one repo: the app sources return to the Ymir tree
+
+- `f7f3063` split the apps out ("step_apps pulls each app repo; the monorepo stops tracking them").
+  Every fault of 2026-09-18 lived at the seam that split created: vite.config.ts, electron/,
+  midgard/, install.sh and the seat's own postinstall each belonged to an app whose source this
+  repo did not hold.
+- The sources return: `git checkout 6fb7124 -- apps/` restores hlidskjalf, odrerir, sessrumnir,
+  smidja and smidja-factory into `apps/` — 751 files. Plan 35, first step.
+- Still to come in this plan: retire the four npm deps and `step_apps`, build from `apps/`, one
+  publish, and the empty-HOME proof.
+
 ## 2026-09-18 — the platform fetches its own Electron runtime (a user needs no help)
 
 - **npm gates install scripts**, so Electron's postinstall never runs and the desktop

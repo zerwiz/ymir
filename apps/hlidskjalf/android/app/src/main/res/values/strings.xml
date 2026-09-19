@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ymir</string>
+    <string name="title_activity_main">Ymir</string>
+    <string name="package_name">org.zerwiz.ymir</string>
+    <string name="custom_url_scheme">org.zerwiz.ymir</string>
+</resources>
