@@ -16,12 +16,16 @@ Ported from the validated upstream agent-distro reference for
 | `lib/rodd-operational-input.ts` | **Rödd** (voice) | structured operational-message wire bridge |
 | `lib/ro-*.ts` | **Ró** helpers | visibility, assistant/user layout adapters, working longship |
 | `lib/skuld-branch-*.ts` | **Skuld** helpers | dispatch handshake + model picker |
+| `lib/ymir-home.ts` | deploy plumbing | resolve the distro root the loader recorded (`.ymir-root`) — a deployed copy cannot find its own `bin/` by walking up from `~/.pi` |
 
 ## Wiring
 
 - **Sága** digest: `bin/saga-session-start.sh`, routed by `bin/saga-sessionstart-run.sh`.
 - **Gná** watcher: `bin/syn-watch-arm.sh`; turn-end check: `bin/syn-turnend-guard.sh`.
 - **Gleipnir** lock: `bin/gleipnir-lock-lib.sh` (writes `state/.lock`).
+- **Root record:** `~/.pi/agent/extensions/.ymir-root`, written by `bin/valknut-load.sh --pi`
+  and read by `lib/ymir-home.ts` — the deployed extensions live outside this tree, so
+  the loader has to tell them where `bin/` is.
 - **Rödd** wire: `bin/rodd-operational-input.sh`.
 
 The harness passes `BROKK_SESSION_PID` so the session lock is bound to the live

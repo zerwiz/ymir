@@ -125,6 +125,52 @@ PY
 declare -a T P S
 add() { T+=("$1"); P+=("$2"); S+=("$3"); }
 
+# ── the deployed-extension root record ───────────────────────────────────────
+# The extensions are DEPLOYED into ${HOME}/.pi/agent/extensions/, and walking up
+# from there reaches ${HOME}/.pi — a directory that holds no bin/. So a deployed
+# copy that exec'd `${root}/bin/…` exec'd a path that does not exist, and the
+# failure was silent: the Gná arm child died with 127 before its first poll, no
+# state/.watch.heartbeat was ever written, and the watch was dead while every
+# file listing looked correct. The root is therefore RECORDED beside the deployed
+# files and read back by .pi/extensions/lib/ymir-home.ts.
+#
+# One absolute root per line, most recent first, deduped, capped. A root that no
+# longer exists (a merged-and-removed Yggdrasil worktree, an uninstalled npm
+# prefix) is skipped by the reader, so deploying from a worktree never strands a
+# machine on a dead path. Prints `recorded` when the file changed, `unchanged`
+# when it did not.
+ymir_root_record() {
+  local pointer="$PI_EXT_HOME/.ymir-root" tmp line
+  [ -d "$PI_EXT_HOME" ] || return 0
+  tmp="$(mktemp 2>/dev/null)" || return 0
+  printf '%s\n' "$ROOT" >"$tmp"
+  if [ -r "$pointer" ]; then
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      [ "$line" = "$ROOT" ] && continue
+      grep -qxF -- "$line" "$tmp" 2>/dev/null && continue
+      printf '%s\n' "$line" >>"$tmp"
+    done <"$pointer"
+  fi
+  if [ "$(wc -l <"$tmp" | tr -d ' ')" -gt 8 ]; then
+    head -n 8 "$tmp" >"$tmp.cap" && mv "$tmp.cap" "$tmp"
+  fi
+  if [ -r "$pointer" ] && cmp -s "$tmp" "$pointer"; then
+    rm -f "$tmp"; printf 'unchanged'; return 0
+  fi
+  mv "$tmp" "$pointer" && printf 'recorded'
+}
+
+# The first recorded root that really holds bin/syn-watch-arm.sh, or nothing.
+ymir_root_verified() {
+  local pointer="$PI_EXT_HOME/.ymir-root" line
+  [ -r "$pointer" ] || return 0
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    [ -x "$line/bin/syn-watch-arm.sh" ] && { printf '%s' "$line"; return 0; }
+  done <"$pointer"
+}
+
 link_agent_dir() {  # <target-dir> <rel-prefix>
   local target=$1 prefix=$2 made=0
   mkdir -p "$target" || return 1
@@ -159,6 +205,15 @@ if [ "$MODE_STATUS" = 1 ]; then
   add agents-source "$AGENTS" "$(ls "$AGENTS"/*.md 2>/dev/null | wc -l | tr -d ' ') files"
   add opencode-skills "$SKILLS" "$(grep -q '\.agents/skills' "$ROOT/opencode.json" 2>/dev/null && printf 'via skills.paths' || printf 'absent')"
   add pi-skills "$SKILLS" "native discovery (walks up to .agents/skills)"
+  # The root the DEPLOYED extensions read (`.ymir-root`). A stale or absent record
+  # means every `${root}/bin/…` they exec is a path that does not exist: the arm
+  # dies at 127 and the watch is silently dead, so this is a checked row.
+  vroot="$(ymir_root_verified)"
+  if [ -n "$vroot" ]; then
+    add pi-ext-root "$PI_EXT_HOME/.ymir-root" "deployed extensions resolve to $vroot"
+  else
+    add pi-ext-root "$PI_EXT_HOME/.ymir-root" "ERROR no recorded root holds bin/syn-watch-arm.sh — deployed extensions cannot find their bin/ (run: bin/valknut-load.sh --pi)"
+  fi
   for hd in .claude .codex .cursor; do
     [ -d "$ROOT/$hd" ] || continue
     [ -L "$ROOT/$hd/skills" ] && add "$hd-skills" "$ROOT/$hd/skills" linked || add "$hd-skills" "$ROOT/$hd/skills" absent
@@ -207,10 +262,26 @@ if [ "$MODE_PI" = 1 ]; then
   # session) started in another project loads THAT project's rules and knows
   # nothing of Ymir - no Brokk, no laws, no lore. Symlink, so the tree stays the
   # single source and an update is picked up with no re-install.
+  #
+  # A Yggdrasil worktree is REMOVED by `yggdrasil.sh cleanup`, so a contract
+  # symlink into one leaves every later session with no AGENTS.md at all — the
+  # same transient-root failure the `.ymir-root` record exists to avoid. A deploy
+  # from a worktree therefore repoints the contract only when the current target
+  # is already gone.
   if [ -d "$HOME/.pi/agent" ]; then
-    ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null \
-      && add pi-global-contract "$HOME/.pi/agent/AGENTS.md" "the Ymir contract, loaded in every pi session" \
-      || add pi-global-contract "$HOME/.pi/agent/AGENTS.md" "ERROR"
+    contract="$HOME/.pi/agent/AGENTS.md"
+    if [ -e "$contract" ]; then
+      case "$ROOT" in
+        */.yggdrasil/*) add pi-global-contract "$contract" "kept — a worktree deploy never repoints a live contract" ;;
+        *) ln -sfn "$ROOT/AGENTS.md" "$contract" 2>/dev/null \
+             && add pi-global-contract "$contract" "the Ymir contract, loaded in every pi session" \
+             || add pi-global-contract "$contract" "ERROR" ;;
+      esac
+    else
+      ln -sfn "$ROOT/AGENTS.md" "$contract" 2>/dev/null \
+        && add pi-global-contract "$contract" "the Ymir contract, loaded in every pi session" \
+        || add pi-global-contract "$contract" "ERROR"
+    fi
   fi
 
   if [ -d "$PI_EXT_SRC" ]; then
@@ -238,6 +309,9 @@ if [ "$MODE_PI" = 1 ]; then
       done
     fi
     add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home, lib included)"
+    # …and record the tree that owns bin/, because the deployed copy cannot find
+    # it by walking up. Read back by .pi/extensions/lib/ymir-home.ts.
+    add pi-ext-root "$PI_EXT_HOME/.ymir-root" "$(ymir_root_record) → $ROOT"
   fi
 fi
 
