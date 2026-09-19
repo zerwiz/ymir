@@ -1972,8 +1972,11 @@ const server = Bun.serve({
       if (p === '/api/desktop' && req.method === 'POST') {
         const body = (await req.json().catch(() => ({}))) as { view?: string };
         const view = body?.view;
-        if (view !== 'hlidskjalf' && view !== 'smidja' && view !== 'sessrumnir') {
-          return json({ error: 'view must be hlidskjalf, smidja, or sessrumnir' }, 400);
+        // odrerir is the fourth hall: its board is read-only, but its WINDOW is an
+        // Electron app like the others, so a rune must raise it, never open a tab.
+        const VIEWS = ['hlidskjalf', 'smidja', 'sessrumnir', 'odrerir'] as const;
+        if (!VIEWS.includes(view as (typeof VIEWS)[number])) {
+          return json({ error: 'view must be hlidskjalf, smidja, sessrumnir, or odrerir' }, 400);
         }
         // Hlidskjalf and Smíðja are views of the one Electron shell; Sessrúmnir
         // is its own app with its own launcher.
