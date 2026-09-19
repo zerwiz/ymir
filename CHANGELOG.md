@@ -1,3 +1,66 @@
+## 2026-09-19 — a third view: Óðrerir joins the shell's window
+
+- The shell knew two URLs (Hlidskjalf :3888, Smíðja :8437), so `--view odrerir` fell through to
+  Hlidskjalf — the fourth rune had been routed to the shell by the gate but had nowhere to
+  land. It now has a view of its own: `ODRERIR` (http://127.0.0.1:4322, where the hall is
+  served), `IS_ODRERIR`, its own app name and slug (`ymir-odrerir`, matching its entry),
+  a menu entry with ⌘/Ctrl+3, and the window-opening paths route to it.
+- Three halls now open and switch in one window; every hall still runs standalone through
+  `ymir <hall>`. The seat remains its own app until its renderer is given an address.
+
+## 2026-09-19 — the fourth rune raises the app, and the hall admits when it invents
+
+- **ᛟ "To the Hall" opened a browser tab.** The three hall runes call `raise(id)` →
+  `gateApi.desktop(id)`, which raises the Electron app; the fourth was an `<a
+  href={HALL_URL} target="_blank">` pointing at `http://localhost:4322`. It is now a button
+  on the same door: `raise` is exported from Halls, the union and the gate's `/api/desktop`
+  accept `odrerir`, and `desktop()` on the client too. The build enforced every half of it.
+- **Óðrerir's inline fallback told fiction as telemetry.** It renders an invented board
+  ("The forge is lit · tended, never relit") when `/livehall.json` cannot be reached, with
+  nothing marking it. It now states plainly: *"Not connected — this board is the saga's
+  sample, not your fleet"*, and the marker is removed the moment a live feed arrives.
+
+## 2026-09-19 — the system finds the user's models, and says what it found
+
+- The Allfather: *"the system must find the users models from root pi."* It did not — the
+  install reported that models would be "ensured" while never naming the file that declares
+  them, so a roster naming a model the machine had never seen stayed invisible until an
+  agent failed.
+- `bin/models-report.sh` reads `$HOME/.pi/agent/models.json` — the ROOT pi home — and
+  `step_models` logs it in both modes: *"the user's models — 7 providers / 54 models ·
+  google,ollama,lmstudio,ollama-remote +3 more"*, or a loud WARN when the file is absent or
+  unparseable. The line sits **before** the `--check` early return, so a dry run reports it
+  too.
+
+## 2026-09-19 — the fork's icons are gone; the rune is the only mark
+
+- `apps/sessrumnir/resources/icons/` still carried the fork's icon set — charcoal blue
+  `#36454F` with an orange dot — so every surface that read the app's own icons showed the
+  old colours beside the brown/gold rune. Every size is regenerated from the rune glyph
+  (`#0e0c09` / `#c9973f`), `icon.ico` is a real multi-size ICO again (written through PIL —
+  ImageMagick's ICO delegate emitted a TGA), and the macOS-only `icon.icns` is removed.
+- The Allfather's instruction: *"those should be deleted and only the new should be used."*
+
+## 2026-09-19 — the hearth was painted behind the wall
+
+- `.chat-center` painted `--color-chat-column` on the element itself, so the
+  `EmberBackground` canvas mounted inside it at `-z-10` was covered by its own parent's
+  colour: the embers were drawn every frame into a layer nobody could see.
+- The colour moves to `.chat-center::before` at `z-index:-20`, below the ember, so the
+  embers rise in front of the column from the bottom as the landing's do.
+
+## 2026-09-19 — 0.1.37: the install that speaks, and the checks that verify
+
+- The install announces itself: after `y` it says how many steps follow, each step names
+  itself as it runs (`[ 3/19] apps …`) and reports its elapsed time — one line rewritten
+  in a terminal, plain lines when piped or logged.
+- `step_apps` reports **PASS "in-tree — apps/ ships with the package"** rather than the
+  now-false "the surfaces are dependencies": the in-tree check runs before the
+  package-shape skip.
+- `step_marks --check` counts the entries really on disk and **names the halls missing**
+  instead of answering OK at zero.
+- The seat's window class is `ymir-sessrumnir`, matching its entry — the icon can be found.
+
 ## 2026-09-19 — the install speaks while it works
 - Progress renders two ways, both proven: a terminal rewrites one line in place
   (`[ 3/19] apps … → [ 3/19] apps — 12s`), a pipe or a log gets one plain line each with

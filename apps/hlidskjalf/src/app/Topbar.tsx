@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useYmir } from '../state/store';
 import { WORKSPACES } from '../data/realms';
-import { HALL_URL } from '../data/metadata';
 import { gateApi, type WorkspaceRow } from '../services/api';
 import { AccentPicker } from '../components/AccentPicker';
 import { AccountMenu } from '../components/AccountMenu';
-import { HallsSwitcher } from '../components/Halls';
+import { HallsSwitcher, raise } from '../components/Halls';
 
 export function Topbar() {
   const realm = useYmir((s) => s.realm);
@@ -100,18 +99,17 @@ export function Topbar() {
 
       {/* The Óðrerir Live Hall — the landing's live board, not one of the three
           apps: it opens as a page in its own tab. The rune is Othala, the hall. */}
-      <a
+      <button
+        type="button"
         className="hall-btn"
-        href={HALL_URL}
-        target="_blank"
-        rel="noreferrer"
-        title="The Óðrerir Live Hall — the landing's carved board"
+        onClick={() => void raise('odrerir')}
+        title="Óðrerir — the hall, in its own window (never a browser tab)"
       >
         <span className="glyph" aria-hidden="true">
           ᛟ
         </span>
         To the Hall
-      </a>
+      </button>
 
       <AccentPicker />
 
