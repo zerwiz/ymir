@@ -26,6 +26,14 @@
 - **Eir gained a `harness` surface** (`bin/eir-doctor.sh`): a record with no live
   root is reported broken, and `fix` re-runs `valknut-load.sh --pi`.
   `bin/valknut-load.sh --status` reports the same row.
+- **The pre-push gate now judges the tree being pushed.** The installed hook had the
+  installing tree baked in, so a push from a Yggdrasil worktree ran the main tree's
+  gate — and, because git exports `GIT_DIR` to hooks, `git -C <main tree>` compared
+  the worktree's index against the main tree's files and refused the push as
+  "dirty" on a clean tree. The hook resolves its tree at runtime and pins
+  `--git-dir`/`--work-tree`, so no tree is baked in and an exported `GIT_DIR` cannot
+  cross trees; `--install` now seats it in the common git dir, so it can be
+  installed from any worktree at all.
 
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`
 — the deployed-extension root record, the resolver, and the worktree contract guard.
