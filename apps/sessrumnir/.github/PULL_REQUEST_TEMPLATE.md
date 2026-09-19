@@ -1,5 +1,5 @@
 <!--
-Thanks for contributing to Pi Desktop!
+Thanks for contributing to Sessrúmnir!
 
 Before you open this PR, please read CONTRIBUTING.md:
 https://github.com/FaqFirebase/pi-desktop/blob/master/CONTRIBUTING.md

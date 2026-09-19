@@ -1,10 +1,10 @@
 {
   "name": "@zerwiz/sessrumnir",
   "version": "0.1.8-alpha",
-  "description": "Sessr\u00famnir \u2014 the desktop seat of Ymir, a GUI frontend for the Pi and OMP coding agents",
+  "description": "Sessrúmnir — the desktop seat of Ymir, a GUI frontend for the Pi and OMP coding agents",
   "main": "out/main/index.js",
   "desktopName": "sessrumnir.desktop",
-  "author": "Pi Desktop GUI Contributors",
+  "author": "Sessrúmnir GUI Contributors",
   "license": "Apache-2.0",
   "homepage": "https://github.com/FaqFirebase/pi-desktop",
   "repository": {
@@ -42,7 +42,6 @@
     "package:win:nsis": "electron-vite build && electron-builder --win nsis",
     "package:win:portable": "electron-vite build && electron-builder --win portable",
     "package:all": "electron-vite build && electron-builder --linux --mac --win",
-    "postinstall": "node scripts/postinstall.js",
     "prepack": "npm run build"
   },
   "dependencies": {
@@ -108,8 +107,8 @@
   },
   "build": {
     "appId": "org.ymir.sessrumnir",
-    "productName": "Sessr\u00famnir",
-    "copyright": "Copyright 2026 Pi Desktop GUI Contributors. Licensed under the Apache License, Version 2.0.",
+    "productName": "Sessrúmnir",
+    "copyright": "Copyright 2026 Sessrúmnir GUI Contributors. Licensed under the Apache License, Version 2.0.",
     "files": [
       "out/**/*",
       "bin/**/*"
@@ -134,9 +133,9 @@
       "syncDesktopName": true,
       "category": "Development",
       "icon": "resources/icons",
-      "synopsis": "Desktop seat of Ymir \u2014 GUI for the Pi and OMP coding agents",
+      "synopsis": "Desktop seat of Ymir — GUI for the Pi and OMP coding agents",
       "description": "An Electron desktop application that provides a GUI frontend for the Pi and OMP coding agents.",
-      "maintainer": "Pi Desktop GUI Contributors",
+      "maintainer": "Sessrúmnir GUI Contributors",
       "artifactName": "Sessrumnir-${version}-${os}-${arch}.${ext}"
     },
     "mac": {
@@ -164,7 +163,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Sessr\u00famnir",
+      "shortcutName": "Sessrúmnir",
       "installerIcon": "resources/icons/icon.ico",
       "uninstallerIcon": "resources/icons/icon.ico",
       "artifactName": "Pi-Desktop-${version}-${os}-${arch}-setup.${ext}"
@@ -179,5 +178,6 @@
     "resources",
     "README.md"
   ],
-  "private": false
+  "private": false,
+  "appId": "com.zerwiz.sessrumnir"
 }
