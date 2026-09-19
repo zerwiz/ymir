@@ -41,7 +41,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes sessrumnir shells well mcp lock migrations hoard)
+SURFACES=(floors herdr a2abridge hermes sessrumnir shells well mcp harness lock migrations hoard)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -92,6 +92,26 @@ s_mcp() {
   return 0
 }
 f_mcp()       { [ -x "$SCRIPT_DIR/a2a-mcp.sh" ] && "$SCRIPT_DIR/a2a-mcp.sh" install >/dev/null 2>&1; }
+# Harness: the Pi extensions are DEPLOYED away from this tree, so a copy cannot
+# find bin/ by walking up — it reads the root recorded beside it (`.ymir-root`,
+# written by bin/valknut-load.sh, resolved by .pi/extensions/lib/ymir-home.ts).
+# A record with no live root means every `${root}/bin/…` they exec is a path that
+# does not exist: the Gná arm child dies at 127 before its first poll, no
+# state/.watch.heartbeat is ever written, and the watch is dead while every file
+# listing looks correct. Absent extensions are healthy — nothing to resolve.
+PI_EXT_HOME="${PI_EXT_HOME:-$HOME/.pi/agent/extensions}"
+s_harness() {
+  [ -d "$PI_EXT_HOME" ] || return 0
+  [ -n "$(ls "$PI_EXT_HOME"/*.ts 2>/dev/null)" ] || return 0
+  [ -r "$PI_EXT_HOME/.ymir-root" ] || return 1
+  local line
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    [ -x "$line/bin/syn-watch-arm.sh" ] && return 0
+  done <"$PI_EXT_HOME/.ymir-root"
+  return 1
+}
+f_harness()   { [ -x "$SCRIPT_DIR/valknut-load.sh" ] && "$SCRIPT_DIR/valknut-load.sh" --pi >/dev/null 2>&1 && s_harness; }
 # Lock: absent, or held by a live pid.
 s_lock() {
   local f="$STATE/.lock" pid
@@ -168,6 +188,7 @@ detail() { # <name> -> one short fact
     sessrumnir)"[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
     well)      "echo 'engram :4602'" ;;
     mcp)       "echo 'a2abridge + engram'" ;;
+    harness)   "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     lock)      "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)"echo 'structure'" ;;
     shells)    'shell_dirs | while IFS= read -r d; do printf "%s %s; " "$(basename "$d")" "$(electron_runtime_state "$d" 2>/dev/null || true)"; done' ;;
