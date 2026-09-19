@@ -1,3 +1,16 @@
+## 2026-09-19 — plan 35 published: 0.1.35 serves the app sources
+
+- **The registry now serves `@zerwiz/ymir@0.1.35`** (version document 200, `latest` moved).
+  The tarball carries the app **sources**: `apps/hlidskjalf/src/app/App.tsx`, the seat's
+  `src/main` (128 files), `install.sh`, `bin/app-build.sh` — 2059 files, 31 MB, no
+  `node_modules`. Gróa's three laws satisfied: one version, verified by the version
+  document, and the **published** tarball unpacked and read.
+- The fixes that had been written but never shipped now ship: the seat picker's
+  `choosing = !isDesktopSeat()` (which explains "Take your seat" greeting every hall —
+  the installed hlidskjalf was 0.1.1 and carried none of it), the seat's rename away from
+  "Pi Desktop", its `appId`, and the deletion of the fork's postinstall.
+- `@zerwiz/smidja-factory` ^0.1.3 → ^0.1.7, the version the registry serves.
+
 ## 2026-09-19 — the seat stops wearing the fork's name (plan 35 folds it in)
 
 - `apps/sessrumnir` carried "Pi Desktop" in 25 files and a `scripts/postinstall.js` whose
