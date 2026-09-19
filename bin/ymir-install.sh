@@ -137,7 +137,11 @@ PLAN
   printf '\nProceed with the install? [y/N] '
   read -r reply || reply=""
   case "$reply" in
-    y|Y|yes|YES) ;;
+    y|Y|yes|YES)
+      # Consent must not be followed by silence: the install is minutes of work, so say
+      # how much follows and let each step name itself as it runs.
+      printf '\n  proceeding — %s steps. Each names itself as it runs, with its time.\n\n' "${STEP_TOTAL:-19}"
+      ;;
     *) printf 'install declined — nothing was changed.\n'; exit 3 ;;
   esac
 }
