@@ -137,7 +137,11 @@ PLAN
   printf '\nProceed with the install? [y/N] '
   read -r reply || reply=""
   case "$reply" in
-    y|Y|yes|YES) ;;
+    y|Y|yes|YES)
+      # Consent must not be followed by silence: the install is minutes of work, so say
+      # how much follows and let each step name itself as it runs.
+      printf '\n  proceeding — %s steps. Each names itself as it runs, with its time.\n\n' "${STEP_TOTAL:-19}"
+      ;;
     *) printf 'install declined — nothing was changed.\n'; exit 3 ;;
   esac
 }
@@ -297,6 +301,13 @@ step_apps() {
   # dependencies. Cloning the repos into node_modules/@zerwiz/ymir/apps/ is how a
   # hollow directory shadowed a real package, so a package tree clones nothing.
   # A CLONE still clones — that is the shape this step exists for.
+  # One repo (plan 35): when the surfaces ship IN this tree there is nothing to
+  # clone — the resolver's first shape (`<root>/apps/<surface>`) is already true.
+  if [ -f "$ROOT/apps/hlidskjalf/package.json" ] && [ -f "$ROOT/apps/odrerir/package.json" ] \
+     && [ -f "$ROOT/apps/sessrumnir/package.json" ]; then
+    add apps PASS "in-tree — apps/ ships with the package (plan 35)"
+    return 0
+  fi
   case "$ROOT" in
     */node_modules/*)
       add apps SKIP "a package install — the surfaces are dependencies (npm i -g @zerwiz/ymir)"
@@ -689,8 +700,17 @@ step_gates() {
 step_marks() {
   if [ ! -x "$SCRIPT_DIR/design-icon.sh" ]; then add marks SKIP "no design-icon.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
-    n=$(ls "$HOME/.local/share"/applications/ymir-*.desktop 2>/dev/null | wc -l | tr -d ' ')
-    add marks OK "$n desktop app marks installed"
+    # A check reports what is TRUE, not what reassures: count the entries really on
+    # disk, and name the halls that are not.
+    local cw=(hlidskjalf odrerir sessrumnir smidja) cn=0 cgone=""
+    for v in "${cw[@]}"; do
+      if [ -f "$HOME/.local/share/applications/ymir-$v.desktop" ]; then cn=$((cn+1)); else cgone="$cgone $v"; fi
+    done
+    if [ "$cn" -eq "${#cw[@]}" ]; then
+      add marks OK "${cn} desktop app marks installed"
+    else
+      add marks WARN "${cn}/${#cw[@]} desktop app marks - missing:$cgone (run without --check to write them)"
+    fi
     return
   fi
   # The apps' own launcher templates land first (the freedesktop half of desktop
@@ -701,11 +721,32 @@ step_marks() {
     "$SCRIPT_DIR/desktop-place.sh" entries >/dev/null 2>&1 || true
   fi
   "$SCRIPT_DIR/design-icon.sh" mint --all >/dev/null 2>&1 || true
-  n=$("$SCRIPT_DIR/design-icon.sh" install 2>/dev/null | grep -c '"ymir-') || n=0
-  [ -r "$HOME/.pi/agent/AGENTS.md" ] || [ -d "$HOME/.pi/agent" ] && {
-    ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null || true
-  }
-  add marks OK "$n app marks (rune icon + entry) · Ymir contract in the pi agent home"
+    "$SCRIPT_DIR/design-icon.sh" install >/dev/null 2>&1 || true
+    [ -r "$HOME/.pi/agent/AGENTS.md" ] || [ -d "$HOME/.pi/agent" ] && {
+      ln -sfn "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md" 2>/dev/null || true
+    }
+    # VERIFY, never claim. This step once reported four marks while Smidja's entry had
+    # never been written: it counted what design-icon.sh PRINTED, not what landed. A
+    # mark is present when its file is on disk, executable, with an Exec that resolves
+    # and an Icon the theme carries.
+    local want=(hlidskjalf odrerir sessrumnir smidja) missing=0 weak=0 gone=""
+    for v in "${want[@]}"; do
+      f="$HOME/.local/share/applications/ymir-$v.desktop"
+      if [ ! -f "$f" ]; then missing=$((missing+1)); gone="$gone $v"; continue; fi
+      [ -x "$f" ] || chmod +x "$f" 2>/dev/null || true
+      exe="$(sed -n 's/^Exec=//p' "$f" | head -1 | awk '{print $1}')"
+      ico="$(sed -n 's/^Icon=//p' "$f" | head -1)"
+      { [ -n "$exe" ] && [ -x "$exe" ]; } || weak=$((weak+1))
+      [ -f "$HOME/.local/share/icons/hicolor/scalable/apps/$ico.svg" ] || weak=$((weak+1))
+    done
+    local total=${#want[@]}
+    if [ "$missing" -gt 0 ]; then
+      add marks WARN "$((total-missing))/$total marks - MISSING:$gone (checked the files, not a log line)"
+    elif [ "$weak" -gt 0 ]; then
+      add marks WARN "$total marks present but $weak do not resolve (Exec or Icon)"
+    else
+      add marks OK "$total marks verified - entry + glyph + resolvable Exec, each hall"
+    fi
 }
 
 # ── 7. services ──────────────────────────────────────────────────────────────
@@ -860,7 +901,48 @@ step_panes() {
 [ "$CHECK" = 0 ] && confirm_install
 [ "$CHECK" = 0 ] && style_patience "the halls are being stood up for the first time"
 
-step_panes; step_prereqs; step_home; step_tree; step_apps; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
+# ── progress ─────────────────────────────────────────────────────────────────
+# The install takes minutes; a user must SEE work rather than silence. Each step
+# announces itself before it runs and reports its elapsed time after, so a slow step
+# reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
+# on stdout stays clean for anything that parses it.
+STEP_TOTAL=19
+STEP_N=0
+run_step() {  # <runner-function> <label spoken to the user>
+  STEP_N=$((STEP_N + 1))
+  local t0=$SECONDS
+  if [ -t 2 ]; then
+    # A terminal: rewrite one line in place, so the list stays short and alive.
+    printf '\r\033[K  [%2d/%2d] %s …' "$STEP_N" "$STEP_TOTAL" "$2" >&2
+    "$1"
+    printf '\r\033[K  [%2d/%2d] %s — %ss\n' "$STEP_N" "$STEP_TOTAL" "$2" "$((SECONDS - t0))" >&2
+  else
+    # Piped or logged: one plain line each, no escapes, so a log reads clean.
+    printf '  [%2d/%2d] %s …\n' "$STEP_N" "$STEP_TOTAL" "$2" >&2
+    "$1"
+    printf '  [%2d/%2d] %s — %ss\n' "$STEP_N" "$STEP_TOTAL" "$2" "$((SECONDS - t0))" >&2
+  fi
+}
+
+run_step step_panes "panes"
+run_step step_prereqs "prerequisites"
+run_step step_home "home"
+run_step step_tree "workspace tree"
+run_step step_apps "apps"
+run_step step_engines "engines"
+run_step step_models "models"
+run_step step_hermes "hermes"
+run_step step_sessrumnir "the seat"
+run_step step_backend "backend"
+run_step step_host "host"
+run_step step_sandbox "sandbox"
+run_step step_memory "memory"
+run_step step_smidja "the smithy"
+run_step step_spa "the spa"
+run_step step_omarchy "omarchy layer"
+run_step step_loaders "loaders"
+run_step step_gates "gates"
+run_step step_marks "marks"
 # Migrations MOVE private data — that is a write, and `--check` promises none.
 # Only a real run heals the home forward; the preview leaves it untouched.
 if [ "$CHECK" = 0 ]; then bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; fi

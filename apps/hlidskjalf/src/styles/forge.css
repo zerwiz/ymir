@@ -1,0 +1,115 @@
+/* ============================================================
+   HLIDSKJALF — Forge & Profile
+   ============================================================ */
+
+.forge-layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: var(--ymir-space-4);
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .forge-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.forge-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 620px;
+  overflow-y: auto;
+}
+.forge-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-3);
+  padding: var(--ymir-space-3) var(--ymir-space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--ymir-steel-2) 40%, transparent);
+  color: var(--ymir-text-1);
+  text-align: left;
+}
+.forge-item:hover {
+  background: var(--ymir-bg-3);
+  color: var(--ymir-text-0);
+}
+.forge-item[aria-selected='true'] {
+  background: var(--realm-tint-dim);
+  color: var(--ymir-text-0);
+  box-shadow: inset 3px 0 0 var(--realm-tint);
+}
+
+/* --- form primitives (shared with modal .field) --------------- */
+.field select {
+  background: var(--ymir-bg-0);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  padding: 10px 12px;
+  color: var(--ymir-text-0);
+  outline: none;
+  font-size: 14px;
+  font-family: var(--ymir-font-body);
+}
+.field select:focus {
+  border-color: var(--ymir-chisel);
+  box-shadow: var(--ymir-bevel);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ymir-space-3);
+}
+@media (max-width: 700px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.chip {
+  font-family: var(--ymir-font-mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ymir-steel-1);
+  background: var(--ymir-bg-2);
+  color: var(--ymir-text-1);
+}
+.chip:hover {
+  border-color: var(--ymir-chisel);
+  color: var(--ymir-text-0);
+  transform: translateY(-1px);
+}
+
+/* --- tenant colour rows --------------------------------------- */
+.tenant-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ymir-space-3);
+  padding: var(--ymir-space-3);
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: var(--ymir-radius);
+  background: var(--ymir-bg-2);
+}
+.tenant-row input[type='color'] {
+  width: 36px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--ymir-steel-1);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--realm-tint) 45%, transparent);
+  background: var(--realm-tint-dim);
+  color: var(--realm-tint);
+}

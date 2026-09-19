@@ -1,6 +1,6 @@
 {
   "name": "@zerwiz/ymir",
-  "version": "0.1.34",
+  "version": "0.1.36",
   "description": "Ymir — the single-tenant agent operating system. One command: curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash  ·  or: npx @zerwiz/ymir  ·  or: npm i -g @zerwiz/ymir (if `ymir` is not found, the README has the three-line PATH cure)",
   "license": "Apache-2.0",
   "homepage": "https://github.com/zerwiz/ymir",
@@ -52,7 +52,12 @@
     "assets/",
     "data/",
     "deploy/",
-    "install.sh"
+    "apps/",
+    "install.sh",
+    "!apps/*/node_modules/",
+    "!apps/*/node_modules/**",
+    "!apps/*/.git/**",
+    "!apps/*/fork/**"
   ],
   "engines": {
     "node": ">=20"
@@ -66,12 +71,15 @@
   },
   "scripts": {
     "test": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
-    "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
+    "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
+    "prepack": "bin/app-build.sh"
   },
   "dependencies": {
-    "@zerwiz/hlidskjalf": "^0.1.1",
-    "@zerwiz/odrerir": "^0.1.1",
-    "@zerwiz/sessrumnir": "^0.1.10",
-    "@zerwiz/smidja-factory": "^0.1.3"
-  }
+    "@zerwiz/smidja-factory": "^0.1.7"
+  },
+  "workspaces": [
+    "apps/hlidskjalf",
+    "apps/odrerir",
+    "apps/sessrumnir"
+  ]
 }

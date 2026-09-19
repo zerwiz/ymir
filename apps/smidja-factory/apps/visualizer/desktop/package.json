@@ -1,0 +1,18 @@
+{
+  "name": "smidja-visualizer-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Electron shell for the Smíðja trace UI (http://localhost:8438) — a native window, maximized so wide lanes fit on screen.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  }
+}
