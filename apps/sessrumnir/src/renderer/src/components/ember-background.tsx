@@ -103,9 +103,16 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
     init()
     raf = requestAnimationFrame(loop)
     window.addEventListener('resize', onResize)
+    // The host is usually mounted HIDDEN (the app keeps the chat mounted while another
+    // view shows), so at mount its rect is 0x0, the canvas was sized 1x1, and the embers
+    // were drawn into a single pixel for the whole session — only a window resize could
+    // ever have fixed it. Observing the HOST re-sizes the moment the room is shown.
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null
+    if (ro && host) ro.observe(host)
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', onResize)
+    if (ro) ro.disconnect()
     }
   }, [])
 
