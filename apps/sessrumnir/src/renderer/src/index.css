@@ -144,6 +144,12 @@
      rise in front of it, from the bottom, as the landing's do. */
   .chat-center {
     position: relative;
+    /* The ember canvas sits at z-index -10. Without a stacking context on this node a
+       negative layer sinks BEHIND an ancestor's background — here the app root's
+       `bg-app` — so the hearth was painted under the room and never seen. `isolate`
+       makes this node the boundary: the column's colour at -20, the embers at -10,
+       the content above, all inside it. */
+    isolation: isolate;
   }
   .chat-center::before {
     content: '';
