@@ -23,7 +23,7 @@ body:
       label: Steps to reproduce
       description: Tell us how to make the bug happen again.
       placeholder: |
-        1. Open Pi Desktop
+        1. Open Sessrúmnir
         2. Click '...'
         3. See error
     validations:
@@ -61,7 +61,7 @@ body:
   - type: input
     id: pi-desktop-version
     attributes:
-      label: Pi Desktop version
+      label: Sessrúmnir version
       description: "Open Diagnostics and copy the App version line. Example: 0.1.8-alpha"
     validations:
       required: true

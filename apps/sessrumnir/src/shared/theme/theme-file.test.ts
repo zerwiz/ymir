@@ -69,10 +69,10 @@ test('themeIdFromName slugifies', () => {
 test('accepts optional author and description, trims them', () => {
   const theme = validateThemeFile({
     ...valid,
-    author: '  Pi Desktop  ',
+    author: '  Sessrúmnir  ',
     description: 'A calm dark theme.',
   })
-  assert.equal(theme.author, 'Pi Desktop')
+  assert.equal(theme.author, 'Sessrúmnir')
   assert.equal(theme.description, 'A calm dark theme.')
   // Absent fields stay absent, not empty strings.
   const bare = validateThemeFile(valid)

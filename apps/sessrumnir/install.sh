@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pi Desktop — Quick Install Script
+# Sessrúmnir — Quick Install Script
 # Usage: curl -fsSL https://raw.githubusercontent.com/FaqFirebase/pi-desktop/master/install.sh | bash
 
 set -e
@@ -25,7 +25,7 @@ print_build_from_source() {
 }
 
 echo "╔═══════════════════════════════════════╗"
-echo "║       Pi Desktop — Installer          ║"
+echo "║       Sessrúmnir — Installer          ║"
 echo "╚═══════════════════════════════════════╝"
 echo ""
 
@@ -40,7 +40,7 @@ case "$OS" in
     # architecture with a published AppImage. Bail out here, before Pi is
     # installed as a side effect below, rather than after.
     if [ "$ARCH" != "x86_64" ]; then
-      echo "Error: No Pi Desktop build is published for $PLATFORM-$ARCH."
+      echo "Error: No Sessrúmnir build is published for $PLATFORM-$ARCH."
       echo "Prebuilt Linux installers are x86_64 only."
       print_build_from_source "$PLATFORM"
       exit 1
@@ -82,7 +82,7 @@ fi
 echo "✓ Pi found: $(which pi)"
 
 # Download the latest release artifact for this platform.
-# Pi Desktop is distributed as a packaged binary, not via npm — see MEMORY.md.
+# Sessrúmnir is distributed as a packaged binary, not via npm — see MEMORY.md.
 if [ "$PLATFORM" = "linux" ]; then
   echo ""
   echo "Downloading AppImage..."
@@ -131,7 +131,7 @@ if [ "$PLATFORM" = "linux" ]; then
   fi
 
   echo ""
-  echo "✓ Pi Desktop installed to $OUTPUT"
+  echo "✓ Sessrúmnir installed to $OUTPUT"
   echo ""
   echo "Run: $OUTPUT"
   echo ""

@@ -54,7 +54,7 @@ Project is currently in **Alpha**. APIs, IPC contracts, on-disk config formats, 
 - One i18next default instance per process (`src/shared/i18n`), starting in English; language files live in `resources/locales/<code>/translation.json`
 - Components call `useTranslation()` from `react-i18next`; other code imports `t` from `src/shared/i18n`. Text is built when called, never stored translated at module load
 - `tEnglish` (also from `src/shared/i18n`) is used instead of `t` for logs, `appLog.*`, and the diagnostics report, which stay English regardless of the interface language
-- Product names ("Pi Desktop", "Pi", "OMP") are never translation keys — they come from `agentEngineLabel()`, `councilAgentLabel()`, or a named constant, never from a language file
+- Product names ("Sessrúmnir", "Pi", "OMP") are never translation keys — they come from `agentEngineLabel()`, `councilAgentLabel()`, or a named constant, never from a language file
 - `npm run lint` runs `i18next-cli lint` and `i18next-cli extract --ci --dry-run`, so hard-coded text and stale keys fail CI
 - Code never decides behavior from a translated display string; it reads underlying values (failure codes, `kind`/`ToolKind` enums, error types) instead
 - `t` from `useTranslation()` changes identity on every language switch. List it in the deps of a `useMemo`/`useCallback` that builds text, but never in the deps of a `useEffect` that does I/O or resets state (a re-run once discarded unsaved editor edits): keep the outcome as data and translate it at render (`utils/preview-load-error.ts`)
@@ -78,7 +78,7 @@ src/
 │   ├── folder-drop.ts            # Pure helpers for drag-drop folder → workspace
 │   ├── untrusted-data.ts         # Wrap file/agent text as a labeled untrusted-data block
 │   ├── agent-engine-label.ts     # Display names for the Pi/OMP engines (every surface reads this one map)
-│   ├── product-name.ts           # "Pi Desktop" display name (a named constant, never a translation key)
+│   ├── product-name.ts           # "Sessrúmnir" display name (a named constant, never a translation key)
 │   ├── i18n/                     # i18next instance, t/tEnglish, bundled languages, OS-language resolver, pseudo-language, locale checks
 │   ├── pi-command.ts             # Slash-command filtering
 │   ├── fork-point.ts             # Fork/branch message helpers
@@ -476,7 +476,7 @@ data-dir migration the GUI's files live under the OS app-data dir
 
 ## Distribution
 
-Pi Desktop is shipped as pre-built binaries — not via npm. Agents must not attempt `npm publish`.
+Sessrúmnir is shipped as pre-built binaries — not via npm. Agents must not attempt `npm publish`.
 
 | Platform | Format | Notes |
 |----------|--------|-------|

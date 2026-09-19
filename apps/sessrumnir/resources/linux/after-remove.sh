@@ -14,5 +14,5 @@ if command -v gtk-update-icon-cache &> /dev/null; then
     gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
 fi
 
-echo "Pi Desktop removed."
+echo "Sessrúmnir removed."
 echo "Session data in ~/.pi-desktop-gui/ was preserved."
