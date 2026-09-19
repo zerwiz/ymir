@@ -912,12 +912,16 @@ run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))
   local t0=$SECONDS
   if [ -t 2 ]; then
+    # A terminal: rewrite one line in place, so the list stays short and alive.
     printf '\r\033[K  [%2d/%2d] %s …' "$STEP_N" "$STEP_TOTAL" "$2" >&2
+    "$1"
+    printf '\r\033[K  [%2d/%2d] %s — %ss\n' "$STEP_N" "$STEP_TOTAL" "$2" "$((SECONDS - t0))" >&2
   else
+    # Piped or logged: one plain line each, no escapes, so a log reads clean.
     printf '  [%2d/%2d] %s …\n' "$STEP_N" "$STEP_TOTAL" "$2" >&2
+    "$1"
+    printf '  [%2d/%2d] %s — %ss\n' "$STEP_N" "$STEP_TOTAL" "$2" "$((SECONDS - t0))" >&2
   fi
-  "$1"
-  printf '\r\033[K  [%2d/%2d] %s — %ss\n' "$STEP_N" "$STEP_TOTAL" "$2" "$((SECONDS - t0))" >&2
 }
 
 run_step step_panes "panes"
