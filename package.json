@@ -67,7 +67,8 @@
   },
   "scripts": {
     "test": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
-    "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
+    "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
+    "prepack": "bin/app-build.sh"
   },
   "dependencies": {
     "@zerwiz/smidja-factory": "^0.1.3"
