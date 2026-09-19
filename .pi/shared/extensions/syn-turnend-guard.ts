@@ -1,13 +1,14 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
   classifyRoddCurrentOperationalText,
   encodeRoddOperationalInput,
 } from "./lib/rodd-operational-input.ts";
+import { resolveYmirRoot } from "./lib/ymir-home.ts";
 
 let guardFollowupActive = false;
 
@@ -15,7 +16,9 @@ type LockOwnership = "owned" | "missing" | "other";
 
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
-const root = resolve(extensionDir, "../..");
+// The distro root comes from the deploy-time record (`.ymir-root`), never from
+// walking up out of the deployed extension home. See lib/ymir-home.ts.
+const root = resolveYmirRoot(extensionDir);
 const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
 const state = process.env.BROKK_STATE_OVERRIDE || `${fmHome}/state`;
 const marker = `${state}/.pi-turnend-extension-loaded`;

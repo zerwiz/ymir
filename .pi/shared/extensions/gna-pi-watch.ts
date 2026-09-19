@@ -11,7 +11,7 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import { Box, Container, Text, type Component } from "@earendil-works/pi-tui";
@@ -27,6 +27,7 @@ import {
   RO_PRESENTATION_EVENT,
 } from "./lib/ro-visibility.ts";
 import { encodeRoddOperationalInput } from "./lib/rodd-operational-input.ts";
+import { resolveYmirRoot } from "./lib/ymir-home.ts";
 
 type ArmResult = {
   ok: boolean;
@@ -82,7 +83,10 @@ function refreshWatchToolShell(
 
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
-const root = resolve(extensionDir, "../..");
+// The distro root is recorded at deploy time (`.ymir-root`, written by
+// bin/valknut-load.sh) and read back here: a deployed copy cannot find its own
+// bin/ by walking up from ${HOME}/.pi/agent/extensions. See lib/ymir-home.ts.
+const root = resolveYmirRoot(extensionDir);
 const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
 const fmRoot = process.env.BROKK_ROOT_OVERRIDE || root;
 const state = process.env.BROKK_STATE_OVERRIDE || `${fmHome}/state`;
