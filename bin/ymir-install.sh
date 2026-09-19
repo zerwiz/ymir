@@ -897,7 +897,44 @@ step_panes() {
 [ "$CHECK" = 0 ] && confirm_install
 [ "$CHECK" = 0 ] && style_patience "the halls are being stood up for the first time"
 
-step_panes; step_prereqs; step_home; step_tree; step_apps; step_engines; step_models; step_hermes; step_sessrumnir; step_backend; step_host; step_sandbox; step_memory; step_smidja; step_spa; step_omarchy; step_loaders; step_gates; step_marks
+# ── progress ─────────────────────────────────────────────────────────────────
+# The install takes minutes; a user must SEE work rather than silence. Each step
+# announces itself before it runs and reports its elapsed time after, so a slow step
+# reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
+# on stdout stays clean for anything that parses it.
+STEP_TOTAL=19
+STEP_N=0
+run_step() {  # <runner-function> <label spoken to the user>
+  STEP_N=$((STEP_N + 1))
+  local t0=$SECONDS
+  if [ -t 2 ]; then
+    printf '\r\033[K  [%2d/%2d] %s …' "$STEP_N" "$STEP_TOTAL" "$2" >&2
+  else
+    printf '  [%2d/%2d] %s …\n' "$STEP_N" "$STEP_TOTAL" "$2" >&2
+  fi
+  "$1"
+  printf '\r\033[K  [%2d/%2d] %s — %ss\n' "$STEP_N" "$STEP_TOTAL" "$2" "$((SECONDS - t0))" >&2
+}
+
+run_step step_panes "panes"
+run_step step_prereqs "prerequisites"
+run_step step_home "home"
+run_step step_tree "workspace tree"
+run_step step_apps "apps"
+run_step step_engines "engines"
+run_step step_models "models"
+run_step step_hermes "hermes"
+run_step step_sessrumnir "the seat"
+run_step step_backend "backend"
+run_step step_host "host"
+run_step step_sandbox "sandbox"
+run_step step_memory "memory"
+run_step step_smidja "the smithy"
+run_step step_spa "the spa"
+run_step step_omarchy "omarchy layer"
+run_step step_loaders "loaders"
+run_step step_gates "gates"
+run_step step_marks "marks"
 # Migrations MOVE private data — that is a write, and `--check` promises none.
 # Only a real run heals the home forward; the preview leaves it untouched.
 if [ "$CHECK" = 0 ]; then bin/ymir-migrate.sh apply >/dev/null 2>&1 || true; fi
