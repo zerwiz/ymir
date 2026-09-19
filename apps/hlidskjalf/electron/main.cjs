@@ -22,6 +22,7 @@ function localOnly(url, fallback) {
 }
 const HLIDSKJALF = localOnly(process.env.HLIDSKJALF_URL || 'http://127.0.0.1:3888/', 'http://127.0.0.1:3888/');
 const SMIDJA = localOnly(process.env.SMIDJA_URL || 'http://127.0.0.1:8437/', 'http://127.0.0.1:8437/');
+const ODRERIR = localOnly(process.env.ODRERIR_URL || 'http://127.0.0.1:4322/', 'http://127.0.0.1:4322/');
 // The gate is the one identity: signing out here clears the shared session for
 // every Ymir surface (Hlidskjalf, Smiðja, Sessrúmnir).
 const GATE = process.env.YMIR_GATE_URL || 'http://127.0.0.1:3889';
@@ -30,8 +31,9 @@ const GATE = process.env.YMIR_GATE_URL || 'http://127.0.0.1:3889';
 // apps so they never stack in the taskbar and each carries its own icon.
 const VIEW = (process.env.YMIR_DESKTOP_VIEW ?? 'hlidskjalf').toLowerCase();
 const IS_SMIDJA = VIEW === 'smidja';
-const APP_NAME = IS_SMIDJA ? 'Ymir · Smíðja' : 'Ymir · Hlidskjalf';
-const APP_SLUG = IS_SMIDJA ? 'ymir-smidja' : 'ymir-hlidskjalf';
+const IS_ODRERIR = VIEW === 'odrerir';
+const APP_NAME = IS_SMIDJA ? 'Ymir · Smíðja' : IS_ODRERIR ? 'Ymir · Óðrerir' : 'Ymir · Hlidskjalf';
+const APP_SLUG = IS_SMIDJA ? 'ymir-smidja' : IS_ODRERIR ? 'ymir-odrerir' : 'ymir-hlidskjalf';
 const ICON = path.join(__dirname, IS_SMIDJA ? 'smidja-icon.png' : 'icon.png');
 
 app.setName(APP_SLUG);
@@ -190,6 +192,7 @@ function buildMenu() {
       submenu: [
         { label: 'Ymir · Hlidskjalf', accelerator: 'CmdOrCtrl+1', click: () => win && win.loadURL(HLIDSKJALF) },
         { label: 'Smiðja — the smithy', accelerator: 'CmdOrCtrl+2', click: () => win && win.loadURL(SMIDJA) },
+{ label: 'Ymir · Óðrerir', accelerator: 'CmdOrCtrl+3', click: () => win && win.loadURL(ODRERIR) },
         { type: 'separator' },
         { label: 'Reload', accelerator: 'CmdOrCtrl+R', click: () => win && win.reload() },
         { label: 'DevTools', accelerator: 'CmdOrCtrl+Alt+I', click: () => win && win.webContents.toggleDevTools() },
@@ -222,11 +225,11 @@ app.whenReady().then(async () => {
     openWindow(HLIDSKJALF, 'Ymir · Hlidskjalf');
     openWindow(SMIDJA, 'Ymir · Smíðja');
   } else {
-    openWindow(IS_SMIDJA ? SMIDJA : HLIDSKJALF, APP_NAME);
+    openWindow(IS_SMIDJA ? SMIDJA : IS_ODRERIR ? ODRERIR : HLIDSKJALF, APP_NAME);
   }
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      openWindow(IS_SMIDJA ? SMIDJA : HLIDSKJALF, APP_NAME);
+      openWindow(IS_SMIDJA ? SMIDJA : IS_ODRERIR ? ODRERIR : HLIDSKJALF, APP_NAME);
     }
   });
 });
