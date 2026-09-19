@@ -402,6 +402,15 @@ step_engines() {
 # ~/.pi/agent/models.json only when the operator has none.
 step_models() {
   [ "$SKIP_ENGINES" = 1 ] && { add models SKIP "--skip-engines"; return; }
+    # The user's OWN models, read from the ROOT pi home — never assumed. A roster can
+    # name a model this machine has never seen, and nothing in the report said so.
+    if [ -x "$SCRIPT_DIR/models-report.sh" ]; then
+      msum="$("$SCRIPT_DIR/models-report.sh" 2>/dev/null)"
+      if [ -n "$msum" ]; then
+        add models-config OK "the user's models — $msum"
+      else
+        add models-config WARN "no models.json in the root pi home — the user's models are unread"
+      fi
   if [ "$CHECK" = 1 ]; then add models OK "would ensure pi + packages and detect local models"; return; fi
   if [ -x "$SCRIPT_DIR/pi-ensure.sh" ]; then
     if "$SCRIPT_DIR/pi-ensure.sh" ensure --install >/dev/null 2>&1; then add models OK "pi + packages present";
@@ -413,15 +422,6 @@ step_models() {
     local detected
     detected="$("$SCRIPT_DIR/models-detect.sh" --json 2>/dev/null | python3 -c 'import json,sys;print(",".join(json.load(sys.stdin).get("providers",{}).keys()))' 2>/dev/null)"
     add models OK "local runtimes: ${detected:-none}"
-    # The user's OWN models, read from the ROOT pi home — never assumed. A roster can
-    # name a model this machine has never seen, and nothing in the report said so.
-    if [ -x "$SCRIPT_DIR/models-report.sh" ]; then
-      msum="$("$SCRIPT_DIR/models-report.sh" 2>/dev/null)"
-      if [ -n "$msum" ]; then
-        add models-config OK "the user's models — $msum"
-      else
-        add models-config WARN "no models.json in the root pi home — the user's models are unread"
-      fi
     fi
     if [ ! -f "$HOME/.pi/agent/models.json" ]; then
       "$SCRIPT_DIR/models-detect.sh" --write >/dev/null 2>&1 && add models OK "seeded ~/.pi/agent/models.json (was absent)"
