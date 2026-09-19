@@ -19,5 +19,5 @@ if command -v update-mime-database &> /dev/null; then
     update-mime-database /usr/share/mime 2>/dev/null || true
 fi
 
-echo "Pi Desktop installed successfully."
+echo "Sessrúmnir installed successfully."
 echo "Run 'pi-desktop' to launch, or find it in your application menu."

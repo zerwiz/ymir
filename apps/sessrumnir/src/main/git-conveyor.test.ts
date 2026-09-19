@@ -28,7 +28,7 @@ async function withGitRepo(fn: (repo: string, git: GitRunner) => Promise<void>):
   }
   git(['init'])
   git(['config', 'user.email', 'pi-desktop@example.test'])
-  git(['config', 'user.name', 'Pi Desktop Tests'])
+  git(['config', 'user.name', 'Sessrúmnir Tests'])
   try {
     await fn(repo, git)
   } finally {

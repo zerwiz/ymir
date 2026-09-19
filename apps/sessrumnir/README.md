@@ -8,7 +8,7 @@ A desktop GUI for the [Pi](https://pi.dev) and [oh-my-pi](https://github.com/can
 > and blood — the landing page's own palette and type). See `AGENTS.md` for the
 > adoption notes; upstream provenance and license are preserved.
 
-![Pi Desktop — Home launcher screen](docs/screenshots/Screenshot_20260824_181929.png)
+![Sessrúmnir — Home launcher screen](docs/screenshots/Screenshot_20260824_181929.png)
 
 Still in alpha, so expect rough edges.
 
@@ -52,7 +52,7 @@ Changed files use readable status badges:
 
 ## Pi and OMP engines
 
-Pi Desktop speaks Pi's RPC protocol directly, so it can run either the standard `pi` CLI or the compatible `omp` binary from [oh-my-pi](https://github.com/can1357/oh-my-pi). **Settings → Agent Configuration → Agent Installation** scans for installed engines, lets you select one, and also supports a custom executable or install directory.
+Sessrúmnir speaks Pi's RPC protocol directly, so it can run either the standard `pi` CLI or the compatible `omp` binary from [oh-my-pi](https://github.com/can1357/oh-my-pi). **Settings → Agent Configuration → Agent Installation** scans for installed engines, lets you select one, and also supports a custom executable or install directory.
 
 Each engine keeps its own sessions: Pi writes to `~/.pi/agent/sessions`, OMP to `~/.omp/agent/sessions`. The app reads both, so switching engines never hides your history. When sessions from both appear in one list, each row is tagged `Pi` or `OMP`, and opening one starts the engine that wrote it.
 
@@ -87,7 +87,7 @@ Example rules:
 
 ## Custom themes
 
-Pi Desktop ships 7 built-in themes (Dark, Light, Nord, Gruvbox, Breeze Dark, Breeze Light, Breeze Claudius) plus System, and you can create your own from **Settings → Appearance**. With **System** selected, **Light Theme** and **Dark Theme** choose which installed theme each OS mode uses.
+Sessrúmnir ships 7 built-in themes (Dark, Light, Nord, Gruvbox, Breeze Dark, Breeze Light, Breeze Claudius) plus System, and you can create your own from **Settings → Appearance**. With **System** selected, **Light Theme** and **Dark Theme** choose which installed theme each OS mode uses.
 
 To build one in the app, click **Create theme** to fork the currently active theme, or **Edit theme** to keep editing one you already created. Pick 7 seed colors (app background, surface, text, accent, success, warning, error) and a dark or light kind; every other color in the app is derived from those seeds. Changes preview live across the whole window as you edit. Two disclosures cover finer control:
 
@@ -169,21 +169,21 @@ chmod +x Pi-Desktop-*.AppImage
 
 ### macOS
 
-Download the `.dmg` (Apple Silicon / arm64) from [Releases](https://github.com/FaqFirebase/pi-desktop/releases), open it, and drag **Pi Desktop** to Applications.
+Download the `.dmg` (Apple Silicon / arm64) from [Releases](https://github.com/FaqFirebase/pi-desktop/releases), open it, and drag **Sessrúmnir** to Applications.
 
 Builds are **not yet signed or notarized**. Because the download is unsigned, macOS quarantines it, and on first launch Gatekeeper shows this dialog (this is macOS's message, not our advice):
 
-> Pi Desktop is damaged and can't be opened. You should move it to the Trash.
+> Sessrúmnir is damaged and can't be opened. You should move it to the Trash.
 
 **Do not move it to the Trash.** The app is not damaged; this is just how Gatekeeper phrases its block on any unsigned app. macOS offers no "Open Anyway" button for this particular dialog, so clear the quarantine flag in Terminal instead:
 
 ```bash
-xattr -dr com.apple.quarantine "/Applications/Pi Desktop.app"
+xattr -dr com.apple.quarantine "/Applications/Sessrúmnir.app"
 ```
 
 Then open the app normally. You only need to do this once.
 
-> If macOS instead says the app **"cannot be opened because Apple cannot check it for malicious software,"** you can allow it without Terminal: open **System Settings → Privacy & Security**, scroll to the **Security** section, and click **Open Anyway** next to the Pi Desktop notice, then confirm with Touch ID / your password.
+> If macOS instead says the app **"cannot be opened because Apple cannot check it for malicious software,"** you can allow it without Terminal: open **System Settings → Privacy & Security**, scroll to the **Security** section, and click **Open Anyway** next to the Sessrúmnir notice, then confirm with Touch ID / your password.
 
 > If you'd rather skip the unsigned-app warnings entirely, build from source. A build you compile yourself runs locally without Gatekeeper blocking it, so there is no signing prompt and no quarantine flag to clear. See [Build it yourself → Linux / macOS](#linux--macos) below.
 
@@ -276,12 +276,12 @@ npm run dev
 | `MSB8040`: Spectre libs missing | VS Build Tools 2026 (v180 toolset) installed instead of 2022 (v143) | Uninstall 2026, install VS Build Tools 2022 with Spectre libs for v143 |
 | `electron-vite is not recognized` | `npm install` didn't complete | Run `npm install` again |
 | Electron binary missing after install | Electron's postinstall extraction left a partial or missing `dist` folder | Add the repo folder to Defender exclusions, then `npm install` again. If it still fails, use the manual download steps below |
-| `EPERM` / `EACCES` writing a project file | Controlled Folder Access (Ransomware protection) is blocking writes under Documents/Desktop | Keep the repo and your projects out of protected folders, or allow Pi Desktop through Controlled folder access (see below) |
+| `EPERM` / `EACCES` writing a project file | Controlled Folder Access (Ransomware protection) is blocking writes under Documents/Desktop | Keep the repo and your projects out of protected folders, or allow Sessrúmnir through Controlled folder access (see below) |
 | Pi shows "error" in status popover | Pi not installed or PATH not updated | Run the install script above in a **new** terminal window |
 
 #### Controlled Folder Access (Ransomware protection)
 
-Windows **Controlled Folder Access** protects `Documents`, `Desktop`, `Pictures`, and similar folders by silently blocking apps it doesn't trust from writing to them. Because Pi Desktop is a coding agent that edits files, this shows up as intermittent `EPERM`/`EACCES` failures (during `npm install`, when the agent edits code, or when you save a file) if your repo or projects live inside a protected folder.
+Windows **Controlled Folder Access** protects `Documents`, `Desktop`, `Pictures`, and similar folders by silently blocking apps it doesn't trust from writing to them. Because Sessrúmnir is a coding agent that edits files, this shows up as intermittent `EPERM`/`EACCES` failures (during `npm install`, when the agent edits code, or when you save a file) if your repo or projects live inside a protected folder.
 
 The reliable fix is to keep code out of protected folders. Clone the repo and put your projects somewhere unprotected, for example:
 
@@ -292,7 +292,7 @@ git clone https://github.com/FaqFirebase/pi-desktop.git C:\dev\pi-desktop
 
 If you must keep code under Documents/Desktop, allow the app instead:
 
-**Windows Security → Virus & threat protection → Ransomware protection → Manage ransomware protection → Allow an app through Controlled folder access → Add an allowed app**, then add the installed `Pi Desktop.exe` (and, for development, `node.exe`, `git.exe`, and `electron.exe`).
+**Windows Security → Virus & threat protection → Ransomware protection → Manage ransomware protection → Allow an app through Controlled folder access → Add an allowed app**, then add the installed `Sessrúmnir.exe` (and, for development, `node.exe`, `git.exe`, and `electron.exe`).
 
 > The portable `.exe` re-extracts to a temporary folder on each launch, so allow-listing it doesn't stick. Prefer the **installer** (`Pi-Desktop-<version>-win-x64-setup.exe`) if you rely on the allow-list approach.
 

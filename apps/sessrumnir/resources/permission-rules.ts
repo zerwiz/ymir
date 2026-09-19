@@ -1,5 +1,5 @@
 /**
- * Permission rules engine for Pi Desktop.
+ * Permission rules engine for Sessrúmnir.
  *
  * Single source of truth shared by:
  * - the bundled Pi extension `pi-desktop-permissions.ts` (loaded by Pi via

@@ -148,7 +148,7 @@ function gitRepo(repo: string): (args: string[], cwd?: string) => string {
   }
   git(['init'])
   git(['config', 'user.email', 'pi-desktop@example.test'])
-  git(['config', 'user.name', 'Pi Desktop Tests'])
+  git(['config', 'user.name', 'Sessrúmnir Tests'])
   git(['add', '.'])
   git(['commit', '-m', 'initial'])
   return git

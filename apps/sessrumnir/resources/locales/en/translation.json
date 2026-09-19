@@ -15,12 +15,12 @@
     "errorBoundary": {
       "fallback": "Failed to render content"
     },
-    "quit": "Quit Pi Desktop",
+    "quit": "Quit Sessrúmnir",
     "resizeHandle": {
       "title": "Drag to resize"
     },
     "updateBanner": {
-      "available": "Pi Desktop <strong>v{{latestVersion}}</strong> is available — you're on v{{currentVersion}}.",
+      "available": "Sessrúmnir <strong>v{{latestVersion}}</strong> is available — you're on v{{currentVersion}}.",
       "dismissAriaLabel": "Dismiss update notification",
       "downloadButton": "Download"
     }
@@ -473,7 +473,7 @@
       "refusedWrite": "Refusing to write outside the active workspace"
     },
     "fs": {
-      "blockedWrite": "Could not write \"{{path}}\" ({{code}}). On Windows this is usually Controlled Folder Access (Ransomware protection) blocking the change. Either allow Pi Desktop in Windows Security → Virus & threat protection → Ransomware protection → \"Allow an app through Controlled folder access\", or move this project out of Documents/Desktop to an unprotected folder (for example C:\\dev)."
+      "blockedWrite": "Could not write \"{{path}}\" ({{code}}). On Windows this is usually Controlled Folder Access (Ransomware protection) blocking the change. Either allow Sessrúmnir in Windows Security → Virus & threat protection → Ransomware protection → \"Allow an app through Controlled folder access\", or move this project out of Documents/Desktop to an unprotected folder (for example C:\\dev)."
     },
     "git": {
       "commandFailed": "{{command}} failed",
@@ -1056,7 +1056,7 @@
       "label": "Light Theme"
     },
     "minimizeToTrayOnClose": {
-      "description": "Keep Pi Desktop running in the system tray when you close the window instead of quitting (Windows and Linux)",
+      "description": "Keep Sessrúmnir running in the system tray when you close the window instead of quitting (Windows and Linux)",
       "label": "Minimize to Tray on Close"
     },
     "openToHomeOnLaunch": {
@@ -1084,7 +1084,7 @@
       "label": "Resume Last Session"
     },
     "runOnStartup": {
-      "description": "Automatically start Pi Desktop when you log in to your computer (takes effect in installed builds)",
+      "description": "Automatically start Sessrúmnir when you log in to your computer (takes effect in installed builds)",
       "label": "Run on Startup"
     },
     "sections": {
@@ -1600,10 +1600,10 @@
     }
   },
   "tray": {
-    "show": "Show Pi Desktop",
+    "show": "Show Sessrúmnir",
     "stillRunningBody": "The window was hidden to the system tray. Click the tray icon to reopen it, or use Quit to exit.",
-    "stillRunningTitle": "Pi Desktop is still running",
-    "unavailableBody": "This desktop has no system tray, so Pi Desktop will close normally instead of minimizing to the tray.",
+    "stillRunningTitle": "Sessrúmnir is still running",
+    "unavailableBody": "This desktop has no system tray, so Sessrúmnir will close normally instead of minimizing to the tray.",
     "unavailableTitle": "System tray unavailable"
   },
   "workflows": {

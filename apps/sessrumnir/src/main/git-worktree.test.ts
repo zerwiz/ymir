@@ -93,7 +93,7 @@ test('describeGitFailure renders English for the log and marked text for the UI'
 
 test('worktree names are deterministic and isolated by workspace id', () => {
   assert.equal(
-    worktreeBranchName('Pi Desktop', 'ws-123-abc'),
+    worktreeBranchName('Sessrúmnir', 'ws-123-abc'),
     'pi/pi-desktop-123-abc'
   )
   const target = worktreeTargetPath('/tmp/gui/worktrees', '/repo/My App', 'ws-123-abc')
