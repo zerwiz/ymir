@@ -52,6 +52,7 @@
     "assets/",
     "data/",
     "deploy/",
+    "apps/",
     "install.sh"
   ],
   "engines": {
@@ -69,9 +70,11 @@
     "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
   },
   "dependencies": {
-    "@zerwiz/hlidskjalf": "^0.1.1",
-    "@zerwiz/odrerir": "^0.1.1",
-    "@zerwiz/sessrumnir": "^0.1.10",
     "@zerwiz/smidja-factory": "^0.1.3"
-  }
+  },
+  "workspaces": [
+    "apps/hlidskjalf",
+    "apps/odrerir",
+    "apps/sessrumnir"
+  ]
 }
