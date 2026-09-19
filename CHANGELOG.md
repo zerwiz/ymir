@@ -1,3 +1,11 @@
+## 2026-09-19 — the install speaks while it works
+
+- After the user accepts with `y`, the installer says how many steps follow, then each
+  step announces itself (`[ 3/19] apps …`) and reports its elapsed time. Silence during a
+  minutes-long step read as a hang: "the user don't know if something are happening".
+- Progress goes to **stderr**, so the TOON report on stdout stays clean for anything that
+  parses it. Without a terminal the lines are printed whole instead of rewritten in place.
+
 ## 2026-09-19 — the window tells the desktop its name; the marks step checks its work
 
 - The seat's window class was `sessrumnir` while its entry said `ymir-sessrumnir`, so nothing
