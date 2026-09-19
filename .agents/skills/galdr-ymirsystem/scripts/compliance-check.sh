@@ -298,7 +298,11 @@ real_skills="$(find -L "$ROOT/.agents/skills" -mindepth 2 -maxdepth 2 -name SKIL
 # marked `app-provided`: the smithy's skill lives in its own app repo, cloned by
 # step_apps — absent in a fresh clone or worktree until that step runs, present in
 # a working tree. Exempting the MARKED entry keeps the index honest without
-# demanding a path that only exists after the app clone.
+# demanding a path that only exists after the app clone. The exemption must drop
+# the skill from BOTH sides (real + indexed) — the symlink's SKILL.md is found on
+# disk even when the row is marked, so the real-side must forget it too.
+app_provided="$(grep -E '^  "[A-Za-z0-9._-]+"' "$ROOT/.agents/skills/README.md" 2>/dev/null | grep -iE 'app-provided' | grep -oE '^  "[A-Za-z0-9._-]+"' | tr -d ' "')"
+real_skills="$(printf '%s\n' "$real_skills" | grep -viF "$app_provided" | sed '/^[[:space:]]*$/d' | sort)"
 indexed="$(grep -E '^  "[A-Za-z0-9._-]+"' "$ROOT/.agents/skills/README.md" 2>/dev/null \
   | grep -viE 'planned|legacy|superseded|removed|abandoned|retired|former|app-provided' \
   | grep -oE '^  "[A-Za-z0-9._-]+"' | tr -d ' "' | sort -u)"

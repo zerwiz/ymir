@@ -80,3 +80,15 @@ marketing_loop[5]{step,what}:
 pip install firecrawl-py browser-use
 bin/valknut-load.sh --all      # rebind agents/skills after adding this skill
 ```
+
+## 5. The sibling craft — translation (Bragi carries words across tongues)
+
+A message that must cross a language border is **translation** work — the
+skald's second hand. Load the **`bragi-translation`** skill and its detailed
+`assets/programs.md` (the exact programs + commands): whisper.cpp on heimdall
+for voice → text, the llama router's local seats for text → text, ffmpeg for
+the format door, and the hoard's `hodd/docs/translation/` for the record.
+
+- A campaign going multilingual starts by loading `bragi-translation`.
+- The translated artifact is a file in the hoard's translation record, never
+  invented inline.
