@@ -784,6 +784,19 @@ $('#lh-dispatch-btn').addEventListener('click', function(){
    PAINT, THEN READ THE HALL
    ============================================================ */
 render(modelFromSaga(saga));
+/* The hall says so when it is telling the tale rather than reading a board:
+   invented rows must never pass for telemetry. Removed when a live feed arrives. */
+try {
+  if (!document.getElementById('saga-note')) {
+    var note = document.createElement('div');
+    note.id = 'saga-note';
+    note.setAttribute('role', 'status');
+    note.style.cssText = 'margin:12px 0;padding:10px 14px;border:1px solid rgba(201,151,63,0.45);border-radius:8px;font-size:0.9rem;line-height:1.45;opacity:0.9';
+    note.textContent = 'Not connected \u2014 this board is the saga\u2019s sample, not your fleet. It reads live once the hall reaches its source.';
+    var host = document.querySelector('.lh-board') || document.body;
+    host.insertBefore(note, host.firstChild);
+  }
+} catch (e) { /* a courtesy; never break the page for it */ }
 
 var lastFeed = null;
 function readSnapshot(force){
@@ -796,6 +809,8 @@ function readSnapshot(force){
         if(!force && raw === lastFeed) return;            /* nothing new to paint */
         lastFeed = raw;
         render(modelFromFeed(feed));
+        var sn = document.getElementById('saga-note');
+        if (sn) sn.remove();   /* live board: the sample marker has no business here */
       })
       .catch(function(){ /* the tale stands */ });
   } catch (e) { /* no fetch available — the tale stands */ }

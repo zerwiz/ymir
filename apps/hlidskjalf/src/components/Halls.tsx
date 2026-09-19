@@ -7,7 +7,7 @@ import { gateApi } from '../services/api';
  * however you reach them.
  */
 export interface Hall {
-  id: 'hlidskjalf' | 'smidja' | 'sessrumnir';
+  id: 'hlidskjalf' | 'smidja' | 'sessrumnir' | 'odrerir';
   glyph: string;
   name: string;
   blurb: string;
@@ -37,7 +37,9 @@ export const HALLS: Hall[] = [
   },
 ];
 
-async function raise(id: Hall['id']): Promise<void> {
+/** Raise a hall's WINDOW — the door the Omarchy bindings use. Exported so the
+ *  Topbar's Óðrerir rune raises the app rather than opening a browser tab. */
+export async function raise(id: Hall['id']): Promise<void> {
   try {
     await gateApi.desktop(id);
   } catch {
