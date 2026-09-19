@@ -1,3 +1,15 @@
+## 2026-09-19 — 0.1.37: the install that speaks, and the checks that verify
+
+- The install announces itself: after `y` it says how many steps follow, each step names
+  itself as it runs (`[ 3/19] apps …`) and reports its elapsed time — one line rewritten
+  in a terminal, plain lines when piped or logged.
+- `step_apps` reports **PASS "in-tree — apps/ ships with the package"** rather than the
+  now-false "the surfaces are dependencies": the in-tree check runs before the
+  package-shape skip.
+- `step_marks --check` counts the entries really on disk and **names the halls missing**
+  instead of answering OK at zero.
+- The seat's window class is `ymir-sessrumnir`, matching its entry — the icon can be found.
+
 ## 2026-09-19 — the install speaks while it works
 - Progress renders two ways, both proven: a terminal rewrites one line in place
   (`[ 3/19] apps … → [ 3/19] apps — 12s`), a pipe or a log gets one plain line each with
