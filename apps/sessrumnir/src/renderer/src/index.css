@@ -137,8 +137,20 @@
 
   /* Chat center column: themable via tokens; defaults track the app background
      so only themes that override --color-chat-column look different. */
+  /* The column's colour must sit BELOW the ember, not over it. Painted on the
+     element itself it covered the EmberBackground canvas (mounted at -z-10 inside
+     this node), so the hearth was drawn every frame into a layer nobody could see.
+     On a pseudo-element at -20 the colour still fills the column, and the embers
+     rise in front of it, from the bottom, as the landing's do. */
   .chat-center {
+    position: relative;
+  }
+  .chat-center::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background-color: var(--color-chat-column);
+    z-index: -20;
   }
   .chat-center > .border-b { border-bottom-color: var(--color-chat-column-border); }
   .chat-center > .border-t { border-top-color: var(--color-chat-column-border); }
