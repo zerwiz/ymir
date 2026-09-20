@@ -289,6 +289,15 @@ echo "$PID" > "$PID_FILE"
 # Wait for the port to answer (max ~15s), then say what is true.
 for _ in $(seq 1 30); do
   if curl -s -o /dev/null "http://127.0.0.1:${PORT}/"; then
+    # The windows — the raise opens all four when a display is present, so
+    # 'ymir raise' stands the whole hall: the high seat, the board, the
+    # smithy's eye, and the seat-hall.
+    if [ -n "${WAYLAND_DISPLAY:-${DISPLAY:-}}" ]; then
+      "$SCRIPT_DIR/electron.sh" start --view hlidskjalf >/dev/null 2>&1 &
+      "$SCRIPT_DIR/electron.sh" start --view odrerir >/dev/null 2>&1 &
+      "$SCRIPT_DIR/electron.sh" start --view smidja >/dev/null 2>&1 &
+      "$ROOT/bin/ymir.js" sessrumnir >/dev/null 2>&1 &
+    fi
     echo "Hlidskjalf raised (pid $PID) → http://127.0.0.1:${PORT}/"
     echo "Logs: $LOG"
     exit 0
