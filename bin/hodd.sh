@@ -9,7 +9,7 @@
 #   bin/hodd.sh tenant acme          # source a tenant's .env (that tenant only)
 #
 # Secrets are REFERENCED by path — `$YMIR_HOARD`, else `$YMIR_HOME`, else
-# `$HOME/Documents/Ymir`. The hoard is NEVER inside the repo (Rule 04); the
+# `$HOME/Documents/ymirhome`. The hoard is NEVER inside the repo (Rule 04); the
 # repo's `hodd/` keeps only the guard, the README and *.example scaffolds.
 set -u
 
