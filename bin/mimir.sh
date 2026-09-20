@@ -15,7 +15,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 WELL="${YMIR_MEMORY_DIR:-$YMIR_HOME/memory/well}/episodes.jsonl"
 BRIDGE="${MIMIRSBRUNN_URL:-http://127.0.0.1:4602}"
 
