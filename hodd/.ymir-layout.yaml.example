@@ -1,0 +1,30 @@
+# .ymir-layout.yaml.example — the ymir-home layout map, taught PUBLIC.
+#
+# Every new ymir seat raises its private home from this skeleton. Copy it to
+# $YMIR_HOME/.ymir-layout.yaml and point each key at the REAL directory —
+# the placement ward (bin/eir-doctor.sh, "hoard" surface) validates that every
+# mapped path EXISTS; a stale map is how private work lands outside the well.
+#
+# THE LAW OF THIS EXAMPLE: it mirrors the home's true map by NAME, one shelf
+# to one key, but rides ZERO private values, ZERO seat literals, ZERO secrets.
+# `$YMIR_HOME` below is the ONLY literal the fleet is allowed to teach — it is
+# the path the seat resolves (default ~/Documents/ymirhome, the private repo
+# $YMIR_HOME_REPO — the seat-held remote, taught as FORM only; never name the real one.
+#
+# Names mirror the home 1:1 (each key BELOW must name a directory that EXISTS
+# once you raise it). The real home's map — the placement-ward's validation
+# target — sits at your private $YMIR_HOME/.ymir-layout.yaml, not here.
+version: 1
+layout:
+  config: "$YMIR_HOME/config"
+  secrets: "$YMIR_HOME/hodd/secrets"        # encrypted at rest, by path only
+  identity: "$YMIR_HOME/hodd/identity"
+  workspaces: "$YMIR_HOME/hodd/workspaces"
+  memory: "$YMIR_HOME/hodd/memory"          # the ONE well — kaia.engram
+  smidja: "$YMIR_HOME/smidja"               # runtime only (ephemeral)
+  state: "$YMIR_HOME/state"                 # runtime; stale-* drop storage
+  data: "$YMIR_HOME/hodd/data"
+  svartalfaheim: "$YMIR_HOME/svartalfaheim" # realms — the company shelves
+git_repo: "$YMIR_HOME"
+github_repo: "zerwiz/ymirhome"              # the private home well (never public)
+secrets_encrypted: false
