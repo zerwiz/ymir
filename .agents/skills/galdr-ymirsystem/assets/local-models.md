@@ -83,7 +83,7 @@ the configuration you intend to keep.
 Always record **the context the run was measured at**. A decode figure without
 its context is not a measurement.
 
-### The four traps that produce believable, useless numbers
+### The traps that produce believable, useless numbers
 
 | Trap | Reads as | Is |
 |---|---|---|
@@ -91,6 +91,9 @@ its context is not a measurement.
 | **Load is not run** | a model that loads, written down as working | it may die on the first real request |
 | **Context-blind comparison** | two runs "differing by config" | they also differed in context; attention cost tracks the context in use |
 | **Asserted > observed** | a tidy explanation for a slow run | the explanation was never tested against an alternative |
+| **Anonymous load on unified memory** | a model that loads fine, and later "the machine crashed" | on a unified-memory host the GPU's memory **is** system RAM. An anonymous (non-`mmap`) load makes the weights unreclaimable, so under pressure the kernel OOM-kills **something else** — usually the desktop, not the model. Load file-backed. |
+| **Backend chosen by reputation** | "ROCm is the AMD backend, so use ROCm" | on some iGPU targets a backend returns **silently wrong** logits — fast, plausible, incorrect. Backend choice is a measurement, not a default. |
+| **Reasoning configured through the chat template** | a model that thinks forever, or degenerates, "because the model is weak" | the engine's **native** reasoning budget and the chat-template keyword are different mechanisms with different behaviour. Configure reasoning at the engine. |
 
 ### The fifth trap — model-host port drift
 
@@ -272,3 +275,71 @@ pi -p --model "llamacpp-igpu/qwen3.5-4b@q4_k_s" "Reply with exactly: IGPU OK"
 `--model` takes `provider/id`, matching the static entries in
 `.pi/agent/models.json` (§2). Screen the result by hand — a model that answers a
 question you did not ask has told you more than one that answers yours.
+
+## 11. Reasoning is a resource you must configure — not a feature you inherit
+
+A reasoning model left to think without bound does not fail gracefully. It fails
+**totally**: no answer at all, after minutes of device time. Three outcome classes
+have been observed from the same model on the same request, differing *only* in how
+reasoning was configured:
+
+| Outcome | Shape |
+|---|---|
+| **Clean** | bounded reasoning, then a correct answer |
+| **Degenerate** | reasoning collapses into repetition — plausible-looking, worthless |
+| **Unterminated** | the model never leaves its reasoning; the response body is empty |
+
+Three rules follow.
+
+1. **Prefer the engine's native reasoning-budget flag.** Where an engine exposes
+   both a native budget and a chat-template keyword, they are **not** the same
+   mechanism. One bounds the thought; the other can truncate it mid-flight and
+   derail the model. Use the native one.
+2. **A budget is a correctness control, not merely a cost control.** The clean
+   outcome above was *caused* by the budget. Without it the model is not slower —
+   it is **wrong, or silent**.
+3. **Read the output, not the counter.** A generation can report a healthy
+   tokens-per-second figure while emitting multilingual noise or a repetition
+   loop. Verify by reading the text.
+
+**Test procedure.** Same prompt, three configurations — unbounded, budgeted,
+and reasoning-off. Score what came back, not how fast it came. A model that is fast
+and empty is not faster.
+
+**For agents that need an answer, not a monologue:** when a harness reports an
+empty completion or a repetition loop from a reasoning model, the first suspect is
+the reasoning configuration, not the model's capability.
+
+## 12. A model service unit must never raise itself
+
+A service unit that loads large weights must be started **by explicit hand**, never
+by login. This is a systemd-and-quadlet lesson, not a vendor one.
+
+- **`[Install] WantedBy=default.target` is the switch** — not the restart policy.
+  A unit carrying it is started when the target is reached, which for a user unit
+  means **every login**. `Restart=` says nothing about this.
+- **Podman quadlet units are *generated* units**, and `systemctl --user disable`
+  is a **no-op** on them. So an autostart armed this way **cannot be turned off
+  afterwards** — not by `disable`, and not by any wrapper script that calls it.
+  Confirm by checking the unit's state (`generated`) before trusting a disable.
+- **The fix is in the file, not the command line:** omit the `[Install]` section
+  entirely, then `daemon-reload`. Start the unit on demand.
+- **Always cap the unit.** `MemoryMax=` (with `MemorySwapMax=0`, `OOMPolicy=stop`)
+  makes a bad load die **inside its own cgroup** instead of taking down the user
+  session — which is what happens when the kernel's global OOM killer picks the
+  victim.
+- **`Restart=never` is not a valid systemd value.** The correct value is
+  `Restart=no`. An invalid value is silently ignored, which makes the
+  configuration a lie even when the effect happens to match the intent.
+
+**Verification, not assumption.** After disarmament, list the generator's
+`default.target.wants` directory and confirm the heavy units are **absent by name**.
+A unit that still appears there can still raise itself.
+
+```bash
+ls /run/user/1000/systemd/generator/default.target.wants/
+```
+
+**Light infrastructure is a legitimate exception** — an embedding server that runs
+on the CPU and cannot exhaust device memory may be allowed to start at login. Record
+the exception and its reason beside the unit; an undocumented exception is drift.

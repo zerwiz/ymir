@@ -1,0 +1,35 @@
+{
+  "name": "@zerwiz/hlidskjalf-mobile",
+  "version": "0.1.0",
+  "private": false,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "expo": "~52.0.0",
+    "expo-status-bar": "~2.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.5"
+  },
+  "devDependencies": {
+    "@types/react": "~18.3.12",
+    "typescript": "~5.3.3"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zerwiz/hlidskjalf-mobile.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "App.tsx",
+    "app.json",
+    "index.ts"
+  ]
+}

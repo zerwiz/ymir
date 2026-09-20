@@ -1,6 +1,5 @@
 # YMIR — The Single-Tenant Agent Operating System
 
-
 ---
 
 <p align="center">
@@ -14,22 +13,10 @@
 
 ![Ymir — the single-tenant agent OS](assets/ymir-banner-03.png)
 
-Before the worlds there was nothing but cold mist and embers of fire. From
-their meeting in the Void — Ginnungagap — came the first being: **Ymir**, the
-ancestor of everything. The gods slew him and made the world from his body.
-
-That is what this platform is. **Ymir is the substrate** — a single machine, a
-single repo — the primordial body from which every realm of work is carved.
-Every service, every tool this fleet ships is shaped from Ymir's frame and
-lives on it; nothing is painted onto Ymir, everything is cut *from* him.
-
-It is not lean. It is a single-operator agentic **distro**: a fleet of named
-agents (Brokk at the bellows, **Eindri** in sealed sandboxes), a memory well at
-the root, an audit ledger a rune cannot un-carve, one tenant and its
-workspaces, and a control plane you actually look at. You are the
-**Allfather**; every agent reports to Brokk; Brokk reports to you.
-Everything — development, marketing, business strategy, life — runs from one
-repository.
+Ymir is a lean, single-operator agentic OS. You are the **Allfather**; **Brokk** is
+your primary agent; **Eindri** are the isolated workers it dispatches. Everything —
+development, marketing, business strategy, life — runs from one repository, with an
+audit ledger, a memory well, one tenant and its workspaces, and a control plane you actually look at.
 
 ---
 
@@ -40,6 +27,98 @@ the machine as the Allfather walks it — no gate between the agent and the tool
 no second master but the Allfather's own hand.
 
 ---
+
+## Install
+
+**One command. It installs into a prefix you own, writes the PATH into your shell,
+runs the first setup, and then proves it.**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash
+```
+
+**No PATH, no prefix, nothing to configure — run it without installing:**
+
+```bash
+npx @zerwiz/ymir
+```
+
+**Already manage Node and npm yourself:**
+
+```bash
+npm install -g @zerwiz/ymir      # then: ymir
+```
+
+### If `ymir` is "command not found"
+
+The command **is** installed — npm put it in its global bin directory, and your shell
+does not look there. That is npm's behaviour, not Ymir's, and it is the most common
+*"it does not work"* in the whole Node ecosystem.
+
+```bash
+npm prefix -g                                  # where npm puts global commands
+ls "$(npm prefix -g)/bin/ymir"                 # the command is there
+export PATH="$(npm prefix -g)/bin:$PATH"       # this shell
+echo 'export PATH="$(npm prefix -g)/bin:$PATH"' >> ~/.bashrc   # every shell after
+```
+
+Or skip the question entirely: `npx @zerwiz/ymir` works with no PATH at all.
+
+### If the version never changes
+
+An install can *succeed* and change nothing — npm may resolve a cached `latest` and
+report success while the old build stays. Clear it once:
+
+```bash
+npm cache clean --force && npm i -g @zerwiz/ymir@latest --prefer-online
+```
+
+The CLI itself now says when it is out of date, once a day.
+
+### The packages — what is on npm
+
+The distro **depends on the four surfaces**, so one command brings the whole
+platform — and each can be installed alone if you want only that hall.
+
+```
+packages[5]{package,what}:
+  "@zerwiz/ymir","the distro — the runtime, the doors, the installer, the plan"
+  "@zerwiz/hlidskjalf","the high seat — the control plane, the gate and the landing"
+  "@zerwiz/odrerir","the live hall — the board on :4322"
+  "@zerwiz/smidja-factory","the smithy — the agent factory, its skills and the visualizer on :8437"
+  "@zerwiz/sessrumnir","the seat-hall — the desktop where you speak with Brokk"
+```
+
+**Why the smithy is not `@zerwiz/smidja`:** that name was accepted twice by the
+registry and served never; it ships as `@zerwiz/smidja-factory`, which resolves.
+
+### A clone and a package are one tree
+
+Ymir runs the same either way; the only difference is where the apps live — a
+clone's `apps/<surface>`, or the package's `node_modules/@zerwiz/<surface>`. One
+resolver (`bin/app-lib.sh`) answers for both, so no script has to care which shape
+it woke in. Colour is for the eye, never for the pipe: `bin/ymir-style.sh` renders
+in the halls' own cloth, and what a pipeline reads on stdout stays plain TOON.
+
+### After it installs — the doors
+
+`npm install -g @zerwiz/ymir` puts **two** commands on your PATH: `ymir` and
+`ymir-install`. Everything else is a door on `ymir`, named for the figure whose
+work it does.
+
+```
+ymir                     first setup: the plan, then your word
+ymir raise | lower       lift the hall, or lay it down
+ymir hlidskjalf          the high seat's window
+ymir smidja              the smithy's board (:8437)
+ymir sessrumnir          the seat-hall's window
+ymir heimdall · invite   the way in, and letting someone else in
+ymir eir · groa          what stands and mending · take the latest and mend forward
+ymir mimir · sense · plan
+```
+
+A name the law has not given a home still answers, once, and tells you the name that
+has it: `ymir doctor` replies *the door is named `ymir eir` now*.
 
 ## The Lore (short version)
 
@@ -649,113 +728,3 @@ resolved from `$YMIR_HOME/secrets/platform.env` at runtime.
 
 ---
 
-## Install — the four doors
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash
-npx @zerwiz/ymir install          # no global install
-git clone https://github.com/zerwiz/ymir.git ~/Ymir && cd ~/Ymir && bin/ymir-install.sh
-npm install -g @zerwiz/ymir       # the CLI, global
-```
-
-**Who can install this today — everyone.** The distro is public; the four
-commands above are open, and the npm road is the smoothest: `npm i -g
-@zerwiz/ymir` stands the platform and its four surfaces (Hlidskjalf, Óðrerir,
-Sessrúmnir, Smíðja), and `ymir raise` lifts the hall. The ship is measured:
-the seat wears the cloth of the halls — stone and bone, bronze and blood —
-with no remnant of the fork it grew from.
-
-**Install now.** The installer is honest about what it cannot do, and says so the installer is honest about what it cannot do, and says so rather
-than pretending. Bring a Linux host (or let the Windows/macOS bootstraps give
-you one — see *Bringing your own machine* above), and read what the installer
-prints before you trust it.
-
-The npm package carries the runtime's `bin/` scripts and the installer; every
-`npm update -g @zerwiz/ymir` re-runs the same self-healing setup that provisions
-prerequisites, engines, and the Hlidskjalf seat. `@zerwiz/*` are the app
-packages (Hlidskjalf, Óðrerir, Sessrúmnir, Smíðja) — one per app.
-
-Private data never touches npm — all user data lives at `$YMIR_HOME` (the hoard
-at `hodd/` and the realms at `svartalfaheim/`) and syncs via the user's
-**private** GitHub repo, never a public one.
-
-### After it installs — the doors
-
-`npm install -g @zerwiz/ymir` puts **two** commands on your PATH: `ymir` and
-`ymir-install`. Everything else is a door on `ymir`, named for the figure whose
-work it does — because a great many doors either open or they do not, and a name
-that says whose hand is on it is the difference between guessing and knowing.
-
-```
-ymir                     first setup: the plan, then your word
-ymir raise | lower       lift the hall, or lay it down
-ymir hlidskjalf          the high seat's window
-ymir smidja              the smithy's board (:8437) — build · start · stop · status
-ymir sessrumnir          the seat-hall's window
-ymir heimdall            the way in — your credential (status · set · github)
-ymir invite              let someone else in — mint · list · revoke
-ymir eir                 what stands, and mend what does not
-ymir groa [migrate]      take the latest, and mend this home forward
-ymir mimir · sense · plan
-```
-
-A name the law has not given a home still answers, once, and tells you the name
-that has it: `ymir doctor` replies *the door is named `ymir eir` now*.
-
-**A long hour says so, in its own voice.** The installer opens with the plan and,
-when the work will take a while, tells you plainly:
-
-```
-◆ much moves   the halls are being stood up for the first time
-      this hour is long, and nothing of yours is lost in it —
-      roots come home, shapes are re-cut, names are set true again.
-      Your patience is noted, and it is earned.
-```
-
-### The packages — what is on npm
-
-Six names were published; five serve. The distro **depends on the four
-surfaces**, so one command brings the whole platform — and each can be installed
-alone if you want only that hall.
-
-```
-packages[5]{package,what,live}:
-  "@zerwiz/ymir","the distro — the runtime, the doors, the installer, the plan","0.1.12"
-  "@zerwiz/hlidskjalf","the high seat — the control plane, the gate and the landing","0.1.0"
-  "@zerwiz/odrerir","the live hall — the board on :4322","0.1.0"
-  "@zerwiz/smidja-factory","the smithy — the agent factory, its skills and the visualizer on :8437","0.1.1"
-  "@zerwiz/sessrumnir","the seat-hall — the desktop where you speak with Brokk","0.1.9"
-```
-
-```bash
-npm install -g @zerwiz/ymir          # the distro AND the four surfaces (dependencies)
-npm install -g @zerwiz/hlidskjalf    # or one hall on its own
-```
-
-**Why the smithy's name is not `@zerwiz/smidja`.** It was published under that
-name and the registry accepted it twice — `0.1.0`, then `0.1.1` — while serving
-neither: the package document answered 404, the website 403, and a republish was
-refused as *already published*. The name was retired and the smithy ships as
-**`@zerwiz/smidja-factory`**, which resolves. A second look before publishing
-costs less than explaining a name that never worked.
-
-### Both shapes — a clone and a package are one tree
-
-Ymir runs the same whether you **cloned** it or **installed** it from npm. The
-apps are the difference, and only in where they live:
-
-| | a clone | an npm install |
-|---|---|---|
-| the surfaces | `apps/hlidskjalf` · `odrerir` · `sessrumnir` · `smidja-factory` | `node_modules/@zerwiz/hlidskjalf` · `odrerir` · `sessrumnir` · `smidja-factory` |
-| how they got there | the registry's `repo: apps/<path>` block clones each | declared as dependencies of the distro |
-
-One resolver (`bin/app-lib.sh`) answers for both, so a script never has to care
-which shape it woke in — and the same is true of the smithy (`bin/smidja-lib.sh`)
-and of a desktop shell's runtime (`bin/electron-lib.sh`). The plan tells you which
-surfaces are present, which are declared but not yet fetched, and which have no
-package at all.
-
-**Colour is for the eye, never for the pipe.** `bin/ymir-style.sh` renders in the
-halls' own cloth — bone for words, bronze for what acts, steel for what stands,
-blood for what is wrong — and only when a human is watching (a terminal, no
-`NO_COLOR`). What a pipeline reads on stdout stays plain TOON.
