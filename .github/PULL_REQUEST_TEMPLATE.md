@@ -10,7 +10,8 @@
       `assets/reference/state/`, `.env.local`, `.env.realm` stay out of the tree.
 - [ ] A change to a governed path is reflected in its Galdr asset
       (see `.agents/skills/galdr-ymirsystem/SKILL.md`).
-- [ ] I updated `docs/masterplan.md` / `CHANGELOG.md` where the change warrants it.
+- [ ] I recorded a fix note under `docs/fixes/<component>/` (`bin/fixes.sh record`) …
+      or updated `docs/masterplan.md` where the change warrants it.
 
 ## Notes for reviewers
 

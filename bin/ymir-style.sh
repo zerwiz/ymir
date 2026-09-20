@@ -73,7 +73,17 @@ style_colour() {  # <state> → the colour for it
 notice_state() {  # <key> → on|off
   local key="$1" store line
   if [ -n "${YMIR_SETTINGS_DIR:-}" ]; then store="$YMIR_SETTINGS_DIR/notices.conf"
-  else store="${YMIR_HOME:-$HOME/Documents/Ymir}/config/notices.conf"; fi
+# The operator's home: env -> the recorded choice -> the ONE documented default
+# (Rule 07; the default lives in bin/hoard-lib.sh, never in a script).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _ymir_yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$(dirname "$_ymir_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_ymir_yc" ] && { . "$_ymir_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _ymir_yr _ymir_yc
+fi
+ymir_home_root YMIR_HOME
+  else store="${YMIR_HOME}/config/notices.conf"; fi
   [ -r "$store" ] || { printf 'on'; return 0; }
   line="$(grep -m1 "^${key}=" "$store" 2>/dev/null || true)"
   [ -n "$line" ] && printf '%s' "${line#*=}" || printf 'on'

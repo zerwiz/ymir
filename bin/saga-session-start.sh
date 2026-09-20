@@ -84,7 +84,17 @@ if [ -x "$SCRIPT_DIR/mimir-bridge.sh" ]; then
     printf 'well bridge: not up (see state/mimir-bridge.log)\n'
   fi
 fi
-if [ -r "${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/.env.realm" ]; then
+# The operator's home: env -> the recorded choice -> the ONE documented default
+# (Rule 07; the default lives in bin/hoard-lib.sh, never in a script).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _ymir_yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$(dirname "$_ymir_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_ymir_yc" ] && { . "$_ymir_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _ymir_yr _ymir_yc
+fi
+ymir_home_root YMIR_HOME
+if [ -r "${YMIR_HOME}/svartalfaheim/$REALM/.env.realm" ]; then
   printf 'realm env: present\n'
 elif [ -r "$ROOT/svartalfaheim/$REALM/.env.realm" ]; then
   printf 'realm env: present\n'
@@ -109,7 +119,7 @@ if [ -d "$STATE" ]; then
 else
   printf 'task metadata records: 0\n'
 fi
-MP="${BROKK_MASTERPLAN:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/docs/masterplan.md}"
+MP="${BROKK_MASTERPLAN:-${YMIR_HOME}/hodd/docs/masterplan.md}"
 if [ -r "$MP" ]; then
   open=$(grep -c '^- Status: ADDED' "$MP" 2>/dev/null || echo 0)
   printf 'open forge orders: %s\n' "${open:-0}"
@@ -132,7 +142,7 @@ emit_context "$DATA/learnings.md" "learnings"
 # The hood: the map of the Allfather's private + company holdings. Printed
 # whole from the realm seat so a session opens knowing the lay of the land.
 HOOD_FILE="$ROOT/svartalfaheim/$REALM/HOOD.md"
-[ -r "${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/HOOD.md"
+[ -r "${YMIR_HOME}/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="${YMIR_HOME}/svartalfaheim/$REALM/HOOD.md"
 emit_context "$HOOD_FILE" "hood"
 
 section "ASSET ROUTING"
