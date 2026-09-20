@@ -22,11 +22,20 @@ export default function well(pi: any) {
 
   /** One shape for every answer: a tool that throws teaches the model nothing. */
   async function call(path: string, init?: RequestInit) {
-    const res = await fetch(new URL(path, BRIDGE).toString(), {
-      ...init,
-      headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
-      signal: AbortSignal.timeout(15000),
-    });
+    let res: Response;
+    try {
+      res = await fetch(new URL(path, BRIDGE).toString(), {
+        ...init,
+        headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
+        signal: AbortSignal.timeout(15000),
+      });
+    } catch (e) {
+      // A refused or timed-out connection is NOT an HTTP answer — fetch rejects
+      // instead of returning a response. Shape it like one so every caller (the
+      // tools above, the probe below) reads the same "not ok" and says so
+      // plainly instead of throwing.
+      return { ok: false as const, status: 0, body: String((e as Error)?.message ?? e) };
+    }
     const body = await res.text();
     if (!res.ok) {
       return { ok: false as const, status: res.status, body: body.slice(0, 400) };
@@ -117,8 +126,16 @@ export default function well(pi: any) {
   // A session that cannot reach the well should say so once, plainly, rather than
   // let every later recall fail in silence.
   pi.on("session_start", async () => {
-    const r = await call("/health");
+    // The bridge is raised by saga-session-start.sh WHILE the digest runs, so a
+    // session can outrun its own well by a second or three. Probe a few times
+    // before declaring it down — a birth race is not an outage.
+    let r: { ok: boolean; status: number; body: string } = { ok: false, status: 0, body: "" };
+    for (let attempt = 0; attempt < 6 && !r.ok; attempt++) {
+      if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 1000));
+      r = await call("/health");
+    }
     if (!r.ok) {
+      console.error(`[ymir-well] the well did not answer (${r.status}): ${r.body}`);
       pi.registerMessageRenderer?.("ymir-well-offline", (m: any) => m);
       return;
     }
