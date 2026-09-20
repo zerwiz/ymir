@@ -905,7 +905,7 @@ business set: the backup carried `state`, `.env.local`, `data`, the realm and
 Before and after any migration, re-clone or swap, check the sets **by name**:
 
 ```bash
-for f in CHANGELOG.md docs/append-only-log.md workspace/memory/runes_audit.md; do
+for f in docs/fixes docs/append-only-log.md workspace/memory/runes_audit.md; do
   [ -e "$f" ] || echo "MISSING append-only artifact: $f"
 done
 ls "$YMIR_HOARD/docs" "$YMIR_HOARD/identity" 2>/dev/null    # the private set

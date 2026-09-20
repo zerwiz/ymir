@@ -21,8 +21,10 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
 
+# The operator's home: env -> the recorded choice -> the ONE documented default
+# (Rule 07). No literal here — a literal would win over the resolver below and
+# pin the machine to a dead path.
 # shellcheck source=bin/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
 ymir_home_root YMIR_HOME

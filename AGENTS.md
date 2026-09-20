@@ -48,8 +48,9 @@ once before any other instruction. Its digest is your startup and recovery input
 read it once and trust it. If the harness already injected the Sága digest, do not
 run it again. Start the Nornir jobs if the digest reports them stopped.
 
-**Changelog:** read `CHANGELOG.md` for recent runtime and policy changes; Brokk
-appends entries chronologically and never rewrites them.
+**Fixes:** read `docs/fixes/<component>/` for recent runtime and policy changes —
+**one file per fix**, never rewritten (`bin/fixes.sh list|show`; the component's
+directory is its history). The old `CHANGELOG.md` monolith is retired.
 
 ## Mandate
 
@@ -327,8 +328,9 @@ See `.agents/assets/agents/naming.md` for the full component map.
   a PR (a branch at that commit) before doing anything else.
   The gate is enforced in git hooks, seated by the install step `gates`:
   `bin/branch-guard.sh` refuses a push to a protected branch, and
-  `bin/changelog-guard.sh` refuses a push whose range never touches
-  `CHANGELOG.md` (`YMIR_SKIP_CHANGELOG_GUARD=1` is the loud override).
+  `bin/fixes-guard.sh` refuses a push whose range carries no new fix note in
+  `docs/fixes/` and names the component it covers (`YMIR_SKIP_FIXES_GUARD=1` is
+  the loud override).
 
 ## Hermes runtime (worker agents)
 
@@ -384,7 +386,7 @@ Not a name, a key, a plan, a schedule, a client, a credential, or a note-to-self
 Private data lives at **`$YMIR_HOME`** and nowhere else. This repo is public;
 the home is the vault.
 
-Everything private lives at **`$YMIR_HOME`** (default `~/Documents/Ymir`),
+Everything private lives at **`$YMIR_HOME`** (default `~/Documents/ymirhome`),
 env-driven, **never** in this repo. The real layout:
 
 ```
@@ -469,7 +471,8 @@ Law: `RULES/05-platforms.md`.
 Some records are the system's memory and are **appended to, never rewritten,
 never truncated, never lost in a move**: the Runes ledger
 (`$YMIR_HOME/hodd/memory/runes_audit.md`, chained by checksum),
-`CHANGELOG.md`, the rules themselves, and everything in `$YMIR_HOME`.
+the rules themselves, the fix notes (`docs/fixes/` — one file per fix), and
+everything in `$YMIR_HOME`.
 A correction is a **new** entry citing the old one. A migration, re-clone
 or backup **must carry every append-only artifact** and the private set —
 a move that drops one is a violation, not an accident. Verify the set

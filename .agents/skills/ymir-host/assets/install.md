@@ -39,8 +39,9 @@ A real interactive install asks once, and records the answer as machine state:
 ```
 
 Resolution order, always through `bin/hoard-lib.sh`:
-`$YMIR_HOME` → the recorded choice → `$HOME/Documents/Ymir` (the one documented
-default). `--check` never writes. `--yes` takes what is recorded, else the default.
+`$YMIR_HOME` → the recorded choice (`~/.config/ymir/home`) → `$HOME/Documents/ymirhome`
+(the ONE documented default, owned by `bin/hoard-lib.sh`). `--check` never writes.
+`--yes` takes what is recorded, else the default.
 
 To move an existing home to a new place, re-run the install with the new value:
 

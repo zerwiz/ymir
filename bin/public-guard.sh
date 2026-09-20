@@ -21,7 +21,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # The public tree scanned for private markers: shipped code, agent surfaces, docs.
 PUBLIC='^(apps/|bin/|scripts/|config/|midgard/|\.agents/|\.pi/|\.opencode/|AGENTS\.md|README\.md|TODO\.md|Structure\.md|CONTRIBUTING\.md|SECURITY\.md|NOTICE|docs/)'
 # Append-only records and archived reference material: history, never rewritten.
-APPEND_ONLY='(^CHANGELOG\.md$|^docs/append-only-log\.md$|^docs/plans/|^assets/reference/|^.agents/state/)'
+APPEND_ONLY='(^docs/fixes/|^docs/append-only-log\.md$|^docs/plans/|^assets/reference/|^.agents/state/)'
 # Operator-private markers that must never appear in a public file.
 # Note: the public owner identity — "zerwiz" the repo holder, its public domains,
 # and the project's own repo forms — is intentionally NOT private. What stays

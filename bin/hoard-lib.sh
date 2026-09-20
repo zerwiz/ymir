@@ -22,7 +22,7 @@ set -u
 
 # Where a machine records its choices (never in the repo, never in the home).
 YMIR_CONFIG_DIR="${YMIR_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/ymir}"
-YMIR_HOME_DEFAULT="${YMIR_HOME_DEFAULT:-$HOME/Documents/Ymir}"
+YMIR_HOME_DEFAULT="${YMIR_HOME_DEFAULT:-$HOME/Documents/ymirhome}"
 
 ymir_home_record() {  # <result-var> — the home recorded at installation, or empty
   local result_var=${1-} f="$YMIR_CONFIG_DIR/home"
