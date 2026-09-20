@@ -24,7 +24,6 @@ layout:
   smidja: "$YMIR_HOME/smidja"               # runtime only (ephemeral)
   state: "$YMIR_HOME/state"                 # runtime; stale-* drop storage
   data: "$YMIR_HOME/hodd/data"
-  svartalfaheim: "$YMIR_HOME/svartalfaheim" # realms — the company shelves
 git_repo: "$YMIR_HOME"
 github_repo: "zerwiz/ymirhome"              # the private home well (never public)
 secrets_encrypted: false
