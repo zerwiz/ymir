@@ -71,7 +71,7 @@ is_running() { [ -n "$(view_pids)" ]; }
 # classic `focuswindow class:...` form does not parse).
 focus_window() {
   command -v hyprctl >/dev/null 2>&1 || return 0
-  hyprctl dispatch "hl.dsp.focus({window=\"class:^sessrumnir\$\"})" >/dev/null 2>&1 || true
+  hyprctl dispatch "hl.dsp.focus({window=\"class:^ymir-sessrumnir\$\"})" >/dev/null 2>&1 || true
 }
 
 case "$ACTION" in
