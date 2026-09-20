@@ -93,7 +93,7 @@ workspace holds what a human reads: the brief, the notes, the reports, and a
   accident, and deleting a realm deletes exactly that tenant's world.
 - **The repo is publishable by construction.** It has no private path to leak,
   because no private path is inside it.
-- **Backup has a name.** The append-only set (Runes ledger, CHANGELOG, rules) and
+- **Backup has a name.** The append-only set (Runes ledger, fix notes, rules) and
   the private set live in one tree, so Rule 06's move-check is a listing.
 
 ## Decisions I need from you

@@ -43,6 +43,31 @@ runes_home() {  # <result-var>
   printf -v "$result_var" '%s' "$root"
 }
 
+runes_ymir_home() {  # <result-var> — the operator's home, resolved (Rule 07)
+  # env -> the recorded choice -> the ONE documented default, all owned by
+  # bin/hoard-lib.sh. Never a literal path in this file.
+  local result_var=${1-}
+  [ -n "$result_var" ] || return 2
+  if [ -n "${YMIR_HOME:-}" ]; then
+    printf -v "$result_var" '%s' "$YMIR_HOME"; return 0
+  fi
+  if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+    local _yr _yc
+    _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+      [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+    done
+    unset _yr _yc
+  fi
+  if command -v ymir_home_root >/dev/null 2>&1; then
+    ymir_home_root "$result_var"
+  else
+    printf 'error: cannot resolve YMIR_HOME — bin/hoard-lib.sh was not found near %s\n' "$0" >&2
+    printf -v "$result_var" '%s' ""
+    return 1
+  fi
+}
+
 runes_file_path() {  # <result-var>
   local result_var=${1-} home
   if [ -n "${BROKK_RUNES_FILE:-}" ]; then
@@ -51,7 +76,8 @@ runes_file_path() {  # <result-var>
   fi
   # The ledger lives with the hoard (the operator's private root), never beside
   # the scripts: an installed runtime may sit in a read-only package directory.
-  printf -v "$result_var" '%s' "${BROKK_RUNES_DIR:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/memory}/runes_audit.md"
+  runes_ymir_home home || return 1
+  printf -v "$result_var" '%s' "${BROKK_RUNES_DIR:-${home}/hodd/memory}/runes_audit.md"
 }
 
 runes_lock_path() {  # <result-var>

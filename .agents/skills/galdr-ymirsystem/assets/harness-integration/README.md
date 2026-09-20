@@ -715,6 +715,23 @@ deploying from a worktree records the worktree **and** keeps the durable root
 behind it. Nothing here is hardcoded — the record is written by the loader that
 performed the deploy (Rule 07).
 
+**The four extensions were fixed — and the lib module they import was not
+(2026-09-20).** The Sep 19 mend named "all four extensions"
+(`gna-pi-watch`, `syn-turnend-guard`, `ro`, `skuld-branch-supervision`) and left
+`rodd-operational-input.ts` — the shared **lib** module whose
+`encodeRoddOperationalInput()` those four call — still walking its own
+`../../../bin/rodd-operational-input.sh`. From the deployed home that resolved
+`${HOME}/.pi/bin/rodd-operational-input.sh`, which does not exist, so `spawnSync`
+failed, `encode` threw, and **no RÖDD operational input was injected at all** —
+not session-start, not watcher, not turn-end-guard, not branch-outcome. The fix is
+the same one the four already use: the lib module resolves through
+`resolveYmirRoot(resolve(dirname(import.meta.url), ".."))` — the extensions dir,
+where `.ymir-root` sits. Measured before the fix: `~/.pi/bin/` absent, no arm
+process, both heartbeats stale for days; after: the deployed helper resolves
+`/home/zerwizomar/ymir` and `bin/rodd-operational-input.sh encode session-start`
+emits a real frame. A deploy only takes effect in a **new** session — an already
+running session holds the code it loaded.
+
 Two consequences worth stating:
 
 - **Root and home are not the same thing.** The root owns `bin/`; the home owns

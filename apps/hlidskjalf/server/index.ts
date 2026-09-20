@@ -31,10 +31,19 @@ const AGENTS_ALT = existsSync(AGENTS_DIR) ? AGENTS_DIR : SUBAGENTS_DIR;
 const CONFIG_DIR = join(ROOT, '.agents/config');
 const STATE_DIR = join(ROOT, 'state');
 // The ledger lives in the HOARD, never in the checkout (Rule 04 / migration
-// 0004): $YMIR_HOARD, else $YMIR_HOME/hodd, else ~/Documents/Ymir/hodd.
-/** $YMIR_HOME — the hoard's home: where a realm's real tree lives. */
-const HOME_DIR = process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir');
-const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'hodd');
+// 0004): $YMIR_HOARD, else $YMIR_HOME/hodd, else the recorded home's hodd.
+/** $YMIR_HOME — the hoard's home: env -> the recorded choice -> ONE default
+ * (Rule 07; bin/hoard-lib.sh owns the record file and the default name). */
+const HOME_DIR = process.env.YMIR_HOME ?? (() => {
+  try {
+    const rec = readFileSync(join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), 'ymir', 'home'), 'utf8').trim().split('\n')[0].trim();
+    if (rec) return rec;
+  } catch {
+    // no record yet — fall through to the one documented default
+  }
+  return join(homedir(), 'Documents', 'ymirhome');
+})();
+const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'ymirhome'), 'hodd');
 const RUNES = join(HOARD, 'memory/runes_audit.md');
 const WELL = join(ROOT, '.agents/memory/well/episodes.jsonl');
 const MASTERPLAN = join(ROOT, 'docs/masterplan.md');
@@ -436,7 +445,7 @@ async function processes() {
 const SMIDJA_DB = (() => {
   if (process.env.SMIDJA_DB) return process.env.SMIDJA_DB;
   const candidates = [
-    join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'smidja', 'smidja.db'),
+    join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'ymirhome'), 'smidja', 'smidja.db'),
     join(ROOT, 'apps', 'smidja', 'smidja_data', 'smidja.db'),
   ];
   return candidates.find((c) => existsSync(c)) ?? candidates[1];

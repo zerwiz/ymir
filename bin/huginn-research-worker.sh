@@ -41,7 +41,7 @@ done
 mkdir -p "$OUTDIR"
 
 # Resolve env — source .env.local if present.
-for f in "$YMIR_ENV_FILE" "${YMIR_HOARD:-$HOME/Documents/Ymir}/.env.local"; do
+for f in "$YMIR_ENV_FILE" "${YMIR_HOARD:-$HOME/Documents/ymirhome}/.env.local"; do
   [ -f "$f" ] && . "$f" 2>/dev/null || true
 done
 
