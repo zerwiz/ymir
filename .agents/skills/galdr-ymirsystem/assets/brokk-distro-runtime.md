@@ -380,6 +380,17 @@ $YMIR_HOME/
 - `bin/hoard-lib.sh` → `hoard_root` = `$YMIR_HOARD`, else `$YMIR_HOME/hodd`.
 - `bin/realm-lib.sh` → root `$YMIR_HOME`; the realm marker is read from
   `hodd/data/realm.md`, and the realms live under `svartalfaheim/`.
+- **One resolver, every script** — `ymir_home_root` (env → the recorded choice in
+  `~/.config/ymir/home` → the ONE documented default). A script must **not** carry
+  its own default path: a literal `$HOME/Documents/…` both drifts from the recorded
+  home and, in `bin/smidja-board.sh`'s case, *won over* the resolver because it set
+  `YMIR_HOME` before the call, pinning the machine to a dead path. `bin/runes-append.sh`
+  (the ledger), `bin/ymir-validate.sh`, `bin/smidja-bootstrap.sh`, `bin/ymir-style.sh`,
+  `bin/saga-session-start.sh`, `bin/mimir-bridge.py`, `bin/bootstrap-macos.sh` and
+  `.agents/skills/lifecycle/smoke_test.sh` now resolve through the lib (2026-09-20).
+- `bin/gjallarhorn-expose.sh` — the tunnel **domain and suffix are the operator's**,
+  read from `$YMIR_HOME/config/tunnel.env` (env wins); the public tree carries no
+  operator domain as a default.
 - The Sága digest reads the realm env and the realm's HOOD file from
   `$YMIR_HOME/svartalfaheim/<realm>/`, never from the checkout.
 - The daily briefing writes into the realm's `workspace/memory/daily/`; memory
