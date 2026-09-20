@@ -1,4 +1,4 @@
-## agents · 2026-09-20 · 2026-09-20 — the well raises no alarm on its own birth race
+## agents · unversioned · 2026-09-20 — the well raises no alarm on its own birth race
 
 ### Why
 - **The `ymir-well` extension crashed at session start with an unhandled
