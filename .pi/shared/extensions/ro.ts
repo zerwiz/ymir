@@ -62,6 +62,7 @@ import {
   setCalmPresentation,
   setCalmStockExportRendering,
 } from "./lib/ro-visibility.ts";
+import { resolveYmirRoot } from "./lib/ymir-home.ts";
 
 type DefinitionFactory<TParams extends TSchema, TDetails, TState> = (
   cwd: string,
@@ -91,7 +92,9 @@ type StandardShellState = {
 
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
-const root = resolve(extensionDir, "../..");
+// The distro root comes from the deploy-time record (`.ymir-root`), never from
+// walking up out of the deployed extension home. See lib/ymir-home.ts.
+const root = resolveYmirRoot(extensionDir);
 
 // Resolves symlinks before comparing tool-ownership identity below: sourceInfo.path
 // values come from independent path-resolution code paths (this module's own

@@ -685,6 +685,52 @@ whenever the Pi surface is bound, with or without `--global`. Adding a shared
 extension is therefore two steps: put the source in `.pi/shared/extensions/`, and
 let the loader place it — **never** place it in `.pi/extensions/`.
 
+**The deployed copy must be told where `bin/` is (2026-09-19).** A deploy that
+copies an extension without telling it where its own `bin/` lives is not a deploy.
+Every extension resolved its distro root as `resolve(extensionDir, "../..")` — and
+from `${HOME}/.pi/agent/extensions/` that reaches `${HOME}/.pi`, which holds pi's
+own config and **no `bin/` at all**. Each `${root}/bin/…` they exec'd was a path
+that did not exist, and the failure was silent by construction: the Gná arm child
+exited **127 before its first poll**, no `state/.watch.heartbeat` was ever written,
+and the watch was dead while every file listing looked correct. The Sága digest was
+never injected either — the turn-end guard spawns `${root}/bin/saga-sessionstart-run.sh`
+from that same root.
+
+The root is now **recorded at deploy time**: `bin/valknut-load.sh --pi` writes one
+absolute root per line — most recent first, deduped, capped — to
+`${HOME}/.pi/agent/extensions/.ymir-root`, and `.pi/extensions/lib/ymir-home.ts`
+reads it back for all four extensions (`gna-pi-watch`, `syn-turnend-guard`, `ro`,
+`skuld-branch-supervision`). Resolution order:
+
+```
+1. BROKK_ROOT_OVERRIDE · BROKK_HOME · YMIR_ROOT   — an explicit word wins
+2. the recorded roots, first one that verifies
+3. resolve(extensionDir, "../..")                 — the pre-pointer contract
+```
+
+A candidate counts only if it really holds `bin/syn-watch-arm.sh`, so a root that
+no longer exists (a merged-and-removed Yggdrasil worktree, an uninstalled npm
+prefix) is skipped rather than trusted. That is why the record is a *list*:
+deploying from a worktree records the worktree **and** keeps the durable root
+behind it. Nothing here is hardcoded — the record is written by the loader that
+performed the deploy (Rule 07).
+
+Two consequences worth stating:
+
+- **Root and home are not the same thing.** The root owns `bin/`; the home owns
+  `state/` and `config/`. They are usually one tree and need not be — a private
+  `$YMIR_HOME` has no `bin/` of its own, and conflating the two is exactly what
+  made a deployed copy exec a path that never existed.
+- **A worktree deploy never repoints the global contract.** `valknut-load.sh`
+  symlinks `~/.pi/agent/AGENTS.md` at the tree it ran from; pointed into
+  `.yggdrasil/<id>` it would die with the worktree and leave every later session
+  with no contract at all. It now repoints only when the current target is already
+  gone.
+
+`bin/eir-doctor.sh` carries the **`harness`** surface, so this is diagnosed rather
+than discovered: a record with no live root is `broken`, and `fix` re-runs
+`valknut-load.sh --pi`. `bin/valknut-load.sh --status` reports the same row.
+
 ## OpenCode agent `tools` key (2026-09-12)
 
 OpenCode requires the frontmatter `tools:` key to be an **object** of its own

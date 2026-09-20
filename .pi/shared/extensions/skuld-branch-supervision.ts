@@ -54,7 +54,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 // Pi exposes pi-ai to extensions as a first-class module in both its Node
 // and compiled-binary loaders, the same standing as pi-tui and typebox
@@ -102,10 +102,14 @@ import {
   classifyRoddOperationalText,
   encodeRoddOperationalInput,
 } from "./lib/rodd-operational-input.ts";
+import { resolveYmirRoot } from "./lib/ymir-home.ts";
 
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
-const root = resolve(extensionDir, "../..");
+// The distro root comes from the deploy-time record (`.ymir-root`), never from
+// walking up out of the deployed extension home — every `bin/` script this file
+// execs (branch prompt, outcome, lease, wake grant) hangs off it.
+const root = resolveYmirRoot(extensionDir);
 const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
 const fmRoot = process.env.BROKK_ROOT_OVERRIDE || root;
 const state = process.env.BROKK_STATE_OVERRIDE || `${fmHome}/state`;
