@@ -124,6 +124,10 @@ Resolution order used by every script (all overridable):
 
 The source is passed with `--source` or parsed from a Claude/Codex-shaped JSON hook payload on stdin (`"source":"startup"` etc.).
 
+Before routing, the runner raises the Mimirsbrunn well bridge
+(`bin/mimir-bridge.sh --start`, idempotent) so `:4602` listens on **every** open —
+the well extension's `session_start` probe finds it up even on a re-emit or nudge.
+
 ### 3.2 Harness adapter matrix
 
 | Harness | Surface | Mechanism | Tier |
