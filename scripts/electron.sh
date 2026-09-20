@@ -25,9 +25,9 @@ fi
 
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "
+ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # A fresh package install has no state/ yet — the door must stand it up.
-mkdir -p "$ROOT/state"$SCRIPT_DIR/.." && pwd)"
+mkdir -p "$ROOT/state"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
 # npm install — both shapes, one resolver (bin/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then

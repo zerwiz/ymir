@@ -88,10 +88,21 @@ PORT="${HLIDSKJALF_PORT:-3888}"
 
 mkdir -p "$RUN"
 
-if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null && curl -s -o /dev/null --max-time 2 "http://127.0.0.1:${PORT}/" 2>/dev/null; then
   echo "Hlidskjalf already running (pid $(cat "$PID_FILE")) → http://127.0.0.1:${PORT}/"
   SPA_UP=1
 else
+  # A live pid is not a serving hall: a dev server bound to a foreign port (or
+  # dead) answers nothing, and a stale pid file that passes `kill -0` would then
+  # skip the raise and leave a window pointing at a dead URL. The port is the
+  # truth; a pid that does not serve it is a ghost — purge its record (a guard
+  # against killing an unrelated process: only the pid WE recorded is touched).
+  if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    echo "Hlidskjalf pid $(cat "$PID_FILE") lives but :${PORT} does not answer — treating as stale, re-raising" >&2
+    kill "$(cat "$PID_FILE")" 2>/dev/null || true
+    sleep 0.5
+  fi
+  rm -f "$PID_FILE"
   SPA_UP=0
 fi
 
@@ -293,9 +304,9 @@ for _ in $(seq 1 30); do
     # 'ymir raise' stands the whole hall: the high seat, the board, the
     # smithy's eye, and the seat-hall.
     if [ -n "${WAYLAND_DISPLAY:-${DISPLAY:-}}" ]; then
-      "$SCRIPT_DIR/electron.sh" start --view hlidskjalf >/dev/null 2>&1 &
-      "$SCRIPT_DIR/electron.sh" start --view odrerir >/dev/null 2>&1 &
-      "$SCRIPT_DIR/electron.sh" start --view smidja >/dev/null 2>&1 &
+      "$ROOT/scripts/electron.sh" start --view hlidskjalf >/dev/null 2>&1 &
+      "$ROOT/scripts/electron.sh" start --view odrerir >/dev/null 2>&1 &
+      "$ROOT/scripts/electron.sh" start --view smidja >/dev/null 2>&1 &
       "$ROOT/bin/ymir.js" sessrumnir >/dev/null 2>&1 &
     fi
     echo "Hlidskjalf raised (pid $PID) → http://127.0.0.1:${PORT}/"
