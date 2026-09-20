@@ -1,3 +1,44 @@
+
+
+## 2026-09-19 — a deployed extension is told where its `bin/` is, so the watch can arm
+
+- **The arm never armed on a deployed machine.** Every Pi extension resolved its
+  distro root as `resolve(extensionDir, "../..")`; from
+  `${HOME}/.pi/agent/extensions/` that reaches `${HOME}/.pi` — a directory that
+  holds pi's own config and **no `bin/` at all**. So `~/.pi/bin/syn-watch-arm.sh`
+  was exec'd, did not exist, and the Gná arm child died with **exit 127 before its
+  first poll**: no `state/.watch.heartbeat` was ever written on the machine, and the
+  watch was dead while every file listing looked correct. The Sága digest was never
+  injected either — the turn-end guard spawns its runner from that same root.
+- **The root is now recorded at deploy time and read back.** `bin/valknut-load.sh
+  --pi` writes one absolute root per line (most recent first, deduped, capped) to
+  `${HOME}/.pi/agent/extensions/.ymir-root`; `.pi/extensions/lib/ymir-home.ts`
+  reads it for all four extensions (`gna-pi-watch`, `syn-turnend-guard`, `ro`,
+  `skuld-branch-supervision`). A candidate counts only if it really holds
+  `bin/syn-watch-arm.sh`, so a merged-and-removed worktree root is skipped instead
+  of trusted — the record is a *list* for exactly that reason.
+- **Root and home are now separate in name and in fact:** the root owns `bin/`, the
+  home owns `state/` and `config/`. A private `$YMIR_HOME` has no `bin/` of its own,
+  and conflating the two is what made a deployed copy exec a path that never existed.
+- **A worktree deploy no longer repoints the global contract.** The
+  `~/.pi/agent/AGENTS.md` symlink is rewritten only when its current target is
+  already gone, so deploying from `.yggdrasil/<id>` cannot leave every later session
+  without a contract.
+- **Eir gained a `harness` surface** (`bin/eir-doctor.sh`): a record with no live
+  root is reported broken, and `fix` re-runs `valknut-load.sh --pi`.
+  `bin/valknut-load.sh --status` reports the same row.
+- **The pre-push gate now judges the tree being pushed.** The installed hook had the
+  installing tree baked in, so a push from a Yggdrasil worktree ran the main tree's
+  gate — and, because git exports `GIT_DIR` to hooks, `git -C <main tree>` compared
+  the worktree's index against the main tree's files and refused the push as
+  "dirty" on a clean tree. The hook resolves its tree at runtime and pins
+  `--git-dir`/`--work-tree`, so no tree is baked in and an exported `GIT_DIR` cannot
+  cross trees; `--install` now seats it in the common git dir, so it can be
+  installed from any worktree at all.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`
+— the deployed-extension root record, the resolver, and the worktree contract guard.
+
 ## 2026-09-19 — no deploys: we have downloads, and one tunnel
 
 - `deploy-staging.yml` fired on every push to main, failed every time (every run since
@@ -9,6 +50,7 @@
   npm; the only reach is the Gjallarhorn tunnel onto his own machine.
 - A pipeline that fails silently on every merge and produces nothing anyone uses is the same
   fault as a mark counted from a log line: it looks like work and reports nothing true.
+
 
 ## 2026-09-19 — a third view: Óðrerir joins the shell's window
 
@@ -220,7 +262,6 @@
 - **The fault the Allfather hit:** `npm install -g @zerwiz/ymir` reported *"changed 200 packages"* and changed nothing — npm resolved a **cached `latest`**, saw the same version, and left the old build in place. The installed copy stayed 0.1.14 while the registry served 0.1.26, and nothing told the user. With 750+ downloads, that is not a detail.
 - **The CLI now says when it is out of date** — once a day, on a terminal, silenced by the same `ymir config notice version off` as every other notice: *"a newer Ymir is on npm 0.1.14 → 0.1.26 · update: npm i -g @zerwiz/ymir"*.
 - **The one-liner is cache-proof**: it installs `@latest` with `--prefer-online`, so a stale packument cannot strand a fresh machine.
-
 
 ## 2026-09-17 — the installer actually installs (the whole platform, then proves it)
 
