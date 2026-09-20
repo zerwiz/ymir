@@ -31,7 +31,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 BRIDGE="$ROOT/bin/mimir-bridge.py"
 # The well is ONE memory and it lives in the hoard — always. An explicit
 # ENGRAM_DB is the operator's escape hatch; without it the hoard decides.

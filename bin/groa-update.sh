@@ -24,7 +24,7 @@ set -u
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 # The registry lives in the hoard (RULES/04-hoard.md; correction 2026-09-17).
 # Resolve through hoard-lib so the path can never drift again.
 if [ -r "$SCRIPT_DIR/hoard-lib.sh" ]; then

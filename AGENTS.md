@@ -384,7 +384,7 @@ Not a name, a key, a plan, a schedule, a client, a credential, or a note-to-self
 Private data lives at **`$YMIR_HOME`** and nowhere else. This repo is public;
 the home is the vault.
 
-Everything private lives at **`$YMIR_HOME`** (default `~/Documents/Ymir`),
+Everything private lives at **`$YMIR_HOME`** (default `~/Documents/ymirhome`),
 env-driven, **never** in this repo. The real layout:
 
 ```

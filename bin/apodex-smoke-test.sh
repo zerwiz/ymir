@@ -29,7 +29,7 @@ hoard_settings_dir YMIR_SETTINGS_DIR
 hoard_local_env YMIR_ENV_FILE
 
 # Source env if available (project .env.local first, then the private hoard).
-for f in "$YMIR_ENV_FILE" "${YMIR_HOARD:-$HOME/Documents/Ymir}/.env.local"; do
+for f in "$YMIR_ENV_FILE" "${YMIR_HOARD:-$HOME/Documents/ymirhome}/.env.local"; do
   [ -f "$f" ] && . "$f" 2>/dev/null || true
 done
 
