@@ -479,6 +479,14 @@ GET  /inspect                -> {episodes, agents, store}
 POST /observe {content,...}  -> {id}
 ```
 
+The Pi extension `ymir-well.ts` (shared, deployed) drinks over this same bridge.
+Its `session_start` probe retries `/health` up to six times at one-second spacing
+because the bridge is raised by `bin/saga-session-start.sh` **while** the digest
+runs — a session can outrun its own well by a second or three, and a birth race
+is not an outage. A refused or timed-out connection is shaped as the same
+`{ok:false}` answer every HTTP miss uses (status 0), so `well_recall` /
+`well_observe` report a down well into the thread instead of throwing out of it.
+
 **MCP server (stdio)** — `engram-mcp --db <store> --agent-id <harness>`, so any
 MCP-capable harness gets `remember`, `recall`, `why`, `forget`, `stats` with no
 integration code. Registered per harness (each writes under its own agent id):
