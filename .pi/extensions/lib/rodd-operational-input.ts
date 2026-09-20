@@ -7,10 +7,19 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+// The deploy-time root record (`.ymir-root`, written by bin/valknut-load.sh) — a
+// DEPLOYED copy cannot find the tree's bin/ by walking up (it reaches
+// ${HOME}/.pi, which holds no bin/), so the root is read back from the record.
+// This module lives in the extensions' lib/, and the record sits beside the
+// extensions, so resolve from THAT dir. Relative + recorded, never hardcoded.
+import { resolveYmirRoot } from "./ymir-home.ts";
+
+const extensionDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const ymirRoot = resolveYmirRoot(extensionDir);
 
 const operationalInputScript =
   process.env.RODD_OPERATIONAL_INPUT_SCRIPT ||
-  resolve(dirname(fileURLToPath(import.meta.url)), "../../../bin/rodd-operational-input.sh");
+  resolve(ymirRoot, "bin", "rodd-operational-input.sh");
 
 export const RODD_CURRENT_OPERATIONAL_KINDS = [
   "session-start",
