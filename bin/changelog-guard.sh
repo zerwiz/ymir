@@ -126,7 +126,12 @@ case "${1:-}" in
   -v|-V|--version) printf '1.0.0\n'; exit 0 ;;
   -h|--help) usage ;;
   --install)
-    hook="$ROOT/.git/hooks/pre-push"
+    # The hook lives in the COMMON git dir: `git push` reads hooks from there, and
+    # every worktree shares them. `$ROOT/.git/hooks` is a path under a FILE in a
+    # linked worktree, so the old path could not even seat the gate from one.
+    common="$(git -C "$ROOT" rev-parse --git-common-dir 2>/dev/null || printf '.git')"
+    case "$common" in /*) ;; *) common="$ROOT/$common" ;; esac
+    hook="$common/hooks/pre-push"
     mkdir -p "$(dirname "$hook")" || exit 1
     cat >"$hook" <<EOF
 #!/usr/bin/env bash
@@ -140,17 +145,25 @@ set -u
 refs="\$(mktemp)"
 trap 'rm -f "\$refs"' EXIT
 cat >"\$refs"
-if [ -x "$SCRIPT_DIR/changelog-assemble.sh" ]; then
-  "$SCRIPT_DIR/changelog-assemble.sh" >/dev/null 2>&1 || true
+# The gate judges the tree being PUSHED, resolved now. Hooks live in the common
+# .git/hooks and are shared by every worktree, so a root baked in at install time
+# made a worktree push read the MAIN tree — and because git exports GIT_DIR to
+# hooks, a plain 'git -C <other tree>' compared one tree's index against another
+# tree's files and refused the push as "dirty". Never bake in a tree; never let
+# the exported GIT_DIR cross trees.
+root="\$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+git_at() { git --git-dir="\$root/.git" --work-tree="\$root" "\$@"; }
+if [ -x "\$root/bin/changelog-assemble.sh" ]; then
+  "\$root/bin/changelog-assemble.sh" >/dev/null 2>&1 || true
   # If folding changed the ledger, it is now a working-tree change the push does
   # not carry. Say so loudly rather than pushing a ledger the fragments are not in.
-  if ! git -C "$ROOT" diff --quiet -- "$CHANGELOG" 2>/dev/null; then
+  if ! git_at diff --quiet -- "$CHANGELOG" 2>/dev/null; then
     printf 'changelog-assemble[1]{state}:\n  "folded fragments into %s — commit it, then push again"\n' "$CHANGELOG" >&2
     exit 1
   fi
 fi
-"$SCRIPT_DIR/branch-guard.sh" <"\$refs" || exit 1
-"$SCRIPT_DIR/changelog-guard.sh" <"\$refs" || exit 1
+"\$root/bin/branch-guard.sh" <"\$refs" || exit 1
+"\$root/bin/changelog-guard.sh" <"\$refs" || exit 1
 exit 0
 EOF
     chmod +x "$hook"
