@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Óðrerir — The Live Hall · Ymir</title>
+<meta name="description" content="Óðrerir — the Ymir fleet's planning glass, carved into the cloth: the tally of the hall, the armed errands dealt one slate at a time, the smiths and their states, and the carved ledger of what is underway, landed and charted. Read live, read-only — the write door stays inside the hall.">
+<meta name="author" content="Ymir">
+<meta name="robots" content="index,follow">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://hall.ymir.zerwiz.org/">
+
+<!-- icons — the carved cloth: stone and bronze -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#c9973f">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0e0c09">
+<meta name="msapplication-TileColor" content="#0e0c09">
+<meta name="apple-mobile-web-app-title" content="Óðrerir">
+
+<!-- Open Graph — Facebook, WhatsApp, Telegram, LinkedIn, Slack, Discord, iMessage -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ymir — Óðrerir">
+<meta property="og:title" content="Óðrerir — The Live Hall">
+<meta property="og:description" content="The fleet's planning glass, carved into the cloth — read live, dealt by hand, never a write door.">
+<meta property="og:url" content="https://hall.ymir.zerwiz.org/">
+<meta property="og:image" content="https://hall.ymir.zerwiz.org/og.png">
+<meta property="og:image:secure_url" content="https://hall.ymir.zerwiz.org/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Óðrerir — the Live Hall, cut in stone and bronze">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Óðrerir — The Live Hall">
+<meta name="twitter:description" content="The fleet's planning glass, carved into the cloth — read live, dealt by hand, never a write door.">
+<meta name="twitter:image" content="https://hall.ymir.zerwiz.org/og.png">
+<meta name="twitter:image:alt" content="Óðrerir — the Live Hall, cut in stone and bronze">
+
+<!-- the glass reads this same snapshot; the link says so -->
+<link rel="alternate" type="application/json" href="/livehall.json" title="the hall's own snapshot">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..500&family=Noto+Sans+Runic&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/cloth.css">
+<link rel="stylesheet" href="/styles/livehall.css">
+</head>
+<body>
+
+<!-- the hearth — the landing page's fire, warming the hall (shared midgard/design-system/ember.js) -->
+<canvas data-ember aria-hidden="true"
+  style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
+<script type="module">
+  import { startAllEmbers } from '../../../midgard/design-system/ember.js';
+  startAllEmbers();
+</script>
+
+<!-- ======= TOPBAR — the hall's own deck ======= -->
+<div class="hall-top">
+  <span><span class="rn">ᛈ</span>YMIR · ÓÐRERIR — THE LIVE HALL</span>
+  <a class="hall-back" href="https://ymirdell.zerwiz.org/" rel="noopener" title="the saga — ymirdell.zerwiz.org" aria-label="Back to the lore — the saga of Ymir">← the lore</a>
+</div>
+
+<!-- ================= ÓÐRERIR — THE LIVE HALL =================
+     The fleet's board on its own deck: the same machinery that drives the
+     /bearings board inside the hall, rebuilt in the carved cloth the landing
+     is cut from (cloth.css is extracted from the landing's :root; the kit is
+     livehall.css). Ported function-for-function: tally strip, the dealt call
+     stack with recommended marks + freeform + the 512-byte queue guard, the
+     carved ledger of underway / landed / charted thread rows, the dispatch
+     picker, stack navigation, fail-closed render.
+     HARD LINE: the public face is READ-ONLY. No visitor path writes to a hold;
+     an answer queued here is held in this page alone. The cards ask the saga's
+     own gates, and the tally is the saga's own count, told honestly.
+-->
+<main class="hall-wrap" id="livehall" aria-labelledby="lh-h2">
+  <header class="shead rv">
+    <span class="snum rn" aria-hidden="true">ᛈ</span>
+    <p class="skicker"><span class="rn">ᛈ</span>óðrœrir · the mead of poetry</p>
+    <h1 id="lh-h2">The Live Hall</h1>
+    <p class="ssub">the fleet's planning glass, carved into the cloth — read live, dealt by hand, never a write door</p>
+  </header>
+
+  <div class="prose rv">
+    <p>The hall keeps its own board, and it is the same one the fleet's mornings are read from: a tally
+    of what stands, one call dealt at a time off a slate pile, and a carved ledger of what is underway,
+    what has landed, and what is charted next. Every part of that board is here — rebuilt in the stone
+    the rest of this page is cut from, with its own machinery intact.</p>
+  </div>
+  <div class="prose rv">
+    <p>What it deals are the hall's own errands — the work the fleet has armed, the smith who holds
+    each one, and the carved ledger of what is underway, what has landed and what is charted next.
+    Nothing here is a door: a word queued on this page stays in this page alone, and the hall's own
+    board is where an errand is armed or released. If no snapshot is at hand the saga's own count
+    stands in its place, and says so.</p>
+  </div>
+
+  <div class="lh-board rv">
+    <noscript><p class="lh-nojs">The hall's board is dealt by script. Without it the tally stands
+    unwritten and the slates stay in the pile — the fleet's own board is where the machinery runs.</p></noscript>
+
+    <div class="lh-tally" id="lh-tally" aria-label="The tally of the hall"></div>
+    <div class="lh-smiths" id="lh-smiths" aria-label="The smiths of the hall"></div>
+    <p class="lh-count" id="lh-count"></p>
+
+    <div class="lh-cols">
+      <section class="lh-sec" aria-label="The hall's call — one slate at a time">
+        <div class="lh-sec-head">
+          <span class="lh-eyebrow"><span class="rn">ᚲ</span>the hall's call</span>
+          <span class="lh-sub" id="lh-call-sub"></span>
+        </div>
+        <div class="lh-callwrap">
+          <div class="lh-call" id="lh-call"></div>
+          <!-- the nav sits under the pile so the dealt slate's top edge lines up
+               with the charted slate across the row -->
+          <div class="lh-stacknav">
+            <span class="lh-stacknav__count" id="lh-stack-count" aria-live="polite">-</span>
+            <button type="button" class="lh-stacknav__btn" id="lh-stack-prev" aria-label="Previous slate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="lh-stacknav__btn" id="lh-stack-next" aria-label="Next slate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="lh-note">a word queued here is <b>held in this page</b> — the hall's own board is where
+        a word becomes work</p>
+      </section>
+
+      <section class="lh-sec" aria-label="Charted next — the lanes waiting on a dispatch">
+        <div class="lh-sec-head">
+          <span class="lh-eyebrow"><span class="rn">ᛚ</span>charted next</span>
+          <span class="lh-sub" id="lh-charted-sub"></span>
+        </div>
+        <div class="lh-slate lh-slate--warm">
+          <div class="lh-rows" id="lh-charted"></div>
+          <div class="lh-dispatch" id="lh-dispatch" hidden>
+            <span class="lh-dispatch__count" id="lh-dispatch-count">nothing picked</span>
+            <span class="lh-queued" id="lh-dispatch-queued">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+              queued
+            </span>
+            <button type="button" class="lh-btn lh-btn--gold" id="lh-dispatch-btn">Queue the dispatch</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="lh-cols">
+      <section class="lh-sec" aria-label="Underway — what the hall keeps running">
+        <div class="lh-sec-head">
+          <span class="lh-eyebrow"><span class="rn">ᚠ</span>underway</span>
+          <span class="lh-sub" id="lh-underway-sub">kept by the hall</span>
+        </div>
+        <div class="lh-slate"><div class="lh-rows" id="lh-underway"></div></div>
+      </section>
+
+      <section class="lh-sec" aria-label="Recently landed — the carvings that stand">
+        <div class="lh-sec-head">
+          <span class="lh-eyebrow"><span class="rn">ᛏ</span><span id="lh-landed-k">landed as carvings</span></span>
+          <span class="lh-sub" id="lh-landed-sub">the saga's thirteen</span>
+        </div>
+        <div class="lh-slate"><div class="lh-rows" id="lh-landed"></div></div>
+      </section>
+    </div>
+
+    <div class="lh-provenance">
+      <span class="lh-asof" id="lh-asof">—</span>
+      <button type="button" class="lh-btn lh-btn--sm lh-refresh" id="lh-refresh" aria-label="Read the hall again"><span class="rn">ᛚ</span>Read again</button>
+    </div>
+  </div>
+</main>
+
+<footer class="hall-foot">
+  <div class="frule" aria-hidden="true"><span>ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</span></div>
+  <p class="hall-foot-big">One call at a time — the board is shown, not written.</p>
+  <p class="hall-foot-close">a word queued here stays in this page<br>
+  the write door stays inside the hall</p>
+</footer>
+
+<!-- the board's payload: the saga's own gates and counts, no private names -->
+<script id="lh-saga" type="application/json">
+{
+  "schema": "ymir-livehall.v1",
+  "source": "saga",
+  "generated": "the saga, v2",
+  "smiths": ["brokk", "sindri", "bragi", "huginn", "mimir", "kvasir", "forseti", "snotra", "galdr"],
+  "houses": ["ymir labs", "brokk forge", "runestone labs", "muninn labs", "dvalin", "utgard studios", "askr", "mannheim"],
+  "captains_call": [
+    {
+      "key": "hall.forge",
+      "type": "decision",
+      "repo": "the forge",
+      "title": "What does the fleet forge next?",
+      "about": "the forge takes one order at a time — the smiths do not begin blind",
+      "decide": "which house's work the next blow falls on",
+      "recommend_value": "brokk",
+      "allow_freeform": true,
+      "freeform_hint": "or name the work in your own words…",
+      "options": [
+        { "value": "brokk", "label": "Brokk Forge", "hint": "engineering & build tooling — isolated workers drive the task to a finished artifact" },
+        { "value": "runestone", "label": "Runestone Labs", "hint": "records & compliance — the ledger and the gates; every action is inscribed" },
+        { "value": "muninn", "label": "Muninn Labs", "hint": "memory & knowledge — the well and its engine; what is observed is remembered" },
+        { "value": "utgard", "label": "Utgard Studios", "hint": "creative — shaped outside the walls, sealed and destroyed after each run" }
+      ]
+    },
+    {
+      "key": "hall.engine",
+      "type": "decision",
+      "repo": "the answer",
+      "title": "Which engine answers this task?",
+      "about": "no plan is spun from air — the answer is chosen before the work begins",
+      "decide": "where the task is answered",
+      "recommend_value": "local",
+      "allow_freeform": false,
+      "options": [
+        { "value": "local", "label": "The hand on the machine", "hint": "a keyless model runs local — the work never leaves the hall" },
+        { "value": "hosted", "label": "The far seeing", "hint": "a hosted model answers; the task crosses the bridge" },
+        { "value": "sealed", "label": "The walled realm", "hint": "the task runs sealed in Utgard and is believed only when the artifact returns" },
+        { "value": "well", "label": "The well", "hint": "the answer is drunk from memory before a single blow is struck" }
+      ]
+    },
+    {
+      "key": "hall.gate",
+      "type": "decision",
+      "repo": "the crossing",
+      "title": "Which gate does the crossing take?",
+      "about": "every crossing into Ymir passes over a gate; nothing bleeds between the halls",
+      "decide": "the road this work travels",
+      "recommend_value": "bifrost",
+      "allow_freeform": false,
+      "options": [
+        { "value": "bifrost", "label": "Bifrost", "hint": "the burning bridge — the ingress every crossing passes over" },
+        { "value": "svartalfaheim", "label": "Svartalfaheim", "hint": "the tenant halls — sandbox_isolated; nothing bleeds between halls" },
+        { "value": "utgard", "label": "Utgard", "hint": "the walled outside — docker_ephemeral, sealed and destroyed after each task" },
+        { "value": "ratatoskr", "label": "Ratatoskr", "hint": "the event stream — every word between gates, announced and carved" }
+      ]
+    },
+    {
+      "key": "hall.rune",
+      "type": "decision",
+      "repo": "the ledger",
+      "title": "What is carved into the ledger?",
+      "about": "the runes are carved once and cannot be un-carved",
+      "decide": "what the day's record will keep",
+      "recommend_value": "evidence",
+      "allow_freeform": true,
+      "freeform_hint": "or inscribe it in your own words…",
+      "options": [
+        { "value": "act", "label": "The act and its actor", "hint": "who struck, and what was struck" },
+        { "value": "reason", "label": "The reason", "hint": "why the blow fell where it did" },
+        { "value": "evidence", "label": "The evidence", "hint": "nothing passes without evidence from the well — what is spun from air is not forged" },
+        { "value": "seal", "label": "The seal", "hint": "the word of the one who approved it, kept in the human loop" }
+      ]
+    }
+  ],
+  "underway": [
+    { "state": "working", "doing": "The forge is lit", "kind": "the hearth", "repo": "tended, never relit" },
+    { "state": "working", "doing": "The watch is set", "kind": "the ward", "repo": "one who sees does not sleep" },
+    { "state": "drawn", "doing": "The nornir are at their loom", "kind": "the seating", "repo": "schedule · select · source" }
+  ],
+  "landed": [
+    { "what": "The Creation", "repo": "ᚢ · the firth", "owner": "§I" },
+    { "what": "The Builders", "repo": "ᚲ · the smiths", "owner": "§II" },
+    { "what": "The Tree & the Seven Gates", "repo": "ᛇ · the trunk", "owner": "§III" },
+    { "what": "The Well", "repo": "ᛚ · the memory", "owner": "§IV" },
+    { "what": "The Artifacts", "repo": "ᛏ · the ledger", "owner": "§V" },
+    { "what": "The Houses", "repo": "ᛟ · the seals", "owner": "§VI" },
+    { "what": "The Forge-Master's Rule", "repo": "ᚠ · the anvil", "owner": "§VII" },
+    { "what": "The Reforging", "repo": "ᛒ · the strike", "owner": "§VIII" },
+    { "what": "The Frame", "repo": "ᛞ · the laws", "owner": "§IX" },
+    { "what": "The Seating", "repo": "ᛊ · the seat", "owner": "§X" },
+    { "what": "The Watch", "repo": "ᛉ · the ward", "owner": "§XI" },
+    { "what": "The Renewal and the Healing", "repo": "ᛜ · the two hands", "owner": "§XII" },
+    { "what": "The House Endures", "repo": "ᚦ · the roots", "owner": "§XIII" }
+  ],
+  "charted": [
+    { "id": "mannheim", "title": "Mannheim — the held seat", "repo": "a name reserved, its hall unbuilt", "reason": "on the chart", "dispatchable": true },
+    { "id": "askr", "title": "Askr — human-facing flows", "repo": "onboarding and the first steps", "reason": "on the chart", "dispatchable": true },
+    { "id": "utgard", "title": "Utgard Studios — the walled creative realm", "repo": "shaped outside the walls", "reason": "on the chart", "dispatchable": true },
+    { "id": "the-cracks", "title": "The cracks found in the quiet hours", "repo": "the healer's round · §XII", "kind": "warning", "dispatchable": false }
+  ],
+  "charted_more": 5,
+  "charted_warning_more": 0
+}
+</script>
+
+<script>
+/* ÓÐRERIR — the Live Hall: the fleet's planning glass.
+
+   Data: a same-origin snapshot at /livehall.json, written by the hall's own
+   generator and served from this deck's origin:
+     { generated_at, realm, tally{runes,projects,loom,wake,smiths},
+       errands_armed[], smiths[{smith,state,pane}], ledger{underway,landed,charted} }
+
+   The glass paints the saga's own tale first (the inline payload), then reads
+   the snapshot and re-paints from it when it is present and valid; when it is
+   absent or unreadable the tale stands, and says so. "Read again" re-reads on
+   command; returning to the tab re-reads it (only when it has changed, so a
+   word queued in this page is never wiped out from under the reader).
+
+   The board's machinery is ported function-for-function from the saga-bearings
+   fleet board and rebuilt in the carved cloth: the dealt slate stack with
+   options + recommended marks + freeform + the 512-byte queue guard, stack
+   navigation, the carved ledger, the dispatch picker, fail-closed render.
+
+   READ-ONLY, ALWAYS. The glass shows; it does not write. There is no hold path
+   from this page — a word queued here stays in this page. The two fields the
+   snapshot carries that are machinery, not glass — `realm` and each smith's
+   `pane` — are deliberately never rendered. */
+(function(){
+'use strict';
+var root = document.getElementById('livehall');
+if(!root) return;
+var $ = function(s){ return root.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(root.querySelectorAll(s)); };
+
+function el(tag, cls, text){ var n = document.createElement(tag); if(cls) n.className = cls; if(text != null) n.textContent = text; return n; }
+function badge(tone, text){ return el('span', 'lh-badge lh-badge--' + tone, text); }
+function isWarning(t){ return t && t.kind === 'warning'; }
+function chartedQueued(rows){ return (rows || []).filter(function(t){ return !isWarning(t); }); }
+function utf8ByteLength(text){ return new TextEncoder().encode(text).length; }
+function stateTone(state){
+  switch(String(state || '').toLowerCase()){
+    case 'working': case 'active': case 'running': case 'lit': return 'online';
+    case 'idle': case 'ready': case 'waiting': case 'drawn': return 'info';
+    case 'blocked': case 'stuck': case 'error': case 'failed': return 'danger';
+    default: return 'neutral';
+  }
+}
+var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+/* Fail closed on the tale itself: a board with unreadable inline data says so
+   plainly instead of rendering an empty hall. */
+function renderBoardError(msg){
+  var board = $('.lh-board');
+  if(!board) return;
+  board.innerHTML = '';
+  var slate = el('div', 'lh-slate lh-decision');
+  var pad = el('div', 'lh-pad');
+  pad.appendChild(el('h3', 'lh-title', 'The hall\u2019s board could not be carved'));
+  pad.appendChild(el('p', 'lh-detail', msg + ' — the saga stands, and the board is shown un-dealt.'));
+  slate.appendChild(pad);
+  board.appendChild(slate);
+}
+
+var saga;
+try {
+  saga = JSON.parse(document.getElementById('lh-saga').textContent);
+} catch (e) {
+  renderBoardError('the hall\u2019s own tale is not valid JSON');
+  return;
+}
+if(!saga || typeof saga !== 'object' || !Array.isArray(saga.captains_call)){
+  renderBoardError('the hall\u2019s own tale does not have the required structure');
+  return;
+}
+
+/* ============================================================
+   THE TWO SHAPES BECOME ONE MODEL
+   ============================================================ */
+function isFeed(d){
+  return !!(d && typeof d === 'object' && d.tally && typeof d.tally === 'object' &&
+    Array.isArray(d.errands_armed) && d.ledger && typeof d.ledger === 'object');
+}
+
+/* the saga's own tale (the inline fallback) */
+function modelFromSaga(d){
+  var smiths = (d.smiths || []).map(function(n){ return { smith: n, state: null }; });
+  var chartedMore = d.charted_more || 0;
+  return {
+    source: 'saga',
+    generated: d.generated || 'the tale',
+    countLine: (d.houses || []).length + ' houses · ' + (d.landed || []).length + ' carvings · one well — the saga\u2019s own count, told honestly',
+    smiths: smiths,
+    deck: (d.captains_call || []).map(function(item){
+      return {
+        key: item.key, type: item.type, title: item.title, repo: item.repo,
+        detail: item.detail, about: item.about, decide: item.decide,
+        options: item.options || [], recommend_value: item.recommend_value,
+        allow_freeform: !!item.allow_freeform, freeform_hint: item.freeform_hint
+      };
+    }),
+    underway: (d.underway || []).map(function(t){
+      return {
+        title: t.doing,
+        sub: t.kind + ' · ' + (t.repo || t.id),
+        badge: { tone: t.state === 'working' ? 'online' : 'info', label: t.state }
+      };
+    }),
+    landed: (d.landed || []).map(function(t){
+      return { title: t.what, sub: (t.repo || t.id) + ' · ' + t.owner };
+    }),
+    charted: (d.charted || []).map(function(t){
+      return { id: t.id, title: t.title, sub: t.repo || t.id, reason: t.reason,
+        kind: t.kind, dispatchable: !!t.dispatchable };
+    }),
+    chartedMore: chartedMore,
+    chartedWarningMore: d.charted_warning_more || 0,
+    tallyExtra: null
+  };
+}
+
+/* the hall's own snapshot (the glass, read live) */
+function modelFromFeed(f){
+  var tally = f.tally || {};
+  var smiths = (f.smiths || []).filter(function(s){ return s && s.smith; }).map(function(s){
+    return { smith: s.smith, state: s.state || null };
+  });
+  var stateOf = {};
+  smiths.forEach(function(s){ stateOf[s.smith] = s.state; });
+  var errands = (f.errands_armed || []).filter(function(n){ return typeof n === 'string' && n; });
+  var ledger = f.ledger || {};
+  return {
+    source: 'hall',
+    generated: f.generated_at || '',
+    countLine: 'read live from the hall\u2019s own snapshot — nothing here is written back',
+    smiths: smiths,
+    deck: errands.map(function(name){
+      return {
+        key: 'errand.' + name,
+        type: 'errand',
+        title: name,
+        smith: name,
+        state: stateOf[name] || null,
+        about: 'armed in the hall — the errand Brokk holds for this smith',
+        decide: 'the word that releases it, or holds it',
+        options: [],                 /* the snapshot carries no options; none are invented */
+        recommend_value: null,
+        allow_freeform: true,
+        freeform_hint: 'or inscribe the word in your own words…'
+      };
+    }),
+    underway: (ledger.underway || []).map(function(n){
+      return {
+        title: n,
+        sub: 'held in the hall',
+        badge: stateOf[n] ? { tone: stateTone(stateOf[n]), label: stateOf[n] } : null
+      };
+    }),
+    landed: (ledger.landed || []).map(function(n){
+      return { title: n, sub: 'landed as work' };
+    }),
+    charted: (ledger.charted || []).map(function(n){
+      return { id: n, title: n, sub: 'on the chart', reason: 'on the chart', dispatchable: true };
+    }),
+    chartedMore: 0,
+    chartedWarningMore: 0,
+    tallyExtra: [
+      { n: tally.runes || 0, l: 'runes carved' },
+      { n: tally.projects || 0, l: 'projects' },
+      { n: tally.loom || 0, l: 'on the loom' },
+      { n: tally.wake || 0, l: 'wake queue' },
+      { n: tally.smiths || smiths.length, l: 'smiths' }
+    ]
+  };
+}
+
+/* ============================================================
+   THE RENDER — one model, one board
+   ============================================================ */
+var deck;            /* #lh-call */
+var cards = [];      /* the dealt slates */
+var active = 0;      /* the slate under the hand */
+var model = null;
+
+function answeredCount(){ return deck.querySelectorAll('.is-queued').length; }
+
+function renderTally(m){
+  var strip = $('#lh-tally');
+  strip.textContent = '';
+  var callTotal = m.deck.length;
+  var left = callTotal - answeredCount();
+  var stats = [{ n: left, l: callTotal === 1 ? 'errand armed' : (m.source === 'hall' ? 'errands armed' : 'calls on the board'), call: true }];
+  if(m.source === 'hall'){
+    stats[0].l = left === 1 ? 'errand armed' : 'errands armed';
+    stats = stats.concat(m.tallyExtra || []);
+  } else {
+    stats.push({ n: m.underway.length, l: 'kept underway' });
+    stats.push({ n: m.landed.length, l: m.source === 'hall' ? 'landed' : 'landed as carvings' });
+    stats.push({ n: chartedQueued(m.charted).length + m.chartedMore, l: 'charted next' });
+  }
+  stats.forEach(function(s){
+    var t = el('div', 'lh-stat' + (s.call ? ' lh-stat--call' : ''));
+    t.appendChild(el('span', 'lh-stat__num', String(s.n)));
+    t.appendChild(el('span', 'lh-stat__label', s.l));
+    strip.appendChild(t);
+  });
+  var sub = $('#lh-call-sub');
+  sub.textContent = left
+    ? left + (left === 1 ? ' slate' : ' slates') + (m.source === 'hall' ? ' armed · dealt by hand' : ' dealt · the hall\u2019s own gates')
+    : 'every slate is queued — the board rests';
+}
+
+function renderSmiths(m){
+  var strip = $('#lh-smiths');
+  strip.textContent = '';
+  if(!m.smiths.length) return;
+  if(m.source === 'saga'){
+    strip.appendChild(document.createTextNode(m.smiths.length + ' named smiths — '));
+    m.smiths.forEach(function(s, i){
+      if(i) strip.appendChild(document.createTextNode(' \u00b7 '));
+      strip.appendChild(el('b', null, s.smith));
+    });
+    return;
+  }
+  m.smiths.forEach(function(s){
+    var chip = el('span', 'lh-smith');
+    chip.appendChild(el('span', 'lh-smith__name', s.smith));
+    if(s.state) chip.appendChild(badge(stateTone(s.state), s.state));
+    strip.appendChild(chip);
+  });
+}
+
+function ctxRow(k, v, node){
+  var row = el('div', 'lh-ctx__row');
+  row.appendChild(el('span', 'lh-ctx__k', k));
+  var val = el('span', 'lh-ctx__v', v || null);
+  if(node) val.appendChild(node);
+  row.appendChild(val);
+  return row;
+}
+
+function smithChip(name, state){
+  var chip = el('span', 'lh-smith-inline');
+  chip.appendChild(el('span', 'lh-smith__name', name));
+  if(state) chip.appendChild(badge(stateTone(state), state));
+  return chip;
+}
+
+function renderDeck(m){
+  deck.textContent = '';
+  cards = [];
+
+  m.deck.forEach(function(item){
+    var card = el('div', 'lh-decision');
+    var pad = el('div', 'lh-pad');
+
+    var top = el('div', 'lh-top');
+    if(item.type === 'merge'){
+      top.appendChild(badge('online', 'checks green'));
+      top.appendChild(badge(item.risk === 'low' ? 'neutral' : 'warn', 'risk ' + item.risk));
+    } else if(item.type === 'errand'){
+      top.appendChild(badge('solid', 'an armed errand'));
+      if(item.smith) top.appendChild(smithChip(item.smith, item.state));
+    } else {
+      top.appendChild(badge('solid', 'the hall decides'));
+      if(item.repo) top.appendChild(el('span', 'lh-repo', item.repo));
+    }
+    pad.appendChild(top);
+
+    pad.appendChild(el('h3', 'lh-title', item.title));
+    if(item.detail) pad.appendChild(el('p', 'lh-detail', item.detail));
+
+    if(item.type !== 'merge' && (item.about || item.decide)){
+      var ctx = el('div', 'lh-ctx');
+      if(item.about) ctx.appendChild(ctxRow('about', item.about));
+      if(item.decide) ctx.appendChild(ctxRow('decide', item.decide));
+      if(item.type === 'errand' && item.smith) ctx.appendChild(ctxRow('smith', null, smithChip(item.smith, item.state)));
+      pad.appendChild(ctx);
+    }
+
+    var form = document.createElement('form');
+    form.setAttribute('data-lh-question', item.key);
+    if(item.options && item.options.length){
+      var opts = el('div', 'lh-opts');
+      item.options.forEach(function(o){
+        var lab = el('label', 'lh-opt');
+        var input = document.createElement('input');
+        input.type = 'radio'; input.name = 'answer'; input.value = o.value;
+        lab.appendChild(input);
+        var body = el('span', 'lh-opt__body');
+        body.appendChild(el('span', 'lh-opt__label', o.label));
+        if(o.hint) body.appendChild(el('span', 'lh-opt__hint', o.hint));
+        lab.appendChild(body);
+        if(item.recommend_value && o.value === item.recommend_value) lab.appendChild(el('span', 'lh-opt__rec', 'rec'));
+        opts.appendChild(lab);
+      });
+      form.appendChild(opts);
+    }
+
+    if(item.allow_freeform){
+      var ff = document.createElement('input');
+      ff.type = 'text'; ff.name = 'note'; ff.className = 'lh-freeform';
+      ff.placeholder = item.freeform_hint || 'or answer in your own words…';
+      form.appendChild(ff);
+    }
+
+    var foot = el('div', 'lh-foot');
+    var btn = el('button', 'lh-btn ' + (item.type === 'merge' ? 'lh-btn--gold' : 'lh-btn--primary'), 'Queue the word');
+    btn.type = 'submit';
+    foot.appendChild(btn);
+    var q = el('span', 'lh-queued');
+    q.innerHTML = CHECK + 'queued';
+    foot.appendChild(q);
+    var limit = el('span', 'lh-limit');
+    limit.setAttribute('role', 'alert');
+    foot.appendChild(limit);
+    form.appendChild(foot);
+
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      limit.classList.remove('is-visible');
+      var fd = new FormData(form);
+      var value = fd.get('answer');
+      var note = (fd.get('note') || '').trim();
+      var answer = value ? (note ? value + ' — ' + note : value) : note;
+      if(!answer) return;
+      if(utf8ByteLength(answer) > 512){
+        limit.textContent = 'the word is too long to queue (512 bytes at most).';
+        limit.classList.add('is-visible');
+        return;
+      }
+      /* READ-ONLY. The hall's own write path stays inside the hall; on the
+         glass the word is acknowledged here and goes no further. */
+      card.classList.add('is-queued');
+      renderTally(model);
+      setTimeout(function(){ showCard(active < cards.length - 1 ? active + 1 : active); }, 450);
+    });
+
+    pad.appendChild(form);
+    card.appendChild(pad);
+    deck.appendChild(card);
+  });
+
+  cards = Array.prototype.slice.call(deck.children);
+  active = 0;
+  var stackNav = $('#lh-stack-count').parentNode;
+  if(cards.length){
+    stackNav.hidden = false;
+    showCard(0);
+  } else {
+    deck.classList.add('lh-call--empty');
+    deck.appendChild(el('div', 'lh-empty', 'Nothing waits on the board right now.'));
+    stackNav.hidden = true;
+  }
+}
+
+function showCard(i){
+  active = Math.max(0, Math.min(cards.length - 1, i));
+  cards.forEach(function(c, j){ c.hidden = j !== active; });
+  var answered = answeredCount();
+  $('#lh-stack-count').textContent = 'slate ' + (active + 1) + ' of ' + cards.length +
+    (answered ? ' · ' + answered + ' queued' : '');
+  $('#lh-stack-prev').disabled = active === 0;
+  $('#lh-stack-next').disabled = active === cards.length - 1;
+  deck.classList.toggle('lh-call--penult', active === cards.length - 2);
+  deck.classList.toggle('lh-call--last', active === cards.length - 1);
+}
+
+function rows(host, items, opts){
+  host.textContent = '';
+  if(!items.length){
+    host.appendChild(el('div', 'lh-empty', opts.empty));
+    return;
+  }
+  items.forEach(function(t){
+    var row = el('div', 'lh-row');
+    if(opts.check){
+      var chk = el('span', 'lh-row__check');
+      chk.innerHTML = CHECK;
+      row.appendChild(chk);
+    }
+    if(t.badge) row.appendChild(badge(t.badge.tone, t.badge.label));
+    var main = el('div', 'lh-row__main');
+    main.appendChild(el('div', 'lh-row__title', t.title));
+    main.appendChild(el('div', 'lh-row__sub', t.sub));
+    row.appendChild(main);
+    host.appendChild(row);
+  });
+}
+
+function renderCharted(m){
+  var ch = $('#lh-charted');
+  ch.textContent = '';
+  var bar = $('#lh-dispatch');
+  bar.classList.remove('is-queued');
+  var anyPickable = false;
+
+  if(!chartedQueued(m.charted).length && !m.chartedMore){
+    ch.appendChild(el('div', 'lh-empty', 'Nothing is charted.'));
+  }
+  m.charted.forEach(function(t){
+    var row = el('div', 'lh-row');
+    if(t.dispatchable && !isWarning(t)){
+      anyPickable = true;
+      var pick = document.createElement('input');
+      pick.type = 'checkbox'; pick.className = 'lh-pick'; pick.value = t.id;
+      pick.setAttribute('aria-label', 'Pick ' + t.id + ' for dispatch');
+      pick.addEventListener('change', function(){
+        if(pick.checked && utf8ByteLength(pickedIds().join(',')) > 512){
+          pick.checked = false;
+          refreshBar('the selection is too long (512 bytes at most). ');
+          return;
+        }
+        refreshBar();
+      });
+      row.appendChild(pick);
+    } else {
+      row.appendChild(el('span', 'lh-pick-spacer'));
+    }
+    var main = el('div', 'lh-row__main');
+    main.appendChild(el('div', 'lh-row__title', t.title));
+    main.appendChild(el('div', 'lh-row__sub', t.reason ? t.reason + ' · ' + t.sub : t.sub));
+    row.appendChild(main);
+    if(isWarning(t)) row.appendChild(badge('danger', 'needs repair'));
+    else if(t.reason) row.appendChild(badge('warn', 'waiting'));
+    ch.appendChild(row);
+  });
+  var shown = chartedQueued(m.charted).length;
+  var total = shown + m.chartedMore;
+  $('#lh-charted-sub').textContent = m.chartedMore ? 'showing ' + shown + ' of ' + total : '';
+  if(m.chartedMore) ch.appendChild(el('span', 'lh-morechip', '+' + m.chartedMore + ' more charted — the saga holds them'));
+  if(m.chartedWarningMore) ch.appendChild(el('span', 'lh-morechip', '+' + m.chartedWarningMore + ' more crack' +
+    (m.chartedWarningMore === 1 ? '' : 's') + ' — the healer walks at night'));
+
+  if(anyPickable){
+    bar.hidden = false;
+    refreshBar();
+  } else {
+    bar.hidden = true;
+  }
+}
+
+function pickedIds(){
+  return $$('.lh-pick:checked').map(function(c){ return c.value; });
+}
+function refreshBar(limitMessage){
+  var n = pickedIds().length;
+  $('#lh-dispatch-count').textContent = limitMessage || (n ? n + ' picked for the dispatch' : 'pick charted work to dispatch');
+  $('#lh-dispatch-btn').disabled = !n;
+}
+
+function renderProvenance(m){
+  var asof = $('#lh-asof');
+  asof.textContent = m.source === 'hall'
+    ? 'live · ' + (m.generated || 'just now')
+    : 'as the saga tells it · ' + (m.generated || 'the tale');
+  asof.classList.toggle('is-live', m.source === 'hall');
+}
+
+function render(m){
+  model = m;
+  renderDeck(m);
+  renderTally(m);
+  renderSmiths(m);
+  $('#lh-count').textContent = m.countLine || '';
+  var live = m.source === 'hall';
+  $('#lh-underway-sub').textContent = live ? 'held by the hall' : 'kept by the hall';
+  $('#lh-landed-k').textContent = live ? 'landed' : 'landed as carvings';
+  $('#lh-landed-sub').textContent = live ? 'the hall\u2019s own ledger' : 'the saga\u2019s thirteen';
+  rows($('#lh-underway'), m.underway, { empty: 'Nothing is underway.' });
+  var ld = $('#lh-landed');
+  ld.classList.add('lh-rows--scroll');
+  rows(ld, m.landed, { empty: live ? 'Nothing has landed yet.' : 'No carving has landed yet.', check: true });
+  renderCharted(m);
+  renderProvenance(m);
+}
+
+/* ============================================================
+   THE STACK NAVIGATION + THE GLASS'S OWN CONTROLS
+   ============================================================ */
+deck = $('#lh-call');
+$('#lh-stack-prev').addEventListener('click', function(){ showCard(active - 1); });
+$('#lh-stack-next').addEventListener('click', function(){ showCard(active + 1); });
+$('#lh-dispatch-btn').addEventListener('click', function(){
+  var ids = pickedIds();
+  if(!ids.length) return;
+  if(utf8ByteLength(ids.join(',')) > 512){
+    refreshBar('the selection is too long (512 bytes at most). ');
+    return;
+  }
+  /* READ-ONLY: acknowledged here; the hall's own write path stays inside. */
+  $('#lh-dispatch').classList.add('is-queued');
+});
+
+/* ============================================================
+   PAINT, THEN READ THE HALL
+   ============================================================ */
+render(modelFromSaga(saga));
+/* The hall says so when it is telling the tale rather than reading a board:
+   invented rows must never pass for telemetry. Removed when a live feed arrives. */
+try {
+  if (!document.getElementById('saga-note')) {
+    var note = document.createElement('div');
+    note.id = 'saga-note';
+    note.setAttribute('role', 'status');
+    note.style.cssText = 'margin:12px 0;padding:10px 14px;border:1px solid rgba(201,151,63,0.45);border-radius:8px;font-size:0.9rem;line-height:1.45;opacity:0.9';
+    note.textContent = 'Not connected \u2014 this board is the saga\u2019s sample, not your fleet. It reads live once the hall reaches its source.';
+    var host = document.querySelector('.lh-board') || document.body;
+    host.insertBefore(note, host.firstChild);
+  }
+} catch (e) { /* a courtesy; never break the page for it */ }
+
+var lastFeed = null;
+function readSnapshot(force){
+  try {
+    fetch('/livehall.json', { cache: 'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(feed){
+        if(!isFeed(feed)) return;                        /* the tale stands */
+        var raw = JSON.stringify(feed);
+        if(!force && raw === lastFeed) return;            /* nothing new to paint */
+        lastFeed = raw;
+        render(modelFromFeed(feed));
+        var sn = document.getElementById('saga-note');
+        if (sn) sn.remove();   /* live board: the sample marker has no business here */
+      })
+      .catch(function(){ /* the tale stands */ });
+  } catch (e) { /* no fetch available — the tale stands */ }
+}
+
+var refreshBtn = $('#lh-refresh');
+if(refreshBtn){
+  refreshBtn.addEventListener('click', function(){
+    refreshBtn.disabled = true;
+    readSnapshot(true);
+    setTimeout(function(){ refreshBtn.disabled = false; }, 400);
+  });
+}
+/* coming back to the glass re-reads it — but only when it has changed, so a
+   word queued in this page is never wiped out from under the reader */
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) readSnapshot(false);
+});
+readSnapshot(false);
+})();
+</script>
+
+<script>
+/* the Hall's reveal — the landing's own rhythm, kept local to this deck */
+(function(){
+'use strict';
+document.documentElement.classList.add('js');
+if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+  document.querySelectorAll('.rv').forEach(function(el){ el.classList.add('in'); });
+  return;
+}
+var io = new IntersectionObserver(function(es){
+  es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: 0.18, rootMargin: '0px 0px -10% 0px' });
+document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+})();
+</script>
+</body>
+</html>

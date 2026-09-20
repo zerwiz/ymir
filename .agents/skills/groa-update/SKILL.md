@@ -91,6 +91,53 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
    that is drift the update should have carried out — name it to the Allfather.
    Owning asset: `.agents/skills/galdr-ymirsystem/assets/installation.md`.
 
+## Updating Ymir on npm — the other half of renewing
+
+Gróa fast-forwards the **tree**; the published **packages** need the same care, and
+the traps here are quiet ones. In order:
+
+```
+npm_renewal[6]{step,how,why}:
+  "1 choose the number","fetch the registry's latest FIRST (curl …/@zerwiz%2fymir, not memory) and bump one above it","the registry can be AHEAD of main when a publish went out from a branch — main said 0.1.18 while npm served 0.1.25"
+  "2 land the bump by PR","branch → commit → gh pr create → merge; never push main (branch-guard refuses)","the delivery gate: a change leaves by PR, and the Allfather's approval is the merge"
+  "3 publish","bin/npm-publish.sh — it opens the vault's door for the token","the token is in hodd/secrets/platform.env.age, never in ~/.npmrc (that one has been stale before)"
+  "4 if it says the token is absent","the DOOR is broken, not the key: with `age` present, age -d -i hodd/secrets/age.key hodd/secrets/platform.env.age | sed -n 's/^NPM_TOKEN=//p'","bin/hodd.sh emit currently returns empty for both spellings; the vault is fine, the emit path is not — mend it"
+  "5 verify","fetch the VERSION document (…/@zerwiz/ymir/<version>) — it answers before the packument does","the registry lags for minutes; the packument can 404 while the version and tarball already resolve"
+  "6 the four apps ride along","their pins move in the same release (hlidskjalf · odrerir · sessrumnir · smidja-factory)","the distro depends on them; a pin left behind keeps shipping the old app to every user"
+```
+
+**The traps, named — each one cost a night:**
+
+- **A stale `latest` makes an install a silent no-op.** npm resolved a cached
+  `latest`, saw the same version, printed *"changed 200 packages"* and left the old
+  build in place. Publish and reinstall with **`@latest --prefer-online`**, and give
+  a stuck machine **`npm cache clean --force`**. The CLI now *says* when it is out
+  of date (once a day), so a stale install cannot hide.
+- **npm gates install scripts.** Electron's postinstall never runs, so a fresh
+  install has web surfaces and no windows; each shell needs `npm rebuild electron`
+  (the installer's `step_desktop` does it, and `bin/electron-lib.sh` verifies).
+- **A package that ships less than it needs is a fault in its own repo.** Declare
+  `name`, `files` and the absence of `private` where the package lives — never
+  rewrite a manifest at publish time (that is how `vite.config.ts` went missing and
+  every panel died on `Unexpected token '<'`).
+
+## The publish discipline — this cannot happen again
+
+Tonight cost seven publishes in an hour, one version thrown away, and a tag left on a
+build that did not carry the fix. Gróa holds four laws now:
+
+```
+publish_laws[4]{law,what_it_cost_us}:
+  "ONE version per sitting, at most","npm accepted 0.1.32 and never created it (404) — rapid publishes read as abuse, and a dropped publish looks exactly like a successful one"
+  "verify by the VERSION DOCUMENT","curl -s -o /dev/null -w '%{http_code}' …/@zerwiz/ymir/<version> — 200 or it did not happen; npm's success line is not evidence"
+  "unpack the TARBALL before calling it released","npm pack <version> and read install.sh / README.md from it: 0.1.31 was tagged latest and did NOT carry the installer fix"
+  "move the TAG, do not republish","npm dist-tag add @zerwiz/ymir@<good> latest — no new version, and every next install gets it"
+```
+
+**Why they are law:** the registry serves what was **published**, not what is on `main`.
+A publish that appears to succeed may reach no user at all; every check above tests the
+artefact — the only thing a user ever touches.
+
 ## Safety
 
 - **Fast-forward only.** Dirty, diverged, offline, or non-default-branch targets are skipped and reported, never forced or stashed. Nothing with unlanded work is ever discarded.

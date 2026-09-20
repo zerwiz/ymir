@@ -1,4 +1,286 @@
+## 2026-09-19 — no deploys: we have downloads, and one tunnel
 
+- `deploy-staging.yml` fired on every push to main, failed every time (every run since
+  2026-09-11), and published Hlidskjalf's `dist/` to Netlify — an SPA whose every panel
+  calls a gate at 127.0.0.1, the operator's own machine. `deploy-production.yml` had never
+  run. Both are removed.
+- The Allfather, plainly: *"we don't have any deploy — we have downloads. The deploy we will
+  have is me reaching the application in the future from my Cloudflare."* Distribution is
+  npm; the only reach is the Gjallarhorn tunnel onto his own machine.
+- A pipeline that fails silently on every merge and produces nothing anyone uses is the same
+  fault as a mark counted from a log line: it looks like work and reports nothing true.
+
+## 2026-09-19 — a third view: Óðrerir joins the shell's window
+
+- The shell knew two URLs (Hlidskjalf :3888, Smíðja :8437), so `--view odrerir` fell through to
+  Hlidskjalf — the fourth rune had been routed to the shell by the gate but had nowhere to
+  land. It now has a view of its own: `ODRERIR` (http://127.0.0.1:4322, where the hall is
+  served), `IS_ODRERIR`, its own app name and slug (`ymir-odrerir`, matching its entry),
+  a menu entry with ⌘/Ctrl+3, and the window-opening paths route to it.
+- Three halls now open and switch in one window; every hall still runs standalone through
+  `ymir <hall>`. The seat remains its own app until its renderer is given an address.
+
+## 2026-09-19 — the fourth rune raises the app, and the hall admits when it invents
+
+- **ᛟ "To the Hall" opened a browser tab.** The three hall runes call `raise(id)` →
+  `gateApi.desktop(id)`, which raises the Electron app; the fourth was an `<a
+  href={HALL_URL} target="_blank">` pointing at `http://localhost:4322`. It is now a button
+  on the same door: `raise` is exported from Halls, the union and the gate's `/api/desktop`
+  accept `odrerir`, and `desktop()` on the client too. The build enforced every half of it.
+- **Óðrerir's inline fallback told fiction as telemetry.** It renders an invented board
+  ("The forge is lit · tended, never relit") when `/livehall.json` cannot be reached, with
+  nothing marking it. It now states plainly: *"Not connected — this board is the saga's
+  sample, not your fleet"*, and the marker is removed the moment a live feed arrives.
+
+## 2026-09-19 — the system finds the user's models, and says what it found
+
+- The Allfather: *"the system must find the users models from root pi."* It did not — the
+  install reported that models would be "ensured" while never naming the file that declares
+  them, so a roster naming a model the machine had never seen stayed invisible until an
+  agent failed.
+- `bin/models-report.sh` reads `$HOME/.pi/agent/models.json` — the ROOT pi home — and
+  `step_models` logs it in both modes: *"the user's models — 7 providers / 54 models ·
+  google,ollama,lmstudio,ollama-remote +3 more"*, or a loud WARN when the file is absent or
+  unparseable. The line sits **before** the `--check` early return, so a dry run reports it
+  too.
+
+## 2026-09-19 — the fork's icons are gone; the rune is the only mark
+
+- `apps/sessrumnir/resources/icons/` still carried the fork's icon set — charcoal blue
+  `#36454F` with an orange dot — so every surface that read the app's own icons showed the
+  old colours beside the brown/gold rune. Every size is regenerated from the rune glyph
+  (`#0e0c09` / `#c9973f`), `icon.ico` is a real multi-size ICO again (written through PIL —
+  ImageMagick's ICO delegate emitted a TGA), and the macOS-only `icon.icns` is removed.
+- The Allfather's instruction: *"those should be deleted and only the new should be used."*
+
+## 2026-09-19 — the hearth was painted behind the wall
+
+- `.chat-center` painted `--color-chat-column` on the element itself, so the
+  `EmberBackground` canvas mounted inside it at `-z-10` was covered by its own parent's
+  colour: the embers were drawn every frame into a layer nobody could see.
+- The colour moves to `.chat-center::before` at `z-index:-20`, below the ember, so the
+  embers rise in front of the column from the bottom as the landing's do.
+
+## 2026-09-19 — 0.1.37: the install that speaks, and the checks that verify
+
+- The install announces itself: after `y` it says how many steps follow, each step names
+  itself as it runs (`[ 3/19] apps …`) and reports its elapsed time — one line rewritten
+  in a terminal, plain lines when piped or logged.
+- `step_apps` reports **PASS "in-tree — apps/ ships with the package"** rather than the
+  now-false "the surfaces are dependencies": the in-tree check runs before the
+  package-shape skip.
+- `step_marks --check` counts the entries really on disk and **names the halls missing**
+  instead of answering OK at zero.
+- The seat's window class is `ymir-sessrumnir`, matching its entry — the icon can be found.
+
+## 2026-09-19 — the install speaks while it works
+- Progress renders two ways, both proven: a terminal rewrites one line in place
+  (`[ 3/19] apps … → [ 3/19] apps — 12s`), a pipe or a log gets one plain line each with
+  no escapes. Verified by running the real function against dummy steps and counting the
+  clear-line escapes when piped: 0.
+
+- After the user accepts with `y`, the installer says how many steps follow, then each
+  step announces itself (`[ 3/19] apps …`) and reports its elapsed time. Silence during a
+  minutes-long step read as a hang: "the user don't know if something are happening".
+- Progress goes to **stderr**, so the TOON report on stdout stays clean for anything that
+  parses it. Without a terminal the lines are printed whole instead of rewritten in place.
+
+## 2026-09-19 — the window tells the desktop its name; the marks step checks its work
+
+- The seat's window class was `sessrumnir` while its entry said `ymir-sessrumnir`, so nothing
+  could match and the dock showed a generic icon although the glyph sat in the theme. Now
+  `ymir-sessrumnir`. The other two were already right (`ymir-hlidskjalf`, `ymir-odrerir`).
+- `step_marks` **verifies instead of claiming**: for each hall it checks the entry file
+  exists, is executable, its `Exec` resolves and its `Icon` is in the theme — and it reports
+  `WARN` naming what is missing. It once reported four marks while Smíðja's entry had never
+  been written, because it counted what `design-icon.sh` *printed*.
+
+## 2026-09-19 — plan 35 published: 0.1.35 serves the app sources
+
+- **The registry now serves `@zerwiz/ymir@0.1.35`** (version document 200, `latest` moved).
+  The tarball carries the app **sources**: `apps/hlidskjalf/src/app/App.tsx`, the seat's
+  `src/main` (128 files), `install.sh`, `bin/app-build.sh` — 2059 files, 31 MB, no
+  `node_modules`. Gróa's three laws satisfied: one version, verified by the version
+  document, and the **published** tarball unpacked and read.
+- The fixes that had been written but never shipped now ship: the seat picker's
+  `choosing = !isDesktopSeat()` (which explains "Take your seat" greeting every hall —
+  the installed hlidskjalf was 0.1.1 and carried none of it), the seat's rename away from
+  "Pi Desktop", its `appId`, and the deletion of the fork's postinstall.
+- `@zerwiz/smidja-factory` ^0.1.3 → ^0.1.7, the version the registry serves.
+
+## 2026-09-19 — the seat stops wearing the fork's name (plan 35 folds it in)
+
+- `apps/sessrumnir` carried "Pi Desktop" in 25 files and a `scripts/postinstall.js` whose
+  job was to install a *Pi Desktop* launcher — so every install re-planted the fork's
+  identity. All 25 renamed; the postinstall deleted and unwired from `package.json`.
+- `appId: com.zerwiz.sessrumnir` set — with no appId the window class matches nothing and
+  the dock cannot find the icon, which is why the glyph was in the theme and never used.
+- Verified: **0 files** under `apps/sessrumnir` still name the fork.
+
+## 2026-09-19 — one repo, step 2: the package ships what it builds
+
+- `files[]` gains `apps/`; `@zerwiz/hlidskjalf`, `@zerwiz/odrerir` and `@zerwiz/sessrumnir`
+  retire as dependencies (npm workspaces link them instead). The smithy stays a package:
+  `apps/smidja` is Python and carries no manifest.
+- `bin/app-build.sh` builds every in-tree app (wired as `prepack`), so a publish cannot
+  carry an unbuilt surface — the fault class of 2026-09-18, an artefact published without
+  the file it needed.
+- Pack hygiene, measured on the real tarball: **154 MB → 31 MB**, `node_modules` 113 → 0,
+  the fork's `fork/` directory gone. The first pack leaked the workspace's own
+  `node_modules/electron/dist/` (154 MB) because a root `files[]` negation does not reach a
+  nested workspace — hence explicit `!apps/*/node_modules/**`.
+- Proven by unpacking: 856 files under `apps/`, the seat's built `out/`, hlidskjalf's and
+  odrerir's `dist/`, `install.sh` and `bin/app-build.sh` all present.
+
+## 2026-09-19 — one repo: the app sources return to the Ymir tree
+
+- `f7f3063` split the apps out ("step_apps pulls each app repo; the monorepo stops tracking them").
+  Every fault of 2026-09-18 lived at the seam that split created: vite.config.ts, electron/,
+  midgard/, install.sh and the seat's own postinstall each belonged to an app whose source this
+  repo did not hold.
+- The sources return: `git checkout 6fb7124 -- apps/` restores hlidskjalf, odrerir, sessrumnir,
+  smidja and smidja-factory into `apps/` — 751 files. Plan 35, first step.
+- Still to come in this plan: retire the four npm deps and `step_apps`, build from `apps/`, one
+  publish, and the empty-HOME proof.
+
+## 2026-09-18 — the platform fetches its own Electron runtime (a user needs no help)
+
+- **npm gates install scripts**, so Electron's postinstall never runs and the desktop
+  windows cannot open: a whole install with no windows, and no error a user could act on.
+- Every npm-shaped cure failed its own way: `npm rebuild electron` reports *"rebuilt
+  dependencies successfully"* and changes nothing; `npm install-scripts approve` does not
+  exist in every npm; `--allow-scripts` works only at install time, and npm skips
+  unchanged packages.
+- **What works everywhere is what the postinstall does:** fetch the release and place it.
+  `electron_fetch_runtime` (`bin/electron-lib.sh`) reads the version from the app's own
+  manifest, fetches that release, places `dist/`, writes `path.txt`, and checks the
+  binary. Both mends fall back to it.
+- **Proven on this machine:** the runtime removed, the mend run, `v43.0.0` present and
+  answering.
+
+## 2026-09-18 — the mend must approve before it rebuilds
+
+- rebuilt dependencies successfully is gated too: without `npm install-scripts approve electron` first it
+  silently changes nothing, and the window still never opens. The mend now approves, rebuilds,
+  and only then reports.
+
+## 2026-09-18 — the seat s chat left the repo, and no file names a home
+
+- **`chat/` was TRACKED in a public repo** — the seat s own conversations. It lives in the
+  home now (`$YMIR_HOME/state/chat/`, where the runtime reads it) and is gitignored: the
+  operator s words are the operator s (Rule 04).
+- **Seven files carried `/home/<user>`** — a username, in public. All seven read `$HOME` now,
+  verified by name: *zero* tracked files name a home path.
+
+## 2026-09-18 — a username was in a tracked file (corrected, not rewritten)
+
+- Two entries carried `$HOME/Ymir` — the operator s own username, in a public file.
+  They now read `$HOME`. The rule is absolute and already in the changelog: **no hardcoded
+  absolute file paths**, ever — a home path names a person, and this repo is public.
+
+## 2026-09-18 — the publish discipline, written into Gróa (this cannot happen again)
+
+- Seven publishes in an hour cost a version: npm accepted 0.1.32 and never created it
+  (404). Four laws are hers now: one version per sitting; verify by the VERSION document;
+  unpack the TARBALL before calling a release done (0.1.31 was tagged latest and did not
+  carry the installer fix); move the TAG rather than republishing.
+
+## 2026-09-18 — the one-liner writes the PATH first (it never reached .bashrc)
+
+- **The bug, exactly:** install.sh passed `"${@:-}"` to npm, which with no arguments is an
+  EMPTY argument — npm errored, and the script exited **before** the PATH block. So the
+  command was never added to .bashrc, on any machine without it already.
+- **The order is now right:** the PATH is written into the shell files FIRST, then the
+  package is installed with a proper argument array — so a failed install still leaves
+  the command reachable, and a second run picks up where the first left off.
+
+> **Frozen 2026-09-18.** This file is the historical record and is no longer
+> written to (Rule 06: a record is never rewritten). New work is recorded as fix
+> notes — one file per fix, per component — under `docs/fixes/`, written with
+> `bin/fixes.sh record` and guarded by `bin/fixes-guard.sh`.
+
+## 2026-09-18 — the README leads with the doors that work
+
+- **The npm page and GitHub both render `README.md`**, so a user meets it first — and
+  it buried the door that always works (`npx @zerwiz/ymir`) and the PATH cure inside
+  a later section. It now opens with the one-liner (install into a prefix you own, PATH
+  written, setup run, door proven), names `npx` second, and answers *"ymir: command not
+  found"* and the stale-install trap where they happen.
+- The three doors and their honest reasons: `npx` needs no PATH at all; the one-liner
+  sets it once; `npm install -g` works wherever npm's global bin is on PATH.
+
+## 2026-09-17 — Gróa knows the npm half: how to renew the published packages
+
+- **Her skill gains the whole procedure** — choose the number from the registry (never from memory: it can be ahead of main), land the bump by PR, publish through the vault, verify by the *version document* (the packument lags), and move the four apps pins in the same release.
+- **And the traps, each of which cost a night:** a stale cached `latest` makes `npm i -g` a silent no-op that still prints success; npm gates Electron s postinstall so windows need `npm rebuild electron`; and a package must declare its own `name`/`files`/privacy where it lives rather than having a manifest rewritten at publish time.
+- The token lives in the encrypted vault; when a tool reports it absent, the DOOR is broken, not the key — and `age -d -i hodd/secrets/age.key hodd/secrets/platform.env.age` opens it while `bin/hodd.sh emit` does not.
+
+## 2026-09-17 — a stale install cannot hide, and the one-liner cannot be stranded
+
+- **The fault the Allfather hit:** `npm install -g @zerwiz/ymir` reported *"changed 200 packages"* and changed nothing — npm resolved a **cached `latest`**, saw the same version, and left the old build in place. The installed copy stayed 0.1.14 while the registry served 0.1.26, and nothing told the user. With 750+ downloads, that is not a detail.
+- **The CLI now says when it is out of date** — once a day, on a terminal, silenced by the same `ymir config notice version off` as every other notice: *"a newer Ymir is on npm 0.1.14 → 0.1.26 · update: npm i -g @zerwiz/ymir"*.
+- **The one-liner is cache-proof**: it installs `@latest` with `--prefer-online`, so a stale packument cannot strand a fresh machine.
+
+
+## 2026-09-17 — the installer actually installs (the whole platform, then proves it)
+
+- **Why pi.dev and opencode just work and Ymir did not.** They are one binary: JS only, no Electron, no build step, no services, no windows — and their `curl|sh` installer puts the command on PATH *and* runs onboarding. The npm path is the side door. Ymir is a platform: its install must place a CLI, four apps, their dependencies, four Electron runtimes (which npm gates), two SPA builds, desktop entries and icons, the services, and a home — eight things to go wrong, and npm fights half of them.
+- **So the one-liner now finishes the job**, the way theirs does: it installs the command, then runs **the first setup**, then **proves what stands** and names the next door. `YMIR_SKIP_SETUP=1` installs the command alone, for anyone who wants the old behaviour.
+- An installer that stops at a binary leaves the user with a tool that does nothing yet.
+
+## 2026-09-17 — the one-liner the README promised, and it sets the PATH
+
+- **`install.sh` did not exist.** The README's first door (\`curl -fsSL …/install.sh | bash\`) led nowhere — which is how a user on another machine ends up typing \`ymir\` in every combination and getting nothing.
+- **It exists now, and it removes the whole class of failure:** a prefix the user owns (no \`sudo\`, no \`EACCES\`), the \`export PATH\` written into the shell's rc so it survives the session, and then it **proves the door** with \`ymir --version\` rather than promising it.
+- The command was never missing from the package — the published tarball ships \`bin/ymir.js\` and declares \`bin: {ymir, ymir-install}\`. **The shell simply was not looking where npm put it**, and that is the most common "it does not work" in the Node ecosystem.
+
+## 2026-09-17 — 0.1.26: published, and the vault door named
+
+- **@zerwiz/ymir@0.1.26 is on the registry** — the latest main, published as `zerwiz`. The token was in the encrypted vault all along; `age` was missing from this machine, and `bin/hodd.sh emit` returns empty, so every reader reported the token absent. The door is the fix, not the key.
+- **The bump clears the registry**: main carried 0.1.18 while the registry served 0.1.25 (other sessions published past main).
+
+## 2026-09-17 — "ymir: command not found" is a PATH fault, and here is the cure
+
+- **The command is installed; the shell is not looking.** The published manifest carries `bin: {ymir, ymir-install}`, so the file is there — in npm's global bin directory, which an ordinary Linux install puts under `~/.npm-global` and a shell profile often never adds.
+- **The README answers it where a stuck user looks**: `npm prefix -g`, the `ls` that proves the command exists, the one-line `export PATH`, and the `EACCES` cure that sets a prefix the user owns instead of reaching for `sudo`.
+
+## 2026-09-17 — the model that raised itself, and the workhorse that replaced it
+
+- **A model raised itself at login and killed the session.** `qwen3-6-35b-a3b`
+  carried `[Install] WantedBy=default.target`, so systemd started it at
+  12:36:33; with `--no-mmap` on a unified-memory APU the weights were
+  unreclaimable, memory and swap drained, and the kernel's global OOM killer took
+  `gnome-shell` — and the Ymir stack with it. `local-models.md` §4 gains
+  **three traps** from this (anonymous load on unified memory; backend chosen by
+  reputation rather than measurement; reasoning configured through the chat
+  template), and a new **§12** states the rule: a model service unit must never
+  raise itself.
+- **`§11 — Reasoning is a resource you must configure`** is new. Unbounded
+  reasoning fails *totally* — no answer at all — not merely worse. The same model
+  on the same request produced clean, degenerate (repetition), or unterminated
+  output depending only on how reasoning was configured. Prefer the engine's
+  native budget flag; the chat-template keyword is a different mechanism.
+- **Seated a new local workhorse** (a 176B-parameter MoE, Vulkan backend, MTP
+  speculative decoding, file-backed load). Measured before seating: prefill and
+  decode both at parity with the reference stack for this silicon. The per-host
+  record belongs in the hoard, not here — §6.
+- **Ran a 32-run A/B on guidance during reasoning** (counsel at the moment of
+  failure vs counsel up front vs pause alone vs bare). Result: counsel delivered
+  *at the failure point* more than doubled rule-adherence over the pause-only
+  control and completed work that bare and up-front-counsel arms abandoned
+  entirely. Caveats, scoring traps, and the full table live in the private
+  record; the *generic* lesson — the artifact must be extracted, scoring must be
+  comment-aware, and the thought must be closed on resume — is recorded where the
+  product work lives.
+- **Proposed, not applied:** a boot-cmdline correction to bring the TTM page pool
+  below system RAM (it is currently set *above* it, which the reference stack for
+  this silicon names as the cause of an unkillable driver deadlock). Needs root
+  and a reboot; runbook with rollback and post-reboot verification is in the hoard.
+
+galdr-reread: `.agents/skills/galdr-ymirsystem/assets/local-models.md` — §4's
+trap table grew from four to seven and its heading no longer claims a count;
+**§11** (reasoning as a configured resource) and **§12** (a model unit must never
+raise itself) are new sections.
 
 ## 2026-09-19 — the skald's second hand: translation, a craft both Bragi and Kvasir read
 
@@ -103,7 +385,6 @@ changed (the skill is its own reference; `assets/programs.md` is its detail).
 - **The consent shows the plan again.** `--colour` renders on stderr and I had sent *both* streams to `/dev/null`, so the plan was invisible at the very moment it was being accepted.
 - **The seat can mend its own runtime**, and says why when it cannot — npm gates Electron postinstall, so a fresh install otherwise ends with a window that cannot open.
 
-
 ## 2026-09-17 — one well, in the hoard: every reader of Kaia's memory resolves the hoard store
 
 - **The memory is ONE store and it lives in the hoard** —
@@ -187,7 +468,6 @@ contract unchanged).
   its own name rather than the fork's. A fresh install was still receiving the
   old voice through the `0.1.8-alpha` pin.
 - **`@zerwiz/ymir@0.1.13`** is the packet that carries them.
-
 
 ## 2026-09-17 — 0.1.12: the icons reach the live tree, and a missing surface is a failure
 
@@ -350,7 +630,7 @@ npm path alone to be true.
   directory` — every package had arrived, and eighteen scripts were looking in the
   clone's `apps/`. `bin/app-lib.sh` resolves a surface in either shape now.
 - **A clone and a package are one tree to the scripts.** Proven against both: the
-  five surfaces resolve from `/home/zerwiz/Ymir` and from an npm-installed
+  five surfaces resolve from `$HOME/Ymir` and from an npm-installed
   package, and `ymir raise` against a packaged tree fetches the app's
   dependencies, raises the gate API, starts Nornir cron, and brings up Bifrost and
   the well.
@@ -370,7 +650,7 @@ npm path alone to be true.
   the invite door, the seat-hall, Eir, the icons, the placement, the hall snapshot
   and the installer's own SPA and shell steps. `bin/smidja-lib.sh` delegates to it
   now, so there is one truth about where things live.
-- **Proven in both trees**: all five surfaces resolve from `/home/zerwiz/Ymir`
+- **Proven in both trees**: all five surfaces resolve from `$HOME/Ymir`
   (a clone) and from an npm-installed package. And `ymir raise` run against the
   packaged tree no longer dies — it fetches the app's dependencies, raises the
   gate API, **starts Nornir cron**, and brings up Bifrost and the well.

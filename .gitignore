@@ -165,3 +165,6 @@ apps/sessrumnir/
 apps/smidja/
 apps/smidja-factory/
 !apps/README.md
+
+# The seat's chat belongs to the operator — in the home, never the repo (Rule 04).
+chat/

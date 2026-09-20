@@ -69,7 +69,7 @@ Added validation checks for Layer 3 (section 1e):
 Verdict: ❌ REJECTED if Layer 3 missing or incomplete.
 
 ### 3. Updated Global Plan Template
-**Location**: `/home/zerwiz/CodeP/wayofmono/thoughts/global/templates/plan-template.md` (rewritten)
+**Location**: `$HOME/CodeP/wayofmono/thoughts/global/templates/plan-template.md` (rewritten)
 
 Complete rewrite including:
 - Linked Ticket section
