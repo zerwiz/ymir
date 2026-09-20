@@ -40,7 +40,7 @@ BACKUP_DIR="${BROKK_BACKUP_DIR:-$STATE/backups}"
 if [ -n "${BROKK_MEMORY_ROOTS:-}" ]; then
   ROOTS="$BROKK_MEMORY_ROOTS"
 else
-  ROOTS="$BROKK_HOME/.agents/memory:${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/memory:${YMIR_HOME:-$HOME/Documents/Ymir}/svartalfaheim/$REALM/workspace/memory"
+  ROOTS="$BROKK_HOME/.agents/memory:${YMIR_HOME:-$HOME/Documents/ymirhome}/hodd/memory:${YMIR_HOME:-$HOME/Documents/ymirhome}/svartalfaheim/$REALM/workspace/memory"
 fi
 MIMIR_DB="${BROKK_MIMIR_DB:-$BROKK_HOME/.agents/memory/mimirsbrunn.db}"
 PRUNE_DAYS="${BROKK_MEMORY_PRUNE_DAYS:-7}"

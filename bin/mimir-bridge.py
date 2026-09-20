@@ -29,10 +29,29 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def _ymir_home() -> Path:
+    """The operator's home: env -> the recorded choice -> the ONE documented
+    default. The default is owned by bin/hoard-lib.sh (Rule 07); this mirrors
+    its record file so a hand-started bridge resolves the same home."""
+    env = os.environ.get("YMIR_HOME")
+    if env:
+        return Path(env).expanduser()
+    cfg = Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config")))
+    try:
+        rec = (cfg / "ymir" / "home").read_text().strip().splitlines()[0].strip()
+        if rec:
+            return Path(rec).expanduser()
+    except (OSError, IndexError):
+        pass
+    return Path.home() / "Documents" / "ymirhome"
+
+
 # The well is ONE memory and it lives in the hoard — never in the tree and
 # never in a migrated copy. The shell bridge passes ENGRAM_DB; this default
 # (hoard | legacy-local) keeps a hand-started bridge honest either way.
-_home = Path(os.environ.get("YMIR_HOME", str(Path.home() / "Documents/Ymir")))
+_home = _ymir_home()
 STORE = Path(os.environ.get(
     "ENGRAM_DB",
     str(_home / "hodd/memory/kaia.engram")

@@ -41,7 +41,7 @@ all files in a single Python pass (was a store read + process spawn per file).
 
 **Where ingest reads from.** Its source is the hoard's `docs/business`, and the
 hoard root resolves through `bin/hoard-lib.sh` (`$YMIR_HOARD`, else `$YMIR_HOME`,
-else `$HOME/Documents/Ymir`) — the same one default every other script uses, and
+else `$HOME/Documents/ymirhome`) — the same one default every other script uses, and
 never the repo's `hodd/`, which holds only the guard, README and `*.example`
 scaffolds (Rule 04).
 
@@ -125,8 +125,8 @@ python3 - <<'PY'
 import json
 from datetime import datetime
 from engram import Engram
-eng = Engram(path="~/Documents/Ymir/hodd/memory/kaia.engram", agent_id="well")
-for l in open("~/Documents/Ymir/hodd/memory/well/episodes.jsonl"):
+eng = Engram(path="~/Documents/ymirhome/hodd/memory/kaia.engram", agent_id="well")
+for l in open("~/Documents/ymirhome/hodd/memory/well/episodes.jsonl"):
     if not l.strip().startswith("{"): continue
     e = json.loads(l); ts = e.get("timestamp")
     when = datetime.fromisoformat(ts.replace("Z","+00:00")) if ts else None

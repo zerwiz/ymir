@@ -15,7 +15,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_HOME/state}"
 
 # The cloth: colour and marks for the human reading this report; the TOON rows on

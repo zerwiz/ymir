@@ -668,8 +668,8 @@ step_loaders() {
 
 # ── 6b. delivery gates (git hooks) ───────────────────────────────────────────
 #
-# Rule 08: work leaves by PR, and every push carries a CHANGELOG entry. The
-# guards live in bin/ (branch-guard, changelog-guard, secret-guard) but git
+# Rule 08: work leaves by PR, and every push carries a fix note. The
+# guards live in bin/ (branch-guard, fixes-guard, secret-guard) but git
 # only reads .git/hooks, so the install seats them there — the gate is live
 # from the first commit of a fresh clone. Idempotent: each --install rewrites
 # its own hook.
@@ -680,22 +680,22 @@ step_gates() {
     if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then
       add gates OK "pre-commit + pre-push installed"
     else
-      add gates WARN "hooks not installed — bin/secret-guard.sh --install && bin/changelog-guard.sh --install"
+      add gates WARN "hooks not installed — bin/secret-guard.sh --install && bin/fixes-guard.sh --install"
     fi
     # The home repo is where the private data lives, so its ward matters more
     # than this repo's four. Report it separately so a dormant vault is visible.
-    local hh; hh="${YMIR_HOME:-$HOME/Documents/Ymir}/.git/hooks/pre-commit"
+    local hh; hh="${YMIR_HOME:-$HOME/Documents/ymirhome}/.git/hooks/pre-commit"
     if [ -x "$hh" ]; then add hoard-gate OK "home pre-commit seated";
     else add hoard-gate WARN "home hooks not installed — bin/hoard-guard.sh --install"; fi
     return
   fi
   [ -x "$SCRIPT_DIR/secret-guard.sh" ] && "$SCRIPT_DIR/secret-guard.sh" --install >/dev/null 2>&1 || true
-  [ -x "$SCRIPT_DIR/changelog-guard.sh" ] && "$SCRIPT_DIR/changelog-guard.sh" --install >/dev/null 2>&1 || true
+  [ -x "$SCRIPT_DIR/fixes-guard.sh" ] && "$SCRIPT_DIR/fixes-guard.sh" --install >/dev/null 2>&1 || true
   # Seat the ward on the PRIVATE home too — every install layer, every machine.
   [ -x "$SCRIPT_DIR/hoard-guard.sh" ] && "$SCRIPT_DIR/hoard-guard.sh" --install >/dev/null 2>&1 || true
   if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then add gates OK "pre-commit + pre-push installed"
   else add gates WARN "could not write .git/hooks — gates are dormant"; fi
-  local hh; hh="${YMIR_HOME:-$HOME/Documents/Ymir}/.git/hooks/pre-commit"
+  local hh; hh="${YMIR_HOME:-$HOME/Documents/ymirhome}/.git/hooks/pre-commit"
   if [ -x "$hh" ]; then add hoard-gate OK "home pre-commit seated";
   else add hoard-gate WARN "home hooks not seated — bin/hoard-guard.sh --install"; fi
 }

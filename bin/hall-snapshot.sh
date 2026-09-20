@@ -50,8 +50,8 @@ hoard_data_dir YMIR_DATA_DIR
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 OUT="${1:-$APP_ODRERIR/public/livehall.json}"
 
-runes_file="${BROKK_RUNES_FILE:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/memory/runes_audit.md}"
-PROJECTS_FILE="${YMIR_HOME:-$HOME/Documents/Ymir}/hodd/identity/projects.yaml"
+runes_file="${BROKK_RUNES_FILE:-${YMIR_HOME:-$HOME/Documents/ymirhome}/hodd/memory/runes_audit.md}"
+PROJECTS_FILE="${YMIR_HOME:-$HOME/Documents/ymirhome}/hodd/identity/projects.yaml"
 projects_file="$PROJECTS_FILE"
 cron_file="$YMIR_SETTINGS_DIR/cron.yaml"
 

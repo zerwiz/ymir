@@ -158,12 +158,7 @@ assets/reference/state/
 
 # Apps live in their own repos (registered in the home registry), pulled by the
 # installer's step_apps — never tracked in the monorepo.
-apps/hlidskjalf/
-apps/hlidskjalf-mobile/
-apps/odrerir/
-apps/sessrumnir/
 apps/smidja/
-apps/smidja-factory/
 !apps/README.md
 
 # The seat's chat belongs to the operator — in the home, never the repo (Rule 04).
