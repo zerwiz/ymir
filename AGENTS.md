@@ -301,7 +301,7 @@ See `.agents/assets/agents/naming.md` for the full component map.
 ## GitHub & isolates
 
 - The operator is the **Allfather**; he works with his **own GitHub login**
-  (`gh` OAuth locally; a **GitHub App** per company/workspace on the server
+  (`gh` OAuth locally; a **GitHub App** per project-root (`workspace/<project>`) on the server — company/ is bloat, reaped 2026-09-20; every shelf under any realm2019s workspace/ IS a project root
   later). Never a shared token.
 - Every project's `host/owner/repo/remote/default_branch/auth` is recorded in the
   **master project registry** (`$YMIR_HOME/hodd/identity/projects.yaml`, a `git{}` block)
