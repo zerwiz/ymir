@@ -33,8 +33,8 @@ const STATE_DIR = join(ROOT, 'state');
 // The ledger lives in the HOARD, never in the checkout (Rule 04 / migration
 // 0004): $YMIR_HOARD, else $YMIR_HOME/hodd, else ~/Documents/Ymir/hodd.
 /** $YMIR_HOME — the hoard's home: where a realm's real tree lives. */
-const HOME_DIR = process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir');
-const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'hodd');
+const HOME_DIR = process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'ymirhome');
+const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'ymirhome'), 'hodd');
 const RUNES = join(HOARD, 'memory/runes_audit.md');
 const WELL = join(ROOT, '.agents/memory/well/episodes.jsonl');
 const MASTERPLAN = join(ROOT, 'docs/masterplan.md');
@@ -436,7 +436,7 @@ async function processes() {
 const SMIDJA_DB = (() => {
   if (process.env.SMIDJA_DB) return process.env.SMIDJA_DB;
   const candidates = [
-    join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'Ymir'), 'smidja', 'smidja.db'),
+    join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'ymirhome'), 'smidja', 'smidja.db'),
     join(ROOT, 'apps', 'smidja', 'smidja_data', 'smidja.db'),
   ];
   return candidates.find((c) => existsSync(c)) ?? candidates[1];

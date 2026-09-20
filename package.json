@@ -80,6 +80,7 @@
   "workspaces": [
     "apps/hlidskjalf",
     "apps/odrerir",
-    "apps/sessrumnir"
+    "apps/sessrumnir",
+    "apps/smidja-factory"
   ]
 }

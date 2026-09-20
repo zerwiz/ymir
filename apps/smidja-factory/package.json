@@ -1,0 +1,51 @@
+{
+  "name": "@zerwiz/smidja-factory",
+  "version": "0.1.7",
+  "description": "Sm\u00ed\u00f0ja \u2014 the smithy, the agent factory: the agent roster and its phases, the phase envelopes, the run trace, and the Visualizer UI on :8437.",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/zerwiz/smidja",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerwiz/smidja.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zerwiz/smidja/issues"
+  },
+  "keywords": [
+    "ymir",
+    "smidja",
+    "smithy",
+    "agent",
+    "agents",
+    "factory",
+    "roster"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "visualizer": "bun --cwd apps/visualizer run server",
+    "build": "bun --cwd apps/visualizer run build",
+    "typecheck": "bun --cwd apps/visualizer run typecheck",
+    "lint": "bun --cwd apps/visualizer run lint",
+    "prepublishOnly": "bun --cwd apps/visualizer run build"
+  },
+  "files": [
+    "LICENSE",
+    "NOTICE",
+    "SKILL.md",
+    "AGENTS.md",
+    "README.md",
+    "docs/",
+    "references/",
+    "cookbooks/",
+    "skills/",
+    "templates/",
+    "scripts/",
+    "apps/visualizer/",
+    "!apps/visualizer/node_modules/**"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

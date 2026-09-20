@@ -19,7 +19,7 @@ data lives at `$YMIR_HOME`, under `hodd/`, and nowhere else.
 
 ## The private layout (current, 2026-09-17)
 
-`$YMIR_HOME` (default `~/Documents/Ymir`, resolved by `bin/hoard-lib.sh`
+`$YMIR_HOME` (default `~/Documents/ymirhome`, resolved by `bin/hoard-lib.sh`
 `hoard_root`) is the private git repo. `hodd/` **is** the hoard; everything
 else under the home is runtime or realm material.
 
