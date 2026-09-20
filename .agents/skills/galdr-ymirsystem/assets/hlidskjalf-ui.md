@@ -486,7 +486,7 @@ new tab — **never** a launcher call.
 - **Target rule — one rule for all of Ymir's apps:** `HALL_URL` in
   `src/data/metadata.ts`. `window.location.host` starting with `localhost` or
   `127.0.0.1` → `http://localhost:4322`; any other host → the public
-  `https://hall.ymir.zerw.org`. `VITE_HALL_URL` overrides it, exactly as
+  `https://hall.ymir.zerwiz.org`. `VITE_HALL_URL` overrides it, exactly as
   `VISUALIZER_URL` does. Each app computes this inline — the Vite builds are
   separate, so there is no shared module to hang it on.
 - **Same door** in the Smíðja visualizer's topbar and in Sessrúmnir, so every

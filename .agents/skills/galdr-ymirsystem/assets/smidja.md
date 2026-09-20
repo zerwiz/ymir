@@ -130,7 +130,7 @@ installed on this machine) — do not reintroduce `sqlite3`.
   Hall** pill (rune Othala ᛟ, `.hall-btn`) beside the theme toggle: a new tab to
   the Óðrerir Live Hall — `http://localhost:4322` when
   `window.location.host` starts with `localhost`/`127.0.0.1`, otherwise
-  `https://hall.ymir.zerw.org`. It is a **plain anchor, not a `/api/desktop`**
+  `https://hall.ymir.zerwiz.org`. It is a **plain anchor, not a `/api/desktop`**
   launcher: the Hall is the landing's live board, not one of the three apps the
   gate raises. Same door in Hlidskjalf's and Sessrúmnir's chrome.
 - See `docs/lore.md` §XIII.

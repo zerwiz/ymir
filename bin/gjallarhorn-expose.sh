@@ -10,8 +10,10 @@
 #   bin/gjallarhorn-expose.sh status   # what is exposed right now
 #
 # Hostnames come from the apps this machine actually serves (a port that answers)
-# plus YMIR_TUNNEL_SUFFIX: <app><suffix>.zerwiz.org. Nothing is invented: an app
-# with no HTTP surface (the desktop shells) is listed as skipped, not faked.
+# plus YMIR_TUNNEL_SUFFIX: <app><suffix><domain>, e.g. ymirdell.example.org. Both
+# the suffix and the domain are the OPERATOR's (env/config); there is no
+# shipped default, and nothing is invented: an app with no HTTP surface (the
+# desktop shells) is listed as skipped, not faked.
 set -u
 
 VERSION="1.0.0"
@@ -31,8 +33,20 @@ fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
 TUNNEL="${YMIR_TUNNEL_NAME:-ymir}"
-DOMAIN="${YMIR_TUNNEL_DOMAIN:-zerwiz.org}"
-SUFFIX="${YMIR_TUNNEL_SUFFIX:-dell}"
+# The exposed names belong to the OPERATOR, never to the distro: the public
+# tree must not carry one operator's domain (Rule 07 + the public-repo law).
+# They resolve from the home's own config, env first:
+#   $YMIR_TUNNEL_DOMAIN / $YMIR_TUNNEL_SUFFIX      (env — wins)
+#   $YMIR_HOME/config/tunnel.env                   (the home's own file)
+# Absent both, the step skips honestly and names what to set.
+ymir_home_root YMIR_HOME
+TUNNEL_CONF="${YMIR_TUNNEL_ENV:-$YMIR_HOME/config/tunnel.env}"
+_env_domain="${YMIR_TUNNEL_DOMAIN:-}"
+_env_suffix="${YMIR_TUNNEL_SUFFIX:-}"
+[ -r "$TUNNEL_CONF" ] && . "$TUNNEL_CONF"
+DOMAIN="${_env_domain:-${YMIR_TUNNEL_DOMAIN:-}}"
+SUFFIX="${_env_suffix:-${YMIR_TUNNEL_SUFFIX:-}}"
+unset _env_domain _env_suffix
 CONFIG="${YMIR_TUNNEL_CONFIG:-$HOME/.cloudflared/config-$TUNNEL.yml}"
 
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -56,9 +70,9 @@ APPS=(
   "smidjafactory:$GATE_PORT"
 )
 
-if [ -z "$SUFFIX" ]; then
+if [ -z "$DOMAIN" ] || [ -z "$SUFFIX" ]; then
   printf 'gjallarhorn[1]{step,status,detail}:\n'
-  printf '  "expose","SKIP","no YMIR_TUNNEL_SUFFIX — this is not the dev machine; the server does not wear its names"\n'
+  printf '  "expose","SKIP","no tunnel names for this operator - set them in %s (YMIR_TUNNEL_DOMAIN=your.domain, YMIR_TUNNEL_SUFFIX=<subdomain>) or in the env"\n' "$TUNNEL_CONF"
   exit 0
 fi
 

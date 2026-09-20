@@ -106,3 +106,33 @@ append_only[7]{artifact,why}:
   "*.jsonl / branch outcomes / session logs","event streams"
 ```
 
+
+## Amendment 2026-09-20 — the changelog is retired; a fix IS a file
+
+**Citing the entries above (2026-09-18, "the changelog system is replaced by fix
+notes" and the CHANGELOG.d fragment amendment): both are superseded here.**
+
+`CHANGELOG.md` is retired — the monolith and its fragments failed for the same
+reason: a monolith fed by fragments, folded at push time, and guarded by a check
+that a stray touched line satisfied. The append-only record for changes is now:
+
+```
+docs/fixes/<component>/<version>-<slug>.md     ONE FILE PER FIX
+```
+
+- **Components:** `install runtime skills agents hlidskjalf odrerir sessrumnir
+  smidja hoard gate`. Two branches never write the same path, so the collision a
+  monolith invites is impossible, and a component's history is its directory.
+- **`bin/fixes.sh record|list|show|diff|validate|components`** writes and reads
+  the notes. Nothing is assembled at push time.
+- **`bin/fixes-guard.sh`** is the pre-push gate: it only READS, requires at least
+  one new note in the pushed range, and names the component the note must cover.
+  `bin/changelog-guard.sh` and `bin/changelog-assemble.sh` are removed with the
+  system they served.
+- **Nothing was lost in the move.** Every `CHANGELOG.md` entry (166) is carried
+  as a note in `docs/fixes/` (161 notes; the duplicates were already folded), and
+  the monolith itself is deleted only because its content now lives there — the
+  append-only duty is met by the notes, not by the file that held them.
+- The `append_only[]` table above still names `CHANGELOG.md`: that row is
+  **superseded by this amendment** and remains readable as the history of the law,
+  never edited in place.

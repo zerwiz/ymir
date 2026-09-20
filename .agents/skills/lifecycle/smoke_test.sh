@@ -32,7 +32,17 @@ else bad well "well bridge not answering — see state/mimir-bridge.log"; fi
 # The smithy's db lives where the RUNTIME keeps it: $YMIR_HOME first, the repo path
 # only as a legacy fallback. The check and the owner must agree, or a present
 # database is reported absent - which is exactly what happened.
-SMIDJA_DB="${YMIR_SMIDJA_DB:-${YMIR_HOME:-$HOME/Documents/Ymir}/smidja/smidja.db}"
+# The operator's home: env -> the recorded choice -> the ONE documented default
+# (Rule 07; the default lives in bin/hoard-lib.sh, never in a script).
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _ymir_yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$(dirname "$_ymir_yr")/bin/hoard-lib.sh"; do
+    [ -r "$_ymir_yc" ] && { . "$_ymir_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _ymir_yr _ymir_yc
+fi
+ymir_home_root YMIR_HOME
+SMIDJA_DB="${YMIR_SMIDJA_DB:-${YMIR_HOME}/smidja/smidja.db}"
 [ -f "$SMIDJA_DB" ] || SMIDJA_DB="$SMIDJA_DB"
 if [ -f "$SMIDJA_DB" ]; then
   t=$(python3 -c "
