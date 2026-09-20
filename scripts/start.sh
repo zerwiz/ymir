@@ -181,11 +181,11 @@ SMIDJA_DB_PATH="${SMIDJA_DB:-}"
 # $YMIR_HOME/smidja/smidja.db. Prefer an existing DB there, then an in-repo copy
 # for a checkout that keeps its own; SMIDJA_DB overrides either.
 if [ -z "$SMIDJA_DB_PATH" ]; then
-  for _db in "${YMIR_HOME:-$HOME/Documents/Ymir}/smidja/smidja.db" \
+  for _db in "${YMIR_HOME:-$HOME/Documents/ymirhome}/smidja/smidja.db" \
              "$ROOT/apps/smidja/smidja_data/smidja.db"; do
     [ -f "$_db" ] && { SMIDJA_DB_PATH="$_db"; break; }
   done
-  SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-${YMIR_HOME:-$HOME/Documents/Ymir}/smidja/smidja.db}"
+  SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-${YMIR_HOME:-$HOME/Documents/ymirhome}/smidja/smidja.db}"
 fi
 if command -v bun >/dev/null 2>&1 && [ -d "$VIZ_DIR" ]; then
   [ -d "$VIZ_DIR/node_modules" ] || (cd "$VIZ_DIR" && bun install >/dev/null 2>&1 || true)
