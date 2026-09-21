@@ -27,7 +27,9 @@ export default function well(pi: any) {
       res = await fetch(new URL(path, BRIDGE).toString(), {
         ...init,
         headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
-        signal: AbortSignal.timeout(15000),
+        // Cold starts fetch the embedding model once (measured ~17s); the 60s
+        // default is the headroom — tune via YMIR_WELL_TIMEOUT_MS (Rule 07).
+        signal: AbortSignal.timeout(Number(process.env.YMIR_WELL_TIMEOUT_MS) || 60000),
       });
     } catch (e) {
       // A refused or timed-out connection is NOT an HTTP answer — fetch rejects
