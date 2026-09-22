@@ -11,6 +11,7 @@
 #   status -> the fleet ledger, one command
 #
 # Usage:
+#   eindri-dispatch.sh scout <id> "<question>" [--seat X] [--figure F]   # a recon errand from one question
 #   eindri-dispatch.sh new <id> [<repo>] [--scout|--mode <mode>]
 #                      [--title T] [--scope S] [--done D] [--wave N]
 #                      [--harness H] [--backend tmux|herdr] [--dry-run]
@@ -99,7 +100,7 @@ spawn_args() { # id repo scout-ish...
 }
 
 cmd_new() {
-  local id repo KIND=ship MODE= SCOUT=0 WAVE= TITLE= SCOPE= DONE= HARNESS= BACKEND= SEAT= NO_SEAT= DRY=0
+  local id repo KIND=ship MODE= SCOUT=0 WAVE= TITLE= SCOPE= DONE= HARNESS= BACKEND= SEAT= NO_SEAT= FIGURE= SKILLS= DRY=0
   local POS=()
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -116,6 +117,11 @@ cmd_new() {
       --seat) SEAT="${2-}"; shift ;;
       --seat=*) SEAT=${1#--seat=} ;;
       --no-seat) NO_SEAT=1 ;;
+      --figure) FIGURE="${2-}"; shift ;;
+      --figure=*) FIGURE=${1#--figure=} ;;
+      --skills) SKILLS="${2-}"; shift ;;
+      --skills=*) SKILLS=${1#--skills=} ;;
+      --no-skill) NO_SKILL=1 ;;
       --dry-run) DRY=1 ;;
       *) POS+=("$1") ;;
     esac
@@ -132,6 +138,16 @@ cmd_new() {
   [ -n "$SEAT" ] || [ -n "${NO_SEAT:-}" ] || {
     echo "error: --seat <alias> is required (or --no-seat for a pure code errand) — the smith must know its machine" >&2; exit 2; }
   if [ -n "${NO_SEAT:-}" ]; then SEAT=standalone; fi
+  # THE CRAFT: every errand names its figure card and its skills (the house
+  # law: skills are loaded before a task, never improvised). Refused without
+  # either, unless --no-skill declares deliberately none.
+  local craft_ok=0
+  if [ -n "$FIGURE" ] && [ -f "$ROOT/.agents/agents/$FIGURE.md" ]; then craft_ok=1; fi
+  [ -n "$SKILLS" ] && craft_ok=1
+  if [ "$craft_ok" = 0 ] && [ -z "${NO_SKILL:-}" ]; then
+    echo "error: the craft is missing — give --figure <name> (its card in .agents/agents/) and/or --skills 'a b'. A smith without a craft is refused (--no-skill declares none deliberately)." >&2
+    exit 2
+  fi
 
   if [ "$SCOUT" = 1 ]; then KIND=scout; else
     [ -n "$MODE" ] || MODE=local-only
@@ -181,6 +197,22 @@ cmd_new() {
     [ -n "$gate" ] && printf '**Wave gate (must be closed):** %s\n\n' "$gate"
     printf '**Seat:** %s\n\n' "$SEAT"
     printf '**Environment:** harness=%s · model=%s · effort=%s · isolation=%s\n\n' "${HARNESS:-auto}" "${MODEL:-default}" "${EFFORT:-default}" "${ISOLATION:-auto}"
+    printf '**Craft (figure + skills — LOAD BEFORE YOU ACT):**\n\n'
+    if [ -n "$FIGURE" ]; then
+      printf '%s\n' "- figure: \`$FIGURE\` — card at \`.agents/agents/$FIGURE.md\` (read it: role, permissions, capabilities)"
+      [ -f "$ROOT/.agents/agents/$FIGURE.md" ] || printf '%s\n' "  (card not found — say so; never improvise the role)"
+    fi
+    for s in ${SKILLS:-}; do
+      if [ -f "$ROOT/.agents/skills/$s/SKILL.md" ]; then
+        printf '%s\n' "- skill: \`$s\` → .agents/skills/$s/SKILL.md (load it before acting)"
+      elif [ -f "$HOME/.pi/agent/skills/$s/SKILL.md" ]; then
+        printf '%s\n' "- skill: \`$s\` → ~/.pi/agent/skills/$s/SKILL.md (load it before acting)"
+      else
+        printf '%s\n' "- skill: \`$s\` — NOT FOUND in .agents/skills or the pi skills: report the gap, do not improvise"
+      fi
+    done
+    [ -z "$FIGURE" ] && [ -z "$SKILLS" ] && printf '%s\n' "(no craft given — declared --no-skill)"
+    printf '\n'
     # the target seat's card, when seated over the private home
     local seat="${SEAT-}"
     if [ -n "$seat" ] && [ -f "$BROKK_HOME/hodd/data/machines.md" ]; then
@@ -211,6 +243,7 @@ cmd_new() {
   # 2) the task record (so relaunch + the tracker know it, pre-spawn)
   meta_write "$id" "id=$id" "kind=$KIND" "mode=${MODE:-scout}" "wave=$WAVE" \
     "title=$TITLE" "scope=$SCOPE" "done=$DONE" "status=open" \
+    "figure=$FIGURE" "skills=$SKILLS" "seat=$SEAT" "craft=${FIGURE:-}-${SKILLS:-}" \
     "project=${repo:-$ROOT}" "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
   # 3) the backlog ledger
@@ -227,7 +260,11 @@ cmd_new() {
 
   # 5) spawn (dry-run reports what would launch)
   if [ "$DRY" = 1 ]; then
-    echo "dry-run: would spawn $id kind=$KIND mode=${MODE:-scout} harness=${HARNESS:-auto} backend=${BACKEND:-auto} worktree=${repo:-$ROOT}"
+    echo "dry-run: would spawn $id kind=$KIND mode=${MODE:-scout} harness=${HARNESS:-auto} backend=${BACKEND:-auto} road=${ROAD:-space} worktree=${repo:-$ROOT}"
+  elif [ -x "$SCRIPT_DIR/eindri-start.sh" ] && [ "$SCOUT" = 1 ]; then
+    # a scout seats VISIBLY on the herdr road (space by default — one errand,
+    # one space); tmux is the verified fallback (the herdr skill's first law)
+    "$SCRIPT_DIR/eindri-start.sh" "$DATA/$id/brief.md" --space 2>/dev/null       && echo "seated $id → herdr space (log $DATA/$id/arm.log)"       || echo "note: eindri-start could not seat $id (no herdr? tmux fallback?) — loop holds at the ledger" >&2
   elif [ -x "$SCRIPT_DIR/einherjar-spawn.sh" ]; then
     local sp=()
     [ "$SCOUT" = 1 ] && sp+=(--scout) || sp+=(--mode "$MODE")
@@ -235,7 +272,7 @@ cmd_new() {
     [ -n "$BACKEND" ] && sp+=(--backend "$BACKEND")
     "$SCRIPT_DIR/einherjar-spawn.sh" "$id" "${repo:-$ROOT}" "${sp[@]}"
   else
-    echo "note: no einherjar-spawn.sh — loop ends at the ledger" >&2
+    echo "note: no seat engine — loop holds at the ledger" >&2
   fi
   say "open: $id → $BACKLOG"
 }
@@ -283,12 +320,16 @@ cmd_review() {
   say "reviewed $id → $verdict (handoff ack — the arm retires now)"
 }
 
-cmd_steer() { # steer <id> <text...> — Brokk speaks to the worker (arm acks it)
+cmd_steer() { # steer <id> <text...> — Brokk speaks to the worker: the data plane
   local id="${1-}"; shift || true
   [ -n "$id" ] && [ $# -gt 0 ] || { echo "error: steer <id> <text>" >&2; exit 2; }
   mkdir -p "$DATA/$id/inbox"
   local n=1; while [ -e "$DATA/$id/inbox/steer-$n.md" ]; do n=$((n+1)); done
   printf '%s\n%s\n' "# steer (Brokk → Eindri $id)" "$*" > "$DATA/$id/inbox/steer-$n.md"
+  # when a herdr agent for this errand is seated, eindri-send is the live lane
+  if [ -x "$ROOT/bin/eindri-send.sh" ]; then
+    "$ROOT/bin/eindri-send.sh" "$id" "$*" >/dev/null 2>&1 && say "steer also sent live to the seated agent ($id)" || true
+  fi
   say "steered $id ← steer-$n.md"
 }
 
@@ -323,6 +364,41 @@ cmd_answer() { # answer <id> <q-file> <text...> — Brokk answers the worker
   say "answered $id ($q) → a-$n.md (the arm acks it to the worker)"
 }
 
+cmd_scout() { # scout <id> "<question>" [--seat X] [--figure F] [--skills ...] [--wave N] [--dry-run]
+  local id="${1-}"; shift || true
+  [ -n "$id" ] || { echo "error: scout <id> \"<question>\"" >&2; exit 2; }
+  local q="" seat= figure= skills= wave=B dry=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --seat) seat="${2-}"; shift 2 ;;
+      --figure) figure="${2-}"; shift 2 ;;
+      --skills) skills="${2-}"; shift 2 ;;
+      --wave) wave="${2-}"; shift 2 ;;
+      --dry-run) dry=1; shift ;;
+      *) q="$q $1"; shift ;;
+    esac
+  done
+  q="$(printf '%s' "$q" | sed 's/^ //')"
+  [ -n "$q" ] || { echo "error: a question is required" >&2; exit 2; }
+  local args=("$id" --scout --title "SCOUT: $q" --done "a report at data/$id/report.md answering: $q")
+  [ -n "$seat" ] && args+=(--seat "$seat")
+  [ -n "$figure" ] && args+=(--figure "$figure")
+  [ -n "$skills" ] && args+=(--skills "$skills")
+  [ -n "$wave" ] && args+=(--wave "$wave")
+  [ "$dry" = 1 ] && args+=(--dry-run)
+  cmd_new "${args[@]}"
+}
+
+cmd_read() { # read <id> — Brokk reads a seated worker's current output
+  local id="${1-}"
+  [ -n "$id" ] || { echo "error: read <id>" >&2; exit 2; }
+  if [ -x "$ROOT/bin/eindri-control.sh" ]; then
+    "$ROOT/bin/eindri-control.sh" read "$id" 2>/dev/null || { echo "error: no seated agent '$id' (control plane)" >&2; exit 1; }
+  else
+    echo "error: no eindri-control.sh" >&2; exit 1
+  fi
+}
+
 cmd_status() {
   [ -f "$BACKLOG" ] || { echo "backlog: empty — no errands yet ($BACKLOG)"; return 0; }
   cat "$BACKLOG"
@@ -349,9 +425,11 @@ esac
 CMD="${1-}"; shift || true
 case "$CMD" in
   new) cmd_new "$@" ;;
+  scout) cmd_scout "$@" ;;
   close) cmd_close "$@" ;;
   review) cmd_review "$@" ;;
   steer) cmd_steer "$@" ;;
+  read) cmd_read "$@" ;;
   questions) cmd_questions "$@" ;;
   answer) cmd_answer "$@" ;;
   status) cmd_status "$@" ;;
