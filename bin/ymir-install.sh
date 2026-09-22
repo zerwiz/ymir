@@ -542,6 +542,28 @@ step_host() {
   fi
 }
 
+# ── 3d. the warden — Heimdall's ssh-key ward ─────────────────────────────────
+# The seat admits its entrant by the rune they carry on GitHub
+# (github.com/<user>.keys, validated, refreshed every 15 min). One published
+# key opens every warded computer, Omarchy or Ubuntu — this is Heimdall's law.
+# The ensure surface carries the ward: installs the script to a stable path
+# (~/.local/bin), records the operator's GitHub user, fetches + merges the
+# keys, and arms the refresh timer. Idempotent; --install may add openssh
+# (sudo, system package), never silently.
+step_heimdall() {
+  if [ ! -x "$SCRIPT_DIR/heimdall-ensure.sh" ]; then add heimdall SKIP "no heimdall-ensure.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if "$SCRIPT_DIR/heimdall-ensure.sh" status >/dev/null 2>&1; then add heimdall OK "the ward stands — GitHub keys, 15-min refresh"
+    else add heimdall WARN "the ward is not armed — a real run installs it"; fi
+    return
+  fi
+  if "$SCRIPT_DIR/heimdall-ensure.sh" ensure --install >/dev/null 2>&1; then
+    add heimdall OK "ward armed — GitHub keys admitted, refresh timer live"
+  else
+    add heimdall WARN "run bin/heimdall-ensure.sh ensure --install (needs sudo for openssh?); or seat keys by hand (hodd/docs/ssh)"
+  fi
+}
+
 # ── 4. sandbox image ─────────────────────────────────────────────────────────
 step_sandbox() {
   local engine; engine="$(ymir_container_engine_name 2>/dev/null || true)"
@@ -916,7 +938,7 @@ step_panes() {
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=19
+STEP_TOTAL=20
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))
@@ -945,6 +967,7 @@ run_step step_hermes "hermes"
 run_step step_sessrumnir "the seat"
 run_step step_backend "backend"
 run_step step_host "host"
+run_step step_heimdall "the warden"
 run_step step_sandbox "sandbox"
 run_step step_memory "memory"
 run_step step_smidja "the smithy"

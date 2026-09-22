@@ -10,6 +10,13 @@
 # The mechanism follows Omarchy's `omarchy-setup-security-sshd --gh-keys`: fetch,
 # validate, authorize; and only *then* offer to turn password logins off.
 #
+# Portability (Rule 05): this ward is the UNIVERSAL door — one published GitHub
+# key opens every warded computer. Proven seats (2026-09-22): Omarchy (omarchy,
+# heimdallomarchy) and Ubuntu/Debian (zerwizserver, whynot) — plain bash, the
+# systemd user timer, Debian's `ssh` unit vs Arch's `sshd` both handled. The
+# install wires it in via bin/heimdall-ensure.sh (step `heimdall`), so a fresh
+# seat is warded at setup, Omarchy or Ubuntu alike.
+#
 # Usage:
 #   heimdall-ssh-keys.sh status
 #   heimdall-ssh-keys.sh add [<github-user> ...] [--key=<public-key>] [--quiet]
@@ -32,7 +39,7 @@
 # Exit: 0 ok, 1 failure, 2 usage, 3 nothing to do.
 set -u
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 KEYS_FILE="${HEIMDALL_KEYS_FILE:-$HOME/.ssh/authorized_keys}"
 CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/heimdall"
 USERS_FILE="$CONF_DIR/gh-users"
