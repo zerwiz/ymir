@@ -223,7 +223,7 @@ isolation[8]{id,rule}:
 - Redis pub/sub is the queue *under* the A2A task model (A2A = semantics, Redis =
   throughput). Messages follow `.agents/bus/protocol.ts`.
 - Every A2A message is observed into **Mimirsbrunn** and logged to **Runes**.
-- **Status:** the native backbone is **planned, not built** — the plan is private at `memory/plans/mesh/25-ratatoskr-a2a.md` (in `$YMIR_HOME`). Today an external `a2abridge` daemon (A2A + MCP over Tailscale) is what runs; `.agents/bus/` is a stub. Way of Teams (`~/CodeP/wayofteams`) is the sold control plane; Ymir's daemon must also work standalone.
+- **Status:** the native backbone is **planned, not built** — the plan is private at `$YMIR_HOME/svartalfaheim/whynotproductions/workspace/ymir/plans/25-ratatoskr-a2a.md` (the canonical plan ledger). Today an external `a2abridge` daemon (A2A + MCP over Tailscale) is what runs; `.agents/bus/` is a stub. Way of Teams (`~/CodeP/wayofteams`) is the sold control plane; Ymir's daemon must also work standalone.
 - Kaia orchestrates: dispatch Eindri as A2A tasks, recall memory before dispatch,
   honour the anti-hallucination gate; specialists reach tools via MCP.
 
@@ -416,17 +416,18 @@ YMIR_HOME/                          ← private git repo (pushed to the user's p
 │   ├── secrets/                    # platform.env.age + age.key (the vault)
 │   ├── state/                      # runtime state; stale-* backups
 │   └── workspaces/                 # marketing/ · personal/ · work/
-├── memory/plans/<domain>/          # plan archive, domain-sorted (tracked)
+├── svartalfaheim/<realm>/workspace/<project>/plans/   # THE plan LEDGER — one canonical shelf per project (the ymir project's: plans 01–42)
 ├── config/                         # agents.yaml and per-machine overlays
 ├── state/                          # runtime state (ephemeral)
 ├── smidja/                         # factory databases (ephemeral)
 └── svartalfaheim/                  # per-realm scoped material
 ```
 
-> 2026-09-17: the home was re-laid out — plans moved from `hodd/docs/plans/`
-> to `memory/plans/<domain>/`, workspaces moved under `hodd/workspaces/`, and
-> dropped-from-git material rests in `hodd/state/stale-*`. The hodd example
-> (`hodd/AGENTS.example.md`) teaches the shape.
+> 2026-09-22: ALL of ymir's plans now live ONLY in the canonical ledger —
+> `svartalfaheim/<realm>/workspace/ymir/plans/` (plans 01–42, README index). The
+> `memory/plans/` shelf is RETIRED — never file a plan there. `hodd/plans/` holds
+> only live PERSONAL working plans. The hodd example (`hodd/AGENTS.example.md`)
+> teaches the shape; `BROKK_PLANS_DIR` may point the runtime at the ledger.
 
 `$YMIR_HOME/hodd/` **is** the private data path — there is no second, flat copy.
 `bin/hoard-lib.sh` resolves it (`hoard_root`), and it is the single source of

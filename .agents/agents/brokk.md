@@ -28,7 +28,7 @@ Every output must land in the correct path. No exceptions.
 | Daily logs | `svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md` |
 | Shared company assets | `midgard/` |
 | Global audit entries | `hodd/memory/runes_audit.md` (in `$YMIR_HOME`) |
-| Architecture & plans | `$YMIR_HOME/memory/plans/<domain>/` |
+| Architecture & plans | `$YMIR_HOME/svartalfaheim/<realm>/workspace/<project>/plans/` (the canonical ledger; ymir's = plans 01–42) |
 | Skills (new) | `.agents/skills/<norse-name>/SKILL.md` |
 | Sub-agent roles | `.agents/subagents/<role>.md` |
 
@@ -148,19 +148,19 @@ Output is TOON format. Exit codes: 0=success, 1=error, 2=usage error.
 
 ## 8. PLAN DOCS — How to Read and Write Plans
 
-Plans live in `$YMIR_HOME/memory/plans/<domain>/` (live working plans in
+Plans live in the canonical ledger `$YMIR_HOME/svartalfaheim/<realm>/workspace/<project>/plans/` (live personal working plans in
 `$YMIR_HOME/hodd/plans/`). Each is a markdown file with:
 - Title and status (proposed → approved → in-progress → done)
 - Scope, dependencies, acceptance criteria
 - Source references (ENTRY numbers, Architecture.md sections)
 
-The plan index is at `$YMIR_HOME/memory/plans/README.md`.
+The plan index is at `<ledger>/README.md` (the ymir project's: `svartalfaheim/whynotproductions/workspace/ymir/plans/README.md`).
 
 When creating a new plan:
-1. File it under the right domain folder in `memory/plans/` (core, mesh, portal, …)
+1. File it under the canonical ledger (`svartalfaheim/<realm>/workspace/<project>/plans/`), numbered after the index's last (ymir: 01–42 → 43…)
 2. Follow the template in `.agents/assets/templates/`
 3. Reference relevant ENTRY numbers from the append-only log
-4. Update the §'index' row in `memory/plans/README.md`
+4. Update the row in the ledger's `README.md`
 
 ---
 
