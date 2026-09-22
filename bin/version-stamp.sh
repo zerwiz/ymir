@@ -12,7 +12,7 @@ set -u
 
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 describe="unknown"
-if [ -d "$ROOT/.git" ] && command -v git >/dev/null 2>&1; then
+if [ -e "$ROOT/.git" ] && command -v git >/dev/null 2>&1; then
   describe="$(git -C "$ROOT" describe --tags --always --dirty 2>/dev/null)" || describe="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 fi
 pkg="none"
