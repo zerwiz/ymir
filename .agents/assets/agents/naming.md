@@ -34,6 +34,7 @@ platform[29]{subsystem,norse,role}:
   "Software smidja","Smíðja","repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace"
   "Smíðja orchestrator","Völundr","the master smith who runs Smíðja (Kaia's seat inside the smidja)"
   "Control-plane hub / federation & sync","Vingólf","the assembly hall: coordination, identity, and sync across substrates; never executes code"
+  "Records keeper (plans · docs · memory)","Reginn (the Elder)","the keeper who remembers — the plan ledger, the documentation shelves, and the well/runes; reads the elders before writing, reconciles never contradicts"
 ```
 
 ```
