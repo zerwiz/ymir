@@ -39,6 +39,7 @@ bin[101]{file,does}:
   "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh - per-home session lock for the Brokk runtime."
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on."
   "heimdall-ssh-keys.sh","heimdall-ssh-keys.sh — Heimdall's SSH-keys surface."
+  "heimdall-ensure.sh","heimdall-ensure.sh — arm the ward: install Heimdall's ssh-key guard on this seat (install step `heimdall`)."
   "herdr-agents.py","(no header description)"
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs."
   "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand."
