@@ -47,7 +47,7 @@ IP** (never 127.0.0.1), state in `.a2a/<agent>`, the directory as a **service**,
 heartbeat + deregister, and `cert` (ed25519) before federation. Cards are
 UNSIGNED until then. Realm boundaries hold.
 
-Plan + registration spec: `$YMIR_HOME/memory/plans/mesh/25-ratatoskr-a2a.md` and `$YMIR_HOME/hodd/docs/a2a-runs.md`.
+Plan + registration spec: `$YMIR_HOME/svartalfaheim/whynotproductions/workspace/ymir/plans/25-ratatoskr-a2a.md` and `$YMIR_HOME/hodd/docs/a2a-runs.md`.
 
 ## Joining the mesh and talking (skill-driven, no code)
 
