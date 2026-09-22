@@ -67,6 +67,7 @@ agents:
   jord:    { model: opencode-go/deepseek-v4.1-flash }
   groa:    { model: opencode-go/deepseek-v4.1-flash }
   volundr: { model: opencode-go/deepseek-v4.1-flash }
+  elder:   { model: opencode-go/deepseek-v4.1-flash }
 
 # How many LOCAL models this machine may run at once (most boxes: 1).
 local_concurrency: 1

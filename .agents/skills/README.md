@@ -11,7 +11,7 @@ dispatches for that work. A skill owned by `brokk` means the primary keeps it in
 hand — a dedicated seat is added when the work earns one.
 
 ```
-skills[27]{skill,does,owner}:
+skills[28]{skill,does,owner}:
   "galdr-ymirsystem","agent-CLI ergonomics — the master builder/maintainer of the runtime","galdr"
   "tyr-check","the judge — galdr principles + runtime gates","tyr"
   "rules-check-drift","rules-file drift — keeps AGENTS.md true after code changes","tyr"
@@ -39,6 +39,7 @@ skills[27]{skill,does,owner}:
   "hnoss-design","design — artifacts via OpenDesign (prototypes, decks, dashboards, image, video)","hnoss"
   "bragi-marketing","marketing — research/crawl (Firecrawl), agentic browser (browser-use)","bragi"
   "bragi-translation","translation — speech→text (whisper.cpp) + text→text (the llama router); carries words between tongues","bragi"
+  "elder-home","the keeper — home records: the plan ledger, documentation, and memory (Reginn, the keeper who remembers)","elder"
 ```
 
 The control-plane UI guide is not a standalone skill: **hlidskjalf-ui** and its
