@@ -37,7 +37,7 @@ $YMIR_HOME/
 │   ├── secrets/                 # platform.env (+ .age) + age.key — by path, never inline
 │   ├── state/                   # runtime state; stale-* backups (dropped-from-git storage)
 │   └── workspaces/              # marketing/ personal/ work/
-├── memory/plans/<domain>/       # the plan ARCHIVE (tracked): core, mesh, portal …
+├── svartalfaheim/<realm>/workspace/<project>/plans/   # the plan LEDGER — one canonical shelf per project (tracked)
 ├── config/                      # agents.yaml + per-machine overlays, cron.yaml
 ├── smidja/  state/              # factory + runtime state (ephemeral)
 └── svartalfaheim/<realm>/       # per-realm scoped material (never crossed without word)
