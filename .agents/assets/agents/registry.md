@@ -5,10 +5,11 @@ AGENTS.md loads this when a task needs the live inventories.
 ## Skills registry (`.agents/skills/`)
 
 ```
-skills[3]{name,norse,purpose,path,status}:
+skills[4]{name,norse,purpose,path,status}:
   "galdr","Galdr","agent-CLI ergonomics + master builder/maintainer",".agents/skills/galdr-ymirsystem/SKILL.md","live"
   "tyr-check","Tyr","the judge — 10 principles + runtime gates",".agents/skills/tyr-check/SKILL.md","live"
   "brokk-craft","Brokk","the forger — generates Galdr-compliant skills in TOON","(planned) .agents/skills/brokk-craft/SKILL.md","planned"
+  "elder-home","Reginn (the Elder)","the keeper — home records: plans ledger, docs, memory",".agents/skills/elder-home/SKILL.md","live"
 ```
 
 The **canonical, complete** skill index is `.agents/skills/README.md` — read it for
