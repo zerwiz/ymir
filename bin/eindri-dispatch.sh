@@ -141,8 +141,12 @@ cmd_new() {
   # THE CRAFT: every errand names its figure card and its skills (the house
   # law: skills are loaded before a task, never improvised). Refused without
   # either, unless --no-skill declares deliberately none.
-  local craft_ok=0
-  if [ -n "$FIGURE" ] && [ -f "$ROOT/.agents/agents/$FIGURE.md" ]; then craft_ok=1; fi
+  local craft_ok=0 CARD=""
+  if [ -n "$FIGURE" ]; then
+    for c in "$ROOT/.agents/agents/$FIGURE.md" "$ROOT/.agents/agents/${FIGURE}"*.md; do
+      [ -f "$c" ] && { CARD="$c"; craft_ok=1; break; }
+    done
+  fi
   [ -n "$SKILLS" ] && craft_ok=1
   if [ "$craft_ok" = 0 ] && [ -z "${NO_SKILL:-}" ]; then
     echo "error: the craft is missing — give --figure <name> (its card in .agents/agents/) and/or --skills 'a b'. A smith without a craft is refused (--no-skill declares none deliberately)." >&2
@@ -199,8 +203,8 @@ cmd_new() {
     printf '**Environment:** harness=%s · model=%s · effort=%s · isolation=%s\n\n' "${HARNESS:-auto}" "${MODEL:-default}" "${EFFORT:-default}" "${ISOLATION:-auto}"
     printf '**Craft (figure + skills — LOAD BEFORE YOU ACT):**\n\n'
     if [ -n "$FIGURE" ]; then
-      printf '%s\n' "- figure: \`$FIGURE\` — card at \`.agents/agents/$FIGURE.md\` (read it: role, permissions, capabilities)"
-      [ -f "$ROOT/.agents/agents/$FIGURE.md" ] || printf '%s\n' "  (card not found — say so; never improvise the role)"
+      printf '%s\n' "- figure: \`$FIGURE\` — card at \`${CARD#.}\` (read it: role, permissions, capabilities)"
+      [ -n "$CARD" ] || printf '%s\n' "  (card not found — say so; never improvise the role)"
     fi
     for s in ${SKILLS:-}; do
       if [ -f "$ROOT/.agents/skills/$s/SKILL.md" ]; then
@@ -264,7 +268,9 @@ cmd_new() {
   elif [ -x "$SCRIPT_DIR/eindri-start.sh" ] && [ "$SCOUT" = 1 ]; then
     # a scout seats VISIBLY on the herdr road (space by default — one errand,
     # one space); tmux is the verified fallback (the herdr skill's first law)
-    "$SCRIPT_DIR/eindri-start.sh" "$DATA/$id/brief.md" --space 2>/dev/null       && echo "seated $id → herdr space (log $DATA/$id/arm.log)"       || echo "note: eindri-start could not seat $id (no herdr? tmux fallback?) — loop holds at the ledger" >&2
+    seat_args=(--space)
+    [ -n "$FIGURE" ] && seat_args+=(--role "${FIGURE%-scout}")
+    "$SCRIPT_DIR/eindri-start.sh" "$DATA/$id/brief.md" "${seat_args[@]}" 2>/dev/null       && echo "seated $id → herdr space (log $DATA/$id/arm.log)"       || echo "note: eindri-start could not seat $id (no herdr? tmux fallback?) — loop holds at the ledger" >&2
   elif [ -x "$SCRIPT_DIR/einherjar-spawn.sh" ]; then
     local sp=()
     [ "$SCOUT" = 1 ] && sp+=(--scout) || sp+=(--mode "$MODE")
@@ -411,6 +417,8 @@ cmd_status() {
     # a fresh arm beat = a live worker under watch
     beat="$STATE/$id.beat"
     if [ -f "$beat" ]; then
+      local row_st; row_st="$(grep "| $id |" "$BACKLOG" 2>/dev/null | tail -1 | awk -F'|' '{gsub(/ /,"",$4); print $4}')"
+      case "$row_st" in accepted|returned|failed) continue ;; esac
       age=$((now - $(stat -c %Y "$beat" 2>/dev/null || echo 0)))
       echo "  · arming $id — beat age ${age}s $([ -f "$STATE/$id.close" ] && echo '(done → awaiting verdict)' || echo '(open)')"
     fi
