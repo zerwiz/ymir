@@ -304,6 +304,16 @@ wire_phase() {
   if [ "${codes:-0}" -gt 0 ]; then emit 6 wire invite SKIP "a live invite code exists"
   else emit 6 wire invite CONSENT "mint an invite code — how anyone else is let in (registration stays closed without one)"; fi
 
+  # Heimdall — the ssh-key ward: entry by the rune carried on GitHub. The
+  # plan row is computed, never recited: a warded seat is a SKIP, a bare one a
+  # DO. Never a BLOCKED — a seat can stand without it, it just has no second
+  # door.
+  if [ -x "$ROOT/bin/heimdall-ensure.sh" ] && "$ROOT/bin/heimdall-ensure.sh" status >/dev/null 2>&1; then
+    emit 6 wire heimdall SKIP "Heimdall guards this seat (GitHub keys, 15-min refresh)"
+  else
+    emit 6 wire heimdall DO "arm Heimdall — the ward admits GitHub keys into this seat's authorized_keys (one published key, all doors)"
+  fi
+
   if [ -d /usr/share/omarchy ]; then
     emit 6 wire launchers DO "place each app on its own numbered desktop + write the launcher entries"
   else
