@@ -50,7 +50,7 @@ plan_phases[9]{n,name,gate}:
   "3","runtimes","git/python3 · bun/uv/mcp<2> · pi · hermes · the terminal backend"
   "4","engines","treehouse · no-mistakes · sandcastle · the Utgard image"
   "5","apps","hlidskjalf · odrerir · sessrumnir · smidja — web build required, shell gated"
-  "6","wire","the way in (auth · invite) and the launcher entries"
+  "6","wire","the way in (auth · invite · heimdall) and the launcher entries"
   "7","raise","every port listening, then the desktop apps"
   "8","verify","what stands, honestly"
 ```
@@ -383,7 +383,7 @@ manifests. The token comes from the hoard, never from `~/.npmrc`.
 ## The steps
 
 ```
-install[23]{step,what,self-heals}:
+install[24]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -395,6 +395,7 @@ install[23]{step,what,self-heals}:
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
+  "heimdall","the ssh-key ward (Heimdall) — entry by the rune carried on GitHub","bin/heimdall-ensure.sh arms it: ward script to ~/.local/bin (stable path, not the repo tree), the operator's GitHub user recorded, keys fetched/validated/merged into ~/.ssh/authorized_keys, 15-min user timer live (loginctl linger note for headless). --install may add openssh via pacman/apt (sudo, system package). Idempotent; a seat can stand warded or bare — reported honestly"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage — the store is ONE well in the hoard ($YMIR_HOME/hodd/memory/kaia.engram), resolved via hoard-lib or ENGRAM_DB"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
@@ -409,7 +410,7 @@ install[23]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**25** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
+**26** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 `smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. `--check`
 skips the runtime-only steps (`services`, `desktop`, `validate`), which have
@@ -629,6 +630,26 @@ hermes-ensure.sh install          # curl -fsSL https://hermes-agent.nousresearch
 
 A user who lacks Hermes gets it at setup (`hermes` step). Config/identity
 (`hermes setup`, auth) stays the user's own; Ymir guarantees only the runtime.
+
+## Heimdall specifically (`bin/heimdall-ensure.sh`, `bin/heimdall-ssh-keys.sh`)
+
+```
+heimdall-ensure.sh status             # heimdall[1]{ward,version,gh_users,keys,timer,linger,sshd}
+heimdall-ensure.sh ensure --install   # arm the ward (may add openssh via sudo)
+heimdall-ensure.sh install            # = ensure --install
+heimdall-ssh-keys.sh status|add|harden|unharden|timer   # the ward's own surface
+```
+
+**Heimdall's law: one rune of introduction, all doors.** Every warded seat
+fetches `github.com/<user>.keys`, validates every key, merges it into
+`~/.ssh/authorized_keys`, and refreshes every 15 minutes on a systemd user
+timer. Publish a public key to the operator's GitHub → it opens every warded
+computer, Omarchy or Ubuntu. The ward is distro-portable (plain bash + curl +
+ssh-keygen; Debian's `ssh` unit and Arch's `sshd` both handled) and is wired
+into the install as the `heimdall` step, so a fresh seat is warded at setup.
+Hardening (`harden`) disables password logins — a console sudo action, never
+taken by an agent, and refused while zero keys are seated (a machine with no
+key inside is a machine nobody can enter).
 
 ## Sessrúmnir specifically (`bin/sessrumnir-ensure.sh`, `bin/sessrumnir.sh`)
 
