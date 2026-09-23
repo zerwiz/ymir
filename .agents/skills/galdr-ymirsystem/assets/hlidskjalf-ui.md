@@ -178,6 +178,17 @@ canvas that sized itself once at a stale dimension never shows the fire. The
 shared module watches the host; the port watches its parent; re-seeding fires
 only when the measured size actually changed (never per-frame).
 
+**The hearth warms from the floor (2026-09-23).** The haze pools — the soft glow
+that reads as the fire — were seeded in a band a fraction down from the top
+(`y: H * 0.3 + rand * H * 0.7`). On the landing's short hero that read as "the
+whole hero"; in a tall chat column it put the glow's upper edge a third down, so
+the hearth appeared to start a third up while the ember dots rose from the
+bottom. The seed is now anchored to the bottom edge —
+`y: H - rand * min(H * 0.28, 240)` — in every copy (`midgard/design-system/ember.js`,
+Sessrúmnir's `ember-background.tsx` / `EmberBackground.tsx` / `assets/ember.js`,
+and the Óðrerir, Hlidskjalf and Smíðja visualizer copies), so the one fire rises
+from the floor everywhere.
+
 ### The gate API reads cheaply (added 2026-09-16)
 
 The gate reads append-only ledgers (Runes, the well's `episodes.jsonl`, masterplan
