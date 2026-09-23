@@ -57,3 +57,22 @@ electron_fetch_runtime() {  # <app-dir> — place the runtime without npm's perm
   rm -rf "$tmp"
   [ -f "$app/path.txt" ] && [ -x "$app/dist/electron" ] && { "$app/dist/electron" --version >/dev/null 2>&1; }
 }
+
+# fetch_electron_zip — the PROVEN road (2026-09-23): the postinstall's silent
+# failures leave locales/ without the binary; the zip's direct fetch + unzip
+# always lands the runtime. The mend's final tier.
+fetch_electron_zip() {  # <app-dir> — the app whose node_modules/electron needs dist/electron
+  local dir="$1" pkg v url tmp
+  pkg="$dir/node_modules/electron/package.json"
+  [ -f "$pkg" ] || return 1
+  v="$(node -e "console.log(require('$pkg').version)" 2>/dev/null)" || return 1
+  url="https://github.com/electron/electron/releases/download/v$v/electron-v$v-linux-x64.zip"
+  tmp="$(mktemp /tmp/electron-XXXXXX.zip 2>/dev/null)" || return 1
+  if command -v curl >/dev/null 2>&1 && curl -sL -m 540 -o "$tmp" "$url" && [ -s "$tmp" ]; then
+    ( cd "$dir/node_modules/electron" && unzip -oq "$tmp" -d dist 2>/dev/null )
+    rm -f "$tmp"
+  else
+    rm -f "$tmp"; return 1
+  fi
+  [ -x "$dir/node_modules/electron/dist/electron" ]
+}
