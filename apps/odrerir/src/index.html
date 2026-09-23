@@ -64,7 +64,10 @@
 <!-- ======= TOPBAR — the hall's own deck ======= -->
 <div class="hall-top">
   <span><span class="rn">ᛈ</span>YMIR · ÓÐRERIR — THE LIVE HALL</span>
-  <a class="hall-back" href="https://ymirdell.zerwiz.org/" rel="noopener" title="the saga — ymirdell.zerwiz.org" aria-label="Back to the lore — the saga of Ymir">← the lore</a>
+  <span class="hall-links" style="display:inline-flex;gap:1rem;align-items:center">
+    <a class="hall-back" href="/lore" title="the lore — the saga at home" aria-label="The lore — the saga of Ymir">← the lore</a>
+    <a class="hall-back" href="/tickets" title="Skuld — the hall's book: the tickets and the plans" aria-label="The hall's book — tickets and plans">→ the book · tickets</a>
+  </span>
 </div>
 
 <!-- ================= ÓÐRERIR — THE LIVE HALL =================
@@ -709,6 +712,16 @@ function renderCharted(m){
     main.appendChild(el('div', 'lh-row__title', t.title));
     main.appendChild(el('div', 'lh-row__sub', t.reason ? t.reason + ' · ' + t.sub : t.sub));
     row.appendChild(main);
+    // the shelf opens when pressed: the about of the charted work, and what a
+    // dispatch of it will make.
+    main.style.cursor = 'pointer';
+    var det = el('div', 'lh-row__detail');
+    det.style.display = 'none';
+    det.appendChild(el('p', null, 'the about: ' + (t.sub || t.reason || 'the plans own the detail — read the project shelf')));
+    det.appendChild(el('p', null, 'a dispatch of this will: carve an isolated worktree, raise the agent on it, and land the deliverable at the project shelf — the aim rides the brief, and the ticket is cut in the book.'));
+    var open = false;
+    main.addEventListener('click', function(){ open = !open; det.style.display = open ? 'block' : 'none'; });
+    row.appendChild(det);
     if(isWarning(t)) row.appendChild(badge('danger', 'needs repair'));
     else if(t.reason) row.appendChild(badge('warn', 'waiting'));
     ch.appendChild(row);
