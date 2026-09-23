@@ -196,14 +196,15 @@ server.resource("the-book", "skuld://book", "the ticket book", async () => {
   return { contents: [{ uri: "skuld://book", mimeType: "text/plain", text: `tickets: ${t} · plans: ${p}` }] };
 });
 
+  server.registerTool("sync_snapshot", { title: "The whole book", description: "The full export (tickets + plans + statuses + namespaces) for the fleet mirrors — the heart is the primary, the instances pull.", inputSchema: {} }, async () => {
+    const t = rows(q(`SELECT id, ticket_no, namespace, status, priority, title, LEFT(description, 200), labels, owner, created_at FROM tickets ORDER BY id`));
+    const p = rows(q(`SELECT id, namespace, title, status, tickets, created_at FROM plans ORDER BY id`));
+    const n = rows(q(`SELECT name, COALESCE(about, name) FROM namespaces ORDER BY name`));
+    return { content: [{ type: "text", text: "tickets\n" + t.join("\n") + "\nplans\n" + p.join("\n") + "\nnamespaces\n" + n.join("\n") }] };
+  });
+
   return server;
 }
-server.registerTool("sync_snapshot", { title: "The whole book", description: "The full export (tickets + plans + statuses + namespaces) for the fleet mirrors — the heart is the primary, the instances pull.", inputSchema: {} }, async () => {
-  const t = rows(q(`SELECT id, ticket_no, namespace, status, priority, title, LEFT(description, 200), labels, owner, created_at FROM tickets ORDER BY id`));
-  const p = rows(q(`SELECT id, namespace, title, status, tickets, created_at FROM plans ORDER BY id`));
-  const n = rows(q(`SELECT name, COALESCE(about, name) FROM namespaces ORDER BY name`));
-  return { content: [{ type: "text", text: "tickets\n" + t.join("\n") + "\nplans\n" + p.join("\n") + "\nnamespaces\n" + n.join("\n") }] };
-});
 
 // — the served mode: StreamableHTTP on PORT (the SDK holds the handshake+session) —
 const PORT = parseInt(process.env.PORT || "0", 10);
