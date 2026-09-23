@@ -102,7 +102,14 @@ igpu_vram_small() {
   return 1
 }
 
-real_electron() { printf '%s' "$APP/node_modules/electron/dist/electron"; }
+real_electron() {
+  local b="$APP/node_modules/electron/dist/electron" s
+  [ -x "$b" ] && { printf '%s' "$b"; return; }
+  # the shared-runtime law: any app's seated electron serves the view
+  s="$(electron_find "$ROOT" 2>/dev/null || true)"
+  [ -n "$s" ] && [ -x "$s/node_modules/electron/dist/electron" ] && { printf '%s' "$s/node_modules/electron/dist/electron"; return; }
+  printf '%s' "$b"
+}
 is_running() {
   local pids; pids="$(view_pids "$1")"
   [ -n "$pids" ]

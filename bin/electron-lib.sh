@@ -76,3 +76,33 @@ fetch_electron_zip() {  # <app-dir> — the app whose node_modules/electron need
   fi
   [ -x "$dir/node_modules/electron/dist/electron" ]
 }
+
+# electron_find — the SHARED runtime: any app's electron in this tree (the
+# never-happen law: one fetch seats every view; a view without its own dep runs
+# the found one). Returns the app dir containing the binary, "" when none.
+electron_find() {  # <root> — the ymir root (repo or npm package)
+  local root="$1" d
+  for d in "$root"/apps/*/node_modules/electron; do
+    [ -x "$d/dist/electron" ] && { printf '%s' "$(dirname "$d")"; return 0; }
+  done
+  return 1
+}
+
+# seat_app_runtime — the install-time runtime seating (the never-happen law):
+# the app's deps, then the electron (the PROVEN zip road, or the found seat's
+# symlink — ONE fetch for the whole tree).
+seat_app_runtime() {  # <app-dir> <fetched-app-dir-or-"">
+  local dir="$1" shared="$2" pkg
+  [ -d "$dir/node_modules/electron/dist" ] && return 0
+  command -v npm >/dev/null 2>&1 || return 1
+  ( cd "$dir" && npm install --include=dev >/dev/null 2>&1 )
+  if [ -d "$dir/node_modules/electron" ] && [ ! -x "$dir/node_modules/electron/dist/electron" ]; then
+    if [ -n "$shared" ] && [ -x "$shared/node_modules/electron/dist/electron" ]; then
+      rm -rf "$dir/node_modules/electron"
+      ln -s "$shared/node_modules/electron" "$dir/node_modules/electron" 2>/dev/null
+    else
+      fetch_electron_zip "$dir" >/dev/null 2>&1 || true
+    fi
+  fi
+  [ -x "$dir/node_modules/electron/dist/electron" ]
+}
