@@ -869,8 +869,8 @@ document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
       row.style.cursor='pointer';
     });
     var tot=0; Object.keys(counts).forEach(function(k){ tot+=counts[k]; });
-    var mEl=document.querySelector('.lh-tally .lh-metric') || document.querySelector('[class*=metric]');
-    if (mEl) { var v=mEl.querySelector('[class*=value],[class*=num]'); if (v) v.textContent=tot; }
+    var mEls=document.querySelectorAll('[class*=metric]');
+    mEls.forEach(function(m){ var lab=(m.innerText||'').toLowerCase(); if (lab.indexOf('errands')>-1) { var v=m.querySelector('[class*=value],[class*=num]'); if (v) v.textContent=tot; } });
   }).catch(function(){});
   (function plansCall(){
     var SK='http://192.168.68.111:8320';
