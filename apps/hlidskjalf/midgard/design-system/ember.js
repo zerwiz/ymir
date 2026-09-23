@@ -59,7 +59,7 @@ function seed(W, H) {
   }
   const haze = [];
   for (let i = 0; i < HAZE; i++) {
-    haze.push({ x: Math.random() * W, y: H * 0.3 + Math.random() * H * 0.7, r: 130 + Math.random() * 170, v: (Math.random() - 0.5) * 0.15 });
+    haze.push({ x: Math.random() * W, y: H - Math.random() * Math.min(H * 0.28, 240), r: 130 + Math.random() * 170, v: (Math.random() - 0.5) * 0.15 });
   }
   return { embers, haze };
 }

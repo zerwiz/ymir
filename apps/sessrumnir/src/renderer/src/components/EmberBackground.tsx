@@ -59,7 +59,7 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
       for (let i = 0; i < 6; i++) {
         haze.push({
           x: Math.random() * W,
-          y: H * 0.3 + Math.random() * H * 0.7,
+          y: H - Math.random() * Math.min(H * 0.28, 240),
           r: 130 + Math.random() * 170,
           v: (Math.random() - 0.5) * 0.15,
         })
