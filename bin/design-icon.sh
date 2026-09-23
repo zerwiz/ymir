@@ -159,7 +159,6 @@ install_all() {
     } >"$apps_dir/$iconname.desktop"
     printf '  "%s","%s.svg","%s.desktop"\n' "$iconname" "$iconname" "$iconname"
   done
-  [ -f "$apps_dir/ymir-smidja.desktop" ] && rm -f "$apps_dir/ymir-smidja.desktop"
   # Names we have retired, swept on every install: a launcher entry that points at
   # an icon nobody ships is a blank square, and the naming law does not let an old
   # name linger beside the new one. (ymir-visualizer → ymir-smidja.)
