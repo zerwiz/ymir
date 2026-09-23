@@ -52,7 +52,17 @@ touch_heartbeat() { date -u +%s >"$STATE/.watch.heartbeat"; }
 actionable() {
   # A non-empty wake queue or an actionable status append ends the cycle.
   if [ -s "$STATE/.wake-queue" ]; then
-    printf 'signal: wake queue\n'
+    # ONE signal per DISTINCT queue content (the 2026-09-22 flood brake): an
+    # unconsumed queue must never re-inject on every poll. A new wake (changed
+    # content) raises exactly one new signal; an unchanged queue stays silent
+    # until the agent drains it (saga-wake-drain.sh) or the content changes.
+    local _h _prev
+    _h="$(md5sum < "$STATE/.wake-queue" | awk '{print $1}')"
+    _prev="$(cat "$STATE/.wake-last-hash" 2>/dev/null || true)"
+    if [ "$_prev" != "$_h" ]; then
+      printf '%s' "$_h" > "$STATE/.wake-last-hash"
+      printf 'signal: wake queue\n'
+    fi
     return 0
   fi
   local sig
