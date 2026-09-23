@@ -90,3 +90,16 @@ hard[3]{step,command,proof}:
 Seating without injecting leaves an idle agent — not a dispatch. If the agent is
 `idle` right after seating, re-send; if it is gone, re-seat. Only report success
 once the agent is `working`.
+
+## Two laws a seat must obey (2026-09-23)
+
+```
+seat_laws[2]{law,why,how}:
+  "a seat loads its own figure","pi loads only AGENTS.md (which describes Brokk), so every seat that is not given its role file believes it IS Brokk","--append-system-prompt .agents/agents/<role>.md"
+  "a seat never takes the helm","there is ONE lock per machine (brokk.lock); a seat in the main home contends with the primary and evicts its watcher (watcher: FAILED ... no longer owns the lock)","a private BROKK_MACHINE_STATE_DIR per seat, set with --env on tab/pane create"
+```
+
+Both are wired into `bin/herdr-run.sh` and `bin/pi-seat.sh`. **Note:**
+`herdr agent start` has no `--env`; set the variable when the pane or tab is
+created so the shell inherits it. Do not hand-roll a seat with a bare `pi` in the
+main home — that is exactly what breaks both laws.

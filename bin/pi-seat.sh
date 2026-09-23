@@ -11,6 +11,7 @@
 # starts pi with --model <provider>/<id>, and prints the pane + agent name.
 set -u
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION="1.0.0"
 PROVIDER="${PI_LOCAL_PROVIDER:-llama-cpp}"
 MODEL="${PI_LOCAL_MODEL:-frontend-design-expert-8b@q4_k_m}"
@@ -44,16 +45,29 @@ if [ "${MAIN:-0}" != 1 ] && [ -x "$SCRIPT_DIR/yggdrasil.sh" ] && git -C "$PWD" r
   [ -d "$wt" ] && { DIR="$wt"; printf 'pi-seat[1]{isolation,worktree}:\n  "on","%s"\n' "$DIR" >&2; }
 fi
 
-# 1. a place to sit — a new tab, or a split beside the caller.
+# 1. a place to sit — a new tab, or a split beside the caller. The pane gets
+# its own machine-state dir so this seat never contends for the primary's helm
+# (bin/gleipnir-lock-lib.sh honours BROKK_MACHINE_STATE_DIR).
+SEAT_ENV="BROKK_MACHINE_STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/ymir/seats/$NAME"
 if [ "$WHERE" = "--tab" ]; then
-  PANE="$(herdr tab create --cwd "$DIR" --label "pi:$NAME" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])')"
+  PANE="$(herdr tab create --cwd "$DIR" --label "pi:$NAME" --env "$SEAT_ENV" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])')"
 else
-  PANE="$(herdr pane split --current --direction right --cwd "$DIR" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')"
+  PANE="$(herdr pane split --current --direction right --cwd "$DIR" --env "$SEAT_ENV" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')"
 fi
 [ -n "$PANE" ] || { printf 'error: could not create a pane\n' >&2; exit 1; }
 
-# 2. start pi on the chosen model in that pane.
-if ! herdr agent start "$NAME" --kind pi --pane "$PANE" -- --model "$PROVIDER/$MODEL" >/dev/null 2>&1; then
+# 2. start pi on the chosen model in that pane, with the figure's own file
+# loaded. Without --append-system-prompt pi loads only AGENTS.md (which
+# describes Brokk) and every seat believes it is Brokk. The chooser speaks
+# SHORT roles (kvasir) while the roster file carries the craft
+# (kvasir-scout.md), so resolve both shapes.
+ROLE_FILE=""
+for f in "$SCRIPT_DIR/../.agents/agents/$NAME.md" "$SCRIPT_DIR/../.agents/agents/$NAME"*.md; do
+  [ -r "$f" ] && { ROLE_FILE="$f"; break; }
+done
+PI_ARGS=(-- --model "$PROVIDER/$MODEL")
+[ -n "$ROLE_FILE" ] && PI_ARGS+=(--append-system-prompt "$ROLE_FILE")
+if ! herdr agent start "$NAME" --kind pi --pane "$PANE" "${PI_ARGS[@]}" >/dev/null 2>&1; then
   printf 'error: could not start pi in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$PANE" >&2; exit 1
 fi
 
