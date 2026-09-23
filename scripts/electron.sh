@@ -56,6 +56,9 @@ hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
 APP="$APP_HLIDSKJALF"
 Odrerir_app="$APP_ODRERIR"
+# Resolve-or-die: an empty app path launched electron against garbage (the
+# 2026-09-23 SIGTRAP — a stray ' s/' reached the argv and the app aborted).
+[ -n "$APP" ] || { printf 'error: cannot resolve the app (%s)\nhelp: (cd apps/%s && npm ci) or reinstall the package\n' "${VIEW:-hlidskjalf}" "${VIEW:-hlidskjalf}" >&2; exit 1; }
 NO_INSTALL=0
 VIEW="${YMIR_DESKTOP_VIEW:-hlidskjalf}"
 VIEWS=(hlidskjalf smidja odrerir)
