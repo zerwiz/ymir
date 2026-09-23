@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
+import { isAbsolute, resolve, sep } from "node:path";
 import { encodeRoddOperationalInput } from "./lib/rodd-operational-input.js";
 
 // Sýn — Brokk primary watcher-arm continuity for OpenCode.
@@ -91,10 +91,28 @@ function resolvePath(anchor) {
   }
 }
 
+// The operator's runtime state (Rule 04: state lives in the home, never in the
+// code tree). Mirrors the Pi extension and bin/hoard-lib.sh so both harnesses
+// read the SAME state/.lock-path the shell tools write.
+function ymirStateDir() {
+  if (process.env.YMIR_STATE_DIR) return process.env.YMIR_STATE_DIR;
+  let home = process.env.YMIR_HOME;
+  if (!home) {
+    try {
+      const rec = readFileSync(`${process.env.HOME || ""}/.config/ymir/home`, "utf8").trim();
+      if (rec) home = rec;
+    } catch {
+      // no recorded choice — fall back to the documented default
+    }
+  }
+  if (!home) home = `${process.env.HOME || ""}/Documents/ymirhome`;
+  return `${home}/state`;
+}
+
 function effectivePaths(root) {
   const brokkRoot = process.env.BROKK_ROOT_OVERRIDE || root;
   const brokkHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || brokkRoot;
-  const state = process.env.BROKK_STATE_OVERRIDE || `${brokkHome}/state`;
+  const state = process.env.BROKK_STATE_OVERRIDE || ymirStateDir();
   const config = process.env.BROKK_CONFIG_OVERRIDE || `${brokkHome}/config`;
   return { root: brokkRoot, home: brokkHome, state, config };
 }
@@ -123,17 +141,59 @@ function shouldArm(paths) {
   return existsSync(`${paths.state}/.supervision-armed`);
 }
 
+// The machine-global state dir — the primary's lock lives here, never in the
+// tree (mirrors gleipnir_machine_state_dir in bin/gleipnir-lock-lib.sh).
+function machineStateDir() {
+  if (process.env.BROKK_MACHINE_STATE_DIR) return process.env.BROKK_MACHINE_STATE_DIR;
+  const xdg = process.env.XDG_STATE_HOME;
+  const base = xdg && xdg.trim() ? xdg : `${process.env.HOME || ""}/.local/state`;
+  return `${base}/ymir`;
+}
+
+// A seat (Eindri-home) keeps a per-home lock; the primary's lock is machine-global.
+function isSeatHome() {
+  return Boolean(process.env.BROKK_STATE_OVERRIDE) || process.env.BROKK_HOME_KIND === "eindri";
+}
+
+function derivedLockPath(paths) {
+  return isSeatHome() ? `${paths.state}/.lock` : `${machineStateDir()}/brokk.lock`;
+}
+
+// A synced pointer may name another user's home — a box reinstalled under a new
+// username carries the old pointer in $YMIR_HOME, which syncs between machines.
+// A path outside the current user's home cannot be this machine's lock: it is
+// stale by definition and must never be trusted (it once made the arm mkdir a
+// foreign home and fail with EACCES, stranding supervision — 2026-09-23).
+function pointerIsCurrentMachine(p, paths) {
+  if (!p || !isAbsolute(p)) return false;
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  if (!home) return p === derivedLockPath(paths);
+  const prefix = home.endsWith(sep) ? home : `${home}${sep}`;
+  return p === home || p.startsWith(prefix);
+}
+
 // The resolved session-lock path (machine-global for the primary, per-home for
-// an Eindri-home). gleipnir-lock-lib.sh records it in state/.lock-path; a
-// pre-contract session still lives at the legacy state/.lock.
+// an Eindri-home). gleipnir-lock-lib.sh records it in state/.lock-path, but a
+// pointer carried in from another machine is validated against the current home
+// before it is trusted; a stale one is healed to the derived path.
 function resolvedLockPath(paths) {
+  let pointer = "";
   try {
-    const pointer = readFileSync(`${paths.state}/.lock-path`, "utf8").trim();
-    if (pointer) return pointer;
+    pointer = readFileSync(`${paths.state}/.lock-path`, "utf8").trim();
   } catch {
     // no pointer yet — pre-machine-lock session
   }
-  return `${paths.state}/.lock`;
+  if (pointer && pointerIsCurrentMachine(pointer, paths)) return pointer;
+  const derived = derivedLockPath(paths);
+  if (pointer) {
+    try {
+      mkdirSync(paths.state, { recursive: true });
+      writeFileSync(`${paths.state}/.lock-path`, `${derived}\n`);
+    } catch {
+      // best-effort: a read-only home still resolves correctly below
+    }
+  }
+  return derived;
 }
 
 async function sessionOwnsLock(paths) {

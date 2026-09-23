@@ -32,11 +32,45 @@ gleipnir_is_eindri_home() {
   return 1
 }
 
+# The operator's runtime state, resolved through bin/hoard-lib.sh — the single
+# source of truth every shell tool uses (Rule 04: state lives in the home, never
+# in the code tree). Sourced in a subshell so this library's namespace is
+# untouched; prints nothing when hoard-lib is unavailable (a bare checkout).
+gleipnir_hoard_state_dir() {
+  local lib
+  lib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hoard-lib.sh"
+  [ -r "$lib" ] || return 0
+  (
+    . "$lib" 2>/dev/null || exit 0
+    hoard_state_dir _gleipnir_state 2>/dev/null || exit 0
+    printf '%s' "${_gleipnir_state:-}"
+  )
+}
+
+# The runtime state dir. A seat (Eindri-home) keeps its per-home state; the
+# primary uses the operator's hoard state. This MUST match the harness readers
+# (`.pi` / `.opencode`), which read `state/.lock-path` back from the same place:
+# the pointer is written here and read there, and the two once disagreed (this
+# library wrote the code tree while Pi read the home), so a stale synced pointer
+# from another machine stranded supervision (2026-09-23).
 gleipnir_state_dir() {  # <result-var>
-  local result_var=${1-}
-  local home="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-}}"
+  local result_var=${1-} home hoard_state
+  [ -n "$result_var" ] || return 2
+  if [ -n "${BROKK_STATE_OVERRIDE:-}" ]; then
+    printf -v "$result_var" '%s' "$BROKK_STATE_OVERRIDE"; return 0
+  fi
+  if gleipnir_is_eindri_home; then
+    home="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-}}"
+    [ -n "$home" ] || gleipnir_root home
+    printf -v "$result_var" '%s' "$home/state"; return 0
+  fi
+  hoard_state=$(gleipnir_hoard_state_dir)
+  if [ -n "$hoard_state" ]; then
+    printf -v "$result_var" '%s' "$hoard_state"; return 0
+  fi
+  home="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-}}"
   [ -n "$home" ] || gleipnir_root home
-  printf -v "$result_var" '%s' "${BROKK_STATE_OVERRIDE:-$home/state}"
+  printf -v "$result_var" '%s' "$home/state"
 }
 
 # /proc/<pid>/stat fields after the closing paren of the comm field: state,
