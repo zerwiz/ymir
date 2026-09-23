@@ -31,8 +31,11 @@ AGENT="${1:-}"
 WORKTREE="${2:-}"
 [ -n "$AGENT" ] || { echo "usage: eindri-seen.sh <agent> [<worktree-root>]" >&2; exit 2; }
 
-# 1. A report file is the strongest signal the smith is done.
+# 1. A report file is the strongest signal the smith is done. A QUESTION is the
+#    same signal with a different need: the smith is not done, it is BLOCKED on
+#    the coordinator — Brokk must answer, not review.
 [ -f "$STATE/eindri-reports/$AGENT.md" ] && exit 0
+[ -f "$STATE/eindri-questions/$AGENT.md" ] && exit 0
 [ -n "$WORKTREE" ] && [ -f "$WORKTREE/REPORT.md" ] && exit 0
 
 # 2. herdr state: only a TERMINAL state counts as reported. A pi agent reads
