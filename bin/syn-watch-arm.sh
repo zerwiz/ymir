@@ -77,8 +77,15 @@ actionable() {
     if [ "$_prev" != "$_h" ]; then
       printf '%s' "$_h" > "$STATE/.wake-last-hash"
       printf 'signal: wake queue\n'
+      return 0
     fi
-    return 0
+    # An UNCHANGED, unconsumed queue was already signalled once. Stay silent and
+    # KEEP WATCHING — never exit here. A bare `return 0` made the watcher leave
+    # without printing a signal:, stale:, check:, or heartbeat: line, so the
+    # harness classified the close as "ended without an actionable reason",
+    # retried five times, and flapped: a single unacknowledged wake stranded
+    # supervision for as long as the queue stayed unchanged (2026-09-23).
+    return 1
   fi
   local sig
   sig=$(find "$STATE" -maxdepth 1 -name '*.signal' -print -quit 2>/dev/null || true)
