@@ -16,6 +16,27 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 WHEN="$ROOT/.agents/backend/fm-procevent-when.sh"
 
+# The spec must record a STABLE adapter path, never the caller's tree. An arm run
+# from a Yggdrasil worktree wrote the WORKTREE's fm-procevent-when.sh into the
+# spec; when the worktree was cleaned, the runner kept a path that no longer
+# existed. Resolve to the MAIN tree via git's common dir, so an arm from any
+# worktree records the same adapter.
+if command -v git >/dev/null 2>&1 && [ -d "$ROOT/.git" -o -f "$ROOT/.git" ]; then
+  _common="$(git -C "$ROOT" rev-parse --git-common-dir 2>/dev/null)"
+  if [ -n "$_common" ]; then
+    _main="$(cd "$ROOT" && cd "$(dirname "$_common")" 2>/dev/null && pwd)"
+    # Inside a worktree this resolves to the MAIN tree; in the main tree it
+    # resolves to itself, and the `!=` keeps us idempotent.
+    if [ -n "$_main" ] && [ "$_main" != "$ROOT" ] && [ -x "$_main/.agents/backend/fm-procevent-when.sh" ]; then
+      ROOT="$_main"; WHEN="$ROOT/.agents/backend/fm-procevent-when.sh"
+      # The condition/action scripts are recorded in the SPEC too — pin them to
+      # the same stable tree, or cleaning the worktree breaks the watch.
+      [ -x "$_main/bin/eindri-seen.sh" ] && SCRIPT_DIR="$_main/bin"
+    fi
+  fi
+  unset _common _main
+fi
+
 # The spec must live in the OPERATOR'S HOME, never beside whichever tree the
 # caller happens to stand in. fm-procevent-when.sh defaults its state to
 # FM_HOME/state = <script dir>/../state, so an arm run from a Yggdrasil worktree

@@ -23,9 +23,24 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
-STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
-DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
-CONFIG="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"
+
+# The operator's records live in the HOME they chose, never in the code tree
+# (Rule 04). Resolve every shelf through bin/hoard-lib.sh, exactly as the shell
+# tools do — the digest once defaulted DATA to $BROKK_HOME/data (the TREE), so it
+# printed "operator: ABSENT, projects: ABSENT, learnings: ABSENT" at every session
+# while the real files sat in $YMIR_HOME/hodd/data/ (2026-09-23). A digest that
+# cannot see its own records is worse than no digest.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+    [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _c
+fi
+hoard_state_dir  _HS 2>/dev/null; hoard_data_dir  _HD 2>/dev/null; hoard_settings_dir _HC 2>/dev/null
+STATE="${BROKK_STATE_OVERRIDE:-${_HS:-$BROKK_HOME/state}}"
+DATA="${BROKK_DATA_OVERRIDE:-${_HD:-$BROKK_HOME/data}}"
+CONFIG="${BROKK_CONFIG_OVERRIDE:-${_HC:-$BROKK_HOME/config}}"
+unset _HS _HD _HC
 # shellcheck source=bin/gleipnir-lock-lib.sh
 . "$SCRIPT_DIR/gleipnir-lock-lib.sh"
 gleipnir_lock_reap

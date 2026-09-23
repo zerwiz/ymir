@@ -89,7 +89,25 @@ const extensionDir = dirname(extensionFile);
 const root = resolveYmirRoot(extensionDir);
 const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
 const fmRoot = process.env.BROKK_ROOT_OVERRIDE || root;
-const state = process.env.BROKK_STATE_OVERRIDE || `${fmHome}/state`;
+// The runtime's records live in the OPERATOR'S HOME (Rule 04), and every shell
+// tool resolves that through bin/hoard-lib.sh: $YMIR_HOME -> the recorded choice
+// (~/.config/ymir/home) -> $HOME/Documents/ymirhome. The extension MUST resolve
+// the same place. It once fell back to `${fmHome}/state` — the CODE TREE — while
+// the Eindri handoff (bin/eindri-acclaim.sh) wrote $YMIR_STATE_DIR/.wake-queue in
+// the hoard. Two queues: the handoff filled one, this watched the other, and no
+// wake ever surfaced (2026-09-23). A seat still overrides via BROKK_STATE_OVERRIDE.
+const ymirHome = (() => {
+  const env = process.env.YMIR_HOME;
+  if (env) return env;
+  try {
+    const rec = readFileSync(`${process.env.HOME || root}/.config/ymir/home`, "utf8").trim();
+    if (rec) return rec;
+  } catch {
+    // no recorded choice — fall back to the documented default
+  }
+  return `${process.env.HOME || root}/Documents/ymirhome`;
+})();
+const state = process.env.BROKK_STATE_OVERRIDE || `${ymirHome}/state`;
 const config = process.env.BROKK_CONFIG_OVERRIDE || `${fmHome}/config`;
 const armScript = `${fmRoot}/bin/syn-watch-arm.sh`;
 const marker = `${state}/.pi-watch-extension-loaded`;

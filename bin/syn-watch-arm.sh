@@ -14,6 +14,21 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
+# The wake queue is written by the Eindri handoff (bin/eindri-acclaim.sh) into the
+# OPERATOR'S HOME state ($YMIR_STATE_DIR), resolved through bin/hoard-lib.sh. The
+# watcher must read the SAME queue: it once defaulted to $BROKK_HOME/state — the
+# CODE TREE — so the handoff filled one queue and the watcher watched another, and
+# no wake ever surfaced (2026-09-23). Same order of authority as the lib.
+if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
+  if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+    for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+      [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
+    done
+    unset _c
+  fi
+  hoard_state_dir _HS 2>/dev/null && BROKK_STATE_OVERRIDE="$_HS"
+  unset _HS
+fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 # shellcheck source=bin/gleipnir-lock-lib.sh
 . "$SCRIPT_DIR/gleipnir-lock-lib.sh"
@@ -100,6 +115,15 @@ while :; do
   if [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; then
     printf 'watcher: retired - session lock is no longer held\n' >&2
     exit 0
+  fi
+
+  # THE MID-SESSION SWEEP. The Eindri handoff failsafe (bin/eindri-handoff.sh)
+  # turns a filed report/question into a wake. It used to run only at SESSION
+  # START, so a report filed while the session ran sat invisible until the next
+  # session — a worker finished and Brokk was never told. Run it every cycle
+  # instead: the queue is filled within seconds and the check below sees it.
+  if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
+    BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/eindri-handoff.sh" sweep >/dev/null 2>&1 || true
   fi
   if actionable; then
     exit 0
