@@ -1,0 +1,8 @@
+{
+  "_comment": "Fleet topology registry (template). Copy to $YMIR_HOME/hodd/data/fleet.json and fill in THIS fleet's hosts. read by bin/topology.sh by hostname; roles: heart (owns the record) · forge (models/GPU) · dev (a full body) · hand (phone). One row per machine; the machine reads its OWN row.",
+  "heart": "heart-host",
+  "hosts": {
+    "heart-host": { "roles": ["heart", "forge"], "lan": "192.168.1.10", "tailnet": "heart-host.tailnet.ts.net" },
+    "dev-host": { "roles": ["dev"], "lan": "192.168.1.11", "tailnet": "dev-host.tailnet.ts.net" }
+  }
+}
