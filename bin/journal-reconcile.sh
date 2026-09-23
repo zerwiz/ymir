@@ -61,11 +61,9 @@ if [ -x "$SCRIPT_DIR/topology.sh" ]; then
   _topo="$(bash "$SCRIPT_DIR/topology.sh" --json 2>/dev/null || true)"
   if [ -n "$_topo" ]; then
     read -r LINK HEART < <(printf '%s' "$_topo" | python3 -c 'import json,sys
-try:
-  d=json.load(sys.stdin)
-except Exception:
-  print("standalone "); raise SystemExit
-print(f"{d.get(\"link\",\"standalone\")} {d.get(\"heart\") or \"\"}")' 2>/dev/null)
+try: d=json.load(sys.stdin)
+except Exception: d={}
+print("%s %s" % (d.get("link","standalone"), d.get("heart") or ""))' 2>/dev/null)
   fi
 fi
 LINK="${LINK:-standalone}"
@@ -90,8 +88,7 @@ default_push() {  # <file>
 push_one() {  # <file>
   local f="$1"
   if [ -n "${YMIR_JOURNAL_PUSH:-}" ]; then
-    # shellcheck disable=SC2086
-    eval "$YMIR_JOURNAL_PUSH" '"$f"'
+    bash -c "$YMIR_JOURNAL_PUSH" _ "$f"
   else
     default_push "$f"
   fi
