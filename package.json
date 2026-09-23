@@ -1,6 +1,6 @@
 {
   "name": "@zerwiz/ymir",
-  "version": "0.1.39",
+  "version": "0.1.52",
   "description": "Ymir \u2014 the single-tenant agent operating system. A fleet of machines (heart \u00b7 forge \u00b7 dev) over one record. One command: curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash  \u00b7  or: npx @zerwiz/ymir  \u00b7  or: npm i -g @zerwiz/ymir. Offline-first (works with no server, syncs up after), MCP servers (memory \u00b7 tickets \u00b7 skills), role-gated crons, one delivery gate. If `ymir` is not found, the README has the three-line PATH cure.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/zerwiz/ymir",
