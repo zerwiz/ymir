@@ -1,6 +1,10 @@
-# runtime · 2026-09-23 — the skills well (skills-MCP :8319)
+# runtime · 2026-09-23 — Bölþorn, the skills well (:8319)
 
-## Why
+### Name
+**Bölþorn** — the giant who taught the nine runic songs (Hávamál) — the
+runes' porch: the fleet's craft, taught on demand.
+
+# Why
 The Ymir skill-hoard (`$ROOT/.agents/skills`) was seat-bound: a body either
 had the tree (essence-fetch) or reached no skills. The fleet nightman can load
 any skill from any seat — served, always the master, no per-seat binds.
