@@ -93,6 +93,22 @@ remote_leg() {
   say "== the remote leg: $REMOTE =="
   local tgz; tgz="$TARBALL"
   [ -n "$tgz" ] || { say "  no tarball here; packing first"; pack_and_hull || return 1; tgz="$TARBALL"; }
+
+  # When the "remote" IS this machine, there is no road to travel: a loopback
+  # ssh needs a known_hosts entry and an alias, and on heimdall neither exists —
+  # so the leg failed with 'cannot reach heimdall' ON heimdall itself (2026-09-23).
+  # Run the same sandbox install and smoke locally instead; the artifact under
+  # test is identical, and the second seat's job is to prove the hull installs
+  # somewhere other than where it was packed.
+  if [ "$REMOTE" = "$(hostname 2>/dev/null)" ] || [ "$REMOTE" = "$(hostname -s 2>/dev/null)" ]; then
+    say "  $REMOTE is this machine — running the leg locally (no loopback ssh)"
+    local dest="$HOME/npm-pretest/seat"
+    rm -rf "$HOME/npm-pretest" && mkdir -p "$dest" || { fail "cannot prepare the local sandbox"; return 1; }
+    sandbox_install "$tgz" "$dest" || return 1
+    smoke "$dest/node_modules/@zerwiz/ymir"
+    return $?
+  fi
+
   ssh -o BatchMode=yes "$REMOTE" "rm -rf ~/npm-pretest && mkdir -p ~/npm-pretest" 2>/dev/null || { fail "cannot reach $REMOTE"; return 1; }
   scp -q "$tgz" "$REMOTE":~/npm-pretest/pkg.tgz 2>/dev/null || { fail "scp to $REMOTE failed"; return 1; }
   ssh -o BatchMode=yes "$REMOTE" "export PATH=\$HOME/.local/share/mise/shims:\$HOME/.local/bin:/usr/bin:/bin
