@@ -29,9 +29,15 @@ AGENT="${1:-}"
 WORKTREE="${2:-}"
 [ -n "$AGENT" ] || { echo "usage: eindri-acclaim.sh <agent> [<worktree-root>]" >&2; exit 2; }
 
-mkdir -p "$STATE/eindri-reports" "$STATE/eindri-done"
+mkdir -p "$STATE/eindri-reports" "$STATE/eindri-questions" "$STATE/eindri-done"
+kind="reported"
 detail=""
-if [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
+if [ -f "$STATE/eindri-questions/$AGENT.md" ]; then
+  # A question, not a report: the smith is blocked on the coordinator. Wake Brokk
+  # with the need named, so the digest says ANSWER, not review.
+  kind="QUESTION"
+  detail="QUESTION at state/eindri-questions/$AGENT.md — answer with bin/eindri-send.sh $AGENT \"…\""
+elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
   detail="report filed at state/eindri-reports/$AGENT.md"
 elif [ -n "$WORKTREE" ] && [ -f "$WORKTREE/REPORT.md" ]; then
   cp "$WORKTREE/REPORT.md" "$STATE/eindri-reports/$AGENT.md" 2>/dev/null || true
@@ -39,9 +45,13 @@ elif [ -n "$WORKTREE" ] && [ -f "$WORKTREE/REPORT.md" ]; then
 else
   detail="left working (herdr state flipped; read the pane: herdr agent read $AGENT)"
 fi
-printf 'eindri %s reported: %s\n' "$AGENT" "$detail" >>"$STATE/.wake-queue"
+printf 'eindri %s %s: %s\n' "$AGENT" "$kind" "$detail" >>"$STATE/.wake-queue"
 printf '%s %s: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$AGENT" "$detail" >"$STATE/eindri-done/$AGENT.md"
 if [ -x "$SCRIPT_DIR/ymir-say.sh" ]; then
-  "$SCRIPT_DIR/ymir-say.sh" note "Eindri $AGENT reported" >/dev/null 2>&1 || true
+  if [ "$kind" = "QUESTION" ]; then
+    "$SCRIPT_DIR/ymir-say.sh" alarm "Eindri $AGENT asks — answer it" >/dev/null 2>&1 || true
+  else
+    "$SCRIPT_DIR/ymir-say.sh" note "Eindri $AGENT reported" >/dev/null 2>&1 || true
+  fi
 fi
-printf 'eindri-acclaim[1]{agent,detail}:\n  "%s","%s"\n' "$AGENT" "$detail"
+printf 'eindri-acclaim[1]{agent,kind,detail}:\n  "%s","%s","%s"\n' "$AGENT" "$kind" "$detail"
