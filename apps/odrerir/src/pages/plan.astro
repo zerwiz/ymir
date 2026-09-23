@@ -1,0 +1,27 @@
+---
+// plan.astro — one plan's page (the press from the roadmap lands here).
+import '../styles/cloth.css'
+import '../styles/livehall.css'
+const SKULD = "http://192.168.68.111:8320";
+---
+<html lang="en">
+<head><meta charset="utf-8" /><title>the plan</title><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+<body>
+<div class="hall-top"><span><span class="rn">ᛚ</span>YMIR · THE PLAN</span><span class="hall-links" style="display:inline-flex;gap:1rem;align-items:center"><a class="hall-back" href="/plans">← the plans</a><a class="hall-back" href="/tickets">the tickets →</a></span></div>
+<main class="hall-wrap" id="plan-body" style="max-width:760px"><p class="dim">reading the plan…</p></main>
+<script>
+const SKULD = "http://192.168.68.111:8320"; let sid = "";
+async function init(){ const h = await fetch(SKULD,{method:"POST",headers:{"content-type":"application/json","accept":"application/json, text/event-stream"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"initialize",params:{protocolVersion:"2025-06-18",capabilities:{},clientInfo:{name:"brokk",version:"1"}}})}); sid=h.headers.get("mcp-session-id")||""; }
+async function call(name,args){ const r=await fetch(SKULD,{method:"POST",headers:{"content-type":"application/json","accept":"application/json, text/event-stream","mcp-session-id":sid},body:JSON.stringify({jsonrpc:"2.0",id:Date.now(),method:"tools/call",params:{name,arguments:args}})}); const d=await r.json(); return (d.result?.content?.[0]?.text)||(d.error?.message)||""; }
+function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
+async function load(){
+  const id=Number(new URLSearchParams(location.search).get("id"))||0;
+  const raw=await call("plans_get",{id}); const c=raw.split("|");
+  if(c.length<4){ document.getElementById("plan-body").innerHTML="<p class='dim'>"+esc(raw)+"</p>"; return; }
+  const mdMod=await import("marked"); const marked=mdMod.marked||mdMod.default;
+  document.getElementById("plan-body").innerHTML="<div class='mono dim' style='margin-bottom:.5rem'>"+esc(c[1]||"")+"/"+esc(c[0]||"")+" · "+esc(c[4]||"")+"</div><h1 style='font-family:var(--serif,Georgia);color:var(--bone,#cfc3a9);font-size:1.5rem;margin:.4rem 0'>"+esc(c[2]||"")+"</h1><div style='color:var(--bone-dim,#9a8f75);line-height:1.6'>"+(marked.parse(c[3]||"")||"")+"</div><div style='margin-top:1.2rem;display:flex;gap:.5rem;flex-wrap:wrap'><span class='mono dim' style='font-size:.72rem'>rides tickets:</span><span class='mono dim' style='font-size:.72rem'>"+esc(c[5]||"-")+"</span></div>";
+}
+init().then(load);
+</script>
+</body>
+</html>
