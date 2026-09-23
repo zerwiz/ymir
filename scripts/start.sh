@@ -17,6 +17,12 @@ if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
 fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# bun installs to ~/.bun/bin and is often absent from a non-login PATH. Adopt it
+# once, here, so the gate API and the Smiðja visualizer are not needlessly
+# skipped — the installer already does this (bin/ymir-install.sh).
+if ! command -v bun >/dev/null 2>&1 && [ -x "$HOME/.bun/bin/bun" ]; then
+  PATH="$HOME/.bun/bin:$PATH"; export PATH
+fi
 # The cloth (bin/ymir-style.sh) — colour and words for the human watching.
 if [ -z "${YMIR_STYLE_LOADED:-}" ] && [ -r "$ROOT/bin/ymir-style.sh" ]; then
   . "$ROOT/bin/ymir-style.sh"; YMIR_STYLE_LOADED=1; style_init
