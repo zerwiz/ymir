@@ -168,6 +168,114 @@ install_all() {
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
 }
 
+# ── raster — re-cut the PNG/ICO icons from the minted SVGs ──────────────────
+# The SVGs carry the design (stone + rune + tint); the launcher icons are
+# rasterised copies, and they go stale (blue, pink, grayscale) the moment the
+# design moves. This re-cuts each app's icons from its own icon.svg, the Ymir
+# emblem (algiz on stone) onto ymir-icon.png, and the smithy's icon into the
+# electron dir — so the menu never shows an old fire.
+rasterize() {  # <svg> <out> <size>
+  local svg=$1 out=$2 size=$3
+  [ -r "$svg" ] || return 1
+  mkdir -p "$(dirname "$out")" || return 1
+  if command -v rsvg-convert >/dev/null 2>&1; then
+    rsvg-convert -w "$size" -h "$size" "$svg" -o "$out" 2>/dev/null
+  elif command -v magick >/dev/null 2>&1; then
+    magick -background none -density 512 -resize "${size}x${size}" "$svg" "$out" 2>/dev/null
+  else
+    return 1
+  fi
+}
+
+emblem_svg() {  # <glyph> <tint> <out.svg>
+  local glyph=$1 tint=$2 out=$3 g="$ICONS/$1.svg" path
+  [ -r "$g" ] || return 1
+  path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$g" | head -1)"
+  [ -n "$path" ] || return 1
+  { printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">\n'
+    printf '  <rect width="32" height="32" rx="7" fill="%s"/>\n' "$STONE"
+    printf '  <g transform="translate(4 4) scale(1.0)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">\n' "$tint"
+    printf '    <path d="%s"/>\n  </g>\n</svg>\n' "$path"; } >"$out"
+}
+
+rune_svg() {  # <glyph> <tint> <out.svg> -- the rune alone, no stone (an Android foreground layer)
+  local g="$ICONS/$1.svg" path
+  [ -r "$g" ] || return 1
+  path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$g" | head -1)"
+  [ -n "$path" ] || return 1
+  { printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">\n'
+    printf '  <g transform="translate(4 4)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">\n' "$2"
+    printf '    <path d="%s"/>\n  </g>\n</svg>\n' "$path"; } >"$3"
+}
+
+raster_targets() {  # <surface> -> "<out>:<size>" lines
+  case "$1" in
+    hlidskjalf) printf '%s\n' "$ROOT/apps/hlidskjalf/electron/icon.png:512" "$ROOT/apps/hlidskjalf/public/apple-touch-icon.png:180" ;;
+    odrerir)    printf '%s\n' "$ROOT/apps/odrerir/electron/icon.png:512" "$ROOT/apps/odrerir/public/apple-touch-icon.png:180" ;;
+    smidja)     printf '%s\n' "$ROOT/apps/smidja-factory/apps/visualizer/desktop/icon.png:512" ;;
+    sessrumnir) for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon-$s.png:$s"; done
+                printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon.png:512" "$ROOT/apps/sessrumnir/public/apple-touch-icon.png:180" ;;
+  esac
+}
+
+raster_all() {
+  local n=0 row d glyph tint says icon surface svg out size tmp
+  printf 'rasters[9]{surface,file,size}:\n'
+  for row in "${APPS[@]}"; do
+    IFS='|' read -r d glyph tint says icon _e _k _n <<<"$row"
+    surface="${icon#ymir-}"
+    case "$surface" in
+      hlidskjalf) svg="$ROOT/apps/hlidskjalf/public/icon.svg" ;;
+      odrerir)    svg="$ROOT/apps/odrerir/public/icon.svg" ;;
+      sessrumnir) svg="$ROOT/apps/sessrumnir/public/icon.svg" ;;
+      smidja)     svg="$ROOT/apps/smidja-factory/apps/visualizer/public/icon.svg" ;;
+      *) continue ;;
+    esac
+    while IFS=: read -r out size; do
+      [ -n "$out" ] || continue
+      if rasterize "$svg" "$out" "$size"; then printf '  "%s","%s","%s"\n' "$surface" "${out#"$ROOT"/}" "$size"; n=$((n+1)); fi
+    done < <(raster_targets "$surface")
+  done
+  # the platform emblem (algiz on stone) onto ymir-icon.png
+  tmp="$(mktemp --suffix=.svg)"
+  if emblem_svg algiz "#c9973f" "$tmp" && rasterize "$tmp" "$ROOT/apps/hlidskjalf/public/ymir-icon.png" 512; then printf '  "ymir","apps/hlidskjalf/public/ymir-icon.png","512"\n'; n=$((n+1)); fi
+  rm -f "$tmp"
+  # the smithy's own icon inside hlidskjalf's electron dir
+  if rasterize "$ROOT/apps/smidja-factory/apps/visualizer/public/icon.svg" "$ROOT/apps/hlidskjalf/electron/smidja-icon.png" 512; then printf '  "smidja","apps/hlidskjalf/electron/smidja-icon.png","512"\n'; n=$((n+1)); fi
+  # Android launcher tiles (all 512 today): the stone tile, its round twin, and the
+  # rune-only foreground layer -- the launcher icons were a stale grayscale relic.
+  if [ -d "$ROOT/apps/hlidskjalf/android/app/src/main/res" ]; then
+    fg="$(mktemp --suffix=.svg)"; rune_svg ehwaz "#c9973f" "$fg"
+    for d in "$ROOT"/apps/hlidskjalf/android/app/src/main/res/mipmap-*/; do
+      [ -d "$d" ] || continue
+      rasterize "$ROOT/apps/hlidskjalf/public/icon.svg" "$d/ic_launcher.png" 512 && n=$((n+1))
+      rasterize "$ROOT/apps/hlidskjalf/public/icon.svg" "$d/ic_launcher_round.png" 512 && n=$((n+1))
+      rasterize "$fg" "$d/ic_launcher_foreground.png" 512 && n=$((n+1))
+    done
+    rm -f "$fg"
+    printf '  "android","apps/hlidskjalf/android/.../mipmap-*/ic_launcher*.png","512"\n'
+  fi
+  # Android splash screens -- they were a plain WHITE relic; re-cut each to the
+  # stone ground with the app icon centred, at its existing size.
+  if command -v magick >/dev/null 2>&1; then
+    for sp in "$ROOT"/apps/hlidskjalf/android/app/src/main/res/drawable*/splash.png; do
+      [ -f "$sp" ] || continue
+      wh="$(identify -format '%wx%h' "$sp" 2>/dev/null)"; [ -n "$wh" ] || continue
+      w="${wh%x*}"; h="${wh#*x}"
+      magick -size "${w}x${h}" xc:#0e0c09 \( "$ROOT/apps/hlidskjalf/public/icon.svg" -background none -resize "$((h/3))x" \) -gravity center -composite "$sp" 2>/dev/null && n=$((n+1))
+    done
+    printf '  "android-splash","apps/hlidskjalf/android/.../drawable*/splash.png","as-is"\n'
+  fi
+  # the Windows .ico files, from the freshly-cut 256 tile
+  if command -v magick >/dev/null 2>&1 && [ -r "$ROOT/apps/sessrumnir/resources/icons/icon-256.png" ]; then
+    for ico in "$ROOT/apps/sessrumnir/resources/icons/icon.ico" "$ROOT/apps/sessrumnir/docs/favicon.ico"; do
+      [ -d "$(dirname "$ico")" ] || continue
+      if magick "$ROOT/apps/sessrumnir/resources/icons/icon-256.png" -define icon:auto-resize=256,128,64,48,32,16 "$ico" 2>/dev/null; then printf '  "%s","%s","ico"\n' "sessrumnir" "${ico#"$ROOT"/}"; n=$((n+1)); fi
+    done
+  fi
+  printf '  "total","%s files"\n' "$n"
+}
+
 case "$ACTION" in
   list) list ;;
   install) install_all ;;
@@ -184,5 +292,6 @@ case "$ACTION" in
       done
       [ "$found" = 1 ] || { printf 'error: unknown app %s\nhelp: bin/design-icon.sh list\n' "$want" >&2; exit 2; }
     fi ;;
-  *) printf 'error: unknown action %s\nhelp: bin/design-icon.sh [list|mint] [app|--all]\n' "$ACTION" >&2; exit 2 ;;
+  raster) raster_all ;;  # re-cut the PNG/ICO icons from the SVGs
+  *) printf 'error: unknown action %s\nhelp: bin/design-icon.sh [list|mint|install|raster] [app|--all]\n' "$ACTION" >&2; exit 2 ;;
 esac
