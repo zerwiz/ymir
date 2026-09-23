@@ -276,3 +276,6 @@
 /* the hall draws itself by script; say so plainly where it cannot */
 .lh-nojs{padding:1.1rem 1rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
   color:var(--steel-dim);line-height:1.9}
+
+.lh-row__detail{padding:.35rem .6rem .6rem 2.1rem;font-family:var(--mono,monospace);font-size:.72rem;color:var(--bone-dim,#9a8f75);line-height:1.5;border-left:1px solid var(--bronze-deep,#7d5f2a);margin-left:1.9rem}
+.lh-row__main{cursor:pointer}

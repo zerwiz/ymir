@@ -15,6 +15,42 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 WHEN="$ROOT/.agents/backend/fm-procevent-when.sh"
+
+# The spec must record a STABLE adapter path, never the caller's tree. An arm run
+# from a Yggdrasil worktree wrote the WORKTREE's fm-procevent-when.sh into the
+# spec; when the worktree was cleaned, the runner kept a path that no longer
+# existed. Resolve to the MAIN tree via git's common dir, so an arm from any
+# worktree records the same adapter.
+if command -v git >/dev/null 2>&1 && [ -d "$ROOT/.git" -o -f "$ROOT/.git" ]; then
+  _common="$(git -C "$ROOT" rev-parse --git-common-dir 2>/dev/null)"
+  if [ -n "$_common" ]; then
+    _main="$(cd "$ROOT" && cd "$(dirname "$_common")" 2>/dev/null && pwd)"
+    # Inside a worktree this resolves to the MAIN tree; in the main tree it
+    # resolves to itself, and the `!=` keeps us idempotent.
+    if [ -n "$_main" ] && [ "$_main" != "$ROOT" ] && [ -x "$_main/.agents/backend/fm-procevent-when.sh" ]; then
+      ROOT="$_main"; WHEN="$ROOT/.agents/backend/fm-procevent-when.sh"
+      # The condition/action scripts are recorded in the SPEC too — pin them to
+      # the same stable tree, or cleaning the worktree breaks the watch.
+      [ -x "$_main/bin/eindri-seen.sh" ] && SCRIPT_DIR="$_main/bin"
+    fi
+  fi
+  unset _common _main
+fi
+
+# The spec must live in the OPERATOR'S HOME, never beside whichever tree the
+# caller happens to stand in. fm-procevent-when.sh defaults its state to
+# FM_HOME/state = <script dir>/../state, so an arm run from a Yggdrasil worktree
+# wrote the spec INTO THE WORKTREE — where the runner never looks, and which is
+# deleted on cleanup. That is how when-huginn.spec was thrown away while Huginn's
+# report sat unnoticed (2026-09-23). Pin it to the hoard, and the runner reads
+# the same place wherever it was started from.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+    [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+fi
+hoard_state_dir _HS 2>/dev/null && FM_STATE_OVERRIDE="${FM_STATE_OVERRIDE:-$_HS/procevent}"
+export FM_STATE_OVERRIDE
 RUNNER="$ROOT/.agents/backend/fm-procevent.sh"
 INTERVAL="20"; STABLE="2"
 

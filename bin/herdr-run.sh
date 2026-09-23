@@ -188,6 +188,20 @@ seat_guard() {  # <name>; non-zero if the seat would share the primary's lock
   [ "$seat_dir" != "$primary_dir" ]
 }
 
+# One local inference at a time per machine (bin/local-model-lock.sh). A seat
+# whose resolved model is local must not start when the host is at capacity —
+# this is the law the lock exists for and that no seat road once called, which
+# let three agents infer against one rail at once. Non-zero = at capacity.
+local_model_guard() {  # <model-string>
+  case "${1:-}" in
+    *llama-swap*|*llamacpp-whynot*|*llama.cpp*|*llama-cpp*|*lmstudio*)
+      [ -x "$SCRIPT_DIR/local-model-lock.sh" ] || return 0
+      "$SCRIPT_DIR/local-model-lock.sh" check >/dev/null 2>&1
+      ;;
+    *) return 0 ;;
+  esac
+}
+
 seat_tab() {  # <name> <cwd> -> prints "<tab_id> <pane_id>"
   local name=$1 cwd=$2 ws out env_arg
   env_arg="$(seat_state_dir "$name")"
@@ -416,6 +430,13 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     if ! seat_guard "$NAME"; then
       printf 'error: refusing to seat %s — it would share the primary session lock\nhelp: a worker gets its own BROKK_MACHINE_STATE_DIR (see seat_state_env)\n' "$NAME" >&2
       exit 1
+    fi
+
+    # Guard: one local inference at a time per machine.
+    if ! local_model_guard "${MODEL_ARGS[*]:-}"; then
+      "$SCRIPT_DIR/local-model-lock.sh" check >&2
+      printf 'help: a local seat already runs on this machine — wait, or use a remote/online model\n' >&2
+      exit 3
     fi
 
     # Where the Eindri sits, in herdr's hierarchy (workspace > tab > pane):
