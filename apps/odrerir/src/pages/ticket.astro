@@ -1,0 +1,94 @@
+---
+// ticket.astro — the ticket's own page (the click from the book lands here):
+// the full view — the head, the face, the review march, the thread.
+import '../styles/cloth.css'
+import '../styles/livehall.css'
+const SKULD = "http://192.168.68.111:8320";
+---
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>the ticket — Skuld</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+<div class="hall-top">
+  <span><span class="rn">ᛉ</span>YMIR · THE TICKET</span>
+  <span class="hall-links" style="display:inline-flex;gap:1rem;align-items:center">
+    <a class="hall-back" href="/tickets" title="the book">← the book</a>
+    <a class="hall-back" href="/plans" title="the plans">the plans →</a>
+  </span>
+</div>
+<main class="hall-wrap" id="ticket-page" style="max-width:760px">
+  <div id="ticket-body">
+    <p class="dim">reading the ticket…</p>
+  </div>
+</main>
+<style>
+  .tk-head{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap}
+  .tk-no{font-family:var(--mono,monospace);font-size:.8rem;color:var(--bone-dim,#9a8f75)}
+  .tk-badge{font-size:.7rem;padding:.18rem .6rem;border-radius:999px;font-family:var(--mono,monospace)}
+  .tk-title{font-family:var(--serif,Georgia);font-size:1.6rem;color:var(--bone,#cfc3a9);margin:.8rem 0 .5rem;line-height:1.25}
+  .tk-desc{font-size:.92rem;line-height:1.6;color:var(--bone-dim,#9a8f75);margin:0 0 1.2rem}
+  .tk-md h1,.tk-md h2,.tk-md h3{color:var(--bone,#cfc3a9);font-family:var(--serif,Georgia);margin:1rem 0 .4rem}
+  .tk-md p{margin:.4rem 0}
+  .tk-md a{color:var(--bronze,#c9973f)}
+  .tk-md code{background:var(--bg-2,#1a1610);border:1px solid var(--steel-1,#2b241a);padding:.1rem .35rem;border-radius:3px;font-size:.8em}
+  .tk-md pre{background:var(--bg-2,#1a1610);border:1px solid var(--steel-1,#2b241a);border-radius:6px;padding:.7rem;overflow-x:auto}
+  .tk-md ul,.tk-md ol{padding-left:1.3rem;margin:.4rem 0}
+  .tk-chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.2rem}
+  .td-chip{font-family:var(--mono,monospace);font-size:.68rem;padding:.24rem .65rem;border:1px solid var(--steel-1,#2b241a);border-radius:999px;color:var(--bone-dim,#9a8f75)}
+  .tk-act{background:transparent;color:var(--bronze,#c9973f);border:1px solid var(--bronze,#c9973f);border-radius:2px;padding:.5rem 1rem;cursor:pointer;font-family:var(--mono,monospace);font-size:.74rem}
+  .tk-act:hover{background:var(--bronze,#c9973f);color:var(--bg-0,#0e0c09)}
+  .tk-com{margin-top:1.6rem;display:grid;gap:.6rem}
+  .tk-com .one{background:var(--bg-2,#1a1610);border:1px solid var(--steel-1,#2b241a);border-radius:4px;padding:.6rem .8rem;font-size:.8rem;line-height:1.45}
+  .tk-com .a{font-family:var(--mono,monospace);font-size:.62rem;color:var(--bronze,#c9973f)}
+  .book-form{display:flex;gap:.6rem;margin-top:1rem}
+  .book-form input{background:var(--bg-1,#151209);color:var(--bone,#cfc3a9);border:1px solid var(--steel-1,#2b241a);border-radius:2px;padding:.5rem .7rem;flex:1;font:inherit}
+  .hall-foot{margin-top:2.5rem}
+</style>
+<script>
+const SKULD = "http://192.168.68.111:8320";
+let sid = null;
+const POST = (body) => fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream", ...(sid ? { "mcp-session-id": sid } : {}) }, body: JSON.stringify(body) }).then(r => r.json());
+async function init() {
+  const h = await fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "odrerir-ticket", version: "1" } } }) });
+  sid = h.headers.get("mcp-session-id") || "";
+}
+const call = (name, args) => POST({ jsonrpc: "2.0", id: Date.now(), method: "tools/call", params: { name, arguments: args } }).then(d => (d.result?.content?.[0]?.text) || (d.error?.message) || "silence");
+function esc(s){ const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+const COLORS = { "Backlog":"#6B7280", "Planned":"#7d5f2a", "Ready":"#96a0a8", "In Progress":"#3B82F6", "Submitted for Review":"#EAB308", "In Review":"#EAB308", "Approved":"#22C55E", "Done":"#22C55E", "Changes Requested":"#F97316" };
+const MARCH = { "Backlog":["Planned"], "Planned":["Ready"], "Ready":["In Progress"], "In Progress":["Submitted for Review","Changes Requested"], "Submitted for Review":["In Review"], "In Review":["Approved","Changes Requested"], "Approved":["Done"], "Done":[], "Changes Requested":["In Progress"] };
+async function load(){
+  const mdMod = await import("marked"); const marked = mdMod.marked || mdMod.default;
+  const id = Number(new URLSearchParams(location.search).get("id")) || 0;
+  if (!id) { document.getElementById("ticket-body").innerHTML = "<p class='dim'>no ticket — head back to <a href='/tickets'>the book</a></p>"; return; }
+  const raw = await call("tickets/get", { id });
+  const c = raw.split("|");
+  if (c.length < 5) { document.getElementById("ticket-body").innerHTML = "<p class='dim'>" + esc(raw) + "</p>"; return; }
+  const [tid, tno, ns, title, desc, pri, st, labels, who] = c;
+  const comments = await call("comments/list", { id });
+  const el = document.getElementById("ticket-body");
+  el.innerHTML = `
+    <div class="tk-head"><span class="tk-no">${esc(ns)}/${esc(tno)} · born ${esc((c[10]||"").slice(0,10))}</span><span class="tk-badge" style="background:${COLORS[st]||"#c9973f"}22;color:${COLORS[st]||"#c9973f"};border:1px solid ${COLORS[st]||"#c9973f"}">${esc(st)}</span></div>
+    <h1 class="tk-title">${esc(title)}</h1>
+    <div class="tk-desc tk-md">${marked.parse(desc || '')}</div>
+    <div class="tk-chips"><span class="td-chip">${esc(pri)}</span><span class="td-chip">holder: ${esc(who || "hall")}</span>${labels && labels !== "{}" ? `<span class="td-chip">${esc(String(labels).replace(/[{}"']/g,""))}</span>` : ""}</div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">${(MARCH[st]||[]).map(s => `<button type="button" class="tk-act" data-to="${esc(s)}">→ ${esc(s)}</button>`).join("") || `<span class="dim" style="font-family:var(--mono,monospace);font-size:.72rem">terminal — ${esc(st)}</span>`}</div>
+    <div class="tk-com"><span class="mono dim" style="font-size:.72rem">the thread</span>${(comments.split("\n")||[]).filter(Boolean).map(x => { const p = x.split("|"); return `<div class="one"><span class="a">${esc(p[1])} · ${esc(p[3])}</span><div class="tk-md">${marked.parse(p[2] || '')}</div></div>`; }).join("") || `<div class="one dim">no comments yet</div>`}</div>
+    <form class="book-form" id="cf"><input id="cc" placeholder="a word on this ticket" /><button type="submit" class="tk-act">carve</button></form>
+  `;
+  document.querySelectorAll(".tk-act[data-to]").forEach(b => b.addEventListener("click", async () => {
+    const r = await call("tickets/update", { id, status: b.dataset.to });
+    if (/updated/.test(r)) load();
+  }));
+  document.getElementById("cf").addEventListener("submit", async e => {
+    e.preventDefault(); const v = document.getElementById("cc").value.trim(); if (!v) return;
+    const r = await call("comments/post", { id, body: v });
+    if (/carved/.test(r)) load();
+  });
+}
+window.addEventListener("DOMContentLoaded", async () => { await init(); load(); });
+</script>
+</body>
+</html>

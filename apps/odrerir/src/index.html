@@ -64,10 +64,8 @@
 <!-- ======= TOPBAR — the hall's own deck ======= -->
 <div class="hall-top">
   <span><span class="rn">ᛈ</span>YMIR · ÓÐRERIR — THE LIVE HALL</span>
-  <span class="hall-links" style="display:inline-flex;gap:1rem;align-items:center">
-    <a class="hall-back" href="/lore" title="the lore — the saga at home" aria-label="The lore — the saga of Ymir">← the lore</a>
-    <a class="hall-back" href="/tickets" title="Skuld — the hall's book: the tickets and the plans" aria-label="The hall's book — tickets and plans">→ the book · tickets</a>
-  </span>
+  <a class="hall-back" href="https://ymirdell.zerwiz.org/" rel="noopener" title="the saga — ymirdell.zerwiz.org" aria-label="Back to the lore — the saga of Ymir">← the lore</a>
+  <a class="hall-back" href="/tickets" title="the book — the tickets" style="margin-left:1rem">the book · tickets →</a>
 </div>
 
 <!-- ================= ÓÐRERIR — THE LIVE HALL =================
@@ -712,16 +710,6 @@ function renderCharted(m){
     main.appendChild(el('div', 'lh-row__title', t.title));
     main.appendChild(el('div', 'lh-row__sub', t.reason ? t.reason + ' · ' + t.sub : t.sub));
     row.appendChild(main);
-    // the shelf opens when pressed: the about of the charted work, and what a
-    // dispatch of it will make.
-    main.style.cursor = 'pointer';
-    var det = el('div', 'lh-row__detail');
-    det.style.display = 'none';
-    det.appendChild(el('p', null, 'the about: ' + (t.sub || t.reason || 'the plans own the detail — read the project shelf')));
-    det.appendChild(el('p', null, 'a dispatch of this will: carve an isolated worktree, raise the agent on it, and land the deliverable at the project shelf — the aim rides the brief, and the ticket is cut in the book.'));
-    var open = false;
-    main.addEventListener('click', function(){ open = !open; det.style.display = open ? 'block' : 'none'; });
-    row.appendChild(det);
     if(isWarning(t)) row.appendChild(badge('danger', 'needs repair'));
     else if(t.reason) row.appendChild(badge('warn', 'waiting'));
     ch.appendChild(row);
@@ -859,6 +847,53 @@ var io = new IntersectionObserver(function(es){
   es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
 }, { threshold: 0.18, rootMargin: '0px 0px -10% 0px' });
 document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+})();
+</script>
+
+<script>
+(function(){
+  // the symbiosis: the hall's charted rows wear their ticket-counts and open the book
+  var SK='http://192.168.68.111:8320';
+  function escs(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+  (function cycle(){
+  fetch(SK,{method:'POST',headers:{'content-type':'application/json','accept':'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'hall-symbiosis',version:'1'}}})})
+  .then(function(h){ return h.headers.get('mcp-session-id')||''; })
+  .then(function(sid){ return fetch(SK,{method:'POST',headers:{'content-type':'application/json','accept':'application/json, text/event-stream','mcp-session-id':sid},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/call',params:{name:'tickets_list',arguments:{}}})}).then(function(r){return r.json();}); })
+  .then(function(d){ var txt=(d.result&&d.result.content&&d.result.content[0]&&d.result.content[0].text)||''; var counts={};
+    txt.split('\n').filter(Boolean).forEach(function(row){ var c=row.split('|'); var ns=c[2]; if(ns){ counts[ns]=(counts[ns]||0)+1; } });
+    document.querySelectorAll('#lh-charted .lh-row').forEach(function(row){ var title=row.querySelector('.lh-row__title'); if(!title) return;
+      var slug=(title.textContent||'').trim(); var n=counts[slug]||0;
+      var b=document.createElement('span'); b.textContent=' ['+n+']'; b.style.cssText='color:#c9973f;font-family:var(--mono,monospace);font-size:.62rem;margin-left:.35rem';
+      title.appendChild(b);
+      row.addEventListener('click',function(){ if(event.target.closest('input')) return; location.href='/tickets?ns='+encodeURIComponent(slug); });
+      row.style.cursor='pointer';
+    });
+    var tot=0; Object.keys(counts).forEach(function(k){ tot+=counts[k]; });
+    var mEl=document.querySelector('.lh-tally .lh-metric') || document.querySelector('[class*=metric]');
+    if (mEl) { var v=mEl.querySelector('[class*=value],[class*=num]'); if (v) v.textContent=tot; }
+  }).catch(function(){});
+  (function plansCall(){
+    var SK='http://192.168.68.111:8320';
+    fetch(SK,{method:'POST',headers:{'content-type':'application/json','accept':'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'brokk',version:'1'}}})})
+    .then(function(h){ return h.headers.get('mcp-session-id')||''; })
+    .then(function(sid){ return fetch(SK,{method:'POST',headers:{'content-type':'application/json','accept':'application/json, text/event-stream','mcp-session-id':sid},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/call',params:{name:'plans_pending',arguments:{}}})}).then(function(r){return r.json();}); })
+    .then(function(d){ var txt=(d.result&&d.result.content&&d.result.content[0]&&d.result.content[0].text)||''; var rows=txt.split('\n').filter(Boolean);
+      var reg=document.querySelector('[class*=call] .lh-rows, [class*=call] .lh-row');
+      if(!rows.length){ var c=document.querySelector('.lh-summary, [class*=call] h2, [class*=call]'); if(c) c.textContent=(c.textContent||'').replace(/nothing waits/i,'no plans await'); return; }
+      var wrap=document.querySelector('#lh-charted'); if(!wrap) return;
+      var pre=document.createElement('div'); pre.style.cssText='margin:.6rem .9rem'; var h=document.createElement('div'); h.textContent='the awaited plans'; h.style.cssText='font-family:var(--mono,monospace);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#c9973f;margin-bottom:.4rem'; pre.appendChild(h);
+      rows.forEach(function(r){ var c=r.split('|'); var row=document.createElement('div'); row.style.cssText='display:flex;gap:.6rem;align-items:center;padding:.4rem .6rem;border:1px solid #2b241a;border-radius:6px;margin-bottom:.4rem;font-size:.85rem'; row.textContent=(c[0]||'#')+' '+ (c[3]||'')+' — '+ (c[2]||'');
+        var ap=document.createElement('button'); ap.textContent='approve'; ap.style.cssText='background:transparent;color:#c9973f;border:1px solid #c9973f;border-radius:6px;padding:.15rem .6rem;cursor:pointer;font-size:.66rem;margin-left:auto'; ap.onclick=function(){ send('plans_update',{id:Number(c[0]),status:'approved'}); };
+        var sh=document.createElement('button'); sh.textContent='approve + ship'; sh.style.cssText='background:#c9973f;color:#0e0c09;border:1px solid #c9973f;border-radius:6px;padding:.15rem .6rem;cursor:pointer;font-size:.66rem'; sh.onclick=function(){ send('plans_update',{id:Number(c[0]),status:'approved'}).then(function(){ send('plans_update',{id:Number(c[0]),status:'shipped'}); location.href='/tickets?ns='+encodeURIComponent(c[1]||''); }); };
+        row.appendChild(ap); row.appendChild(sh); pre.appendChild(row);
+      });
+      wrap.parentNode.insertBefore(pre, wrap);
+      window.send=function(name,args){ var SK='http://192.168.68.111:8320'; return fetch(SK,{method:'POST',headers:{'content-type':'application/json','accept':'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:9,method:'tools/call',params:{name:name,arguments:args}})}).then(function(r){return r.json();}); };
+    }).catch(function(){});
+  })();
+  setTimeout(cycle, 15000);
+  })();
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) location.reload(); });
 })();
 </script>
 </body>
