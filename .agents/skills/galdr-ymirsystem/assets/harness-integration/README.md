@@ -529,6 +529,18 @@ duplicates:
 are bound by the same loader pass as pi, so no harness is left holding a
 hand-made subset. Naming differs by harness and must be respected:
 
+> **Rebind on every install, update and merge (2026-09-23).** The harnesses load
+their surfaces from their **own** homes — Pi reads `${HOME}/.pi/agent/extensions/`
+— so a change merged into the repo is INVISIBLE to a running harness until the
+bind re-runs. A hand-copied extension was the symptom; the cure is to make the
+bind automatic: `bin/ymir-install.sh` runs `valknut-load.sh --install` (which
+seats a **post-merge** hook), `bin/groa-update.sh` runs `--all --global` after
+every pull, and the hook runs it after every merge. Two further truths:
+> **a running session keeps the code it loaded** (so a fixed extension is live
+> from the NEXT pi session, never the current one), and the hooks dir is found by
+> asking git (`rev-parse --git-path hooks`) — in a worktree `.git` is a file and
+> the shared hooks live in the main repo.
+
 ```
 agent_binding[5]{harness,dir,name_rule}:
   "opencode",".opencode/agents/","the frontmatter `name:` — bragi.md -> bragi-marketer.md"

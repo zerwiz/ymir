@@ -703,6 +703,13 @@ step_loaders() {
   if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
     if [ "$CHECK" = 1 ]; then add loaders OK "valknut-load.sh present"; else
       "$SCRIPT_DIR/valknut-load.sh" >/dev/null 2>&1 && add loaders OK "agents/skills loaded" || add loaders WARN "loader reported errors"
+      # Seat the post-merge rebind hook as well. Pi loads its extensions from
+      # ${HOME}/.pi/agent/extensions/, so a merged extension fix stays invisible
+      # to the running harness unless the bind re-runs. No install and no update
+      # should leave the surfaces stale.
+      "$SCRIPT_DIR/valknut-load.sh" --install >/dev/null 2>&1 \
+        && add loaders OK "post-merge rebind hook seated" \
+        || add loaders WARN "post-merge hook not seated"
     fi
   else add loaders SKIP "no valknut-load.sh"; fi
 }
