@@ -24,8 +24,8 @@ const OPER = process.env.SKULD_OPERATOR || 'brokk';
 const TOLERANCE = parseInt(process.env.SKULD_TOLERANCE || '1', 10);
 const PROTOCOL = '2025-06-18';
 const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'];
-const STATUSES = ['open', 'in-progress', 'review', 'closed'];
-const NEXT = { open: ['in-progress'], 'in-progress': ['review'], review: ['closed'], closed: [] };
+const STATUSES = ['Backlog','Planned','Ready','In Progress','Submitted for Review','In Review','Approved','Done','Changes Requested'];
+const NEXT = { 'Backlog':['Planned'], 'Planned':['Ready'], 'Ready':['In Progress'], 'In Progress':['Submitted for Review','Changes Requested'], 'Submitted for Review':['In Review'], 'In Review':['Approved','Changes Requested'], 'Approved':['Done'], 'Done':[], 'Changes Requested':['In Progress'] };
 
 function q(sql, vars) {
   // psql -c never resolves :'var' (proven), so the markers are inlined as
@@ -88,7 +88,7 @@ const law = {
   transition(cur, to) {
     if (!STATUSES.includes(to)) return `status must be one of ${STATUSES.join(', ')}`;
     if (to === cur) return null;
-    if (!(NEXT[cur] || []).includes(to)) return `illegal status walk: ${cur} -> ${to} (forward only; closed is terminal)`;
+    if (!(NEXT[cur] || []).includes(to)) return `illegal status walk: ${cur} -> ${to} (forward only through the review march; the reviewer's gate stands at Submitted for Review; Changes Requested returns to In Progress)`;
     return null;
   }
 };
@@ -114,6 +114,8 @@ const rpc = {
     { name: 'tickets/close', description: 'Close a ticket (terminal; only from review).', inputSchema: { type: 'object', properties: { id: { type: 'integer' } }, required: ['id'] } },
     { name: 'plans/create', description: 'Create a plan (title 6+, body 40+; tickets[] must all exist in the namespace). The blocking law is on.', inputSchema: { type: 'object', properties: { namespace: { type: 'string' }, title: { type: 'string' }, body: { type: 'string' }, tickets: { type: 'array', items: { type: 'integer' } } }, required: ['namespace', 'title', 'body'] } },
     { name: 'plans/list', description: 'List plans (by namespace).', inputSchema: { type: 'object', properties: { namespace: { type: 'string' } } } },
+    { name: 'comments/list', description: 'The comment thread of a ticket.', inputSchema: { type: 'object', properties: { id: { type: 'integer' } }, required: ['id'] } },
+    { name: 'comments/post', description: 'Post a comment on a ticket.', inputSchema: { type: 'object', properties: { id: { type: 'integer' }, body: { type: 'string' } }, required: ['id', 'body'] } },
     { name: 'blocks/status', description: 'The calling agent\'s block status.', inputSchema: { type: 'object' } },
     { name: 'blocks/clear', description: 'Clear an agent\'s block (the operator\'s door only — agent must equal SKULD_OPERATOR).', inputSchema: { type: 'object', properties: { agent: { type: 'string' } }, required: ['agent'] } }
   ] }),
@@ -136,13 +138,38 @@ const rpc = {
     if (error && name.startsWith('tickets') === false && name.startsWith('plans') === false) {}
     if (error) return { content: [{ type: 'text', text: error }], isError: true };
 
+
+    if (name === 'comments/list') {
+      const r = q(`SELECT id, author, body, created_at FROM comments WHERE ticket_id = :'id' ORDER BY id`, { id: String(args.id) });
+      return { content: [{ type: 'text', text: rows(r.out).join('\n') || '(no comments)' }] };
+    }
+    if (name === 'comments/post') {
+      const body = String(args.body || '').trim();
+      if (!body) return { content: [{ type: 'text', text: 'a comment needs words' }], isError: true };
+      if (body.length > 2000) return { content: [{ type: 'text', text: 'a comment may not exceed 2000 chars' }], isError: true };
+      const r = q(`INSERT INTO comments (ticket_id, author, body) VALUES (:'id', :'a', :'b') RETURNING id`, { id: String(args.id), a: agent, b: body });
+      if (!r.ok) return { content: [{ type: 'text', text: 'store error: ' + r.err }], isError: true };
+      return { content: [{ type: 'text', text: 'comment #' + r.out + ' carved on ticket #' + args.id }] };
+    }
+    if (name === 'plans/get') {
+      const r = q(`SELECT id, namespace, title, body, status, tickets, created_at FROM plans WHERE id = :'id'`, { id: String(args.id) });
+      const line = rows(r.out)[0];
+      if (!line) return { content: [{ type: 'text', text: 'no plan #' + args.id }], isError: true };
+      return { content: [{ type: 'text', text: line }] };
+    }
     if (name === 'tickets/create') {
       const ns = String(args.namespace || ''); const title = String(args.title || '');
       const body = String(args.description || ''); const pri = String(args.priority || 'Medium');
+      const st = String(args.status || 'Ready');
       const labels = Array.isArray(args.labels) ? args.labels.map(String) : [];
       const bad = law.ticket(ns, title, body, pri, labels);
       if (bad) { violation(agent, `tickets/create refused: ${bad}`); return { content: [{ type: 'text', text: `refused: ${bad}\n(recorded — a repeated violation blocks you)` }], isError: true }; }
-      const r = q(`INSERT INTO tickets (namespace, title, description, priority, labels, owner) VALUES (:'n', :'t', :'d', :'p', string_to_array(:'l', ','), :'o') RETURNING id`, { n: ns, t: title, d: body, p: pri, l: labels.join(','), o: agent });
+      const parent = String(args.parent || '')
+      const r = q(`INSERT INTO tickets (namespace, title, description, priority, status, labels, owner, ticket_no, parent_id)
+                  VALUES (:'n', :'t', :'d', :'p', :'st', string_to_array(:'l', ','), :'o',
+                          (SELECT COALESCE(MAX(ticket_no), 0) + 1 FROM tickets WHERE namespace = :'n'),
+                          NULLIF(:'parent', '')::bigint)
+                  RETURNING id, ticket_no`, { n: ns, t: title, d: body, p: pri, st: st, l: labels.join(','), o: agent, parent });
       if (!r.ok) return { content: [{ type: 'text', text: `store error: ${r.err}` }], isError: true };
       return { content: [{ type: 'text', text: `ticket #${r.out} created in '${ns}'` }] };
     }
@@ -152,11 +179,11 @@ const rpc = {
       for (const [k, col] of [['namespace', 'namespace'], ['status', 'status'], ['assignee', 'assignee'], ['owner', 'owner']]) {
         if (args[k]) { f.push(`${col} = :'${k}'`); v[k] = String(args[k]); }
       }
-      const r = q(`SELECT id, namespace, status, priority, title FROM tickets ${f.length ? 'WHERE ' + f.join(' AND ') : ''} ORDER BY id DESC LIMIT 100`, v);
+      const r = q(`SELECT id, ticket_no, namespace, status, priority, title, COALESCE(assignee, owner, 'hall'), COALESCE(parent_id, 0) FROM tickets ${f.length ? 'WHERE ' + f.join(' AND ') : ''} ORDER BY id DESC LIMIT 100`, v);
       return { content: [{ type: 'text', text: rows(r.out).map(x => `#${x}`).join('\n') || '(no tickets)' }] };
     }
     if (name === 'tickets/get') {
-      const r = q(`SELECT id, namespace, title, description, priority, status, labels, owner, assignee, created_at FROM tickets WHERE id = :'id'`, { id: String(args.id) });
+      const r = q(`SELECT id, ticket_no, namespace, title, description, priority, status, labels, owner, assignee, created_at FROM tickets WHERE id = :'id'`, { id: String(args.id) });
       const line = rows(r.out)[0];
       if (!line) return { content: [{ type: 'text', text: `no ticket #${args.id}` }], isError: true };
       return { content: [{ type: 'text', text: line }] };
@@ -244,7 +271,14 @@ const PORT = parseInt(process.env.PORT || '0', 10);
 if (PORT > 0) {
   import('node:http').then(({ default: http }) => {
     const server = http.createServer((req, res) => {
-      const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type, accept, mcp-session-id, mcp-session-id', 'access-control-allow-methods': 'POST, OPTIONS' };
+      // the session id must be READABLE by the page's own JS: browsers hide a
+      // response header unless it is named in access-control-expose-headers.
+      const cors = {
+        'access-control-allow-origin': '*',
+        'access-control-allow-headers': 'content-type, accept, mcp-session-id',
+        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-expose-headers': 'mcp-session-id, Mcp-Session-Id'
+      };
       if (req.method === 'OPTIONS') { res.writeHead(204, cors).end(); return; }
       if (req.method !== 'POST') { res.writeHead(405).end(); return; }
       let body = '';
