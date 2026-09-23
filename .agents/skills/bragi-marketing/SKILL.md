@@ -78,6 +78,8 @@ marketing_loop[5]{step,what}:
 
 ```sh
 pip install firecrawl-py browser-use
+# The keyless video road (section 6) — one binary, no key, no account:
+#   yt-dlp        (already on heimdall at /usr/bin/yt-dlp)
 bin/valknut-load.sh --all      # rebind agents/skills after adding this skill
 ```
 
@@ -92,3 +94,66 @@ the format door, and the hoard's `hodd/docs/translation/` for the record.
 - A campaign going multilingual starts by loading `bragi-translation`.
 - The translated artifact is a file in the hoard's translation record, never
   invented inline.
+
+## 6. Video sources — the transcript road (keyless)
+
+A talk, a launch, a teardown — the signal is in the **video**, and a marketing
+brief that ignores it is half-blind. Videos are read with **yt-dlp**, which
+needs no key, no account, and no signed-in browser. This is the road to reach for
+first; the Pi harness's own YouTube mode needs `GEMINI_API_KEY` or a
+signed-in Chromium, so it fails closed on a bare box.
+
+**The tool is `bin/yt-transcript.sh`** — one command, all three reads:
+
+```sh
+bin/yt-transcript.sh <url>                 # metadata + description + transcript
+bin/yt-transcript.sh <url> --meta          # metadata + description only
+bin/yt-transcript.sh <url> --out DIR       # where the transcript lands (default /tmp)
+```
+
+It exits **3** when the captions are refused but the metadata was read — partial
+work, reported honestly, never faked. The raw verbs, if you need them by hand:
+
+```sh
+URL="https://youtu.be/<id>"
+
+# 1. the metadata — title | uploader | duration | upload date
+yt-dlp --skip-download --print "%(title)s|%(uploader)s|%(duration)s|%(upload_date)s" "$URL"
+
+# 2. the DESCRIPTION — often the real payload: chapters, links, the thesis
+yt-dlp --skip-download --print "%(description)s" "$URL"
+
+# 3. the TRANSCRIPT — auto-generated when none is published
+yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt \
+  -o "/tmp/%(id)s.%(ext)s" "$URL"
+
+# 4. read it as text
+sed -e '/^WEBVTT/d' -e '/^[0-9][0-9]:/d' -e '/^$/d' /tmp/<id>.en.vtt | \
+  sed 's/<[^>]*>//g' | uniq
+```
+
+```
+video_road[3]{step,verb,why}:
+  "metadata","--print %(title)s|%(uploader)s|%(duration)s|%(upload_date)s","who said it, when, how long"
+  "description","--print %(description)s","chapters, links, the author's own summary"
+  "transcript","--write-auto-sub --sub-lang en --sub-format vtt","the words, auto-generated when none are published"
+```
+
+**Gotchas, learned the hard way:**
+
+- **429 Too Many Requests.** YouTube throttles caption downloads; retry after a
+  pause. The metadata and description calls usually still answer, so take what
+  you can and say what you could not get.
+- **`--write-auto-sub`** gives the generator's captions when the uploader
+  published none — good enough to quote a thesis, and it must be labelled as
+  auto-generated when cited.
+- **Write to `/tmp`, not the tree.** A transcript is source material, not an
+  artifact; the tree carries only what the campaign needs (Rule 04).
+- **Impersonation warning is harmless** — yt-dlp notes it wanted an impersonation
+  target; the download still succeeds.
+- **Cite the video, not the transcript.** A claim carries the video URL and the
+  timestamp, never "the transcript says".
+
+**Where it lands:** the scraped/transcribed source goes to the marketing
+workspace (`$YMIR_HOME/workspaces/marketing/`), beside the Firecrawl output —
+the same shelf the daily scrape round fills (plan 49).
