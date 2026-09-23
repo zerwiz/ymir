@@ -23,6 +23,14 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
 ```
 
 - Exactly **one** lightweight scheduler loop is kept alive, tracked by `state/cron.pid`.
+- **Session-scoped retirement (2026-09-23).** Nornir is started BY a session
+  (`saga-session-start.sh`), never before one, so the loop retires the moment
+  that session is gone: each cycle it reads the machine's session lock
+  (`$BROKK_MACHINE_STATE_DIR/brokk.lock`, default `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/brokk.lock`)
+  and exits — logging `cron retired - no live session lock` — when the lock is
+  absent or its holder is dead or a zombie. This ends the **8-orphan-loop leak**
+  left by ended seats; a seat never leaves its scheduler behind. `--stop` still
+  stops a loop by hand.
 - Liveness is verified by PID **and** the command line carrying the identity mark
   `cron run:` (`/proc/<pid>/cmdline`), so PID reuse after reboot cannot fake a running loop.
 - Log rotation: `state/cron.log` rotates to `state/cron.log.1` above

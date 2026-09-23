@@ -108,6 +108,21 @@ scheduler='
   lock_dir="$state/.cron-locks"
   mkdir -p "$stamp_dir" "$lock_dir"
   while :; do
+    # Retire when the session that started this scheduler is gone: a seat that
+    # ends must not leave its cron loop behind (2026-09-23 -- eight orphan loops
+    # from ended seats). The scheduler lives only while the state lock is held by
+    # a live process; a headless scheduler with no lock retires too, because
+    # Nornir is started BY a session, never before one.
+    mach="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
+    lockf="$mach/brokk.lock"
+    owner=$(tr -d "[:space:]" <"$lockf" 2>/dev/null || true)
+    st=$(ps -o stat= -p "$owner" 2>/dev/null | tr -d " ")
+    if [ -z "$owner" ] || [ "$owner" = "1" ] || [ ! -d "/proc/$owner" ] \
+       || [ "${st#Z}" != "$st" ] || [ "${st#X}" != "$st" ]; then
+      printf "%s cron retired - no live session lock at %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" >>"$log"
+      rm -f "$state/cron.pid" 2>/dev/null || true
+      exit 0
+    fi
     now=$(date +%H:%M)
     today=$(date +%Y-%m-%d)
     while IFS= read -r line; do

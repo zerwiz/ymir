@@ -48,7 +48,10 @@ PY
 # never reads ciphertext directly — it asks for the resolved path.
 resolve_secret() {  # <file> <result-var>
   local f=$1 var=$2 tmp key
-  if [ -r "$f" ]; then printf -v "$var" '%s' "$f"; return 0; fi
+  # An EMPTY plaintext must not shadow the encrypted vault: a 0-byte
+  # platform.env once made every secret read as absent while the 7.6 KB
+  # platform.env.age sat unread (2026-09-23). Only a NON-EMPTY plaintext wins.
+  if [ -s "$f" ]; then printf -v "$var" '%s' "$f"; return 0; fi
   if [ -r "$f.age" ]; then
     key="$HOARD/secrets/age.key"
     command -v age >/dev/null 2>&1 || { printf 'error: %s is encrypted but age is not installed\nhelp: sudo pacman -S age\n' "$f.age" >&2; return 1; }
@@ -59,7 +62,6 @@ resolve_secret() {  # <file> <result-var>
   fi
   printf 'error: not readable: %s (and no %s.age)\n' "$f" "$f" >&2; return 1
 }
-
 case "$ACTION" in
   path)  printf '%s\n' "$HOARD" ;;
   init)
