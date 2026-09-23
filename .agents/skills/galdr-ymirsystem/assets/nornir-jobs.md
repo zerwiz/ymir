@@ -23,6 +23,12 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
 ```
 
 - Exactly **one** lightweight scheduler loop is kept alive, tracked by `state/cron.pid`.
+- **Role gate (2026-09-23, plan 51 P4).** A job may carry a role prefix:
+  `HH:MM @<role>[,<role>] <command>`. The scheduler reads THIS machine's roles
+  from `bin/topology.sh` (default `dev`) and runs only the jobs whose gate
+  includes one of them; no gate means any role. The record jobs belong to
+  `@heart`, the model jobs to `@forge`, and a `dev` body runs neither — this is
+  what stops a dev box from running a heart's work.
 - **Session-scoped retirement (2026-09-23).** Nornir is started BY a session
   (`saga-session-start.sh`), never before one, so the loop retires the moment
   that session is gone: each cycle it reads the machine's session lock
