@@ -11,6 +11,21 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
+# The watcher writes BOTH its arm marker and its heartbeat into the OPERATOR's
+# state, never the code tree (Rule 04). Resolve the same place here, or a live
+# watcher is read as dead: the guard looked in $BROKK_HOME/state (the TREE), found
+# a stale code-tree heartbeat, and fired "turn would end blind" every turn while
+# the hoard heartbeat was seconds fresh (2026-09-23).
+if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
+  if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+    for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+      [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
+    done
+    unset _c
+  fi
+  hoard_state_dir _HS 2>/dev/null && BROKK_STATE_OVERRIDE="$_HS"
+  unset _HS
+fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 STALE_SECONDS="${BROKK_WATCH_HEARTBEAT_STALE_SECONDS:-60}"
 

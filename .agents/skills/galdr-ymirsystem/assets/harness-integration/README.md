@@ -154,6 +154,13 @@ The guard is **inert until the first successful arm** writes `state/.supervision
 
 It goes stale when `now - state/.watch.heartbeat > BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60).
 
+> **`$STATE` is the operator's hoard state, never the code tree (2026-09-23).**
+> `bin/syn-turnend-guard.sh` resolves `$STATE` through `bin/hoard-lib.sh`, exactly
+> as the watcher and the wake drain do. It once defaulted to `$BROKK_HOME/state`
+> (the **tree**), so it read a stale code-tree heartbeat and fired *"turn would
+> end blind"* every turn while the live watcher beat into the hoard seconds
+> earlier. The marker and heartbeat live where the watcher writes them — the home.
+
 ### Part 4 — PreToolUse seatbelts
 
 Bind the harness's pre-tool event for shell commands to the two owner scripts. Exit **2** (or throw) blocks the tool call.
