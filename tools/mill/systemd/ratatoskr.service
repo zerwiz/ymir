@@ -1,13 +1,8 @@
 [Unit]
 Description=Ratatoskr, the heart A2A node (:8301)
-
 [Service]
 Type=simple
-WorkingDirectory=/home/whynot/a2a-node
-Environment=PATH=/home/whynot/.bun/bin:/usr/bin:/bin
-ExecStart=/home/whynot/.bun/bin/bun run server.ts
+WorkingDirectory=%h/.fleet
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+ExecStart=%h/.bun/bin/bun run ratatoskr-server.ts
 Restart=on-failure
-RestartSec=3
-
-[Install]
-WantedBy=default.target

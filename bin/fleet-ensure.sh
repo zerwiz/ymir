@@ -35,19 +35,40 @@ status() {
 
 ensure() {
   mkdir -p "$DST" "$HOME/.config/systemd/user"
-  # 1) the tools from the repo
+  # 1) the tools from the repo into the seat's fleet dir
   cp -r "$ROOT/tools/well-mcp/server.ts" "$DST/well-mcp-server.ts" 2>/dev/null || true
   cp -r "$ROOT/tools/ratatoskr-node/server.ts" "$DST/ratatoskr-server.ts" 2>/dev/null || true
   cp -r "$ROOT/tools/mill/worker.sh" "$DST/mill-worker.sh" 2>/dev/null || true
-  # 2) the units, templated to this seat
+  # 2) the units (the templates are %h-native — every seat materializes the
+  #    same shapes; no /home/whynot assumptions, no sed substitution)
   for u in $(units); do
     src="$ROOT/tools/mill/systemd/$u.service"
     [ -f "$src" ] || continue
-    tgt="$HOME/.config/systemd/user/$u.service"
-    # substitute the seat's absolute paths
-    sed -e "s|/home/whynot|$HOME|g" "$src" > "$tgt"
+    cp "$src" "$HOME/.config/systemd/user/$u.service"
   done
-  # the served well URL into the seat's pi mcp.json (best-effort)
+  # 3) the well venv (mcp-proxy wrapping engram-mcp) — materialized HERE, so a
+  #    seat never inherits the heart's hand-built venv path
+  VENV="$DST/well-venv"
+  if [ ! -x "$VENV/bin/mcp-proxy" ]; then
+    if command -v python3 >/dev/null 2>&1; then
+      python3 -m venv "$VENV" 2>/dev/null && "$VENV/bin/pip" -q install mcp-proxy "mcp<2" engram-mcp >/dev/null 2>&1
+    fi
+  fi
+  # 4) the cards root — the seat's own agent card under /.well-known
+  CROOT="$DST/cards-root"
+  mkdir -p "$CROOT/.well-known"
+  if [ ! -f "$CROOT/.well-known/agent-card.json" ]; then
+    cat > "$CROOT/.well-known/agent-card.json" <<CARD
+{
+  "name": "$(hostname -s 2>/dev/null || echo seat)",
+  "description": "Ymir body seat — A2A node (:8301) · cards (:8318)",
+  "url": "http://$(hostname -I 2>/dev/null | awk '{print $1}'):8301",
+  "version": "1.0"
+}
+CARD
+  fi
+  [ -f "$CROOT/index.html" ] || printf '<h1>Fleet cards — %s</h1>\n' "$(hostname -s)" > "$CROOT/index.html"
+  # 5) the served well URL into the seat's pi mcp.json (best-effort)
   mkdir -p "$HOME/.pi/agent"
   if [ -f "$HOME/.pi/agent/mcp.json" ]; then
     python3 - "$WELL_URL" <<'PY'
@@ -61,11 +82,17 @@ PY
   else
     printf '{"mcpServers":{"well":{"url":"%s"}}}\n' "$WELL_URL" > "$HOME/.pi/agent/mcp.json"
   fi
-  # 3) raise (best-effort, never fails the install)
+  # 6) raise (best-effort, never fails the install) — embed is heart-gated:
+  #    only seats that have the model file host the stone
   systemctl --user daemon-reload >/dev/null 2>&1 || true
-  for u in well-mcp ratatoskr mill-worker embed cards; do
+  for u in well-mcp ratatoskr mill-worker cards; do
     systemctl --user enable --now "$u.service" >/dev/null 2>&1 || say "$u: could not raise (warn)"
   done
+  if [ -f "$HOME/Models/embed/nomic-embed-text-v1.5.Q4_K_M.gguf" ]; then
+    systemctl --user enable --now embed.service >/dev/null 2>&1 || say "embed: could not raise (warn)"
+  else
+    say "embed: skipped (the model file is not on this seat)"
+  fi
   status
 }
 
