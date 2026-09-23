@@ -23,14 +23,21 @@ that would have been safe looked unsafe.
   same smoke, with no ssh. The artifact under test is identical, and the leg's
   purpose — prove the hull installs somewhere other than where it was packed — is
   still served when the pack seat and the install seat are the same box.
-- A genuine second seat still takes the ssh road unchanged.
+- **`NPM_PRETEST_HOSTS`** — the remote leg now tests **every seat in a list**
+  (default `omarchy whynot`), not one. The decree is that the tarball installs and
+  smokes on the seats — plural — before the shelf sees it; a single default seat
+  checked only wherever the pack happened to run. `NPM_PRETEST_HOST` remains for
+  one seat.
+- A genuine other seat still takes the ssh road unchanged.
 
 ### Verification
 - `bash -n` clean.
-- **`PRETEST PASS` on heimdall**, printing
-  `heimdall is this machine — running the leg locally (no loopback ssh)`, with the
-  smoke green: 171 bin tools, `ymir.js --version` answers, the `.agents`
-  dotfolders ship, and 5 fleet servers stand in the installed tree.
+- **`PRETEST PASS`, every leg green:**
+  - **heimdall** (this seat) — `heimdall is this machine — running the leg locally
+    (no loopback ssh)`: 171 bin tools, `ymir.js --version` answers, the `.agents`
+    dotfolders ship, 5 fleet servers in the installed tree.
+  - **omarchy** — `REMOTE_PASS`
+  - **whynot** — `REMOTE_PASS`
 
 ### Files
 - `bin/npm-pretest.sh`
