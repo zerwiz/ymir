@@ -74,4 +74,13 @@ fi
 # 3. optional first task.
 [ -n "$TASK" ] && herdr agent prompt "$NAME" "$TASK" >/dev/null 2>&1 || true
 
+# 4. arm the handoff (plan 42). A when-source beside the smith files his report
+# and wakes Brokk the moment he leaves `working`; without it a seat finishes
+# into silence.
+if [ -x "$SCRIPT_DIR/eindri-watch.sh" ]; then
+  "$SCRIPT_DIR/eindri-watch.sh" arm "$NAME" "$DIR" >/dev/null 2>&1 \
+    && printf 'pi-seat[1]{agent,armed}:\n  "%s","watch-%s"\n' "$NAME" "$NAME" >&2 \
+    || printf 'pi-seat[1]{agent,armed}:\n  "%s","failed — wake Brokk by hand"\n' "$NAME" >&2
+fi
+
 printf 'pi-seat[1]{agent,pane,provider,model}:\n  "%s","%s","%s","%s"\n' "$NAME" "$PANE" "$PROVIDER" "$MODEL"

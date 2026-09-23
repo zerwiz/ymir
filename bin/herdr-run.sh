@@ -460,6 +460,21 @@ case "$ACTION" in
       sleep 3
     done
     printf 'herdr-run[1]{eindri,injected,attempts}:\n  "%s","%s",%s\n' "$NAME" "$injected" "${_try:-0}" >&2
+
+    # Arm the handoff (plan 42, the automation law). A when-source beside the
+    # smith watches him and, the moment he reports (REPORT.md lands, or herdr
+    # shows he left `working`), files the report, marks him done, and wakes
+    # Brokk through state/.wake-queue. Without this a seated worker finishes
+    # into silence and the coordinator has to poll by hand — the exact failure
+    # plan 42 exists to kill.
+    if [ -x "$SCRIPT_DIR/eindri-watch.sh" ]; then
+      if "$SCRIPT_DIR/eindri-watch.sh" arm "$NAME" "$SEAT_CWD" >/dev/null 2>&1; then
+        printf 'herdr-run[1]{eindri,armed}:\n  "%s","watch-%s"\n' "$NAME" "$NAME" >&2
+      else
+        printf 'herdr-run[1]{eindri,armed}:\n  "%s","failed — the handoff will not fire; wake Brokk by hand"\n' "$NAME" >&2
+      fi
+    fi
+
     if [ "${YMIR_HERDR_AGENT_WAIT:-1}" = "1" ]; then
       hdr agent wait "$NAME" --until done --until idle --timeout $((SETTLE * 1000)) >/dev/null 2>&1 || true
     fi
