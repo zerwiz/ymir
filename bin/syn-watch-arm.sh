@@ -116,6 +116,15 @@ while :; do
     printf 'watcher: retired - session lock is no longer held\n' >&2
     exit 0
   fi
+
+  # THE MID-SESSION SWEEP. The Eindri handoff failsafe (bin/eindri-handoff.sh)
+  # turns a filed report/question into a wake. It used to run only at SESSION
+  # START, so a report filed while the session ran sat invisible until the next
+  # session — a worker finished and Brokk was never told. Run it every cycle
+  # instead: the queue is filled within seconds and the check below sees it.
+  if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
+    BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/eindri-handoff.sh" sweep >/dev/null 2>&1 || true
+  fi
   if actionable; then
     exit 0
   fi
