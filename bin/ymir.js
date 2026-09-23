@@ -20,6 +20,7 @@
  *   ymir smidja          the smithy's board (:8437) — build · start · stop · status
  *   ymir hlidskjalf      the high seat's window
  *   ymir sessrumnir      the seat-hall's window
+ *   ymir odrerir         the live hall's window
  *   ymir mimir           the memory well
  *   ymir sense           what THIS machine is
  *   ymir --version
@@ -130,6 +131,7 @@ const DOORS = {
   smidja:     { script: 'bin/smidja-board.sh',    about: "the smithy's board on :8437 (build · start · stop · status)" },
   hlidskjalf: { script: 'scripts/electron.sh',    about: "the high seat's window", args: ['start', '--view', 'hlidskjalf'] },
   sessrumnir: { script: 'scripts/electron.sh',    about: "the seat-hall's window", args: ['start', '--view', 'sessrumnir'] },
+  odrerir:    { script: 'scripts/electron.sh',    about: "the live hall's window", args: ['start', '--view', 'odrerir'] },
   mimir:      { script: 'bin/mimir.sh',           about: 'the memory well' },
   config:     { script: 'bin/ymir-config.sh',     about: 'your preferences — which notices are shown (stay silent with `notice <key> off`)' },
   sense:      { script: 'bin/host-sense.sh',      about: 'what THIS machine is' },
