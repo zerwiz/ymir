@@ -99,6 +99,7 @@ bin/nornir-cron-start.sh            # resolve + start (idempotent)
 06:00 bin/nornir-job-observer.sh
 00:30 bin/nornir-job-memory-housekeeping.sh
 00:00 bin/nornir-job-git-sync.sh
+05:30 bin/nornir-job-bragi-scrape.sh
 ```
 
 - One job per line: `HH:MM <command>` (24-hour, zero-padded).
@@ -110,6 +111,25 @@ bin/nornir-cron-start.sh            # resolve + start (idempotent)
 ---
 
 ## 3. The jobs
+
+### 3.0 Bragi — the scrape round (`bin/nornir-job-bragi-scrape.sh`, 05:30)
+
+- **Reads**: the operator's source list — `$YMIR_HOME/config/scrape-sources.yaml`
+  (beside `agents.yaml` and `cron.yaml`, NOT under `hodd/config/`, which does not
+  exist). Each entry: `name`, `url`, `kind` (scrape | search), `note`.
+- **Writes**: one markdown file per source, `YYYY-MM-DD-<name>.md`, into
+  `$YMIR_HOME/hodd/workspaces/marketing/scraped/`, plus a Rune
+  (`bragi / scrape.round`).
+- **The engine is Firecrawl, and it may be SELF-HOSTED.** A self-hosted engine
+  needs a **URL**, not a key: `FIRECRAWL_API_URL` (env → the home's local env →
+  the documented default `http://localhost:3002`). The fleet runs it on its own
+  iron (heimdall and whynot), keyless (`USE_DB_AUTHENTICATION=false`). A cloud
+  `FIRECRAWL_API_KEY` is still honoured, but it is no longer the only road.
+- **No SDK.** The job calls the REST API with `curl` (`POST /v2/scrape` for a
+  URL, `POST /v2/search` for a query — a query sent to `/scrape` is rejected
+  with *Invalid URL*), so `firecrawl-py` is not a dependency.
+- **Honest failure:** with no engine reachable it says so and scrapes nothing —
+  it never invents a page.
 
 ### 3.1 Sága — daily briefing (`bin/nornir-job-daily-briefing.sh`, 07:00)
 

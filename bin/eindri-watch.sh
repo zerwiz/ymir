@@ -15,6 +15,21 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 WHEN="$ROOT/.agents/backend/fm-procevent-when.sh"
+
+# The spec must live in the OPERATOR'S HOME, never beside whichever tree the
+# caller happens to stand in. fm-procevent-when.sh defaults its state to
+# FM_HOME/state = <script dir>/../state, so an arm run from a Yggdrasil worktree
+# wrote the spec INTO THE WORKTREE — where the runner never looks, and which is
+# deleted on cleanup. That is how when-huginn.spec was thrown away while Huginn's
+# report sat unnoticed (2026-09-23). Pin it to the hoard, and the runner reads
+# the same place wherever it was started from.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+    [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+fi
+hoard_state_dir _HS 2>/dev/null && FM_STATE_OVERRIDE="${FM_STATE_OVERRIDE:-$_HS/procevent}"
+export FM_STATE_OVERRIDE
 RUNNER="$ROOT/.agents/backend/fm-procevent.sh"
 INTERVAL="20"; STABLE="2"
 
