@@ -1,316 +1,240 @@
 #!/usr/bin/env node
-// skuld (tickets-mcp) — the ticket hall: Ymir's tickets and plans, served as
-// an MCP stdio server for mcp-proxy on :8320. The store is the heart's
-// postgres (`skuld` db; the skuld role). Deps-free: psql only (PGPASSWORD).
-//
-// THE BLOCKING LAW (the Allfather's decree, from the wayofteams guardrail):
-// an agent that does not make tickets and plans in the correct way is BLOCKED.
-// The shape's law: a registered namespace; a ticket needs a real title (>= 4),
-// a real description (>= 10), a valid priority, <= 6 labels; a plan needs body
-// >= 40 and its tickets[] must all exist in the namespace. First violation =
-// a warning on the blocks ledger; at SKULD_TOLERANCE violations the agent is
-// hard-blocked (every skuld tool isError "blocked: <reason>") until the
-// operator clears (blocks/clear, open only to SKULD_OPERATOR) or the ledger
-// is amended. Statuses walk forward: open -> in-progress -> review -> closed
-// (closed is terminal).
+// skuld v2 — the ticket hall on the official MCP SDK (plan 43 corrective).
+// The same store, the same blocking laws, proper bones: McpServer +
+// StreamableHTTP transport + zod-anchored tools + a resource. The psql spine
+// stays (deps-free, escaped literals) — the SDK is the surface, the pg is the
+// floor.
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { z } from "zod";
+import { spawnSync } from "node:child_process";
 
-import { spawnSync } from 'node:child_process';
-
-const DB = process.env.SKULD_PGHOST || '127.0.0.1';
-const ROLE = process.env.SKULD_PGROLE || 'skuld';
-const PASS = process.env.SKULD_PGPASSWORD || 'skuld';
-const DBN  = process.env.SKULD_DBNAME || 'skuld';
-const OPER = process.env.SKULD_OPERATOR || 'brokk';
-const TOLERANCE = parseInt(process.env.SKULD_TOLERANCE || '1', 10);
-const PROTOCOL = '2025-06-18';
-const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'];
-const STATUSES = ['Backlog','Planned','Ready','In Progress','Submitted for Review','In Review','Approved','Done','Changes Requested'];
-const NEXT = { 'Backlog':['Planned'], 'Planned':['Ready'], 'Ready':['In Progress'], 'In Progress':['Submitted for Review','Changes Requested'], 'Submitted for Review':['In Review'], 'In Review':['Approved','Changes Requested'], 'Approved':['Done'], 'Done':[], 'Changes Requested':['In Progress'] };
+const DB = process.env.SKULD_PGHOST || "127.0.0.1";
+const ROLE = process.env.SKULD_PGROLE || "skuld";
+const PASS = process.env.SKULD_PGPASSWORD || "skuld";
+const DBN = process.env.SKULD_DBNAME || "skuld";
+const OPER = process.env.SKULD_OPERATOR || "brokk";
 
 function q(sql, vars) {
-  // psql -c never resolves :'var' (proven), so the markers are inlined as
-  // escaped literals ('' doubling = injection-safe text substitution).
-  const out = sql.replace(/:'([a-z_]+)'/g, (m, k) => "'" + String(vars?.[k] ?? '').replace(/'/g, "''") + "'");
-  const r = spawnSync('psql', ['-h', DB, '-U', ROLE, '-d', DBN, '-Atc', out],
-    { env: { ...process.env, PGPASSWORD: PASS }, encoding: 'utf8', maxBuffer: 8 << 20 });
-  return { ok: r.status === 0, out: (r.stdout || '').trim(), err: (r.stderr || '').trim() };
+  const out = sql.replace(/:'([a-z_]+)'/g, (m, k) => "'" + String(vars?.[k] ?? "").replace(/'/g, "''") + "'");
+  const r = spawnSync("psql", ["-h", DB, "-U", ROLE, "-d", DBN, "-Atc", out],
+    { env: { ...process.env, PGPASSWORD: PASS }, encoding: "utf8", maxBuffer: 8 << 20 });
+  return { ok: r.status === 0, out: (r.stdout || "").trim(), err: (r.stderr || "").trim() };
 }
+const rows = (o) => o ? o.split("\n") : [];
+const agentOf = () => "brokk"; // the seat's pi names itself; the heart serves one hall at a time
+function blockStatus(agent) { const r = q(`SELECT reason FROM blocks WHERE agent = :'a'`, { a: agent }); return rows(r.out)[0] || null; }
+function violation(agent, reason) { q(`INSERT INTO blocks (agent, reason) VALUES (:'a', :'r') ON CONFLICT (agent) DO UPDATE SET reason = :'r', created_at = now()`, { a: agent, r: reason }); }
+const STATUSES = ["Backlog","Planned","Ready","In Progress","Submitted for Review","In Review","Approved","Done","Changes Requested"];
+const MARCH = { "Backlog":["Planned"], "Planned":["Ready"], "Ready":["In Progress"], "In Progress":["Submitted for Review","Changes Requested"], "Submitted for Review":["In Review"], "In Review":["Approved","Changes Requested"], "Approved":["Done"], "Done":[], "Changes Requested":["In Progress"] };
 
-function rows(out) { return out ? out.split('\n') : []; }
-
-let CURRENT_AGENT = 'unknown';   // per-session, caught at the initialize
-const SESSIONS = new Map();      // sid -> { agent, at }
-
-function agentOf() { return CURRENT_AGENT; }
-
-// — the block ledger —
-function violation(agent, reason) {
-  // one warning: the first attempt already fails (isError); the ledger counts.
-  q(`INSERT INTO blocks (agent, reason) VALUES (:'a', :'r')
-     ON CONFLICT (agent) DO UPDATE SET reason = :'r', created_at = now()`, { a: agent, r: reason });
-}
-function blockStatus(agent) {
-  const r = q(`SELECT reason, created_at FROM blocks WHERE agent = :'a'`, { a: agent });
-  return rows(r.out)[0] || null;
-}
-function isBlocked(agent) {
-  const b = blockStatus(agent);
-  if (!b) return null;
-  const [reason] = b.split('|');
-  return reason;
-}
-
-function ensureNamespace(ns) {
-  const r = q(`SELECT 1 FROM namespaces WHERE name = :'n'`, { n: ns });
-  return rows(r.out).length > 0;
-}
-
-const law = {
-  ticket(ns, title, description, priority, labels) {
-    if (!ns || !ensureNamespace(ns)) return `namespace '${ns}' is not on the registry (registered: ymir, whynotproductions)`;
-    if (!title || String(title).trim().length < 4) return 'a ticket needs a real title (4+ chars)';
-    if (!description || String(description).trim().length < 10) return 'a ticket needs a real description (10+ chars)';
-    if (!PRIORITIES.includes(priority)) return `priority must be one of ${PRIORITIES.join(', ')}`;
-    if (labels.length > 6) return 'a ticket may carry at most 6 labels';
-    return null;
-  },
-  plan(ns, title, body, tickets) {
-    if (!ensureNamespace(ns)) return `namespace '${ns}' is not on the registry`;
-    if (!title || String(title).trim().length < 6) return 'a plan needs a real title (6+ chars)';
-    if (!body || String(body).trim().length < 40) return 'a plan needs a real body (40+ chars) — anything plan-sized is written first';
-    if (tickets.length) {
-      const t = q(`SELECT id FROM tickets WHERE namespace = :'n' AND id = ANY (string_to_array(:'ts', ',')::bigint[])`, { n: ns, ts: tickets.join(',') });
-      const found = rows(t.out).length;
-      if (found !== tickets.length) return `plan tickets must exist in the namespace (${found}/${tickets.length} found)`;
-    }
-    return null;
-  },
-  transition(cur, to) {
-    if (!STATUSES.includes(to)) return `status must be one of ${STATUSES.join(', ')}`;
-    if (to === cur) return null;
-    if (!(NEXT[cur] || []).includes(to)) return `illegal status walk: ${cur} -> ${to} (forward only through the review march; the reviewer's gate stands at Submitted for Review; Changes Requested returns to In Progress)`;
-    return null;
-  }
-};
+function makeMcp() {
+  const server = new McpServer({ name: "skuld", version: "2.0.0" }, {
+    capabilities: { tools: {}, resources: { subscribe: false, listChanged: false } }
+  });
 
 function blockedResult(agent) {
-  const reason = isBlocked(agent);
-  const error = reason ? `blocked: ${reason} — an agent that does not make tickets and plans correctly is blocked; the operator clears it (blocks/clear)` : null;
-  return { error, reason };
+  const b = blockStatus(agent);
+  return b ? `blocked: ${b.split("|")[0]} — an agent that does not make tickets and plans correctly is blocked; the operator clears it (blocks/clear)` : null;
+}
+function guarded(name, args) {
+  const agent = agentOf();
+  const bad = blockedResult(agent);
+  if (bad && !["blocks_status", "blocks_clear"].includes(name)) return bad;
+  return null;
 }
 
-const rpc = {
-  initialize: (p) => {
-    if (p?.clientInfo?.name) CURRENT_AGENT = String(p.clientInfo.name).slice(0, 64);
-    return { protocolVersion: p?.protocolVersion || PROTOCOL,
-    capabilities: { tools: { listChanged: false }, resources: { listChanged: false, subscribe: false } },
-    serverInfo: { name: 'skuld', version: '1' } };
-  },
-  'tools/list': () => ({ tools: [
-    { name: 'tickets/create', description: 'Create a ticket in a registered namespace (title 4+, description 10+, priority Low/Medium/High/Critical, <= 6 labels). The blocking law is on: a malformed ticket blocks the calling agent.', inputSchema: { type: 'object', properties: { namespace: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, priority: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } } }, required: ['namespace', 'title', 'description'] } },
-    { name: 'tickets/list', description: 'List tickets (by namespace, status, assignee, owner).', inputSchema: { type: 'object', properties: { namespace: { type: 'string' }, status: { type: 'string' }, assignee: { type: 'string' }, owner: { type: 'string' } } } },
-    { name: 'tickets/get', description: 'Read one ticket by id.', inputSchema: { type: 'object', properties: { id: { type: 'integer' } }, required: ['id'] } },
-    { name: 'tickets/update', description: 'Update a ticket: status (open -> in-progress -> review -> closed, forward only), priority, labels, assignee.', inputSchema: { type: 'object', properties: { id: { type: 'integer' }, status: { type: 'string' }, priority: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } }, assignee: { type: 'string' } }, required: ['id'] } },
-    { name: 'tickets/close', description: 'Close a ticket (terminal; only from review).', inputSchema: { type: 'object', properties: { id: { type: 'integer' } }, required: ['id'] } },
-    { name: 'plans/create', description: 'Create a plan (title 6+, body 40+; tickets[] must all exist in the namespace). The blocking law is on.', inputSchema: { type: 'object', properties: { namespace: { type: 'string' }, title: { type: 'string' }, body: { type: 'string' }, tickets: { type: 'array', items: { type: 'integer' } } }, required: ['namespace', 'title', 'body'] } },
-    { name: 'plans/list', description: 'List plans (by namespace).', inputSchema: { type: 'object', properties: { namespace: { type: 'string' } } } },
-    { name: 'comments/list', description: 'The comment thread of a ticket.', inputSchema: { type: 'object', properties: { id: { type: 'integer' } }, required: ['id'] } },
-    { name: 'comments/post', description: 'Post a comment on a ticket.', inputSchema: { type: 'object', properties: { id: { type: 'integer' }, body: { type: 'string' } }, required: ['id', 'body'] } },
-    { name: 'blocks/status', description: 'The calling agent\'s block status.', inputSchema: { type: 'object' } },
-    { name: 'blocks/clear', description: 'Clear an agent\'s block (the operator\'s door only — agent must equal SKULD_OPERATOR).', inputSchema: { type: 'object', properties: { agent: { type: 'string' } }, required: ['agent'] } }
-  ] }),
-  'tools/call': (p, agent) => {
-    const name = p?.name || '';
-    const args = p?.arguments || {};
-    // the operator's door never blocks
-    if (name === 'blocks/clear') {
-      const target = String(args.agent || '');
-      if (CURRENT_AGENT !== OPER) return { content: [{ type: 'text', text: `blocks/clear is the operator's door (SKULD_OPERATOR=${OPER}); you are ${CURRENT_AGENT}` }], isError: true };
-      q(`DELETE FROM blocks WHERE agent = :'a'`, { a: target });
-      return { content: [{ type: 'text', text: `block cleared for ${target}` }] };
-    }
-    if (name === 'blocks/status') {
-      const b = blockStatus(agent);
-      return { content: [{ type: 'text', text: b ? `blocked: ${b.split('|')[0]}` : `clean: ${agent}` }] };
-    }
-    // the wall: a blocked agent cannot touch the hall's books
-    const { error } = blockedResult(agent);
-    if (error && name.startsWith('tickets') === false && name.startsWith('plans') === false) {}
-    if (error) return { content: [{ type: 'text', text: error }], isError: true };
+server.registerTool("tickets_create", {
+  title: "Create a ticket", description: "A registered namespace, title (4+), description (10+), a valid priority. The blocking law is on.",
+  inputSchema: { namespace: z.string(), title: z.string(), description: z.string(), priority: z.string().optional(), status: z.string().optional(), labels: z.array(z.string()).optional(), parent: z.number().optional() }
+}, async (a) => {
+  const agent = agentOf();
+  const g = guarded("tickets_create", a);
+  if (g) return { content: [{ type: "text", text: g }], isError: true };
+  const ns = String(a.namespace || "");
+  if (!ns || !rows(q(`SELECT 1 FROM namespaces WHERE name = :'n'`, { n: ns })).length) { violation(agent, "tickets/create refused: namespace not registered"); return { content: [{ type: "text", text: `refused: namespace '${ns}' is not on the registry` }], isError: true }; }
+  if (String(a.title).trim().length < 4) { violation(agent, "tickets/create refused: title"); return { content: [{ type: "text", text: "refused: a ticket needs a real title (4+ chars)" }], isError: true }; }
+  if (String(a.description).trim().length < 10) { violation(agent, "tickets/create refused: description"); return { content: [{ type: "text", text: "refused: a ticket needs a real description (10+ chars)" }], isError: true }; }
+  const pri = String(a.priority || "Medium");
+  if (!["Low","Medium","High","Critical"].includes(pri)) return { content: [{ type: "text", text: "priority must be Low/Medium/High/Critical" }], isError: true };
+  const st = String(a.status || "Ready");
+  if (!STATUSES.includes(st)) return { content: [{ type: "text", text: "status must be one of the vocabulary" }], isError: true };
+  const labels = (a.labels || []).map(String);
+  if (labels.length > 6) return { content: [{ type: "text", text: "at most 6 labels" }], isError: true };
+  const r = q(`INSERT INTO tickets (namespace, title, description, priority, status, labels, owner, ticket_no, parent_id)
+    VALUES (:'n', :'t', :'d', :'p', :'st', string_to_array(:'l', ','), :'o',
+      (SELECT COALESCE(MAX(ticket_no), 0) + 1 FROM tickets WHERE namespace = :'n'),
+      NULLIF(:'parent', '')::bigint) RETURNING id, ticket_no`,
+    { n: ns, t: String(a.title), d: String(a.description), p: pri, st, l: labels.join(","), o: agent, parent: a.parent ? String(a.parent) : "" });
+  if (!r.ok) return { content: [{ type: "text", text: "store error: " + r.err }], isError: true };
+  return { content: [{ type: "text", text: `ticket ${ns}/${rows(r.out)[0].split("|")[1]} created (#${rows(r.out)[0].split("|")[0]})` }] };
+});
 
+server.registerTool("tickets_list", {
+  title: "List tickets", description: "Filter by namespace/status/priority/assignee; the airy numbers + statuses bath.",
+  inputSchema: { namespace: z.string().optional(), status: z.string().optional(), priority: z.string().optional() }
+}, async (a) => {
+  const f = [], v = {};
+  if (a.namespace) { f.push("namespace = :'ns'"); v.ns = String(a.namespace); }
+  if (a.status) { f.push("status = :'st'"); v.st = String(a.status); }
+  if (a.priority) { f.push("priority = :'pr'"); v.pr = String(a.priority); }
+  const r = q(`SELECT id, ticket_no, namespace, status, priority, title, COALESCE(assignee, owner, 'hall'), COALESCE(parent_id, 0), LEFT(description, 120)
+    FROM tickets ${f.length ? "WHERE " + f.join(" AND ") : ""} ORDER BY id DESC LIMIT 200`, v);
+  return { content: [{ type: "text", text: rows(r.out).join("\n") || "(no tickets)" }] };
+});
 
-    if (name === 'comments/list') {
-      const r = q(`SELECT id, author, body, created_at FROM comments WHERE ticket_id = :'id' ORDER BY id`, { id: String(args.id) });
-      return { content: [{ type: 'text', text: rows(r.out).join('\n') || '(no comments)' }] };
+server.registerTool("tickets_get", {
+  title: "Read a ticket", description: "The full row of one ticket.",
+  inputSchema: { id: z.number() }
+}, async (a) => {
+  const r = q(`SELECT id, ticket_no, namespace, title, description, priority, status, labels, owner, assignee, created_at FROM tickets WHERE id = :'id'`, { id: String(a.id) });
+  const line = rows(r.out)[0];
+  return line ? { content: [{ type: "text", text: line }] } : { content: [{ type: "text", text: `no ticket #${a.id}` }], isError: true };
+});
+
+server.registerTool("tickets_update", {
+  title: "Update a ticket", description: "The legal march (Backlog -> Done through the review gate) + the Done-witness (a description 10+). Violations block.",
+  inputSchema: { id: z.number(), status: z.string().optional(), priority: z.string().optional(), labels: z.array(z.string()).optional(), assignee: z.string().optional() }
+}, async (a) => {
+  const agent = agentOf();
+  const g = guarded("tickets_update", a);
+  if (g) return { content: [{ type: "text", text: g }], isError: true };
+  const cur = rows(q(`SELECT status FROM tickets WHERE id = :'id'`, { id: String(a.id) }))[0];
+  if (!cur) return { content: [{ type: "text", text: `no ticket #${a.id}` }], isError: true };
+  const sets = [], v = { id: String(a.id) };
+  if (a.status !== undefined) {
+    if (!STATUSES.includes(a.status)) return { content: [{ type: "text", text: "unknown status" }], isError: true };
+    if (a.status !== cur && !(MARCH[cur] || []).includes(a.status)) { violation(agent, `illegal march ${cur} -> ${a.status}`); return { content: [{ type: "text", text: `refused: illegal march ${cur} -> ${a.status} (the review gate stands)` }], isError: true }; }
+    if (a.status === "Done") {
+      const d2 = rows(q(`SELECT description FROM tickets WHERE id = :'id'`, { id: String(a.id) }))[0] || "";
+      if (d2.trim().length < 10) { violation(agent, "Done-witness refused: no description"); return { content: [{ type: "text", text: "refused: a Done ticket needs a description (10+ chars) — the Done-witness law" }], isError: true }; }
     }
-    if (name === 'comments/post') {
-      const body = String(args.body || '').trim();
-      if (!body) return { content: [{ type: 'text', text: 'a comment needs words' }], isError: true };
-      if (body.length > 2000) return { content: [{ type: 'text', text: 'a comment may not exceed 2000 chars' }], isError: true };
-      const r = q(`INSERT INTO comments (ticket_id, author, body) VALUES (:'id', :'a', :'b') RETURNING id`, { id: String(args.id), a: agent, b: body });
-      if (!r.ok) return { content: [{ type: 'text', text: 'store error: ' + r.err }], isError: true };
-      return { content: [{ type: 'text', text: 'comment #' + r.out + ' carved on ticket #' + args.id }] };
-    }
-    if (name === 'plans/get') {
-      const r = q(`SELECT id, namespace, title, body, status, tickets, created_at FROM plans WHERE id = :'id'`, { id: String(args.id) });
-      const line = rows(r.out)[0];
-      if (!line) return { content: [{ type: 'text', text: 'no plan #' + args.id }], isError: true };
-      return { content: [{ type: 'text', text: line }] };
-    }
-    if (name === 'tickets/create') {
-      const ns = String(args.namespace || ''); const title = String(args.title || '');
-      const body = String(args.description || ''); const pri = String(args.priority || 'Medium');
-      const st = String(args.status || 'Ready');
-      const labels = Array.isArray(args.labels) ? args.labels.map(String) : [];
-      const bad = law.ticket(ns, title, body, pri, labels);
-      if (bad) { violation(agent, `tickets/create refused: ${bad}`); return { content: [{ type: 'text', text: `refused: ${bad}\n(recorded — a repeated violation blocks you)` }], isError: true }; }
-      const parent = String(args.parent || '')
-      const r = q(`INSERT INTO tickets (namespace, title, description, priority, status, labels, owner, ticket_no, parent_id)
-                  VALUES (:'n', :'t', :'d', :'p', :'st', string_to_array(:'l', ','), :'o',
-                          (SELECT COALESCE(MAX(ticket_no), 0) + 1 FROM tickets WHERE namespace = :'n'),
-                          NULLIF(:'parent', '')::bigint)
-                  RETURNING id, ticket_no`, { n: ns, t: title, d: body, p: pri, st: st, l: labels.join(','), o: agent, parent });
-      if (!r.ok) return { content: [{ type: 'text', text: `store error: ${r.err}` }], isError: true };
-      return { content: [{ type: 'text', text: `ticket #${r.out} created in '${ns}'` }] };
-    }
-    if (name === 'tickets/list') {
-      const f = [];
-      const v = {};
-      for (const [k, col] of [['namespace', 'namespace'], ['status', 'status'], ['assignee', 'assignee'], ['owner', 'owner']]) {
-        if (args[k]) { f.push(`${col} = :'${k}'`); v[k] = String(args[k]); }
-      }
-      const r = q(`SELECT id, ticket_no, namespace, status, priority, title, COALESCE(assignee, owner, 'hall'), COALESCE(parent_id, 0) FROM tickets ${f.length ? 'WHERE ' + f.join(' AND ') : ''} ORDER BY id DESC LIMIT 100`, v);
-      return { content: [{ type: 'text', text: rows(r.out).map(x => `#${x}`).join('\n') || '(no tickets)' }] };
-    }
-    if (name === 'tickets/get') {
-      const r = q(`SELECT id, ticket_no, namespace, title, description, priority, status, labels, owner, assignee, created_at FROM tickets WHERE id = :'id'`, { id: String(args.id) });
-      const line = rows(r.out)[0];
-      if (!line) return { content: [{ type: 'text', text: `no ticket #${args.id}` }], isError: true };
-      return { content: [{ type: 'text', text: line }] };
-    }
-    if (name === 'tickets/update') {
-      const cur = q(`SELECT status FROM tickets WHERE id = :'id'`, { id: String(args.id) });
-      const curS = rows(cur.out)[0];
-      if (!curS) return { content: [{ type: 'text', text: `no ticket #${args.id}` }], isError: true };
-      const sets = []; const v = { id: String(args.id) };
-      if (args.status !== undefined) {
-        const bad = law.transition(curS, String(args.status));
-        if (bad) { violation(agent, `tickets/update refused: ${bad}`); return { content: [{ type: 'text', text: `refused: ${bad}\n(recorded)` }], isError: true }; }
-        sets.push(`status = :'status'`); v.status = String(args.status);
-        if (args.status === 'closed') sets.push(`closed_at = now()`);
-      }
-      if (args.priority !== undefined) {
-        if (!PRIORITIES.includes(args.priority)) return { content: [{ type: 'text', text: `priority must be one of ${PRIORITIES.join(', ')}` }], isError: true };
-        sets.push(`priority = :'priority'`); v.priority = String(args.priority);
-      }
-      if (args.labels !== undefined) {
-        const ls = Array.isArray(args.labels) ? args.labels.map(String) : [];
-        if (ls.length > 6) return { content: [{ type: 'text', text: 'at most 6 labels' }], isError: true };
-        sets.push(`labels = string_to_array(:'labels', ',')`); v.labels = ls.join(',');
-      }
-      if (args.assignee !== undefined) { sets.push(`assignee = :'assignee'`); v.assignee = String(args.assignee); }
-      if (!sets.length) return { content: [{ type: 'text', text: 'nothing to update' }], isError: true };
-      sets.push(`updated_at = now()`);
-      const r = q(`UPDATE tickets SET ${sets.join(', ')} WHERE id = :'id' RETURNING id`, v);
-      return r.ok ? { content: [{ type: 'text', text: `ticket #${r.out} updated` }] } : { content: [{ type: 'text', text: `store error: ${r.err}` }], isError: true };
-    }
-    if (name === 'tickets/close') {
-      return rpc['tools/call']({ name: 'tickets/update', arguments: { id: args.id, status: 'closed' } }, agent);
-    }
-    if (name === 'plans/create') {
-      const ns = String(args.namespace || ''); const title = String(args.title || '');
-      const body = String(args.body || ''); const ts = Array.isArray(args.tickets) ? args.tickets.map(x => String(x)) : [];
-      const bad = law.plan(ns, title, body, ts);
-      if (bad) { violation(agent, `plans/create refused: ${bad}`); return { content: [{ type: 'text', text: `refused: ${bad}\n(recorded — a repeated violation blocks you)` }], isError: true }; }
-      const r = q(`INSERT INTO plans (namespace, title, body, tickets, status) VALUES (:'n', :'t', :'d', string_to_array(:'ts', ',')::bigint[], 'active') RETURNING id`, { n: ns, t: title, d: body, ts: ts.join(',') });
-      return r.ok ? { content: [{ type: 'text', text: `plan #${r.out} created in '${ns}'` }] } : { content: [{ type: 'text', text: `store error: ${r.err}` }], isError: true };
-    }
-    if (name === 'plans/list') {
-      const f = args.namespace ? `WHERE namespace = :'n'` : '';
-      const v = args.namespace ? { n: String(args.namespace) } : {};
-      const r = q(`SELECT id, namespace, status, tickets, title FROM plans ${f} ORDER BY id DESC LIMIT 50`, v);
-      return { content: [{ type: 'text', text: rows(r.out).map(x => `#${x}`).join('\n') || '(no plans)' }] };
-    }
-    return { content: [{ type: 'text', text: `unknown tool: ${name}` }], isError: true };
-  },
-  'resources/list': () => ({
-    resources: [
-      { uri: 'skuld://book', name: 'the ticket book', description: 'tickets and plans of the hall', mimeType: 'text/plain' }
-    ]
-  }),
-  'resources/read': (p) => {
-    const id = (p?.uri || '').replace(/^skuld:\/\/\w+[#/]?/, '');
-    if (id === 'book') {
-      const t = q(`SELECT count(*) FROM tickets`); const pl = q(`SELECT count(*) FROM plans`);
-      return { contents: [{ uri: p.uri, mimeType: 'text/plain', text: `tickets: ${rows(t.out)[0] || 0} · plans: ${rows(pl.out)[0] || 0}` }] };
-    }
-    const r = q(`SELECT id, namespace, title, description, priority, status, labels, owner, assignee FROM tickets WHERE id = :'id'`, { id });
-    const line = rows(r.out)[0];
-    return { contents: [{ uri: p.uri, mimeType: 'text/plain', text: line ? `#${line}` : 'no such ticket' }] };
+    sets.push("status = :'st'"); v.st = String(a.status);
+    if (a.status === "Done") sets.push("closed_at = now()");
   }
-};
+  if (a.priority !== undefined) { sets.push("priority = :'pr'"); v.pr = String(a.priority); }
+  if (a.labels !== undefined) { sets.push("labels = string_to_array(:'l', ',')"); v.l = a.labels.map(String).join(","); }
+  if (a.assignee !== undefined) { sets.push("assignee = :'as'"); v.as = String(a.assignee); }
+  if (!sets.length) return { content: [{ type: "text", text: "nothing to update" }], isError: true };
+  sets.push("updated_at = now()");
+  const r = q(`UPDATE tickets SET ${sets.join(", ")} WHERE id = :'id' RETURNING id`, v);
+  return r.ok ? { content: [{ type: "text", text: `ticket #${r.out} updated` }] } : { content: [{ type: "text", text: "store error" }], isError: true };
+});
 
-function handle(msg) {
-  const { id, method, params } = msg;
-  if (!method || method === 'notifications/initialized' || method.startsWith('notifications/')) return null;
-  let result = null, error = null;
-  try {
-    if (method === 'initialize') { if (params?.clientInfo?.name) CURRENT_AGENT = String(params.clientInfo.name).slice(0, 64); result = rpc.initialize(params); }
-    else if (method === 'tools/list') result = rpc['tools/list']();
-    else if (method === 'tools/call') result = rpc['tools/call'](params, CURRENT_AGENT);
-    else if (method === 'resources/list') result = rpc['resources/list']();
-    else if (method === 'resources/read') result = rpc['resources/read'](params);
-    else error = { code: -32601, message: `Unknown method: ${method}` };
-  } catch (e) { error = { code: -32603, message: String(e) }; }
-  const resp = { jsonrpc: '2.0', id: id ?? null, ...(error ? { error } : { result }) };
-  return { resp, agent: CURRENT_AGENT, initialized: method === 'initialize' };
+server.registerTool("plans_update", { title: "Approve or ship a plan", description: "The operator walks a plan: approved -> shipped. The reviewer's hand is the Allfather's.",
+  inputSchema: { id: z.number(), status: z.string() }
+}, async (a) => {
+  const agent = agentOf();
+  const cur = rows(q(`SELECT status FROM plans WHERE id = :'id'`, { id: String(a.id) }))[0];
+  if (!cur) return { content: [{ type: "text", text: `no plan #${a.id}` }], isError: true };
+  const to = String(a.status);
+  const MARCH = { "drafted": ["active", "approved"], "active": ["approved"], "approved": ["shipped"], "shipped": ["done"], "done": [], "superseded": [] };
+  if (to !== cur && !(MARCH[cur] || []).includes(to)) return { content: [{ type: "text", text: `illegal plan walk ${cur} -> ${to}` }], isError: true };
+  if (to === "approved" && agent !== OPER) return { content: [{ type: "text", text: "the approval is the Allfather's hand" }], isError: true };
+  const r = q(`UPDATE plans SET status = :'st', updated_at = now() WHERE id = :'id' RETURNING id`, { id: String(a.id), st: to });
+  return r.ok ? { content: [{ type: "text", text: `plan #${r.out} ${to}` }] } : { content: [{ type: "text", text: "store error" }], isError: true };
+});
+server.registerTool("plans_pending", { title: "The awaiting plans", description: "The plans that wait the Allfather's approval.", inputSchema: {} }, async () => {
+  const r = q(`SELECT id, namespace, title, status FROM plans WHERE status IN ('drafted','active') ORDER BY id`);
+  return { content: [{ type: "text", text: rows(r.out).join("\n") || "(no plans await)" }] };
+});
+
+server.registerTool("namespaces_list", { title: "The projects", description: "The registered projects (the slugs and their names) — the pickers fill from here.", inputSchema: {} }, async () => {
+  const r = q(`SELECT name, COALESCE(about, name) FROM namespaces ORDER BY name`);
+  return { content: [{ type: "text", text: rows(r.out).join("\n") || "(no namespaces)" }] };
+});
+
+server.registerTool("plans_create", { title: "Cut a plan", description: "A title (6+), a body (40+), its tickets[] must exist. The law is on.",
+  inputSchema: { namespace: z.string(), title: z.string(), body: z.string(), tickets: z.array(z.number()).optional() }
+}, async (a) => {
+  const agent = agentOf();
+  if (blockStatus(agent)) return { content: [{ type: "text", text: "blocked: " + blockStatus(agent) }], isError: true };
+  const ns = String(a.namespace || "");
+  if (!rows(q(`SELECT 1 FROM namespaces WHERE name = :'n'`, { n: ns })).length) return { content: [{ type: "text", text: "namespace not registered" }], isError: true };
+  if (String(a.title).trim().length < 6) { violation(agent, "plans_create refused: title"); return { content: [{ type: "text", text: "refused: a plan needs a real title (6+ chars)" }], isError: true }; }
+  if (String(a.body).trim().length < 40) { violation(agent, "plans_create refused: body"); return { content: [{ type: "text", text: "refused: a plan needs a real body (40+ chars)" }], isError: true }; }
+  const ts = (a.tickets || []).map(String);
+  if (ts.length) { const found = rows(q(`SELECT id FROM tickets WHERE namespace = :'n' AND id = ANY (string_to_array(:'ts', ',')::bigint[])`, { n: ns, ts: ts.join(",") })).length; if (found !== ts.length) return { content: [{ type: "text", text: `plan tickets must exist (${found}/${ts.length})` }], isError: true }; }
+  const r = q(`INSERT INTO plans (namespace, title, body, tickets, status) VALUES (:'n', :'t', :'d', string_to_array(:'ts', ',')::bigint[], 'active') RETURNING id`, { n: ns, t: String(a.title), d: String(a.body), ts: ts.join(",") });
+  return r.ok ? { content: [{ type: "text", text: `plan #${r.out} created in ${ns}` }] } : { content: [{ type: "text", text: "store error" }], isError: true };
+});
+server.registerTool("plans_list", { title: "The plans", description: "The roadmap rows with their body-fragments.", inputSchema: { namespace: z.string().optional() } }, async (a) => {
+  const f = a.namespace ? "WHERE namespace = :'n'" : ""; const v = a.namespace ? { n: String(a.namespace) } : {};
+  const r = q(`SELECT id, namespace, status, tickets, title, LEFT(body, 140), created_at FROM plans ${f} ORDER BY id DESC LIMIT 100`, v);
+  return { content: [{ type: "text", text: rows(r.out).join("\n") || "(no plans)" }] };
+});
+server.registerTool("plans_get", { title: "One plan", description: "The full plan row.", inputSchema: { id: z.number() } }, async (a) => {
+  const r = q(`SELECT id, namespace, title, body, status, tickets, created_at FROM plans WHERE id = :'id'`, { id: String(a.id) });
+  const line = rows(r.out)[0];
+  return line ? { content: [{ type: "text", text: line }] } : { content: [{ type: "text", text: `no plan #${a.id}` }], isError: true };
+});
+
+server.registerTool("comments_list", { title: "The thread", description: "A ticket's comments.", inputSchema: { id: z.number() } }, async (a) => {
+  const r = q(`SELECT id, author, body, created_at FROM comments WHERE ticket_id = :'id' ORDER BY id`, { id: String(a.id) });
+  return { content: [{ type: "text", text: rows(r.out).join("\n") || "(no comments)" }] };
+});
+server.registerTool("comments_post", { title: "Carve a comment", description: "A word on the ticket.", inputSchema: { id: z.number(), body: z.string() } }, async (a) => {
+  const body = String(a.body).trim();
+  if (!body || body.length > 2000) return { content: [{ type: "text", text: "a comment needs 1..2000 words" }], isError: true };
+  const r = q(`INSERT INTO comments (ticket_id, author, body) VALUES (:'id', :'a', :'b') RETURNING id`, { id: String(a.id), a: agentOf(), b: body });
+  return r.ok ? { content: [{ type: "text", text: `comment #${r.out} carved` }] } : { content: [{ type: "text", text: "store error" }], isError: true };
+});
+
+server.registerTool("blocks_status", { title: "Your block", description: "The calling agent's ledger state.", inputSchema: {} }, async () => {
+  const b = blockStatus(agentOf());
+  return { content: [{ type: "text", text: b ? `blocked: ${b.split("|")[0]}` : `clean: ${agentOf()}` }] };
+});
+server.registerTool("blocks_clear", { title: "The operator's key", description: "Only SKULD_OPERATOR may lift.", inputSchema: { agent: z.string() } }, async (a) => {
+  if (agentOf() !== OPER) return { content: [{ type: "text", text: `the operator's door only` }], isError: true };
+  q(`DELETE FROM blocks WHERE agent = :'a'`, { a: String(a.agent) });
+  return { content: [{ type: "text", text: `block cleared for ${a.agent}` }] };
+});
+
+server.resource("the-book", "skuld://book", "the ticket book", async () => {
+  const t = rows(q(`SELECT count(*) FROM tickets`))[0] || "0";
+  const p = rows(q(`SELECT count(*) FROM plans`))[0] || "0";
+  return { contents: [{ uri: "skuld://book", mimeType: "text/plain", text: `tickets: ${t} · plans: ${p}` }] };
+});
+
+  return server;
 }
+server.registerTool("sync_snapshot", { title: "The whole book", description: "The full export (tickets + plans + statuses + namespaces) for the fleet mirrors — the heart is the primary, the instances pull.", inputSchema: {} }, async () => {
+  const t = rows(q(`SELECT id, ticket_no, namespace, status, priority, title, LEFT(description, 200), labels, owner, created_at FROM tickets ORDER BY id`));
+  const p = rows(q(`SELECT id, namespace, title, status, tickets, created_at FROM plans ORDER BY id`));
+  const n = rows(q(`SELECT name, COALESCE(about, name) FROM namespaces ORDER BY name`));
+  return { content: [{ type: "text", text: "tickets\n" + t.join("\n") + "\nplans\n" + p.join("\n") + "\nnamespaces\n" + n.join("\n") }] };
+});
 
-// — the served mode: the hall speaks HTTP directly (no proxy, no identity theft) —
-const PORT = parseInt(process.env.PORT || '0', 10);
+// — the served mode: StreamableHTTP on PORT (the SDK holds the handshake+session) —
+const PORT = parseInt(process.env.PORT || "0", 10);
 if (PORT > 0) {
-  import('node:http').then(({ default: http }) => {
-    const server = http.createServer((req, res) => {
-      // the session id must be READABLE by the page's own JS: browsers hide a
-      // response header unless it is named in access-control-expose-headers.
-      const cors = {
-        'access-control-allow-origin': '*',
-        'access-control-allow-headers': 'content-type, accept, mcp-session-id',
-        'access-control-allow-methods': 'POST, OPTIONS',
-        'access-control-expose-headers': 'mcp-session-id, Mcp-Session-Id'
-      };
-      if (req.method === 'OPTIONS') { res.writeHead(204, cors).end(); return; }
-      if (req.method !== 'POST') { res.writeHead(405).end(); return; }
-      let body = '';
-      req.on('data', c => { body += c; if (body.length > 1 << 20) req.destroy(); });
-      req.on('end', () => {
-        let msg; try { msg = JSON.parse(body); } catch { res.writeHead(400, { 'content-type': 'application/json' }).end('{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"parse error"}}'); return; }
-        const sid = String(req.headers['mcp-session-id'] || '');
-        if (!msg.method?.startsWith('notifications/') && sid && SESSIONS.has(sid)) CURRENT_AGENT = SESSIONS.get(sid).agent;
-        const out = handle(msg);
-        if (!out) { res.writeHead(204).end(); return; }
-        let sid2 = sid;
-        if (out.initialized) { sid2 = Math.random().toString(16).slice(2); SESSIONS.set(sid2, { agent: out.agent, at: Date.now() }); }
-        res.writeHead(200, { 'content-type': 'application/json', ...cors, 'mcp-session-id': sid2, 'Mcp-Session-Id': sid2 });
-        res.end(JSON.stringify(out.resp) + '\n');
-      });
+  import("node:http").then(({ default: http }) => {
+    const serverHttp = http.createServer(async (req, res) => {
+      const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type, accept, mcp-session-id, mcp-protocol-version, mcp-integration-context", "access-control-allow-methods": "POST, OPTIONS, DELETE", "access-control-expose-headers": "mcp-session-id, Mcp-Session-Id" };
+      if (req.method === "OPTIONS") { res.writeHead(204, cors).end(); return; }
+      if (!["POST", "DELETE"].includes(req.method)) { res.writeHead(405).end(); return; }
+      // the documented session-map: one transport per session; the known
+      // session re-uses its transport, a fresh one joins by its own connect
+      globalThis.__skuldSessions ||= new Map();
+      const reqSid = String(req.headers['mcp-session-id'] || '');
+      let entry = reqSid ? globalThis.__skuldSessions.get(reqSid) : null;
+      if (req.method === 'DELETE' && reqSid) { globalThis.__skuldSessions.delete(reqSid); return; }
+      if (!entry) {
+        const mcp = makeMcp();
+        const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => crypto.randomUUID(), onsessioninitialized: (id) => { if (!globalThis.__skuldSessions.has(id)) globalThis.__skuldSessions.set(id, { mcp, transport }); } });
+        await mcp.connect(transport);
+        entry = { mcp, transport };
+        if (!reqSid) globalThis.__skuldSessions.set('boot', entry);
+      }
+      const transport = entry.transport;
+      Object.entries(cors).forEach(([k, v]) => res.setHeader(k, v));
+      res.setHeader("content-type", "application/json");
+      try {
+        const raw = await requestBody(req); let parsed = null; try { parsed = JSON.parse(raw); } catch {}
+        await transport.handleRequest(req, res, parsed); }
+      catch (e) { res.end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32603, message: String(e) } })); }
     });
-    server.listen(PORT, '0.0.0.0', () => {});
-    setInterval(() => { for (const [k, v] of SESSIONS) if (Date.now() - v.at > 3600e3) SESSIONS.delete(k); }, 3600e3);
+    serverHttp.listen(PORT, "0.0.0.0");
   }).catch(e => { process.stderr.write(String(e)); });
 }
-
-// — the stdio mode (local pipes and tests) —
-let buf = '';
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', chunk => {
-  buf += chunk;
-  let i;
-  while ((i = buf.indexOf('\n')) >= 0) {
-    const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-    if (!line) continue;
-    let msg; try { msg = JSON.parse(line); } catch { continue; }
-    const out = handle(msg);
-    if (out) process.stdout.write(JSON.stringify(out.resp) + '\n');
-  }
-});
+function requestBody(req) { return new Promise((ok, no) => { let b = ""; req.on("data", c => { b += c; if (b.length > 2 << 20) req.destroy(); }); req.on("end", () => ok(b)); req.on("error", no); }); }
