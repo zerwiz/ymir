@@ -31,6 +31,10 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_settings_dir YMIR_SETTINGS_DIR
 hoard_local_env YMIR_ENV_FILE
+# The resolved cache lives in the runtime state, which belongs to the operator's
+# home (Rule 04). Without this call YMIR_STATE_DIR is unbound and `set -u` kills
+# every verb — show, get, resolve and apply all died on line 35.
+hoard_state_dir YMIR_STATE_DIR
 CFG="${YMIR_AGENTS_YAML:-$YMIR_SETTINGS_DIR/agents.yaml}"
 RESOLVED="${YMIR_STATE_DIR}/agents-resolved.json"
 
