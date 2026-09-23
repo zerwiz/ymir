@@ -8,6 +8,7 @@
 #
 # Usage:
 #   bin/valknut-load.sh [--opencode] [--pi] [--global] [--status] [--all]
+#   bin/valknut-load.sh --install      # seat the post-merge hook (bind on merge)
 #   bin/valknut-load.sh --version | -v
 #
 # Exit: 0 ok, 1 error, 2 usage.
@@ -40,7 +41,7 @@ for a in "$@"; do
   esac
 done
 
-MODE_OPENCODE=0; MODE_PI=0; MODE_GLOBAL=0; MODE_STATUS=0
+MODE_OPENCODE=0; MODE_PI=0; MODE_GLOBAL=0; MODE_INSTALL=0; MODE_STATUS=0
 for a in "$@"; do
   case "$a" in
     --opencode) MODE_OPENCODE=1 ;;
@@ -48,9 +49,41 @@ for a in "$@"; do
     --global) MODE_GLOBAL=1 ;;
     --status) MODE_STATUS=1 ;;
     --all) MODE_OPENCODE=1; MODE_PI=1 ;;
+    --install) MODE_INSTALL=1 ;;
     *) printf 'error: unknown flag %s\nhelp: bin/valknut-load.sh [--opencode|--pi|--global|--status|--all]\n' "$a" >&2; exit 2 ;;
   esac
 done
+
+# --install: seat the post-merge hook, so a MERGE rebinds the surfaces. A merged
+# extension fix otherwise sits in the repo while the RUNNING harness keeps the
+# code it loaded — which is exactly how a hand-copy became necessary 2026-09-23.
+if [ "$MODE_INSTALL" = "1" ]; then
+  # Ask git for the hooks dir: in a worktree `.git` is a FILE, and the shared
+  # hooks live in the MAIN repo — the same reason a fix must be installed from
+  # wherever git says, not from the caller's tree.
+  hooksdir="$(git -C "$ROOT" rev-parse --git-path hooks 2>/dev/null)"
+  case "$hooksdir" in /*) ;; "") hooksdir="" ;; *) hooksdir="$ROOT/$hooksdir" ;; esac
+  if [ -n "$hooksdir" ] && [ -d "$hooksdir" ]; then
+    h="$hooksdir/post-merge"
+    main_root="$(cd "$(dirname "$(git -C "$ROOT" rev-parse --git-common-dir 2>/dev/null)")" 2>/dev/null && pwd)"
+    [ -n "$main_root" ] || main_root="$ROOT"
+    cat >"$h" <<HOOK
+#!/usr/bin/env bash
+# post-merge — rebind the harness surfaces after a merge. Installed by
+# bin/valknut-load.sh --install. A merge pulls new agents, skills and Pi
+# extensions into the tree; the harnesses load them from their OWN homes, so the
+# bind must run or a merged fix stays invisible to the running session.
+set -u
+[ -x "$main_root/bin/valknut-load.sh" ] && "$main_root/bin/valknut-load.sh" --all --global >/dev/null 2>&1 || true
+HOOK
+    chmod +x "$h"
+    printf 'valknut-load[1]{hook,path,state}:\n  "post-merge","%s","installed"\n' "$h"
+  else
+    printf 'valknut-load[1]{hook,state}:\n  "post-merge","skipped — no hooks dir (not a git checkout)"\n'
+  fi
+  exit 0
+fi
+
 [ $((MODE_OPENCODE + MODE_PI + MODE_STATUS)) -eq 0 ] && { MODE_OPENCODE=1; MODE_PI=1; }
 
 if [ ! -d "$AGENTS" ]; then

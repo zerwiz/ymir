@@ -125,7 +125,9 @@ refuses only a verifiably live owner), and the Pi extension classifies an empty
 lock as `missing` so `gna_watch_arm`'s reclaim takes it directly. A vacant helm
 is never punted to a manual session start; only a real live contender is refused.
 
-- **Pi** owns continuity in `gna-pi-watch.ts` (Gná); the model gets a **tool** `gna_watch_arm` and a command `/gna-watch-arm` for the first cycle or a repair, never for ordinary re-arms. Gná's liveness is **zombie-aware**: `kill(pid, 0)` alone passes a zombie and a recycled pid, so the watcher reads `/proc/<pid>/stat` — the state character (Z/X = dead) and the starttime recorded at lock acquire (field 22; a mismatch means the kernel handed the pid to an unrelated process) — answers every ordinary wake: a **vacant** helm is taken (arm script via `gleipnir_lock_acquire`; Gná classifies an empty lock as `missing` so the reclaim takes it in place), while only a verifiably live other owner is refused as read-only. It drops its own lock on real process exit (`releaseLockIfOwned`). Gná's wake delivery is **echo-guarded**: an identical watcher message is sent at most once per drained state — when both durable queues (`state/.wake-queue` and the FM runner's `.agents/state/.wake-queue`) are empty, a repeat is the same news the primary already drained and is not re-delivered, so a long stale window cannot flood the follow-up queue.
+- **Pi** owns continuity in `gna-pi-watch.ts` (Gná); the model gets a **tool** `gna_watch_arm` and a command `/gna-watch-arm` for the first cycle or a repair, never for ordinary re-arms. Gná's liveness is **zombie-aware**: `kill(pid, 0)` alone passes a zombie and a recycled pid, so the watcher reads `/proc/<pid>/stat` — the state character (Z/X = dead) and the starttime recorded at lock acquire (field 22; a mismatch means the kernel handed the pid to an unrelated process) — answers every ordinary wake: a **vacant** helm is taken (arm script via `gleipnir_lock_acquire`; Gná classifies an empty lock as `missing` so the reclaim takes it in place), while only a verifiably live other owner is refused as read-only. It drops its own lock on real process exit (`releaseLockIfOwned`). Gná's wake delivery is **echo-guarded**: an identical watcher message is sent at most once per drained state — when the durable queue is empty, a repeat is the same news the primary already drained and is not re-delivered, so a long stale window cannot flood the follow-up queue.
+
+> **ONE QUEUE (2026-09-23).** The state dir is the **operator's home**, never the code tree: `$YMIR_STATE_OVERRIDE` → `$YMIR_HOME/state` → the recorded choice (`~/.config/ymir/home`) → `$HOME/Documents/ymirhome`. Every reader and writer must resolve it the SAME way — `bin/hoard-lib.sh` for shell, and the same order of authority inside `gna-pi-watch.ts`. This was once two dirs: the watcher read `$BROKK_HOME/state` (the **tree**) while the Eindri handoff (`bin/eindri-acclaim.sh`) wrote `$YMIR_STATE_DIR` (the **hoard**), so a report filled one `.wake-queue` and the watcher polled another — **the task wrote, the watcher watched, and no wake ever surfaced.** A report may be filed and still be invisible; the queue is only real when both ends agree on where it is.
 - **OpenCode** owns continuity in `syn-watch-arm.js` (Sýn); the coordinator is published under `globalThis.__brokkOpenCodeWatchArm` so the turn-end guard can consult it first.
 - **Claude Code** uses the `Stop` hook with `"asyncRewake": true` and a long timeout to keep the arm running out of band.
 - **Codex / Cursor** run `syn-turnend-guard.sh` at Stop; they do **not** own a long-lived arm (no auto re-arm).
@@ -526,6 +528,18 @@ duplicates:
 `--all`). **Every harness gets EVERY agent** — claude, codex, cursor and opencode
 are bound by the same loader pass as pi, so no harness is left holding a
 hand-made subset. Naming differs by harness and must be respected:
+
+> **Rebind on every install, update and merge (2026-09-23).** The harnesses load
+their surfaces from their **own** homes — Pi reads `${HOME}/.pi/agent/extensions/`
+— so a change merged into the repo is INVISIBLE to a running harness until the
+bind re-runs. A hand-copied extension was the symptom; the cure is to make the
+bind automatic: `bin/ymir-install.sh` runs `valknut-load.sh --install` (which
+seats a **post-merge** hook), `bin/groa-update.sh` runs `--all --global` after
+every pull, and the hook runs it after every merge. Two further truths:
+> **a running session keeps the code it loaded** (so a fixed extension is live
+> from the NEXT pi session, never the current one), and the hooks dir is found by
+> asking git (`rev-parse --git-path hooks`) — in a worktree `.git` is a file and
+> the shared hooks live in the main repo.
 
 ```
 agent_binding[5]{harness,dir,name_rule}:
