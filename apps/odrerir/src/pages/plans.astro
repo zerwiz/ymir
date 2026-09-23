@@ -1,0 +1,113 @@
+---
+// plans.astro — the plans' house, its own page (the wayofteams anatomy:
+// /plans lists the plans; the tickets board lives at /tickets).
+import '../styles/cloth.css'
+import '../styles/livehall.css'
+const SKULD = "http://192.168.68.111:8320";
+---
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>the plans — the roadmap</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+<div class="hall-top">
+  <span><span class="rn">ᛚ</span>YMIR · THE PLANS — THE ROADMAP</span>
+  <span class="hall-links" style="display:inline-flex;gap:1rem;align-items:center">
+    <a class="hall-back" href="/" title="the live hall — the board">← the hall</a>
+    <a class="hall-back" href="/tickets" title="the tickets — the board">the tickets →</a>
+  </span>
+</div>
+<main class="hall-wrap" id="plans-page">
+  <header class="shead rv">
+    <span class="snum rn" aria-hidden="true">ᛚ</span>
+    <p class="skicker"><span class="rn">ᛚ</span>the plans · the roadmap</p>
+    <h1>the roadmap</h1>
+    <p class="ssub">every plan cut from the tickets — its body, its state, the tickets it rides</p>
+  </header>
+
+  <div class="panel rv">
+    <div class="panel-head"><div class="panel-title"><span class="glyph" aria-hidden="true">ᛚ</span>the plans</div></div>
+    <div class="panel-body flush" id="plans" style="font-size:.85rem">reading the plans…</div>
+  </div>
+
+  <div class="panel rv" style="margin-top:1.5rem">
+    <div class="panel-head"><div class="panel-title"><span class="glyph" aria-hidden="true">ᚲ</span>cut a plan</div></div>
+    <div class="panel-body">
+      <form id="pf" class="book-form">
+        <select name="namespace" id="ns-pick"><option>ymir</option></select>
+        <input name="title" placeholder="plan title" required />
+        <textarea name="body" rows="4" placeholder="the plan's body — anything plan-sized is written first" required></textarea>
+        <div class="book-row">
+          <select name="tickets" id="ticket-pick" multiple size="6"></select>
+          <span class="mono dim" style="font-size:.68rem">press to pick the tickets the plan rides (multiselect)</span>
+          <button type="submit">cut the plan</button>
+        </div>
+        <div class="msg" id="pmsg" hidden></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="hall-foot">
+    <div class="hall-foot-big">one book, two doors — the MCP and the hall</div>
+    <div class="hall-foot-close">the plans ride the tickets — a plan's tickets must exist before the plan does</div>
+  </div>
+</main>
+<style>
+  .book-form{display:grid;gap:.6rem}
+  .book-row{display:flex;gap:.6rem;flex-wrap:wrap}
+  .book-form input,.book-form textarea{background:var(--bg-1,#151209);color:var(--bone,#cfc3a9);border:1px solid var(--steel-1,#2b241a);border-radius:2px;padding:.5rem .6rem;font:inherit}
+  .book-form button{background:transparent;color:var(--bronze,#c9973f);border:1px solid var(--bronze,#c9973f);border-radius:2px;padding:.5rem 1.1rem;cursor:pointer;letter-spacing:.12em;text-transform:lowercase;font-family:var(--mono,monospace)}
+  .book-form button:hover{background:var(--bronze,#c9973f);color:var(--bg-0,#0e0c09)}
+  .road{display:grid;gap:.6rem;padding:.7rem}
+  .road-row{background:var(--bg-2,#1a1610);border:1px solid var(--steel-1,#2b241a);border-left:3px solid var(--bronze,#c9973f);border-radius:4px;padding:.7rem .8rem}
+  .road-row .pt{font-family:var(--serif,Georgia);font-size:.98rem;color:var(--bone,#cfc3a9)}
+  .road-row .ps{margin-top:.35rem;font-family:var(--mono,monospace);font-size:.7rem;color:var(--bone-dim,#9a8f75);line-height:1.5}
+  .book-form select{background:var(--bg-1,#151209);color:var(--bone,#cfc3a9);border:1px solid var(--steel-1,#2b241a);border-radius:2px;padding:.5rem .6rem}
+  #ticket-pick{min-height:7.5rem}
+    .msg{white-space:pre-wrap;font-size:.8rem;font-family:var(--mono,monospace);padding:.5rem .6rem}
+  .err{color:var(--danger,#c2584a);border:1px solid var(--danger,#c2584a)}
+  .ok{color:var(--ok,#96a0a8);border:1px solid var(--ok,#96a0a8)}
+</style>
+<script>
+const SKULD = "http://192.168.68.111:8320";
+let sid = null;
+const POST = (body) => fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream", ...(sid ? { "mcp-session-id": sid } : {}) }, body: JSON.stringify(body) }).then(r => r.json());
+async function init() {
+  const h = await fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "odrerir-plans", version: "1" } } }) });
+  sid = h.headers.get("mcp-session-id") || "";
+}
+const call = (name, args) => POST({ jsonrpc: "2.0", id: Date.now(), method: "tools/call", params: { name, arguments: args } }).then(d => (d.result?.content?.[0]?.text) || (d.error?.message) || "silence");
+function esc(s){ const d=document.createElement("div"); d.textContent=s||""; return d.innerHTML; }
+async function fillPicks(){
+  const t = await call("tickets/list", { namespace: "ymir" });
+  const rows = (t.split("\n")||[]).filter(Boolean);
+  const nss = []; const tp = document.getElementById("ticket-pick");
+  if (tp) tp.innerHTML = "";
+  rows.forEach(r => { const c = r.split("|"); const n = c[2]; if (n && !nss.includes(n)) nss.push(n); if (tp) { const o = document.createElement("option"); o.value = c[0]; o.textContent = c[2] + "/" + c[1] + "  " + c[5]; tp.appendChild(o); } });
+  const ns = document.getElementById("ns-pick"); if (ns) { ns.innerHTML = ""; (nss.length ? nss : ["ymir"]).forEach(n => { const o = document.createElement("option"); o.value = n; o.textContent = n; ns.appendChild(o); }); }
+}
+async function loadPlans(){
+  const p = await call("plans/list", { namespace: "ymir" });
+  const el = document.getElementById("plans");
+  const rows = (p.split("\n")||[]).filter(Boolean);
+  if (!rows.length || rows.length === 1 && /no plans|silence/.test(p)) { el.innerHTML = "<div class='dim' style='padding:.6rem .7rem;font-family:var(--mono,monospace);font-size:.72rem'>no plans cut yet — the tickets board waits at /tickets</div>"; return; }
+  const road = document.createElement("div"); road.className = "road";
+  rows.forEach(r => { const cols = r.split("|"); const [id, ns, st, tickets] = cols; const title = cols.slice(4).join("|"); const row = document.createElement("div"); row.className = "road-row"; row.innerHTML = `<div class="pt">${esc(title)}</div><div class="ps">plan #${esc(id)} · ${esc(ns)} · ${esc(st)}<br>rides tickets: ${esc(tickets || "-")}</div>`;
+    row.style.cursor = "pointer";
+    row.addEventListener("click", async () => { const d = await call("plans/get", { id: parseInt(id, 10) }); const c = d.split("|"); alert("THE PLAN\n" + c[2] + "\n\n" + (c[3]||"")); });
+    road.appendChild(row); });
+  el.textContent = ""; el.appendChild(road);
+}
+window.addEventListener("DOMContentLoaded", async () => {
+  await init(); await fillPicks(); loadPlans();
+  document.getElementById("pf").addEventListener("submit", async e => {
+    e.preventDefault(); const f=new FormData(e.target);
+    const r = await call("plans/create", { namespace: f.get("namespace"), title: f.get("title"), body: f.get("body"), tickets: Array.from(document.querySelectorAll("#ticket-pick option:checked")).map(o => parseInt(o.value, 10)) });
+    document.getElementById("pmsg").hidden=false; const m=document.getElementById("pmsg"); m.className="msg "+(/created/.test(r)?"ok":"err"); m.textContent=r; loadPlans();
+  });
+});
+</script>
+</body>
+</html>
