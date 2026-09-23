@@ -244,6 +244,8 @@ const PORT = parseInt(process.env.PORT || '0', 10);
 if (PORT > 0) {
   import('node:http').then(({ default: http }) => {
     const server = http.createServer((req, res) => {
+      const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type, accept, mcp-session-id, mcp-session-id', 'access-control-allow-methods': 'POST, OPTIONS' };
+      if (req.method === 'OPTIONS') { res.writeHead(204, cors).end(); return; }
       if (req.method !== 'POST') { res.writeHead(405).end(); return; }
       let body = '';
       req.on('data', c => { body += c; if (body.length > 1 << 20) req.destroy(); });
@@ -255,7 +257,7 @@ if (PORT > 0) {
         if (!out) { res.writeHead(204).end(); return; }
         let sid2 = sid;
         if (out.initialized) { sid2 = Math.random().toString(16).slice(2); SESSIONS.set(sid2, { agent: out.agent, at: Date.now() }); }
-        res.writeHead(200, { 'content-type': 'application/json', 'mcp-session-id': sid2, 'Mcp-Session-Id': sid2 });
+        res.writeHead(200, { 'content-type': 'application/json', ...cors, 'mcp-session-id': sid2, 'Mcp-Session-Id': sid2 });
         res.end(JSON.stringify(out.resp) + '\n');
       });
     });

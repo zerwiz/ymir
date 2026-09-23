@@ -1,0 +1,116 @@
+---
+// tickets.astro — the hall's book: Skuld's tickets and plans, poured into the
+// mead-hall. The client speaks to the heart's Skuld MCP (the streamable door);
+// the blocking law answers honest refusals right in the page.
+const SKULD = import.meta.env.PUBLIC_SKULD_URL || "http://192.168.68.111:8320";
+---
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Skuld — the hall's book</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  body { font-family: ui-sans-serif, system-ui; margin: 0; background: #101014; color: #e8e6df; }
+  main { max-width: 900px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  h1 { font-size: 1.6rem; } h1 em { color: #c9a227; font-style: normal; }
+  h2 { font-size: 1.05rem; margin-top: 2.2rem; color: #c9a227; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  td, th { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid #2a2a33; }
+  .st-open{color:#7fb0ff}.st-in-progress{color:#ffd479}.st-review{color:#c9a227}.st-closed{color:#6fd67a}
+  form { display: grid; gap: .5rem; margin-top: .5rem; }
+  input, select, textarea, button { background:#1c1c24; color:#e8e6df; border:1px solid #33334a; border-radius:6px; padding:.45rem .6rem; font:inherit; }
+  button { background:#c9a227; color:#101014; font-weight:600; cursor:pointer; }
+  .msg { white-space: pre-wrap; font-size:.82rem; padding:.5rem .6rem; border-radius:6px; margin-top:.5rem; }
+  .err { background:#3a2020; color:#ff9b9b; } .ok { background:#1d3427; color:#8fe0a0; }
+  .cols { display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; }
+  @media (max-width: 700px){ .cols{ grid-template-columns: 1fr } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Skuld — <em>the hall's book</em></h1>
+  <p style="opacity:.75; font-size:.9rem">tickets and plans of the fleet, from the heart's own ledger.</p>
+
+  <div class="cols">
+    <section>
+      <h2>tickets</h2>
+      <table id="tickets"><thead><tr><th>#</th><th>ns</th><th>status</th><th>pri</th><th>title</th><th>who</th></tr></thead><tbody><tr><td colspan="6" style="opacity:.5">loading…</td></tr></tbody></table>
+      <h2>new ticket</h2>
+      <form id="tf">
+        <input name="namespace" placeholder="namespace (ymir)" value="ymir" />
+        <input name="title" placeholder="title (4+ chars)" required />
+        <textarea name="description" rows="3" placeholder="description (10+ chars — the law reads you)" required></textarea>
+        <input name="labels" placeholder="labels, comma-separated (max 6)" />
+        <select name="priority"><option>Low</option><option selected>Medium</option><option>High</option><option>Critical</option></select>
+        <button type="submit">cut the ticket</button>
+        <div class="msg" id="tmsg" hidden></div>
+      </form>
+    </section>
+    <section>
+      <h2>plans</h2>
+      <div id="plans" style="font-size:.85rem; opacity:.85">loading…</div>
+      <h2>new plan</h2>
+      <form id="pf">
+        <input name="namespace" placeholder="namespace" value="ymir" />
+        <input name="title" placeholder="plan title (6+ chars)" required />
+        <textarea name="body" rows="4" placeholder="the plan's body (40+ chars — anything plan-sized is written first)" required></textarea>
+        <input name="tickets" placeholder="ticket ids, comma-separated (must exist)" />
+        <button type="submit">cut the plan</button>
+        <div class="msg" id="pmsg" hidden></div>
+      </form>
+    </section>
+  </div>
+</main>
+<script>
+const SKULD = {SKULD};
+let sid = null;
+const POST = (body) => fetch(SKULD, {
+  method: "POST",
+  headers: { "content-type": "application/json", "accept": "application/json, text/event-stream", ...(sid ? { "mcp-session-id": sid } : {}) },
+  body: JSON.stringify(body)
+}).then(r => r.json());
+async function init() {
+  const r = await POST({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "odrerir-hall", version: "1" } } });
+  const h = await fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "odrerir-hall", version: "1" } } }) });
+  sid = h.headers.get("mcp-session-id");
+  if (!sid) sid = r?.result?.sessionId || "";
+}
+const call = (name, arguments_) => POST({ jsonrpc: "2.0", id: Date.now(), method: "tools/call", params: { name, arguments: arguments_ } })
+  .then(d => (d.result?.content?.[0]?.text) || (d.error?.message) || "silence");
+function esc(s){ const d=document.createElement("div"); d.textContent=s||""; return d.innerHTML; }
+async function loadTickets(){
+  const t = await call("tickets/list", { namespace: "ymir" });
+  const body = document.querySelector("#tickets tbody");
+  const rows = (t.split("\n")||[]).filter(Boolean);
+  if (!rows.length) { body.innerHTML = "<tr><td colspan=6 style='opacity:.5'>the book is empty</td></tr>"; return; }
+  body.innerHTML = rows.map(r => { const [id,ns,st,pr,title] = r.split("|"); return `<tr><td>#${esc(id)}</td><td>${esc(ns)}</td><td class="st-${esc(st)}">${esc(st)}</td><td>${esc(pr)}</td><td>${esc(title)}</td><td>${esc(st)}</td></tr>`; }).join("");
+}
+async function loadPlans(){
+  const p = await call("plans/list", { namespace: "ymir" });
+  const el = document.querySelector("#plans");
+  const rows = (p.split("\n")||[]).filter(Boolean);
+  el.innerHTML = rows.length ? rows.map(r => `<div style="padding:.35rem 0; border-bottom:1px solid #2a2a33">${esc(r)}</div>`).join("") : "<div style='opacity:.5'>no plans cut yet</div>";
+}
+function msg(id, text, kind){ const el=document.getElementById(id); el.hidden=false; el.className="msg "+(kind||"err"); el.textContent=text; }
+window.addEventListener("DOMContentLoaded", async () => {
+  await init(); loadTickets(); loadPlans();
+  document.getElementById("tf").addEventListener("submit", async e => {
+    e.preventDefault(); const f=new FormData(e.target);
+    const r = await call("tickets/create", {
+      namespace: f.get("namespace"), title: f.get("title"), description: f.get("description"),
+      priority: f.get("priority"), labels: (f.get("labels")||"").split(",").map(s=>s.trim()).filter(Boolean)
+    });
+    msg("tmsg", r, /created/.test(r) ? "ok" : "err"); loadTickets();
+  });
+  document.getElementById("pf").addEventListener("submit", async e => {
+    e.preventDefault(); const f=new FormData(e.target);
+    const r = await call("plans/create", {
+      namespace: f.get("namespace"), title: f.get("title"), body: f.get("body"),
+      tickets: (f.get("tickets")||"").split(",").map(s=>parseInt(s,10)).filter(n=>!isNaN(n))
+    });
+    msg("pmsg", r, /created/.test(r) ? "ok" : "err"); loadPlans();
+  });
+});
+</script>
+</body>
+</html>
