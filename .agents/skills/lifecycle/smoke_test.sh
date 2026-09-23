@@ -174,6 +174,21 @@ else
   skip migrations "ymir-migrate.sh absent"
 fi
 
+# 14b. topology — role + shape + link to the heart (plan 51, Phase 0)
+if [ -x "$ROOT/bin/topology.sh" ]; then
+  _topo="$(bash "$ROOT/bin/topology.sh" 2>/dev/null || true)"
+  _link="$(printf '%s' "$_topo" | sed -nE 's/^  "link","([^"]+)".*/\1/p')"
+  _shape="$(printf '%s' "$_topo" | sed -nE 's/^  "shape","([^"]+)".*/\1/p')"
+  case "$_link" in
+    attached) ok topology "$_shape, roles=$(printf '%s' "$_topo" | sed -nE 's/^  "roles","([^"]+)".*/\1/p') — attached to the heart" ;;
+    detached|offline) skip topology "$_shape, $_link — working locally, will sync up" ;;
+    standalone) skip topology "$_shape, no heart configured" ;;
+    *) bad topology "topology reported no link" ;;
+  esac
+else
+  skip topology "topology.sh absent"
+fi
+
 # ── data ─────────────────────────────────────────────────────────────────────
 
 # 15. the Smiðja database exists with a schema
