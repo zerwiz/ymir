@@ -72,7 +72,7 @@ WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
 hoard_root HOARD
 DOMAINS="company marketing development life me"
 
-CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0; PLAN_ONLY=0; PLAN_ARGS=()
+CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0; PLAN_ONLY=0; PLAN_ARGS=(); FLEET_MODE=0
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -82,6 +82,7 @@ while [ $# -gt 0 ]; do
     --phase) PLAN_ARGS+=("$1" "${2-}"); shift 2 ;;   # --phase carries its number
     --skip-engines) SKIP_ENGINES=1; shift ;;
     --skip-services) SKIP_SERVICES=1; shift ;;
+    --fleet) FLEET_MODE=1; shift ;;
     --no-desktop) NO_DESKTOP=1; shift ;;
     --yes|-y|--non-interactive|--accept-all-defaults) ASSUME_YES=1; shift ;;
     --status) exec "$SCRIPT_DIR/ymir-install.sh" --check ;;
