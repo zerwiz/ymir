@@ -46,13 +46,16 @@ if [ "${MAIN:-0}" != 1 ] && [ -x "$SCRIPT_DIR/yggdrasil.sh" ] && git -C "$PWD" r
 fi
 
 # 1. a place to sit — a new tab, or a split beside the caller. The pane gets
-# its own machine-state dir so this seat never contends for the primary's helm
-# (bin/gleipnir-lock-lib.sh honours BROKK_MACHINE_STATE_DIR).
-SEAT_ENV="BROKK_MACHINE_STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/ymir/seats/$NAME"
+# its own state dir, so the seat resolves its own lock AND writes its own
+# `.lock-path` pointer (a shared pointer let a seat clobber the primary's, which
+# killed supervision).
+SEAT_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ymir/seats/$NAME"
 if [ "$WHERE" = "--tab" ]; then
-  PANE="$(herdr tab create --cwd "$DIR" --label "pi:$NAME" --env "$SEAT_ENV" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])')"
+  PANE="$(herdr tab create --cwd "$DIR" --label "pi:$NAME" \
+    --env "BROKK_MACHINE_STATE_DIR=$SEAT_DIR" --env "BROKK_STATE_OVERRIDE=$SEAT_DIR" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])')"
 else
-  PANE="$(herdr pane split --current --direction right --cwd "$DIR" --env "$SEAT_ENV" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')"
+  PANE="$(herdr pane split --current --direction right --cwd "$DIR" \
+    --env "BROKK_MACHINE_STATE_DIR=$SEAT_DIR" --env "BROKK_STATE_OVERRIDE=$SEAT_DIR" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')"
 fi
 [ -n "$PANE" ] || { printf 'error: could not create a pane\n' >&2; exit 1; }
 
