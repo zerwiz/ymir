@@ -104,7 +104,7 @@ Resolution order used by every script (all overridable):
 | 3 | **WAKE QUEUE** | `wake queue: N pending`, each `WAKE <record>`, `WAKE_ACK_REQUIRED`, `open decisions: N` | `bin/eindri-handoff.sh sweep` (the failsafe — sweeps undelivered reports/questions into the queue) **then** `bin/saga-wake-drain.sh` → `state/.wake-queue`, `state/*.decision` |
 | 4 | **SUPERVISION** | one operating block: `harness next step: arm supervision via the installed harness adapter; never run bin/syn-watch-arm.sh by hand.` | Sýn/Gná per-harness protocols |
 | 5 | **FLEET DIGEST** | `task metadata records: N` (count of `state/*.meta`) and `open forge orders: N` (`grep -c '^- Status: ADDED' docs/masterplan.md`) | `state/*.meta`, `docs/masterplan.md` |
-| 6 | **CONTEXT DIGEST** | `--- realm ---`, then `data/operator.md`, `data/projects.md`, `data/learnings.md`, each delimited; `ABSENT: <path>` when missing | `data/` |
+| 6 | **CONTEXT DIGEST** | `--- realm ---`, then `data/operator.md`, `data/projects.md`, `data/learnings.md`, each delimited; `ABSENT: <path>` when missing | **`$YMIR_HOME/hodd/data/`** via `bin/hoard-lib.sh` (`BROKK_DATA_OVERRIDE` wins) — never `$BROKK_HOME/data`, the code tree, which no operator record has ever occupied |
 | 6b | **TODAY** | the day's work, appended blocks under each actor | `bin/daily-log.sh today` → `$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md` |
 | 7 | **CRON START** | `cron: running pid=N jobs=M` or `cron: started …` / `cron: no jobs configured …` | `bin/nornir-cron-start.sh` (idempotent) |
 | 7b | **TOOL SURFACE** | the Allfather's own handles: `/edit <path>`, `bin/ymir-say.sh`, `bin/omarchy-plugins.sh`, `bin/herdr-run.sh` | inline |
