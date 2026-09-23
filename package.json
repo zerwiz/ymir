@@ -61,7 +61,9 @@
     "tools/",
     "!tools/**/node_modules/**",
     "!tools/**/__pycache__/**",
-    "!tools/**/*.pyc"
+    "!tools/**/*.pyc",
+    "apps/smidja-factory/apps/visualizer/dist/",
+    "apps/smidja-factory/apps/visualizer/dist/**"
   ],
   "engines": {
     "node": ">=20"

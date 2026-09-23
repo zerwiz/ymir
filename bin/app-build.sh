@@ -14,7 +14,12 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 want=("$@")
-[ ${#want[@]} -eq 0 ] && want=(hlidskjalf odrerir sessrumnir)
+# Every surface that SERVES a built bundle must be here. The Smíðja visualizer is
+# NESTED (apps/smidja-factory/apps/visualizer) and was missing from this list, so
+# its dist/ was never built before packing and the npm package shipped without
+# the interface — the API answered, the app view showed nothing (2026-09-23).
+# A path may be nested; it is joined onto apps/ below.
+[ ${#want[@]} -eq 0 ] && want=(hlidskjalf odrerir sessrumnir smidja-factory/apps/visualizer)
 
 built=0 skipped=0 failed=0
 for s in "${want[@]}"; do

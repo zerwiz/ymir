@@ -29,6 +29,10 @@ fail() { say "FAIL: $*"; PASS=0; }
 ok() { say "  ok: $*"; }
 
 # — the hull: what the tarball MUST carry (the porch law) —
+# A hull entry is a path that must appear INSIDE the package. The tools/ lesson
+# (0.1.49) was a directory missing from files[]; the visualizer lesson
+# (2026-09-23) was a BUILT bundle never built before the pack — so the app
+# installed, answered, and showed no interface. Both belong here.
 HULL=(
   "tools/mill/systemd/ratatoskr.service"
   "tools/mill/systemd/skuld.service"
@@ -37,9 +41,18 @@ HULL=(
   "tools/well-mcp/server.ts"
   "tools/ratatoskr-node/server.ts"
   "tools/mill/worker.sh"
+  # the Smiðja visualizer's BUILT UI — without it the app view is blank
+  "apps/smidja-factory/apps/visualizer/dist/index.html"
 )
 
 pack_and_hull() {
+  say "== building every surface that serves a bundle (the prepack, run for real) =="
+  # npm pack runs with --ignore-scripts below, so the package.json `prepack`
+  # (bin/app-build.sh) never fires. Build explicitly, or the tarball ships
+  # without the visualizer's interface — which is exactly what happened.
+  if [ -x "$ROOT/bin/app-build.sh" ]; then
+    "$ROOT/bin/app-build.sh" 2>&1 | tail -3 || say "  WARN: app-build reported a failure"
+  fi
   say "== packing the exact publish artifact =="
   ( cd "$ROOT" && npm pack --ignore-scripts --pack-destination "$WORK" >/dev/null 2>&1 )
   local tgz; tgz="$(ls "$WORK"/*.tgz 2>/dev/null | head -1)"
