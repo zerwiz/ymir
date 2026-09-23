@@ -228,12 +228,22 @@ else
   skip well-store "no engram store yet (a fresh home)"
 fi
 
-# 17. the hoard layout is honest (no private data flat beside hodd/)
+# 17. the hoard layout is honest (no private data flat beside hodd/, and the
+#     machine-local layout map names paths that EXIST here — a map carried in
+#     from another seat's home is the same trap as the lock pointer)
 if [ -n "${_ymh:-}" ] && [ -d "$_ymh" ]; then
   _flat=""
   for _k in identity data docs secrets tenants; do [ -d "$_ymh/$_k" ] && _flat="$_flat $_k"; done
-  if [ -z "$_flat" ]; then ok hoard "no flat private-data duplicates"
-  else bad hoard "flat duplicates beside hodd/:$_flat — bin/eir-doctor.sh fix"; fi
+  _lay="$_ymh/.ymir-layout.yaml"
+  _badlay=""
+  if [ -f "$_lay" ]; then
+    while IFS= read -r _p; do
+      [ -n "$_p" ] && [ ! -d "$_p" ] && _badlay="$_badlay $_p"
+    done < <(sed -nE 's/^  [a-z_]+: "([^"]+)".*/\1/p' "$_lay")
+  fi
+  if [ -n "$_flat" ]; then bad hoard "flat duplicates beside hodd/:$_flat — bin/eir-doctor.sh fix"
+  elif [ -n "$_badlay" ]; then bad hoard "layout map names paths absent here:$_badlay — repoint to this machine's home"
+  else ok hoard "layout honest; map paths exist"; fi
 else
   skip hoard "no home to inspect"
 fi
