@@ -65,5 +65,20 @@ if command -v systemctl >/dev/null 2>&1 && [ -d "$HOME/.config/systemd/user" ]; 
   done
 fi
 
+# desktop launcher entries + Hyprland placement — the four/five apps in the menu.
+# An install must refresh these too: the entries outlive the tree that wrote them,
+# and a stale or missing one (Smiðja was deleted by a stray line) is invisible until
+# an operator looks at the menu. Best-effort and host-gated; opt out with
+# YMIR_SKIP_DESKTOP=1.
+if [ "${YMIR_SKIP_DESKTOP:-0}" != 1 ] && [ -d "$HOME/.local/share/applications" ]; then
+  if [ "$DRY" = 1 ]; then
+    printf 'fleet-deploy: would refresh desktop entries (design-icon install) + placement\n'
+  else
+    [ -x "$ROOT/bin/design-icon.sh" ] && bash "$ROOT/bin/design-icon.sh" install >/dev/null 2>&1 || true
+    [ -x "$ROOT/bin/desktop-place.sh" ] && bash "$ROOT/bin/desktop-place.sh" apply >/dev/null 2>&1 || true
+    printf 'fleet-deploy: desktop entries refreshed\n'
+  fi
+fi
+
 printf 'fleet-deploy: %s file(s) refreshed\n' "$changed"
 exit 0
