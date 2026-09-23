@@ -28,9 +28,10 @@ function violation(agent, reason) { q(`INSERT INTO blocks (agent, reason) VALUES
 const STATUSES = ["Backlog","Planned","Ready","In Progress","Submitted for Review","In Review","Approved","Done","Changes Requested"];
 const MARCH = { "Backlog":["Planned"], "Planned":["Ready"], "Ready":["In Progress"], "In Progress":["Submitted for Review","Changes Requested"], "Submitted for Review":["In Review"], "In Review":["Approved","Changes Requested"], "Approved":["Done"], "Done":[], "Changes Requested":["In Progress"] };
 
-const server = new McpServer({ name: "skuld", version: "2.0.0" }, {
-  capabilities: { tools: {}, resources: { subscribe: false, listChanged: false } }
-});
+function makeMcp() {
+  const server = new McpServer({ name: "skuld", version: "2.0.0" }, {
+    capabilities: { tools: {}, resources: { subscribe: false, listChanged: false } }
+  });
 
 function blockedResult(agent) {
   const b = blockStatus(agent);
@@ -195,6 +196,15 @@ server.resource("the-book", "skuld://book", "the ticket book", async () => {
   return { contents: [{ uri: "skuld://book", mimeType: "text/plain", text: `tickets: ${t} · plans: ${p}` }] };
 });
 
+  return server;
+}
+server.registerTool("sync_snapshot", { title: "The whole book", description: "The full export (tickets + plans + statuses + namespaces) for the fleet mirrors — the heart is the primary, the instances pull.", inputSchema: {} }, async () => {
+  const t = rows(q(`SELECT id, ticket_no, namespace, status, priority, title, LEFT(description, 200), labels, owner, created_at FROM tickets ORDER BY id`));
+  const p = rows(q(`SELECT id, namespace, title, status, tickets, created_at FROM plans ORDER BY id`));
+  const n = rows(q(`SELECT name, COALESCE(about, name) FROM namespaces ORDER BY name`));
+  return { content: [{ type: "text", text: "tickets\n" + t.join("\n") + "\nplans\n" + p.join("\n") + "\nnamespaces\n" + n.join("\n") }] };
+});
+
 // — the served mode: StreamableHTTP on PORT (the SDK holds the handshake+session) —
 const PORT = parseInt(process.env.PORT || "0", 10);
 if (PORT > 0) {
@@ -203,9 +213,20 @@ if (PORT > 0) {
       const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type, accept, mcp-session-id, mcp-protocol-version, mcp-integration-context", "access-control-allow-methods": "POST, OPTIONS, DELETE", "access-control-expose-headers": "mcp-session-id, Mcp-Session-Id" };
       if (req.method === "OPTIONS") { res.writeHead(204, cors).end(); return; }
       if (!["POST", "DELETE"].includes(req.method)) { res.writeHead(405).end(); return; }
-      // one protocol, one transport: the connect happens once per server boot
-      if (!globalThis.__skuldBoot) globalThis.__skuldBoot = (async () => { const tr = new StreamableHTTPServerTransport({ sessionIdGenerator: () => crypto.randomUUID(), onsessioninitialized: () => {} }); await server.connect(tr); return tr; })();
-      const transport = await globalThis.__skuldBoot;
+      // the documented session-map: one transport per session; the known
+      // session re-uses its transport, a fresh one joins by its own connect
+      globalThis.__skuldSessions ||= new Map();
+      const reqSid = String(req.headers['mcp-session-id'] || '');
+      let entry = reqSid ? globalThis.__skuldSessions.get(reqSid) : null;
+      if (req.method === 'DELETE' && reqSid) { globalThis.__skuldSessions.delete(reqSid); return; }
+      if (!entry) {
+        const mcp = makeMcp();
+        const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => crypto.randomUUID(), onsessioninitialized: (id) => { if (!globalThis.__skuldSessions.has(id)) globalThis.__skuldSessions.set(id, { mcp, transport }); } });
+        await mcp.connect(transport);
+        entry = { mcp, transport };
+        if (!reqSid) globalThis.__skuldSessions.set('boot', entry);
+      }
+      const transport = entry.transport;
       Object.entries(cors).forEach(([k, v]) => res.setHeader(k, v));
       res.setHeader("content-type", "application/json");
       try {

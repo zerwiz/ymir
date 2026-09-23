@@ -16,3 +16,5 @@ The tickets + plans + comments + blocks now ride `@modelcontextprotocol/sdk`
 
 ## Files
 - `tools/tickets-mcp/server.mjs`
+- the fleet-sync: `bin/skuld-sync.sh` — the instances pull the heart's whole
+  book (sync_snapshot) into their local mirror, per the heart-primary decree.
