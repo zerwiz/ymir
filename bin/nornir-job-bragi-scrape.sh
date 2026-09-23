@@ -12,7 +12,9 @@
 #         kind: scrape|search        # default scrape
 #         note: why this source matters
 #
-# Firecrawl is BYOK: FIRECRAWL_API_KEY comes from the home's platform.env
+# Firecrawl: a SELF-HOSTED engine needs a URL, not a key. The fleet runs it on
+# its own iron (heimdall/whynot, :3002). A cloud key is still honoured, but the
+# key is not the only road. (Was: BYOK only — FIRECRAWL_API_KEY from platform.env
 # (bin/hodd.sh emit), never inline. A missing key is reported, not faked — the
 # job is honest about what it could not do.
 #
@@ -31,9 +33,14 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   unset _yr _yc
 fi
 hoard_root _HOME
+hoard_settings_dir _SETTINGS
 hoard_data_dir _DATA
 
-SOURCES="${BROKK_SCRAPE_SOURCES:-$_HOME/config/scrape-sources.yaml}"
+# The source list is the OPERATOR'S settings, beside agents.yaml and cron.yaml —
+# $YMIR_HOME/config/. It once resolved to _HOME/config ($YMIR_HOME/hodd/config),
+# a shelf that does not exist, so the job said "no sources" while the file sat in
+# the settings dir the header always named.
+SOURCES="${BROKK_SCRAPE_SOURCES:-$_SETTINGS/scrape-sources.yaml}"
 OUT_DIR="${BROKK_SCRAPE_OUT:-$_HOME/workspaces/marketing/scraped}"
 mkdir -p "$OUT_DIR"
 
@@ -42,6 +49,13 @@ FIRECRAWL_API_KEY="${FIRECRAWL_API_KEY:-}"
 if [ -z "$FIRECRAWL_API_KEY" ] && [ -x "$ROOT/bin/hodd.sh" ]; then
   FIRECRAWL_API_KEY="$("$ROOT/bin/hodd.sh" emit secrets/platform.env 2>/dev/null | grep -m1 '^FIRECRAWL_API_KEY=' | cut -d= -f2-)"
 fi
+# The base URL: env -> the home's local env -> one documented default (the
+# self-hosted engine on this machine). Rule 07: never a literal deep in logic.
+FIRECRAWL_API_URL="${FIRECRAWL_API_URL:-}"
+if [ -z "$FIRECRAWL_API_URL" ] && [ -x "$ROOT/bin/hodd.sh" ]; then
+  FIRECRAWL_API_URL="$("$ROOT/bin/hodd.sh" emit secrets/platform.env 2>/dev/null | grep -m1 '^FIRECRAWL_API_URL=' | cut -d= -f2-)"
+fi
+FIRECRAWL_API_URL="${FIRECRAWL_API_URL:-http://localhost:3002}"
 
 [ -r "$SOURCES" ] || {
   printf 'bragi-scrape: no sources at %s — nothing scheduled to scrape (exit 0)\n' "$SOURCES"
@@ -71,36 +85,46 @@ for i in items: print("|".join(i))
 PY
 )"
 
-if [ -z "$FIRECRAWL_API_KEY" ]; then
-  failed=$failed; skipped=1
-  printf 'bragi-scrape: FIRECRAWL_API_KEY absent — sources listed, nothing scraped\n'
-  # still record the rune honestly
+if ! curl -s -m 5 -o /dev/null "$FIRECRAWL_API_URL/" 2>/dev/null; then
+  skipped=$(printf '%s\n' "$rows" | grep -c .)
+  printf 'bragi-scrape: no Firecrawl at %s — sources listed, nothing scraped\n' "$FIRECRAWL_API_URL"
+  printf 'help: start the self-hosted engine (docker compose up -d in ~/firecrawl)\n'
 else
   while IFS='|' read -r name url kind; do
     [ -n "$name" ] || continue
     out="$OUT_DIR/$TODAY-$name.md"
-    if python3 - "$url" "$kind" "$out" "$FIRECRAWL_API_KEY" <<'PY'
-import os, sys
-url, kind, out, key = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+    # curl, not the SDK: no pip dependency, and the self-hosted engine answers
+    # the same /v2/scrape shape as the cloud service.
+    # scrape takes a URL; search takes a QUERY — different endpoints, and a
+    # query passed to /scrape is rejected with "Invalid URL".
+    if [ "$kind" = "search" ]; then
+      endpoint="/v2/search"
+      body="$(python3 -c 'import json,sys;print(json.dumps({"query":sys.argv[1],"limit":5}))' "$url")"
+    else
+      endpoint="/v2/scrape"
+      body="$(python3 -c 'import json,sys;print(json.dumps({"url":sys.argv[1],"formats":["markdown"]}))' "$url")"
+    fi
+    if curl -s -m 120 -X POST "$FIRECRAWL_API_URL$endpoint" \
+         -H 'Content-Type: application/json' -d "$body" \
+         | python3 -c '
+import json,sys,datetime
 try:
-    from firecrawl import FirecrawlApp
-except ImportError:
-    sys.exit(2)  # engine not installed
-app = FirecrawlApp(api_key=key)
-try:
-    doc = app.scrape_url(url, params={"formats": ["markdown"]}) if kind == "scrape" \
-        else app.search(url, params={"formats": ["markdown"]})
-    text = doc.get("markdown", "") if isinstance(doc, dict) else str(doc)
-    with open(out, "w") as f:
-        f.write("<!-- source: %s ; kind: %s ; fetched: %s -->\n\n%s\n" % (url, kind, __import__("datetime").datetime.utcnow().isoformat() + "Z", text))
-    sys.exit(0)
-except Exception as exc:
-    print("scrape error: %s" % exc, file=sys.stderr)
-    sys.exit(1)
-PY
-    then ok=$((ok+1))
-    elif [ $? -eq 2 ]; then skipped=$((skipped+1))
-    else failed=$((failed+1)); fi
+    d=json.load(sys.stdin)
+except Exception as e:
+    print("bad answer: %s" % e, file=sys.stderr); sys.exit(1)
+if not d.get("success"):
+    print("scrape refused: %s" % str(d)[:200], file=sys.stderr); sys.exit(1)
+data=d.get("data")
+if isinstance(data, list):
+    md="\n\n---\n\n".join(("## %s\n%s" % (r.get("title",""), r.get("markdown") or r.get("description") or r.get("url",""))) for r in data)
+elif isinstance(data, dict):
+    md=data.get("markdown","")
+else:
+    md=""
+out,url,kind=sys.argv[1],sys.argv[2],sys.argv[3]
+open(out,"w").write("<!-- source: %s ; kind: %s ; fetched: %s -->\n\n%s\n" % (url,kind,datetime.datetime.utcnow().isoformat()+"Z",md))
+' "$out" "$url" "$kind"
+    then ok=$((ok+1)); else failed=$((failed+1)); fi
   done <<< "$rows"
 fi
 

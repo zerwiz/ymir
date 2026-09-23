@@ -103,6 +103,14 @@ else
 fi
 
 section "WAKE QUEUE"
+# The handoff failsafe runs BEFORE the drain: it sweeps the report/question
+# shelves for anything not yet delivered to Brokk and puts it in the wake queue.
+# The fast road is the when-adapter; this is the slow road that cannot be missed
+# (the runner may be down, or a spec may have been written into a worktree).
+# Without it, a finished Eindri's work sits on the shelf unseen.
+if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
+  BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/eindri-handoff.sh" sweep 2>/dev/null || true
+fi
 if [ -x "$SCRIPT_DIR/saga-wake-drain.sh" ]; then
   BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/saga-wake-drain.sh" || true
 else
@@ -144,6 +152,17 @@ emit_context "$DATA/learnings.md" "learnings"
 HOOD_FILE="$ROOT/svartalfaheim/$REALM/HOOD.md"
 [ -r "${YMIR_HOME}/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="${YMIR_HOME}/svartalfaheim/$REALM/HOOD.md"
 emit_context "$HOOD_FILE" "hood"
+
+section "TODAY"
+# The day's work, so a session opens knowing what was already forged. Written by
+# bin/daily-log.sh into the hoard shelf the contract names
+# ($YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md) — the record a random document in
+# hodd/docs is not.
+if [ -x "$SCRIPT_DIR/daily-log.sh" ]; then
+  BROKK_HOME="$BROKK_HOME" "$SCRIPT_DIR/daily-log.sh" today 2>/dev/null | head -24 || printf 'no entries yet\n'
+else
+  printf 'daily-log.sh not installed\n'
+fi
 
 section "ASSET ROUTING"
 # Load the owning asset BEFORE editing a governed path. A code change not
