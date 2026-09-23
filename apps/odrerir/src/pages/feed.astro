@@ -1,0 +1,55 @@
+---
+// feed.astro — the hall pours what the well and the mill ground.
+// Rendered server-side on the heart: the well's recent, the mill's
+// vector index, the mill's reviews, the grind log.
+const WELL = "http://127.0.0.1:4602";
+const fs = await import("node:fs");
+const os = await import("node:os");
+let recent = [];
+let health = {};
+try {
+  const h = await fetch(`${WELL}/health`).then((r) => r.json());
+  health = h;
+  const r = await fetch(`${WELL}/recent?limit=8`).then((r) => r.json());
+  recent = Array.isArray(r) ? r : r.episodes ?? [];
+} catch {}
+const home = os.homedir();
+let reviews = [];
+try { reviews = fs.readdirSync(`${home}/mill/reviews`).slice(-5).map((f) => ({ f })); } catch {}
+let vectors = 0;
+try { vectors = fs.readFileSync(`${home}/mill/vector-index.jsonl`, "utf8").split("\n").filter(Boolean).length; } catch {}
+let grind = [];
+try { grind = fs.readFileSync(`${home}/mill/arm.log`, "utf8").split("\n").slice(-4); } catch {}
+---
+
+<html lang="en" data-theme="forge">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Óðrerir · the live volt</title>
+<style>
+:root{--bg:#0e0c09;--panel:#151209;--bone:#cfc3a9;--bone-dim:#9a8f75;--bronze:#c9973f;--blood:#7c3a30}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--bone);font-family:monospace;max-width:900px;margin:0 auto;padding:2rem}
+h1{color:var(--bronze);font-size:1.4rem;text-transform:uppercase;letter-spacing:.3em}h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.2em;color:var(--bone-dim);border-bottom:1px solid #2b241a;padding-bottom:.3rem}
+.ep{background:var(--panel);border-left:3px solid var(--bronze);padding:.6rem .8rem;margin:.5rem 0;font-size:.8rem}
+.v{margin:.4rem 0}
+mark{background:#2b241a;color:var(--bronze);padding:.1rem .4rem}
+</style>
+</head>
+<body>
+<h1>Óðrerir · the live volt</h1>
+
+<h2>the well</h2>
+<p class="v">episodes <mark>{health.episodes ?? "?"}</mark> · store <span style="color:var(--bone-dim)">{(health.store ?? "").split("/").slice(-3).join("/")}</span></p>
+{recent.map((e) => (
+  <div class="ep">{(e.content ?? "").slice(0, 180)} <span style="color:var(--bone-dim)">— {(e.tags ?? "").toString()}</span></div>
+))}
+
+<h2>the mill</h2>
+<p class="v">vector index <mark>{vectors}</mark> vectors · reviews <mark>{reviews.length}</mark> on the board</p>
+{reviews.map((rv) => (<p class="v">· {rv.f}</p>))}
+{grind.map((l) => (<p class="v" style="color:var(--bone-dim)">{l.slice(-90)}</p>))}
+
+<p style="color:var(--bone-dim);margin-top:3rem">the hall pours what the well and the mill grind — wave E's board feed, live from the heart.</p>
+</body>
+</html>
