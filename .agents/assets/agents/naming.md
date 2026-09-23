@@ -29,6 +29,7 @@ platform[29]{subsystem,norse,role}:
   "MCP/A2A composition","Hermóðr","MCP vertical (agent→tools) + A2A horizontal (agent↔agent)"
   "Session-start digest","Sága","the seeress who sees all; boots the session"
   "Watch / supervision","Sýn","watchful sight; guards the turn boundary"
+  "Hallucination loop breaker","Níðhöggr","the serpent that gnaws the root forever; names the endless loop and breaks it"
   "Session lock","Gleipnir","the chain that binds one session"
   "Scheduled jobs","Nornir","the fates who govern time"
   "Software smidja","Smíðja","repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace"
