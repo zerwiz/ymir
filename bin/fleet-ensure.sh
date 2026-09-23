@@ -83,11 +83,11 @@ p=os.path.expanduser("~/.pi/agent/mcp.json")
 try: d=json.load(open(p))
 except Exception: d={}
 d.setdefault("mcpServers",{})["well"]={"url":sys.argv[1]}
-d["mcpServers"]["skills"]={"url":sys.argv[2]}
+d["mcpServers"]["bolthorn"]={"url":sys.argv[2]}
 json.dump(d, open(p,"w"), indent=2)
 PY
   else
-    printf '{"mcpServers":{"well":{"url":"%s"},"skills":{"url":"%s"}}}\n' "$WELL_URL" "$SKILLS_URL" > "$HOME/.pi/agent/mcp.json"
+    printf '{"mcpServers":{"well":{"url":"%s"},"bolthorn":{"url":"%s"}}}\n' "$WELL_URL" "$SKILLS_URL" > "$HOME/.pi/agent/mcp.json"
   fi
   # 6) raise (best-effort, never fails the install) — embed is heart-gated:
   #    only seats that have the model file host the stone

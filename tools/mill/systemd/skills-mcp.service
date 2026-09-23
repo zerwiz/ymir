@@ -1,5 +1,5 @@
 [Unit]
-Description=Skills MCP — the served skills well (:8319/mcp)
+Description=Bölþorn — the skills well, the runes' porch (:8319/mcp)
 [Service]
 Type=simple
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
