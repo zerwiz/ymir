@@ -893,6 +893,24 @@ The **consent preamble** the installer prints before it acts says the same thing
 hosts recorded first-class)"* — so the operator is told what will happen in the
 portable terms the code now uses, not the Omarchy-only terms it used before.
 
+### The machine's role (plan 51, P1)
+
+Right after host learning, **`step_role`** records what this machine **IS** in the
+fleet — the one fact every role-aware surface derives from (the MCP config, the
+cron gates, model placement, dispatch). It reads the role from the fleet registry
+(`$YMIR_HOME/hodd/data/fleet.json`) by hostname:
+
+- a host that is **absent** is registered as **`dev`** — the safe default,
+  because a dev body owns no record and runs no record jobs;
+- it reports the role and the live link from `bin/topology.sh`, e.g.
+  `role: heart,forge (link: attached)` on the server;
+- it honors `YMIR_HOST`, and `--check` writes nothing (it warns instead of
+  registering).
+
+`bin/role.sh set <host> heart|forge|dev|hand` changes the role afterward; the
+roles and what each owns are in `README.md` (*"The Fleet — many machines, one
+record"*) and Plan 51.
+
 ### What the Omarchy layer installs
 
 ```bash
