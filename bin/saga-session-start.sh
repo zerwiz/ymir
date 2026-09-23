@@ -135,6 +135,18 @@ fi
 section "SUPERVISION"
 printf 'harness next step: arm supervision via the installed harness adapter; never run bin/syn-watch-arm.sh by hand.\n'
 
+section "UPDATE"
+# Does a newer Ymir stand on npm? The CLI told the USER; the RUNTIME had no such
+# sense, so a session could run for days on an old tree and never know a fix had
+# shipped (2026-09-23). One cached lookup a day; silence when there is no news.
+if [ -x "$SCRIPT_DIR/ymir-update-check.sh" ]; then
+  out="$(BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/ymir-update-check.sh" 2>/dev/null)"; rc=$?
+  if [ "$rc" = "3" ]; then printf '%s\n' "$out"
+  else printf 'current — no newer Ymir on npm\n'; fi
+else
+  printf 'check not installed\n'
+fi
+
 section "FLEET DIGEST"
 if [ -d "$STATE" ]; then
   metas=$(find "$STATE" -maxdepth 1 -name '*.meta' 2>/dev/null | wc -l | tr -d '[:space:]')
