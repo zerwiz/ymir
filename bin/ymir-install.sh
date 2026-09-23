@@ -569,6 +569,38 @@ step_heimdall() {
 # embedding stone · the cards root — raised as user units from tools/, and the
 # seat's pi mcp.json pointed at the served well. Best-effort: a service that
 # cannot raise reports a WARN, never a fail.
+# ── 3d. the desktop runtimes (the never-happen law) ──────────────────────────
+# The windows must work AT INSTALLATION: the electron runtimes are seated here,
+# one shared fetch for the whole tree, so the first click is never a mend.
+step_desktop_runtime() {
+  local shared="" A n=0
+  [ -f "$SCRIPT_DIR/electron-lib.sh" ] && . "$SCRIPT_DIR/electron-lib.sh"
+  [ -f "$SCRIPT_DIR/app-lib.sh" ] && . "$SCRIPT_DIR/app-lib.sh"
+  if ! command -v seat_app_runtime >/dev/null 2>&1; then
+    add "desktop-runtime" SKIP "no seat helpers (electron-lib missing)"
+    return 0
+  fi
+  if [ "$CHECK" = 1 ]; then
+    add "desktop-runtime" SKIP "seated on a real run"
+    return 0
+  fi
+  for appdir in hlidskjalf odrerir sessrumnir smidja-factory; do
+    if command -v app_dir >/dev/null 2>&1 && app_dir "$appdir" A 2>/dev/null && [ -n "$A" ]; then
+      if seat_app_runtime "$A" "$shared"; then
+        [ -z "$shared" ] && shared="$A"
+        n=$((n+1))
+      fi
+    fi
+  done
+  if [ "$n" -ge 2 ]; then
+    add "desktop-runtime" OK "$n views seated (one shared electron fetch)"
+  elif [ "$n" -ge 1 ]; then
+    add "desktop-runtime" WARN "$n view seated (of 4) — the rest mend on first click"
+  else
+    add "desktop-runtime" WARN "no runtimes seated — first clicks will mend"
+  fi
+}
+
 step_fleet() {
   if [ ! -x "$SCRIPT_DIR/fleet-ensure.sh" ]; then add fleet SKIP "no fleet-ensure.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
@@ -980,6 +1012,7 @@ run_step step_prereqs "prerequisites"
 run_step step_home "home"
 run_step step_tree "workspace tree"
 run_step step_apps "apps"
+run_step step_desktop_runtime "desktop runtimes"
 run_step step_engines "engines"
 run_step step_models "models"
 run_step step_hermes "hermes"
