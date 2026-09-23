@@ -11,14 +11,17 @@
 # Usage:   bin/npm-pretest.sh            local leg + the remote leg
 #          bin/npm-pretest.sh local      local only
 #          bin/npm-pretest.sh remote     remote only (needs the local tarball)
-# Env:     NPM_PRETEST_HOST   ssh host for the remote leg (default heimdall)
+# Env:     NPM_PRETEST_HOSTS  the remote seats, space-separated
+#                             (default: omarchy whynot; a seat that IS this
+#                             machine runs its leg locally, no loopback ssh)
+#          NPM_PRETEST_HOST   one seat, back-compat
 #          NPM_PRETEST_SKIP_REMOTE=1     skip the remote leg
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 WORK="$(mktemp -d /tmp/npm-pretest-XXXXXX)"
-REMOTE="${NPM_PRETEST_HOST:-heimdall}"
+REMOTE="${NPM_PRETEST_HOST:-${NPM_PRETEST_HOSTS:-omarchy whynot}}"
 PASS=1
 TARBALL=""
 say() { printf '%s\n' "$*"; }
@@ -26,6 +29,10 @@ fail() { say "FAIL: $*"; PASS=0; }
 ok() { say "  ok: $*"; }
 
 # — the hull: what the tarball MUST carry (the porch law) —
+# A hull entry is a path that must appear INSIDE the package. The tools/ lesson
+# (0.1.49) was a directory missing from files[]; the visualizer lesson
+# (2026-09-23) was a BUILT bundle never built before the pack — so the app
+# installed, answered, and showed no interface. Both belong here.
 HULL=(
   "tools/mill/systemd/ratatoskr.service"
   "tools/mill/systemd/skuld.service"
@@ -34,9 +41,18 @@ HULL=(
   "tools/well-mcp/server.ts"
   "tools/ratatoskr-node/server.ts"
   "tools/mill/worker.sh"
+  # the Smiðja visualizer's BUILT UI — without it the app view is blank
+  "apps/smidja-factory/apps/visualizer/dist/index.html"
 )
 
 pack_and_hull() {
+  say "== building every surface that serves a bundle (the prepack, run for real) =="
+  # npm pack runs with --ignore-scripts below, so the package.json `prepack`
+  # (bin/app-build.sh) never fires. Build explicitly, or the tarball ships
+  # without the visualizer's interface — which is exactly what happened.
+  if [ -x "$ROOT/bin/app-build.sh" ]; then
+    "$ROOT/bin/app-build.sh" 2>&1 | tail -3 || say "  WARN: app-build reported a failure"
+  fi
   say "== packing the exact publish artifact =="
   ( cd "$ROOT" && npm pack --ignore-scripts --pack-destination "$WORK" >/dev/null 2>&1 )
   local tgz; tgz="$(ls "$WORK"/*.tgz 2>/dev/null | head -1)"
@@ -90,9 +106,30 @@ local_leg() {
 }
 
 remote_leg() {
+  local hosts="$REMOTE" overall=0 h
+  [ -n "$TARBALL" ] || { say "  no tarball here; packing first"; pack_and_hull || return 1; }
+  # One leg per seat. The decree is that the tarball installs AND smokes on the
+  # seats BEFORE the shelf sees it — plural, and not only the one it was packed
+  # on. A seat that IS this machine runs locally (a loopback ssh has no road).
+  for h in $hosts; do
+    one_remote_leg "$h" || overall=1
+  done
+  return "$overall"
+}
+
+one_remote_leg() {  # <host>
+  local REMOTE="$1" tgz="$TARBALL"
   say "== the remote leg: $REMOTE =="
-  local tgz; tgz="$TARBALL"
-  [ -n "$tgz" ] || { say "  no tarball here; packing first"; pack_and_hull || return 1; tgz="$TARBALL"; }
+
+  if [ "$REMOTE" = "$(hostname 2>/dev/null)" ] || [ "$REMOTE" = "$(hostname -s 2>/dev/null)" ]; then
+    say "  $REMOTE is this machine — running the leg locally (no loopback ssh)"
+    local dest="$HOME/npm-pretest/seat"
+    rm -rf "$HOME/npm-pretest" && mkdir -p "$dest" || { fail "cannot prepare the local sandbox"; return 1; }
+    sandbox_install "$tgz" "$dest" || return 1
+    smoke "$dest/node_modules/@zerwiz/ymir"
+    return $?
+  fi
+
   ssh -o BatchMode=yes "$REMOTE" "rm -rf ~/npm-pretest && mkdir -p ~/npm-pretest" 2>/dev/null || { fail "cannot reach $REMOTE"; return 1; }
   scp -q "$tgz" "$REMOTE":~/npm-pretest/pkg.tgz 2>/dev/null || { fail "scp to $REMOTE failed"; return 1; }
   ssh -o BatchMode=yes "$REMOTE" "export PATH=\$HOME/.local/share/mise/shims:\$HOME/.local/bin:/usr/bin:/bin
