@@ -49,7 +49,7 @@ Resolution order used by every script (all overridable):
 | `BROKK_ROOT_OVERRIDE` | `dirname(bin)/..` | the tracked code root; scripts are read from here |
 | `BROKK_HOME` | `BROKK_ROOT_OVERRIDE` | the private home that owns `data/ state/ config/` |
 | `BROKK_DATA_OVERRIDE` | `$BROKK_HOME/data` | durable context + per-task briefs/reports |
-| `BROKK_STATE_OVERRIDE` | `$BROKK_HOME/state` | lock, cron, metas, status logs, backups |
+| `BROKK_STATE_OVERRIDE` | `hoard_state_dir` (`$YMIR_STATE_DIR` → `$YMIR_HOME/state`) | lock, cron, metas, status logs, backups |
 | `BROKK_CONFIG_OVERRIDE` | `$BROKK_HOME/config` | cron.yaml, eindri-harness, dispatch rules |
 
 ### 2.1 Tracked surface
@@ -88,7 +88,7 @@ Resolution order used by every script (all overridable):
 | `state/.cron-fired/`, `state/.cron-locks/` | once-a-day date guards + per-job flock | chronological edge protection |
 | `state/.wake-queue` | durable Sága wakes | drained, stay until acknowledged |
 | `state/.supervision-armed`, `state/.watch.heartbeat` | Sýn arm marker + liveness | guard is inert until first arm; the watcher re-verifies the lock every poll and retires silently when the owner dies |
-| `state/.lock-path` | resolved session-lock path | pointer the harness extensions read; written by `gleipnir_lock_acquire` |
+| `state/.lock-path` | resolved session-lock path | pointer the harness extensions read; written by `gleipnir_lock_acquire`. The lock is machine-local but the pointer lives in the synced home, so a pointer outside the current user's home is stale: both harness readers validate it and heal it (2026-09-23) |
 | `state/backups/` | Muninn memory snapshots | written before any prune |
 | `state/observer.log`, `state/observer.last` | Huginn observation output | read-only bridge |
 | `workspace/memory/runes_audit.md` | Runes chained JSONL ledger | append-only, never rewritten |
@@ -155,7 +155,7 @@ Gleipnir is the impossible chain that binds one live Brokk session per home so a
 - **Why the walk matters:** running `bin/saga-session-start.sh` **manually** leaves `BROKK_SESSION_PID` unset. Writing `$$` recorded the digest helper's pid, which is dead a second later — an orphan lock that reads as "no live session" and silently blocks supervision from arming. The ancestry walk is the fix; a helper's pid is never authoritative.
 - `gleipnir_lock_owned` walks up to 8 ancestry levels so a helper can prove the session owns the lock.
 - **Refused lock ⇒ read-only session.** No spawn, steer, merge, drain, or repair. The digest says so in stage 1.
-- **One lock per machine (primary).** The primary's lock is machine-global — `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/brokk.lock` (override `BROKK_MACHINE_STATE_DIR`) — so a second checkout of the same host is read-only and cannot masquerade as its own home. **Eindri-homes are exempt:** an Eindri-home holds its own `<home>/state/.lock` so workers run in parallel with the primary (and on remote hosts). `data/eindri-home` or `BROKK_HOME_KIND=eindri` marks a home as an Eindri-home. `gleipnir_lock_acquire` writes `state/.lock-path` (the resolved path) for the non-bash harness readers, and the extensions fall back to the legacy `state/.lock` for a session that started before this contract.
+- **One lock per machine (primary).** The primary's lock is machine-global — `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/brokk.lock` (override `BROKK_MACHINE_STATE_DIR`) — so a second checkout of the same host is read-only and cannot masquerade as its own home. **Eindri-homes are exempt:** an Eindri-home holds its own `<home>/state/.lock` so workers run in parallel with the primary (and on remote hosts). `data/eindri-home` or `BROKK_HOME_KIND=eindri` marks a home as an Eindri-home. `gleipnir_lock_acquire` writes `state/.lock-path` (the resolved path) for the non-bash harness readers, and the extensions fall back to the legacy `state/.lock` for a session that started before this contract. **The pointer's state dir is the operator's hoard state** (`gleipnir_state_dir` resolves through `bin/hoard-lib.sh` for the primary, `<home>/state` for an Eindri-home), so writer and readers agree; a synced pointer naming another user's home (a box reinstalled under a new username) is rejected and healed rather than trusted.
 - **Reclaim:** a lock whose pid is not alive is reclaimable; a live foreign pid is never overridden. The guard's `lockOwnership()` treats missing / other / pid 1 as non-owned.
 
 ## 5. Sýn / Gná — supervision model
@@ -261,7 +261,7 @@ Restart is a non-event: **durable `data/` + `state/` + live backend inventory ar
 | `BROKK_HOME` | all | private home; defaults to `BROKK_ROOT_OVERRIDE` |
 | `BROKK_ROOT_OVERRIDE` | all | tracked code root |
 | `BROKK_DATA_OVERRIDE` | Sága, Erindi, Einherjar, jobs | `$BROKK_HOME/data` |
-| `BROKK_STATE_OVERRIDE` | all | `$BROKK_HOME/state` |
+| `BROKK_STATE_OVERRIDE` | all | `hoard_state_dir` (`$YMIR_STATE_DIR` → `$YMIR_HOME/state`) |
 | `BROKK_CONFIG_OVERRIDE` | Hamr, Nornir, Einherjar | `$BROKK_HOME/config` |
 | `BROKK_SESSION_PID` | Gleipnir, adapters | live harness pid bound into `state/.lock` |
 | `BROKK_REALM` | Sága, jobs | realm; else `data/realm.md`; else `way-of` |
