@@ -728,3 +728,169 @@ resolved from `$YMIR_HOME/secrets/platform.env` at runtime.
 
 ---
 
+## The Fleet — many machines, one record (2026-09-23)
+
+Ymir is not one box. It is a **fleet**: a *heart* that owns the record, one or
+more *forges* that own the models, and *dev* bodies the operator works from — all
+over a LAN or a tailnet, with **one** memory, one backlog, one ledger. This
+section is the map of that layer. The design is Plan 51
+(`.../plans/fleet/51-multi-machine-operations.md`); the code is in `bin/` and
+tested in `.agents/tests/`.
+
+### Roles — declared once, enforced everywhere
+
+Every machine carries **one** role (a machine may hold two), read by hostname from
+one registry (`$YMIR_HOME/hodd/data/fleet.json`):
+
+| Role | Owns | Runs | Does **not** run |
+|---|---|---|---|
+| **heart** | the record — home, memory (engram), backlog, Runes ledger, plans | the record crons (git-sync, memory housekeeping, briefing), the record MCP servers | heavy model serving |
+| **forge** | model serving + GPU compute | the model rail, bench/build jobs, heavy workers | the record; the desktop layer |
+| **dev** | a FULL body — harness, seats, local models, workers | its own session crons only | the record jobs, the forge rail |
+| **hand** | the phone (PWA) | — | anything long-running |
+
+```bash
+bin/role.sh show                  # this machine's role + the whole roster
+bin/role.sh set whynot heart,forge
+bin/role.sh validate              # every role known; the named heart is a real row
+```
+
+### Topology — is this box alone, a client, or a node?
+
+```bash
+bin/topology.sh
+```
+```text
+topology[7]{fact,value}:
+  "host","heimdall"
+  "roles","dev"
+  "shape","fleet"
+  "heart","whynot"
+  "link","attached"          # attached | detached | offline | standalone
+  "journal","none"
+  "registry","/home/…/hodd/data/fleet.json"
+```
+
+`link` is the honest answer to *"is the server up?"*: **attached** (the heart
+answers), **detached** (a network, but no heart), **offline** (no route at all),
+**standalone** (no heart configured). The lifecycle smoke test checks it, and
+treats detached/offline as **healthy**, never a failure.
+
+### Offline-first — work with no server, sync up after
+
+A machine with the heart down — or **no network at all** — stays fully usable. The
+shape is **cache + journal + reconciler**:
+
+```bash
+bin/journal-append.sh --op note --data '{"ticket":42}'   # commits locally, never blocks
+bin/journal-reconcile.sh                                 # pushes when the heart answers
+bin/journal-receive.sh                                   # ON THE HEART: folds it in
+```
+- Every write that must reach the record is committed to
+  `$STATE/journal/<host>.jsonl` **first**, with an **idempotency key**
+  (`<host>:<seq>:<uuid>`) — so a replay is a no-op.
+- The reconciler pushes when the heart is **attached**, then moves the journal to
+  `sent/`; queued entries wait through the outage and reconcile in one pass.
+- The heart's `journal-receive.sh` is the **only** writer that folds journals
+  into `$STATE/journal/folded/<host>.jsonl`, deduped by key. Journals are
+  namespaced by hostname, so **the record can never fork** — the failure that once
+  split the Runes chain.
+
+### MCP servers — addressed by role, never by a LAN IP
+
+The record servers live on the heart; every body reaches them by name:
+
+| Server | What | Where |
+|---|---|---|
+| **well** (`engram`) | long-term memory | heart `:8317/mcp` |
+| **skuld** | tickets + plans | heart `:8320` |
+| **bolthorn** | the skill library (29 tools) | heart `:8319/mcp` |
+| **firecrawl** | self-hosted scrape | local (stdio) |
+
+```bash
+bin/mcp-config.sh            # generate the harness MCP config for THIS role
+bin/mcp-config.sh write      # install ~/.pi/agent/mcp.json (backup kept)
+```
+A dev body points at the heart's tailnet name; the heart itself uses `127.0.0.1`.
+The smoke test proves each server with a **real** MCP handshake
+(`initialize` → `tools/list`) and reports the tool count. Servers ship **from the
+repo** and are deployed from it — never hand-placed (Rule 10,
+[`RULES/10-deployed-servers.md`](RULES/10-deployed-servers.md)).
+
+### Crons by role — a dev body runs no record jobs
+
+Nornir's schedule (`config/cron.yaml`) is shared across the fleet, so each line
+declares the role that owns it:
+
+```yaml
+@heart 07:00 bin/nornir-job-daily-briefing.sh
+@heart 00:00 bin/nornir-job-git-sync.sh
+08:00 bin/nornir-job-hall-snapshot.sh        # no gate = any role
+```
+A dev body runs **none** of the `@heart` jobs. The scheduler retires itself when
+its session is gone, so a body never leaves an orphan loop behind.
+
+### Models — the forge owns the rail
+
+Models are hardware-bound; a body does not download 20 GB to a laptop, it calls
+the forge over the tailnet.
+
+```bash
+bin/model-placement.sh    # every forge rail (http://<tailnet>:8080), reachable or not
+```
+The one-local-model constraint is per machine. Aliases are a fleet contract:
+never rename a preset without updating every seat's registry.
+
+### Workers (Eindri) — routed by the nature of the errand
+
+```bash
+bin/eindri-route.sh model     # -> the forge host(s)
+bin/eindri-route.sh ui        # -> a dev body
+bin/eindri-route.sh record    # -> the heart
+bin/eindri-route.sh --kinds   # the whole table
+```
+
+### One version across the fleet
+
+```bash
+bin/fleet-version.sh          # tree · installed · published + a verdict
+bin/fleet-version.sh check    # exit 1 on drift
+```
+`in sync · drift · ahead · behind · unknown`. Drift is loud, not silent.
+
+### The operations index
+
+```text
+fleet_ops[9]{command,what}:
+  "bin/topology.sh","this machine: role, shape, link, journal"
+  "bin/role.sh","declare / read / validate a machine's role"
+  "bin/fleet-version.sh","tree vs installed vs published, with a verdict"
+  "bin/journal-append.sh","commit a write to the offline outbox"
+  "bin/journal-reconcile.sh","push the outbox when the heart answers"
+  "bin/journal-receive.sh","the heart folds journals in (idempotent)"
+  "bin/mcp-config.sh","generate the harness MCP config from role"
+  "bin/model-placement.sh","the fleet's forge rails and the local model lock"
+  "bin/eindri-route.sh","route an errand to the role that fits it"
+```
+
+### Health — one command for the whole stack
+
+```bash
+.agents/skills/lifecycle/smoke_test.sh
+```
+35 independent checks across **services** (SPA, gate API, well, Bifrost, Smiðja,
+hall, model rail), **runtime** (lock, lock pointer, supervision, cron, cron-leak,
+migrations, harness, topology, version), **data** (Smiðja schema, well store,
+hoard layout, vault, ledger, backlog), **integrations** (every MCP handshake,
+firecrawl, A2A, herdr, local-model lock, node, model registry, pre-push gate) and
+**governance** (compliance, secret ward). Optional surfaces report **SKIP**, never
+FAIL; offline is healthy.
+
+And the whole system has a **doctor**:
+
+```bash
+bin/eir-doctor.sh check      # composes every *-ensure.sh surface
+bin/eir-doctor.sh fix        # mends what is broken
+```
+
+---
