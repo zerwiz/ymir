@@ -147,13 +147,50 @@ worth_a_smith() {
 
 # Seat an Eindri in a TAB of this home's workspace (the durable road).
 # The reply carries result.tab.tab_id and result.root_pane.pane_id.
+# A worker must never contend for the primary's helm. Give its pane a private
+# machine-state dir so bin/gleipnir-lock-lib.sh resolves a DISTINCT brokk.lock
+# (the lib honours BROKK_MACHINE_STATE_DIR). Without this, every seat in the main
+# home fights the primary for the one lock and evicts its watcher — the
+# "watcher: FAILED ... no longer owns the lock" failure.
+seat_state_env() {  # <name> -> KEY=VALUE for `--env`
+  local name=${1:-eindri}
+  printf 'BROKK_MACHINE_STATE_DIR=%s/ymir/seats/%s' \
+    "${XDG_STATE_HOME:-$HOME/.local/state}" "$name"
+}
+
+# Resolve a role to its figure file. The chooser (bin/eindri-role.sh) and
+# config/agents.yaml speak SHORT roles (kvasir, sindri, bragi); the roster files
+# carry the craft in the name (kvasir-scout.md, sindri-developer.md,
+# bragi-marketer.md). Exact match first, then the short-role prefix.
+role_file_for() {  # <role> -> path on stdout, non-zero when none
+  local role=${1:-} f
+  [ -n "$role" ] || return 1
+  f="$ROOT/.agents/agents/$role.md"
+  [ -r "$f" ] && { printf '%s' "$f"; return 0; }
+  for f in "$ROOT/.agents/agents/$role"*.md; do
+    [ -r "$f" ] && { printf '%s' "$f"; return 0; }
+  done
+  return 1
+}
+
+# Refuse a seat that would resolve the primary's helm. seat_state_env always
+# lands under seats/<name>, so this is an assertion against future regressions,
+# not a live collision — a silent collision is what let the watcher die.
+seat_guard() {  # <name>; non-zero if the seat would share the primary's lock
+  local name=${1:-eindri} seat_dir primary_dir
+  seat_dir="$(seat_state_env "$name")"
+  primary_dir="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
+  [ "$seat_dir" != "$primary_dir" ]
+}
+
 seat_tab() {  # <name> <cwd> -> prints "<tab_id> <pane_id>"
-  local name=$1 cwd=$2 ws out
+  local name=$1 cwd=$2 ws out env_arg
+  env_arg="$(seat_state_env "$name")"
   ws="$(home_workspace)"
   if [ -n "$ws" ]; then
-    out="$(hdr tab create --workspace "$ws" --cwd "$cwd" --label "$name" 2>/dev/null)"
+    out="$(hdr tab create --workspace "$ws" --cwd "$cwd" --label "$name" --env "$env_arg" 2>/dev/null)"
   else
-    out="$(hdr tab create --cwd "$cwd" --label "$name" 2>/dev/null)"
+    out="$(hdr tab create --cwd "$cwd" --label "$name" --env "$env_arg" 2>/dev/null)"
   fi
   printf '%s' "$out" | python3 -c '
 import json,sys
@@ -170,7 +207,7 @@ except Exception:
 # one space, torn down when the errand ends.
 seat_space() {  # <name> <cwd> -> prints "<workspace_id> <tab_id> <pane_id>"
   local name=$1 cwd=$2 out
-  out="$(hdr workspace create --cwd "$cwd" --label "ymir:$name" 2>/dev/null)"
+  out="$(hdr workspace create --cwd "$cwd" --label "ymir:$name" --env "$(seat_state_env "$name")" 2>/dev/null)"
   printf '%s' "$out" | python3 -c '
 import json,sys
 try:
@@ -221,7 +258,7 @@ seat_pane() {  # <name> <cwd>
   local cwd=$2 target out
   target="$(current_pane)"; [ -n "$target" ] || target="$(home_pane)"
   [ -n "$target" ] || return 1
-  out="$(hdr pane split "$target" --direction right --cwd "$cwd" 2>/dev/null)"
+  out="$(hdr pane split "$target" --direction right --cwd "$cwd" --env "$(seat_state_env "$1")" 2>/dev/null)"
   printf '%s' "$out" | python3 -c '
 import json,sys
 try:
@@ -337,6 +374,27 @@ case "$ACTION" in
       [ -n "$_h" ] && KIND="$_h"
       [ -n "$_m" ] && MODEL_ARGS=(-- --model "$_m")
       printf 'herdr-run[1]{agent,harness,model}:\n  "%s","%s","%s"\n' "$ROLE" "${_h:-?}" "${_m:-?}" >&2
+    fi
+
+    # The figure's own file. Without it pi loads only AGENTS.md (which describes
+    # Brokk) and EVERY seat believes it is Brokk — proven 2026-09-23: a seat
+    # told nothing answered "I am Brokk, the Allfather's counsellor". pi reads
+    # the role file through --append-system-prompt.
+    if [ "$KIND" = "pi" ] && [ -n "$ROLE" ]; then
+      role_file="$(role_file_for "$ROLE")" || role_file=""
+      if [ -n "$role_file" ]; then
+        [ ${#MODEL_ARGS[@]} -eq 0 ] && MODEL_ARGS=(--)
+        MODEL_ARGS+=(--append-system-prompt "$role_file")
+        printf 'herdr-run[1]{role,prompt}:\n  "%s","%s"\n' "$ROLE" "$role_file" >&2
+      else
+        printf 'herdr-run[1]{role,prompt,state}:\n  "%s","none","no role file — this seat may default to Brokk"\n' "$ROLE" >&2
+      fi
+    fi
+
+    # Guard: the seat must not resolve the primary's helm.
+    if ! seat_guard "$NAME"; then
+      printf 'error: refusing to seat %s — it would share the primary session lock\nhelp: a worker gets its own BROKK_MACHINE_STATE_DIR (see seat_state_env)\n' "$NAME" >&2
+      exit 1
     fi
 
     # Where the Eindri sits, in herdr's hierarchy (workspace > tab > pane):
