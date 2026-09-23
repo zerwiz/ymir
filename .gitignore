@@ -163,3 +163,10 @@ apps/smidja/
 
 # The seat's chat belongs to the operator — in the home, never the repo (Rule 04).
 chat/
+
+# The Smiðja visualizer's BUILT UI must SHIP in the npm package. npm honours
+# .gitignore when no .npmignore exists, so the blanket `dist/` rule dropped the
+# whole interface from the tarball: the API answered and the app view showed
+# nothing. Un-ignore it by name (a build artifact that is part of the product).
+!apps/smidja-factory/apps/visualizer/dist/
+!apps/smidja-factory/apps/visualizer/dist/**
