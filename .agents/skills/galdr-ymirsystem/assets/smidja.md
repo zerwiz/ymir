@@ -167,6 +167,10 @@ Expected: `2/2 phases passed`, a `smidja_id`, and the DB written. Then
 
 ## Gotchas
 
+0. **`bun` lives at `~/.bun/bin` and is often off a non-login PATH.** `scripts/start.sh`
+   and `bin/smidja-board.sh` adopt it once (2026-09-23) before checking, so the gate
+   API and the visualizer are not skipped on a machine that HAS bun.
+
 1. **`sqlite3` CLI is absent** — use `python3 -c` (the justfile already does).
 2. **Local models are served by the llama.cpp router `:8080`**, addressed as
    `llama-cpp/<id>`; LM Studio `:1234` may be down. Confirm with `pi --list-models`.
