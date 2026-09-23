@@ -147,15 +147,20 @@ worth_a_smith() {
 
 # Seat an Eindri in a TAB of this home's workspace (the durable road).
 # The reply carries result.tab.tab_id and result.root_pane.pane_id.
-# A worker must never contend for the primary's helm. Give its pane a private
-# machine-state dir so bin/gleipnir-lock-lib.sh resolves a DISTINCT brokk.lock
-# (the lib honours BROKK_MACHINE_STATE_DIR). Without this, every seat in the main
-# home fights the primary for the one lock and evicts its watcher — the
-# "watcher: FAILED ... no longer owns the lock" failure.
-seat_state_env() {  # <name> -> KEY=VALUE for `--env`
+# A worker must never contend for the primary's helm, and must never write the
+# primary's lock POINTER either. Both are keyed off the state dir, so the seat
+# gets its own: BROKK_MACHINE_STATE_DIR resolves its lock
+# (bin/gleipnir-lock-lib.sh), and BROKK_STATE_OVERRIDE resolves the state the
+# pi extension reads the `.lock-path` pointer from. Setting only the former left
+# the pointer shared: a seat wrote its own pointer over the primary's, the
+# primary's extension read the seat's lock, called itself read-only, and
+# supervision died (watcher: FAILED ... no longer owns the lock, 2026-09-23).
+seat_state_dir() {  # <name> -> the seat's private state dir
   local name=${1:-eindri}
-  printf 'BROKK_MACHINE_STATE_DIR=%s/ymir/seats/%s' \
-    "${XDG_STATE_HOME:-$HOME/.local/state}" "$name"
+  printf '%s/ymir/seats/%s' "${XDG_STATE_HOME:-$HOME/.local/state}" "$name"
+}
+seat_state_env() {  # <name> -> KEY=VALUE for the machine lock (kept for callers)
+  printf 'BROKK_MACHINE_STATE_DIR=%s' "$(seat_state_dir "${1:-eindri}")"
 }
 
 # Resolve a role to its figure file. The chooser (bin/eindri-role.sh) and
@@ -178,19 +183,21 @@ role_file_for() {  # <role> -> path on stdout, non-zero when none
 # not a live collision — a silent collision is what let the watcher die.
 seat_guard() {  # <name>; non-zero if the seat would share the primary's lock
   local name=${1:-eindri} seat_dir primary_dir
-  seat_dir="$(seat_state_env "$name")"
+  seat_dir="$(seat_state_dir "$name")"
   primary_dir="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
   [ "$seat_dir" != "$primary_dir" ]
 }
 
 seat_tab() {  # <name> <cwd> -> prints "<tab_id> <pane_id>"
   local name=$1 cwd=$2 ws out env_arg
-  env_arg="$(seat_state_env "$name")"
+  env_arg="$(seat_state_dir "$name")"
   ws="$(home_workspace)"
   if [ -n "$ws" ]; then
-    out="$(hdr tab create --workspace "$ws" --cwd "$cwd" --label "$name" --env "$env_arg" 2>/dev/null)"
+    out="$(hdr tab create --workspace "$ws" --cwd "$cwd" --label "$name" \
+      --env "BROKK_MACHINE_STATE_DIR=$env_arg" --env "BROKK_STATE_OVERRIDE=$env_arg" 2>/dev/null)"
   else
-    out="$(hdr tab create --cwd "$cwd" --label "$name" --env "$env_arg" 2>/dev/null)"
+    out="$(hdr tab create --cwd "$cwd" --label "$name" \
+      --env "BROKK_MACHINE_STATE_DIR=$env_arg" --env "BROKK_STATE_OVERRIDE=$env_arg" 2>/dev/null)"
   fi
   printf '%s' "$out" | python3 -c '
 import json,sys
@@ -206,8 +213,10 @@ except Exception:
 # Seat an Eindri in a DISPOSABLE workspace (the projection road). One errand,
 # one space, torn down when the errand ends.
 seat_space() {  # <name> <cwd> -> prints "<workspace_id> <tab_id> <pane_id>"
-  local name=$1 cwd=$2 out
-  out="$(hdr workspace create --cwd "$cwd" --label "ymir:$name" --env "$(seat_state_env "$name")" 2>/dev/null)"
+  local name=$1 cwd=$2 out d
+  d="$(seat_state_dir "$name")"
+  out="$(hdr workspace create --cwd "$cwd" --label "ymir:$name" \
+    --env "BROKK_MACHINE_STATE_DIR=$d" --env "BROKK_STATE_OVERRIDE=$d" 2>/dev/null)"
   printf '%s' "$out" | python3 -c '
 import json,sys
 try:
@@ -255,10 +264,12 @@ except Exception:
 # the work rather than hidden in a tab. Splits the current pane (inside herdr)
 # or this home's active pane. Prints "<tab_id> <pane_id>".
 seat_pane() {  # <name> <cwd>
-  local cwd=$2 target out
+  local cwd=$2 target out d
+  d="$(seat_state_dir "$1")"
   target="$(current_pane)"; [ -n "$target" ] || target="$(home_pane)"
   [ -n "$target" ] || return 1
-  out="$(hdr pane split "$target" --direction right --cwd "$cwd" --env "$(seat_state_env "$1")" 2>/dev/null)"
+  out="$(hdr pane split "$target" --direction right --cwd "$cwd" \
+    --env "BROKK_MACHINE_STATE_DIR=$d" --env "BROKK_STATE_OVERRIDE=$d" 2>/dev/null)"
   printf '%s' "$out" | python3 -c '
 import json,sys
 try:
