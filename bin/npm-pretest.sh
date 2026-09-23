@@ -37,7 +37,7 @@ HULL=(
 
 pack_and_hull() {
   say "== packing the exact publish artifact =="
-  ( cd "$ROOT" && npm pack --pack-destination "$WORK" >/dev/null 2>&1 )
+  ( cd "$ROOT" && npm pack --ignore-scripts --pack-destination "$WORK" >/dev/null 2>&1 )
   local tgz; tgz="$(ls "$WORK"/*.tgz 2>/dev/null | head -1)"
   [ -n "$tgz" ] || { fail "npm pack produced no tarball"; return 1; }
   say "  tarball: $(basename "$tgz") ($(du -h "$tgz" | cut -f1))"
