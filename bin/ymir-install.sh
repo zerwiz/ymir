@@ -542,6 +542,33 @@ step_host() {
   fi
 }
 
+# ── 3c-bis. the role — what this machine IS in the fleet (plan 51) ───────────
+# Role is the one fact every surface derives from: install, update, the MCP
+# config, the cron set, the model rail, and dispatch. It is read from the fleet
+# registry by hostname; a host that is ABSENT is registered here as `dev` — the
+# safe default, because a dev body owns no record and runs no record jobs.
+# `bin/role.sh set <host> heart|forge|dev|hand` changes it.
+step_role() {
+  if [ ! -x "$SCRIPT_DIR/role.sh" ]; then add role SKIP "no role.sh"; return 0; fi
+  local host roles
+  host="${YMIR_HOST:-$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')}"
+  roles="$("$SCRIPT_DIR/role.sh" show "$host" 2>/dev/null | sed -nE 's/^  "[^"]+","([^"]+)","[^"]*"$/\1/p' | head -1)"
+  if [ -z "$roles" ] || [ "$roles" = "unassigned" ]; then
+    if [ "$CHECK" = 1 ]; then
+      add role WARN "not in the fleet registry — a real run registers '$host' as dev"
+    elif "$SCRIPT_DIR/role.sh" set "$host" dev >/dev/null 2>&1; then
+      add role OK "registered '$host' as dev (bin/role.sh set $host heart|forge|dev|hand)"
+    else
+      add role WARN "could not register '$host' in the fleet registry"
+    fi
+  elif [ -x "$SCRIPT_DIR/topology.sh" ]; then
+    local link; link="$("$SCRIPT_DIR/topology.sh" 2>/dev/null | sed -nE 's/^  "link","([^"]+)".*/\1/p')"
+    add role OK "role: $roles${link:+ (link: $link)}"
+  else
+    add role OK "role: $roles"
+  fi
+}
+
 # ── 3d. the warden — Heimdall's ssh-key ward ─────────────────────────────────
 # The seat admits its entrant by the rune they carry on GitHub
 # (github.com/<user>.keys, validated, refreshed every 15 min). One published
@@ -993,6 +1020,7 @@ run_step step_hermes "hermes"
 run_step step_sessrumnir "the seat"
 run_step step_backend "backend"
 run_step step_host "host"
+run_step step_role "role"
 run_step step_heimdall "the warden"
 run_step step_fleet "fleet services"
 run_step step_sandbox "sandbox"
