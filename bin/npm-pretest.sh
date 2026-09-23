@@ -11,14 +11,17 @@
 # Usage:   bin/npm-pretest.sh            local leg + the remote leg
 #          bin/npm-pretest.sh local      local only
 #          bin/npm-pretest.sh remote     remote only (needs the local tarball)
-# Env:     NPM_PRETEST_HOST   ssh host for the remote leg (default heimdall)
+# Env:     NPM_PRETEST_HOSTS  the remote seats, space-separated
+#                             (default: omarchy whynot; a seat that IS this
+#                             machine runs its leg locally, no loopback ssh)
+#          NPM_PRETEST_HOST   one seat, back-compat
 #          NPM_PRETEST_SKIP_REMOTE=1     skip the remote leg
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 WORK="$(mktemp -d /tmp/npm-pretest-XXXXXX)"
-REMOTE="${NPM_PRETEST_HOST:-heimdall}"
+REMOTE="${NPM_PRETEST_HOST:-${NPM_PRETEST_HOSTS:-omarchy whynot}}"
 PASS=1
 TARBALL=""
 say() { printf '%s\n' "$*"; }
@@ -90,16 +93,21 @@ local_leg() {
 }
 
 remote_leg() {
-  say "== the remote leg: $REMOTE =="
-  local tgz; tgz="$TARBALL"
-  [ -n "$tgz" ] || { say "  no tarball here; packing first"; pack_and_hull || return 1; tgz="$TARBALL"; }
+  local hosts="$REMOTE" overall=0 h
+  [ -n "$TARBALL" ] || { say "  no tarball here; packing first"; pack_and_hull || return 1; }
+  # One leg per seat. The decree is that the tarball installs AND smokes on the
+  # seats BEFORE the shelf sees it — plural, and not only the one it was packed
+  # on. A seat that IS this machine runs locally (a loopback ssh has no road).
+  for h in $hosts; do
+    one_remote_leg "$h" || overall=1
+  done
+  return "$overall"
+}
 
-  # When the "remote" IS this machine, there is no road to travel: a loopback
-  # ssh needs a known_hosts entry and an alias, and on heimdall neither exists —
-  # so the leg failed with 'cannot reach heimdall' ON heimdall itself (2026-09-23).
-  # Run the same sandbox install and smoke locally instead; the artifact under
-  # test is identical, and the second seat's job is to prove the hull installs
-  # somewhere other than where it was packed.
+one_remote_leg() {  # <host>
+  local REMOTE="$1" tgz="$TARBALL"
+  say "== the remote leg: $REMOTE =="
+
   if [ "$REMOTE" = "$(hostname 2>/dev/null)" ] || [ "$REMOTE" = "$(hostname -s 2>/dev/null)" ]; then
     say "  $REMOTE is this machine — running the leg locally (no loopback ssh)"
     local dest="$HOME/npm-pretest/seat"
