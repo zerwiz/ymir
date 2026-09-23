@@ -1,0 +1,11 @@
+[Unit]
+Description=Skuld — the ticket hall (:8320, direct HTTP, no proxy)
+[Service]
+Type=simple
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+Environment=PORT=8320
+Environment=SKULD_PGPASSWORD=skuld
+ExecStart=node %h/.fleet/tickets-mcp-server.mjs
+Restart=on-failure
+RestartSec=3
+[Install]
