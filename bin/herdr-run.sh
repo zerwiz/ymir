@@ -320,6 +320,16 @@ case "$ACTION" in
     done
     [ "${1:-}" = "--" ] && shift
     PROMPT="${*:-}"
+
+    # The seat brief (plan 46). A worker owns decisions inside its craft and has
+    # NO human at its terminal: the ask-user questionnaire reaches whoever sits
+    # at the pane, and a worker that asks it hands the Allfather a question the
+    # worker should have decided. Say so up front, and name where a genuine
+    # question goes — the coordinator's report file.
+    PROMPT="$PROMPT
+
+---
+Seat law, read first. You are a worker figure, not the primary. There is NO human at this terminal: do NOT use ask_user_question — no questionnaire from this pane reaches the Allfather. Decide everything inside your craft yourself; that is why you were seated. If a genuine fork needs the coordinator, write it to state/eindri-reports/$NAME.md and stop — Brokk answers it or carries it to the Allfather. And if the same action fails twice, do not run it a third time: change the approach, or write down what blocked you. Repeating a command that returns nothing is a loop, not work."
     if ! can_use_herdr; then
       printf 'error: no herdr session — cannot seat an Eindri\nhelp: inside herdr, or use bin/einherjar-spawn.sh\n' >&2
       exit 1
