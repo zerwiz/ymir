@@ -142,6 +142,48 @@ const DOORS = {
 // built yesterday still works — and says what to type instead.
 const RENAMED = { validate: 'eir', auth: 'heimdall', desktop: 'hlidskjalf', doctor: 'eir', update: 'groa' };
 
+// The MENU. A bare `ymir` used to run the installer outright — so a user who
+// typed `ymir` to see what it was got a setup plan and a `Proceed? [y/N]`
+// prompt, with no way to reach the other doors without knowing their names
+// (2026-09-23). The doors are the product; show them, and let the Allfather
+// choose. Same design language as the install plan: a mark, a one-line
+// subtitle, indented rows, bronze names, faint prose.
+function menu() {
+  const lines = [];
+  lines.push('');
+  lines.push(`  ${bronze('\u16c9')}  ${bold('Ymir')} ${faint(pkg.version)}`);
+  lines.push(`     ${faint('the single-tenant agent operating system')}`);
+  lines.push('');
+
+  // What this machine already is, in two facts — so the menu is not blind.
+  const home = process.env.YMIR_HOME || null;
+  lines.push(`  ${faint('home')}     ${home ? bronze(home) : faint('not chosen yet — run `ymir install`')}`);
+  lines.push('');
+
+  const GROUPS = [
+    ['begin',   ['install', 'plan', 'sense']],
+    ['keep it', ['groa', 'migrate', 'eir', 'validate']],
+    ['lift it', ['raise', 'lower', 'smidja', 'hlidskjalf', 'sessrumnir']],
+    ['the way in', ['heimdall', 'invite']],
+    ['your own', ['config', 'mimir']],
+  ];
+  for (const [title, verbs] of GROUPS) {
+    lines.push(bold(`  ${title}`));
+    for (const v of verbs) {
+      const d = DOORS[v];
+      if (!d) continue;
+      lines.push(`    ${bronze(v.padEnd(11))} ${faint(d.about)}`);
+    }
+    lines.push('');
+  }
+
+  lines.push(faint('  `ymir <door>` runs one directly; `ymir --help` lists every door.'));
+  lines.push(faint('  Nothing here changes this machine until you say so.'));
+  lines.push('');
+  process.stdout.write(lines.join('\n') + '\n');
+  return 0;
+}
+
 function usage() {
   const lines = [];
   lines.push('');
@@ -178,7 +220,9 @@ const first = argv[0];
 
 versionNotice();
 checkForUpdate();
-if (!first) run(DOORS.install.script, []);
+// A bare `ymir` shows the MENU — never the installer. Setup is a door, entered
+// on purpose.
+if (!first) { menu(); process.exit(0); }
 if (first === '--version' || first === '-v' || first === '-V') {
   process.stdout.write(`${pkg.version}\n`);
   process.exit(0);
