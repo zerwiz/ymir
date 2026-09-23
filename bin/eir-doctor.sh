@@ -86,9 +86,16 @@ f_well()      { "$SCRIPT_DIR/mimir.sh" start >/dev/null 2>&1; }
 # MCP: both A2A servers wired into opencode + pi.
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp.json" oc="$ROOT/opencode.json"
-  [ -f "$oc" ] || return 1
-  grep -q '"engram"' "$oc" 2>/dev/null && grep -q '"a2abridge"' "$oc" 2>/dev/null || return 1
-  if [ -f "$pi" ]; then grep -q '"a2abridge"' "$pi" 2>/dev/null || return 1; fi
+  # The live MCP surfaces: the OpenCode config must still bind engram (the well),
+  # and the Pi config must parse and carry the fleet servers. The old demand for
+  # "a2abridge" is retired — the fleet moved to well/bolthorn/skuld/firecrawl, and
+  # the real connection proof now lives in smoke_test.sh (2026-09-23).
+  [ -f "$pi" ] || [ -f "$oc" ] || return 1
+  if [ -f "$oc" ]; then grep -q '"engram"' "$oc" 2>/dev/null || return 1; fi
+  if [ -f "$pi" ]; then
+    grep -q '"mcpServers"' "$pi" 2>/dev/null || return 1
+    command -v python3 >/dev/null 2>&1 && ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$pi" 2>/dev/null && return 1
+  fi
   return 0
 }
 f_mcp()       { [ -x "$SCRIPT_DIR/a2a-mcp.sh" ] && "$SCRIPT_DIR/a2a-mcp.sh" install >/dev/null 2>&1; }
