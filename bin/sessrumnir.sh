@@ -53,7 +53,13 @@ repair_runtime() {
   [ -f "$dir/node_modules/electron/path.txt" ] && return 0
   command -v npm >/dev/null 2>&1 || return 1
   echo "Sessrúmnir — its Electron runtime is absent; fetching it (this is the gated postinstall)…" >&2
-  ( cd "$dir" && npm rebuild electron >/dev/null 2>&1 ) || { [ -r "$(dirname "$0")/electron-lib.sh" ] && . "$(dirname "$0")/electron-lib.sh"; electron_fetch_runtime "$dir"; } && [ -f "$dir/node_modules/electron/path.txt" ]
+  # tier 1 — the deps may be ungated entirely; tier 2 — approve + rebuild
+  ( cd "$dir" && { npm install --include=dev >/dev/null 2>&1; npm install-scripts approve electron >/dev/null 2>&1 || true; npm rebuild electron >/dev/null 2>&1; } )
+  # tier 3 — the postinstall's own downloader, then the PROVEN zip road
+  [ -f "$dir/node_modules/electron/install.js" ] && ( cd "$dir/node_modules/electron" && node install.js >/dev/null 2>&1 ) || true
+  [ -r "$(dirname "$0")/electron-lib.sh" ] && . "$(dirname "$0")/electron-lib.sh"
+  command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$dir" || true
+  [ -x "$dir/node_modules/electron/dist/electron" ]
 }
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac

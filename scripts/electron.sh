@@ -203,11 +203,17 @@ repair_electron() {  # <app-dir>
 if ! ensure_electron_binary; then
   # npm-independent: fetch the release as the postinstall would (bin/electron-lib.sh)
   [ -r "$ROOT/bin/electron-lib.sh" ] && { . "$ROOT/bin/electron-lib.sh"; }
+  # tier 1 — the deps themselves may be ungated (npm's policy skips dev-deps):
+  # the npm package's apps arrive without node_modules at all
+  ( cd "$APP" && npm install --include=dev >/dev/null 2>&1 ) || true
   command -v electron_fetch_runtime >/dev/null 2>&1 && electron_fetch_runtime "$APP" || true
   # Try the mending ourselves before telling the user to do it by hand: npm's
   # gating is the cause, and the cure is one command we can run.
   echo "the Electron runtime is partial — mending it (npm rebuild electron)…" >&2
   repair_electron "$APP" >/dev/null 2>&1 || true
+  # tier 3 — the postinstall's own downloader, then the PROVEN zip road
+  [ -f "$APP/node_modules/electron/install.js" ] && ( cd "$APP/node_modules/electron" && node install.js >/dev/null 2>&1 ) || true
+  command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$APP" || true
   ensure_electron_binary || {
     printf 'error: the Electron runtime could not be mended\nhelp: cd <the app> && npm install-scripts approve electron && npm rebuild electron\nhelp: or run the web surfaces only: ymir install --no-desktop\n' >&2
     exit 1
