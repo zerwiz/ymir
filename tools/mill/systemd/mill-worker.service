@@ -1,0 +1,11 @@
+[Unit]
+Description=Mill worker — Grótti grinds the well (+/-)
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /home/whynot/mill/worker.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
