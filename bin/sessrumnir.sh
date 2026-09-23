@@ -39,6 +39,9 @@ fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
 APP="$APP_SESSRUMNIR"
+# Resolve-or-die (the 2026-09-23 SIGTRAP guard): never launch electron with
+# an empty or concatenated app path.
+[ -n "$APP" ] && [ -d "$APP" ] || { printf 'error: cannot resolve the sessrumnir app\nhelp: (cd apps/sessrumnir && npm ci)\n' >&2; exit 1; }
 PID_FILE="$YMIR_STATE_DIR/sessrumnir.pid"
 LOG_FILE="$YMIR_STATE_DIR/sessrumnir.log"
 
