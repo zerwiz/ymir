@@ -152,6 +152,17 @@ s_hoard() {
   for k in identity data docs secrets tenants; do
     [ -d "$YMIR_HOME/$k" ] && return 1
   done
+  # A session-lock pointer that names another machine's home is stale drift: the
+  # lock is machine-local, but the pointer lives in the synced home, so a box
+  # reinstalled under a new username inherits the old one. The arm then tries to
+  # mkdir a foreign home and fails with EACCES, stranding supervision (2026-09-23).
+  local lp="$YMIR_HOME/state/.lock-path" rec
+  if [ -f "$lp" ]; then
+    rec="$(head -n1 "$lp" 2>/dev/null | tr -d '[:space:]')"
+    if [ -n "$rec" ] && [ -n "${HOME:-}" ] && [ "$rec" != "$HOME" ] && [ "${rec#"$HOME"/}" = "$rec" ]; then
+      return 1
+    fi
+  fi
   return 0
 }
 f_hoard() {
@@ -175,6 +186,15 @@ f_hoard() {
         sed -i "s|^  $k2: .*|  $k2: \"$h/$k2\"|" "$lay"
       fi
     done
+  fi
+  # A stale session-lock pointer (see s_hoard) is repointed at this machine.
+  local lp="$YMIR_HOME/state/.lock-path" rec want
+  if [ -f "$lp" ]; then
+    rec="$(head -n1 "$lp" 2>/dev/null | tr -d '[:space:]')"
+    if [ -n "$rec" ] && [ -n "${HOME:-}" ] && [ "$rec" != "$HOME" ] && [ "${rec#"$HOME"/}" = "$rec" ]; then
+      want="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}/brokk.lock"
+      printf '%s\n' "$want" >"$lp" 2>/dev/null || true
+    fi
   fi
   s_hoard
 }
