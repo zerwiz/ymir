@@ -11,7 +11,7 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, isAbsolute, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import { Box, Container, Text, type Component } from "@earendil-works/pi-tui";
@@ -186,18 +186,65 @@ function pidAlive(pid: string, starttime = ""): boolean {
   }
 }
 
+// The machine-global state dir — the primary's lock lives here, never in the
+// tree (mirrors gleipnir_machine_state_dir in bin/gleipnir-lock-lib.sh).
+function machineStateDir(): string {
+  const env = process.env.BROKK_MACHINE_STATE_DIR;
+  if (env) return env;
+  const xdg = process.env.XDG_STATE_HOME;
+  const base = xdg && xdg.trim() ? xdg : `${process.env.HOME || root}/.local/state`;
+  return `${base}/ymir`;
+}
+
+// A seat (Eindri-home) keeps a per-home lock; the primary's lock is machine-global.
+function isSeatHome(): boolean {
+  return Boolean(process.env.BROKK_STATE_OVERRIDE) || process.env.BROKK_HOME_KIND === "eindri";
+}
+
+function derivedLockPath(): string {
+  return isSeatHome() ? `${state}/.lock` : `${machineStateDir()}/brokk.lock`;
+}
+
+// A synced pointer may name another user's home — a box reinstalled under a new
+// username (heimdallomarchy -> heimdall) carries the old pointer in $YMIR_HOME,
+// which syncs between machines. A path that does not live under the current
+// user's home cannot be this machine's lock, so it is stale by definition and
+// must never be trusted: it once made the arm mkdir a foreign home and fail with
+// EACCES, stranding supervision (2026-09-23).
+function pointerIsCurrentMachine(path: string): boolean {
+  if (!path || !isAbsolute(path)) return false;
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  if (!home) return path === derivedLockPath();
+  const prefix = home.endsWith(sep) ? home : `${home}${sep}`;
+  return path === home || path.startsWith(prefix);
+}
+
+// Rewrite a stale pointer so the next reader (and the shell tools) see the truth.
+function healLockPointer(path: string): void {
+  try {
+    mkdirSync(state, { recursive: true });
+    writeFileSync(`${state}/.lock-path`, `${path}\n`);
+  } catch {
+    // best-effort: a read-only home still resolves correctly below
+  }
+}
+
 // The resolved session-lock path. The primary holds a machine-global lock; an
 // Eindri-home holds a per-home one. gleipnir-lock-lib.sh records whichever it
-// resolved in state/.lock-path; a session that started before that contract is
-// still on the legacy state/.lock, so fall back to it.
+// resolved in state/.lock-path, but a pointer carried in from another machine is
+// validated against the current home before it is trusted; a stale one is healed
+// to the path this machine derives.
 function resolvedLockPath(): string {
+  let pointer = "";
   try {
-    const pointer = readFileSync(`${state}/.lock-path`, "utf8").trim();
-    if (pointer) return pointer;
+    pointer = readFileSync(`${state}/.lock-path`, "utf8").trim();
   } catch {
     // no pointer yet — pre-machine-lock session
   }
-  return `${state}/.lock`;
+  if (pointer && pointerIsCurrentMachine(pointer)) return pointer;
+  const derived = derivedLockPath();
+  if (pointer) healLockPointer(derived);
+  return derived;
 }
 
 function lockOwnership(): LockOwnership {

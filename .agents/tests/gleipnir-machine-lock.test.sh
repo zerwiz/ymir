@@ -15,6 +15,10 @@ bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+# The primary's runtime state resolves through bin/hoard-lib.sh (Rule 04), so
+# pin it to the sandbox: without this the library would touch the operator's
+# real home.
+export YMIR_STATE_DIR="$TMP/state"
 
 # --- path resolution ---------------------------------------------------------
 
@@ -43,7 +47,7 @@ BROKK_HOME="$TMP/home" BROKK_MACHINE_STATE_DIR="$TMP/machine" BROKK_SESSION_PID=
   || bad "owner: $(cat "$TMP/owner")"
 [ -f "$TMP/machine/brokk.lock" ] && ok "machine lock file written" \
   || bad "machine lock file missing"
-[ "$(cat "$TMP/home/state/.lock-path" 2>/dev/null)" = "$TMP/machine/brokk.lock" ] \
+[ "$(cat "$TMP/state/.lock-path" 2>/dev/null)" = "$TMP/machine/brokk.lock" ] \
   && ok "pointer records the resolved lock path" \
   || bad "pointer missing or wrong"
 
@@ -56,7 +60,7 @@ out=$(BROKK_HOME="$TMP/other" BROKK_MACHINE_STATE_DIR="$TMP/machine" BROKK_SESSI
 
 # --- migration: a legacy home lock is still honored --------------------------
 
-rm -f "$TMP/machine/brokk.lock"; mkdir -p "$TMP/home2/state"; printf '%s\n' "$$" > "$TMP/home2/state/.lock"
+rm -f "$TMP/machine/brokk.lock"; mkdir -p "$TMP/state"; printf '%s\n' "$$" > "$TMP/state/.lock"
 out=$(BROKK_HOME="$TMP/home2" BROKK_MACHINE_STATE_DIR="$TMP/machine" \
   bash -c '. "$0"; gleipnir_lock_owner o; printf "%s" "$o"' "$LIB")
 [ "$out" = "$$" ] && ok "legacy home lock is honored during migration" \
@@ -125,6 +129,25 @@ else
   bad "test setup: expected a zombie child (got state ${state:-none})"
 fi
 kill "$zombie_keeper" 2>/dev/null || true
+
+# --- migration heals a foreign lock pointer -----------------------------------
+
+# A pointer carried in from another machine/user (the synced home) must be
+# re-derived for THIS machine, never trusted. HOME is a sandbox so the foreign
+# path is genuinely outside it.
+mkdir -p "$TMP/migstate"
+printf '/home/otheruser/.local/state/ymir/brokk.lock\n' > "$TMP/migstate/.lock-path"
+YMIR_STATE_DIR="$TMP/migstate" BROKK_MACHINE_STATE_DIR="$TMP/mig" HOME="$TMP/fakehome" \
+  bash "$ROOT/.agents/migrations/0006-lock-path-home-drift.sh" >/dev/null 2>&1
+[ "$(cat "$TMP/migstate/.lock-path" 2>/dev/null)" = "$TMP/mig/brokk.lock" ] \
+  && ok "migration heals a foreign lock pointer" \
+  || bad "migration left a foreign pointer: $(cat "$TMP/migstate/.lock-path" 2>/dev/null)"
+# Idempotent: a second run changes nothing.
+YMIR_STATE_DIR="$TMP/migstate" BROKK_MACHINE_STATE_DIR="$TMP/mig" HOME="$TMP/fakehome" \
+  bash "$ROOT/.agents/migrations/0006-lock-path-home-drift.sh" >/dev/null 2>&1
+[ "$(cat "$TMP/migstate/.lock-path" 2>/dev/null)" = "$TMP/mig/brokk.lock" ] \
+  && ok "migration is idempotent" \
+  || bad "migration not idempotent"
 
 [ "$fail" = 0 ] && echo "ALL PASS" || echo "FAILURES"
 exit "$fail"
