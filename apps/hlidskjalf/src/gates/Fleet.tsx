@@ -146,7 +146,7 @@ export function Fleet() {
                     >
                       {house.glyph}
                     </div>
-                    <span className="node-label">{a.name}</span>
+                    <span className="node-label" title={a.name}>{a.name}</span>
                   </div>
                 );
               })}

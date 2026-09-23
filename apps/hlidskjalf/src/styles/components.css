@@ -560,6 +560,13 @@
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--ymir-bg-1);
+  padding: 0 3px;
+  border-radius: 3px;
+  z-index: 4;
   font-family: var(--ymir-font-mono);
   font-size: 10px;
   color: var(--ymir-text-1);
