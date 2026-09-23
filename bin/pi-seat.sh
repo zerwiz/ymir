@@ -45,6 +45,17 @@ if [ "${MAIN:-0}" != 1 ] && [ -x "$SCRIPT_DIR/yggdrasil.sh" ] && git -C "$PWD" r
   [ -d "$wt" ] && { DIR="$wt"; printf 'pi-seat[1]{isolation,worktree}:\n  "on","%s"\n' "$DIR" >&2; }
 fi
 
+# 0. the local-model guard: one local inference at a time per machine.
+case "$PROVIDER" in
+  llama-swap|llamacpp-whynot|llama.cpp|llama-cpp|lmstudio)
+    if [ -x "$SCRIPT_DIR/local-model-lock.sh" ] && ! "$SCRIPT_DIR/local-model-lock.sh" check >/dev/null 2>&1; then
+      "$SCRIPT_DIR/local-model-lock.sh" check >&2
+      printf 'help: a local seat already runs on this machine — wait, or use a remote/online model\n' >&2
+      exit 3
+    fi
+    ;;
+esac
+
 # 1. a place to sit — a new tab, or a split beside the caller. The pane gets
 # its own state dir, so the seat resolves its own lock AND writes its own
 # `.lock-path` pointer (a shared pointer let a seat clobber the primary's, which
