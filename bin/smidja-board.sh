@@ -21,6 +21,11 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# bun installs to ~/.bun/bin and is often absent from a non-login PATH; adopt it
+# once so the board's build/run steps are not refused on a machine that HAS bun.
+if ! command -v bun >/dev/null 2>&1 && [ -x "$HOME/.bun/bin/bun" ]; then
+  PATH="$HOME/.bun/bin:$PATH"; export PATH
+fi
 
 # The operator's home: env -> the recorded choice -> the ONE documented default
 # (Rule 07). No literal here — a literal would win over the resolver below and
