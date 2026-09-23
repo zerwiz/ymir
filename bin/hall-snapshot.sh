@@ -62,15 +62,18 @@ loom=$(grep -cE '^[0-9]{2}:[0-9]{2} ' "$cron_file" 2>/dev/null || echo 0)
 wake=$(wc -l <"$STATE/.wake-queue" 2>/dev/null | tr -d '[:space:]'); [ -n "$wake" ] || wake=0
 
 # --- the smiths and their errands (herdr x when-sources) ---
+# The herdr schema names a session's identity in `agent` (not `name`); the
+# fleet's smiths are every named figure-pane — the generic harness ids
+# (opencode/pi/...) are not smiths, the figures are.
 SMITHS_JSON="$(herdr agent list 2>/dev/null | python3 -c "
 import json,sys
 try:
     d=json.load(sys.stdin)
     out=[]
     for a in d['result']['agents']:
-        n=a.get('name')
-        if n in ('odrerir','sessrumnir-cloth','hall-button'):
-            out.append({'smith':n,'state':a.get('agent_status','unknown'),'pane':a.get('pane_id','')})
+        title=(a.get('terminal_title_stripped') or a.get('terminal_title') or '').strip()
+        name=title.split('|')[0].strip() or a.get('agent') or 'smith'
+        out.append({'smith':name,'state':a.get('agent_status','unknown'),'pane':a.get('pane_id','')})
     print(json.dumps(out))
 except Exception:
     print('[]')
