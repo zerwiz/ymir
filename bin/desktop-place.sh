@@ -69,6 +69,16 @@ install_entries() {
     printf 'skip: desktop entries are Omarchy/Linux-shaped; this host is %s\n' "$(ymir_os)" >&2
     return 0
   fi
+  # Which root runs the launchers? The npm package when the ymir CLI resolves
+  # into one (its node_modules/@zerwiz/ymir has the scripts and bin), else this
+  # repo — the answer to "the apps run from the npm installation".
+  local root="$ROOT" cli cliReal pkgRoot
+  cli="$(command -v ymir 2>/dev/null || true)"
+  if [ -n "$cli" ]; then
+    cliReal="$(realpath "$cli" 2>/dev/null || echo "$cli")"
+    pkgRoot="$(dirname "$(dirname "$cliReal")")"
+    if [ -n "$pkgRoot" ] && [ -d "$pkgRoot/scripts" ] && [ "$pkgRoot" != "$ROOT" ]; then root="$pkgRoot"; fi
+  fi
   mkdir -p "$dst" || return 1
   local src found=0
   for src in "${dirs[@]}"; do
@@ -76,7 +86,7 @@ install_entries() {
     found=1
     for f in "$src"/*.desktop.in; do
       [ -e "$f" ] || continue
-      sed -e "s|__YMIR_ROOT__|$ROOT|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
+      sed -e "s|__YMIR_ROOT__|$root|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
     done
   done
   [ "$found" = 1 ] || { printf 'error: no launcher templates found\n' >&2; return 1; }
