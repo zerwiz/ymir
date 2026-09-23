@@ -189,6 +189,19 @@ else
   skip topology "topology.sh absent"
 fi
 
+# 14c. fleet version — the tree, the install, and the published line agree
+if [ -x "$ROOT/bin/fleet-version.sh" ]; then
+  _fv="$(bash "$ROOT/bin/fleet-version.sh" 2>/dev/null || true)"
+  _vd="$(printf '%s' "$_fv" | sed -nE 's/^  "verdict","([^"]+)".*/\1/p')"
+  case "$_vd" in
+    "in sync"|ahead) ok version "$_vd" ;;
+    drift|behind|unknown) skip version "$_vd — $(printf '%s' "$_fv" | sed -nE 's/^  "verdict","[^"]+","([^"]+)".*/\1/p')" ;;
+    *) skip version "not reported" ;;
+  esac
+else
+  skip version "fleet-version.sh absent"
+fi
+
 # ── data ─────────────────────────────────────────────────────────────────────
 
 # 15. the Smiðja database exists with a schema
