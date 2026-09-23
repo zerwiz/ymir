@@ -1,7 +1,7 @@
 {
   "name": "@zerwiz/ymir",
   "version": "0.1.39",
-  "description": "Ymir — the single-tenant agent operating system. One command: curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash  ·  or: npx @zerwiz/ymir  ·  or: npm i -g @zerwiz/ymir (if `ymir` is not found, the README has the three-line PATH cure)",
+  "description": "Ymir \u2014 the single-tenant agent operating system. One command: curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash  \u00b7  or: npx @zerwiz/ymir  \u00b7  or: npm i -g @zerwiz/ymir (if `ymir` is not found, the README has the three-line PATH cure)",
   "license": "Apache-2.0",
   "homepage": "https://github.com/zerwiz/ymir",
   "repository": {
@@ -57,7 +57,11 @@
     "!apps/*/node_modules/",
     "!apps/*/node_modules/**",
     "!apps/*/.git/**",
-    "!apps/*/fork/**"
+    "!apps/*/fork/**",
+    "tools/",
+    "!tools/**/node_modules/**",
+    "!tools/**/__pycache__/**",
+    "!tools/**/*.pyc"
   ],
   "engines": {
     "node": ">=20"
