@@ -20,6 +20,7 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 WORK="$(mktemp -d /tmp/npm-pretest-XXXXXX)"
 REMOTE="${NPM_PRETEST_HOST:-heimdall}"
 PASS=1
+TARBALL=""
 say() { printf '%s\n' "$*"; }
 fail() { say "FAIL: $*"; PASS=0; }
 ok() { say "  ok: $*"; }
@@ -48,12 +49,18 @@ pack_and_hull() {
     else fail "the tarball lacks $h"; missing=1; fi
   done
   [ "$missing" = 0 ] || return 1
-  printf '%s' "$tgz"
+  TARBALL="$tgz"
+  return 0
 }
 
 sandbox_install() {  # <tgz> <dest>
-  local tgz="$1" dest="$2"
-  npm install --prefix "$dest" "$tgz" >/dev/null 2>&1 || { fail "sandbox install failed in $(dirname "$dest")"; return 1; }
+  local tgz="$1" dest="$2" log="$WORK/install.log"
+  if ! npm install --prefix "$dest" "$tgz" >"$log" 2>&1; then
+    if ! npm install --prefix "$dest" "$tgz" >>"$log" 2>&1; then
+      fail "sandbox install failed — $(tail -2 "$log" | tr '\n' ' ')"
+      return 1
+    fi
+  fi
   [ -d "$dest/node_modules/@zerwiz/ymir" ] || { fail "the packaged ymir did not land in the sandbox"; return 1; }
 }
 
@@ -66,7 +73,7 @@ smoke() {  # <pkg-dir>
   [ -d "$P/.agents" ] && ok "the .agents dotfolders ship in the package" || { n=1; }
   if [ -x "$P/bin/essence-fetch.sh" ]; then
     BROKK_ROOT_OVERRIDE="$P" bash "$P/bin/essence-fetch.sh" >/dev/null 2>&1
-    [ -d "$P/.agents/RULES" ] && ok "essence-fetch heals the dotfolders" || fail "essence-fetch left no RULES"
+    [ -d "$P/RULES" ] && [ -d "$P/.agents" ] && ok "the dotfolders + RULES stand after the fetch" || fail "essence-fetch left no RULES at the root"
   else
     fail "essence-fetch.sh absent from the package"
   fi
@@ -75,17 +82,17 @@ smoke() {  # <pkg-dir>
 }
 
 local_leg() {
-  local tgz dest
-  tgz="$(pack_and_hull)" || return 1
+  local dest
+  pack_and_hull || return 1
   dest="$WORK/seat-local"
-  sandbox_install "$tgz" "$dest" || return 1
+  sandbox_install "$TARBALL" "$dest" || return 1
   smoke "$dest/node_modules/@zerwiz/ymir"
 }
 
 remote_leg() {
   say "== the remote leg: $REMOTE =="
-  local tgz; tgz="$(ls "$WORK"/*.tgz 2>/dev/null | head -1)"
-  [ -n "$tgz" ] || { say "  no tarball here; packing first"; tgz="$(pack_and_hull)" || return 1; }
+  local tgz; tgz="$TARBALL"
+  [ -n "$tgz" ] || { say "  no tarball here; packing first"; pack_and_hull || return 1; tgz="$TARBALL"; }
   ssh -o BatchMode=yes "$REMOTE" "rm -rf ~/npm-pretest && mkdir -p ~/npm-pretest" 2>/dev/null || { fail "cannot reach $REMOTE"; return 1; }
   scp -q "$tgz" "$REMOTE":~/npm-pretest/pkg.tgz 2>/dev/null || { fail "scp to $REMOTE failed"; return 1; }
   ssh -o BatchMode=yes "$REMOTE" "export PATH=\$HOME/.local/share/mise/shims:\$HOME/.local/bin:/usr/bin:/bin
