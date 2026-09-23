@@ -52,7 +52,7 @@ server.registerTool("tickets_create", {
   const g = guarded("tickets_create", a);
   if (g) return { content: [{ type: "text", text: g }], isError: true };
   const ns = String(a.namespace || "");
-  if (!ns || !rows(q(`SELECT 1 FROM namespaces WHERE name = :'n'`, { n: ns })).length) { violation(agent, "tickets/create refused: namespace not registered"); return { content: [{ type: "text", text: `refused: namespace '${ns}' is not on the registry` }], isError: true }; }
+  if (!ns || !rows(q(`SELECT 1 FROM namespaces WHERE name = :'n'`, { n: ns }).out).length) { violation(agent, "tickets/create refused: namespace not registered"); return { content: [{ type: "text", text: `refused: namespace '${ns}' is not on the registry` }], isError: true }; }
   if (String(a.title).trim().length < 4) { violation(agent, "tickets/create refused: title"); return { content: [{ type: "text", text: "refused: a ticket needs a real title (4+ chars)" }], isError: true }; }
   if (String(a.description).trim().length < 10) { violation(agent, "tickets/create refused: description"); return { content: [{ type: "text", text: "refused: a ticket needs a real description (10+ chars)" }], isError: true }; }
   const pri = String(a.priority || "Medium");
@@ -99,14 +99,14 @@ server.registerTool("tickets_update", {
   const agent = agentOf();
   const g = guarded("tickets_update", a);
   if (g) return { content: [{ type: "text", text: g }], isError: true };
-  const cur = rows(q(`SELECT status FROM tickets WHERE id = :'id'`, { id: String(a.id) }))[0];
+  const cur = rows(q(`SELECT status FROM tickets WHERE id = :'id'`, { id: String(a.id) }).out)[0];
   if (!cur) return { content: [{ type: "text", text: `no ticket #${a.id}` }], isError: true };
   const sets = [], v = { id: String(a.id) };
   if (a.status !== undefined) {
     if (!STATUSES.includes(a.status)) return { content: [{ type: "text", text: "unknown status" }], isError: true };
     if (a.status !== cur && !(MARCH[cur] || []).includes(a.status)) { violation(agent, `illegal march ${cur} -> ${a.status}`); return { content: [{ type: "text", text: `refused: illegal march ${cur} -> ${a.status} (the review gate stands)` }], isError: true }; }
     if (a.status === "Done") {
-      const d2 = rows(q(`SELECT description FROM tickets WHERE id = :'id'`, { id: String(a.id) }))[0] || "";
+      const d2 = rows(q(`SELECT description FROM tickets WHERE id = :'id'`, { id: String(a.id) }).out)[0] || "";
       if (d2.trim().length < 10) { violation(agent, "Done-witness refused: no description"); return { content: [{ type: "text", text: "refused: a Done ticket needs a description (10+ chars) — the Done-witness law" }], isError: true }; }
     }
     sets.push("status = :'st'"); v.st = String(a.status);
@@ -125,7 +125,7 @@ server.registerTool("plans_update", { title: "Approve or ship a plan", descripti
   inputSchema: { id: z.number(), status: z.string() }
 }, async (a) => {
   const agent = agentOf();
-  const cur = rows(q(`SELECT status FROM plans WHERE id = :'id'`, { id: String(a.id) }))[0];
+  const cur = rows(q(`SELECT status FROM plans WHERE id = :'id'`, { id: String(a.id) }).out)[0];
   if (!cur) return { content: [{ type: "text", text: `no plan #${a.id}` }], isError: true };
   const to = String(a.status);
   const MARCH = { "drafted": ["active", "approved"], "active": ["approved"], "approved": ["shipped"], "shipped": ["done"], "done": [], "superseded": [] };
@@ -150,11 +150,11 @@ server.registerTool("plans_create", { title: "Cut a plan", description: "A title
   const agent = agentOf();
   if (blockStatus(agent)) return { content: [{ type: "text", text: "blocked: " + blockStatus(agent) }], isError: true };
   const ns = String(a.namespace || "");
-  if (!rows(q(`SELECT 1 FROM namespaces WHERE name = :'n'`, { n: ns })).length) return { content: [{ type: "text", text: "namespace not registered" }], isError: true };
+  if (!rows(q(`SELECT 1 FROM namespaces WHERE name = :'n'`, { n: ns }).out).length) return { content: [{ type: "text", text: "namespace not registered" }], isError: true };
   if (String(a.title).trim().length < 6) { violation(agent, "plans_create refused: title"); return { content: [{ type: "text", text: "refused: a plan needs a real title (6+ chars)" }], isError: true }; }
   if (String(a.body).trim().length < 40) { violation(agent, "plans_create refused: body"); return { content: [{ type: "text", text: "refused: a plan needs a real body (40+ chars)" }], isError: true }; }
   const ts = (a.tickets || []).map(String);
-  if (ts.length) { const found = rows(q(`SELECT id FROM tickets WHERE namespace = :'n' AND id = ANY (string_to_array(:'ts', ',')::bigint[])`, { n: ns, ts: ts.join(",") })).length; if (found !== ts.length) return { content: [{ type: "text", text: `plan tickets must exist (${found}/${ts.length})` }], isError: true }; }
+  if (ts.length) { const found = rows(q(`SELECT id FROM tickets WHERE namespace = :'n' AND id = ANY (string_to_array(:'ts', ',')::bigint[])`, { n: ns, ts: ts.join(",") }).out).length; if (found !== ts.length) return { content: [{ type: "text", text: `plan tickets must exist (${found}/${ts.length})` }], isError: true }; }
   const r = q(`INSERT INTO plans (namespace, title, body, tickets, status) VALUES (:'n', :'t', :'d', string_to_array(:'ts', ',')::bigint[], 'active') RETURNING id`, { n: ns, t: String(a.title), d: String(a.body), ts: ts.join(",") });
   return r.ok ? { content: [{ type: "text", text: `plan #${r.out} created in ${ns}` }] } : { content: [{ type: "text", text: "store error" }], isError: true };
 });
@@ -191,15 +191,15 @@ server.registerTool("blocks_clear", { title: "The operator's key", description: 
 });
 
 server.resource("the-book", "skuld://book", "the ticket book", async () => {
-  const t = rows(q(`SELECT count(*) FROM tickets`))[0] || "0";
-  const p = rows(q(`SELECT count(*) FROM plans`))[0] || "0";
+  const t = rows(q(`SELECT count(*) FROM tickets`).out)[0] || "0";
+  const p = rows(q(`SELECT count(*) FROM plans`).out)[0] || "0";
   return { contents: [{ uri: "skuld://book", mimeType: "text/plain", text: `tickets: ${t} · plans: ${p}` }] };
 });
 
   server.registerTool("sync_snapshot", { title: "The whole book", description: "The full export (tickets + plans + statuses + namespaces) for the fleet mirrors — the heart is the primary, the instances pull.", inputSchema: {} }, async () => {
-    const t = rows(q(`SELECT id, ticket_no, namespace, status, priority, title, LEFT(description, 200), labels, owner, created_at FROM tickets ORDER BY id`));
-    const p = rows(q(`SELECT id, namespace, title, status, tickets, created_at FROM plans ORDER BY id`));
-    const n = rows(q(`SELECT name, COALESCE(about, name) FROM namespaces ORDER BY name`));
+    const t = rows(q(`SELECT id, ticket_no, namespace, status, priority, title, LEFT(description, 200), labels, owner, created_at FROM tickets ORDER BY id`).out);
+    const p = rows(q(`SELECT id, namespace, title, status, tickets, created_at FROM plans ORDER BY id`).out);
+    const n = rows(q(`SELECT name, COALESCE(about, name) FROM namespaces ORDER BY name`).out);
     return { content: [{ type: "text", text: "tickets\n" + t.join("\n") + "\nplans\n" + p.join("\n") + "\nnamespaces\n" + n.join("\n") }] };
   });
 
