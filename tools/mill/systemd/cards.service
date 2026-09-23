@@ -1,0 +1,11 @@
+[Unit]
+Description=Fleet cards — /.well-known discovery root (:8318)
+
+[Service]
+Type=simple
+WorkingDirectory=/home/whynot/well/root
+ExecStart=/usr/bin/python3 -m http.server 8318 --bind 0.0.0.0
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

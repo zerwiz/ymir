@@ -1,0 +1,11 @@
+[Unit]
+Description=Embedding stone — nomic qwen-scale embeddings (:8500)
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/llama-server -m /home/whynot/Models/embed/nomic-embed-text-v1.5.Q4_K_M.gguf --embedding --port 8500 --alias embed --ctx-size 8192
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
