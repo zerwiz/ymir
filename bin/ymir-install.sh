@@ -564,6 +564,25 @@ step_heimdall() {
   fi
 }
 
+# ── 3e. the fleet services (the heart's surfaces) ─────────────────────────────
+# well-mcp (the served well) · ratatoskr A2A node · the mill worker · the
+# embedding stone · the cards root — raised as user units from tools/, and the
+# seat's pi mcp.json pointed at the served well. Best-effort: a service that
+# cannot raise reports a WARN, never a fail.
+step_fleet() {
+  if [ ! -x "$SCRIPT_DIR/fleet-ensure.sh" ]; then add fleet SKIP "no fleet-ensure.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if "$SCRIPT_DIR/fleet-ensure.sh" status >/dev/null 2>&1; then add fleet OK "services present"
+    else add fleet WARN "no fleet services — a real run raises them"; fi
+    return
+  fi
+  if "$SCRIPT_DIR/fleet-ensure.sh" ensure >/dev/null 2>&1; then
+    add fleet OK "well-MCP · A2A node · the mill · the stone · cards — raised (user units)"
+  else
+    add fleet WARN "fleet-ensure reported gaps — re-run bin/fleet-ensure.sh ensure"
+  fi
+}
+
 # ── 4. sandbox image ─────────────────────────────────────────────────────────
 step_sandbox() {
   local engine; engine="$(ymir_container_engine_name 2>/dev/null || true)"
@@ -938,7 +957,7 @@ step_panes() {
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=20
+STEP_TOTAL=21
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))
@@ -968,6 +987,7 @@ run_step step_sessrumnir "the seat"
 run_step step_backend "backend"
 run_step step_host "host"
 run_step step_heimdall "the warden"
+run_step step_fleet "fleet services"
 run_step step_sandbox "sandbox"
 run_step step_memory "memory"
 run_step step_smidja "the smithy"
