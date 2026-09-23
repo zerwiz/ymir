@@ -104,6 +104,7 @@ scheduler='
   export BROKK_CONFIG_OVERRIDE="$confdir"
   export BROKK_ROOT_OVERRIDE="$root"
   export BROKK_REALM="${BROKK_REALM:-}"
+  export BROKK_ROLES="${BROKK_ROLES:-dev}"
   stamp_dir="$state/.cron-fired"
   lock_dir="$state/.cron-locks"
   mkdir -p "$stamp_dir" "$lock_dir"
@@ -128,9 +129,25 @@ scheduler='
     while IFS= read -r line; do
       case "$line" in ""|\#*) continue ;; esac
       at=${line%% *}
-      cmd=${line#* }
+      rest=${line#* }
+      # An optional role gate: `@heart` or `@heart,forge` before the command. A
+      # job runs only when one of the roles of THIS machine is in the gate; no
+      # gate means any role. Plan 51: the record jobs belong to the heart, the
+      # model jobs to the forge, and a dev body runs neither (2026-09-23).
+      gate=""
+      case "$rest" in
+        @*) gate=${rest%% *}; cmd=${rest#* } ;;
+        *)  cmd=$rest ;;
+      esac
       [ -n "$cmd" ] || continue
       [ "$at" = "$now" ] || continue
+      if [ -n "$gate" ]; then
+        _match=0
+        for _w in ${gate#@}; do
+          case ",${BROKK_ROLES:-dev}," in *",$_w,"*) _match=1 ;; esac
+        done
+        [ "$_match" = 1 ] || continue
+      fi
       key=$(printf "%s" "$cmd" | tr -c "A-Za-z0-9._-" "_")
       stamp="$stamp_dir/$key"
       if [ -r "$stamp" ] && [ "$(cat "$stamp" 2>/dev/null)" = "$today" ]; then continue; fi
@@ -186,6 +203,24 @@ fi
 
 mkdir -p "$STAMP_DIR" "$LOCK_DIR"
 rotate_log
+
+# This machine's roles (plan 51): the scheduler runs only the jobs its roles own.
+# Read from the topology resolver; default to `dev` when there is no registry, so
+# an unconfigured box runs only ungated jobs (and never a heart's record jobs).
+if [ -z "${BROKK_ROLES:-}" ]; then
+  _roles="dev"
+  if [ -x "$SCRIPT_DIR/topology.sh" ]; then
+    _roles="$(bash "$SCRIPT_DIR/topology.sh" --json 2>/dev/null \
+      | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+print(",".join(d.get("roles") or ["dev"]))' 2>/dev/null)"
+    [ -n "$_roles" ] || _roles="dev"
+  fi
+  BROKK_ROLES="$_roles"
+  unset _roles
+fi
+export BROKK_ROLES
 
 if command -v setsid >/dev/null 2>&1; then
   setsid bash -c "$scheduler" _ "$CRON_CONFIG" "$LOG_FILE" "$STATE" "$BROKK_HOME" "$CONFIG" "$ROOT" >>"$LOG_FILE" 2>&1 &
