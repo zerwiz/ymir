@@ -329,7 +329,7 @@ case "$ACTION" in
     PROMPT="$PROMPT
 
 ---
-Seat law, read first. You are a worker figure, not the primary. There is NO human at this terminal: do NOT use ask_user_question — no questionnaire from this pane reaches the Allfather. Decide everything inside your craft yourself; that is why you were seated. If a genuine fork needs the coordinator, write it to state/eindri-reports/$NAME.md and stop — Brokk answers it or carries it to the Allfather. And if the same action fails twice, do not run it a third time: change the approach, or write down what blocked you. Repeating a command that returns nothing is a loop, not work."
+Seat law, read first. You are a worker figure, not the primary. There is NO human at this terminal: do NOT use ask_user_question — no questionnaire from this pane reaches the Allfather. Decide everything inside your craft yourself; that is why you were seated. If a genuine fork needs the coordinator, write the QUESTION to state/eindri-questions/$NAME.md and stop — Brokk is woken, answers it with bin/eindri-send.sh, and you carry on. When the errand is DONE, write the report to state/eindri-reports/$NAME.md. And if the same action fails twice, do not run it a third time: change the approach, or write down what blocked you. Repeating a command that returns nothing is a loop, not work."
     if ! can_use_herdr; then
       printf 'error: no herdr session — cannot seat an Eindri\nhelp: inside herdr, or use bin/einherjar-spawn.sh\n' >&2
       exit 1
