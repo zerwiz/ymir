@@ -36,7 +36,9 @@ function q(sql, vars) {
 
 function rows(out) { return out ? out.split('\n') : []; }
 
-function agentOf(msg) { return (msg?.params?.clientInfo?.name || '').slice(0, 64) || 'unknown'; }
+let CURRENT_AGENT = 'unknown';   // the seat's name, caught at the initialize
+
+function agentOf(msg) { return CURRENT_AGENT; }
 
 // — the block ledger —
 function violation(agent, reason) {
@@ -95,9 +97,12 @@ function blockedResult(agent) {
 }
 
 const rpc = {
-  initialize: (p) => ({ protocolVersion: p?.protocolVersion || PROTOCOL,
+  initialize: (p) => {
+    if (p?.clientInfo?.name) CURRENT_AGENT = String(p.clientInfo.name).slice(0, 64);
+    return { protocolVersion: p?.protocolVersion || PROTOCOL,
     capabilities: { tools: { listChanged: false }, resources: { listChanged: false, subscribe: false } },
-    serverInfo: { name: 'skuld', version: '1' } }),
+    serverInfo: { name: 'skuld', version: '1' } };
+  },
   'tools/list': () => ({ tools: [
     { name: 'tickets/create', description: 'Create a ticket in a registered namespace (title 4+, description 10+, priority Low/Medium/High/Critical, <= 6 labels). The blocking law is on: a malformed ticket blocks the calling agent.', inputSchema: { type: 'object', properties: { namespace: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, priority: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } } }, required: ['namespace', 'title', 'description'] } },
     { name: 'tickets/list', description: 'List tickets (by namespace, status, assignee, owner).', inputSchema: { type: 'object', properties: { namespace: { type: 'string' }, status: { type: 'string' }, assignee: { type: 'string' }, owner: { type: 'string' } } } },
