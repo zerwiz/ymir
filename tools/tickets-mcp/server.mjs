@@ -28,17 +28,20 @@ const STATUSES = ['open', 'in-progress', 'review', 'closed'];
 const NEXT = { open: ['in-progress'], 'in-progress': ['review'], review: ['closed'], closed: [] };
 
 function q(sql, vars) {
-  const args = ['-h', DB, '-U', ROLE, '-d', DBN, '-Atc', sql];
-  for (const [k, v] of Object.entries(vars || {})) args.push('-v', `${k}=${String(v)}`);
-  const r = spawnSync('psql', args, { env: { ...process.env, PGPASSWORD: PASS }, encoding: 'utf8', maxBuffer: 8 << 20 });
+  // psql -c never resolves :'var' (proven), so the markers are inlined as
+  // escaped literals ('' doubling = injection-safe text substitution).
+  const out = sql.replace(/:'([a-z_]+)'/g, (m, k) => "'" + String(vars?.[k] ?? '').replace(/'/g, "''") + "'");
+  const r = spawnSync('psql', ['-h', DB, '-U', ROLE, '-d', DBN, '-Atc', out],
+    { env: { ...process.env, PGPASSWORD: PASS }, encoding: 'utf8', maxBuffer: 8 << 20 });
   return { ok: r.status === 0, out: (r.stdout || '').trim(), err: (r.stderr || '').trim() };
 }
 
 function rows(out) { return out ? out.split('\n') : []; }
 
-let CURRENT_AGENT = 'unknown';   // the seat's name, caught at the initialize
+let CURRENT_AGENT = 'unknown';   // per-session, caught at the initialize
+const SESSIONS = new Map();      // sid -> { agent, at }
 
-function agentOf(msg) { return CURRENT_AGENT; }
+function agentOf() { return CURRENT_AGENT; }
 
 // — the block ledger —
 function violation(agent, reason) {
@@ -120,7 +123,7 @@ const rpc = {
     // the operator's door never blocks
     if (name === 'blocks/clear') {
       const target = String(args.agent || '');
-      if (target !== OPER) return { content: [{ type: 'text', text: `blocks/clear is the operator's door (SKULD_OPERATOR=${OPER}); you are ${agent}` }], isError: true };
+      if (CURRENT_AGENT !== OPER) return { content: [{ type: 'text', text: `blocks/clear is the operator's door (SKULD_OPERATOR=${OPER}); you are ${CURRENT_AGENT}` }], isError: true };
       q(`DELETE FROM blocks WHERE agent = :'a'`, { a: target });
       return { content: [{ type: 'text', text: `block cleared for ${target}` }] };
     }
@@ -220,6 +223,48 @@ const rpc = {
   }
 };
 
+function handle(msg) {
+  const { id, method, params } = msg;
+  if (!method || method === 'notifications/initialized' || method.startsWith('notifications/')) return null;
+  let result = null, error = null;
+  try {
+    if (method === 'initialize') { if (params?.clientInfo?.name) CURRENT_AGENT = String(params.clientInfo.name).slice(0, 64); result = rpc.initialize(params); }
+    else if (method === 'tools/list') result = rpc['tools/list']();
+    else if (method === 'tools/call') result = rpc['tools/call'](params, CURRENT_AGENT);
+    else if (method === 'resources/list') result = rpc['resources/list']();
+    else if (method === 'resources/read') result = rpc['resources/read'](params);
+    else error = { code: -32601, message: `Unknown method: ${method}` };
+  } catch (e) { error = { code: -32603, message: String(e) }; }
+  const resp = { jsonrpc: '2.0', id: id ?? null, ...(error ? { error } : { result }) };
+  return { resp, agent: CURRENT_AGENT, initialized: method === 'initialize' };
+}
+
+// — the served mode: the hall speaks HTTP directly (no proxy, no identity theft) —
+const PORT = parseInt(process.env.PORT || '0', 10);
+if (PORT > 0) {
+  import('node:http').then(({ default: http }) => {
+    const server = http.createServer((req, res) => {
+      if (req.method !== 'POST') { res.writeHead(405).end(); return; }
+      let body = '';
+      req.on('data', c => { body += c; if (body.length > 1 << 20) req.destroy(); });
+      req.on('end', () => {
+        let msg; try { msg = JSON.parse(body); } catch { res.writeHead(400, { 'content-type': 'application/json' }).end('{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"parse error"}}'); return; }
+        const sid = String(req.headers['mcp-session-id'] || '');
+        if (!msg.method?.startsWith('notifications/') && sid && SESSIONS.has(sid)) CURRENT_AGENT = SESSIONS.get(sid).agent;
+        const out = handle(msg);
+        if (!out) { res.writeHead(204).end(); return; }
+        let sid2 = sid;
+        if (out.initialized) { sid2 = Math.random().toString(16).slice(2); SESSIONS.set(sid2, { agent: out.agent, at: Date.now() }); }
+        res.writeHead(200, { 'content-type': 'application/json', 'mcp-session-id': sid2, 'Mcp-Session-Id': sid2 });
+        res.end(JSON.stringify(out.resp) + '\n');
+      });
+    });
+    server.listen(PORT, '0.0.0.0', () => {});
+    setInterval(() => { for (const [k, v] of SESSIONS) if (Date.now() - v.at > 3600e3) SESSIONS.delete(k); }, 3600e3);
+  }).catch(e => { process.stderr.write(String(e)); });
+}
+
+// — the stdio mode (local pipes and tests) —
 let buf = '';
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', chunk => {
@@ -229,17 +274,7 @@ process.stdin.on('data', chunk => {
     const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
     if (!line) continue;
     let msg; try { msg = JSON.parse(line); } catch { continue; }
-    const { id, method, params } = msg;
-    if (!method || method === 'notifications/initialized' || method.startsWith('notifications/')) continue;
-    let result = null, error = null;
-    try {
-      if (method === 'initialize') result = rpc.initialize(params);
-      else if (method === 'tools/list') result = rpc['tools/list']();
-      else if (method === 'tools/call') result = rpc['tools/call'](params, agentOf(msg));
-      else if (method === 'resources/list') result = rpc['resources/list']();
-      else if (method === 'resources/read') result = rpc['resources/read'](params);
-      else error = { code: -32601, message: `Unknown method: ${method}` };
-    } catch (e) { error = { code: -32603, message: String(e) }; }
-    process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id: id ?? null, ...(error ? { error } : { result }) }) + '\n');
+    const out = handle(msg);
+    if (out) process.stdout.write(JSON.stringify(out.resp) + '\n');
   }
 });
