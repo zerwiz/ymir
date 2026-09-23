@@ -105,7 +105,18 @@ herdr agent start "$FIGURE" --kind "$HARNESS" --pane "$PANE" "${ARGS[@]}" >/dev/
 sleep 6
 
 # 4. the seat law + the brief
-[ -n "$OUT" ] || OUT="$HOME_DIR/workspaces/marketing/scraped"
+# 4. the seat law + the brief
+#
+# The output shelf follows the CRAFT, not the caller. A marketing round (Bragi)
+# lands on the marketing shelf; a research round (Huginn) lands on the research
+# shelf. Getting this wrong filed a RESEARCH artifact under marketing — the work
+# was right, the shelf lied about what it was.
+if [ -z "$OUT" ]; then
+  case "$FIGURE" in
+    bragi|hnoss)   OUT="$HOME_DIR/workspaces/marketing/scraped" ;;
+    *)             OUT="$HOME_DIR/workspaces/personal/research" ;;
+  esac
+fi
 mkdir -p "$OUT" 2>/dev/null || true
 
 BRIEF="Seat law, read first. You are a worker figure, not the primary. There is NO human at this terminal: do NOT use ask_user_question. Decide everything inside your craft yourself. If a genuine fork needs the coordinator, write the QUESTION to $STATE/eindri-questions/$FIGURE.md and stop — Brokk answers with bin/eindri-send.sh. When the errand is DONE, write the report to $STATE/eindri-reports/$FIGURE.md. If the same action fails twice, do not run it a third time.
