@@ -28,7 +28,7 @@ const SKULD = "http://192.168.68.111:8320";
   </header>
 
   <div class="panel rv">
-    <div class="panel-head"><div class="panel-title"><span class="glyph" aria-hidden="true">ᛚ</span>the plans</div></div>
+    <div class="panel-head"><div class="panel-title"><span class="glyph" aria-hidden="true">ᛚ</span>the plans <span id="plan-count" class="mono dim" style="margin-left:.4rem"></span></div></div>
     <div class="panel-body flush" id="plans" style="font-size:.85rem">reading the plans…</div>
   </div>
 
@@ -60,7 +60,7 @@ const SKULD = "http://192.168.68.111:8320";
   .book-form input,.book-form textarea{background:var(--bg-1,#151209);color:var(--bone,#cfc3a9);border:1px solid var(--steel-1,#2b241a);border-radius:2px;padding:.5rem .6rem;font:inherit}
   .book-form button{background:transparent;color:var(--bronze,#c9973f);border:1px solid var(--bronze,#c9973f);border-radius:2px;padding:.5rem 1.1rem;cursor:pointer;letter-spacing:.12em;text-transform:lowercase;font-family:var(--mono,monospace)}
   .book-form button:hover{background:var(--bronze,#c9973f);color:var(--bg-0,#0e0c09)}
-  .road{display:grid;gap:.6rem;padding:.7rem}
+  .road{display:grid;gap:.55rem;padding:.8rem}
   .road-row{background:var(--bg-2,#1a1610);border:1px solid var(--steel-1,#2b241a);border-left:3px solid var(--bronze,#c9973f);border-radius:4px;padding:.7rem .8rem}
   .road-row .pt{font-family:var(--serif,Georgia);font-size:.98rem;color:var(--bone,#cfc3a9)}
   .road-row .ps{margin-top:.35rem;font-family:var(--mono,monospace);font-size:.7rem;color:var(--bone-dim,#9a8f75);line-height:1.5}
@@ -92,6 +92,7 @@ async function loadPlans(){
   const p = await call("plans/list", { namespace: "ymir" });
   const el = document.getElementById("plans");
   const rows = (p.split("\n")||[]).filter(Boolean);
+  document.getElementById("plan-count").textContent = rows.length ? rows.length : "";
   if (!rows.length || rows.length === 1 && /no plans|silence/.test(p)) { el.innerHTML = "<div class='dim' style='padding:.6rem .7rem;font-family:var(--mono,monospace);font-size:.72rem'>no plans cut yet — the tickets board waits at /tickets</div>"; return; }
   const road = document.createElement("div"); road.className = "road";
   rows.forEach(r => { const cols = r.split("|"); const [id, ns, st, tickets] = cols; const title = cols.slice(4).join("|"); const row = document.createElement("div"); row.className = "road-row"; row.innerHTML = `<div class="pt">${esc(title)}</div><div class="ps">plan #${esc(id)} · ${esc(ns)} · ${esc(st)}<br>rides tickets: ${esc(tickets || "-")}</div>`;
@@ -101,7 +102,8 @@ async function loadPlans(){
   el.textContent = ""; el.appendChild(road);
 }
 window.addEventListener("DOMContentLoaded", async () => {
-  await init(); await fillPicks(); loadPlans();
+  await init(); try { const raw = await call("namespaces_list", {}); const ns = document.getElementById("ns-pick"); if (ns) { const opts = (raw.split("\n")||[]).filter(Boolean); if (opts.length) { ns.innerHTML = ""; opts.forEach(o => { const [s,n] = o.split("|"); const opt = document.createElement("option"); opt.value = s; opt.textContent = s + (n && n !== s ? " — " + n : ""); ns.appendChild(opt); }); } } } catch(e) {}
+  fillPicks(); loadPlans();
   document.getElementById("pf").addEventListener("submit", async e => {
     e.preventDefault(); const f=new FormData(e.target);
     const r = await call("plans/create", { namespace: f.get("namespace"), title: f.get("title"), body: f.get("body"), tickets: Array.from(document.querySelectorAll("#ticket-pick option:checked")).map(o => parseInt(o.value, 10)) });

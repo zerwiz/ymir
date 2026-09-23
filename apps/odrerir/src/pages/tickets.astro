@@ -6,6 +6,15 @@
 import '../styles/cloth.css'
 import '../styles/livehall.css'
 const SKULD = "http://192.168.68.111:8320";
+let TICKET_ROWS = [];
+try {
+  const sk = await fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "odrerir-build", version: "1" } } }) });
+  const ssid = sk.headers.get("mcp-session-id") || "";
+  const js = await (await fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream", ...(ssid ? { "mcp-session-id": ssid } : {}) }, body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "tickets/list", arguments: { namespace: "ymir" } } }) })).json();
+  const txt = js.result?.content?.[0]?.text || "";
+  TICKET_ROWS = txt.split("\n").filter(Boolean);
+} catch (e) { TICKET_ROWS = []; }
+const ROWS_HTML = TICKET_ROWS.map(r => { const c = r.split("|"); const id = c[0].replace(/^#/,""); return `<tr data-id=\"${id}\"><td><input type=checkbox class=row-sel value=\"${id}\"></td><td class=\"mono dim\">${c[2]}/${c[1]}</td><td>${c[5]}</td><td>${c[3]}</td><td>${c[4]}</td><td class=\"dim\">${c[6]||''}</td><td class=\"dim\">${c[7] && c[7] !== '0' ? '⇡'+c[7] : ''}</td></tr>`; }).join("");
 ---
 <html lang="en">
 <head>
@@ -22,20 +31,17 @@ const SKULD = "http://192.168.68.111:8320";
   </span>
 </div>
 <main class="hall-wrap" id="book">
-  <header class="shead rv">
-    <span class="snum rn" aria-hidden="true">ᛉ</span>
-    <p class="skicker"><span class="rn">ᛉ</span>skuld · the debts owed</p>
-    <h1 id="book-h2">The Hall's Book</h1>
-    <p class="ssub">the tickets of the fleet — filter, sort, pick, press — the book answers the hand, never the keyboard</p>
-  </header>
+  <header class="shead rv" style="margin-bottom:1.2rem"><p class="skicker"><span class="rn">ᛉ</span>skuld · the hall book</p></header>
 
+  <div id="strip" style="display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem;margin-bottom:.9rem"></div>
   <div class="panel rv">
     <div class="panel-head">
-      <div class="panel-title"><span class="glyph" aria-hidden="true">ᛏ</span>the tickets <span id="tick-count" class="kb-count" style="margin-left:.4rem"></span></div>
+      <div class="panel-title"><span class="glyph" aria-hidden="true">ᛏ</span>the tickets <span id="tick-count" class="mono dim" style="margin-left:.4rem"></span></div>
       <button type="button" id="new-ticket-btn" class="td-act">+ new ticket</button>
     </div>
     <div class="panel-body flush">
       <div class="filters" id="filters">
+        <div id="ns-pills" style="display:inline-flex;gap:.3rem;flex-wrap:wrap"></div>
         <select id="f-status"><option value="">status: any</option></select>
         <select id="f-priority"><option value="">priority: any</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select>
         <select id="f-assignee"><option value="">assignee: any</option></select>
@@ -64,13 +70,7 @@ const SKULD = "http://192.168.68.111:8320";
         </select>
         <button type="button" id="bulk-go" class="td-act">apply</button>
       </div>
-      <table class="tick-table" id="tick-table">
-        <thead><tr>
-          <th style="width:2rem"><input type="checkbox" id="sel-all" /></th>
-          <th>ID</th><th>title</th><th>status</th><th>pri</th><th>who</th><th>⇡</th>
-        </tr></thead>
-        <tbody id="tick-body"><tr><td colspan="7" class="dim">reading the book…</td></tr></tbody>
-      </table>
+      <div id="card-list" style="display:grid;gap:.5rem;padding:.8rem"></div>
     </div>
   </div>
 
@@ -80,11 +80,14 @@ const SKULD = "http://192.168.68.111:8320";
   </div>
 </main>
 <style>
-  .filters{display:flex;gap:.6rem;flex-wrap:wrap;padding:.6rem .9rem;border-bottom:1px solid var(--steel-1,#2b241a)}
+
+    .filters{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;padding:.55rem .9rem;border-bottom:1px solid var(--steel-1,#2b241a)}
   .filters select{background:var(--bg-1,#151209);color:var(--bone,#cfc3a9);border:1px solid var(--steel-1,#2b241a);border-radius:2px;padding:.35rem .6rem;font-size:.74rem}
   .tick-table{width:100%;border-collapse:collapse;font-size:.84rem}
-  .tick-table th{text-align:left;padding:.5rem .7rem;color:var(--bone-dim,#9a8f75);letter-spacing:.08em;font-weight:400;text-transform:lowercase;border-bottom:1px solid var(--steel-1,#2b241a);font-size:.7rem}
-  .tick-table td{padding:.5rem .7rem;border-bottom:1px solid var(--steel-1,#2b241a)}
+  .panel-body.flush{overflow-x:auto}
+  .tick-table th{text-align:left;padding:.62rem .8rem;color:var(--bone-dim,#9a8f75);letter-spacing:.14em;font-weight:600;text-transform:uppercase;border-bottom:1px solid var(--steel-1,#2b241a);font-size:.64rem;white-space:nowrap}
+  .tick-table td{padding:.68rem 1rem;font-size:.86rem;border-bottom:1px solid var(--steel-1,#2b241a)}
+  .tick-table th{padding:.68rem 1rem}
   .tick-table tbody tr{cursor:pointer}
   .tick-table tbody tr:hover{background:var(--bg-2,#1a1610)}
   .st-badge{display:inline-block;font-size:.68rem;padding:.14rem .5rem;border-radius:999px;font-family:var(--mono,monospace)}
@@ -109,7 +112,9 @@ const SKULD = "http://192.168.68.111:8320";
   .td-strip span{font-size:.6rem;letter-spacing:.12em;text-transform:lowercase;color:var(--bone-dim,#9a8f75)}
   .td-panel h2{font-family:var(--serif,Georgia);font-size:1.15rem;color:var(--bone,#cfc3a9);margin:.5rem 0 .4rem}
   .td-desc{font-size:.85rem;line-height:1.5;color:var(--bone-dim,#9a8f75);margin:0 0 .8rem;white-space:pre-wrap}
-  .td-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem}
+  .td-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.9rem}
+  .td-chip{font-family:var(--mono,monospace);font-size:.68rem;padding:.22rem .6rem;border:1px solid var(--steel-1,#2b241a);border-radius:999px;color:var(--bone-dim,#9a8f75)}
+  #td-assign{background:var(--bg-2,#1a1610);color:var(--bone,#cfc3a9);border:1px solid var(--steel-1,#2b241a);border-radius:2px;padding:.35rem .5rem;font-size:.72rem}
   .td-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
   .td-comments{display:grid;gap:.5rem;margin-top:.5rem}
   .td-comment{background:var(--bg-2,#1a1610);border:1px solid var(--steel-1,#2b241a);border-radius:4px;padding:.5rem .7rem;font-size:.78rem}
@@ -125,13 +130,25 @@ async function init() {
   const h = await fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "odrerir-hall", version: "1" } } }) });
   sid = h.headers.get("mcp-session-id") || "";
 }
-const call = (name, args) => POST({ jsonrpc: "2.0", id: Date.now(), method: "tools/call", params: { name, arguments: args } }).then(d => (d.result?.content?.[0]?.text) || (d.error?.message) || "silence");
+async function call(name, args) {
+  const r = await fetch(SKULD, { method: "POST", headers: { "content-type": "application/json", "accept": "application/json, text/event-stream", ...(sid ? { "mcp-session-id": sid } : {}) }, body: JSON.stringify({ jsonrpc: "2.0", id: Date.now(), method: "tools/call", params: { name, arguments: args } }) });
+  const d = await r.json();
+  return (d.result?.content?.[0]?.text) || (d.error?.message) || "silence";
+}
 function esc(s){ const d=document.createElement("div"); d.textContent=s||""; return d.innerHTML; }
 const COLORS = { "Backlog":"#6B7280", "Planned":"#7d5f2a", "Ready":"#96a0a8", "In Progress":"#3B82F6", "Submitted for Review":"#EAB308", "In Review":"#EAB308", "Approved":"#22C55E", "Done":"#22C55E", "Changes Requested":"#F97316" };
 const MARCH = { "Backlog":["Planned"], "Planned":["Ready"], "Ready":["In Progress"], "In Progress":["Submitted for Review","Changes Requested"], "Submitted for Review":["In Review"], "In Review":["Approved","Changes Requested"], "Approved":["Done"], "Done":[], "Changes Requested":["In Progress"] };
 let ROWS = []; let sel = new Set();
+let FILTER_NS = new URLSearchParams(location.search).get("ns") || "";
 function stBadge(st){ return `<span class="st-badge" style="background:${COLORS[st]||"#c9973f"}22;color:${COLORS[st]||"#c9973f"};border:1px solid ${COLORS[st]||"#c9973f"}">${esc(st)}</span>`; }
+const PRI_COLORS = { "Critical":"#f44336", "High":"#f97316", "Medium":"#3b82f6", "Low":"#6b7280" };
+function priBadge(p){ const c = PRI_COLORS[p] || "#6b7280"; return `<span class="st-badge" style="background:${c}22;color:${c};border:1px solid ${c}">${esc(p)}</span>`; }
 function fillFilters(){
+  const pills = document.getElementById("ns-pills"); if (pills) {
+    const nss = []; ROWS.forEach(r => { const n = r.split("|")[2]; if (n && !nss.includes(n)) nss.push(n); });
+    const mk = (label, val) => { const b = document.createElement("button"); b.type="button"; b.textContent = label; b.style.cssText = "background:" + (FILTER_NS === val ? "var(--bronze,#c9973f)" : "transparent") + ";color:" + (FILTER_NS === val ? "var(--bg-0,#0e0c09)" : "var(--bone-dim,#9a8f75)") + ";border:1px solid var(--steel-1,#2b241a);border-radius:6px;padding:.3rem .7rem;font-family:var(--mono,monospace);font-size:.66rem;cursor:pointer;letter-spacing:.06em"; b.addEventListener("click", () => { FILTER_NS = FILTER_NS === val ? "" : val; fillFilters(); renderRows(); }); return b; };
+    pills.textContent = ""; pills.appendChild(mk("All", "")); nss.forEach(n => pills.appendChild(mk(n, n)));
+  }
   const fs = document.getElementById("f-status"), fa = document.getElementById("f-assignee");
   fs.innerHTML = '<option value="">status: any</option>';
   fa.innerHTML = '<option value="">assignee: any</option>';
@@ -143,25 +160,36 @@ function fillFilters(){
 }
 function renderRows(){
   const fs = document.getElementById("f-status").value, fp = document.getElementById("f-priority").value, fa = document.getElementById("f-assignee").value;
-  const rows = ROWS.filter(r => { const c = r.split("|"); return (!fs || c[3] === fs) && (!fp || c[4] === fp) && (!fa || c[6] === fa); });
+  const rows = ROWS.filter(r => { const c = r.split("|"); return (!fs || c[3] === fs) && (!fp || c[4] === fp) && (!fa || c[6] === fa) && (!FILTER_NS || c[2] === FILTER_NS); });
   document.getElementById("tick-count").textContent = rows.length;
-  document.getElementById("tick-body").innerHTML = rows.map(r => { const [rawId,no,ns,st,pr,title,who,par] = r.split("|"); const id = (rawId||"").replace(/^#/,"");
-    return `<tr data-id="${esc(id)}"><td><input type="checkbox" class="row-sel" value="${esc(id)}" ${sel.has(id) ? "checked" : ""} /></td><td class="mono dim">${esc(ns)}/${esc(no)}</td><td>${esc(title)}</td><td>${stBadge(st)}</td><td>${esc(pr)}</td><td class="dim">${esc(who||"")}</td><td class="dim">${par && par !== "0" ? "⇡" + esc(par) : ""}</td></tr>`;
+  const strip = { "backlog": 0, "active": 0, "review": 0, "changes": 0, "done": 0 };
+  ROWS.forEach(r => { const s = r.split("|")[3]; if (s === "Backlog" || s === "Planned" || s === "Ready") strip.backlog++; else if (s === "In Progress") strip.active++; else if (s === "Submitted for Review" || s === "In Review") strip.review++; else if (s === "Changes Requested") strip.changes++; else if (s === "Done") strip.done++; });
+  const stripEl = document.getElementById("strip");
+  if (stripEl) stripEl.innerHTML = Object.keys(strip).map(k => `<div style="background:var(--bg-2,#1a1610);border:1px solid var(--steel-1,#2b241a);border-radius:6px;padding:.55rem .8rem"><b style="display:block;font-size:1.35rem;color:var(--bone,#cfc3a9)">${strip[k]}</b><span style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-dim,#9a8f75)">${k}</span></div>`).join("");
+  const list = document.getElementById("card-list");
+  if (list) list.innerHTML = rows.map(r => { const [rawId,no,ns,st,pr,title,who,par] = r.split("|"); const id = (rawId||"").replace(/^#/,"");
+    return `<div class="tcard" data-id="${esc(id)}" style="display:flex;gap:.8rem;align-items:center;background:var(--bg-2,#1a1610);border:1px solid var(--steel-1,#2b241a);border-left:3px solid ${COLORS[st]||"#c9973f"};border-radius:6px;padding:.65rem .85rem;cursor:pointer"><input type="checkbox" class="row-sel" value="${esc(id)}" ${sel.has(id) ? "checked" : ""} /><span class="mono dim" style="min-width:4.2rem">${esc(ns)}/${esc(no)}</span><div style="flex:1;min-width:0"><div style="color:var(--bone,#cfc3a9);font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(title)}</div><div style="display:flex;gap:.45rem;margin-top:.2rem;flex-wrap:wrap">${stBadge(st)}${priBadge(pr)}<span class="mono dim" style="font-size:.62rem">${esc(who||"")}</span>${par && par !== "0" ? `<span class="mono dim" style="font-size:.62rem">⇡${esc(par)}</span>` : ""}</div></div></div>`;
   }).join("");
+  document.querySelectorAll(".tcard").forEach(c => c.addEventListener("click", function(e){ if (e.target.closest("input")) return; location.href = "/ticket?id=" + c.dataset.id; }));
+  document.querySelectorAll(".row-sel").forEach(cb => cb.addEventListener("change", function(){ this.checked ? sel.add(this.value) : sel.delete(this.value); selCount(); }));
   document.querySelectorAll("#tick-body tr").forEach(tr => tr.addEventListener("click", function(e){
-    if (e.target.closest("input")) return; const id = Number(tr.dataset.id); openTicket(id);
+    if (e.target.closest("input")) return; const id = Number(tr.dataset.id); if (id) location.href = "/ticket?id=" + id;
   }));
   document.querySelectorAll(".row-sel").forEach(cb => cb.addEventListener("change", function(){ this.checked ? sel.add(this.value) : sel.delete(this.value); selCount(); }));
   document.getElementById("sel-all").checked = rows.length > 0 && rows.every(r => sel.has(r.split("|")[0]));
 }
 function selCount(){ document.getElementById("sel-count").textContent = sel.size ? sel.size + " selected" : "none selected"; }
 async function loadBook(){
-  const t = await call("tickets/list", { namespace: "ymir" });
-  ROWS = (t.split("\n")||[]).filter(Boolean);
-  fillFilters(); renderRows();
+  try {
+    const t = await call("tickets/list", { namespace: "ymir" });
+    ROWS = (t.split("\n")||[]).filter(Boolean);
+    fillFilters(); renderRows();
+  } catch (e) {
+    document.getElementById("tick-body").innerHTML = "<tr><td colspan=7 class=dim>ERR: " + esc(e.message) + "</td></tr>";
+  }
 }
 async function openTicket(id){
-  const old = document.getElementById("ticket-detail"); if (old) old.remove();
+  document.querySelectorAll(".ticket-detail").forEach(el => el.remove());
   const raw = await call("tickets/get", { id: Number(id) || 0 });
   const c = raw.split("|");
   const [tid, tno, ns, title, desc, pri, st, labels, who, assignee] = c;
@@ -172,16 +200,17 @@ async function openTicket(id){
   const o = document.createElement("div"); o.id = "ticket-detail"; o.className = "ticket-detail";
   o.innerHTML = `<div class="td-backdrop" onclick="document.querySelector('#ticket-detail')&&document.querySelector('#ticket-detail').remove()"></div>
 <div class="td-panel">
-  <div class="td-head" style="display:flex;align-items:center"><span class="mono dim">${esc(ns)}/${esc(tno)} · ${esc(st)}</span><button type="button" class="td-close" id="td-x">✕</button></div>
+  <div class="td-head" style="display:flex;align-items:center"><span class="mono dim">${esc(ns)}/${esc(tno)} · ${esc(st)} · born ${esc((c[10]||"").slice(0,10))}</span><button type="button" class="td-close" id="td-x">✕</button></div>
   <div class="td-strip">
     <div><b>${strip.Backlog}</b><span>Backlog</span></div><div><b>${strip.Active}</b><span>Active</span></div><div><b>${strip.Review}</b><span>Review</span></div><div><b>${strip.Blocked}</b><span>Changes</span></div><div><b>${strip.Done}</b><span>Done</span></div>
   </div>
   <h2>${esc(title || ('raw: ' + raw.slice(0, 90)))}</h2>
   <p class="td-desc">${esc(desc||"")}</p>
   <div class="td-row">
-    <span class="p-chip mono dim">${esc(pri)}</span>
-    <span class="mono dim">holder:</span><select id="td-assign">${all.filter(x=>x[3]!=="Done").map(x=>'<option value="'+esc(x[6]||"hall")+'">'+esc(x[6]||"hall")+'</option>').join("")}</select>
-    ${labels && labels !== "{}" ? `<span class="mono dim">labels: ${esc(String(labels).replace(/[{}"']/g,""))}</span>` : ""}
+    <span class="td-chip" style="border-color:${COLORS[st]||"#c9973f"};color:${COLORS[st]||"#c9973f"}">${esc(pri)}</span>
+    <label class="mono dim" style="font-size:.68rem;text-transform:lowercase;letter-spacing:.1em">holder
+      <select id="td-assign" style="margin-left:.3rem">${all.filter(x=>x[3]!=="Done").map(x=>'<option value="'+esc(x[6]||"hall")+'">'+esc(x[6]||"hall")+'</option>').join("")}</select>
+    </label>
   </div>
   <div class="td-actions">${(MARCH[st]||[]).map(s => `<button type="button" class="td-act td-march" data-to="${esc(s)}">→ ${esc(s)}</button>`).join("") || `<span class="mono dim">terminal — ${esc(st)}</span>`}</div>
   <div class="td-comments" id="td-comments">${(comments.split("\n")||[]).filter(Boolean).map(x => { const p = x.split("|"); return `<div class="td-comment"><span class="a">${esc(p[1])} · ${esc(p[3])}</span><div>${esc(p[2])}</div></div>`; }).join("") || `<div class="mono dim" style="font-size:.7rem">no comments yet</div>`}</div>
@@ -193,8 +222,16 @@ async function openTicket(id){
   document.querySelectorAll(".td-march").forEach(b => b.addEventListener("click", async () => { const to = b.dataset.to; const r = await call("tickets/update", { id, status: to }); if (/updated/.test(r)) { o.remove(); loadBook(); } }));
   document.getElementById("td-comment-btn").addEventListener("click", async () => { const v = document.getElementById("td-comment-text").value.trim(); if (!v) return; const r = await call("comments/post", { id, body: v }); if (/carved/.test(r)) o.remove(); });
 }
+async function fillNS(){
+  const raw = await call("namespaces_list", {});
+  const el = document.getElementById("ns-pick"); if (!el) return;
+  const opts = (raw.split("\n")||[]).filter(Boolean);
+  if (!opts.length) return;
+  el.innerHTML = "";
+  opts.forEach(o => { const [s, n] = o.split("|"); const opt = document.createElement("option"); opt.value = s; opt.textContent = s + (n && n !== s ? " — " + n : ""); el.appendChild(opt); });
+}
 window.addEventListener("DOMContentLoaded", async () => {
-  await init(); loadBook();
+  await init(); fillNS().catch(()=>{}); loadBook();
   ["f-status","f-priority","f-assignee"].forEach(id => document.getElementById(id).addEventListener("change", renderRows));
   document.getElementById("sel-all").addEventListener("change", function(){
     const vis = Array.from(document.querySelectorAll(".row-sel"));
