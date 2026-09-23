@@ -95,9 +95,14 @@ remote_leg() {
   [ -n "$tgz" ] || { say "  no tarball here; packing first"; pack_and_hull || return 1; tgz="$TARBALL"; }
   ssh -o BatchMode=yes "$REMOTE" "rm -rf ~/npm-pretest && mkdir -p ~/npm-pretest" 2>/dev/null || { fail "cannot reach $REMOTE"; return 1; }
   scp -q "$tgz" "$REMOTE":~/npm-pretest/pkg.tgz 2>/dev/null || { fail "scp to $REMOTE failed"; return 1; }
-  ssh -o BatchMode=yes "$REMOTE" "export PATH=\$HOME/.local/share/mise/shims:\$HOME/.local/bin:/usr/bin:/bin
+  local rv; rv="$(ssh -o BatchMode=yes "$REMOTE" "export PATH=\$HOME/.local/share/mise/shims:\$HOME/.local/bin:/usr/bin:/bin
 D=~/npm-pretest/seat; npm install --prefix \$D ~/npm-pretest/pkg.tgz >/dev/null 2>&1 && [ -d \$D/node_modules/@zerwiz/ymir ] \
-  && { N=\$D/node_modules/@zerwiz/ymir; T=\$(ls \$N/bin | wc -l); node \$N/bin/ymir.js --version >/dev/null 2>&1; B1=\$?; [ -d \$N/tools/mill/systemd ] && [ \$(find \$N/tools -name 'server*.mjs' | wc -l) -ge 2 ]; B2=\$?; echo \"remote tools=\$T ver=\$B1 hull=\$B2\"; ( [ \$T -ge 100 ] && [ \$B1 = 0 ] && [ \$B2 = 0 ] ) && echo REMOTE_PASS || echo REMOTE_FAIL; }" 2>/dev/null | tail -1
+  && { N=\$D/node_modules/@zerwiz/ymir; T=\$(ls \$N/bin | wc -l); node \$N/bin/ymir.js --version >/dev/null 2>&1; B1=\$?; [ -d \$N/tools/mill/systemd ] && [ \$(find \$N/tools -name 'server*.mjs' | wc -l) -ge 2 ]; B2=\$?; echo \"remote tools=\$T ver=\$B1 hull=\$B2\"; ( [ \$T -ge 100 ] && [ \$B1 = 0 ] && [ \$B2 = 0 ] ) && echo REMOTE_PASS || echo REMOTE_FAIL; }" 2>/dev/null | tail -1)"
+  case "$rv" in
+    *REMOTE_PASS*) say "  $REMOTE: PASS" ;;
+    *REMOTE_FAIL*) fail "$REMOTE: the sandbox install or smoke failed" ;;
+    *) fail "$REMOTE: unreachable or silent (no verdict)" ;;
+  esac
 }
 
 case "${1-}" in
