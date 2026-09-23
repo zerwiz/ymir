@@ -128,3 +128,18 @@ if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS#
 
 # Heal this home forward (structure migrations) after every update.
 [ -x "$SCRIPT_DIR/ymir-migrate.sh" ] && "$SCRIPT_DIR/ymir-migrate.sh" apply >/dev/null 2>&1 || true
+
+# REBIND the harness surfaces (Valknut). An update pulls new agents, skills and
+# Pi extensions into the tree, but the harnesses load them from their OWN homes —
+# Pi reads ${HOME}/.pi/agent/extensions/. Without this step a merged extension
+# fix sits in the repo while the RUNNING harness keeps the old code, which is how
+# a hand-copy became necessary (2026-09-23). No installation or update should
+# leave the surfaces stale: bind them here, every time.
+if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
+  print_step "loaders" 2>/dev/null || printf '  loaders: '
+  if "$SCRIPT_DIR/valknut-load.sh" --all --global >/dev/null 2>&1; then
+    printf 'rebound (agents · skills · pi extensions)\n'
+  else
+    printf 'WARN — valknut-load reported errors; run bin/valknut-load.sh --status\n'
+  fi
+fi
