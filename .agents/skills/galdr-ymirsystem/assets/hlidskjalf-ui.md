@@ -548,3 +548,22 @@ proof of anything:
 Verified both ways: `GET /api/session` without a cookie is `authed:false` and
 `/api/orders` is 401; the same calls with the marker from 127.0.0.1 are
 `authed:true` (login = the operator) and 200.
+
+### The launcher icons are re-cut, never stale (2026-09-23)
+
+The SVGs carry the design (stone + rune + tint); the launcher icons are
+**rasterised copies**, and they go stale the moment the design moves — the
+electron icons for Hlidskjalf and Óðrerir were still **blue**, and
+`ymir-icon.png` was a **grayscale** relic. `bin/design-icon.sh raster` re-cuts
+every app icon from its own `public/icon.svg` (rsvg-convert, else magick):
+
+- hlidskjalf → `electron/icon.png` (512), `public/apple-touch-icon.png` (180);
+- odrerir → `electron/icon.png` (512), `public/apple-touch-icon.png` (180);
+- sessrumnir → `resources/icons/icon-{16…512}.png` + `icon.png` +
+  `public/apple-touch-icon.png` (180) + the `.ico` files;
+- smidja → `apps/smidja-factory/apps/visualizer/desktop/icon.png` (512);
+- the Ymir emblem (**algiz** on stone) → `hlidskjalf/public/ymir-icon.png`, and
+  the smithy's icon → `hlidskjalf/electron/smidja-icon.png`.
+
+Run it whenever the design or a glyph changes; it is idempotent and writes
+nothing else.
