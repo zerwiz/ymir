@@ -30,7 +30,45 @@ DST="$HOME/.fleet"
 # The tree that SHIPS the templates may differ from the seat's platform root
 # (an updater or installer from a source tree against a packed seat). Normally
 # one and the same; the override is how a changed tree raises an existing seat.
-FLEET_TEMPLATE_ROOT="${FLEET_TEMPLATE_ROOT:-$ROOT}"
+#
+# BUT A CALLER'S TREE MUST NEVER BE WRITTEN INTO THE OPERATOR'S PERMANENT UNITS.
+# 2026-09-24: a smith ran an ensure from its Yggdrasil worktree and this seat's
+# ~/.config/systemd/user/nornir.service came out holding
+#   ExecStart=/bin/bash <main>/.yggdrasil/<id>/bin/nornir-cron-start.sh
+# — a DISPOSABLE path. Pruning the worktree would have broken the seat's cron at
+# boot, silently. So when no explicit override is given, resolve to the MAIN tree
+# through git's common dir (the eindri-watch.sh lesson: a worktree's ensure and
+# the main tree's ensure must materialize the same durable paths), and the
+# materializer below refuses any unit that still carries a .yggdrasil/ path.
+if [ -z "${FLEET_TEMPLATE_ROOT:-}" ]; then
+  FLEET_TEMPLATE_ROOT="$ROOT"
+  if command -v git >/dev/null 2>&1 && [ -e "$ROOT/.git" ]; then
+    _ftr_common="$(git -C "$ROOT" rev-parse --git-common-dir 2>/dev/null)"
+    if [ -n "$_ftr_common" ]; then
+      _ftr_main="$(cd "$ROOT" && cd "$(dirname "$_ftr_common")" 2>/dev/null && pwd)"
+      # Inside a worktree this is the MAIN tree; in the main tree it is itself,
+      # and the != keeps it idempotent.
+      if [ -n "$_ftr_main" ] && [ "$_ftr_main" != "$ROOT" ] && [ -d "$_ftr_main/tools/mill/systemd" ]; then
+        FLEET_TEMPLATE_ROOT="$_ftr_main"
+      fi
+    fi
+    unset _ftr_common _ftr_main
+  fi
+fi
+# A unit that names a disposable tree is a boot failure waiting to happen: refuse
+# it loudly rather than seat it.
+refuse_disposable_path() {  # <unit-file>
+  local u="${1-}" bad
+  [ -f "$u" ] || return 0
+  bad="$(grep -n '\.yggdrasil/' "$u" 2>/dev/null | head -1)" || true
+  if [ -n "$bad" ]; then
+    say "fleet: REFUSED — $u names a disposable worktree path:" >&2
+    say "fleet:   $bad" >&2
+    say "fleet:   remedy: re-run from the MAIN tree, or pass FLEET_TEMPLATE_ROOT=<the durable root>" >&2
+    return 1
+  fi
+  return 0
+}
 WELL_URL="${FLEET_WELL_URL:-http://127.0.0.1:8317/mcp}"
 SKILLS_URL="${FLEET_SKILLS_URL:-http://127.0.0.1:8319/mcp}"
 SKULD_URL="${FLEET_SKULD_URL:-http://127.0.0.1:8320}"
@@ -132,6 +170,7 @@ materialize_embed() {
   # with the remedy — never a written unit, never a restart loop.
   if [ -x /usr/local/bin/llama-server ] && [ -f "$HOME/Models/embed/nomic-embed-text-v1.5.Q4_K_M.gguf" ]; then
     cp -f "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/embed.service" "$HOME/.config/systemd/user/embed.service"
+    refuse_disposable_path "$HOME/.config/systemd/user/embed.service" || return 1
     return 0
   fi
   say "fleet: embed — the embedding stone is owed (heart/forge) but cannot rise:" >&2
@@ -175,12 +214,14 @@ materialize_web_unit() {  # <program> — substitute the per-seat roots into the
       -e "s|__YMIR_HLIDSKJALF_API_PORT__|$HLIDSKJALF_API_PORT|g" \
       -e "s|__YMIR_SMIDJA_PORT__|$SMIDJA_PORT|g" \
       "$template" > "$dst"
+  refuse_disposable_path "$dst" || return 1
 }
 
 materialize_units() {  # <owed...> — every owed unit + the target; purge the stale
   local owed="$1" p="" i=0
   # the ONE target, every seat
   cp -f "$FLEET_TEMPLATE_ROOT/tools/web/systemd/ymir.target" "$HOME/.config/systemd/user/ymir.target"
+  refuse_disposable_path "$HOME/.config/systemd/user/ymir.target" || return 1
   mkdir -p "$HOME/.config/systemd/user"
   for p in $owed; do
     case "$p" in
@@ -195,6 +236,7 @@ materialize_units() {  # <owed...> — every owed unit + the target; purge the s
       *)  # the mill/offices — %h-native templates, copied as they ship
         if [ -f "$(PROGRAM_UNIT_SRC "$p")" ]; then
           cp -f "$(PROGRAM_UNIT_SRC "$p")" "$HOME/.config/systemd/user/$p.service"
+          refuse_disposable_path "$HOME/.config/systemd/user/$p.service" || return 1
         else
           say "fleet: $p — no unit template (tools/mill/systemd/$p.service missing)" >&2
           EMBED_MISSING=1  # any missing template is a loud gap, not a skip
