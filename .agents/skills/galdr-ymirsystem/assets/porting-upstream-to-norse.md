@@ -212,7 +212,7 @@ node --check .opencode/plugins/*.js .opencode/plugins/lib/*.js 2>/dev/null
 | Runes append | `bash bin/runes-append.sh smoke event --message hi` | `runes: appended … checksum=…`; ledger gains one chained line |
 | Brief scaffold | `bash bin/erindi-brief.sh T-smoke repo --mode local-only` | `data/T-smoke/brief.md` with `Delivery contract: mode=local-only` |
 | Spawn fail-closed | `bash bin/einherjar-spawn.sh T-smoke . --mode local-only --harness bogus` | refuses: not verified |
-| Dispatch backstop | with `config/eindri-dispatch.json` present, omit `--harness` | refuses: pass an explicit `--harness` |
+| Dispatch backstop | with an ACTIVE profile (no unfilled `<...>` tokens; `bin/dispatch-profile.sh active`), omit `--harness` | refuses: pass an explicit `--harness`; a template-only host resolves from the machine (D4, 2026-09-24) |
 | Vör read | `bash bin/vor-crew-state.sh T-smoke` | one `state: … · source: … · …` line, exit 0 |
 
 ### 7.5 Naming audit
