@@ -12,7 +12,7 @@ const PORT = Number(process.env.PORT || 8321);
 const VAULT = process.env.SNOTRA_VAULT || process.env.YMIR_HOME || join(process.env.HOME, "Documents", "ymirhome");
 const MINUTES_DIR = process.env.SNOTRA_MINUTES_DIR || join(VAULT, "hodd", "workspaces", "meetings");
 
-const server = new McpServer({ name: "snotra", version: "0.1.0" });
+const SERVER_DEF = { name: "snotra", version: "0.1.0" };
 
 // --- helpers ----------------------------------------------------------------
 
@@ -40,84 +40,90 @@ async function readMinute(name) {
   }
 }
 
-// --- tools ------------------------------------------------------------------
+// --- tools & resource (registered per-connection) ---------------------------
 
-server.registerTool(
-  "snotra_list",
-  {
-    title: "List stored meetings",
-    description: "List all meeting minutes in the vault (read-only).",
-    inputSchema: {}
-  },
-  async () => {
-    const entries = await listMinutes();
-    const lines = entries.map(e => `${e.name}  ${e.size}B  ${e.mtime.toISOString().slice(0, 10)}`);
-    return { content: [{ type: "text", text: lines.join("\n") || "(no meetings stored)" }] };
-  }
-);
-
-server.registerTool(
-  "snotra_read",
-  {
-    title: "Read a meeting minute",
-    description: "Read the full content of a stored meeting minute.",
-    inputSchema: { name: z.string() }
-  },
-  async ({ name }) => {
-    const text = await readMinute(name);
-    if (!text) return { content: [{ type: "text", text: `no meeting found: ${name}` }], isError: true };
-    return { content: [{ type: "text", text: text }] };
-  }
-);
-
-server.registerTool(
-  "snotra_search",
-  {
-    title: "Search meeting minutes",
-    description: "Search meeting minutes for a keyword or phrase (case-insensitive).",
-    inputSchema: { query: z.string() }
-  },
-  async ({ query }) => {
-    const entries = await listMinutes();
-    const results = [];
-    for (const e of entries) {
-      const text = await readMinute(e.name);
-      if (text && text.toLowerCase().includes(query.toLowerCase())) {
-        results.push({ name: e.name, snippet: text.slice(0, 200) });
-      }
+function registerTools(mcp) {
+  mcp.registerTool(
+    "snotra_list",
+    {
+      title: "List stored meetings",
+      description: "List all meeting minutes in the vault (read-only).",
+      inputSchema: {}
+    },
+    async () => {
+      const entries = await listMinutes();
+      const lines = entries.map(e => `${e.name}  ${e.size}B  ${e.mtime.toISOString().slice(0, 10)}`);
+      return { content: [{ type: "text", text: lines.join("\n") || "(no meetings stored)" }] };
     }
-    const lines = results.map(r => `${r.name}\n  ${r.snippet}...`);
-    return { content: [{ type: "text", text: lines.join("\n\n") || "(no matches)" }] };
-  }
-);
+  );
 
-server.registerTool(
-  "snotra_summary",
-  {
-    title: "Summary of all meetings",
-    description: "Return a brief summary of all stored meetings (names, dates, topics).",
-    inputSchema: {}
-  },
-  async () => {
-    const entries = await listMinutes();
-    const lines = entries.map(e => `${e.name}  ${e.mtime.toISOString().slice(0, 10)}`);
-    return { content: [{ type: "text", text: `Meetings: ${entries.length}\n${lines.join("\n")}` }] };
-  }
-);
+  mcp.registerTool(
+    "snotra_read",
+    {
+      title: "Read a meeting minute",
+      description: "Read the full content of a stored meeting minute.",
+      inputSchema: { name: z.string() }
+    },
+    async ({ name }) => {
+      const text = await readMinute(name);
+      if (!text) return { content: [{ type: "text", text: `no meeting found: ${name}` }], isError: true };
+      return { content: [{ type: "text", text: text }] };
+    }
+  );
 
-// --- resource ---------------------------------------------------------------
+  mcp.registerTool(
+    "snotra_search",
+    {
+      title: "Search meeting minutes",
+      description: "Search meeting minutes for a keyword or phrase (case-insensitive).",
+      inputSchema: { query: z.string() }
+    },
+    async ({ query }) => {
+      const entries = await listMinutes();
+      const results = [];
+      for (const e of entries) {
+        const text = await readMinute(e.name);
+        if (text && text.toLowerCase().includes(query.toLowerCase())) {
+          results.push({ name: e.name, snippet: text.slice(0, 200) });
+        }
+      }
+      const lines = results.map(r => `${r.name}\n  ${r.snippet}...`);
+      return { content: [{ type: "text", text: lines.join("\n\n") || "(no matches)" }] };
+    }
+  );
 
-server.resource(
-  "the-ear",
-  "snotra://ear",
-  "the meeting ear — how many meetings are stored",
-  async () => {
-    const entries = await listMinutes();
-    return {
-      contents: [{ uri: "snotra://ear", mimeType: "text/plain", text: `meetings: ${entries.length}` }]
-    };
-  }
-);
+  mcp.registerTool(
+    "snotra_summary",
+    {
+      title: "Summary of all meetings",
+      description: "Return a brief summary of all stored meetings (names, dates, topics).",
+      inputSchema: {}
+    },
+    async () => {
+      const entries = await listMinutes();
+      const lines = entries.map(e => `${e.name}  ${e.mtime.toISOString().slice(0, 10)}`);
+      return { content: [{ type: "text", text: `Meetings: ${entries.length}\n${lines.join("\n")}` }] };
+    }
+  );
+
+  mcp.resource(
+    "the-ear",
+    "snotra://ear",
+    "the meeting ear — how many meetings are stored",
+    async () => {
+      const entries = await listMinutes();
+      return {
+        contents: [{ uri: "snotra://ear", mimeType: "text/plain", text: `meetings: ${entries.length}` }]
+      };
+    }
+  );
+}
+
+function newMcp() {
+  const mcp = new McpServer(SERVER_DEF);
+  registerTools(mcp);
+  return mcp;
+}
 
 // --- serve ------------------------------------------------------------------
 
@@ -159,7 +165,7 @@ import("node:http").then(({ default: http }) => {
     }
 
     if (!entry) {
-      const mcp = server;
+      const mcp = newMcp();
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => crypto.randomUUID(),
         onsessioninitialized: (id) => {

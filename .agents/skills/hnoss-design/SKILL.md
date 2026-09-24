@@ -81,3 +81,13 @@ od mcp install opencode        # bind the engine to OpenCode
 od mcp install pi              # and to Pi
 bin/valknut-load.sh --all      # rebind agents/skills after adding this skill
 ```
+
+**This seat (heimdall, 2026-09-24):** the daemon is a Docker container on
+loopback `:7456`, the bridge is `open-design-mcp` wired into pi via
+`~/.local/bin/hnoss-mcp-launch.sh`, and design generation proxies through our
+own llama-swap rail. **Seating the Allfather:** the daemon is loopback-only
+and single-tenant, so `OPEN_DESIGN_DISABLE_API_AUTH=1` in
+`~/opendesign/deploy/.env` — no sign-in box; `http://127.0.0.1:7456` opens
+straight to the Studio —** and `agentId` must be `pi` (the CLI whose registry is
+the Allfather's 54 models at llama-swap), NEVER a cloud model name.
+Full runbook: `DESIGN.md` → `RUNTIME ADDENDUM` + `The model truth`. Full runbook: `DESIGN.md` → `RUNTIME`.
