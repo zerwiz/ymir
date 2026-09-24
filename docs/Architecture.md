@@ -157,6 +157,28 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
 - **Skrymir** — embedded file browser (FileBrowser) scoped per tenant via Bifrost.
 - **Telegram / Web chat** — remote command and approve while away.
 
+**The gates tell the truth (added 2026-09-24).** Three laws, each a guarantee:
+
+- **The desktop runtime is ONE resolver, and absence is never success.**
+  `bin/electron-lib.sh` finds the Electron binary in every shape npm leaves
+  behind — app-local, the nearest ancestor hoist (workspace root), the sibling
+  package — and every guard returns *failure* when nothing resolves. The
+  first-run install is workspace-aware (a member's local `node_modules` would
+  be reconciled away). `bin/desktop-verify.sh` proves each surface runs
+  (`--version`) and is routed right: the class invariant — `app_class` ==
+  `.desktop` StartupWMClass == window rule == the app's own slug.
+  `bin/graphics-lib.sh` classifies the DRM devices and decides the GPU policy
+  (software render on a fragile hybrid; `YMIR_DESKTOP_DISABLE_GPU` overrides).
+- **The Cron gate shows local AND server schedules.** `/api/cron` reads the
+  scheduler's OWN config (`$YMIR_HOME/config/cron.yaml`), reporting
+  source/why/roles/last-fired; `/api/cron/seats` reads whynot · zerwizserver
+  over the ssh ring — read on demand, machine-local (plan 51 rule 1). The
+  board and the loop share ONE line grammar: a `@role[,role]` gate may sit
+  before OR after the time.
+- **The Files gate folds.** The realm tree is folded by default; folders wear
+  folder-shaped SVG icons, open and close on click, and the initial selection's
+  ancestor chain stays open.
+
 ### 3.10 Automation — Cron, Mjollnir, Valhalla
 - **Cron runner**: stateless spawn → inject AGENTS.md + task prompt → execute →
   write realm daily log → exit. Daily briefing 07:00, git backup, social poster.
@@ -164,6 +186,23 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
   fix + tests → `gh pr create` → human review in Hlidskjalf. Never force-merges.
 - **Valhalla**: PM2/Docker/systemd lifecycle (`process_controller.ts`) + fleet
   registry (`app_registry.json`). Missions, processes, and worker clusters.
+
+**Nornir's grammar and Glitnir's truth (added 2026-09-24):**
+
+- **A running loop embeds its parser at spawn** — a parser fix needs the seat
+  pulled AND a loop restart. The role gate parses BOTH orders (`@heart 06:00
+  bin/x` or `06:00 @heart bin/x`); the heart's record jobs were once silently
+  dead because only the after-time shape matched.
+- **Loops are started BY a session** and retire when the session lock dies;
+  nothing starts at boot — a supervised `nornir.service` on the server seats is
+  the pending decision (plan 54).
+- **Glitnir reads real GitHub**: `/api/reviews` lists open PRs with
+  `reviewDecision` + `mergeable` (GitHub `APPROVED` + green → `state:
+  'approved'`, CI failing → `changes`, draft → `open`), passed an explicit
+  `--repo` (default `zerwiz/ymir`) so packaged installs read PRs too, and
+  returns `{ cards, ghError }` — a dead GitHub read is a named warning, never
+  a silent blank. The SPA counts real PRs only (the lint + compliance gate card
+  is a gate, not a PR) and refreshes on a 30s beat.
 
 ### 3.11 Þjazi Backend Integration
 - **Þjazi** is an experimental agent-native terminal backend with native per-pane agent state and push events, required when running sub-agents inside terminal panes.
