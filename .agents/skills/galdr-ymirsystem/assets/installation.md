@@ -650,7 +650,11 @@ packaged tree — `bin/npm-pretest.sh local`). PASS, open the PR with the proof
 line; FAIL, no PR — the pack is mended first (`bin/npm-pretest.sh` names the
 wound). `--body` prints the proof block to paste under the PR description,
 and the external publish gate (`bin/npm-pretest.sh` full) still runs the remote
-seat legs before the shelf ever sails.
+seat legs before the shelf ever sails. **Bootability is proven, not assumed**
+(2026-09-24): the same leg runs the launcher first-run install in the package
+and verifies every surface resolves an executable electron that answers
+`--version` plus a built web index — the electrons work and start, or the PR
+never opens.
 
 ## What the system adopts (engines)
 
