@@ -40,7 +40,7 @@ case "${1-}" in
     ;;
 esac
 
-[ -x "$ROOT/bin/npm-pretest.sh" ] || { printf 'pr-pretest[1]{gate,state}:\n  "fail","no bin/npm-pretest.sh in this tree"\n' >&2; exit 1; }
+[ -r "$ROOT/bin/npm-pretest.sh" ] || { printf 'pr-pretest[1]{gate,state}:\n  "fail","no bin/npm-pretest.sh in this tree"\n' >&2; exit 1; }
 
 # The real local npm installation: pack the exact artifact, sandbox-install with
 # a genuine `npm install <tarball>`, and smoke the installed essence. Remote
