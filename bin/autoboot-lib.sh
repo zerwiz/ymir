@@ -16,6 +16,7 @@
 #   cards     the seats' card root (:8318)                heart
 #   skills-mcp the skills well MCP door (:8319)           heart
 #   skuld     the ticket hall (:8320)                     heart
+#   snotra    the meeting ear MCP face (:8321)              heart
 #   embed     the embedding stone (:8500)                 heart,forge
 #   hlidskjalf-spa  the high seat's SPA (:3888)            dev
 #   hlidskjalf-gate the gate API (:3889)                  dev
@@ -56,11 +57,11 @@ if [ -z "$AUTOBOOT_STATE_DIR" ]; then
 fi
 
 # --- the one table --------------------------------------------------------
-AUTOBOOT_PROGRAMS="well-mcp ratatoskr mill-worker cards skills-mcp skuld embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
+AUTOBOOT_PROGRAMS="well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
 
 autoboot_role_programs() {  # <role> → prints the program ids the role owes
   case "${1-}" in
-    heart) printf '%s\n' "well-mcp ratatoskr mill-worker cards skills-mcp skuld embed nornir" ;;
+    heart) printf '%s\n' "well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed nornir" ;;
     forge) printf '%s\n' "embed" ;;
     dev)   printf '%s\n' "well-mcp hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir" ;;
     hand|*) printf '%s\n' "" ;;
@@ -70,7 +71,7 @@ autoboot_role_programs() {  # <role> → prints the program ids the role owes
 autoboot_program_roles() {  # <program> → prints the roles that owe it
   case "${1-}" in
     well-mcp)       printf '%s\n' "heart dev" ;;
-    ratatoskr|mill-worker|cards|skills-mcp|skuld) printf '%s\n' "heart" ;;
+    ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra) printf '%s\n' "heart" ;;
     embed)          printf '%s\n' "heart forge" ;;
     hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja) printf '%s\n' "dev" ;;
     nornir)         printf '%s\n' "heart dev" ;;
@@ -81,6 +82,7 @@ autoboot_program_roles() {  # <program> → prints the roles that owe it
 autoboot_program_desc() {  # <program> → one human line
   case "${1-}" in
     well-mcp)       printf '%s\n' "the well's MCP door (:8317)" ;;
+    snotra)         printf '%s\n' "the meeting ear's MCP face (:8321, read-only minutes)" ;;
     ratatoskr)      printf '%s\n' "the A2A node (:8301)" ;;
     mill-worker)    printf '%s\n' "the mill worker" ;;
     cards)          printf '%s\n' "the cards root (:8318)" ;;
