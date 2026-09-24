@@ -47,19 +47,28 @@ LOG_FILE="$YMIR_STATE_DIR/sessrumnir.log"
 
 # npm gates install scripts, so the Electron runtime a seat needs is often absent
 # after a global install — the window then cannot open and says nothing useful.
-# Mend it before refusing (the same lesson as scripts/electron.sh).
+# Mend it before refusing (the same lesson as scripts/electron.sh). Resolver-aware
+# (P1): the binary is found by electron_bin, the mend installs at the workspace
+# root for a member (P3), and fetches land in the resolved dir.
 repair_runtime() {
-  local dir="$1"
-  [ -f "$dir/node_modules/electron/path.txt" ] && return 0
+  local dir="$1" root bin edir installd
+  if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$(dirname "$0")/electron-lib.sh" ]; then
+    . "$(dirname "$0")/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
+  fi
+  root="$(electron_root "$dir")"
+  bin="$(electron_bin "$dir" "$root" sessrumnir 2>/dev/null || true)"
+  [ -n "$bin" ] && [ -x "$bin" ] && return 0
   command -v npm >/dev/null 2>&1 || return 1
   echo "Sessrúmnir — its Electron runtime is absent; fetching it (this is the gated postinstall)…" >&2
   # tier 1 — the deps may be ungated entirely; tier 2 — approve + rebuild
-  ( cd "$dir" && { npm install --include=dev >/dev/null 2>&1; npm install-scripts approve electron >/dev/null 2>&1 || true; npm rebuild electron >/dev/null 2>&1; } )
+  if electron_is_workspace_member "$dir" "$root"; then installd="$root"; else installd="$dir"; fi
+  ( cd "$installd" && { npm install --include=dev >/dev/null 2>&1; npm install-scripts approve electron >/dev/null 2>&1 || true; npm rebuild electron >/dev/null 2>&1; } )
   # tier 3 — the postinstall's own downloader, then the PROVEN zip road
-  [ -f "$dir/node_modules/electron/install.js" ] && ( cd "$dir/node_modules/electron" && node install.js >/dev/null 2>&1 ) || true
-  [ -r "$(dirname "$0")/electron-lib.sh" ] && . "$(dirname "$0")/electron-lib.sh"
-  command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$dir" || true
-  [ -x "$dir/node_modules/electron/dist/electron" ]
+  edir="$(electron_pkg_dir "$dir" "$root" sessrumnir 2>/dev/null || true)"
+  [ -n "$edir" ] && [ -f "$edir/install.js" ] && ( cd "$edir" && node install.js >/dev/null 2>&1 ) || true
+  command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$dir" "$root" sessrumnir || true
+  bin="$(electron_bin "$dir" "$root" sessrumnir 2>/dev/null || true)"
+  [ -n "$bin" ] && [ -x "$bin" ]
 }
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac

@@ -55,6 +55,11 @@ hoard_local_env YMIR_ENV_FILE
 . "$SCRIPT_DIR/hoard-lib.sh"
 # shellcheck source=bin/app-lib.sh
 . "$SCRIPT_DIR/app-lib.sh"
+# The runtime resolver answers for every desktop surface (P1, 2026-09-24); load
+# it beside app-lib so the install steps and the verifier speak its language.
+if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/electron-lib.sh" ]; then
+  . "$SCRIPT_DIR/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
+fi
 ymir_home_root YMIR_HOME
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
 # @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
@@ -736,7 +741,9 @@ step_spa() {
   fi
   # Electron's runtime comes from a gated postinstall. package.json pins the
   # approval, but verify the binary so the desktop shell never fails silently.
-  if [ -x "$app/node_modules/electron/dist/electron" ] || [ ! -d "$app/electron" ]; then
+  # The answer comes from the resolver (P1): app-local, workspace-hoisted, or
+  # the sibling package — never one hardcoded path.
+  if [ "$(electron_runtime_state "$app" "$ROOT" "$(app_pkg hlidskjalf)" 2>/dev/null || echo absent)" = ok ]; then
     add hlidskjalf OK "installed + built + electron (served on :3888)"
   else
     add hlidskjalf WARN "installed + built, but electron has no binary — npm rebuild electron"
@@ -869,30 +876,40 @@ step_services() {
 step_desktop() {
   if [ "$NO_DESKTOP" = 1 ]; then add desktop SKIP "--no-desktop"; return; fi
   if [ ! -x "$ROOT/scripts/electron.sh" ]; then add desktop SKIP "no scripts/electron.sh"; return; fi
-  if [ "$CHECK" = 1 ]; then add desktop OK "would launch Hlidskjalf + Smíðja"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    # A check probes: every surface must RESOLVE an executable runtime and be
+    # routed by the right class (bin/desktop-verify.sh — read-only, few
+    # seconds). Fails loudly, naming the surface and the resolved path.
+    if [ -x "$ROOT/bin/desktop-verify.sh" ]; then
+      if out="$("$ROOT/bin/desktop-verify.sh" 2>&1)"; then
+        add desktop OK "verified: every surface resolves a runnable Electron and is routed right"
+      else
+        add desktop FAIL "$(printf '%s' "$out" | grep -m1 'FAIL' | sed 's/^  //')"
+      fi
+    else
+      add desktop OK "would verify + launch the desktop shells"
+    fi
+    return
+  fi
   # A headless host has no display; launching a window would only fail.
   # DISPLAY/WAYLAND_DISPLAY are X11/Wayland variables — macOS has a display and
   # neither of them, so testing only those would wrongly skip every Mac.
   if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && [ "$(ymir_os)" != macos ]; then
     add desktop SKIP "no display (headless) — run scripts/electron.sh start --both"; return
   fi
-  # Placement is the Omarchy layer's job and has already run (step_omarchy runs
-  # before this step), so here we only launch.
-  # Verify the runtime before claiming anything: a skipped Electron postinstall
-  # leaves a partial runtime that fails to launch while every build still passes.
-  if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/electron-lib.sh" ]; then
-    . "$SCRIPT_DIR/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
-  fi
-  local shell partial=""
-  for shell in hlidskjalf odrerir sessrumnir; do
-    local dir d
-    app_dir "$shell" dir || continue
-    d="$(electron_runtime_state "$dir" 2>/dev/null || true)"
-    [ "$d" = partial ] && partial="$partial $shell"
-  done
-  if [ -n "$partial" ]; then
-    add desktop WARN "the Electron runtime is PARTIAL for:$partial — the web surfaces stand; approve and rebuild to launch the shells"
-    return 0
+  # P4 (2026-09-24): the INSTALL-TIME guarantee — before any window is claimed,
+  # every surface must resolve an executable runtime that ANSWERS --version and
+  # is routed by the right class. A runtime that is merely absent is a FAILURE,
+  # never the old silent SKIP: the launcher must not proceed into a path that
+  # npm will never make.
+  if [ -x "$ROOT/bin/desktop-verify.sh" ]; then
+    local vout vrc
+    vout="$("$ROOT/bin/desktop-verify.sh" 2>&1)"
+    vrc=$?
+    if [ "$vrc" != 0 ]; then
+      add desktop FAIL "$(printf '%s' "$vout" | grep -m1 'FAIL' | sed 's/^  //')"
+      return 0
+    fi
   fi
   # One window per surface that is here: the halls are not one app.
   raised=0
@@ -901,9 +918,20 @@ step_desktop() {
   done
   [ -x "$ROOT/bin/sessrumnir.sh" ] && "$ROOT/bin/sessrumnir.sh" start >/dev/null 2>&1 && raised=$((raised+1))
   if [ "$raised" -ge 2 ]; then
-    add desktop OK "raised $raised window(s) — Hlidskjalf · Smíðja · Óðrerir · Sessrúmnir"
+    add desktop OK "verified + raised $raised window(s) — Hlidskjalf · Smíðja · Óðrerir · Sessrúmnir"
   else
-    add desktop WARN "could not raise the desktop apps — ymir hlidskjalf | smidja | sessrumnir"
+    add desktop WARN "could not raise every desktop app — ymir hlidskjalf | smidja | sessrumnir"
+  fi
+  # The routing is then proven LIVE (P5): with the windows up, the compositor
+  # must actually hold each surface's class. One retry lets a slow map settle.
+  if [ -x "$ROOT/bin/desktop-verify.sh" ] && command -v hyprctl >/dev/null 2>&1; then
+    local t=0
+    while [ "$t" -lt 2 ] && ! "$ROOT/bin/desktop-verify.sh" --live >/dev/null 2>&1; do
+      t=$((t+1)); sleep 3
+    done
+    if ! "$ROOT/bin/desktop-verify.sh" --live >/dev/null 2>&1; then
+      add desktop FAIL "a raised surface's window is missing its class on the compositor — bin/desktop-verify.sh --live names it"
+    fi
   fi
 }
 
