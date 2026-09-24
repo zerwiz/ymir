@@ -129,6 +129,19 @@ if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS#
 # Heal this home forward (structure migrations) after every update.
 [ -x "$SCRIPT_DIR/ymir-migrate.sh" ] && "$SCRIPT_DIR/ymir-migrate.sh" apply >/dev/null 2>&1 || true
 
+# Eir checks after every update, so a desktop that cannot open is REPORTED and
+# never silently dead (P8, 2026-09-24). The update is never blocked on a
+# broken surface — the report is the loudness; the Nornir job keeps the watch
+# daily.
+if [ -x "$SCRIPT_DIR/eir-doctor.sh" ]; then
+  if eir_out="$("$SCRIPT_DIR/eir-doctor.sh" check 2>&1)"; then
+    printf 'eir: check clean\n'
+  else
+    eir_broken="$(printf '%s' "$eir_out" | sed -n '2s/.*,\([0-9][0-9]*\)$/\1/p')"
+    printf 'eir: %s surface(s) need mending — bin/eir-doctor.sh (the row above names them)\n' "${eir_broken:-?}"
+  fi
+fi
+
 # REBIND the harness surfaces (Valknut). An update pulls new agents, skills and
 # Pi extensions into the tree, but the harnesses load them from their OWN homes —
 # Pi reads ${HOME}/.pi/agent/extensions/. Without this step a merged extension
