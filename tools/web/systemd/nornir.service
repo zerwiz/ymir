@@ -1,0 +1,12 @@
+[Unit]
+Description=Nornir — the seat's scheduled jobs, read from the operator's config/cron.yaml (this seat's own schedule, never a hardcoded list)
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+ExecStart=/bin/bash __YMIR_BIN_DIR__/nornir-cron-start.sh
+ExecStop=/bin/bash __YMIR_BIN_DIR__/nornir-cron-start.sh --stop
+
+[Install]
+WantedBy=ymir.target

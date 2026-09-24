@@ -1,0 +1,4 @@
+[Unit]
+Description=Ymir — the platform's services for this seat's roles. Every role-owed program joins here; the install enables this ONE target, and boot pulls the whole role set.
+[Install]
+WantedBy=default.target

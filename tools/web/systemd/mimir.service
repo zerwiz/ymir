@@ -1,0 +1,16 @@
+[Unit]
+Description=Mimir — the well bridge, the engram HTTP face (:4602, dev seats)
+
+[Service]
+Type=simple
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+# --foreground keeps the bridge under systemd's supervision: no self-daemon,
+# no pid file — the unit IS the process the way the law wants it.
+ExecStart=/bin/bash __YMIR_BIN_DIR__/mimir-bridge.sh --foreground
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+[Install]
+WantedBy=ymir.target

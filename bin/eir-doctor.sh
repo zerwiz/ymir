@@ -41,7 +41,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes sessrumnir shells graphics well mcp harness lock migrations hoard)
+SURFACES=(floors herdr a2abridge hermes sessrumnir shells graphics well mcp harness lock migrations hoard autoboot)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -53,6 +53,10 @@ s_hermes()    { [ -x "$SCRIPT_DIR/hermes-ensure.sh" ] && "$SCRIPT_DIR/hermes-ens
 f_hermes()    { "$SCRIPT_DIR/hermes-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+# The boot law (2026-09-24): every role-owed program enabled and standing. The
+# mend for a stopped boot IS the raise — re-materialize, re-enable, re-verify.
+s_autoboot()  { [ -x "$SCRIPT_DIR/ymir-autoboot.sh" ] && "$SCRIPT_DIR/ymir-autoboot.sh" verify >/dev/null 2>&1; }
+f_autoboot()  { [ -x "$SCRIPT_DIR/fleet-ensure.sh" ] && "$SCRIPT_DIR/fleet-ensure.sh" ensure >/dev/null 2>&1; }
 # The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
 # workspace-hoisted, or the sibling package (bin/electron-lib.sh). ABSENT for
 # an app the operator has installed is a FAILURE, never healthy: a desktop
@@ -235,6 +239,7 @@ detail() { # <name> -> one short fact
     migrations)"echo 'structure'" ;;
     shells)    'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
     hoard)     "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
+    autoboot)  "$SCRIPT_DIR/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/ymir-autoboot.sh verify'" ;;
   esac
 }
 

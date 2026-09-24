@@ -617,20 +617,54 @@ step_heimdall() {
 # ── 3e. the fleet services (the heart's surfaces) ─────────────────────────────
 # well-mcp (the served well) · ratatoskr A2A node · the mill worker · the
 # embedding stone · the cards root — raised as user units from tools/, and the
-# seat's pi mcp.json pointed at the served well. Best-effort: a service that
-# cannot raise reports a WARN, never a fail.
+# seat's pi mcp.json pointed at the served well. ROLE-GATED (plan 51): a seat
+# rises exactly what its roles owe, one target (ymir.target) pulls the set at
+# boot, and a program that cannot rise is a FAILURE with its reason — never a
+# warn the install steps past (law, 2026-09-24).
 step_fleet() {
   if [ ! -x "$SCRIPT_DIR/fleet-ensure.sh" ]; then add fleet SKIP "no fleet-ensure.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
-    if "$SCRIPT_DIR/fleet-ensure.sh" status >/dev/null 2>&1; then add fleet OK "services present"
-    else add fleet WARN "no fleet services — a real run raises them"; fi
+    if "$SCRIPT_DIR/fleet-ensure.sh" status >/dev/null 2>&1; then add fleet OK "services mapped — role-gated raise on a real run"
+    else add fleet WARN "no user manager — a real run raises the role set"; fi
     return
   fi
   if "$SCRIPT_DIR/fleet-ensure.sh" ensure >/dev/null 2>&1; then
-    add fleet OK "well-MCP · A2A node · the mill · the stone · cards — raised (user units)"
+    add fleet OK "role-owed services raised and verified (ymir.target enabled)"
   else
-    add fleet WARN "fleet-ensure reported gaps — re-run bin/fleet-ensure.sh ensure"
+    add fleet FAIL "a role-owed service could not rise — run bin/fleet-ensure.sh ensure to see the unit and the reason"
   fi
+}
+
+# ── 3f. autoboot (the boot law) ──────────────────────────────────────────────
+# Every Ymir program rises at boot, by itself — role-gated. This step asserts
+# the two things that make that true: the ONE target is enabled (fleet-ensure
+# did it) and the seat's user units survive a reboot (Linger, on a headless
+# seat). The Linger value is reported here on EVERY seat — the DoD.
+step_autoboot() {
+  local v=""
+  v="$(loginctl show-user "$USER" -p Linger 2>/dev/null | sed 's/^Linger=//')"
+  case "$v" in yes) ;; *) v="no" ;; esac
+  if [ "$CHECK" = 1 ]; then
+    add autoboot OK "Linger=$v · would enable ymir.target + assert linger on a real run"
+    return
+  fi
+  # A headless seat (heart/forge/server) has no login to raise its session:
+  # without linger, every enabled user unit is dead until someone logs in —
+  # and no surface says so. Enable it, or fail with the exact remedy.
+  if [ "$v" = no ]; then
+    if { [ -z "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ "$(ymir_os 2>/dev/null || echo other)" != macos ]; }; then
+      if loginctl enable-linger "$USER" 2>/dev/null; then
+        v="$(loginctl show-user "$USER" -p Linger 2>/dev/null | sed 's/^Linger=//')"; [ "$v" = yes ] || v="no"
+        if [ "$v" = yes ]; then
+          add autoboot OK "Linger enabled ($USER) — headless boot services will rise"
+          return
+        fi
+      fi
+      add autoboot FAIL "Linger=no on a headless seat — boot services would never rise; remedy: sudo loginctl enable-linger $USER"
+      return
+    fi
+  fi
+  add autoboot OK "Linger=$v — boot is role-gated and proven (bin/ymir-autoboot.sh verify)"
 }
 
 # ── 4. sandbox image ─────────────────────────────────────────────────────────
@@ -867,7 +901,18 @@ step_services() {
     for p in 3888 3889 4602 4603; do (exec 3<>"/dev/tcp/127.0.0.1/$p") 2>/dev/null && up=$((up+1)); done
     add services OK "$up/4 ports up (3888/3889/4602/4603)"; return
   fi
-  if "$ROOT/scripts/start.sh" >/dev/null 2>&1; then add services OK "runtime raised"; else add services WARN "start.sh reported errors"; fi
+  # The web stack is SEATED as user units on dev seats (hlidskjalf-spa · gate ·
+  # mimir · bifrost · smidja, all joined to ymir.target and raised by the fleet
+  # step above) — the old "run scripts/start.sh and hope" road is retired. This
+  # step PROVES the raise: the boot proof reads systemd directly and exits
+  # non-zero when a role-owed program is not enabled. Desktop windows stay on
+  # demand; the services are what boot owes.
+  if out="$("$SCRIPT_DIR/ymir-autoboot.sh" verify 2>&1)"; then
+    add services OK "autoboot verified — every dev-seat service is enabled and standing"
+  else
+    local nbad; nbad="$(printf '%s' "$out" | grep -cE '"disabled"|"failed"|"inactive"' || true)"
+    add services FAIL "boot proof failed ($nbad program(s)) — bin/ymir-autoboot.sh verify names them"
+  fi
 }
 
 # ── 7b. desktop (both Electron apps) ──────────────────────────
@@ -984,7 +1029,8 @@ step_register() {
     printf '## Engines\n\n- Yggdrasil → treehouse\n- Utgard → sandcastle\n- Mjollnir/Glitnir → no-mistakes\n- Hermes → hermes-agent (worker runtime)\n- Sessrúmnir → pi-desktop (desktop GUI, vendored at apps/sessrumnir)\n\n'
     printf '## Next\n\n1. `gh auth login` (your own GitHub login).\n'
     printf '2. Register your projects and their `git{}` blocks in `hoard/identity/projects.yaml`.\n'
-    printf '3. `scripts/start.sh` then open http://127.0.0.1:3888/.\n'
+    printf '3. The services rise at boot (role-gated; `bin/ymir-autoboot.sh status` shows them).\n'
+    printf '   `scripts/start.sh` remains the manual raise when a window is wanted.\n'
     printf '4. To let someone else try it, share the invite code printed above\n'
     printf '   (or mint another: `bin/ymir-invite.sh mint <n>`). They register at the\n'
     printf '   login screen; `bin/ymir-invite.sh list` shows what is spent.\n'
@@ -996,13 +1042,25 @@ step_register() {
 # Prove the installation actually works: live ports, readable stores, running
 # processes. The installer says what it did; this observes the result.
 step_validate() {
-  if [ ! -x "$SCRIPT_DIR/ymir-validate.sh" ]; then add validate SKIP "no ymir-validate.sh"; return; fi
-  if [ "$CHECK" = 1 ]; then add validate OK "would verify the running system"; return; fi
-  if out="$("$SCRIPT_DIR/ymir-validate.sh" --quiet 2>&1)"; then
-    add validate OK "all required checks pass"
+  # The final gate proves the BOOT as well as the running system: ymir-validate
+  # checks live ports/stores; the autoboot proof checks that every role-owed
+  # program would RISE at boot (enabled + standing). Both must pass for the
+  # install to claim "it stands".
+  if [ ! -x "$SCRIPT_DIR/ymir-validate.sh" ] || [ ! -x "$SCRIPT_DIR/ymir-autoboot.sh" ]; then
+    add validate SKIP "no ymir-validate.sh / ymir-autoboot.sh"; return
+  fi
+  if [ "$CHECK" = 1 ]; then add validate OK "would verify the running system and the boot proof"; return; fi
+  local boot_ok=1 live_ok=0 out nf
+  if "$SCRIPT_DIR/ymir-autoboot.sh" verify --quiet >/dev/null 2>&1; then boot_ok=0; fi
+  if out="$("$SCRIPT_DIR/ymir-validate.sh" --quiet 2>&1)"; then live_ok=1; else nf="$(printf '%s' "$out" | grep -oE '[0-9]+ required check\(s\) failed' | head -1)"; fi
+  if [ "$boot_ok" = 0 ] && [ "$live_ok" = 1 ]; then
+    add validate OK "all checks pass — the roll is verified (bin/ymir-autoboot.sh verify)"
   else
-    local nf; nf="$(printf '%s' "$out" | grep -oE '[0-9]+ required check\(s\) failed' | head -1)"
-    add validate WARN "${nf:-some checks} failed — run bin/ymir-validate.sh for detail"
+    local why=""
+    [ "$boot_ok" = 1 ] && why="boot proof failed — bin/ymir-autoboot.sh verify"
+    [ -n "$why" ] && [ "$live_ok" = 0 ] && why="$why; "
+    [ "$live_ok" = 0 ] && why="${why}${nf:-some live checks} failed — bin/ymir-validate.sh"
+    add validate WARN "$why"
   fi
 }
 
@@ -1037,7 +1095,7 @@ step_panes() {
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=21
+STEP_TOTAL=23
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))
@@ -1069,6 +1127,7 @@ run_step step_host "host"
 run_step step_role "role"
 run_step step_heimdall "the warden"
 run_step step_fleet "fleet services"
+run_step step_autoboot "autoboot"
 run_step step_sandbox "sandbox"
 run_step step_memory "memory"
 run_step step_smidja "the smithy"

@@ -112,6 +112,7 @@ and stay; entries that *are* test/mock are removed.
 
 ```
 bin/mimir-bridge.sh --status          # well[1]{port,status}: 4602,"up"
+bin/mimir-bridge.sh --foreground      # run under a supervising unit (mimir.service)
 bin/mimir.sh health                   # WARM/COLD + entry count + online
 bin/mimir.sh recall "sales pipeline"  # semantic recall (bridge) with local fallback
 curl -s localhost:4602/health         # {"status":"up","episodes":367,"agents":["well"]}
@@ -153,7 +154,8 @@ hardcoded timeline is gone.
 - **`ModuleNotFoundError: mcp.server.fastmcp`** → mcp 2.x installed; pin `mcp<2`.
 - **First `observe` slow (~20–30 s)** → the embedding model is warming; later
   writes are instant.
-- **Bridge down / `COLD`** → `bin/mimir-bridge.sh --start`; check
+- **Bridge down / `COLD`** → `bin/mimir-bridge.sh --start`; on a dev seat the
+  mend is `systemctl --user restart mimir.service`; check
   `$YMIR_STATE_DIR/mimir-bridge.log` — runtime state lives in the home the
   operator chose (`hoard_state_dir` via `bin/hoard-lib.sh`), never in the code
   tree: a packaged install replaces its tree on upgrade.
