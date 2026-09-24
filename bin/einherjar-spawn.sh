@@ -5,32 +5,49 @@
 #
 # Usage:
 #   einherjar-spawn.sh <task-id> <project-dir> --mode <direct-PR|local-only|no-mistakes>
-#       [--yolo on|off] [--harness <name>] [--model <name>]
+#       [--yolo on|off] [--harness <name>] [--model <token|request>]
 #       [--effort <low|medium|high|xhigh|max>] [--backend tmux|herdr]
-#       [--isolation on|off|auto]
+#       [--isolation on|off|auto] [--force] [--dry-run]
 #   einherjar-spawn.sh <task-id> <project-dir> --scout [--harness ...] [--model ...]
-#       [--effort ...] [--backend ...] [--isolation ...]
+#       [--effort ...] [--backend ...] [--isolation ...] [--force] [--dry-run]
 #   einherjar-spawn.sh <task-id> --relaunch [--harness ...] [--model ...]
-#       [--effort ...] [--isolation ...]
+#       [--effort ...] [--isolation ...] [--force] [--dry-run]
 #
-# It fails closed on an unverified harness: bin/hamr-harness.sh is the shape
-# detector when present, otherwise the inline detector runs; either verdict is
-# checked against the verified adapter set before any endpoint or worktree
-# exists. A raw launch command (a --harness value containing whitespace) is the
-# deliberate escape hatch for trialing a new adapter.
 # It creates or reuses the Yggdrasil worktree at <BROKK_HOME>/.yggdrasil/<id>,
 # records state/<id>.meta, and refuses to launch a ship task whose brief's
 # fixed "Delivery contract: mode=<mode>" line disagrees with the explicit
 # --mode, so an adjusted brief and the recorded task cannot drift.
-# --isolation on runs the worker inside an Utgard container built from
-# .agents/sandbox/Dockerfile.utgard; auto selects it only when the image is
-# present, and reports the decision; off runs the worker in the worktree.
-# --relaunch reuses the recorded worktree, kind, and mode from state/<id>.meta
-# and only harness/model/effort/isolation may change.
+#
+# The rule (settled 2026-09-24): herdr is the ORDINARY road — a normal deploy
+# runs in a herdr workspace in the worktree, with no container. Utgard is the
+# EXCEPTION, chosen for untrusted code or an outsized task, never for routine
+# work and never merely because an image is present. Isolation is DECLARED in
+# the brief as `Isolation: herdr|utgard — <why>`; `--isolation auto` honours
+# that declaration. A declared utgard with no image is a LOUD refusal, never a
+# silent downgrade. The choice and its reason are recorded in state/<id>.meta.
+# worth-a-smith REFUSES by default: an errand that is not worktree-shaped is
+# refused with the reason and the remedy; --force overrides and is recorded.
+# The harness and model resolve from the MACHINE, in order: explicit flags ->
+# a named model via bin/model-resolve.sh -> config/agents.yaml (the private
+# home) -> the fleet law (local model -> pi, hosted -> opencode). Never from a
+# repo template; provenance is printed and recorded.
+#
+# --dry-run resolves and PRINTS the whole plan before anything is created:
+# engine, isolation (+ reason), backend (+ why), harness, model (+ provenance),
+# worktree, brief, mode, yolo, worth-a-smith verdict, and the launch shape.
 #
 # Every spawn prints:
 #   spawned <id> harness=<h> kind=<kind> [mode=<m> yolo=<y>] backend=<b> target=<t> worktree=<wt> isolation=<on|off>
 set -eu
+
+# D1 (2026-09-24): a non-zero exit is never silent. Every failing command names
+# its line and text; the dispatcher that died twice at rc=1 with zero output
+# stays dead forever now.
+log_err() {
+  local rc=$? line=${1:-} cmd=${2:-}
+  printf 'einherjar-spawn: ERROR at line %s — %s (exit %s)\n' "$line" "$cmd" "$rc" >&2
+}
+trap 'log_err "$LINENO" "${BASH_COMMAND:-}"' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=bin/ymir-platform.sh
@@ -38,7 +55,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Docker or rootless Podman (Fedora). Empty when neither is reachable.
 ENGINE="$(ymir_container_engine 2>/dev/null || true)"
 VOL_SUFFIX="$(ymir_volume_suffix)"
-USERNS_FLAG="$(ymir_rootless_podman 2>/dev/null && printf -- '--userns=keep-id')"
+# Rootless Podman needs --userns=keep-id for bind-mount ownership. Guarded:
+# the substitution must SUCCEED (empty) on hosts that are not rootless Podman,
+# or set -e aborts the dispatcher mute — which it did (2026-09-24, rc=1 zero
+# output on heimdall: every spawn died at this line before any message).
+USERNS_FLAG="$( { ymir_rootless_podman 2>/dev/null && printf -- '--userns=keep-id'; } || true )"
 
 usage() {
   awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
@@ -91,6 +112,8 @@ EFFORT_SET=0
 BACKEND=
 BACKEND_SET=0
 ISOLATION=auto
+FORCE=0
+DRY=0
 POS=()
 want_value=
 for a in "$@"; do
@@ -128,6 +151,8 @@ for a in "$@"; do
     --backend=*) BACKEND=${a#--backend=}; BACKEND_SET=1 ;;
     --isolation) want_value=isolation ;;
     --isolation=*) ISOLATION=${a#--isolation=} ;;
+    --force) FORCE=1 ;;
+    --dry-run) DRY=1 ;;
     *) POS+=("$a") ;;
   esac
 done
@@ -169,100 +194,71 @@ if [ "$SCOUT" -eq 1 ]; then
   KIND=scout
 fi
 
-# --- harness resolution / verification --------------------------------------
-# hamr-harness.sh (Hamr = the shape a being wears) is the detector when present.
-detect_harness() {
-  if [ -x "$SCRIPT_DIR/hamr-harness.sh" ]; then
-    "$SCRIPT_DIR/hamr-harness.sh" eindri 2>/dev/null || true
-    return
-  fi
-  # Inline fallback detector: config/eindri-harness, then environment markers,
-  # then process ancestry, then the platform default (opencode).
-  local configured=
-  if [ -f "$CONFIG/eindri-harness" ]; then
-    configured=$(tr -d '[:space:]' < "$CONFIG/eindri-harness" || true)
-  fi
-  if [ -n "$configured" ] && [ "$configured" != default ]; then
-    printf '%s\n' "$configured"
-    return
-  fi
-  [ "${PI_CODING_AGENT:-}" = true ] && { printf 'pi\n'; return; }
-  [ "${CLAUDECODE:-}" = 1 ] && { printf 'claude\n'; return; }
-  local pid=$$ comm
-  for _ in 1 2 3 4 5 6; do
-    comm=$(ps -o comm= -p "$pid" 2>/dev/null) || break
-    case "$(basename -- "${comm:-}")" in
-      *opencode*) printf 'opencode\n'; return ;;
-      *claude*) printf 'claude\n'; return ;;
-      *codex*) printf 'codex\n'; return ;;
-      pi|pi-signed) printf 'pi\n'; return ;;
-      *node*|*python*)
-        case "$(ps -o args= -p "$pid" 2>/dev/null)" in
-          *opencode*) printf 'opencode\n'; return ;;
-          *" pi "*|*/pi) printf 'pi\n'; return ;;
-        esac ;;
-    esac
-    pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
-    [ -n "$pid" ] && [ "$pid" -gt 1 ] || break
-  done
-  printf 'opencode\n'
-}
-
+# --- explicit harness -------------------------------------------------------
 RAW_LAUNCH=
 HARNESS=
+HARNESS_PROV=
 if [ -n "$HARNESS_ARG" ]; then
   case "$HARNESS_ARG" in
     *' '*) RAW_LAUNCH=$HARNESS_ARG ;;
     *) HARNESS=$HARNESS_ARG ;;
   esac
-elif [ "$RELAUNCH" -eq 0 ] && [ -f "$CONFIG/eindri-dispatch.json" ]; then
-  echo "error: config/eindri-dispatch.json is active - pass an explicit --harness resolved from its dispatch rules (consultation backstop, so the profiles are never silently skipped)" >&2
+fi
+
+# --- dispatch profile: active means "consult your rules" --------------------
+# D4 (2026-09-24): a profile that still carries unfilled <...> model tokens is
+# NOT active and steers nothing. Only a real profile (a $YMIR_HOME/hodd/config
+# override, or a repo config resolved from the machine) gates the backstop.
+DISPATCH_ACTIVE=
+_disp=$("$SCRIPT_DIR/dispatch-profile.sh" active 2>/dev/null) || _disp=
+if [ -n "$_disp" ]; then
+  DISPATCH_ACTIVE=$(printf '%s\n' "$_disp" | sed -n '2p' | sed -E 's/^ *"[^"]+","([^"]+)".*/\1/')
+fi
+if [ "$RELAUNCH" -eq 0 ] && [ -z "$HARNESS" ] && [ "$MODEL_SET" -eq 0 ] && [ -n "$DISPATCH_ACTIVE" ]; then
+  echo "error: an ACTIVE dispatch profile governs this machine ($DISPATCH_ACTIVE) - pass an explicit --harness/--model resolved from its rules (consultation backstop, so the profiles are never silently skipped)" >&2
   exit 1
-else
-  HARNESS=$(detect_harness)
-  [ -n "$HARNESS" ] || HARNESS=opencode
 fi
+unset _disp
 
-if [ -n "$RAW_LAUNCH" ]; then
-  HARNESS=$(printf '%s' "$RAW_LAUNCH" | awk '{for(i=1;i<=NF;i++) if ($i !~ /^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}')
-  HARNESS=$(basename -- "$HARNESS")
-  echo "warning: launching a raw command as harness '$HARNESS' (not on the verified adapter set)" >&2
+# --- backend resolution -----------------------------------------------------
+# D5 (2026-09-24): the default is herdr when the herdr SERVER answers; tmux is
+# the fallback. The gate is the server's existence (pgrep/status API), NEVER
+# `bin/herdr-run.sh available` — that verb answers for a SESSION's HERDR_ENV
+# ("is this shell inside herdr?"), not for whether a server can host a worker.
+# A herdr server can host a worker even when the dispatcher sits outside herdr;
+# conflating the two left the backend on tmux while `herdr server` ran.
+herdr_server_present() {
+  pgrep -f 'herdr server' >/dev/null 2>&1 && return 0
+  command -v herdr >/dev/null 2>&1 || return 1
+  herdr status --json 2>/dev/null | grep -qE '"running"[[:space:]]*:[[:space:]]*true' && return 0
+  return 1
+}
+
+RESOLVED_BACKEND=
+BACKEND_WHY=
+if [ "$BACKEND_SET" -eq 1 ]; then
+  RESOLVED_BACKEND=$BACKEND
+  BACKEND_WHY="explicit --backend"
 else
-  verified=0
-  for v in $VERIFIED_HARNESSES; do
-    if [ "$HARNESS" = "$v" ]; then verified=1; break; fi
-  done
-  if [ "$verified" -ne 1 ]; then
-    echo "error: harness '$HARNESS' is not verified for direct launch; verified: $VERIFIED_HARNESSES. Supply a raw launch command via --harness to trial a new adapter." >&2
-    exit 1
-  fi
-  if ! command -v "$HARNESS" >/dev/null 2>&1; then
-    echo "error: harness '$HARNESS' executable not found on PATH; install it or select a verified harness" >&2
-    exit 1
-  fi
-fi
-
-# --- backend resolution ------------------------------------------------------
-resolve_backend() {
-  local b="${BROKK_BACKEND:-}"
+  b="${BROKK_BACKEND:-}"
   if [ -z "$b" ] && [ -f "$CONFIG/backend" ]; then
     b=$(head -n1 "$CONFIG/backend" | tr -d '[:space:]')
   fi
-  if [ -z "$b" ]; then
-    if [ -n "${TMUX:-}" ]; then b=tmux
-    elif [ "${HERDR_ENV:-}" = 1 ]; then b=herdr
-    else b=tmux; fi
+  if [ -n "$b" ]; then
+    case "$b" in
+      tmux|herdr) RESOLVED_BACKEND=$b; BACKEND_WHY="explicit (BROKK_BACKEND/config/backend)" ;;
+      *) echo "error: unsupported backend '$b' (supported: tmux, herdr)" >&2; exit 1 ;;
+    esac
+  elif herdr_server_present; then
+    RESOLVED_BACKEND=herdr
+    BACKEND_WHY="the herdr server answers (pgrep/API) — herdr is the fleet backend; tmux is only the fallback"
+  elif command -v tmux >/dev/null 2>&1; then
+    RESOLVED_BACKEND=tmux
+    BACKEND_WHY="no herdr server answering — tmux is the fallback"
+  else
+    echo "error: no backend available — herdr server is not running and tmux is not on PATH" >&2
+    exit 1
   fi
-  case "$b" in
-    tmux|herdr) printf '%s\n' "$b" ;;
-    *) echo "error: unsupported backend '$b' (supported: tmux, herdr)" >&2; return 1 ;;
-  esac
-}
-
-if [ "$BACKEND_SET" -eq 1 ]; then
-  RESOLVED_BACKEND=$BACKEND
-else
-  RESOLVED_BACKEND=$(resolve_backend) || exit 1
 fi
 
 if [ "$RESOLVED_BACKEND" = tmux ]; then
@@ -279,6 +275,7 @@ meta_value() {  # <file> <key>
 
 PROJECT_DIR=
 WT=
+BRIEF=
 if [ "$RELAUNCH" -eq 1 ]; then
   [ -f "$META" ] || { echo "error: --relaunch requires an existing task record at $META" >&2; exit 1; }
   KIND=$(meta_value "$META" kind); KIND=${KIND:-ship}
@@ -296,24 +293,11 @@ if [ "$RELAUNCH" -eq 1 ]; then
     if [ -n "$RECORDED_RAW" ]; then
       RAW_LAUNCH=$RECORDED_RAW
       HARNESS=${RECORDED_HARNESS:-$(printf '%s' "$RECORDED_RAW" | awk '{print $1}')}
+      HARNESS_PROV="recorded raw_launch (relaunch)"
     else
-      [ -n "$RECORDED_HARNESS" ] || RECORDED_HARNESS=$(detect_harness)
       HARNESS=$RECORDED_HARNESS
-      verified=0
-      for v in $VERIFIED_HARNESSES; do
-        if [ "$HARNESS" = "$v" ]; then verified=1; break; fi
-      done
-      if [ "$verified" -ne 1 ]; then
-        echo "error: recorded harness '$HARNESS' is not verified for relaunch; pass an explicit --harness or a raw launch command" >&2
-        exit 1
-      fi
-      command -v "$HARNESS" >/dev/null 2>&1 || {
-        echo "error: recorded harness '$HARNESS' executable not found on PATH" >&2
-        exit 1
-      }
+      HARNESS_PROV="recorded in the task record (relaunch)"
     fi
-    if [ "$MODEL_SET" -eq 0 ]; then MODEL=$(meta_value "$META" model); fi
-    if [ "$EFFORT_SET" -eq 0 ]; then EFFORT=$(meta_value "$META" effort); fi
   fi
   BRIEF="$DATA/$ID/brief.md"
   [ -f "$BRIEF" ] || { echo "error: no brief at $BRIEF; regenerate it: bin/erindi-brief.sh $ID --relaunch" >&2; exit 1; }
@@ -341,37 +325,332 @@ else
   fi
 fi
 
-# --- isolation resolution ----------------------------------------------------
-# A spawned Eindri is a MODEL-DRIVEN worker: it must reach a model endpoint to
-# think at all. Utgard runs with `--network none`, so a sandboxed agent cannot
-# reach either a cloud model (OpenCode Go) or a local one (llama.cpp) — it dies
-# silently at launch, leaving an empty pane and no status line. Utgard is for
-# untrusted CODE, not for the agent's own brain. So `auto` keeps the worker in
-# its worktree, and `on` is an explicit choice that warns.
+# --- worth-a-smith: refuse a smith for work that does not need one ----------
+# D7 (2026-09-24): the first law lives in einherjar-spawn too, not only in
+# bin/herdr-run.sh. The errand is the brief's # Task text. A refusal is LOUD
+# with the reason and the remedy; --force overrides and is recorded.
+WORTH_VERDICT=yes
+WORTH_WHY=forced
+task_text=$(sed -n '/^# Task/,/^# \(Delivery contract\|Setup\|Rules\)/{ /^# /d; p; }' "$BRIEF" 2>/dev/null | head -c 1500)
+if printf '%s' "$task_text" | grep -q '{TASK}'; then
+  WORTH_VERDICT=no
+  WORTH_WHY='the brief still carries the unfilled {TASK} errand text — write the errand into the brief before dispatch'
+elif [ "${#task_text}" -le 1 ]; then
+  WORTH_VERDICT=no
+  WORTH_WHY='the brief has no # Task section to judge — fill the errand before dispatch'
+elif [ -x "$SCRIPT_DIR/herdr-run.sh" ]; then
+  wout=$("$SCRIPT_DIR/herdr-run.sh" worth-a-smith "$task_text" 2>/dev/null) || true
+  if [ -n "$wout" ]; then
+    _w=$(printf '%s\n' "$wout" | sed -n '2p')
+    _verdict=$(printf '%s' "$_w" | sed -E 's/^ *"([^"]*)".*/\1/')
+    _why=$(printf '%s' "$_w" | sed -E 's/^ *"[^"]*","([^"]*)".*/\1/')
+    case "$_verdict" in
+      yes) WORTH_VERDICT=yes; WORTH_WHY=$_why ;;
+      no) WORTH_VERDICT=no; WORTH_WHY=$_why ;;
+      *) WORTH_VERDICT=yes; WORTH_WHY="worth-a-smith verdict unreadable; dispatching on the brief" ;;
+    esac
+  fi
+fi
+if [ "$WORTH_VERDICT" = no ] && [ "$FORCE" -ne 1 ]; then
+  echo "error: this errand is not worth a smith ($WORTH_WHY). The first law: a SHORT ERRAND IS DONE IN HAND — answer it yourself, do not seat a worker. If it truly needs a smith, pass --force (recorded in the meta)." >&2
+  if [ "$DRY" -eq 0 ]; then exit 1; fi
+  echo "preflight: would REFUSE (not worth a smith: $WORTH_WHY) — --force overrides and is recorded in the meta" >&2
+fi
+
+# --- harness + model resolution FROM THE MACHINE (D3) -----------------------
+# Order: (1) explicit flags; (2) a named model via bin/model-resolve.sh;
+# (3) this machine's agent default (config/agents.yaml / bin/agents-config.sh,
+# the PRIVATE home — never a repo template); (4) the fleet law — local model
+# -> pi, hosted -> opencode. Provenance is printed and recorded.
+MODEL_LOCAL=no
+WT_ROOT="$BROKK_HOME/.yggdrasil"
+
+catalog_has() {  # <provider/model> -> 0 when the pair is in the live pi catalog
+  python3 - "$1" <<'PY'
+import sys, subprocess
+want = sys.argv[1]
+prov, _, model = want.partition("/")
+try:
+    out = subprocess.check_output(["pi", "--list-models"], text=True, stderr=subprocess.DEVNULL)
+except Exception:
+    raise SystemExit(1)
+for line in out.splitlines():
+    p = line.split()
+    if len(p) >= 2 and p[0] == prov and p[1].rstrip() == model:
+        raise SystemExit(0)
+raise SystemExit(1)
+PY
+}
+
+pi_first_local_model() {  # -> the first served provider/model from the pi catalog
+  python3 - <<'PY'
+import subprocess
+try:
+    out = subprocess.check_output(["pi", "--list-models"], text=True, stderr=subprocess.DEVNULL)
+    for line in out.splitlines():
+        p = line.split()
+        if len(p) >= 2 and "@" in p[1]:
+            print(f"{p[0]}/{p[1]}")
+            raise SystemExit(0)
+except Exception:
+    pass
+raise SystemExit(1)
+PY
+}
+
+agent_yaml_local_providers() {  # -> the local_providers list from agents.yaml
+  local y
+  y=$(python3 - "$SCRIPT_DIR" <<'PY'
+import sys, os
+home = os.environ.get("YMIR_HOME") or os.path.expanduser("~/Documents/ymirhome")
+cands = [
+    os.environ.get("YMIR_AGENTS_YAML") or "",
+    os.path.join(home, "config", "agents.yaml"),
+]
+try:
+    import yaml
+    for c in cands:
+        if c and os.path.exists(c):
+            d = yaml.safe_load(open(c)) or {}
+            lp = (d.get("harness") or {}).get("local_providers") or []
+            if lp:
+                print(" ".join(str(x) for x in lp))
+                raise SystemExit(0)
+except Exception:
+    pass
+raise SystemExit(0)
+PY
+)
+  printf '%s' "$y"
+}
+
+LOCAL_PROVIDERS="$(agent_yaml_local_providers)"
+is_local_provider() {  # <provider>
+  local p=$1
+  [ -n "$p" ] || return 1
+  case " $LOCAL_PROVIDERS " in *" $p "*) return 0 ;; esac
+  case "$p" in llama*|*llama*|lmstudio|apodex) return 0 ;; *) return 1 ;; esac
+}
+model_is_token() {  # <model> -> 0 when it is a concrete provider/model token
+  case "$1" in */*) return 0 ;; *) return 1 ;; esac
+}
+
+# refused when the chosen harness cannot serve the resolved model (D3/D4)
+serve_ok() {  # <harness> <model> -> 0 servable
+  local h=$1 m=$2
+  [ -n "$m" ] && [ "$m" != default ] || return 0
+  case "$m" in
+    *"<"*|*" "*|*your-model*|*/) return 1 ;;
+  esac
+  if [ "$h" = opencode ]; then
+    if is_local_provider "${m%%/*}"; then
+      catalog_has "$m" && return 0 || return 1
+    fi
+    return 0
+  fi
+  catalog_has "$m" && return 0 || return 1
+}
+
+resolve_harness_model() {
+  local req mr mrow m5 prov h conf _m _h _first _clean _f1 _f2
+  # (1) an explicit CONCRETE model token; harness by locality when unset
+  if [ "$MODEL_SET" -eq 1 ] && [ -n "$MODEL" ] && model_is_token "$MODEL"; then
+    MODEL_PROV="explicit flag (--model $MODEL)"
+    if [ -z "$HARNESS" ]; then
+      if is_local_provider "${MODEL%%/*}"; then HARNESS=pi; HARNESS_PROV="fleet law (local provider -> pi)"
+      else HARNESS=opencode; HARNESS_PROV="fleet law (hosted provider -> opencode)"; fi
+    fi
+  # (2) an explicit model REQUEST resolved by bin/model-resolve.sh
+  elif [ "$MODEL_SET" -eq 1 ] && [ -n "$MODEL" ]; then
+    req=$MODEL
+    mr=$("$SCRIPT_DIR/model-resolve.sh" resolve "$req" 2>/dev/null) || true
+    mrow=$(printf '%s\n' "$mr" | sed -n '2p')
+    _clean=$(printf '%s' "$mrow" | tr -d '"')
+    IFS=',' read -r _f1 _f2 h prov m5 conf <<<"$_clean" || true
+    if [ "$conf" = unresolved ] || [ -z "$m5" ] || [ -z "$prov" ]; then
+      echo "error: model request '$req' could not be resolved (bin/model-resolve.sh) - ask the Allfather which model, then pass a concrete --model provider/model" >&2
+      exit 1
+    fi
+    MODEL="${prov}/${m5}"
+    MODEL_PROV="bin/model-resolve.sh resolve \"$req\" (confidence=$conf)"
+    if [ -z "$HARNESS" ] && [ -n "$h" ] && [ "$h" != default ]; then
+      HARNESS=$h
+      HARNESS_PROV="bin/model-resolve.sh (resolved harness)"
+    fi
+    unset _clean _f1 _f2
+  # (3) this machine's agent default (the private home, never a repo template)
+  elif [ "$MODEL_SET" -eq 0 ]; then
+    if [ -x "$SCRIPT_DIR/agents-config.sh" ]; then
+      _m=$("$SCRIPT_DIR/agents-config.sh" get brokk model 2>/dev/null | sed -n '1p')
+      if [ -n "$_m" ] && [ "$_m" != default ]; then
+        MODEL=$_m
+        MODEL_PROV="config/agents.yaml via bin/agents-config.sh (this machine)"
+        if [ -z "$HARNESS" ]; then
+          _h=$("$SCRIPT_DIR/agents-config.sh" get brokk harness 2>/dev/null | sed -n '1p')
+          HARNESS=$_h
+          [ -n "$HARNESS" ] && HARNESS_PROV="config/agents.yaml via bin/agents-config.sh (harness rule)"
+        fi
+      fi
+    fi
+  fi
+  # (4) the fleet law: unresolved harness, and the machine's local truth
+  if [ -z "$HARNESS" ]; then
+    if [ -z "$MODEL" ]; then
+      _first=$(pi_first_local_model || true)
+      if [ -n "$_first" ]; then
+        MODEL=$_first
+        MODEL_LOCAL=yes
+        MODEL_PROV="fleet law — first served local model from the pi catalog"
+        HARNESS=pi
+        HARNESS_PROV="fleet law — a local model catalog exists, so local -> pi"
+      else
+        HARNESS=opencode
+        HARNESS_PROV="fleet law — no local catalog, hosted -> opencode"
+      fi
+    elif [ "$MODEL_LOCAL" != yes ]; then
+      HARNESS=opencode
+      HARNESS_PROV="fleet law — hosted model -> opencode"
+    else
+      HARNESS=pi
+      HARNESS_PROV="fleet law — local model -> pi"
+    fi
+  fi
+  [ -z "$MODEL" ] && MODEL_PROV="none — the harness default is served"
+  if [ -n "$MODEL" ]; then
+    if is_local_provider "${MODEL%%/*}"; then MODEL_LOCAL=yes; else MODEL_LOCAL=no; fi
+  fi
+  if ! serve_ok "$HARNESS" "$MODEL"; then
+    echo "error: harness '$HARNESS' cannot serve model '${MODEL:-<harness default>}' on this machine — resolve a servable token (bin/model-resolve.sh list) or pass an explicit --model provider/model" >&2
+    exit 1
+  fi
+}
+
+if [ -n "$RAW_LAUNCH" ]; then
+  HARNESS=$(printf '%s' "$RAW_LAUNCH" | awk '{for(i=1;i<=NF;i++) if ($i !~ /^[A-Za-z_][A-Za-z0-9_]*=/) {print $i; exit}}')
+  HARNESS=$(basename -- "$HARNESS")
+  HARNESS_PROV="raw launch command (escape hatch)"
+  echo "warning: launching a raw command as harness '$HARNESS' (not on the verified adapter set)" >&2
+else
+  resolve_harness_model
+  verified=0
+  for v in $VERIFIED_HARNESSES; do
+    if [ "$HARNESS" = "$v" ]; then verified=1; break; fi
+  done
+  if [ "$verified" -ne 1 ]; then
+    echo "error: harness '$HARNESS' is not verified for direct launch; verified: $VERIFIED_HARNESSES. Supply a raw launch command via --harness to trial a new adapter." >&2
+    exit 1
+  fi
+  if ! command -v "$HARNESS" >/dev/null 2>&1; then
+    echo "error: harness '$HARNESS' executable not found on PATH; install it or select a verified harness" >&2
+    exit 1
+  fi
+fi
+
+# --- isolation: the brief DECLARES it; the spawn validates it (D2) ----------
+# herdr is the ordinary road (no container). Utgard is the exception, chosen
+# for untrusted code or an outsized task. `--isolation auto` honours the
+# brief's `Isolation: herdr|utgard — <why>` line. A declared utgard with no
+# image is a LOUD refusal; an explicit --isolation off against a declared
+# utgard is refused too (the declaration is never silently downgraded).
+ISOLATION_DECLARED=herdr
+ISOLATION_REASON="no Isolation: line in the brief — herdr is the ordinary road"
+_isoline=$(grep -m1 -E '^[[:space:]]*#?[[:space:]]*Isolation:[[:space:]]+(herdr|utgard)([^A-Za-z0-9]|$)' "$BRIEF" 2>/dev/null || true)
+if [ -n "$_isoline" ]; then
+  _iso_word=$(printf '%s' "$_isoline" | sed -E 's/^[[:space:]]*#?[[:space:]]*Isolation:[[:space:]]+([A-Za-z]+).*/\1/')
+  _iso_rest=$(printf '%s' "$_isoline" | sed -E 's/^[[:space:]]*#?[[:space:]]*Isolation:[[:space:]]+[A-Za-z]+([[:space:]]*(-|—)[[:space:]]*)?//')
+  case "$_iso_word" in
+    herdr|utgard) ISOLATION_DECLARED=$_iso_word; [ -n "$_iso_rest" ] && ISOLATION_REASON=$_iso_rest ;;
+    *) ISOLATION_DECLARED=herdr; ISOLATION_REASON="unrecognized isolation declaration '$_iso_word' — herdr is the ordinary road" ;;
+  esac
+fi
+unset _isoline _iso_word _iso_rest
+
+confirm_utgard_image() {  # -> 0 present (engine + image), else loud refusal
+  [ -n "$ENGINE" ] || {
+    echo "error: isolation=utgard requires a container engine, but neither docker nor podman is reachable — REFUSED, not downgraded. Remedy: start docker/podman, or edit the brief to 'Isolation: herdr — <why>'." >&2
+    return 1
+  }
+  "$ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1 || {
+    echo "error: isolation=utgard requires the Utgard image 'utgard-runner:latest', which is absent — REFUSED, not downgraded. Remedy: build it (bin/utgard.sh build) or edit the brief to 'Isolation: herdr — <why>'." >&2
+    return 1
+  }
+  return 0
+}
+
 ISOLATION_EFFECTIVE=off
 case "$ISOLATION" in
   on)
-    [ -n "$ENGINE" ] || { echo "error: --isolation on requires docker or podman on PATH" >&2; exit 1; }
-    "$ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1 || {
-      echo "error: --isolation on requires the Utgard image 'utgard-runner:latest'; build it: bin/utgard.sh build" >&2
-      exit 1
-    }
+    confirm_utgard_image || { if [ "$DRY" -eq 0 ]; then exit 1; fi; }
     ISOLATION_EFFECTIVE=on
-    echo "warning: Utgard runs with --network none — the worker's model endpoint must be reachable INSIDE the sandbox, or the agent dies silently. Pass --isolation off to run in the worktree." >&2
+    [ "$DRY" -eq 1 ] || echo "warning: Utgard runs with --network none — the worker's model endpoint must be reachable INSIDE the sandbox, or the agent dies silently. The ordinary road is herdr (the worktree, no container)." >&2
     ;;
-  off) ISOLATION_EFFECTIVE=off ;;
-  auto)
-    ISOLATION_EFFECTIVE=off
-    if [ -n "$ENGINE" ] && "$ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1; then
-      echo "isolation: off (Utgard image present, but a model-driven worker needs its endpoint and Utgard has no network — pass --isolation on only for a sandbox that can reach a model)" >&2
-    else
-      echo "isolation: off (no Utgard image; pass --isolation on after building it)" >&2
+  off)
+    if [ "$ISOLATION_DECLARED" = utgard ]; then
+      echo "error: brief $BRIEF declares Isolation: utgard but --isolation off forces the worktree — a declared isolation is never silently downgraded; edit the brief's declaration (Isolation: herdr — <why>) or relaunch without --isolation off" >&2
+      exit 1
     fi
+    ISOLATION_EFFECTIVE=off
+    ;;
+  auto)
+    case "$ISOLATION_DECLARED" in
+      utgard)
+        if ! confirm_utgard_image; then
+          [ "$DRY" -eq 0 ] && exit 1
+          echo "preflight: would REFUSE (declared utgard, no image — never a silent downgrade); --isolation off or a herdr declaration changes it" >&2
+        fi
+        ISOLATION_EFFECTIVE=on
+        ;;
+      herdr) ISOLATION_EFFECTIVE=off ;;
+      *) echo "error: brief $BRIEF carries an unreadable isolation declaration — fix the 'Isolation: herdr|utgard — <why>' line" >&2; exit 1 ;;
+    esac
     ;;
 esac
 
+# --- local-model lock (D6) ---------------------------------------------------
+# The rail is --models-max 1: one resident model, a request evicts. A local
+# worker must not evict Brokk's own model while he thinks. For a LOCAL model we
+# pre-check the lock (refuse with the holder named when the host is at
+# capacity) and wrap the launched command in bin/local-model-lock.sh so the
+# flock is held from before the worker starts until after it exits.
+LOCKED=no
+if [ "$MODEL_LOCAL" = yes ] && [ -x "$SCRIPT_DIR/local-model-lock.sh" ]; then
+  out=$("$SCRIPT_DIR/local-model-lock.sh" check 2>/dev/null) || true
+  case "$(printf '%s\n' "$out" | sed -n '2p')" in
+    '"free"*') LOCKED=yes ;;
+    '"busy"*')
+      LOCK_HOLDER=$(printf '%s\n' "$out" | sed -n '3p' 2>/dev/null | tr -d '"')
+      [ -n "$LOCK_HOLDER" ] || LOCK_HOLDER="a local seat already runs (bin/local-model-lock.sh check)"
+      if [ "$DRY" -eq 1 ]; then
+        LOCKED=yes
+        echo "preflight: local-model-lock BUSY — holder: $LOCK_HOLDER; a real run refuses (the launched command still serializes under the lock if --force)" >&2
+      else
+        echo "error: local-model-lock is BUSY ($LOCK_HOLDER) and the resolved model '$MODEL' is LOCAL — two local workers (or a worker + Brokk) would thrash the single-model rail. Wait for the holder, or pass a hosted model." >&2
+        exit 1
+      fi
+      ;;
+    *) LOCKED=yes ;;
+  esac
+fi
+
+# --- dry-run: print the whole resolved plan, create nothing ------------------
+if [ "$DRY" -eq 1 ]; then
+  _wt="$WT_ROOT/$ID"
+  _cwd=$_wt
+  [ "$ISOLATION_EFFECTIVE" = on ] && _cwd=/sandbox/workspace
+  printf 'preflight[1]{engine,isolation,isolation_reason,backend,backend_why,harness,harness_prov,model,model_prov,worktree,brief,mode,yolo,worth,lock}:\n'
+  printf '  "%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' \
+    "${ENGINE:-none}" "$ISOLATION_EFFECTIVE" "$ISOLATION_REASON" "$RESOLVED_BACKEND" "$BACKEND_WHY" \
+    "$HARNESS" "${HARNESS_PROV:-}" "${MODEL:-<harness default>}" "${MODEL_PROV:-}" "$_wt" "$BRIEF" \
+    "${MODE:-scout}" "$YOLO" "$WORTH_VERDICT" "${LOCKED:-no}${LOCK_HOLDER:+ (busy: $LOCK_HOLDER)}"
+  printf '  launch: cd %s && %s%s --prompt "$(cat %s)"\n' \
+    "$_cwd" "$HARNESS" "${MODEL:+ --model $MODEL}" "$BRIEF"
+  [ "$ISOLATION_DECLARED" = utgard ] && [ "$ISOLATION_EFFECTIVE" != on ] && printf '  note: brief declares Isolation: utgard; effective %s. A declared utgard is never silently downgraded; the refusal above is the law, not a fallback.\n' "$ISOLATION_EFFECTIVE"
+  [ "$ISOLATION_DECLARED" = herdr ] && [ "$ISOLATION_EFFECTIVE" = on ] && printf '  note: brief declares Isolation: herdr (the ordinary road) but --isolation on forced the sandbox\n'
+  printf '  dispatch_profile: %s\n' "${DISPATCH_ACTIVE:-<none active — the machine resolution governs>}"
+  exit 0
+fi
+
 # --- Yggdrasil worktree ------------------------------------------------------
-WT_ROOT="$BROKK_HOME/.yggdrasil"
 if [ -z "$WT" ]; then
   WT="$WT_ROOT/$ID"
   mkdir -p "$WT_ROOT"
@@ -435,7 +714,7 @@ PROMPT="$DATA/$ID/prompt.md"
 } >"$PROMPT" 2>/dev/null || cp "$BRIEF" "$PROMPT"
 BRIEF_REF=$PROMPT
 
-build_launch_command() {
+build_launch_command() {  # prints the worker command WITHOUT the leading exec
   local brief_ref=$1 model_flag= effort_flag=
   if [ -n "$MODEL" ] && [ "$MODEL" != default ]; then
     model_flag="--model $(shell_quote "$MODEL") "
@@ -447,11 +726,11 @@ build_launch_command() {
   fi
   case "$HARNESS" in
     opencode)
-      printf 'OPENCODE_CONFIG_CONTENT=%s exec opencode %s--prompt "$(cat %s)"' \
+      printf 'OPENCODE_CONFIG_CONTENT=%s opencode %s--prompt "$(cat %s)"' \
         "$(shell_quote '{"permission":{"*":"allow"}}')" "$model_flag" "$(shell_quote "$brief_ref")"
       ;;
     pi|pi-signed)
-      printf 'exec pi %s%s"$(cat %s)"' "$model_flag" "$effort_flag" "$(shell_quote "$brief_ref")"
+      printf 'pi %s%s"$(cat %s)"' "$model_flag" "$effort_flag" "$(shell_quote "$brief_ref")"
       ;;
     *)
       local cmd=$RAW_LAUNCH
@@ -468,7 +747,11 @@ LAUNCH_CMD=$(build_launch_command "$BRIEF_REF")
   printf '#!/usr/bin/env bash\n'
   printf 'set -eu\n'
   printf 'cd %s\n' "$(shell_quote "$LAUNCH_CWD")"
-  printf '%s\n' "$LAUNCH_CMD"
+  if [ "$LOCKED" = yes ]; then
+    printf 'exec %s bash -c %s\n' "$(shell_quote "$SCRIPT_DIR/local-model-lock.sh")" "$(shell_quote "$LAUNCH_CMD")"
+  else
+    printf 'exec %s\n' "$LAUNCH_CMD"
+  fi
 } > "$LAUNCH_SCRIPT"
 chmod +x "$LAUNCH_SCRIPT"
 
@@ -496,6 +779,11 @@ EOF
   # writable; Docker keeps an explicit --user. Both get :Z under enforcing SELinux.
   if [ -n "$USERNS_FLAG" ]; then USER_ARG=""; else USER_ARG="--user $(shell_quote "$(id -u):$(id -g)")"; fi
   PANE_CMD="$ENGINE run --rm -it --network none --cpus 1.0 --memory 512m --security-opt no-new-privileges $USERNS_FLAG $USER_ARG -e HOME=/tmp -v $(shell_quote "$WT:/sandbox/workspace$VOL_SUFFIX")$GIT_MOUNT_ARGS -v $(shell_quote "$STATE:$STATE$VOL_SUFFIX") -v $(shell_quote "$DATA:$DATA$VOL_SUFFIX") -w /sandbox/workspace utgard-runner:latest bash $(shell_quote "$LAUNCH_SCRIPT")"
+  if [ "$LOCKED" = yes ]; then
+    # the flock is HOST-side: it must wrap the docker run itself, not a
+    # command inside the container (the lockfile is the host's inode).
+    PANE_CMD="$SCRIPT_DIR/local-model-lock.sh $PANE_CMD"
+  fi
 else
   rm -f "$STATE/$ID.utgard"
   PANE_CMD="bash $(shell_quote "$LAUNCH_SCRIPT")"
@@ -548,6 +836,16 @@ else
   RUN_TARGET=$(launch_herdr) || exit 1
 fi
 
+# --- heartbeat baseline (D8) -------------------------------------------------
+# The supervisor distinguishes a silent worker from a thinking one by the
+# freshness of state/<id>.status. Record the launch in the meta and append the
+# first heartbeat line so the baseline exists before the worker's own first
+# line. bin/eindri-heartbeat.sh holds the silence judgement; a worker with no
+# append inside the window wakes Brokk with id, elapsed, and last line.
+LAUNCH_ISO=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+LAUNCH_EPOCH=$(date +%s)
+printf 'working: launched %s (heartbeat baseline)\n' "$LAUNCH_ISO" >> "$STATE/$ID.status" 2>/dev/null || true
+
 # --- record state ------------------------------------------------------------
 SPAWN_GEN="s$(date +%s).${BASHPID:-$$}.$RANDOM"
 META_TMP="$STATE/.$ID.meta.${BASHPID:-$$}"
@@ -560,18 +858,35 @@ META_TMP="$STATE/.$ID.meta.${BASHPID:-$$}"
   fi
   printf 'harness=%s\n' "$HARNESS"
   printf 'raw_launch=%s\n' "$RAW_LAUNCH"
+  printf 'harness_provenance=%s\n' "${HARNESS_PROV:-}"
   printf 'model=%s\n' "$MODEL"
+  printf 'model_provenance=%s\n' "${MODEL_PROV:-}"
+  printf 'model_local=%s\n' "$MODEL_LOCAL"
   printf 'effort=%s\n' "$EFFORT"
   printf 'backend=%s\n' "$RESOLVED_BACKEND"
+  printf 'backend_reason=%s\n' "$BACKEND_WHY"
   printf 'window=%s\n' "$RUN_TARGET"
   printf 'worktree=%s\n' "$WT"
   printf 'project=%s\n' "$PROJECT_DIR"
   printf 'brief=%s\n' "$BRIEF"
   printf 'isolation=%s\n' "$ISOLATION_EFFECTIVE"
+  printf 'isolation_declared=%s\n' "$ISOLATION_DECLARED"
+  printf 'isolation_reason=%s\n' "$ISOLATION_REASON"
+  printf 'worth_a_smith=%s\n' "${WORTH_VERDICT:-yes}"
+  printf 'worth_why=%s\n' "$WORTH_WHY"
+  printf 'force=%s\n' "$FORCE"
+  printf 'locked=%s\n' "$LOCKED"
+  printf 'launched=%s\n' "$LAUNCH_EPOCH"
+  printf 'launch_iso=%s\n' "$LAUNCH_ISO"
   printf 'launch=%s\n' "$LAUNCH_SCRIPT"
   printf 'spawn_gen=%s\n' "$SPAWN_GEN"
 } > "$META_TMP"
 mv "$META_TMP" "$META"
+
+# --- arm the silence watch (best effort) -------------------------------------
+if [ -x "$SCRIPT_DIR/eindri-watch.sh" ]; then
+  "$SCRIPT_DIR/eindri-watch.sh" arm-silence "$ID" --window "${EINDRI_SILENT_WINDOW:-1800}" >/dev/null 2>&1 || true
+fi
 
 if [ "$KIND" = ship ]; then
   printf 'spawned %s harness=%s kind=%s mode=%s yolo=%s backend=%s target=%s worktree=%s isolation=%s\n' \
