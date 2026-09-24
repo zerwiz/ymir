@@ -41,7 +41,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes sessrumnir shells graphics well mcp harness lock migrations hoard autoboot)
+SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness lock migrations hoard autoboot)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -51,6 +51,11 @@ s_a2abridge() { [ -x "$SCRIPT_DIR/a2abridge-ensure.sh" ] && "$SCRIPT_DIR/a2abrid
 f_a2abridge() { "$SCRIPT_DIR/a2abridge-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_hermes()    { [ -x "$SCRIPT_DIR/hermes-ensure.sh" ] && "$SCRIPT_DIR/hermes-ensure.sh" status >/dev/null 2>&1; }
 f_hermes()    { "$SCRIPT_DIR/hermes-ensure.sh" ensure --install >/dev/null 2>&1; }
+# The meeting ear's engine (whisper.cpp + a model); the MCP face + unit ride
+# the fleet surface below. A seat that captures but transcribes elsewhere still
+# passes (voxtype counts as an engine).
+s_snotra()    { [ -x "$SCRIPT_DIR/snotra-ensure.sh" ] && "$SCRIPT_DIR/snotra-ensure.sh" status >/dev/null 2>&1; }
+f_snotra()    { "$SCRIPT_DIR/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
 # The boot law (2026-09-24): every role-owed program enabled and standing. The

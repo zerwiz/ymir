@@ -449,6 +449,25 @@ step_hermes() {
   else add hermes SKIP "no hermes-ensure.sh"; fi
 }
 
+# ── 3b1b. Snotra, the meeting ear's engine ──────────────────────────────────
+# The ear captures on the meeting seat and transcribes with whisper.cpp. The
+# engine is per-OS (pacman/apt/build) and the model is fetched once; a seat that
+# already carries a whisper build or voxtype is left untouched. The MCP face and
+# unit ride the fleet step (bin/fleet-ensure.sh).
+step_snotra() {
+  [ "$SKIP_ENGINES" = 1 ] && { add snotra SKIP "--skip-engines"; return; }
+  if [ ! -x "$SCRIPT_DIR/snotra-ensure.sh" ]; then add snotra SKIP "no snotra-ensure.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if "$SCRIPT_DIR/snotra-ensure.sh" status >/dev/null 2>&1; then add snotra OK "whisper engine + model present"; else add snotra WARN "engine or model missing"; fi
+    return
+  fi
+  if "$SCRIPT_DIR/snotra-ensure.sh" ensure --install >/dev/null 2>&1; then
+    add snotra OK "whisper engine + model present"
+  else
+    add snotra WARN "engine or model missing (run bin/snotra-ensure.sh install)"
+  fi
+}
+
 # ── 3b2. Sessrúmnir desktop GUI ──────────────────────────────────────────────
 # The seat-hall: a vendored, re-themed fork of pi-desktop (Apache-2.0) at
 # apps/sessrumnir. Deps are never committed; the ensure step installs them on
@@ -1095,7 +1114,7 @@ step_panes() {
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=23
+STEP_TOTAL=24
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))
@@ -1121,6 +1140,7 @@ run_step step_apps "apps"
 run_step step_engines "engines"
 run_step step_models "models"
 run_step step_hermes "hermes"
+run_step step_snotra "the meeting ear"
 run_step step_sessrumnir "the seat"
 run_step step_backend "backend"
 run_step step_host "host"
