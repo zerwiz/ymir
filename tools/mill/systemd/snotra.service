@@ -1,0 +1,12 @@
+[Unit]
+Description=Snotra — the meeting ear MCP face (:8321, read-only minutes)
+[Service]
+Type=simple
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+Environment=PORT=8321
+Environment=SNOTRA_VAULT=%h/Documents/ymirhome
+ExecStart=node %h/.fleet/snotra-server.mjs
+Restart=on-failure
+RestartSec=3
+[Install]
+WantedBy=default.target
