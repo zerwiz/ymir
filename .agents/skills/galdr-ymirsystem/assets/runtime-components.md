@@ -69,6 +69,9 @@ Per-component variable lists appear in each section below.
 | `bin/nornir-job-memory-housekeeping.sh` | **Muninn** | backup-gated memory snapshot/prune | `nornir-job-memory-housekeeping.sh` | 0 |
 | `bin/nornir-job-observer.sh` | **Huginn** | read-only observation of command + Brokk | `nornir-job-observer.sh` | 0 |
 | `bin/runes-append.sh` | **Runes** | append-only chained audit ledger | `... <actor> <event> [--order W] [--realm R] --message "..."` \| `--help` | 0; 1 IO; 2 usage |
+| `bin/snotra-capture.sh` | **Snotra** | capture mic + system monitor (PipeWire) to a dated WAV in the hoard; writes the Listening indicator | `snotra-capture.sh start [secs]` \| `stop` \| `status` \| `devices` | 0; 1 no device; 2 usage |
+| `bin/snotra-transcribe.sh` | **Snotra** | transcribe a recording (engine discovered), write Markdown minutes + a Rune | `snotra-transcribe.sh <wav> [topic]` | 0; 1 no recording |
+| `bin/snotra-ensure.sh` | **Snotra** | ensure the seat's whisper engine + model (per-OS) | `snotra-ensure.sh status` \| `ensure [--install]` \| `install` | 0 present; 1 absent; 2 usage |
 
 ### 3.2 `bin/saga-session-start.sh` — Sága, the session digest
 
