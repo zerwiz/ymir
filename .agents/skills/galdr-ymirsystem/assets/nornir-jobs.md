@@ -81,6 +81,11 @@ same day. That is deliberate: cron is idempotent-by-date, not retrying-by-failur
 | `BROKK_CRON_LOG_MAX_BYTES` | `1048576` | Rotation threshold. |
 | `BROKK_REALM` | `""` | Realm exported to jobs (jobs also fall back to `data/realm.md`). |
 
+**The cradle seats both overrides (2026-09-24):** `fleet-ensure` renders
+`nornir.service` with `BROKK_STATE_OVERRIDE` and `BROKK_CONFIG_OVERRIDE` set to the
+operator's home (`<home>/state` and `<home>/config`) — the scheduler and the smoke
+read the same state.
+
 ---
 
 ## 2. The schedule is the user's — `$YMIR_HOME/config/cron.yaml`
