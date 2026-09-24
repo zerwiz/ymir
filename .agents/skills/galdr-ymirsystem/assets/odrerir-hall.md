@@ -131,3 +131,14 @@ public hall), surface rules in `.agents/skills/galdr-ymirsystem/assets/hlidskjal
 ("The Hall door" section), and `bin/hall-snapshot.sh` for the livehall feed if a
 board ever needs it again. Everything the hall renders lives under
 `apps/odrerir/`.
+### The three doors + the raise hinge (2026-09-24, follow-up)
+- `#/` is the **hall board** (`LivehallBoard`) — the livehall snapshot
+  (`/livehall.json`: tally · smiths · the call · ledger), fail-closed when the
+  snapshot is absent. `#/tickets`, `#/plans` are the boards; the topbar links
+  are the board · the tickets · the plans.
+- The **halls buttons** raise the other windows through the Hlidskjalf gate via
+  the vite `/api` proxy (same-origin; `ODRERIR_GATE`, default
+  `http://127.0.0.1:3889`) with the desktop-seat marker when the seat is one —
+  a direct cross-origin POST is CORS-blocked and dies silent (fixed 2026-09-24).
+- The plans board wears the tickets' skin exactly: the same status badges
+  (`src/board.ts` — one palette), the same inline +new panel, the same table.

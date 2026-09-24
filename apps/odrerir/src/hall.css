@@ -412,6 +412,102 @@ body {
   cursor: pointer;
   margin-left: auto;
 }
+/* the hall's own board — the livehall (tally · smiths · call · ledger) */
+.lh-board .panel-body {
+  padding: 1rem;
+}
+.lh-tally {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.lh-tally-cell {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hall-steel);
+  border-radius: 4px;
+  padding: 0.55rem 0.6rem;
+  text-align: center;
+}
+.lh-tally-cell b {
+  display: block;
+  font-size: 1.25rem;
+  color: var(--hall-bone);
+  font-family: var(--ymir-font-head, Georgia, serif);
+}
+.lh-tally-cell span {
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  color: var(--hall-bone-dim);
+  font-family: var(--ymir-font-mono, monospace);
+}
+.lh-smiths {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.lh-smith {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--hall-steel);
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.72rem;
+}
+.lh-state {
+  color: var(--hall-bronze);
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.6rem;
+  text-transform: lowercase;
+}
+.lh-cols {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  gap: 0.6rem;
+}
+.lh-sec {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hall-steel);
+  border-radius: 6px;
+  padding: 0.65rem 0.7rem;
+  min-height: 5rem;
+}
+.lh-sec-head {
+  margin-bottom: 0.45rem;
+}
+.lh-eyebrow {
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  color: var(--hall-bronze);
+}
+.lh-call-line {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+.lh-ledger {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+.lh-count {
+  margin: 0.9rem 0 0;
+  font-size: 0.66rem;
+}
+@media (max-width: 900px) {
+  .lh-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+  .lh-tally {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 @media (max-width: 700px) {
   .td-strip {
     grid-template-columns: repeat(3, 1fr);
