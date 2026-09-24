@@ -320,7 +320,16 @@ export function ChatPanel(): React.JSX.Element {
 
               return (
                 <>
-                  <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto">
+                  <div ref={scrollRef} onScroll={onScroll} className="flex flex-1 flex-col overflow-y-auto">
+                    {/* Bottom-anchored chat: the spacer takes the free space when
+                        the conversation is short, so the embers grow from the
+                        BOTTOM of the pane (2026-09-24) — a plain block painted
+                        from the top, with content starting mid-viewport. It
+                        collapses to 0 when the conversation overflows, so
+                        scrolling still reaches everything (the justify-end trap
+                        that cuts off overflow start is avoided). The scroll hook
+                        ends a long conversation at the bottom. */}
+                    <div aria-hidden className="shrink-0" style={{ flex: '1 1 auto' }} />
                     {sessionLoading && messages.length === 0 ? (
                       <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-dim">
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-border-strong border-t-accent" />
