@@ -28,6 +28,7 @@ import {
   type ChatModel,
   type ChatSession,
   type CronInfo,
+  type CronSeat,
   type MimirHealth,
   type RuntimeInfo,
   type SmidjaDecision,
@@ -129,6 +130,7 @@ interface YmirState {
   live: boolean | null;
   runtime: RuntimeInfo | null;
   cron: CronInfo | null;
+  cronSeats: CronSeat[] | null;
   mimir: MimirHealth | null;
   smidjaDb: string;
   smidjaSessions: SmidjaSession[];
@@ -294,6 +296,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   live: null,
   runtime: null,
   cron: null,
+  cronSeats: null,
   mimir: null,
   smidjaDb: 'absent',
   smidjaSessions: [],
@@ -317,7 +320,7 @@ export const useYmir = create<YmirState>((set, get) => ({
       // rather than handing the panel a shape it cannot read.
       const ok = <T,>(x: T | null | undefined, prev: T): T =>
         x && !(x as unknown as { error?: unknown }).error ? (x as T) : prev;
-      const [agents, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills] =
+      const [agents, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
           gateApi.agents().then((v) => ok(v, get().agents)).catch(() => get().agents),
@@ -330,10 +333,11 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.files(get().realm).then((v) => ok(v, get().files)).catch(() => get().files),
           gateApi.runtime().then((v) => ok(v, get().runtime)).catch(() => get().runtime),
           gateApi.cron().then((v) => ok(v, get().cron)).catch(() => get().cron),
+          gateApi.cronSeats().then((v) => ok(v, get().cronSeats ?? [])).catch(() => get().cronSeats ?? []),
           gateApi.mimirHealth().catch(() => null),
           gateApi.skills().then((v) => ok(v, get().skills)).catch(() => get().skills),
         ]);
-      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, mimir, skills, usage, live: true });
+      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills, usage, live: true });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set({ live: false });

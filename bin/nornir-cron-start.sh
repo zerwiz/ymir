@@ -128,16 +128,24 @@ scheduler='
     today=$(date +%Y-%m-%d)
     while IFS= read -r line; do
       case "$line" in ""|\#*) continue ;; esac
-      at=${line%% *}
-      rest=${line#* }
-      # An optional role gate: `@heart` or `@heart,forge` before the command. A
-      # job runs only when one of the roles of THIS machine is in the gate; no
-      # gate means any role. Plan 51: the record jobs belong to the heart, the
-      # model jobs to the forge, and a dev body runs neither (2026-09-23).
-      gate=""
-      case "$rest" in
-        @*) gate=${rest%% *}; cmd=${rest#* } ;;
-        *)  cmd=$rest ;;
+      # An optional role gate may sit BEFORE the time (the home config form:
+      # @heart 06:00 bin/x) or AFTER it (06:00 @heart bin/x). The 2026-09-24
+      # fault: only the after-time shape parsed, so every role-first line was
+      # silently DEAD while --status still counted it declared — on every seat,
+      # the heart record jobs never fired. Both orders are one gate now (plan 54).
+      gate=""; at=""; cmd=""
+      case "$line" in
+        @*)
+          gate=${line%% *}; rest=${line#* }
+          at=${rest%% *}; cmd=${rest#* }
+          ;;
+        *)
+          at=${line%% *}; rest=${line#* }
+          case "$rest" in
+            @*) gate=${rest%% *}; cmd=${rest#* } ;;
+            *)  cmd=$rest ;;
+          esac
+          ;;
       esac
       [ -n "$cmd" ] || continue
       [ "$at" = "$now" ] || continue

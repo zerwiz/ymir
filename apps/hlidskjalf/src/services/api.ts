@@ -32,12 +32,29 @@ export interface RuntimeInfo {
 export interface CronJob {
   at: string;
   command: string;
+  role?: string;
   status: string;
+  applies?: boolean;
 }
 export interface CronInfo {
   running: boolean;
   pid: string;
+  why?: string;
+  source?: 'home' | 'repo' | 'example' | 'none';
+  roles?: string[];
   jobs: CronJob[];
+  last?: Record<string, string>;
+}
+export interface CronSeat {
+  seat: string;
+  host: string;
+  reachable: boolean;
+  running: boolean;
+  pid: string;
+  roles: string[];
+  jobs: number;
+  applies: number;
+  error?: string;
 }
 
 export interface LoaderRow {
@@ -357,6 +374,7 @@ export const gateApi = {
   skills: () => get<SkillDef[]>('/api/skills'),
   runtime: () => get<RuntimeInfo>('/api/runtime'),
   cron: () => get<CronInfo>('/api/cron'),
+  cronSeats: () => get<CronSeat[]>('/api/cron/seats'),
   loaders: () => get<LoaderRow[]>('/api/loaders'),
   checks: () => get<CheckRow[]>('/api/checks'),
   orders: () => get<OrdersInfo>('/api/orders'),

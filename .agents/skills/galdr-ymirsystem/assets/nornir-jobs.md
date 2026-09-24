@@ -274,6 +274,23 @@ DRM truth and the effective GPU policy (`bin/graphics-lib.sh`). A broken surface
 appends a `doctor.broken` rune and exits 1 so the cron log carries it. Eir is
 also reached after every update (`bin/groa-update.sh`).
 
+### 3.10 The role gate parses BOTH orders (added 2026-09-24, plan 54)
+
+The loop's line grammar accepts the `@role[,role]` gate **before** the time
+(`@heart 06:00 bin/nornir-job-observer.sh` — the shape the home's `cron.yaml`
+writes) **or after** it (`06:00 @heart bin/x`). The 2026-09-24 fault: only the
+after-time order parsed, so every role-first line was silently DEAD while the
+loop still counted it declared — on every seat, the heart's record jobs never
+fired. `.agents/tests/cron-role-gate.test.sh` covers both orders. `--status` and
+the Hlidskjalf board (`/api/cron`) parse with the same grammar, so the declared
+set, the running set, and the shown set are one reality.
+
+- **A loop embeds its parse at spawn.** `nornir-cron-start.sh` hands the body to
+  a background `bash -c`; the RUNNING process keeps the grammar of the moment it
+  was started. Deploying a parser fix therefore needs the seat's tree pulled AND
+  a fresh session (or a `--stop` + start) — a long-lived loop keeps the old body
+  until then.
+
 Not a cron job — a **provisioner**: stands Mautic + Postiz + Activepieces
 (+ optional Forgejo) on ANY computer, the same OSS engines the server runs.
 Env-driven (ports virtualized), secrets generated once into the home, never
