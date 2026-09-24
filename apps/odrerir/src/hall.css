@@ -110,6 +110,15 @@ body {
 }
 
 /* ── the stage ──────────────────────────────────────────────── */
+/* the hall board is the ORIGINAL <main id="livehall">, carried whole — its
+   wrapper is scanty so the board's own (restored) layout is the one that
+   shows (2026-09-24: never simplify). */
+.hall-stage {
+  position: relative;
+  z-index: 1;
+  height: calc(100% - 60px);
+  overflow-y: auto;
+}
 .hall-wrap {
   position: relative;
   z-index: 1;
@@ -535,3 +544,5 @@ body {
     width: 100%;
   }
 }
+/* the ORIGINAL hall board kit, scoped to #livehall (2026-09-24: never simplify) */
+@import "./hall/lh-scoped.css";
