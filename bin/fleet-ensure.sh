@@ -215,6 +215,8 @@ materialize_web_unit() {  # <program> — substitute the per-seat roots into the
       -e "s|__YMIR_VIZ_DB__|$VIZ_DB|g" \
       -e "s|__YMIR_ENV_FILE__|$ENV_FILE|g" \
       -e "s|__YMIR_BIN_DIR__|$FLEET_TEMPLATE_ROOT/bin|g" \
+      -e "s|__YMIR_OPERATOR_STATE__|$HOME_ROOT/state|g" \
+      -e "s|__YMIR_OPERATOR_CONFIG__|$HOME_ROOT/config|g" \
       -e "s|__YMIR_HLIDSKJALF_PORT__|$HLIDSKJALF_PORT|g" \
       -e "s|__YMIR_HLIDSKJALF_API_PORT__|$HLIDSKJALF_API_PORT|g" \
       -e "s|__YMIR_SMIDJA_PORT__|$SMIDJA_PORT|g" \
