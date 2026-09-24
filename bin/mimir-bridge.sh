@@ -3,8 +3,9 @@
 # The engram engine speaks CLI + MCP; this keeps its HTTP face alive so the gate
 # API, `bin/mimir.sh`, and the session start can drink from the well.
 #
-# Usage: bin/mimir-bridge.sh [--start|--stop|--status] [--port N]
-#        bin/mimir-bridge.sh --version
+# Usage: bin/mimir-bridge.sh [--start|--stop|--status] [--port N] [--foreground]
+#        bin/mimir-bridge.sh --foreground  # stay in the foreground (a systemd unit
+#                                          # supervises this process directly — no self-daemon)
 set -u
 
 # --- portability shim: bin/ymir-platform.sh --------------------------------
@@ -49,13 +50,15 @@ case "${1-}" in
   -h|--help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 ACTION="start"
+FOREGROUND=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --start|"") ACTION=start; shift ;;
     --stop) ACTION=stop; shift ;;
     --status) ACTION=status; shift ;;
+    --foreground) FOREGROUND=1; shift ;;
     --port) PORT=${2-}; shift 2 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/mimir-bridge.sh [--start|--stop|--status]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/mimir-bridge.sh [--start|--stop|--status|--foreground]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -95,6 +98,11 @@ if ! "$PY" -c "import engram" 2>/dev/null; then
 fi
 
 mkdir -p "$YMIR_STATE_DIR" "$(dirname "$DB")"
+if [ "$FOREGROUND" = 1 ]; then
+  # A systemd unit owns this process: no self-daemon, no pid file, no port
+  # poll — the bridge is the unit, and the unit's truth is the process's.
+  exec env ENGRAM_DB="$DB" MIMIRSBRUNN_PORT="$PORT" "$PY" "$BRIDGE"
+fi
 ENGRAM_DB="$DB" MIMIRSBRUNN_PORT="$PORT" nohup "$PY" "$BRIDGE" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 sleep 3

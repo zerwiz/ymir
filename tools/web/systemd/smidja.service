@@ -1,0 +1,17 @@
+[Unit]
+Description=Smíðja visualizer API — the smithy's eye, serves the UI from dist (:8437, dev seats)
+
+[Service]
+Type=simple
+WorkingDirectory=__YMIR_VIZ_DIR__
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+Environment=CMD_DB=__YMIR_VIZ_DB__
+Environment=PORT=__YMIR_SMIDJA_PORT__
+ExecStart=%h/.bun/bin/bun run server/index.ts
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+[Install]
+WantedBy=ymir.target
