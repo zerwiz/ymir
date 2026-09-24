@@ -66,7 +66,7 @@ s_shells() {
     dir=""
     app_dir "$s" dir 2>/dev/null || dir=""
     [ -n "$dir" ] || continue          # not installed — a deliberate web-only install
-    state="$(electron_runtime_state "$dir" "$ROOT" "$(app_pkg "$s")" 2>/dev/null || echo absent)"
+    state="$(electron_runtime_state "$dir" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"
     [ "$state" = ok ] || return 1      # absent OR partial: the shell cannot open
   done < <(shell_surfaces)
   return 0
@@ -233,7 +233,7 @@ detail() { # <name> -> one short fact
     harness)   "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     lock)      "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)"echo 'structure'" ;;
-    shells)    'shell_surfaces | while IFS= read -r s; do d="$(app_dir "$s" 2>/dev/null || true)"; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null || echo absent)"; done' ;;
+    shells)    'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
     hoard)     "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
   esac
 }
