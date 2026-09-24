@@ -37,6 +37,15 @@ if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   done
   unset _ya _yac
 fi
+# The runtime resolver (P1) and the graphics policy (P7) live in bin/ — every
+# launcher, every doctor, and the installer read the SAME answer, never an
+# app-local hardcode (2026-09-24).
+if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/electron-lib.sh" ]; then
+  . "$ROOT/bin/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
+fi
+if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/graphics-lib.sh" ]; then
+  . "$ROOT/bin/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
+fi
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
 app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
 app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
@@ -92,8 +101,19 @@ view_pids() {  # all live Electron pids for a view
 # turns into a NULL dereference, killing the GPU process while the window
 # survives. These are dashboards, not 3D, so software rendering costs nothing.
 IGPU_VRAM_SMALL_MIB="${YMIR_IGPU_VRAM_SMALL_MIB:-2048}"
+# P7 (2026-09-24): the old test read mem_info_vram_total only — i915 NEVER
+# exposes that file — so on this Intel + discrete hybrid the guard never fired
+# and the GPU process died for want of a fence (SIGABRT, no OOM). The fragile
+# case is now classified from the DRM devices themselves: a shared-memory
+# integrated device beside a discrete one (bin/graphics-lib.sh). GTT is read
+# where amdgpu exposes it; the small-carve-out read remains only as the
+# fallback when the lib is not present.
 igpu_vram_small() {
   local d total
+  if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/graphics-lib.sh" ]; then
+    . "$ROOT/bin/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
+  fi
+  if [ "${YMIR_GRAPHICS_LIB_LOADED:-0}" = 1 ] && graphics_hybrid_fragile; then return 0; fi
   for d in /sys/class/drm/card*/device; do
     [ -r "$d/mem_info_vram_total" ] || continue
     total=$(( $(cat "$d/mem_info_vram_total" 2>/dev/null || echo 0) / 1048576 ))
@@ -102,7 +122,15 @@ igpu_vram_small() {
   return 1
 }
 
-real_electron() { printf '%s' "$APP/node_modules/electron/dist/electron"; }
+# P1 (2026-09-24): the ONE resolver. The launcher execs whatever electron_bin
+# finds for THIS surface's app dir — app-local, workspace-hoisted, or the
+# sibling package — never a path npm will not make. real_electron takes the
+# view because smidja/odrerir live in different app dirs than hlidskjalf.
+real_electron() {  # <surface|view>
+  local s="${1:-$VIEW}"
+  [ "$s" = both ] && s=hlidskjalf
+  electron_bin "$(app_dir "$s")" "$ROOT" "$(app_pkg "$s")"
+}
 is_running() {
   local pids; pids="$(view_pids "$1")"
   [ -n "$pids" ]
@@ -157,36 +185,39 @@ esac
 command -v npm >/dev/null 2>&1 || { printf 'error: npm not found\nhelp: install node/npm to run the desktop shell\n' >&2; exit 1; }
 mkdir -p "$YMIR_STATE_DIR"
 
-if [ ! -x "$APP/node_modules/.bin/electron" ]; then
+# P3 (2026-09-24): npm workspaces HOIST a member app's deps to the root — an
+# install inside the member reconciles the tree and REMOVES the local
+# node_modules the launcher was about to use. Install at the workspace root
+# when the app is a member; app-local only for a standalone app.
+electron_install_root() {  # <app-dir> → the dir whose package.json owns the deps
+  if electron_is_workspace_member "$1" "$ROOT"; then printf '%s' "$ROOT"; else printf '%s' "$1"; fi
+}
+
+if ! electron_bin "$(app_dir hlidskjalf)" "$ROOT" hlidskjalf >/dev/null 2>&1 \
+   && [ ! -x "$ROOT/node_modules/.bin/electron" ] && [ ! -x "$APP/node_modules/.bin/electron" ]; then
   if [ "$NO_INSTALL" = 1 ]; then
-    printf 'error: electron not installed in %s\nhelp: (cd apps/hlidskjalf && npm install)\n' "$APP" >&2; exit 1
+    printf 'error: electron not installed in %s\nhelp: (cd %s && npm install)\n' "$(app_dir hlidskjalf)" "$(electron_install_root "$APP")" >&2; exit 1
   fi
   printf 'electron: installing dependencies (first run)…\n' >&2
-  ( cd "$APP" && npm install ) >/dev/null 2>&1 || { printf 'error: npm install failed — see apps/hlidskjalf\n' >&2; exit 1; }
+  local _installd; _installd="$(electron_install_root "$APP")"
+  ( cd "$_installd" && npm install ) >/dev/null 2>&1 || { printf 'error: npm install failed — see %s\n' "$_installd" >&2; exit 1; }
 fi
 
 # npm 11+ gates postinstall scripts (allowScripts), so Electron's binary is
 # often never downloaded even though the package installed. Heal that here:
 # run the package's own postinstall, and if it still yields no binary, extract
 # from the already-cached zip and write path.txt (what the postinstall does).
+# P2 (2026-09-24): absence is NEVER success. The old guard returned 0 when the
+# runtime was absent — the mend was skipped and the launcher exec'd a path
+# that did not exist, and every check said healthy. Only a resolver-verified,
+# answering executable is success. Do not reintroduce a bare `return 0` on the
+# absent branch; see .agents/tests/electron-lib.test.sh.
 ensure_electron_binary() {
-  local bin="$APP/node_modules/electron/dist/electron"
-  [ -x "$bin" ] && return 0
-  [ -d "$APP/node_modules/electron" ] || return 0   # nothing installed yet
-  if [ -f "$APP/node_modules/electron/install.js" ]; then
-    ( cd "$APP" && node node_modules/electron/install.js ) >/dev/null 2>&1 || true
-  fi
-  [ -x "$bin" ] && return 0
-  # Fall back to the download cache, which the postinstall populated.
-  local zip
-  zip="$(ls "$HOME"/.cache/electron/*/electron-v*-linux-*.zip 2>/dev/null | head -1)"
-  if [ -n "$zip" ] && command -v unzip >/dev/null 2>&1; then
-    mkdir -p "$APP/node_modules/electron/dist"
-    unzip -q -o "$zip" -d "$APP/node_modules/electron/dist" >/dev/null 2>&1 && \
-      printf 'electron' >"$APP/node_modules/electron/path.txt"
-  fi
-  [ -x "$bin" ] && return 0
-  return 1
+  local bin v
+  v="$VIEW"; [ "$v" = both ] && v=hlidskjalf
+  bin="$(electron_bin "$(app_dir "$v")" "$ROOT" "$(app_pkg "$v")")" || return 1
+  [ -n "$bin" ] && [ -x "$bin" ] || return 1
+  "$bin" --version >/dev/null 2>&1
 }
 
 # npm gates install scripts by default (11.16+ warns, 12 refuses), and Electron's
@@ -202,18 +233,19 @@ repair_electron() {  # <app-dir>
 }
 if ! ensure_electron_binary; then
   # npm-independent: fetch the release as the postinstall would (bin/electron-lib.sh)
-  [ -r "$ROOT/bin/electron-lib.sh" ] && { . "$ROOT/bin/electron-lib.sh"; }
+  local mend_pkg; mend_pkg="$(app_pkg hlidskjalf)"
   # tier 1 — the deps themselves may be ungated (npm's policy skips dev-deps):
   # the npm package's apps arrive without node_modules at all
-  ( cd "$APP" && npm install --include=dev >/dev/null 2>&1 ) || true
-  command -v electron_fetch_runtime >/dev/null 2>&1 && electron_fetch_runtime "$APP" || true
+  ( cd "$(electron_install_root "$APP")" && npm install --include=dev >/dev/null 2>&1 ) || true
+  command -v electron_fetch_runtime >/dev/null 2>&1 && electron_fetch_runtime "$APP" "$ROOT" "$mend_pkg" || true
   # Try the mending ourselves before telling the user to do it by hand: npm's
   # gating is the cause, and the cure is one command we can run.
   echo "the Electron runtime is partial — mending it (npm rebuild electron)…" >&2
-  repair_electron "$APP" >/dev/null 2>&1 || true
+  repair_electron "$(electron_install_root "$APP")" >/dev/null 2>&1 || true
   # tier 3 — the postinstall's own downloader, then the PROVEN zip road
-  [ -f "$APP/node_modules/electron/install.js" ] && ( cd "$APP/node_modules/electron" && node install.js >/dev/null 2>&1 ) || true
-  command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$APP" || true
+  local _edir; _edir="$(electron_pkg_dir "$APP" "$ROOT" "$mend_pkg" 2>/dev/null || true)"
+  [ -n "$_edir" ] && [ -f "$_edir/install.js" ] && ( cd "$_edir" && node install.js >/dev/null 2>&1 ) || true
+  command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$APP" "$ROOT" "$mend_pkg" || true
   ensure_electron_binary || {
     printf 'error: the Electron runtime could not be mended\nhelp: cd <the app> && npm install-scripts approve electron && npm rebuild electron\nhelp: or run the web surfaces only: ymir install --no-desktop\n' >&2
     exit 1
@@ -275,21 +307,26 @@ start_one() {
   fi
   # Launch the REAL Electron binary, not the .bin node shim, so the recorded pid
   # is the app itself (the shim spawns and would leave a stale/incorrect pid).
-  local bin; bin="$(real_electron)"
+  local bin; bin="$(real_electron "$v")"
+  [ -n "$bin" ] && [ -x "$bin" ] || { printf 'error: no Electron runtime for %s — run the installer or npm install at the workspace root\n' "$v" >&2; exit 1; }
   local -a extra=()
-  # GPU safety — see igpu_vram_small() above for why this exists.
-  #   YMIR_DESKTOP_DISABLE_GPU=1  force software rendering
-  #   YMIR_DESKTOP_DISABLE_GPU=0  force the GPU path
-  #   unset (auto)                decide from the device's VRAM carve-out
+  # GPU safety — see igpu_vram_small() above for why this exists. The effective
+  # policy is ONE decision (bin/graphics-lib.sh), recorded by the sense snapshots;
+  # YMIR_DESKTOP_DISABLE_GPU remains the human override (P7, 2026-09-24).
+  #   1            force software rendering
+  #   0            force the GPU path
+  #   unset (auto) decide from the machine's DRM classification
   case "${YMIR_DESKTOP_DISABLE_GPU:-auto}" in
     1|true|yes) extra+=(--disable-gpu --disable-gpu-compositing) ;;
     0|false|no) : ;;
     *)
-      if [ "$(ymir_os 2>/dev/null)" = linux ] && igpu_vram_small; then
-        extra+=(--disable-gpu --disable-gpu-compositing)
+      if [ "$(ymir_os 2>/dev/null)" = linux ]; then
+        local gp; gp="$(graphics_policy 2>/dev/null || true)"
+        [ -n "$gp" ] || { igpu_vram_small && gp=software || gp=gpu; }
+        [ "$gp" = software ] && extra+=(--disable-gpu --disable-gpu-compositing)
       fi ;;
   esac
-  nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron)" "$(app_dir "$v")" \
+  nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron "$v")" "$(app_dir "$v")" \
     --user-data-dir="$HOME/.config/$(view_mark "$v")" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &
   echo $! >"$f"

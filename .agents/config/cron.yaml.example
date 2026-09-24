@@ -18,3 +18,5 @@
 00:30 bin/nornir-job-skillopt-sleep.sh
 00:15 bin/nornir-job-memory-housekeeping.sh
 00:00 bin/nornir-job-git-sync.sh
+# Eir checks every surface daily (P8) — a desktop that cannot open is reported.
+08:15 bin/nornir-job-doctor.sh

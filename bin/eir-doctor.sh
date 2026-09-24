@@ -41,7 +41,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes sessrumnir shells well mcp harness lock migrations hoard autoboot)
+SURFACES=(floors herdr a2abridge hermes sessrumnir shells graphics well mcp harness lock migrations hoard autoboot)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -53,35 +53,50 @@ s_hermes()    { [ -x "$SCRIPT_DIR/hermes-ensure.sh" ] && "$SCRIPT_DIR/hermes-ens
 f_hermes()    { "$SCRIPT_DIR/hermes-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+# The boot law (2026-09-24): every role-owed program enabled and standing. The
+# mend for a stopped boot IS the raise — re-materialize, re-enable, re-verify.
 s_autoboot()  { [ -x "$SCRIPT_DIR/ymir-autoboot.sh" ] && "$SCRIPT_DIR/ymir-autoboot.sh" verify >/dev/null 2>&1; }
-# The mend for a stopped boot IS the raise: re-materialize, re-enable, re-verify.
 f_autoboot()  { [ -x "$SCRIPT_DIR/fleet-ensure.sh" ] && "$SCRIPT_DIR/fleet-ensure.sh" ensure >/dev/null 2>&1; }
-# The desktop shells: absent is healthy (the web surfaces stand alone), PARTIAL is
-# not — npm gated the Electron postinstall, so the window cannot open while every
-# build still passes (bin/electron-lib.sh).
-shell_dirs() {
-  local a d
-  for a in hlidskjalf odrerir sessrumnir; do
-    for d in "$ROOT/apps/$a" "$ROOT/node_modules/@zerwiz/$a"; do
-      [ -d "$d" ] && { printf '%s\n' "$d"; break; }
-    done
-  done
-}
+# The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
+# workspace-hoisted, or the sibling package (bin/electron-lib.sh). ABSENT for
+# an app the operator has installed is a FAILURE, never healthy: a desktop
+# that cannot open must be reported red, not quietly green. Only a surface
+# whose app dir is not installed at all — the recorded web-only decision — is
+# skipped.
+shell_surfaces() { printf '%s\n' hlidskjalf odrerir sessrumnir; }
 s_shells() {
-  local d state
-  while IFS= read -r d; do
-    state="$(electron_runtime_state "$d" 2>/dev/null || true)"
-    [ "$state" = partial ] && return 1
-  done < <(shell_dirs)
+  local s dir state
+  while IFS= read -r s; do
+    dir=""
+    app_dir "$s" dir 2>/dev/null || dir=""
+    [ -n "$dir" ] || continue          # not installed — a deliberate web-only install
+    state="$(electron_runtime_state "$dir" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"
+    [ "$state" = ok ] || return 1      # absent OR partial: the shell cannot open
+  done < <(shell_surfaces)
   return 0
 }
 f_shells() {
-  printf 'eir: the shells need YOUR hand — npm gated the runtime download:\n' >&2
+  printf 'eir: the shells need mending — bin/ymir-install.sh (the desktop step) mends them; or by hand:\n' >&2
   electron_remedy >&2
   return 1
 }
 if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/electron-lib.sh" ]; then
   . "$SCRIPT_DIR/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
+fi
+# Graphics (P8): the DRM truth and the effective GPU policy. A host with a
+# display but NO DRM card cannot render at all — that is a named failure, not
+# a green row. On a headless box nothing renders anyway: healthy.
+s_graphics() {
+  if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then return 0; fi
+  graphics_block --json 2>/dev/null | grep -qF '"cards":[{' || return 1
+  return 0
+}
+f_graphics() {
+  printf 'eir: a display is up but no DRM card is sensed — inspect the driver (bin/omarchy-sense.sh observe) and the kernel log\n' >&2
+  return 1
+}
+if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/graphics-lib.sh" ]; then
+  . "$SCRIPT_DIR/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
 fi
 
 s_well()      { [ -x "$SCRIPT_DIR/mimir.sh" ] && "$SCRIPT_DIR/mimir.sh" health >/dev/null 2>&1; }
@@ -218,10 +233,11 @@ detail() { # <name> -> one short fact
     sessrumnir)"[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
     well)      "echo 'engram :4602'" ;;
     mcp)       "echo 'a2abridge + engram'" ;;
+    graphics)  "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     lock)      "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)"echo 'structure'" ;;
-    shells)    'shell_dirs | while IFS= read -r d; do printf "%s %s; " "$(basename "$d")" "$(electron_runtime_state "$d" 2>/dev/null || true)"; done' ;;
+    shells)    'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
     hoard)     "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
     autoboot)  "$SCRIPT_DIR/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/ymir-autoboot.sh verify'" ;;
   esac
