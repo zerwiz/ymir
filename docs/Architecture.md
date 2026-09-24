@@ -71,7 +71,10 @@ repository, orchestrated by autonomous Norse-named agents.
 
 - **Svartalfaheim** holds the realms (one directory per tenant) and per-tenant
   A2A discovery; **Midgard** is the shared cross-tenant space; **Runes** is the
-  immutable ledger; **Valhalla** supervises the processes.
+  immutable ledger; **Valhalla** supervises the processes. The **meeting layer**
+  (**Snotra**, the ear, and **Þing**, the assembly hall) sits beside the core —
+  capture on the meeting seat, transcription on the GPU seat, the record served
+  from the heart (§3.13).
 
 ## 3. Core Subsystems
 
@@ -233,6 +236,45 @@ Integrated from Dex Horthy's agentic engineering framework (YouTube `xgkjtF89-44
 - [ ] High-stakes changes go through multi-model review
 - [ ] Incident-to-PR pipeline operational
 
+### 3.13 The Meeting Layer — Snotra (the ear) & Þing (the room)
+
+Meetings are a first-class Ymir capability: heard, transcribed, and kept in the
+hoard where the fleet's agents can read them.
+
+**The role split is by seat, and it is honest about physics:**
+
+```
+THE EAR (capture)         the seat in the meeting — PipeWire mic + system monitor.
+                          A headless server cannot hear a call on the operator's laptop.
+THE BRAIN (transcribe)    the seat with the GPU — whisper.cpp (CUDA). CPU fallback
+                          when the resident rail model starves VRAM.
+THE RECORD (store/serve)  the heart — minutes in the vault, synced by the home's git
+                          road, the read-only MCP face served there.
+```
+
+- **Snotra** — the meeting ear (plan 52). `bin/snotra-capture.sh` records mic +
+  system audio via PipeWire (no virtual loopback device); `bin/snotra-transcribe.sh`
+  discovers the seat's whisper engine (env → PATH → build trees → `voxtype`),
+  normalises to 16 kHz mono, and writes Markdown minutes under
+  `$YMIR_HOME/hodd/workspaces/meetings/` with a Rune per meeting. Minutes are
+  summarised by the **local rail** (`llama-swap`, no cloud key).
+- **The MCP face** (`tools/snotra/server.mjs`, streamable HTTP `:8321`, read-only)
+  lets any seat's agent ask *"what did we decide about X?"* — `snotra_list`,
+  `snotra_read`, `snotra_search`, `snotra_summary`.
+- **Þing** — the assembly hall (plan 53): Ymir's own meeting room, a MiroTalk P2P
+  (AGPLv3) fork on whynot (`:3000`, public door `ping.zerwiz.org`). The ear
+  complements the room: Snotra records meetings held in other halls; Þing is a
+  hall of our own, so the ear can know the room, the participants, and the moment
+  it began.
+- **The engine is per-seat** (open-source-first, no duplicate vendored): heimdall
+  and whynot carry CUDA whisper.cpp builds; omarchy's `voxtype` already bundles
+  whisper (models + a full `meeting` mode) and gained `extra/whisper-cpp` only for
+  a uniform CLI. `bin/snotra-ensure.sh` reports and installs per-OS; the
+  `snotra` step of `bin/ymir-install.sh` and the `snotra` surface of
+  `bin/eir-doctor.sh` keep a fresh seat whole.
+- **First Law:** audio and transcripts are private data — the hoard, never the
+  repo. The repo carries the wiring, never a recording, a name, or a minute.
+
 ## 4. Execution Chain Examples
 
 ### 4.1 Inbound GitHub Bug Report
@@ -303,6 +345,9 @@ On success: cleanup(merge=true) → merged to main, worktree removed
 | Persistence | Postgres 16 (self-hosted) + engram/SQLite | Runes/Mimirsbrunn |
 | Process mgmt | PM2 / Docker | Valhalla |
 | CI/CD | GitHub Actions + gh CLI | Mjollnir / deploy |
+| Meeting capture | **PipeWire** (mic + system monitor) + ffmpeg | Snotra (the ear) |
+| Meeting transcription | **whisper.cpp** (CUDA; `voxtype` on omarchy) | Snotra (the brain) |
+| Meeting room | **MiroTalk P2P** (AGPLv3 fork) | Þing (the assembly hall) |
 | Reused systems | `smidja`, the upstream `firstmate` distro, `.compliance`, smidja visualizer | — |
 
 ### Target stack (Ymir Rut v2.6 — port AFTER end-to-end, ENTRY-009)
@@ -334,6 +379,7 @@ On success: cleanup(merge=true) → merged to main, worktree removed
 | P9 | Mjollnir issue→PR pipeline | P1, P4 |
 | P10 | Toolchain & deploy engine (Valhalla, GitHub CI/CD) | P1 |
 | P11 | **Ymir Rut port** (Rust/NATS/gRPC re-floor) — only after P0–P10 work end-to-end | P0–P10 |
+| P12 | **Meeting layer** — Snotra (the ear: PipeWire capture, whisper.cpp, minutes in the hoard, the read-only MCP face) + Þing (the assembly hall) | P2, P4 |
 
 Detailed per-feature plans: `docs/plans/`. Full v2.6 target spec: `docs/ymir-rut.md`.
 Mythos & houses: `docs/lore.md`. Decision history: `docs/append-only-log.md`.
