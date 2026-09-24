@@ -5,6 +5,8 @@ Description=Nornir — the seat's scheduled jobs, read from the operator's confi
 Type=oneshot
 RemainAfterExit=yes
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+Environment=BROKK_STATE_OVERRIDE=__YMIR_OPERATOR_STATE__
+Environment=BROKK_CONFIG_OVERRIDE=__YMIR_OPERATOR_CONFIG__
 ExecStart=/bin/bash __YMIR_BIN_DIR__/nornir-cron-start.sh
 ExecStop=/bin/bash __YMIR_BIN_DIR__/nornir-cron-start.sh --stop
 
