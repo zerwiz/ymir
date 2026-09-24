@@ -129,13 +129,17 @@ function launch() {
 
   // Build electron args.
   // --no-sandbox is required so Pi subprocesses can spawn.
-  // --disable-gpu is intentionally NOT passed by default — it breaks window
-  // creation on some Wayland + AMD setups. If the GPU process crashes on your
-  // system, re-add it locally as an escape hatch.
-  const electronArgs = [
-    appPath,
-    '--no-sandbox',
-  ]
+  // GPU safety (P7, 2026-09-24): bin/sessrumnir.sh resolves the ONE machine-wide
+  // graphics policy (bin/graphics-lib.sh) and exports the effective override in
+  // YMIR_DESKTOP_DISABLE_GPU (1 = software rendering). On a fragile hybrid the
+  // Electron GPU process dies for want of a fence and the browser makes SIGTRAP
+  // suicide once the process is judged unusable — the same fix scripts/electron.sh
+  // applies to hlidskjalf/smidja/odrerir. The DECISION lives in the launcher,
+  // never hardcoded here.
+  const electronArgs = [appPath, '--no-sandbox']
+  if (['1', 'true', 'yes'].includes(String(process.env.YMIR_DESKTOP_DISABLE_GPU ?? '').toLowerCase())) {
+    electronArgs.push('--disable-gpu', '--disable-gpu-compositing')
+  }
 
   // Pass workspace path via environment variable
   const env = { ...process.env }

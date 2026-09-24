@@ -129,6 +129,34 @@ mkdir -p "$YMIR_STATE_DIR"
 args=()
 [ -n "$WORKSPACE" ] && args+=("$WORKSPACE")
 
+# P7 graphics policy (2026-09-24): on a fragile hybrid (a shared-memory iGPU
+# beside a dGPU) Electron's GPU process dies for want of a fence and the browser
+# makes SIGTRAP suicide once the process is judged unusable — sessrumnir crashed
+# exactly this way twice on this box. Resolve the ONE machine-wide answer the
+# same way scripts/electron.sh does (bin/graphics-lib.sh, never a hardcode) and
+# export the EFFECTIVE override for the app's node launcher, which appends the
+# --disable-gpu flags. 1/true/yes and 0/false/no remain the human override.
+if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ]; then
+  for _gc in "$SCRIPT_DIR/graphics-lib.sh" "$ROOT/bin/graphics-lib.sh"; do
+    [ -r "$_gc" ] && { . "$_gc"; YMIR_GRAPHICS_LIB_LOADED=1; break; }
+  done
+  unset _gc
+fi
+case "${YMIR_DESKTOP_DISABLE_GPU:-auto}" in
+  1|true|yes) YMIR_DESKTOP_DISABLE_GPU=1 ;;
+  0|false|no) YMIR_DESKTOP_DISABLE_GPU=0 ;;
+  *)
+    if [ "${YMIR_GRAPHICS_LIB_LOADED:-0}" = 1 ]; then
+      _gp="$(graphics_policy 2>/dev/null || true)"
+      [ -n "$_gp" ] || _gp=gpu
+    else
+      _gp=gpu
+    fi
+    [ "$_gp" = software ] && YMIR_DESKTOP_DISABLE_GPU=1 || YMIR_DESKTOP_DISABLE_GPU=0
+    unset _gp ;;
+esac
+export YMIR_DESKTOP_DISABLE_GPU
+
 nohup node "$APP/bin/sessrumnir.js" "${args[@]}" >"$LOG_FILE" 2>&1 < /dev/null &
 echo $! >"$PID_FILE"
 
