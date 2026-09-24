@@ -265,8 +265,16 @@ ymir_in_container() {
 
 # The `-v` suffix for a bind mount: `:Z` whenever SELinux is enforcing — Docker
 # and Podman both need the relabel there — else empty. Append to `<host>:<ctr>`.
+# FIX 2026-09-24: print-and-SUCCEED. The old `ymir_selinux_enforcing && printf ':Z'`
+# returned 1 on every non-SELinux host, and under `set -e` that aborted any caller
+# that captured the substitution (einherjar-spawn.sh:40 — the dispatcher died
+# mute at rc=1 with zero output on Arch/macOS/most hosts). An empty suffix is a
+# valid outcome, never an error.
 ymir_volume_suffix() {
-  ymir_selinux_enforcing && printf ':Z'
+  if ymir_selinux_enforcing; then
+    printf ':Z'
+  fi
+  return 0
 }
 
 # ── GPUs: report what exists, without assuming NVIDIA ───────────────────────

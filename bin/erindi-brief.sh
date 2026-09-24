@@ -3,10 +3,24 @@
 #
 # Erindi ("the errand") is the written errand Brokk hands an Eindri. The brief
 # carries the Setup / Rules / Definition-of-done contract, a fixed machine-
-# readable "Delivery contract: mode=<mode>" line, the worktree-isolation
-# assertion, the status protocol, and the steering-inbox receive/ack section.
-# Ported from the upstream distro brief scaffold for plan 29
-# (memory/plans/core/29-brokk-distro-runtime.md).
+# readable "Delivery contract: mode=<mode>" line, the ISOLATION DECLARATION,
+# the status protocol, and the steering-inbox receive/ack section. Ported from
+# the upstream distro brief scaffold for plan 29.
+#
+# The rule (settled 2026-09-24): herdr is the ORDINARY road — a normal deploy
+# runs in a herdr workspace in the worktree, with no container. Utgard is the
+# EXCEPTION, chosen for untrusted code or an outsized task, never for routine
+# work and never merely because an image is present. The brief DECLARES the
+# isolation on its own line so einherjar-spawn validates it against reality:
+#
+#   Isolation: herdr — <why>        (ordinary; the default)
+#   Isolation: utgard — <why>       (the exception: untrusted code / outsized load)
+#
+# The scaffold emits the herdr line; a writer who needs Utgard edits the line
+# and says why. The declaration is never inferred from the task text.
+# The Definition of done is machine-checkable: every gate is a COMMAND the
+# worker runs and whose output it records; where a gate cannot be a command,
+# the brief says why.
 #
 # Usage:
 #   erindi-brief.sh <task-id> <repo-name> --mode <no-mistakes|direct-PR|local-only>
@@ -87,6 +101,22 @@ esac
 meta_value() {  # <meta> <key>
   grep "^$2=" "$1" 2>/dev/null | tail -1 | cut -d= -f2- || true
 }
+
+# The isolation declaration the brief carries. Fresh scaffolds declare herdr
+# (the ordinary road); a writer who needs Utgard edits the line. A relaunch
+# re-derives the RECORDED isolation (state/<id>.meta) so the replacement smith
+# receives the same declaration the spawn validated.
+ISOLATION_WORD=herdr
+ISOLATION_WHY="the ordinary road: herdr and the worktree only; Utgard is for untrusted code or an outsized task"
+if [ "$RELAUNCH" -eq 1 ]; then
+  iso=$(meta_value "$STATE/$ID.meta" isolation)
+  iso_reason=$(meta_value "$STATE/$ID.meta" isolation_reason)
+  case "$iso" in
+    on) ISOLATION_WORD=utgard; [ -n "$iso_reason" ] && ISOLATION_WHY=$iso_reason ;;
+    off) ISOLATION_WORD=herdr; [ -n "$iso_reason" ] && ISOLATION_WHY=$iso_reason ;;
+  esac
+fi
+ISOLATION_DECLARATION="Isolation: $ISOLATION_WORD — $ISOLATION_WHY"
 
 if [ "$RELAUNCH" -eq 1 ]; then
   META="$STATE/$ID.meta"
@@ -169,6 +199,33 @@ Report status by appending one line:
    until a defined \`done:\` gate under Definition of done.
    A decision or blocker stays open until a \`resolved\` line carrying its exact key
    lands; a later \`done:\` or \`working:\` line never closes it.
+   Silence is distinguished from thinking: a worker that stops appending inside
+   the window is reported as SUSPECT (bin/eindri-heartbeat.sh) — keep a line
+   moving whenever you make progress.
+EOF
+)
+
+# The isolation/verification preamble, shared by every brief. herdr is the
+# ordinary road; Utgard is named only as the exception with its trigger.
+ISOLATION_SETUP=$(cat <<EOF
+**herdr is the ordinary road.** Your workspace is created in this worktree; no
+container runs. Utgard is the EXCEPTION, chosen only for \`untrusted code\` or an
+\`outsized task\` — this errand declares:
+
+$ISOLATION_DECLARATION
+
+(The declaration is not inferred from the task text. A \`utgard\` declaration is
+validated by bin/einherjar-spawn.sh against the Utgard image — a declared utgard
+with no image is a refusal to launch, never a silent fallback.)
+
+**Verify isolation before anything else.** Run \`pwd -P\` and
+\`git rev-parse --show-toplevel\`; both must resolve to this disposable task
+worktree (host path .yggdrasil/$ID; under Utgard it appears at /sandbox/workspace),
+never the primary checkout Brokk operates from.
+The path check is authoritative. If the top-level path is the primary checkout or
+not the worktree you were launched in, STOP - do not branch or commit here - append
+\`blocked: launched in primary checkout, not an isolated worktree\` to the status
+file and stop.
 EOF
 )
 
@@ -183,13 +240,15 @@ You are an Eindri: an autonomous worker agent managed by Brokk. Work on your own
 Delivery contract: mode=scout
 
 # Setup
-You are in a disposable git worktree of $REPO at .yggdrasil/$ID on the host (under Utgard it appears at /sandbox/workspace), at a detached HEAD on a clean default branch.
+You are in a disposable git worktree of $REPO at .yggdrasil/$ID, at a detached HEAD on a clean default branch.
+
+$ISOLATION_SETUP
+
 This is a SCOUT task: the deliverable is a written report, not a PR.
 The worktree is your laboratory - install, run, edit, and make scratch commits freely; all of it is discarded at teardown.
 The report is the only thing that survives, so anything worth keeping must be in it.
 
-**Verify isolation before anything else.** Run \`pwd -P\` and \`git rev-parse --show-toplevel\`; both must resolve to this disposable task worktree (host path .yggdrasil/$ID, or /sandbox/workspace under Utgard), never the primary checkout Brokk operates from.
-If the top-level path is the primary checkout or not the worktree you were launched in, STOP - do not branch or commit here - append \`blocked: launched in primary checkout, not an isolated worktree\` to the status file and stop.
+1. First action: confirm where you stand with \`pwd -P\` and \`git rev-parse --show-toplevel\`.
 
 # Rules
 1. Never push to any remote and never open a PR.
@@ -200,10 +259,11 @@ If the top-level path is the primary checkout or not the worktree you were launc
 
 $INBOX_SECTION
 
-# Definition of done
-Write your findings to \`$REPORT_FILE\`.
-The report must stand alone: what you did, what you found, the evidence (commands run, output, file:line references), and what you recommend.
-When the report is complete, append \`done: {one-line conclusion}\` to the status file and stop.
+# Definition of done — every gate is a COMMAND; run it and record its output
+- \`test -s $REPORT_FILE\` exits 0 (the report exists and is non-empty). Record its size with \`wc -c $REPORT_FILE\`.
+- \`grep -E '^(done|recommend|conclusion|findings):' $REPORT_FILE\` finds the stand-alone conclusion — what you did, what you found, the evidence (commands, output, file:line), and what you recommend.
+   (A prose judgment "reads well" cannot be a command — read it yourself and say so in the report.)
+- Append \`done: {one-line conclusion}\` to the status file and stop.
 EOF
   if [ "$RELAUNCH" -eq 1 ]; then
     printf 'scaffolded: %s (scout, relaunch; replace {TASK})\n' "$BRIEF"
@@ -216,15 +276,38 @@ fi
 case "$MODE" in
   direct-PR)
     RULE1='Never push to the default branch (push only your `eindri/'"$ID"'` branch). Never merge a PR; the Glitnir human gate owns the merge.'
-    DOD_BODY='Commit your work on `eindri/'"$ID"'`. Push the branch and open a PR with `gh`. Report the PR URL: append `done: opened PR <url>` to the status file and stop. Brokk routes the PR to the Glitnir human gate; you never merge.'
+    DOD_BODY=$(cat <<EOF
+# Definition of done — every gate is a COMMAND; run it and record its output
+- \`git diff --quiet\` exits 0 (no uncommitted tracked change beyond the scratch you intend to keep).
+- \`git push -u origin eindri/$ID\` succeeds — your branch reaches the remote.
+- \`gh pr create --fill\` opens the pull request and prints its URL.
+- \`gh pr view --json url -q .url\` prints the same URL; record it as the evidence.
+   (A prose PR description that "reads well" cannot be a command — read it yourself and say so.)
+- Append \`done: opened PR <url>\` to the status file and stop. Brokk routes the PR to the Glitnir human gate; you never merge.
+EOF
+)
     ;;
   local-only)
     RULE1="Never push to any remote and never open a PR. Work only on your \`eindri/$ID\` branch; Brokk merges into local \`main\` after the Allfather approves."
-    DOD_BODY="Commit your work on \`eindri/$ID\`. Append \`done: ready in branch eindri/$ID\` to the status file and stop. Brokk merges into local \`main\` after the Allfather approves."
+    DOD_BODY=$(cat <<EOF
+# Definition of done — every gate is a COMMAND; run it and record its output
+- \`git branch --show-current\` prints \`eindri/$ID\` (you are on the right branch).
+- \`git diff --quiet\` exits 0 (everything committed).
+- \`git status --porcelain\` lists only the scratch files you intend to leave; record the list.
+- Append \`done: ready in branch eindri/$ID\` to the status file and stop. Brokk merges into local \`main\` after the Allfather approves.
+EOF
+)
     ;;
   *)  # no-mistakes
     RULE1='Never push to the default branch. Never merge a PR; the Glitnir human gate owns the merge.'
-    DOD_BODY='Run the `no-mistakes` pipeline over your branch and open the PR it produces. Append `done: <PR url> (pipeline <status>)` to the status file and stop. Brokk routes the PR to the Glitnir human gate; you never merge.'
+    DOD_BODY=$(cat <<EOF
+# Definition of done — every gate is a COMMAND; run it and record its output
+- \`no-mistakes doctor\` reports the repo is initialized here (run \`no-mistakes init\` first if not).
+- \`git push -u origin eindri/$ID\` succeeds — the pipeline branch reaches the remote.
+- The \`no-mistakes\` pipeline run prints its PR URL and a status; record both.
+- Append \`done: <PR url> (pipeline <status>)\` to the status file and stop. Brokk routes the PR to the Glitnir human gate; you never merge.
+EOF
+)
     ;;
 esac
 
@@ -245,10 +328,9 @@ You are an Eindri: an autonomous worker agent managed by Brokk. Work on your own
 Delivery contract: mode=$MODE
 
 # Setup
-You are in a disposable git worktree of $REPO at .yggdrasil/$ID on the host (under Utgard it appears at /sandbox/workspace), at a detached HEAD on a clean default branch.
+You are in a disposable git worktree of $REPO at .yggdrasil/$ID, at a detached HEAD on a clean default branch.
 
-**Verify isolation before anything else.** Run \`pwd -P\` and \`git rev-parse --show-toplevel\`; both must resolve to this disposable task worktree (host path .yggdrasil/$ID, or /sandbox/workspace under Utgard), never the primary checkout Brokk operates from.
-The path check is authoritative. If the top-level path is the primary checkout or not the worktree you were launched in, STOP - do not branch or commit here - append \`blocked: launched in primary checkout, not an isolated worktree\` to the status file and stop.
+$ISOLATION_SETUP
 
 1. First action: create your branch: \`git checkout -b eindri/$ID\`$SETUP_STEP2
 
@@ -261,7 +343,6 @@ The path check is authoritative. If the top-level path is the primary checkout o
 
 $INBOX_SECTION
 
-# Definition of done
 $DOD_BODY
 EOF
 if [ "$RELAUNCH" -eq 1 ]; then

@@ -46,10 +46,16 @@ HYPR_DIR="$HOME/.config/hypr"
 RULE_FILE="$HYPR_DIR/ymir-desktops.lua"
 # The three Ymir surfaces, in the order they should claim desktops.
 APPS=(hlidskjalf smidja sessrumnir odrerir)
-CLASS_hlidskjalf="ymir-hlidskjalf"
-CLASS_smidja="ymir-smidja"
-CLASS_sessrumnir="sessrumnir"
-CLASS_odrerir="ymir-odrerir"
+# The window classes come from ONE source (bin/app-lib.sh) — the electrons
+# set their own names (ymir-hlidskjalf / ymir-smidja / ymir-sessrumnir /
+# ymir-odrerir), and the rules, the .desktop StartupWMClass, and this file
+# must all name the same string (P5, 2026-09-24). CLASS_sessrumnir was
+# "sessrumnir" while the app actually presents ymir-sessrumnir — the rule
+# matched nothing and the launcher's StartupWMClass matched nothing.
+CLASS_hlidskjalf="$(app_class hlidskjalf)"
+CLASS_smidja="$(app_class smidja)"
+CLASS_sessrumnir="$(app_class sessrumnir)"
+CLASS_odrerir="$(app_class odrerir)"
 
 # ── launcher entries (ANY Linux desktop — GNOME, KDE, Hyprland) ──────────────
 # Two halves live in this file, and they are not the same kind of thing:
