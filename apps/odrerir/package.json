@@ -1,19 +1,27 @@
 {
   "name": "@zerwiz/odrerir",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
-  "description": "\u00d3\u00f0rerir \u2014 the Ymir fleet's board on its own deck: the landing's carved cloth, the board's machinery, read-only.",
+  "description": "Óðrerir — the Ymir fleet's Live Hall, rebuilt as a Hlidskjalf-type app: React + Vite, the ember cloth, the halls buttons, the tickets + plans boards in one anatomy.",
   "main": "electron/main.cjs",
   "scripts": {
-    "check:cloth": "node scripts/extract-cloth.mjs --check",
-    "dev": "npm run check:cloth && astro dev",
-    "build": "npm run check:cloth && astro build",
-    "preview": "astro preview",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
     "prepack": "npm run build"
   },
   "dependencies": {
-    "astro": "latest"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
   },
   "license": "Apache-2.0",
   "repository": {
@@ -25,6 +33,7 @@
   },
   "files": [
     "dist",
+    "electron",
     "README.md"
   ]
 }
