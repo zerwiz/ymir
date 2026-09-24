@@ -128,6 +128,11 @@ materialize_tools() {
     src="${pair%%:*}"; dstn="${pair##*:}"
     [ -f "$ROOT/$src" ] && cp -f "$ROOT/$src" "$DST/$dstn" 2>/dev/null || true
   done
+  # the meeting ear's operator commands — capture, transcribe, ensure — so any
+  # seat can run them from ~/.fleet without a repo checkout on its PATH
+  for f in snotra-capture.sh snotra-transcribe.sh snotra-ensure.sh runes-append.sh; do
+    [ -f "$ROOT/bin/$f" ] && cp -f "$ROOT/bin/$f" "$DST/$f" 2>/dev/null && chmod +x "$DST/$f" 2>/dev/null || true
+  done
   # the skills mirror — the master .agents/skills tree, refreshed each ensure
   if [ -d "$ROOT/.agents/skills" ]; then
     rm -rf "$DST/skills" && cp -r "$ROOT/.agents/skills" "$DST/skills" 2>/dev/null || true
