@@ -31,7 +31,9 @@ supports this; it is not a rewrite.
 
 ### M2 — Systemd unit (`tools/mill/systemd/snotra.service`)
 
-- User unit, `WantedBy=default.target` (the auto-boot law)
+- User unit, `WantedBy=ymir.target` — it joins the ONE target the install enables
+  once, and boot pulls the whole role set (the auto-boot law). NOT `default.target`,
+  which was the pre-autoboot contract.
 - Runs `node ~/.fleet/snotra-server.mjs` on port 8321
 - Depends on `$YMIR_HOME` being mounted (the hoard)
 
