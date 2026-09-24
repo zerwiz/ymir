@@ -124,12 +124,23 @@ smoke() {  # <pkg-dir>
         local sdir2 bin idx
         sdir2=""; app_dir "$sh" sdir2 2>/dev/null || sdir2=""
         [ -n "$sdir2" ] || { fail "app-boot: $sh has no app dir in the package"; boot_ok=0; continue; }
+        # the built web surface the launcher serves: the smithy's visualizer is
+        # NESTED (apps/smidja-factory/apps/visualizer/dist), the seat-hall is a
+        # built main.
         idx="$sdir2/dist/index.html"
+        [ "$sh" = smidja ] && idx="$sdir2/apps/visualizer/dist/index.html"
         [ "$sh" = sessrumnir ] && idx="$sdir2/out/main/index.js"
         [ -f "$idx" ] || { fail "app-boot: $sh web surface not built ($idx)"; boot_ok=0; }
+        # the launcher's mend roads (electron-lib) — npm gates the postinstall,
+        # so after the install the runtime must be fetched exactly as
+        # scripts/electron.sh does, then the resolver gate is the launcher gate.
+        command -v electron_fetch_runtime >/dev/null 2>&1 && electron_fetch_runtime "$sdir2" "$P" "$(app_pkg "$sh")" >/dev/null 2>&1
+        command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$sdir2" "$P" "$(app_pkg "$sh")" >/dev/null 2>&1
         bin="$(electron_bin "$sdir2" "$P" "$(app_pkg "$sh")" 2>/dev/null || true)"
         if [ -n "$bin" ] && [ -x "$bin" ] && "$bin" --version >/dev/null 2>&1; then
-          ok "app-boot: $sh electron boots ("$($bin --version 2>/dev/null | head -1)")"
+          local v
+          v="$($bin --version 2>/dev/null | head -1)"
+          ok "app-boot: $sh electron boots ("$v")"
         else
           fail "app-boot: $sh has no runnable electron ($bin)"
           boot_ok=0
