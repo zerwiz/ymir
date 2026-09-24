@@ -34,6 +34,7 @@ FLEET_TEMPLATE_ROOT="${FLEET_TEMPLATE_ROOT:-$ROOT}"
 WELL_URL="${FLEET_WELL_URL:-http://127.0.0.1:8317/mcp}"
 SKILLS_URL="${FLEET_SKILLS_URL:-http://127.0.0.1:8319/mcp}"
 SKULD_URL="${FLEET_SKULD_URL:-http://127.0.0.1:8320}"
+SNOTRA_URL="${FLEET_SNOTRA_URL:-http://127.0.0.1:8321/mcp}"
 PORT_BASE="${FLEET_PORT_BASE:-8317}"
 CHECK_ONLY=0
 EMBED_MISSING=0
@@ -84,7 +85,8 @@ materialize_tools() {
               "tools/ratatoskr-node/server.ts:ratatoskr-server.ts" \
               "tools/mill/worker.sh:mill-worker.sh" \
               "tools/skills-mcp/server.mjs:skills-mcp-server.mjs" \
-              "tools/tickets-mcp/server.mjs:tickets-mcp-server.mjs"; do
+              "tools/tickets-mcp/server.mjs:tickets-mcp-server.mjs" \
+              "tools/snotra/server.mjs:snotra-server.mjs"; do
     src="${pair%%:*}"; dstn="${pair##*:}"
     [ -f "$ROOT/$src" ] && cp -f "$ROOT/$src" "$DST/$dstn" 2>/dev/null || true
   done
@@ -336,9 +338,9 @@ wire_mcp() {  # role-aware: the well door is local (every seat hosts its own);
   # localhost to every seat" line is how the Allfather's doors pointed at
   # ghosts on a seat that never hosted them.
   mkdir -p "$HOME/.pi/agent"
-  python3 - "$WELL_URL" "$SKILLS_URL" "$SKULD_URL" "$AUTOBOOT_HOST_ROLES" "$AUTOBOOT_FLEET_REGISTRY" "$HOME" <<'PY'
+  python3 - "$WELL_URL" "$SKILLS_URL" "$SKULD_URL" "$SNOTRA_URL" "$AUTOBOOT_HOST_ROLES" "$AUTOBOOT_FLEET_REGISTRY" "$HOME" <<'PY'
 import json, os, sys
-well, skills, skuld, roles, reg, home = sys.argv[1:7]
+well, skills, skuld, snotra, roles, reg, home = sys.argv[1:8]
 if "heart" not in (roles or "").split():
     # a dev/forge/hand seat drinks the heart's doors; resolve the heart's base
     # from the fleet registry (tailnet MagicDNS preferred, LAN fallback)
@@ -350,6 +352,7 @@ if "heart" not in (roles or "").split():
         if base:
             skills = "http://%s:8319/mcp" % base
             skuld = "http://%s:8320" % base
+            snotra = "http://%s:8321/mcp" % base
     except Exception:
         pass
 p = os.path.join(home, ".pi/agent/mcp.json")
@@ -359,6 +362,7 @@ d.setdefault("mcpServers", {})
 d["mcpServers"]["well"] = {"url": well}
 d["mcpServers"]["bolthorn"] = {"url": skills}
 d.setdefault("mcpServers", {})["skuld"] = {"url": skuld}
+d.setdefault("mcpServers", {})["snotra"] = {"url": snotra}
 os.makedirs(os.path.dirname(p), exist_ok=True)
 json.dump(d, open(p, "w"), indent=2)
 PY
