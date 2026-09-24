@@ -156,9 +156,33 @@ Rules that hold it honest:
 
 `/api/health · /api/me · /api/workspace · /api/agents · /api/tasks · /api/runes ·
 /api/well · /api/processes · /api/reviews · /api/files · /api/runtime · /api/cron ·
+/api/cron/seats ·
 /api/loaders · /api/checks · /api/settings · /api/stream · /api/mimir …` plus the
 smithy trace: `/api/smidja/{health,sessions,sessions/:id,decisions,stats}` and
 chat: `/api/chat/history`, `POST /api/chat`.
+
+### The Cron gate — local and server schedules (2026-09-24, plan 54)
+
+The Nornir gate (`src/gates/Cron.tsx`) shows BOTH faces: the LOCAL seat's loop and
+the SERVER seats' (whynot · zerwizserver). Two read-only routes feed it:
+
+- **`/api/cron`** — the schedule the LOOP reads, never the repo's template. The
+  board once read `<ROOT>/.agents/config`, which ships only `cron.yaml.example`,
+  so it painted "0 jobs" while the loop ran the home's real schedule. It now
+  resolves as the loop does: `$YMIR_HOME/config/cron.yaml` → repo `cron.yaml` →
+  the example (flagged). The answer carries `source`, each job's `role` gate and
+  whether it `applies` to this seat's roles (from `bin/topology.sh`), the fired
+  markers (`state/.cron-fired`), and — when stopped — a `why` read from
+  `state/cron.log` (e.g. `no live session lock`).
+- **`/api/cron/seats`** — one ssh round-trip per server seat (BatchMode,
+  `ConnectTimeout=3`, host aliases `whynot` and `server` from `~/.ssh/config`),
+  returning reachable/running/pid/roles plus how many of the schedule's jobs that
+  seat's roles run. Read on demand, machine-local — never carried through the
+  synced home (plan 51 rule 1). The seat list defaults to whynot + zerwizserver
+  and is overridable with `YMIR_CRON_SERVER_SEATS="seat:sshhost …"`.
+
+Never render a bare zero: an absent schedule names the missing path, a stopped
+loop names its reason, an unreachable seat names the ssh failure.
 
 `POST /api/chat` resolves the chosen model against the operator's Pi catalog and
 tries **every** engine that advertises it (LM Studio `:1234`, the llama.cpp
