@@ -129,6 +129,22 @@ Rules that hold it honest:
 
 ## Interaction patterns (modal + toast)
 
+### The Files tree folds, and its folders look like folders (2026-09-24)
+
+`src/gates/Files.tsx` renders the realm tree. The old tree was always fully
+flattened: folders had no open/close at all (every click merely selected) and
+used a text triangle `▸` as the dir glyph. Now:
+
+- **Fold fold**: each directory except the root starts collapsed; clicking a
+dir toggles it (`aria-expanded` reflects the state; the chevron shows ▸/▾).
+The tree renders through `visibleFlat`, which walks children only while the
+parent is open.
+- **Folder icons**: dirs render a folder-shaped inline SVG (currentColor, the
+realm tint owns the hue) beside the chevron; files render a document glyph.
+- **The selected file stays visible**: on mount, the ancestor chain of the
+initially selected file is opened (the tree starts folded, so without this the
+selection would hide under closed parents).
+
 - `src/state/ui.ts` exposes `useUI()` → `toast({kind,title,body})` and
   `openModal({variant,title,body,fields,content,onSubmit})`.
 - `<Overlay/>` (mounted in `App`) renders the modal + toast host. Variants:
