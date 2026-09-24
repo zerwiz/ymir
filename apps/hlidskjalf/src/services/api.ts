@@ -3,7 +3,7 @@ import type {
   ChatMessage,
   FileNode,
   ProcessInfo,
-  PullRequest,
+  ReviewsInfo,
   RecallEpisode,
   RealmId,
   RuneEntry,
@@ -364,7 +364,7 @@ export const gateApi = {
   well: (q: string) => get<RecallEpisode[]>(`/api/well?q=${encodeURIComponent(q)}`),
   runes: () => get<RuneEntry[]>('/api/runes'),
   processes: () => get<ProcessInfo[]>('/api/processes'),
-  reviews: () => get<PullRequest[]>('/api/reviews'),
+  reviews: () => get<ReviewsInfo>('/api/reviews'),
   files: (realm?: string) =>
     get<FileNode>(`/api/files${realm ? `?realm=${encodeURIComponent(realm)}` : ''}`),
   file: (realm: string, path: string) =>

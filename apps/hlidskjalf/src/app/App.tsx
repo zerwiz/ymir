@@ -52,7 +52,8 @@ export default function App() {
   useEffect(() => {
     if (!session) return;
     const id = window.setInterval(() => { void useYmir.getState().refreshSmidja(); void useYmir.getState().refreshAgents(); }, 5000);
-    return () => window.clearInterval(id);
+    const reviewsId = window.setInterval(() => { void useYmir.getState().refreshReviews(); }, 30_000);
+    return () => { window.clearInterval(id); window.clearInterval(reviewsId); };
   }, [session]);
 
   useEffect(() => {
