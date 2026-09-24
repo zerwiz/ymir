@@ -483,6 +483,25 @@ The review surface's operator copy now names the **Allfather** throughout — th
 seal prompt, the rune emit string, the "awaiting the Allfather" tile, and the
 gate comment — retiring the imported `captain` term.
 
+### Glitnir tells the whole truth (2026-09-24 audit)
+
+Four gaps closed in one pass:
+
+- **`approved` is now reachable**: `gh pr list --json … reviewDecision,mergeable`
+  feeds the card state — GitHub `APPROVED` + green checks lands on
+  `state: 'approved'` (the seal button's true prerequisite); CI failing lands on
+  `changes`; a draft stays `open`.
+- **The tiles count REAL PRs**: "Open PRs / Approved / CI failing" count `number
+  > 0` cards only — the Brokk lint + compliance gate card (`number: 0`) is a
+  gate, not a pull request, and no longer inflates the count.
+- **A dead GitHub read is shown, never swallowed**: `reviews()` returns
+  `{ cards, ghError }`; the Reviews gate renders the gh error above the cards.
+- **The repo is explicit and the board refreshes**: `gh pr list --repo` derives
+  from the origin remote with the documented default `zerwiz/ymir` (so a
+  packaged install with no `.git` still reads PRs), and the store refreshes the
+  cards on a 30s beat (`refreshReviews`) — a PR that opens after the page loads
+  appears without a reload.
+
 ### One seat, three halls (added 2026-09-13)
 
 - **Post-login chooser** (`src/components/Halls.tsx`): `App.tsx` shows it once

@@ -853,17 +853,27 @@ function smidjaStats() {
 }
 
 /* ---- /api/reviews (real PRs + compliance as checks) ---------------------- */
+// Glitnir's truth (audited 2026-09-24): the old route could never show an
+// APPROVED card (no review state was ever fetched), counted the synthetic lint
+// card in "Open PRs", swallowed every gh failure silently, and relied on the
+// cwd's git remote for repo detection (a packaged install has no .git, so gh
+// found nothing and the board was blank). Now: reviewDecision + mergeable are
+// fetched, the repo is passed explicitly, a gh failure is REPORTED not
+// swallowed, and the payload distinguishes real PR cards from the lint card.
 async function reviews() {
   const cards: unknown[] = [];
+  let ghError = '';
 
-  // 1. Real pull requests from the repo's remote — the Glitnir gate. A delivered
-  //    change must appear here so the Allfather can review and seal it; without
-  //    this the surface showed only the synthetic lint card and no PR ever landed.
+  // 1. Real pull requests — Glitnir's cards. `--repo` is explicit so the read
+  //    works from a packaged install (no .git to detect a remote from); the
+  //    default is the repo itself (Rule 07 — one documented default).
   try {
+    const repo =
+      (run(['git', '-C', ROOT, 'remote', 'get-url', 'origin']).match(/[:/]([^/:]+\/[^/]+?)(?:\.git)?$/) ?? [])[1] ?? 'zerwiz/ymir';
     const list = JSON.parse(
       (await runAsync([
-        'gh', 'pr', 'list', '--state', 'open', '--limit', '50',
-        '--json', 'number,title,author,headRefName,isDraft,updatedAt,additions,deletions,statusCheckRollup',
+        'gh', 'pr', 'list', '--repo', repo, '--state', 'open', '--limit', '50',
+        '--json', 'number,title,author,headRefName,isDraft,updatedAt,additions,deletions,statusCheckRollup,reviewDecision,mergeable',
       ], 15000)) || '[]',
     ) as Array<{
       number: number;
@@ -874,6 +884,8 @@ async function reviews() {
       updatedAt?: string;
       additions?: number;
       deletions?: number;
+      reviewDecision?: string;
+      mergeable?: string;
       statusCheckRollup?: Array<{ name?: string; context?: string; status?: string; conclusion?: string }>;
     }>;
     for (const pr of list) {
@@ -887,14 +899,18 @@ async function reviews() {
               : 'nominal',
       }));
       const failing = checks.some((c) => c.state === 'down');
+      const approved = pr.reviewDecision === 'APPROVED' && !failing;
       cards.push({
         id: `pr-${pr.number}`,
         number: pr.number,
         title: pr.title,
-        repo: 'origin',
+        repo,
         author: pr.author?.login ?? 'unknown',
         realm: 'work',
-        state: pr.isDraft ? 'open' : failing ? 'changes' : 'open',
+        // draft → open (awaiting the Allfather); CI failing → changes (blocked);
+        // GitHub APPROVED + green → approved (ready to seal).
+        state: pr.isDraft ? 'open' : failing ? 'changes' : approved ? 'approved' : 'open',
+        mergeable: pr.mergeable ?? undefined,
         checks,
         checklist: [{ label: `branch ${pr.headRefName ?? '?'}`, done: true }],
         additions: pr.additions ?? 0,
@@ -902,11 +918,13 @@ async function reviews() {
         updatedAt: pr.updatedAt ?? new Date().toISOString(),
       });
     }
-  } catch {
-    /* gh unavailable or offline — the compliance card below still stands */
+  } catch (e) {
+    // The Allfather must SEE a dead gh, never a silent blank board.
+    ghError = e instanceof Error ? e.message : String(e);
   }
 
-  // 2. The compliance card (lint + governed-path checks) always stands.
+  // 2. The compliance card (lint + governed-path checks) always stands, but IT
+  //    IS NOT A PULL REQUEST — the board counts real PRs (number > 0) apart.
   const out = await runAsync(['bash', 'bin/brokk-lint.sh', '--quiet'], 60000);
   const compliance = await runAsync(['bash', '.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh', '--json'], 60000);
   let gates: { id: string; status: string; detail: string }[] = [];
@@ -931,7 +949,7 @@ async function reviews() {
     ],
     additions: 0, deletions: 0, updatedAt: new Date().toISOString(),
   });
-  return cards;
+  return { cards, ghError };
 }
 
 /* ---- /api/files (realm tree) --------------------------------------------- */

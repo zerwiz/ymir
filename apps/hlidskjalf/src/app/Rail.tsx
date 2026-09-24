@@ -15,7 +15,7 @@ function gateCount(id: GateId, s: ReturnType<typeof useYmir.getState>): number |
     case 'runes':
       return s.runes.length;
     case 'reviews':
-      return s.reviews.length;
+      return s.reviews?.cards.length ?? 0;
     case 'processes':
       return s.processes.length;
     case 'files':
