@@ -107,7 +107,7 @@ smoke() {  # <pkg-dir>
       sdir=""
       app_dir "$sh" sdir 2>/dev/null || sdir=""
       [ -n "$sdir" ] || { fail "desktop shape: app_dir $sh empty in the package"; shape_ok=0; continue; }
-      local st; st="$(electron_runtime_state "$sdir" "$P" "$(app_pkg "$sh")" 2>/dev/null || echo absent)"
+      local st; st="$(electron_runtime_state "$sdir" "$P" "$(app_pkg "$sh")" 2>/dev/null)"
       case "$st" in ok|partial|absent) ;; *) fail "desktop shape: $sh answered '$st'"; shape_ok=0 ;; esac
     done
     [ "$shape_ok" = 1 ] && ok "desktop shape resolves for all four surfaces in the package"
