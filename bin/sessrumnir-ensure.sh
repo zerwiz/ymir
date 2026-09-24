@@ -30,6 +30,13 @@ if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   unset _ya _yac
 fi
 app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
+# The runtime resolver — one shape-aware answer, never an app-local hardcode (P1).
+if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ]; then
+  for _ec in "$SCRIPT_DIR/electron-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/electron-lib.sh"; do
+    [ -r "$_ec" ] && { . "$_ec"; YMIR_ELECTRON_LIB_LOADED=1; break; }
+  done
+  unset _ec
+fi
 
 APP="$APP_SESSRUMNIR"
 
@@ -45,43 +52,56 @@ deps_present() { [ -d "$APP/node_modules" ] && [ -x "$APP/node_modules/.bin/elec
 built_present() { [ -f "$APP/out/main/index.js" ]; }
 
 status() {
-  local dir deps built electron
+  local dir deps built electron state
   if app_dir; then dir="$APP"; else dir="absent"; fi
   if deps_present; then deps="yes"; else deps="no"; fi
   if built_present; then built="yes"; else built="no"; fi
-  if [ -x "$APP/node_modules/electron/dist/electron" ]; then electron="yes"; else electron="no"; fi
+  # The runtime answer comes from the resolver: app-local, workspace-hoisted,
+  # or sibling package — not a single hardcoded path (P1, 2026-09-24).
+  state="$(electron_runtime_state "$APP" "$ROOT" sessrumnir 2>/dev/null || echo absent)"
+  case "$state" in ok) electron="yes" ;; partial) electron="partial" ;; *) electron="no" ;; esac
   printf 'sessrumnir[1]{dir,deps,built,electron}:\n'
   printf '  "%s","%s","%s","%s"\n' "$dir" "$deps" "$built" "$electron"
   [ "$dir" = "absent" ] || [ "$deps" = "no" ] && return 1
+  [ "$electron" = "yes" ] || return 1
   return 0
 }
 
 npm_install() {
   command -v npm >/dev/null 2>&1 || { printf 'error: npm not found — cannot install Sessrúmnir deps\nhelp: install node/npm\n' >&2; return 1; }
   printf 'sessrumnir: installing dependencies (first run)…\n' >&2
-  ( cd "$APP" && npm install ) >/dev/null 2>&1 || return 1
+  # P3 (2026-09-24): a workspace member's deps HOIST to the workspace root — an
+  # install inside the member reconciles the tree and REMOVES its node_modules.
+  # Install at the root when a member, app-local only for a standalone app.
+  local installd
+  if electron_is_workspace_member "$APP" "$ROOT"; then installd="$ROOT"; else installd="$APP"; fi
+  ( cd "$installd" && npm install ) >/dev/null 2>&1 || return 1
 }
 
 # npm 11+ gates postinstall scripts (allowScripts), so Electron's binary is
 # often never downloaded even though the package installed. Heal that here —
 # the same remedy scripts/electron.sh uses: run the package's own postinstall,
 # then extract from the already-cached zip and write path.txt.
+# P2 (2026-09-24): absence is NEVER success. The old guard returned 0 when the
+# runtime was absent — a `return 0` on the absent branch must not return.
 ensure_electron_binary() {
-  local bin="$APP/node_modules/electron/dist/electron"
-  [ -x "$bin" ] && return 0
-  [ -d "$APP/node_modules/electron" ] || return 0
-  if [ -f "$APP/node_modules/electron/install.js" ]; then
-    ( cd "$APP" && node node_modules/electron/install.js ) >/dev/null 2>&1 || true
+  local bin edir zip
+  bin="$(electron_bin "$APP" "$ROOT" sessrumnir 2>/dev/null || true)"
+  [ -n "$bin" ] && [ -x "$bin" ] && "$bin" --version >/dev/null 2>&1 && return 0
+  edir="$(electron_pkg_dir "$APP" "$ROOT" sessrumnir 2>/dev/null || true)"
+  [ -n "$edir" ] || return 1
+  if [ -f "$edir/install.js" ]; then
+    ( cd "$edir" && node install.js ) >/dev/null 2>&1 || true
   fi
-  [ -x "$bin" ] && return 0
-  local zip
+  bin="$(electron_bin "$APP" "$ROOT" sessrumnir 2>/dev/null || true)"
+  [ -n "$bin" ] && [ -x "$bin" ] && return 0
   zip="$(ls "$HOME"/.cache/electron/*/electron-v*-linux-*.zip 2>/dev/null | head -1)"
   if [ -n "$zip" ] && command -v unzip >/dev/null 2>&1; then
-    mkdir -p "$APP/node_modules/electron/dist"
-    unzip -q -o "$zip" -d "$APP/node_modules/electron/dist" >/dev/null 2>&1 && \
-      printf 'electron' >"$APP/node_modules/electron/path.txt"
+    mkdir -p "$edir/dist"
+    unzip -q -o "$zip" -d "$edir/dist" >/dev/null 2>&1 && printf 'electron' >"$edir/path.txt"
   fi
-  [ -x "$bin" ]
+  bin="$(electron_bin "$APP" "$ROOT" sessrumnir 2>/dev/null || true)"
+  [ -n "$bin" ] && [ -x "$bin" ]
 }
 
 build_app() {

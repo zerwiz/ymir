@@ -20,12 +20,29 @@
 #
 #   app_dir <surface> <result-var>   the app's directory (empty + exit 1 if absent)
 #   app_pkg <surface>                the npm package name for that surface
+#   app_class <surface>              the window class the app actually presents
+#                                    (the ONE source of truth for routing —
+#                                    desktop-place rules, .desktop StartupWMClass,
+#                                    and the electron app.setName slug must agree, 2026-09-24)
 set -u
 
 app_pkg() {  # <surface> → the package name npm serves
   case "${1-}" in
     smidja) printf '%s' 'smidja-factory' ;;
     *)      printf '%s' "${1-}" ;;
+  esac
+}
+
+app_class() {  # <surface> → the WM class the app presents
+  # Read from the electrons themselves: hlidskjalf's main.cjs names
+  # ymir-hlidskjalf / ymir-smidja / ymir-odrerir; odrerir's own and
+  # sessrumnir's both name their ymir-<slug>. A rename belongs HERE first.
+  case "${1-}" in
+    hlidskjalf) printf '%s' 'ymir-hlidskjalf' ;;
+    smidja)     printf '%s' 'ymir-smidja' ;;
+    odrerir)    printf '%s' 'ymir-odrerir' ;;
+    sessrumnir) printf '%s' 'ymir-sessrumnir' ;;
+    *)          printf '%s' "ymir-${1-}" ;;
   esac
 }
 

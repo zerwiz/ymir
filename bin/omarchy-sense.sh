@@ -59,7 +59,7 @@ is_omarchy() { [ -d /usr/share/omarchy ]; }
 
 # A stable, comparable fingerprint of the machine. Keep keys short (TOON).
 snapshot() {
-  local ov="" pkgs cnf monitors scale wm
+  local ov="" pkgs cnf monitors scale wm gpu graphics
   is_omarchy && ov="$(omarchy version 2>/dev/null | head -1)"
   # Explicitly installed packages (the user's own choices, not the base image).
   pkgs="$(pacman -Qe 2>/dev/null | wc -l | tr -d ' ')"
@@ -78,9 +78,26 @@ try:
   m=json.load(sys.stdin); print(m[0].get("scale") if m else 0)
 except Exception: print(0)' 2>/dev/null || echo 0)"
   wm="${XDG_CURRENT_DESKTOP:-unknown}"
-  python3 - "$ov" "$pkgs" "$cnf" "$monitors" "$scale" "$wm" <<'PY'
+  # The graphics block (P6, 2026-09-24): the old snapshot was blind to GPUs —
+  # no /dev/dri, no driver, no render node — so a desktop that could not render
+  # recorded nothing. bin/graphics-lib.sh classifies the DRM devices
+  # (integrated/discrete/hybrid), reads GTT where exposed, names the drivers
+  # and their versions, and decides the effective GPU policy the shells use;
+  # the whole block is recorded so the installer's next decision is
+  # evidence-based, not guessed.
+  gpu=""; graphics='{}'
+  if [ -r "$SCRIPT_DIR/graphics-lib.sh" ]; then
+    . "$SCRIPT_DIR/graphics-lib.sh"
+    gpu="$(graphics_policy 2>/dev/null || echo gpu)"
+    graphics="$(graphics_block --json 2>/dev/null || echo '{}')"
+  fi
+  python3 - "$ov" "$pkgs" "$cnf" "$monitors" "$scale" "$wm" "$gpu" "$graphics" <<'PY'
 import json, sys
-ov, pkgs, cnf, monitors, scale, wm = sys.argv[1:7]
+ov, pkgs, cnf, monitors, scale, wm, gpu, graphics = sys.argv[1:9]
+try:
+    g = json.loads(graphics)
+except Exception:
+    g = {}
 print(json.dumps({
   "omarchy": ov,
   "explicit_pkgs": int(pkgs or 0),
@@ -88,6 +105,8 @@ print(json.dumps({
   "monitors": int(monitors or 0),
   "scale": scale,
   "wm": wm,
+  "gpu_policy": gpu,
+  "graphics": g,
 }, sort_keys=True))
 PY
 }
@@ -104,7 +123,7 @@ observe() {
 import json, sys
 prev = json.loads(sys.argv[1] or "{}")
 now = json.loads(sys.argv[2] or "{}")
-keys = ["omarchy", "explicit_pkgs", "config_files", "monitors", "scale", "wm"]
+keys = ["omarchy", "explicit_pkgs", "config_files", "monitors", "scale", "wm", "gpu_policy"]
 changes = []
 for k in keys:
     if k in prev and prev[k] != now.get(k):
@@ -125,15 +144,28 @@ os.replace(tmp, path)
 PY
 
   [ "$QUIET" = 1 ] && return 0
-  printf 'omarchy-sense[1]{omarchy,monitors,scale,configs,pkgs,changes}:\n'
+  local gpu note
+  gpu="$(python3 - "$SNAP" 2>/dev/null <<'PY' || echo gpu
+import json,sys
+try:
+    d=json.load(open(sys.argv[1]))
+    print(d.get("gpu_policy", "gpu"))
+except Exception:
+    print("gpu")
+PY
+)"
+  note=""
+  [ "$gpu" = software ] && note=" — hybrid/integrated GPU: shells default to software rendering (YMIR_DESKTOP_DISABLE_GPU overrides)"
+  printf 'omarchy-sense[1]{omarchy,monitors,scale,configs,pkgs,gpu,changes}:\n'
   python3 - "$report" "$SNAP" <<'PY'
 import json, sys
 rep = json.loads(sys.argv[1])
 n = rep["now"]
 ch = rep["changes"]
 print(f'  "{n.get("omarchy") or "not-omarchy"}",{n.get("monitors",0)},"{n.get("scale",0)}",'
-      f'{n.get("config_files",0)},{n.get("explicit_pkgs",0)},{len(ch)}')
+      f'{n.get("config_files",0)},{n.get("explicit_pkgs",0)},"{n.get("gpu_policy","gpu")}",{len(ch)}')
 PY
+  printf '%s\n' "$note"
   python3 - "$report" <<'PY'
 import json, sys
 rep = json.loads(sys.argv[1])
@@ -150,10 +182,18 @@ case "$ACTION" in
       python3 - "$SNAP" <<'PY'
 import json, sys
 d = json.load(open(sys.argv[1]))
-print(f'  "{d.get("omarchy") or "not-omarchy"} · monitors={d.get("monitors")} '
-      f'scale={d.get("scale")} configs={d.get("config_files")} '
-      f'pkgs={d.get("explicit_pkgs")} · seen {d.get("observed_at")}"')
+g = d.get("graphics") or {}
+line = f'  "{d.get("omarchy") or "not-omarchy"} · monitors={d.get("monitors")} '
+line += f'scale={d.get("scale")} configs={d.get("config_files")} '
+line += f'pkgs={d.get("explicit_pkgs")} · graphics={g.get("classification","unknown")}'
+line += f' policy={d.get("gpu_policy","gpu")} · seen {d.get("observed_at")}"'
+print(line)
 PY
+      [ "$(python3 - "$SNAP" 2>/dev/null <<'PY' || echo gpu
+import json,sys
+print(json.load(open(sys.argv[1])).get("gpu_policy", "gpu"))
+PY
+)" = software ] && printf '  note: hybrid/integrated GPU — the desktop shells default to software rendering (YMIR_DESKTOP_DISABLE_GPU overrides)\n'
     else
       printf 'omarchy-sense[1]{snapshot}:\n  "none yet — run bin/omarchy-sense.sh observe"\n'
     fi

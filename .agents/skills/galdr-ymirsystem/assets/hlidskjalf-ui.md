@@ -267,11 +267,27 @@ choice: `other` (default) · `primary` · an index.
 is wrong and a second launch stacks on the first. Identify it by its own command
 line (the per-view `--user-data-dir` is stable), which is what `electron.sh` does.
 
-**GPU.** On a small-VRAM iGPU the Wayland `--type=gpu-process` can die with
-`amdgpu: Not enough memory for command submission` (SIGSEGV, not an OOM).
-`YMIR_DESKTOP_DISABLE_GPU=1` adds `--disable-gpu --disable-gpu-compositing` —
-these are dashboards, not 3D apps. See the `ymir` skill (its omarchy asset)
-skill for the full native story.
+**One class per app, and the install proves it (2026-09-24).** Each surface
+presents its own window class — `ymir-hlidskjalf` · `ymir-smidja` ·
+`ymir-odrerir` · `ymir-sessrumnir` — decided once in `app_class`
+(`bin/app-lib.sh`), set by the Electron mains (`app.setName(APP_SLUG)` +
+`appendSwitch('class', APP_SLUG)`). The `.desktop` `StartupWMClass`, the
+generated Hyprland rule, and the launchers must all name the same string; they
+once did not (`CLASS_sessrumnir="sessrumnir"` vs the app's `ymir-sessrumnir`,
+which made every Ymir key seem to open one app). The desktop step of
+`bin/ymir-install.sh` runs `bin/desktop-verify.sh` before any window is claimed
+and after the raise (`--live`), so a misrouted or unopenable surface is a loud
+FAIL, never green.
+
+**GUI.** On a small-VRAM iGPU the Wayland `--type=gpu-process` can die with
+`amdgpu: Not enough memory for command submission` (SIGSEGV, not an OOM). The
+effective policy is one decision in `bin/graphics-lib.sh`: a shared-memory
+integrated device beside a discrete one (a hybrid — i915 exposes no
+`mem_info_vram_total`, so Intel is classified by presence, GTT read where amdgpu
+exposes it) defaults the shells to software rendering. `YMIR_DESKTOP_DISABLE_GPU`
+remains the override: `1` forces software, `0` forces the GPU path. The sense
+snapshots record the policy (`bin/omarchy-sense.sh observe`, `gpu_policy`) so the
+next decision is evidence-based.
 
 ## Verification
 
