@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# snotra-capture.sh — start a PipeWire capture of mic + system audio.
+# snotra-capture.sh — capture mic + system audio on the meeting seat.
 #
 # Usage:
-#   snotra-capture.sh start   — begin capture (mic + monitor)
-#   snotra-capture.sh stop    — stop the running capture
-#   snotra-capture.sh status  — show capture state
+#   snotra-capture.sh start [seconds]   — begin capture (mic + monitor)
+#   snotra-capture.sh stop              — stop the running capture
+#   snotra-capture.sh status            — show capture state
+#   snotra-capture.sh devices           — list sinks/sources and the chosen pair
 #
-# Captures system audio monitor + microphone via PipeWire, writes to a dated
-# path under $YMIR_HOME/hodd/workspaces/meetings/. The recording is a single
-# WAV file (PCM 16-bit 48kHz stereo).
+# Captures the system-audio monitor and the microphone, mixes them, and writes
+# a dated WAV under $YMIR_HOME/hodd/workspaces/meetings/. PipeWire exposes the
+# monitor of any sink, so no virtual loopback device is needed.
+#
+# Capture is via the PulseAudio protocol (`-f pulse`), which PipeWire serves
+# through pipewire-pulse on every Omarchy seat — the native `pipewire` ffmpeg
+# demuxer is not present in the fleet's ffmpeg builds.
 #
 # The Listening indicator: this script writes state/.snotra-listening so the
 # bar can read it (the bar already carries ScreenRecording and Dictation
@@ -16,8 +21,8 @@
 #
 # Env:
 #   YMIR_HOME          — the hoard root (default ~/Documents/ymirhome)
-#   SNOTRA_MONITOR     — PipeWire sink monitor name (default: first analog stereo)
-#   SNOTRA_MIC         — PipeWire source name (default: first analog stereo input)
+#   SNOTRA_MONITOR     — sink monitor name (default: the running/default sink)
+#   SNOTRA_MIC         — source name (default: the running/default input)
 
 set -u
 
@@ -31,96 +36,130 @@ mkdir -p "$HOARD" "$STATE_DIR"
 
 say() { printf '%s\n' "$*"; }
 
-# Resolve the default sink/source if not set
-resolve_defaults() {
-  [ -n "${SNOTA_MONITOR:-}" ] && return
-  SNOTA_MONITOR=$(pwcli list-sinks 2>/dev/null | awk '/analog-stereo/{print $1; exit}')
-  [ -z "$SNOTA_MONITOR" ] && SNOTA_MONITOR="alsa_output.pci-0000_00_1f.3.analog-stereo.monitor"
-  [ -n "${SNOTA_MIC:-}" ] && return
-  SNOTA_MIC=$(pwcli list-sources 2>/dev/null | awk '/analog-stereo/{print $1; exit}')
-  [ -z "$SNOTA_MIC" ] && SNOTA_MIC="alsa_input.pci-0000_00_1f.3.analog-stereo"
+# pactl is the portable surface (PipeWire serves the PulseAudio protocol on
+# every seat); fall back to wpctl when pactl is absent.
+have_pactl() { command -v pactl >/dev/null 2>&1; }
+
+default_sink() {
+  if have_pactl; then
+    pactl get-default-sink 2>/dev/null && return
+  fi
+  wpctl status 2>/dev/null | awk '/Sinks:/{f=1} f&&/\*/{print $2; exit}'
+}
+
+default_source() {
+  if have_pactl; then
+    pactl get-default-source 2>/dev/null && return
+  fi
+  wpctl status 2>/dev/null | awk '/Sources:/{f=1} f&&/\*/{print $2; exit}'
+}
+
+resolve_devices() {
+  local sink source
+  sink="${SNOTRA_MONITOR:-}"
+  if [ -z "$sink" ]; then
+    sink="$(default_sink)"
+    # the monitor of the default sink is what carries system audio
+    [ -n "$sink" ] && case "$sink" in *.monitor) ;; *) sink="$sink.monitor" ;; esac
+  fi
+  source="${SNOTRA_MIC:-}"
+  if [ -z "$source" ]; then
+    source="$(default_source)"
+  fi
+  printf '%s\n%s\n' "$sink" "$source"
+}
+
+list_devices() {
+  say "Sinks (system audio — capture the .monitor):"
+  if have_pactl; then pactl list short sinks 2>/dev/null | sed 's/^/  /'; fi
+  say "Sources (microphone):"
+  if have_pactl; then pactl list short sources 2>/dev/null | sed 's/^/  /'; fi
+  say ""
+  local pair
+  pair="$(resolve_devices)"
+  say "Chosen monitor: $(printf '%s' "$pair" | sed -n 1p)"
+  say "Chosen mic:     $(printf '%s' "$pair" | sed -n 2p)"
 }
 
 do_start() {
-  resolve_defaults
+  local SECONDS_ARG="${1:-}"
+  local pair MONITOR MIC
+  # a dead capture leaves stale state behind; clear it before a new run
+  if [ -f "$PID_FILE" ] && ! kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
+    rm -f "$PID_FILE" "$LISTENING_FILE"
+  fi
+  pair="$(resolve_devices)"
+  MONITOR="$(printf '%s' "$pair" | sed -n 1p)"
+  MIC="$(printf '%s' "$pair" | sed -n 2p)"
 
   local DATESTAMP
   DATESTAMP=$(date +%Y-%m-%d_%H%M%S)
   local OUTFILE="$HOARD/meeting-${DATESTAMP}.wav"
 
   say "Snotra capture starting…"
-  say "  Sink monitor: $SNOTA_MONITOR"
-  say "  Mic source:   $SNOTA_MIC"
+  say "  Sink monitor: ${MONITOR:-(none)}"
+  say "  Mic source:   ${MIC:-(none)}"
   say "  Output:       $OUTFILE"
 
-  # Record both channels via PipeWire + ffmpeg:
-  #   -f pipewire with the monitor (system audio) and mic (microphone)
-  #   We use ffmpeg's lavfi with the pipewire protocol.
-  #   If pipewire protocol is unavailable, fall back to a combined source.
-
-  # Start a background ffmpeg that captures both streams and mixes them.
-  # PipeWire's native capture: use ffplay/ffmpeg with the pipewire device.
-  # Fallback: use pactl/pipewire to create a combined source.
-
-  # The most reliable path on PipeWire 1.x: use ffmpeg with the pipewire
-  # protocol to capture the monitor, and a second capture for the mic,
-  # then mix. But since we need a single file, we use a single ffmpeg
-  # with a complex filtergraph.
-
-  # Check if ffmpeg supports pipewire
-  if ffmpeg -demuxers 2>&1 | grep -q pipewire; then
-    ffmpeg -y \
-      -f pipewire -i "$SNOTA_MONITOR" \
-      -f pipewire -i "$SNOTA_MIC" \
-      -filter_complex "[0:a][1:a]amix=inputs=2:duration=longest" \
-      -ar 48000 -ac 2 -sample_fmt s16 -c pcm_s16le \
-      "$OUTFILE" &
+  local -a DUR=()
+  if [ -n "$SECONDS_ARG" ]; then
+    DUR=(-t "$SECONDS_ARG")
+    say "  Duration:     ${SECONDS_ARG}s"
   else
-    # Fallback: use PulseAudio/PipeWire's built-in monitor + mic via
-    # a virtual combined source. We create a combined source using
-    # pw-cli and record from it.
-    say "WARNING: pipewire demuxer not available in ffmpeg"
-    say "Falling back to pactl-based capture…"
+    # Safety cap: a capture left running must stop itself (default 4h).
+    DUR=(-t "${SNOTRA_MAX_SECONDS:-14400}")
+    say "  Duration:     ${SNOTRA_MAX_SECONDS:-14400}s max (safety cap)"
+  fi
 
-    # Create a combined source (mic + monitor) via pipewire
-    local COMBINED
-    COMBINED=$(pw-cli 2>/dev/null | grep -i combined || echo "")
-
-    # Simplest fallback: record the monitor only (system audio carries
-    # the meeting; the mic is the operator's voice which is less critical
-    # for automated transcription).
-    ffmpeg -y \
-      -f pipewire -i "$SNOTA_MONITOR" \
-      -ar 48000 -ac 2 -sample_fmt s16 -c pcm_s16le \
-      "$OUTFILE" &
+  # `-t` is an OUTPUT option — placed before the output file. As an input
+  # option it limits only the first input, and amix(duration=longest) then
+  # waits on the unbounded second input, so the capture never stops.
+  # Mix the monitor (everyone else) with the mic (the operator). A missing
+  # device degrades to the other alone rather than failing the capture.
+  if [ -n "$MONITOR" ] && [ -n "$MIC" ]; then
+    ffmpeg -y -hide_banner -loglevel error \
+      -f pulse -i "$MONITOR" \
+      -f pulse -i "$MIC" \
+      -filter_complex "[0:a][1:a]amix=inputs=2:duration=longest:dropout_transition=0" \
+      -ar 48000 -ac 2 -c:a pcm_s16le \
+      "${DUR[@]}" "$OUTFILE" &
+  elif [ -n "$MONITOR" ]; then
+    say "  (no microphone resolved — capturing system audio only)"
+    ffmpeg -y -hide_banner -loglevel error \
+      -f pulse -i "$MONITOR" -ar 48000 -ac 2 -c:a pcm_s16le \
+      "${DUR[@]}" "$OUTFILE" &
+  elif [ -n "$MIC" ]; then
+    say "  (no monitor resolved — capturing microphone only)"
+    ffmpeg -y -hide_banner -loglevel error \
+      -f pulse -i "$MIC" -ar 48000 -ac 2 -c:a pcm_s16le \
+      "${DUR[@]}" "$OUTFILE" &
+  else
+    echo "error: no audio device resolved; run 'snotra-capture.sh devices'" >&2
+    exit 1
   fi
 
   local FFMPEG_PID=$!
   echo "$FFMPEG_PID" > "$PID_FILE"
-
-  # Write the listening state for the bar indicator
   echo "recording" > "$LISTENING_FILE"
 
   say "Snotra capture ACTIVE (pid $FFMPEG_PID)"
-  say "  Listening indicator: state/.snotra-listening = recording"
-  say "  Press Ctrl+C or run 'snotra-capture.sh stop' to end"
+  say "  Listening indicator: $LISTENING_FILE = recording"
+  say "  Stop with: snotra-capture.sh stop"
 
-  # Wait for the ffmpeg process
   wait "$FFMPEG_PID" 2>/dev/null || true
 
-  # Clean up
   rm -f "$PID_FILE" "$LISTENING_FILE"
   say "Snotra capture stopped"
   say "  Output: $OUTFILE"
+  [ -f "$OUTFILE" ] && say "  Size:   $(du -h "$OUTFILE" | cut -f1)"
 }
 
 do_stop() {
   if [ -f "$PID_FILE" ]; then
     local PID
-    PID=$(cat "$PID_FILE")
+    PID="$(cat "$PID_FILE")"
     if kill -0 "$PID" 2>/dev/null; then
       kill "$PID" 2>/dev/null
-      wait "$PID" 2>/dev/null || true
       say "Snotra capture stopped (pid $PID)"
     fi
   fi
@@ -130,29 +169,28 @@ do_stop() {
 do_status() {
   if [ -f "$PID_FILE" ]; then
     local PID
-    PID=$(cat "$PID_FILE")
+    PID="$(cat "$PID_FILE")"
     if kill -0 "$PID" 2>/dev/null; then
       say "Snotra capture ACTIVE (pid $PID)"
-      say "  Listening indicator: state/.snotra-listening = recording"
-      # Show the bar indicator path
-      say "  Bar indicator: read state/.snotra-listening (value: $(cat "$LISTENING_FILE" 2>/dev/null || echo unknown))"
+      say "  Listening indicator: $LISTENING_FILE = $(cat "$LISTENING_FILE" 2>/dev/null || echo unknown)"
       return 0
     fi
   fi
   say "Snotra capture: idle"
-  say "  Listening indicator: state/.snotra-listening = absent"
+  say "  Listening indicator: absent"
   return 1
 }
 
 case "${1:-}" in
-  start)   do_start ;;
+  start)   do_start "${2:-}" ;;
   stop)    do_stop ;;
   status)  do_status ;;
+  devices) list_devices ;;
   -h|--help|"")
-    sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
     ;;
   *)
-    echo "error: unknown command (start|stop|status)" >&2
+    echo "error: unknown command (start|stop|status|devices)" >&2
     exit 2
     ;;
 esac

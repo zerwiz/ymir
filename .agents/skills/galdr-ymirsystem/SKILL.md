@@ -37,7 +37,7 @@ Nornir jobs run, and how it is all verified. A runtime change not reflected in
 ## Routing (load one row)
 
 ```
-assets[24]{path,load_when}:
+assets[26]{path,load_when}:
   "assets/principles.md","the 10 CLI design principles (full doctrine)"
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -60,6 +60,8 @@ assets[24]{path,load_when}:
   "assets/smidja.md","the smithy: install, roster/pi models, run, trace, visualizer ports, observer"
   "assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
   "assets/odrerir-hall.md","the Óðrerir Live Hall — apps/odrerir, :4322, its window, the planning snapshot feed (bin/hall-snapshot.sh)"
+  "assets/snotra-meeting-ear.md","the meeting ear — capture (PipeWire), transcribe (whisper.cpp), minutes into the hoard, the read-only MCP face; the per-seat engine matrix and the install road"
+  "assets/thing-assembly-hall.md","Þing — the meeting room (MiroTalk P2P fork on whynot): the brand files and the sessionStorage trap, the Ymir look, the deploy weld, the cache lie, the AGPL position"
   "assets/pi-boot-guide.md","the PI primary boot path"
   "assets/README.md","the full asset index"
 ```
