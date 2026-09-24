@@ -65,7 +65,7 @@ fi
 # Which unit files the templates can materialize (all programs + the target)
 PROGRAM_UNIT_SRC() {  # <program> → the template path
   case "${1-}" in
-    well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|embed)
+    well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra|embed)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/$1.service" ;;
     hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/web/systemd/$1.service" ;;
