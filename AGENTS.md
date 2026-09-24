@@ -100,7 +100,7 @@ incomplete change. The router is `.agents/skills/galdr-ymirsystem/SKILL.md` (its
 table maps every task to its file).
 
 ```
-governed[7]{path,load_first}:
+governed[9]{path,load_first}:
   "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
   "apps/odrerir/**",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md"
@@ -108,6 +108,8 @@ governed[7]{path,load_first}:
   "bin/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
   "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
+  "bin/snotra-*",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
+  "tools/snotra/**",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
 ```
 
 Deep doctrine and the full asset index: `.agents/skills/galdr-ymirsystem/SKILL.md` and

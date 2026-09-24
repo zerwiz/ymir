@@ -23,7 +23,7 @@ PORT_BASE="${FLEET_PORT_BASE:-8317}"
 
 say() { printf '%s\n' "$*"; }
 
-units() { printf 'well-mcp\nratatoskr\nmill-worker\nembed\ncards\nskills-mcp\nskuld\n'; }
+units() { printf 'well-mcp\nratatoskr\nmill-worker\nembed\ncards\nskills-mcp\nskuld\nsnotra\n'; }
 
 status() {
   local n=0
@@ -43,6 +43,7 @@ ensure() {
   cp -r "$ROOT/tools/mill/worker.sh" "$DST/mill-worker.sh" 2>/dev/null || true
   cp -r "$ROOT/tools/skills-mcp/server.mjs" "$DST/skills-mcp-server.mjs" 2>/dev/null || true
   cp -r "$ROOT/tools/tickets-mcp/server.mjs" "$DST/tickets-mcp-server.mjs" 2>/dev/null || true
+  cp -r "$ROOT/tools/snotra/server.mjs" "$DST/snotra-server.mjs" 2>/dev/null || true
   # the skills mirror — the master .agents/skills tree, refreshed each ensure
   if [ -d "$ROOT/.agents/skills" ]; then
     rm -rf "$DST/skills" && cp -r "$ROOT/.agents/skills" "$DST/skills" 2>/dev/null || true
@@ -78,8 +79,9 @@ CARD
   [ -f "$CROOT/index.html" ] || printf '<h1>Fleet cards — %s</h1>\n' "$(hostname -s)" > "$CROOT/index.html"
   # 5) the served well + skills URLs into the seat's pi mcp.json (best-effort)
   mkdir -p "$HOME/.pi/agent"
+  SNOTRA_URL="${FLEET_SNOTRA_URL:-http://127.0.0.1:8321/mcp}"
   if [ -f "$HOME/.pi/agent/mcp.json" ]; then
-    python3 - "$WELL_URL" "$SKILLS_URL" "$SKULD_URL" <<'PY'
+    python3 - "$WELL_URL" "$SKILLS_URL" "$SKULD_URL" "$SNOTRA_URL" <<'PY'
 import json, sys, os
 p=os.path.expanduser("~/.pi/agent/mcp.json")
 try: d=json.load(open(p))
@@ -87,15 +89,16 @@ except Exception: d={}
 d.setdefault("mcpServers",{})["well"]={"url":sys.argv[1]}
 d["mcpServers"]["bolthorn"]={"url":sys.argv[2]}
 d.setdefault("mcpServers",{})["skuld"]={"url":sys.argv[3]}
+d.setdefault("mcpServers",{})["snotra"]={"url":sys.argv[4]}
 json.dump(d, open(p,"w"), indent=2)
 PY
   else
-    printf '{"mcpServers":{"well":{"url":"%s"},"bolthorn":{"url":"%s"}}}\n' "$WELL_URL" "$SKILLS_URL" > "$HOME/.pi/agent/mcp.json"
+    printf '{"mcpServers":{"well":{"url":"%s"},"bolthorn":{"url":"%s"},"skuld":{"url":"%s"},"snotra":{"url":"%s"}}}\n' "$WELL_URL" "$SKILLS_URL" "$SKULD_URL" "$SNOTRA_URL" > "$HOME/.pi/agent/mcp.json"
   fi
   # 6) raise (best-effort, never fails the install) — embed is heart-gated:
   #    only seats that have the model file host the stone
   systemctl --user daemon-reload >/dev/null 2>&1 || true
-  for u in well-mcp ratatoskr mill-worker cards skuld; do
+  for u in well-mcp ratatoskr mill-worker cards skuld snotra; do
     systemctl --user enable --now "$u.service" >/dev/null 2>&1 || say "$u: could not raise (warn)"
   done
   if [ -x "$VENV/bin/mcp-proxy" ] && [ -f "$DST/skills-mcp-server.mjs" ] && [ -d "$DST/skills" ]; then
