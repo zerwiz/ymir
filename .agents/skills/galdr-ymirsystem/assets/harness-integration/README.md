@@ -33,6 +33,14 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > `pi --mcp-config .pi/mcp.json`). Prefer `--project` when integrating Ymir into
 > an existing workflow. `bin/a2a-mcp.sh show` reports what is **actually** wired —
 > every key present, not a fixed list.
+>
+> **The MCP doors are role-wired at raise** (`bin/fleet-ensure.sh ensure`):
+> `well` binds this seat's own served well door (`127.0.0.1:8317/mcp`), while
+> `bolthorn` (:8319) and `skuld` (:8320) are the HEART's doors — a dev/forge/hand
+> seat drinks them over the tailnet from the fleet registry's heart row
+> (`http://<heart>/…`), and the heart drinks its own. This replaced the old
+> "write localhost to every seat" line, which pointed the Allfather's doors at
+> ghosts on seats that never hosted them.
 
 
 The Ymir runtime is a **distro**: a directory of instructions, skills, tooling and conventions that turns a general-purpose agent into a specialized one. Launching a supported harness inside `BROKK_HOME` is supposed to instantiate **Brokk** and address the operator as the **Allfather** *before the model's first turn*.

@@ -383,7 +383,7 @@ manifests. The token comes from the hoard, never from `~/.npmrc`.
 ## The steps
 
 ```
-install[25]{step,what,self-heals}:
+install[26]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -395,7 +395,8 @@ install[25]{step,what,self-heals}:
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
-  "fleet","the fleet services (the heart's surfaces): well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root","bin/fleet-ensure.sh copies tools/ to the seat, templatizes the five user units, raises them (best-effort WARN), and points the seat's pi mcp.json at the served well URL (--well-url)"
+  "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root) on heart seats, the stone on forge seats, the well door on dev seats","bin/fleet-ensure.sh copies tools/ to the seat, materializes ONLY what the roles owe, purges stale units, enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
+  "autoboot","the boot law: Linger asserted on headless seats, ymir.target enabled once, the boot proof run","checks loginctl show-user $USER -p Linger (enables it headless or fails with the remedy), reports the value on every seat, and calls bin/ymir-autoboot.sh verify — every role-owed program enabled and standing"
   "heimdall","the ssh-key ward (Heimdall) — entry by the rune carried on GitHub","bin/heimdall-ensure.sh arms it: ward script to ~/.local/bin (stable path, not the repo tree), the operator's GitHub user recorded, keys fetched/validated/merged into ~/.ssh/authorized_keys, 15-min user timer live (loginctl linger note for headless). --install may add openssh via pacman/apt (sudo, system package). Idempotent; a seat can stand warded or bare — reported honestly"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage — the store is ONE well in the hoard ($YMIR_HOME/hodd/memory/kaia.engram), resolved via hoard-lib or ENGRAM_DB"
@@ -406,14 +407,17 @@ install[25]{step,what,self-heals}:
   "marks","each app's rune icon + .desktop entry into the operator's own desktop, and the Ymir contract into pi's agent home","bin/design-icon.sh mint --all + install writes to $HOME/.local/share (never a session sandbox), so every app is dockable and pinnable; the contract symlink means every pi session, in ANY folder, loads Brokk"
   "invite","the way in for anyone else — an invite code","bin/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
   "register","workspace/INSTALL.md","writes the record"
-  "services","gate API, SPA, Nornir, bridges, visualizer","raises via scripts/start.sh (which builds the visualizer UI when ./dist is absent)"
+  "services","gate API, SPA, Nornir, bridges, visualizer — as USER UNITS on dev seats (hlidskjalf-spa · hlidskjalf-gate · mimir · bifrost · smidja · nornir, all joined to ymir.target)","raised by the fleet step; this step PROVES the raise with bin/ymir-autoboot.sh verify — the old run-scripts/start.sh road is retired for boot (it stays as the manual raise for a window an operator opens)"
   "desktop","Hlidskjalf + Smíðja desktop apps","bin/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**27** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
+**28** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
-`smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. `--check`
+`smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. The fleet
+step raises every role-owed program (the role gates live in `bin/ymir-autoboot.sh`
+— ONE table, shared with `bin/fleet-ensure.sh`); the `autoboot` step asserts
+Linger and runs the boot proof. `--check`
 skips the runtime-only steps (`services`, `desktop`, `validate`), which have
 nothing to report when the runtime is not raised, so a real run prints those
 three in addition. The exact set is whatever the host honestly has — never
@@ -909,7 +913,11 @@ cron gates, model placement, dispatch). It reads the role from the fleet registr
 
 `bin/role.sh set <host> heart|forge|dev|hand` changes the role afterward; the
 roles and what each owns are in `README.md` (*"The Fleet — many machines, one
-record"*) and Plan 51.
+record"*) and Plan 51. The boot follows the same lines: **what a seat owes at
+boot is its roles' programs** — the heart's offices, the forge's stone, a dev
+body's own web stack (`bin/ymir-autoboot.sh status` prints the per-role truth,
+and `bin/ymir-autoboot.sh verify` is the boot proof the install's final step
+runs).
 
 ### What the Omarchy layer installs
 
