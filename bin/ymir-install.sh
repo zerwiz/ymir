@@ -521,6 +521,24 @@ step_host() {
   fi
   add host OK "host sensed: ${seen}"
 
+  # The Eindri dispatch profile (D4, 2026-09-24). A shipped template that still
+  # carries unfilled model tokens must never steer dispatch, and install must
+  # not leave the template to look active. Derive a REAL profile from this
+  # machine (config/agents.yaml + the pi catalog) into the hoard's config dir
+  # once; the private override wins over the repo file thereafter.
+  if [ -x "$SCRIPT_DIR/dispatch-profile.sh" ] && [ -n "${HOARD:-}" ]; then
+    local hoprofile="$HOARD/config/eindri-dispatch.json"
+    if [ -f "$hoprofile" ]; then
+      add dispatch-profile OK "kept (private override at $hoprofile)"
+    elif [ "$CHECK" = 1 ]; then
+      add dispatch-profile OK "derived at install (private override: $hoprofile)"
+    elif mkdir -p "$HOARD/config" && "$SCRIPT_DIR/dispatch-profile.sh" derive --out "$hoprofile" >/dev/null 2>&1; then
+      add dispatch-profile OK "derived from this machine: $hoprofile"
+    else
+      add dispatch-profile WARN "could not derive $hoprofile (is config/agents.yaml present and pi installed?)"
+    fi
+  fi
+
   # The operator's own agent setup, seeded from the tracked template into the
   # home's settings dir — settings are the operator's, never the package's.
   # Idempotent: the seeded file is private and is never overwritten once set.
