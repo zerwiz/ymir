@@ -185,12 +185,20 @@ export interface PullRequest {
   author: string;
   realm: RealmId;
   state: 'open' | 'draft' | 'changes' | 'approved' | 'merged';
+  mergeable?: string;
   checks: { name: string; state: AgentStatus }[];
   checklist: { label: string; done: boolean }[];
   additions: number;
   deletions: number;
   issue?: string;
   updatedAt: string;
+}
+
+/** The Glitnir payload (2026-09-24 audit): real PR cards + the compliance card,
+ *  plus a named gh failure — a dead GitHub read is BOARDLY fatal, never silent. */
+export interface ReviewsInfo {
+  cards: PullRequest[];
+  ghError?: string;
 }
 
 export interface FileNode {
