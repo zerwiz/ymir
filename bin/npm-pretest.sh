@@ -95,6 +95,23 @@ smoke() {  # <pkg-dir>
   fi
   local servers; servers="$(find "$P/tools" -name "server*.mjs" -o -name "server*.ts" -o -name "worker.sh" 2>/dev/null | wc -l)"
   [ "$servers" -ge 4 ] && ok "fleet servers in the installed tree: $servers" || fail "fleet servers: $servers (expected 4+)"
+  # The desktop guarantee (2026-09-24): from the PACKAGED tree, every surface's
+  # app dir resolves and the runtime resolver answers a truthful verdict — a
+  # fresh package has no electron until the launcher's first-run install lands
+  # it at the workspace root, but the SHAPE must resolve and the gate must never
+  # lie (a crash here means the resolver cannot read the packaged layout).
+  if [ -r "$P/bin/app-lib.sh" ] && [ -r "$P/bin/electron-lib.sh" ]; then
+    . "$P/bin/app-lib.sh"; . "$P/bin/electron-lib.sh"
+    local sdir shape_ok=1
+    for sh in hlidskjalf odrerir sessrumnir smidja; do
+      sdir=""
+      app_dir "$sh" sdir 2>/dev/null || sdir=""
+      [ -n "$sdir" ] || { fail "desktop shape: app_dir $sh empty in the package"; shape_ok=0; continue; }
+      local st; st="$(electron_runtime_state "$sdir" "$P" "$(app_pkg "$sh")" 2>/dev/null || echo absent)"
+      case "$st" in ok|partial|absent) ;; *) fail "desktop shape: $sh answered '$st'"; shape_ok=0 ;; esac
+    done
+    [ "$shape_ok" = 1 ] && ok "desktop shape resolves for all four surfaces in the package"
+  fi
 }
 
 local_leg() {
