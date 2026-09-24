@@ -270,7 +270,7 @@ apps_phase() {
   for d in hlidskjalf odrerir sessrumnir; do
     dir="$(app_dir "$d" 2>/dev/null || true)"
     if [ -z "$dir" ]; then missing=$((missing+1)); continue; fi
-    case "$(electron_runtime_state "$dir" 2>/dev/null || true)" in
+    case "$(electron_runtime_state "$dir" "$ROOT" "$(app_pkg "$d")" 2>/dev/null || true)" in
       ok) shells=$((shells+1)) ;;
       partial) partial="$partial $d" ;;
       *) missing=$((missing+1)) ;;

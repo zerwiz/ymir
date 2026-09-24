@@ -214,6 +214,17 @@ seat-hall trio, Eir, the icon mint, the desktop placement, the hall snapshot, an
 the installer's own SPA and shell steps. `bin/smidja-lib.sh` delegates to it, so
 there is **one** truth about where things live.
 
+**`app_class <surface>` is the second answer it owns (added 2026-09-24).** The
+window class a surface PRESENTS (`ymir-hlidskjalf` · `ymir-smidja` ·
+`ymir-odrerir` · `ymir-sessrumnir`) is decided here once. It must equal the
+surface's `.desktop` `StartupWMClass`, the generated Hyprland window rule, and
+the slug the Electron sets (`app.setName` / `appendSwitch('class')`). It did not:
+`bin/desktop-place.sh` declared `CLASS_sessrumnir="sessrumnir"` while the app
+presents `ymir-sessrumnir`, so the rule and the entry matched nothing and every
+Ymir key seemed to open one app. Rename a class HERE first;
+`bin/desktop-verify.sh --class-only` asserts the invariant and
+`.agents/tests/desktop-classes.test.sh` holds it in the tree.
+
 **The trap that named itself.** `printf -v <name>` writes to the *function's*
 scope. A helper whose scratch variable shares the caller's requested name
 swallows the answer — `app_dir hlidskjalf c` returned nothing because the
@@ -485,6 +496,30 @@ It writes `~/.config/hypr/ymir-desktops.lua` using Omarchy's own idiom —
 touches `/usr/share/omarchy/`. Verify with `hyprctl configerrors` (must be empty).
 On a non-Omarchy host the step is a clean SKIP.
 
+The class names come from `app_class` (`bin/app-lib.sh`) — one source. A change
+to a class (the 2026-09-24 `ymir-sessrumnir` correction) needs `apply` re-run so
+the generated rule is regenerated; a stale rule is caught by
+`bin/desktop-verify.sh --class-only`.
+
+### The install verifies the shelves can open (2026-09-24)
+
+`bin/desktop-verify.sh` checks every surface — hlidskjalf · smidja · odrerir ·
+sessrumnir — and its answer is the install's guarantee:
+
+```bash
+bin/desktop-verify.sh            # resolve + --version + the class invariant
+bin/desktop-verify.sh --live     # with a compositor: a window of the class is held
+bin/desktop-verify.sh --class-only
+```
+
+For each surface: (a) the runtime resolver (`bin/electron-lib.sh`) yields an
+executable Electron; (b) it answers `--version`; (c) with a compositor present, a
+window of the expected class is held; (d) the class invariant above. It **fails
+loudly**, naming the surface and the resolved path — a runtime that is merely
+absent is a FAILURE, never a silent SKIP. The desktop step of
+`bin/ymir-install.sh` runs it **before** any window is claimed (and again
+`--live` after the raise); a broken surface exits the install nonzero.
+
 ## The Þjazi backend (herdr-first)
 
 Ymir spawns agents into terminal panes, so a terminal backend must exist. Ymir is
@@ -747,6 +782,26 @@ tree that passes its own build**:
 - **`electron` does not.** Its postinstall downloads the ~100 MB runtime; without
   it `node_modules/electron/dist/` is left partial and `path.txt` is never
   written, so the desktop shell cannot start — while the web app builds perfectly.
+
+**Where the runtime actually lands, and the one resolver (2026-09-24).** The
+root `package.json` declares a workspace (`apps/*`), so npm **HOISTS** each app's
+electron to the ymir ROOT — `ymir/node_modules/electron` — and **never** creates
+`apps/<app>/node_modules/electron`. A probe that looks only app-locally finds
+nothing that can exist (this is what made the shells fail silently). Three rules
+follow, all owned by `bin/electron-lib.sh`:
+
+- **the resolver** — `electron_bin`/`electron_pkg_dir` search, in order: the
+  app-local dir, the nearest ancestor hoist (walking up, halting at a foreign
+  ymir root), then the sibling package. `electron_runtime_state` answers
+  `ok` | `partial` | `absent`; **absence is never success** — every guard returns
+  failure when nothing resolves (proven by `.agents/tests/electron-lib.test.sh`).
+- **install at the workspace root** — an install INSIDE a member reconciles the
+  tree and REMOVES the local `node_modules` the launcher was about to use
+  (`electron_is_workspace_member`). Install at the root for a member, app-local
+  only for a standalone app.
+- **fetch into the resolved dir** — `electron_place_dir` returns the seat a fetch
+  must use (the root hoist for a member). `electron_fetch_runtime`/
+  `fetch_electron_zip` place the runtime there.
 
 Detect it:
 
