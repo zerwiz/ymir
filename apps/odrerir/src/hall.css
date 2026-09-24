@@ -412,6 +412,20 @@ body {
   cursor: pointer;
   margin-left: auto;
 }
+/* the book's connection chip (2026-09-24) — the user must SEE the door */
+.skuld-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.6rem;
+}
+.skuld-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
 /* the hall's own board — the livehall (tally · smiths · call · ledger) */
 .lh-board .panel-body {
   padding: 1rem;
