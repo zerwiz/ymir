@@ -106,13 +106,31 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
     // The host is usually mounted HIDDEN (the app keeps the chat mounted while another
     // view shows), so at mount its rect is 0x0, the canvas was sized 1x1, and the embers
     // were drawn into a single pixel for the whole session — only a window resize could
-    // ever have fixed it. Observing the HOST re-sizes the moment the room is shown.
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null
-    if (ro && host) ro.observe(host)
+    // ever have fixed it. Observing the HOST re-sizes the moment the room is shown. The
+    // hearth warms the chat column *and* the home screen, and both resize when panes
+    // split or panels toggle — so re-seed only when its dimensions actually changed.
+    let ro: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined' && host) {
+      let lastW = 0
+      let lastH = 0
+      ro = new ResizeObserver((entries) => {
+        const e = entries[0]
+        if (!e) return
+        const w = e.contentRect?.width ?? 0
+        const h = e.contentRect?.height ?? 0
+        if (Math.abs(w - lastW) > 0.5 || Math.abs(h - lastH) > 0.5) {
+          lastW = w
+          lastH = h
+          onResize()
+        }
+      })
+      ro.observe(host)
+    }
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', onResize)
-    if (ro) ro.disconnect()
+      if (ro) ro.disconnect()
+    }
     }
   }, [])
 
