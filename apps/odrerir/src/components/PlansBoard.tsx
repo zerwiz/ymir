@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { skuldCall, skuldInit } from '../skuld';
 import { esc, stBadge } from '../board';
+import SkuldStatusChip from './SkuldStatus';
 
 /**
  * PlansBoard — the roadmap, wearing the SAME anatomy and skin as the tickets
@@ -31,16 +32,20 @@ export default function PlansBoard() {
   useEffect(() => {
     void (async () => {
       await skuldInit().catch(() => undefined);
-      const t = await skuldCall('tickets/list', { namespace: 'ymir' });
-      setTickets((t.split('\n') ?? []).filter(Boolean));
-      const p = await skuldCall('plans/list', { namespace: 'ymir' });
-      setRows((p.split('\n') ?? []).filter(Boolean));
+      // only lines carrying the row shape (id|ns|state|…) count — a "no plans"
+      // sentence is the EMPTY state, never a row (2026-09-24).
+      const t = await skuldCall('tickets_list', { namespace: 'ymir' }).catch(() => '');
+      setTickets((t.split('\n') ?? []).filter((r) => r.includes('|')));
+      await loadPlans().catch(() => undefined);
     })();
+    const onRetry = () => void loadPlans().catch(() => undefined);
+    window.addEventListener('skuld:retry', onRetry);
+    return () => window.removeEventListener('skuld:retry', onRetry);
   }, []);
 
   async function loadPlans() {
-    const p = await skuldCall('plans/list', { namespace: 'ymir' });
-    setRows((p.split('\n') ?? []).filter(Boolean));
+    const p = await skuldCall('plans_list', { namespace: 'ymir' });
+    setRows((p.split('\n') ?? []).filter((r) => r.includes('|')));
   }
 
   const d = detail ? detail.split('|') : [];
@@ -60,6 +65,7 @@ export default function PlansBoard() {
             the plans <span className="mono dim" style={{ marginLeft: '.4rem', fontSize: '.72rem' }}>{visible.length}</span>
           </div>
           <button type="button" className="td-act" onClick={() => setNewOpen((v) => !v)}>+ new plan</button>
+          <SkuldStatusChip />
         </div>
         <div className="panel-body flush">
           <div className="filters">
@@ -77,7 +83,7 @@ export default function PlansBoard() {
                   e.preventDefault();
                   const f = new FormData(e.currentTarget);
                   const picked = Array.from(e.currentTarget.querySelectorAll<HTMLOptionElement>('#ticket-pick option:checked')).map((o) => parseInt(o.value, 10));
-                  const r = await skuldCall('plans/create', {
+                  const r = await skuldCall('plans_create', {
                     namespace: f.get('namespace'),
                     title: f.get('title'),
                     body: f.get('body'),
@@ -127,7 +133,7 @@ export default function PlansBoard() {
                   <tr
                     key={c.id}
                     onClick={async () => {
-                      const raw = await skuldCall('plans/get', { id: parseInt(c.id, 10) });
+                      const raw = await skuldCall('plans_get', { id: parseInt(c.id, 10) });
                       setDetail(raw);
                     }}
                   >

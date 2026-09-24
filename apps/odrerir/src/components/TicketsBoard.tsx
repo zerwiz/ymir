@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { skuldCall, skuldInit } from '../skuld';
+import SkuldStatusChip from './SkuldStatus';
 
 /**
  * TicketsBoard — the hall's book (plan 43), carried faithful from the old
@@ -75,15 +76,20 @@ export default function TicketsBoard() {
   );
 
   async function load() {
-    const t = await skuldCall('tickets/list', { namespace: 'ymir' });
-    setRows((t.split('\n') ?? []).filter(Boolean));
+    const t = await skuldCall('tickets_list', { namespace: 'ymir' });
+    // a "no tickets"/silence sentence is the EMPTY state, never a row: only
+    // lines carrying the row shape (id|no|ns|…) count (2026-09-24).
+    setRows((t.split('\n') ?? []).filter((r) => r.includes('|')));
   }
 
   useEffect(() => {
     void (async () => {
       await skuldInit().catch(() => undefined);
-      await load();
+      await load().catch(() => undefined);
     })();
+    const onRetry = () => void load().catch(() => undefined);
+    window.addEventListener('skuld:retry', onRetry);
+    return () => window.removeEventListener('skuld:retry', onRetry);
   }, []);
 
   function toggleSel(id: string, on: boolean) {
@@ -96,8 +102,8 @@ export default function TicketsBoard() {
   }
 
   async function openDetail(id: string) {
-    const raw = await skuldCall('tickets/get', { id: Number(id) || 0 });
-    const comments = await skuldCall('comments/list', { id: Number(id) || 0 });
+    const raw = await skuldCall('tickets_get', { id: Number(id) || 0 });
+    const comments = await skuldCall('comments_list', { id: Number(id) || 0 });
     setDetail(raw);
     setDetailComments(comments);
   }
@@ -131,6 +137,7 @@ export default function TicketsBoard() {
             the tickets <span className="mono dim" style={{ marginLeft: '.4rem', fontSize: '.72rem' }}>{visible.length}</span>
           </div>
           <button type="button" className="td-act" onClick={() => setNewOpen((v) => !v)}>+ new ticket</button>
+          <SkuldStatusChip />
         </div>
         <div className="panel-body flush">
           <div className="filters">
@@ -155,7 +162,7 @@ export default function TicketsBoard() {
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const f = new FormData(e.currentTarget);
-                  const r = await skuldCall('tickets/create', {
+                  const r = await skuldCall('tickets_create', {
                     namespace: f.get('namespace'),
                     title: f.get('title'),
                     description: f.get('description'),
@@ -264,7 +271,7 @@ export default function TicketsBoard() {
               onChange={async (e) => {
                 const to = e.target.value;
                 if (!to) return;
-                for (const id of Array.from(sel)) await skuldCall('tickets/update', { id: parseInt(id, 10), status: to });
+                for (const id of Array.from(sel)) await skuldCall('tickets_update', { id: parseInt(id, 10), status: to });
                 setSel(new Set());
                 await load();
               }}
@@ -301,7 +308,7 @@ export default function TicketsBoard() {
                 style={{ background: 'var(--hall-bg)', color: 'var(--hall-bone)', border: '1px solid var(--hall-steel)', borderRadius: 2, padding: '.3rem .5rem' }}
                 onChange={async (e) => {
                   const id = Number(d[0]);
-                  if (e.target.value) await skuldCall('tickets/update', { id, assignee: e.target.value });
+                  if (e.target.value) await skuldCall('tickets_update', { id, assignee: e.target.value });
                 }}
               >
                 <option value="">—</option>
@@ -318,7 +325,7 @@ export default function TicketsBoard() {
                   className="td-act"
                   onClick={async () => {
                     const id = Number(d[0]);
-                    const r = await skuldCall('tickets/update', { id, status: s });
+                    const r = await skuldCall('tickets_update', { id, status: s });
                     if (/updated/.test(r)) {
                       setDetail(null);
                       await load();
@@ -349,7 +356,7 @@ export default function TicketsBoard() {
                 e.preventDefault();
                 const v = new FormData(e.currentTarget).get('td-comment-text') as string;
                 if (!v?.trim()) return;
-                const r = await skuldCall('comments/post', { id: Number(d[0]), body: v.trim() });
+                const r = await skuldCall('comments_post', { id: Number(d[0]), body: v.trim() });
                 if (/carved/.test(r)) setDetail(null);
               }}
             >

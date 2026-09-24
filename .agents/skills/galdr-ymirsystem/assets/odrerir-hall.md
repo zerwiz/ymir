@@ -142,3 +142,20 @@ board ever needs it again. Everything the hall renders lives under
   a direct cross-origin POST is CORS-blocked and dies silent (fixed 2026-09-24).
 - The plans board wears the tickets' skin exactly: the same status badges
   (`src/board.ts` — one palette), the same inline +new panel, the same table.
+
+### The boards' MCP alignment + the connection chip (2026-09-24)
+- **The server's true tool names are underscored, un-prefixed**: `tickets_list`
+  · `tickets_get` · `tickets_update` · `tickets_create` · `comments_list` ·
+  `comments_post` · `plans_list` · `plans_get` · `plans_create`. The old hall
+  (and the first React port) called them with slashes (`tickets/list`) — a name
+  the server never served; the boards rang a dead door. The UI calls the true
+  names; `bin/odrerir-mcp-smoke.sh` asserts that alignment (`tools/list`) so a
+  rename can never silently orphan the UI.
+- **Skuld answers tools/call as SSE** (`event: message` + a `data:` JSON frame);
+  the client parses the last data frame, plain JSON otherwise.
+- **The connection is VISIBLE**: `src/skuld.ts` publishes a status and the
+  boards render the chip (connected / ringing / NOT connected — the cause +
+  retry). A dead door looks dead, never like an empty book.
+- **Smoke**: `bin/odrerir-mcp-smoke.sh` is wired into the lifecycle smoke as
+  the `boards` row (real initialize + list + get + comments over the tailnet
+  door, with the alignment assert).
