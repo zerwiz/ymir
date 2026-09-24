@@ -111,6 +111,46 @@ smoke() {  # <pkg-dir>
       case "$st" in ok|partial|absent) ;; *) fail "desktop shape: $sh answered '$st'"; shape_ok=0 ;; esac
     done
     [ "$shape_ok" = 1 ] && ok "desktop shape resolves for all four surfaces in the package"
+    # APPS FULLY BOOTABLE (2026-09-24, the Allfather's law): it is critical
+    # that the apps WORK and START, especially the electrons. Run the launcher's
+    # own first-run install at the workspace root (the P3 law — the exact road
+    # scripts/electron.sh walks on a fresh package), then verify EVERY surface:
+    # the resolver yields an executable electron that ANSWERS --version, and the
+    # web surface's built index stands. The same guard the launcher runs before
+    # it would ever exec a window.
+    local boot_ok=1
+    if ( cd "$P" && npm install --no-audit --no-fund >/dev/null 2>&1 ); then
+      for sh in hlidskjalf odrerir sessrumnir smidja; do
+        local sdir2 bin idx
+        sdir2=""; app_dir "$sh" sdir2 2>/dev/null || sdir2=""
+        [ -n "$sdir2" ] || { fail "app-boot: $sh has no app dir in the package"; boot_ok=0; continue; }
+        # the built web surface the launcher serves: the smithy's visualizer is
+        # NESTED (apps/smidja-factory/apps/visualizer/dist), the seat-hall is a
+        # built main.
+        idx="$sdir2/dist/index.html"
+        [ "$sh" = smidja ] && idx="$sdir2/apps/visualizer/dist/index.html"
+        [ "$sh" = sessrumnir ] && idx="$sdir2/out/main/index.js"
+        [ -f "$idx" ] || { fail "app-boot: $sh web surface not built ($idx)"; boot_ok=0; }
+        # the launcher's mend roads (electron-lib) — npm gates the postinstall,
+        # so after the install the runtime must be fetched exactly as
+        # scripts/electron.sh does, then the resolver gate is the launcher gate.
+        command -v electron_fetch_runtime >/dev/null 2>&1 && electron_fetch_runtime "$sdir2" "$P" "$(app_pkg "$sh")" >/dev/null 2>&1
+        command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$sdir2" "$P" "$(app_pkg "$sh")" >/dev/null 2>&1
+        bin="$(electron_bin "$sdir2" "$P" "$(app_pkg "$sh")" 2>/dev/null || true)"
+        if [ -n "$bin" ] && [ -x "$bin" ] && "$bin" --version >/dev/null 2>&1; then
+          local v
+          v="$($bin --version 2>/dev/null | head -1)"
+          ok "app-boot: $sh electron boots ("$v")"
+        else
+          fail "app-boot: $sh has no runnable electron ($bin)"
+          boot_ok=0
+        fi
+      done
+    else
+      fail "app-boot: the workspace-root first-run install failed in the package"
+      boot_ok=0
+    fi
+    [ "$boot_ok" = 1 ] && ok "app-boot: all surfaces resolve a runnable electron + a built web surface"
   fi
 }
 
