@@ -394,7 +394,7 @@ install[25]{step,what,self-heals}:
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
-  "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
+  "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
   "fleet","the fleet services (the heart's surfaces): well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root","bin/fleet-ensure.sh copies tools/ to the seat, templatizes the five user units, raises them (best-effort WARN), and points the seat's pi mcp.json at the served well URL (--well-url)"
   "heimdall","the ssh-key ward (Heimdall) — entry by the rune carried on GitHub","bin/heimdall-ensure.sh arms it: ward script to ~/.local/bin (stable path, not the repo tree), the operator's GitHub user recorded, keys fetched/validated/merged into ~/.ssh/authorized_keys, 15-min user timer live (loginctl linger note for headless). --install may add openssh via pacman/apt (sudo, system package). Idempotent; a seat can stand warded or bare — reported honestly"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
@@ -908,8 +908,17 @@ cron gates, model placement, dispatch). It reads the role from the fleet registr
   registering).
 
 `bin/role.sh set <host> heart|forge|dev|hand` changes the role afterward; the
-roles and what each owns are in `README.md` (*"The Fleet — many machines, one
-record"*) and Plan 51.
+roles and what each owns are in `README.md` (*“The Fleet — many machines, one
+record”*) and Plan 51.
+
+### The dispatch profile is derived, never left as a template (D4)
+
+`step_host` also runs `bin/dispatch-profile.sh derive` into
+`$YMIR_HOME/hodd/config/eindri-dispatch.json` (once — a private override that
+wins over the repo file thereafter). The derivation reads `config/agents.yaml`
+plus the live pi catalog, so the rules carry the machine's real harness/model;
+a template still holding unfilled model tokens is NOT active and steers
+nothing (`bin/dispatch-profile.sh active` decides — see `eindri-orchestration.md` §5.1).
 
 ### What the Omarchy layer installs
 
