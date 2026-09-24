@@ -28,7 +28,7 @@ trap 'rm -f "$LOG"' EXIT
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   --body)
     # The proof block for the PR body — a PASS line already exists meaning the
     # real installation happened on THIS tree, with the tarball's own name set.
