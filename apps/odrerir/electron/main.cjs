@@ -1,7 +1,8 @@
 // Óðrerir — Electron shell. The Live Hall as a desktop app.
 //
-// Raises the hall (the Astro board on :4322) if it is down, then opens it in
-// its own native window. The board stays the UI; this is the window around it.
+// Raises the hall (the Hlidskjalf-type board on :4322 — React since plan 55,
+// 2026-09-24) if it is down, then opens it in its own native window. The board
+// stays the UI; this is the window around it.
 // One app identity of its own, so it never stacks with Hlidskjalf or Smíðja.
 const { app, BrowserWindow, Menu, shell, screen } = require('electron');
 const { spawn } = require('node:child_process');

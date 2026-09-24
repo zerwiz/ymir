@@ -3,13 +3,14 @@
 Purpose: the complete reference for **Óðrerir**, the Ymir fleet's planning glass —
 the carved board that reads the machine's real state and renders it read-only:
 the tally of the hall, the armed errands dealt one slate at a time, the smiths and
-their states, and the carved ledger of what is underway, landed, and charted.
+their states, the tickets and the plans.
 
-> The hall is its **own app** under `apps/odrerir` (an Astro board), separate from
-> the landing page it once lived beside (`~/CodeP/ymir-homepage`, migrated
-> 2026-09-15). The Allfather's word: only the hall came into the tree, not the
-> landing. It has its **own** Electron window (`--view odrerir`), so it never
-> stacks with Hlidskjalf or Smíðja.
+> The hall is its **own app** under `apps/odrerir`, **built as a Hlidskjalf-type
+> app since 2026-09-24 (plan 55)** — React + Vite + TS, the ember hearth, the
+> translucent panels, and the halls buttons in the same design as the high seat.
+> It was an Astro static board before, and it is one no longer. It keeps its
+> **own** Electron window (`--view odrerir`) and its own port `:4322`, so it
+> never stacks with Hlidskjalf or Smíðja.
 
 ---
 
@@ -19,15 +20,18 @@ their states, and the carved ledger of what is underway, landed, and charted.
 |---|---|
 | Norse figure | **Óðrerir** — the cauldron of the mead of poetry, poured live |
 | App home | `apps/odrerir` |
-| Tech | Astro (static output) + a `verbatim-hall` integration |
-| Port | `:4322` (env `ODRERIR_PORT`, config `server.port`) |
-| Feed | `public/livehall.json` — written by `bin/hall-snapshot.sh` |
+| Tech | React 19 + Vite 6 + TS (mirrors `apps/hlidskjalf`; `main` → `electron/main.cjs`) |
+| Cloth | the canonical `midgard/design-system/tokens.css` + the hearth (`midgard/design-system/ember.js`, carried in-repo) |
+| Boards | the tickets + plans, BOTH in the tickets anatomy (table · filters · bulk · +new · detail sheet); Skuld MCP over the tailnet door |
+| Port | `:4322` (env `ODRERIR_PORT`) |
 | Public face | `https://hall.ymir.zerwiz.org` (production) |
 | Desktop app | `ymir-odrerir` — its own Electron shell, own icon, own `.desktop` |
 
-The page (`src/index.html`) is served **verbatim**; assets are handed beside it.
-Missing `livehall.json` is **not** a build failure — the board paints the saga's
-own tale and says so.
+The SPA (`src/App.tsx` → the EmberBackground + the topbar with the halls
+buttons → the boards) builds to `dist/`. The boards read the **Skuld MCP at
+`whynot.tailefab81.ts.net:8320`** — a fleet MCP is addressed by TAILNET NAME,
+never a LAN IP (the 2026-09-24 law; a LAN address draws HTTP 000 from the
+other seats).
 
 ## 2. Raising the hall
 
@@ -41,7 +45,10 @@ scripts[1]{command,result}:
   "scripts/start.sh","Óðrerir — Live Hall raised (pid <pid>) → http://127.0.0.1:4322/"
 ```
 
-- If `apps/odrerir/node_modules` is missing it `npm install`s once.
+- If `apps/odrerir/node_modules` is missing it installs once (workspace-aware:
+  the root `npm install` hoists; vite arrives by the P3 law).
+- A packaged app ships `dist/` and is served with
+  `npx --no-install vite preview --port :4322`; a clone runs `npm run dev`.
 - Liveness is tracked by `.run/odrerir.pid`, logs to `.run/odrerir.log`.
 - Idempotent: already running → "already running" line, no double spawn.
 - Missing app dir → `Óðrerir — Live Hall skipped (missing apps/odrerir).`
@@ -50,14 +57,13 @@ scripts[1]{command,result}:
 
 ```
 hall-dev[4]{command,when}:
-  "cd apps/odrerir && npm run dev","hack + watch (runs check:cloth first)"
-  "cd apps/odrerir && npm run build","static build into dist/"
+  "cd apps/odrerir && npm run dev","hack + watch (vite dev server on :4322)"
+  "cd apps/odrerir && npm run build","tsc --noEmit && vite build into dist/"
   "cd apps/odrerir && npm run preview","serve the built dist for a look"
-  "cd apps/odrerir && npm run check:cloth","verify the cloth tokens are in step (warns+passes when the landing is absent)"
+  "cd apps/odrerir && npm run typecheck","tsc --noEmit"
 ```
 
-`npm install` is required once (`--no-audit --no-fund`). Astro is the only
-dependency.
+`npm install` is required once (`--no-audit --no-fund`).
 
 ### 2.3 Its own window
 
@@ -72,62 +78,56 @@ odrerir[4]{aspect,detail}:
   "menu","Reload / DevTools / quit (own app menu — no cross-app Sign out)"
 ```
 
-`--both` raises Hlidskjalf + Smíðja; Óðrerir is raised by its own `--view odrerir`
-call. The hall's Electron binary is shared from `apps/hlidskjalf/node_modules`;
-the app directory passed to Electron is `apps/odrerir` (its `package.json`
-`main` → `electron/main.cjs`). The hall has **no** gate session — a Sign-out link
-is never shown; the window is read-only chrome around a read-only board.
+The hall's Electron binary is resolved by `bin/electron-lib.sh` (one resolver,
+app-local → hoisted → sibling); the app directory passed to Electron is
+`apps/odrerir` (its `package.json` `main` → `electron/main.cjs`). The hall has
+**no** gate session — a Sign-out link is never shown.
 
-## 3. The planning feed — `bin/hall-snapshot.sh`
+## 3. The boards
 
-```
-snapshot[1]{command,out}:
-  "bin/hall-snapshot.sh","apps/odrerir/public/livehall.json (default)"
-```
-
-- Reads REAL system state: Runes tally, project registry, the Nornir loom (cron
-  jobs), the wake queue, the herdr smiths (`odrerir` / `sessrumnir-cloth` /
-  `hall-button`), the armed `when-*` errands, and the runes-ledger counts.
-- **PUBLIC-SAFE BY LAW:** only Norse worker names, counts, and job ids — never a
-  private name, path, secret, or command (the PLAN §12 gate). When the feed is
-  stale the board says so rather than inventing state.
-- Override the output with the first argument; override the home with
-  `BROKK_ROOT_OVERRIDE`, the state dir with `BROKK_STATE_OVERRIDE`.
+- **Tickets** (`src/components/TicketsBoard.tsx`) — the hall's book (plan 43):
+  the filterable table (status · priority · assignee) with bulk power and a
+  +new door; pressing a row opens the detail sheet with the stat-strip, the
+  state march, the assignee's pick and the comments thread. Tools over Skuld:
+  `tickets/list|get|create|update`, `comments/list|post`.
+- **Plans** (`src/components/PlansBoard.tsx`) — the roadmap, wearing the SAME
+  anatomy: a filtered table (id · title · state · rides), a +new plan door
+  whose ticket picker lists the living tickets, and a detail sheet with the
+  plan's body and the tickets it rides. Tools: `plans/list|get|create`.
+- **One layout, one law**: a plan's tickets must exist before the plan does.
 
 ## 4. Working on the hall — laws and gotchas
 
-- **Only the board lives here.** The landing page (`src/lore.html`, the site's
-  prose) stays outside the tree. Any change that assumes the landing is beside
-  the hall is wrong.
-- **The cloth** (`src/styles/cloth.css`) carries a marked region
-  (`/* >>> generated:tokens … >>> */` → `/* <<< generated:tokens <<< */`)
-  extracted from the landing's `:root`. Standalone, `check:cloth` warns and
-  passes — the locked copy is the source of truth for this app. Touching the
-  region by hand breaks the check.
-- **Snapshot freshness:** after adding an armed errand or a new smith, re-run
-  `bin/hall-snapshot.sh` so the board shows it. The `verbatim-hall` integration
-  serves `public/livehall.json` same-origin in dev and copies it into the build.
+- **The halls buttons** (`src/App.tsx`, `HALLS`) are the high seat's control:
+  they raise the other Ymir windows through the Hlidskjalf gate
+  (`/api/desktop`). A quiet gate never breaks the board.
+- **The cloth is the canonical import**: `src/hall.css` imports
+  `midgard/design-system/tokens.css`; the hearth is the carried-in
+  `midgard/design-system/ember.js`. No bespoke palette, no generated regions.
+- **The Skuld door is env-overridable** (`VITE_SKULD_URL`), defaulting to the
+  tailnet MagicDNS name — never a LAN IP (2026-09-24 law).
 - **Ports are sacred:** `:4322` is Óðrerir's alone. Do not move it into a
-  Hlidskjalf route or a launcher call — its door is a plain anchor in a new tab
-  (`.hall-btn`, rune **ᛟ**, "To the Hall") and its own window.
-- **`.astro/dev.json` is runtime state, never tracked.** Astro rewrites it on
-  every start with the live `pid` and the host's own addresses (LAN + tailnet),
-  so committing it leaks a private IP per run. It is gitignored; the generated
-  types beside it (`content.d.ts`, `types.d.ts`) stay tracked.
+  Hlidskjalf route or a launcher call — its door is its own window and its own
+  topbar buttons.
+- **Astro is gone**: no `src/index.html` verbatim page, no `.astro` pages, no
+  `astro.config.mjs`, no `check:cloth` — anything that looks for them is
+  looking at the old world.
 
 ## 5. Files you will touch
 
 ```
-files[5]{path,what}:
-  "apps/odrerir/src/index.html","the board's carved page (served verbatim)"
-  "apps/odrerir/src/styles/cloth.css","the cloth (locked token region + board primitives)"
-  "apps/odrerir/src/styles/livehall.css","the board kit"
-  "apps/odrerir/astro.config.mjs","server port/host, verbatim-hall integration, asset slate"
+files[6]{path,what}:
+  "apps/odrerir/src/App.tsx","the shell — hearth, topbar, halls buttons, hash views"
+  "apps/odrerir/src/hall.css","the cloth: tokens import, glass panels, the boards' anatomy"
+  "apps/odrerir/src/components/TicketsBoard.tsx","the hall's book — table · bulk · +new · detail"
+  "apps/odrerir/src/components/PlansBoard.tsx","the roadmap — the same anatomy"
+  "apps/odrerir/src/skuld.ts","the Skuld MCP client (tailnet door, session header)"
   "apps/odrerir/electron/main.cjs","the hall's own window (single instance, no session)"
 ```
 
 Door plumbing that reaches the hall from other apps: `HALL_URL` in
 `apps/hlidskjalf/src/data/metadata.ts` (`localhost|127.0.0.1` → `:4322`, else the
 public hall), surface rules in `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md`
-("The Hall door" section). Everything the hall renders lives only under
-`apps/odrerir/`; nothing else in the tree is its feed but `bin/hall-snapshot.sh`.
+("The Hall door" section), and `bin/hall-snapshot.sh` for the livehall feed if a
+board ever needs it again. Everything the hall renders lives under
+`apps/odrerir/`.
