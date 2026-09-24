@@ -220,20 +220,22 @@ hamr-harness.sh eindri-effort → optional effort token
 
 ```
 einherjar-spawn.sh <task-id> <project-dir> --mode <direct-PR|local-only|no-mistakes>
-    [--yolo on|off] [--harness <name>] [--model <name>]
+    [--yolo on|off] [--harness <name>] [--model <token|request>]
     [--effort low|medium|high|xhigh|max] [--backend tmux|herdr]
-    [--isolation on|off|auto]
+    [--isolation on|off|auto] [--force] [--dry-run]
 einherjar-spawn.sh <task-id> <project-dir> --scout [flags...]
-einherjar-spawn.sh <task-id> --relaunch [--harness ...] [--model ...] [--effort ...] [--isolation ...]
+einherjar-spawn.sh <task-id> --relaunch [--harness ...] [--model ...] [--effort ...] [--isolation ...] [--force] [--dry-run]
 ```
 
 Behavior:
 
 1. Validates the task id (no `/`, no leading `.`, no spaces).
-2. Resolves the harness; **fails closed** against `VERIFIED_HARNESSES='opencode pi pi-signed'` (line 53). A `--harness` with whitespace is a raw launch escape hatch with a warning. If `config/eindri-dispatch.json` exists, fresh spawns must pass an explicit `--harness`.
+2. Resolves harness + model FROM THE MACHINE (2026-09-24): explicit flags → `bin/model-resolve.sh` for a model request → `config/agents.yaml` via `bin/agents-config.sh` → the fleet law (local → pi, hosted → opencode). Provenance is printed and recorded. **Fails closed** against `VERIFIED_HARNESSES='opencode pi pi-signed'`; a `--harness` with whitespace is a raw launch escape hatch. A model the chosen harness cannot serve is refused. Only an ACTIVE dispatch profile (`bin/dispatch-profile.sh active` — never a template carrying unfilled tokens, and the `$YMIR_HOME/hodd/config` override wins) forces an explicit `--harness` (consultation backstop).
 3. Requires the brief at `data/<id>/brief.md`; a ship launch refuses if the brief's `Delivery contract: mode=` disagrees with `--mode`.
-4. Creates/reuses a Yggdrasil worktree at `$BROKK_HOME/.yggdrasil/<id>` (detached at `origin/HEAD` or `HEAD`).
-5. Resolves isolation: `on` requires docker + `utgard-runner:latest`; `auto` picks it when present and reports the decision.
+4. Consults **worth-a-smith** (D7): a not-worktree-shaped errand is REFUSED with the reason and remedy; `--force` overrides and records `force=1`.
+5. Creates/reuses a Yggdrasil worktree at `$BROKK_HOME/.yggdrasil/<id>` (detached at `origin/HEAD` or `HEAD`).
+6. Resolves isolation from the brief's `Isolation:` declaration (herdr = ordinary road); `--isolation auto` honours it and a declared utgard with no image is a LOUD refusal, never a silent downgrade; `on` requires docker + `utgard-runner:latest`; `off` is refused against a declared utgard.
+7. Takes the local-model lock for a LOCAL model (`bin/local-model-lock.sh` pre-check refuses with the holder named; the launched command runs under the flock) and records a heartbeat baseline (`launched=`, first status line) for the silence bridge.
 6. Builds `state/<id>.launch.sh`, writes `state/<id>.utgard` when isolated, then launches in tmux (`eindri-<id>` window) or herdr (`eindri-<id>` workspace).
 7. Records `state/<id>.meta` and prints `spawned <id> harness=... kind=... mode=... yolo=... backend=... target=... worktree=... isolation=...`.
 
@@ -381,8 +383,8 @@ Full deep dive: [`harness-integration/opencode.md`](harness-integration/opencode
 | File | Format | Purpose |
 |---|---|---|
 | `config/cron.yaml` | `HH:MM <command>` lines, `#` comments | Nornir schedule. Current jobs: `07:00` daily briefing, `06:00` observer, `00:30` memory housekeeping, `00:00` git sync |
-| `config/eindri-harness` | one line `<harness> [<model>] [<effort>]` | default harness for dispatched Eindri. Current: `opencode` |
-| `config/eindri-dispatch.json` | JSON (rules + default) | per-task harness/model/effort selection rules. If present, `einherjar-spawn.sh` requires an explicit `--harness` |
+| `config/eindri-harness` | one line `<harness> [<model>] [<effort>]` | `bin/hamr-harness.sh` query surface only — NOT the spawn's resolution authority (2026-09-24). Current: `opencode` |
+| `config/eindri-dispatch.json` | JSON (rules + default) | per-task harness/model/effort rules. ACTIVE only when it parses, carries no unfilled `<...>` tokens, and every rule's model is servable here (`bin/dispatch-profile.sh`); the `$YMIR_HOME/hodd/config` override wins. Active ⇒ `einherjar-spawn.sh` requires an explicit `--harness` |
 | `config/backend` *(optional)* | one word `tmux`/`herdr` | backend override for `einherjar-spawn.sh`; absent here |
 | `config/x-mode.env` *(optional)* | shell env | sourced by the OpenCode arm spawn; makes `shouldArm` true. Absent by default |
 
@@ -522,8 +524,8 @@ bin/nornir-cron-start.sh --status       # → cron: running pid=... jobs=4
 - **`saga-session-start.sh` acquires but never releases the lock.** A refused lock means the whole session is read-only. Release is process-exit bound.
 - **The fleet digest counts `state/*.meta`, not `data/backlog.md`.** Plan §6 claims `data/backlog.md` feeds the fleet digest; the code does not read it there.
 - **The digest has 8 sections, not the 9 in plan §6.** There is no `NETWORK CHECKS` stage.
-- **`bin/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, but the subcommand is `eindri`.** `crew` falls through to `detect_own`, so `config/eindri-harness` is ignored on the Hamr path (the inline fallback honours it). See §12.
-- **`config/eindri-dispatch.json` makes fresh spawns require an explicit `--harness`.** This is intentional (consultation backstop) but surprises callers who omit it.
+- **`bin/einherjar-spawn.sh` resolves harness/model FROM THE MACHINE (D3).** `config/eindri-harness` is a query surface for `bin/hamr-harness.sh`; it is NOT the spawn's authority (2026-09-24).
+- **An ACTIVE dispatch profile makes fresh spawns require an explicit `--harness`.** The shipped template with unfilled `<...>` tokens is NOT active (`bin/dispatch-profile.sh`); only a real profile triggers the consultation backstop.
 - **`--relaunch` cannot change mode/kind/project.** Only harness/model/effort/isolation may change; mode is re-derived from the meta.
 - **The daily briefing is deterministic by design.** No model call; do not "improve" it into an LLM summary.
 - **Muninn never prunes without a successful backup.** `BROKK_MEMORY_PRUNE=1` is inert if the backup failed.
@@ -548,6 +550,6 @@ bin/nornir-cron-start.sh --status       # → cron: running pid=... jobs=4
 | Plan §7 Grok "project hooks (`grok --trust`)" | no `.grok/` exists in Ymir; Grok unimplemented |
 | Plan §7 Codex "nudge-tier / bounded foreground checkpoint" | Codex is run-tier via `SessionStart` JSON + `PreToolUse` + `Stop` |
 | Plan §7 Cursor "run interactive only (no headless turn-end)" | also implements `sessionStart` + `stop` hooks; headless still lacks the turn-end hook |
-| `bin/einherjar-spawn.sh` calls `hamr-harness.sh crew` | `hamr-harness.sh` supports `eindri`/`eindri-model`/`eindri-effort`; `crew` silently falls through to `detect_own` |
-| `bin/erindi-brief.sh` / `einherjar-spawn.sh` reference `.agents/sandbox/Dockerfile.utgard` and `utgard-runner:latest` | the Dockerfile and `sandcastle.config.json` exist; no image is guaranteed built, so `--isolation auto` reports `off` until it is |
+| `bin/einherjar-spawn.sh` calls `hamr-harness.sh crew` | resolved 2026-09-24: the spawn resolves harness/model from the machine and never calls `hamr-harness` for the default |
+| `bin/erindi-brief.sh` / `einherjar-spawn.sh` reference `.agents/sandbox/Dockerfile.utgard` and `utgard-runner:latest` | the Dockerfile and `sandcastle.config.json` exist; no image is guaranteed built, so a DECLARED utgard with no image is a LOUD refusal (never `--isolation auto` sealing off by file presence) |
 | Plan §13 says `docs/supervision-protocols/` will be created | directory does not exist in Ymir |

@@ -214,6 +214,17 @@ seat-hall trio, Eir, the icon mint, the desktop placement, the hall snapshot, an
 the installer's own SPA and shell steps. `bin/smidja-lib.sh` delegates to it, so
 there is **one** truth about where things live.
 
+**`app_class <surface>` is the second answer it owns (added 2026-09-24).** The
+window class a surface PRESENTS (`ymir-hlidskjalf` · `ymir-smidja` ·
+`ymir-odrerir` · `ymir-sessrumnir`) is decided here once. It must equal the
+surface's `.desktop` `StartupWMClass`, the generated Hyprland window rule, and
+the slug the Electron sets (`app.setName` / `appendSwitch('class')`). It did not:
+`bin/desktop-place.sh` declared `CLASS_sessrumnir="sessrumnir"` while the app
+presents `ymir-sessrumnir`, so the rule and the entry matched nothing and every
+Ymir key seemed to open one app. Rename a class HERE first;
+`bin/desktop-verify.sh --class-only` asserts the invariant and
+`.agents/tests/desktop-classes.test.sh` holds it in the tree.
+
 **The trap that named itself.** `printf -v <name>` writes to the *function's*
 scope. A helper whose scratch variable shares the caller's requested name
 swallows the answer — `app_dir hlidskjalf c` returned nothing because the
@@ -394,8 +405,8 @@ install[26]{step,what,self-heals}:
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
-  "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example"
-  "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root) on heart seats, the stone on forge seats, the well door on dev seats","bin/fleet-ensure.sh copies tools/ to the seat, materializes ONLY what the roles owe, purges stale units, enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
+  "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
+  "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root) on heart seats, the stone on forge seats, the well door on dev seats","bin/fleet-ensure.sh copies tools/ to the seat, materializes ONLY what the roles owe, purges stale units, points the seat's pi mcp.json at the served well URL (--well-url), enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
   "autoboot","the boot law: Linger asserted on headless seats, ymir.target enabled once, the boot proof run","checks loginctl show-user $USER -p Linger (enables it headless or fails with the remedy), reports the value on every seat, and calls bin/ymir-autoboot.sh verify — every role-owed program enabled and standing"
   "heimdall","the ssh-key ward (Heimdall) — entry by the rune carried on GitHub","bin/heimdall-ensure.sh arms it: ward script to ~/.local/bin (stable path, not the repo tree), the operator's GitHub user recorded, keys fetched/validated/merged into ~/.ssh/authorized_keys, 15-min user timer live (loginctl linger note for headless). --install may add openssh via pacman/apt (sudo, system package). Idempotent; a seat can stand warded or bare — reported honestly"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
@@ -488,6 +499,30 @@ It writes `~/.config/hypr/ymir-desktops.lua` using Omarchy's own idiom —
 `require("hypr.ymir-desktops")` line to the user's `hyprland.lua`. It **never**
 touches `/usr/share/omarchy/`. Verify with `hyprctl configerrors` (must be empty).
 On a non-Omarchy host the step is a clean SKIP.
+
+The class names come from `app_class` (`bin/app-lib.sh`) — one source. A change
+to a class (the 2026-09-24 `ymir-sessrumnir` correction) needs `apply` re-run so
+the generated rule is regenerated; a stale rule is caught by
+`bin/desktop-verify.sh --class-only`.
+
+### The install verifies the shelves can open (2026-09-24)
+
+`bin/desktop-verify.sh` checks every surface — hlidskjalf · smidja · odrerir ·
+sessrumnir — and its answer is the install's guarantee:
+
+```bash
+bin/desktop-verify.sh            # resolve + --version + the class invariant
+bin/desktop-verify.sh --live     # with a compositor: a window of the class is held
+bin/desktop-verify.sh --class-only
+```
+
+For each surface: (a) the runtime resolver (`bin/electron-lib.sh`) yields an
+executable Electron; (b) it answers `--version`; (c) with a compositor present, a
+window of the expected class is held; (d) the class invariant above. It **fails
+loudly**, naming the surface and the resolved path — a runtime that is merely
+absent is a FAILURE, never a silent SKIP. The desktop step of
+`bin/ymir-install.sh` runs it **before** any window is claimed (and again
+`--live` after the raise); a broken surface exits the install nonzero.
 
 ## The Þjazi backend (herdr-first)
 
@@ -752,6 +787,26 @@ tree that passes its own build**:
   it `node_modules/electron/dist/` is left partial and `path.txt` is never
   written, so the desktop shell cannot start — while the web app builds perfectly.
 
+**Where the runtime actually lands, and the one resolver (2026-09-24).** The
+root `package.json` declares a workspace (`apps/*`), so npm **HOISTS** each app's
+electron to the ymir ROOT — `ymir/node_modules/electron` — and **never** creates
+`apps/<app>/node_modules/electron`. A probe that looks only app-locally finds
+nothing that can exist (this is what made the shells fail silently). Three rules
+follow, all owned by `bin/electron-lib.sh`:
+
+- **the resolver** — `electron_bin`/`electron_pkg_dir` search, in order: the
+  app-local dir, the nearest ancestor hoist (walking up, halting at a foreign
+  ymir root), then the sibling package. `electron_runtime_state` answers
+  `ok` | `partial` | `absent`; **absence is never success** — every guard returns
+  failure when nothing resolves (proven by `.agents/tests/electron-lib.test.sh`).
+- **install at the workspace root** — an install INSIDE a member reconciles the
+  tree and REMOVES the local `node_modules` the launcher was about to use
+  (`electron_is_workspace_member`). Install at the root for a member, app-local
+  only for a standalone app.
+- **fetch into the resolved dir** — `electron_place_dir` returns the seat a fetch
+  must use (the root hoist for a member). `electron_fetch_runtime`/
+  `fetch_electron_zip` place the runtime there.
+
 Detect it:
 
 ```bash
@@ -918,6 +973,17 @@ boot is its roles' programs** — the heart's offices, the forge's stone, a dev
 body's own web stack (`bin/ymir-autoboot.sh status` prints the per-role truth,
 and `bin/ymir-autoboot.sh verify` is the boot proof the install's final step
 runs).
+roles and what each owns are in `README.md` (*“The Fleet — many machines, one
+record”*) and Plan 51.
+
+### The dispatch profile is derived, never left as a template (D4)
+
+`step_host` also runs `bin/dispatch-profile.sh derive` into
+`$YMIR_HOME/hodd/config/eindri-dispatch.json` (once — a private override that
+wins over the repo file thereafter). The derivation reads `config/agents.yaml`
+plus the live pi catalog, so the rules carry the machine's real harness/model;
+a template still holding unfilled model tokens is NOT active and steers
+nothing (`bin/dispatch-profile.sh active` decides — see `eindri-orchestration.md` §5.1).
 
 ### What the Omarchy layer installs
 

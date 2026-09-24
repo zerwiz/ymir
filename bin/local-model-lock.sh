@@ -64,6 +64,7 @@ PY
   # the provider name anywhere in it. Verified — a seat on llama-swap yields two
   # matches in the full read.
   busy=0
+  holders=""
   if command -v herdr >/dev/null 2>&1; then
     for a in $(herdr agent list 2>/dev/null | python3 -c '
 import json,sys
@@ -71,8 +72,11 @@ try:
     for x in json.load(sys.stdin)["result"]["agents"]: print(x.get("name",""))
 except Exception: pass' 2>/dev/null); do
       [ -n "$a" ] || continue
-      herdr agent read "$a" 2>/dev/null | grep -qE '\((llama-swap|llamacpp-whynot|llama\.cpp|lmstudio)\)' \
-        && busy=$((busy + 1))
+      if herdr agent read "$a" 2>/dev/null | grep -qE '\((llama-swap|llamacpp-whynot|llama\.cpp|lmstudio)\)'; then
+        busy=$((busy + 1))
+        [ -n "$holders" ] && holders="$holders,"
+        holders="$holders$a"
+      fi
     done
   fi
   if [ "$busy" -lt "$N0" ]; then
@@ -80,6 +84,7 @@ except Exception: pass' 2>/dev/null); do
     exit 0
   fi
   printf 'local-model-lock[1]{check,slots,used,state}:\n  "busy",%s,%s,"a local seat already runs — wait, or use a remote/online model"\n' "$N0" "$busy"
+  [ -n "$holders" ] && printf '"%s"\n' "$holders"
   exit 3
 fi
 

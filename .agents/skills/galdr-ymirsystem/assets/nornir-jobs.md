@@ -263,6 +263,17 @@ at sunrise. The forge address is the user's, from the home — never the tree:
 
 ### 3.8 The marketing stack (`bin/ymir-marketing-stack.sh`)
 
+### 3.9 Eir — the daily doctor round (`bin/nornir-job-doctor.sh`, 08:15, added 2026-09-24)
+
+Every surface is checked daily so a desktop that cannot open is REPORTED, never
+silently dead: `bin/eir-doctor.sh check` (floors, herdr, a2abridge, hermes,
+sessrumnir, **shells**, **graphics**, well, mcp, harness, lock, migrations,
+hoard). The `shells` surface uses the runtime resolver (`bin/electron-lib.sh`) —
+absence for an installed app is a FAILURE, and the `graphics` surface reports the
+DRM truth and the effective GPU policy (`bin/graphics-lib.sh`). A broken surface
+appends a `doctor.broken` rune and exits 1 so the cron log carries it. Eir is
+also reached after every update (`bin/groa-update.sh`).
+
 Not a cron job — a **provisioner**: stands Mautic + Postiz + Activepieces
 (+ optional Forgejo) on ANY computer, the same OSS engines the server runs.
 Env-driven (ports virtualized), secrets generated once into the home, never
