@@ -6,3 +6,7 @@ WorkingDirectory=%h/.fleet
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 ExecStart=%h/.bun/bin/bun run ratatoskr-server.ts
 Restart=on-failure
+StartLimitIntervalSec=120
+StartLimitBurst=10
+[Install]
+WantedBy=ymir.target

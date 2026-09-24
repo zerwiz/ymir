@@ -1,8 +1,16 @@
 [Unit]
-Description=Embedding stone — nomic embed (:8500, heart seats only)
+Description=Embedding stone — nomic embed (:8500, heart/forge seats only)
 [Service]
 Type=simple
-ExecStart=%h/.fleet/embed/llama-server -m %h/Models/embed/nomic-embed-text-v1.5.Q4_K_M.gguf --embedding --port 8500 --alias embed --ctx-size 8192
+# The engine is the fleet's ONE canonical llama.cpp (the rail's binary,
+# /usr/local/bin/llama-server — every heart/forge seat hosts it). -ngl 0 keeps
+# the stone CPU-bound: a resident embedding server must never fight the rail
+# for the GPU (and a GPU-fit fails on some seats' builds). The model is ~90MB;
+# CPU embedding is the honest cost of sharing a seat.
+ExecStart=/usr/local/bin/llama-server -m %h/Models/embed/nomic-embed-text-v1.5.Q4_K_M.gguf --embedding --port 8500 --alias embed --ctx-size 8192 -ngl 0
 Restart=on-failure
 RestartSec=3
+StartLimitIntervalSec=120
+StartLimitBurst=10
 [Install]
+WantedBy=ymir.target
