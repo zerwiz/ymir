@@ -789,6 +789,20 @@ else
   PANE_CMD="bash $(shell_quote "$LAUNCH_SCRIPT")"
 fi
 
+# --- the seat's OWN machine state: the helm must not be stolen ---------------
+# pi's session-start writes brokk.lock and .pi-watch-extension-loaded. Without a
+# private BROKK_MACHINE_STATE_DIR, EVERY worker raised by this road took the
+# PRIMARY's helm and killed Brokk's watcher — twice on 2026-09-24, both times
+# silently, the extension reporting only "cannot restore continuity".
+# herdr-run.sh and pi-seat.sh already give a seat its own dir (their --env on tab
+# create); this road never did. Same convention, so a seat is a seat everywhere:
+#   ${XDG_STATE_HOME:-$HOME/.local/state}/ymir/seats/<id>
+# The assignment prefixes the pane command, so it holds on every backend and for
+# the Utgard path too (inside the sandbox HOME=/tmp, so it is inert there).
+SEAT_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ymir/seats/$ID"
+mkdir -p "$SEAT_STATE_DIR" 2>/dev/null || true
+PANE_CMD="BROKK_MACHINE_STATE_DIR=$(shell_quote "$SEAT_STATE_DIR") BROKK_STATE_OVERRIDE=$(shell_quote "$SEAT_STATE_DIR") $PANE_CMD"
+
 # --- backend launch ----------------------------------------------------------
 launch_tmux() {  # -> prints target
   local session wname wid
@@ -815,7 +829,15 @@ launch_tmux() {  # -> prints target
 
 launch_herdr() {  # -> prints pane id
   local out ws pane
-  out=$(herdr workspace create --cwd "$WT" --label "eindri-$ID" --no-focus 2>/dev/null) || {
+  # The seat gets its OWN machine-state dir at creation time: `--env` sets the
+  # environment of the LAUNCHED PROCESS, which is the road herdr-run.sh and
+  # pi-seat.sh already use. A command-prefix (VAR=x cmd) is NOT enough here — it
+  # was tried on 2026-09-24 and the worker still took the primary's helm, because
+  # the pane's own environment wins for everything the harness reads at startup.
+  [ -n "$SEAT_STATE_DIR" ] && mkdir -p "$SEAT_STATE_DIR" 2>/dev/null || true
+  out=$(herdr workspace create --cwd "$WT" --label "eindri-$ID" --no-focus \
+    --env "BROKK_MACHINE_STATE_DIR=$SEAT_STATE_DIR" \
+    --env "BROKK_STATE_OVERRIDE=$SEAT_STATE_DIR" 2>/dev/null) || {
     echo "error: herdr workspace create failed (is a herdr server running? try: herdr)" >&2
     return 1
   }
