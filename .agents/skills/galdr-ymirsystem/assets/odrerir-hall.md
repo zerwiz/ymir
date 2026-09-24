@@ -159,3 +159,16 @@ board ever needs it again. Everything the hall renders lives under
 - **Smoke**: `bin/odrerir-mcp-smoke.sh` is wired into the lifecycle smoke as
   the `boards` row (real initialize + list + get + comments over the tailnet
   door, with the alignment assert).
+
+### The hall board is the ORIGINAL, carried whole (2026-09-24, the never-simplify law)
+- `LivehallBoard` renders the ORIGINAL Astro `<main id="livehall">` verbatim
+  (vite `?raw`), injects the original saga payload, and runs the original board
+  script — the dealt slate stack with its option cards and recommended marks,
+  the freeform word with the 512-byte queue guard, stack navigation, the
+  dispatch picker, the carved ledger thread rows, fail-closed render. No
+  re-invention: `src/hall/{lh-main.html,lh-saga.json,lh-board.js}` are the
+  originals from git history; `lh-scoped.css` is the original kit (cloth +
+  livehall.css) scoped to `#livehall`.
+- **Law:** a port is never simplified — the original is the contract.
+  The tickets' click-detail is proven (CDP): the detail sheet opens with the
+  title, the description and the stat-strip.

@@ -1,0 +1,97 @@
+<main class="hall-wrap" id="livehall" aria-labelledby="lh-h2">
+  <header class="shead rv">
+    <span class="snum rn" aria-hidden="true">ᛈ</span>
+    <p class="skicker"><span class="rn">ᛈ</span>óðrœrir · the mead of poetry</p>
+    <h1 id="lh-h2">The Live Hall</h1>
+    <p class="ssub">the fleet's planning glass, carved into the cloth — read live, dealt by hand, never a write door</p>
+  </header>
+
+  <div class="prose rv">
+    <p>The hall keeps its own board, and it is the same one the fleet's mornings are read from: a tally
+    of what stands, one call dealt at a time off a slate pile, and a carved ledger of what is underway,
+    what has landed, and what is charted next. Every part of that board is here — rebuilt in the stone
+    the rest of this page is cut from, with its own machinery intact.</p>
+  </div>
+  <div class="prose rv">
+    <p>What it deals are the hall's own errands — the work the fleet has armed, the smith who holds
+    each one, and the carved ledger of what is underway, what has landed and what is charted next.
+    Nothing here is a door: a word queued on this page stays in this page alone, and the hall's own
+    board is where an errand is armed or released. If no snapshot is at hand the saga's own count
+    stands in its place, and says so.</p>
+  </div>
+
+  <div class="lh-board rv">
+    <noscript><p class="lh-nojs">The hall's board is dealt by script. Without it the tally stands
+    unwritten and the slates stay in the pile — the fleet's own board is where the machinery runs.</p></noscript>
+
+    <div class="lh-tally" id="lh-tally" aria-label="The tally of the hall"></div>
+    <div class="lh-smiths" id="lh-smiths" aria-label="The smiths of the hall"></div>
+    <p class="lh-count" id="lh-count"></p>
+
+    <div class="lh-cols">
+      <section class="lh-sec" aria-label="The hall's call — one slate at a time">
+        <div class="lh-sec-head">
+          <span class="lh-eyebrow"><span class="rn">ᚲ</span>the hall's call</span>
+          <span class="lh-sub" id="lh-call-sub"></span>
+        </div>
+        <div class="lh-callwrap">
+          <div class="lh-call" id="lh-call"></div>
+          <!-- the nav sits under the pile so the dealt slate's top edge lines up
+               with the charted slate across the row -->
+          <div class="lh-stacknav">
+            <span class="lh-stacknav__count" id="lh-stack-count" aria-live="polite">-</span>
+            <button type="button" class="lh-stacknav__btn" id="lh-stack-prev" aria-label="Previous slate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="lh-stacknav__btn" id="lh-stack-next" aria-label="Next slate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="lh-note">a word queued here is <b>held in this page</b> — the hall's own board is where
+        a word becomes work</p>
+      </section>
+
+      <section class="lh-sec" aria-label="Charted next — the lanes waiting on a dispatch">
+        <div class="lh-sec-head">
+          <span class="lh-eyebrow"><span class="rn">ᛚ</span>charted next</span>
+          <span class="lh-sub" id="lh-charted-sub"></span>
+        </div>
+        <div class="lh-slate lh-slate--warm">
+          <div class="lh-rows" id="lh-charted"></div>
+          <div class="lh-dispatch" id="lh-dispatch" hidden>
+            <span class="lh-dispatch__count" id="lh-dispatch-count">nothing picked</span>
+            <span class="lh-queued" id="lh-dispatch-queued">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+              queued
+            </span>
+            <button type="button" class="lh-btn lh-btn--gold" id="lh-dispatch-btn">Queue the dispatch</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="lh-cols">
+      <section class="lh-sec" aria-label="Underway — what the hall keeps running">
+        <div class="lh-sec-head">
+          <span class="lh-eyebrow"><span class="rn">ᚠ</span>underway</span>
+          <span class="lh-sub" id="lh-underway-sub">kept by the hall</span>
+        </div>
+        <div class="lh-slate"><div class="lh-rows" id="lh-underway"></div></div>
+      </section>
+
+      <section class="lh-sec" aria-label="Recently landed — the carvings that stand">
+        <div class="lh-sec-head">
+          <span class="lh-eyebrow"><span class="rn">ᛏ</span><span id="lh-landed-k">landed as carvings</span></span>
+          <span class="lh-sub" id="lh-landed-sub">the saga's thirteen</span>
+        </div>
+        <div class="lh-slate"><div class="lh-rows" id="lh-landed"></div></div>
+      </section>
+    </div>
+
+    <div class="lh-provenance">
+      <span class="lh-asof" id="lh-asof">—</span>
+      <button type="button" class="lh-btn lh-btn--sm lh-refresh" id="lh-refresh" aria-label="Read the hall again"><span class="rn">ᛚ</span>Read again</button>
+    </div>
+  </div>
+</main>
