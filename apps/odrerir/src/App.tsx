@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import EmberBackground from './components/EmberBackground';
+import LivehallBoard from './components/LivehallBoard';
 import TicketsBoard from './components/TicketsBoard';
 import PlansBoard from './components/PlansBoard';
 
 /**
- * Óðrerir — the Live Hall, rebuilt as a Hlidskjalf-type app (plan 55,
- * 2026-09-24): the ember hearth, the translucent panels, and the halls
- * buttons in the same design as the high seat. The board itself — tickets +
- * plans — rides the Skuld door; the shell is the same cloth.
+ * Óðrerir — the Live Hall, a Hlidskjalf-type app (plan 55): the ember hearth,
+ * the translucent panels, the halls buttons in the same design as the high
+ * seat. Three doors — `#/` the hall, `#/tickets`, `#/plans` — and the raise
+ * buttons that call the gate through the vite /api proxy (same-origin, so the
+ * local desktop seat is trusted; 2026-09-24).
  */
 
 // The three halls, one hinge: these buttons raise the other Ymir windows
@@ -19,21 +21,39 @@ const HALLS = [
   { id: 'odrerir', glyph: 'ᛟ', name: 'Óðrerir' },
 ];
 
+function isDesktopSeat(): boolean {
+  const w = window as unknown as { ymirDesktop?: { desktop?: boolean } };
+  return w.ymirDesktop?.desktop === true;
+}
+
 function raiseHall(id: string) {
   if (id === 'odrerir') return; // you are here
-  fetch('http://127.0.0.1:3889/api/desktop', {
+  // Same-origin: the vite proxy sends /api to the Hlidskjalf gate, so the
+  // desktop seat's marker rides without a CORS wall.
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  if (isDesktopSeat()) headers['x-ymir-surface'] = 'desktop';
+  fetch('/api/desktop', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers,
+    credentials: 'include',
     body: JSON.stringify({ view: id }),
-    signal: AbortSignal.timeout(2500),
+    signal: AbortSignal.timeout(8000),
   }).catch(() => undefined); // a quiet gate never breaks the board
 }
 
-type View = 'tickets' | 'plans';
+type View = 'hall' | 'tickets' | 'plans';
 function viewFromHash(): View {
   const h = window.location.hash.replace(/^#\/?/, '');
-  return h === 'plans' ? 'plans' : 'tickets';
+  if (h === 'tickets') return 'tickets';
+  if (h === 'plans') return 'plans';
+  return 'hall';
 }
+
+const DOORS: { id: View; label: string }[] = [
+  { id: 'hall', label: 'the board' },
+  { id: 'tickets', label: 'the tickets' },
+  { id: 'plans', label: 'the plans' },
+];
 
 export default function App() {
   const [view, setView] = useState<View>(viewFromHash);
@@ -51,14 +71,14 @@ export default function App() {
           <span aria-hidden="true">ᛟ</span> YMIR · ÓÐRERIR — THE LIVE HALL
         </span>
         <span className="hall-links">
-          {(['tickets', 'plans'] as const).map((v) => (
+          {DOORS.map((d) => (
             <a
-              key={v}
+              key={d.id}
               className="hall-back"
-              href={`#/${v}`}
-              data-here={view === v ? '1' : undefined}
+              href={`#/${d.id == null ? '' : d.id === 'hall' ? '' : d.id}`}
+              data-here={view === d.id ? '1' : undefined}
             >
-              {v === 'tickets' ? 'the tickets' : 'the plans'}
+              {d.label}
             </a>
           ))}
         </span>
@@ -78,7 +98,7 @@ export default function App() {
         </span>
       </div>
       <main className="hall-wrap">
-        {view === 'tickets' ? <TicketsBoard /> : <PlansBoard />}
+        {view === 'hall' ? <LivehallBoard /> : view === 'tickets' ? <TicketsBoard /> : <PlansBoard />}
       </main>
     </>
   );
