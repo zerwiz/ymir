@@ -73,9 +73,22 @@ else bad smidja-api "visualizer API not up — scripts/start.sh"; fi
 if listening 8438; then ok smidja-ui "visualizer UI listening on :8438"
 else skip smidja-ui "dev UI not raised (optional)"; fi
 
-# 6. Óðrerir, the live hall — optional
-if listening 4322; then ok hall "Óðrerir hall listening on :4322"
-else skip hall "not raised (optional)"; fi
+# 6. Óðrerir, the live hall + ITS BOARDS through the Skuld MCP (2026-09-24,
+# the Allfather's word: test the tickets and plans through the MCP for real).
+if listening 4322; then
+  ok hall "Óðrerir hall listening on :4322"
+  if [ -r "$ROOT/bin/odrerir-mcp-smoke.sh" ]; then
+    if bash "$ROOT/bin/odrerir-mcp-smoke.sh" >/dev/null 2>&1; then
+      ok boards "the tickets + plans answer through the Skuld MCP (live, tailnet door)"
+    else
+      bad boards "the hall's book did not answer — bin/odrerir-mcp-smoke.sh names the wound (the Skuld door)"
+    fi
+  else
+    skip boards "bin/odrerir-mcp-smoke.sh absent"
+  fi
+else
+  skip hall "not raised (optional)"
+fi
 
 # 7. the model rail — optional; a seat may have no model resident
 if listening 8080; then ok models "model rail listening on :8080"
