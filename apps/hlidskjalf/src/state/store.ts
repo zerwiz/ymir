@@ -7,6 +7,7 @@ import type {
   DomainId,
   ProcessInfo,
   PullRequest,
+  ReviewsInfo,
   RecallEpisode,
   RealmId,
   RuneEntry,
@@ -147,7 +148,7 @@ interface YmirState {
   streams: Record<string, StreamEvent[]>;
   recall: RecallEpisode[];
   processes: ProcessInfo[];
-  reviews: PullRequest[];
+  reviews: ReviewsInfo | null;
   files: FileNode;
   chat: ChatMessage[];
   chatSessions: ChatSession[];
@@ -166,6 +167,7 @@ interface YmirState {
   refreshSmidja: () => Promise<void>;
   /** Re-read the LIVE fleet: the dead leave, and the count follows the source. */
   refreshAgents: () => Promise<void>;
+  refreshReviews: () => Promise<void>;
   setSelectedSession: (id: string | null) => void;
   loadSessionDetail: (id: string) => Promise<void>;
 
@@ -235,7 +237,7 @@ function emptyState() {
     streams: { all: [] } as YmirState['streams'],
     recall: [] as YmirState['recall'],
     processes: [] as YmirState['processes'],
-    reviews: [] as YmirState['reviews'],
+    reviews: null as YmirState['reviews'],
     files: { name: 'realm', type: 'dir', path: '/', children: [] } as YmirState['files'],
     chat: [] as YmirState['chat'],
     skills: [] as YmirState['skills'],
@@ -347,6 +349,13 @@ export const useYmir = create<YmirState>((set, get) => ({
   refreshAgents: async () => {
     const agents = await gateApi.agents().catch(() => undefined);
     if (agents) set({ agents });
+  },
+  refreshReviews: async () => {
+    // The board must show a PR that opened since the page loaded (2026-09-24
+    // audit): refresh the Glitnir cards on a gentle 30s beat. The server memo
+    // (60s) caps the gh read, so this is one cheap round-trip, never a throng.
+    const info = await gateApi.reviews().catch(() => undefined);
+    if (info) set({ reviews: info, live: true });
   },
   refreshSmidja: async () => {
     try {
@@ -632,7 +641,11 @@ export const useYmir = create<YmirState>((set, get) => ({
         : [...s.chatAgents, name],
     })),
   updateReview: (id, patch) =>
-    set((s) => ({ reviews: s.reviews.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
+    set((s) => ({
+      reviews: s.reviews
+        ? { ...s.reviews, cards: s.reviews.cards.map((r) => (r.id === id ? { ...r, ...patch } : r)) }
+        : s.reviews,
+    })),
   updateProcess: (id, patch) =>
     set((s) => ({ processes: s.processes.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
 }));
