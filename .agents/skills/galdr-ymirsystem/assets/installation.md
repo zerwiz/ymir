@@ -638,6 +638,20 @@ Nornir cron, `smidja.db`, the desktop apps, the well (`:4602`), and the audit
 ledger. A FAIL means the install is not usable; a WARN means a documented-optional
 part is off. `--json` for machine consumption.
 
+### The PR-time real-install gate (2026-09-24, `bin/pr-pretest.sh`)
+
+The Allfather's law: *when PRs are made, do a REAL local npm installation for
+testing, so the updates work when they are pushed to npm later.* One wrapper
+stands at the PR door: `bin/pr-pretest.sh` packs the exact publish artifact
+(what `npm pack` would push), installs it with a genuine `npm install
+<tarball>` into a fresh sandbox prefix, and smokes the installed essence (bin
+tools, `ymir.js --version`, the hull files, the desktop resolver shape over the
+packaged tree — `bin/npm-pretest.sh local`). PASS, open the PR with the proof
+line; FAIL, no PR — the pack is mended first (`bin/npm-pretest.sh` names the
+wound). `--body` prints the proof block to paste under the PR description,
+and the external publish gate (`bin/npm-pretest.sh` full) still runs the remote
+seat legs before the shelf ever sails.
+
 ## What the system adopts (engines)
 
 | Engine | Norse shell | Role |
