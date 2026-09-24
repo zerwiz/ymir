@@ -27,7 +27,19 @@ supports this; it is not a rewrite.
 
 - `server.mjs` — MCP server (read-only minutes access, streamable HTTP, port 8321)
 - Materialized into `~/.fleet/snotra-server.mjs` by `bin/fleet-ensure.sh`
+- The operator commands (`snotra-capture.sh`, `snotra-transcribe.sh`,
+  `snotra-ensure.sh`, `runes-append.sh`) are materialized into `~/.fleet` too
 - Pinned version: Meetily-Local AppImage (see fetch below)
+
+### M0 — the engine ensure (`bin/snotra-ensure.sh`)
+
+- Reports the seat's engine + model; installs what is missing
+- Per-OS: `pacman -S whisper-cpp` (Arch/omarchy), `apt-get install whisper.cpp`
+  (Debian), else build-from-source guidance
+- Model fetched from the whisper.cpp Hugging Face release; a voxtype seat keeps
+  its models
+- Wired into `bin/ymir-install.sh` (`step_snotra`) and `bin/eir-doctor.sh`
+  (`snotra` surface)
 
 ### M2 — Systemd unit (`tools/mill/systemd/snotra.service`)
 
@@ -91,6 +103,19 @@ the public repo. The repo carries only the wiring scripts and the MCP server.
 - No meeting content in the repo
 - No audio files in the repo
 - The hoard is the vault; the repo is the wiring
+
+## The fleet's engines (measured 2026-09-24)
+
+| seat | engine | model | notes |
+|---|---|---|---|
+| heimdall | `~/whisper.cpp.src/build/bin/whisper-cli` (CUDA) | `~/whisper.cpp/models/ggml-small.en.bin` | the brain (A5000) |
+| whynot | `~/whisper.cpp/build/bin/whisper-cli` (CUDA) | `~/whisper.cpp/models/ggml-small.en.bin` | needs `LD_LIBRARY_PATH` |
+| omarchy | `/usr/bin/whisper-cli` (CPU, `extra/whisper-cpp`) | `~/.local/share/voxtype/models/ggml-small.en.bin` | voxtype also has a full `meeting` mode |
+
+The transcribe script discovers the engine (env → PATH → build trees →
+`voxtype transcribe`), normalises to 16 kHz mono, sets `LD_LIBRARY_PATH` for a
+build-tree binary, and picks GPU vs CPU by free VRAM (a resident rail model
+starves CUDA — whynot's P2000 always falls to the CPU).
 
 ## Dependencies
 

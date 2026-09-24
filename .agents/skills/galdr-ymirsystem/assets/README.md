@@ -8,7 +8,7 @@ galdr[1]{role}:
 ## Routing
 
 ```
-assets[26]{path,load_when}:
+assets[28]{path,load_when}:
   "principles.md","the 10 CLI design principles (full doctrine)"
   "build-method.md","building/maintaining the runtime; forging a new skill"
   "registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -31,6 +31,8 @@ assets[26]{path,load_when}:
   "nornir-jobs.md","the scheduler, the jobs, and the Runes ledger"
   "hlidskjalf-ui.md","this portal: control plane UI — SPA, gate API, auth, desktop, tunnel"
   "odrerir-hall.md","the Óðrerir Live Hall: apps/odrerir board, :4322, its own window, the planning feed bin/hall-snapshot.sh"
+  "snotra-meeting-ear.md","the meeting ear: PipeWire capture, whisper.cpp transcription, minutes in the hoard, the read-only MCP face (:8321), the per-seat engine matrix and install road"
+  "thing-assembly-hall.md","Þing — the meeting room (MiroTalk P2P fork on whynot): the brand files and the sessionStorage trap, the Ymir look, the deploy weld, the cache lie, the AGPL position"
   "pi-boot-guide.md","the PI primary boot path"
   "eindri-profiles.md","Einherjar fleet profiles (8 specialists)"
   "build-tool-categories.md","build tool categories for synthesis"
