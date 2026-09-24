@@ -1035,16 +1035,129 @@ async function runtime() {
 }
 
 /* ---- /api/cron ----------------------------------------------------------- */
+// The schedule the LOOP reads — never the repo's template. The board used to
+// read join(ROOT,'.agents/config'), which ships ONLY cron.yaml.example, so it
+// painted "0 jobs" while the loop ran the home's real schedule (2026-09-24).
+// bin/nornir-cron-start.sh resolves the config first from $YMIR_HOME/config;
+// the board resolves the same way.
+function cronConfigPath(): { path: string; source: string } {
+  const home = join(HOME_DIR, 'config', 'cron.yaml');
+  if (existsSync(home)) return { path: home, source: 'home' };
+  const repo = join(CONFIG_DIR, 'cron.yaml');
+  if (existsSync(repo)) return { path: repo, source: 'repo' };
+  const example = join(CONFIG_DIR, 'cron.yaml.example');
+  if (existsSync(example)) return { path: example, source: 'example' };
+  return { path: '', source: 'none' };
+}
+
+interface CronJobLine { at: string; role: string; command: string; }
+// Mirror the loop's parse exactly (bin/nornir-cron-start.sh): a `@role[,role]`
+// gate may sit BEFORE the time (`@heart 06:00 bin/x`) or AFTER (`06:00 @heart
+// bin/x`); no gate means any role. One reality for scheduler, API, and board.
+function parseCronJobs(cfg: string): CronJobLine[] {
+  const jobs: CronJobLine[] = [];
+  for (const raw of cfg.split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    let rest = line;
+    let role = '';
+    if (line.startsWith('@')) {
+      role = line.split(/\s+/)[0].slice(1);
+      rest = line.slice(line.indexOf(' ') + 1).trim();
+    }
+    const m = rest.match(/^(\d{2}:\d{2})\s+(.+)$/);
+    if (!m) continue;
+    let tail = m[2];
+    if (tail.startsWith('@')) {
+      role = tail.split(/\s+/)[0].slice(1);
+      tail = tail.slice(tail.indexOf(' ') + 1).trim();
+    }
+    if (!tail) continue;
+    jobs.push({ at: m[1], role, command: tail });
+  }
+  return jobs;
+}
+function roleWords(role: string): string[] { return role ? role.split(',') : []; }
+function jobApplies(job: CronJobLine, roles: string[]): boolean {
+  if (!job.role) return true;               // no gate: any role
+  return roleWords(job.role).some((w) => roles.includes(w));
+}
+
 async function cron() {
-  const cfg = read(join(CONFIG_DIR, 'cron.yaml'));
-  const jobs = cfg
-    .split('\n')
-    .filter((l) => /^\d{2}:\d{2}\s+/.test(l))
-    .map((l) => ({ at: l.slice(0, 5), command: l.slice(6).trim() }));
+  const { path, source } = cronConfigPath();
+  const cfg = path ? read(path) : '';
+  const jobs = parseCronJobs(cfg);
   const status = await runAsync(['bash', 'bin/nornir-cron-start.sh', '--status']);
   const running = status.includes('running');
   const pid = (status.match(/pid=(\d+)/) ?? [])[1] ?? '';
-  return { running, pid, jobs: jobs.map((j) => ({ ...j, status: running ? 'scheduled' : 'stopped' })) };
+  // Why a stopped loop is stopped — the log's last word, so 'DOWN' carries a
+  // reason, never a bare verdict.
+  const log = read(join(STATE_DIR, 'cron.log'));
+  const sleepLines = log.split('\n').filter((l) => l.includes('cron retired') || l.includes('cron run'));
+  const why = running ? '' : (sleepLines.length
+    ? ((sleepLines[sleepLines.length - 1].match(/cron retired - (.+)$/) ?? [])[1] ?? 'stopped')
+    : 'never started this session');
+  // The seat's own roles, so the board can say which jobs run HERE (plan 51).
+  let roles: string[] = [];
+  try { roles = ((JSON.parse(await runAsync(['bash', 'bin/topology.sh', '--json'])) as { roles?: string[] }).roles ?? []) as string[]; } catch { /* no topology */ }
+  // Last fire per job, from the loop's date-guard stamps.
+  const last: Record<string, string> = {};
+  const stampDir = join(STATE_DIR, '.cron-fired');
+  for (const j of jobs) {
+    const f = join(stampDir, j.command.replace(/[^A-Za-z0-9._-]/g, '_'));
+    if (existsSync(f)) last[j.command] = read(f).trim();
+  }
+  const applies = jobs.filter((j) => jobApplies(j, roles)).length;
+  return {
+    running, pid, why, source, roles,
+    jobs: jobs.map((j) => ({ at: j.at, role: j.role, command: j.command, status: running ? 'scheduled' : 'stopped', applies: jobApplies(j, roles) })),
+    last,
+  };
+}
+
+// The server crons the board must show beside the local ones (plan 54,
+// 2026-09-24): whynot and zerwizserver are the fleet's servers (the hoard's
+// machines.md; ~/.ssh/config hosts `whynot` and `server` → zerwizserver).
+// One ssh round-trip per seat — read-on-demand, machine-local, BatchMode only.
+const DEFAULT_SERVER_SEATS = [
+  { seat: 'whynot', host: 'whynot' },
+  { seat: 'zerwizserver', host: 'server' },
+];
+function serverSeats(): { seat: string; host: string }[] {
+  const env = process.env.YMIR_CRON_SERVER_SEATS;
+  if (env) {
+    return env.split(/\s+/).filter(Boolean).map((e) => {
+      const [seat, host] = e.split(':');
+      return { seat, host: host ?? seat };
+    });
+  }
+  return DEFAULT_SERVER_SEATS;
+}
+
+async function cronSeats() {
+  const { path } = cronConfigPath();
+  const localJobs = parseCronJobs(path ? read(path) : '');
+  const rows = [];
+  for (const s of serverSeats()) {
+    const out = await runAsync(
+      ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=3', s.host,
+        `bash -lc 'G=$HOME/ymir; [ -d "$G/bin" ] || G=$(dirname "$(ls -d "$HOME"/*ymir*/bin 2>/dev/null | head -1)" 2>/dev/null); cd "$G" 2>/dev/null || exit 1; bash bin/nornir-cron-start.sh --status; bash bin/topology.sh --json 2>/dev/null'`],
+      8000);
+    if (!out) {
+      rows.push({ seat: s.seat, host: s.host, reachable: false, running: false, pid: '', roles: [], jobs: localJobs.length, applies: 0, error: 'unreachable (ssh ring)' });
+      continue;
+    }
+    const running = out.includes('running');
+    const pid = (out.match(/pid=(\d+)/) ?? [])[1] ?? '';
+    let roles: string[] = [];
+    try { roles = ((JSON.parse(out.slice(out.indexOf('{'))) as { roles?: string[] }).roles ?? []) as string[]; } catch { /* no topology answer */ }
+    rows.push({
+      seat: s.seat, host: s.host, reachable: true, running, pid, roles,
+      jobs: localJobs.length,
+      applies: localJobs.filter((j) => jobApplies(j, roles)).length,
+    });
+  }
+  return rows;
 }
 
 /* ---- /api/loaders, /api/checks, /api/settings ---------------------------- */
@@ -1998,6 +2111,7 @@ const server = Bun.serve({
         return json({ view, ok: proc.exitCode === 0, output: out.trim().slice(-400) });
       }
       if (p === '/api/cron') return json(await cron());
+      if (p === '/api/cron/seats') return json(await cronSeats());
       if (p === '/api/loaders') return json(await loaders());
       if (p === '/api/checks') return json(await checks());
       if (p === '/api/smidja/health') return json(smidjaHealth());
