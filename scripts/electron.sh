@@ -199,7 +199,7 @@ if ! electron_bin "$(app_dir hlidskjalf)" "$ROOT" hlidskjalf >/dev/null 2>&1 \
     printf 'error: electron not installed in %s\nhelp: (cd %s && npm install)\n' "$(app_dir hlidskjalf)" "$(electron_install_root "$APP")" >&2; exit 1
   fi
   printf 'electron: installing dependencies (first run)…\n' >&2
-  local _installd; _installd="$(electron_install_root "$APP")"
+  _installd="$(electron_install_root "$APP")"
   ( cd "$_installd" && npm install ) >/dev/null 2>&1 || { printf 'error: npm install failed — see %s\n' "$_installd" >&2; exit 1; }
 fi
 
@@ -233,7 +233,9 @@ repair_electron() {  # <app-dir>
 }
 if ! ensure_electron_binary; then
   # npm-independent: fetch the release as the postinstall would (bin/electron-lib.sh)
-  local mend_pkg; mend_pkg="$(app_pkg hlidskjalf)"
+  # Top-level scope: `local` is a function-only word and would error at this
+  # depth (2026-09-24) — plain assignments, names are mend-scoped by position.
+  mend_pkg="$(app_pkg hlidskjalf)"
   # tier 1 — the deps themselves may be ungated (npm's policy skips dev-deps):
   # the npm package's apps arrive without node_modules at all
   ( cd "$(electron_install_root "$APP")" && npm install --include=dev >/dev/null 2>&1 ) || true
@@ -243,7 +245,7 @@ if ! ensure_electron_binary; then
   echo "the Electron runtime is partial — mending it (npm rebuild electron)…" >&2
   repair_electron "$(electron_install_root "$APP")" >/dev/null 2>&1 || true
   # tier 3 — the postinstall's own downloader, then the PROVEN zip road
-  local _edir; _edir="$(electron_pkg_dir "$APP" "$ROOT" "$mend_pkg" 2>/dev/null || true)"
+  _edir="$(electron_pkg_dir "$APP" "$ROOT" "$mend_pkg" 2>/dev/null || true)"
   [ -n "$_edir" ] && [ -f "$_edir/install.js" ] && ( cd "$_edir" && node install.js >/dev/null 2>&1 ) || true
   command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$APP" "$ROOT" "$mend_pkg" || true
   ensure_electron_binary || {
