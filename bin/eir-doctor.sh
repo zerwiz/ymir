@@ -41,7 +41,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes sessrumnir shells well mcp harness lock migrations hoard)
+SURFACES=(floors herdr a2abridge hermes sessrumnir shells well mcp harness lock migrations hoard autoboot)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -53,6 +53,9 @@ s_hermes()    { [ -x "$SCRIPT_DIR/hermes-ensure.sh" ] && "$SCRIPT_DIR/hermes-ens
 f_hermes()    { "$SCRIPT_DIR/hermes-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+s_autoboot()  { [ -x "$SCRIPT_DIR/ymir-autoboot.sh" ] && "$SCRIPT_DIR/ymir-autoboot.sh" verify >/dev/null 2>&1; }
+# The mend for a stopped boot IS the raise: re-materialize, re-enable, re-verify.
+f_autoboot()  { [ -x "$SCRIPT_DIR/fleet-ensure.sh" ] && "$SCRIPT_DIR/fleet-ensure.sh" ensure >/dev/null 2>&1; }
 # The desktop shells: absent is healthy (the web surfaces stand alone), PARTIAL is
 # not — npm gated the Electron postinstall, so the window cannot open while every
 # build still passes (bin/electron-lib.sh).
@@ -220,6 +223,7 @@ detail() { # <name> -> one short fact
     migrations)"echo 'structure'" ;;
     shells)    'shell_dirs | while IFS= read -r d; do printf "%s %s; " "$(basename "$d")" "$(electron_runtime_state "$d" 2>/dev/null || true)"; done' ;;
     hoard)     "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
+    autoboot)  "$SCRIPT_DIR/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/ymir-autoboot.sh verify'" ;;
   esac
 }
 

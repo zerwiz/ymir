@@ -8,4 +8,7 @@ Environment=SKULD_PGPASSWORD=skuld
 ExecStart=node %h/.fleet/tickets-mcp-server.mjs
 Restart=on-failure
 RestartSec=3
+StartLimitIntervalSec=120
+StartLimitBurst=10
 [Install]
+WantedBy=ymir.target
