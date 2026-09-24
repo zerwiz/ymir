@@ -7,4 +7,7 @@ Environment=SKILLS_DIR=%h/.fleet/skills
 ExecStart=%h/.fleet/well-venv/bin/mcp-proxy --host 0.0.0.0 --port 8319 -- node %h/.fleet/skills-mcp-server.mjs
 Restart=on-failure
 RestartSec=3
+StartLimitIntervalSec=120
+StartLimitBurst=10
 [Install]
+WantedBy=ymir.target

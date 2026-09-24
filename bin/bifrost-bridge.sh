@@ -11,6 +11,8 @@
 # auto-selects lmstudio so a fresh install with a local model server just works.
 #
 # Usage: bin/bifrost-bridge.sh [--start|--stop|--status] [--port N] [--provider NAME]
+#        bin/bifrost-bridge.sh --foreground  # stay in the foreground (a systemd unit
+#                                            # supervises this process directly — no self-daemon)
 #        bin/bifrost-bridge.sh --version
 set -u
 
@@ -56,14 +58,16 @@ case "${1-}" in
   -h|--help) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 ACTION="start"
+FOREGROUND=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --start|"") ACTION=start; shift ;;
     --stop|stop) ACTION=stop; shift ;;
     --status|status) ACTION=status; shift ;;
+    --foreground) FOREGROUND=1; shift ;;
     --port) PORT=${2-}; shift 2 ;;
     --provider) PROVIDER=${2-}; shift 2 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/bifrost-bridge.sh [--start|--stop|--status|--port|--provider]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/bifrost-bridge.sh [--start|--stop|--status|--port|--provider|--foreground]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -115,6 +119,11 @@ fi
 
 # A missing env file is fine for keyless providers; the bridge reads what it can.
 mkdir -p "$YMIR_STATE_DIR"
+if [ "$FOREGROUND" = 1 ]; then
+  # A systemd unit owns this process: no self-daemon, no pid file, no port
+  # poll — the bridge is the unit, and the unit's truth is the process's.
+  exec python3 "$BRIDGE" --port "$PORT" --env "$ENV_FILE" --provider "$PROVIDER"
+fi
 nohup python3 "$BRIDGE" --port "$PORT" --env "$ENV_FILE" --provider "$PROVIDER" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 sleep 2
