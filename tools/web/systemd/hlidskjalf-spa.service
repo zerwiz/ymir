@@ -1,0 +1,21 @@
+[Unit]
+Description=Hlidskjalf SPA — the high seat's web face (:3888, dev seats)
+After=hlidskjalf-gate.service
+Wants=hlidskjalf-gate.service
+
+[Service]
+Type=simple
+WorkingDirectory=__YMIR_APP_DIR__
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+Environment=PORT=__YMIR_HLIDSKJALF_PORT__
+# The packaged install ships ./dist and is previewed; a clone gets the dev
+# server — both on the SAME port (the port every other door expects, never the
+# vite default). One shell picks the honest shape per seat.
+ExecStart=/bin/bash -c 'if [ -d dist ]; then exec npx --no-install vite preview --port __YMIR_HLIDSKJALF_PORT__ --strictPort --host; else exec npm run dev -- --port __YMIR_HLIDSKJALF_PORT__ --strictPort --host; fi'
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+[Install]
+WantedBy=ymir.target

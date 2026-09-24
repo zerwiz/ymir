@@ -5,4 +5,7 @@ Type=simple
 ExecStart=%h/.fleet/well-venv/bin/mcp-proxy --host 0.0.0.0 --port 8317 -- %h/.fleet/well-venv/bin/engram-mcp --db %h/Documents/ymirhome/hodd/memory/kaia.engram
 Restart=on-failure
 RestartSec=3
+StartLimitIntervalSec=120
+StartLimitBurst=10
 [Install]
+WantedBy=ymir.target
