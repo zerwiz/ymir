@@ -97,7 +97,7 @@ export default function App() {
           ))}
         </span>
       </div>
-      <main className="hall-wrap">
+      <main className={view === 'hall' ? 'hall-stage' : 'hall-wrap'}>
         {view === 'hall' ? <LivehallBoard /> : view === 'tickets' ? <TicketsBoard /> : <PlansBoard />}
       </main>
     </>
