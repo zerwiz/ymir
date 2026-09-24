@@ -43,7 +43,7 @@ CLASS_ONLY=0
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 for a in "$@"; do
   case "$a" in
