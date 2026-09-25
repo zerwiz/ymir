@@ -1,0 +1,16 @@
+# Runtime artifacts this repo keeps ON PURPOSE. One glob per line, then `# reason`.
+#
+# This file exists because a real case was found that was neither ignored nor tracked:
+# the Smiðja visualizer's built UI, un-ignored by name in .gitignore so that npm would
+# carry it into the tarball (npm honours .gitignore when there is no .npmignore, and the
+# blanket `dist/` rule had dropped the whole interface: the API answered and the view
+# showed nothing).
+#
+# Declared here rather than left as an un-ignore in .gitignore, because that abused one
+# file to shape another system's output, and because an undeclared artifact is the fault
+# this ward exists to catch. A declaration is a decision, and a decision can be reviewed.
+#
+# THE BETTER REMEDY, and it is a debt: that package should carry an `.npmignore` or a
+# `files` field, which is the mechanism designed for this. Then the un-ignore disappears
+# from .gitignore, `dist/` returns to being plain build output, and this line is deleted.
+apps/smidja-factory/apps/visualizer/dist/*
