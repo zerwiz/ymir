@@ -22,6 +22,16 @@ ContainerName=ymir
 # `:Z` relabels for SELinux (harmless where SELinux is off).
 Volume=%h/dev/Way-Of/ymir:/opt/ymir:Z
 
+# The operator's HOME, so the container's YMIR_HOME resolves to the same place the
+# host's does. Without it every runtime path falls back to $HOME/Documents/ymirhome:
+# the well finds no engram, the visualizer finds no smithy DB, the cron status reads
+# the wrong state dir, and the ledger looks in a directory that does not exist.
+Volume=%h/Documents/Ymir:/home/bun/Documents/Ymir:Z
+
+# The harness config (~/.pi): the model registry and the MCP servers the lifecycle
+# smoke test probes.
+Volume=%h/.pi:/home/bun/.pi:Z
+
 WorkingDir=/opt/ymir
 EnvironmentFile=%h/.config/ymir/ymir.env
 
