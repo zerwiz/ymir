@@ -165,3 +165,21 @@ healthy daemon, 2026-09-25):
   (`tailscale status --json` → `Self.DNSName`) → loopback. A card that advertises
   a LAN IP is a dead door off-LAN; a card that advertises `127.0.0.1` is a dead
   door for every peer.
+
+## Federation — the engine's surface, measured (2026-09-25)
+
+The skill used to say "`cert` (ed25519) before federation", as if certs alone
+opened the wire. They do not. Measured on **a2abridge 3.0.0**:
+
+- `a2abridge cert` has **one action: `generate`**. There is no trust store, no
+  peer list, no key-exchange command.
+- `a2abridge bridge` has **no TLS/trust/peer flag** — only `-advertise-host`,
+  `-directory`, `-id`, `-name`, `-skills`, `-model`, `-state-dir`.
+- The directory has no federation endpoint.
+
+So generating a cert today writes two files nothing consumes. **Cross-machine
+discovery is therefore per-seat, not federated**: each bridge registers with its
+own local directory (`127.0.0.1:7777`), and a peer on another seat is not
+visible unless `A2A_DIRECTORY` is pointed at a shared, reachable directory. The
+native Ratatoskr backbone (plan 25) or a newer engine release is where true
+federation lands — not a Ymir wrapper on top of `cert generate`.
