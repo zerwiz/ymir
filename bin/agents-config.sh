@@ -270,6 +270,33 @@ if os.path.exists(oc):
     with open(oc, "w") as fh:
         json.dump(d, fh, indent=2); fh.write("\n")
 
+# 2b. GLOBAL opencode.json — the same providers, so a run OUTSIDE this checkout
+#     (another project, or a worktree before its link exists) still resolves the
+#     local rail. The project file keeps per-agent models; the global file is the
+#     machine's provider truth, resolved from the hoard like everything else.
+home = os.environ.get("HOME", "")
+if home:
+    ocg = os.path.join(home, ".config/opencode/opencode.json")
+    try:
+        g = json.load(open(ocg))
+    except Exception:
+        g = {}
+    gprov = g.setdefault("provider", {})
+    for name, pspec in providers.items():
+        entry = gprov.setdefault(name, {})
+        entry.setdefault("npm", pspec.get("npm", "@ai-sdk/openai-compatible"))
+        entry.setdefault("name", pspec.get("name", name))
+        if pspec.get("base_url"):
+            entry.setdefault("options", {})["baseURL"] = pspec["base_url"]
+        models = entry.setdefault("models", {})
+        for mid in (pspec.get("models") or []):
+            exact = rmap.get(name, {}).get(mid, mid)
+            models.setdefault(exact, {"name": exact})
+        changed.append(f"gprovider:{name}")
+    os.makedirs(os.path.dirname(ocg), exist_ok=True)
+    with open(ocg, "w") as fh:
+        json.dump(g, fh, indent=2); fh.write("\n")
+
 # 3. Cache the resolved combination for get / bin/agent-run.sh.
 os.makedirs(os.path.dirname(resolved_path), exist_ok=True)
 json.dump({a: {"harness": harness_of(a), "model": harness_model(a)}
