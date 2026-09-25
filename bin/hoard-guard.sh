@@ -18,6 +18,20 @@
 #
 # Exit 1 on any hit, so the commit is blocked before the secret is committed.
 set -u
+# The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _yh="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+  for _i in 1 2 3 4 5; do
+    [ -n "$_yh" ] || break
+    if [ -r "$_yh/bin/hoard-lib.sh" ]; then . "$_yh/bin/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
+    if [ -r "$_yh/hoard-lib.sh" ]; then . "$_yh/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
+    _yh="$(cd "$_yh/.." 2>/dev/null && pwd)"
+  done
+  unset _yh _i
+fi
+if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

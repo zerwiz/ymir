@@ -94,7 +94,7 @@ installed_lock="$PKG/bin/gleipnir-lock-lib.sh"
 if [ -r "$installed_lock" ]; then
   resolved="$(bash -c '. "$0"; gleipnir_state_dir s; printf "%s" "$s"' "$installed_lock" 2>/dev/null)"
   case "$resolved" in
-    */ymirhome/state|*/Documents/ymirhome/state) ok "gleipnir_state_dir -> hoard state ($resolved)" ;;
+      */ymirhome/state|*/Documents/ymirhome/state) ok "gleipnir_state_dir -> hoard state ($resolved)" ;;  # allow-home-default: RECOGNIZES another seat's path shape, it does not guess one
     *) fail "gleipnir_state_dir -> $resolved (expected the hoard state, not the code tree)" ;;
   esac
 else
