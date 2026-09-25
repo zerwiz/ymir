@@ -122,14 +122,18 @@ f_well()      { "$SCRIPT_DIR/mimir.sh" start >/dev/null 2>&1; }
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp.json" oc="$ROOT/opencode.json"
   # The live MCP surfaces: the OpenCode config must still bind engram (the well),
-  # and the Pi config must parse and carry the fleet servers. The old demand for
-  # "a2abridge" is retired — the fleet moved to well/bolthorn/skuld/firecrawl, and
-  # the real connection proof now lives in smoke_test.sh (2026-09-23).
+  # and the Pi config must parse and carry the fleet servers. If the A2A mesh
+  # engine (a2abridge) is seated, its bridge must be wired too — a seated engine
+  # with no bridge is the silent half; the deeper connection proof lives in
+  # smoke_test.sh (2026-09-23).
   [ -f "$pi" ] || [ -f "$oc" ] || return 1
   if [ -f "$oc" ]; then grep -q '"engram"' "$oc" 2>/dev/null || return 1; fi
   if [ -f "$pi" ]; then
     grep -q '"mcpServers"' "$pi" 2>/dev/null || return 1
     command -v python3 >/dev/null 2>&1 && ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$pi" 2>/dev/null && return 1
+    if [ -x "$HOME/.a2abridge/bin/a2abridge" ]; then
+      grep -q '"a2abridge"' "$pi" 2>/dev/null || return 1
+    fi
   fi
   return 0
 }

@@ -47,9 +47,31 @@ while [ $# -gt 0 ]; do
   shift
 done
 if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp.json"; else PI_MCP="$HOME/.pi/agent/mcp.json"; fi
+OC_GLOBAL="$HOME/.config/opencode/opencode.json"
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
-ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
+# The stdio engram MCP must run on an interpreter that HAS the mcp SDK. The
+# hand-installed `~/.local/bin/engram-mcp` shim points at a uv CPython that does
+# NOT carry it (ModuleNotFoundError: mcp) — a harness wired to it is dead on
+# arrival. The well's venv (built by bin/fleet-ensure.sh) DOES carry it and is
+# the canonical on-seat binary. Resolve a WORKING one; never guess a path.
+engram_bin_ok() {  # <path> — exit 0 iff its shebang interpreter can import mcp
+  local p="$1" py
+  [ -x "$p" ] || return 1
+  py="$(head -1 "$p" 2>/dev/null | sed 's/^#!//')"
+  case "$py" in
+    *python*) "$py" -c 'import mcp' >/dev/null 2>&1 ;;
+    *)        return 0 ;;   # an opaque binary is taken on trust
+  esac
+}
+pick_engram_bin() {
+  local c
+  for c in "${ENGRAM_BIN:-}" "$HOME/.fleet/well-venv/bin/engram-mcp" "$(command -v engram-mcp 2>/dev/null || true)"; do
+    [ -n "$c" ] && engram_bin_ok "$c" && { printf '%s' "$c"; return 0; }
+  done
+  printf '%s' "${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
+}
+ENGRAM_BIN="$(pick_engram_bin)"
 # The well is ONE memory and it lives in the hoard — always. An explicit
 # ENGRAM_DB is the operator's escape hatch; without it the hoard decides.
 if [ -n "${ENGRAM_DB:-}" ]; then
@@ -76,10 +98,10 @@ platform_env_val() {  # <KEY>
 TEAMS_URL="${WAYOFTEAMS_MCP_URL:-}";  [ -n "$TEAMS_URL" ]  || TEAMS_URL="$(platform_env_val WAYOFTEAMS_MCP_URL)"
 ANCHOR_URL="${ANCHOR_MCP_URL:-}";     [ -n "$ANCHOR_URL" ] || ANCHOR_URL="$(platform_env_val ANCHOR_MCP_URL)"
 
-python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" "$TEAMS_URL" "$ANCHOR_URL" <<'PY'
+python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" "$TEAMS_URL" "$ANCHOR_URL" "$OC_GLOBAL" "$PROJECT" <<'PY'
 import sys, os, json
 (root, pi_path, oc_path, a2ab, durl, advert, wotes, action, engram_bin, engram_db,
- teams_url, anchor_url) = sys.argv[1:13]
+ teams_url, anchor_url, oc_global, project) = sys.argv[1:15]
 
 def load(p, default):
     try: return json.load(open(p))
@@ -149,6 +171,19 @@ for name, spec in ones.items():
     entry = spec["oc"]; entry["enabled"] = True
     ocd["mcp"][name] = entry
 json.dump(ocd, open(oc_path, "w"), indent=2); open(oc_path, "a").write("\n")
+
+# OpenCode is PROJECT-scoped: it reads $ROOT/opencode.json in this checkout and
+# nothing of it in a Yggdrasil worktree. When we are wiring the operator's seat
+# (not --project), merge the SAME servers into OpenCode's GLOBAL config so a
+# worker seated in a worktree still resolves the mesh and the well.
+if str(project) != "1":
+    gid = load(oc_global, {"mcp": {}})
+    gid.setdefault("mcp", {})
+    for name, spec in ones.items():
+        entry = spec["oc"]; entry["enabled"] = True
+        gid["mcp"][name] = entry
+    os.makedirs(os.path.dirname(oc_global), exist_ok=True)
+    json.dump(gid, open(oc_global, "w"), indent=2); open(oc_global, "a").write("\n")
 
 print(f'a2a-mcp[1]{{action,servers}}:\n  "install","{",".join(ones)}"')
 PY
