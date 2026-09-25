@@ -170,3 +170,6 @@ chat/
 # nothing. Un-ignore it by name (a build artifact that is part of the product).
 !apps/smidja-factory/apps/visualizer/dist/
 !apps/smidja-factory/apps/visualizer/dist/**
+
+# A local config backup, never tracked (and this repo is public).
+opencode.json.bak*
