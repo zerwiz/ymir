@@ -83,7 +83,12 @@ fi
 [ -n "$base" ] || { printf 'fixes-guard[1]{gate,result}:\n  "push","no base to compare — first push of a branch is judged on its own"\n'; exit 0; }
 
 range="${base}..${head_sha}"
-notes="$(git diff --name-only --diff-filter=A "$range" 2>/dev/null | grep -E '^docs/fixes/[a-z]+/[0-9][^/]*\.md$' || true)"
+# The note's name is <version>-<slug>.md, and a version is whatever bin/fixes.sh was
+# TOLD it is: `--version=unversioned` is legitimate, and 158 of the repo's notes use
+# it. Accepting only a digit-first version made the gate blind to those notes and
+# refused every push that carried one (2026-09-25) — the guard demanded a format its
+# own writer does not require. A note the gate cannot SEE is a note it cannot judge.
+notes="$(git diff --name-only --diff-filter=A "$range" 2>/dev/null | grep -E '^docs/fixes/[a-z]+/([0-9]|unversioned-)[^/]*\.md$' || true)"
 touched="$(git diff --name-only "$range" 2>/dev/null | grep -v '^docs/fixes/' | grep -v '^CHANGELOG' || true)"
 
 if [ -z "$notes" ]; then
