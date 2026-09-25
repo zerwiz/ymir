@@ -12,6 +12,7 @@
 # Programs:
 #   well-mcp  the well's served MCP door (:8317)          heart,dev
 #   ratatoskr the A2A node (:8301)                        heart
+#   a2abridge-directory the A2A mesh directory (:7777)    heart,dev
 #   mill-worker the well's grinder                         heart
 #   cards     the seats' card root (:8318)                heart
 #   skills-mcp the skills well MCP door (:8319)           heart
@@ -57,13 +58,13 @@ if [ -z "$AUTOBOOT_STATE_DIR" ]; then
 fi
 
 # --- the one table --------------------------------------------------------
-AUTOBOOT_PROGRAMS="well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
+AUTOBOOT_PROGRAMS="well-mcp ratatoskr a2abridge-directory mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
 
 autoboot_role_programs() {  # <role> → prints the program ids the role owes
   case "${1-}" in
-    heart) printf '%s\n' "well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed nornir" ;;
+    heart) printf '%s\n' "well-mcp ratatoskr a2abridge-directory mill-worker cards skills-mcp skuld snotra embed nornir" ;;
     forge) printf '%s\n' "embed" ;;
-    dev)   printf '%s\n' "well-mcp hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir" ;;
+    dev)   printf '%s\n' "well-mcp a2abridge-directory hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir" ;;
     hand|*) printf '%s\n' "" ;;
   esac
 }
@@ -72,6 +73,7 @@ autoboot_program_roles() {  # <program> → prints the roles that owe it
   case "${1-}" in
     well-mcp)       printf '%s\n' "heart dev" ;;
     ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra) printf '%s\n' "heart" ;;
+    a2abridge-directory) printf '%s\n' "heart dev" ;;
     embed)          printf '%s\n' "heart forge" ;;
     hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja) printf '%s\n' "dev" ;;
     nornir)         printf '%s\n' "heart dev" ;;
@@ -84,6 +86,7 @@ autoboot_program_desc() {  # <program> → one human line
     well-mcp)       printf '%s\n' "the well's MCP door (:8317)" ;;
     snotra)         printf '%s\n' "the meeting ear's MCP face (:8321, read-only minutes)" ;;
     ratatoskr)      printf '%s\n' "the A2A node (:8301)" ;;
+    a2abridge-directory) printf '%s\n' "the A2A mesh directory (:7777)" ;;
     mill-worker)    printf '%s\n' "the mill worker" ;;
     cards)          printf '%s\n' "the cards root (:8318)" ;;
     skills-mcp)     printf '%s\n' "the skills well door (:8319)" ;;

@@ -556,6 +556,34 @@ step_snotra() {
   fi
 }
 
+# ── 3b1c. Ratatoskr — the A2A mesh engine (a2abridge) ───────────────────────
+# The mesh is the MIT engine **a2abridge**: a local directory daemon every
+# agent announces to (:7777), plus the MCP bridge that gives each harness the
+# a2a tools. The heart's A2A *node* (:8301) is a fleet service (step_fleet);
+# THIS step seats the engine and wires it, so a fresh install is a mesh of one
+# with no hand-copy — and Eir can repair it (bin/eir-doctor.sh a2abridge).
+step_a2a() {
+  [ "$SKIP_ENGINES" = 1 ] && { add a2a SKIP "--skip-engines"; return; }
+  if [ ! -x "$SCRIPT_DIR/a2abridge-ensure.sh" ]; then add a2a SKIP "no a2abridge-ensure.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if "$SCRIPT_DIR/a2abridge-ensure.sh" status >/dev/null 2>&1; then add a2a OK "engine + directory present"; else add a2a WARN "engine absent (run bin/a2abridge-ensure.sh ensure --install)"; fi
+    return
+  fi
+  # The ensure's own post-start probe can race the daemon's first bind, so the
+  # truth is the status check AFTER it, never its exit alone.
+  "$SCRIPT_DIR/a2abridge-ensure.sh" ensure --install >/dev/null 2>&1 || true
+  if "$SCRIPT_DIR/a2abridge-ensure.sh" status >/dev/null 2>&1; then
+    add a2a OK "engine + directory up"
+  else
+    add a2a WARN "engine absent — run bin/a2abridge-ensure.sh ensure --install (offline?)"
+  fi
+  if [ -x "$SCRIPT_DIR/a2a-mcp.sh" ] && "$SCRIPT_DIR/a2a-mcp.sh" install >/dev/null 2>&1; then
+    add a2a-mcp OK "a2abridge + engram wired into pi + opencode"
+  else
+    add a2a-mcp WARN "run bin/a2a-mcp.sh install to wire the mesh"
+  fi
+}
+
 # ── 3b2. Sessrúmnir desktop GUI ──────────────────────────────────────────────
 # The seat-hall: a vendored, re-themed fork of pi-desktop (Apache-2.0) at
 # apps/sessrumnir. Deps are never committed; the ensure step installs them on
@@ -1230,6 +1258,7 @@ run_step step_models "models"
 run_step step_local_model "the local model"
 run_step step_hermes "hermes"
 run_step step_snotra "the meeting ear"
+run_step step_a2a "the A2A mesh"
 run_step step_sessrumnir "the seat"
 run_step step_backend "backend"
 run_step step_host "host"

@@ -27,7 +27,7 @@ import {
   RO_PRESENTATION_EVENT,
 } from "./lib/ro-visibility.ts";
 import { encodeRoddOperationalInput } from "./lib/rodd-operational-input.ts";
-import { resolveYmirRoot } from "./lib/ymir-home.ts";
+import { resolveYmirHome, resolveYmirRoot } from "./lib/ymir-home.ts";
 
 type ArmResult = {
   ok: boolean;
@@ -96,17 +96,7 @@ const fmRoot = process.env.BROKK_ROOT_OVERRIDE || root;
 // the Eindri handoff (bin/eindri-acclaim.sh) wrote $YMIR_STATE_DIR/.wake-queue in
 // the hoard. Two queues: the handoff filled one, this watched the other, and no
 // wake ever surfaced (2026-09-23). A seat still overrides via BROKK_STATE_OVERRIDE.
-const ymirHome = (() => {
-  const env = process.env.YMIR_HOME;
-  if (env) return env;
-  try {
-    const rec = readFileSync(`${process.env.HOME || root}/.config/ymir/home`, "utf8").trim();
-    if (rec) return rec;
-  } catch {
-    // no recorded choice — fall back to the documented default
-  }
-  return `${process.env.HOME || root}/Documents/ymirhome`;
-})();
+const ymirHome = resolveYmirHome();
 const state = process.env.BROKK_STATE_OVERRIDE || `${ymirHome}/state`;
 const config = process.env.BROKK_CONFIG_OVERRIDE || `${fmHome}/config`;
 const armScript = `${fmRoot}/bin/syn-watch-arm.sh`;
@@ -245,6 +235,28 @@ function resolvedLockPath(): string {
   const derived = derivedLockPath();
   if (pointer) healLockPointer(derived);
   return derived;
+}
+
+// The opt-in gate (plan 58 Phase 0c). The extensions deploy GLOBALLY, so every
+// `pi` session on this machine loads them and resolves the SAME machine lock. A
+// session that was never SEATED here (no saga-session-start) must never reclaim
+// or delete that lock. The seat marker records the pid the lock was acquired for
+// and ownership is proven by ancestry, so an unrelated session stands down.
+function isSeatedSession(): boolean {
+  let seated = "";
+  try {
+    seated = readFileSync(`${state}/.seated`, "utf8").trim();
+  } catch {
+    return false;
+  }
+  if (!/^[0-9]+$/.test(seated)) return false;
+  let pid = String(process.pid);
+  for (let i = 0; i < 8; i += 1) {
+    if (pid === seated) return true;
+    pid = parentPid(pid);
+    if (!pid || pid === "1") break;
+  }
+  return false;
 }
 
 function lockOwnership(): LockOwnership {
@@ -635,8 +647,12 @@ export default function (pi: ExtensionAPI) {
     if (ownership === "other") return { ok: false, message: "watcher: read-only - session lock is held by another brokk session" };
     if (ownership === "missing") {
       // No verifiably-live holder: the recorded owner is dead, a zombie, or a
-      // recycled pid. Reclaim the helm directly (was: punt to
-      // saga-session-start.sh) so a leftover lock never strands supervision.
+      // recycled pid. Only a session SEATED here may reclaim the helm — an
+      // unrelated `pi` (the extensions are global) must stand down, never take
+      // or delete a lock that is not its own (plan 58 Phase 0c).
+      if (!isSeatedSession()) {
+        return { ok: false, message: "watcher: stood down - this session was not seated here (no seat marker); not reclaiming the machine lock" };
+      }
       reclaimStaleLock(resolvedLockPath());
       return startArm(owner, predecessorArmPid);
     }

@@ -138,6 +138,10 @@ is never punted to a manual session start; only a real live contender is refused
 > **ONE QUEUE (2026-09-23).** The state dir is the **operator's home**, never the code tree: `$YMIR_STATE_OVERRIDE` → `$YMIR_HOME/state` → the recorded choice (`~/.config/ymir/home`) → `$HOME/Documents/ymirhome`. Every reader and writer must resolve it the SAME way — `bin/hoard-lib.sh` for shell, and the same order of authority inside `gna-pi-watch.ts`. This was once two dirs: the watcher read `$BROKK_HOME/state` (the **tree**) while the Eindri handoff (`bin/eindri-acclaim.sh`) wrote `$YMIR_STATE_DIR` (the **hoard**), so a report filled one `.wake-queue` and the watcher polled another — **the task wrote, the watcher watched, and no wake ever surfaced.** A report may be filed and still be invisible; the queue is only real when both ends agree on where it is.
 
 > **THE POINTER IS MACHINE-LOCAL (2026-09-23).** `state/.lock-path` records the resolved session-lock path — a path that is *machine-local and per-user*, yet the pointer itself lives in the **synced** home. So a box reinstalled under a new username (e.g. `heimdallomarchy` → `heimdall`) inherits a pointer to the OLD home; both harness readers (`gna-pi-watch.ts`, `syn-watch-arm.js`) then tried to `mkdir` a foreign home and failed with `EACCES`, stranding supervision. The writer and the readers now resolve the SAME state dir (`gleipnir_state_dir` uses `bin/hoard-lib.sh` for the primary, `<home>/state` for an Eindri-home), and both readers **validate** the pointer: a path outside the current user's home is stale, is ignored, and is healed to the path this machine derives (machine-global for the primary, per-home for a seat). The `0006-lock-path-home-drift` migration heals an existing home; Eir's `hoard` surface diagnoses and mends the drift.
+>
+> **ONE STATE DIR (2026-09-25).** The code tree kept a second `state/` beside the home's, and an extension whose `BROKK_HOME` was unset fell back to it — a live arm read as dead because the tree `.lock` held a dead pid. The readers now resolve the home through `resolveYmirHome()` (`.pi/extensions/lib/ymir-home.ts`: `$YMIR_HOME` → the recorded choice `~/.config/ymir/home` → the default `$HOME/Documents/ymirhome`); `skuld` reads `state/.lock-path` like its siblings instead of `${state}/.lock`; and migration `0007-one-state-dir` retires the tree decoy by replacing `$ROOT/state` with a **symlink** to `$YMIR_HOME/state` — so even a `$ROOT/state/...` fallback lands in the one truth. `.gitignore` ignores `state` outright. Never write the tree.
+>
+> **PARTICIPATION IS OPT-IN (2026-09-25).** The extensions deploy GLOBALLY, so every `pi` session on the machine loads them and resolves one machine lock — a plain `pi` in an unrelated project (measured: cwd `CodeP/learnai`) carried only `YMIR_HOME`, exactly like the primary, and could reclaim a lock the primary had lost. `bin/saga-session-start.sh` now records the seated pid in `$STATE/.seated`, and `gna-pi-watch.ts` reclaims a **MISSING** lock only when this session's pid (or an ancestor) is that seat — otherwise it **stands down**: no reclaim, no delete. The primary's lock is `owned` by ancestry and never reaches the gate; `releaseLockIfOwned` deletes only what it owns.
 - **OpenCode** owns continuity in `syn-watch-arm.js` (Sýn); the coordinator is published under `globalThis.__brokkOpenCodeWatchArm` so the turn-end guard can consult it first.
 - **Claude Code** uses the `Stop` hook with `"asyncRewake": true` and a long timeout to keep the arm running out of band.
 - **Codex / Cursor** run `syn-turnend-guard.sh` at Stop; they do **not** own a long-lived arm (no auto re-arm).
@@ -526,6 +530,19 @@ The engine needs the `mcp<2` SDK for `engram-mcp` (v2 renamed `FastMCP` to
 `MCPServer`, which breaks engram 1.x/2.x):
 `python3 -m pip install --user --break-system-packages 'mcp<2'`.
 
+**The binary must actually carry the SDK (2026-09-25).** A hand-installed
+`~/.local/bin/engram-mcp` shim can point at a CPython without `mcp`
+(`ModuleNotFoundError: No module named 'mcp'`), so a harness wired to it is dead
+on arrival — the entry connects and immediately closes. `bin/a2a-mcp.sh` now
+resolves a **working** binary in order — `$ENGRAM_BIN`, then the well venv's
+`~/.fleet/well-venv/bin/engram-mcp` (built by `bin/fleet-ensure.sh`), then
+`command -v engram-mcp` — testing each candidate's shebang interpreter for
+`import mcp`; it never wires a path it has not proven. When wiring the
+operator's seat (not `--project`) it also merges the mesh and well servers into
+OpenCode's **global** config (`~/.config/opencode/opencode.json`), because
+OpenCode reads `opencode.json` per checkout and a worker seated in a Yggdrasil
+worktree would otherwise lose the mesh and the well.
+
 Rule: **drink before you act, water it after** — recall on the way in, and
 `POST /observe` (or the `remember` MCP tool) after a lesson lands.
 
@@ -596,6 +613,20 @@ writers[2]{writer,owns}:
   "bin/valknut-load.sh","STRUCTURE — the base keys, the agent blocks, the skills path; rendered from opencode.json.example"
   "bin/agents-config.sh apply","the ROSTER — providers and per-agent models, from config/agents.yaml"
 ```
+
+**A worktree gets the same file by link (2026-09-25).** OpenCode is
+project-scoped, so a Yggdrasil worktree — which has no untracked
+`opencode.json` — lost its providers, its per-agent models and its MCP servers
+(reproduced: `llama.cpp`/`llama-swap`/`apodex` vanished). `bin/valknut-load.sh`
+now points every `.yggdrasil/*/` at the one config with a **relative symlink**
+(`opencode.json -> ../../opencode.json`) — one author, no copies to drift, and
+`.yggdrasil/` is gitignored so nothing is ever tracked.
+
+**`bin/agents-config.sh apply` also writes the GLOBAL config.** The same
+providers are published into `~/.config/opencode/opencode.json`, so an OpenCode
+run OUTSIDE this checkout (another project, or before a worktree link exists)
+still resolves the local rail. The project file keeps the per-agent models; the
+global file is the machine's provider truth, resolved from the hoard.
 
 **Both merge; neither overwrites.** The loader's `config_out` adds missing keys (
 deep, `setdefault`-style), ensures `skills.paths`, and re-asserts nothing else;

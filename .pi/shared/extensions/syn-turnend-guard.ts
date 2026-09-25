@@ -8,7 +8,7 @@ import {
   classifyRoddCurrentOperationalText,
   encodeRoddOperationalInput,
 } from "./lib/rodd-operational-input.ts";
-import { resolveYmirRoot } from "./lib/ymir-home.ts";
+import { resolveYmirHome, resolveYmirRoot } from "./lib/ymir-home.ts";
 
 let guardFollowupActive = false;
 
@@ -20,7 +20,7 @@ const extensionDir = dirname(extensionFile);
 // walking up out of the deployed extension home. See lib/ymir-home.ts.
 const root = resolveYmirRoot(extensionDir);
 const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
-const state = process.env.BROKK_STATE_OVERRIDE || `${fmHome}/state`;
+const state = process.env.BROKK_STATE_OVERRIDE || `${resolveYmirHome()}/state`;
 const marker = `${state}/.pi-turnend-extension-loaded`;
 const extensionVersion = `sha256:${createHash("sha256").update(readFileSync(extensionFile)).digest("hex")}`;
 

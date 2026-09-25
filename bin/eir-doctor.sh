@@ -53,7 +53,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness lock migrations hoard autoboot)
+SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness lock migrations hoard autoboot services)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -122,14 +122,18 @@ f_well()      { "$SCRIPT_DIR/mimir.sh" start >/dev/null 2>&1; }
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp.json" oc="$ROOT/opencode.json"
   # The live MCP surfaces: the OpenCode config must still bind engram (the well),
-  # and the Pi config must parse and carry the fleet servers. The old demand for
-  # "a2abridge" is retired — the fleet moved to well/bolthorn/skuld/firecrawl, and
-  # the real connection proof now lives in smoke_test.sh (2026-09-23).
+  # and the Pi config must parse and carry the fleet servers. If the A2A mesh
+  # engine (a2abridge) is seated, its bridge must be wired too — a seated engine
+  # with no bridge is the silent half; the deeper connection proof lives in
+  # smoke_test.sh (2026-09-23).
   [ -f "$pi" ] || [ -f "$oc" ] || return 1
   if [ -f "$oc" ]; then grep -q '"engram"' "$oc" 2>/dev/null || return 1; fi
   if [ -f "$pi" ]; then
     grep -q '"mcpServers"' "$pi" 2>/dev/null || return 1
     command -v python3 >/dev/null 2>&1 && ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$pi" 2>/dev/null && return 1
+    if [ -x "$HOME/.a2abridge/bin/a2abridge" ]; then
+      grep -q '"a2abridge"' "$pi" 2>/dev/null || return 1
+    fi
   fi
   return 0
 }
@@ -181,6 +185,11 @@ f_migrations(){ [ -x "$SCRIPT_DIR/ymir-migrate.sh" ] && "$SCRIPT_DIR/ymir-migrat
 # $YMIR_HOME/{identity,data,docs,secrets,tenants} duplicate beside hodd/ — the
 # drift that RULES/04-hoard.md (correction 2026-09-17) forbids.
 _hoard_root() { local r; if [ -x "$SCRIPT_DIR/hoard-lib.sh" ]; then . "$SCRIPT_DIR/hoard-lib.sh"; hoard_root r; printf '%s' "$r"; else printf '%s' "${YMIR_HOARD:-$YMIR_HOME/hodd}"; fi; }
+# Service-format: the process a service runs is never bash (a review gate, not
+# auto-mendable — converting a daemon is a decision, declared in the allowlist).
+s_services()  { [ -x "$SCRIPT_DIR/service-format.sh" ] && "$SCRIPT_DIR/service-format.sh" check >/dev/null 2>&1; }
+f_services()  { "$SCRIPT_DIR/service-format.sh" check >/dev/null 2>&1; }
+
 s_hoard() {
   local h; h="$(_hoard_root)"
   [ -d "$h" ] || return 1
@@ -260,20 +269,21 @@ f_hoard() {
 
 detail() { # <name> -> one short fact
   case "$1" in
-    floors)    "[ -x $SCRIPT_DIR/prereq-ensure.sh ] && echo tool floors" ;;
-    herdr)     "have herdr && herdr --version 2>/dev/null | head -1 || echo 'herdr absent'" ;;
-    a2abridge) "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
-    hermes)    "have hermes && echo present || echo absent" ;;
-    sessrumnir)"[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
-    well)      "echo 'engram :4602'" ;;
-    mcp)       "echo 'a2abridge + engram'" ;;
-    graphics)  "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
-    harness)   "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
-    lock)      "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
-    migrations)"echo 'structure'" ;;
-    shells)    'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
-    hoard)     "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
-    autoboot)  "$SCRIPT_DIR/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/ymir-autoboot.sh verify'" ;;
+    floors)    printf '%s' "[ -x $SCRIPT_DIR/prereq-ensure.sh ] && echo tool floors" ;;
+    herdr)     printf '%s' "have herdr && herdr --version 2>/dev/null | head -1 || echo 'herdr absent'" ;;
+    a2abridge) printf '%s' "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
+    hermes)    printf '%s' "have hermes && echo present || echo absent" ;;
+    sessrumnir)printf '%s' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
+    well)      printf '%s' "echo 'engram :4602'" ;;
+    mcp)       printf '%s' "echo 'a2abridge + engram'" ;;
+    graphics)  printf '%s' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
+    harness)   printf '%s' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
+    lock)      printf '%s' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
+    migrations)printf '%s' "echo 'structure'" ;;
+    shells)    printf '%s' 'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
+    hoard)     printf '%s' "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
+    autoboot)  printf '%s' "$SCRIPT_DIR/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/ymir-autoboot.sh verify'" ;;
+    services)  printf '%s' "$SCRIPT_DIR/service-format.sh check 2>/dev/null | sed -n '2p' | sed 's/^ *//'" ;;
   esac
 }
 
@@ -290,7 +300,9 @@ rows=""
 count=0
 for s in "${SURFACES[@]}"; do
   if "s_$s" >/dev/null 2>&1; then state=ok; else state=broken; broken=$((broken+1)); fi
-  d="$("detail" "$s" 2>/dev/null | head -1)"
+  # detail() returns a COMMAND string; run it (the rows were empty for every
+  # surface until this eval was seated, 2026-09-25).
+  d="$(eval "$("detail" "$s" 2>/dev/null)" 2>/dev/null | head -1)"
   rows="${rows}  \"${s}\",\"${state}\",\"${d}\"\n"
   count=$((count+1))
 done
