@@ -35,6 +35,13 @@ seat comes up whole, not with a research note.
   already serves models, `--skip-engines`/`YMIR_SKIP_LOCAL_MODEL` honored, loud
   refusals for no CUDA / unknown hardware / no disk / bad checksum. A
   `local-model` row is added to `bin/ymir-plan.sh`.
+- **`--omarchy-first`** — a new installer option that raises the Omarchy layer
+  (`step_omarchy`) **before** the core, for a user who does not have Omarchy yet.
+  It does not install the Omarchy OS (upstream); it runs `bin/omarchy-install.sh`
+  first, then the core. Without the flag the layer runs last. Documented on the
+  homepage (`README.md`) and in the planning/installation doc
+  (`galdr-ymirsystem/assets/installation.md`) and the Omarchy owning asset
+  (`ymir-host/assets/omarchy.md`).
 - **`config/model-catalog.yaml.example`** — the tracked template (seeded into the
   hoard as `config/model-catalog.yaml`); the runtime reads the hoard copy.
 - Assets updated: Galdr `installation.md` (steps table + counts) and
@@ -56,9 +63,13 @@ and 57 builds the install step ON that road. No second translation table.
 ### Files
 - `bin/llama-ensure.sh`, `bin/model-fit.sh`, `bin/model-fetch.sh` — new.
 - `bin/pi-model-wire.sh`, `bin/model-register.sh`, `bin/model-tune.sh` — new.
-- `bin/ymir-install.sh` — `step_local_model`, wired after `step_models`.
+- `bin/ymir-install.sh` — `step_local_model`, wired after `step_models`; and the
+  `--omarchy-first` option (raise the Omarchy layer before the core).
 - `bin/ymir-plan.sh` — a `local-model` row.
+- `README.md` — the homepage: `--omarchy-first` for a user without Omarchy.
 - `config/model-catalog.yaml.example` — the tracked catalog template.
-- `.agents/skills/galdr-ymirsystem/assets/installation.md`,
-  `.agents/skills/galdr-ymirsystem/assets/local-models.md` — updated.
+- `.agents/skills/galdr-ymirsystem/assets/installation.md` — usage, the
+  `--omarchy-first` subsection, the steps note.
+- `.agents/skills/galdr-ymirsystem/assets/local-models.md` — §7 the install road.
+- `.agents/skills/ymir-host/assets/omarchy.md` — the layer-first note.
 - `docs/fixes/smidja/002-hoard-driven-models.md` — the plan-56 road this builds on.

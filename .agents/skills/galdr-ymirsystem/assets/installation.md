@@ -15,9 +15,29 @@ bin/ymir-install.sh --plan        # the plan, probed — changes nothing (--json
 bin/ymir-install.sh --check       # report only, no writes, no prompt
 bin/ymir-install.sh --yes         # non-interactive (accept the plan)
 bin/ymir-install.sh --skip-engines --skip-services
+bin/ymir-install.sh --omarchy-first   # raise the Omarchy layer FIRST (see below)
 bin/ymir-install.sh --no-desktop  # don't open the desktop apps at the end
 bin/ymir-install.sh --status      # alias of --check
 ```
+
+### Raising the Omarchy layer first — for a user without Omarchy
+
+The Omarchy layer runs **last** by default: the portable core stands first, then
+the first-class desktop layer. A user who is **not on Omarchy yet** — or who is
+about to move onto it — can run the layer **first**:
+
+```bash
+bin/ymir-install.sh --omarchy-first
+```
+
+`--omarchy-first` does **not** install the Omarchy OS; that is upstream (Arch +
+Hyprland, via Omarchy's own installer). It runs `bin/omarchy-install.sh` *before*
+the core — learning the host, the `post-update` hook, the suggested shell plugins,
+each app's numbered desktop, the launcher entries, the editor's desktop, the
+away-mode alarm, and the Þjazi backend — then the core steps. Without the flag
+the layer runs last, after the core stands. `step_omarchy` detects its host, so on
+a non-Omarchy machine **both** orderings report a clean `SKIP`, never a faked
+layer (Rule 05).
 
 ## The plan comes first — `bin/ymir-plan.sh`
 
@@ -435,7 +455,9 @@ install[28]{step,what,self-heals}:
 
 **30** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
-`smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. The fleet
+`smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. The Omarchy
+layer (`step_omarchy`) runs **last** by default; `--omarchy-first` raises it
+before the core (see above). The fleet
 step raises every role-owed program (the role gates live in `bin/ymir-autoboot.sh`
 — ONE table, shared with `bin/fleet-ensure.sh`); the `autoboot` step asserts
 Linger and runs the boot proof. `--check`

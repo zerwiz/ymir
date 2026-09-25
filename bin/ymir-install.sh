@@ -6,6 +6,7 @@
 #
 # Usage:
 #   bin/ymir-install.sh [--check] [--skip-engines] [--skip-services] [--no-desktop] [--yes]
+#   bin/ymir-install.sh --omarchy-first    # raise the Omarchy layer FIRST (see below)
 #   bin/ymir-install.sh --plan [--json]     # the plan, computed — changes nothing
 #   bin/ymir-install.sh --yes | --non-interactive | --accept-all-defaults
 #   bin/ymir-install.sh --status
@@ -77,7 +78,7 @@ WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
 hoard_root HOARD
 DOMAINS="company marketing development life me"
 
-CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0; PLAN_ONLY=0; PLAN_ARGS=()
+CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0; PLAN_ONLY=0; OMARCHY_FIRST=0; PLAN_ARGS=()
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -86,6 +87,7 @@ while [ $# -gt 0 ]; do
     --json|--blocked) PLAN_ARGS+=("$1"); shift ;;
     --phase) PLAN_ARGS+=("$1" "${2-}"); shift 2 ;;   # --phase carries its number
     --skip-engines) SKIP_ENGINES=1; shift ;;
+    --omarchy-first|--omarchy) OMARCHY_FIRST=1; shift ;;
     --skip-services) SKIP_SERVICES=1; shift ;;
     --no-desktop) NO_DESKTOP=1; shift ;;
     --yes|-y|--non-interactive|--accept-all-defaults) ASSUME_YES=1; shift ;;
@@ -1202,7 +1204,7 @@ step_panes() {
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=24
+STEP_TOTAL=25
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))
@@ -1220,6 +1222,11 @@ run_step() {  # <runner-function> <label spoken to the user>
   fi
 }
 
+# The Omarchy layer is raised last by default (the core stands first). A user who
+# wants it FIRST — a fresh Omarchy host, or one who came from a non-Omarchy box —
+# asks with --omarchy-first, and the layer runs before the core. It detects its own
+# host and skips cleanly elsewhere, so the flag is safe on every platform.
+[ "$OMARCHY_FIRST" = 1 ] && run_step step_omarchy "omarchy layer (first)"
 run_step step_panes "panes"
 run_step step_prereqs "prerequisites"
 run_step step_home "home"
@@ -1241,7 +1248,7 @@ run_step step_sandbox "sandbox"
 run_step step_memory "memory"
 run_step step_smidja "the smithy"
 run_step step_spa "the spa"
-run_step step_omarchy "omarchy layer"
+[ "$OMARCHY_FIRST" = 1 ] || run_step step_omarchy "omarchy layer"
 run_step step_loaders "loaders"
 run_step step_gates "gates"
 run_step step_marks "marks"
