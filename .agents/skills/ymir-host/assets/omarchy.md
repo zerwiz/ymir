@@ -265,6 +265,22 @@ Mac or on WSL those steps report a clean skip and the core still runs.
 When a core feature changes, this layer is updated in the same change
 (`RULES/05-platforms.md`). Details: `galdr-ymirsystem/assets/installation.md`.
 
+### Standing the layer up first (a user without Omarchy)
+
+`bin/ymir-install.sh` runs `step_omarchy` **last** by default — the portable core
+stands first, then the first-class layer. A user who is not on Omarchy yet, or is
+about to move onto it, can ask for the layer first:
+
+```bash
+bin/ymir-install.sh --omarchy-first
+```
+
+It does **not** install the Omarchy OS (that is upstream — Arch + Hyprland, via
+Omarchy's own installer); it runs `bin/omarchy-install.sh` *before* the core, then
+the core. On a non-Omarchy host both orderings report a clean `SKIP`. This is
+written for the reader on the homepage (`README.md`) and in
+`galdr-ymirsystem/assets/installation.md`.
+
 ### Electron GPU-process crashes on the shared-memory iGPU
 
 Both dashboards can look healthy while `coredumpctl` fills with SIGSEGV cores

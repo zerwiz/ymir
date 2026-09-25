@@ -448,6 +448,24 @@ runtime, so those layers raise a Linux host and hand the work to
 `bin/ymir-install.sh` inside it. Each is gated on its host and skips cleanly
 everywhere else — no layer asserts a machine it is not standing on.
 
+**No Omarchy yet? Raise the layer first.** Ymir's Omarchy layer is first-class,
+but it is not required: the portable core stands on any Linux, and the layer
+reports a clean `SKIP` elsewhere. A user who wants it — or who is about to move
+onto Omarchy — can ask the installer to stand the Omarchy layer up **before** the
+core:
+
+```bash
+bin/ymir-install.sh --omarchy-first     # Omarchy layer first, then the core
+```
+
+Omarchy itself is installed upstream (Arch + Hyprland, the Omarchy project's own
+installer) — `--omarchy-first` does **not** install the OS. It runs
+`bin/omarchy-install.sh` first (learning the host · the `post-update` hook · the
+suggested shell plugins · each app's numbered desktop · the launcher entries ·
+the editor's desktop · the away-mode alarm · the Þjazi backend), then the core.
+Without the flag the layer runs last, after the core stands; on a non-Omarchy
+host both orderings report a clean `SKIP`, never a faked layer.
+
 **Build the installers** — neither needs a matching host:
 
 ```bash
