@@ -255,6 +255,20 @@ fi
 
 if [ "$MODE_OPENCODE" = 1 ]; then
   add opencode-config "$ROOT/opencode.json" "$(config_out "$ROOT/opencode.json.example" "$ROOT/opencode.json")"
+  # A Yggdrasil worktree does NOT inherit the untracked `opencode.json`, so an
+  # OpenCode run inside one loses its providers, its per-agent models and its
+  # MCP servers (reproduced 2026-09-25: llama.cpp/llama-swap/apodex vanished).
+  # Point every worktree at the ONE config by a RELATIVE symlink — one author,
+  # no copies to drift. `.yggdrasil/` is gitignored, so this is never tracked.
+  if [ -d "$ROOT/.yggdrasil" ]; then
+    wt=0; wtn=0
+    for d in "$ROOT"/.yggdrasil/*/; do
+      [ -d "$d" ] || continue
+      wtn=$((wtn+1))
+      ln -sfn ../../opencode.json "$d/opencode.json" 2>/dev/null && wt=$((wt+1))
+    done
+    [ "$wtn" -gt 0 ] && add opencode-worktrees "$ROOT/.yggdrasil" "$wt/$wtn worktrees bound to the one config"
+  fi
   # OpenCode reads `.opencode/agents/` (PLURAL). The singular `.opencode/agent/`
   # was never read by the harness at all — twenty correct symlinks in a directory
   # no loader opens, which is why only the agents declared by hand in
