@@ -4,7 +4,10 @@
 # can be paid down (plan 58 Phase 5's companion) but cannot grow.
 #
 # Rules: daemon-in-bash · oneshot-loop · service-in-shim.
-nornir.service:oneshot-loop          # the scheduler loop should be a Python service (Type=simple), or systemd timers
+#
+# CORRECTED 2026-09-25: nornir is NOT debt. Its `while` runs inside a detached
+# `setsid`, so `Type=oneshot` is right and Rule B now spares a detaching
+# launcher. The ward's first false positive, caught by reading the script.
 mill-worker.service:daemon-in-bash   # the queue worker should be a Python daemon
-mimir.service:service-in-shim        # bin/mimir-bridge.sh (126 lines) only execs python; move the logic into Python and exec it directly
+mimir.service:service-in-shim        # the unit's door is 126 lines; give the unit a thin exec of an engram-compatible python
 bifrost.service:service-in-shim      # bin/bifrost-bridge.sh (140 lines) only execs python; move the logic into Python and exec it directly
