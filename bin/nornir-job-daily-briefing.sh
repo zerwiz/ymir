@@ -18,6 +18,19 @@
 #   BROKK_BRIEF_MAX_ORDERS   open orders listed (default 15)
 #   BROKK_BRIEF_MAX_RUNES    today's runes listed (default 12)
 set -u
+# The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
+    [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yc
+fi
+if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
@@ -36,12 +49,12 @@ REALM="${REALM:-}"
 if [ -z "$REALM" ]; then . "$SCRIPT_DIR/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
 
 DATE=$(date +%Y-%m-%d)
-BRIEF_DIR="${BROKK_BRIEF_DIR:-${YMIR_HOME:-$HOME/Documents/ymirhome}/svartalfaheim/$REALM/workspace/memory/daily}"
+BRIEF_DIR="${BROKK_BRIEF_DIR:-${YMIR_HOME}/svartalfaheim/$REALM/workspace/memory/daily}"
 BRIEF_FILE="$BRIEF_DIR/$DATE.md"
 MAX_ORDERS="${BROKK_BRIEF_MAX_ORDERS:-15}"
 MAX_RUNES="${BROKK_BRIEF_MAX_RUNES:-12}"
-MASTERPLAN="${BROKK_MASTERPLAN:-${YMIR_HOME:-$HOME/Documents/ymirhome}/hodd/docs/masterplan.md}"
-PLANS_DIR="${BROKK_PLANS_DIR:-${YMIR_HOME:-$HOME/Documents/ymirhome}/memory/plans}"
+MASTERPLAN="${BROKK_MASTERPLAN:-${YMIR_HOME}/hodd/docs/masterplan.md}"
+PLANS_DIR="${BROKK_PLANS_DIR:-${YMIR_HOME}/memory/plans}"
 
 mkdir -p "$BRIEF_DIR" || { printf 'error: cannot create %s\n' "$BRIEF_DIR"; exit 1; }
 TMP="$BRIEF_DIR/.$DATE.md.tmp.$$"
@@ -137,7 +150,7 @@ if [ "$meta_count" != "0" ]; then
     emit "  - $(basename "$m"): $(head -n 1 "$m" 2>/dev/null)"
   done
 fi
-if [ -r "${YMIR_HOME:-$HOME/Documents/ymirhome}/svartalfaheim/$REALM/.env.realm" ]; then
+if [ -r "${YMIR_HOME}/svartalfaheim/$REALM/.env.realm" ]; then
   emit "- realm env: present"
 else
   emit "- realm env: ABSENT (svartalfaheim/$REALM/.env.realm)"

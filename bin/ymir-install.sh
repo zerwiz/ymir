@@ -837,7 +837,7 @@ step_gates() {
     fi
     # The home repo is where the private data lives, so its ward matters more
     # than this repo's four. Report it separately so a dormant vault is visible.
-    local hh; hh="${YMIR_HOME:-$HOME/Documents/ymirhome}/.git/hooks/pre-commit"
+    local hh; hh="${YMIR_HOME}/.git/hooks/pre-commit"
     if [ -x "$hh" ]; then add hoard-gate OK "home pre-commit seated";
     else add hoard-gate WARN "home hooks not installed — bin/hoard-guard.sh --install"; fi
     return
@@ -848,7 +848,7 @@ step_gates() {
   [ -x "$SCRIPT_DIR/hoard-guard.sh" ] && "$SCRIPT_DIR/hoard-guard.sh" --install >/dev/null 2>&1 || true
   if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then add gates OK "pre-commit + pre-push installed"
   else add gates WARN "could not write .git/hooks — gates are dormant"; fi
-  local hh; hh="${YMIR_HOME:-$HOME/Documents/ymirhome}/.git/hooks/pre-commit"
+  local hh; hh="${YMIR_HOME}/.git/hooks/pre-commit"
   if [ -x "$hh" ]; then add hoard-gate OK "home pre-commit seated";
   else add hoard-gate WARN "home hooks not seated — bin/hoard-guard.sh --install"; fi
 }
