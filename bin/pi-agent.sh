@@ -15,8 +15,8 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-PROVIDER="${PI_LOCAL_PROVIDER:-llama-cpp}"
-MODEL="${PI_LOCAL_MODEL:-frontend-design-expert-8b@q4_k_m}"
+PROVIDER="${PI_LOCAL_PROVIDER:-}"
+MODEL="${PI_LOCAL_MODEL:-}"
 AGENT=""; TASK=""; SKILLS=()
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -33,6 +33,19 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$TASK" ] || { printf 'error: %s needs a task\n' "$AGENT" >&2; exit 2; }
+
+# Resolve provider + model from the hoard when env/flag did not name them: the
+# figure's own model first, else the hoard default_model. No concrete id in-tree.
+if [ -z "$PROVIDER" ] || [ -z "$MODEL" ]; then
+  _am="$([ -x "$SCRIPT_DIR/agents-config.sh" ] && "$SCRIPT_DIR/agents-config.sh" get "$AGENT" model 2>/dev/null)"
+  [ -n "$_am" ] || _am="$([ -x "$SCRIPT_DIR/agents-config.sh" ] && "$SCRIPT_DIR/agents-config.sh" default 2>/dev/null)"
+  [ -n "$PROVIDER" ] || PROVIDER="${_am%%/*}"
+  [ -n "$MODEL" ] || MODEL="${_am#*/}"
+fi
+[ -n "$PROVIDER" ] && [ -n "$MODEL" ] || {
+  printf 'error: no model resolved for %s — set -m/-p or config/agents.yaml in your hoard\n' "$AGENT" >&2
+  exit 2
+}
 
 # 1. the agent's canonical profile (persona + mission) by `name:`.
 PROFILE=""

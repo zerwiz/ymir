@@ -1,6 +1,5 @@
 ---
 mode: subagent
-model: llamacpp/qwen3.5-9b
 permission:
   read: allow
   edit: deny

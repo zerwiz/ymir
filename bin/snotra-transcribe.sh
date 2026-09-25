@@ -25,7 +25,7 @@
 #   RAIL_URL           — llama-swap URL for summaries
 #                        (default http://127.0.0.1:8080/v1; a remote seat sets
 #                         http://heimdall.tailefab81.ts.net:8080/v1)
-#   RAIL_MODEL         — the model alias (default qwen3.6-35b-a3b@q2_k_xl)
+#   RAIL_MODEL         — the model alias (env/personal; unset = loud refusal)
 #   RAIL_KEY           — llama-swap API key (from ~/.pi/agent/auth.json)
 
 set -u
@@ -49,9 +49,17 @@ HOARD="$YMIR_HOME/hodd"
 MEETINGS="$HOARD/workspaces/meetings"
 WHISPER_GPU="${WHISPER_GPU:-on}"
 RAIL_URL="${RAIL_URL:-http://127.0.0.1:8080/v1}"
-RAIL_MODEL="${RAIL_MODEL:-qwen3.6-35b-a3b@q2_k_xl}"
+RAIL_MODEL="${RAIL_MODEL:-}"
 RAIL_KEY="${RAIL_KEY:-}"
 TMP_PREFIX="/tmp/snotra-$$"
+
+# Loud refusal: no concrete model in the tree; the hoard or env must provide.
+[ -n "$RAIL_MODEL" ] || {
+  printf 'error: RAIL_MODEL is unset — set it in your hoard agents.yaml or\n'
+  printf '  export RAIL_MODEL=provider/model-id\n'
+  printf '  (the public tree carries no concrete model id)\n' >&2
+  exit 2
+}
 
 mkdir -p "$MEETINGS"
 

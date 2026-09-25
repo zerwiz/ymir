@@ -1,6 +1,5 @@
 ---
 mode: subagent
-model: flash-next/qwen3.8-flash-next
 permission:
   read: allow
   edit: allow

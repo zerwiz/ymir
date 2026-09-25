@@ -13,8 +13,8 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION="1.0.0"
-PROVIDER="${PI_LOCAL_PROVIDER:-llama-cpp}"
-MODEL="${PI_LOCAL_MODEL:-frontend-design-expert-8b@q4_k_m}"
+PROVIDER="${PI_LOCAL_PROVIDER:-}"
+MODEL="${PI_LOCAL_MODEL:-}"
 NAME="pi-local"; TASK=""; WHERE="--current"; DIR="$PWD"; MAIN=0
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -34,6 +34,20 @@ while [ $# -gt 0 ]; do
 done
 
 have() { command -v "$1" >/dev/null 2>&1; }
+
+# Resolve provider + model from the hoard (config/agents.yaml) when the env/flag
+# did not name them: the figure's own model first, else the default_model.
+if [ -z "$PROVIDER" ] || [ -z "$MODEL" ]; then
+  _am="$([ -x "$SCRIPT_DIR/agents-config.sh" ] && "$SCRIPT_DIR/agents-config.sh" get "$NAME" model 2>/dev/null)"
+  [ -n "$_am" ] || _am="$([ -x "$SCRIPT_DIR/agents-config.sh" ] && "$SCRIPT_DIR/agents-config.sh" default 2>/dev/null)"
+  [ -n "$PROVIDER" ] || PROVIDER="${_am%%/*}"
+  [ -n "$MODEL" ] || MODEL="${_am#*/}"
+fi
+[ -n "$PROVIDER" ] && [ -n "$MODEL" ] || {
+  printf 'error: no model resolved for %s — set -m/-p or config/agents.yaml in your hoard\n' "$NAME" >&2
+  exit 2
+}
+
 [ "${HERDR_ENV:-}" = "1" ] || { printf 'error: not inside herdr (HERDR_ENV unset)\nhelp: run this from a herdr pane\n' >&2; exit 1; }
 have herdr || { printf 'error: herdr not on PATH\n' >&2; exit 1; }
 

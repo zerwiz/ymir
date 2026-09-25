@@ -1,6 +1,5 @@
 ---
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash
 permission:
   read: allow
   edit: deny
