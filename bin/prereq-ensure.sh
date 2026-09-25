@@ -50,29 +50,64 @@ engram_python() {  # echo an interpreter that can (or could) run engram
   printf 'python3'
 }
 
+# engdbram (whose import name is `engram`) requires Python >= 3.11.
+#
+# NOTE THE NAME, because reading the wrong one cost a wrong diagnosis: the PyPI
+# project *called* `engram` is a different package entirely (a differentiable
+# rendering stack built on mitsuba/drjit) and its `<3.14,>=3.12` ceiling is NOT our
+# constraint. The engine's own floor is 3.11, so a distro's 3.13 or 3.14 is fine.
+engram_version_ok() {  # <python> -> 0 when >= 3.11
+  "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)' >/dev/null 2>&1
+}
+engram_v() { "$1" -V 2>&1 | head -1; }
+
+# A Python without pip can install nothing, and it says so only into /dev/null — which
+# is how "no pip" was reported as a version problem. ensurepip is stdlib, so it is the
+# first remedy; where a distro disables it (Debian ships it disabled) this returns
+# non-zero and the caller says exactly that.
+engram_ensure_pip() {  # <python> -> 0 when `-m pip --version` answers
+  local py="$1"
+  "$py" -m pip --version >/dev/null 2>&1 && return 0
+  "$py" -m ensurepip --upgrade >/dev/null 2>&1 || "$py" -m ensurepip >/dev/null 2>&1 || true
+  "$py" -m pip --version >/dev/null 2>&1
+}
+
 ensure_engram() {
-  local py; py="$(engram_python)"
+  local py why=""; py="$(engram_python)"
   if "$py" -c 'import engram' >/dev/null 2>&1; then
     mkdir -p "$(dirname "$ENGRAM_PY_FILE")" 2>/dev/null
     printf '%s\n' "$py" >"$ENGRAM_PY_FILE" 2>/dev/null
-    say engram present "importable under $py"
+    say engram present "importable under $(engram_v "$py")"
     return 0
   fi
-  # is the chosen interpreter even in engram's supported range?
-  if ! "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)' >/dev/null 2>&1; then
-    if command -v uv >/dev/null 2>&1 && uv python install 3.12 >/dev/null 2>&1; then
-      py="$(uv python find 3.12 2>/dev/null || printf '%s' "$py")"
+
+  # Name the real cause, not a guess: an old interpreter, or one that cannot install.
+  if ! engram_version_ok "$py"; then
+    why="$(engram_v "$py") is older than engdbram needs (>=3.11)"
+  elif ! engram_ensure_pip "$py"; then
+    why="no pip for $(engram_v "$py"), and ensurepip could not supply one"
+  fi
+
+  # Either way, uv can supply an interpreter that both is new enough and can install.
+  if [ -n "$why" ] && command -v uv >/dev/null 2>&1 && uv python install 3.12 >/dev/null 2>&1; then
+    local cand; cand="$(uv python find 3.12 2>/dev/null || true)"
+    if [ -n "$cand" ] && engram_version_ok "$cand" && engram_ensure_pip "$cand"; then
+      py="$cand"; why=""
     fi
   fi
-  if "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)' >/dev/null 2>&1 \
-     && "$py" -m pip install --user --break-system-packages -q engdbram >/dev/null 2>&1 \
-     && "$py" -c 'import engram' >/dev/null 2>&1; then
-    mkdir -p "$(dirname "$ENGRAM_PY_FILE")" 2>/dev/null
-    printf '%s\n' "$(command -v "$py" 2>/dev/null || printf '%s' "$py")" >"$ENGRAM_PY_FILE" 2>/dev/null
-    say engram installed "$py"
-    return 0
+
+  if [ -z "$why" ]; then
+    if "$py" -m pip install --user --break-system-packages -q engdbram >/dev/null 2>&1 \
+       && "$py" -c 'import engram' >/dev/null 2>&1; then
+      mkdir -p "$(dirname "$ENGRAM_PY_FILE")" 2>/dev/null
+      printf '%s\n' "$(command -v "$py" 2>/dev/null || printf '%s' "$py")" >"$ENGRAM_PY_FILE" 2>/dev/null
+      say engram installed "$(engram_v "$py")"
+      return 0
+    fi
+    why="pip could not install engdbram under $(engram_v "$py")"
   fi
-  say engram absent "install failed (engdbram needs Python >=3.11) — try: uv python install 3.12"
+
+  say engram absent "$why — help: bin/prereq-ensure.sh uv, then bin/prereq-ensure.sh engram"
   return 1
 }
 
