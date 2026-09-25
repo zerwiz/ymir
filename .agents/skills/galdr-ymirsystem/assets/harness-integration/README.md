@@ -526,6 +526,19 @@ The engine needs the `mcp<2` SDK for `engram-mcp` (v2 renamed `FastMCP` to
 `MCPServer`, which breaks engram 1.x/2.x):
 `python3 -m pip install --user --break-system-packages 'mcp<2'`.
 
+**The binary must actually carry the SDK (2026-09-25).** A hand-installed
+`~/.local/bin/engram-mcp` shim can point at a CPython without `mcp`
+(`ModuleNotFoundError: No module named 'mcp'`), so a harness wired to it is dead
+on arrival — the entry connects and immediately closes. `bin/a2a-mcp.sh` now
+resolves a **working** binary in order — `$ENGRAM_BIN`, then the well venv's
+`~/.fleet/well-venv/bin/engram-mcp` (built by `bin/fleet-ensure.sh`), then
+`command -v engram-mcp` — testing each candidate's shebang interpreter for
+`import mcp`; it never wires a path it has not proven. When wiring the
+operator's seat (not `--project`) it also merges the mesh and well servers into
+OpenCode's **global** config (`~/.config/opencode/opencode.json`), because
+OpenCode reads `opencode.json` per checkout and a worker seated in a Yggdrasil
+worktree would otherwise lose the mesh and the well.
+
 Rule: **drink before you act, water it after** — recall on the way in, and
 `POST /observe` (or the `remember` MCP tool) after a lesson lands.
 
@@ -596,6 +609,20 @@ writers[2]{writer,owns}:
   "bin/valknut-load.sh","STRUCTURE — the base keys, the agent blocks, the skills path; rendered from opencode.json.example"
   "bin/agents-config.sh apply","the ROSTER — providers and per-agent models, from config/agents.yaml"
 ```
+
+**A worktree gets the same file by link (2026-09-25).** OpenCode is
+project-scoped, so a Yggdrasil worktree — which has no untracked
+`opencode.json` — lost its providers, its per-agent models and its MCP servers
+(reproduced: `llama.cpp`/`llama-swap`/`apodex` vanished). `bin/valknut-load.sh`
+now points every `.yggdrasil/*/` at the one config with a **relative symlink**
+(`opencode.json -> ../../opencode.json`) — one author, no copies to drift, and
+`.yggdrasil/` is gitignored so nothing is ever tracked.
+
+**`bin/agents-config.sh apply` also writes the GLOBAL config.** The same
+providers are published into `~/.config/opencode/opencode.json`, so an OpenCode
+run OUTSIDE this checkout (another project, or before a worktree link exists)
+still resolves the local rail. The project file keeps the per-agent models; the
+global file is the machine's provider truth, resolved from the hoard.
 
 **Both merge; neither overwrites.** The loader's `config_out` adds missing keys (
 deep, `setdefault`-style), ensures `skills.paths`, and re-asserts nothing else;

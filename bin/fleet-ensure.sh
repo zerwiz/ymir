@@ -426,6 +426,17 @@ d.setdefault("mcpServers", {})["skuld"] = {"url": skuld}
 d.setdefault("mcpServers", {})["snotra"] = {"url": snotra}
 os.makedirs(os.path.dirname(p), exist_ok=True)
 json.dump(d, open(p, "w"), indent=2)
+
+# OpenCode's GLOBAL config too: it is project-scoped, so a seat's own well door
+# must live here or a run outside this checkout loses the well. The URL is this
+# seat's door (loopback), never a LAN IP of another host (Rule 07).
+ocp = os.path.join(home, ".config/opencode/opencode.json")
+try: oc = json.load(open(ocp))
+except Exception: oc = {}
+oc.setdefault("mcp", {})
+oc["mcp"]["well"] = {"type": "remote", "url": well}
+os.makedirs(os.path.dirname(ocp), exist_ok=True)
+json.dump(oc, open(ocp, "w"), indent=2)
 PY
 }
 
