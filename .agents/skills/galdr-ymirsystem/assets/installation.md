@@ -402,7 +402,7 @@ manifests. The token comes from the hoard, never from `~/.npmrc`.
 ## The steps
 
 ```
-install[27]{step,what,self-heals}:
+install[28]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -410,6 +410,7 @@ install[27]{step,what,self-heals}:
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at the hoard root under the chosen home)","creates if missing; hoard_root resolves through bin/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/hodd.sh emit resolves"
   "apps","the app repos (the app split) — hlidskjalf · hlidskjalf-mobile · odrerir · sessrumnir · smidja","reads $HOARD/identity/projects.yaml (never guesses a remote); clones a missing apps/<path> from its registered git{} block, fast-forwards a present one, and stamps the smithy engine (apps/smidja) from the cloned factory's templates"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
+  "local-model","the local brain for THIS hardware — a CUDA llama.cpp engine, the best model that fits, pi wiring, and Ymir registration","bin/llama-ensure.sh ADOPTS a standing CUDA llama-server (proves CUDA0, never rebuilds it) and only builds with GGML_CUDA=ON when none exists; bin/model-fit.sh picks the largest model that fits the PROBED GPU/VRAM/RAM/disk (generic — never this box); bin/model-fetch.sh downloads it resumable, checksummed, consent first, into the hoard; bin/pi-model-wire.sh wires ~/.pi/agent/models.json (exact served id + key reference) and proves a one-shot; bin/model-register.sh writes the same model into the hoard config/agents.<host>.yaml overlay so Ymir/Smidja share one model road; bin/model-tune.sh measures the real ctx/ngl/n-cpu-moe/kv/fa and replaces the placeholder in data/local-models.md. When a local rail already serves models, NOTHING is downloaded — the operator's registered model is adopted. Loud refusals (no CUDA, unknown hardware, no disk, bad checksum), never a silent skip"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "snotra","the meeting ear's engine — whisper.cpp + a model","bin/snotra-ensure.sh reports the seat's engine and installs what is missing (pacman/apt/build); a voxtype seat keeps its models. The MCP face + unit ride the fleet step"
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
@@ -432,7 +433,7 @@ install[27]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**29** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
+**30** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 `smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. The fleet
 step raises every role-owed program (the role gates live in `bin/ymir-autoboot.sh`

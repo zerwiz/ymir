@@ -221,6 +221,19 @@ engines_phase() {
   if have sandcastle; then emit 4 engines sandcastle SKIP "Utgard present"
   else emit 4 engines sandcastle DO "install sandcastle (Utgard) if available"; fi
 
+  # The local model (plan 57): adopt the engine, fit a model to THIS hardware.
+  if [ -x "$ROOT/bin/llama-ensure.sh" ]; then
+    if "$ROOT/bin/llama-ensure.sh" status >/dev/null 2>&1; then
+      emit 4 engines local-model SKIP "a CUDA llama-server stands (adopted, not rebuilt)"
+    elif "$ROOT/bin/llama-ensure.sh" status 2>&1 | grep -q 'CPU-ONLY'; then
+      emit 4 engines local-model DO "a CPU-only llama-server stands — install a CUDA build (a CPU bench is ~10x slow)"
+    else
+      emit 4 engines local-model DO "no llama-server — build llama.cpp with CUDA (GGML_CUDA=ON)"
+    fi
+  else
+    emit 4 engines local-model BLOCKED "bin/llama-ensure.sh is absent"
+  fi
+
   if have docker || have podman; then
     local img
     if have docker && docker image inspect utgard-runner:latest >/dev/null 2>&1; then
