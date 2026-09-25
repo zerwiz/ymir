@@ -43,6 +43,17 @@ if [ -d "$TREE_STATE" ]; then
   for f in "$TREE_STATE"/*; do
     base="$(basename "$f")"
     if [ "$base" = ".gitkeep" ]; then rm -f "$f"; continue; fi
+    case "$base" in
+      .lock|.lock.starttime)
+        # The decoy's own session-lock files are NEVER truth: the primary's lock
+        # lives machine-global and is named by state/.lock-path. Recover them, so
+        # a stale pid can never masquerade as a per-home lock in the hoard.
+        mkdir -p "$HOARD_STATE/.recovered-tree-state"
+        dest="$HOARD_STATE/.recovered-tree-state/$base"; n=1
+        while [ -e "$dest" ]; do dest="$dest.$n"; n=$((n+1)); done
+        if cp -a "$f" "$dest" 2>/dev/null; then rm -rf "$f"; recovered=$((recovered+1)); else kept=$((kept+1)); fi
+        continue ;;
+    esac
     if [ -e "$HOARD_STATE/$base" ]; then
       mkdir -p "$HOARD_STATE/.recovered-tree-state"
       dest="$HOARD_STATE/.recovered-tree-state/$base"; n=1
