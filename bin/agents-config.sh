@@ -3,16 +3,19 @@
 #
 #   bin/agents-config.sh show                 # the current combination (TOON)
 #   bin/agents-config.sh get <agent> <key>    # key: harness | model
+#   bin/agents-config.sh default [--provider|--model|--harness]
+#   bin/agents-config.sh provider-url <provider>   # the provider's base_url
 #   bin/agents-config.sh resolve              # exact ids for local provider models
 #   bin/agents-config.sh init                 # seed config/agents.yaml from the template
-#   bin/agents-config.sh apply                # write it into agents + project config
+#   bin/agents-config.sh apply                # publish it into project harness config
 #   bin/agents-config.sh --version
 #
-# Source of truth: config/agents.yaml. `apply` sets `model:` in the canonical
-# `.agents/agents/*.md` (matched by `name:`), writes local providers + agent
-# models into project `opencode.json`, emits a runnable primary for any agent
-# marked `primary: true`, and caches the resolved combination in
-# `state/agents-resolved.json` (read by `get` and bin/agent-run.sh).
+# Source of truth: config/agents.yaml (in the hoard, with a per-host overlay).
+# The figures carry NO model: dispatch resolves each figure's model from this
+# YAML by figure name (`get <figure> model`). `apply` writes local providers +
+# agent models into project `opencode.json` and caches the resolved combination
+# in `state/agents-resolved.json` (read by `get` and bin/agent-run.sh); it never
+# rewrites a tracked `.agents/agents/*.md`.
 set -u
 
 VERSION="1.0.0"
@@ -177,11 +180,35 @@ if action == "resolve":
         print('agents-resolve[1]{state}:\n  "all models are exact ids"')
     sys.exit(0)
 
+if action == "default":
+    # The fallback smith's model, resolved from the hoard (overlay applied).
+    # `--provider` / `--model` / `--harness` split it; bare prints provider/model.
+    raw = resolve_model(default_model)
+    if "--provider" in args:
+        print(raw.split("/", 1)[0] if "/" in raw else "")
+    elif "--model" in args:
+        print(raw.split("/", 1)[1] if "/" in raw else raw)
+    elif "--harness" in args:
+        print(local_harness if "local" not in args else local_harness)
+    else:
+        print(raw)
+    sys.exit(0)
+
+if action == "provider-url":
+    if len(args) < 1:
+        print('error: provider-url needs <provider>'); sys.exit(2)
+    print((providers.get(args[0]) or {}).get("base_url") or "")
+    sys.exit(0)
+
 if action == "get":
     if len(args) < 2:
         print('error: get needs <agent> <harness|model>'); sys.exit(2)
     a, key = args[0], args[1]
-    if os.path.exists(resolved_path):
+    # The cache is derived, not authoritative: use it only when it is newer than
+    # the hoard YAML, else re-resolve live so a stale cache cannot serve an old model.
+    fresh = os.path.exists(resolved_path) and (
+        not os.path.exists(cfg_path) or os.path.getmtime(resolved_path) >= os.path.getmtime(cfg_path))
+    if fresh:
         try:
             cached = json.load(open(resolved_path)).get(a, {})
             if key in cached:
@@ -197,18 +224,10 @@ if action != "apply":
 changed = []
 rmap = resolve_map()
 
-# 1. Canonical agent profiles — set `model:` where `name:` matches.
-for p in sorted(glob.glob(os.path.join(root, ".agents/agents/*.md"))):
-    txt = open(p).read()
-    m = re.search(r'^name:\s*(\S+)', txt, re.M)
-    if not m or m.group(1) not in agents:
-        continue
-    a = m.group(1)
-    new = resolve_model(model_of(a))
-    new_txt, n = re.subn(r'^model:.*$', f'model: {new}', txt, count=1, flags=re.M)
-    if n and new_txt != txt:
-        open(p, "w").write(new_txt)
-        changed.append(f"md:{a}")
+# 1. Canonical agent profiles carry NO model (plan 56). The figure's model is
+# resolved from the hoard by figure name at dispatch — `get <figure> model` —
+# never written back into a tracked file. `apply` therefore does NOT touch
+# .agents/agents/*.md; a machine whose roster differs must not dirty the tree.
 
 # 2. Project opencode.json — providers + agent models + runnable primaries.
 oc = os.path.join(root, "opencode.json")

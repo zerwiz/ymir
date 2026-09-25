@@ -28,11 +28,11 @@ or starting agents, load the sibling instead:
 
 - **Coding agents:** `pi` for local/LM Studio rosters (default config:
   `coding_agent: pi`), `opencode` (via the `ocrd` profile) for cloud rosters.
-- **Default model:** `lmstudio/qwen3.5-9b` (from `smidja.config.yaml`:
-  `${SMIDJA_LOCAL_MODEL:-lmstudio/qwen3.5-9b}`). Full model surface: local
-  qwen3.5-4b/9b, gemma-4-12b-it, qwen3.6-35b-a3b quants, frontend-design-expert-8b;
-  cloud deepseek-v4-flash / big-pickle / nemotron-3-ultra-free — see
-  `smidja/smidja_smidja_config/roster.yaml` (the `tiers:` block).
+- **Default model:** resolved from the hoard (`config/agents.yaml`); the shipped
+  roster carries an empty placeholder (`${SMIDJA_LOCAL_MODEL:-}`) and refuses
+  loudly when no model is set. Full model surface: local
+  qwen quants and other GGUFs the operator's rail serves; cloud through the
+  chosen harness — see `smidja/smidja_smidja_config/roster.yaml` (the `tiers:` block).
 - **Rosters/teams:** `smidja/smidja_smidja_config/roster.yaml` — the ONE file (stacks,
   roles, tools, writes + the `tiers:` model catalog). `smidja rosters` lists/validates.
   - **Scaffold commands** (safe writes to that one file): `smidja team list|show|

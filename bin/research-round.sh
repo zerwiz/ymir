@@ -32,7 +32,8 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
 fi
-hoard_state_dir STATE 2>/dev/null || STATE="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
+hoard_state_dir STATE 2>/dev/null || STATE="${BROKK_STATE_OVERRIDE:-}"
+[ -n "$STATE" ] || { printf 'error: the state dir did not resolve\nhelp: source bin/hoard-lib.sh (it resolves the home), or set BROKK_STATE_OVERRIDE\n' >&2; exit 1; }
 hoard_root HOME_DIR 2>/dev/null || HOME_DIR="$ROOT"
 
 case "${1-}" in
@@ -62,7 +63,7 @@ command -v herdr >/dev/null 2>&1 || { printf 'error: herdr not on PATH\n' >&2; e
 if [ -z "$MODEL" ] && [ -x "$SCRIPT_DIR/agents-config.sh" ]; then
   MODEL="$("$SCRIPT_DIR/agents-config.sh" get "$FIGURE" model 2>/dev/null)"
 fi
-[ -n "$MODEL" ] || MODEL="llama-swap/qwen3.6-35b-a3b@q2_k_xl"
+[ -n "$MODEL" ] || { printf 'error: no model resolved — pass --model M or set config/agents.yaml in the hoard\n'; exit 2; }
 HARNESS="pi"
 [ -x "$SCRIPT_DIR/agents-config.sh" ] && HARNESS="$("$SCRIPT_DIR/agents-config.sh" get "$FIGURE" harness 2>/dev/null || printf 'pi')"
 

@@ -1,6 +1,5 @@
 ---
 mode: all
-model: opencode-go/deepseek-v4.1-flash
 permission:
   read: allow
   edit: allow
