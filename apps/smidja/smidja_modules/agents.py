@@ -13,6 +13,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import time
 from pathlib import Path
 from typing import Literal, Optional
@@ -143,10 +144,10 @@ def _expand_one(text: str) -> str:
 def _expand_env(value):
     """Expand `${VAR}` / `${VAR:-default}` in config strings from the environment.
 
-    Rosters stay environment-agnostic: write `model: ${SMIDJA_LOCAL_MODEL:-lmstudio/qwen3.5-9b}`
+    Rosters stay environment-agnostic: write `model: ${SMIDJA_LOCAL_MODEL:-}`
     and each machine's `.env` decides the backend without editing the roster.
 
-    Defaults may nest (`${SMIDJA_PLANNER_MODEL:-${SMIDJA_LOCAL_MODEL:-lmstudio/...}}`);
+    Defaults may nest (`${SMIDJA_PLANNER_MODEL:-${SMIDJA_LOCAL_MODEL:-}}`);
     expansion loops until no placeholder remains.
     """
     if isinstance(value, str):
@@ -164,8 +165,106 @@ def _expand_env(value):
     return value
 
 
+# ── the hoard road (Rule 07 / plan 56) ───────────────────────────────────────
+# The roster carries no concrete model: an empty `model:` is filled from the
+# operator's hoard (`config/agents.yaml`, per-host overlay), resolved by the ONE
+# resolver `bin/agents-config.sh`. Env wins (already expanded above); then the
+# hoard; then the roster refuses loudly. Two operators, two models, tree untouched.
+
+_HOARD_CACHE: dict[str, str] = {}
+
+
+def _repo_root() -> Optional[Path]:
+    """The tree that owns bin/agents-config.sh (found, never assumed)."""
+    for cand in Path(__file__).resolve().parents:
+        if (cand / "bin" / "agents-config.sh").is_file():
+            return cand
+    return None
+
+
+def _hoard_agents_yaml() -> Optional[Path]:
+    """The operator's private agents.yaml, resolved without hardcoding a path."""
+    env = os.environ.get("YMIR_AGENTS_YAML")
+    if env and Path(env).is_file():
+        return Path(env)
+    settings = os.environ.get("YMIR_SETTINGS_DIR")
+    if not settings:
+        ymir_home = os.environ.get("YMIR_HOME") or os.environ.get("YMIR_HOARD")
+        if ymir_home:
+            settings = str(Path(ymir_home) / "config")
+    if settings:
+        cand = Path(settings) / "agents.yaml"
+        if cand.is_file():
+            return cand
+    return None
+
+
+def _hoard_cfg() -> dict:
+    """Parse the hoard agents.yaml once (with overlay left to the resolver)."""
+    if "_cfg" in _HOARD_CACHE:
+        return json.loads(_HOARD_CACHE["_cfg"])
+    p = _hoard_agents_yaml()
+    try:
+        cfg = (yaml.safe_load(p.read_text()) or {}) if p else {}
+    except Exception:
+        cfg = {}
+    _HOARD_CACHE["_cfg"] = json.dumps(cfg)
+    return cfg
+
+
+def _hoard_default_model() -> str:
+    """The hoard's default model, via the ONE resolver (`agents-config.sh default`).
+
+    Falls back to the raw `default_model:` only if the resolver cannot run.
+    """
+    if "default" in _HOARD_CACHE:
+        return _HOARD_CACHE["default"]
+    model = ""
+    root = _repo_root()
+    if root:
+        script = root / "bin" / "agents-config.sh"
+        try:
+            model = subprocess.check_output(
+                ["bash", str(script), "default"], text=True,
+                stderr=subprocess.DEVNULL, timeout=15).strip()
+        except Exception:
+            model = ""
+    if not model:
+        model = str(_hoard_cfg().get("default_model") or "")
+    _HOARD_CACHE["default"] = model
+    return model
+
+
+def _hoard_role_model(role: str) -> str:
+    """A per-role override from the hoard (`smidja_roles:`), else empty."""
+    roles = _hoard_cfg().get("smidja_roles") or {}
+    if isinstance(roles, dict):
+        v = roles.get(role)
+        if isinstance(v, str):
+            return v
+        if isinstance(v, dict):
+            return str(v.get("model") or "")
+    return ""
+
+
+def _fill_models_from_hoard(raw: dict) -> str:
+    """Fill empty roster models from the hoard (env already won during expansion)."""
+    default = _hoard_default_model()
+    targets = [raw.get("defaults") or {}] + list(raw.get("agents") or [])
+    for target in targets:
+        if not isinstance(target, dict):
+            continue
+        if not target.get("model"):
+            role = str(target.get("name") or "")
+            target["model"] = _hoard_role_model(role) or default
+    return default
+
+
 def load_config(path: str = "smidja/smidja_smidja_config/smidja.config.yaml") -> smidjaConfig:
     raw = _expand_env(yaml.safe_load(Path(path).read_text()) or {})
+    # Fill empty models from the hoard BEFORE the defaults-merge below, so a
+    # roster entry with no model inherits the operator's choice, not a literal.
+    _fill_models_from_hoard(raw)
     defaults = raw.get("defaults", {}) or {}
     for agent in raw.get("agents", []) or []:
         for key in ("coding_agent", "model", "thinking", "color", "tools", "writes"):
@@ -195,6 +294,11 @@ def validate(cfg: smidjaConfig, required: list[str]) -> None:
         if agent.coding_agent not in ("pi", "opencode"):
             problems.append(f"agent {name!r}: coding_agent {agent.coding_agent!r} "
                             f"is not implemented (pi | opencode)")
+        elif not agent.model:
+            problems.append(
+                f"agent {name!r}: no model — set SMIDJA_LOCAL_MODEL (or "
+                f"SMIDJA_{name.upper()}_MODEL), or default_model in your hoard "
+                f"config/agents.yaml (resolve with bin/agents-config.sh)")
         elif agent.coding_agent == "pi":
             try:
                 agent_pi.resolve_model(agent.model)

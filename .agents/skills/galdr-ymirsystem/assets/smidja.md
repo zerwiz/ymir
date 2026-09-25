@@ -54,15 +54,15 @@ smidja/smidja_*.py` directly.
 ## Roster & models — through pi's `models.json`
 
 - The roster: `smidja/smidja_smidja_config/smidja.config.yaml`. `defaults.model`
-  and each agent's `model:` are **`provider/id`**, resolved by **pi** from
+  and each agent's `model:` are **`provider/id`** resolved by **pi** from
   `~/.pi/agent/models.json`. List what resolves with `pi --list-models`.
-- They are written as env-expandable placeholders so one backend can be chosen
-  without editing the roster: `${SMIDJA_LOCAL_MODEL:-…}` and per-role
-  `${SMIDJA_<ROLE>_MODEL:-…}`. `just` loads `.env` (`set dotenv-load`).
-- Example local model (llama.cpp router on `:8080`):
-  `llama-cpp/qwen3.6-35b-a3b@iq3_s`. Verify one-shot:
-  `pi -p --no-session --model "llama-cpp/qwen3.6-35b-a3b@iq3_s" "reply OK"`.
-- Keys: the starter roster names cloud providers (`google`, `fireworks`, `openai`)
+- Models come from the **hoard** (`config/agents.yaml` + per-host overlay),
+  resolved by `bin/agents-config.sh resolve` → `state/agents-resolved.json`.
+  The shipped config carries **empty** env-expandable placeholders:
+  `${SMIDJA_LOCAL_MODEL:-}` and per-role `${SMIDJA_<ROLE>_MODEL:-}`.
+  `just` loads `.env` (`set dotenv-load`). Set `SMIDJA_LOCAL_MODEL` to pick
+  the backend; omit it and the roster has no model.
+- Keys: the roster names cloud providers (`google`, `fireworks`, `openai`)
   → `OPENROUTER_API_KEY` / `FIREWORKS_API_KEY` / `OPENAI_API_KEY` in `.env`. A local
   llama roster needs no key.
 
@@ -156,7 +156,7 @@ yggdrasil.worktrees`. See `assets/nornir-jobs.md`.
 ## Smoke test
 
 ```bash
-SMIDJA_LOCAL_MODEL=llama-cpp/qwen3.6-35b-a3b@iq3_s \
+SMIDJA_LOCAL_MODEL=llama-cpp/<your-model-id> \
   uv run apps/smidja/smidja_prompt.py --agent scout \
   "Reply with a single line: which top-level directories exist in this repo. Change nothing."
 ```
