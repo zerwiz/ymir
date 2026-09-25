@@ -71,3 +71,29 @@ export function resolveYmirRoot(extensionDir: string): string {
   // surfaces as a missing bin/ at that exact path — never hidden behind another.
   return resolve(explicit[0] ?? legacy);
 }
+
+/**
+ * The session's HOME: the operator's private root that owns `state/` and
+ * `config/`. Resolved the SAME way every shell tool resolves it, through
+ * `bin/hoard-lib.sh`'s documented order (Rule 04):
+ *
+ *   1. `$YMIR_HOME` — an explicit word wins
+ *   2. the recorded choice, `~/.config/ymir/home`
+ *   3. the documented default, `$HOME/Documents/ymirhome`
+ *
+ * The ROOT owns `bin/`; the HOME owns `state/`. An extension that never resolves
+ * the home falls back to its own root and writes private runtime state into the
+ * public code tree — the drift this closes (2026-09-25). Never return the tree.
+ */
+export function resolveYmirHome(): string {
+  const explicit = process.env.YMIR_HOME;
+  if (explicit) return resolve(explicit);
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  try {
+    const recorded = readFileSync(resolve(home, ".config", "ymir", "home"), "utf8").trim();
+    if (recorded) return resolve(recorded);
+  } catch {
+    // no recorded choice — fall through to the documented default
+  }
+  return resolve(home, "Documents", "ymirhome");
+}
