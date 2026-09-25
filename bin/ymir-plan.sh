@@ -145,8 +145,14 @@ code_phase() {
   local leaked="" f n
   n="$(ls -A "$ROOT/data" 2>/dev/null | grep -vc '^\.gitkeep$' || true)"
   [ -d "$ROOT/data" ] && [ "${n:-0}" -gt 0 ] && leaked="$leaked data/"
-  n="$(ls -A "$ROOT/state" 2>/dev/null | grep -vc '^\.gitkeep$' || true)"
-  [ -d "$ROOT/state" ] && [ "${n:-0}" -gt 0 ] && leaked="$leaked state/"
+  # `state` is retired to a symlink into the operator's home (0007-one-state-dir):
+  # a link is the cure, not a leak. Only a REAL directory with entries leaks.
+  if [ -L "$ROOT/state" ]; then
+    :
+  else
+    n="$(ls -A "$ROOT/state" 2>/dev/null | grep -vc '^\.gitkeep$' || true)"
+    [ -d "$ROOT/state" ] && [ "${n:-0}" -gt 0 ] && leaked="$leaked state/"
+  fi
   for f in config/agents.yaml config/cron.yaml config/tailscale-sync.yaml config/wedge-alarm .env.local; do
     [ -e "$ROOT/$f" ] || continue
     # `config` is a symlink into .agents/config, and git tracks the REAL path —

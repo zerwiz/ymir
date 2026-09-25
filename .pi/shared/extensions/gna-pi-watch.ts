@@ -27,7 +27,7 @@ import {
   RO_PRESENTATION_EVENT,
 } from "./lib/ro-visibility.ts";
 import { encodeRoddOperationalInput } from "./lib/rodd-operational-input.ts";
-import { resolveYmirRoot } from "./lib/ymir-home.ts";
+import { resolveYmirHome, resolveYmirRoot } from "./lib/ymir-home.ts";
 
 type ArmResult = {
   ok: boolean;
@@ -96,17 +96,7 @@ const fmRoot = process.env.BROKK_ROOT_OVERRIDE || root;
 // the Eindri handoff (bin/eindri-acclaim.sh) wrote $YMIR_STATE_DIR/.wake-queue in
 // the hoard. Two queues: the handoff filled one, this watched the other, and no
 // wake ever surfaced (2026-09-23). A seat still overrides via BROKK_STATE_OVERRIDE.
-const ymirHome = (() => {
-  const env = process.env.YMIR_HOME;
-  if (env) return env;
-  try {
-    const rec = readFileSync(`${process.env.HOME || root}/.config/ymir/home`, "utf8").trim();
-    if (rec) return rec;
-  } catch {
-    // no recorded choice — fall back to the documented default
-  }
-  return `${process.env.HOME || root}/Documents/ymirhome`;
-})();
+const ymirHome = resolveYmirHome();
 const state = process.env.BROKK_STATE_OVERRIDE || `${ymirHome}/state`;
 const config = process.env.BROKK_CONFIG_OVERRIDE || `${fmHome}/config`;
 const armScript = `${fmRoot}/bin/syn-watch-arm.sh`;
