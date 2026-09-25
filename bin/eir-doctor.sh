@@ -184,13 +184,22 @@ _hoard_root() { local r; if [ -x "$SCRIPT_DIR/hoard-lib.sh" ]; then . "$SCRIPT_D
 s_hoard() {
   local h; h="$(_hoard_root)"
   [ -d "$h" ] || return 1
-  local lay="$YMIR_HOME/.ymir-layout.yaml" k p
-  if [ -f "$lay" ]; then
-    for k in config secrets identity workspaces memory smidja state data; do
-      p="$(sed -nE "s/^  $k: \"([^\"]+)\".*/\1/p" "$lay" | head -1)"
-      [ -n "$p" ] && [ ! -d "$p" ] && return 1
-    done
-  fi
+    local lay="$YMIR_HOME/.ymir-layout.yaml" k p rp maproot
+    if [ -f "$lay" ]; then
+      # A path naming the SAME home under another root is not foreign: a substrate
+      # container bind-mounts the home at its own prefix. Retry under this root.
+      maproot="$(sed -nE 's/^git_repo: "([^"]+)".*/\1/p' "$lay" 2>/dev/null | head -1)"
+      for k in config secrets identity workspaces memory smidja state data; do
+        p="$(sed -nE "s/^  $k: \"([^\"]+)\".*/\1/p" "$lay" | head -1)"
+        [ -n "$p" ] || continue
+        rp="$p"
+        if [ ! -d "$rp" ] && [ -n "$maproot" ] && [ "${p#"$maproot"}" != "$p" ]; then
+          rp="$YMIR_HOME/${p#"$maproot"/}"
+        fi
+        [ ! -d "$rp" ] && [ "${p#/}" != "$p" ] && return 1
+        [ ! -d "$rp" ] && [ "${p#/}" = "$p" ] && [ ! -d "$YMIR_HOME/$p" ] && return 1
+      done
+    fi
   for k in identity data docs secrets tenants; do
     [ -d "$YMIR_HOME/$k" ] && return 1
   done
@@ -219,16 +228,24 @@ f_hoard() {
     cp -an "$src/." "$h/$k/" 2>/dev/null || true
     rm -rf "$src" 2>/dev/null || true
   done
-  # A layout entry naming a nonexistent dir is repointed at the hoard.
-  local lay="$YMIR_HOME/.ymir-layout.yaml" k2 p
-  if [ -f "$lay" ] && [ -d "$h" ]; then
-    for k2 in identity data secrets docs tenants; do
-      p="$(sed -nE "s/^  $k2: \"([^\"]+)\".*/\1/p" "$lay" | head -1)"
-      if [ -n "$p" ] && [ ! -d "$p" ]; then
+    # A layout entry naming a nonexistent dir is repointed at the hoard.
+    local lay="$YMIR_HOME/.ymir-layout.yaml" k2 p rp maproot
+    if [ -f "$lay" ] && [ -d "$h" ]; then
+      maproot="$(sed -nE 's/^git_repo: "([^"]+)".*/\1/p' "$lay" 2>/dev/null | head -1)"
+      for k2 in identity data secrets docs tenants; do
+        p="$(sed -nE "s/^  $k2: \"([^\"]+)\".*/\1/p" "$lay" | head -1)"
+        [ -n "$p" ] || continue
+        rp="$p"
+        if [ ! -d "$rp" ] && [ -n "$maproot" ] && [ "${p#"$maproot"}" != "$p" ]; then
+          rp="$YMIR_HOME/${p#"$maproot"/}"
+        fi
+        # Resolves under this root, or under a container's view of the same home:
+        # nothing to repoint.
+        if [ -d "$rp" ]; then continue; fi
+        if [ "${p#/}" = "$p" ] && [ -d "$YMIR_HOME/$p" ]; then continue; fi
         sed -i "s|^  $k2: .*|  $k2: \"$h/$k2\"|" "$lay"
-      fi
-    done
-  fi
+      done
+    fi
   # A stale session-lock pointer (see s_hoard) is repointed at this machine.
   local lp="$YMIR_HOME/state/.lock-path" rec want
   if [ -f "$lp" ]; then
