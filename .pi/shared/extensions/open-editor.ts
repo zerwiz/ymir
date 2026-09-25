@@ -25,6 +25,7 @@ import { appendFileSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import type { AutocompleteItem } from "@mariozechner/pi-tui";
+import { resolveYmirHome } from "./lib/ymir-home.ts";
 
 // Editors that open in their own window / don't occupy the terminal.
 // We launch these detached so pi keeps running.
@@ -335,9 +336,10 @@ async function openInHerdrTab(
 
 	// Record the seat so `bin/herdr-run.sh close-all` can clear it.
 	try {
-		const root = process.env.BROKK_HOME || process.cwd();
+		// The seat record is runtime state in the OPERATOR'S HOME (Rule 04), never
+		// the code tree when BROKK_HOME is unset — resolved like every shell tool.
 		const state =
-			process.env.BROKK_STATE_OVERRIDE || join(root, "state");
+			process.env.BROKK_STATE_OVERRIDE || join(resolveYmirHome(), "state");
 		mkdirSync(state, { recursive: true });
 		appendFileSync(join(state, "herdr-seats"), `${tabId}\t${label}\n`);
 	} catch {

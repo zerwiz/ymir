@@ -72,8 +72,10 @@ apps/odrerir/public/livehall.json
 # Brokk runtime home — private (ship *.example templates only)
 data/*
 !data/*.example
-state/*
-!state/.gitkeep
+# Runtime state lives in the operator's home ($YMIR_HOME/state), NEVER the code
+# tree. `state` is, at most, a symlink to it — created by .agents/migrations/
+# 0007-one-state-dir, and ignored here so a retired decoy can never be tracked.
+state
 config/*
 !config/*.example
 .pi/extensions/*.local.ts

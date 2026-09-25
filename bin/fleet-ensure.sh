@@ -237,6 +237,17 @@ materialize_units() {  # <owed...> — every owed unit + the target; purge the s
           *) say "fleet: embed not owed here (roles: $AUTOBOOT_HOST_ROLES)" ;; esac
         materialize_embed || EMBED_MISSING=1
         ;;
+      a2abridge-directory)
+        # The mesh directory is an ENGINE-OWNED unit: a2abridge's own installer
+        # writes and enables a2abridge-directory.service, so there is no Ymir
+        # template to copy. Absent here = the engine was never seated; name the
+        # remedy loudly rather than writing a unit the engine would own.
+        if [ ! -f "$HOME/.config/systemd/user/a2abridge-directory.service" ]; then
+          say "fleet: a2abridge-directory — the mesh engine's unit is missing" >&2
+          say "fleet:   remedy: bin/a2abridge-ensure.sh ensure --install (bin/ymir-install.sh step does this)" >&2
+          A2A_MISSING=1
+        fi
+        ;;
       hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir)
         materialize_web_unit "$p"
         ;;
@@ -340,6 +351,7 @@ raise_units() {  # <owed...>
   for p in $owed; do
     case "$p" in
       embed) [ "${EMBED_MISSING:-0}" = 1 ] && continue ;;
+      a2abridge-directory) [ "${A2A_MISSING:-0}" = 1 ] && continue ;;
     esac
     if systemctl --user enable --now "$p.service" >/dev/null 2>&1; then
       say "fleet: $p.service enabled + started"
@@ -414,6 +426,17 @@ d.setdefault("mcpServers", {})["skuld"] = {"url": skuld}
 d.setdefault("mcpServers", {})["snotra"] = {"url": snotra}
 os.makedirs(os.path.dirname(p), exist_ok=True)
 json.dump(d, open(p, "w"), indent=2)
+
+# OpenCode's GLOBAL config too: it is project-scoped, so a seat's own well door
+# must live here or a run outside this checkout loses the well. The URL is this
+# seat's door (loopback), never a LAN IP of another host (Rule 07).
+ocp = os.path.join(home, ".config/opencode/opencode.json")
+try: oc = json.load(open(ocp))
+except Exception: oc = {}
+oc.setdefault("mcp", {})
+oc["mcp"]["well"] = {"type": "remote", "url": well}
+os.makedirs(os.path.dirname(ocp), exist_ok=True)
+json.dump(oc, open(ocp, "w"), indent=2)
 PY
 }
 
@@ -429,6 +452,7 @@ status() {
 ensure() {
   local owed="" roles=""
   EMBED_MISSING=0
+  A2A_MISSING=0
   autoboot_owed_roles AUTOBOOT_HOST_ROLES
   autoboot_owed owed
   say "fleet: $AUTOBOOT_HOST owes (${AUTOBOOT_HOST_ROLES}): $owed"

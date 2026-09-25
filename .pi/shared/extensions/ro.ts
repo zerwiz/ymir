@@ -62,7 +62,7 @@ import {
   setCalmPresentation,
   setCalmStockExportRendering,
 } from "./lib/ro-visibility.ts";
-import { resolveYmirRoot } from "./lib/ymir-home.ts";
+import { resolveYmirHome, resolveYmirRoot } from "./lib/ymir-home.ts";
 
 type DefinitionFactory<TParams extends TSchema, TDetails, TState> = (
   cwd: string,
@@ -161,7 +161,9 @@ export default function (pi: ExtensionAPI) {
 
   const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
   const configDirectory = process.env.BROKK_CONFIG_OVERRIDE || resolve(fmHome, "config");
-  const stateDirectory = process.env.BROKK_STATE_OVERRIDE || resolve(fmHome, "state");
+  // The state dir is the OPERATOR'S HOME (Rule 04), resolved like every shell
+  // tool — never `${fmHome}/state` (the code tree) when BROKK_HOME is unset.
+  const stateDirectory = process.env.BROKK_STATE_OVERRIDE || resolve(resolveYmirHome(), "state");
   // Ró is a PER-USER preference: it lives in the gitignored state dir so toggling
   // it never dirties the tracked tree, and YMIR_RO/BROKK_RO may set the default.
   // The legacy tracked `config/ro` is still read (upgrade path) but never written.
