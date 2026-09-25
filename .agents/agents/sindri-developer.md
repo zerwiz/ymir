@@ -1,6 +1,6 @@
 ---
 mode: subagent
-model: llamacpp-coder/qwen3-coder-30b
+model: flash-next/qwen3.8-flash-next
 permission:
   read: allow
   edit: allow
