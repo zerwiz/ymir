@@ -618,6 +618,12 @@ now points every `.yggdrasil/*/` at the one config with a **relative symlink**
 (`opencode.json -> ../../opencode.json`) — one author, no copies to drift, and
 `.yggdrasil/` is gitignored so nothing is ever tracked.
 
+**`bin/agents-config.sh apply` also writes the GLOBAL config.** The same
+providers are published into `~/.config/opencode/opencode.json`, so an OpenCode
+run OUTSIDE this checkout (another project, or before a worktree link exists)
+still resolves the local rail. The project file keeps the per-agent models; the
+global file is the machine's provider truth, resolved from the hoard.
+
 **Both merge; neither overwrites.** The loader's `config_out` adds missing keys (
 deep, `setdefault`-style), ensures `skills.paths`, and re-asserts nothing else;
 `agents-config` does the same for providers and models — and it writes **only
