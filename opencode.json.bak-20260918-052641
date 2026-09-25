@@ -1,0 +1,234 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "",
+  "default_agent": "brokk",
+  "agent": {
+    "brokk": {
+      "description": "Primary autonomous agent of the Ymir Agent Operating System",
+      "mode": "primary",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "temperature": 0.7,
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "task": "allow",
+        "skill": "allow",
+        "question": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "external_directory": "allow"
+      }
+    },
+    "build": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Implementation subagent for Ymir forge orders",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "builder": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Builder \u2014 implement the plan exactly; report every changed file.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "write": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "plan": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Planning subagent for Ymir architecture",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "planner": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Planner \u2014 turn a request into a plan the builder can implement without asking questions.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "reviewer": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Reviewer \u2014 confirm what was built is what was asked for; change nothing.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "documenter": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Documenter \u2014 write up the change from the diff; document only.",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "write": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "scout": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "Scout \u2014 find and report where things live, change nothing.",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
+      }
+    },
+    "hnoss": {
+      "mode": "primary",
+      "model": "opencode-go/deepseek-v4.1-flash",
+      "description": "hnoss \u2014 primary (from config/agents.yaml)"
+    },
+    "sindri": {
+      "mode": "primary",
+      "model": "qwen3-coder-30b/Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf",
+      "description": "sindri \u2014 primary (from config/agents.yaml)"
+    },
+    "kvasir": {
+      "mode": "primary",
+      "model": "qwen-9b/Qwen3.5-9B-Q8_0.gguf",
+      "description": "kvasir \u2014 primary (from config/agents.yaml)"
+    }
+  },
+  "skills": {
+    "paths": [
+      ".agents/skills"
+    ]
+  },
+  "mcp": {
+    "engram": {
+      "type": "local",
+      "command": [
+        "/home/craigema/.local/bin/engram-mcp",
+        "--db",
+        "/home/craigema/Documents/Ymir/memory/kaia.engram"
+      ],
+      "environment": {},
+      "enabled": true
+    },
+    "a2abridge": {
+      "type": "local",
+      "command": [
+        "/home/craigema/.a2abridge/bin/a2abridge",
+        "bridge"
+      ],
+      "environment": {
+        "A2A_DIRECTORY": "http://127.0.0.1:7777",
+        "A2A_ADVERTISE_HOST": "127.0.0.1"
+      },
+      "enabled": true
+    },
+    "wayofteams": {
+      "type": "remote",
+      "url": "{env:WOTEAMS_MCP_URL}"
+    },
+    "way-of-anchor-sse": {
+      "type": "remote",
+      "url": "http://localhost:42777/sse"
+    }
+  },
+  "provider": {
+    "llama.cpp": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "llama-server (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:8080/v1"
+      },
+      "models": {
+        "frontend-design-expert-8b@q4_k_m": {
+          "name": "frontend-design-expert-8b@q4_k_m"
+        }
+      }
+    },
+    "qwen-9b": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Qwen3.5-9B (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:8082/v1"
+      },
+      "models": {
+        "Qwen3.5-9B-Q8_0.gguf": {
+          "name": "Qwen3.5-9B-Q8_0.gguf"
+        }
+      }
+    },
+    "qwen3-coder-30b": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Qwen3-Coder-30B (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:8085/v1"
+      },
+      "models": {
+        "Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf": {
+          "name": "Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf"
+        }
+      }
+    },
+    "llama-server-local": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Qwen3.6-35B-A3B (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:8084/v1"
+      },
+      "models": {
+        "Qwen3.6-35B-A3B-UD-IQ3_S.gguf": {
+          "name": "Qwen3.6-35B-A3B-UD-IQ3_S.gguf"
+        }
+      }
+    },
+    "apodex": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "apodex-mini (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:1234/v1"
+      },
+      "models": {
+        "apodex-1.0-mini": {
+          "name": "apodex-1.0-mini (Q4_K_M)"
+        }
+      }
+    }
+  },
+  "lsp": false
+}

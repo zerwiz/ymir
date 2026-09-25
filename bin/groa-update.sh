@@ -20,11 +20,23 @@
 #   galdr-reread: yes|no                 (Galdr must refresh the owning assets)
 #   nudge-eindri-homes: <id> ...|none
 set -u
+# The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
+    [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yc
+fi
+if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
 
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 # The registry lives in the hoard (RULES/04-hoard.md; correction 2026-09-17).
 # Resolve through hoard-lib so the path can never drift again.
 if [ -r "$SCRIPT_DIR/hoard-lib.sh" ]; then

@@ -86,6 +86,11 @@ same day. That is deliberate: cron is idempotent-by-date, not retrying-by-failur
 operator's home (`<home>/state` and `<home>/config`) — the scheduler and the smoke
 read the same state.
 
+**No job carries its own home default (2026-09-24).** The scheduler and every job
+resolve the home through `bin/hoard-lib.sh`; `bin/defaults-guard.sh` refuses a private
+default, so a job cannot drift back to a path that is not this machine's. The ward also
+refuses a script that uses the home without resolving it.
+
 ---
 
 ## 2. The schedule is the user's — `$YMIR_HOME/config/cron.yaml`

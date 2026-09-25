@@ -27,7 +27,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 YMIR_HOME_ROOT=""
 if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root YMIR_HOME_ROOT 2>/dev/null; fi
-YMIR_HOME_ROOT="${YMIR_HOME_ROOT:-${YMIR_HOME:-$HOME/Documents/ymirhome}}"
+YMIR_HOME_ROOT="${YMIR_HOME_ROOT:-${YMIR_HOME}}"
 REGISTRY="${YMIR_FLEET_REGISTRY:-$YMIR_HOME_ROOT/hodd/data/fleet.json}"
 HOST="${YMIR_HOST:-$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')}"
 RAIL_PORT="${YMIR_RAIL_PORT:-8080}"

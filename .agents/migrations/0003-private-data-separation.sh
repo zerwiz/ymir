@@ -5,7 +5,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"
+YMIR_HOME="${YMIR_HOME:-$HOME/Documents/Ymir}"  # allow-home-default: this migration heals the OLD home name; naming it is the point
 
 echo "0003-private-data-separation"
 echo "  source:  $ROOT (repo)"

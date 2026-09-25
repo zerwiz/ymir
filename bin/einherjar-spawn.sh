@@ -39,6 +39,19 @@
 # Every spawn prints:
 #   spawned <id> harness=<h> kind=<kind> [mode=<m> yolo=<y>] backend=<b> target=<t> worktree=<wt> isolation=<on|off>
 set -eu
+# The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
+    [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yc
+fi
+if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
 
 # D1 (2026-09-24): a non-zero exit is never silent. Every failing command names
 # its line and text; the dispatcher that died twice at rc=1 with zero output
@@ -402,7 +415,12 @@ agent_yaml_local_providers() {  # -> the local_providers list from agents.yaml
   local y
   y=$(python3 - "$SCRIPT_DIR" <<'PY'
 import sys, os
-home = os.environ.get("YMIR_HOME") or os.path.expanduser("~/Documents/ymirhome")
+  home = os.environ.get("YMIR_HOME")
+  if not home:
+      _rec = os.path.join(os.path.expanduser("~"), ".config", "ymir", "home")
+      home = open(_rec).read().strip() if os.path.exists(_rec) else ""
+  if not home:
+      raise SystemExit("YMIR_HOME is unset and no home is recorded (Rule 07; bin/hoard-lib.sh)")
 cands = [
     os.environ.get("YMIR_AGENTS_YAML") or "",
     os.path.join(home, "config", "agents.yaml"),

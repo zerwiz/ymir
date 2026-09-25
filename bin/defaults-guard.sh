@@ -48,6 +48,10 @@ while IFS= read -r hit; do
   [ "$skip" = 1 ] && continue
   text="${rest#*:}"
   case "$text" in *allow-home-default:*) continue ;; esac
+  # A COMMENT is not a default. A runbook, a usage line or a header may quote a path;
+  # only something that executes can guess one.
+  trim="${text#"${text%%[![:space:]]*}"}"
+  case "$trim" in '#'*) continue ;; esac
   printf '  "a home guessed","%s","%s","%s"\n' "$rel" "$line" "$(printf '%s' "$text" | cut -c1-72)"
   findings=$((findings + 1))
 done < <(grep -rnE "$PAT" "${TARGETS[@]}" 2>/dev/null \
@@ -57,7 +61,36 @@ done < <(grep -rnE "$PAT" "${TARGETS[@]}" 2>/dev/null \
 
 if [ "$findings" -eq 0 ]; then
   printf '  "none","","","every path resolves through the one resolver"\n'
+fi
+
+# ── the second class: a script that USES the home and never RESOLVES it ───────
+# The literal rule above is structurally blind to this, and that blindness cost ten
+# scripts on 2026-09-24: converged to be free of any default, and left unable to run,
+# because a file can be entirely literal-free and still not know where anything is.
+# The resolver must actually be CALLED.
+printf '\ndefaults-guard[2]{finding,file,why}:\n'
+unresolved=0
+while IFS= read -r f; do
+  grep -qE '\$\{?YMIR_HOME' "$f" 2>/dev/null || continue
+  grep -q 'ymir_home_root' "$f" 2>/dev/null && continue
+  # A REAL assignment resolves it by hand and is allowed (the migrations set the old name
+  # on purpose). A SELF-assignment is a no-op from the literal pass and is not an answer.
+  if grep -qE '^[[:space:]]*(export[[:space:]]+)?YMIR_HOME=' "$f" 2>/dev/null \
+     && ! grep -qE '^[[:space:]]*(export[[:space:]]+)?YMIR_HOME="\$\{YMIR_HOME\}"[[:space:]]*$' "$f" 2>/dev/null; then
+    continue
+  fi
+  printf '  "uses the home, never resolves it","%s","call ymir_home_root (bin/hoard-lib.sh), or assign the home deliberately"\n' "${f#"$ROOT"/}"
+  unresolved=$((unresolved + 1))
+done < <(find "$ROOT/bin" "$ROOT/.agents" -type f \( -name '*.sh' -o -name '*.bash' \) \
+           -not -path '*/node_modules/*' -not -path '*/.git/*' 2>/dev/null | sort)
+
+if [ "$unresolved" -eq 0 ]; then
+  printf '  "none","",""\n'
+fi
+
+if [ "$findings" -eq 0 ] && [ "$unresolved" -eq 0 ]; then
   exit 0
 fi
-printf 'defaults-guard: %s finding(s)\nhelp: call the resolver (bin/hoard-lib.sh); never restate where things live\n' "$findings" >&2
+printf 'defaults-guard: %s default(s), %s unresolved\nhelp: call the resolver (bin/hoard-lib.sh); never restate where things live, and never use the home without resolving it\n' \
+  "$findings" "$unresolved" >&2
 exit 1

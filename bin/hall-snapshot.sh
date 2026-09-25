@@ -15,6 +15,19 @@
 #   default output: apps/odrerir/public/livehall.json
 #   (the Live Hall's own deck; the merged public site takes it from its build).
 set -u
+# The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
+    [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yc
+fi
+if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
 # npm install — both shapes, one resolver (bin/app-lib.sh).
@@ -50,8 +63,8 @@ hoard_data_dir YMIR_DATA_DIR
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 OUT="${1:-$APP_ODRERIR/public/livehall.json}"
 
-runes_file="${BROKK_RUNES_FILE:-${YMIR_HOME:-$HOME/Documents/ymirhome}/hodd/memory/runes_audit.md}"
-PROJECTS_FILE="${YMIR_HOME:-$HOME/Documents/ymirhome}/hodd/identity/projects.yaml"
+runes_file="${BROKK_RUNES_FILE:-${YMIR_HOME}/hodd/memory/runes_audit.md}"
+PROJECTS_FILE="${YMIR_HOME}/hodd/identity/projects.yaml"
 projects_file="$PROJECTS_FILE"
 cron_file="$YMIR_SETTINGS_DIR/cron.yaml"
 

@@ -7,6 +7,19 @@
 #        bin/mimir-bridge.sh --foreground  # stay in the foreground (a systemd unit
 #                                          # supervises this process directly — no self-daemon)
 set -u
+# The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
+    [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yc
+fi
+if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
 
 # --- portability shim: bin/ymir-platform.sh --------------------------------
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
@@ -32,7 +45,6 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 BRIDGE="$ROOT/bin/mimir-bridge.py"
 # The well is ONE memory and it lives in the hoard — always. An explicit
 # ENGRAM_DB is the operator's escape hatch; without it the hoard decides.
