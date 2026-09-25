@@ -15,7 +15,18 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+# The home comes from the ONE resolver (Rule 07: env → the recorded choice → the one
+# default in bin/hoard-lib.sh), never from a literal here. Carrying a private default
+# made the doctor inspect a home that did not exist and report the hoard broken on a
+# machine whose home is simply named differently.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/hoard-lib.sh" ]; then
+  . "$SCRIPT_DIR/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1
+fi
+if command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+else
+  YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+fi
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_HOME/state}"
 
 # The cloth: colour and marks for the human reading this report; the TOON rows on

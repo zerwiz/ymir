@@ -29,7 +29,13 @@ ok()    { check "$1" OK   "$2"; }
 bad()   { check "$1" FAIL "$2"; fail=1; }
 skip()  { check "$1" SKIP "$2"; }
 http_ok()   { curl -fsS -m "$TIMEOUT" "$1" >/dev/null 2>&1; }
-listening() { ss -ltn 2>/dev/null | grep -qE "[:.]$1([[:space:]]|$)"; }
+# Is something listening on a loopback port? `ss` is NOT in every install container
+# (this script must run where the services run), so a bash-builtin TCP connect is
+# tried first. Depending on `ss` alone reported a raised hall as SKIP.
+listening() {
+  (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null && return 0
+  ss -ltn 2>/dev/null | grep -qE "[:.]$1([[:space:]]|$)"
+}
 
 # Resolve the operator's home/state exactly as every shell tool does (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -42,43 +48,75 @@ STATE=""
 if command -v hoard_state_dir >/dev/null 2>&1; then hoard_state_dir STATE 2>/dev/null; fi
 STATE="${STATE:-${YMIR_STATE_DIR:-${YMIR_HOME:-$HOME/Documents/ymirhome}/state}}"
 
+# The ports belong to the INSTALL, not to this script. A containerised install
+# publishes 38888/38889/54370 (deploy/env.example), and hardcoding the dev seats'
+# 3888/3889/8437 reported FAIL on every service check of a healthy install. The
+# operator's env file is the same one the services take theirs from; let it win,
+# then fall back to the dev-seat defaults.
+_ENVF=""
+if command -v hoard_local_env >/dev/null 2>&1; then hoard_local_env _ENVF 2>/dev/null || true; fi
+if [ -n "${_ENVF:-}" ] && [ -r "$_ENVF" ]; then
+  set -a
+  # shellcheck disable=SC1090,SC1091
+  . "$_ENVF" 2>/dev/null || true
+  set +a
+fi
+SPA_PORT="${HLIDSKJALF_PORT:-3888}"
+API_PORT="${HLIDSKJALF_API_PORT:-3889}"
+VIZ_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
+VIZ_UI_PORT="${SMIDJA_VIZ_UI_PORT:-8438}"
+HALL_PORT="${ODRERIR_PORT:-4322}"
+WELL_URL="${MIMIRSBRUNN_URL:-http://127.0.0.1:4602}"
+BIFROST_PORT="${BIFROST_PORT:-4603}"
+MODEL_PORT="${MODEL_RAIL_PORT:-8080}"
+
 # ── services ─────────────────────────────────────────────────────────────────
 
 # 1. the SPA answers over HTTP, not merely that the port accepts
-if http_ok http://127.0.0.1:3888/; then ok spa "Hlidskjalf answers on :3888"
-else bad spa "no HTTP answer on :3888 — scripts/start.sh"; fi
+if http_ok "http://127.0.0.1:${SPA_PORT}/"; then ok spa "Hlidskjalf answers on :${SPA_PORT}"
+else bad spa "no HTTP answer on :${SPA_PORT} — scripts/start.sh"; fi
 
-# 2. the gate API
-if http_ok http://127.0.0.1:3889/api/health || http_ok http://127.0.0.1:3889/; then
-  ok api "gate API answers on :3889"
-else bad api "no answer on :3889 — scripts/start.sh"; fi
+# 2. the gate API. A GATED answer is an answer: with HLIDSKJALF_AUTH set the gate
+#    returns 401 to /api/health, and `curl -f` counted that as failure — so the check
+#    said "down" about a gate that was serving. Any HTTP status but 000 means up.
+_api_code="$(curl -s -m "$TIMEOUT" -o /dev/null -w '%{http_code}' "http://127.0.0.1:${API_PORT}/api/health" 2>/dev/null || echo 000)"
+[ "$_api_code" = "000" ] && _api_code="$(curl -s -m "$TIMEOUT" -o /dev/null -w '%{http_code}' "http://127.0.0.1:${API_PORT}/" 2>/dev/null || echo 000)"
+if [ "$_api_code" != "000" ]; then ok api "gate API answers on :${API_PORT} (HTTP $_api_code)"
+else bad api "no answer on :${API_PORT} — scripts/start.sh"; fi
 
 # 3. the well (Mimirsbrunn bridge)
-if http_ok http://127.0.0.1:4602/health; then ok well "well bridge answers on :4602"
-else bad well "well bridge not answering — bin/mimir-bridge.sh --start"; fi
+if http_ok "${WELL_URL}/health"; then ok well "well bridge answers at ${WELL_URL}"
+else bad well "well bridge not answering at ${WELL_URL} — bin/mimir-bridge.sh --start"; fi
 
 # 4. Bifrost (the model bridge) — optional: needs a provider key
-if listening 4603; then
-  _code="$(curl -s -m "$TIMEOUT" -o /dev/null -w '%{http_code}' http://127.0.0.1:4603/ 2>/dev/null || echo 000)"
-  if [ "$_code" != "000" ]; then ok bifrost "Bifrost answers on :4603 (HTTP $_code)"
-  else bad bifrost "listening on :4603 but does not answer"; fi
+if listening "$BIFROST_PORT"; then
+  _code="$(curl -s -m "$TIMEOUT" -o /dev/null -w '%{http_code}' "http://127.0.0.1:${BIFROST_PORT}/" 2>/dev/null || echo 000)"
+  if [ "$_code" != "000" ]; then ok bifrost "Bifrost answers on :${BIFROST_PORT} (HTTP $_code)"
+  else bad bifrost "listening on :${BIFROST_PORT} but does not answer"; fi
 else skip bifrost "not raised (optional; needs OPENCODE_GO_API_KEY)"; fi
 
 # 5. the Smiðja visualizer API and UI
-if listening 8437; then
-  if http_ok http://127.0.0.1:8437/api/health || http_ok http://127.0.0.1:8437/; then
-    ok smidja-api "visualizer API answers on :8437"
-  else bad smidja-api "visualizer listening on :8437 but does not answer"; fi
+if listening "$VIZ_PORT"; then
+  if http_ok "http://127.0.0.1:${VIZ_PORT}/api/health" || http_ok "http://127.0.0.1:${VIZ_PORT}/"; then
+    ok smidja-api "visualizer API answers on :${VIZ_PORT}"
+  else bad smidja-api "visualizer listening on :${VIZ_PORT} but does not answer"; fi
 else bad smidja-api "visualizer API not up — scripts/start.sh"; fi
-if listening 8438; then ok smidja-ui "visualizer UI listening on :8438"
+if listening "$VIZ_UI_PORT"; then ok smidja-ui "visualizer UI listening on :${VIZ_UI_PORT}"
 else skip smidja-ui "dev UI not raised (optional)"; fi
 
 # 6. Óðrerir, the live hall + ITS BOARDS through the Skuld MCP (2026-09-24,
 # the Allfather's word: test the tickets and plans through the MCP for real).
-if listening 4322; then
-  ok hall "Óðrerir hall listening on :4322"
+if listening "$HALL_PORT"; then
+  ok hall "Óðrerir hall listening on :${HALL_PORT}"
   if [ -r "$ROOT/bin/odrerir-mcp-smoke.sh" ]; then
-    if bash "$ROOT/bin/odrerir-mcp-smoke.sh" >/dev/null 2>&1; then
+    # The boards read ANOTHER seat's door. When that seat is not on the net, an
+    # unreachable door is a dependency that is not here, not a fault of this install.
+    # Distinguish "cannot reach" from "answered wrongly", and read the URL from the
+    # app's own default so no tailnet name is written down twice.
+    _skuld="${SKULD_URL:-$(sed -nE "s/.*'(http[^']+)'.*/\1/p" "$ROOT/apps/odrerir/src/skuld.ts" 2>/dev/null | head -1)}"
+    if [ -n "$_skuld" ] && ! curl -s -o /dev/null -m 4 "$_skuld" 2>/dev/null; then
+      skip boards "the Skuld door is not on this net ($_skuld); the boards read another seat"
+    elif bash "$ROOT/bin/odrerir-mcp-smoke.sh" >/dev/null 2>&1; then
       ok boards "the tickets + plans answer through the Skuld MCP (live, tailnet door)"
     else
       bad boards "the hall's book did not answer — bin/odrerir-mcp-smoke.sh names the wound (the Skuld door)"
@@ -91,8 +129,8 @@ else
 fi
 
 # 7. the model rail — optional; a seat may have no model resident
-if listening 8080; then ok models "model rail listening on :8080"
-else skip models "no model rail on :8080 (optional)"; fi
+if listening "$MODEL_PORT"; then ok models "model rail listening on :${MODEL_PORT}"
+else skip models "no model rail on :${MODEL_PORT} (optional)"; fi
 
 # ── runtime ──────────────────────────────────────────────────────────────────
 
@@ -103,6 +141,7 @@ if [ -r "$ROOT/bin/gleipnir-lock-lib.sh" ]; then
   _owner=""
   gleipnir_lock_owner _owner 2>/dev/null || true
   if [ -n "$_owner" ] && gleipnir_pid_alive "$_owner"; then
+    LOCK_LIVE=1
     ok lock "session lock held by live pid $_owner"
   elif [ -z "$_owner" ]; then
     skip lock "no session lock (no live session)"
@@ -161,6 +200,11 @@ fi
 if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
   if BROKK_STATE_OVERRIDE="$STATE" bash "$ROOT/bin/nornir-cron-start.sh" --status 2>/dev/null | grep -q 'running'; then
     ok cron "Nornir cron is running"
+  elif [ "${LOCK_LIVE:-0}" != 1 ]; then
+    # The scheduler is SESSION-scoped: it retires itself when no session lock is held
+    # ("cron retired - no live session lock"). In an install container no session is
+    # armed, so a stopped cron is correct behaviour rather than a fault.
+    skip cron "no live session lock; the scheduler stands down by design"
   else
     bad cron "Nornir cron is not running — bin/nornir-cron-start.sh"
   fi
