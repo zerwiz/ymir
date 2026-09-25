@@ -1,0 +1,18 @@
+name: The gates
+
+# One room, two doors. GitHub Actions and Forgejo Actions are two hosts for the SAME
+# command, bin/ci-verify.sh, so the checks have exactly one home and cannot drift between
+# hosts. If a host needs a different runner label, that is one line in one file and no
+# change to what is proved.
+on:
+  push:
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: The gates
+        run: bash bin/ci-verify.sh
