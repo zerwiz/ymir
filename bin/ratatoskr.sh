@@ -27,11 +27,13 @@ case "$ACTION" in
   status)
     printf 'ratatoskr[1]{engine,version}:\n  "%s","%s"\n' "$A2AB" "$("$A2AB" version 2>/dev/null | head -1)"
     printf 'directory[1]{url,state,agents}:\n'
-    body="$(curl -s --max-time 4 "$DIR_URL/" 2>/dev/null)"
+    # a2abridge 3.x: GET /agents -> a bare list of {url,lastSeen}.
+    body="$(curl -s --max-time 4 "$DIR_URL/agents" 2>/dev/null)"
     if [ -n "$body" ]; then
       printf '  "%s","up","%s"\n' "$DIR_URL" "$(printf '%s' "$body" | python3 -c 'import json,sys
 try:
-    d=json.load(sys.stdin); print(",".join(a.get("name","") for a in d.get("served_agents",[])) or "none")
+    ags=json.load(sys.stdin)
+    print(len(ags) if isinstance(ags,list) else "?")
 except Exception: print("?")' 2>/dev/null)"
     else
       printf '  "%s","down","none"\n' "$DIR_URL"
