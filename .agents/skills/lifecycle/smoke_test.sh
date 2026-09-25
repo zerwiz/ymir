@@ -294,8 +294,21 @@ if [ -n "${_ymh:-}" ] && [ -d "$_ymh" ]; then
   _lay="$_ymh/.ymir-layout.yaml"
   _badlay=""
   if [ -f "$_lay" ]; then
+    # A map path may name the SAME home under another root: a substrate container
+    # bind-mounts the home at its own prefix, and the map is written where the home
+    # lives. "Foreign" means another HOME, not another prefix, so a path that fails
+    # here is retried under this root before it is called a fault.
+    _maproot="$(sed -nE 's/^git_repo: "([^"]+)".*/\1/p' "$_lay" 2>/dev/null | head -1)"
     while IFS= read -r _p; do
-      [ -n "$_p" ] && [ ! -d "$_p" ] && _badlay="$_badlay $_p"
+      [ -n "$_p" ] || continue
+      [ -d "$_p" ] && continue
+      if [ -n "$_maproot" ] && [ "${_p#"$_maproot"}" != "$_p" ] \
+         && [ -d "$_ymh/${_p#"$_maproot"/}" ]; then continue; fi
+      case "$_p" in
+        /*) ;;
+        *) [ -d "$_ymh/$_p" ] && continue ;;
+      esac
+      _badlay="$_badlay $_p"
     done < <(sed -nE 's/^  [a-z_]+: "([^"]+)".*/\1/p' "$_lay")
   fi
   if [ -n "$_flat" ]; then bad hoard "flat duplicates beside hodd/:$_flat — bin/eir-doctor.sh fix"
