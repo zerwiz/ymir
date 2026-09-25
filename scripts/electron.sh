@@ -26,8 +26,9 @@ fi
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-# A fresh package install has no state/ yet — the door must stand it up.
-mkdir -p "$ROOT/state"
+# The state dir is the operator's home, not the tree (Rule 04): it is stood up
+# below, once hoard-lib has resolved it. Never mkdir "$ROOT/state" here — that is
+# the drift the plan's purity row names.
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
 # npm install — both shapes, one resolver (bin/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
@@ -81,8 +82,8 @@ while [ $# -gt 0 ]; do case "$1" in
   *) shift ;;
 esac; done
 
-pid_file() { case "$1" in smidja) printf '%s/state/electron-smidja.pid' "$ROOT" ;; odrerir) printf '%s/state/electron-odrerir.pid' "$ROOT" ;; *) printf '%s/state/electron.pid' "$ROOT" ;; esac; }
-log_file() { case "$1" in smidja) printf '%s/state/electron-smidja.log' "$ROOT" ;; odrerir) printf '%s/state/electron-odrerir.log' "$ROOT" ;; *) printf '%s/state/electron.log' "$ROOT" ;; esac; }
+pid_file() { case "$1" in smidja) printf '%s/electron-smidja.pid' "$YMIR_STATE_DIR" ;; odrerir) printf '%s/electron-odrerir.pid' "$YMIR_STATE_DIR" ;; *) printf '%s/electron.pid' "$YMIR_STATE_DIR" ;; esac; }
+log_file() { case "$1" in smidja) printf '%s/electron-smidja.log' "$YMIR_STATE_DIR" ;; odrerir) printf '%s/electron-odrerir.log' "$YMIR_STATE_DIR" ;; *) printf '%s/electron.log' "$YMIR_STATE_DIR" ;; esac; }
 
 # The `.bin/electron` shim is a node script that SPAWNS the real Electron, so its
 # pid (`$!`) is not the app. Track Electron by its own command line instead — the
@@ -193,6 +194,14 @@ electron_install_root() {  # <app-dir> → the dir whose package.json owns the d
   if electron_is_workspace_member "$1" "$ROOT"; then printf '%s' "$ROOT"; else printf '%s' "$1"; fi
 }
 
+# ONE printer for app_dir, defined BEFORE every runtime check that calls it. The
+# app-lib function of the same name takes an out-parameter (`app_dir <name> <var>`)
+# and prints NOTHING, so `$(app_dir hlidskjalf)` was empty: electron_bin was handed
+# an empty app dir, refused, and the mend declared a present runtime unmendable.
+# The shell could therefore never open while every check said healthy (2026-09-25).
+# This definition must stay ABOVE the first caller, never below it.
+app_dir() { case "$1" in odrerir) printf '%s' "${Odrerir_app:-}" ;; *) printf '%s' "$APP" ;; esac; }
+
 if ! electron_bin "$(app_dir hlidskjalf)" "$ROOT" hlidskjalf >/dev/null 2>&1 \
    && [ ! -x "$ROOT/node_modules/.bin/electron" ] && [ ! -x "$APP/node_modules/.bin/electron" ]; then
   if [ "$NO_INSTALL" = 1 ]; then
@@ -239,22 +248,28 @@ if ! ensure_electron_binary; then
   # tier 1 — the deps themselves may be ungated (npm's policy skips dev-deps):
   # the npm package's apps arrive without node_modules at all
   ( cd "$(electron_install_root "$APP")" && npm install --include=dev >/dev/null 2>&1 ) || true
-  command -v electron_fetch_runtime >/dev/null 2>&1 && electron_fetch_runtime "$APP" "$ROOT" "$mend_pkg" || true
-  # Try the mending ourselves before telling the user to do it by hand: npm's
-  # gating is the cause, and the cure is one command we can run.
-  echo "the Electron runtime is partial — mending it (npm rebuild electron)…" >&2
+  echo "the Electron runtime is missing or partial — mending it…" >&2
+  # tier 2 — npm's own roads: approve, rebuild, then the package's downloader.
+  # They run FIRST, because any of them can empty dist/ when the gated download
+  # fails: a runtime placed before them does not survive.
   repair_electron "$(electron_install_root "$APP")" >/dev/null 2>&1 || true
-  # tier 3 — the postinstall's own downloader, then the PROVEN zip road
   _edir="$(electron_pkg_dir "$APP" "$ROOT" "$mend_pkg" 2>/dev/null || true)"
   [ -n "$_edir" ] && [ -f "$_edir/install.js" ] && ( cd "$_edir" && node install.js >/dev/null 2>&1 ) || true
-  command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$APP" "$ROOT" "$mend_pkg" || true
+  # tier 3 — THE PROVEN ZIP ROAD, LAST AND AS THE LAST WORD. Fetching the release
+  # zip is npm-independent and lands the runtime every time, so it must not be
+  # undone by a later `npm rebuild electron`. The 2026-09-25 defect: the mend ran
+  # the fetch (2026-09-23 road), then the rebuild clobbered it, and the launcher
+  # refused a runtime the zip road had already placed. Only the final verify judges.
+  if ! ensure_electron_binary; then
+    command -v electron_fetch_runtime >/dev/null 2>&1 && electron_fetch_runtime "$APP" "$ROOT" "$mend_pkg" || true
+    ensure_electron_binary || { command -v fetch_electron_zip >/dev/null 2>&1 && fetch_electron_zip "$APP" "$ROOT" "$mend_pkg" || true; }
+  fi
   ensure_electron_binary || {
     printf 'error: the Electron runtime could not be mended\nhelp: cd <the app> && npm install-scripts approve electron && npm rebuild electron\nhelp: or run the web surfaces only: ymir install --no-desktop\n' >&2
     exit 1
   }
 fi
 
-app_dir() { case "$1" in odrerir) printf '%s' "$Odrerir_app" ;; *) printf '%s' "$APP" ;; esac; }
 view_host() { case "$1" in smidja) printf '%s' 'http://127.0.0.1:8437/' ;; odrerir) printf '%s' 'http://127.0.0.1:4322/' ;; *) printf '%s' 'http://127.0.0.1:3888/' ;; esac; }
 
 service_up() { curl -s -o /dev/null --max-time 3 "$1" 2>/dev/null; }

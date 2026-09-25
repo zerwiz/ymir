@@ -184,14 +184,20 @@ VIZ_API_PID_FILE="$RUN/smidja-viz-api.pid"
 VIZ_UI_PID_FILE="$RUN/smidja-viz-ui.pid"
 SMIDJA_DB_PATH="${SMIDJA_DB:-}"
 # The smithy DB follows the HOME: 0003-private-data-separation moved it to
-# $YMIR_HOME/smidja/smidja.db. Prefer an existing DB there, then an in-repo copy
-# for a checkout that keeps its own; SMIDJA_DB overrides either.
+# <home>/smidja/smidja.db. Resolve that home through the ONE resolver (Rule 07),
+# never a literal. The old fallback named $HOME/Documents/ymirhome, a home that
+# does not exist on this machine, so the visualizer was handed a path it could
+# never find and exited at once — and the Electron Smidja window then showed
+# ERR_CONNECTION_REFUSED on an empty page, which is what the Allfather saw
+# (2026-09-25). SMIDJA_DB overrides either candidate.
 if [ -z "$SMIDJA_DB_PATH" ]; then
-  for _db in "${YMIR_HOME:-$HOME/Documents/ymirhome}/smidja/smidja.db" \
+  _smidja_home=""
+  command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _smidja_home 2>/dev/null || true
+  for _db in "${_smidja_home:+$_smidja_home/smidja/smidja.db}" \
              "$ROOT/apps/smidja/smidja_data/smidja.db"; do
-    [ -f "$_db" ] && { SMIDJA_DB_PATH="$_db"; break; }
+    [ -n "$_db" ] && [ -f "$_db" ] && { SMIDJA_DB_PATH="$_db"; break; }
   done
-  SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-${YMIR_HOME:-$HOME/Documents/ymirhome}/smidja/smidja.db}"
+  [ -n "$SMIDJA_DB_PATH" ] || printf 'start: the smithy DB was not found — set SMIDJA_DB, or expect the visualizer to refuse\n' >&2
 fi
 if command -v bun >/dev/null 2>&1 && [ -d "$VIZ_DIR" ]; then
   [ -d "$VIZ_DIR/node_modules" ] || (cd "$VIZ_DIR" && bun install >/dev/null 2>&1 || true)

@@ -25,7 +25,13 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   unset _c
 fi
 hoard_state_dir _HS 2>/dev/null
-STATE="${BROKK_STATE_OVERRIDE:-${_HS:-$ROOT/state}}"
+# Resolve-or-refuse. The code tree's state/ is never a fallback (Rule 04; the
+# plan's purity row is exactly this drift). The home resolves first, always.
+STATE="${BROKK_STATE_OVERRIDE:-${_HS:-}}"
+if [ -z "$STATE" ]; then
+  printf 'error: the state dir did not resolve\nhelp: source bin/hoard-lib.sh (it resolves the home), or set BROKK_STATE_OVERRIDE\n' >&2
+  exit 1
+fi
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;

@@ -40,7 +40,14 @@ fi
 if command -v hoard_state_dir >/dev/null 2>&1; then
   hoard_state_dir YMIR_STATE_DIR
 fi
-STATE="${BROKK_STATE_OVERRIDE:-${YMIR_STATE_DIR:-$ROOT/state}}"
+# Resolve-or-refuse. The code tree's state/ is never a fallback: that fallback IS
+# the drift the plan's purity row exists to catch, and the operator's runtime state
+# (logs, locks, pids) belongs in the home they chose, or the next upgrade erases it.
+STATE="${BROKK_STATE_OVERRIDE:-${YMIR_STATE_DIR:-}}"
+if [ -z "$STATE" ]; then
+  printf 'error: the state dir did not resolve\nhelp: source bin/hoard-lib.sh (it resolves the home), or set BROKK_STATE_OVERRIDE\n' >&2
+  exit 1
+fi
 
 # Thresholds resolve from config with one documented default (Rule 07).
 THRESHOLD="${LOOP_REPEAT_N:-3}"

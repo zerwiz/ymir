@@ -172,6 +172,33 @@ which engine, how to reach it, how to point a harness at it, and how to measure
 it. Keep the service's own scripts, registry and configuration on the machine —
 outside every repository — and keep only the framework here.
 
+**The install now stands the local model up (plan 57).** `bin/ymir-install.sh`'s
+`local-model` step is generic and adopt-first — it never rebuilds what stands and
+never bakes this box into the logic:
+
+```
+bin/llama-ensure.sh ensure     # ADOPT a standing CUDA llama-server (proves CUDA0);
+                               # build with GGML_CUDA=ON only when none exists.
+bin/model-fit.sh               # the largest model that fits the PROBED
+                               # GPU/VRAM/RAM/disk (never a baked figure).
+bin/model-fetch.sh <id> --consent   # resumable, checksummed, into the hoard models dir.
+bin/pi-model-wire.sh --provider P --model ID --base-url URL
+                               # ~/.pi/agent/models.json (exact served id + key
+                               # reference) + a one-shot `pi -p --model P/ID` proof.
+bin/model-register.sh --provider P --model ID --base-url URL
+                               # the SAME model into the hoard config/agents.<host>.yaml
+                               # overlay — one model road for Ymir and Smíðja.
+bin/model-tune.sh --model-id ID   # drive this skill's bench-one/bench-ctx and
+                                  # REPLACE the data/local-models.md placeholder.
+```
+
+When a local rail already serves models, **nothing is downloaded**: the
+operator's registered model is adopted. Loud refusals throughout (no CUDA,
+unknown hardware, no disk, bad checksum) — never a silent skip. Hardware probing
+is synthetic-profile-testable: `bin/model-fit.sh --profile FILE` takes a
+`{gpu, vram_mb, ram_mb, disk_gb}` file so two machines can be proven to choose
+two different models with the tree untouched.
+
 ## 8. Upstream documentation — the authoritative addresses
 
 Verified **2026-09-12**. These are the *sources of truth*; galdr reads them
