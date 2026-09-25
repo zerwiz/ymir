@@ -1,0 +1,61 @@
+# config/model-catalog.yaml.example — a MENU of public model artifacts, not a
+# choice. bin/model-fit.sh reads the operator's hoard copy
+# ($YMIR_HOME/config/model-catalog.yaml) and picks the largest candidate that
+# fits the hardware PROBED AT RUN TIME. Nothing here is pinned: the selection is
+# the machine's, so two operators get two models with this tree untouched.
+#
+# Fields per candidate:
+#   id          — a stable label (also the gguf file stem)
+#   params_b    — parameter count in billions (for ordering/reason)
+#   quant       — the GGUF quantisation
+#   size_gb     — the file size on disk
+#   min_vram_mb — VRAM the candidate needs to run usefully on the GPU
+#   context     — native context (tokens)
+#   url         — direct download URL
+#   sha256      — the file's checksum; model-fetch refuses an unset hash loudly
+#   note        — a short, honest description
+#
+# Leave sha256 empty only while drafting; a real install requires it.
+
+version: 1
+
+candidates:
+  - id: small-4b
+    params_b: 4
+    quant: q4_k_m
+    size_gb: 2.6
+    min_vram_mb: 4500
+    context: 32768
+    url: ""
+    sha256: ""
+    note: a small, fast general model for modest GPUs.
+
+  - id: mid-9b
+    params_b: 9
+    quant: q4_k_m
+    size_gb: 5.5
+    min_vram_mb: 8000
+    context: 131072
+    url: ""
+    sha256: ""
+    note: a mid-size general model for 8-12 GB GPUs.
+
+  - id: large-moe-35b
+    params_b: 35
+    quant: q4_k_xl
+    size_gb: 20.0
+    min_vram_mb: 12000
+    context: 131072
+    url: ""
+    sha256: ""
+    note: a sparse MoE; runs on a 16 GB GPU with --n-cpu-moe offload.
+
+  - id: xl-70b
+    params_b: 70
+    quant: q4_k_m
+    size_gb: 40.0
+    min_vram_mb: 40000
+    context: 32768
+    url: ""
+    sha256: ""
+    note: a large dense model for 48 GB+ of VRAM.
