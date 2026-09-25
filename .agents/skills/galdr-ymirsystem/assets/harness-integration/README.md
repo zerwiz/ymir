@@ -526,6 +526,19 @@ The engine needs the `mcp<2` SDK for `engram-mcp` (v2 renamed `FastMCP` to
 `MCPServer`, which breaks engram 1.x/2.x):
 `python3 -m pip install --user --break-system-packages 'mcp<2'`.
 
+**The binary must actually carry the SDK (2026-09-25).** A hand-installed
+`~/.local/bin/engram-mcp` shim can point at a CPython without `mcp`
+(`ModuleNotFoundError: No module named 'mcp'`), so a harness wired to it is dead
+on arrival — the entry connects and immediately closes. `bin/a2a-mcp.sh` now
+resolves a **working** binary in order — `$ENGRAM_BIN`, then the well venv's
+`~/.fleet/well-venv/bin/engram-mcp` (built by `bin/fleet-ensure.sh`), then
+`command -v engram-mcp` — testing each candidate's shebang interpreter for
+`import mcp`; it never wires a path it has not proven. When wiring the
+operator's seat (not `--project`) it also merges the mesh and well servers into
+OpenCode's **global** config (`~/.config/opencode/opencode.json`), because
+OpenCode reads `opencode.json` per checkout and a worker seated in a Yggdrasil
+worktree would otherwise lose the mesh and the well.
+
 Rule: **drink before you act, water it after** — recall on the way in, and
 `POST /observe` (or the `remember` MCP tool) after a lesson lands.
 

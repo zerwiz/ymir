@@ -130,9 +130,9 @@
     "engram": {
       "type": "local",
       "command": [
-        "__YMIR_HOME__/.local/bin/engram-mcp",
+        "__YMIR_HOME__/.fleet/well-venv/bin/engram-mcp",
         "--db",
-        "__YMIR_ROOT__/.agents/memory/kaia.engram"
+        "__YMIR_HOME__/hodd/memory/kaia.engram"
       ],
       "enabled": true
     }
