@@ -80,9 +80,13 @@ for unit in "$ROOT"/tools/*/systemd/*.service; do
       fi ;;
   esac
 
-  # Rule B — a oneshot whose body holds a foreground loop (a contradicting contract).
+  # Rule B — a oneshot whose body holds a FOREGROUND loop (a contradicting
+  # contract). A launcher that detaches the loop (setsid/nohup/disown) is a
+  # oneshot by design — nornir's scheduler runs inside a detached `setsid`, so
+  # its unit is correct; only a loop the unit itself must stay for is a fault.
   if [ "$type" = oneshot ] && [ -n "$script" ] && \
-     grep -qE '^[[:space:]]*while[[:space:]]+(:|\$\{?true\}?|true|1)([[:space:]]|;)' "$script" 2>/dev/null; then
+     grep -qE '^[[:space:]]*while[[:space:]]+(:|\$\{?true\}?|true|1)([[:space:]]|;)' "$script" 2>/dev/null && \
+     ! grep -qE '(^|[[:space:]])(setsid|nohup|disown)([[:space:]]|$)' "$script" 2>/dev/null; then
     add "$name" "oneshot-loop" "$(basename -- "$script") holds a foreground loop under Type=oneshot"
   fi
 
