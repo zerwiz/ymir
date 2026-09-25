@@ -63,7 +63,7 @@ command -v herdr >/dev/null 2>&1 || { printf 'error: herdr not on PATH\n' >&2; e
 if [ -z "$MODEL" ] && [ -x "$SCRIPT_DIR/agents-config.sh" ]; then
   MODEL="$("$SCRIPT_DIR/agents-config.sh" get "$FIGURE" model 2>/dev/null)"
 fi
-[ -n "$MODEL" ] || MODEL="llama-swap/qwen3.6-35b-a3b@q2_k_xl"
+[ -n "$MODEL" ] || { printf 'error: no model resolved — pass --model M or set config/agents.yaml in the hoard\n'; exit 2; }
 HARNESS="pi"
 [ -x "$SCRIPT_DIR/agents-config.sh" ] && HARNESS="$("$SCRIPT_DIR/agents-config.sh" get "$FIGURE" harness 2>/dev/null || printf 'pi')"
 
