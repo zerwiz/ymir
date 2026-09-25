@@ -32,7 +32,8 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
 fi
-hoard_state_dir STATE 2>/dev/null || STATE="${BROKK_STATE_OVERRIDE:-$ROOT/state}"
+hoard_state_dir STATE 2>/dev/null || STATE="${BROKK_STATE_OVERRIDE:-}"
+[ -n "$STATE" ] || { printf 'error: the state dir did not resolve\nhelp: source bin/hoard-lib.sh (it resolves the home), or set BROKK_STATE_OVERRIDE\n' >&2; exit 1; }
 hoard_root HOME_DIR 2>/dev/null || HOME_DIR="$ROOT"
 
 case "${1-}" in
