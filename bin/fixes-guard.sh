@@ -37,11 +37,15 @@ case "${1-}" in
     cat >"$H" <<EOF
 #!/usr/bin/env bash
 # pre-push — the delivery gate. Installed by bin/fixes-guard.sh --install.
-#   1. branch-guard — never push a protected branch
-#   2. fixes-guard  — every push carries a fix note for what it changed (read-only)
+#   1. guards       — the TREE wards: the tree is not a runtime, and one place knows where
+#                     things live. First, because it is fast and a dirty tree should fail
+#                     before anything else is argued about.
+#   2. branch-guard — never push a protected branch.
+#   3. fixes-guard  — every push carries a fix note for what it changed.
 set -u
 refs="\$(mktemp)"; trap 'rm -f "\$refs"' EXIT
 cat >"\$refs"
+"$ROOT/bin/guards.sh" || exit 1
 "$ROOT/bin/branch-guard.sh" <"\$refs" || exit 1
 "$ROOT/bin/fixes-guard.sh" <"\$refs" || exit 1
 EOF

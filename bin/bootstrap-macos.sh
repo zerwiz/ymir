@@ -32,7 +32,7 @@ VM="ymir"; CHECK=0; REPO=""
 # distro's ONE default (`Documents/ymirhome`, owned by bin/hoard-lib.sh) — a
 # guest path, so it stays absolute with the guest user as its variable.
 VM_USER="${YMIR_VM_USER:-ubuntu}"
-VM_HOME="${YMIR_HOME:-/home/${VM_USER}/Documents/ymirhome}"
+  VM_HOME="${YMIR_HOME:-/home/${VM_USER}/Documents/ymirhome}"  # allow-home-default: the guest has no recorded choice yet; this bootstrap seeds it
 
 while [ $# -gt 0 ]; do
   case "$1" in
