@@ -610,6 +610,14 @@ writers[2]{writer,owns}:
   "bin/agents-config.sh apply","the ROSTER — providers and per-agent models, from config/agents.yaml"
 ```
 
+**A worktree gets the same file by link (2026-09-25).** OpenCode is
+project-scoped, so a Yggdrasil worktree — which has no untracked
+`opencode.json` — lost its providers, its per-agent models and its MCP servers
+(reproduced: `llama.cpp`/`llama-swap`/`apodex` vanished). `bin/valknut-load.sh`
+now points every `.yggdrasil/*/` at the one config with a **relative symlink**
+(`opencode.json -> ../../opencode.json`) — one author, no copies to drift, and
+`.yggdrasil/` is gitignored so nothing is ever tracked.
+
 **Both merge; neither overwrites.** The loader's `config_out` adds missing keys (
 deep, `setdefault`-style), ensures `skills.paths`, and re-asserts nothing else;
 `agents-config` does the same for providers and models — and it writes **only
