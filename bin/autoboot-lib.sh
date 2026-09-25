@@ -44,7 +44,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 AUTOBOOT_HOME_ROOT=""
 if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root AUTOBOOT_HOME_ROOT 2>/dev/null; fi
-AUTOBOOT_HOME_ROOT="${AUTOBOOT_HOME_ROOT:-${YMIR_HOME:-$HOME/Documents/ymirhome}}"
+AUTOBOOT_HOME_ROOT="${AUTOBOOT_HOME_ROOT:-${YMIR_HOME}}"
 AUTOBOOT_FLEET_REGISTRY="${YMIR_FLEET_REGISTRY:-$AUTOBOOT_HOME_ROOT/hodd/data/fleet.json}"
 AUTOBOOT_HOST="${YMIR_HOST:-$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')}"
 AUTOBOOT_STATE_DIR="${BROKK_STATE_OVERRIDE:-}"

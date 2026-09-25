@@ -95,12 +95,13 @@ python3 -m pip install --user --break-system-packages 'mcp<2'
 ## 4. Laws
 
 ```
-well_laws[5]{id,law}:
+well_laws[6]{id,law}:
   1,"No mock data — the well holds only true observations; test writes are purged"
   2,"Drink before you act — recall on the way in; never answer the Allfather dry"
   3,"Water it after — observe a lesson once it lands"
   4,"Hoarded — the store is $YMIR_HOME/hodd/memory/kaia.engram (one well, never a duplicated migrated copy)"
   5,"One well — every harness shares it; scope per-call, never per-server"
+  6,"One resolver — the bridge resolves the home through bin/hoard-lib.sh; a private default is refused by bin/defaults-guard.sh (2026-09-24)"
 ```
 
 Words that *discuss* mock data (docs about removing mocks) are real knowledge

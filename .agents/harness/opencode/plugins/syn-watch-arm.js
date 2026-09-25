@@ -105,7 +105,11 @@ function ymirStateDir() {
       // no recorded choice — fall back to the documented default
     }
   }
-  if (!home) home = `${process.env.HOME || ""}/Documents/ymirhome`;
+    if (!home) {
+      // No environment and no recorded choice: refuse rather than guess. A guessed home
+      // is how this whole class of bug began (Rule 07).
+      throw new Error("cannot resolve the home: set YMIR_HOME, or record it (bin/hoard-lib.sh)");
+    }
   return `${home}/state`;
 }
 
