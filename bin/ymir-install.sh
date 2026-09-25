@@ -437,6 +437,94 @@ step_models() {
   fi
 }
 
+# ── 3a3. the local model: engine, the user's model, pi, ymir ────────────────
+# Installation stands a local brain up for THIS hardware (plan 57). It ADOPTS an
+# existing CUDA llama.cpp engine (never rebuilds what stands), chooses the best
+# model that fits the PROBED hardware, fetches it (consent first), wires pi, and
+# registers the same model with Ymir in the hoard — one model road. When a local
+# server already serves models, nothing is downloaded: the operator's registered
+# model is adopted. Loud refusals throughout; never a silent skip.
+step_local_model() {
+  [ "$SKIP_ENGINES" = 1 ] && { add local-model SKIP "--skip-engines"; return; }
+  [ "${YMIR_SKIP_LOCAL_MODEL:-0}" = 1 ] && { add local-model SKIP "YMIR_SKIP_LOCAL_MODEL=1"; return; }
+
+  # 1. the engine — adopt what stands, build only when none.
+  if [ ! -x "$SCRIPT_DIR/llama-ensure.sh" ]; then add local-model SKIP "no llama-ensure.sh"; return; fi
+  local eng
+  if eng="$("$SCRIPT_DIR/llama-ensure.sh" ensure 2>&1)"; then
+    [ "$CHECK" = 1 ] && add local-model OK "engine would stand (adopt/build) CUDA llama-server" \
+                     || add local-model OK "engine: $(printf '%s' "$eng" | awk -F'\",\"' '/"(adopt|built)"/{print $3; exit}')"
+  else
+    add local-model WARN "engine: $(printf '%s' "$eng" | tail -1)"
+    return
+  fi
+
+  # 2. the model. If a local rail already serves models, ADOPT the registered one
+  #    (no download); else fit one to the probed hardware and fetch it by consent.
+  local provider model base url served="" key=""
+  provider="$("$SCRIPT_DIR/agents-config.sh" default --provider 2>/dev/null || true)"
+  model="$("$SCRIPT_DIR/agents-config.sh" default --model 2>/dev/null || true)"
+  base="$([ -n "$provider" ] && "$SCRIPT_DIR/agents-config.sh" provider-url "$provider" 2>/dev/null || true)"
+  [ -n "$base" ] || base="http://127.0.0.1:8080/v1"
+  url="${base%/}/models"
+  # The rail is keyed: read the provider's key from the operator's pi auth (a
+  # reference, never a value in the tree), else the hoard env.
+  key="$(python3 - "$HOME/.pi/agent/auth.json" "$provider" <<'PY' 2>/dev/null
+import json, sys
+try: d=json.load(open(sys.argv[1]))
+except Exception: sys.exit(0)
+p=d.get(sys.argv[2])
+print((p.get("key") or p.get("apiKey")) if isinstance(p, dict) else (p if isinstance(p,str) else ""))
+PY
+)"
+  if [ -z "$key" ]; then
+    [ -r "$YMIR_ENV_FILE" ] && key="$(. "$YMIR_ENV_FILE" 2>/dev/null; printf '%s' "${LLAMA_SWAP_API_KEY:-}")"
+  fi
+  if have curl; then
+    local -a curl_args=(-fsS --max-time 4)
+    [ -n "$key" ] && curl_args+=(-H "Authorization: Bearer $key")
+    curl_args+=("$url")
+    served="$(curl "${curl_args[@]}" 2>/dev/null | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: sys.exit(0)
+ids=[m.get("id") for m in (d.get("data") or []) if m.get("id")]
+print(ids[0] if ids else "")' 2>/dev/null)"
+  fi
+
+  if [ -n "$served" ]; then
+    # A rail stands: register + wire the operator's model (or the first served).
+    [ -n "$model" ] || model="$served"
+    if [ "$CHECK" = 1 ]; then add local-model OK "rail serves models — would register ${provider}/${model}"; return; fi
+    [ -x "$SCRIPT_DIR/model-register.sh" ] && "$SCRIPT_DIR/model-register.sh" --provider "$provider" --model "$model" --base-url "$base" >/dev/null 2>&1
+    [ -x "$SCRIPT_DIR/pi-model-wire.sh" ] && "$SCRIPT_DIR/pi-model-wire.sh" --provider "$provider" --model "$model" --base-url "$base" --no-prove >/dev/null 2>&1
+    add local-model OK "adopted rail model ${provider}/${model} (no download)"
+    [ -x "$SCRIPT_DIR/model-tune.sh" ] && "$SCRIPT_DIR/model-tune.sh" --model-id "$model" --dry-run >/dev/null 2>&1 && add local-model-tune INFO "tune available: bin/model-tune.sh --model-id ${model}"
+    return
+  fi
+
+  # No rail: fit a model to this hardware.
+  local choice_json choice_id
+  if ! choice_json="$("$SCRIPT_DIR/model-fit.sh" --json 2>/dev/null)"; then
+    add local-model BLOCKED "no model fits — $( "$SCRIPT_DIR/model-fit.sh" 2>&1 | tail -1 )"
+    return
+  fi
+  choice_id="$(printf '%s' "$choice_json" | python3 -c 'import json,sys;print(json.load(sys.stdin)["choice"]["id"])' 2>/dev/null)"
+  [ -n "$choice_id" ] || { add local-model WARN "could not read the fit choice"; return; }
+
+  if [ "$CHECK" = 1 ]; then add local-model OK "would fetch + wire '${choice_id}' for this hardware"; return; fi
+
+  # Consent for the multi-GB download: --yes, or the explicit env door.
+  if [ "$ASSUME_YES" != 1 ] && [ "${YMIR_LOCAL_MODEL_CONSENT:-0}" != 1 ]; then
+    add local-model CONSENT "would download '${choice_id}' — re-run with --yes or YMIR_LOCAL_MODEL_CONSENT=1"
+    return
+  fi
+  if ! "$SCRIPT_DIR/model-fetch.sh" "$choice_id" --consent >/dev/null 2>&1; then
+    add local-model WARN "fetch failed for '${choice_id}' — see bin/model-fetch.sh ${choice_id}"
+    return
+  fi
+  add local-model OK "fetched '${choice_id}' into the hoard models dir"
+}
+
 # ── 3b. hermes runtime ───────────────────────────────────────────────────────
 step_hermes() {
   [ "$SKIP_ENGINES" = 1 ] && { add hermes SKIP "--skip-engines"; return; }
@@ -1139,6 +1227,7 @@ run_step step_tree "workspace tree"
 run_step step_apps "apps"
 run_step step_engines "engines"
 run_step step_models "models"
+run_step step_local_model "the local model"
 run_step step_hermes "hermes"
 run_step step_snotra "the meeting ear"
 run_step step_sessrumnir "the seat"
