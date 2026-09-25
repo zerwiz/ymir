@@ -87,6 +87,14 @@ Plus `hoard_local_env` → `$YMIR_HOME/.env.local`: the operator's **credentials
 resolves it through `bin/hoard-lib.sh`. `--check` never writes; `--yes` takes what
 is recorded, else the documented default.
 
+**No script carries its own default (2026-09-24).** Every governed script that needs
+the home calls `ymir_home_root`; none restates a path. Hand-converging this once already
+failed — nine scripts were fixed and a tenth was found a week later only by reading — so
+the rule is now a **lock**: `bin/defaults-guard.sh` refuses a home default anywhere outside
+`bin/hoard-lib.sh`, and a waiver must be written on the line it applies to. The same ward
+also refuses a script that *uses* the home without resolving it, which is the class the
+first pass missed: a file can be free of literals and still be unable to find anything.
+
 ```bash
 bin/hoard-lib.sh                     # the lib (source-safe; functions only)
 ymir_home_root   HOME                # → the home

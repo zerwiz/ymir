@@ -42,7 +42,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 YMIR_HOME_ROOT=""
 if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root YMIR_HOME_ROOT 2>/dev/null; fi
-YMIR_HOME_ROOT="${YMIR_HOME_ROOT:-${YMIR_HOME:-$HOME/Documents/ymirhome}}"
+YMIR_HOME_ROOT="${YMIR_HOME_ROOT:-${YMIR_HOME}}"
 STATE=""
 if command -v hoard_state_dir >/dev/null 2>&1; then hoard_state_dir STATE 2>/dev/null; fi
 STATE="${STATE:-${YMIR_STATE_DIR:-$YMIR_HOME_ROOT/state}}"

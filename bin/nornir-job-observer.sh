@@ -20,6 +20,19 @@
 # Environment:
 #   BROKK_YGGDRASIL_ROOT  external worktree root to observe (default ~/.treehouse)
 set -u
+# The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
+    [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yc
+fi
+if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
@@ -29,10 +42,10 @@ STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 . "$SCRIPT_DIR/runes-append.sh"
 
 WORKTREE_ROOT="${BROKK_YGGDRASIL_ROOT:-$HOME/.treehouse}"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+YMIR_HOME="${YMIR_HOME}"
 SMIDJA_DB="${YMIR_HOME:+$YMIR_HOME/smidja/smidja.db}"
 [ -z "${SMIDJA_DB:-}" ] || [ ! -f "$SMIDJA_DB" ] && SMIDJA_DB="$ROOT/apps/smidja/smidja_data/smidja.db"
-MASTERPLAN="${BROKK_MASTERPLAN:-${YMIR_HOME:-$HOME/Documents/ymirhome}/hodd/docs/masterplan.md}"
+MASTERPLAN="${BROKK_MASTERPLAN:-${YMIR_HOME}/hodd/docs/masterplan.md}"
 WELL_DIR="${BROKK_WELL_DIR:-${YMIR_HOME:+$YMIR_HOME/hodd/memory/well}}"
 [ -n "$WELL_DIR" ] && [ -d "$WELL_DIR" ] || WELL_DIR="$ROOT/.agents/memory/well"
 AGENTS_DIR="$ROOT/.agents/agents"

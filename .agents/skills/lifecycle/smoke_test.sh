@@ -46,7 +46,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 STATE=""
 if command -v hoard_state_dir >/dev/null 2>&1; then hoard_state_dir STATE 2>/dev/null; fi
-STATE="${STATE:-${YMIR_STATE_DIR:-${YMIR_HOME:-$HOME/Documents/ymirhome}/state}}"
+STATE="${STATE:-${YMIR_STATE_DIR:-${YMIR_HOME}/state}}"
 
 # The ports belong to the INSTALL, not to this script. A containerised install
 # publishes 38888/38889/54370 (deploy/env.example), and hardcoding the dev seats'
@@ -262,7 +262,7 @@ fi
 # ── data ─────────────────────────────────────────────────────────────────────
 
 # 15. the Smiðja database exists with a schema
-if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root _ymh; else _ymh="${YMIR_HOME:-$HOME/Documents/ymirhome}"; fi
+if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root _ymh; else _ymh="${YMIR_HOME}"; fi
 SMIDJA_DB="${YMIR_SMIDJA_DB:-${_ymh}/smidja/smidja.db}"
 if [ -f "$SMIDJA_DB" ]; then
   _t="$(python3 -c "
@@ -277,8 +277,8 @@ fi
 
 # 16. the well store (engram) exists
 if [ -s "$ROOT/.agents/memory/kaia.engram" ] \
-   || [ -s "${YMIR_HOME:-$HOME/Documents/ymirhome}/.agents/memory/kaia.engram" ] \
-   || [ -s "${YMIR_HOME:-$HOME/Documents/ymirhome}/hodd/memory/kaia.engram" ] \
+   || [ -s "${YMIR_HOME}/.agents/memory/kaia.engram" ] \
+   || [ -s "${YMIR_HOME}/hodd/memory/kaia.engram" ] \
    || [ -s "$HOME/hodd/memory/kaia.engram" ]; then
   ok well-store "engram memory store present"
 else
