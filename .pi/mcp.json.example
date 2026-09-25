@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "engram": {
-      "command": "__YMIR_HOME__/.local/bin/engram-mcp",
+      "command": "__YMIR_HOME__/.fleet/well-venv/bin/engram-mcp",
       "args": [
         "--db",
         "__YMIR_HOME__/hodd/memory/kaia.engram"
