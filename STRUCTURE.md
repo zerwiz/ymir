@@ -20,7 +20,7 @@ ymir/
 ├── .no-mistakes.yaml              # [d] the clean-PR gate posture
 ├── .gitignore · .secret-guardignore         # [d] the wards
 │
-├── bin/                            # THE FORGE — 158 scripts: every door of the hall
+├── bin/                            # THE FORGE — every door of the hall (355 files; counted, never assumed)
 │   ├── ymir.js                    # [d] the npm CLI front door (install/raise/lower/eir/groa/pi…)
 │   ├── ymir-install.sh            # [d] first setup (--plan · --yes · --no-desktop)
 │   ├── ymir-migrate.sh · ymir-invite.sh · ymir-setup-auth.sh · ymir-say.sh
@@ -37,7 +37,7 @@ ymir/
 │   ├── secret-guard.sh · hoard-guard.sh · perm-guard.sh · docs-guard.sh
 │   ├── syn-watch-arm.sh · syn-turnend-guard.sh    # Sýn supervision
 │   ├── valknut-load.sh            # [d] binds the distro into each harness
-│   └── …                          # full inventory lives in bin/ itself (158)
+│   └── …                          # full inventory lives in bin/ itself
 │
 ├── scripts/                        # THE RAISE — stand the hall, or lay it down
 │   ├── start.sh                   # [d] raise: SPA :3888 · gate :3889 · Óðrerir :4322 · visualizer :8437 · services
@@ -80,7 +80,7 @@ ymir/
 │   #                                08 delivery gate · 09 electron
 ├── .compliance/                    # [d] the NSR compliance harness (gates · telemetry · config)
 ├── data/                           # [g] untracked operator facts work-area (learnings, models) — truth lives in the home
-├── state/ · .run/                  # [g] runtime state: pid files, logs, wake queue (.gitkeep tracked only)
+├── state/ · .run/                  # [g] runtime state. `state/` is a SYMLINK to $YMIR_HOME/state (migration 0007), or absent; .run/ holds pid files/logs — never tracked
 ├── hodd/                           # [d] the hoard EXAMPLE templates (AGENTS.example.md, .ymir-layout.yaml.example) — never private data
 ├── midgard/                        # [d] shared public assets — design-system/ (tokens, icons, ymir-mark)
 ├── svartalfaheim/                  # [d] realm templates + examples (never real realm data)
@@ -105,7 +105,7 @@ ymir/
 | `docs/` | Knowledge: architecture, lore, runbooks, per-fix notes | fixes notes append |
 | `RULES/` | Numbered house law (append-only) | corrections append |
 | `.compliance/` | NSR gate harness (wiring, danger, env, paths) | `.compliance/` stamps in target repos |
-| `state/ .run/` | Runtime state (git-ignored except `.gitkeep`) | pid files, logs, wake queue |
+| `state/ .run/` | Runtime state. `state/` is a symlink to `$YMIR_HOME/state` (migration 0007): the tree keeps the name, the home owns the truth; `.run/` holds pid files/logs | none tracked (git-ignored) |
 | `hodd/ midgard/ svartalfaheim/ workspace/` | Example templates; shared public design assets; realm scaffolds; registry examples | none |
 
 ## Conventions
