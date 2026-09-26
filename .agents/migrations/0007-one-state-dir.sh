@@ -19,6 +19,10 @@ TREE_STATE="$ROOT/state"
 
 # shellcheck source=bin/hoard-lib.sh
 . "$ROOT/bin/hoard-lib.sh" 2>/dev/null || true
+# The ONE resolver, called by name (defaults-guard): the state dir is derived
+# from the operator's home — env → recorded choice → the one default — never
+# restated here.
+ymir_home_root YMIR_HOME_ROOT 2>/dev/null || true
 hoard_state_dir HOARD_STATE 2>/dev/null || true
 HOARD_STATE="${HOARD_STATE:-${YMIR_STATE_DIR:-}}"
 if [ -z "${HOARD_STATE:-}" ]; then
