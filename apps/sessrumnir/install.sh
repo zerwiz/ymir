@@ -1,13 +1,13 @@
 #!/bin/bash
 # Sessrúmnir — Quick Install Script
-# Usage: curl -fsSL https://raw.githubusercontent.com/FaqFirebase/pi-desktop/master/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/apps/sessrumnir/install.sh | bash
 
 set -e
 
-REPO="FaqFirebase/pi-desktop"
+REPO="zerwiz/ymir"
 RELEASES_PAGE="https://github.com/$REPO/releases"
 RELEASES_API="https://api.github.com/repos/$REPO/releases"
-BINARY_NAME="pi-desktop"
+BINARY_NAME="sessrumnir"
 INSTALL_DIR="${HOME}/.local/bin"
 # How many recent releases the asset lookup scans. More than one, so a release
 # whose installers are still uploading mid-CI-run does not hide the newest
@@ -20,7 +20,7 @@ print_build_from_source() {
   echo ""
   echo "Or build from source:"
   echo "  git clone https://github.com/$REPO.git"
-  echo "  cd pi-desktop"
+  echo "  cd ymir/apps/sessrumnir"
   echo "  npm install && npm run package:$1"
 }
 

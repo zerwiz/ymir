@@ -342,8 +342,8 @@ test('fetchGalleryThemes returns valid entries with pinned first-party URLs', as
     { name: 'Ember Light', kind: 'light', file: 'themes/ember-light.json' },
   ]))
   assert.deepEqual(themes.map(({ name, kind, url }) => ({ name, kind, url })), [
-    { name: 'Ocean', kind: 'dark', url: 'https://raw.githubusercontent.com/FaqFirebase/pi-desktop-themes/main/themes/ocean/theme.json' },
-    { name: 'Ember Light', kind: 'light', url: 'https://raw.githubusercontent.com/FaqFirebase/pi-desktop-themes/main/themes/ember-light.json' },
+    { name: 'Ocean', kind: 'dark', url: 'https://raw.githubusercontent.com/zerwiz/ymir/main/apps/sessrumnir/themes/themes/ocean/theme.json' },
+    { name: 'Ember Light', kind: 'light', url: 'https://raw.githubusercontent.com/zerwiz/ymir/main/apps/sessrumnir/themes/themes/ember-light.json' },
   ])
 })
 
@@ -389,7 +389,7 @@ test('fetchGalleryThemes rejects a non-array index and a failed fetch', async ()
   await assert.rejects(fetchGalleryThemes(failFetch), /gallery index download failed: 500/)
 })
 
-const GALLERY_BASE = 'https://raw.githubusercontent.com/FaqFirebase/pi-desktop-themes/main'
+const GALLERY_BASE = 'https://raw.githubusercontent.com/zerwiz/ymir/main/apps/sessrumnir/themes'
 
 test('fetchGalleryThemes exposes a valid screenshot URL, ignores a bad one', async () => {
   const themes = await fetchGalleryThemes(jsonFetch([
