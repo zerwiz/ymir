@@ -32,7 +32,11 @@ gate() {  # <name> <description> <command...>
   if [ "$rc" -eq 0 ]; then
     printf '  "%s","PASS","%s"\n' "$name" "$what"
   else
-    printf '  "%s","FAIL","%s — %s"\n' "$name" "$what" "$(printf '%s' "$out" | tail -1 | cut -c1-88)"
+    printf '  "%s","FAIL","%s"\n' "$name" "$what"
+    # The failing gate's own tail — the single-line swallow hid WHICH check
+    # died inside (e.g. pr-pretest's hull/sandbox/app-boot rows). Print the
+    # last 12 lines so CI tells us the actual failing step.
+    printf '%s\n' "$out" | grep -vE '^[[:space:]]*$' | tail -12 | sed 's/^/    /'
     fail=1
   fi
 }
