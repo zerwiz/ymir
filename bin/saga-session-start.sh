@@ -63,6 +63,19 @@ else
   gleipnir_lock_owner owner
 fi
 
+# A SEAT MARKER for the opt-in gate (plan 58 Phase 0c). The nine Ymir extensions
+# deploy GLOBALLY, so every `pi` session on the machine loads them and resolves
+# the same machine lock; on 2026-09-25 an unrelated session could reclaim a lock
+# the primary had lost. Only a session SEATED here may reclaim it. The marker
+# records the pid the lock was acquired for; the extensions prove ownership by
+# ancestry against it.
+if [ "$LOCKED" = "1" ]; then
+  gleipnir_session_pid _seat_pid 2>/dev/null || _seat_pid=""
+  mkdir -p "$STATE" 2>/dev/null || true
+  printf '%s\n' "${_seat_pid:-${BROKK_SESSION_PID:-$$}}" >"$STATE/.seated" 2>/dev/null || true
+  unset _seat_pid
+fi
+
 printf 'BROKK SESSION START - %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 printf 'home=%s realm=%s\n' "$BROKK_HOME" "$REALM"
 
