@@ -57,19 +57,20 @@ if [ -z "$AUTOBOOT_STATE_DIR" ]; then
 fi
 
 # --- the one table --------------------------------------------------------
-AUTOBOOT_PROGRAMS="well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
+AUTOBOOT_PROGRAMS="a2abridge-directory well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
 
 autoboot_role_programs() {  # <role> → prints the program ids the role owes
   case "${1-}" in
-    heart) printf '%s\n' "well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed nornir" ;;
+    heart) printf '%s\n' "a2abridge-directory well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed nornir" ;;
     forge) printf '%s\n' "embed" ;;
-    dev)   printf '%s\n' "well-mcp hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir" ;;
+    dev)   printf '%s\n' "a2abridge-directory well-mcp hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir" ;;
     hand|*) printf '%s\n' "" ;;
   esac
 }
 
 autoboot_program_roles() {  # <program> → prints the roles that owe it
   case "${1-}" in
+    a2abridge-directory) printf '%s\n' "heart dev" ;;
     well-mcp)       printf '%s\n' "heart dev" ;;
     ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra) printf '%s\n' "heart" ;;
     embed)          printf '%s\n' "heart forge" ;;
@@ -81,6 +82,7 @@ autoboot_program_roles() {  # <program> → prints the roles that owe it
 
 autoboot_program_desc() {  # <program> → one human line
   case "${1-}" in
+    a2abridge-directory) printf '%s\n' "the local A2A directory (:7777)" ;;
     well-mcp)       printf '%s\n' "the well's MCP door (:8317)" ;;
     snotra)         printf '%s\n' "the meeting ear's MCP face (:8321, read-only minutes)" ;;
     ratatoskr)      printf '%s\n' "the A2A node (:8301)" ;;
