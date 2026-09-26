@@ -1,0 +1,11 @@
+[Unit]
+Description=Local A2A 1.0 discovery service for AI coding agents (:7777)
+[Service]
+Type=simple
+ExecStart=%h/.a2abridge/bin/a2abridge service run --addr 127.0.0.1:7777
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=120
+StartLimitBurst=10
+[Install]
+WantedBy=ymir.target

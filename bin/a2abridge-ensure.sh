@@ -69,6 +69,19 @@ patch_unit_logs() {
   fi
 }
 
+patch_unit_boot() {
+  # The engine's unit says WantedBy=multi-user.target — a SYSTEM target. A
+  # systemd --user service boots to default.target, so an enabled unit with
+  # the system target never rises at boot. Repoint the boot hook to the user
+  # manager's real target and re-enable (the wanted-by symlink follows).
+  [ -f "$UNIT" ] || return 0
+  if grep -qE '^WantedBy=multi-user.target' "$UNIT" 2>/dev/null; then
+    sed -i 's|^WantedBy=multi-user.target|WantedBy=default.target|' "$UNIT"
+    systemctl --user daemon-reload >/dev/null 2>&1 || true
+    systemctl --user enable a2abridge-directory >/dev/null 2>&1 || true
+  fi
+}
+
 status() {
   local eng srvc dir
   if engine_present; then eng="$("$A2AB" version 2>/dev/null | head -1)"; else eng="absent"; fi
@@ -89,6 +102,7 @@ ensure() {
     fi
   fi
   patch_unit_logs
+  patch_unit_boot
   if ! service_up; then
     systemctl --user start a2abridge-directory >/dev/null 2>&1 || true
     sleep 1
