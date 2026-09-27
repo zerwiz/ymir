@@ -44,6 +44,8 @@ class KindsTest(unittest.TestCase):
             ("fleet.json", "fleet"),
             ("fleet.json.example", "fleet"),
             ("eindri-dispatch.json", "eindri-dispatch"),
+            ("grants.yaml", "grants"),
+            ("grants.yaml.example", "grants"),
         ):
             self.assertEqual(spec_for(name).kind, kind, name)
 
@@ -55,8 +57,8 @@ class KindsTest(unittest.TestCase):
         with self.assertRaises(ConfigError):
             spec_for("agents.yaml", "not-a-kind")
 
-    def test_the_four_known_kinds_are_the_runtime_reads(self) -> None:
-        self.assertEqual(set(KNOWN), {"agents", "cron", "fleet", "eindri-dispatch"})
+    def test_the_five_known_kinds_are_the_runtime_reads(self) -> None:
+        self.assertEqual(set(KNOWN), {"agents", "cron", "fleet", "eindri-dispatch", "grants"})
 
 
 class AlwaysRefusesTest(unittest.TestCase):
@@ -107,7 +109,7 @@ class ExamplesTest(unittest.TestCase):
     """The shipped examples are the truth the schemas must validate."""
 
     def test_every_shipped_example_loads_clean(self) -> None:
-        for name in ("agents.yaml.example", "cron.yaml.example", "fleet.json.example", "eindri-dispatch.json"):
+        for name in ("agents.yaml.example", "cron.yaml.example", "fleet.json.example", "eindri-dispatch.json", "grants.yaml.example"):
             data = load_config(CONFIG / name, root=REPO)
             self.assertIsInstance(data, dict, name)
 
