@@ -36,7 +36,7 @@ ymir/
 │   ├── mimir*.{sh,py}             # the well (engram) · bifrost-*.sh (bridge) · gjallarhorn-*.sh (tunnel)
 │   ├── mjollnir.sh · github-deploy.sh · branch-guard.sh · fixes-guard.sh · fixes.sh
 │   ├── secret-guard.sh · hoard-guard.sh · perm-guard.sh · docs-guard.sh
-│   ├── syn-watch-arm.sh · syn-turnend-guard.sh    # Sýn supervision
+│   ├── syn-watch.sh · syn-watch-arm.sh · syn-turnend-guard.sh    # Sýn: the arm service, its thin client, the guard
 │   ├── valknut-load.sh            # [d] binds the distro into each harness
 │   └── …                          # full inventory lives in bin/ itself (214)
 │

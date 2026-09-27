@@ -13,6 +13,8 @@
 #   fleet-ensure.sh status              # per-role truth (delegates to the proof)
 #   fleet-ensure.sh ensure              # materialize + raise + VERIFY (fails loud)
 #   fleet-ensure.sh verify              # the proof alone (exit non-zero on gaps)
+#   fleet-ensure.sh unit <program>      # materialize ONE unit (the single renderer:
+#                                       #   bin/syn-watch.sh start asks it to seat the arm)
 #   fleet-ensure.sh --well-url <url>    # the served well URL for this seat's mcp
 # Env: BROKK_ROOT_OVERRIDE · BROKK_HOME · YMIR_HOST (role read) · HLIDSKJALF_PORT
 #      · HLIDSKJALF_API_PORT · SMIDJA_VIZ_API_PORT · SMIDJA_DB
@@ -107,6 +109,8 @@ PROGRAM_UNIT_SRC() {  # <program> → the template path
   case "${1-}" in
     well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra|embed|mcp-gateway)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/$1.service" ;;
+    syn-watch)
+      printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/ymir-syn-watch.service" ;;
     hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/web/systemd/$1.service" ;;
     ymir.target)
@@ -211,7 +215,7 @@ VIZ_DB="${SMIDJA_DB:-}"
 materialize_web_unit() {  # <program> — substitute the per-seat roots into the template
   local p="$1" template dst
   template="$(PROGRAM_UNIT_SRC "$p")"
-  dst="$HOME/.config/systemd/user/$p.service"
+  dst="$HOME/.config/systemd/user/$(autoboot_unit_of "$p")"
   sed -e "s|__YMIR_APP_DIR__|$APP_DIR|g" \
       -e "s|__YMIR_VIZ_DIR__|$VIZ_DIR|g" \
       -e "s|__YMIR_VIZ_DB__|$VIZ_DB|g" \
@@ -250,13 +254,13 @@ materialize_units() {  # <owed...> — every owed unit + the target; purge the s
           A2A_MISSING=1
         fi
         ;;
-      hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir|mcp-gateway)
+      hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir|mcp-gateway|syn-watch)
         materialize_web_unit "$p"
         ;;
       *)  # the mill/offices — %h-native templates, copied as they ship
         if [ -f "$(PROGRAM_UNIT_SRC "$p")" ]; then
-          cp -f "$(PROGRAM_UNIT_SRC "$p")" "$HOME/.config/systemd/user/$p.service"
-          refuse_disposable_path "$HOME/.config/systemd/user/$p.service" || return 1
+          cp -f "$(PROGRAM_UNIT_SRC "$p")" "$HOME/.config/systemd/user/$(autoboot_unit_of "$p")"
+          refuse_disposable_path "$HOME/.config/systemd/user/$(autoboot_unit_of "$p")" || return 1
         else
           say "fleet: $p — no unit template (tools/mill/systemd/$p.service missing)" >&2
           EMBED_MISSING=1  # any missing template is a loud gap, not a skip
@@ -272,15 +276,15 @@ purge_stale_units() {  # <owed...> — units NOT owed must not stand (a stale un
   local owed="$1" p=""
   for p in $AUTOBOOT_PROGRAMS; do
     case " $owed " in *" $p "*) continue ;; esac
-    if [ -f "$HOME/.config/systemd/user/$p.service" ] || \
-       systemctl --user is-enabled --quiet "$p.service" 2>/dev/null || \
-       [ -e "$HOME/.config/systemd/user/ymir.target.wants/$p.service" ] || \
-       [ -e "$HOME/.config/systemd/user/default.target.wants/$p.service" ]; then
-      systemctl --user stop "$p.service" 2>/dev/null || true
-      systemctl --user disable "$p.service" 2>/dev/null || true
-      rm -f "$HOME/.config/systemd/user/$p.service" "$HOME/.config/systemd/user/"*.target.wants/"$p.service" 2>/dev/null || true
-      systemctl --user reset-failed "$p.service" 2>/dev/null || true
-      say "fleet: purged stale unit $p.service (not owed by roles: $AUTOBOOT_HOST_ROLES)"
+    if [ -f "$HOME/.config/systemd/user/$(autoboot_unit_of "$p")" ] || \
+       systemctl --user is-enabled --quiet "$(autoboot_unit_of "$p")" 2>/dev/null || \
+       [ -e "$HOME/.config/systemd/user/ymir.target.wants/$(autoboot_unit_of "$p")" ] || \
+       [ -e "$HOME/.config/systemd/user/default.target.wants/$(autoboot_unit_of "$p")" ]; then
+      systemctl --user stop "$(autoboot_unit_of "$p")" 2>/dev/null || true
+      systemctl --user disable "$(autoboot_unit_of "$p")" 2>/dev/null || true
+      rm -f "$HOME/.config/systemd/user/$(autoboot_unit_of "$p")" "$HOME/.config/systemd/user/"*.target.wants/"$(autoboot_unit_of "$p")" 2>/dev/null || true
+      systemctl --user reset-failed "$(autoboot_unit_of "$p")" 2>/dev/null || true
+      say "fleet: purged stale unit $(autoboot_unit_of "$p") (not owed by roles: $AUTOBOOT_HOST_ROLES)"
     fi
   done
 }
@@ -355,10 +359,10 @@ raise_units() {  # <owed...>
       embed) [ "${EMBED_MISSING:-0}" = 1 ] && continue ;;
       a2abridge-directory) [ "${A2A_MISSING:-0}" = 1 ] && continue ;;
     esac
-    if systemctl --user enable --now "$p.service" >/dev/null 2>&1; then
-      say "fleet: $p.service enabled + started"
+    if systemctl --user enable --now "$(autoboot_unit_of "$p")" >/dev/null 2>&1; then
+      say "fleet: $(autoboot_unit_of "$p") enabled + started"
     else
-      say "fleet: FAIL — could not raise $p.service (systemctl --user enable --now $p.service)" >&2
+      say "fleet: FAIL — could not raise $(autoboot_unit_of "$p") (systemctl --user enable --now $(autoboot_unit_of "$p"))" >&2
       fail=1
     fi
   done
@@ -480,5 +484,11 @@ case "${1-}" in
         *) say "error: unknown flag $1" >&2; exit 2 ;;
       esac
     done; ensure ;;
-  *) say "error: unknown command (status|ensure|verify)" >&2; exit 2 ;;
+  unit)
+    shift
+    p="${1-}"
+    [ -n "$p" ] || { say "error: unit needs a program name (e.g. syn-watch)" >&2; exit 2; }
+    web_app_dirs
+    materialize_web_unit "$p" ;;
+  *) say "error: unknown command (status|ensure|verify|unit)" >&2; exit 2 ;;
 esac

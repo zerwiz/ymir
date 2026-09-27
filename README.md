@@ -358,7 +358,7 @@ and inject it; nudge-tier harnesses are asked.
 - **Lock:** `bin/gleipnir-lock-lib.sh` — bound to the live session pid.
 - **Bridge:** `bin/bifrost-bridge.sh` — raises the local model endpoint.
 - **Jobs:** `bin/nornir-cron-start.sh` — daily briefing 07:00, observer, housekeeping, git sync.
-- **Watch:** `bin/syn-watch-arm.sh` + the harness adapter.
+- **Watch:** `bin/syn-watch.sh` — the arm as a standing service (`status|start|stop`, unit `ymir-syn-watch.service`) — plus `bin/syn-watch-arm.sh`, the thin client the harness adapter spawns.
 
 Details: [`docs/session-start.md`](docs/session-start.md).
 
