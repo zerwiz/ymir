@@ -9,6 +9,7 @@
 #
 #   model-placement.sh            # TOON
 #   model-placement.sh --json
+#   model-placement.sh check      # the gate; exit 1 on an unresolved alias
 #   model-placement.sh --version
 set -u
 
@@ -16,7 +17,7 @@ VERSION="1.0.0"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 MODE=toon
-[ "${1-}" = "--json" ] && MODE=json
+case "${1-}" in --json) MODE=json ;; check) MODE=check ;; esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -60,15 +61,31 @@ fi
 
 reach() { curl -fsS -m 2 -o /dev/null "$1" 2>/dev/null && echo yes || echo no; }
 
+# the alias-conformance gate (plan 51 §6): every alias this seat's registry
+# names must resolve on a rail (the forge's or this body's). `check` exits 1 on
+# a missing alias — so the rename road can never silently break a seat.
+ALIAS_VERDICT="skipped"; ALIAS_NOTE="gate absent"
+if [ "${YMIR_ALIAS_CHECK:-on}" != off ] && [ -x "$SCRIPT_DIR/model-alias-check.sh" ]; then
+  _ao="$(bash "$SCRIPT_DIR/model-alias-check.sh" --local 2>/dev/null)" || true
+  ALIAS_VERDICT="$(printf '%s' "$_ao" | sed -nE 's/^  "verdict","([^"]+)".*/\1/p' | head -1)"
+  [ -n "$ALIAS_VERDICT" ] || ALIAS_VERDICT="unknown"
+  if [ "$ALIAS_VERDICT" = FAIL ]; then
+    ALIAS_NOTE="$(printf '%s' "$_ao" | grep -m1 '^help:' | sed 's/^help: //')"
+  elif [ "$ALIAS_VERDICT" = pass ]; then
+    ALIAS_NOTE="every alias this seat names resolves (or its rail is offline)"
+  fi
+fi
+
 if [ "$MODE" = json ]; then
-  python3 - "$_map" "$LOCK" <<'PY'
+  python3 - "$_map" "$LOCK" "$ALIAS_VERDICT" "$ALIAS_NOTE" <<'PY'
 import json, sys, subprocess
 rows=[]
 for line in sys.argv[1].splitlines():
     h,rail,roles=line.split("\t")
     ok="yes" if subprocess.run(["curl","-fsS","-m","2","-o","/dev/null",rail]).returncode==0 else "no"
     rows.append({"host":h,"rail":rail,"roles":roles.split(","),"reachable":ok})
-print(json.dumps({"forges":rows,"local_lock":sys.argv[2]}))
+print(json.dumps({"forges":rows,"local_lock":sys.argv[2],
+                  "alias_conformance":{"verdict":sys.argv[3],"detail":sys.argv[4]}}))
 PY
   exit 0
 fi
@@ -78,4 +95,6 @@ printf '%s\n' "$_map" | while IFS=$'\t' read -r h rail roles; do
   printf '  "%s","%s","%s"\n' "$h" "$rail" "$(reach "$rail")"
 done
 printf 'model_placement[1]{note,local_lock}:\n  "the forge owns the heavy rail; a body calls it over the tailnet","%s"\n' "$LOCK"
+printf 'model_placement[1]{alias_conformance,detail}:\n  "%s","%s"\n' "$ALIAS_VERDICT" "$ALIAS_NOTE"
+if [ "$MODE" = check ] && [ "$ALIAS_VERDICT" = FAIL ]; then exit 1; fi
 exit 0
