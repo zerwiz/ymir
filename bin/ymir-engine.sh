@@ -8,8 +8,10 @@
 #   ymir-engine.sh seat <id> --project <dir> [--harness h] [--model m] [--compat]
 #   ymir-engine.sh status <id> [--window N] [--toon]
 #   ymir-engine.sh send <id> "<text>"
-#   ymir-engine.sh stop <id> [--remove-worktree]
+#   ymir-engine.sh stop <id> [--remove-worktree] [--require-landed] [--force]
 #   ymir-engine.sh dispatch <role|figure> [--task T] [--brief F] [--kind K] [--toon]
+#   ymir-engine.sh landed <worktree> [--branch b] [--pr url] [--mode m] [--force]
+#   ymir-engine.sh watch <status|start|stop|restart|run>   # Sýn, the standing arm
 #   ymir-engine.sh ensure | version
 #
 # Interpreters: a private venv ($YMIR_ENGINE_VENV, built by
