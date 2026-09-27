@@ -163,7 +163,10 @@ release_claim() { [ "$DRY" -eq 0 ] && rmdir "$REVIEW_SPAWNED" 2>/dev/null || tru
 # ── the PR: from the flag, else the task's own terminal status line ──────────
 PR_URL="$PR_URL_ARG"
 if [ -z "$PR_URL" ]; then
-  for _sf in "$TASK_STATE/$ID.status" "$SHARED_STATE/$ID.status"; do
+  # The done line may sit in the task's own record state or the caller's seat
+  # state (a per-seat BROKK_STATE_OVERRIDE); the spine reads wherever it landed.
+  for _sf in "${BROKK_STATE_OVERRIDE:-}/$ID.status" "$TASK_STATE/$ID.status" "$SHARED_STATE/$ID.status"; do
+    [ -n "$_sf" ] || continue
     [ -f "$_sf" ] || continue
     _url=$(grep -oE 'https://github\.com/[^[:space:]]+/pull/[0-9]+' "$_sf" 2>/dev/null | tail -1 || true)
     if [ -n "$_url" ]; then PR_URL="$_url"; break; fi
