@@ -71,6 +71,8 @@
     "!apps/*/.git/**",
     "!apps/*/fork/**",
     "tools/",
+    "packages/",
+    "!packages/**/node_modules/**",
     "!tools/**/node_modules/**",
     "!tools/**/__pycache__/**",
     "!tools/**/*.pyc",

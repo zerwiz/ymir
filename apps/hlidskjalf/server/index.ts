@@ -21,6 +21,7 @@ import {
   register,
   verify as verifyAccount,
 } from './accounts.ts';
+import { A2A_PROTOCOL, type AgentInterface } from '../../../packages/contracts/src/index.ts';
 
 const PORT = Number(process.env.PORT ?? 3889);
 const HERE = import.meta.dir;
@@ -193,6 +194,7 @@ function agents() {
     const norse = String(fm.norse_name ?? fm.name ?? id);
     // Real, sourced fields only — no fabricated status/trace/tasks.
     const registered = existsSync(join(ROOT, '.opencode/agents', `${id}.md`));
+    const a2a: AgentInterface = { protocol: A2A_PROTOCOL, endpoint: `local://${id}`, signed: false };
     return {
       id,
       name: norse.charAt(0).toUpperCase() + norse.slice(1),
@@ -202,7 +204,7 @@ function agents() {
       status: registered ? 'nominal' : 'degraded',
       capabilities: Array.isArray(fm.capabilities) ? fm.capabilities : [],
       skills: [],
-      interface: { protocol: 'a2a/1.0', endpoint: `local://${id}`, signed: false },
+      interface: a2a,
       model: String(fm.model ?? '') || model,
       uptime: 0,
       tasksDone: 0,
