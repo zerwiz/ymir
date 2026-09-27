@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Mapping
 
 from . import backend as backend_mod
-from . import heartbeat, paths, proc, worktree as worktree_mod
-from .errors import SeatNotFound
+from . import heartbeat, landed as landed_mod, paths, proc, worktree as worktree_mod
+from .errors import EngineError, SeatNotFound
 
 
 @dataclass(frozen=True)
@@ -36,9 +36,16 @@ def stop(
     probe=proc.which,
     remove_worktree: bool = False,
     force: bool = False,
+    require_landed: bool = False,
     now: float | None = None,
 ) -> StopResult:
-    """Reap a seat: close the pane, prove it is gone, record the terminal line."""
+    """Reap a seat: close the pane, prove it is gone, record the terminal line.
+
+    `require_landed` puts the teardown gate in front of a worktree removal: a
+    seat whose work has not landed is REFUSED by name, because the removal is
+    what destroys it. `force` is the approved-discard path and is passed
+    straight to the gate, exactly as a shell door's `--force` is.
+    """
     environ = dict(env) if env is not None else None
     roots = paths.resolve(environ)
     state = roots.state
@@ -64,6 +71,20 @@ def stop(
 
     removed = False
     if remove_worktree and meta.get("worktree"):
+        if require_landed:
+            verdict = landed_mod.gate(
+                meta["worktree"],
+                pr_url=meta.get("pr", "") or meta.get("pr_url", ""),
+                mode=meta.get("mode", ""),
+                force=force,
+                runner=runner,
+                env=environ,
+            )
+            if not verdict.landed:
+                raise EngineError(
+                    f"refusing to remove {meta['worktree']}: the work has not landed "
+                    f"({verdict.how}: {verdict.detail})"
+                )
         removed = worktree_mod.remove(
             seat_id, meta.get("project", ""), Path(meta["worktree"]).parent, force=force, runner=runner
         )

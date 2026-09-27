@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# contracts-check.sh — the typed surfaces' proof, in one command.
+#
+# Plan 58 Phase 6. ONE typed A2A/agent-card contract (packages/contracts) is
+# imported by two consumers — the A2A server (packages/a2a/ratatoskr) and
+# Hlidskjalf (apps/hlidskjalf). This gate proves it:
+#
+#   · the contract tests pass (node --test; a deliberately mismatched card must
+#     be refused, naming the field)
+#   · the contract type-checks on its own
+#   · the A2A server's card module type-checks against it (the server consumer)
+#   · Hlidskjalf type-checks against it (the UI consumer), when its deps are present
+#
+# The tsc legs SKIP loudly when tsc (or Hlidskjalf's node_modules) is absent: CI
+# checks out without an install, and a gate that cannot run must say so, never
+# fail the push.
+#
+# Usage: bin/contracts-check.sh [--version]
+# Exit: 0 pass · 1 fail · 2 usage.
+set -u
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+cd "$ROOT" || exit 2
+
+case "${1-}" in
+  -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+  -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  "") ;;
+  *) printf 'error: unknown flag %s\n' "${1-}" >&2; exit 2 ;;
+esac
+
+fail=0
+say() { printf '%s\n' "$*"; }
+
+say 'contracts_check[4]{leg,status,detail}:'
+
+# 1. the contract tests — no dependencies, always runnable.
+if out="$(node --test packages/contracts/test/ 2>&1)"; then
+  say "  \"tests\",\"PASS\",\"$(printf '%s' "$out" | grep -oE 'pass [0-9]+' | tail -1) · a mismatched card is refused\""
+else
+  say "  \"tests\",\"FAIL\",\"node --test packages/contracts/test/\""
+  printf '%s\n' "$out" | tail -12 | sed 's/^/    /'
+  fail=1
+fi
+
+# tsc: from the tree or PATH; a missing tsc is a loud SKIP, never a false FAIL.
+TSC=""
+if command -v tsc >/dev/null 2>&1; then
+  TSC="tsc"
+elif command -v npx >/dev/null 2>&1 && npx --no-install tsc --version >/dev/null 2>&1; then
+  TSC="npx --no-install tsc"
+fi
+
+tsc_leg() {  # <name> <project>
+  local name="$1" proj="$2"
+  if [ -z "$TSC" ]; then
+    say "  \"$name\",\"SKIP\",\"tsc not found on this machine\""
+    return 0
+  fi
+  if out="$($TSC --noEmit -p "$proj" 2>&1)"; then
+    say "  \"$name\",\"PASS\",\"$proj\""
+  else
+    say "  \"$name\",\"FAIL\",\"$proj\""
+    printf '%s\n' "$out" | head -12 | sed 's/^/    /'
+    fail=1
+  fi
+}
+
+tsc_leg contract packages/contracts/tsconfig.json
+tsc_leg a2a-server packages/a2a/ratatoskr/tsconfig.json
+
+# 3. Hlidskjalf — the UI consumer. Its project needs node_modules to resolve
+#    react/etc.; without them the leg is skipped, not failed. A worktree may
+#    borrow its primary checkout's node_modules up-tree, so search upward.
+modules_present() {
+  local d="$ROOT"
+  for _ in 1 2 3 4; do
+    [ -d "$d/node_modules" ] && return 0
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+if modules_present; then
+  tsc_leg hlidskjalf apps/hlidskjalf/tsconfig.json
+else
+  say "  \"hlidskjalf\",\"SKIP\",\"no node_modules — run npm install to check the UI consumer\""
+fi
+
+if [ "$fail" = 0 ]; then
+  say 'contracts-check: PASS — one contract, two consumers, and a mismatched card refused.'
+  exit 0
+fi
+printf 'contracts-check: a leg failed — see the FAIL row above\n' >&2
+exit 1
