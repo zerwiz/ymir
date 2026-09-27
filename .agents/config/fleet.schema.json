@@ -2,10 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/zerwiz/ymir/config/fleet.schema.json",
   "title": "config/fleet.json",
-  "description": "The fleet registry (plan 51 · plan 58, Phase 7): one row per machine, read by hostname by bin/topology.sh, bin/eindri-route.sh, bin/mcp-gateway.sh and bin/model-placement.sh. A registry that names a heart which is not a host, or a host that is not itself, is refused loudly at load. Roles are the fleet's role law: heart (owns the record) · forge (models/GPU) · dev (a full body) · hand (phone).",
+  "description": "The fleet registry (plan 51 · plan 58, Phase 7): one row per machine, read by hostname by bin/topology.sh, bin/eindri-route.sh, bin/mcp-gateway.sh, bin/model-placement.sh and bin/rail-resolve.sh. A registry that names a heart which is not a host, or a host that is not itself, is refused loudly at load. Roles are the fleet's role law: heart (owns the record) · forge (models/GPU) · dev (a full body) · hand (phone).",
   "type": "object",
   "additionalProperties": false,
   "required": ["heart", "hosts"],
+  "patternProperties": {
+    "^_comment": { "type": "string" }
+  },
   "properties": {
     "_comment": { "type": "string" },
     "version": { "type": "integer", "minimum": 1 },
@@ -13,6 +16,20 @@
       "type": "string",
       "minLength": 1,
       "description": "the host that owns the record; must name a row in hosts"
+    },
+    "rails": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "the ordered strong boxes that may serve the fleet's models (plan 51 Part 9c) — whichever is CONNECTED serves; the first ALIVE one is the answer"
+    },
+    "ear": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "the ear's live resolution order (plan 51 Part 9c) — the strong boxes carrying whisper; name only, each host's own address resolves from hosts{}"
     },
     "hosts": {
       "type": "object",
