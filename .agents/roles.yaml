@@ -1,0 +1,186 @@
+# .agents/roles.yaml — the decision table: ROLE → FIGURE → TOOLS.
+#
+# WHO a figure is lives in `.agents/agents/<figure>.md` (prose + frontmatter).
+# THIS file is the WIRING: which role summons which figure, what the role does,
+# the words that summon it, and the tools the figure holds at hand. It is DATA,
+# read by the doors — `bin/eindri-role.sh` (the chooser) and
+# `bin/agents-config.sh roster` (the resolved roster) — so no script re-declares
+# a role in code.
+#
+# WHAT MODEL: never here, and never in a figure card. The model is resolved from
+# the hoard (`$YMIR_HOME/config/agents.yaml`, with the per-host overlay) BY
+# FIGURE NAME at dispatch:
+#
+#   bin/agents-config.sh get <figure> model
+#
+# The public tree carries no model for hardware it has never seen (Rule 04,
+# plan 56; plan 58 Phase 4).
+#
+# `tools` mirrors the figure card's `ymir_tools`; the card is the per-figure
+# declaration, this file is the role-keyed view the chooser and the roster read.
+# `dispatch: true` marks the roles the chooser weighs when it picks a smith;
+# the rest are summoned by name.
+
+version: 1
+model_from: hoard
+
+roles:
+  # ─── the dispatch roles — the chooser's candidates, in chooser order ───
+  developer:
+    figure: sindri
+    craft: "code — build, refactor, fix, test"
+    dispatch: true
+    keywords: [code, build, refactor, fix, bug, implement, feature, test, compile, script, forge, api, backend, frontend, function, class, module]
+    tools: [yggdrasil, herder, hermes_runner, vector_db, supabase]
+
+  marketer:
+    figure: bragi
+    craft: "content — marketing, SEO, social"
+    dispatch: true
+    keywords: [content, write, copy, marketing, seo, social, post, article, blog, campaign, brand, announcement, newsletter]
+    tools: [vector_db, supabase, hermes_runner, herder, yggdrasil]
+
+  researcher:
+    figure: huginn
+    craft: "research — search, analyse, discover"
+    dispatch: true
+    keywords: [research, search, analyse, analyze, investigate, find, discover, compare, benchmark, source, docs, "look", up]
+    tools: [vector_db, hermes_runner, herder, yggdrasil, supabase, mimirsbrunn, huginn_research_worker]
+
+  scout:
+    figure: kvasir
+    craft: "scout — recon a codebase before work"
+    dispatch: true
+    keywords: [scout, recon, survey, map, explore, inventory, reconnaissance, terrain, reconnoiter]
+    tools: [vector_db, hermes_runner, herder, yggdrasil]
+
+  designer:
+    figure: hnoss
+    craft: "design — UI/UX, prototypes, decks, dashboards"
+    dispatch: true
+    keywords: [design, ui, ux, prototype, landing, dashboard, deck, slide, visual, layout, figma, design-system]
+    tools: [opendesign, chrome_devtools]
+
+  planner:
+    figure: mimir
+    craft: "plan — design the approach"
+    dispatch: true
+    keywords: [plan, design, architect, approach, strategy, spec, breakdown, sequence, decompose]
+    tools: [vector_db, hermes_runner, herder, yggdrasil]
+
+  documenter:
+    figure: snotra
+    craft: "document — prose, guides, references"
+    dispatch: true
+    keywords: [document, docs, guide, reference, readme, manual, explain, describe, prose]
+    tools: [vector_db, hermes_runner, herder, yggdrasil]
+
+  reviewer:
+    figure: forseti
+    craft: "review — judge the work"
+    dispatch: true
+    keywords: [review, judge, audit, critique, verify, assess, check, inspect, quality, gate]
+    tools: [vector_db, hermes_runner, herder, yggdrasil]
+
+  builder:
+    figure: galdr
+    craft: "runtime — the Ymir distro itself"
+    dispatch: true
+    keywords: [galdr, runtime, distro, install, skill, toon, cli, agent-facing, extension]
+    tools: [yggdrasil, herder, vector_db, tasks_cli]
+    skills: [galdr-ymirsystem]
+
+  # ─── the named roles — summoned by figure or role, never chosen by keyword ───
+  primary:
+    figure: brokk
+    craft: "the counsellor — plans, steers, reviews, dispatches"
+    dispatch: false
+    keywords: []
+    tools: [yggdrasil, herder, vector_db, tasks_cli, well_recall]
+
+  keeper:
+    figure: elder
+    craft: "the keeper who remembers — the records council"
+    dispatch: false
+    keywords: []
+    tools: [vector_db, tasks_cli, well_recall, yggdrasil]
+
+  consenter:
+    figure: frigg
+    craft: "the consent gate — decides unambiguous ask-user findings"
+    dispatch: false
+    keywords: []
+    tools: [vector_db]
+    skills: [frigg-consent]
+
+  updater:
+    figure: groa
+    craft: "the renewer — fast-forwards Brokk and its homes"
+    dispatch: false
+    keywords: []
+    tools: [yggdrasil]
+    skills: [groa-update]
+
+  curator:
+    figure: muninn
+    craft: "the rememberer — sweeps a session and curates memory"
+    dispatch: false
+    keywords: []
+    tools: [vector_db]
+    skills: [muninn-stow]
+
+  seer:
+    figure: saga
+    craft: "the seeress — the session's bearings"
+    dispatch: false
+    keywords: []
+    tools: [vector_db, herder]
+    skills: [saga-bearings]
+
+  recoverer:
+    figure: syn
+    craft: "the seeing — the stuck-worker playbook"
+    dispatch: false
+    keywords: []
+    tools: [herder, vector_db]
+    skills: [syn-recovery]
+
+  reconciler:
+    figure: urdh
+    craft: "the fate — holds what is unresolved for the Allfather"
+    dispatch: false
+    keywords: []
+    tools: [vector_db]
+    skills: [urdh-hold]
+
+  orchestrator:
+    figure: volundr
+    craft: "the master smith — Smíðja's orchestrator seat"
+    dispatch: false
+    keywords: []
+    tools: [herder, yggdrasil, vector_db]
+    skills: [smidja-factory]
+
+  diagnoser:
+    figure: vor
+    craft: "the aware — reads bootstrap and network diagnostics"
+    dispatch: false
+    keywords: []
+    tools: [vector_db]
+    skills: [vor-diagnostics]
+
+  registrar:
+    figure: jord
+    craft: "the grounded — the project registry and its delivery posture"
+    dispatch: false
+    keywords: []
+    tools: [vector_db, yggdrasil]
+    skills: [jord-projects]
+
+  judge:
+    figure: tyr
+    craft: "the just — validates tools, skills and docs against the gates"
+    dispatch: false
+    keywords: []
+    tools: [vector_db]
+    skills: [tyr-check, rules-check-drift]
