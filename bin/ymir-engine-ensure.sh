@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # ymir-engine-ensure.sh — materialize the engine's private python home.
 #
-# The engine is stdlib-only, so today this script's honest answer is "no venv
-# needed". It exists because the moment the engine grows a dependency the venv
-# must appear WITHOUT the tree changing: a private, machine-local venv is built
-# here, never committed (the repo ships source; the seat builds its own home).
+# The engine's four verbs are stdlib-only; Phase 7's config layer (load-with-schema)
+# declared the tree's first real dependencies (jsonschema, PyYAML), and the moment
+# a dependency is declared the venv must appear WITHOUT the tree changing: a
+# private, machine-local venv is built here, never committed (the repo ships
+# source; the seat builds its own home).
 #
 #   ymir-engine-ensure.sh          # ensure (idempotent, cheap)
 #   ymir-engine-ensure.sh status   # report only, change nothing

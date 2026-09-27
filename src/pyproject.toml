@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ymir-runtime"
-version = "1.0.0"
-description = "THE ENGINE — one deep module, four verbs: seat · status · send · stop (plan 58, Phase 1)"
+version = "1.1.0"
+description = "THE ENGINE — one deep module, four verbs: seat · status · send · stop (plan 58, Phase 1); plus the config layer: load-with-schema, loud refusal (Phase 7)"
 requires-python = ">=3.9"
 license = { text = "Apache-2.0" }
-dependencies = []
+dependencies = ["jsonschema>=4.17", "PyYAML>=6.0"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: Apache Software License",
@@ -19,7 +19,7 @@ Documentation = "https://github.com/zerwiz/ymir"
 
 [tool.setuptools]
 package-dir = { "" = "." }
-packages = ["ymir_runtime", "ymir_runtime.tests"]
+packages = ["ymir_runtime", "ymir_runtime.config", "ymir_runtime.tests"]
 
 [tool.ymir]
 engine = "ymir_runtime"
