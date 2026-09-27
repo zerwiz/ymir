@@ -28,6 +28,13 @@ command -v "$HERDR" >/dev/null 2>&1 || { [ "$MODE" = json ] && printf '[]\n' || 
 
 raw="$("$HERDR" pane list 2>/dev/null)"
 
+# The roster is read from the REPO root, absolute, so a caller's cwd can never
+# point it at the wrong directory (the Fleet showed an empty board because a
+# relative .agents/agents resolved against the server's cwd, not the repo). An
+# explicit ROSTER_DIR in the environment always wins.
+if REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null)"; then :; else REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"; fi
+export ROSTER_DIR="${ROSTER_DIR:-$REPO_ROOT/.agents/agents}"
+
 MODE="$MODE" RAW="$raw" python3 - <<'PY'
 import json, os, sys
 
