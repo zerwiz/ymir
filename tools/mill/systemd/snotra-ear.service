@@ -1,0 +1,15 @@
+[Unit]
+Description=Snotra's ear — the whisper engine served to the fleet (:8322, strong-box only)
+[Service]
+Type=simple
+# The ear is served on a STRONG box only (plan 51 Part 9a): the heart fronts the
+# door (:8321) and never loads whisper. fleet-ensure raises this unit by
+# CAPABILITY (an engine + a model on the seat), so the heart reports a clean skip.
+Environment=PATH=%h/.fleet:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash %h/.fleet/snotra-ear.sh serve
+Restart=on-failure
+RestartSec=3
+StartLimitIntervalSec=120
+StartLimitBurst=10
+[Install]
+WantedBy=ymir.target

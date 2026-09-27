@@ -72,6 +72,7 @@ Per-component variable lists appear in each section below.
 | `bin/snotra-capture.sh` | **Snotra** | capture mic + system monitor (PipeWire) to a dated WAV in the hoard; writes the Listening indicator | `snotra-capture.sh start [secs]` \| `stop` \| `status` \| `devices` | 0; 1 no device; 2 usage |
 | `bin/snotra-transcribe.sh` | **Snotra** | transcribe a recording (engine discovered), write Markdown minutes + a Rune | `snotra-transcribe.sh <wav> [topic]` | 0; 1 no recording |
 | `bin/snotra-ensure.sh` | **Snotra** | ensure the seat's whisper engine + model (per-OS) | `snotra-ensure.sh status` \| `ensure [--install]` \| `install` | 0 present; 1 absent; 2 usage |
+| `bin/snotra-ear.sh` | **Snotra** | the ear served: upstream `whisper-server` on `:8322` for the fleet's hearing (capability-owed — a strong box only) | `snotra-ear.sh serve` \| `status` \| `probe` | 0 can hear; 1 no engine/model; 2 usage |
 
 ### 3.2 `bin/saga-session-start.sh` — Sága, the session digest
 

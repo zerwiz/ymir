@@ -1,10 +1,12 @@
 [Unit]
-Description=Snotra — the meeting ear MCP face (:8321, read-only minutes)
+Description=Snotra — the meeting ear MCP face (:8321, minutes + the fleet's hearing door)
 [Service]
 Type=simple
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 Environment=PORT=8321
 Environment=SNOTRA_VAULT=%h/Documents/ymirhome
+# The door is fronted here; the HEARING rides a strong box (plan 51 Parts 9a/9c):
+# snotra_transcribe resolves the live ear from the fleet registry's `ear` row.
 ExecStart=node %h/.fleet/snotra-server.mjs
 Restart=on-failure
 RestartSec=3

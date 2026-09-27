@@ -135,9 +135,14 @@ run_whisper() {
   [ -s "$TMP_PREFIX.txt" ]
 }
 
-# Free VRAM in MiB (empty when nvidia-smi is unavailable).
+# Free VRAM in MiB (empty when nvidia-smi is unavailable OR cannot reach a
+# driver — a driverless seat prints its complaint on stdout, so only digits
+# survive; the caller's `-ge` must never see that text).
 free_vram_mb() {
-  nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' '
+  local v
+  v="$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -dc '0-9')"
+  case "$v" in ''|*[!0-9]*) return 0 ;; esac
+  printf '%s' "$v"
 }
 
 do_transcribe() {

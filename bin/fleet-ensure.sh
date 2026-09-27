@@ -107,7 +107,7 @@ fi
 # Which unit files the templates can materialize (all programs + the target)
 PROGRAM_UNIT_SRC() {  # <program> → the template path
   case "${1-}" in
-    well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra|embed|mcp-gateway)
+    well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra|snotra-ear|embed|mcp-gateway)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/$1.service" ;;
     syn-watch)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/ymir-syn-watch.service" ;;
@@ -145,9 +145,10 @@ materialize_tools() {
       cp -f "$ROOT/$src" "$DST/$dstn" 2>/dev/null || true
     fi
   done
-  # the meeting ear's operator commands — capture, transcribe, ensure — so any
-  # seat can run them from ~/.fleet without a repo checkout on its PATH
-  for f in snotra-capture.sh snotra-transcribe.sh snotra-ensure.sh runes-append.sh; do
+  # the meeting ear's operator commands — capture, transcribe, ensure, the
+  # served ear engine — so any seat can run them from ~/.fleet without a repo
+  # checkout on its PATH
+  for f in snotra-capture.sh snotra-transcribe.sh snotra-ensure.sh snotra-ear.sh runes-append.sh; do
     [ -f "$ROOT/bin/$f" ] && cp -f "$ROOT/bin/$f" "$DST/$f" 2>/dev/null && chmod +x "$DST/$f" 2>/dev/null || true
   done
   # the skills mirror — the master .agents/skills tree, refreshed each ensure
