@@ -10,7 +10,7 @@
 // callbacks from a prior generation are no-ops against the active replacement.
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
@@ -488,6 +488,24 @@ export default function (pi: ExtensionAPI) {
     return confirmHandlingDelivery(snapshot());
   }
 
+  // CATCH-UP ON RE-ARM (plan 58 Phase 3). The moment Gná re-arms the watcher
+  // after a flap, sweep the handoff shelves immediately — before the arm child
+  // is spawned — so recovery reconciles what the dead window missed even if the
+  // arm child never becomes ready. Idempotent via the shared delivery ledger
+  // (bin/eindri-wake-lib.sh); the arm script sweeps again on its own cycle.
+  function sweepHandoffCatchUp(): void {
+    if (!existsSync(`${fmRoot}/bin/eindri-handoff.sh`)) return;
+    try {
+      spawnSync("bash", [`${fmRoot}/bin/eindri-handoff.sh`, "sweep"], {
+        cwd: fmRoot,
+        encoding: "utf8",
+        env: { ...process.env, BROKK_HOME: fmHome, BROKK_ROOT_OVERRIDE: fmRoot, BROKK_STATE_OVERRIDE: state },
+      });
+    } catch {
+      // best-effort: the arm's own cycle sweeps again, and the wake is durable
+    }
+  }
+
   function offerWakeToBranch(message: string): boolean {
     const heartbeat = /^heartbeat($|:)/.test(message);
     // A check-kind close (merge-confirmation polls, Relay mentions,
@@ -653,6 +671,7 @@ export default function (pi: ExtensionAPI) {
         message: `watcher: unchanged - Pi extension already owns a scheduled continuity retry; no manual re-arm needed; ${repairOnlyHint}`,
       };
     }
+    sweepHandoffCatchUp();
     const id = ++owner.seq;
     const env = {
       ...process.env,
