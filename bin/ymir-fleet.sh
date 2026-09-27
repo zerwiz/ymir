@@ -12,7 +12,7 @@ case "${1-}" in
     bin/essence-fetch.sh >/dev/null 2>&1 || true   # the npm world's dotfolders self-heal
     bin/fleet-ensure.sh ensure
     bin/fleet-ensure.sh ensure "${2:+--well-url $2}"
-    echo "fleet mode: the well URL is the seat's mcp.json (well) — run 'pi' and your tools drink one store."
+    echo "fleet mode: the well URL is the seat's mcp-adapter.json (well) — run 'pi' and your tools drink one store."
     ;;
   *) echo "error: ymir-fleet.sh [status|ensure [--well-url <url>]]" >&2; exit 2 ;;
 esac

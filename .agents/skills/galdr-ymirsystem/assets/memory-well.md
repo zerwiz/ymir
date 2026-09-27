@@ -78,7 +78,7 @@ call instead when attribution is wanted.)
 | Harness | Config | Notes |
 |---|---|---|
 | OpenCode (4 accounts: `opencode`, `opencode-rd`, `opencode-work`, `opencode-oczer`) | `<config-dir>/opencode.json` → `mcp.engram` | `{type:"local", command:["engram-mcp","--db",…], enabled:true}` |
-| Pi | `~/.pi/agent/settings.json` → `mcpServers.engram` **and** `~/.pi/agent/mcp.json` + repo `.pi/mcp.json` (pass `pi --mcp-config .pi/mcp.json`) | pi-mcp-adapter. **Scope:** `bin/a2a-mcp.sh install` writes the GLOBAL `~/.pi/agent/mcp.json`; `install --project` writes the repo's `.pi/mcp.json` instead and never touches `~/.pi` — use it when Pi is run in other areas. |
+| Pi | `~/.pi/agent/settings.json` → `mcpServers.engram` **and** `~/.pi/agent/mcp-adapter.json` + repo `.pi/mcp-adapter.json` (pass `pi --mcp-config .pi/mcp-adapter.json`) | pi-mcp-adapter. **Scope:** `bin/a2a-mcp.sh install` writes the GLOBAL `~/.pi/agent/mcp-adapter.json`; `install --project` writes the repo's `.pi/mcp-adapter.json` instead and never touches `~/.pi` — use it when Pi is run in other areas. |
 | Claude Code | `~/.claude.json` → `mcpServers.engram` | |
 | Cursor | `~/.cursor/mcp.json` → `mcpServers.engram` | |
 | Codex | `~/.codex/config.toml` → `[mcp_servers.engram]` | args are a TOML array |

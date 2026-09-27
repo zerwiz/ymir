@@ -92,7 +92,7 @@ if [ ! -d "$AGENTS" ]; then
 fi
 
 # ── machine config, rendered from its example ────────────────────────────────
-# opencode.json and .pi/mcp.json must contain ABSOLUTE paths, so they cannot be
+# opencode.json and .pi/mcp-adapter.json must contain ABSOLUTE paths, so they cannot be
 # tracked — a tracked copy would hand every operator the previous one's home.
 # They are rendered from the shipped *.example with the real $HOME and root.
 #
@@ -282,7 +282,7 @@ if [ "$MODE_OPENCODE" = 1 ]; then
 fi
 
 if [ "$MODE_PI" = 1 ]; then
-  add pi-mcp "$ROOT/.pi/mcp.json" "$(config_out "$ROOT/.pi/mcp.json.example" "$ROOT/.pi/mcp.json")"
+  add pi-mcp "$ROOT/.pi/mcp-adapter.json" "$(config_out "$ROOT/.pi/mcp-adapter.json.example" "$ROOT/.pi/mcp-adapter.json")"
   n=$(link_agent_dir "$PI_LOCAL" "../../.agents/agents") && add pi-local "$PI_LOCAL" "bound ($n links)" || add pi-local "$PI_LOCAL" "ERROR"
   if [ "$MODE_GLOBAL" = 1 ]; then
     g=$(link_agent_dir "$PI_GLOBAL" "$AGENTS") && add pi-global "$PI_GLOBAL" "bound ($g links)" || add pi-global "$PI_GLOBAL" "ERROR"
