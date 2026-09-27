@@ -109,3 +109,9 @@ errand (Phase 8).
 - `tests/e2e/landed-gate-proof.sh` (new)
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md` (§5, §7.1, §7.4)
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md` (the arm table)
+
+**Correction (2026-09-27, Forseti's stack review — appended, the original stands).**
+The governed asset's section headings were H2 collisions (`## 7.4` triples against
+the grants' `### 7.4`), a wart the stack rebases carried. Corrected in place to
+coherent H3 numbering in file order (dispatch `### 7.6` · state `### 7.7` · the
+god-seams `### 7.8`), blank lines restored, nothing else changed.
