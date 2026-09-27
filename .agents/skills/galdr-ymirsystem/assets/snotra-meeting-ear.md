@@ -8,10 +8,11 @@ privately in the hoard. Named for Snotra, the wise one, mistress of counsel.
 ```
 THE EAR (capture)      the seat in the meeting — heimdall today, omarchy too
                        PipeWire mic + monitor capture. Nothing else can do this.
-THE BRAIN (transcribe) the seat with the GPU — heimdall's <gpu>
-                       whisper.cpp CUDA (~1.0s) + local rail for summaries
-THE RECORD (store/serve)  whynot, the heart — minutes in the vault, synced by
-                       the home's git road, the MCP face served there
+THE BRAIN (transcribe) the seat with the GPU — the living-rail resolver's
+                       serving box (heimdall's <gpu> first, then whynot)
+                       whisper.cpp CUDA (~1.0s) + the LIVE rail for summaries
+THE RECORD (store/serve)  the heart (zerwizserver) — minutes in the vault, synced
+                       by the home's git road, the MCP face served there
 ```
 
 **Cost if run otherwise:** If the Allfather insists on transcribing on whynot
@@ -73,11 +74,12 @@ supports this; it is not a rewrite.
 - StreamableHTTP transport (mirrors `tools/tickets-mcp`)
 - Wired into seat MCP config by `fleet-ensure.sh` (port 8321)
 
-### M6 — Summaries on the local rail
+### M6 — Summaries on the living rail
 
-- Uses the machine's own llama-swap rail (`http://127.0.0.1:8080/v1`)
-- Model: `qwen3.6-35b-a3b@q2_k_xl` (the resident model on heimdall)
-- No cloud key needed — the rail key is resolved from `~/.pi/agent/auth.json`
+- Rides the ONE resolver (`bin/rail-resolve.sh`, `src/ymir_runtime/fleet/rail.py`, plan 51 Parts 9a/9c): the serving strong box's `http://<box>:8080/v1`, first-alive — a dropped box reroutes, never an outage
+- `RAIL_URL` forces one specific rail when set; unset, the resolver's serving box wins (the ear's summaries ride whichever strong box is CONNECTED)
+- Model: resolved from the hoard/env (`RAIL_MODEL`; unset = loud refusal — the tree carries no concrete model id)
+- No cloud key needed — the rail key is a REFERENCE (env `LLAMA_SWAP_API_KEY` → the hoard vault → `~/.pi/agent/auth.json`), never a value in the tree
 
 ### M7 — The proof
 

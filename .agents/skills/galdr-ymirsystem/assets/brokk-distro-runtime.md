@@ -371,7 +371,7 @@ refused, never returned unvalidated. `load_config(path)` is the one entry
 kinds[5]{kind,schema,readers}
   "agents.yaml","agents.schema.json","bin/agents-config.sh · bin/dispatch-profile.sh · bin/local-model-lock.sh · bin/einherjar-spawn.sh"
   "cron.yaml","cron.schema.json","bin/nornir-cron-start.sh · bin/hall-snapshot.sh"
-  "fleet.json","fleet.schema.json","bin/topology.sh · bin/eindri-route.sh · bin/mcp-gateway.sh · bin/model-placement.sh"
+  "fleet.json","fleet.schema.json","bin/topology.sh · bin/eindri-route.sh · bin/mcp-gateway.sh · bin/model-placement.sh · bin/rail-resolve.sh"
   "eindri-dispatch.json","eindri-dispatch.schema.json","bin/dispatch-profile.sh"
   "grants.yaml","grants.schema.json","src/ymir_runtime/grants.py · bin/ymir-config-check.sh"
 ```
@@ -500,6 +500,40 @@ ships `src/`, so a packaged install carries the door and its module together.
 replaced (kept verbatim under `src/ymir_runtime/tests/fixtures/state/`): the lock
 cycle, the rune append, and the queue append are byte-identical, the ledger still
 chains, and the live readers resolve the same path, owner, and starttime.
+### 7.8 The living rail resolver — where models come from, resolved once (plan 51 Parts 9a/9b/9c)
+
+The rails are a LIVE set, not a single point: models come from whichever strong
+box is CONNECTED at the moment (heimdall · whynot · omarchy), and a box that
+drops out of the tailnet drops out of the lane — a lane reroute, never an outage.
+The WHERE-MODELS-COME-FROM rule now lives ONCE in `src/ymir_runtime/fleet/rail.py`,
+reached by the door `bin/rail-resolve.sh`; every surface that states a rail URL
+calls it, and none restates one.
+
+```
+fleet_rail[5]{piece,owns}
+  "rail.py","the private registry ($YMIR_HOME/hodd/data/fleet.json, never shipped): the strong boxes are its `rails` list, else its `ear` list, else its `forge` hosts — a box not declared is never invented"
+  "liveness","`GET /health` first (keyless, cheap), then `GET /v1/models` with the shared key; a key refused still reads ALIVE — only the served set is unknown"
+  "the answer","rank first-alive → the serving `http://<box>:8080/v1`; with an alias, the first live box that SERVES it. Every rail down, or no live box serving the name, is a DECLINED answer (exit 1) — never a fake URL"
+  "the key","a REFERENCE — the env `LLAMA_SWAP_API_KEY` (env → the hoard vault → pi auth.json); the value is read only to ask a rail what it serves, and is never emitted"
+  "the door","`bin/rail-resolve.sh resolve|status [--json]` → `python3 -m ymir_runtime.fleet`; TOON for a human, `--json` for callers"
+```
+
+**Who calls it.** `bin/model-placement.sh` (the ranked rails + reachability),
+`bin/eindri-route.sh` (a model errand follows the live set, first-alive at its
+head), `bin/model-alias-check.sh` (an alias is verified against the RESOLVED
+provider — a seat's name resolves against whichever box serves),
+`bin/snotra-transcribe.sh` (the ear's summaries ride the live rail),
+`bin/mcp-gateway.sh` (a `rail` verb and a `rail` row in `status`; the rail is
+never an MCP upstream — the upstream map is handed to the engine verbatim), and
+`bin/mcp-config.sh` (the resolved rail under the config's `ymir` block, advisory
+metadata a harness ignores). `config/fleet.json.example` and `fleet.schema.json`
+carry `rails` and `ear`, so a registry names its strong boxes explicitly (Part
+9c's own word: one set serves the models and the ear).
+
+The unit suite is `test_rail.py` — a synthetic registry and a scripted probe: one
+box up and one down → the up one serves; both down → declined — and
+`.agents/tests/rail-resolve.test.sh` proves the door against a stub rail.
+
 ## 7.4 The first god-seams — the arm and the landed gate (plan 58, Phase 5, 2026-09-27)
 
 Phase 5 is "split the gods, delete the twins", **one god per PR**. Two of the
