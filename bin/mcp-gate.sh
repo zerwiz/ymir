@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp.json.
+# mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.
 # An on-call server is AVAILABLE but not raised at every boot: its tool
 # schemas leave the boot context (the lean answer to the seat's MCP budget —
 # chrome-devtools is the first citizen, a big schema a boot rarely needs).
 #
 # Usage:   mcp-gate.sh <arm|disarm> <server>
 #          mcp-gate.sh status                 what the seat's boot table holds
-# Env:     PI_MCP_JSON — the config (default ~/.pi/agent/mcp.json)
+# Env:     PI_MCP_JSON — the config (default ~/.pi/agent/mcp-adapter.json)
 set -u
 
-CFG="${PI_MCP_JSON:-$HOME/.pi/agent/mcp.json}"
+CFG="${PI_MCP_JSON:-$HOME/.pi/agent/mcp-adapter.json}"
 ACTION="${1-}"; SERVER="${2-}"
 
 chrome_spec() { python3 - "$CFG" <<'PY'

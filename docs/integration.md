@@ -9,7 +9,7 @@
 ## The stance
 
 Ymir's harness wiring lives **inside the checkout**: `.opencode/plugins/*.js` (the
-Brokk adapters) and the project `opencode.json` / `.pi/mcp.json`. A harness that
+Brokk adapters) and the project `opencode.json` / `.pi/mcp-adapter.json`. A harness that
 merges project config with global config therefore gains Ymir **only when opened
 in the Ymir directory**; every other project is untouched.
 
@@ -33,9 +33,9 @@ bin/valknut-load.sh --opencode     # bind Ymir's agents/skills into OpenCode
 ```
 
 `bin/a2a-mcp.sh install` (no `--project`) also writes Pi's **global**
-`~/.pi/agent/mcp.json`. When Pi is used in other areas, prefer `--project`: it
-writes the repo's `.pi/mcp.json` instead, and Pi picks it up only when launched
-with `pi --mcp-config .pi/mcp.json`.
+`~/.pi/agent/mcp-adapter.json`. When Pi is used in other areas, prefer `--project`: it
+writes the repo's `.pi/mcp-adapter.json` instead, and Pi picks it up only when launched
+with `pi --mcp-config .pi/mcp-adapter.json`.
 
 ### Order matters
 
@@ -90,7 +90,7 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4602/health   # the we
 ## Rollback (nothing global was changed)
 
 ```bash
-rm -f .pi/mcp.json opencode.json            # project wiring (private/generated)
+rm -f .pi/mcp-adapter.json opencode.json    # project wiring (private/generated)
 git checkout -- .agents/agents/             # roster model lines, if applied
 systemctl --user stop ymir.service          # the substrate
 ```

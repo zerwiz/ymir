@@ -66,7 +66,7 @@ ymir/
 │   └── README.md                  # [d]
 │
 ├── .pi/ · .opencode/ · .claude/ · .codex/ · .cursor/     # HARNESS DIRS (adapters + agent links)
-│   ├── .pi/extensions/ · settings.json · mcp.json        # [d] Pi adapter (Gná; the session-start digest)
+│   ├── .pi/extensions/ · settings.json · mcp-adapter.json        # [d] Pi adapter (Gná; the session-start digest)
 │   └── agents/ · plugins/ · hooks.json …                 # bound by bin/valknut-load.sh from .agents/
 │
 ├── docs/                           # PLANNING & KNOWLEDGE

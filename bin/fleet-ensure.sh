@@ -392,7 +392,7 @@ raise_verify() {  # <owed...>
   return "$ver"
 }
 
-# ── the seat's pi mcp.json wiring (the doors the harness drinks from) ──────
+# ── the seat's pi mcp-adapter.json wiring (the doors the harness drinks from) ──────
 wire_mcp() {  # role-aware: the well door is local (every seat hosts its own);
   # bolthorn (:8319) and skuld (:8320) live on the HEART — a dev seat drinks
   # them over the tailnet, and the heart drinks its own. The old "write
@@ -416,7 +416,7 @@ if "heart" not in (roles or "").split():
             snotra = "http://%s:8321/mcp" % base
     except Exception:
         pass
-p = os.path.join(home, ".pi/agent/mcp.json")
+p = os.path.join(home, ".pi/agent/mcp-adapter.json")
 try: d = json.load(open(p))
 except Exception: d = {}
 d.setdefault("mcpServers", {})
