@@ -66,9 +66,30 @@ passed on the same request, and the fix is a session header plus a transport wit
 a fingerprint the edge admits. The law it violated is now Rule 09's sibling:
 *local is not a port number; it is a promise.*
 
+## One library, two names (plan 58, Phase 5)
+
+The supervision library family — `fm-classify-lib.sh`, `fm-wake-lib.sh`,
+`fm-lease-lib.sh`, `fm-timeout-lib.sh` — is no longer a second implementation.
+Each is now a **thin adapter** over the ONE library in `bin/`
+(`bin/brokk-classify-lib.sh`, `bin/brokk-wake-lib.sh`, `bin/brokk-lease-lib.sh`,
+`bin/brokk-timeout-lib.sh`): it maps the upstream `FM_*` dialect onto the native
+`BROKK_*` names, sources the one library, and re-exports the upstream verb names
+as one-line aliases. `fm-wake-grant.sh` is the same shape over the native door
+`bin/brokk-wake-grant.sh`. The Ymir side owns the behaviour — it carries the
+real fixes the vendored copies lacked (the resolved `state/.lock-path` read, the
+`brokk-branch-eligible-owner-v1` marker, the timeout library itself) — so the
+native side is the implementation and the upstream name is the adapter.
+
+A body added to one of those files is a second implementation, which is the thing
+the collapse exists to end. Everything else here (`fm-procevent*.sh`, the other
+`fm-*` tools) is unchanged and still the live vendored runtime that
+`bin/eindri-watch.sh` and `bin/hall-snapshot.sh` call.
+
 ## Maintaining this
 
 - **Owner:** Brokk. **Upstream:** `~/firstmate` — a change here that upstream does
   not have is drift, and should be a documented port, not a quiet edit.
 - **Never rename an `fm-*` file** to a Norse name while the upstream reference is
   needed: names are the join between the two trees.
+- **Never add behaviour to an adapter.** The family above defines none; the one
+  library is `bin/brokk-*`.
