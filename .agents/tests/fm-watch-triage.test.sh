@@ -311,37 +311,37 @@ test_classifier_primitives() {
   dir=$(make_case classify-primitives); state="$dir/state"
   printf 'working: a\n\ndone: b\n\n' > "$state/x.status"
   [ "$(last_status_line "$state/x.status")" = "done: b" ] || fail "last_status_line did not return the last non-blank line"
-  status_is_captain_relevant "done: b" || fail "done: not recognized as captain-relevant"
-  status_is_captain_relevant "needs-decision [key=q1]: b" || fail "keyed needs-decision not recognized as captain-relevant"
-  status_is_captain_relevant "working: b" && fail "working: wrongly recognized as captain-relevant"
+  status_is_Allfather_relevant "done: b" || fail "done: not recognized as captain-relevant"
+  status_is_Allfather_relevant "needs-decision [key=q1]: b" || fail "keyed needs-decision not recognized as captain-relevant"
+  status_is_Allfather_relevant "working: b" && fail "working: wrongly recognized as captain-relevant"
   # Incident regression: free-text "merged" inside a nonterminal working: line must
   # not become captain-relevant (AFK false-terminal path).
-  status_is_captain_relevant \
+  status_is_Allfather_relevant \
     "working: stage 2 setup complete on PR #74 exact source branch rebased onto merged #76; task dates preserved" \
     && fail "working: ... merged #N wrongly recognized as captain-relevant"
-  status_is_captain_relevant "working: rebased onto predecessor #76" \
+  status_is_Allfather_relevant "working: rebased onto predecessor #76" \
     && fail "working: predecessor prose wrongly recognized as captain-relevant"
-  status_is_captain_relevant "working: PR ready checks green merged ready in branch" \
+  status_is_Allfather_relevant "working: PR ready checks green merged ready in branch" \
     && fail "working: free-text tokens wrongly recognized as captain-relevant"
-  status_is_captain_relevant "done: PR https://x/pull/76 checks green" \
+  status_is_Allfather_relevant "done: PR https://x/pull/76 checks green" \
     || fail "genuine done: checks green not captain-relevant"
   status_is_terminal_verb "done: PR https://x/pull/76 checks green" \
     || fail "done: not a terminal verb"
   status_is_terminal_verb "working: rebased onto merged #76" \
     && fail "working: wrongly classed as terminal verb"
-  status_is_captain_relevant "merged" || fail "legacy bare merged free-text not captain-relevant"
-  status_is_captain_relevant "PR ready https://x/pull/2" \
+  status_is_Allfather_relevant "merged" || fail "legacy bare merged free-text not captain-relevant"
+  status_is_Allfather_relevant "PR ready https://x/pull/2" \
     || fail "legacy bare PR ready free-text not captain-relevant"
   [ "$(window_to_task "sess:fm-fix-login-k3")" = "fix-login-k3" ] || fail "window_to_task did not strip session+fm- prefix"
   fm_write_meta "$state/herdr-task.meta" "window=default:w1:p2" "backend=herdr"
   [ "$(window_to_task "default:w1:p2" "$state")" = "herdr-task" ] || fail "window_to_task did not resolve opaque backend target through metadata"
-  FM_CAPTAIN_RE='custom-verb:' status_is_captain_relevant "custom-verb: x" || fail "FM_CAPTAIN_RE override not honored"
-  FM_CAPTAIN_RE='custom-verb:' status_is_captain_relevant "done: x" && fail "FM_CAPTAIN_RE override did not replace the default verb set"
-  FM_CAPTAIN_RE='merged|custom-verb:' status_is_captain_relevant "working: rebased onto merged #76" \
-    && fail "FM_CAPTAIN_RE override bypassed working: suppression"
-  FM_CAPTAIN_RE='checks green|custom-verb:' status_is_captain_relevant "paused: checks green pending approval" \
-    && fail "FM_CAPTAIN_RE override bypassed paused: suppression"
-  FM_CAPTAIN_RE='custom-verb:' status_is_captain_relevant "custom-verb: x" \
+  BROKK_ALLFATHER_RE='custom-verb:' status_is_Allfather_relevant "custom-verb: x" || fail "BROKK_ALLFATHER_RE override not honored"
+  BROKK_ALLFATHER_RE='custom-verb:' status_is_Allfather_relevant "done: x" && fail "BROKK_ALLFATHER_RE override did not replace the default verb set"
+  BROKK_ALLFATHER_RE='merged|custom-verb:' status_is_Allfather_relevant "working: rebased onto merged #76" \
+    && fail "BROKK_ALLFATHER_RE override bypassed working: suppression"
+  BROKK_ALLFATHER_RE='checks green|custom-verb:' status_is_Allfather_relevant "paused: checks green pending approval" \
+    && fail "BROKK_ALLFATHER_RE override bypassed paused: suppression"
+  BROKK_ALLFATHER_RE='custom-verb:' status_is_Allfather_relevant "custom-verb: x" \
     || fail "nonterminal suppression weakened custom bare-line behavior"
   printf 'needs-decision: should docs mention [key=prose]?\nneeds-decision [key=q1]: real choice\nresolved: docs still mention [key=q1]\nneeds-decision [key=bad key]: malformed\n' > "$state/keys.status"
   open=$(status_open_decisions "$state/keys.status")
@@ -423,23 +423,23 @@ test_status_is_paused_classifier() {
   status_is_paused '' && fail "empty line classified as paused"
   # A pause is deliberately NOT captain-relevant: it is a stop-nagging signal, not
   # work to keep surfacing.
-  status_is_captain_relevant 'paused: holding for the upstream release' && fail "paused is captain-relevant (should not be)"
-  status_is_paused_or_captain_held 'paused: holding for the upstream release' \
+  status_is_Allfather_relevant 'paused: holding for the upstream release' && fail "paused is captain-relevant (should not be)"
+  status_is_paused_or_Allfather_held 'paused: holding for the upstream release' \
     || fail "declared pause not recognized by the bounded-idle classifier"
-  status_is_paused_or_captain_held 'captain-held [key=route]: tracked by task-decision-route' \
+  status_is_paused_or_Allfather_held 'captain-held [key=route]: tracked by task-decision-route' \
     || fail "captain-held transfer not recognized by the bounded-idle classifier"
-  status_is_paused_or_captain_held 'resolved [key=route]: captain answered' \
+  status_is_paused_or_Allfather_held 'resolved [key=route]: captain answered' \
     && fail "resolved decision remained classed as captain-held"
   # The two declarations share one cadence but block on different humans, so the
   # combined predicate cannot be the only discriminator: a recheck has to know which
   # verb it is naming.
-  status_is_captain_held 'captain-held [key=route]: tracked by task-decision-route' \
+  status_is_Allfather_held 'captain-held [key=route]: tracked by task-decision-route' \
     || fail "captain-held verb not recognized"
-  status_is_captain_held 'paused: holding for the upstream release' \
+  status_is_Allfather_held 'paused: holding for the upstream release' \
     && fail "a declared pause matched the captain-held verb"
-  status_is_captain_held 'working: the captain-held backlog item is next' \
+  status_is_Allfather_held 'working: the captain-held backlog item is next' \
     && fail "a working line mentioning captain-held false-matched"
-  status_is_captain_held '' && fail "empty line classified as captain-held"
+  status_is_Allfather_held '' && fail "empty line classified as captain-held"
   pass "status_is_paused: only the leading paused verb matches, paused is not captain-relevant, and the two declared-wait verbs stay separable"
 }
 

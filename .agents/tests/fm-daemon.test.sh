@@ -813,7 +813,7 @@ test_stale_paused_classifies_pause() {
   dir=$(make_supercase stale-paused)
   state="$dir/state"
   pause_reason='paused: waiting for upstream checks green, merged, and blocked state to clear'
-  status_is_captain_relevant "$pause_reason" && fail "pause reason phrases made the status captain-relevant"
+  status_is_Allfather_relevant "$pause_reason" && fail "pause reason phrases made the status captain-relevant"
   printf '%s\n' "$pause_reason" > "$state/held-w9.status"
   out=$(FM_STATE_OVERRIDE="$state" classify_stale "sess:fm-held-w9" "$state")
   case "$out" in pause\|*) ;; *) fail "declared pause did not classify as pause: $out" ;; esac
@@ -828,7 +828,7 @@ test_stale_captain_held_classifies_pause() {
   dir=$(make_supercase stale-captain-held)
   state="$dir/state"
   held_reason='captain-held [key=route]: tracked by task-decision-route'
-  status_is_captain_relevant "$held_reason" && fail "a captain-held transfer line was treated as captain-relevant"
+  status_is_Allfather_relevant "$held_reason" && fail "a captain-held transfer line was treated as captain-relevant"
   printf '%s\n' "$held_reason" > "$state/held-w9h.status"
   out=$(FM_STATE_OVERRIDE="$state" classify_stale "sess:fm-held-w9h" "$state")
   case "$out" in pause\|*) ;; *) fail "captain-held transfer did not classify as pause: $out" ;; esac
