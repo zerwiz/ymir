@@ -1,0 +1,8 @@
+{
+  "name": "@zerwiz/a2a-ratatoskr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ratatoskr — the heart's A2A 1.0 node (:8301), built on the shared agent-card contract.",
+  "license": "Apache-2.0",
+  "type": "module"
+}
