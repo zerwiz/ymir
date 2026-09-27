@@ -114,15 +114,24 @@ scheduler='
     # from ended seats). The scheduler lives only while the state lock is held by
     # a live process; a headless scheduler with no lock retires too, because
     # Nornir is started BY a session, never before one.
-    mach="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
-    lockf="$mach/brokk.lock"
-    owner=$(tr -d "[:space:]" <"$lockf" 2>/dev/null || true)
-    st=$(ps -o stat= -p "$owner" 2>/dev/null | tr -d " ")
-    if [ -z "$owner" ] || [ "$owner" = "1" ] || [ ! -d "/proc/$owner" ] \
-       || [ "${st#Z}" != "$st" ] || [ "${st#X}" != "$st" ]; then
-      printf "%s cron retired - no live session lock at %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" >>"$log"
-      rm -f "$state/cron.pid" 2>/dev/null || true
-      exit 0
+    #
+    # EXCEPTION (plan 51 Part 7): the always-on heart has no interactive session,
+    # so the record crons would never run. A PERSISTENT seat sets
+    # BROKK_NORNIR_PERSIST=1 and the loop binds to the machine ROLE, not a
+    # session: it stays up with no lock and is stopped only by --stop or the
+    # unit. (A fake session lock was the rejected alternative — it would refuse a
+    # real Brokk seat on the heart.)
+    if [ "${BROKK_NORNIR_PERSIST:-0}" != "1" ]; then
+      mach="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
+      lockf="$mach/brokk.lock"
+      owner=$(tr -d "[:space:]" <"$lockf" 2>/dev/null || true)
+      st=$(ps -o stat= -p "$owner" 2>/dev/null | tr -d " ")
+      if [ -z "$owner" ] || [ "$owner" = "1" ] || [ ! -d "/proc/$owner" ] \
+         || [ "${st#Z}" != "$st" ] || [ "${st#X}" != "$st" ]; then
+        printf "%s cron retired - no live session lock at %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$lockf" >>"$log"
+        rm -f "$state/cron.pid" 2>/dev/null || true
+        exit 0
+      fi
     fi
     now=$(date +%H:%M)
     today=$(date +%Y-%m-%d)

@@ -3,14 +3,40 @@
 // served over JSON-RPC (the A2A 1.0 wire) at :8301.
 import { AgentCard, AgentSkill, Message, Part, Role, TaskState, TextPart } from "@a2a-js/sdk";
 import { DefaultRequestHandler, InMemoryTaskStore, JsonRpcTransportHandler, ServerCallContext, type AgentExecutor, type RequestContext, type AgentExecutionEvent } from "@a2a-js/sdk/server";
+import { hostname } from "node:os";
 
 const WELL = process.env.WELL_URL || "http://127.0.0.1:4602";
 const PORT = Number(process.env.PORT || 8301);
 
+// The card's `url` must be the address a PEER uses to reach this node — over the
+// fleet that is the tailnet name, never a LAN address (a home IP is dead on the
+// road). Resolved, not hardcoded (Rule 07): an explicit A2A_ADVERTISE_URL wins,
+// then A2A_ADVERTISE_HOST, then this host's own tailnet DNS name, then loopback.
+function tailnetHost(): string | undefined {
+  try {
+    const out = Bun.spawnSync(["tailscale", "status", "--json"], { stdout: "pipe", stderr: "ignore" });
+    if (out.exitCode !== 0) return undefined;
+    const self = JSON.parse(out.stdout.toString())?.Self?.DNSName as string | undefined;
+    return self ? self.replace(/\.$/, "") : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function advertiseUrl(): string {
+  const explicit = process.env.A2A_ADVERTISE_URL;
+  if (explicit) return explicit.endsWith("/") ? explicit : `${explicit}/`;
+  const host = process.env.A2A_ADVERTISE_HOST || tailnetHost() || "127.0.0.1";
+  return `http://${host}:${PORT}/`;
+}
+
+// The name must follow the heart, not a frozen box: `A2A_AGENT_NAME` wins, else
+// `heart-<this host>` — so a heart move between boxes is a re-resolve, never a
+// lying card.
 const card: AgentCard = {
-  name: "heart-whynot",
+  name: process.env.A2A_AGENT_NAME || `heart-${hostname().split(".")[0]}`,
   description: "The record heart + the forge: gate, well, mill, served-MCP. The A2A node of the federation.",
-  url: `http://192.168.68.111:${PORT}/`,
+  url: advertiseUrl(),
   version: "1.0.0",
   capabilities: {
     streaming: true,

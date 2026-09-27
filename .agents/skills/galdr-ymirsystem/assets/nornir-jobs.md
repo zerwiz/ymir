@@ -37,6 +37,14 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
   absent or its holder is dead or a zombie. This ends the **8-orphan-loop leak**
   left by ended seats; a seat never leaves its scheduler behind. `--stop` still
   stops a loop by hand.
+- **Persistent seat (2026-09-27, plan 51 Part 7).** The always-on **heart** has
+  no interactive session, so its record crons would never run under the
+  session-scoped retirement above. A persistent seat sets
+  **`BROKK_NORNIR_PERSIST=1`** (via the unit's environment) and the loop binds to
+  the machine's **role, not a session**: it skips the retire check and stays up
+  with no lock until `--stop` or the unit stops it. A fake session lock was
+  rejected — it would refuse a real Brokk seat on the heart. Every other seat
+  keeps the default (session-scoped).
 - Liveness is verified by PID **and** the command line carrying the identity mark
   `cron run:` (`/proc/<pid>/cmdline`), so PID reuse after reboot cannot fake a running loop.
 - Log rotation: `state/cron.log` rotates to `state/cron.log.1` above

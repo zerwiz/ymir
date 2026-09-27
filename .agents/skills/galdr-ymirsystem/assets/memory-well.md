@@ -11,7 +11,12 @@ The well is **Mimirsbrunn**, backed by the validated OSS engine **engdbram**
 > **The name trap.** PyPI's `engram` is an unrelated *rendering* library
 > (mitsuba/drjit/torch). Installing it pulls gigabytes of CUDA wheels and still
 > leaves Ymir with no memory engine. The distribution is **`engdbram`**;
-> `bin/prereq-ensure.sh engram` installs the right one. It is **one repo-local store** shared by every agent and
+> `bin/prereq-ensure.sh engram` installs the right one. There is a **second
+> trap**: PyPI's `engram-mcp` is a *different* package (a Notion bridge, same
+> console-script name). The fleet's `engram-mcp` is the console script **inside
+> `engdbram`** — `bin/fleet-ensure.sh` installs `engdbram` for the well venv and
+> rebuilds a venv whose `import engram` fails (2026-09-27), and `engdbram` needs
+> Python `>=3.11,<3.14`. It is **one repo-local store** shared by every agent and
 every harness. Motto: **drink before you act, water it after** — recall on the
 way in, observe on the way out.
 
@@ -26,6 +31,7 @@ way in, observe on the way out.
 | HTTP bridge | `bin/mimir-bridge.py` (+ `bin/mimir-bridge.sh`) | the `:4602` face over the engram library |
 | CLI | `bin/mimir.sh` | operator CLI: `health` `recall` `observe` `timeline` |
 | Ingest | `bin/mimir-ingest.sh` | drinks a directory into the JSONL well + bridge |
+| Vault sync | `bin/well-vault-sync.sh` | checkpoints the engram WAL and stages ONLY the named well files into the home vault (`--mode push`), or fast-forwards it (`--mode pull`); the `@heart 06:35` row runs it from the repo root. `sqlite3` fast path, `python3` stdlib fallback |
 | Gate API | `apps/hlidskjalf/server/index.ts` | `/api/well`, `/api/well/episode`, `/api/mimir/health` |
 | UI | `apps/hlidskjalf/src/gates/Well.tsx` + `components/RecallPanel.tsx` | recall panel, timeline, click-to-read |
 | MCP server | `engram-mcp` (console script) | stdio MCP: `remember` `recall` `why` `forget` `stats` |

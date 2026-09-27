@@ -152,13 +152,27 @@ materialize_tools() {
 CARD
   fi
   [ -f "$DST/cards-root/index.html" ] || printf '<h1>Fleet cards — %s</h1>\n' "$(hostname -s)" > "$DST/cards-root/index.html"
-  # the well venv (mcp-proxy wrapping engram-mcp) — materialized HERE, so a
-  # seat never inherits the heart's hand-built venv path
+  # the well venv (mcp-proxy wrapping the engram MCP) — materialized HERE, so a
+  # seat never inherits the heart's hand-built venv path. The engine is
+  # **engdbram** (its console script is `engram-mcp`); PyPI's `engram-mcp` is a
+  # different, unrelated Notion bridge — installing it left every well face
+  # serving the wrong tools while `systemctl` still said "running". Rebuild a
+  # venv whose `import engram` fails, and pick a python the engine accepts
+  # (>=3.11,<3.14) from the recorded interpreter when the default is too new.
   VENV="$DST/well-venv"
-  if [ ! -x "$VENV/bin/mcp-proxy" ]; then
-    if command -v python3 >/dev/null 2>&1; then
-      python3 -m venv "$VENV" 2>/dev/null && "$VENV/bin/pip" -q install mcp-proxy "mcp<2" engram-mcp >/dev/null 2>&1
+  _fe_venv_ok() { [ -x "$VENV/bin/mcp-proxy" ] && "$VENV/bin/python" -c 'import engram' >/dev/null 2>&1; }
+  if ! _fe_venv_ok; then
+    _fe_py=""
+    [ -r "$HOME/.config/ymir/engram-python" ] && _fe_py="$(tr -d '[:space:]' <"$HOME/.config/ymir/engram-python" 2>/dev/null)"
+    [ -n "$_fe_py" ] || _fe_py="$(command -v python3 2>/dev/null || true)"
+    if [ -n "$_fe_py" ] && command -v "$_fe_py" >/dev/null 2>&1; then
+      rm -rf "$VENV"
+      if "$_fe_py" -m venv "$VENV" 2>/dev/null; then
+        "$VENV/bin/pip" -q install --upgrade pip >/dev/null 2>&1 || true
+        "$VENV/bin/pip" -q install mcp-proxy 'mcp<2' engdbram >/dev/null 2>&1 || true
+      fi
     fi
+    unset _fe_py
   fi
 }
 
