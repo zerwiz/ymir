@@ -16,12 +16,18 @@ support module, not a fifth verb. The grants law (`src/ymir_runtime/grants.py`) 
 registered with it as the kind `grants`: a cross-operator grant without each
 Heimdall's signature is refused (plan 58, *Several Ymirs, one company*).
 
+Beside them sits the dispatch layer: `resolve(role|task, brief=…)` walks the
+decision table (`.agents/roles.yaml` + the hoard's `config/agents.yaml`) to role →
+figure → tools → model → seat. It, too, is a support layer: `seat()` still owns
+the seat.
+
 Plan 58, Phase 1. Read `docs/fixes/runtime/` for what each release changed.
 """
 
 from __future__ import annotations
 
 from .config import ConfigError, ConfigUnavailable, ConfigValidationError, load_config
+from .dispatch import Resolution, TableRefusal, resolve
 from .errors import EngineError, EngineRefusal, SeatNotFound
 from .harness import HarnessSelection
 from .seat import Errand, seat
@@ -40,13 +46,16 @@ __all__ = [
     "EngineError",
     "EngineRefusal",
     "HarnessSelection",
+    "Resolution",
     "SeatNotFound",
     "SeatState",
     "SendResult",
     "StopResult",
+    "TableRefusal",
     "Worktree",
     "__version__",
     "load_config",
+    "resolve",
     "seat",
     "send",
     "status",
