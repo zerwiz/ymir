@@ -21,6 +21,12 @@ decision table (`.agents/roles.yaml` + the hoard's `config/agents.yaml`) to role
 figure → tools → model → seat. It, too, is a support layer: `seat()` still owns
 the seat.
 
+Two support modules own behaviour the doors used to carry themselves:
+`watch.py` is Sýn — the standing arm's lease, heartbeat, verdict, and raise
+grammar — and `landed.py` is the teardown gate, so a worktree is never removed
+while its work has not landed. Both are reached through `bin/syn-watch.sh` and
+`stop --require-landed`.
+
 Plan 58, Phase 1. Read `docs/fixes/runtime/` for what each release changed.
 """
 
@@ -30,13 +36,14 @@ from .config import ConfigError, ConfigUnavailable, ConfigValidationError, load_
 from .dispatch import Resolution, TableRefusal, resolve
 from .errors import EngineError, EngineRefusal, SeatNotFound
 from .harness import HarnessSelection
+from .landed import Landed, gate as landed_gate
 from .seat import Errand, seat
 from .send import SendResult, send
 from .status import SeatState, status
 from .stop import StopResult, stop
 from .worktree import Worktree
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 __all__ = [
     "ConfigError",
@@ -46,6 +53,7 @@ __all__ = [
     "EngineError",
     "EngineRefusal",
     "HarnessSelection",
+    "Landed",
     "Resolution",
     "SeatNotFound",
     "SeatState",
@@ -54,6 +62,7 @@ __all__ = [
     "TableRefusal",
     "Worktree",
     "__version__",
+    "landed_gate",
     "load_config",
     "resolve",
     "seat",
