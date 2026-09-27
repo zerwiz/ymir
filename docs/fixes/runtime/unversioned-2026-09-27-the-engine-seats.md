@@ -79,11 +79,14 @@ grammar are **untouched**.
 - **The twins are alive.** `bin/einherjar-spawn.sh`'s own 990-line body and the
   `.agents/backend/fm-*` vendored runtime both still stand; deleting them is
   Phase 5, a later errand.
-- **Pre-existing, observed, NOT fixed here:** `bin/einherjar-spawn.sh`'s
-  `agent_yaml_local_providers` heredoc has an indented Python body and dies with
-  `IndentationError` on every spawn (harmless today — the local-provider fallback
-  catches it). Reported, not touched: it is the old road, and this errand's
-  charter is to leave it working.
+- **The model-resolver heredoc is PRESERVED, not touched (Brokk steer 001).** The
+  base tree carries an indented python heredoc in `bin/einherjar-spawn.sh`'s
+  `agent_yaml_local_providers` — the one that broke every dispatch until PR #215
+  normalized it. This branch does **not** touch that region: `git merge-tree` of
+  #215 into this branch is clean, with BOTH the column-zero heredoc and the engine
+  handoff standing in the merged tree. The engine does not use the bash heredoc at
+  all — `src/ymir_runtime/harness.py` resolves harness/model/effort itself — so the
+  heredoc stays only for the old road until the adapter's own resolution retires.
 - **Pre-existing miscount corrected:** `installation.md`'s `install[]` block
   declared 29 rows and held 30; the gate reads the declaration, so the block lied
   by one. Fixed in the same pass — a governed asset that miscounts itself is the
