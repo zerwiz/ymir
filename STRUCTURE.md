@@ -1,6 +1,6 @@
 # YMIR — Complete Repository Structure
 
-Authoritative layout of the Ymir Agent Operating System, cut from the live tree (2026-09-20).
+Authoritative layout of the Ymir Agent Operating System, cut from the live tree (2026-09-27; the `bin/` count re-verified against the tree, never trusted from the last pass).
 Legend: `[d]` = tracked in git (doc/config/template/manifest) · `[g]` = git-ignored/generated ·
 `[p]` = planned (structure exists or is promised, not yet built). Private data never lives here —
 it rests in `$YMIR_HOME/hodd` (Rule 04); the repo is the public program.
@@ -20,7 +20,7 @@ ymir/
 ├── .no-mistakes.yaml              # [d] the clean-PR gate posture
 ├── .gitignore · .secret-guardignore         # [d] the wards
 │
-├── bin/                            # THE FORGE — 213 files: every door of the hall (counted 2026-09-27)
+├── bin/                            # THE FORGE — 214 files: every door of the hall (counted 2026-09-27)
 │   ├── ymir.js                    # [d] the npm CLI front door (install/raise/lower/eir/groa/pi…)
 │   ├── ymir-install.sh            # [d] first setup (--plan · --yes · --no-desktop)
 │   ├── ymir-migrate.sh · ymir-invite.sh · ymir-setup-auth.sh · ymir-say.sh
@@ -38,7 +38,7 @@ ymir/
 │   ├── secret-guard.sh · hoard-guard.sh · perm-guard.sh · docs-guard.sh
 │   ├── syn-watch-arm.sh · syn-turnend-guard.sh    # Sýn supervision
 │   ├── valknut-load.sh            # [d] binds the distro into each harness
-│   └── …                          # full inventory lives in bin/ itself (213)
+│   └── …                          # full inventory lives in bin/ itself (214)
 │
 ├── scripts/                        # THE RAISE — stand the hall, or lay it down
 │   ├── start.sh                   # [d] raise: SPA :3888 · gate :3889 · Óðrerir :4322 · visualizer :8437 · services
@@ -46,6 +46,7 @@ ymir/
 │   └── electron.sh                # [d] the desktop shell (views: hlidskjalf · smidja · odrerir; --both)
 │
 ├── src/ymir_runtime/               # THE ENGINE — python, stdlib only, no build step
+│   ├── __init__.py · __main__.py  # [d] the package edge · `python3 -m ymir_runtime`
 │   ├── seat.py · status.py · send.py · stop.py   # [d] the four-verb public interface
 │   ├── worktree.py · harness.py · backend.py · container.py · heartbeat.py   # [d] Yggdrasil · Hamr · the pane · Utgard · silence
 │   ├── paths.py · proc.py · errors.py            # [d] the home law · one place that runs a process · the failures
@@ -75,7 +76,8 @@ ymir/
 │   └── README.md                  # [d]
 │
 ├── .pi/ · .opencode/ · .claude/ · .codex/ · .cursor/     # HARNESS DIRS (adapters + agent links)
-│   ├── .pi/extensions/ · settings.json · mcp-adapter.json        # [d] Pi adapter (Gná; the session-start digest)
+│   ├── .pi/extensions/ · settings.json                           # [d] Pi extension sources + settings
+│   ├── .pi/mcp-adapter.json.example  # [d] the tracked register template; the rendered `.pi/mcp-adapter.json` is [g]
 │   └── agents/ · plugins/ · hooks.json …                 # bound by bin/valknut-load.sh from .agents/
 │
 ├── docs/                           # PLANNING & KNOWLEDGE
@@ -89,7 +91,8 @@ ymir/
 │   #                                08 delivery gate · 09 electron
 ├── .compliance/                    # [d] the NSR compliance harness (gates · telemetry · config)
 ├── data/                           # [g] untracked operator facts work-area (learnings, models) — truth lives in the home
-├── state/ · .run/                  # [g] runtime state: pid files, logs, wake queue (.gitkeep tracked only)
+├── state/ · .run/                  # [g] runtime state: pid files, logs, wake queue (.gitkeep tracked only).
+│   #                                 `state/` is a SYMLINK → `$YMIR_HOME/state` (Rule 04 — one truth, never a tree copy)
 ├── hodd/                           # [d] the hoard EXAMPLE templates (AGENTS.example.md, .ymir-layout.yaml.example) — never private data
 ├── midgard/                        # [d] shared public assets — design-system/ (tokens, icons, ymir-mark)
 ├── svartalfaheim/                  # [d] realm templates + examples (never real realm data)
@@ -114,7 +117,7 @@ ymir/
 | `docs/` | Knowledge: architecture, lore, runbooks, per-fix notes | fixes notes append |
 | `RULES/` | Numbered house law (append-only) | corrections append |
 | `.compliance/` | NSR gate harness (wiring, danger, env, paths) | `.compliance/` stamps in target repos |
-| `state/ .run/` | Runtime state (git-ignored except `.gitkeep`) | pid files, logs, wake queue |
+| `state/ .run/` | Runtime state, git-ignored except `.gitkeep`; **`state/` is a symlink into the operator's home** (`$YMIR_HOME/state`), so a write through the tree path lands in the hoard | pid files, logs, wake queue |
 | `hodd/ midgard/ svartalfaheim/ workspace/` | Example templates; shared public design assets; realm scaffolds; registry examples | none |
 
 ## Conventions
