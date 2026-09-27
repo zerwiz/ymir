@@ -1,3 +1,5 @@
+import type { AgentInterface } from '../../../packages/contracts/src/index.ts';
+
 // Known realms autocomplete; arbitrary realm ids are allowed so a freshly
 // provisioned tenant (first GitHub login) can exist without a rebuild.
 export type RealmId = 'work' | 'personal' | (string & {});
@@ -92,11 +94,7 @@ export interface AgentCard {
   status: AgentStatus;
   capabilities: string[];
   skills: string[];
-  interface: {
-    protocol: string;
-    endpoint: string;
-    signed: boolean;
-  };
+  interface: AgentInterface;
   model: string;
   uptime: number;
   tasksDone: number;

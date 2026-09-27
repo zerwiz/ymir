@@ -125,14 +125,25 @@ materialize_tools() {
   #    the well door; heart/forge seats the offices) — each copy is best-effort
   #    because the artifacts' ABSENCE is verified loudly AFTER the raise.
   mkdir -p "$DST"
+  # Each row is <repo path>:<~/.fleet path>. A DIRECTORY row is copied whole, so
+  # the packages/ anchor is preserved and a relative import across packages
+  # (e.g. the A2A server's card) resolves in the deployed copy exactly as it
+  # does in the repo. Legacy flat rows keep their flat deployed names.
   for pair in "tools/well-mcp/server.ts:well-mcp-server.ts" \
-              "tools/ratatoskr-node/server.ts:ratatoskr-server.ts" \
+              "packages/a2a/ratatoskr:packages/a2a/ratatoskr" \
+              "packages/mcp/skills:packages/mcp/skills" \
+              "packages/contracts:packages/contracts" \
               "tools/mill/worker.sh:mill-worker.sh" \
-              "tools/skills-mcp/server.mjs:skills-mcp-server.mjs" \
               "tools/tickets-mcp/server.mjs:tickets-mcp-server.mjs" \
               "tools/snotra/server.mjs:snotra-server.mjs"; do
     src="${pair%%:*}"; dstn="${pair##*:}"
-    [ -f "$ROOT/$src" ] && cp -f "$ROOT/$src" "$DST/$dstn" 2>/dev/null || true
+    [ -e "$ROOT/$src" ] || continue
+    mkdir -p "$DST/$(dirname "$dstn")"
+    if [ -d "$ROOT/$src" ]; then
+      cp -R "$ROOT/$src/." "$DST/$dstn/" 2>/dev/null || true
+    else
+      cp -f "$ROOT/$src" "$DST/$dstn" 2>/dev/null || true
+    fi
   done
   # the meeting ear's operator commands — capture, transcribe, ensure — so any
   # seat can run them from ~/.fleet without a repo checkout on its PATH

@@ -26,12 +26,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 DST="${YMIR_FLEET_DIR:-$HOME/.fleet}"
 
-# tool file in the package -> deployed name under ~/.fleet
+# tool file (or directory) in the package -> deployed path under ~/.fleet
 TOOLS=(
   "tools/well-mcp/server.ts:well-mcp-server.ts"
-  "tools/ratatoskr-node/server.ts:ratatoskr-server.ts"
+  "packages/a2a/ratatoskr:packages/a2a/ratatoskr"
+  "packages/mcp/skills:packages/mcp/skills"
+  "packages/contracts:packages/contracts"
   "tools/mill/worker.sh:mill-worker.sh"
-  "tools/skills-mcp/server.mjs:skills-mcp-server.mjs"
   "tools/tickets-mcp/server.mjs:tickets-mcp-server.mjs"
 )
 # unit -> the unit name systemd knows
@@ -43,7 +44,19 @@ UNITS=( "well-mcp" "ratatoskr" "mill-worker" "cards" "skuld" )
 changed=0
 for pair in "${TOOLS[@]}"; do
   src="${pair%%:*}"; name="${pair#*:}"
-  [ -r "$ROOT/$src" ] || continue
+  [ -e "$ROOT/$src" ] || continue
+  if [ -d "$ROOT/$src" ]; then
+    mkdir -p "$DST/$name"
+    diff -rq "$ROOT/$src" "$DST/$name" >/dev/null 2>&1 && continue
+    if [ "$DRY" = 1 ]; then
+      printf 'fleet-deploy: would refresh %s/\n' "$name"
+    else
+      cp -R "$ROOT/$src/." "$DST/$name/" 2>/dev/null || continue
+      printf 'fleet-deploy: refreshed %s/\n' "$name"
+    fi
+    changed=$((changed + 1))
+    continue
+  fi
   if [ -r "$DST/$name" ] && cmp -s "$ROOT/$src" "$DST/$name"; then continue; fi
   if [ "$DRY" = 1 ]; then
     printf 'fleet-deploy: would refresh %s\n' "$name"

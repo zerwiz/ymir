@@ -1,29 +1,17 @@
 // ratatoskr-node.ts — the heart's A2A node (wave D, 2026-09-23).
 // DefaultRequestHandler + InMemoryTaskStore + a WELL round-trip executor,
 // served over JSON-RPC (the A2A 1.0 wire) at :8301.
-import { AgentCard, AgentSkill, Message, Part, Role, TaskState, TextPart } from "@a2a-js/sdk";
+import { Message, Part, Role, TaskState, TextPart, type AgentCard as SdkAgentCard } from "@a2a-js/sdk";
 import { DefaultRequestHandler, InMemoryTaskStore, JsonRpcTransportHandler, ServerCallContext, type AgentExecutor, type RequestContext, type AgentExecutionEvent } from "@a2a-js/sdk/server";
+import { A2A_CARD_PATH, type AgentCard } from "../../contracts/src/index.ts";
+import { heartCard } from "./card.ts";
 
 const WELL = process.env.WELL_URL || "http://127.0.0.1:4602";
 const PORT = Number(process.env.PORT || 8301);
 
-const card: AgentCard = {
-  name: "heart-whynot",
-  description: "The record heart + the forge: gate, well, mill, served-MCP. The A2A node of the federation.",
-  url: `http://192.168.68.111:${PORT}/`,
-  version: "1.0.0",
-  capabilities: {
-    streaming: true,
-    pushNotifications: false,
-    stateTransitionHistory: false,
-  },
-  skills: [{ id: "well-recall", name: "well-recall", description: "Recall from the well" } satisfies AgentSkill],
-  defaultInputModes: ["text"],
-  defaultOutputModes: ["text"],
-  securitySchemes: [],
-  security: [],
-  protocols: ["a2a"],
-};
+// The card is the SHARED contract's: built (and validated) at boot, so a card
+// that left the shape fails here, loudly, and never reaches the wire.
+const card: AgentCard = heartCard();
 
 const executor: AgentExecutor = {
   async *executeTask(context: RequestContext): AsyncIterable<AgentExecutionEvent> {
@@ -40,14 +28,14 @@ const executor: AgentExecutor = {
 };
 
 const store = new InMemoryTaskStore();
-const requestHandler = new DefaultRequestHandler(card, store, executor);
+const requestHandler = new DefaultRequestHandler(card as unknown as SdkAgentCard, store, executor);
 const transport = new JsonRpcTransportHandler(requestHandler);
 
 const server = Bun.serve({
   port: PORT,
   async fetch(req: Request) {
     const url = new URL(req.url);
-    if (url.pathname === "/.well-known/agent-card.json") return Response.json(card);
+    if (url.pathname === A2A_CARD_PATH) return Response.json(card);
     if (req.method === "POST") {
       const body = await req.text();
       const context = new ServerCallContext({}); // tenant/user defaults
@@ -58,8 +46,7 @@ const server = Bun.serve({
       }
       return Response.json(out, { headers: { "content-type": "application/json" } });
     }
-    if (url.pathname === "/.well-known/agent-card.json") return Response.json(card);
-    return new Response("ratatoskr node — POST JSON-RPC here; card at /.well-known/agent-card.json", { status: 404 });
+    return new Response(`ratatoskr node — POST JSON-RPC here; card at ${A2A_CARD_PATH}`, { status: 404 });
   },
 });
 console.log(`ratatoskr: heart node on :${PORT} — card + JSON-RPC live`);

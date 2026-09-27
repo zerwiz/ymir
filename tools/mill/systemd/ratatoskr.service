@@ -4,7 +4,7 @@ Description=Ratatoskr, the heart A2A node (:8301)
 Type=simple
 WorkingDirectory=%h/.fleet
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
-ExecStart=%h/.bun/bin/bun run ratatoskr-server.ts
+ExecStart=%h/.bun/bin/bun run packages/a2a/ratatoskr/server.ts
 Restart=on-failure
 StartLimitIntervalSec=120
 StartLimitBurst=10

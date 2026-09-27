@@ -75,11 +75,11 @@ without a repo checkout on its PATH.
 ```
 fleet[8]{service,source,unit,port,role}:
   "well-mcp","tools/well-mcp/server.ts","well-mcp.service","8317","heart + dev door"
-  "ratatoskr","tools/ratatoskr-node/server.ts","ratatoskr.service","8301","heart"
+  "ratatoskr","packages/a2a/ratatoskr/server.ts","ratatoskr.service","8301","heart"
   "mill-worker","tools/mill/worker.sh","mill-worker.service","—","heart"
   "embed","(llama-server)","embed.service","8500","heart/forge with the model"
   "cards","(cards-root)","cards.service","8318","all"
-  "skills-mcp","tools/skills-mcp/server.mjs","skills-mcp.service","8319","heart + dev"
+  "skills-mcp","packages/mcp/skills/server.mjs","skills-mcp.service","8319","heart + dev"
   "skuld","tools/tickets-mcp/server.mjs","skuld.service","8320","heart"
   "snotra","tools/snotra/server.mjs","snotra.service","8321","heart (read-only minutes)"
 ```

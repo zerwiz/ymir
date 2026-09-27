@@ -36,10 +36,12 @@ ok() { say "  ok: $*"; }
 HULL=(
   "tools/mill/systemd/ratatoskr.service"
   "tools/mill/systemd/skuld.service"
-  "tools/skills-mcp/server.mjs"
+  "packages/mcp/skills/server.mjs"
   "tools/tickets-mcp/server.mjs"
   "tools/well-mcp/server.ts"
-  "tools/ratatoskr-node/server.ts"
+  "packages/a2a/ratatoskr/server.ts"
+  "packages/a2a/ratatoskr/card.ts"
+  "packages/contracts/src/agent-card.ts"
   "tools/mill/worker.sh"
   # the Smiðja visualizer's BUILT UI — without it the app view is blank
   "apps/smidja-factory/apps/visualizer/dist/index.html"
