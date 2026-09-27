@@ -34,13 +34,19 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > an existing workflow. `bin/a2a-mcp.sh show` reports what is **actually** wired —
 > every key present, not a fixed list.
 >
-> **The MCP doors are role-wired at raise** (`bin/fleet-ensure.sh ensure`):
-> `well` binds this seat's own served well door (`127.0.0.1:8317/mcp`), while
-> `bolthorn` (:8319) and `skuld` (:8320) are the HEART's doors — a dev/forge/hand
-> seat drinks them over the tailnet from the fleet registry's heart row
-> (`http://<heart>/…`), and the heart drinks its own. This replaced the old
-> "write localhost to every seat" line, which pointed the Allfather's doors at
-> ghosts on seats that never hosted them.
+> **The MCP doors point at ONE local gateway** (`bin/mcp-gateway.sh`, :8316),
+> raised per body by `bin/fleet-ensure.sh ensure` (the `mcp-gateway` unit). The
+> seat's `mcp-adapter.json` names the gateway for the record MCPs — `well`,
+> `bolthorn`, `skuld` all resolve to `http://127.0.0.1:8316/mcp/<server>` — so a
+> change to the heart's address re-resolves inside the gateway and never moves the
+> seat's config. Attached, the gateway proxies the role-resolved heart endpoints
+> (tailnet first, LAN fallback, loopback on the heart); detached or offline it
+> serves the cached tool catalog and queues writes into the body's journal
+> (`state/journal/<host>.jsonl`), and its `sync` tool flushes the journal and
+> refreshes the catalogs on reconnect. The well is local-first: the gateway
+> reaches the seat's own well door first. This replaced the old "write the heart
+> IP into every seat" line, which broke the seat's doors the moment the heart
+> moved — and `bin/mcp-config.sh` renders the same gateway door.
 
 
 The Ymir runtime is a **distro**: a directory of instructions, skills, tooling and conventions that turns a general-purpose agent into a specialized one. Launching a supported harness inside `BROKK_HOME` is supposed to instantiate **Brokk** and address the operator as the **Allfather** *before the model's first turn*.
