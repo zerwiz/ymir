@@ -127,11 +127,11 @@ bin/syn-watch-arm.sh --restart
 
 | Piece | Door | What it owns |
 |---|---|---|
-| The arm (the loop) | `bin/syn-watch.sh run` | the poll, the heartbeat, the wake raise, the lease — standing, session-independent |
+| The arm (the loop) | `bin/syn-watch.sh run` | the poll, the heartbeat, the wake raise, the lease — standing, session-independent; the BEHAVIOUR is `src/ymir_runtime/watch.py` (plan 58, Phase 5), so this door only names the verb |
 | The door | `bin/syn-watch.sh status\|start\|stop\|restart` | the operator's truth (`up` · `idle` · `stale` · `down`, exit non-zero on a gap) and the raise/lower |
 | The unit | `tools/mill/systemd/ymir-syn-watch.service` | `Type=simple`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; seated by `bin/fleet-ensure.sh` (program `syn-watch`, roles heart+dev) |
 | The thin client | `bin/syn-watch-arm.sh` | the helm, attach, and the relay of what the arm raised — what the harness adapters spawn |
-| The tests | `.agents/tests/syn-watch-arm-silent-exit.test.sh` · `tests/e2e/arm-service-proof.sh` | the flood brake + the live service proofs |
+| The tests | `.agents/tests/syn-watch-arm-silent-exit.test.sh` · `tests/e2e/arm-service-proof.sh` | the flood brake + the live service proofs (both run the engine's `watch.py` through the door) |
 
 **Why the shape changed.** The loop used to live INSIDE the arm script, so it
 lived and died with the session. When the session's lock owner went away it
