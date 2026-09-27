@@ -76,3 +76,18 @@ mode/model/permission   the harness binding (OpenCode) — from the canonical
 - `bin/perm-guard.sh` flags any profile with a flat `bash: allow`
   (`--strict` exits 1). Run it before claiming an agent change done; see the
   runbook `docs/runbooks/agent-permissions.md`.
+
+## 6. The review figure — the automatic PR-review spine (appended 2026-09-27)
+
+The **reviewer** role is sealed to **Forseti** (`.agents/agents/forseti-reviewer.md`),
+the judge of the Eindri. Every ship errand that reaches `done` with a PR has a
+dedicated review errand seated for it — `<id>-review`, a **scout-kind** errand
+launched through the einherjar road on the `pi` harness — before the Allfather's
+seal. The mechanism is `bin/eindri-review-spawn.sh`, called from the terminal act
+(`bin/eindri-acclaim.sh --terminal done`); it fires **once per task** (the
+`.reviewed` marker), and `YMIR_AUTO_REVIEW=off` is the loud override.
+
+Law, unchanged and restated: edit the **canonical** card in `.agents/agents/` and
+re-run `bin/valknut-load.sh --all`; **never** edit the harness directories by
+hand. The judge's card keeps `edit: deny` / `write: deny` — the spine only ever
+reads the branch it judges.
