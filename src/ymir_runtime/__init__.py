@@ -10,11 +10,16 @@ Everything a door needs is behind those four calls. A door (`bin/eindri-start.sh
 the engine can own it, and keeps the old road when the engine refuses — the
 strangler is reversible by design until parity is proven.
 
+Beside the verbs sits the config layer: `load_config(path)` returns a validated
+config or refuses loudly, naming the key and the file (plan 58, Phase 7). It is a
+support module, not a fifth verb.
+
 Plan 58, Phase 1. Read `docs/fixes/runtime/` for what each release changed.
 """
 
 from __future__ import annotations
 
+from .config import ConfigError, ConfigUnavailable, ConfigValidationError, load_config
 from .errors import EngineError, EngineRefusal, SeatNotFound
 from .harness import HarnessSelection
 from .seat import Errand, seat
@@ -23,9 +28,12 @@ from .status import SeatState, status
 from .stop import StopResult, stop
 from .worktree import Worktree
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = [
+    "ConfigError",
+    "ConfigUnavailable",
+    "ConfigValidationError",
     "Errand",
     "EngineError",
     "EngineRefusal",
@@ -36,6 +44,7 @@ __all__ = [
     "StopResult",
     "Worktree",
     "__version__",
+    "load_config",
     "seat",
     "send",
     "status",
