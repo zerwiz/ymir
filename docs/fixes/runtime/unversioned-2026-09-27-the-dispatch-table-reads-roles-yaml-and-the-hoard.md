@@ -72,3 +72,13 @@ binder (`bin/agents-config.sh apply`), not a second copy here.
   the validator-gated rows cleanly (31 skips).
 - `bash -n bin/ymir-engine.sh` clean.
 - No new dependency: the layer reads YAML/JSON through the declared config layer.
+
+**Correction (2026-09-27, Forseti's #229 review — appended, the original stands).**
+The review held the seal on three items; all mended in the same pass:
+- The dispatch section is `### 7.6` (level 3), ordered after `### 7.5`, with its
+  blank line — not `## 7.4` (a duplicate of the grants' 7.4).
+- The suite count on the rebased head is **175 OK (42 skipped, system python3)**,
+  not 158.
+- `resolve()` now derives `root` from `env` when none is passed
+  (`root = resolve_paths(env).root`), so the table and the model registry read
+  the SAME root — the rootA/rootB divergence the judge demonstrated is closed.
