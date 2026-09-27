@@ -551,3 +551,23 @@ Realm secrets are read from `svartalfaheim/<realm>/.env.realm` (active realm, or
 (`.gitignore`: `svartalfaheim/*/.env*`, with `!*.example` so templates stay
 tracked). The full how-to for a company's secrets — realm-level and per-venture —
 is `svartalfaheim/wayof/SECRETS.md`.
+
+### 3.11 The rollover backstop (`bin/nornir-job-asken-handoff.sh`, 04:00, added 2026-09-27)
+
+The handoff (`asken trigger`) is automatic at the moment a surface calls it (the
+OpenCode plugin, the Zed task); this job is the **backstop**, so a session that
+died without a reporter still leaves a fresh `HANDOFF.md` behind. It is
+best-effort and always exits 0 — a missing `asken` on PATH is a `skip`, never a
+failure.
+
+| Reads | Writes |
+|---|---|
+| `$ASKEN_REPOS` (colon- or space-separated, default `$BROKK_HOME`) · each repo's `.asken/` state | each repo's `HANDOFF.md` + `.asken/handoff.json` · Rune `nornir / asken.handoff` |
+
+- Only a repository that carries a `.asken/` state is handed off (or **every**
+  listed repository when `ASKEN_INIT_ALL` is set); `ASKEN_BIN` overrides the
+  executable, else `command -v asken`.
+- Runs `asken trigger --force --repo <repo> --quiet`, so the refresh is
+  unconditional; the Anchor sync is time-bounded inside `asken` and skipped when
+  Anchor is down, so the job never blocks and the roll still mirrors when it can.
+- Emits one TOON row per repository (`repo,head,acted`), then carves the Rune.

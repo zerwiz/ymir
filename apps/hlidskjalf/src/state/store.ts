@@ -25,6 +25,7 @@ import {
   saveSession,
 } from '../services/auth';
 import {
+  GateError,
   gateApi,
   type ChatModel,
   type ChatSession,
@@ -39,6 +40,21 @@ import {
 } from '../services/api';
 
 export type Density = 'comfortable' | 'compact';
+
+/**
+ * Why the fleet is what it is. An empty board has four different causes, and a
+ * silent 0/0 says none of them: the roster was read (live), the gate refused the
+ * request (unauthorized), the connector answered with an error (unreadable), or
+ * the gate did not answer at all (offline). Naming the cause is the fix.
+ */
+export type AgentsStatus = 'loading' | 'live' | 'unauthorized' | 'unreadable' | 'offline';
+
+/** Map an agents-call failure to the one honest word a surface can show. */
+function agentsFailureStatus(error: unknown): AgentsStatus {
+  if (error instanceof GateError && error.status === 401) return 'unauthorized';
+  if (error instanceof GateError) return 'unreadable';
+  return 'offline';
+}
 
 /* --- Personal accent: paint your own seat ---------------------- */
 function hexToRgba(hex: string, alpha: number): string {
@@ -141,6 +157,8 @@ interface YmirState {
   sessionDetail: SmidjaDetail | null;
 
   agents: AgentCard[];
+  /** Why the roster is what it is: live, unauthorised, unreadable, or offline. */
+  agentsStatus: AgentsStatus;
   /** Harness usage: opencode and pi sessions, not only the smithy's runs. */
   usage: import('../services/api').YmirUsage | null;
   tasks: Task[];
@@ -231,6 +249,7 @@ export function gateFromHash(): GateId {
 function emptyState() {
   return {
     agents: [] as YmirState['agents'],
+    agentsStatus: 'loading' as AgentsStatus,
     usage: null,
     tasks: [] as YmirState['tasks'],
     runes: [] as YmirState['runes'],
@@ -322,10 +341,18 @@ export const useYmir = create<YmirState>((set, get) => ({
       // rather than handing the panel a shape it cannot read.
       const ok = <T,>(x: T | null | undefined, prev: T): T =>
         x && !(x as unknown as { error?: unknown }).error ? (x as T) : prev;
-      const [agents, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills] =
+      const [agentsResult, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
-          gateApi.agents().then((v) => ok(v, get().agents)).catch(() => get().agents),
+          // The roster is special: an empty board has four causes, so this call
+          // returns the rows AND the one honest word for why they are what they are.
+          (async (): Promise<[AgentCard[], AgentsStatus]> => {
+            try {
+              return [await gateApi.agents(), 'live'];
+            } catch (error) {
+              return [get().agents, agentsFailureStatus(error)];
+            }
+          })(),
           gateApi.usage().then((v) => ok(v, get().usage)).catch(() => get().usage),
           gateApi.tasks().then((v) => ok(v, get().tasks)).catch(() => get().tasks),
           gateApi.runes().then((v) => ok(v, get().runes)).catch(() => get().runes),
@@ -339,16 +366,24 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.mimirHealth().catch(() => null),
           gateApi.skills().then((v) => ok(v, get().skills)).catch(() => get().skills),
         ]);
-      set({ agents, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills, usage, live: true });
+      const [agents, agentsStatus] = agentsResult;
+      set({ agents, agentsStatus, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills, usage, live: true });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
-      set({ live: false });
+      set((s) => ({
+        live: false,
+        agentsStatus: s.agentsStatus === 'loading' ? 'offline' : s.agentsStatus,
+      }));
     }
   },
 
   refreshAgents: async () => {
-    const agents = await gateApi.agents().catch(() => undefined);
-    if (agents) set({ agents });
+    try {
+      const agents = await gateApi.agents();
+      set({ agents, agentsStatus: 'live' });
+    } catch (error) {
+      set({ agentsStatus: agentsFailureStatus(error) });
+    }
   },
   refreshReviews: async () => {
     // The board must show a PR that opened since the page loaded (2026-09-24
@@ -421,7 +456,7 @@ export const useYmir = create<YmirState>((set, get) => ({
 
   signOut: () => {
     clearSession();
-    set({ session: null, live: null, query: '' });
+    set({ session: null, live: null, query: '', agentsStatus: 'offline' });
   },
 
   setRealm: (realm) => {
