@@ -59,8 +59,9 @@ Resolution order used by every script (all overridable):
 |---|---|
 | `AGENTS.md` | The always-loaded contract: mandate, naming, laws, routing |
 | `opencode.json` | `default_agent: "brokk"`, the `brokk` primary, subagent profiles, `skills.paths: [".agents/skills"]` |
-| `bin/` | Every runtime script (Sága, Sýn, Gná, Gleipnir, Nornir, Einherjar, Erindi, Vör, Rödd, Runes, Hamr) — and the engine's own door (`bin/ymir-engine.sh`) |
-| `src/ymir_runtime/` | **THE ENGINE** — `seat · status · send · stop` behind one interface, with `worktree · harness · backend · container · heartbeat` below it. A harness never reads it; only a `bin/` door calls it |
+| `bin/` | Every runtime script (Sága, Sýn, Gná, Gleipnir, Nornir, Einherjar, Erindi, Vör, Rödd, Runes, Hamr) — and the engine's own doors (`bin/ymir-engine.sh`, `bin/ymir-state.sh`) |
+| `src/ymir_runtime/` | **THE ENGINE** — `seat · status · send · stop` behind one interface, with `worktree · harness · backend · container · heartbeat` below it, and the state crafts under `state/` (`lock` · `runes` · `envelope` · `queue`). A harness never reads it; only a `bin/` door calls it |
+| `src/ymir_runtime/state/` | **THE STATE** (plan 58's `state/` shape) — `lock.py` (Gleipnir) · `runes.py` · `envelope.py` · `queue.py`, with `bin/ymir-state.sh` as their door. `bin/gleipnir-lock-lib.sh`, `bin/runes-append.sh`, and the wake-queue primitives in `bin/brokk-wake-lib.sh` are THIN SHIMS over them; parity is the proof |
 | `tests/` | Unit tests BESIDE the modules (`src/ymir_runtime/tests/`, reached by a bare `python3 -m unittest` from the root) and the e2e proofs (`tests/e2e/engine-proof.sh`) |
 | `.agents/` | Skills (`skills/`), Eindri profiles (`subagents/`), sandbox (`sandbox/Dockerfile.utgard`), tools, bus |
 | `.pi/extensions/` | `syn-turnend-guard.ts` (Sýn), `gna-pi-watch.ts` (Gná), `lib/vordr-sessionstart-supervisor.mjs` (Vörðr), `lib/rodd-operational-input.ts` (Rödd) |
@@ -83,13 +84,13 @@ Resolution order used by every script (all overridable):
 | `data/backlog.md` | pointer to `docs/masterplan.md` open orders | never replaces the masterplan |
 | `data/<id>/brief.md` | the Erindi brief handed to an Eindri | fixed `Delivery contract: mode=<mode>` line |
 | `data/<id>/report.md` | a scout Eindri's deliverable | report only, no branch/PR |
-| `state/.lock` | Gleipnir session lock (bare pid) | written by `bin/gleipnir-lock-lib.sh` |
+| `state/.lock` | Gleipnir session lock (bare pid) | written by `bin/gleipnir-lock-lib.sh`, the shim over `src/ymir_runtime/state/lock.py` |
 | `state/<id>.meta` | task metadata (harness, model, worktree, backend…) | authoritative task record |
 | `state/<id>.status` | append-only best-effort event log | last line = last event, not current state |
 | `state/<id>.inbox/` | Brokk→Eindri steering message files | `mv NNN.msg handled/` is the ack |
 | `state/cron.pid`, `state/cron.log` | Nornir scheduler loop + log | managed by `bin/nornir-cron-start.sh` |
 | `state/.cron-fired/`, `state/.cron-locks/` | once-a-day date guards + per-job flock | chronological edge protection |
-| `state/.wake-queue` | durable Sága wakes | drained, stay until acknowledged |
+| `state/.wake-queue` | durable Sága wakes | drained, stay until acknowledged; the TSV `<epoch>\t<seq>\t<kind>\t<key>\t<payload>` line is written by `src/ymir_runtime/state/queue.py` through the `bin/brokk-wake-lib.sh` shim |
 | `state/.supervision-armed`, `state/.watch.heartbeat` | Sýn arm marker + liveness | guard is inert until the first arm; the arm is a SERVICE (plan 58 Phase 2) and keeps both written whether or not a session is seated |
 | `state/.arm.lease`, `state/.arm.event`, `state/.arm.wake` | the arm's lease, its delivery slot, its append-only journal | `pid=<pid> starttime=<st> gen=<n> mode=<systemd\|daemon> session=<pid\|none> heartbeat=<epoch> state=<dir>`; `bin/syn-watch.sh status` and Eir's `arm` surface read the lease, `bin/syn-watch-arm.sh` carries the event out |
 | `state/.lock-path` | resolved session-lock path | pointer the harness extensions read; written by `gleipnir_lock_acquire`. The lock is machine-local but the pointer lives in the synced home, so a pointer outside the current user's home is stale: both harness readers validate it and heal it (2026-09-23) |
@@ -153,8 +154,8 @@ Dispatch is **fail-closed**: `bin/einherjar-spawn.sh` refuses any harness outsid
 
 Gleipnir is the impossible chain that binds one live Brokk session per home so a second session cannot mutate shared state.
 
-- **File:** `state/.lock` — a bare PID, read by the Pi extensions.
-- **Library:** `bin/gleipnir-lock-lib.sh` (source-safe). Functions: `gleipnir_lock_acquire`, `gleipnir_lock_release`, `gleipnir_lock_owner`, `gleipnir_lock_owned`, `gleipnir_pid_alive`, `gleipnir_lock_path`, `gleipnir_state_dir`, `gleipnir_root`.
+- **File:** `state/.lock` (a bare PID) for an Eindri-home, machine-global `brokk.lock` for the primary — the pointer `state/.lock-path` is read by the Pi extensions.
+- **Library:** `bin/gleipnir-lock-lib.sh` (source-safe) is a **thin shim** over `src/ymir_runtime/state/lock.py` through `bin/ymir-state.sh`; the shell keeps its names (`gleipnir_lock_acquire`, `gleipnir_lock_release`, `gleipnir_lock_owner`, `gleipnir_lock_owned`, `gleipnir_pid_alive`, `gleipnir_lock_path`, `gleipnir_state_dir`, `gleipnir_root`) and the Python module owns the correctness. Verified by parity: the lock cycle through the shim is byte-identical to the shell it replaced, and the live readers resolve the same path, owner, and starttime.
 - **Critical invariant:** the lock must bind to the **live harness process**, not the short-lived digest helper. Harnesses pass `BROKK_SESSION_PID`; when it is absent, `gleipnir_session_pid` walks the ancestry (up to 8 levels) for the harness itself (`pi`, `opencode`, `claude`, `cursor`, `codex`, `grok`, `kimi`, `muse`, `hermes`) and binds to that — only a run with no harness ancestor falls back to `$$`.
 - **Why the walk matters:** running `bin/saga-session-start.sh` **manually** leaves `BROKK_SESSION_PID` unset. Writing `$$` recorded the digest helper's pid, which is dead a second later — an orphan lock that reads as "no live session" and silently blocks supervision from arming. The ancestry walk is the fix; a helper's pid is never authoritative.
 - `gleipnir_lock_owned` walks up to 8 ancestry levels so a helper can prove the session owns the lock.
@@ -386,6 +387,7 @@ lifecycle smoke test gains a `config` check over the shipped shapes.
 the next starting set, not an oversight.
 
 
+
 ### 7.4 The grants law — explicit, signed, cross-operator shares (plan 58)
 
 Plan 42 federates ONE operator's machines; *Several Ymirs, one company* federates
@@ -465,6 +467,33 @@ surface uses; the Python layer reads the same data and calls the same resolver,
 so neither is forked. `bin/eindri-role.sh` may become a thin adapter over this
 layer in a later pass (the strangler), as the config layer's doors did not need to.
 
+### 7.7 The state crafts — one implementation, thin shims (plan 58)
+
+Plan 58's `state/` shape is real: `src/ymir_runtime/state/` holds the four
+correctness-critical crafts as deep modules, and the shell that used to own them
+is a thin shim. The Python owns the rule; the shell owns its name and its line.
+
+```
+state[4]{module,owns,shim}
+  "lock.py","Gleipnir: state-dir · lock-path · owner · pid-alive · reap · acquire · release, with the harness-ancestry session pid and the /proc starttime that makes pid reuse read as death","bin/gleipnir-lock-lib.sh"
+  "runes.py","the append-only chained ledger: head · escape · fold (prev + \\n + base) · flock · append; never rewrites, never truncates","bin/runes-append.sh"
+  "envelope.py","the durable wrapper state files travel in: kind · id · created · payload, encoded as key=value meta or one JSON object, written atomically (temp + os.replace)","—"
+  "queue.py","the durable wake queue: the TSV <epoch>\\t<seq>\\t<kind>\\t<key>\\t<payload> line, cleaned fields, the seq file, one O_APPEND write","bin/brokk-wake-lib.sh (fm_wake_append · fm_wake_queued_keys_locked)"
+```
+
+The door is `bin/ymir-state.sh` (picks the interpreter, sets `PYTHONPATH` to the
+tree, execs `python3 -m ymir_runtime.state`); exit codes are the module's own —
+**0** ran/condition true · **1** condition false or IO failed · **2** usage. A shim
+that cannot reach the door fails **loud** (`bin/gleipnir-lock-lib.sh` refuses
+non-zero), so a wake or a lock is never dropped silently. The npm `files` array
+ships `src/`, so a packaged install carries the door and its module together.
+
+**Parity is the proof, not the assertion.** `test_state.py` is the unit suite
+(beside the modules) and `test_state_parity.py` runs the shim against the shell it
+replaced (kept verbatim under `src/ymir_runtime/tests/fixtures/state/`): the lock
+cycle, the rune append, and the queue append are byte-identical, the ledger still
+chains, and the live readers resolve the same path, owner, and starttime.
+
 ## 8. Context sources
 
 At stage 6 the digest injects, each delimited with an explicit `ABSENT` marker:
@@ -482,7 +511,7 @@ Absence is meaningful: **an absent file is never confused with an empty-but-pres
 
 ## 9. Runes and Rödd
 
-- **Runes** (`bin/runes-append.sh`): append-only chained JSONL under `workspace/memory/runes_audit.md`. Each entry folds the previous checksum into its own (`"prev"` field), so a line cannot be altered or removed without breaking every later line. CLI/library: `runes-append.sh <actor> <event> [--order Wxxxx] [--realm R] --message "…"`; exit 0 appended, 1 IO error, 2 usage. Locked with `flock` on `state/runes.lock` so concurrent writers cannot fork the chain. **Never rewrites, never truncates.**
+- **Runes** (`bin/runes-append.sh`): append-only chained JSONL under `hodd/memory/runes_audit.md`. Each entry folds the previous checksum into its own (`"prev"` field), so a line cannot be altered or removed without breaking every later line. CLI/library: `runes-append.sh <actor> <event> [--order Wxxxx] [--realm R] --message "…"`; exit 0 appended, 1 IO error, 2 usage. The chain is owned by `src/ymir_runtime/state/runes.py` through `bin/ymir-state.sh`, and `bin/runes-append.sh` is a **thin shim** over it — locked with `flock` on `state/runes.lock` so concurrent writers cannot fork the chain, and proven byte-identical to the shell it replaced. **Never rewrites, never truncates.**
 - **Rödd** (`bin/rodd-operational-input.sh`): the structured wire between the primary and workers. Form `U+2063 RODD_OP: v1 <kind>: <body>`; kinds `session-start watcher turn-end-guard away-supervisor launch-brief branch-outcome` plus the `from-brokk` carrier. CLI `encode|kind|classify|body`; the `.pi` and `.opencode` adapters call it rather than re-parsing the wire. This file is the **single owner** of the protocol; callers must never re-parse it.
 
 ## 10. Restart semantics
