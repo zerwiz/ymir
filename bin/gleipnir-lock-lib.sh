@@ -15,7 +15,7 @@
 #
 #   · the primary's lock is machine-global (`${XDG_STATE_HOME:-$HOME/.local/state}/ymir/brokk.lock`);
 #     an Eindri-home keeps its own `<home>/state/.lock`.
-#   · the state dir resolves from the hoard (`$YMIR_HOME/state`), never the tree.
+#   · the state dir resolves from the hoard (bin/hoard-lib.sh), never the tree.
 #   · the owner is the live harness pid; `<lock>.starttime` makes pid reuse read
 #     as death; a zombie is not a lock; a live other owner is REFUSED.
 #   · `GLEIPNIR_LOCK_ACQUIRED` is set exactly as before.
