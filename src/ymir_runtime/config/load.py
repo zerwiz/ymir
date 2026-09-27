@@ -99,6 +99,17 @@ def _fleet_host_is_itself(doc: Mapping[str, Any], *, source: str, host: str | No
         )
 
 
+def _grants_obey_the_realm_law(doc: Mapping[str, Any], *, source: str, **_ignored: Any) -> None:
+    """Every grant obeys the realm law — signed per Heimdall when it crosses.
+
+    Imported lazily so the package's own init never drags the grants module in
+    before its door (`python3 -m ymir_runtime.grants`) runs.
+    """
+    from ..grants import check_registry
+
+    check_registry(doc, source=source)
+
+
 # ── the parsers ──────────────────────────────────────────────────────────────
 
 
@@ -168,6 +179,7 @@ KNOWN: dict[str, ConfigSpec] = {
     "cron": ConfigSpec("cron", "cron.schema.json", "cron"),
     "fleet": ConfigSpec("fleet", "fleet.schema.json", "json", (_fleet_heart_is_declared, _fleet_host_is_itself)),
     "eindri-dispatch": ConfigSpec("eindri-dispatch", "eindri-dispatch.schema.json", "json"),
+    "grants": ConfigSpec("grants", "grants.schema.json", "yaml", (_grants_obey_the_realm_law,)),
 }
 
 
@@ -189,6 +201,8 @@ def spec_for(path: str | Path, kind: str | None = None) -> ConfigSpec:
         return KNOWN["fleet"]
     if name == "eindri-dispatch.json":
         return KNOWN["eindri-dispatch"]
+    if name == "grants.yaml":
+        return KNOWN["grants"]
     if name == "agents.yaml" or _AGENT_OVERLAY.match(name):
         return KNOWN["agents"]
     raise ConfigError(
