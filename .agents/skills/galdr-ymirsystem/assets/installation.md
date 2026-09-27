@@ -429,7 +429,7 @@ manifests. The token comes from the hoard, never from `~/.npmrc`.
 ## The steps
 
 ```
-install[30]{step,what,self-heals}:
+install[32]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -444,12 +444,14 @@ install[30]{step,what,self-heals}:
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
+  "role","what this machine IS — resolved BEFORE the chain, so the whole step set is role-selected","bin/role-lib.sh establish_roles: --role/$YMIR_ROLE → the fleet registry (bin/role.sh) → the machine card in hodd/data/machines.md → ask (interactive) → the safe body dev; step_role reports the role + components + live link, records it with bin/role.sh set, and folds a Machine Card into the ONE registry hodd/data/machines.md (plan 39). An unknown --role is refused (exit 2); --check writes nothing"
   "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root · snotra, the meeting ear's MCP face) on heart seats, the stone on forge seats, the well door, the MCP gateway and the a2abridge mesh directory on dev seats","bin/fleet-ensure.sh copies tools/ to the seat (and the snotra operator commands to ~/.fleet), materializes ONLY what the roles owe (a2abridge-directory is engine-owned: patched by bin/a2abridge-ensure.sh and materialized from its house template when owed), purges stale units, points the seat's pi mcp-adapter.json at THIS body's MCP gateway (bin/mcp-gateway.sh, :8316, which fronts well/bolthorn/skuld and resolves the heart at request time; --well-url still forces an explicit well door), enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
   "mesh","the A2A mesh (Ratatoskr): the local discovery directory (:7777) + the engine","bin/a2abridge-ensure.sh installs the a2abridge engine (A2A_NO_IDE=1), patches its user unit (journal output + the boot hook WantedBy=default.target), and raises the directory; the directory is a role-owed program (heart · dev) in the autoboot ONE table, materialized from tools/mill/systemd/a2abridge-directory.service and verified beside the well/tickets/skills doors"
   "autoboot","the boot law: Linger asserted on headless seats, ymir.target enabled once, the boot proof run","checks loginctl show-user $USER -p Linger (enables it headless or fails with the remedy), reports the value on every seat, and calls bin/ymir-autoboot.sh verify — every role-owed program enabled and standing"
   "heimdall","the ssh-key ward (Heimdall) — entry by the rune carried on GitHub","bin/heimdall-ensure.sh arms it: ward script to ~/.local/bin (stable path, not the repo tree), the operator's GitHub user recorded, keys fetched/validated/merged into ~/.ssh/authorized_keys, 15-min user timer live (loginctl linger note for headless). --install may add openssh via pacman/apt (sudo, system package). Idempotent; a seat can stand warded or bare — reported honestly"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage — the store is ONE well in the hoard ($YMIR_HOME/hodd/memory/kaia.engram), resolved via hoard-lib or ENGRAM_DB"
+  "record","the RECORD's offices — the engram store, the journal fold receiver, the record crons (heart only)","asserts the store is present and bin/journal-receive.sh is executable, and counts the @heart jobs in the cron config; a body SKIPs the whole step with the reason — the record lives on the heart, and a body that ran it would fork the chain (Law 7)"
   "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
   "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh, then bin/valknut-load.sh --install to seat the post-merge rebind hook. The harnesses load their surfaces from their OWN homes — Pi reads ${HOME}/.pi/agent/extensions/ — so a merged extension fix is invisible until the bind re-runs. The same rebind rides the updater (bin/groa-update.sh) after every pull, and the post-merge hook after every merge: no install and no update leaves the surfaces stale"
@@ -462,9 +464,13 @@ install[30]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**30** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
+**33** `step_*` functions are defined (`home` asks, `tree` builds); **27** run as the
+visible progress chain. A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
-`smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. The fleet
+`smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. **Every
+role-owned step opens with a `role_gate`** (plan 51 P1): a component this
+machine's roles do not own becomes a `SKIP` naming the role that does, so the
+install never stands up another role's parts. The fleet
 step raises every role-owed program (the role gates live in `bin/ymir-autoboot.sh`
 — ONE table, shared with `bin/fleet-ensure.sh`); the `autoboot` step asserts
 Linger and runs the boot proof. `--check`
@@ -1009,29 +1015,65 @@ The **consent preamble** the installer prints before it acts says the same thing
 hosts recorded first-class)"* — so the operator is told what will happen in the
 portable terms the code now uses, not the Omarchy-only terms it used before.
 
-### The machine's role (plan 51, P1)
+### The machine's role — the install's component set (plan 51, P1)
 
-Right after host learning, **`step_role`** records what this machine **IS** in the
-fleet — the one fact every role-aware surface derives from (the MCP config, the
-cron gates, model placement, dispatch). It reads the role from the fleet registry
-(`$YMIR_HOME/hodd/data/fleet.json`) by hostname:
+**Role is resolved before the first step runs.** `bin/ymir-install.sh` calls
+`establish_roles` (`bin/role-lib.sh`) right after consent and **before** the step
+chain, because the role is what selects the components the chain installs.
 
-- a host that is **absent** is registered as **`dev`** — the safe default,
-  because a dev body owns no record and runs no record jobs;
-- it reports the role and the live link from `bin/topology.sh`, e.g.
-  `role: heart,forge (link: attached)` on the server;
-- it honors `YMIR_HOST`, and `--check` writes nothing (it warns instead of
-  registering).
+```
+role_resolution[4]{source,when}:
+  "--role <r> | $YMIR_ROLE","the operator names it for this run — the strongest statement; an unknown name is REFUSED (exit 2), never guessed"
+  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/role.sh)"
+  "the machine card","the host's own row in $YMIR_HOME/hodd/data/machines.md — a role token in that row"
+  "ask -> the safe body","a host in none of them is ASKED on a real interactive run; a run that cannot ask (--check, --yes, no tty) takes the documented safe body `dev` (owns no record, runs no record job) and says so — never the union of every role's parts"
+```
 
-`bin/role.sh set <host> heart|forge|dev|hand` changes the role afterward; the
-roles and what each owns are in `README.md` (*"The Fleet — many machines, one
-record"*) and Plan 51. The boot follows the same lines: **what a seat owes at
-boot is its roles' programs** — the heart's offices, the forge's stone, a dev
-body's own web stack (`bin/ymir-autoboot.sh status` prints the per-role truth,
-and `bin/ymir-autoboot.sh verify` is the boot proof the install's final step
-runs).
-roles and what each owns are in `README.md` (*“The Fleet — many machines, one
-record”*) and Plan 51.
+Every role-owned step opens with a `role_gate` and, when this machine holds none
+of the roles that own the component, emits a `SKIP` that names why:
+
+```text
+"record","SKIP","not this machine's role (heart only) — the record (fold · store · record crons) lives on the heart"
+"omarchy","SKIP","not this machine's role (dev only) — the dev desktop layer"
+"local-model","SKIP","not this machine's role (forge,dev only) — the model rail"
+```
+
+The components each role owes (the ONE table, `bin/role-lib.sh` `components_for`):
+
+```
+role_components[4]{role,components}:
+  "heart","core · record · well · web · mesh — the record services, NO dev desktop layer and NO rail"
+  "forge","core · rail · harness · sandbox — the rail, NO desktop and NO record"
+  "dev","core · harness · rail · desktop · web · mesh · well · sandbox — a FULL body; it runs no heart office"
+  "hand","core only — nothing persistent"
+```
+
+`step_role` then **records** what was resolved: `bin/role.sh set` writes the fleet
+registry, and `machine_card_write` folds this machine into the ONE registry,
+`hodd/data/machines.md` (plan 39's fold — no parallel card). The card is keyed by
+a deterministic heading (`## Machine card — <host> (role: <roles>)`), so a repeat
+install writes nothing and a role change APPENDS a new card — the registry's
+history is never rewritten (Rule 06).
+
+```bash
+bin/ymir-install.sh --check                 # this host's role + component set, no writes
+bin/ymir-install.sh --check --role heart    # read AS a heart: the dev desktop layer and the rail SKIP
+bin/ymir-install.sh --role forge            # declare it for the run (and record it)
+bin/role.sh set <host> heart,forge          # change it afterwards
+```
+
+**Rule 05 holds:** the role layer is **host-neutral** — it selects components,
+never platform behaviour — while the Omarchy/macOS/Windows layers stay gated on
+the host. A host with no declared role is never silently given every part: it is
+asked (interactively), or given the safe body and told. The roles and what each
+owns are in `README.md` (*"The Fleet — many machines, one record"*) and Plan 51.
+
+### The boot follows the same lines
+
+The boot obeys the role too: **what a seat owes at boot is its roles'
+programs** — the heart's offices, the forge's stone, a dev body's own web stack.
+`bin/ymir-autoboot.sh status` prints the per-role truth, and
+`bin/ymir-autoboot.sh verify` is the boot proof the install's final step runs.
 
 ### The dispatch profile is derived, never left as a template (D4)
 

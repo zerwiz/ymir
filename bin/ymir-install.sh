@@ -5,7 +5,7 @@
 # the loaders, the registries, and the runtime services. Idempotent. Galdr TOON.
 #
 # Usage:
-#   bin/ymir-install.sh [--check] [--skip-engines] [--skip-services] [--no-desktop] [--yes]
+#   bin/ymir-install.sh [--check] [--role heart|forge|dev|hand] [--skip-engines] [--skip-services] [--no-desktop] [--yes]
 #   bin/ymir-install.sh --plan [--json]     # the plan, computed — changes nothing
 #   bin/ymir-install.sh --yes | --non-interactive | --accept-all-defaults
 #   bin/ymir-install.sh --status
@@ -53,6 +53,11 @@ hoard_local_env YMIR_ENV_FILE
 # repo (Rule 04).
 # shellcheck source=bin/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
+# The role lib — what this machine IS, and the components its roles owe (plan 51
+# P1). It resolves the home through hoard-lib, so it loads right after it.
+if [ -z "${YMIR_ROLE_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/role-lib.sh" ]; then
+  . "$SCRIPT_DIR/role-lib.sh"; YMIR_ROLE_LIB_LOADED=1
+fi
 # shellcheck source=bin/app-lib.sh
 . "$SCRIPT_DIR/app-lib.sh"
 # The runtime resolver answers for every desktop surface (P1, 2026-09-24); load
@@ -77,7 +82,7 @@ WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
 hoard_root HOARD
 DOMAINS="company marketing development life me"
 
-CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0; PLAN_ONLY=0; PLAN_ARGS=()
+CHECK=0; SKIP_ENGINES=0; SKIP_SERVICES=0; ASSUME_YES=0; NO_DESKTOP=0; PLAN_ONLY=0; PLAN_ARGS=(); ROLE_FLAG=""
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -85,14 +90,30 @@ while [ $# -gt 0 ]; do
     --plan|--dry-run) PLAN_ONLY=1; shift ;;
     --json|--blocked) PLAN_ARGS+=("$1"); shift ;;
     --phase) PLAN_ARGS+=("$1" "${2-}"); shift 2 ;;   # --phase carries its number
+    --role) ROLE_FLAG="${2-}"; shift 2 ;;
+    --role=*) ROLE_FLAG="${1#--role=}"; shift ;;
     --skip-engines) SKIP_ENGINES=1; shift ;;
     --skip-services) SKIP_SERVICES=1; shift ;;
     --no-desktop) NO_DESKTOP=1; shift ;;
     --yes|-y|--non-interactive|--accept-all-defaults) ASSUME_YES=1; shift ;;
     --status) exec "$SCRIPT_DIR/ymir-install.sh" --check ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/ymir-install.sh [--check|--plan|--skip-engines|--skip-services|--no-desktop|--yes]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/ymir-install.sh [--check|--plan|--role heart|forge|dev|hand|--skip-engines|--skip-services|--no-desktop|--yes]\n' "$1" >&2; exit 2 ;;
   esac
 done
+
+# A role named on the command line is the strongest statement of what this
+# machine IS. An unknown name is REFUSED here, before anything changes — never
+# mapped to a guessed set. (The resolved role is exported so every child —
+# bin/role.sh, bin/topology.sh, the plan — reads the same fact.)
+if [ -n "$ROLE_FLAG" ]; then
+  for _r in ${ROLE_FLAG//,/ }; do
+    case " heart forge dev hand " in *" $_r "*) ;; *)
+      printf 'error: unknown role %s\nhelp: --role heart|forge|dev|hand (a comma list names a machine with two roles)\n' "$_r" >&2; exit 2 ;;
+    esac
+  done
+  export YMIR_ROLE="$ROLE_FLAG"
+fi
+unset _r
 
 # The plan is a question, not a change: it prints and exits without writing.
 if [ "$PLAN_ONLY" = 1 ]; then
@@ -111,6 +132,19 @@ INVITE_CODE=""
 add() { IDS+=("$1"); STATUS+=("$2"); DETAIL+=("$3"); }
 have() { command -v "$1" >/dev/null 2>&1; }
 TOON="install[0]{step,status,detail}:"
+
+# The step chain below is gated on exactly this; nothing else selects components.
+# The resolution chain, the component table, and the machine-card writer live in
+# bin/role-lib.sh (functions only), so a test drives them without an install.
+ROLE_SET=""; ROLE_SRC="none"; ROLE_HOST=""; ROLE_COMPONENTS="core"; ROLE_DEFAULTED=0
+
+role_gate() {  # <id> <role|r,r> <what> — a step runs only when this machine holds one
+  local id="$1" need="$2" what="$3" r
+  [ -n "$ROLE_SET" ] || { add "$id" SKIP "no role declared — pass --role <r> or bin/role.sh set <host> heart|forge|dev|hand"; return 1; }
+  for r in ${need//,/ }; do role_has "$r" && return 0; done
+  add "$id" SKIP "not this machine's role ($need only) — $what"
+  return 1
+}
 
 # ── consent ──────────────────────────────────────────────────────────────
 # Show exactly what will change and require explicit acceptance. A real
@@ -302,6 +336,7 @@ step_home() {
 # engine (apps/smidja) is stamped from the cloned factory's templates, exactly
 # as install.py does for a target repo.
 step_apps() {
+  role_gate apps heart,dev "the web surfaces (Hlidskjalf · Óðrerir · Sessrúmnir · Smíðja)" || return 0
   # A packaged install has no apps/ of its own on purpose: the surfaces arrive as
   # dependencies. Cloning the repos into node_modules/@zerwiz/ymir/apps/ is how a
   # hollow directory shadowed a real package, so a package tree clones nothing.
@@ -406,6 +441,7 @@ step_engines() {
 # model runtimes actually here (never assume llama.cpp), and seed
 # ~/.pi/agent/models.json only when the operator has none.
 step_models() {
+  role_gate models forge,dev "the harness (pi) and its local models" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add models SKIP "--skip-engines"; return; }
     # The user's OWN models, read from the ROOT pi home — never assumed. A roster can
     # name a model this machine has never seen, and nothing in the report said so.
@@ -445,6 +481,7 @@ step_models() {
 # server already serves models, nothing is downloaded: the operator's registered
 # model is adopted. Loud refusals throughout; never a silent skip.
 step_local_model() {
+  role_gate local-model forge,dev "the model rail" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add local-model SKIP "--skip-engines"; return; }
   [ "${YMIR_SKIP_LOCAL_MODEL:-0}" = 1 ] && { add local-model SKIP "YMIR_SKIP_LOCAL_MODEL=1"; return; }
 
@@ -527,6 +564,7 @@ print(ids[0] if ids else "")' 2>/dev/null)"
 
 # ── 3b. hermes runtime ───────────────────────────────────────────────────────
 step_hermes() {
+  role_gate hermes forge,dev "the worker runtime (heavy workers)" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add hermes SKIP "--skip-engines"; return; }
   if [ -x "$SCRIPT_DIR/hermes-ensure.sh" ]; then
     if [ "$CHECK" = 1 ]; then
@@ -543,6 +581,7 @@ step_hermes() {
 # already carries a whisper build or voxtype is left untouched. The MCP face and
 # unit ride the fleet step (bin/fleet-ensure.sh).
 step_snotra() {
+  role_gate snotra heart,dev "the meeting ear" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add snotra SKIP "--skip-engines"; return; }
   if [ ! -x "$SCRIPT_DIR/snotra-ensure.sh" ]; then add snotra SKIP "no snotra-ensure.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
@@ -563,6 +602,7 @@ step_snotra() {
 # THIS step seats the engine and wires it, so a fresh install is a mesh of one
 # with no hand-copy — and Eir can repair it (bin/eir-doctor.sh a2abridge).
 step_a2a() {
+  role_gate a2a heart,dev "the A2A mesh directory" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add a2a SKIP "--skip-engines"; return; }
   if [ ! -x "$SCRIPT_DIR/a2abridge-ensure.sh" ]; then add a2a SKIP "no a2abridge-ensure.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
@@ -589,6 +629,7 @@ step_a2a() {
 # apps/sessrumnir. Deps are never committed; the ensure step installs them on
 # first run, exactly as scripts/electron.sh does for the other desktop apps.
 step_sessrumnir() {
+  role_gate sessrumnir dev "the dev desktop layer" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add sessrumnir SKIP "--skip-engines"; return; }
   if [ -x "$SCRIPT_DIR/sessrumnir-ensure.sh" ]; then
     if [ "$CHECK" = 1 ]; then
@@ -632,6 +673,7 @@ step_backend() {
 # core, and it owns its own installer. The core calls it here and reports one
 # line; everything inside is the layer's business.
 step_omarchy() {
+  role_gate omarchy dev "the dev desktop layer" || return 0
   if [ ! -x "$SCRIPT_DIR/omarchy-install.sh" ]; then add omarchy SKIP "no omarchy-install.sh"; return 0; fi
   if [ "$CHECK" = 1 ]; then
     "$SCRIPT_DIR/omarchy-install.sh" --check >/dev/null 2>&1
@@ -700,31 +742,35 @@ step_host() {
   fi
 }
 
-# ── 3c-bis. the role — what this machine IS in the fleet (plan 51) ───────────
+# ── 3c-bis. the role — what this machine IS in the fleet (plan 51, P1) ────────
 # Role is the one fact every surface derives from: install, update, the MCP
-# config, the cron set, the model rail, and dispatch. It is read from the fleet
-# registry by hostname; a host that is ABSENT is registered here as `dev` — the
-# safe default, because a dev body owns no record and runs no record jobs.
-# `bin/role.sh set <host> heart|forge|dev|hand` changes it.
+# config, the cron set, the model rail, and dispatch. It is resolved BEFORE the
+# step chain (establish_roles) so the chain installs only this role's parts; this
+# step reports what was resolved, records it in the fleet registry, and writes
+# the machine card into the ONE registry (`hodd/data/machines.md`). A host that
+# was nowhere declared and could not be asked is reported LOUDLY as the safe
+# body (dev) — never silence, and never the union of every role's parts.
 step_role() {
+  local host="$ROLE_HOST" roles="$ROLE_SET" link="" card="" detail=""
   if [ ! -x "$SCRIPT_DIR/role.sh" ]; then add role SKIP "no role.sh"; return 0; fi
-  local host roles
-  host="${YMIR_HOST:-$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')}"
-  roles="$("$SCRIPT_DIR/role.sh" show "$host" 2>/dev/null | sed -nE 's/^  "[^"]+","([^"]+)","[^"]*"$/\1/p' | head -1)"
-  if [ -z "$roles" ] || [ "$roles" = "unassigned" ]; then
-    if [ "$CHECK" = 1 ]; then
-      add role WARN "not in the fleet registry — a real run registers '$host' as dev"
-    elif "$SCRIPT_DIR/role.sh" set "$host" dev >/dev/null 2>&1; then
-      add role OK "registered '$host' as dev (bin/role.sh set $host heart|forge|dev|hand)"
-    else
-      add role WARN "could not register '$host' in the fleet registry"
-    fi
-  elif [ -x "$SCRIPT_DIR/topology.sh" ]; then
-    local link; link="$("$SCRIPT_DIR/topology.sh" 2>/dev/null | sed -nE 's/^  "link","([^"]+)".*/\1/p')"
-    add role OK "role: $roles${link:+ (link: $link)}"
-  else
-    add role OK "role: $roles"
+  case "$ROLE_SRC" in
+    env|registry|card|declared) detail="role: $roles (source: $ROLE_SRC)" ;;
+    *) detail="no role declared — the safe body '$ROLE_SET'" ;;
+  esac
+  if [ -x "$SCRIPT_DIR/topology.sh" ]; then
+    link="$("$SCRIPT_DIR/topology.sh" 2>/dev/null | sed -nE 's/^  "link","([^"]+)".*/\1/p')"
   fi
+  # Record the declared role where the rest of the fleet reads it — a real run
+  # only; --check writes nothing. The registry already has it when it answered.
+  if [ "$CHECK" = 0 ] && [ "$ROLE_SRC" != registry ]; then
+    "$SCRIPT_DIR/role.sh" set "$host" "$ROLE_SET" >/dev/null 2>&1 || true
+  fi
+  if [ "$CHECK" = 0 ]; then card="$(machine_card_write "$host" "$ROLE_SET" "$ROLE_COMPONENTS" "$ROLE_SRC")"; fi
+  detail="$detail${link:+ · link: $link} · components: $ROLE_COMPONENTS${card:+ · card: $card}"
+  case "$ROLE_SRC" in
+    env|registry|card|declared) add role OK "$detail" ;;
+    *) add role WARN "$detail — declare it: --role <r>, or bin/role.sh set $host heart|forge|dev|hand" ;;
+  esac
 }
 
 # ── 3d. the warden — Heimdall's ssh-key ward ─────────────────────────────────
@@ -757,6 +803,7 @@ step_heimdall() {
 # boot, and a program that cannot rise is a FAILURE with its reason — never a
 # warn the install steps past (law, 2026-09-24).
 step_fleet() {
+  role_gate fleet heart,dev "the record offices and this body's doors" || return 0
   if [ ! -x "$SCRIPT_DIR/fleet-ensure.sh" ]; then add fleet SKIP "no fleet-ensure.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
     if "$SCRIPT_DIR/fleet-ensure.sh" status >/dev/null 2>&1; then add fleet OK "services mapped — role-gated raise on a real run"
@@ -804,6 +851,7 @@ step_autoboot() {
 
 # ── 4. sandbox image ─────────────────────────────────────────────────────────
 step_sandbox() {
+  role_gate sandbox forge,dev "Utgard — the build/farm sandbox" || return 0
   local engine; engine="$(ymir_container_engine_name 2>/dev/null || true)"
   if [ -z "$engine" ]; then add sandbox SKIP "no container engine (docker/podman)"; return; fi
   if "$engine" image inspect utgard-runner:latest >/dev/null 2>&1; then
@@ -830,6 +878,7 @@ step_sandbox() {
 
 # ── 5. memory (well + harness MCP) ───────────────────────────────────────────
 step_memory() {
+  role_gate memory heart,dev "the well (the record's store · a body's door)" || return 0
   # The well is ONE memory and it lives in the hoard — always.
   if [ -n "${ENGRAM_DB:-}" ]; then
     local db="$ENGRAM_DB"
@@ -846,8 +895,35 @@ step_memory() {
   add memory OK "engram store $store · MCP in $mcp harness configs"
 }
 
+# ── 5a2. the record — the heart's offices (plan 51 P1) ───────────────────────
+# The record — the home, the engram store, the Runes ledger, the plans and the
+# journal FOLD — lives on ONE machine: the heart. The fold receiver and the
+# record crons are the heart's to run; a body that ran them would fork the chain
+# (Law 7). So this step exists only where the heart does, and a body reports the
+# SKIP with its reason — never a substituted install.
+step_record() {
+  role_gate record heart "the record (fold · store · record crons) lives on the heart" || return 0
+  local db="" store="absent" fold="absent" crons="0" cronf=""
+  command -v hoard_memory_store >/dev/null 2>&1 && hoard_memory_store db
+  [ -n "$db" ] && [ -f "$db" ] && store="present"
+  [ -x "$SCRIPT_DIR/journal-receive.sh" ] && fold="present"
+  command -v hoard_settings_dir >/dev/null 2>&1 && hoard_settings_dir cronf
+  [ -n "$cronf" ] && [ -f "$cronf/cron.yaml" ] || cronf="$ROOT/.agents/config"
+  [ -f "$cronf/cron.yaml" ] && crons="$(grep -c '@heart' "$cronf/cron.yaml" 2>/dev/null || printf 0)"
+  if [ "$CHECK" = 1 ]; then
+    add record OK "would hold the record — engram store $store · journal fold $fold · $crons record cron(s)"
+    return
+  fi
+  if [ "$store" != present ] || [ "$fold" != present ]; then
+    add record WARN "the record is incomplete — engram store $store, journal fold $fold (bin/mimir-bridge.sh --start)"
+    return
+  fi
+  add record OK "holds the record — engram store $store · journal fold $fold · $crons record cron(s)"
+}
+
 # ── 5b. smidja db (visualizer readiness) ─────────────────────────────
 step_smidja() {
+  role_gate smidja heart,dev "the smithy" || return 0
   if [ -x "$SCRIPT_DIR/smidja-bootstrap.sh" ]; then
     if [ "$CHECK" = 1 ]; then
       local dbok vizok
@@ -891,6 +967,7 @@ step_smidja() {
 # Hlidskjalf installs with npm (its own lockfile), not bun, and its API serves the
 # UI from ./dist. Without this step a fresh clone has no SPA and no build.
 step_spa() {
+  role_gate hlidskjalf heart,dev "the control plane (Hlidskjalf)" || return 0
   local app; app_dir hlidskjalf app || app=""
   local app_ok="$app"
   [ -d "$app" ] || { add hlidskjalf SKIP "no apps/hlidskjalf"; return 0; }
@@ -977,6 +1054,7 @@ step_gates() {
 # every session - in ANY folder - loads Brokk. Idempotent, and it writes to the
 # operator's real data dir, never a sandbox one.
 step_marks() {
+  role_gate marks dev "the dev desktop layer" || return 0
   if [ ! -x "$SCRIPT_DIR/design-icon.sh" ]; then add marks SKIP "no design-icon.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
     # A check reports what is TRUE, not what reassures: count the entries really on
@@ -1030,6 +1108,7 @@ step_marks() {
 
 # ── 7. services ──────────────────────────────────────────────────────────────
 step_services() {
+  role_gate services heart,dev "the role's web stack" || return 0
   [ "$SKIP_SERVICES" = 1 ] && { add services SKIP "--skip-services"; return; }
   if [ "$CHECK" = 1 ]; then
     local up=0
@@ -1054,6 +1133,7 @@ step_services() {
 # The operator should SEE the applications when the install finishes, so we
 # raise both desktop shells (Hlidskjalf + Smíðja) as separate processes.
 step_desktop() {
+  role_gate desktop dev "the dev desktop layer" || return 0
   if [ "$NO_DESKTOP" = 1 ]; then add desktop SKIP "--no-desktop"; return; fi
   if [ ! -x "$ROOT/scripts/electron.sh" ]; then add desktop SKIP "no scripts/electron.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
@@ -1121,6 +1201,7 @@ step_desktop() {
 # to try it. Registration stays closed until a live code exists, so the gate is
 # never open by accident.
 step_invite() {
+  role_gate invite heart,dev "the control plane's way in" || return 0
   if [ "$CHECK" = 1 ]; then add invite OK "would mint an invite code"; return; fi
   if [ ! -x "$ROOT/bin/ymir-invite.sh" ]; then add invite SKIP "bin/ymir-invite.sh not executable"; return; fi
   if ! command -v bun >/dev/null 2>&1; then add invite SKIP "bun missing — no account store"; return; fi
@@ -1136,6 +1217,7 @@ step_invite() {
 # no way in until the operator sets one. Interactive installs prompt; --yes and
 # non-tty leave it to bin/ymir-setup-auth.sh.
 step_auth() {
+  role_gate auth heart,dev "the control plane's way in" || return 0
   if [ ! -x "$ROOT/bin/ymir-setup-auth.sh" ]; then add auth SKIP "bin/ymir-setup-auth.sh not executable"; return; fi
   local door
   door=$(bash "$ROOT/bin/ymir-setup-auth.sh" status 2>/dev/null | sed -n '2p' | cut -d, -f1 | tr -d ' "')
@@ -1223,6 +1305,11 @@ step_panes() {
 
 # Ask before touching the machine; --check only previews and never asks.
 [ "$CHECK" = 0 ] && confirm_install
+
+# Resolve what this machine IS — BEFORE any step runs, because the role picks the
+# component set the whole chain installs (plan 51 P1). This asks when nothing is
+# declared and a person is present; otherwise it takes the documented safe body.
+establish_roles
 [ "$CHECK" = 0 ] && style_patience "the halls are being stood up for the first time"
 
 # ── progress ─────────────────────────────────────────────────────────────────
@@ -1230,7 +1317,7 @@ step_panes() {
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=24
+STEP_TOTAL=27
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))
@@ -1268,6 +1355,7 @@ run_step step_fleet "fleet services"
 run_step step_autoboot "autoboot"
 run_step step_sandbox "sandbox"
 run_step step_memory "memory"
+run_step step_record "the record"
 run_step step_smidja "the smithy"
 run_step step_spa "the spa"
 run_step step_omarchy "omarchy layer"
