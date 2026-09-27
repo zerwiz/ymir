@@ -102,7 +102,7 @@ import {
   classifyRoddOperationalText,
   encodeRoddOperationalInput,
 } from "./lib/rodd-operational-input.ts";
-import { resolveYmirRoot } from "./lib/ymir-home.ts";
+import { resolveYmirHome, resolveYmirRoot } from "./lib/ymir-home.ts";
 
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
@@ -112,7 +112,7 @@ const extensionDir = dirname(extensionFile);
 const root = resolveYmirRoot(extensionDir);
 const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
 const fmRoot = process.env.BROKK_ROOT_OVERRIDE || root;
-const state = process.env.BROKK_STATE_OVERRIDE || `${fmHome}/state`;
+const state = process.env.BROKK_STATE_OVERRIDE || `${resolveYmirHome()}/state`;
 const config = process.env.BROKK_CONFIG_OVERRIDE || `${fmHome}/config`;
 const afkFlag = join(state, ".afk");
 const sessionsDir = join(state, "branch-session");
@@ -270,6 +270,20 @@ function pidAlive(pid: string): boolean {
 
 let ownedLockPid = "";
 
+// The resolved session-lock path: the primary holds a MACHINE-global lock and
+// records it in `state/.lock-path`; an Eindri-home holds a per-home `.lock`.
+// Reading `state/.lock` directly (the old way) looked at the wrong file for a
+// primary — the odd reader out that made this extension blind to a live helm.
+function resolvedLockPath(): string {
+  try {
+    const pointer = readFileSync(`${state}/.lock-path`, "utf8").trim();
+    if (pointer) return pointer;
+  } catch {
+    // no pointer yet — pre-machine-lock session
+  }
+  return `${state}/.lock`;
+}
+
 // Same ownership read as the watcher extension's lockOwnership(): the lock
 // names the harness pid, and this process owns it when that pid appears in
 // its own ancestry.
@@ -277,7 +291,7 @@ function lockOwnership(): LockOwnership {
   ownedLockPid = "";
   let lockPid = "";
   try {
-    lockPid = readFileSync(`${state}/.lock`, "utf8").trim();
+    lockPid = readFileSync(resolvedLockPath(), "utf8").trim();
   } catch {
     return "missing";
   }

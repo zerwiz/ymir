@@ -342,6 +342,18 @@ else
   add skillindex "skill index + cited skill paths" FAIL "$skill_detail"
 fi
 
+# --- service-format (the process a service runs is never bash) -------------
+if [ -x "$ROOT/bin/service-format.sh" ]; then
+  if "$ROOT/bin/service-format.sh" check >/dev/null 2>&1; then
+    add service-format "the process a service runs is never bash" PASS "no undeclared shell daemon"
+  else
+    sf="$("$ROOT/bin/service-format.sh" check 2>/dev/null | sed -n '2p' | tr -d ' ')"
+    add service-format "the process a service runs is never bash" FAIL "new undeclared finding(s) (${sf:-see bin/service-format.sh check})"
+  fi
+else
+  add service-format "the process a service runs is never bash" SKIP "bin/service-format.sh absent"
+fi
+
 # --- assets (governed paths) -------------------------------------------------
 # A governed file changed in the working tree must have its owning asset changed
 # in the same change, or the runtime has drifted from its documentation.
