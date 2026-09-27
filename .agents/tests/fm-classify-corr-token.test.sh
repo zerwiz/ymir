@@ -264,15 +264,15 @@ test_captain_relevance_and_pause_are_unchanged_without_a_token() {
   # Pinned verdicts for the untokened shapes. These are the historical answers;
   # the fast path in status_line_verb returns such a prefix byte-for-byte, so
   # this is the regression wall for every consumer at once.
-  status_is_captain_relevant 'done: shipped' || fail "done: regressed"
-  status_is_captain_relevant 'needs-decision [key=q1]: pick one' || fail "keyed needs-decision regressed"
-  status_is_captain_relevant 'blocked: stuck' || fail "blocked: regressed"
-  status_is_captain_relevant 'failed: gave up' || fail "failed: regressed"
-  status_is_captain_relevant 'working: still going' && fail "working: regressed to captain-relevant"
-  status_is_captain_relevant 'working: rebased onto merged #76' \
+  status_is_Allfather_relevant 'done: shipped' || fail "done: regressed"
+  status_is_Allfather_relevant 'needs-decision [key=q1]: pick one' || fail "keyed needs-decision regressed"
+  status_is_Allfather_relevant 'blocked: stuck' || fail "blocked: regressed"
+  status_is_Allfather_relevant 'failed: gave up' || fail "failed: regressed"
+  status_is_Allfather_relevant 'working: still going' && fail "working: regressed to captain-relevant"
+  status_is_Allfather_relevant 'working: rebased onto merged #76' \
     && fail "nonterminal free-text guard regressed"
-  status_is_captain_relevant 'merged' || fail "legacy bare free-text regressed"
-  status_is_captain_relevant 'resolved [key=q1]: answered' && fail "resolved regressed to captain-relevant"
+  status_is_Allfather_relevant 'merged' || fail "legacy bare free-text regressed"
+  status_is_Allfather_relevant 'resolved [key=q1]: answered' && fail "resolved regressed to captain-relevant"
 
   status_is_paused 'paused: waiting on the upstream release' || fail "paused: regressed"
   status_is_paused '  paused:   waiting on a reset' || fail "spaced paused: regressed"
@@ -282,8 +282,8 @@ test_captain_relevance_and_pause_are_unchanged_without_a_token() {
 
   status_is_terminal_verb 'done: shipped' || fail "terminal verb regressed"
   status_is_terminal_verb 'working: rebased onto merged #76' && fail "nonterminal terminal-verb regressed"
-  status_is_paused_or_captain_held 'captain-held [key=r]: tracked' || fail "captain-held regressed"
-  status_is_paused_or_captain_held 'resolved [key=r]: answered' && fail "resolved regressed"
+  status_is_paused_or_Allfather_held 'captain-held [key=r]: tracked' || fail "captain-held regressed"
+  status_is_paused_or_Allfather_held 'resolved [key=r]: answered' && fail "resolved regressed"
 
   pass "untokened captain-relevance, pause, terminal-verb and captain-held verdicts are unchanged"
 }
@@ -294,13 +294,13 @@ test_consumer_verdicts_read_through_the_token() {
   # token made "done corr=...: PR ready" invisible to the terminal-verb test,
   # while "working corr=...: rebased onto merged #76" leaked through the
   # free-text fallback the nonterminal guard was supposed to stop.
-  status_is_captain_relevant "done corr=$CORR: shipped" \
+  status_is_Allfather_relevant "done corr=$CORR: shipped" \
     || fail "a correlated done is not captain-relevant"
-  status_is_captain_relevant "needs-decision corr=$CORR [key=q]: pick one" \
+  status_is_Allfather_relevant "needs-decision corr=$CORR [key=q]: pick one" \
     || fail "a correlated needs-decision is not captain-relevant"
-  status_is_captain_relevant "blocked corr=$CORR: stuck" \
+  status_is_Allfather_relevant "blocked corr=$CORR: stuck" \
     || fail "a correlated blocked is not captain-relevant"
-  status_is_captain_relevant "done [corr=$CORR]: shipped via the helper" \
+  status_is_Allfather_relevant "done [corr=$CORR]: shipped via the helper" \
     || fail "a helper-bracketed done is not captain-relevant"
 
   status_is_terminal_verb "done corr=$CORR: shipped" \
@@ -308,16 +308,16 @@ test_consumer_verdicts_read_through_the_token() {
   status_is_terminal_verb "working corr=$CORR: still going" \
     && fail "a correlated working became a terminal verb"
 
-  status_is_captain_relevant "working corr=$CORR: rebased onto merged #76" \
+  status_is_Allfather_relevant "working corr=$CORR: rebased onto merged #76" \
     && fail "a correlated working leaked through the free-text fallback"
-  status_is_captain_relevant "resolved corr=$CORR [key=q]: answered" \
+  status_is_Allfather_relevant "resolved corr=$CORR [key=q]: answered" \
     && fail "a correlated resolved leaked through the free-text fallback"
 
   # The pause and captain-held declarations the watcher reads to leave a
   # deliberately idle endpoint alone instead of aging it as a possible wedge.
   status_is_paused "paused corr=$CORR: waiting on the upstream release" \
     || fail "a correlated pause was not recognised as a declared external wait"
-  status_is_paused_or_captain_held "captain-held corr=$CORR [key=r]: tracked as a hold" \
+  status_is_paused_or_Allfather_held "captain-held corr=$CORR [key=r]: tracked as a hold" \
     || fail "a correlated captain-held was not recognised"
   status_is_paused "blocked corr=$CORR: the build is paused upstream" \
     && fail "a correlated blocked mentioning paused false-matched"
