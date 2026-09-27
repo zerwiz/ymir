@@ -12,7 +12,7 @@ The kinds are the configs the RUNTIME actually resolves (plan 58, Phase 7):
                            bin/local-model-lock.sh · bin/einherjar-spawn.sh
     cron.yaml              bin/nornir-cron-start.sh · bin/hall-snapshot.sh
     fleet.json             bin/topology.sh · bin/eindri-route.sh
-                           bin/mcp-gateway.sh · bin/model-placement.sh
+                           bin/mcp-gateway.sh · bin/model-placement.sh · bin/rail-resolve.sh
     eindri-dispatch.json   bin/dispatch-profile.sh
 
 A config the runtime does NOT read gets no schema and is not loaded here —
