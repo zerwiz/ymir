@@ -385,6 +385,7 @@ lifecycle smoke test gains a `config` check over the shipped shapes.
 `config/app-repos.yaml` are read by the runtime but carry no schema yet — they are
 the next starting set, not an oversight.
 
+
 ### 7.4 The grants law — explicit, signed, cross-operator shares (plan 58)
 
 Plan 42 federates ONE operator's machines; *Several Ymirs, one company* federates
@@ -423,6 +424,46 @@ scoped by **operator (host) + namespace** and never merged into a peer's lineage
 The format is extended, never mutated: an entry without `ns` is the operator's own
 and reads exactly as it always did. The cross-operator well share and the Óðrerir
 company view ride later errands; the foundation is the scoping itself.
+
+### 7.6 The dispatch table — role → figure → model → seat (plan 58, Part 1)
+
+Plan 58's language table puts the rule plainly: **Dispatch — role → figure →
+model → seat: Python + YAML; a decision table belongs in data, not in a
+1000-line script.** `src/ymir_runtime/dispatch/` is that decision, read as data:
+
+```
+dispatch[4]{module,owns}
+  "table.py","`.agents/roles.yaml` (canonical, shipped by #223): role → figure · craft · tools · keywords · dispatch. Declares no role; an unrostered figure or a table claiming `model_from` other than `hoard` is a loud refusal"
+  "registry.py","the hoard's model, read at runtime from `$YMIR_HOME/config/agents.yaml` (schema-validated by the config layer); a human model REQUEST is resolved by `bin/model-resolve.sh` and its TOON is read back — never re-implemented"
+  "resolve.py","one errand → one `Resolution` (role · figure · craft · tools · model · harness · effort · seat · kind, with provenance)"
+  "__main__.py","`python3 -m ymir_runtime.dispatch [resolve|roles|choose|request]` — the layer's own door face"
+```
+
+**The seat type is not re-decided.** `resolve()` reads the `Isolation: herdr|utgard`
+declaration through `container.declared_from_brief` (the one owner of that parse),
+so a brief cannot be read two ways; an explicit `--isolation` wins, exactly as the
+engine's own flag does. The module launches nothing — `seat()` still owns the seat.
+
+**The engine's CLI gains a `dispatch` verb** proving the resolution without adding
+a fifth verb to the four-verb interface:
+
+```bash
+bin/ymir-engine.sh dispatch developer --toon            # role → figure/model/seat
+bin/ymir-engine.sh dispatch --task "write the campaign" --kind ship
+python3 -m ymir_runtime.dispatch roles                  # the table, TOON
+python3 -m ymir_runtime.dispatch request "qwen 3.6 iq3" # the fleet registry's answer
+```
+
+**The two refusals, both naming the key (the config layer's voice):** an unknown
+role/figure lists every name the table knows; an absent hoard config names
+`agents.<figure>.model` and the exact path. A model value is never carried by the
+tree — two hoard YAMLs resolve two different models with the tree untouched.
+
+**What stays with the shell doors.** `bin/eindri-role.sh` (the chooser) and
+`bin/model-resolve.sh` (the model-request loop) remain the doors the shell
+surface uses; the Python layer reads the same data and calls the same resolver,
+so neither is forked. `bin/eindri-role.sh` may become a thin adapter over this
+layer in a later pass (the strangler), as the config layer's doors did not need to.
 
 ## 8. Context sources
 
