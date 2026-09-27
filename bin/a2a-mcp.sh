@@ -3,13 +3,13 @@
 # agent can use the mesh, the memory well, and the control plane at once.
 #
 #   bin/a2a-mcp.sh install            # add a2abridge + engram (+wayofteams if present) to pi + opencode
-#   bin/a2a-mcp.sh install --project  # scoped: write the REPO's .pi/mcp.json + opencode.json, never ~/.pi
+#   bin/a2a-mcp.sh install --project  # scoped: write the REPO's .pi/mcp-adapter.json + opencode.json, never ~/.pi
 #   bin/a2a-mcp.sh show [--project]   # what is wired, in the chosen scope
 #   bin/a2a-mcp.sh --version
 #
-# Scope: default writes Pi's GLOBAL MCP list (~/.pi/agent/mcp.json). `--project`
-# keeps everything inside the repo (`.pi/mcp.json` + `opencode.json`) so a Pi used
-# in other areas is left untouched — launch it with `pi --mcp-config .pi/mcp.json`
+# Scope: default writes Pi's GLOBAL MCP list (~/.pi/agent/mcp-adapter.json). `--project`
+# keeps everything inside the repo (`.pi/mcp-adapter.json` + `opencode.json`) so a Pi used
+# in other areas is left untouched — launch it with `pi --mcp-config .pi/mcp-adapter.json`
 # to pick the repo up.
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
@@ -46,7 +46,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp.json"; else PI_MCP="$HOME/.pi/agent/mcp.json"; fi
+if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp-adapter.json"; else PI_MCP="$HOME/.pi/agent/mcp-adapter.json"; fi
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
 ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
@@ -134,7 +134,7 @@ if action == "show":
 if action != "install":
     print("error: use install|show"); sys.exit(2)
 
-# pi mcp.json
+# pi mcp-adapter.json
 pid = load(pi_path, {"mcpServers": {}})
 pid.setdefault("mcpServers", {})
 for name, spec in ones.items():

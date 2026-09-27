@@ -172,7 +172,7 @@ merely tolerated.
 |---|---|---|
 | **Omarchy-native** | The host desktop is Omarchy (Arch + Hyprland). Ymir reads monitors/scale, lets Hyprland own window placement, mitigates the amdgpu GPU crash, and **learns the user's setup** — packages, configs, Omarchy version — re-learning after every `omarchy update` via a `post-update` hook. | `bin/omarchy-sense.sh`, `bin/omarchy-hook-install.sh`, skill `ymir` |
 | **herdr-first (Þjazi)** | Agent panes need a terminal backend. **herdr** is preferred (Þjazi protocol **14+**; presentation spaces at **0.8.0+**), **tmux** is the accepted reference backend. A missing backend is reported, never silently degraded. | `bin/herdr-ensure.sh`, skill `ymir` |
-| **pi-native** | The [pi](https://pi.dev) coding harness is a first-class surface: extensions, skills, prompt templates, themes, custom providers, and **pi packages** (npm/git) are all live. This is where Ymir gains reach — a new capability can be a pi extension or a packaged bundle, not just a shell script. | `.pi/extensions/`, `.pi/settings.json`, `.pi/mcp.json` |
+| **pi-native** | The [pi](https://pi.dev) coding harness is a first-class surface: extensions, skills, prompt templates, themes, custom providers, and **pi packages** (npm/git) are all live. This is where Ymir gains reach — a new capability can be a pi extension or a packaged bundle, not just a shell script. | `.pi/extensions/`, `.pi/settings.json`, `.pi/mcp-adapter.json` |
 
 **Why this matters.** The freedom runs both ways: because Ymir is pi-native it can
 ship **pi packages** — bundling extensions, skills, prompt templates, and themes
@@ -515,7 +515,7 @@ ymir/
 │   ├── memory/               # Mimirsbrunn well — kaia.engram + episodes.jsonl
 │   ├── sandbox/               # Utgard barrier (Dockerfile.utgard, utgard.config.json)
 │   └── bus/                   # Ratatoskr (A2A) protocol
-├── .pi/extensions/  .pi/mcp.json   # Pi adapters (Sýn, Gná, Ró, Skuld) + engram MCP
+├── .pi/extensions/  .pi/mcp-adapter.json   # Pi adapters (Sýn, Gná, Ró, Skuld) + engram MCP
 ├── .opencode/plugins/         # OpenCode adapters (Sága, Sýn, Rödd)
 ├── apps/hlidskjalf/           # the control plane (React + Vite + Bun gate API)
 ├── midgard/                   # shared assets, design tokens, icons
@@ -809,7 +809,7 @@ The record servers live on the heart; every body reaches them by name:
 
 ```bash
 bin/mcp-config.sh            # generate the harness MCP config for THIS role
-bin/mcp-config.sh write      # install ~/.pi/agent/mcp.json (backup kept)
+bin/mcp-config.sh write      # install ~/.pi/agent/mcp-adapter.json (backup kept)
 ```
 A dev body points at the heart's tailnet name; the heart itself uses `127.0.0.1`.
 The smoke test proves each server with a **real** MCP handshake
