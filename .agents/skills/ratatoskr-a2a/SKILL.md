@@ -146,3 +146,40 @@ tools[4]{tool,does}:
   "bin/a2a-talk.sh agents|send <peer> \"<text>\"","Brokk-side A2A talk"
   "bin/a2a-serve.py <pane> <name> <port>","per-Eindri A2A server: inject task -> read reply"
 ```
+
+## The raw directory (a2abridge 3.x) vs the MCP tools
+
+The **MCP tools** and the **directory wire** speak different shapes — do not
+confuse them (this is what made `a2a-talk` read “directory unreachable” against a
+healthy daemon, 2026-09-25):
+
+- **MCP tools** (`a2a_list_agents` / `a2a-agents`): `{name,url,skills}` — the
+  bridge enriches each entry from its card.
+- **The directory itself**: `GET <directory>/agents` returns a bare list of
+  `{url,lastSeen}` — **no name, no skills**. `bin/ratatoskr.sh status` and
+  `bin/a2a-talk.sh agents` read this raw shape and fetch each peer's `name` from
+  its card (`<url>/.well-known/agent-card.json`). Never parse `served_agents`:
+  that is an older engine's shape and it silently fails.
+- **The node card's address is resolved, never hardcoded** (Rule 07):
+  `A2A_ADVERTISE_URL` → `A2A_ADVERTISE_HOST` → the host's own tailnet DNS name
+  (`tailscale status --json` → `Self.DNSName`) → loopback. A card that advertises
+  a LAN IP is a dead door off-LAN; a card that advertises `127.0.0.1` is a dead
+  door for every peer.
+
+## Federation — the engine's surface, measured (2026-09-25)
+
+The skill used to say "`cert` (ed25519) before federation", as if certs alone
+opened the wire. They do not. Measured on **a2abridge 3.0.0**:
+
+- `a2abridge cert` has **one action: `generate`**. There is no trust store, no
+  peer list, no key-exchange command.
+- `a2abridge bridge` has **no TLS/trust/peer flag** — only `-advertise-host`,
+  `-directory`, `-id`, `-name`, `-skills`, `-model`, `-state-dir`.
+- The directory has no federation endpoint.
+
+So generating a cert today writes two files nothing consumes. **Cross-machine
+discovery is therefore per-seat, not federated**: each bridge registers with its
+own local directory (`127.0.0.1:7777`), and a peer on another seat is not
+visible unless `A2A_DIRECTORY` is pointed at a shared, reachable directory. The
+native Ratatoskr backbone (plan 25) or a newer engine release is where true
+federation lands — not a Ymir wrapper on top of `cert generate`.
