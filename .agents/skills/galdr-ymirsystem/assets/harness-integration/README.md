@@ -47,6 +47,21 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > reaches the seat's own well door first. This replaced the old "write the heart
 > IP into every seat" line, which broke the seat's doors the moment the heart
 > moved — and `bin/mcp-config.sh` renders the same gateway door.
+>
+> **Typed surfaces — the servers' home is `packages/` (plan 58 Phase 6).** The
+> MCP/A2A servers move under `packages/` strangler-style, and the surfaces they
+> share are typed in `packages/contracts/`. The A2A node is the first to land:
+> `packages/a2a/ratatoskr/server.ts` builds its `/.well-known/agent-card.json`
+> through the one A2A agent-card contract, which Hlidskjalf imports too
+> (`apps/hlidskjalf/src/types.ts`, `apps/hlidskjalf/server/index.ts`) — one
+> contract, two consumers, contract tests in `packages/contracts/test/`. The
+> first MCP server moved is Bölþorn — `packages/mcp/skills/server.mjs` (:8319);
+> the rest still stand in `tools/` (well-mcp, tickets-mcp, snotra, mcp-gateway)
+> until their own PRs. `bin/fleet-ensure.sh` / `bin/fleet-deploy.sh` copy a
+> DIRECTORY row whole, preserving the `packages/` anchor, so a relative import
+> across packages resolves in the deployed `~/.fleet` copy exactly as it does in
+> the repo. No door, unit, or config name changes: `ratatoskr.service` (:8301)
+> and `skills-mcp.service` (:8319) keep their names and ports.
 
 
 The Ymir runtime is a **distro**: a directory of instructions, skills, tooling and conventions that turns a general-purpose agent into a specialized one. Launching a supported harness inside `BROKK_HOME` is supposed to instantiate **Brokk** and address the operator as the **Allfather** *before the model's first turn*.
