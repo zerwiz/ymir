@@ -24,7 +24,7 @@ lifecycle[4]{script,action,delegates_to}:
   "start.sh","raise the stack","scripts/start.sh (the real boot command)"
   "stop.sh","lower the stack","scripts/stop.sh"
   "status.sh","what is up, by surface","the five ports + the two desktop views"
-  "smoke_test.sh","does it actually work","HTTP, the well, the Smiðja schema, the harness bindings"
+  "smoke_test.sh","does it actually work","HTTP, the well, the Smiðja schema, the harness bindings, and the fleet's version/topology/alias-conformance checks"
 ```
 
 ```bash
@@ -44,8 +44,11 @@ these.
 
 `smoke_test.sh` is the one that adds something: it answers *"is it working"*
 rather than *"is a socket open"* — it fetches the SPA over HTTP, asks the well
-bridge, checks the Smiðja schema has tables, and proves the agents are bound. It
-exits non-zero on failure so a gate can rely on it.
+bridge, checks the Smiðja schema has tables, proves the agents are bound, and
+reads the fleet's own gates (`bin/topology.sh`, `bin/fleet-version.sh`,
+`bin/model-alias-check.sh`): an alias a seat names that no rail serves is a
+FAIL, while an unreachable seat is only ever reported offline. It exits
+non-zero on failure so a gate can rely on it.
 
 ## Verify
 
