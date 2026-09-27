@@ -29,7 +29,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const PORT = Number(process.env.MCP_GATEWAY_PORT || 8316);
 const STATE = process.env.MCP_GATEWAY_STATE || path.join(os.homedir(), ".ymir-state");
 const CACHE = path.join(STATE, "mcp-gateway", "cache");
@@ -348,9 +348,22 @@ async function handleRpc(msg, serverFilter) {
 }
 
 // ── the HTTP surface ─────────────────────────────────────────────────────────
+// CORS: the record has BROWSER readers (the Óðrerir hall's boards, the other
+// in-repo UIs), so the door admits their origin — exactly the road the retired
+// skuld server opened and the gateway dropped. The gateway binds 127.0.0.1, so
+// the only pages that can reach it are this body's own; `allow-private-network`
+// admits a page served from the public hall to this loopback door.
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "content-type, accept, mcp-session-id, mcp-protocol-version, mcp-integration-context",
+  "access-control-allow-methods": "POST, OPTIONS",
+  "access-control-expose-headers": "mcp-session-id, Mcp-Session-Id",
+  "access-control-allow-private-network": "true",
+};
+
 function sendJson(res, code, obj) {
   const body = Buffer.from(JSON.stringify(obj));
-  res.writeHead(code, { "content-type": "application/json", "content-length": String(body.length) });
+  res.writeHead(code, { "content-type": "application/json", "content-length": String(body.length), ...CORS });
   res.end(body);
 }
 
@@ -372,6 +385,9 @@ const server = http.createServer(async (req, res) => {
   let u;
   try { u = new URL(req.url, "http://localhost"); } catch { return sendJson(res, 400, { error: "bad url" }); }
 
+  // the browser's preflight: answer it before the method gate below.
+  if (req.method === "OPTIONS") { res.writeHead(204, CORS); return res.end(); }
+
   if (req.method === "GET" && (u.pathname === "/health" || u.pathname === "/")) {
     return sendJson(res, 200, health());
   }
@@ -382,7 +398,7 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 404, { jsonrpc: "2.0", id: null, error: { code: -32601, message: `unknown record server: ${serverFilter}` } });
   }
   if (req.method === "GET") {
-    res.writeHead(405, { allow: "POST" });
+    res.writeHead(405, { allow: "POST", ...CORS });
     return res.end();
   }
   if (req.method !== "POST") return sendJson(res, 405, { error: "method not allowed" });
@@ -404,7 +420,7 @@ const server = http.createServer(async (req, res) => {
     reply = await one(msg);
   }
   if (reply === null || (Array.isArray(reply) && reply.length === 0)) {
-    res.writeHead(202); return res.end();
+    res.writeHead(202, { ...CORS }); return res.end();
   }
   return sendJson(res, 200, reply);
 });

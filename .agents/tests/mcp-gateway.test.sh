@@ -94,6 +94,19 @@ grep -q 'tickets_list' "$STATE/mcp-gateway/cache/skuld.json" 2>/dev/null && ok "
 out="$(rpc /mcp/skuld tools/call '{"name":"tickets_list","arguments":{"namespace":"work"}}')"
 printf '%s' "$out" | grep -q 'live:tickets_list' && ok "attached: a read proxies live (and is cached)" || bad "attached read: $out"
 
+# ═══ 1b. the browser road: the door admits the hall's origin (CORS) ════════
+# The Óðrerir hall reads the record from a PAGE, and the retired skuld server
+# opened CORS for it; the gateway must keep that road open or the board falls to
+# the saga's sample while the door is perfectly alive.
+pf="$(curl -s -m 3 -o /dev/null -D - -X OPTIONS "http://127.0.0.1:$GW_PORT/mcp/skuld" \
+  -H 'Origin: http://127.0.0.1:4322' -H 'Access-Control-Request-Method: POST' \
+  -H 'Access-Control-Request-Headers: content-type,mcp-session-id' 2>/dev/null | tr -d '\r')"
+printf '%s' "$pf" | grep -qi '^HTTP/1.1 204' && ok "preflight: OPTIONS answers 204" || bad "preflight: $pf"
+printf '%s' "$pf" | grep -qi '^access-control-allow-origin: \*' && ok "preflight: the browser origin is admitted" || bad "preflight CORS: $pf"
+out="$(curl -s -m 3 -D - -o /dev/null -X POST -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -H 'Origin: http://127.0.0.1:4322' \
+  -d '{"jsonrpc":"2.0","id":9,"method":"tools/list"}' "http://127.0.0.1:$GW_PORT/mcp/skuld" 2>/dev/null | tr -d '\r')"
+printf '%s' "$out" | grep -qi '^access-control-allow-origin: \*' && ok "an answered call carries CORS" || bad "POST CORS: $out"
+
 # ═══ 2. the upstream dies (a REAL refused connection) ═══════════════════════
 kill "$UPPID" 2>/dev/null; wait "$UPPID" 2>/dev/null; UPPID=""
 sleep 0.3
