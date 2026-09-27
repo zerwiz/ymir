@@ -117,6 +117,20 @@ function noteUnauthorized(path: string, status: number): void {
   }
 }
 
+/**
+ * A gate failure that keeps its HTTP status, so a surface can say WHICH failure
+ * it was: an unauthorised gate is not an empty roster, and an unreachable gate is
+ * not an empty roster either. A bare Error hid that distinction (2026-09-27).
+ */
+export class GateError extends Error {
+  readonly status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'GateError';
+    this.status = status;
+  }
+}
+
 async function get<T>(path: string): Promise<T> {
   // Bound every call so one slow endpoint can never stall a combined load.
   const ctrl = new AbortController();
@@ -124,7 +138,7 @@ async function get<T>(path: string): Promise<T> {
   try {
     const res = await fetch(`${BASE}${path}`, { credentials: 'include', headers: desktopHeaders(), signal: ctrl.signal });
     noteUnauthorized(path, res.status);
-    if (!res.ok) throw new Error(`${path} → ${res.status}`);
+    if (!res.ok) throw new GateError(res.status, `${path} → ${res.status}`);
     return (await res.json()) as T;
   } finally {
     window.clearTimeout(timer);
@@ -142,7 +156,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   // The gate explains refusals in its own words (a spent invite code, a taken
   // username, a short password). Carry that sentence to the caller rather than a
   // bare status, so the surface can say what is actually wrong.
-  if (!res.ok) throw new Error(await errorText(res, path));
+  if (!res.ok) throw new GateError(res.status, await errorText(res, path));
   return (await res.json()) as T;
 }
 
@@ -160,7 +174,7 @@ async function errorText(res: Response, path: string): Promise<string> {
 async function del<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { method: 'DELETE', credentials: 'include', headers: desktopHeaders() });
   noteUnauthorized(path, res.status);
-  if (!res.ok) throw new Error(`${path} → ${res.status}`);
+  if (!res.ok) throw new GateError(res.status, `${path} → ${res.status}`);
   return (await res.json()) as T;
 }
 

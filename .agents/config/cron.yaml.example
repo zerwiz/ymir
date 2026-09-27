@@ -20,3 +20,6 @@
 00:00 bin/nornir-job-git-sync.sh
 # Eir checks every surface daily (P8) — a desktop that cannot open is reported.
 08:15 bin/nornir-job-doctor.sh
+# The rollover backstop: hand off every repository that carries a .asken state,
+# so a session that died without a reporter still leaves a fresh HANDOFF.md.
+04:00 bin/nornir-job-asken-handoff.sh

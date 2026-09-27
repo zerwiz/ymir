@@ -2082,9 +2082,20 @@ const server = Bun.serve({
         try {
           const { execFileSync } = await import('node:child_process');
           const script = new URL('../../../bin/hlidskjalf-agents.sh', import.meta.url).pathname;
-          const out = execFileSync(script, [], { timeout: 4000 }).toString().trim();
+          // cwd is ROOT and ROSTER_DIR is the absolute roster, so the connector's
+          // roster path cannot resolve against the wrong directory.
+          const out = execFileSync(script, [], {
+            timeout: 4000,
+            cwd: ROOT,
+            env: { ...process.env, ROSTER_DIR: AGENTS_ALT },
+          }).toString().trim();
+          // An EMPTY array is not data: herdr was absent or no pane answered.
+          // Fall through to the roster, exactly as the comment below promises.
           if (out.startsWith('[')) {
-            return new Response(out, { headers: { 'content-type': 'application/json' } });
+            const rows = JSON.parse(out) as unknown;
+            if (Array.isArray(rows) && rows.length > 0) {
+              return new Response(out, { headers: { 'content-type': 'application/json' } });
+            }
           }
         } catch {
           // herdr absent or the connector failed: fall through to the roster
