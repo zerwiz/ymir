@@ -20,7 +20,7 @@ ymir/
 ├── .no-mistakes.yaml              # [d] the clean-PR gate posture
 ├── .gitignore · .secret-guardignore         # [d] the wards
 │
-├── bin/                            # THE FORGE — 158 scripts: every door of the hall
+├── bin/                            # THE FORGE — 213 files: every door of the hall (counted 2026-09-27)
 │   ├── ymir.js                    # [d] the npm CLI front door (install/raise/lower/eir/groa/pi…)
 │   ├── ymir-install.sh            # [d] first setup (--plan · --yes · --no-desktop)
 │   ├── ymir-migrate.sh · ymir-invite.sh · ymir-setup-auth.sh · ymir-say.sh
@@ -29,7 +29,8 @@ ymir/
 │   ├── nornir-cron-start.sh       # [d] the schedule spine; + nornir-job-*.sh (briefing, observer, housekeeping, git-sync…)
 │   ├── eir-doctor.sh · groa-update.sh        # heal · renew (Eir · Gróa)
 │   ├── app-lib.sh · smidja-lib.sh · hoard-lib.sh · gleipnir-lock-lib.sh · hamr-harness.sh
-│   ├── einherjar-spawn.sh · eindri-start/send/control/seat/watch.sh    # the Eindri doors
+│   ├── ymir-engine.sh · ymir-engine-ensure.sh   # [d] THE ENGINE's door + its private venv (never committed)
+│   ├── einherjar-spawn.sh · eindri-start/send/control/seat/watch.sh    # the Eindri doors (engine-first adapters)
 │   ├── pi-seat.sh · pi-local.sh · pi-agent.sh · pi-ensure.sh            # Pi seats
 │   ├── herdr-run.sh · herdr-ensure.sh · herdr-agents.py                 # herdr panes
 │   ├── mimir*.{sh,py}             # the well (engram) · bifrost-*.sh (bridge) · gjallarhorn-*.sh (tunnel)
@@ -37,12 +38,20 @@ ymir/
 │   ├── secret-guard.sh · hoard-guard.sh · perm-guard.sh · docs-guard.sh
 │   ├── syn-watch-arm.sh · syn-turnend-guard.sh    # Sýn supervision
 │   ├── valknut-load.sh            # [d] binds the distro into each harness
-│   └── …                          # full inventory lives in bin/ itself (158)
+│   └── …                          # full inventory lives in bin/ itself (213)
 │
 ├── scripts/                        # THE RAISE — stand the hall, or lay it down
 │   ├── start.sh                   # [d] raise: SPA :3888 · gate :3889 · Óðrerir :4322 · visualizer :8437 · services
 │   ├── stop.sh · raise.sh · lower.sh
 │   └── electron.sh                # [d] the desktop shell (views: hlidskjalf · smidja · odrerir; --both)
+│
+├── src/ymir_runtime/               # THE ENGINE — python, stdlib only, no build step
+│   ├── seat.py · status.py · send.py · stop.py   # [d] the four-verb public interface
+│   ├── worktree.py · harness.py · backend.py · container.py · heartbeat.py   # [d] Yggdrasil · Hamr · the pane · Utgard · silence
+│   ├── paths.py · proc.py · errors.py            # [d] the home law · one place that runs a process · the failures
+│   ├── tests/                     # [d] unit tests BESIDE the modules (a bare `python3 -m unittest` reaches them)
+│   └── pyproject.toml             # [d] the one declaration of the engine's dependencies (none today)
+├── tests/                          # [d] the suite hinge + the live proofs (e2e/engine-proof.sh proof|parity)
 │
 ├── apps/                           # THE SURFACES — each its own npm package (workspaces)
 │   ├── hlidskjalf/                # the high seat — React + Vite SPA, server/ gate API, electron/ shell

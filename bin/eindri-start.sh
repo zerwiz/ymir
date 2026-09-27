@@ -9,6 +9,10 @@
 #
 # Usage:
 #   eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]
+#   eindri-start.sh "<request>" --id <task-id> [--project <dir>] [--role <name>] [--kind pi|opencode]
+#       # --id names a real errand and hands it to the engine
+#       # (src/ymir_runtime/): a Yggdrasil worktree, a recorded seat, a
+#       # heartbeat. Without --id the ordinary road below seats the agent.
 #   eindri-start.sh --version
 set -u
 
@@ -32,19 +36,21 @@ STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 SEATS="$STATE/herdr-seats"
 SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; SEAT=""; MODEL=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""
+REQ=""; ROLE=""; SEAT=""; MODEL=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --role) ROLE=${2-}; shift 2 ;;
     --kind) KIND=${2-}; shift 2 ;;
     --model) MODEL=${2-}; shift 2 ;;
+    --id) TASK_ID=${2-}; shift 2 ;;
+    --project) PROJECT_DIR=${2-}; shift 2 ;;
     --main) MAIN="--main"; shift ;;
     --space) SEAT="--space"; shift ;;
     --tab) SEAT="--tab"; shift ;;
     --pane) SEAT="--pane"; shift ;;
-    -*) printf 'error: unknown flag %s\nhelp: bin/eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]\n' "$1" >&2; exit 2 ;;
+    -*) printf 'error: unknown flag %s\nhelp: bin/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]\n' "$1" >&2; exit 2 ;;
     *) [ -z "$REQ" ] && REQ="$1" || REQ="$REQ $1"; shift ;;
   esac
 done
@@ -60,6 +66,30 @@ fi
 ROLE="${ROLE:-eindri}"
 SLUG="$(printf '%s' "$REQ" | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | sed -E 's/^-|-$//g' | cut -c1-24)"
 LABEL="${ROLE}-${SLUG:-task}"
+
+# 3. The engine owns the errand when the caller names one (plan 58, Phase 1).
+#    With --id an errand is a real seat — worktree, harness, record, heartbeat.
+#    A seat hint (--pane/--tab/--space/--main) is the old road's grain, so those
+#    callers keep the road below; YMIR_ENGINE=off skips the handoff entirely.
+if [ -n "$TASK_ID" ] && [ -z "$SEAT" ] && [ -z "$MAIN" ] \
+   && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/ymir-engine.sh" ]; then
+  PROJECT_DIR="${PROJECT_DIR:-$PWD}"
+  engine_args=(seat "$TASK_ID" --project "$PROJECT_DIR" --harness "$KIND" --request "$REQ" --role "$ROLE")
+  if [ -n "$MODEL" ]; then engine_args+=(--model "$MODEL"); fi
+  engine_rc=0
+  engine_out="$("$SCRIPT_DIR/ymir-engine.sh" "${engine_args[@]}")" || engine_rc=$?
+  if [ "$engine_rc" -eq 0 ]; then
+    printf '%s' "$engine_out"
+    printf 'eindri-start[1]{role,seat,a2a,request,label}:\n  "%s","engine","none","%s","%s"\n' "$ROLE" "$REQ" "$LABEL"
+    exit 0
+  fi
+  if [ "$engine_rc" -ne 4 ]; then
+    printf 'error: the engine failed to seat %s (exit %s) — the old road was NOT run, because a half-seat is worse than none\nhelp: bin/ymir-engine.sh seat %s --project %s\n' \
+      "$TASK_ID" "$engine_rc" "$TASK_ID" "$PROJECT_DIR" >&2
+    exit 1
+  fi
+  printf 'engine: cannot own %s — seating the ordinary way\n' "$TASK_ID" >&2
+fi
 
 mkdir -p "$STATE"
 

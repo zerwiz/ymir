@@ -42,7 +42,7 @@ assets[26]{path,load_when}:
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
   "assets/norse-naming.md","naming any component; the naming law + component map"
-  "assets/brokk-distro-runtime.md","the runtime spec (home, digest, lock, supervision, cron)"
+  "assets/brokk-distro-runtime.md","the runtime spec (home, digest, lock, supervision, cron, and THE ENGINE — src/ymir_runtime's four verbs)"
   "assets/runtime-components.md","every runtime component, interface, and env var"
   "assets/local-models.md","Vog — local models: engines (llama.cpp, LM Studio, Ollama), detection, harness wiring, honest measurement"
   "assets/runtime-compliance.md","runtime acceptance gates + runnable checklist"
