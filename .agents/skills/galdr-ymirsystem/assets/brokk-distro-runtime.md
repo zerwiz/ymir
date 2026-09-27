@@ -169,7 +169,7 @@ Supervision is **event-driven and zero-token**: no polling by the model, no baby
 
 | Piece | Figure | Owns | Files |
 |---|---|---|---|
-| The arm (the watch loop) | **Sýn** | one standing arm per home: polls the state dir, raises `signal:`/`stale:`/`check:`/`heartbeat:` when the primary is needed, and IDLES (never retires) when no session is seated | `bin/syn-watch.sh` (`run`; `status\|start\|stop`), `tools/mill/systemd/ymir-syn-watch.service` |
+| The arm (the watch loop) | **Sýn** | one standing arm per home: polls the state dir, raises `signal:`/`stale:`/`check:`/`heartbeat:` when the primary is needed, and IDLES (never retires) when no session is seated | `bin/syn-watch.sh` (thin door; `run` is the loop), `src/ymir_runtime/watch.py` (the behaviour), `tools/mill/systemd/ymir-syn-watch.service` |
 | The thin client | **Sýn** | enters a vacant helm, seats/attaches to the arm, relays the raised line, exits | `bin/syn-watch-arm.sh` |
 | Turn-boundary guard | **Sýn** | refuses a blind turn end when supervision is off | `bin/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-turnend-guard.js` |
 | Continuity messenger | **Gná** | arms, re-arms, delivers actionable wakes to the Pi session | `.pi/extensions/gna-pi-watch.ts` |
@@ -177,7 +177,7 @@ Supervision is **event-driven and zero-token**: no polling by the model, no baby
 
 Mechanics:
 
-- **The arm is a SERVICE (plan 58, Phase 2 — 2026-09-27).** The loop is `bin/syn-watch.sh run`, seated once per home by `ymir-syn-watch.service` (`systemd --user`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; materialized by `bin/fleet-ensure.sh`, program `syn-watch`, roles heart+dev) or, where the one unit does not serve a state (a seat's private state, a probe), by a detached daemon. `bin/syn-watch-arm.sh` is its **thin client**: it runs `gleipnir_lock_acquire` on a vacant helm, attaches to the arm for this home, writes nothing itself, and exits on a `signal:`/`stale:`/`check:`/`heartbeat:` line. The arm writes `state/.supervision-armed`, touches `state/.watch.heartbeat` and its lease every cycle, and **keeps standing when the session's lock owner dies** — a session-owned arm that dies with its session is exactly the fault this replaced (it flapped through 2026-09-27 and needed three hand re-arms). `bin/syn-watch.sh status` reports `up` · `idle` · `stale` · `down` and exits non-zero on a gap; Eir's `arm` surface composes it; `BROKK_WATCH_INLINE=1` keeps the loop in the client for a probe, and an explicit `BROKK_STATE_OVERRIDE` gets its own detached daemon rather than commandeering the machine's unit.
+- **The arm is a SERVICE (plan 58, Phase 2 — 2026-09-27), and its BEHAVIOUR is the ENGINE's (plan 58, Phase 5 — 2026-09-27).** The loop is `bin/syn-watch.sh run`, seated once per home by `ymir-syn-watch.service` (`systemd --user`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; materialized by `bin/fleet-ensure.sh`, program `syn-watch`, roles heart+dev) or, where the one unit does not serve a state (a seat's private state, a probe), by a detached daemon. The lease, the heartbeat, the `up`/`idle`/`stale`/`down` verdict, the raise grammar, and the wake-queue flood brake live in `src/ymir_runtime/watch.py`; `bin/syn-watch.sh` is only the interpreter and the argv, and defines nothing that could drift (it `exec`s `bin/ymir-engine.sh watch`). `bin/syn-watch-arm.sh` is the arm's **thin client**: it runs `gleipnir_lock_acquire` on a vacant helm, attaches to the arm for this home, writes nothing itself, and exits on a `signal:`/`stale:`/`check:`/`heartbeat:` line. The arm writes `state/.supervision-armed`, touches `state/.watch.heartbeat` and its lease every cycle, and **keeps standing when the session's lock owner dies** — a session-owned arm that dies with its session is exactly the fault this replaced (it flapped through 2026-09-27 and needed three hand re-arms). `bin/syn-watch.sh status` reports `up` · `idle` · `stale` · `down` and exits non-zero on a gap; Eir's `arm` surface composes it; `BROKK_WATCH_INLINE=1` keeps the loop in the client for a probe, and an explicit `BROKK_STATE_OVERRIDE` gets its own detached daemon rather than commandeering the machine's unit.
 - `bin/syn-turnend-guard.sh` is **inert until the first successful arm** (it returns 0 unless `state/.supervision-armed` exists). When armed, if the heartbeat is missing or older than `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60), it prints the recovery instruction and exits 2 so the adapter re-prompts.
 - **Do not arm before the first successful arm** and **never run `bin/syn-watch-arm.sh` by hand** — the Pi/OpenCode extensions own continuity (arming THIS client, whose watch stands on its own). The PreToolUse seatbelts exist so the extension can deny a bash command that violates an invariant: `bin/syn-arm-pretool-check.sh` blocks backgrounding/detaching the arm (a real `&` or nohup/setsid/disown; `&&` chaining and `bash -n` are allowed), and `bin/syn-guard-pretool-check.sh` blocks destructive shapes against the session lock, the supervision markers, the append-only Runes ledger, the guard/extension machinery itself, secrets, and the fleet-steering registries. They are best-effort guardrails, not a security boundary.
 - **Proofs:** `tests/e2e/arm-service-proof.sh [proof|systemd]` (the plan's gate, live: idle with no session, kill → returns, heartbeat fresh, `status` non-zero on an induced gap, Eir names it) and `.agents/tests/syn-watch-arm-silent-exit.test.sh` (the flood brake + the client relay).
@@ -304,12 +304,13 @@ this" — and a non-4 failure is fatal without falling back, because a half-seat
 worse than none. `YMIR_ENGINE=off` disables the handoff everywhere.
 
 **What the engine does NOT own yet** (named, not implied): the Utgard sandbox
-(declared utgard → exit 4, the old road keeps it), `--relaunch`, worktree removal on
-`stop` (opt-in), `fm-teardown`'s landed-work gates and backlog transitions, and
-reading a worker's reply (`send` delivers; `bin/eindri-control.sh` reads). The
-gods (`fm-spawn`/`fm-teardown`/`fm-watch`) still stand in the vendored runtime;
-their decomposition is Phase 5, one god per PR. The supervision *library* twins
-are collapsed — see 7.2.
+(declared utgard → exit 4, the old road keeps it), `--relaunch`, `fm-teardown`'s
+backlog transitions and its secondmate-home retirement, and reading a worker's
+reply (`send` delivers; `bin/eindri-control.sh` reads). The gods
+(`fm-spawn`/`fm-teardown`/`fm-watch`) still stand in the vendored runtime; their
+decomposition is Phase 5, one god per PR. The supervision *library* twins are
+collapsed — see 7.2 — and the watcher's behaviour and the landed-work gate are
+now the engine's — see 7.4.
 
 **Its own home.** `bin/ymir-engine-ensure.sh` builds the engine's private venv
 (`$HOME/.fleet/ymir-engine-venv`) at first use when `src/pyproject.toml` declares
@@ -385,6 +386,7 @@ lifecycle smoke test gains a `config` check over the shipped shapes.
 **Unschematized, named not implied:** `config/model-catalog.yaml` and
 `config/app-repos.yaml` are read by the runtime but carry no schema yet — they are
 the next starting set, not an oversight.
+
 
 
 
@@ -491,6 +493,56 @@ ships `src/`, so a packaged install carries the door and its module together.
 replaced (kept verbatim under `src/ymir_runtime/tests/fixtures/state/`): the lock
 cycle, the rune append, and the queue append are byte-identical, the ledger still
 chains, and the live readers resolve the same path, owner, and starttime.
+## 7.4 The first god-seams — the arm and the landed gate (plan 58, Phase 5, 2026-09-27)
+
+Phase 5 is "split the gods, delete the twins", **one god per PR**. Two of the
+three seams landed in this change; the third is named below.
+
+**The watcher god — Sýn's behaviour is the engine's.** `bin/syn-watch.sh` carried
+the arm's whole judgement in 409 lines of bash, while the vendored watcher
+(`.agents/backend/fm-watch.sh`, 1962 lines) carried a second, drifting copy of the
+same questions over the same record. The judgement now lives ONCE in
+`src/ymir_runtime/watch.py`: the lease (`pid`/`starttime`/`gen`/`mode`/`session`),
+the heartbeat, the `up`·`idle`·`stale`·`down` verdict, the session-owner read
+(asked of `bin/gleipnir-lock-lib.sh`, never re-derived), the raise grammar
+(`.wake-queue` with its content-hash flood brake, `*.signal`, `*.check`,
+`.watcher-stop`), and the delivery slot + journal. `bin/syn-watch.sh` is a thin
+door into it (`exec bin/ymir-engine.sh watch …`), keeping the exact CLI, the exact
+TOON row, the exact stderr remedies, and the exact exit codes; the systemd unit is
+unchanged (`ExecStart=/bin/bash <bin>/syn-watch.sh run`), because the door `exec`s
+the interpreter and keeps the same pid.
+
+```
+arm[6]{verb,what,proven_by}
+  "status [--detail]","lease/verdict/row from the engine","tests/e2e/arm-service-proof.sh proof"
+  "start","unit first, else a detached daemon, then wait for a live lease","arm-service-proof.sh proof+systemd"
+  "stop","unit stop plus the lease holder's TERM, then prove it let go","arm-service-proof.sh proof"
+  "restart","stop then start","arm-service-proof.sh systemd"
+  "run [--emit]","the one loop; --emit is the pre-service probe shape",".agents/tests/syn-watch-arm-silent-exit.test.sh"
+  "session_owner","the lock law asked of bin/gleipnir-lock-lib.sh","the arm tests' session cases"
+```
+
+**The teardown god's landed gate — `landed.py`.** The gate that decides whether a
+worktree may be discarded (uncommitted changes, remote reachability, a merged PR
+whose head contains the local work, the content-in-default fallback) is now
+`src/ymir_runtime/landed.py`, reached by `python3 -m ymir_runtime landed <wt>` and
+by `stop --remove-worktree --require-landed`, which REFUSES to remove a worktree
+whose work has not landed, naming the proof that said so. Every uncertainty
+(a gh error, an unresolvable default branch, a merge it cannot compute) is a
+refusal, never a guess — the vendored gate's fail-safe posture, kept.
+
+What the engine does NOT yet do with it, said plainly: the vendored
+`fm-teardown.sh` still holds its own shell copy of the gate, because its suite
+(`.agents/tests/fm-teardown.test.sh`) **cannot run on this tree at all** — it
+drives `$ROOT/bin/fm-teardown.sh`, and `.agents/bin/` was never vendored. Blind
+repointing without that suite is the gamble the plan forbids, so the repoint rides
+the next errand, with the suite made runnable first.
+
+**The Utgard seat road — still unbuilt, and it says so.** `container.py` owns the
+decision and the refusals (a declared `utgard` with no engine or no image is a
+loud refusal, never a silent downgrade) but not the launch: `isolation=utgard`
+still returns exit 4 and the old road (`bin/einherjar-spawn.sh`) keeps it. This is
+the plan's own Phase 5 honesty clause, and it rides its own PR.
 
 ## 8. Context sources
 
