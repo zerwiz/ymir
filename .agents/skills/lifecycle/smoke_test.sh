@@ -259,6 +259,21 @@ else
   skip version "fleet-version.sh absent"
 fi
 
+# 14d. alias conformance — every alias this seat's registry names resolves on a
+#      rail (plan 51 §6). Local-only: the ring-wide check is the gate's own job,
+#      and an offline seat is reported there, never a FAIL here.
+if [ -x "$ROOT/bin/model-alias-check.sh" ]; then
+  _aa="$(bash "$ROOT/bin/model-alias-check.sh" --local 2>/dev/null || true)"
+  _av="$(printf '%s' "$_aa" | sed -nE 's/^  "verdict","([^"]+)".*/\1/p')"
+  case "$_av" in
+    pass) ok alias "alias conformance — every alias this seat names resolves" ;;
+    FAIL) bad alias "$(printf '%s' "$_aa" | grep -m1 '^help:' | sed 's/^help: //')" ;;
+    *) skip alias "not reported" ;;
+  esac
+else
+  skip alias "model-alias-check.sh absent"
+fi
+
 # ── data ─────────────────────────────────────────────────────────────────────
 
 # 15. the Smiðja database exists with a schema
