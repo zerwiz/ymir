@@ -6,6 +6,8 @@
 #   bin/agents-config.sh default [--provider|--model|--harness]
 #   bin/agents-config.sh provider-url <provider>   # the provider's base_url
 #   bin/agents-config.sh resolve              # exact ids for local provider models
+#   bin/agents-config.sh roster               # role → figure → harness → model → tools
+#                                             #   (roles.yaml + the hoard; the tree is untouched)
 #   bin/agents-config.sh init                 # seed config/agents.yaml from the template
 #   bin/agents-config.sh apply                # publish it into project harness config
 #   bin/agents-config.sh --version
@@ -18,7 +20,7 @@
 # rewrites a tracked `.agents/agents/*.md`.
 set -u
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -43,7 +45,7 @@ RESOLVED="${YMIR_STATE_DIR}/agents-resolved.json"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help|"") sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 ACTION="${1:-show}"; shift || true
 
@@ -198,6 +200,33 @@ if action == "provider-url":
     if len(args) < 1:
         print('error: provider-url needs <provider>'); sys.exit(2)
     print((providers.get(args[0]) or {}).get("base_url") or "")
+    sys.exit(0)
+
+if action == "roster":
+    # The one resolved roster: ROLE (from roles.yaml) → FIGURE → harness → model
+    # (from the hoard, BY FIGURE NAME) → tools. Nothing here reads or writes a
+    # tracked `.agents/agents/*.md`: the wiring is data and the model is the
+    # operator's, so two hoard YAMLs yield two rosters and the tree never moves
+    # (plan 58 Phase 4).
+    roles_path = os.environ.get("YMIR_ROLES_YAML") or os.path.join(root, ".agents", "roles.yaml")
+    if not os.path.exists(roles_path):
+        print(f'error: roles table not found: {roles_path}')
+        print('help: it is canonical at .agents/roles.yaml')
+        sys.exit(1)
+    rdoc = yaml.safe_load(open(roles_path)) or {}
+    rroles = rdoc.get("roles") or {}
+    out = []
+    for rkey, spec in rroles.items():
+        if not isinstance(spec, dict):
+            continue
+        fig = spec.get("figure") or ""
+        if not fig:
+            continue
+        tools = " ".join(str(t) for t in (spec.get("tools") or []))
+        out.append((rkey, fig, harness_of(fig), harness_model(fig), tools))
+    print(f'agents-roster[{len(out)}]{{role,figure,harness,model,tools}}:')
+    for rkey, fig, h, m, tools in out:
+        print(f'  "{rkey}","{fig}","{h}","{m}","{tools}"')
     sys.exit(0)
 
 if action == "get":
