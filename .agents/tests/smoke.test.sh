@@ -37,8 +37,12 @@ else
   add "saga digest" FAIL
 fi
 
-# 3. lock present and held by a live session (or this test)
-owner=$(tr -d "[:space:]" <"$STATE/.lock" 2>/dev/null)
+# 3. a session lock exists and its owner is live (or is this test). The lock the
+#    primary resolves is MACHINE-GLOBAL (one helm per machine, plan 58 Phase 0),
+#    so ask the lib for the path rather than assuming the tree's state dir.
+. "$ROOT/bin/gleipnir-lock-lib.sh"
+gleipnir_lock_path lockfile
+owner=$(tr -d "[:space:]" <"$lockfile" 2>/dev/null)
 if [ -n "$owner" ] && { [ "$owner" = "$$" ] || kill -0 "$owner" 2>/dev/null; }; then
   add "gleipnir lock" OK
 else
@@ -52,9 +56,11 @@ else
   add "nornir cron" FAIL
 fi
 
-# 5. Sýn arms and exits on a signal
+# 5. Sýn arms and exits on a signal. The watch loop now normally stands in the
+# ARM SERVICE (bin/syn-watch.sh run); this smoke proves the loop and the grammar
+# in-process, and the standing-service proofs are tests/e2e/arm-service-proof.sh.
 touch "$STATE/smoke.signal"
-if out=$(timeout 8 bash "$ROOT/bin/syn-watch-arm.sh" --restart 2>&1) && printf '%s' "$out" | grep -q '^signal:'; then
+if out=$(BROKK_WATCH_INLINE=1 timeout 8 bash "$ROOT/bin/syn-watch-arm.sh" --restart 2>&1) && printf '%s' "$out" | grep -q '^signal:'; then
   add "syn watch-arm" OK
 else
   add "syn watch-arm" FAIL
@@ -75,8 +81,9 @@ else
   add "galdr compliance" FAIL
 fi
 
-# 8. config resolves under .agents/config (ro is now per-user in state/)
-if [ -f "$BROKK_CONFIG_OVERRIDE/cron.yaml" ] && [ -f "$BROKK_CONFIG_OVERRIDE/eindri-harness" ]; then
+# 8. the distro's config is here, repo-local (the OPERATOR's own config/ carries
+#    the live cron.yaml; the repo ships the template, cron.yaml.example)
+if [ -f "$BROKK_CONFIG_OVERRIDE/cron.yaml.example" ] && [ -f "$BROKK_CONFIG_OVERRIDE/eindri-harness" ]; then
   add "config repo-local" OK
 else
   add "config repo-local" FAIL

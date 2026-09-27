@@ -53,7 +53,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness lock migrations hoard autoboot)
+SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot)
 
 s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -158,6 +158,14 @@ s_harness() {
   return 1
 }
 f_harness()   { [ -x "$SCRIPT_DIR/valknut-load.sh" ] && "$SCRIPT_DIR/valknut-load.sh" --pi >/dev/null 2>&1 && s_harness; }
+# Arm: Sýn as a SERVICE (plan 58, Phase 2) — one standing watcher per home that
+# idles when no session is seated, never retires with one. The surface is the
+# arm's own door (bin/syn-watch.sh): a live lease with a fresh heartbeat is
+# healthy whether a session is up (state=up) or none is (state=idle). A missing
+# or stale arm is a NAMED failure — command merges and a blind turn end are what
+# a dead watch costs — and the mend is to seat the service again.
+s_arm()      { [ -x "$SCRIPT_DIR/syn-watch.sh" ] && "$SCRIPT_DIR/syn-watch.sh" status >/dev/null 2>&1; }
+f_arm()      { [ -x "$SCRIPT_DIR/syn-watch.sh" ] && "$SCRIPT_DIR/syn-watch.sh" start >/dev/null 2>&1 && s_arm; }
 # Lock: absent, or held by a live pid.
 s_lock() {
   local f="$STATE/.lock" pid
@@ -262,22 +270,27 @@ f_hoard() {
   s_hoard
 }
 
-detail() { # <name> -> one short fact
+# Each branch PRINTS the command that produces the fact; the caller evaluates it
+# (the branches used to be bare command text, which is a command-not-found — a
+# single quoted word, not a command — so every row's detail came out EMPTY, and
+# the `arm` surface is the one the plan's proof asks to NAME the arm, 2026-09-27).
+detail() { # <name> -> the command that prints one short fact
   case "$1" in
-    floors)    "[ -x $SCRIPT_DIR/prereq-ensure.sh ] && echo tool floors" ;;
-    herdr)     "have herdr && herdr --version 2>/dev/null | head -1 || echo 'herdr absent'" ;;
-    a2abridge) "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
-    hermes)    "have hermes && echo present || echo absent" ;;
-    sessrumnir)"[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
-    well)      "echo 'engram :4602'" ;;
-    mcp)       "echo 'a2abridge + engram'" ;;
-    graphics)  "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
-    harness)   "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
-    lock)      "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
-    migrations)"echo 'structure'" ;;
-    shells)    'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
-    hoard)     "printf 'hoard %s' \"$(_hoard_root)\" ; [ -d \"$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\\n'" ;;
-    autoboot)  "$SCRIPT_DIR/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/ymir-autoboot.sh verify'" ;;
+    floors)    printf '%s\n' "[ -x $SCRIPT_DIR/prereq-ensure.sh ] && echo 'tool floors'" ;;
+    herdr)     printf '%s\n' "have herdr && herdr --version 2>/dev/null | head -1 || echo 'herdr absent'" ;;
+    a2abridge) printf '%s\n' "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
+    hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
+    sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
+    well)      printf '%s\n' "echo 'engram :4602'" ;;
+    mcp)       printf '%s\n' "echo 'a2abridge + engram'" ;;
+    graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
+    harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
+    arm)       printf '%s\n' "$SCRIPT_DIR/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
+    lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
+    migrations)printf '%s\n' "echo 'structure'" ;;
+    shells)    printf '%s\n' 'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
+    hoard)     printf '%s\n' "printf 'hoard %s' \"\$(_hoard_root)\" ; [ -d \"\$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\n'" ;;
+    autoboot)  printf '%s\n' "$SCRIPT_DIR/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/ymir-autoboot.sh verify'" ;;
   esac
 }
 
@@ -294,7 +307,7 @@ rows=""
 count=0
 for s in "${SURFACES[@]}"; do
   if "s_$s" >/dev/null 2>&1; then state=ok; else state=broken; broken=$((broken+1)); fi
-  d="$("detail" "$s" 2>/dev/null | head -1)"
+  d="$(eval "$("detail" "$s" 2>/dev/null)" 2>/dev/null | head -1)"
   rows="${rows}  \"${s}\",\"${state}\",\"${d}\"\n"
   count=$((count+1))
 done
