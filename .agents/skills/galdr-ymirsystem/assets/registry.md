@@ -101,10 +101,11 @@ commands[8]{command,purpose}:
 ## Brokk commands — the Eindri wake bridge (control)
 
 ```
-commands[4]{command,purpose}:
+commands[5]{command,purpose}:
   "bin/eindri-watch.sh","the bridge's door: arm/retire/list/reconcile a when-source per smith (Norns' loom)"
   "bin/eindri-seen.sh","bridge condition: has the smith reported? (report file, or herdr left working)"
-  "bin/eindri-acclaim.sh","bridge action: file the report, mark done, append the wake queue + desktop note"
+  "bin/eindri-acclaim.sh","the push path: file the report/status, mark the ONE shared ledger (bin/eindri-wake-lib.sh), append the durable wake queue + desktop note; the worker's own terminal act"
+  "bin/eindri-handoff.sh","the handoff failsafe: sweep undelivered reports/questions into the wake queue, idempotent on the shared ledger (run on re-arm and on the 06:45 cron row)"
   "bin/hall-snapshot.sh","the planning feed: real system state -> public-safe livehall.json for the Óðrerir Hall"
 ```
 

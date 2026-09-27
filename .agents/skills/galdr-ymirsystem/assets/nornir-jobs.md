@@ -43,10 +43,15 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
   `BROKK_CRON_LOG_MAX_BYTES` (default 1 MiB).
 - **Handoff failsafe sweep (2026-09-27, plan 58 Phase 3).** A row
   (`06:45 bin/eindri-handoff.sh sweep`, any role) delivers every undelivered
-  worker report or question into the wake queue, idempotently — a worker whose
-  terminal act wrote `$STATE/eindri-reports/<id>.md` surfaces at the next sweep,
-  re-arm, or session start, whatever the live poller was doing. One delivery
-  marker per item; a second sweep never re-fires old news.
+  worker report or question into the wake queue — a worker whose terminal act wrote
+  `$STATE/eindri-reports/<id>.md` surfaces at the next sweep, re-arm, or session
+  start, whatever the live poller was doing. Delivery is idempotent across BOTH
+  roads (the poller's `bin/eindri-acclaim.sh` and this sweep) on the ONE shared
+  ledger `$STATE/eindri-delivered/<id>.<kind>` (`bin/eindri-wake-lib.sh`), so a
+  second sweep — or an acclaim that already fired — never re-fires old news. The
+  worker's own terminal act (`bin/eindri-acclaim.sh <id> --terminal done --line …`)
+  writes the durable wake itself, with no sweep and no arm running; the sweep is
+  the backstop.
 - No jobs configured → `cron: no jobs configured (...)` and exit 0.
 
 ### 1.2 State files
