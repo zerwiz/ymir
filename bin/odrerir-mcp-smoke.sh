@@ -3,11 +3,12 @@
 # Skuld MCP, live (2026-09-24, the Allfather's word: "make test tickets and
 # plans thru the mcp for real").
 #
-# The Óðrerir boards do not read a local file for tickets/plans: they call the
-# Skuld MCP over its tailnet door (whynot.tailefab81.ts.net:8320). This smoke
-# walks the SAME wire the browser walks — initialize (an mcp-session-id), then
-# tickets/list, plans/list, tickets/get, comments/list, plans/get — and judges
-# the answers the boards parse:
+# The Óðrerir boards do not read a local file for tickets/plans: they ring the
+# Skuld MCP through THIS BODY's own gateway (bin/mcp-gateway.sh, :8316), which
+# resolves the heart (zerwizserver) at request time — the app never names the
+# heart. This smoke walks the SAME wire the browser walks — initialize (an
+# mcp-session-id), then tickets/list, plans/list, tickets/get, comments/list,
+# plans/get — and judges the answers the boards parse:
 #   * tickets/list must answer rows shaped id|no|ns|status|pri|title|who|...
 #   * a "no plans"/"silence" sentence is the EMPTY state, never a row;
 #   * tickets/get must answer the multi-field row the detail sheet renders.
@@ -20,7 +21,7 @@
 set -u
 
 VERSION="1.0.0"
-URL="${SKULD_URL:-http://whynot.tailefab81.ts.net:8320}"
+URL="${SKULD_URL:-http://127.0.0.1:${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}/mcp/skuld}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --url) URL=${2-}; shift 2 ;;
@@ -126,9 +127,15 @@ tools_json="$(curl -s --max-time 8 -X POST "$URL" \
   -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
   ${sid:+-H "mcp-session-id: $sid"} \
   -d '{"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}' 2>/dev/null)"
-names="$(printf '%s\n' "$tools_json" | sed -n 's/^data: //p' | python3 -c '
+names="$(printf '%s\n' "$tools_json" | python3 -c '
 import json, sys
 text = sys.stdin.read().strip()
+# Skuld answers tools/list as an SSE frame on the heart directly, plain JSON
+# through the gateway (it is stateless StreamableHTTP): read the last data:
+# frame when present, parse the raw body otherwise — the client parses both.
+frames = [l[5:].strip() for l in text.split("\n") if l.startswith("data:")]
+if frames:
+    text = frames[-1]
 try:
     d = json.loads(text) if text else {}
 except Exception:
