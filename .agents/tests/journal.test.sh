@@ -25,6 +25,19 @@ for line in open(sys.argv[1]):
     assert "key" in d and "op" in d and "data" in d, d
 PY
 
+# 1b. a company-namespace entry is scoped; a plain one is the operator's OWN
+bash "$APPEND" --op note --namespace company-x --data '{"b":3}' >/dev/null 2>&1
+python3 - "$J" <<'PY' && ok "namespaced entry carries ns; plain entry does not" || bad "ns scoping wrong"
+import json,sys
+lines=[json.loads(l) for l in open(sys.argv[1]) if l.strip()]
+assert lines[0].get("ns") is None, lines[0]
+assert lines[1].get("ns") is None, lines[1]
+assert lines[2].get("ns")=="company-x", lines[2]
+PY
+out="$(bash "$APPEND" --namespace 'Bad NS' --op note 2>&1)"; rc=$?
+[ "$rc" = 2 ] && ok "a malformed namespace is refused (rc=2)" || bad "namespace validation: rc=$rc $out"
+printf '%s' "$(bash "$APPEND" --list 2>/dev/null)" | grep -q 'company-x' && ok "--list reports the namespace" || bad "--list missed the namespace"
+
 # 2. detached: the journal queues and is NOT lost
 out="$(YMIR_HEART=none bash "$RECON" 2>/dev/null)"
 printf '%s' "$out" | grep -q 'queued' && ok "detached: journal queued, exit 0" || bad "detached: $out"

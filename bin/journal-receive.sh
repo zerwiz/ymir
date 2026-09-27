@@ -5,13 +5,16 @@
 # outbox to the heart's inbox (`~/.ymir-inbox/<host>.jsonl`, see
 # bin/journal-reconcile.sh). This is the ONLY writer that folds them in:
 #   * entries are deduped by their idempotency key, so a replay is a no-op;
-#   * new entries append to `$STATE/journal/folded/<host>.jsonl` (one canonical
-#     log per machine) — the fork that happened once cannot recur (Law 7);
+#   * an entry carrying `ns` folds into `$STATE/journal/folded/<ns>/<host>.jsonl`
+#     (the COMPANY namespace, plan 58) and an entry without one folds into
+#     `$STATE/journal/folded/<host>.jsonl` (the operator's OWN) — so a company
+#     project's entries are scoped (operator + namespace) and never merged into a
+#     peer's lineage; an old entry without a namespace reads as the operator's own;
 #   * a fully-folded inbox file is archived to the inbox's `folded/`.
 #
 #   journal-receive.sh            # fold everything waiting
-#   journal-receive.sh --dry-run  # report what would fold; change nothing
-#   journal-receive.sh --status   # what is waiting / folded
+#   journal-receive.sh --dry-run  # report what would fold (and where); change nothing
+#   journal-receive.sh --status   # what is waiting / folded, by namespace
 #   journal-receive.sh --version
 #
 # Env: YMIR_JOURNAL_INBOX (default ~/.ymir-inbox), YMIR_STATE_OVERRIDE.
@@ -54,7 +57,13 @@ inbox_files() { find "$INBOX" -maxdepth 1 -name '*.jsonl' -type f 2>/dev/null | 
 
 if [ "$MODE" = status ]; then
   printf 'journal_inbox[3]{inbox,waiting,folded}:\n'
-  printf '  "%s","%s file(s)","%s host log(s)"\n' "$INBOX" "$(inbox_files | wc -l | tr -d '[:space:]')" "$(find "$FOLDED" -maxdepth 1 -name '*.jsonl' -type f 2>/dev/null | wc -l | tr -d '[:space:]')"
+  printf '  "%s","%s file(s)","%s log(s)"\n' "$INBOX" "$(inbox_files | wc -l | tr -d '[:space:]')" "$(find "$FOLDED" -name '*.jsonl' -type f 2>/dev/null | wc -l | tr -d '[:space:]')"
+  ns_rows="$(find "$FOLDED" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    printf '  "%s","%s"\n' "${d##*/}" "$(find "$d" -name '*.jsonl' -type f 2>/dev/null | wc -l | tr -d '[:space:]')"
+  done)"
+  printf 'journal_namespaces[%s]{namespace,logs}:\n' "$(printf '%s' "$ns_rows" | grep -c '"' || true)"
+  [ -n "$ns_rows" ] && printf '%s\n' "$ns_rows"
   exit 0
 fi
 
@@ -66,28 +75,55 @@ folded_total=0; files=0
 while IFS= read -r f; do
   [ -n "$f" ] || continue
   host="$(basename "$f" .jsonl)"
-  dest="$FOLDED/$host.jsonl"
   if [ "$MODE" = dry ]; then
-    printf 'journal: would fold %s -> %s (%s entries)\n' "$f" "$dest" "$(wc -l <"$f" | tr -d '[:space:]')"
+    ns_list="$(python3 - "$f" <<'PY'
+import json, sys
+names = sorted({(json.loads(line).get("ns") or "own") for line in open(sys.argv[1]) if line.strip()})
+print(",".join(names) or "none")
+PY
+)"
+    printf 'journal: would fold %s (%s entries; scopes: %s) -> %s[/<ns>/]%s.jsonl\n' "$f" "$(wc -l <"$f" | tr -d '[:space:]')" "$ns_list" "$FOLDED" "$host"
     continue
   fi
-  n="$(python3 - "$f" "$dest" <<'PY'
+  n="$(python3 - "$f" "$FOLDED" "$host" <<'PY'
 import json, os, sys
-src, dest = sys.argv[1], sys.argv[2]
-have = set()
-if os.path.exists(dest):
-    for line in open(dest):
-        try: have.add(json.loads(line)["key"])
-        except Exception: pass
+src, folded_root, host = sys.argv[1], sys.argv[2], sys.argv[3]
+known: dict = {}
 added = 0
-with open(dest, "a") as out:
-    for line in open(src):
+
+def dest_for(ns: str) -> str:
+    if ns:
+        directory = os.path.join(folded_root, ns)
+        os.makedirs(directory, exist_ok=True)
+        return os.path.join(directory, host + ".jsonl")
+    return os.path.join(folded_root, host + ".jsonl")
+
+def seen_at(path: str) -> set:
+    if path not in known:
+        keys = set()
+        if os.path.exists(path):
+            for line in open(path):
+                try: keys.add(json.loads(line)["key"])
+                except Exception: pass
+        known[path] = keys
+    return known[path]
+
+with open(src) as fh:
+    for line in fh:
         line = line.rstrip("\n")
         if not line: continue
-        try: k = json.loads(line)["key"]
-        except Exception: continue
-        if k in have: continue      # idempotent: a replayed key is a no-op
-        have.add(k); out.write(line + "\n"); added += 1
+        try:
+            entry = json.loads(line)
+            key = entry["key"]
+        except Exception:
+            continue
+        destination = dest_for(entry.get("ns") or "")
+        keys = seen_at(destination)
+        if key in keys: continue      # idempotent: a replayed key is a no-op
+        keys.add(key)
+        with open(destination, "a") as out:
+            out.write(line + "\n")
+        added += 1
 print(added)
 PY
 )"
