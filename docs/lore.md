@@ -1058,3 +1058,106 @@ to the world's door.
 
 *The halls share one cloth; the mead pours; the rune points home; the saga
 files itself.*
+
+---
+
+## XXXII. The Reforged Watch, the Judge, and the Roads That Cannot Die (2026-09-27)
+
+> A new chapter, appended whole. The halls grew by a dozen names this day; the
+> chronicle must not lie about what stands. Nothing above is rewritten — the old
+> stanzas hold their truths; these are the truths that came after.
+
+### Sýn, the Standing Watch
+
+The old watch died with the session that kindled it — and when the session went,
+the hall went blind, turn after turn: *"supervision is off."* The reforging is
+done. **Sýn** — the watch — is now a **service**: one standing watcher per hall,
+a child of *systemd* itself, so no session's death can take it. It is **idle-not-
+dead** — it watches even when the hall is empty — and it wears a lease, so a
+heartbeat is always knowable. It cannot fall with the session; it was never the
+session's.
+
+### Forseti, the Judge
+
+Every harvest used to come to the Allfather's hammer on the forgemaster's word
+alone. Now a **judge** stands at the gate: **Forseti** — the one who genuinely
+settles disputes — a dedicated reviewer, fierce in auditing. He is read-only by
+law: he never touches the branch; he *verifies*. The worker's report is to him a
+hypothesis; the command's output is the evidence; anything he cannot re-prove is
+a rework item, and a silent pass is a failure of the judge. His verdict —
+`APPROVE` with *seal-ready*, or `NEEDS-REWORK` with a line-numbered list — holds
+the Allfather's hammer until it is earned. And the spine is forged so that **every
+`done` sends the judge out on its own**: no errand may claim completion and hide
+from his bench.
+
+### Gná, the Messenger (the wake road)
+
+The old road woke the hall by a single thread that any pause could fray. The
+reforged road is a **durable queue**: a worker's terminal act — one command —
+writes three marks (the status line, the report on the shelf, and the wake itself)
+so that even with no watch and no sweep, the news waits on disk. **Gná** is the
+name of the carrying: the failsafe sweep that gathers undelivered reports and
+questions, the catch-up that runs the moment a watch re-arms, and the ack that
+eats only what it saw — never a newer wake. A finished worker can be *quiet*, but
+it cannot be *hidden*; and the workers may always call the hall directly — a
+`needs-decision` or a question rides the same road home.
+
+### Vörðr, the Wardens
+
+The gates of the hall are now wards, and the wards are named **Vörðr**. They are
+not decorations: a push without its fix-note is refused; a broken service format
+is a loud finding; a body that would write the canonical chain is stood down —
+the heart is the *only* writer of the record (Law 7), and the ward remembers the
+one day the chain forked. Wards judge, they do not watch from the wall.
+
+### The Engine (the deep forge)
+
+The flat script-hoard is being deepened, not torn down. **The Engine** —
+`src/ymir_runtime/` — is one module with four verbs (*seat · status · send ·
+stop*), forged behind the old doors so every door stays a door. The serpent eats
+its own tail: strangler-style, the gods of old (`fm-spawn`, `fm-teardown`, the
+watch itself) give their seams to the engine one at a time, each with a parity
+proof — the old door and the new module must answer the same. What was tested only
+end to end is now testable beside the module: a real errand seated, watched,
+reaped, all through the engine.
+
+### The Gateway (the one door)
+
+Each body fronts the record — the well, the ticket-hall, the skills — through
+**one local door**: the gateway. Attached, it proxies the resolved heart (tailnet
+first, LAN fallback, loopback on the heart itself). Heart dark or no network at
+all, it serves from its cached catalog, queues writes into the body's own
+journal, and never hangs a harness. The well is special: engram is local-first on
+every seat, so the well is served from the local store **always**. A body's
+config never changes when the heart's address does — it points at its own door,
+which remembers how to degrade.
+
+### The Heart on the Always-On Box
+
+The map was redrawn by the Allfather's word: the **heart** is the machine that is
+*always on* — for the record's first duty is always-on, not compute. The memory
+(home, engram, ledger, plans) lives there; the fold runs there; the headless
+heart's schedule persists (`BROKK_NORNIR_PERSIST=1`) even with no seat. The
+**forge** is the machine with the compute — models, bench, heavy smiths — and
+though it sleeps sometimes, that is lawful, for it never held the record. The dev
+bodies are full halls from their own faces, offline first-class: a body works
+when the heart is dark and reconciles when it returns, journaled and idempotent.
+The warm replica reads and takes intake — never a second live writer.
+
+### The Federation (several Ymirs, one company)
+
+Beyond one mind with many bodies lies **several minds with one company**:
+operator Ymirs, each fully private, joined by **explicit grants** — signed by
+each Heimdall — over a shared namespace: tickets, plans, and the project's memory
+on one company heart; each Ymir working fully offline from its cache and journal,
+catching up on reconnect. The grants law is a ward: a grant that crosses the
+realm law without the signatures is refused at load. The Óðrerir company view —
+the mead hall where the shared company's work is seen — is the next carving.
+
+### The Roads That Cannot Die
+
+Whatever else the future cuts from Ymir, these roads are law now: the **watch**
+does not fall with a session; the **wake** cannot be eaten by an ack; the
+**judge** meets every harvest before the hammer; the **ward** refuses the
+silent lie. The chronicle is appended, not rewritten — because a rune that is
+carved cannot be un-carved.
