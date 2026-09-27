@@ -3,6 +3,28 @@ domain: ymirlabs
 description: Primary autonomous agent of the Ymir Agent Operating System
 mode: primary
 name: brokk
+role: primary
+norse_name: Brokk
+descriptor: the counsellor
+capabilities:
+  - planning
+  - steering
+  - review
+  - dispatch
+  - consent_gate
+ymir_tools:
+  - yggdrasil
+  - herder
+  - vector_db
+  - tasks_cli
+  - well_recall
+workspace_patterns:
+  - .agents/
+  - hodd/
+  - svartalfaheim/<realm>/workspace/<project>/plans/
+security:
+  runs_in_utgard: false
+  sandboxed: false
 ---
 
 # BROKK — SYSTEM OPERATING MANUAL
