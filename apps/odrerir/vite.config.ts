@@ -1,5 +1,8 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Connect, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Óðrerir — the Live Hall, built like the high seat. Ports are env-driven with
 // the historic defaults (Rule 07): the window and every door know :4322.
@@ -13,8 +16,43 @@ const HALL_HOST = process.env.ODRERIR_HOST ?? '127.0.0.1';
 const GATE_ORIGIN = process.env.ODRERIR_GATE ?? 'http://127.0.0.1:3889';
 const apiProxy = { '/api': GATE_ORIGIN };
 
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+
+// THE HALL'S LIVE FEED, AT REQUEST TIME (plan 51 P9c doctrine: resolve at the
+// request, never restate at build). The board reads `/livehall.json`;
+// `bin/hall-snapshot.sh` writes `public/livehall.json` from the real system
+// state (runes · projects · cron · wake · smiths). A build bakes that file into
+// `dist/` — and a packaged install carries no snapshot at all (it is
+// gitignored, so the published build has none), which is how the board fell to
+// the saga's sample for good. This serves the snapshot from disk on EVERY
+// request, so the feed is whatever the snapshot job last wrote. No file → 404 →
+// the board honestly keeps the saga's tale rather than inventing rows.
+function livehallFeed(): Plugin {
+  const snapshot = path.resolve(HERE, 'public/livehall.json');
+  const serve: Connect.NextHandleFunction = (req, res, next) => {
+    if ((req.url ?? '').split('?')[0] !== '/livehall.json') return next();
+    try {
+      const body = fs.readFileSync(snapshot);
+      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+      res.end(body);
+    } catch {
+      res.writeHead(404, { 'content-type': 'application/json; charset=utf-8' });
+      res.end('{}');
+    }
+  };
+  return {
+    name: 'ymir-livehall-feed',
+    configureServer(server) {
+      server.middlewares.use(serve);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(serve);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), livehallFeed()],
   base: './',
   server: {
     host: HALL_HOST,

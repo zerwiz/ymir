@@ -109,17 +109,19 @@ else skip smidja-ui "dev UI not raised (optional)"; fi
 if listening "$HALL_PORT"; then
   ok hall "Óðrerir hall listening on :${HALL_PORT}"
   if [ -r "$ROOT/bin/odrerir-mcp-smoke.sh" ]; then
-    # The boards read ANOTHER seat's door. When that seat is not on the net, an
-    # unreachable door is a dependency that is not here, not a fault of this install.
-    # Distinguish "cannot reach" from "answered wrongly", and read the URL from the
-    # app's own default so no tailnet name is written down twice.
-    _skuld="${SKULD_URL:-$(sed -nE "s/.*'(http[^']+)'.*/\1/p" "$ROOT/apps/odrerir/src/skuld.ts" 2>/dev/null | head -1)}"
-    if [ -n "$_skuld" ] && ! curl -s -o /dev/null -m 4 "$_skuld" 2>/dev/null; then
-      skip boards "the Skuld door is not on this net ($_skuld); the boards read another seat"
+    # The boards ride THIS body's OWN gateway (plan 51 P6): a loopback door
+    # that resolves the heart at request time, not another seat's name. When the
+    # gateway is not raised there is no door to ring — a dependency absent, not
+    # a wrong answer. Read the URL from the app's own default so no address is
+    # written down twice.
+    _gw_port="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
+    _skuld="${SKULD_URL:-http://127.0.0.1:${_gw_port}/mcp/skuld}"
+    if ! curl -s -o /dev/null -m 4 "http://127.0.0.1:${_gw_port}/health" 2>/dev/null; then
+      skip boards "the MCP gateway is not raised (bin/mcp-gateway.sh start); the boards have no door"
     elif bash "$ROOT/bin/odrerir-mcp-smoke.sh" >/dev/null 2>&1; then
-      ok boards "the tickets + plans answer through the Skuld MCP (live, tailnet door)"
+      ok boards "the tickets + plans answer through this body's gateway (live door)"
     else
-      bad boards "the hall's book did not answer — bin/odrerir-mcp-smoke.sh names the wound (the Skuld door)"
+      bad boards "the hall's book did not answer — bin/odrerir-mcp-smoke.sh names the wound ($_skuld)"
     fi
   else
     skip boards "bin/odrerir-mcp-smoke.sh absent"
