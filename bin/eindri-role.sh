@@ -5,79 +5,111 @@
 # wrong smith for a task is like handing a skald a hammer: the work gets done
 # badly, or not at all. This maps a task to the agent whose craft matches it.
 #
-# The roster is the source of truth (.agents/agents/*.md). This is the chooser.
+# The DECISION TABLE is data: `.agents/roles.yaml` (role → figure → tools). This
+# door only reads it — it declares no role in code (plan 58 Phase 4). The figure
+# cards in `.agents/agents/*.md` carry the prose and the frontmatter; the ROSTER
+# (`bin/agents-config.sh roster`) joins this table to the hoard's model choice.
 #
 # Usage:
 #   bin/eindri-role.sh list
 #   bin/eindri-role.sh choose "<task text>"        # the smith whose craft fits
-#   bin/eindri-role.sh for <keyword>               # exact role lookup
+#   bin/eindri-role.sh for <role|figure>           # exact role or figure lookup
 #   bin/eindri-role.sh --version
 #
 # Output: Galdr TOON.
 set -u
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROLES="${YMIR_ROLES_YAML:-$ROOT/.agents/roles.yaml}"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help|"") sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 ACTION="${1:-list}"; shift || true
 
-# role | craft | the words that call it
-roles() {
-  cat <<'ROLES'
-sindri|code — build, refactor, fix, test|code build refactor fix bug implement feature test compile script forge api backend frontend function class module
-bragi|content — marketing, SEO, social|content write copy marketing seo social post article blog campaign brand announcement newsletter
-huginn|research — search, analyse, discover|research search analyse analyze investigate find discover compare benchmark source docs look up
-kvasir|scout — recon a codebase before work|scout recon survey map explore inventory reconnaissance terrain reconnoiter
-hnoss|design — UI/UX, prototypes, decks, dashboards|design ui ux prototype landing dashboard deck slide visual layout figma design-system
-mimir|plan — design the approach|plan design architect approach strategy spec breakdown sequence decompose
-snotra|document — prose, guides, references|document docs guide reference readme manual explain describe prose
-forseti|review — judge the work|review judge audit critique verify assess check inspect quality gate
-galdr|runtime — the Ymir distro itself|galdr runtime distro install skill toon cli agent-facing extension
-ROLES
-}
+[ -r "$ROLES" ] || { printf 'error: roles table not found: %s\nhelp: it is canonical at .agents/roles.yaml\n' "$ROLES" >&2; exit 1; }
 
-case "$ACTION" in
-  list)
-    printf 'eindri-roles[8]{role,craft}:\n'
-    while IFS='|' read -r r c _; do
-      printf '  "%s","%s"\n' "$r" "$c"
-    done < <(roles)
-    ;;
-  for)
-    want="${1:-}"
-    [ -n "$want" ] || { printf 'error: for needs a role name\n' >&2; exit 2; }
-    hit="$(roles | awk -F'|' -v w="$want" '$1==w {print}')"
-    if [ -n "$hit" ]; then
-      printf 'eindri-role[1]{role,craft}:\n  "%s","%s"\n' "$(printf '%s' "$hit" | cut -d'|' -f1)" "$(printf '%s' "$hit" | cut -d'|' -f2)"
-    else
-      printf 'eindri-role[1]{role,known}:\n  "%s","no"\n' "$want"
-      printf 'help: bin/eindri-role.sh list\n' >&2
-      exit 1
-    fi
-    ;;
-  choose)
-    text="$(printf '%s' "${*:-}" | tr '[:upper:]' '[:lower:]')"
-    [ -n "$text" ] || { printf 'error: choose needs task text\n' >&2; exit 2; }
-    best=""; bestscore=0
-    while IFS='|' read -r r craft words; do
-      s=0
-      for w in $words; do
-        [ -n "$w" ] || continue
-        case "$w" in of|the|and|a|to) continue ;; esac
-        printf '%s\n' "$text" | grep -Eqw -- "$w" && s=$((s+1))
-      done
-      if [ "$s" -gt "$bestscore" ]; then bestscore=$s; best="$r"; bestcraft="$craft"; fi
-    done < <(roles)
-    if [ -z "$best" ]; then
-      # No craft word matched: the smith of first resort for general work.
-      best="sindri"; bestcraft="code — build, refactor, fix, test"
-    fi
-    printf 'eindri-choice[1]{role,craft,score}:\n  "%s","%s",%s\n' "$best" "$bestcraft" "$bestscore"
-    ;;
-  *) printf 'error: unknown action %s\nhelp: bin/eindri-role.sh [list|choose|for]\n' "$ACTION" >&2; exit 2 ;;
-esac
+ROLES="$ROLES" ACTION="$ACTION" python3 - "$@" <<'PY'
+import os, re, sys
+try:
+    import yaml
+except Exception:
+    print('error: python3 has no PyYAML'); sys.exit(1)
+
+roles_path = os.environ["ROLES"]
+action = os.environ.get("ACTION", "list")
+args = sys.argv[1:]
+doc = yaml.safe_load(open(roles_path)) or {}
+roles = doc.get("roles") or {}
+
+def craft_of(spec):
+    return spec.get("craft") or ""
+
+def rows():
+    """(role_key, spec) in file order — the table's own order is the tie-break."""
+    for key, spec in roles.items():
+        if isinstance(spec, dict):
+            yield key, spec
+
+def dispatch_rows():
+    for key, spec in rows():
+        if spec.get("dispatch"):
+            yield key, spec
+
+def find(term):
+    """A role by its key, else by its figure — the two names a caller speaks."""
+    for key, spec in rows():
+        if key == term:
+            return key, spec
+    for key, spec in rows():
+        if spec.get("figure") == term:
+            return key, spec
+    return None, None
+
+if action == "list":
+    rs = list(dispatch_rows())
+    print(f'eindri-roles[{len(rs)}]{{role,craft}}:')
+    for _key, spec in rs:
+        print(f'  "{spec.get("figure")}","{craft_of(spec)}"')
+    sys.exit(0)
+
+if action == "for":
+    want = args[0] if args else ""
+    if not want:
+        print('error: for needs a role or figure name', file=sys.stderr); sys.exit(2)
+    key, spec = find(want)
+    if spec is None:
+        print(f'eindri-role[1]{{role,known}}:\n  "{want}","no"')
+        print('help: bin/eindri-role.sh list', file=sys.stderr)
+        sys.exit(1)
+    print(f'eindri-role[1]{{role,craft}}:\n  "{spec.get("figure")}","{craft_of(spec)}"')
+    sys.exit(0)
+
+if action == "choose":
+    text = " ".join(args).lower()
+    if not text:
+        print('error: choose needs task text', file=sys.stderr); sys.exit(2)
+    best = None; bestscore = 0
+    for key, spec in dispatch_rows():
+        s = 0
+        for word in (spec.get("keywords") or []):
+            word = str(word)
+            if not word or word in ("of", "the", "and", "a", "to"):
+                continue
+            if re.search(r"(?<![A-Za-z0-9_])" + re.escape(word) + r"(?![A-Za-z0-9_])", text):
+                s += 1
+        if s > bestscore:
+            bestscore = s; best = (key, spec)
+    if best is None:
+        # No craft word matched: the smith of first resort for general work.
+        best = ("developer", roles.get("developer") or {"figure": "sindri", "craft": "code — build, refactor, fix, test"})
+    spec = best[1]
+    print(f'eindri-choice[1]{{role,craft,score}}:\n  "{spec.get("figure")}","{craft_of(spec)}",{bestscore}')
+    sys.exit(0)
+
+print(f'error: unknown action {action}\nhelp: bin/eindri-role.sh [list|choose|for]', file=sys.stderr)
+sys.exit(2)
+PY

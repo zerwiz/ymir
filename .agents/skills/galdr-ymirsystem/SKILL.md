@@ -3,6 +3,21 @@ name: galdr
 description: Galdr — agent-CLI ergonomics and the master builder/maintainer of the Ymir (Brokk distro) runtime. Use when building, modifying, or reviewing any agent-facing CLI, or when building/maintaining any Ymir subsystem across harnesses (OpenCode, Pi, Claude Code, Cursor, Codex). Load its assets[] row for the task before editing a governed path.
 domain: brokkforge
 allowed-tools: read,write,bash,glob,grep
+role: builder
+norse_name: Galdr
+descriptor: the master builder
+capabilities:
+  - agent_cli_ergonomics
+  - runtime_maintenance
+  - galdr_governance
+  - toon_output
+skills:
+  - galdr-ymirsystem
+ymir_tools:
+  - yggdrasil
+  - herder
+  - vector_db
+  - tasks_cli
 ---
 
 # galdr-ymirsystem — agent-CLI ergonomics — the master builder/maintainer of the runtime

@@ -540,9 +540,13 @@ Rule: **drink before you act, water it after** — recall on the way in, and
 ## 14. Agent locations — `.agents/agents` is the source of truth
 
 Agent profiles live **only** in `.agents/agents/*.md` (the canonical, with the
-harness config like `mode`/`model`/`permission` in their frontmatter). The
-harness directories **bind** them by symlink — they are never hand-written
-duplicates:
+harness config like `mode`/`permission` in their frontmatter, and the figure's
+`role`/`norse_name`/`ymir_tools` beside them). A card carries **no model**: the
+model is resolved from the hoard by figure name at dispatch
+(`bin/agents-config.sh get <figure> model`), and the role → figure → tools wiring
+lives in `.agents/roles.yaml` — a file the harness never reads (it is read by the
+*doors*, `bin/eindri-role.sh` and `bin/agents-config.sh roster`). The harness
+directories **bind** them by symlink — they are never hand-written duplicates:
 
 - OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
 - Pi: `.pi/agents/<profile>.md` → the same canonical files
@@ -573,8 +577,9 @@ agent_binding[5]{harness,dir,name_rule}:
   "cursor",".cursor/agents/","the profile file name"
 ```
 
-To change an agent, edit `.agents/agents/*.md` and re-run the loader; never edit
-a harness directory (they are all links).
+To change an agent, edit `.agents/agents/*.md` (or its role in
+`.agents/roles.yaml`) and re-run the loader; never edit a harness directory
+(they are all links). A card edit is live at once — the links are live.
 
 ### Skill location — the same law, one tree
 

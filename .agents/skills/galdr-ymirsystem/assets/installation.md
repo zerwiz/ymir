@@ -1042,6 +1042,41 @@ plus the live pi catalog, so the rules carry the machine's real harness/model;
 a template still holding unfilled model tokens is NOT active and steers
 nothing (`bin/dispatch-profile.sh active` decides — see `eindri-orchestration.md` §5.1).
 
+### The agents are declared, not scripted (plan 58 Phase 4)
+
+WHO a figure is lives in the tree; WHAT MODEL it runs is the operator's. The two
+halves have separate homes, and neither leaks into the other:
+
+```
+declared_agents[4]{what,where,read_by}:
+  "the figure (prose + frontmatter)",".agents/agents/<figure>.md","the harnesses (symlinked), the roster"
+  "the wiring (role → figure → tools)",".agents/roles.yaml","bin/eindri-role.sh · bin/agents-config.sh roster"
+  "the model (per figure)","$YMIR_HOME/config/agents.yaml (+ per-host overlay)","bin/agents-config.sh get <figure> model"
+  "the resolved roster","bin/agents-config.sh roster","dispatch doors, reads only"
+```
+
+- **No model is pinned in the tree.** A figure card carries `role`,
+  `norse_name`, `descriptor`, `capabilities`, `skills`, `ymir_tools` and
+  `workspace_patterns` — never a `model:`. The model is resolved from the hoard
+  **by figure name** at dispatch (`bin/agents-config.sh get <figure> model`),
+  so one public tree runs on any hardware (Rule 04; plan 56).
+- **`roles.yaml` is the decision table in data.** `bin/eindri-role.sh` reads it
+  — it declares no role in code — and `bin/agents-config.sh roster` joins it to
+  the hoard, emitting `role → figure → harness → model → tools`. Two hoard
+  YAMLs yield two rosters; the tracked tree never moves.
+- **Apply writes nothing canonical.** `bin/agents-config.sh apply` publishes
+  local providers and per-agent models into the *harness's own* config
+  (`opencode.json`, untracked) and caches the resolution in state; it never
+  rewrites `.agents/agents/*.md`. The roster is resolved, not stamped into the
+  tree, and `bin/valknut-load.sh` still binds every card by symlink.
+
+```bash
+bin/eindri-role.sh list                 # the dispatch roles and their crafts
+bin/eindri-role.sh choose "<task>"      # the smith whose craft fits
+bin/agents-config.sh roster             # role → figure → harness → model → tools
+bin/agents-config.sh get sindri model   # one figure's model, from the hoard
+```
+
 ### What the Omarchy layer installs
 
 ```bash
