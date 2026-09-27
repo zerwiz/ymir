@@ -10,7 +10,7 @@
 #
 #   mcp-config.sh            # this machine's config (JSON) to stdout
 #   mcp-config.sh show       # the same
-#   mcp-config.sh write      # write $HOME/.pi/agent/mcp.json (backup kept)
+#   mcp-config.sh write      # write $HOME/.pi/agent/mcp-adapter.json (backup kept)
 #   mcp-config.sh --version
 #
 # Env: YMIR_FLEET_REGISTRY · YMIR_HOST · YMIR_MCP_WELL_PORT (8317) ·
@@ -65,7 +65,7 @@ PY
 case "$MODE" in
   show|--json|"") printf '%s\n' "$CONFIG" ;;
   write)
-    dest="$HOME/.pi/agent/mcp.json"
+    dest="$HOME/.pi/agent/mcp-adapter.json"
     mkdir -p "$(dirname "$dest")"
     [ -f "$dest" ] && cp "$dest" "$dest.bak-$(date -u +%Y%m%dT%H%M%SZ)" 2>/dev/null || true
     printf '%s\n' "$CONFIG" >"$dest"
