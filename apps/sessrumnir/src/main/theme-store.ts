@@ -364,7 +364,7 @@ export async function installThemeFromUrl(
 // installThemeFromUrl, which re-validates content and re-runs the SSRF guard.
 
 const GALLERY_RAW_BASE =
-  'https://raw.githubusercontent.com/FaqFirebase/pi-desktop-themes/main'
+  'https://raw.githubusercontent.com/zerwiz/ymir/main/apps/sessrumnir/themes'
 const GALLERY_INDEX_URL = `${GALLERY_RAW_BASE}/index.json`
 // The index embeds each theme's full content for gallery preview cards, so
 // its cap is a multiple of the single-file cap rather than equal to it.
