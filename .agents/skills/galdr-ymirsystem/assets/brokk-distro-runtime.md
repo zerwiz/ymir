@@ -308,9 +308,11 @@ their decomposition is Phase 5, one god per PR. The supervision *library* twins
 are collapsed — see 7.2.
 
 **Its own home.** `bin/ymir-engine-ensure.sh` builds the engine's private venv
-(`$HOME/.fleet/ymir-engine-venv`) at first use **only** when `src/pyproject.toml`
-declares a dependency; while the engine is stdlib-only the honest answer is "not
-needed", and nothing is ever committed. `bin/ymir-engine.sh` sets `YMIR_ENGINE_ROOT`
+(`$HOME/.fleet/ymir-engine-venv`) at first use when `src/pyproject.toml` declares
+dependencies. Since Phase 7 it declares `jsonschema` + `PyYAML` for the config
+layer, so the venv is built and both `bin/ymir-engine.sh` and
+`bin/ymir-config-check.sh` prefer it; nothing is ever committed (the venv's
+`*.egg-info/` is ignored). `bin/ymir-engine.sh` sets `YMIR_ENGINE_ROOT`
 so the engine knows the CODE tree it came from — which is not always what
 `BROKK_HOME` points at (a caller may point the home at a project so its worktrees
 land there).
@@ -347,6 +349,36 @@ the live vendored route (`fm-procevent.sh`/`fm-procevent-when.sh`, called by
 are still gods (the engine does not own their landed-work gates or the watcher),
 and the Utgard seat road still rides `bin/einherjar-spawn.sh` until `container.py`
 owns the sandbox.
+### 7.3 The config layer — load with schema, refuse loudly (plan 58, Phase 7)
+
+`src/ymir_runtime/config/` validates every config the runtime reads against a JSON
+Schema in `config/*.schema.json` BEFORE a value is trusted. A shape fault is a
+loud refusal naming the KEY and the FILE; a config with no registered kind is
+refused, never returned unvalidated. `load_config(path)` is the one entry
+(`load.py` · `schema.py`).
+
+```
+kinds[4]{kind,schema,readers}
+  "agents.yaml","agents.schema.json","bin/agents-config.sh · bin/dispatch-profile.sh · bin/local-model-lock.sh · bin/einherjar-spawn.sh"
+  "cron.yaml","cron.schema.json","bin/nornir-cron-start.sh · bin/hall-snapshot.sh"
+  "fleet.json","fleet.schema.json","bin/topology.sh · bin/eindri-route.sh · bin/mcp-gateway.sh · bin/model-placement.sh"
+  "eindri-dispatch.json","eindri-dispatch.schema.json","bin/dispatch-profile.sh"
+```
+
+Two invariants JSON Schema cannot state are semantic checks in `load.py`: an agent
+name must be a rostered figure (`.agents/agents/` is canonical), and the fleet
+`heart` must be a declared host — a registry naming a host that is not itself is
+refused when the host is known.
+
+The door `bin/ymir-config-check.sh [examples|validate <file>…|kinds]` picks the
+engine venv, prints TOON, and exits **0** every config valid · **1** a config
+refused · **2** usage · **3** the validator is missing. The engine's own module CLI
+is `python3 -m ymir_runtime.config`, so the four-verb interface is unbroken; the
+lifecycle smoke test gains a `config` check over the shipped shapes.
+
+**Unschematized, named not implied:** `config/model-catalog.yaml` and
+`config/app-repos.yaml` are read by the runtime but carry no schema yet — they are
+the next starting set, not an oversight.
 
 ## 8. Context sources
 
