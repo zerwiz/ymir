@@ -12,8 +12,10 @@
 #   ymir-engine.sh ensure | version
 #
 # Interpreters: a private venv ($YMIR_ENGINE_VENV, built by
-# bin/ymir-engine-ensure.sh) when it exists, else the system python3. The engine
-# is stdlib-only today, so both are the same engine.
+# bin/ymir-engine-ensure.sh) when it exists, else the system python3. Phase 7
+# declared the config layer's dependencies (jsonschema, PyYAML), so the venv is
+# the road that can validate a config; the four verbs still run on either
+# interpreter.
 #
 # Exit codes are the engine's own, and 4 is the Strangler's hinge:
 #   0 ran · 1 failed · 2 usage · 4 the engine will NOT own this errand — the
