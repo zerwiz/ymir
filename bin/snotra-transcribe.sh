@@ -22,9 +22,9 @@
 #   SNOTRA_WHISPER_BIN — explicit whisper binary override
 #   SNOTRA_WHISPER_MODEL — explicit model override
 #   WHISPER_GPU        — informational (whisper auto-detects CUDA)
-#   RAIL_URL           — llama-swap URL for summaries
-#                        (default http://127.0.0.1:8080/v1; a remote seat sets
-#                         http://heimdall.<tailnet>.ts.net:8080/v1)
+#   RAIL_URL           — the OpenAI-compatible rail for summaries (default: the
+#                        ONE living-rail resolver's serving box, bin/rail-resolve.sh;
+#                        set it to force one specific rail)
 #   RAIL_MODEL         — the model alias (env/personal; unset = loud refusal)
 #   RAIL_KEY           — llama-swap API key (from ~/.pi/agent/auth.json)
 
@@ -48,6 +48,16 @@ YMIR_HOME="${YMIR_HOME}"
 HOARD="$YMIR_HOME/hodd"
 MEETINGS="$HOARD/workspaces/meetings"
 WHISPER_GPU="${WHISPER_GPU:-on}"
+# The rail is the LIVING rail (plan 51 Parts 9a/9c): the ear's summaries ride
+# whichever strong box is CONNECTED, resolved by the ONE resolver. An explicit
+# RAIL_URL still wins; the local seat's own rail is the last-ditch default.
+RAIL_URL="${RAIL_URL:-}"
+if [ -z "$RAIL_URL" ] && [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
+  RAIL_URL="$(bash "$SCRIPT_DIR/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+print((d.get("serving") or {}).get("url",""))' 2>/dev/null || true)"
+fi
 RAIL_URL="${RAIL_URL:-http://127.0.0.1:8080/v1}"
 RAIL_MODEL="${RAIL_MODEL:-}"
 RAIL_KEY="${RAIL_KEY:-}"
