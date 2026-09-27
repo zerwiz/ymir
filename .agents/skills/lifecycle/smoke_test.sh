@@ -405,6 +405,20 @@ else
   skip mcp "no MCP config found"
 fi
 
+# 21b. the local MCP gateway (plan 51 P6): ONE door in front of the record
+#      MCPs. When raised it must complete a real initialize→tools/list; when it
+#      is not raised the check skips (a body mid-rollout must not fail its gate).
+_gw_port="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
+if curl -fsS -m "$TIMEOUT" "http://127.0.0.1:$_gw_port/health" >/dev/null 2>&1; then
+  _gw_probe="$(mcp_probe "http://127.0.0.1:$_gw_port/mcp/well")"
+  case "$_gw_probe" in
+    ok:*) ok mcp:gateway "the record door answers — ${_gw_probe#ok:} tools (http://127.0.0.1:$_gw_port)" ;;
+    *)    bad mcp:gateway "${_gw_probe#fail:} (http://127.0.0.1:$_gw_port)" ;;
+  esac
+else
+  skip mcp:gateway "gateway not raised (bin/mcp-gateway.sh start)"
+fi
+
 # 22. firecrawl's local service (a stdio MCP fronting a local HTTP API)
 if listening 3002; then
   if curl -fsS -m "$TIMEOUT" http://localhost:3002/ >/dev/null 2>&1; then ok firecrawl "local service answers on :3002"
