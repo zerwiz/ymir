@@ -100,8 +100,9 @@ incomplete change. The router is `.agents/skills/galdr-ymirsystem/SKILL.md` (its
 table maps every task to its file).
 
 ```
-governed[9]{path,load_first}:
+governed[10]{path,load_first}:
   "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
+  "src/ymir_runtime/** | bin/ymir-engine*.sh | bin/einherjar-spawn.sh | bin/eindri-start.sh",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
   "apps/odrerir/**",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md"
   "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr-ymirsystem/assets/memory-well.md"

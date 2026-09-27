@@ -650,6 +650,40 @@ if [ "$MODEL_LOCAL" = yes ] && [ -x "$SCRIPT_DIR/local-model-lock.sh" ]; then
   esac
 fi
 
+# --- engine-first (plan 58, Phase 1): the strangler's hinge -------------------
+# The engine (`src/ymir_runtime/`) owns an errand end to end — worktree, harness,
+# backend, record, heartbeat. When it says it CANNOT (exit 4: a sandbox seat, an
+# unverified harness, a relaunch, a backend that cannot answer) this script runs
+# the road it already had, unchanged. That predicate lives in the engine; there
+# is no second copy of it here. YMIR_ENGINE=off skips the handoff.
+if [ "$DRY" -eq 0 ] && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/ymir-engine.sh" ]; then
+  engine_args=(seat "$ID" --project "$PROJECT_DIR" --kind "$KIND" --mode "${MODE:-scout}" --yolo "$YOLO"
+               --backend "$RESOLVED_BACKEND" --harness "${RAW_LAUNCH:-$HARNESS}"
+               --worth-a-smith "$WORTH_VERDICT" --worth-why "$WORTH_WHY")
+  if [ -n "${MODEL:-}" ]; then engine_args+=(--model "$MODEL"); fi
+  if [ -n "${EFFORT:-}" ]; then engine_args+=(--effort "$EFFORT"); fi
+  if [ -f "$BRIEF" ]; then engine_args+=(--brief "$BRIEF"); fi
+  if [ "$ISOLATION_EFFECTIVE" = on ]; then
+    engine_args+=(--isolation utgard)
+  else
+    engine_args+=(--isolation herdr)
+  fi
+  if [ "$LOCKED" = yes ] && [ -x "$SCRIPT_DIR/local-model-lock.sh" ]; then
+    engine_args+=(--lock "$SCRIPT_DIR/local-model-lock.sh")
+  fi
+  if [ "$FORCE" -eq 1 ]; then engine_args+=(--force); fi
+  engine_args+=(--compat)
+  engine_rc=0
+  "$SCRIPT_DIR/ymir-engine.sh" "${engine_args[@]}" || engine_rc=$?
+  if [ "$engine_rc" -eq 0 ]; then exit 0; fi
+  if [ "$engine_rc" -ne 4 ]; then
+    printf 'error: the engine failed to seat %s (exit %s) — the old road was NOT run, because a half-seat is worse than none\nhelp: bin/ymir-engine.sh seat %s --project %s\n' \
+      "$ID" "$engine_rc" "$ID" "$PROJECT_DIR" >&2
+    exit 1
+  fi
+  printf 'engine: cannot own %s — running the existing road\n' "$ID" >&2
+fi
+
 # --- dry-run: print the whole resolved plan, create nothing ------------------
 if [ "$DRY" -eq 1 ]; then
   _wt="$WT_ROOT/$ID"

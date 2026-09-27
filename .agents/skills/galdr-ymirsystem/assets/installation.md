@@ -107,6 +107,33 @@ hoard_local_env  ENVFILE             # → <home>/.env.local
 that points an operator's thing into the tree is the bug the `purity` row exists to
 catch.
 
+### The engine builds its own home — `src/ymir_runtime/` and its private venv
+
+The agent-execution road (seat · status · send · stop) lives in the tracked tree
+as `src/ymir_runtime/` — python, **stdlib only**, so a bare `python3` runs it and
+the install has nothing to compile. A harness never reads it: only a `bin/` door
+calls it (`bin/ymir-engine.sh`; behind it `bin/eindri-start.sh` and
+`bin/einherjar-spawn.sh` are thin adapters).
+
+When the engine ever grows a dependency, the venv appears **without the tree
+changing** — a private, machine-local home built at first use, exactly the
+`~/.fleet/well-venv` pattern:
+
+```bash
+bin/ymir-engine-ensure.sh          # status of the engine's own home (idempotent)
+# → engine-ensure[1]{venv,state,deps}:
+#     "$HOME/.fleet/ymir-engine-venv","not needed (stdlib only)","0"
+```
+
+`src/pyproject.toml` is the one declaration of that dependency list; the ensure
+script reads it and provisions `$YMIR_ENGINE_VENV` →
+`$HOME/.fleet/ymir-engine-venv` (override wins) only when the list is non-empty.
+Nothing is ever committed: the repo ships source, the seat builds its own home.
+
+The engine's unit tests sit **beside the modules** (`src/ymir_runtime/tests/`) and
+are reached by a bare `python3 -m unittest` from the checkout root; the live
+proofs are `tests/e2e/engine-proof.sh proof|parity`.
+
 ### Carrying an existing tree home — migration 0005
 
 Every *writer* resolves the home now, but an installation made before this change
@@ -402,7 +429,7 @@ manifests. The token comes from the hoard, never from `~/.npmrc`.
 ## The steps
 
 ```
-install[29]{step,what,self-heals}:
+install[30]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"

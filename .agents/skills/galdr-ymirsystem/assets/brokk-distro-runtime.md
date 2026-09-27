@@ -20,6 +20,7 @@ Ymir adopts the identical shape, retargeted:
 | Human operator (Allfather) | **Allfather** |
 | Sub-agents (Eindri) | **Eindri** |
 | Crew spawn (fm-spawn) | **Einherjar** (`bin/einherjar-spawn.sh`) |
+| Agent-execution road (`fm-spawn`/`fm-send`/`fm-watch`/`fm-teardown`) | **the engine** (`src/ymir_runtime/`) — four verbs, python, stdlib only; the doors are thin adapters over it and the old road keeps running until parity is proven (plan 58, Phase 1) |
 | Worktree engine (Yggdrasil) | **Yggdrasil** (`<BROKK_HOME>/.yggdrasil/<id>`) |
 | Isolated home variable (`FM_HOME`) | **`BROKK_HOME`** |
 
@@ -58,7 +59,9 @@ Resolution order used by every script (all overridable):
 |---|---|
 | `AGENTS.md` | The always-loaded contract: mandate, naming, laws, routing |
 | `opencode.json` | `default_agent: "brokk"`, the `brokk` primary, subagent profiles, `skills.paths: [".agents/skills"]` |
-| `bin/` | Every runtime script (Sága, Sýn, Gná, Gleipnir, Nornir, Einherjar, Erindi, Vör, Rödd, Runes, Hamr) |
+| `bin/` | Every runtime script (Sága, Sýn, Gná, Gleipnir, Nornir, Einherjar, Erindi, Vör, Rödd, Runes, Hamr) — and the engine's own door (`bin/ymir-engine.sh`) |
+| `src/ymir_runtime/` | **THE ENGINE** — `seat · status · send · stop` behind one interface, with `worktree · harness · backend · container · heartbeat` below it. A harness never reads it; only a `bin/` door calls it |
+| `tests/` | Unit tests BESIDE the modules (`src/ymir_runtime/tests/`, reached by a bare `python3 -m unittest` from the root) and the e2e proofs (`tests/e2e/engine-proof.sh`) |
 | `.agents/` | Skills (`skills/`), Eindri profiles (`subagents/`), sandbox (`sandbox/Dockerfile.utgard`), tools, bus |
 | `.pi/extensions/` | `syn-turnend-guard.ts` (Sýn), `gna-pi-watch.ts` (Gná), `lib/vordr-sessionstart-supervisor.mjs` (Vörðr), `lib/rodd-operational-input.ts` (Rödd) |
 | `.opencode/plugins/` | `saga-sessionstart.js`, `syn-watch-arm.js`, `syn-turnend-guard.js`, `syn-pretool-check.js`, `syn-cd-check.js`, `lib/rodd-operational-input.js` |
@@ -220,6 +223,54 @@ All jobs are **stateless spawns**: fresh process → inject directives → execu
 **Backends.** `tmux` (verified reference) or `herdr` (Þjazi protocol 14+). `config/backend` / `BROKK_BACKEND` / `TMUX` / `HERDR_ENV=1` select it. Spawn prints one line: `spawned <id> harness=<h> kind=<ship|scout> [mode=<m> yolo=<y>] backend=<b> target=<t> worktree=<wt> isolation=<on|off>`.
 
 **Dispatch profiles.** `config/eindri-dispatch.json` holds natural-language rules choosing a per-task harness/model/effort. A profile is ACTIVE only when it parses, carries no unfilled `<...>` model tokens, and every rule's model is servable on THIS machine (`bin/dispatch-profile.sh active|validate`); the `$YMIR_HOME/hodd/config/eindri-dispatch.json` override wins when present. Install derives a real profile from the machine. When a profile is ACTIVE, `bin/einherjar-spawn.sh` requires an explicit `--harness`/`--model` resolved from those rules (consultation backstop, so profiles are never silently skipped); with no active profile the spawn resolves harness/model FROM THE MACHINE (explicit flags → `bin/model-resolve.sh` → `config/agents.yaml` → the fleet law: local → pi, hosted → opencode, provenance printed and recorded) and never from a repo template. Verified harnesses: `opencode pi pi-signed`; effort values are `low|medium|high|xhigh|max`.
+
+### 7.1 The engine — the road itself, with one interface (2026-09-27)
+
+The worker model above is the *contract*. The **engine** (`src/ymir_runtime/`) is
+what now carries it out, so the road stops being 156 shell scripts trying to be a
+runtime:
+
+```
+verbs[4]{verb,returns}
+  "seat(errand)","seat_id — worktree + harness + backend + record + heartbeat, all hidden"
+  "status(seat_id)","working | blocked | done | idle, read from the record the system already writes"
+  "send(seat_id, text)","a durable numbered inbox message FIRST, the pane steer second"
+  "stop(seat_id)","reap the backend target, PROVE it is gone, record the terminal line"
+modules[6]{file,owns}
+  "worktree.py","Yggdrasil: create-or-reuse `.yggdrasil/<id>`; a squatter is a loud refusal, never an overwrite"
+  "harness.py","Hamr: harness + model + effort with provenance, and the exact launch line"
+  "backend.py","herdr first, tmux the verified fallback: launch · steer · liveness · kill"
+  "container.py","the Utgard decision; herdr is owned, the sandbox is REFUSED (see below)"
+  "heartbeat.py","the same judgement `bin/eindri-heartbeat.sh` makes: silent | fresh | terminal | absent"
+  "seat · status · send · stop","the four verbs, and nothing else public"
+```
+
+**The record is the old record.** `seat()` writes the SAME `state/<id>.meta` keys,
+the same `working: launched … (heartbeat baseline)` line, the same `.launch.sh`, and
+the same seat-private `BROKK_MACHINE_STATE_DIR`, so `bin/eindri-heartbeat.sh`, Vör,
+and Hlidskjalf's Fleet read an engine seat with no change at all. What it will not
+do is *duplicate* a rule: the worth-a-smith verdict is asked of
+`bin/herdr-run.sh`, the door that owns the heuristic.
+
+**Strangler, reversible.** `bin/eindri-start.sh` and `bin/einherjar-spawn.sh` call
+the engine when it can fully own the errand and otherwise run the road they already
+had. The hinge is exit **4** from `bin/ymir-engine.sh` — "the engine will NOT own
+this" — and a non-4 failure is fatal without falling back, because a half-seat is
+worse than none. `YMIR_ENGINE=off` disables the handoff everywhere.
+
+**What the engine does NOT own yet** (named, not implied): the Utgard sandbox
+(declared utgard → exit 4, the old road keeps it), `--relaunch`, worktree removal on
+`stop` (opt-in), `fm-teardown`'s landed-work gates and backlog transitions, and
+reading a worker's reply (`send` delivers; `bin/eindri-control.sh` reads). The
+`fm-*`/`brokk-*` twins stand until Phase 5.
+
+**Its own home.** `bin/ymir-engine-ensure.sh` builds the engine's private venv
+(`$HOME/.fleet/ymir-engine-venv`) at first use **only** when `src/pyproject.toml`
+declares a dependency; while the engine is stdlib-only the honest answer is "not
+needed", and nothing is ever committed. `bin/ymir-engine.sh` sets `YMIR_ENGINE_ROOT`
+so the engine knows the CODE tree it came from — which is not always what
+`BROKK_HOME` points at (a caller may point the home at a project so its worktrees
+land there).
 
 ## 8. Context sources
 
