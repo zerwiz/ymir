@@ -248,6 +248,39 @@ additional.
 > acclaim (or an older brief that never called it); the self-wake is the guarantee
 > that a well-behaved worker needs nothing alive to be heard.
 
+### Part 2c — the review spine (the judge sent after every ship)
+
+A PR is not done when it is pushed; it is done when it is AUDITED. The push path's
+terminal act opens the second half: when a ship errand reaches `done`,
+`bin/eindri-acclaim.sh` calls `bin/eindri-review-spawn.sh <id>`, which seats
+**Forseti** as a dedicated scout-kind `<id>-review` errand over the PR the worker
+opened.
+
+```
+bin/einherjar-spawn.sh <id>-review <project> --scout --backend herdr \
+    --harness pi --model opencode-go/deepseek-v4.1-flash --effort high
+```
+
+The harness is the one the einherjar road launches for this figure — `pi`,
+resolved from the roster (`bin/agents-config.sh get forseti harness`). The fierce
+brief is filled from `.agents/assets/templates/review-brief.template.md` for THIS
+task (PR, branch, task id), and the verdict lands on the wake road at
+`state/eindri-reports/<id>-review.md` — the shelf Part 2b already sweeps.
+
+```
+review_spine[5]{rule,how}
+  "once per task","a .reviewed marker (state/.reviewed/<id>) is written only after the judge is seated"
+  "off is loud","YMIR_AUTO_REVIEW=off prints why and skips; never a silent no-op"
+  "failure is loud","a failed spawn leaves no marker and queues a wake — a retry can still seat the judge"
+  "never a review of a review","a scout opens no PR, so a -review id skips"
+  "read-only","the judge's card keeps edit: deny / write: deny — it never touches the branch"
+```
+
+`--dry-run` (or `YMIR_REVIEW_DRY=1`) resolves everything and prints the exact
+spawn line without seating the judge, so the spine can be proved on a fixture.
+The spine writes to the SHARED state, never a seat's private dir: the review's
+meta, status, and verdict belong where Brokk and the sweep read them.
+
 ### Part 3 — Turn-end guard
 
 Bind the harness's "turn is about to end" event to `bin/syn-turnend-guard.sh`. If the guard prints the recovery instruction and exits **2**, the adapter must re-prompt instead of letting the turn end blind.
@@ -745,7 +778,7 @@ einherjar[20]{figure,craft,domain,engine}:
   "Hnoss","designer / shaper","utgard","OpenDesign"
   "Huginn","researcher / sage","muninn","—"
   "Mímir","planner / the wise","ymirlabs","—"
-  "Forseti","reviewer / the just","runestone","—"
+  "Forseti","reviewer / the just — the automatic PR-review spine","runestone","—"
   "Snotra","documenter / the wise-woman","runestone","—"
   "Kvasir","scout / the knowing","ymirlabs","—"
   "Galdr","builder — CLI ergonomics","ymirlabs","—"

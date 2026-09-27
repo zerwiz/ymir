@@ -77,9 +77,9 @@ roles:
 
   reviewer:
     figure: forseti
-    craft: "review — judge the work"
+    craft: "review — judge the work (the automatic PR-review spine)"
     dispatch: true
-    keywords: [review, judge, audit, critique, verify, assess, check, inspect, quality, gate]
+    keywords: [review, judge, audit, critique, verify, assess, check, inspect, quality, gate, pr, "pull request", ship]
     tools: [vector_db, hermes_runner, herder, yggdrasil]
 
   builder:
