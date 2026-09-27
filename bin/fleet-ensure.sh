@@ -70,9 +70,11 @@ refuse_disposable_path() {  # <unit-file>
   return 0
 }
 WELL_URL="${FLEET_WELL_URL:-http://127.0.0.1:8317/mcp}"
+WELL_OVERRIDE=""   # set only by --well-url: force this seat's well door past the gateway
 SKILLS_URL="${FLEET_SKILLS_URL:-http://127.0.0.1:8319/mcp}"
 SKULD_URL="${FLEET_SKULD_URL:-http://127.0.0.1:8320}"
 SNOTRA_URL="${FLEET_SNOTRA_URL:-http://127.0.0.1:8321/mcp}"
+GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
 PORT_BASE="${FLEET_PORT_BASE:-8317}"
 CHECK_ONLY=0
 EMBED_MISSING=0
@@ -103,7 +105,7 @@ fi
 # Which unit files the templates can materialize (all programs + the target)
 PROGRAM_UNIT_SRC() {  # <program> → the template path
   case "${1-}" in
-    well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra|embed)
+    well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra|embed|mcp-gateway)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/$1.service" ;;
     hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/web/systemd/$1.service" ;;
@@ -248,7 +250,7 @@ materialize_units() {  # <owed...> — every owed unit + the target; purge the s
           A2A_MISSING=1
         fi
         ;;
-      hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir)
+      hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir|mcp-gateway)
         materialize_web_unit "$p"
         ;;
       *)  # the mill/offices — %h-native templates, copied as they ship
@@ -393,27 +395,27 @@ raise_verify() {  # <owed...>
 }
 
 # ── the seat's pi mcp-adapter.json wiring (the doors the harness drinks from) ──────
-wire_mcp() {  # role-aware: the well door is local (every seat hosts its own);
-  # bolthorn (:8319) and skuld (:8320) live on the HEART — a dev seat drinks
-  # them over the tailnet, and the heart drinks its own. The old "write
-  # localhost to every seat" line is how the Allfather's doors pointed at
-  # ghosts on a seat that never hosted them.
+wire_mcp() {  # every record MCP is fronted by THIS seat's own gateway
+  # (bin/mcp-gateway.sh, :8316): the harness points at one local door, and the
+  # gateway resolves the heart's address at request time (tailnet first, LAN
+  # fallback, loopback on the heart). A heart-address change is a re-resolve
+  # inside the gateway, never a rewire of the seat. Snotra is not yet behind the
+  # gateway, so it still resolves the heart's own door here.
   mkdir -p "$HOME/.pi/agent"
-  python3 - "$WELL_URL" "$SKILLS_URL" "$SKULD_URL" "$SNOTRA_URL" "$AUTOBOOT_HOST_ROLES" "$AUTOBOOT_FLEET_REGISTRY" "$HOME" <<'PY'
+  python3 - "$GATEWAY_PORT" "$WELL_OVERRIDE" "$SNOTRA_URL" "$AUTOBOOT_HOST_ROLES" "$AUTOBOOT_FLEET_REGISTRY" "$HOME" <<'PY'
 import json, os, sys
-well, skills, skuld, snotra, roles, reg, home = sys.argv[1:8]
+gp, well_override, snotra, roles, reg, home = sys.argv[1:7]
+base = "http://127.0.0.1:%s/mcp" % gp
+well = well_override or ("%s/well" % base)
 if "heart" not in (roles or "").split():
-    # a dev/forge/hand seat drinks the heart's doors; resolve the heart's base
-    # from the fleet registry (tailnet MagicDNS preferred, LAN fallback)
+    # snotra is heart-only; resolve the heart's base from the fleet registry
     try:
         doc = json.load(open(reg))
         heart = (doc.get("heart") or "")
         row = (doc.get("hosts") or {}).get(heart, {})
-        base = (row.get("tailnet") or row.get("lan") or "").split("://")[-1]
-        if base:
-            skills = "http://%s:8319/mcp" % base
-            skuld = "http://%s:8320" % base
-            snotra = "http://%s:8321/mcp" % base
+        hb = (row.get("tailnet") or row.get("lan") or "").split("://")[-1]
+        if hb:
+            snotra = "http://%s:8321/mcp" % hb
     except Exception:
         pass
 p = os.path.join(home, ".pi/agent/mcp-adapter.json")
@@ -421,9 +423,9 @@ try: d = json.load(open(p))
 except Exception: d = {}
 d.setdefault("mcpServers", {})
 d["mcpServers"]["well"] = {"url": well}
-d["mcpServers"]["bolthorn"] = {"url": skills}
-d.setdefault("mcpServers", {})["skuld"] = {"url": skuld}
-d.setdefault("mcpServers", {})["snotra"] = {"url": snotra}
+d["mcpServers"]["bolthorn"] = {"url": "%s/bolthorn" % base}
+d["mcpServers"]["skuld"] = {"url": "%s/skuld" % base}
+d["mcpServers"]["snotra"] = {"url": snotra}
 os.makedirs(os.path.dirname(p), exist_ok=True)
 json.dump(d, open(p, "w"), indent=2)
 PY
@@ -473,7 +475,7 @@ case "${1-}" in
     ;;
   ensure) shift; while [ $# -gt 0 ]; do
       case "$1" in
-        --well-url) WELL_URL="${2-}"; shift 2 ;;
+        --well-url) WELL_URL="${2-}"; WELL_OVERRIDE="${2-}"; shift 2 ;;
         --check) CHECK_ONLY=1; shift ;;
         *) say "error: unknown flag $1" >&2; exit 2 ;;
       esac
