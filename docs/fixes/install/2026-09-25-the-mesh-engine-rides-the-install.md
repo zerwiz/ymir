@@ -34,5 +34,9 @@ setup reproducible and puts the directory under the one boot table.
 - `bin/eir-doctor.sh`
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`
 
+**2026-09-26 addendum:** the TOON row count went 29 → 30 — the `a2a` row
+joined main's merged `mesh` row, and the header must name the real count
+(compliance-check's `toon` row was red until the count was fixed).
+
 galdr-reread: `installation.md` (the `a2a` step; `a2abridge-directory` in the
 fleet/autoboot rows).
