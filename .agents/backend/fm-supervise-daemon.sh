@@ -167,7 +167,7 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 # shellcheck source=bin/fm-operational-input.sh
 . "$FM_DAEMON_DIR/fm-operational-input.sh"
 
-# Shared wake classifier (last_status_line, status_is_captain_relevant,
+# Shared wake classifier (last_status_line, status_is_Allfather_relevant,
 # window_to_task, and the status-span reader). The SAME library backs the
 # always-on watcher's triage, so the captain-relevant verb set and the
 # classification predicates have exactly one definition.
@@ -208,7 +208,7 @@ WEDGE_ALARM_TIMEOUT_SECS_DEFAULT=10
 WEDGE_ALARM_LAST_EPOCH=0
 WEDGE_ALARM_NOTIFIER_PID=
 # The captain-relevant verb set and the status classifiers (last_status_line,
-# status_is_captain_relevant, window_to_task, and the status-span reader) now
+# status_is_Allfather_relevant, window_to_task, and the status-span reader) now
 # live in bin/fm-classify-lib.sh, shared with the always-on watcher.
 # Composer-empty detection, submit acknowledgement, and the harness-scoped
 # supervisor-pane busy guard live in bin/fm-tmux-lib.sh.
@@ -331,7 +331,7 @@ _collapse_newlines() {  # <text>
 # pass the captain pane in as FM_SUPERVISOR_TARGET.
 
 # --- classification helpers (PURE: no side effects, testable) ---------------
-# last_status_line, status_is_captain_relevant, window_to_task, and the
+# last_status_line, status_is_Allfather_relevant, window_to_task, and the
 # status-span reader come from bin/fm-classify-lib.sh (sourced above),
 # the single classifier shared with bin/fm-watch.sh. The decision-string wrappers
 # and dedup state below layer the daemon's escalation-digest concerns on top.
@@ -378,7 +378,7 @@ classify_signal() {  # <reason-after-colon> <state>
     # nonetheless ends on a captain-relevant line, this signal is a re-notification
     # of something already escalated, not a routine one; position is the whole
     # dedupe, so no separate seen-marker comparison is needed.
-    status_is_captain_relevant "$last" && seen_rel=1
+    status_is_Allfather_relevant "$last" && seen_rel=1
   done
   # strip a trailing " | " separator so the distilled line is clean
   distilled="${distilled% | }"
@@ -415,7 +415,7 @@ classify_stale() {  # <window> <state> [<span-record> <span-status>]
     printf 'escalate|stale + actionable status: %s' "$event"
     return
   fi
-  if [ -n "$last" ] && status_is_paused_or_captain_held "$last"; then
+  if [ -n "$last" ] && status_is_paused_or_Allfather_held "$last"; then
     # A DECLARED external-wait pause or a verified captain-held transfer
     # (fm-classify-lib.sh owns which declarations qualify): an idle pane is
     # EXPECTED, so this is not a wedge. The caller records a pause marker (long
@@ -425,7 +425,7 @@ classify_stale() {  # <window> <state> [<span-record> <span-status>]
     printf 'pause|paused (awaiting external), rechecked on a long cadence: %s' "$last"
     return
   fi
-  if [ -n "$last" ] && status_is_captain_relevant "$last"; then
+  if [ -n "$last" ] && status_is_Allfather_relevant "$last"; then
     # Independent of free-text captain-relevant matching: a nonterminal progress
     # verb (working:) must never take the terminal stale path. Seen-status dedupe
     # must not permanently suppress or clear possible-wedge aging merely because
@@ -521,7 +521,7 @@ reconcile_pause_tracking() {  # <window> <state> <last-status-line>
   key=$(_stale_key "$task")
   marker="$state/.subsuper-paused-$key"
   watcher_key=$(_stale_key "$win")
-  if status_is_paused_or_captain_held "$last"; then
+  if status_is_paused_or_Allfather_held "$last"; then
     stale_marker_remove "$win" "$state"
     pause_marker_record "$win" "$state"
   elif [ -e "$marker" ] || [ -e "$state/.paused-$watcher_key" ]; then
@@ -539,7 +539,7 @@ migrate_watcher_pause_markers() {  # <state>
     key=$(_stale_key "$task")
     watcher_key=$(_stale_key "$win")
     last=$(last_status_line "$state/$task.status")
-    if status_is_paused_or_captain_held "$last" || [ -e "$state/.subsuper-paused-$key" ] || [ -e "$state/.paused-$watcher_key" ]; then
+    if status_is_paused_or_Allfather_held "$last" || [ -e "$state/.subsuper-paused-$key" ] || [ -e "$state/.paused-$watcher_key" ]; then
       reconcile_pause_tracking "$win" "$state" "$last"
     fi
   done
@@ -1057,7 +1057,7 @@ housekeeping() {  # <state>
     fi
     task=$(window_to_task "$win" "$state")
     last=$(last_status_line "$state/$task.status")
-    if [ -n "$last" ] && status_is_paused_or_captain_held "$last"; then
+    if [ -n "$last" ] && status_is_paused_or_Allfather_held "$last"; then
       reconcile_pause_tracking "$win" "$state" "$last"
       continue
     fi
@@ -1074,7 +1074,7 @@ housekeeping() {  # <state>
   done
 
   # (2b) pause re-surface recheck. A declared wait is waiting, not wedged (fm-classify-lib.sh's
-  # status_is_paused_or_captain_held owns which declarations qualify), so it is
+  # status_is_paused_or_Allfather_held owns which declarations qualify), so it is
   # rechecked on a much longer cadence than a wedge (PAUSE_RESURFACE_SECS) and never
   # escalated as one - but it MUST re-surface, so neither a forgotten pause nor a
   # forgotten captain hold can rot invisibly. Past the window: gone -> drop; still
@@ -1098,7 +1098,7 @@ housekeeping() {  # <state>
     fi
     task=$(window_to_task "$win" "$state")
     last=$(last_status_line "$state/$task.status")
-    if [ -z "$last" ] || ! status_is_paused_or_captain_held "$last"; then
+    if [ -z "$last" ] || ! status_is_paused_or_Allfather_held "$last"; then
       reconcile_pause_tracking "$win" "$state" "$last"
       continue
     fi
@@ -1115,7 +1115,7 @@ housekeeping() {  # <state>
       2) rm -f "$marker" ;;
       *)
         last=$(last_status_line "$state/$task.status")
-        if [ -n "$last" ] && status_is_captain_held "$last"; then
+        if [ -n "$last" ] && status_is_Allfather_held "$last"; then
           if escalate_add "$state" "captain-held ${age}s (awaiting the captain, answer the held decision or release the hold): $win"; then
             _now > "$marker"
           fi
@@ -1352,7 +1352,7 @@ handle_wake() {  # <reason> <state>
                 *) case "$stale_detail" in
                      idle\ *s,\ possible\ wedge,\ escalation\ *)
                        last=$(last_status_line "$state/$task.status")
-                       status_is_paused_or_captain_held "$last" \
+                       status_is_paused_or_Allfather_held "$last" \
                          || decision="escalate|${reason#stale: }"
                        ;;
                    esac ;;
@@ -1405,7 +1405,7 @@ handle_wake() {  # <reason> <state>
         # Nonterminal progress verbs keep possible-wedge markers even if free text
         # once looked captain-relevant or was written into a seen marker.
         _clear_wedge=0
-        if [ -n "$last" ] && status_is_captain_relevant "$last"; then
+        if [ -n "$last" ] && status_is_Allfather_relevant "$last"; then
           if status_is_terminal_verb "$last"; then
             _clear_wedge=1
           else
