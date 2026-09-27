@@ -15,6 +15,11 @@
 # reaches the seat's own well door first (the heart's as fallback). Only the
 # heart-only MCPs carry the cache+queue treatment.
 #
+# The door admits BROWSER readers (CORS, 2026-09-27): the Óðrerir hall and the
+# other in-repo UIs read the record from a PAGE, and the retired skuld server
+# opened that road; the gateway keeps it open (loopback-bound, so only this
+# body's own pages can reach it). A preflight OPTIONS answers 204.
+#
 #   mcp-gateway.sh serve            # run the gateway in the foreground
 #   mcp-gateway.sh start|stop       # raise / lower it in the background
 #   mcp-gateway.sh status [--json]  # link, upstreams, journal depth
@@ -33,7 +38,7 @@
 #      (8319) · YMIR_MCP_TICKETS_PORT (8320)
 set -u
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;

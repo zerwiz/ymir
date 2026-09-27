@@ -22,16 +22,20 @@ their states, the tickets and the plans.
 | App home | `apps/odrerir` |
 | Tech | React 19 + Vite 6 + TS (mirrors `apps/hlidskjalf`; `main` → `electron/main.cjs`) |
 | Cloth | the canonical `midgard/design-system/tokens.css` + the hearth (`midgard/design-system/ember.js`, carried in-repo) |
-| Boards | the tickets + plans, BOTH in the tickets anatomy (table · filters · bulk · +new · detail sheet); Skuld MCP over the tailnet door |
+| Boards | the tickets + plans, BOTH in the tickets anatomy (table · filters · bulk · +new · detail sheet); Skuld MCP through this body's gateway door |
 | Port | `:4322` (env `ODRERIR_PORT`) |
 | Public face | `https://hall.ymir.zerwiz.org` (production) |
 | Desktop app | `ymir-odrerir` — its own Electron shell, own icon, own `.desktop` |
 
 The SPA (`src/App.tsx` → the EmberBackground + the topbar with the halls
-buttons → the boards) builds to `dist/`. The boards read the **Skuld MCP at
-`whynot.<tailnet>.ts.net:8320`** — a fleet MCP is addressed by TAILNET NAME,
-never a LAN IP (the 2026-09-24 law; a LAN address draws HTTP 000 from the
-other seats).
+buttons → the boards) builds to `dist/`. The boards read the **record through
+THIS BODY's own MCP gateway** (`http://127.0.0.1:8316/mcp/skuld`, port from
+`MCP_GATEWAY_PORT`): the gateway resolves the heart (zerwizserver) at REQUEST
+time, so the hall never names the heart and a heart move never moves the hall's
+door (plan 51 P6/9c — the same law the harnesses' `mcp-adapter.json` obeys).
+The door admits the browser origin (CORS, restored 2026-09-27), so the board
+reaches it straight from the page — the road the retired skuld server opened and
+the gateway had dropped.
 
 ## 2. Raising the hall
 
@@ -104,8 +108,9 @@ app-local → hoisted → sibling); the app directory passed to Electron is
 - **The cloth is the canonical import**: `src/hall.css` imports
   `midgard/design-system/tokens.css`; the hearth is the carried-in
   `midgard/design-system/ember.js`. No bespoke palette, no generated regions.
-- **The Skuld door is env-overridable** (`VITE_SKULD_URL`), defaulting to the
-  tailnet MagicDNS name — never a LAN IP (2026-09-24 law).
+- **The Skuld door is env-overridable** (`VITE_SKULD_URL`), defaulting to this
+  body's gateway (`http://127.0.0.1:<MCP_GATEWAY_PORT>/mcp/skuld`, port default
+  8316) — the app never bakes a heart address (plan 51 P6/9c).
 - **Ports are sacred:** `:4322` is Óðrerir's alone. Do not move it into a
   Hlidskjalf route or a launcher call — its door is its own window and its own
   topbar buttons.
@@ -121,7 +126,7 @@ files[6]{path,what}:
   "apps/odrerir/src/hall.css","the cloth: tokens import, glass panels, the boards' anatomy"
   "apps/odrerir/src/components/TicketsBoard.tsx","the hall's book — table · bulk · +new · detail"
   "apps/odrerir/src/components/PlansBoard.tsx","the roadmap — the same anatomy"
-  "apps/odrerir/src/skuld.ts","the Skuld MCP client (tailnet door, session header)"
+  "apps/odrerir/src/skuld.ts","the Skuld MCP client (this body's gateway door, session header)"
   "apps/odrerir/electron/main.cjs","the hall's own window (single instance, no session)"
 ```
 
@@ -157,8 +162,8 @@ board ever needs it again. Everything the hall renders lives under
   boards render the chip (connected / ringing / NOT connected — the cause +
   retry). A dead door looks dead, never like an empty book.
 - **Smoke**: `bin/odrerir-mcp-smoke.sh` is wired into the lifecycle smoke as
-  the `boards` row (real initialize + list + get + comments over the tailnet
-  door, with the alignment assert).
+  the `boards` row (real initialize + list + get + comments through this body's
+  gateway door, with the alignment assert).
 
 ### The hall board is the ORIGINAL, carried whole (2026-09-24, the never-simplify law)
 - `LivehallBoard` renders the ORIGINAL Astro `<main id="livehall">` verbatim
@@ -172,3 +177,37 @@ board ever needs it again. Everything the hall renders lives under
 - **Law:** a port is never simplified — the original is the contract.
   The tickets' click-detail is proven (CDP): the detail sheet opens with the
   title, the description and the stat-strip.
+
+### The living door + the live feed (2026-09-27 — the React hall reads LIVE again)
+- **The wound.** The React port kept the Astro door's default `SKULD_URL =
+  http://whynot.<tailnet>.ts.net:8320`. The 2026-09-27 cutover (plan 51 Part 9)
+  retired whynot's Skuld unit and moved the record to the heart (zerwizserver),
+  so every board call rang a dead seat and the book read empty. The one gateway
+  (`bin/mcp-gateway.sh`, :8316) fronts skuld over the heart — but the gateway had
+  no CORS, so a PAGE still could not read it directly.
+- **The repair (one door, one resolver).** `src/skuld.ts` rings THIS BODY's
+  gateway — `http://127.0.0.1:${VITE_MCP_GATEWAY_PORT:-8316}/mcp/skuld` — and
+  `VITE_SKULD_URL` overrides the whole door. The app names no heart; the gateway
+  resolves it at request time. The gateway engine
+  (`tools/mcp-gateway/server.mjs`, v1.1.0) admits the browser origin again
+  (preflight `OPTIONS` → 204 + `access-control-allow-origin`), restoring the road
+  the retired skuld server opened (`b0c1569`, "Skuld's CORS opened for the
+  browser"). `bin/mcp-gateway.sh` carries the same note.
+- **The saga sample, honestly cleared.** The hall board (`#/`) clears its "Not
+  connected — this board is the saga's sample" note only when `/livehall.json`
+  answers with a feed (`src/hall/lh-board.js:506`). `bin/hall-snapshot.sh` writes
+  `public/livehall.json`, but a build bakes that file into `dist/` and a
+  packaged install (gitignored snapshot) carries none — so the note could stand
+  forever. `vite.config.ts` now serves that file from disk on EVERY request in
+  dev and preview (`ymir-livehall-feed`): the feed is whatever the snapshot job
+  last wrote, `cache-control: no-store`; absent → 404 → the board keeps the
+  saga's tale, never invented rows.
+- **Knobs:** `VITE_MCP_GATEWAY_PORT` (build-time, default 8316 — the gateway's
+  own `MCP_GATEWAY_PORT` default); `VITE_SKULD_URL` overrides the whole door.
+- **Deploy note:** the engine change reaches the body's running door by
+  restarting it — `systemctl --user restart mcp-gateway` (the unit runs
+  `bin/mcp-gateway.sh serve` from the tree).
+- **Smoke:** `bin/odrerir-mcp-smoke.sh` defaults to the gateway door and parses
+  the gateway's plain-JSON `tools/list` as well as the heart's SSE frame; the
+  lifecycle `boards` row now probes the gateway's `/health` (a loopback door,
+  not another seat's name).

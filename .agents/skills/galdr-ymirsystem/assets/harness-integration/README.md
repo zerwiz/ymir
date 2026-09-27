@@ -46,7 +46,11 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > refreshes the catalogs on reconnect. The well is local-first: the gateway
 > reaches the seat's own well door first. This replaced the old "write the heart
 > IP into every seat" line, which broke the seat's doors the moment the heart
-> moved — and `bin/mcp-config.sh` renders the same gateway door.
+> moved — and `bin/mcp-config.sh` renders the same gateway door. The door also
+> admits BROWSER readers (CORS — `OPTIONS` → 204 and `access-control-allow-origin`
+> on every answer, engine v1.1.0): the Óðrerir hall's boards read the record from
+> a page, the road the retired skuld server opened. The gateway binds 127.0.0.1,
+> so only this body's own UIs can reach it.
 >
 > **The model rail is resolved the same way** (plan 51 Parts 9a/9c). The rails
 > are a LIVE set — models come from whichever strong box is CONNECTED (heimdall ·
