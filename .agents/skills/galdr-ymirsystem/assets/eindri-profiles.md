@@ -14,7 +14,7 @@ Eight specialists, one primary. Each is named for the figure whose role matches 
 | **Huginn** | Huginn (sage) | Research, web search, analysis, knowledge discovery | Research | `.agents/agents/huginn-researcher.md` |
 | **Mimir** | Mimir | Planner — memory, recall, architecture sequencing | Planning | `.agents/agents/mimir-planner.md` |
 | **Kvasir** | Kvasir (wisest) | Scout — reconnaissance, investigation | Scout | `.agents/agents/kvasir-scout.md` |
-| **Forseti** | Forseti (reconciler) | Reviewer — QA, acceptance, compliance | Review | `.agents/agents/forseti-reviewer.md` |
+| **Forseti** | Forseti (reconciler) | Reviewer — QA, acceptance, compliance; seated automatically after every ship PR | Review | `.agents/agents/forseti-reviewer.md` |
 | **Snotra** | Snotra (modest) | Documenter — docs, changelogs, runbooks | Docs | `.agents/agents/snotra-documenter.md` |
 
 **Rule:** Every agent carries its rune of introduction (Agent Card). Every agent
