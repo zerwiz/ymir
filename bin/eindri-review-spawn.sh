@@ -132,18 +132,24 @@ PROJECT="$(meta_value "$TASK_META" project)"
 [ -n "$PROJECT" ] || PROJECT="${BROKK_ROOT_OVERRIDE:-$ROOT}"
 WORKTREE="$(meta_value "$TASK_META" worktree)"
 
-# The shared state the spine writes and Brokk reads: the project's state (the
-# hoard, symlinked beside the code), not a seat's private dir.
+# The shared state the spine writes and Brokk reads: the RESOLVED task root
+# (the hoard, symlinked beside the code), never an inference from the existence
+# of $PROJECT/state — that inference seated a SECOND judge under an override
+# (Forseti's verdict on #235, reproduced live). The resolved root wins; the
+# project's state dir is only a fallback when no task state resolved at all.
 SHARED_ROOT="$PROJECT"
-if [ -d "$SHARED_ROOT/state" ]; then SHARED_STATE="$SHARED_ROOT/state"; else SHARED_STATE="$TASK_STATE"; fi
+[ -n "$TASK_STATE" ] && SHARED_STATE="$TASK_STATE" || SHARED_STATE="$SHARED_ROOT/state"
 SHARED_DATA="$SHARED_ROOT/data"
 
 # ── the anti-double marker ───────────────────────────────────────────────────
 REVIEWED_DIR="$SHARED_STATE/.reviewed"
 MARKER="$REVIEWED_DIR/$ID"
 REVIEW_SPAWNED="$REVIEWED_DIR/$ID.spawning"
-if [ -f "$MARKER" ]; then
+if [ -f "$MARKER" ] && [ "$FORCE" -ne 1 ]; then
   skip "already reviewed ($MARKER exists) — a re-done never re-reviews"
+fi
+if [ -f "$MARKER" ] && [ "$FORCE" -eq 1 ]; then
+  printf 'review-spawn: --force overrides the anti-double marker (%s) — a deliberate re-review\n' "$MARKER"
 fi
 # Claim the task atomically so two racing dones cannot seat two judges. A stale
 # claim (older than 30 min: a spawn that died badly) is reclaimed.
