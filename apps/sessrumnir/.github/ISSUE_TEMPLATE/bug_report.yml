@@ -59,7 +59,7 @@ body:
       required: true
 
   - type: input
-    id: pi-desktop-version
+    id: sessrumnir-version
     attributes:
       label: Sessrúmnir version
       description: "Open Diagnostics and copy the App version line. Example: 0.1.8-alpha"
@@ -95,5 +95,5 @@ body:
       options:
         - label: I searched existing issues and didn't find a duplicate.
           required: true
-        - label: I'm on the latest release listed at https://github.com/FaqFirebase/pi-desktop/releases
+        - label: I'm on the latest release listed at https://github.com/zerwiz/ymir/releases
           required: true

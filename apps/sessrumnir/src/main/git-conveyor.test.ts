@@ -74,15 +74,15 @@ test('extractUrl returns the first CLI URL without inventing one', () => {
 
 test('extractGitHubPullRequestUrl finds a PR URL inside a task', () => {
   assert.equal(
-    extractGitHubPullRequestUrl('Continue https://github.com/FaqFirebase/pi-desktop/pull/55.'),
-    'https://github.com/FaqFirebase/pi-desktop/pull/55'
+    extractGitHubPullRequestUrl('Continue https://github.com/zerwiz/ymir/pull/210.'),
+    'https://github.com/zerwiz/ymir/pull/210'
   )
   assert.equal(extractGitHubPullRequestUrl('Fix issue #55'), null)
 })
 
 test('githubRepoFromRemote normalizes HTTPS and SSH remotes', () => {
-  assert.equal(githubRepoFromRemote('https://github.com/FaqFirebase/pi-desktop.git'), 'FaqFirebase/pi-desktop')
-  assert.equal(githubRepoFromRemote('git@github.com:FaqFirebase/pi-desktop.git'), 'FaqFirebase/pi-desktop')
+  assert.equal(githubRepoFromRemote('https://github.com/zerwiz/ymir.git'), 'zerwiz/ymir')
+  assert.equal(githubRepoFromRemote('git@github.com:zerwiz/ymir.git'), 'zerwiz/ymir')
   assert.equal(githubRepoFromRemote('https://gitlab.com/example/repo.git'), null)
 })
 

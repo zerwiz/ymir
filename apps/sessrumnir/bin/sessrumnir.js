@@ -36,7 +36,7 @@ if (args.includes('--help') || args.includes('-h')) {
     sessrumnir .                # Launch with current directory
 
   Install:
-    See https://github.com/FaqFirebase/pi-desktop for releases
+    See https://github.com/zerwiz/ymir for releases
     and build-from-source instructions.
 
   The app requires Pi to be installed:
