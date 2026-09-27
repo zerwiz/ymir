@@ -303,7 +303,9 @@ worse than none. `YMIR_ENGINE=off` disables the handoff everywhere.
 (declared utgard → exit 4, the old road keeps it), `--relaunch`, worktree removal on
 `stop` (opt-in), `fm-teardown`'s landed-work gates and backlog transitions, and
 reading a worker's reply (`send` delivers; `bin/eindri-control.sh` reads). The
-`fm-*`/`brokk-*` twins stand until Phase 5.
+gods (`fm-spawn`/`fm-teardown`/`fm-watch`) still stand in the vendored runtime;
+their decomposition is Phase 5, one god per PR. The supervision *library* twins
+are collapsed — see 7.2.
 
 **Its own home.** `bin/ymir-engine-ensure.sh` builds the engine's private venv
 (`$HOME/.fleet/ymir-engine-venv`) at first use **only** when `src/pyproject.toml`
@@ -312,6 +314,39 @@ needed", and nothing is ever committed. `bin/ymir-engine.sh` sets `YMIR_ENGINE_R
 so the engine knows the CODE tree it came from — which is not always what
 `BROKK_HOME` points at (a caller may point the home at a project so its worktrees
 land there).
+
+### 7.2 One library, two names — the port twins collapsed (plan 58, Phase 5)
+
+The port was **duplicated, not adapted**: `bin/brokk-classify-lib.sh` 1770 =
+`.agents/backend/fm-classify-lib.sh` 1770, and three siblings, drifting apart by
+hand (classify 262 diff-lines, wake 384, lease 110, wake-grant 24). The collapse
+keeps the **native side as the one implementation** and turns the vendored name
+into a thin adapter — the plan's own "`brokk-*` and `fm-*` become thin adapters,
+or one alias table" shape:
+
+```
+one_library[5]{native,adapter,why_native_wins}
+  "bin/brokk-classify-lib.sh",".agents/backend/fm-classify-lib.sh","the native verbs are Allfather-named and the vendored default crew-state door was missing"
+  "bin/brokk-wake-lib.sh",".agents/backend/fm-wake-lib.sh","the native stall markers are eindri-home-named and it calls bin/hamr-harness.sh"
+  "bin/brokk-lease-lib.sh",".agents/backend/fm-lease-lib.sh","the native lib carries the resolved state/.lock-path read (Phase 0)"
+  "bin/brokk-timeout-lib.sh",".agents/backend/fm-timeout-lib.sh","the native file is the one that actually exists; the vendored classify sourced a missing bin/brokk-timeout-lib.sh"
+  "bin/brokk-wake-grant.sh",".agents/backend/fm-wake-grant.sh","the native door writes brokk-branch-eligible-owner-v1, the marker the Pi branch extension reads"
+```
+
+Each adapter maps the upstream `FM_*` env dialect onto the native `BROKK_*` names
+(the upstream caller's own word is final) and sources the one library. The
+upstream verb names were repointed onto the native ones in the vendored callers
+in the same change, so an adapter defines **no behaviour**; a body added to one is
+the second implementation the collapse exists to end. The `bin/`
+doors (`bifrost`... `brokk-lease.sh`, `brokk-wake-grant.sh`, `skuld-branch-outcome.sh`,
+the Pi extension's two calls) are unchanged, so the extension ABI is intact, and
+the live vendored route (`fm-procevent.sh`/`fm-procevent-when.sh`, called by
+`bin/eindri-watch.sh`) resolves the same state with the same output.
+
+**What remains for the next errand, said plainly:** `fm-teardown` and `fm-watch`
+are still gods (the engine does not own their landed-work gates or the watcher),
+and the Utgard seat road still rides `bin/einherjar-spawn.sh` until `container.py`
+owns the sandbox.
 
 ## 8. Context sources
 

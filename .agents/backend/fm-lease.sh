@@ -106,22 +106,22 @@ case "$CMD" in
     # Loud accidental-override guard: a claim naming the OTHER actor than the
     # caller's own injected identity is a wiring mistake, never a role change.
     # Release and bulk release enforce the same caller authorization below.
-    CALLER=$(fm_lease_actor) || exit "$FM_LEASE_REFUSE_EXIT"
+    CALLER=$(fm_lease_actor) || exit "$BROKK_LEASE_REFUSE_EXIT"
     if [ "$ACTOR" != "$CALLER" ]; then
       echo "error: claim refused - the $CALLER supervision actor cannot claim a lease as $ACTOR on '$TASK'" >&2
-      exit "$FM_LEASE_REFUSE_EXIT"
+      exit "$BROKK_LEASE_REFUSE_EXIT"
     fi
     LEASE=$(fm_lease_path "$TASK")
-    if fm_lease_live "$TASK" && [ "$FM_LEASE_ACTOR" != "$ACTOR" ]; then
-      echo "error: claim refused - task '$TASK' is leased to the $FM_LEASE_ACTOR supervision actor (state/.lease-$TASK)" >&2
-      exit "$FM_LEASE_REFUSE_EXIT"
+    if fm_lease_live "$TASK" && [ "$BROKK_LEASE_ACTOR" != "$ACTOR" ]; then
+      echo "error: claim refused - task '$TASK' is leased to the $BROKK_LEASE_ACTOR supervision actor (state/.lease-$TASK)" >&2
+      exit "$BROKK_LEASE_REFUSE_EXIT"
     fi
     # The lease outlives this CLI call, so its liveness pid must be the
-    # long-lived supervising process: FM_LEASE_HOLDER_PID when the caller
+    # long-lived supervising process: BROKK_LEASE_HOLDER_PID when the caller
     # provides one (the Pi branch extension passes the session-lock holder),
     # else the session-lock holder (state/.lock is the harness pid), else this
     # shell; without a matching session lock the resulting lease is stale.
-    HOLDER_PID=${FM_LEASE_HOLDER_PID:-}
+    HOLDER_PID=${BROKK_LEASE_HOLDER_PID:-}
     case "$HOLDER_PID" in *[!0-9]*) HOLDER_PID= ;; esac
     if [ -z "$HOLDER_PID" ]; then
       HOLDER_PID=$(head -n 1 "$STATE/.lock" 2>/dev/null | tr -cd '0-9' || true)
@@ -135,9 +135,9 @@ case "$CMD" in
     elif ! ln -- "$TMP" "$LEASE" 2>/dev/null; then
       # Lost the create race to the sibling actor; re-check who won.
       rm -f -- "$TMP"
-      if fm_lease_live "$TASK" && [ "$FM_LEASE_ACTOR" != "$ACTOR" ]; then
-        echo "error: claim refused - task '$TASK' was just leased to the $FM_LEASE_ACTOR supervision actor" >&2
-        exit "$FM_LEASE_REFUSE_EXIT"
+      if fm_lease_live "$TASK" && [ "$BROKK_LEASE_ACTOR" != "$ACTOR" ]; then
+        echo "error: claim refused - task '$TASK' was just leased to the $BROKK_LEASE_ACTOR supervision actor" >&2
+        exit "$BROKK_LEASE_REFUSE_EXIT"
       fi
       TMP=$(mktemp "$STATE/.fm-lease-tmp.XXXXXX")
       printf '%s\t%s\t%s\n' "$ACTOR" "$HOLDER_PID" "$(date +%s)" > "$TMP"
@@ -147,32 +147,32 @@ case "$CMD" in
     fi
     ;;
   release)
-    CALLER=$(fm_lease_actor) || exit "$FM_LEASE_REFUSE_EXIT"
+    CALLER=$(fm_lease_actor) || exit "$BROKK_LEASE_REFUSE_EXIT"
     if [ "$ACTOR" != "$CALLER" ]; then
       echo "error: release refused - the $CALLER supervision actor cannot release a lease as $ACTOR on '$TASK'" >&2
-      exit "$FM_LEASE_REFUSE_EXIT"
+      exit "$BROKK_LEASE_REFUSE_EXIT"
     fi
-    if fm_lease_read "$TASK" && { [ "$FM_LEASE_ACTOR" = "$ACTOR" ] || [ -z "$FM_LEASE_ACTOR" ]; }; then
+    if fm_lease_read "$TASK" && { [ "$BROKK_LEASE_ACTOR" = "$ACTOR" ] || [ -z "$BROKK_LEASE_ACTOR" ]; }; then
       rm -f -- "$(fm_lease_path "$TASK")"
     fi
     ;;
   check)
     fm_lease_read "$TASK" || exit 1
     if fm_lease_live "$TASK"; then LIVENESS=live; else LIVENESS=stale; fi
-    printf '%s %s %s %s\n' "${FM_LEASE_ACTOR:-unreadable}" "${FM_LEASE_PID:-0}" "${FM_LEASE_EPOCH:-0}" "$LIVENESS"
+    printf '%s %s %s %s\n' "${BROKK_LEASE_ACTOR:-unreadable}" "${BROKK_LEASE_PID:-0}" "${BROKK_LEASE_EPOCH:-0}" "$LIVENESS"
     ;;
   release-actor)
-    CALLER=$(fm_lease_actor) || exit "$FM_LEASE_REFUSE_EXIT"
+    CALLER=$(fm_lease_actor) || exit "$BROKK_LEASE_REFUSE_EXIT"
     if [ "$ACTOR" != "$CALLER" ]; then
       echo "error: release-actor refused - the $CALLER supervision actor cannot release leases as $ACTOR" >&2
-      exit "$FM_LEASE_REFUSE_EXIT"
+      exit "$BROKK_LEASE_REFUSE_EXIT"
     fi
     for LEASE in "$STATE"/.lease-*; do
       [ -e "$LEASE" ] || continue
       case "$LEASE" in *.lock) continue ;; esac
       TASK=${LEASE##*/.lease-}
       fm_lease_valid_id "$TASK" || continue
-      if fm_lease_read "$TASK" && [ "$FM_LEASE_ACTOR" = "$ACTOR" ]; then
+      if fm_lease_read "$TASK" && [ "$BROKK_LEASE_ACTOR" = "$ACTOR" ]; then
         rm -f -- "$LEASE"
       fi
     done
