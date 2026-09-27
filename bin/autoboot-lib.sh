@@ -26,6 +26,7 @@
 #   bifrost   the model bridge (:4603)                    dev
 #   smidja    the smithy's eye (:8437)                    dev
 #   nornir    the seat's scheduled jobs (config/cron.yaml) heart,dev
+#   syn-watch the arm: Sýn as a standing service (idle-not-dead) heart,dev
 #
 # A seat rises exactly what its roles owe. The web stack (Hlidskjalf's SPA, the
 # gate, Mimir, Bifrost, Smiðja) are SERVICES — dev seats owe them as units; the
@@ -59,13 +60,13 @@ if [ -z "$AUTOBOOT_STATE_DIR" ]; then
 fi
 
 # --- the one table --------------------------------------------------------
-AUTOBOOT_PROGRAMS="a2abridge-directory well-mcp mcp-gateway ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
+AUTOBOOT_PROGRAMS="a2abridge-directory well-mcp mcp-gateway ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir syn-watch"
 
 autoboot_role_programs() {  # <role> → prints the program ids the role owes
   case "${1-}" in
-    heart) printf '%s\n' "a2abridge-directory well-mcp mcp-gateway ratatoskr mill-worker cards skills-mcp skuld snotra embed nornir" ;;
+    heart) printf '%s\n' "a2abridge-directory well-mcp mcp-gateway ratatoskr mill-worker cards skills-mcp skuld snotra embed nornir syn-watch" ;;
     forge) printf '%s\n' "embed mcp-gateway" ;;
-    dev)   printf '%s\n' "a2abridge-directory well-mcp mcp-gateway hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir" ;;
+    dev)   printf '%s\n' "a2abridge-directory well-mcp mcp-gateway hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir syn-watch" ;;
     hand|*) printf '%s\n' "" ;;
   esac
 }
@@ -80,6 +81,7 @@ autoboot_program_roles() {  # <program> → prints the roles that owe it
     embed)          printf '%s\n' "heart forge" ;;
     hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja) printf '%s\n' "dev" ;;
     nornir)         printf '%s\n' "heart dev" ;;
+    syn-watch)      printf '%s\n' "heart dev" ;;
     *)              printf '%s\n' "" ;;
   esac
 }
@@ -103,6 +105,7 @@ autoboot_program_desc() {  # <program> → one human line
     bifrost)        printf '%s\n' "the model bridge (:4603)" ;;
     smidja)         printf '%s\n' "the smithy's eye (:8437)" ;;
     nornir)         printf '%s\n' "the seat's scheduled jobs (config/cron.yaml)" ;;
+    syn-watch)      printf '%s\n' "the arm: Sýn as a standing service (idle-not-dead)" ;;
     *)              printf '%s\n' "${1-}" ;;
   esac
 }
@@ -146,8 +149,12 @@ autoboot_owed_roles() {  # <result-var> — the roles used for the owe computati
 }
 
 autoboot_unit_of() {  # <program|target> — the unit file name (the ONE target has none)
+  # The name is almost always <program>.service, but the arm's own door is
+  # bin/syn-watch.sh while its unit is ymir-syn-watch.service: the map lives HERE
+  # so the raise, the proof, the purge, and the materializer all agree.
   case "${1-}" in
     ymir.target) printf '%s\n' "ymir.target" ;;
+    syn-watch) printf '%s\n' "ymir-syn-watch.service" ;;
     *) printf '%s\n' "${1-}.service" ;;
   esac
 }

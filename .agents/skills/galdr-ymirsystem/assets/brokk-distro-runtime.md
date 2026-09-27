@@ -90,7 +90,8 @@ Resolution order used by every script (all overridable):
 | `state/cron.pid`, `state/cron.log` | Nornir scheduler loop + log | managed by `bin/nornir-cron-start.sh` |
 | `state/.cron-fired/`, `state/.cron-locks/` | once-a-day date guards + per-job flock | chronological edge protection |
 | `state/.wake-queue` | durable Sága wakes | drained, stay until acknowledged |
-| `state/.supervision-armed`, `state/.watch.heartbeat` | Sýn arm marker + liveness | guard is inert until first arm; the watcher re-verifies the lock every poll and retires silently when the owner dies |
+| `state/.supervision-armed`, `state/.watch.heartbeat` | Sýn arm marker + liveness | guard is inert until the first arm; the arm is a SERVICE (plan 58 Phase 2) and keeps both written whether or not a session is seated |
+| `state/.arm.lease`, `state/.arm.event`, `state/.arm.wake` | the arm's lease, its delivery slot, its append-only journal | `pid=<pid> starttime=<st> gen=<n> mode=<systemd\|daemon> session=<pid\|none> heartbeat=<epoch> state=<dir>`; `bin/syn-watch.sh status` and Eir's `arm` surface read the lease, `bin/syn-watch-arm.sh` carries the event out |
 | `state/.lock-path` | resolved session-lock path | pointer the harness extensions read; written by `gleipnir_lock_acquire`. The lock is machine-local but the pointer lives in the synced home, so a pointer outside the current user's home is stale: both harness readers validate it and heal it (2026-09-23) |
 | `state/backups/` | Muninn memory snapshots | written before any prune |
 | `state/observer.log`, `state/observer.last` | Huginn observation output | read-only bridge |
@@ -167,16 +168,18 @@ Supervision is **event-driven and zero-token**: no polling by the model, no baby
 
 | Piece | Figure | Owns | Files |
 |---|---|---|---|
-| Watcher cycle | **Sýn** | one arm cycle; prints `signal:`/`stale:`/`check:`/`heartbeat:` when the primary is needed, then exits | `bin/syn-watch-arm.sh` |
+| The arm (the watch loop) | **Sýn** | one standing arm per home: polls the state dir, raises `signal:`/`stale:`/`check:`/`heartbeat:` when the primary is needed, and IDLES (never retires) when no session is seated | `bin/syn-watch.sh` (`run`; `status\|start\|stop`), `tools/mill/systemd/ymir-syn-watch.service` |
+| The thin client | **Sýn** | enters a vacant helm, seats/attaches to the arm, relays the raised line, exits | `bin/syn-watch-arm.sh` |
 | Turn-boundary guard | **Sýn** | refuses a blind turn end when supervision is off | `bin/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-turnend-guard.js` |
 | Continuity messenger | **Gná** | arms, re-arms, delivers actionable wakes to the Pi session | `.pi/extensions/gna-pi-watch.ts` |
 | Digest child warden | **Vörðr** | supervises the Sága digest child so Pi can stream and cap its output | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` |
 
 Mechanics:
 
-- `bin/syn-watch-arm.sh --restart` verifies a live lock owner **at arm and on every poll**, writes `state/.supervision-armed`, touches `state/.watch.heartbeat` each cycle, polls `BROKK_WATCH_POLL_SECONDS` (default 5), and exits on a `signal:`/`stale:`/`check:`/`heartbeat:` line. The per-cycle re-check retires an orphaned watcher silently (`watcher: retired - session lock is no longer held`, not actionable) once its home's lock owner dies, so a leftover checkout cannot keep `state/.supervision-armed` fresh for a dead session and silence the turn-end guard. The harness extension owns continuity and re-arms.
+- **The arm is a SERVICE (plan 58, Phase 2 — 2026-09-27).** The loop is `bin/syn-watch.sh run`, seated once per home by `ymir-syn-watch.service` (`systemd --user`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; materialized by `bin/fleet-ensure.sh`, program `syn-watch`, roles heart+dev) or, where the one unit does not serve a state (a seat's private state, a probe), by a detached daemon. `bin/syn-watch-arm.sh` is its **thin client**: it runs `gleipnir_lock_acquire` on a vacant helm, attaches to the arm for this home, writes nothing itself, and exits on a `signal:`/`stale:`/`check:`/`heartbeat:` line. The arm writes `state/.supervision-armed`, touches `state/.watch.heartbeat` and its lease every cycle, and **keeps standing when the session's lock owner dies** — a session-owned arm that dies with its session is exactly the fault this replaced (it flapped through 2026-09-27 and needed three hand re-arms). `bin/syn-watch.sh status` reports `up` · `idle` · `stale` · `down` and exits non-zero on a gap; Eir's `arm` surface composes it; `BROKK_WATCH_INLINE=1` keeps the loop in the client for a probe, and an explicit `BROKK_STATE_OVERRIDE` gets its own detached daemon rather than commandeering the machine's unit.
 - `bin/syn-turnend-guard.sh` is **inert until the first successful arm** (it returns 0 unless `state/.supervision-armed` exists). When armed, if the heartbeat is missing or older than `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60), it prints the recovery instruction and exits 2 so the adapter re-prompts.
-- **Do not arm before the first successful arm** and **never run `bin/syn-watch-arm.sh` by hand** — the Pi/OpenCode extensions own continuity. The PreToolUse seatbelts exist so the extension can deny a bash command that violates an invariant: `bin/syn-arm-pretool-check.sh` blocks backgrounding/detaching the arm (a real `&` or nohup/setsid/disown; `&&` chaining and `bash -n` are allowed), and `bin/syn-guard-pretool-check.sh` blocks destructive shapes against the session lock, the supervision markers, the append-only Runes ledger, the guard/extension machinery itself, secrets, and the fleet-steering registries. They are best-effort guardrails, not a security boundary.
+- **Do not arm before the first successful arm** and **never run `bin/syn-watch-arm.sh` by hand** — the Pi/OpenCode extensions own continuity (arming THIS client, whose watch stands on its own). The PreToolUse seatbelts exist so the extension can deny a bash command that violates an invariant: `bin/syn-arm-pretool-check.sh` blocks backgrounding/detaching the arm (a real `&` or nohup/setsid/disown; `&&` chaining and `bash -n` are allowed), and `bin/syn-guard-pretool-check.sh` blocks destructive shapes against the session lock, the supervision markers, the append-only Runes ledger, the guard/extension machinery itself, secrets, and the fleet-steering registries. They are best-effort guardrails, not a security boundary.
+- **Proofs:** `tests/e2e/arm-service-proof.sh [proof|systemd]` (the plan's gate, live: idle with no session, kill → returns, heartbeat fresh, `status` non-zero on an induced gap, Eir names it) and `.agents/tests/syn-watch-arm-silent-exit.test.sh` (the flood brake + the client relay).
 - **Calm presentation** and the **Pi supervision branch** were deliberately dropped from the port; they are deferred (see `porting-upstream-to-norse.md` §6).
 
 ## 6. Nornir — the cron spine
@@ -400,6 +403,9 @@ Restart is a non-event: **durable `data/` + `state/` + live backend inventory ar
 | `BROKK_PAUSED_VERB` | Erindi, Vör | status verb for deliberate idling (default `paused`) |
 | `BROKK_WATCH_POLL_SECONDS` | Sýn | watcher poll interval (default 5) |
 | `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` | Sýn | staleness threshold (default 60) |
+| `BROKK_WATCH_INLINE` | Sýn | `1` keeps the watch loop inside `bin/syn-watch-arm.sh` (the pre-service shape; a probe) |
+| `BROKK_WATCH_DAEMON_GRACE_SECONDS` | Sýn | seconds the client waits for a re-seated arm before crying `stale:` (default 15) |
+| `SYN_WATCH_UNIT` | Sýn | the unit `bin/syn-watch.sh` reports/starts (default `ymir-syn-watch.service`) |
 | `BROKK_WATCH_PREDECESSOR_ARM_PID` | Sýn/Gná | watch generation identity |
 | `BROKK_WATCH_ARM_SCRIPT` | Gná | arm script path override |
 | `BROKK_PI_ARM_READY_TIMEOUT_MS`, `BROKK_OPENCODE_ARM_READY_TIMEOUT_MS` | adapters | arm readiness timeout |
@@ -431,6 +437,7 @@ Additional runtime invariants that must hold:
 - Every script is `bash -n` clean and smoke-tested; every failure reports a plain reason, never a silent fallback.
 - The lock binds to the live session pid via `BROKK_SESSION_PID`.
 - The turn-end guard is inert until the first successful arm writes `state/.supervision-armed`.
+- The arm is a standing service: `bin/syn-watch.sh status` exits 0 (`up` or `idle`) while the lease is live and the heartbeat is fresh, and non-zero on a gap; a killed arm returns (systemd `Restart=always`, or the thin client re-seating it).
 - `rodd-operational-input.sh` is the single owner of the wire; callers never re-parse it.
 - `runes-append.sh` never rewrites or truncates; the chain stays unbroken.
 - A scout spawn never carries `--mode`; a relaunch re-derives kind/mode from `state/<id>.meta`.
