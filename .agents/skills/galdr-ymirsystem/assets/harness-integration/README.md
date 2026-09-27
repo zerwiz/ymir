@@ -116,25 +116,74 @@ Bind the harness's "session is opening" event to `bin/saga-sessionstart-run.sh`.
 
 ### Part 2 — Watch arm (Sýn supervision)
 
-Bind a "session is idle / turn ended" event to arm **one** `bin/syn-watch-arm.sh` cycle, and let the adapter own **continuity** (re-arming) so no model tokens are spent on ordinary re-arms.
+Bind a "session is idle / turn ended" event to run **one thin client cycle** —
+`bin/syn-watch-arm.sh --restart` — and let the adapter own **continuity**
+(re-arming) so no model tokens are spent on ordinary re-arms. The **watch itself
+is a SERVICE** (plan 58, Phase 2 — 2026-09-27), seated once and standing.
 
 ```bash
 bin/syn-watch-arm.sh --restart
 ```
 
-The arm script polls `state/` every `BROKK_WATCH_POLL_SECONDS` (default 5), writes `state/.watch.heartbeat`, and exits with an actionable line when the wake queue or a `*.signal`/`*.check`/`.watcher-stop` appears:
+| Piece | Door | What it owns |
+|---|---|---|
+| The arm (the loop) | `bin/syn-watch.sh run` | the poll, the heartbeat, the wake raise, the lease — standing, session-independent |
+| The door | `bin/syn-watch.sh status\|start\|stop\|restart` | the operator's truth (`up` · `idle` · `stale` · `down`, exit non-zero on a gap) and the raise/lower |
+| The unit | `tools/mill/systemd/ymir-syn-watch.service` | `Type=simple`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; seated by `bin/fleet-ensure.sh` (program `syn-watch`, roles heart+dev) |
+| The thin client | `bin/syn-watch-arm.sh` | the helm, attach, and the relay of what the arm raised — what the harness adapters spawn |
+| The tests | `.agents/tests/syn-watch-arm-silent-exit.test.sh` · `tests/e2e/arm-service-proof.sh` | the flood brake + the live service proofs |
 
-```
-signal: wake queue
-signal: <name>
-check: <name>
-stale: watcher stopped by operator
-```
+**Why the shape changed.** The loop used to live INSIDE the arm script, so it
+lived and died with the session. When the session's lock owner went away it
+printed `watcher: retired - session lock is no longer held` and exited 0 — a
+**silent** close, which the harness reads as "ended without an actionable
+reason", retries, and flaps. On 2026-09-27 it flapped all day and needed three
+hand re-arms.
+
+The arm:
+
+- polls the state dir every `BROKK_WATCH_POLL_SECONDS` (default 5) and writes
+  `state/.watch.heartbeat` every cycle;
+- raises **ONE** actionable line into `state/.arm.event` (journalled append-only
+  in `state/.arm.wake`) when the wake queue or a `*.signal`/`*.check`/
+  `.watcher-stop` appears:
+
+  ```
+  signal: wake queue
+  signal: <name>
+  check: <name>
+  stale: watcher stopped by operator
+  stale: arm service is down - ...
+  ```
+
+- is **IDLE-NOT-DEAD**: a dead or absent session owner is recorded in the lease
+  (`session=<pid|none>`) and the arm keeps standing. The wake queue is durable,
+  and the session-start digest drains what was raised while none was seated — the
+  fix for a session-owned arm that dies with the session;
+- keeps `state/.supervision-armed` written every cycle, so a standing arm keeps the
+  turn-end guard armed, and an arm that is down makes the guard fire instead of a
+  turn ending blind;
+- writes `state/.arm.lease` — `pid=<pid> starttime=<st> gen=<n>`
+  `mode=<systemd|daemon> session=<pid|none> heartbeat=<epoch> state=<dir>` — the
+  lease-based liveness `bin/syn-watch.sh status`, the thin client, and Eir's `arm`
+  surface all read.
+
+The thin client's CLI is **unchanged**, so every adapter works as it stands:
+`--restart`, and `--handling-delivered <generation> --watcher-pid <pid>` (the
+confirmation Gná sends once a successor is ready). It prints the lines the old
+arm printed — `watcher: started pid=<pid> recovery-generation=svc.<arm-pid>.<gen>`,
+`watcher: attached - arm service up ...`, then the raised line — and it re-seats the
+service itself if the arm dies under it (a systemd restart is invisible inside a
+`BROKK_WATCH_DAEMON_GRACE_SECONDS` window; a watch that cannot be re-seated is loud).
+`BROKK_WATCH_INLINE=1` keeps the loop inside the client — the pre-service shape,
+for a probe. An explicit `BROKK_STATE_OVERRIDE` (a seat's private state) is served
+by its own detached daemon, never by the machine's one unit; a unit instance per
+seat is Phase 3's seam.
 
 It refuses to arm with exit 0 and a `watcher: read-only - the session helm is held by
 another live session` message **only** when a genuinely live other session holds the helm.
 A **vacant** helm — no owner, a dead/zombie/recycled owner, or a truncated/empty
-lock — is entered in place: the arm script runs `gleipnir_lock_acquire` (which
+lock — is entered in place: the client runs `gleipnir_lock_acquire` (which
 refuses only a verifiably live owner), and the Pi extension classifies an empty
 lock as `missing` so `gna_watch_arm`'s reclaim takes it directly. A vacant helm
 is never punted to a manual session start; only a real live contender is refused.

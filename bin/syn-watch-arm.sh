@@ -1,24 +1,45 @@
 #!/usr/bin/env bash
-# syn-watch-arm.sh - arm one Brokk supervision watcher cycle.
+# syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.
 #
-# Sýn ("the one who sees") watches the runtime state and exits with an
-# actionable `signal:`/`stale:`/`check:`/`heartbeat:` line when something needs
-# the primary. The Pi extension (gna-pi-watch.ts) owns continuity and re-arms.
-# Ported/trimmed from the upstream agent-distro reference for plan 29
-# (memory/plans/core/29-brokk-distro-runtime.md).
+# Sýn ("the one who sees") watches the runtime state and raises an actionable
+# `signal:`/`stale:`/`check:`/`heartbeat:` line when the primary is needed. The
+# Pi/OpenCode extensions (gna-pi-watch, syn-watch-arm.js) own the session side:
+# they spawn this client, relay whatever it prints, deliver the wake, and spawn
+# the next one.
 #
-# Usage: syn-watch-arm.sh --restart
-#        syn-watch-arm.sh --handling-delivered <generation> --watcher-pid <pid>
+# What changed, and why (plan 58, Phase 2 — 2026-09-27): the WATCH LOOP used to
+# live in this file, so it lived and died with the session. When the session's
+# lock owner went away the loop printed `watcher: retired - session lock is no
+# longer held` and exited 0 in silence — a silent close the harness reads as
+# "ended without an actionable reason", then retries and flaps. On 2026-09-27 it
+# flapped all day and needed three hand re-arms.
+#
+# Now the loop is bin/syn-watch.sh run — a standing service with its own lease
+# that IDLES (never retires) when no session is seated and is restarted when it
+# dies — and THIS file is the thin client:
+#
+#   · it enters a vacant helm (bin/gleipnir-lock-lib.sh) exactly as before;
+#   · it seats/attaches to the arm service for this home;
+#   · it prints the same lines, in the same grammar, and exits when one is raised;
+#   · the session's death no longer kills the watch.
+#
+# CLI (unchanged, so every harness adapter works as it stands):
+#   syn-watch-arm.sh --restart
+#   syn-watch-arm.sh --handling-delivered <generation> --watcher-pid <pid>
+#
+# `BROKK_WATCH_INLINE=1` keeps the watch loop in this process — the pre-service
+# shape, for a probe or a host with no way to seat a daemon.
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # The wake queue is written by the Eindri handoff (bin/eindri-acclaim.sh) into the
-# OPERATOR'S HOME state ($YMIR_STATE_DIR), resolved through bin/hoard-lib.sh. The
-# watcher must read the SAME queue: it once defaulted to $BROKK_HOME/state — the
-# CODE TREE — so the handoff filled one queue and the watcher watched another, and
-# no wake ever surfaced (2026-09-23). Same order of authority as the lib.
+# OPERATOR'S HOME state — never the code tree. Both sides resolve it the same way,
+# through bin/hoard-lib.sh. The watcher must read the SAME queue: it once defaulted
+# to the tree's state dir, so the handoff filled one queue and the watcher watched
+# another, and no wake ever surfaced (2026-09-23). Same order of authority as the lib.
+_STATE_GIVEN="${BROKK_STATE_OVERRIDE:-}"
 if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
     for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
@@ -33,17 +54,26 @@ STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 # shellcheck source=bin/gleipnir-lock-lib.sh
 . "$SCRIPT_DIR/gleipnir-lock-lib.sh"
 
+WATCH="$SCRIPT_DIR/syn-watch.sh"
 POLL_SECONDS="${BROKK_WATCH_POLL_SECONDS:-5}"
-HEARTBEAT_STALE_SECONDS="${BROKK_WATCH_HEARTBEAT_STALE_SECONDS:-60}"
+DAEMON_GRACE_SECONDS="${BROKK_WATCH_DAEMON_GRACE_SECONDS:-15}"
 
-mkdir -p "$STATE"
+EVENT="$STATE/.arm.event"
+LEASE="$STATE/.arm.lease"
 
+# The delivery confirmation the extension sends back once the wake it relayed has
+# been handled and a successor is ready. It carries the generation this client
+# printed, so the record names what was handled.
 if [ "${1-}" = "--handling-delivered" ]; then
   generation=${2-}
   watcher_pid=${4-}
+  mkdir -p "$STATE" 2>/dev/null || true
+  [ -n "$generation" ] && printf '%s\n' "$generation" >"$STATE/.arm.handled" 2>/dev/null || true
   printf 'watcher: handling delivered generation=%s watcher-pid=%s\n' "$generation" "$watcher_pid"
   exit 0
 fi
+
+mkdir -p "$STATE"
 
 # CATCH-UP ON RE-ARM (plan 58 Phase 3). The moment this arm recovers — the Pi
 # extension's re-arm after a flap, a repair, or session start — reconcile what
@@ -60,96 +90,97 @@ if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
   unset _handoff_out
 fi
 
+[ -x "$WATCH" ] || { printf 'watcher: FAILED - the arm service door is missing: %s\n' "$WATCH" >&2; exit 1; }
+
+# ── the helm ────────────────────────────────────────────────────────────────
+# A live-session contract: enter a VACANT helm (no owner, or an owner verifiably
+# gone) through the lib's acquire; only a genuinely live other session is refused.
+
 lock_owner=$(gleipnir_lock_owner _lo 2>/dev/null; printf '%s' "${_lo:-}")
 if [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; then
-  # The helm is vacant: no owner, or an owner verifiably gone (dead, zombie,
-  # recycled, or a truncated/empty lock). Enter through the lib's acquire,
-  # which refuses only a genuinely live other session — so a vacant helm is
-  # taken here, never punted to a manual session start.
   if ! gleipnir_lock_acquire; then
     printf 'watcher: read-only - the session helm is held by another live session\n' >&2
     exit 0
   fi
-  lock_owner=$(gleipnir_lock_owner _lo 2>/dev/null; printf '%s' "${_lo:-}")
 fi
 
-GENERATION="${BROKK_WATCH_PREDECESSOR_ARM_PID:-arm}-$$"
-printf 'watcher: started pid=%s recovery-generation=%s\n' "$$" "$GENERATION"
-: >"$STATE/.supervision-armed"
-
-touch_heartbeat() { date -u +%s >"$STATE/.watch.heartbeat"; }
-
-actionable() {
-  # A non-empty wake queue or an actionable status append ends the cycle.
-  if [ -s "$STATE/.wake-queue" ]; then
-    # ONE signal per DISTINCT queue content (the 2026-09-22 flood brake): an
-    # unconsumed queue must never re-inject on every poll. A new wake (changed
-    # content) raises exactly one new signal; an unchanged queue stays silent
-    # until the agent drains it (saga-wake-drain.sh) or the content changes.
-    local _h _prev
-    _h="$(md5sum < "$STATE/.wake-queue" | awk '{print $1}')"
-    _prev="$(cat "$STATE/.wake-last-hash" 2>/dev/null || true)"
-    if [ "$_prev" != "$_h" ]; then
-      printf '%s' "$_h" > "$STATE/.wake-last-hash"
-      printf 'signal: wake queue\n'
-      return 0
-    fi
-    # An UNCHANGED, unconsumed queue was already signalled once. Stay silent and
-    # KEEP WATCHING — never exit here. A bare `return 0` made the watcher leave
-    # without printing a signal:, stale:, check:, or heartbeat: line, so the
-    # harness classified the close as "ended without an actionable reason",
-    # retried five times, and flapped: a single unacknowledged wake stranded
-    # supervision for as long as the queue stayed unchanged (2026-09-23).
-    return 1
-  fi
-  local sig
-  sig=$(find "$STATE" -maxdepth 1 -name '*.signal' -print -quit 2>/dev/null || true)
-  if [ -n "$sig" ]; then
-    rm -f "$sig"
-    printf 'signal: %s\n' "$(basename "$sig" .signal)"
-    return 0
-  fi
-  local check
-  check=$(find "$STATE" -maxdepth 1 -name '*.check' -print -quit 2>/dev/null || true)
-  if [ -n "$check" ]; then
-    rm -f "$check"
-    printf 'check: %s\n' "$(basename "$check" .check)"
-    return 0
-  fi
-  if [ -f "$STATE/.watcher-stop" ]; then
-    rm -f "$STATE/.watcher-stop"
-    printf 'stale: watcher stopped by operator\n'
-    return 0
-  fi
-  return 1
+lease_alive() {
+  local pid st state
+  [ -r "$LEASE" ] || return 1
+  pid=$(sed -n 's/^pid=\([^ ]*\).*/\1/p' "$LEASE" | head -1)
+  st=$(sed -n 's/.*starttime=\([^ ]*\).*/\1/p' "$LEASE" | head -1)
+  state=$(sed -n 's/.* state=//p' "$LEASE" | head -1)
+  case "$pid" in ''|*[!0-9]*) return 1 ;; esac
+  [ "$state" = "$STATE" ] || return 1
+  gleipnir_pid_alive "$pid" "$st"
 }
 
-touch_heartbeat
-while :; do
-  # The lock is a live-session contract, not an arm-time snapshot. If the
-  # harness that held this home's lock has exited — or a replacement never took
-  # it — this watcher is an orphan and must retire rather than beat forever for
-  # a dead session (which would also strand `state/.supervision-armed` with a
-  # fresh-enough heartbeat and silence the turn-end guard). Retiring is not
-  # actionable: it prints no `signal:`/`stale:`/`check:` line, so it never wakes
-  # a session.
-  lock_owner=$(gleipnir_lock_owner _lo 2>/dev/null; printf '%s' "${_lo:-}")
-  if [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; then
-    printf 'watcher: retired - session lock is no longer held\n' >&2
-    exit 0
-  fi
+lease_part() {  # <key> — one field of the live lease
+  [ -r "$LEASE" ] || return 0
+  awk -v k="$1=" '{ for (i = 1; i <= NF; i++) if (index($i, k) == 1) { print substr($i, length(k) + 1); exit } }' "$LEASE" 2>/dev/null || true
+}
 
-  # THE MID-SESSION SWEEP. The Eindri handoff failsafe (bin/eindri-handoff.sh)
-  # turns a filed report/question into a wake. It used to run only at SESSION
-  # START, so a report filed while the session ran sat invisible until the next
-  # session — a worker finished and Brokk was never told. Run it every cycle
-  # instead: the queue is filled within seconds and the check below sees it.
-  if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
-    BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/eindri-handoff.sh" sweep >/dev/null 2>&1 || true
-  fi
-  if actionable; then
-    exit 0
-  fi
+# ── the inline shape (pre-service; opt-in only) ─────────────────────────────
+if [ "${BROKK_WATCH_INLINE:-0}" = 1 ]; then
+  printf 'watcher: started pid=%s recovery-generation=inline-%s\n' "$$" "$$"
+  printf 'watcher: attached - inline watch loop (BROKK_WATCH_INLINE=1) state=%s\n' "$STATE"
+  exec "$WATCH" run --emit
+fi
+
+# ── the service ─────────────────────────────────────────────────────────────
+next_gen="$(cat "$STATE/.arm.gen" 2>/dev/null || true)"
+case "$next_gen" in ''|*[!0-9]*) next_gen=0 ;; esac
+# Readiness is declared BEFORE the seat is proven, so a seat that cannot rise is
+# relayed as an actionable line rather than a silent close the harness retries.
+printf 'watcher: started pid=%s recovery-generation=svc.0.%s\n' "$$" "$((next_gen + 1))"
+
+lease_alive || "$WATCH" start >/dev/null 2>&1 || true
+if ! lease_alive; then
+  printf 'stale: arm service is down - no live lease for %s (remedy: bin/syn-watch.sh start)\n' "$STATE"
+  exit 0
+fi
+svc_pid="$(lease_part pid)"
+svc_gen="$(lease_part gen)"
+svc_mode="$(lease_part mode)"
+printf 'watcher: attached - arm service up pid=%s mode=%s gen=%s recovery-generation=svc.%s.%s state=%s\n' \
+  "${svc_pid:-none}" "${svc_mode:-unknown}" "${svc_gen:-0}" "${svc_pid:-0}" "${svc_gen:-0}" "$STATE"
+
+# ── relay ───────────────────────────────────────────────────────────────────
+# The service raises ONE line into .arm.event; this client carries it out and
+# exits, exactly as the old loop did when it ended on an actionable line.
+deliver_pending() {
+  local line
+  [ -s "$EVENT" ] || return 1
+  line="$(head -n1 "$EVENT" 2>/dev/null || true)"
+  [ -n "$line" ] || return 1
+  # A line raised between the read and the removal must not be swallowed.
+  [ "$(head -n1 "$EVENT" 2>/dev/null || true)" = "$line" ] || return 1
+  rm -f "$EVENT" 2>/dev/null || true
+  printf '%s\n' "$line"
+}
+
+if deliver_pending; then exit 0; fi
+
+down_since=0
+while :; do
   sleep "$POLL_SECONDS"
-  touch_heartbeat
+  if deliver_pending; then exit 0; fi
+  if ! lease_alive; then
+    # A systemd restart is invisible here: it is back inside the grace window.
+    # Past the grace the client re-seats the service itself — a dead arm that can
+    # be raised again is not news the model needs; one that cannot is.
+    [ "$down_since" = 0 ] && down_since="$(date -u +%s)"
+    if [ "$(( $(date -u +%s) - down_since ))" -ge "$DAEMON_GRACE_SECONDS" ]; then
+      "$WATCH" start >/dev/null 2>&1 || true
+      if lease_alive; then
+        printf 'watcher: re-seated the arm service pid=%s state=%s\n' "$(lease_part pid)" "$STATE" >&2
+        down_since=0
+      else
+        printf 'stale: arm service is down - the watch could not be re-seated (remedy: bin/syn-watch.sh status)\n'
+        exit 0
+      fi
+    fi
+  else
+    down_since=0
+  fi
 done

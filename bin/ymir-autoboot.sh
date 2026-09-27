@@ -96,9 +96,9 @@ verify() {  # [--quiet]
                  rows="${rows}  \"$p\",\"$st\",\"$(autoboot_program_desc "$p") — deferred: ${reason:-no reason}\"\n" ;;
       *)         bad=$((bad+1))
                  case "$st" in
-                   disabled) reason="not enabled — systemctl --user enable ${p}.service" ;;
-                   failed)   reason="unit reached FAILED (see: journalctl --user -u ${p}.service)" ;;
-                   inactive) reason="enabled but not active — journalctl --user -u ${p}.service" ;;
+                   disabled) reason="not enabled — systemctl --user enable $(autoboot_unit_of "$p")" ;;
+                   failed)   reason="unit reached FAILED (see: journalctl --user -u $(autoboot_unit_of "$p"))" ;;
+                   inactive) reason="enabled but not active — journalctl --user -u $(autoboot_unit_of "$p")" ;;
                    *) reason="unknown state ${st}" ;;
                  esac
                  rows="${rows}  \"$p\",\"$st\",\"$(autoboot_program_desc "$p") — ${reason}\"\n" ;;
