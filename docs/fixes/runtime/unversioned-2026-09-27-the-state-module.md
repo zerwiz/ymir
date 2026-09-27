@@ -87,3 +87,9 @@ module together (the engine door already required `src/` and was not shipped).
 - `bin/ymir-state.sh` (new door) · `bin/gleipnir-lock-lib.sh` ·
   `bin/runes-append.sh` · `bin/brokk-wake-lib.sh`
 - `package.json` · `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`
+
+**Correction (2026-09-27, Forseti's stack review — appended, the original stands).**
+The governed asset's section headings were H2 collisions (`## 7.4` triples against
+the grants' `### 7.4`), a wart the stack rebases carried. Corrected in place to
+coherent H3 numbering in file order (dispatch `### 7.6` · state `### 7.7` · the
+god-seams `### 7.8`), blank lines restored, nothing else changed.
