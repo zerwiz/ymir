@@ -176,6 +176,7 @@ shell_quote() {
 
 STATUS_FILE=$(shell_quote "$STATE/$ID.status")
 REPORT_SHELF=$(shell_quote "$STATE/eindri-reports/$ID.md")
+WAKE_QUEUE=$(shell_quote "$STATE/.wake-queue")
 INBOX_DIR=$(shell_quote "$STATE/$ID.inbox")
 REPORT_FILE="$DATA/$ID/report.md"
 
@@ -193,10 +194,15 @@ Report status by appending one line:
    States: working, needs-decision, blocked, $PAUSED_VERB, done, failed.
    Each append wakes Brokk, so report sparingly: only phase changes a supervisor
    would act on and the needs-decision/blocked/$PAUSED_VERB/done/failed states.
-   A TERMINAL state (done:, failed:, needs-decision:) is ALSO a report: in the SAME
-   act, append one short line to $REPORT_SHELF — the shelf the handoff failsafe
-   sweeps (bin/eindri-handoff.sh) — naming what shipped and where (PR, path, proof).
-   The status line and the report line are ONE act; never defer one.
+   A TERMINAL state (done:, failed:, needs-decision:) is ALSO a report. Make the
+   terminal act ONE command — it writes the status line, files the report shelf the
+   handoff failsafe sweeps (bin/eindri-handoff.sh), and appends the DURABLE wake
+   (state/.wake-queue) so Brokk is woken even with no arm and no sweep running:
+      \`bin/eindri-acclaim.sh $ID --terminal done --line "<what shipped and where: PR, path, proof>"\`
+   Use \`--terminal failed\` or \`--terminal needs-decision\` as the state; a
+   needs-decision files the question shelf ($STATE/eindri-questions/$ID.md) instead.
+   Never defer the wake: a report that is not in the queue is a report Brokk may
+   never see.
    Use \`$PAUSED_VERB: {why}\` - distinct from \`blocked:\` - ONLY when you are deliberately
    idling on a known external wait you expect to clear on its own (an upstream release,
    a rate-limit reset); use \`blocked:\` when you are stuck and need Brokk to act.
@@ -268,7 +274,9 @@ $INBOX_SECTION
 - \`test -s $REPORT_FILE\` exits 0 (the report exists and is non-empty). Record its size with \`wc -c $REPORT_FILE\`.
 - \`grep -E '^(done|recommend|conclusion|findings):' $REPORT_FILE\` finds the stand-alone conclusion — what you did, what you found, the evidence (commands, output, file:line), and what you recommend.
    (A prose judgment "reads well" cannot be a command — read it yourself and say so in the report.)
-- Append \`done: {one-line conclusion}\` to the status file and stop.
+- Run the terminal act — one command; it files your report shelf and appends the durable wake: \`bin/eindri-acclaim.sh $ID --terminal done --line "{one-line conclusion}"\`.
+- \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
+- Stop.
 EOF
   if [ "$RELAUNCH" -eq 1 ]; then
     printf 'scaffolded: %s (scout, relaunch; replace {TASK})\n' "$BRIEF"
@@ -288,7 +296,10 @@ case "$MODE" in
 - \`gh pr create --fill\` opens the pull request and prints its URL.
 - \`gh pr view --json url -q .url\` prints the same URL; record it as the evidence.
    (A prose PR description that "reads well" cannot be a command — read it yourself and say so.)
-- Append \`done: opened PR <url>\` to the status file and stop. Brokk routes the PR to the Glitnir human gate; you never merge.
+- Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
+     \`bin/eindri-acclaim.sh $ID --terminal done --line "opened PR <url>"\`
+- \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue; Brokk is woken with no arm and no sweep).
+- Stop. Brokk routes the PR to the Glitnir human gate; you never merge.
 EOF
 )
     ;;
@@ -299,7 +310,10 @@ EOF
 - \`git branch --show-current\` prints \`eindri/$ID\` (you are on the right branch).
 - \`git diff --quiet\` exits 0 (everything committed).
 - \`git status --porcelain\` lists only the scratch files you intend to leave; record the list.
-- Append \`done: ready in branch eindri/$ID\` to the status file and stop. Brokk merges into local \`main\` after the Allfather approves.
+- Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
+     \`bin/eindri-acclaim.sh $ID --terminal done --line "ready in branch eindri/$ID"\`
+- \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
+- Stop. Brokk merges into local \`main\` after the Allfather approves.
 EOF
 )
     ;;
@@ -310,7 +324,10 @@ EOF
 - \`no-mistakes doctor\` reports the repo is initialized here (run \`no-mistakes init\` first if not).
 - \`git push -u origin eindri/$ID\` succeeds — the pipeline branch reaches the remote.
 - The \`no-mistakes\` pipeline run prints its PR URL and a status; record both.
-- Append \`done: <PR url> (pipeline <status>)\` to the status file and stop. Brokk routes the PR to the Glitnir human gate; you never merge.
+- Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
+     \`bin/eindri-acclaim.sh $ID --terminal done --line "<PR url> (pipeline <status>)"\`
+- \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
+- Stop. Brokk routes the PR to the Glitnir human gate; you never merge.
 EOF
 )
     ;;
