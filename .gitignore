@@ -100,6 +100,7 @@ apps/odrerir/.astro/dev.json
 .env
 __pycache__/
 *.pyc
+*.egg-info/
 
 # Capacitor / Android build artifacts
 apps/hlidskjalf/android/app/build/
