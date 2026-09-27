@@ -8,9 +8,10 @@
 # Renaming a rail alias that a body still names breaks that body silently — the
 # written law, until now with no gate. This reads every reachable seat's registry
 # over the ring, gathers what every reachable rail serves (the written presets
-# AND the live `/v1/models`), and verifies each named alias resolves somewhere in
-# the fleet (the forge or locally). A name no rail serves is a missing alias: the
-# gate FAILS, names the seat + the alias, and exits non-zero.
+# AND the live `/v1/models`), and verifies each named alias resolves against the
+# RESOLVED provider — the living rail set the ONE resolver ranks (plan 51 Part
+# 9c), the forge or any live body. A name no live rail serves is a missing alias:
+# the gate FAILS, names the seat + the alias, and exits non-zero.
 #
 # Honesty: a seat (or a rail) that cannot be reached is reported `offline` —
 # never a FAIL — and every reachable seat is still verified.
@@ -163,6 +164,16 @@ while IFS=$'\t' read -r name addrs; do
   printf '%s\t%s\n' "$name" "$state" >>"$TMP/seatorder.tsv"
 done <"$TMP/seats.tsv"
 
+# ── the resolved provider (plan 51 Part 9c) ──────────────────────────────────
+# The aliases are verified against the LIVING rail set, not one static seat: the
+# ONE resolver names the strong boxes, probes them, and reports what each live
+# box serves. A box that is down is reported offline, never a FAIL.
+if [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
+  bash "$SCRIPT_DIR/rail-resolve.sh" status --json >"$TMP/rail.json" 2>/dev/null || : >"$TMP/rail.json"
+else
+  : >"$TMP/rail.json"
+fi
+
 # ── the judgement ────────────────────────────────────────────────────────────
 python3 - "$TMP" "$SELF" "$MODE" "$NO_LIVE" "$FLEET" <<'PY'
 import json, os, sys, urllib.parse
@@ -209,6 +220,17 @@ for name, _state in seats:
 served = set()
 for a in rails.values():
     served |= a
+
+# The resolved provider's served set joins the union: a seat's name may be
+# carried by whichever strong box is CONNECTED, not only by a rail it can reach.
+try:
+    rail_doc = json.load(open(os.path.join(tmp, "rail.json")))
+except Exception:
+    rail_doc = {}
+rail_live = [r for r in (rail_doc.get("rails") or []) if r.get("live")]
+for r in rail_live:
+    served |= {str(m) for m in (r.get("models") or [])}
+resolved = rail_doc.get("serving") or {}
 
 def provider_rail(seat, base):
     """Which rail a provider's baseUrl addresses: (kind, name)."""
@@ -280,12 +302,15 @@ if mode == "json":
         "offline": [{"seat": s, "reason": reason} for s, reason in offline_seats]
                    + [{"seat": s, "provider": p, "alias": a, "rail": r} for s, p, a, r, _ in offline_rows],
         "seats": [{"seat": s, "state": st, "served": n} for s, st, n in seat_summary],
+        "rail": {"host": resolved.get("host"), "url": resolved.get("url"), "live_boxes": len(rail_live)},
     }))
     sys.exit(1 if missing else 0)
 
 print(f'model_alias_seats[{len(seat_summary)}]{{seat,state,served_aliases}}:')
 for s, st, n in seat_summary:
     print(f'  "{s}","{st}","{n}"')
+print(f'model_alias_rail[1]{{serving,url,live_boxes}}:')
+print(f'  "{resolved.get("host") or "none"}","{resolved.get("url") or ""}","{len(rail_live)}"')
 if missing:
     print(f'model_alias_missing[{len(missing)}]{{seat,provider,alias,rail}}:')
     for s, p, a, r, _ in missing:
