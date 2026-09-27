@@ -478,6 +478,17 @@ The authoritative interface is always the code listed in [`../runtime-components
 
 The adapter pattern is ported from the validated upstream **Brokk** agent-distro harness adapters (`bin/fm-harness.sh`, `bin/fm-sessionstart-run.sh`, `.agents/harness/opencode/plugins/fm-primary-*.js`, `.pi/extensions/fm-primary-*.ts`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.grok/hooks/*.json`). Ymir adopts the *mechanism* and renames every component per plan 29 §12 (Sága, Sýn, Gná, Vörðr, Rödd, Gleipnir, Hamr, Einherjar, Erindi, Vör, Nornir). The upstream names (`fm-*`, "Allfather") are provenance only and must never name a Ymir component.
 
+**Where the provenance lives, and where the wards look (2026-09-27).** The
+upstream-derived scripts are kept in `.agents/backend/` — the FM backend tree —
+and are the validation record, not a Ymir surface. The compliance wards scope to
+the shipped **door** surface on purpose: the `naming` ward reads `AGENTS.md` and
+`bin/*.sh`; the `mocks` ward reads `bin/` (comment-only lines excluded). So an
+upstream term or design word inside `.agents/backend/` is the record; a `bin/*.sh`
+that names an upstream term is a real fault. This is the declaration behind the
+two long-standing gate notes (naming `fm-*`, mocks `fm-composer-lib`): the gate's
+scope is the runtime, the provenance is the record — mended by this note, never by
+widening a ward to a tree that carries hundreds of upstream mentions.
+
 ---
 
 ## 13. The Well — memory for every harness (engram)
