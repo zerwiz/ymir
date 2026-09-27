@@ -45,6 +45,21 @@ if [ "${1-}" = "--handling-delivered" ]; then
   exit 0
 fi
 
+# CATCH-UP ON RE-ARM (plan 58 Phase 3). The moment this arm recovers — the Pi
+# extension's re-arm after a flap, a repair, or session start — reconcile what
+# the dead window missed: sweep the handoff shelves into the durable wake queue
+# BEFORE the lock and the poll loop, so recovery is never blind and an arm that
+# is refused read-only has still reconciled. Idempotent via the shared ledger
+# (bin/eindri-wake-lib.sh); the cycle sweep below is the steady-state form.
+CATCH_UP=0
+if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
+  _handoff_out="$(BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/eindri-handoff.sh" sweep 2>/dev/null)" || true
+  CATCH_UP="$(printf '%s\n' "$_handoff_out" | sed -n 's/.*"sweep",\([0-9][0-9]*\),.*/\1/p' | head -n1)"
+  [ -n "$CATCH_UP" ] || CATCH_UP=0
+  printf 'watcher: catch-up sweep delivered=%s\n' "$CATCH_UP"
+  unset _handoff_out
+fi
+
 lock_owner=$(gleipnir_lock_owner _lo 2>/dev/null; printf '%s' "${_lo:-}")
 if [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; then
   # The helm is vacant: no owner, or an owner verifiably gone (dead, zombie,
