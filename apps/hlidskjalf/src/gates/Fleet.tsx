@@ -1,9 +1,9 @@
 import type { CSSProperties } from 'react';
-import { useYmir } from '../state/store';
+import { useYmir, type AgentsStatus } from '../state/store';
 import { useUI } from '../state/ui';
 import { useTenantDef } from '../hooks/useTenantDef';
 import { DOMAINS, TERMINAL_STATES } from '../data/realms';
-import type { AgentCard as AgentCardType } from '../types';
+import type { AgentCard as AgentCardType, AgentStatus } from '../types';
 import { MetricTile } from '../components/MetricTile';
 import { AgentCard } from '../components/AgentCard';
 import { StatusChip } from '../components/Status';
@@ -36,16 +36,55 @@ function layout(agents: AgentCardType[]): { pos: Record<string, { x: number; y: 
   return { pos, edges };
 }
 
+/** The one honest line for the board: an empty fleet has four causes, not one. */
+function fleetNote(
+  agentsStatus: AgentsStatus,
+  count: number,
+): { text: string; chip: AgentStatus; detail: string } {
+  if (count > 0 && agentsStatus === 'live') {
+    return { text: 'published', chip: 'nominal', detail: 'A2A 1.0 cards published.' };
+  }
+  switch (agentsStatus) {
+    case 'unauthorized':
+      return {
+        text: 'gate unauthorised',
+        chip: 'down',
+        detail: 'The gate refused the request (401). Sign in, and the roster will load.',
+      };
+    case 'unreadable':
+      return {
+        text: 'roster unreadable',
+        chip: 'down',
+        detail: 'The connector answered with an error; the roster could not be read.',
+      };
+    case 'offline':
+      return {
+        text: 'gate offline',
+        chip: 'down',
+        detail: 'The gate API did not answer; showing the last good data.',
+      };
+    case 'live':
+      return {
+        text: 'no agents standing',
+        chip: 'degraded',
+        detail: 'The gate answered, and no agents are standing.',
+      };
+    default:
+      return { text: 'reading the roster', chip: 'nominal', detail: 'Reading the roster...' };
+  }
+}
+
 export function Fleet() {
   const agents = useYmir((s) => s.agents);
+  const agentsStatus = useYmir((s) => s.agentsStatus);
   const tasks = useYmir((s) => s.tasks);
   const realm = useYmir((s) => s.realm);
   const session = useYmir((s) => s.session);
   const runes = useYmir((s) => s.runes);
   const integrity = runes.length ? runes.filter((r) => r.checksum).length / runes.length : null;
-  const live = useYmir((s) => s.live);
   const { openModal } = useUI();
   const def = useTenantDef(realm, session?.tenants.find((t) => t.realm === realm));
+  const note = fleetNote(agentsStatus, agents.length);
 
   const online = agents.filter((a) => a.status === 'nominal' && a.live?.state !== 'working').length;
   const active = tasks.filter((t) => !TERMINAL_STATES.includes(t.state)).length;
@@ -86,11 +125,11 @@ export function Fleet() {
         <div>
           <h1 className="stage-title">The Fleet</h1>
           <p className="stage-deck">
-            {online}/{agents.length} agents nominal · {def.tenant} · A2A 1.0 cards {live === false ? '(gate API offline)' : 'published'}
+            {online}/{agents.length} agents nominal · {def.tenant} · A2A 1.0 cards {note.text}
           </p>
         </div>
         <div className="row">
-          <StatusChip status={live === false ? 'degraded' : 'nominal'} />
+          <StatusChip status={note.chip} />
         </div>
       </div>
 
@@ -100,6 +139,17 @@ export function Fleet() {
         <MetricTile label="Ledger integrity" value={integrity != null ? integrity.toFixed(3) : '—'} delta={`${runes.length} runes`} tone="var(--ymir-ok)" />
         <MetricTile label="Utgard sealed" value={sealed} delta={`${working} degraded`} tone="var(--ymir-warn)" />
       </div>
+
+      {agents.length === 0 && (
+        <section className="panel" style={{ marginBottom: 'var(--ymir-space-4)' }}>
+          <div className="panel-body">
+            <div className="row" style={{ alignItems: 'center', gap: 'var(--ymir-space-3)' }}>
+              <StatusChip status={note.chip} />
+              <span className="dim">{note.detail}</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="gate-grid cols-2">
         <section className="panel">
