@@ -11,6 +11,7 @@
 #
 # Programs:
 #   well-mcp  the well's served MCP door (:8317)          heart,dev
+#   mcp-gateway the body's one record door (:8316)        heart,forge,dev
 #   ratatoskr the A2A node (:8301)                        heart
 #   a2abridge-directory the A2A mesh directory (:7777)    heart,dev
 #   mill-worker the well's grinder                         heart
@@ -58,13 +59,13 @@ if [ -z "$AUTOBOOT_STATE_DIR" ]; then
 fi
 
 # --- the one table --------------------------------------------------------
-AUTOBOOT_PROGRAMS="a2abridge-directory well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
+AUTOBOOT_PROGRAMS="a2abridge-directory well-mcp mcp-gateway ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir"
 
 autoboot_role_programs() {  # <role> → prints the program ids the role owes
   case "${1-}" in
-    heart) printf '%s\n' "a2abridge-directory well-mcp ratatoskr mill-worker cards skills-mcp skuld snotra embed nornir" ;;
-    forge) printf '%s\n' "embed" ;;
-    dev)   printf '%s\n' "a2abridge-directory well-mcp hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir" ;;
+    heart) printf '%s\n' "a2abridge-directory well-mcp mcp-gateway ratatoskr mill-worker cards skills-mcp skuld snotra embed nornir" ;;
+    forge) printf '%s\n' "embed mcp-gateway" ;;
+    dev)   printf '%s\n' "a2abridge-directory well-mcp mcp-gateway hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir" ;;
     hand|*) printf '%s\n' "" ;;
   esac
 }
@@ -73,6 +74,7 @@ autoboot_program_roles() {  # <program> → prints the roles that owe it
   case "${1-}" in
     a2abridge-directory) printf '%s\n' "heart dev" ;;
     well-mcp)       printf '%s\n' "heart dev" ;;
+    mcp-gateway)    printf '%s\n' "heart forge dev" ;;
     ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra) printf '%s\n' "heart" ;;
     a2abridge-directory) printf '%s\n' "heart dev" ;;
     embed)          printf '%s\n' "heart forge" ;;
@@ -86,6 +88,7 @@ autoboot_program_desc() {  # <program> → one human line
   case "${1-}" in
     a2abridge-directory) printf '%s\n' "the local A2A directory (:7777)" ;;
     well-mcp)       printf '%s\n' "the well's MCP door (:8317)" ;;
+    mcp-gateway)    printf '%s\n' "the body's one record door (:8316)" ;;
     snotra)         printf '%s\n' "the meeting ear's MCP face (:8321, read-only minutes)" ;;
     ratatoskr)      printf '%s\n' "the A2A node (:8301)" ;;
     a2abridge-directory) printf '%s\n' "the A2A mesh directory (:7777)" ;;
