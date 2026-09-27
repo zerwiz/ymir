@@ -1,0 +1,45 @@
+# grants.yaml.example — the federation grant registry (plan 58, "Several Ymirs,
+# one company"). Copy to the hoard at $YMIR_HOME/hodd/identity/grants.yaml and
+# fill in real operator identities; the example carries only placeholders and is
+# a VALID document, simply not ACTIVE until a machine writes its own.
+#
+# One grant is one explicit share: operator A's Ymir opens a company namespace to
+# operator B's Ymir, for a role. Because it crosses operators it crosses the realm
+# law (Rule 05), so it must be signed by EACH side's Heimdall — `signed: true` on
+# both cards, and one signature per party. A grant within one operator (plan 42)
+# is same-realm and needs no signature. src/ymir_runtime/grants.py refuses a
+# cross-operator grant with a missing signature, naming the Heimdall that did not
+# sign.
+version: 1
+operator: "<this-operator>"
+grants:
+  - grant_id: "00000000-0000-4000-8000-000000000000"
+    namespace: "example-project"
+    role: "member"
+    state: "active"
+    issued: "2026-09-27T00:00:00Z"
+    grantor:
+      ymir: "<granting-ymir>"
+      operator: "<granting-operator>"
+      heimdall: "<granting-heimdall-key-id>"
+      card:
+        protocol: "a2a/1.0"
+        endpoint: "http://<granting-host>:8301/"
+        signed: true
+    grantee:
+      ymir: "<joining-ymir>"
+      operator: "<joining-operator>"
+      heimdall: "<joining-heimdall-key-id>"
+      card:
+        protocol: "a2a/1.0"
+        endpoint: "http://<joining-host>:8301/"
+        signed: true
+    signatures:
+      - signer: "<granting-heimdall-key-id>"
+        alg: "ed25519"
+        key_id: "<granting-key-id>"
+        sig: "<base64url-jws>"
+      - signer: "<joining-heimdall-key-id>"
+        alg: "ed25519"
+        key_id: "<joining-key-id>"
+        sig: "<base64url-jws>"
