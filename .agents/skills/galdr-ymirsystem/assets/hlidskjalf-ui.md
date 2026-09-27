@@ -642,3 +642,29 @@ every app icon from its own `public/icon.svg` (rsvg-convert, else magick):
 
 Run it whenever the design or a glyph changes; it is idempotent and writes
 nothing else.
+
+### The Fleet names why it is empty (2026-09-27)
+
+An empty board had four different causes and the surface showed one silent
+`0/0`: the roster was read (`live`), the gate refused the request
+(`unauthorized`), the connector answered with an error (`unreadable`), or the
+gate did not answer at all (`offline`). The board now names the cause:
+
+- `services/api.ts` throws `GateError` (HTTP status preserved) instead of a bare
+  `Error`, so a caller can tell a 401 from an unreachable gate.
+- `state/store.ts` exports `AgentsStatus`, derives it for the roster call
+  (`agentsFailureStatus`: 401 → `unauthorized`, another `GateError` →
+  `unreadable`, else `offline`), and exposes it; every other endpoint still
+  degrades on its own.
+- `gates/Fleet.tsx` reads it and prints the one honest line — `gate
+  unauthorised`, `roster unreadable`, `gate offline`, or `no agents standing`
+  when the gate answered and the roster is truly empty — with a matching chip
+  and an empty-fleet panel.
+- The roster path is **absolute and read from the repo root**: both
+  `bin/hlidskjalf-agents.sh` and its server copy resolve `REPO_ROOT` (git) and
+  export `ROSTER_DIR="$REPO_ROOT/.agents/agents"`; `/api/agents` runs the
+  connector with `cwd: ROOT` and `ROSTER_DIR: AGENTS_ALT`, and treats an empty
+  connector array as **no data**, falling through to the roster rather than
+  painting an empty fleet.
+
+Rule: a Hlidskjalf code change updates this asset in the same pass.
