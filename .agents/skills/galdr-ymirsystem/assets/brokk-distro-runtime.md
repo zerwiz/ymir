@@ -183,7 +183,7 @@ Mechanics:
 
 Nornir are the fates who govern time. `bin/nornir-cron-start.sh` keeps exactly **one** lightweight scheduler loop alive (idempotent), started by Sága stage 7 at every session start.
 
-- **Schedule:** `config/cron.yaml`, one `HH:MM <command>` per line, `#` comments.
+- **Schedule:** `config/cron.yaml`, one `HH:MM <command>` per line, `#` comments, with an optional **role gate**: `@heart[,role] HH:MM <cmd>` or `HH:MM @heart <cmd>`. Both orders parse (the 2026-09-24 fault: only the after-time shape matched, so every role-first line silently never ran). The scheduler runs only the jobs this machine's roles own, resolved from `bin/topology.sh` / `$YMIR_HOME/hodd/data/fleet.json` — record jobs ride the heart, model/bench jobs ride the forge, a dev body runs only its session jobs.
 - **PID/log:** `state/cron.pid`, `state/cron.log` (rotates at `BROKK_CRON_LOG_MAX_BYTES`, default 1 MiB).
 - **Once-a-day guard:** `state/.cron-fired/<key>` stores the date; the loop matches `HH:MM` once per day so a job cannot double-run in the same minute or across a loop restart.
 - **No overlap:** each job runs under a per-job `flock` in `state/.cron-locks/`; a busy job is skipped with `cron skip (busy)`.
@@ -217,6 +217,8 @@ All jobs are **stateless spawns**: fresh process → inject directives → execu
 **Isolation.** Every worker runs in a Yggdrasil worktree at `<BROKK_HOME>/.yggdrasil/<id>`, created read-only-referencing the project. herdr is the ORDINARY road — no container. Utgard is the EXCEPTION, chosen for untrusted code or an outsized task, never because an image is present. The brief DECLARES it (`Isolation: herdr|utgard — <why>`); `--isolation auto` honours the declaration, and a declared utgard with no image is a LOUD refusal, never a silent downgrade (2026-09-24). A sealed worker mounts the worktree at `/sandbox/workspace`, plus `state/` and `data/` at their host paths. The brief's first instruction to the worker is to verify isolation with `pwd -P` and `git rev-parse --show-toplevel` before touching anything.
 
 **Status protocol.** A worker appends one line `{state}: {one short line}` to `state/<id>.status`; states are `working, needs-decision, blocked, paused, done, failed` (`paused` is configurable via `BROKK_PAUSED_VERB`). Each append wakes Brokk, so reports are sparse. `Vör` reconciles the possibly-stale log against the authoritative backend endpoint recorded in the meta and never infers current state from `tail -1` alone.
+
+**Report-shelf handoff (2026-09-27).** The status line alone is not enough: the failsafe `bin/eindri-handoff.sh sweep` reads only `$STATE/eindri-reports/<id>.md` and `$STATE/eindri-questions/`, never `state/<id>.status`. A worker's terminal act therefore writes its status line **and** a short report to `$STATE/eindri-reports/<id>.md` (what shipped, the PR, the proof); `bin/erindi-brief.sh` carries that line in its template so every errand inherits it. The sweep runs at session start (Sága stage 3) and on a Nornir cadence, idempotently. The fourth failure mode, written from life: **the worker wrote the wrong shelf.**
 
 **Steering inbox.** Brokk steers a live worker through durable messages in `state/<id>.inbox/NNN.msg`; the worker reads them in numeric order and acknowledges by `mv`-ing each into `state/<id>.inbox/handled/`. The move **is** the acknowledgement.
 
