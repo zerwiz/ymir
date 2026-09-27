@@ -47,6 +47,21 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > reaches the seat's own well door first. This replaced the old "write the heart
 > IP into every seat" line, which broke the seat's doors the moment the heart
 > moved — and `bin/mcp-config.sh` renders the same gateway door.
+>
+> **Typed surfaces — the servers' home is `packages/` (plan 58 Phase 6).** The
+> MCP/A2A servers move under `packages/` strangler-style, and the surfaces they
+> share are typed in `packages/contracts/`. The A2A node is the first to land:
+> `packages/a2a/ratatoskr/server.ts` builds its `/.well-known/agent-card.json`
+> through the one A2A agent-card contract, which Hlidskjalf imports too
+> (`apps/hlidskjalf/src/types.ts`, `apps/hlidskjalf/server/index.ts`) — one
+> contract, two consumers, contract tests in `packages/contracts/test/`. The
+> first MCP server moved is Bölþorn — `packages/mcp/skills/server.mjs` (:8319);
+> the rest still stand in `tools/` (well-mcp, tickets-mcp, snotra, mcp-gateway)
+> until their own PRs. `bin/fleet-ensure.sh` / `bin/fleet-deploy.sh` copy a
+> DIRECTORY row whole, preserving the `packages/` anchor, so a relative import
+> across packages resolves in the deployed `~/.fleet` copy exactly as it does in
+> the repo. No door, unit, or config name changes: `ratatoskr.service` (:8301)
+> and `skills-mcp.service` (:8319) keep their names and ports.
 
 
 The Ymir runtime is a **distro**: a directory of instructions, skills, tooling and conventions that turns a general-purpose agent into a specialized one. Launching a supported harness inside `BROKK_HOME` is supposed to instantiate **Brokk** and address the operator as the **Allfather** *before the model's first turn*.
@@ -127,11 +142,11 @@ bin/syn-watch-arm.sh --restart
 
 | Piece | Door | What it owns |
 |---|---|---|
-| The arm (the loop) | `bin/syn-watch.sh run` | the poll, the heartbeat, the wake raise, the lease — standing, session-independent |
+| The arm (the loop) | `bin/syn-watch.sh run` | the poll, the heartbeat, the wake raise, the lease — standing, session-independent; the BEHAVIOUR is `src/ymir_runtime/watch.py` (plan 58, Phase 5), so this door only names the verb |
 | The door | `bin/syn-watch.sh status\|start\|stop\|restart` | the operator's truth (`up` · `idle` · `stale` · `down`, exit non-zero on a gap) and the raise/lower |
 | The unit | `tools/mill/systemd/ymir-syn-watch.service` | `Type=simple`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; seated by `bin/fleet-ensure.sh` (program `syn-watch`, roles heart+dev) |
 | The thin client | `bin/syn-watch-arm.sh` | the helm, attach, and the relay of what the arm raised — what the harness adapters spawn |
-| The tests | `.agents/tests/syn-watch-arm-silent-exit.test.sh` · `tests/e2e/arm-service-proof.sh` | the flood brake + the live service proofs |
+| The tests | `.agents/tests/syn-watch-arm-silent-exit.test.sh` · `tests/e2e/arm-service-proof.sh` | the flood brake + the live service proofs (both run the engine's `watch.py` through the door) |
 
 **Why the shape changed.** The loop used to live INSIDE the arm script, so it
 lived and died with the session. When the session's lock owner went away it

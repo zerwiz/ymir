@@ -41,6 +41,12 @@ scripts/stop.sh     # lower them all
 ```
 
 - Verify: `npm run typecheck` (`tsc --noEmit`) and `npm run build` must both be green.
+- **Typed surfaces (plan 58 Phase 6):** the fleet card's `interface` is the shared
+  **A2A agent-card contract** at `packages/contracts/src/index.ts` —
+  `apps/hlidskjalf/src/types.ts` imports `AgentInterface`, and the gate builds the
+  same shape in `server/index.ts`; the A2A node
+  (`packages/a2a/ratatoskr/server.ts`) builds the card it serves through the same
+  contract. Change the contract, never a copy.
 - Headless check: render with Playwright/Chrome and assert **0 console errors**.
 
 ## Tokens — never hardcode colour

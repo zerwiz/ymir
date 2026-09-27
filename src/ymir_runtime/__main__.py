@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from . import __version__, heartbeat, paths, proc
+from . import __version__, heartbeat, landed as landed_mod, paths, proc, watch
 from .dispatch import ModelUnavailable, TableRefusal
 from .dispatch import resolve as resolve_dispatch
 from .errors import EngineError, EngineRefusal, SeatNotFound
@@ -72,6 +72,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("version", help="print the engine version")
 
+    sub.add_parser("watch", help="Sýn — the standing arm's own verbs (status|start|stop|restart|run)")
+
     ensure = sub.add_parser("ensure", help="report the interpreter and roots the engine will use")
     ensure.add_argument("--toon", action="store_true")
 
@@ -103,7 +105,15 @@ def build_parser() -> argparse.ArgumentParser:
     stop_p = sub.add_parser("stop", help="reap a seat")
     stop_p.add_argument("seat_id")
     stop_p.add_argument("--remove-worktree", action="store_true")
+    stop_p.add_argument("--require-landed", action="store_true", help="refuse to remove a worktree whose work has not landed")
     stop_p.add_argument("--force", action="store_true")
+
+    landed_p = sub.add_parser("landed", help="did this work LAND? — the teardown gate")
+    landed_p.add_argument("worktree")
+    landed_p.add_argument("--branch", default="")
+    landed_p.add_argument("--pr", default="")
+    landed_p.add_argument("--mode", default="")
+    landed_p.add_argument("--force", action="store_true")
     return parser
 
 
@@ -116,7 +126,15 @@ def main(
 ) -> int:
     """The door's entry. The injections exist so the CLI's own contract is
     assertable without a pane, exactly as the modules' is."""
-    args = build_parser().parse_args(list(argv) if argv is not None else None)
+    arguments = list(argv) if argv is not None else sys.argv[1:]
+    # The arm's own surface (`watch status|start|stop|restart|run`), dispatched
+    # before argparse: the verb carries its own flags through to `bin/syn-watch.sh`
+    # unchanged, and the shape of `run --emit` must not be re-spelled here.
+    if arguments[:1] == ["watch"]:
+        return watch.main(
+            arguments[1:], env=env, runner=runner or proc.run, probe=probe or proc.which
+        )
+    args = build_parser().parse_args(arguments)
     run = runner or proc.run
     lookup = probe or proc.which
 
@@ -155,11 +173,26 @@ def main(
         ]), end="")
         return EXIT_OK
 
+    if args.verb == "landed":
+        verdict = landed_mod.gate(
+            args.worktree,
+            branch=args.branch,
+            pr_url=args.pr,
+            mode=args.mode,
+            force=args.force,
+            runner=run,
+            env=env,
+        )
+        print(_row("landed[1]{worktree,landed,how,detail}", [
+            args.worktree, "yes" if verdict.landed else "no", verdict.how, verdict.detail,
+        ]), end="")
+        return EXIT_OK if verdict.landed else EXIT_FAILED
+
     if args.verb == "stop":
         try:
             result = stop(
                 args.seat_id, remove_worktree=args.remove_worktree, force=args.force,
-                env=env, runner=run, probe=lookup,
+                require_landed=args.require_landed, env=env, runner=run, probe=lookup,
             )
         except SeatNotFound as exc:
             print(f"error: {exc}", file=sys.stderr)
