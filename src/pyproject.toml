@@ -19,7 +19,7 @@ Documentation = "https://github.com/zerwiz/ymir"
 
 [tool.setuptools]
 package-dir = { "" = "." }
-packages = ["ymir_runtime", "ymir_runtime.config", "ymir_runtime.tests"]
+packages = ["ymir_runtime", "ymir_runtime.config", "ymir_runtime.dispatch", "ymir_runtime.tests"]
 
 [tool.ymir]
 engine = "ymir_runtime"
