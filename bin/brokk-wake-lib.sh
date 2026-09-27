@@ -8,6 +8,9 @@ BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$BROKK_ROOT}}"
 STATE="${BROKK_STATE_OVERRIDE:-${STATE:-$BROKK_HOME/state}}"
 BROKK_WAKE_QUEUE="${BROKK_WAKE_QUEUE:-$STATE/.wake-queue}"
 BROKK_WAKE_QUEUE_LOCK="${BROKK_WAKE_QUEUE_LOCK:-$STATE/.wake-queue.lock}"
+# The queue's append and key reads live in ONE implementation
+# (src/ymir_runtime/state/queue.py) and this door is how the shell reaches it.
+BROKK_WAKE_STATE_DOOR="${BROKK_WAKE_STATE_DOOR:-$BROKK_WAKE_LIB_DIR/ymir-state.sh}"
 BROKK_LOCK_STALE_AFTER="${BROKK_LOCK_STALE_AFTER:-2}"
 # Resolved once at source time: fm_pid_identity and fm_path_mtime run inside 0.2s
 # confirm and 0.5s attach polls, and forking uname per call is a measurable cost on
@@ -1366,8 +1369,7 @@ fm_wake_clean_field() {
 }
 
 fm_wake_append() {
-  local kind=$1 key=$2 payload=$3 clean_key clean_payload epoch seq seq_file status
-  local recovery_marker
+  local kind=$1 key=$2 payload=$3 clean_key clean_payload epoch status=0 recovery_marker
   case "$kind" in
     signal|stale|check|heartbeat) ;;
     *) printf 'fm_wake_append: invalid wake kind: %s\n' "$kind" >&2; return 2 ;;
@@ -1376,22 +1378,16 @@ fm_wake_append() {
   clean_key=$(printf '%s' "$key" | fm_wake_clean_field)
   clean_payload=$(printf '%s' "$payload" | fm_wake_clean_field)
   epoch=$(date +%s)
-  seq_file="$STATE/.wake-queue.seq"
   recovery_marker="$STATE/.watcher-down"
-  status=0
 
+  # The line itself is the engine's (state/queue.py): this shell holds its own
+  # queue lock and the recovery marker, and hands the append over. A door that
+  # cannot run fails LOUD — it never drops a wake silently.
   fm_lock_acquire_wait "$BROKK_WAKE_QUEUE_LOCK"
   _fm_recovery_marker_publish "$recovery_marker" downtime || status=$?
   if [ "$status" -eq 0 ]; then
-    seq=$(cat "$seq_file" 2>/dev/null || echo 0)
-    case "$seq" in
-      ''|*[!0-9]*) seq=0 ;;
-    esac
-    seq=$((seq + 1))
-    printf '%s\n' "$seq" > "$seq_file" || status=$?
-  fi
-  if [ "$status" -eq 0 ]; then
-    printf '%s\t%s\t%s\t%s\t%s\n' "$epoch" "$seq" "$kind" "$clean_key" "$clean_payload" >> "$BROKK_WAKE_QUEUE" || status=$?
+    "$BROKK_WAKE_STATE_DOOR" queue append "$kind" "$clean_key" "$clean_payload" \
+      --queue "$BROKK_WAKE_QUEUE" --epoch "$epoch" --assume-locked || status=$?
   fi
   fm_lock_release "$BROKK_WAKE_QUEUE_LOCK"
   return "$status"
@@ -1416,8 +1412,7 @@ fm_wake_queued_keys() {
 
 fm_wake_queued_keys_locked() {
   local kind=$1
-  awk -F '\t' -v kind="$kind" 'NF >= 5 && $3 == kind && !seen[$4]++ { print $4 }' \
-    "$BROKK_WAKE_QUEUE" 2>/dev/null || true
+  "$BROKK_WAKE_STATE_DOOR" queue keys "$kind" --queue "$BROKK_WAKE_QUEUE"
 }
 
 fm_wake_eindri-home_stall_marker_write() { # <task> <row-key>
