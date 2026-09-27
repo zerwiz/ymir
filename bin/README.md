@@ -3,7 +3,7 @@
 Auto-generated from each script's header. One line per tool. Ported scripts are
 credited to the upstream `firstmate` distro (port record: `.agents/skills/galdr-ymirsystem/assets/porting-upstream-to-norse.md`); the rest are Ymir's own.
 
-bin[101]{file,does}:
+bin[103]{file,does}:
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the two A2A MCP servers into the harnesses so"
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:"
   "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri."
@@ -18,6 +18,7 @@ bin[101]{file,does}:
   "brokk-lease.sh","brokk-lease.sh - claim, release, inspect, and sweep per-task supervision leases."
   "brokk-lint.sh","brokk-lint.sh — the Brokk lint gate. Single owner of lint for CI and"
   "brokk-send.sh","brokk-send.sh — send a one-line steer to a running Brokk/Eindri-home."
+  "brokk-timeout-lib.sh","brokk-timeout-lib.sh - the single owner of bounded command execution."
   "brokk-update.sh","brokk-update.sh — update Brokk and every registered Eindri-home to the latest."
   "brokk-wake-grant.sh","shellcheck source=bin/brokk-wake-lib.sh"
   "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers."
