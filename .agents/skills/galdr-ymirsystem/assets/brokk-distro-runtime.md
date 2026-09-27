@@ -202,6 +202,45 @@ Current schedule (`config/cron.yaml`):
 
 All jobs are **stateless spawns**: fresh process → inject directives → execute → write output → exit. Each carves a Runes line.
 
+### 6.1 The role gate — one fact, every surface (plan 51)
+
+A machine's **role** is ONE fact, declared once, and read by every surface that
+would otherwise install, boot, schedule, or route wrongly. It is captured at
+install time, before the step chain runs, by `bin/role-lib.sh` `establish_roles`:
+
+```
+role_resolution[4]{source,when}:
+  "--role <r> | $YMIR_ROLE","the operator names it for this run; an unknown name is refused (exit 2)"
+  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/role.sh)"
+  "the machine card","the host's own row in hodd/data/machines.md"
+  "ask -> the safe body","asked interactively; a run that cannot ask takes `dev` (owns no record) and says so"
+```
+
+The components each role owes — the ONE table the installer gates on, and the
+record the install folds into `hodd/data/machines.md`:
+
+```
+role_components[4]{role,components}:
+  "heart","core · record · well · web · mesh"
+  "forge","core · rail · harness · sandbox"
+  "dev","core · harness · rail · desktop · web · mesh · well · sandbox"
+  "hand","core"
+```
+
+Three surfaces derive from it, and no surface re-decides it:
+
+- **install** — `bin/ymir-install.sh` `role_gate`s each role-owned step; a
+  component this machine's roles do not own is a `SKIP` naming the owning role.
+- **boot** — `bin/ymir-autoboot.sh` holds the ONE role→program table, shared with
+  `bin/fleet-ensure.sh`.
+- **cron** — `config/cron.yaml` lines carry `@<role>[,<role>]`; a dev body runs no
+  `@heart` job.
+
+The role is a *list* — a machine may hold two (`heart,forge` on a combined server,
+`heart,dev` on an always-on box that is also a work machine); each surface unions
+what its roles owe. A host with no declared role is never silently given every
+part.
+
 ## 7. Einherjar / Erindi / Vör — the worker model
 
 | Step | Figure | Script | Artifact |
@@ -359,6 +398,12 @@ Additional runtime invariants that must hold:
 - `runes-append.sh` never rewrites or truncates; the chain stays unbroken.
 - A scout spawn never carries `--mode`; a relaunch re-derives kind/mode from `state/<id>.meta`.
 - Dispatch on an unverified adapter is fail-closed.
+- **The install is role-selected.** `bin/ymir-install.sh` resolves the role
+  before its step chain and gates every role-owned step; a component the
+  machine's roles do not own is a SKIP naming the owning role, and an unknown
+  `--role` is refused. The same role picks the boot set
+  (`bin/ymir-autoboot.sh`), the cron gate (`config/cron.yaml` `@role`), and the
+  MCP config (`bin/mcp-config.sh`).
 - **No mocks, no examples, no placeholders** in the shipped runtime.
 
 ## 13. Operations cheat-sheet

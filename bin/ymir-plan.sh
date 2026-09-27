@@ -57,7 +57,9 @@ while [ $# -gt 0 ]; do
     --colour|--color) COLOUR=1; shift ;;
     --phase) ONLY_PHASE="${2-}"; shift 2 ;;
     --blocked) ONLY_BLOCKED=1; shift ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/ymir-plan.sh [--json|--colour] [--phase N] [--blocked]\n' "$1" >&2; exit 2 ;;
+    --role) export YMIR_ROLE="${2-}"; shift 2 ;;
+    --role=*) export YMIR_ROLE="${1#--role=}"; shift ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/ymir-plan.sh [--json|--colour] [--phase N] [--blocked] [--role heart|forge|dev|hand]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -123,6 +125,21 @@ resolve_phase() {
     emit 0 resolve chosen SKIP "the home is set by \$YMIR_HOME: $YMIR_HOME"
   else
     emit 0 resolve chosen CONSENT "no home chosen yet — the install asks, then records it (default $YMIR_HOME_DEFAULT)"
+  fi
+
+  # What this machine IS (plan 51 P1). The install resolves the role BEFORE its
+  # step chain and installs only that role's components, so the plan names the
+  # role and where it came from — the preview can no longer read as one shape
+  # everywhere on every host.
+  local rline="" rroles="" rsrc=""
+  if [ -x "$ROOT/bin/role.sh" ]; then
+    rline="$(bash "$ROOT/bin/role.sh" resolve --why 2>/dev/null | head -1)"
+    rroles="${rline%%$'\t'*}"; rsrc="${rline##*$'\t'}"
+  fi
+  if [ -n "$rroles" ]; then
+    emit 0 resolve role INFO "$rroles (source: ${rsrc:-none}) — only this role's components install"
+  else
+    emit 0 resolve role CONSENT "no role in the registry for this host — the install asks (or pass --role heart|forge|dev|hand)"
   fi
 }
 
