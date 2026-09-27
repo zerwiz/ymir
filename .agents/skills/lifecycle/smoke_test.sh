@@ -196,6 +196,21 @@ else
   bad loaders "valknut-load.sh --status reported a problem"
 fi
 
+# 12b. every config the runtime reads passes its JSON Schema (plan 58 P7).
+#      Validate the SHIPPED shapes, which are always here. A missing validator
+#      SKIPs (the engine venv is not provisioned yet); a bad config FAILs.
+if [ -x "$ROOT/bin/ymir-config-check.sh" ]; then
+  bash "$ROOT/bin/ymir-config-check.sh" examples >/dev/null 2>&1
+  _cfg_rc=$?
+  case "$_cfg_rc" in
+    0) ok config "the shipped config shapes pass their schemas (agents · cron · fleet · eindri-dispatch)" ;;
+    3) skip config "jsonschema not installed — bin/ymir-engine-ensure.sh ensure" ;;
+    *) bad config "a shipped config refused its schema — bin/ymir-config-check.sh examples" ;;
+  esac
+else
+  skip config "ymir-config-check.sh absent"
+fi
+
 # 13. Nornir cron is running (inspected in the OPERATOR's state, not the tree)
 if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
   if BROKK_STATE_OVERRIDE="$STATE" bash "$ROOT/bin/nornir-cron-start.sh" --status 2>/dev/null | grep -q 'running'; then
