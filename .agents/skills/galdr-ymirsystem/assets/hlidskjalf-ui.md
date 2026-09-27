@@ -674,3 +674,17 @@ gate did not answer at all (`offline`). The board now names the cause:
   painting an empty fleet.
 
 Rule: a Hlidskjalf code change updates this asset in the same pass.
+### The mobile shells — PWA, Android, iOS (2026-09-27)
+
+Hlidskjalf reaches a phone three ways, all the same web app:
+
+- **PWA.** The SPA carries `manifest.webmanifest` (`display: standalone`),
+  `sw.js`, `apple-touch-icon.png`, and a theme-color, so Safari's *Add to Home
+  Screen* installs it. A secure context (HTTPS) is required for the service
+  worker; `tailscale serve --bg <port>` or the tunnel supplies one.
+- **Capacitor shells.** `apps/hlidskjalf/android` (existing) and
+  `apps/hlidskjalf/ios` (added 2026-09-27) wrap the web app for the stores. Both
+  are thin and read `YMIR_SERVER_URL` (default `http://127.0.0.1:3888`) at
+  `cap sync` time; with `cleartext:false` an operator points them at their HTTPS
+  host with no code change. iOS builds require macOS + Xcode and are produced on
+  a Mac, never here — `ios/` is scaffolded, not built.
