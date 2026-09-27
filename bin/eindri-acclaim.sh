@@ -136,4 +136,24 @@ else
     fi
   fi
 fi
+# 4. The review spine (FORSETI the Judge). The delivery gate's other half: a
+#    ship errand that reached `done` with a PR wakes its own reviewer. One per
+#    task (the .reviewed marker); YMIR_AUTO_REVIEW=off is the loud override; a
+#    failed spawn is a loud wake, never silence.
+if [ "$TERMINAL" = done ] && [ -x "$SCRIPT_DIR/eindri-review-spawn.sh" ]; then
+  if _rv_out="$("$SCRIPT_DIR/eindri-review-spawn.sh" "$AGENT" 2>&1)"; then
+    printf '%s\n' "$_rv_out"
+  else
+    _rv_rc=$?
+    printf '%s\n' "$_rv_out" >&2
+    if [ ! -f "$STATE/.reviewed/$AGENT.failed" ]; then
+      mkdir -p "$STATE/.reviewed" 2>/dev/null || true
+      printf '%s\n' "$_rv_out" >"$STATE/.reviewed/$AGENT.failed" 2>/dev/null || true
+      eindri_queue_wake "eindri $AGENT review spawn FAILED (rc=$_rv_rc): $(printf '%s' "$_rv_out" | grep -m1 . || true)"
+      if [ -x "$SCRIPT_DIR/ymir-say.sh" ]; then
+        "$SCRIPT_DIR/ymir-say.sh" alarm "Forseti's review spawn failed for $AGENT" >/dev/null 2>&1 || true
+      fi
+    fi
+  fi
+fi
 printf 'eindri-acclaim[1]{agent,kind,detail}:\n  "%s","%s","%s"\n' "$AGENT" "$kind" "$detail"

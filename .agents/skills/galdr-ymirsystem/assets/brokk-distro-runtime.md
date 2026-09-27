@@ -251,6 +251,7 @@ part.
 | Write the errand | **Erindi** | `bin/erindi-brief.sh <id> <repo> --mode <…>` | `data/<id>/brief.md` |
 | Gather + launch the worker | **Einherjar** | `bin/einherjar-spawn.sh <id> <project> --mode <…>` | Yggdrasil worktree + backend pane + `state/<id>.meta` |
 | Read the worker's true state | **Vör** | `bin/vor-crew-state.sh <id>` | one line: `state: <…> · source: <backend|status-log|none> · <detail>` |
+| Judge the PR (automatic) | **Forseti** | `bin/eindri-review-spawn.sh <id>` | a scout-kind `<id>-review` errand + the verdict shelf |
 
 **Delivery contract.** A ship brief carries a fixed machine-readable line `Delivery contract: mode=<mode>`; `bin/einherjar-spawn.sh` refuses to launch a ship task whose explicit `--mode` disagrees, so an adjusted brief and the recorded task cannot drift. A scout brief carries `Delivery contract: mode=scout` and delivers `data/<id>/report.md` (no branch, no push, no PR).
 
@@ -261,6 +262,10 @@ part.
 **Status protocol.** A worker appends one line `{state}: {one short line}` to `state/<id>.status`; states are `working, needs-decision, blocked, paused, done, failed` (`paused` is configurable via `BROKK_PAUSED_VERB`). Each append wakes Brokk, so reports are sparse. `Vör` reconciles the possibly-stale log against the authoritative backend endpoint recorded in the meta and never infers current state from `tail -1` alone.
 
 **Report-shelf handoff (2026-09-27).** The status line alone is not enough: the failsafe `bin/eindri-handoff.sh sweep` reads only `$STATE/eindri-reports/<id>.md` and `$STATE/eindri-questions/`, never `state/<id>.status`. A worker's terminal act therefore writes its status line **and** a short report to `$STATE/eindri-reports/<id>.md` (what shipped, the PR, the proof); `bin/erindi-brief.sh` carries that line in its template so every errand inherits it. The sweep runs at session start (Sága stage 3) and on a Nornir cadence, idempotently. The fourth failure mode, written from life: **the worker wrote the wrong shelf.**
+
+**The review spine — the judge sent after every ship (2026-09-27).** The delivery-gate law makes a PR the only way work leaves; the spine makes the PR audited before the Allfather's seal. A ship errand's terminal `done` (the terminal act `bin/eindri-acclaim.sh <id> --terminal done --line "…"`) calls `bin/eindri-review-spawn.sh <id>`, which reads the PR from the task's own record (`state/<id>.status` carries `done: opened PR <url>`) and seats **Forseti** as a scout-kind review errand through the einherjar road: `--scout --backend herdr --harness pi --model opencode-go/deepseek-v4.1-flash --effort high`. The fierce brief is filled from `.agents/assets/templates/review-brief.template.md` for THIS task (PR, branch, task id), and the verdict lands on the wake road at `state/eindri-reports/<id>-review.md`.
+
+**One per task.** A `.reviewed` marker (`state/.reviewed/<id>`) is written only after the judge is SEATED, so a re-done never re-reviews, and a failed spawn leaves no marker so a retry can still seat the judge. `YMIR_AUTO_REVIEW=off` is the loud override (it prints why and skips); a failed spawn is queued as a loud wake, never silence. A scout opens no PR, so the spine never reviews a review. The judge is read-only by charter — Forseti's card keeps `edit: deny`/`write: deny`.
 
 **Steering inbox.** Brokk steers a live worker through durable messages in `state/<id>.inbox/NNN.msg`; the worker reads them in numeric order and acknowledges by `mv`-ing each into `state/<id>.inbox/handled/`. The move **is** the acknowledgement.
 
