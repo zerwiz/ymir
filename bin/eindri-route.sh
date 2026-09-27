@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # eindri-route.sh — which machine should host an errand, by its nature?
 #
-# Plan 51 (multi-machine operations), Phase 5. An errand belongs to the role that
-# fits it: a model/GPU job to the FORGE, a desktop/UI job to a DEV body, a
-# record/ledger job to the HEART. This reads the fleet registry and prints the
-# target host(s). It is a planner, not a dispatcher — it changes nothing.
+# Plan 51 (multi-machine operations), Phases 5 + 9c. An errand belongs to the role
+# that fits it: a model/GPU job to a strong box, a desktop/UI job to a DEV body, a
+# record/ledger job to the HEART. A model errand follows the LIVING rail — the
+# ONE resolver's ranked live set, first-alive at its head — so a dropped box
+# reroutes the plan. This reads the fleet registry and prints the target host(s).
+# It is a planner, not a dispatcher — it changes nothing.
 #
 #   eindri-route.sh <kind> [--json]
-#   eindri-route.sh model     -> the forge host(s)
+#   eindri-route.sh model     -> the live rail host(s), first-alive at the head
 #   eindri-route.sh ui        -> a dev host
 #   eindri-route.sh record    -> the heart
 #   eindri-route.sh any       -> this machine first, then the fleet
@@ -61,14 +63,29 @@ if [ -z "$ROLE" ]; then
   ROLE=any
 fi
 
-TARGETS="$(python3 - "$REGISTRY" "$ROLE" "$HOST" <<'PY'
+# A model errand follows the LIVE rail (plan 51 Part 9c): the strong boxes the
+# registry names, ranked first-alive by the ONE resolver. With none alive, the
+# planner falls back to the registry's forge hosts — it names a target; it never
+# invents a box and never dispatches.
+LIVE_RAILS=""
+if [ "$ROLE" = forge ] && [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
+  LIVE_RAILS="$(bash "$SCRIPT_DIR/rail-resolve.sh" status --json 2>/dev/null | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+print(",".join(r.get("host","") for r in (d.get("rails") or []) if r.get("live")))' 2>/dev/null || true)"
+fi
+
+TARGETS="$(python3 - "$REGISTRY" "$ROLE" "$HOST" "$LIVE_RAILS" <<'PY'
 import json, sys
-reg, role, me = sys.argv[1], sys.argv[2], sys.argv[3]
+reg, role, me, live_csv = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 try: doc = json.load(open(reg))
 except Exception: doc = {}
 hosts = {h: (v or {}).get("roles") or [] for h, v in (doc.get("hosts") or {}).items()}
+live = [h for h in (live_csv or "").split(",") if h]
 if role == "any":
     order = [me] + sorted(h for h in hosts if h != me)
+elif live:
+    order = live
 else:
     order = sorted(h for h, r in hosts.items() if role in r)
 print(",".join(order))

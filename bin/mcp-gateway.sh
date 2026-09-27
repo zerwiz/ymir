@@ -19,6 +19,7 @@
 #   mcp-gateway.sh start|stop       # raise / lower it in the background
 #   mcp-gateway.sh status [--json]  # link, upstreams, journal depth
 #   mcp-gateway.sh resolve          # the role-resolved upstream map (JSON)
+#   mcp-gateway.sh rail [verb]      # the LIVING model rail (bin/rail-resolve.sh)
 #   mcp-gateway.sh sync [action]    # push|pull|refresh|all via the sync tool
 #   mcp-gateway.sh catalog          # the cached catalogs
 #   mcp-gateway.sh --version
@@ -181,11 +182,22 @@ cmd_status() {
     return 0
   fi
   if [ "${1-}" = "--json" ]; then printf '%s\n' "$json"; return 0; fi
-  python3 - "$json" <<'PY'
+  # The model rail is a SIBLING fact (plan 51 Part 9c), resolved by the ONE
+  # resolver — a model URL in the upstream map would be read as a sixth MCP
+  # server by the engine, so it is never one.
+  local rail_row=""
+  if [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
+    rail_row="$(bash "$SCRIPT_DIR/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+s=d.get("serving") or {}
+print(("%s %s" % (s.get("host") or "none", s.get("url") or "")).strip())' 2>/dev/null || true)"
+  fi
+  python3 - "$json" "$rail_row" <<'PY'
 import json, sys
 d = json.loads(sys.argv[1])
 up = d.get("upstreams") or {}
-n = 4 + len(up)
+n = 5 + len(up)
 print("mcp_gateway[%d]{fact,value}:" % n)
 print('  "host","%s"' % d.get("host"))
 print('  "port","%s"' % d.get("port"))
@@ -195,6 +207,7 @@ for name in sorted(up):
     print('  "upstream.%s","%s (%s tools)"' % (name, s.get("state"), s.get("tools")))
 j = d.get("journal") or {}
 print('  "journal","%s entries in %s file(s), last %ss ago"' % (j.get("entries"), j.get("files"), j.get("last_age_s")))
+print('  "rail","%s"' % (sys.argv[2] or "unresolved"))
 PY
 }
 
@@ -230,13 +243,18 @@ cmd_catalog() {
   printf '%b' "$rows"
 }
 
+# The living model rail, reached through the ONE resolver (plan 51 Part 9c):
+# `mcp-gateway.sh rail resolve [alias]` / `rail status`. It is never an upstream.
+cmd_rail() { bash "$SCRIPT_DIR/rail-resolve.sh" "$@"; }
+
 case "${1:-status}" in
   serve)    cmd_serve ;;
   start)    cmd_start ;;
   stop)     cmd_stop ;;
   status)   cmd_status "${2-}" ;;
   resolve)  resolve_upstreams ;;
+  rail)     shift; cmd_rail "$@" ;;
   sync)     cmd_sync "${2-}" ;;
   catalog)  cmd_catalog ;;
-  *) printf 'error: unknown command %s\nhelp: bin/mcp-gateway.sh [serve|start|stop|status|resolve|sync|catalog]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown command %s\nhelp: bin/mcp-gateway.sh [serve|start|stop|status|resolve|rail|sync|catalog]\n' "$1" >&2; exit 2 ;;
 esac
