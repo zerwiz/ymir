@@ -122,6 +122,30 @@ send[1]:    a2a_call agent_url="http://127.0.0.1:7777/" text="…"
 
 Directory: `http://127.0.0.1:7777`. Config: `~/.pi/agent/mcp-adapter.json` → `a2abridge`.
 
+## Federation — several Ymirs, one company (plan 58)
+
+Plan 42 federates ONE operator's machines. Federating **several operators'** Ymirs
+over A2A — a company project shared across different Ymir users — crosses the
+realm law (Rule 05). It is therefore an **explicit grant**, never a merge:
+
+```
+federation[3]{piece,where,law}
+  "the grants law","src/ymir_runtime/grants.py · hodd/identity/grants.yaml (kind `grants`)","a grant that crosses operators must carry a signature from EACH party's Heimdall; a missing signature is REFUSED, naming the Heimdall"
+  "the typed card","packages/contracts AgentInterface {protocol · endpoint · signed}","the grant's `card` block is the SAME shape as the shared agent-card contract — one contract, never a second"
+  "the scoped journal","bin/journal-append.sh --namespace <ns> · bin/journal-receive.sh","a company entry folds into journal/folded/<ns>/<host>.jsonl only; an entry with no namespace reads as the operator's own"
+```
+
+- **Signing rides each operator's Heimdall** (`a2abridge cert`, ed25519/JWS). Cards
+  are UNSIGNED until `cert` has run; a card claiming `signed: true` without a
+  signature is refused by the law.
+- **Judge a registry:** `python3 -m ymir_runtime.grants check` (or
+  `bin/ymir-config-check.sh validate <grants.yaml>`); `... signers` prints who
+  must sign which grant.
+- **Proven offline:** `tests/e2e/several-ymirs-foundation-proof.sh`.
+- **Honest state:** the foundation — grants + namespace-scoped journal — stands;
+  the **cross-operator well share** and the **Óðrerir company view** are NOT built
+  yet and ride their own errands.
+
 ## Troubleshooting
 
 - **`Invalid URL`** — you passed a peer *name*. Resolve with `a2a-agents`, then
