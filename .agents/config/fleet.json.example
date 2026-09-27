@@ -1,6 +1,9 @@
 {
-  "_comment": "Fleet topology registry (template). Copy to $YMIR_HOME/hodd/data/fleet.json and fill in THIS fleet's hosts. read by bin/topology.sh by hostname; roles: heart (owns the record) · forge (models/GPU) · dev (a full body) · hand (phone). One row per machine; the machine reads its OWN row.",
+  "_comment": "Fleet topology registry (template). Copy to $YMIR_HOME/hodd/data/fleet.json and fill in THIS fleet's hosts. Read by bin/topology.sh by hostname, bin/mcp-gateway.sh for role-resolved MCP upstreams, and bin/rail-resolve.sh for the living rail (plan 51 Part 9c). Roles: heart (owns the record) · forge (models/GPU) · dev (a full body) · hand (phone). One row per machine; the machine reads its OWN row.",
+  "_comment_rails": "The ordered strong boxes that may serve the fleet's models: whichever is CONNECTED at the moment serves, and a dropped box reroutes. bin/rail-resolve.sh reads `rails` first, else `ear`, else the hosts whose roles include `forge`. Only hosts declared in hosts{} are ever answers — never an invented box.",
   "heart": "heart-host",
+  "rails": ["rail-host", "dev-host"],
+  "ear": ["rail-host", "dev-host"],
   "hosts": {
     "heart-host": { "roles": ["heart", "forge"], "lan": "192.168.1.10", "tailnet": "heart-host.tailnet.ts.net" },
     "dev-host": { "roles": ["dev"], "lan": "192.168.1.11", "tailnet": "dev-host.tailnet.ts.net" }
