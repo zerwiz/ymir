@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # model-placement.sh — which machine hosts the models, and is the rail up?
 #
-# Plan 51 (multi-machine operations), Phase 5. Models are hardware-bound; the
-# FORGE owns the heavy rail and a body does not download 20 GB to a laptop — it
-# calls the forge over the tailnet. This reports the fleet's rails (every host
-# whose role includes `forge`), whether each answers, and this machine's
-# one-local-model lock. Offline-safe.
+# Plan 51 (multi-machine operations), Phases 5 + 9c. Models are hardware-bound; a
+# body does not download 20 GB to a laptop — it calls a strong box over the
+# tailnet. The rails are a LIVE set: whichever strong box is CONNECTED serves, and
+# a dropped box reroutes. This reports the fleet's rails through the ONE resolver
+# (`bin/rail-resolve.sh` → `src/ymir_runtime/fleet/rail.py`) — the registry's
+# `rails` list, else its `ear` list, else its `forge` hosts — whether each answers,
+# and this machine's one-local-model lock. Offline-safe.
 #
 #   model-placement.sh            # TOON
 #   model-placement.sh --json
@@ -29,8 +31,6 @@ fi
 YMIR_HOME_ROOT=""
 if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root YMIR_HOME_ROOT 2>/dev/null; fi
 YMIR_HOME_ROOT="${YMIR_HOME_ROOT:-${YMIR_HOME}}"
-REGISTRY="${YMIR_FLEET_REGISTRY:-$YMIR_HOME_ROOT/hodd/data/fleet.json}"
-HOST="${YMIR_HOST:-$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')}"
 RAIL_PORT="${YMIR_RAIL_PORT:-8080}"
 
 # the local one-local-model lock
@@ -40,30 +40,19 @@ if [ -x "$SCRIPT_DIR/local-model-lock.sh" ]; then
   case "$LOCK" in free|held) ;; *) LOCK="unknown" ;; esac
 fi
 
-# the forge rails, from the registry
-_map="$(python3 - "$REGISTRY" "$HOST" "$RAIL_PORT" <<'PY'
-import json, sys
-reg, me, port = sys.argv[1], sys.argv[2], sys.argv[3]
-try: doc = json.load(open(reg))
-except Exception: doc = {}
-hosts = doc.get("hosts") or {}
-for h in sorted(hosts):
-    roles = (hosts[h] or {}).get("roles") or []
-    if "forge" not in roles: continue
-    addr = str((hosts[h] or {}).get("tailnet") or (hosts[h] or {}).get("lan") or h)
-    print(f"{h}\thttp://{addr}:{port}\t{roles}")
-PY
-)"
-if [ -z "$_map" ]; then
-  printf 'model_placement[1]{note,local_lock}:\n  "no forge host in the registry","%s"\n' "$LOCK"
+# The rails are a LIVE set (plan 51 Part 9c): the ONE resolver names the strong
+# boxes, probes each, and ranks first-alive. A dropped box shows as unreachable
+# and drops out of the serving answer — never hidden, and never restated here.
+export YMIR_RAIL_PORT="${YMIR_RAIL_PORT:-$RAIL_PORT}"
+RAIL_JSON="$(bash "$SCRIPT_DIR/rail-resolve.sh" status --json 2>/dev/null || true)"
+if [ -z "$RAIL_JSON" ]; then
+  printf 'model_placement[1]{note,local_lock}:\n  "the rail resolver answered nothing (registry unreadable, or the engine is absent)","%s"\n' "$LOCK"
   exit 0
 fi
 
-reach() { curl -fsS -m 2 -o /dev/null "$1" 2>/dev/null && echo yes || echo no; }
-
 # the alias-conformance gate (plan 51 §6): every alias this seat's registry
-# names must resolve on a rail (the forge's or this body's). `check` exits 1 on
-# a missing alias — so the rename road can never silently break a seat.
+# names must resolve on the RESOLVED provider — whichever strong box serves.
+# `check` exits 1 on a missing alias, so a rename can never silently break a seat.
 ALIAS_VERDICT="skipped"; ALIAS_NOTE="gate absent"
 if [ "${YMIR_ALIAS_CHECK:-on}" != off ] && [ -x "$SCRIPT_DIR/model-alias-check.sh" ]; then
   _ao="$(bash "$SCRIPT_DIR/model-alias-check.sh" --local 2>/dev/null)" || true
@@ -77,24 +66,30 @@ if [ "${YMIR_ALIAS_CHECK:-on}" != off ] && [ -x "$SCRIPT_DIR/model-alias-check.s
 fi
 
 if [ "$MODE" = json ]; then
-  python3 - "$_map" "$LOCK" "$ALIAS_VERDICT" "$ALIAS_NOTE" <<'PY'
-import json, sys, subprocess
-rows=[]
-for line in sys.argv[1].splitlines():
-    h,rail,roles=line.split("\t")
-    ok="yes" if subprocess.run(["curl","-fsS","-m","2","-o","/dev/null",rail]).returncode==0 else "no"
-    rows.append({"host":h,"rail":rail,"roles":roles.split(","),"reachable":ok})
-print(json.dumps({"forges":rows,"local_lock":sys.argv[2],
-                  "alias_conformance":{"verdict":sys.argv[3],"detail":sys.argv[4]}}))
+  python3 - "$RAIL_JSON" "$LOCK" "$ALIAS_VERDICT" "$ALIAS_NOTE" <<'PY'
+import json, sys
+doc = json.loads(sys.argv[1])
+rows = [{"host": r.get("host"), "rail": r.get("base"), "roles": r.get("roles") or [],
+         "reachable": "yes" if r.get("live") else "no"} for r in doc.get("rails") or []]
+print(json.dumps({"forges": rows, "serving": doc.get("serving"), "local_lock": sys.argv[2],
+                  "alias_conformance": {"verdict": sys.argv[3], "detail": sys.argv[4]}}))
 PY
   exit 0
 fi
 
-printf 'model_placement[%s]{host,rail,reachable}:\n' "$(printf '%s\n' "$_map" | wc -l | tr -d '[:space:]')"
-printf '%s\n' "$_map" | while IFS=$'\t' read -r h rail roles; do
-  printf '  "%s","%s","%s"\n' "$h" "$rail" "$(reach "$rail")"
-done
-printf 'model_placement[1]{note,local_lock}:\n  "the forge owns the heavy rail; a body calls it over the tailnet","%s"\n' "$LOCK"
-printf 'model_placement[1]{alias_conformance,detail}:\n  "%s","%s"\n' "$ALIAS_VERDICT" "$ALIAS_NOTE"
+python3 - "$RAIL_JSON" "$LOCK" "$ALIAS_VERDICT" "$ALIAS_NOTE" <<'PY'
+import json, sys
+doc = json.loads(sys.argv[1]); rails = doc.get("rails") or []
+serving = doc.get("serving") or {}
+print('model_placement[%d]{host,rail,reachable}:' % len(rails))
+for r in rails:
+    print('  "%s","%s","%s"' % (r.get("host"), r.get("base"), "yes" if r.get("live") else "no"))
+print('model_placement[1]{serving,key_ref}:')
+print('  "%s","%s"' % (serving.get("host") or "none", serving.get("key_ref") or "LLAMA_SWAP_API_KEY"))
+print('model_placement[1]{note,local_lock}:')
+print('  "the strong boxes serve the fleet by liveness (plan 51 Part 9c); a body calls one over the tailnet","%s"' % sys.argv[2])
+print('model_placement[1]{alias_conformance,detail}:')
+print('  "%s","%s"' % (sys.argv[3], sys.argv[4]))
+PY
 if [ "$MODE" = check ] && [ "$ALIAS_VERDICT" = FAIL ]; then exit 1; fi
 exit 0
