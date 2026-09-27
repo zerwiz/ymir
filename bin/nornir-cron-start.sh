@@ -114,7 +114,21 @@ scheduler='
     # from ended seats). The scheduler lives only while the state lock is held by
     # a live process; a headless scheduler with no lock retires too, because
     # Nornir is started BY a session, never before one.
-    mach="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
+    if [ -n "${BROKK_MACHINE_STATE_DIR:-}" ]; then
+      mach="$BROKK_MACHINE_STATE_DIR"
+    elif [ -f "$state/.lock-path" ]; then
+      # Phase 0 (one state dir): the helms location is what the pointer says, never the
+      # raw legacy default. The pointer is the ONE fact (bin/hoard-lib.sh +
+      # src/ymir_runtime/state/lock.py); restating it here is how the cron
+      # retired against a missing lock at the OLD path while a fresh session
+      # stood — 2026-09-27, the install validation caught it.
+      mach="$(dirname "$(cat "$state/.lock-path" 2>/dev/null || true)")"
+      if [ -z "$mach" ] || [ "$mach" = "." ] || [ ! -d "$mach" ]; then
+        mach="${XDG_STATE_HOME:-$HOME/.local/state}/ymir"
+      fi
+    else
+      mach="${XDG_STATE_HOME:-$HOME/.local/state}/ymir"
+    fi
     lockf="$mach/brokk.lock"
     owner=$(tr -d "[:space:]" <"$lockf" 2>/dev/null || true)
     st=$(ps -o stat= -p "$owner" 2>/dev/null | tr -d " ")
