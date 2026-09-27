@@ -4,7 +4,7 @@ The full Norse component map. AGENTS.md loads this when a task names a subsystem
 Deep doctrine (law, aetts, reject list): `.agents/skills/galdr-ymirsystem/assets/norse-naming.md`.
 
 ```
-platform[29]{subsystem,norse,role}:
+platform[39]{subsystem,norse,role}:
   "Master platform root","Ymir","base host OS, master daemon"
   "Primary agent","Brokk","main autonomous worker"
   "Sub-agent worker","Eindri","isolated sandboxed workers"
@@ -36,6 +36,14 @@ platform[29]{subsystem,norse,role}:
   "Smíðja orchestrator","Völundr","the master smith who runs Smíðja (Kaia's seat inside the smidja)"
   "Control-plane hub / federation & sync","Vingólf","the assembly hall: coordination, identity, and sync across substrates; never executes code"
   "Records keeper (plans · docs · memory)","Reginn (the Elder)","the keeper who remembers — the plan ledger, the documentation shelves, and the well/runes; reads the elders before writing, reconciles never contradicts"
+  "Standing supervision watch (service)","Sýn (reforged)","the arm as a service — one standing watcher per hall, idle-not-dead, lease; a child of systemd, cannot fall with a session"
+  "Dedicated PR reviewer / judge","Forseti","fierce read-only audit of every harvest; verdict (APPROVE / NEEDS-REWORK) holds the seal; auto-spawned on every done"
+  "Durable wake messenger","Gná","the wake road — self-wake at the source, failsafe sweep, re-arm catch-up, an ack that eats only what it saw"
+  "The wards","Vörðr","gate guardians — fix-note guard, service-format ward, second-writer ward (Law 7)"
+  "The engine (runtime core)","The Engine","src/ymir_runtime/ — one module, four verbs (seat · status · send · stop); the deep forge behind thin doors"
+  "Body MCP gateway","The Gateway","one local door per body fronting well/tickets/skills; attached proxies the heart, dark serves the cache and queues the journal"
+  "The heart on the always-on box","(topology)","the record's home is the always-on machine; compute rides the forge; the headless heart's schedule persists"
+  "Rules-keeper of the fleet",".agents/skills/elder-home","the elder council — plans, docs, memory; append-only, reconcile never contradict"
 ```
 
 ```
