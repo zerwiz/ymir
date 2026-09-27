@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Mapping
 
 from .. import container
+from ..paths import resolve as resolve_paths
 from .registry import HoardModels, ModelUnavailable
 from .table import DEFAULT_ROLE, Role, Table, TableRefusal, read as read_table
 
@@ -86,6 +87,13 @@ def resolve(
     `ship` or `scout`; `model_request` (when given) is resolved by the fleet's
     registry door instead of the hoard's configured model.
     """
+    # One env, one root (Forseti, 2026-09-27): when a caller passes env but
+    # no root, the table and the model registry must read the SAME root —
+    # otherwise env can select the model config while os.environ selects the
+    # table (the rootA/rootB divergence Forseti demonstrated).
+    if root is None and env:
+        root = resolve_paths(env).root
+
     if kind not in KINDS:
         raise TableRefusal(
             f"unsupported seat kind '{kind}' (supported: {', '.join(KINDS)})",

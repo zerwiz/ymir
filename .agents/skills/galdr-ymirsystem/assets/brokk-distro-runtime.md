@@ -424,7 +424,8 @@ scoped by **operator (host) + namespace** and never merged into a peer's lineage
 The format is extended, never mutated: an entry without `ns` is the operator's own
 and reads exactly as it always did. The cross-operator well share and the Óðrerir
 company view ride later errands; the foundation is the scoping itself.
-## 7.4 The dispatch table — role → figure → model → seat (plan 58, Part 1)
+
+### 7.6 The dispatch table — role → figure → model → seat (plan 58, Part 1)
 
 Plan 58's language table puts the rule plainly: **Dispatch — role → figure →
 model → seat: Python + YAML; a decision table belongs in data, not in a
