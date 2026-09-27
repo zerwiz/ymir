@@ -415,12 +415,12 @@ agent_yaml_local_providers() {  # -> the local_providers list from agents.yaml
   local y
   y=$(python3 - "$SCRIPT_DIR" <<'PY'
 import sys, os
-  home = os.environ.get("YMIR_HOME")
-  if not home:
-      _rec = os.path.join(os.path.expanduser("~"), ".config", "ymir", "home")
-      home = open(_rec).read().strip() if os.path.exists(_rec) else ""
-  if not home:
-      raise SystemExit("YMIR_HOME is unset and no home is recorded (Rule 07; bin/hoard-lib.sh)")
+home = os.environ.get("YMIR_HOME")
+if not home:
+    _rec = os.path.join(os.path.expanduser("~"), ".config", "ymir", "home")
+    home = open(_rec).read().strip() if os.path.exists(_rec) else ""
+if not home:
+    raise SystemExit("YMIR_HOME is unset and no home is recorded (Rule 07; bin/hoard-lib.sh)")
 cands = [
     os.environ.get("YMIR_AGENTS_YAML") or "",
     os.path.join(home, "config", "agents.yaml"),
