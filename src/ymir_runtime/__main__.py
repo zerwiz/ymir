@@ -2,7 +2,9 @@
 
 The bash doors (`bin/ymir-engine.sh`, and through it `bin/eindri-start.sh` and
 `bin/einherjar-spawn.sh`) call THIS, never the modules directly. It exists so the
-four verbs are reachable from a shell without a second interface.
+four verbs are reachable from a shell without a second interface — plus
+`dispatch`, which resolves an errand to its role, figure, model and seat type
+without adding a fifth verb to the interface.
 
 Exit codes are part of the contract:
   0  the verb ran
@@ -18,9 +20,12 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 from typing import Mapping, Sequence
 
 from . import __version__, heartbeat, paths, proc
+from .dispatch import ModelUnavailable, TableRefusal
+from .dispatch import resolve as resolve_dispatch
 from .errors import EngineError, EngineRefusal, SeatNotFound
 from .seat import Errand, seat
 from .send import send
@@ -73,6 +78,18 @@ def build_parser() -> argparse.ArgumentParser:
     seat_p = sub.add_parser("seat", help="seat an errand end to end")
     seat_p.add_argument("task_id")
     _add_errand_flags(seat_p)
+
+    dispatch_p = sub.add_parser(
+        "dispatch",
+        help="resolve an errand to its role, figure, tools, model and seat",
+    )
+    dispatch_p.add_argument("target", nargs="?", default="", help="a role key or a figure name")
+    dispatch_p.add_argument("--task", default="", help="errand text; the roles table chooses the smith")
+    dispatch_p.add_argument("--brief", default="", help="a brief whose Isolation: line names the seat type")
+    dispatch_p.add_argument("--kind", default="ship", choices=("ship", "scout"))
+    dispatch_p.add_argument("--effort", default="")
+    dispatch_p.add_argument("--isolation", default="", choices=("", "herdr", "utgard"))
+    dispatch_p.add_argument("--toon", action="store_true")
 
     status_p = sub.add_parser("status", help="report a seat's state")
     status_p.add_argument("seat_id")
@@ -157,6 +174,53 @@ def main(
             result.detail,
         ]), end="")
         return EXIT_OK if result.reaped else EXIT_FAILED
+
+    if args.verb == "dispatch":
+        brief_text = ""
+        if args.brief:
+            brief_path = Path(args.brief).expanduser()
+            if not brief_path.is_file():
+                print(f"error: brief not found: {brief_path}", file=sys.stderr)
+                return EXIT_FAILED
+            brief_text = brief_path.read_text(encoding="utf-8", errors="replace")
+        try:
+            resolution = resolve_dispatch(
+                role=args.target,
+                task=args.task,
+                brief=brief_text,
+                kind=args.kind,
+                effort=args.effort,
+                isolation=args.isolation,
+                env=env,
+            )
+        except (TableRefusal, ModelUnavailable) as exc:
+            print(f"refused: {exc}", file=sys.stderr)
+            return EXIT_FAILED
+        if args.toon:
+            print(
+                _row(
+                    "dispatch[1]{role,figure,craft,tools,harness,model,seat,kind}",
+                    resolution.as_row(),
+                ),
+                end="",
+            )
+        else:
+            print(
+                _row(
+                    "dispatch[1]{role,figure,tools,harness,model,seat,kind}",
+                    (
+                        resolution.role,
+                        resolution.figure,
+                        resolution.tools_cell(),
+                        resolution.harness,
+                        resolution.model,
+                        resolution.seat,
+                        resolution.kind,
+                    ),
+                ),
+                end="",
+            )
+        return EXIT_OK
 
     if args.verb == "seat":
         errand = Errand(

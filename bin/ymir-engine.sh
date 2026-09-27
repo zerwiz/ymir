@@ -9,6 +9,7 @@
 #   ymir-engine.sh status <id> [--window N] [--toon]
 #   ymir-engine.sh send <id> "<text>"
 #   ymir-engine.sh stop <id> [--remove-worktree]
+#   ymir-engine.sh dispatch <role|figure> [--task T] [--brief F] [--kind K] [--toon]
 #   ymir-engine.sh ensure | version
 #
 # Interpreters: a private venv ($YMIR_ENGINE_VENV, built by
