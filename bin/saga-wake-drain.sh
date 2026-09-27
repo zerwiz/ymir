@@ -37,12 +37,42 @@ FMQ="$SCRIPT_DIR/../.agents/state/.wake-queue"
 case "${1:-drain}" in
   -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   ack|--ack)
-    # Drop the queues once their wakes have been handled. Clear the watcher's
-    # flood-brake hash too, so a later wake signals cleanly.
-    : >"$QUEUE" 2>/dev/null || true
-    [ -f "$FMQ" ] && : >"$FMQ" 2>/dev/null
-    rm -f "$STATE/.wake-last-hash" 2>/dev/null || true
-    printf 'wake queue: acknowledged (0 pending)\n'
+    # Consume EXACTLY what the last drain PRESENTED — never a wake that arrived
+    # after it. The old full-truncate ate undrained wakes (the ack race) and let
+    # the sweep's re-presentation ring with an empty hand — the ghost wakes the
+    # Allfather saw. A multiset diff: handled lines leave, newer lines stay.
+    python3 - "$QUEUE" "$FMQ" "$STATE/.wake-drained" "$STATE/.wake-fmq-drained" <<'PY' 2>/dev/null || true
+import os, sys, collections
+queue, fmq, qsnap, fsnap = sys.argv[1:5]
+def consume(path, snap):
+    if not os.path.exists(snap) or not os.path.exists(path):
+        return  # no presentation record — nothing consumed from this door
+    lines = open(path).read().splitlines()
+    cnt = collections.Counter(open(snap).read().splitlines())
+    out = []
+    for l in lines:
+        if cnt.get(l, 0) > 0:
+            cnt[l] -= 1
+        else:
+            out.append(l)
+    if out:
+        open(path, "w").write("\n".join(out) + "\n")
+    else:
+        os.remove(path)
+consume(queue, qsnap)
+consume(fmq, fsnap)
+for snap in (qsnap, fsnap):
+    if os.path.exists(snap):
+        os.remove(snap)
+PY
+    # The flood-brake hash clears only when both doors are truly empty, so a
+    # later terminal wake signals cleanly; preserved newer wakes keep it set.
+    if [ ! -s "$QUEUE" ] && { [ ! -f "$FMQ" ] || [ ! -s "$FMQ" ]; }; then
+      rm -f "$STATE/.wake-last-hash" 2>/dev/null || true
+      printf 'wake queue: acknowledged (0 pending)\n'
+    else
+      printf 'wake queue: acknowledged handled wakes; newer wakes preserved\n'
+    fi
     exit 0
     ;;
   drain|--drain|"") ;;
@@ -67,6 +97,12 @@ else
   done <"$QUEUE"
   printf 'WAKE_ACK_REQUIRED: acknowledge handled wakes to drop them from the queue\n'
 fi
+
+# Snapshot exactly what this drain presented, so ack consumes these lines and
+# never a wake that arrives later (the ack race). An empty door clears its
+# snapshot — nothing was presented to consume.
+if [ -s "$QUEUE" ]; then cp "$QUEUE" "$STATE/.wake-drained" 2>/dev/null; else rm -f "$STATE/.wake-drained"; fi
+if [ -s "$FMQ" ]; then cp "$FMQ" "$STATE/.wake-fmq-drained" 2>/dev/null; else rm -f "$STATE/.wake-fmq-drained"; fi
 
 # Open-decision markers (approval gates) left unhandled.
 decisions=$(find "$STATE" -maxdepth 1 -name '*.decision' 2>/dev/null | wc -l | tr -d '[:space:]')
