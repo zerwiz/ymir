@@ -12,7 +12,9 @@ strangler is reversible by design until parity is proven.
 
 Beside the verbs sits the config layer: `load_config(path)` returns a validated
 config or refuses loudly, naming the key and the file (plan 58, Phase 7). It is a
-support module, not a fifth verb.
+support module, not a fifth verb. The grants law (`src/ymir_runtime/grants.py`) is
+registered with it as the kind `grants`: a cross-operator grant without each
+Heimdall's signature is refused (plan 58, *Several Ymirs, one company*).
 
 Plan 58, Phase 1. Read `docs/fixes/runtime/` for what each release changed.
 """
