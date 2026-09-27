@@ -175,6 +175,7 @@ shell_quote() {
 }
 
 STATUS_FILE=$(shell_quote "$STATE/$ID.status")
+REPORT_SHELF=$(shell_quote "$STATE/eindri-reports/$ID.md")
 INBOX_DIR=$(shell_quote "$STATE/$ID.inbox")
 REPORT_FILE="$DATA/$ID/report.md"
 
@@ -192,6 +193,10 @@ Report status by appending one line:
    States: working, needs-decision, blocked, $PAUSED_VERB, done, failed.
    Each append wakes Brokk, so report sparingly: only phase changes a supervisor
    would act on and the needs-decision/blocked/$PAUSED_VERB/done/failed states.
+   A TERMINAL state (done:, failed:, needs-decision:) is ALSO a report: in the SAME
+   act, append one short line to $REPORT_SHELF — the shelf the handoff failsafe
+   sweeps (bin/eindri-handoff.sh) — naming what shipped and where (PR, path, proof).
+   The status line and the report line are ONE act; never defer one.
    Use \`$PAUSED_VERB: {why}\` - distinct from \`blocked:\` - ONLY when you are deliberately
    idling on a known external wait you expect to clear on its own (an upstream release,
    a rate-limit reset); use \`blocked:\` when you are stuck and need Brokk to act.

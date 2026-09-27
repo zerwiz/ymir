@@ -41,6 +41,12 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
   `cron run:` (`/proc/<pid>/cmdline`), so PID reuse after reboot cannot fake a running loop.
 - Log rotation: `state/cron.log` rotates to `state/cron.log.1` above
   `BROKK_CRON_LOG_MAX_BYTES` (default 1 MiB).
+- **Handoff failsafe sweep (2026-09-27, plan 58 Phase 3).** A row
+  (`06:45 bin/eindri-handoff.sh sweep`, any role) delivers every undelivered
+  worker report or question into the wake queue, idempotently — a worker whose
+  terminal act wrote `$STATE/eindri-reports/<id>.md` surfaces at the next sweep,
+  re-arm, or session start, whatever the live poller was doing. One delivery
+  marker per item; a second sweep never re-fires old news.
 - No jobs configured → `cron: no jobs configured (...)` and exit 0.
 
 ### 1.2 State files
