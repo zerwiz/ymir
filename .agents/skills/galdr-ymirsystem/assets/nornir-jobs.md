@@ -556,6 +556,7 @@ failure.
 - Only a repository that carries a `.asken/` state is handed off (or **every**
   listed repository when `ASKEN_INIT_ALL` is set); `ASKEN_BIN` overrides the
   executable, else `command -v asken`.
-- Runs `asken trigger --force --repo <repo> --no-anchor --quiet`, so the refresh
-  is unconditional and never waits on the network.
+- Runs `asken trigger --force --repo <repo> --quiet`, so the refresh is
+  unconditional; the Anchor sync is time-bounded inside `asken` and skipped when
+  Anchor is down, so the job never blocks and the roll still mirrors when it can.
 - Emits one TOON row per repository (`repo,head,acted`), then carves the Rune.

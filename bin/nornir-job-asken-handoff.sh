@@ -31,7 +31,10 @@ for repo in $repos; do
   # ASKEN_INIT_ALL opts every listed repository in regardless.
   [ -d "$repo/.asken" ] || [ -n "${ASKEN_INIT_ALL:-}" ] || continue
   count=$((count + 1))
-  verdict="$("$ASKEN_BIN" trigger --force --repo "$repo" --no-anchor --quiet 2>&1)"
+  # --force so the refresh is unconditional, and no --no-anchor: the Anchor sync
+  # is time-bounded inside asken and skipped when Anchor is down, so a scheduled
+  # roll is mirrored to the memory plane and the job still never blocks.
+  verdict="$("$ASKEN_BIN" trigger --force --repo "$repo" --quiet 2>&1)"
   head="$(git -C "$repo" rev-parse --short HEAD 2>/dev/null || printf '?')"
   if printf '%s' "$verdict" | grep -q '"acted": true'; then
     acted=$((acted + 1))
