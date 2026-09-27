@@ -101,3 +101,9 @@ rail).
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`
 - `.agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md`
+
+**Correction (2026-09-27, Forseti's verdict — appended, the original stands).**
+Two one-line truths mended: (1) the template's `rails`/`ear` arrays name only
+DECLARED hosts (`heart-host` · `dev-host`) — the undeclared "rail-host" is gone,
+honouring the file's own line 3; (2) `config/load.py`'s fleet.json readers table
+now names all five doors including `bin/rail-resolve.sh` — code and asset agree.
