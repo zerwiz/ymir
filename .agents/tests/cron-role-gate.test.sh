@@ -33,6 +33,14 @@ sleep 6
 [ ! -f "$TMP/heart.ran" ] && ok "a @heart job does NOT run on a dev box" || bad "a @heart job RAN on a dev box"
 [ ! -f "$TMP/forge.ran" ] && ok "a @forge job does NOT run on a dev box" || bad "a @forge job RAN on a dev box"
 
+# Stop the first loop BEFORE the second fixture: the keep-one-loop law (plan 51
+# P4) rightly refuses a second scheduler while the first's window still runs —
+# racing it starved the role-first lines. A stopped loop frees the helm.
+BROKK_STATE_OVERRIDE="$TMP/state" BROKK_MACHINE_STATE_DIR="$TMP/machine" \
+  BROKK_CONFIG_OVERRIDE="$TMP/config" BROKK_ROLES=dev BROKK_ROOT_OVERRIDE="$ROOT" \
+  bash "$CRON" --stop >/dev/null 2>&1 || true
+sleep 1
+
 # The role gate BEFORE the time — the shape the home's config/cron.yaml writes
 # (@heart 06:00 bin/...). The 2026-09-24 fault: only the after-time shape
 # parsed, so every role-first line was silently DEAD while still counted as
