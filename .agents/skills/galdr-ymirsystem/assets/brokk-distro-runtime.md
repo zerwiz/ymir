@@ -361,17 +361,19 @@ refused, never returned unvalidated. `load_config(path)` is the one entry
 (`load.py` · `schema.py`).
 
 ```
-kinds[4]{kind,schema,readers}
+kinds[5]{kind,schema,readers}
   "agents.yaml","agents.schema.json","bin/agents-config.sh · bin/dispatch-profile.sh · bin/local-model-lock.sh · bin/einherjar-spawn.sh"
   "cron.yaml","cron.schema.json","bin/nornir-cron-start.sh · bin/hall-snapshot.sh"
   "fleet.json","fleet.schema.json","bin/topology.sh · bin/eindri-route.sh · bin/mcp-gateway.sh · bin/model-placement.sh"
   "eindri-dispatch.json","eindri-dispatch.schema.json","bin/dispatch-profile.sh"
+  "grants.yaml","grants.schema.json","src/ymir_runtime/grants.py · bin/ymir-config-check.sh"
 ```
 
-Two invariants JSON Schema cannot state are semantic checks in `load.py`: an agent
-name must be a rostered figure (`.agents/agents/` is canonical), and the fleet
+Three invariants JSON Schema cannot state are semantic checks in `load.py`: an agent
+name must be a rostered figure (`.agents/agents/` is canonical), the fleet
 `heart` must be a declared host — a registry naming a host that is not itself is
-refused when the host is known.
+refused when the host is known — and every grant must obey the realm law (see
+§7.4).
 
 The door `bin/ymir-config-check.sh [examples|validate <file>…|kinds]` picks the
 engine venv, prints TOON, and exits **0** every config valid · **1** a config
@@ -382,6 +384,45 @@ lifecycle smoke test gains a `config` check over the shipped shapes.
 **Unschematized, named not implied:** `config/model-catalog.yaml` and
 `config/app-repos.yaml` are read by the runtime but carry no schema yet — they are
 the next starting set, not an oversight.
+
+### 7.4 The grants law — explicit, signed, cross-operator shares (plan 58)
+
+Plan 42 federates ONE operator's machines; *Several Ymirs, one company* federates
+**several operators' Ymirs**, each with its own private hoard, cooperating on a
+company project. That crosses the realm law (Rule 05), so a shared company
+namespace is an **explicit grant** between operators — never a blanket merge. The
+registry shape is the config kind `grants`; the law is `src/ymir_runtime/grants.py`.
+
+```
+grants_law[4]{rule,enforced_by}
+  "signed per Heimdall","a GRANT THAT CROSSES OPERATORS is refused without a signature from EACH party's Heimdall, named in the refusal"
+  "a card that says signed is signed","a party whose card.signed is true must have its own Heimdall's signature (card claim and registry can never disagree)"
+  "no foreign signer","a signature must come from one of the two parties; a Heimdall outside the grant may not sign"
+  "no self-grant","a grant naming one Heimdall on both sides is refused"
+```
+
+The `card` block is deliberately the SAME shape as the shared A2A agent-card
+contract (`packages/contracts` `AgentInterface`: protocol · endpoint · signed),
+so the grants law and the typed card speak one contract, never a second. The data
+lives in the hoard (`hodd/identity/grants.yaml`, `default_registry()`); the schema
+and validator travel with the code. A machine with no registry has no grants.
+
+The door is `python3 -m ymir_runtime.grants [check|signers|default]`; the config
+door reaches the same check as
+`bin/ymir-config-check.sh validate <grants.yaml>`. Proven offline by
+`tests/e2e/several-ymirs-foundation-proof.sh`.
+
+### 7.5 The namespace-scoped journal (plan 58, Several Ymirs)
+
+Plan 51's outbox/reconcile/fold trio already carries offline writes to the heart.
+This feature scopes an entry to a **company namespace**: `bin/journal-append.sh
+--namespace <ns>` adds an `ns` field, and `bin/journal-receive.sh` folds an entry
+with `ns` into `journal/folded/<ns>/<host>.jsonl` while an entry without one folds
+into `journal/folded/<host>.jsonl` as before. A company project's entries are thus
+scoped by **operator (host) + namespace** and never merged into a peer's lineage.
+The format is extended, never mutated: an entry without `ns` is the operator's own
+and reads exactly as it always did. The cross-operator well share and the Óðrerir
+company view ride later errands; the foundation is the scoping itself.
 
 ## 8. Context sources
 

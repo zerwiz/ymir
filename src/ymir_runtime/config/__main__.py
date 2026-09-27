@@ -27,7 +27,7 @@ EXIT_USAGE = 2
 EXIT_UNAVAILABLE = 3
 
 # The shipped shapes the schemas must validate — the examples are the truth.
-EXAMPLES = ("agents.yaml.example", "cron.yaml.example", "fleet.json.example", "eindri-dispatch.json")
+EXAMPLES = ("agents.yaml.example", "cron.yaml.example", "fleet.json.example", "eindri-dispatch.json", "grants.yaml.example")
 
 
 def _row(header: str, cells: tuple[str, ...]) -> str:
@@ -103,6 +103,8 @@ def _shape(data) -> str:
             return f"{len(data['agents'])} agents"
         if "rules" in data:
             return f"{len(data['rules'])} rules"
+        if "grants" in data:
+            return f"{len(data['grants'])} grants"
     return type(data).__name__
 
 
