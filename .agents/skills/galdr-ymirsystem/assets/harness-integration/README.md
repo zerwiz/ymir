@@ -48,6 +48,17 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > IP into every seat" line, which broke the seat's doors the moment the heart
 > moved — and `bin/mcp-config.sh` renders the same gateway door.
 >
+> **The model rail is resolved the same way** (plan 51 Parts 9a/9c). The rails
+> are a LIVE set — models come from whichever strong box is CONNECTED (heimdall ·
+> whynot · omarchy) — so `bin/mcp-config.sh` carries the resolved rail under the
+> seat config's `ymir` block (`host`, `url`, `keyRef`), read from the ONE
+> resolver `bin/rail-resolve.sh` (`src/ymir_runtime/fleet/rail.py`). Harnesses
+> read `mcpServers`; the `ymir` block is advisory metadata. `bin/mcp-gateway.sh
+> rail [resolve|status]` answers the same question over the gateway door, and
+> the rail is NEVER an MCP upstream — the upstream map is handed to the engine
+> verbatim. The served set decides alias conformance too: `bin/model-alias-check.sh`
+> verifies a seat's names against the RESOLVED provider, not one static seat.
+>
 > **Typed surfaces — the servers' home is `packages/` (plan 58 Phase 6).** The
 > MCP/A2A servers move under `packages/` strangler-style, and the surfaces they
 > share are typed in `packages/contracts/`. The A2A node is the first to land:
