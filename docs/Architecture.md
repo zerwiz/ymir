@@ -5,6 +5,11 @@ Status: **DRAFT v0.2** — consolidates `Ymir.md`, the Ymir Rut v2.6 target spec
 memory engine (ENTRY-007), the house system (ENTRY-004), and the OSS-first
 stack ruling (ENTRY-009/010).
 
+> **Live-shape note (2026-09-27):** this draft predates the single-tenant turn and
+the plan-58 deepening. Where it disagrees with the running system, **Appendix A —
+the live architecture, drawn true** is authoritative. The draft is kept as the
+design record (append-only), not as a map of today's tree.
+
 > **Stack ruling (today):** **TypeScript + Python + React + Vue** — the agent-proficient
 > stack, so agents can run and extend the whole platform. Rust/Cargo, NATS, Envoy,
 > and Protobuf are the **Ymir Rut v2.6 target** and are ported to *after* the system
@@ -422,3 +427,123 @@ On success: cleanup(merge=true) → merged to main, worktree removed
 
 Detailed per-feature plans: `docs/plans/`. Full v2.6 target spec: `docs/ymir-rut.md`.
 Mythos & houses: `docs/lore.md`. Decision history: `docs/append-only-log.md`.
+
+---
+
+## Appendix A — The live architecture, drawn true (2026-09-27)
+
+Plan 58 Phase 8 (THE WARDS). Every count and path below was re-measured on the
+tree, never trusted from an earlier pass. This appendix is the map of the system
+that runs; §1–§7 above are the design record.
+
+### A.1 The engine — the agent-execution road has one seam
+
+`src/ymir_runtime/` (python, stdlib only, no build step) is the agent-execution
+road behind **one interface — four verbs**:
+
+```
+verbs[4]{verb,returns}:
+  "seat(errand)","seat_id — worktree + harness + backend + record + heartbeat, all hidden"
+  "status(seat_id)","working | blocked | done | idle, read from the record the system already writes"
+  "send(seat_id, text)","a durable numbered inbox message FIRST, the pane steer second"
+  "stop(seat_id)","reap the backend target, PROVE it is gone, record the terminal line"
+```
+
+Below the verbs: `worktree.py` (Yggdrasil) · `harness.py` (Hamr) · `backend.py`
+(herdr first, tmux the verified fallback) · `container.py` (the Utgard decision)
+· `heartbeat.py` (silent | fresh | terminal | absent), plus `paths.py` ·
+`proc.py` · `errors.py`.
+
+- **The record is the old record.** `seat()` writes the SAME `state/<id>.meta`
+  keys, the same `working: launched … (heartbeat baseline)` line, the same
+  `.launch.sh`, and the same seat-private machine-state dir — so
+  `bin/eindri-heartbeat.sh`, Vör, and Hlidskjalf's Fleet read an engine seat with
+  no change.
+- **Doors stay thin, strangler and reversible.** `bin/ymir-engine.sh` is the
+  engine's door (exit **4** = "the engine will NOT own this errand");
+  `bin/ymir-engine-ensure.sh` builds the private venv only when
+  `src/pyproject.toml` declares a dependency (none today); `bin/einherjar-spawn.sh`
+  and `bin/eindri-start.sh` are engine-first and keep their old road on exit 4.
+  `YMIR_ENGINE=off` disables the handoff everywhere.
+- **Proof, not assertion.** `python3 -m unittest` reaches unit tests beside the
+  modules; `tests/e2e/engine-proof.sh proof|parity` runs one real errand and
+  compares the engine's record against the old door's.
+- **Not owned yet (named):** the Utgard sandbox launch, `--relaunch`, worktree
+  removal on `stop`, `fm-teardown`'s landed-work gates, and reply reads. The
+  `.agents/backend/fm-*` provenance tree stands until Phase 5.
+
+### A.2 The gateway — how the doors are reached
+
+- **Ports:** SPA `:3888` · gate API `:3889` · Óðrerir `:4322` · visualizer
+  `:8437` · Mimir bridge `:4602` · Bifrost `:4603`.
+- **The record MCP doors** (`well :8317` · `skills :8319` · `skuld :8320` ·
+  `snotra :8321`) resolve to the **heart** (plan 51); a dev body drinks them and
+  does not run them.
+- **Pi binds via `.pi/mcp-adapter.json`.** The register moved `mcp.json` →
+  `mcp-adapter.json` (#214). The tracked file is `.pi/mcp-adapter.json.example`;
+  the rendered `.pi/mcp-adapter.json` holds machine paths and is git-ignored.
+  `bin/valknut-load.sh` writes it; a Pi seat launches
+  `pi --mcp-config .pi/mcp-adapter.json`.
+- **A2A:** the live mesh is the external `a2abridge` daemon (A2A + MCP over
+  Tailscale); `.agents/bus/` is a stub and the native Ratatoskr backbone is
+  planned, not built.
+
+### A.3 The report-shelf handoff — a worker is never invisible
+
+Measured 2026-09-27: three errands reached `done:` and no wake reached the hall.
+The fault was that the fast road (the status-append → wake poller) and the
+failsafe (`bin/eindri-handoff.sh`) read different shelves.
+
+- A worker's terminal act writes its status line **and**
+  `$STATE/eindri-reports/<id>.md` (one short report: what shipped, the PR, the
+  proof). `bin/erindi-brief.sh` carries the line in its template, so every errand
+  inherits it by construction.
+- The failsafe `bin/eindri-handoff.sh sweep` sweeps the report and question
+  shelves only; it never reads `state/<id>.status`. It runs at session start
+  (Sága stage 3) and on a Nornir cadence, idempotently.
+- **One shelf, one contract.** Four failure modes are now named, the fourth written
+  from life: the poller is dead; the sweep runs at the wrong time; the sweep reads
+  the wrong shelf; **the worker wrote the wrong shelf.**
+
+### A.4 Role-gated crons
+
+- `config/cron.yaml` carries an optional role gate — `@heart[,role] HH:MM <cmd>`
+  or `HH:MM @heart <cmd>`. **Both orders parse** (the 2026-09-24 fault: only the
+  after-time shape matched, so every role-first line silently never ran).
+- The scheduler runs only the jobs this machine's roles own; roles resolve from
+  `bin/topology.sh` / `$YMIR_HOME/hodd/data/fleet.json`.
+- **Record jobs ride the heart** (git-sync · memory housekeeping · daily briefing ·
+  observer); model and bench crons ride the **forge** where the GPU is; a dev body
+  runs only its own session jobs.
+
+### A.5 The topology (plan 51 Part 7)
+
+The heart moved to the always-on box: the record's first duty is uptime, not
+compute.
+
+```
+topology[5]{machine,role,why}:
+  "zerwizserver (.103)","HEART (+ a work/dev face)","ALWAYS ON — the record crons and the journal fold run here"
+  "whynot (.111)","FORGE","the compute (models, bench crons, heavy Eindri); not always on, so never the record"
+  "heimdall (.110)","dev (strong)","a full body: local rail + its own session crons"
+  "omarchy (.105)","dev","a full body"
+  "phone","hand","a client: PWA read + light dispatch"
+```
+
+Roles are **data** — a machine may carry two (`heart+forge` on whynot before the
+move). Nothing starts at boot: Sága stage 7 raises the loop, and the scheduler
+binds to the machine's role, not a session. `bin/topology.sh` reports the live
+shape — `single` | `connected` | `detached` — and changes nothing.
+
+### A.6 Corrections to this draft (append, never rewrite)
+
+- **Single tenant.** The multi-tenant realm model (§1, §3.6, §5) is retired
+  (2026-09-12): one operator, workspaces over knowledge domains; a house is a
+  brand, never an isolation boundary.
+- **Persistence.** SQLite + engram (`:4602`) + the chained JSONL Runes ledger are
+  the current store; Postgres 16 in §6 belongs to the Rut target only.
+- **Plans.** Ymir's plans live in the operator's hoard under `$YMIR_HOME`, never
+  in this public tree (Rule 04). References above to `docs/plans/` are the design
+  era's shape.
+- **The Rut port** (§6, Rust/NATS/gRPC) remains a post-end-to-end target, not
+  current code.
