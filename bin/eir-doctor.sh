@@ -120,7 +120,7 @@ s_well()      { [ -x "$SCRIPT_DIR/mimir.sh" ] && "$SCRIPT_DIR/mimir.sh" health >
 f_well()      { "$SCRIPT_DIR/mimir.sh" start >/dev/null 2>&1; }
 # MCP: both A2A servers wired into opencode + pi.
 s_mcp() {
-  local pi="$HOME/.pi/agent/mcp.json" oc="$ROOT/opencode.json"
+  local pi="$HOME/.pi/agent/mcp-adapter.json" oc="$ROOT/opencode.json"
   # The live MCP surfaces: the OpenCode config must still bind engram (the well),
   # and the Pi config must parse and carry the fleet servers. If the A2A mesh
   # engine (a2abridge) is seated, its bridge must be wired too — a seated engine

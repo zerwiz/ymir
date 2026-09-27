@@ -63,7 +63,7 @@ the `a2abridge` MCP). So inside a session:
 - `a2a-broadcast "<text>"` — FYI to the mesh.
 
 **To be reachable**, the agent's bridge must announce to the directory
-(`~/.pi/agent/mcp.json` → `a2abridge`, `A2A_DIRECTORY`). If a peer does not
+(`~/.pi/agent/mcp-adapter.json` → `a2abridge`, `A2A_DIRECTORY`). If a peer does not
 appear in `a2a-agents`, the bridge announced to the wrong directory — the fix is
 in the **skill/config**, not new code: point the bridge at
 `http://127.0.0.1:7777` with `-advertise-host <tailnet-ip>` and `-name <agent>`.
@@ -120,7 +120,7 @@ send[1]:    a2a_call agent_url="http://127.0.0.1:7777/" text="…"
 - **Delivery on receipt** is injection (`herdr agent prompt <agent> "<text>"`);
   the reply is read back with `herdr agent read <agent>` and attached to the task.
 
-Directory: `http://127.0.0.1:7777`. Config: `~/.pi/agent/mcp.json` → `a2abridge`.
+Directory: `http://127.0.0.1:7777`. Config: `~/.pi/agent/mcp-adapter.json` → `a2abridge`.
 
 ## Troubleshooting
 

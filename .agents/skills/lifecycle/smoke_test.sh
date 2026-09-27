@@ -375,8 +375,8 @@ res=d.get("result") or {}
 print(len(res.get("tools") or []) if isinstance(res, dict) else -1)' 2>/dev/null || echo -1)"
   if [ "${n:- -1}" -ge 0 ] 2>/dev/null; then printf 'ok:%s' "$n"; else printf 'fail:no tools/list result'; fi
 }
-_mcp_cfg="$HOME/.pi/agent/mcp.json"
-[ -f "$_mcp_cfg" ] || _mcp_cfg="$ROOT/.pi/mcp.json"
+_mcp_cfg="$HOME/.pi/agent/mcp-adapter.json"
+[ -f "$_mcp_cfg" ] || _mcp_cfg="$ROOT/.pi/mcp-adapter.json"
 if [ -f "$_mcp_cfg" ] && command -v python3 >/dev/null 2>&1; then
   _servers="$(python3 -c '
 import json,sys

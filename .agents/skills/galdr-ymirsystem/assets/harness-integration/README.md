@@ -28,9 +28,9 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > `bin/a2a-mcp.sh install`. OpenCode speaks `type: remote` natively; Pi has no
 > remote transport, so it reaches them through the `mcp-remote` stdio bridge. The
 > URLs never enter the tracked tree. By default the Pi side writes the **global**
-> `~/.pi/agent/mcp.json`; `bin/a2a-mcp.sh install --project` writes the repo's
-> `.pi/mcp.json` instead, leaving a Pi used elsewhere untouched (launch with
-> `pi --mcp-config .pi/mcp.json`). Prefer `--project` when integrating Ymir into
+> `~/.pi/agent/mcp-adapter.json`; `bin/a2a-mcp.sh install --project` writes the repo's
+> `.pi/mcp-adapter.json` instead, leaving a Pi used elsewhere untouched (launch with
+> `pi --mcp-config .pi/mcp-adapter.json`). Prefer `--project` when integrating Ymir into
 > an existing workflow. `bin/a2a-mcp.sh show` reports what is **actually** wired —
 > every key present, not a fixed list.
 >
@@ -479,7 +479,7 @@ The adapter pattern is ported from the validated upstream **Brokk** agent-distro
 The well is **Mimirsbrunn**, backed by the validated OSS engine **engram**. It is
 ONE store and it lives in the hoard — `$YMIR_HOME/hodd/memory/kaia.engram` —
 reached two ways. Every reader resolves it through `hoard_memory_store`
-(bin/hoard-lib.sh) or an explicit `ENGRAM_DB`; the rendered `.pi/mcp.json`
+(bin/hoard-lib.sh) or an explicit `ENGRAM_DB`; the rendered `.pi/mcp-adapter.json`
 carries the hoard path (`__YMIR_HOME__/hodd/memory/kaia.engram`). The well
 rides the private vault between the Allfather's computers as one store — the
 legacy `memory/kaia.engram` duplicates are struck.
@@ -517,7 +517,7 @@ integration code. Registered per harness (each writes under its own agent id):
 | Harness | Config | Agent id |
 |---|---|---|
 | OpenCode | `opencode.json` → `mcp.engram` (+ `~/.config/opencode/opencode.json`) | `opencode` |
-| Pi | `.pi/mcp.json` (pass `pi --mcp-config .pi/mcp.json`) | `pi` |
+| Pi | `.pi/mcp-adapter.json` (pass `pi --mcp-config .pi/mcp-adapter.json`) | `pi` |
 | Claude Code | `~/.claude.json` → `mcpServers.engram` | `claude` |
 | Cursor | `~/.cursor/mcp.json` → `mcpServers.engram` | `cursor` |
 | Codex | `~/.codex/config.toml` → `[mcp_servers.engram]` | `codex` |

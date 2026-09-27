@@ -22,7 +22,7 @@ selection amber `#57411a` on pale bone `#f0e6cd`; focus = chisel ring
 |---|---|
 | daemon | Docker `open-design` (ghcr.io/nexu-io/od:latest), loopback `:7456`, token-gated |
 | MCP bridge | `open-design-mcp` (npm, global) — 10 `od_*` tools |
-| pi register | `~/.pi/agent/mcp.json` → `hnoss-mcp-launch.sh` |
+| pi register | `~/.pi/agent/mcp-adapter.json` → `hnoss-mcp-launch.sh` |
 | launcher | `~/.local/bin/hnoss-mcp-launch.sh` — resolves `OD_API_TOKEN` + the model-rail key at launch |
 | model rail | BYOK = llama-swap `127.0.0.1:8080/v1` (`qwen3.6-35b-a3b@iq3_s`) |
 
