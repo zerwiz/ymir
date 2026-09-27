@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # mcp-config.sh — generate the harness MCP config: ONE local gateway door.
 #
-# Plan 51 (multi-machine operations), Phase 3 + 6. An MCP address is never a
+# Plan 51 (multi-machine operations), Phase 3 + 6 + 9c. An MCP address is never a
 # literal LAN IP in a synced config, and it is never the heart directly: the
 # record servers (well/engram, tickets/skuld, skills/bolthorn) are fronted by
 # THIS body's own gateway (`bin/mcp-gateway.sh`, :8316), which resolves the
 # heart's address at request time. A heart-address change re-resolves inside the
 # gateway; the seat's config never moves. Firecrawl stays local (stdio).
+#
+# The MODEL rail is the same law (Part 9c): the config carries where models come
+# from as RESOLVED metadata under `ymir.rail`, read from the ONE resolver
+# (`bin/rail-resolve.sh`), so no surface restates a rail URL. Harnesses read
+# `mcpServers`; the `ymir` block is advisory and ignored by them.
 #
 #   mcp-config.sh            # this machine's config (JSON) to stdout
 #   mcp-config.sh show       # the same
@@ -34,11 +39,25 @@ if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root YMIR_HOME_ROOT
 YMIR_HOME_ROOT="${YMIR_HOME_ROOT:-${YMIR_HOME}}"
 GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
 
-CONFIG="$(python3 - "$GATEWAY_PORT" <<'PY'
+# The model rail, resolved once (plan 51 Part 9c): the serving URL and its key
+# REFERENCE, never a value. A declined answer (no live rail) leaves the block out.
+RAIL_HOST=""; RAIL_URL=""; RAIL_KEY="LLAMA_SWAP_API_KEY"; _rail=""
+if [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
+  _rail="$(bash "$SCRIPT_DIR/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+s=d.get("serving") or {}
+print("%s\t%s\t%s" % (s.get("host") or "", s.get("url") or "", s.get("key_ref") or "LLAMA_SWAP_API_KEY"))' 2>/dev/null || true)"
+  IFS=$'\t' read -r RAIL_HOST RAIL_URL RAIL_KEY <<EOF
+$_rail
+EOF
+fi
+
+CONFIG="$(python3 - "$GATEWAY_PORT" "$RAIL_HOST" "$RAIL_URL" "$RAIL_KEY" <<'PY'
 import json, sys
-gp = sys.argv[1]
+gp, rail_host, rail_url, rail_key = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 base = f"http://127.0.0.1:{gp}/mcp"
-print(json.dumps({
+doc = {
   "mcpServers": {
     "well":     {"url": f"{base}/well"},
     "bolthorn": {"url": f"{base}/bolthorn"},
@@ -46,7 +65,11 @@ print(json.dumps({
     "firecrawl": {"command": "npx", "args": ["-y", "firecrawl-mcp"],
                   "env": {"FIRECRAWL_API_URL": "http://localhost:3002"}},
   }
-}, indent=2))
+}
+if rail_host:
+    doc["ymir"] = {"rail": {"host": rail_host, "url": rail_url, "keyRef": rail_key,
+                             "resolver": "bin/rail-resolve.sh"}}
+print(json.dumps(doc, indent=2))
 PY
 )"
 
