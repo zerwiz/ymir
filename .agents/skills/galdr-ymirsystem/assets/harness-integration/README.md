@@ -148,6 +148,57 @@ is never punted to a manual session start; only a real live contender is refused
 - **Claude Code** uses the `Stop` hook with `"asyncRewake": true` and a long timeout to keep the arm running out of band.
 - **Codex / Cursor** run `syn-turnend-guard.sh` at Stop; they do **not** own a long-lived arm (no auto re-arm).
 
+### Part 2b — the Eindri push path (worker self-wake · re-arm catch-up · one ledger)
+
+Plan 58 Phase 3. A worker does not depend on a live poller to be heard: **it writes
+its own wake before it exits**, and the arm only notifies.
+
+**One command is the terminal act.** `bin/eindri-acclaim.sh` is the action half of
+the wake bridge *and* the worker's own finish line. The spawn brief
+(`bin/erindi-brief.sh`) teaches the smith to end with:
+
+```bash
+bin/eindri-acclaim.sh <id> --terminal done --line "<what shipped and where: PR, path, proof>"
+```
+
+That single act appends the `state/<id>.status` line, files the report shelf
+(`state/eindri-reports/<id>.md`; a `needs-decision` files
+`state/eindri-questions/<id>.md`), appends the **durable wake** to
+`state/.wake-queue`, and sounds the desktop note. No poller, no sweep, and no arm
+need be alive: a finished errand wakes Brokk by itself, and `bin/saga-wake-drain.sh`
+sees it in the very next digest.
+
+**One ledger, exactly one wake.** `bin/eindri-wake-lib.sh` is the shared delivery
+ledger: `state/eindri-delivered/<id>.<kind>`. The poller's `eindri-acclaim.sh` and
+the failsafe sweep `eindri-handoff.sh` both read and write it, so whichever road
+arrives first writes the wake and the other stands down — one finished errand is
+never delivered twice. Legacy markers (`state/eindri-handoff/<id>.report`,
+`state/eindri-done/<id>.md`) are honoured as already-delivered, so a home that fed
+the old two-ledger shape never re-fires news the operator already saw. The report
+shelf is the ONE contract; `acclaim` heals it from a terminal status line when a
+worker wrote only the wrong shelf.
+
+**Catch-up on re-arm.** Recovery is not blind. `bin/syn-watch-arm.sh` sweeps the
+handoff shelves into the durable queue *before* the session lock and the poll loop,
+and prints its own reconciliation:
+
+```
+watcher: catch-up sweep delivered=<n>
+```
+
+The Pi extension (`gna-pi-watch.ts`, Gná) calls the same sweep the moment it
+re-arms — before the arm child is spawned — so a flap reconciles what the dead
+window missed even if the successor arm never becomes ready. The arm grammar the
+extension parses is **unchanged**: `watcher: started pid=<pid> …
+recovery-generation=<gen>` and the `--handling-delivered <gen> --watcher-pid <pid>`
+verb are untouched; the catch-up line and the existing per-cycle sweep are purely
+additional.
+
+> **The push path replaces the need for the sweep, it does not retire it.** The
+> sweep is the backstop for a worker that died between its shelf write and its
+> acclaim (or an older brief that never called it); the self-wake is the guarantee
+> that a well-behaved worker needs nothing alive to be heard.
+
 ### Part 3 — Turn-end guard
 
 Bind the harness's "turn is about to end" event to `bin/syn-turnend-guard.sh`. If the guard prints the recovery instruction and exits **2**, the adapter must re-prompt instead of letting the turn end blind.
