@@ -1,0 +1,28 @@
+[Unit]
+Description=Snotra's watch — the ear pricks up when a call begins and leaves when the room empties (mic seats)
+
+[Service]
+Type=simple
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+# The watch is seated from the seat's own materialized copy (%h/.fleet, exactly
+# as the ear's engine is), and its state and the wake queue live in the
+# operator's home, never in the code tree (Rule 04). __YMIR_BIN_DIR__ is the
+# DURABLE main tree — never a disposable worktree — and is how the watch reaches
+# the fleet doors that do not ship beside it (ymir-say, the wake library, the
+# runes ledger, the rail resolver).
+Environment=BROKK_STATE_OVERRIDE=__YMIR_OPERATOR_STATE__
+Environment=SNOTRA_DOORS_DIR=__YMIR_BIN_DIR__
+ExecStart=/bin/bash %h/.fleet/snotra-detect.sh run
+# A stop closes the book: the capture ends, the minutes are finalized and
+# delivered. If the finalize is cut short the recording is kept and the watch
+# finalizes it on its next start — never an abandoned recording, never an ear
+# left recording after the room emptied.
+# The `-` is deliberate: a stop with nothing armed is a no-op, not a failure —
+# the verb still exits non-zero for a hand that asked it to leave nothing.
+ExecStop=-/bin/bash %h/.fleet/snotra-detect.sh leave
+TimeoutStopSec=180
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=ymir.target
