@@ -48,9 +48,13 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > IP into every seat" line, which broke the seat's doors the moment the heart
 > moved — and `bin/mcp-config.sh` renders the same gateway door. The door also
 > admits BROWSER readers (CORS — `OPTIONS` → 204 and `access-control-allow-origin`
-> on every answer, engine v1.1.0): the Óðrerir hall's boards read the record from
-> a page, the road the retired skuld server opened. The gateway binds 127.0.0.1,
-> so only this body's own UIs can reach it.
+> on every answer, engine v1.2.0): the Óðrerir hall's boards read the record from
+> a page, the road the retired skuld server opened. That road is PINNED to the
+> body's own pages: a loopback origin (127.0.0.1 · localhost · `[::1]`) or one
+> listed in `MCP_GATEWAY_ALLOWED_ORIGINS` is admitted; a foreign Origin is refused
+> (403). Binding 127.0.0.1 is NOT a browser boundary on its own — a page can
+> reach loopback, so an unpinned wildcard admitted any visited page to the
+> record.
 >
 > **The model rail is resolved the same way** (plan 51 Parts 9a/9c). The rails
 > are a LIVE set — models come from whichever strong box is CONNECTED (heimdall ·
