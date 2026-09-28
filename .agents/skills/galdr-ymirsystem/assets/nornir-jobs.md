@@ -232,20 +232,24 @@ removed and the failure is reported plainly.
 
 ### 3.5 Óðrerir — Live Hall snapshot (`bin/nornir-job-hall-snapshot.sh`, 08:00)
 
-The Live Hall is a glass: it reads `apps/odrerir/public/livehall.json`
-(same-origin, `cache: no-store`). This job writes that snapshot from real state
-via `bin/hall-snapshot.sh` — runes, the project registry, the cron gauge, the
-wake queue, standing smiths, armed `when-` sources, and the landed errands —
-then carves Rune `odrerir / hall.snapshot`. Scheduled at 08:00 so it follows
-the 06:00 observer and the 07:00 briefing: the morning board carries the day's
-fresh runes.
+The Live Hall is a glass: it reads `/livehall.json` (same-origin,
+`cache: no-store`). This job writes that snapshot from real state via
+`bin/hall-snapshot.sh` — runes, the project registry, the cron gauge, the wake
+queue, standing smiths, armed `when-` sources, and the landed errands — then
+carves Rune `odrerir / hall.snapshot`. The snapshot is written for BOTH install
+shapes: `apps/odrerir/public/livehall.json` (a clone, served at request time by
+the app's `ymir-livehall-feed` plugin) and, when the app carries a `dist/`, the
+same file beside it at `apps/odrerir/dist/livehall.json` (a packaged seat has no
+`vite.config.ts`, so `vite preview` serves `dist/` statically — the job's write
+lands where the seat reads). Scheduled at 08:00 so it follows the 06:00 observer
+and the 07:00 briefing: the morning board carries the day's fresh runes.
 
 | Reads | Writes |
 |---|---|
-| runes ledger · `hodd/identity/projects.yaml` · `config/cron.yaml` · `state/.wake-queue` · herdr agent list · armed when-sources · `state/eindri-reports/archive/` | `apps/odrerir/public/livehall.json` (gitignored runtime) · Rune `odrerir / hall.snapshot` |
+| runes ledger · `hodd/identity/projects.yaml` · `config/cron.yaml` · `state/.wake-queue` · herdr agent list · armed when-sources · `state/eindri-reports/archive/` | `apps/odrerir/public/livehall.json` (gitignored runtime) · `apps/odrerir/dist/livehall.json` when `dist/` exists · Rune `odrerir / hall.snapshot` |
 
-- The snapshot is **runtime, never repo**: `apps/odrerir/public/livehall.json`
-  is gitignored, so the job never dirties a branch.
+- The snapshot is **runtime, never repo**: `apps/odrerir/{public,dist}/livehall.json`
+  are gitignored, so the job never dirties a branch.
 - Absent `livehall.json` on the Hall is *not* a build failure — the page paints
   the saga's own count and says so. This job is what makes the board true.
 - Idempotent by nature: each run rewrites the same snapshot from the same
