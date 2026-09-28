@@ -174,3 +174,7 @@ chat/
 
 # A local config backup, never tracked (and this repo is public).
 opencode.json.bak*
+
+# The local skills shelf — the Allfather's own craft, never published.
+# Ships nothing, clones to nobody, and is not in the npm package.
+.agents/skills-local/
