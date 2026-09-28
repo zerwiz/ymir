@@ -11,7 +11,7 @@ dispatches for that work. A skill owned by `brokk` means the primary keeps it in
 hand — a dedicated seat is added when the work earns one.
 
 ```
-skills[28]{skill,does,owner}:
+skills[29]{skill,does,owner}:
   "galdr-ymirsystem","agent-CLI ergonomics — the master builder/maintainer of the runtime","galdr"
   "tyr-check","the judge — galdr principles + runtime gates","tyr"
   "rules-check-drift","rules-file drift — keeps AGENTS.md true after code changes","tyr"
@@ -37,6 +37,7 @@ skills[28]{skill,does,owner}:
   "hamr-adapters","harness adapters — per-harness reference","brokk"
   "pr-ops","pull requests — create, update, check status, request merge","brokk"
   "hnoss-design","design — artifacts via OpenDesign (prototypes, decks, dashboards, image, video)","hnoss"
+  "maestro-video","video — the AI video forge (Maestro): generate shots, assemble with ffmpeg, lay the VO; and provision the forge for a seat","hnoss"
   "bragi-marketing","marketing — research/crawl (Firecrawl), agentic browser (browser-use)","bragi"
   "bragi-translation","translation — speech→text (whisper.cpp) + text→text (the llama router); carries words between tongues","bragi"
   "elder-home","the keeper — home records: the plan ledger, documentation, and memory (Reginn, the keeper who remembers)","elder"

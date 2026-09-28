@@ -1,0 +1,65 @@
+# Maestro — the AI video forge, as a USER unit on the Ymir fleet.
+#
+# This is the TEMPLATE the ensure seam renders (bin/maestro-ensure.sh). It is a
+# systemd --user unit; nothing here needs root. Copy-render it with the real
+# paths for the seat, then:
+#
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now maestro.service
+#   curl -sf http://127.0.0.1:7860/api/v1/models >/dev/null && echo "door answers"
+#
+# WHY EACH LINE (these are the two faults that cost real hours):
+#
+#  * MAESTRO_LLAMA_BIN — Maestro's LLM planner hunts for a CUDA llama-server in
+#    <app>/ckpts/llm/bin and, finding none, COMPILES llama.cpp FROM SOURCE
+#    (~355 nvcc objects, ~15 min, usually failing). Point this at a directory
+#    that already holds a CUDA llama-server and the planner is simply adopted.
+#    This is the documented escape hatch (app/services/llama_linux_runtime.py).
+#
+#  * Restart=always + TimeoutStartSec=900 — a video family is tens of gigabytes
+#    and its first load is minutes; systemd's default start timeout kills the
+#    forge mid-load and the seat reports a failure that was never one.
+#
+#  * SERVER_NAME=127.0.0.1 — the forge is UNAUTHENTICATED. Loopback-only is the
+#    law: never bind the LAN, never put it behind a tunnel. A seat that wants
+#    remote reach rides its own private overlay deliberately (see the asset's
+#    privacy rule), never a public door.
+#
+#  * WorkingDirectory — the app resolves `checkpoints_paths`, `save_path` and
+#    `loras_root` RELATIVE to it (app/wgp_config.json). Getting this wrong is
+#    how a seat "downloads 19 GB again" into an empty tree.
+
+[Unit]
+Description=Maestro — the local AI video forge (text/image-to-video, music, voice)
+Documentation=file://%h/.fleet/maestro-setup.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/CodeP/MaestroAiVideo/app
+ExecStart=%h/CodeP/MaestroAiVideo/app/env/bin/python launch.py
+
+# Adopt the seat's existing CUDA llama-server instead of compiling one.
+# Render this to the real directory; the ensure seam proves it holds a
+# CUDA build before it seats the unit, and REFUSES to seat it otherwise.
+Environment=MAESTRO_LLAMA_BIN=/usr/local/bin
+# The planner GGUF cache — its own shelf, beside the app, never inside the repo.
+Environment=MAESTRO_LLM_CACHE=%h/CodeP/MaestroAiVideo/app/ckpts/llm
+
+# The door: loopback only, by law.
+Environment=SERVER_NAME=127.0.0.1
+Environment=SERVER_PORT=7860
+Environment=PYTHONUNBUFFERED=1
+
+Restart=always
+RestartSec=10
+TimeoutStartSec=900
+TimeoutStopSec=30
+KillSignal=SIGINT
+
+StandardOutput=append:%h/.fleet/maestro.log
+StandardError=append:%h/.fleet/maestro.log
+
+[Install]
+WantedBy=ymir.target

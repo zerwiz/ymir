@@ -771,6 +771,42 @@ Ymir's deep-navy palette. The Omarchy launcher entry is rendered from
 `apps/sessrumnir/resources/ymir-sessrumnir.desktop.in` by `bin/desktop-place.sh`
 (placement + `SUPER+B`).
 
+## Maestro specifically (`bin/maestro-ensure.sh`)
+
+The **video forge** (Maestro) is not a Ymir engine but a **user-provisioned
+service**, so its ensure is a **seam**: it detects, seats and proves, and refuses
+loudly on a box that cannot generate. The craft and the road ship as the
+`maestro-video` skill (`.agents/skills/maestro-video/`: `SKILL.md`,
+`assets/maestro-api.md`, `assets/setup-for-users.md`, `assets/maestro.service`).
+
+```
+maestro-ensure.sh status            # door + GPU + unit truth, and the model count
+detect | ensure [--install] | verify
+```
+
+- **The compute boundary gates it (plan 51 Part 9a).** `detect` probes
+  `nvidia-smi` and refuses when there is no CUDA device, when the compute
+  capability is below `sm_80`, or when VRAM is under ~12 GiB — *a weak seat never
+  runs inference; it calls the lane*. The refusal writes **nothing**.
+- **It refuses to seat a forge that would compile its own planner.** Maestro's
+  LLM planner builds `llama.cpp` from source when it finds no CUDA
+  `llama-server`; the ensure requires one in `MAESTRO_LLAMA_BIN` and stops
+  otherwise (the fault it prevents is `RuntimeError: Linux CUDA llama-server
+  compilation failed`, ~15 min of `nvcc`).
+- **It adopts, never fights.** A door already answering `/api/v1/models` is
+  left running and merely verified — the same doctrine as `bin/llama-ensure.sh`.
+- **The unit is rendered, not hand-written**: `assets/maestro.service`
+  (`WantedBy=ymir.target`, `Restart=always`, `TimeoutStartSec=900`, the
+  `MAESTRO_LLAMA_BIN` / `MAESTRO_LLM_CACHE` / loopback `SERVER_NAME` env block).
+  `ymir.target`, never `default.target` — the fleet's ONE user target, so a forge
+  rises by ROLE and not on every login.
+- **Loopback is law.** The forge is unauthenticated: the template binds
+  `127.0.0.1` and the doc forbids a LAN bind or a tunnel. Widening the bind is an
+  operator decision on their own box, never something the provision road does.
+
+It is **not yet a step of `bin/ymir-install.sh`** — it is the seam a fleet or
+install step can seat, callable today by an agent or a human.
+
 ## Neutral tenant defaults — a fresh Ymir is a distro, not the company
 
 A fresh install ships **no company of its own**. `bin/ymir-install.sh` seeds one
