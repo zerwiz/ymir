@@ -19,6 +19,9 @@
 #   skills-mcp the skills well MCP door (:8319)           heart
 #   skuld     the ticket hall (:8320)                     heart
 #   snotra    the meeting ear MCP face (:8321)              heart
+#   snotra-detect the ear's WATCH (: the call's start/leave) CAPABILITY: a seat
+#                                                         with a microphone (a call
+#                                                         seat), never the heart
 #   embed     the embedding stone (:8500)                 heart,forge
 #   hlidskjalf-spa  the high seat's SPA (:3888)            dev
 #   hlidskjalf-gate the gate API (:3889)                  dev
@@ -60,7 +63,7 @@ if [ -z "$AUTOBOOT_STATE_DIR" ]; then
 fi
 
 # --- the one table --------------------------------------------------------
-AUTOBOOT_PROGRAMS="a2abridge-directory well-mcp mcp-gateway ratatoskr mill-worker cards skills-mcp skuld snotra embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir syn-watch"
+AUTOBOOT_PROGRAMS="a2abridge-directory well-mcp mcp-gateway ratatoskr mill-worker cards skills-mcp skuld snotra snotra-detect embed hlidskjalf-spa hlidskjalf-gate mimir bifrost smidja nornir syn-watch"
 
 autoboot_role_programs() {  # <role> → prints the program ids the role owes
   case "${1-}" in
@@ -77,6 +80,9 @@ autoboot_program_roles() {  # <program> → prints the roles that owe it
     well-mcp)       printf '%s\n' "heart dev" ;;
     mcp-gateway)    printf '%s\n' "heart forge dev" ;;
     ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra) printf '%s\n' "heart" ;;
+    # snotra-detect is owed by CAPABILITY (a seat with a microphone), not by
+    # role — see autoboot_capability_programs below.
+    snotra-detect)  printf '%s\n' "" ;;
     a2abridge-directory) printf '%s\n' "heart dev" ;;
     embed)          printf '%s\n' "heart forge" ;;
     hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja) printf '%s\n' "dev" ;;
@@ -92,6 +98,7 @@ autoboot_program_desc() {  # <program> → one human line
     well-mcp)       printf '%s\n' "the well's MCP door (:8317)" ;;
     mcp-gateway)    printf '%s\n' "the body's one record door (:8316)" ;;
     snotra)         printf '%s\n' "the meeting ear's MCP face (:8321, read-only minutes)" ;;
+    snotra-detect)  printf '%s\n' "the ear's watch — arms on a call, leaves when the room empties (mic seats)" ;;
     ratatoskr)      printf '%s\n' "the A2A node (:8301)" ;;
     a2abridge-directory) printf '%s\n' "the A2A mesh directory (:7777)" ;;
     mill-worker)    printf '%s\n' "the mill worker" ;;
@@ -108,6 +115,27 @@ autoboot_program_desc() {  # <program> → one human line
     syn-watch)      printf '%s\n' "the arm: Sýn as a standing service (idle-not-dead)" ;;
     *)              printf '%s\n' "${1-}" ;;
   esac
+}
+
+# --- the capability axis ---------------------------------------------------
+# A program owed by CAPABILITY, never by role: Snotra's watch can only stand on
+# a seat that can HEAR — one with a PipeWire graph and a real microphone. The
+# heart is headless and owes nothing; a call seat owes the watch. A seat that
+# cannot hear reports a clean skip, and the raise's purge lowers the unit where
+# it cannot live.
+AUTOBOOT_CAPABILITY_PROGRAMS="snotra-detect"
+
+autoboot_capability_detect() {  # exit 0 iff this seat has a microphone to watch
+  command -v pactl >/dev/null 2>&1 || return 1
+  command -v python3 >/dev/null 2>&1 || return 1
+  # a non-monitor source is a microphone; monitor sources are playback taps
+  pactl list short sources 2>/dev/null \
+    | awk '{ n=$2; if (n != "" && n !~ /\.monitor$/) found=1 } END { exit !found }'
+}
+
+autoboot_capability_programs() {  # prints this seat's capability-owed programs
+  autoboot_capability_detect && printf '%s\n' "snotra-detect"
+  return 0
 }
 
 # --- the seat -------------------------------------------------------------
@@ -137,6 +165,11 @@ autoboot_owed() {  # <result-var> — this seat's owed programs, dedup'd, in reg
     for _ab_p in $(autoboot_role_programs "$_ab_r"); do
       case " $_ab_seen " in *" $_ab_p "*) ;; *) _ab_seen="$_ab_seen $_ab_p" ;; esac
     done
+  done
+  # ... and the capability-owed programs, on the same table's discipline: a
+  # seat's raise and its proof must never disagree about what it owes.
+  for _ab_p in $(autoboot_capability_programs); do
+    case " $_ab_seen " in *" $_ab_p "*) ;; *) _ab_seen="$_ab_seen $_ab_p" ;; esac
   done
   printf -v "$rv" '%s' "${_ab_seen# }"
 }

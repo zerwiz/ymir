@@ -6,6 +6,10 @@ privately in the hoard. Named for Snotra, the wise one, mistress of counsel.
 ## Architecture
 
 ```
+THE WATCH (detect)     a CALL SEAT — any seat with a microphone. Watches PipeWire
+                       for an app taking the mic, arms the capture of the
+                       conversation pair, and leaves when the room empties.
+                       Raised by CAPABILITY, never by role.
 THE EAR (capture)      the seat in the meeting — heimdall today, omarchy too
                        PipeWire mic + monitor capture. Nothing else can do this.
 THE BRAIN (transcribe) the seat with the GPU — the living-rail resolver's
@@ -14,6 +18,11 @@ THE BRAIN (transcribe) the seat with the GPU — the living-rail resolver's
 THE RECORD (store/serve)  the heart (zerwizserver) — minutes in the vault, synced
                        by the home's git road, the MCP face served there
 ```
+
+**The watch is the half that makes the ear automatic.** Before it, a meeting was
+heard only if a hand armed the capture; now the microphone is the signal — a
+voice call cannot happen unless the call application opens a capture stream on a
+microphone — and the moment the room empties the ear leaves.
 
 **Cost if run otherwise:** If the Allfather insists on transcribing on whynot
 (the <gpu>), it costs a 3-5× slowdown on transcription (<gpu> lacks CUDA
@@ -29,7 +38,11 @@ supports this; it is not a rewrite.
 - `server.mjs` — MCP server (read-only minutes access, streamable HTTP, port 8321)
 - Materialized into `~/.fleet/snotra-server.mjs` by `bin/fleet-ensure.sh`
 - The operator commands (`snotra-capture.sh`, `snotra-transcribe.sh`,
-  `snotra-ensure.sh`, `runes-append.sh`) are materialized into `~/.fleet` too
+  `snotra-detect.sh`, `snotra-mine.sh`, `snotra-ensure.sh`, `runes-append.sh`)
+  are materialized into `~/.fleet` too — **with `hoard-lib.sh` beside them**: each
+  of them resolves the operator's home through it, and a seat that has the
+  command without the resolver dies on an unbound `YMIR_HOME` the moment it runs
+  outside a shell that already knew the home
 - Pinned version: Meetily-Local AppImage (see fetch below)
 
 ### M0 — the engine ensure (`bin/snotra-ensure.sh`)
@@ -93,6 +106,115 @@ supports this; it is not a rewrite.
 - This asset updated in the same change
 - `compliance-check.sh` clean
 
+### M9 — The watch (`bin/snotra-detect.sh`)
+
+- `run` — the standing watch (the unit's `ExecStart`); `status` — TOON row;
+  `scan` — the PipeWire picture, once; `once` — one scan and act
+- `arm [slug]` / `leave` — the manual doors, for a call the detector cannot see
+- **The START edge.** A NEW record stream on a non-monitor source, sustained for
+  `SNOTRA_ARM_DEBOUNCE` (3 s). The graph is read through the portable `pactl`
+  surface (PipeWire serves the PulseAudio protocol on every seat), one snapshot
+  per tick emitting tab-separated records for sources, source-outputs, sinks and
+  sink-inputs. A stream **already open when the watch started is not a call** —
+  the watch takes a baseline at start, because Discord holds the microphone open
+  while idle on a real seat. A second signal covers an app that already holds the
+  mic: a NEW playback stream from that same app is the remote side beginning.
+- **The conversation pair.** At arm the watch resolves the microphone the call
+  app is actually reading and the SINK the call itself is playing into (the sink
+  its playback stream rides, falling back to the default sink), and arms the
+  capture with that pair — so both sides are heard. No loopback module, no
+  virtual device: the pair is resolved from the graph.
+- **The LEAVE edge.** Three independent signs, first to fire:
+
+```
+leave_edges[4]{id,sign,default}:
+  "L1","every stream that armed the ear is gone (sustained)","SNOTRA_RELEASE_GRACE=5s"
+  "L2","the conversation's sink left the graph","—"
+  "L3","mic AND monitor below a dB floor, sustained","SNOTRA_SILENCE_DB=-45 · SNOTRA_SILENCE_SECONDS=300"
+  "L4","the capture's own safety cap","SNOTRA_MAX_SECONDS=14400"
+```
+
+- **The ear never lingers.** `do_arm` refuses to arm while a capture is already
+  alive (one ear at a time), and `stop_lingering_captures` kills any ffmpeg still
+  writing into the meetings shelf at leave and at start-up — so a lost pid, a
+  crash or a restart can never leave a recording running.
+- **The anti-flap quiet.** After a meeting closes the watch re-baselines and arms
+  nothing for `SNOTRA_COOLDOWN` (30 s): a meeting's own end can raise a
+  microphone (a notification's sound, an app closing its device), and a watch
+  that re-armed on that would deliver forever.
+
+### M10 — The pipeline and the delivery (at leave)
+
+Stop the capture → transcribe through the seat's whisper (the same engine the ear
+serves) → mine → write → deliver:
+
+- `<date>-<lane>-<slug>.md` — the dated minutes (lane default `ping`)
+- `<date>-<lane>-<slug>.actions.md` — the mined decisions and actions
+- `<date>-<lane>-<slug>.transcript.txt` — the transcript with its timestamps
+- `<date>-<lane>-<slug>.wav` — the recording
+- **delivery**: `bin/ymir-say.sh --mark-done` (a desktop note) AND a durable wake
+  through the queue's own door — `bin/ymir-state.sh queue append check
+  "meeting:<slug>" "check: …"` — so the meeting reaches Brokk with no arm and no
+  sweep. The append is **bounded** (`timeout 20`): no queue pathology may wedge a
+  delivery.
+
+### M11 — The miner (`bin/snotra-mine.sh`)
+
+- Mechanical commitment cues over the transcript: decisions ("we decided",
+  "agreed", "confirmed", "the decision is", …) and action items ("I will",
+  "we need to", "let's", "follow up", "send", "by <day>", …)
+- Every line carries its **verbatim quote** and its **timestamp**, so it can be
+  jumped to in the recording; the transcript is normalized from whisper's SRT,
+  because `--output-txt` carries no times
+- The trust note is written into the header, not implied: machine STT, wording may
+  be imperfect, **no speaker diarization — owners are never assigned**, nothing
+  invented
+- A small exclusion list keeps openers ("good morning, let's get started") out of
+  the action list
+
+### M12 — The boot (`tools/mill/systemd/snotra-detect.service`)
+
+- A user unit, `WantedBy=ymir.target`, seated from the seat's materialized copy
+  (`%h/.fleet/snotra-detect.sh`) with `SNOTRA_DOORS_DIR` naming the durable tree
+- Raised by **capability**, never by role: it joins the one table in
+  `bin/autoboot-lib.sh` (`AUTOBOOT_CAPABILITY_PROGRAMS`), so a seat's raise and
+  its proof can never disagree about what it owes. A seat with a microphone owes
+  the watch; a headless heart reports a clean skip.
+- `ExecStop=-… leave` closes the book on a stop; a stop with nothing armed is a
+  no-op, not a failure
+
+## What the watch guarantees — and what it does not
+
+```
+guarantee[3]{edge,what,whose}:
+  "guaranteed","every call whose start and end THIS machine can see — an app taking and releasing the microphone, or a conversation sink appearing and leaving","the watch's"
+  "not guaranteed","a call that never touches this machine (a phone, another seat, a browser elsewhere) leaves nothing here to hear","the LANE's — a live-lane ear on the seat in the meeting, or the platform's own recording"
+  "named false positives","any client that opens a microphone capture stream arms the ear, the seat's own voice tooling included","the seat's policy, below"
+```
+
+No claim is made beyond the machine's reach. The manual door (`snotra-detect.sh
+arm`, and `snotra-capture.sh` by hand) stays for any call the watch cannot see.
+
+### The seat's policy (what this seat does NOT treat as a call)
+
+The ignore list and the thresholds are configurable per seat, and a seat may keep
+its policy **in the hoard** at `hodd/data/snotra-detect.conf` (a `KEY=value` file
+sourced before the environment) — so a room is tuned without editing the tree:
+
+```
+detect_env[10]{key,default,meaning}:
+  "SNOTRA_IGNORE_APPS","—","space-separated app names never treated as a call"
+  "SNOTRA_IGNORE_BINARIES","ffmpeg","process binaries likewise (the watch's own probe)"
+  "SNOTRA_IGNORE_APP_RE","^PipeWire ALSA","an awk-matched app-name regex. The ALSA-plugin utility clients are never a call — and on a real seat BOTH the seat's dictation (voxtype) and arecord report under this name, so the rule also keeps dictation out of the meetings shelf. No backslash escapes: awk's -v strips them"
+  "SNOTRA_ARM_DEBOUNCE","3","seconds a new mic stream must persist to arm"
+  "SNOTRA_RELEASE_GRACE","5","seconds the mic must stay released to leave"
+  "SNOTRA_SILENCE_DB","-45","the room-quiet floor in dB"
+  "SNOTRA_SILENCE_SECONDS","300","seconds of quiet that end a meeting"
+  "SNOTRA_COOLDOWN","30","the anti-flap quiet after a meeting closes"
+  "SNOTRA_MIN_SECONDS","5","the shortest capture that is a meeting at all; below it the recording is KEPT and the shelf left alone"
+  "SNOTRA_LANE","ping","the filename lane token"
+```
+
 ## Private data
 
 Audio recordings, transcripts, and meeting content are **private data**. They
@@ -128,6 +250,14 @@ starves CUDA — whynot's <gpu> always falls to the CPU).
 - **Node.js** (MCP server) — already available
 - **bun** (optional, for faster startup) — already installed on seats
 
+## The watch and the engine
+
+Meetily-Local is the recommended *capturer*; the **watch** (M9–M12) is Ymir's
+own and needs no engine at all — it is a read of the PipeWire graph and a
+capture of the conversation pair. Meetily has no call detection, and its Pro tier
+lists auto-detect as future work; the watch is that half, built around whatever
+capturer the seat uses.
+
 ## Meetily-Local integration (future)
 
 Meetily-Local (`github.com/Hankanman/Meetily-Local`) is the recommended engine
@@ -147,7 +277,9 @@ version pinned. The ensure script can include this fetch step.
 ## Naming
 
 - **Snotra** — the meeting ear (wise one, mistress of counsel)
+- The watch is the **ear's own watch** (pricks up when a call begins; `snotra-detect`)
 - The capture is the **ear** (hears the meeting)
 - The transcription is the **brain** (processes what was heard)
+- The miner is the **counsel** (what was decided, and who owes what)
 - The minutes are the **record** (what was decided)
 - The MCP face is the **voice** (speaks the record to agents)

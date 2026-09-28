@@ -107,7 +107,7 @@ fi
 # Which unit files the templates can materialize (all programs + the target)
 PROGRAM_UNIT_SRC() {  # <program> → the template path
   case "${1-}" in
-    well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra|embed|mcp-gateway)
+    well-mcp|ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra|snotra-detect|embed|mcp-gateway)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/$1.service" ;;
     syn-watch)
       printf '%s\n' "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/ymir-syn-watch.service" ;;
@@ -147,7 +147,11 @@ materialize_tools() {
   done
   # the meeting ear's operator commands — capture, transcribe, ensure — so any
   # seat can run them from ~/.fleet without a repo checkout on its PATH
-  for f in snotra-capture.sh snotra-transcribe.sh snotra-ensure.sh runes-append.sh; do
+  # hoard-lib.sh rides along: every one of these commands resolves the
+  # operator's home through it, and a seat that has the command without the
+  # resolver dies on an unbound YMIR_HOME the moment it runs outside a shell
+  # that already knew the home.
+  for f in hoard-lib.sh snotra-capture.sh snotra-transcribe.sh snotra-detect.sh snotra-mine.sh snotra-ensure.sh runes-append.sh; do
     [ -f "$ROOT/bin/$f" ] && cp -f "$ROOT/bin/$f" "$DST/$f" 2>/dev/null && chmod +x "$DST/$f" 2>/dev/null || true
   done
   # the skills mirror — the master .agents/skills tree, refreshed each ensure
@@ -265,7 +269,10 @@ materialize_units() {  # <owed...> — every owed unit + the target; purge the s
           A2A_MISSING=1
         fi
         ;;
-      hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir|mcp-gateway|syn-watch)
+      # the templated units: their ExecStart carries the DURABLE roots
+      # (__YMIR_BIN_DIR__ = the main tree, never a disposable worktree), which
+      # is what the watch needs to reach the doors it calls.
+      hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja|nornir|mcp-gateway|syn-watch|snotra-detect)
         materialize_web_unit "$p"
         ;;
       *)  # the mill/offices — %h-native templates, copied as they ship
