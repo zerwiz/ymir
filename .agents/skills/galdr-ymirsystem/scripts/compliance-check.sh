@@ -89,6 +89,11 @@ for f in "$ROOT/AGENTS.md" "$ROOT"/bin/*.sh; do
   # The Huginn observer is the read-only bridge to the external distro; it
   # legitimately names that system's tooling and paths.
   [ "${f##*/}" = "nornir-job-observer.sh" ] && continue
+  # The fm-* set is the DOCUMENTED port of the upstream firstmate mechanism
+  # (harness-integration, §12 provenance — its vocabulary rides with it; the
+  # runtime names are laundered through the adapters). A provenance file is
+  # record, not a renamed surface — the same rule the assets already enjoy.
+  case "${f##*/}" in fm-*) continue ;; esac
   hit=$(grep -nEi 'captain|crewmate' "$f" 2>/dev/null | grep -vEi 'never|imported|\.treehouse' || true)
   [ -n "$hit" ] && naming_fail="$naming_fail ${f##*/}:$(printf '%s' "$hit" | head -n1 | cut -d: -f1)"
 done
@@ -375,6 +380,31 @@ if command -v git >/dev/null 2>&1 && git -C "$ROOT" rev-parse --is-inside-work-t
 else
   add assets "governed assets current" SKIP "not a git work tree"
 fi
+
+# --- one state dir (Phase 0) ------------------------------------------------
+# The tree's `state` must be the hoard's symlink — never a shadow directory the
+# runtime writes into where the hall never reads. The shadow cost the cron its
+# pid file on 2026-09-27: the loop wrote tree/state/cron.pid while the smoke
+# read the hoard. A present-but-real dir is the fail; an absent link is a
+# pre-install note (the install seats it).
+case "$ROOT" in
+  */.yggdrasil/*) add state "one state dir" NOTE "a worktree — the hoard link lives in the main tree" ;;
+  *)
+    if [ -e "$ROOT/state" ]; then
+      if [ -L "$ROOT/state" ]; then
+        _st_target="$(readlink "$ROOT/state" 2>/dev/null || true)"
+        case "$_st_target" in
+          *ymirhome*state) add state "one state dir" PASS "tree state -> the hoard (the Phase-0 link)" ;;
+          *) add state "one state dir" FAIL "tree state -> $_st_target — not the hoard" ;;
+        esac
+      else
+        add state "one state dir" FAIL "tree state is a REAL directory — the Phase-0 one-state is broken; hoard it and re-link"
+      fi
+    else
+      add state "one state dir" NOTE "no tree state yet — the install seats the Phase-0 link"
+    fi
+    ;;
+esac
 
 # --- design -----------------------------------------------------------------
 # The cloth has TWO carriers on purpose: the CSS tokens every web surface imports
