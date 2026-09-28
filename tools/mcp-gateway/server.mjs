@@ -21,6 +21,11 @@
 //   MCP_GATEWAY_PORT                listen port (default 8316)
 //   MCP_GATEWAY_HOST                the seat's short hostname (report only)
 //   MCP_GATEWAY_UPSTREAM_TIMEOUT_MS per-upstream request timeout (default 1500)
+//   MCP_GATEWAY_ALLOWED_ORIGINS     comma-separated browser origins to admit in
+//                                   ADDITION to the body's own loopback pages
+//                                   (a page served from http://127.0.0.1:… etc.
+//                                   is always admitted). A foreign origin is
+//                                   refused outright — see the CORS block below.
 
 import http from "node:http";
 import fs from "node:fs";
@@ -29,7 +34,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const PORT = Number(process.env.MCP_GATEWAY_PORT || 8316);
 const STATE = process.env.MCP_GATEWAY_STATE || path.join(os.homedir(), ".ymir-state");
 const CACHE = path.join(STATE, "mcp-gateway", "cache");
@@ -349,21 +354,45 @@ async function handleRpc(msg, serverFilter) {
 
 // ── the HTTP surface ─────────────────────────────────────────────────────────
 // CORS: the record has BROWSER readers (the Óðrerir hall's boards, the other
-// in-repo UIs), so the door admits their origin — exactly the road the retired
-// skuld server opened and the gateway dropped. The gateway binds 127.0.0.1, so
-// the only pages that can reach it are this body's own; `allow-private-network`
-// admits a page served from the public hall to this loopback door.
-const CORS = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-headers": "content-type, accept, mcp-session-id, mcp-protocol-version, mcp-integration-context",
-  "access-control-allow-methods": "POST, OPTIONS",
-  "access-control-expose-headers": "mcp-session-id, Mcp-Session-Id",
-  "access-control-allow-private-network": "true",
-};
+// in-repo UIs), so the door admits THEIR origin — the road the retired skuld
+// server opened and the gateway dropped. It is a PIN, not a wildcard: the
+// admitted set is this body's own pages (any http(s) origin whose host is
+// loopback — 127.0.0.1 · localhost · [::1]) plus any origin listed in
+// MCP_GATEWAY_ALLOWED_ORIGINS. Binding 127.0.0.1 is NOT a browser boundary on
+// its own (a page may reach loopback, and 127.0.0.1 is mixed-content-exempt), so
+// an Origin outside the set is REFUSED with 403 before the method gate — not
+// merely denied CORS, because a "simple" request (no preflight) can still carry
+// a JSON body. A request with no Origin is a native MCP client (pi, opencode,
+// curl), never a browser, and is admitted. `access-control-allow-private-network`
+// is deliberately absent: it widened a public page onto this loopback door.
+const EXTRA_ORIGINS = String(process.env.MCP_GATEWAY_ALLOWED_ORIGINS || "")
+  .split(",").map((s) => s.trim()).filter(Boolean);
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
 
-function sendJson(res, code, obj) {
+function originAllowed(origin) {
+  if (!origin) return true;                       // a native MCP client, not a browser
+  if (EXTRA_ORIGINS.includes(origin)) return true;
+  try {
+    const u = new URL(origin);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    return LOOPBACK_HOSTS.has(u.hostname.toLowerCase());
+  } catch { return false; }
+}
+
+function corsHeaders(origin) {
+  const h = {
+    "access-control-allow-headers": "content-type, accept, mcp-session-id, mcp-protocol-version, mcp-integration-context",
+    "access-control-allow-methods": "POST, OPTIONS",
+    "access-control-expose-headers": "mcp-session-id, Mcp-Session-Id",
+    "vary": "Origin",
+  };
+  if (origin && originAllowed(origin)) h["access-control-allow-origin"] = origin;
+  return h;
+}
+
+function sendJson(res, code, obj, cors = {}) {
   const body = Buffer.from(JSON.stringify(obj));
-  res.writeHead(code, { "content-type": "application/json", "content-length": String(body.length), ...CORS });
+  res.writeHead(code, { "content-type": "application/json", "content-length": String(body.length), ...cors });
   res.end(body);
 }
 
@@ -382,30 +411,38 @@ function readBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  // The origin pin is the FIRST gate: a browser page from outside the body's
+  // own doors is turned away before it can read OR write the record.
+  const origin = req.headers.origin || "";
+  if (origin && !originAllowed(origin)) {
+    return sendJson(res, 403, { error: "origin not allowed" }, { "vary": "Origin" });
+  }
+  const cors = corsHeaders(origin);
+
   let u;
-  try { u = new URL(req.url, "http://localhost"); } catch { return sendJson(res, 400, { error: "bad url" }); }
+  try { u = new URL(req.url, "http://localhost"); } catch { return sendJson(res, 400, { error: "bad url" }, cors); }
 
   // the browser's preflight: answer it before the method gate below.
-  if (req.method === "OPTIONS") { res.writeHead(204, CORS); return res.end(); }
+  if (req.method === "OPTIONS") { res.writeHead(204, cors); return res.end(); }
 
   if (req.method === "GET" && (u.pathname === "/health" || u.pathname === "/")) {
-    return sendJson(res, 200, health());
+    return sendJson(res, 200, health(), cors);
   }
   const m = u.pathname.match(/^\/mcp(?:\/([A-Za-z0-9_-]+))?\/?$/);
-  if (!m) return sendJson(res, 404, { error: "not found" });
+  if (!m) return sendJson(res, 404, { error: "not found" }, cors);
   const serverFilter = m[1] || null;
   if (serverFilter && !UPSTREAMS[serverFilter]) {
-    return sendJson(res, 404, { jsonrpc: "2.0", id: null, error: { code: -32601, message: `unknown record server: ${serverFilter}` } });
+    return sendJson(res, 404, { jsonrpc: "2.0", id: null, error: { code: -32601, message: `unknown record server: ${serverFilter}` } }, cors);
   }
   if (req.method === "GET") {
-    res.writeHead(405, { allow: "POST", ...CORS });
+    res.writeHead(405, { allow: "POST", ...cors });
     return res.end();
   }
-  if (req.method !== "POST") return sendJson(res, 405, { error: "method not allowed" });
+  if (req.method !== "POST") return sendJson(res, 405, { error: "method not allowed" }, cors);
 
   const raw = await readBody(req);
   let msg;
-  try { msg = JSON.parse(raw); } catch { return sendJson(res, 400, rpcError(null, -32700, "parse error")); }
+  try { msg = JSON.parse(raw); } catch { return sendJson(res, 400, rpcError(null, -32700, "parse error"), cors); }
 
   const one = async (m0) => {
     const out = await handleRpc(m0, serverFilter);
@@ -420,9 +457,9 @@ const server = http.createServer(async (req, res) => {
     reply = await one(msg);
   }
   if (reply === null || (Array.isArray(reply) && reply.length === 0)) {
-    res.writeHead(202, { ...CORS }); return res.end();
+    res.writeHead(202, { ...cors }); return res.end();
   }
-  return sendJson(res, 200, reply);
+  return sendJson(res, 200, reply, cors);
 });
 
 server.listen(PORT, "127.0.0.1", () => {

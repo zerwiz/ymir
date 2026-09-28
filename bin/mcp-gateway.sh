@@ -15,10 +15,16 @@
 # reaches the seat's own well door first (the heart's as fallback). Only the
 # heart-only MCPs carry the cache+queue treatment.
 #
-# The door admits BROWSER readers (CORS, 2026-09-27): the Óðrerir hall and the
-# other in-repo UIs read the record from a PAGE, and the retired skuld server
-# opened that road; the gateway keeps it open (loopback-bound, so only this
-# body's own pages can reach it). A preflight OPTIONS answers 204.
+# The door admits BROWSER readers (CORS, 2026-09-27; PINNED 2026-09-28): the
+# Óðrerir hall and the other in-repo UIs read the record from a PAGE, and the
+# retired skuld server opened that road; the gateway keeps it open — but only to
+# this body's OWN pages. An Origin whose host is not loopback (127.0.0.1 ·
+# localhost · [::1]) — or is not listed in MCP_GATEWAY_ALLOWED_ORIGINS — is
+# REFUSED with 403 before the method gate, not merely denied CORS; a request
+# with no Origin is a native MCP client and is admitted. Binding 127.0.0.1 is
+# not a browser boundary by itself: a page may reach loopback, and 127.0.0.1 is
+# mixed-content-exempt, so an unpinned wildcard admitted ANY visited page to the
+# record. A preflight OPTIONS from an admitted origin answers 204.
 #
 #   mcp-gateway.sh serve            # run the gateway in the foreground
 #   mcp-gateway.sh start|stop       # raise / lower it in the background
@@ -34,11 +40,12 @@
 # heart-only rows go unconfigured, and the gateway never fails to stand.
 #
 # Env: YMIR_FLEET_REGISTRY · YMIR_HOST · MCP_GATEWAY_STATE · MCP_GATEWAY_PORT
-#      (YMIR_MCP_GATEWAY_PORT) · YMIR_MCP_WELL_PORT (8317) · YMIR_MCP_SKILLS_PORT
-#      (8319) · YMIR_MCP_TICKETS_PORT (8320)
+#      (YMIR_MCP_GATEWAY_PORT) · MCP_GATEWAY_ALLOWED_ORIGINS (extra browser
+#      origins to admit beside this body's loopback pages) · YMIR_MCP_WELL_PORT
+#      (8317) · YMIR_MCP_SKILLS_PORT (8319) · YMIR_MCP_TICKETS_PORT (8320)
 set -u
 
-VERSION="1.1.0"
+VERSION="1.2.0"
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -141,6 +148,7 @@ cmd_serve() {
   export MCP_GATEWAY_BIN="$SCRIPT_DIR"
   export MCP_GATEWAY_HOST="$HOST"
   export MCP_GATEWAY_PORT="$GATEWAY_PORT"
+  export MCP_GATEWAY_ALLOWED_ORIGINS="${MCP_GATEWAY_ALLOWED_ORIGINS:-}"
   export MCP_GATEWAY_UPSTREAMS="${MCP_GATEWAY_UPSTREAMS:-$(resolve_upstreams)}"
   exec "$NODE" "$server"
 }
