@@ -23,6 +23,11 @@
 #   YMIR_HOME          — the hoard root (default ~/Documents/ymirhome)
 #   SNOTRA_MONITOR     — sink monitor name (default: the running/default sink)
 #   SNOTRA_MIC         — source name (default: the running/default input)
+#   SNOTRA_OUTFILE     — explicit WAV path (default: <hoard>/meeting-<stamp>.wav).
+#                        The watch (bin/snotra-detect.sh) uses it to name the
+#                        recording after the meeting lane; the chosen path is
+#                        recorded in state/.snotra-outfile for the pipeline.
+#   SNOTRA_MAX_SECONDS — the safety cap on an unbounded capture (default 14400)
 
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
@@ -44,6 +49,7 @@ HOARD="$YMIR_HOME/hodd/workspaces/meetings"
 STATE_DIR="$YMIR_HOME/state"
 LISTENING_FILE="$STATE_DIR/.snotra-listening"
 PID_FILE="$STATE_DIR/.snotra-pid"
+OUTFILE_STATE="$STATE_DIR/.snotra-outfile"
 
 mkdir -p "$HOARD" "$STATE_DIR"
 
@@ -105,9 +111,10 @@ do_start() {
   MONITOR="$(printf '%s' "$pair" | sed -n 1p)"
   MIC="$(printf '%s' "$pair" | sed -n 2p)"
 
-  local DATESTAMP
+  local DATESTAMP OUTFILE
   DATESTAMP=$(date +%Y-%m-%d_%H%M%S)
-  local OUTFILE="$HOARD/meeting-${DATESTAMP}.wav"
+  OUTFILE="${SNOTRA_OUTFILE:-$HOARD/meeting-${DATESTAMP}.wav}"
+  mkdir -p "$(dirname "$OUTFILE")" 2>/dev/null || true
 
   say "Snotra capture starting…"
   say "  Sink monitor: ${MONITOR:-(none)}"
@@ -154,6 +161,8 @@ do_start() {
   local FFMPEG_PID=$!
   echo "$FFMPEG_PID" > "$PID_FILE"
   echo "recording" > "$LISTENING_FILE"
+  # the chosen recording path, so the finalize pipeline never has to guess it
+  printf '%s\n' "$OUTFILE" > "$OUTFILE_STATE"
 
   say "Snotra capture ACTIVE (pid $FFMPEG_PID)"
   say "  Listening indicator: $LISTENING_FILE = recording"
@@ -162,6 +171,7 @@ do_start() {
   wait "$FFMPEG_PID" 2>/dev/null || true
 
   rm -f "$PID_FILE" "$LISTENING_FILE"
+  # .snotra-outfile is deliberately KEPT: the pipeline reads it after the stop
   say "Snotra capture stopped"
   say "  Output: $OUTFILE"
   [ -f "$OUTFILE" ] && say "  Size:   $(du -h "$OUTFILE" | cut -f1)"

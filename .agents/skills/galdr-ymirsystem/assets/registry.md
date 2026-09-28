@@ -68,12 +68,13 @@ Usage: `python3 .agents/tools/bin/tasks-cli <command>`. All tools emit TOON.
 
 The heart's offices materialize from `tools/` into `~/.fleet` and rise as user
 units joined to `ymir.target` (the auto-boot law). The snotra operator commands
-(`snotra-capture.sh`, `snotra-transcribe.sh`, `snotra-ensure.sh`,
+(`snotra-capture.sh`, `snotra-transcribe.sh`, `snotra-detect.sh`,
+`snotra-mine.sh`, `snotra-ensure.sh`,
 `runes-append.sh`) are copied to `~/.fleet` too, so any seat can run the ear
 without a repo checkout on its PATH.
 
 ```
-fleet[8]{service,source,unit,port,role}:
+fleet[9]{service,source,unit,port,role}:
   "well-mcp","tools/well-mcp/server.ts","well-mcp.service","8317","heart + dev door"
   "ratatoskr","packages/a2a/ratatoskr/server.ts","ratatoskr.service","8301","heart"
   "mill-worker","tools/mill/worker.sh","mill-worker.service","—","heart"
@@ -82,6 +83,7 @@ fleet[8]{service,source,unit,port,role}:
   "skills-mcp","packages/mcp/skills/server.mjs","skills-mcp.service","8319","heart + dev"
   "skuld","tools/tickets-mcp/server.mjs","skuld.service","8320","heart"
   "snotra","tools/snotra/server.mjs","snotra.service","8321","heart (read-only minutes)"
+  "snotra-detect","bin/snotra-detect.sh","snotra-detect.service","—","CAPABILITY: any seat with a microphone (the ear's watch; never the heart)"
 ```
 
 ## OpenCode commands
