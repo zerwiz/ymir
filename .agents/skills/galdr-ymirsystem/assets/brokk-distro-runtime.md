@@ -779,3 +779,25 @@ $YMIR_HOME/
 Why it matters: an installed runtime (npm) may live in a read-only package
 directory, so **nothing private or writable may be resolved relative to the
 scripts**. Both resolvers are home-based for exactly that reason.
+
+---
+
+## The seat, the process, and the helm — one runtime model (2026-09-28)
+
+**A dated appendix (append-only), the doctrine the churn taught.** Three different
+beings, named once so the machine never confuses them:
+
+```
+seat_model[4]{being,what_it_is,implications}:
+  "session","a durable log identity — the seat's *.jsonl saga, resumable","one session may wear MANY pids across restarts; a restart = a NEW pid, and re-seating is required to regain the helm"
+  "pid","a process at an instant; numbers are REUSED after death","a pid in a lock/marker is only trustworthy with a liveness+identity check (kill -0 /proc + the cmdline mark)"
+  "helm","the machine lock — ONE pid at a time is the seated primary","per-pid claim, never per-session; a stale .seated marker (dead pid) is a lie the wards must catch; Phase 0c: no process takes the helm from a living owner; the seated primary re-asserts on restart"
+  "the watch","the standing arm — a systemd pid with a lease, session-independent","cannot lose the helm because it never held one; the arm's continuity is lease-based, not lock-based"
+```
+
+Errands weave all three: task-id ↔ pane ↔ one live pid while seated, and always a
+durable record (status · inbox · report) that outlives the pid — the inbox road
+answers an errand whose body has already ended. `bin/eindri-send.sh`'s pane
+prompt may fail on an ended pane; the durable inbox is the always-true lane.
+
+galdr-reread: the naming map's Sýn + the harness-integration arm section.
