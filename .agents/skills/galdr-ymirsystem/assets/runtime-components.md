@@ -69,7 +69,9 @@ Per-component variable lists appear in each section below.
 | `bin/nornir-job-memory-housekeeping.sh` | **Muninn** | backup-gated memory snapshot/prune | `nornir-job-memory-housekeeping.sh` | 0 |
 | `bin/nornir-job-observer.sh` | **Huginn** | read-only observation of command + Brokk | `nornir-job-observer.sh` | 0 |
 | `bin/runes-append.sh` | **Runes** | append-only chained audit ledger | `... <actor> <event> [--order W] [--realm R] --message "..."` \| `--help` | 0; 1 IO; 2 usage |
-| `bin/snotra-capture.sh` | **Snotra** | capture mic + system monitor (PipeWire) to a dated WAV in the hoard; writes the Listening indicator | `snotra-capture.sh start [secs]` \| `stop` \| `status` \| `devices` | 0; 1 no device; 2 usage |
+| `bin/snotra-detect.sh` | **Snotra** | the ear's watch: reads the PipeWire graph, arms the capture of the conversation pair when an app takes the mic, and leaves (stop + transcribe + mine + deliver) when the room empties. Raised by capability as `snotra-detect.service` | `snotra-detect.sh run` \| `status` \| `scan` \| `once` \| `arm [slug]` \| `leave` | 0; 1 idle or unreadable graph; 2 usage |
+| `bin/snotra-mine.sh` | **Snotra** | mine decisions and action items out of a transcript — mechanical cues, verbatim quotes, timestamps; no owner is ever assigned | `snotra-mine.sh <transcript> <out-actions.md> [minutes]` | 0 mined; 1 usage/IO |
+| `bin/snotra-capture.sh` | **Snotra** | capture mic + system monitor (PipeWire) to a dated WAV in the hoard; writes the Listening indicator and `state/.snotra-outfile`. `SNOTRA_OUTFILE` names the recording, `SNOTRA_MONITOR`/`SNOTRA_MIC` the conversation pair | `snotra-capture.sh start [secs]` \| `stop` \| `status` \| `devices` | 0; 1 no device; 2 usage |
 | `bin/snotra-transcribe.sh` | **Snotra** | transcribe a recording (engine discovered), write Markdown minutes + a Rune | `snotra-transcribe.sh <wav> [topic]` | 0; 1 no recording |
 | `bin/snotra-ensure.sh` | **Snotra** | ensure the seat's whisper engine + model (per-OS) | `snotra-ensure.sh status` \| `ensure [--install]` \| `install` | 0 present; 1 absent; 2 usage |
 
