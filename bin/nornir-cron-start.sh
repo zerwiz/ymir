@@ -62,6 +62,26 @@ STAMP_DIR="$STATE/.cron-fired"
 LOCK_DIR="$STATE/.cron-locks"
 IDENTITY_MARK='cron run:'
 
+# ── the MACHINE's loop, not the seat's (2026-09-28) ──────────────────────────
+# The keep-one-loop guard was keyed on the SEAT's state dir, so five seats running
+# on one machine started five schedulers — and every ungated job in the machine's
+# schedule ran once per scheduler (the smoke test's `cron-leak`: "5 cron loops
+# running"). The schedule belongs to the MACHINE, so the loop does too: one
+# identity per machine, whichever seat happened to raise it. That seat keeps the
+# log and the fired-stamps; the identity is the machine's.
+machine_state_dir() {
+  local p=""
+  if [ -n "${BROKK_MACHINE_STATE_DIR:-}" ]; then printf '%s' "$BROKK_MACHINE_STATE_DIR"; return 0; fi
+  # Phase 0 (one state dir): the pointer is the ONE fact, never the raw legacy default.
+  [ -f "$STATE/.lock-path" ] && p="$(dirname "$(cat "$STATE/.lock-path" 2>/dev/null || true)")"
+  case "$p" in ""|.|/|./) p="${XDG_STATE_HOME:-$HOME/.local/state}/ymir" ;; esac
+  [ -d "$p" ] || p="${XDG_STATE_HOME:-$HOME/.local/state}/ymir"
+  printf '%s' "$p"
+}
+MACHINE_STATE="$(machine_state_dir)"
+MACHINE_PID_FILE="$MACHINE_STATE/cron.pid"
+mkdir -p "$MACHINE_STATE" 2>/dev/null || true
+
 mkdir -p "$STATE"
 
 job_count() {
@@ -71,10 +91,13 @@ job_count() {
 
 # A live loop is a live pid whose command line still carries the scheduler body.
 # The identity check guards against pid reuse after a reboot/crash.
+# The pid file is the MACHINE's (above), so a second seat reuses the loop that is
+# already running rather than starting a duplicate.
 running_pid() {
-  [ -r "$PID_FILE" ] || return 1
+  [ -r "$MACHINE_PID_FILE" ] || [ -r "$PID_FILE" ] || return 1
   local pid
-  pid=$(tr -d '[:space:]' <"$PID_FILE")
+  pid=$(tr -d '[:space:]' <"$MACHINE_PID_FILE" 2>/dev/null || true)
+  [ -n "$pid" ] || pid=$(tr -d '[:space:]' <"$PID_FILE" 2>/dev/null || true)
   case "$pid" in
     ''|*[!0-9]*) return 1 ;;
   esac
@@ -202,10 +225,10 @@ case "${1-}" in
   --stop)
     if pid=$(running_pid); then
       kill "$pid" 2>/dev/null || true
-      rm -f "$PID_FILE"
+      rm -f "$PID_FILE" "$MACHINE_PID_FILE"
       printf 'cron: stopped pid=%s\n' "$pid"
     else
-      rm -f "$PID_FILE" 2>/dev/null || true
+      rm -f "$PID_FILE" "$MACHINE_PID_FILE" 2>/dev/null || true
       printf 'cron: already stopped\n'
     fi
     exit 0
@@ -250,5 +273,6 @@ else
   nohup bash -c "$scheduler" _ "$CRON_CONFIG" "$LOG_FILE" "$STATE" "$BROKK_HOME" "$CONFIG" "$ROOT" >>"$LOG_FILE" 2>&1 &
 fi
 loop_pid=$!
+printf '%s\n' "$loop_pid" >"$MACHINE_PID_FILE"
 printf '%s\n' "$loop_pid" >"$PID_FILE"
 printf 'cron: started pid=%s jobs=%s\n' "$loop_pid" "$jobs"
