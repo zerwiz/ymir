@@ -579,7 +579,10 @@ step_hermes() {
 # The ear captures on the meeting seat and transcribes with whisper.cpp. The
 # engine is per-OS (pacman/apt/build) and the model is fetched once; a seat that
 # already carries a whisper build or voxtype is left untouched. The MCP face and
-# unit ride the fleet step (bin/fleet-ensure.sh).
+# unit ride the fleet step (bin/fleet-ensure.sh) — and so does the WATCH
+# (snotra-detect), which the fleet step raises by CAPABILITY on any seat with a
+# microphone: a call seat owes the ear's watch, a headless heart reports a
+# clean skip.
 step_snotra() {
   role_gate snotra heart,dev "the meeting ear" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add snotra SKIP "--skip-engines"; return; }

@@ -27,6 +27,12 @@
 #                        set it to force one specific rail)
 #   RAIL_MODEL         — the model alias (env/personal; unset = loud refusal)
 #   RAIL_KEY           — llama-swap API key (from ~/.pi/agent/auth.json)
+#   SNOTRA_MINUTES_FILE   — explicit minutes path (default: <meetings>/meeting-<stamp>-minutes.md).
+#                           The watch names the minutes after the meeting lane.
+#   SNOTRA_TRANSCRIPT_FILE — also write the plain transcript to this path
+#   SNOTRA_EAR_URL     — the fleet ear lane to transcribe on when THIS seat has no
+#                        engine (default: the first live ear from the fleet registry's
+#                        `ear` row, port SNOTRA_EAR_PORT=8322)
 
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
@@ -124,6 +130,38 @@ if [ -z "$RAIL_KEY" ] && [ -f "$HOME/.pi/agent/auth.json" ]; then
   RAIL_KEY=$(python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));print(d.get("llama-swap",{}).get("key",""))' "$HOME/.pi/agent/auth.json" 2>/dev/null || true)
 fi
 
+# The fleet's ear lanes, in the registry's declared order. Prints one URL per
+# line; the caller takes the first that answers.
+resolve_ear_lane() {
+  local url="${SNOTRA_EAR_URL:-}"
+  [ -n "$url" ] && { printf '%s\n' "$url"; return 0; }
+  local reg="$HOARD/data/fleet.json"
+  [ -r "$reg" ] || return 1
+  python3 - "$reg" "${SNOTRA_EAR_PORT:-8322}" <<'PY' 2>/dev/null || return 1
+import json, sys
+reg, port = sys.argv[1], sys.argv[2]
+try:
+    with open(reg, encoding="utf-8") as fh:
+        d = json.load(fh)
+except Exception:
+    raise SystemExit(1)
+hosts = d.get("hosts") or {}
+for name in (d.get("ear") or []):
+    row = hosts.get(name) or {}
+    host = (row.get("tailnet") or row.get("lan") or "").split("://")[-1].split(":")[0]
+    if host:
+        print("http://%s:%s" % (host, port))
+PY
+}
+
+# ear_transcribe <url> <audio> — the ear lane's /inference, one clip.
+ear_transcribe() {
+  local url="$1" audio="$2" out
+  [ -s "$audio" ] || return 1
+  curl -fsS --max-time 600 -X POST "${url%/}/inference" \
+    -F "file=@${audio};type=audio/wav" -F "response_format=text" 2>/dev/null || return 1
+}
+
 # run_whisper <bin> <model|''> <audio> <extra flags…>
 # Writes "$TMP_PREFIX.txt"; returns non-zero when the engine failed.
 # A build-tree binary needs its own directory on LD_LIBRARY_PATH (libwhisper.so).
@@ -136,10 +174,13 @@ run_whisper() {
   rm -f "$TMP_PREFIX.txt"
   (
     export LD_LIBRARY_PATH="$bindir:${LD_LIBRARY_PATH:-}"
+    # --output-srt rides alongside the plain text: it is the ONLY output that
+    # carries timestamps, and a mined action item without its moment cannot be
+    # jumped to in the recording.
     if [ -n "$model" ]; then
-      "$bin" -m "$model" -f "$audio" -l en --output-txt --output-file "$TMP_PREFIX" "$@"
+      "$bin" -m "$model" -f "$audio" -l en --output-txt --output-srt --output-file "$TMP_PREFIX" "$@"
     else
-      "$bin" -f "$audio" -l en --output-txt --output-file "$TMP_PREFIX" "$@"
+      "$bin" -f "$audio" -l en --output-txt --output-srt --output-file "$TMP_PREFIX" "$@"
     fi
   ) >/dev/null 2>&1
   [ -s "$TMP_PREFIX.txt" ]
@@ -155,12 +196,14 @@ do_transcribe() {
   local TOPIC="${2:-meeting}"
   local DATESTAMP
   DATESTAMP=$(date +%Y-%m-%d_%H%M%S)
-  local MINUTES_FILE="$MEETINGS/meeting-${DATESTAMP}-minutes.md"
+  local MINUTES_FILE="${SNOTRA_MINUTES_FILE:-$MEETINGS/meeting-${DATESTAMP}-minutes.md}"
+  local TRANSCRIPT_FILE="${SNOTRA_TRANSCRIPT_FILE:-}"
 
   if [ ! -f "$WAV" ]; then
     echo "error: recording not found: $WAV" >&2
     exit 1
   fi
+  mkdir -p "$(dirname "$MINUTES_FILE")" 2>/dev/null || true
 
   say "Transcribing: $WAV"
   say "Topic: $TOPIC"
@@ -219,7 +262,57 @@ do_transcribe() {
     say "  Install: whisper-cli (extra/whisper-cpp) or build whisper.cpp"
   fi
 
+  # A seat with no engine of its own still hears the meeting: the fleet's live
+  # ear lane (whisper served at SNOTRA_EAR_PORT) transcribes the clip. Bounded by
+  # what one HTTP body can carry — a full-length meeting belongs on a seat that
+  # holds the engine, and that limit is named in the asset, not hidden here.
+  if [ -z "$TRANSCRIPT" ] && [ -z "$WHISPER" ] && ! command -v voxtype >/dev/null 2>&1; then
+    local EAR_URL EAR_TEXT
+    EAR_URL="$(resolve_ear_lane || true)"
+    if [ -n "$EAR_URL" ]; then
+      say "  no local engine — transcribing on the fleet's ear lane"
+      EAR_TEXT="$(ear_transcribe "$EAR_URL" "$NORM" || true)"
+      if [ -n "$EAR_TEXT" ]; then
+        TRANSCRIPT="$EAR_TEXT"
+        say "  ear lane answered: $EAR_URL"
+      else
+        say "  the ear lane did not answer — no transcript"
+      fi
+    fi
+  fi
+
   TRANSCRIPT="${TRANSCRIPT:-}"
+  if [ -n "$TRANSCRIPT_FILE" ]; then
+    mkdir -p "$(dirname "$TRANSCRIPT_FILE")" 2>/dev/null || true
+    if [ -s "$TMP_PREFIX.srt" ]; then
+      # The timestamped form the miner reads: [start --> end] the words.
+      python3 - "$TMP_PREFIX.srt" "$TRANSCRIPT_FILE" <<'PY'
+import re, sys
+src, dst = sys.argv[1], sys.argv[2]
+TS = re.compile(r"^(\d{2}:\d{2}:\d{2})[,.](\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2})[,.](\d{3})\s*$")
+out, buf, span = [], [], None
+with open(src, encoding="utf-8", errors="replace") as fh:
+    for line in fh:
+        line = line.rstrip("\n")
+        m = TS.match(line.strip())
+        if m:
+            if span and buf:
+                out.append("[%s.%s --> %s.%s] %s" % (span[0], span[1], span[2], span[3], " ".join(buf).strip()))
+            span, buf = (m.group(1), m.group(2), m.group(3), m.group(4)), []
+            continue
+        if line.strip().isdigit() and not buf:
+            continue
+        if span and line.strip():
+            buf.append(line.strip())
+if span and buf:
+    out.append("[%s.%s --> %s.%s] %s" % (span[0], span[1], span[2], span[3], " ".join(buf).strip()))
+with open(dst, "w", encoding="utf-8") as fh:
+    fh.write("\n".join(out) + ("\n" if out else ""))
+PY
+    else
+      printf '%s\n' "$TRANSCRIPT" > "$TRANSCRIPT_FILE"
+    fi
+  fi
 
   # Step 3: produce structured minutes
   local DATE_TODAY HOUR
@@ -314,7 +407,7 @@ except Exception:
   fi
 
   # cleanup
-  rm -f "$NORM" "$TMP_PREFIX.txt"
+  rm -f "$NORM" "$TMP_PREFIX.txt" "$TMP_PREFIX.srt"
   say "Done: $MINUTES_FILE"
 }
 
