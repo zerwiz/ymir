@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "engram": {
+      "command": "$HOME_SEAT/.local/bin/engram-mcp",
+      "args": [
+        "--db",
+        "$HOME_SEAT/hodd/memory/kaia.engram"
+      ]
+    }
+  }
+}
