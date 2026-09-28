@@ -48,6 +48,7 @@ public/js/brand.js           the client DEFAULT (fallback) brand
 |---|---|
 | name / titles / OG / join label | `config.template.js` brand block + `brand.js` defaults — `Þing`, `ENTER HALL`, `Ymir · Þing` |
 | the mark | `public/images/logo.svg` = the Ymir Algiz-anvil (`assets/ymir-mark-algiz-anvil.svg`, same emblem Hlidskjalf's `Emblem.tsx` renders) — feeds favicon + every header/footer |
+| the social card | `public/images/thing-og.png` + `.jpg` — the 1200×630 Open Graph card. **The rasters are BUILD ARTIFACTS**: the source is `tools/og-card/thing-og.html` and `tools/og-card/render.sh` cuts it (see *The social card* below) |
 | the palette | stock MiroTalk blue (`--ds-brand-*: #4678f9`) → Ymir **slate + cyan + gold**: see `public/css/_tokens.css` (`--ds-brand-*`), `landing.css` body gradient, `client.css` `:root --body-bg` |
 | about modal | `brand.about.*` — no author/email block; the hall's own words + `© Ymir — Þing` |
 | footer | every view reduced to Privacy Policy + local `/api/v1/docs/` + `© 2026 Ymir — Þing` |
@@ -66,6 +67,31 @@ cp app/src/config.template.js app/src/config.js     # the unit skips npm prestar
 systemctl --user restart thing.service
 ```
 
+If the BRAND moved, the social card is re-cut **before** the pull — it is a build
+artifact, and a card left un-rendered is a card that lies about the page:
+
+```
+tools/og-card/render.sh            # re-render, then commit both rasters
+```
+
+### The social card (2026-09-28)
+
+The hall used to be shared as a bare link. `og:image` pointed at
+`../images/logo.svg` — a **relative** path (a crawler has not fetched the page and
+cannot resolve it) to an **SVG** (which no crawler renders) — and `og:url` was
+**empty**. Every share of `ping.zerwiz.org` unfurled to nothing.
+
+```
+social_card[3]{piece,where,rule}:
+  "the card","tools/og-card/thing-og.html → public/images/thing-og.png|.jpg","1200×630, the house composition (mark left, wordmark right, mono details, one bronze rule) in the HALL's cloth — stone and bronze, Cormorant / Newsreader / IBM Plex Mono — so the card looks like the page it links to"
+  "the renderer","tools/og-card/render.sh","headless chromium at 1200×630 → PNG, ImageMagick → the JPEG twin. The rasters are build artifacts; the HTML is the source of truth. Edit the HTML, run the renderer, commit both"
+  "the metadata","app/src/config.template.js brand.og + app/src/htmlInjector.js + every view head","the image and the url are ABSOLUTE (a crawler cannot resolve a relative path, and an empty og:url tells it nothing); og:image:secure_url|type|width|height|alt and og:locale are declared; the landing carries a canonical and a twitter:image:alt; the icon <link>s (and the client brand that re-applies them) are root-absolute, so they stop breaking on nested routes"
+```
+
+The crawler fetches the **JPEG** (`og:image:type: image/jpeg`) — a tenth of the
+PNG's bytes, and every crawler takes it. The PNG ships beside it as the lossless
+master. Neither is optional: a crawler fetches a file, not a build.
+
 ### The cache lie
 
 - `ping.zerwiz.org` is Cloudflare-backed (`cf-cache-status: DYNAMIC`), but
@@ -80,10 +106,25 @@ systemctl --user restart thing.service
 ### Verification
 
 - `node --check app/src/config.template.js public/js/brand.js public/js/client.js`
+- **the card and its metadata**: boot the fork and read the served page —
+  `curl -sS 127.0.0.1:3000/ | grep -o '<meta property="og:[^>]*>'` must show an
+  absolute `og:image` and `og:url`, the `og:image:*` set, and a canonical; then
+  `curl -o /dev/null -w '%{http_code} %{content_type}' /images/thing-og.jpg`
+  must be `200 image/jpeg`
+- `tools/og-card/render.sh --check` — proves the committed rasters still match
+  their source (a card that drifted from its HTML is a card nobody re-cut)
 - The rendered landing must have ZERO `MiroTalk`/`sponsor` matches and the
   Þing title; `/brand` must return `message.app.name = "Þing"` with the bloat
   html flags false.
 - No secrets, no names in the fork tree — public branding only (First Law).
+
+## Found, not fixed (the Allfather's to route)
+
+- **`npm ci` fails on this fork** — the lock is out of sync (`Missing:
+  @jitsi/rnnoise-wasm@0.2.1`, `@mediapipe/selfie_segmentation@0.1.1675465747`),
+  and `Dockerfile` line 19 runs `npm ci --omit=dev`, so a fresh docker build of
+  the fork is broken today. `npm install` works (the OG proof used it). One
+  `npm install` + commit of the lock would mend it.
 
 ## Not yet built (plan 53 phases)
 
