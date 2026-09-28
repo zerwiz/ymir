@@ -14,6 +14,33 @@ first_law{one,rule}:
    Private data lives at $YMIR_HOME, under hodd/. See \"Private data — YMIR_HOME\"."
 ```
 
+## The skill shelves, and how to FIND one
+
+**Nothing is preloaded.** A session that reads every skill acts like it read
+none. So a skill is *found* on demand and read then:
+
+```bash
+bash bin/skill-find.sh "the words you would use"   # search the descriptions
+bash bin/skill-find.sh --list                       # every skill, one line each
+bash bin/skill-find.sh --where <name>               # the exact path
+bash bin/skill-find.sh --check                      # duplicates, unfindable skills
+```
+
+**Four shelves, searched in order, first hit wins:**
+
+| # | Shelf | Who it is for |
+|---|---|---|
+| 1 | `.agents/skills/` | **ships** with the repo and the npm package — the project's craft |
+| 2 | `.agents/skills-local/` | **this machine only.** Gitignored, never published, never cloned |
+| 3 | `~/Documents/ymirhome/.agents/skills/` | **the Allfather's own projects** — `aigf` and the rest of the business |
+| 4 | `~/.pi/agent/skills/` | yours, harness-wide, across projects |
+
+**A shipped skill always beats a local one on purpose.** The project's craft
+must be the same on every machine, or two developers get two different answers.
+
+**A skill is unfindable without a one-line `description:` in its front matter.**
+`--check` names the ones that have none, and they get fixed before they ship.
+
 ## The voice (how you speak to the Allfather)
 
 Speak in the house voice — **Norse-natural**, not corporate-flat. Use the old

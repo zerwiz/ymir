@@ -207,12 +207,20 @@ cmd_new() {
       [ -n "$CARD" ] || printf '%s\n' "  (card not found — say so; never improvise the role)"
     fi
     for s in ${SKILLS:-}; do
+      # Three shelves, in order. A shipped skill always wins a name collision on
+      # purpose: the project's craft must be the same on every machine.
       if [ -f "$ROOT/.agents/skills/$s/SKILL.md" ]; then
         printf '%s\n' "- skill: \`$s\` → .agents/skills/$s/SKILL.md (load it before acting)"
+      elif [ -f "$ROOT/.agents/skills-local/$s/SKILL.md" ]; then
+        printf '%s\n' "- skill: \`$s\` → .agents/skills-local/$s/SKILL.md (LOCAL to this machine, not published — load it before acting)"
+      elif [ -f "$YMIR_HOME/.agents/skills/$s/SKILL.md" ]; then
+        printf '%s\n' "- skill: \`$s\` → the Allfather's home shelf, .agents/skills/$s/SKILL.md (their project craft — load it before acting)"
+      elif [ -f "$HOME/Documents/ymirhome/.agents/skills/$s/SKILL.md" ]; then
+        printf '%s\n' "- skill: \`$s\` → the Allfather's home shelf, .agents/skills/$s/SKILL.md (their project craft — load it before acting)"
       elif [ -f "$HOME/.pi/agent/skills/$s/SKILL.md" ]; then
         printf '%s\n' "- skill: \`$s\` → ~/.pi/agent/skills/$s/SKILL.md (load it before acting)"
       else
-        printf '%s\n' "- skill: \`$s\` — NOT FOUND in .agents/skills or the pi skills: report the gap, do not improvise"
+        printf '%s\n' "- skill: \`$s\` — NOT FOUND in .agents/skills, .agents/skills-local, the home shelf, or the pi skills. Find it: bash bin/skill-find.sh \"$s\". If it is genuinely absent, report the gap — do not improvise."
       fi
     done
     [ -z "$FIGURE" ] && [ -z "$SKILLS" ] && printf '%s\n' "(no craft given — declared --no-skill)"

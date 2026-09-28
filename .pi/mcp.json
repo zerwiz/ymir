@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "engram": {
+      "command": "/home/heimdall/.local/bin/engram-mcp",
+      "args": [
+        "--db",
+        "/home/heimdall/hodd/memory/kaia.engram"
+      ]
+    }
+  }
+}
