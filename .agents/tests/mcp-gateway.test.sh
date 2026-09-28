@@ -94,18 +94,38 @@ grep -q 'tickets_list' "$STATE/mcp-gateway/cache/skuld.json" 2>/dev/null && ok "
 out="$(rpc /mcp/skuld tools/call '{"name":"tickets_list","arguments":{"namespace":"work"}}')"
 printf '%s' "$out" | grep -q 'live:tickets_list' && ok "attached: a read proxies live (and is cached)" || bad "attached read: $out"
 
-# ═══ 1b. the browser road: the door admits the hall's origin (CORS) ════════
+# ═══ 1b. the browser road: the door admits ONLY the body's own origin ═══════
 # The Óðrerir hall reads the record from a PAGE, and the retired skuld server
-# opened CORS for it; the gateway must keep that road open or the board falls to
-# the saga's sample while the door is perfectly alive.
+# opened CORS for it; the gateway must keep that road open — but pinned to the
+# body's own pages. A foreign Origin is refused outright (403), not merely
+# denied CORS: a hostile page must not read OR write the record through the
+# loopback door. A request with no Origin is a native MCP client and is
+# admitted (every rpc() call above carries none).
 pf="$(curl -s -m 3 -o /dev/null -D - -X OPTIONS "http://127.0.0.1:$GW_PORT/mcp/skuld" \
   -H 'Origin: http://127.0.0.1:4322' -H 'Access-Control-Request-Method: POST' \
   -H 'Access-Control-Request-Headers: content-type,mcp-session-id' 2>/dev/null | tr -d '\r')"
-printf '%s' "$pf" | grep -qi '^HTTP/1.1 204' && ok "preflight: OPTIONS answers 204" || bad "preflight: $pf"
-printf '%s' "$pf" | grep -qi '^access-control-allow-origin: \*' && ok "preflight: the browser origin is admitted" || bad "preflight CORS: $pf"
+printf '%s' "$pf" | grep -qi '^HTTP/1.1 204' && ok "preflight: the hall's own origin answers 204" || bad "preflight: $pf"
+printf '%s' "$pf" | grep -qi '^access-control-allow-origin: http://127.0.0.1:4322' && ok "preflight: the origin is echoed (pinned, not *)" || bad "preflight CORS: $pf"
+printf '%s' "$pf" | grep -qi 'allow-private-network' && bad "preflight widened with allow-private-network" || ok "preflight carries no allow-private-network widening"
+
+pf="$(curl -s -m 3 -o /dev/null -D - -X OPTIONS "http://127.0.0.1:$GW_PORT/mcp/skuld" \
+  -H 'Origin: https://evil.example' -H 'Access-Control-Request-Method: POST' \
+  -H 'Access-Control-Request-Headers: content-type' 2>/dev/null | tr -d '\r')"
+printf '%s' "$pf" | grep -qi '^HTTP/1.1 403' && ok "preflight: a foreign origin is REFUSED (403, no 204)" || bad "foreign preflight: $pf"
+printf '%s' "$pf" | grep -qi 'allow-private-network' && bad "foreign preflight widened" || ok "foreign preflight carries no widening"
+
+out="$(curl -s -m 3 -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -H 'Origin: https://evil.example' \
+  -d '{"jsonrpc":"2.0","id":9,"method":"tools/list"}' "http://127.0.0.1:$GW_PORT/mcp/skuld" 2>/dev/null)"
+[ "$out" = 403 ] && ok "a foreign origin is refused a READ (403)" || bad "foreign read: HTTP $out"
+
+out="$(curl -s -m 3 -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -H 'Origin: https://evil.example' \
+  -d '{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"tickets_create","arguments":{"title":"drive-by"}}}' "http://127.0.0.1:$GW_PORT/mcp/skuld" 2>/dev/null)"
+[ "$out" = 403 ] && ok "a foreign origin is refused a WRITE (403)" || bad "foreign write: HTTP $out"
+
 out="$(curl -s -m 3 -D - -o /dev/null -X POST -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -H 'Origin: http://127.0.0.1:4322' \
   -d '{"jsonrpc":"2.0","id":9,"method":"tools/list"}' "http://127.0.0.1:$GW_PORT/mcp/skuld" 2>/dev/null | tr -d '\r')"
-printf '%s' "$out" | grep -qi '^access-control-allow-origin: \*' && ok "an answered call carries CORS" || bad "POST CORS: $out"
+printf '%s' "$out" | grep -qi '^HTTP/1.1 200' && ok "the hall's own origin is served (200)" || bad "hall POST: $out"
+printf '%s' "$out" | grep -qi '^access-control-allow-origin: http://127.0.0.1:4322' && ok "an answered call carries the pinned origin" || bad "POST CORS: $out"
 
 # ═══ 2. the upstream dies (a REAL refused connection) ═══════════════════════
 kill "$UPPID" 2>/dev/null; wait "$UPPID" 2>/dev/null; UPPID=""
