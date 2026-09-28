@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board.
 #
-# The Hall is a glass: it reads apps/odrerir/public/livehall.json, written by
-# this job from the real system state (runes · projects · cron · wake queue ·
-# standing smiths · armed when-sources · landed errands). Scheduled at 08:00,
-# after the 06:00 observer and the 07:00 briefing, so the morning's board
-# carries the day's fresh runes. Stateless: read inputs → write the snapshot →
-# carve a Rune → exit.
+# The Hall is a glass: it reads the livehall feed written by this job from the
+# real system state (runes · projects · cron · wake queue · standing smiths ·
+# armed when-sources · landed errands). In a clone the feed is
+# apps/odrerir/public/livehall.json served at request time by the app's vite
+# plugin; in a packaged install (no vite.config.ts, `vite preview` on dist/) the
+# same job also writes apps/.../dist/livehall.json, so both shapes serve the
+# living feed. Scheduled at 08:00, after the 06:00 observer and the 07:00
+# briefing, so the morning's board carries the day's fresh runes. Stateless:
+# read inputs → write the snapshot → carve a Rune → exit.
 #
 # Overrides: BROKK_ROOT_OVERRIDE (hall-snapshot.sh), YMIR_HOME (the hoard).
 set -u
