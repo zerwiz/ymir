@@ -612,6 +612,26 @@ deliver() {  # <minutes> <actions> <slug> <counts> <duration> <reason>
   [ -s "$actions" ] && body="$body
 Actions: $actions ($counts mined)"
 
+  # ── ONCE ONLY (2026-09-28) ────────────────────────────────────────────────
+  # One meeting, one announcement. The watch re-finalises a capture it has already
+  # finalised (a released mic that comes back, a restart that finds an abandoned
+  # recording, a flap), and each pass announced the SAME minutes again — the
+  # Allfather was told about one capture over and over, and separate `check` rows
+  # accumulated in the wake queue for it. Key the delivery on the MEETING ARTEFACT
+  # — the minutes path, which is unique per capture — and never on the app slug,
+  # which collides across meetings and never closes. A suppression is logged and
+  # said out loud, never silent.
+  local ledger_dir ledger
+  ledger_dir="$STATE_DIR/meetings-delivered"
+  mkdir -p "$ledger_dir" 2>/dev/null || true
+  ledger="$ledger_dir/$(printf '%s' "$minutes" | sha256sum | cut -c1-16)"
+  if [ -e "$ledger" ]; then
+    log "already delivered — $minutes (suppressed; one meeting is announced once)"
+    say "snotra: already delivered — $headline"
+    return 0
+  fi
+  printf '%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$minutes" >"$ledger" 2>/dev/null || true
+
   # --mark-done is ymir-say's own verb form: it takes the headline and body as
   # its own arguments (a trailing flag would be parsed as the headline).
   if [ -x "$(door ymir-say.sh)" ]; then
@@ -743,6 +763,21 @@ tick() {
       triggers="$(awk -F'\t' -v pids="$talk_key" '
         BEGIN { n = split(pids, p, ","); for (i = 1; i <= n; i++) if (p[i] != "") want[p[i]] = 1 }
         $1 == "SO" { if ($5 in want) print $2 }' "$snap" | sort -n | paste -sd, -)"
+    fi
+    # ── THE CALL GATE (2026-09-28) ────────────────────────────────────────
+    # A mic grab is NOT a meeting. On 2026-09-28 this watch armed on a seat where
+    # nobody was in a call, because an idle Chromium mic hold looks identical to a
+    # call to anything that only asks "does an app hold the mic?" — it recorded the
+    # room and announced the same minutes over and over. Require a stream that
+    # CARRIES a call role (`media.role`), or an explicit arm written by the Thing
+    # room or the operator. bin/snotra-iscall.sh is the one owner of that call.
+    _iscall="$(door snotra-iscall.sh 2>/dev/null || true)"
+    [ -n "$_iscall" ] && [ -x "$_iscall" ] || _iscall="${HOME}/.fleet/snotra-iscall.sh"
+    if [ -x "$_iscall" ] && ! "$_iscall" >/dev/null 2>&1; then
+      log "no call: $("$_iscall" --why 2>/dev/null || printf 'no call role on any mic stream')"
+      PENDING_KEY=""
+      PENDING_SINCE=0
+      return 0
     fi
     if do_arm "$snap" "$triggers" "$BASELINE"; then
       PHASE="in-call"
