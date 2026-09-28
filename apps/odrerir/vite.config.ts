@@ -21,12 +21,15 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 // THE HALL'S LIVE FEED, AT REQUEST TIME (plan 51 P9c doctrine: resolve at the
 // request, never restate at build). The board reads `/livehall.json`;
 // `bin/hall-snapshot.sh` writes `public/livehall.json` from the real system
-// state (runes · projects · cron · wake · smiths). A build bakes that file into
-// `dist/` — and a packaged install carries no snapshot at all (it is
-// gitignored, so the published build has none), which is how the board fell to
-// the saga's sample for good. This serves the snapshot from disk on EVERY
-// request, so the feed is whatever the snapshot job last wrote. No file → 404 →
-// the board honestly keeps the saga's tale rather than inventing rows.
+// state (runes · projects · cron · wake · smiths), and ALSO `dist/livehall.json`
+// whenever a dist/ exists. This plugin serves the public/ snapshot from disk on
+// EVERY request, so in the CLONE shape (vite dev, or vite preview with this
+// config) the feed is whatever the snapshot job last wrote. A packaged seat
+// carries no vite.config.ts (the tarball ships dist/ · electron/ · README.md),
+// so this plugin never runs there — and `vite preview` serves the dist/ file
+// statically, which the snapshot job rewrites in place. Either way the served
+// feed is the job's last write, not a build-time bake. No file → 404 → the
+// board honestly keeps the saga's tale rather than inventing rows.
 function livehallFeed(): Plugin {
   const snapshot = path.resolve(HERE, 'public/livehall.json');
   const serve: Connect.NextHandleFunction = (req, res, next) => {
