@@ -14,6 +14,8 @@
 #   bin/hall-snapshot.sh [<output.json>]
 #   default output: apps/odrerir/public/livehall.json
 #   (the Live Hall's own deck; the merged public site takes it from its build).
+#   When the app carries a dist/ (the packaged shape, served by `vite preview`),
+#   the snapshot is written there too, so BOTH shapes serve the living feed.
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -135,4 +137,15 @@ print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 mkdir -p "$(dirname "$OUT")"
 printf '%s\n' "$OUT_JSON" > "$OUT"
-printf 'hall-snapshot[1]{generated_at,output}:\n  "%s","%s"\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$OUT"
+# The packaged shape carries no vite.config.ts, so the request-time plugin never
+# runs: `vite preview` serves the app's dist/ statically (scripts/start.sh).
+# Write the snapshot into dist/ too, so the packaged seat serves THIS job's last
+# write — never the publish-time bake. The feed is therefore live in both
+# shapes: public/ through the plugin in a clone, dist/ through the static
+# server in a package.
+OUT_BUILD=""
+if [ -n "$APP_ODRERIR" ] && [ -d "$APP_ODRERIR/dist" ]; then
+  OUT_BUILD="$APP_ODRERIR/dist/livehall.json"
+  printf '%s\n' "$OUT_JSON" > "$OUT_BUILD"
+fi
+printf 'hall-snapshot[1]{generated_at,output,build_output}:\n  "%s","%s","%s"\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$OUT" "$OUT_BUILD"

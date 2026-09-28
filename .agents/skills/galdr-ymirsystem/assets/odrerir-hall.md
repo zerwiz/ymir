@@ -30,12 +30,14 @@ their states, the tickets and the plans.
 The SPA (`src/App.tsx` → the EmberBackground + the topbar with the halls
 buttons → the boards) builds to `dist/`. The boards read the **record through
 THIS BODY's own MCP gateway** (`http://127.0.0.1:8316/mcp/skuld`, port from
-`MCP_GATEWAY_PORT`): the gateway resolves the heart (zerwizserver) at REQUEST
+`VITE_MCP_GATEWAY_PORT`): the gateway resolves the heart (zerwizserver) at REQUEST
 time, so the hall never names the heart and a heart move never moves the hall's
 door (plan 51 P6/9c — the same law the harnesses' `mcp-adapter.json` obeys).
-The door admits the browser origin (CORS, restored 2026-09-27), so the board
-reaches it straight from the page — the road the retired skuld server opened and
-the gateway had dropped.
+The door admits the browser origin (CORS, restored 2026-09-27 and PINNED to the
+body's own pages 2026-09-28), so the board reaches it straight from the page —
+the road the retired skuld server opened and the gateway had dropped. Only a
+loopback origin (127.0.0.1 · localhost · `[::1]`), or one listed in
+`MCP_GATEWAY_ALLOWED_ORIGINS`, is admitted; a foreign origin is refused (403).
 
 ## 2. Raising the hall
 
@@ -109,8 +111,8 @@ app-local → hoisted → sibling); the app directory passed to Electron is
   `midgard/design-system/tokens.css`; the hearth is the carried-in
   `midgard/design-system/ember.js`. No bespoke palette, no generated regions.
 - **The Skuld door is env-overridable** (`VITE_SKULD_URL`), defaulting to this
-  body's gateway (`http://127.0.0.1:<MCP_GATEWAY_PORT>/mcp/skuld`, port default
-  8316) — the app never bakes a heart address (plan 51 P6/9c).
+  body's gateway (`http://127.0.0.1:<VITE_MCP_GATEWAY_PORT>/mcp/skuld`, port
+  default 8316) — the app never bakes a heart address (plan 51 P6/9c).
 - **Ports are sacred:** `:4322` is Óðrerir's alone. Do not move it into a
   Hlidskjalf route or a launcher call — its door is its own window and its own
   topbar buttons.
@@ -211,3 +213,27 @@ board ever needs it again. Everything the hall renders lives under
   the gateway's plain-JSON `tools/list` as well as the heart's SSE frame; the
   lifecycle `boards` row now probes the gateway's `/health` (a loopback door,
   not another seat's name).
+
+### The door is PINNED, and the feed lives in both shapes (2026-09-28 — Forseti's rework)
+Forseti's review of #239 (`$YMIR_HOME/state/eindri-reports/odrerir-live-door-review.md`)
+held the seal with three items; this section records the mend.
+- **The CORS hole (F2).** The engine answered `access-control-allow-origin: *`,
+  always `access-control-allow-private-network: true`, with no origin gate — and
+  127.0.0.1 is mixed-content-exempt, so ANY visited page could read and WRITE the
+  record (well · bolthorn · skuld). The false invariant ("the gateway binds
+  127.0.0.1, so only this body's own pages can reach it") said otherwise. The
+  engine (v1.2.0) now PINS the admitted set: any loopback origin, plus
+  `MCP_GATEWAY_ALLOWED_ORIGINS`; a foreign Origin is refused with **403 before
+  the method gate** (not merely denied CORS — a simple request can carry a JSON
+  body without a preflight). `access-control-allow-private-network` is removed
+  and the origin is echoed, never `*`. A request with no Origin is a native MCP
+  client and is admitted.
+- **The packaged feed (F1).** `bin/hall-snapshot.sh` now writes the snapshot to
+  `public/livehall.json` AND, when the app carries a `dist/`, to
+  `dist/livehall.json`. A clone is served by `vite dev`/`vite preview` through
+  the `ymir-livehall-feed` plugin (public/, request time); a packaged seat has
+  no `vite.config.ts` and is served by `vite preview` from `dist/` — where the
+  job's write now lands. The served feed is the job's last write in BOTH shapes.
+- **The knob name (F3).** This asset now names `VITE_MCP_GATEWAY_PORT` (the
+  app's build knob, `src/skuld.ts:24`) in every row; the gateway's own
+  `MCP_GATEWAY_PORT` stays the server-side default the build knob mirrors.
