@@ -151,6 +151,11 @@ assets/reference/state/
 
 # machine config rendered from .pi/mcp-adapter.json.example (holds absolute paths)
 .pi/mcp-adapter.json
+# the same for the bare pi mcp list — a rendered copy of the example, never the
+# template itself. It was tracked by mistake and carried a seat's absolute paths
+# (and a wrong one: ~/hodd instead of $YMIR_HOME/hodd).
+.pi/mcp.json
+.pi/*.bak-*
 
 # The away-mode alarm channel: written per machine by the Omarchy layer.
 .agents/config/wedge-alarm

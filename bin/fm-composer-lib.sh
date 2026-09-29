@@ -481,7 +481,7 @@ fm_composer_idle_matches() {
 # Content and plain_content are normalized and re-trimmed on entry, so the
 # verdict never depends on which whitespace alphabet the calling adapter
 # trimmed with.
-fm_composer_classify_content() {  # <bordered> <content> [idle_re] [idle_case] [plain_content] [placeholder-position] [styled]
+fm_composer_classify_content() {  # <bordered> <content> [idle_re] [idle_case] [plain_content] [placeholder_position] [styled]
   local bordered=$1 idle_re=${3:-} idle_case=${4:-sensitive} content plain_content glyph=''
   local placeholder_position=${6:-0} styled=${7:-1} idle_collision=0
   content=$2

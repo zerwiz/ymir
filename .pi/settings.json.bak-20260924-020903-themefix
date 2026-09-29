@@ -1,8 +1,0 @@
-{
-  "defaultProvider": "opencode-go",
-  "defaultModel": "deepseek-v4-flash",
-  "theme": "dark",
-  "packages": [
-    "npm:@juicesharp/rpiv-ask-user-question"
-  ]
-}
