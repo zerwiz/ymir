@@ -31,6 +31,16 @@ VERSION="1.0.0"
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/ymir-platform.sh" 2>/dev/null || true
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+# The operator's home, resolved by the ONE resolver (bin/hoard-lib.sh) — never
+# restated. The four-shelf skill walk below reads the home shelf from here, and
+# $HOME/Documents/ymirhome is NOT a default: it is one machine's layout.
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/hoard-lib.sh" 2>/dev/null || true
+if command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
+YMIR_HOME="${YMIR_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
+export YMIR_HOME
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
 DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
@@ -207,12 +217,18 @@ cmd_new() {
       [ -n "$CARD" ] || printf '%s\n' "  (card not found — say so; never improvise the role)"
     fi
     for s in ${SKILLS:-}; do
+      # Three shelves, in order. A shipped skill always wins a name collision on
+      # purpose: the project's craft must be the same on every machine.
       if [ -f "$ROOT/.agents/skills/$s/SKILL.md" ]; then
         printf '%s\n' "- skill: \`$s\` → .agents/skills/$s/SKILL.md (load it before acting)"
+      elif [ -f "$ROOT/.agents/skills-local/$s/SKILL.md" ]; then
+        printf '%s\n' "- skill: \`$s\` → .agents/skills-local/$s/SKILL.md (LOCAL to this machine, not published — load it before acting)"
+      elif [ -f "$YMIR_HOME/.agents/skills/$s/SKILL.md" ]; then
+        printf '%s\n' "- skill: \`$s\` → the Allfather's home shelf, .agents/skills/$s/SKILL.md (their project craft — load it before acting)"
       elif [ -f "$HOME/.pi/agent/skills/$s/SKILL.md" ]; then
         printf '%s\n' "- skill: \`$s\` → ~/.pi/agent/skills/$s/SKILL.md (load it before acting)"
       else
-        printf '%s\n' "- skill: \`$s\` — NOT FOUND in .agents/skills or the pi skills: report the gap, do not improvise"
+        printf '%s\n' "- skill: \`$s\` — NOT FOUND in .agents/skills, .agents/skills-local, the home shelf, or the pi skills. Find it: bash bin/skill-find.sh \"$s\". If it is genuinely absent, report the gap — do not improvise."
       fi
     done
     [ -z "$FIGURE" ] && [ -z "$SKILLS" ] && printf '%s\n' "(no craft given — declared --no-skill)"
