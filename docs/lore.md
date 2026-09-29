@@ -1161,3 +1161,33 @@ does not fall with a session; the **wake** cannot be eaten by an ack; the
 **judge** meets every harvest before the hammer; the **ward** refuses the
 silent lie. The chronicle is appended, not rewritten — because a rune that is
 carved cannot be un-carved.
+
+---
+
+## XXXIII. The Seat, the Process, and the Helm (2026-09-28)
+
+> A new chapter, appended whole. The halls run on THREE different kinds of
+> being, and the confusions between them cost a day's churn. The chronicle now
+> names them once, so the machine never re-teaches what this day paid for.
+
+**The session is a rune-scroll, not a body.** Every seat's session is a file —
+a `*.jsonl` saga of its own turns — that is durable and resumable. A session may
+be carried by many bodies (processes) across its life: a restart is a NEW body
+wearing the same scroll. One scroll, many bodies over time; one body, one scroll
+at an instant. **PID and session are never the same thing;** pid is a moment,
+session is a life.
+
+**The helm is a process claim, not a session right.** The machine lock holds ONE
+pid at a time — the seated primary. When a session restarts it gains a new pid
+and must **re-seat** to regain the helm; a stale seated-marker (a dead pid) is a
+lie the ward must catch. The Phase-0c law stands: no process may take the helm
+from a living owner.
+
+**An errand weaves all three.** A task-id ↔ a pane ↔ one live pid while seated —
+and always a DURABLE record (status · inbox · report) that outlives the pid,
+which is why the inbox road answers an errand whose body has already ended.
+
+**The Watch answers to neither.** The standing arm is a systemd body with a
+lease — deliberately session-independent. It cannot lose the helm because it
+never held one. The three beings of the hall: the scroll (session), the body
+(pid), the seat (helm) — and beyond all three, the watch.
