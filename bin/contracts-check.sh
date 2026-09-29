@@ -36,10 +36,16 @@ say() { printf '%s\n' "$*"; }
 say 'contracts_check[4]{leg,status,detail}:'
 
 # 1. the contract tests — no dependencies, always runnable.
-if out="$(node --test packages/contracts/test/ 2>&1)"; then
+#    The GLOB is load-bearing: `node --test <dir>` is not a stable contract across
+#    node majors. Node 24 resolves the argument as a module entry point and dies
+#    with "Cannot find module .../test" (MODULE_NOT_FOUND); node 26 treats it as a
+#    directory and passes. Passing the FILES (the shell expands the glob) is
+#    correct on every version this repo supports, so the gate's verdict cannot
+#    depend on which node the room happens to have.
+if out="$(node --test packages/contracts/test/*.test.ts 2>&1)"; then
   say "  \"tests\",\"PASS\",\"$(printf '%s' "$out" | grep -oE 'pass [0-9]+' | tail -1) · a mismatched card is refused\""
 else
-  say "  \"tests\",\"FAIL\",\"node --test packages/contracts/test/\""
+  say "  \"tests\",\"FAIL\",\"node --test packages/contracts/test/*.test.ts\""
   printf '%s\n' "$out" | tail -12 | sed 's/^/    /'
   fail=1
 fi
