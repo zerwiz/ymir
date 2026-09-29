@@ -34,7 +34,14 @@
 
 set -u
 
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+# The operator's home, resolved by the ONE resolver (bin/hoard-lib.sh) — env →
+# recorded → documented default. It was `${YMIR_HOME:-$HOME/Documents/ymirhome}`,
+# which is one machine's layout, and the defaults-guard refuses it.
+# shellcheck disable=SC1091
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hoard-lib.sh" 2>/dev/null || true
+if command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
 STATE_DIR="${YMIR_STATE_DIR:-${YMIR_HOME}/state}"
 ARM_MARKER="${SNOTRA_ARM_MARKER:-$STATE_DIR/.snotra-arm}"
 CALL_ROLES="${SNOTRA_CALL_ROLES:-communication phone}"

@@ -14,5 +14,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      # The node version is PINNED, not inherited. The runner's preinstalled Node
+      # was a version that cannot run the contract tests at all: those tests are
+      # TypeScript (`node --test packages/contracts/test/`), and type stripping
+      # is only on by default from Node 22.18 / 23.6. The gate therefore failed
+      # on correct code with a test error no seat could reproduce. A gate whose
+      # result depends on whatever the runner shipped is not a gate.
+      - name: Seat the node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: The gates
         run: bash bin/ci-verify.sh
