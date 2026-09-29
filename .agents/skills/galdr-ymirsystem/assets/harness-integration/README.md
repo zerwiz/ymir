@@ -706,6 +706,24 @@ integration code. Registered per harness (each writes under its own agent id):
 | Cursor | `~/.cursor/mcp.json` → `mcpServers.engram` | `cursor` |
 | Codex | `~/.codex/config.toml` → `[mcp_servers.engram]` | `codex` |
 
+**A rendered MCP list is never tracked (2026-09-29).** Two Pi configs are
+*rendered* from their `.example` and therefore hold a seat's absolute paths, so
+both are gitignored and the repo ships only the templates:
+
+```
+.pi/mcp-adapter.json     rendered from .pi/mcp-adapter.json.example   (gitignored)
+.pi/mcp.json             rendered from .pi/mcp.json.example           (gitignored)
+.pi/*.bak-*              a seat's own backups — never tracked, never shipped
+```
+
+`.pi/mcp.json` was tracked by mistake and carried both a user path and a wrong
+one (`~/hodd/memory/kaia.engram` — missing `Documents/ymirhome`, the pre-vault
+layout), so it tripped the Rule 07 `config` ward on a public npm tarball. The
+template `.pi/mcp.json.example` carries `__YMIR_HOME__` exactly like the
+adapter's. **The canonical Pi surface is still `.pi/mcp-adapter.json`**
+(`pi --mcp-config .pi/mcp-adapter.json`); the bare list is only for a Pi that
+reads the conventional project path.
+
 The engine needs the `mcp<2` SDK for `engram-mcp` (v2 renamed `FastMCP` to
 `MCPServer`, which breaks engram 1.x/2.x):
 `python3 -m pip install --user --break-system-packages 'mcp<2'`.

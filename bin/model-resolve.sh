@@ -95,8 +95,11 @@ if not req.strip():
     print("error: need a model request"); sys.exit(2)
 
 req_l = req.strip().lower()
-# 1. exact provider/model (optionally @quant)
-if "/" in req and "@" in req:
+# 1. exact provider/model. The @quant is a LOCAL convention - an online id like
+#    opencode-go/deepseek-v4.1-flash has no @ in it, and requiring one meant
+#    every online model name fell through to the local-only fuzzy pass and came
+#    back "unresolved" while the config named it in every single agent.
+if "/" in req and ("@" in req or req.split("/", 1)[0].strip() in providers):
     p, m = req.split("/", 1)
     print(f'model-resolve[1]{{request,locality,harness,provider,model,confidence}}:\n  "{req}","{"local" if is_local_provider(p) else "online"}","{LOCAL_H if is_local_provider(p) else ONLINE_H}","{p}","{m}","exact"')
     sys.exit(0)
