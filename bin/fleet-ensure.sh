@@ -151,7 +151,7 @@ materialize_tools() {
   # operator's home through it, and a seat that has the command without the
   # resolver dies on an unbound YMIR_HOME the moment it runs outside a shell
   # that already knew the home.
-  for f in hoard-lib.sh snotra-capture.sh snotra-transcribe.sh snotra-detect.sh snotra-mine.sh snotra-ensure.sh runes-append.sh; do
+  for f in hoard-lib.sh snotra-capture.sh snotra-transcribe.sh snotra-detect.sh snotra-iscall.sh snotra-mine.sh snotra-ensure.sh runes-append.sh; do
     [ -f "$ROOT/bin/$f" ] && cp -f "$ROOT/bin/$f" "$DST/$f" 2>/dev/null && chmod +x "$DST/$f" 2>/dev/null || true
   done
   # the skills mirror — the master .agents/skills tree, refreshed each ensure
