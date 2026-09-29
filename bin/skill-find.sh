@@ -31,8 +31,14 @@ LOCALS="$ROOT/.agents/skills-local"
 PISKILLS="$HOME/.pi/agent/skills"
 # The Allfather's OWN shelf, in the private home. This is where the skills for
 # their projects and their other work live - aigf, the fleet, anything that is
-# about their business rather than about Ymir.
-HOMESKILLS="$HOME/Documents/ymirhome/.agents/skills"
+# about their business rather than about Ymir. The home is RESOLVED by the one
+# resolver (bin/hoard-lib.sh); a literal path here would be one machine's layout.
+# shellcheck disable=SC1091
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hoard-lib.sh" 2>/dev/null || true
+if command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME
+fi
+HOMESKILLS="${YMIR_HOME:-$ROOT}/.agents/skills"
 
 BOLD=$'\033[1m'; DIM=$'\033[2m'; GRN=$'\033[32m'; YEL=$'\033[33m'; RED=$'\033[31m'; OFF=$'\033[0m'
 
