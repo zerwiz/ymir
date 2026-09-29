@@ -1191,3 +1191,30 @@ which is why the inbox road answers an errand whose body has already ended.
 lease — deliberately session-independent. It cannot lose the helm because it
 never held one. The three beings of the hall: the scroll (session), the body
 (pid), the seat (helm) — and beyond all three, the watch.
+## XXXIV. The Carving in Motion — the film series (2026-09-29)
+
+The thirteen rune chapters of the halls are a ready-made season, in saga
+order, and each is a myth whose mechanism is already a subsystem. They are now
+planned for film. The plan lives in the operator's vault at
+`~/Documents/ymirhome/hodd/plans/video/` — two documents, both dated:
+`ymir-cinematic-series.md` (the full build, with machine detail) and
+`film-series.md` (the ymir-facing cut — the series, the beat sheet, the cast,
+the pipeline, the social rules).
+
+Two things are settled here because the film depends on them, and both were
+open questions in the pack:
+
+- **The watch and the judge are named.** The film pack left the watcher eye
+  and the figure with the scales anonymous; the frame has always called them
+  **Sýn** (§XX, §XXXII) and **Forseti** (§XXXII). The films use the names. An
+  allegory with unnamed figures is decoration.
+- **The shield-wall is canon.** "It's not the individual strength of the axe.
+  It's the weight when ten men press together" — the best line the mythology
+  has, and until now it existed only in a cancelled render on one machine. It
+  is the pilot film. Ten men press together; that is the whole argument for
+  orchestration, and it is Ymir's argument made in the register Ymir speaks.
+
+The films obey the same law as the halls: append-only, no readable text in the
+picture, the palette never mixed, and the **turn** in every episode — the
+moment the myth and the machine diverge, which is the only reason to film a
+myth at all.

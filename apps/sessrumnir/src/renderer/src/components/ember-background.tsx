@@ -131,7 +131,6 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
       window.removeEventListener('resize', onResize)
       if (ro) ro.disconnect()
     }
-    }
   }, [])
 
   return <canvas ref={canvasRef} aria-hidden="true" className={className} />
