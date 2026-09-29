@@ -58,6 +58,16 @@ tsc_leg() {  # <name> <project>
     say "  \"$name\",\"SKIP\",\"tsc not found on this machine\""
     return 0
   fi
+  # The gate's own rule, applied to EVERY tsc leg: CI checks out without an
+  # install, so a project with no node_modules cannot resolve its type
+  # definitions. That is a gate that cannot run — say so, never fail the push.
+  # (The contract and the A2A server were the two legs that forgot this, and
+  #  they failed CI with TS2688 "Cannot find type definition file for 'node'"
+  #  on a checkout that had never been installed.)
+  if ! modules_present; then
+    say "  \"$name\",\"SKIP\",\"no node_modules — run npm install to type-check $proj\""
+    return 0
+  fi
   if out="$($TSC --noEmit -p "$proj" 2>&1)"; then
     say "  \"$name\",\"PASS\",\"$proj\""
   else
@@ -67,12 +77,11 @@ tsc_leg() {  # <name> <project>
   fi
 }
 
-tsc_leg contract packages/contracts/tsconfig.json
-tsc_leg a2a-server packages/a2a/ratatoskr/tsconfig.json
-
 # 3. Hlidskjalf — the UI consumer. Its project needs node_modules to resolve
 #    react/etc.; without them the leg is skipped, not failed. A worktree may
 #    borrow its primary checkout's node_modules up-tree, so search upward.
+#    Defined before every tsc_leg call: bash resolves at CALL time, so a leg
+#    that asked earlier would have found no such command and skipped itself.
 modules_present() {
   local d="$ROOT"
   for _ in 1 2 3 4; do
@@ -81,6 +90,9 @@ modules_present() {
   done
   return 1
 }
+
+tsc_leg contract packages/contracts/tsconfig.json
+tsc_leg a2a-server packages/a2a/ratatoskr/tsconfig.json
 if modules_present; then
   tsc_leg hlidskjalf apps/hlidskjalf/tsconfig.json
 else
