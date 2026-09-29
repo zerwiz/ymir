@@ -120,6 +120,11 @@ do_start() {
   say "  Sink monitor: ${MONITOR:-(none)}"
   say "  Mic source:   ${MIC:-(none)}"
   say "  Output:       $OUTFILE"
+  if [ "${SNOTRA_CHANNELS:-stereo}" = "stereo" ]; then
+    say "  Channels:     stereo — mic = channel 0 (you), system = channel 1 (others)"
+  else
+    say "  Channels:     mono (mixed) — set SNOTRA_CHANNELS=stereo to keep the two sides apart"
+  fi
 
   local -a DUR=()
   if [ -n "$SECONDS_ARG" ]; then
@@ -134,15 +139,32 @@ do_start() {
   # `-t` is an OUTPUT option — placed before the output file. As an input
   # option it limits only the first input, and amix(duration=longest) then
   # waits on the unbounded second input, so the capture never stops.
-  # Mix the monitor (everyone else) with the mic (the operator). A missing
-  # device degrades to the other alone rather than failing the capture.
+  #
+  # THE CHANNEL ASSIGNMENT IS LOAD-BEARING. whisper.cpp's `-di` calls the
+  # speaker by whichever channel's energy dominates a segment, so the operator's
+  # mic must be channel 0 and the room (the sink monitor) channel 1. Measured on
+  # heimdall 2026-09-28: with the monitor on channel 0 the remote side came back
+  # `(speaker 0)` — the
+  # two sides swapped. Set SNOTRA_CHANNELS=mono for the old mixed-down file (a
+  # 2-channel file is safe either way: without `-di` the decoder downmixes it).
   if [ -n "$MONITOR" ] && [ -n "$MIC" ]; then
-    ffmpeg -y -hide_banner -loglevel error \
-      -f pulse -i "$MONITOR" \
-      -f pulse -i "$MIC" \
-      -filter_complex "[0:a][1:a]amix=inputs=2:duration=longest:dropout_transition=0" \
-      -ar 48000 -ac 2 -c:a pcm_s16le \
-      "${DUR[@]}" "$OUTFILE" &
+    if [ "${SNOTRA_CHANNELS:-stereo}" = "stereo" ]; then
+      # input 0 is the monitor, input 1 the mic — so the FILTER re-orders them:
+      # [1:a] (mic) -> channel 0, [0:a] (monitor) -> channel 1.
+      ffmpeg -y -hide_banner -loglevel error \
+        -f pulse -i "$MONITOR" \
+        -f pulse -i "$MIC" \
+        -filter_complex "[1:a]aformat=channel_layouts=mono,pan=mono|c0=c0[me];[0:a]aformat=channel_layouts=mono,pan=mono|c0=c0[them];[me][them]amerge=inputs=2[a]" \
+        -map "[a]" -ar 48000 -ac 2 -c:a pcm_s16le \
+        "${DUR[@]}" "$OUTFILE" &
+    else
+      ffmpeg -y -hide_banner -loglevel error \
+        -f pulse -i "$MONITOR" \
+        -f pulse -i "$MIC" \
+        -filter_complex "[0:a][1:a]amix=inputs=2:duration=longest:dropout_transition=0" \
+        -ar 48000 -ac 2 -c:a pcm_s16le \
+        "${DUR[@]}" "$OUTFILE" &
+    fi
   elif [ -n "$MONITOR" ]; then
     say "  (no microphone resolved — capturing system audio only)"
     ffmpeg -y -hide_banner -loglevel error \

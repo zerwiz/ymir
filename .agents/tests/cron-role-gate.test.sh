@@ -46,6 +46,11 @@ sleep 1
 # parsed, so every role-first line was silently DEAD while still counted as
 # declared. Both orders are the one gate now (plan 54).
 rm -f "$TMP"/*.ran
+# Recompute the minute HERE: the fixture above ran ~20s ago, and a schedule line is
+# matched once, against the loop's own clock. A `now` captured at the top of the
+# file makes this fixture MISS whenever the minute rolls in between — the test then
+# blames the parser for a clock tick (observed 2026-09-28).
+now="$(date +%H:%M)"
 cat >"$TMP/config/cron.yaml" <<EOF
 @heart $now touch $TMP/rolefirst-heart.ran
 @dev $now touch $TMP/rolefirst-dev.ran
