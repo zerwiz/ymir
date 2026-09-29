@@ -163,6 +163,12 @@ ear_transcribe() {
 }
 
 # run_whisper <bin> <model|''> <audio> <extra flags…>
+# audio_channels <file> — the channel count (1 or 2), empty when ffprobe cannot say.
+audio_channels() {
+  ffprobe -v error -select_streams a:0 -show_entries stream=channels \
+    -of default=nw=1:nk=1 "$1" 2>/dev/null | head -1 | tr -d '[:space:]'
+}
+
 # Writes "$TMP_PREFIX.txt"; returns non-zero when the engine failed.
 # A build-tree binary needs its own directory on LD_LIBRARY_PATH (libwhisper.so).
 # Run inside a subshell so a CUDA abort cannot print a signal message into the
@@ -172,15 +178,24 @@ run_whisper() {
   local bindir
   bindir="$(dirname "$bin")"
   rm -f "$TMP_PREFIX.txt"
+  # `-di` is the stereo-channel diarization: whisper compares the two channels'
+  # energy over each segment and prefixes the text `(speaker 0)` / `(speaker 1)`.
+  # It is only meaningful on a 2-channel capture (bin/snotra-capture.sh's stereo
+  # mode puts the mic on channel 0), and omitting it is harmless — a 2-channel
+  # file decoded without `-di` is downmixed to mono by the decoder.
+  local DI=""
+  if [ "${SNOTRA_DIARIZE:-on}" != "off" ] && [ "$(audio_channels "$audio")" = "2" ]; then
+    DI="-di"
+  fi
   (
     export LD_LIBRARY_PATH="$bindir:${LD_LIBRARY_PATH:-}"
     # --output-srt rides alongside the plain text: it is the ONLY output that
     # carries timestamps, and a mined action item without its moment cannot be
     # jumped to in the recording.
     if [ -n "$model" ]; then
-      "$bin" -m "$model" -f "$audio" -l en --output-txt --output-srt --output-file "$TMP_PREFIX" "$@"
+      "$bin" -m "$model" -f "$audio" -l en $DI --output-txt --output-srt --output-file "$TMP_PREFIX" "$@"
     else
-      "$bin" -f "$audio" -l en --output-txt --output-srt --output-file "$TMP_PREFIX" "$@"
+      "$bin" -f "$audio" -l en $DI --output-txt --output-srt --output-file "$TMP_PREFIX" "$@"
     fi
   ) >/dev/null 2>&1
   [ -s "$TMP_PREFIX.txt" ]
@@ -282,6 +297,17 @@ do_transcribe() {
   fi
 
   TRANSCRIPT="${TRANSCRIPT:-}"
+# Whisper's channel labels made legible. The assignment is the capture's:
+  # channel 0 is the operator's microphone, channel 1 is everyone else (the sink
+  # monitor). A name map per recurring meeting (meetings/.speakers.yaml) is the
+  # next step; until then these two labels are always true.
+  if [ -n "$TRANSCRIPT" ]; then
+    TRANSCRIPT="$(printf '%s\n' "$TRANSCRIPT" | sed \
+      -e 's/(speaker 0)/[Me]/g' \
+      -e 's/(speaker 1)/[Others]/g' \
+      -e 's/(speaker ?)/[?]/g')"
+  fi
+
   if [ -n "$TRANSCRIPT_FILE" ]; then
     mkdir -p "$(dirname "$TRANSCRIPT_FILE")" 2>/dev/null || true
     if [ -s "$TMP_PREFIX.srt" ]; then
@@ -312,6 +338,11 @@ PY
     else
       printf '%s\n' "$TRANSCRIPT" > "$TRANSCRIPT_FILE"
     fi
+  # the same labels, in the timestamped form the miner reads
+  if [ -s "$TRANSCRIPT_FILE" ]; then
+    sed -i -e 's/(speaker 0)/[Me]/g' -e 's/(speaker 1)/[Others]/g' \
+           -e 's/(speaker ?)/[?]/g' "$TRANSCRIPT_FILE"
+  fi
   fi
 
   # Step 3: produce structured minutes
