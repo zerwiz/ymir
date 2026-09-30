@@ -37,8 +37,15 @@ export FM_GATE_REFUSE_BYPASS=1
 
 # Resolve the repo root from this library's own location. Consumed by sourcing
 # test files, not by this library, so it reads as "unused" here.
+#
+# This library lives at <root>/.agents/tests/lib.sh, so the root is TWO levels up.
+# It resolved one level up instead, which made ROOT=".agents", put every fixture
+# path under "/", made $ROOT/bin unresolvable, and failed every assertion in the
+# suite - quietly, because a broken test suite that still prints lines looks like
+# a suite with failures rather than one that never ran. See
+# docs/fixes/runtime/…-the-behaviour-suite-could-not-run.md.
 # shellcheck disable=SC2034
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # --- reporters --------------------------------------------------------------
 

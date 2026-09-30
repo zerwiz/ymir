@@ -1663,6 +1663,12 @@ EOF
     # shellcheck disable=SC2086  # same space-separated status-path list
     if afk_present || [ "$signal_actionable" -eq 0 ] \
       || { ! signal_crew_provably_working $files && ! signal_turnend_panes_churned $files; }; then
+      # The Allfather is told BEFORE the agent wake, and independently of it. This
+      # is the path that used to end silently at `wake`: the event was delivered
+      # to firstmate, and whether a person heard it was a model's decision. It is
+      # now the watcher's own, durable, and exactly-once-per-state.
+      # shellcheck disable=SC2086  # $files is a space-separated status-path list
+      fm_notify_files $files
       while IFS=$(printf '\t') read -r sf sig f; do
         [ -n "$sf" ] || continue
         fm_wake_append signal "$(basename "$f")" "$reason" || exit 1
@@ -1942,6 +1948,10 @@ EOF
       # this wake sends firstmate to the whole fleet, so every log is read.
       fm_wake_append heartbeat heartbeat heartbeat || exit 1
       touch "$STATE/.last-heartbeat"
+      # The backstop's whole purpose is catching an event the per-wake path
+      # absorbed, so it must reach the human on exactly the same terms.
+      # shellcheck disable=SC2086  # newline-separated status-path list
+      fm_notify_files $(printf '%s' "$FM_HEARTBEAT_SURFACE_ENDPOINTS" | cut -f1)
       mark_all_captain_relevant_surfaced || true
       wake "heartbeat"
     else
