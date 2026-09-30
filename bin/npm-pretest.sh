@@ -53,7 +53,17 @@ pack_and_hull() {
   # (bin/app-build.sh) never fires. Build explicitly, or the tarball ships
   # without the visualizer's interface — which is exactly what happened.
   if [ -x "$ROOT/bin/app-build.sh" ]; then
-    "$ROOT/bin/app-build.sh" 2>&1 | tail -3 || say "  WARN: app-build reported a failure"
+    # NO PIPE. `app-build | tail -3` makes the pipeline's status tail's, so a FAILED
+    # build could not fail this gate: the pretest went on to pack a tarball with no
+    # surfaces and reported the symptom three steps later as "sessrumnir web surface
+    # not built" (2026-09-30). A gate that cannot fail is not a gate.
+    if "$ROOT/bin/app-build.sh" >"$WORK/app-build.log" 2>&1; then
+      tail -3 "$WORK/app-build.log"
+    else
+      fail "app-build failed — packing now would ship a tarball with no app surfaces"
+      tail -25 "$WORK/app-build.log" | sed 's/^/    /'
+      return 1
+    fi
   fi
   say "== packing the exact publish artifact =="
   ( cd "$ROOT" && npm pack --ignore-scripts --pack-destination "$WORK" >/dev/null 2>&1 )
