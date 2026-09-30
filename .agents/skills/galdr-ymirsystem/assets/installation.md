@@ -502,6 +502,38 @@ assume the count:
 bash bin/ymir-install.sh --check | grep -cE '^  "'   # the honest count, on your host
 ```
 
+## The Pi binary is the operator's, not Ymir's
+
+`bin/pi-ensure.sh` ensures Ymir's **Pi packages** and nothing more:
+
+```
+npm:pi-mcp-adapter   MCP servers (from mcp.json: a2abridge, engram)
+npm:pi-web-access    web fetch/search tools
+npm:pi-lmstudio      LM Studio / local model bridge
+```
+
+The Pi **binary** belongs to the operator, on whatever channel the operator
+picked — npm, mise, or something else — and one seat may legitimately differ from
+the next. Ymir therefore does not install it, does not choose a channel for it,
+and does not edit the operator's `~/.npmrc`, shell rc, or `PATH` to steer it. If
+`pi` is absent, `pi-ensure.sh` says so and exits non-zero; it does not resolve it.
+
+The packages go in through `pi install npm:<pkg>`, which writes Pi's own
+extension prefix (`~/.pi/agent/npm`). That is why ensuring them needs no npm
+configuration, no sudo, and no operator state.
+
+**Why this line is drawn.** The script used to install the binary and preferred
+`mise install pi@latest` while its own error string claimed *"need mise or npm"* —
+naming a fallback the function never had. It also opened with
+`have pi && return 0`, so on a seat that already had any `pi` it did nothing and
+reported success. A stale mise Pi therefore reached every seat while the
+installer reported healthy. See `docs/fixes/install/`.
+
+`pi-ensure.sh status` still prints the answering version and its **resolved**
+origin. That is observation, not judgement: a second Pi on a box is the
+operator's to resolve, and seeing two paths side by side is the whole value of
+printing it.
+
 ## Configuration is never hardcoded (Rule 07)
 
 Every port, host, endpoint, path, and credential is resolved from env/config with
