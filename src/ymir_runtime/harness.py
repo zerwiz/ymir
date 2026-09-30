@@ -203,8 +203,14 @@ def build_launch_command(selection: HarnessSelection, brief_ref: str) -> str:
         )
         return f'{selection.name} {model_flag}{effort_flag}"$(cat {proc.shell_quote(brief_ref)})"'
     if selection.name == "opencode":
+        # `env` is load-bearing, not decoration. The seat writer prefixes `exec ` to
+        # any shape that does not already carry it (seat.py), and `exec VAR=x cmd`
+        # is not runnable shell — bash looks for a command called
+        # `OPENCODE_CONFIG_CONTENT=...`. With `env` the shape is executable BOTH as a
+        # plain command and after `exec`, which is why every harness's shape must be
+        # self-contained: a launch shape that only works in one caller is a trap.
         return (
-            "OPENCODE_CONFIG_CONTENT="
+            "env OPENCODE_CONFIG_CONTENT="
             + proc.shell_quote('{"permission":{"*":"allow"}}')
             + f' opencode {model_flag}--prompt "$(cat {proc.shell_quote(brief_ref)})"'
         )
