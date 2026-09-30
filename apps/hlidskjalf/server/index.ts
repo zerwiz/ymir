@@ -47,6 +47,9 @@ const HOME_DIR = process.env.YMIR_HOME ?? (() => {
 const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'ymirhome'), 'hodd');
 const RUNES = join(HOARD, 'memory/runes_audit.md');
 const WELL = join(ROOT, '.agents/memory/well/episodes.jsonl');
+// The engram store lives in the hoard (never the tree); the well lane reads its
+// supersede TIMESTAMPS only — never a fact's text (plan 60 Part 9's ward).
+const WELL_DB = join(HOARD, 'memory/kaia.engram');
 const MASTERPLAN = join(ROOT, 'docs/masterplan.md');
 
 const json = (data: unknown, status = 200) =>
@@ -379,14 +382,38 @@ async function well(q = '') {
 }
 
 /* ---- /api/mimir/health --------------------------------------------------- */
+// The well lane's decay axis (plan 60 Part 9): the DAYS a fact was superseded,
+// read straight from the engram store — timestamps only, never `subject`,
+// `predicate`, `object` or episode content. `/api/well` serves episodes, not
+// facts; this is the one fact-shaped datum the grid needs, and it carries no
+// private text. A missing store is an empty list, and the lane says so.
+function wellSupersedeDates(store?: unknown): string[] {
+  const dbPath = typeof store === 'string' && store ? store : WELL_DB;
+  try {
+    if (!existsSync(dbPath)) return [];
+    const db = new Database(dbPath, { readonly: true });
+    try {
+      const rows = db
+        .query("select distinct substr(superseded_at,1,10) as d from facts where superseded_at is not null order by d")
+        .all() as { d?: string }[];
+      return rows.map((r) => r.d ?? '').filter(Boolean);
+    } finally {
+      db.close();
+    }
+  } catch {
+    return [];
+  }
+}
+
 async function mimirHealth() {
+  let base: Record<string, unknown> = { status: 'down', store: null, episodes: 0, agents: [] };
   try {
     const res = await fetch(`${MIMIR_URL}/health`, { signal: AbortSignal.timeout(4000) });
-    if (res.ok) return await res.json();
+    if (res.ok) base = (await res.json()) as Record<string, unknown>;
   } catch {
     /* down */
   }
-  return { status: 'down', store: null, episodes: 0, agents: [] };
+  return { ...base, superseded_dates: wellSupersedeDates(base.store) };
 }
 
 /** One full episode from the well — the Allfather reads the whole memory. */
@@ -1178,6 +1205,94 @@ async function cronSeats() {
     });
   }
   return rows;
+}
+
+/* ---- /api/calendar (Mánagandr, the read reckoning) ----------------------- */
+// The reader (`tools/calendar/reader.mjs`, its own errand) refreshes the Google
+// grant and writes ONE rolling cache under the hoard's state. This route only
+// READS that file — there is no write path here, and none anywhere in the gate.
+// `state` is the honest word: a missing cache is NOT an empty calendar.
+const CALENDAR_CACHE = process.env.MANAGANDR_CACHE ?? join(HOARD, 'state', 'calendar', 'cache.json');
+// Freshness window for the cache; env-driven (Rule 07), one documented default.
+const CALENDAR_TTL_S = Number(process.env.MANAGANDR_CALENDAR_TTL_SECONDS ?? 6 * 60 * 60);
+
+interface CalendarEventOut {
+  id: string;
+  title: string;
+  start: string;
+  end: string | null;
+  allDay: boolean;
+  cancelled: boolean;
+  calendarId: string;
+  /** Present only when the cache carries it — a count, never names. */
+  attendees?: number;
+}
+interface CalendarAnswer {
+  as_of: string | null;
+  state: 'ok' | 'unknown' | 'absent';
+  events: CalendarEventOut[];
+}
+
+function pickField(obj: Record<string, unknown>, ...keys: string[]): unknown {
+  for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+  return undefined;
+}
+
+/** Normalise one raw cache event to the pinned shape; a stray becomes null. */
+function normalizeEvent(raw: unknown, i: number): CalendarEventOut | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const e = raw as Record<string, unknown>;
+  const start = pickField(e, 'start', 'start_at', 'startTime');
+  if (typeof start !== 'string' || !start) return null;
+  const rawEnd = pickField(e, 'end', 'end_at', 'endTime');
+  const end = typeof rawEnd === 'string' ? rawEnd : null;
+  const allDayFlag = pickField(e, 'allDay', 'all_day', 'isAllDay');
+  // An all-day event is flagged, or is a bare date with no time component.
+  const allDay = allDayFlag === true || (end === null && /^\d{4}-\d{2}-\d{2}$/.test(start));
+  const status = String(pickField(e, 'status', 'state') ?? '');
+  const cancelledFlag = pickField(e, 'cancelled', 'canceled');
+  const cancelled = cancelledFlag === true || /cancel/i.test(status);
+  const attendeesRaw = pickField(e, 'attendees', 'attendee_count', 'attendeeCount');
+  const attendees = Array.isArray(attendeesRaw)
+    ? attendeesRaw.length
+    : typeof attendeesRaw === 'number'
+      ? attendeesRaw
+      : undefined;
+  const out: CalendarEventOut = {
+    id: String(pickField(e, 'id', 'eventId', 'event_id') ?? `ev-${i}`),
+    title: String(pickField(e, 'title', 'summary', 'name') ?? '(untitled)'),
+    start,
+    end: allDay ? null : end,
+    allDay,
+    cancelled,
+    calendarId: String(pickField(e, 'calendarId', 'calendar_id', 'calendar') ?? 'primary'),
+  };
+  if (attendees !== undefined) out.attendees = attendees;
+  return out;
+}
+
+function calendar(): CalendarAnswer {
+  // No cache at all: the token is Phase 0 and has not been granted. This is NOT
+  // an empty day — the gate must say "not granted", never paint a blank grid.
+  if (!existsSync(CALENDAR_CACHE)) return { as_of: null, state: 'absent', events: [] };
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(CALENDAR_CACHE, 'utf8'));
+  } catch {
+    // The file is there but unreadable — unknown, never absent and never empty.
+    return { as_of: null, state: 'unknown', events: [] };
+  }
+  const obj = (parsed && typeof parsed === 'object' ? parsed : {}) as Record<string, unknown>;
+  const rawAsOf = pickField(obj, 'as_of', 'asOf', 'generated_at', 'generatedAt', 'fetched_at', 'updated_at', 'at');
+  const asOf = typeof rawAsOf === 'string' && rawAsOf ? rawAsOf : null;
+  const rawEvents = pickField(obj, 'events', 'items');
+  const list = Array.isArray(rawEvents) ? rawEvents : Array.isArray(parsed) ? parsed : [];
+  const events = list.map(normalizeEvent).filter(Boolean) as CalendarEventOut[];
+  // Freshness is provable only from a readable as_of inside the TTL; anything
+  // else is unknown — the cache exists but cannot be trusted for freshness.
+  const t = asOf ? Date.parse(asOf) : NaN;
+  const fresh = Number.isFinite(t) && Date.now() - t <= CALENDAR_TTL_S * 1000;
+  return { as_of: asOf, state: fresh ? 'ok' : 'unknown', events };
 }
 
 /* ---- /api/loaders, /api/checks, /api/settings ---------------------------- */
@@ -2141,6 +2256,7 @@ const server = Bun.serve({
         await proc.exited;
         return json({ view, ok: proc.exitCode === 0, output: out.trim().slice(-400) });
       }
+      if (p === '/api/calendar') return json(calendar());
       if (p === '/api/cron') return json(await cron());
       if (p === '/api/cron/seats') return json(await cronSeats());
       if (p === '/api/loaders') return json(await loaders());

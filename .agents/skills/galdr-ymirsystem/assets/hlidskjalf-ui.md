@@ -28,9 +28,14 @@ Quick rules:
 ## Location & stack
 
 - App: `apps/hlidskjalf` — **React 19 + Vite + TypeScript**, state via **Zustand**.
-- The app lives in **its own repo** (`zerwiz/hlidskjalf`, registered in the home
-  registry) — the monorepo never tracks it; `bin/ymir-install.sh`'s `apps` step
-  clones it into `apps/hlidskjalf` at install, or fast-forwards a present clone.
+- **The app lives in THIS repo** at `apps/hlidskjalf` — it has hundreds of tracked
+  files in the monorepo, its origin is the ymir repo, and the home registry
+  points it at `repo: apps/hlidskjalf` with posture `direct-PR`. (An earlier
+  version of this guide claimed it lived in its own repo (`zerwiz/hlidskjalf`)
+  that the monorepo never tracked; that is **stale** and was corrected
+  2026-09-30 in the same change that added the Mánagandr gate. `bin/ymir-install.sh`'s
+  `apps` step still materializes a checkout at install, but a working checkout is
+  the tree.)
 - Gate API: `apps/hlidskjalf/server/index.ts` — **Bun + `bun:sqlite`**, read-only,
   bound to the runtime and the smithy trace; Vite proxies `/api` → `:3889`.
 - Raise everything with the scripts (do not hand-start each process):
@@ -118,7 +123,7 @@ Rules that hold it honest:
   routed in `src/app/Shell.tsx`:
   `#/fleet` · `#/tasks` · `#/well` · `#/runes` · `#/reviews` · `#/processes` ·
   `#/files` · `#/chat` · `#/forge` · `#/profile` · `#/sessions` · `#/trace` ·
-  `#/decisions` · `#/stats` · `#/cron` · `#/runtime`.
+  `#/decisions` · `#/stats` · `#/cron` · `#/runtime` · `#/managandr`.
 
 ## Rules of the surface
 
@@ -178,7 +183,7 @@ selection would hide under closed parents).
 
 `/api/health · /api/me · /api/workspace · /api/agents · /api/tasks · /api/runes ·
 /api/well · /api/processes · /api/reviews · /api/files · /api/runtime · /api/cron ·
-/api/cron/seats ·
+/api/cron/seats · /api/calendar ·
 /api/loaders · /api/checks · /api/settings · /api/stream · /api/mimir …` plus the
 smithy trace: `/api/smidja/{health,sessions,sessions/:id,decisions,stats}` and
 chat: `/api/chat/history`, `POST /api/chat`.
@@ -205,6 +210,44 @@ the SERVER seats' (whynot · zerwizserver). Two read-only routes feed it:
 
 Never render a bare zero: an absent schedule names the missing path, a stopped
 loop names its reason, an unreachable seat names the ssh failure.
+
+### The Mánagandr gate — the read calendar (2026-09-30, plan 60)
+
+The seventeenth gate (`#/managandr`, id `managandr`, label `Mánagandr`, glyph
+`ᛅ`) is a **read** month reckoning — no create, edit, delete, invite or move
+exists in it, because the verb is ABSENT, not disabled. It is a month grid:
+week day-columns, an hour gutter in **the machine's timezone** (`Date` local
+methods — never a hardcoded offset or zone), a now line on today's column, `‹ ›`
+month navigation and a `⟨ Today ⟩` return, and four lane toggles.
+
+- **`/api/calendar`** (new, read-only, under the same `/api/*` auth — 401
+  without a session) reads the reader's rolling cache
+  (`$YMIR_HOME/hodd/state/calendar/cache.json`, written by `tools/calendar/reader.mjs`;
+  `MANAGANDR_CACHE` overrides the path, `MANAGANDR_CALENDAR_TTL_SECONDS` the
+  freshness window) and answers exactly
+  `{ as_of, state: "ok"|"unknown"|"absent", events: Event[] }` with
+  `Event = { id, title, start, end|null, allDay, cancelled, calendarId }`
+  (plus `attendees` when the cache carries it). **A missing cache and an empty
+  calendar never answer the same**: `absent` names Phase 0 (no consent), `unknown`
+  names an unprovable freshness, `ok` is fresh — and a fresh cache with no events
+  in the *visible* month says so rather than drawing a blank grid.
+- **The lanes compose from what the house already serves** — no second data path:
+  reckoning → `/api/calendar`; Nornir → `/api/cron` + `/api/cron/seats` (the
+  collision hairline: a marker on the hour a job lands inside a meeting — hollow
+  planned, filled ran, blood missed; a job's run-state is provable only for the
+  seat that runs it, so every other firing stays planned, never a false missed);
+  Smíðja → `/api/smidja/sessions` + each session's phases (a thin rail per run, a
+  block per phase, a blood edge on a refused gate); well → `/api/well` (density,
+  one tick per episode, brightness by `score`) with the supersede days from
+  `/api/mimir/health.superseded_dates` (timestamps only — never a fact's text).
+- **Wards:** no payload, no episode `content`, no event location/attendees as
+  free text is drawn or cached — counts, spans, statuses, tags, salience, costs
+  and verdicts only; colours are `var(--ymir-*)` tokens, never a raw hex. The
+  calendar cache lives in the hoard state; the app reads it and never writes.
+- Verified: `npm run typecheck` and `npm run build` green; a headless Chromium
+  run of `#/managandr` (desktop seat) renders 0 console errors, with the real
+  cache showing its events, an all-day chip, the collision hairlines and the read
+  modal (title · span · attendees · source id · Open in Google Calendar).
 
 `POST /api/chat` resolves the chosen model against the operator's Pi catalog and
 tries **every** engine that advertises it (LM Studio `:1234`, the llama.cpp

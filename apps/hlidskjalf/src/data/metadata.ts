@@ -112,6 +112,11 @@ export const GATE_META: Record<GateId, PageMeta> = {
     description:
       'Runs, tokens, and cost — totals and by chain and model.',
   },
+  managandr: {
+    title: 'Mánagandr',
+    description:
+      'The read calendar: the month grid, the Nornir collision hairlines, the smithy\u2019s lanes, and the well\u2019s density. No write path.',
+  },
 };
 
 function setMeta(attr: 'name' | 'property', key: string, content: string): void {
