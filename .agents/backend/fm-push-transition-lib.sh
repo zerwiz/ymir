@@ -15,6 +15,11 @@ FM_PUSH_TRANSITION_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$FM_PUSH_TRANSITION_LIB_DIR/fm-backend.sh"
 # shellcheck source=bin/fm-transition-lib.sh
 . "$FM_PUSH_TRANSITION_LIB_DIR/fm-transition-lib.sh"
+# shellcheck source=.agents/backend/fm-notify-lib.sh
+[ -n "${FM_NOTIFY_LIB_LOADED:-}" ] || {
+  . "$FM_PUSH_TRANSITION_LIB_DIR/fm-notify-lib.sh"
+  FM_NOTIFY_LIB_LOADED=1
+}
 
 TRIAGE_LOG="$STATE/.watch-triage.log"
 TRIAGE_LOG_MAX_BYTES=${FM_WATCH_TRIAGE_LOG_MAX_BYTES:-262144}
@@ -161,6 +166,10 @@ handle_push_transition() {  # <backend> <session> <record>
     0|1) surface_end=${span_record%%$'\t'*}; rest=${span_record#*$'\t'}; surface_ident=${rest%%$'\t'*} ;;
   esac
   reason="stale: $window (herdr: agent $to - waiting on human, escalated immediately, not via wedge timer)"
+  # The human is told here, not left to whatever firstmate decides to do with the
+  # wake. This is the transition that literally says the agent is waiting on a
+  # person, so it is the one that must never depend on a model to pass it on.
+  fm_notify_task "$task" || true
   fm_wake_append stale "$window" "$reason" || exit 1
   fm_backend_commit_transition "$backend" "$STATE" "$session" "$record" || exit 1
   mark_surfaced "$STATE/$task.status" "$surface_end" "$surface_ident"
