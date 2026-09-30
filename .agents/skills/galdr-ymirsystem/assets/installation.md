@@ -87,13 +87,32 @@ Plus `hoard_local_env` → `$YMIR_HOME/.env.local`: the operator's **credentials
 resolves it through `bin/hoard-lib.sh`. `--check` never writes; `--yes` takes what
 is recorded, else the documented default.
 
-**No script carries its own default (2026-09-24).** Every governed script that needs
-the home calls `ymir_home_root`; none restates a path. Hand-converging this once already
-failed — nine scripts were fixed and a tenth was found a week later only by reading — so
-the rule is now a **lock**: `bin/defaults-guard.sh` refuses a home default anywhere outside
-`bin/hoard-lib.sh`, and a waiver must be written on the line it applies to. The same ward
-also refuses a script that *uses* the home without resolving it, which is the class the
-first pass missed: a file can be free of literals and still be unable to find anything.
+**No script carries its own default (2026-09-24; widened 2026-09-30).** Every
+governed script that needs the home calls `ymir_home_root`; none restates a path.
+Hand-converging this once already failed — nine scripts were fixed and a tenth was
+found a week later only by reading — so the rule is now a **lock**:
+`bin/defaults-guard.sh` refuses a home default anywhere outside the two definition
+sites — `bin/hoard-lib.sh` in bash and `src/ymir_runtime/paths.py` in python — and
+a waiver must be written on the line it applies to. The same ward also refuses a
+script that *uses* the home without resolving it, which is the class the first
+pass missed: a file can be free of literals and still be unable to find anything.
+
+```
+defaults-guard[3]{class,refuses,note}:
+  "a guessed default","any absolute path naming a seat's own home","code only; a comment or runbook may quote a path, and a test fixture must name a synthetic one"
+  "an unresolved home","a file that reads $YMIR_HOME without calling the resolver","the literal pass is structurally blind to this"
+  "an absolute symlink","a TRACKED link whose target is absolute","a link's content IS its target, so no grep of the worktree can see it"
+```
+
+The third class is the one that shipped a machine into every clone: `state` was
+tracked as a link to `/home/heimdall/Documents/ymirhome/state`, so each seat
+inherited a dead link and the seat that wrote it never saw the failure. The law is
+one line — **a tracked link is relative and in-tree** — which Rule 02's harness
+links and `config` → `.agents/config` already satisfy. `.gitignore` refuses the
+path itself (`/state`, not `state/*`, which cannot match a link *named* `state`),
+and an absent link is a pre-install note the install seats per machine. The scan
+covers `bin/ .agents/ tools/ scripts/ src/`: guarding the doors and not the yard is
+how `tools/mill/worker.sh` came to carry three absolute paths unchallenged.
 
 ```bash
 bin/hoard-lib.sh                     # the lib (source-safe; functions only)
