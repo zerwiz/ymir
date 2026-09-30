@@ -71,7 +71,8 @@ export type GateId =
   | 'worktrees'
   | 'trace'
   | 'decisions'
-  | 'stats';
+  | 'stats'
+  | 'managandr';
 
 export interface SkillDef {
   id: string;
