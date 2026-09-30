@@ -33,6 +33,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Mapping
 
+from .. import paths
+
 HEAD = (
     "# RUNES Audit Trail\n"
     "> Append-only log of all significant system actions across Ymir\n"
@@ -57,7 +59,7 @@ def ymir_home(env: Mapping[str, str] | None = None) -> Path:
         recorded = pointer.joinpath("home").read_text(encoding="utf-8").splitlines()[0].strip()
     except (OSError, IndexError):
         recorded = ""
-    return Path(recorded or "~/Documents/ymirhome").expanduser()
+    return Path(recorded or paths.DEFAULT_HOME).expanduser()
 
 
 def home(env: Mapping[str, str] | None = None) -> Path:

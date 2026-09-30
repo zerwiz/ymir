@@ -34,6 +34,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
+from ..paths import DEFAULT_HOME
+
 HARNESS_COMMS = (
     "pi",
     "opencode",
@@ -46,7 +48,6 @@ HARNESS_COMMS = (
     "hermes",
 )
 ANCESTRY_LIMIT = 8
-DEFAULT_HOME = "~/Documents/ymirhome"
 PROC_ROOT = "/proc"
 
 

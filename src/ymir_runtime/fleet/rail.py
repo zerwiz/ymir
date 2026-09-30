@@ -38,13 +38,14 @@ import urllib.request
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
+
+from ..paths import DEFAULT_HOME
 from typing import Callable
 
 KEY_REF = "LLAMA_SWAP_API_KEY"
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 2.0
 LOOPBACK = "127.0.0.1"
-DEFAULT_HOME = "~/Documents/ymirhome"
 
 HEALTH_PATH = "/health"
 
