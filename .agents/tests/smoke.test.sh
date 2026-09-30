@@ -16,7 +16,14 @@ QUIET=0; [ "${1-}" = "--quiet" ] && QUIET=1
 export BROKK_HOME="$ROOT"
 export BROKK_ROOT_OVERRIDE="$ROOT"
 export BROKK_CONFIG_OVERRIDE="$ROOT/.agents/config"
-export BROKK_STATE_OVERRIDE="$ROOT/state"
+# The smoke test's state is ITS OWN scratch dir, never the tree's. It used to be
+# "$ROOT/state" and relied on that path existing — which only ever happened on the
+# machine the tracked symlink pointed at, so on every other clone the touch below
+# failed into a green run. A test creates its own ground.
+SMOKE_TMP="$(mktemp -d)"
+trap 'rm -rf "$SMOKE_TMP"' EXIT
+export BROKK_STATE_OVERRIDE="$SMOKE_TMP/state"
+mkdir -p "$BROKK_STATE_OVERRIDE"
 export BROKK_SESSION_PID="$$"
 STATE="$BROKK_STATE_OVERRIDE"
 declare -a STEP S; fails=0

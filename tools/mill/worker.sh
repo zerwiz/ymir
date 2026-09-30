@@ -3,10 +3,25 @@
 #   well-digest      local Qwen summarizes the well, then SPEAKS it (piper)
 #   index-derivative embed the well's episodes on the stone (:8500) -> vector-index.jsonl
 #   recall-rag       embed a query, cosine over the index, observe the top hits
-#   code-review      review a git range on the local model -> ~/mill/reviews/
+#   code-review      review a git range on the local model -> $MILL_HOME/reviews/
 set -u
 Q=mill:jobs
 log() { printf '[mill] %s\n' "$*"; }
+
+# Every path this worker touches is the SEAT's or the TREE's, never one machine's
+# name — a path is resolved from env with one documented default (Rule 07), and
+# the tree is located from this file, not remembered. A worker pinned to one
+# seat's absolute paths only ever ran on that seat, and failed silently everywhere else.
+MILL_HOME="${MILL_HOME:-$HOME/mill}"
+WELL_VENV="${WELL_VENV:-$HOME/.venvs/well}"
+YMIR_ROOT="${YMIR_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+VECTOR_INDEX="${MILL_VECTOR_INDEX:-$MILL_HOME/vector-index.jsonl}"
+PIPER_MODEL="${PIPER_MODEL:-$MILL_HOME/voices/en_US-lessac-medium.onnx}"
+
+# The hoard emits the platform env (keys, endpoints) in memory; nothing is inlined.
+emit_platform_env() {
+  eval "$("$YMIR_ROOT/bin/hodd.sh" emit secrets/platform.env 2>/dev/null)" 2>/dev/null || true
+}
 
 vec_of() { # <json-file> -> "[-0.03,0.01,...]" (first 120 dims), empty on error
   python3 -c "import json,sys
@@ -32,7 +47,7 @@ except Exception: print(5)" <<<"$job" 2>/dev/null)"
     well-digest)
       h="$(curl -s --max-time 5 http://127.0.0.1:4602/health)"
       recent="$(curl -s --max-time 5 "http://127.0.0.1:4602/recent?limit=$scope")"
-      eval "$(cd ~/Documents/ymirhome && ~/ymir/bin/hodd.sh emit secrets/platform.env 2>/dev/null)"
+      emit_platform_env
       prompt="Summarize the Ymir well's recent state in 3 terse lines (what stands, what is open). Well health: ${h:0:120} Recent: ${recent:0:400}"
       body="$(python3 -c "import json,sys;print(json.dumps({'model':'qwen3.6-35b-a3b','messages':[{'role':'user','content':sys.argv[1]}],'max_tokens':200}))" "$prompt")"
       reply="$(curl -s --max-time 180 http://127.0.0.1:8080/v1/chat/completions -H "Authorization: Bearer ${LLAMA_SWAP_API_KEY:-}" -H "Content-Type: application/json" -d "$body")"
@@ -41,8 +56,8 @@ try: print(json.load(sys.stdin.read())['choices'][0]['message']['content'])
 except Exception: print('llm-error')" <<<"$reply" 2>/dev/null)"
       curl -s --max-time 5 -X POST http://127.0.0.1:4602/observe -H "content-type: application/json" \
         -d "$(python3 -c "import json,sys;print(json.dumps({'content':'[mill] well-digest: '+sys.argv[1],'tags':'mill,digest','actors':'grotti'}))" "$text")" >/dev/null 2>&1
-      mkdir -p ~/mill/voice
-      (printf '%s' "$text" | ~/.venvs/well/bin/piper -m ~/mill/voices/en_US-lessac-medium.onnx -f ~/mill/voice/digest-$(date +%H%M%S).wav >/dev/null 2>&1) || true
+      mkdir -p "$MILL_HOME/voice"
+      (printf '%s' "$text" | "$WELL_VENV/bin/piper" -m "$PIPER_MODEL" -f "$MILL_HOME/voice/digest-$(date +%H%M%S).wav" >/dev/null 2>&1) || true
       log "well-digest ground + voiced: ${text:0:60}"
       ;;
     index-derivative)
@@ -63,10 +78,10 @@ try: print(len(json.loads(sys.argv[1])))
 except Exception: print(0)" "$v" 2>/dev/null)"
         h="$(printf '%s' "$line" | sha1sum | cut -c1-12)"
         c="$(python3 -c "import sys,json;print(json.dumps(sys.stdin.read()))" <<<"$(printf '%s' "$line" | head -c 160)" 2>/dev/null)"
-        echo "{\"hash\":\"$h\",\"dims\":${dims:-0},\"ts\":$(date +%s),\"c\":$c,\"v\":$v}" >> ~/mill/vector-index.jsonl
+        echo "{\"hash\":\"$h\",\"dims\":${dims:-0},\"ts\":$(date +%s),\"c\":$c,\"v\":$v}" >>"$VECTOR_INDEX"
         n=$((n+1))
       done < /tmp/eps.txt
-      metric="$(wc -l < ~/mill/vector-index.jsonl 2>/dev/null || echo 0)"
+      metric="$(wc -l <"$VECTOR_INDEX" 2>/dev/null || echo 0)"
       curl -s --max-time 6 -X POST http://127.0.0.1:4602/observe -H "content-type: application/json" \
         -d "$(python3 -c "import json;print(json.dumps({'content':'[mill] derivative: indexed $n more, index at $metric vectors','tags':'mill,derivative','actors':'grotti'}))")" >/dev/null 2>&1
       log "index-derivative: index now $metric vectors ($n this turn)"
@@ -79,7 +94,7 @@ except Exception: print('')" <<<"$job" 2>/dev/null)"
         -d "$(python3 -c "import json,sys;print(json.dumps({'content':sys.argv[1]}))" "$query")" > /tmp/q.json 2>/dev/null
       best="$(python3 -c "import json, math, sys
 qv=json.loads(sys.argv[1]) if sys.argv[1:] else []
-lines=[l for l in open('$HOME_SEAT/mill/vector-index.jsonl') if l.strip()]
+lines=[l for l in open(sys.argv[2]) if l.strip()]
 best=[]
 for l in lines:
     try:
@@ -89,7 +104,7 @@ for l in lines:
         best.append((dot/(na*nb),c))
     except Exception: pass
 best.sort(reverse=True)
-print(' | '.join(x[1] for x in best[:2]))" "$(vec_of /tmp/q.json)" 2>/dev/null)"
+print(' | '.join(x[1] for x in best[:2]))" "$(vec_of /tmp/q.json)" "$VECTOR_INDEX" 2>/dev/null)"
       if [ -n "$best" ]; then
         curl -s --max-time 6 -X POST http://127.0.0.1:4602/observe -H "content-type: application/json" \
           -d "$(python3 -c "import json,sys;print(json.dumps({'content':'[mill] recall: '+sys.argv[1][:200],'tags':'mill,recall','actors':'grotti'}))" "$best")" >/dev/null 2>&1
@@ -100,22 +115,22 @@ print(' | '.join(x[1] for x in best[:2]))" "$(vec_of /tmp/q.json)" 2>/dev/null)"
       ;;
     code-review)
       repo="$(python3 -c "import sys,json
-try: print(json.loads(sys.stdin.read()).get('repo','$HOME_SEAT/ymir'))
-except Exception: print('$HOME_SEAT/ymir')" <<<"$job" 2>/dev/null)"
+try: print(json.loads(sys.stdin.read()).get('repo',sys.argv[1]))
+except Exception: print(sys.argv[1])" <<<"$job" "$YMIR_ROOT" 2>/dev/null)"
       range="$(python3 -c "import sys,json
 try: print(json.loads(sys.stdin.read()).get('range','HEAD~5..HEAD'))
 except Exception: print('HEAD~5..HEAD')" <<<"$job" 2>/dev/null)"
       logline="$(git -C "$repo" log --oneline "$range" 2>/dev/null | head -8)"
       diffstat="$(git -C "$repo" diff "$range" --stat 2>/dev/null | tail -14)"
-      eval "$(cd ~/Documents/ymirhome && ~/ymir/bin/hodd.sh emit secrets/platform.env 2>/dev/null)"
+      emit_platform_env
       prompt="Review this git range tersely (risks, standards drift, what to seal). Log: ${logline} Diff stat: ${diffstat}"
       body="$(python3 -c "import json,sys;print(json.dumps({'model':'qwen3.6-35b-a3b','messages':[{'role':'user','content':sys.argv[1]}],'max_tokens':220}))" "$prompt")"
       reply="$(curl -s --max-time 180 http://127.0.0.1:8080/v1/chat/completions -H "Authorization: Bearer ${LLAMA_SWAP_API_KEY:-}" -H "Content-Type: application/json" -d "$body")"
       text="$(python3 -c "import sys,json
 try: print(json.load(sys.stdin.read())['choices'][0]['message']['content'])
 except Exception: print('llm-error')" <<<"$reply" 2>/dev/null)"
-      mkdir -p ~/mill/reviews
-      f=~/mill/reviews/$(date +%Y%m%d-%H%M%S).md
+      mkdir -p "$MILL_HOME/reviews"
+      f="$MILL_HOME/reviews/$(date +%Y%m%d-%H%M%S).md"
       { printf '# Review (%s, %s)\n\n' "$range" "$(basename "$repo")"; printf '%s\n' "$text"; } > "$f"
       curl -s --max-time 6 -X POST http://127.0.0.1:4602/observe -H "content-type: application/json" \
         -d "$(python3 -c "import json,sys;print(json.dumps({'content':'[mill] review: '+sys.argv[1][:140],'tags':'mill,review','actors':'grotti'}))" "$text")" >/dev/null 2>&1
