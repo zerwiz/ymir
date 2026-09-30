@@ -37,8 +37,17 @@ export FM_GATE_REFUSE_BYPASS=1
 
 # Resolve the repo root from this library's own location. Consumed by sourcing
 # test files, not by this library, so it reads as "unused" here.
+# TWO levels up, not one. This file lives at .agents/tests/lib.sh, so its parent
+# is .agents/ — and `$ROOT/bin/fm-wake-lib.sh` then resolved to
+# .agents/bin/fm-wake-lib.sh, which has never existed. It was wrong from the
+# repository's first commit (3c99ba0), and because lib.sh is SOURCED it failed
+# SILENTLY: the pid-identity call failed, lib.sh returned 1 out of a sourced
+# file, and every test came up half-built with no reason printed
+# (`fm_test_cleanup: command not found`, empty TMP_ROOT, fixture paths
+# collapsing to `/<world>/...`). An inherited ROOT now wins, because the runner
+# exports the real one.
 # shellcheck disable=SC2034
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
 # --- reporters --------------------------------------------------------------
 
@@ -80,6 +89,17 @@ fm_test_pid_identity() {
 
 FM_TEST_OWNER_IDENTITY=$(fm_test_pid_identity "$$") || {
   rm -f "$FM_TEST_CLEANUP_REGISTRY"
+  # This file is SOURCED, so a bare `return 1` leaves the caller half-built:
+  # no fm_test_cleanup defined, TMP_ROOT empty, and every fixture path later
+  # reported as `/<world>/...: No such file or directory`. Say the REAL reason,
+  # and stop the caller instead of handing it a corpse.
+  if [ -z "${ROOT:-}" ]; then
+    printf 'agents/tests/lib.sh: ROOT is not set — run this suite through bin/fm-test-run.sh (which exports it), or `ROOT=%s bash %s`\n' \
+      "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)" "${BASH_SOURCE[1]:-the test script}" >&2
+  else
+    printf 'agents/tests/lib.sh: could not derive this pid identity (ROOT=%s, tmp=%s) — the suite cannot initialise\n' \
+      "$ROOT" "${TMPDIR:-/tmp}" >&2
+  fi
   return 1
 }
 

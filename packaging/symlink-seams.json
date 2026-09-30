@@ -1,0 +1,40 @@
+{
+  "$comment": "The seams this package cannot carry, and why. npm does not pack a symlink as a symlink: it is dropped or dereferenced, so a path that exists in the git tree can be absent from the published tarball. Every entry here is a path the compliance wards would otherwise report as missing/dead INSIDE the artifact, with the door that seats it on a real machine. Read by bin/packaged-gate.sh and by the compliance wards when they run against an unpacked artifact.",
+  "seams": [
+    {
+      "path": ".claude/skills",
+      "kind": "symlink",
+      "target": "../.agents/skills",
+      "seated_by": "bin/valknut-load.sh --all",
+      "why": "Rule 02: the harness skill dirs are symlinks to the canonical tree. A machine seats them at install; the tarball must not carry a copy that could drift from the canonical one."
+    },
+    {
+      "path": ".codex/skills",
+      "kind": "symlink",
+      "target": "../.agents/skills",
+      "seated_by": "bin/valknut-load.sh --all",
+      "why": "as .claude/skills"
+    },
+    {
+      "path": ".cursor/skills",
+      "kind": "symlink",
+      "target": "../.agents/skills",
+      "seated_by": "bin/valknut-load.sh --all",
+      "why": "as .claude/skills"
+    },
+    {
+      "path": ".agents/skills/smidja-factory",
+      "kind": "symlink",
+      "target": "../../apps/smidja-factory",
+      "seated_by": "bin/ymir-install.sh (apps step) — the smithy is cloned from zerwiz/smidja",
+      "why": "The factory is a clone of another repository and is deliberately not tracked here; shipping a copy would defeat the clone."
+    },
+    {
+      "path": ".agents/skills/tyr-check/assets",
+      "kind": "symlink",
+      "target": "../galdr-ymirsystem/assets",
+      "seated_by": "bin/valknut-load.sh --all",
+      "why": "The judge's asset mirror is one canonical tree seen twice (the sync ward proves they agree). A shipped copy would be a second copy, which is the exact drift the ward exists to prevent."
+    }
+  ]
+}

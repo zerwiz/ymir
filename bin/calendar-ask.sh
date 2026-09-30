@@ -50,7 +50,7 @@ EXIT_BUSY=10
 EXIT_UNKNOWN=20
 EXIT_USAGE=2
 
-usage() { sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; }
 
 SUB=""
 WINDOW=""
