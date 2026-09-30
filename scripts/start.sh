@@ -6,6 +6,35 @@
 # ============================================================
 set -euo pipefail
 
+# --- usage: answered BEFORE any work -----------------------------------------
+# This script had NO argument parsing, so `scripts/start.sh --help` ran the whole
+# raise — including a full `npm install` — instead of printing help (2026-09-30).
+# A door that fetches dependencies when asked what it does is a trap.
+usage() {
+  cat <<'EOF'
+ymir-start — raise the Hlidskjalf control plane and the rest of the standing hall.
+
+  scripts/start.sh                 # raise everything that is down (idempotent)
+  scripts/start.sh --foreground    # run the SPA in THIS terminal instead of detaching
+  scripts/start.sh --help          # this text
+  scripts/start.sh --version
+
+What it raises (each is skipped if already serving):
+  Hlidskjalf SPA      http://127.0.0.1:3888    (HLIDSKJALF_PORT)
+  gate API            http://127.0.0.1:3889    (HLIDSKJALF_API_PORT) — auth + /api/* + dist/
+  Smíðja visualizer   http://127.0.0.1:8437
+  Óðrerir live hall   http://127.0.0.1:4322
+  Nornir cron, Bifrost (:4603), Mimir (:4602)
+
+Lower it with: scripts/stop.sh
+Logs: .run/*.log   Verify with: bash .agents/skills/lifecycle/smoke_test.sh
+EOF
+}
+case "${1-}" in
+  -h|--help)    usage; exit 0 ;;
+  --version)    printf 'ymir-start 1.0.0\n'; exit 0 ;;
+esac
+
 # --- portability shim: bin/ymir-platform.sh --------------------------------
 # One place knows the OS differences (readlink -f, /proc, setsid, stat, nproc).
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
