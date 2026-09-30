@@ -484,9 +484,14 @@ Below the verbs: `worktree.py` (Yggdrasil) · `harness.py` (Hamr) · `backend.py
   the rendered `.pi/mcp-adapter.json` holds machine paths and is git-ignored.
   `bin/valknut-load.sh` writes it; a Pi seat launches
   `pi --mcp-config .pi/mcp-adapter.json`.
-- **A2A:** the live mesh is the external `a2abridge` daemon (A2A + MCP over
-  Tailscale); `.agents/bus/` is a stub and the native Ratatoskr backbone is
-  planned, not built.
+- **A2A (corrected 2026-09-30):** the native backbone **runs**. The heart's node
+  `heart-zerwizserver` answers on door `:8301` and serves its agent card at
+  `/.well-known/agent-card.json` (`streaming: true`, skill `well-recall`), built from the shared
+  contract in `packages/contracts` — the same shape the seat's card is built from. An external
+  `a2abridge` is **seat-side** (`:7777` here), an adapter a harness talks to, not the backbone, and
+  no `a2abridge` binary exists on the server. `.agents/bus/` is still a stub, and the directory of
+  many installs — with per-pair, per-skill grants — does not exist yet: plan **61**, in the
+  canonical plan ledger.
 
 ### A.3 The report-shelf handoff — a worker is never invisible
 
