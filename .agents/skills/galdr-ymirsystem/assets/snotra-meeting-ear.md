@@ -290,6 +290,18 @@ governed by exactly one file — the one in this tree — instead of a materiali
 copy in `~/.config/systemd/user/` that nobody audits, which is how a 900 MiB engine
 came to sit on a seat for three days with no meeting and no unit in the tree.
 
+**`ear_seat_unit` REFRESHES, it does not merely seed** (corrected 2026-10-01, after
+PR #258 shipped a version that tested only `[ -f "$dst" ]`). A seat is not
+provisioned or unprovisioned — it is provisioned *to some version*, and that is
+exactly where a stale `[Install] WantedBy=ymir.target` hides. So the function
+`cmp -s`es the seated copy against the tree's and refreshes when they differ,
+returning quietly when they match. The failure it prevents is the sharp one:
+seeding-only would have removed the engine's residency from a seat that had
+**never** had the unit and left it pinned on a seat that **always** did — the seats
+that need the fix most. A seat that hand-wrote its own engine unit is **not**
+refused: the watch warns and leaves it standing, because silently replacing a
+hand-made unit is the same sin in the other direction.
+
 **The rail yields during transcription.** `bin/snotra-transcribe.sh` defaults
 `SNOTRA_FREE_RAIL=1`: when the GPU is starved it sources
 `~/.local/bin/voice-gpu-lib.sh` and calls `voice_ensure_vram 2048`, unloading the
