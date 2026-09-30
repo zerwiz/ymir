@@ -119,3 +119,59 @@ estimated Kokoro at "~100 MB, contention is small" and recorded 1,212 MiB two se
 later, and the ear's unit invented a capability raise to explain a boot target. The
 expensive mistake is not the 900 MiB — it is that a resource with no stated owner and no
 stated gate looks, from every angle, like it is working.
+
+---
+
+## 2026-10-01 (later) — correction: seating seeded a missing unit but never refreshed a stale one
+
+Cites the `ear_seat_unit` shipped in `e904aa1` / PR #258 above. That version is
+correct in intent and wrong in one line:
+
+```bash
+[ -f "$dst" ] && return 0        # ← the defect
+```
+
+It tested only whether the seated unit **existed**. So it seeded a seat that had
+none, and left untouched every seat that had been seated by an **earlier** version
+of the tree — which is precisely the population the fix was for. Found on heimdall
+the moment the merge landed: `~/.config/systemd/user/snotra-ear.service` was dated
+**Sep 27**, still carried `[Install]` / `WantedBy=ymir.target`, and the watch would
+have started it forever without ever replacing it.
+
+The `[Install]` section is the whole point of the exercise. A unit with one can be
+put back into `ymir.target` by a single `systemctl --user enable` — by the next
+`fleet-ensure`, by a boot-time re-enable, or by a hand. So the fix would have
+removed the engine's residency from a seat that had **never** had the unit, and left
+it pinned on a seat that **always** did. The seats that need it most are the ones
+that would have kept it.
+
+**The correction:** compare, do not test for existence. `cmp -s` against the tree's
+copy; refresh when they differ, return quietly when they match.
+
+```
+seat[3]{state_of_seated_copy,before,after}
+  "absent","seeded from the tree","unchanged — the tree's copy, 0 [Install] sections"
+  "STALE (an earlier version of the tree)","left pinned to the old unit","REFRESHED — 1 [Install] section -> 0, identical to the tree"
+  "current","left alone","left alone — no churn, no daemon-reload"
+```
+
+**Verified by probe, not by assertion** (`ear_seat_unit` extracted and run against a
+fake `$HOME`, with `systemctl` stubbed):
+
+| pass | seated copy | rc | result |
+|---|---|---|---|
+| 1 | stale, carrying `[Install] WantedBy=ymir.target` | 0 | refreshed — **`[Install]` sections 1 → 0**, byte-identical to the tree |
+| 2 | already the tree's copy | 0 | silent, no copy, no `daemon-reload` |
+| 3 | no template in either tree | 0 | the seat's own copy **stands**, with a warning — an un-auditable unit is said out loud, not deleted |
+
+Pass 3 is deliberate: a seat that hand-wrote its own engine unit is not refused. The
+watch warns, because the whole failure was a unit nobody could account for, and
+silently replacing a hand-made unit would be the same sin in the other direction.
+
+**Still not verified:** the `ear_up` → `ear_down` round trip on a real meeting. That
+is unchanged from the note above and is still the first thing to watch.
+
+**The lesson, one layer deeper than the one above.** The first fix assumed a seat is
+either provisioned or not. It is neither — a seat is provisioned *to some version*,
+and the versions are exactly where a stale `[Install]` hides. **Idempotence is not
+"do nothing if the file exists"; it is "make the file be what it should be".**
