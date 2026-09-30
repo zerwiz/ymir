@@ -103,3 +103,19 @@ named. Everywhere else the touch failed into a green run.
 - `.agents/tests/defaults-guard-seat-paths.test.sh` (new) ·
   `.agents/tests/smoke.test.sh`
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`
+**Addendum (2026-09-30 — the fresh-clone proof, run after the commit above).**
+The note above claimed a clone starts with no `state/` and every writer creates
+its own; that is now measured, not argued:
+
+```
+clone[4]{check,result}
+  "state present","no — `ls` reports no such file; `git ls-files -s state` is empty"
+  "defaults-guard check","exit 0, all three sections none"
+  "tracked symlinks","112, every one relative and in-tree"
+  "smoke.test.sh","8/8 OK — galdr compliance among them"
+```
+
+Cloned from the branch into a bare tree that had never carried the link. The
+compliance `state` row reads `NOTE — no tree state yet`, which is the shape a
+pre-install machine is meant to be in. The seat that wrote the link is the only
+one that ever saw it work; every other seat has now been proved to work without it.
