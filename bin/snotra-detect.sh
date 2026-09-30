@@ -429,6 +429,86 @@ slugify() {  # <text> → a filename-safe token
   printf '%s' "${s:-impromptu}"
 }
 
+# ── the ENGINE's residency: awake only while a meeting is ───────────────────
+# The watch needs no engine — it is a read of the PipeWire graph. The ENGINE
+# (whisper on the ear lane, :8322) is what costs VRAM, and it is not small:
+# ~900 MiB on a strong box. On a 16 GiB card that is the whole margin — with
+# the engine resident, the rail's 262K model cannot allocate its MTP draft
+# context and every request comes back 500. Measured on heimdall 2026-10-01:
+# the preset takes 13,790 MiB, the engine 900, and 16,384 is the card.
+#
+# So the engine follows the SAME question the watch already asks, and nothing
+# else: `snotra-iscall.sh` is the one authority on whether a call is live, so
+# it is the one authority on whether the engine owes the card any VRAM. Its
+# residency is deliberately NOT `WantedBy=ymir.target` and NOT a capability
+# raise — those decide by what HARDWARE the seat has, never by whether a
+# MEETING is happening, which is how a seat ended up holding 900 MiB for three
+# days with no call on the room.
+#
+# The window is `arm` -> `finalize` complete. Not one tick shorter: the
+# transcription of the recording happens AT leave, through this very engine, so
+# lowering it when the room empties rather than when the minutes are written
+# would lose the meeting it was raised for.
+SNOTRA_EAR_UNIT="${SNOTRA_EAR_UNIT:-snotra-ear.service}"
+
+# The unit is seated from the DURABLE tree at arm time, never enabled at boot.
+# It is deliberately not in AUTOBOOT_PROGRAMS: that list is the purge list, and
+# an entry there would be purged for not being owed — while an entry NOT there
+# is ungoverned, which is how a 900 MiB engine came to sit on a seat for three
+# days with no meeting and no unit in the tree to audit. Seating it here keeps
+# one copy, in the tree, and makes a seat that has never held a meeting cost
+# nothing at all.
+ear_seat_unit() {  # 0 when the unit is in place (or already was)
+  local src dst
+  dst="$HOME/.config/systemd/user/$SNOTRA_EAR_UNIT"
+  [ -f "$dst" ] && return 0
+  mkdir -p "$HOME/.config/systemd/user" 2>/dev/null || return 1
+  # SNOTRA_DOORS_DIR is <root>/bin, so the tree that holds tools/mill/systemd
+  # is its parent. Beside the watch first, exactly as door() prefers.
+  for src in "$SCRIPT_DIR/../tools/mill/systemd/$SNOTRA_EAR_UNIT" \
+             "${SNOTRA_DOORS_DIR:-/nonexistent}/../tools/mill/systemd/$SNOTRA_EAR_UNIT"; do
+    if [ -f "$src" ]; then
+      cp -f "$src" "$dst" 2>/dev/null || return 1
+      log "engine: seated $SNOTRA_EAR_UNIT into ~/.config/systemd/user"
+      break
+    fi
+  done
+  [ -f "$dst" ] || { log "engine: WARNING — no $SNOTRA_EAR_UNIT template in the tree"; return 1; }
+  systemctl --user daemon-reload >>"$DETECT_LOG" 2>&1 || true
+  return 0
+}
+
+ear_up() {
+  have systemctl || return 0
+  if systemctl --user is-active --quiet "$SNOTRA_EAR_UNIT" 2>/dev/null; then
+    return 0
+  fi
+  ear_seat_unit || return 0
+  log "engine: raising $SNOTRA_EAR_UNIT — a meeting is being recorded"
+  if systemctl --user start "$SNOTRA_EAR_UNIT" >>"$DETECT_LOG" 2>&1; then
+    log "engine: $SNOTRA_EAR_UNIT is up"
+  else
+    # Not fatal. The seat's own whisper is the fallback lane, and a meeting that
+    # is recorded is a meeting that can still be transcribed.
+    log "engine: WARNING — $SNOTRA_EAR_UNIT did not rise; transcription falls to the seat's own whisper"
+  fi
+  return 0
+}
+
+ear_down() {
+  have systemctl || return 0
+  if ! systemctl --user is-active --quiet "$SNOTRA_EAR_UNIT" 2>/dev/null; then
+    return 0
+  fi
+  log "engine: lowering $SNOTRA_EAR_UNIT — the minutes are written, the card is owed nothing"
+  if systemctl --user stop "$SNOTRA_EAR_UNIT" >>"$DETECT_LOG" 2>&1; then
+    log "engine: $SNOTRA_EAR_UNIT is down"
+  else
+    log "engine: WARNING — $SNOTRA_EAR_UNIT did not lower; it will idle at the next boot"
+  fi
+  return 0
+}
+
 # ── the START edge: arm the ear on the conversation pair ───────────────────
 do_arm() {  # <snapshot> <trigger-csv> <baseline-csv> [forced-slug]
   local snap="$1" triggers="$2" baseline="$3" forced="${4:-}"
@@ -481,6 +561,9 @@ do_arm() {  # <snapshot> <trigger-csv> <baseline-csv> [forced-slug]
   fi
   state_write "in-call" "$slug" "$outfile" "$topic" "${sink:+$sink.monitor}" "$mic" "$sink" \
     "$(date +%s)" "$triggers" "$baseline"
+  # The engine rises only once the capture is confirmed alive — a refused arm
+  # must not cost the card a whisper for a meeting that is not being heard.
+  ear_up
   say "snotra: the ear is listening — ${base}"
   return 0
 }
@@ -514,6 +597,7 @@ do_leave() {  # <reason>
   if [ -z "$outfile" ] || [ ! -f "$outfile" ]; then
     log "leave: no recording on disk — nothing to finalize"
     state_clear
+    ear_down
     return 1
   fi
   local bytes secs=""
@@ -529,10 +613,16 @@ do_leave() {  # <reason>
     log "leave: recording ${secs}s is below the ${MIN_SECONDS}s meeting floor — kept, not mined ($outfile)"
     say "snotra: the ear left; ${secs}s was too short to be a meeting (kept: $outfile)"
     state_clear
+    # Still lowered: the recording is kept on the shelf, but nothing will
+    # transcribe it now, so holding the engine for it is a cost with no buyer.
+    ear_down
     return 1
   fi
 
   finalize "$outfile" "$slug" "$topic" "$reason" "$armed" "$sink" "$mic"
+  # AFTER finalize, never before: finalize transcribes the recording through this
+  # engine. Lowering first would leave a recorded meeting with no minutes.
+  ear_down
 }
 
 finalize() {  # <wav> <slug> <topic> <reason> <armed> <sink> <mic>
@@ -711,6 +801,11 @@ back_to_idle() {  # re-baseline after a meeting ends
   # nothing arms until it passes.
   COOLDOWN_UNTIL=$(( $(date +%s) + COOLDOWN ))
   rebaseline
+  # The safety net for the engine. Reaching idle means no meeting is being
+  # recorded, so nothing is owed the card: a watch that restarted mid-meeting
+  # (leaving an engine up with no arm behind it), or a seat that was disabled
+  # by hand, both land here and give the VRAM back.
+  ear_down
 }
 
 tick() {
