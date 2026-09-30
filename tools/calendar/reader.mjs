@@ -123,6 +123,9 @@ export function resolveConfig(env = process.env) {
     home,
     cacheDir,
     cachePath: env.MANAGANDR_CACHE || join(cacheDir, "cache.json"),
+    // Whether the cache path was NAMED. A named path may hold a fixture; the
+    // canonical one may not.
+    cacheExplicit: env.MANAGANDR_CACHE != null && env.MANAGANDR_CACHE !== "",
     calendarId: env.MANAGANDR_CALENDAR_ID || DEFAULT_CALENDAR_ID,
     clientId: env.MANAGANDR_CLIENT_ID || env.HEIMDALL_OAUTH_CLIENT_ID || "",
     clientSecret: env.MANAGANDR_CLIENT_SECRET || env.HEIMDALL_OAUTH_CLIENT_SECRET || "",
@@ -375,6 +378,17 @@ export async function readCalendar(opts = {}) {
       as_of: now.toISOString(), window: windowMeta(window),
       calendar_id: cfg.calendarId, zone: cfg.zone, source: "fixture", events
     };
+    // A fixture may only ever write a cache the CALLER named. Writing invented
+    // events into the hoard's rolling cache makes the control plane serve
+    // "Invented All-Day Gathering" as if it were the Allfather's real diary —
+    // and it happened (2026-09-30 20:30, from a probe that omitted --cache).
+    // The canonical path is the one the HALL reads, so it takes a real read.
+    if (opts.cachePath == null && !cfg.cacheExplicit) {
+      throw new Error(
+        "refusing to write fixture data to the canonical cache " +
+          `${cachePath} — pass --cache <path> to write a fixture somewhere private`
+      );
+    }
     await writeCache(cachePath, payload);
     return fromPayload(payload, { status: "ok", source: "fixture", checked_at: checkedAt });
   }
@@ -431,7 +445,7 @@ function parseArgs(argv) {
       case "--now": out.now = argv[++i]; break;
       case "--refresh": case "-r": out.refresh = true; break;
       case "--fixture": out.fixture = argv[++i]; break;
-      case "--cache": out.cache = argv[++i]; break;
+      case "--cache": out.cachePath = argv[++i]; break;
       case "--ask": out.ask = argv[++i]; break;
       case "--probe": out.probe = true; break;
       case "--titles": out.titles = true; break;
@@ -484,7 +498,7 @@ async function main() {
       now: args.now || undefined,
       refresh: args.refresh,
       fixture: args.fixture,
-      cachePath: args.cache || undefined
+      cachePath: args.cachePath || undefined
     });
     if (args.ask) {
       const now = args.now ? new Date(args.now) : new Date();
