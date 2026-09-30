@@ -27,6 +27,7 @@ import {
 import {
   GateError,
   gateApi,
+  type CalendarInfo,
   type ChatModel,
   type ChatSession,
   type CronInfo,
@@ -146,6 +147,7 @@ interface YmirState {
   traceability: number;
   live: boolean | null;
   runtime: RuntimeInfo | null;
+  calendar: CalendarInfo | null;
   cron: CronInfo | null;
   cronSeats: CronSeat[] | null;
   mimir: MimirHealth | null;
@@ -183,6 +185,8 @@ interface YmirState {
   signOut: () => void;
   loadLive: () => Promise<void>;
   refreshSmidja: () => Promise<void>;
+  /** The reckoning on its own track: a slow endpoint must not hold the grid. */
+  refreshCalendar: () => Promise<void>;
   /** Re-read the LIVE fleet: the dead leave, and the count follows the source. */
   refreshAgents: () => Promise<void>;
   refreshReviews: () => Promise<void>;
@@ -316,6 +320,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   traceability: 0.984,
   live: null,
   runtime: null,
+  calendar: null,
   cron: null,
   cronSeats: null,
   mimir: null,
@@ -336,6 +341,8 @@ export const useYmir = create<YmirState>((set, get) => ({
   loadLive: async () => {
     // Smíðja loads on its own track so a slow endpoint never holds its gates hostage.
     void get().refreshSmidja();
+    // The reckoning likewise: a slow reviews/usage leg must not blank the calendar.
+    void get().refreshCalendar();
     try {
       // An endpoint that answers with {error} has FAILED: keep the last good value
       // rather than handing the panel a shape it cannot read.
@@ -409,6 +416,14 @@ export const useYmir = create<YmirState>((set, get) => ({
       });
     } catch {
       // keep the last good data
+    }
+  },
+  refreshCalendar: async () => {
+    try {
+      const calendar = await gateApi.calendar();
+      set({ calendar, live: true });
+    } catch {
+      // keep the last good reckoning — a gate that cannot answer is not an empty day
     }
   },
 
