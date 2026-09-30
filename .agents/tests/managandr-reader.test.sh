@@ -24,6 +24,7 @@ FIX="$ROOT/.agents/tests/assets/managandr-google-events.json"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
+skip() { printf 'skip - %s\n' "$1"; }
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -35,6 +36,20 @@ CACHE="$TMP/cache.json"
 NOWS=2026-10-13T10:00:00Z
 BUSY_AT=2026-10-13T10:00:00Z
 FREE_AT=2026-10-20T12:00:00Z
+
+# ── 0. dependencies: a gate that CANNOT run must SAY SO, never fail ─────────
+# The judge (PR #251) caught this: on a checkout with no `npm install` the suite
+# went RED with ERR_MODULE_NOT_FOUND: zod, reporting a fault in correct code.
+# zod now ships as a declared dependency (package.json), but a machine without an
+# install still cannot load the reader — and the repo's own rule (contracts-check.sh,
+# fixed 2026-09-30) is that an unrunnable gate skips LOUDLY with the remedy.
+if node --input-type=module -e 'import "zod"' >/dev/null 2>&1; then
+  :
+else
+  skip "dependencies absent — run npm install to exercise the reader"
+  printf 'managandr-reader: skipped (no node_modules: run npm install)\n'
+  exit 0
+fi
 
 # ── 1. syntax ────────────────────────────────────────────────────────────────
 if bash -n "$DOOR" 2>/dev/null; then ok "calendar-ask.sh is bash -n clean"; else bad "bash -n calendar-ask.sh"; fi

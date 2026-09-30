@@ -119,6 +119,14 @@ RUN_STARTED_MS=$(now_ms)
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 1
+# ROOT must reach the SCRIPTS, not just this runner. Every test resolves its
+# fixtures and libs through `$ROOT` (`.agents/tests/lib.sh` calls
+# `$ROOT/bin/fm-wake-lib.sh`), and it was never exported — so the identity call
+# failed, lib.sh `return`ed out of a SOURCED file, and the test came up
+# half-built: `fm_test_cleanup: command not found`, `TMP_ROOT` empty, and every
+# fixture path collapsing to `/start-nonblocking/...` with no reason printed.
+# A test that cannot initialise must say so, not fail in a stranger's syntax.
+export ROOT
 
 MODE=
 LIST_ONLY=0

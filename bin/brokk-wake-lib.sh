@@ -895,11 +895,28 @@ fm_lock_try_acquire() {
   return "$rc"
 }
 
-fm_lock_acquire_wait() {
-  local lockdir=$1
+fm_lock_acquire_wait() {  # <lockdir> [max-seconds] — bounded; non-zero when it gives up
+  # It was UNBOUNDED: no timeout, no attempt cap. A publish lock that is never
+  # freed (a stale owner, or the `lock-changed` fixture case which changes one on
+  # purpose) wedged the worker at 10Hz forever — and a wedged worker is the one
+  # thing the deferred network stage exists to prevent. It now gives up, says
+  # why, and lets the caller degrade. The bound is counted in tenths with
+  # integer arithmetic: a float formatted through awk needs the value
+  # interpolated INTO the awk program, which the shell would expand first, and
+  # under `set -u` that is an unbound-variable error on every iteration.
+  local lockdir=$1 max=${2:-${FM_LOCK_WAIT_MAX_SECS:-30}}
+  local step=0.1 tenths=0 limit
+  case "$max" in ''|*[!0-9]*) max=30 ;; esac
+  limit=$(( max * 10 ))
   while ! fm_lock_try_acquire "$lockdir"; do
-    sleep 0.1
+    if [ "$tenths" -ge "$limit" ]; then
+      printf 'lock: gave up waiting %ss for %s — unavailable, not free\n' "$max" "$lockdir" >&2
+      return 1
+    fi
+    sleep "$step"
+    tenths=$(( tenths + 1 ))
   done
+  return 0
 }
 
 fm_lock_release() {
