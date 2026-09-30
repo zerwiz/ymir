@@ -1,0 +1,30 @@
+[Unit]
+Description=Snotra's ear — the whisper engine served to the fleet (:8322, strong-box only)
+# The engine is NOT a boot resident and this unit deliberately carries NO
+# [Install] section, so nothing can put it in ymir.target (or default.target)
+# and nothing enables it at login.
+#
+# Why: the engine is the largest VRAM claim the ear makes — ~900 MiB on a strong
+# box — and a strong box is also serving a rail whose 262K model needs 13,790
+# MiB of a 16 GiB card. On heimdall, this unit being resident from login is what
+# made every rail request fail with a 500 that named the model. Measured
+# 2026-10-01; see docs/fixes/snotra/2026-10-01-the-ear-follows-the-gate.md.
+#
+# So its lifecycle belongs to the WATCH, which already knows whether a meeting
+# is happening: bin/snotra-detect.sh raises it once a capture is confirmed alive
+# and lowers it after the minutes are written. That is a stricter gate than
+# "this seat has a GPU" (a capability raise) and a stricter one than "the seat
+# booted" — only a meeting can start it.
+#
+# It is seated into ~/.config/systemd/user/ by the watch at arm time, from the
+# durable tree, so a seat that has never run a meeting costs nothing.
+[Service]
+Type=simple
+# The ear is served on a STRONG box only (plan 51 Part 9a): the heart fronts the
+# door (:8321) and never loads whisper, so a headless heart reports a clean skip.
+Environment=PATH=%h/.fleet:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash %h/.fleet/snotra-ear.sh serve
+Restart=on-failure
+RestartSec=3
+StartLimitIntervalSec=120
+StartLimitBurst=10
