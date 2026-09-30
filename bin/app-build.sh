@@ -31,10 +31,17 @@ for s in "${want[@]}"; do
     printf 'app-build[1]{%s}:\n  "skipped — no build script"\n' "$s"; skipped=$((skipped+1)); continue
   fi
   printf 'app-build[1]{%s}:\n  "building…"\n' "$s"
-  if ( cd "$d" && { [ -d node_modules ] || npm install --no-audit --no-fund >/dev/null 2>&1; } && npm run build >/dev/null 2>&1 ); then
+  # The build's own output is KEPT. It used to go to /dev/null while the failure
+  # line said "see its output above" — above nothing. When CI reported "sessrumnir
+  # web surface not built", the log that would have said WHY was thrown away one
+  # step earlier (2026-09-30). A build that fails silently is how a tarball ships
+  # with no surfaces at all.
+  blog="$(mktemp "${TMPDIR:-/tmp}/app-build.XXXXXX.log")"
+  if ( cd "$d" && { [ -d node_modules ] || npm install --no-audit --no-fund >"$blog" 2>&1; } && npm run build >>"$blog" 2>&1 ); then
     printf 'app-build[1]{%s}:\n  "built — dist/"\n' "$s"; built=$((built+1))
   else
-    printf 'app-build[1]{%s}:\n  "FAILED — see its output above"\n' "$s"; failed=$((failed+1))
+    printf 'app-build[1]{%s}:\n  "FAILED — build log: %s (last 15 lines follow)"\n' "$s" "$blog"; failed=$((failed+1))
+    tail -15 "$blog" | sed 's/^/    /'
   fi
 done
 printf 'app-build[1]{built,skipped,failed}:\n  "%d","%d","%d"\n' "$built" "$skipped" "$failed"
