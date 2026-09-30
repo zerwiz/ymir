@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -80,9 +81,32 @@ class BuildLaunchCommandTest(unittest.TestCase):
         selection = harness.HarnessSelection("opencode", "openai/gpt-5", "", "", "")
         self.assertEqual(
             harness.build_launch_command(selection, "/d/prompt.md"),
-            "OPENCODE_CONFIG_CONTENT='{\"permission\":{\"*\":\"allow\"}}' opencode "
+            "env OPENCODE_CONFIG_CONTENT='{\"permission\":{\"*\":\"allow\"}}' opencode "
             "--model 'openai/gpt-5' --prompt \"$(cat '/d/prompt.md')\"",
         )
+
+    def test_every_launch_shape_survives_the_exec_prefix(self) -> None:
+        """The seat writer prefixes `exec ` to any shape that lacks it.
+
+        `exec NAME=value cmd` is not runnable shell: bash looks for a command
+        literally named `NAME=value`. That killed every opencode seat on 2026-09-30
+        with "exec: OPENCODE_CONFIG_CONTENT=…: not found". This guard holds the
+        CONTRACT rather than the string — any shape that fails to parse after the
+        prefix is a shape that cannot seat an agent.
+        """
+        for name, model in (("opencode", "openai/gpt-5"), ("pi", None), ("pi-signed", None)):
+            shape = harness.build_launch_command(
+                harness.HarnessSelection(name, model or "", "", "", ""), "/d/prompt.md"
+            )
+            with self.subTest(harness=name):
+                proc_ok = subprocess.run(
+                    ["bash", "-n"], input=f"exec {shape}\n", text=True, capture_output=True
+                )
+                self.assertEqual(proc_ok.returncode, 0, f"unparseable after exec: {shape}")
+                bare_ok = subprocess.run(
+                    ["bash", "-n"], input=f"{shape}\n", text=True, capture_output=True
+                )
+                self.assertEqual(bare_ok.returncode, 0, f"unparseable on its own: {shape}")
 
     def test_raw_launch_substitutes_the_brief_reference(self) -> None:
         selection = harness.HarnessSelection("bash", "", "", "", "", "bash -c 'run __BRIEF__'")
