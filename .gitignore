@@ -72,8 +72,15 @@ apps/odrerir/public/livehall.json
 # Brokk runtime home — private (ship *.example templates only)
 data/*
 !data/*.example
-state/*
-!state/.gitkeep
+# The state dir is DERIVED per machine: bin/hoard-lib.sh resolves it to
+# ${YMIR_STATE_DIR:-$YMIR_HOME/state} (Rule 04/07 — the operator's home owns
+# it, never the tree; bin/ymir-plan.sh's purity row names a repo state/ as the
+# drift it is). The rule must cover the path ITSELF, not only what sits inside
+# it — `state/*` cannot match a symlink NAMED state, which is how one pointing
+# at another machine's home (/home/heimdall/Documents/ymirhome/state) came to be
+# tracked here and shipped to every clone. A clone gets no state/ at all; each
+# seat creates its own.
+/state
 config/*
 !config/*.example
 .pi/extensions/*.local.ts
