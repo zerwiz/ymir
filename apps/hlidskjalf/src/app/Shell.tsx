@@ -23,6 +23,7 @@ import { Worktrees } from '../gates/Worktrees';
 import { Trace } from '../gates/Trace';
 import { Decisions } from '../gates/Decisions';
 import { Stats } from '../gates/Stats';
+import { Managandr } from '../gates/Managandr';
 
 function Stage() {
   const gate = useYmir((s) => s.gate);
@@ -61,6 +62,8 @@ function Stage() {
       return <Decisions />;
     case 'stats':
       return <Stats />;
+    case 'managandr':
+      return <Managandr />;
     default:
       return <Fleet />;
   }
