@@ -1230,6 +1230,8 @@ interface CalendarEventOut {
 interface CalendarAnswer {
   as_of: string | null;
   state: 'ok' | 'unknown' | 'absent';
+  /** Where the answer came from: 'google' | 'cache' | 'fixture' | 'none'. */
+  source?: string;
   events: CalendarEventOut[];
 }
 
@@ -1285,6 +1287,7 @@ function calendar(): CalendarAnswer {
   const obj = (parsed && typeof parsed === 'object' ? parsed : {}) as Record<string, unknown>;
   const rawAsOf = pickField(obj, 'as_of', 'asOf', 'generated_at', 'generatedAt', 'fetched_at', 'updated_at', 'at');
   const asOf = typeof rawAsOf === 'string' && rawAsOf ? rawAsOf : null;
+  const source = String(pickField(obj, 'source') ?? 'unknown');
   const rawEvents = pickField(obj, 'events', 'items');
   const list = Array.isArray(rawEvents) ? rawEvents : Array.isArray(parsed) ? parsed : [];
   const events = list.map(normalizeEvent).filter(Boolean) as CalendarEventOut[];
@@ -1292,7 +1295,16 @@ function calendar(): CalendarAnswer {
   // else is unknown — the cache exists but cannot be trusted for freshness.
   const t = asOf ? Date.parse(asOf) : NaN;
   const fresh = Number.isFinite(t) && Date.now() - t <= CALENDAR_TTL_S * 1000;
-  return { as_of: asOf, state: fresh ? 'ok' : 'unknown', events };
+  // A FIXTURE is invented data, and a fresh timestamp does not make it real. It
+  // is served as `unknown` with its source named, never as `ok` — the grid must
+  // never paint "Invented All-Day Gathering" as the Allfather's diary. This
+  // happened once (a probe omitted --cache and wrote 5 invented events into the
+  // hoard's cache); the reader now refuses that write, and this refuses to
+  // present it.
+  if (source === 'fixture') {
+    return { as_of: asOf, state: 'unknown', source, events };
+  }
+  return { as_of: asOf, state: fresh ? 'ok' : 'unknown', source, events };
 }
 
 /* ---- /api/loaders, /api/checks, /api/settings ---------------------------- */
