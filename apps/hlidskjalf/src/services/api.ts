@@ -57,6 +57,27 @@ export interface CronSeat {
   error?: string;
 }
 
+/** One event from Mánagandr's cache, normalised by the gate (plan 60). */
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  /** ISO start. */
+  start: string;
+  /** ISO end, or null for an all-day event. */
+  end: string | null;
+  allDay: boolean;
+  cancelled: boolean;
+  calendarId: string;
+  /** Present only when the reader carried it — a count, never names. */
+  attendees?: number;
+}
+export interface CalendarInfo {
+  as_of: string | null;
+  /** ok = fresh & readable · unknown = exists, freshness unprovable · absent = no cache. */
+  state: 'ok' | 'unknown' | 'absent';
+  events: CalendarEvent[];
+}
+
 export interface LoaderRow {
   tool: string;
   path: string;
@@ -210,6 +231,8 @@ export interface MimirHealth {
   store: string | null;
   episodes: number;
   agents: string[];
+  /** Days a fact was superseded — timestamps only, the well lane's decay axis. */
+  superseded_dates?: string[];
 }
 export interface WorkspaceRow {
   id: string;
@@ -387,6 +410,7 @@ export const gateApi = {
     ),
   skills: () => get<SkillDef[]>('/api/skills'),
   runtime: () => get<RuntimeInfo>('/api/runtime'),
+  calendar: () => get<CalendarInfo>('/api/calendar'),
   cron: () => get<CronInfo>('/api/cron'),
   cronSeats: () => get<CronSeat[]>('/api/cron/seats'),
   loaders: () => get<LoaderRow[]>('/api/loaders'),
