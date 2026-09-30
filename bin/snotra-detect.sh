@@ -458,24 +458,48 @@ SNOTRA_EAR_UNIT="${SNOTRA_EAR_UNIT:-snotra-ear.service}"
 # days with no meeting and no unit in the tree to audit. Seating it here keeps
 # one copy, in the tree, and makes a seat that has never held a meeting cost
 # nothing at all.
-ear_seat_unit() {  # 0 when the unit is in place (or already was)
+ear_seat_unit() {  # 0 when the TREE's unit is the one seated (seated, or refreshed)
   local src dst
   dst="$HOME/.config/systemd/user/$SNOTRA_EAR_UNIT"
-  [ -f "$dst" ] && return 0
   mkdir -p "$HOME/.config/systemd/user" 2>/dev/null || return 1
   # SNOTRA_DOORS_DIR is <root>/bin, so the tree that holds tools/mill/systemd
   # is its parent. Beside the watch first, exactly as door() prefers.
   for src in "$SCRIPT_DIR/../tools/mill/systemd/$SNOTRA_EAR_UNIT" \
              "${SNOTRA_DOORS_DIR:-/nonexistent}/../tools/mill/systemd/$SNOTRA_EAR_UNIT"; do
-    if [ -f "$src" ]; then
-      cp -f "$src" "$dst" 2>/dev/null || return 1
-      log "engine: seated $SNOTRA_EAR_UNIT into ~/.config/systemd/user"
-      break
+    [ -f "$src" ] || continue
+    # Already the tree's copy — nothing to do. Comparing, not merely testing for
+    # existence: a seat that was seated by an EARLIER version of this tree still
+    # carries that version's unit, and the earlier version is the one with
+    # `[Install] WantedBy=ymir.target` in it. Seeding only what is missing leaves
+    # exactly the seats that need the fix holding the file that causes it.
+    if [ -f "$dst" ] && cmp -s "$src" "$dst"; then
+      return 0
     fi
+    if cp -f "$src" "$dst" 2>/dev/null; then
+      if [ -f "$dst" ]; then
+        log "engine: seated the tree's $SNOTRA_EAR_UNIT into ~/.config/systemd/user (refreshed)"
+      else
+        log "engine: WARNING — could not seat $SNOTRA_EAR_UNIT"
+        return 1
+      fi
+    else
+      log "engine: WARNING — could not seat $SNOTRA_EAR_UNIT"
+      return 1
+    fi
+    # daemon-reload only. Nothing here enables the unit, and the tree's copy has
+    # no [Install] section — so there is no longer a way to put the engine back
+    # into ymir.target, even by hand.
+    systemctl --user daemon-reload >>"$DETECT_LOG" 2>&1 || true
+    return 0
   done
-  [ -f "$dst" ] || { log "engine: WARNING — no $SNOTRA_EAR_UNIT template in the tree"; return 1; }
-  systemctl --user daemon-reload >>"$DETECT_LOG" 2>&1 || true
-  return 0
+  # No template in either tree. A seat's own copy still runs, so this is a
+  # warning and not a refusal: an un-auditable unit is worth saying out loud.
+  if [ -f "$dst" ]; then
+    log "engine: WARNING — no $SNOTRA_EAR_UNIT template in the tree; the seat's own copy stands"
+    return 0
+  fi
+  log "engine: WARNING — no $SNOTRA_EAR_UNIT template in the tree"
+  return 1
 }
 
 ear_up() {
