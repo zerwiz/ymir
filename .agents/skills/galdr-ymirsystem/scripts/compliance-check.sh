@@ -149,7 +149,19 @@ else
 fi
 
 # --- sync -------------------------------------------------------------------
-if diff -rq "$GALDR/assets" "$TYR/assets" >/dev/null 2>&1; then
+# In a PACKAGED artifact the judge's mirror is a declared seam (npm does not pack
+# a symlink), so an absent mirror is not drift — it is the artifact declaring what
+# it cannot carry. Read packaging/symlink-seams.json and SKIP loudly rather than
+# reporting a phantom fault; an UNDECLARED absence is still a FAIL.
+sync_seam=""
+if [ -f "$ROOT/packaging/symlink-seams.json" ]; then
+  # The delimiter cannot be `/`: the path it matches CONTAINS one.
+  sync_seam="$(grep -o '"[^"]*tyr-check/assets"' "$ROOT/packaging/symlink-seams.json" | head -1 | tr -d '"')"
+fi
+if [ -n "$sync_seam" ] && { [ ! -e "$TYR/assets" ] || [ ! -e "$GALDR/assets" ]; }; then
+  add sync "galdr/tyr assets mirrored" SKIP \
+    "declared symlink seam ($sync_seam) is absent in this artifact; a real machine seats it (bin/valknut-load.sh --all)"
+elif diff -rq "$GALDR/assets" "$TYR/assets" >/dev/null 2>&1; then
   add sync "galdr/tyr assets mirrored" PASS "in sync"
 else
   add sync "galdr/tyr assets mirrored" FAIL "drift detected"

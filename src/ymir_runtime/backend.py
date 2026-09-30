@@ -109,8 +109,24 @@ def _pane_cmd(pane_cmd: str, seat_state_dir: str) -> str:
     if not seat_state_dir:
         return pane_cmd
     quoted = proc.shell_quote(seat_state_dir)
+    # TMPDIR is the third isolation axis, and it was missing (2026-09-30). A
+    # worktree isolates the CODE and the seat state dir isolates the STATE, but
+    # two errands launched in parallel both inherited the machine's /tmp — so
+    # opencode, `mktemp -d` and every headless Chrome `--user-data-dir`
+    # converged on ONE shared namespace (/tmp/opencode, 282 MB of browser
+    # profiles and fixture files by the time it was noticed). Parallel errands
+    # then share scratch by accident, which is the collision the isolation law
+    # exists to prevent. Each seat now gets its own scratch, reaped with the seat.
+    seat_tmp = Path(seat_state_dir) / "tmp"
+    try:
+        seat_tmp.mkdir(parents=True, exist_ok=True)
+        seat_tmp.chmod(0o700)
+    except OSError:
+        pass
+    tmp_quoted = proc.shell_quote(str(seat_tmp))
     return (
-        f"BROKK_MACHINE_STATE_DIR={quoted} BROKK_STATE_OVERRIDE={quoted} {pane_cmd}"
+        f"BROKK_MACHINE_STATE_DIR={quoted} BROKK_STATE_OVERRIDE={quoted} "
+        f"TMPDIR={tmp_quoted} {pane_cmd}"
     )
 
 
