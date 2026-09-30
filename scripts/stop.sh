@@ -5,6 +5,29 @@
 # ============================================================
 set -euo pipefail
 
+# --- usage: answered BEFORE any work -----------------------------------------
+# Same trap as start.sh, which had no argument parsing at all until 2026-09-30:
+# asking a door what it does must never be the thing that raises or lowers it.
+usage() {
+  cat <<'EOF'
+ymir-stop — lower the Hlidskjalf control plane and the rest of the standing hall.
+
+  scripts/stop.sh            # stop what this tree raised
+  scripts/stop.sh --force    # stop it even if the pid file disagrees with the port
+  scripts/stop.sh --help     # this text
+  scripts/stop.sh --version
+
+What it lowers: Hlidskjalf SPA (:3888) · gate API (:3889) · Smíðja visualizer (:8437) ·
+Óðrerir (:4322) · Nornir cron · Bifrost (:4603) · Mimir (:4602)
+
+Raise it with: scripts/start.sh
+EOF
+}
+case "${1-}" in
+  -h|--help)    usage; exit 0 ;;
+  --version)    printf 'ymir-stop 1.0.0\n'; exit 0 ;;
+esac
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUN="$ROOT/.run"
 PID_FILE="$RUN/hlidskjalf.pid"
