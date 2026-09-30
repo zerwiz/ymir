@@ -258,6 +258,51 @@ capture of the conversation pair. Meetily has no call detection, and its Pro tie
 lists auto-detect as future work; the watch is that half, built around whatever
 capturer the seat uses.
 
+### The engine's residency is the watch's to decide (2026-10-01)
+
+`tools/mill/systemd/snotra-ear.service` — the whisper engine on `:8322` — is
+**not a boot resident and carries no `[Install]` section**, so nothing can put
+it in `ymir.target`. `bin/snotra-detect.sh` seats it into
+`~/.config/systemd/user/` at arm time and owns its whole lifecycle:
+
+| when | what | why there |
+|---|---|---|
+| `do_arm`, after the capture is confirmed alive | `ear_up` | a refused arm must not cost the card a whisper for a meeting that is not being heard |
+| `do_leave`, on **all three** exits | `ear_down` | no meeting, no VRAM owed — whichever way the leave ended |
+| `do_leave`, **after** `finalize` returns | `ear_down` | `finalize` transcribes *through this engine*; lowering first leaves a recorded meeting with no minutes |
+| `back_to_idle` | `ear_down` | the net for a watch that restarted mid-meeting, or a seat disabled by hand |
+
+**Why a boot target was the wrong owner.** The engine is the largest VRAM claim
+the ear makes — ~900 MiB on a strong box — and a strong box is also serving a
+rail whose 262K model needs 13,790 MiB of a 16 GiB card. On heimdall the unit
+being resident from login is what made **every rail request fail with a 500 that
+named the model**: the preset's MTP draft context found no room. `WantedBy` and a
+capability raise both decide by *what hardware the seat has*; only the watch's gate
+decides by *whether a meeting is happening*. The old unit comment claimed a
+capability raise that never existed — `AUTOBOOT_CAPABILITY_PROGRAMS` is
+`snotra-detect` alone.
+
+**The ear is deliberately absent from `AUTOBOOT_PROGRAMS`.** That list is the purge
+list: `purge_stale_units` drops any unit in it that is not owed, and the ear is
+owed by nothing (a headless heart must never load whisper). Adding it would have
+the engine's own unit purged out from under the watch. Staying out leaves the copy
+governed by exactly one file — the one in this tree — instead of a materialized
+copy in `~/.config/systemd/user/` that nobody audits, which is how a 900 MiB engine
+came to sit on a seat for three days with no meeting and no unit in the tree.
+
+**The rail yields during transcription.** `bin/snotra-transcribe.sh` defaults
+`SNOTRA_FREE_RAIL=1`: when the GPU is starved it sources
+`~/.local/bin/voice-gpu-lib.sh` and calls `voice_ensure_vram 2048`, unloading the
+resident rail model and retrying on GPU. A meeting is the thing that matters while
+it is happening and the rail is the largest claim on the card, so the rail gives
+way. `SNOTRA_FREE_RAIL=0` is the deliberate override for a seat that would rather
+wait than have its rail evicted. The transcribe path already falls back to CPU by
+free VRAM, and then to the seat's own `whisper-cli` when the ear lane is
+unreachable — so a meeting is never lost to an engine that would not start.
+
+Record: `docs/fixes/snotra/2026-10-01-the-ear-follows-the-gate.md`.
+Measured: `~/CHANGELOG.md` 2026-10-01 and `$YMIR_HOME/hodd/docs/devtools/text-to-speech.md` 2026-10-01.
+
 ## Meetily-Local integration (future)
 
 Meetily-Local (`github.com/Hankanman/Meetily-Local`) is the recommended engine
