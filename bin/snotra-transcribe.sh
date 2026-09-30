@@ -257,7 +257,13 @@ do_transcribe() {
         run_whisper "$WHISPER" "$MODEL" "$NORM" "" || true
     fi
     [ -f "$TMP_PREFIX.txt" ] && TRANSCRIPT="$(cat "$TMP_PREFIX.txt")"
-    if [ -z "$TRANSCRIPT" ] && [ "${SNOTRA_FREE_RAIL:-0}" = 1 ] && [ -x "$HOME/.local/bin/voice-gpu-lib.sh" ]; then
+    # The rail yields. A resident rail model is the single largest claim on a
+    # strong box's VRAM — 13,790 MiB for the 262K MTP preset on heimdall — and
+    # the meeting is the thing that matters while it is happening, so the rail
+    # is the one that gives way. This path was written and left opt-in; it is
+    # on by default now, and `SNOTRA_FREE_RAIL=0` is the deliberate override
+    # for a seat that would rather wait than have its rail evicted.
+    if [ -z "$TRANSCRIPT" ] && [ "${SNOTRA_FREE_RAIL:-1}" = 1 ] && [ -x "$HOME/.local/bin/voice-gpu-lib.sh" ]; then
       say "  GPU starved — freeing the rail and retrying"
       # shellcheck disable=SC1090
       . "$HOME/.local/bin/voice-gpu-lib.sh"
