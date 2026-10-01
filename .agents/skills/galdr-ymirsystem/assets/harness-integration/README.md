@@ -446,6 +446,32 @@ Every adapter and script resolves the same runtime roots. The overrides exist so
 
 Full variable inventory: [`../runtime-components.md`](../runtime-components.md) §5.
 
+### 5b. The registries an adapter resolves
+
+An adapter never parses a registry itself. Two files, two shapes, one reader.
+
+| Registry | Shape | Who reads it |
+|---|---|---|
+| `$YMIR_HOME/hodd/identity/projects.yaml` (private) | one `git{}` block per project | `bin/project-git.sh`, `bin/mjollnir.sh`, `bin/yggdrasil.sh`, `bin/github-deploy.sh` |
+| `$YMIR_HOME/hodd/identity/workspaces.yaml` (private) | one entry per **realm** | the gate API (`apps/hlidskjalf/server/index.ts`), `bin/workspace-provision.sh` |
+
+The repo ships only the shapes: `registry/projects.yaml.example`, `registry/workspaces.yaml.example`
+(plan 62 moved them out of the old `workspace/`, so the word means one thing again).
+
+> **A project row names its REALM: `realm:` (2026-10-01, plan 62).** The key used to read
+> `workspace:` — a row never named a workspace, it named the realm whose shelf
+> (`svartalfaheim/<realm>/projects/`) the project lives under. Every reader of that key now goes
+> through **`bin/registry-lib.sh`**, which is the only place allowed to resolve it: `realm` first,
+> `workspace` as a **deprecated alias that always names itself on stderr**
+> (`deprecated-registry-key: row "<id>" carries \`workspace:\` …`). `bin/ymir-validate.sh` gained the
+> `registry` check — PASS when every row names its realm, WARN naming each row still on the old key,
+> never FAIL. A harness adapter that needs the realm of a project calls
+> `bin/project-git.sh <id> --field realm` and gets the same answer, warning included. Never read the
+> key with `grep`/`awk` in a new script: that is how a rename lands as a silent break. The ward is
+> `.agents/tests/registry-realm-key.test.sh` (new key silent · old key resolves AND names itself · a
+> row with both keys reads the new one and stays quiet · the block still prints), and
+> `bash .agents/skills/lifecycle/smoke_test.sh` proves the reader is the only place that resolves it.
+
 ---
 
 ## 6. Fail-closed dispatch rules

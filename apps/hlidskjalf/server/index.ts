@@ -1772,7 +1772,7 @@ function savePrompt(agent: string, kind: string, body: string): { ok: boolean; p
 
 /* ---- /api/workspaces + /api/setup — single-tenant workspaces ------------ */
 function workspaces(): { id: string; name: string; kind: string; company?: string; domains: string[] }[] {
-  let regPath = join(ROOT, 'workspace/workspaces.yaml');
+  let regPath = join(ROOT, 'registry/workspaces.yaml');
   const hoardReg = join(HOARD, 'identity/workspaces.yaml');
   try { read(hoardReg); regPath = hoardReg; } catch { /* fall back to the tracked scaffold */ }
   const txt = read(regPath);

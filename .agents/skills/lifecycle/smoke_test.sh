@@ -502,6 +502,109 @@ if [ "$DEEP" = 1 ]; then
     skip compliance "compliance-check.sh absent"
   fi
 
+  # 18b. the workspace rename resolves (plan 62 / migration 0007). A rename that
+  # is only *believed* is not a rename: these are the paths every reader now uses,
+  # and each one is proved to exist — the old names proved gone, so a stale
+  # reader fails here instead of at 3am on a seat.
+  if [ -f "$ROOT/registry/projects.yaml.example" ] && [ ! -d "$ROOT/workspace" ]; then
+    ok rename-repo "the registry templates are at registry/ (workspace/ is gone)"
+  else
+    bad rename-repo "expected registry/projects.yaml.example and no workspace/ in the repo"
+  fi
+  for rd in "$ROOT"/bin/project-git.sh "$ROOT"/bin/syn-guard-pretool-check.sh; do
+    [ -f "$rd" ] || continue
+    if grep -q '"$ROOT/workspace/\|workspace/projects.yaml\|workspace/workspaces.yaml' "$rd" 2>/dev/null; then
+      bad rename-readers "$(basename "$rd") still names the old workspace path"
+    fi
+  done
+  ok rename-readers "no bin/ reader still names the old workspace path"
+  # 18c-bis. the VALUE rename (plan 62 item 6): `workspace:` was never a workspace, it names
+  # the realm. The ward is that bin/registry-lib.sh is the ONLY place that resolves the
+  # key — a reader that greps for it is a reader a rename breaks silently.
+  if [ -r "$ROOT/bin/registry-lib.sh" ]; then
+    if grep -lE "^[[:space:]]*(realm|workspace):" "$ROOT"/bin/*.sh 2>/dev/null | grep -v 'registry-lib.sh$' | grep -q .; then
+      bad rename-realm "a bin/ script resolves the realm key outside bin/registry-lib.sh"
+    else
+      ok rename-realm "bin/registry-lib.sh is the one reader of the realm key"
+    fi
+    if grep -q 'deprecated-registry-key' "$ROOT/bin/registry-lib.sh" && bash "$ROOT/.agents/tests/registry-realm-key.test.sh" >/dev/null 2>&1; then
+      ok rename-alias "the deprecated key still resolves, and names itself"
+    else
+      bad rename-alias "the deprecated `workspace:` key does not resolve-with-a-warning (run .agents/tests/registry-realm-key.test.sh)"
+    fi
+  else
+    bad rename-realm "bin/registry-lib.sh is missing — no reader resolves the realm key"
+  fi
+  # the home half, only meaningful where a home exists on this seat
+  HM=""
+  if [ -x "$ROOT/bin/hoard-lib.sh" ]; then
+    ( . "$ROOT/bin/hoard-lib.sh" 2>/dev/null; hoard_root _h 2>/dev/null && printf '%s' "${_h:-}" > /tmp/.smoke-home.$$ ) && HM="$(cat /tmp/.smoke-home.$$ 2>/dev/null)"; rm -f /tmp/.smoke-home.$$
+  fi
+  # Never GUESS a home (Rule 07): the env, else the resolver's own answer.
+  if [ -z "${HM:-}" ]; then
+    # The HOME, resolved the documented way. `hodd.sh path` answers the HOARD
+    # ($YMIR_HOME/hodd), so a home check built on it silently skips on every seat
+    # that HAS a home — the same wrong-root mistake the migration made.
+    if [ -f "$ROOT/bin/hoard-lib.sh" ]; then
+      ( . "$ROOT/bin/hoard-lib.sh" 2>/dev/null; command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HM )
+      HM="$(printf '%s' "${HM:-}")"
+    fi
+    [ -n "${HM:-}" ] || HM="${YMIR_HOME:-}"
+  fi
+  if [ -d "$HM" ]; then
+    if [ -d "$HM/hodd/life" ] && [ ! -d "$HM/hodd/workspaces" ]; then
+      ok rename-home "hodd/life/ present, hodd/workspaces/ gone"
+    else
+      skip rename-home "home present but the life shelf is not renamed yet (run bin/ymir-migrate.sh apply)"
+    fi
+    if [ -d "$HM/hodd/hodd" ]; then
+      bad rename-home "the stray hodd/hodd/ is still there"
+    else
+      ok rename-stray "the stray double-hodd is gone"
+    fi
+    led=0
+    for l in "$HM"/svartalfaheim/*/projects/*/plans; do [ -d "$l" ] && led=$((led + 1)); done
+    if [ "$led" -gt 0 ]; then ok rename-ledger "$led realm project ledger(s) under projects/"
+    else skip rename-ledger "no realm project ledger yet (migration pending)"; fi
+  else
+    skip rename-home "no ymirhome on this seat"
+  fi
+
+  # 18c. the SWEEP: stale names and hardcoded paths anywhere in the runtime.
+  # A rename is only done when nothing still speaks the old name. Excluded on
+  # purpose: a migration (it MUST name what it moves), the fix notes (the
+  # append-only record of what the old name was), and worktrees.
+  stale=$(grep -rnE "hodd/workspaces|svartalfaheim/[a-z]+/workspace/|\$ROOT/workspace/" \
+            bin src apps/hlidskjalf/server .agents/skills/*/scripts .agents/skills/*/assets docs AGENTS.md RULES 2>/dev/null \
+          | grep -v "^\.agents/migrations/" | grep -v "^docs/fixes/" | grep -v "smoke_test.sh" \
+          | grep -v "elder-home/assets/ledger.md" | head -5)
+  if [ -z "$stale" ]; then
+    ok rename-sweep "no runtime surface still names an old workspace path"
+  else
+    bad rename-sweep "stale workspace paths remain:"
+    printf '%s\n' "$stale" | sed 's/^/    /'
+  fi
+  # A FIXTURE is not a hardcoded path: a test that asserts on /tmp/home/state/.lock-path
+  # is doing its job. Fixtures and examples are excluded; a /home/<user>/ or /Users/<user>/
+  # in a runtime surface is Rule 07 and is reported.
+  # The elder's law KEEPS its own history: the old layout block stays, and the
+  # correction below it is the truth. So the sweep must see the correction.
+  if grep -q "the canonical shelf is .projects/" .agents/skills/elder-home/assets/ledger.md 2>/dev/null; then
+    ok rename-law "the elder's law carries the dated correction naming projects/ as canonical"
+  else
+    bad rename-law "the elder's law still names the old shelf with no correction"
+  fi
+
+  hard=$(grep -rnE "/home/[a-z][a-z0-9_-]+/|/Users/[A-Za-z][A-Za-z0-9_-]+/" \
+           bin src apps/hlidskjalf/server .agents/skills/*/scripts config 2>/dev/null \
+         | grep -v "^\.agents/migrations/" | grep -vE "\.example|smoke_test|/tests?/|/test_[a-z]" | head -5)
+  if [ -z "$hard" ]; then
+    ok hardcoded-paths "no absolute user path in the runtime (Rule 07)"
+  else
+    bad hardcoded-paths "absolute user paths in the runtime:"
+    printf '%s\n' "$hard" | sed 's/^/    /'
+  fi
+
   # 19. the secret ward (no secret in the tree)
   if [ -x "$ROOT/bin/secret-guard.sh" ]; then
     if bash "$ROOT/bin/secret-guard.sh" >/dev/null 2>&1; then ok secrets "secret ward clean"
