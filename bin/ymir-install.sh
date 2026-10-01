@@ -1406,6 +1406,37 @@ if [ "${STYLE_ON:-0}" = 1 ]; then
   [ -n "$skips" ] && style_hint "skipped:$skips — each with its reason in the table above"
 fi
 printf '\nnext: gh auth login · register your projects in hoard/identity/projects.yaml · open http://127.0.0.1:3888/\n'
+
+# The calendar grant, told plainly and never fatally. Plan 60: Ymir reads exactly ONE
+# calendar — the operator's — and only after THEY consent in their own browser. An
+# API key cannot do this (a key names an application, never a person), so the
+# credential step is real and must be explained where it is met, not discovered.
+# This is NEVER a FAIL: the hall is fully usable without it, and the grid says
+# "the reckoning is not granted" until it is done.
+cal_ready=0
+if [ -f "$ROOT/bin/hodd.sh" ] && command -v bash >/dev/null 2>&1; then
+  cal_ready="$(bash "$ROOT/bin/hodd.sh" emit secrets/platform.env 2>/dev/null \
+    | sed -n 's/^GOOGLE_OAUTH_CLIENT_ID=//p' | head -1)"
+fi
+if [ -z "$cal_ready" ]; then
+  cat <<'CAL'
+
+  optional · the read calendar (Mánagandr)
+    Not granted, and nothing is broken: the hall runs without it and the grid says
+    "the reckoning is not granted". Google will not let Ymir read YOUR calendar with an
+    API key — a key identifies an app, never a person — so you consent once yourself:
+      1. https://console.cloud.google.com/apis/credentials → Create credentials → OAuth client ID
+      2. Application type: DESKTOP APP  (only this type accepts a local callback)
+      3. Scope: https://www.googleapis.com/auth/calendar.readonly   (nothing wider)
+      4. Add YOUR OWN address under "Test users" — a new client is in testing mode and
+         refuses anyone you have not listed
+      5. put both values in your own vault, hodd/secrets/platform.env:
+             GOOGLE_OAUTH_CLIENT_ID=…      GOOGLE_OAUTH_CLIENT_SECRET=…
+    Then: bin/hodd.sh emit secrets/platform.env | grep GOOGLE_OAUTH   (to confirm it is there)
+    Nothing you type here is ever read from the repo, and the refresh token that comes
+    back stays in your vault, encrypted at rest.
+CAL
+fi
 [ -n "$INVITE_CODE" ] && printf 'invite: %s — share it to let someone register (bin/ymir-invite.sh list shows what is spent)\n' "$INVITE_CODE"
 
 for s in "${STATUS[@]}"; do [ "$s" = FAIL ] && exit 1; done
