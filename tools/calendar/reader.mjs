@@ -127,8 +127,14 @@ export function resolveConfig(env = process.env) {
     // canonical one may not.
     cacheExplicit: env.MANAGANDR_CACHE != null && env.MANAGANDR_CACHE !== "",
     calendarId: env.MANAGANDR_CALENDAR_ID || DEFAULT_CALENDAR_ID,
-    clientId: env.MANAGANDR_CLIENT_ID || env.HEIMDALL_OAUTH_CLIENT_ID || "",
-    clientSecret: env.MANAGANDR_CLIENT_SECRET || env.HEIMDALL_OAUTH_CLIENT_SECRET || "",
+    // ONE vocabulary, three accepted spellings. The install guide tells a user to put
+    // `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` in their own vault (2026-10-01) and the grant
+    // handshake writes `MANAGANDR_OAUTH_REFRESH_TOKEN`; the reader used to know only
+    // `MANAGANDR_CLIENT_*` and `HEIMDALL_OAUTH_*`, so a user who followed the guide
+    // exactly was told "no_oauth_client". Documentation and code must name a secret the
+    // same way — that is the same lesson as the workspace rename, learned twice in a day.
+    clientId: env.MANAGANDR_CLIENT_ID || env.GOOGLE_OAUTH_CLIENT_ID || env.HEIMDALL_OAUTH_CLIENT_ID || "",
+    clientSecret: env.MANAGANDR_CLIENT_SECRET || env.GOOGLE_OAUTH_CLIENT_SECRET || env.HEIMDALL_OAUTH_CLIENT_SECRET || "",
     refreshTokenKey,
     refreshToken: env[refreshTokenKey] || "",
     tokenUri: env.MANAGANDR_TOKEN_URI || DEFAULT_TOKEN_URI,

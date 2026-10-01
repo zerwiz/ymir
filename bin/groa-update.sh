@@ -168,3 +168,23 @@ if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
     printf 'WARN — valknut-load reported errors; run bin/valknut-load.sh --status\n'
   fi
 fi
+
+# The calendar grant, reported on UPDATE too (2026-10-01). An update is the moment a
+# user is most likely to meet a new capability, so the capability says here whether it
+# is granted — and, if not, exactly where to put the two values. Never a failure:
+# the house runs without it. The full steps live in the installation asset.
+if [ -x "$SCRIPT_DIR/hodd.sh" ] && command -v bash >/dev/null 2>&1; then
+  _cal="$(bash "$SCRIPT_DIR/hodd.sh" emit secrets/platform.env 2>/dev/null || true)"
+  case "$_cal" in
+    *MANAGANDR_OAUTH_REFRESH_TOKEN*)
+      printf 'calendar: granted — Mánagandr reads ONE calendar, yours. Rotate the client secret any time; a refresh token survives it.\n'
+      ;;
+    *GOOGLE_OAUTH_CLIENT_ID*)
+      printf 'calendar: client present, not yet granted — open http://127.0.0.1:3888/ -> Mánagandr, or re-run the consent.\n'
+      ;;
+    *)
+      printf 'calendar: NOT granted (nothing is broken). Steps: bin/ymir-install.sh prints them; scope calendar.readonly, Desktop app, add yourself as a test user.\n'
+      ;;
+  esac
+  unset _cal
+fi
