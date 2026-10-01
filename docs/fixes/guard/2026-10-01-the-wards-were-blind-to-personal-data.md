@@ -64,7 +64,7 @@ where the Allfather's law says it belongs.
 
 ## Known, not fixed here
 
-`svartalfaheim/examples/SECRETS.md` is a tracked private path and reds
+`docs/guides/SECRETS.md` is a tracked private path and reds
 `private-guard.sh --all`. It predates this work and is a public how-to whose
 placement is a separate judgement; it is reported, not silently absorbed.
 
