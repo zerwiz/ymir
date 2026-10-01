@@ -212,9 +212,9 @@ them may ever be written inside this repo** (see "Private data — YMIR_HOME").
 ```
 outputs[7]{kind,path}:
   "Business / strategy","$YMIR_HOME/hodd/identity/companies/"
-  "Marketing / social","$YMIR_HOME/hodd/workspaces/marketing/"
-  "Software specs","$YMIR_HOME/hodd/workspaces/work/"
-  "Personal / schedules","$YMIR_HOME/hodd/workspaces/personal/"
+  "Marketing / social","$YMIR_HOME/hodd/life/marketing/"
+  "Software specs","$YMIR_HOME/hodd/life/work/"
+  "Personal / schedules","$YMIR_HOME/hodd/life/personal/"
   "Daily logs","$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md"
   "Shared PUBLIC assets","midgard/"
   "Global audit entries","$YMIR_HOME/hodd/memory/runes_audit.md"
@@ -253,7 +253,7 @@ isolation[8]{id,rule}:
 - Redis pub/sub is the queue *under* the A2A task model (A2A = semantics, Redis =
   throughput). Messages follow `.agents/bus/protocol.ts`.
 - Every A2A message is observed into **Mimirsbrunn** and logged to **Runes**.
-- **Status (corrected 2026-09-30 — the entry above this one said "planned, not built", and that was false):** the native backbone **stands and answers**. `packages/a2a/ratatoskr/` (shared contract at `packages/contracts/src/agent-card.ts`, `A2A_PROTOCOL = "a2a/1.0"`, card served at `/.well-known/agent-card.json`) runs as the heart's node `heart-zerwizserver` on **`zerwizserver:8301`**, measured: `GET http://127.0.0.1:8301/.well-known/agent-card.json` returns its card with `streaming: true` and the skill `well-recall`. An external `a2abridge` still runs **seat-side** (this seat, `:7777`) as the adapter a harness talks to — it is not the backbone, and **no `a2abridge` binary exists on the server**. `.agents/bus/` **is** still a stub, so that half of the old claim held. What does **not** exist is the directory of many installs and per-pair grants: that is plan **61** (`$YMIR_HOME/svartalfaheim/whynotproductions/workspace/ymir/plans/61-the-constellation-many-ymirs-one-forge.md`), whose first phase corrects this very line. Way of Teams (`~/CodeP/wayofteams`) remains the sold control plane; Ymir's daemon works standalone.
+- **Status (corrected 2026-09-30 — the entry above this one said "planned, not built", and that was false):** the native backbone **stands and answers**. `packages/a2a/ratatoskr/` (shared contract at `packages/contracts/src/agent-card.ts`, `A2A_PROTOCOL = "a2a/1.0"`, card served at `/.well-known/agent-card.json`) runs as the heart's node `heart-zerwizserver` on **`zerwizserver:8301`**, measured: `GET http://127.0.0.1:8301/.well-known/agent-card.json` returns its card with `streaming: true` and the skill `well-recall`. An external `a2abridge` still runs **seat-side** (this seat, `:7777`) as the adapter a harness talks to — it is not the backbone, and **no `a2abridge` binary exists on the server**. `.agents/bus/` **is** still a stub, so that half of the old claim held. What does **not** exist is the directory of many installs and per-pair grants: that is plan **61** (`$YMIR_HOME/svartalfaheim/whynotproductions/projects/ymir/plans/61-the-constellation-many-ymirs-one-forge.md`), whose first phase corrects this very line. Way of Teams (`~/CodeP/wayofteams`) remains the sold control plane; Ymir's daemon works standalone.
 - Kaia orchestrates: dispatch Eindri as A2A tasks, recall memory before dispatch,
   honour the anti-hallucination gate; specialists reach tools via MCP.
 

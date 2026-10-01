@@ -8,7 +8,7 @@
 #   snotra-capture.sh devices           — list sinks/sources and the chosen pair
 #
 # Captures the system-audio monitor and the microphone, mixes them, and writes
-# a dated WAV under $YMIR_HOME/hodd/workspaces/meetings/. PipeWire exposes the
+# a dated WAV under $YMIR_HOME/hodd/life/meetings/. PipeWire exposes the
 # monitor of any sink, so no virtual loopback device is needed.
 #
 # Capture is via the PulseAudio protocol (`-f pulse`), which PipeWire serves
@@ -45,7 +45,7 @@ if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
 fi
 
 YMIR_HOME="${YMIR_HOME}"
-HOARD="$YMIR_HOME/hodd/workspaces/meetings"
+HOARD="$YMIR_HOME/hodd/life/meetings"
 STATE_DIR="$YMIR_HOME/state"
 LISTENING_FILE="$STATE_DIR/.snotra-listening"
 PID_FILE="$STATE_DIR/.snotra-pid"

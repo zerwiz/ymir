@@ -153,7 +153,7 @@ bin/nornir-cron-start.sh            # resolve + start (idempotent)
   (beside `agents.yaml` and `cron.yaml`, NOT under `hodd/config/`, which does not
   exist). Each entry: `name`, `url`, `kind` (scrape | search), `note`.
 - **Writes**: one markdown file per source, `YYYY-MM-DD-<name>.md`, into
-  `$YMIR_HOME/hodd/workspaces/marketing/scraped/`, plus a Rune
+  `$YMIR_HOME/hodd/life/marketing/scraped/`, plus a Rune
   (`bragi / scrape.round`).
 - **The engine is Firecrawl, and it may be SELF-HOSTED.** A self-hosted engine
   needs a **URL**, not a key: `FIRECRAWL_API_URL` (env → the home's local env →

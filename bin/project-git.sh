@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # project-git.sh — resolve a project's GitHub block from the master registry
-# (`workspace/projects.yaml`). The runtime consumes this instead of guessing a
+# (`registry/projects.yaml`). The runtime consumes this instead of guessing a
 # remote. Auth is a REFERENCE (app|pat|ssh|gh), never a value.
 #
 # Usage:
@@ -16,7 +16,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 . "$SCRIPT_DIR/hoard-lib.sh"
 hoard_root _hoard
 REG="${PROJECTS_YAML:-$_hoard/identity/projects.yaml}"
-[ -f "$REG" ] || REG="$ROOT/workspace/projects.yaml"
+[ -f "$REG" ] || REG="$ROOT/registry/projects.yaml"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ID="${1-}"; shift || true

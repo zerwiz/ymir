@@ -53,3 +53,20 @@ A new plan that touches ground the elders already hold must open with
 A plan is amended by a NEW numbered plan or an appended dated section, never by
 rewriting it. Fix notes (`docs/fixes/<component>/`) stay one-file-per-fix and
 are never rewritten — corrections supersede, they do not erase.
+#### Correction (2026-09-30, append-only) — the canonical shelf is `projects/`, not `workspace/`
+
+The layout block above names `svartalfaheim/<realm>/workspace/<project>/plans/`. **That name is
+retired** (plan 62, "one word, three meanings"). The canonical shelf is now:
+
+```
+$YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/    # plans, and the index
+$YMIR_HOME/hodd/life/<domain>/                               # the operator's life shelves
+$YMIR_HOME/hodd/identity/{projects,workspaces}.yaml           # the registries
+```
+
+The move is performed by `.agents/migrations/0007-one-word-three-meanings.sh` (`git mv` inside the
+home, then the append-only set is verified **by name**), so a seat that already ran it has the new
+path and a seat that has not still has the old one — and this correction tells a reader which is
+which. The block above is left as the record of what the law used to say; it is not the current
+shelf. **A plan written before today and read after it names the old path** — the plans themselves
+are history and are not rewritten; the law is corrected, once, here.

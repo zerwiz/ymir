@@ -8,7 +8,7 @@
 #   1. Normalize the audio to 16kHz mono (whisper's native rate)
 #   2. Transcribe with the seat's whisper engine (discovered, never assumed)
 #   3. Produce structured minutes in Markdown
-#   4. Store minutes under $YMIR_HOME/hodd/workspaces/meetings/
+#   4. Store minutes under $YMIR_HOME/hodd/life/meetings/
 #   5. Append a Rune to the audit ledger
 #
 # Portable across the fleet: the engine is DISCOVERED on each seat —
