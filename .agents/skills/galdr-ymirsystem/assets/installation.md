@@ -445,6 +445,13 @@ The app repos are cloned into `apps/` by the install's `apps` step (from the
 registry's `repo: apps/<path>` blocks), which is where `--all` reads their
 manifests. The token comes from the hoard, never from `~/.npmrc`.
 
+The seeded `projects.yaml` teaches the **current** key: a project row names its
+**realm** (`realm: personal`), not a workspace — that key was `workspace:` before
+plan 62 (2026-10-01). A registry written before the rename still works: readers
+resolve both through `bin/registry-lib.sh` and name the old key when they see it,
+and `bin/ymir-validate.sh`'s `registry` check warns (never fails) about rows still
+carrying it. The operator's live registry is renamed by hand, with his word.
+
 ## The steps
 
 ```

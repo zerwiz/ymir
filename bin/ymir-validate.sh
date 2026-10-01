@@ -36,6 +36,9 @@ smidja_factory_dir SMIDJA_FACTORY
 
 # shellcheck source=bin/ymir-platform.sh
 . "$SCRIPT_DIR/ymir-platform.sh"
+# The one reader for the master registry's row keys (`realm:`, deprecated `workspace:`).
+# shellcheck source=bin/registry-lib.sh
+if [ -r "$SCRIPT_DIR/registry-lib.sh" ]; then . "$SCRIPT_DIR/registry-lib.sh"; fi
 # Docker or rootless Podman (Fedora), whichever is present.
 CONTAINER_ENGINE="$(ymir_container_engine_name 2>/dev/null || true)"
 JSON=0; QUIET=0
@@ -186,6 +189,24 @@ if [ -r "$RUNES_LEDGER" ]; then
   add runes PASS "audit ledger readable ($(wc -l <"$RUNES_LEDGER" | tr -d ' ') lines)"
 else
   add runes FAIL "audit ledger unreadable"
+fi
+
+# ── 11. the master registry speaks the current key ─────────────────────────
+# Plan 62 renamed a project row's `workspace:` to `realm:`. A row on the old key
+# still resolves (bin/registry-lib.sh), so this is a WARN, never a FAIL — but it is
+# named, because a silent rename is how a registry stops meaning what it says.
+REG_FILE=""
+if command -v registry_projects_file >/dev/null 2>&1; then REG_FILE="$(registry_projects_file 2>/dev/null || true)"; fi
+if [ -z "$REG_FILE" ] || [ ! -r "$REG_FILE" ]; then
+  add registry WARN "no master project registry readable — run bin/ymir-install.sh"
+else
+  legacy=""
+  command -v registry_deprecated_rows >/dev/null 2>&1 && legacy="$(registry_deprecated_rows "$REG_FILE" 2>/dev/null || true)"
+  if [ -z "$legacy" ]; then
+    add registry PASS "every project row names its realm ($REG_FILE)"
+  else
+    add registry WARN "deprecated key 'workspace:' still on $(printf '%s' "$legacy" | tr '\t\n' ', ' | sed 's/, $//') — renamed to 'realm:' (plan 62); rows still resolve, but rename them"
+  fi
 fi
 
 # ── output ──────────────────────────────────────────────────────────────────
