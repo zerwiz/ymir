@@ -47,6 +47,23 @@ TENANT_DOC='((^|/)(company_wiki|wiki|policies|handbook|playbook|internal|confide
 # Public exceptions: a wiki-shaped name that is a genuine scaffold or doc.
 TENANT_DOC_ALLOW='(\.example$|\.example\.md$|README\.md$|/\.gitkeep$)'
 
+# CONTENT — operator IDENTITY and TOPOLOGY (Rule 04, appended 2026-10-01).
+#
+# private-guard above polices PATHS and secret-guard polices CREDENTIAL VALUES.
+# Neither ever looked at the plain text of a file for who the operator IS or
+# WHERE their machines live: a username, a tailnet domain, a personal hostname,
+# a fleet hardware inventory. That content is personal even though it is not a
+# secret, so no ward woke when it was committed and pushed to a public remote.
+#
+# The patterns below are deliberately GENERIC and shape-based. The operator's
+# own name, domains and hosts are never written into this repo — naming them
+# here would re-create the very leak this guard exists to stop. It matches the
+# SHAPE of private identity; the values live at $YMIR_HOME.
+PERSONAL='(/home/[a-z][a-z0-9._-]*/|[a-z0-9][a-z0-9-]*\.ts\.net|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3})'
+# `$HOME` and `<user>` / `<host>` placeholders are the PUBLIC way to say these
+# things — a doc using them teaches the craft without naming the man.
+PERSONAL_OK='(\$HOME|\$\{HOME\}|\$USER|\$HOME_SEAT|<user>|<host>|<tailnet>|<gpu>|<seat>|<home>|/home/user/|100\.64\.0\.0/10)'
+
 scan_list() {
   local hit=0 f
   while IFS= read -r f; do
@@ -59,6 +76,18 @@ scan_list() {
     if printf '%s\n' "$f" | grep -Eq "$TENANT_DOC" && ! printf '%s\n' "$f" | grep -Eq "$TENANT_DOC_ALLOW"; then
       printf 'private-guard: tenant/company document in the public tree: %s\n' "$f" >&2
       printf '  company knowledge belongs at $YMIR_HOME/hodd/identity/companies/, never here\n' >&2
+      hit=1
+      continue
+    fi
+    # Synthetic fixtures are not the operator. A test's /home/alice and a
+    # fleet.json.example's host.tail.ts.net are teaching shapes, not identity.
+    case "$f" in
+      *.test.sh|*.test.ts|*.test.py|*/tests/*|tests/*|*.example|*.example.*|*/fixtures/*) continue ;;
+    esac
+    if [ -f "$ROOT/$f" ] && grep -Eq "$PERSONAL" "$ROOT/$f" 2>/dev/null && ! grep -Eq "$PERSONAL_OK" "$ROOT/$f" 2>/dev/null; then
+      printf 'private-guard: operator identity/topology in public file: %s\n' "$f" >&2
+      grep -En "$PERSONAL" "$ROOT/$f" 2>/dev/null | head -3 | cut -c1-160 | sed 's/^/  /' >&2
+      printf '  say it with $HOME / <user> / <host> / <tailnet>, or keep it at $YMIR_HOME\n' >&2
       hit=1
     fi
   done

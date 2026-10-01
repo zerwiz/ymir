@@ -16,7 +16,7 @@
   `credentials-file: …/ymir.json`; cloudflared names that file for the tunnel's
   UUID, so it refused to start and the world got 530. The line is gone —
   cloudflared resolves a named tunnel's own credentials.
-- Verified through the tunnel: `https://<host>.zerwiz.org/` → 200. The app
+- Verified through the tunnel: `https://<host>.example.org/` → 200. The app
   hostnames still answer 530: their DNS routes were made against an earlier
   tunnel and need re-creating (`cloudflared tunnel route dns ymir <host>`).
 
