@@ -8,7 +8,7 @@
 > house (Rule 01/03).
 >
 > **2026-09-17:** the roots settled — workspaces now live under
-> `$YMIR_HOME/hodd/workspaces/` (marketing/ · personal/ · work/); this page
+> `$YMIR_HOME/hodd/life/` (marketing/ · personal/ · work/); this page
 > stays the map, the hoard is authoritative.
 
 ## The one idea

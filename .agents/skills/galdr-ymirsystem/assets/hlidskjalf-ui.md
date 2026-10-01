@@ -25,6 +25,21 @@ Quick rules:
 - Raise/repair: `scripts/start.sh`; if the window is gone but ports answer, the
   shell must be restarted (backend ≠ window).
 
+## Where the registries live (2026-09-30, plan 62)
+
+The example registries moved with the rename: **`workspace/` → `registry/`**.
+
+```
+registry/projects.yaml.example    # one git{} block per project (host/owner/repo/…/auth)
+registry/workspaces.yaml.example
+```
+
+The gate API reads `join(ROOT, 'registry/workspaces.yaml')` and `bin/project-git.sh` falls back to
+`$ROOT/registry/projects.yaml`; both were rewritten in the same change that moved the templates.
+Note the **value** `workspace:` in a project row is a different thing from any path — it names the
+**realm**, and its rename to `realm:` ships with its readers (`bin/project-git.sh`,
+`bin/ymir-validate.sh`) so a registry rewrite can never break a reader silently.
+
 ## Location & stack
 
 - App: `apps/hlidskjalf` — **React 19 + Vite + TypeScript**, state via **Zustand**.
