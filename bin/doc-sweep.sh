@@ -149,6 +149,11 @@ project_shelf() {  # <id> <realm> — the project's own shelf, created-path incl
 CLASS=""; DEST=""; REASON=""; VERB="MOVE"
 set_class() {  # <class> <destination> <reason> — the verb follows the class, never a flag
   CLASS=$1; DEST=${2-}; REASON=$3
+  # The verb FOLLOWS the class, so the summary's count and the body's verb can
+  # never disagree — they were: the summary said `unplaceable,64` while the body
+  # printed `REPORT`, and a reader could not tell whether the 64 were a different
+  # set from the 8 (2026-10-01). Every class that is not a move or a proposal now
+  # says REPORT, and the summary says `report` for all of them.
   case "$1" in
     move)    VERB=MOVE ;;
     propose) VERB=PROPOSE ;;
@@ -274,12 +279,33 @@ cmd_scan() {
   [ "$depth" -ge 1 ] || die "--depth is at least 1"
 
   REGISTRY="$(registry || true)"
+  # The ledger is DISCOVERED, never derived. The ymir project's registry row names
+  # the realm it WORKS in (`work`), but the canonical plan ledger lives under a
+  # different realm (`whynotproductions`) — so deriving the destination from the
+  # project's realm proposed a path that does not exist (2026-10-01). If exactly
+  # one ledger is present, that is the ledger; only when none is found do we fall
+  # back to the registry, and then we SAY the fallback was used.
   ledger_default=""
-  if [ -n "$REGISTRY" ]; then
-    local yrealm; yrealm="$(printf '%s\n' "$REGISTRY" | awk -F'\t' '$1=="ymir-platform"{print $2; exit}')"
-    ledger_default="$YMIR_HOME/svartalfaheim/${yrealm:-work}/projects/ymir/plans"
+  ledger_note=""
+  local found=0 cand
+  for cand in "$YMIR_HOME"/svartalfaheim/*/projects/ymir/plans; do
+    [ -d "$cand" ] || continue
+    found=$((found + 1))
+    ledger_default="$cand"
+  done
+  if [ "$found" -eq 1 ]; then
+    ledger_note="discovered"
+  elif [ "$found" -gt 1 ]; then
+    ledger_default=""
+    ledger_note="ambiguous ($found ledgers present — name one with --ledger)"
+  else
+    if [ -n "$REGISTRY" ]; then
+      local yrealm; yrealm="$(printf '%s\n' "$REGISTRY" | awk -F'\t' '$1=="ymir-platform"{print $2; exit}')"
+      ledger_default="$YMIR_HOME/svartalfaheim/${yrealm:-work}/projects/ymir/plans"
+    fi
+    [ -n "$ledger_default" ] || ledger_default="$YMIR_HOME/svartalfaheim/work/projects/ymir/plans"
+    ledger_note="derived from the registry — no ledger found on disk"
   fi
-  [ -n "$ledger_default" ] || ledger_default="$YMIR_HOME/svartalfaheim/work/projects/ymir/plans"
 
   local -a items=()
   for r in "${roots[@]}"; do
@@ -326,7 +352,18 @@ cmd_scan() {
 
   printf 'doc_sweep[%s]{class,count}:\n' "$n"
   local k tally=0
-  for k in move propose unplaceable report hold duplicate in-place; do
+  # Every non-move, non-proposal class prints the verb REPORT, so the summary is
+  # keyed the same way: `unplaceable` was a summary-only word, and a reader could
+  # not tell whether it was the same set as `report` (it was not).
+  # Fold the summary-only word into the verb the body actually prints, BEFORE the
+  # loop, so one key is printed once and the tally balances. `unplaceable` was a
+  # summary-only class: the body printed REPORT for those 64, so the summary and
+  # the body were speaking different vocabularies for the same set (2026-10-01).
+  if [ -n "${counts[unplaceable]+x}" ]; then
+    counts[report]=$(( ${counts[report]:-0} + ${counts[unplaceable]:-0} ))
+    unset 'counts[unplaceable]'
+  fi
+  for k in move propose report hold duplicate in-place; do
     [ -n "${counts[$k]+x}" ] || continue
     printf '  "%s",%s\n' "$k" "${counts[$k]}"
     tally=$((tally + ${counts[$k]}))
@@ -337,6 +374,8 @@ cmd_scan() {
   fi
   printf 'home: %s\n' "$YMIR_HOME"
   printf 'roots: %s\n' "${roots[*]}"
+  printf 'ledger: %s\n' "${ledger_default:-<none — pass --ledger>}"
+  [ -n "$ledger_note" ] && printf 'ledger_source: %s\n' "$ledger_note"
   printf 'depth: %s\n' "$depth"
   printf '# doc-sweep report — REPORT ONLY. Nothing was moved, and nothing will be until a human runs:\n'
   printf '#   bash bin/doc-sweep.sh apply --plan <this-file>\n'
