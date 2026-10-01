@@ -273,7 +273,7 @@ YAML
 # Register your own projects, e.g.:
 #   - id: my-project
 #     name: My Project
-#     workspace: personal
+#     realm: personal        # the realm — it was `workspace:` before plan 62
 #     domains: [development]
 #     repo: projects/my-project
 #     posture: local-only

@@ -518,6 +518,23 @@ if [ "$DEEP" = 1 ]; then
     fi
   done
   ok rename-readers "no bin/ reader still names the old workspace path"
+  # 18c-bis. the VALUE rename (plan 62 item 6): `workspace:` was never a workspace, it names
+  # the realm. The ward is that bin/registry-lib.sh is the ONLY place that resolves the
+  # key — a reader that greps for it is a reader a rename breaks silently.
+  if [ -r "$ROOT/bin/registry-lib.sh" ]; then
+    if grep -lE "^[[:space:]]*(realm|workspace):" "$ROOT"/bin/*.sh 2>/dev/null | grep -v 'registry-lib.sh$' | grep -q .; then
+      bad rename-realm "a bin/ script resolves the realm key outside bin/registry-lib.sh"
+    else
+      ok rename-realm "bin/registry-lib.sh is the one reader of the realm key"
+    fi
+    if grep -q 'deprecated-registry-key' "$ROOT/bin/registry-lib.sh" && bash "$ROOT/.agents/tests/registry-realm-key.test.sh" >/dev/null 2>&1; then
+      ok rename-alias "the deprecated key still resolves, and names itself"
+    else
+      bad rename-alias "the deprecated `workspace:` key does not resolve-with-a-warning (run .agents/tests/registry-realm-key.test.sh)"
+    fi
+  else
+    bad rename-realm "bin/registry-lib.sh is missing — no reader resolves the realm key"
+  fi
   # the home half, only meaningful where a home exists on this seat
   HM=""
   if [ -x "$ROOT/bin/hoard-lib.sh" ]; then
