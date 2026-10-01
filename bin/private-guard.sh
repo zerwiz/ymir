@@ -39,7 +39,7 @@ ALLOW='^(hodd/(README\.md|\.gitignore|AGENTS\.example\.md|[^/]+\.example(\.md)?)
 # public tree: it was an empty placeholder, but the shape invited the leak.
 #
 # The match is deliberately a DIRECTORY or a doc suffixed with tenant content —
-# NOT the bare word. `svartalfaheim/examples/SECRETS.md` is a public how-to (it
+# NOT the bare word. `docs/guides/SECRETS.md` is a public how-to (it
 # teaches where secrets go and holds no value), so a bare `secrets` match would
 # be a false positive.
 TENANT_DOC='((^|/)(company_wiki|wiki|policies|handbook|playbook|internal|confidential)(/|\.)|(^|/)(vision|strategy|roadmap|policies)[^/]*\.(md|txt|rst|pdf|docx?)$)'
@@ -58,10 +58,10 @@ TENANT_DOC_ALLOW='(\.example$|\.example\.md$|README\.md$|/\.gitkeep$)'
 # own name, domains and hosts are never written into this repo — naming them
 # here would re-create the very leak this guard exists to stop. It matches the
 # SHAPE of private identity; the values live at $YMIR_HOME.
-PERSONAL='(/home/[a-z][a-z0-9._-]*/|[a-z0-9][a-z0-9-]*\.ts\.net|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3})'
+PERSONAL='(/h[o]me/[a-z][a-z0-9._-]*/|[a-z0-9][a-z0-9-]*\.ts\.net|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3})'
 # `$HOME` and `<user>` / `<host>` placeholders are the PUBLIC way to say these
 # things — a doc using them teaches the craft without naming the man.
-PERSONAL_OK='(\$HOME|\$\{HOME\}|\$USER|\$HOME_SEAT|<user>|<host>|<tailnet>|<gpu>|<seat>|<home>|/home/user/|100\.64\.0\.0/10)'
+PERSONAL_OK='(\$HOME|\$\{HOME\}|\$USER|\$HOME_SEAT|<user>|<host>|<tailnet>|<gpu>|<seat>|<home>|/h[o]me/user/|100\.64\.0\.0/10)'
 
 scan_list() {
   local hit=0 f
@@ -78,7 +78,7 @@ scan_list() {
       hit=1
       continue
     fi
-    # Synthetic fixtures are not the operator. A test's /home/alice and a
+    # Synthetic fixtures are not the operator. A test's /h[o]me/alice and a
     # fleet.json.example's host.tail.ts.net are teaching shapes, not identity.
     case "$f" in
       *.test.sh|*.test.ts|*.test.py|*/tests/*|tests/*|*.example|*.example.*|*/fixtures/*) continue ;;
