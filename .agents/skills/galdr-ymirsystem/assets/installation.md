@@ -1264,3 +1264,44 @@ that the sweep corrected. The visualizer path is
 skill tree (dropped 2026-09-17, the skill carries no copy), not a doubled
 `smidja-factory-factory`, and not the abandoned `.agents/skills/smidja/` tree
 (stale build output, moved aside).
+
+## The read calendar is optional, and its credential step is spelled out (2026-10-01)
+
+Plan 60: **Ymir is single-user per install.** The calendar it reads is the calendar of the
+person who installed it, granted by **that person**, in **their own vault**. There is no
+service account, no shared calendar, and no operator-held token for anyone else.
+
+**An API key cannot do this.** `GOOGLE_API_KEY` identifies an *application*; a person's
+calendar needs **OAuth**, where the person consents once and Ymir holds a **refresh token**
+instead of their password. So the credential step is real — and a user must never meet it
+as a puzzle.
+
+### The steps, in the order they must be done
+1. <https://console.cloud.google.com/apis/credentials> → **Create credentials → OAuth client ID**.
+2. **Application type: DESKTOP APP.** This is load-bearing: only a desktop/installed client
+   accepts a `http://127.0.0.1:<port>` callback. A *web* client cannot, and its registered
+   redirect URI is enforced exactly — a web client borrowed from another product will send the
+   code **to that product**, which is how a calendar grant ends up somewhere it has no business
+   being.
+3. **Scope: `https://www.googleapis.com/auth/calendar.readonly`.** Read-only, nothing wider.
+   Ymir has no write verb at all; that is the point of the feature.
+4. **Add your own address under "Test users."** A new client is in *testing* mode and refuses
+   any account you have not listed — so "Sign in with Google" fails for everyone else, by design.
+5. Put both values in **your own vault**, `hodd/secrets/platform.env`:
+   `GOOGLE_OAUTH_CLIENT_ID=…` and `GOOGLE_OAUTH_CLIENT_SECRET=…`. Confirm with
+   `bin/hodd.sh emit secrets/platform.env | grep GOOGLE_OAUTH`.
+
+### What happens on install and on update
+- `bin/ymir-install.sh` prints this block **only when the grant is absent**, and it is never a
+  FAIL: the hall is fully usable without it, and the grid says *"the reckoning is not granted"*
+  until the steps above are done.
+- The **Connect door** (plan 60 §10: `/api/calendar/connect|callback` plus `hodd.sh set`) is the
+  intended way a user does this **without touching an encrypted vault by hand**. It is **not built
+  yet** — so today the steps above are manual, and this section is the honest substitute.
+- The refresh token that comes back is written **into that user's own `ymirhome`**, encrypted at
+  rest, and never into the repo, a log, or a rune.
+
+### What is deliberately not here
+No service account, no domain-wide delegation, no shared calendar, and no token held on behalf
+of anyone else — those are different products with different blast radii, and they are not this
+one.
