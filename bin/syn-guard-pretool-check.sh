@@ -76,7 +76,7 @@ case "$cmd" in
 esac
 
 # 6. Fleet-steering registries — route changes through their owning scripts.
-for n in 'data/eindri-homes.md' 'workspace/projects.yaml' 'config/cron.yaml'; do
+for n in 'data/eindri-homes.md' 'registry/projects.yaml' 'config/cron.yaml'; do
   destructive_on "$n" && deny "the registry ($n) steers the fleet; edit it deliberately, not with a shell rewrite"
 done
 

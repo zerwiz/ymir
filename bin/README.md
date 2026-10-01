@@ -3,7 +3,7 @@
 Auto-generated from each script's header. One line per tool. Ported scripts are
 credited to the upstream `firstmate` distro (port record: `.agents/skills/galdr-ymirsystem/assets/porting-upstream-to-norse.md`); the rest are Ymir's own.
 
-bin[103]{file,does}:
+bin[104]{file,does}:
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the two A2A MCP servers into the harnesses so"
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:"
   "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri."
@@ -72,6 +72,8 @@ bin[103]{file,does}:
   "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry"
   "public-guard.sh","public-guard.sh — every PUBLIC, user-facing file must be free of operator"
   "ratatoskr.sh","ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`)."
+  "registry-lib.sh","registry-lib.sh — the ONE reader for a project row's realm key (`realm:`;"
+  "deprecated `workspace:` still resolves, and says so by name)."
   "repo-scrub.sh","repo-scrub.sh — purge private paths from ALL git history before going public."
   "rodd-operational-input.sh","rodd-operational-input.sh - canonical Rödd operational-input protocol."
   "runes-append.sh","runes-append.sh - append-only Runes audit ledger."

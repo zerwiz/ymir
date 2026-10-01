@@ -25,6 +25,29 @@ Quick rules:
 - Raise/repair: `scripts/start.sh`; if the window is gone but ports answer, the
   shell must be restarted (backend ≠ window).
 
+## Where the registries live (2026-09-30, plan 62)
+
+The example registries moved with the rename: **`workspace/` → `registry/`**.
+
+```
+registry/projects.yaml.example    # one git{} block per project (host/owner/repo/…/auth)
+registry/workspaces.yaml.example
+```
+
+The gate API reads `join(ROOT, 'registry/workspaces.yaml')` and `bin/project-git.sh` falls back to
+`$ROOT/registry/projects.yaml`; both were rewritten in the same change that moved the templates.
+
+> **The VALUE rename shipped 2026-10-01 (plan 62 item 6).** A project row's `workspace:` was never a
+> workspace — it named the **realm** — so the key is now `realm:` in `registry/projects.yaml.example`,
+> in `bin/ymir-install.sh`'s seeded registry, and in every row of the operator's home registry (by his
+> hand, not by a script). The readers resolve **both** keys through `bin/registry-lib.sh`: `realm`
+> first, `workspace` as a deprecated alias that is **named on stderr** every time it is used
+> (`deprecated-registry-key: row "<id>" carries \`workspace:\` …`). `bin/ymir-validate.sh` gained the
+> `registry` check: PASS when every row names its realm, WARN naming each row still on the old key —
+> never FAIL, because a registry rewrite must not break a reader silently. `--field workspace` on
+> `bin/project-git.sh` likewise resolves and says it is `realm`. Never resolve the realm key outside
+> `bin/registry-lib.sh`.
+
 ## Location & stack
 
 - App: `apps/hlidskjalf` — **React 19 + Vite + TypeScript**, state via **Zustand**.
