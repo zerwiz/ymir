@@ -13,7 +13,23 @@ metadata:
 
 Use this playbook when the session-start digest reports an ordinary direct report's endpoint dead or its metadata has no window, or when a direct report is stale, looping, repeatedly confused, asking a question its brief already answers, unresponsive, or when a steer failed to land.
 
-Interrupt, stop, and relaunch a worker through `bin/brokk-control.sh <task-id> interrupt|exit|relaunch`, which resolves the recorded runtime itself, verifies each action, and never tears down or discards anything ([`docs/agent-control.md`](../../../docs/agent-control.md)).
+Interrupt and stop a worker through `bin/eindri-control.sh <interrupt|exit|read> <agent-or-pane>`,
+which verifies each action and never tears down or discards anything.
+
+**There is no relaunch verb here (measured 2026-10-01).** This playbook used to name
+`bin/brokk-control.sh <id> relaunch`; that script does not exist on this house, and the door that
+does (`bin/eindri-control.sh`) offers only `interrupt | exit | read`. The real relaunch road is
+**`bin/einherjar-spawn.sh <id> --relaunch`**, and it needs its brief in place first:
+
+```sh
+bash bin/erindi-brief.sh <id> --relaunch      # scaffold data/<id>/brief.md
+# …fill the brief's {TASK}…
+bash bin/einherjar-spawn.sh <id> --relaunch --harness <h> --model <m>
+```
+
+Two refusals that road will give, and both are correct: a `{TASK}` placeholder still in the brief,
+and a seat record that already stands (stop it first, or the existing road runs and the stale
+launch script is reused).
 That plane covers workers running in this home; a remotely placed Eindri-home is refused by name and reconciled through `Eindri-home-provisioning` instead.
 Load `harness-adapters` before a resume command or a harness-specific skill invocation, and whenever the adapter's own quirks matter.
 The target window's harness is recorded as `harness=` in `state/<id>.meta`.
@@ -45,9 +61,15 @@ Escalate in order:
 
 1. Peek the pane, and check the task's steering inbox (`state/<id>.inbox/`) for unhandled `*.msg` records - a stale wake naming an unread Brokk instruction means the worker never acknowledged a durable steer, and the record itself shows exactly what was intended.
 2. If the Eindri is waiting on a question its brief already answers, answer in one line via `BROKK_HOME=<this-Brokk-home> bin/brokk-send.sh` from an active Brokk session unless `BROKK_HOME` is already set to the active Brokk home.
-3. If the Eindri is confused or looping, interrupt with `BROKK_HOME=<this-Brokk-home> bin/brokk-control.sh <task-id> interrupt`, then redirect with one corrective line through `brokk-send`.
-4. If the Eindri is genuinely wedged after redirection, relaunch it with `BROKK_HOME=<this-Brokk-home> bin/brokk-control.sh <task-id> relaunch --note '<progress so far>'`, which stops the agent, carries the brief plus that note into a replacement in the same local copy, and restores the prior record if the replacement cannot start.
-   Pass `--harness`, `--model`, or `--effort` on that same command when the worker should come back on a different runtime.
+3. If the Eindri is confused or looping, interrupt with `bin/eindri-control.sh <id> interrupt`, then redirect with one corrective line through `brokk-send` (note: `brokk-send` resolves a *registered* `eindri-homes.md` home; a local worktree errand has none, so use the errand's own wake queue).
+4. If the Eindri is genuinely wedged after redirection, relaunch it with
+   `bash bin/erindi-brief.sh <id> --relaunch` (refill its brief with what it did and what is left),
+   then `bash bin/einherjar-spawn.sh <id> --relaunch --harness <h> --model <m>`.
+   Pass the harness and model when the worker should come back on a different runtime.
+   **Measure before you judge**: a worktree that reads `0` commits against `origin/main..HEAD` may
+   have already landed its work on the **remote** branch — check `git log --oneline
+   origin/<branch>` and `gh pr list` before filing a failure (Brokk filed two delivered errands as
+   failed on 2026-10-01 by doing exactly that).
    Genuine wedging means looping, unresponsive, repeating the same obstacle, or truly dead.
    A low context reading is not wedging; modern harnesses auto-compact and keep going.
    The worktree and commits persist, so relaunch is cheap.
