@@ -256,7 +256,7 @@ cmd_new() {
     printf '\n**Expected close (the report contract):** write \`data/%s/result.md\`; the arm files the close hook, a rune is carved, and the Allfather tail + well lesson follow (law 7).\n' "$id"
     printf '\n**History (same wave):**\n\n'
     grep "| $id |" "$BACKLOG" 2>/dev/null | sed 's/^/  /' | head -5
-    printf '\n**Citations:** plan 42 (\`%s\`), the errand book Part III-b (incl. the handoff minimum), Part II-c (per-machine), Part II-e (the mill).\n' "${PLAN42_REF:-svartalfaheim/whynotproductions/workspace/ymir/plans/42-federation-single-heart.md}"
+    printf '\n**Citations:** plan 42 (\`%s\`), the errand book Part III-b (incl. the handoff minimum), Part II-c (per-machine), Part II-e (the mill).\n' "${PLAN42_REF:-svartalfaheim/whynotproductions/projects/ymir/plans/42-federation-single-heart.md}"
   } > "$plan"
   printf '\n\n**Your planning document:** `data/%s/plan.md` — read it before you touch a command.\n' "$id" >> "$brief" 2>/dev/null || true
 

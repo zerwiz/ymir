@@ -300,7 +300,7 @@ THE RECORD (store/serve)  the heart — minutes in the vault, synced by the home
   system audio via PipeWire (no virtual loopback device); `bin/snotra-transcribe.sh`
   discovers the seat's whisper engine (env → PATH → build trees → `voxtype`),
   normalises to 16 kHz mono, and writes Markdown minutes under
-  `$YMIR_HOME/hodd/workspaces/meetings/` with a Rune per meeting. Minutes are
+  `$YMIR_HOME/hodd/life/meetings/` with a Rune per meeting. Minutes are
   summarised by the **local rail** (`llama-swap`, no cloud key).
 - **The MCP face** (`tools/snotra/server.mjs`, streamable HTTP `:8321`, read-only)
   lets any seat's agent ask *"what did we decide about X?"* — `snotra_list`,
