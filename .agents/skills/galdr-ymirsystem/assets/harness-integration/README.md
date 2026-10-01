@@ -419,6 +419,9 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 | `.pi/shared/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
 | `.pi/shared/extensions/todo.ts` | the todo surface | user |
 | `.pi/shared/extensions/ymir-subagents.ts` | **the Eindri roster as a Pi tool** — reads the canonical `.agents/agents/*.md` tree and exposes every figure through a `subagent` tool (and a `/subagents` command). See "Pi has no agent loader" below | user |
+| `.pi/shared/extensions/constellation.ts` | **the mesh, as tools** — `constellation_list` / `constellation_ask` / `constellation_card`. Discovers peers from the agent-card registry (`CONSTELLATION_REGISTRY` = git URL or local path; `CONSTELLATION_CACHE` = cache dir, never in the tree), validates every card against the shared contract (`packages/contracts/src/agent-card.ts`, imported at runtime through the recorded `.ymir-root` because a deployed copy has no `packages/` under it), reports invalid cards with the failing field named, and **refuses every call** while the grant (`skills[]` + a short-lived skill-scoped JWT, phase 61.2) is unmade. Read-only: it never writes to a peer | 61 |
+| `.pi/shared/extensions/lib/constellation-contract.ts` | re-exports the shared agent-card contract, located at runtime so the DEPLOYED copy resolves it | 61 |
+| `.pi/shared/extensions/lib/constellation-registry.ts` | `resolveRegistry`, `scanRegistryDir`, `renderRegistry`, `constellationAsk` — discovery and the refusal | 61 |
 | `.pi/shared/extensions/lib/rodd-operational-input.ts` | `encodeRoddOperationalInput`, `classifyRoddOperationalText`, `classifyRoddCurrentOperationalText` | shared wire |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` | detached child supervisor (Vörðr) | 1 (transport) |
 | `.claude/settings.json` | `hooks.SessionStart[]`, `hooks.Stop[]` | 1, 3, 5 |

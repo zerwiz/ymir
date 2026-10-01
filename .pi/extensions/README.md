@@ -12,6 +12,7 @@ Ported from the validated upstream agent-distro reference for
 | `gna-pi-watch.ts` | **Gná** (Frigg's messenger) | watcher continuity: arm, re-arm, deliver actionable wakes; emits the Skuld dispatch offer |
 | `ro.ts` | **Ró** (calm/peace) | calm presentation: hides transcript chrome, replaces the working row with a longship, `/ro` toggle |
 | `skuld-branch-supervision.ts` | **Skuld** (the Norn of what shall be) | supervision branch: handles routine wakes with a cheaper model; `/skuld-model` |
+| `lib/constellation-registry.ts` + `lib/constellation-contract.ts` | **Constellation** (the mesh) | the agent-card registry read, validated and reported; `constellation_ask` refuses without a grant (phase 61.2) |
 | `lib/vordr-sessionstart-supervisor.mjs` | **Vörðr** (warden) | supervise the digest child process |
 | `lib/rodd-operational-input.ts` | **Rödd** (voice) | structured operational-message wire bridge |
 | `lib/ro-*.ts` | **Ró** helpers | visibility, assistant/user layout adapters, working longship |
@@ -27,6 +28,8 @@ Ported from the validated upstream agent-distro reference for
   and read by `lib/ymir-home.ts` — the deployed extensions live outside this tree, so
   the loader has to tell them where `bin/` is.
 - **Rödd** wire: `bin/rodd-operational-input.sh`.
+- **Constellation registry:** `CONSTELLATION_REGISTRY` (a git URL or a local path of the registry repo) and `CONSTELLATION_CACHE` (optional cache dir, never inside the tree). With neither set the mesh tools SKIP loudly — never an empty peer list. The home behind the default cache path comes from `ymir_home_root` (`bin/hoard-lib.sh`), the same resolver every shell uses.
+- **Tests:** `node --test .pi/extensions/lib/constellation-registry.test.ts .pi/extensions/lib/constellation-load.test.ts` — the four promises (a sound card parses · an invalid card is named · the call refuses · unknown is not empty) and the deployed-shape load.
 
 The harness passes `BROKK_SESSION_PID` so the session lock is bound to the live
 Pi process, not the short-lived digest helper.
