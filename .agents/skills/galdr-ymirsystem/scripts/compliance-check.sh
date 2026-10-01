@@ -177,6 +177,31 @@ else
   add surfaces "Galdr agent+skill dual-surface" FAIL "agent and skill differ"
 fi
 
+# --- hoard -------------------------------------------------------------------
+# Rule 04, appended 2026-10-01: personal data is not only secrets. Run BOTH
+# wards over the whole tracked tree — secret-guard for credential values,
+# private-guard for operator identity/topology. Either red fails the gate.
+hoard_detail=""
+if out="$(bash "$ROOT/bin/secret-guard.sh" --all 2>&1)"; then
+  hoard_detail="secret-guard clean"
+else
+  hoard_detail="secret-guard: $(printf '%s' "$out" | grep -m1 'secret-guard:' | cut -c1-120)"
+fi
+if out="$(bash "$ROOT/bin/private-guard.sh" --all 2>&1)"; then
+  add hoard "the hoard boundary (Rule 04)" PASS "$hoard_detail · private-guard clean"
+else
+  hoard_detail="private-guard: $(printf '%s' "$out" | grep -m1 'private-guard:' | cut -c1-120)"
+  add hoard "the hoard boundary (Rule 04)" FAIL "$hoard_detail"
+fi
+
+# The Allfather's own model knowledge must live at $YMIR_HOME, never here. The
+# doctrine may ship; the measurements, hosts and numbers may not.
+if [ -e "$ROOT/.agents/skills/modeltesting" ]; then
+  add hoard "operator model knowledge lives in YMIR_HOME" FAIL "modeltesting is in the public tree; it belongs at \$YMIR_HOME/.agents/skills/modeltesting"
+else
+  add hoard "operator model knowledge lives in YMIR_HOME" PASS "no modeltesting skill in the public tree; doctrine only"
+fi
+
 # --- harnesses --------------------------------------------------------------
 # Every harness reads agents through its own directory (.claude/agents,
 # .codex/agents, .cursor/agents, .pi/agents, .opencode/agents) and skills through

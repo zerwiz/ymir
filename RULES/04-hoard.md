@@ -95,3 +95,82 @@ The truth on a live home, and the intent of this rule:
 
 Confirmed by the Allfather 2026-09-17. Drift of this kind is caught by
 `bin/eir-doctor.sh`'s hoard placement check.
+
+---
+
+## Appended 2026-10-01 — personal data is not only secrets; the ward must see it
+
+The first law says: *never store personal or private data in this repo — not a
+secret, a key, a name, a plan, a schedule, a client, a credential, or a note.*
+
+Read until now, the automated wards enforced only the **secret** half.
+
+- `bin/secret-guard.sh` scanned content for **credential values** (keys, tokens).
+- `bin/private-guard.sh` scanned **paths** for private roots.
+- **Nothing scanned file content for who the operator IS or WHERE their machines
+  live.** So an operator username, a tailnet domain, a personal hostname and a
+  fleet hardware inventory were committed and pushed to a public remote while
+  every gate reported green. Measured 2026-10-01 across `origin` =
+  `github.com/zerwiz/ymir` (public).
+
+**The law, as the Allfather laid it down:**
+
+1. A person's **identity and topology are personal data** whether or not they are
+   a secret. Username, home path, tailnet domain, hostnames, machine names and
+   the fleet's hardware inventory are **never** committed to this repo.
+2. **Local-model knowledge is never in this repo, under any circumstances.**
+   The modeltesting skill, its benchmarks, VRAM ceilings, measured prefill/decode
+   and per-seat host profiles are **operator-specific** and live at
+   **`$YMIR_HOME/.agents/skills/modeltesting`**. This repo may carry only the
+   *doctrine* — which engines exist, how to detect them, why honest measurement
+   beats a lucky load — never the measurements, the hosts, or the numbers.
+   (Supersedes commit `cb5c2f1`, 2026-09-12, which moved the skill to a galdr
+   asset; the asset remains doctrine, the skill is the Allfather's own.)
+3. The **public way** to say a private thing is a placeholder: `$HOME`,
+   `$HOME_SEAT`, `<user>`, `<host>`, `<tailnet>`, `<gpu>`, `<seat>`, `<home>`.
+   Docs use the placeholder and stay universal; the value stays in the hoard.
+4. The wards must **fail** on this class, not merely be able to. A test that
+   cannot fail on the leak is not a test.
+
+**The ward:** `bin/private-guard.sh` now scans content for identity/topology by
+**shape, never by value** — a literal `/home/<name>/`, a `*.ts.net` tailnet host,
+a CGNAT `100.64/10` address — and exempts synthetic fixtures and `.example`
+files. It deliberately contains **no** operator name, domain or hostname: naming
+them in the guard would re-create the very leak the guard exists to stop.
+
+Confirmed by the Allfather 2026-10-01. Law 06: this entry is appended, never
+rewritten; a correction is a new entry citing this one.
+
+---
+
+## Appended 2026-10-01 — data comes FROM the hoard; the repo holds only craft
+
+Laid down by the Allfather, following the entry above.
+
+The repo must not merely *avoid* personal data — it must not **contain a copy of
+it in any form**, not even a placeholder that a human filled in once. Every piece
+of operator data is **read at run time from `$YMIR_HOME`**, and the repo ships
+only the *function* that reads it.
+
+| Belongs in `$YMIR_HOME` (data) | Belongs in this repo (craft) |
+|---|---|
+| the modeltesting skill, benchmarks, VRAM ceilings, host profiles | the doctrine: which engines exist, how to detect them |
+| machine / seat inventories, topology, hostnames | `.example` **shapes** with synthetic names |
+| the operator's model ids, context windows, measured limits | the scripts that read `$YMIR_HOME` and decide |
+
+Rules:
+
+1. **No copy.** A value that exists in the hoard is never also pasted into the
+   repo — not as a value, not as an "example" filled with the real thing.
+2. **Examples are synthetic.** An `.example` carries a made-up name
+   (`h1.tail.ts.net`, `/home/alice`), never a real seat, domain or user. A ward
+   enforces it; see `bin/private-guard.sh` and the exempt-fixture rule in
+   `.agents/tests/private-guard-identity.test.sh`.
+3. **Functions read the hoard.** Anything needing operator data resolves it
+   through `bin/hoard-lib.sh` (`hoard_root`) at run time. A machine that has no
+   hoard says so loudly; it never falls back to a value baked into the tree.
+4. **One source of truth.** When the data and the repo disagree, the hoard is
+   right and the repo is drift.
+
+Confirmed by the Allfather 2026-10-01. Appended under Law 06; a correction is a
+new entry citing this one.

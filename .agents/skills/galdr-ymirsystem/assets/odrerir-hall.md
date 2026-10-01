@@ -24,7 +24,7 @@ their states, the tickets and the plans.
 | Cloth | the canonical `midgard/design-system/tokens.css` + the hearth (`midgard/design-system/ember.js`, carried in-repo) |
 | Boards | the tickets + plans, BOTH in the tickets anatomy (table · filters · bulk · +new · detail sheet); Skuld MCP through this body's gateway door |
 | Port | `:4322` (env `ODRERIR_PORT`) |
-| Public face | `https://hall.ymir.zerwiz.org` (production) |
+| Public face | `https://hall.ymir.example.org` (production) |
 | Desktop app | `ymir-odrerir` — its own Electron shell, own icon, own `.desktop` |
 
 The SPA (`src/App.tsx` → the EmberBackground + the topbar with the halls

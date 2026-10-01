@@ -3,7 +3,7 @@
 ### Why
 - **Electron:** `apps/hlidskjalf/electron` + `scripts/electron.sh` open Hlidskjalf
   (and Smiðja) as a native window; raises the stack if down.
-- **Tunnel:** `<host>.zerwiz.org` → `:3889` via `bin/gjallarhorn-tunnel.sh`
+- **Tunnel:** `<host>.example.org` → `:3889` via `bin/gjallarhorn-tunnel.sh`
   (cloudflared config in `midgard/infrastructure/ingress/cloudflared-ymir.yml`).
 - **Auth:** hardcoded HTTP Basic (`zerwiz:allfather`, `HLIDSKJALF_AUTH`) on the
   gate API, which now also serves the built SPA. Temporary — move to Heimdall +
