@@ -1,6 +1,9 @@
 # Workspace registry — the SHAPE only. The real registry lives at
 # $YMIR_HOME/identity/workspaces.yaml (private; see RULES/04-hoard.md).
 # Single tenant: one operator, no company.
+#
+# Every `id:` here is a REALM — the value a project row names in its `realm:` key
+# (plan 62; the key used to read `workspace:`). Add a realm here before naming it.
 workspaces:
   - id: work
     name: Work
