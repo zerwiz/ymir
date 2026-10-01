@@ -319,6 +319,29 @@ THE RECORD (store/serve)  the heart — minutes in the vault, synced by the home
 - **First Law:** audio and transcripts are private data — the hoard, never the
   repo. The repo carries the wiring, never a recording, a name, or a minute.
 
+### 3.14 The shelf-sweeper — the operator's documents, found and filed (plan 63)
+
+Documents do not stay in the vault: they end up loose beside it, named for nothing.
+`bin/doc-sweep.sh` is the tool that reads that pile and says where each thing
+belongs — and refuses to act on its own judgement.
+
+- **`scan` is a report, never a move.** It classifies by evidence, in this order: a
+  path naming a known project in `hodd/identity/projects.yaml` → that project's
+  shelf; a plan-shaped document → the plan ledger, **proposed only**; a note carrying
+  a known domain → `hodd/life/<domain>/`; anything else → **unplaceable**, with the
+  reason. A symlink, a socket, a binary, an archive, a credential, an OS folder and
+  the vault itself are reported and never moved, whatever they are named.
+- **`apply` moves what a PLAN says and nothing else.** The plan file is the word
+  (`MOVE <from> -> <to> because: …`); every line is pre-flighted before any move, and
+  one bad line refuses the whole plan. There is no `--force` and no `--all`.
+- **`verify` re-checks by name and by digest** against the ledger in
+  `$YMIR_HOME/state/doc-sweep/`, so a second `apply` is a no-op and a moved file can
+  be proven.
+- **The repo stays clean:** every destination must resolve inside the home through
+  the one resolver (`bin/hoard-lib.sh`); a line aimed at the code tree is refused by
+  name, with the reason. The sweeper never stages, never deletes, and never dumps an
+  unplaceable file into `docs/`.
+
 ## 4. Execution Chain Examples
 
 ### 4.1 Inbound GitHub Bug Report
