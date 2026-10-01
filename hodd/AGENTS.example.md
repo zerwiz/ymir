@@ -53,9 +53,9 @@ still living live in `hodd/plans/`; settled plans are filed into
 | Kind | Path |
 |------|------|
 | Business / strategy | `hodd/identity/companies/` |
-| Marketing / social | `hodd/workspaces/marketing/` |
-| Software specs | `hodd/workspaces/work/` |
-| Personal / schedules | `hodd/workspaces/personal/` |
+| Marketing / social | `hodd/life/marketing/` |
+| Software specs | `hodd/life/work/` |
+| Personal / schedules | `hodd/life/personal/` |
 | Daily logs | `hodd/memory/daily/YYYY-MM-DD.md` |
 | Plans (live) | `hodd/plans/` |
 | Plans (archive) | `memory/plans/<domain>/` |

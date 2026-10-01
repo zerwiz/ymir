@@ -75,7 +75,7 @@ supports this; it is not a rewrite.
 
 - Transcribes WAV with whisper.cpp (local GPU)
 - Produces structured Markdown minutes
-- Stores under `$YMIR_HOME/hodd/workspaces/meetings/`
+- Stores under `$YMIR_HOME/hodd/life/meetings/`
   (the workspaces shelf: meetings are work-adjacent artifacts that follow the
   operator across domains; the hoard's `workspaces/` is the natural home)
 - Appends a Rune via `bin/runes-append.sh`
@@ -218,7 +218,7 @@ detect_env[10]{key,default,meaning}:
 ## Private data
 
 Audio recordings, transcripts, and meeting content are **private data**. They
-live under `$YMIR_HOME/hodd/workspaces/meetings/` and are never committed to
+live under `$YMIR_HOME/hodd/life/meetings/` and are never committed to
 the public repo. The repo carries only the wiring scripts and the MCP server.
 
 ## First Law compliance
