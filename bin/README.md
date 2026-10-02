@@ -262,7 +262,7 @@ bin[390]{file,does,kind,verdict,disposition,callers,lines}:
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","wired","keep",5,119
   "host-sense.sh","host-sense.sh — learn THIS machine: distro, kernel, session, desktop, and what","tool","wired","keep",6,200
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",1,135
-  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","internal","keep",2,196
+  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",2,196
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",1,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",2,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",3,131
@@ -387,7 +387,7 @@ bin[390]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","wired","keep",3,66
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",4,60
   "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",1,19
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",21,1444
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",21,1413
   "ymir-invite.sh","ymir-invite — hand someone a way in to your Ymir, and take it back.","tool","wired","keep",4,105
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","data","internal","keep",1,89
   "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",2,337
@@ -403,6 +403,6 @@ bin[390]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",6,243
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
 
-**Tally.** verdict: wired=172, provenance=156, tested=39, internal=23
+**Tally.** verdict: wired=173, provenance=156, tested=39, internal=22
 
 **Tally.** disposition: keep=232, provenance=156, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
