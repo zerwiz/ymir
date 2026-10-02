@@ -24,6 +24,9 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
 const HOME = process.env.YMIR_HOME || `${process.env.HOME}/Documents/ymirhome`;
+// Ymir's TOOLS are the repo's; only its DATA is the home's. So the well's door is
+// bin/mimir.sh beside this extension, and it resolves the home through the env.
+const ROOT_BIN = process.env.YMIR_ROOT || "/home/heimdall/ymir";
 
 /** The layout law, in one place: what a path means decides where it may live. */
 const SHELVES: { match: RegExp; where: string; why: string }[] = [
@@ -96,6 +99,64 @@ export default function ymirhome(pi: any) {
     "sensitivity",     // private | internal — lets the door REFUSE a secret
     "owner",           // who answers for this
   ] as const;
+
+
+  // ── the well: drink before you act, water it after ────────────────────────
+  // The house law is 'recall on the way in, observe on the way out'. A door into
+  // the home that cannot reach the well makes an agent file a lesson it already
+  // knows, and re-file one it has filed. So the well is part of the DOOR, not a
+  // separate thing the agent has to remember to use.
+  pi.registerTool({
+    name: "ymir_recall",
+    description:
+      "RECALL from the well before acting on anything the home owns. The house law: drink before " +
+      "you act. Thin — it calls bin/mimir.sh, so a human or a cron row recalls the same way.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "what you are about to do, in words" },
+        limit: { type: "number", description: "episodes to return (default 5)" },
+      },
+      required: ["query"],
+    },
+    handler: async (args: any) => {
+      try {
+        const out = run("bash", ["-c", '"$1" recall "$2" "$3"', "_",
+          `${ROOT_BIN}/bin/mimir.sh`, String(args.query), String(args.limit ?? 5)], HOME);
+        return { output: out || "the well has nothing on that (an empty well is a real answer, not a failure)" };
+      } catch (e: any) {
+        return { output: "the well did not answer: " + String(e?.message ?? e).split("\n")[0] };
+      }
+    },
+  });
+
+  pi.registerTool({
+    name: "ymir_remember",
+    description:
+      "OBSERVE into the well — water it after. Records what was learned, so the NEXT machine (or " +
+      "the next session) starts where this one finished. Tags and actors optional; the value is the " +
+      "claim, not the transcript.",
+    parameters: {
+      type: "object",
+      properties: {
+        lesson: { type: "string", description: "what was learned, as a claim about the work" },
+        tags: { type: "array", items: { type: "string" } },
+        actors: { type: "array", items: { type: "string" } },
+      },
+      required: ["lesson"],
+    },
+    handler: async (args: any) => {
+      try {
+        const parts = [String(args.lesson)];
+        if (args.tags?.length) parts.push(`tags: ${(args.tags as string[]).join(",")}`);
+        if (args.actors?.length) parts.push(`actors: ${(args.actors as string[]).join(",")}`);
+        run("bash", ["-c", '"$1" observe "$2"', "_", `${ROOT_BIN}/bin/mimir.sh`, parts.join(" ")], HOME);
+        return { output: "observed into the well. Next: ymir_note it into the plan it belongs to, or ymir_push the doc that carries it." };
+      } catch (e: any) {
+        return { output: "the well did not take it: " + String(e?.message ?? e).split("\n")[0] };
+      }
+    },
+  });
 
   pi.registerTool({
     name: "ymir_header",

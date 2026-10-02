@@ -29,7 +29,10 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 YMIR_HOME="${YMIR_HOME}"
-WELL="${YMIR_MEMORY_DIR:-$YMIR_HOME/memory/well}/episodes.jsonl"
+# The well log lives INSIDE the hoard, which is `$YMIR_HOME/hodd/` (Rule 04) — this
+# line omitted the `hodd/` segment, so recall and observe pointed at a path that has
+# never existed. Found by the ymirhome door calling it, not by reading it.
+WELL="${YMIR_MEMORY_DIR:-$YMIR_HOME/hodd/memory/well}/episodes.jsonl"
 BRIDGE="${MIMIRSBRUNN_URL:-http://127.0.0.1:4602}"
 
 usage() { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; }
