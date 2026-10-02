@@ -100,15 +100,16 @@ open(sys.argv[2] if False else '/dev/stdout', 'w').write("\n".join(out))
 PY
 rc=$?
 
-TMPOUT="$(mktemp)"
-python3 - "$REG" "$Q" > "$TMPOUT" <<'PY'
+render() {
+OUT_T="$(mktemp)"
+python3 - "$REG" "$Q" > "$OUT_T" <<'PY'
 import sys, io, contextlib
 buf = io.StringIO()
 with contextlib.redirect_stdout(buf):
     exec(open('/dev/stdin').read()) if False else None
 PY
 # regenerate deterministically into the file (the heredoc above printed to stdout; do it once cleanly)
-python3 - "$REG" "$Q" > "$TMPOUT" <<'PY'
+python3 - "$REG" "$Q" > "$OUT_T" <<'PY'
 import sys, datetime
 reg, q = sys.argv[1], sys.argv[2]
 rows=[]
@@ -148,16 +149,22 @@ for st in ('blocked','owed','open','done'):
 n={k:sum(1 for r in rows if r[0]==k) for k in ('blocked','owed','open','done')}
 print(f"**Tally.** blocked={n['blocked']} owed={n['owed']} open={n['open']} done={n['done']}")
 PY
+}
+
+if [ "$MODE" != "--check" ]; then render; fi
+
 
 if [ "$MODE" = "--check" ]; then
-  if [ ! -f "$OUT" ] || ! diff -q "$OUT" "$TMPOUT" >/dev/null 2>&1; then
+  render            # render to a TEMP; --check must never touch the queue it verifies
+  if [ ! -f "$OUT" ] || ! diff -q "$OUT" "$OUT_T" >/dev/null 2>&1; then
     echo "queue --check: $OUT is STALE — run bin/queue.sh" >&2; rm -f "$TMPOUT"; exit 1
   fi
   echo "queue --check: current ($(grep -c '^| ' "$OUT") rows)"
-  rm -f "$TMPOUT"; exit 0
+  rm -f "$OUT_T"; exit 0
 fi
 
-cp "$TMPOUT" "$OUT"; rm -f "$TMPOUT"
+render
+cp "$OUT_T" "$OUT"; rm -f "$OUT_T"
 echo "wrote $OUT"
 grep -E '^\*\*Tally' "$OUT"
 exit 0
