@@ -44,10 +44,11 @@ gate() {  # <name> <description> <command...>
 gate ward        "the tree wards (runtime, defaults)"   bash "$ROOT/bin/guards.sh"
 gate compliance  "the 15 governance gates"              bash "$ROOT/.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
 gate contracts   "the typed surfaces (one contract, two consumers)" bash "$ROOT/bin/contracts-check.sh"
-gate queue       "the derived work queue is current"              bash "$ROOT/bin/queue.sh --check"
-gate capability "the capability register is current"           bash "$ROOT/bin/capabilities.sh --check"
+gate queue       "the derived work queue is current"              bash "$ROOT/bin/queue.sh" --check
+gate capability "the capability register is current"           bash "$ROOT/bin/capabilities.sh" --check
 gate home-index "the home's shelves are navigable"             bash "$ROOT/bin/home-index-check.sh"
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/usage-ratchet.sh"
+gate inventory  "the bin/backend index is current"            bash "$ROOT/bin/inventory.sh" --check
 if [ "$FAST" = 1 ]; then
   printf '  "%s","SKIP","%s"\n' pr-pretest "skipped by --fast"
 else

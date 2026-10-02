@@ -41,7 +41,7 @@ bin[399]{file,does,kind,verdict,disposition,callers,lines}:
   "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","wired","keep",6,1862
   "calendar-ask.sh","calendar-ask.sh — the shell door onto Mánagandr, the read calendar.","tool","tested","keep",1,118
   "capabilities.sh","capabilities.sh — THE register: what Ymir can do, and the door a caller should use.","tool","wired","keep",4,126
-  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,62
+  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,63
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",2,114
   "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",1,182
   "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","internal","keep",1,174
@@ -246,7 +246,7 @@ bin[399]{file,does,kind,verdict,disposition,callers,lines}:
   "gjallarhorn-tunnel.sh","gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn).","tool","wired","keep",1,86
   "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM.","lib","tested","keep",6,164
   "graphics-lib.sh","graphics-lib.sh — the machine's graphics truth, shared by every reader.","lib","wired","keep",4,167
-  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",5,183
+  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",5,191
   "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",3,51
   "hall-snapshot.sh","hall-snapshot.sh — the planning feed for the Óðrerir Live Hall.","tool","wired","keep",2,151
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",2,247
@@ -264,7 +264,7 @@ bin[399]{file,does,kind,verdict,disposition,callers,lines}:
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",3,74
   "host-sense.sh","host-sense.sh — learn THIS machine: distro, kernel, session, desktop, and what","tool","wired","keep",6,200
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",1,135
-  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",5,200
+  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",6,200
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",1,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",2,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",3,131
@@ -376,7 +376,7 @@ bin[399]{file,does,kind,verdict,disposition,callers,lines}:
   "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",1,75
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",5,131
   "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","internal","keep",1,76
-  "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",2,68
+  "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",3,68
   "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",2,91
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,112
   "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",1,116

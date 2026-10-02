@@ -180,3 +180,11 @@ if [ "${seat_failed:-0}" != 0 ]; then
   exit 1
 fi
 exit "${seat_failed:-0}"
+
+# What CHANGED for you, since your last update. Every change carries a note in
+# docs/fixes/; until now nothing printed them, so an updating user saw "updated" and
+# nothing else. This is the reader that closes the loop (plan 66 §7).
+if [ -x "$ROOT/bin/update-notes.sh" ]; then
+  printf '\n'
+  bash "$ROOT/bin/update-notes.sh" || true
+fi
