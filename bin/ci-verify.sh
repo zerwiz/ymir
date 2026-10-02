@@ -49,6 +49,7 @@ gate capability "the capability register is current"           bash "$ROOT/bin/c
 gate home-index "the home's shelves are navigable"             bash "$ROOT/bin/home-index-check.sh"
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/usage-ratchet.sh"
 gate inventory  "the bin/backend index is current"            bash "$ROOT/bin/inventory.sh" --check
+gate workflows  "every Actions workflow parses"               bash "$ROOT/bin/workflow-check.sh" --quiet
 if [ "$FAST" = 1 ]; then
   printf '  "%s","SKIP","%s"\n' pr-pretest "skipped by --fast"
 else

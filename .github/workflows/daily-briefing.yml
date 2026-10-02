@@ -44,20 +44,20 @@ jobs:
           ROLES=$(ls .agents/subagents/ 2>/dev/null | tr '\n' ' ' || echo "none")
           echo "Eindri role profiles: $ROLES"
 
-          mkdir -p "svartalfaheim/zerwiz/workspace/memory/daily/"
-          cat > "svartalfaheim/zerwiz/workspace/memory/daily/${DATE_STR}.md" << 'BRIEFING'
-# Daily Briefing — ${DATE}
+          mkdir -p "svartalfaheim/zerwiz/projects/memory/daily/"
+          cat > "svartalfaheim/zerwiz/projects/memory/daily/${DATE_STR}.md" << 'BRIEFING'
+          # Daily Briefing — ${DATE}
 
-## Active Endri Fleet
-- **Yggdrasil worktrees:** ${WORKTREES}
-- **Eindri role profiles:** ${ROLES}
+          ## Active Endri Fleet
+          - **Yggdrasil worktrees:** ${WORKTREES}
+          - **Eindri role profiles:** ${ROLES}
 
-## Active Forge Orders (masterplan.md)
-(summary of in-flight W-orders appended by the worker that runs the briefing.)
+          ## Active Forge Orders (masterplan.md)
+          (summary of in-flight W-orders appended by the worker that runs the briefing.)
 
-## Status
-*Generated automatically at 07:00 by Valhalla. Full detail: Hlidskjalf dashboard.*
-BRIEFING
+          ## Status
+          *Generated automatically at 07:00 by Valhalla. Full detail: Hlidskjalf dashboard.*
+          BRIEFING
           echo "Briefing written."
 
       - name: Commit daily briefing
@@ -65,6 +65,6 @@ BRIEFING
           set -e
           git config user.name "Valhalla Bot"
           git config user.email "valhalla@ymir.local"
-          git add "svartalfaheim/zerwiz/workspace/memory/daily/$(date +%Y-%m-%d).md"
+          git add "svartalfaheim/zerwiz/projects/memory/daily/$(date +%Y-%m-%d).md"
           git commit -m "Daily briefing: $(date +%Y-%m-%d)" || echo "No changes to commit"
           git push 2>/dev/null || echo "Push skipped (up to date or no remote)"

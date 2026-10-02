@@ -12,7 +12,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",391
+  "shell doors (bin/*.sh)",392
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",29
   "Pi extension tools",33
@@ -381,6 +381,7 @@ capabilities[5]{surface,count}:
 | version-stamp.sh | version-stamp.sh — a seat says exactly which build it runs (2026-09-22). | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | uncalled+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | uncalled+named | keep (a human or a cron row must run it) |
+| workflow-check.sh | workflow-check.sh — every GitHub Actions workflow must PARSE, before CI  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | workspace-provision.sh | workspace-provision.sh — carve one workspace for the operator. Single te | uncalled+named | keep (a human or a cron row must run it) |
 | workspace-rag.sh | workspace-rag.sh — memory over the realm workspaces (W0038). | uncalled+named | keep (a human or a cron row must run it) |
 | wyrd-db.sh | wyrd-db.sh — the database layer (W0040). Applies the platform schema and | uncalled+named | keep (a human or a cron row must run it) |

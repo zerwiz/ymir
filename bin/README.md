@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[399]{file,does,kind,verdict,disposition,callers,lines}:
+bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",10,-
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",4,155
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","internal","keep",3,104
@@ -41,7 +41,7 @@ bin[399]{file,does,kind,verdict,disposition,callers,lines}:
   "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","wired","keep",6,1862
   "calendar-ask.sh","calendar-ask.sh — the shell door onto Mánagandr, the read calendar.","tool","tested","keep",1,118
   "capabilities.sh","capabilities.sh — THE register: what Ymir can do, and the door a caller should use.","tool","wired","keep",4,126
-  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,63
+  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,64
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",2,114
   "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",1,182
   "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","internal","keep",1,174
@@ -385,6 +385,7 @@ bin[399]{file,does,kind,verdict,disposition,callers,lines}:
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",1,25
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",3,125
   "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","internal","keep",2,61
+  "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","internal","keep",1,70
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",1,81
   "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",1,164
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",1,48
@@ -412,6 +413,6 @@ bin[399]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",6,243
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
 
-**Tally.** verdict: wired=179, provenance=156, tested=42, internal=22
+**Tally.** verdict: wired=179, provenance=156, tested=42, internal=23
 
-**Tally.** disposition: keep=240, provenance=156, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=241, provenance=156, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
