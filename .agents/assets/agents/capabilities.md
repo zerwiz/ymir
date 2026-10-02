@@ -283,6 +283,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 | \`models-report.sh\` | models-report — the user's OWN models, read from the ROOT pi home. | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | \`model-tune.sh\` | model-tune.sh — tune the chosen model for THIS host, with measured numbe | uncalled+named | keep (a human or a cron row must run it) |
 | \`nidhogg.sh\` | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination finder: | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| \`no-delete-guard.sh\` | no-delete-guard.sh — Rule 11, ENFORCED. A tracked file is never deleted. | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | \`nornir-cron-start.sh\` | nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempo | tested+named | keep (a human or a cron row must run it) |
 | \`nornir-job-asken-handoff.sh\` | nornir-job-asken-handoff.sh — the rollover, on the schedule. | uncalled+named | keep (a human or a cron row must run it) |
 | \`nornir-job-bragi-scrape.sh\` | nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape ro | uncalled+named | keep (a human or a cron row must run it) |
@@ -394,3 +395,56 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 | \`ymir-update-check.sh\` | ymir-update-check.sh — does a newer Ymir stand on npm? One answer, cache | uncalled+named | keep (a human or a cron row must run it) |
 | \`ymir-validate.sh\` | ymir-validate.sh — verify the installation actually works. | uncalled+named | keep (a human or a cron row must run it) |
 | \`yt-transcript.sh\` | yt-transcript.sh — read a video: metadata, description, and transcript. | uncalled+named | keep (a human or a cron row must run it) |
+
+## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)
+
+| module | what it owns | tested | reachable from a door |
+|---|---|---|---|
+| `backend` | The backend — where a seat's pane actually lives (herdr first, tmux fa | yes | yes (bin/ imports the engine) |
+| `load` | Load a hoard config WITH its schema — one road from a file to trusted  | yes | yes (bin/ imports the engine) |
+| `__main__` | `python3 -m ymir_runtime.config` — the door face of the config layer. | yes | yes (bin/ imports the engine) |
+| `schema` | JSON Schema validation for the hoard's configs — a loud refusal, never | yes | yes (bin/ imports the engine) |
+| `container` | Utgard — the sandbox decision, made honestly and once. | yes | yes (bin/ imports the engine) |
+| `__main__` | `python3 -m ymir_runtime.dispatch` — the door face of the decision tab | yes | yes (bin/ imports the engine) |
+| `registry` | `dispatch/registry.py` — where a figure's model comes from, and nothin | yes | yes (bin/ imports the engine) |
+| `resolve` | `dispatch/resolve.py` — one errand, one resolution. | yes | yes (bin/ imports the engine) |
+| `table` | `dispatch/table.py` — the decision table, read as DATA. | yes | yes (bin/ imports the engine) |
+| `errors` | The engine's own failures, so a caller can tell them apart. | yes | yes (bin/ imports the engine) |
+| `__main__` | `python3 -m ymir_runtime.fleet` — the door face of the living rail res | yes | yes (bin/ imports the engine) |
+| `rail` | fleet/rail.py — the LIVING rail resolver (plan 51, Parts 9a/9b/9c). | yes | yes (bin/ imports the engine) |
+| `grants` | The grants law — explicit, signed, cross-operator shares of a company  | yes | yes (bin/ imports the engine) |
+| `harness` | Hamr — which harness wears this errand, and the exact line that launch | yes | yes (bin/ imports the engine) |
+| `heartbeat` | The heartbeat — a dead worker must never look like a thinking one. | yes | yes (bin/ imports the engine) |
+| `landed` | landed.py — did this work LAND? The teardown gate, owned by the engine | yes | yes (bin/ imports the engine) |
+| `__main__` | The engine's door face — `python3 -m ymir_runtime <verb>`. | yes | yes (bin/ imports the engine) |
+| `paths` | Where the engine's roots live — the ONE Python reader of the home law. | yes | yes (bin/ imports the engine) |
+| `proc` | One place that runs a process, so every module is testable without a s | yes | yes (bin/ imports the engine) |
+| `seat` | seat(errand) -> seat_id — the one verb that puts an errand in the worl | yes | yes (bin/ imports the engine) |
+| `send` | send(seat_id, text) — the data plane, durable first. | yes | yes (bin/ imports the engine) |
+| `envelope` | envelopes — the durable, typed wrappers state files travel in. | yes | yes (bin/ imports the engine) |
+| `lock` | locks (Gleipnir) — the session lock, in Python, as the ONE implementat | yes | yes (bin/ imports the engine) |
+| `__main__` | `python3 -m ymir_runtime.state` — the door the shims call. | yes | yes (bin/ imports the engine) |
+| `queue` | queues — the durable wake queue, Python-owned, appended atomically. | yes | yes (bin/ imports the engine) |
+| `runes` | runes — the append-only chained audit ledger, Python-owned. | yes | yes (bin/ imports the engine) |
+| `status` | status(seat_id) -> state — the four states, read from the record. | yes | yes (bin/ imports the engine) |
+| `stop` | stop(seat_id) — reap the seat cleanly, leaving no orphan. | yes | yes (bin/ imports the engine) |
+| `support` | Test doubles and fixtures for the engine's unit suite. | yes | yes (bin/ imports the engine) |
+| `test_backend` | backend.py — herdr first, tmux the verified fallback, nothing assumed. | yes | yes (bin/ imports the engine) |
+| `test_cli` | __main__.py — the door face, its exit codes, and the compat line. | yes | yes (bin/ imports the engine) |
+| `test_config` | config/ — load-with-schema, a loud refusal naming the key and the file | yes | yes (bin/ imports the engine) |
+| `test_container` | container.py — the sandbox decision, and the refusals it must make. | yes | yes (bin/ imports the engine) |
+| `test_dispatch` | dispatch/ — the decision table as Python reading data (plan 58, Part 1 | yes | yes (bin/ imports the engine) |
+| `test_grants` | grants/ — the realm law: a cross-operator share is signed by each Heim | yes | yes (bin/ imports the engine) |
+| `test_harness` | harness.py — the choice, the provenance, and the exact launch line. | yes | yes (bin/ imports the engine) |
+| `test_heartbeat` | heartbeat.py — the silence judgement, identical to the shell condition | yes | yes (bin/ imports the engine) |
+| `test_landed` | landed.py — the teardown gate, proven on real repositories. | yes | yes (bin/ imports the engine) |
+| `test_lifecycle` | status · send · stop — the other three verbs, read from the record. | yes | yes (bin/ imports the engine) |
+| `test_paths` | paths.py — the home law, read once. | yes | yes (bin/ imports the engine) |
+| `test_rail` | fleet/rail.py — the living rail resolver (plan 51, Parts 9a/9b/9c). | yes | yes (bin/ imports the engine) |
+| `test_seat` | seat.py — the whole errand, end to end, in a temp home and a real repo | yes | yes (bin/ imports the engine) |
+| `test_state_parity` | state/ PARITY — the shim against the shell it replaced, byte for byte. | yes | yes (bin/ imports the engine) |
+| `test_state` | state/ — locks (Gleipnir) · runes · envelopes · queues, beside their m | yes | yes (bin/ imports the engine) |
+| `test_watch` | watch.py — the arm's behaviour, read from the record it writes. | yes | yes (bin/ imports the engine) |
+| `test_worktree` | worktree.py — Yggdrasil, against a real git repo. | yes | yes (bin/ imports the engine) |
+| `watch` | Sýn — the standing arm's behaviour, owned once by the engine. | yes | yes (bin/ imports the engine) |
+| `worktree` | Yggdrasil — the worktree. One errand, one checkout, zero collision. | yes | yes (bin/ imports the engine) |
