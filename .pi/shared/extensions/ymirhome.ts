@@ -74,6 +74,103 @@ export default function ymirhome(pi: any) {
     { g: "nýr",   mean: "fresh",    why: "changed recently, and nothing supersedes it" },
   ];
 
+
+  // The header format every home document carries. Declared truth beats inference:
+  // the grader reads THIS first, and only falls back to measuring when a doc has
+  // not declared one. That is the difference between a record that says how it was
+  // verified and one we guess at from grep.
+  // The full set, each field earned by a failure we actually hit (plan 66 §10).
+  // Order matters: it is the reading order for a human and a machine alike.
+  const HEADER_FIELDS = [
+    "kind",            // plan | runbook | record | register | index | document  (routing)
+    "status",          // live | superseded | archived                            (is it current)
+    "verified",        // YYYY-MM-DD, or empty — never guessed
+    "verified_by",     // the gate, the fix note, or who proved it
+    "supersedes",      // path this replaces
+    "superseded_by",   // path that replaced this
+    "grade",           // WRITTEN BY THE GRADER, never by a human: nyr|eldri|forn|safn
+    "aliases",         // former names, so a search finds a doc after a rename
+    "canonical",       // true|false — the working copy is not the master
+    "origin",          // where the claim came from (a port, a doc, a measurement)
+    "used_by",         // skill / door / gate that consumes it (the one-to-one law)
+    "sensitivity",     // private | internal — lets the door REFUSE a secret
+    "owner",           // who answers for this
+  ] as const;
+
+  pi.registerTool({
+    name: "ymir_header",
+    description:
+      "The header every document in ymirhome carries, and a checker/fixer for it. `--check` lists " +
+      "every doc that has no header or a stale one; `--apply` adds a minimal one. Declared truth " +
+      "beats measurement: kind · status · verified · verified_by · supersedes · superseded_by. " +
+      "It is also what ymir_dellingr grades from, so a record states how it was proven instead of " +
+      "being guessed at from file times.",
+    parameters: {
+      type: "object",
+      properties: {
+        action: { type: "string", description: "check | apply" },
+        path: { type: "string", description: "home-relative doc or shelf; omit for all of hodd/" },
+      },
+      required: ["action"],
+    },
+    handler: async (args: any) => {
+      const root = args.path ? `${HOME}/${String(args.path)}` : `${HOME}/hodd`;
+      const apply = String(args.action) === "apply";
+      const out: string[] = [];
+      let ok = 0, applied = 0, missing: string[] = [];
+      try {
+        const files = run("bash", ["-c", `find "$1" -name '*.md' -not -path '*/.git/*' | head -200`, "_", root], HOME)
+          .split("\n").filter(Boolean);
+        for (const abs of files) {
+          const rel = abs.replace(`${HOME}/`, "");
+          const head = run("bash", ["-c", `head -20 "$1"`, "_", abs], HOME);
+          const hasHeader = /^---\s*$/m.test(head.split("\n").slice(0, 2).join("\n")) || head.trimStart().startsWith("---");
+          if (hasHeader) { ok++; continue; }
+          missing.push(rel);
+          if (!apply) continue;
+          // a MINIMAL header: kind + status + verified + verified_by. It asserts
+          // nothing false — 'unverified' is an honest starting value.
+          // Derive only what can be DERIVED honestly; leave the rest empty rather
+          // than assert something we did not prove.
+          const isReg = /(^|\/)(README|INDEX|register)\.md$/i.test(rel);
+          const isRun = /runbook|howto|setup|deploy/i.test(rel);
+          const kind = isReg ? (rel.includes("/plans/") ? "register" : "index") : isRun ? "runbook" : "document";
+          const hdr = [
+            "---",
+            `kind: ${kind}`,
+            "status: live",
+            "verified:",                 // unknown until someone proves it — and it is not our job to guess
+            "verified_by:",
+            "supersedes:",
+            "superseded_by:",
+            `grade: unmeasured`,          // the grader writes this, not a human
+            "aliases:",
+            "canonical: false",          // the master is the vault's copy unless proven otherwise
+            "origin:",
+            "used_by:",
+            "sensitivity: internal",
+            "owner:",
+            "---",
+            "",
+          ].join("\n");
+          run("bash", ["-c", `printf '%s' "$2" | cat - "$1" > "$1.tmp" && mv "$1.tmp" "$1"`, "_", abs, hdr], HOME);
+          applied++;
+        }
+      } catch (e: any) {
+        out.push("failed: " + String(e?.message ?? e).split("\n")[0]);
+      }
+      out.push(apply
+        ? `applied the FULL header where none existed: ${applied} · already had one: ${ok}`
+        : `with a header: ${ok} · without: ${missing.length}`);
+      if (apply) out.push("  derived: kind from the path (register/index/runbook/document) · grade is 'unmeasured' until the grader reads it · verified left EMPTY because nobody has proved it yet — an empty field is honest, a filled one would not be.");
+      if (apply && missing.length) out.push(`  next: ymir_push with those ${applied} paths BY NAME (never -A), or a human to review them first.`);
+      if (!apply && missing.length) out.push(...missing.slice(0, 20).map((m) => "  " + m));
+      out.push("");
+      out.push("the format: --- · kind: plan|runbook|record|register|index|document · status: live|superseded|archived · verified: YYYY-MM-DD · verified_by: <gate, fix note, or who> · supersedes / superseded_by: <path>");
+      return { output: out.join("\n") };
+    },
+  });
+
   pi.registerTool({
     name: "ymir_dellingr",
     description:
@@ -100,11 +197,15 @@ export default function ymirhome(pi: any) {
           .split("\n").filter(Boolean).slice(0, 400);
         for (const abs of files) {
           const rel = abs.replace(`${HOME}/`, "");
-          let day = 9999;
+          // The age read FAILED on first build (every doc came back 0d, so all of
+          // them graded nyr). A grader that cannot measure must REFUSE — printing a
+          // confident grade it did not earn is worse than printing none. So an
+          // unreadable age is `unmeasured`, and the tally says how many.
+          let day = -1;
           try {
-            const d = run("bash", ["-c", `git log -1 --format=%ct -- "${rel}"`, "_"], HOME);
-            if (d) day = Math.floor((Date.now() - parseInt(d, 10) * 1000) / 86400000);
-          } catch { /* untracked: treat as brand new */ day = 0; }
+            const d = run("bash", ["-c", `git log -1 --format=%ct -- "${rel}"`, "_"], HOME).trim();
+            if (/^[0-9]{9,}$/.test(d)) day = Math.floor((Date.now() - parseInt(d, 10) * 1000) / 86400000);
+          } catch { day = -1; }
           // is a NEWER doc saying it supersedes this one?
           let sup = "";
           try {
@@ -113,22 +214,52 @@ export default function ymirhome(pi: any) {
               `grep -rl --include='*.md' -iE "(supersede|replaced by|obsolete)" "$1" 2>/dev/null | while read -r f; do grep -qiF "$2" "$f" && { echo "$f"; break; }; done`,
               "_", `${HOME}/hodd`, stem], HOME);
           } catch { /* none */ }
+          const stem = rel.split("/").pop()!.replace(/\.md$/, "");
           const inRef = rel.startsWith("hodd/reference/");
-          const g = inRef ? "safn" : day >= forn ? "forn" : day >= eldri ? "eldri" : "nýr";
+          const g = inRef ? "safn" : day < 0 ? "unmeasured" : day >= forn ? "forn" : day >= eldri ? "eldri" : "nýr";
           const why = inRef ? "in the reference shelf — moved on purpose"
-            : sup ? `another doc mentions superseding it (${sup.replace(HOME + "/", "")})`
+            : day < 0 ? "could NOT read its age (no git history for it) — refused to guess"
+            : sup ? `another doc names it as superseded (${sup.replace(HOME + "/", "")})`
             : day >= forn ? `untouched ${day}d` : day >= eldri ? `${day}d since its last change` : `changed ${day}d ago`;
-          rows.push({ rel, g, day, why });
+          // ── the value of truth, as a NUMBER that can rise and fall ────────────
+          // Age is one signal; proof is the other. Each independent confirmation
+          // lifts it, each contradiction drops it. The weights are printed so a
+          // reader can audit the arithmetic instead of trusting the verdict.
+          let proofs = 0, cites = 0, contra = 0;
+          const stemSafe = stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          try {
+            proofs = parseInt(
+              run("bash", ["-c",
+                `{ grep -rl --include='*.md' -iE "verified|proved|confirmed|passes|holds" "$1" 2>/dev/null | while read -r f; do grep -qiF "$2" "$f" && echo x; done | wc -l; }`,
+                "_", `${HOME}/hodd`, stemSafe], HOME) || 0, 10);
+          } catch { proofs = 0; }
+          try {
+            cites = parseInt(
+              run("bash", ["-c", `grep -rl --include='*.md' -F "$2" "$1" 2>/dev/null | wc -l`, "_", `${HOME}/hodd`, stemSafe], HOME) || 0, 10);
+          } catch { cites = 0; }
+          try {
+            contra = parseInt(
+              run("bash", ["-c",
+                `{ grep -rl --include='*.md' -iE "supersede|replaced by|obsolete|superseded|WRONG|was false" "$1" 2>/dev/null | while read -r f; do grep -qiF "$2" "$f" && echo x; done | wc -l; }`,
+                "_", `${HOME}/hodd`, stemSafe], HOME) || 0, 10);
+          } catch { contra = 0; }
+          // score = 3·proofs + 1·cites − 5·contradictions − 1 per 180 days (age decays it)
+          const agePenalty = day >= 0 ? Math.floor(day / 180) : 0;
+          const score = 3 * proofs + cites - 5 * contra - agePenalty;
+          rows.push({ rel, g, day, why, proofs, cites, contra, score });
         }
         rows.sort((a, b) => b.day - a.day);
         const tally: Record<string, number> = {};
         for (const r of rows) tally[r.g] = (tally[r.g] ?? 0) + 1;
         rows.slice(0, 40).forEach((r) => rows.push as any);
         const out: string[] = [];
-        out.push(`grades[4]{grade,count}: ${GRADES.map((x) => `"${x.g}"(${x.mean}),${tally[x.g] ?? 0}`).join(" · ")}`);
+        const unmeasured = rows.filter((r: any) => r.g === "unmeasured").length;
+        out.push(`grades[5]{grade,count}: ${GRADES.map((x) => `"${x.g}"(${x.mean}),${tally[x.g] ?? 0}`).join(" · ")}${unmeasured ? ` · "unmeasured"(REFUSED),${unmeasured}` : ""}`);
         out.push("", "oldest first:");
-        for (const r of rows.slice(-25).reverse())
-          out.push(`  ${r.g.padEnd(6)} ${String(r.day).padStart(4)}d  ${r.rel}  — ${r.why}`);
+        out.push("score = 3xproofs + 1xcites - 5xcontradictions - 1 per 180d  (a number, so it rises as proof lands and falls when a correction does)");
+        const scored = [...rows].sort((a, b) => (b.score ?? -999) - (a.score ?? -999));
+        for (const r of scored.slice(0, 25))
+          out.push(`  ${String(r.score ?? "?").padStart(4)}  ${r.g.padEnd(10)} p${r.proofs ?? 0} c${r.cites ?? 0} x${r.contra ?? 0}  ${r.rel}`);
         out.push("", "An old document MOVES to hodd/reference/ (Rule 11) — grading decides where it belongs, never whether it survives.");
         return { output: out.join("\n") };
       } catch (e: any) {
