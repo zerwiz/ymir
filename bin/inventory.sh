@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+# inventory.sh — the honest index of the two shelves nobody can read.
+#
+# WHY (2026-10-02): the Allfather asked *"do we have a readme in the bin folder and backend
+# folder over what every file are doing?"* — one existed, and it was worthless:
+#
+#   files in bin/            389
+#   entries in bin/README.md 105     ← 284 files with no entry at all
+#   entries ending mid-sentence  6     ← truncated headers
+#   a generator                    none  ← it was hand-written once
+#   a checker                      none  ← so it silently rotted
+#
+# This writes BOTH inventories from the files themselves, and `--check` fails when the
+# shelf and the index disagree — so the index cannot rot again.
+#
+# Per file it reports, all measured rather than judged:
+#   does        the file's own header, first COMPLETE sentence
+#   kind        door · lib · tool · provenance(fm-*) · module
+#   verdict     tested · wired · internal · orphan        (liveness, strongest first)
+#   disposition keep · migrate → src/ymir_runtime/<mod> · retire · provenance
+#   called-by   the doors that invoke it
+#
+#   bin/inventory.sh            # write bin/README.md and .agents/backend/README.md
+#   bin/inventory.sh --check    # fail if either index is stale (for CI)
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MODE="${1:-write}"
+
+python3 - "$ROOT" "$MODE" <<'PY'
+import os, re, subprocess, sys, json
+from pathlib import Path
+
+ROOT, MODE = Path(sys.argv[1]), sys.argv[2]
+BIN = ROOT / "bin"
+BACKEND = ROOT / ".agents" / "backend"
+SRC = ROOT / "src" / "ymir_runtime"
+
+def read(p, n=200000):
+    try: return p.read_text(errors="ignore")[:n]
+    except Exception: return ""
+
+def first_sentence(text, limit=140):
+    """The file's own header, first COMPLETE sentence (never a truncated line)."""
+    lines = text.splitlines()
+    for i, ln in enumerate(lines[:40]):
+        s = ln.strip()
+        if not s or s.startswith("#!") or s.startswith("set "):
+            continue
+        s = re.sub(r"^#+\s*", "", s).strip()
+        s = re.sub(r"\s+", " ", s)
+        if len(s) < 3:
+            continue
+        m = re.match(r"^(.{10,}?[.!?])(\s|$)", s)
+        s = m.group(1) if m else s
+        return (s[:limit - 1].rstrip() + "…") if len(s) > limit else s
+    return "(no header)"
+
+# ---- corpus: everything that can prove a file is alive -----------------------
+corpus_paths = []
+for root in ("agents", "apps", "docs", "src", "pi", "tools", "RULES", "data", ".github"):
+    d = ROOT / root
+    if not d.exists(): continue
+    for dp, dn, fn in os.walk(d):
+        dn[:] = [x for x in dn if x not in ("node_modules", ".git", "dist", ".next", "__pycache__")]
+        for f in fn:
+            if f.endswith((".sh", ".md", ".ts", ".tsx", ".py", ".yaml", ".yml", ".json", ".toml")):
+                corpus_paths.append(Path(dp) / f)
+corpus = []
+for p in corpus_paths:
+    corpus.append(read(p))
+for f in ("AGENTS.md", "README.md", "opencode.json", "package.json"):
+    corpus.append(read(ROOT / f))
+CORPUS = "\n".join(corpus)
+
+TESTS = "\n".join(read(p) for p in (ROOT / ".agents" / "tests").glob("*") if p.is_file()) if (ROOT / ".agents" / "tests").exists() else ""
+
+PY_MODULES = {p.stem for p in SRC.rglob("*.py")} if SRC.exists() else set()
+PY_MODULE_PATHS = {p.stem: p.relative_to(ROOT).as_posix() for p in SRC.rglob("*.py")} if SRC.exists() else {}
+
+def counterpart(stem):
+    """A python module with the same name, if the runtime already owns this."""
+    s = re.sub(r"^(fm|brokk|ymir|agent)-", "", stem)
+    s = re.sub(r"-(lib|sh)$", "", s).replace("-", "_")
+    for cand in (stem.replace("-", "_"), s):
+        if cand in PY_MODULES:
+            return PY_MODULE_PATHS.get(cand)
+    return None
+
+def analyse(path: Path, shelf: str):
+    name = path.name
+    stem = re.sub(r"\.(sh|py|bash)$", "", name)
+    text = read(path)
+    is_exec = os.access(path, os.X_OK)
+
+    # callers: which other doors invoke it
+    called_by = []
+    for other in (BIN.iterdir() if BIN.exists() else []):
+        if other == path or not other.is_file(): continue
+        if name in read(other, 200000): called_by.append(other.name)
+    outside = name in CORPUS
+    tested = name in TESTS
+
+    if name.startswith("fm-"):
+        verdict = "provenance"
+        disp = "provenance"
+    elif tested:
+        verdict, disp = "tested", "keep"
+    elif outside:
+        verdict, disp = "wired", "keep"
+    elif called_by:
+        verdict, disp = "internal", "keep"
+    else:
+        verdict, disp = "orphan", "retire"
+
+    cp = counterpart(stem)
+    if disp == "keep" and cp and shelf == "bin":
+        disp = f"migrate → {cp}"
+
+    kind = "provenance" if name.startswith("fm-") else (
+        "lib" if "-lib" in name else "tool" if is_exec else "data")
+    return dict(file=name, does=first_sentence(text), kind=kind, verdict=verdict,
+                disposition=disp, callers=len(called_by),
+                lines=text.count("\n") + 1)
+
+def table(rows, title_cols):
+    out = [f'{title_cols}[{len(rows)}]{{file,does,kind,verdict,disposition,callers,lines}}:']
+    for r in sorted(rows, key=lambda x: x["file"]):
+        esc = lambda s: str(s).replace('"', "'").replace("\n", " ").strip()
+        out.append('  "%s","%s","%s","%s","%s",%s,%s' % (
+            esc(r["file"]), esc(r["does"]), esc(r["kind"]), esc(r["verdict"]),
+            esc(r["disposition"]), r["callers"], r["lines"]))
+    return "\n".join(out)
+
+def tally(rows, key):
+    d = {}
+    for r in rows: d[r[key]] = d.get(r[key], 0) + 1
+    return ", ".join(f"{k}={v}" for k, v in sorted(d.items(), key=lambda kv: -kv[1]))
+
+shelves = {}
+for shelf, d in (("bin", BIN), (".agents/backend", BACKEND)):
+    if d.exists():
+        shelves[shelf] = [analyse(p, shelf) for p in sorted(d.iterdir()) if p.is_file()]
+
+fail = False
+for shelf, rows in shelves.items():
+    target = ROOT / ("bin/README.md" if shelf == "bin" else ".agents/backend/README.md")
+    gen = []
+    if shelf == "bin":
+        gen.append("# `bin/` — every file, what it does, and whether it is alive\n")
+        gen.append("**Generated by `bin/inventory.sh`. Do not hand-edit; run `bin/inventory.sh` and")
+        gen.append("commit the result.** `bin/inventory.sh --check` fails when this file and the")
+        gen.append("shelf disagree, so the index cannot rot the way the hand-written one did.\n")
+        gen.append("**Read the columns.** `verdict` is measured, not judged: `tested` = a test")
+        gen.append("exercises it · `wired` = a skill, doc or gate names it · `internal` = only other")
+        gen.append("doors call it · `orphan` = nothing outside `bin/` names it · `provenance` = a")
+        gen.append("vendored `fm-*` script kept byte-comparable to upstream on purpose.")
+        gen.append("`disposition` says what happens to it: `keep`, `migrate → src/…` where the")
+        gen.append("Python runtime already has the module, `retire` for orphans, `provenance`.")
+        gen.append("")
+        gen.append(table(rows, "bin"))
+        gen.append("")
+        gen.append(f"**Tally.** verdict: {tally(rows,'verdict')}")
+        gen.append("")
+        gen.append(f"**Tally.** disposition: {tally(rows,'disposition')}")
+    else:
+        gen.append("# `.agents/backend/` — the backend layer, file by file\n")
+        gen.append("**Generated by `bin/inventory.sh`. Do not hand-edit.**\n")
+        gen.append("**What this folder is.** Two things that share one job — *make work happen")
+        gen.append("and report it truthfully*:\n")
+        gen.append("1. **The vendored firstmate runtime** (`fm-*`) — the validated upstream Ymir")
+        gen.append("   ported its dispatch from. It is the reference implementation of")
+        gen.append("   spawn → send → peek → watch → teardown, and it stays byte-comparable to")
+        gen.append("   upstream so a port can be checked against it. **Provenance, not Ymir's own.**")
+        gen.append("2. **The model bridges** — Ymir's own files. They are why this index exists:\n")
+        gen.append(table(rows, "backend"))
+        gen.append("")
+        gen.append(f"**Tally.** verdict: {tally(rows,'verdict')}")
+    body = "\n".join(gen) + "\n"
+
+    if MODE == "--check":
+        cur = read(target)
+        if cur.strip() != body.strip():
+            print(f"inventory --check: {target.relative_to(ROOT)} is STALE — run bin/inventory.sh", file=sys.stderr)
+            fail = True
+        else:
+            print(f"inventory --check: {target.relative_to(ROOT)} is current ({len(rows)} files)")
+    else:
+        target.write_text(body)
+        print(f"wrote {target.relative_to(ROOT)} — {len(rows)} files · verdict: {tally(rows,'verdict')} · disposition: {tally(rows,'disposition')}")
+
+sys.exit(1 if fail else 0)
+PY
+rc=$?
+[ "$MODE" = "--check" ] && exit $rc
+exit 0
