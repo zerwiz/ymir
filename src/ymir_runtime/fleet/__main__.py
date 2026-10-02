@@ -176,7 +176,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version="1.0.0")
     parser.add_argument("mode", nargs="?", default="resolve", choices=("resolve", "status"))
     parser.add_argument("alias", nargs="?", default="", help="a model alias to verify on the serving rail")
-    parser.add_argument("--registry", default="", help="the fleet registry (default $YMIR_HOME/hodd/data/fleet.json)")
+    parser.add_argument("--registry", default="", help="the fleet registry (default: hodd/data/fleet.json under the operator's home)")
     parser.add_argument("--host", default="", help="this box's fleet name (default YMIR_HOST / hostname)")
     parser.add_argument("--port", type=int, default=0, help="the rail port (default 8080)")
     parser.add_argument("--timeout", type=float, default=0.0, help="per-probe seconds (default 2)")

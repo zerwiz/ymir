@@ -71,9 +71,15 @@ else
 fi
 
 # ── 3. a guessed seat home in an executable line, anywhere in scope ───────────
+# The fixture must plant a GUESSED path, not a variable: `$HOME_SEAT/mill/…` names a
+# variable and is a legitimate shape, so the ward correctly did not refuse it — this
+# suite was asserting behaviour the ward never had, over a fixture that did not plant
+# what its own comment claimed (the sibling failure in this same file, HOME_SEAT
+# unbound, was written in the same sitting). A guess looks like a path that DECIDES
+# where the home is: /home/<someone>/Documents/ymirhome/… — and that is what lands here.
 repo2="$TMP/repo-lit"
 seed_repo "$repo2"
-printf '#!/usr/bin/env bash\necho $HOME_SEAT/mill/vector-index.jsonl\n' >"$repo2/tools/mill-worker.sh"
+printf '#!/usr/bin/env bash\ncat /home/someone/Documents/ymirhome/hodd/data/fleet.json\n' >"$repo2/tools/mill-worker.sh"
 git -C "$repo2" add -A >/dev/null 2>&1
 out="$(bash "$repo2/bin/defaults-guard.sh" check 2>&1)"; rc=$?
 if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -q 'a home guessed'; then

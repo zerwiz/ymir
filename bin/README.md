@@ -46,7 +46,7 @@ bin[399]{file,does,kind,verdict,disposition,callers,lines}:
   "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",1,182
   "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","internal","keep",1,174
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",2,104
-  "defaults-guard.sh","defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE.","data","tested","keep",2,135
+  "defaults-guard.sh","defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE.","data","tested","keep",2,162
   "design-check.sh","design-check.sh — one identity, two renderers: they must agree.","tool","internal","keep",1,92
   "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",3,298
   "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",7,269
