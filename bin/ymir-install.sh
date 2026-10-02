@@ -1003,7 +1003,14 @@ step_spa() {
 step_loaders() {
   if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
     if [ "$CHECK" = 1 ]; then add loaders OK "valknut-load.sh present"; else
-      "$SCRIPT_DIR/valknut-load.sh" >/dev/null 2>&1 && add loaders OK "agents/skills loaded" || add loaders WARN "loader reported errors"
+      # Rule: a seat that cannot be seated is not installed. This warned and
+      # carried on, which is how a capability exists in the repo and is silently
+      # absent on the machine (plan 66 §7).
+      if "$SCRIPT_DIR/valknut-load.sh" >/dev/null 2>&1; then
+        add loaders OK "agents/skills/extensions loaded"
+      else
+        add loaders FAIL "the seat could not be seated — run bin/valknut-load.sh --status"
+      fi
       # Seat the post-merge rebind hook as well. Pi loads its extensions from
       # ${HOME}/.pi/agent/extensions/, so a merged extension fix stays invisible
       # to the running harness unless the bind re-runs. No install and no update

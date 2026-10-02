@@ -165,6 +165,18 @@ if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
   if "$SCRIPT_DIR/valknut-load.sh" --all --global >/dev/null 2>&1; then
     printf 'rebound (agents · skills · pi extensions)\n'
   else
-    printf 'WARN — valknut-load reported errors; run bin/valknut-load.sh --status\n'
+    # A seat that could NOT be seated is not updated. This used to WARN and carry
+    # on, which is how an extension fix merged but never loaded (2026-09-30).
+    printf 'FAIL — valknut-load could not seat the seat; this update is NOT complete.\n' >&2
+    printf '      run bin/valknut-load.sh --status, then bin/verify-seat.sh\n' >&2
+    seat_failed=1
   fi
 fi
+
+# The seating verdict is the update's verdict: a seat that could not be seated is
+# not updated, and the caller must be able to SEE that in an exit code.
+if [ "${seat_failed:-0}" != 0 ]; then
+  printf 'groa-update: SEATING FAILED — the tree moved but the seat did not\n' >&2
+  exit 1
+fi
+exit "${seat_failed:-0}"
