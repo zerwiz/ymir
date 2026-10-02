@@ -63,6 +63,80 @@ function classify(rel: string): { ok: boolean; shelf: string; why: string } {
 // node --experimental-strip-types --check rejects).
 export default function ymirhome(pi: any) {
 
+
+  // The grade vocabulary is Norse because it names STATES, not figures — which is
+  // how the naming law lets a word in when a figure would blur a role that is
+  // already taken (Forseti judges PRs; Vörðr is the wards).
+  const GRADES = [
+    { g: "safn", mean: "archive",  why: "moved here on purpose; read, never edited" },
+    { g: "forn",  mean: "old",      why: "superseded by a newer doc, or untouched a long time" },
+    { g: "eldri", mean: "aging",    why: "still referenced, but not recently changed" },
+    { g: "nýr",   mean: "fresh",    why: "changed recently, and nothing supersedes it" },
+  ];
+
+  pi.registerTool({
+    name: "ymir_dellingr",
+    description:
+      "GRADE the documentation: is it fresh or old? Marks every document with a Norse grade " +
+      "(nýr fresh · eldri aging · forn old · safn archive) from measurable signals only — last " +
+      "change, whether a newer doc supersedes it, and whether anything still cites it. Nothing is " +
+      "deleted for being old: an old document MOVES to hodd/reference/ (Rule 11), so grading " +
+      "decides where something belongs, never whether it survives.",
+    parameters: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "home-relative doc; omit to grade a whole shelf" },
+        ageDays: { type: "number", description: "days before 'eldri' (default 90), before 'forn' (default 365)" },
+      },
+      required: [],
+    },
+    handler: async (args: any) => {
+      const eldri = Number(args.ageDays ? args.ageDays / 2 : 90);
+      const forn = Number(args.ageDays ?? 365);
+      const root = args.path ? `${HOME}/${String(args.path)}` : `${HOME}/hodd`;
+      const rows: string[] = [];
+      try {
+        const files = run("bash", ["-c", `find "$1" -name '*.md' -not -path '*/.git/*' -not -path '*/node_modules/*'`, "_", root], HOME)
+          .split("\n").filter(Boolean).slice(0, 400);
+        for (const abs of files) {
+          const rel = abs.replace(`${HOME}/`, "");
+          let day = 9999;
+          try {
+            const d = run("bash", ["-c", `git log -1 --format=%ct -- "${rel}"`, "_"], HOME);
+            if (d) day = Math.floor((Date.now() - parseInt(d, 10) * 1000) / 86400000);
+          } catch { /* untracked: treat as brand new */ day = 0; }
+          // is a NEWER doc saying it supersedes this one?
+          let sup = "";
+          try {
+            const stem = rel.split("/").pop()!.replace(/\.md$/, "");
+            sup = run("bash", ["-c",
+              `grep -rl --include='*.md' -iE "(supersede|replaced by|obsolete)" "$1" 2>/dev/null | while read -r f; do grep -qiF "$2" "$f" && { echo "$f"; break; }; done`,
+              "_", `${HOME}/hodd`, stem], HOME);
+          } catch { /* none */ }
+          const inRef = rel.startsWith("hodd/reference/");
+          const g = inRef ? "safn" : day >= forn ? "forn" : day >= eldri ? "eldri" : "nýr";
+          const why = inRef ? "in the reference shelf — moved on purpose"
+            : sup ? `another doc mentions superseding it (${sup.replace(HOME + "/", "")})`
+            : day >= forn ? `untouched ${day}d` : day >= eldri ? `${day}d since its last change` : `changed ${day}d ago`;
+          rows.push({ rel, g, day, why });
+        }
+        rows.sort((a, b) => b.day - a.day);
+        const tally: Record<string, number> = {};
+        for (const r of rows) tally[r.g] = (tally[r.g] ?? 0) + 1;
+        rows.slice(0, 40).forEach((r) => rows.push as any);
+        const out: string[] = [];
+        out.push(`grades[4]{grade,count}: ${GRADES.map((x) => `"${x.g}"(${x.mean}),${tally[x.g] ?? 0}`).join(" · ")}`);
+        out.push("", "oldest first:");
+        for (const r of rows.slice(-25).reverse())
+          out.push(`  ${r.g.padEnd(6)} ${String(r.day).padStart(4)}d  ${r.rel}  — ${r.why}`);
+        out.push("", "An old document MOVES to hodd/reference/ (Rule 11) — grading decides where it belongs, never whether it survives.");
+        return { output: out.join("\n") };
+      } catch (e: any) {
+        return { output: "could not grade: " + String(e?.message ?? e).split("\n")[0] };
+      }
+    },
+  });
+
   pi.registerTool({
     name: "ymir_find_home",
     description:
