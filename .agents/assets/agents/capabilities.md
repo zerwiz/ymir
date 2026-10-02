@@ -12,7 +12,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",389
+  "shell doors (bin/*.sh)",391
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",29
   "Pi extension tools",33
@@ -313,6 +313,7 @@ capabilities[5]{surface,count}:
 | omarchy-plugins.sh | omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs on  | uncalled+named | keep (a human or a cron row must run it) |
 | omarchy-sense.sh | omarchy-sense.sh — learn the Allfather's Omarchy machine. | uncalled+named | keep (a human or a cron row must run it) |
 | open-design.sh | open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| opendesign.sh | opendesign.sh — start / stop / status for OpenDesign (the design forge,  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | packaged-gate.sh | packaged-gate.sh — prove the PUBLISHED artifact, not the tree. | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeating | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | pi-agent.sh | pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/mis | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
@@ -373,6 +374,7 @@ capabilities[5]{surface,count}:
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to the  | uncalled+named | keep (a human or a cron row must run it) |
 | topology.sh | topology.sh — what IS this machine in the fleet, and is it talking to th | tested+named | keep (a human or a cron row must run it) |
 | ui-truth-check.sh | ui-truth-check.sh — the panel's number must equal the machine's number. | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| usage-ratchet.sh | usage-ratchet.sh — PROVE the doors are used, and fail when the unused pi | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside the  | uncalled+named | keep (a human or a cron row must run it) |
 | valhalla.sh | valhalla.sh — the process hall (Valhalla). List, inspect, revive, and re | uncalled+named | keep (a human or a cron row must run it) |
 | valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into each | tested+named | keep (a human or a cron row must run it) |

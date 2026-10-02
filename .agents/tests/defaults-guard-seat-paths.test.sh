@@ -43,6 +43,8 @@ else
 fi
 
 # ── 2. the defect that shipped: an absolute symlink in the index ─────────────
+HOME_SEAT="${HOME_SEAT:-$HOME/Documents/ymirhome}"   # the seat the house uses
+export HOME_SEAT
 repo="$TMP/repo-link"
 seed_repo "$repo"
 ln -s $HOME_SEAT/Documents/ymirhome/state "$repo/state"

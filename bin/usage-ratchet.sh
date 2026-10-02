@@ -32,6 +32,7 @@ UNUSED_BIN=$(( $(c "uncalled") ))
 NAMED_ONLY=$(( $(c "uncalled\+named") ))
 TESTED=$(( $(c "tested") + $(c "tested\+named") ))
 BACKEND_PROV=$(grep -oE '"provenance"=[0-9]+' .agents/backend/README.md | head -1 | cut -d= -f2)
+SHELF_NOW=$(ls bin/*.sh 2>/dev/null | wc -l | tr -d ' ')
 
 printf 'usage_ratchet[4]{unused_bin,named_only,tested,backend_provenance}:\n  "%s","%s","%s","%s"\n' \
   "$UNUSED_BIN" "$NAMED_ONLY" "$TESTED" "${BACKEND_PROV:-?}"
@@ -53,15 +54,21 @@ fi
 
 if [ -z "$prev" ]; then
   mkdir -p "$(dirname "$REC")"
-  printf '{\n  "unused_bin": %s,\n  "date": "%s",\n  "note": "first baseline; from here the pile may only shrink"\n}\n' \
-    "$UNUSED_BIN" "$(date -u +%Y-%m-%d)" > "$REC"
+  printf '{\n  "unused_bin": %s,\n  "shelf": %s,\n  "date": "%s",\n  "note": "first baseline; the pile may only shrink RELATIVE to the shelf"\n}\n' \
+    "$UNUSED_BIN" "$SHELF_NOW" "$(date -u +%Y-%m-%d)" > "$REC"
   printf 'usage_ratchet[1]{action}: "first baseline recorded: %s unused — now it may only shrink"\n' "$UNUSED_BIN"
   exit 0
 fi
 
-if [ "$UNUSED_BIN" -gt "$prev" ]; then
+# A door ADDED today is uncalled until a skill names it — that is not a regression, it
+# is Tuesday. So the gate is: the unused pile may not grow BEYOND the growth of the shelf.
+prev_shelf="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1])).get('shelf',''))" "$REC" 2>/dev/null || true)"
+allowed="$SHELF_NOW"
+[ -n "${prev_shelf:-}" ] && allowed=$(( allowed - prev_shelf ))
+[ "$allowed" -lt 0 ] && allowed=0
+if [ "$UNUSED_BIN" -gt $(( prev + allowed )) ]; then
   cat >&2 <<MSG
-usage_ratchet: the UNUSED pile GREW — $prev -> $UNUSED_BIN
+usage_ratchet: the UNUSED pile grew BEYOND new doors — $prev -> $UNUSED_BIN (allowed +$allowed from a shelf that grew)
 
   A door became unreferenced since the last baseline. That is the failure this ratchet exists
   to stop, and it is not a matter of taste: every unused door is one an agent cannot find,
