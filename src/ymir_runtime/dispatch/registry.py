@@ -161,7 +161,7 @@ class HoardModels:
                 f"no model is configured for '{figure}': {path} is absent",
                 key=f"agents.{figure}.model",
                 path=path,
-                remedy="write $YMIR_HOME/config/agents.yaml (bin/agents-config.sh init) — the tree ships no model value",
+                remedy="write config/agents.yaml under the operator's home (bin/agents-config.sh init) — the tree ships no model value",
             )
         try:
             document = load_config(path, kind="agents", root=self.root)
