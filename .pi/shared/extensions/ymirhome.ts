@@ -165,8 +165,41 @@ export default function ymirhome(pi: any) {
       if (apply) out.push("  derived: kind from the path (register/index/runbook/document) · grade is 'unmeasured' until the grader reads it · verified left EMPTY because nobody has proved it yet — an empty field is honest, a filled one would not be.");
       if (apply && missing.length) out.push(`  next: ymir_push with those ${applied} paths BY NAME (never -A), or a human to review them first.`);
       if (!apply && missing.length) out.push(...missing.slice(0, 20).map((m) => "  " + m));
+      // ── the FILL RATE: a header that is present but empty carries nothing ─────
+      // The Allfather: 'how do we know the format will actually contain what the
+      // documents and plans are talking about?' So the tool measures its own
+      // usefulness: per field, how many documents DECLARE it against how many
+      // carry it empty. A field at 0% is a field nobody has earned — and it is
+      // named here, so it cannot be quietly believed in.
+      const filled: Record<string, number> = {};
+      for (const f of HEADER_FIELDS) filled[f] = 0;
+      let declared = 0;
+      try {
+        const heads = run("bash", ["-c", `find "$1" -name '*.md' -not -path '*/.git/*' | head -300`, "_", root], HOME)
+          .split("\n").filter(Boolean);
+        for (const abs of heads) {
+          const head = run("bash", ["-c", `head -20 "$1"`, "_", abs], HOME);
+          if (!head.trimStart().startsWith("---")) continue;
+          declared++;
+          for (const line of head.split("\n")) {
+            if (!line.includes(":")) continue;
+            const key = line.slice(0, line.indexOf(":")).trim();
+            const val = line.slice(line.indexOf(":") + 1).trim();
+            if (!HEADER_FIELDS.includes(key as any)) continue;
+            // A value counts only if it is really there: an empty field, the literal
+            // 'unmeasured', and a false canonical are all NOT a declaration.
+            if (val && val !== "unmeasured" && val !== "false") filled[key]++;
+          }
+        }
+      } catch { /* the report must never break the tool */ }
       out.push("");
-      out.push("the format: --- · kind: plan|runbook|record|register|index|document · status: live|superseded|archived · verified: YYYY-MM-DD · verified_by: <gate, fix note, or who> · supersedes / superseded_by: <path>");
+      out.push(`fill rate over ${declared} declared header(s) — a field at 0% is a field nobody has earned:`);
+      for (const f of HEADER_FIELDS) {
+        const pct = declared ? Math.round((filled[f] / declared) * 100) : 0;
+        out.push(`  ${f.padEnd(14)} ${String(filled[f]).padStart(4)}/${declared}  ${pct}%`);
+      }
+      out.push("");
+      out.push("the format: --- · kind · status · verified · verified_by · supersedes · superseded_by · grade · aliases · canonical · origin · used_by · sensitivity · owner");
       return { output: out.join("\n") };
     },
   });
