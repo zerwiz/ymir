@@ -25,7 +25,7 @@ mkdir -p "$TMP/whole-ext" "$TMP/whole-state" "$TMP/whole-locks"
 for e in constellation.ts gna-pi-watch.ts syn-turnend-guard.ts ymirhome.ts; do : > "$TMP/whole-ext/$e"; done
 touch "$TMP/whole-state/.pi-gna-watch-loaded"
 printf '%s\n' "$$" > "$TMP/whole-locks/brokk.lock"
-out="$(PI_EXT_DIR="$TMP/whole-ext" YMIR_STATE_DIR="$TMP/whole-state" BROKK_STATE_ROOT="$TMP/whole-locks" bash "$DOOR" --no-exit 2>&1)"
+out="$(PI_EXT_DIR="$TMP/whole-ext" YMIR_STATE_DIR="$TMP/whole-state" BROKK_STATE_ROOT="$TMP/whole-locks" WATCHER_PIDS="$$" bash "$DOOR" --no-exit 2>&1)"
 printf '%s' "$out" | grep -q '"WHOLE"' \
   && ok "a whole seat (extensions present) verifies WHOLE" \
   || { no "a whole seat did not verify: $out"; }

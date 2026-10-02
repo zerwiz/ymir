@@ -55,10 +55,14 @@ else
 fi
 
 # 3 · a PROCESS holds the arm (the file existing proved nothing on 2026-09-30)
-if pgrep -f "syn-watch|gna-watch|branch-supervision" >/dev/null 2>&1; then
-  good watch-running "a watcher process is alive"
+# WATCHER_PIDS lets a test prove liveness with a real pid; the default is the real search.
+if [ -n "${WATCHER_PIDS:-}" ]; then
+  _w=0; for _p in $WATCHER_PIDS; do kill -0 "$_p" 2>/dev/null && _w=1; done
+  [ "$_w" = 1 ]
+elif pgrep -f "syn-watch|gna-watch|branch-supervision" >/dev/null 2>&1; then
+  good watch-running "pid(s) alive: ${WATCHER_PIDS}"
 else
-  bad watch-running "no watcher process (an arm file alone is not an arm)"
+  bad watch-running "no watcher process is alive (an arm file alone is not an arm)"
 fi
 
 # 4 · the helm names a LIVE pid
@@ -78,6 +82,10 @@ fi
 # 5 · the vault resolves and the well log is where the reader looks
 # The home, resolved by THE resolver the ward names (ymir_home_root, bin/hoard-lib.sh).
 # Defaults-guard refused this file for using $YMIR_HOME without calling it — correctly.
+# The library is SOURCED here: calling a resolver that was never defined falls back to
+# the env and quietly proves less than it claims.
+# shellcheck source=bin/hoard-lib.sh
+. "$ROOT/bin/hoard-lib.sh" 2>/dev/null || true
 H=""
 if command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root H
