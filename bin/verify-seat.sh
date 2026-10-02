@@ -34,7 +34,13 @@ printf 'verify-seat[2]{missing,of}:\n  "%s","%s"\n' "$MISSING" "5"
 
 # 1 · the Pi extensions are DEPLOYED (present in the global home)
 EXT_DIR="${PI_EXT_DIR:-$HOME/.pi/agent/extensions}"
-want_ext=(constellation.ts gna-pi-watch.ts syn-turnend-guard.ts ymirhome.ts)
+# The expected set is DERIVED from the source shelf, not a hand-kept list: a list here
+# went stale the moment a door was added, which is how a user could install Ymir and
+# never receive an extension. Every door in .pi/shared/extensions MUST be on the seat.
+want_ext=()
+while IFS= read -r f; do want_ext+=("$(basename "$f")"); done < <(
+  ls "$ROOT/.pi/shared/extensions/"*.ts 2>/dev/null | sort
+)
 have=0; absent=""
 for e in "${want_ext[@]}"; do
   [ -f "$EXT_DIR/$e" ] && have=$((have + 1)) || absent="$absent $e"
