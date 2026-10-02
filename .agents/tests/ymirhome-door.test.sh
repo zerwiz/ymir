@@ -59,7 +59,7 @@ trap cleanup EXIT
 
 list="$(run list)"
 case "$list" in
-  "15 "*) ok "the door registers 15 tools (place, find_home, structure, layout, import, find, index, push, note, plan, secret_keys, free, daily, dellingr, header)" ;;
+  "17 "*) ok "the door registers 17 tools (place, find_home, structure, layout, import, find, index, push, note, plan, secret_keys, free, daily, dellingr, header, recall, remember)" ;;
   *)      no "the door registered the wrong tool set: $list" ;;
 esac
 
