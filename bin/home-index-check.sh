@@ -59,6 +59,10 @@ check_shelf() {  # <dir>
 }
 
 for d in "$H"/hodd/*/ ; do check_shelf "${d%/}"; done
+# the REPO's asset shelf obeys the same law: naming.md and registry.md are how an agent
+# finds what a thing is called, and a shelf of 7 with no index is invisible by accident.
+check_shelf "$ROOT/.agents/assets"
+check_shelf "$ROOT/.agents/assets/agents"
 for d in "$H"/svartalfaheim/*/projects/*/ ; do check_shelf "${d%/}"; done
 for d in "$H"/svartalfaheim/*/projects/*/*/ ; do check_shelf "${d%/}"; done
 
