@@ -76,10 +76,13 @@ else
 fi
 
 # 5 · the vault resolves and the well log is where the reader looks
-H="${YMIR_HOME:-}"
-if [ -z "$H" ] || [ ! -d "$H/hodd/memory" ]; then
-  H="$(bash "$ROOT/bin/hodd.sh" path 2>/dev/null || true)"
+# The home, resolved by THE resolver the ward names (ymir_home_root, bin/hoard-lib.sh).
+# Defaults-guard refused this file for using $YMIR_HOME without calling it — correctly.
+H=""
+if command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root H
 fi
+[ -n "$H" ] || H="${YMIR_HOME:-}"
 if [ -n "$H" ] && [ -d "$H/hodd/memory/well" ]; then
   good vault "resolved to $H (well log present)"
 else
