@@ -89,6 +89,10 @@ def counterpart(stem):
 
 def analyse(path: Path, shelf: str):
     name = path.name
+    # README.md is the inventory's OWN output: emitting its line count makes the
+    # file change every generation, so --check could never pass. A dash is
+    # honest ('this is the index itself') and idempotent.
+    self_indexed = name in ('README.md',)
     stem = re.sub(r"\.(sh|py|bash)$", "", name)
     text = read(path)
     is_exec = os.access(path, os.X_OK)
@@ -121,7 +125,7 @@ def analyse(path: Path, shelf: str):
         "lib" if "-lib" in name else "tool" if is_exec else "data")
     return dict(file=name, does=first_sentence(text), kind=kind, verdict=verdict,
                 disposition=disp, callers=len(called_by),
-                lines=text.count("\n") + 1)
+                lines=("-" if self_indexed else text.count("\n") + 1))
 
 def table(rows, title_cols):
     out = [f'{title_cols}[{len(rows)}]{{file,does,kind,verdict,disposition,callers,lines}}:']

@@ -12,7 +12,7 @@ and report it truthfully*:
 2. **The model bridges** — Ymir's own files. They are why this index exists:
 
 backend[168]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",9,185
+  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",11,-
   "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","provenance","provenance",6,655
   "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","provenance","provenance",4,242
   "fm-afk-start.sh","Enter away mode and run the sub-supervisor daemon in a harness-tracked","provenance","provenance","provenance",4,173
