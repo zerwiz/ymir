@@ -1101,3 +1101,22 @@ the logic stays in `bin/`, where a human or a cron row can run the same thing.**
 and `bin/ymir-install.sh` + `bin/groa-update.sh` **seating it and failing loudly** — because a
 capability that exists in the repo but is never seated is exactly the silent absence that cost
 the watch on 2026-09-30.
+
+
+## The rules door — the house law as a surface (2026-10-01)
+
+`.pi/shared/extensions/rules.ts` (deployed by `bin/valknut-load.sh --all --global`). The Allfather:
+*"we need to build for rules."* An agent that does not know the laws either reads ten files and
+misses the one that matters, or invents — and `RULES/` was prose no tool could read.
+
+Two tools, and **only** its own (register §12: one tool, one registration — the door keeps
+`ymir_place/find_home/…`):
+
+| tool | what it answers |
+|---|---|
+| `ymir_rule <topic>` | the laws that govern it, **quoted by line, with the file named** — and when no law mentions the topic it says so and hands over the whole (small) law rather than inventing one |
+| `ymir_gates` | which gate covers which surface, **read from `bin/ci-verify.sh`** rather than asserted, plus the doors a seat can run — carrying the law it quotes: *a gate that exists and runs nowhere is how a capability is silently absent* |
+
+`bash .agents/tests/rules-door.test.sh` → **7 passed, 0 failed**, including the two that matter most:
+a topic no law covers **says so and invents nothing**, and the tool set is **its own two** — no
+tool belongs to two doors.
