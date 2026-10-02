@@ -45,6 +45,7 @@ capabilities[5]{surface,count}:
 
 EOM
 
+printf 'capabilities[5]{surface,count}:\n  "shell doors (bin/*.sh)",%s\n  "runtime modules (src/ymir_runtime/*.py)",%s\n  "skills (.agents/skills/*)",%s\n  "Pi extension tools",%s\n  "generated","%s"\n\n' "$shells" "$pys" "$skills" "$tools" "$(date -u +%Y-%m-%d)"
 printf '| door | the job | verdict | tech decision |\n|---|---|---|---|\n'
 for f in bin/*.sh; do
   n=$(basename "$f")
@@ -57,7 +58,7 @@ for f in bin/*.sh; do
   v="uncalled"; [ "$tested" = yes ] && v="tested"; [ "$named" = yes ] && v="${v}+named"
   d="keep (a human or a cron row must run it)"
   [ "$tested" = no ] && [ "$named" = no ] && d="**decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete"
-  printf '| \`%s\` | %s | %s | %s |\n' "$n" "$job" "$v" "$d"
+  printf '| %s | %s | %s | %s |\n' "$n" "$job" "$v" "$d"
 done
 
 printf '\n## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)\n\n'
