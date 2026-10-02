@@ -35,7 +35,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ```
 capabilities[5]{surface,count}:
   "shell doors (bin/*.sh)",$shells
-  "runtime modules (src/ymir_runtime/*.py)",$pys
+  "runtime modules (src/ymir_runtime/*.py)",$pys   # §1b — the engine, which a bin-only register skipped
   "skills (.agents/skills/*)",$skills
   "Pi extension tools",$tools
   "generated","$(date -u +%Y-%m-%d)"
@@ -58,6 +58,27 @@ for f in bin/*.sh; do
   d="keep (a human or a cron row must run it)"
   [ "$tested" = no ] && [ "$named" = no ] && d="**decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete"
   printf '| \`%s\` | %s | %s | %s |\n' "$n" "$job" "$v" "$d"
+done
+
+printf '\n## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)\n\n'
+printf '| module | what it owns | tested | reachable from a door |\n|---|---|---|---|\n'
+for f in $(find src/ymir_runtime -name '*.py' ! -name '__init__.py' | sort); do
+  m=$(basename "$f" .py)
+  # the first docstring line is what the module says it owns — read, not asserted
+  owns=$(python3 - "$f" <<'PYD' 2>/dev/null || true
+import ast,sys
+try:
+    t=ast.parse(open(sys.argv[1]).read())
+    d=ast.get_docstring(t) or ""
+    print(" ".join(d.strip().splitlines()[:1])[:70] if d else "(no docstring)")
+except Exception:
+    print("(unreadable)")
+PYD
+)
+  tested=no;  grep -qlr "$m" src/ymir_runtime/tests/ 2>/dev/null && tested=yes
+  [ "$tested" = no ] && grep -qlr "$m" .agents/tests/ 2>/dev/null && tested=yes
+  reach=no;   grep -qlr "ymir_runtime" bin/ 2>/dev/null && reach="yes (bin/ imports the engine)"
+  printf '| `%s` | %s | %s | %s |\n' "$m" "$owns" "$tested" "$reach"
 done
 
 cat <<EOM
