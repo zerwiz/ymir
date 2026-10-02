@@ -46,6 +46,7 @@ gate compliance  "the 15 governance gates"              bash "$ROOT/.agents/skil
 gate contracts   "the typed surfaces (one contract, two consumers)" bash "$ROOT/bin/contracts-check.sh"
 gate queue       "the derived work queue is current"              bash "$ROOT/bin/queue.sh --check"
 gate capability "the capability register is current"           bash "$ROOT/bin/capabilities.sh --check"
+gate home-index "the home's shelves are navigable"             bash "$ROOT/bin/home-index-check.sh"
 if [ "$FAST" = 1 ]; then
   printf '  "%s","SKIP","%s"\n' pr-pretest "skipped by --fast"
 else
