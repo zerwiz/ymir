@@ -1078,3 +1078,26 @@ The same extension in **both** paths makes pi exit with a tool-name conflict and
 no agent can be seated — which is why the shared trio has exactly one home and is
 deployed, never duplicated. Editing a path from the table above without checking
 which of the two it is will edit a file that is not there.
+
+## The ymirhome extension — a Pi surface over doors that already exist (2026-10-02)
+
+`.pi/shared/extensions/ymirhome.ts` (deployed by `bin/valknut-load.sh --all --global`) is the
+first capability built under the destination rule: **what the harness should feel is an extension;
+the logic stays in `bin/`, where a human or a cron row can run the same thing.**
+
+| tool | the door it calls |
+|---|---|
+| `ymir_find_home` · `ymir_place` · `ymir_import` | the placement oracle and the only sanctioned way material enters the home |
+| `ymir_structure` · `ymir_layout` | the layout law and the shape of the home |
+| `ymir_find` · `ymir_index` | the shelves, by name or content; what is uncalled or orphaned |
+| `ymir_push` | `git` in the vault — named paths only, refuses secrets, **refuses to delete a tracked file** (Rule 11) |
+| `ymir_note` · `ymir_plan` · `ymir_daily` | the append-only operations (a dated section, the next numbered plan, today's log) |
+| `ymir_secret_keys` | key **names** only — a name may print, a value never leaves |
+| `ymir_free` | `bin/calendar-ask.sh` — the operator's own calendar, read-only |
+| `ymir_dellingr` | grades documents `nýr · eldri · forn · safn`; **known defect — its age signal reads 0d, so it currently grades everything fresh. It must refuse rather than guess.** |
+
+**The shape every extension here shares** (plan 66 §8): one home (`.pi/shared/extensions` →
+`~/.pi/agent/extensions`), every tool THIN, every tool saying **no** when it cannot do the job,
+and `bin/ymir-install.sh` + `bin/groa-update.sh` **seating it and failing loudly** — because a
+capability that exists in the repo but is never seated is exactly the silent absence that cost
+the watch on 2026-09-30.
