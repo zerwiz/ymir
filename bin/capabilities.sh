@@ -18,7 +18,7 @@ MODE="${1:-write}"
 # The live signals, taken from the surfaces themselves — never asserted.
 shells=$(ls bin/*.sh 2>/dev/null | wc -l | tr -d ' ')
 pys=$(find src/ymir_runtime -name '*.py' 2>/dev/null | wc -l | tr -d ' ')
-skills=$(git ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | sort -u | wc -l | tr -d ' ')
+skills=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | sort -u | wc -l | tr -d ' ')
 tools=$(grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/*.ts 2>/dev/null | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | wc -l | tr -d ' ')
 
 # Resolved ONCE, from TRACKED files only, for the same reason as bin/inventory.sh: a
@@ -26,15 +26,23 @@ tools=$(grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/
 # skill directory `.agents/skills/skillopt-staging/` exists here and not in git, and it
 # alone flipped `named=no` to `named=yes` for test_paths and test_grants — so CI read a
 # different register than the machine that generated it, and correctly called it stale.
-NAMING_FILES=$(git ls-files '.agents/skills/*/SKILL.md' '.agents/skills/*/assets/*.md' AGENTS.md | tr '\n' ' ')
+NAMING_FILES=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' '.agents/skills/*/assets/*.md' AGENTS.md | tr '\n' ' ')
 
 # TRACKED, once. A verdict read out of the working tree is a verdict about THIS MACHINE:
 # `__pycache__/test_grants.cpython-314.pyc` CONTAINS the string 'test_grants', so a local
 # run of the suite made `tested=yes` for a module whose tracked tests never mention it —
 # and CI, which has no bytecode, read `no` and correctly called the register stale.
 # Compiled artefacts are not evidence. Everything a verdict rests on must be in the commit.
-AGENT_TEST_FILES=$(git ls-files '.agents/tests/*' | tr '\n' ' ')
-PY_TEST_FILES=$(git ls-files 'src/ymir_runtime/tests/*' | tr '\n' ' ')
+AGENT_TEST_FILES=$(git -c safe.directory='*' ls-files '.agents/tests/*' | tr '\n' ' ')
+PY_TEST_FILES=$(git -c safe.directory='*' ls-files 'src/ymir_runtime/tests/*' | tr '\n' ' ')
+
+# An empty tracked list is not a normal state — it means git refused the listing (CI
+# checkouts are often owned by another user) and every verdict below would silently
+# become `no`. Say so, once, loudly.
+if [ -z "${AGENT_TEST_FILES:-}" ]; then
+  echo "capabilities: git ls-files returned NOTHING — verdicts would all read 'no'." >&2
+  echo "  (on CI this is usually git's dubious-ownership refusal; safe.directory is set, so check git works here)" >&2
+fi
 
 emit() {
 cat <<EOM
@@ -140,7 +148,11 @@ EOM
 TMP="$(mktemp)"; emit > "$TMP"
 if [ "$MODE" = "--check" ]; then
   if [ ! -f "$OUT" ] || ! diff -q "$OUT" "$TMP" >/dev/null 2>&1; then
-    echo "capabilities --check: $OUT is STALE — run bin/capabilities.sh" >&2; rm -f "$TMP"; exit 1
+    echo "capabilities --check: $OUT is STALE — run bin/capabilities.sh" >&2
+    echo "capabilities_check[2]{diff,first_lines}:" >&2
+    diff "$OUT" "$TMP" 2>/dev/null | head -12 | sed "s/^/  /" >&2 || true
+    echo "  (if the diff is only counts or verdicts, the cause is usually an input CI does not have — a vault file, an untracked skill, a .pyc)" >&2
+    rm -f "$TMP"; exit 1
   fi
   echo "capabilities --check: current ($(grep -c '^| ' "$OUT") door rows)"
   rm -f "$TMP"; exit 0
