@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three
+# reproducibility bugs, all ordering or collation). LC_ALL=C pins the collation of git's
+# output, of `sort`, and of grep's character classes; under a UTF-8 locale the same tree
+# rendered a different register, which is why CI kept calling a current file stale.
+export LC_ALL=C
 # capabilities.sh — THE register: what Ymir can do, and the door a caller should use.
 #
 # WHY (2026-10-01): *"an agent with no tool for a job goes and grabs a random script"*, and of 390
@@ -18,7 +24,7 @@ MODE="${1:-write}"
 # The live signals, taken from the surfaces themselves — never asserted.
 shells=$(ls bin/*.sh 2>/dev/null | wc -l | tr -d ' ')
 pys=$(find src/ymir_runtime -name '*.py' 2>/dev/null | wc -l | tr -d ' ')
-skills=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | sort -u | wc -l | tr -d ' ')
+skills=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | LC_ALL=C sort -u | wc -l | tr -d ' ')
 tools=$(grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/*.ts 2>/dev/null | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | wc -l | tr -d ' ')
 
 # Resolved ONCE, from TRACKED files only, for the same reason as bin/inventory.sh: a
@@ -74,7 +80,7 @@ printf '| door | the job | verdict | tech decision |\n|---|---|---|---|\n'
 # returns first — ext4 hashes it, overlayfs in CI does not — so two machines built the
 # SAME register with the SAME rows in a DIFFERENT order, and the staleness check (rightly)
 # called it stale. Sorting makes the register a function of CONTENT alone.
-for f in $(ls bin/*.sh 2>/dev/null | sort); do
+for f in $(ls bin/*.sh 2>/dev/null | LC_ALL=C sort); do
   n=$(basename "$f")
   case "$n" in inventory.sh|capabilities.sh|queue.sh|update-notes.sh|verify-seat.sh) continue ;; esac
   # the first sentence of its own header is the job, from the door itself
@@ -87,7 +93,7 @@ for f in $(ls bin/*.sh 2>/dev/null | sort); do
   named=no
   for _nf in $NAMING_FILES; do
     [ -f "$_nf" ] || continue
-    grep -ql "$n" "$_nf" 2>/dev/null && { named=yes; break; }
+    grep -qlF "$n" "$_nf" 2>/dev/null && { named=yes; break; }
   done
   v="uncalled"; [ "$tested" = yes ] && v="tested"; [ "$named" = yes ] && v="${v}+named"
   d="keep (a human or a cron row must run it)"
@@ -97,7 +103,7 @@ done
 
 printf '\n## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)\n\n'
 printf '| module | what it owns | tested | reachable from a door |\n|---|---|---|---|\n'
-for f in $(find src/ymir_runtime -name '*.py' ! -name '__init__.py' | sort); do
+for f in $(find src/ymir_runtime -name '*.py' ! -name '__init__.py' | LC_ALL=C sort); do
   m=$(basename "$f" .py)
   # the first docstring line is what the module says it owns — read, not asserted
   owns=$(python3 - "$f" <<'PYD' 2>/dev/null || true
@@ -112,7 +118,7 @@ PYD
 )
   tested=no
   for _tf in $PY_TEST_FILES $AGENT_TEST_FILES; do
-    [ -f "$_tf" ] && grep -ql "$m" "$_tf" 2>/dev/null && { tested=yes; break; }
+    [ -f "$_tf" ] && grep -qlF "$m" "$_tf" 2>/dev/null && { tested=yes; break; }
   done
   reach=no;   grep -qlr "ymir_runtime" bin/ 2>/dev/null && reach="yes (bin/ imports the engine)"
   printf '| `%s` | %s | %s | %s |\n' "$m" "$owns" "$tested" "$reach"
