@@ -157,7 +157,7 @@ if [ "$MODE" != "--check" ]; then render; fi
 if [ "$MODE" = "--check" ]; then
   render            # render to a TEMP; --check must never touch the queue it verifies
   if [ ! -f "$OUT" ] || ! diff -q "$OUT" "$OUT_T" >/dev/null 2>&1; then
-    echo "queue --check: $OUT is STALE — run bin/queue.sh" >&2; rm -f "$TMPOUT"; exit 1
+    echo "queue --check: $OUT is STALE — run bin/queue.sh" >&2; rm -f "$OUT_T"; exit 1
   fi
   echo "queue --check: current ($(grep -c '^| ' "$OUT") rows)"
   rm -f "$OUT_T"; exit 0

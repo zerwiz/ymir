@@ -14,8 +14,8 @@ Python runtime already has the module, `retire` for orphans, `provenance`.
 bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",10,-
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",4,155
-  "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","internal","keep",3,104
-  "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","internal","keep",1,9
+  "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",3,104
+  "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","wired","keep",1,9
   "a2a-talk.sh","a2a-talk.sh — list A2A agents and talk to one (bidirectional reply).","tool","wired","keep",1,51
   "a2abridge-ensure.sh","a2abridge-ensure.sh — ensure the A2A mesh engine (a2abridge) is present,","tool","wired","keep",4,122
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,44
@@ -25,7 +25,7 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",15,95
   "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,275
   "bifrost-bridge.sh","bifrost-bridge.sh — raise/lower the model bridge (Bifrost: the bridge between","tool","wired","keep",5,141
-  "bifrost-ingress.sh","bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdall · Gjallarhorn).","tool","internal","keep",1,78
+  "bifrost-ingress.sh","bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdall · Gjallarhorn).","tool","wired","keep",1,78
   "bootstrap-macos.sh","bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs.","tool","wired","keep",1,115
   "bootstrap-windows.ps1","bootstrap-windows.ps1 — give a Windows operator the Ubuntu host Ymir needs.","data","wired","keep",1,113
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","wired","keep",2,65
@@ -44,10 +44,10 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,64
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",2,114
   "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",1,182
-  "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","internal","keep",1,174
+  "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","wired","keep",1,174
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",2,104
   "defaults-guard.sh","defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE.","data","tested","keep",2,162
-  "design-check.sh","design-check.sh — one identity, two renderers: they must agree.","tool","internal","keep",1,92
+  "design-check.sh","design-check.sh — one identity, two renderers: they must agree.","tool","wired","keep",1,92
   "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",3,298
   "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",7,269
   "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",2,171
@@ -65,7 +65,7 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",2,274
   "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",3,116
   "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",1,108
-  "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","internal","keep",1,84
+  "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",1,84
   "eindri-seen.sh","eindri-seen.sh — condition half of the Eindri→Brokk wake bridge.","tool","wired","keep",3,57
   "eindri-send.sh","eindri-send.sh — the DATA plane: send conversational text to a seated Eindri.","tool","wired","keep",6,16
   "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",2,129
@@ -76,7 +76,7 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",9,212
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","wired","keep",5,374
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",3,18
-  "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","internal","keep",1,87
+  "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",1,87
   "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","wired","keep",3,147
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",2,158
   "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",2,82
@@ -242,7 +242,7 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",1,95
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",1,151
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",2,72
-  "gjallarhorn-purge.sh","gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname.","tool","internal","keep",2,68
+  "gjallarhorn-purge.sh","gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname.","tool","wired","keep",2,68
   "gjallarhorn-tunnel.sh","gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn).","tool","wired","keep",1,86
   "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM.","lib","tested","keep",6,164
   "graphics-lib.sh","graphics-lib.sh — the machine's graphics truth, shared by every reader.","lib","wired","keep",4,167
@@ -264,7 +264,7 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",3,74
   "host-sense.sh","host-sense.sh — learn THIS machine: distro, kernel, session, desktop, and what","tool","wired","keep",6,200
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",1,135
-  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",6,200
+  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",6,206
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",1,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",2,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",3,131
@@ -279,7 +279,7 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",2,132
   "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",1,35
   "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","wired","keep",10,130
-  "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","internal","keep",1,73
+  "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",1,73
   "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",2,105
   "model-alias-check.sh","model-alias-check.sh — does every alias a body names resolve in the fleet?","tool","wired","keep",2,332
   "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",2,123
@@ -311,28 +311,28 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "odrerir-mcp-smoke.sh","odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans through the","tool","wired","keep",1,157
   "omarchy-hook-install.sh","omarchy-hook-install.sh — let Ymir notice when Omarchy updates.","tool","wired","keep",2,61
   "omarchy-install.sh","omarchy-install.sh — the Omarchy installation layer (Rule 05).","tool","wired","keep",2,162
-  "omarchy-plugins.sh","omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs on consent.","tool","internal","keep",3,188
+  "omarchy-plugins.sh","omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs on consent.","tool","wired","keep",3,188
   "omarchy-sense.sh","omarchy-sense.sh — learn the Allfather's Omarchy machine.","tool","wired","keep",4,203
-  "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","internal","keep",1,85
+  "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",1,85
   "opendesign.sh","opendesign.sh — start / stop / status for OpenDesign (the design forge, Hnoss).","tool","wired","keep",1,88
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",1,103
   "perm-guard.sh","perm-guard.sh — flag agent profiles whose permissions are self-defeating.","tool","wired","keep",1,31
   "pi-agent.sh","pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/mission","tool","wired","keep",1,82
   "pi-ensure.sh","pi-ensure.sh — ensure the Pi packages Ymir depends on.","tool","wired","keep",3,105
   "pi-local.sh","pi-local.sh — run a Pi agent on a LOCAL model, reusable.","tool","wired","keep",1,52
-  "pi-model-agnostic.sh","pi-model-agnostic — pi must not EXPECT any model.","tool","internal","keep",1,72
+  "pi-model-agnostic.sh","pi-model-agnostic — pi must not EXPECT any model.","tool","wired","keep",1,72
   "pi-model-wire.sh","pi-model-wire.sh — wire a chosen local model into the operator's pi.","tool","wired","keep",2,151
   "pi-seat.sh","pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a local","tool","wired","keep",2,115
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",2,59
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",11,202
   "private-guard.sh","private-guard.sh — enforce the Hoard boundary (Rule 04).","tool","wired","keep",2,73
   "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",3,73
-  "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","internal","keep",1,158
+  "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",1,158
   "public-guard.sh","public-guard.sh — every PUBLIC, user-facing file must be free of operator","tool","wired","keep",2,86
   "queue.sh","queue.sh — THE work queue, and it is DERIVED, never authored.","tool","wired","migrate → src/ymir_runtime/state/queue.py",4,170
   "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",8,64
   "ratatoskr.sh","ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`).","tool","wired","keep",1,50
-  "realm-lib.sh","realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the company's.","lib","internal","keep",6,46
+  "realm-lib.sh","realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the company's.","lib","wired","keep",6,46
   "registry-lib.sh","registry-lib.sh — the ONE reader for the master project registry's row keys.","lib","tested","migrate → src/ymir_runtime/dispatch/registry.py",14,76
   "repo-scrub.sh","repo-scrub.sh — purge private paths from ALL git history before going public.","tool","wired","keep",1,76
   "research-round.sh","research-round.sh — one reusable research errand: seat a skald or a sage, give","tool","wired","keep",1,144
@@ -346,7 +346,7 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",6,110
   "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",4,64
   "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",4,131
-  "sessrumnir-sync.sh","sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmnir fork","tool","internal","keep",1,248
+  "sessrumnir-sync.sh","sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmnir fork","tool","wired","keep",1,248
   "sessrumnir.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",3,172
   "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","wired","keep",3,145
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",2,77
@@ -367,15 +367,15 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-asset-pretool-check.sh","syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths.","tool","wired","keep",1,90
   "syn-cd-pretool-check.sh","syn-cd-pretool-check.sh - PreToolUse seatbelt for directory-changing commands.","tool","wired","keep",1,29
   "syn-guard-pretool-check.sh","syn-guard-pretool-check.sh - PreToolUse seatbelt for the runtime's load-bearing","tool","tested","keep",1,84
-  "syn-spawn-pretool-check.sh","syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for typing.","data","internal","keep",1,59
+  "syn-spawn-pretool-check.sh","syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for typing.","data","wired","keep",1,59
   "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind.","tool","tested","keep",2,52
   "syn-watch-arm.sh","syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.","tool","tested","keep",7,187
   "syn-watch.sh","syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, seated","tool","tested","keep",5,53
-  "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","internal","keep",1,204
+  "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",1,204
   "telegram-bot.sh","telegram-bot.sh — the horn answers (W0036).","tool","wired","keep",1,83
   "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",1,75
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",5,131
-  "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","internal","keep",1,76
+  "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","wired","keep",1,76
   "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",3,68
   "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",2,91
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,112
@@ -384,22 +384,22 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",4,115
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",1,25
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",3,125
-  "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","internal","keep",2,61
-  "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","internal","keep",1,70
+  "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","wired","keep",2,61
+  "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","wired","keep",2,70
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",1,81
   "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",1,164
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",1,48
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","wired","keep",5,153
   "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",5,165
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",1,43
-  "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","internal","keep",3,77
-  "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","internal","keep",1,146
+  "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",3,77
+  "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","wired","keep",1,146
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","wired","keep",3,66
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",4,60
   "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",1,19
   "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",22,1420
   "ymir-invite.sh","ymir-invite — hand someone a way in to your Ymir, and take it back.","tool","wired","keep",4,105
-  "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","data","internal","keep",1,89
+  "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","data","wired","keep",1,89
   "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",2,337
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","wired","keep",6,75
   "ymir-plan.sh","ymir-plan.sh — THE INSTALL PLAN.","tool","wired","keep",3,431
@@ -413,6 +413,6 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",6,243
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
 
-**Tally.** verdict: wired=179, provenance=156, tested=42, internal=23
+**Tally.** verdict: wired=202, provenance=156, tested=42
 
 **Tally.** disposition: keep=241, provenance=156, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
