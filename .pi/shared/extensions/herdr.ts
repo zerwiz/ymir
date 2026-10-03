@@ -138,6 +138,15 @@ function render(): string {
   return out.join("\n");
 }
 
+
+// Pi 1.0's tool contract: the model-facing text is `content`, and THROWING is how a tool
+// reports failure — returning an object does not mark it as an error. `output:` reached the
+// model as an empty success while the harness called a key that did not exist.
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function herdr(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_seats",
@@ -147,7 +156,7 @@ export default function herdr(pi: ExtensionAPI) {
       "three outlived their errands during the failed launches. Thin: it reads herdr's own JSON and " +
       "tmux natively; it does not re-implement bin/herdr-*.sh.",
     parameters: { type: "object", properties: { backend: { type: "string", description: "herdr | tmux — omit for both" } } },
-    handler: async () => ({ output: render() }),
+    execute: async (_toolCallId: string) => piOut(render()),
   });
 
   pi.registerTool({
@@ -160,7 +169,7 @@ export default function herdr(pi: ExtensionAPI) {
       properties: { target: { type: "string", description: "session:window.pane (tmux) or pane id (herdr)" } },
       required: ["target"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const target = String(args.target);
       const out: string[] = [];
       // tmux: re-read liveness immediately before closing — never close on a stale reading
@@ -168,19 +177,19 @@ export default function herdr(pi: ExtensionAPI) {
       if (row) {
         if (row.status !== "DEAD") {
           out.push(`refused: ${target} is LIVE (${row.agent}, ${row.cwd}) — this closes stranded shells, not running work.`);
-          return { output: out.join("\n") };
+          return piOut(out.join("\n"));
         }
         run("tmux", ["kill-pane", "-t", target], true);
         out.push(`closed dead tmux pane ${target}`);
-        return { output: out.join("\n") };
+        return piOut(out.join("\n"));
       }
       const hp = herdrSeats().find((p) => p.id === target);
       if (hp) {
         out.push(`refused: ${target} is a LIVE herdr pane (${hp.agent}, ${hp.status}) — closing a live pane needs a human.`);
-        return { output: out.join("\n") };
+        return piOut(out.join("\n"));
       }
       out.push(`refused: no seat named ${target} in either backend. ymir_seats lists them.`);
-      return { output: out.join("\n") };
+      return piOut(out.join("\n"));
     },
   });
 }

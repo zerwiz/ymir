@@ -12,7 +12,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",392
+  "shell doors (bin/*.sh)",393
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",27
   "Pi extension tools",36
@@ -78,6 +78,7 @@ capabilities[5]{surface,count}:
 | electron-lib.sh | electron-lib.sh — is a desktop shell's runtime actually there? | tested+named | keep (a human or a cron row must run it) |
 | erindi-brief.sh | erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brie | tested+named | keep (a human or a cron row must run it) |
 | essence-fetch.sh | essence-fetch.sh — the npm world's self-heal: npm's packer refuses dot | tested | keep (a human or a cron row must run it) |
+| extension-api-check.sh | extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool  | tested | keep (a human or a cron row must run it) |
 | feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
 | fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | tested+named | keep (a human or a cron row must run it) |
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |

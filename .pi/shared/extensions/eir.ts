@@ -54,6 +54,16 @@ function run(door: string, args: string[], timeoutMs: number): { rc: number; out
   }
 }
 
+
+// Pi 1.0 tool contract. The model-facing text is `content`; THROWING is how a tool reports
+// failure. Named `piOut`, not `out`, because several handlers declare a LOCAL `const out` —
+// and a module helper with a one-word name gets shadowed by them (0.1.100: "out is not a
+// function" in seven tools, all the same cause).
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function eir(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_heal",
@@ -69,11 +79,11 @@ export default function eir(pi: ExtensionAPI) {
       },
       required: [],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const mode = String(args?.mode ?? "check");
       const r = run("eir-doctor.sh", [mode], mode === "fix" ? 300_000 : 180_000);
       const verdict = r.rc === 0 ? "whole" : `not whole (exit ${r.rc})`;
-      return { output: `eir_heal[2]{mode,verdict}:\n  "${mode}","${verdict}"\n\n${r.out || "(the healer said nothing — that is itself a finding)"}` };
+      return piOut(`eir_heal[2]{mode,verdict}:\n  "${mode}","${verdict}"\n\n${r.out || "(the healer said nothing — that is itself a finding)"}`);
     },
   });
 
@@ -92,14 +102,14 @@ export default function eir(pi: ExtensionAPI) {
       },
       required: [],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const mode = String(args?.mode ?? "check");
       const r = run("groa-update.sh", [mode === "update" ? "" : "--check"], 600_000);
       const note =
         mode === "update" && r.rc !== 0
           ? `\n  Gróa did not finish cleanly (exit ${r.rc}). The seat may be partly renewed — read the output before running it again.`
           : "";
-      return { output: `${r.out || "(the updater said nothing)"}${note}` };
+      return piOut(`${r.out || "(the updater said nothing)"}${note}`);
     },
   });
 }

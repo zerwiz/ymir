@@ -50,6 +50,9 @@ gate home-index "the home's shelves are navigable"             bash "$ROOT/bin/h
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/usage-ratchet.sh"
 gate inventory  "the bin/backend index is current"            bash "$ROOT/bin/inventory.sh" --check
 gate workflows  "every Actions workflow parses"               bash "$ROOT/bin/workflow-check.sh" --quiet
+gate ext-api    "extensions speak Pi's real tool API"          bash "$ROOT/bin/extension-api-check.sh" --quiet
+gate ext-smoke  "every Ymir tool ANSWERS when called like Pi calls it" \
+               node --experimental-strip-types "$ROOT/tools/extension-smoke.mjs"
 if [ "$FAST" = 1 ]; then
   printf '  "%s","SKIP","%s"\n' pr-pretest "skipped by --fast"
 else

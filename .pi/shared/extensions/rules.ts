@@ -50,6 +50,15 @@ function matchingLines(text: string, topic: string, limit = 8): string[] {
     .map((x) => x.line);
 }
 
+
+// Pi 1.0's tool contract: the model-facing text is `content`, and THROWING is how a tool
+// reports failure — returning an object does not mark it as an error. `output:` reached the
+// model as an empty success while the harness called a key that did not exist.
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function rules(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_rule",
@@ -64,10 +73,10 @@ export default function rules(pi: ExtensionAPI) {
       },
       required: ["topic"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const topic = String(args.topic);
       const rows: string[] = [];
-      if (!existsSync(RULES)) return { output: `no RULES/ at ${RULES} — this seat has no house law to quote.` };
+      if (!existsSync(RULES)) return piOut(`no RULES/ at ${RULES} — this seat has no house law to quote.`);
       for (const f of readdirSync(RULES).filter((x) => x.endsWith(".md")).sort()) {
         const lines = matchingLines(read(join(RULES, f)), topic);
         if (!lines.length) continue;
@@ -76,12 +85,9 @@ export default function rules(pi: ExtensionAPI) {
       }
       if (!rows.length) {
         const all = readdirSync(RULES).filter((x) => x.endsWith(".md")).map((x) => `  ${x}`);
-        return {
-          output:
-            `no law in RULES/ mentions "${topic}".\n\nthe whole law (small enough to read):\n${all.join("\n")}`,
-        };
+        return piOut(`no law in RULES/ mentions "${topic}".\n\nthe whole law (small enough to read):\n${all.join("\n")}`);
       }
-      return { output: `the law about ${topic}:\n${rows.join("\n")}\n\nquoted from RULES/ — if a law is not there, nothing forbids it; if it is, it binds.` };
+      return piOut(`the law about ${topic}:\n${rows.join("\n")}\n\nquoted from RULES/ — if a law is not there, nothing forbids it; if it is, it binds.`);
     },
   });
 
@@ -91,11 +97,11 @@ export default function rules(pi: ExtensionAPI) {
       "Which gate covers which surface, and whether it is actually WIRED — a gate that exists and " +
       "runs nowhere is how a capability is silently absent.",
     parameters: { type: "object", properties: { surface: { type: "string" } } },
-    handler: async () => {
+    execute: async (_toolCallId: string) => {
       const rows: string[] = [];
       const ci = read(join(ROOT, "bin", "ci-verify.sh"));
       const gates = [...ci.matchAll(/^gate\s+(\S+)\s+"([^"]+)"/gm)].map((m) => [m[1], m[2]]);
-      if (!gates.length) return { output: "no gates found in bin/ci-verify.sh — the gate list itself is unreadable." };
+      if (!gates.length) return piOut("no gates found in bin/ci-verify.sh — the gate list itself is unreadable.");
       rows.push(`ci-verify[${gates.length}]{gate,covers}:`);
       for (const [name, what] of gates) rows.push(`  "${name}","${what}"`);
       rows.push("");
@@ -107,7 +113,7 @@ export default function rules(pi: ExtensionAPI) {
       rows.push(`bin/home-index-check.sh whether the home's shelves can be navigated`);
       rows.push("");
       rows.push("a gate that exists and runs nowhere is how a capability is silently absent.");
-      return { output: rows.join("\n") };
+      return piOut(rows.join("\n"));
     },
   });
 }

@@ -104,6 +104,16 @@ function classify(rel: string): { ok: boolean; shelf: string; why: string } {
 // The house pattern: the deployed extensions take `pi` untyped, so the module
 // parses under every loader Pi uses (a type-only import is the one thing that
 // node --experimental-strip-types --check rejects).
+
+// Pi 1.0 tool contract. The model-facing text is `content`; THROWING is how a tool reports
+// failure. Named `piOut`, not `out`, because several handlers declare a LOCAL `const out` —
+// and a module helper with a one-word name gets shadowed by them (0.1.100: "out is not a
+// function" in seven tools, all the same cause).
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function ymirhome(pi: any) {
 
 
@@ -159,13 +169,13 @@ export default function ymirhome(pi: any) {
       },
       required: ["query"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       try {
         const out = run("bash", ["-c", '"$1" recall "$2" "$3"', "_",
           `${ROOT_BIN}/bin/mimir.sh`, String(args.query), String(args.limit ?? 5)], HOME);
-        return { output: out || "the well has nothing on that (an empty well is a real answer, not a failure)" };
+        return piOut(out || "the well has nothing on that (an empty well is a real answer, not a failure)");
       } catch (e: any) {
-        return { output: "the well did not answer: " + String(e?.message ?? e).split("\n")[0] };
+        return piOut("the well did not answer: " + String(e?.message ?? e).split("\n")[0]);
       }
     },
   });
@@ -185,15 +195,15 @@ export default function ymirhome(pi: any) {
       },
       required: ["lesson"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       try {
         const parts = [String(args.lesson)];
         if (args.tags?.length) parts.push(`tags: ${(args.tags as string[]).join(",")}`);
         if (args.actors?.length) parts.push(`actors: ${(args.actors as string[]).join(",")}`);
         run("bash", ["-c", '"$1" observe "$2"', "_", `${ROOT_BIN}/bin/mimir.sh`, parts.join(" ")], HOME);
-        return { output: "observed into the well. Next: ymir_note it into the plan it belongs to, or ymir_push the doc that carries it." };
+        return piOut("observed into the well. Next: ymir_note it into the plan it belongs to, or ymir_push the doc that carries it.");
       } catch (e: any) {
-        return { output: "the well did not take it: " + String(e?.message ?? e).split("\n")[0] };
+        return piOut("the well did not take it: " + String(e?.message ?? e).split("\n")[0]);
       }
     },
   });
@@ -214,7 +224,7 @@ export default function ymirhome(pi: any) {
       },
       required: ["action"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const root = args.path ? `${HOME}/${String(args.path)}` : `${HOME}/hodd`;
       const apply = String(args.action) === "apply";
       const out: string[] = [];
@@ -301,7 +311,7 @@ export default function ymirhome(pi: any) {
       }
       out.push("");
       out.push("the format: --- · kind · status · verified · verified_by · supersedes · superseded_by · grade · aliases · canonical · origin · used_by · sensitivity · owner");
-      return { output: out.join("\n") };
+      return piOut(out.join("\n"));
     },
   });
 
@@ -321,7 +331,7 @@ export default function ymirhome(pi: any) {
       },
       required: ["path"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const raw = String(args.path);
       const abs = raw.startsWith("/") ? raw : `${HOME}/${raw}`;
       const base = raw.split("/").pop() ?? raw;
@@ -331,11 +341,9 @@ export default function ymirhome(pi: any) {
       if (abs.startsWith(`${HOME}/`)) {
         const rel = abs.slice(HOME.length + 1);
         const here = classify(rel);
-        return {
-          output: here.ok
+        return piOut(here.ok
             ? `already home, and legal:\n  ${rel}\n  shelf: ${here.shelf} (${here.why})\n  nothing to do.`
-            : `it is INSIDE the home but in no legal shelf:\n  ${rel}\n  reason: ${here.why}\n  move it with ymir_place(..., move:true) into hodd/reference/ if it is retired.`,
-        };
+            : `it is INSIDE the home but in no legal shelf:\n  ${rel}\n  reason: ${here.why}\n  move it with ymir_place(..., move:true) into hodd/reference/ if it is retired.`);
       }
 
       // 2. classify by subject, most specific first.
@@ -363,14 +371,11 @@ export default function ymirhome(pi: any) {
       }
       const why = hit ? hit.why : "no rule claims it — reference is the safe shelf; say so in the report";
       const verdict = classify(dest);
-      if (!verdict.ok) return { output: `refused: ${verdict.why}\n  would have been: ${dest}` };
-      return {
-        output:
-          `outside the home →\n  ${base}\n  destination: ${dest}\n  because: ${why}\n` +
+      if (!verdict.ok) return piOut(`refused: ${verdict.why}\n  would have been: ${dest}`);
+      return piOut(`outside the home →\n  ${base}\n  destination: ${dest}\n  because: ${why}\n` +
           `  shelf: ${verdict.shelf}\n` +
           (hit ? "" : "  ⚠ this was a fallback, not a confident classification — confirm it.\n") +
-          `  next: ymir_import({ sources: ["${raw}"], dryRun:true }) to confirm, then act.`,
-      };
+          `  next: ymir_import({ sources: ["${raw}"], dryRun:true }) to confirm, then act.`);
     },
   });
 
@@ -390,10 +395,10 @@ export default function ymirhome(pi: any) {
       },
       required: ["path", "why"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const verdict = classify(String(args.path));
       if (!verdict.ok) {
-        return { output: `refused: ${verdict.why}\n  proposed: ${args.path}` };
+        return piOut(`refused: ${verdict.why}\n  proposed: ${args.path}`);
       }
       const dest = `${HOME}/${args.path}`;
       const lines = [`placed → ${args.path}`, `  shelf: ${verdict.shelf}`, `  because: ${args.why}`];
@@ -416,7 +421,7 @@ export default function ymirhome(pi: any) {
         }
       }
       lines.push(`  next: name it in the shelf's README row, or in register.md if it is an ask.`);
-      return { output: lines.join("\n") };
+      return piOut(lines.join("\n"));
     },
   });
 
@@ -433,7 +438,7 @@ export default function ymirhome(pi: any) {
       "the convention that applies to it. Ask this before filing anything, so an agent knows the " +
       "structures rather than guessing them.",
     parameters: { type: "object", properties: { depth: { type: "number", description: "default 2" } } },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const depth = Number(args.depth || 2);
       const rows: string[] = [];
       const walk = (dir: string, level: number) => {
@@ -462,7 +467,7 @@ export default function ymirhome(pi: any) {
       } catch (e: any) {
         rows.push("could not walk the home: " + String(e?.message ?? e).split("\n")[0]);
       }
-      return { output: rows.join("\n") };
+      return piOut(rows.join("\n"));
     },
   });
 
@@ -482,7 +487,7 @@ export default function ymirhome(pi: any) {
       },
       required: ["sources"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const dry = args.dryRun !== false;
       const lines: string[] = [];
       for (const raw of (args.sources as string[]) ?? []) {
@@ -511,7 +516,7 @@ export default function ymirhome(pi: any) {
         }
       }
       if (args.area === undefined) lines.push("classifier used the filename; pass `area` to override.");
-      return { output: lines.join("\n") };
+      return piOut(lines.join("\n"));
     },
   });
 
@@ -521,7 +526,7 @@ export default function ymirhome(pi: any) {
       "Which secret key NAMES exist in the vault. Never values - a name can be printed, a value " +
       "never leaves the vault. Use it to answer 'is the grant there?' without touching a secret.",
     parameters: { type: "object", properties: { filter: { type: "string", description: "substring, e.g. GOOGLE" } } },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       try {
         const names = run("bash", [
           "-c",
@@ -532,9 +537,9 @@ export default function ymirhome(pi: any) {
           .split("\n")
           .filter(Boolean)
           .filter((n) => !args.filter || n.toLowerCase().includes(String(args.filter).toLowerCase()));
-        return { output: names.length ? names.join("\n") : "no matching key names (values are never printed)" };
+        return piOut(names.length ? names.join("\n") : "no matching key names (values are never printed)");
       } catch (e: any) {
-        return { output: "could not read the vault: " + String(e?.message ?? e).split("\n")[0] };
+        return piOut("could not read the vault: " + String(e?.message ?? e).split("\n")[0]);
       }
     },
   });
@@ -545,22 +550,19 @@ export default function ymirhome(pi: any) {
       "The layout law itself: which shelf a home-relative path belongs to, and where a given " +
       "thing lives. Ask before writing, so nothing is filed by guess.",
     parameters: { type: "object", properties: { path: { type: "string" } } },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       if (args.path) {
         const v = classify(String(args.path));
-        return { output: v.ok ? `${v.path}\n  shelf: ${v.shelf}\n  because: ${v.why}` : `refused: ${v.why}` };
+        return piOut(v.ok ? `${v.path}\n  shelf: ${v.shelf}\n  because: ${v.why}` : `refused: ${v.why}`);
       }
-      return {
-        output:
-          "hodd/            private material (docs · data · memory · identity · life/<domain>)\n" +
+      return piOut("hodd/            private material (docs · data · memory · identity · life/<domain>)\n" +
           "  hodd/life/<domain>/   the operator's own domains: marketing · personal · work · meetings\n" +
           "  hodd/reference/       retired files, kept to be learned from (Rule 11)\n" +
           "  hodd/secrets/         credentials — never a document\n" +
           "svartalfaheim/<realm>/projects/<project>/\n" +
           "  …/plans/              the canonical plan ledger\n" +
           "  …/docs/                that project's documents\n" +
-          "Law: a register is an INDEX (state + a link); depth lives in a plan.",
-      };
+          "Law: a register is an INDEX (state + a link); depth lives in a plan.");
     },
   });
 
@@ -575,16 +577,16 @@ export default function ymirhome(pi: any) {
       },
       required: ["what"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const what = String(args.what);
       try {
         const out = args.content
           ? run("grep", ["-ril", "--exclude-dir=.git", what, HOME])
           : run("find", [HOME, "-iname", `*${what}*`]);
         const rows = out.split("\n").filter(Boolean).slice(0, 40).map((p) => p.replace(HOME, "~"));
-        return { output: rows.length ? rows.join("\n") : `nothing matched "${what}"` };
+        return piOut(rows.length ? rows.join("\n") : `nothing matched "${what}"`);
       } catch {
-        return { output: `nothing matched "${what}"` };
+        return piOut(`nothing matched "${what}"`);
       }
     },
   });
@@ -595,7 +597,7 @@ export default function ymirhome(pi: any) {
       "What is uncalled, stale or orphaned in the shelves: untracked strays, empty dirs, files with no " +
       "README row, and the size of each shelf.",
     parameters: { type: "object", properties: { shelf: { type: "string" } } },
-    handler: async () => {
+    execute: async (_toolCallId: string) => {
       const out: string[] = [];
       try {
         out.push("untracked (strays — ymir_place or git add by NAME, never -A):");
@@ -606,7 +608,7 @@ export default function ymirhome(pi: any) {
       } catch (e: any) {
         out.push("could not read the home: " + String(e?.message ?? e).split("\n")[0]);
       }
-      return { output: out.join("\n") };
+      return piOut(out.join("\n"));
     },
   });
 }
