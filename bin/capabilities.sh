@@ -18,8 +18,23 @@ MODE="${1:-write}"
 # The live signals, taken from the surfaces themselves — never asserted.
 shells=$(ls bin/*.sh 2>/dev/null | wc -l | tr -d ' ')
 pys=$(find src/ymir_runtime -name '*.py' 2>/dev/null | wc -l | tr -d ' ')
-skills=$(ls -d .agents/skills/*/ 2>/dev/null | wc -l | tr -d ' ')
+skills=$(git ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | sort -u | wc -l | tr -d ' ')
 tools=$(grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/*.ts 2>/dev/null | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | wc -l | tr -d ' ')
+
+# Resolved ONCE, from TRACKED files only, for the same reason as bin/inventory.sh: a
+# verdict computed from the working tree is a verdict about THIS MACHINE. The untracked
+# skill directory `.agents/skills/skillopt-staging/` exists here and not in git, and it
+# alone flipped `named=no` to `named=yes` for test_paths and test_grants — so CI read a
+# different register than the machine that generated it, and correctly called it stale.
+NAMING_FILES=$(git ls-files '.agents/skills/*/SKILL.md' '.agents/skills/*/assets/*.md' AGENTS.md | tr '\n' ' ')
+
+# TRACKED, once. A verdict read out of the working tree is a verdict about THIS MACHINE:
+# `__pycache__/test_grants.cpython-314.pyc` CONTAINS the string 'test_grants', so a local
+# run of the suite made `tested=yes` for a module whose tracked tests never mention it —
+# and CI, which has no bytecode, read `no` and correctly called the register stale.
+# Compiled artefacts are not evidence. Everything a verdict rests on must be in the commit.
+AGENT_TEST_FILES=$(git ls-files '.agents/tests/*' | tr '\n' ' ')
+PY_TEST_FILES=$(git ls-files 'src/ymir_runtime/tests/*' | tr '\n' ' ')
 
 emit() {
 cat <<EOM
@@ -53,8 +68,15 @@ for f in bin/*.sh; do
   # the first sentence of its own header is the job, from the door itself
   job=$(sed -n '2,12p' "$f" | grep -m1 -E '^#' | sed 's/^# \{0,1\}//' | cut -c1-72)
   [ -z "$job" ] && job="(no header line)"
-  tested=no; grep -qlr "$n" .agents/tests/ 2>/dev/null && tested=yes
-  named=no;  grep -qlr "$n" .agents/skills/*/SKILL.md .agents/skills/*/assets/*.md AGENTS.md 2>/dev/null && named=yes
+  tested=no
+  for _tf in $AGENT_TEST_FILES; do
+    [ -f "$_tf" ] && grep -ql "$n" "$_tf" 2>/dev/null && { tested=yes; break; }
+  done
+  named=no
+  for _nf in $NAMING_FILES; do
+    [ -f "$_nf" ] || continue
+    grep -ql "$n" "$_nf" 2>/dev/null && { named=yes; break; }
+  done
   v="uncalled"; [ "$tested" = yes ] && v="tested"; [ "$named" = yes ] && v="${v}+named"
   d="keep (a human or a cron row must run it)"
   [ "$tested" = no ] && [ "$named" = no ] && d="**decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete"
@@ -76,8 +98,10 @@ except Exception:
     print("(unreadable)")
 PYD
 )
-  tested=no;  grep -qlr "$m" src/ymir_runtime/tests/ 2>/dev/null && tested=yes
-  [ "$tested" = no ] && grep -qlr "$m" .agents/tests/ 2>/dev/null && tested=yes
+  tested=no
+  for _tf in $PY_TEST_FILES $AGENT_TEST_FILES; do
+    [ -f "$_tf" ] && grep -ql "$m" "$_tf" 2>/dev/null && { tested=yes; break; }
+  done
   reach=no;   grep -qlr "ymir_runtime" bin/ 2>/dev/null && reach="yes (bin/ imports the engine)"
   printf '| `%s` | %s | %s | %s |\n' "$m" "$owns" "$tested" "$reach"
 done
