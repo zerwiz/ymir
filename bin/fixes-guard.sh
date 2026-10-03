@@ -100,6 +100,25 @@ if [ -z "$notes" ]; then
 fi
 
 # The record is there: now say whether it speaks to what the push changed.
+# WHAT A PATH IS, so the note that describes it can be recognised.
+#
+# Until 2026-10-01 this matcher only knew three shapes: a path containing the component's own
+# name, a short list of files that happen to spell one, and `.agents/skills/*`. So a note under
+# `runtime/` describing `bin/verify-seat.sh` counted as covering NOTHING — and every push that
+# carried a correct note still had to be pushed with the loud YMIR_SKIP_FIXES_GUARD=1 override.
+# **A gate that must be routinely overridden is a gate nobody trusts**, so the map is explicit now
+# rather than clever: a path that names no component is mapped by WHAT IT IS.
+path_component() {  # <path> -> the component it belongs to, or empty
+  case "$1" in
+    src/ymir_runtime/*|bin/mimir*|bin/mimir.sh|bin/verify-seat.sh|bin/saga-wake-drain.sh) echo runtime ;;
+    bin/ymir-install.sh|bin/groa-update.sh|bin/valknut-load.sh|bin/ymir-migrate.sh) echo install ;;
+    .pi/*|.agents/skills/*|bin/skill-find.sh|bin/fixes.sh|bin/fixes-guard.sh) echo agents ;;
+    bin/capabilities.sh|bin/inventory.sh|bin/queue.sh|bin/home-index-check.sh|bin/no-delete-guard.sh) echo gate ;;
+    .agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md|apps/hlidskjalf/*) echo hlidskjalf ;;
+    .agents/skills/galdr-ymirsystem/assets/smidja.md|.agents/skills/smidja-factory/*) echo smidja ;;
+    .agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md|bin/snotra*|tools/snotra/*) echo snotra ;;
+  esac
+}
 covered=0
 for n in $notes; do
   c="$(printf '%s' "${n#docs/fixes/}" | cut -d/ -f1)"
@@ -108,6 +127,12 @@ for n in $notes; do
     *bin/fixes*|*install*) [ "$c" = install ] && covered=$((covered+1)) ;;
     *bin/ymir*|*bin/sessrumnir*|*bin/smidja*|*bin/npm-publish*|*.agents/skills/*) covered=$((covered+1)) ;;
   esac
+  # and: does the note's component own any path this push touched?
+  while IFS= read -r f; do
+    [ "$(path_component "$f")" = "$c" ] && covered=$((covered+1))
+  done <<EOF2
+$(printf '%s\n' "$touched" | grep -v '^docs/fixes/')
+EOF2
 done
 
 count="$(printf '%s\n' "$notes" | grep -c . || true)"

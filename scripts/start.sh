@@ -361,3 +361,15 @@ done
 echo "Hlidskjalf started (pid $PID) but :${PORT} did not answer — see $LOG" >&2
 tail -5 "$LOG" >&2 2>/dev/null || true
 exit 1
+
+# ── the seat proves itself, or the raise did not succeed ──────────────────────
+# The Allfather: "starting things could also start when apps are starting." A seat
+# that raises four apps and cannot prove its watch is loaded, its helm is held and
+# its vault resolves is not raised — it is merely running. This is that proof, and it
+# FAILS (non-zero) rather than warns: on 2026-09-30 this seat looked healthy with no
+# watch loaded at all.
+if [ -x "$ROOT/bin/verify-seat.sh" ] 2>/dev/null || [ -x "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/bin/verify-seat.sh" ]; then
+  VS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/bin/verify-seat.sh"
+  printf '\n'
+  "$VS" || printf 'WARN — the seat is not whole (see the rows above); run bin/verify-seat.sh\n' >&2
+fi

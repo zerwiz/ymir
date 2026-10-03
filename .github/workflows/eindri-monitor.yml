@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: Yggdrasil branch to monitor (format: feat/eindri-...)
+        description: "Yggdrasil branch to monitor (format: feat/eindri-...)"
         required: true
         default: "feat/eindri"
       check_interval:
-        description: Check interval in minutes (default: 10)
+        description: "Check interval in minutes (default: 10)"
         required: false
         default: "10"
 
