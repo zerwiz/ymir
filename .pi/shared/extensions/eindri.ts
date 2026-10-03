@@ -33,7 +33,7 @@ function run(cmd: string, args: string[], quiet = true): RunResult {
 
 function field(file: string, key: string): string {
   if (!existsSync(file)) return "";
-  return (new RegExp(`^${key}=(.*)$`, "m").exec(readFileSync(file, "utf8"))?.[1] ?? "";
+  return (new RegExp(`^${key}=(.*)$`, "m").exec(readFileSync(file, "utf8"))?.[1] ?? "");
 }
 
 function readErrand(id: string): string {

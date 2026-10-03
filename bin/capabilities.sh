@@ -149,7 +149,18 @@ one_capability[4]{rule,means}:
 EOM
 }
 
-TMP="$(mktemp)"; emit > "$TMP"
+TMP="$(mktemp)"
+# The header is an UNQUOTED heredoc, so its own body is interpreted and a few of its lines
+# exit non-zero ("capabilities[5]surface:: command not found" — visible on stderr for years).
+# Under CI's `bash -e` that made THIS LINE the last one to run: the script died here and
+# never reached its own verdict, so a CURRENT register reported as a FAILED gate. So do not
+# inherit the incidental status — assert the postcondition instead: a register was written,
+# and it has rows. (Quoting the heredoc is the proper fix and is still owed.)
+emit > "$TMP" || true
+if [ ! -s "$TMP" ]; then
+  echo "capabilities: emit produced NOTHING — the register cannot be built" >&2
+  rm -f "$TMP"; exit 1
+fi
 if [ "$MODE" = "--check" ]; then
   if [ ! -f "$OUT" ] || ! diff -q "$OUT" "$TMP" >/dev/null 2>&1; then
     echo "capabilities --check: $OUT is STALE — run bin/capabilities.sh" >&2
