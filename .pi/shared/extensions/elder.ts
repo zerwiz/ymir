@@ -74,6 +74,15 @@ function run(cmd: string, args: string[], cwd?: string): string {
   }).trim();
 }
 
+
+// Pi 1.0's tool contract: the model-facing text is `content`, and THROWING is how a tool
+// reports failure — returning an object does not mark it as an error. `output:` reached the
+// model as an empty success while the harness called a key that did not exist.
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function elder(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_note",
@@ -89,10 +98,10 @@ export default function elder(pi: ExtensionAPI) {
       },
       required: ["path", "heading", "body"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const rel = String(args.path);
       if (!rel.startsWith("hodd/") && !rel.startsWith("svartalfaheim/")) {
-        return { output: `refused: ${rel} is not in the home. Documents live under hodd/ or svartalfaheim/.` };
+        return piOut(`refused: ${rel} is not in the home. Documents live under hodd/ or svartalfaheim/.`);
       }
       const abs = `${HOME}/${rel}`;
       const heading = String(args.heading);
@@ -103,9 +112,9 @@ export default function elder(pi: ExtensionAPI) {
         run("bash", ["-c", `printf '\n---\n\n%s\n\n' >> "$1" && cat >> "$1"`, "_", abs], HOME);
         // body via stdin-safe append
         run("bash", ["-c", `cat >> "$1"`, "_", abs], HOME, args.body);
-        return { output: `appended to ${rel}\n  ${dated}\n  next: ymir_push with that one path (never -A).` };
+        return piOut(`appended to ${rel}\n  ${dated}\n  next: ymir_push with that one path (never -A).`);
       } catch (e: any) {
-        return { output: "failed: " + String(e?.message ?? e).split("\n")[0] };
+        return piOut("failed: " + String(e?.message ?? e).split("\n")[0]);
       }
     },
   });
@@ -125,7 +134,7 @@ export default function elder(pi: ExtensionAPI) {
       },
       required: ["slug", "title"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const realm = String(args.realm || "whynotproductions");
       const project = String(args.project || "ymir");
       const dir = `${HOME}/svartalfaheim/${realm}/projects/${project}/plans`;
@@ -135,14 +144,11 @@ export default function elder(pi: ExtensionAPI) {
         const nn = String(next).padStart(2, "0");
         const file = `${dir}/${nn}-${String(args.slug)}.md`;
         run("bash", ["-c", `printf '# Plan %s — %s\n\n**Opened %s.**\n' "$2" "$3" "$(date -u +%%Y-%%m-%%d)" > "$1"`, "_", file, nn, String(args.title)], HOME);
-        return {
-          output:
-            `created ${file}\n` +
+        return piOut(`created ${file}\n` +
             `  number: ${nn} (after the index's highest)\n` +
-            `  next: add the README index row, then ymir_push that ONE path by name.`,
-        };
+            `  next: add the README index row, then ymir_push that ONE path by name.`);
       } catch (e: any) {
-        return { output: "failed: " + String(e?.message ?? e).split("\n")[0] };
+        return piOut("failed: " + String(e?.message ?? e).split("\n")[0]);
       }
     },
   });
@@ -162,14 +168,14 @@ export default function elder(pi: ExtensionAPI) {
       },
       required: ["paths", "message"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       // A tool that throws on a missing argument teaches the caller nothing. `required` is a
       // hint to a well-behaved model, not a guarantee — so say what is missing instead.
       if (!Array.isArray(args?.paths) || !args.paths.length) {
-        return { output: "ymir_push needs `paths` — an array of home-relative paths to stage. Never stage everything: name the files." };
+        return piOut("ymir_push needs `paths` — an array of home-relative paths to stage. Never stage everything: name the files.");
       }
       if (!String(args?.message ?? "").trim()) {
-        return { output: "ymir_push needs a `message` — an imperative subject line and a paragraph of what and why." };
+        return piOut("ymir_push needs a `message` — an imperative subject line and a paragraph of what and why.");
       }
       const paths = (args.paths as string[]).map(String);
       const lines: string[] = [];
@@ -177,16 +183,13 @@ export default function elder(pi: ExtensionAPI) {
         // a secret never enters the vault's history, and no file is ever deleted
         for (const p of paths) {
           if (/(^|\/)\.?env$|secret|credential|\.key$|token/i.test(p)) {
-            return { output: `refused: ${p} looks like a credential. Secrets stay out of history.` };
+            return piOut(`refused: ${p} looks like a credential. Secrets stay out of history.`);
           }
         }
         const deleted = run("git", ["diff", "--name-only", "--diff-filter=D", "HEAD"], HOME);
         if (deleted.trim()) {
-          return {
-            output:
-              `refused: this commit deletes tracked files:\n  ${deleted}\n` +
-              `Rule 11 — never delete, only move. Use ymir_place(..., move:true) into hodd/reference/.`,
-          };
+          return piOut(`refused: this commit deletes tracked files:\n  ${deleted}\n` +
+              `Rule 11 — never delete, only move. Use ymir_place(..., move:true) into hodd/reference/.`);
         }
         run("git", ["add", "--", ...paths], HOME);
         run("git", ["commit", "-m", String(args.message)], HOME);
@@ -200,7 +203,7 @@ export default function elder(pi: ExtensionAPI) {
       } catch (e: any) {
         lines.push("failed: " + String(e?.message ?? e).split("\n").slice(0, 3).join(" | "));
       }
-      return { output: lines.join("\n") };
+      return piOut(lines.join("\n"));
     },
   });
 
@@ -212,19 +215,19 @@ export default function elder(pi: ExtensionAPI) {
       properties: { note: { type: "string", description: "omit to read today instead" } },
       required: [],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const day = new Date().toISOString().slice(0, 10);
       const f = `${HOME}/hodd/memory/daily/${day}.md`;
       try {
         run("mkdir", ["-p", f.slice(0, f.lastIndexOf("/"))], HOME);
         if (!args.note) {
-          if (!existsSync(f)) return { output: `no entry yet for ${day} — nothing has been written for that day` };
-          return { output: run("cat", [f], HOME) || `no entry yet for ${day}` };
+          if (!existsSync(f)) return piOut(`no entry yet for ${day} — nothing has been written for that day`);
+          return piOut(run("cat", [f], HOME) || `no entry yet for ${day}`);
         }
         run("bash", ["-c", `printf '%s\n' "$2" >> "$1"`, "_", f, `- ${new Date().toISOString().slice(11, 16)} ${String(args.note)}`], HOME);
-        return { output: `appended to hodd/memory/daily/${day}.md — next: ymir_push that path by name.` };
+        return piOut(`appended to hodd/memory/daily/${day}.md — next: ymir_push that path by name.`);
       } catch (e: any) {
-        return { output: "failed: " + String(e?.message ?? e).split("\n")[0] };
+        return piOut("failed: " + String(e?.message ?? e).split("\n")[0]);
       }
     },
   });
@@ -245,7 +248,7 @@ export default function elder(pi: ExtensionAPI) {
       },
       required: [],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const eldri = Number(args.ageDays ? args.ageDays / 2 : 90);
       const forn = Number(args.ageDays ?? 365);
       const root = args.path ? `${HOME}/${String(args.path)}` : `${HOME}/hodd`;
@@ -319,9 +322,9 @@ export default function elder(pi: ExtensionAPI) {
         for (const r of scored.slice(0, 25))
           out.push(`  ${String(r.score ?? "?").padStart(4)}  ${r.g.padEnd(10)} p${r.proofs ?? 0} c${r.cites ?? 0} x${r.contra ?? 0}  ${r.rel}`);
         out.push("", "An old document MOVES to hodd/reference/ (Rule 11) — grading decides where it belongs, never whether it survives.");
-        return { output: out.join("\n") };
+        return piOut(out.join("\n"));
       } catch (e: any) {
-        return { output: "could not grade: " + String(e?.message ?? e).split("\n")[0] };
+        return piOut("could not grade: " + String(e?.message ?? e).split("\n")[0]);
       }
     },
   });

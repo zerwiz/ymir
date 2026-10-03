@@ -67,6 +67,15 @@ function run(args: string[]): string {
   } catch { return ""; }
 }
 
+
+// Pi 1.0's tool contract: the model-facing text is `content`, and THROWING is how a tool
+// reports failure — returning an object does not mark it as an error. `output:` reached the
+// model as an empty success while the harness called a key that did not exist.
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function odrerir(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_hall",
@@ -76,7 +85,7 @@ export default function odrerir(pi: ExtensionAPI) {
       "Thin over the doors that own those answers, and it WRITES nothing. A door that cannot " +
       "answer is reported as unable, never as zero.",
     parameters: { type: "object", properties: { runes: { type: "number", description: "how many runes (default 5)" } } },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const out: string[] = [];
       const missing = (what: string, why: string) => out.push(`  ${what.padEnd(14)} UNABLE — ${why}`);
 
@@ -130,7 +139,7 @@ export default function odrerir(pi: ExtensionAPI) {
       out.push("");
       out.push("every figure came from the door that owns it — the hall cannot show a number the tree does not hold.");
       out.push("a door that could not answer is shown UNABLE, never as zero: an absent answer is not an empty one.");
-      return { output: out.join("\n") };
+      return piOut(out.join("\n"));
     },
   });
 }
