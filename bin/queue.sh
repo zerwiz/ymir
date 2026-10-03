@@ -35,8 +35,25 @@ REG="$PLAN_DIR/register.md"
 Q="$PLAN_DIR/questions.md"
 OUT="$PLAN_DIR/queue.md"
 
-[ -f "$REG" ] || { echo "queue: no register at $REG" >&2; exit 1; }
-[ -f "$Q" ] || { echo "queue: no questions at $Q" >&2; exit 1; }
+# The register and the questions live in the operator's PRIVATE vault — which is deliberately
+# NOT in this repository. So on CI (or any checkout without a vault) this gate cannot run, and
+# it must SAY SO rather than report a verdict. That is the third instance of one lesson today:
+# a thing that cannot start must say so in its own words, because a gate that fails for a
+# missing input reads as "this repository is broken". Verdict: SKIP, exit 0.
+[ -f "$REG" ] || {
+  if [ "$MODE" = "--check" ]; then
+    printf 'queue[1]{verdict,why}: "SKIP","the plan register is not in this repository — it lives in the operator vault (%s), and CI has none. Nothing is stale; nothing was checked."\n' "$REG"
+    exit 0
+  fi
+  echo "queue: no register at $REG" >&2; exit 1
+}
+[ -f "$Q" ] || {
+  if [ "$MODE" = "--check" ]; then
+    printf 'queue[1]{verdict,why}: "SKIP","no questions file in the vault (%s). Nothing is stale; nothing was checked."\n' "$Q"
+    exit 0
+  fi
+  echo "queue: no questions at $Q" >&2; exit 1
+}
 
 python3 - "$REG" "$Q" <<'PY'
 import re, sys, datetime

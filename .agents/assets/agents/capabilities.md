@@ -14,7 +14,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 capabilities[5]{surface,count}:
   "shell doors (bin/*.sh)",392
   "runtime modules (src/ymir_runtime/*.py)",54
-  "skills (.agents/skills/*)",29
+  "skills (.agents/skills/*)",27
   "Pi extension tools",33
   "generated","2026-10-03"
 
@@ -43,8 +43,8 @@ capabilities[5]{surface,count}:
 | brokk-update.sh | brokk-update.sh — back-compat alias. | uncalled+named | keep (a human or a cron row must run it) |
 | brokk-wake-grant.sh | shellcheck source=bin/brokk-wake-lib.sh | uncalled+named | keep (a human or a cron row must run it) |
 | brokk-wake-lib.sh | Shared durable wake queue and portable lock helpers. | uncalled+named | keep (a human or a cron row must run it) |
-| calendar-ask.sh | calendar-ask.sh — the shell door onto Mánagandr, the read calendar. | tested | keep (a human or a cron row must run it) |
-| ci-verify.sh | ci-verify.sh — what CI must prove, in one command, for BOTH hosts. | tested | keep (a human or a cron row must run it) |
+| calendar-ask.sh | calendar-ask.sh — the shell door onto Mánagandr, the read calendar. | tested+named | keep (a human or a cron row must run it) |
+| ci-verify.sh | ci-verify.sh — what CI must prove, in one command, for BOTH hosts. | tested+named | keep (a human or a cron row must run it) |
 | contracts-check.sh | contracts-check.sh — the typed surfaces' proof, in one command. | tested | keep (a human or a cron row must run it) |
 | crash-sense.sh | crash-sense.sh — surface machine crashes to the Allfather on Omarchy. | uncalled+named | keep (a human or a cron row must run it) |
 | daily-log.sh | daily-log.sh — the day's work, recorded where the contract says it lives | uncalled+named | keep (a human or a cron row must run it) |
@@ -82,7 +82,7 @@ capabilities[5]{surface,count}:
 | fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | uncalled+named | keep (a human or a cron row must run it) |
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | uncalled+named | keep (a human or a cron row must run it) |
 | fleet-apply.sh | fleet-apply.sh — apply fleet-wide preferences to every registered Eindri | uncalled+named | keep (a human or a cron row must run it) |
-| fleet-deploy.sh | fleet-deploy.sh — refresh the machine's fleet services from THIS package | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| fleet-deploy.sh | fleet-deploy.sh — refresh the machine's fleet services from THIS package | uncalled+named | keep (a human or a cron row must run it) |
 | fleet-ensure.sh | fleet-ensure.sh — the role-gated RAISE (plan 42's fleet services, plan 5 | uncalled+named | keep (a human or a cron row must run it) |
 | fleet-version.sh | fleet-version.sh — is the fleet on ONE version? (plan 51, Phase 2) | tested+named | keep (a human or a cron row must run it) |
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
@@ -446,12 +446,12 @@ capabilities[5]{surface,count}:
 | `test_config` | config/ — load-with-schema, a loud refusal naming the key and the file | yes | yes (bin/ imports the engine) |
 | `test_container` | container.py — the sandbox decision, and the refusals it must make. | yes | yes (bin/ imports the engine) |
 | `test_dispatch` | dispatch/ — the decision table as Python reading data (plan 58, Part 1 | yes | yes (bin/ imports the engine) |
-| `test_grants` | grants/ — the realm law: a cross-operator share is signed by each Heim | yes | yes (bin/ imports the engine) |
+| `test_grants` | grants/ — the realm law: a cross-operator share is signed by each Heim | no | yes (bin/ imports the engine) |
 | `test_harness` | harness.py — the choice, the provenance, and the exact launch line. | yes | yes (bin/ imports the engine) |
 | `test_heartbeat` | heartbeat.py — the silence judgement, identical to the shell condition | yes | yes (bin/ imports the engine) |
 | `test_landed` | landed.py — the teardown gate, proven on real repositories. | yes | yes (bin/ imports the engine) |
 | `test_lifecycle` | status · send · stop — the other three verbs, read from the record. | yes | yes (bin/ imports the engine) |
-| `test_paths` | paths.py — the home law, read once. | yes | yes (bin/ imports the engine) |
+| `test_paths` | paths.py — the home law, read once. | no | yes (bin/ imports the engine) |
 | `test_rail` | fleet/rail.py — the living rail resolver (plan 51, Parts 9a/9b/9c). | yes | yes (bin/ imports the engine) |
 | `test_seat` | seat.py — the whole errand, end to end, in a temp home and a real repo | yes | yes (bin/ imports the engine) |
 | `test_state_parity` | state/ PARITY — the shim against the shell it replaced, byte for byte. | yes | yes (bin/ imports the engine) |
