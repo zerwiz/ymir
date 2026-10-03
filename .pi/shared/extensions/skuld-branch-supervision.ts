@@ -1,3 +1,17 @@
+
+// The vault, resolved by the house's own resolver — never `$HOME/Documents/ymirhome`,
+// which is this seat's layout and not a rule (Rule 04; 0.1.53 lost a push to that guess,
+// and the ward now scans .pi/ so a guess here fails the build).
+function resolveHome(): string {
+  const fromEnv = process.env.YMIR_HOME?.trim();
+  if (fromEnv) return fromEnv;
+  const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
+    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
+  }).trim();
+  if (!v) throw new Error("the vault path is empty — run `bin/hodd.sh path` and read what it says");
+  return v;
+}
+
 // Brokk supervision branch for Pi (docs/pi-supervision-branch.md).
 //
 // A persistent second AgentSession - the supervision BRANCH - inside the same
@@ -1465,7 +1479,31 @@ ${context.command}
     return shell;
   };
 
-  pi.registerTool?.({
+  
+// ── resolution: this file must run on ANY seat, so it may not know a machine ──
+// (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/heimdall/ymir`.)
+// This is the JS mirror of `ymir_root_verified` in bin/valknut-load.sh — same contract,
+// same order: $YMIR_ROOT, then the recorded roots, first one that really holds the house.
+// One reader in the shell, one here; they must agree, or a worktree seat reads a dead path.
+function resolveRoot(): string {
+  const fromEnv = process.env.YMIR_ROOT?.trim();
+  if (fromEnv) return fromEnv;
+  const pointer = join(homedir(), ".pi", "agent", "extensions", ".ymir-root");
+  if (existsSync(pointer)) {
+    for (const line of readFileSync(pointer, "utf8").split("\n")) {
+      const root = line.trim();
+      if (!root) continue;
+      if (existsSync(join(root, "bin", "syn-watch-arm.sh"))) return root;
+    }
+  }
+  throw new Error(
+    "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
+    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout — install records " +
+    "the root, and every extension reads it from there.",
+  );
+}
+
+pi.registerTool?.({
     name: "brokk_branch_outcomes",
     label: "Read supervision branch outcomes",
     description:
@@ -1560,7 +1598,7 @@ ${context.command}
     handler: async (args: any) => {
       const out: string[] = [];
       const sh = (process.env.YMIR_PLAN_DIR ||
-        `${process.env.YMIR_HOME || `${process.env.HOME}/Documents/ymirhome`}/svartalfaheim/${args.realm || "whynotproductions"}/projects/${args.project || "ymir"}/plans`);
+        `${resolveHome()}/svartalfaheim/${args.realm || "whynotproductions"}/projects/${args.project || "ymir"}/plans`);
       let names: string[] = [];
       try { names = execFileSync("ls", [sh], { encoding: "utf8" }).split("\n").filter(Boolean); } catch { /* none */ }
       const t = args.topic ? String(args.topic).toLowerCase() : "";
@@ -1595,7 +1633,7 @@ ${context.command}
     },
     handler: async (args: any) => {
       try {
-        const q = execFileSync("bash", ["${YMIR_ROOT:-/home/heimdall/ymir}/bin/queue.sh", "--check"], { encoding: "utf8" });
+        const q = execFileSync("bash", [join(resolveRoot(), "bin", "queue.sh"), "--check"], { encoding: "utf8" });
         const lines = q.split("\n").filter((l) => l.startsWith("| "));
         const want = args.state ? String(args.state).toLowerCase() : null;
         const head = lines.find((l) => l.startsWith("| # "));
