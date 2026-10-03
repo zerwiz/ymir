@@ -32,6 +32,23 @@ tools=$(grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/
 # skill directory `.agents/skills/skillopt-staging/` exists here and not in git, and it
 # alone flipped `named=no` to `named=yes` for test_paths and test_grants — so CI read a
 # different register than the machine that generated it, and correctly called it stale.
+# file <TAB> verdict, read out of the inventory's TOON rows (quoted fields).
+INVENTORY_MAP="$(mktemp)"; trap 'rm -f "$INVENTORY_MAP"' EXIT
+if [ -r bin/README.md ]; then
+  python3 - bin/README.md >"$INVENTORY_MAP" <<'PYVERDICT'
+import csv, sys
+for row in csv.reader(open(sys.argv[1])):
+    if len(row) < 4:
+        continue
+    # Rows are INDENTED, so csv hands back '  "a2a-serve.sh"' — which ends with a quote, not
+    # with ".sh". An unguarded endswith() therefore matched NOTHING and every door read as
+    # untested: 178 false "undecided" rows from one missing strip(). Strip first, ask second.
+    name = row[0].strip().strip('"')
+    if name.endswith((".sh", ".py")):
+        print(f"{name}\t{row[3].strip().strip(chr(34))}")
+PYVERDICT
+fi
+
 NAMING_FILES=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' '.agents/skills/*/assets/*.md' AGENTS.md | tr '\n' ' ')
 
 # TRACKED, once. A verdict read out of the working tree is a verdict about THIS MACHINE:
@@ -86,10 +103,15 @@ for f in $(ls bin/*.sh 2>/dev/null | LC_ALL=C sort); do
   # the first sentence of its own header is the job, from the door itself
   job=$(sed -n '2,12p' "$f" | grep -m1 -E '^#' | sed 's/^# \{0,1\}//' | cut -c1-72)
   [ -z "$job" ] && job="(no header line)"
+  # `tested` is NOT recomputed here. Two generators each deciding the same question is how one
+  # register reported 188 doors tested while the other reported 115 and declared 64
+  # "undecided" — a disagreement dressed as a fact. bin/inventory.sh OWNS the verdict; this
+  # register reads it, and owns only what inventory cannot know: whether a SKILL names it.
+  # USED, not merely tested. The inventory's `wired` means something CALLS this file, which is
+  # use by definition — the house's two honest answers (name it, or move it) only apply to a
+  # file that nothing exercises and nothing names. A door called by another door is alive.
   tested=no
-  for _tf in $AGENT_TEST_FILES; do
-    [ -f "$_tf" ] && grep -ql "$n" "$_tf" 2>/dev/null && { tested=yes; break; }
-  done
+  grep -qE "^${n}$(printf "\t")(tested|wired)$" "$INVENTORY_MAP" 2>/dev/null && tested=yes
   named=no
   for _nf in $NAMING_FILES; do
     [ -f "$_nf" ] || continue
@@ -116,10 +138,23 @@ except Exception:
     print("(unreadable)")
 PYD
 )
+  # The inventory's map covers bin/ and the backend shelf; it does NOT list runtime modules,
+  # so pointing this lookup at it reported every module untested (16 rows, all `no`, while
+  # src/ymir_runtime/tests/ holds 21 files). A python module is tested when a python test
+  # names it — that question belongs to the python tests, not to the shell door index.
+  # A TEST FILE IS THE TEST. The lookup asked only whether some OTHER test names this module,
+  # so the eleven `test_*.py` files were reported untested — the eleven files whose entire
+  # job is to test. Ask the cheap question first: is this file itself a test?
   tested=no
-  for _tf in $PY_TEST_FILES $AGENT_TEST_FILES; do
-    [ -f "$_tf" ] && grep -qlF "$m" "$_tf" 2>/dev/null && { tested=yes; break; }
-  done
+  case "$f" in
+    */test_*.py|*/*_test.py|*/tests/*) tested=yes ;;
+  esac
+  if [ "$tested" = no ]; then
+    for _tf in $PY_TEST_FILES; do
+      [ -f "$_tf" ] || continue
+      grep -qlF "$m" "$_tf" 2>/dev/null && { tested=yes; break; }
+    done
+  fi
   reach=no;   grep -qlr "ymir_runtime" bin/ 2>/dev/null && reach="yes (bin/ imports the engine)"
   printf '| `%s` | %s | %s | %s |\n' "$m" "$owns" "$tested" "$reach"
 done
