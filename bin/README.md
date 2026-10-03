@@ -382,7 +382,7 @@ bin[401]{file,does,kind,verdict,disposition,callers,lines}:
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,112
   "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",1,116
   "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,406
-  "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",4,151
+  "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",4,156
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",1,25
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",3,125
   "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","wired","keep",2,61

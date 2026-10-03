@@ -101,8 +101,13 @@ fi
 if [ -n "${WATCHER_PIDS:-}" ]; then
   _w=0; for _p in $WATCHER_PIDS; do kill -0 "$_p" 2>/dev/null && _w=1; done
   [ "$_w" = 1 ]
-elif pgrep -f "syn-watch|gna-watch|branch-supervision" >/dev/null 2>&1; then
-  good watch-running "pid(s) alive: ${WATCHER_PIDS}"
+# The NAMES were guessed and matched nothing that exists. Measured on 2026-10-03: the watcher
+# actually runs as `python -m ymir_runtime watch run` (pid 1206), while this pattern asked for
+# syn-watch|gna-watch|branch-supervision — so the seat reported "no watcher alive" while its
+# heartbeat was four seconds old. Same disease as the marker it now replaced: asserting a name
+# instead of the thing the name stands for. Each pattern below is a name MEASURED on this host.
+elif pgrep -f "ymir_runtime watch|ymir_runtime supervise|syn-watch-arm|syn-watch\.sh|gna-watch|branch-supervision|watch-drain" >/dev/null 2>&1; then
+  good watch-running "pid(s) alive: $(pgrep -f "ymir_runtime watch|syn-watch|gna-watch" | tr "\n" " " | cut -c1-60)"
 else
   bad watch-running "no watcher process is alive (an arm file alone is not an arm)"
 fi

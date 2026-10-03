@@ -15,6 +15,9 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const targets = process.argv.slice(2);
+// ymir-well is deliberately ABSENT from the default set: its `well_observe` wrote 28 episodes
+// of the literal string "undefined" into Kaia's well when this test called it with `{}`. A
+// memory write from a test is never correct, and the well is the operator's own memory.
 const names = targets.length ? targets : [
   "elder", "ymirhome", "managandr", "eir", "opendesign", "odrerir",
   "rules", "herdr", "eindri", "skuld-branch-supervision", "gna-pi-watch",
@@ -22,6 +25,7 @@ const names = targets.length ? targets : [
 
 let bad = 0;
 let called = 0;
+let verified = 0;   // proved callable; not executed, because it might write
 const skipped = [];
 
 for (const name of names) {
@@ -90,6 +94,23 @@ for (const name of names) {
       continue;
     }
     try {
+      // A SMOKE TEST MUST NOT WRITE — and it cannot know every tool that writes.
+      // This one called EVERY tool with `{}`, and `ymir_plan` — which writes — created 28 junk
+      // files named `NN-undefined.md` in the operator's private vault. A test that can write to
+      // someone's records is not a test; it is an accident with a green tick.
+      //
+      // So the rule is safe by default: every tool is proved CALLABLE, and only the explicit
+      // read-only allowlist is actually EXECUTED. Adding a tool to the allowlist is a decision
+      // someone has to make deliberately; adding one to the wrong list is now impossible.
+      const READ_ONLY = new Set([
+        "ymir_hall", "ymir_rule", "ymir_gates", "ymir_seats", "ymir_find_home",
+        "ymir_calendar", "ymir_studio", "ymir_heal", "ymir_update", "skuld_plan",
+        "brokk_branch_outcomes", "skuld_branch_report",
+      ]);
+      if (!READ_ONLY.has(t.name)) {
+        verified++;
+        continue;   // proved callable above; deliberately NOT executed
+      }
       const r = await t.execute("smoke-call-id", {}, undefined, () => {}, {});
       called++;
       if (!r || !Array.isArray(r.content)) {
@@ -117,6 +138,6 @@ if (skipped.length) {
   console.log("\n  skipped (Pi provides the package, bare node cannot):");
   for (const s2 of skipped) console.log(`    · ${s2}`);
 }
-console.log(`\nextension_smoke[3]{called,broken,skipped}:`);
-console.log(`  "${called}","${bad}","${skipped.length}"`);
+console.log(`\nextension_smoke[4]{called,verified_not_executed,broken,skipped}:`);
+console.log(`  "${called}","${verified}","${bad}","${skipped.length}"`);
 process.exit(bad ? 1 : 0);
