@@ -45,7 +45,7 @@ PAT="\\\$HOME/Doc""uments/|Doc""uments/ymirhome|/opt/ym""ir|/ho""me/[A-Za-z0-9_.
 NOT_CODE="--exclude=*.test.* --exclude=*.spec.* --exclude-dir=tests --exclude-dir=test --exclude-dir=__tests__"
 
 TARGETS=("$@")
-[ "${#TARGETS[@]}" -gt 0 ] || TARGETS=("$ROOT/bin" "$ROOT/.agents" "$ROOT/tools" "$ROOT/scripts" "$ROOT/src")
+[ "${#TARGETS[@]}" -gt 0 ] || TARGETS=("$ROOT/bin" "$ROOT/.agents" "$ROOT/tools" "$ROOT/scripts" "$ROOT/src" "$ROOT/.pi")
 
 findings=0
 printf 'defaults-guard[3]{finding,file,line,text}:\n'

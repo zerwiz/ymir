@@ -16,9 +16,35 @@
  */
 
 import { execFileSync } from "node:child_process";
+import { homedir } from "node:os";
 import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
-const ROOT = process.env.YMIR_ROOT || "/home/heimdall/ymir";
+
+// ── resolution: this file must run on ANY seat, so it may not know a machine ──
+// (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/heimdall/ymir`.)
+// This is the JS mirror of `ymir_root_verified` in bin/valknut-load.sh — same contract,
+// same order: $YMIR_ROOT, then the recorded roots, first one that really holds the house.
+// One reader in the shell, one here; they must agree, or a worktree seat reads a dead path.
+function resolveRoot(): string {
+  const fromEnv = process.env.YMIR_ROOT?.trim();
+  if (fromEnv) return fromEnv;
+  const pointer = join(homedir(), ".pi", "agent", "extensions", ".ymir-root");
+  if (existsSync(pointer)) {
+    for (const line of readFileSync(pointer, "utf8").split("\n")) {
+      const root = line.trim();
+      if (!root) continue;
+      if (existsSync(join(root, "bin", "syn-watch-arm.sh"))) return root;
+    }
+  }
+  throw new Error(
+    "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
+    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout — install records " +
+    "the root, and every extension reads it from there.",
+  );
+}
+
+const ROOT = resolveRoot();
 
 type RunResult = { rc: number; out: string };
 
