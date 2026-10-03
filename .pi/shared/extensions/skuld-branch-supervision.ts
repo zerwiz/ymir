@@ -1536,4 +1536,83 @@ ${context.command}
       0,
     );
   });
+
+  // ── plans and tickets, through Skuld ──────────────────────────────────────
+  // The Allfather: *"plans and tickets should be used through Skuld."* Skuld was
+  // the branch surface; these two are the WORK surface — and both are THIN: the
+  // plan ledger is the HOME's, and the queue is derived from it, so neither is
+  // re-implemented here (register §12: one door, one registration).
+  pi.registerTool?.({
+    name: "skuld_plan",
+    description:
+      "What is planned and what state it is in. Reads the canonical plan ledger in the home " +
+      "(svartalfaheim/<realm>/projects/<project>/plans) and the DERIVED work queue — so the answer " +
+      "is the plan, not a copy of it. Asks 'are we building the right thing, and is it open?'",
+    parameters: {
+      type: "object",
+      properties: {
+        topic: { type: "string", description: "a plan number, a slug, or a word; omit for the shelf" },
+        realm: { type: "string" },
+        project: { type: "string" },
+      },
+      required: [],
+    },
+    handler: async (args: any) => {
+      const out: string[] = [];
+      const sh = (process.env.YMIR_PLAN_DIR ||
+        `${process.env.YMIR_HOME || `${process.env.HOME}/Documents/ymirhome`}/svartalfaheim/${args.realm || "whynotproductions"}/projects/${args.project || "ymir"}/plans`);
+      let names: string[] = [];
+      try { names = execFileSync("ls", [sh], { encoding: "utf8" }).split("\n").filter(Boolean); } catch { /* none */ }
+      const t = args.topic ? String(args.topic).toLowerCase() : "";
+      const hit = names.filter((n) => n.endsWith(".md") && (!t || n.toLowerCase().includes(t)))
+        .sort((a, b) => parseInt(a) - parseInt(b));
+      if (!hit.length) return { output: `no plan matches${t ? ` "${t}"` : ""} in ${sh}\nthe shelf holds: ${names.length} files` };
+      out.push(`plans[${hit.length}]{file,headline}:`);
+      for (const f of hit) {
+        const head = (() => { try { return execFileSync("bash", ["-c", `head -3 "$1" | tail -1 | cut -c1-88`, "_", `${sh}/${f}`], { encoding: "utf8" }).trim(); } catch { return ""; } })();
+        out.push(`  "${f}","${head}"`);
+      }
+      out.push("");
+      out.push("state and what is owed: bin/queue.sh --check (the queue is DERIVED from register.md + questions.md)");
+      out.push("why it exists and what it rules: ymir_rule <topic>");
+      return { output: out.join("\n") };
+    },
+  });
+
+  pi.registerTool?.({
+    name: "skuld_ticket",
+    description:
+      "The tickets: what is queued, what is in flight, what was closed and how it ended. Reads the " +
+      "derived work queue and the durable outcome store — so a ticket's state is never guessed " +
+      "from a session.",
+    parameters: {
+      type: "object",
+      properties: {
+        state: { type: "string", description: "blocked | owed | open | done — omit for all" },
+        limit: { type: "number" },
+      },
+      required: [],
+    },
+    handler: async (args: any) => {
+      try {
+        const q = execFileSync("bash", ["${YMIR_ROOT:-/home/heimdall/ymir}/bin/queue.sh", "--check"], { encoding: "utf8" });
+        const lines = q.split("\n").filter((l) => l.startsWith("| "));
+        const want = args.state ? String(args.state).toLowerCase() : null;
+        const head = lines.find((l) => l.startsWith("| # "));
+        const body = lines.filter((l) => l !== head && (!want || l.toLowerCase().includes(want)));
+        const rows = [`tickets[${body.length}]{state,what}:`];
+        for (const l of body.slice(0, Number(args.limit ?? 20))) {
+          const c = l.split("|").map((x) => x.trim());
+          if (c.length < 4) continue;
+          rows.push(`  "${c[3] || c[2]}","${(c[2] || "").slice(0, 78)}"`);
+        }
+        rows.push("");
+        rows.push("derived from register.md + questions.md — a queue that is authored rots.");
+        return { output: rows.join("\n") };
+      } catch (e: any) {
+        return { output: "the queue did not answer: " + String(e?.message ?? e).split("\n")[0] };
+      }
+    },
+  });
+
 }

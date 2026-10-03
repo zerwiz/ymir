@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: Yggdrasil branch to merge (format: feat/eindri-...)
+        description: "Yggdrasil branch to merge (format: feat/eindri-...)"
         required: true
         default: "feat/eindri"
       reviewer:
@@ -42,10 +42,10 @@ jobs:
             --title "Eindri: changes from $BRANCH_NAME" \
             --body "Changes from an Eindri worker on branch $BRANCH_NAME.
 
-- **Reviewed by:** @${REVIEWER}
-- **Gate:** Glitnir human approval required — Mjollnir never force-merges.
+            - **Reviewed by:** @${REVIEWER}
+            - **Gate:** Glitnir human approval required — Mjollnir never force-merges.
 
-_Yggdrasil worktree: .yggdrasil/$BRANCH_NAME_"
+            _Yggdrasil worktree: .yggdrasil/$BRANCH_NAME_"
             --base main \
             --head "$BRANCH_NAME" \
             --label "eindri" \

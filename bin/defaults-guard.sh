@@ -80,8 +80,34 @@ fi
 # The resolver must actually be CALLED.
 printf '\ndefaults-guard[2]{finding,file,why}:\n'
 unresolved=0
+# A COMMENT IS NOT CODE. Widening this walk to tools/ and src/ (2026-10-02) surfaced
+# nine findings, and every one was a `$YMIR_HOME` inside a `#`/`//` comment or a Python
+# docstring — the ward was grepping prose as though it were an instruction. Comments are
+# stripped before the question is asked, so a file that only *talks about* the home is
+# clean, and a file that *reads* it without resolving it is still refused.
+code_of() {
+  # 1. line comments (shell / python / js / ts), then 2. triple-quoted blocks (python
+  #    docstrings). Everything else is code and is printed. The first version of this
+  #    stripper had NO else branch for a line with two ordinary quotes, so it silently
+  #    ate every line containing `X="$SOMETHING"` — it hid a REAL offender while looking
+  #    like it worked. A filter that drops what it cannot classify is worse than none.
+  grep -vE '^[[:space:]]*(#|//|\*|/\*)' "$1" 2>/dev/null | awk '
+    function flush(rest,   pre) {
+      pre = substr(rest, 1, RSTART - 1)
+      if (substr(rest, RSTART + 3) ~ /"""/) print pre
+      else { print pre; inq = 1 }
+    }
+    BEGIN { inq = 0; q = "" }
+    {
+      if (inq) { if (index($0, q)) inq = 0; next }
+      rest = $0
+      if (match(rest, /"""/)) { flush(rest); q = "\"\"\""; next }
+      if (match(rest, /\x27\x27\x27/)) { flush(rest); q = "\x27\x27\x27"; next }
+      print
+    }'
+}
 while IFS= read -r f; do
-  grep -qE '\$\{?YMIR_HOME' "$f" 2>/dev/null || continue
+  code_of "$f" | grep -qE '\$\{?YMIR_HOME' || continue
   grep -q 'ymir_home_root' "$f" 2>/dev/null && continue
   # A REAL assignment resolves it by hand and is allowed (the migrations set the old name
   # on purpose). A SELF-assignment is a no-op from the literal pass and is not an answer.
@@ -91,8 +117,9 @@ while IFS= read -r f; do
   fi
   printf '  "uses the home, never resolves it","%s","call ymir_home_root (bin/hoard-lib.sh), or assign the home deliberately"\n' "${f#"$ROOT"/}"
   unresolved=$((unresolved + 1))
-done < <(find "$ROOT/bin" "$ROOT/.agents" -type f \( -name '*.sh' -o -name '*.bash' \) \
-           -not -path '*/node_modules/*' -not -path '*/.git/*' 2>/dev/null | sort)
+done < <(find "${TARGETS[@]}" -type f \( -name '*.sh' -o -name '*.bash' -o -name '*.py' \
+           -o -name '*.ts' -o -name '*.mjs' -o -name '*.js' \) \
+           -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/target/*' 2>/dev/null | sort)
 
 if [ "$unresolved" -eq 0 ]; then
   printf '  "none","",""\n'
