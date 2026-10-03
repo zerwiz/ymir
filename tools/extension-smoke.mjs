@@ -12,6 +12,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const targets = process.argv.slice(2);
 const names = targets.length ? targets : [
@@ -28,9 +29,18 @@ for (const name of names) {
   try {
     // Resolve the shelf; never name the machine (Rule 07). $YMIR_ROOT, else the pointer
     // bin/valknut-load.sh records in ~/.pi/agent/extensions/.ymir-root.
+    // Three doors, in order — and the LAST one can never be wrong: this file lives INSIDE the
+    // checkout, so the shelf is a fixed climb from here. CI has no pointer and no env; it only
+    // has the checkout. Without this third door the gate failed in CI for exactly the reason it
+    // had passed everywhere else: assuming a machine that may not be the one running.
+    const checkout = fileURLToPath(new URL("..", import.meta.url));
+    const pointer = join(homedir(), ".pi", "agent", "extensions", ".ymir-root");
     const root = process.env.YMIR_ROOT?.trim()
-      || (readFileSync(join(homedir(), ".pi", "agent", "extensions", ".ymir-root"), "utf8")
-            .split("\n").map((l) => l.trim()).find((l) => l && existsSync(join(l, "bin", "syn-watch-arm.sh"))) || "");
+      || (existsSync(pointer)
+          ? readFileSync(pointer, "utf8").split("\n").map((l) => l.trim())
+              .find((l) => l && existsSync(join(l, "bin", "syn-watch-arm.sh")))
+          : "")
+      || (existsSync(join(checkout, ".pi", "shared", "extensions")) ? checkout : "");
     if (!root) {
       console.log(`  ${name.padEnd(28)} NO ROOT — set YMIR_ROOT or run bin/valknut-load.sh --all --global`);
       bad++;
@@ -43,6 +53,14 @@ for (const name of names) {
     // bare node, run from the repo, cannot. That is a limitation of THIS harness, not a defect
     // in the extension — so it is SKIPPED and said so, rather than reported as broken, because a
     // gate that cries wolf gets ignored and then misses the next real one.
+    // Same rule at LOAD time: several extensions resolve the root at module top-level, so on a
+    // checkout with no vault the refusal happens before any tool exists. That is the extension
+    // being CORRECT — it refuses to guess where the house is — and it must not be reported as a
+    // break, or the gate teaches people to ignore it.
+    if (msg.includes("YMIR_ROOT is not set") || msg.includes("vault path is empty")) {
+      skipped.push(`${name} (no root on this machine — refuses to guess at load, which is correct)`);
+      continue;
+    }
     if (msg.includes("Cannot find package '@earendil-works/")) {
       skipped.push(`${name} (needs Pi's own packages — verified by loading in Pi, not here)`);
       continue;
@@ -82,7 +100,15 @@ for (const name of names) {
       // Throwing is the DOCUMENTED way to report failure, so a throw is not automatically a
       // broken tool — but a throw on empty arguments for a tool that should describe its own
       // requirements is worth seeing.
-      console.log(`  ${t.name.padEnd(28)} threw: ${String(e.message).slice(0, 58)}`);
+      const msg = String(e.message);
+    // An extension that REFUSES because there is no resolvable root is not broken — it is
+    // correct. A CI checkout has no vault and no recorded root, so half the house honestly
+    // declines to guess. Reporting that as a failure would train everyone to ignore the gate.
+    if (msg.includes("YMIR_ROOT is not set") || msg.includes("vault path is empty")) {
+      skipped.push(`${t.name} (no root on this machine — it refuses to guess, which is correct)`);
+      continue;
+    }
+    console.log(`  ${t.name.padEnd(28)} threw: ${msg.slice(0, 58)}`);
     }
   }
 }
