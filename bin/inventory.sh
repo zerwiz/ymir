@@ -57,15 +57,21 @@ def first_sentence(text, limit=140):
     return "(no header)"
 
 # ---- corpus: everything that can prove a file is alive -----------------------
-corpus_paths = []
-for root in ("agents", "apps", "docs", "src", "pi", "tools", "RULES", "data", ".github"):
-    d = ROOT / root
-    if not d.exists(): continue
-    for dp, dn, fn in os.walk(d):
-        dn[:] = [x for x in dn if x not in ("node_modules", ".git", "dist", ".next", "__pycache__")]
-        for f in fn:
-            if f.endswith((".sh", ".md", ".ts", ".tsx", ".py", ".yaml", ".yml", ".json", ".toml")):
-                corpus_paths.append(Path(dp) / f)
+# TWO bugs lived here (2026-10-02), and CI caught the second:
+#
+#   1. The roots were `agents` and `pi` — DIRECTORIES THAT DO NOT EXIST. The real shelves
+#      are `.agents` (723 tracked files) and `.pi` (57), so the single largest body of
+#      proof-of-alive evidence in the house was silently excluded from every verdict.
+#   2. A `find`/`os.walk` corpus includes gitIGNORED files, so a machine with local state
+#      (`.agents/state/`, `.agents/skills-local/`, `.opencode/node_modules/`) renders a
+#      DIFFERENT index than a fresh checkout. CI then reads the committed index, finds it
+#      stale, and fails — correctly — for a difference no reviewer can see in the diff.
+#
+# So the corpus is now `git ls-files`: TRACKED files only. A generated index must be
+# reproducible from a clean checkout by construction, or its `--check` is a lottery.
+TEXTY = (".sh", ".md", ".ts", ".tsx", ".py", ".yaml", ".yml", ".json", ".toml", ".mjs", ".js")
+tracked = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True).stdout.split()
+corpus_paths = [ROOT / p for p in tracked if p.endswith(TEXTY)]
 corpus = []
 for p in corpus_paths:
     corpus.append(read(p))
