@@ -40,7 +40,7 @@ bin[400]{file,does,kind,verdict,disposition,callers,lines}:
   "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,128
   "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","wired","keep",6,1862
   "calendar-ask.sh","calendar-ask.sh — the shell door onto Mánagandr, the read calendar.","tool","tested","keep",1,118
-  "capabilities.sh","capabilities.sh — THE register: what Ymir can do, and the door a caller should use.","tool","wired","keep",4,177
+  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",4,183
   "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,64
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",2,114
   "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",1,182
