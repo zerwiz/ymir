@@ -14,7 +14,7 @@
 #     test proved the bug rather than the tool
 #
 # So this gate checks the SEAM — the shape Pi calls through — and not the file's syntax.
-# Reference: $YMIR_HOME/hodd/docs/developer-setup/pi-extension-api.md
+# Reference: the operator vault, hodd/docs/developer-setup/pi-extension-api.md
 #            https://pi.dev/docs/latest/extensions
 #            ~/.npm-global/.../pi-coding-agent/examples/extensions/hello.ts
 #
@@ -97,7 +97,7 @@ extension-api-check: $bad extension(s) do not speak Pi's tool API.
   then fails on first use — which is what happened to every Ymir door on 2026-10-03.
 
   The whole reference, quoted from the installed package:
-    \$YMIR_HOME/hodd/docs/developer-setup/pi-extension-api.md
+    the operator vault: hodd/docs/developer-setup/pi-extension-api.md
     https://pi.dev/docs/latest/extensions
     ~/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/examples/extensions/hello.ts
 MSG
