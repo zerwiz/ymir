@@ -51,6 +51,29 @@ const ROOT_BIN = resolveRoot();
 const HOME = resolveHome();
 
 
+// The shared door-runner. It travelled with the TOOL BLOCKS but not with the file, so every
+// handler here would have thrown `run is not defined` at first call — and the smoke test that
+// moved these tools only REGISTERED them. 2026-10-03: **a tool that registers is not a tool that
+// runs** (the same lesson as 0.1.95's "deployed is not loadable", one level up).
+// The four grades of document freshness (moved with ymir_dellingr from ymirhome; like `run`,
+// it lived inside the function and did not travel with the tool block — so the tool threw
+// "GRADES is not defined" on its first real call).
+const GRADES = [
+  { g: "safn",  mean: "archive", why: "moved here on purpose; read, never edited" },
+  { g: "forn",  mean: "old",     why: "superseded by a newer doc, or untouched a long while" },
+  { g: "eldri", mean: "aging",   why: "still referenced, but not recently changed" },
+  { g: "nýr",   mean: "fresh",   why: "changed recently, and nothing supersedes it" },
+];
+
+function run(cmd: string, args: string[], cwd?: string): string {
+  return execFileSync(cmd, args, {
+    cwd,
+    encoding: "utf8",
+    maxBuffer: 8 * 1024 * 1024,
+    env: { ...process.env, YMIR_HOME: HOME },
+  }).trim();
+}
+
 export default function elder(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_note",
@@ -140,6 +163,14 @@ export default function elder(pi: ExtensionAPI) {
       required: ["paths", "message"],
     },
     handler: async (args: any) => {
+      // A tool that throws on a missing argument teaches the caller nothing. `required` is a
+      // hint to a well-behaved model, not a guarantee — so say what is missing instead.
+      if (!Array.isArray(args?.paths) || !args.paths.length) {
+        return { output: "ymir_push needs `paths` — an array of home-relative paths to stage. Never stage everything: name the files." };
+      }
+      if (!String(args?.message ?? "").trim()) {
+        return { output: "ymir_push needs a `message` — an imperative subject line and a paragraph of what and why." };
+      }
       const paths = (args.paths as string[]).map(String);
       const lines: string[] = [];
       try {
@@ -186,7 +217,10 @@ export default function elder(pi: ExtensionAPI) {
       const f = `${HOME}/hodd/memory/daily/${day}.md`;
       try {
         run("mkdir", ["-p", f.slice(0, f.lastIndexOf("/"))], HOME);
-        if (!args.note) return { output: run("cat", [f], HOME) || `no entry yet for ${day}` };
+        if (!args.note) {
+          if (!existsSync(f)) return { output: `no entry yet for ${day} — nothing has been written for that day` };
+          return { output: run("cat", [f], HOME) || `no entry yet for ${day}` };
+        }
         run("bash", ["-c", `printf '%s\n' "$2" >> "$1"`, "_", f, `- ${new Date().toISOString().slice(11, 16)} ${String(args.note)}`], HOME);
         return { output: `appended to hodd/memory/daily/${day}.md — next: ymir_push that path by name.` };
       } catch (e: any) {
