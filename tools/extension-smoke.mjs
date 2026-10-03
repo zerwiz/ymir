@@ -9,6 +9,10 @@
 // `content` — because an empty result reaches the model as a silent success.
 //
 //   node --experimental-strip-types tools/extension-smoke.mjs [extension ...]
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
 const targets = process.argv.slice(2);
 const names = targets.length ? targets : [
   "elder", "ymirhome", "managandr", "eir", "opendesign", "odrerir",
@@ -22,7 +26,17 @@ const skipped = [];
 for (const name of names) {
   let mod;
   try {
-    mod = await import(`/home/heimdall/ymir/.pi/shared/extensions/${name}.ts`);
+    // Resolve the shelf; never name the machine (Rule 07). $YMIR_ROOT, else the pointer
+    // bin/valknut-load.sh records in ~/.pi/agent/extensions/.ymir-root.
+    const root = process.env.YMIR_ROOT?.trim()
+      || (readFileSync(join(homedir(), ".pi", "agent", "extensions", ".ymir-root"), "utf8")
+            .split("\n").map((l) => l.trim()).find((l) => l && existsSync(join(l, "bin", "syn-watch-arm.sh"))) || "");
+    if (!root) {
+      console.log(`  ${name.padEnd(28)} NO ROOT — set YMIR_ROOT or run bin/valknut-load.sh --all --global`);
+      bad++;
+      continue;
+    }
+    mod = await import(join(root, ".pi", "shared", "extensions", `${name}.ts`));
   } catch (e) {
     const msg = String(e.message);
     // Pi resolves its OWN packages (@earendil-works/pi-ai, pi-tui) from the global install;
