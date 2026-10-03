@@ -1,3 +1,30 @@
+
+// The vault, resolved by the house's own resolver — never `$HOME/Documents/ymirhome`,
+// which is this seat's layout and not a rule (Rule 04; 0.1.53 lost a push to that guess,
+// and the ward now scans .pi/ so a guess here fails the build).
+function resolveRoot(): string {
+  const fromEnv = process.env.YMIR_ROOT?.trim();
+  if (fromEnv) return fromEnv;
+  const pointer = join(homedir(), ".pi", "agent", "extensions", ".ymir-root");
+  if (existsSync(pointer)) {
+    for (const line of readFileSync(pointer, "utf8").split("\n")) {
+      const root = line.trim();
+      if (root && existsSync(join(root, "bin", "syn-watch-arm.sh"))) return root;
+    }
+  }
+  throw new Error("YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root");
+}
+
+function resolveHome(): string {
+  const fromEnv = process.env.YMIR_HOME?.trim();
+  if (fromEnv) return fromEnv;
+  const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
+    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
+  }).trim();
+  if (!v) throw new Error("the vault path is empty — run `bin/hodd.sh path` and read what it says");
+  return v;
+}
+
 // Brokk primary watcher bridge for Pi.
 //
 // Session-generation ownership (stated once here):
@@ -11,7 +38,7 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, sep } from "node:path";
+import { dirname, isAbsolute, sep, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import { Box, Container, Text, type Component } from "@earendil-works/pi-tui";
@@ -105,7 +132,7 @@ const ymirHome = (() => {
   } catch {
     // no recorded choice — fall back to the documented default
   }
-  return `${process.env.HOME || root}/Documents/ymirhome`;
+  return resolveHome();
 })();
 const state = process.env.BROKK_STATE_OVERRIDE || `${ymirHome}/state`;
 const config = process.env.BROKK_CONFIG_OVERRIDE || `${fmHome}/config`;

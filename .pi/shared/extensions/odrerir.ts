@@ -17,9 +17,49 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { execFileSync } from "node:child_process";
+import { homedir } from "node:os";
 import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
-const ROOT = process.env.YMIR_ROOT || "/home/heimdall/ymir";
+
+// ── resolution: this file must run on ANY seat, so it may not know a machine ──
+// (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/heimdall/ymir`.)
+// This is the JS mirror of `ymir_root_verified` in bin/valknut-load.sh — same contract,
+// same order: $YMIR_ROOT, then the recorded roots, first one that really holds the house.
+// One reader in the shell, one here; they must agree, or a worktree seat reads a dead path.
+function resolveRoot(): string {
+  const fromEnv = process.env.YMIR_ROOT?.trim();
+  if (fromEnv) return fromEnv;
+  const pointer = join(homedir(), ".pi", "agent", "extensions", ".ymir-root");
+  if (existsSync(pointer)) {
+    for (const line of readFileSync(pointer, "utf8").split("\n")) {
+      const root = line.trim();
+      if (!root) continue;
+      if (existsSync(join(root, "bin", "syn-watch-arm.sh"))) return root;
+    }
+  }
+  throw new Error(
+    "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
+    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout — install records " +
+    "the root, and every extension reads it from there.",
+  );
+}
+
+
+// The vault, resolved by the house's own resolver — never `$HOME/Documents/ymirhome`,
+// which is this seat's layout and not a rule (Rule 04; 0.1.53 lost a push to that guess,
+// and the ward now scans .pi/ so a guess here fails the build).
+function resolveHome(): string {
+  const fromEnv = process.env.YMIR_HOME?.trim();
+  if (fromEnv) return fromEnv;
+  const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
+    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
+  }).trim();
+  if (!v) throw new Error("the vault path is empty — run `bin/hodd.sh path` and read what it says");
+  return v;
+}
+
+const ROOT = resolveRoot();
 
 function run(args: string[]): string {
   try {
@@ -79,7 +119,7 @@ export default function odrerir(pi: ExtensionAPI) {
       }
 
       // 5 · the last runes, carved
-      const runes = `${process.env.YMIR_HOME || `${process.env.HOME}/Documents/ymirhome`}/hodd/memory/runes_audit.md`;
+      const runes = `${resolveHome()}/hodd/memory/runes_audit.md`;
       if (!existsSync(runes)) missing("runes", "no ledger at " + runes);
       else {
         const lines = readFileSync(runes, "utf8").trim().split("\n");
