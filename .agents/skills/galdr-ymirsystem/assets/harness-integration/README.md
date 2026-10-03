@@ -1120,3 +1120,52 @@ Two tools, and **only** its own (register §12: one tool, one registration — t
 `bash .agents/tests/rules-door.test.sh` → **7 passed, 0 failed**, including the two that matter most:
 a topic no law covers **says so and invents nothing**, and the tool set is **its own two** — no
 tool belongs to two doors.
+
+---
+
+## 2026-10-03 — the extension audit, and what it changed about the surfaces
+
+The audit asked one measured question: **which `bin/` door does each tool actually reach?**
+`31 of 392` — and that is the *design*, not a defect. Wrapping every door would break the law
+that made this house work: **one capability, ONE registered tool**. The test is *"would I, mid-
+conversation, ask for this?"* A cron row cannot call an MCP tool and a human types a door, so
+those stay doors.
+
+### What moved
+
+| change | why |
+|---|---|
+| `ymirhome` 17 → **11** tools | placement and reading is one job; writing and records is another |
+| **`elder.ts`** (new) — `ymir_note · ymir_plan · ymir_push · ymir_daily · ymir_dellingr` | Elder is the records council: he writes the register, the ledger and the daily record. A move, not a rewrite — same doors, same behaviour |
+| **`managandr.ts`** (new) — `ymir_calendar` | the calendar is **not a home concern**. It reached `ymirhome` because that door already knew how to reach the vault |
+| **`eir.ts`** (new) — `ymir_heal · ymir_update` | *"is the house healthy"* and *"renew Brokk"* had no tool at all. Two tools, not one `ymir_maintain`: a healer and an updater are two decisions |
+| **`opendesign.ts`** (new) — `ymir_studio` | the studio's door existed with no tool. **Never Maestro** — this one never touches :7860 |
+
+### Three bugs the audit found by looking, not by reading
+
+1. **A literal that bash never expands.** The calendar tool passed
+   `"${YMIR_HOME:-$HOME/Documents/ymirhome}/bin/calendar-ask.sh"` to `bash` as an *argument*.
+   Bash does not expand variables inside an argument it was handed, so **that tool had never once
+   reached the calendar on any seat** — and nothing noticed, because a broken tool and an absent
+   tool look identical from outside.
+2. **Five extensions carried a hardcoded `/home/heimdall/ymir`.** Rule 07, introduced by me. The
+   contract now: `YMIR_ROOT`, else the root `bin/valknut-load.sh` records in
+   `~/.pi/agent/extensions/.ymir-root` — **the first recorded root that really holds
+   `bin/syn-watch-arm.sh`**, else a loud failure naming the fix. Note the pointer lives *inside*
+   `extensions/`, and a root may be a **list**: a worktree seat is recorded beside the main one,
+   and only the entry that holds the house is used.
+3. **`join` imported from `node:fs`.** A type-stripping parser and esbuild both accept it; only
+   the runtime refuses. It is in `node:path`. Found by a smoke test that *loads* each extension —
+   nine files, none of which a parse-only check would have caught.
+
+### And the ward now reads `.pi/`
+
+`defaults-guard.sh` scanned `bin/ .agents/ tools/ scripts/ src/` and **not** `.pi/` — which is
+where every one of those bugs lived, in runtime code, unguarded. Adding `.pi` surfaced **five more
+real findings on the first run** (three `${process.env.HOME}/Documents/ymirhome` guesses, the
+unexpanded literal above, and a `$YMIR_HOME` guess). All fixed; the ward is clean on `.pi/`.
+
+**`deployed is not loadable` (0.1.95) and `installed is not resolvable` (today) are the same
+lesson:** a seat that copied a file has not proved it can run it, and a path that resolved on my
+laptop has not proved it resolves on yours. Both checks now exist, and both were proved by making
+them fail on purpose first.

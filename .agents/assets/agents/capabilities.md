@@ -15,7 +15,7 @@ capabilities[5]{surface,count}:
   "shell doors (bin/*.sh)",392
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",27
-  "Pi extension tools",33
+  "Pi extension tools",36
   "generated","2026-10-03"
 
 | door | the job | verdict | tech decision |
