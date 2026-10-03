@@ -135,6 +135,14 @@ export default function elder(pi: ExtensionAPI) {
       required: ["slug", "title"],
     },
     execute: async (_toolCallId: string, args: any) => {
+      // `required` is a HINT to a well-behaved model, not a guarantee — and this tool WRITES.
+      // Called with no arguments it created 28 junk plans in the operator's private vault, each
+      // titled "smoke". A writing tool must refuse what it cannot fill in.
+      if (!String(args?.slug ?? "").trim() || !String(args?.title ?? "").trim()) {
+        return piOut("ymir_plan needs `slug` and `title`. This tool WRITES a file into the " +
+          "plan ledger, so it refuses to guess: an empty title once produced 28 files named " +
+          "`NN-undefined.md` in the operator's vault.");
+      }
       const realm = String(args.realm || "whynotproductions");
       const project = String(args.project || "ymir");
       const dir = `${HOME}/svartalfaheim/${realm}/projects/${project}/plans`;
@@ -143,7 +151,7 @@ export default function elder(pi: ExtensionAPI) {
         const next = (parseInt(nums || "0", 10) || 0) + 1;
         const nn = String(next).padStart(2, "0");
         const file = `${dir}/${nn}-${String(args.slug)}.md`;
-        run("bash", ["-c", `printf '# Plan %s — %s\n\n**Opened %s.**\n' "$2" "$3" "$(date -u +%%Y-%%m-%%d)" > "$1"`, "_", file, nn, String(args.title)], HOME);
+        run("bash", ["-c", `printf '# Plan %s — %s\n\n**Opened %s.**\n' "$2" "$3" "$(date -u +%Y-%m-%d)" > "$1"`, "_", file, nn, String(args.title)], HOME);
         return piOut(`created ${file}\n` +
             `  number: ${nn} (after the index's highest)\n` +
             `  next: add the README index row, then ymir_push that ONE path by name.`);
