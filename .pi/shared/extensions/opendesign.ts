@@ -33,6 +33,16 @@ function resolveRoot(): string {
   );
 }
 
+
+// Pi 1.0 tool contract. The model-facing text is `content`; THROWING is how a tool reports
+// failure. Named `piOut`, not `out`, because several handlers declare a LOCAL `const out` —
+// and a module helper with a one-word name gets shadowed by them (0.1.100: "out is not a
+// function" in seven tools, all the same cause).
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function opendesign(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_studio",
@@ -49,7 +59,7 @@ export default function opendesign(pi: ExtensionAPI) {
       },
       required: [],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const action = String(args?.action ?? "status");
       try {
         const out = execFileSync("bash", [join(resolveRoot(), "bin", "opendesign.sh"), action], {
@@ -57,14 +67,11 @@ export default function opendesign(pi: ExtensionAPI) {
           timeout: 120_000,
           stdio: ["ignore", "pipe", "pipe"],
         }).trim();
-        return { output: `opendesign[2]{action,verdict}:\n  "${action}","${out ? "done" : "no answer"}"\n\n${out}` };
+        return piOut(`opendesign[2]{action,verdict}:\n  "${action}","${out ? "done" : "no answer"}"\n\n${out}`);
       } catch (e: any) {
         const detail = String(e?.stderr || e?.message || e).trim().split("\n").slice(0, 4).join("\n");
-        return {
-          output:
-            `opendesign[2]{action,verdict}:\n  "${action}","failed (exit ${e?.status ?? 1})"\n\n${detail}\n` +
-            `  note: the studio is a CONTAINER. If docker is not running, that is the answer — this door does not start docker for you.`,
-        };
+        return piOut(`opendesign[2]{action,verdict}:\n  "${action}","failed (exit ${e?.status ?? 1})"\n\n${detail}\n` +
+            `  note: the studio is a CONTAINER. If docker is not running, that is the answer — this door does not start docker for you.`);
       }
     },
   });

@@ -79,7 +79,17 @@ for f in ("AGENTS.md", "README.md", "opencode.json", "package.json"):
     corpus.append(read(ROOT / f))
 CORPUS = "\n".join(corpus)
 
-TESTS = "\n".join(read(p) for p in (ROOT / ".agents" / "tests").glob("*") if p.is_file()) if (ROOT / ".agents" / "tests").exists() else ""
+# A test is a test wherever it lives. This used to read ONLY `.agents/tests/`, so 73 doors
+# that `src/ymir_runtime/tests/` and the `.agents/backend/fm-*.test.sh` suites really do
+# exercise were reported untested — which is how a second register could claim 64 of them
+# were undecided while the first said they were fine.
+TEST_ROOTS = (".agents/tests", "src", "tools", ".agents/backend", "apps", "packages")
+TESTS = "\n".join(
+    read(p)
+    for root in TEST_ROOTS
+    for p in (ROOT / root).rglob("*")
+    if p.is_file() and (".test." in p.name or "/tests/" in p.as_posix() or p.name.endswith("_test.py"))
+) or ""
 
 PY_MODULES = {p.stem for p in SRC.rglob("*.py")} if SRC.exists() else set()
 PY_MODULE_PATHS = {p.stem: p.relative_to(ROOT).as_posix() for p in SRC.rglob("*.py")} if SRC.exists() else {}
@@ -111,7 +121,16 @@ def analyse(path: Path, shelf: str):
     outside = name in CORPUS
     tested = name in TESTS
 
-    if name.startswith("fm-"):
+    # A NAME is not a verdict. This shelf was `if name.startswith("fm-"): provenance`,
+    # which overrode every piece of evidence: 174 files were filed as inert vendored
+    # reference when 162 of them are exercised by a test and 11 more are called by a door,
+    # and NOT ONE was unreferenced. Evidence first, provenance last — provenance then means
+    # what it says: inert, and only because nothing exercises it.
+    if tested:
+        verdict, disp = "tested", "keep"
+    elif called_by:
+        verdict, disp = "wired", "keep"
+    elif name.startswith("fm-"):
         verdict = "provenance"
         disp = "provenance"
     elif tested:

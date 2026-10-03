@@ -92,6 +92,16 @@ function readErrand(id: string): string {
   return out.join("\n");
 }
 
+
+// Pi 1.0 tool contract. The model-facing text is `content`; THROWING is how a tool reports
+// failure. Named `piOut`, not `out`, because several handlers declare a LOCAL `const out` —
+// and a module helper with a one-word name gets shadowed by them (0.1.100: "out is not a
+// function" in seven tools, all the same cause).
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function eindri(pi: any) {
   pi.registerTool({
     name: "ymir_errand",
@@ -115,30 +125,27 @@ export default function eindri(pi: any) {
       },
       required: ["action", "id"],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const id = String(args.id);
       const a = String(args.action);
       switch (a) {
         case "read":
-          return { output: readErrand(id) };
+          return piOut(readErrand(id));
 
         case "start": {
-          if (!args.project) return { output: "start needs `project` (the repo root)." };
+          if (!args.project) return piOut("start needs `project` (the repo root).");
           const r = run("bash", [`${ROOT}/bin/einherjar-spawn.sh`, id, String(args.project),
             "--mode", String(args.mode || "direct-PR"),
             ...(args.harness ? ["--harness", String(args.harness)] : []),
             ...(args.model ? ["--model", String(args.model)] : [])], false);
-          return {
-            output:
-              `${id}: spawn rc=${r.rc}\n${r.out || "(see state/" + id + ".status)"}\n` +
-              `one spawn path only - einherjar-spawn.sh. Start here again and you will get a refusal, which is correct.`,
-          };
+          return piOut(`${id}: spawn rc=${r.rc}\n${r.out || "(see state/" + id + ".status)"}\n` +
+              `one spawn path only - einherjar-spawn.sh. Start here again and you will get a refusal, which is correct.`);
         }
 
         case "steer": {
-          if (!args.message) return { output: "steer needs `message` (one line)." };
+          if (!args.message) return piOut("steer needs `message` (one line).");
           const r = run("bash", [`${ROOT}/bin/eindri-send.sh`, id, String(args.message)], false);
-          return { output: `steered ${id}: rc=${r.rc}\n${r.out || ""}` };
+          return piOut(`steered ${id}: rc=${r.rc}\n${r.out || ""}`);
         }
 
         case "close": {
@@ -147,16 +154,13 @@ export default function eindri(pi: any) {
             ...(args.note ? ["--line", String(args.note)] : [])], false);
           // and stop the seat, so a closed errand leaves nothing running
           const x = run("bash", [`${ROOT}/bin/eindri-control.sh`, "exit", id], false);
-          return {
-            output:
-              `closed ${id} as ${term}\n  claim rc=${c.rc} ${c.out.split("\n").slice(0, 2).join(" · ")}\n` +
+          return piOut(`closed ${id} as ${term}\n  claim rc=${c.rc} ${c.out.split("\n").slice(0, 2).join(" · ")}\n` +
               `  seat  rc=${x.rc} ${x.out.split("\n").slice(0, 1).join("")}\n` +
-              `  a closed errand leaves no running seat and one durable record.`,
-          };
+              `  a closed errand leaves no running seat and one durable record.`);
         }
 
         default:
-          return { output: `unknown action "${a}" — use start, read, steer or close.` };
+          return piOut(`unknown action "${a}" — use start, read, steer or close.`);
       }
     },
   });
