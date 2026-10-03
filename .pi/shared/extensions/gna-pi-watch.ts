@@ -420,6 +420,15 @@ const cleanupOnProcessExit = () => {
 };
 process.once("exit", cleanupOnProcessExit);
 
+
+// Pi 1.0's tool contract: the model-facing text is `content`, and THROWING is how a tool
+// reports failure — returning an object does not mark it as an error. `output:` reached the
+// model as an empty success while the harness called a key that did not exist.
+const out = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function (pi: ExtensionAPI) {
   let generation = createGeneration();
   activateGeneration(generation);

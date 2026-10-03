@@ -49,6 +49,16 @@ function ask(args: string[]): string {
   }).trim();
 }
 
+
+// Pi 1.0 tool contract. The model-facing text is `content`; THROWING is how a tool reports
+// failure. Named `piOut`, not `out`, because several handlers declare a LOCAL `const out` —
+// and a module helper with a one-word name gets shadowed by them (0.1.100: "out is not a
+// function" in seven tools, all the same cause).
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function managandr(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_calendar",
@@ -71,7 +81,7 @@ export default function managandr(pi: ExtensionAPI) {
       },
       required: [],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const action = String(args?.action ?? "what");
       const argv = [action];
       if (action === "what" && args?.at) argv.push("at", String(args.at));
@@ -79,16 +89,13 @@ export default function managandr(pi: ExtensionAPI) {
       try {
         const out = ask(argv);
         if (!out) {
-          return {
-            output:
-              "the calendar answers nothing yet — state is probably `not granted`, or unknown. " +
-              "It is never silently empty: ask `probe` to see which.",
-          };
+          return piOut("the calendar answers nothing yet — state is probably `not granted`, or unknown. " +
+              "It is never silently empty: ask `probe` to see which.");
         }
-        return { output: out };
+        return piOut(out);
       } catch (e: any) {
         const msg = String(e?.stderr || e?.message || e).trim().split("\n")[0];
-        return { output: `Mánagandr is not answering: ${msg}\n  check: bin/calendar-ask.sh probe` };
+        return piOut(`Mánagandr is not answering: ${msg}\n  check: bin/calendar-ask.sh probe`);
       }
     },
   });

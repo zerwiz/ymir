@@ -421,6 +421,15 @@ function collectMainDialog(sessionManager: ReadonlyEntries, collection: MirrorCo
   return items;
 }
 
+
+// Pi 1.0's tool contract: the model-facing text is `content`, and THROWING is how a tool
+// reports failure — returning an object does not mark it as an error. `output:` reached the
+// model as an empty success while the harness called a key that did not exist.
+const piOut = (text: unknown): { content: { type: "text"; text: string }[]; details: undefined } => ({
+  content: [{ type: "text", text: String(text) }],
+  details: undefined,
+});
+
 export default function (pi: ExtensionAPI) {
   let branch: AgentSession | null = null;
   let branchBroken = "";
@@ -1595,7 +1604,7 @@ pi.registerTool?.({
       },
       required: [],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       const out: string[] = [];
       const sh = (process.env.YMIR_PLAN_DIR ||
         `${resolveHome()}/svartalfaheim/${args.realm || "whynotproductions"}/projects/${args.project || "ymir"}/plans`);
@@ -1604,7 +1613,7 @@ pi.registerTool?.({
       const t = args.topic ? String(args.topic).toLowerCase() : "";
       const hit = names.filter((n) => n.endsWith(".md") && (!t || n.toLowerCase().includes(t)))
         .sort((a, b) => parseInt(a) - parseInt(b));
-      if (!hit.length) return { output: `no plan matches${t ? ` "${t}"` : ""} in ${sh}\nthe shelf holds: ${names.length} files` };
+      if (!hit.length) return piOut(`no plan matches${t ? ` "${t}"` : ""} in ${sh}\nthe shelf holds: ${names.length} files`);
       out.push(`plans[${hit.length}]{file,headline}:`);
       for (const f of hit) {
         const head = (() => { try { return execFileSync("bash", ["-c", `head -3 "$1" | tail -1 | cut -c1-88`, "_", `${sh}/${f}`], { encoding: "utf8" }).trim(); } catch { return ""; } })();
@@ -1613,7 +1622,7 @@ pi.registerTool?.({
       out.push("");
       out.push("state and what is owed: bin/queue.sh --check (the queue is DERIVED from register.md + questions.md)");
       out.push("why it exists and what it rules: ymir_rule <topic>");
-      return { output: out.join("\n") };
+      return piOut(out.join("\n"));
     },
   });
 
@@ -1631,7 +1640,7 @@ pi.registerTool?.({
       },
       required: [],
     },
-    handler: async (args: any) => {
+    execute: async (_toolCallId: string, args: any) => {
       try {
         const q = execFileSync("bash", [join(resolveRoot(), "bin", "queue.sh"), "--check"], { encoding: "utf8" });
         const lines = q.split("\n").filter((l) => l.startsWith("| "));
@@ -1646,9 +1655,9 @@ pi.registerTool?.({
         }
         rows.push("");
         rows.push("derived from register.md + questions.md — a queue that is authored rots.");
-        return { output: rows.join("\n") };
+        return piOut(rows.join("\n"));
       } catch (e: any) {
-        return { output: "the queue did not answer: " + String(e?.message ?? e).split("\n")[0] };
+        return piOut("the queue did not answer: " + String(e?.message ?? e).split("\n")[0]);
       }
     },
   });

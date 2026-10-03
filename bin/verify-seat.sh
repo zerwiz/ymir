@@ -69,10 +69,31 @@ if [ -z "$STATE" ]; then
   ( . "$ROOT/bin/hoard-lib.sh" 2>/dev/null && hoard_state_dir STATE ) || true
 fi
 STATE="${STATE:-$ROOT/state}"
+# THE CONDITION, NOT A FILENAME. This asked for `.pi-gna-watch-loaded` — a marker NOTHING in
+# the house writes — while the watcher writes `.watch.heartbeat` with a unix timestamp, and
+# that heartbeat was CURRENT to the second when this was found. So the seat reported the watch
+# MISSING while it was beating. Sixth in this family: a gate asserting a named artefact
+# instead of the thing the artefact stands for. Ask whether the watch is ALIVE:
+#   fresh heartbeat  (now - value < WATCH_STALE_SECONDS, default 1800)
+#   OR a loaded-marker, for any seat that does write one
 if [ -f "$STATE/.pi-gna-watch-loaded" ]; then
-  good watch-loaded "$(stat -c%y "$STATE/.pi-gna-watch-loaded" 2>/dev/null | cut -d' ' -f1)"
+  good watch-loaded "marker $(stat -c%y "$STATE/.pi-gna-watch-loaded" 2>/dev/null | cut -d' ' -f1)"
+elif [ -f "$STATE/.watch.heartbeat" ]; then
+  _hb="$(head -c 20 "$STATE/.watch.heartbeat" 2>/dev/null | tr -cd '0-9')"
+  _now="$(date +%s)"
+  _age=$(( _now - ${_hb:-0} ))
+  if [ "$_age" -ge 0 ] && [ "$_age" -lt "${WATCH_STALE_SECONDS:-1800}" ]; then
+    good watch-loaded "heartbeat ${_age}s old (alive; marker .pi-gna-watch-loaded is not written by this house)"
+  else
+    # a heartbeat from the FUTURE is unreadable, not "very old" — say which, not a huge number
+    if [ "$_age" -lt 0 ]; then
+      bad watch-loaded "heartbeat reads ${_age}s in the FUTURE — unreadable; the watch is not beating"
+    else
+      bad watch-loaded "heartbeat is ${_age}s old — STALE (over ${WATCH_STALE_SECONDS:-1800}s): the watch has stopped beating"
+    fi
+  fi
 else
-  bad watch-loaded "no .pi-gna-watch-loaded — the watch is NOT active in this session"
+  bad watch-loaded "no heartbeat and no marker under $STATE — the watch is NOT active"
 fi
 
 # 3 · a PROCESS holds the arm (the file existing proved nothing on 2026-09-30)

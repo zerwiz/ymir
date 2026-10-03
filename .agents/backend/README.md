@@ -12,173 +12,173 @@ and report it truthfully*:
 2. **The model bridges** — Ymir's own files. They are why this index exists:
 
 backend[168]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",11,-
-  "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","provenance","provenance",6,655
-  "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","provenance","provenance",4,242
-  "fm-afk-start.sh","Enter away mode and run the sub-supervisor daemon in a harness-tracked","provenance","provenance","provenance",4,173
-  "fm-arm-command-policy.mjs","// Semantic policy for watcher arm and checkpoint shell commands.","provenance","provenance","provenance",2,961
-  "fm-arm-pretool-check.sh","Stable PreToolUse transport for the watcher-arm command policy.","provenance","provenance","provenance",4,201
-  "fm-backend-hometag-lib.sh","bin/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation","provenance","provenance","provenance",3,53
-  "fm-backend.sh","fm-backend.sh - runtime-backend selection, meta helpers, selector resolution,","provenance","provenance","provenance",25,982
-  "fm-backlog-handoff.sh","Hand already-identified, in-scope backlog items off from the main firstmate","provenance","provenance","provenance",4,910
-  "fm-backlog-receive.sh","Receive one delivered remote-secondmate outbox into this home's backlog.","provenance","provenance","provenance",4,188
-  "fm-backlog-transition-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",8,780
-  "fm-bearings-board.sh","fm-bearings-board.sh - build and arm the /bearings lavish fleet board.","provenance","provenance","provenance",2,205
-  "fm-bearings-snapshot.sh","fm-bearings-snapshot.sh - compact, bounded, TOON-by-default bearings projection.","provenance","provenance","provenance",5,547
-  "fm-bootstrap.sh","Bootstrap detection, best-effort fleet refresh/prune, and installs.","provenance","provenance","provenance",16,1569
-  "fm-branch-outcome.sh","fm-branch-outcome.sh - the durable outcome store for the Pi supervision","provenance","provenance","provenance",3,204
-  "fm-branch-prompt.sh","fm-branch-prompt.sh - emit the supervision branch's system prompt","provenance","provenance","provenance",2,102
-  "fm-brief.sh","Scaffold a crewmate brief or persistent secondmate charter at","provenance","provenance","provenance",11,453
-  "fm-busy-event.sh","fm-busy-event.sh - the ONLY writer of the semantic busy-state contract","provenance","provenance","provenance",7,235
-  "fm-busy-lib.sh","fm-busy-lib.sh - the ONE owner of firstmate's semantic busy-state contract.","provenance","provenance","provenance",12,987
-  "fm-captain-hold.sh","fm-captain-hold.sh - deterministic mechanics for tasks held for the captain.","provenance","provenance","provenance",12,1002
-  "fm-cd-command-policy.mjs","// Semantic policy for the cd-guard: does a shell command persistently change the","provenance","provenance","provenance",1,154
-  "fm-cd-pretool-check.sh","Stable PreToolUse transport for the cd-guard command policy.","provenance","provenance","provenance",3,191
-  "fm-check-lib.sh","FM_CUSTOM_CHECK_HASH=","provenance","provenance","provenance",4,75
-  "fm-check-register.sh","Bind an intentional custom watcher check to its current bytes.","provenance","provenance","provenance",4,43
-  "fm-check-unregister.sh","Retire an intentional custom watcher check and its trust binding.","provenance","provenance","provenance",3,53
-  "fm-classify-lib.sh","fm-classify-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","provenance","provenance",16,48
-  "fm-claude-stop-autoarm.sh","Claude Stop-owned watcher auto-arm (asyncRewake hook).","provenance","provenance","provenance",6,335
-  "fm-composer-lib.sh","bin/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:","provenance","provenance","provenance",10,1421
-  "fm-config-inherit-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",9,1203
-  "fm-config-push.sh","Push declared inherited local material to live secondmate homes.","provenance","provenance","provenance",4,255
-  "fm-control-lib.sh","fm-control-lib.sh - the ONE executable owner of firstmate's agent lifecycle","provenance","provenance","provenance",8,252
-  "fm-control.sh","fm-control.sh - the CONTROL PLANE for a firstmate-owned agent: allowlisted","provenance","provenance","provenance",8,879
-  "fm-crew-state.sh","fm-crew-state.sh - deterministic read of a crew's CURRENT state.","provenance","provenance","provenance",13,626
-  "fm-cursor-lib.sh","Cursor executable resolution and Cursor process identity.","provenance","provenance","provenance",6,244
-  "fm-decision-hold.sh","fm-decision-hold.sh - transitional compatibility shim over bin/fm-captain-hold.sh.","provenance","provenance","provenance",4,233
-  "fm-doc-audience-check.sh","fm-doc-audience-check.sh - validate the tracked documentation audience inventory.","provenance","provenance","provenance",2,270
-  "fm-dod-lib.sh","Single owner of a ship task's mode-specific 'Definition of done' block.","provenance","provenance","provenance",3,68
-  "fm-ensure-agents-md.sh","Ensure a project worktree follows the agent-memory file convention.","provenance","provenance","provenance",4,254
-  "fm-extension-launch-barrier.mjs","// Static core-owned launch barrier for one trusted extension invocation.","provenance","provenance","provenance",0,130
-  "fm-extension.mjs","// Trusted external Firstmate extension binding host.","provenance","provenance","provenance",3,2578
-  "fm-extension.sh","Tracked shell entrypoint for local and fm-on extension binding commands.","provenance","provenance","provenance",3,17
-  "fm-ff-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",10,421
-  "fm-fleet-snapshot.sh","fm-fleet-snapshot.sh - read-only structured fleet snapshot.","provenance","provenance","provenance",8,1464
-  "fm-fleet-sync.sh","Refresh project clones: fast-forward the checked-out local default branch to","provenance","provenance","provenance",10,459
-  "fm-fleet-view.sh","fm-fleet-view.sh - human renderer over fm-fleet-snapshot.sh.","provenance","provenance","provenance",3,97
-  "fm-gate-refuse-lib.sh","fm-gate-refuse-lib.sh - fail-closed refusal that keeps a no-mistakes GATE agent","provenance","provenance","provenance",9,103
-  "fm-guard.sh","Watcher liveness and worktree-tangle guard, called by supervision scripts, by","provenance","provenance","provenance",22,243
-  "fm-harness.sh","Detect the agent harness this process tree runs on.","provenance","provenance","provenance",11,196
-  "fm-herdr-ci-cleanup.sh","fm-herdr-ci-cleanup.sh - bounded cleanup of CI-owned Herdr lab sessions.","provenance","provenance","provenance",3,116
-  "fm-herdr-lab.sh","Provision and operate an isolated Herdr lab session without risking the live","provenance","provenance","provenance",4,347
-  "fm-herdr-session-cleanup.sh","Retire stale restored-shell Herdr presentation children at locked session start.","provenance","provenance","provenance",4,338
-  "fm-home-seed.sh","Provision and route persistent secondmate homes.","provenance","provenance","provenance",4,985
-  "fm-home-summary-refresh.sh","fm-home-summary-refresh.sh - publish this home's structured summary ledger.","provenance","provenance","provenance",7,256
-  "fm-hook-host-lib.sh","Shared 'which harness delivered this hook payload?' predicate for the tracked","provenance","provenance","provenance",6,37
-  "fm-inactive-reconcile.sh","fm-inactive-reconcile.sh - bounded reconciliation of suspicious inactive terminal outcomes.","provenance","provenance","provenance",7,532
-  "fm-inbox.sh","fm-inbox.sh - the captain's out-of-band capture surface.","provenance","provenance","provenance",2,400
-  "fm-install-actionlint.sh","fm-install-actionlint.sh - install CI's pinned, verified actionlint build.","provenance","provenance","provenance",4,85
-  "fm-install-herdr.sh","fm-install-herdr.sh - install CI's pinned, verified Herdr build.","provenance","provenance","provenance",5,97
-  "fm-install-shellcheck.sh","fm-install-shellcheck.sh - install CI's pinned, verified ShellCheck build.","provenance","provenance","provenance",4,85
-  "fm-install-treehouse.sh","fm-install-treehouse.sh - install CI's pinned, verified Treehouse build.","provenance","provenance","provenance",3,96
-  "fm-kimi-turnend-hook.sh","Install or remove Firstmate's guarded Kimi crew turn-end hook.","provenance","provenance","provenance",3,277
-  "fm-lease-lib.sh","fm-lease-lib.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","provenance","provenance",10,37
-  "fm-lease.sh","fm-lease.sh - claim, release, inspect, and sweep per-task supervision leases.","provenance","provenance","provenance",5,190
-  "fm-line-cap-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",6,52
-  "fm-lint-workflows.sh","fm-lint-workflows.sh - owner of firstmate's GitHub workflow lint.","provenance","provenance","provenance",5,138
-  "fm-lint.sh","fm-lint.sh - the single owner of firstmate's lint definition.","provenance","provenance","provenance",5,592
-  "fm-lock-lib.sh","Shared 'is this git lock file provably abandoned?' decision procedure.","provenance","provenance","provenance",3,105
-  "fm-lock.sh","Acquire or inspect the per-home firstmate session lock.","provenance","provenance","provenance",7,108
-  "fm-marker-lib.sh","fm-marker-lib.sh - compatibility entry point for from-firstmate routing.","provenance","provenance","provenance",7,13
-  "fm-merge-local.sh","Perform the approved local merge for a local-only ship task: fast-forward the","provenance","provenance","provenance",6,75
-  "fm-merge-outcome-lib.sh","Shared durable, supervisor-facing outcome publication for a confirmed merge.","provenance","provenance","provenance",3,139
-  "fm-nm-run-lib.sh","Shared no-mistakes axi run attribution primitives.","provenance","provenance","provenance",4,125
-  "fm-on.sh","Execute one tracked Firstmate command in a configured remote secondmate home.","provenance","provenance","provenance",23,126
-  "fm-operational-input.sh","fm-operational-input.sh - canonical Firstmate operational-input protocol.","provenance","provenance","provenance",10,254
-  "fm-peek.sh","Print the tail of a crewmate endpoint (bounded, for cheap diagnosis).","provenance","provenance","provenance",7,47
-  "fm-pending-reply-lib.sh","fm-pending-reply-lib.sh - parent-owned secondmate missed-report guards.","provenance","provenance","provenance",10,1410
-  "fm-pr-check.sh","Record a PR-ready task: store one validated canonical pr=<url> and the forge's","provenance","provenance","provenance",6,136
-  "fm-pr-lib.sh","Shared validation and atomic artifact helpers for merge polling on the","provenance","provenance","provenance",19,1017
-  "fm-pr-merge.sh","Merge a task's PR or MR after recording pr= and any available pr_head= through","provenance","provenance","provenance",9,708
-  "fm-pr-poll.sh","Static watcher program for a validated PR/MR poll sidecar.","provenance","provenance","provenance",5,111
-  "fm-primary-scope-lib.sh","Shared marker-or-plain-checkout predicate for tracked hooks that must act only","provenance","provenance","provenance",8,34
-  "fm-procevent-extension-capture.pl","use strict;","provenance","provenance","provenance",2,260
-  "fm-procevent-lavish.sh","Lavish adapter for the generic process-to-event runner.","provenance","provenance","provenance",3,629
-  "fm-procevent-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",7,893
-  "fm-procevent-quota.sh","Quota-exhaustion process-event adapter.","provenance","provenance","provenance",3,291
-  "fm-procevent-remote-reply.sh","Remote-secondmate reply adapter for the generic process-event runner.","provenance","provenance","provenance",7,578
-  "fm-procevent-when.sh","Condition->action adapter for the generic process-to-event runner: register a","provenance","provenance","provenance",3,505
-  "fm-procevent.sh","Generic process-to-event runner: supervise a registered long-polling child","provenance","provenance","provenance",14,1467
-  "fm-project-mode.sh","Resolve a project's REGISTERED delivery posture from the data/projects.md registry.","provenance","provenance","provenance",7,93
-  "fm-project-origin-lib.sh","Validate a project origin URL that one home hands to another.","provenance","provenance","provenance",3,181
-  "fm-promote.sh","Promote a scout task to a ship task in place: the crewmate keeps its window,","provenance","provenance","provenance",7,283
-  "fm-public-followup-emit.sh","fm-public-followup-emit.sh - emit ONE structured terminal work result for work","provenance","provenance","provenance",4,261
-  "fm-public-followup-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",9,399
-  "fm-public-followup.sh","fm-public-followup.sh - the deterministic consumer and delivery owner for","provenance","provenance","provenance",11,1331
-  "fm-push-transition-lib.sh","Shared owner of the watcher's native push-transition escalation.","provenance","provenance","provenance",2,169
-  "fm-quota-axi-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",6,94
-  "fm-quota-choose.sh","Choose the first quota-eligible candidate from a ranked list.","provenance","provenance","provenance",3,385
-  "fm-remote-delta-read.sh","Blocking, non-destructive delta read for a remote secondmate append-only log.","provenance","provenance","provenance",4,190
-  "fm-remote-doctor.sh","Check, and optionally repair, one remote account's second-mate readiness.","provenance","provenance","provenance",9,801
-  "fm-remote-entrypoint.sh","Fixed remote entrypoint for bin/fm-on.sh.","provenance","provenance","provenance",5,194
-  "fm-remote-file.sh","Path-confined remote file transfer for fm-on.sh.","provenance","provenance","provenance",5,235
-  "fm-remote-home-provision.sh","Provision the FM_HOME selected by the fixed remote entrypoint.","provenance","provenance","provenance",4,260
-  "fm-remote-home-seed.sh","Register and provision a whole secondmate home on an SSH-reachable host.","provenance","provenance","provenance",3,260
-  "fm-remote-inherit-push.sh","Push the declared inherited-material allowlist to one remote secondmate route.","provenance","provenance","provenance",6,91
-  "fm-remote-inherit.sh","Apply one primary-authoritative inherited item inside the selected remote home.","provenance","provenance","provenance",4,180
-  "fm-remote-job-lib.sh","Shared remote fm-on job-worker protocol.","provenance","provenance","provenance",7,1242
-  "fm-remote-job-reap-orphans.sh","Reap remote job workers whose code root no longer exists.","provenance","provenance","provenance",4,138
-  "fm-remote-job-worker.sh","Long-lived per-account worker for remote fm-on jobs.","provenance","provenance","provenance",5,1125
-  "fm-remote-readiness-lib.sh","fm-remote-readiness-lib.sh - the remote second-mate readiness gate sequence.","provenance","provenance","provenance",5,45
-  "fm-remote-secondmate-control.sh","Host-local lifecycle control for the remote secondmate home selected by fm-on.","provenance","provenance","provenance",13,341
-  "fm-review-diff.sh","Review a crewmate branch against the authoritative base.","provenance","provenance","provenance",4,159
-  "fm-secondmate-charter-lib.sh","Shared extraction of secondmate registry summary and scope from a charter.","provenance","provenance","provenance",3,45
-  "fm-secondmate-nudge-lib.sh","shellcheck shell=bash disable=SC2034","provenance","provenance","provenance",4,69
-  "fm-secondmate-parent-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","provenance","provenance",6,71
-  "fm-secondmate-reconcile.sh","fm-secondmate-reconcile.sh - ask a secondmate to reconcile its own books, at","provenance","provenance","provenance",4,372
-  "fm-secondmate-registry-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","provenance","provenance",12,312
-  "fm-secondmate-report.sh","fm-secondmate-report.sh - optional helper to append a correlated parent report.","provenance","provenance","provenance",5,89
-  "fm-send.sh","Steer a task by durable record: write the message into the task's steering","provenance","provenance","provenance",24,1060
-  "fm-session-lock-lib.sh","Shared session-lock harness identity.","provenance","provenance","provenance",8,177
-  "fm-session-start.sh","fm-session-start.sh - one command for the whole session start.","provenance","provenance","provenance",14,971
-  "fm-sessionstart-cursor.sh","Cursor session-open adapter: the RUN tier transport for Cursor Agent CLI.","provenance","provenance","provenance",2,41
-  "fm-sessionstart-nudge.sh","Print the one-line session-start instruction only for a genuine firstmate","provenance","provenance","provenance",4,46
-  "fm-sessionstart-run.sh","Session-open entry point for harnesses that RUN the digest instead of asking","provenance","provenance","provenance",5,146
-  "fm-spawn.sh","Spawn a direct report: a crewmate in a treehouse or Orca worktree, or a","provenance","provenance","provenance",30,3154
-  "fm-startup-memory-budget-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",6,225
-  "fm-startup-memory-budget.sh","Read and account for the local startup-memory budget.","provenance","provenance","provenance",5,95
-  "fm-startup-network.sh","fm-startup-network.sh - the deferred network stage of a session start.","provenance","provenance","provenance",6,643
-  "fm-stow-cascade.sh","Enumerate this home's registered secondmates for an internal /stow cascade.","provenance","provenance","provenance",3,252
-  "fm-subagent-pretool-check.sh","PreToolUse guard against primary-session delegation outside the fleet.","provenance","provenance","provenance",2,208
-  "fm-supervise-daemon.sh","fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).","provenance","provenance","provenance",7,1733
-  "fm-supervision-instructions.sh","Render the primary-harness supervision operating block for session start and","provenance","provenance","provenance",6,216
-  "fm-supervision-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",7,91
-  "fm-supervisor-target-lib.sh","fm-supervisor-target-lib.sh - the single owner of supervisor-pane discovery.","provenance","provenance","provenance",5,79
-  "fm-tangle-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",4,54
-  "fm-task-inbox-lib.sh","fm-task-inbox-lib.sh - the per-task steering inbox: durable records plus a","provenance","provenance","provenance",8,403
-  "fm-tasks-axi-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",14,124
-  "fm-teardown.sh","Tear down a finished task: return the treehouse worktree, release the Orca","provenance","provenance","provenance",21,2923
-  "fm-test-isolation-proof.sh","fm-test-isolation-proof.sh - bounded concurrent isolation proofs for portable","provenance","provenance","provenance",3,589
-  "fm-test-run.sh","fm-test-run.sh - single owner of Firstmate's behavior-test runner, lane","provenance","provenance","provenance",4,2192
-  "fm-timeout-lib.sh","fm-timeout-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","provenance","provenance",18,25
-  "fm-timing-lib.sh","fm-timing-lib.sh - the single owner of the deferred network stage's elapsed-time","provenance","provenance","provenance",5,180
-  "fm-tmux-lib.sh","fm-tmux-lib.sh — shared tmux pane primitives for firstmate.","provenance","provenance","provenance",9,292
-  "fm-tool-update-check.sh","fm-tool-update-check.sh - report watched tooling that has an update available,","provenance","provenance","provenance",2,899
-  "fm-trace-context-lib.sh","shellcheck shell=bash","provenance","provenance","provenance",6,228
-  "fm-transition-lib.sh","Shared, backend-neutral agent-state transition shape and supervision policy.","provenance","provenance","provenance",4,104
-  "fm-turnend-guard-cursor.sh","Cursor `stop` hook adapter for a firstmate PRIMARY session: the park model.","provenance","provenance","provenance",3,392
-  "fm-turnend-guard-grok.sh","Grok Stop-hook adapter for the firstmate PRIMARY turn-end guard.","provenance","provenance","provenance",1,91
-  "fm-turnend-guard.sh","Turn-end guard for any firstmate PRIMARY session: the main home OR a","provenance","provenance","provenance",7,433
-  "fm-update.sh","Self-update a running firstmate and its secondmates to the latest origin.","provenance","provenance","provenance",5,111
-  "fm-vendor-auth-probe.sh","fm-vendor-auth-probe.sh - one hard-bounded, non-destructive authentication","provenance","provenance","provenance",3,191
-  "fm-voice-client.py","'''fm-voice-client.py - the captain's laptop end of the spoken interface.","provenance","provenance","provenance",0,1374
-  "fm-voice-relay.py","'''fm-voice-relay.py - hold the Nova Sonic session on this desktop, on behalf of the laptop.","provenance","provenance","provenance",1,1257
-  "fm-wake-drain.sh","Present durable watcher wake records, optionally acknowledge handled records,","provenance","provenance","provenance",12,593
-  "fm-wake-grant.sh","fm-wake-grant.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","provenance","provenance",2,25
-  "fm-wake-lib.sh","fm-wake-lib.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","provenance","provenance",54,60
-  "fm-watch-arm.sh","Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.","provenance","provenance","provenance",5,603
-  "fm-watch-checkpoint.sh","Run one bounded foreground watcher checkpoint for harnesses that should not","provenance","provenance","provenance",3,110
-  "fm-watch.sh","Firstmate watcher.","provenance","provenance","provenance",22,1963
-  "fm-x-dismiss.sh","Dismiss a pending X-mode mention at the relay WITHOUT replying to it.","provenance","provenance","provenance",2,117
-  "fm-x-followup.sh","Post a completion follow-up for an X-mode-linked task, up to three within a","provenance","provenance","provenance",6,287
-  "fm-x-lib.sh","Shared config resolution for the X-mode connector client (fm-x-poll.sh and","provenance","provenance","provenance",10,1001
-  "fm-x-link.sh","Link a spawned task to the X-mode mention that triggered it, so firstmate can","provenance","provenance","provenance",4,235
-  "fm-x-poll.sh","One short-poll of the relay connector for a pending X-mode mention.","provenance","provenance","provenance",5,186
-  "fm-x-reply.sh","Post firstmate's composed answer back to the relay for a pending X-mode mention.","provenance","provenance","provenance",5,386
+  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",12,-
+  "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",6,655
+  "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",4,242
+  "fm-afk-start.sh","Enter away mode and run the sub-supervisor daemon in a harness-tracked","provenance","tested","keep",4,173
+  "fm-arm-command-policy.mjs","// Semantic policy for watcher arm and checkpoint shell commands.","provenance","tested","keep",2,961
+  "fm-arm-pretool-check.sh","Stable PreToolUse transport for the watcher-arm command policy.","provenance","tested","keep",4,201
+  "fm-backend-hometag-lib.sh","bin/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation","provenance","wired","keep",3,53
+  "fm-backend.sh","fm-backend.sh - runtime-backend selection, meta helpers, selector resolution,","provenance","tested","keep",25,982
+  "fm-backlog-handoff.sh","Hand already-identified, in-scope backlog items off from the main firstmate","provenance","tested","keep",4,910
+  "fm-backlog-receive.sh","Receive one delivered remote-secondmate outbox into this home's backlog.","provenance","tested","keep",4,188
+  "fm-backlog-transition-lib.sh","shellcheck shell=bash","provenance","tested","keep",8,780
+  "fm-bearings-board.sh","fm-bearings-board.sh - build and arm the /bearings lavish fleet board.","provenance","tested","keep",2,205
+  "fm-bearings-snapshot.sh","fm-bearings-snapshot.sh - compact, bounded, TOON-by-default bearings projection.","provenance","tested","keep",5,547
+  "fm-bootstrap.sh","Bootstrap detection, best-effort fleet refresh/prune, and installs.","provenance","tested","keep",16,1569
+  "fm-branch-outcome.sh","fm-branch-outcome.sh - the durable outcome store for the Pi supervision","provenance","tested","keep",3,204
+  "fm-branch-prompt.sh","fm-branch-prompt.sh - emit the supervision branch's system prompt","provenance","tested","keep",2,102
+  "fm-brief.sh","Scaffold a crewmate brief or persistent secondmate charter at","provenance","tested","keep",11,453
+  "fm-busy-event.sh","fm-busy-event.sh - the ONLY writer of the semantic busy-state contract","provenance","tested","keep",7,235
+  "fm-busy-lib.sh","fm-busy-lib.sh - the ONE owner of firstmate's semantic busy-state contract.","provenance","tested","keep",12,987
+  "fm-captain-hold.sh","fm-captain-hold.sh - deterministic mechanics for tasks held for the captain.","provenance","tested","keep",12,1002
+  "fm-cd-command-policy.mjs","// Semantic policy for the cd-guard: does a shell command persistently change the","provenance","tested","keep",1,154
+  "fm-cd-pretool-check.sh","Stable PreToolUse transport for the cd-guard command policy.","provenance","tested","keep",3,191
+  "fm-check-lib.sh","FM_CUSTOM_CHECK_HASH=","provenance","tested","keep",4,75
+  "fm-check-register.sh","Bind an intentional custom watcher check to its current bytes.","provenance","tested","keep",4,43
+  "fm-check-unregister.sh","Retire an intentional custom watcher check and its trust binding.","provenance","tested","keep",3,53
+  "fm-classify-lib.sh","fm-classify-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","tested","keep",16,48
+  "fm-claude-stop-autoarm.sh","Claude Stop-owned watcher auto-arm (asyncRewake hook).","provenance","tested","keep",6,335
+  "fm-composer-lib.sh","bin/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:","provenance","tested","keep",10,1421
+  "fm-config-inherit-lib.sh","shellcheck shell=bash","provenance","tested","keep",9,1203
+  "fm-config-push.sh","Push declared inherited local material to live secondmate homes.","provenance","tested","keep",4,255
+  "fm-control-lib.sh","fm-control-lib.sh - the ONE executable owner of firstmate's agent lifecycle","provenance","tested","keep",8,252
+  "fm-control.sh","fm-control.sh - the CONTROL PLANE for a firstmate-owned agent: allowlisted","provenance","tested","keep",8,879
+  "fm-crew-state.sh","fm-crew-state.sh - deterministic read of a crew's CURRENT state.","provenance","tested","keep",13,626
+  "fm-cursor-lib.sh","Cursor executable resolution and Cursor process identity.","provenance","tested","keep",6,244
+  "fm-decision-hold.sh","fm-decision-hold.sh - transitional compatibility shim over bin/fm-captain-hold.sh.","provenance","tested","keep",4,233
+  "fm-doc-audience-check.sh","fm-doc-audience-check.sh - validate the tracked documentation audience inventory.","provenance","tested","keep",2,270
+  "fm-dod-lib.sh","Single owner of a ship task's mode-specific 'Definition of done' block.","provenance","wired","keep",3,68
+  "fm-ensure-agents-md.sh","Ensure a project worktree follows the agent-memory file convention.","provenance","tested","keep",4,254
+  "fm-extension-launch-barrier.mjs","// Static core-owned launch barrier for one trusted extension invocation.","provenance","tested","keep",0,130
+  "fm-extension.mjs","// Trusted external Firstmate extension binding host.","provenance","tested","keep",3,2578
+  "fm-extension.sh","Tracked shell entrypoint for local and fm-on extension binding commands.","provenance","tested","keep",3,17
+  "fm-ff-lib.sh","shellcheck shell=bash","provenance","tested","keep",10,421
+  "fm-fleet-snapshot.sh","fm-fleet-snapshot.sh - read-only structured fleet snapshot.","provenance","tested","keep",8,1464
+  "fm-fleet-sync.sh","Refresh project clones: fast-forward the checked-out local default branch to","provenance","tested","keep",10,459
+  "fm-fleet-view.sh","fm-fleet-view.sh - human renderer over fm-fleet-snapshot.sh.","provenance","tested","keep",3,97
+  "fm-gate-refuse-lib.sh","fm-gate-refuse-lib.sh - fail-closed refusal that keeps a no-mistakes GATE agent","provenance","tested","keep",9,103
+  "fm-guard.sh","Watcher liveness and worktree-tangle guard, called by supervision scripts, by","provenance","tested","keep",22,243
+  "fm-harness.sh","Detect the agent harness this process tree runs on.","provenance","tested","keep",11,196
+  "fm-herdr-ci-cleanup.sh","fm-herdr-ci-cleanup.sh - bounded cleanup of CI-owned Herdr lab sessions.","provenance","wired","keep",3,116
+  "fm-herdr-lab.sh","Provision and operate an isolated Herdr lab session without risking the live","provenance","tested","keep",4,347
+  "fm-herdr-session-cleanup.sh","Retire stale restored-shell Herdr presentation children at locked session start.","provenance","tested","keep",4,338
+  "fm-home-seed.sh","Provision and route persistent secondmate homes.","provenance","tested","keep",4,985
+  "fm-home-summary-refresh.sh","fm-home-summary-refresh.sh - publish this home's structured summary ledger.","provenance","tested","keep",7,256
+  "fm-hook-host-lib.sh","Shared 'which harness delivered this hook payload?' predicate for the tracked","provenance","tested","keep",6,37
+  "fm-inactive-reconcile.sh","fm-inactive-reconcile.sh - bounded reconciliation of suspicious inactive terminal outcomes.","provenance","tested","keep",7,532
+  "fm-inbox.sh","fm-inbox.sh - the captain's out-of-band capture surface.","provenance","tested","keep",2,400
+  "fm-install-actionlint.sh","fm-install-actionlint.sh - install CI's pinned, verified actionlint build.","provenance","tested","keep",4,85
+  "fm-install-herdr.sh","fm-install-herdr.sh - install CI's pinned, verified Herdr build.","provenance","wired","keep",5,97
+  "fm-install-shellcheck.sh","fm-install-shellcheck.sh - install CI's pinned, verified ShellCheck build.","provenance","tested","keep",4,85
+  "fm-install-treehouse.sh","fm-install-treehouse.sh - install CI's pinned, verified Treehouse build.","provenance","wired","keep",3,96
+  "fm-kimi-turnend-hook.sh","Install or remove Firstmate's guarded Kimi crew turn-end hook.","provenance","tested","keep",3,277
+  "fm-lease-lib.sh","fm-lease-lib.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","tested","keep",10,37
+  "fm-lease.sh","fm-lease.sh - claim, release, inspect, and sweep per-task supervision leases.","provenance","tested","keep",5,190
+  "fm-line-cap-lib.sh","shellcheck shell=bash","provenance","tested","keep",6,52
+  "fm-lint-workflows.sh","fm-lint-workflows.sh - owner of firstmate's GitHub workflow lint.","provenance","tested","keep",5,138
+  "fm-lint.sh","fm-lint.sh - the single owner of firstmate's lint definition.","provenance","tested","keep",5,592
+  "fm-lock-lib.sh","Shared 'is this git lock file provably abandoned?' decision procedure.","provenance","tested","keep",3,105
+  "fm-lock.sh","Acquire or inspect the per-home firstmate session lock.","provenance","tested","keep",7,108
+  "fm-marker-lib.sh","fm-marker-lib.sh - compatibility entry point for from-firstmate routing.","provenance","tested","keep",7,13
+  "fm-merge-local.sh","Perform the approved local merge for a local-only ship task: fast-forward the","provenance","tested","keep",6,75
+  "fm-merge-outcome-lib.sh","Shared durable, supervisor-facing outcome publication for a confirmed merge.","provenance","tested","keep",3,139
+  "fm-nm-run-lib.sh","Shared no-mistakes axi run attribution primitives.","provenance","tested","keep",4,125
+  "fm-on.sh","Execute one tracked Firstmate command in a configured remote secondmate home.","provenance","tested","keep",23,126
+  "fm-operational-input.sh","fm-operational-input.sh - canonical Firstmate operational-input protocol.","provenance","tested","keep",10,254
+  "fm-peek.sh","Print the tail of a crewmate endpoint (bounded, for cheap diagnosis).","provenance","tested","keep",7,47
+  "fm-pending-reply-lib.sh","fm-pending-reply-lib.sh - parent-owned secondmate missed-report guards.","provenance","tested","keep",10,1410
+  "fm-pr-check.sh","Record a PR-ready task: store one validated canonical pr=<url> and the forge's","provenance","tested","keep",6,136
+  "fm-pr-lib.sh","Shared validation and atomic artifact helpers for merge polling on the","provenance","tested","keep",19,1017
+  "fm-pr-merge.sh","Merge a task's PR or MR after recording pr= and any available pr_head= through","provenance","tested","keep",9,708
+  "fm-pr-poll.sh","Static watcher program for a validated PR/MR poll sidecar.","provenance","tested","keep",5,111
+  "fm-primary-scope-lib.sh","Shared marker-or-plain-checkout predicate for tracked hooks that must act only","provenance","tested","keep",8,34
+  "fm-procevent-extension-capture.pl","use strict;","provenance","tested","keep",2,260
+  "fm-procevent-lavish.sh","Lavish adapter for the generic process-to-event runner.","provenance","tested","keep",3,629
+  "fm-procevent-lib.sh","shellcheck shell=bash","provenance","tested","keep",7,893
+  "fm-procevent-quota.sh","Quota-exhaustion process-event adapter.","provenance","tested","keep",3,291
+  "fm-procevent-remote-reply.sh","Remote-secondmate reply adapter for the generic process-event runner.","provenance","tested","keep",7,578
+  "fm-procevent-when.sh","Condition->action adapter for the generic process-to-event runner: register a","provenance","tested","keep",3,505
+  "fm-procevent.sh","Generic process-to-event runner: supervise a registered long-polling child","provenance","tested","keep",14,1467
+  "fm-project-mode.sh","Resolve a project's REGISTERED delivery posture from the data/projects.md registry.","provenance","tested","keep",7,93
+  "fm-project-origin-lib.sh","Validate a project origin URL that one home hands to another.","provenance","tested","keep",3,181
+  "fm-promote.sh","Promote a scout task to a ship task in place: the crewmate keeps its window,","provenance","tested","keep",7,283
+  "fm-public-followup-emit.sh","fm-public-followup-emit.sh - emit ONE structured terminal work result for work","provenance","tested","keep",4,261
+  "fm-public-followup-lib.sh","shellcheck shell=bash","provenance","tested","keep",9,399
+  "fm-public-followup.sh","fm-public-followup.sh - the deterministic consumer and delivery owner for","provenance","tested","keep",11,1331
+  "fm-push-transition-lib.sh","Shared owner of the watcher's native push-transition escalation.","provenance","tested","keep",2,169
+  "fm-quota-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",6,94
+  "fm-quota-choose.sh","Choose the first quota-eligible candidate from a ranked list.","provenance","tested","keep",3,385
+  "fm-remote-delta-read.sh","Blocking, non-destructive delta read for a remote secondmate append-only log.","provenance","tested","keep",4,190
+  "fm-remote-doctor.sh","Check, and optionally repair, one remote account's second-mate readiness.","provenance","tested","keep",9,801
+  "fm-remote-entrypoint.sh","Fixed remote entrypoint for bin/fm-on.sh.","provenance","tested","keep",5,194
+  "fm-remote-file.sh","Path-confined remote file transfer for fm-on.sh.","provenance","tested","keep",5,235
+  "fm-remote-home-provision.sh","Provision the FM_HOME selected by the fixed remote entrypoint.","provenance","tested","keep",4,260
+  "fm-remote-home-seed.sh","Register and provision a whole secondmate home on an SSH-reachable host.","provenance","tested","keep",3,260
+  "fm-remote-inherit-push.sh","Push the declared inherited-material allowlist to one remote secondmate route.","provenance","wired","keep",6,91
+  "fm-remote-inherit.sh","Apply one primary-authoritative inherited item inside the selected remote home.","provenance","tested","keep",4,180
+  "fm-remote-job-lib.sh","Shared remote fm-on job-worker protocol.","provenance","tested","keep",7,1242
+  "fm-remote-job-reap-orphans.sh","Reap remote job workers whose code root no longer exists.","provenance","tested","keep",4,138
+  "fm-remote-job-worker.sh","Long-lived per-account worker for remote fm-on jobs.","provenance","tested","keep",5,1125
+  "fm-remote-readiness-lib.sh","fm-remote-readiness-lib.sh - the remote second-mate readiness gate sequence.","provenance","wired","keep",5,45
+  "fm-remote-secondmate-control.sh","Host-local lifecycle control for the remote secondmate home selected by fm-on.","provenance","tested","keep",13,341
+  "fm-review-diff.sh","Review a crewmate branch against the authoritative base.","provenance","tested","keep",4,159
+  "fm-secondmate-charter-lib.sh","Shared extraction of secondmate registry summary and scope from a charter.","provenance","wired","keep",3,45
+  "fm-secondmate-nudge-lib.sh","shellcheck shell=bash disable=SC2034","provenance","wired","keep",4,69
+  "fm-secondmate-parent-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","tested","keep",6,71
+  "fm-secondmate-reconcile.sh","fm-secondmate-reconcile.sh - ask a secondmate to reconcile its own books, at","provenance","tested","keep",4,372
+  "fm-secondmate-registry-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","tested","keep",12,312
+  "fm-secondmate-report.sh","fm-secondmate-report.sh - optional helper to append a correlated parent report.","provenance","tested","keep",5,89
+  "fm-send.sh","Steer a task by durable record: write the message into the task's steering","provenance","tested","keep",24,1060
+  "fm-session-lock-lib.sh","Shared session-lock harness identity.","provenance","tested","keep",8,177
+  "fm-session-start.sh","fm-session-start.sh - one command for the whole session start.","provenance","tested","keep",14,971
+  "fm-sessionstart-cursor.sh","Cursor session-open adapter: the RUN tier transport for Cursor Agent CLI.","provenance","tested","keep",2,41
+  "fm-sessionstart-nudge.sh","Print the one-line session-start instruction only for a genuine firstmate","provenance","tested","keep",4,46
+  "fm-sessionstart-run.sh","Session-open entry point for harnesses that RUN the digest instead of asking","provenance","tested","keep",5,146
+  "fm-spawn.sh","Spawn a direct report: a crewmate in a treehouse or Orca worktree, or a","provenance","tested","keep",30,3154
+  "fm-startup-memory-budget-lib.sh","shellcheck shell=bash","provenance","wired","keep",6,225
+  "fm-startup-memory-budget.sh","Read and account for the local startup-memory budget.","provenance","tested","keep",5,95
+  "fm-startup-network.sh","fm-startup-network.sh - the deferred network stage of a session start.","provenance","tested","keep",6,643
+  "fm-stow-cascade.sh","Enumerate this home's registered secondmates for an internal /stow cascade.","provenance","tested","keep",3,252
+  "fm-subagent-pretool-check.sh","PreToolUse guard against primary-session delegation outside the fleet.","provenance","tested","keep",2,208
+  "fm-supervise-daemon.sh","fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).","provenance","tested","keep",7,1733
+  "fm-supervision-instructions.sh","Render the primary-harness supervision operating block for session start and","provenance","tested","keep",6,216
+  "fm-supervision-lib.sh","shellcheck shell=bash","provenance","tested","keep",7,91
+  "fm-supervisor-target-lib.sh","fm-supervisor-target-lib.sh - the single owner of supervisor-pane discovery.","provenance","tested","keep",5,79
+  "fm-tangle-lib.sh","shellcheck shell=bash","provenance","tested","keep",4,54
+  "fm-task-inbox-lib.sh","fm-task-inbox-lib.sh - the per-task steering inbox: durable records plus a","provenance","tested","keep",8,403
+  "fm-tasks-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",14,124
+  "fm-teardown.sh","Tear down a finished task: return the treehouse worktree, release the Orca","provenance","tested","keep",21,2923
+  "fm-test-isolation-proof.sh","fm-test-isolation-proof.sh - bounded concurrent isolation proofs for portable","provenance","tested","keep",3,589
+  "fm-test-run.sh","fm-test-run.sh - single owner of Firstmate's behavior-test runner, lane","provenance","tested","keep",4,2192
+  "fm-timeout-lib.sh","fm-timeout-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","tested","keep",18,25
+  "fm-timing-lib.sh","fm-timing-lib.sh - the single owner of the deferred network stage's elapsed-time","provenance","tested","keep",5,180
+  "fm-tmux-lib.sh","fm-tmux-lib.sh — shared tmux pane primitives for firstmate.","provenance","tested","keep",9,292
+  "fm-tool-update-check.sh","fm-tool-update-check.sh - report watched tooling that has an update available,","provenance","tested","keep",2,899
+  "fm-trace-context-lib.sh","shellcheck shell=bash","provenance","tested","keep",6,228
+  "fm-transition-lib.sh","Shared, backend-neutral agent-state transition shape and supervision policy.","provenance","tested","keep",4,104
+  "fm-turnend-guard-cursor.sh","Cursor `stop` hook adapter for a firstmate PRIMARY session: the park model.","provenance","tested","keep",3,392
+  "fm-turnend-guard-grok.sh","Grok Stop-hook adapter for the firstmate PRIMARY turn-end guard.","provenance","tested","keep",1,91
+  "fm-turnend-guard.sh","Turn-end guard for any firstmate PRIMARY session: the main home OR a","provenance","tested","keep",7,433
+  "fm-update.sh","Self-update a running firstmate and its secondmates to the latest origin.","provenance","tested","keep",5,111
+  "fm-vendor-auth-probe.sh","fm-vendor-auth-probe.sh - one hard-bounded, non-destructive authentication","provenance","tested","keep",3,191
+  "fm-voice-client.py","'''fm-voice-client.py - the captain's laptop end of the spoken interface.","provenance","tested","keep",0,1374
+  "fm-voice-relay.py","'''fm-voice-relay.py - hold the Nova Sonic session on this desktop, on behalf of the laptop.","provenance","tested","keep",1,1257
+  "fm-wake-drain.sh","Present durable watcher wake records, optionally acknowledge handled records,","provenance","tested","keep",12,593
+  "fm-wake-grant.sh","fm-wake-grant.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","tested","keep",2,25
+  "fm-wake-lib.sh","fm-wake-lib.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","tested","keep",54,60
+  "fm-watch-arm.sh","Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.","provenance","tested","keep",5,603
+  "fm-watch-checkpoint.sh","Run one bounded foreground watcher checkpoint for harnesses that should not","provenance","tested","keep",3,110
+  "fm-watch.sh","Firstmate watcher.","provenance","tested","keep",22,1963
+  "fm-x-dismiss.sh","Dismiss a pending X-mode mention at the relay WITHOUT replying to it.","provenance","tested","keep",2,117
+  "fm-x-followup.sh","Post a completion follow-up for an X-mode-linked task, up to three within a","provenance","tested","keep",6,287
+  "fm-x-lib.sh","Shared config resolution for the X-mode connector client (fm-x-poll.sh and","provenance","tested","keep",10,1001
+  "fm-x-link.sh","Link a spawned task to the X-mode mention that triggered it, so firstmate can","provenance","tested","keep",4,235
+  "fm-x-poll.sh","One short-poll of the relay connector for a pending X-mode mention.","provenance","tested","keep",5,186
+  "fm-x-reply.sh","Post firstmate's composed answer back to the relay for a pending X-mode mention.","provenance","tested","keep",5,386
   "fm_voice_frame.py","'''fm_voice_frame.py - the wire format between the voice client and the relay.","data","tested","keep",0,167
   "fm_voice_records.py","'''fm_voice_records.py - what the voice agent is allowed to know, and how it hands work over.","tool","tested","keep",1,575
   "model-bridge.py","'''model-bridge.py — expose a model provider to pi via an OpenAI-compatible","data","wired","keep",1,361
   "opencode-go-bridge.py","'''opencode-go-bridge.py — backward-compatible entry point.","tool","wired","keep",0,31
 
-**Tally.** verdict: provenance=163, tested=3, wired=2
+**Tally.** verdict: tested=156, wired=12

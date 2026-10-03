@@ -1169,3 +1169,54 @@ unexpanded literal above, and a `$YMIR_HOME` guess). All fixed; the ward is clea
 lesson:** a seat that copied a file has not proved it can run it, and a path that resolved on my
 laptop has not proved it resolves on yours. Both checks now exist, and both were proved by making
 them fail on purpose first.
+
+---
+
+## 2026-10-03 — the tool API is `execute`, not `handler`: two gates so it cannot recur
+
+**Every Ymir door in the hall died at once** with `definition.execute is not a function`. Three
+different tools, **one** cause: all of them registered with
+
+```ts
+pi.registerTool({ name, description, parameters, handler: async (args) => ({ output }) })
+```
+
+and Pi 1.0's `ToolDefinition` has **no `handler` field at all**. Pi accepts the registration,
+**advertises the tool to the model**, then calls `definition.execute(...)` on first use and finds
+`undefined`. Three things were wrong, not one:
+
+| | was | must be |
+|---|---|---|
+| key | `handler:` | **`execute:`** |
+| first arg | `args` | **`_toolCallId`** — the params are the *second* |
+| result | `{ output }` | **`{ content: [{ type: "text", text }], details }`** |
+
+A mechanical rename would have been *worse than the break*: the body would receive the tool-call
+id — a **string** — where it expects the params object, and answer confidently and wrongly.
+And **returning an object does not mark a tool as failed** — only throwing does.
+
+**Reference (version-matched, on disk):**
+`~/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent` — `docs/extensions.md` §Tools,
+`examples/extensions/hello.ts`, and `dist/core/extensions/types.d.ts` (`interface ToolDefinition`).
+Upstream: <https://pi.dev/docs/latest/extensions>. The full write-up, with the verbatim example,
+lives in the operator's vault at `hodd/docs/developer-setup/pi-extension-api.md`.
+
+### Why nothing caught it
+
+- the file **parsed** — `handler:` is valid object syntax;
+- the extension **loaded** and the tool **registered** — Pi advertises it happily;
+- the smoke test **called** `tool.handler(args)` — with the same wrong key the source used, so it
+  agreed with the code and **proved the bug rather than the tool**.
+
+> A check that calls a tool the way the code calls it will always agree with the code.
+
+### Two gates, both proved by making them fail first
+
+| gate | refuses |
+|---|---|
+| `bin/extension-api-check.sh` | `handler:` **inside a `registerTool` block** (commands and `pi.on` handlers legitimately take `handler`), an `execute` whose first parameter is `args`, and any `return { output: … }` |
+| `tools/extension-smoke.mjs` | a tool that is **not callable**, or returns no `content[]` — called as `execute(toolCallId, params, signal, onUpdate, ctx)`, i.e. **the harness's own convention** |
+
+Current state: **26 tools called, 0 broken**, 2 skipped and *said to be skipped* because bare node
+cannot resolve Pi's own packages — a limitation of the harness, not of the extension. A gate that
+cries to prove itself by failing once, and a harness honest about what it cannot see, both matter.
