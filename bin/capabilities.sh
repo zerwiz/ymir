@@ -70,7 +70,11 @@ EOM
 
 printf 'capabilities[5]{surface,count}:\n  "shell doors (bin/*.sh)",%s\n  "runtime modules (src/ymir_runtime/*.py)",%s\n  "skills (.agents/skills/*)",%s\n  "Pi extension tools",%s\n  "generated","%s"\n\n' "$shells" "$pys" "$skills" "$tools" "$(date -u +%Y-%m-%d)"
 printf '| door | the job | verdict | tech decision |\n|---|---|---|---|\n'
-for f in bin/*.sh; do
+# READDIR ORDER IS NOT AN ORDER. `for f in bin/*.sh` yields whatever the filesystem
+# returns first — ext4 hashes it, overlayfs in CI does not — so two machines built the
+# SAME register with the SAME rows in a DIFFERENT order, and the staleness check (rightly)
+# called it stale. Sorting makes the register a function of CONTENT alone.
+for f in $(ls bin/*.sh 2>/dev/null | sort); do
   n=$(basename "$f")
   case "$n" in inventory.sh|capabilities.sh|queue.sh|update-notes.sh|verify-seat.sh) continue ;; esac
   # the first sentence of its own header is the job, from the door itself
