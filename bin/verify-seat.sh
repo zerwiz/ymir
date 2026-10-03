@@ -41,12 +41,27 @@ want_ext=()
 while IFS= read -r f; do want_ext+=("$(basename "$f")"); done < <(
   ls "$ROOT/.pi/shared/extensions/"*.ts 2>/dev/null | sort
 )
-have=0; absent=""
+have=0; absent=""; broken=""
 for e in "${want_ext[@]}"; do
-  [ -f "$EXT_DIR/$e" ] && have=$((have + 1)) || absent="$absent $e"
+  if [ ! -f "$EXT_DIR/$e" ]; then absent="$absent $e"; continue; fi
+  have=$((have + 1))
+  # DEPLOYED IS NOT LOADABLE. This check counted FILES COPIED and said "14/14 deployed"
+  # while `eindri.ts` had an unclosed paren and Pi refused to start with
+  # "Failed to load extension … ParseError". A file the seat copies is not a file the seat
+  # can run, and the difference is the whole point of seating anything.
+  if ! _ps="$(node --experimental-strip-types --input-type=module -e "
+      import('node:fs').then(fs => process.stdout.write(fs.readFileSync(process.argv[1],'utf8')))
+    " "$EXT_DIR/$e" 2>/dev/null)"; then
+    broken="$broken $e"
+    continue
+  fi
+  # node cannot PARSE ts, but Pi's loader strips types first. So parse the types away and
+  # then check the JavaScript that results is syntactically whole.
+  _js="$(printf '%s' "$_ps" | npx --yes esbuild --loader=ts --log-level=error 2>/dev/null)" \
+    || broken="$broken $e"
 done
-[ -z "$absent" ] && good extensions "$have/${#want_ext[@]} deployed in $EXT_DIR" \
-                  || bad extensions "not deployed:$absent  (bin/valknut-load.sh --all --global)"
+[ -z "$absent" ] && [ -z "$broken" ] && good extensions "$have/${#want_ext[@]} deployed AND parsing in $EXT_DIR" \
+                  || bad extensions "not deployed:$absent  |  deployed but DOES NOT PARSE:$broken  (bin/valknut-load.sh --all --global; then parse them)"
 
 # 2 · the Gná watch actually LOADED this session (its own marker, not an arm file)
 STATE="${YMIR_STATE_DIR:-}"
