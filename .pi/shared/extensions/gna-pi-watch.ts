@@ -303,7 +303,25 @@ function lockOwnership(): LockOwnership {
   }
   // pidAlive rejects zombies and recycled pids, so "missing" truly means the
   // recorded holder is verifiably gone — never a live "other" session.
-  return pidAlive(lockPid, recordedStarttime) ? "other" : "missing";
+  if (!pidAlive(lockPid, recordedStarttime)) return "missing";
+
+  // A LIVE PROCESS IS NOT A LIVE SUPERVISOR. Measured 2026-10-03: an idle `pi` window held
+  // the helm for two days with 21 minutes of CPU in total, and because its arm child was
+  // long dead nothing could ever reclaim it — so `gna_watch_arm` answered "read-only" to the
+  // one session that could actually supervise, and the watch looked perfectly healthy while
+  // no session owned it. A pid is a PROXY for "this session is supervising"; the thing itself
+  // is the supervisor process. Ask about the thing.
+  //
+  // Recorded when an arm child starts (`<lock>.child`), cleared when it exits.
+  let childPid = "";
+  try {
+    childPid = readFileSync(`${lockPath}.child`, "utf8").trim();
+  } catch {
+    // no sidecar: this holder never recorded a supervisor, or predates the rule
+  }
+  if (!/^[0-9]+$/.test(childPid)) return "missing";   // no verifiable supervisor
+  if (!pidAlive(childPid, "")) return "missing";      // supervisor gone — reclaim it
+  return "other";
 }
 
 // A stale lock (owner dead / zombie / pid reused) is cleared and the helm is
@@ -313,6 +331,7 @@ function lockOwnership(): LockOwnership {
 function reclaimStaleLock(lockPath: string): void {
   mkdirSync(dirname(lockPath), { recursive: true });
   writeFileSync(lockPath, `${process.pid}\n`);
+  rmSync(`${lockPath}.child`, { force: true });   // the old supervisor is not ours
   const starttime = procStarttime(String(process.pid));
   if (starttime) writeFileSync(`${lockPath}.starttime`, `${starttime}\n`);
   const legacyPath = `${state}/.lock`;
@@ -724,6 +743,13 @@ export default function (pi: ExtensionAPI) {
       stdio: ["ignore", "pipe", "pipe"],
     });
     owner.child = armChild;
+    // Record WHICH supervisor this session owns. Without this the lock can only say "a pi
+    // process exists", which is exactly the claim that let an idle window hold the helm.
+    try {
+      writeFileSync(`${resolvedLockPath()}.child`, `${armChild.pid}\n`);
+    } catch {
+      // best-effort: an unwritable sidecar falls back to the old pid-only rule
+    }
     let stdout = "";
     let stderr = "";
     let settled = false;
@@ -752,7 +778,15 @@ export default function (pi: ExtensionAPI) {
       }
     };
     const releaseChild = (): void => {
-      if (owner.child === armChild) owner.child = null;
+      if (owner.child !== armChild) return;
+      owner.child = null;
+      // The supervisor is gone, so the helm is unowned by anything real. Leaving the sidecar
+      // would keep naming a dead child and make the NEXT session look like a live "other".
+      try {
+        rmSync(`${resolvedLockPath()}.child`, { force: true });
+      } catch {
+        // best-effort
+      }
     };
     armChild.stdout.on("data", (chunk: Buffer) => {
       stdout += chunk.toString();
