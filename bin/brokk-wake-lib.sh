@@ -415,8 +415,38 @@ fm_lock_claim() {
   return 0
 }
 
+# Reclaim owner directories that no lock points at any more.
+#
+# Measured 2026-10-03: 1,595 of them had piled up in state/ (14 MB), one per lock-steal attempt.
+# `fm_lock_discard_owner` cleans up on a FAILED claim; a claim that succeeds leaves its owner
+# directory behind for ever. Nothing asked what the right number of them is, so they grew until
+# `ls state/` was mostly noise.
+#
+# Safe by construction: a directory that a live lock still points at is NEVER removed, because
+# the test is the symlink itself. And a young directory is left alone, so a claim in flight is
+# never pruned out from under itself.
+fm_lock_prune_orphans() {
+  local lockdir=$1 dir base target age
+  # The owner dirs are SIBLINGS of the lock, not children of it: the lock is a symlink FILE.
+  # The first version guarded on `[ -d "$lockdir" ]`, which is false for a file, so it returned
+  # immediately and pruned nothing at all - and reported nothing wrong. Measure before you
+  # conclude a cleanup worked.
+  [ -n "$lockdir" ] || return 0
+  for dir in "$lockdir".steal.owner.*; do
+    [ -d "$dir" ] || continue
+    [ -L "$dir" ] && continue
+    base=$(basename "$dir")
+    target=$(readlink "$lockdir" 2>/dev/null || true)
+    [ "$target" = "$dir" ] && continue          # the live lock points here — never prune
+    age=$(( $(date +%s) - $(stat -c%Y "$dir" 2>/dev/null || echo 0) ))
+    [ "$age" -lt 60 ] && continue                 # a claim may be in flight
+    rm -rf "$dir" 2>/dev/null || true
+  done
+}
+
 fm_lock_try_create() {
   local lockdir=$1 allowed_steal_owner=${2:-} ownerdir
+  fm_lock_prune_orphans "$lockdir"
   BROKK_LOCK_OWNER_DIR=
   ownerdir=$(fm_lock_owner_dir "$lockdir") || return 1
   if [ -e "$lockdir" ] || [ -L "$lockdir" ]; then
