@@ -190,3 +190,6 @@ opencode.json.bak*
 # The local skills shelf — the Allfather's own craft, never published.
 # Ships nothing, clones to nobody, and is not in the npm package.
 .agents/skills-local/
+
+# runtime output: the engine writes here, never tracked
+bin/state/
