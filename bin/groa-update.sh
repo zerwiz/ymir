@@ -162,6 +162,18 @@ fi
 # leave the surfaces stale: bind them here, every time.
 if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
   print_step "loaders" 2>/dev/null || printf '  loaders: '
+  # An update that leaves the phone gateway broken is NOT complete, for the same reason the
+  # seat is not complete: extensions that were seated but never re-proved stay broken quietly.
+  if [ -x "$SCRIPT_DIR/tools/ymir-gateway/smoke.sh" ]; then
+    if bash "$SCRIPT_DIR/tools/ymir-gateway/smoke.sh" >/dev/null 2>&1; then
+      printf 'gateway: ok — ymir-gateway answers after the update\n'
+    else
+      printf 'FAIL — ymir-gateway smoke test failed after this update.\n'
+      printf '      run bash tools/ymir-gateway/smoke.sh (YMIR_LIVE=1 to include the local rail)\n' >&2
+      GATEWAY_FAILED=1
+    fi
+  fi
+
   if "$SCRIPT_DIR/valknut-load.sh" --all --global >/dev/null 2>&1; then
     printf 'rebound (agents · skills · pi extensions)\n'
   else
@@ -179,7 +191,9 @@ if [ "${seat_failed:-0}" != 0 ]; then
   printf 'groa-update: SEATING FAILED — the tree moved but the seat did not\n' >&2
   exit 1
 fi
-exit "${seat_failed:-0}"
+# A flag nobody reads is a gate that reports and does not fail — the exact shape of fault
+# this file already refuses. Fail the update when the gateway did not answer.
+exit "$(( ${seat_failed:-0} || ${GATEWAY_FAILED:-0} ))"
 
 # What CHANGED for you, since your last update. Every change carries a note in
 # docs/fixes/; until now nothing printed them, so an updating user saw "updated" and

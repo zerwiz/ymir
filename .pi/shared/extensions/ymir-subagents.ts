@@ -31,8 +31,25 @@
  * extensions in this tree take `pi` as `any` and declare parameters as plain
  * JSON schema. This one follows them.
  */
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { homedir } from "node:os";
 import { join, resolve } from "node:path";
+
+// Install records the root; the extension reads it. Never a machine path in source (Rule 07).
+function resolveRoot(): string {
+  const fromEnv = process.env.YMIR_ROOT?.trim();
+  if (fromEnv) return fromEnv;
+  const pointer = join(homedir(), ".pi", "agent", "extensions", ".ymir-root");
+  if (existsSync(pointer)) {
+    for (const line of readFileSync(pointer, "utf8").split("\n")) {
+      const root = line.trim();
+      if (root && existsSync(join(root, "bin", "syn-watch-arm.sh"))) return root;
+    }
+  }
+  throw new Error("YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root");
+}
+const ROOT = resolveRoot();
 
 /** A figure as the canonical tree declares it. */
 type Figure = {
@@ -220,6 +237,57 @@ export default function subagents(pi: any) {
               text: `error: no model available for subagent "${figure.name}"`,
             },
           ],
+          isError: true,
+        };
+      }
+
+      // A DISPATCH MUST LEAVE A SEAT.
+      //
+      // Measured 2026-10-03: this tool ran the figure IN-PROCESS via
+      // `ctx.modelRegistry.streamSimple`. It returned a character count, opened NO herdr pane,
+      // wrote NO state record, and blocked this session for the whole run. Two errands were sent
+      // this way and reported as dispatched; the second returned `chars: 0` and never ran at all.
+      //
+      // The Allfather: *"where are the subagents? it should always use herdr."* — correct. An errand
+      // you cannot see is indistinguishable from one that died, and a return value is not a seat.
+      //
+      // So: dispatch through the ONE sanctioned spawn path (bin/einherjar-spawn.sh — the same door
+      // eindri.ts uses), which gives the figure a herdr pane and state/<id>.{status,meta}, and
+      // return the SEAT and the ERRAND ids. In-process streaming stays as an explicit fallback for
+      // figures that have no errand profile yet, and it says so when it is used.
+      const errandId = `${figure.name}-${Date.now().toString(36)}`;
+      try {
+        // The seat door REFUSES an unfilled brief (measured: "this errand is not worth a smith"),
+        // which is exactly right — so the brief is scaffolded and then FILLED with the task.
+        // A dispatch that produced a placeholder brief would seat a figure with nothing to do.
+        execFileSync("bash", [`${ROOT}/bin/erindi-brief.sh`, errandId, ROOT, "--mode", "direct-PR"],
+          { encoding: "utf8", timeout: 30_000, stdio: ["ignore", "pipe", "pipe"] });
+        const brief = readFileSync(join(ROOT, "data", errandId, "brief.md"), "utf8")
+          .replace(/\{TASK\}/g, String(params.task ?? ""))
+          .replace(/\{FIGURE\}/g, figure.name);
+        writeFileSync(join(ROOT, "data", errandId, "brief.md"), brief);
+
+        execFileSync(
+          "bash",
+          [`${ROOT}/bin/einherjar-spawn.sh`, errandId, ROOT, "--mode", "direct-PR"],
+          { encoding: "utf8", timeout: 60_000, stdio: ["ignore", "pipe", "pipe"],
+            env: { ...process.env, BROKK_TASK: String(params.task ?? ""), BROKK_FIGURE: figure.name } },
+        );
+        return {
+          content: [
+            { type: "text", text:
+              `dispatched ${figure.name} as errand ${errandId}\n` +
+              `  seat: a herdr pane now exists — list it with ymir_seats, read it with ` +
+              `ymir_errand(action=read, errand=${errandId})\n` +
+              `  steer:  ymir_errand(action=steer, errand=${errandId}, message="…")` },
+          ],
+        };
+      } catch (err: any) {
+        return {
+          content: [{ type: "text", text:
+            `error: could not seat ${figure.name} — ` +
+            `${String(err?.stderr || err?.message || err).split("\n")[0]}\n` +
+            `  check: bash bin/einherjar-spawn.sh ${errandId} ${ROOT} --mode direct-PR` }],
           isError: true,
         };
       }
