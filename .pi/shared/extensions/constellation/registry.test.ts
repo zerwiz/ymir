@@ -22,8 +22,8 @@ import {
   resolveRegistry,
   scanCardSecrets,
   scanRegistryDir,
-} from "./constellation-registry.ts";
-import { repoRootFromHere } from "./constellation-registry.ts";
+} from "./registry.ts";
+import { repoRootFromHere } from "./registry.ts";
 
 const root = repoRootFromHere();
 

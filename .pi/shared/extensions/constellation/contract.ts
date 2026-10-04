@@ -20,14 +20,14 @@ import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { resolveYmirRoot } from "./ymir-home.ts";
+import { resolveYmirRoot } from "../lib/ymir-home.ts";
 
 import type {
   AgentCapabilities,
   AgentCard,
   AgentInterface,
   AgentSkill,
-} from "../../../packages/contracts/src/agent-card.ts";
+} from "../../../../packages/contracts/src/agent-card.ts";
 
 export type { AgentCapabilities, AgentCard, AgentInterface, AgentSkill };
 
@@ -37,7 +37,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolveYmirRoot(resolve(here, ".."));
 
 const CONTRACT_CANDIDATES = [
-  resolve(here, "../../../packages/contracts/src/agent-card.ts"),
+  resolve(here, "../../../../packages/contracts/src/agent-card.ts"),
   resolve(root, "packages/contracts/src/agent-card.ts"),
 ];
 

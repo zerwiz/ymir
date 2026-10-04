@@ -39,7 +39,7 @@ import {
   assertAgentCard,
   type AgentCard,
   type AgentInterface,
-} from "./constellation-contract.ts";
+} from "./contract.ts";
 
 /** The registry's schema file lives beside the cards and is not itself a card. */
 export const REGISTRY_SCHEMA_FILE = "agent-card.schema.json";

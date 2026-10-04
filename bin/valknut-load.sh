@@ -440,43 +440,67 @@ if [ "$MODE_PI" = 1 ]; then
   if [ -d "$PI_EXT_SRC" ]; then
     mkdir -p "$PI_EXT_HOME" 2>/dev/null
     dep_n=0
-    for f in "$PI_EXT_SRC"/*.ts; do
-      [ -e "$f" ] || continue
-      b=$(basename "$f")
-      if [ -f "$PI_EXT_HOME/$b" ] && cmp -s "$f" "$PI_EXT_HOME/$b"; then continue; fi
-      cp -f "$f" "$PI_EXT_HOME/$b" && dep_n=$((dep_n+1))
-    done
-    # Their supporting modules are one level away, under the extensions' own lib:
-    # the shared extensions require sibling lib modules, and deploying the
-    # top-level files ALONE ships extensions that cannot load. That is exactly
-    # what pi reported: Failed to load extension, Cannot find module ./lib/....
-    # A deploy that copies a file but not the module it imports is not a deploy.
-    PI_EXT_LIB="$ROOT/.pi/extensions/lib"
-    if [ -d "$PI_EXT_LIB" ]; then
-      mkdir -p "$PI_EXT_HOME/lib" 2>/dev/null
-      for f in "$PI_EXT_LIB"/*; do
+    # The source is ONE tree (Rule 13): top-level single-file extensions, plus one
+    # directory per multi-file extension (pi loads a subdirectory only when it has
+    # an index.ts), plus lib/ for what is genuinely shared. The deploy MIRRORS that
+    # tree — copying the top-level files alone ships extensions that cannot load,
+    # which is exactly the "Cannot find module ./lib/..." pi reported.
+    #
+    # Tests never deploy. A *.test.ts is not a discoverable entry point, so it is
+    # harmless in the live tree — but it would be copied on every run and then read
+    # as part of the shipped extension set. The repo keeps its tests; the deploy
+    # does not.
+    deploy_ext_tree() {
+      local src="$1" dst="$2" rel f b
+      for f in "$src"/*; do
         [ -e "$f" ] || continue
         b=$(basename "$f")
-        # Tests are not extensions and do not belong in the live tree. A .test.ts
-        # is never a discoverable entry point (no index.ts, not a top-level file),
-        # so it is harmless there — but it is copied on every loader run and then
-        # read as though it were part of the shipped extension set. The repo keeps
-        # its tests; the deploy does not.
+        if [ -d "$f" ]; then
+          [ "$b" = "node_modules" ] && continue
+          mkdir -p "$dst/$b" 2>/dev/null
+          deploy_ext_tree "$f" "$dst/$b" && true
+          continue
+        fi
         case "$b" in
           *.test.ts|*.test.js|*.test.mjs|*.spec.ts|*.spec.js) continue ;;
         esac
-        if [ -f "$PI_EXT_HOME/lib/$b" ] && cmp -s "$f" "$PI_EXT_HOME/lib/$b"; then continue; fi
-        cp -f "$f" "$PI_EXT_HOME/lib/$b" && dep_n=$((dep_n+1))
+        rel="${f#$src/}"
+        mkdir -p "$(dirname "$dst/$rel")" 2>/dev/null
+        if [ -f "$dst/$rel" ] && cmp -s "$f" "$dst/$rel"; then continue; fi
+        cp -f "$f" "$dst/$rel" && dep_n=$((dep_n+1))
       done
-      # A test that a previous run already deployed stays deployed unless removed.
-      # Cleaning it up here is what makes the exclusion above actually take effect.
-      for f in "$PI_EXT_HOME"/lib/*.test.ts "$PI_EXT_HOME"/lib/*.test.js \
-               "$PI_EXT_HOME"/lib/*.test.mjs "$PI_EXT_HOME"/lib/*.spec.ts; do
-        [ -e "$f" ] || continue
-        rm -f "$f" && dep_n=$((dep_n+1))
+    }
+    deploy_ext_tree "$PI_EXT_SRC" "$PI_EXT_HOME"
+
+    # PRUNE. A deploy only ever ADDS, so a restructure leaves the old file beside
+    # the new directory — and that is the collision Rule 13 §1 exists to prevent:
+    # `ro.ts` and `ro/index.ts` both load, both register Ro's tools, and pi exits
+    # with a tool-name conflict so no agent can be seated.
+    #
+    # The rule is EXACT: remove a deployed file only when the source has no file
+    # at the same relative path. An earlier version of this block removed
+    # everything not named `.ymir-root` and wiped the live tree — 43 files — which
+    # is what a prune must never do.
+    pruned=0
+    for stale in "$PI_EXT_HOME"/*.ts "$PI_EXT_HOME"/*.js "$PI_EXT_HOME"/*.mjs; do
+      [ -e "$stale" ] || continue
+      b=$(basename "$stale")
+      [ -e "$PI_EXT_SRC/$b" ] || { rm -f "$stale" && pruned=$((pruned+1)); }
+    done
+    if [ -d "$PI_EXT_HOME/lib" ]; then
+      for stale in "$PI_EXT_HOME"/lib/*; do
+        [ -e "$stale" ] || continue
+        b=$(basename "$stale")
+        [ -e "$PI_EXT_SRC/lib/$b" ] || { rm -f "$stale" && pruned=$((pruned+1)); }
       done
     fi
-    add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home, lib included)"
+    for d in "$PI_EXT_HOME"/*/; do
+      [ -d "$d" ] || continue
+      b=$(basename "$d")
+      [ -d "$PI_EXT_SRC/$b" ] || { rm -rf "$d" && pruned=$((pruned+1)); }
+    done
+    [ "$pruned" -gt 0 ] && add pi-ext-prune "$PI_EXT_HOME" "$pruned removed (source no longer has them — a leftover would double-register)"
+    add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (one tree mirrored: files, extension folders, lib)"
     # …and record the tree that owns bin/, because the deployed copy cannot find
     # it by walking up. Read back by .pi/extensions/lib/ymir-home.ts.
     add pi-ext-root "$PI_EXT_HOME/.ymir-root" "$(ymir_root_record) → $ROOT"
