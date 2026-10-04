@@ -18,12 +18,12 @@ The task was to confirm the seat door (herdr) seats a figure and reports a pane 
 |-----------|---------|-------|--------|-----|-----|
 | w3 | w3:p7 | pi | working | w3:t7 | /home/heimdall/ymir |
 | w3 | w3:pA | pi | idle | w3:t9 | /home/heimdall/ymir |
-| w21 | w21:p1 | pi | idle | w21:t1 | /home/heimdall/CodeP/aiassetvault |
-| wS | wS:p1 | pi | idle | wS:t1 | /home/heimdall/CodeP/ymirhomepage |
-| wM | wM:p1 | pi | idle | wM:t1 | /home/heimdall/CodeP/learnai |
+| w21 | w21:p1 | pi | idle | w21:t1 | /home/heimdall/CodeP/<redacted> |
+| wS | wS:p1 | pi | idle | wS:t1 | /home/heimdall/CodeP/<redacted> |
+| wM | wM:p1 | pi | idle | wM:t1 | /home/heimdall/CodeP/<redacted> |
 | w1Z | w1Z:p1 | pi | idle | w1Z:t1 | /home/heimdall/CodeP/coe |
-| w1S | w1S:p1 | pi | idle | w1S:t1 | /home/heimdall/CodeP/aigeeksandfreaks |
-| w1S | w1S:p6 | pi | idle | w1S:t6 | /home/heimdall/CodeP/aigeeksandfreaks |
+| w1S | w1S:p1 | pi | idle | w1S:t1 | /home/heimdall/CodeP/<redacted> |
+| w1S | w1S:p6 | pi | idle | w1S:t6 | /home/heimdall/CodeP/<redacted> |
 | wN | wN:p1 | pi | idle | wN:t1 | /home/heimdall/CodeP/wayofteams |
 | w22 | w22:p1 | pi | working | w22:t1 | /home/heimdall/ymir/.yggdrasil/probe-1791125967 |
 
@@ -45,3 +45,21 @@ The task was to confirm the seat door (herdr) seats a figure and reports a pane 
 ### Conclusion
 
 The seat door (herdr) **seats a figure** (`pi` agent) in every workspace and **reports a pane id** for each pane. The pane id format is `<workspace_id>:<pane_number>` (e.g., `w22:p1`).
+
+---
+
+## 2026-10-04 — REDACTED AGAIN, and why the first attempt was not enough
+
+The first redaction was merged as **#278**. Then **#279** — the probe errand's own PR — merged
+**after** it and restored the unredacted note. So for one more merge the five private project
+directories were public again.
+
+**The lesson is about ordering, not about care:** I patched a file while another PR targeting the
+same file was already open. Two patches to one path, merged out of order, and the second undid the
+first. **A redaction is only finished when it is on the line everyone merges FROM** — which is why
+this one is cut from `origin/main` after the merge, not before it.
+
+Verified on this branch: `aiassetvault · ymirhomepage · learnai · aigeeksandfreaks` → **0 hits**.
+
+(The many other `CodeP/` matches in this repo are `CodeP/ymir` — **this public repository itself**,
+which is not private data.)
