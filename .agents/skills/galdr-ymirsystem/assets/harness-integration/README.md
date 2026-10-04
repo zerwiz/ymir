@@ -2,7 +2,13 @@
 
 > **Purpose:** Define how each agent harness (OpenCode, Pi, Claude Code, Cursor, Codex, Grok) seats **Brokk** before the first turn, arms **Sýn** supervision, guards the turn end, and enforces the PreToolUse seatbelts — and give a step-by-step recipe to add a new harness.
 
-This is the reference an agent reads to add a harness adapter or rebuild one from scratch. It is paired with one deep-dive file per harness:
+This is the reference an agent reads to add a harness adapter or rebuild one from scratch.
+
+> **Adding or changing a Pi extension is governed by `RULES/13-pi-extensions.md`** —
+> one home per extension, a directory with an `index.ts` per multi-file extension,
+> and `bin/valknut-load.sh --check` as the gate. **Two load paths means no agent can
+> be seated**, and the only symptom herdr can report is a pane that will not sit at
+> a prompt. It is paired with one deep-dive file per harness:
 
 | Deep dive | Harness |
 |---|---|

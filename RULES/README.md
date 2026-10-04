@@ -22,3 +22,4 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 
 | 09 | `09-electron.md` | Electron is a local seat: local connections only, no login, the rune icon and entry installed, one lifecycle with the web. |
 | 10 | `10-deployed-servers.md` | Every server/service/worker/MCP runs from a file the repo owns and is deployed from it (`bin/fleet-ensure.sh`); never hand-placed on a machine. |
+| 13 | `13-pi-extensions.md` | Pi extensions: **one home per extension** (`.pi/shared/extensions/` → `~/.pi/agent/extensions/`), pi's own layout (a directory needs `index.ts`), and `bin/valknut-load.sh --check` as the gate. Two load paths means **no agent can be seated**. |
