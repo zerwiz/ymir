@@ -297,11 +297,19 @@ ymir_root_record() {
   [ -d "$PI_EXT_HOME" ] || return 0
   tmp="$(mktemp 2>/dev/null)" || return 0
   printf '%s\n' "$ROOT" >"$tmp"
+  # PRUNE DEAD ROOTS. Measured 2026-10-04: `.ymir-root` carried FOUR roots and TWO of them were
+  # `.yggdrasil/` worktrees that no longer exist. Every resolver that reads this file asks "the
+  # first recorded root that really holds bin/syn-watch-arm.sh", so a worktree that survives here
+  # after it is deleted from disk will eventually be picked — and every door an extension calls
+  # through it fails at 127. This list is a cache of places that USED to be real; a cache of dead
+  # places is worse than no cache.
   if [ -r "$pointer" ]; then
     while IFS= read -r line; do
       [ -n "$line" ] || continue
       [ "$line" = "$ROOT" ] && continue
       grep -qxF -- "$line" "$tmp" 2>/dev/null && continue
+      # keep a root only while it still IS a root
+      [ -x "$line/bin/syn-watch-arm.sh" ] || continue
       printf '%s\n' "$line" >>"$tmp"
     done <"$pointer"
   fi
