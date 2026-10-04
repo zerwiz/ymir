@@ -1011,6 +1011,23 @@ step_loaders() {
       else
         add loaders FAIL "the seat could not be seated — run bin/valknut-load.sh --status"
       fi
+
+      # The phone gateway (plan 68 P1). Installed and UPDATED, not just written: a capability
+      # that is committed and never seated is the exact failure this file already fails on
+      # (see the Rule comment above), so the gateway gets the same treatment as the extensions —
+      # its adopted dependency is installed, and it is PROVEN by its own smoke test before this
+      # install is allowed to call itself done.
+      if [ "$CHECK" = 1 ]; then
+        add gateway OK "ymir-gateway present (tools/ymir-gateway)"
+      else
+        ( cd "$SCRIPT_DIR/tools/ymir-gateway" 2>/dev/null \
+            && npm i --no-audit --no-fund @agentclientprotocol/sdk >/dev/null 2>&1 ) || true
+        if bash "$SCRIPT_DIR/tools/ymir-gateway/smoke.sh" >/dev/null 2>&1; then
+          add gateway OK "ymir-gateway seated and its smoke test answers"
+        else
+          add gateway FAIL "ymir-gateway smoke test failed — run bash tools/ymir-gateway/smoke.sh"
+        fi
+      fi
       # Seat the post-merge rebind hook as well. Pi loads its extensions from
       # ${HOME}/.pi/agent/extensions/, so a merged extension fix stays invisible
       # to the running harness unless the bind re-runs. No install and no update
