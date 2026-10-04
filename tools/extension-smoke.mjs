@@ -50,7 +50,18 @@ for (const name of names) {
       bad++;
       continue;
     }
-    mod = await import(join(root, ".pi", "shared", "extensions", `${name}.ts`));
+    // Resolve an extension the way PI resolves it (Rule 13 §3): a direct `.ts`, or a
+    // DIRECTORY whose entry point is `index.ts`. Pi's loader does exactly this and does
+    // not recurse deeper, so anything else is not an extension. Hard-coding `${name}.ts`
+    // is what broke this gate the moment a multi-file extension became a folder.
+    const shelf = join(root, ".pi", "shared", "extensions");
+    const asFile = join(shelf, `${name}.ts`);
+    const asDir = join(shelf, name, "index.ts");
+    const entry = existsSync(asFile) ? asFile
+                : existsSync(asDir) ? asDir
+                : null;
+    if (!entry) throw new Error(`no extension named ${name}: neither ${name}.ts nor ${name}/index.ts`);
+    mod = await import(entry);
   } catch (e) {
     const msg = String(e.message);
     // Pi resolves its OWN packages (@earendil-works/pi-ai, pi-tui) from the global install;
