@@ -119,7 +119,7 @@ Full rules, examples, and the `--version` fast path: `assets/principles.md`.
 ```
 harnesses[6]{harness,surface,tier,figures}:
   "OpenCode","`.opencode/plugins/saga-sessionstart.js`, `syn-watch-arm.js`, `syn-turnend-guard.js`, `syn-pretool-check.js`, `syn-cd-check.js`","run","Sága+Sýn"
-  "Pi","`.pi/extensions/syn-turnend-guard.ts`, `gna-pi-watch.ts` (+ Vörðr supervisor)","run","Sága+Sýn+Gná+Vörðr"
+  "Pi","`.pi/shared/extensions/syn-turnend-guard.ts`, `gna-pi-watch.ts` (+ Vörðr supervisor)","run","Sága+Sýn+Gná+Vörðr"
   "Claude Code","`.claude/settings.json` SessionStart + Stop","run","Sága+Sýn"
   "Cursor","`.cursor/hooks.json` sessionStart + stop + preToolUse","run","Sága+Sýn"
   "Codex","`.codex/hooks.json` SessionStart + PreToolUse + Stop (`[features].hooks=true`)","run","Sága+Sýn"

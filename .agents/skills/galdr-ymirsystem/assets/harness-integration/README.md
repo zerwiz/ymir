@@ -420,7 +420,7 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 | `.agents/harness/opencode/plugins/lib/rodd-operational-input.js` | `encodeRoddOperationalInput(root, kind, content)` | shared wire |
 | `.pi/shared/extensions/syn-turnend-guard.ts` | `export default function (pi: ExtensionAPI)` | 1, 3, 4 |
 | `.pi/shared/extensions/gna-pi-watch.ts` | `export default function (pi: ExtensionAPI)` | 2 |
-| `.pi/shared/extensions/ro.ts` | Ró — the calm presentation preference (`/calm`), state/ro | user |
+| `.pi/shared/extensions/ro/index.ts` | Ró — the calm presentation preference (`/calm`), state/ro | user |
 | `.pi/shared/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor; strictly user-facing, no LLM tool. **Resolution:** `$VISUAL` → `$EDITOR` → the first editor that exists (`code cursor zed subl nvim vim hx helix nano micro emacs vi`), so a host that is not Omarchy — where Omarchy's own launcher or a bare `vi` may be absent — still gets a working editor instead of an ENOENT | user |
 | `.pi/shared/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
 | `.pi/shared/extensions/todo.ts` | the todo surface | user |

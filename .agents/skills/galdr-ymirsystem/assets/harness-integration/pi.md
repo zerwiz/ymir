@@ -18,8 +18,8 @@ Pi is a **run-tier** harness with an in-process extension API: the extension run
 
 | File | Norse role | Contract parts |
 |---|---|---|
-| `.pi/extensions/syn-turnend-guard.ts` | **Sýn** — session-start injection + compaction re-emit + turn-end guard + PreToolUse seatbelts | 1, 3, 4 |
-| `.pi/extensions/gna-pi-watch.ts` | **Gná** — watcher continuity (arm, re-arm, deliver actionable wakes) | 2 |
+| `.pi/shared/extensions/syn-turnend-guard.ts` | **Sýn** — session-start injection + compaction re-emit + turn-end guard + PreToolUse seatbelts | 1, 3, 4 |
+| `.pi/shared/extensions/gna-pi-watch.ts` | **Gná** — watcher continuity (arm, re-arm, deliver actionable wakes) | 2 |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` | **Vörðr** — detached child supervisor for the digest | 1 (transport) |
 | `.pi/extensions/lib/rodd-operational-input.ts` | **Rödd** — TypeScript wire bridge | shared |
 | `.pi/extensions/README.md` | prose inventory (see §11: partially stale) | — |
@@ -29,7 +29,7 @@ Pi is a **run-tier** harness with an in-process extension API: the extension run
 Both extensions use `import.meta.url` to locate themselves and derive the root as `resolve(extensionDir, "../..")` — i.e. the repo root that holds `bin/`:
 
 ```ts
-// .pi/extensions/syn-turnend-guard.ts:23-29
+// .pi/shared/extensions/syn-turnend-guard.ts:23-29
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
 const root = resolve(extensionDir, "../..");
@@ -59,7 +59,7 @@ Sýn also registers a `process.once("exit", ...)` cleanup that SIGKILLs the dige
 ### 2.1 `session_start` source mapping (Sýn)
 
 ```ts
-// .pi/extensions/syn-turnend-guard.ts:522-534
+// .pi/shared/extensions/syn-turnend-guard.ts:522-534
 pi.on?.("session_start", (event, ctx) => {
   const reason = String(event.reason ?? "");
   const source = reason === "startup"
@@ -91,7 +91,7 @@ The returned message is a `syn-sessionstart-nudge` `SessionstartMessage` with en
 
 ### 2.3 `session_compact` (Sýn)
 
-Manual compaction is idle and auto-compaction may retry without another `before_agent_start`, so the compact handler creates its own generation and calls `pi.sendMessage(message)` directly (`.pi/extensions/syn-turnend-guard.ts:546-557`).
+Manual compaction is idle and auto-compaction may retry without another `before_agent_start`, so the compact handler creates its own generation and calls `pi.sendMessage(message)` directly (`.pi/shared/extensions/syn-turnend-guard.ts:546-557`).
 
 ### 2.4 `agent_settled` turn-end guard (Sýn)
 
@@ -131,7 +131,7 @@ Both seatbelts piggyback on the same extension file so no extra `-e` flag is nee
 
 `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` runs the Sága runner as a **detached child** so Pi can stream and cap output without blocking the session open.
 
-Sýn spawns it (`.pi/extensions/syn-turnend-guard.ts:260-282`):
+Sýn spawns it (`.pi/shared/extensions/syn-turnend-guard.ts:260-282`):
 
 ```ts
 const supervised = process.platform !== "win32";
@@ -167,7 +167,7 @@ Liveness sees real death (`gleipnir_pid_alive` / `pidAlive`). `kill(0)` alone re
 
 ### Delivery cap and truncation
 
-Sýn caps injected bytes at `sessionstartDeliveryBytes = 512 * 1024` (`.pi/extensions/syn-turnend-guard.ts:71`). On overflow it appends:
+Sýn caps injected bytes at `sessionstartDeliveryBytes = 512 * 1024` (`.pi/shared/extensions/syn-turnend-guard.ts:71`). On overflow it appends:
 
 ```
 PI SESSION-START DELIVERY TRUNCATED - the digest exceeded 512 KiB. Treat omitted context as unread and inspect the named files directly before acting on it.
@@ -185,13 +185,13 @@ Pi's prerequisite exit is `sessionstartIneligibleExit = 3`; a stand-down (`BROKK
 
 ## 4. Gná watcher continuity
 
-`.pi/extensions/gna-pi-watch.ts` owns the watcher in the persistent TUI. It exposes:
+`.pi/shared/extensions/gna-pi-watch.ts` owns the watcher in the persistent TUI. It exposes:
 
 - **Command** `pi.registerCommand("gna-watch-arm", ...)` (line 530).
 - **Tool** `pi.registerTool({ name: "gna_watch_arm", ... })` (line 538) with `promptGuidelines` telling the model to call it **only** for the first cycle or after an actionable notification, never after ordinary work — the extension re-arms automatically.
 - **Events** `session_start` (activate generation, `markLoaded`) and `session_shutdown` (stop generation).
 
-Arm spawn (`.pi/extensions/gna-pi-watch.ts:397-434`):
+Arm spawn (`.pi/shared/extensions/gna-pi-watch.ts:397-434`):
 
 ```ts
 const ownership = lockOwnership();
@@ -226,7 +226,7 @@ Pi will not auto-load tracked `.pi/extensions/*.ts` until the project is trusted
 Upstream's trust-free fallback is to launch the selected executable with the extension flags explicitly:
 
 ```bash
-pi -e .pi/extensions/syn-turnend-guard.ts -e .pi/extensions/gna-pi-watch.ts
+pi -e .pi/shared/extensions/syn-turnend-guard.ts -e .pi/shared/extensions/gna-pi-watch.ts
 ```
 
 Use this only for diagnosis or an untrusted checkout; the production path is the trust prompt.

@@ -140,7 +140,7 @@ the well extension's `session_start` probe finds it up even on a re-emit or nudg
 | Harness | Surface | Mechanism | Tier |
 |---|---|---|---|
 | OpenCode | `.opencode/plugins/saga-sessionstart.js` | `session.created` → run digest once per session id, inject via `client.session.promptAsync`; `syn-watch-arm.js` owns `session.idle` | nudge/run |
-| Pi | `.pi/extensions/syn-turnend-guard.ts` | native session-open run; digest injected before the first turn; re-emit on compaction; refuse blind turn end | run |
+| Pi | `.pi/shared/extensions/syn-turnend-guard.ts` | native session-open run; digest injected before the first turn; re-emit on compaction; refuse blind turn end | run |
 | Claude Code | `.claude/settings.json` | `SessionStart` runs `saga-sessionstart-run.sh`; `Stop` runs `syn-turnend-guard.sh --claude` then async `syn-watch-arm.sh --restart` | run |
 | Codex | `.codex/hooks.json` | `SessionStart` pipes the payload to `saga-sessionstart-run.sh`; `Stop` runs the guard; `PreToolUse` runs the Sýn seatbelts | nudge |
 | Cursor | `.cursor/hooks.json` | `sessionStart` captures digest and returns `{additional_context}`; `stop` returns `{followup_message}` on guard exit 2; `preToolUse` runs seatbelts | interactive only |
@@ -171,8 +171,8 @@ Supervision is **event-driven and zero-token**: no polling by the model, no baby
 |---|---|---|---|
 | The arm (the watch loop) | **Sýn** | one standing arm per home: polls the state dir, raises `signal:`/`stale:`/`check:`/`heartbeat:` when the primary is needed, and IDLES (never retires) when no session is seated | `bin/syn-watch.sh` (thin door; `run` is the loop), `src/ymir_runtime/watch.py` (the behaviour), `tools/mill/systemd/ymir-syn-watch.service` |
 | The thin client | **Sýn** | enters a vacant helm, seats/attaches to the arm, relays the raised line, exits | `bin/syn-watch-arm.sh` |
-| Turn-boundary guard | **Sýn** | refuses a blind turn end when supervision is off | `bin/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-turnend-guard.js` |
-| Continuity messenger | **Gná** | arms, re-arms, delivers actionable wakes to the Pi session | `.pi/extensions/gna-pi-watch.ts` |
+| Turn-boundary guard | **Sýn** | refuses a blind turn end when supervision is off | `bin/syn-turnend-guard.sh`, `.pi/shared/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-turnend-guard.js` |
+| Continuity messenger | **Gná** | arms, re-arms, delivers actionable wakes to the Pi session | `.pi/shared/extensions/gna-pi-watch.ts` |
 | Digest child warden | **Vörðr** | supervises the Sága digest child so Pi can stream and cap its output | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` |
 
 Mechanics:

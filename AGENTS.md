@@ -127,7 +127,7 @@ incomplete change. The router is `.agents/skills/galdr-ymirsystem/SKILL.md` (its
 table maps every task to its file).
 
 ```
-governed[10]{path,load_first}:
+governed[11]{path,load_first}:
   "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
   "src/ymir_runtime/** | bin/ymir-engine*.sh | bin/einherjar-spawn.sh | bin/eindri-start.sh",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
@@ -412,7 +412,7 @@ gate by another door, once `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set.
 `RULES/` holds the numbered house law. Read the rule that governs the task:
 
 ```
-rules[6]{file,governs}:
+rules[7]{file,governs}:
   "RULES/01-domains.md","domains (Greinar) · houses · Eindri"
   "RULES/02-agents.md","agents: .agents/agents is canonical; harness dirs are symlinks; no mock"
   "RULES/03-houses.md","a house is a company (WayOf); domains are never houses"

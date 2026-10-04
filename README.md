@@ -542,7 +542,7 @@ and are required from `hyprland.lua`. See what is live with
 |---|---|---|
 | **SUPER + Y** | raise **Hlidskjalf** — the control plane | `bin/desktop-place.sh` → `~/.config/hypr/ymir-launchers.lua` |
 | **SUPER + M** | raise **Smiðja** — the visualizer | same file |
-| **ctrl + shift + e** | open the **file picker** over the working directory | `.pi/extensions/open-editor.ts` |
+| **ctrl + shift + e** | open the **file picker** over the working directory | `.pi/shared/extensions/open-editor.ts` |
 
 Each app window opens on **its own numbered desktop** (the placement rules in
 `bin/desktop-place.sh` send it there), so a speed-start both raises the app and

@@ -70,8 +70,8 @@ These are the figures the port actually wired into `bin/` and the harness adapte
 | Sub-agent worker | **Eindri** | "The one who runs the errand" | `.agents/subagents/*.md`, `bin/einherjar-spawn.sh` |
 | Session-start digest | **Sága** | The seeress who sees all that happens | `bin/saga-session-start.sh`, `bin/saga-sessionstart-run.sh` |
 | Daily briefing (same seeress, dated) | **Sága** | The daily seeing | `bin/nornir-job-daily-briefing.sh` |
-| Watch / supervision | **Sýn** | Watchful sight; guards the turn boundary | `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-watch-arm.js`, `.opencode/plugins/syn-turnend-guard.js` |
-| Watch wake messenger | **Gná** | Frigg's rider who carries word | `.pi/extensions/gna-pi-watch.ts` |
+| Watch / supervision | **Sýn** | Watchful sight; guards the turn boundary | `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`, `.pi/shared/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-watch-arm.js`, `.opencode/plugins/syn-turnend-guard.js` |
+| Watch wake messenger | **Gná** | Frigg's rider who carries word | `.pi/shared/extensions/gna-pi-watch.ts` |
 | Digest process supervisor | **Vörðr** | The warden who holds the child | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` |
 | Operational wire | **Rödd** | The voice between Allfather, Brokk, and Eindri | `bin/rodd-operational-input.sh`, `.pi/extensions/lib/rodd-operational-input.ts`, `.opencode/plugins/lib/rodd-operational-input.js` |
 | Session lock | **Gleipnir** | The impossible chain that binds one session | `bin/gleipnir-lock-lib.sh` → `state/.lock` |
@@ -201,8 +201,8 @@ kept only so the migration is traceable. New tooling must still not reproduce an
 
 ```
 runtime_figures[7]{figure,role,path}:
-  "Ró","calm presentation (hides chrome; /ro)","`.pi/extensions/ro.ts` + `lib/ro-*.ts`, `state/ro` (env `YMIR_RO`)"
-  "Skuld","supervision branch (routine wakes; /skuld-model)","`.pi/extensions/skuld-branch-supervision.ts` + `lib/skuld-branch-*.ts`, `config/skuld-branch-*`"
+  "Ró","calm presentation (hides chrome; /ro)","`.pi/shared/extensions/ro/index.ts` + `lib/ro-*.ts`, `state/ro` (env `YMIR_RO`)"
+  "Skuld","supervision branch (routine wakes; /skuld-model)","`.pi/shared/extensions/skuld-branch-supervision/index.ts` + `lib/skuld-branch-*.ts`, `config/skuld-branch-*`"
   "Valknut","repo-local loader (binds agents into each tool)","`bin/valknut-load.sh`"
   "Mímir","Eindri planner (architecture, sequencing)","`.agents/agents/mimir-planner.md`"
   "Forseti","Eindri reviewer (QA, acceptance; changes nothing)","`.agents/agents/forseti-reviewer.md`"

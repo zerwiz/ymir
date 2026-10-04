@@ -12,7 +12,7 @@ Reference is read-only: the upstream distro lives at `$BROKK_UPSTREAM` and is ci
 |---|---|
 | Role adoption on launch (`AGENTS.md:1-12`) | `AGENTS.md` mandate: "You are Brokk; the operator is the Allfather" |
 | One-command session start (upstream digest) | `bin/saga-session-start.sh` |
-| Native harness injection (`bin/fm-sessionstart-run.sh`, `.opencode/plugins/fm-primary-sessionstart-nudge.js`, `.pi/extensions/fm-primary-turnend-guard.ts`, `.claude/settings.json`) | `bin/saga-sessionstart-run.sh`, `.opencode/plugins/saga-sessionstart.js`, `.pi/extensions/syn-turnend-guard.ts`, `.claude/settings.json` |
+| Native harness injection (`bin/fm-sessionstart-run.sh`, `.opencode/plugins/fm-primary-sessionstart-nudge.js`, `.pi/extensions/fm-primary-turnend-guard.ts`, `.claude/settings.json`) | `bin/saga-sessionstart-run.sh`, `.opencode/plugins/saga-sessionstart.js`, `.pi/shared/extensions/syn-turnend-guard.ts`, `.claude/settings.json` |
 | Home separation (`FM_HOME`, `AGENTS.md:42-54`) | `BROKK_HOME`; private `data/ state/ config/` |
 | Context sources (`data/Allfather.md · projects.md · learnings.md`, state metas) | `data/operator.md · projects.md · learnings.md` |
 | Harness detection + dispatch (`bin/fm-harness.sh`, `bin/fm-spawn.sh`, `config/eindri-harness`, `config/crew-dispatch.json`) | `bin/hamr-harness.sh`, `bin/einherjar-spawn.sh`, `config/eindri-harness`, `config/eindri-dispatch.json` |
@@ -54,8 +54,8 @@ Before retargeting, every upstream file was classified. The rule: **generic mech
 | `bin/fm-brief.sh` | worker brief scaffold with a fixed delivery-contract line | `bin/erindi-brief.sh` |
 | `bin/fm-spawn.sh` | worktree + backend launch + meta record | `bin/einherjar-spawn.sh` |
 | `bin/fm-crew-state.sh` | reconcile status log vs backend liveness | `bin/vor-crew-state.sh` |
-| `.pi/extensions/fm-primary-turnend-guard.ts` | inject digest, re-emit on compaction, refuse blind end | `.pi/extensions/syn-turnend-guard.ts` |
-| `.pi/extensions/fm-primary-pi-watch.ts` | watcher continuity (arm/re-arm/deliver) | `.pi/extensions/gna-pi-watch.ts` |
+| `.pi/extensions/fm-primary-turnend-guard.ts` | inject digest, re-emit on compaction, refuse blind end | `.pi/shared/extensions/syn-turnend-guard.ts` |
+| `.pi/extensions/fm-primary-pi-watch.ts` | watcher continuity (arm/re-arm/deliver) | `.pi/shared/extensions/gna-pi-watch.ts` |
 | `.pi/extensions/lib/fm-sessionstart-supervisor.mjs` | supervise the digest child | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` |
 | `.pi/extensions/lib/fm-operational-input.ts` | wire bridge for Pi | `.pi/extensions/lib/rodd-operational-input.ts` |
 | `.opencode/plugins/fm-primary-sessionstart-nudge.js` | nudge-tier session-start injection | `.opencode/plugins/saga-sessionstart.js` |
@@ -244,8 +244,8 @@ Expected: only provenance citations in this file and the known legacy strings li
 | `bin/syn-cd-pretool-check.sh` | `bin/fm-cd-pretool-check.sh` | landed, inert v0 |
 | `bin/nornir-cron-start.sh`, `bin/nornir-job-*.sh` | none (Ymir extension) | landed, verified |
 | `bin/runes-append.sh` | none (Ymir extension) | landed, verified |
-| `.pi/extensions/syn-turnend-guard.ts` | `.pi/extensions/fm-primary-turnend-guard.ts` | landed, verified |
-| `.pi/extensions/gna-pi-watch.ts` | `.pi/extensions/fm-primary-pi-watch.ts` | landed; calm + supervision branch dropped |
+| `.pi/shared/extensions/syn-turnend-guard.ts` | `.pi/extensions/fm-primary-turnend-guard.ts` | landed, verified |
+| `.pi/shared/extensions/gna-pi-watch.ts` | `.pi/extensions/fm-primary-pi-watch.ts` | landed; calm + supervision branch dropped |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` | `.pi/extensions/lib/fm-sessionstart-supervisor.mjs` | landed |
 | `.pi/extensions/lib/rodd-operational-input.ts` | `.pi/extensions/lib/fm-operational-input.ts` | landed |
 | `.opencode/plugins/saga-sessionstart.js` | `.opencode/plugins/fm-primary-sessionstart-nudge.js` | landed |

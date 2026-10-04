@@ -10,7 +10,7 @@ pi_boot[6]{figure,mechanism,file}:
   "Hamr","harness resolution (Pi default profile)","bin/hamr-harness.sh"
   "Einherjar","dispatch Eindri workers from an Erindi brief","bin/einherjar-spawn.sh"
   "Runtime backend","herdr/tmux pane supervision (Þjazi protocol 14+)","runtime backend"
-  "Supervision","Sýn/Gná watcher + Pi supervision branch under Valhalla","bin/syn-watch-arm.sh, .pi/extensions/gna-pi-watch.ts"
+  "Supervision","Sýn/Gná watcher + Pi supervision branch under Valhalla","bin/syn-watch-arm.sh, .pi/shared/extensions/gna-pi-watch.ts"
   "Worktrees","Yggdrasil (`.yggdrasil/<id>/`) isolation","bin/einherjar-spawn.sh"
   "Huginn observer","read-only (W0012) until Ratatoskr two-way","bin/nornir-job-observer.sh"
 ```

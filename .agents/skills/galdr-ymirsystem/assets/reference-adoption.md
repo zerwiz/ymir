@@ -82,13 +82,13 @@ Sixteen skills adopted under `.agents/skills/`; see the registry in
 ```
 doc_map[8]{upstream,adopt_as}:
   "supervision-protocols/*","`.agents/skills/galdr-ymirsystem/assets/harness-integration/` (per-harness tier)"
-  "turnend-guard.md","`bin/syn-turnend-guard.sh` + `.pi/extensions/syn-turnend-guard.ts`"
+  "turnend-guard.md","`bin/syn-turnend-guard.sh` + `.pi/shared/extensions/syn-turnend-guard.ts`"
   "trace-context.md","W3C trace propagation (W0094)"
   "subagent-guard.md","Eindri pretool seatbelts (syn-*-pretool-check.sh)"
   "architecture.md","`.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`"
   "configuration.md","`.agents/config/` keys (W0104)"
   "tmux-backend.md / herdr-backend.md","`bin/` runtime backends (Valhalla)"
-  "calm.md","`.pi/extensions/ro.ts` (Ró)"
+  "calm.md","`.pi/shared/extensions/ro/index.ts` (Ró)"
 ```
 
 ## Maintaining this

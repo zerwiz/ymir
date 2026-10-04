@@ -151,7 +151,7 @@ resets config) without explicit confirmation.
 
 ## The editor (Pi's `/edit`)
 
-Pi ships a user-facing **Open Editor** extension (`.pi/extensions/open-editor.ts`) that
+Pi ships a user-facing **Open Editor** extension (`.pi/shared/extensions/open-editor.ts`) that
 opens files from the working directory in the Allfather's own editor. It is
 **strictly his** — no LLM tool is registered, because agents already have `read`
 and `edit`. Know it, name it when he would reach for it, and never try to drive it
