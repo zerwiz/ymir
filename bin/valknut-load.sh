@@ -27,6 +27,11 @@ PI_GLOBAL="${HOME}/.pi/agent/agents"
 # seated. This loader DEPLOYS that source into the single home.
 PI_EXT_SRC="$ROOT/.pi/shared/extensions"
 PI_EXT_HOME="${HOME}/.pi/agent/extensions"
+# The helper modules the shared extensions import. Still sourced from the OLD flat
+# tree (`.pi/extensions/lib`) because plan 29 built them there and the single-home
+# migration moved the extensions but not their internals — see the harness-integration
+# asset. Named separately so --check can see it without running a deploy.
+PI_EXT_LIB_SRC="$ROOT/.pi/extensions/lib"
 OC_LOCAL="$ROOT/.opencode/agents"
 SKILLS="$ROOT/.agents/skills"
 
@@ -41,18 +46,133 @@ for a in "$@"; do
   esac
 done
 
-MODE_OPENCODE=0; MODE_PI=0; MODE_GLOBAL=0; MODE_INSTALL=0; MODE_STATUS=0
+MODE_OPENCODE=0; MODE_PI=0; MODE_GLOBAL=0; MODE_INSTALL=0; MODE_STATUS=0; MODE_CHECK=0
 for a in "$@"; do
   case "$a" in
     --opencode) MODE_OPENCODE=1 ;;
     --pi|--agents) MODE_PI=1 ;;
     --global) MODE_GLOBAL=1 ;;
     --status) MODE_STATUS=1 ;;
+    --check) MODE_CHECK=1 ;;
     --all) MODE_OPENCODE=1; MODE_PI=1 ;;
     --install) MODE_INSTALL=1 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/valknut-load.sh [--opencode|--pi|--global|--status|--all]\n' "$a" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/valknut-load.sh [--opencode|--pi|--global|--status|--check|--all]\n' "$a" >&2; exit 2 ;;
   esac
 done
+
+# --check: is the DEPLOYED extension tree what the repo says it is?
+#
+# This gate exists because of four defects that every other check missed (2026-10-04):
+#   1. the deployed ymir-subagents.ts was 12,991 B against a 13,748 B source, so the
+#      RUNNING harness was missing the fix that stops a figure being seated with an
+#      unfilled brief — and every file listing looked correct
+#   2. `constellation-load.test.ts` and `constellation-registry.test.ts` were copied
+#      into the live tree on every deploy, because nothing excluded them
+#   3. an extension present in BOTH `~/.pi/agent/extensions/` and the project
+#      `.pi/extensions/` registers its tools twice; pi refuses the duplicate and no
+#      agent can be seated. The no-op stubs exist to prevent exactly this
+#   4. the governing doc pointed at both paths at once, so a grep for a module's
+#      home returned two answers
+#
+# A deploy is a COPY. Nothing re-runs the loader on its own, so the only thing that
+# can catch a stale deploy is a check that asks. Exit 1 on any failure, so it can sit
+# in CI and in the post-merge hook rather than in someone's memory.
+if [ "$MODE_CHECK" = "1" ]; then
+  fails=0
+  printf 'check{pi-extensions-deployed}:\n'
+  if [ ! -d "$PI_EXT_HOME" ]; then
+    printf '  %-46s %s\n' "deployed tree" "MISSING — run: bin/valknut-load.sh --pi"
+    exit 1
+  fi
+
+  # 1. every deployed extension must be byte-identical to its source
+  stale=0
+  for f in "$PI_EXT_SRC"/*.ts "$PI_EXT_SRC"/*.js; do
+    [ -e "$f" ] || continue
+    b=$(basename "$f")
+    if [ ! -f "$PI_EXT_HOME/$b" ]; then
+      printf '  %-46s %s\n' "$b" "NOT DEPLOYED"
+      stale=$((stale+1))
+    elif ! cmp -s "$f" "$PI_EXT_HOME/$b"; then
+      printf '  %-46s %s\n' "$b" "STALE — deployed differs from source"
+      stale=$((stale+1))
+    fi
+  done
+  [ "$stale" -eq 0 ] && printf '  %-46s %s\n' "all extensions byte-identical to source" "PASS" \
+                     || { printf '  %-46s %s\n' "stale or undeployed extensions" "FAIL ($stale)"; fails=$((fails+1)); }
+
+  # 2. the helper modules the shared set imports must be deployed too — deploying
+  #    the top-level files ALONE ships extensions that cannot load
+  if [ -d "$PI_EXT_LIB_SRC" ]; then
+    miss=0
+    for f in "$PI_EXT_LIB_SRC"/*; do
+      [ -e "$f" ] || continue
+      b=$(basename "$f")
+      case "$b" in *.test.*|*.spec.*) continue ;; esac
+      if [ ! -f "$PI_EXT_HOME/lib/$b" ]; then
+        printf '  %-46s %s\n' "lib/$b" "NOT DEPLOYED"
+        miss=$((miss+1))
+      elif ! cmp -s "$f" "$PI_EXT_HOME/lib/$b"; then
+        printf '  %-46s %s\n' "lib/$b" "STALE"
+        miss=$((miss+1))
+      fi
+    done
+    [ "$miss" -eq 0 ] && printf '  %-46s %s\n' "all helper modules byte-identical" "PASS" \
+                      || { printf '  %-46s %s\n' "helper modules" "FAIL ($miss)"; fails=$((fails+1)); }
+  fi
+
+  # 3. nothing that is not a test may live in the live tree
+  leaked=0
+  for f in "$PI_EXT_HOME"/lib/*.test.* "$PI_EXT_HOME"/*.test.*; do
+    [ -e "$f" ] || continue
+    printf '  %-46s %s\n' "$(basename "$f")" "LEAKED — a test is in the live tree"
+    leaked=$((leaked+1))
+  done
+  [ "$leaked" -eq 0 ] && printf '  %-46s %s\n' "no test files in the deployed tree" "PASS" \
+                      || { printf '  %-46s %s\n' "test files deployed" "FAIL ($leaked)"; fails=$((fails+1)); }
+
+  # 4. no extension may exist in BOTH load paths. This is the collision that makes
+  #    pi exit with a tool-name conflict, and no agent can be seated.
+  #
+  #    Tested by fault injection, and the first version of this check was WRONG: it
+  #    skipped any project-local file byte-identical to the source, on the theory that
+  #    only a *different* file collides. A file copied VERBATIM from the source
+  #    collides just as hard — it registers the same tools from a second directory pi
+  #    already scanned. So the rule is the plain one: a project-local extension file
+  #    must either not exist, or register nothing at all.
+  dupes=0
+  for f in "$ROOT/.pi/extensions"/*.ts "$ROOT/.pi/extensions"/*.js; do
+    [ -e "$f" ] || continue
+    b=$(basename "$f")
+    sz=$(stat -c%s "$f")
+    if [ "$sz" -gt 1024 ]; then
+      printf '  %-46s %s\n' "$b" "DUPLICATE — ${sz}B in the project tree registers tools pi already loaded"
+      dupes=$((dupes+1))
+    elif [ -f "$PI_EXT_SRC/$b" ] && cmp -s "$f" "$PI_EXT_SRC/$b"; then
+      printf '  %-46s %s\n' "$b" "DUPLICATE — byte-identical to the deployed source"
+      dupes=$((dupes+1))
+    fi
+  done
+  [ "$dupes" -eq 0 ] && printf '  %-46s %s\n' "no extension in two load paths" "PASS" \
+                     || { printf '  %-46s %s\n' "double-registered extensions" "FAIL ($dupes)"; fails=$((fails+1)); }
+
+  # 5. A no-op stub is allowed only while it stays a no-op. List them, so the
+  #    eventual deletion of this tree is a decision rather than a surprise.
+  stubs=0
+  for f in "$ROOT/.pi/extensions"/*.ts; do
+    [ -e "$f" ] || continue
+    stubs=$((stubs+1))
+  done
+  printf '  %-46s %s\n' "project-local no-op stubs" "$stubs present (each must register nothing)"
+
+  printf 'check{pi-extension-check}:\n'
+  if [ "$fails" -eq 0 ]; then
+    printf '  %-46s %s\n' "valknut-load --check" "PASS"
+    exit 0
+  fi
+  printf '  %-46s %s\n' "valknut-load --check" "FAIL ($fails) — run: bin/valknut-load.sh --pi"
+  exit 1
+fi
 
 # --install: seat the post-merge hook, so a MERGE rebinds the surfaces. A merged
 # extension fix otherwise sits in the repo while the RUNNING harness keeps the
@@ -337,8 +457,23 @@ if [ "$MODE_PI" = 1 ]; then
       for f in "$PI_EXT_LIB"/*; do
         [ -e "$f" ] || continue
         b=$(basename "$f")
+        # Tests are not extensions and do not belong in the live tree. A .test.ts
+        # is never a discoverable entry point (no index.ts, not a top-level file),
+        # so it is harmless there — but it is copied on every loader run and then
+        # read as though it were part of the shipped extension set. The repo keeps
+        # its tests; the deploy does not.
+        case "$b" in
+          *.test.ts|*.test.js|*.test.mjs|*.spec.ts|*.spec.js) continue ;;
+        esac
         if [ -f "$PI_EXT_HOME/lib/$b" ] && cmp -s "$f" "$PI_EXT_HOME/lib/$b"; then continue; fi
         cp -f "$f" "$PI_EXT_HOME/lib/$b" && dep_n=$((dep_n+1))
+      done
+      # A test that a previous run already deployed stays deployed unless removed.
+      # Cleaning it up here is what makes the exclusion above actually take effect.
+      for f in "$PI_EXT_HOME"/lib/*.test.ts "$PI_EXT_HOME"/lib/*.test.js \
+               "$PI_EXT_HOME"/lib/*.test.mjs "$PI_EXT_HOME"/lib/*.spec.ts; do
+        [ -e "$f" ] || continue
+        rm -f "$f" && dep_n=$((dep_n+1))
       done
     fi
     add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (shared single home, lib included)"
