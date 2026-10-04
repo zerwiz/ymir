@@ -16,7 +16,20 @@ export LC_ALL=C
 #   bin/capabilities.sh --check    # fail when the register is stale (wired into ci-verify)
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Walk UP until we find the repo, rather than assuming one level. `bin/capabilities.sh` and
+# `bin/doors/capabilities.sh` BOTH have to work, and the difference is depth — a fixed `..`
+# made the nested copy resolve ROOT to `bin/`, so it looked for `bin/*.sh` inside `bin/bin/`,
+# found nothing, and rendered a 2-row register over a 400-door house. Nesting must not be able
+# to blind the index. (2026-10-04)
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 cd "$ROOT" || exit 2
 OUT=".agents/assets/agents/capabilities.md"
 MODE="${1:-write}"
@@ -25,7 +38,14 @@ MODE="${1:-write}"
 shells=$(ls bin/*.sh 2>/dev/null | wc -l | tr -d ' ')
 pys=$(find src/ymir_runtime -name '*.py' 2>/dev/null | wc -l | tr -d ' ')
 skills=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | LC_ALL=C sort -u | wc -l | tr -d ' ')
-tools=$(grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/*.ts 2>/dev/null | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | wc -l | tr -d ' ')
+# Enumerate the extension tree the way PI enumerates it (Rule 13 §3): a direct `.ts`,
+# or a directory whose entry point is `index.ts`. A flat glob of `*.ts` stopped seeing
+# ro/, constellation/ and skuld-branch-supervision/ the moment they became folders,
+# and the register silently UNDERCOUNTED by eight tools — which is worse than being
+# stale, because a stale register fails a gate and a wrong one does not.
+tools=$(find .pi/shared/extensions -type f -name '*.ts' -not -name '*.test.ts' 2>/dev/null \
+          | xargs -r grep -hoE 'pi\.registerTool\(\{|name: "[a-z_]+"' 2>/dev/null \
+          | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | wc -l | tr -d ' ')
 
 # Resolved ONCE, from TRACKED files only, for the same reason as bin/inventory.sh: a
 # verdict computed from the working tree is a verdict about THIS MACHINE. The untracked
