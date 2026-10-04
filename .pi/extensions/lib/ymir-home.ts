@@ -1,0 +1,100 @@
+/**
+ * ymir-home.ts — where the distro lives, as seen from a DEPLOYED extension.
+ *
+ * Pi extensions are deployed to ONE global home (`${HOME}/.pi/agent/extensions/`;
+ * see `bin/seat/valknut-load.sh` and the harness-integration asset). Deployed away from
+ * the tree that owns `bin/`, a copy cannot find it by walking up: the old
+ * `resolve(extensionDir, "../..")` reached `${HOME}/.pi`, which holds pi's own
+ * config and no `bin/` at all. Every extension that then exec'd `${root}/bin/…`
+ * exec'd a path that does not exist, and the failure was silent by construction —
+ * the Gná arm child died with exit 127 before its first poll, no
+ * `state/.watch.heartbeat` was ever written, and the watch was dead while every
+ * file listing looked correct. A deploy that copies an extension without telling
+ * it where its own `bin/` lives is not a deploy.
+ *
+ * So the root is RECORDED at deploy time: `bin/seat/valknut-load.sh --pi` writes one
+ * absolute root per line, most recent first, to `.ymir-root` beside the deployed
+ * extensions, and this module reads it back. Resolution order:
+ *
+ *   1. BROKK_ROOT_OVERRIDE · BROKK_HOME · YMIR_ROOT — an explicit word wins
+ *   2. the recorded roots, first one that verifies
+ *   3. `resolve(extensionDir, "../..")` — the pre-pointer contract, unchanged
+ *
+ * A candidate only counts if it really holds `bin/pi/syn-watch-arm.sh`, so a root
+ * that no longer exists (a merged-and-removed Yggdrasil worktree, an uninstalled
+ * npm prefix) is skipped rather than trusted. Nothing here is hardcoded: the
+ * record is written by the loader that performed the deploy (Rule 07).
+ *
+ * Note the deliberate split it enables: the ROOT owns `bin/`, the HOME owns
+ * `state/` and `config/`. They are usually the same tree and need not be — a
+ * private `$YMIR_HOME` has no `bin/` of its own, and conflating the two is what
+ * made the deployed copy exec a path that never existed.
+ */
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+
+/** The deploy-time root record, written beside the deployed extensions. */
+export const YMIR_ROOT_POINTER = ".ymir-root";
+
+/** A root is usable only when the arm script it will exec is really there. */
+export function isYmirRoot(candidate: string | undefined): boolean {
+  if (!candidate) return false;
+  return existsSync(resolve(candidate, "bin"));
+}
+
+function recordedRoots(extensionDir: string): string[] {
+  try {
+    return readFileSync(resolve(extensionDir, YMIR_ROOT_POINTER), "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch {
+    // No record — a session that started before the pointer contract.
+    return [];
+  }
+}
+
+/**
+ * Walk UP from a file until a directory that owns `bin/` is found.
+ *
+ * WHY, and it is Rule 12's exact lesson applied to the wrong file: the old code
+ * climbed a FIXED two levels (`resolve(extensionDir, "../..")`). That was correct
+ * only while every extension sat flat in one directory. The moment an extension
+ * became a folder — `constellation/index.ts`, one level deeper — the climb
+ * landed on `.pi/`, which owns no `bin/`, and six extensions failed to load.
+ *
+ * Rule 12 says it for the doors: **"a door may never resolve the repo by counting
+ * `..`"**, because depth must not be able to blind the resolver. The same law,
+ * the same reason. A `.ymir-root` pointer could not have saved it either: the
+ * pointer lives beside the DEPLOYED copy, and these extensions now live in the
+ * tree where there is nothing to record.
+ */
+function walkUpToRoot(from: string): string {
+  let dir = resolve(from);
+  for (let i = 0; i < 12; i += 1) {
+    if (isYmirRoot(dir)) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break; // reached the filesystem root
+    dir = parent;
+  }
+  return "";
+}
+
+/**
+ * The distro root: the tree that owns `bin/`. Never the session home.
+ */
+export function resolveYmirRoot(extensionDir: string): string {
+  const explicit = [
+    process.env.BROKK_ROOT_OVERRIDE,
+    process.env.BROKK_HOME,
+    process.env.YMIR_ROOT,
+  ].filter((value): value is string => Boolean(value));
+  for (const candidate of explicit) {
+    if (isYmirRoot(candidate)) return resolve(candidate);
+  }
+  const walked = walkUpToRoot(extensionDir);
+  if (walked) return walked;
+  // Nothing verified. Name the first candidate we were given, so the failure
+  // surfaces as a missing bin/ at that exact path — never hidden behind another.
+  return resolve(explicit[0] ?? extensionDir);
+}
