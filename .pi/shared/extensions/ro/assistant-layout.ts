@@ -8,7 +8,7 @@
 // ./ro-visibility.ts owns which classes Ró hides.
 import type { AssistantMessageComponent as PiAssistantMessageComponent } from "@earendil-works/pi-coding-agent";
 import * as PiCodingAgent from "@earendil-works/pi-coding-agent";
-import { roPresentationHides } from "./ro-visibility.ts";
+import { roPresentationHides } from "../lib/ro-visibility.ts";
 
 type AssistantMessage = Parameters<PiAssistantMessageComponent["updateContent"]>[0];
 

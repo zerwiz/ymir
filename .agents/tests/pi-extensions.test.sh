@@ -17,7 +17,7 @@ set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SRC="$ROOT/.pi/shared/extensions"
-LIB_SRC="$ROOT/.pi/extensions/lib"
+LIB_SRC="$SRC/lib"
 PROJECT="$ROOT/.pi/extensions"
 HOME_EXT="${PI_EXT_HOME:-$HOME/.pi/agent/extensions}"
 
@@ -64,13 +64,22 @@ for f in "$PROJECT"/*.ts "$PROJECT"/*.js; do
 done
 [ "$heavy" -eq 0 ] && ok "every .pi/extensions/*.ts is a no-op factory"
 
-# ── 3. lib/ is NOT an extension directory, and that is correct ───────────────
-# Pi: "No recursion beyond one level", and a subdirectory loads only with an
-# index.ts. lib/ has none, so it is never scanned — the shared extensions reach
-# those modules by relative import, and the loader must deploy them too.
-[ -f "$LIB_SRC" ] && ls "$LIB_SRC"/index.ts >/dev/null 2>&1 \
-  && bad "lib/ has no index.ts (it must never become an extension directory)" \
-  || ok "lib/ has no index.ts — pi will never scan it as an extension"
+# ── 3. directory shape: index.ts where there is a directory (Rule 13 §3) ─────
+# Pi loads a subdirectory ONLY when it holds index.ts. So every extension folder
+# must have one, and lib/ must NOT have one — it is the shared set, not an
+# extension.
+nodirs=0; withidx=0
+for d in "$SRC"/*/; do
+  [ -d "$d" ] || continue
+  b=$(basename "$d")
+  if [ "$b" = "lib" ]; then
+    [ -f "$d/index.ts" ] && { bad "lib/ has an index.ts — pi would load it as an extension"; nodirs=1; } \
+                         || ok "lib/ has no index.ts — shared modules, never an extension"
+    continue
+  fi
+  if [ -f "$d/index.ts" ]; then withidx=$((withidx+1)); else bad "$b/ has no index.ts — pi would not discover it"; nodirs=1; fi
+done
+[ "$nodirs" -eq 0 ] && [ "$withidx" -gt 0 ] && ok "every extension folder has an index.ts ($withidx)"
 
 # ── 4. every relative import RESOLVES — where the extension actually runs ─────
 # An extension's imports must resolve in the DEPLOYED tree, because that is where
@@ -100,11 +109,31 @@ else
   ok "every relative import resolves where extensions run ($(basename "$tree_of"))"
 fi
 
-# The known gap, stated every run so it cannot be forgotten.
-gap=$(grep -cE '"\./lib/' "$SRC"/*.ts 2>/dev/null | awk -F: '{s+=$2} END{print s+0}')
-[ "$gap" -gt 0 ] && printf '# NOTE: %s import(s) in the source still reach sideways into lib/ —\n' "$gap" \
-  && printf '#       Rule 13 §3 says those modules belong inside their own extension folder\n' \
-  && printf '#       (one directory + index.ts). The layout is unchanged; that is steps 3-5.\n'
+# Every lib/ module must be genuinely SHARED — Rule 13 §3. One importer means the
+# module has an owner and belongs inside that extension's folder instead.
+# A module with at most one importer and no path reference is misplaced: it has
+# an owner and belongs inside that extension's folder. A module referenced BY PATH
+# (spawned as a child process rather than imported) is a different case — it has no
+# import graph to sit in, so lib/ is its correct home.
+solo=$(for m in "$LIB_SRC"/*.ts "$LIB_SRC"/*.mjs; do
+          [ -e "$m" ] || continue
+          b=$(basename "$m")
+          n=$(grep -l -- "\./lib/$b\|\.\./lib/$b" "$SRC"/*.ts "$SRC"/*/*.ts 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$n" -le 1 ]; then
+            p=$(grep -l -- "$b" "$SRC"/*.ts "$SRC"/*/*.ts 2>/dev/null | wc -l | tr -d ' ')
+            [ "$p" -eq 0 ] && echo "$b"
+          fi
+        done | tr '\n' ' ')
+spawned=$(for m in "$LIB_SRC"/*.mjs; do
+            [ -e "$m" ] || continue
+            b=$(basename "$m")
+            grep -l -- "$b" "$SRC"/*.ts "$SRC"/*/*.ts 2>/dev/null >/dev/null && echo "$b"
+          done | tr '\n' ' ')
+if [ -n "$solo" ]; then
+  bad "lib/ holds module(s) with no owner and no path reference: $solo"
+else
+  ok "every lib/ module is shared by 2+ extensions, or is spawned by path${spawned:+ ($spawned)}"
+fi
 
 # ── 5. the deployed tree agrees with the source ─────────────────────────────
 if [ ! -d "$HOME_EXT" ]; then
@@ -114,6 +143,7 @@ else
   for f in "$SRC"/*.ts "$SRC"/*.js; do
     [ -e "$f" ] || continue
     b="$(basename "$f")"
+    case "$b" in *.test.ts|*.test.js|*.test.mjs|*.spec.ts) continue ;; esac
     if [ ! -f "$HOME_EXT/$b" ]; then
       bad "deployed: $b is NOT DEPLOYED"
       drift=1
@@ -121,8 +151,8 @@ else
       bad "deployed: $b is STALE ($(stat -c%s "$HOME_EXT/$b") vs source $(stat -c%s "$f"))"
       drift=1
     fi
-  done
-  [ "$drift" -eq 0 ] && ok "deployed extensions are byte-identical to source"
+  done < <(find "$SRC" -type f \( -name '*.ts' -o -name '*.js' -o -name '*.mjs' \) | sort)
+  [ "$drift" -eq 0 ] && ok "the whole deployed tree is byte-identical to source"
 
   leaked=0
   for f in "$HOME_EXT"/lib/*.test.* "$HOME_EXT"/*.test.*; do

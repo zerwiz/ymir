@@ -18,7 +18,7 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
 
-import shim from "../../extensions/constellation.ts";
+import shim from "./index.ts";
 
 const ROOT = resolve(import.meta.dirname, "../../..");
 const TOOLS = ["constellation_ask", "constellation_card", "constellation_list"]; // sorted, as read back

@@ -95,7 +95,7 @@ import {
   type RoPresentationState,
   roTranscriptClassIsVisible,
   RO_PRESENTATION_EVENT,
-} from "./lib/ro-visibility.ts";
+} from "../lib/ro-visibility.ts";
 import {
   activateEligibleRowsOwner,
   deactivateEligibleRowsOwner,
@@ -104,19 +104,19 @@ import {
   scopeForSkuldWake,
   writeEligibleRowsSnapshot,
   type SkuldDispatchOffer,
-} from "./lib/skuld-branch-dispatch.ts";
+} from "../lib/skuld-branch-dispatch.ts";
 import {
   BRANCH_PICKER_MAX_VISIBLE,
   buildBranchModelItems,
   filterBranchPickerItems,
   FOLLOW_MAIN_VALUE,
   type BranchPickerItem,
-} from "./lib/skuld-branch-model-picker.ts";
+} from "./model-picker.ts";
 import {
   classifyRoddOperationalText,
   encodeRoddOperationalInput,
-} from "./lib/rodd-operational-input.ts";
-import { resolveYmirRoot } from "./lib/ymir-home.ts";
+} from "../lib/rodd-operational-input.ts";
+import { resolveYmirRoot } from "../lib/ymir-home.ts";
 
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
