@@ -261,6 +261,19 @@ function healLockPointer(path: string): void {
 // resolved in state/.lock-path, but a pointer carried in from another machine is
 // validated against the current home before it is trusted; a stale one is healed
 // to the path this machine derives.
+function resolvedRoot(): string {
+  const fromEnv = process.env.YMIR_ROOT?.trim();
+  if (fromEnv) return fromEnv;
+  const pointer = join(homedir(), ".pi", "agent", "extensions", ".ymir-root");
+  if (existsSync(pointer)) {
+    for (const line of readFileSync(pointer, "utf8").split("\n")) {
+      const root = line.trim();
+      if (root && existsSync(join(root, "bin", "syn-watch-arm.sh"))) return root;
+    }
+  }
+  return fileURLToPath(new URL("..", import.meta.url));
+}
+
 function resolvedLockPath(): string {
   let pointer = "";
   try {
@@ -847,7 +860,39 @@ export default function (pi: ExtensionAPI) {
     if (generation.stopping) generation = createGeneration();
     activateGeneration(generation);
     markLoaded();
+    seatTheSession();
   });
+
+  // A NEW WINDOW MUST SEE WHAT WAITED FOR IT.
+  //
+  // Measured 2026-10-03: `state/.wake-queue` held a wake from 2026-10-01 that was never
+  // presented to anyone, and the reason is here — NOBODY RAN THE DOOR. `bin/saga-session-start.sh`
+  // drains the queue, seeds the digest and raises the bridge, but no extension ever EXECUTED it:
+  // four of them mentioned it in a comment and none called it. So the queue was durable, the drain
+  // door worked perfectly when a human ran it by hand, and the delivery half of supervision was
+  // simply not wired to anything.
+  //
+  // Best-effort and never fatal: a session that cannot seat is still a session. The digest and the
+  // wake list go into the context so a fresh window opens knowing what was waiting.
+  function seatTheSession(): void {
+    const ctxState = process.env.YMIR_STATE_DIR?.trim() || `${resolvedLockPath().split("/.local/")[0]}/.local/state/ymir`;
+    try {
+      execFileSync("bash", [join(resolvedRoot(), "bin", "saga-session-start.sh")], {
+        encoding: "utf8",
+        timeout: 120_000,
+        stdio: ["ignore", "pipe", "pipe"],
+        env: { ...process.env, YMIR_STATE_DIR: ctxState },
+      });
+    } catch (e: any) {
+      // Deliberately swallowed, and deliberately SHOUTED: a gate that cannot start must say so,
+      // because "the door failed" and "the door was never called" look identical from outside.
+      console.error(
+        `gna-pi-watch: could not run bin/saga-session-start.sh — ${
+          String(e?.stderr || e?.message || e).split("\n")[0]
+        }. Wakes in the queue may wait until a human runs it.`,
+      );
+    }
+  }
   pi.on?.("session_shutdown", () => {
     stopGeneration(generation);
   });
