@@ -112,6 +112,19 @@ else
   bad watch-running "no watcher process is alive (an arm file alone is not an arm)"
 fi
 
+# 3b · the phone gateway answers (plan 68 P1)
+# A seat with a dead phone door is not whole — and the smoke is the OFFLINE one by default, so
+# this row costs nothing and never depends on a model being resident.
+if [ -x "$ROOT/tools/ymir-gateway/smoke.sh" ]; then
+  if out_gw="$(bash "$ROOT/tools/ymir-gateway/smoke.sh" 2>&1)"; then
+    good gateway "smoke answers ($(printf '%s' "$out_gw" | grep -c '","PASS"') checks)"
+  else
+    bad gateway "smoke FAILED — $(printf '%s' "$out_gw" | grep '"FAIL"' | head -1 | cut -c1-70)"
+  fi
+else
+  bad gateway "no tools/ymir-gateway/smoke.sh — the phone door has no proof"
+fi
+
 # 4 · the helm names a LIVE pid
 # The lock path resolves (Rule 07): env → the one the seat uses → the documented default.
 LOCK="${BROKK_LOCK:-${BROKK_STATE_ROOT:-$HOME/.local/state/ymir}/brokk.lock}"
