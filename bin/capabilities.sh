@@ -25,7 +25,14 @@ MODE="${1:-write}"
 shells=$(ls bin/*.sh 2>/dev/null | wc -l | tr -d ' ')
 pys=$(find src/ymir_runtime -name '*.py' 2>/dev/null | wc -l | tr -d ' ')
 skills=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | LC_ALL=C sort -u | wc -l | tr -d ' ')
-tools=$(grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/*.ts 2>/dev/null | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | wc -l | tr -d ' ')
+# Enumerate the extension tree the way PI enumerates it (Rule 13 §3): a direct `.ts`,
+# or a directory whose entry point is `index.ts`. A flat glob of `*.ts` stopped seeing
+# ro/, constellation/ and skuld-branch-supervision/ the moment they became folders,
+# and the register silently UNDERCOUNTED by eight tools — which is worse than being
+# stale, because a stale register fails a gate and a wrong one does not.
+tools=$(find .pi/shared/extensions -type f -name '*.ts' -not -name '*.test.ts' 2>/dev/null \
+          | xargs -r grep -hoE 'pi\.registerTool\(\{|name: "[a-z_]+"' 2>/dev/null \
+          | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | wc -l | tr -d ' ')
 
 # Resolved ONCE, from TRACKED files only, for the same reason as bin/inventory.sh: a
 # verdict computed from the working tree is a verdict about THIS MACHINE. The untracked
