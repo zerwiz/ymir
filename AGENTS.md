@@ -135,6 +135,7 @@ governed[10]{path,load_first}:
   "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
+  "RULES/13-pi-extensions.md","governs the Pi extension surface: one home, index.ts per multi-file extension, no thin loaders"
   "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
   "bin/snotra-*",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
   "tools/snotra/**",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
@@ -418,6 +419,7 @@ rules[6]{file,governs}:
   "RULES/05-platforms.md","one portable core, per-OS installation layers; a core change updates every layer"
   "RULES/06-append-only.md","the ledger, the changelog, the log and the rules: append, never rewrite, never lose on a move"
   "RULES/07-config.md","configuration is never hardcoded: ports, hosts, paths, credentials resolve from env/config with one documented default"
+  "RULES/13-pi-extensions.md","Pi extensions: one home per extension, pi's layout (a directory needs index.ts), and valknut-load --check as the gate — two load paths seats nobody"
 ```
 
 A change that contradicts a rule must change the rule first (append-only). The

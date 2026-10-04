@@ -30,7 +30,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { resolveYmirRoot } from "./lib/ymir-home.ts";
+import { resolveYmirRoot } from "../lib/ymir-home.ts";
 import {
   constellationAsk,
   findPeer,
@@ -43,7 +43,7 @@ import {
   type PeerCard,
   type PeerRejection,
   type RegistryResolution,
-} from "./lib/constellation-registry.ts";
+} from "./registry.ts";
 
 const extensionFile = fileURLToPath(import.meta.url);
 const root = resolveYmirRoot(dirname(extensionFile));

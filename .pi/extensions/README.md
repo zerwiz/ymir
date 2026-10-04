@@ -6,6 +6,36 @@ injected before the first turn, and supervision stays alive across the session.
 Ported from the validated upstream agent-distro reference for
 [plan 29](../../docs/plans/29-brokk-distro-runtime.md).
 
+## This tree is NOT the extension home
+
+**Every file here is a no-op that registers nothing, and that is deliberate.**
+The real extensions live in **`.pi/shared/extensions/`** and are deployed by copy
+to **`~/.pi/agent/extensions/`**.
+
+Pi loads both this project directory and the global one, and it does **not**
+de-duplicate. An extension present in both registers its tools twice and pi exits
+with a tool-name conflict, so **no agent can be seated**. A file exporting no
+factory at all is an error in its own right. So this tree holds exactly two things:
+
+| File | What it is |
+|---|---|
+| `*.ts` — nine of them | **no-op factories.** Each header says why. They register nothing and exist only so a duplicate cannot collide |
+| `lib/` | **helper modules, not extensions.** Pi does not recurse past one level and a subdirectory loads only with an `index.ts`, so `lib/` is never scanned. The deployed extensions reach these by relative import, and `bin/valknut-load.sh --pi` copies them alongside |
+
+**Two homes, and one of them is wrong:**
+
+| Path | Holds |
+|---|---|
+| `.pi/shared/extensions/` | **every extension** — the source of truth |
+| `~/.pi/agent/extensions/` | the deployed copy the running harness loads |
+| `.pi/extensions/lib/` | helper modules. **A leftover.** Plan 29 built them in this flat tree; the single-home migration moved the extensions and not their internals, so the loader grew a second copy line to cover the gap |
+
+`bin/valknut-load.sh --check` (added 2026-10-04) fails if the deployed tree drifts
+from source, if a test file is in the live tree, or if anything in this directory
+registers a tool.
+
+## The extensions themselves
+
 | File | Norse role | Purpose |
 |---|---|---|
 | `syn-turnend-guard.ts` | **Sýn** (watchful sight) | inject the Sága digest at session start, re-emit on compaction, refuse a blind turn end, PreToolUse seatbelts |
@@ -17,6 +47,8 @@ Ported from the validated upstream agent-distro reference for
 | `lib/ro-*.ts` | **Ró** helpers | visibility, assistant/user layout adapters, working longship |
 | `lib/skuld-branch-*.ts` | **Skuld** helpers | dispatch handshake + model picker |
 | `lib/ymir-home.ts` | deploy plumbing | resolve the distro root the loader recorded (`.ymir-root`) — a deployed copy cannot find its own `bin/` by walking up from `~/.pi` |
+
+*All of the above paths are in `.pi/shared/extensions/`, except the `lib/` entries.*
 
 ## Wiring
 
