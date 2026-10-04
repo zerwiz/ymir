@@ -21,7 +21,7 @@ frontmatter at all. A decision table belongs in data, not in a script.
    output** — the table was moved, not retuned. `for` now also accepts a role
    key as well as a figure short name. The bare `list` count is now the table's
    own length (it had hardcoded `8` for nine rows).
-3. **`bin/agents-config.sh` gains `roster`** (1.0.0 → 1.1.0): it joins
+3. **`bin/fleet/agents-config.sh` gains `roster`** (1.0.0 → 1.1.0): it joins
    `roles.yaml` to the hoard and prints
    `role → figure → harness → model → tools`. Two hoard YAMLs yield two rosters;
    the tracked tree never moves. `show`/`apply`/`get`/`resolve` are untouched.
@@ -40,7 +40,7 @@ frontmatter at all. A decision table belongs in data, not in a script.
 
 ### Honesty — what this PR covers, and what it does not
 
-- **Retiring apply-writes was already done in #203.** `bin/agents-config.sh
+- **Retiring apply-writes was already done in #203.** `bin/fleet/agents-config.sh
   apply` writes the harness's *own* config (`opencode.json`, untracked) and the
   state cache; it has **no code path that writes `.agents/agents/*.md`** (verified
   by grep and by the tree-untouched proof below). This PR adds the resolver
@@ -49,7 +49,7 @@ frontmatter at all. A decision table belongs in data, not in a script.
   produces identical output by construction.
 - **`roles.yaml` is read, not enforced.** It is deliberately not a JSON-Schema
   gate — that is Phase 7 (SCHEMA THE CONFIG). A missing roles file makes
-  `bin/agents/eindri-role.sh` and `bin/agents-config.sh roster` refuse loudly; a bad one
+  `bin/agents/eindri-role.sh` and `bin/fleet/agents-config.sh roster` refuse loudly; a bad one
   is caught by the YAML parse check, not yet by a schema.
 - The `herder` token in the cards' `ymir_tools` (vs the engine's `herdr`) is
   mirrored verbatim, not renamed — a rename is its own change.
@@ -58,10 +58,10 @@ frontmatter at all. A decision table belongs in data, not in a script.
 
 ```
 # two synthetic hoard YAMLs -> two rosters, tree untouched
-YMIR_AGENTS_YAML=/tmp/hoard-a.yaml bin/agents-config.sh roster  -> "...llama-swap/model-a" x21
-YMIR_AGENTS_YAML=/tmp/hoard-b.yaml bin/agents-config.sh roster  -> "...llama-swap/model-b" x21
+YMIR_AGENTS_YAML=/tmp/hoard-a.yaml bin/fleet/agents-config.sh roster  -> "...llama-swap/model-a" x21
+YMIR_AGENTS_YAML=/tmp/hoard-b.yaml bin/fleet/agents-config.sh roster  -> "...llama-swap/model-b" x21
 git status --porcelain .agents/agents        -> only the authored card edits, never a roster write
-bin/agents-config.sh apply                   -> cards before == cards after (apply writes no card)
+bin/fleet/agents-config.sh apply                   -> cards before == cards after (apply writes no card)
 
 # the chooser is unchanged for the same input
 old vs new bin/agents/eindri-role.sh choose "<task>" -> identical row for 13 task strings
@@ -72,19 +72,19 @@ ls -l .pi/agents/sindri-developer.md         -> ../../.agents/agents/sindri-deve
 ls -l .opencode/agents/sindri.md             -> ../../.agents/agents/sindri-developer.md
 subagent list                                -> 21 figures, all with name+description
 bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh -> 15/15 PASS
-bash bin/npm-pretest.sh (NPM_PRETEST_SKIP_REMOTE=1) -> PRETEST PASS
+bash bin/forge/npm/npm-pretest.sh (NPM_PRETEST_SKIP_REMOTE=1) -> PRETEST PASS
 ```
 
-`bin/pr-pretest.sh` itself hangs on its `local` sub-leg in this seat's sandbox
+`bin/forge/npm/pr-pretest.sh` itself hangs on its `local` sub-leg in this seat's sandbox
 (a pre-existing quirk, unrelated to this change); the underlying
-`bash bin/npm-pretest.sh` with the remote leg skipped reaches `PRETEST PASS`,
+`bash bin/forge/npm/npm-pretest.sh` with the remote leg skipped reaches `PRETEST PASS`,
 which is the local truth the gate exists to prove.
 
 ### Files
 
 - `.agents/roles.yaml` (new)
 - `bin/agents/eindri-role.sh`
-- `bin/agents-config.sh`
+- `bin/fleet/agents-config.sh`
 - `.agents/agents/brokk.md`, `.agents/agents/galdr.md`, `.agents/agents/elder.md`
 - `.agents/skills/galdr-ymirsystem/SKILL.md` (the galdr agent's mirror)
 - `.pi/agents/elder.md`, `.opencode/agents/elder.md`, `.claude/agents/elder.md`,

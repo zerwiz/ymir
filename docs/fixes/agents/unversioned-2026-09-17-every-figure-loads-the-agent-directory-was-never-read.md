@@ -11,7 +11,7 @@
   (20 links, all resolving). `bin/seat/valknut-load.sh` now writes the plural path and
   **migrates a legacy singular dir forward**, so an old home heals instead of
   silently keeping its agents invisible.
-- **The roster now declares what it names.** `bin/agents-config.sh apply` only
+- **The roster now declares what it names.** `bin/fleet/agents-config.sh apply` only
   touched an agent already present in `opencode.json` (`if a in ablock`), so a
   figure the roster knew but the config had never seen stayed undeclared. The
   roster is the source of truth; a name in it now reaches the harness config.

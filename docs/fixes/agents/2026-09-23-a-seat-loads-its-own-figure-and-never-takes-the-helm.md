@@ -2,7 +2,7 @@
 
 ### Why
 - **Every seated figure believed it was Brokk.** `bin/seat/herdr-run.sh` and
-  `bin/pi-seat.sh` started pi with `--model` only. Pi's loaded context is
+  `bin/pi/pi-seat.sh` started pi with `--model` only. Pi's loaded context is
   `~/.pi/agent/AGENTS.md`, `~/AGENTS.md`, `AGENTS.md` — the always-loaded
   contract, which describes **Brokk** as the primary. The figure's own file
   (`.agents/agents/<role>.md`) was never injected. Proven live: a seat named
@@ -14,7 +14,7 @@
 - **Every seat contended for the primary's helm, and the watcher died.** There
   is one lock per machine —
   `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/brokk.lock`
-  (`bin/gleipnir-lock-lib.sh`). A seat started in the main home inherited that
+  (`bin/vault/gleipnir-lock-lib.sh`). A seat started in the main home inherited that
   home's state and fought the primary for the same lock; the last to start won.
   The evicted primary's extension then returned `read-only` and surfaced
   `watcher: FAILED - Pi extension cannot restore continuity because this session
@@ -23,7 +23,7 @@
   `1173111`, `1612013`) evicted the primary `2796305`; later a second Brokk in
   the herdr pane `π - heimdall` (pid `2612975`) took the helm and the primary's
   heartbeat went 453s stale.
-- **`bin/pi-seat.sh` referenced an undefined `SCRIPT_DIR`.** Its Yggdrasil
+- **`bin/pi/pi-seat.sh` referenced an undefined `SCRIPT_DIR`.** Its Yggdrasil
   isolation block tested `[ -x "$SCRIPT_DIR/yggdrasil.sh" ]` against
   `/yggdrasil.sh`, so the check always failed and **no seat was ever isolated
   into a worktree** — a silent no-op.
@@ -39,7 +39,7 @@
   `sindri-developer.md`, `bragi-marketer.md`). A naive `$ROLE.md` resolves
   nothing, so the helper tries the exact path first, then the short-role
   prefix. Verified for every role in the roster.
-- **`bin/seat/herdr-run.sh` + `bin/pi-seat.sh`** — every seat now gets a private
+- **`bin/seat/herdr-run.sh` + `bin/pi/pi-seat.sh`** — every seat now gets a private
   machine-state dir, so a worker resolves its own `brokk.lock`:
   `seat_state_env()` emits `BROKK_MACHINE_STATE_DIR=…/ymir/seats/<name>`, passed
   as `--env` on `herdr tab create` / `herdr pane split` / `herdr workspace
@@ -48,10 +48,10 @@
 - **`bin/seat/herdr-run.sh`** — `seat_guard()` refuses a seat that would resolve the
   primary's lock, so a future regression fails loudly instead of killing
   supervision.
-- **`bin/pi-seat.sh`** — defines `SCRIPT_DIR`, so the Yggdrasil isolation block
+- **`bin/pi/pi-seat.sh`** — defines `SCRIPT_DIR`, so the Yggdrasil isolation block
   actually runs, and passes the role file plus the per-seat state dir.
 
 ### Files
 - `bin/seat/herdr-run.sh`
-- `bin/pi-seat.sh`
+- `bin/pi/pi-seat.sh`
 - `.agents/skills/herdr-panes/SKILL.md` (the seat contract, updated in the same change)
