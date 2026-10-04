@@ -13,7 +13,7 @@
 - **Every `$YMIR_HOME/...` path in the file was corrected** to `$YMIR_HOME/hodd/...`
   — the directory rules table, the registry reference, the secrets reference, and
   the append-only ledger path all pointed at the old flat layout.
-- **Two wards are now documented**: `bin/secret-guard.sh` (a secret entering the
+- **Two wards are now documented**: `bin/gates/guards/secret-guard.sh` (a secret entering the
   repo) and Eir's `hoard` surface (private data drifting outside the hoard, or a
   `.ymir-layout.yaml` naming a path that does not exist).
 - **Staging discipline is written down.** Stage named files in the home, never
