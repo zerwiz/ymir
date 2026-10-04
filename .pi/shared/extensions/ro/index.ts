@@ -47,13 +47,13 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { Box, Container, getKeybindings, type Component } from "@earendil-works/pi-tui";
 import type { TSchema } from "typebox";
-import { installRoAssistantLayout } from "./lib/ro-assistant-layout.ts";
-import { installRoOperationalUserLayout } from "./lib/ro-operational-user-layout.ts";
+import { installRoAssistantLayout } from "./assistant-layout.ts";
+import { installRoOperationalUserLayout } from "./operational-user-layout.ts";
 import {
   RO_WORKING_SHIP_WIDGET_KEY,
   createCalmWorkingShipAnimation,
   createCalmWorkingShipWidget,
-} from "./lib/ro-working-ship.ts";
+} from "./working-ship.ts";
 import {
   roPresentationHides,
   calmPresentationIsActive,
@@ -61,8 +61,8 @@ import {
   registerBrokkSyntheticPresentation,
   setCalmPresentation,
   setCalmStockExportRendering,
-} from "./lib/ro-visibility.ts";
-import { resolveYmirRoot } from "./lib/ymir-home.ts";
+} from "../lib/ro-visibility.ts";
+import { resolveYmirRoot } from "../lib/ymir-home.ts";
 
 type DefinitionFactory<TParams extends TSchema, TDetails, TState> = (
   cwd: string,

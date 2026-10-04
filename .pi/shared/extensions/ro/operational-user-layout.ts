@@ -5,8 +5,8 @@
 // message delivery.
 import type { UserMessageComponent as PiUserMessageComponent } from "@earendil-works/pi-coding-agent";
 import * as PiCodingAgent from "@earendil-works/pi-coding-agent";
-import { roPresentationHides } from "./ro-visibility.ts";
-import { classifyRoddCurrentOperationalText } from "./rodd-operational-input.ts";
+import { roPresentationHides } from "../lib/ro-visibility.ts";
+import { classifyRoddCurrentOperationalText } from "../lib/rodd-operational-input.ts";
 
 type UserMessageConstructorArgs = ConstructorParameters<typeof PiUserMessageComponent>;
 type UserMessageLike = {

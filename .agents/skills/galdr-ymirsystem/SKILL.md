@@ -169,6 +169,11 @@ untracked but for its guard and README. Read secrets by path with
 `bin/hodd.sh emit <file>` (`YMIR_HOARD`), never inline a value. When a governed
 path needs a secret, resolve it through Hodd. Law: `RULES/04-hoard.md`.
 
+Building or changing a **Pi extension** — its home, its file layout, its
+imports — is governed by **`RULES/13-pi-extensions.md`**: one home per
+extension, a multi-file extension is a directory with an `index.ts`, and
+`bin/valknut-load.sh --check` is the gate.
+
 ## Operator runbooks
 
 Task-oriented guides live in `docs/runbooks/` (models · agents · Tailscale sync ·

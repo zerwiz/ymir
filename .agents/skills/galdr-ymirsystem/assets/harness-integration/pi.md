@@ -6,6 +6,14 @@ Pi is a **run-tier** harness with an in-process extension API: the extension run
 
 ---
 
+
+> **The extension layout is law: `RULES/13-pi-extensions.md`.**
+> One home per extension. A multi-file extension is a **directory with an
+> `index.ts`** — pi loads a subdirectory only when it has one, and never recurses
+> deeper. `.pi/extensions/` registers nothing. `lib/` is a leftover from plan 29,
+> still sourced from the old flat tree and deployed by a separate loader line.
+> Gate: `bin/valknut-load.sh --check`. Smoke test:
+> `.agents/tests/pi-extensions.test.sh`.
 ## 1. Files
 
 | File | Norse role | Contract parts |
