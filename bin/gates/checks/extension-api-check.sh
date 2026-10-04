@@ -25,7 +25,15 @@
 # copy parses. Copying the mistake faithfully is not a new mistake.
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 cd "$ROOT" || exit 2
 SRC="$ROOT/.pi/shared/extensions"
 QUIET=0; [ "${1:-}" = "--quiet" ] && QUIET=1

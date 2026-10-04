@@ -35,7 +35,10 @@ OUT=".agents/assets/agents/capabilities.md"
 MODE="${1:-write}"
 
 # The live signals, taken from the surfaces themselves — never asserted.
-shells=$(ls bin/*.sh 2>/dev/null | wc -l | tr -d ' ')
+# RECURSIVE: a door at bin/gates/checks/ is a door. `ls bin/*.sh` silently stopped
+# counting them the moment the first system folder existed — 438 -> 434, four doors invisible,
+# and the gate called it current. Structure and index must move together or not at all.
+shells=$(find bin -name '*.sh' -o -name '*.py' 2>/dev/null | grep -v '/.git' | wc -l | tr -d ' ')
 pys=$(find src/ymir_runtime -name '*.py' 2>/dev/null | wc -l | tr -d ' ')
 skills=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | LC_ALL=C sort -u | wc -l | tr -d ' ')
 tools=$(grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/*.ts 2>/dev/null | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | wc -l | tr -d ' ')
@@ -110,7 +113,10 @@ printf '| door | the job | verdict | tech decision |\n|---|---|---|---|\n'
 # returns first — ext4 hashes it, overlayfs in CI does not — so two machines built the
 # SAME register with the SAME rows in a DIFFERENT order, and the staleness check (rightly)
 # called it stale. Sorting makes the register a function of CONTENT alone.
-for f in $(ls bin/*.sh 2>/dev/null | LC_ALL=C sort); do
+# RECURSIVE for the same reason as the count: a door at bin/gates/checks/ IS a door, and
+# `ls bin/*.sh` drops it from the register the moment a system folder exists. That is how
+# 438 doors became 434 and the gate still said 'current'.
+for f in $(find bin -name '*.sh' -not -path '*/.git/*' 2>/dev/null | LC_ALL=C sort); do
   n=$(basename "$f")
   case "$n" in inventory.sh|capabilities.sh|queue.sh|update-notes.sh|verify-seat.sh) continue ;; esac
   # the first sentence of its own header is the job, from the door itself
