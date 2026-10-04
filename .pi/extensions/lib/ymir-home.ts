@@ -31,7 +31,7 @@
  * made the deployed copy exec a path that never existed.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 /** The deploy-time root record, written beside the deployed extensions. */
 export const YMIR_ROOT_POINTER = ".ymir-root";
@@ -39,7 +39,7 @@ export const YMIR_ROOT_POINTER = ".ymir-root";
 /** A root is usable only when the arm script it will exec is really there. */
 export function isYmirRoot(candidate: string | undefined): boolean {
   if (!candidate) return false;
-  return existsSync(resolve(candidate, "bin", "syn-watch-arm.sh"));
+  return existsSync(resolve(candidate, "bin"));
 }
 
 function recordedRoots(extensionDir: string): string[] {
@@ -54,6 +54,19 @@ function recordedRoots(extensionDir: string): string[] {
   }
 }
 
+/** Walk UP until a directory owning bin/ is found. Rule 12: never resolve the repo
+ * by counting ".." — depth must not be able to blind the resolver. */
+function walkUpToRoot(from: string): string {
+  let dir = resolve(from);
+  for (let i = 0; i < 12; i += 1) {
+    if (isYmirRoot(dir)) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return "";
+}
+
 /**
  * The distro root: the tree that owns `bin/`. Never the session home.
  */
@@ -63,10 +76,11 @@ export function resolveYmirRoot(extensionDir: string): string {
     process.env.BROKK_HOME,
     process.env.YMIR_ROOT,
   ].filter((value): value is string => Boolean(value));
-  const legacy = resolve(extensionDir, "../..");
-  for (const candidate of [...explicit, ...recordedRoots(extensionDir), legacy]) {
+  for (const candidate of explicit) {
     if (isYmirRoot(candidate)) return resolve(candidate);
   }
+  const walked = walkUpToRoot(extensionDir);
+  if (walked) return walked;
   // Nothing verified. Name the first candidate we were given, so the failure
   // surfaces as a missing bin/ at that exact path — never hidden behind another.
   return resolve(explicit[0] ?? legacy);

@@ -2,7 +2,7 @@
 
 ### Why
 - **The one-local-model law was built as a tool and wired into nothing.**
-  `bin/local-model-lock.sh` exists — its own header: *"only one local inference
+  `bin/model/local-model-lock.sh` exists — its own header: *"only one local inference
   is active per host"* — and **no seat road called it**:
 
   ```
@@ -14,7 +14,7 @@
   So three agents (`bragi`, `snotra`, `huginn`) were inferring against one rail
   at once, on a machine whose law is one at a time. The Allfather caught it, not
   the code.
-- **A new seat road repeated the mistake.** `bin/research-round.sh` was written
+- **A new seat road repeated the mistake.** `bin/agents/research-round.sh` was written
   with no guard either — a fourth road, the same omission.
 - **The lock's own interface did not fit a seat.** It wraps a *command* in
   `flock`, which is right for a one-shot inference and awkward for a long-lived
@@ -22,7 +22,7 @@
   host is at capacity".
 
 ### Fix
-- **`bin/local-model-lock.sh`** gains a **`check`** verb: it counts the seats
+- **`bin/model/local-model-lock.sh`** gains a **`check`** verb: it counts the seats
   currently inferring locally and exits **0** when a slot is free, **3** when the
   host is at capacity (`local_concurrency`, default 1).
 - **A detection trap, found live.** The first version read the pane with
@@ -34,8 +34,8 @@
   reads the **whole pane** and matches the provider name anywhere in it —
   verified: a seat on `llama-swap` yields two matches in the full read.
 - **Every seat road now calls it** — `bin/seat/herdr-run.sh` (via a new
-  `local_model_guard()` beside `seat_guard()`), `bin/pi-seat.sh`, and the new
-  `bin/research-round.sh`. A local seat is refused with exit 3 and a plain
+  `local_model_guard()` beside `seat_guard()`), `bin/pi/pi-seat.sh`, and the new
+  `bin/agents/research-round.sh`. A local seat is refused with exit 3 and a plain
   instruction: wait, or use a remote/online model.
 
 ### Verification
@@ -50,7 +50,7 @@
 - `bash -n` clean on all four scripts.
 
 ### Files
-- `bin/local-model-lock.sh`
+- `bin/model/local-model-lock.sh`
 - `bin/seat/herdr-run.sh`
-- `bin/pi-seat.sh`
-- `bin/research-round.sh`
+- `bin/pi/pi-seat.sh`
+- `bin/agents/research-round.sh`

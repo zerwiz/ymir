@@ -4,7 +4,7 @@
 - **A worker seat clobbered the primary's lock POINTER, and supervision died.**
   The per-seat helm fix (#124) set `BROKK_MACHINE_STATE_DIR` for a seat, so its
   **lock** resolved to its own path
-  (`bin/gleipnir-lock-lib.sh` → `gleipnir_lock_path`). But the **pointer** file
+  (`bin/vault/gleipnir-lock-lib.sh` → `gleipnir_lock_path`). But the **pointer** file
   (`.lock-path`, the record the pi extension reads) resolves through
   `gleipnir_state_dir`, which is keyed off `BROKK_STATE_OVERRIDE`/`BROKK_HOME` —
   and a seat shares `BROKK_HOME` with the primary. So the seat wrote its own
@@ -37,7 +37,7 @@
   touches the primary's. `seat_state_dir()` replaces `seat_state_env()` and the
   three seat roads (`seat_tab`, `seat_space`, `seat_pane`) pass both `--env`
   flags.
-- **`bin/pi-seat.sh`** — the same two variables on its tab/pane creation.
+- **`bin/pi/pi-seat.sh`** — the same two variables on its tab/pane creation.
 
 ### What was deliberately NOT changed
 The pointer could instead have been moved into the machine state dir (beside the
@@ -46,8 +46,8 @@ the pointer at the **home** state path and would have silently fallen back to th
 legacy `.lock`:
 
 - `bin/brokk:34`
-- `bin/brokk-lease-lib.sh:151`
-- `bin/brokk-lease.sh:130`
+- `bin/agents/brokk-lease-lib.sh:151`
+- `bin/agents/brokk-lease.sh:130`
 
 Giving the seat its own state dir achieves the same invariant (pointer and lock
 in one directory) without touching the primary's contract.
@@ -62,4 +62,4 @@ in one directory) without touching the primary's contract.
 
 ### Files
 - `bin/seat/herdr-run.sh`
-- `bin/pi-seat.sh`
+- `bin/pi/pi-seat.sh`

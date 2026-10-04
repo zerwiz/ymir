@@ -418,4 +418,4 @@ bin[403]{file,does,kind,verdict,disposition,callers,lines}:
 
 **Tally.** verdict: wired=209, tested=194
 
-**Tally.** disposition: keep=394, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=394, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
