@@ -83,3 +83,22 @@ afterwards.
 **The nine no-op stubs are still in `.pi/extensions/`.** They register nothing, so
 they are not a collision, and deleting them is a separate decision — it changes what
 pi discovers at seat time. Rule 13 §2 forbids them growing, not existing.
+
+### A note on where fix notes for this surface go
+
+These notes were first filed under `docs/fixes/harness-integration/`, mirroring the
+asset that governs the surface. **The fixes gate cannot see them there** —
+`bin/fixes-guard.sh` matches notes with `^docs/fixes/[a-z]+/…`, and a hyphen in a
+component name is invisible to it, so the push was refused with *"no fix note in
+this range"* while three correct notes sat in the range.
+
+**The gate's own map answers the question anyway:** `.pi/*` → **`agents`** and
+`bin/valknut-load.sh` → **`install`**. So the notes moved to the two components the
+gate already knows, rather than the gate being taught a new one.
+
+**Worth noting that the two governing documents disagree.** `AGENTS.md` sends
+`.pi/**` work to the **harness-integration** asset, while `bin/fixes-guard.sh` calls
+that same work **`agents`**. The asset name and the component name are not the same
+vocabulary, and a reader who trusted the first would file a note the second cannot
+read. Recorded rather than fixed here: aligning them is a change to the guard's map
+or to `AGENTS.md`, and neither belongs in a restructure.
