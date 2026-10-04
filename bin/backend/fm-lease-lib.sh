@@ -22,7 +22,7 @@
 #     extension's bash tool, not by agent memory. Any other value is refused
 #     loudly - an unknown actor is a wiring bug, not a third role.
 #   - Staleness: the recorded pid is the long-lived supervising process (the
-#     session-lock holder, or FM_LEASE_HOLDER_PID - see bin/fm-lease.sh), and
+#     session-lock holder, or FM_LEASE_HOLDER_PID - see bin/backend/fm-lease.sh), and
 #     both actors live inside that one pi process, so a dead recorded pid
 #     means the process died; the lease is cleared at the next claim, guard,
 #     or sweep. Liveness requires a Pi calling context plus state/.lock, and
@@ -33,7 +33,7 @@
 #     by the branch extension's generation-activation cleanup.
 #
 # THREAT MODEL (deliberate, captain-decided): these guards are
-# CONFUSED-AGENT-GRADE, the same grade bin/fm-gate-refuse-lib.sh documents
+# CONFUSED-AGENT-GRADE, the same grade bin/backend/fm-gate-refuse-lib.sh documents
 # for the gate refusal. They stop non-deliberate misuse - the injected actor
 # identity, the loud refusals, and the session-bound staleness make every
 # accidental cross-actor mutation fail loudly. A deliberately forging shell
@@ -58,9 +58,9 @@
 #     branch-side containment only; main's tasks-axi path has no executable
 #     backlog lease guard in this scope.
 #
-# Sourced by bin/fm-send.sh, bin/fm-control.sh, bin/fm-teardown.sh,
-# bin/fm-pr-merge.sh, bin/fm-merge-local.sh, bin/fm-spawn.sh, and
-# bin/fm-lease.sh. Callers must have $STATE resolved before calling. No side
+# Sourced by bin/backend/fm-send.sh, bin/backend/fm-control.sh, bin/backend/fm-teardown.sh,
+# bin/backend/fm-pr-merge.sh, bin/backend/fm-merge-local.sh, bin/backend/fm-spawn.sh, and
+# bin/backend/fm-lease.sh. Callers must have $STATE resolved before calling. No side
 # effects on source. set -u / set -e safe.
 
 # Distinct from usage errors (2), the gate refusal (3), and fm-send's
@@ -120,7 +120,7 @@ fm_lease_read() {
   IFS= read -r line < "$file" 2>/dev/null || line=
   FM_LEASE_ACTOR=$(printf '%s' "$line" | cut -f1)
   FM_LEASE_PID=$(printf '%s' "$line" | cut -f2)
-  # shellcheck disable=SC2034 # Consumed by sourcing callers (bin/fm-lease.sh check).
+  # shellcheck disable=SC2034 # Consumed by sourcing callers (bin/backend/fm-lease.sh check).
   FM_LEASE_EPOCH=$(printf '%s' "$line" | cut -f3)
   case "$FM_LEASE_ACTOR" in
     main|branch) ;;

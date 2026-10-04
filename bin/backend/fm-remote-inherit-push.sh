@@ -3,8 +3,8 @@
 # Usage: fm-remote-inherit-push.sh <secondmate-id> <generation>
 #
 # The item set is derived from the ONE declared owner
-# (FM_INHERITABLE_CONFIG in bin/fm-config-inherit-lib.sh), the same declaration
-# the receiving bin/fm-remote-inherit.sh enforces, so the two implementations in
+# (FM_INHERITABLE_CONFIG in bin/backend/fm-config-inherit-lib.sh), the same declaration
+# the receiving bin/backend/fm-remote-inherit.sh enforces, so the two implementations in
 # one code revision cannot drift silently. Different local and remote revisions
 # fail closed as documented by that owner. FM_CONFIG_INHERIT_LIVE=1 marks a live
 # convergence push into an already-running home and skips session-scoped items,
@@ -17,9 +17,9 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 CONFIG="${FM_CONFIG_OVERRIDE:-$FM_HOME/config}"
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
-# shellcheck source=bin/fm-config-inherit-lib.sh
+# shellcheck source=bin/backend/fm-config-inherit-lib.sh
 . "$SCRIPT_DIR/fm-config-inherit-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit 1; }

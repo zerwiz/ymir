@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # Shared worktree-tangle guard for the firstmate-on-itself case.
-# Usage: . bin/fm-tangle-lib.sh
+# Usage: . bin/backend/fm-tangle-lib.sh
 #
 # Firstmate is a treehouse-pooled git repo of itself: crewmate worktrees and
 # secondmate homes are all linked `git worktree`s of the same repo, while the

@@ -10,9 +10,9 @@
 # user's machine is modified.
 #
 # Usage:
-#   bin/omarchy-sense.sh observe [--quiet]   # record the current state, diff vs last
-#   bin/omarchy-sense.sh status              # show the latest snapshot + last change
-#   bin/omarchy-sense.sh --version
+#   bin/host/omarchy-sense.sh observe [--quiet]   # record the current state, diff vs last
+#   bin/host/omarchy-sense.sh status              # show the latest snapshot + last change
+#   bin/host/omarchy-sense.sh --version
 #
 # State: state/omarchy-setup.json (gitignored — this is per-user, per-machine).
 # Output: Galdr TOON.
@@ -20,7 +20,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -43,7 +44,7 @@ SNAP="$STATE_DIR/omarchy-setup.json"
 # and points at the portable sensor instead of recording the wrong machine.
 if ! { command -v omarchy >/dev/null 2>&1 || [ -d "$HOME/.local/share/omarchy" ]; }; then
   printf 'omarchy-sense[1]{step,status,detail}:\n'
-  printf '  "sensor","SKIP","not an Omarchy host — this layer applies where Omarchy is; run bin/host-sense.sh for THIS machine"\n'
+  printf '  "sensor","SKIP","not an Omarchy host — this layer applies where Omarchy is; run bin/host/host-sense.sh for THIS machine"\n'
   exit 0
 fi
 QUIET=0
@@ -80,7 +81,7 @@ except Exception: print(0)' 2>/dev/null || echo 0)"
   wm="${XDG_CURRENT_DESKTOP:-unknown}"
   # The graphics block (P6, 2026-09-24): the old snapshot was blind to GPUs —
   # no /dev/dri, no driver, no render node — so a desktop that could not render
-  # recorded nothing. bin/graphics-lib.sh classifies the DRM devices
+  # recorded nothing. bin/host/graphics-lib.sh classifies the DRM devices
   # (integrated/discrete/hybrid), reads GTT where exposed, names the drivers
   # and their versions, and decides the effective GPU policy the shells use;
   # the whole block is recorded so the installer's next decision is
@@ -195,8 +196,8 @@ print(json.load(open(sys.argv[1])).get("gpu_policy", "gpu"))
 PY
 )" = software ] && printf '  note: hybrid/integrated GPU — the desktop shells default to software rendering (YMIR_DESKTOP_DISABLE_GPU overrides)\n'
     else
-      printf 'omarchy-sense[1]{snapshot}:\n  "none yet — run bin/omarchy-sense.sh observe"\n'
+      printf 'omarchy-sense[1]{snapshot}:\n  "none yet — run bin/host/omarchy-sense.sh observe"\n'
     fi
     ;;
-  *) printf 'error: unknown action %s\nhelp: bin/omarchy-sense.sh [observe|status]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/host/omarchy-sense.sh [observe|status]\n' "$1" >&2; exit 2 ;;
 esac

@@ -22,7 +22,7 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
 # shellcheck source=bin/records/runes-append.sh
-. "$SCRIPT_DIR/runes-append.sh"
+. "$SCRIPT_DIR/../records/runes-append.sh"
 
 MODE="${BROKK_GIT_SYNC_MODE:-fetch}"
 REMOTE="${BROKK_GIT_SYNC_REMOTE:-origin}"
@@ -32,7 +32,7 @@ if [ -z "$REALM" ] && [ -r "$DATA/realm.md" ]; then
 fi
 REALM="${REALM:-}"
 # Never assume the company's slug: resolve the operator's realm neutrally.
-if [ -z "$REALM" ]; then . "$SCRIPT_DIR/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
+if [ -z "$REALM" ]; then . "$SCRIPT_DIR/../skuld/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
 STAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 command -v git >/dev/null 2>&1 || { printf 'error: git not installed\nhelp: install git and re-run\n'; exit 1; }

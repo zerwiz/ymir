@@ -21,14 +21,14 @@
 # the one primary-authoritative shared captain-preference file,
 # data/captain-shared.md, into each secondmate home's data/ as a read-only copy.
 #
-# Usage: . bin/fm-config-inherit-lib.sh   (no FM_* setup required)
+# Usage: . bin/backend/fm-config-inherit-lib.sh   (no FM_* setup required)
 #
 # Why this is separate from the tracked-files fast-forward (fm-ff-lib.sh): config/
 # is gitignored, so a tracked-files fast-forward never carries these items. This
 # is an explicit copy run at the convergence points the primary owns - a
-# secondmate spawn (bin/fm-spawn.sh), the bootstrap secondmate sweep
-# (bin/fm-bootstrap.sh), and the focused mid-session config push
-# (bin/fm-config-push.sh). It is PRIMARY-AUTHORITATIVE: the primary's value wins
+# secondmate spawn (bin/backend/fm-spawn.sh), the bootstrap secondmate sweep
+# (bin/backend/fm-bootstrap.sh), and the focused mid-session config push
+# (bin/backend/fm-config-push.sh). It is PRIMARY-AUTHORITATIVE: the primary's value wins
 # and is re-pushed on every convergence, so the fleet stays converged on the
 # primary; an item the primary does not set is mirrored as absence downstream.
 # After successful config/* changes under an already-running secondmate, callers
@@ -43,15 +43,15 @@
 # downstream.
 #
 # That single declaration is also the ONE owner of the inherited-material
-# allowlist for remote routes: bin/fm-remote-inherit-push.sh (sender) and
-# bin/fm-remote-inherit.sh (receiver, executing inside the remote home) both
+# allowlist for remote routes: bin/backend/fm-remote-inherit-push.sh (sender) and
+# bin/backend/fm-remote-inherit.sh (receiver, executing inside the remote home) both
 # derive their item set from fm_config_inherit_items rather than restating it,
 # so a new inheritable item cannot be accepted by one side and refused by the
 # other. A local and remote code root that disagree about this list must be
 # reconciled by the ordinary remote sync/update path before the transfer
 # succeeds; there is no separate allowlist version negotiation.
 #
-# shellcheck source=bin/fm-startup-memory-budget-lib.sh
+# shellcheck source=bin/backend/fm-startup-memory-budget-lib.sh
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-startup-memory-budget-lib.sh"
 
 # The one shared data file in this inheritance contract. There is deliberately
@@ -69,7 +69,7 @@ FM_INHERITABLE_CONFIG="${FM_INHERITABLE_CONFIG:-crew-dispatch.json crew-harness 
 # local configuration. They are inherited at the launch convergence point, where
 # the primary also hands the new process its frozen on/off decision, and left
 # untouched by live convergence into an already-running home, whose decision is
-# already frozen for its current session (bin/fm-trace-context-lib.sh).
+# already frozen for its current session (bin/backend/fm-trace-context-lib.sh).
 FM_SESSION_SCOPED_INHERITABLE_CONFIG="trace-context"
 
 # True when <item> is session-scoped in the sense above.

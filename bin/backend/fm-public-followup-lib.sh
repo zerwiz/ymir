@@ -63,12 +63,12 @@
 # event id and the same destination path. Idempotency therefore holds across
 # retries, restarts, and duplicate child reports without any coordination.
 #
-# Depends on bin/fm-x-lib.sh for .env reading and the private-artifact
+# Depends on bin/backend/fm-x-lib.sh for .env reading and the private-artifact
 # publication primitives (atomic, single-link, mode-validated, non-executable);
 # those remain that file's contract and are not restated here.
 
 _FM_PF_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)" || _FM_PF_LIB_DIR="."
-# shellcheck source=bin/fm-x-lib.sh
+# shellcheck source=bin/backend/fm-x-lib.sh
 . "$_FM_PF_LIB_DIR/fm-x-lib.sh"
 
 FM_PF_DIRNAME='public-followup'
@@ -251,7 +251,7 @@ EOF
 }
 
 # fm_pf_now_epoch: wall clock as epoch seconds. FMX_NOW_OVERRIDE pins it for
-# tests, matching bin/fm-x-lib.sh.
+# tests, matching bin/backend/fm-x-lib.sh.
 fm_pf_now_epoch() {
   printf '%s\n' "${FMX_NOW_OVERRIDE:-$(date +%s)}"
 }
@@ -343,7 +343,7 @@ fm_pf_registry_lock_acquire() {
   fm_pf_slug_valid "$id" || return 1
   fmx_private_artifact_dir_prepare "$(fm_pf_root "$state")" >/dev/null || return 1
   if ! command -v fm_lock_acquire_wait >/dev/null 2>&1; then
-    # shellcheck source=bin/fm-wake-lib.sh
+    # shellcheck source=bin/backend/fm-wake-lib.sh
     . "$_FM_PF_LIB_DIR/fm-wake-lib.sh"
   fi
   fm_lock_acquire_wait "$(fm_pf_registry_lock_path "$state" "$id")"

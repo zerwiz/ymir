@@ -3,8 +3,8 @@
 # documents (plans, strategy, roadmaps, the masterplan) before they are staged.
 # Those live at $YMIR_HOME/hodd/docs/ (Rule 04-hoard.md).
 #
-#   bin/docs-guard.sh            # scan the staged change (used as pre-commit)
-#   bin/docs-guard.sh --all      # scan every tracked file
+#   bin/gates/guards/docs-guard.sh            # scan the staged change (used as pre-commit)
+#   bin/gates/guards/docs-guard.sh --all      # scan every tracked file
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -22,7 +22,8 @@ if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # Private document shapes that must never be published under docs/.
 PATTERNS='(^docs/plans/|^docs/masterplan|^docs/append-only-log|^docs/ratatoskr\.md|^docs/.*-plan\.md$|^docs/.*(plan|strategy|roadmap|backlog|proposal|private)\.md$)'

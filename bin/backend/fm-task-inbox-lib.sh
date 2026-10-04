@@ -5,10 +5,10 @@
 # ONE owner of the steering-inbox contract: the record format, sequence
 # allocation, the idempotent re-enqueue dedup, the handled/ acknowledgement,
 # the self-describing doorbell line, and the watcher's re-ring ladder policy.
-# bin/fm-send.sh writes and rings locally, the host-local remote steer leg
-# (bin/fm-remote-secondmate-control.sh cmd_send) writes idempotently and rings
-# on the remote host, bin/fm-watch.sh polls and re-rings, and the brief
-# scaffold (bin/fm-brief.sh) tells the worker how to read and acknowledge;
+# bin/backend/fm-send.sh writes and rings locally, the host-local remote steer leg
+# (bin/backend/fm-remote-secondmate-control.sh cmd_send) writes idempotently and rings
+# on the remote host, bin/backend/fm-watch.sh polls and re-rings, and the brief
+# scaffold (bin/backend/fm-brief.sh) tells the worker how to read and acknowledge;
 # none of them restates the format.
 #
 # Design (captain-adopted, data/fm-send-reliability-reframe-s1/report.md): the
@@ -55,8 +55,8 @@
 # deduplication marker: normal polls surface a message once, while a crash or
 # marker failure may produce a rare duplicate rather than silently lose a wake.
 #
-# fm_task_inbox_ring requires bin/fm-backend.sh's dispatch (sourced below); the
-# other helpers are dependency-light. Sourced by bin/fm-send.sh, bin/fm-watch.sh,
+# fm_task_inbox_ring requires bin/backend/fm-backend.sh's dispatch (sourced below); the
+# other helpers are dependency-light. Sourced by bin/backend/fm-send.sh, bin/backend/fm-watch.sh,
 # and tests. No side effects on source beyond its sourced libraries.
 #
 # Tunables (env):

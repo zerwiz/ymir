@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # repo-scrub.sh — purge private paths from ALL git history before going public.
 #
-#   bin/repo-scrub.sh --dry-run          # list what history still holds
-#   bin/repo-scrub.sh --yes              # back up, then rewrite history
-#   bin/repo-scrub.sh --yes <path> ...   # add extra paths to purge
+#   bin/gates/repo-scrub.sh --dry-run          # list what history still holds
+#   bin/gates/repo-scrub.sh --yes              # back up, then rewrite history
+#   bin/gates/repo-scrub.sh --yes <path> ...   # add extra paths to purge
 #
 # Rewrites every commit. A mirror backup is written to /tmp first. git-filter-repo
 # drops the `origin` remote, so re-add it after. ALWAYS rotate any exposed key
@@ -25,7 +25,8 @@ fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 DEFAULT_PATHS=(assets/reference/state "${YMIR_HOME}/hodd/memory")   # the ledger moved into the hoard
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -50,7 +51,7 @@ if [ "$MODE" = dry ]; then
     n="$(git -C "$ROOT" log --all --name-only --pretty=format: -- "$p" 2>/dev/null | grep -c . || true)"
     printf '  "%s",%s\n' "$p" "${n:-0}"
   done
-  printf 'help: bin/repo-scrub.sh --yes  (backs up to /tmp, then rewrites history)\n'
+  printf 'help: bin/gates/repo-scrub.sh --yes  (backs up to /tmp, then rewrites history)\n'
   exit 0
 fi
 
@@ -71,5 +72,5 @@ printf 'repo-scrub[1]{action,backup,remote}:\n  "purged","%s","origin removed �
 printf 'next[4]{step,command}:\n'
 printf '  "re-add remote","git remote add origin <url>"\n'
 printf '  "force-push","git push --force --all && git push --force --tags"\n'
-printf '  "re-verify","bin/secret-guard.sh --all"\n'
+printf '  "re-verify","bin/gates/guards/secret-guard.sh --all"\n'
 printf '  "rotate key","rotate sk-LJcx… and any other exposed credential NOW"\n'

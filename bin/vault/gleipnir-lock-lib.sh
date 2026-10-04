@@ -3,7 +3,7 @@
 #
 # Gleipnir is the impossible chain that bound Fenrir: here it binds ONE live
 # Brokk primary per MACHINE. The lock's correctness lives in ONE implementation —
-# `src/ymir_runtime/state/lock.py`, reached through `bin/ymir-state.sh`. This file
+# `src/ymir_runtime/state/lock.py`, reached through `bin/records/ymir-state.sh`. This file
 # defines no behaviour of its own: every function maps its shell name and its
 # `<result-var>` convention onto the module and returns its answer, so the lock
 # has exactly one implementation and two readers (the shell doors and the
@@ -30,7 +30,7 @@ _gleipnir_root="${BROKK_ROOT_OVERRIDE:-$(cd "$_gleipnir_lib_dir/.." && pwd)}"
 # (bin/ + src/ shipped together) resolves it, and a caller's BROKK_ROOT_OVERRIDE
 # (which may point at a project, not the tree) cannot misdirect it.
 _gleipnir_state() {
-  local door="$_gleipnir_lib_dir/ymir-state.sh"
+  local door="${_gleipnir_lib_dir}/../records/ymir-state.sh"
   [ -x "$door" ] || {
     printf 'gleipnir: the engine door %s is missing — the lock cannot resolve\n' "$door" >&2
     return 127

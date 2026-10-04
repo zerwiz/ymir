@@ -9,7 +9,7 @@
 # anywhere else.
 #
 # Usage:
-#   . bin/registry-lib.sh
+#   . bin/skuld/registry-lib.sh
 #   registry_projects_file                 # → the master registry's path
 #   registry_realm <block> <id> <file>     # → the realm; warns on the old key
 #   registry_deprecated_rows <file>        # → "id<TAB>value" per row on the old key

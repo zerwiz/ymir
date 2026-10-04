@@ -12,11 +12,11 @@
 # (Omarchy docs: "A plugin is a git repo with a manifest.json at its root.")
 #
 # Usage:
-#   bin/omarchy-plugins.sh list                  # what Ymir suggests
-#   bin/omarchy-plugins.sh installed             # what is present now
-#   bin/omarchy-plugins.sh suggest [--yes]       # offer them; install on consent
-#   bin/omarchy-plugins.sh add <id>              # install one (with consent unless --yes)
-#   bin/omarchy-plugins.sh --version
+#   bin/host/omarchy-plugins.sh list                  # what Ymir suggests
+#   bin/host/omarchy-plugins.sh installed             # what is present now
+#   bin/host/omarchy-plugins.sh suggest [--yes]       # offer them; install on consent
+#   bin/host/omarchy-plugins.sh add <id>              # install one (with consent unless --yes)
+#   bin/host/omarchy-plugins.sh --version
 #
 # Consent: nothing is installed without an explicit yes (or --yes). These are
 # third-party plugins that run unsandboxed inside the Omarchy shell — the registry
@@ -25,7 +25,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -113,7 +114,7 @@ case "$ACTION" in
       [ -n "$id" ] || continue
       printf '  "%s","%s","%s"\n' "$id" "$name" "$why"
     done < <(catalog)
-    printf 'install: bin/omarchy-plugins.sh add <id>   (Omarchy installs via `omarchy plugin add`)\n'
+    printf 'install: bin/host/omarchy-plugins.sh add <id>   (Omarchy installs via `omarchy plugin add`)\n'
     ;;
   installed)
     if ! have omarchy; then printf 'omarchy-plugins[1]{state}:\n  "not an Omarchy host"\n'; exit 0; fi
@@ -130,7 +131,7 @@ case "$ACTION" in
       else printf '  [ -- ] %-32s %s\n' "$name" "$why"; fi
     done < <(catalog)
     printf '\nEach is Omarchy-verified as a listing, not audited for safety. Install one at a time:\n'
-    printf '  bin/omarchy-plugins.sh add <id>\n'
+    printf '  bin/host/omarchy-plugins.sh add <id>\n'
     if [ "$YES" = 1 ]; then
       while IFS='|' read -r id name why; do
         [ -n "$id" ] || continue
@@ -141,7 +142,7 @@ case "$ACTION" in
     ;;
   add)
     id="${1:-}"; shift || true
-    [ -n "$id" ] || { printf 'error: add needs a plugin id\nhelp: bin/omarchy-plugins.sh list\n' >&2; exit 2; }
+    [ -n "$id" ] || { printf 'error: add needs a plugin id\nhelp: bin/host/omarchy-plugins.sh list\n' >&2; exit 2; }
     [ "${1:-}" = "--yes" ] && YES=1
     have omarchy || { printf 'error: not an Omarchy host (no `omarchy` command)\n' >&2; exit 1; }
     if is_installed "$id"; then
@@ -155,13 +156,13 @@ case "$ACTION" in
     fi
     repo="$(repo_for "$id")"
     if [ -z "$repo" ]; then
-      printf 'error: cannot resolve the repository for %s\nhelp: check the id (bin/omarchy-plugins.sh list), or install by repo:\n' "$id" >&2
+      printf 'error: cannot resolve the repository for %s\nhelp: check the id (bin/host/omarchy-plugins.sh list), or install by repo:\n' "$id" >&2
       printf '      omarchy plugin add <git-url> --enable\n' >&2
       exit 1
     fi
     if [ "$YES" != 1 ]; then
       if [ ! -t 0 ]; then
-        printf 'error: refusing to install %s without --yes\nhelp: bin/omarchy-plugins.sh add %s --yes\n' "$id" "$id" >&2
+        printf 'error: refusing to install %s without --yes\nhelp: bin/host/omarchy-plugins.sh add %s --yes\n' "$id" "$id" >&2
         exit 3
       fi
       printf 'Install %s from %s? It runs unsandboxed inside your Omarchy shell. [y/N] ' "$id" "$repo"
@@ -183,5 +184,5 @@ case "$ACTION" in
       exit 1
     fi
     ;;
-  *) printf 'error: unknown action %s\nhelp: bin/omarchy-plugins.sh [list|installed|suggest|add]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/host/omarchy-plugins.sh [list|installed|suggest|add]\n' "$ACTION" >&2; exit 2 ;;
 esac

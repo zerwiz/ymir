@@ -5,7 +5,7 @@
 # parent status channel with the request's corr=<id> token. This helper makes
 # that easy, but correctness must not depend on using it: a plain echo of a
 # status line that includes the same corr token is equally valid
-# (bin/fm-pending-reply-lib.sh).
+# (bin/backend/fm-pending-reply-lib.sh).
 #
 # Usage:
 #   fm-secondmate-report.sh <status-file> <verb> <corr_id> <note...>
@@ -23,7 +23,7 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/fm-pending-reply-lib.sh
+# shellcheck source=bin/backend/fm-pending-reply-lib.sh
 . "$SCRIPT_DIR/fm-pending-reply-lib.sh"
 
 usage() {

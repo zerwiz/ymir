@@ -2,7 +2,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 
 BRANCH_ROWS="$STATE/.branch-eligible-rows"

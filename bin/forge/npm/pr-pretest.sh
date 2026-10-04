@@ -4,7 +4,7 @@
 # made we need to do real npm installations locally for testing so our updates
 # will work when we're pushing to npm later on.")
 #
-# `bin/npm-pretest.sh` packs the exact publish artifact and sandbox-installs it
+# `bin/forge/npm/npm-pretest.sh` packs the exact publish artifact and sandbox-installs it
 # with a REAL `npm install <tarball>` into a fresh prefix, then smokes the
 # installed essence (bin tools, ymir.js --version, the hull files, and the
 # desktop resolver shape over the packaged tree). This wrapper is the PR gate
@@ -12,9 +12,9 @@
 # prints the one line to paste into the PR body as the proof.
 #
 # Usage:
-#   bin/pr-pretest.sh           # run the real local npm install test
-#   bin/pr-pretest.sh --body    # print the PR-body proof block (after a pass)
-#   bin/pr-pretest.sh --version
+#   bin/forge/npm/pr-pretest.sh           # run the real local npm install test
+#   bin/forge/npm/pr-pretest.sh --body    # print the PR-body proof block (after a pass)
+#   bin/forge/npm/pr-pretest.sh --version
 #
 # Exit: 0 = PRETEST PASS (a real install of the tarball this tree packs,
 #       installed and smokes); 1 = FAIL — do not open the PR, mend the pack.
@@ -35,25 +35,25 @@ case "${1-}" in
     printf '%s\n' \
       '## The real npm install gate (pr-pretest)' \
       'A real local npm installation of the tarball this tree packs was run and smoked:' \
-      "  \`NPM_PRETEST_SKIP_REMOTE=1 bin/pr-pretest.sh\` → \`PRETEST PASS\`"
+      "  \`NPM_PRETEST_SKIP_REMOTE=1 bin/forge/npm/pr-pretest.sh\` → \`PRETEST PASS\`"
     exit 0
     ;;
 esac
 
-[ -r "$ROOT/bin/npm-pretest.sh" ] || { printf 'pr-pretest[1]{gate,state}:\n  "fail","no bin/npm-pretest.sh in this tree"\n' >&2; exit 1; }
+[ -r "$ROOT/bin/forge/npm/npm-pretest.sh" ] || { printf 'pr-pretest[1]{gate,state}:\n  "fail","no bin/forge/npm/npm-pretest.sh in this tree"\n' >&2; exit 1; }
 
 # The real local npm installation: pack the exact artifact, sandbox-install with
 # a genuine `npm install <tarball>`, and smoke the installed essence. Remote
 # seats are the pretest's own separate leg; the PR gate is the LOCAL truth.
-if NPM_PRETEST_SKIP_REMOTE=1 bash "$ROOT/bin/npm-pretest.sh" local >"$LOG" 2>&1; then
+if NPM_PRETEST_SKIP_REMOTE=1 bash "$ROOT/bin/forge/npm/npm-pretest.sh" local >"$LOG" 2>&1; then
   printf 'pr-pretest[1]{gate,state,tarball}:\n  "pass","real npm install + smoke","%s"\n' \
     "$(grep -oE 'zerwiz-ymir-[0-9.]+\.tgz' "$LOG" | head -1)"
   printf 'PRETEST PASS — a real local npm installation of this tree''s tarball installed and smokes.\n'
-  printf 'proof: paste `NPM_PRETEST_SKIP_REMOTE=1 bin/pr-pretest.sh` → PRETEST PASS into the PR body.\n'
+  printf 'proof: paste `NPM_PRETEST_SKIP_REMOTE=1 bin/forge/npm/pr-pretest.sh` → PRETEST PASS into the PR body.\n'
   exit 0
 fi
 
 printf 'pr-pretest[1]{gate,state}:\n  "fail","the real npm install did not pass — see:%s"\n' "$LOG" >&2
-printf '%s\n' 'PRETEST FAIL — do not open the pull request; mend the pack (bin/npm-pretest.sh names the wound).' >&2
+printf '%s\n' 'PRETEST FAIL — do not open the pull request; mend the pack (bin/forge/npm/npm-pretest.sh names the wound).' >&2
 tail -8 "$LOG" >&2
 exit 1

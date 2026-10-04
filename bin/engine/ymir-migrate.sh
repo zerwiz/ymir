@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.
 #
-#   bin/ymir-migrate.sh status           # which migrations exist / are applied
-#   bin/ymir-migrate.sh apply            # apply everything pending, in order
-#   bin/ymir-migrate.sh apply --dry-run  # show what would run, touch nothing
-#   bin/ymir-migrate.sh --version
+#   bin/engine/ymir-migrate.sh status           # which migrations exist / are applied
+#   bin/engine/ymir-migrate.sh apply            # apply everything pending, in order
+#   bin/engine/ymir-migrate.sh apply --dry-run  # show what would run, touch nothing
+#   bin/engine/ymir-migrate.sh --version
 #
 # Each migration is `.agents/migrations/<NNNN>-<name>.sh`, MUST be idempotent,
 # and runs with `bash`. Applied ids are recorded in `state/migrations` (private).
-# `bin/ymir-install.sh` and `bin/brokk-update.sh` call `apply` after an update.
+# `bin/engine/ymir-install.sh` and `bin/agents/brokk-update.sh` call `apply` after an update.
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -26,7 +26,8 @@ fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 YMIR_HOME="${YMIR_HOME}"
 MIG_DIR="$ROOT/.agents/migrations"
 STATE_DIR="${YMIR_STATE_DIR:-$YMIR_HOME/state}"
@@ -57,7 +58,7 @@ if [ "$ACTION" = status ]; then
   exit 0
 fi
 
-[ "$ACTION" = apply ] || { printf 'error: unknown action %s\nhelp: bin/ymir-migrate.sh [status|apply [--dry-run]]\n' "$ACTION" >&2; exit 2; }
+[ "$ACTION" = apply ] || { printf 'error: unknown action %s\nhelp: bin/engine/ymir-migrate.sh [status|apply [--dry-run]]\n' "$ACTION" >&2; exit 2; }
 
 ran=0; skipped=0
 for m in "${MIGS[@]}"; do

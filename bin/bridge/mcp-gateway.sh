@@ -30,7 +30,7 @@
 #   mcp-gateway.sh start|stop       # raise / lower it in the background
 #   mcp-gateway.sh status [--json]  # link, upstreams, journal depth
 #   mcp-gateway.sh resolve          # the role-resolved upstream map (JSON)
-#   mcp-gateway.sh rail [verb]      # the LIVING model rail (bin/rail-resolve.sh)
+#   mcp-gateway.sh rail [verb]      # the LIVING model rail (bin/model/rail-resolve.sh)
 #   mcp-gateway.sh sync [action]    # push|pull|refresh|all via the sync tool
 #   mcp-gateway.sh catalog          # the cached catalogs
 #   mcp-gateway.sh --version
@@ -56,7 +56,7 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -199,8 +199,8 @@ cmd_status() {
   # resolver — a model URL in the upstream map would be read as a sixth MCP
   # server by the engine, so it is never one.
   local rail_row=""
-  if [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
-    rail_row="$(bash "$SCRIPT_DIR/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
+  if [ -x "$SCRIPT_DIR/../model/rail-resolve.sh" ]; then
+    rail_row="$(bash "$SCRIPT_DIR/../model/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)
 except Exception: d={}
 s=d.get("serving") or {}
@@ -258,7 +258,7 @@ cmd_catalog() {
 
 # The living model rail, reached through the ONE resolver (plan 51 Part 9c):
 # `mcp-gateway.sh rail resolve [alias]` / `rail status`. It is never an upstream.
-cmd_rail() { bash "$SCRIPT_DIR/rail-resolve.sh" "$@"; }
+cmd_rail() { bash "$SCRIPT_DIR/../model/rail-resolve.sh" "$@"; }
 
 case "${1:-status}" in
   serve)    cmd_serve ;;

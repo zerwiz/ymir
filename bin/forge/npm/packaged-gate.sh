@@ -15,8 +15,8 @@
 # visible. A symlinked seam is declared in packaging/symlink-seams.json with the
 # door that seats it on a real machine; an UNDECLARED missing path is a failure.
 #
-#   bin/packaged-gate.sh            # pack, unpack, prove
-#   bin/packaged-gate.sh --keep     # leave the unpacked dir and print its path
+#   bin/forge/npm/packaged-gate.sh            # pack, unpack, prove
+#   bin/forge/npm/packaged-gate.sh --keep     # leave the unpacked dir and print its path
 #
 # Exit: 0 the artifact holds · 1 it does not · 2 usage.
 set -u
@@ -30,7 +30,7 @@ case "${1-}" in
   -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   --keep) KEEP=1 ;;
   "") KEEP=0 ;;
-  *) printf 'error: unknown flag %s\nhelp: bin/packaged-gate.sh [--keep]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown flag %s\nhelp: bin/forge/npm/packaged-gate.sh [--keep]\n' "$1" >&2; exit 2 ;;
 esac
 
 TMP="$(mktemp -d)"

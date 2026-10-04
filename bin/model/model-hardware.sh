@@ -16,7 +16,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -68,7 +69,7 @@ block="<!-- model-hardware:begin -->
   request OOMs, then drop one step (ctx is per-model).
 - **The method** — engines, wiring, and honest measurement — is the Galdr asset
   \`.agents/skills/galdr-ymirsystem/assets/local-models.md\`. Then
-  \`bin/models-detect.sh --write\` registers what serves.
+  \`bin/model/models-detect.sh --write\` registers what serves.
 <!-- model-hardware:end -->"
 
 # The researched settings are NOT in the managed block, so a re-run never clobbers

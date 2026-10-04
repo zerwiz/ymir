@@ -2,7 +2,7 @@
 //
 // Rödd ("voice") is the structured message wire between the Brokk primary and
 // Ymir's workers. This is the TypeScript half of the protocol; the shell CLI
-// (bin/rodd-operational-input.sh) is the single owner of construction/parsing.
+// (bin/agents/rodd-operational-input.sh) is the single owner of construction/parsing.
 // Ported from the upstream agent-distro reference.
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";

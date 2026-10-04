@@ -6,8 +6,8 @@
 # second invocation waits). Different machines are independent; a big box may
 # allow more via `local_concurrency` in config/agents.yaml.
 #
-#   bin/local-model-lock.sh <command...>     # run a command under the lock
-#   bin/local-model-lock.sh check            # is a local-model slot free?
+#   bin/model/local-model-lock.sh <command...>     # run a command under the lock
+#   bin/model/local-model-lock.sh check            # is a local-model slot free?
 #
 # `check` is for the SEAT roads. A herdr seat is long-lived, so wrapping it in
 # `flock` is awkward; instead the seat asks whether a slot is free and refuses
@@ -17,7 +17,8 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -41,7 +42,7 @@ CFG="${YMIR_AGENTS_YAML:-$YMIR_SETTINGS_DIR/agents.yaml}"
 LOCK="$YMIR_STATE_DIR/local-model.lock"
 WAIT="${LOCAL_MODEL_WAIT:-1800}"
 
-[ $# -gt 0 ] || { printf 'error: usage: bin/local-model-lock.sh <command...> | check\n' >&2; exit 2; }
+[ $# -gt 0 ] || { printf 'error: usage: bin/model/local-model-lock.sh <command...> | check\n' >&2; exit 2; }
 
 # check — how many seats are inferring locally right now, and is there room?
 if [ "$1" = "check" ]; then

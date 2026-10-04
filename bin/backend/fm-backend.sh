@@ -88,7 +88,7 @@ fm_backend_is_known() {  # <name>
 }
 
 # fm_backend_detect: detect the runtime firstmate itself is CURRENTLY executing
-# inside, from verified environment markers (mirrors bin/fm-harness.sh's
+# inside, from verified environment markers (mirrors bin/backend/fm-harness.sh's
 # env-marker detection layer for harnesses). Prints the detected backend name
 # and returns 0, or returns 1 when nothing is detected. Nesting resolves
 # INNERMOST-first: tmux sets $TMUX in every process running inside it, even a
@@ -797,11 +797,11 @@ fm_backend_busy_state() {  # <backend> <target>
 # empty|pending|pending-unproven|unknown for callers that need a pre-submit
 # input guard, a submit acknowledgement, or a launch-readiness check. It is
 # exposed so a caller other than the send path (the away-mode daemon's
-# supervisor-pane pending-input guard in bin/fm-supervise-daemon.sh, and
+# supervisor-pane pending-input guard in bin/backend/fm-supervise-daemon.sh, and
 # fm-spawn.sh's kimi readiness/delivery checks) can ask the same question
 # without duplicating per-backend composer reading. Every adapter's named
 # classifier is a THIN wrapper - capture plus a capability descriptor fed to
-# the one shared shape owner (bin/fm-composer-lib.sh,
+# the one shared shape owner (bin/backend/fm-composer-lib.sh,
 # fm_composer_classify_screen) - so no backend can hold a private shape
 # assumption; zellij's classifier reads `dump-screen --ansi`, which replaced
 # its old no-classifier content-diff reporting.
@@ -908,11 +908,11 @@ fm_backend_agent_alive() {  # <backend> <target>
 
 # --- native event push (backend-extensible) ---------------------------------
 #
-# The watcher's event-wait splice (bin/fm-watch.sh) is backend-agnostic: it asks
+# The watcher's event-wait splice (bin/backend/fm-watch.sh) is backend-agnostic: it asks
 # fm_backend_has_push whether a window's backend can push semantic state changes,
 # and for those backends replaces its blind `sleep POLL` with a bounded wait on
 # fm_backend_wait_transition. Every push-capable backend reuses the shared
-# normalized-transition shape and policy table (bin/fm-transition-lib.sh); today
+# normalized-transition shape and policy table (bin/backend/fm-transition-lib.sh); today
 # only herdr implements the surface (docs/herdr-backend.md "Native
 # pane.agent_status_changed push escalation"). A backend with no native push
 # reports has-push false and returns 2 from the dispatchers below, so the

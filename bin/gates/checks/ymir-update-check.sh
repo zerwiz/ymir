@@ -6,8 +6,8 @@
 # never know a fix had shipped — so Brokk could not offer to update, and the
 # Allfather had to remember to look. This is the runtime's own sense of drift.
 #
-#   bin/ymir-update-check.sh            # report; exit 3 when newer stands
-#   bin/ymir-update-check.sh --force    # ignore the day's cache
+#   bin/gates/checks/ymir-update-check.sh            # report; exit 3 when newer stands
+#   bin/gates/checks/ymir-update-check.sh --force    # ignore the day's cache
 #
 # The answer is cached one day (state/update-check) so a session start is not a
 # network call every time. Never fatal: no network, no npm, no answer — silence,
@@ -19,7 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c

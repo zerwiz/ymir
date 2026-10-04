@@ -33,7 +33,7 @@ case "${1-}" in
   -h|--help|"") sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 
-[ $# -ge 2 ] || { printf 'error: need <transcript> <out-actions.md> [minutes-file]\nhelp: bin/snotra-mine.sh <transcript> <out> [minutes]\n' >&2; exit 1; }
+[ $# -ge 2 ] || { printf 'error: need <transcript> <out-actions.md> [minutes-file]\nhelp: bin/time/snotra/snotra-mine.sh <transcript> <out> [minutes]\n' >&2; exit 1; }
 TRANSCRIPT="$1"
 OUT="$2"
 MINUTES="${3:-}"

@@ -18,7 +18,7 @@ function resolveHome(): string {
 // pi process as the Allfather's MAIN session. The watcher extension offers each
 // actionable wake here (lib/skuld-branch-dispatch.ts); the branch handles it with
 // real tools and reports through the skuld_branch_report custom tool, which
-// writes the durable outcome store FIRST (bin/skuld-branch-outcome.sh) and then
+// writes the durable outcome store FIRST (bin/skuld/skuld-branch-outcome.sh) and then
 // merges an append-only note to main's tail. Main's Allfather/assistant dialog
 // is mirrored into the branch as read-only brokk-main-mirror context from Pi's
 // before_agent_start prompt and at main's turn_end. Pi-only by construction: this
@@ -28,7 +28,7 @@ function resolveHome(): string {
 // Away mode (or a broken branch) keeps today's wake-to-main behavior
 // untouched regardless.
 //
-// Prefix stability (the cache contract, owner: bin/skuld-branch-prompt.sh
+// Prefix stability (the cache contract, owner: bin/skuld/skuld-branch-prompt.sh
 // header): the branch's system prompt is the generator's byte-stable output,
 // the tool set is BRANCH_TOOL_NAMES in that fixed order on every spawn, and
 // one shared per-home prompt_cache_key is set for branch requests in a
@@ -63,7 +63,7 @@ function resolveHome(): string {
 // Threat model (Allfather-decided): the branch's actor identity is
 // CONFUSED-AGENT-GRADE - deterministic spawnHook env injection plus a
 // readonly-variable shell prelude so an accidental override fails loudly
-// inside the branch's own shell. bin/brokk-lease-lib.sh documents the grade and
+// inside the branch's own shell. bin/agents/brokk-lease-lib.sh documents the grade and
 // its deliberate limits.
 import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
@@ -834,7 +834,7 @@ export default function (pi: ExtensionAPI) {
           // variables are readonly inside the branch's own shell, so an
           // accidental in-shell reassignment fails loudly instead of silently
           // impersonating main. Confused-agent-grade by design; the threat
-          // model lives in bin/brokk-lease-lib.sh.
+          // model lives in bin/agents/brokk-lease-lib.sh.
           command: `readonly SKULD_ACTOR GLEIPNIR_LEASE_HOLDER_PID
 (
 ${context.command}
@@ -1620,7 +1620,7 @@ pi.registerTool?.({
         out.push(`  "${f}","${head}"`);
       }
       out.push("");
-      out.push("state and what is owed: bin/queue.sh --check (the queue is DERIVED from register.md + questions.md)");
+      out.push("state and what is owed: bin/gates/queue.sh --check (the queue is DERIVED from register.md + questions.md)");
       out.push("why it exists and what it rules: ymir_rule <topic>");
       return piOut(out.join("\n"));
     },

@@ -5,8 +5,8 @@
 # path being committed — even by `git add -f` or a `git mv` that bypasses
 # .gitignore.
 #
-#   bin/private-guard.sh           # inspect the staged change
-#   bin/private-guard.sh --all     # inspect every tracked file
+#   bin/gates/guards/private-guard.sh           # inspect the staged change
+#   bin/gates/guards/private-guard.sh --all     # inspect every tracked file
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -24,7 +24,8 @@ if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # Private roots — nothing here is public. These paths may exist locally
 # but MUST never be committed: they live at YMIR_HOME, env-driven.

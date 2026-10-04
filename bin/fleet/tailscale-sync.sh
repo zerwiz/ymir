@@ -2,12 +2,12 @@
 # tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over
 # Tailscale. Peer-allowlisted, dry-runnable, never a central server.
 #
-#   bin/tailscale-sync.sh status            # tailnet + configured peers
-#   bin/tailscale-sync.sh init              # seed the config from its template
-#   bin/tailscale-sync.sh push [peer]       # local → peer (all peers if omitted)
-#   bin/tailscale-sync.sh pull <peer>       # peer → local
-#   bin/tailscale-sync.sh --dry-run push    # show what would move
-#   bin/tailscale-sync.sh --version
+#   bin/fleet/tailscale-sync.sh status            # tailnet + configured peers
+#   bin/fleet/tailscale-sync.sh init              # seed the config from its template
+#   bin/fleet/tailscale-sync.sh push [peer]       # local → peer (all peers if omitted)
+#   bin/fleet/tailscale-sync.sh pull <peer>       # peer → local
+#   bin/fleet/tailscale-sync.sh --dry-run push    # show what would move
+#   bin/fleet/tailscale-sync.sh --version
 #
 # Config: config/tailscale-sync.yaml (private, from the tracked .example).
 # Transport: rsync over ssh, addressed by Tailscale MagicDNS. No relay.
@@ -15,7 +15,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -70,7 +71,7 @@ except Exception: pass' 2>/dev/null)"
   peers="none"
   [ -r "$CFG" ] && peers="$(python3 -c 'import yaml,sys; d=yaml.safe_load(open(sys.argv[1])) or {}; print(",".join(p if isinstance(p,str) else p.get("host","") for p in (d.get("peers") or [])))' "$CFG" 2>/dev/null)"
   printf 'tailscale-sync[1]{backend,self,online,peers,config}:\n'
-  printf '  "%s","%s","%s","%s","%s"\n' "$ts_state" "${ts_self:-?}" "${online:-none}" "${peers:-none}" "$( [ -r "$CFG" ] && echo present || echo "absent (bin/tailscale-sync.sh init)" )"
+  printf '  "%s","%s","%s","%s","%s"\n' "$ts_state" "${ts_self:-?}" "${online:-none}" "${peers:-none}" "$( [ -r "$CFG" ] && echo present || echo "absent (bin/fleet/tailscale-sync.sh init)" )"
   exit 0
 fi
 
@@ -82,7 +83,7 @@ if [ "$ACTION" = init ]; then
   exit 0
 fi
 
-[ -r "$CFG" ] || { printf 'error: no config %s\nhelp: bin/tailscale-sync.sh init\n' "$CFG" >&2; exit 1; }
+[ -r "$CFG" ] || { printf 'error: no config %s\nhelp: bin/fleet/tailscale-sync.sh init\n' "$CFG" >&2; exit 1; }
 have tailscale || { printf 'error: tailscale is not installed\nhelp: https://tailscale.com/download\n' >&2; exit 1; }
 have rsync || { printf 'error: rsync is not installed\n' >&2; exit 1; }
 [ "$(tailscale status --json 2>/dev/null | python3 -c 'import json,sys;print((json.load(sys.stdin) or {}).get("BackendState",""))' 2>/dev/null)" = "Running" ] \
@@ -112,7 +113,7 @@ for line in "${META[@]:-}"; do
     path=*) PATHS+=("${line#*=}") ;;
   esac
 done
-[ "${#PEERS[@]}" -gt 0 ] || { printf 'error: no matching peer\nhelp: bin/tailscale-sync.sh status\n' >&2; exit 1; }
+[ "${#PEERS[@]}" -gt 0 ] || { printf 'error: no matching peer\nhelp: bin/fleet/tailscale-sync.sh status\n' >&2; exit 1; }
 [ "${#PATHS[@]}" -gt 0 ] || { printf 'error: config lists no paths\n' >&2; exit 1; }
 [ "$include_auth" = 1 ] || PATHS=("${PATHS[@]/~\/.pi\/agent\/auth.json/}")
 

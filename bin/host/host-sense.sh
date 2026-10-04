@@ -13,10 +13,10 @@
 # It is a sensor: it observes and reports. It changes nothing.
 #
 # Usage:
-#   bin/host-sense.sh                     # the host, as TOON
-#   bin/host-sense.sh --json              # the same facts, machine-readable
-#   bin/host-sense.sh capability <name>   # yes|partial|no — for scripting
-#   bin/host-sense.sh --version
+#   bin/host/host-sense.sh                     # the host, as TOON
+#   bin/host/host-sense.sh --json              # the same facts, machine-readable
+#   bin/host/host-sense.sh capability <name>   # yes|partial|no — for scripting
+#   bin/host/host-sense.sh --version
 #
 # Capabilities asked of a desktop:
 #   placement  can a window be pinned to its own numbered workspace from a script
@@ -167,7 +167,7 @@ if [ -n "$CAP" ]; then
     placement) printf '%s\n' "$PLACEMENT" ;;
     launcher)  printf '%s\n' "$LAUNCHER" ;;
     tray)      printf '%s\n' "$TRAY" ;;
-    *) printf 'error: unknown capability %s\nhelp: bin/host-sense.sh capability [placement|launcher|tray]\n' "$CAP" >&2; exit 2 ;;
+    *) printf 'error: unknown capability %s\nhelp: bin/host/host-sense.sh capability [placement|launcher|tray]\n' "$CAP" >&2; exit 2 ;;
   esac
   exit 0
 fi

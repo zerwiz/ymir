@@ -57,8 +57,8 @@ mkdir -p "$STATE"
 # still find the bridge up when the well extension's session_start probe fires.
 # --start is idempotent (no-op when already up); the digest repeats it later
 # only as its own status line.
-if [ -x "$SCRIPT_DIR/mimir-bridge.sh" ]; then
-  if ! "$SCRIPT_DIR/mimir-bridge.sh" --start >/dev/null 2>&1; then
+if [ -x "$SCRIPT_DIR/../bridge/mimir-bridge.sh" ]; then
+  if ! "$SCRIPT_DIR/../bridge/mimir-bridge.sh" --start >/dev/null 2>&1; then
     printf 'well bridge: failed to start (see state/mimir-bridge.log)\n'
   fi
 fi

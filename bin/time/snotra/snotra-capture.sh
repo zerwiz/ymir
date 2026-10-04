@@ -24,7 +24,7 @@
 #   SNOTRA_MONITOR     — sink monitor name (default: the running/default sink)
 #   SNOTRA_MIC         — source name (default: the running/default input)
 #   SNOTRA_OUTFILE     — explicit WAV path (default: <hoard>/meeting-<stamp>.wav).
-#                        The watch (bin/snotra-detect.sh) uses it to name the
+#                        The watch (bin/time/snotra/snotra-detect.sh) uses it to name the
 #                        recording after the meeting lane; the chosen path is
 #                        recorded in state/.snotra-outfile for the pipeline.
 #   SNOTRA_MAX_SECONDS — the safety cap on an unbounded capture (default 14400)

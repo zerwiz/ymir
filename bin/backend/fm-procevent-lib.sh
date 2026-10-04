@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # Shared identity, ownership, capture, and publication rules for the generic
 # process-to-event runner.
-# Usage: . bin/fm-procevent-lib.sh   (requires fm-pr-lib.sh and fm-wake-lib.sh)
+# Usage: . bin/backend/fm-procevent-lib.sh   (requires fm-pr-lib.sh and fm-wake-lib.sh)
 #
 # The runner lets firstmate learn that a registered long-polling source produced
 # a result without holding that blocking process in its conversational turn. It

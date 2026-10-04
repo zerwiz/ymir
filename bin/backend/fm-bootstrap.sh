@@ -27,7 +27,7 @@
 #          instead converge the persistent home to their configured remote code
 #          root. If either placement changes its loaded instruction surface
 #          (AGENTS.md, bin/, or .agents/skills/), bootstrap immediately nudges it
-#          via FM_HOME=<active-home> bin/fm-send.sh fm-<id> so meta resolves the
+#          via FM_HOME=<active-home> bin/backend/fm-send.sh fm-<id> so meta resolves the
 #          current route and the standard from-firstmate marker is applied. A
 #          successful send prints one BOOTSTRAP_INFO line with the exact target
 #          and message sent; a failed send leaves an idempotent retry marker
@@ -41,7 +41,7 @@
 #          quarantine diagnostics for divergent shared captain-preference
 #          copies; no-op/current and successful updates stay quiet.
 #          SECONDMATE_LIVENESS lines report only actionable failures from the
-#          recovery-grade state owned by bin/fm-backend.sh's
+#          recovery-grade state owned by bin/backend/fm-backend.sh's
 #          fm_backend_agent_state: skipped distinguishes an existing ambiguous
 #          process, an unreadable target, and an unverified backend; respawn
 #          failed names whether the endpoint was missing or agent-less.
@@ -84,14 +84,14 @@
 #          BACKLOG_RECONCILE lines report what backlog_record_reconcile could not
 #          settle in THIS home. Every ordinary dispatch and completion now moves
 #          the backlog row inside the script that moves the task's record
-#          (bin/fm-backlog-transition-lib.sh), so this sweep exists for the
+#          (bin/backend/fm-backlog-transition-lib.sh), so this sweep exists for the
 #          crash window inside those scripts and for drift a home was already
 #          carrying: it finishes the authoritative close an interrupted cleanup
 #          recorded, and marks In flight any item this home already owns a worker
 #          for. The worker-record sweep never starts a captain-held or closed
 #          item, and reconciliation never reads or writes another home; the fleet
 #          snapshot's classifier and
-#          bin/fm-secondmate-reconcile.sh's nudge stay as backstops. Replayed
+#          bin/backend/fm-secondmate-reconcile.sh's nudge stay as backstops. Replayed
 #          closes and restored In-flight rows print BOOTSTRAP_INFO facts.
 #          Set FM_BOOTSTRAP_DETECT_ONLY=1 to skip the six MUTATING sweeps
 #          (backlog_record_reconcile, secondmate_sync,
@@ -121,7 +121,7 @@
 #                 local pass.
 #          FM_BOOTSTRAP_DETECT_ONLY composes with it unchanged, so `only` plus
 #          detect-only is the read-only `gh auth status` probe on its own.
-#          bin/fm-startup-network.sh owns the deferral: it runs the `only` phase
+#          bin/backend/fm-startup-network.sh owns the deferral: it runs the `only` phase
 #          in a detached bounded worker and publishes the result. This file stays
 #          the single owner of every sweep, and the split changes only WHEN each
 #          runs, never WHETHER. During the network phase, project clone refresh
@@ -152,33 +152,33 @@ PROJECTS="${FM_PROJECTS_OVERRIDE:-$FM_HOME/projects}"
 CONFIG="${FM_CONFIG_OVERRIDE:-$FM_HOME/config}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
-# shellcheck source=bin/fm-tasks-axi-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-tasks-axi-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-tasks-axi-lib.sh"
-# shellcheck source=bin/fm-backlog-transition-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-backlog-transition-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-backlog-transition-lib.sh"
-# shellcheck source=bin/fm-quota-axi-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-quota-axi-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-quota-axi-lib.sh"
-# shellcheck source=bin/fm-tangle-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-tangle-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-tangle-lib.sh"
-# shellcheck source=bin/fm-ff-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-ff-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-ff-lib.sh"
-# shellcheck source=bin/fm-cursor-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-cursor-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-cursor-lib.sh"
-# shellcheck source=bin/fm-config-inherit-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-config-inherit-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-config-inherit-lib.sh"
-# shellcheck source=bin/fm-secondmate-nudge-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-secondmate-nudge-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-secondmate-nudge-lib.sh"
-# shellcheck source=bin/fm-startup-memory-budget-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-startup-memory-budget-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-startup-memory-budget-lib.sh"
-# shellcheck source=bin/fm-x-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-x-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-x-lib.sh"
-# shellcheck source=bin/fm-backend.sh disable=SC1091
+# shellcheck source=bin/backend/fm-backend.sh disable=SC1091
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-remote-readiness-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-remote-readiness-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-remote-readiness-lib.sh"
 # fm-timing-lib.sh is inert unless FM_TIMING_LOG names a file, which only the
 # deferred network stage sets, so an ordinary bootstrap run records nothing.
-# shellcheck source=bin/fm-timing-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-timing-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-timing-lib.sh"
 
 # Network-phase selection (see the header). An unrecognized value resolves to
@@ -309,7 +309,7 @@ fleet_sync_relay_all_output() {
 }
 
 fleet_sync() {
-  [ -x "$FM_ROOT/bin/fm-fleet-sync.sh" ] || return 0
+  [ -x "$FM_ROOT/bin/backend/fm-fleet-sync.sh" ] || return 0
   [ -d "$PROJECTS" ] || return 0
 
   tmp=$(mktemp "${TMPDIR:-/tmp}/fm-fleet-sync.XXXXXX" 2>/dev/null) || return 0
@@ -317,7 +317,7 @@ fleet_sync() {
   monitor_was_on=0
   case $- in *m*) monitor_was_on=1 ;; esac
   set -m 2>/dev/null || true
-  "$FM_ROOT/bin/fm-fleet-sync.sh" >"$tmp" 2>/dev/null &
+  "$FM_ROOT/bin/backend/fm-fleet-sync.sh" >"$tmp" 2>/dev/null &
   pid=$!
 
   start=$SECONDS
@@ -342,7 +342,7 @@ fleet_sync() {
 }
 
 secondmate_sync() {
-  # shellcheck source=bin/fm-wake-lib.sh disable=SC1091
+  # shellcheck source=bin/backend/fm-wake-lib.sh disable=SC1091
   . "$SCRIPT_DIR/fm-wake-lib.sh"
   # Placement-specific secondmate sync: local homes fast-forward to the primary
   # checkout's current default-branch commit. That path is purely LOCAL - no
@@ -767,7 +767,7 @@ secondmate_liveness_one() {  # <meta> <id>
         ;;
       dead|missing)
         cause="remote endpoint $agent_state on its configured host"
-        if out=$(FM_SPAWN_NO_GUARD=1 "$FM_ROOT/bin/fm-spawn.sh" "$id" --secondmate 2>&1); then
+        if out=$(FM_SPAWN_NO_GUARD=1 "$FM_ROOT/bin/backend/fm-spawn.sh" "$id" --secondmate 2>&1); then
           secondmate_note_respawned "$id"
           report_relaunch "$id" "$cause" "host=$remote_host"
         else
@@ -804,7 +804,7 @@ secondmate_liveness_one() {  # <meta> <id>
       else
         cause="recorded endpoint confidently missing"
       fi
-      if out=$(FM_SPAWN_NO_GUARD=1 "$FM_ROOT/bin/fm-spawn.sh" "$id" --secondmate 2>&1); then
+      if out=$(FM_SPAWN_NO_GUARD=1 "$FM_ROOT/bin/backend/fm-spawn.sh" "$id" --secondmate 2>&1); then
         secondmate_note_respawned "$id"
         report_relaunch "$id" "$cause" "backend=$backend"
       else
@@ -879,7 +879,7 @@ missing_tool_diagnostic() {
 
 # Required-tool detection follows the RESOLVED backend, not a one-size default:
 # a universal toolchain every home needs plus the backend-specific delta owned by
-# fm_backend_required_tools (bin/fm-backend.sh). So a herdr/zellij/cmux home is
+# fm_backend_required_tools (bin/backend/fm-backend.sh). So a herdr/zellij/cmux home is
 # never told tmux is missing, and only orca drops treehouse. A backend value with
 # no verified dependency set is reported before the universal checks continue.
 COMMON_TOOLS="node git gh no-mistakes gh-axi chrome-devtools-axi lavish-axi tasks-axi quota-axi"
@@ -986,7 +986,7 @@ x_mode_remove_artifact() {
 # wire the relay poll into the existing authenticated watcher dispatch.
 # Drops two idempotent, gitignored artifacts:
 #   state/x-watch.check.sh - byte-static identity shim; the watcher validates
-#                            its bytes and invokes bin/fm-x-poll.sh directly
+#                            its bytes and invokes bin/backend/fm-x-poll.sh directly
 #   config/x-mode.env      - exports FM_CHECK_INTERVAL=30, sourced by the watcher
 #                            arm so only an X instance polls at the 30s cadence
 # On opt-out (no token, or empty) it removes any such artifacts so the instance
@@ -1185,11 +1185,11 @@ crew_dispatch_validate() {
 
 # Same-home record reconciliation. Every ordinary dispatch and completion now
 # moves the backlog row inside the script that moves the task's record
-# (bin/fm-backlog-transition-lib.sh), so remaining recovery cases include a
+# (bin/backend/fm-backlog-transition-lib.sh), so remaining recovery cases include a
 # process killed mid-transition and drift this home was already carrying. Heal
 # this home's OWN books on its own
 # restart rather than waiting for a parent's cross-home nudge; the fleet
-# snapshot's classifier and bin/fm-secondmate-reconcile.sh's nudge stay as
+# snapshot's classifier and bin/backend/fm-secondmate-reconcile.sh's nudge stay as
 # backstops for what this cannot see. Never reads or writes another home.
 backlog_record_reconcile() {
   local marker meta meta_lock id row label has_record=0 gate_status
@@ -1212,7 +1212,7 @@ backlog_record_reconcile() {
   fi
   # Keep the wake/lock library's source-time state-directory creation inside
   # this mutating sweep, so FM_BOOTSTRAP_DETECT_ONLY remains read-only.
-  # shellcheck source=bin/fm-wake-lib.sh disable=SC1091
+  # shellcheck source=bin/backend/fm-wake-lib.sh disable=SC1091
   . "$SCRIPT_DIR/fm-wake-lib.sh"
 
   # Finish any close an interrupted cleanup recorded but never landed.

@@ -12,18 +12,19 @@
 # guard: the same value must appear in both, or the build says so.
 #
 # Usage:
-#   bin/design-check.sh          # compare, TOON, exit 0/1
-#   bin/design-check.sh --fix-hint
+#   bin/gates/checks/design-check.sh          # compare, TOON, exit 0/1
+#   bin/gates/checks/design-check.sh --fix-hint
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/app-lib.sh).
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -46,7 +47,7 @@ esac
 # file would fail every worktree for a reason that is not drift.
 if [ ! -r "$SEEDS" ]; then
   printf 'design[1]{state,reason}:\n'
-  printf '  "SKIP","the seat'"'"'s cloth is app-provided (%s) — run bin/ymir-install.sh step_apps"\n' "${SEEDS#"$ROOT"/}"
+  printf '  "SKIP","the seat'"'"'s cloth is app-provided (%s) — run bin/engine/ymir-install.sh step_apps"\n' "${SEEDS#"$ROOT"/}"
   exit 0
 fi
 

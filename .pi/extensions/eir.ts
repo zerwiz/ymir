@@ -4,8 +4,8 @@
  * Why this file exists (audit §4, 2026-10-03): two doors an agent wants at conversational
  * speed had NO tool at all.
  *
- *   ymir_heal   → bin/eir-doctor.sh  check|fix   "is the house healthy" / "heal it"
- *   ymir_update → bin/groa-update.sh check|update  "is there anything new" / "renew Brokk"
+ *   ymir_heal   → bin/agents/eir-doctor.sh  check|fix   "is the house healthy" / "heal it"
+ *   ymir_update → bin/agents/groa-update.sh check|update  "is there anything new" / "renew Brokk"
  *
  * They are two tools and not one because they are two decisions: *diagnose-and-mend* is a
  * healer, *fast-forward-and-renew* is the updater. A single `ymir_maintain` with a mode
@@ -14,7 +14,7 @@
  * Both doors FAIL LOUDLY by design — install and update refuse to warn-and-continue — so
  * `ymir_update` reports a non-zero exit as a fact rather than pretending the seat is renewed.
  *
- * NOT tools, deliberately: bin/no-delete-guard.sh and bin/workflow-check.sh are wards and
+ * NOT tools, deliberately: bin/no-delete-guard.sh and bin/gates/checks/workflow-check.sh are wards and
  * gates. A hook is not a capability an agent calls.
  */
 
@@ -71,7 +71,7 @@ export default function eir(pi: ExtensionAPI) {
     description:
       "Eir the healer: diagnose every surface of the house (`check`) or mend what is broken " +
       "(`fix`). Composes every *-ensure.sh and reports per surface. Thin: it calls " +
-      "bin/eir-doctor.sh, so a human gets the same diagnosis.",
+      "bin/agents/eir-doctor.sh, so a human gets the same diagnosis.",
     parameters: {
       type: "object",
       properties: {
@@ -93,7 +93,7 @@ export default function eir(pi: ExtensionAPI) {
     description:
       "Gróa the updater shaman: `check` says whether the checkout has anything new and " +
       "whether the instruction surface moved; `update` fast-forwards Brokk and every " +
-      "Eindri-home, never forced, then mends forward. Thin: it calls bin/groa-update.sh. " +
+      "Eindri-home, never forced, then mends forward. Thin: it calls bin/agents/groa-update.sh. " +
       "Merges stay human — this tool never merges.",
     parameters: {
       type: "object",

@@ -82,13 +82,13 @@ RECORD_SCHEMA=fm-tool-updates-v1
 # their two versions, and several tools can report in the same sweep.
 MAX_LINE=1000
 
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-line-cap-lib.sh
+# shellcheck source=bin/backend/fm-line-cap-lib.sh
 . "$SCRIPT_DIR/fm-line-cap-lib.sh"
-# shellcheck source=bin/fm-check-lib.sh
+# shellcheck source=bin/backend/fm-check-lib.sh
 . "$SCRIPT_DIR/fm-check-lib.sh"
 
 usage() {

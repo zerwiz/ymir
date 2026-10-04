@@ -19,7 +19,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 PROJECT="$ROOT/src/pyproject.toml"
 VENV="${YMIR_ENGINE_VENV:-$HOME/.fleet/ymir-engine-venv}"
 
@@ -54,7 +55,7 @@ if [ "$ACTION" = status ]; then
   exit 0
 fi
 
-command -v python3 >/dev/null 2>&1 || { printf 'error: python3 not on PATH\nhelp: bin/prereq-ensure.sh\n' >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { printf 'error: python3 not on PATH\nhelp: bin/engine/prereq-ensure.sh\n' >&2; exit 1; }
 if [ ! -x "$VENV/bin/python" ]; then
   mkdir -p "$(dirname "$VENV")" || { printf 'error: cannot create %s\n' "$(dirname "$VENV")" >&2; exit 1; }
   python3 -m venv "$VENV" >/dev/null 2>&1 || { printf 'error: python3 -m venv failed at %s\n' "$VENV" >&2; exit 1; }

@@ -10,7 +10,7 @@ usage() {
   cat <<'EOF'
 Usage: fm-watch-checkpoint.sh [--seconds <n>]
 
-Run bin/fm-watch.sh in the foreground for a bounded checkpoint.
+Run bin/backend/fm-watch.sh in the foreground for a bounded checkpoint.
 On an actionable watcher wake, pass through the watcher output and exit 0.
 On a quiet checkpoint, print "checkpoint: no actionable wake within <n>s" and exit 124.
 EOF

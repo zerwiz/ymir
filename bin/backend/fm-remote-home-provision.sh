@@ -7,11 +7,11 @@
 # Manifest schema fm-remote-home-provision.v1 carries a base64 charter, the
 # base64 parent SSH alias, and one base64 project record per line. Each project
 # record's origin is the URL the parent resolved and named, so this host clones
-# from it and re-validates it through bin/fm-project-origin-lib.sh instead of
+# from it and re-validates it through bin/backend/fm-project-origin-lib.sh instead of
 # trusting the sender. The remote code root is cloned into an absent home,
 # project origins are cloned on this host, the project registry and charter are
 # published, the durable .fm-secondmate-parent record names this home's route to its parent as
-# "remote" - read by bin/fm-teardown.sh's cleanup gate so a delegated public
+# "remote" - read by bin/backend/fm-teardown.sh's cleanup gate so a delegated public
 # reply promise, which the subsystem can only carry on the parent's own
 # filesystem, is never mistaken for one this child could hold - and the
 # .fm-secondmate-home marker commits the complete seed last.
@@ -24,7 +24,7 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME=${FM_HOME:?FM_HOME is required}
 MAX_MANIFEST_BYTES=1048576
 
-# shellcheck source=bin/fm-project-origin-lib.sh
+# shellcheck source=bin/backend/fm-project-origin-lib.sh
 . "$SCRIPT_DIR/fm-project-origin-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit 1; }
@@ -139,7 +139,7 @@ else
   die "no SHA-256 tool is available for provisioning serialization"
 fi
 FM_STATE_OVERRIDE="$PROVISION_LOCK_STATE"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 PROVISION_LOCK="$STATE/.remote-home-provision-$HOME_LOCK_KEY.lock"
 fm_lock_acquire_wait "$PROVISION_LOCK"

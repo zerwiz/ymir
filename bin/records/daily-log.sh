@@ -36,7 +36,7 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
 fi
@@ -65,7 +65,7 @@ case "$ACTION" in
         *) TEXT="${TEXT:+$TEXT }$1"; shift ;;
       esac
     done
-    [ -n "$TEXT" ] || { printf 'error: usage: bin/daily-log.sh add "<what>" [--actor NAME] [--tag T]\n' >&2; exit 2; }
+    [ -n "$TEXT" ] || { printf 'error: usage: bin/records/daily-log.sh add "<what>" [--actor NAME] [--tag T]\n' >&2; exit 2; }
 
     mkdir -p "$DIR" 2>/dev/null || { printf 'error: cannot create %s\n' "$DIR" >&2; exit 1; }
     f="$DIR/$(today).md"

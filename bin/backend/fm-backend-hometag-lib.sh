@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bin/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation
+# bin/backend/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation
 # for session-provider backends whose container has ONE namespace shared by
 # every firstmate home on the machine, with no native per-home split (cmux's
 # one app-global workspace list, zellij's one shared "firstmate" session's

@@ -9,7 +9,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -40,7 +41,7 @@ if [ "$ID" = "this" ] || [ "$ID" = "brokk" ]; then HOME_DIR="$ROOT"; HOST=""; el
 fi
 
 if [ -n "$HOST" ]; then
-  printf 'send[1]{id,state,detail}:\n  "%s","remote","run bin/brokk-send.sh %s on host %s"\n' "$ID" "$ID" "$HOST"
+  printf 'send[1]{id,state,detail}:\n  "%s","remote","run bin/agents/brokk-send.sh %s on host %s"\n' "$ID" "$ID" "$HOST"
   exit 1
 fi
 [ -n "$HOME_DIR" ] && [ -d "$HOME_DIR" ] || { printf 'send[1]{id,state,detail}:\n  "%s","unknown","no home for id (see %s)"\n' "$ID" "${REG#"$ROOT"/}"; exit 1; }

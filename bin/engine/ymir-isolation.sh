@@ -16,8 +16,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/ymir-platform.sh
-. "$SCRIPT_DIR/ymir-platform.sh"
+# shellcheck source=bin/fleet/ymir-platform.sh
+. "$SCRIPT_DIR/../fleet/ymir-platform.sh"
 
 usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; }
 
@@ -53,7 +53,7 @@ case "$CMD" in
         *) WT=$1; shift ;;
       esac
     done
-    [ -n "$WT" ] || { printf 'error: run needs a worktree path\nhelp: bin/ymir-isolation.sh run <worktree> -- <command>\n' >&2; exit 2; }
+    [ -n "$WT" ] || { printf 'error: run needs a worktree path\nhelp: bin/engine/ymir-isolation.sh run <worktree> -- <command>\n' >&2; exit 2; }
     [ -d "$WT" ] || { printf 'error: worktree not found: %s\n' "$WT" >&2; exit 1; }
     [ "$#" -gt 0 ] || { printf 'error: run needs a command after --\n' >&2; exit 2; }
     WT="$(cd "$WT" && pwd)"
@@ -83,6 +83,6 @@ case "$CMD" in
     ;;
 
   *)
-    printf 'error: unknown command %s\nhelp: bin/ymir-isolation.sh [probe|run|--version]\n' "$CMD" >&2
+    printf 'error: unknown command %s\nhelp: bin/engine/ymir-isolation.sh [probe|run|--version]\n' "$CMD" >&2
     exit 2 ;;
 esac

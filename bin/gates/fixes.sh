@@ -13,22 +13,23 @@
 #
 # Two branches never write the same path, so the collision is impossible. The
 # history of a component is its directory, sorted. Nothing is ever assembled at
-# push time, and the gate that guards it only READS (bin/fixes-guard.sh).
+# push time, and the gate that guards it only READS (bin/gates/guards/fixes-guard.sh).
 #
-#   bin/fixes.sh record --component=install --version=0.1.28 --title="…" \
+#   bin/gates/fixes.sh record --component=install --version=0.1.28 --title="…" \
 #                       [--why="…"] [--files="a,b"] [--date=YYYY-MM-DD]
-#   bin/fixes.sh list [<component>]          # the components, or one's notes
-#   bin/fixes.sh show <file|component>       # a note, or the newest of a component
-#   bin/fixes.sh diff --component=X --from=V --to=V
-#   bin/fixes.sh validate                    # every note's header, and its order
-#   bin/fixes.sh components                  # just the names
+#   bin/gates/fixes.sh list [<component>]          # the components, or one's notes
+#   bin/gates/fixes.sh show <file|component>       # a note, or the newest of a component
+#   bin/gates/fixes.sh diff --component=X --from=V --to=V
+#   bin/gates/fixes.sh validate                    # every note's header, and its order
+#   bin/gates/fixes.sh components                  # just the names
 #
 # Exit: 0 ok, 1 error, 2 usage.
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 FIXES="$ROOT/docs/fixes"
 
 # The components are the machine's own parts, not an invented list.
@@ -56,7 +57,7 @@ for a in "$@"; do
     --date=*)      date="${a#*=}" ;;
     --from=*)      from="${a#*=}" ;;
     --to=*)        to="${a#*=}" ;;
-    -*) die "unknown argument $a" "bin/fixes.sh --help" ;;
+    -*) die "unknown argument $a" "bin/gates/fixes.sh --help" ;;
     *) pos="${a}" ;;
   esac
 done
@@ -89,7 +90,7 @@ case "$action" in
     ;;
 
   show)
-    what="${pos:-${component:-}}"; [ -n "$what" ] || die "what shall I show?" "bin/fixes.sh show <component|file>"
+    what="${pos:-${component:-}}"; [ -n "$what" ] || die "what shall I show?" "bin/gates/fixes.sh show <component|file>"
     if [ -f "$what" ]; then f="$what"
     elif [ -f "$FIXES/$what" ]; then f="$FIXES/$what"
     else
@@ -103,12 +104,12 @@ case "$action" in
   record)
     [ -n "$component" ] && [ -n "$version" ] && [ -n "$title" ] \
       || die "record needs --component, --version and --title" \
-             "bin/fixes.sh record --component=install --version=0.1.28 --title=\"…\""
+             "bin/gates/fixes.sh record --component=install --version=0.1.28 --title=\"…\""
     known "$component" || die "unknown component $component" "one of: $COMPONENTS"
     date="${date:-$(date -u +%Y-%m-%d)}"
     dir="$FIXES/$component"; mkdir -p "$dir"
     f="$dir/${version}-$(slugify "$title").md"
-    [ -e "$f" ] && die "that note already exists: ${f#"$ROOT"/}" "bin/fixes.sh show ${f#"$ROOT"/}"
+    [ -e "$f" ] && die "that note already exists: ${f#"$ROOT"/}" "bin/gates/fixes.sh show ${f#"$ROOT"/}"
     {
       printf '## %s · %s · %s — %s\n\n' "$component" "$version" "$date" "$title"
       [ -n "$why" ] && printf '### Why\n%s\n\n' "$why"
@@ -120,7 +121,7 @@ case "$action" in
     ;;
 
   diff)
-    [ -n "$component" ] || die "diff needs --component" "bin/fixes.sh diff --component=install --from=0.1.27 --to=0.1.28"
+    [ -n "$component" ] || die "diff needs --component" "bin/gates/fixes.sh diff --component=install --from=0.1.27 --to=0.1.28"
     known "$component" || die "unknown component $component"
     n=0
     while IFS= read -r f; do
@@ -153,5 +154,5 @@ case "$action" in
     else printf 'fixes[1]{state,failed}:\n  "invalid",%s\n' "$fails"; exit 1; fi
     ;;
 
-  *) die "unknown action ${action:-}" "bin/fixes.sh [record|list|show|diff|validate|components]" ;;
+  *) die "unknown action ${action:-}" "bin/gates/fixes.sh [record|list|show|diff|validate|components]" ;;
 esac

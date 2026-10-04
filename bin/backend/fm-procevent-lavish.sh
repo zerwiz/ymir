@@ -35,11 +35,11 @@
 #            transient interruption described below.
 # terminal   Exit 0 when the captured result means this Lavish source will never
 #            produce another result, so the runner may retire it; any other exit
-#            keeps it armed. This is the generic adapter contract bin/fm-procevent.sh
+#            keeps it armed. This is the generic adapter contract bin/backend/fm-procevent.sh
 #            calls, and the only place Lavish's notion of "ended" is decided.
 # silent     Exit 0 when the captured result is a routine no-op the runner should
 #            record and never announce; any other exit publishes the wake. This
-#            is the generic no-op contract bin/fm-procevent.sh calls, and the
+#            is the generic no-op contract bin/backend/fm-procevent.sh calls, and the
 #            only place Lavish's notion of "nothing was said" is decided.
 #
 # AN EMPTY BOARD CLOSE IS NOT NEWS, and that is what `silent` exists to say.
@@ -63,14 +63,14 @@
 # This adapter is deliberately thin. It owns only what is specific to Lavish:
 # canonical source identity, the argv for the currently published poll command,
 # and how to read a completed result. Ownership, durable capture, publication,
-# and restart recovery all belong to bin/fm-procevent.sh.
+# and restart recovery all belong to bin/backend/fm-procevent.sh.
 #
 # `answers` is this adapter's half of the generic keyed-answer contract in
-# bin/fm-procevent.sh. It reports what the captain actually chose, as
+# bin/backend/fm-procevent.sh. It reports what the captain actually chose, as
 # `<task-id>\t<answer>\t<label>` lines, and stops there. It maps nothing to a
 # task, records no decision, and closes nothing: a captain answer is not special
 # to Lavish, so every rule about what a keyed answer DOES belongs to the one
-# intake in bin/fm-captain-hold.sh, which the runner feeds. A Lavish review is
+# intake in bin/backend/fm-captain-hold.sh, which the runner feeds. A Lavish review is
 # just an ephemeral discussion format that happens to carry answers.
 #
 # Only rows tagged `choice` are read. A freeform captain message is prose that may
@@ -100,7 +100,7 @@
 # deliberately narrow: real feedback, ended and missing sessions, any other
 # SERVER_ERROR, and the same interruption still standing after the bound is
 # spent are all printed straight through and captured normally. The retry is a
-# Lavish fact, so the generic runner in bin/fm-procevent.sh stays
+# Lavish fact, so the generic runner in bin/backend/fm-procevent.sh stays
 # adapter-agnostic and learns nothing about it.
 #
 # LOSS LIMITATION, stated plainly. The published poll destructively clears
@@ -115,11 +115,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-procevent-lib.sh
+# shellcheck source=bin/backend/fm-procevent-lib.sh
 . "$SCRIPT_DIR/fm-procevent-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit 1; }

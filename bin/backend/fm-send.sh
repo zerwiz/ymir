@@ -26,7 +26,7 @@
 # failed or lost remote transport) or a decision-close append failed after
 # delivery (the error then carries the exact manual close). The remote enqueue
 # is idempotent: the remote leg deduplicates an exact re-run of the same
-# request onto the existing record (bin/fm-task-inbox-lib.sh), so after a lost
+# request onto the existing record (bin/backend/fm-task-inbox-lib.sh), so after a lost
 # transport (ssh exit 255, completion unknown) fm-send retries the same leg
 # once itself. For an ordinary reply-bearing request, a later re-run is
 # idempotent only through the printed FM_PENDING_REPLY_EXISTING_CORR=<corr>
@@ -46,7 +46,7 @@
 # ordinary record by the worker's acknowledgement move into handled/, with the
 # watcher re-ringing an unacknowledged message and escalating a stuck one. An
 # explicit fire-and-forget record is excluded from that ladder.
-# bin/fm-task-inbox-lib.sh owns the record format, the doorbell line, and the
+# bin/backend/fm-task-inbox-lib.sh owns the record format, the doorbell line, and the
 # re-ring ladder. The composer pre-check before the ring is ADVISORY only: when
 # the composer visibly holds pending text the ring is skipped with a notice and
 # the watcher re-rings an ordinary record later; no composer verdict is
@@ -68,7 +68,7 @@
 # failure); any other nonzero = the send failed and nothing may be assumed
 # delivered. Submission dispatches through the target's recorded backend; the
 # tmux adapter shares its composer/submit core with the away-mode daemon via
-# bin/fm-tmux-lib.sh. Tune with FM_SEND_RETRIES (default 3) / FM_SEND_SLEEP
+# bin/backend/fm-tmux-lib.sh. Tune with FM_SEND_RETRIES (default 3) / FM_SEND_SLEEP
 # (0.4). Slash commands, and codex `$...` skill invocations resolved through
 # harness meta, get a longer pre-Enter settle so completion popups do not
 # swallow Enter. A remote secondmate target has no typed text plane at all:
@@ -88,7 +88,7 @@
 #
 # From-firstmate marker: when the resolved target is a task selector whose meta
 # records kind=secondmate, the message uses the live-charter-compatible
-# from-firstmate carrier owned by bin/fm-operational-input.sh so the secondmate
+# from-firstmate carrier owned by bin/backend/fm-operational-input.sh so the secondmate
 # routes its reply via its status file or a status-pointed doc instead of
 # stranding it in chat the main firstmate never reads. On the inbox plane the
 # marker travels verbatim inside the recorded body. A crewmate/scout target,
@@ -98,7 +98,7 @@
 # Parent-owned pending-reply expectation: every newly marked secondmate request
 # except an explicit --fire-and-forget delivery receives a privacy-safe
 # correlation id and a durable parent record under state/pending-replies/ before
-# delivery (bin/fm-pending-reply-lib.sh). Delivery
+# delivery (bin/backend/fm-pending-reply-lib.sh). Delivery
 # success and reply success are separate facts: delivery never resolves the
 # expectation. On the inbox plane the durable enqueue IS delivery to the task's
 # record, so the expectation is marked delivered at enqueue time; when that
@@ -117,7 +117,7 @@
 # idempotent while allowing a later identical instruction to be distinct.
 #
 # Remote secondmate delivery: the send crosses fm-on.sh to a host-local leg
-# (bin/fm-remote-secondmate-control.sh cmd_send) that writes the message as a
+# (bin/backend/fm-remote-secondmate-control.sh cmd_send) that writes the message as a
 # durable record into the remote home's steering inbox and rings the remote
 # doorbell, best-effort. The remote record is the delivery, exactly as it is
 # locally: leg exit 0 means durably recorded (fm-send then exits 0, marks the
@@ -161,7 +161,7 @@
 # remote transport.
 #
 # Chat is also a channel that carries keyed captain answers, so the same flag
-# feeds bin/fm-captain-hold.sh's one keyed-answer intake for any key that names
+# feeds bin/backend/fm-captain-hold.sh's one keyed-answer intake for any key that names
 # a captain-held task in this home - the key as a task id itself, or through
 # the legacy `<task>-decision-<key>` identity for pre-collapse rows. fm-send
 # closes nothing itself; it hands the intake `<task-id>\t<answer>\t<label>`
@@ -171,7 +171,7 @@
 # the status ledger alone can no longer close.
 #
 # Each named key must therefore currently be open in ONE of the two ledgers: open
-# in this home's status log per status_open_decisions (bin/fm-classify-lib.sh), or
+# in this home's status log per status_open_decisions (bin/backend/fm-classify-lib.sh), or
 # a still-open captain-held task resolved as above. A key in neither is refused
 # before sending, so a mistyped key cannot deliver an answer while silently
 # orphaning the decision. A failed or unconfirmed send never closes a key; a
@@ -195,10 +195,10 @@ FM_SEND_ORIGINAL_ARGS=("$@")
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
-# shellcheck source=bin/fm-gate-refuse-lib.sh
+# shellcheck source=bin/backend/fm-gate-refuse-lib.sh
 . "$SCRIPT_DIR/fm-gate-refuse-lib.sh"
 # Fail closed before any fleet mutation: a no-mistakes gate agent must never steer
-# a crewmate (see bin/fm-gate-refuse-lib.sh).
+# a crewmate (see bin/backend/fm-gate-refuse-lib.sh).
 fm_refuse_if_gate_agent
 
 if [ -z "${FM_HOME+x}" ] || [ -z "${FM_HOME:-}" ]; then
@@ -216,23 +216,23 @@ if [ ! -d "$STATE" ]; then
   exit 1
 fi
 
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-control-lib.sh
+# shellcheck source=bin/backend/fm-control-lib.sh
 . "$SCRIPT_DIR/fm-control-lib.sh"
-# shellcheck source=bin/fm-marker-lib.sh
+# shellcheck source=bin/backend/fm-marker-lib.sh
 . "$SCRIPT_DIR/fm-marker-lib.sh"
-# shellcheck source=bin/fm-pending-reply-lib.sh
+# shellcheck source=bin/backend/fm-pending-reply-lib.sh
 . "$SCRIPT_DIR/fm-pending-reply-lib.sh"
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 . "$SCRIPT_DIR/fm-classify-lib.sh"
-# shellcheck source=bin/fm-line-cap-lib.sh
+# shellcheck source=bin/backend/fm-line-cap-lib.sh
 . "$SCRIPT_DIR/fm-line-cap-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-task-inbox-lib.sh
+# shellcheck source=bin/backend/fm-task-inbox-lib.sh
 . "$SCRIPT_DIR/fm-task-inbox-lib.sh"
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
 
 FM_GUARD_CONTINUE_LINE='This is a supervision warning only; the requested message WILL still be sent.' "$SCRIPT_DIR/fm-guard.sh" || true
@@ -252,8 +252,8 @@ fm_send_id_from_meta() {  # <meta-file>
 # (verified), so the interrupt is not complete until it has been sent. A failed
 # clear is loud rather than silent, because the alternative is a corrupted steer.
 # WHICH adapters need that clear, and which key clears them, comes from the one
-# control-plane capability table (bin/fm-control-lib.sh) rather than a second
-# copy here - the same table bin/fm-control.sh's interrupt verb reads.
+# control-plane capability table (bin/backend/fm-control-lib.sh) rather than a second
+# copy here - the same table bin/backend/fm-control.sh's interrupt verb reads.
 fm_send_clear_after_interrupt() {  # <key>
   local key=$1 family clear
   [ "$key" = Escape ] || return 0
@@ -283,10 +283,10 @@ fm_send_record_interrupt() {  # <key>
   [ -f "$STATE/$id.busy-gen" ] || return 0
   gen=$(fm_meta_get "$TARGET_META" busy_gen)
   if [ -n "$gen" ]; then
-    "$FM_ROOT/bin/fm-busy-event.sh" apply "$STATE" "$id" idle \
+    "$FM_ROOT/bin/backend/fm-busy-event.sh" apply "$STATE" "$id" idle \
       --gen "$gen" --source fm-interrupt --event interrupt
   else
-    "$FM_ROOT/bin/fm-busy-event.sh" apply "$STATE" "$id" idle \
+    "$FM_ROOT/bin/backend/fm-busy-event.sh" apply "$STATE" "$id" idle \
       --current-gen --source fm-interrupt --event interrupt
   fi || {
     echo "error: key '$key' reached $T, but the Claude interrupt state could not be recorded for $id" >&2
@@ -424,8 +424,8 @@ shift
 # Supervision lease guard: a steer is overlap territory between the two Pi
 # supervision actors, so refuse while the OTHER actor holds this task's live
 # lease. A home with no supervision branch has no lease files and passes
-# untouched (contract: bin/fm-lease-lib.sh).
-# shellcheck source=bin/fm-lease-lib.sh
+# untouched (contract: bin/backend/fm-lease-lib.sh).
+# shellcheck source=bin/backend/fm-lease-lib.sh
 . "$SCRIPT_DIR/fm-lease-lib.sh"
 if [ -n "$TARGET_META" ]; then
   LEASE_GUARD_TASK=$(fm_send_id_from_meta "$TARGET_META")
@@ -595,7 +595,7 @@ fi
 # command; the decision then stays open and re-surfaces, never silently lost.
 # The close is this home's own bookkeeping, written by the very turn that
 # answered the decision, so it goes through the guarded self-announced append
-# (bin/fm-wake-lib.sh) and does not wake this same session again; any
+# (bin/backend/fm-wake-lib.sh) and does not wake this same session again; any
 # concurrent foreign status bytes leave the watcher's wake path untouched.
 fm_send_close_resolved_keys() {  # <answer-text>
   local note=$1 k line append_rc
@@ -1017,7 +1017,7 @@ else
       # likely landed. It stays armed on its unconfirmed-delivery marker, so a
       # correlated report still resolves it and an unanswered one still
       # surfaces through the library's own reconciliation
-      # (bin/fm-pending-reply-lib.sh).
+      # (bin/backend/fm-pending-reply-lib.sh).
       echo "fm-send: text delivered to $T but submission is unconfirmed (verdict=pending; tried $RESOLUTION_TRIED); do not retype or blindly resend - verify with fm-peek.sh, then re-send '--key Enter' only if the composer still holds the text" >&2
       exit 3
       ;;

@@ -10,7 +10,8 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 ASKEN_BIN="${ASKEN_BIN:-$(command -v asken 2>/dev/null || true)}"
 if [ -z "$ASKEN_BIN" ] || [ ! -x "$ASKEN_BIN" ]; then

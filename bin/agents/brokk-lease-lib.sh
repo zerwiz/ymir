@@ -22,7 +22,7 @@
 #     extension's bash tool, not by agent memory. Any other value is refused
 #     loudly - an unknown actor is a wiring bug, not a third role.
 #   - Staleness: the recorded pid is the long-lived supervising process (the
-#     session-lock holder, or BROKK_LEASE_HOLDER_PID - see bin/brokk-lease.sh), and
+#     session-lock holder, or BROKK_LEASE_HOLDER_PID - see bin/agents/brokk-lease.sh), and
 #     both actors live inside that one pi process, so a dead recorded pid
 #     means the process died; the lease is cleared at the next claim, guard,
 #     or sweep. Liveness requires a Pi calling context plus state/.lock, and
@@ -58,9 +58,9 @@
 #     branch-side containment only; main's tasks-axi path has no executable
 #     backlog lease guard in this scope.
 #
-# Sourced by bin/brokk-send.sh, bin/brokk-control.sh, bin/brokk-teardown.sh,
+# Sourced by bin/agents/brokk-send.sh, bin/brokk-control.sh, bin/brokk-teardown.sh,
 # bin/brokk-pr-merge.sh, bin/brokk-merge-local.sh, bin/agents/einherjar-spawn.sh, and
-# bin/brokk-lease.sh. Callers must have $STATE resolved before calling. No side
+# bin/agents/brokk-lease.sh. Callers must have $STATE resolved before calling. No side
 # effects on source. set -u / set -e safe.
 
 # Distinct from usage errors (2), the gate refusal (3), and brokk-send's
@@ -77,7 +77,7 @@ fm_lease_lock_helpers() {
   # analysis boundary so ShellCheck's external-source traversal does not
   # recursively duplicate that large graph for every lease-lib consumer.
   # shellcheck source=/dev/null
-  . "$BROKK_LEASE_LIB_DIR/brokk-wake-lib.sh"
+  . "${BROKK_LEASE_LIB_DIR}/../time/brokk-wake-lib.sh"
 }
 
 # fm_lease_actor: print the current actor after validating it. Returns 1 (with
@@ -120,7 +120,7 @@ fm_lease_read() {
   IFS= read -r line < "$file" 2>/dev/null || line=
   BROKK_LEASE_ACTOR=$(printf '%s' "$line" | cut -f1)
   BROKK_LEASE_PID=$(printf '%s' "$line" | cut -f2)
-  # shellcheck disable=SC2034 # Consumed by sourcing callers (bin/brokk-lease.sh check).
+  # shellcheck disable=SC2034 # Consumed by sourcing callers (bin/agents/brokk-lease.sh check).
   BROKK_LEASE_EPOCH=$(printf '%s' "$line" | cut -f3)
   case "$BROKK_LEASE_ACTOR" in
     main|branch) ;;

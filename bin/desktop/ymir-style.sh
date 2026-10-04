@@ -69,7 +69,7 @@ style_colour() {  # <state> → the colour for it
 }
 
 # --- preferences: a user must be able to say "not again", once --------------
-# The store is the operator's settings (see bin/ymir-config.sh); absent means on.
+# The store is the operator's settings (see bin/engine/ymir-config.sh); absent means on.
 notice_state() {  # <key> → on|off
   local key="$1" store line
   if [ -n "${YMIR_SETTINGS_DIR:-}" ]; then store="$YMIR_SETTINGS_DIR/notices.conf"

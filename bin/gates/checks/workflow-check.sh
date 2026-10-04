@@ -9,8 +9,8 @@
 # **a gate that cannot START must say so** — applied one level up: the workflow itself
 # could not start.
 #
-#   bin/workflow-check.sh          # parse every .github/workflows/*.yml
-#   bin/workflow-check.sh --quiet  # only report failures
+#   bin/gates/checks/workflow-check.sh          # parse every .github/workflows/*.yml
+#   bin/gates/checks/workflow-check.sh --quiet  # only report failures
 #
 # Non-fatal if python3 lacks PyYAML: it then checks the two structural rules it can see.
 set -uo pipefail

@@ -3,13 +3,14 @@
 # no-mistakes; run by .github/workflows and `commands.lint` in .no-mistakes.yaml.
 # Galdr-style: TOON output, structured errors, no prompts, idempotent.
 #
-# Usage: bin/brokk-lint.sh [--quiet] ; bin/brokk-lint.sh --version
+# Usage: bin/agents/brokk-lint.sh [--quiet] ; bin/agents/brokk-lint.sh --version
 # Exit: 0 clean, 1 findings, 2 usage.
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -59,7 +60,7 @@ if [ "$QUIET" = 0 ]; then
 fi
 if [ "$fails" -gt 0 ]; then
   printf 'error: %s lint check(s) failed\n' "$fails" >&2
-  printf 'help: run bin/brokk-lint.sh to see the failing check\n' >&2
+  printf 'help: run bin/agents/brokk-lint.sh to see the failing check\n' >&2
   exit 1
 fi
 exit 0

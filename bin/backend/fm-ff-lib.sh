@@ -1,12 +1,12 @@
 # shellcheck shell=bash
 # Shared fast-forward machinery for firstmate self-sync.
-# Usage: . bin/fm-ff-lib.sh   (after FM_ROOT and FM_HOME are set)
+# Usage: . bin/backend/fm-ff-lib.sh   (after FM_ROOT and FM_HOME are set)
 #
 # This is the one implementation of "advance a firstmate checkout to a base by a
 # clean fast-forward, never forcing, merging, or stashing" used by every sync
 # path:
-#   - /updatefirstmate (bin/fm-update.sh) pulls from origin: base_mode "origin".
-#   - the local-HEAD secondmate sync (bin/fm-spawn.sh on launch, bin/fm-bootstrap.sh
+#   - /updatefirstmate (bin/backend/fm-update.sh) pulls from origin: base_mode "origin".
+#   - the local-HEAD secondmate sync (bin/backend/fm-spawn.sh on launch, bin/backend/fm-bootstrap.sh
 #     on startup) follows the PRIMARY checkout's current default-branch commit:
 #     base_mode is that local commit, with NO fetch and no origin dependency.
 #
@@ -25,7 +25,7 @@
 # shared default branch or any other worktree's checkout.
 
 SUB_HOME_MARKER="${SUB_HOME_MARKER:-.fm-secondmate-home}"
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-secondmate-registry-lib.sh"
 
 # --- helpers ---------------------------------------------------------------

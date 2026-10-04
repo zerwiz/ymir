@@ -11,7 +11,7 @@
 # is generating — that kills the run.
 #
 # Usage:
-#   bin/open-design.sh start|stop|status|health|logs|projects|new|rm|open
+#   bin/pi/open-design.sh start|stop|status|health|logs|projects|new|rm|open
 #
 # House law: config is never hardcoded (Rule 07). Everything resolves from env with
 # one documented default.
@@ -43,7 +43,7 @@ cmd_start() {
     fi
     sleep 1
   done
-  echo "open-design did not answer on :${PORT}; see: bin/open-design.sh logs" >&2
+  echo "open-design did not answer on :${PORT}; see: bin/pi/open-design.sh logs" >&2
   return 1
 }
 
@@ -63,7 +63,7 @@ cmd_status() {
 cmd_projects() { api "${BASE}/api/projects"; echo; }
 
 cmd_new() {
-  [ -n "${1:-}" ] || { echo "usage: bin/open-design.sh new <id> [name]" >&2; return 2; }
+  [ -n "${1:-}" ] || { echo "usage: bin/pi/open-design.sh new <id> [name]" >&2; return 2; }
   local id="$1" name="${2:-$1}"
   api -X POST "${BASE}/api/projects" -H 'Content-Type: application/json' \
     -d "$(printf '{"id":"%s","name":"%s","kind":"prototype","fidelity":"high"}' "${id}" "${name}")"
@@ -71,7 +71,7 @@ cmd_new() {
 }
 
 cmd_rm() {
-  [ -n "${1:-}" ] || { echo "usage: bin/open-design.sh rm <id>" >&2; return 2; }
+  [ -n "${1:-}" ] || { echo "usage: bin/pi/open-design.sh rm <id>" >&2; return 2; }
   api -X DELETE "${BASE}/api/projects/${1}"; echo
 }
 

@@ -106,11 +106,11 @@ export default function rules(pi: ExtensionAPI) {
       for (const [name, what] of gates) rows.push(`  "${name}","${what}"`);
       rows.push("");
       rows.push(`bin/             the doors this seat can run, each saying what it is:`);
-      rows.push(`bin/inventory.sh   what every door does, its verdict and its disposition (--check fails when stale)`);
-      rows.push(`bin/capabilities.sh the capability register: job -> door -> tech decision (--check fails when stale)`);
-      rows.push(`bin/queue.sh       the work queue, DERIVED from register + questions (--check fails when stale)`);
+      rows.push(`bin/gates/inventory.sh   what every door does, its verdict and its disposition (--check fails when stale)`);
+      rows.push(`bin/gates/capabilities.sh the capability register: job -> door -> tech decision (--check fails when stale)`);
+      rows.push(`bin/gates/queue.sh       the work queue, DERIVED from register + questions (--check fails when stale)`);
       rows.push(`bin/seat/verify-seat.sh whether THIS seat is whole; non-zero when a surface is missing`);
-      rows.push(`bin/home-index-check.sh whether the home's shelves can be navigated`);
+      rows.push(`bin/gates/checks/home-index-check.sh whether the home's shelves can be navigated`);
       rows.push("");
       rows.push("a gate that exists and runs nowhere is how a capability is silently absent.");
       return piOut(rows.join("\n"));

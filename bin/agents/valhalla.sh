@@ -15,8 +15,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/ymir-platform.sh
-. "$SCRIPT_DIR/ymir-platform.sh"
+# shellcheck source=bin/fleet/ymir-platform.sh
+. "$SCRIPT_DIR/../fleet/ymir-platform.sh"
 # Docker or rootless Podman (Fedora). Empty when neither binary exists.
 ENGINE="$(ymir_container_engine_name 2>/dev/null || true)"
 
@@ -111,5 +111,5 @@ for p in d:
     esac
     ;;
 
-  *) printf 'error: unknown command %s\nhelp: bin/valhalla.sh [list|status|restart|stop|start|logs|--version]\n' "$CMD" >&2; exit 2 ;;
+  *) printf 'error: unknown command %s\nhelp: bin/agents/valhalla.sh [list|status|restart|stop|start|logs|--version]\n' "$CMD" >&2; exit 2 ;;
 esac

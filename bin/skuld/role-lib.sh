@@ -5,7 +5,7 @@
 #
 # One owner for three things the installer must not re-decide:
 #
-#   the resolution chain   --role / $YMIR_ROLE → the fleet registry (bin/role.sh)
+#   the resolution chain   --role / $YMIR_ROLE → the fleet registry (bin/skuld/role.sh)
 #                          → this machine's card row in hodd/data/machines.md
 #                          → ASK (a real interactive run) → the safe body
 #   the component table    which parts each role owes (heart · forge · dev · hand)
@@ -24,12 +24,12 @@
 #   machine_card_write <host> <roles> <components> <source>
 #                                          -> "written" | "unchanged" | "unwritten"
 #
-# Depends on: bin/vault/hoard-lib.sh (the home), bin/role.sh + bin/topology.sh (reads).
+# Depends on: bin/vault/hoard-lib.sh (the home), bin/skuld/role.sh + bin/fleet/topology.sh (reads).
 set -u
 
 ROLE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _rl in "$ROLE_LIB_DIR/hoard-lib.sh" "$(dirname "$ROLE_LIB_DIR")/bin/vault/hoard-lib.sh"; do
+  for _rl in "${ROLE_LIB_DIR}/../vault/hoard-lib.sh" "$(dirname "$ROLE_LIB_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_rl" ] && { . "$_rl"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _rl
@@ -105,20 +105,20 @@ machine_card_write() {  # <host> <roles> <components> <source>
   stamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   os_name="$(. /etc/os-release 2>/dev/null; printf '%s' "${PRETTY_NAME:-unknown}")"
   platform="$(ymir_os 2>/dev/null || printf unknown) · $(uname -m 2>/dev/null || printf unknown)"
-  if [ -x "$ROLE_LIB_DIR/topology.sh" ]; then
-    link="$(bash "$ROLE_LIB_DIR/topology.sh" 2>/dev/null | sed -nE 's/^  "link","([^"]+)".*/\1/p')"
-    heart="$(bash "$ROLE_LIB_DIR/topology.sh" 2>/dev/null | sed -nE 's/^  "heart","([^"]+)".*/\1/p')"
+  if [ -x "${ROLE_LIB_DIR}/../fleet/topology.sh" ]; then
+    link="$(bash "${ROLE_LIB_DIR}/../fleet/topology.sh" 2>/dev/null | sed -nE 's/^  "link","([^"]+)".*/\1/p')"
+    heart="$(bash "${ROLE_LIB_DIR}/../fleet/topology.sh" 2>/dev/null | sed -nE 's/^  "heart","([^"]+)".*/\1/p')"
   fi
   head="## Machine card — $host (role: $roles)"
   if [ -f "$machines" ] && grep -qxF "$head" "$machines" 2>/dev/null; then printf 'unchanged'; return 0; fi
   {
     printf '\n%s\n\n' "$head"
-    printf -- '- recorded: %s by `bin/ymir-install.sh` (source: %s)\n' "$stamp" "$src"
+    printf -- '- recorded: %s by `bin/engine/ymir-install.sh` (source: %s)\n' "$stamp" "$src"
     printf -- '- role: %s — components: %s\n' "$roles" "$comps"
     printf -- '- host: %s · %s\n' "$host" "$os_name"
     printf -- '- platform: %s\n' "$platform"
     if [ -n "$link" ]; then printf -- '- link: %s%s\n' "$link" "${heart:+ · heart: $heart}"; fi
-    printf -- '- re-declare: `bin/role.sh set %s heart|forge|dev|hand`\n' "$host"
+    printf -- '- re-declare: `bin/skuld/role.sh set %s heart|forge|dev|hand`\n' "$host"
   } >>"$machines" 2>/dev/null || { printf 'unwritten'; return 1; }
   printf 'written'
 }

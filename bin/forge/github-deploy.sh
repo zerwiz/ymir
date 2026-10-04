@@ -15,7 +15,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -49,8 +50,8 @@ while [ $# -gt 0 ]; do case "$1" in
   --env) ENVIRONMENT=${2-}; shift 2 ;;
   *) ARGS+=("$1"); shift ;;
 esac; done
-if [ -n "$PROJ" ] && [ -x "$SCRIPT_DIR/project-git.sh" ]; then
-  REPO="$("$SCRIPT_DIR/project-git.sh" "$PROJ" --field owner)/$("$SCRIPT_DIR/project-git.sh" "$PROJ" --field repo)"
+if [ -n "$PROJ" ] && [ -x "$SCRIPT_DIR/../agents/project-git.sh" ]; then
+  REPO="$("$SCRIPT_DIR/../agents/project-git.sh" "$PROJ" --field owner)/$("$SCRIPT_DIR/../agents/project-git.sh" "$PROJ" --field repo)"
 fi
 REPO_ARG=(); [ -n "$REPO" ] && REPO_ARG=(--repo "$REPO")
 
@@ -73,7 +74,7 @@ case "$CMD" in
     env_name=${ARGS[0]:-}
     case "$env_name" in
       staging|production) ;;
-      *) printf 'error: dispatch needs staging|production\nhelp: bin/github-deploy.sh dispatch staging\n' >&2; exit 2 ;;
+      *) printf 'error: dispatch needs staging|production\nhelp: bin/forge/github-deploy.sh dispatch staging\n' >&2; exit 2 ;;
     esac
     if gh workflow run "deploy-${env_name}.yml" "${REPO_ARG[@]}" >/dev/null 2>&1; then
       printf 'dispatched[1]{workflow,environment,status}:\n  "deploy-%s.yml","%s","queued"\n' "$env_name" "$env_name"
@@ -90,5 +91,5 @@ except: d=[]
 for r in d: print(f"  \"{r.get(\"name\",\"\")}\",\"{r.get(\"status\",\"\")}\",\"{r.get(\"conclusion\",\"\")}\",\"{r.get(\"createdAt\",\"\")[:16]}\"")'
     ;;
 
-  *) printf 'error: unknown command %s\nhelp: bin/github-deploy.sh [secrets|dispatch|status|--version]\n' "$CMD" >&2; exit 2 ;;
+  *) printf 'error: unknown command %s\nhelp: bin/forge/github-deploy.sh [secrets|dispatch|status|--version]\n' "$CMD" >&2; exit 2 ;;
 esac

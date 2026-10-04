@@ -5,8 +5,8 @@
 # board can render beautifully and still lie. This compares what the UI is SERVED
 # against what the machine actually holds, per source, and FAILS on a mismatch.
 #
-#   bin/ui-truth-check.sh          # compare, TOON, exit 0/1
-#   bin/ui-truth-check.sh --help
+#   bin/gates/checks/ui-truth-check.sh          # compare, TOON, exit 0/1
+#   bin/gates/checks/ui-truth-check.sh --help
 #
 # It reads endpoints as the DESKTOP SEAT (loopback + the marker), which is the
 # trusted seat rule 09 allows — the web door would answer 401 and prove nothing
@@ -15,10 +15,11 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 GATE="${HLIDSKJALF_API_PORT:-3889}"
 # shellcheck source=bin/vault/hoard-lib.sh
-. "$SCRIPT_DIR/hoard-lib.sh"
+. "$SCRIPT_DIR/../../vault/hoard-lib.sh"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -35,7 +36,7 @@ except Exception: print(0)' 2>/dev/null || echo 0; }
 verdict="PASS"; details=""
 
 # ── the fleet: herdr vs the connector vs the endpoint ─────────────────────────
-SRC_JSON="$("$SCRIPT_DIR/hlidskjalf-agents.sh" 2>/dev/null || printf '[]')"
+SRC_JSON="$("$SCRIPT_DIR/../../desktop/hlidskjalf-agents.sh" 2>/dev/null || printf '[]')"
 src_n=$(printf '%s' "$SRC_JSON" | json_len)
 UI_JSON="$(curl -s --max-time 8 -H 'x-ymir-surface: desktop' "http://127.0.0.1:${GATE}/api/agents" 2>/dev/null || printf '[]')"
 ui_n=$(printf '%s' "$UI_JSON" | json_len)

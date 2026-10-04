@@ -21,7 +21,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 SETTLE="${YMIR_SEAT_SETTLE:-35}"
 
 case "${1-}" in
@@ -33,7 +34,7 @@ NAME="${1:-}"; shift || true
 [ -n "$NAME" ] || { printf 'error: a name is required\nhelp: bin/agents/eindri-seat.sh <name> --role <role> -- "<brief>"\n' >&2; exit 2; }
 
 # hand the rest to the house door, which owns the harness rule and the pane log
-SEAT_OUT="$("$SCRIPT_DIR/herdr-run.sh" eindri "$NAME" "$@" 2>&1)"
+SEAT_OUT="$("$SCRIPT_DIR/../seat/herdr-run.sh" eindri "$NAME" "$@" 2>&1)"
 RC=$?
 printf '%s\n' "$SEAT_OUT"
 

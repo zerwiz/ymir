@@ -3,8 +3,8 @@
 # private content (tenant names, personal handles, domains, /home paths, secret
 # shapes). Supersedes agents-guard (root AGENTS.md is just one public file).
 #
-#   bin/public-guard.sh          # inspect the staged change (pre-commit)
-#   bin/public-guard.sh --all    # inspect every tracked public file
+#   bin/gates/guards/public-guard.sh          # inspect the staged change (pre-commit)
+#   bin/gates/guards/public-guard.sh --all    # inspect every tracked public file
 #
 # Two lessons are baked in here (2026-09-12):
 #   1. The scan used to cover only root docs, so `apps/`, `bin/`, `scripts/` and
@@ -30,7 +30,8 @@ if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The public tree scanned for private markers: shipped code, agent surfaces, docs.
 PUBLIC='^(apps/|bin/|scripts/|config/|midgard/|\.agents/|\.pi/|\.opencode/|AGENTS\.md|README\.md|TODO\.md|Structure\.md|CONTRIBUTING\.md|SECURITY\.md|NOTICE|docs/)'
@@ -59,7 +60,7 @@ scan_one() {  # $1 = path in the index; prints a finding, returns 1 when clean
   # This file necessarily contains the patterns it looks for; scanning it would
   # always fail. The same is true of every guard whose job is to name a secret
   # shape, so all three are exempt by name — and the patterns in them stay honest.
-  case "$f" in bin/public-guard.sh|bin/secret-guard.sh|bin/hoard-guard.sh) return 0 ;; esac
+  case "$f" in bin/gates/guards/public-guard.sh|bin/gates/guards/secret-guard.sh|bin/gates/guards/hoard-guard.sh) return 0 ;; esac
   printf '%s\n' "$f" | grep -Eq "$PUBLIC" || return 0
   printf '%s\n' "$f" | grep -Eq "$APPEND_ONLY" && return 0
   out="$(git -C "$ROOT" show ":$f" 2>/dev/null | leaks)" || true

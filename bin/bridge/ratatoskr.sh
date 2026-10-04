@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`).
 #
-#   bin/ratatoskr.sh status            # engine + directory health + served agents
-#   bin/ratatoskr.sh doctor            # a2abridge's full health-check
-#   bin/ratatoskr.sh directory start|stop|status   # the local discovery daemon
-#   bin/ratatoskr.sh service ...       # systemd-user / launchd service management
-#   bin/ratatoskr.sh cert ...          # ed25519 cert+key for cross-machine federation
-#   bin/ratatoskr.sh version
+#   bin/bridge/ratatoskr.sh status            # engine + directory health + served agents
+#   bin/bridge/ratatoskr.sh doctor            # a2abridge's full health-check
+#   bin/bridge/ratatoskr.sh directory start|stop|status   # the local discovery daemon
+#   bin/bridge/ratatoskr.sh service ...       # systemd-user / launchd service management
+#   bin/bridge/ratatoskr.sh cert ...          # ed25519 cert+key for cross-machine federation
+#   bin/bridge/ratatoskr.sh version
 #
 # The engine is the authority; this is a Ymir-shaped, fail-safe wrapper.
 set -u
@@ -45,5 +45,5 @@ except Exception: print("?")' 2>/dev/null)"
       *) printf 'error: directory start|stop|status\n' >&2; exit 2 ;;
     esac ;;
   service|cert|worker|install|uninstall|update|completion) exec "$A2AB" "$ACTION" "$@" ;;
-  *) printf 'error: unknown action %s\nhelp: bin/ratatoskr.sh [status|doctor|directory|service|cert|version]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/bridge/ratatoskr.sh [status|doctor|directory|service|cert|version]\n' "$ACTION" >&2; exit 2 ;;
 esac

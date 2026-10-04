@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # fm-busy-event.sh - the ONLY writer of the semantic busy-state contract
-# owned by bin/fm-busy-lib.sh (record format, gen binding, and classification
+# owned by bin/backend/fm-busy-lib.sh (record format, gen binding, and classification
 # live there; this script owns mutation mechanics only).
 #
 # Subcommands:
@@ -46,7 +46,7 @@ EOF
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/fm-busy-lib.sh
+# shellcheck source=bin/backend/fm-busy-lib.sh
 . "$SCRIPT_DIR/fm-busy-lib.sh"
 
 CMD=${1:-}
@@ -101,7 +101,7 @@ LOCK="$REC.lock"
 # a path, reports that on stderr, prints a partial filesystem dump ("  File:
 # ...") on stdout, and still exits 0 - the fallback never runs and the caller
 # gets a non-numeric token. Detect the platform once and pick the right form,
-# exactly as bin/fm-watch.sh does.
+# exactly as bin/backend/fm-watch.sh does.
 if [ "$(uname)" = Darwin ]; then
   lock_mtime() { stat -f %m "$1" 2>/dev/null; }
 else

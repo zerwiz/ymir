@@ -3,19 +3,19 @@
 #
 # Why a wrapper: an editor window that lands on the desktop you are working on
 # steals the place you were reading. Ymir's law for its own windows is "own
-# numbered desktop, preferring an empty one" (bin/desktop-place.sh), and the
+# numbered desktop, preferring an empty one" (bin/seat/sessrumnir/desktop-place.sh), and the
 # editor deserves the same treatment — open the file, then move that window off
 # to a free desktop so the work you were doing stays where it was.
 #
 # This is the value Pi's Open Editor extension should resolve for $EDITOR:
-#     export EDITOR="bin/ymir-edit.sh"
+#     export EDITOR="bin/engine/ymir-edit.sh"
 # It accepts the same shape a normal editor does: `ymir-edit.sh <path>`.
 #
 # Usage:
-#   bin/ymir-edit.sh <path>          # open, then move to a free desktop
-#   bin/ymir-edit.sh --desktop <n> <path>
-#   bin/ymir-edit.sh --here <path>   # open on the current desktop (no move)
-#   bin/ymir-edit.sh --version
+#   bin/engine/ymir-edit.sh <path>          # open, then move to a free desktop
+#   bin/engine/ymir-edit.sh --desktop <n> <path>
+#   bin/engine/ymir-edit.sh --here <path>   # open on the current desktop (no move)
+#   bin/engine/ymir-edit.sh --version
 #
 # Env:
 #   YMIR_EDITOR          the real editor (default: code, else nvim, else vi)
@@ -24,7 +24,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -59,7 +60,7 @@ is_gui() {
 }
 
 # An empty numbered desktop, preferring the lowest free one. Mirrors
-# bin/desktop-place.sh's rule: on Omarchy the numbered desktops are the screens.
+# bin/seat/sessrumnir/desktop-place.sh's rule: on Omarchy the numbered desktops are the screens.
 free_desktop() {
   command -v hyprctl >/dev/null 2>&1 || return 1
   hyprctl workspaces -j 2>/dev/null | python3 -c '
@@ -85,7 +86,7 @@ move_window_to() {  # <desktop> <class-regex>
   return 0
 }
 
-[ -n "$TARGET" ] || { printf 'error: ymir-edit needs a path\nhelp: bin/ymir-edit.sh <path>\n' >&2; exit 2; }
+[ -n "$TARGET" ] || { printf 'error: ymir-edit needs a path\nhelp: bin/engine/ymir-edit.sh <path>\n' >&2; exit 2; }
 
 EDITOR_BIN="$(pick_editor)"
 EDITOR_BASE="$(basename "$EDITOR_BIN")"

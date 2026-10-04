@@ -23,10 +23,11 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yc
@@ -93,7 +94,7 @@ report() {
 
 case "$ACTION" in
   path)
-    find_server || { printf 'error: no llama-server found\nhelp: bin/llama-ensure.sh ensure\n' >&2; exit 1; }
+    find_server || { printf 'error: no llama-server found\nhelp: bin/model/llama-ensure.sh ensure\n' >&2; exit 1; }
     printf '\n'
     exit 0
     ;;
@@ -102,7 +103,7 @@ case "$ACTION" in
     exit $?
     ;;
   ensure) ;;
-  *) printf 'error: unknown command %s\nhelp: bin/llama-ensure.sh [status|ensure|path]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown command %s\nhelp: bin/model/llama-ensure.sh [status|ensure|path]\n' "$ACTION" >&2; exit 2 ;;
 esac
 
 # ── ensure: adopt what stands, else build ───────────────────────────────────

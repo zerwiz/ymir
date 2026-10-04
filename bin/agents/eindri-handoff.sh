@@ -29,7 +29,7 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
 fi
@@ -78,9 +78,9 @@ deliver() {  # <kind> <name> <path>
   esac
   eindri_queue_wake "$line"
   eindri_mark_delivered "$name" "$wake_kind"
-  if [ -x "$SCRIPT_DIR/ymir-say.sh" ]; then
-    [ "$kind" = "QUESTION" ] && "$SCRIPT_DIR/ymir-say.sh" alarm "Eindri $name asks — answer it" >/dev/null 2>&1 \
-                            || "$SCRIPT_DIR/ymir-say.sh" note "Eindri $name reported" >/dev/null 2>&1
+  if [ -x "$SCRIPT_DIR/../time/snotra/ymir-say.sh" ]; then
+    [ "$kind" = "QUESTION" ] && "$SCRIPT_DIR/../time/snotra/ymir-say.sh" alarm "Eindri $name asks — answer it" >/dev/null 2>&1 \
+                            || "$SCRIPT_DIR/../time/snotra/ymir-say.sh" note "Eindri $name reported" >/dev/null 2>&1
   fi
 }
 

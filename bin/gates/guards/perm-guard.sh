@@ -3,12 +3,13 @@
 # The headline case: a flat `bash: allow` gives a total shell, so any
 # `edit: deny` / `write: deny` on the same agent stops nothing.
 #
-#   bin/perm-guard.sh            # report (exit 0)
-#   bin/perm-guard.sh --strict   # exit 1 if any flat bash allowance exists
+#   bin/gates/guards/perm-guard.sh            # report (exit 0)
+#   bin/gates/guards/perm-guard.sh --strict   # exit 1 if any flat bash allowance exists
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 STRICT=0; [ "${1:-}" = "--strict" ] && STRICT=1
 
 hits=0
