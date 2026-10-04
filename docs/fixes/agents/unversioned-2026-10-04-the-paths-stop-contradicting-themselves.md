@@ -41,7 +41,7 @@ which is exactly the impression that sent the question.
 - **`.pi/extensions/README.md` now opens by saying this tree is not the extension
   home**, what the nine stubs are for, and why `lib/` is a leftover from plan 29.
 - **The `.ymir-root` bullet now records the validation that already exists** — every
-  recorded root is checked against `bin/syn-watch-arm.sh` and one that is gone is
+  recorded root is checked against `bin/pi/syn-watch-arm.sh` and one that is gone is
   skipped. Dead worktrees in that file are hygiene, not a silent resolution failure.
 
 ### Verified

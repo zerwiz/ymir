@@ -88,7 +88,7 @@ pi discovers at seat time. Rule 13 §2 forbids them growing, not existing.
 
 These notes were first filed under `docs/fixes/harness-integration/`, mirroring the
 asset that governs the surface. **The fixes gate cannot see them there** —
-`bin/fixes-guard.sh` matches notes with `^docs/fixes/[a-z]+/…`, and a hyphen in a
+`bin/gates/guards/fixes-guard.sh` matches notes with `^docs/fixes/[a-z]+/…`, and a hyphen in a
 component name is invisible to it, so the push was refused with *"no fix note in
 this range"* while three correct notes sat in the range.
 
@@ -97,7 +97,7 @@ this range"* while three correct notes sat in the range.
 gate already knows, rather than the gate being taught a new one.
 
 **Worth noting that the two governing documents disagree.** `AGENTS.md` sends
-`.pi/**` work to the **harness-integration** asset, while `bin/fixes-guard.sh` calls
+`.pi/**` work to the **harness-integration** asset, while `bin/gates/guards/fixes-guard.sh` calls
 that same work **`agents`**. The asset name and the component name are not the same
 vocabulary, and a reader who trusted the first would file a note the second cannot
 read. Recorded rather than fixed here: aligning them is a change to the guard's map

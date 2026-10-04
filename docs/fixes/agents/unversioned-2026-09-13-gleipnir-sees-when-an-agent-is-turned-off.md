@@ -9,7 +9,7 @@
   Worse, the Sessrúmnir desktop RPC session holds the live lock yet never
   arms supervision (no turn ever calls `gna_watch_arm`), stranding every
   other session read-only.
-- **Fix:** `bin/gleipnir-lock-lib.sh` now records the owner's starttime in a
+- **Fix:** `bin/vault/gleipnir-lock-lib.sh` now records the owner's starttime in a
   `brokk.lock.starttime` sidecar and reaps a holder whose `/proc/<pid>/stat`
   state is `Z`/`X` or whose starttime no longer matches (pid reuse) — dead,
   zombie, and recycled holders are cleared at session start/acquire. Gná

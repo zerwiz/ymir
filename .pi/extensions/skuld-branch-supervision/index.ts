@@ -1502,7 +1502,7 @@ function resolveRoot(): string {
     for (const line of readFileSync(pointer, "utf8").split("\n")) {
       const root = line.trim();
       if (!root) continue;
-      if (existsSync(join(root, "bin", "syn-watch-arm.sh"))) return root;
+      if (existsSync(join(root, "bin"))) return root;
     }
   }
   throw new Error(

@@ -44,7 +44,7 @@ function resolveRoot(): string {
   if (existsSync(pointer)) {
     for (const line of readFileSync(pointer, "utf8").split("\n")) {
       const root = line.trim();
-      if (root && existsSync(join(root, "bin", "syn-watch-arm.sh"))) return root;
+      if (root && existsSync(join(root, "bin"))) return root;
     }
   }
   throw new Error("YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root");
