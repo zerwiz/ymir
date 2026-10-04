@@ -35,7 +35,7 @@ OUT=".agents/assets/agents/capabilities.md"
 MODE="${1:-write}"
 
 # The live signals, taken from the surfaces themselves — never asserted.
-shells=$(ls bin/*.sh 2>/dev/null | wc -l | tr -d ' ')
+shells=$(find bin \( -name '*.sh' -o -name '*.py' \) -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' ')
 pys=$(find src/ymir_runtime -name '*.py' 2>/dev/null | wc -l | tr -d ' ')
 skills=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | LC_ALL=C sort -u | wc -l | tr -d ' ')
 # Enumerate the extension tree the way PI enumerates it (Rule 13 §3): a direct `.ts`,
@@ -117,7 +117,7 @@ printf '| door | the job | verdict | tech decision |\n|---|---|---|---|\n'
 # returns first — ext4 hashes it, overlayfs in CI does not — so two machines built the
 # SAME register with the SAME rows in a DIFFERENT order, and the staleness check (rightly)
 # called it stale. Sorting makes the register a function of CONTENT alone.
-for f in $(ls bin/*.sh 2>/dev/null | LC_ALL=C sort); do
+for f in $(find bin -name '*.sh' -not -path '*/.git/*' 2>/dev/null | LC_ALL=C sort); do
   n=$(basename "$f")
   case "$n" in inventory.sh|capabilities.sh|queue.sh|update-notes.sh|verify-seat.sh) continue ;; esac
   # the first sentence of its own header is the job, from the door itself

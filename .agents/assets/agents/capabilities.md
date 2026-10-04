@@ -12,7 +12,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",393
+  "shell doors (bin/*.sh)",398
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",27
   "Pi extension tools",39
@@ -78,7 +78,6 @@ capabilities[5]{surface,count}:
 | electron-lib.sh | electron-lib.sh — is a desktop shell's runtime actually there? | tested+named | keep (a human or a cron row must run it) |
 | erindi-brief.sh | erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brie | tested+named | keep (a human or a cron row must run it) |
 | essence-fetch.sh | essence-fetch.sh — the npm world's self-heal: npm's packer refuses dot | tested | keep (a human or a cron row must run it) |
-| extension-api-check.sh | extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool  | tested+named | keep (a human or a cron row must run it) |
 | feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
 | fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | tested+named | keep (a human or a cron row must run it) |
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
@@ -242,6 +241,10 @@ capabilities[5]{surface,count}:
 | fm-x-link.sh | Link a spawned task to the X-mode mention that triggered it, so firstmat | tested | keep (a human or a cron row must run it) |
 | fm-x-poll.sh | One short-poll of the relay connector for a pending X-mode mention. | tested | keep (a human or a cron row must run it) |
 | fm-x-reply.sh | Post firstmate's composed answer back to the relay for a pending X-mode  | tested | keep (a human or a cron row must run it) |
+| extension-api-check.sh | extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool  | uncalled+named | keep (a human or a cron row must run it) |
+| home-index-check.sh | home-index-check.sh — every shelf in the home has an index, and the in | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| usage-ratchet.sh | usage-ratchet.sh — PROVE the doors are used, and fail when the unused  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| workflow-check.sh | workflow-check.sh — every GitHub Actions workflow must PARSE, before C | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | github-deploy.sh | github-deploy.sh — zero-trust deploys (W0035). Sync secrets from the l | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-expose.sh | gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjal | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-notify.sh | gjallarhorn-notify.sh — the horn (W0036). Unified push: Telegram + a w | tested+named | keep (a human or a cron row must run it) |
@@ -263,7 +266,6 @@ capabilities[5]{surface,count}:
 | hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested | keep (a human or a cron row must run it) |
 | hoard-lib.sh | hoard-lib.sh — where the operator's HOME lives, and the two roots bene | tested+named | keep (a human or a cron row must run it) |
 | hodd.sh | hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant. | tested+named | keep (a human or a cron row must run it) |
-| home-index-check.sh | home-index-check.sh — every shelf in the home has an index, and the in | tested | keep (a human or a cron row must run it) |
 | host-sense.sh | host-sense.sh — learn THIS machine: distro, kernel, session, desktop,  | tested+named | keep (a human or a cron row must run it) |
 | huginn-research-worker.sh | huginn-research-worker — Apodex-powered research worker (Eindri). | tested | keep (a human or a cron row must run it) |
 | journal-append.sh | journal-append.sh — write one idempotent entry to THIS machine's outbo | tested+named | keep (a human or a cron row must run it) |
@@ -375,14 +377,12 @@ capabilities[5]{surface,count}:
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | topology.sh | topology.sh — what IS this machine in the fleet, and is it talking to  | tested+named | keep (a human or a cron row must run it) |
 | ui-truth-check.sh | ui-truth-check.sh — the panel's number must equal the machine's number | tested | keep (a human or a cron row must run it) |
-| usage-ratchet.sh | usage-ratchet.sh — PROVE the doors are used, and fail when the unused  | tested | keep (a human or a cron row must run it) |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside th | tested+named | keep (a human or a cron row must run it) |
 | valhalla.sh | valhalla.sh — the process hall (Valhalla). List, inspect, revive, and  | tested+named | keep (a human or a cron row must run it) |
 | valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into ea | tested+named | keep (a human or a cron row must run it) |
 | version-stamp.sh | version-stamp.sh — a seat says exactly which build it runs (2026-09-22 | tested | keep (a human or a cron row must run it) |
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |
-| workflow-check.sh | workflow-check.sh — every GitHub Actions workflow must PARSE, before C | tested | keep (a human or a cron row must run it) |
 | workspace-provision.sh | workspace-provision.sh — carve one workspace for the operator. Single  | tested+named | keep (a human or a cron row must run it) |
 | workspace-rag.sh | workspace-rag.sh — memory over the realm workspaces (W0038). | tested+named | keep (a human or a cron row must run it) |
 | wyrd-db.sh | wyrd-db.sh — the database layer (W0040). Applies the platform schema a | tested+named | keep (a human or a cron row must run it) |
