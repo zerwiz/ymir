@@ -28,11 +28,19 @@ set -u
 
 # --- resolve before use: roots come from the libs, never from a literal --------
 _yd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-for _c in "$_yd/hoard-lib.sh" "$(dirname "$_yd")/bin/hoard-lib.sh"; do
+for _c in "$_yd/hoard-lib.sh" "$(dirname "$_yd")/bin/vault/hoard-lib.sh"; do
   [ -r "$_c" ] && { . "$_c"; break; }
 done
 unset _yd _c
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 PLAN="$ROOT/bin/ymir-install.sh"
 
 JSON=0; STRICT=0

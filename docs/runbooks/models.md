@@ -49,7 +49,7 @@ bin/agents-config.sh init        # seed from template (once)
 bin/agents-config.sh resolve     # show bare alias -> exact id
 bin/agents-config.sh show        # the live combination (agent, harness, model)
 bin/agents-config.sh apply       # write into profiles + opencode.json
-bin/agent-run.sh hnoss "design a hero section"
+bin/agents/agent-run.sh hnoss "design a hero section"
 ```
 
 ## Different models on different machines

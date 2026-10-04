@@ -1,6 +1,6 @@
 """Yggdrasil — the worktree. One errand, one checkout, zero collision.
 
-The engine owns this step so `bin/einherjar-spawn.sh` does not have to. The
+The engine owns this step so `bin/agents/einherjar-spawn.sh` does not have to. The
 behaviour is deliberately the *same* as the shell road it replaces:
 
   · the path is the same  (`<root>/.yggdrasil/<seat-id>`)

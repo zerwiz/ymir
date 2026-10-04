@@ -19,7 +19,7 @@
 #        fm-spawn.sh <task-id> --relaunch [--harness <name>] [--model <name>] [--effort <level>]
 #   --relaunch launches a replacement agent for an EXISTING task into that
 #   task's own recorded endpoint and worktree instead of creating either. It is
-#   the launch half of the control plane (bin/fm-control.sh relaunch), which
+#   the launch half of the control plane (bin/backend/fm-control.sh relaunch), which
 #   owns the checkpoint, the progress note, stopping the previous agent, and the
 #   transaction; call fm-control rather than this flag directly unless you are
 #   deliberately re-launching an already-stopped task. Every identity axis -
@@ -43,7 +43,7 @@
 #   is authorized). Without it, the script resolves FM_BACKEND, then
 #   config/backend, then runtime auto-detection from the runtime firstmate's
 #   environment: $TMUX, HERDR_ENV=1, or cmux runtime signals (via
-#   bin/fm-backend.sh's fm_backend_detect, with cmux fallback details in
+#   bin/backend/fm-backend.sh's fm_backend_detect, with cmux fallback details in
 #   docs/cmux-backend.md),
 #   then tmux.
 #   Spawn-capable backends are the reference tmux adapter and experimental
@@ -186,7 +186,7 @@
 # the tracked project-scope .cursor/hooks.json in its own home, whose stop-hook
 # park owns that home's supervision (docs/supervision-protocols/cursor.md).
 # Publishing the record and moving this home's backlog item to In flight are one
-# step, not two: bin/fm-backlog-transition-lib.sh owns that invariant, and this
+# step, not two: bin/backend/fm-backlog-transition-lib.sh owns that invariant, and this
 # script performs the transition under the task's own meta lock before it reports
 # success. A ship or scout dispatch therefore REFUSES up front, before any
 # endpoint, worktree, or record exists, unless the home's backlog has an
@@ -206,7 +206,7 @@
 # Every fresh spawn or relaunch records a new spawn_gen= incarnation token so durable
 # consumers can distinguish a replacement worker that reuses the same task id.
 # When the home session's frozen trace-context decision is enabled (see
-# docs/configuration.md and bin/fm-trace-context-lib.sh), the meta also records
+# docs/configuration.md and bin/backend/fm-trace-context-lib.sh), the meta also records
 # one W3C traceparent= carrier, the same value injected into the pane as
 # TRACEPARENT; the default-off path writes neither, leaving the generated meta
 # and launch environment unchanged.
@@ -215,7 +215,7 @@
 #   decision. It is accepted only for --secondmate spawns, only as a strictly
 #   validated W3C traceparent, and exists because a remote secondmate's task
 #   identity is owned by the parent home that holds its task metadata, while the
-#   pane export happens on the remote host (bin/fm-remote-secondmate-control.sh).
+#   pane export happens on the remote host (bin/backend/fm-remote-secondmate-control.sh).
 #   Local spawns never pass it and resolve their own carrier exactly as before.
 set -eu
 
@@ -235,9 +235,9 @@ esac
 FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 
-# shellcheck source=bin/fm-tasks-axi-lib.sh
+# shellcheck source=bin/backend/fm-tasks-axi-lib.sh
 . "$SCRIPT_DIR/fm-tasks-axi-lib.sh"
-# shellcheck source=bin/fm-backlog-transition-lib.sh
+# shellcheck source=bin/backend/fm-backlog-transition-lib.sh
 . "$SCRIPT_DIR/fm-backlog-transition-lib.sh"
 
 resolve_directory_input() {
@@ -275,36 +275,36 @@ if [ -e "$STATE" ] || [ -L "$STATE" ]; then
     exit 1
   }
 fi
-# shellcheck source=bin/fm-ff-lib.sh
+# shellcheck source=bin/backend/fm-ff-lib.sh
 . "$SCRIPT_DIR/fm-ff-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 fm_backlog_directory_present "$STATE" "state directory" || {
   echo "error: spawn refused: $FM_BACKLOG_TRANSITION_ERROR" >&2
   exit 1
 }
-# shellcheck source=bin/fm-secondmate-nudge-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-nudge-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-nudge-lib.sh"
-# shellcheck source=bin/fm-config-inherit-lib.sh
+# shellcheck source=bin/backend/fm-config-inherit-lib.sh
 . "$SCRIPT_DIR/fm-config-inherit-lib.sh"
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-control-lib.sh
+# shellcheck source=bin/backend/fm-control-lib.sh
 . "$SCRIPT_DIR/fm-control-lib.sh"
-# shellcheck source=bin/fm-gate-refuse-lib.sh
+# shellcheck source=bin/backend/fm-gate-refuse-lib.sh
 . "$SCRIPT_DIR/fm-gate-refuse-lib.sh"
-# shellcheck source=bin/fm-busy-lib.sh
+# shellcheck source=bin/backend/fm-busy-lib.sh
 . "$SCRIPT_DIR/fm-busy-lib.sh"
-# shellcheck source=bin/fm-cursor-lib.sh
+# shellcheck source=bin/backend/fm-cursor-lib.sh
 . "$SCRIPT_DIR/fm-cursor-lib.sh"
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-trace-context-lib.sh
+# shellcheck source=bin/backend/fm-trace-context-lib.sh
 . "$SCRIPT_DIR/fm-trace-context-lib.sh"
-# shellcheck source=bin/fm-remote-readiness-lib.sh
+# shellcheck source=bin/backend/fm-remote-readiness-lib.sh
 . "$SCRIPT_DIR/fm-remote-readiness-lib.sh"
 # Fail closed before any fleet mutation: a no-mistakes gate agent must never spawn
-# a direct report (see bin/fm-gate-refuse-lib.sh).
+# a direct report (see bin/backend/fm-gate-refuse-lib.sh).
 fm_refuse_if_gate_agent
 # Skip the watcher guard when re-exec'd for one pair of a batch (FM_SPAWN_NO_GUARD is
 # set by the batch loop below), so the guard runs once for the batch, not once per pair.
@@ -504,7 +504,7 @@ spawn_remote_secondmate() {
   fi
   # A remote second mate always runs on Herdr: its server belongs to the host's
   # own GUI login session, so the endpoint outlives every SSH connection that
-  # supervises it. bin/fm-remote-doctor.sh gates that host on the same
+  # supervises it. bin/backend/fm-remote-doctor.sh gates that host on the same
   # requirement, and the remote home's config/backend never overrides it.
   case "${BACKEND_ARG:--}" in
     -|herdr) backend=herdr ;;
@@ -980,8 +980,8 @@ fi
 # Role partition: spawning NEW work is MAIN-owned. A relaunch of an existing
 # task is legitimate branch recovery (fm-control drives it through this same
 # entrypoint), so only a fresh spawn refuses the branch actor (contract:
-# bin/fm-lease-lib.sh; no-op in homes without a branch actor).
-# shellcheck source=bin/fm-lease-lib.sh
+# bin/backend/fm-lease-lib.sh; no-op in homes without a branch actor).
+# shellcheck source=bin/backend/fm-lease-lib.sh
 . "$SCRIPT_DIR/fm-lease-lib.sh"
 if [ "$RELAUNCH" -ne 1 ]; then
   fm_lease_forbid_branch "new-task spawn (fm-spawn)"
@@ -994,7 +994,7 @@ if [ "$RELAUNCH" -eq 1 ]; then
   elif [ "$(fm_lease_actor)" = branch ]; then
     # Role partition refinement: branch recovery relaunches only through the
     # fm-control transaction that owns the control lock, never by invoking
-    # this entrypoint directly (contract: bin/fm-lease-lib.sh).
+    # this entrypoint directly (contract: bin/backend/fm-lease-lib.sh).
     echo "error: relaunch (fm-spawn) refused - the supervision branch must relaunch through fm-control" >&2
     exit "$FM_LEASE_REFUSE_EXIT"
   elif fm_lock_try_acquire "$SPAWN_CONTROL_LOCK"; then
@@ -1017,8 +1017,8 @@ if [ "$RELAUNCH" -eq 0 ]; then
   # with a forced teardown that has already enumerated that set: a record
   # published inside the enumerate-then-remove window is invisible to the
   # teardown's per-task preflight but visible to its cleanup, and gets mutated
-  # while never lifecycle-locked (bin/fm-wake-lib.sh's fm_task_set_lock_path
-  # owns the evidence; bin/fm-teardown.sh holds the same lock from enumeration
+  # while never lifecycle-locked (bin/backend/fm-wake-lib.sh's fm_task_set_lock_path
+  # owns the evidence; bin/backend/fm-teardown.sh holds the same lock from enumeration
   # through cleanup). Taken before this task's own locks, matching the
   # acquisition order documented there, and held through publication.
   #
@@ -1117,14 +1117,14 @@ if [ "$RELAUNCH" -eq 1 ]; then
   fm_backend_source "$BACKEND" || exit 1
   # A relaunch must PROVE the previous agent is gone before it launches another
   # one into the same endpoint, and only tmux and herdr have a recovery-grade
-  # classifier that can (bin/fm-control-lib.sh owns that capability table).
+  # classifier that can (bin/backend/fm-control-lib.sh owns that capability table).
   fm_control_backend_state_verified "$BACKEND" || {
     echo "error: backend '$BACKEND' has no recovery-grade agent-state classifier, so a relaunch cannot prove the previous agent exited; refusing rather than risking two agents in one endpoint" >&2
     exit 1
   }
   RELAUNCH_STATE=$(fm_backend_agent_state "$BACKEND" "$RELAUNCH_TARGET")
   [ "$RELAUNCH_STATE" = dead ] || {
-    echo "error: task $ID's endpoint reads '$RELAUNCH_STATE'; a relaunch requires a positively agent-free endpoint (stop the agent first with bin/fm-control.sh $ID exit)" >&2
+    echo "error: task $ID's endpoint reads '$RELAUNCH_STATE'; a relaunch requires a positively agent-free endpoint (stop the agent first with bin/backend/fm-control.sh $ID exit)" >&2
     exit 1
   }
   RELAUNCH_PRIOR_HARNESS=$(fm_meta_get "$RELAUNCH_META" harness)
@@ -1157,7 +1157,7 @@ if [ "$RELAUNCH" -eq 1 ]; then
   # for this task. It must NOT fall through to the fresh-spawn config
   # resolution, which would silently move an existing task onto whatever the
   # crew or secondmate default currently says. Choosing a different harness is
-  # the caller's explicit decision, made with --harness (bin/fm-control.sh
+  # the caller's explicit decision, made with --harness (bin/backend/fm-control.sh
   # resolves that decision, including a secondmate's durable pin).
   ARG3=${HARNESS_ARG:-$RELAUNCH_PRIOR_HARNESS}
   [ -n "$ARG3" ] || {
@@ -1292,7 +1292,7 @@ launch_template() {
     # AGENTS.md rules, which the crewmate contract depends on.
     # muse's turn-end signal rides neither the launch command nor a hook: its
     # plugin engine is off in the default build, so firstmate folds muse's own
-    # session event log instead (bin/fm-busy-lib.sh), bound by the sidecar
+    # session event log instead (bin/backend/fm-busy-lib.sh), bound by the sidecar
     # written below. Nothing to place in the template for it.
     # codex, opencode, and kimi are also markerless and share this inherited-marker hazard; changing their verified launch boundaries belongs in follow-up work.
     muse) printf '%s' 'env -u CLAUDECODE -u PI_CODING_AGENT -u GROK_AGENT -u FM_PI_HARNESS XDG_CONFIG_HOME=__MUSECONFIG__ XDG_DATA_HOME=__MUSEDATA__ MUSE_EXPERIMENTAL_FOREIGN_PERSONAL_CONTEXT_KILL=on __MUSEBIN__ --yolo __MODELFLAG____EFFORTFLAG__"$(__OPINPUT__ encode launch-brief < __BRIEF__)"' ;;
@@ -2014,7 +2014,7 @@ herdr_projection_existing_meta_allows_flat() {  # <meta>
   esac
 }
 
-# Backlog preflight (bin/fm-backlog-transition-lib.sh). This spawn is about to
+# Backlog preflight (bin/backend/fm-backlog-transition-lib.sh). This spawn is about to
 # become the sole owner of the row's In-flight transition, so prove the row is
 # transitionable BEFORE any endpoint, worktree, or record exists: a refusal here
 # costs nothing to unwind, while the same refusal after publication would strand
@@ -2350,7 +2350,7 @@ kimi_capture() {
 }
 
 # Kimi launch-readiness and delivery route their composer-emptiness half
-# through the shared classifier (bin/fm-composer-lib.sh via
+# through the shared classifier (bin/backend/fm-composer-lib.sh via
 # fm_backend_composer_state), the same owner every steer and injection guard
 # reads. This retired a fourth, spawn-local copy of composer shape knowledge -
 # a hardcoded bordered `│ > │` regex that would have silently broken kimi
@@ -2500,7 +2500,7 @@ if [ "$RELAUNCH" -eq 1 ]; then
   # new one. Without this, a harness switch would leave the old adapter's hook
   # files and turn-end token registry entries behind, and even a same-harness
   # relaunch would orphan the retired busy generation's token
-  # (bin/fm-control-lib.sh owns where those artifacts live).
+  # (bin/backend/fm-control-lib.sh owns where those artifacts live).
   clear_relaunch_harness_wiring "$RELAUNCH_PRIOR_HARNESS" "$WT" "$STATE_REAL" "$ID" || {
     echo "error: could not retire $RELAUNCH_PRIOR_HARNESS wiring for task $ID; refusing to arm the replacement" >&2
     exit 1
@@ -2511,7 +2511,7 @@ if [ "$RELAUNCH" -eq 1 ]; then
   RELAUNCH_REPLACEMENT_WT=$WT
 fi
 if [ "$KIND" != secondmate ]; then
-  # Arm the semantic busy-state contract (bin/fm-busy-lib.sh) for every
+  # Arm the semantic busy-state contract (bin/backend/fm-busy-lib.sh) for every
   # adapter with a verified semantic source. The launch brief sent below IS a
   # submitted turn, so the seed record is busy/fm-spawn. The minted gen is
   # embedded into each adapter's wiring so an event from a superseded
@@ -2537,7 +2537,7 @@ if [ "$KIND" != secondmate ]; then
       ;;
     kimi*)
       # Standalone Kimi stays unknown until fm_busy_kimi_verified opens on a
-      # live-verified installed version (bin/fm-busy-lib.sh owns the gate and
+      # live-verified installed version (bin/backend/fm-busy-lib.sh owns the gate and
       # the required evidence). Arming without wiring would seed a busy record
       # nothing can ever clear, so the arm waits for the wiring.
       if fm_busy_kimi_verified; then
@@ -2548,7 +2548,7 @@ if [ "$KIND" != secondmate ]; then
   esac
   case "$HARNESS" in
     claude*)
-      # Semantic busy-state hooks (bin/fm-busy-lib.sh): UserPromptSubmit opens
+      # Semantic busy-state hooks (bin/backend/fm-busy-lib.sh): UserPromptSubmit opens
       # a turn; Stop (normal completion), StopFailure (API-error turn end),
       # and SessionEnd (process shutdown) all close it, so an abnormal end can
       # never leave a stale busy record. Claude fires no hook for a manual
@@ -2656,7 +2656,7 @@ export default function (pi: any) {
 EOF
       ;;
     codex*)
-      # Semantic busy-state source negotiation (bin/fm-busy-lib.sh owns the
+      # Semantic busy-state source negotiation (bin/backend/fm-busy-lib.sh owns the
       # probes and the evidence). Neither Codex path is usable on the
       # installed binary: a pane worker's turns are not observable through
       # the app-server protocol, and its lifecycle hooks did not fire for a
@@ -2718,7 +2718,7 @@ EOF
       # muse's turn lifecycle is neither a hook nor a launch flag: its plugin
       # engine (the only hook surface) is disabled in the default build, so
       # firstmate reads muse's own durable session event log instead
-      # (bin/fm-busy-lib.sh owns the fold). That is a PULL
+      # (bin/backend/fm-busy-lib.sh owns the fold). That is a PULL
       # source with no writer, so nothing is armed and no record is seeded -
       # exactly the reason standalone Kimi is not armed either.
       # This sidecar is the whole binding: it pins the sessions root, the
@@ -2745,7 +2745,7 @@ EOF
     cursor*)
       # Cursor's turn lifecycle is neither a hook nor a launch flag: it writes
       # its own durable per-conversation transcript and brackets every turn
-      # there (bin/fm-busy-lib.sh owns the fold). Like muse that is a PULL
+      # there (bin/backend/fm-busy-lib.sh owns the fold). Like muse that is a PULL
       # source with no writer, so nothing is armed and no record is seeded.
       # This sidecar is the whole binding. It pins the projects root and the
       # exact workspace path cursor records in each project's
@@ -2798,7 +2798,7 @@ elif [ "$KIND" = scout ]; then
   YOLO=
 fi
 
-# Resolve the optional default-off W3C trace context (bin/fm-trace-context-lib.sh,
+# Resolve the optional default-off W3C trace context (bin/backend/fm-trace-context-lib.sh,
 # docs/configuration.md): the one carrier both recorded in meta and injected into
 # the pane, so an observer reads exactly what the child receives. Empty only when
 # disabled or on entropy/validation failure. Reuses this task's already-recorded
@@ -2913,7 +2913,7 @@ if [ "$RELAUNCH" -eq 0 ]; then
 fi
 
 # Fuse the backlog In-flight transition into the publication that just created
-# the record (bin/fm-backlog-transition-lib.sh owns the invariant). It runs under
+# the record (bin/backend/fm-backlog-transition-lib.sh owns the invariant). It runs under
 # this task's own meta lock, so a steer or teardown racing the same id stays
 # serialized exactly as before. The call itself is deferred to the final commit
 # point below so every earlier launch-delivery failure remains unwindable.
@@ -2988,7 +2988,7 @@ fi
 if [ "$KIND" = secondmate ]; then
   sq_home=$(shell_quote "$PROJ_ABS")
   sq_primary_home=$(shell_quote "$FM_HOME")
-  # Keep this in step with fm_supervision_model (bin/fm-wake-lib.sh): Claude's
+  # Keep this in step with fm_supervision_model (bin/backend/fm-wake-lib.sh): Claude's
   # Stop auto-arm and Cursor's stop-hook park both run the watcher only BETWEEN
   # turns, so a fresh beacon with no live watcher is their healthy mid-turn state.
   case "$HARNESS" in
@@ -2999,7 +2999,7 @@ if [ "$KIND" = secondmate ]; then
   # literal (never the raw FM_TRACE_CONTEXT string) so a FM_TRACE_CONTEXT override
   # on the primary reaches the secondmate's OWN workers, not just the copied
   # config/trace-context file: otherwise off would not disable them and on would
-  # not enable them across the launch boundary (bin/fm-trace-context-lib.sh header).
+  # not enable them across the launch boundary (bin/backend/fm-trace-context-lib.sh header).
   # Reuse the single frozen decision from the carrier resolution above so the
   # injected carrier and this on/off snapshot are guaranteed to agree.
   LAUNCH="FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME=$sq_primary_home FM_HOME=$sq_home FM_TRACE_CONTEXT=$SPAWN_TRACE_EFFECTIVE FM_SUPERVISION_MODEL=$supervision_model $LAUNCH"

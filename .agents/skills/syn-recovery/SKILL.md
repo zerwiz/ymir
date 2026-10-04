@@ -13,18 +13,18 @@ metadata:
 
 Use this playbook when the session-start digest reports an ordinary direct report's endpoint dead or its metadata has no window, or when a direct report is stale, looping, repeatedly confused, asking a question its brief already answers, unresponsive, or when a steer failed to land.
 
-Interrupt and stop a worker through `bin/eindri-control.sh <interrupt|exit|read> <agent-or-pane>`,
+Interrupt and stop a worker through `bin/agents/eindri-control.sh <interrupt|exit|read> <agent-or-pane>`,
 which verifies each action and never tears down or discards anything.
 
 **There is no relaunch verb here (measured 2026-10-01).** This playbook used to name
 `bin/brokk-control.sh <id> relaunch`; that script does not exist on this house, and the door that
-does (`bin/eindri-control.sh`) offers only `interrupt | exit | read`. The real relaunch road is
-**`bin/einherjar-spawn.sh <id> --relaunch`**, and it needs its brief in place first:
+does (`bin/agents/eindri-control.sh`) offers only `interrupt | exit | read`. The real relaunch road is
+**`bin/agents/einherjar-spawn.sh <id> --relaunch`**, and it needs its brief in place first:
 
 ```sh
-bash bin/erindi-brief.sh <id> --relaunch      # scaffold data/<id>/brief.md
+bash bin/agents/erindi-brief.sh <id> --relaunch      # scaffold data/<id>/brief.md
 # …fill the brief's {TASK}…
-bash bin/einherjar-spawn.sh <id> --relaunch --harness <h> --model <m>
+bash bin/agents/einherjar-spawn.sh <id> --relaunch --harness <h> --model <m>
 ```
 
 Two refusals that road will give, and both are correct: a `{TASK}` placeholder still in the brief,
@@ -40,7 +40,7 @@ This procedure covers ordinary `kind=ship` and `kind=scout` direct reports.
 Load `Eindri-home-provisioning` instead for `kind=Eindri-home` recovery.
 
 For a REMOTE Eindri-home, `brokk-crew-state` and `brokk-peek` read the actual remote endpoint over `brokk-on.sh`, and `brokk-send` reports a delivered-with-pending-confirmation steer as delivered (their headers own the contracts); an `unknown-remote` read or unreachable-host failure means the remote state could not be read, never that the mate is dead or the send failed.
-Recover a genuinely stuck remote mate only through `bin/einherjar-spawn.sh <id> --Eindri-home`, never raw herdr pane close/kill surgery, which strands the endpoint binding.
+Recover a genuinely stuck remote mate only through `bin/agents/einherjar-spawn.sh <id> --Eindri-home`, never raw herdr pane close/kill surgery, which strands the endpoint binding.
 
 Treat the digest's endpoint result as a presence signal, not proof that the task's work or validation run is gone.
 Read the targeted current state with `bin/vor-crew-state.sh <id>` before deciding to relaunch.
@@ -61,10 +61,10 @@ Escalate in order:
 
 1. Peek the pane, and check the task's steering inbox (`state/<id>.inbox/`) for unhandled `*.msg` records - a stale wake naming an unread Brokk instruction means the worker never acknowledged a durable steer, and the record itself shows exactly what was intended.
 2. If the Eindri is waiting on a question its brief already answers, answer in one line via `BROKK_HOME=<this-Brokk-home> bin/brokk-send.sh` from an active Brokk session unless `BROKK_HOME` is already set to the active Brokk home.
-3. If the Eindri is confused or looping, interrupt with `bin/eindri-control.sh <id> interrupt`, then redirect with one corrective line through `brokk-send` (note: `brokk-send` resolves a *registered* `eindri-homes.md` home; a local worktree errand has none, so use the errand's own wake queue).
+3. If the Eindri is confused or looping, interrupt with `bin/agents/eindri-control.sh <id> interrupt`, then redirect with one corrective line through `brokk-send` (note: `brokk-send` resolves a *registered* `eindri-homes.md` home; a local worktree errand has none, so use the errand's own wake queue).
 4. If the Eindri is genuinely wedged after redirection, relaunch it with
-   `bash bin/erindi-brief.sh <id> --relaunch` (refill its brief with what it did and what is left),
-   then `bash bin/einherjar-spawn.sh <id> --relaunch --harness <h> --model <m>`.
+   `bash bin/agents/erindi-brief.sh <id> --relaunch` (refill its brief with what it did and what is left),
+   then `bash bin/agents/einherjar-spawn.sh <id> --relaunch --harness <h> --model <m>`.
    Pass the harness and model when the worker should come back on a different runtime.
    **Measure before you judge**: a worktree that reads `0` commits against `origin/main..HEAD` may
    have already landed its work on the **remote** branch — check `git log --oneline

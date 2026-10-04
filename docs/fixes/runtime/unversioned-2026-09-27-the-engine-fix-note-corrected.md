@@ -3,7 +3,7 @@
 ### Why
 The fix note `docs/fixes/runtime/unversioned-2026-09-27-the-engine-seats.md` (this
 branch's record for plan 58 Phase 1) reported the indented python heredoc in
-`bin/einherjar-spawn.sh`'s `agent_yaml_local_providers` as a wart this errand had
+`bin/agents/einherjar-spawn.sh`'s `agent_yaml_local_providers` as a wart this errand had
 observed and deliberately left alone.
 
 That report was wrong twice over, and a supervisor caught it:
@@ -28,4 +28,4 @@ That report was wrong twice over, and a supervisor caught it:
 ### Files
 - `docs/fixes/runtime/unversioned-2026-09-27-the-engine-seats.md` (the corrected entry)
 - `docs/fixes/runtime/unversioned-2026-09-27-the-engine-fix-note-corrected.md` (this one)
-- `bin/einherjar-spawn.sh` (unchanged in this correction — verified, not edited)
+- `bin/agents/einherjar-spawn.sh` (unchanged in this correction — verified, not edited)

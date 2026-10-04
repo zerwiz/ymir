@@ -6,7 +6,7 @@
   Frigg, Gróa, Jörð, Sýn, Týr, Galdr… — and the Fleet served **13 panes all named
   "OpenCode"**, role `opencode`. The board showed seats and never the smiths who might
   be standing in them.
-- **`bin/hlidskjalf-agents.sh` now reads the roster** (`.agents/agents/*.md`, canonical
+- **`bin/desktop/hlidskjalf-agents.sh` now reads the roster** (`.agents/agents/*.md`, canonical
   per RULES/02) and joins each agent to its standing pane: figure, craft, model from
   the definition's frontmatter, and `live{}` only when a pane answers to it. An
   **unseated agent is still an agent** — hiding it is what made the board a rack.

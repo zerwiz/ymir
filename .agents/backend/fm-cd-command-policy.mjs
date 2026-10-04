@@ -6,7 +6,7 @@
 // primary shell, so the next firstmate-owned command (a backlog write, an
 // fm-* lifecycle call, tasks-axi) runs inside a project clone instead of the
 // home. This policy blocks exactly that class of command; the environmental
-// scoping to the real primary checkout lives in the bin/fm-cd-pretool-check.sh
+// scoping to the real primary checkout lives in the bin/backend/fm-cd-pretool-check.sh
 // transport, not here. See docs/cd-guard.md for the full contract.
 //
 // The shell tokenizer and command-position analysis are imported from

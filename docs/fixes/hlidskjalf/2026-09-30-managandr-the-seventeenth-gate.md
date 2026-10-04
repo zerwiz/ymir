@@ -75,7 +75,7 @@ second data path. Two faults were folded into the same change:
   Open in Google Calendar`. September (the default month, no events in it) draws
   the honest note — *"The cache is fresh; no events fall in September 2026 — it
   carries 5 across the wider window."* — never a blank grid.
-- `bash bin/guards.sh` and `bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh`
+- `bash bin/gates/guards.sh` and `bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh`
   pass on the worktree.
 
 ## Files

@@ -70,7 +70,7 @@ FM_HOME="$LAB" "$ROOT/bin/fm-spawn.sh" "$TASK" "$LAB/projects/comms" --scout --h
   || fail "could not launch the real Claude cmux probe"
 SPAWNED=1
 
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 FM_HOME="$LAB"
 export FM_HOME
 . "$ROOT/bin/fm-backend.sh"

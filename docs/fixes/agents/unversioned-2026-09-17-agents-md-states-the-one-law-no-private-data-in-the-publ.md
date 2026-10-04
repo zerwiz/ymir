@@ -8,7 +8,7 @@
 - **The private-data section was rebuilt against the disk.** It had duplicated
   `secrets/` and `identity/` lines, no `hodd/` level, and a layout that no longer
   matched the home. It now shows the real tree, names `$YMIR_HOME/hodd/` as *the*
-  private data path, and records that `bin/hoard-lib.sh` is the one source of
+  private data path, and records that `bin/vault/hoard-lib.sh` is the one source of
   truth for it.
 - **Every `$YMIR_HOME/...` path in the file was corrected** to `$YMIR_HOME/hodd/...`
   — the directory rules table, the registry reference, the secrets reference, and

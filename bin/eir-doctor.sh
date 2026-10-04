@@ -13,9 +13,9 @@
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
-             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
-             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+  for _yc in "${ROOT:-}/bin/vault/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/vault/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/vault/hoard-lib.sh" \
              "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
     [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
@@ -75,7 +75,7 @@ f_sessrumnir(){ "$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2
 s_autoboot()  { [ -x "$SCRIPT_DIR/ymir-autoboot.sh" ] && "$SCRIPT_DIR/ymir-autoboot.sh" verify >/dev/null 2>&1; }
 f_autoboot()  { [ -x "$SCRIPT_DIR/fleet-ensure.sh" ] && "$SCRIPT_DIR/fleet-ensure.sh" ensure >/dev/null 2>&1; }
 # The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
-# workspace-hoisted, or the sibling package (bin/electron-lib.sh). ABSENT for
+# workspace-hoisted, or the sibling package (bin/desktop/electron-lib.sh). ABSENT for
 # an app the operator has installed is a FAILURE, never healthy: a desktop
 # that cannot open must be reported red, not quietly green. Only a surface
 # whose app dir is not installed at all — the recorded web-only decision — is
@@ -140,7 +140,7 @@ s_mcp() {
 f_mcp()       { [ -x "$SCRIPT_DIR/a2a-mcp.sh" ] && "$SCRIPT_DIR/a2a-mcp.sh" install >/dev/null 2>&1; }
 # Harness: the Pi extensions are DEPLOYED away from this tree, so a copy cannot
 # find bin/ by walking up — it reads the root recorded beside it (`.ymir-root`,
-# written by bin/valknut-load.sh, resolved by .pi/extensions/lib/ymir-home.ts).
+# written by bin/seat/valknut-load.sh, resolved by .pi/extensions/lib/ymir-home.ts).
 # A record with no live root means every `${root}/bin/…` they exec is a path that
 # does not exist: the Gná arm child dies at 127 before its first poll, no
 # state/.watch.heartbeat is ever written, and the watch is dead while every file

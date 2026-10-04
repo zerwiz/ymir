@@ -4,15 +4,15 @@ Purpose: the complete reference for Ymir's **Nornir** scheduler (the fates who g
 each scheduled job, the append-only **Runes** ledger, and the read-only observer law.
 
 > Jobs are declared in `config/cron.yaml`, started idempotently at every session start by
-> `bin/nornir-cron-start.sh`, and run statelessly: start → read inputs → write outputs →
+> `bin/time/nornir-cron-start.sh`, and run statelessly: start → read inputs → write outputs →
 > carve a Rune → exit. A job never owns mutable source trees.
 >
 > Nornir is a Ymir extension. Upstream Brokk has only a watcher
-> (`bin/fm-watch-arm.sh`); plan 29 §6 explicitly adds the scheduled spine on top of it.
+> (`bin/backend/fm-watch-arm.sh`); plan 29 §6 explicitly adds the scheduled spine on top of it.
 
 ---
 
-## 1. The scheduler — `bin/nornir-cron-start.sh`
+## 1. The scheduler — `bin/time/nornir-cron-start.sh`
 
 ### 1.1 Interface
 
@@ -42,14 +42,14 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
 - Log rotation: `state/cron.log` rotates to `state/cron.log.1` above
   `BROKK_CRON_LOG_MAX_BYTES` (default 1 MiB).
 - **Handoff failsafe sweep (2026-09-27, plan 58 Phase 3).** A row
-  (`06:45 bin/eindri-handoff.sh sweep`, any role) delivers every undelivered
+  (`06:45 bin/agents/eindri-handoff.sh sweep`, any role) delivers every undelivered
   worker report or question into the wake queue — a worker whose terminal act wrote
   `$STATE/eindri-reports/<id>.md` surfaces at the next sweep, re-arm, or session
   start, whatever the live poller was doing. Delivery is idempotent across BOTH
-  roads (the poller's `bin/eindri-acclaim.sh` and this sweep) on the ONE shared
-  ledger `$STATE/eindri-delivered/<id>.<kind>` (`bin/eindri-wake-lib.sh`), so a
+  roads (the poller's `bin/agents/eindri-acclaim.sh` and this sweep) on the ONE shared
+  ledger `$STATE/eindri-delivered/<id>.<kind>` (`bin/agents/eindri-wake-lib.sh`), so a
   second sweep — or an acclaim that already fired — never re-fires old news. The
-  worker's own terminal act (`bin/eindri-acclaim.sh <id> --terminal done --line …`)
+  worker's own terminal act (`bin/agents/eindri-acclaim.sh <id> --terminal done --line …`)
   writes the durable wake itself, with no sweep and no arm running; the sweep is
   the backstop.
 - No jobs configured → `cron: no jobs configured (...)` and exit 0.
@@ -64,9 +64,9 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
 | `state/.cron-locks/<job-key>.lock` | Per-job `flock` so a slow job never overlaps itself. |
 
 `<job-key>` is the command string with every character outside `[A-Za-z0-9._-]` replaced by
-`_` (`bin/nornir-cron-start.sh:88`).
+`_` (`bin/time/nornir-cron-start.sh:88`).
 
-### 1.3 Loop mechanics (`bin/nornir-cron-start.sh:69-106`)
+### 1.3 Loop mechanics (`bin/time/nornir-cron-start.sh:69-106`)
 
 1. Every 45 seconds, compute `now=HH:MM` and `today=YYYY-MM-DD`.
 2. For each non-comment line: split `at=${line%% *}` / `cmd=${line#* }`.
@@ -81,13 +81,13 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
 Because the stamp is written before the run, a job that crashes mid-run does **not** retry the
 same day. That is deliberate: cron is idempotent-by-date, not retrying-by-failure.
 
-### 1.4 Environment (`bin/nornir-cron-start.sh:18-20`)
+### 1.4 Environment (`bin/time/nornir-cron-start.sh:18-20`)
 
 | Variable | Default | Effect |
 |---|---|---|
 | `BROKK_ROOT_OVERRIDE` | script's parent | Root when `BROKK_HOME` unset. |
 | `BROKK_HOME` | `$ROOT` | Home owning the jobs and state. |
-| `BROKK_STATE_OVERRIDE` | `$YMIR_STATE_DIR` (`<home>/state`, via `bin/hoard-lib.sh`) | Scheduler state directory — in the home the operator chose, never in the code tree. |
+| `BROKK_STATE_OVERRIDE` | `$YMIR_STATE_DIR` (`<home>/state`, via `bin/vault/hoard-lib.sh`) | Scheduler state directory — in the home the operator chose, never in the code tree. |
 | `BROKK_CONFIG_OVERRIDE` | — (see §2) | Where `cron.yaml` lives — an explicit override always wins. |
 | `BROKK_CRON_LOG_MAX_BYTES` | `1048576` | Rotation threshold. |
 | `BROKK_REALM` | `""` | Realm exported to jobs (jobs also fall back to `data/realm.md`). |
@@ -98,7 +98,7 @@ operator's home (`<home>/state` and `<home>/config`) — the scheduler and the s
 read the same state.
 
 **No job carries its own home default (2026-09-24).** The scheduler and every job
-resolve the home through `bin/hoard-lib.sh`; `bin/defaults-guard.sh` refuses a private
+resolve the home through `bin/vault/hoard-lib.sh`; `bin/defaults-guard.sh` refuses a private
 default, so a job cannot drift back to a path that is not this machine's. The ward also
 refuses a script that uses the home without resolving it.
 
@@ -111,7 +111,7 @@ resolves the schedule in this order:
 
 1. `BROKK_CONFIG_OVERRIDE` (explicit, unmistakeable);
 2. the **home's own** `$YMIR_HOME/config/cron.yaml` — where an operator edits
-   their real jobs (`$YMIR_HOME` resolves through `bin/hoard-lib.sh`, the one
+   their real jobs (`$YMIR_HOME` resolves through `bin/vault/hoard-lib.sh`, the one
    answer the whole runtime shares);
 3. the repo's `config/cron.yaml.example` — a template a fresh install copies,
    **never** a live schedule. A tracked `config/cron.yaml` is not consulted.
@@ -121,8 +121,8 @@ To take charge of your schedule:
 ```bash
 cp ~/ymir/config/cron.yaml.example ~/Documents/Ymir/config/cron.yaml
 # edit ~/Documents/Ymir/config/cron.yaml, then:
-bin/nornir-cron-start.sh --status   # jobs=<n> from YOUR schedule
-bin/nornir-cron-start.sh            # resolve + start (idempotent)
+bin/time/nornir-cron-start.sh --status   # jobs=<n> from YOUR schedule
+bin/time/nornir-cron-start.sh            # resolve + start (idempotent)
 ```
 
 ### The format
@@ -130,11 +130,11 @@ bin/nornir-cron-start.sh            # resolve + start (idempotent)
 ```
 # Nornir cron schedule — the user's own jobs
 # Format: HH:MM <command>. Started idempotently by bin/nornir-cron-start.sh.
-07:00 bin/nornir-job-daily-briefing.sh
-06:00 bin/nornir-job-observer.sh
-00:30 bin/nornir-job-memory-housekeeping.sh
-00:00 bin/nornir-job-git-sync.sh
-05:30 bin/nornir-job-bragi-scrape.sh
+07:00 bin/time/nornir-job-daily-briefing.sh
+06:00 bin/time/nornir-job-observer.sh
+00:30 bin/time/nornir-job-memory-housekeeping.sh
+00:00 bin/time/nornir-job-git-sync.sh
+05:30 bin/time/nornir-job-bragi-scrape.sh
 ```
 
 - One job per line: `HH:MM <command>` (24-hour, zero-padded).
@@ -147,7 +147,7 @@ bin/nornir-cron-start.sh            # resolve + start (idempotent)
 
 ## 3. The jobs
 
-### 3.0 Bragi — the scrape round (`bin/nornir-job-bragi-scrape.sh`, 05:30)
+### 3.0 Bragi — the scrape round (`bin/time/nornir-job-bragi-scrape.sh`, 05:30)
 
 - **Reads**: the operator's source list — `$YMIR_HOME/config/scrape-sources.yaml`
   (beside `agents.yaml` and `cron.yaml`, NOT under `hodd/config/`, which does not
@@ -166,7 +166,7 @@ bin/nornir-cron-start.sh            # resolve + start (idempotent)
 - **Honest failure:** with no engine reachable it says so and scrapes nothing —
   it never invents a page.
 
-### 3.1 Sága — daily briefing (`bin/nornir-job-daily-briefing.sh`, 07:00)
+### 3.1 Sága — daily briefing (`bin/time/nornir-job-daily-briefing.sh`, 07:00)
 
 Deterministic, **no model call**. Reads four grounded inputs and writes one file.
 
@@ -185,10 +185,10 @@ Deterministic, **no model call**. Reads four grounded inputs and writes one file
 - Output override: `BROKK_BRIEF_DIR`.
 
 ```bash
-BROKK_REALM=way-of bin/nornir-job-daily-briefing.sh
+BROKK_REALM=way-of bin/time/nornir-job-daily-briefing.sh
 ```
 
-### 3.2 Huginn — observer (`bin/nornir-job-observer.sh`, 06:00)
+### 3.2 Huginn — observer (`bin/time/nornir-job-observer.sh`, 06:00)
 
 The raven of observation. Read-only, and **self-contained**: every source lives inside Ymir
 (the only external read is the worktree root).
@@ -208,7 +208,7 @@ The raven of observation. Read-only, and **self-contained**: every source lives 
 - SQLite is opened `file:<db>?mode=ro` with a 3s timeout; the observer never mutates it.
 - Overrides: `BROKK_YGGDRASIL_ROOT`.
 
-### 3.3 Muninn — memory housekeeping (`bin/nornir-job-memory-housekeeping.sh`, 00:30)
+### 3.3 Muninn — memory housekeeping (`bin/time/nornir-job-memory-housekeeping.sh`, 00:30)
 
 The raven of memory. Reports, snapshots, then (only if enabled) prunes.
 
@@ -230,7 +230,7 @@ removed and the failure is reported plainly.
 | `BROKK_MEMORY_PRUNE` | `0` (disabled) |
 | `BROKK_MEMORY_PRUNE_DAYS` | `7` |
 
-### 3.5 Óðrerir — Live Hall snapshot (`bin/nornir-job-hall-snapshot.sh`, 08:00)
+### 3.5 Óðrerir — Live Hall snapshot (`bin/time/nornir-job-hall-snapshot.sh`, 08:00)
 
 The Live Hall is a glass: it reads `/livehall.json` (same-origin,
 `cache: no-store`). This job writes that snapshot from real state via
@@ -255,7 +255,7 @@ and the 07:00 briefing: the morning board carries the day's fresh runes.
 - Idempotent by nature: each run rewrites the same snapshot from the same
   inputs; the cron date-guard suppresses repeat dispatch within a day.
 
-### 3.6 Tyr — NSR compliance round (`bin/nornir-job-nsr-compliance.sh`, 02:30)
+### 3.6 Tyr — NSR compliance round (`bin/time/nornir-job-nsr-compliance.sh`, 02:30)
 
 The NorthStar deterministic gate, run nightly in the quiet hours so sunrise
 finds the doors mended or the Rune already says which broke. Runs every
@@ -270,7 +270,7 @@ round, `nornir / nsr.compliance.failed` (exit 1) naming the failed gates.
 - The morning briefing reads the ledger, so a FAIL is seen at 07:00, not
   found by accident.
 
-### 3.7 Forgejo — the local git round (`bin/nornir-job-forgejo-git.sh`, 02:45)
+### 3.7 Forgejo — the local git round (`bin/time/nornir-job-forgejo-git.sh`, 02:45)
 
 The issue-to-PR loop, read each night: lists the local forge's open issues and
 carves one Rune with the tally, so a growing queue (or a dead tunnel) is seen
@@ -288,12 +288,12 @@ at sunrise. The forge address is the user's, from the home — never the tree:
 
 ### 3.8 The marketing stack (`bin/ymir-marketing-stack.sh`)
 
-### 3.9 Eir — the daily doctor round (`bin/nornir-job-doctor.sh`, 08:15, added 2026-09-24)
+### 3.9 Eir — the daily doctor round (`bin/time/nornir-job-doctor.sh`, 08:15, added 2026-09-24)
 
 Every surface is checked daily so a desktop that cannot open is REPORTED, never
 silently dead: `bin/eir-doctor.sh check` (floors, herdr, a2abridge, hermes,
 sessrumnir, **shells**, **graphics**, well, mcp, harness, lock, migrations,
-hoard). The `shells` surface uses the runtime resolver (`bin/electron-lib.sh`) —
+hoard). The `shells` surface uses the runtime resolver (`bin/desktop/electron-lib.sh`) —
 absence for an installed app is a FAILURE, and the `graphics` surface reports the
 DRM truth and the effective GPU policy (`bin/graphics-lib.sh`). A broken surface
 appends a `doctor.broken` rune and exits 1 so the cron log carries it. Eir is
@@ -302,7 +302,7 @@ also reached after every update (`bin/groa-update.sh`).
 ### 3.10 The role gate parses BOTH orders (added 2026-09-24, plan 54)
 
 The loop's line grammar accepts the `@role[,role]` gate **before** the time
-(`@heart 06:00 bin/nornir-job-observer.sh` — the shape the home's `cron.yaml`
+(`@heart 06:00 bin/time/nornir-job-observer.sh` — the shape the home's `cron.yaml`
 writes) **or after** it (`06:00 @heart bin/x`). The 2026-09-24 fault: only the
 after-time order parsed, so every role-first line was silently DEAD while the
 loop still counted it declared — on every seat, the heart's record jobs never
@@ -331,9 +331,9 @@ bin/ymir-marketing-stack.sh up|status|down|doors
   doors are tunnel-driven (`cloudflared`) — see the registry's
   `marketing_doors[]` table.
 - Idempotent: gates are pure checks; the cron date-guard suppresses repeat
-  dispatch within a day; safe to invoke by hand (`bash bin/nornir-job-nsr-compliance.sh`).
+  dispatch within a day; safe to invoke by hand (`bash bin/time/nornir-job-nsr-compliance.sh`).
 
-### 3.4 Yggdrasil — git sync (`bin/nornir-job-git-sync.sh`, 00:00)
+### 3.4 Yggdrasil — git sync (`bin/time/nornir-job-git-sync.sh`, 00:00)
 
 The world-tree kept in order. Two modes, both non-destructive:
 
@@ -363,7 +363,7 @@ The world-tree kept in order. Two modes, both non-destructive:
 
 ## 4. Runes — the append-only audit ledger
 
-`bin/runes-append.sh` is both a CLI and a **source-safe shell library**. It never rewrites or
+`bin/records/runes-append.sh` is both a CLI and a **source-safe shell library**. It never rewrites or
 truncates existing entries.
 
 ### 4.1 Ledger
@@ -390,7 +390,7 @@ runes: appended actor=<actor> event=<event> order=<order|none> checksum=<hex>
 ### 4.3 Library
 
 ```bash
-. bin/runes-append.sh
+. bin/records/runes-append.sh
 runes_append "nornir" "briefing.written" --realm way-of --message "daily briefing written"
 # RUNES_LAST_CHECKSUM holds the new checksum
 ```
@@ -465,7 +465,7 @@ Violations are a runtime-compliance failure (see `runtime-compliance.md`).
    - End with one `runes_append "<actor>" "<event>" [--realm R] --message "..."`.
    - `bash -n` clean; fail loudly with `error:` + `help:` on stdout.
 2. **Register it** in `config/cron.yaml` as `HH:MM bin/nornir-job-<name>.sh`.
-3. **(Re)start** the scheduler: `bin/nornir-cron-start.sh`.
+3. **(Re)start** the scheduler: `bin/time/nornir-cron-start.sh`.
 4. **Prove idempotence**: run the job twice; the date guard must suppress a second dispatch the
    same day, and the job itself must be safe to re-run.
 
@@ -473,8 +473,8 @@ Violations are a runtime-compliance failure (see `runtime-compliance.md`).
 chmod +x bin/nornir-job-example.sh
 bash -n bin/nornir-job-example.sh
 printf '05:00 bin/nornir-job-example.sh\n' >> config/cron.yaml
-bin/nornir-cron-start.sh --status
-bin/nornir-cron-start.sh
+bin/time/nornir-cron-start.sh --status
+bin/time/nornir-cron-start.sh
 ```
 
 ---
@@ -483,24 +483,24 @@ bin/nornir-cron-start.sh
 
 ```bash
 # 1. Scheduler is running with the expected job count
-bin/nornir-cron-start.sh --status          # cron: running pid=… jobs=4
+bin/time/nornir-cron-start.sh --status          # cron: running pid=… jobs=4
 
 # 2. All job scripts and the ledger parse
-for f in bin/nornir-job-*.sh bin/nornir-cron-start.sh bin/runes-append.sh; do
+for f in bin/nornir-job-*.sh bin/time/nornir-cron-start.sh bin/records/runes-append.sh; do
   bash -n "$f" && echo "OK $f"
 done
 
 # 3. Idempotent start: a second start must not spawn a second loop
-bin/nornir-cron-start.sh; bin/nornir-cron-start.sh --status
+bin/time/nornir-cron-start.sh; bin/time/nornir-cron-start.sh --status
 
 # 4. Each job runs standalone (fresh processes, exit 0)
-bin/nornir-job-daily-briefing.sh
-bin/nornir-job-observer.sh
-bin/nornir-job-memory-housekeeping.sh
-bin/nornir-job-git-sync.sh
+bin/time/nornir-job-daily-briefing.sh
+bin/time/nornir-job-observer.sh
+bin/time/nornir-job-memory-housekeeping.sh
+bin/time/nornir-job-git-sync.sh
 
 # 5. Ledger append + chain
-bin/runes-append.sh smoke ledger.append --realm way-of --message "nornir smoke"
+bin/records/runes-append.sh smoke ledger.append --realm way-of --message "nornir smoke"
 tail -n 3 workspace/memory/runes_audit.md
 
 # 6. Cron log carries run records
@@ -538,7 +538,7 @@ git -C $BROKK_UPSTREAM status --porcelain    # must not contain observer edits
 - Change the ledger format or chaining → update §4 and the verify snippet in §4.6 in lockstep;
   the chain must remain reproducible.
 - Change scheduler state file names → update §1.2 and the smoke commands in §7.
-- Keep the observer's source list in §3.2 aligned with `bin/nornir-job-observer.sh`; the plan-23
+- Keep the observer's source list in §3.2 aligned with `bin/time/nornir-job-observer.sh`; the plan-23
   read-only law is non-negotiable.
 
 ### The realm default is `wayof` again, and the realm's secrets live with it (2026-09-12)
@@ -556,7 +556,7 @@ Realm secrets are read from `svartalfaheim/<realm>/.env.realm` (active realm, or
 tracked). The full how-to for a company's secrets — realm-level and per-venture —
 is `svartalfaheim/wayof/SECRETS.md`.
 
-### 3.11 The rollover backstop (`bin/nornir-job-asken-handoff.sh`, 04:00, added 2026-09-27)
+### 3.11 The rollover backstop (`bin/time/nornir-job-asken-handoff.sh`, 04:00, added 2026-09-27)
 
 The handoff (`asken trigger`) is automatic at the moment a surface calls it (the
 OpenCode plugin, the Zed task); this job is the **backstop**, so a session that

@@ -3,8 +3,8 @@
 #
 # ONE tmux source for delivery-busy detection, composer capture primitives,
 # and verified submit.
-# Both the away-mode daemon and bin/fm-send.sh reach these primitives through
-# backend dispatch, while bin/fm-composer-lib.sh owns the shared verdict.
+# Both the away-mode daemon and bin/backend/fm-send.sh reach these primitives through
+# backend dispatch, while bin/backend/fm-composer-lib.sh owns the shared verdict.
 #
 # Composer shapes and verdicts are owned by bin/fm-composer-lib.sh.
 # This file owns only tmux's styled capture, cursor and Pi identity primitives,
@@ -17,13 +17,13 @@
 # an unknown post-Enter composer only after this submit observed an idle baseline
 # become busy.
 # The queued-Enter policy itself lives in fm_composer_queued_enter_verdict
-# (bin/fm-composer-lib.sh); this file supplies tmux's pane-busy primitive.
+# (bin/backend/fm-composer-lib.sh); this file supplies tmux's pane-busy primitive.
 #
 # FM_COMPOSER_IDLE_RE is interpreted by the shared classifier with its structural
 # and styling safety gates.
 # FM_BUSY_REGEX overrides the rendered delivery-busy matching used here.
 #
-# NOT a task-state source: task busy state is owned by bin/fm-busy-lib.sh's
+# NOT a task-state source: task busy state is owned by bin/backend/fm-busy-lib.sh's
 # semantic contract. The matching below serves only delivery guards: the submit
 # acknowledgement and the away-mode supervisor-pane busy guard. Both ask about
 # the pane receiving input, not the state of a recorded worker task. Matching
@@ -34,21 +34,21 @@
 #
 # Composer classification is NOT owned here: every shape, glyph, border
 # family, geometry rule, and verdict decision lives in the shared
-# bin/fm-composer-lib.sh (fm_composer_classify_screen), sourced below and
+# bin/backend/fm-composer-lib.sh (fm_composer_classify_screen), sourced below and
 # reused by every backend adapter so the decision cannot drift. This file
 # keeps only tmux's genuine capture-side primitives - the styled pane
 # capture, the #{cursor_y} cursor read, the pi foreground-process identity
 # probe, and the capability descriptor - plus the busy detection and submit
 # cores that consume the shared verdict.
 
-# shellcheck source=bin/fm-composer-lib.sh
+# shellcheck source=bin/backend/fm-composer-lib.sh
 . "$(dirname -- "${BASH_SOURCE[0]}")/fm-composer-lib.sh"
-# shellcheck source=bin/fm-cursor-lib.sh
+# shellcheck source=bin/backend/fm-cursor-lib.sh
 . "$(dirname -- "${BASH_SOURCE[0]}")/fm-cursor-lib.sh"
 
 
 # fm_tmux_strip_ghost: thin adapter over the shared, fleet-wide ghost extractor
-# fm_composer_strip_ghost (bin/fm-composer-lib.sh). It drops de-emphasised
+# fm_composer_strip_ghost (bin/backend/fm-composer-lib.sh). It drops de-emphasised
 # ghost/placeholder runs - dim/faint (SGR 2, claude's/codex's/cursor's ghost) AND a
 # dark/muted truecolor foreground (grok's placeholder) - from one captured,
 # styled composer line and prints the plain, real-typed text. Kept as a named
@@ -62,7 +62,7 @@ fm_tmux_strip_ghost() { fm_composer_strip_ghost; }
 # how to capture a styled screen, how to read the cursor row, how to probe a
 # live pi agent, and the static capability facts. Every shape, glyph, border
 # family, and verdict decision lives in the shared owner
-# (bin/fm-composer-lib.sh, fm_composer_classify_screen), so a new harness
+# (bin/backend/fm-composer-lib.sh, fm_composer_classify_screen), so a new harness
 # shape is taught there once and never here.
 
 # fm_tmux_composer_capture: the visible pane WITH ANSI styling. The styled
@@ -79,7 +79,7 @@ fm_tmux_composer_cursor_row() {  # <target>
 }
 
 # fm_tmux_composer_caps: the tmux capability descriptor - static data, not
-# logic (see the capability model in bin/fm-composer-lib.sh).
+# logic (see the capability model in bin/backend/fm-composer-lib.sh).
 fm_tmux_composer_caps() {
   printf 'styled=1\ncursor=1\nidentity=1\nrows=0\n'
 }

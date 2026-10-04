@@ -98,7 +98,7 @@ EOF
     "pr=https://github.com/kunchenguid/firstmate/pull/9"
   printf 'needs-decision: choose an API shape\n' > "$home/state/ship-task.status"
   # A working ship task proves it through its own semantic busy-state record
-  # (bin/fm-busy-lib.sh), which is what the snapshot's current-state read
+  # (bin/backend/fm-busy-lib.sh), which is what the snapshot's current-state read
   # consults; rendered pane text is no longer a state source.
   fixture_gen=$("$ROOT/bin/fm-busy-event.sh" arm "$home/state" ship-task)
   "$ROOT/bin/fm-busy-event.sh" apply "$home/state" ship-task busy --gen "$fixture_gen" \
@@ -594,7 +594,7 @@ test_view_renders_snapshot() {
     "view should render queued backlog row"
   assert_contains "$view" "| done-task | Done Task | alpha | ship | - | https://github.com/kunchenguid/firstmate/pull/7 |" \
     "view should render done backlog row"
-  assert_contains "$view" "bin/fm-send.sh fm-secondmate-task" \
+  assert_contains "$view" "bin/backend/fm-send.sh fm-secondmate-task" \
     "view should show secondmate send guidance"
   assert_contains "$view" "| secondmate-task | working / status-log | secondmate | $home/secondmate-home | tmux | present / alive |" \
     "view should show secondmate endpoint agent liveness"

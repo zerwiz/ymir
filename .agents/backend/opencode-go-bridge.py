@@ -5,7 +5,7 @@ The bridge grew a provider choice, so the implementation now lives in
 `model-bridge.py`. This shim keeps every existing reference to
 `opencode-go-bridge.py` working by delegating with `--provider opencode-go`.
 
-Prefer `model-bridge.py` (or `bin/bifrost-bridge.sh --provider NAME`) for new
+Prefer `model-bridge.py` (or `bin/bridge/bifrost-bridge.sh --provider NAME`) for new
 work; the full provider list is opencode-go, lmstudio, openai-compatible.
 """
 import os

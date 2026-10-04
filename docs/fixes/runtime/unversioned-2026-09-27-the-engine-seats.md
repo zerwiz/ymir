@@ -29,25 +29,25 @@ modules[6]{file,owns}
 
 `seat()` records the **same meta the old door records** (same keys, same status
 baseline line, same `.launch.sh`, same seat-private machine-state dir), so every
-existing reader — `bin/eindri-heartbeat.sh`, Vör, Hlidskjalf's Fleet — keeps
+existing reader — `bin/agents/eindri-heartbeat.sh`, Vör, Hlidskjalf's Fleet — keeps
 working with no change. It also delegates rather than duplicates: the
-worth-a-smith verdict is asked of `bin/herdr-run.sh`, the door that owns the
+worth-a-smith verdict is asked of `bin/seat/herdr-run.sh`, the door that owns the
 heuristic.
 
 **The doors became thin, strangler-style and reversible:**
-- `bin/ymir-engine.sh` — the door to the engine; exit **4** means "the engine will
+- `bin/engine/ymir-engine.sh` — the door to the engine; exit **4** means "the engine will
   NOT own this errand", which is the caller's signal to keep its old road.
-- `bin/ymir-engine-ensure.sh` — the engine's private venv, built at runtime when
+- `bin/engine/ymir-engine-ensure.sh` — the engine's private venv, built at runtime when
   `src/pyproject.toml` declares a dependency. Today it declares none, so the
   honest answer is "not needed (stdlib only)"; nothing is ever committed.
-- `bin/einherjar-spawn.sh` — engine-first: it hands the fully-resolved errand to
+- `bin/agents/einherjar-spawn.sh` — engine-first: it hands the fully-resolved errand to
   the engine; on exit 4 it runs the road it already had, unchanged. A non-4
   failure is fatal and does NOT fall back (a half-seat is worse than none).
-- `bin/eindri-start.sh` — same handoff when the caller names an errand with
+- `bin/agents/eindri-start.sh` — same handoff when the caller names an errand with
   `--id`; without `--id`, or with a seat hint (`--pane/--tab/--space/--main`),
   the ordinary road runs. `YMIR_ENGINE=off` disables the handoff everywhere.
 
-`bin/valknut-load.sh`, `.pi/**`, and the arm's `signal:/stale:/check:/heartbeat:`
+`bin/seat/valknut-load.sh`, `.pi/**`, and the arm's `signal:/stale:/check:/heartbeat:`
 grammar are **untouched**.
 
 ### The proofs (run, not asserted)
@@ -59,28 +59,28 @@ grammar are **untouched**.
   `state/<id>.inbox/001.msg` and steered the pane; `stop` reaped the window and
   recorded `done: stopped … (engine stop)`. Verdict `PASS` (4 verbs).
 - `tests/e2e/engine-proof.sh parity` — the old door (`YMIR_ENGINE=off
-  bin/einherjar-spawn.sh`) and the engine seat the same errand: **11 recorded keys
+  bin/agents/einherjar-spawn.sh`) and the engine seat the same errand: **11 recorded keys
   agree** (`kind mode yolo harness raw_launch backend isolation
   isolation_declared force locked worth_a_smith`), 8 more keys are carried by
   both records, both targets live, and **both reaps leave no orphan**.
-- `bin/valknut-load.sh --status` exits 0; `git diff bin/valknut-load.sh .pi/` is empty.
+- `bin/seat/valknut-load.sh --status` exits 0; `git diff bin/seat/valknut-load.sh .pi/` is empty.
 
 ### What the engine does NOT yet own (named plainly, for the next phase)
 - **The Utgard sandbox is not launched.** `container.py` decides and refuses; a
   declared or forced utgard returns exit 4 and the old road keeps it until the
   sandbox module's own phase. Never a silent downgrade.
 - **`--relaunch` is not owned.** An existing seat record is refused (exit 4), so
-  relaunch still rides `bin/einherjar-spawn.sh`.
+  relaunch still rides `bin/agents/einherjar-spawn.sh`.
 - **`stop()` does not delete the worktree** unless asked (`--remove-worktree`), and
   `fm-teardown`'s landed-work gates, PR lookups, and backlog transitions are NOT
   ported — reap means "the pane is gone", not "the task is closed".
 - **`send()` does not read the reply.** Peek/read stays with
-  `bin/eindri-control.sh`; `send` is a delivery verb, not a conversation.
-- **The twins are alive.** `bin/einherjar-spawn.sh`'s own 990-line body and the
+  `bin/agents/eindri-control.sh`; `send` is a delivery verb, not a conversation.
+- **The twins are alive.** `bin/agents/einherjar-spawn.sh`'s own 990-line body and the
   `.agents/backend/fm-*` vendored runtime both still stand; deleting them is
   Phase 5, a later errand.
 - **The model-resolver heredoc is PRESERVED, not touched (Brokk steer 001).** The
-  base tree carries an indented python heredoc in `bin/einherjar-spawn.sh`'s
+  base tree carries an indented python heredoc in `bin/agents/einherjar-spawn.sh`'s
   `agent_yaml_local_providers` — the one that broke every dispatch until PR #215
   normalized it. This branch does **not** touch that region: `git merge-tree` of
   #215 into this branch is clean, with BOTH the column-zero heredoc and the engine
@@ -96,6 +96,6 @@ grammar are **untouched**.
 - `src/pyproject.toml` · `src/ymir_runtime/{__init__,__main__,errors,paths,proc,worktree,harness,backend,container,heartbeat,seat,status,send,stop}.py`
 - `src/ymir_runtime/tests/{__init__,support,test_paths,test_worktree,test_harness,test_container,test_backend,test_heartbeat,test_seat,test_lifecycle,test_cli}.py`
 - `tests/__init__.py` · `tests/test_engine.py` (the `python3 -m unittest` hinge) · `tests/e2e/engine-proof.sh`
-- `bin/ymir-engine.sh` · `bin/ymir-engine-ensure.sh` (new doors)
-- `bin/einherjar-spawn.sh` · `bin/eindri-start.sh` (engine-first adapters, old road intact)
+- `bin/engine/ymir-engine.sh` · `bin/engine/ymir-engine-ensure.sh` (new doors)
+- `bin/agents/einherjar-spawn.sh` · `bin/agents/eindri-start.sh` (engine-first adapters, old road intact)
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md` · `.agents/skills/galdr-ymirsystem/assets/installation.md` · `STRUCTURE.md`

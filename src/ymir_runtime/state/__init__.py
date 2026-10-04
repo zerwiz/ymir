@@ -8,8 +8,8 @@ deep modules —
   envelope              the durable, typed wrappers state files travel in
   queue                 the durable wake queue, appended atomically
 
-`bin/gleipnir-lock-lib.sh`, `bin/runes-append.sh`, and the wake-queue
-primitives in `bin/brokk-wake-lib.sh` are THIN SHIMS over these modules: the
+`bin/gleipnir-lock-lib.sh`, `bin/records/runes-append.sh`, and the wake-queue
+primitives in `bin/time/brokk-wake-lib.sh` are THIN SHIMS over these modules: the
 shell keeps its names and its lines, the correctness lives here once. Every shim
 is proven by parity — the same lock cycle, the same rune line, the same queue
 record — never by assertion.

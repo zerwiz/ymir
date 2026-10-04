@@ -12,7 +12,7 @@
 # source, `~/.pi/agent/extensions/` is the deployed copy, and an extension in both
 # makes pi exit with a tool-name conflict so that no agent can be seated.
 #
-# Run standalone, or through bin/fm-test-run.sh like any other tests/*.test.sh.
+# Run standalone, or through bin/backend/fm-test-run.sh like any other tests/*.test.sh.
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -137,7 +137,7 @@ fi
 
 # ── 5. the deployed tree agrees with the source ─────────────────────────────
 if [ ! -d "$HOME_EXT" ]; then
-  ok "deployed tree absent — nothing to reconcile (run: bin/valknut-load.sh --pi)"
+  ok "deployed tree absent — nothing to reconcile (run: bin/seat/valknut-load.sh --pi)"
 else
   drift=0
   for f in "$SRC"/*.ts "$SRC"/*.js; do
@@ -202,10 +202,10 @@ else
 fi
 
 # ── 8. the gate itself exists and is wired ──────────────────────────────────
-grep -q 'MODE_CHECK' "$ROOT/bin/valknut-load.sh" 2>/dev/null \
-  && ok "bin/valknut-load.sh carries --check (Rule 13 §9)" \
-  || bad "bin/valknut-load.sh carries --check (Rule 13 §9)"
-grep -q 'no-delete-guard\|\*\.test\.\*' "$ROOT/bin/valknut-load.sh" 2>/dev/null \
+grep -q 'MODE_CHECK' "$ROOT/bin/seat/valknut-load.sh" 2>/dev/null \
+  && ok "bin/seat/valknut-load.sh carries --check (Rule 13 §9)" \
+  || bad "bin/seat/valknut-load.sh carries --check (Rule 13 §9)"
+grep -q 'no-delete-guard\|\*\.test\.\*' "$ROOT/bin/seat/valknut-load.sh" 2>/dev/null \
   && ok "the loader excludes test files from the deploy" \
   || bad "the loader excludes test files from the deploy"
 

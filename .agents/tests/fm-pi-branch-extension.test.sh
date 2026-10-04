@@ -2,7 +2,7 @@
 # Tests for the tracked Pi supervision-branch extension
 # (.pi/extensions/fm-branch-supervision.ts): wake dispatch acceptance and
 # gating, the two-stage noise filter's second stage (verdict-driven delivery
-# into main), store-first durability through the real bin/fm-branch-outcome.sh,
+# into main), store-first durability through the real bin/backend/fm-branch-outcome.sh,
 # the byte-stable tool order and per-home prompt_cache_key hook, the dialog
 # mirror, and branch-session persistence. The Pi SDK is stubbed (scriptable
 # in-process sessions); every fleet-record behavior runs the REAL bin scripts.
@@ -670,7 +670,7 @@ if (/branch merged|\[routine\]|\[captain\]/.test(sentToMain[2].message.content))
 // custom message into a provider message - customType, display, and details are
 // all dropped - so `content` IS the delivered payload, and these two files are
 // the exact bytes main's model would read. The bash side classifies them with
-// the REAL bin/fm-operational-input.sh so the protocol's own executable, not a
+// the REAL bin/backend/fm-operational-input.sh so the protocol's own executable, not a
 // pattern in this test, decides what was delivered. Pi's half of that contract
 // is proven separately against the real SDK in fm-pi-branch-live-e2e.test.sh.
 writeFileSync(`${home}/state/delivered-captain-note`, sentToMain[2].message.content);
@@ -875,7 +875,7 @@ globalThis.__fmExecuteBranchBash = async (context) => {
 
 async function runFleetCommand(session, args) {
   const bash = session.options.customTools.find((tool) => tool.name === "bash");
-  const command = ["bin/fm-wake-drain.sh", ...args].join(" ");
+  const command = ["bin/backend/fm-wake-drain.sh", ...args].join(" ");
   const result = await bash.execute(`fleet-${fleetOperations.length}`, { command }, undefined, undefined, {});
   if (result.isError) throw new Error(`fleet command failed: ${JSON.stringify(result)}`);
   return result.details;
@@ -2612,7 +2612,7 @@ if (!reportResult.isError) throw new Error("stale report tool was not refused");
 let bashRefused = false;
 try {
   oldBash.__options.spawnHook({
-    command: "bin/fm-lease.sh claim task-stale --actor branch",
+    command: "bin/backend/fm-lease.sh claim task-stale --actor branch",
     cwd: home,
     env: {},
   });

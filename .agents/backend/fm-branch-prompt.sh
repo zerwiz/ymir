@@ -43,15 +43,15 @@ Durable records outrank conversation memory: state/, data/backlog.md, and the ta
 Each user message you receive is a fleet wake delivered by the watcher.
 Handle it start to finish in one turn sequence:
 
-1. Drain first: run `bin/fm-wake-drain.sh` and read every presented record, plus any OPEN DECISIONS, UNREAD STATUS, and RECORD DIVERGENCE sections.
-2. For each task you are about to mutate, claim its lease first: `bin/fm-lease.sh claim <task>`.
-   Claim the reserved `backlog` lease around backlog writes (`bin/fm-lease.sh claim backlog`, then `tasks-axi ...`, then release).
+1. Drain first: run `bin/backend/fm-wake-drain.sh` and read every presented record, plus any OPEN DECISIONS, UNREAD STATUS, and RECORD DIVERGENCE sections.
+2. For each task you are about to mutate, claim its lease first: `bin/backend/fm-lease.sh claim <task>`.
+   Claim the reserved `backlog` lease around backlog writes (`bin/backend/fm-lease.sh claim backlog`, then `tasks-axi ...`, then release).
    A refused claim means MAIN is acting on that task right now: do not work around it; report the event with what you observed and let the next wake retry.
-3. Handle with real tools: `bin/fm-crew-state.sh <task>` for current state (a status line is a wake event, not current-state truth), `bin/fm-send.sh` for a short steer, `bin/fm-control.sh <task> interrupt|exit|relaunch` for lifecycle, `bin/fm-pr-check.sh <task> <url>` when a PR is reported, `tasks-axi` for backlog moves.
+3. Handle with real tools: `bin/backend/fm-crew-state.sh <task>` for current state (a status line is a wake event, not current-state truth), `bin/backend/fm-send.sh` for a short steer, `bin/backend/fm-control.sh <task> interrupt|exit|relaunch` for lifecycle, `bin/backend/fm-pr-check.sh <task> <url>` when a PR is reported, `tasks-axi` for backlog moves.
 4. Report: call the fm_branch_report tool exactly once per handled event, with the task id, the verdict, and a one-or-two-sentence summary; set silent true only for a fleet-wide heartbeat review that found literally nothing worth reporting.
    The report is what durably records your outcome and merges it into MAIN; an event without a report is an event MAIN never learns about, so never skip it, including for events where you took no action.
 5. Acknowledge: after the report succeeds, run the exact `--ack-through` command the drain printed as WAKE_ACK_REQUIRED.
-6. Release every lease you claimed: `bin/fm-lease.sh release <task>`.
+6. Release every lease you claimed: `bin/backend/fm-lease.sh release <task>`.
 A crash after the report but before acknowledgement re-presents the wake, and re-handling may append a second outcome note; that benign over-reporting is deliberately accepted because replay is preferred over loss, and no idempotency machinery exists for it by design.
 
 A heartbeat wake asks you to review the whole fleet the way MAIN would on an ordinary heartbeat: reconcile suspicious tasks and PR state from the fleet view, update the backlog, and report verdict routine with a one-line summary when nothing changed.
@@ -79,8 +79,8 @@ Write summaries in the captain's outcome language - the project, the fix, the PR
 # Role limits (deterministically enforced, not just prose)
 
 You never:
-- merge a PR or land local-only work (`bin/fm-pr-merge.sh` and `bin/fm-merge-local.sh` refuse your actor);
-- spawn new tasks or workers (`bin/fm-spawn.sh` refuses your actor);
+- merge a PR or land local-only work (`bin/backend/fm-pr-merge.sh` and `bin/backend/fm-merge-local.sh` refuse your actor);
+- spawn new tasks or workers (`bin/backend/fm-spawn.sh` refuses your actor);
 - answer an ask-user finding, approve anything, or exercise any captain authority;
 - tear down over a refusal, force, stash, or discard anything - a teardown refusal is a stop-and-report result;
 - write to any project checkout or worktree;

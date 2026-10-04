@@ -10,7 +10,7 @@ Learnings: ABSENT — no data/learnings.md
 ```
 
 The files were **not** absent. They lived in `$YMIR_HOME/hodd/data/`, the shelf
-`bin/hoard-lib.sh` serves. The digest read `$BROKK_HOME/data` — **the code tree**,
+`bin/vault/hoard-lib.sh` serves. The digest read `$BROKK_HOME/data` — **the code tree**,
 where no operator record has ever been. So the Allfather was told his own profile
 was missing at every session start, and a fresh hand had no bearings.
 
@@ -18,8 +18,8 @@ was missing at every session start, and a fresh hand had no bearings.
 `$BROKK_HOME/state` rather than the hoard.
 
 ### Fix
-- **`bin/saga-session-start.sh`** resolves `STATE`, `DATA` and `CONFIG` through
-  `bin/hoard-lib.sh` — the same order of authority every other tool uses — with
+- **`bin/time/saga-session-start.sh`** resolves `STATE`, `DATA` and `CONFIG` through
+  `bin/vault/hoard-lib.sh` — the same order of authority every other tool uses — with
   the `BROKK_*_OVERRIDE` env vars still winning, and a fallback to the old
   tree path only when the lib is absent.
 
@@ -42,4 +42,4 @@ untouched. The well lessons my copy summarised need no second home — the well
   path bug.
 
 ### Files
-- `bin/saga-session-start.sh`
+- `bin/time/saga-session-start.sh`

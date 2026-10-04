@@ -28,12 +28,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
 fi
 hoard_state_dir STATE 2>/dev/null || STATE="${BROKK_STATE_OVERRIDE:-}"
-[ -n "$STATE" ] || { printf 'error: the state dir did not resolve\nhelp: source bin/hoard-lib.sh (it resolves the home), or set BROKK_STATE_OVERRIDE\n' >&2; exit 1; }
+[ -n "$STATE" ] || { printf 'error: the state dir did not resolve\nhelp: source bin/vault/hoard-lib.sh (it resolves the home), or set BROKK_STATE_OVERRIDE\n' >&2; exit 1; }
 hoard_root HOME_DIR 2>/dev/null || HOME_DIR="$ROOT"
 
 case "${1-}" in

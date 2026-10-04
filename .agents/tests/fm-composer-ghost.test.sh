@@ -4,7 +4,7 @@
 # A harness fills an otherwise-empty composer with de-emphasised ghost text that a
 # plain pane capture cannot tell apart from human input, so the composer reader
 # saw an idle pane as holding pending input. Two rendering styles are covered by
-# the one shared ANSI-aware owner (fm_composer_strip_ghost, bin/fm-composer-lib.sh,
+# the one shared ANSI-aware owner (fm_composer_strip_ghost, bin/backend/fm-composer-lib.sh,
 # reached here through the fm_tmux_strip_ghost thin adapter):
 #   - DIM/FAINT (SGR 2): claude's rotating prompt suggestion, codex's idle tip.
 #   - a dark/muted TRUECOLOR foreground: grok's placeholder/hint text.
@@ -573,7 +573,7 @@ test_single_capture_leaves_no_fallback_race() {
   # The old reader captured twice (a full-pane scan, then a separate
   # cursor-row band capture), so a pane redraw between the two could hand the
   # verdict a row the scan never saw. The consolidated reader classifies ONE
-  # capture (bin/fm-composer-lib.sh, fm_composer_classify_screen), so the
+  # capture (bin/backend/fm-composer-lib.sh, fm_composer_classify_screen), so the
   # race is structurally gone: a divergent band-capture row (served via
   # FM_FAKE_ROW, which only a band capture would read) must have no effect on
   # the verdict.

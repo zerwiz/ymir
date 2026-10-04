@@ -32,7 +32,7 @@ container runs. Utgard is the EXCEPTION, chosen only for `untrusted code` or an
 Isolation: herdr — the ordinary road: herdr and the worktree only; Utgard is for untrusted code or an outsized task
 
 (The declaration is not inferred from the task text. A `utgard` declaration is
-validated by bin/einherjar-spawn.sh against the Utgard image — a declared utgard
+validated by bin/agents/einherjar-spawn.sh against the Utgard image — a declared utgard
 with no image is a refusal to launch, never a silent fallback.)
 
 **Verify isolation before anything else.** Run `pwd -P` and
@@ -60,9 +60,9 @@ The report is the only thing that survives, so anything worth keeping must be in
    would act on and the needs-decision/blocked/paused/done/failed states.
    A TERMINAL state (done:, failed:, needs-decision:) is ALSO a report. Make the
    terminal act ONE command — it writes the status line, files the report shelf the
-   handoff failsafe sweeps (bin/eindri-handoff.sh), and appends the DURABLE wake
+   handoff failsafe sweeps (bin/agents/eindri-handoff.sh), and appends the DURABLE wake
    ({{WAKE_QUEUE}}) so Brokk is woken even with no arm and no sweep running:
-      `BROKK_STATE_OVERRIDE={{STATE_DIR}} bin/eindri-acclaim.sh {{REVIEW_ID}} --terminal done --line "<the verdict in one line>"`
+      `BROKK_STATE_OVERRIDE={{STATE_DIR}} bin/agents/eindri-acclaim.sh {{REVIEW_ID}} --terminal done --line "<the verdict in one line>"`
    The explicit `BROKK_STATE_OVERRIDE` is deliberate: a seat has its own private
    state (plan 45), but this verdict belongs to the SHARED state where Brokk reads
    the wake road. Use `--terminal failed` or `--terminal needs-decision` as the
@@ -89,6 +89,6 @@ The move IS the acknowledgement: without it Brokk rings again and eventually tre
 - `grep -E '^(done|recommend|conclusion|findings|verdict):' {{REPORT_PATH}}` finds the stand-alone conclusion — what you did, what you found, the evidence (commands, output, file:line), and your verdict.
    (A prose judgment "reads well" cannot be a command — read it yourself and say so in the report.)
 - The verdict TOON block is the mandatory tail of the report (APPROVE / NEEDS-REWORK, the count, the line-numbered list, the seal word).
-- Run the terminal act — one command; it files the report shelf and appends the durable wake: `BROKK_STATE_OVERRIDE={{STATE_DIR}} bin/eindri-acclaim.sh {{REVIEW_ID}} --terminal done --line "<the verdict in one line>"`.
+- Run the terminal act — one command; it files the report shelf and appends the durable wake: `BROKK_STATE_OVERRIDE={{STATE_DIR}} bin/agents/eindri-acclaim.sh {{REVIEW_ID}} --terminal done --line "<the verdict in one line>"`.
 - `grep -c "{{REVIEW_ID}}" {{WAKE_QUEUE}}` prints at least 1 (the wake is in the durable queue).
 - Stop. Brokk routes the verdict; the Allfather alone seals.

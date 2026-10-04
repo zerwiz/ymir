@@ -422,7 +422,7 @@ def cycle(
 def sweep_handoff(paths: ArmPaths, *, env: Mapping[str, str], runner: proc.Runner = proc.run) -> None:
     """The mid-session sweep: a filed report becomes a wake within seconds.
 
-    `bin/eindri-handoff.sh` owns the shelf scan and its ledger; this only points
+    `bin/agents/eindri-handoff.sh` owns the shelf scan and its ledger; this only points
     it at the SAME state dir the arm watches.
     """
     door = paths.root / "bin" / "eindri-handoff.sh"

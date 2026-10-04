@@ -31,11 +31,11 @@ PI_VERSION=$(pi --version)
 # shellcheck source=/dev/null
 . "$ROOT/bin/fm-operational-input.sh"
 # shellcheck disable=SC2016 # Backticks are literal prompt markup.
-LEGACY_START='Run `bin/fm-session-start.sh` now, exactly once, before executing any other instructions.'
+LEGACY_START='Run `bin/backend/fm-session-start.sh` now, exactly once, before executing any other instructions.'
 LEGACY_AWAY=$'\xE2\x81\xA3Supervisor escalate (1 event(s)): done: legacy rollout'
 MARKER_NEAR_MISS=$'\xE2\x81\xA3Captain note: this invisible separator is intentional.'
 # shellcheck disable=SC2016 # Backticks are literal prompt markup.
-START_NEAR_MISS='Captain quote: Run `bin/fm-session-start.sh` now, exactly once, before executing any other instructions.'
+START_NEAR_MISS='Captain quote: Run `bin/backend/fm-session-start.sh` now, exactly once, before executing any other instructions.'
 fm_operational_input_encode watcher "CURRENT_AHOY_WATCHER_BODY" CURRENT_WATCHER \
   || fail "could not construct current Ahoy watcher fixture"
 QUOTED_CURRENT="Captain quote: $CURRENT_WATCHER"
@@ -212,7 +212,7 @@ run_native_ahoy_regressions() {
   printf '%s\n' \
     '# Native Pi Ahoy regression fixture' \
     '' \
-    'Run `bin/fm-session-start.sh` exactly once at session start.' \
+    'Run `bin/backend/fm-session-start.sh` exactly once at session start.' \
     > "$AHOY_PROJECT/AGENTS.md"
 
   first_out=$(
@@ -305,7 +305,7 @@ send_prompt "/calm"
 sleep 0.2
 
 : > "$HOME_DIR/state/pi-e2e.meta"
-send_prompt "Start supervision with fm_watch_arm_pi and never use bash to arm supervision. After the watcher wake arrives, run bin/fm-wake-drain.sh and reply exactly HANDLED."
+send_prompt "Start supervision with fm_watch_arm_pi and never use bash to arm supervision. After the watcher wake arrives, run bin/backend/fm-wake-drain.sh and reply exactly HANDLED."
 wait_for_text "watcher: started Pi extension arm child 1" || fail "Pi did not render the initial watcher tool result"
 
 printf 'done: pi live e2e watcher fire\n' > "$HOME_DIR/state/pi-e2e.status"
@@ -322,7 +322,7 @@ wait_for_exact_line "HANDLED" 120 || fail "Pi did not drain and settle after its
 pane=$(capture)
 guard_count=$(printf '%s\n' "$pane" | grep -Fc "TURN WOULD END BLIND - supervision is off." || true)
 [ "$guard_count" -eq 0 ] || fail "successor was not protecting Pi before its next turn end (guard count $guard_count)"
-foreground_arm='$ bin/fm-watch-arm.sh'
+foreground_arm='$ bin/backend/fm-watch-arm.sh'
 if printf '%s\n' "$pane" | grep -Fq "$foreground_arm"; then
   fail "Pi used a foreground bash watcher arm"
 fi

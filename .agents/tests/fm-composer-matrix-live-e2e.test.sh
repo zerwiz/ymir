@@ -2,7 +2,7 @@
 # tests/fm-composer-matrix-live-e2e.test.sh - the live composer-matrix guard
 # (live-harness-optin family; task fm-composer-thin-adapter-refactor-r1).
 #
-# The shared composer classifier's shape catalogue (bin/fm-composer-lib.sh) is
+# The shared composer classifier's shape catalogue (bin/backend/fm-composer-lib.sh) is
 # built entirely from vendor-rendered signals, so per
 # .agents/skills/firstmate-coding-guidelines it must be proven against the
 # REAL harnesses: a stub can only confirm the assumption already written into

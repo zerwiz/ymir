@@ -29,7 +29,7 @@ not tidiness, it is that no one can tell which file does what without opening al
 An attempted move (`bin/capabilities.sh` → `bin/doors/capabilities.sh`) rendered a register with
 **2 rows instead of 437**. Cause: `ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"` — one
 level up from the script. Nested, it resolved `ROOT` to `bin/`, then searched for `bin/*.sh`
-*inside* `bin/bin/`, found nothing, and reported a healthy-looking empty index.
+*inside* `bin/`, found nothing, and reported a healthy-looking empty index.
 
 > **A generator that resolves its own location by depth can be blinded by a folder.**
 > Fix the resolver *first*; move second. Anything else is a coin toss with a 437-row index.

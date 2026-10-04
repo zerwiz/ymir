@@ -1,7 +1,7 @@
 ## skills · unversioned · 2026-09-17 — the local git round joins the loom; the stack's doors are in the registry
 
 ### Why
-- **`bin/nornir-job-forgejo-git.sh` (02:45)** — reads the local forge's open
+- **`bin/time/nornir-job-forgejo-git.sh` (02:45)** — reads the local forge's open
   issues each night (`$YMIR_HOME/config/forge.env` names the door; token
   optional), writes a daily digest to the hoard, carves Rune
   `forgejo / git.issues` — or `git.door-down` (exit 1) when the tunnel is

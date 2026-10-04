@@ -2,7 +2,7 @@
 
 This is the proof the errand rests on: a lock cycle, a rune append, and a queue
 op each produce EXACTLY the same outcome through `bin/gleipnir-lock-lib.sh` /
-`bin/runes-append.sh` / `bin/brokk-wake-lib.sh` as through the implementation
+`bin/records/runes-append.sh` / `bin/time/brokk-wake-lib.sh` as through the implementation
 they replaced. The old shell is kept (verbatim) under
 `tests/fixtures/state/`, and the old queue algorithm is re-stated verbatim in
 the test as the oracle, so the comparison is against the real predecessor,

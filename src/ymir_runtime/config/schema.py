@@ -10,7 +10,7 @@ Schema in `config/*.schema.json` BEFORE a single value leaves this package:
     config: silence is the failure this phase exists to end.
 
 `jsonschema` is the validator; it is declared in `src/pyproject.toml` and the
-engine's private venv (`bin/ymir-engine-ensure.sh`) installs it. Absence is a
+engine's private venv (`bin/engine/ymir-engine-ensure.sh`) installs it. Absence is a
 refusal, never a downgrade.
 """
 
@@ -30,7 +30,7 @@ except Exception:  # pragma: no cover - exercised by the unavailability tests
     _best_match = None
     _SchemaError = None  # type: ignore[assignment]
 
-REMEDY = "bin/ymir-engine-ensure.sh ensure (installs the declared dependencies)"
+REMEDY = "bin/engine/ymir-engine-ensure.sh ensure (installs the declared dependencies)"
 
 
 class ConfigError(EngineError):

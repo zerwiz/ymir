@@ -6,10 +6,10 @@
 # MECHANICAL CONSUMERS ONLY. This answers "what posture did the captain register
 # for this project", never "how does this task ship". A task's delivery mode and
 # yolo are resolved by firstmate at intake and passed explicitly to
-# bin/fm-brief.sh, bin/fm-spawn.sh, and bin/fm-promote.sh (AGENTS.md section 7).
-# The consumers are bin/fm-fleet-sync.sh (skip local-only clones),
-# bin/fm-home-seed.sh (refuse local-only seeding, run no-mistakes init), and
-# bin/fm-spawn.sh's advisory registry-deviation notice.
+# bin/backend/fm-brief.sh, bin/backend/fm-spawn.sh, and bin/backend/fm-promote.sh (AGENTS.md section 7).
+# The consumers are bin/backend/fm-fleet-sync.sh (skip local-only clones),
+# bin/backend/fm-home-seed.sh (refuse local-only seeding, run no-mistakes init), and
+# bin/backend/fm-spawn.sh's advisory registry-deviation notice.
 #
 # Registry line format (data/projects.md):
 #   - <name> - <desc> (added <date>)                  -> no-mistakes off  (legacy default)

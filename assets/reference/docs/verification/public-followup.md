@@ -13,7 +13,7 @@ Task chronology and delivery evidence stay outside this record.
 
 ## Environment
 
-Recorded 2026-08-21 on Darwin 25.5.0 (arm64) with GNU bash 5.3.9, tasks-axi 0.2.5, jq 1.8.1, and ShellCheck 0.11.0 (the version `bin/fm-lint.sh` pins).
+Recorded 2026-08-21 on Darwin 25.5.0 (arm64) with GNU bash 5.3.9, tasks-axi 0.2.5, jq 1.8.1, and ShellCheck 0.11.0 (the version `bin/backend/fm-lint.sh` pins).
 The relay is a fakebin `curl` in every case, so no public post is ever made; `tasks-axi` and `jq` are the real tools, because stubbing the obligation state machine would verify nothing.
 
 ## Restart end-to-end and regressions
@@ -97,7 +97,7 @@ It proves the feature makes no `tasks-axi` call, prints nothing, and creates no 
 The whole added cost in that home is the activation predicate, measured over 1000 in-process calls including loop overhead:
 
 ```sh
-. bin/fm-public-followup-lib.sh
+. bin/backend/fm-public-followup-lib.sh
 for i in $(seq 1 1000); do fm_pf_relay_active "$HOME_DIR" || true; done
 ```
 
@@ -111,9 +111,9 @@ Roughly 0.02 ms per session start, from a single `[ -f "$FM_HOME/.env" ]` test t
 
 Primary harnesses (`claude`, `codex`, `opencode`, `pi`, `pi-signed`, `grok`, `kimi`): not applicable after inspection.
 Nothing here reads or renders harness-specific state.
-The only supervision surfaces touched are the session-start digest, which `bin/fm-supervision-instructions.sh` already renders per harness without knowing this section exists, and the wake payload produced by the existing relay poll, which every harness protocol consumes identically.
+The only supervision surfaces touched are the session-start digest, which `bin/backend/fm-supervision-instructions.sh` already renders per harness without knowing this section exists, and the wake payload produced by the existing relay poll, which every harness protocol consumes identically.
 
 Runtime backends (tmux, herdr, zellij, orca, cmux): not applicable after inspection.
 No command here reads `state/<id>.meta`'s backend fields, resolves an endpoint, or captures a pane.
-The lifecycle integrations are backlog-handoff warnings, promotion rechain hints, and `bin/fm-teardown.sh`'s owed-reply refusal plus non-blocking open-loop and legacy `x_request=` warnings.
+The lifecycle integrations are backlog-handoff warnings, promotion rechain hints, and `bin/backend/fm-teardown.sh`'s owed-reply refusal plus non-blocking open-loop and legacy `x_request=` warnings.
 They inspect home, task, parent-binding, and registration records rather than backend fields or endpoints, so they behave identically on every backend.

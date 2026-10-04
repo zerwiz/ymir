@@ -27,7 +27,7 @@ names what is missing** — and the refusal is provable.
    into the cache, else a SKIP carrying the reason.
 3. **`.pi/extensions/lib/constellation-contract.ts`** — the ONE agent-card contract,
    imported, never copied. Types come from the shared module; the VALUES are located
-   at runtime through the root `bin/valknut-load.sh` recorded in `.ymir-root`,
+   at runtime through the root `bin/seat/valknut-load.sh` recorded in `.ymir-root`,
    because the deployed copy lives in `~/.pi/agent/extensions/` and has no `packages/`
    under it — a relative import there is a deploy that cannot load.
 4. **`.pi/extensions/constellation.ts`** — the no-op shim, so a project-local pi
@@ -59,13 +59,13 @@ names what is missing** — and the refusal is provable.
   missing-grant reason; no registry ⇒ SKIP, not an empty list; a cache dir inside the
   tree ⇒ SKIP; a shallow clone lands outside the tree; an endpoint's credentials are
   redacted.
-- The deployed shape loads: the test reproduces `bin/valknut-load.sh`'s deploy into a
+- The deployed shape loads: the test reproduces `bin/seat/valknut-load.sh`'s deploy into a
   scratch home (shared `*.ts` + `lib/*` + `.ymir-root`), drives the factory with a
   stub `pi`, and reads back exactly `constellation_list`, `constellation_ask`,
   `constellation_card` plus the load marker `state/.pi-constellation-loaded` — the
   same shape `gna-pi-watch` proves itself with. The project-local file registers
   nothing.
-- `bash bin/guards.sh` — runtime-guard PASS, defaults-guard PASS.
+- `bash bin/gates/guards.sh` — runtime-guard PASS, defaults-guard PASS.
 - `bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh` — 16 checks, all
   PASS/NOTE.
 

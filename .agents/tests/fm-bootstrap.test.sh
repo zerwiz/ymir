@@ -963,7 +963,7 @@ SH
 # The verdict costs three subprocesses, so a caller that already has it can hand
 # it over - but only one hop, and never onward into a spawned agent's
 # environment, where it could outlive a tasks-axi upgrade.
-# assert_timing_record <log> <scope> <name> <detail> <msg>: one bin/fm-timing-lib.sh
+# assert_timing_record <log> <scope> <name> <detail> <msg>: one bin/backend/fm-timing-lib.sh
 # record with exactly these fields must exist. Field-exact rather than a substring
 # match, so a detail that landed in the wrong column cannot pass.
 assert_timing_record() {
@@ -978,7 +978,7 @@ assert_timing_record() {
 # used to be unattributable without re-running it by hand. These are the records
 # that make it attributable, and they must come from the real sweeps rather than
 # a stand-in: what is being pinned is that each network owner is actually wrapped.
-# bin/fm-timing-lib.sh stays inert unless FM_TIMING_LOG names a file, so an
+# bin/backend/fm-timing-lib.sh stays inert unless FM_TIMING_LOG names a file, so an
 # ordinary bootstrap run is unaffected either way, which is asserted here too.
 test_network_phases_record_per_step_elapsed_times() {
   local case_dir fakebin log fields

@@ -14,7 +14,7 @@ that remembers how to degrade.
 
 ### What
 
-- **`bin/mcp-gateway.sh`** — the door: `serve` (foreground), `start`/`stop`
+- **`bin/bridge/mcp-gateway.sh`** — the door: `serve` (foreground), `start`/`stop`
   (background, pidfile), `status`, `resolve` (the role-resolved upstream map),
   `sync`, `catalog`. It resolves upstreams through `bin/topology.sh`'s registry
   (`$YMIR_HOME/hodd/data/fleet.json`, read at runtime, never shipped) with
@@ -23,12 +23,12 @@ that remembers how to degrade.
 - **`tools/mcp-gateway/server.mjs`** — the engine, dependency-free: attached it
   proxies the resolved heart endpoints; detached/offline it serves the cached
   tool catalog (and last-read results), queues tool calls into the body's own
-  journal (`state/journal/<host>.jsonl`, via `bin/journal-append.sh`), and
+  journal (`state/journal/<host>.jsonl`, via `bin/records/journal-append.sh`), and
   reports upstreams unreachable. Its `sync` tool pushes the journal
-  (`bin/journal-reconcile.sh`) and refreshes the catalogs — reconcile without
+  (`bin/records/journal-reconcile.sh`) and refreshes the catalogs — reconcile without
   shell access. The well is local-first: its own door is tried before the
   heart's. It never blocks a harness (a bounded per-upstream timeout).
-- **`bin/mcp-config.sh`** — now emits the gateway as the door for well/bolthorn/
+- **`bin/bridge/mcp-config.sh`** — now emits the gateway as the door for well/bolthorn/
   skuld (`http://127.0.0.1:8316/mcp/<server>`); the config is role- and
   heart-address-independent, so a heart move is a re-resolve, not a rewire.
 - **`bin/fleet-ensure.sh`** — `wire_mcp` writes the gateway door for the record
@@ -38,7 +38,7 @@ that remembers how to degrade.
 - **`bin/autoboot-lib.sh`** — `mcp-gateway` is a role-owed program (heart ·
   forge · dev) with its description and the new unit template
   `tools/mill/systemd/mcp-gateway.service`.
-- **`bin/mcp-gate.sh`** default target unchanged (`mcp-adapter.json`); no door
+- **`bin/bridge/mcp-gate.sh`** default target unchanged (`mcp-adapter.json`); no door
   renamed.
 - **Tests:** `.agents/tests/mcp-gateway.test.sh` — the P6 gate: a REAL
   refused-network run (upstream killed → real ECONNREFUSED) proves
@@ -64,10 +64,10 @@ galdr-reread: `harness-integration/README.md`, `installation.md`.
 
 ### Files
 
-- `bin/mcp-gateway.sh` (new)
+- `bin/bridge/mcp-gateway.sh` (new)
 - `tools/mcp-gateway/server.mjs` (new)
 - `tools/mill/systemd/mcp-gateway.service` (new)
-- `bin/mcp-config.sh`
+- `bin/bridge/mcp-config.sh`
 - `bin/fleet-ensure.sh`
 - `bin/autoboot-lib.sh`
 - `.agents/tests/mcp-gateway.test.sh` (new)

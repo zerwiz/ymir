@@ -78,7 +78,7 @@ printf 'project=fixture\n' > "$HOME_DIR/state/grok-e2e.meta"
 wait_for_text "Grok Build" 180 || fail "Grok did not reach its ready composer"
 sleep 1
 # shellcheck disable=SC2016 # Backticks are literal prompt markup.
-PROMPT='Use run_terminal_command with background=true to run exactly `bin/fm-watch-arm.sh`. Never use a shell ampersand. Once it reports started, respond briefly.'
+PROMPT='Use run_terminal_command with background=true to run exactly `bin/backend/fm-watch-arm.sh`. Never use a shell ampersand. Once it reports started, respond briefly.'
 "$TMUX" -L "$SOCKET" send-keys -t "$SESSION" -l "$PROMPT"
 "$TMUX" -L "$SOCKET" send-keys -t "$SESSION" Enter
 
@@ -105,7 +105,7 @@ grep -Eq 'reason=actionable-signal' "$HOME_DIR/state/.watch-cycle-exits.log" 2>/
   || fail "Grok action cycle was not classified in the lifecycle ledger"
 wait_for_text "Task completed in" 120 || fail "Grok did not surface its native background-task completion notification"
 pane=$(capture)
-if printf '%s\n' "$pane" | grep -Fq 'bin/fm-watch-arm.sh &'; then
+if printf '%s\n' "$pane" | grep -Fq 'bin/backend/fm-watch-arm.sh &'; then
   fail "Grok used a shell ampersand instead of its tracked background task"
 fi
 

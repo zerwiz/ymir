@@ -44,7 +44,7 @@ denies "$GUARD" 'echo x > config/cron.yaml'
 allows "$GUARD" 'cat state/.lock'
 allows "$GUARD" 'rg wake state/.wake-queue'
 allows "$GUARD" 'git status'
-allows "$GUARD" 'bin/runes-append.sh brokk test --message hi'
+allows "$GUARD" 'bin/records/runes-append.sh brokk test --message hi'
 allows "$GUARD" 'bash -n bin/syn-guard-pretool-check.sh'
 
 [ "$fail" = 0 ] && echo "ALL PASS" || echo "FAILURES"

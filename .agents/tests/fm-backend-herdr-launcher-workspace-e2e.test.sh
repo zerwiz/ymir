@@ -11,7 +11,7 @@
 # whichever one sorted first - visibly the wrong space whenever the launcher was
 # not in it.
 #
-# This drives the REAL bin/fm-spawn.sh and bin/fm-teardown.sh, because the
+# This drives the REAL bin/backend/fm-spawn.sh and bin/backend/fm-teardown.sh, because the
 # guarantee spans the whole spawn handoff (fm-spawn.sh's herdr arm ->
 # fm_backend_herdr_container_ensure -> fm_backend_herdr_workspace_ensure ->
 # fm_backend_herdr_launcher_identity) and no adapter primitive holds it alone.
@@ -20,7 +20,7 @@
 # from an environment this test composed.
 #
 # Safety (2026-07-02 incident, see tests/herdr-test-safety.sh): every lifecycle
-# operation goes through bin/fm-herdr-lab.sh, which appends the named session
+# operation goes through bin/backend/fm-herdr-lab.sh, which appends the named session
 # flag and verifies the default fleet session is unchanged after teardown.
 set -u
 

@@ -23,10 +23,10 @@ if [ -z "${YMIR_STYLE_LOADED:-}" ]; then
 fi
 style_init
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
-# @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
+# @zerwiz/smidja-factory package in an npm install (bin/desktop/smidja-lib.sh).
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
   _ys="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/smidja-lib.sh"; do
+  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/desktop/smidja-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_SMIDJA_LIB_LOADED=1; break; }
   done
   unset _ys _yc
@@ -102,31 +102,31 @@ if port_open 4603; then
   if [ -n "$provider" ]; then add bifrost PASS "bridge up on :4603 (models served)"
   else add bifrost WARN "port 4603 open but /v1/models empty"; fi
 else
-  add bifrost FAIL "bridge down on :4603 — run bin/bifrost-bridge.sh --start"
+  add bifrost FAIL "bridge down on :4603 — run bin/bridge/bifrost-bridge.sh --start"
 fi
 
 # ── 6. Nornir cron running ──────────────────────────────────────────────────
 # The scheduler's cmdline is `bash -c <body>` and carries no "nornir" token, so
 # ask nornir-cron-start.sh itself (it owns the identity check) instead of pgrep.
-if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
-  cron_out="$("$ROOT/bin/nornir-cron-start.sh" 2>/dev/null || true)"
+if [ -x "$ROOT/bin/time/nornir-cron-start.sh" ]; then
+  cron_out="$("$ROOT/bin/time/nornir-cron-start.sh" 2>/dev/null || true)"
   if printf '%s' "$cron_out" | grep -q 'cron: running'; then
     add cron PASS "$(printf '%s' "$cron_out" | grep -m1 'cron: running')"
   else
-    add cron FAIL "nornir cron not running — run bin/nornir-cron-start.sh"
+    add cron FAIL "nornir cron not running — run bin/time/nornir-cron-start.sh"
   fi
 else
   add cron SKIP "no nornir-cron-start.sh"
 fi
 
 # ── 7. smidja db (visualizer readiness) ─────────────────────────────────────
-# The same pair scripts/start.sh and bin/smidja-bootstrap.sh resolve: an existing
+# The same pair scripts/start.sh and bin/desktop/smidja-bootstrap.sh resolve: an existing
 # $YMIR_HOME/smidja/smidja.db first, then an in-repo copy.
 # The operator's home: env -> the recorded choice -> the ONE documented default
-# (Rule 07; the default lives in bin/hoard-lib.sh, never in a script).
+# (Rule 07; the default lives in bin/vault/hoard-lib.sh, never in a script).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _ymir_yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$(dirname "$_ymir_yr")/bin/hoard-lib.sh"; do
+  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$(dirname "$_ymir_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_ymir_yc" ] && { . "$_ymir_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _ymir_yr _ymir_yc
@@ -142,7 +142,7 @@ fi
 if [ -f "$SMIDJA_DB_PATH" ]; then
   add smidja-db PASS "smidja.db present"
 else
-  add smidja-db FAIL "smidja.db missing — run bin/smidja-bootstrap.sh"
+  add smidja-db FAIL "smidja.db missing — run bin/desktop/smidja-bootstrap.sh"
 fi
 
 # ── 7b. visualizer (built ./dist AND its API actually listening) ────────────

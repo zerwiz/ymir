@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # tests/fm-backend-autodetect-smoke.test.sh - real herdr smoke test for runtime
-# backend AUTO-DETECTION (bin/fm-backend.sh's fm_backend_detect, wired into
+# backend AUTO-DETECTION (bin/backend/fm-backend.sh's fm_backend_detect, wired into
 # fm_backend_name between config/backend and the tmux default).
 #
 # Unlike tests/fm-backend-herdr.test.sh (fake herdr CLI) and
 # tests/fm-backend-herdr-smoke.test.sh (real herdr, adapter primitives called
-# directly), this suite drives the REAL bin/fm-spawn.sh and bin/fm-teardown.sh
+# directly), this suite drives the REAL bin/backend/fm-spawn.sh and bin/backend/fm-teardown.sh
 # end to end, because auto-detection is a fm-spawn-TIME decision, not an
 # adapter primitive - it has to be proven where fm_backend_name is actually
 # called. The real spawn runs in a helper-provisioned, per-run named Herdr lab
@@ -21,7 +21,7 @@
 # by fm_backend_detect's own unit coverage plus that fake-tmux fm-spawn test.
 #
 # Safety (2026-07-02 incident): every test-owned Herdr operation goes through
-# bin/fm-herdr-lab.sh, which appends the named session flag and verifies the
+# bin/backend/fm-herdr-lab.sh, which appends the named session flag and verifies the
 # default fleet session is unchanged after teardown. Never replace the helper
 # with an ambient HERDR_SESSION-only command.
 set -u

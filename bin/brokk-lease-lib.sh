@@ -59,7 +59,7 @@
 #     backlog lease guard in this scope.
 #
 # Sourced by bin/brokk-send.sh, bin/brokk-control.sh, bin/brokk-teardown.sh,
-# bin/brokk-pr-merge.sh, bin/brokk-merge-local.sh, bin/einherjar-spawn.sh, and
+# bin/brokk-pr-merge.sh, bin/brokk-merge-local.sh, bin/agents/einherjar-spawn.sh, and
 # bin/brokk-lease.sh. Callers must have $STATE resolved before calling. No side
 # effects on source. set -u / set -e safe.
 

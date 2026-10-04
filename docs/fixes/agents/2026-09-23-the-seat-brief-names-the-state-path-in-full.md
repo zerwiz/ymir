@@ -6,7 +6,7 @@
   to `state/eindri-questions/<name>.md`"*. A seated worker's cwd is the code tree,
   so that resolved to `<repo>/state/eindri-questions/<name>.md`. But the
   Eindri→Brokk bridge resolves its state through the hoard
-  (`bin/hoard-lib.sh` → `$YMIR_STATE_DIR`), i.e.
+  (`bin/vault/hoard-lib.sh` → `$YMIR_STATE_DIR`), i.e.
   `$YMIR_HOME/state/eindri-questions/`. The two paths never met, so the route
   stayed silent.
 - **Proven live (2026-09-23).** The `snotra` Eindri was seated, told to ask about
@@ -26,7 +26,7 @@
   home for a worker's records.
 
 ### Fix
-- **`bin/herdr-run.sh`** — the seat brief now names the state path **in full**,
+- **`bin/seat/herdr-run.sh`** — the seat brief now names the state path **in full**,
   expanded from the already-resolved `STATE_DIR` (which `hoard_state_dir`
   produces at the top of the script):
   - question → `$STATE_DIR/eindri-questions/$NAME.md`
@@ -36,12 +36,12 @@
   inside the code tree"* — so a worker cannot reasonably land it in the tree.
 
 ### Verification
-- `bash -n bin/herdr-run.sh` clean.
+- `bash -n bin/seat/herdr-run.sh` clean.
 - The expansion was checked against the bridge's own resolution:
   `STATE_DIR = $HOME_SEAT/Documents/ymirhome/state`, and
-  `bin/eindri-seen.sh` resolves `STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"`
+  `bin/agents/eindri-seen.sh` resolves `STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"`
   — the same directory.
 - The route was proven end to end with the file in that directory (see above).
 
 ### Files
-- `bin/herdr-run.sh`
+- `bin/seat/herdr-run.sh`

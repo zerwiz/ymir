@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.
 #
-# The watcher (bin/fm-watch.sh) blocks until it has an actionable wake to
+# The watcher (bin/backend/fm-watch.sh) blocks until it has an actionable wake to
 # surface, then prints one reason line and exits. While state/.afk exists the
 # daemon owns triage and the watcher exits on every wake for the daemon to
 # classify. Reliability depends on arming through a mechanism that SURVIVES the
 # call and NOTIFIES on exit, so firstmate must run this script as the harness's
 # own tracked background task (e.g. run_in_background), or - for a Claude
 # primary - inside the Stop asyncRewake hook's foreground process tree
-# (bin/fm-claude-stop-autoarm.sh), where the harness owns the process group and
+# (bin/backend/fm-claude-stop-autoarm.sh), where the harness owns the process group and
 # the hook's exit-2 rewake is the notification. Run it as its own standalone
 # background task, never bundled onto the tail of another command.
 # NEVER fire it and forget with a shell `&` inside another call: that backgrounded
 # child is reaped when the call returns, leaving NO watcher running and a false
 # "already running" off the dying process. That exact mistake silently took
 # supervision down for ~30 minutes.
-# On a harness with a PreToolUse-equivalent hook, bin/fm-arm-pretool-check.sh
+# On a harness with a PreToolUse-equivalent hook, bin/backend/fm-arm-pretool-check.sh
 # applies the command-position policy before the command runs; see
 # docs/arm-pretool-check.md for the blessed tree and deny reason codes. It is a
 # pre-execution seatbelt, not a substitute for the verification here.
@@ -55,7 +55,7 @@
 # state/.watch.lock) and own a fresh cycle, or attach if a verified live peer
 # wins the singleton while the duplicate child stands down. It
 # resolves and signals exactly that pid, so it can never touch another home's
-# watcher. NEVER `ymir_kill_matching # bin/fm-watch.sh`: that pattern matches every firstmate home's watcher
+# watcher. NEVER `ymir_kill_matching # bin/backend/fm-watch.sh`: that pattern matches every firstmate home's watcher
 # (secondmate homes run the same script) and would kill siblings.
 set -u
 
@@ -68,7 +68,7 @@ if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 
 WATCH="$SCRIPT_DIR/fm-watch.sh"

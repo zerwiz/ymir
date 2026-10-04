@@ -16,7 +16,7 @@ The inherited dispatch file applies the same best-fit profiles there.
 
 ## Owners
 
-`../../../bin/einherjar-spawn.sh` owns launch, autonomy, concrete flags, task-kind compatibility, and worker turn-end wiring.
+`../../../bin/agents/einherjar-spawn.sh` owns launch, autonomy, concrete flags, task-kind compatibility, and worker turn-end wiring.
 Natural-language rules stay with Brokk, while scripts receive concrete axes.
 
 `../../../bin/brokk-busy-lib.sh` owns semantic busy trust.
@@ -26,7 +26,7 @@ Tool references record empirical knowledge for those executable owners.
 ## Adapter verification
 
 For an approved new adapter check, use the spawn owner's raw-launch escape hatch only for a trivial supervised task.
-Verify detection in `../../../bin/hamr-harness.sh`, launch in `../../../bin/einherjar-spawn.sh`, busy state in `../../../bin/brokk-busy-lib.sh`, shared composer behavior in `../../../bin/brokk-composer-lib.sh`, lifecycle in `../../../bin/brokk-control-lib.sh`, and tmux liveness in `../../../bin/backends/tmux.sh` when Eindri-home use is supported.
+Verify detection in `../../../bin/hamr-harness.sh`, launch in `../../../bin/agents/einherjar-spawn.sh`, busy state in `../../../bin/brokk-busy-lib.sh`, shared composer behavior in `../../../bin/brokk-composer-lib.sh`, lifecycle in `../../../bin/brokk-control-lib.sh`, and tmux liveness in `../../../bin/backends/tmux.sh` when Eindri-home use is supported.
 Also verify primary integration through `references/common/primary-hooks.md`, model discovery through `references/common/model-and-effort.md`, and one tool record.
 A value remains unreachable until its executable owner, portable regression, applicable credentialed live guard, and verification record land together.
 `../Brokk-coding-guidelines/SKILL.md` owns harness-dependent proof.

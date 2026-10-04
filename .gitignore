@@ -72,7 +72,7 @@ apps/odrerir/public/livehall.json
 # Brokk runtime home — private (ship *.example templates only)
 data/*
 !data/*.example
-# The state dir is DERIVED per machine: bin/hoard-lib.sh resolves it to
+# The state dir is DERIVED per machine: bin/vault/hoard-lib.sh resolves it to
 # ${YMIR_STATE_DIR:-$YMIR_HOME/state} (Rule 04/07 — the operator's home owns
 # it, never the tree; bin/ymir-plan.sh's purity row names a repo state/ as the
 # drift it is). The rule must cover the path ITSELF, not only what sits inside

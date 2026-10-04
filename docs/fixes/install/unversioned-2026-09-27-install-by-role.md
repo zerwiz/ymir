@@ -39,7 +39,7 @@ install-time COMPONENT SELECTION"*.
   body, and no heart office); `hand` → core only. A machine may hold two roles;
   the parts union.
 - **A new `record` step** (heart-only) asserts the heart's offices: the engram
-  store, the `bin/journal-receive.sh` fold receiver, and the `@heart` record jobs
+  store, the `bin/records/journal-receive.sh` fold receiver, and the `@heart` record jobs
   in the cron config. It is the dev/forge body's clearest SKIP line, and it makes
   the record's single-writer law visible at install time.
 - **The machine card is folded into the ONE registry.** `step_role` writes the

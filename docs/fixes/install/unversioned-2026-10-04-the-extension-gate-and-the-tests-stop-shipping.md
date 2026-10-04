@@ -3,11 +3,11 @@
 ### Why
 
 - **The running harness was on stale code and nothing said so.** A deploy is a
-  *copy* — `bin/valknut-load.sh --pi` copies `.pi/shared/extensions/` into
+  *copy* — `bin/seat/valknut-load.sh --pi` copies `.pi/shared/extensions/` into
   `~/.pi/agent/extensions/` and nothing re-runs it — so a repo edit does nothing
   until someone remembers. Measured: the deployed `ymir-subagents.ts` was **12,991
   bytes against a 13,748-byte source**, and the ten missing lines are
-  `bin/erindi-brief.sh`. Their own comment: *"the seat door REFUSES an unfilled
+  `bin/agents/erindi-brief.sh`. Their own comment: *"the seat door REFUSES an unfilled
   brief… A dispatch that produced a placeholder brief would **seat a figure with
   nothing to do**."* Every file listing looked correct.
 - **Two test files were being deployed into the live tree on every loader run.**
@@ -21,10 +21,10 @@
 
 ### Fix
 
-- **`bin/valknut-load.sh` no longer copies `*.test.*` / `*.spec.*` into the live
+- **`bin/seat/valknut-load.sh` no longer copies `*.test.*` / `*.spec.*` into the live
   tree**, and removes any that an earlier run already deployed — otherwise the
   exclusion would not actually take effect.
-- **`bin/valknut-load.sh --check` is a new gate** with five checks and exit 1 on
+- **`bin/seat/valknut-load.sh --check` is a new gate** with five checks and exit 1 on
   failure, so it can sit in CI or a hook rather than in someone's memory:
   1. every deployed extension is byte-identical to its source
   2. every helper module the shared set imports is deployed too — deploying the
@@ -74,7 +74,7 @@ project-local extension file must either not exist, or register nothing.
 ### Verified
 
 ```
-$ bash bin/valknut-load.sh --check
+$ bash bin/seat/valknut-load.sh --check
   all extensions byte-identical to source        PASS
   all helper modules byte-identical              PASS
   no test files in the deployed tree             PASS

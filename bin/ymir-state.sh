@@ -13,7 +13,7 @@
 #
 # Exit codes are the module's own: 0 ran (condition true) · 1 ran (condition
 # false / IO failed) · 2 usage. `bin/gleipnir-lock-lib.sh` and
-# `bin/runes-append.sh` are thin shims over this door; a body added in bash
+# `bin/records/runes-append.sh` are thin shims over this door; a body added in bash
 # would be the second implementation this door exists to remove.
 set -u
 

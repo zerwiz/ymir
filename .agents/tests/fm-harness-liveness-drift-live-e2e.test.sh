@@ -63,7 +63,7 @@ fm_backend_source tmux || fail "fm_backend_source tmux failed"
 "$REAL_TMUX" -L "$SOCKET" new-session -d -s "$SESSION" -n control -c "$LAB/wt" \
   || fail "could not start the private tmux server"
 
-# Kimi is not required to be on PATH; mirror bin/fm-spawn.sh's own resolution
+# Kimi is not required to be on PATH; mirror bin/backend/fm-spawn.sh's own resolution
 # order so this guard covers the same binary firstmate would actually launch.
 resolve_harness_binary() {  # <harness>
   local harness=$1 candidate

@@ -34,7 +34,7 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
-# The wake queue is written by the Eindri handoff (bin/eindri-acclaim.sh) into the
+# The wake queue is written by the Eindri handoff (bin/agents/eindri-acclaim.sh) into the
 # OPERATOR'S HOME state — never the code tree. Both sides resolve it the same way,
 # through bin/hoard-lib.sh. The watcher must read the SAME queue: it once defaulted
 # to the tree's state dir, so the handoff filled one queue and the watcher watched
@@ -42,7 +42,7 @@ BROKK_HOME="${BROKK_HOME:-$ROOT}"
 _STATE_GIVEN="${BROKK_STATE_OVERRIDE:-}"
 if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-    for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+    for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
       [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
     done
     unset _c
@@ -80,7 +80,7 @@ mkdir -p "$STATE"
 # the dead window missed: sweep the handoff shelves into the durable wake queue
 # BEFORE the lock and the poll loop, so recovery is never blind and an arm that
 # is refused read-only has still reconciled. Idempotent via the shared ledger
-# (bin/eindri-wake-lib.sh); the cycle sweep below is the steady-state form.
+# (bin/agents/eindri-wake-lib.sh); the cycle sweep below is the steady-state form.
 CATCH_UP=0
 if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
   _handoff_out="$(BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/eindri-handoff.sh" sweep 2>/dev/null)" || true

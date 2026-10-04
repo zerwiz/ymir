@@ -2,7 +2,7 @@
 
 ### Why
 - **Root cause of the Apodex-provider loss, mended at the source.** Two writers
-  share the untracked `opencode.json`: `bin/valknut-load.sh` (structure, from
+  share the untracked `opencode.json`: `bin/seat/valknut-load.sh` (structure, from
   `opencode.json.example`) and `bin/agents-config.sh apply` (the roster —
   providers and per-agent models, from `config/agents.yaml`). The loader
   re-rendered with `sed` + `mv`, so because the example carried only
@@ -18,7 +18,7 @@
   the branch's whole range since it left the trunk touching it — a commit that
   merely lands a file the record already tells needs no micro-entry. A branch
   whose entire range leaves untold is still refused.
-- `bin/valknut-load.sh --status` reports the config outcome
+- `bin/seat/valknut-load.sh --status` reports the config outcome
   (`seeded` · `merged(…)` · `unchanged` · `kept`), so a silent stomp can never
   hide behind a "rendered" line again.
 - `harness-int

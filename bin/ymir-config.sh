@@ -24,7 +24,7 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/hoard-lib.sh
+# shellcheck source=bin/vault/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
 hoard_settings_dir SETTINGS
 STORE="$SETTINGS/notices.conf"

@@ -251,7 +251,7 @@ export default function subagents(pi: any) {
       // The Allfather: *"where are the subagents? it should always use herdr."* — correct. An errand
       // you cannot see is indistinguishable from one that died, and a return value is not a seat.
       //
-      // So: dispatch through the ONE sanctioned spawn path (bin/einherjar-spawn.sh — the same door
+      // So: dispatch through the ONE sanctioned spawn path (bin/agents/einherjar-spawn.sh — the same door
       // eindri.ts uses), which gives the figure a herdr pane and state/<id>.{status,meta}, and
       // return the SEAT and the ERRAND ids. In-process streaming stays as an explicit fallback for
       // figures that have no errand profile yet, and it says so when it is used.
@@ -260,7 +260,7 @@ export default function subagents(pi: any) {
         // The seat door REFUSES an unfilled brief (measured: "this errand is not worth a smith"),
         // which is exactly right — so the brief is scaffolded and then FILLED with the task.
         // A dispatch that produced a placeholder brief would seat a figure with nothing to do.
-        execFileSync("bash", [`${ROOT}/bin/erindi-brief.sh`, errandId, ROOT, "--mode", "direct-PR"],
+        execFileSync("bash", [`${ROOT}/bin/agents/erindi-brief.sh`, errandId, ROOT, "--mode", "direct-PR"],
           { encoding: "utf8", timeout: 30_000, stdio: ["ignore", "pipe", "pipe"] });
         const brief = readFileSync(join(ROOT, "data", errandId, "brief.md"), "utf8")
           .replace(/\{TASK\}/g, String(params.task ?? ""))
@@ -269,7 +269,7 @@ export default function subagents(pi: any) {
 
         execFileSync(
           "bash",
-          [`${ROOT}/bin/einherjar-spawn.sh`, errandId, ROOT, "--mode", "direct-PR"],
+          [`${ROOT}/bin/agents/einherjar-spawn.sh`, errandId, ROOT, "--mode", "direct-PR"],
           { encoding: "utf8", timeout: 60_000, stdio: ["ignore", "pipe", "pipe"],
             env: { ...process.env, BROKK_TASK: String(params.task ?? ""), BROKK_FIGURE: figure.name } },
         );
@@ -287,7 +287,7 @@ export default function subagents(pi: any) {
           content: [{ type: "text", text:
             `error: could not seat ${figure.name} — ` +
             `${String(err?.stderr || err?.message || err).split("\n")[0]}\n` +
-            `  check: bash bin/einherjar-spawn.sh ${errandId} ${ROOT} --mode direct-PR` }],
+            `  check: bash bin/agents/einherjar-spawn.sh ${errandId} ${ROOT} --mode direct-PR` }],
           isError: true,
         };
       }

@@ -62,7 +62,7 @@
 #   stale: <window> (steering-inbox ladder bookkeeping unwritable: ...)
 #                          an unhandled record's ladder cannot advance; quiet
 #                          successful attempts never wake firstmate
-#                          (bin/fm-task-inbox-lib.sh owns the ladder policy)
+#                          (bin/backend/fm-task-inbox-lib.sh owns the ladder policy)
 #   check: <script>: <out> authenticated check output, always actionable
 #   check: process-event result captured: <keys>
 #                          a durably captured process-to-event result is queued
@@ -104,10 +104,10 @@ mkdir -p "$STATE"
 # runtime can exceed the bounded CI lint worker while adding no uncovered file.
 # shellcheck source=/dev/null
 . "$SCRIPT_DIR/fm-push-transition-lib.sh"
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
 # Single owner of durable merge-outcome publication, shared with
-# bin/fm-pr-merge.sh so self and poll origins use the same role-routed outcome.
+# bin/backend/fm-pr-merge.sh so self and poll origins use the same role-routed outcome.
 # The watcher still owns immediate delivery of its actionable poll result and
 # poll retirement.
 # This library is a canonical lint root in its own right, and it reaches the
@@ -117,21 +117,21 @@ mkdir -p "$STATE"
 # worker while adding no uncovered file.
 # shellcheck source=/dev/null
 . "$SCRIPT_DIR/fm-merge-outcome-lib.sh"
-# shellcheck source=bin/fm-x-lib.sh
+# shellcheck source=bin/backend/fm-x-lib.sh
 . "$SCRIPT_DIR/fm-x-lib.sh"
-# shellcheck source=bin/fm-check-lib.sh
+# shellcheck source=bin/backend/fm-check-lib.sh
 . "$SCRIPT_DIR/fm-check-lib.sh"
 # Parent-owned secondmate missed-report guards: durable pending-reply
 # expectations created by fm-send on marked secondmate requests. The tick is
 # cheap when no records exist and never scrapes secondmate conversation.
-# shellcheck source=bin/fm-pending-reply-lib.sh
+# shellcheck source=bin/backend/fm-pending-reply-lib.sh
 . "$SCRIPT_DIR/fm-pending-reply-lib.sh"
-# shellcheck source=bin/fm-busy-lib.sh
+# shellcheck source=bin/backend/fm-busy-lib.sh
 . "$SCRIPT_DIR/fm-busy-lib.sh"
-# Steering-inbox loss detection: bin/fm-task-inbox-lib.sh owns the record,
+# Steering-inbox loss detection: bin/backend/fm-task-inbox-lib.sh owns the record,
 # doorbell, and re-ring ladder contracts; this watcher only supplies the busy
 # gate and the wake emission (inbox_steer_check below).
-# shellcheck source=bin/fm-task-inbox-lib.sh
+# shellcheck source=bin/backend/fm-task-inbox-lib.sh
 . "$SCRIPT_DIR/fm-task-inbox-lib.sh"
 
 WATCH_LOCK="$STATE/.watch.lock"
@@ -157,8 +157,8 @@ if [ "$(uname)" = Darwin ]; then
 else
   stat_mtime() { stat -c %Y "$1" 2>/dev/null; }
 fi
-# bin/fm-classify-lib.sh owns status reported-state signatures and presentation
-# markers, while bin/fm-wake-lib.sh owns their wake-facing routing, the legacy
+# bin/backend/fm-classify-lib.sh owns status reported-state signatures and presentation
+# markers, while bin/backend/fm-wake-lib.sh owns their wake-facing routing, the legacy
 # turn-ended signature, annotation staleness checks, and guarded bookkeeping writes.
 
 POLL=${FM_POLL:-15}                   # seconds between cycles
@@ -176,7 +176,7 @@ SIGNAL_GRACE=${FM_SIGNAL_GRACE:-30}   # seconds to linger after a signal so trai
 TURNEND_CHURN_ABSORB_SECS=${FM_TURNEND_CHURN_ABSORB_SECS:-900}  # longest a task's
                                       # bare turn-ends may be deferred on pane-churn
                                       # evidence alone (signal_turnend_panes_churned)
-# Busy state is decided by the semantic contract in bin/fm-busy-lib.sh, which
+# Busy state is decided by the semantic contract in bin/backend/fm-busy-lib.sh, which
 # is the single owner of per-harness sources, source attribution, and the one
 # remaining rendered-text fallback (Grok only).
 # Always-on wake triage: most wakes during a long crew validation are benign (a
@@ -250,7 +250,7 @@ hash_pane() {
 }
 
 # window_is_busy: 0 (busy) iff the task's harness is PROVABLY working, through
-# the semantic busy-state contract (bin/fm-busy-lib.sh). Only an exact busy
+# the semantic busy-state contract (bin/backend/fm-busy-lib.sh). Only an exact busy
 # verdict returns 0: idle, unknown, and dead all return 1, so a converted
 # adapter whose semantic state is missing, malformed, stale, or unverified is
 # treated as not-provably-working and surfaces rather than being absorbed.
@@ -398,7 +398,7 @@ inbox_steer_check() {  # <window> <task>
 # delegates to the unchanged all-tasks authoritative proof.
 #
 # It exists because the first two are unreachable for a harness whose semantic
-# busy state has no verified source: bin/fm-crew-state.sh can only answer unknown
+# busy state has no verified source: bin/backend/fm-crew-state.sh can only answer unknown
 # for such an adapter, crew_is_provably_working is therefore never satisfiable,
 # and every worker turn boundary surfaced a wake with nothing to act on - the cost
 # scaling with the number of workers in flight. Pane churn needs no harness
@@ -1026,7 +1026,7 @@ scan_signals() {
 }
 
 # Deliver a durably queued process-event result to firstmate. Publication is
-# owned by bin/fm-procevent.sh - by the runner at capture time and by reconcile's
+# owned by bin/backend/fm-procevent.sh - by the runner at capture time and by reconcile's
 # re-announcement - so this decides only whether a queued check record has been
 # surfaced yet, then reports it through the same actionable exit every other wake
 # uses. Without it a captured result sits on the queue until something else
@@ -1445,7 +1445,7 @@ if ! fm_pr_poll_retirement_recover_all "$STATE" "$SCRIPT_DIR/fm-pr-poll.sh"; the
 fi
 
 # Shared by both the first-notification and already-notified paths below so
-# the retirement sequence (bin/fm-pr-lib.sh) is stated once.
+# the retirement sequence (bin/backend/fm-pr-lib.sh) is stated once.
 retire_merged_pr_poll() {  # <id>
   local id=$1
   if fm_pr_poll_retirement_publish "$STATE" "$id" "$SCRIPT_DIR/fm-pr-poll.sh" merged; then

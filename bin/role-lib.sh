@@ -24,12 +24,12 @@
 #   machine_card_write <host> <roles> <components> <source>
 #                                          -> "written" | "unchanged" | "unwritten"
 #
-# Depends on: bin/hoard-lib.sh (the home), bin/role.sh + bin/topology.sh (reads).
+# Depends on: bin/vault/hoard-lib.sh (the home), bin/role.sh + bin/topology.sh (reads).
 set -u
 
 ROLE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _rl in "$ROLE_LIB_DIR/hoard-lib.sh" "$(dirname "$ROLE_LIB_DIR")/bin/hoard-lib.sh"; do
+  for _rl in "$ROLE_LIB_DIR/hoard-lib.sh" "$(dirname "$ROLE_LIB_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_rl" ] && { . "$_rl"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _rl
@@ -97,7 +97,7 @@ establish_roles() {
 machine_card_write() {  # <host> <roles> <components> <source>
   local host="$1" roles="$2" comps="$3" src="$4"
   local data="" machines="" head="" stamp="" os_name="" platform="" link="" heart=""
-  # The hoard's data shelf resolves through bin/hoard-lib.sh — never restated here.
+  # The hoard's data shelf resolves through bin/vault/hoard-lib.sh — never restated here.
   if command -v hoard_data_dir >/dev/null 2>&1; then hoard_data_dir data || data=""; fi
   [ -n "$data" ] || { printf 'unwritten'; return 1; }
   machines="${YMIR_MACHINES_MD:-$data/machines.md}"

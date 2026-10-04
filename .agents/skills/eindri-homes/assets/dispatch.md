@@ -6,10 +6,10 @@ chain must never guess a model or skip the lock.
 ```
 dispatch[8]{step,who,what}:
   "1 request","Allfather / Brokk","a task, optionally naming a model or locality"
-  "2 role","bin/eindri-role.sh choose","pick the smith by craft (whole-word match)"
+  "2 role","bin/agents/eindri-role.sh choose","pick the smith by craft (whole-word match)"
   "3 model","bin/model-resolve.sh resolve","friendly/exact -> {locality,harness,provider,model}; unresolved -> ASK"
   "4 harness","config/agents.yaml harness rule","local -> pi, online -> opencode (agent may pin harness:)"
-  "5 seat","bin/herdr-run.sh eindri (or bin/eindri-start.sh)","herdr pane/tab/space; --model resolution happens here"
+  "5 seat","bin/seat/herdr-run.sh eindri (or bin/agents/eindri-start.sh)","herdr pane/tab/space; --model resolution happens here"
   "6 lock","bin/local-model-lock.sh","serialize local inference per host (local_concurrency)"
   "7 register","a2a MCP (a2abridge bridge)","agent announces its card; reachable over A2A"
   "8 report","herdr agent list / Hlidskjalf Fleet","state: working/blocked/done; tasks from Runes"
@@ -23,9 +23,9 @@ bin/model-resolve.sh resolve "qwen 3.6 iq2"
 #  -> locality=local harness=pi provider=llama-cpp model=qwen3.6-35b-a3b@q2_k_xl
 
 # seat the right smith on the right model, in a visible pane
-bin/herdr-run.sh eindri bragi --model "qwen 3.6 iq2" -- "do marketing research"
+bin/seat/herdr-run.sh eindri bragi --model "qwen 3.6 iq2" -- "do marketing research"
 # convenience front door:
-bin/eindri-start.sh "do marketing research"        # role + seat; add --model to pin
+bin/agents/eindri-start.sh "do marketing research"        # role + seat; add --model to pin
 ```
 
 ## Rules (non-negotiable)
@@ -56,8 +56,8 @@ report success after only step 1.
 
 ```
 dispatch-hard[3]{step,tool,proof}:
-  "1 seat","bin/eindri-start.sh | bin/herdr-run.sh eindri","the agent exists in a pane"
-  "2 INJECT the task","bin/eindri-send.sh <agent> \"<task>\"","the agent's chat received it"
+  "1 seat","bin/agents/eindri-start.sh | bin/seat/herdr-run.sh eindri","the agent exists in a pane"
+  "2 INJECT the task","bin/agents/eindri-send.sh <agent> \"<task>\"","the agent's chat received it"
   "3 VERIFY","herdr agent list shows agent_status working/busy","it is actually doing the work"
 ```
 
@@ -76,5 +76,5 @@ Rules:
 Every Eindri is seated in a **secure Yggdrasil worktree** by default
 (`.yggdrasil/<id>`), never the main tree. Work in the main tree only when the
 Allfather explicitly asks to help in main — pass `--main` to
-`bin/eindri-start.sh` / `bin/herdr-run.sh`. Anything else that seats an agent
+`bin/agents/eindri-start.sh` / `bin/seat/herdr-run.sh`. Anything else that seats an agent
 (`pi-seat.sh`, the tmux fallback) must isolate the same way.

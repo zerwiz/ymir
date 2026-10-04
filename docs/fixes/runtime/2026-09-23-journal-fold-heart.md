@@ -4,7 +4,7 @@
 - **Problem:** the body side of P2b was built (append + push to `~/.ymir-inbox`),
   but nothing on the heart **folded** the inbox into the record — the loop was
   open at the far end.
-- **Fix:** `bin/journal-receive.sh` — the **only writer** that folds bodies'
+- **Fix:** `bin/records/journal-receive.sh` — the **only writer** that folds bodies'
   journals in (Law 7):
   - dedupes by **idempotency key**, so a replay after a partial push is a no-op;
   - appends new entries to `$STATE/journal/folded/<host>.jsonl` — one canonical
@@ -20,5 +20,5 @@
 - `bash -n` clean.
 
 ### Files
-- `bin/journal-receive.sh`
+- `bin/records/journal-receive.sh`
 - `.agents/tests/journal-fold.test.sh`

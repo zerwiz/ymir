@@ -2,7 +2,7 @@
  * ymir-home.ts — where the distro lives, as seen from a DEPLOYED extension.
  *
  * Pi extensions are deployed to ONE global home (`${HOME}/.pi/agent/extensions/`;
- * see `bin/valknut-load.sh` and the harness-integration asset). Deployed away from
+ * see `bin/seat/valknut-load.sh` and the harness-integration asset). Deployed away from
  * the tree that owns `bin/`, a copy cannot find it by walking up: the old
  * `resolve(extensionDir, "../..")` reached `${HOME}/.pi`, which holds pi's own
  * config and no `bin/` at all. Every extension that then exec'd `${root}/bin/…`
@@ -12,7 +12,7 @@
  * file listing looked correct. A deploy that copies an extension without telling
  * it where its own `bin/` lives is not a deploy.
  *
- * So the root is RECORDED at deploy time: `bin/valknut-load.sh --pi` writes one
+ * So the root is RECORDED at deploy time: `bin/seat/valknut-load.sh --pi` writes one
  * absolute root per line, most recent first, to `.ymir-root` beside the deployed
  * extensions, and this module reads it back. Resolution order:
  *

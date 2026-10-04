@@ -28,8 +28,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # using it here made every path in this migration one level wrong, so it moved
 # nothing, verified nothing, and still reported success (2026-09-30). The one
 # resolver for the operator's home is `ymir_home_root` in bin/hoard-lib.sh.
-# shellcheck source=bin/hoard-lib.sh
-. "$ROOT/bin/hoard-lib.sh" 2>/dev/null || true
+# shellcheck source=bin/vault/hoard-lib.sh
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 HOME_DIR=""
 if command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root HOME_DIR

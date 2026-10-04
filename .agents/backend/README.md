@@ -11,14 +11,15 @@ and report it truthfully*:
    upstream so a port can be checked against it. **Provenance, not Ymir's own.**
 2. **The model bridges** — Ymir's own files. They are why this index exists:
 
-backend[168]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",10,-
+backend[175]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",12,-
+  "cmux.sh","bin/backends/cmux.sh - the cmux session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,650
   "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",6,655
   "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",4,242
   "fm-afk-start.sh","Enter away mode and run the sub-supervisor daemon in a harness-tracked","provenance","tested","keep",4,173
   "fm-arm-command-policy.mjs","// Semantic policy for watcher arm and checkpoint shell commands.","provenance","tested","keep",2,961
   "fm-arm-pretool-check.sh","Stable PreToolUse transport for the watcher-arm command policy.","provenance","tested","keep",4,201
-  "fm-backend-hometag-lib.sh","bin/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation","provenance","wired","keep",3,53
+  "fm-backend-hometag-lib.sh","bin/backend/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation","provenance","wired","keep",3,53
   "fm-backend.sh","fm-backend.sh - runtime-backend selection, meta helpers, selector resolution,","provenance","tested","keep",25,982
   "fm-backlog-handoff.sh","Hand already-identified, in-scope backlog items off from the main firstmate","provenance","tested","keep",4,910
   "fm-backlog-receive.sh","Receive one delivered remote-secondmate outbox into this home's backlog.","provenance","tested","keep",4,188
@@ -39,7 +40,7 @@ backend[168]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-check-unregister.sh","Retire an intentional custom watcher check and its trust binding.","provenance","tested","keep",3,53
   "fm-classify-lib.sh","fm-classify-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","tested","keep",16,48
   "fm-claude-stop-autoarm.sh","Claude Stop-owned watcher auto-arm (asyncRewake hook).","provenance","tested","keep",6,335
-  "fm-composer-lib.sh","bin/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:","provenance","tested","keep",10,1421
+  "fm-composer-lib.sh","bin/backend/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:","provenance","tested","keep",10,1421
   "fm-config-inherit-lib.sh","shellcheck shell=bash","provenance","tested","keep",9,1203
   "fm-config-push.sh","Push declared inherited local material to live secondmate homes.","provenance","tested","keep",4,255
   "fm-control-lib.sh","fm-control-lib.sh - the ONE executable owner of firstmate's agent lifecycle","provenance","tested","keep",8,252
@@ -178,7 +179,13 @@ backend[168]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-x-reply.sh","Post firstmate's composed answer back to the relay for a pending X-mode mention.","provenance","tested","keep",5,386
   "fm_voice_frame.py","'''fm_voice_frame.py - the wire format between the voice client and the relay.","data","tested","keep",0,167
   "fm_voice_records.py","'''fm_voice_records.py - what the voice agent is allowed to know, and how it hands work over.","tool","tested","keep",1,575
+  "herdr-eventwait.py","'''Raw AF_UNIX subscriber for herdr's native pane.agent_status_changed stream.","tool","tested","keep",0,158
+  "herdr-workspace-move.py","'''Send one narrowly scoped workspace.move request to a Herdr control socket.","tool","tested","keep",0,115
+  "herdr.sh","bin/backends/herdr.sh - the herdr session-provider adapter (EXPERIMENTAL).","data","tested","keep",11,3387
   "model-bridge.py","'''model-bridge.py — expose a model provider to pi via an OpenAI-compatible","data","wired","keep",1,361
   "opencode-go-bridge.py","'''opencode-go-bridge.py — backward-compatible entry point.","tool","wired","keep",0,31
+  "orca.sh","bin/backends/orca.sh - the Orca terminal session-provider adapter.","data","tested","keep",2,291
+  "tmux.sh","bin/backends/tmux.sh - the tmux session-provider adapter.","data","tested","keep",4,358
+  "zellij.sh","bin/backends/zellij.sh - the zellij session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,701
 
-**Tally.** verdict: tested=156, wired=12
+**Tally.** verdict: tested=163, wired=12

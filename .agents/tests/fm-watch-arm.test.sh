@@ -8,7 +8,7 @@
 # successful cycle used to be reported as
 # "watcher: FAILED - cycle ended without an actionable reason" on every harness
 # whose protocol reads that line. These are real-process tests: a real
-# bin/fm-watch.sh holds the singleton, a real bin/fm-watch-arm.sh attaches to it,
+# bin/backend/fm-watch.sh holds the singleton, a real bin/backend/fm-watch-arm.sh attaches to it,
 # and a real status change drives a real wake through the watcher-bound delivery
 # record and durable queue.
 set -u

@@ -67,14 +67,14 @@ if [[ -f "$PID_FILE" ]]; then
 fi
 
 # Runtime services: the Nornir schedule and the Bifrost model bridge.
-if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
-  "$ROOT/bin/nornir-cron-start.sh" --stop >/dev/null 2>&1 && { echo "Nornir cron stopped."; stopped=1; }
+if [ -x "$ROOT/bin/time/nornir-cron-start.sh" ]; then
+  "$ROOT/bin/time/nornir-cron-start.sh" --stop >/dev/null 2>&1 && { echo "Nornir cron stopped."; stopped=1; }
 fi
-if [ -x "$ROOT/bin/bifrost-bridge.sh" ]; then
-  "$ROOT/bin/bifrost-bridge.sh" --stop >/dev/null 2>&1 && { echo "Bifrost bridge stopped."; stopped=1; }
+if [ -x "$ROOT/bin/bridge/bifrost-bridge.sh" ]; then
+  "$ROOT/bin/bridge/bifrost-bridge.sh" --stop >/dev/null 2>&1 && { echo "Bifrost bridge stopped."; stopped=1; }
 fi
-if [ -x "$ROOT/bin/mimir-bridge.sh" ]; then
-  "$ROOT/bin/mimir-bridge.sh" --stop >/dev/null 2>&1 && { echo "Mimir bridge stopped."; stopped=1; }
+if [ -x "$ROOT/bin/bridge/mimir-bridge.sh" ]; then
+  "$ROOT/bin/bridge/mimir-bridge.sh" --stop >/dev/null 2>&1 && { echo "Mimir bridge stopped."; stopped=1; }
 fi
 
 # Smíðja visualizer (API + UI).

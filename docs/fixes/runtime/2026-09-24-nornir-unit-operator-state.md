@@ -10,7 +10,7 @@
   `BROKK_STATE_OVERRIDE=__YMIR_OPERATOR_STATE__` and
   `BROKK_CONFIG_OVERRIDE=__YMIR_OPERATOR_CONFIG__`, and `fleet-ensure.sh` renders
   those placeholders from `$HOME_ROOT` (the home the operator chose at install —
-  `bin/hoard-lib.sh`), so every future seat points its scheduler at the operator's
+  `bin/vault/hoard-lib.sh`), so every future seat points its scheduler at the operator's
   state and schedule, never the tree's.
 
 ## Verified

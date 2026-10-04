@@ -10,7 +10,7 @@ one fallback pattern, repeated.
   ended their resolution with `${...:-$ROOT/state}`, and `scripts/electron.sh` both
   mkdir'd the tree's state and wrote its pid and log files there
   (`pid_file`/`log_file`). All four now **resolve-or-refuse**: the home resolves via
-  `bin/hoard-lib.sh`, and a failure to resolve is said out loud rather than written
+  `bin/vault/hoard-lib.sh`, and a failure to resolve is said out loud rather than written
   into the tree. A silent write is how drift becomes history.
 - **Three neighbours were correct and were left alone:** `bin/autoboot-lib.sh`,
   `bin/topology.sh` and `bin/fleet-ensure.sh` resolve `$YMIR_HOME/state` through

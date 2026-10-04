@@ -98,7 +98,7 @@ DEFAULT_BOUNDS=$(
   # shellcheck disable=SC2030 # This source intentionally initializes subshell-only defaults.
   FM_REMOTE_JOB_STATE_ROOT="$DEFAULT_STATE"
   export FM_REMOTE_JOB_STATE_ROOT
-  # shellcheck source=bin/fm-remote-job-lib.sh
+  # shellcheck source=bin/backend/fm-remote-job-lib.sh
   . "$ROOT/bin/fm-remote-job-lib.sh"
   fm_remote_job_stage "$ACCOUNT_HOME" "$REMOTE_ROOT" "$REMOTE_HOME" fm-probe-job.sh </dev/null >/dev/null
   printf '%s %s\n' \
@@ -118,7 +118,7 @@ export FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux
 export FM_REMOTE_JOB_QUEUE_TIMEOUT=5
 # shellcheck disable=SC2031 # The sourced defaults above were confined to DEFAULT_BOUNDS.
 export FM_REMOTE_JOB_TIMEOUT=5
-# shellcheck source=bin/fm-remote-job-lib.sh
+# shellcheck source=bin/backend/fm-remote-job-lib.sh
 . "$ROOT/bin/fm-remote-job-lib.sh"
 
 LOCAL_BIN_PARENT="$ACCOUNT_HOME/.local"

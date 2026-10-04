@@ -13,7 +13,7 @@ Plan 58, Part 1: *Dispatch — role → figure → model → seat: Python + YAML
 - `src/ymir_runtime/__init__.py`
 - `src/pyproject.toml`
 - `src/ymir_runtime/tests/test_dispatch.py`
-- `bin/ymir-engine.sh`
+- `bin/engine/ymir-engine.sh`
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`
 ### What
 **The decision table, read as data** (`src/ymir_runtime/dispatch/`):
@@ -70,7 +70,7 @@ binder (`bin/agents-config.sh apply`), not a second copy here.
 - **Unit tests beside the module:** `python3 -m unittest` — 158 tests OK (34 new in
   `src/ymir_runtime/tests/test_dispatch.py`); system python3 (no jsonschema) skips
   the validator-gated rows cleanly (31 skips).
-- `bash -n bin/ymir-engine.sh` clean.
+- `bash -n bin/engine/ymir-engine.sh` clean.
 - No new dependency: the layer reads YAML/JSON through the declared config layer.
 
 **Correction (2026-09-27, Forseti's #229 review — appended, the original stands).**

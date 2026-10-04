@@ -1,6 +1,6 @@
 """Where the engine's roots live — the ONE Python reader of the home law.
 
-`bin/hoard-lib.sh` owns this contract in bash; this module is its Python twin
+`bin/vault/hoard-lib.sh` owns this contract in bash; this module is its Python twin
 and resolves the same answer: **env → the machine's recorded choice → the one
 documented default** (Rule 07). No path is hardcoded twice, and the engine never
 writes inside the code tree.
@@ -65,7 +65,7 @@ def ymir_home(env: Mapping[str, str]) -> Path:
 def repo_root(env: Mapping[str, str], *, module_file: str = __file__) -> Path:
     """The CODE tree — where `src/` and the sibling `bin/` doors live.
 
-    `YMIR_ENGINE_ROOT` is set by `bin/ymir-engine.sh`, so the engine always knows
+    `YMIR_ENGINE_ROOT` is set by `bin/engine/ymir-engine.sh`, so the engine always knows
     the tree it was launched from. `BROKK_ROOT_OVERRIDE`/`BROKK_HOME` are the
     fallbacks for a direct `python3 -m ymir_runtime` call. This is deliberately
     NOT the same notion as the worktree root: a caller may point `BROKK_HOME` at

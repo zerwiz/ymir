@@ -15,7 +15,7 @@ home cannot be trusted about any home.
 
 ### What
 The home now comes from `ymir_home_root` (env → the recorded choice → the one default
-in `bin/hoard-lib.sh`), sourced from `bin/hoard-lib.sh` beside the script, with the old
+in `bin/vault/hoard-lib.sh`), sourced from `bin/vault/hoard-lib.sh` beside the script, with the old
 literal kept only as a last-resort fallback when the resolver is absent.
 
 **What it revealed once fixed:** with the right home, the hoard surface fails on its

@@ -1653,7 +1653,7 @@ test_secondmate_teardown_refuses_process_events_without_sweep_script() {
       "$ROOT/bin/fm-teardown.sh" domain --force >/dev/null 2>"$err"; then
     fail "force teardown removed process-event state without a sweep-capable child script"
   fi
-  grep -F 'no sweep-capable bin/fm-procevent.sh' "$err" >/dev/null || fail "missing sweep capability refusal was not explained"
+  grep -F 'no sweep-capable bin/backend/fm-procevent.sh' "$err" >/dev/null || fail "missing sweep capability refusal was not explained"
   [ -d "$subhome" ] || fail "missing sweep capability refusal removed the home"
   [ -e "$home/state/domain.meta" ] || fail "missing sweep capability refusal removed parent evidence"
   grep -F -- '- domain ' "$home/data/secondmates.md" >/dev/null || fail "missing sweep capability refusal removed the route"

@@ -3,7 +3,7 @@
 # library (plan 58, Phase 5: one name, one behaviour).
 #
 # This file defines no behaviour of its own. It maps the upstream dialect onto
-# `bin/brokk-wake-lib.sh`, sources it, and re-exports the upstream verb names as
+# `bin/time/brokk-wake-lib.sh`, sources it, and re-exports the upstream verb names as
 # one-line aliases, so the vendored callers in this folder keep resolving while
 # the implementation lives in exactly one place. A body added here would be the
 # second implementation this file exists to remove.
@@ -51,8 +51,8 @@ if [ -z "${FM_ROOT_OVERRIDE+x}" ] && [ -z "${FM_ROOT+x}" ] \
   BROKK_STATE_OVERRIDE=""
 fi
 
-# shellcheck source=bin/brokk-wake-lib.sh
-. "$_ymir_repo/bin/brokk-wake-lib.sh"
+# shellcheck source=bin/time/brokk-wake-lib.sh
+. "$_ymir_repo/bin/time/brokk-wake-lib.sh"
 unset _ymir_backend_dir _ymir_repo
 
 # The upstream callers that used the older verb names were repointed onto the

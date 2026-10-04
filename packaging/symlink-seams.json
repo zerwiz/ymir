@@ -5,21 +5,21 @@
       "path": ".claude/skills",
       "kind": "symlink",
       "target": "../.agents/skills",
-      "seated_by": "bin/valknut-load.sh --all",
+      "seated_by": "bin/seat/valknut-load.sh --all",
       "why": "Rule 02: the harness skill dirs are symlinks to the canonical tree. A machine seats them at install; the tarball must not carry a copy that could drift from the canonical one."
     },
     {
       "path": ".codex/skills",
       "kind": "symlink",
       "target": "../.agents/skills",
-      "seated_by": "bin/valknut-load.sh --all",
+      "seated_by": "bin/seat/valknut-load.sh --all",
       "why": "as .claude/skills"
     },
     {
       "path": ".cursor/skills",
       "kind": "symlink",
       "target": "../.agents/skills",
-      "seated_by": "bin/valknut-load.sh --all",
+      "seated_by": "bin/seat/valknut-load.sh --all",
       "why": "as .claude/skills"
     },
     {
@@ -33,7 +33,7 @@
       "path": ".agents/skills/tyr-check/assets",
       "kind": "symlink",
       "target": "../galdr-ymirsystem/assets",
-      "seated_by": "bin/valknut-load.sh --all",
+      "seated_by": "bin/seat/valknut-load.sh --all",
       "why": "The judge's asset mirror is one canonical tree seen twice (the sync ward proves they agree). A shipped copy would be a second copy, which is the exact drift the ward exists to prevent."
     }
   ]

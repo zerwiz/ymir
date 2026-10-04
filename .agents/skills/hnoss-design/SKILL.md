@@ -79,7 +79,7 @@ GSAP → deterministic MP4).
 ```sh
 od mcp install opencode        # bind the engine to OpenCode
 od mcp install pi              # and to Pi
-bin/valknut-load.sh --all      # rebind agents/skills after adding this skill
+bin/seat/valknut-load.sh --all      # rebind agents/skills after adding this skill
 ```
 
 **This seat (heimdall, 2026-09-24):** the daemon is a Docker container on

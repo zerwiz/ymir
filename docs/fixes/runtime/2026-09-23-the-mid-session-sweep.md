@@ -1,7 +1,7 @@
 ## runtime · unversioned · 2026-09-23 — the mid-session sweep: a filed report no longer waits for the next session
 
 ### Why
-The handoff failsafe (`bin/eindri-handoff.sh`) ran in exactly one place: the
+The handoff failsafe (`bin/agents/eindri-handoff.sh`) ran in exactly one place: the
 **session start** digest. So a report filed *while a session was running* sat
 undelivered until the **next** session — a worker finished and Brokk was never
 told. That is the same failure as the original one, one layer in: the sweep

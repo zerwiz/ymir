@@ -43,7 +43,7 @@ husks of the vault, and the vault.
 | Ward | How it holds |
 |---|---|
 | **Nothing moves without a word** | `scan` writes no file but its report; `apply` reads the PLAN for what to move, never the filesystem. There is no flag that skips the plan. |
-| **The repo stays clean** | every destination must resolve inside the home, read through the one resolver (`bin/hoard-lib.sh`) — never a literal. A plan line aimed at the code tree is refused by name, with the reason. |
+| **The repo stays clean** | every destination must resolve inside the home, read through the one resolver (`bin/vault/hoard-lib.sh`) — never a literal. A plan line aimed at the code tree is refused by name, with the reason. |
 | **All or nothing** | every line of a plan is pre-flighted before any move; one bad line refuses the WHOLE plan. A half-applied plan is worse than none. |
 | **Never delete** | a symlink, an archive and a credential are refused even when a plan names them; a duplicate is reported as a duplicate, never resolved by removing one; a line that would overwrite is refused. |
 | **A machine never files into the ledger** | ledger destinations are emitted as `PROPOSE`, and `apply` skips them. Only a `MOVE` line the Allfather wrote moves. |

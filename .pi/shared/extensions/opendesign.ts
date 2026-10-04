@@ -29,7 +29,7 @@ function resolveRoot(): string {
   }
   throw new Error(
     "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
-    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout.",
+    "Run `bin/seat/valknut-load.sh --all --global` from your Ymir checkout.",
   );
 }
 

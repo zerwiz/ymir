@@ -8,11 +8,11 @@ The full runtime spec is `.agents/skills/galdr-ymirsystem/assets/brokk-distro-ru
 ```
 pi_boot[6]{figure,mechanism,file}:
   "Hamr","harness resolution (Pi default profile)","bin/hamr-harness.sh"
-  "Einherjar","dispatch Eindri workers from an Erindi brief","bin/einherjar-spawn.sh"
+  "Einherjar","dispatch Eindri workers from an Erindi brief","bin/agents/einherjar-spawn.sh"
   "Runtime backend","herdr/tmux pane supervision (Þjazi protocol 14+)","runtime backend"
   "Supervision","Sýn/Gná watcher + Pi supervision branch under Valhalla","bin/syn-watch-arm.sh, .pi/extensions/gna-pi-watch.ts"
-  "Worktrees","Yggdrasil (`.yggdrasil/<id>/`) isolation","bin/einherjar-spawn.sh"
-  "Huginn observer","read-only (W0012) until Ratatoskr two-way","bin/nornir-job-observer.sh"
+  "Worktrees","Yggdrasil (`.yggdrasil/<id>/`) isolation","bin/agents/einherjar-spawn.sh"
+  "Huginn observer","read-only (W0012) until Ratatoskr two-way","bin/time/nornir-job-observer.sh"
 ```
 
 ## PI CLI requirements
@@ -31,6 +31,6 @@ herdr-profile.toml, einherjar-spawn.schema.json, supervision-tree.yml).
 
 ## Seating
 
-Run `bin/saga-session-start.sh` exactly once at session start; if the harness
+Run `bin/time/saga-session-start.sh` exactly once at session start; if the harness
 injected the Sága digest, do not run it again. Start the Nornir jobs if the digest
 reports them stopped.

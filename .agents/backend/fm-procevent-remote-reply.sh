@@ -57,10 +57,10 @@
 #   - control-byte normalization, so content-bearing bytes from another machine
 #     cannot make the parent's status file unsafe to read
 #   - the caught-up watermark this channel publishes for
-#     bin/fm-pending-reply-lib.sh, because a report that exists remotely but has
+#     bin/backend/fm-pending-reply-lib.sh, because a report that exists remotely but has
 #     not been mirrored yet must not be mistaken for a report the mate never
 #     wrote (see WINDOW_CLOSED_EMPTY below)
-# Line framing and size bounding belong to bin/fm-remote-delta-read.sh, which
+# Line framing and size bounding belong to bin/backend/fm-remote-delta-read.sh, which
 # delivers only whole lines and breaks continuity on an over-long one.
 set -u
 
@@ -79,11 +79,11 @@ MAX_DOC_BYTES=${FM_REMOTE_REPLY_MAX_DOC_BYTES:-262144}
 SSH_UNAVAILABLE=255
 DOCUMENT_LOCAL_FAILURE=2
 
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
-# shellcheck source=bin/fm-pending-reply-lib.sh
+# shellcheck source=bin/backend/fm-pending-reply-lib.sh
 . "$SCRIPT_DIR/fm-pending-reply-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit 1; }
@@ -244,7 +244,7 @@ cmd_arm() {
 # with the remote log matching the committed cursor exactly (any pending bytes
 # would have returned a delta at once), so the parent had read that log through
 # its end at window START. The window start, not its close, is therefore the
-# honest watermark, and bin/fm-pending-reply-lib.sh consumes it so a missing
+# honest watermark, and bin/backend/fm-pending-reply-lib.sh consumes it so a missing
 # correlated report is judged only against a channel known to have caught up.
 WINDOW_CLOSED_EMPTY=75
 

@@ -2,7 +2,7 @@
 # Behavior tests for both native session-open tiers: the nudge wrapper that
 # only asks the agent to take the helm, and the run wrapper that takes it.
 #
-# The run-wrapper cases drive the REAL bin/fm-session-start.sh against a
+# The run-wrapper cases drive the REAL bin/backend/fm-session-start.sh against a
 # throwaway home, so they prove routing by the digest that actually appears,
 # not by inspecting the wrapper's source. docs/sessionstart-nudge.md owns the
 # tier assignment and the source table these pin.
@@ -33,7 +33,7 @@ NUDGE="$ROOT/bin/fm-sessionstart-nudge.sh"
 RUN="$ROOT/bin/fm-sessionstart-run.sh"
 # shellcheck source=/dev/null
 . "$ROOT/bin/fm-operational-input.sh"
-NUDGE_TEXT="Run \`bin/fm-session-start.sh\` now, exactly once, before executing any other instructions."
+NUDGE_TEXT="Run \`bin/backend/fm-session-start.sh\` now, exactly once, before executing any other instructions."
 fm_operational_input_encode session-start "$NUDGE_TEXT" NUDGE_LINE \
   || fail "could not construct expected session-start nudge"
 fm_git_identity fmtest fmtest@example.invalid
@@ -603,7 +603,7 @@ const proven = begin("new", "session-proven");
 await waitFor(() => existsSync(`${state}/completed-2`), "proven generation never completed");
 const provenResult = await providerCall(proven, "proven prompt");
 assert(provenResult?.message?.content.includes("GENERATION_DIGEST_2"), "proven path lost startup context");
-assert(!provenResult.message.content.includes("Run `bin/fm-session-start.sh`"), "proven path used manual fallback");
+assert(!provenResult.message.content.includes("Run `bin/backend/fm-session-start.sh`"), "proven path used manual fallback");
 const provenSupervisor = supervisorFor(2);
 assert(alive(provenSupervisor), "completed generation lost its stable supervisor owner");
 const originalKill = process.kill;
@@ -654,14 +654,14 @@ plan(6, "empty");
 const empty = begin("new", "session-empty");
 const emptyResult = await providerCall(empty, "empty");
 assert(existsSync(`${state}/completed-6`), "empty attempt had not settled before fallback delivery");
-assert(emptyResult?.message?.content.includes("Run `bin/fm-session-start.sh` now, exactly once, before executing any other instructions."),
+assert(emptyResult?.message?.content.includes("Run `bin/backend/fm-session-start.sh` now, exactly once, before executing any other instructions."),
   "empty output lost the exact manual fallback");
 
 renameSync(runner, `${runner}.missing`);
 const spawnError = begin("new", "session-spawn-error");
 const spawnErrorResult = await providerCall(spawnError, "spawn error");
 renameSync(`${runner}.missing`, runner);
-assert(spawnErrorResult?.message?.content.includes("Run `bin/fm-session-start.sh` now, exactly once"),
+assert(spawnErrorResult?.message?.content.includes("Run `bin/backend/fm-session-start.sh` now, exactly once"),
   "spawn error lost the manual fallback");
 
 plan(7, "ineligible");
@@ -672,19 +672,19 @@ assert((await providerCall(ineligible, "ineligible")) === undefined,
 plan(8, "error");
 const failed = begin("new", "session-failed");
 const failedResult = await providerCall(failed, "failed");
-assert(failedResult?.message?.content.includes("Run `bin/fm-session-start.sh` now, exactly once"),
+assert(failedResult?.message?.content.includes("Run `bin/backend/fm-session-start.sh` now, exactly once"),
   "failed eligible attempt lost the manual fallback");
 
 plan(9, "error");
 const failedResume = begin("resume", "session-failed-resume");
 const failedResumeResult = await providerCall(failedResume, "failed resume");
-assert(failedResumeResult?.message?.content.includes("Run `bin/fm-session-start.sh` now, exactly once"),
+assert(failedResumeResult?.message?.content.includes("Run `bin/backend/fm-session-start.sh` now, exactly once"),
   "failed eligible resume lost the manual fallback");
 
 plan(10, "error");
 const failedFork = begin("fork", "session-failed-fork");
 const failedForkResult = await providerCall(failedFork, "failed fork");
-assert(failedForkResult?.message?.content.includes("Run `bin/fm-session-start.sh` now, exactly once"),
+assert(failedForkResult?.message?.content.includes("Run `bin/backend/fm-session-start.sh` now, exactly once"),
   "failed eligible fork lost the manual fallback");
 
 plan(11, "empty");
@@ -708,7 +708,7 @@ assert(!providerCalls.some((call) => call.prompt === "timeout"), "timeout provid
 release(13);
 const timedResult = await timedCall;
 assert(timedResult?.message?.content.includes("STARTUP TRUNCATED - stage=bootstrap"), "timeout banner was lost");
-assert(!timedResult.message.content.includes("Run `bin/fm-session-start.sh`"), "bounded timeout incorrectly used manual fallback");
+assert(!timedResult.message.content.includes("Run `bin/backend/fm-session-start.sh`"), "bounded timeout incorrectly used manual fallback");
 
 plan(14, "truncate");
 const truncated = begin("new", "session-truncated");

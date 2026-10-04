@@ -12,7 +12,7 @@
 #       (clear/compact), not only on a cold startup, and
 #   (c) a worker the hook detaches SURVIVES the hook returning. Session start
 #       moved every external-network call into such a worker
-#       (bin/fm-startup-network.sh), so a harness that reaps the hook's process
+#       (bin/backend/fm-startup-network.sh), so a harness that reaps the hook's process
 #       tree would silently stop running the sweeps entirely. Whether it does is
 #       a vendor behavior no portable test can see.
 #
@@ -20,7 +20,7 @@
 # tests/fm-sessionstart-nudge.test.sh pins that routing portably with real
 # processes and no harness. This guard covers only what CI cannot see.
 #
-# It swaps a RECORDER in for bin/fm-sessionstart-run.sh inside a throwaway lab
+# It swaps a RECORDER in for bin/backend/fm-sessionstart-run.sh inside a throwaway lab
 # checkout, so nothing here touches a real home, lock, or fleet. The recorder
 # logs the source the harness supplied and prints a source-stamped token; the
 # model is then asked to quote that token back, which is the only way to prove
@@ -161,7 +161,7 @@ if [ -z "$source" ]; then
 fi
 [ -n "$source" ] || source=none
 printf '%s\n' "$source" >> "$record"
-# Exactly what bin/fm-session-start.sh does after taking the lock.
+# Exactly what bin/backend/fm-session-start.sh does after taking the lock.
 if [ -n "${FM_LIVE_DETACH_MARKER:-}" ]; then
   "$(dirname "$0")/fm-startup-network.sh" start --locked 0 --harvest-pid $$ >/dev/null 2>&1 || true
 fi
@@ -469,7 +469,7 @@ export default function (pi: ExtensionAPI): void {
             type: "toolCall" as const,
             id: `manual-${Date.now()}`,
             name: "bash",
-            arguments: { command: "bin/fm-session-start.sh" },
+            arguments: { command: "bin/backend/fm-session-start.sh" },
           };
           output.content.push(toolCall);
           stream.push({ type: "toolcall_start", contentIndex: 0, partial: output });

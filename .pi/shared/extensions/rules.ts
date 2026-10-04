@@ -101,7 +101,7 @@ export default function rules(pi: ExtensionAPI) {
       const rows: string[] = [];
       const ci = read(join(ROOT, "bin", "ci-verify.sh"));
       const gates = [...ci.matchAll(/^gate\s+(\S+)\s+"([^"]+)"/gm)].map((m) => [m[1], m[2]]);
-      if (!gates.length) return piOut("no gates found in bin/ci-verify.sh — the gate list itself is unreadable.");
+      if (!gates.length) return piOut("no gates found in bin/gates/ci-verify.sh — the gate list itself is unreadable.");
       rows.push(`ci-verify[${gates.length}]{gate,covers}:`);
       for (const [name, what] of gates) rows.push(`  "${name}","${what}"`);
       rows.push("");
@@ -109,7 +109,7 @@ export default function rules(pi: ExtensionAPI) {
       rows.push(`bin/inventory.sh   what every door does, its verdict and its disposition (--check fails when stale)`);
       rows.push(`bin/capabilities.sh the capability register: job -> door -> tech decision (--check fails when stale)`);
       rows.push(`bin/queue.sh       the work queue, DERIVED from register + questions (--check fails when stale)`);
-      rows.push(`bin/verify-seat.sh whether THIS seat is whole; non-zero when a surface is missing`);
+      rows.push(`bin/seat/verify-seat.sh whether THIS seat is whole; non-zero when a surface is missing`);
       rows.push(`bin/home-index-check.sh whether the home's shelves can be navigated`);
       rows.push("");
       rows.push("a gate that exists and runs nowhere is how a capability is silently absent.");

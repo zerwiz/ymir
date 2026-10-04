@@ -44,7 +44,7 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/brokk-wake-lib.sh
+# shellcheck source=bin/time/brokk-wake-lib.sh
 . "$SCRIPT_DIR/brokk-wake-lib.sh"
 
 STORE="$STATE/branch-outcomes.jsonl"

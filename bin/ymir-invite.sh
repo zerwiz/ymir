@@ -15,7 +15,15 @@
 # so there is one definition of what an account and an invite are.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
 # npm install — both shapes, one resolver (bin/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then

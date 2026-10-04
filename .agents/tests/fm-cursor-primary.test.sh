@@ -5,19 +5,19 @@
 #
 # Four layers, all hermetic over temp dirs with real processes and NO cursor
 # installed, so CI enforces them everywhere:
-#   HOST GUARD  - bin/fm-hook-host-lib.sh, and each tracked Claude-shaped hook
+#   HOST GUARD  - bin/backend/fm-hook-host-lib.sh, and each tracked Claude-shaped hook
 #                 entrypoint standing down on a Cursor-delivered payload, which
 #                 is what keeps a Cursor primary from running every covered
 #                 event twice.
-#   PARK        - bin/fm-turnend-guard-cursor.sh, the stop-hook park: its
+#   PARK        - bin/backend/fm-turnend-guard-cursor.sh, the stop-hook park: its
 #                 follow-up sources, its double loop bound, its bounded repair
 #                 nag, and its post-claim supersession contract.
-#   SESSION     - bin/fm-sessionstart-cursor.sh, which injects the digest at
+#   SESSION     - bin/backend/fm-sessionstart-cursor.sh, which injects the digest at
 #                 sessionStart.
 #
 # The park runs as a child of a fake harness (a bash symlink named cursor-agent)
 # whose pid holds the fixture home's session lock, so the real Cursor ancestry
-# path in bin/fm-session-lock-lib.sh is exercised rather than stubbed.
+# path in bin/backend/fm-session-lock-lib.sh is exercised rather than stubbed.
 # tests/fm-cursor-primary-live-e2e.test.sh is the opt-in guard against a real
 # cursor-agent. Neither replaces the other.
 # shellcheck disable=SC2016 # single quotes are deliberate: $FM_HOME expands inside the fake harness child
@@ -238,7 +238,7 @@ SH
 test_pretool_guards_deduplicate_and_render_cursor_deny() {
   local dir payload out status decision
   dir=$(make_primary_dir "$TMP_ROOT/host-pretool")
-  payload='{"tool_name":"Shell","tool_input":{"command":"bin/fm-watch-arm.sh &"},"cursor_version":"2026.08.11-e8db854"}'
+  payload='{"tool_name":"Shell","tool_input":{"command":"bin/backend/fm-watch-arm.sh &"},"cursor_version":"2026.08.11-e8db854"}'
   out=$(printf '%s' "$payload" | bash "$dir/bin/fm-arm-pretool-check.sh" 2>&1); status=$?
   expect_code 0 "$status" "the Claude-settings duplicate must allow under Cursor"
   [ -z "$out" ] || fail "duplicate pretool entry produced output: $out"
@@ -657,7 +657,7 @@ test_tracked_registration_covers_the_primary_events() {
   jq -e '[.hooks.stop[] | select(.loop_limit != null and .loop_limit > 0)] | length == 1' "$reg" >/dev/null 2>&1 \
     || fail "the stop registration needs an explicit positive loop_limit: without it Cursor's default is unlimited"
   jq -e '[.hooks.sessionStart[]] | all(.timeout > 120)' "$reg" >/dev/null 2>&1 \
-    || fail "the session-open timeout must sit above bin/fm-session-start.sh's own 120s budget"
+    || fail "the session-open timeout must sit above bin/backend/fm-session-start.sh's own 120s budget"
   pass "cursor registration: covers every primary event with a bounded stop loop"
 }
 

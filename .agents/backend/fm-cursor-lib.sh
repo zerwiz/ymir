@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Cursor executable resolution and Cursor process identity.
-# Sourced by bin/fm-spawn.sh, bin/fm-harness.sh, bin/fm-busy-lib.sh, and
+# Sourced by bin/backend/fm-spawn.sh, bin/backend/fm-harness.sh, bin/backend/fm-busy-lib.sh, and
 # bin/backends/tmux.sh. This file is sourced by scripts and has no side effects
 # on source.
 #
@@ -35,7 +35,7 @@
 #
 # Cursor's composer shape is deliberately NOT here. Its reverse-video
 # placeholder remnant is taught to the ONE fleet-wide screen classifier in
-# bin/fm-composer-lib.sh, which every backend already delegates to; an
+# bin/backend/fm-composer-lib.sh, which every backend already delegates to; an
 # adapter-local composer normalizer would be the second copy that owner exists
 # to prevent.
 
@@ -146,7 +146,7 @@ fm_cursor_catalog_has_model() {  # <model>
 # Print the stable absolute launcher path for the Cursor executable, or return 1
 # with a diagnostic on stderr.
 #
-# Resolution order, shared by bin/fm-spawn.sh and bin/fm-remote-doctor.sh:
+# Resolution order, shared by bin/backend/fm-spawn.sh and bin/backend/fm-remote-doctor.sh:
 # cursor-agent on PATH, `agent` on PATH, then the ~/.local/bin installs of
 # both. cursor-agent is preferred over the alias at every stage. The
 # ~/.local/bin fallbacks exist because Cursor's user-local install is routinely
@@ -210,8 +210,8 @@ fm_cursor_argv0_is_cursor() {  # <argv0>
 
 # True when the process described by command name $1 and structured argv0 $3 is
 # Cursor. The single owner of Cursor process identity for the ancestry walk
-# (bin/fm-session-lock-lib.sh), harness detection (bin/fm-harness.sh), pane
-# liveness (bin/backends/tmux.sh), and worker-server discovery (bin/fm-spawn.sh).
+# (bin/backend/fm-session-lock-lib.sh), harness detection (bin/backend/fm-harness.sh), pane
+# liveness (bin/backends/tmux.sh), and worker-server discovery (bin/backend/fm-spawn.sh).
 #
 # Accepted: an exact cursor-agent command name; a MainThread or bare
 # interpreter whose structured argv[0] carries Cursor's install path; a legacy

@@ -711,7 +711,7 @@ EOF
 # Every check the main session alone can act on stays on main, even when an
 # unrelated task-local row in the same queue is perfectly branch-eligible. The
 # no-op checks the branch never sees are suppressed at their source instead
-# (bin/fm-procevent-lavish.sh "silent"), so what remains under a `check:`
+# (bin/backend/fm-procevent-lavish.sh "silent"), so what remains under a `check:`
 # trigger is exactly the main-only set, and each named class is driven here
 # through the real dispatcher.
 test_pi_main_only_check_classes_stay_on_main() {
@@ -1472,7 +1472,7 @@ const assertMissingLock = (result, label) => {
   if (!result.details.message.includes("no live session holds the lock")) {
     throw new Error(`${label} missing no-live-session guidance: ${result.details.message}`);
   }
-  if (!result.details.message.includes("bin/fm-session-start.sh") || !result.details.message.includes("re-arm")) {
+  if (!result.details.message.includes("bin/backend/fm-session-start.sh") || !result.details.message.includes("re-arm")) {
     throw new Error(`${label} missing reclaim and re-arm guidance: ${result.details.message}`);
   }
   if (result.details.message.includes("held by another firstmate session")) {

@@ -1,7 +1,7 @@
 ## runtime · unversioned · 2026-09-23 — the UPDATE section in the digest's asset
 
 ### Why
-The change that added an `== UPDATE ==` section to `bin/saga-session-start.sh`
+The change that added an `== UPDATE ==` section to `bin/time/saga-session-start.sh`
 left its governed asset behind, and compliance caught it: *"stale (asset not
 updated): saga-session-start.sh"*.
 

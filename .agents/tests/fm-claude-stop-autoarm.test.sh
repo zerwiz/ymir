@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Behavior tests for the Claude Stop-owned watcher auto-arm
-# (bin/fm-claude-stop-autoarm.sh, docs/watcher-continuity.md).
+# (bin/backend/fm-claude-stop-autoarm.sh, docs/watcher-continuity.md).
 #
 # The hook fires as a Claude asyncRewake Stop hook. These tests run it hermetically
 # as a child of a fake harness (a bash symlink named "claude") whose pid is
@@ -383,8 +383,8 @@ test_actionable_close_rewakes_with_reason() {
   expect_code 2 "$status" "an actionable arm close must exit 2 so Claude rewakes"
   assert_contains "$out" "firstmate watcher wake" "rewake must carry the wake banner"
   assert_contains "$out" "stale: fixture-win actionable" "rewake must carry the arm's reason line"
-  assert_contains "$out" "bin/fm-wake-drain.sh" "rewake must direct the drain-first protocol"
-  assert_contains "$out" "do NOT run bin/fm-watch-arm.sh" "rewake must forbid a duplicate model re-arm"
+  assert_contains "$out" "bin/backend/fm-wake-drain.sh" "rewake must direct the drain-first protocol"
+  assert_contains "$out" "do NOT run bin/backend/fm-watch-arm.sh" "rewake must forbid a duplicate model re-arm"
   [ "$(epoch_outcome "$dir")" = rewake ] || fail "epoch must record outcome=rewake, got: $(epoch_outcome "$dir")"
   [ ! -e "$dir/state/.claude-autoarm.lock" ] || fail "owner lock must be released after the cycle"
   [ -e "$dir/state/arm-ran" ] || fail "hook never foregrounded the arm wrapper"
@@ -430,7 +430,7 @@ test_failed_close_rewakes_with_failure_banner() {
   expect_code 2 "$status" "a typed watcher failure must rewake as an alarm"
   assert_contains "$out" "automatic supervision mechanism is broken" "failure rewake must describe the automatic mechanism failure"
   assert_contains "$out" "watcher: FAILED" "failure rewake must carry the arm's typed failure"
-  assert_not_contains "$out" "bin/fm-watch-arm.sh" "failure rewake must not create a manual arm loop"
+  assert_not_contains "$out" "bin/backend/fm-watch-arm.sh" "failure rewake must not create a manual arm loop"
   [ "$(epoch_outcome "$dir")" = failed ] || fail "epoch must record outcome=failed, got: $(epoch_outcome "$dir")"
   [ "$(wc -l < "$dir/state/arm-ran" | tr -d ' ')" -eq 2 ] || fail "failure must exhaust exactly two bounded arm attempts"
   pass "auto-arm: bounded failure verification emits one automatic-mechanism alarm"

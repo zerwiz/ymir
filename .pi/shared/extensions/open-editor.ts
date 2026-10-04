@@ -333,7 +333,7 @@ async function openInHerdrTab(
 		return;
 	}
 
-	// Record the seat so `bin/herdr-run.sh close-all` can clear it.
+	// Record the seat so `bin/seat/herdr-run.sh close-all` can clear it.
 	try {
 		const root = process.env.BROKK_HOME || process.cwd();
 		const state =

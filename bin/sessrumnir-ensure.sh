@@ -32,7 +32,7 @@ fi
 app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
 # The runtime resolver — one shape-aware answer, never an app-local hardcode (P1).
 if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ]; then
-  for _ec in "$SCRIPT_DIR/electron-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/electron-lib.sh"; do
+  for _ec in "$SCRIPT_DIR/electron-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/desktop/electron-lib.sh"; do
     [ -r "$_ec" ] && { . "$_ec"; YMIR_ELECTRON_LIB_LOADED=1; break; }
   done
   unset _ec

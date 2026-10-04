@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tests/fm-afk-launch.test.sh - the script-owned, backend-aware away-daemon
-# launch (bin/fm-afk-launch.sh) and the away-mode stale-artifact lifecycle fixes
-# (bin/fm-afk-start.sh). Two layers:
+# launch (bin/backend/fm-afk-launch.sh) and the away-mode stale-artifact lifecycle fixes
+# (bin/backend/fm-afk-start.sh). Two layers:
 #
 #   UNIT (always run, no backend): the session-scoped stale-artifact clear on a
 #   fresh entry vs a refresh, and the correct-ordered stop (daemon SIGTERM'd

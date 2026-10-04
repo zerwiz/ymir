@@ -1,14 +1,14 @@
 ## runtime · 2026-09-24 — the spawn road stole the primary's helm
 
 ### Why
-Every worker raised by `bin/einherjar-spawn.sh` **took the helm from the primary**.
+Every worker raised by `bin/agents/einherjar-spawn.sh` **took the helm from the primary**.
 pi's session-start writes `brokk.lock` and `.pi-watch-extension-loaded`; a worker that
 shares the machine state dir overwrites both, so Brokk's watcher loses the lock it lives
 by and dies — reporting only *"cannot restore continuity because this session no longer
 owns the lock"*. Observed **three times in one afternoon**: after each spawn the lock was
 gone, the arm children count fell to 0, and the heartbeat stopped.
 
-`bin/herdr-run.sh:211` and `bin/pi-seat.sh:66` already solved this — they pass
+`bin/seat/herdr-run.sh:211` and `bin/pi-seat.sh:66` already solved this — they pass
 `--env BROKK_MACHINE_STATE_DIR=<seat dir> --env BROKK_STATE_OVERRIDE=<seat dir>` when the
 pane/tab is CREATED, which is why their seats (`~/.local/state/ymir/seats/kvasir`,
 `sindri-arm`, …) each hold their own `brokk.lock`. `einherjar-spawn.sh` launched through a
@@ -26,7 +26,7 @@ herdr workspace create --env BROKK_MACHINE_STATE_DIR=/tmp/envtest-probe ...
 ```
 
 ### What
-- `bin/einherjar-spawn.sh` `launch_herdr()` passes the seat's own machine state on
+- `bin/agents/einherjar-spawn.sh` `launch_herdr()` passes the seat's own machine state on
   workspace create, using the convention the other roads already use —
   `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/seats/<id>`.
 - The same assignment also prefixes the pane command on the tmux backend, where there is no
@@ -42,4 +42,4 @@ herdr workspace create --env BROKK_MACHINE_STATE_DIR=/tmp/envtest-probe ...
   beating.
 
 ### Files
-- `bin/einherjar-spawn.sh`
+- `bin/agents/einherjar-spawn.sh`

@@ -12,7 +12,7 @@
 #     PLAN for what to move, never the filesystem. There is no --force and no --all, and
 #     there is no "put it somewhere sensible".
 #   * The repo stays clean: every destination must resolve inside the home, read through
-#     the ONE resolver (bin/hoard-lib.sh) — never a literal path, never $HOME/Documents.
+#     the ONE resolver (bin/vault/hoard-lib.sh) — never a literal path, never $HOME/Documents.
 #   * Never delete. A symlink, a socket and a binary are REPORTED; a duplicate is reported
 #     as a duplicate; nothing is ever resolved by removing one.
 #   * A machine never files into the plan ledger: a plan-shaped document is PROPOSED there.
@@ -38,7 +38,7 @@
 # `bin/doc-sweep.sh apply --plan plan.txt` moves exactly the MOVE lines in it.
 #
 # Env:
-#   YMIR_HOME / YMIR_HOARD / YMIR_STATE_DIR  the resolver's answers (bin/hoard-lib.sh)
+#   YMIR_HOME / YMIR_HOARD / YMIR_STATE_DIR  the resolver's answers (bin/vault/hoard-lib.sh)
 #   DOC_SWEEP_ROOT      the default root (default: the folder the home sits in)
 #   DOC_SWEEP_DEPTH     how deep a root is walked (default 1)
 #   DOC_SWEEP_CLASSES   a human-curated map, read when present (tab-separated):
@@ -59,7 +59,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   unset _yh _i
 fi
 command -v ymir_home_root >/dev/null 2>&1 || {
-  printf 'doc-sweep: bin/hoard-lib.sh is missing — the home is never guessed\n' >&2; exit 2; }
+  printf 'doc-sweep: bin/vault/hoard-lib.sh is missing — the home is never guessed\n' >&2; exit 2; }
 ymir_home_root YMIR_HOME
 hoard_root HOARD
 hoard_state_dir STATE

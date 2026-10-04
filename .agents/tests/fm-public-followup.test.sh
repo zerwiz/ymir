@@ -672,13 +672,13 @@ test_secondmate_teardown_requires_parent_binding() {
 }
 
 # The three tests below exercise the durable .fm-secondmate-parent record a real
-# bin/fm-home-seed.sh seed now writes next to .fm-secondmate-home (fm-remote-sm-
+# bin/backend/fm-home-seed.sh seed now writes next to .fm-secondmate-home (fm-remote-sm-
 # cleanup-parent-binding-s1 report, section 7). Before this record existed, the
 # marked-child gate above could only ever see the parent through the launch-time
 # FM_PUBLIC_FOLLOWUP_PRIMARY_HOME env var: a restart that dropped that prefix made
 # the guard silently treat an actually-active parent relay as off, which could
 # drop a real public-reply obligation without anyone noticing. Each test drives
-# the real bin/fm-teardown.sh cleanup path against a home real fm-home-seed.sh
+# the real bin/backend/fm-teardown.sh cleanup path against a home real fm-home-seed.sh
 # produced, never a hand-crafted marker.
 
 assert_local_secondmate_parent_record() {

@@ -9,7 +9,7 @@ records sat in `$YMIR_HOME/hodd/data/`.
 
 ### Fix
 - **`.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`** — the row
-  now names the real source: `$YMIR_HOME/hodd/data/` via `bin/hoard-lib.sh`
+  now names the real source: `$YMIR_HOME/hodd/data/` via `bin/vault/hoard-lib.sh`
   (`BROKK_DATA_OVERRIDE` wins), never `$BROKK_HOME/data`.
 
 ### Verification

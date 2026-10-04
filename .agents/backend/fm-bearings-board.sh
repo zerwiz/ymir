@@ -15,7 +15,7 @@
 #            template at the stable board path. Establish or resume the Lavish
 #            session on that board BEFORE binding and arming its answer source,
 #            so a registered poll can never race a session that does not exist.
-#            Bind to the keyed-answer intake (bin/fm-captain-hold.sh) ALWAYS
+#            Bind to the keyed-answer intake (bin/backend/fm-captain-hold.sh) ALWAYS
 #            precedes arm, so the board can never produce an answer that has
 #            nowhere to go (captain-hold-lifecycle's ordering rule, enforced
 #            here rather than left to agent memory). Output starts with

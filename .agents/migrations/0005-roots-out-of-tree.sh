@@ -5,7 +5,7 @@
 # everything the operator owns lives in the home they chose. A packaged install
 # (npm) treats its tree as read-only, and the next upgrade replaces it — so
 # anything of theirs kept in the tree is kept at its peril. Every *writer* was
-# converted to resolve the home through bin/hoard-lib.sh; this carries what is
+# converted to resolve the home through bin/vault/hoard-lib.sh; this carries what is
 # already sitting in the tree to where those writers now look.
 #
 #   what moves            from the tree            to the home
@@ -38,9 +38,9 @@ R="${YMIR_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 # The resolver lives in the tree that ships this migration. When YMIR_ROOT points
 # somewhere else (a sandbox, a test fixture), fall back to the lib beside this
 # script rather than failing to resolve the home at all.
-LIB="$R/bin/hoard-lib.sh"
-[ -r "$LIB" ] || LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/bin/hoard-lib.sh"
-# shellcheck source=bin/hoard-lib.sh
+LIB="$R/bin/vault/hoard-lib.sh"
+[ -r "$LIB" ] || LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/bin/vault/hoard-lib.sh"
+# shellcheck source=bin/vault/hoard-lib.sh
 . "$LIB"
 ymir_home_root H
 hoard_root HOARD

@@ -875,7 +875,7 @@ SH
   printf '%s\n' "$fb"
 }
 
-# fm_backend_herdr_presentation_enabled is the one gate bin/fm-spawn.sh consults
+# fm_backend_herdr_presentation_enabled is the one gate bin/backend/fm-spawn.sh consults
 # before projecting a crewmate or scout, so these cases pin the default-on
 # contract, its explicit opt-out, its explicit opt-in, and the version floor
 # that decides the unconfigured default at that interface.
@@ -3090,7 +3090,7 @@ test_composer_state_pi_separator_idle_is_empty() {
 # does not compose a message - the menu consumes the keys and Enter selects the
 # highlighted default, so the text is discarded and a decision nobody made is
 # recorded (issue #2797). Every "is it safe to type here?" consumer reads this
-# verdict: the away-mode injection guard (bin/fm-supervise-daemon.sh) and
+# verdict: the away-mode injection guard (bin/backend/fm-supervise-daemon.sh) and
 # fm-send's pre-type refusal both proceed ONLY on an affirmative `empty`.
 test_composer_state_pi_parked_prompt_is_not_empty() {
   local dir log resp fb out
@@ -3165,7 +3165,7 @@ test_composer_state_pi_separator_requires_safe_native_identity() {
 # read "unknown" (claude/codex fixtures) or produced a false "empty" from a
 # stale decorative box (the banner-priority fixture) - none of them correctly
 # tracked the live composer, which is exactly what caused
-# bin/fm-supervise-daemon.sh's fm_backend_herdr_send_text_submit to never
+# bin/backend/fm-supervise-daemon.sh's fm_backend_herdr_send_text_submit to never
 # confirm a landed injection, so escalate_flush never cleared
 # state/.subsuper-escalations and the same digest was redelivered every cycle.
 
@@ -3727,7 +3727,7 @@ test_send_text_submit_confirms_despite_codex_idle_tip_composer() {
 }
 
 # Companion regression for the pre-injection empty-box guard itself
-# (bin/fm-supervise-daemon.sh's pane_input_pending): a real Codex idle
+# (bin/backend/fm-supervise-daemon.sh's pane_input_pending): a real Codex idle
 # composer can show faint ghost suggestions after the bare `›` prompt.
 # The guard must ignore that faint suggestion text, otherwise away-mode
 # escalation delivery defers forever even though the human has typed nothing.
@@ -3743,7 +3743,7 @@ test_composer_state_codex_dynamic_idle_tip_reads_empty_when_faint() {
 }
 
 # Regression guard for the PRE-injection empty-box guard itself
-# (bin/fm-supervise-daemon.sh's pane_input_pending, dispatched via
+# (bin/backend/fm-supervise-daemon.sh's pane_input_pending, dispatched via
 # fm_backend_composer_state -> fm_backend_herdr_composer_state): this task
 # changes ONLY submit confirmation, so genuine unsubmitted text in the
 # composer must still read 'pending' and the guard must still refuse to
@@ -3829,7 +3829,7 @@ test_dispatch_routes_herdr_backend() {
 }
 
 test_dispatch_busy_state_unknown_for_tmux() {
-  # shellcheck source=bin/fm-backend.sh
+  # shellcheck source=bin/backend/fm-backend.sh
   . "$ROOT/bin/fm-backend.sh"
   [ "$(fm_backend_busy_state tmux 'sess:win')" = unknown ] \
     || fail "fm_backend_busy_state should report unknown for tmux (no native agent-state primitive; watcher falls back to regex)"
@@ -3838,7 +3838,7 @@ test_dispatch_busy_state_unknown_for_tmux() {
 
 test_dispatch_composer_state_routes_by_backend() {
   # fm_backend_composer_state (the generic per-backend composer/pending-input
-  # classifier the away-mode daemon dispatches through - bin/fm-supervise-daemon.sh's
+  # classifier the away-mode daemon dispatches through - bin/backend/fm-supervise-daemon.sh's
   # pane_input_pending) must route to each backend's OWN named classifier with
   # the target passed through unchanged - every backend has one now, all thin
   # wrappers over the shared fm_composer_classify_screen - and report unknown
@@ -3846,7 +3846,7 @@ test_dispatch_composer_state_routes_by_backend() {
   # Sourced-guards are pre-set so fm_backend_source no-ops and these stubs are
   # never clobbered by the real per-backend files trying (and failing) a live call.
   (
-    # shellcheck source=bin/fm-backend.sh
+    # shellcheck source=bin/backend/fm-backend.sh
     . "$ROOT/bin/fm-backend.sh"
     _FM_BACKEND_TMUX_SOURCED=1
     _FM_BACKEND_HERDR_SOURCED=1
@@ -4420,7 +4420,7 @@ test_wait_transition_clean_timeout_returns_1() {
   pass "fm_backend_herdr_wait_transition: stock macOS Bash clean timeout closes fd 9 and returns 1"
 }
 
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$ROOT/bin/fm-backend.sh"
 
 test_version_check_accepts_current_protocol

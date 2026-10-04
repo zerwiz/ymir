@@ -6,7 +6,7 @@ This is the reference an agent reads to add a harness adapter or rebuild one fro
 
 > **Adding or changing a Pi extension is governed by `RULES/13-pi-extensions.md`** —
 > one home per extension, a directory with an `index.ts` per multi-file extension,
-> and `bin/valknut-load.sh --check` as the gate. **Two load paths means no agent can
+> and `bin/seat/valknut-load.sh --check` as the gate. **Two load paths means no agent can
 > be seated**, and the only symptom herdr can report is a pane that will not sit at
 > a prompt. It is paired with one deep-dive file per harness:
 
@@ -26,21 +26,21 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 
 ## 1. What a harness adapter is
 
-> **MCP scope (well · mesh · Teams · Anchor).** `bin/a2a-mcp.sh install` wires the
+> **MCP scope (well · mesh · Teams · Anchor).** `bin/bridge/a2a-mcp.sh install` wires the
 > `engram` (memory well) and `a2abridge` (A2A mesh) MCP servers into OpenCode's
 > repo `opencode.json` **and** Pi. The **Teams** plane (`wayofteams`) and
 > **Anchor** memory are **remote** MCP servers named by URL: set
 > `WAYOFTEAMS_MCP_URL` / `ANCHOR_MCP_URL` in the private platform env, then run
-> `bin/a2a-mcp.sh install`. OpenCode speaks `type: remote` natively; Pi has no
+> `bin/bridge/a2a-mcp.sh install`. OpenCode speaks `type: remote` natively; Pi has no
 > remote transport, so it reaches them through the `mcp-remote` stdio bridge. The
 > URLs never enter the tracked tree. By default the Pi side writes the **global**
-> `~/.pi/agent/mcp-adapter.json`; `bin/a2a-mcp.sh install --project` writes the repo's
+> `~/.pi/agent/mcp-adapter.json`; `bin/bridge/a2a-mcp.sh install --project` writes the repo's
 > `.pi/mcp-adapter.json` instead, leaving a Pi used elsewhere untouched (launch with
 > `pi --mcp-config .pi/mcp-adapter.json`). Prefer `--project` when integrating Ymir into
-> an existing workflow. `bin/a2a-mcp.sh show` reports what is **actually** wired —
+> an existing workflow. `bin/bridge/a2a-mcp.sh show` reports what is **actually** wired —
 > every key present, not a fixed list.
 >
-> **The MCP doors point at ONE local gateway** (`bin/mcp-gateway.sh`, :8316),
+> **The MCP doors point at ONE local gateway** (`bin/bridge/mcp-gateway.sh`, :8316),
 > raised per body by `bin/fleet-ensure.sh ensure` (the `mcp-gateway` unit). The
 > seat's `mcp-adapter.json` names the gateway for the record MCPs — `well`,
 > `bolthorn`, `skuld` all resolve to `http://127.0.0.1:8316/mcp/<server>` — so a
@@ -52,7 +52,7 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > refreshes the catalogs on reconnect. The well is local-first: the gateway
 > reaches the seat's own well door first. This replaced the old "write the heart
 > IP into every seat" line, which broke the seat's doors the moment the heart
-> moved — and `bin/mcp-config.sh` renders the same gateway door. The door also
+> moved — and `bin/bridge/mcp-config.sh` renders the same gateway door. The door also
 > admits BROWSER readers (CORS — `OPTIONS` → 204 and `access-control-allow-origin`
 > on every answer, engine v1.2.0): the Óðrerir hall's boards read the record from
 > a page, the road the retired skuld server opened. That road is PINNED to the
@@ -64,10 +64,10 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 >
 > **The model rail is resolved the same way** (plan 51 Parts 9a/9c). The rails
 > are a LIVE set — models come from whichever strong box is CONNECTED (heimdall ·
-> whynot · omarchy) — so `bin/mcp-config.sh` carries the resolved rail under the
+> whynot · omarchy) — so `bin/bridge/mcp-config.sh` carries the resolved rail under the
 > seat config's `ymir` block (`host`, `url`, `keyRef`), read from the ONE
 > resolver `bin/rail-resolve.sh` (`src/ymir_runtime/fleet/rail.py`). Harnesses
-> read `mcpServers`; the `ymir` block is advisory metadata. `bin/mcp-gateway.sh
+> read `mcpServers`; the `ymir` block is advisory metadata. `bin/bridge/mcp-gateway.sh
 > rail [resolve|status]` answers the same question over the gateway door, and
 > the rail is NEVER an MCP upstream — the upstream map is handed to the engine
 > verbatim. The served set decides alias conformance too: `bin/model-alias-check.sh`
@@ -99,7 +99,7 @@ A harness will not do that on its own. Each harness exposes a different set of l
   turn end / tool call)           .pi, hooks.json)   Gleipnir, ...)
 ```
 
-Every adapter must satisfy the **four-part adapter contract** (§3). A harness with no adapter is *unverified* and must never be used for a dispatched Eindri (`bin/einherjar-spawn.sh` fails closed).
+Every adapter must satisfy the **four-part adapter contract** (§3). A harness with no adapter is *unverified* and must never be used for a dispatched Eindri (`bin/agents/einherjar-spawn.sh` fails closed).
 
 ---
 
@@ -109,13 +109,13 @@ The tier answers **how the session-start digest reaches model context**.
 
 | Tier | Meaning | Contract |
 |---|---|---|
-| **run-tier** | The harness's session-open adapter can **execute** a command and inject its stdout into model context (or as the session's first context) before the model acts. | Adapter calls `bin/saga-sessionstart-run.sh`; the digest text is delivered natively. Nothing is left to the model's discretion. |
-| **nudge-tier** | The harness can only post a message into the session and **ask** the model to take the helm. The model can defer. | Adapter calls `bin/saga-sessionstart-run.sh` (which emits the digest *or* a one-line "run `bin/saga-session-start.sh` now" instruction) and delivers it as a prompt/follow-up. |
+| **run-tier** | The harness's session-open adapter can **execute** a command and inject its stdout into model context (or as the session's first context) before the model acts. | Adapter calls `bin/time/saga-sessionstart-run.sh`; the digest text is delivered natively. Nothing is left to the model's discretion. |
+| **nudge-tier** | The harness can only post a message into the session and **ask** the model to take the helm. The model can defer. | Adapter calls `bin/time/saga-sessionstart-run.sh` (which emits the digest *or* a one-line "run `bin/time/saga-session-start.sh` now" instruction) and delivers it as a prompt/follow-up. |
 
-Important nuance: **tier is per-event, not per-harness.** All current harnesses are run-tier for the session-open digest *except* the disabled/Grok path. But `bin/saga-sessionstart-run.sh` deliberately emits a **nudge** for context-preserving opens (`resume`, `reload`, `fork`) even on a run-tier harness, because re-running the whole digest is redundant when prior context is restored:
+Important nuance: **tier is per-event, not per-harness.** All current harnesses are run-tier for the session-open digest *except* the disabled/Grok path. But `bin/time/saga-sessionstart-run.sh` deliberately emits a **nudge** for context-preserving opens (`resume`, `reload`, `fork`) even on a run-tier harness, because re-running the whole digest is redundant when prior context is restored:
 
 ```bash
-# bin/saga-sessionstart-run.sh:70-72
+# bin/time/saga-sessionstart-run.sh:70-72
 resume|reload|fork)
   printf 'Run `%s` exactly once now, before executing any other instructions.\n' "bash $SCRIPT_DIR/saga-session-start.sh"
   ;;
@@ -142,11 +142,11 @@ Every production adapter implements the same four responsibilities. The harness-
 
 ### Part 1 — Session-open injection
 
-Bind the harness's "session is opening" event to `bin/saga-sessionstart-run.sh`.
+Bind the harness's "session is opening" event to `bin/time/saga-sessionstart-run.sh`.
 
 ```bash
 # The one command every session-open adapter invokes.
-"$BROKK_ROOT/bin/saga-sessionstart-run.sh" [--source <src>] [--pi-prerequisite]
+"$BROKK_ROOT/bin/time/saga-sessionstart-run.sh" [--source <src>] [--pi-prerequisite]
 ```
 
 - `--source` ∈ `startup|new|clear|compact|resume|reload|fork`; absent → parse a Claude/Codex-shaped JSON hook payload on stdin, default `startup`.
@@ -230,9 +230,9 @@ is never punted to a manual session start; only a real live contender is refused
 
 - **Pi** owns continuity in `gna-pi-watch.ts` (Gná); the model gets a **tool** `gna_watch_arm` and a command `/gna-watch-arm` for the first cycle or a repair, never for ordinary re-arms. Gná's liveness is **zombie-aware**: `kill(pid, 0)` alone passes a zombie and a recycled pid, so the watcher reads `/proc/<pid>/stat` — the state character (Z/X = dead) and the starttime recorded at lock acquire (field 22; a mismatch means the kernel handed the pid to an unrelated process) — answers every ordinary wake: a **vacant** helm is taken (arm script via `gleipnir_lock_acquire`; Gná classifies an empty lock as `missing` so the reclaim takes it in place), while only a verifiably live other owner is refused as read-only. It drops its own lock on real process exit (`releaseLockIfOwned`). Gná's wake delivery is **echo-guarded**: an identical watcher message is sent at most once per drained state — when the durable queue is empty, a repeat is the same news the primary already drained and is not re-delivered, so a long stale window cannot flood the follow-up queue.
 
-> **ONE QUEUE (2026-09-23).** The state dir is the **operator's home**, never the code tree: `$YMIR_STATE_OVERRIDE` → `$YMIR_HOME/state` → the recorded choice (`~/.config/ymir/home`) → `$HOME/Documents/ymirhome`. Every reader and writer must resolve it the SAME way — `bin/hoard-lib.sh` for shell, and the same order of authority inside `gna-pi-watch.ts`. This was once two dirs: the watcher read `$BROKK_HOME/state` (the **tree**) while the Eindri handoff (`bin/eindri-acclaim.sh`) wrote `$YMIR_STATE_DIR` (the **hoard**), so a report filled one `.wake-queue` and the watcher polled another — **the task wrote, the watcher watched, and no wake ever surfaced.** A report may be filed and still be invisible; the queue is only real when both ends agree on where it is.
+> **ONE QUEUE (2026-09-23).** The state dir is the **operator's home**, never the code tree: `$YMIR_STATE_OVERRIDE` → `$YMIR_HOME/state` → the recorded choice (`~/.config/ymir/home`) → `$HOME/Documents/ymirhome`. Every reader and writer must resolve it the SAME way — `bin/vault/hoard-lib.sh` for shell, and the same order of authority inside `gna-pi-watch.ts`. This was once two dirs: the watcher read `$BROKK_HOME/state` (the **tree**) while the Eindri handoff (`bin/agents/eindri-acclaim.sh`) wrote `$YMIR_STATE_DIR` (the **hoard**), so a report filled one `.wake-queue` and the watcher polled another — **the task wrote, the watcher watched, and no wake ever surfaced.** A report may be filed and still be invisible; the queue is only real when both ends agree on where it is.
 
-> **THE POINTER IS MACHINE-LOCAL (2026-09-23).** `state/.lock-path` records the resolved session-lock path — a path that is *machine-local and per-user*, yet the pointer itself lives in the **synced** home. So a box reinstalled under a new username (e.g. `heimdallomarchy` → `heimdall`) inherits a pointer to the OLD home; both harness readers (`gna-pi-watch.ts`, `syn-watch-arm.js`) then tried to `mkdir` a foreign home and failed with `EACCES`, stranding supervision. The writer and the readers now resolve the SAME state dir (`gleipnir_state_dir` uses `bin/hoard-lib.sh` for the primary, `<home>/state` for an Eindri-home), and both readers **validate** the pointer: a path outside the current user's home is stale, is ignored, and is healed to the path this machine derives (machine-global for the primary, per-home for a seat). The `0006-lock-path-home-drift` migration heals an existing home; Eir's `hoard` surface diagnoses and mends the drift.
+> **THE POINTER IS MACHINE-LOCAL (2026-09-23).** `state/.lock-path` records the resolved session-lock path — a path that is *machine-local and per-user*, yet the pointer itself lives in the **synced** home. So a box reinstalled under a new username (e.g. `heimdallomarchy` → `heimdall`) inherits a pointer to the OLD home; both harness readers (`gna-pi-watch.ts`, `syn-watch-arm.js`) then tried to `mkdir` a foreign home and failed with `EACCES`, stranding supervision. The writer and the readers now resolve the SAME state dir (`gleipnir_state_dir` uses `bin/vault/hoard-lib.sh` for the primary, `<home>/state` for an Eindri-home), and both readers **validate** the pointer: a path outside the current user's home is stale, is ignored, and is healed to the path this machine derives (machine-global for the primary, per-home for a seat). The `0006-lock-path-home-drift` migration heals an existing home; Eir's `hoard` surface diagnoses and mends the drift.
 - **OpenCode** owns continuity in `syn-watch-arm.js` (Sýn); the coordinator is published under `globalThis.__brokkOpenCodeWatchArm` so the turn-end guard can consult it first.
 - **Claude Code** uses the `Stop` hook with `"asyncRewake": true` and a long timeout to keep the arm running out of band.
 - **Codex / Cursor** run `syn-turnend-guard.sh` at Stop; they do **not** own a long-lived arm (no auto re-arm).
@@ -242,22 +242,22 @@ is never punted to a manual session start; only a real live contender is refused
 Plan 58 Phase 3. A worker does not depend on a live poller to be heard: **it writes
 its own wake before it exits**, and the arm only notifies.
 
-**One command is the terminal act.** `bin/eindri-acclaim.sh` is the action half of
+**One command is the terminal act.** `bin/agents/eindri-acclaim.sh` is the action half of
 the wake bridge *and* the worker's own finish line. The spawn brief
-(`bin/erindi-brief.sh`) teaches the smith to end with:
+(`bin/agents/erindi-brief.sh`) teaches the smith to end with:
 
 ```bash
-bin/eindri-acclaim.sh <id> --terminal done --line "<what shipped and where: PR, path, proof>"
+bin/agents/eindri-acclaim.sh <id> --terminal done --line "<what shipped and where: PR, path, proof>"
 ```
 
 That single act appends the `state/<id>.status` line, files the report shelf
 (`state/eindri-reports/<id>.md`; a `needs-decision` files
 `state/eindri-questions/<id>.md`), appends the **durable wake** to
 `state/.wake-queue`, and sounds the desktop note. No poller, no sweep, and no arm
-need be alive: a finished errand wakes Brokk by itself, and `bin/saga-wake-drain.sh`
+need be alive: a finished errand wakes Brokk by itself, and `bin/time/saga-wake-drain.sh`
 sees it in the very next digest.
 
-**One ledger, exactly one wake.** `bin/eindri-wake-lib.sh` is the shared delivery
+**One ledger, exactly one wake.** `bin/agents/eindri-wake-lib.sh` is the shared delivery
 ledger: `state/eindri-delivered/<id>.<kind>`. The poller's `eindri-acclaim.sh` and
 the failsafe sweep `eindri-handoff.sh` both read and write it, so whichever road
 arrives first writes the wake and the other stands down — one finished errand is
@@ -292,12 +292,12 @@ additional.
 
 A PR is not done when it is pushed; it is done when it is AUDITED. The push path's
 terminal act opens the second half: when a ship errand reaches `done`,
-`bin/eindri-acclaim.sh` calls `bin/eindri-review-spawn.sh <id>`, which seats
+`bin/agents/eindri-acclaim.sh` calls `bin/agents/eindri-review-spawn.sh <id>`, which seats
 **Forseti** as a dedicated scout-kind `<id>-review` errand over the PR the worker
 opened.
 
 ```
-bin/einherjar-spawn.sh <id>-review <project> --scout --backend herdr \
+bin/agents/einherjar-spawn.sh <id>-review <project> --scout --backend herdr \
     --harness pi --model opencode-go/deepseek-v4.1-flash --effort high
 ```
 
@@ -342,7 +342,7 @@ The guard is **inert until the first successful arm** writes `state/.supervision
 It goes stale when `now - state/.watch.heartbeat > BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60).
 
 > **`$STATE` is the operator's hoard state, never the code tree (2026-09-23).**
-> `bin/syn-turnend-guard.sh` resolves `$STATE` through `bin/hoard-lib.sh`, exactly
+> `bin/syn-turnend-guard.sh` resolves `$STATE` through `bin/vault/hoard-lib.sh`, exactly
 > as the watcher and the wake drain do. It once defaulted to `$BROKK_HOME/state`
 > (the **tree**), so it read a stale code-tree heartbeat and fired *"turn would
 > end blind"* every turn while the live watcher beat into the hoard seconds
@@ -376,7 +376,7 @@ governed[6]{path,load_first}:
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
   "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
-  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
+  "bin/seat/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
   "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
 
@@ -482,20 +482,20 @@ The repo ships only the shapes: `registry/projects.yaml.example`, `registry/work
 
 ## 6. Fail-closed dispatch rules
 
-Dispatch is owned by `bin/einherjar-spawn.sh` (Norse: **Einherjar**). It **never silently falls back** to an unverified harness.
+Dispatch is owned by `bin/agents/einherjar-spawn.sh` (Norse: **Einherjar**). It **never silently falls back** to an unverified harness.
 
 | Rule | Where | Behavior |
 |---|---|---|
-| Verified adapter set | `bin/einherjar-spawn.sh:53` | `VERIFIED_HARNESSES='opencode pi pi-signed'` |
-| Unverified harness | `bin/einherjar-spawn.sh:224-232` | `error: harness '<h>' is not verified for direct launch` → exit 1 |
-| Missing executable | `bin/einherjar-spawn.sh:233-236` | `error: harness '<h>' executable not found on PATH` → exit 1 |
+| Verified adapter set | `bin/agents/einherjar-spawn.sh:53` | `VERIFIED_HARNESSES='opencode pi pi-signed'` |
+| Unverified harness | `bin/agents/einherjar-spawn.sh:224-232` | `error: harness '<h>' is not verified for direct launch` → exit 1 |
+| Missing executable | `bin/agents/einherjar-spawn.sh:233-236` | `error: harness '<h>' executable not found on PATH` → exit 1 |
 | Missing auth/dependency | adapter scripts | report a plain reason; never a silent fallback |
-| Raw launch escape hatch | `bin/einherjar-spawn.sh:207-211` | a `--harness` value containing whitespace is treated as a raw command, warns loudly, and is *not* on the verified set |
-| Active dispatch profiles | `bin/einherjar-spawn.sh:212-214` | if `config/eindri-dispatch.json` exists, a fresh spawn **must** pass an explicit `--harness` resolved from its rules |
-| Brief/flag drift | `bin/einherjar-spawn.sh:327-335` | refuses a ship launch whose brief's `Delivery contract: mode=<m>` disagrees with `--mode` |
-| Isolation dependency | `bin/einherjar-spawn.sh:340-359` | `--isolation on` requires docker + `utgard-runner:latest`, else exit 1; `auto` reports the decision |
+| Raw launch escape hatch | `bin/agents/einherjar-spawn.sh:207-211` | a `--harness` value containing whitespace is treated as a raw command, warns loudly, and is *not* on the verified set |
+| Active dispatch profiles | `bin/agents/einherjar-spawn.sh:212-214` | if `config/eindri-dispatch.json` exists, a fresh spawn **must** pass an explicit `--harness` resolved from its rules |
+| Brief/flag drift | `bin/agents/einherjar-spawn.sh:327-335` | refuses a ship launch whose brief's `Delivery contract: mode=<m>` disagrees with `--mode` |
+| Isolation dependency | `bin/agents/einherjar-spawn.sh:340-359` | `--isolation on` requires docker + `utgard-runner:latest`, else exit 1; `auto` reports the decision |
 
-**Adding a harness to the verified set is a deliberate act:** implement all four contract parts, smoke-test them, then add the adapter name to `VERIFIED_HARNESSES` in `bin/einherjar-spawn.sh` (see §8).
+**Adding a harness to the verified set is a deliberate act:** implement all four contract parts, smoke-test them, then add the adapter name to `VERIFIED_HARNESSES` in `bin/agents/einherjar-spawn.sh` (see §8).
 
 ---
 
@@ -537,7 +537,7 @@ Pick the closest existing adapter in the table (§4) and mirror its structure. T
 
 - **Resolve the root** the same way: prefer `worktree` → `git -C <dir> rev-parse --show-toplevel` → `realpathSync(dir)`.
 - **Call only `bin/` owner scripts.** Never re-implement digest, arm, guard, or classification logic.
-- **Session-open:** call `bin/saga-sessionstart-run.sh`. Never `bin/saga-session-start.sh` directly from an adapter.
+- **Session-open:** call `bin/time/saga-sessionstart-run.sh`. Never `bin/time/saga-session-start.sh` directly from an adapter.
 - **Watch arm:** require a live lock. If the arm reports `read-only`, stop; do not retry.
 - **Turn-end:** re-prompt on exit 2. On any other exit, do nothing.
 - **Seatbelts:** relay exit 2 as a block.
@@ -553,7 +553,7 @@ Run the commands in §9 and confirm the four contract parts. Do not mark the ada
 
 ### Stage 5 — Mark verified + document
 
-1. Add the harness name to `VERIFIED_HARNESSES` in `bin/einherjar-spawn.sh:53`.
+1. Add the harness name to `VERIFIED_HARNESSES` in `bin/agents/einherjar-spawn.sh:53`.
 2. Add a row to the matrix in §4 of this file and a deep-dive file next to it.
 3. If you want it as the default for dispatched Eindri, set `config/eindri-harness` (one line: `<harness> [<model>] [<effort>]`).
 4. Record the verified version and any marker quirks in this file's Gotchas and in `data/learnings.md`.
@@ -565,13 +565,13 @@ Run the commands in §9 and confirm the four contract parts. Do not mark the ada
 The verified set is the fail-closed gate. Edit exactly this line and nothing else:
 
 ```bash
-# bin/einherjar-spawn.sh:53
+# bin/agents/einherjar-spawn.sh:53
 VERIFIED_HARNESSES='opencode pi pi-signed'
 ```
 
 Notes:
 
-- `pi-signed` is a Pi variant (`BROKK_PI_HARNESS=pi-signed` / `FM_PI_HARNESS`); it maps to `pi` in `einherjar-spawn.sh`'s inline fallback but is a distinct token for the launch command (`bin/einherjar-spawn.sh:419-430`).
+- `pi-signed` is a Pi variant (`BROKK_PI_HARNESS=pi-signed` / `FM_PI_HARNESS`); it maps to `pi` in `einherjar-spawn.sh`'s inline fallback but is a distinct token for the launch command (`bin/agents/einherjar-spawn.sh:419-430`).
 - Adding a raw command is **not** a substitute: `--harness "mycmd --flag"` bypasses verification and warns.
 
 ---
@@ -593,11 +593,11 @@ python3 -m json.tool .cursor/hooks.json      >/dev/null && echo "cursor JSON ok"
 
 ```bash
 # Run as the harness would; it must print the Sága digest and exit 0.
-bin/saga-sessionstart-run.sh --source startup | head -n 20
+bin/time/saga-sessionstart-run.sh --source startup | head -n 20
 echo "exit=$?"
 
 # Re-emit path after a completed startup:
-test -f state/.session-start-complete && bin/saga-sessionstart-run.sh --source compact | head -n 3
+test -f state/.session-start-complete && bin/time/saga-sessionstart-run.sh --source compact | head -n 3
 ```
 
 ### Watch arm arms, heartbeat, and exits on a wake
@@ -635,7 +635,7 @@ bin/syn-cd-pretool-check.sh  --command 'ls -la';                          echo "
 ### Session lock ownership
 
 ```bash
-bin/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-ONLY
+bin/time/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-ONLY
 ```
 
 ---
@@ -644,12 +644,12 @@ bin/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-ONLY
 
 - **The digest helper must never hold the lock.** Bind `BROKK_SESSION_PID` to the live harness process or a second session will read the lock as stale and mutate shared state.
 - **`saga-session-start.sh` acquires the lock but never releases it.** Release is the harness's business (process exit). A refused lock means **read-only**: no spawn, steer, merge, drain, or repair.
-- **Don't call `bin/saga-session-start.sh` directly from an adapter.** Use `bin/saga-sessionstart-run.sh`; only the wrapper knows the source-routing rules (`startup` runs, `clear`/`compact` re-emits, `resume`/`reload`/`fork` nudges).
+- **Don't call `bin/time/saga-session-start.sh` directly from an adapter.** Use `bin/time/saga-sessionstart-run.sh`; only the wrapper knows the source-routing rules (`startup` runs, `clear`/`compact` re-emits, `resume`/`reload`/`fork` nudges).
 - **The turn-end guard is inert until `.supervision-armed` exists.** A guard test that never arms proves nothing. Arm first, then force a stale heartbeat.
 - **`session.idle` fires often.** On OpenCode, the watch-arm plugin acts first and publishes `globalThis.__brokkOpenCodeWatchArm`; the guard plugin consults it and only calls `bin/syn-turnend-guard.sh` when the coordinator could not arm. Calling the guard first produces a false "turn would end blind" prompt during normal re-arms.
 - **Never background the arm from the model's bash tool.** `syn-arm-pretool-check.sh` denies it; the adapter owns continuity. The arm is a plugin/extension child, not a tool call.
 - **Exit-code semantics differ by host.** Claude's `SessionStart` exit 2 blocks initialization, so the run wrapper always exits 0 on the transport path; Pi's prerequisite uses exit 3 internally so preflight can distinguish a stand-down from a silent failure.
-- **`hamr-harness.sh` has no `crew` subcommand — its subcommand is `eindri`.** `bin/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, which falls through to `detect_own` (`bin/hamr-harness.sh:231-236`); see §11. Until that call is fixed, `config/eindri-harness` is only honoured by the inline fallback, not the Hamr path.
+- **`hamr-harness.sh` has no `crew` subcommand — its subcommand is `eindri`.** `bin/agents/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, which falls through to `detect_own` (`bin/hamr-harness.sh:231-236`); see §11. Until that call is fixed, `config/eindri-harness` is only honoured by the inline fallback, not the Hamr path.
 - **Plugin auto-loading is path-based, not declared.** OpenCode loads `.agents/harness/opencode/plugins/*.js` automatically; there is no `plugin` array in `opencode.json`. The `package.json` only declares `"type": "module"`.
 - **Grok is not wired in Ymir.** Upstream Brokk ships `.grok/hooks/*.json`; Ymir has no `.grok/`. Treat Grok as unverified (see §11).
 - **Windows timing.** OpenCode and Pi raise the arm-ready budget to 35s on `win32` so a slow Git Bash cold start is not SIGTERMed mid-confirmation (`.agents/harness/opencode/plugins/syn-watch-arm.js:17-19`, `.pi/shared/extensions/gna-pi-watch.ts:91-94`).
@@ -662,8 +662,8 @@ bin/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-ONLY
 |---|---|
 | `.agents/harness/opencode/plugins/syn-sessionstart.js` | actual file is `.agents/harness/opencode/plugins/saga-sessionstart.js` |
 | `.agents/harness/opencode/plugins/gna-watch-arm.js` (plan §1) | actual file is `.agents/harness/opencode/plugins/syn-watch-arm.js` (OpenCode's watcher is **Sýn**, not Gná; Gná exists only on Pi) |
-| Plan §13 "still to build: `bin/hamr-harness.sh`; the `.opencode`/Claude/Codex/Cursor adapters; `bin/einherjar-spawn.sh`; …" | all of these are **now landed**; plan §13 is stale |
-| Digest §6 lists 9 stages including **NETWORK CHECKS** and **FLEET DIGEST from `data/backlog.md`** | `bin/saga-session-start.sh` currently prints **8** sections (LOCK, BOOTSTRAP, WAKE QUEUE, SUPERVISION, FLEET DIGEST, CONTEXT DIGEST, CRON START, NEXT STEP); there is **no NETWORK CHECKS section**, and the fleet digest counts `state/*.meta` + `docs/masterplan.md` orders, not `data/backlog.md` |
+| Plan §13 "still to build: `bin/hamr-harness.sh`; the `.opencode`/Claude/Codex/Cursor adapters; `bin/agents/einherjar-spawn.sh`; …" | all of these are **now landed**; plan §13 is stale |
+| Digest §6 lists 9 stages including **NETWORK CHECKS** and **FLEET DIGEST from `data/backlog.md`** | `bin/time/saga-session-start.sh` currently prints **8** sections (LOCK, BOOTSTRAP, WAKE QUEUE, SUPERVISION, FLEET DIGEST, CONTEXT DIGEST, CRON START, NEXT STEP); there is **no NETWORK CHECKS section**, and the fleet digest counts `state/*.meta` + `docs/masterplan.md` orders, not `data/backlog.md` |
 | Plan §7 "Cursor … run interactive only (no headless turn-end)" | `.cursor/hooks.json` **does** implement `sessionStart` (`additional_context`) and `stop` (`followup_message`) |
 | Plan §7 "Codex … bounded foreground checkpoint … nudge-tier" | `.codex/hooks.json` implements run-tier `SessionStart` + `PreToolUse` + `Stop` |
 | Plan §7 "Grok — project hooks (`grok --trust`)" | no `.grok/` exists in Ymir; Grok is unimplemented |
@@ -675,7 +675,7 @@ The authoritative interface is always the code listed in [`../runtime-components
 
 ## 12. Provenance
 
-The adapter pattern is ported from the validated upstream **Brokk** agent-distro harness adapters (`bin/fm-harness.sh`, `bin/fm-sessionstart-run.sh`, `.agents/harness/opencode/plugins/fm-primary-*.js`, `.pi/extensions/fm-primary-*.ts`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.grok/hooks/*.json`). Ymir adopts the *mechanism* and renames every component per plan 29 §12 (Sága, Sýn, Gná, Vörðr, Rödd, Gleipnir, Hamr, Einherjar, Erindi, Vör, Nornir). The upstream names (`fm-*`, "Allfather") are provenance only and must never name a Ymir component.
+The adapter pattern is ported from the validated upstream **Brokk** agent-distro harness adapters (`bin/backend/fm-harness.sh`, `bin/backend/fm-sessionstart-run.sh`, `.agents/harness/opencode/plugins/fm-primary-*.js`, `.pi/extensions/fm-primary-*.ts`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.grok/hooks/*.json`). Ymir adopts the *mechanism* and renames every component per plan 29 §12 (Sága, Sýn, Gná, Vörðr, Rödd, Gleipnir, Hamr, Einherjar, Erindi, Vör, Nornir). The upstream names (`fm-*`, "Allfather") are provenance only and must never name a Ymir component.
 
 **Where the provenance lives, and where the wards look (2026-09-27).** The
 upstream-derived scripts are kept in `.agents/backend/` — the FM backend tree —
@@ -695,15 +695,15 @@ widening a ward to a tree that carries hundreds of upstream mentions.
 The well is **Mimirsbrunn**, backed by the validated OSS engine **engram**. It is
 ONE store and it lives in the hoard — `$YMIR_HOME/hodd/memory/kaia.engram` —
 reached two ways. Every reader resolves it through `hoard_memory_store`
-(bin/hoard-lib.sh) or an explicit `ENGRAM_DB`; the rendered `.pi/mcp-adapter.json`
+(bin/vault/hoard-lib.sh) or an explicit `ENGRAM_DB`; the rendered `.pi/mcp-adapter.json`
 carries the hoard path (`__YMIR_HOME__/hodd/memory/kaia.engram`). The well
 rides the private vault between the Allfather's computers as one store — the
 legacy `memory/kaia.engram` duplicates are struck.
 
-**HTTP bridge (`:4602`)** — `bin/mimir-bridge.py`, raised by
-`bin/mimir-bridge.sh` (and by `scripts/start.sh` + `bin/saga-session-start.sh`).
-It wraps the engram library so the gate API, `bin/mimir.sh`, and
-`bin/mimir-ingest.sh` can drink over the small HTTP contract:
+**HTTP bridge (`:4602`)** — `bin/bridge/mimir-bridge.py`, raised by
+`bin/bridge/mimir-bridge.sh` (and by `scripts/start.sh` + `bin/time/saga-session-start.sh`).
+It wraps the engram library so the gate API, `bin/records/mimir.sh`, and
+`bin/records/mimir-ingest.sh` can drink over the small HTTP contract:
 
 ```
 GET  /health                 -> {status, store, episodes, agents}
@@ -715,7 +715,7 @@ POST /observe {content,...}  -> {id}
 ```
 
 The Pi extension `ymir-well.ts` (shared, deployed) drinks over this same bridge.
-`bin/saga-sessionstart-run.sh` raises the bridge (idempotent) on **every**
+`bin/time/saga-sessionstart-run.sh` raises the bridge (idempotent) on **every**
 session open — startup, clear/compact re-emit and resume alike — so `:4602`
 listens before the session binds and the extension's `session_start` probe
 usually succeeds on its first try. The probe still retries `/health` up to six
@@ -773,13 +773,13 @@ harness config like `mode`/`permission` in their frontmatter, and the figure's
 model is resolved from the hoard by figure name at dispatch
 (`bin/agents-config.sh get <figure> model`), and the role → figure → tools wiring
 lives in `.agents/roles.yaml` — a file the harness never reads (it is read by the
-*doors*, `bin/eindri-role.sh` and `bin/agents-config.sh roster`). The harness
+*doors*, `bin/agents/eindri-role.sh` and `bin/agents-config.sh roster`). The harness
 directories **bind** them by symlink — they are never hand-written duplicates:
 
 - OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
 - Pi: `.pi/agents/<profile>.md` → the same canonical files
 
-`bin/valknut-load.sh` creates the symlinks (`--opencode`, `--pi`, `--global`,
+`bin/seat/valknut-load.sh` creates the symlinks (`--opencode`, `--pi`, `--global`,
 `--all`). **Every harness gets EVERY agent** — claude, codex, cursor and opencode
 are bound by the same loader pass as pi, so no harness is left holding a
 hand-made subset. Naming differs by harness and must be respected:
@@ -820,7 +820,7 @@ gate asserts all four:
 |---|---|
 | **opencode** | `skills.paths: [".agents/skills"]` in `opencode.json` (the loader merges it in and re-asserts it on every run) |
 | **pi** | **native discovery** — it walks up from the cwd to `.agents/skills` (and `~/.agents/skills`). No link, no config: a second root under `.pi/` would invite double-loading, exactly as the extensions rule warns |
-| **claude · codex · cursor** | `<harness>/skills -> ../.agents/skills`, created by `bin/valknut-load.sh` (their project scope is their own directory) |
+| **claude · codex · cursor** | `<harness>/skills -> ../.agents/skills`, created by `bin/seat/valknut-load.sh` (their project scope is their own directory) |
 
 **Do not** copy a `SKILL.md` into a harness directory: a copy is drift, and a
 nested `SKILL.md` carrying frontmatter is loaded as a *second, phantom* skill by
@@ -832,7 +832,7 @@ every recursive scanner (the `harnesses` gate refuses it).
 
 ```
 writers[2]{writer,owns}:
-  "bin/valknut-load.sh","STRUCTURE — the base keys, the agent blocks, the skills path; rendered from opencode.json.example"
+  "bin/seat/valknut-load.sh","STRUCTURE — the base keys, the agent blocks, the skills path; rendered from opencode.json.example"
   "bin/agents-config.sh apply","the ROSTER — providers and per-agent models, from config/agents.yaml"
 ```
 
@@ -878,7 +878,7 @@ einherjar[20]{figure,craft,domain,engine}:
   "Völundr","master smith — Smíðja's orchestrator","brokkforge","—"
 ```
 
-Bind with `bin/valknut-load.sh --all` (OpenCode: `.opencode/agents/<name>.md`; Pi:
+Bind with `bin/seat/valknut-load.sh --all` (OpenCode: `.opencode/agents/<name>.md`; Pi:
 `.pi/agents/<profile>.md`) — never edit the harness dirs.
 
 ## Pi has no agent loader (2026-09-17)
@@ -960,7 +960,7 @@ repo carries their **source** at `.pi/shared/extensions/` — a path pi does not
 load, therefore collision-free — and the loader deploys it into the single home:
 
 ```bash
-bin/valknut-load.sh --pi      # deploys .pi/shared/extensions/*.ts -> ~/.pi/agent/extensions/
+bin/seat/valknut-load.sh --pi      # deploys .pi/shared/extensions/*.ts -> ~/.pi/agent/extensions/
 ```
 
 The deploy copies (never links: a broken link would silently disable a tool),
@@ -977,10 +977,10 @@ own config and **no `bin/` at all**. Each `${root}/bin/…` they exec'd was a pa
 that did not exist, and the failure was silent by construction: the Gná arm child
 exited **127 before its first poll**, no `state/.watch.heartbeat` was ever written,
 and the watch was dead while every file listing looked correct. The Sága digest was
-never injected either — the turn-end guard spawns `${root}/bin/saga-sessionstart-run.sh`
+never injected either — the turn-end guard spawns `${root}/bin/time/saga-sessionstart-run.sh`
 from that same root.
 
-The root is now **recorded at deploy time**: `bin/valknut-load.sh --pi` writes one
+The root is now **recorded at deploy time**: `bin/seat/valknut-load.sh --pi` writes one
 absolute root per line — most recent first, deduped, capped — to
 `${HOME}/.pi/agent/extensions/.ymir-root`, and the deployed copy of
 `.pi/extensions/lib/ymir-home.ts` reads it back for all four extensions
@@ -1033,7 +1033,7 @@ Two consequences worth stating:
 
 `bin/eir-doctor.sh` carries the **`harness`** surface, so this is diagnosed rather
 than discovered: a record with no live root is `broken`, and `fix` re-runs
-`valknut-load.sh --pi`. `bin/valknut-load.sh --status` reports the same row.
+`valknut-load.sh --pi`. `bin/seat/valknut-load.sh --status` reports the same row.
 
 ## OpenCode agent `tools` key (2026-09-12)
 
@@ -1059,7 +1059,7 @@ Rules:
 - **Edit only `.agents/`.** Never edit a file under `.opencode/` or `.pi/` — those are
   symlinks to `.agents/` (e.g. `.opencode/agents/bragi.md` links to
   `.agents/agents/bragi-marketer.md`).
-- After any change: `bin/valknut-load.sh --all` to rebind.
+- After any change: `bin/seat/valknut-load.sh --all` to rebind.
 - **OpenCode requires REAL `.opencode/{node_modules,package.json,.gitignore}`** — the
   dependency store. Symlinking them hit ELOOP + untracked files and was reverted.
 - So `.opencode` holds: symlinked `agent/` + `plugins`, and the real dep store. It
@@ -1084,7 +1084,7 @@ from `@juicesharp/rpiv-ask-user-question` (MIT), pinned **project-locally** in
 | Path | Loaded by | Holds |
 |---|---|---|
 | `.pi/extensions/` | pi, as **project-local** extensions | **NOTHING that registers a tool.** It holds no-op stubs only — see the correction below |
-| `.pi/shared/extensions/` | **the source**, deployed by `bin/valknut-load.sh --pi` into `${HOME}/.pi/agent/extensions/` | **every Ymir extension**, governance and user-facing alike |
+| `.pi/shared/extensions/` | **the source**, deployed by `bin/seat/valknut-load.sh --pi` into `${HOME}/.pi/agent/extensions/` | **every Ymir extension**, governance and user-facing alike |
 | `.pi/extensions/lib/` | nothing — pi does not recurse past one level | the helper modules the shared extensions import |
 
 **The 2026-10-04 correction.** This table previously said `.pi/extensions/` holds
@@ -1102,7 +1102,7 @@ extensions reach those modules by relative import, and the loader must therefore
 deploy them too. **A deploy that copies the top-level files without `lib/` ships
 extensions that cannot load.**
 
-Verified with `bin/valknut-load.sh --check` (added 2026-10-04): it fails when the
+Verified with `bin/seat/valknut-load.sh --check` (added 2026-10-04): it fails when the
 deployed tree differs from source, when a test file is in the live tree, or when an
 extension exists in two load paths.
 
@@ -1113,7 +1113,7 @@ which of the two it is will edit a file that is not there.
 
 ## The ymirhome extension — a Pi surface over doors that already exist (2026-10-02)
 
-`.pi/shared/extensions/ymirhome.ts` (deployed by `bin/valknut-load.sh --all --global`) is the
+`.pi/shared/extensions/ymirhome.ts` (deployed by `bin/seat/valknut-load.sh --all --global`) is the
 first capability built under the destination rule: **what the harness should feel is an extension;
 the logic stays in `bin/`, where a human or a cron row can run the same thing.**
 
@@ -1137,7 +1137,7 @@ the watch on 2026-09-30.
 
 ## The rules door — the house law as a surface (2026-10-01)
 
-`.pi/shared/extensions/rules.ts` (deployed by `bin/valknut-load.sh --all --global`). The Allfather:
+`.pi/shared/extensions/rules.ts` (deployed by `bin/seat/valknut-load.sh --all --global`). The Allfather:
 *"we need to build for rules."* An agent that does not know the laws either reads ten files and
 misses the one that matters, or invents — and `RULES/` was prose no tool could read.
 
@@ -1147,7 +1147,7 @@ Two tools, and **only** its own (register §12: one tool, one registration — t
 | tool | what it answers |
 |---|---|
 | `ymir_rule <topic>` | the laws that govern it, **quoted by line, with the file named** — and when no law mentions the topic it says so and hands over the whole (small) law rather than inventing one |
-| `ymir_gates` | which gate covers which surface, **read from `bin/ci-verify.sh`** rather than asserted, plus the doors a seat can run — carrying the law it quotes: *a gate that exists and runs nowhere is how a capability is silently absent* |
+| `ymir_gates` | which gate covers which surface, **read from `bin/gates/ci-verify.sh`** rather than asserted, plus the doors a seat can run — carrying the law it quotes: *a gate that exists and runs nowhere is how a capability is silently absent* |
 
 `bash .agents/tests/rules-door.test.sh` → **7 passed, 0 failed**, including the two that matter most:
 a topic no law covers **says so and invents nothing**, and the tool set is **its own two** — no
@@ -1181,7 +1181,7 @@ those stay doors.
    reached the calendar on any seat** — and nothing noticed, because a broken tool and an absent
    tool look identical from outside.
 2. **Five extensions carried a hardcoded `/home/heimdall/ymir`.** Rule 07, introduced by me. The
-   contract now: `YMIR_ROOT`, else the root `bin/valknut-load.sh` records in
+   contract now: `YMIR_ROOT`, else the root `bin/seat/valknut-load.sh` records in
    `~/.pi/agent/extensions/.ymir-root` — **the first recorded root that really holds
    `bin/syn-watch-arm.sh`**, else a loud failure naming the fix. Note the pointer lives *inside*
    `extensions/`, and a root may be a **list**: a worktree seat is recorded beside the main one,

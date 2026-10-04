@@ -3,7 +3,7 @@
 # door (plan 58, Phase 5: one name, one behaviour).
 #
 # This file defines no behaviour of its own. It maps the upstream dialect onto
-# `bin/brokk-wake-grant.sh` and hands the verb over with `exec`, so the vendored
+# `bin/time/brokk-wake-grant.sh` and hands the verb over with `exec`, so the vendored
 # callers in this folder keep resolving while the implementation lives in exactly
 # one place. A body added here would be the second implementation this file
 # exists to remove.
@@ -21,4 +21,4 @@ _ymir_repo="$(cd "$_ymir_backend_dir/../.." && pwd)"
 [ -z "${FM_WAKE_QUEUE+x}" ] || export BROKK_WAKE_QUEUE="$FM_WAKE_QUEUE"
 [ -z "${FM_WAKE_QUEUE_LOCK+x}" ] || export BROKK_WAKE_QUEUE_LOCK="$FM_WAKE_QUEUE_LOCK"
 
-exec "$_ymir_repo/bin/brokk-wake-grant.sh" "$@"
+exec "$_ymir_repo/bin/time/brokk-wake-grant.sh" "$@"

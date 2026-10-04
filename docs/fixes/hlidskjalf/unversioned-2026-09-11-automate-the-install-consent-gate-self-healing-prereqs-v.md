@@ -7,7 +7,7 @@
 - **New `bin/prereq-ensure.sh`:** self-healing prerequisites in USER SPACE —
   installs `bun` and `uv` via their official installers, `mcp<2>` via pip, and can
   fetch a specific Python (e.g. `3.12`) with uv for packages that need one.
-- **New `bin/smidja-bootstrap.sh`:** creates `smidja/smidja_data/smidja.db` from
+- **New `bin/desktop/smidja-bootstrap.sh`:** creates `smidja/smidja_data/smidja.db` from
   the tracer's own schema and seeds a bootstrap session, so the Smíðja visualizer
   has data from the first install. Fixed: it now bootstraps on a bare call
   instead of printing help, and reports failure honestly when the DB is absent.
