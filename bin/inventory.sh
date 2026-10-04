@@ -24,7 +24,20 @@
 #   bin/inventory.sh --check    # fail if either index is stale (for CI)
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Walk UP until we find the repo, rather than assuming one level. `bin/capabilities.sh` and
+# `bin/doors/capabilities.sh` BOTH have to work, and the difference is depth — a fixed `..`
+# made the nested copy resolve ROOT to `bin/`, so it looked for `bin/*.sh` inside `bin/bin/`,
+# found nothing, and rendered a 2-row register over a 400-door house. Nesting must not be able
+# to blind the index. (2026-10-04)
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 MODE="${1:-write}"
 
 python3 - "$ROOT" "$MODE" <<'PY'
