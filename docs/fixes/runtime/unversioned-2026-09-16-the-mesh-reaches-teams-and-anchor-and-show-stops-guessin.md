@@ -1,13 +1,13 @@
 ## runtime · unversioned · 2026-09-16 — the mesh reaches Teams and Anchor, and `show` stops guessing
 
 ### Why
-`bin/a2a-mcp.sh` wired only the well (`engram`) and the mesh (`a2abridge`). The
+`bin/bridge/a2a-mcp.sh` wired only the well (`engram`) and the mesh (`a2abridge`). The
 **Teams** plane and **Anchor** memory existed only in the operator's personal
 harness config, so no agent *inside* Ymir could see tickets or anchored memory —
 and `a2a-mcp.sh show` insisted on a **fixed** server list, reporting
 `wayofteams-mcp not on PATH` even when the plane was wired and working.
 
-- **Remote MCP servers, URL-driven.** `bin/a2a-mcp.sh` now wires `wayofteams`
+- **Remote MCP servers, URL-driven.** `bin/bridge/a2a-mcp.sh` now wires `wayofteams`
   (from `WAYOFTEAMS_MCP_URL`) and `way-of-anchor-sse` (from `ANCHOR_MCP_URL`).
   OpenCode gets them natively (`type: remote`); Pi, which has no remote
   transport, gets them through the `mcp-remote` stdio bridge. A URL wins over a

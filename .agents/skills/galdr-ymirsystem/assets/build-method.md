@@ -23,8 +23,8 @@ build_assets[6]{step,asset}:
 2. **Check the harness guide** — `assets/harness-integration/<harness>.md` for the
    exact hook surface, event names, and file paths.
 3. **Reuse the runtime scripts** — the harness adapter never reimplements the digest,
-   the lock, the watcher, or the guard; it invokes `bin/saga-session-start.sh`,
-   `bin/saga-sessionstart-run.sh`, `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`,
+   the lock, the watcher, or the guard; it invokes `bin/time/saga-session-start.sh`,
+   `bin/time/saga-sessionstart-run.sh`, `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`,
    `bin/rodd-operational-input.sh`, `bin/gleipnir-lock-lib.sh`.
 4. **Wire the contract** — session-open injection (run or nudge tier), watch arm,
    turn-end guard, pretool seatbelts.

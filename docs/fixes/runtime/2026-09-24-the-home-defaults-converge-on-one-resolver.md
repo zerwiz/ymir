@@ -14,7 +14,7 @@ the convergence was done as a reviewed transform with a dry run, not by hand and
   - the macOS bootstrap keeps a guest default under a waiver, because a fresh guest has no
     recorded choice yet and that bootstrap seeds it;
   - `bin/npm-install-local-test.sh` **recognizes** another seat's path shape; it does not guess one;
-  - the embedded Python in `bin/einherjar-spawn.sh` now resolves `env → the recorded choice → a
+  - the embedded Python in `bin/agents/einherjar-spawn.sh` now resolves `env → the recorded choice → a
     loud failure` instead of guessing, and the Node plugin
     (`syn-watch-arm.js`) now **throws rather than assuming a home**.
 

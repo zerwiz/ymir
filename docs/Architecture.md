@@ -165,7 +165,7 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
 **The gates tell the truth (added 2026-09-24).** Three laws, each a guarantee:
 
 - **The desktop runtime is ONE resolver, and absence is never success.**
-  `bin/electron-lib.sh` finds the Electron binary in every shape npm leaves
+  `bin/desktop/electron-lib.sh` finds the Electron binary in every shape npm leaves
   behind — app-local, the nearest ancestor hoist (workspace root), the sibling
   package — and every guard returns *failure* when nothing resolves. The
   first-run install is workspace-aware (a member's local `node_modules` would
@@ -217,7 +217,7 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
 - **Transport behavior**: Adapter starts and polls a named server before workspace/tab/pane/agent calls. Every Þjazi invocation goes through `fm_backend_herdr_cli`, which sets the environment and passes an explicit trailing `--session <name>`.
 - **Push events**: Protocol 16 can subscribe to `pane.agent_status_changed` over a bounded Unix-socket reader. Polling runs every cycle and remains the permanent fallback when protocol 16, the event schema, Python, connection, subscription, or repeated reader execution is unavailable.
 - **Away-mode supervisor**: Supports tmux and Þjazi supervisor panes only. Refuses Zellij, Orca, and cmux. For Þjazi, target existence, native state, capture, composer state, and verified submit all route through the shared backend dispatcher and the explicit named-session CLI owner.
-- **Destructive lab safety**: `bin/fm-herdr-lab.sh` is the sole supported lifecycle helper for isolated verification. It provisions only non-default names beginning with `fm-lab-`, appends an explicit `--session` to allowed task commands, refuses caller-supplied session flags and server/session lifecycle subcommands, and performs destructive stop/delete only through its guarded lifecycle actions.
+- **Destructive lab safety**: `bin/backend/fm-herdr-lab.sh` is the sole supported lifecycle helper for isolated verification. It provisions only non-default names beginning with `fm-lab-`, appends an explicit `--session` to allowed task commands, refuses caller-supplied session flags and server/session lifecycle subcommands, and performs destructive stop/delete only through its guarded lifecycle actions.
 - **Active limits**: Þjazi remains experimental; presentation ordering needs protocol 16 and Python and is best-effort only; mutable labels can collide and are never placement or destructive authority; a Brokk outside Þjazi cannot resolve a launcher workspace, so a colliding home label refuses new spawns until the collision is cleared; ghost and placeholder recognition uses ANSI de-emphasis when available.
 - **Regression test suite**: 18+ test scripts covering presentation, cleanup, prune safety, focus, respawn, workspace-per-home, launcher workspace, and event wait smoke tests.
 - **Sub-agent orchestration**: When Brokk orchestrates sub-agents, Þjazi opens visible terminal panes/windows via `herdr run --pane-name "<role>-<branch>"` pointing to Treehouse worktrees. The user can see the sub-agent typing, executing CLI tools, and running tests live in real time. Þjazi panes are non-blocking—the main agent remains open to answer user inputs or supervise other sub-agents.
@@ -338,7 +338,7 @@ belongs — and refuses to act on its own judgement.
   `$YMIR_HOME/state/doc-sweep/`, so a second `apply` is a no-op and a moved file can
   be proven.
 - **The repo stays clean:** every destination must resolve inside the home through
-  the one resolver (`bin/hoard-lib.sh`); a line aimed at the code tree is refused by
+  the one resolver (`bin/vault/hoard-lib.sh`); a line aimed at the code tree is refused by
   name, with the reason. The sweeper never stages, never deletes, and never dumps an
   unplaceable file into `docs/`.
 
@@ -480,13 +480,13 @@ Below the verbs: `worktree.py` (Yggdrasil) · `harness.py` (Hamr) · `backend.py
 - **The record is the old record.** `seat()` writes the SAME `state/<id>.meta`
   keys, the same `working: launched … (heartbeat baseline)` line, the same
   `.launch.sh`, and the same seat-private machine-state dir — so
-  `bin/eindri-heartbeat.sh`, Vör, and Hlidskjalf's Fleet read an engine seat with
+  `bin/agents/eindri-heartbeat.sh`, Vör, and Hlidskjalf's Fleet read an engine seat with
   no change.
-- **Doors stay thin, strangler and reversible.** `bin/ymir-engine.sh` is the
+- **Doors stay thin, strangler and reversible.** `bin/engine/ymir-engine.sh` is the
   engine's door (exit **4** = "the engine will NOT own this errand");
-  `bin/ymir-engine-ensure.sh` builds the private venv only when
-  `src/pyproject.toml` declares a dependency (none today); `bin/einherjar-spawn.sh`
-  and `bin/eindri-start.sh` are engine-first and keep their old road on exit 4.
+  `bin/engine/ymir-engine-ensure.sh` builds the private venv only when
+  `src/pyproject.toml` declares a dependency (none today); `bin/agents/einherjar-spawn.sh`
+  and `bin/agents/eindri-start.sh` are engine-first and keep their old road on exit 4.
   `YMIR_ENGINE=off` disables the handoff everywhere.
 - **Proof, not assertion.** `python3 -m unittest` reaches unit tests beside the
   modules; `tests/e2e/engine-proof.sh proof|parity` runs one real errand and
@@ -505,7 +505,7 @@ Below the verbs: `worktree.py` (Yggdrasil) · `harness.py` (Hamr) · `backend.py
 - **Pi binds via `.pi/mcp-adapter.json`.** The register moved `mcp.json` →
   `mcp-adapter.json` (#214). The tracked file is `.pi/mcp-adapter.json.example`;
   the rendered `.pi/mcp-adapter.json` holds machine paths and is git-ignored.
-  `bin/valknut-load.sh` writes it; a Pi seat launches
+  `bin/seat/valknut-load.sh` writes it; a Pi seat launches
   `pi --mcp-config .pi/mcp-adapter.json`.
 - **A2A (corrected 2026-09-30):** the native backbone **runs**. The heart's node
   `heart-zerwizserver` answers on door `:8301` and serves its agent card at
@@ -520,13 +520,13 @@ Below the verbs: `worktree.py` (Yggdrasil) · `harness.py` (Hamr) · `backend.py
 
 Measured 2026-09-27: three errands reached `done:` and no wake reached the hall.
 The fault was that the fast road (the status-append → wake poller) and the
-failsafe (`bin/eindri-handoff.sh`) read different shelves.
+failsafe (`bin/agents/eindri-handoff.sh`) read different shelves.
 
 - A worker's terminal act writes its status line **and**
   `$STATE/eindri-reports/<id>.md` (one short report: what shipped, the PR, the
-  proof). `bin/erindi-brief.sh` carries the line in its template, so every errand
+  proof). `bin/agents/erindi-brief.sh` carries the line in its template, so every errand
   inherits it by construction.
-- The failsafe `bin/eindri-handoff.sh sweep` sweeps the report and question
+- The failsafe `bin/agents/eindri-handoff.sh sweep` sweeps the report and question
   shelves only; it never reads `state/<id>.status`. It runs at session start
   (Sága stage 3) and on a Nornir cadence, idempotently.
 - **One shelf, one contract.** Four failure modes are now named, the fourth written

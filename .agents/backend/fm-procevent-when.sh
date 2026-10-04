@@ -70,7 +70,7 @@
 #   <bounded tail of the relevant command output>
 #
 # Ownership, durable capture, publication, restart recovery, and the handled
-# acknowledgement all belong to bin/fm-procevent.sh; this adapter owns only the
+# acknowledgement all belong to bin/backend/fm-procevent.sh; this adapter owns only the
 # condition->action semantics above.
 set -u
 
@@ -79,13 +79,13 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-procevent-lib.sh
+# shellcheck source=bin/backend/fm-procevent-lib.sh
 . "$SCRIPT_DIR/fm-procevent-lib.sh"
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
 
 WHEN_DIR="$STATE/when"
@@ -229,7 +229,7 @@ cmd_arm() {
   fm_procevent_source_lock_release "$sid"
   trap - EXIT
   printf 'armed: %s\n' "$sid"
-  printf 'starts on the watcher'"'"'s next cycle; or run: bin/fm-procevent.sh reconcile\n'
+  printf 'starts on the watcher'"'"'s next cycle; or run: bin/backend/fm-procevent.sh reconcile\n'
   printf 'reminder: deterministic, safe, reversible actions only; judgment and destructive actions stay on the wake-and-decide path\n'
 }
 

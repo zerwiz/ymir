@@ -13,7 +13,7 @@
 
   So `show`, `get`, `resolve`, `apply` and `init` were all dead. **The agent/model
   map could not be read or applied at all** — a configured model never reached
-  the canonical `.agents/agents/*.md`, and `bin/agent-run.sh` had no cache to
+  the canonical `.agents/agents/*.md`, and `bin/agents/agent-run.sh` had no cache to
   read.
 - The state path belongs to the operator's home (Rule 04), which is exactly what
   `hoard_state_dir` resolves; the call was simply missing.

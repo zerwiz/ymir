@@ -36,7 +36,7 @@ serving from the heart) must not blip.
   the repo. `bin/npm-pretest.sh`'s hull and `package.json` `files[]` carry
   `packages/`.
 - **The proof is a gate** — `bin/contracts-check.sh` (tests + contract tsc +
-  A2A-server tsc + Hlidskjalf tsc), wired into `bin/ci-verify.sh`.
+  A2A-server tsc + Hlidskjalf tsc), wired into `bin/gates/ci-verify.sh`.
 
 ### Still standing (strangler, stated plainly)
 Five servers remain in `tools/` and move in later PRs: `well-mcp`
@@ -49,7 +49,7 @@ Their doors and unit names are untouched here.
 - `packages/contracts/{package.json,tsconfig.json,src/agent-card.ts,src/index.ts,test/agent-card.test.ts}`
 - `packages/a2a/ratatoskr/{server.ts,card.ts,tsconfig.json}`
 - `packages/mcp/skills/server.mjs`
-- `bin/fleet-ensure.sh` · `bin/fleet-deploy.sh` · `bin/npm-pretest.sh` · `bin/contracts-check.sh` · `bin/ci-verify.sh`
+- `bin/fleet-ensure.sh` · `bin/fleet-deploy.sh` · `bin/npm-pretest.sh` · `bin/contracts-check.sh` · `bin/gates/ci-verify.sh`
 - `tools/mill/systemd/ratatoskr.service` · `tools/mill/systemd/skills-mcp.service`
 - `apps/hlidskjalf/src/types.ts` · `apps/hlidskjalf/server/index.ts`
 - `package.json`
@@ -61,7 +61,7 @@ Their doors and unit names are untouched here.
 - `bash bin/contracts-check.sh` → all 4 legs PASS.
 - The moved MCP server still serves its door: `initialize` → `tools/list`
   answers (`skills-mcp`, `load_skill`) on the moved file.
-- `bin/mcp-gateway.sh resolve` still yields `bolthorn` `:8319` — no door moved;
-  `bin/mcp-gateway.sh catalog` still resolves.
+- `bin/bridge/mcp-gateway.sh resolve` still yields `bolthorn` `:8319` — no door moved;
+  `bin/bridge/mcp-gateway.sh catalog` still resolves.
 - `apps/hlidskjalf` `tsc --noEmit` green; `bun build apps/hlidskjalf/server/index.ts`
   resolves the contract import.

@@ -151,7 +151,7 @@ test_stale_pane_transient_persistent_resume() {
 
   # Resumed: a fresh transient marker but the crew is provably working again ->
   # housekeeping clears the marker without escalating. The proof is the crew's
-  # own semantic busy-state record (bin/fm-busy-lib.sh), not rendered pane text.
+  # own semantic busy-state record (bin/backend/fm-busy-lib.sh), not rendered pane text.
   stale_marker_record "$win" "$state"
   echo $(( $(date +%s) - 500 )) > "$state/.subsuper-stale-$key"
   printf 'Working...\n' > "$dir/pane.txt"

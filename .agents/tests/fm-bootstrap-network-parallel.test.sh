@@ -7,7 +7,7 @@
 # worker scheduler: it is that each mate still emits its own SECONDMATE_LIVENESS
 # / SECONDMATE_SYNC line, that those lines cannot splice into each other, and
 # that a dirty or unreachable mate still refuses rather than proceeding. This
-# suite drives bin/fm-bootstrap.sh's network-only phase through FM_SSH_BIN, so
+# suite drives bin/backend/fm-bootstrap.sh's network-only phase through FM_SSH_BIN, so
 # it exercises the same remote probe path a real session start uses.
 set -u
 

@@ -45,7 +45,7 @@
   `LOOP_READ_LINES` (500). No literal in the logic.
 - **State lives outside the tree (Rule 04):** fingerprints under the operator's
   hoard state dir (`$YMIR_STATE_DIR/.nidhogg/`), resolved through
-  `bin/hoard-lib.sh`, never beside the script.
+  `bin/vault/hoard-lib.sh`, never beside the script.
 - **Named in the platform map** (`.agents/assets/agents/naming.md`):
   `"Hallucination loop breaker","Níðhöggr"`.
 

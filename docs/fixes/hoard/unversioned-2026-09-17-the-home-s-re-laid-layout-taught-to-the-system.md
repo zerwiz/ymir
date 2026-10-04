@@ -9,7 +9,7 @@
 - **AGENTS.md** — the private-home tree block, the outputs table
   (`hodd/workspaces/work/`, `hodd/workspaces/personal/`), and the Ratatoskr
   plan pointer updated to the new homes.
-- **bin/nornir-job-daily-briefing.sh** — the morning brief's masterplan and
+- **bin/time/nornir-job-daily-briefing.sh** — the morning brief's masterplan and
   plan-status reads follow the new layout (`hodd/docs/masterplan.md`,
   `memory/plans`) with `BROKK_MASTERPLAN`/`BROKK_PLANS_DIR` overrides.
 

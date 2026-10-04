@@ -16,8 +16,8 @@ set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CHECK="$ROOT/bin/ymir-config-check.sh"
-APPEND="$ROOT/bin/journal-append.sh"
-RECEIVE="$ROOT/bin/journal-receive.sh"
+APPEND="$ROOT/bin/records/journal-append.sh"
+RECEIVE="$ROOT/bin/records/journal-receive.sh"
 for f in "$CHECK" "$APPEND" "$RECEIVE"; do
   [ -f "$f" ] || { printf 'proof[1]{gate,result}:\n  "missing","%s"\n' "$f"; exit 1; }
 done

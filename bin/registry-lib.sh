@@ -23,7 +23,7 @@ _registry_dir() { cd "$(dirname "${BASH_SOURCE[0]}")" && pwd; }
 _registry_load_hoard() {
   [ -z "${REGISTRY_LIB_HOARD_LOADED:-}" ] || return 0
   local d; d="$(_registry_dir)"
-  # shellcheck source=bin/hoard-lib.sh
+  # shellcheck source=bin/vault/hoard-lib.sh
   [ -r "$d/hoard-lib.sh" ] && . "$d/hoard-lib.sh" && REGISTRY_LIB_HOARD_LOADED=1
   return 0
 }

@@ -6,13 +6,13 @@ of them silently won over its own fix.
 
 - **Nine scripts carried their own home default**, and some still named the
   **dead** `$HOME/Documents/Ymir` (the home moved to `Documents/ymirhome`): the
-  ledger (`bin/runes-append.sh`), `bin/ymir-validate.sh`, `bin/smidja-bootstrap.sh`,
-  `bin/ymir-style.sh`, `bin/saga-session-start.sh`, `bin/mimir-bridge.py`,
+  ledger (`bin/records/runes-append.sh`), `bin/ymir-validate.sh`, `bin/desktop/smidja-bootstrap.sh`,
+  `bin/ymir-style.sh`, `bin/time/saga-session-start.sh`, `bin/bridge/mimir-bridge.py`,
   `bin/bootstrap-macos.sh` (a `/home/${VM_USER}` literal), and
   `.agents/skills/lifecycle/smoke_test.sh`. All now resolve through
   `ymir_home_root` (env → the recorded choice → the ONE default in
-  `bin/hoard-lib.sh`).
-- **The subtle one:** `bin/smidja-board.sh` *did* call the resolver — but set
+  `bin/vault/hoard-lib.sh`).
+- **The subtle one:** `bin/desktop/smidja-board.sh` *did* call the resolver — but set
   `YMIR_HOME` from a literal first, so the resolver saw a non-empty value and kept
   the **dead** path. A literal before the call is not a default; it is an override.
   The literal is gone.
@@ -35,11 +35,11 @@ galdr-reread: `brokk-distro-runtime.md` (one resolver, every script).
 - `apps/hlidskjalf/server/index.ts`
 - `bin/bootstrap-macos.sh`
 - `bin/gjallarhorn-expose.sh`
-- `bin/hoard-lib.sh`
-- `bin/mimir-bridge.py`
+- `bin/vault/hoard-lib.sh`
+- `bin/bridge/mimir-bridge.py`
 - `bin/public-guard.sh`
-- `bin/runes-append.sh`
-- `bin/saga-session-start.sh`
-- `bin/smidja-board.sh`
-- `bin/smidja-bootstrap.sh`
+- `bin/records/runes-append.sh`
+- `bin/time/saga-session-start.sh`
+- `bin/desktop/smidja-board.sh`
+- `bin/desktop/smidja-bootstrap.sh`
 - `bin/ymir-style.sh`

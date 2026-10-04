@@ -10,9 +10,9 @@
   tokens (bone · bronze · steel · blood), shown only where a human watches, with
   the data left as TOON on stdout. The plan, the installer, the validate report
   and Eir all wear it.
-- **The shapes.** `bin/smidja-lib.sh` tells a clone's smithy from a packaged one;
-  `bin/smidja-board.sh` is the board's own door (`ymir smidja`), built and served
-  from an npm install; `bin/electron-lib.sh` verifies a shell's runtime so a
+- **The shapes.** `bin/desktop/smidja-lib.sh` tells a clone's smithy from a packaged one;
+  `bin/desktop/smidja-board.sh` is the board's own door (`ymir smidja`), built and served
+  from an npm install; `bin/desktop/electron-lib.sh` verifies a shell's runtime so a
   skipped npm install script cannot pass as a launch.
 - **The icons.** One truth where three maps disagreed, and no claim of a glyph
   nobody drew: Óðrerir wears ansuz, Sessrúmnir othala, the smithy's icon is named

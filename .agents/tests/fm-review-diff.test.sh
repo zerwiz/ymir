@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests for bin/fm-review-diff.sh: when a task has an open PR recorded in meta,
+# Tests for bin/backend/fm-review-diff.sh: when a task has an open PR recorded in meta,
 # the review diff must compare the authoritative base against a freshly fetched
 # PR head, not a stale local branch or a stale recorded pr_head= left behind
 # after no-mistakes fix rounds push to the PR.

@@ -179,7 +179,7 @@ def log(enabled, message):
 
 
 def widen_path():
-    """Put the toolbox directories on PATH, as bin/fm-inbox.sh does and for the same reason.
+    """Put the toolbox directories on PATH, as bin/backend/fm-inbox.sh does and for the same reason.
 
     `ssh host command` gets no login shell, so it gets no ~/.toolbox/bin. The
     sandbox profile's credential_process is the bare word `ada`, so without this

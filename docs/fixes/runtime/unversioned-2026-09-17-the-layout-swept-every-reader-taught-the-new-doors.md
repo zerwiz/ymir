@@ -1,13 +1,13 @@
 ## runtime · unversioned · 2026-09-17 — the layout swept: every reader taught the new doors
 
 ### Why
-- **bin/nornir-job-observer.sh** — masterplan, runes ledger, and the well now
+- **bin/time/nornir-job-observer.sh** — masterplan, runes ledger, and the well now
   resolve to the hoard homes (`hodd/docs/masterplan.md`,
   `hodd/memory/runes_audit.md`, `hodd/memory/well`), overridable via
   `BROKK_MASTERPLAN`/`BROKK_WELL_DIR`.
-- **bin/saga-session-start.sh** — the Sága digest's open-orders read follows
+- **bin/time/saga-session-start.sh** — the Sága digest's open-orders read follows
   the home (`hodd/docs/masterplan.md`).
-- **bin/nornir-job-daily-briefing.sh** — message/comment paths updated to the
+- **bin/time/nornir-job-daily-briefing.sh** — message/comment paths updated to the
   same doors.
 - **bin/docs-guard.sh** — block message names both new homes (hodd/docs,
   memory/plans).

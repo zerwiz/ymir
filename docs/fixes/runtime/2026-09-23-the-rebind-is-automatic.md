@@ -5,7 +5,7 @@
 them bound the surfaces automatically.
 
 Pi loads its extensions from `${HOME}/.pi/agent/extensions/`, deployed from the
-repo's `.pi/shared/extensions/` by `bin/valknut-load.sh`. So when the supervision
+repo's `.pi/shared/extensions/` by `bin/seat/valknut-load.sh`. So when the supervision
 extension was fixed in the repo, **pi kept running the old code**, and a hand-copy
 into the global home became the only way to make the fix real. That is the wrong
 shape: a merged fix must reach the harness by the ordinary path.
@@ -19,7 +19,7 @@ Three gaps:
    naive `$ROOT/.git/hooks` check reported "not a git checkout" and skipped.
 
 ### Fix
-- **`bin/valknut-load.sh --install`** — seats a **post-merge** hook (idempotent),
+- **`bin/seat/valknut-load.sh --install`** — seats a **post-merge** hook (idempotent),
   found via `git rev-parse --git-path hooks` and pointing at the MAIN tree, so a
   merge rebinds the surfaces.
 - **`bin/ymir-install.sh`** — the `loaders` step now also runs
@@ -41,11 +41,11 @@ extension and repairing the session are two different acts.
 - `bash -n` clean on all three scripts.
 - `valknut-load.sh --install` seats the hook at the path git reports:
   `$HOME_SEAT/ymir/.git/hooks/post-merge`, pointing at
-  `$HOME_SEAT/ymir/bin/valknut-load.sh --all --global`.
+  `$HOME_SEAT/ymir/bin/seat/valknut-load.sh --all --global`.
 - Compliance gate: **15/15 PASS**.
 
 ### Files
-- `bin/valknut-load.sh`
+- `bin/seat/valknut-load.sh`
 - `bin/ymir-install.sh`
 - `bin/groa-update.sh`
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`

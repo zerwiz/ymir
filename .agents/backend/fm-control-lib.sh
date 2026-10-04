@@ -3,12 +3,12 @@
 # CONTROL-PLANE mechanics.
 #
 # Data plane vs control plane (captain-approved root architecture, 2026-07-13).
-# bin/fm-send.sh is the DATA plane: conversational text for the agent to read,
+# bin/backend/fm-send.sh is the DATA plane: conversational text for the agent to read,
 # always routing-marked for a kind=secondmate target so the reply comes back
 # through the status path. That marking is exactly right for a message and
 # exactly wrong for a lifecycle command: a marked "/quit" arrives as ordinary
 # chat ("[fm-from-firstmate] /quit") that the agent reasons ABOUT instead of
-# executing. bin/fm-control.sh is the CONTROL plane: allowlisted lifecycle
+# executing. bin/backend/fm-control.sh is the CONTROL plane: allowlisted lifecycle
 # verbs addressed to an exact task id, with the per-harness mechanics owned
 # here rather than improvised per harness in agent prose.
 #
@@ -26,11 +26,11 @@
 #      verified to run. These are the empirically verified facts previously
 #      carried only in the harness-adapters skill's per-adapter tables; that
 #      skill now points here so one executable owner holds them, and
-#      bin/fm-send.sh's --key path reads the same table rather than a second
+#      bin/backend/fm-send.sh's --key path reads the same table rather than a second
 #      copy of it.
 #   3. Per-backend capability: which named keys a runtime backend can deliver,
 #      and whether the backend has a recovery-grade agent-state classifier
-#      (bin/fm-backend.sh's fm_backend_agent_state) able to PROVE that an agent
+#      (bin/backend/fm-backend.sh's fm_backend_agent_state) able to PROVE that an agent
 #      stopped. A verb whose postcondition cannot be proven on the recorded
 #      backend is refused rather than performed blind.
 #
@@ -70,7 +70,7 @@ fm_control_harness_supported() {  # <harness>
 
 # The verified adapter a RECORDED harness value belongs to. Every table below
 # is keyed by the exact verified adapter name, but a task launched from a raw
-# command records the command's basename instead (bin/fm-spawn.sh derives
+# command records the command's basename instead (bin/backend/fm-spawn.sh derives
 # harness= that way), which is why the spawn adapters match `claude*`, `muse*`,
 # and friends. This is the one place that prefix rule is stated. `pi` and
 # `pi-signed` are exact because a `pi*` prefix would swallow the signed adapter,
@@ -92,7 +92,7 @@ fm_control_harness_family() {  # <recorded-harness>
 }
 
 # Which task kinds an adapter is verified to run. muse is a crewmate/scout
-# adapter only: it has no primary supervision protocol, and bin/fm-spawn.sh
+# adapter only: it has no primary supervision protocol, and bin/backend/fm-spawn.sh
 # refuses a --secondmate launch on it. The control plane
 # asks this BEFORE it stops anything, so an incompatible relaunch target is
 # refused while the current agent is still running rather than after it has

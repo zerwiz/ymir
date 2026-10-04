@@ -3,7 +3,7 @@
 ### Why
 - **The memory engine was never installed by the installer.** `bin/prereq-ensure.sh`
   had no `engram` target at all, and `bin/ymir-install.sh` only *checked* for it
-  and printed `SKIP "optional — install engine then run bin/mimir-bridge.sh"`. A
+  and printed `SKIP "optional — install engine then run bin/bridge/mimir-bridge.sh"`. A
   SKIP never blocks, so the well was silently down on every install.
 - **The hint named the wrong package.** PyPI's `engram` is an unrelated
   *rendering* library (mitsuba/drjit/torch): following the hint pulled gigabytes
@@ -12,7 +12,7 @@
   right answer all along (`PyPI engdbram, v2.2.1`).
 - **Now it installs.** `prereq-ensure.sh engram` installs `engdbram` into an
   interpreter that can run it (>=3.11; uv supplies 3.12 here), records that
-  interpreter in `~/.config/ymir/engram-python`, and `bin/mimir-bridge.sh` reuses
+  interpreter in `~/.config/ymir/engram-python`, and `bin/bridge/mimir-bridge.sh` reuses
   it for both the check and the run. The installer provisions rather than hints,
   and reports WARN instead of a silent SKIP when it cannot.
 - **Verified:** `curl 127.0.0.1:4602/health` -> `{"status": "up", "store":

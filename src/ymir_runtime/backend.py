@@ -7,7 +7,7 @@ record reads identically whichever door was used.
 
 The seat's OWN machine-state dir is set on the launched process, never on ours:
 without it every worker raised by this road takes the primary's helm. That
-lesson is kept here as law (see `bin/einherjar-spawn.sh`'s header).
+lesson is kept here as law (see `bin/agents/einherjar-spawn.sh`'s header).
 """
 
 from __future__ import annotations

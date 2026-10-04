@@ -11,7 +11,7 @@ symlinked into each harness.
 Rebind after any change:
 
 ```bash
-bin/valknut-load.sh --all
+bin/seat/valknut-load.sh --all
 ```
 
 ## A profile's frontmatter
@@ -37,13 +37,13 @@ OpenCode rejects `tools:` as a list — Ymir capabilities go under **`ymir_tools
 
 1. Write `.agents/agents/<name>-<craft>.md` (copy a neighbour).
 2. Give it a `model` (or leave it to inherit `default_model`) and a `domain`.
-3. `bin/valknut-load.sh --all` to bind it into OpenCode + Pi.
+3. `bin/seat/valknut-load.sh --all` to bind it into OpenCode + Pi.
 4. Register it in `.agents/skills/galdr-ymirsystem/assets/registry.md` if it is durable.
 
 ## Run an agent
 
 ```bash
-bin/agent-run.sh hnoss "design a compact hero"   # harness+model from agents.yaml
+bin/agents/agent-run.sh hnoss "design a compact hero"   # harness+model from agents.yaml
 ```
 
 Local models run through `pi`, hosted through `opencode` (see the **models**
@@ -52,6 +52,6 @@ runbook). `mode: all` lets an agent be dispatched *and* driven directly.
 ## Dispatch to a live pane (herdr)
 
 ```bash
-bin/eindri-start.sh "design a landing page"       # one command: role -> seat -> run
-bin/eindri-start.sh "…" --pane | --tab | --space  # seat a pane / tab / workspace
+bin/agents/eindri-start.sh "design a landing page"       # one command: role -> seat -> run
+bin/agents/eindri-start.sh "…" --pane | --tab | --space  # seat a pane / tab / workspace
 ```

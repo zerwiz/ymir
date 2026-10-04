@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/fm-watch-triage.test.sh - the always-on wake triage built into
-# bin/fm-watch.sh and the shared classifier (bin/fm-classify-lib.sh). The watcher
+# bin/backend/fm-watch.sh and the shared classifier (bin/backend/fm-classify-lib.sh). The watcher
 # now absorbs the benign majority of wakes in bash and exits ONLY on an actionable
 # wake, so firstmate's LLM re-arms once per actionable event instead of once per
 # wake. These tests cover the classifier predicates as pure functions, then drive

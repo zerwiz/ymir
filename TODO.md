@@ -33,7 +33,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 
 ### A3. Þjazi installed at install time — DONE
 - **Asked:** "install herdr if user don't have it in the installation."
-- **Done:** `bin/herdr-ensure.sh` (status/ensure) verifies the version against the
+- **Done:** `bin/seat/herdr-ensure.sh` (status/ensure) verifies the version against the
   floors and installs via the pinned SHA-verified installer, else accepts tmux.
   Wired as `step_backend` in the installer. Verified: `backend OK herdr`.
 
@@ -155,7 +155,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 - **Finding:** `pip install engram` is the **wrong package** — PyPI's `engram` is
   Benjamin Beilharz's alpha scientific project (pulls torch/triton). The code needs
   `from engram import Engram` (`.agents/skills/galdr-ymirsystem/assets/memory-well.md`,
-  `bin/mimir-bridge.py`).
+  `bin/bridge/mimir-bridge.py`).
 - The store exists (`kaia.engram`, 1.3 MB) and was seeded 2026-09-11 ("engram 1.30",
   370 episodes) — so the engine *did* exist once.
 - **Remains:** the Allfather names the source (git URL / package / where it was

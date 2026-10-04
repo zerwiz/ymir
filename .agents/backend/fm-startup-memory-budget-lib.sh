@@ -1,12 +1,12 @@
 # shellcheck shell=bash
 # Startup-memory budget primitives.
-# Usage: . bin/fm-startup-memory-budget-lib.sh
+# Usage: . bin/backend/fm-startup-memory-budget-lib.sh
 #
 # The local, primary-authoritative config/startup-memory-budget setting is one
 # strictly formatted positive decimal value followed by one newline.  The
 # locked primary bootstrap owns first materialization.  This library owns safe
 # parsing, default publication, and the portable prompt-memory estimate used by
-# bin/fm-startup-memory-budget.sh and the internal /stow skill.
+# bin/backend/fm-startup-memory-budget.sh and the internal /stow skill.
 
 FM_STARTUP_MEMORY_BUDGET_FILE="startup-memory-budget"
 FM_STARTUP_MEMORY_BUDGET_DEFAULT="7500"

@@ -112,8 +112,8 @@ smoke() {  # <pkg-dir>
   # fresh package has no electron until the launcher's first-run install lands
   # it at the workspace root, but the SHAPE must resolve and the gate must never
   # lie (a crash here means the resolver cannot read the packaged layout).
-  if [ -r "$P/bin/app-lib.sh" ] && [ -r "$P/bin/electron-lib.sh" ]; then
-    . "$P/bin/app-lib.sh"; . "$P/bin/electron-lib.sh"
+  if [ -r "$P/bin/app-lib.sh" ] && [ -r "$P/bin/desktop/electron-lib.sh" ]; then
+    . "$P/bin/app-lib.sh"; . "$P/bin/desktop/electron-lib.sh"
     local sdir shape_ok=1
     for sh in hlidskjalf odrerir sessrumnir smidja; do
       sdir=""

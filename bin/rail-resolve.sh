@@ -31,11 +31,11 @@ esac
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
-# The ONE resolver (Rule 07): env → the recorded choice, through `bin/hoard-lib.sh`.
+# The ONE resolver (Rule 07): env → the recorded choice, through `bin/vault/hoard-lib.sh`.
 # This door never restates a path; when no home can be resolved the module reports
 # a declined answer rather than guessing one.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c

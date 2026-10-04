@@ -18,9 +18,9 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 "$FM_ROOT/bin/fm-guard.sh" || true
 # Role partition: landing local-only work is MAIN-owned; the Pi supervision
-# branch reports readiness and never lands (contract: bin/fm-lease-lib.sh;
+# branch reports readiness and never lands (contract: bin/backend/fm-lease-lib.sh;
 # no-op in homes without a branch actor).
-# shellcheck source=bin/fm-lease-lib.sh
+# shellcheck source=bin/backend/fm-lease-lib.sh
 . "$SCRIPT_DIR/fm-lease-lib.sh"
 fm_lease_forbid_branch "local-only landing (fm-merge-local)"
 ID=${1:?usage: fm-merge-local.sh <task-id>}
@@ -29,7 +29,7 @@ META="$STATE/$ID.meta"
 
 PROJ=$(grep '^project=' "$META" | cut -d= -f2-)
 MODE=$(grep '^mode=' "$META" | cut -d= -f2- || true)
-[ "$MODE" = local-only ] || { echo "error: task $ID is mode=$MODE, not local-only; merge PR tasks with bin/fm-pr-merge.sh <id> <PR url> after approval" >&2; exit 1; }
+[ "$MODE" = local-only ] || { echo "error: task $ID is mode=$MODE, not local-only; merge PR tasks with bin/backend/fm-pr-merge.sh <id> <PR url> after approval" >&2; exit 1; }
 
 default_branch() {
   local ref branch

@@ -43,7 +43,7 @@ set -u
 AUTOBOOT_LIB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AUTOBOOT_ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$AUTOBOOT_LIB_SCRIPT_DIR/.." && pwd)}"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _ab_c in "$AUTOBOOT_LIB_SCRIPT_DIR/hoard-lib.sh" "$(dirname "$AUTOBOOT_LIB_SCRIPT_DIR")/bin/hoard-lib.sh"; do
+  for _ab_c in "$AUTOBOOT_LIB_SCRIPT_DIR/hoard-lib.sh" "$(dirname "$AUTOBOOT_LIB_SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_ab_c" ] && { . "$_ab_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _ab_c
@@ -206,7 +206,7 @@ autoboot_is_unit_failed() {  # <program> — exit 0 iff the unit state is failed
 
 # --- the activity probes --------------------------------------------------
 # A daemon's truth is its unit state. Nornir's is its scheduler loop: the unit
-# is oneshot (it calls bin/nornir-cron-start.sh, which daemonizes the loop), so
+# is oneshot (it calls bin/time/nornir-cron-start.sh, which daemonizes the loop), so
 # the loop's own identity check is the probe — never the unit's stale "exited".
 autoboot_probe() {  # <program> — exit 0 iff genuinely active
   case "${1-}" in

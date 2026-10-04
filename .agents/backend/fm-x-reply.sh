@@ -9,7 +9,7 @@
 #
 # --receipt-file <path> writes {request_id, endpoint, chunks, dry_run} to <path>
 # after the reply lands, so a caller that must record HOW MANY messages were
-# posted (bin/fm-public-followup.sh, building a typed delivery receipt) does not
+# posted (bin/backend/fm-public-followup.sh, building a typed delivery receipt) does not
 # have to re-derive the split. Omitted by default and never written on failure,
 # so stdout, exit codes, and every existing caller stay unchanged.
 #
@@ -91,7 +91,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
-# shellcheck source=bin/fm-x-lib.sh
+# shellcheck source=bin/backend/fm-x-lib.sh
 . "$SCRIPT_DIR/fm-x-lib.sh"
 
 TMP_FILES=()

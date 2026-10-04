@@ -21,7 +21,7 @@ A true elder remembers — so memory is kept true, one record, append-only.
 - **Single canonical writer on the heart** (plan 42 target). Bodies append via
   the chain; a fork is healed by a NEW entry carrying both tails (never a
   silent merge). The 2026-09-22 fork-and-hand-merge is the cautionary tale.
-- Every significant action is carved: `bin/runes-append.sh <actor> <event>
+- Every significant action is carved: `bin/records/runes-append.sh <actor> <event>
   --realm R --message "…"` (or the home's ledger via `BROKK_HOME`).
 
 ## Daily logs

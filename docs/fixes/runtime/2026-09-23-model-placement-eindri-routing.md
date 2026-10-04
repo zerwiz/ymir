@@ -11,7 +11,7 @@
     (`http://<tailnet>:8080`), whether it answers (offline-safe), and this
     machine's one-local-model lock. The forge owns the heavy rail; a body calls it
     over the tailnet instead of downloading.
-  - **`bin/eindri-route.sh <kind>`** — maps an errand to the role that fits:
+  - **`bin/agents/eindri-route.sh <kind>`** — maps an errand to the role that fits:
     `model|bench|gpu|train|inference → forge`; `ui|desktop|app|design|theme → dev`;
     `record|ledger|memory|backlog|plan|sync|ticket|audit → heart`; anything else →
     `any` (this machine first). Prints the target host(s) from the registry.
@@ -26,5 +26,5 @@
 
 ### Files
 - `bin/model-placement.sh`
-- `bin/eindri-route.sh`
+- `bin/agents/eindri-route.sh`
 - `.agents/tests/model-eindri.test.sh`

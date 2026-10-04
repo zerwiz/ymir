@@ -32,7 +32,7 @@ gleipnir_is_eindri_home() {
   return 1
 }
 
-# The operator's runtime state, resolved through bin/hoard-lib.sh — the single
+# The operator's runtime state, resolved through bin/vault/hoard-lib.sh — the single
 # source of truth every shell tool uses (Rule 04: state lives in the home, never
 # in the code tree). Sourced in a subshell so this library's namespace is
 # untouched; prints nothing when hoard-lib is unavailable (a bare checkout).

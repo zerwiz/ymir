@@ -104,7 +104,7 @@ processes:
       timeout: 5
 
   - name: "mimirsbrunn-bridge"
-    command: "python3 $YMIR_ROOT/bin/mimir-bridge.py"
+    command: "python3 $YMIR_ROOT/bin/bridge/mimir-bridge.py"
     directory: "$YMIR_ROOT"
     user: "<user>"
     autostart: true

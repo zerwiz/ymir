@@ -10,10 +10,10 @@
 - **Through the smithy right now:**
   `store $YMIR_HOME/memory/kaia.engram · episodes 8 · facts 36 (35 active) ·
   entities 60 · edges 480 · reflections 1 (2026-09-16T21:01) · vec index 8`.
-- **A trap found while doing it:** restarting the bridge RAW (`python3 bin/mimir-bridge.py`)
+- **A trap found while doing it:** restarting the bridge RAW (`python3 bin/bridge/mimir-bridge.py`)
   loses the env that carries the well's path, and the bridge silently re-points at the
   old store in the repo — 364 stale episodes and no facts. The well is the **blessed
-  starter's** to raise: `bin/mimir-bridge.sh --start`. A raw restart is a different
+  starter's** to raise: `bin/bridge/mimir-bridge.sh --start`. A raw restart is a different
   well wearing the same port.
 
 ### Files

@@ -2530,7 +2530,7 @@ function usage() {
 
 Usage:
   bin/fm-extension.mjs bind <package-root> --adapter <name> [--adapter <name> ...] --trust-same-user-code [--consent <fact> ...] [--timeout-ms <milliseconds>]
-  bin/fm-extension.sh remote-bind <secondmate-id> <package-root> --adapter <name> --trust-same-user-code [bind options]
+  bin/backend/fm-extension.sh remote-bind <secondmate-id> <package-root> --adapter <name> --trust-same-user-code [bind options]
   bin/fm-extension.mjs retire-binding <extension-id> --if-binding-digest <sha256:digest>
   bin/fm-extension.mjs retire-transfer <extension-id> --if-transfer-digest <sha256:digest> --if-binding-digest <sha256:digest>
   bin/fm-extension.mjs list

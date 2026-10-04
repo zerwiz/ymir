@@ -16,7 +16,7 @@
 # The figures carry NO model: dispatch resolves each figure's model from this
 # YAML by figure name (`get <figure> model`). `apply` writes local providers +
 # agent models into project `opencode.json` and caches the resolved combination
-# in `state/agents-resolved.json` (read by `get` and bin/agent-run.sh); it never
+# in `state/agents-resolved.json` (read by `get` and bin/agents/agent-run.sh); it never
 # rewrites a tracked `.agents/agents/*.md`.
 set -u
 
@@ -29,7 +29,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # must never sit in a tree that ships (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc

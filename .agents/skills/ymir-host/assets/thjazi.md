@@ -22,7 +22,7 @@ herdr-first system without breaking on a tmux-only host.
 
 An **Eindri** is a delegated hand (AGENTS.md; `docs/lore.md` §II — Brokk works the
 bellows, Eitri/Eindri works the craft). Two roads seat one, and each fits its own
-country. `bin/herdr-run.sh` is the runner; `bin/eindri-role.sh` names the smith.
+country. `bin/seat/herdr-run.sh` is the runner; `bin/agents/eindri-role.sh` names the smith.
 
 ```
 herdr_roads[2]{road,shape,use_when}:
@@ -35,16 +35,16 @@ worker takes its **own tab in the home's workspace**, never a slice of yours. Yo
 pane keeps its width; the smith sits beside your tabs, reachable with a tab switch.
 
 ```
-bin/herdr-run.sh available                      # reach herdr? which session/workspace?
-bin/herdr-run.sh worth-a-smith "<errand>"       # THE FIRST LAW (see below)
-bin/herdr-run.sh eindri -- "<task>"             # the RIGHT smith, seated in a TAB
-bin/herdr-run.sh eindri --space -- "<task>"     # ...or in a disposable WORKSPACE
-bin/herdr-run.sh eindri sindri -- "<task>"      # name the smith explicitly
-bin/herdr-run.sh eindri --role huginn -- "<task>"
-bin/herdr-run.sh run <name> -- <command...>     # a command in a tab (not an agent)
-bin/herdr-run.sh agent-status                   # who stands, and in what state
-bin/herdr-run.sh status                         # what seats we recorded
-bin/herdr-run.sh close-all                      # clear the tabs/workspaces we made
+bin/seat/herdr-run.sh available                      # reach herdr? which session/workspace?
+bin/seat/herdr-run.sh worth-a-smith "<errand>"       # THE FIRST LAW (see below)
+bin/seat/herdr-run.sh eindri -- "<task>"             # the RIGHT smith, seated in a TAB
+bin/seat/herdr-run.sh eindri --space -- "<task>"     # ...or in a disposable WORKSPACE
+bin/seat/herdr-run.sh eindri sindri -- "<task>"      # name the smith explicitly
+bin/seat/herdr-run.sh eindri --role huginn -- "<task>"
+bin/seat/herdr-run.sh run <name> -- <command...>     # a command in a tab (not an agent)
+bin/seat/herdr-run.sh agent-status                   # who stands, and in what state
+bin/seat/herdr-run.sh status                         # what seats we recorded
+bin/seat/herdr-run.sh close-all                      # clear the tabs/workspaces we made
 ```
 
 **Quoting into a pane.** A pane runs its command through a *shell*, so `run`
@@ -108,9 +108,9 @@ eindri_roles[8]{role,craft}:
 ```
 
 ```
-bin/eindri-role.sh list                 # the roster
-bin/eindri-role.sh choose "<task text>" # the craft that fits
-bin/eindri-role.sh for <role>           # exact lookup
+bin/agents/eindri-role.sh list                 # the roster
+bin/agents/eindri-role.sh choose "<task text>" # the craft that fits
+bin/agents/eindri-role.sh for <role>           # exact lookup
 ```
 
 A named role wins; otherwise the craft is read from the errand itself ("write a
@@ -155,7 +155,7 @@ with a plain reason rather than degrading silently.
 
 ## Installing and upgrading
 
-`bin/herdr-ensure.sh` (when present) is the single owner of provisioning; it
+`bin/seat/herdr-ensure.sh` (when present) is the single owner of provisioning; it
 detects, installs when absent, and verifies the reported version. The pinned,
 SHA-verified installer for the CI lane is `.agents/backend/fm-install-herdr.sh`
 — it installs an **exact** version from official release assets, verifies SHA-256,
@@ -167,8 +167,8 @@ required protocol. Never install a floating "latest" for the pinned lane.
 .agents/backend/fm-install-herdr.sh "$HOME/.local/bin"
 
 # User-space, if the helper is present
-bin/herdr-ensure.sh status
-bin/herdr-ensure.sh ensure --install
+bin/seat/herdr-ensure.sh status
+bin/seat/herdr-ensure.sh ensure --install
 ```
 
 Opting out of presentation spaces (they are presentation-only, never correctness)
@@ -188,7 +188,7 @@ is done with `config/herdr-presentation-spaces` — see AGENTS.md.
 
 ```bash
 scripts/electron.sh status        # if the app surface is the question
-bin/backend/* or bin/einherjar-spawn.sh --help    # spawn contract
+bin/backend/* or bin/agents/einherjar-spawn.sh --help    # spawn contract
 # one pane, one worker: a second spawn for the same id must be refused
 ```
 
@@ -206,7 +206,7 @@ misconfiguration, not a mystery.
 ## The seat hierarchy (panes · tabs · spaces)
 
 herdr is `Session > Workspace > Tab > Pane`. An Eindri can be seated at each rung,
-chosen by `bin/eindri-start.sh` / `bin/herdr-run.sh eindri`:
+chosen by `bin/agents/eindri-start.sh` / `bin/seat/herdr-run.sh eindri`:
 
 | flag | rung | road | when |
 |------|------|------|------|

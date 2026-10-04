@@ -5,7 +5,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-M="$ROOT/bin/mcp-config.sh"
+M="$ROOT/bin/bridge/mcp-config.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

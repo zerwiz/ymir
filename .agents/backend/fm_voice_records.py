@@ -37,7 +37,7 @@ Two readings here treat that differently, on purpose.
   The worker count and the state histogram cover every live runtime record,
   finished ids included, because a task with a meta file still on disk is still
   on deck and still needs tearing down. That is the question those two figures
-  answer, and it is the same meaning bin/fm-inbox.sh gives "workers" in the human
+  answer, and it is the same meaning bin/backend/fm-inbox.sh gives "workers" in the human
   rendering. Neither can carry record free text: one is an integer, and the
   other's keys are the state verb folded through the closed set below.
 
@@ -73,13 +73,13 @@ than by turning the whole feature down.
 
 WORKER STATE. This module reports the last recorded event verb, which is
 history rather than a live check, and labels it that way in its own output so
-the model cannot present it as current truth. bin/fm-crew-state.sh remains the
+the model cannot present it as current truth. bin/backend/fm-crew-state.sh remains the
 owner of real current-state reconciliation and is far too slow for a spoken
 answer. The verb is folded through the closed STATE_VERBS vocabulary below, and
 anything outside it becomes "note": a status line is free text, and this verb is
 the only thing derived from a record that a counts-scope answer says out loud.
 
-bin/fm-inbox.sh `status` is the human rendering of the same records and stays
+bin/backend/fm-inbox.sh `status` is the human rendering of the same records and stays
 the owner of that. This module exists because a spoken answer needs a machine
 shape and a read scope that the human rendering has no reason to carry.
 
@@ -124,7 +124,7 @@ DATE_TAG = re.compile(r"\((?:since|done) [0-9-]+\)")
 READ_SECTIONS = ("in flight", "queued")
 
 # The states a worker is asked to report, and the two more that close a decision.
-# bin/fm-brief.sh states the first six to every crewmate and bin/fm-classify-lib.sh
+# bin/backend/fm-brief.sh states the first six to every crewmate and bin/backend/fm-classify-lib.sh
 # owns resolved and captain-held; this module only recognises them.
 #
 # A CLOSED set, not a shape. A status line is free text appended by a crewmate,
@@ -149,7 +149,7 @@ class RecordError(Exception):
 
 
 def default_home():
-    """Return the operational home, matching bin/fm-inbox.sh's resolution."""
+    """Return the operational home, matching bin/backend/fm-inbox.sh's resolution."""
     env = os.environ.get("FM_HOME")
     if env:
         return env
@@ -157,7 +157,7 @@ def default_home():
 
 
 def state_dir(home):
-    """Return the runtime state directory, resolved as bin/fm-inbox.sh resolves it.
+    """Return the runtime state directory, resolved as bin/backend/fm-inbox.sh resolves it.
 
     fm-inbox.sh reads ${FM_STATE_OVERRIDE:-$FM_HOME/state}, and the handover
     below queues through fm-inbox.sh with the ambient environment. A reader that
@@ -303,7 +303,7 @@ def _parse_backlog(path):
 def _last_event(state_dir, task_id):
     """Return (verb, line) from the last status event, or (None, None).
 
-    bin/fm-classify-lib.sh remains the owner of status-verb normalization.
+    bin/backend/fm-classify-lib.sh remains the owner of status-verb normalization.
     This security-bounded projection accepts the prefix before the first ':'
     and the first '[', whichever comes first, only when it is in STATE_VERBS.
     The bracket matters: status metadata sits between the verb and the colon,
@@ -508,7 +508,7 @@ def fleet_status(home=None, scope=None):
 
 
 def queue_request(text, home=None, root=None):
-    """Hand real work to firstmate through bin/fm-inbox.sh note."""
+    """Hand real work to firstmate through bin/backend/fm-inbox.sh note."""
     home = home or default_home()
     root = root or os.path.dirname(os.path.abspath(__file__))
     body = (text or "").strip()

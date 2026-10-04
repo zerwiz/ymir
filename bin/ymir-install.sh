@@ -37,7 +37,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # must never sit in a tree that ships (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc
@@ -49,9 +49,9 @@ hoard_local_env YMIR_ENV_FILE
 # the one documented default. An interactive run ASKS and RECORDS the answer
 # (step_home); --check never writes, --yes takes what is recorded.
 # The hoard resolves through the shared lib, so the installer can never disagree
-# with bin/hodd.sh about where private data lives — and never points inside the
+# with bin/vault/hodd.sh about where private data lives — and never points inside the
 # repo (Rule 04).
-# shellcheck source=bin/hoard-lib.sh
+# shellcheck source=bin/vault/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
 # The role lib — what this machine IS, and the components its roles owe (plan 51
 # P1). It resolves the home through hoard-lib, so it loads right after it.
@@ -67,10 +67,10 @@ if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/electron-lib.sh" 
 fi
 ymir_home_root YMIR_HOME
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
-# @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
+# @zerwiz/smidja-factory package in an npm install (bin/desktop/smidja-lib.sh).
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
   _ys="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/smidja-lib.sh"; do
+  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/desktop/smidja-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_SMIDJA_LIB_LOADED=1; break; }
   done
   unset _ys _yc
@@ -241,7 +241,7 @@ step_tree() {
   # The hoard is OUTSIDE the repo (Rule 04): this creates its layout at the
   # resolved root, never in the checkout. Idempotent.
   "$SCRIPT_DIR/hodd.sh" init >/dev/null 2>&1 || true
-  # A missing platform env makes `bin/hodd.sh emit secrets/platform.env` fail on a
+  # A missing platform env makes `bin/vault/hodd.sh emit secrets/platform.env` fail on a
   # fresh machine; seed an empty one (0600) so the reference always resolves.
   if [ ! -f "$HOARD/secrets/platform.env" ]; then
     mkdir -p "$HOARD/secrets"
@@ -609,7 +609,7 @@ step_a2a() {
   [ "$SKIP_ENGINES" = 1 ] && { add a2a SKIP "--skip-engines"; return; }
   if [ ! -x "$SCRIPT_DIR/a2abridge-ensure.sh" ]; then add a2a SKIP "no a2abridge-ensure.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
-    if "$SCRIPT_DIR/a2abridge-ensure.sh" status >/dev/null 2>&1; then add a2a OK "engine + directory present"; else add a2a WARN "engine absent (run bin/a2abridge-ensure.sh ensure --install)"; fi
+    if "$SCRIPT_DIR/a2abridge-ensure.sh" status >/dev/null 2>&1; then add a2a OK "engine + directory present"; else add a2a WARN "engine absent (run bin/bridge/a2abridge-ensure.sh ensure --install)"; fi
     return
   fi
   # The ensure's own post-start probe can race the daemon's first bind, so the
@@ -618,12 +618,12 @@ step_a2a() {
   if "$SCRIPT_DIR/a2abridge-ensure.sh" status >/dev/null 2>&1; then
     add a2a OK "engine + directory up"
   else
-    add a2a WARN "engine absent — run bin/a2abridge-ensure.sh ensure --install (offline?)"
+    add a2a WARN "engine absent — run bin/bridge/a2abridge-ensure.sh ensure --install (offline?)"
   fi
   if [ -x "$SCRIPT_DIR/a2a-mcp.sh" ] && "$SCRIPT_DIR/a2a-mcp.sh" install >/dev/null 2>&1; then
     add a2a-mcp OK "a2abridge + engram wired into pi + opencode"
   else
-    add a2a-mcp WARN "run bin/a2a-mcp.sh install to wire the mesh"
+    add a2a-mcp WARN "run bin/bridge/a2a-mcp.sh install to wire the mesh"
   fi
 }
 
@@ -918,7 +918,7 @@ step_record() {
     return
   fi
   if [ "$store" != present ] || [ "$fold" != present ]; then
-    add record WARN "the record is incomplete — engram store $store, journal fold $fold (bin/mimir-bridge.sh --start)"
+    add record WARN "the record is incomplete — engram store $store, journal fold $fold (bin/bridge/mimir-bridge.sh --start)"
     return
   fi
   add record OK "holds the record — engram store $store · journal fold $fold · $crons record cron(s)"
@@ -942,7 +942,7 @@ step_smidja() {
       # smidja deps resolve without a system install.
       add smidja WARN "needs uv — bin/prereq-ensure.sh uv (the visualizer stays empty without it)"
     else
-      if "$SCRIPT_DIR/smidja-bootstrap.sh" >/dev/null 2>&1; then add smidja OK "smidja.db ready (visualizer has data)"; else add smidja WARN "could not bootstrap smidja.db — run bin/smidja-bootstrap.sh to see why"; fi
+      if "$SCRIPT_DIR/smidja-bootstrap.sh" >/dev/null 2>&1; then add smidja OK "smidja.db ready (visualizer has data)"; else add smidja WARN "could not bootstrap smidja.db — run bin/desktop/smidja-bootstrap.sh to see why"; fi
     fi
   else add smidja SKIP "no smidja-bootstrap.sh"; fi
   # The visualizer API serves its UI from ./dist — without a build it answers
@@ -1009,7 +1009,7 @@ step_loaders() {
       if "$SCRIPT_DIR/valknut-load.sh" >/dev/null 2>&1; then
         add loaders OK "agents/skills/extensions loaded"
       else
-        add loaders FAIL "the seat could not be seated — run bin/valknut-load.sh --status"
+        add loaders FAIL "the seat could not be seated — run bin/seat/valknut-load.sh --status"
       fi
 
       # The phone gateway (plan 68 P1). Installed and UPDATED, not just written: a capability

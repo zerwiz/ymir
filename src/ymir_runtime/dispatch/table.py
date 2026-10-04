@@ -30,7 +30,7 @@ ROLES_RELATIVE = Path(".agents") / "roles.yaml"
 AGENTS_RELATIVE = Path(".agents") / "agents"
 
 # The chooser's smith of first resort when no craft word matches — the same
-# fallback `bin/eindri-role.sh` uses, so the two choosers cannot disagree.
+# fallback `bin/agents/eindri-role.sh` uses, so the two choosers cannot disagree.
 DEFAULT_ROLE = "developer"
 
 _STOPWORDS = frozenset({"of", "the", "and", "a", "to"})
@@ -98,7 +98,7 @@ class Table:
         )
 
     def find(self, term: str) -> Role:
-        """A role by its key, else by its figure — as `bin/eindri-role.sh for` does."""
+        """A role by its key, else by its figure — as `bin/agents/eindri-role.sh for` does."""
         try:
             return self.get(term)
         except TableRefusal:
@@ -161,7 +161,7 @@ def _load_yaml(path: Path) -> Any:
     except Exception as exc:  # pragma: no cover - PyYAML is a declared dependency
         raise TableRefusal(
             "PyYAML is required to read the roles table and is not installed",
-            remedy="bin/ymir-engine-ensure.sh ensure (installs the declared dependencies)",
+            remedy="bin/engine/ymir-engine-ensure.sh ensure (installs the declared dependencies)",
         ) from exc
     try:
         return yaml.safe_load(path.read_text(encoding="utf-8"))

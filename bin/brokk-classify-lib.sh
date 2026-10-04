@@ -197,7 +197,7 @@ status_is_paused_or_Allfather_held() {  # <status-line>
 # terminal line never clears an open Allfather decision.
 # Who WRITES the closing line is owned elsewhere: the answering brokk closes
 # at answer time through brokk-send's --resolve-key (bin/brokk-send.sh header), and a
-# worker self-closes only a blocker that cleared without an answer (bin/erindi-brief.sh
+# worker self-closes only a blocker that cleared without an answer (bin/agents/erindi-brief.sh
 # rule 6), so closure never depends on a busy worker's discipline.
 #
 # Decision key grammar (backward-compatible with the existing "<verb>: <note>"
@@ -226,7 +226,7 @@ status_is_paused_or_Allfather_held() {  # <status-line>
 # including the "[corr=<16 hex>]" form bin/brokk-eindri-home-report.sh writes. It
 # does not cover the UNBRACKETED token that bin/brokk-pending-reply-lib.sh writes
 # (fm_pending_reply_corr_token), which a eindri-home answering a marked request
-# echoes on its parent status line ahead of the key tag (bin/erindi-brief.sh), so a
+# echoes on its parent status line ahead of the key tag (bin/agents/erindi-brief.sh), so a
 # real transition routinely arrives as
 #   needs-decision corr=<16 hex> [key=texte-du-mur]: <summary>
 #   resolved       corr=<16 hex> [key=texte-du-mur]: <how it was decided>
@@ -613,7 +613,7 @@ EOF
 # side effect (state/.<task>.open-decisions-cursor), the library's second
 # documented exception to the pure-read rule after crew_absorb_class. The write
 # is atomic (temp file + rename), so a crash between calls leaves either the
-# prior cursor or the new one, never a partial one. bin/saga-wake-drain.sh calls
+# prior cursor or the new one, never a partial one. bin/time/saga-wake-drain.sh calls
 # this only after releasing the wake-queue lock, so a hypothetical race between
 # two overlapping drains can at worst redo a little folding work twice - never
 # drop an open decision - because a losing writer's offset can only ever be

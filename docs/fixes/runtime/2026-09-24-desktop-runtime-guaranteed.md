@@ -9,7 +9,7 @@ Three silent failures made the installation guarantee nothing on heimdall:
    (`ymir/node_modules/electron`). Every runtime probe looked only at the app
    dir — `scripts/electron.sh` `real_electron()` →
    `$APP/node_modules/electron/dist/electron`, `ensure_electron_binary()` →
-   the same, `bin/electron-lib.sh` `electron_runtime_state()` →
+   the same, `bin/desktop/electron-lib.sh` `electron_runtime_state()` →
    `$dir/node_modules/electron` — a path npm will never create. Observed in
    `state/electron.log`: `env: '<pkg>/apps/hlidskjalf/node_modules/electron/
    dist/electron': No such file or directory`.
@@ -31,7 +31,7 @@ so GPU-side buffer/fence failure on the i915 GPU process. The only GPU gate,
 on this Intel+discrete hybrid the guard never fired.
 
 ### What
-- **The one resolver** — `bin/electron-lib.sh`: `electron_bin`,
+- **The one resolver** — `bin/desktop/electron-lib.sh`: `electron_bin`,
   `electron_pkg_dir`, `electron_place_dir`, `electron_runtime_state`,
   `electron_fetch_runtime`, `fetch_electron_zip` now search every shape npm
   leaves behind, in order: app-local, the nearest ancestor hoist (walking up,
@@ -59,5 +59,5 @@ on this Intel+discrete hybrid the guard never fired.
   `card2` (i915 drives fb0).
 
 ### Files
-- `bin/electron-lib.sh` · `bin/graphics-lib.sh` (new) · `scripts/electron.sh`
+- `bin/desktop/electron-lib.sh` · `bin/graphics-lib.sh` (new) · `scripts/electron.sh`
 - `bin/sessrumnir.sh` · `bin/sessrumnir-ensure.sh` · `.agents/tests/electron-lib.test.sh`

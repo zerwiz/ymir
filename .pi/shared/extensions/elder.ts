@@ -32,7 +32,7 @@ function resolveRoot(): string {
   }
   throw new Error(
     "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
-    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout.",
+    "Run `bin/seat/valknut-load.sh --all --global` from your Ymir checkout.",
   );
 }
 
@@ -43,7 +43,7 @@ function resolveHome(): string {
   const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
-  if (!v) throw new Error("the vault path is empty — run `bin/hodd.sh path` and read what it says");
+  if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
   return v;
 }
 

@@ -12,13 +12,13 @@ a2a[4]{piece,what,path}:
   "engine","a2abridge — directory (discovery) · bridge (announce) · service · cert · doctor","~/.a2abridge/bin/a2abridge"
   "MCP (mesh)","a2abridge — a2a_* tools for the agents","~/.pi/agent/mcp-adapter.json, opencode.json"
   "MCP (control plane)","wayofteams-* — tickets, plans, memory, knowledge (NEEDS AUTH)","WOTEAMS_URL / WOTEAMS_TOKEN"
-  "Ymir front door","bin/ratatoskr.sh, bin/a2a-mcp.sh","bin/"
+  "Ymir front door","bin/ratatoskr.sh, bin/bridge/a2a-mcp.sh","bin/"
 ```
 
 ## Setup
 
 ```bash
-bin/a2a-mcp.sh install     # wires the MCP servers into pi + opencode
+bin/bridge/a2a-mcp.sh install     # wires the MCP servers into pi + opencode
 bin/ratatoskr.sh status    # engine + directory + served agents
 bin/ratatoskr.sh doctor    # health-check
 ```
@@ -44,8 +44,8 @@ a2a_inbox                               # your incoming queue
 a2a_complete_task task_id="…" text="…"  # answer a task
 ```
 
-**From Brokk / scripts:** `bin/a2a-talk.sh agents` and
-`bin/a2a-talk.sh send <peer> "<text>"`.
+**From Brokk / scripts:** `bin/bridge/a2a-talk.sh agents` and
+`bin/bridge/a2a-talk.sh send <peer> "<text>"`.
 
 ## Rules that bite
 

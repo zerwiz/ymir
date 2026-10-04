@@ -3,7 +3,7 @@
 #
 # When enabled, firstmate resolves one W3C `traceparent` carrier for a task,
 # injects it into the agent's pane shell as the TRACEPARENT environment variable
-# before launch (bin/fm-spawn.sh, alongside GOTMPDIR, so it reaches every spawn
+# before launch (bin/backend/fm-spawn.sh, alongside GOTMPDIR, so it reaches every spawn
 # backend and every harness for ship, scout, and secondmate spawns), and records
 # the identical value as `traceparent=` in state/<id>.meta. Because the injected
 # carrier and the recorded carrier are the same string, an observer that reads
@@ -26,7 +26,7 @@
 # environment, and adopting its carrier would merge every routed task into one
 # ever-growing trace instead of one trace per task.
 #
-# Usage: . bin/fm-trace-context-lib.sh
+# Usage: . bin/backend/fm-trace-context-lib.sh
 #
 # Public entry points:
 #   fm_trace_context_session_start <config-dir> <effective-state-file>
@@ -54,9 +54,9 @@
 #   on/off value, so later config and environment edits take effect only after a
 #   new home session starts.
 #   At launch, the primary propagates config/trace-context into the secondmate
-#   home (FM_INHERITABLE_CONFIG in bin/fm-config-inherit-lib.sh) and passes its
+#   home (FM_INHERITABLE_CONFIG in bin/backend/fm-config-inherit-lib.sh) and passes its
 #   frozen on/off decision into the new process as a non-empty FM_TRACE_CONTEXT
-#   value in the launch prefix (bin/fm-spawn.sh). The Secondmate freezes that
+#   value in the launch prefix (bin/backend/fm-spawn.sh). The Secondmate freezes that
 #   inherited decision when its own home session starts.
 #   A REMOTE secondmate route resolves here too, in the PARENT process that owns
 #   that task's meta: fm-spawn's spawn_remote_secondmate resolves the carrier,

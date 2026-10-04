@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/fm-control-herdr-smoke.test.sh - real-herdr smoke test for the agent
-# lifecycle control plane (bin/fm-control.sh).
+# lifecycle control plane (bin/backend/fm-control.sh).
 #
 # tmux is the control plane's reference backend and is covered hermetically in
 # tests/fm-control.test.sh. herdr is the OTHER backend whose recovery-grade

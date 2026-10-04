@@ -118,9 +118,9 @@ fm_operational_input_body() {  # <current-message> <result-var>
 # They exist only for persisted pre-protocol transcripts and must never be used
 # by current producers or current-path tests.
 # shellcheck disable=SC2016 # Backticks are literal historical prompt markup.
-FM_LEGACY_SESSIONSTART='Run `bin/fm-session-start.sh` now, exactly once, before executing any other instructions.'
+FM_LEGACY_SESSIONSTART='Run `bin/backend/fm-session-start.sh` now, exactly once, before executing any other instructions.'
 FM_LEGACY_WATCHER_PREFIX='FIRSTMATE WATCHER WAKE: '
-FM_LEGACY_WATCHER_SUFFIX=$'\n\nRun bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.'
+FM_LEGACY_WATCHER_SUFFIX=$'\n\nRun bin/backend/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.'
 FM_LEGACY_TURNEND_PREFIX=$'TURN WOULD END BLIND - supervision is off. The watcher cycle is missing, failed, or unhealthy. Follow the harness recovery instruction below before ending the turn.\n\n'
 FM_LEGACY_AWAY_PREFIX="${FM_OPERATIONAL_MARK}Supervisor escalate ("
 
@@ -197,10 +197,10 @@ fm_operational_read_stdin() {  # <result-var>
 fm_operational_usage() {
   cat <<'EOF'
 Usage:
-  bin/fm-operational-input.sh encode <kind>  # body on stdin
-  bin/fm-operational-input.sh kind           # current input on stdin
-  bin/fm-operational-input.sh classify       # current or legacy input on stdin
-  bin/fm-operational-input.sh body           # current input on stdin
+  bin/backend/fm-operational-input.sh encode <kind>  # body on stdin
+  bin/backend/fm-operational-input.sh kind           # current input on stdin
+  bin/backend/fm-operational-input.sh classify       # current or legacy input on stdin
+  bin/backend/fm-operational-input.sh body           # current input on stdin
 
 Current construction kinds:
   session-start watcher turn-end-guard away-supervisor from-firstmate launch-brief

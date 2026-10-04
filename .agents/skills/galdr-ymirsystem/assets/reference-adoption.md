@@ -7,7 +7,7 @@ Norse-named runtime is loaded.
 
 ## Data → the well (Mimirsbrunn)
 
-`assets/data/**/*.md` is real planning/knowledge material. `bin/mimir-ingest.sh`
+`assets/data/**/*.md` is real planning/knowledge material. `bin/records/mimir-ingest.sh`
 chunks it by heading into episodes (content hash, source, tags, timestamp) and
 appends them to the local well store; it POSTs each to the engram bridge when
 reachable. Idempotent by hash.
@@ -15,12 +15,12 @@ reachable. Idempotent by hash.
 ```
 data_pipeline[2]{stage,path}:
   "source","assets/data/**/*.md (13 files, ~370 sections)"
-  "ingest","`bin/mimir-ingest.sh` → `.agents/memory/well/episodes.jsonl` + bridge `/observe`"
+  "ingest","`bin/records/mimir-ingest.sh` → `.agents/memory/well/episodes.jsonl` + bridge `/observe`"
 ```
 
 ```
 runes[1]{command,purpose}:
-  "bin/mimir-ingest.sh","drink the repo's data into the well (idempotent)"
+  "bin/records/mimir-ingest.sh","drink the repo's data into the well (idempotent)"
 ```
 
 ## State conventions (Brokk)

@@ -14,7 +14,7 @@
 - **Ratatoskr mesh healed:** the `a2abridge` engine (MIT,
   `vbcherepanov/a2abridge` v3.0.0) is installed at `~/.a2abridge/bin/`, its
   directory daemon runs on `127.0.0.1:7777`, and `bin/ratatoskr.sh
-  status|doctor` pass. Forged `bin/a2abridge-ensure.sh` (installs the engine,
+  status|doctor` pass. Forged `bin/bridge/a2abridge-ensure.sh` (installs the engine,
   patches the systemd unit's unwritable `/var/log` log paths to journal,
   keeps the directory up) and wired it into migration `0002-a2a-mcp.sh`, so
   every install/update heals the mesh instead of leaving a dangling MCP path.

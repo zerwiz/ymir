@@ -12,7 +12,7 @@
   machine. `data/realm.md` now pins `wayof` (was drifting between `way-of`,
   `wayof`, and `default`; hoard cards + persona updated to match).
 - **Hood:** `svartalfaheim/wayof/HOOD.md` is the map of the hoard and the
-  seat; `bin/saga-session-start.sh` stage 6 (context digest) now prints
+  seat; `bin/time/saga-session-start.sh` stage 6 (context digest) now prints
   `--- hood ---` whole from the realm seat, so a session opens knowing the
   operator's holdings. Living overviews: `workspace/company/wayof-overview.md`
   and `workspace/company/aigf.md` (hodd stays the private store; the realm

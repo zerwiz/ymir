@@ -23,7 +23,7 @@ if [ -n "${FM_TEST_FIXTURES_SOURCED:-}" ]; then
 fi
 FM_TEST_FIXTURES_SOURCED=1
 
-# Production floor lives in bin/fm-bootstrap.sh (NO_MISTAKES_MIN). Keep this
+# Production floor lives in bin/backend/fm-bootstrap.sh (NO_MISTAKES_MIN). Keep this
 # equal to that floor so a bump is one constant here plus that production pin.
 export FM_TEST_NO_MISTAKES_VERSION=1.46.0
 export FM_TEST_NO_MISTAKES_FAKE_VERSION="no-mistakes version v${FM_TEST_NO_MISTAKES_VERSION} (fake)"

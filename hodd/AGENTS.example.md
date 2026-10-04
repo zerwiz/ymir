@@ -19,7 +19,7 @@ data lives at `$YMIR_HOME`, under `hodd/`, and nowhere else.
 
 ## The private layout (current, 2026-09-17)
 
-`$YMIR_HOME` (default `~/Documents/ymirhome`, resolved by `bin/hoard-lib.sh`
+`$YMIR_HOME` (default `~/Documents/ymirhome`, resolved by `bin/vault/hoard-lib.sh`
 `hoard_root`) is the private git repo. `hodd/` **is** the hoard; everything
 else under the home is runtime or realm material.
 
@@ -65,7 +65,7 @@ still living live in `hodd/plans/`; settled plans are filed into
 ## Secrets
 
 ```bash
-eval "$(bin/hodd.sh emit secrets/platform.env)"   # decrypts in memory
+eval "$(bin/vault/hodd.sh emit secrets/platform.env)"   # decrypts in memory
 ```
 `hodd/secrets/` stores `platform.env` (+ encrypted `platform.env.age`) and
 `age.key`. A value never enters a tracked file. **Staging discipline:** stage

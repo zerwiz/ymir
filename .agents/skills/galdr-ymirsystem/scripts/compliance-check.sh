@@ -32,7 +32,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yh="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
   for _i in 1 2 3 4 5; do
     [ -n "$_yh" ] || break
-    if [ -r "$_yh/bin/hoard-lib.sh" ]; then . "$_yh/bin/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
+    if [ -r "$_yh/bin/vault/hoard-lib.sh" ]; then . "$_yh/bin/vault/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     if [ -r "$_yh/hoard-lib.sh" ]; then . "$_yh/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     _yh="$(cd "$_yh/.." 2>/dev/null && pwd)"
   done
@@ -160,7 +160,7 @@ if [ -f "$ROOT/packaging/symlink-seams.json" ]; then
 fi
 if [ -n "$sync_seam" ] && { [ ! -e "$TYR/assets" ] || [ ! -e "$GALDR/assets" ]; }; then
   add sync "galdr/tyr assets mirrored" SKIP \
-    "declared symlink seam ($sync_seam) is absent in this artifact; a real machine seats it (bin/valknut-load.sh --all)"
+    "declared symlink seam ($sync_seam) is absent in this artifact; a real machine seats it (bin/seat/valknut-load.sh --all)"
 elif diff -rq "$GALDR/assets" "$TYR/assets" >/dev/null 2>&1; then
   add sync "galdr/tyr assets mirrored" PASS "in sync"
 else
@@ -367,9 +367,9 @@ asset_for() {
     *bin/ymir-install.sh)                      printf '%s' "$GALDR/assets/installation.md" ;;
     *apps/hlidskjalf/*)                        printf '%s' "$GALDR/assets/hlidskjalf-ui.md" ;;
     *bin/mimir*)                               printf '%s' "$GALDR/assets/memory-well.md" ;;
-    *bin/gleipnir-lock-lib.sh|*bin/saga-session-start.sh|*state/.lock) printf '%s' "$GALDR/assets/brokk-distro-runtime.md" ;;
+    *bin/gleipnir-lock-lib.sh|*bin/time/saga-session-start.sh|*state/.lock) printf '%s' "$GALDR/assets/brokk-distro-runtime.md" ;;
     *bin/nornir-*|*config/cron.yaml*)           printf '%s' "$GALDR/assets/nornir-jobs.md" ;;
-    *bin/valknut-load.sh|*/.pi/*|*/.opencode/*) printf '%s' "$GALDR/assets/harness-integration/README.md" ;;
+    *bin/seat/valknut-load.sh|*/.pi/*|*/.opencode/*) printf '%s' "$GALDR/assets/harness-integration/README.md" ;;
     *bin/smidja*|*.agents/skills/smidja-factory/*) printf '%s' "$GALDR/assets/smidja.md" ;;
     *)                                         printf '' ;;
   esac

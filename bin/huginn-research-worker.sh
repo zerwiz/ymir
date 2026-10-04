@@ -10,9 +10,9 @@
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
-             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
-             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+  for _yc in "${ROOT:-}/bin/vault/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/vault/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/vault/hoard-lib.sh" \
              "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
     [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
@@ -30,7 +30,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # must never sit in a tree that ships (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc
@@ -64,8 +64,8 @@ KEY="${APODEX_API_KEY:-not-needed-for-local}"
 
 # 1. Recall context from Mimirsbrunn (boost, never blocker).
 RECALL=""
-if [ -x "$ROOT/bin/mimir.sh" ]; then
-  RECALL=$("$ROOT/bin/mimir.sh" recall "$BRIEF" --k 3 2>/dev/null | tail -20 || true)
+if [ -x "$ROOT/bin/records/mimir.sh" ]; then
+  RECALL=$("$ROOT/bin/records/mimir.sh" recall "$BRIEF" --k 3 2>/dev/null | tail -20 || true)
 fi
 
 # 2. Build the request payload.
@@ -120,10 +120,10 @@ with open(sys.argv[1], "w") as f:
 PY
 
 # 6. Observe the verdict into Mimirsbrunn (never a blocker).
-if [ -x "$ROOT/bin/mimir.sh" ]; then
+if [ -x "$ROOT/bin/records/mimir.sh" ]; then
   VERDICT=$(python3 -c "import json; print(json.load(open('$RESP')).get('verdict',''))" 2>/dev/null || true)
   [ -n "$VERDICT" ] && \
-    "$ROOT/bin/mimir.sh" observe "$VERDICT" \
+    "$ROOT/bin/records/mimir.sh" observe "$VERDICT" \
       --tags "apodex,research,verdict" \
       --source "huginn-research-worker" \
       2>/dev/null || true

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # wedge-notify.sh — the Ymir wedge-alarm notifier.
 #
-# The away-mode supervisor (bin/fm-supervise-daemon.sh) raises a loud, rate-
+# The away-mode supervisor (bin/backend/fm-supervise-daemon.sh) raises a loud, rate-
 # limited alarm when an escalation cannot be delivered into the primary pane past
 # FM_MAX_DEFER_SECS — the "wedge" case, where the pane itself is the thing that is
 # broken and no digest can reach the Allfather. Its alarm routes through a
@@ -26,7 +26,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc

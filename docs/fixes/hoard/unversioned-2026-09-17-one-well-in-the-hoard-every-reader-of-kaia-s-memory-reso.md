@@ -3,7 +3,7 @@
 ### Why
 - **The memory is ONE store and it lives in the hoard** —
   `$YMIR_HOME/hodd/memory/kaia.engram` — never in the tree, never in a
-  migrated copy. `bin/hoard-lib.sh` gains `hoard_memory_store` (the one
+  migrated copy. `bin/vault/hoard-lib.sh` gains `hoard_memory_store` (the one
   resolver); every reader honors it or an explicit `ENGRAM_DB`:
   `mimir-bridge.sh`/`mimir-bridge.py`, `mimir-reflect.sh`, `a2a-mcp.sh`,
   `ymir-install.sh` step_memory, and the rendered `.pi/mcp.json.example`

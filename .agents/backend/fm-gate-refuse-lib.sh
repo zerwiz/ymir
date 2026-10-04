@@ -32,7 +32,7 @@
 # crew worktree - has NEITHER signal and is COMPLETELY unaffected: the function
 # returns 0 and the lifecycle proceeds exactly as before.
 #
-# This mirrors the unspoofable-marker precedent in bin/fm-marker-lib.sh: a signal
+# This mirrors the unspoofable-marker precedent in bin/backend/fm-marker-lib.sh: a signal
 # the agent cannot forge, keyed on at a chokepoint, keeping the pattern familiar
 # to firstmate maintainers. It layers ABOVE no-mistakes' separately-shipping
 # HEAD-continuity guard, which remains the adversarial/residual backstop.
@@ -47,14 +47,14 @@
 # safety helpers) export it, so every test that drives these scripts against its
 # temp-sandbox fleet is exempt. This does NOT weaken the boundary against the
 # real hazard: the threat is a CONFUSED-not-adversarial gate agent that runs
-# bin/fm-spawn.sh directly after adopting firstmate's identity - it never sources
+# bin/backend/fm-spawn.sh directly after adopting firstmate's identity - it never sources
 # firstmate's test helpers, so it never carries the bypass; and the adversarial
 # case (an agent that would deliberately set it) is covered by no-mistakes'
 # neutral-execution-context and the HEAD-continuity guard. The dedicated
 # tests/fm-gate-refuse.test.sh strips the bypass so it still verifies real refusal.
 #
-# Sourced by bin/fm-spawn.sh, bin/fm-send.sh, bin/fm-teardown.sh,
-# bin/fm-sessionstart-nudge.sh, and the tests.
+# Sourced by bin/backend/fm-spawn.sh, bin/backend/fm-send.sh, bin/backend/fm-teardown.sh,
+# bin/backend/fm-sessionstart-nudge.sh, and the tests.
 # No side effects on source. set -u / set -e safe. The refusal is a hard exit,
 # not a return, because there is no safe way to continue a fleet mutation from a
 # gate context.

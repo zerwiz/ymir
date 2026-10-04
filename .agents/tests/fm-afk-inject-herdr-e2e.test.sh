@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/fm-afk-inject-herdr-e2e.test.sh - real-herdr end-to-end test for the
-# away-mode daemon's herdr transport (bin/fm-supervise-daemon.sh), the herdr
+# away-mode daemon's herdr transport (bin/backend/fm-supervise-daemon.sh), the herdr
 # counterpart of tests/fm-afk-inject-e2e.test.sh's private-socket tmux e2e.
 # Mirrors tests/fm-backend-herdr-smoke.test.sh and tests/herdr-test-safety.sh's
 # isolation patterns: everything runs on a throwaway, named, NEVER-default

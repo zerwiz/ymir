@@ -2,7 +2,7 @@
 
 ### Why
 - **Statistics now reports the HARNESSES** (pi + opencode), not the smithy's runs.
-  `bin/hlidskjalf-usage.sh` aggregates opencode's SQLite token store and both pi
+  `bin/desktop/hlidskjalf-usage.sh` aggregates opencode's SQLite token store and both pi
   stores, and emits the numbers under the names the gate renders (`gate{}`):
   totals, usage, providers local/online with per_model, by_chain, by_model.
   Verified: 21,497 runs (opencode 21,422 · pi 75) · 331.5M tokens ·

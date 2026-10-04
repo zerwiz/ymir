@@ -21,7 +21,7 @@
  * peer list, because UNKNOWN and EMPTY look the same downstream and only one of
  * them is the truth.
  *
- * Placement: this file belongs to the SHARED source, which `bin/valknut-load.sh`
+ * Placement: this file belongs to the SHARED source, which `bin/seat/valknut-load.sh`
  * deploys to the one global pi extension home. `.pi/extensions/constellation.ts` is
  * the no-op shim that keeps a worktree-local session from registering it twice.
  */

@@ -32,7 +32,7 @@ for (const name of names) {
   let mod;
   try {
     // Resolve the shelf; never name the machine (Rule 07). $YMIR_ROOT, else the pointer
-    // bin/valknut-load.sh records in ~/.pi/agent/extensions/.ymir-root.
+    // bin/seat/valknut-load.sh records in ~/.pi/agent/extensions/.ymir-root.
     // Three doors, in order — and the LAST one can never be wrong: this file lives INSIDE the
     // checkout, so the shelf is a fixed climb from here. CI has no pointer and no env; it only
     // has the checkout. Without this third door the gate failed in CI for exactly the reason it
@@ -46,7 +46,7 @@ for (const name of names) {
           : "")
       || (existsSync(join(checkout, ".pi", "shared", "extensions")) ? checkout : "");
     if (!root) {
-      console.log(`  ${name.padEnd(28)} NO ROOT — set YMIR_ROOT or run bin/valknut-load.sh --all --global`);
+      console.log(`  ${name.padEnd(28)} NO ROOT — set YMIR_ROOT or run bin/seat/valknut-load.sh --all --global`);
       bad++;
       continue;
     }

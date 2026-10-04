@@ -3,7 +3,7 @@
 # the REMOTE second mate route, over the deterministic generic SSH boundary.
 #
 # The local spawn path's coverage lives in tests/fm-trace-context-spawn.test.sh.
-# A remote second mate never reaches that path: bin/fm-spawn.sh routes it through
+# A remote second mate never reaches that path: bin/backend/fm-spawn.sh routes it through
 # spawn_remote_secondmate, which hands the launch to the remote host. These
 # assertions drive the real chain - parent fm-spawn -> fm-on -> the real remote
 # entrypoint -> fm-remote-secondmate-control -> the remote host's own fm-spawn -

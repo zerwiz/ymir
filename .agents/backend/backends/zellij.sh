@@ -6,7 +6,7 @@
 # and herdr-addendum.md D2/D3 (zellij is P3, after herdr; treehouse stays the
 # worktree provider). Zellij is a session provider ONLY: the worktree provider
 # stays treehouse, exactly like tmux and herdr. Sourced only through
-# bin/fm-backend.sh's fm_backend_source in normal operation; the unit tests
+# bin/backend/fm-backend.sh's fm_backend_source in normal operation; the unit tests
 # source it directly.
 #
 # Session shape (report "Zellij implementation choices" #1, unchanged by
@@ -27,7 +27,7 @@
 # could send/peek/close each other's tabs. This is the exact gap a
 # captain-directed no-mistakes review gate caught for the cmux backend
 # (docs/cmux-backend.md) and this same tag mechanism (bin/backends/cmux.sh's
-# fm_backend_cmux_scoped_title, now shared via bin/fm-backend-hometag-lib.sh)
+# fm_backend_cmux_scoped_title, now shared via bin/backend/fm-backend-hometag-lib.sh)
 # is ported here for the identical reason. Every NEW tab is created with a
 # title tagged with this installation's home label (fm_backend_zellij_scoped_title,
 # "fm-<hometag>-<id>"); every list/find/recover/kill path is scoped to this
@@ -116,12 +116,12 @@ FM_BACKEND_ZELLIJ_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 FM_ROOT="${FM_ROOT_OVERRIDE:-${FM_ROOT:-$FM_BACKEND_ZELLIJ_ROOT}}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 
-# shellcheck source=bin/fm-backend-hometag-lib.sh
+# shellcheck source=bin/backend/fm-backend-hometag-lib.sh
 . "$FM_BACKEND_ZELLIJ_ROOT/bin/fm-backend-hometag-lib.sh"
 
 # Shared composer classification (the fleet-wide shape catalogue and verdict
 # owner; this adapter contributes only capture and capability facts).
-# shellcheck source=bin/fm-composer-lib.sh
+# shellcheck source=bin/backend/fm-composer-lib.sh
 . "$FM_BACKEND_ZELLIJ_ROOT/bin/fm-composer-lib.sh"
 
 # Verified minimum: report.md recommends "likely Zellij 0.44 or newer" for
@@ -141,7 +141,7 @@ fm_backend_zellij_session() {
 }
 
 # fm_backend_zellij_home_label: readable home prefix plus a short hash of the
-# resolved FM_ROOT path (bin/fm-backend-hometag-lib.sh). Zellij has one
+# resolved FM_ROOT path (bin/backend/fm-backend-hometag-lib.sh). Zellij has one
 # session-global tab namespace shared by every firstmate home, so the path
 # hash distinguishes every installation, including multiple primary homes.
 # Moving an installation changes this tag and old zellij tab titles stop
@@ -499,7 +499,7 @@ fm_backend_zellij_capture() {  # <target> <lines> [expected-label]
 # output", verified live at zellij 0.44.0 against real Claude Code) gives
 # zellij a styled capture, so the shared classifier reads its composer with
 # the same ghost-stripping confidence as tmux and herdr. Every shape lives in
-# the shared owner (bin/fm-composer-lib.sh, fm_composer_classify_screen);
+# the shared owner (bin/backend/fm-composer-lib.sh, fm_composer_classify_screen);
 # this adapter contributes only the capture and its capability facts.
 
 # fm_backend_zellij_composer_capture: bounded styled tail of the pane. When
@@ -562,7 +562,7 @@ fm_backend_zellij_composer_observed_append() {  # <target> <before> <text> [expe
 
 # fm_backend_zellij_send_text_submit: type <text> into <target> once (raw,
 # unsubmitted, via send_literal), then drive the shared verify-and-retry-Enter
-# loop (bin/fm-composer-lib.sh: fm_composer_submit_retry_core) against the
+# loop (bin/backend/fm-composer-lib.sh: fm_composer_submit_retry_core) against the
 # real composer verdict above. Echoes empty|pending|unknown|send-failed, a
 # subset of the proof-carrying submit vocabulary. Only a positively classified
 # empty composer confirms delivery - a pane that merely CHANGED does not, so
@@ -653,7 +653,7 @@ fm_backend_zellij_list_live() {  # <session>
 # carries it - mirroring fm_backend_zellij_tab_matches_label's migration
 # posture. Rare path in practice (zellij tasks normally carry meta);
 # best-effort. Not wired into fm_backend_resolve_selector's dispatcher
-# (bin/fm-backend.sh), mirroring herdr: that bare-selector fallback stays
+# (bin/backend/fm-backend.sh), mirroring herdr: that bare-selector fallback stays
 # tmux-only by design, and zellij/herdr tasks are targeted via task-selector
 # meta or an explicit recorded target.
 fm_backend_zellij_resolve_bare_selector() {  # <name>

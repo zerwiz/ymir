@@ -5,7 +5,7 @@
 # This is the single owner of the proven portable candidate set, the reusable
 # concurrent proof run, and its isolation checks. Production portable CI shards,
 # bounded local fm-test-run.sh --jobs admission, and family worker caps are owned
-# by bin/fm-test-run.sh (docs/fm-test-portable-shards.md).
+# by bin/backend/fm-test-run.sh (docs/fm-test-portable-shards.md).
 #
 # It does NOT compose production CI shard membership; fm-test-run.sh owns that
 # partition. The default portable pool excludes real Herdr, real default-server
@@ -19,9 +19,9 @@
 #
 # Options:
 #   --pool NAME  candidate pool: "portable" (default, this harness's own curated
-#                set) or a bin/fm-test-run.sh family name, to prove a stateful
+#                set) or a bin/backend/fm-test-run.sh family name, to prove a stateful
 #                family that stays serial on CI but may earn bounded local
-#                concurrency. bin/fm-test-run.sh's list_concurrent_safe_families
+#                concurrency. bin/backend/fm-test-run.sh's list_concurrent_safe_families
 #                records which families passed.
 #   --jobs N     max concurrent workers (default: 4; min 1)
 #   --json path  write a pool-scoped machine-readable proof artifact after the
@@ -340,7 +340,7 @@ fi
 
 # The portable pool is this harness's own curated set. A family pool proves a
 # stateful family that stays serial on CI but may earn bounded local
-# concurrency; bin/fm-test-run.sh's list_concurrent_safe_families records which
+# concurrency; bin/backend/fm-test-run.sh's list_concurrent_safe_families records which
 # families passed. Membership stays empirical: a family that fails here is not
 # admitted, and this harness never retries a failure into green.
 pool_candidates() {
@@ -353,11 +353,11 @@ pool_candidates() {
       ;;
     *:1)
       "$ROOT/bin/fm-test-run.sh" --list --family "$POOL" \
-        || die "--pool $POOL is not a known family (see bin/fm-test-run.sh --list-families)"
+        || die "--pool $POOL is not a known family (see bin/backend/fm-test-run.sh --list-families)"
       ;;
     *)
       "$ROOT/bin/fm-test-run.sh" --list-scheduled --family "$POOL" \
-        || die "--pool $POOL is not a known family (see bin/fm-test-run.sh --list-families)"
+        || die "--pool $POOL is not a known family (see bin/backend/fm-test-run.sh --list-families)"
       ;;
   esac
 }

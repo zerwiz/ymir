@@ -28,7 +28,7 @@ export interface UnreadWakeScope {
    * The exact durable-queue sequence numbers this scan proved safe for the
    * branch to drain and acknowledge right now (docs/watcher-continuity.md
    * "Per-actor acknowledgement" - the single owner of the consume contract
-   * bin/saga-wake-drain.sh implements against this list). Empty whenever
+   * bin/time/saga-wake-drain.sh implements against this list). Empty whenever
    * `eligible` is false.
    */
   eligibleSeqs: string[];
@@ -51,7 +51,7 @@ const UNSAFE_SCOPE: UnreadWakeScope = { status: "unsafe", eligible: false, proje
 
 // scopeForSkuldWake is the single owner of branch-eligibility classification
 // (docs/pi-supervision-branch.md "Autonomy"; docs/watcher-continuity.md
-// "Per-actor acknowledgement"). bin/saga-wake-drain.sh never reclassifies a row
+// "Per-actor acknowledgement"). bin/time/saga-wake-drain.sh never reclassifies a row
 // itself - it only consumes the exact sequence-number snapshot this function
 // (via writeEligibleRowsSnapshot) hands it.
 //
@@ -150,7 +150,7 @@ export function scopeForSkuldWake(state: string, heartbeat: boolean): UnreadWake
   return { status: eligible ? "safe" : "unsafe", eligible, projects: [...projects], eligibleSeqs, corrupted: false };
 }
 
-// The exact state-relative filename bin/saga-wake-drain.sh reads for a
+// The exact state-relative filename bin/time/saga-wake-drain.sh reads for a
 // SKULD_ACTOR=branch drain or ack (its header is the single owner of
 // the consume-side contract). Written atomically, immediately before every
 // branch prompt, by writeEligibleRowsSnapshot below.

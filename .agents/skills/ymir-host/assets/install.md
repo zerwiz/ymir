@@ -38,9 +38,9 @@ A real interactive install asks once, and records the answer as machine state:
 ~/.config/ymir/home      # the home chosen at installation (a path)
 ```
 
-Resolution order, always through `bin/hoard-lib.sh`:
+Resolution order, always through `bin/vault/hoard-lib.sh`:
 `$YMIR_HOME` → the recorded choice (`~/.config/ymir/home`) → `$HOME/Documents/ymirhome`
-(the ONE documented default, owned by `bin/hoard-lib.sh`). `--check` never writes.
+(the ONE documented default, owned by `bin/vault/hoard-lib.sh`). `--check` never writes.
 `--yes` takes what is recorded, else the default.
 
 To move an existing home to a new place, re-run the install with the new value:
@@ -68,8 +68,8 @@ ymir mimir · sense · plan
 
 The operator may have cloned the tree or installed the package; the scripts must
 not care. `bin/app-lib.sh` resolves a surface either way (`apps/<surface>`, else
-`node_modules/@zerwiz/<package>`), `bin/smidja-lib.sh` resolves the smithy, and
-`bin/electron-lib.sh` verifies a shell's runtime. To exercise the *other* shape
+`node_modules/@zerwiz/<package>`), `bin/desktop/smidja-lib.sh` resolves the smithy, and
+`bin/desktop/electron-lib.sh` verifies a shell's runtime. To exercise the *other* shape
 without a second machine:
 
 ```bash
@@ -95,5 +95,5 @@ operator owns lives in the home. A packaged install replaces its tree on upgrade
 so anything of theirs kept in the tree is kept at its peril, which is exactly what
 the plan's `purity` row exists to catch.
 
-**Rule for a new host feature:** resolve every path through `bin/hoard-lib.sh`;
+**Rule for a new host feature:** resolve every path through `bin/vault/hoard-lib.sh`;
 never name `$ROOT/data`, `$ROOT/state`, `$ROOT/config` or `$ROOT/.env.local`.

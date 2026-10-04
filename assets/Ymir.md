@@ -133,7 +133,7 @@ Want me to generate the full repository boilerplate code with Express/Hono backe
 - An auto-detected Þjazi spawn prints an opt-out notice.
 - Spawn stops before creating a Þjazi container or acquiring a task worktree when `herdr`, `jq`, or the protocol floor is unavailable.
 - No separate first-run provisioning is required.
-- The required CI lane uses the pinned installers in `bin/fm-install-herdr.sh` and `bin/fm-install-treehouse.sh`.
+- The required CI lane uses the pinned installers in `bin/backend/fm-install-herdr.sh` and `bin/backend/fm-install-treehouse.sh`.
 - Those script headers own release assets, checksums, download bounds, and post-install gates.
 - Real harness credential tests remain opt-in rather than part of default CI.
 

@@ -7,10 +7,10 @@
  * them records a seat. That is "we're doing that in so many ways" made measurable.
  *
  * THIN by construction — every action calls the door that already does the work:
- *   start  → bin/einherjar-spawn.sh <id> <project> --mode direct-PR   (the ONE spawn path)
+ *   start  → bin/agents/einherjar-spawn.sh <id> <project> --mode direct-PR   (the ONE spawn path)
  *   read   → state/<id>.status + state/<id>.meta + the worktree's branch and commits
- *   steer  → bin/eindri-send.sh <id> "<message>"                     (the steering inbox)
- *   close  → bin/eindri-acclaim.sh <id> --terminal … then bin/eindri-control.sh exit <id>
+ *   steer  → bin/agents/eindri-send.sh <id> "<message>"                     (the steering inbox)
+ *   close  → bin/agents/eindri-acclaim.sh <id> --terminal … then bin/agents/eindri-control.sh exit <id>
  *
  * It registers nothing the door already owns (register §12): no place, no push, no note.
  */
@@ -23,7 +23,7 @@ import { join } from "node:path";
 
 // ── resolution: this file must run on ANY seat, so it may not know a machine ──
 // (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/heimdall/ymir`.)
-// This is the JS mirror of `ymir_root_verified` in bin/valknut-load.sh — same contract,
+// This is the JS mirror of `ymir_root_verified` in bin/seat/valknut-load.sh — same contract,
 // same order: $YMIR_ROOT, then the recorded roots, first one that really holds the house.
 // One reader in the shell, one here; they must agree, or a worktree seat reads a dead path.
 function resolveRoot(): string {
@@ -39,7 +39,7 @@ function resolveRoot(): string {
   }
   throw new Error(
     "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
-    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout — install records " +
+    "Run `bin/seat/valknut-load.sh --all --global` from your Ymir checkout — install records " +
     "the root, and every extension reads it from there.",
   );
 }
@@ -134,7 +134,7 @@ export default function eindri(pi: any) {
 
         case "start": {
           if (!args.project) return piOut("start needs `project` (the repo root).");
-          const r = run("bash", [`${ROOT}/bin/einherjar-spawn.sh`, id, String(args.project),
+          const r = run("bash", [`${ROOT}/bin/agents/einherjar-spawn.sh`, id, String(args.project),
             "--mode", String(args.mode || "direct-PR"),
             ...(args.harness ? ["--harness", String(args.harness)] : []),
             ...(args.model ? ["--model", String(args.model)] : [])], false);
@@ -144,16 +144,16 @@ export default function eindri(pi: any) {
 
         case "steer": {
           if (!args.message) return piOut("steer needs `message` (one line).");
-          const r = run("bash", [`${ROOT}/bin/eindri-send.sh`, id, String(args.message)], false);
+          const r = run("bash", [`${ROOT}/bin/agents/eindri-send.sh`, id, String(args.message)], false);
           return piOut(`steered ${id}: rc=${r.rc}\n${r.out || ""}`);
         }
 
         case "close": {
           const term = String(args.terminal || "done");
-          const c = run("bash", [`${ROOT}/bin/eindri-acclaim.sh`, id, "--terminal", term,
+          const c = run("bash", [`${ROOT}/bin/agents/eindri-acclaim.sh`, id, "--terminal", term,
             ...(args.note ? ["--line", String(args.note)] : [])], false);
           // and stop the seat, so a closed errand leaves nothing running
-          const x = run("bash", [`${ROOT}/bin/eindri-control.sh`, "exit", id], false);
+          const x = run("bash", [`${ROOT}/bin/agents/eindri-control.sh`, "exit", id], false);
           return piOut(`closed ${id} as ${term}\n  claim rc=${c.rc} ${c.out.split("\n").slice(0, 2).join(" · ")}\n` +
               `  seat  rc=${x.rc} ${x.out.split("\n").slice(0, 1).join("")}\n` +
               `  a closed errand leaves no running seat and one durable record.`);

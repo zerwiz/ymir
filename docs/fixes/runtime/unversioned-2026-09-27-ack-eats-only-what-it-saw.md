@@ -4,7 +4,7 @@
 
 The Allfather's rule, 2026-09-27: *wakes should fire ONLY when the workers are
 done.* A ghost remained: the watcher sometimes signalled a wake queue that
-drained empty. Root cause, measured: `bin/saga-wake-drain.sh ack` truncated the
+drained empty. Root cause, measured: `bin/time/saga-wake-drain.sh ack` truncated the
 **entire** queue (`: >"$QUEUE"`), so a wake delivered between a drain and its
 ack was eaten — and the catch-up sweep's later re-presentation could ring with
 nothing pending. The two back-to-back wakes seen the same evening were real
@@ -29,4 +29,4 @@ the change is in the drain's own semantics).
 
 ### Files
 
-- `bin/saga-wake-drain.sh`
+- `bin/time/saga-wake-drain.sh`

@@ -41,7 +41,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Whether the home was named explicitly matters: a home that was chosen is not
 # the same as one we defaulted to, and the plan says which.
 YMIR_HOME_WAS_SET=0; [ -n "${YMIR_HOME:-}" ] && YMIR_HOME_WAS_SET=1
-# shellcheck source=bin/hoard-lib.sh
+# shellcheck source=bin/vault/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
 ymir_home_root YMIR_HOME
 hoard_root HOARD
@@ -292,7 +292,7 @@ apps_phase() {
 
   # A shell is ready only when its runtime VERIFIES: npm gates install scripts,
   # and a skipped Electron postinstall leaves a partial runtime that still builds
-  # the web app and still reports success (bin/electron-lib.sh).
+  # the web app and still reports success (bin/desktop/electron-lib.sh).
   if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ]; then
     for c in "$SCRIPT_DIR/electron-lib.sh"; do [ -r "$c" ] && { . "$c"; YMIR_ELECTRON_LIB_LOADED=1; }; done
   fi

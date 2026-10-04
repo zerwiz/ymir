@@ -5,7 +5,7 @@
 # and awaits it at every turn boundary, so one script owns both halves of Cursor
 # primary supervision:
 #
-#   PARK      while supervision is needed, foreground bin/fm-watch-arm.sh and
+#   PARK      while supervision is needed, foreground bin/backend/fm-watch-arm.sh and
 #             hold the turn boundary open until the watcher closes with an
 #             actionable wake, then return that wake as the follow-up. No model
 #             tokens are spent while parked. The next turn end parks again, so
@@ -79,15 +79,15 @@ case "$ARM_ATTEMPTS" in 1|2|3) : ;; *) ARM_ATTEMPTS=2 ;; esac
 case "$POLL" in ''|*[!0-9]*|0) POLL=2 ;; esac
 case "$LOCK_ATTEMPTS" in ''|*[!0-9]*|0) LOCK_ATTEMPTS=50 ;; esac
 
-# shellcheck source=bin/fm-primary-scope-lib.sh
+# shellcheck source=bin/backend/fm-primary-scope-lib.sh
 . "$SCRIPT_DIR/fm-primary-scope-lib.sh"
-# shellcheck source=bin/fm-supervision-lib.sh
+# shellcheck source=bin/backend/fm-supervision-lib.sh
 . "$SCRIPT_DIR/fm-supervision-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-session-lock-lib.sh
+# shellcheck source=bin/backend/fm-session-lock-lib.sh
 . "$SCRIPT_DIR/fm-session-lock-lib.sh"
-# shellcheck source=bin/fm-operational-input.sh
+# shellcheck source=bin/backend/fm-operational-input.sh
 . "$SCRIPT_DIR/fm-operational-input.sh"
 
 PAYLOAD=$(cat 2>/dev/null || true)
@@ -251,7 +251,7 @@ current_session_still_ours() {
 
 # Only the lock-owning session may arm or wake. A prior session that died
 # leaving its numeric harness pid behind is the one recoverable
-# case, delegated to bin/fm-lock.sh so acquisition keeps its single owner.
+# case, delegated to bin/backend/fm-lock.sh so acquisition keeps its single owner.
 if ! fm_session_lock_owned_by_self "$STATE"; then
   LOCK_PID=$(cat "$STATE/.lock" 2>/dev/null || true)
   case "$LOCK_PID" in ''|*[!0-9]*) exit 0 ;; esac
@@ -271,7 +271,7 @@ claim_park || exit 0
 if [ "$LOOP_COUNT" -ge "$LOOP_CEILING" ]; then
   [ "$LOOP_COUNT" -eq "$LOOP_CEILING" ] || exit 0
   fm_supervision_needed "$STATE" "$GRACE" || exit 0
-  emit_followup turn-end-guard "FIRSTMATE SUPERVISION FOLLOW-UP CEILING REACHED - this session has taken $LOOP_COUNT consecutive hook-driven turns without a captain message, so automatic wake delivery stops here to bound the loop. Queued wakes stay durable: run bin/fm-wake-drain.sh, handle them, and run its exact WAKE_ACK_REQUIRED command. Supervision resumes automatically at the next turn end after the captain's next message."
+  emit_followup turn-end-guard "FIRSTMATE SUPERVISION FOLLOW-UP CEILING REACHED - this session has taken $LOOP_COUNT consecutive hook-driven turns without a captain message, so automatic wake delivery stops here to bound the loop. Queued wakes stay durable: run bin/backend/fm-wake-drain.sh, handle them, and run its exact WAKE_ACK_REQUIRED command. Supervision resumes automatically at the next turn end after the captain's next message."
 fi
 
 # Away mode owns the watcher and its own triage; never park and never wake.
@@ -361,7 +361,7 @@ if [ "$ACTIONABLE" -eq 1 ]; then
   emit_followup watcher "firstmate watcher wake - one supervision event needs a handling turn now.
 $WAKE
 
-Run bin/fm-wake-drain.sh first, handle the wake, then run its exact WAKE_ACK_REQUIRED --ack-through command. Until that post-handling acknowledgement, interruption leaves the wake durable for idempotent re-handling. This stop hook owns watcher continuity: when the handling turn ends, the next needed cycle parks automatically - do NOT run bin/fm-watch-arm.sh after an ordinary wake." reset-budget
+Run bin/backend/fm-wake-drain.sh first, handle the wake, then run its exact WAKE_ACK_REQUIRED --ack-through command. Until that post-handling acknowledgement, interruption leaves the wake durable for idempotent re-handling. This stop hook owns watcher continuity: when the handling turn ends, the next needed cycle parks automatically - do NOT run bin/backend/fm-watch-arm.sh after an ordinary wake." reset-budget
 fi
 
 # A verified live cycle with a fresh beacon is positive recovery even though this
@@ -373,7 +373,7 @@ fi
 
 # The park could not establish supervision. Ask the SHARED predicate whether
 # this turn would genuinely end blind, rather than deciding that here a second
-# time: bin/fm-turnend-guard.sh owns the block decision and its banner for every
+# time: bin/backend/fm-turnend-guard.sh owns the block decision and its banner for every
 # harness, and --cursor tells it this is Cursor's own registration rather than
 # the Claude-settings duplicate.
 GUARD_ERR=$(mktemp "${TMPDIR:-/tmp}/fm-turnend-cursor.XXXXXX") || exit 0

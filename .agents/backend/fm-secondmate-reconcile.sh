@@ -9,13 +9,13 @@
 # This is a BACKSTOP, not the primary mechanism. Dispatch and completion pair
 # the backlog row with the task's record inside the one script that moves the
 # record, and each home reconciles its own books at session start
-# (bin/fm-backlog-transition-lib.sh), so what reaches here is what neither could
+# (bin/backend/fm-backlog-transition-lib.sh), so what reaches here is what neither could
 # see: a home that has not restarted since it drifted, or one still running
 # older code.
 #
 # A backlog-vs-metadata inventory mismatch inside a secondmate home
 # (orphan_in_flight, unowned_current, terminal_in_flight) no longer makes that
-# home unreadable: bin/fm-fleet-snapshot.sh keeps its decisions, queued, landed,
+# home unreadable: bin/backend/fm-fleet-snapshot.sh keeps its decisions, queued, landed,
 # and live work and carries the mismatch for renderers. The books are still
 # wrong, and only the home that owns them may fix them, so the parent sends one
 # reconcile instruction and stops there.
@@ -31,7 +31,7 @@
 #     stale, cannot mis-order against a concurrent snapshot, and cannot
 #     mis-classify a repair as a new problem, which an identity-precise record
 #     has to get right in every direction to avoid silently swallowing a nudge;
-#   - sending through bin/fm-send.sh's fire-and-forget plane, which records the
+#   - sending through bin/backend/fm-send.sh's fire-and-forget plane, which records the
 #     instruction durably for local and remote mates alike while staying out of
 #     the steering inbox's re-ring and escalation ladder: the parent expects no
 #     reply, so nothing should chase one.
@@ -74,7 +74,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 
 # One nudge per home per four hours.
@@ -216,7 +216,7 @@ cmd_notify() {
   # Only a real inventory mismatch is a books problem the mate can fix; every
   # other invalidity is either unreadable state or nothing to reconcile.
   # spawn_gen is empty only for a persistent remote secondmate, whose parent
-  # metadata never carries one (bin/fm-spawn.sh's spawn_remote_secondmate());
+  # metadata never carries one (bin/backend/fm-spawn.sh's spawn_remote_secondmate());
   # host is its substitute identity there and is otherwise unused. Both are
   # still character-restricted so a malformed sample cannot masquerade as
   # either a live incarnation token or a live host.

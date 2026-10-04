@@ -31,12 +31,12 @@ AHOY_PROJECT="$LAB/ahoy-project"
 # shellcheck source=/dev/null
 . "$ROOT/bin/fm-operational-input.sh"
 # shellcheck disable=SC2016 # Backticks are literal prompt markup.
-LEGACY_START='Run `bin/fm-session-start.sh` now, exactly once, before executing any other instructions.'
+LEGACY_START='Run `bin/backend/fm-session-start.sh` now, exactly once, before executing any other instructions.'
 fm_operational_input_encode session-start "$LEGACY_START" CURRENT_START \
   || fail "could not construct the current session-start fixture"
 MARKER_NEAR_MISS=$'\xE2\x81\xA3Captain note: this invisible separator is intentional.'
 # shellcheck disable=SC2016 # Backticks are literal prompt markup.
-START_NEAR_MISS='Captain quote: Run `bin/fm-session-start.sh` now, exactly once, before executing any other instructions.'
+START_NEAR_MISS='Captain quote: Run `bin/backend/fm-session-start.sh` now, exactly once, before executing any other instructions.'
 fm_operational_input_encode watcher "CURRENT_AHOY_WATCHER_BODY" CURRENT_WATCHER \
   || fail "could not construct current Ahoy watcher fixture"
 QUOTED_CURRENT="Captain quote: $CURRENT_WATCHER"
@@ -192,7 +192,7 @@ run_ahoy_transcript_regressions() {
   printf '%s\n' \
     '# Native OpenCode Ahoy regression fixture' \
     '' \
-    'Run `bin/fm-session-start.sh` exactly once at session start.' \
+    'Run `bin/backend/fm-session-start.sh` exactly once at session start.' \
     > "$AHOY_PROJECT/AGENTS.md"
 
   run_ahoy_case marker-near-miss "$MARKER_NEAR_MISS" boundary
@@ -305,7 +305,7 @@ mkdir -p "$HOME_DIR/state" "$HOME_DIR/config"
 printf 'project=fixture\n' > "$HOME_DIR/state/opencode-e2e.meta"
 
 # shellcheck disable=SC2016 # The model, not this test shell, expands FM_HOME.
-PROMPT='Use the terminal to run `printf ready > "$FM_HOME/state/opencode-model-initial"`, then respond briefly. If a later watcher wake arrives, run bin/fm-wake-drain.sh, then run `printf handled > "$FM_HOME/state/opencode-model-handled"`. Never run or request any watcher arm command.'
+PROMPT='Use the terminal to run `printf ready > "$FM_HOME/state/opencode-model-initial"`, then respond briefly. If a later watcher wake arrives, run bin/backend/fm-wake-drain.sh, then run `printf handled > "$FM_HOME/state/opencode-model-handled"`. Never run or request any watcher arm command.'
 "$TMUX" -L "$SOCKET" new-session -d -s "$SESSION" -c "$PROJECT" \
   "env OPENCODE_CONFIG_CONTENT='{\"permission\":{\"*\":\"allow\"}}' FM_HOME='$HOME_DIR' FM_ROOT_OVERRIDE='$PROJECT' FM_POLL=1 FM_SIGNAL_GRACE=0 FM_HEARTBEAT=600 bash -lc 'printf \"%s\\n\" \"\$\$\" > \"\$FM_HOME/state/.lock\"; opencode --auto; rc=\$?; printf \"OPENCODE_EXIT=%s\\n\" \"\$rc\"; sleep 300'"
 
@@ -350,7 +350,7 @@ wait_for_handled || fail "OpenCode did not drain and settle after plugin-owned r
 pane=$(capture)
 guard_count=$(printf '%s\n' "$pane" | grep -Fc "TURN WOULD END BLIND - supervision is off." || true)
 [ "$guard_count" -eq 0 ] || fail "OpenCode successor was not protecting the next idle event (guard count $guard_count)"
-if printf '%s\n' "$pane" | grep -Fq '$ bin/fm-watch-arm.sh'; then
+if printf '%s\n' "$pane" | grep -Fq '$ bin/backend/fm-watch-arm.sh'; then
   fail "OpenCode model attempted to re-arm instead of leaving continuity to the plugin"
 fi
 

@@ -21,8 +21,8 @@ _root() {
   printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 }
 ROOT="$(_root)"
-# shellcheck source=bin/hoard-lib.sh
-. "$ROOT/bin/hoard-lib.sh" 2>/dev/null || true
+# shellcheck source=bin/vault/hoard-lib.sh
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 H=""
 command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root H
 # No literal fallback: if the resolver cannot name a home, say so. A door that

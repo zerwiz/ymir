@@ -142,7 +142,7 @@ test_answer_send_closes_open_decision() {
 # The answerer's close is this home's own bookkeeping: it must not re-wake the
 # session that wrote it, while any other writer's later line on the same task
 # still must. Both directions are read through the production seen-signature
-# gate the watcher's signal scan consumes (bin/fm-wake-lib.sh).
+# gate the watcher's signal scan consumes (bin/backend/fm-wake-lib.sh).
 test_answer_close_is_self_announced() {
   local dir fb log home rc
   dir="$TMP_ROOT/self-announced"; mkdir -p "$dir"

@@ -29,8 +29,8 @@ mkdir -p "$BRIEF_HOME/data"
 test_script_parses() {
   local out rc
   out=$(bash -n "$ROOT/bin/fm-brief.sh" 2>&1); rc=$?
-  expect_code 0 "$rc" "bash -n bin/fm-brief.sh must parse cleanly (got: $out)"
-  [ -z "$out" ] || fail "bash -n bin/fm-brief.sh emitted unexpected output: $out"
+  expect_code 0 "$rc" "bash -n bin/backend/fm-brief.sh must parse cleanly (got: $out)"
+  [ -z "$out" ] || fail "bash -n bin/backend/fm-brief.sh emitted unexpected output: $out"
   pass "fm-brief.sh: bash -n succeeds"
 }
 
@@ -425,7 +425,7 @@ test_herdr_lab_contract_quotes_foreign_firstmate_path() {
   brief="$home/data/$id/brief.md"
   assert_grep "HERDR_LAB_HELPER=$helper" "$brief" \
     "Herdr lab brief must shell-quote an absolute Firstmate helper path"
-  assert_no_grep "bin/fm-herdr-lab.sh name $id" "$brief" \
+  assert_no_grep "bin/backend/fm-herdr-lab.sh name $id" "$brief" \
     "Herdr lab brief must not invoke a worktree-relative helper"
   pass "fm-brief.sh: --herdr-lab uses its quoted Firstmate-owned helper path"
 }

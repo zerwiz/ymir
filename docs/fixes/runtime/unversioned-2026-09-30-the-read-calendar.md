@@ -40,7 +40,7 @@
   `probe --titles` honours an explicit request; and no write verb or jq exists.
 - Fixture `.agents/tests/assets/managandr-google-events.json` carries synthetic
   times and invented titles only — no attendee, no location, no real data.
-- `bash bin/guards.sh` and
+- `bash bin/gates/guards.sh` and
   `bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh` both pass on
   the worktree.
 

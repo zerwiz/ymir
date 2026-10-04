@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/fm-task-inbox.test.sh - the per-task steering inbox
-# (bin/fm-task-inbox-lib.sh) and the watcher's re-ring ladder.
+# (bin/backend/fm-task-inbox-lib.sh) and the watcher's re-ring ladder.
 #
 # The inbox+doorbell design replaces typed steer payloads with durable
 # sequenced records acknowledged by an atomic mv into handled/; the terminal

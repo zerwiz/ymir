@@ -92,7 +92,7 @@ installed on this machine) — do not reintroduce `sqlite3`.
 - DB: **`$YMIR_HOME/smidja/smidja.db`** (WAL; read-only readers never block a run).
   `0003-private-data-separation` moved it out of the checkout; an in-repo
   `apps/smidja/smidja_data/smidja.db` is the fallback. Created at the first run
-  (`bin/smidja-bootstrap.sh`); `scripts/start.sh` resolves the same pair.
+  (`bin/desktop/smidja-bootstrap.sh`); `scripts/start.sh` resolves the same pair.
 - Tables: `sessions` (`smidja_id, smidja_name, request, status, engineer,
   started_at, ended_at, total_tokens, total_cost, archived`), `phases`
   (`phase_id, smidja_id, seq, name, kind, owner, description, status, attempt,
@@ -145,7 +145,7 @@ every 5s, so a finished run appears without a reload.
 
 ## The observer (Huginn) — self-contained
 
-`bin/nornir-job-observer.sh` runs on the Nornir schedule (06:00). It reads **only
+`bin/time/nornir-job-observer.sh` runs on the Nornir schedule (06:00). It reads **only
 Ymir's own runtime** — `docs/masterplan.md`, `.agents/agents`, `.agents/memory/well`,
 `workspace/memory/runes_audit.md`, **`$YMIR_HOME/smidja/smidja.db`**, and the
 read-only external worktree root — and writes only `state/observer.log` + Runes.
@@ -168,7 +168,7 @@ Expected: `2/2 phases passed`, a `smidja_id`, and the DB written. Then
 ## Gotchas
 
 0. **`bun` lives at `~/.bun/bin` and is often off a non-login PATH.** `scripts/start.sh`
-   and `bin/smidja-board.sh` adopt it once (2026-09-23) before checking, so the gate
+   and `bin/desktop/smidja-board.sh` adopt it once (2026-09-23) before checking, so the gate
    API and the visualizer are not skipped on a machine that HAS bun.
 
 1. **`sqlite3` CLI is absent** — use `python3 -c` (the justfile already does).
@@ -180,7 +180,7 @@ Expected: `2/2 phases passed`, a `smidja_id`, and the DB written. Then
 5. **Protected files** (`apps/smidja/smidja_modules/`, `apps/smidja/smidja_*.py`, the config)
    are enforced by `smidja_modules/permissions.py`; agents roll back unauthorized
    changes. The smithy moved from the repo root `smidja/` to `apps/smidja/`
-   (Amendment C); `bin/smidja-bootstrap.sh` searches both so a stale layout cannot
+   (Amendment C); `bin/desktop/smidja-bootstrap.sh` searches both so a stale layout cannot
    break the DB seed again.
 6. New skills synthesized for the smithy are validated in Utgard (Gungnir, W0007)
    before production.

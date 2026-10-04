@@ -22,7 +22,7 @@ Verified on 2026-07-25 with Kimi Code CLI 0.29.1.
 
 ## Readiness-gated start
 
-`../../../bin/einherjar-spawn.sh` launches Kimi bare, waits for the composer box or `Welcome to Kimi Code!`, sends only `Read the brief at <absolute-path> and follow it exactly.`, and requires a cleared composer plus either the echoed `✨` submission or nonzero context before accepting delivery.
+`../../../bin/agents/einherjar-spawn.sh` launches Kimi bare, waits for the composer box or `Welcome to Kimi Code!`, sends only `Read the brief at <absolute-path> and follow it exactly.`, and requires a cleared composer plus either the echoed `✨` submission or nonzero context before accepting delivery.
 This launch-then-send shape is mandatory because Kimi rejects positional instructions as an unknown command.
 The path must be absolute because the instructions live outside the task worktree and Kimi reads them there without `--add-dir`.
 
@@ -43,7 +43,7 @@ The delivery-only spinner match covers the full moon-phase glyph set but remains
 Kimi is outside the primary turn-end guard scope.
 `../../../docs/turnend-guard.md` owns its separate global hook surface and Allfather-approved crew wake integration.
 
-`../../../bin/einherjar-spawn.sh` installs one marker-delimited Brokk entry in `$HOME/.kimi-code/config.toml`, one silent always-zero hook script, and one private token registry under `$HOME/.kimi-code/brokk-turn-end.d/`.
+`../../../bin/agents/einherjar-spawn.sh` installs one marker-delimited Brokk entry in `$HOME/.kimi-code/config.toml`, one silent always-zero hook script, and one private token registry under `$HOME/.kimi-code/brokk-turn-end.d/`.
 Each Kimi worker worktree receives a gitignored `.brokk-kimi-turnend` pointer.
 The global hook touches `state/<id>.turn-ended` only when the Stop payload's `cwd`, pointer, and registry entry all agree.
 A guarded silent hook cannot be verified from absence of effect, so prove invocation with an unguarded probe before concluding it did not fire.

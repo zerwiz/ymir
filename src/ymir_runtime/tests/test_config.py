@@ -104,7 +104,7 @@ class AlwaysRefusesTest(unittest.TestCase):
         self.assertEqual(caught.exception.dependency, "jsonschema")
 
 
-@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/ymir-engine-ensure.sh ensure")
+@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/engine/ymir-engine-ensure.sh ensure")
 class ExamplesTest(unittest.TestCase):
     """The shipped examples are the truth the schemas must validate."""
 
@@ -120,7 +120,7 @@ class ExamplesTest(unittest.TestCase):
             self.assertRegex(job["time"], r"^[0-2][0-9]:[0-5][0-9]$")
 
 
-@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/ymir-engine-ensure.sh ensure")
+@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/engine/ymir-engine-ensure.sh ensure")
 class BrokenConfigTest(unittest.TestCase):
     """A deliberate break is refused loudly, naming the key and the file."""
 

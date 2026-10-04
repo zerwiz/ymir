@@ -10,7 +10,7 @@ Four pipes were built but never carried anything.
    the script's location, and `eindri-watch.sh` had run from `.yggdrasil/…`, a
    path deleted on cleanup — also a Rule 04 violation); and nobody looked.
 2. **Firecrawl.** Self-hosted and answering `:3002 → 200` on both heimdall and
-   whynot, but `bin/nornir-job-bragi-scrape.sh` still demanded a **cloud key** —
+   whynot, but `bin/time/nornir-job-bragi-scrape.sh` still demanded a **cloud key** —
    and imported the `firecrawl` Python SDK, which is not installed. The engine
    was installed and unused.
 3. **The source list.** The job's header named `$YMIR_HOME/config/scrape-sources.yaml`
@@ -21,18 +21,18 @@ Four pipes were built but never carried anything.
    documents under `hodd/docs/`.
 
 ### Fix
-- **`bin/eindri-handoff.sh`** — the handoff FAILSAFE. It sweeps
+- **`bin/agents/eindri-handoff.sh`** — the handoff FAILSAFE. It sweeps
   `$STATE/eindri-reports/` and `$STATE/eindri-questions/` for anything not yet
   delivered and puts it in the wake queue, so Sága's drain surfaces it in the
   next session digest. Idempotent (one delivery marker per item); exit **3** when
   something *was* waiting. A question and a report keep separate markers, so a
   question is never mistaken for a finished errand.
-- **`bin/saga-session-start.sh`** — runs the sweep **before** the wake drain, so
+- **`bin/time/saga-session-start.sh`** — runs the sweep **before** the wake drain, so
   the digest always shows undelivered work.
-- **`bin/eindri-watch.sh`** — pins `FM_STATE_OVERRIDE` to the **hoard**
+- **`bin/agents/eindri-watch.sh`** — pins `FM_STATE_OVERRIDE` to the **hoard**
   (`$YMIR_HOME/state/procevent`), so a spec armed from a worktree lands where the
   runner looks.
-- **`bin/nornir-job-bragi-scrape.sh`** — a **URL, not a key**:
+- **`bin/time/nornir-job-bragi-scrape.sh`** — a **URL, not a key**:
   `FIRECRAWL_API_URL` (env → home env → the documented default `:3002`), and
   **curl instead of the SDK** (`/v2/scrape` for a URL, `/v2/search` for a query).
   The source list resolves to `$YMIR_HOME/config/`, matching its own header.
@@ -53,9 +53,9 @@ Four pipes were built but never carried anything.
 - `bash -n` clean on every script touched.
 
 ### Files
-- `bin/eindri-handoff.sh` (new)
+- `bin/agents/eindri-handoff.sh` (new)
 - `bin/daily-log.sh` (new)
-- `bin/saga-session-start.sh`
-- `bin/eindri-watch.sh`
-- `bin/nornir-job-bragi-scrape.sh`
+- `bin/time/saga-session-start.sh`
+- `bin/agents/eindri-watch.sh`
+- `bin/time/nornir-job-bragi-scrape.sh`
 - `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md`

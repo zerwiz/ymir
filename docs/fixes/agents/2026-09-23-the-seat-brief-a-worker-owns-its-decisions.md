@@ -25,7 +25,7 @@
   so.
 
 ### Fix
-- **`bin/herdr-run.sh`** — the injected prompt now carries a short **seat brief**
+- **`bin/seat/herdr-run.sh`** — the injected prompt now carries a short **seat brief**
   ahead of the task:
   - You are a worker figure, not the primary.
   - There is **NO human at this terminal**; do **not** use `ask_user_question` —
@@ -36,16 +36,16 @@
   - **If the same action fails twice, do not run it a third time** — change the
     approach or write down what blocked you. Repeating a command that returns
     nothing is a loop, not work.
-- **`bin/mcp-gate.sh`** — restored the executable bit. The gate merged in #127
-  without it, so `bin/mcp-gate.sh status` failed with `Permission denied` for
+- **`bin/bridge/mcp-gate.sh`** — restored the executable bit. The gate merged in #127
+  without it, so `bin/bridge/mcp-gate.sh status` failed with `Permission denied` for
   every caller that ran it as a command rather than through `bash`.
 
 ### Verification
-- `bash -n bin/herdr-run.sh` clean.
+- `bash -n bin/seat/herdr-run.sh` clean.
 - The brief is injected ahead of the task, so the worker reads the law before the
   errand.
-- `bin/mcp-gate.sh` now runs as a command: `status` reports the boot table.
+- `bin/bridge/mcp-gate.sh` now runs as a command: `status` reports the boot table.
 
 ### Files
-- `bin/herdr-run.sh`
-- `bin/mcp-gate.sh`
+- `bin/seat/herdr-run.sh`
+- `bin/bridge/mcp-gate.sh`

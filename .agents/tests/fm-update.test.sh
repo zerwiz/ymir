@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests for bin/fm-update.sh: fast-forward-only self-update of a running
+# Tests for bin/backend/fm-update.sh: fast-forward-only self-update of a running
 # firstmate repo and every registered secondmate home.
 #
 # The guarantees under test mirror fm-fleet-sync.sh and prime directive #3:

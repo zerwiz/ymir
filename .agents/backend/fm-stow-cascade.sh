@@ -22,12 +22,12 @@
 #
 # transport says how the sweep reaches that home:
 #   agent     - a live secondmate agent owns the home; steer it with
-#               bin/fm-send.sh so it sweeps its own uncaptured session
+#               bin/backend/fm-send.sh so it sweeps its own uncaptured session
 #               knowledge and replies through its marked return channel.
 #   direct    - a local home with no live agent; curate its editable memory
 #               files in place.
 #   deferred  - a remote home with no live agent. There is deliberately no
-#               generic remote write path (bin/fm-remote-file.sh put reaches
+#               generic remote write path (bin/backend/fm-remote-file.sh put reaches
 #               only the handoff outbox), so that home is accounted read-only
 #               and curated by its next cascade once its agent is back.
 #   unavailable - the home's own accounting did not complete, so no transport
@@ -67,11 +67,11 @@ REGISTRY="$DATA/secondmates.md"
 BUDGET_CMD=fm-startup-memory-budget.sh
 SUB_HOME_MARKER="${SUB_HOME_MARKER:-.fm-secondmate-home}"
 
-# shellcheck source=bin/fm-ff-lib.sh
+# shellcheck source=bin/backend/fm-ff-lib.sh
 . "$SCRIPT_DIR/fm-ff-lib.sh"
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
 
 BOUND=${FM_STOW_CASCADE_TIMEOUT:-60}

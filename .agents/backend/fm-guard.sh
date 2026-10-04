@@ -10,7 +10,7 @@
 # healthy, prints a loud, clearly delimited banner so the agent cannot skim past
 # it in the tool output of whatever it was doing - the one channel every harness
 # has. Supervision health is MODEL-AWARE (fm_watcher_supervision_verdict in
-# bin/fm-wake-lib.sh): under the Claude Stop auto-arm model the watcher runs only
+# bin/backend/fm-wake-lib.sh): under the Claude Stop auto-arm model the watcher runs only
 # between turns, so mid-turn a fresh beacon with no live watcher is healthy and
 # only a stale beacon (beyond FM_GUARD_GRACE) is a genuine lapse; under the Pi
 # extension model the extension tears the watcher down and respawns it on every
@@ -46,11 +46,11 @@ CONTINUE_LINE=${FM_GUARD_CONTINUE_LINE:-This is a supervision warning only; the 
 # Cleared when the home leaves the unhealthy state so a later episode re-arms.
 STALE_BANNER_MARKER="$STATE/.guard-watcher-stale-banner"
 
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-tangle-lib.sh
+# shellcheck source=bin/backend/fm-tangle-lib.sh
 . "$SCRIPT_DIR/fm-tangle-lib.sh"
-# shellcheck source=bin/fm-supervision-lib.sh
+# shellcheck source=bin/backend/fm-supervision-lib.sh
 . "$SCRIPT_DIR/fm-supervision-lib.sh"
 
 # Deterministic episode key from the qualitative down-state (the failing
@@ -149,7 +149,7 @@ if [ -n "$tangle_branch" ]; then
 fi
 
 # Compute supervision need and watcher-beacon freshness via the shared
-# grace-based predicate (bin/fm-supervision-lib.sh). Act when work, an event
+# grace-based predicate (bin/backend/fm-supervision-lib.sh). Act when work, an event
 # source, or an X-mode relay poll needs supervision.
 fm_supervision_status "$STATE" "$GRACE"
 in_flight=$FM_SUP_IN_FLIGHT
@@ -236,7 +236,7 @@ if "$queue_pending"; then
   if [ "$READ_ONLY" -eq 1 ]; then
     echo "WARNING: queued wakes pending - left untouched because this session lacks verified fleet-lock ownership." >&2
   else
-    echo "WARNING: queued wakes pending - drain them with bin/fm-wake-drain.sh before anything else." >&2
+    echo "WARNING: queued wakes pending - drain them with bin/backend/fm-wake-drain.sh before anything else." >&2
   fi
 fi
 exit 0

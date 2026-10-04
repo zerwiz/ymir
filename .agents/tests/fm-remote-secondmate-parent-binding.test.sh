@@ -3,15 +3,15 @@
 # fm-remote-sm-cleanup-parent-binding-s1 scout report: finished-worker cleanup
 # inside a REMOTE second-mate home refused forever with "cannot resolve the
 # primary home ... durable parent binding", because the remote launch hands the
-# child the remote code checkout as its parent home (bin/fm-spawn.sh's sole
+# child the remote code checkout as its parent home (bin/backend/fm-spawn.sh's sole
 # writer of FM_PUBLIC_FOLLOWUP_PRIMARY_HOME receives FM_HOME=$FM_ROOT from
-# bin/fm-remote-secondmate-control.sh's host-local launch), and that path can
+# bin/backend/fm-remote-secondmate-control.sh's host-local launch), and that path can
 # never carry the parent's real state or registry.
 #
 # The fix (report section 7, captain-approved same-machine scope): a durable
 # .fm-secondmate-parent record, written once at seeding next to the
 # .fm-secondmate-home identity marker, names this home's route to its parent as
-# "local" or "remote". bin/fm-teardown.sh's cleanup gate reads it and treats a
+# "local" or "remote". bin/backend/fm-teardown.sh's cleanup gate reads it and treats a
 # remote parent as OUT OF SCOPE (never refuses purely for being cross-machine,
 # since the whole promised-public-reply subsystem is same-filesystem by
 # construction) while still refusing on a genuine same-filesystem signal
@@ -21,8 +21,8 @@
 #
 # This drives the REAL remote route (fm-remote-home-seed.sh -> fm-on.sh ->
 # fm-remote-entrypoint.sh -> the host-local fm-remote-secondmate-control.sh ->
-# the real bin/fm-spawn.sh --secondmate) across the repo's own deterministic SSH
-# boundary and Herdr fixture, then runs the real bin/fm-teardown.sh for a
+# the real bin/backend/fm-spawn.sh --secondmate) across the repo's own deterministic SSH
+# boundary and Herdr fixture, then runs the real bin/backend/fm-teardown.sh for a
 # finished child worker inside the produced remote home - never source-text
 # matching.
 set -u

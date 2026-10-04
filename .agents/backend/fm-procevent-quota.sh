@@ -14,7 +14,7 @@
 #            <threshold> (default 10%) or when its runway.status becomes
 #            exhausted_now. The condition is deterministic, the action is only
 #            the durable `check: procevent:quota:<seq>` wake, and the watch is
-#            registered through `bin/fm-procevent.sh register`.
+#            registered through `bin/backend/fm-procevent.sh register`.
 # poll       The blocking child the generic runner executes; never run this
 #            directly in a conversational turn. It polls `quota-axi --json`
 #            until quota drops below the threshold or an error stops the watch.
@@ -34,15 +34,15 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-procevent-lib.sh
+# shellcheck source=bin/backend/fm-procevent-lib.sh
 . "$SCRIPT_DIR/fm-procevent-lib.sh"
-# shellcheck source=bin/fm-quota-axi-lib.sh
+# shellcheck source=bin/backend/fm-quota-axi-lib.sh
 . "$SCRIPT_DIR/fm-quota-axi-lib.sh"
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
 
 DEFAULT_INTERVAL=60

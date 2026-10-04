@@ -32,19 +32,19 @@ The entrypoint authorizes that bootstrap with normal git tracking when git resol
 After setup, every other command verifies Firstmate's account-owned remote job worker, stages the encoded argv and stdin bytes, waits for its result, and relays stdout, stderr, and the exit status separately.
 On macOS the worker is `dev.firstmate.remote-job`, an Aqua-scoped LaunchAgent at `~/Library/LaunchAgents/dev.firstmate.remote-job.plist` with logs under `~/Library/Logs/`.
 After that bootstrap every non-doctor `fm-on.sh` target runs through that worker in the remote account's GUI session, never in the SSH process or a Herdr pane.
-The worker serves one lane per staged home: jobs for the same home follow the staging-order contract owned by [`bin/fm-remote-job-lib.sh`](../bin/fm-remote-job-lib.sh), while different homes' lanes run concurrently so one home's long job never delays another home's commands.
+The worker serves one lane per staged home: jobs for the same home follow the staging-order contract owned by [`bin/backend/fm-remote-job-lib.sh`](../bin/fm-remote-job-lib.sh), while different homes' lanes run concurrently so one home's long job never delays another home's commands.
 Within a home's lane the worker preempts a running reply long-poll as soon as any command other than another reply long-poll is queued for that home, so interactive commands and startup checks are never serialized behind a poll window.
-`bin/fm-remote-job-lib.sh` owns that preemption contract and distinguishes preemption from a wait window that closes with no data, so only a genuinely quiet window proves channel freshness while either outcome can re-arm without losing data.
+`bin/backend/fm-remote-job-lib.sh` owns that preemption contract and distinguishes preemption from a wait window that closes with no data, so only a genuinely quiet window proves channel freshness while either outcome can re-arm without losing data.
 A caller that disconnects or whose caller-side wait expires before its job completes cancels it instead of abandoning it: cancelled queued work is skipped, cancelled running work is stopped, and the finalized record is cleaned up, so retries never convoy behind abandoned work.
 Linux uses the same queue and worker protocol without the Aqua-session requirement.
-A worker stops itself once its configured code root stops being a Firstmate checkout, so a worker started from a worktree cannot outlive that worktree, and `bin/fm-remote-job-reap-orphans.sh` clears any worker already left behind that way without ever touching one whose checkout still exists.
+A worker stops itself once its configured code root stops being a Firstmate checkout, so a worker started from a worktree cannot outlive that worktree, and `bin/backend/fm-remote-job-reap-orphans.sh` clears any worker already left behind that way without ever touching one whose checkout still exists.
 The remote account must provide the required toolchain, the selected worker runtime, the selected session backend, and credentials that work on that host.
 The origin URL named for each project must be reachable from the remote account because projects are cloned on that host rather than copied from the primary.
 
 ## Non-interactive tool contract
 
 No login or interactive shell ever runs on the remote host, so `~/.profile`, `~/.bashrc`, and `~/.zshrc` never contribute to the runtime `PATH`.
-`bin/fm-remote-job-lib.sh` is the single owner of the worker `PATH` and builds it by filesystem discovery rather than by evaluating shell startup files.
+`bin/backend/fm-remote-job-lib.sh` is the single owner of the worker `PATH` and builds it by filesystem discovery rather than by evaluating shell startup files.
 The authorized child sees `<remote-root>/bin` first, then a genuine account `~/.local/bin`, the nvm default version bin, asdf shims and install bins, mise shims and install bins, Nix directories, Homebrew directories, and the system tail `/usr/bin:/bin:/usr/sbin:/sbin`.
 Nvm selection follows the filesystem `alias/default` chain and chooses the highest matching installed semantic version, falling back to the highest installed semantic version when the alias is absent or has no installed match.
 An nvm `system` default adds no nvm version bin, so the later system directories provide Node.
@@ -77,11 +77,11 @@ The wrapper must execute that absolute target rather than resolving its own name
 
 ## Readiness, repair, and the human steps
 
-`bin/fm-remote-doctor.sh` is the single owner of what "ready for a remote second mate" means.
+`bin/backend/fm-remote-doctor.sh` is the single owner of what "ready for a remote second mate" means.
 Check any host against it directly:
 
 ```sh
-bin/fm-on.sh <secondmate-id|ssh-alias> fm-remote-doctor.sh
+bin/backend/fm-on.sh <secondmate-id|ssh-alias> fm-remote-doctor.sh
 ```
 
 That run is read-only.
@@ -93,7 +93,7 @@ The script's own header owns the full line protocol.
 `--fix` repairs only the automatable gaps and is safe to rerun:
 
 ```sh
-bin/fm-on.sh <secondmate-id|ssh-alias> fm-remote-doctor.sh --fix
+bin/backend/fm-on.sh <secondmate-id|ssh-alias> fm-remote-doctor.sh --fix
 ```
 
 Over the plain SSH doctor bootstrap, it writes and reloads the Firstmate-owned `dev.firstmate.remote-job` and `dev.firstmate.herdr.fm-remote` launch agents on macOS, both scoped with `LimitLoadToSessionType=Aqua` and bootstrapped in `gui/<uid>`.
@@ -118,7 +118,7 @@ A file at `~/.local/bin/fm-remote-entrypoint.sh` that is not Firstmate's own sym
 Create and fill the normal secondmate charter first, then run:
 
 ```sh
-bin/fm-remote-home-seed.sh <id> <ssh-alias> <remote-root> <remote-home> {<project>[=<origin-url>]...|--no-projects}
+bin/backend/fm-remote-home-seed.sh <id> <ssh-alias> <remote-root> <remote-home> {<project>[=<origin-url>]...|--no-projects}
 ```
 
 `<remote-root>` is the remote Firstmate code clone that supplies tracked scripts.
@@ -128,7 +128,7 @@ Name each project's origin as `<project>=<origin-url>`.
 Resolve the concrete origin from the captain, the project registry, an existing clone anywhere, the forge, or an explicit paste rather than imposing one URL template.
 Seeding a project this machine has never cloned needs no clone under `projects/`, no `no-mistakes` initialization here, and no fleet sync first.
 A bare `<project>` is still accepted when this machine happens to have `projects/<project>`, whose configured origin is then read instead of being retyped.
-[`bin/fm-project-origin-lib.sh`](../bin/fm-project-origin-lib.sh) owns which URLs are accepted; it decides on structure and safety alone, so no forge, domain, or host is privileged and a self-hosted server works exactly as a hosted one does.
+[`bin/backend/fm-project-origin-lib.sh`](../bin/fm-project-origin-lib.sh) owns which URLs are accepted; it decides on structure and safety alone, so no forge, domain, or host is privileged and a self-hosted server works exactly as a hosted one does.
 The primary validates every resolved origin before transport, and the receiving host validates it again before cloning.
 The project's registered delivery mode still comes from this machine's `data/projects.md`, so an unregistered or `local-only` project is refused rather than provisioned.
 
@@ -140,18 +140,18 @@ It does not copy project trees or the primary process environment.
 A known provisioning failure rolls back the new route, while SSH exit 255 preserves it because remote completion is unknown and must be reconciled on the same host.
 
 Seeding also writes a durable `.fm-secondmate-parent` record next to the home's `.fm-secondmate-home` identity marker, naming this home's route to its parent as `local` or `remote`.
-The promised-public-reply subsystem is same-filesystem by construction, so a remote route can never carry a delegated public-reply promise; `bin/fm-teardown.sh`'s cleanup gate reads this record to treat a remote parent as out of scope rather than an unresolved binding.
+The promised-public-reply subsystem is same-filesystem by construction, so a remote route can never carry a delegated public-reply promise; `bin/backend/fm-teardown.sh`'s cleanup gate reads this record to treat a remote parent as out of scope rather than an unresolved binding.
 
 Local secondmates keep the existing route form and need no migration.
 A fleet may contain local and remote routes together.
-Use `bin/fm-home-seed.sh validate` to validate either form.
+Use `bin/backend/fm-home-seed.sh validate` to validate either form.
 
 ## Normal operation
 
 Launch or recover the remote second mate with the same command used for a local route:
 
 ```sh
-bin/fm-spawn.sh <id> --secondmate
+bin/backend/fm-spawn.sh <id> --secondmate
 ```
 
 The primary resolves the verified secondmate harness and optional model and effort, runs the same readiness gate the seed runs, transfers the inherited-material allowlist, and asks the remote host to launch on Herdr in `fm-remote`.
@@ -170,7 +170,7 @@ The Bearings inventory-reconcile hook therefore accepts these markerless routes,
 Send routed requests normally:
 
 ```sh
-FM_HOME=<primary-home> bin/fm-send.sh fm-<id> '<request>'
+FM_HOME=<primary-home> bin/backend/fm-send.sh fm-<id> '<request>'
 ```
 
 The [`fm-send.sh` header](../bin/fm-send.sh) owns the exact delivery-status contract.
@@ -209,7 +209,7 @@ An unavailable remote home is projected as unknown and is never replaced by a lo
 Move already-judged queued work with the normal command:
 
 ```sh
-bin/fm-backlog-handoff.sh <id> <item-key>...
+bin/backend/fm-backlog-handoff.sh <id> <item-key>...
 ```
 
 For a remote route, `tasks-axi mv` first moves the dependency-closed set atomically from the primary backlog into `data/handoff/<id>.outbox.md`.
@@ -221,7 +221,7 @@ There is no two-phase journal and no additional tasks-axi release requirement.
 
 ## Sync, update, and retirement
 
-Locked startup convergence and `bin/fm-config-push.sh` transfer only the declared inherited-material allowlist.
+Locked startup convergence and `bin/backend/fm-config-push.sh` transfer only the declared inherited-material allowlist.
 Changed live routes receive a marked instruction to re-read the transferred files.
 The primary records that remote nudge before delivery and retries it during locked startup convergence after a failed send.
 Local secondmates retain their generation-specific local pointer contract; remote transfers do not copy those primary-local instruction paths.
@@ -232,7 +232,7 @@ Dirty, diverged, unavailable, or otherwise unsafe targets are reported and left 
 Retire a remote second mate with the normal guarded command:
 
 ```sh
-bin/fm-teardown.sh <id>
+bin/backend/fm-teardown.sh <id>
 ```
 
 Retirement is executed on the configured host and refuses while the remote home has child work, while the primary has an unfinished backlog outbox, or while a routed reply remains unresolved.
@@ -247,19 +247,19 @@ The portable tests use the real entrypoint protocol, real git repositories, a de
 The lifecycle test covers seeding a registered project that this machine has never cloned, asserts that the local project tree is unchanged afterwards, and carries Bitbucket, self-hosted, and scp-like origins through to the remote clone:
 
 ```sh
-bin/fm-test-run.sh tests/fm-on.test.sh
-bin/fm-test-run.sh tests/fm-send-remote-delivery.test.sh
-bin/fm-test-run.sh tests/fm-secondmate-reconcile.test.sh
-bin/fm-test-run.sh tests/fm-peek-remote.test.sh
-bin/fm-test-run.sh tests/fm-crew-state.test.sh
-bin/fm-test-run.sh tests/fm-remote-job.test.sh
-bin/fm-test-run.sh tests/fm-remote-transport-lanes.test.sh
-bin/fm-test-run.sh tests/fm-remote-doctor.test.sh
-bin/fm-test-run.sh tests/fm-project-origin.test.sh
-bin/fm-test-run.sh tests/fm-remote-reply.test.sh
-bin/fm-test-run.sh tests/fm-remote-backlog-handoff.test.sh
-bin/fm-test-run.sh tests/fm-remote-secondmate-lifecycle-e2e.test.sh
-bin/fm-test-run.sh tests/fm-remote-secondmate-trace-context.test.sh
+bin/backend/fm-test-run.sh tests/fm-on.test.sh
+bin/backend/fm-test-run.sh tests/fm-send-remote-delivery.test.sh
+bin/backend/fm-test-run.sh tests/fm-secondmate-reconcile.test.sh
+bin/backend/fm-test-run.sh tests/fm-peek-remote.test.sh
+bin/backend/fm-test-run.sh tests/fm-crew-state.test.sh
+bin/backend/fm-test-run.sh tests/fm-remote-job.test.sh
+bin/backend/fm-test-run.sh tests/fm-remote-transport-lanes.test.sh
+bin/backend/fm-test-run.sh tests/fm-remote-doctor.test.sh
+bin/backend/fm-test-run.sh tests/fm-project-origin.test.sh
+bin/backend/fm-test-run.sh tests/fm-remote-reply.test.sh
+bin/backend/fm-test-run.sh tests/fm-remote-backlog-handoff.test.sh
+bin/backend/fm-test-run.sh tests/fm-remote-secondmate-lifecycle-e2e.test.sh
+bin/backend/fm-test-run.sh tests/fm-remote-secondmate-trace-context.test.sh
 ```
 
 The account-level checks the doctor performs - a real Aqua login session, a real `launchctl` domain, and a real herdr server - are only ever exercised against fixtures here, so the readiness gate's behavior on a genuine Mac remains an operator-run smoke test.

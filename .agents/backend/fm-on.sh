@@ -41,7 +41,7 @@ DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 REG="$DATA/secondmates.md"
 PROTOCOL=1
 
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit 1; }

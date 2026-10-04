@@ -3,7 +3,7 @@
 #
 # A confused no-mistakes gate agent runs inside a firstmate checkout, adopts the
 # captain identity from AGENTS.md, and reaches for fm-spawn/fm-send/fm-teardown.
-# bin/fm-gate-refuse-lib.sh is the firstmate capability-removal half: sourced at
+# bin/backend/fm-gate-refuse-lib.sh is the firstmate capability-removal half: sourced at
 # the top of those three entrypoints and called before any fleet mutation, it
 # fails closed on either of two independent signals:
 #   1. NO_MISTAKES_GATE set in the environment (the marker no-mistakes stamps);

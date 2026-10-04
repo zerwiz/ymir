@@ -3,7 +3,7 @@
 ### Why
 - **Change:** Removed the last external dependency. `bin/factory-observe.sh`
   (which defaulted to `~/command/factory/factory_data/factory.db`) is gone;
-  `bin/smidja-observe.sh` reads the repo's own
+  `bin/desktop/smidja-observe.sh` reads the repo's own
   `smidja/smidja_data/smidja.db` read-only and reports absence honestly.
 - **API:** `/api/factory` replaced by `/api/smidja/{health,sessions,sessions/:id,decisions,stats}`
   (`bun:sqlite`, read-only).

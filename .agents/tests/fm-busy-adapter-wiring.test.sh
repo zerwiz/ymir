@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Behavior tests for the per-adapter semantic busy-state wiring that
-# bin/fm-spawn.sh installs under the contract owned by bin/fm-busy-lib.sh.
+# bin/backend/fm-spawn.sh installs under the contract owned by bin/fm-busy-lib.sh.
 #
 # These tests run the REAL fm-spawn against a fake tmux pane and an isolated
 # git worktree, then drive the generated adapter artifact (the Pi extension,
 # the OpenCode plugin) in a plain Node host, so the artifact, the real
-# bin/fm-busy-event.sh writer, and the real classifier are exercised together
+# bin/backend/fm-busy-event.sh writer, and the real classifier are exercised together
 # with no live harness session.
 set -u
 

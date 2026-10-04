@@ -12,7 +12,7 @@ Pi is a **run-tier** harness with an in-process extension API: the extension run
 > `index.ts`** — pi loads a subdirectory only when it has one, and never recurses
 > deeper. `.pi/extensions/` registers nothing. `lib/` is a leftover from plan 29,
 > still sourced from the old flat tree and deployed by a separate loader line.
-> Gate: `bin/valknut-load.sh --check`. Smoke test:
+> Gate: `bin/seat/valknut-load.sh --check`. Smoke test:
 > `.agents/tests/pi-extensions.test.sh`.
 ## 1. Files
 
@@ -135,7 +135,7 @@ Sýn spawns it (`.pi/extensions/syn-turnend-guard.ts:260-282`):
 
 ```ts
 const supervised = process.platform !== "win32";
-const runner = `${root}/bin/saga-sessionstart-run.sh`;
+const runner = `${root}/bin/time/saga-sessionstart-run.sh`;
 child = spawn(
   supervised ? "node" : runner,
   supervised
@@ -176,7 +176,7 @@ PI SESSION-START DELIVERY TRUNCATED - the digest exceeded 512 KiB. Treat omitted
 On a failed/empty startup it substitutes the manual fallback:
 
 ```
-Run `bin/saga-session-start.sh` now, exactly once, before executing any other instructions.
+Run `bin/time/saga-session-start.sh` now, exactly once, before executing any other instructions.
 ```
 
 Pi's prerequisite exit is `sessionstartIneligibleExit = 3`; a stand-down (`BROKK_SESSIONSTART_INELIGIBLE=1`) exits 3 and is mapped to `{ kind: "ineligible" }` rather than `failed`.
@@ -202,7 +202,7 @@ const env = { ...process.env, BROKK_HOME, BROKK_ROOT_OVERRIDE, BROKK_CONFIG_OVER
 const armChild = spawn("bash", ["-lc", 'exec "$BROKK_WATCH_ARM_SCRIPT" --restart'], { cwd: brokkRoot, env, ... });
 ```
 
-`missing` (recorded holder dead / zombie / pid reused) no longer punts to `bin/saga-session-start.sh`: Gná reclaims the helm directly (`reclaimStaleLock`, mirroring `gleipnir_lock_acquire` — pid + starttime sidecar + `state/.lock-path` pointer) and arms immediately, so a leftover lock can never strand supervision.
+`missing` (recorded holder dead / zombie / pid reused) no longer punts to `bin/time/saga-session-start.sh`: Gná reclaims the helm directly (`reclaimStaleLock`, mirroring `gleipnir_lock_acquire` — pid + starttime sidecar + `state/.lock-path` pointer) and arms immediately, so a leftover lock can never strand supervision.
 
 Continuity: `classifyClose` separates **actionable** (`signal:`/`stale:`/`check:`/`heartbeat:` line) from **failure**. Actionable → `restoreAfterActionableClose` (retries with backoff) then `deliverActionableWake` (encodes a `watcher` Rödd message and `pi.sendUserMessage(..., {deliverAs:"followUp"})`). Failure → `scheduleRetry`. Retry knobs: `BROKK_WATCH_REARM_RETRY_BASE_MS` (250), `..._MAX_MS` (4000), `..._LIMIT` (5); readiness `BROKK_PI_ARM_READY_TIMEOUT_MS` (12s, 35s on win32); retire `BROKK_WATCH_ARM_RETIRE_TIMEOUT_MS` (1000).
 
@@ -252,10 +252,10 @@ test -f state/.pi-gna-watch-loaded   && echo "Gná loaded: $(head -n1 state/.pi-
 
 ```bash
 # What Sýn runs under Vörðr:
-node .pi/extensions/lib/vordr-sessionstart-supervisor.mjs bin/saga-sessionstart-run.sh --source startup --pi-prerequisite | head -n 20
+node .pi/extensions/lib/vordr-sessionstart-supervisor.mjs bin/time/saga-sessionstart-run.sh --source startup --pi-prerequisite | head -n 20
 echo "exit=$?"   # wrapper exits 0; Vörðr reports {type:"result",code,bytes}
 # Direct wrapper for comparison:
-bin/saga-sessionstart-run.sh --source startup --pi-prerequisite | head -n 5
+bin/time/saga-sessionstart-run.sh --source startup --pi-prerequisite | head -n 5
 ```
 
 ### Verify the turn-end guard

@@ -14,7 +14,7 @@ None failed loudly — each reported a clean PASS, a wrong SKIP, or a silent los
   The realm declaration never arrived and `0004` fell back to a neutral realm.
   `copy` now **merges** a directory into its target (never overwriting a file) and
   copies a single file only when it is absent.
-- **`bin/smidja-bootstrap.sh` looked for the smithy at the old root.** `sys.path`
+- **`bin/desktop/smidja-bootstrap.sh` looked for the smithy at the old root.** `sys.path`
   pointed at `smidja/`, but the split moved it to `apps/smidja/`, so the DB seed
   died with `ModuleNotFoundError: No module named 'smidja_modules'`. It now
   searches `apps/smidja` then `smidja`, so either layout works.

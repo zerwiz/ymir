@@ -8,7 +8,7 @@
 # surface whose class is misrouted is a FAILURE, never a silent orphan.
 #
 # For each surface (hlidskjalf · smidja · odrerir · sessrumnir):
-#   (a) the resolver (bin/electron-lib.sh) yields an executable binary —
+#   (a) the resolver (bin/desktop/electron-lib.sh) yields an executable binary —
 #       app-local, workspace-hoisted, or the sibling package; never assumed
 #   (b) that binary answers `--version`
 #   (c) --live, with a compositor present: a window of the surface's class is
@@ -33,7 +33,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 for _dc in "$SCRIPT_DIR/app-lib.sh" "$ROOT/bin/app-lib.sh"; do
   [ -r "$_dc" ] && { . "$_dc"; break; }
 done
-for _dc in "$SCRIPT_DIR/electron-lib.sh" "$ROOT/bin/electron-lib.sh"; do
+for _dc in "$SCRIPT_DIR/electron-lib.sh" "$ROOT/bin/desktop/electron-lib.sh"; do
   [ -r "$_dc" ] && { . "$_dc"; break; }
 done
 

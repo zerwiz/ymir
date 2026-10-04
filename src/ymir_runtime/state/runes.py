@@ -3,7 +3,7 @@
 Runes are what was carved: an append-only JSONL record of every significant
 action in the Ymir runtime. Each entry folds the previous entry's checksum into
 its own, so a line cannot be altered or removed without breaking every later
-line. `bin/runes-append.sh` is a THIN SHIM over this module; the checksum format
+line. `bin/records/runes-append.sh` is a THIN SHIM over this module; the checksum format
 and the append-only law are preserved to the byte, because the ledger already
 has history and the chain must not move.
 

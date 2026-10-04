@@ -62,5 +62,5 @@ $ bash bin/inventory.sh --check       → PASS   (401 files)
 $ node --experimental-strip-types tools/extension-smoke.mjs
     extension_smoke{called,verified_not_executed,broken,skipped} = 9, 17, 0, 2
 $ bash .agents/tests/pi-extensions.test.sh   → PASS
-$ bash bin/valknut-load.sh --check           → PASS
+$ bash bin/seat/valknut-load.sh --check           → PASS
 ```

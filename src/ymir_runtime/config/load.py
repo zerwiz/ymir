@@ -9,10 +9,10 @@ semantic fault all refuse loudly — none of them returns a default.
 The kinds are the configs the RUNTIME actually resolves (plan 58, Phase 7):
 
     agents.yaml            bin/agents-config.sh · bin/dispatch-profile.sh
-                           bin/local-model-lock.sh · bin/einherjar-spawn.sh
-    cron.yaml              bin/nornir-cron-start.sh · bin/hall-snapshot.sh
-    fleet.json             bin/topology.sh · bin/eindri-route.sh
-                           bin/mcp-gateway.sh · bin/model-placement.sh · bin/rail-resolve.sh
+                           bin/local-model-lock.sh · bin/agents/einherjar-spawn.sh
+    cron.yaml              bin/time/nornir-cron-start.sh · bin/hall-snapshot.sh
+    fleet.json             bin/topology.sh · bin/agents/eindri-route.sh
+                           bin/bridge/mcp-gateway.sh · bin/model-placement.sh · bin/rail-resolve.sh
     eindri-dispatch.json   bin/dispatch-profile.sh
 
 A config the runtime does NOT read gets no schema and is not loaded here —

@@ -11,7 +11,7 @@ if all three were down.
 
 Measured facts this closes:
 
-1. The worker had no way to write its OWN wake. `bin/eindri-acclaim.sh` was the
+1. The worker had no way to write its OWN wake. `bin/agents/eindri-acclaim.sh` was the
    poller's action half only, so a dead poller meant a dead handoff.
 2. The poller's `eindri-acclaim.sh` and the failsafe `eindri-handoff.sh` kept
    **separate** delivery markers (`state/eindri-done/` vs `state/eindri-handoff/`),
@@ -23,15 +23,15 @@ Measured facts this closes:
 ### The fix
 
 1. **The worker's own terminal act is one command, and it writes the wake.**
-   `bin/eindri-acclaim.sh <id> --terminal done --line "<what shipped>"` appends the
+   `bin/agents/eindri-acclaim.sh <id> --terminal done --line "<what shipped>"` appends the
    status line, files the report shelf (`state/eindri-reports/<id>.md`; a
    `needs-decision` files `state/eindri-questions/<id>.md`), appends the durable
    wake to `state/.wake-queue`, marks the ledger, and sounds the note. The spawn
-   brief (`bin/erindi-brief.sh`) teaches it as the terminal act in every mode
+   brief (`bin/agents/erindi-brief.sh`) teaches it as the terminal act in every mode
    (direct-PR, local-only, no-mistakes, scout), with a gate that proves the wake is
    in the queue. A well-behaved worker now needs **no arm, no poller, and no
    sweep** to be heard.
-2. **One shelf, one contract — one ledger.** New `bin/eindri-wake-lib.sh` owns the
+2. **One shelf, one contract — one ledger.** New `bin/agents/eindri-wake-lib.sh` owns the
    shared delivery ledger `state/eindri-delivered/<id>.<kind>`, the durable queue
    append, and the desktop note. Both `eindri-acclaim.sh` and `eindri-handoff.sh`
    read and write it, so exactly one wake is written per (id, kind) whichever road
@@ -53,7 +53,7 @@ Measured facts this closes:
 Scratch `/tmp` states, no arm running:
 
 - `acclaim <id> --terminal done --line …` → wake in `.wake-queue`, status line and
-  shelf written, `bin/saga-wake-drain.sh` prints `WAKE eindri <id> reported`.
+  shelf written, `bin/time/saga-wake-drain.sh` prints `WAKE eindri <id> reported`.
 - A shelf written with no acclaim (a session that died mid-errand) → `handoff sweep`
   exits 3, drain finds it; a second sweep exits 0 (idempotent).
 - acclaim after the sweep does not double the wake; the shared ledger is named.
@@ -66,7 +66,7 @@ Scratch `/tmp` states, no arm running:
 
 The Pi extension source lives at `.pi/shared/extensions/gna-pi-watch.ts`; the
 running harness reads the deployed copy under `~/.pi/agent/extensions/`. This PR
-covers the **source**; the deployed copy refreshes with `bin/valknut-load.sh --pi`
+covers the **source**; the deployed copy refreshes with `bin/seat/valknut-load.sh --pi`
 (seated as the post-merge hook). Until that deploy, the in-repo arm script's own
 catch-up sweep already reconciles on every re-arm — the extension call is the
 belt to the arm's braces.
@@ -75,10 +75,10 @@ galdr-reread: `harness-integration/README.md`, `nornir-jobs.md`, `registry.md`.
 
 ### Files
 
-- `bin/eindri-wake-lib.sh` (new)
-- `bin/eindri-acclaim.sh`
-- `bin/eindri-handoff.sh`
-- `bin/erindi-brief.sh`
+- `bin/agents/eindri-wake-lib.sh` (new)
+- `bin/agents/eindri-acclaim.sh`
+- `bin/agents/eindri-handoff.sh`
+- `bin/agents/erindi-brief.sh`
 - `bin/syn-watch-arm.sh`
 - `.pi/shared/extensions/gna-pi-watch.ts`
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`

@@ -1,7 +1,7 @@
 """The engine's own failures, so a caller can tell them apart.
 
 Three classes only, because a caller needs to decide one thing: may I keep
-going, or must I hand this back to the old road (`bin/einherjar-spawn.sh`)?
+going, or must I hand this back to the old road (`bin/agents/einherjar-spawn.sh`)?
 
   EngineError     — the engine tried and failed.
   EngineRefusal   — the engine will NOT own this errand. The adapter keeps the

@@ -11,7 +11,7 @@
 - **Rule 04 corrected, append-only.** The rule's mapping table read as if
   `hodd/x/` and `$YMIR_HOME/x/` were two locations; on a real home that produced
   two parallel stores which drifted. The appended correction states the truth:
-  `$YMIR_HOME/hodd/` **is** the private data path, `bin/hoard-lib.sh` is the one
+  `$YMIR_HOME/hodd/` **is** the private data path, `bin/vault/hoard-lib.sh` is the one
   source of truth for it, and `.ymir-layout.yaml` must name only paths that
   exist. Nothing above the correction was rewritten.
 

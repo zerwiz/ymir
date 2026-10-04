@@ -37,10 +37,10 @@ kind, `grants`, over `hodd/identity/grants.yaml`:
 **2. The namespace-scoped journal.** Plan 51's outbox/fold trio is extended, never
 mutated:
 
-- `bin/journal-append.sh --namespace <ns>` adds an `ns` field to the entry (and
+- `bin/records/journal-append.sh --namespace <ns>` adds an `ns` field to the entry (and
   refuses a malformed namespace, exit 2). An entry with no `ns` is unchanged —
   the operator's own.
-- `bin/journal-receive.sh` folds an entry with `ns` into
+- `bin/records/journal-receive.sh` folds an entry with `ns` into
   `journal/folded/<ns>/<host>.jsonl` and one without into
   `journal/folded/<host>.jsonl`. A company project's entries are thus scoped by
   **operator (host) + namespace** and never merged into a peer's lineage; an old
@@ -92,7 +92,7 @@ rest stands on.
 - `src/ymir_runtime/grants.py` · `src/ymir_runtime/tests/test_grants.py` (new)
 - `src/ymir_runtime/config/load.py` · `config/__main__.py` (kind registered)
 - `src/ymir_runtime/tests/test_config.py` (five kinds)
-- `bin/journal-append.sh` · `bin/journal-receive.sh`
+- `bin/records/journal-append.sh` · `bin/records/journal-receive.sh`
 - `.agents/tests/journal.test.sh` · `.agents/tests/journal-fold.test.sh`
 - `tests/e2e/several-ymirs-foundation-proof.sh` (new)
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md` (§7.4, §7.5)

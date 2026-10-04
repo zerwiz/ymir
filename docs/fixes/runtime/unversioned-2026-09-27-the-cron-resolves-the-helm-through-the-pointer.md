@@ -3,7 +3,7 @@
 ### Why
 
 The local installation's validate (2026-09-27) caught a real merged-code defect:
-`bin/nornir-cron-start.sh` probed the session lock at the RAW legacy default
+`bin/time/nornir-cron-start.sh` probed the session lock at the RAW legacy default
 (`${XDG_STATE_HOME:-$HOME/.local/state}/ymir/brokk.lock`) and ignored
 `state/.lock-path` — the Phase-0 pointer that is the ONE fact of where the helm
 sits. When the primary session's lock was re-stood elsewhere (or the pointer
@@ -26,4 +26,4 @@ galdr-reread: `nornir-jobs.md` (the session-bound retirement row).
 
 ### Files
 
-- `bin/nornir-cron-start.sh`
+- `bin/time/nornir-cron-start.sh`

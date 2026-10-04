@@ -44,7 +44,7 @@
 #   snotra-detect.sh --version
 #
 # Env:
-#   YMIR_HOME               the hoard root (resolved by bin/hoard-lib.sh)
+#   YMIR_HOME               the hoard root (resolved by bin/vault/hoard-lib.sh)
 #   SNOTRA_POLL_SECONDS     idle/event tick bound (default 2)
 #   SNOTRA_ARM_DEBOUNCE     seconds a new mic stream must persist to arm (default 3)
 #   SNOTRA_RELEASE_GRACE    seconds the mic must stay released to leave (default 5)
@@ -91,11 +91,11 @@ esac
 # second road, so a seat that has not been re-ensured yet still resolves the
 # home rather than dying on an unbound variable.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "${ROOT:-}/bin/hoard-lib.sh" \
-             "${SNOTRA_DOORS_DIR:-}/bin/hoard-lib.sh" \
+  for _yc in "${ROOT:-}/bin/vault/hoard-lib.sh" \
+             "${SNOTRA_DOORS_DIR:-}/bin/vault/hoard-lib.sh" \
              "${SNOTRA_DOORS_DIR:-}/hoard-lib.sh" \
-             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
-             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/vault/hoard-lib.sh" \
+             "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/bin/vault/hoard-lib.sh" \
              "$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/hoard-lib.sh"; do
     [ -n "$_yc" ] && [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
@@ -105,7 +105,7 @@ if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root YMIR_HOME
 fi
 if [ -z "${YMIR_HOME:-}" ]; then
-  printf 'error: the hoard home could not be resolved — bin/hoard-lib.sh was not found\n' >&2
+  printf 'error: the hoard home could not be resolved — bin/vault/hoard-lib.sh was not found\n' >&2
   printf 'help: seat the watch with bin/fleet-ensure.sh ensure (it materializes hoard-lib.sh\n' >&2
   printf '      beside the operator commands in ~/.fleet), or set YMIR_HOME\n' >&2
   exit 1
@@ -758,7 +758,7 @@ Actions: $actions ($counts mined)"
   # reaches Brokk with no arm and no sweep.
   #
   # Two deliberate choices. FIRST, the door and not the shell helper
-  # (bin/brokk-wake-lib.sh's fm_wake_append): that helper takes a lock DIRECTORY
+  # (bin/time/brokk-wake-lib.sh's fm_wake_append): that helper takes a lock DIRECTORY
   # at $STATE/.wake-queue.lock while the queue itself owns a lock FILE at the
   # same path — so where the queue's file exists the helper's acquire can never
   # succeed and it waits forever. A watch that waits forever is an ear that never

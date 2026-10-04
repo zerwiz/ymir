@@ -3,7 +3,7 @@
 // THE DOOR IS THIS BODY'S OWN GATEWAY (plan 51 P3/P6/9c). The record's home
 // moved to the heart (zerwizserver), so no client names the heart any more: the
 // hall rings `http://127.0.0.1:<gateway>/mcp/skuld` — the one local gateway
-// (bin/mcp-gateway.sh, :8316) — and the gateway resolves the heart at REQUEST
+// (bin/bridge/mcp-gateway.sh, :8316) — and the gateway resolves the heart at REQUEST
 // time. A heart-address change re-resolves inside the gateway; the hall's door
 // never moves. This is the same law the harnesses' mcp-adapter.json obeys, and
 // the gateway admits the browser origin (CORS) so the board reaches the door

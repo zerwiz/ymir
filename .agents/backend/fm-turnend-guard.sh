@@ -4,7 +4,7 @@
 # is guarded exactly like the main primary; only child crew/scout worktrees are
 # exempt (see the scoping block below and docs/turnend-guard.md).
 #
-# fm-guard.sh (bin/fm-guard.sh) is pull-based: it only warns when some other
+# fm-guard.sh (bin/backend/fm-guard.sh) is pull-based: it only warns when some other
 # supervision script happens to run. A primary session that ends a turn without
 # resuming its harness supervision protocol, and then never runs another
 # fleet-touching command itself, can sit blind for hours.
@@ -15,7 +15,7 @@
 # follow-up because their turn-end events are passive. Grok delegates native
 # blocking when its running Stop payload advertises that capability, with one
 # bounded resume fallback for payloads from pre-native processes. Cursor calls
-# this guard back with --cursor from bin/fm-turnend-guard-cursor.sh and renders
+# this guard back with --cursor from bin/backend/fm-turnend-guard-cursor.sh and renders
 # exit 2 as one bounded follow-up, because exit 2 is a silent no-op on Cursor's
 # stop step; without that flag a Cursor-shaped payload is the Claude-settings
 # duplicate Cursor also loads, and this guard stands down.
@@ -48,7 +48,7 @@
 # would re-open the exact blind window this guard exists to close
 # (docs/turnend-guard.md records the 2026-07-21 incident). In --claude mode this
 # guard ignores stop_hook_active and instead cooperates with the Stop-owned
-# auto-arm (bin/fm-claude-stop-autoarm.sh), which fires on the same Stop event:
+# auto-arm (bin/backend/fm-claude-stop-autoarm.sh), which fires on the same Stop event:
 #   1. a live identity-matched watcher with a fresh beacon allows immediately;
 #   2. otherwise wait briefly (FM_CLAUDE_AUTOARM_SYNC_WAIT_MS, default 800ms)
 #      for the auto-arm to claim this home (a live OPEN generation claim in the
@@ -90,11 +90,11 @@ for arg in "$@"; do
   esac
 done
 
-# shellcheck source=bin/fm-supervision-lib.sh
+# shellcheck source=bin/backend/fm-supervision-lib.sh
 . "$SCRIPT_DIR/fm-supervision-lib.sh"
-# shellcheck source=bin/fm-primary-scope-lib.sh
+# shellcheck source=bin/backend/fm-primary-scope-lib.sh
 . "$SCRIPT_DIR/fm-primary-scope-lib.sh"
-# shellcheck source=bin/fm-hook-host-lib.sh
+# shellcheck source=bin/backend/fm-hook-host-lib.sh
 . "$SCRIPT_DIR/fm-hook-host-lib.sh"
 
 # Read the whole turn-end hook payload once; never block on unreadable/absent
@@ -102,13 +102,13 @@ done
 PAYLOAD=$(cat 2>/dev/null || true)
 [ -n "$PAYLOAD" ] || exit 0
 
-# jq is the repo's established JSON dependency (bin/fm-x-poll.sh uses the same
+# jq is the repo's established JSON dependency (bin/backend/fm-x-poll.sh uses the same
 # "missing jq -> silent no-op" degrade). Without it we cannot safely read the
 # loop-guard field, so we must never block - fail open, not noisy.
 command -v jq >/dev/null 2>&1 || exit 0
 
 # A Cursor primary also loads the tracked Claude settings, and Cursor's own
-# registration owns its turn boundary through bin/fm-turnend-guard-cursor.sh,
+# registration owns its turn boundary through bin/backend/fm-turnend-guard-cursor.sh,
 # which calls this guard back with --cursor. Without that flag a Cursor-delivered
 # payload is the Claude-compatibility duplicate and must not create a second
 # continuation path (docs/turnend-guard.md "Harness integrations").
@@ -136,7 +136,7 @@ fi
 # mirrors the cd-guard's intent that a secondmate's own session is a guarded
 # primary. Only an UNMARKED checkout (or one with an invalid marker) falls
 # through to the linked-worktree exemption: firstmate hands out crewmate/scout
-# task worktrees as genuine linked `git worktree`s (bin/fm-spawn.sh aborts
+# task worktrees as genuine linked `git worktree`s (bin/backend/fm-spawn.sh aborts
 # otherwise), whose git-dir lives under the parent repo's .git/worktrees/<name>
 # and differs from the common (shared) git-dir, while a main, non-worktree
 # checkout has the two equal. Child worktrees never carry the gitignored marker,
@@ -144,7 +144,7 @@ fi
 fm_primary_scope_matches "$FM_ROOT" "$STATE" || exit 0
 
 # --- the actual predicate ----------------------------------------------------
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 
 BUDGET_FILE="$STATE/.turnend-claude-blocks"
@@ -261,7 +261,7 @@ autoarm_owns_recovery() {
   fm_watcher_healthy "$STATE" "$WATCH" "$GRACE" "$FM_HOME" && return 0
   # A live OPEN generation claim owns recovery: the ledger names a live,
   # identity-matched owner still arming that is not stuck (fm_autoarm_claim_open
-  # in bin/fm-wake-lib.sh owns that predicate). A finished, dead,
+  # in bin/backend/fm-wake-lib.sh owns that predicate). A finished, dead,
   # identity-mismatched, or stuck claim deliberately fails it and falls
   # through, because treating such a claim as ownership is what let a dead
   # watcher go unnoticed for turn after turn; the outcome cases below still

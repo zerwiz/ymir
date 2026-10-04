@@ -3,7 +3,7 @@ import { StatusChip } from '../components/Status';
 
 /**
  * Runtime — the Sága session digest as injected at session open (plan 29).
- * Reads `/api/runtime` (bin/saga-session-start.sh); when nothing is loaded it
+ * Reads `/api/runtime` (bin/time/saga-session-start.sh); when nothing is loaded it
  * says so. Read-only: the digest is what Brokk received, not an editor.
  */
 export function Runtime() {

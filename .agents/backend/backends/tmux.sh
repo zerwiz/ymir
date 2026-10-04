@@ -6,7 +6,7 @@
 # fm-spawn.sh, and fm-teardown.sh already ran inline into named functions
 # here, running the EXACT same commands in the EXACT same order, so the
 # default (tmux, `backend=` absent) path stays byte-identical. Sourced only
-# through bin/fm-backend.sh's fm_backend_source, never directly.
+# through bin/backend/fm-backend.sh's fm_backend_source, never directly.
 #
 # Worktree acquisition (running `treehouse get` inside the pane, and polling
 # its cwd) is unchanged by this extraction: P1 scopes only the session
@@ -14,15 +14,15 @@
 # inline with these same send/current-path primitives.
 #
 # The verified composer/busy-detection and verify-and-retry-submit primitives
-# already live in bin/fm-tmux-lib.sh, shared with the away-mode daemon
-# (bin/fm-supervise-daemon.sh); this adapter sources that file and re-exports
+# already live in bin/backend/fm-tmux-lib.sh, shared with the away-mode daemon
+# (bin/backend/fm-supervise-daemon.sh); this adapter sources that file and re-exports
 # its submit core under the backend's naming convention rather than
 # duplicating it, so the two consumers cannot drift apart.
-# shellcheck source=bin/fm-tmux-lib.sh
+# shellcheck source=bin/backend/fm-tmux-lib.sh
 . "$FM_BACKEND_LIB_DIR/fm-tmux-lib.sh"
-# shellcheck source=bin/fm-session-lock-lib.sh
+# shellcheck source=bin/backend/fm-session-lock-lib.sh
 . "$FM_BACKEND_LIB_DIR/fm-session-lock-lib.sh"
-# shellcheck source=bin/fm-cursor-lib.sh
+# shellcheck source=bin/backend/fm-cursor-lib.sh
 . "$FM_BACKEND_LIB_DIR/fm-cursor-lib.sh"
 
 # fm_backend_tmux_resolve_bare_selector: the live-window-listing fallback for a
@@ -52,7 +52,7 @@ fm_backend_tmux_send_key() {  # <target> <key>
 
 # fm_backend_tmux_send_text_submit: type <text> into <target> once, then
 # submit with Enter, retried (Enter only, never retyped) until the composer
-# clears. Re-exports fm_tmux_submit_core (bin/fm-tmux-lib.sh) verbatim; see
+# clears. Re-exports fm_tmux_submit_core (bin/backend/fm-tmux-lib.sh) verbatim; see
 # that file for the composer-verification contract and echoed verdicts.
 fm_backend_tmux_send_text_submit() {  # <target> <text> <retries> <enter-sleep> <settle>
   fm_tmux_submit_core "$@"
@@ -180,7 +180,7 @@ fm_backend_tmux_classify_process_name() {  # <path> [argv0] -> agent|shell|other
       # other installed name is the far-too-generic `agent` (verified live on
       # cursor-agent 2026.08.11-e8db854: #{pane_current_command} is `node` while
       # `ps -o comm=` carries the cursor-agent install path). Identity therefore
-      # comes from the narrowed structural rule in bin/fm-cursor-lib.sh, which
+      # comes from the narrowed structural rule in bin/backend/fm-cursor-lib.sh, which
       # demands Cursor's own name or install tree in the path or argv[0]. An
       # unrelated `node` or `agent` matches nothing here and stays `other`,
       # which the callers above fold into `ambiguous` rather than `dead`, so a
@@ -247,7 +247,7 @@ fm_backend_tmux_foreground_argv0s() {  # <target>
 }
 
 # fm_backend_tmux_agent_state: recovery-grade harness-agent state for one
-# recorded target. See bin/fm-backend.sh's fm_backend_agent_state for the
+# recorded target. See bin/backend/fm-backend.sh's fm_backend_agent_state for the
 # shared state vocabulary and docs/tmux-backend.md "Agent liveness probe" for
 # the empirical basis. Tmux silently falls back to the active window when a
 # named target is absent, so the exact recorded window must appear in a

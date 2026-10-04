@@ -23,7 +23,7 @@ installed loader's own rule.** Where this rule and habit disagree, pi's source w
 ## The law
 
 1. **One home per extension, ever.** The source is `.pi/shared/extensions/`; the deployed copy
-   is `~/.pi/agent/extensions/`, written by `bin/valknut-load.sh --pi`. **Never the same
+   is `~/.pi/agent/extensions/`, written by `bin/seat/valknut-load.sh --pi`. **Never the same
    extension in both, and never in two of the three trees.**
 2. **`.pi/extensions/` registers nothing.** It holds no-op factories that exist solely to stop a
    duplicate collision, and nothing else. **A file there that grows past a no-op is a bug**, and
@@ -48,7 +48,7 @@ installed loader's own rule.** Where this rule and habit disagree, pi's source w
 8. **Deploy both the extension and everything it imports.** Copying the top-level files without
    their modules ships extensions that **cannot load** — the exact failure that made
    `Cannot find module ./lib/…` the first symptom anyone saw.
-9. **The gate is `bin/valknut-load.sh --check`, and it must pass.** Deployed tree byte-identical
+9. **The gate is `bin/seat/valknut-load.sh --check`, and it must pass.** Deployed tree byte-identical
    to source; helper modules deployed; no test file in the live tree; nothing in two load paths.
    **A gate that only ever passes is worse than no gate**, so every check is proved by breaking
    the thing it watches.
@@ -63,7 +63,7 @@ descriptions all survived until somebody went looking.
 
 | | measured 2026-10-04 |
 |---|---|
-| **a stale deploy, invisible** | deployed `ymir-subagents.ts` was **12,991 B against a 13,748 B source**. The missing lines are `bin/erindi-brief.sh` — the fix that stops a dispatch seating a figure with an unfilled brief. Every file listing looked correct |
+| **a stale deploy, invisible** | deployed `ymir-subagents.ts` was **12,991 B against a 13,748 B source**. The missing lines are `bin/agents/erindi-brief.sh` — the fix that stops a dispatch seating a figure with an unfilled brief. Every file listing looked correct |
 | **an unfinished migration** | plan 29 built a flat `.pi/extensions/` + `lib/`. Plan 58 moved the extensions to `.pi/shared/extensions/` and **did not move their internals**, so the loader grew a second copy line. One system, two sources, and the second was never planned |
 | **a specified-but-unbuildable half** | plan 58 says `.pi/extensions/*.ts` should be "thin loaders that pull the shared set". That is mutually exclusive with a copy deploy, so they became no-ops. **The next reader reads that row as an outstanding task** |
 | **the doc answering twice** | one table said `.pi/extensions/` held the governance four; a later section said *"never in `.pi/extensions/`"*. Neither was true |

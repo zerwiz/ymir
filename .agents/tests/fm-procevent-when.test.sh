@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Behavior tests for the condition->action adapter of the process-to-event
-# runner (bin/fm-procevent-when.sh).
+# runner (bin/backend/fm-procevent-when.sh).
 #
 # Every scenario is exercised through the adapter's public commands plus the
 # generic runner, against real condition and action processes; nothing here

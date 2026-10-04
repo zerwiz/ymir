@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/zerwiz/ymir/config/cron.schema.json",
   "title": "config/cron.yaml (parsed)",
-  "description": "The schedule the Nornir scheduler (bin/nornir-cron-start.sh) actually runs (plan 58, Phase 7). cron.yaml is a LINE format — `HH:MM [@role[,role]] <command>`, either order — so the loader parses each live line into this document and validates THAT, because a line the scheduler cannot parse is a job that silently never fires. The role gate is the fleet's role law: heart · forge · dev · hand.",
+  "description": "The schedule the Nornir scheduler (bin/time/nornir-cron-start.sh) actually runs (plan 58, Phase 7). cron.yaml is a LINE format — `HH:MM [@role[,role]] <command>`, either order — so the loader parses each live line into this document and validates THAT, because a line the scheduler cannot parse is a job that silently never fires. The role gate is the fleet's role law: heart · forge · dev · hand.",
   "type": "object",
   "additionalProperties": false,
   "required": ["jobs"],

@@ -39,7 +39,7 @@ listening() {
 
 # Resolve the operator's home/state exactly as every shell tool does (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$ROOT/bin/hoard-lib.sh"; do
+  for _c in "$ROOT/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -86,7 +86,7 @@ else bad api "no answer on :${API_PORT} — scripts/start.sh"; fi
 
 # 3. the well (Mimirsbrunn bridge)
 if http_ok "${WELL_URL}/health"; then ok well "well bridge answers at ${WELL_URL}"
-else bad well "well bridge not answering at ${WELL_URL} — bin/mimir-bridge.sh --start"; fi
+else bad well "well bridge not answering at ${WELL_URL} — bin/bridge/mimir-bridge.sh --start"; fi
 
 # 4. Bifrost (the model bridge) — optional: needs a provider key
 if listening "$BIFROST_PORT"; then
@@ -108,7 +108,7 @@ else skip smidja-ui "dev UI not raised (optional)"; fi
 # the Allfather's word: test the tickets and plans through the MCP for real).
 if listening "$HALL_PORT"; then
   ok hall "Óðrerir hall listening on :${HALL_PORT}"
-  if [ -r "$ROOT/bin/odrerir-mcp-smoke.sh" ]; then
+  if [ -r "$ROOT/bin/desktop/odrerir-mcp-smoke.sh" ]; then
     # The boards ride THIS body's OWN gateway (plan 51 P6): a loopback door
     # that resolves the heart at request time, not another seat's name. When the
     # gateway is not raised there is no door to ring — a dependency absent, not
@@ -117,14 +117,14 @@ if listening "$HALL_PORT"; then
     _gw_port="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
     _skuld="${SKULD_URL:-http://127.0.0.1:${_gw_port}/mcp/skuld}"
     if ! curl -s -o /dev/null -m 4 "http://127.0.0.1:${_gw_port}/health" 2>/dev/null; then
-      skip boards "the MCP gateway is not raised (bin/mcp-gateway.sh start); the boards have no door"
-    elif bash "$ROOT/bin/odrerir-mcp-smoke.sh" >/dev/null 2>&1; then
+      skip boards "the MCP gateway is not raised (bin/bridge/mcp-gateway.sh start); the boards have no door"
+    elif bash "$ROOT/bin/desktop/odrerir-mcp-smoke.sh" >/dev/null 2>&1; then
       ok boards "the tickets + plans answer through this body's gateway (live door)"
     else
-      bad boards "the hall's book did not answer — bin/odrerir-mcp-smoke.sh names the wound ($_skuld)"
+      bad boards "the hall's book did not answer — bin/desktop/odrerir-mcp-smoke.sh names the wound ($_skuld)"
     fi
   else
-    skip boards "bin/odrerir-mcp-smoke.sh absent"
+    skip boards "bin/desktop/odrerir-mcp-smoke.sh absent"
   fi
 else
   skip hall "not raised (optional)"
@@ -192,7 +192,7 @@ else
 fi
 
 # 12. the agents are bound into the harnesses
-if [ -x "$ROOT/bin/valknut-load.sh" ] && bash "$ROOT/bin/valknut-load.sh" --status >/dev/null 2>&1; then
+if [ -x "$ROOT/bin/seat/valknut-load.sh" ] && bash "$ROOT/bin/seat/valknut-load.sh" --status >/dev/null 2>&1; then
   ok loaders "agents bound into the harnesses"
 else
   bad loaders "valknut-load.sh --status reported a problem"
@@ -206,7 +206,7 @@ if [ -x "$ROOT/bin/ymir-config-check.sh" ]; then
   _cfg_rc=$?
   case "$_cfg_rc" in
     0) ok config "the shipped config shapes pass their schemas (agents · cron · fleet · eindri-dispatch)" ;;
-    3) skip config "jsonschema not installed — bin/ymir-engine-ensure.sh ensure" ;;
+    3) skip config "jsonschema not installed — bin/engine/ymir-engine-ensure.sh ensure" ;;
     *) bad config "a shipped config refused its schema — bin/ymir-config-check.sh examples" ;;
   esac
 else
@@ -214,8 +214,8 @@ else
 fi
 
 # 13. Nornir cron is running (inspected in the OPERATOR's state, not the tree)
-if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
-  if BROKK_STATE_OVERRIDE="$STATE" bash "$ROOT/bin/nornir-cron-start.sh" --status 2>/dev/null | grep -q 'running'; then
+if [ -x "$ROOT/bin/time/nornir-cron-start.sh" ]; then
+  if BROKK_STATE_OVERRIDE="$STATE" bash "$ROOT/bin/time/nornir-cron-start.sh" --status 2>/dev/null | grep -q 'running'; then
     ok cron "Nornir cron is running"
   elif [ "${LOCK_LIVE:-0}" != 1 ]; then
     # The scheduler is SESSION-scoped: it retires itself when no session lock is held
@@ -223,7 +223,7 @@ if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
     # armed, so a stopped cron is correct behaviour rather than a fault.
     skip cron "no live session lock; the scheduler stands down by design"
   else
-    bad cron "Nornir cron is not running — bin/nornir-cron-start.sh"
+    bad cron "Nornir cron is not running — bin/time/nornir-cron-start.sh"
   fi
 else
   skip cron "nornir-cron-start.sh absent"
@@ -302,9 +302,9 @@ import sqlite3,sys
 try: print(sqlite3.connect('$SMIDJA_DB').execute(\"select count(*) from sqlite_master where type='table'\").fetchone()[0])
 except Exception: print(0)" 2>/dev/null || echo 0)"
   if [ "${_t:-0}" -ge 5 ]; then ok smidja-db "$_t tables"
-  else bad smidja-db "schema looks empty ($_t tables) — bin/smidja-bootstrap.sh"; fi
+  else bad smidja-db "schema looks empty ($_t tables) — bin/desktop/smidja-bootstrap.sh"; fi
 else
-  bad smidja-db "no smidja.db — bin/smidja-bootstrap.sh"
+  bad smidja-db "no smidja.db — bin/desktop/smidja-bootstrap.sh"
 fi
 
 # 16. the well store (engram) exists
@@ -448,7 +448,7 @@ if curl -fsS -m "$TIMEOUT" "http://127.0.0.1:$_gw_port/health" >/dev/null 2>&1; 
     *)    bad mcp:gateway "${_gw_probe#fail:} (http://127.0.0.1:$_gw_port)" ;;
   esac
 else
-  skip mcp:gateway "gateway not raised (bin/mcp-gateway.sh start)"
+  skip mcp:gateway "gateway not raised (bin/bridge/mcp-gateway.sh start)"
 fi
 
 # 22. firecrawl's local service (a stdio MCP fronting a local HTTP API)
@@ -458,7 +458,7 @@ if listening 3002; then
 else skip firecrawl "not raised (optional)"; fi
 
 # 23. the A2A/MCP install surface is present
-if [ -x "$ROOT/bin/a2a-mcp.sh" ]; then ok a2a "a2a-mcp.sh present"
+if [ -x "$ROOT/bin/bridge/a2a-mcp.sh" ]; then ok a2a "a2a-mcp.sh present"
 else skip a2a "a2a-mcp.sh absent"; fi
 
 # 24. herdr, the terminal-pane backend
@@ -537,16 +537,16 @@ if [ "$DEEP" = 1 ]; then
   fi
   # the home half, only meaningful where a home exists on this seat
   HM=""
-  if [ -x "$ROOT/bin/hoard-lib.sh" ]; then
-    ( . "$ROOT/bin/hoard-lib.sh" 2>/dev/null; hoard_root _h 2>/dev/null && printf '%s' "${_h:-}" > /tmp/.smoke-home.$$ ) && HM="$(cat /tmp/.smoke-home.$$ 2>/dev/null)"; rm -f /tmp/.smoke-home.$$
+  if [ -x "$ROOT/bin/vault/hoard-lib.sh" ]; then
+    ( . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null; hoard_root _h 2>/dev/null && printf '%s' "${_h:-}" > /tmp/.smoke-home.$$ ) && HM="$(cat /tmp/.smoke-home.$$ 2>/dev/null)"; rm -f /tmp/.smoke-home.$$
   fi
   # Never GUESS a home (Rule 07): the env, else the resolver's own answer.
   if [ -z "${HM:-}" ]; then
     # The HOME, resolved the documented way. `hodd.sh path` answers the HOARD
     # ($YMIR_HOME/hodd), so a home check built on it silently skips on every seat
     # that HAS a home — the same wrong-root mistake the migration made.
-    if [ -f "$ROOT/bin/hoard-lib.sh" ]; then
-      ( . "$ROOT/bin/hoard-lib.sh" 2>/dev/null; command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HM )
+    if [ -f "$ROOT/bin/vault/hoard-lib.sh" ]; then
+      ( . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null; command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HM )
       HM="$(printf '%s' "${HM:-}")"
     fi
     [ -n "${HM:-}" ] || HM="${YMIR_HOME:-}"

@@ -8,7 +8,7 @@ function resolveHome(): string {
   const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
-  if (!v) throw new Error("the vault path is empty — run `bin/hodd.sh path` and read what it says");
+  if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
   return v;
 }
 
@@ -923,7 +923,7 @@ ${context.command}
   }
 
   async function fallbackToMain(message: string, detail: string): Promise<void> {
-    const body = `BROKK WATCHER WAKE: ${message}\n\nRun bin/saga-wake-drain.sh first and handle the queued wake. (Supervision branch unavailable, falling back to main: ${detail})`;
+    const body = `BROKK WATCHER WAKE: ${message}\n\nRun bin/time/saga-wake-drain.sh first and handle the queued wake. (Supervision branch unavailable, falling back to main: ${detail})`;
     let content = body;
     try {
       // Marked operational like every watcher injection, so the wake is never
@@ -1491,7 +1491,7 @@ ${context.command}
   
 // ── resolution: this file must run on ANY seat, so it may not know a machine ──
 // (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/heimdall/ymir`.)
-// This is the JS mirror of `ymir_root_verified` in bin/valknut-load.sh — same contract,
+// This is the JS mirror of `ymir_root_verified` in bin/seat/valknut-load.sh — same contract,
 // same order: $YMIR_ROOT, then the recorded roots, first one that really holds the house.
 // One reader in the shell, one here; they must agree, or a worktree seat reads a dead path.
 function resolveRoot(): string {
@@ -1507,7 +1507,7 @@ function resolveRoot(): string {
   }
   throw new Error(
     "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
-    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout — install records " +
+    "Run `bin/seat/valknut-load.sh --all --global` from your Ymir checkout — install records " +
     "the root, and every extension reads it from there.",
   );
 }

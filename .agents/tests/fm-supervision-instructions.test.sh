@@ -13,7 +13,7 @@ test_selected_harness_block_only() {
   out=$("$RENDER" --harness codex)
   assert_contains "$out" "SUPERVISION OPERATING INSTRUCTIONS - primary harness: codex" "codex heading missing"
   assert_contains "$out" "Mode: Codex foreground checkpoint." "codex snippet missing"
-  assert_contains "$out" "bin/fm-watch-checkpoint.sh" "codex checkpoint helper missing"
+  assert_contains "$out" "bin/backend/fm-watch-checkpoint.sh" "codex checkpoint helper missing"
   assert_not_contains "$out" "Mode: Claude Stop-hook-owned supervision." "renderer printed the claude snippet too"
   assert_not_contains "$out" "Mode: Pi extension background wake." "renderer printed the pi snippet too"
   pass "renderer prints exactly the selected harness block"
@@ -47,7 +47,7 @@ test_repair_lines() {
   home="$TMP_ROOT/repair-home"
   mkdir -p "$home/state" "$home/config"
   out=$(FM_HOME="$home" FM_CODEX_WATCH_CHECKPOINT=7 "$RENDER" --harness codex --repair-line)
-  assert_contains "$out" "bin/fm-watch-checkpoint.sh --seconds 7" "codex repair line did not use checkpoint helper and env override"
+  assert_contains "$out" "bin/backend/fm-watch-checkpoint.sh --seconds 7" "codex repair line did not use checkpoint helper and env override"
 
   out=$(FM_HOME="$home" "$RENDER" --harness claude --queue-pending 1 --repair-line)
   assert_contains "$out" "After draining queued wakes" "queue-pending prefix missing"
@@ -55,12 +55,12 @@ test_repair_lines() {
   assert_not_contains "$out" "is broken" "claude pre-verification repair line claimed a verified mechanism failure"
   assert_not_contains "$out" "FAILED" "claude pre-verification repair line emitted a verified failure notice"
   assert_not_contains "$out" "manual background" "claude pre-verification repair line directed a manual background arm"
-  assert_not_contains "$out" "bin/fm-watch-arm.sh" "claude pre-verification repair line directed an arm command"
+  assert_not_contains "$out" "bin/backend/fm-watch-arm.sh" "claude pre-verification repair line directed an arm command"
 
   : > "$home/config/x-mode.env"
   out=$(FM_HOME="$home" FM_CODEX_WATCH_CHECKPOINT=7 "$RENDER" --harness codex --x-mode 1 --repair-line)
   assert_contains "$out" "source '$home/config/x-mode.env' first" "x-mode repair line did not source the effective cadence config"
-  assert_contains "$out" "bin/fm-watch-checkpoint.sh --seconds 7" "x-mode codex repair line lost the checkpoint helper"
+  assert_contains "$out" "bin/backend/fm-watch-checkpoint.sh --seconds 7" "x-mode codex repair line lost the checkpoint helper"
 
   out=$(FM_HOME="$home" "$RENDER" --harness opencode --read-only 1 --repair-line)
   assert_contains "$out" "session holding the fleet lock" "read-only repair line missing"
@@ -84,38 +84,38 @@ test_cross_harness_ordinary_continuation_and_repair_matrix() {
   out=$("$RENDER" --harness opencode)
   ordinary=$(printf '%s\n' "$out" | grep -F -- '- Ordinary wake:')
   assert_contains "$ordinary" "plugin already owns watcher continuity" "opencode ordinary-wake line does not leave continuity to the plugin"
-  assert_not_contains "$ordinary" "bin/fm-watch-arm.sh" "opencode ordinary-wake line incorrectly calls the recovery probe"
+  assert_not_contains "$ordinary" "bin/backend/fm-watch-arm.sh" "opencode ordinary-wake line incorrectly calls the recovery probe"
   out=$("$RENDER" --harness opencode --repair-line)
   assert_contains "$out" "manual recovery probe" "opencode recovery line lost its manual probe"
 
   out=$("$RENDER" --harness claude)
   ordinary=$(printf '%s\n' "$out" | grep -F -- '- Ordinary wake:')
   assert_contains "$ordinary" "Stop-owned auto-arm" "claude ordinary-wake line does not leave continuity to the Stop hook"
-  assert_contains "$ordinary" "bin/fm-claude-stop-autoarm.sh" "claude ordinary-wake line lost the auto-arm script name"
+  assert_contains "$ordinary" "bin/backend/fm-claude-stop-autoarm.sh" "claude ordinary-wake line lost the auto-arm script name"
   assert_contains "$ordinary" "do not arm another cycle" "claude ordinary-wake line does not forbid a model re-arm"
-  assert_not_contains "$ordinary" "bin/fm-watch-arm.sh" "claude ordinary-wake line incorrectly calls the manual arm"
+  assert_not_contains "$ordinary" "bin/backend/fm-watch-arm.sh" "claude ordinary-wake line incorrectly calls the manual arm"
   out=$("$RENDER" --harness claude --repair-line)
   assert_contains "$out" "watcher supervision needs Stop-owned automatic recovery" "claude recovery line lost its neutral automatic-recovery guidance"
   assert_not_contains "$out" "is broken" "claude recovery line claimed failure before verification"
-  assert_not_contains "$out" "bin/fm-watch-arm.sh" "claude recovery line must not create a repeatable manual arm loop"
+  assert_not_contains "$out" "bin/backend/fm-watch-arm.sh" "claude recovery line must not create a repeatable manual arm loop"
 
   out=$("$RENDER" --harness grok)
   ordinary=$(printf '%s\n' "$out" | grep -F -- '- Ordinary wake:')
   assert_contains "$ordinary" "re-arm" "grok ordinary-wake line does not tell the model to re-arm"
   assert_contains "$ordinary" "Grok tracked background task" "grok ordinary-wake line lost tracked background ownership"
-  assert_contains "$ordinary" "bin/fm-watch-arm.sh" "grok ordinary-wake line lost the background arm command"
+  assert_contains "$ordinary" "bin/backend/fm-watch-arm.sh" "grok ordinary-wake line lost the background arm command"
   out=$("$RENDER" --harness grok --repair-line)
   assert_contains "$out" "Grok tracked background task" "grok recovery line lost its tracked background repair"
-  assert_contains "$out" "bin/fm-watch-arm.sh" "grok recovery line lost the arm command"
+  assert_contains "$out" "bin/backend/fm-watch-arm.sh" "grok recovery line lost the arm command"
 
   out=$("$RENDER" --harness codex)
   ordinary=$(printf '%s\n' "$out" | grep -F -- '- Ordinary wake:')
   assert_contains "$ordinary" "next foreground" "codex ordinary-wake line lost its foreground checkpoint"
-  assert_contains "$ordinary" "bin/fm-watch-checkpoint.sh" "codex ordinary-wake line lost the checkpoint command"
-  assert_not_contains "$ordinary" "bin/fm-watch-arm.sh" "codex ordinary-wake line incorrectly uses a background arm"
+  assert_contains "$ordinary" "bin/backend/fm-watch-checkpoint.sh" "codex ordinary-wake line lost the checkpoint command"
+  assert_not_contains "$ordinary" "bin/backend/fm-watch-arm.sh" "codex ordinary-wake line incorrectly uses a background arm"
   out=$("$RENDER" --harness codex --repair-line)
   assert_contains "$out" "foreground checkpoint" "codex recovery line lost its checkpoint repair"
-  assert_contains "$out" "bin/fm-watch-checkpoint.sh" "codex recovery line lost the checkpoint command"
+  assert_contains "$out" "bin/backend/fm-watch-checkpoint.sh" "codex recovery line lost the checkpoint command"
 
   pass "renderer preserves every harness ordinary-continuation and missing-cycle repair path"
 }
@@ -142,7 +142,7 @@ test_grok_is_background_notify() {
   assert_contains "$out" "Mode: Grok background-notify supervision." "grok snippet missing background-notify mode"
   assert_contains "$out" "background: true" "grok snippet missing tracked background tool instruction"
   assert_contains "$out" "synthetic_reason: task_completed" "grok snippet missing auto-wake synthetic prompt detail"
-  assert_contains "$out" "bin/fm-watch-arm.sh" "grok snippet missing watcher arm"
+  assert_contains "$out" "bin/backend/fm-watch-arm.sh" "grok snippet missing watcher arm"
   assert_not_contains "$out" "__FM_X_MODE_ENV" "renderer leaked an x-mode path placeholder"
   assert_not_contains "$out" "foreground checkpoint" "grok snippet must not be Codex-style foreground checkpoint"
   out=$("$RENDER" --harness grok --repair-line)
@@ -156,7 +156,7 @@ test_grok_command_sources_effective_config() {
   config="$TMP_ROOT/grok-config"
   mkdir -p "$home/state" "$config"
   out=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$config" "$RENDER" --harness grok --x-mode 1)
-  assert_contains "$out" "[ -f '$config/x-mode.env' ] && . '$config/x-mode.env'; exec bin/fm-watch-arm.sh" "grok arm command did not use the effective x-mode config path"
+  assert_contains "$out" "[ -f '$config/x-mode.env' ] && . '$config/x-mode.env'; exec bin/backend/fm-watch-arm.sh" "grok arm command did not use the effective x-mode config path"
   pass "grok rendered command sources the effective x-mode config"
 }
 

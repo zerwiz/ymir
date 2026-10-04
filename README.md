@@ -171,7 +171,7 @@ merely tolerated.
 | Identity | What it means | Where it lives |
 |---|---|---|
 | **Omarchy-native** | The host desktop is Omarchy (Arch + Hyprland). Ymir reads monitors/scale, lets Hyprland own window placement, mitigates the amdgpu GPU crash, and **learns the user's setup** — packages, configs, Omarchy version — re-learning after every `omarchy update` via a `post-update` hook. | `bin/omarchy-sense.sh`, `bin/omarchy-hook-install.sh`, skill `ymir` |
-| **herdr-first (Þjazi)** | Agent panes need a terminal backend. **herdr** is preferred (Þjazi protocol **14+**; presentation spaces at **0.8.0+**), **tmux** is the accepted reference backend. A missing backend is reported, never silently degraded. | `bin/herdr-ensure.sh`, skill `ymir` |
+| **herdr-first (Þjazi)** | Agent panes need a terminal backend. **herdr** is preferred (Þjazi protocol **14+**; presentation spaces at **0.8.0+**), **tmux** is the accepted reference backend. A missing backend is reported, never silently degraded. | `bin/seat/herdr-ensure.sh`, skill `ymir` |
 | **pi-native** | The [pi](https://pi.dev) coding harness is a first-class surface: extensions, skills, prompt templates, themes, custom providers, and **pi packages** (npm/git) are all live. This is where Ymir gains reach — a new capability can be a pi extension or a packaged bundle, not just a shell script. | `.pi/extensions/`, `.pi/settings.json`, `.pi/mcp-adapter.json` |
 
 **Why this matters.** The freedom runs both ways: because Ymir is pi-native it can
@@ -219,7 +219,7 @@ backend_priority[3]{rank,backend,note}:
   "3","none","spawn is refused with a plain reason"
 ```
 
-`bin/herdr-ensure.sh` verifies the *version* (not just presence) and installs via
+`bin/seat/herdr-ensure.sh` verifies the *version* (not just presence) and installs via
 the pinned, SHA-256-verified installer when herdr is absent. Selection order:
 `config/backend` → `BROKK_BACKEND` → `HERDR_ENV=1` → else tmux. Full reference:
 the `ymir` skill.
@@ -334,7 +334,7 @@ Utgard sandbox on a Yggdrasil worktree.
 | **Kvasir** | the knowing | scout | reconnaissance — changes nothing |
 
 Profiles live in [`.agents/agents/`](.agents/agents/) and are bound to each tool by
-`bin/valknut-load.sh` (OpenCode reads `.opencode/agents/`; Pi links resolve under
+`bin/seat/valknut-load.sh` (OpenCode reads `.opencode/agents/`; Pi links resolve under
 `.pi/agents/`).
 
 ---
@@ -354,10 +354,10 @@ and inject it; nudge-tier harnesses are asked.
 | **Cursor** | `.cursor/hooks.json` — `sessionStart` + `stop` + `preToolUse` |
 | **Codex** | `.codex/hooks.json` — `SessionStart` + `PreToolUse` + `Stop` |
 
-- **Seat:** `bin/saga-session-start.sh` — the one ordered digest.
+- **Seat:** `bin/time/saga-session-start.sh` — the one ordered digest.
 - **Lock:** `bin/gleipnir-lock-lib.sh` — bound to the live session pid.
-- **Bridge:** `bin/bifrost-bridge.sh` — raises the local model endpoint.
-- **Jobs:** `bin/nornir-cron-start.sh` — daily briefing 07:00, observer, housekeeping, git sync.
+- **Bridge:** `bin/bridge/bifrost-bridge.sh` — raises the local model endpoint.
+- **Jobs:** `bin/time/nornir-cron-start.sh` — daily briefing 07:00, observer, housekeeping, git sync.
 - **Watch:** `bin/syn-watch.sh` — the arm as a standing service (`status|start|stop`, unit `ymir-syn-watch.service`) — plus `bin/syn-watch-arm.sh`, the thin client the harness adapter spawns.
 
 Details: [`docs/session-start.md`](docs/session-start.md).
@@ -394,7 +394,7 @@ bin/ymir-install.sh                 # add --yes for non-interactive, or --check 
 scripts/start.sh                    # → http://127.0.0.1:3888/
 
 # 3) The agent seat (any supported harness)
-bin/saga-session-start.sh           # the digest (auto-runs on harness open)
+bin/time/saga-session-start.sh           # the digest (auto-runs on harness open)
 ```
 
 The installer is idempotent and self-healing: it provisions what it can in user
@@ -411,7 +411,7 @@ non-Omarchy host loses only the Omarchy-specific hook, never the logic.
 ```
 platform_gifts[3]{platform,what_the_install_does,what_you_gain}:
   "Omarchy","detects the host, reads hyprctl monitors+scale, writes o.window desktop rules, snapshots the setup, installs the post-update hook","your dashboards land on their own numbered desktops; Ymir knows THIS machine and relearns it when Omarchy moves"
-  "herdr (Þjazi)","bin/herdr-ensure.sh verifies the version against the floors and installs via the pinned, SHA-verified installer; tmux is the accepted reference","every Eindri worker gets a real pane in a real terminal; presentation spaces at 0.8.0+, panes at protocol 14+"
+  "herdr (Þjazi)","bin/seat/herdr-ensure.sh verifies the version against the floors and installs via the pinned, SHA-verified installer; tmux is the accepted reference","every Eindri worker gets a real pane in a real terminal; presentation spaces at 0.8.0+, panes at protocol 14+"
   "pi","registers the harness surfaces, the MCP servers, and the model providers (local LM Studio / Ollama or the Bifrost bridge)","extensions, skills, prompt templates, themes, and pi PACKAGES are all live — a new Ymir capability can ship as an installable pi package"
 ```
 
@@ -782,9 +782,9 @@ A machine with the heart down — or **no network at all** — stays fully usabl
 shape is **cache + journal + reconciler**:
 
 ```bash
-bin/journal-append.sh --op note --data '{"ticket":42}'   # commits locally, never blocks
-bin/journal-reconcile.sh                                 # pushes when the heart answers
-bin/journal-receive.sh                                   # ON THE HEART: folds it in
+bin/records/journal-append.sh --op note --data '{"ticket":42}'   # commits locally, never blocks
+bin/records/journal-reconcile.sh                                 # pushes when the heart answers
+bin/records/journal-receive.sh                                   # ON THE HEART: folds it in
 ```
 - Every write that must reach the record is committed to
   `$STATE/journal/<host>.jsonl` **first**, with an **idempotency key**
@@ -808,8 +808,8 @@ The record servers live on the heart; every body reaches them by name:
 | **firecrawl** | self-hosted scrape | local (stdio) |
 
 ```bash
-bin/mcp-config.sh            # generate the harness MCP config for THIS role
-bin/mcp-config.sh write      # install ~/.pi/agent/mcp-adapter.json (backup kept)
+bin/bridge/mcp-config.sh            # generate the harness MCP config for THIS role
+bin/bridge/mcp-config.sh write      # install ~/.pi/agent/mcp-adapter.json (backup kept)
 ```
 A dev body points at the heart's tailnet name; the heart itself uses `127.0.0.1`.
 The smoke test proves each server with a **real** MCP handshake
@@ -823,9 +823,9 @@ Nornir's schedule (`config/cron.yaml`) is shared across the fleet, so each line
 declares the role that owns it:
 
 ```yaml
-@heart 07:00 bin/nornir-job-daily-briefing.sh
-@heart 00:00 bin/nornir-job-git-sync.sh
-08:00 bin/nornir-job-hall-snapshot.sh        # no gate = any role
+@heart 07:00 bin/time/nornir-job-daily-briefing.sh
+@heart 00:00 bin/time/nornir-job-git-sync.sh
+08:00 bin/time/nornir-job-hall-snapshot.sh        # no gate = any role
 ```
 A dev body runs **none** of the `@heart` jobs. The scheduler retires itself when
 its session is gone, so a body never leaves an orphan loop behind.
@@ -844,10 +844,10 @@ never rename a preset without updating every seat's registry.
 ### Workers (Eindri) — routed by the nature of the errand
 
 ```bash
-bin/eindri-route.sh model     # -> the forge host(s)
-bin/eindri-route.sh ui        # -> a dev body
-bin/eindri-route.sh record    # -> the heart
-bin/eindri-route.sh --kinds   # the whole table
+bin/agents/eindri-route.sh model     # -> the forge host(s)
+bin/agents/eindri-route.sh ui        # -> a dev body
+bin/agents/eindri-route.sh record    # -> the heart
+bin/agents/eindri-route.sh --kinds   # the whole table
 ```
 
 ### One version across the fleet
@@ -865,12 +865,12 @@ fleet_ops[9]{command,what}:
   "bin/topology.sh","this machine: role, shape, link, journal"
   "bin/role.sh","declare / read / validate a machine's role"
   "bin/fleet-version.sh","tree vs installed vs published, with a verdict"
-  "bin/journal-append.sh","commit a write to the offline outbox"
-  "bin/journal-reconcile.sh","push the outbox when the heart answers"
-  "bin/journal-receive.sh","the heart folds journals in (idempotent)"
-  "bin/mcp-config.sh","generate the harness MCP config from role"
+  "bin/records/journal-append.sh","commit a write to the offline outbox"
+  "bin/records/journal-reconcile.sh","push the outbox when the heart answers"
+  "bin/records/journal-receive.sh","the heart folds journals in (idempotent)"
+  "bin/bridge/mcp-config.sh","generate the harness MCP config from role"
   "bin/model-placement.sh","the fleet's forge rails and the local model lock"
-  "bin/eindri-route.sh","route an errand to the role that fits it"
+  "bin/agents/eindri-route.sh","route an errand to the role that fits it"
 ```
 
 ### Health — one command for the whole stack
