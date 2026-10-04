@@ -39,7 +39,7 @@ Measured facts this closes:
    `state/eindri-done/<id>.md`) are honoured as already-delivered, so an existing
    home never re-fires old news. `acclaim` also heals the report shelf from a
    terminal status line when a worker wrote only the wrong shelf.
-3. **Catch-up on re-arm.** `bin/syn-watch-arm.sh` runs the handoff sweep *before*
+3. **Catch-up on re-arm.** `bin/pi/syn-watch-arm.sh` runs the handoff sweep *before*
    the session lock and the poll loop and prints `watcher: catch-up sweep
    delivered=<n>`, so recovery reconciles what the dead window missed even when the
    arm is refused read-only. The Pi extension (`gna-pi-watch.ts`, Gná) calls the
@@ -79,7 +79,7 @@ galdr-reread: `harness-integration/README.md`, `nornir-jobs.md`, `registry.md`.
 - `bin/agents/eindri-acclaim.sh`
 - `bin/agents/eindri-handoff.sh`
 - `bin/agents/erindi-brief.sh`
-- `bin/syn-watch-arm.sh`
+- `bin/pi/syn-watch-arm.sh`
 - `.pi/shared/extensions/gna-pi-watch.ts`
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`
 - `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md`
