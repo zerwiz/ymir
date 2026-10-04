@@ -2,7 +2,7 @@
 # snotra-detect.sh — the ear's watch: pricks up when a call begins, and leaves
 # when the room empties.
 #
-# Snotra's ear (bin/snotra-capture.sh + bin/snotra-transcribe.sh) hears a
+# Snotra's ear (bin/time/snotra/snotra-capture.sh + bin/time/snotra/snotra-transcribe.sh) hears a
 # meeting only if a hand arms it. This is the hand: a standing watch on
 # PipeWire that sees an application take the MICROPHONE, arms the capture of the
 # conversation pair (the mic AND the call's own output sink, so the remote side
@@ -87,7 +87,7 @@ esac
 
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 # The watch is seated from %h/.fleet, where hoard-lib.sh is materialized beside
-# it (bin/fleet-ensure.sh); the durable tree named by SNOTRA_DOORS_DIR is the
+# it (bin/fleet/fleet-ensure.sh); the durable tree named by SNOTRA_DOORS_DIR is the
 # second road, so a seat that has not been re-ensured yet still resolves the
 # home rather than dying on an unbound variable.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -106,7 +106,7 @@ if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
 fi
 if [ -z "${YMIR_HOME:-}" ]; then
   printf 'error: the hoard home could not be resolved — bin/vault/hoard-lib.sh was not found\n' >&2
-  printf 'help: seat the watch with bin/fleet-ensure.sh ensure (it materializes hoard-lib.sh\n' >&2
+  printf 'help: seat the watch with bin/fleet/fleet-ensure.sh ensure (it materializes hoard-lib.sh\n' >&2
   printf '      beside the operator commands in ~/.fleet), or set YMIR_HOME\n' >&2
   exit 1
 fi
@@ -752,7 +752,7 @@ Actions: $actions ($counts mined)"
     "$(door ymir-say.sh)" --mark-done "$headline" "$body" >>"$DETECT_LOG" 2>&1 || true
   fi
 
-  # The durable wake, through the queue's OWN door (bin/ymir-state.sh →
+  # The durable wake, through the queue's OWN door (bin/records/ymir-state.sh →
   # src/ymir_runtime/state/queue.py, the one implementation): a `check`, the kind
   # the fleet uses for news that is not a crew status line, so the meeting
   # reaches Brokk with no arm and no sweep.
@@ -889,7 +889,7 @@ tick() {
     # call to anything that only asks "does an app hold the mic?" — it recorded the
     # room and announced the same minutes over and over. Require a stream that
     # CARRIES a call role (`media.role`), or an explicit arm written by the Thing
-    # room or the operator. bin/snotra-iscall.sh is the one owner of that call.
+    # room or the operator. bin/time/snotra/snotra-iscall.sh is the one owner of that call.
     _iscall="$(door snotra-iscall.sh 2>/dev/null || true)"
     [ -n "$_iscall" ] && [ -x "$_iscall" ] || _iscall="${HOME}/.fleet/snotra-iscall.sh"
     if [ -x "$_iscall" ] && ! "$_iscall" >/dev/null 2>&1; then

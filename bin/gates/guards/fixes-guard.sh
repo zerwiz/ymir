@@ -23,7 +23,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 cd "$ROOT" || exit 1
 
 [ "${YMIR_SKIP_FIXES_GUARD:-0}" = 1 ] && { printf 'fixes-guard[1]{gate,result}:\n  "push","skipped (YMIR_SKIP_FIXES_GUARD=1)"\n'; exit 0; }
@@ -36,7 +37,7 @@ case "${1-}" in
     mkdir -p "$(dirname "$H")"
     cat >"$H" <<EOF
 #!/usr/bin/env bash
-# pre-push — the delivery gate. Installed by bin/fixes-guard.sh --install.
+# pre-push — the delivery gate. Installed by bin/gates/guards/fixes-guard.sh --install.
 #   1. guards       — the TREE wards: the tree is not a runtime, and one place knows where
 #                     things live. First, because it is fast and a dirty tree should fail
 #                     before anything else is argued about.
@@ -46,15 +47,15 @@ set -u
 refs="\$(mktemp)"; trap 'rm -f "\$refs"' EXIT
 cat >"\$refs"
 "$ROOT/bin/gates/guards.sh" || exit 1
-"$ROOT/bin/branch-guard.sh" <"\$refs" || exit 1
-"$ROOT/bin/fixes-guard.sh" <"\$refs" || exit 1
+"$ROOT/bin/gates/guards/branch-guard.sh" <"\$refs" || exit 1
+"$ROOT/bin/gates/guards/fixes-guard.sh" <"\$refs" || exit 1
 EOF
     chmod +x "$H"
     printf 'fixes-guard[1]{gate,result}:\n  "hook","installed at %s"\n' "${H#"$ROOT"/}"
     exit 0 ;;
   --check) ;;
   "") ;;
-  *) printf 'error: unknown flag %s\nhelp: bin/fixes-guard.sh [--install|--check]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown flag %s\nhelp: bin/gates/guards/fixes-guard.sh [--install|--check]\n' "$1" >&2; exit 2 ;;
 esac
 
 # ── the judgement ────────────────────────────────────────────────────────────
@@ -83,7 +84,7 @@ fi
 [ -n "$base" ] || { printf 'fixes-guard[1]{gate,result}:\n  "push","no base to compare — first push of a branch is judged on its own"\n'; exit 0; }
 
 range="${base}..${head_sha}"
-# The note's name is <version>-<slug>.md, and a version is whatever bin/fixes.sh was
+# The note's name is <version>-<slug>.md, and a version is whatever bin/gates/fixes.sh was
 # TOLD it is: `--version=unversioned` is legitimate, and 158 of the repo's notes use
 # it. Accepting only a digit-first version made the gate blind to those notes and
 # refused every push that carried one (2026-09-25) — the guard demanded a format its
@@ -93,7 +94,7 @@ touched="$(git diff --name-only "$range" 2>/dev/null | grep -v '^docs/fixes/' | 
 
 if [ -z "$notes" ]; then
   printf 'fixes-guard[1]{gate,result}:\n  "push","refused — no fix note in this range"\n' >&2
-  printf 'help: bin/fixes.sh record --component=<%s> --version=<v> --title="what changed"\n' \
+  printf 'help: bin/gates/fixes.sh record --component=<%s> --version=<v> --title="what changed"\n' \
     "install|runtime|skills|agents|hlidskjalf|odrerir|sessrumnir|smidja|hoard|gate" >&2
   printf 'note: a note is a file under docs/fixes/<component>/ — write one, commit it, push again.\n' >&2
   exit 1
@@ -111,9 +112,9 @@ fi
 path_component() {  # <path> -> the component it belongs to, or empty
   case "$1" in
     src/ymir_runtime/*|bin/mimir*|bin/records/mimir.sh|bin/seat/verify-seat.sh|bin/time/saga-wake-drain.sh) echo runtime ;;
-    bin/ymir-install.sh|bin/groa-update.sh|bin/seat/valknut-load.sh|bin/ymir-migrate.sh) echo install ;;
-    .pi/*|.agents/skills/*|bin/skill-find.sh|bin/fixes.sh|bin/fixes-guard.sh) echo agents ;;
-    bin/capabilities.sh|bin/inventory.sh|bin/queue.sh|bin/home-index-check.sh|bin/no-delete-guard.sh) echo gate ;;
+    bin/engine/ymir-install.sh|bin/agents/groa-update.sh|bin/seat/valknut-load.sh|bin/engine/ymir-migrate.sh) echo install ;;
+    .pi/*|.agents/skills/*|bin/agents/skill-find.sh|bin/gates/fixes.sh|bin/gates/guards/fixes-guard.sh) echo agents ;;
+    bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/queue.sh|bin/gates/checks/home-index-check.sh|bin/no-delete-guard.sh) echo gate ;;
     .agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md|apps/hlidskjalf/*) echo hlidskjalf ;;
     .agents/skills/galdr-ymirsystem/assets/smidja.md|.agents/skills/smidja-factory/*) echo smidja ;;
     .agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md|bin/snotra*|tools/snotra/*) echo snotra ;;

@@ -8,13 +8,13 @@
 # the token from the hoard, hand it to npm through a temporary userconfig, and
 # throw the file away.
 #
-#   bin/npm-publish.sh                 # the platform (the repo root manifest)
-#   bin/npm-publish.sh apps/hlidskjalf # one package
-#   bin/npm-publish.sh --all           # the platform + every app package
-#   bin/npm-publish.sh --whoami        # which account the hoard token is
-#   bin/npm-publish.sh --dry-run apps/odrerir
-#   bin/npm-publish.sh --unpublish @zerwiz/ymir@0.1.5     # take ONE version back
-#   bin/npm-publish.sh --unpublish @zerwiz/ymir@0.1.5 --dry-run
+#   bin/forge/npm/npm-publish.sh                 # the platform (the repo root manifest)
+#   bin/forge/npm/npm-publish.sh apps/hlidskjalf # one package
+#   bin/forge/npm/npm-publish.sh --all           # the platform + every app package
+#   bin/forge/npm/npm-publish.sh --whoami        # which account the hoard token is
+#   bin/forge/npm/npm-publish.sh --dry-run apps/odrerir
+#   bin/forge/npm/npm-publish.sh --unpublish @zerwiz/ymir@0.1.5     # take ONE version back
+#   bin/forge/npm/npm-publish.sh --unpublish @zerwiz/ymir@0.1.5 --dry-run
 #
 # Unpublish: npm allows ONE VERSION back for 72 hours after it was published;
 # past that only npm support can remove it, which is why this door names the
@@ -28,9 +28,10 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # shellcheck source=bin/vault/hoard-lib.sh
-. "$SCRIPT_DIR/hoard-lib.sh"
+. "$SCRIPT_DIR/../../vault/hoard-lib.sh"
 
 DRY=0; WHO=0; ALL=0; UNPUBLISH=0; UNPUB_SPEC=""; TARGETS=()
 for a in "$@"; do
@@ -42,7 +43,7 @@ for a in "$@"; do
     --unpublish=*) UNPUBLISH=1; UNPUB_SPEC="${a#*=}" ;;
     -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
     -h|--help|"") sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    -*) printf 'error: unknown flag %s\nhelp: bin/npm-publish.sh [--all|--whoami|--unpublish <spec>|--dry-run] [<package-dir>...]\n' "$a" >&2; exit 2 ;;
+    -*) printf 'error: unknown flag %s\nhelp: bin/forge/npm/npm-publish.sh [--all|--whoami|--unpublish <spec>|--dry-run] [<package-dir>...]\n' "$a" >&2; exit 2 ;;
     *) TARGETS+=("$a") ;;
   esac
 done
@@ -88,7 +89,7 @@ if [ "$UNPUBLISH" = 1 ]; then
   case "$UNPUB_SPEC" in
     *@*@*) ;;  # @scope/name@version
     *@[0-9]*) ;;
-    *) printf 'error: --unpublish needs a package AND a version\nhelp: bin/npm-publish.sh --unpublish @scope/name@<version>\n' >&2; exit 2 ;;
+    *) printf 'error: --unpublish needs a package AND a version\nhelp: bin/forge/npm/npm-publish.sh --unpublish @scope/name@<version>\n' >&2; exit 2 ;;
   esac
   if [ "$DRY" = 1 ]; then
     printf 'npm_unpublish[1]{spec,state}:\n  "%s","dry-run — nothing was removed"\n' "$UNPUB_SPEC"
@@ -101,7 +102,7 @@ if [ "$UNPUBLISH" = 1 ]; then
     printf 'note: newer version moves the "latest" tag off it at once.\n'
   else
     why="$(printf '%s' "$out" | grep -m1 -E 'npm error (code )?[A-Z0-9]+|E[0-9]{3}' | cut -c1-90)"
-    printf 'error: unpublish failed — %s\nhelp: is it inside the 72-hour window, and is the token the right account? (bin/npm-publish.sh --whoami)\n' "${why:-see npm log}" >&2
+    printf 'error: unpublish failed — %s\nhelp: is it inside the 72-hour window, and is the token the right account? (bin/forge/npm/npm-publish.sh --whoami)\n' "${why:-see npm log}" >&2
     exit 1
   fi
   exit 0
@@ -132,5 +133,5 @@ for dir in "${TARGETS[@]}"; do
     failed=$((failed+1))
   fi
 done
-[ "$failed" = 0 ] || { printf 'error: %d package(s) did not publish\nhelp: bin/npm-publish.sh --whoami  (is the hoard token still the right account?)\n' "$failed" >&2; exit 1; }
+[ "$failed" = 0 ] || { printf 'error: %d package(s) did not publish\nhelp: bin/forge/npm/npm-publish.sh --whoami  (is the hoard token still the right account?)\n' "$failed" >&2; exit 1; }
 exit 0

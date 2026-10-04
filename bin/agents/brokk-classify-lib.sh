@@ -29,7 +29,7 @@
 #
 # There are three documented exceptions. The absorb classification
 # (crew_absorb_class and its working/paused wrappers) is NOT a pure status-file
-# read: it reuses bin/vor-crew-state.sh, which may make a bounded no-mistakes call,
+# read: it reuses bin/records/vor-crew-state.sh, which may make a bounded no-mistakes call,
 # to decide whether a crew that just stopped its turn or went stale is working,
 # deliberately paused, or neither. Callers run it ONLY on no-verb signal handling
 # and first sighting of a stale hash, never on every wake, so the per-wake triage
@@ -49,16 +49,16 @@ _BROKK_CLASSIFY_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/nul
 # The crew current-state reader used for the "provably working" decision.
 # Overridable so tests can replace the run-step/pane verdict without a real worktree
 # or no-mistakes install; absent, it points at the real sibling script.
-BROKK_CREW_STATE_BIN="${BROKK_CREW_STATE_BIN:-$_BROKK_CLASSIFY_LIB_DIR/vor-crew-state.sh}"
+BROKK_CREW_STATE_BIN="${BROKK_CREW_STATE_BIN:-${_BROKK_CLASSIFY_LIB_DIR}/../records/vor-crew-state.sh}"
 
 # fm_run_timed, the shared hard bound the worktree write probe below puts around
-# its one filesystem walk. bin/brokk-timeout-lib.sh owns bounded execution for this
+# its one filesystem walk. bin/agents/brokk-timeout-lib.sh owns bounded execution for this
 # repo, so nothing here re-derives the coreutils/BSD/perl selection. That library
 # declares `set -u` for its own hygiene, which a sourced sibling must not impose on
 # THIS library's consumers - several of them deliberately run without it - so the
 # caller's setting is restored around the source.
 case $- in *u*) _fm_classify_nounset=on ;; *) _fm_classify_nounset=off ;; esac
-# shellcheck source=bin/brokk-timeout-lib.sh
+# shellcheck source=bin/agents/brokk-timeout-lib.sh
 # shellcheck disable=SC1091
 . "$_BROKK_CLASSIFY_LIB_DIR/brokk-timeout-lib.sh"
 [ "$_fm_classify_nounset" = on ] || set +u
@@ -196,7 +196,7 @@ status_is_paused_or_Allfather_held() {  # <status-line>
 # Allfather-held backlog transfer referencing that key CLOSES it; a later unrelated
 # terminal line never clears an open Allfather decision.
 # Who WRITES the closing line is owned elsewhere: the answering brokk closes
-# at answer time through brokk-send's --resolve-key (bin/brokk-send.sh header), and a
+# at answer time through brokk-send's --resolve-key (bin/agents/brokk-send.sh header), and a
 # worker self-closes only a blocker that cleared without an answer (bin/agents/erindi-brief.sh
 # rule 6), so closure never depends on a busy worker's discipline.
 #
@@ -1581,7 +1581,7 @@ status_span_has_actionable() {  # <status-file> <start-offset>
 }
 
 # Classify WHY an idle/stale crew MIGHT be safely absorbed instead of surfaced,
-# from bin/vor-crew-state.sh's one authoritative current-state line
+# from bin/records/vor-crew-state.sh's one authoritative current-state line
 # ("state: <s> · source: <src> · <detail>"). Prints exactly one token:
 #   working - an actively-running no-mistakes step (running/fixing/ci) or a busy
 #             pane; the crew is legitimately mid-work on a static-looking pane

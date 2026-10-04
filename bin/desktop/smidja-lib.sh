@@ -20,7 +20,7 @@ SMIDJA_SURFACE="smidja"
 SMIDJA_PACKAGE="smidja-factory"
 
 smidja_factory_dir() {  # <result-var> — the smithy's directory, or empty
-  # The general resolver (bin/app-lib.sh) knows both shapes; the smithy is one
+  # The general resolver (bin/seat/sessrumnir/app-lib.sh) knows both shapes; the smithy is one
   # surface among them. The old skill symlink is the last resort, and a dangling
   # one is not a home — the visualizer must be readable there.
   local _smd_rv=${1-} _smd_c

@@ -9,10 +9,10 @@
 # template counted as ACTIVE, its first rule named opencode, Brokk obeyed it,
 # and an opencode worker was raised though the fleet law is pi-primary.
 #
-#   bin/dispatch-profile.sh active              # the ACTIVE profile path, or none
-#   bin/dispatch-profile.sh validate [file]     # a profile is coherent + servable
-#   bin/dispatch-profile.sh derive [--out P]    # write a machine-derived profile
-#   bin/dispatch-profile.sh --version
+#   bin/fleet/dispatch-profile.sh active              # the ACTIVE profile path, or none
+#   bin/fleet/dispatch-profile.sh validate [file]     # a profile is coherent + servable
+#   bin/fleet/dispatch-profile.sh derive [--out P]    # write a machine-derived profile
+#   bin/fleet/dispatch-profile.sh --version
 #
 # Activation order (the override wins):
 #   1. $YMIR_HOME/hodd/config/eindri-dispatch.json     (the private override)
@@ -101,7 +101,7 @@ collect(d.get("default") or [])
 # 1. an unfilled template token never steers
 for t in tokens:
     if not t or "<" in t or "your-model" in t:
-        fail("active", f"an unfilled `<...>` model token steers a rule ({t!r}); the profile is NOT ACTIVE — derive one (bin/dispatch-profile.sh derive) or write $YMIR_HOME/hodd/config/eindri-dispatch.json")
+        fail("active", f"an unfilled `<...>` model token steers a rule ({t!r}); the profile is NOT ACTIVE — derive one (bin/fleet/dispatch-profile.sh derive) or write $YMIR_HOME/hodd/config/eindri-dispatch.json")
 # 2. the harness set is the verified launch set
 verified = {"opencode", "pi", "pi-signed"}
 try:
@@ -196,7 +196,7 @@ derive() {
     case "$1" in
       --out) out="${2-}"; shift 2 ;;
       --out=*) out=${1#--out=} ; shift ;;
-      *) printf 'error: unknown flag %s\nhelp: bin/dispatch-profile.sh derive [--out PATH]\n' "$1" >&2; exit 2 ;;
+      *) printf 'error: unknown flag %s\nhelp: bin/fleet/dispatch-profile.sh derive [--out PATH]\n' "$1" >&2; exit 2 ;;
     esac
   done
   [ -n "$out" ] || out="$ROOT/config/eindri-dispatch.json"
@@ -237,7 +237,7 @@ harness = local_harness if (model and looks_local(model.split("/",1)[0])) else o
 profile = {
   "version": 1,
   "platform": "ymir",
-  "notes": "Derived from THIS machine on " + os.popen("date -u +%Y-%m-%d").read().strip() + " — config/agents.yaml + the live pi catalog. Brokk reads these rules before dispatching an Eindri and passes only concrete --harness/--model/--effort flags to bin/einherjar-spawn.sh. Effort values: low|medium|high|xhigh|max.",
+  "notes": "Derived from THIS machine on " + os.popen("date -u +%Y-%m-%d").read().strip() + " — config/agents.yaml + the live pi catalog. Brokk reads these rules before dispatching an Eindri and passes only concrete --harness/--model/--effort flags to bin/agents/einherjar-spawn.sh. Effort values: low|medium|high|xhigh|max.",
   "rules": [
     {"when": "General implementation, refactoring, or bug fixes in a codebase",
      "use": [{"harness": harness, "model": model, "effort": "medium"}],
@@ -252,9 +252,9 @@ profile = {
      "use": [{"harness": "pi", "effort": "medium"}],
      "why": "pi is the verified runner for persistent and background workers; omitting model uses pi's configured default"},
     {"when": "The Allfather names a model, a family/quant, or a locality (local/online)",
-     "use": [{"resolve": "bin/model-resolve.sh resolve \"<request>\"",
+     "use": [{"resolve": "bin/model/model-resolve.sh resolve \"<request>\"",
               "then": "pass the returned --harness/--model to bin/agents/einherjar-spawn.sh"}],
-     "why": "resolve a friendly request to an exact servable id: local -> " + local_harness + ", online -> " + online_harness + ". If it returns unresolved, ask the Allfather; never guess. Local runs are serialized by bin/local-model-lock.sh."}
+     "why": "resolve a friendly request to an exact servable id: local -> " + local_harness + ", online -> " + online_harness + ". If it returns unresolved, ask the Allfather; never guess. Local runs are serialized by bin/model/local-model-lock.sh."}
   ],
   "default": [{"harness": harness, "model": model, "effort": "medium"}]
 }
@@ -273,5 +273,5 @@ case "$ACTION" in
   active)   active; exit $? ;;
   validate) validate "$@"; exit $? ;;
   derive)   derive "$@"; exit $? ;;
-  *) printf 'error: unknown action %s\nhelp: bin/dispatch-profile.sh active|validate|derive\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/fleet/dispatch-profile.sh active|validate|derive\n' "$ACTION" >&2; exit 2 ;;
 esac

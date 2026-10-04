@@ -14,11 +14,11 @@
 # "ended without an actionable reason", then retries and flaps. On 2026-09-27 it
 # flapped all day and needed three hand re-arms.
 #
-# Now the loop is bin/syn-watch.sh run — a standing service with its own lease
+# Now the loop is bin/pi/syn-watch.sh run — a standing service with its own lease
 # that IDLES (never retires) when no session is seated and is restarted when it
 # dies — and THIS file is the thin client:
 #
-#   · it enters a vacant helm (bin/gleipnir-lock-lib.sh) exactly as before;
+#   · it enters a vacant helm (bin/vault/gleipnir-lock-lib.sh) exactly as before;
 #   · it seats/attaches to the arm service for this home;
 #   · it prints the same lines, in the same grammar, and exits when one is raised;
 #   · the session's death no longer kills the watch.
@@ -36,13 +36,13 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # The wake queue is written by the Eindri handoff (bin/agents/eindri-acclaim.sh) into the
 # OPERATOR'S HOME state — never the code tree. Both sides resolve it the same way,
-# through bin/hoard-lib.sh. The watcher must read the SAME queue: it once defaulted
+# through bin/vault/hoard-lib.sh. The watcher must read the SAME queue: it once defaulted
 # to the tree's state dir, so the handoff filled one queue and the watcher watched
 # another, and no wake ever surfaced (2026-09-23). Same order of authority as the lib.
 _STATE_GIVEN="${BROKK_STATE_OVERRIDE:-}"
 if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-    for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+    for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
       [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
     done
     unset _c
@@ -51,8 +51,8 @@ if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
   unset _HS
 fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
-# shellcheck source=bin/gleipnir-lock-lib.sh
-. "$SCRIPT_DIR/gleipnir-lock-lib.sh"
+# shellcheck source=bin/vault/gleipnir-lock-lib.sh
+. "$SCRIPT_DIR/../vault/gleipnir-lock-lib.sh"
 
 WATCH="$SCRIPT_DIR/syn-watch.sh"
 POLL_SECONDS="${BROKK_WATCH_POLL_SECONDS:-5}"
@@ -82,8 +82,8 @@ mkdir -p "$STATE"
 # is refused read-only has still reconciled. Idempotent via the shared ledger
 # (bin/agents/eindri-wake-lib.sh); the cycle sweep below is the steady-state form.
 CATCH_UP=0
-if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
-  _handoff_out="$(BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/eindri-handoff.sh" sweep 2>/dev/null)" || true
+if [ -x "$SCRIPT_DIR/../agents/eindri-handoff.sh" ]; then
+  _handoff_out="$(BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/../agents/eindri-handoff.sh" sweep 2>/dev/null)" || true
   CATCH_UP="$(printf '%s\n' "$_handoff_out" | sed -n 's/.*"sweep",\([0-9][0-9]*\),.*/\1/p' | head -n1)"
   [ -n "$CATCH_UP" ] || CATCH_UP=0
   printf 'watcher: catch-up sweep delivered=%s\n' "$CATCH_UP"
@@ -136,7 +136,7 @@ printf 'watcher: started pid=%s recovery-generation=svc.0.%s\n' "$$" "$((next_ge
 
 lease_alive || "$WATCH" start >/dev/null 2>&1 || true
 if ! lease_alive; then
-  printf 'stale: arm service is down - no live lease for %s (remedy: bin/syn-watch.sh start)\n' "$STATE"
+  printf 'stale: arm service is down - no live lease for %s (remedy: bin/pi/syn-watch.sh start)\n' "$STATE"
   exit 0
 fi
 svc_pid="$(lease_part pid)"
@@ -176,7 +176,7 @@ while :; do
         printf 'watcher: re-seated the arm service pid=%s state=%s\n' "$(lease_part pid)" "$STATE" >&2
         down_since=0
       else
-        printf 'stale: arm service is down - the watch could not be re-seated (remedy: bin/syn-watch.sh status)\n'
+        printf 'stale: arm service is down - the watch could not be re-seated (remedy: bin/pi/syn-watch.sh status)\n'
         exit 0
       fi
     fi

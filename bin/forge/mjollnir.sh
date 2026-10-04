@@ -12,7 +12,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -62,12 +63,12 @@ if [ "$CMD" = status ]; then
   printf '  "pending","%s"\n' "$(find "$YMIR_DATA_DIR" -maxdepth 2 -name 'brief.md' -path '*issue-*' 2>/dev/null | wc -l | tr -d ' ')"
   exit 0
 fi
-[ "$CMD" = run ] || { printf 'error: unknown command %s\nhelp: bin/mjollnir.sh [run|status|--version]\n' "$CMD" >&2; exit 2; }
+[ "$CMD" = run ] || { printf 'error: unknown command %s\nhelp: bin/forge/mjollnir.sh [run|status|--version]\n' "$CMD" >&2; exit 2; }
 [ -n "$ISSUE" ] || { printf 'error: run needs --issue <n>\n' >&2; exit 2; }
 
 # The `no-mistakes` posture runs through the OSS clean-PR gate engine.
 if [ "$MODE" = "no-mistakes" ]; then
-  command -v no-mistakes >/dev/null 2>&1 || { printf 'error: no-mistakes engine not installed\nhelp: bin/ymir-install.sh (github.com/kunchenguid/no-mistakes)\n' >&2; exit 1; }
+  command -v no-mistakes >/dev/null 2>&1 || { printf 'error: no-mistakes engine not installed\nhelp: bin/engine/ymir-install.sh (github.com/kunchenguid/no-mistakes)\n' >&2; exit 1; }
   [ -f "$ROOT/.no-mistakes.yaml" ] || printf 'warn: .no-mistakes.yaml absent — the gate uses defaults\n' >&2
 fi
 [ -n "$REPO" ] || { printf 'error: run needs --repo <dir>\n' >&2; exit 2; }
@@ -87,7 +88,7 @@ ID="issue-$ISSUE"
 printf 'mjollnir[1]{issue,task,mode,repo}:\n  "%s","%s","%s","%s"\n' "$ISSUE" "$ID" "$MODE" "$REPO"
 
 # 2. Scaffold the brief (the worker's contract).
-"$SCRIPT_DIR/erindi-brief.sh" "$ID" "$(basename "$REPO")" --mode "$MODE" >/dev/null 2>&1 || true
+"$SCRIPT_DIR/../agents/erindi-brief.sh" "$ID" "$(basename "$REPO")" --mode "$MODE" >/dev/null 2>&1 || true
 BRIEF="$YMIR_DATA_DIR/$ID/brief.md"
 if [ -f "$BRIEF" ]; then
   { printf '\n\n## Issue #%s — %s\n\n%s\n' "$ISSUE" "$TITLE" "$BODY"; } >>"$BRIEF"

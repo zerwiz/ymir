@@ -14,7 +14,7 @@
 # key opens every warded computer. Proven seats (2026-09-22): Omarchy (omarchy,
 # heimdallomarchy) and Ubuntu/Debian (zerwizserver, whynot) — plain bash, the
 # systemd user timer, Debian's `ssh` unit vs Arch's `sshd` both handled. The
-# install wires it in via bin/heimdall-ensure.sh (step `heimdall`), so a fresh
+# install wires it in via bin/host/heimdall-ensure.sh (step `heimdall`), so a fresh
 # seat is warded at setup, Omarchy or Ubuntu alike.
 #
 # Usage:
@@ -61,7 +61,7 @@ die() {
   exit 1
 }
 usage() {
-  printf 'error: %s\nhelp: bin/heimdall-ssh-keys.sh {status|add|harden|unharden|timer}\n' "$1" >&2
+  printf 'error: %s\nhelp: bin/host/heimdall-ssh-keys.sh {status|add|harden|unharden|timer}\n' "$1" >&2
   exit 2
 }
 
@@ -278,7 +278,7 @@ as_root() {
 
 write_dropin() {
   as_root tee "$DROPIN" >/dev/null <<'CONF'
-# Written by bin/heimdall-ssh-keys.sh once an SSH key was authorized.
+# Written by bin/host/heimdall-ssh-keys.sh once an SSH key was authorized.
 # Delete this file and reload sshd to allow password logins again.
 PasswordAuthentication no
 KbdInteractiveAuthentication no

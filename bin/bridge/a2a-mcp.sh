@@ -29,7 +29,8 @@ fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 OC="$ROOT/opencode.json"
 A2AB="${A2ABRIDGE_BIN:-$HOME/.a2abridge/bin/a2abridge}"
 DIR="${A2A_DIRECTORY:-http://127.0.0.1:7777}"
@@ -55,7 +56,7 @@ ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
 if [ -n "${ENGRAM_DB:-}" ]; then
   ENGRAM_DB_ABS="$ENGRAM_DB"
 else
-  . "$SCRIPT_DIR/hoard-lib.sh" 2>/dev/null || true
+  . "$SCRIPT_DIR/../vault/hoard-lib.sh" 2>/dev/null || true
   hoard_memory_store ENGRAM_DB_ABS
 fi
 ENGRAM_DB="$ENGRAM_DB_ABS"

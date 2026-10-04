@@ -4,13 +4,13 @@
 # Usage: fm-remote-job-reap-orphans.sh [--dry-run]
 #   --dry-run reports what would be reaped and signals nothing.
 #
-# A remote job worker (bin/fm-remote-job-worker.sh) is launched from a specific
+# A remote job worker (bin/backend/fm-remote-job-worker.sh) is launched from a specific
 # Firstmate code root: the account's own checkout under the LaunchAgent, a
 # remote secondmate's checkout, a no-mistakes gate worktree, a pooled task
 # worktree, or a test fixture root. When that root is pruned while the worker is
 # running, the worker is reparented to init and, on older builds, keeps polling
 # and logging indefinitely. Current workers stop themselves once their root is
-# gone (bin/fm-remote-job-worker.sh); this sweep is the belt-and-suspenders pass
+# gone (bin/backend/fm-remote-job-worker.sh); this sweep is the belt-and-suspenders pass
 # that clears workers already orphaned that way, including ones started before
 # self-termination shipped.
 #
@@ -35,11 +35,11 @@ set -u
 
 SCRIPT_DIR=$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 
-# shellcheck source=bin/fm-remote-job-lib.sh
+# shellcheck source=bin/backend/fm-remote-job-lib.sh
 . "$SCRIPT_DIR/fm-remote-job-lib.sh"
 
 DRY_RUN=0
-REAP_SUFFIX=/bin/fm-remote-job-worker.sh
+REAP_SUFFIX=/bin/backend/fm-remote-job-worker.sh
 
 reap_die() { printf 'fm-remote-job-reap-orphans: %s\n' "$1" >&2; exit 2; }
 

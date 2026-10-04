@@ -2,7 +2,7 @@
  * opendesign — the design studio's door. ONE tool, one container, no confusion.
  *
  * Why this file exists (audit §4, 2026-10-03): the studio has a real door
- * (`bin/opendesign.sh start|stop|status`, added when OpenDesign was stopped) and NO tool, so
+ * (`bin/pi/opendesign.sh start|stop|status`, added when OpenDesign was stopped) and NO tool, so
  * "turn the studio off" cost a shell round-trip through a skill while it sat right there.
  *
  * **OpenDesign is NOT Maestro.** OpenDesign is the design studio on :7456 (a container named
@@ -51,7 +51,7 @@ export default function opendesign(pi: ExtensionAPI) {
       "The OpenDesign studio — the container on :7456, nothing else. `status` (default) " +
       "reports whether it runs; `start` and `stop` raise and lower it. This NEVER touches " +
       "Maestro, the film forge on :7860, which is a different craft entirely. Thin: it " +
-      "calls bin/opendesign.sh, so a human does the same thing.",
+      "calls bin/pi/opendesign.sh, so a human does the same thing.",
     parameters: {
       type: "object",
       properties: {

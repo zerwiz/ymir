@@ -19,12 +19,13 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/app-lib.sh).
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -32,7 +33,7 @@ fi
 app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
 # The runtime resolver — one shape-aware answer, never an app-local hardcode (P1).
 if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ]; then
-  for _ec in "$SCRIPT_DIR/electron-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/desktop/electron-lib.sh"; do
+  for _ec in "$SCRIPT_DIR/../../desktop/electron-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/desktop/electron-lib.sh"; do
     [ -r "$_ec" ] && { . "$_ec"; YMIR_ELECTRON_LIB_LOADED=1; break; }
   done
   unset _ec
@@ -43,7 +44,7 @@ APP="$APP_SESSRUMNIR"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 CMD="${1-}"; shift || true
 DO_INSTALL=0
-case "$CMD" in ensure) ;; status|install) ;; *) printf 'error: unknown command %s\nhelp: bin/sessrumnir-ensure.sh [status|ensure|install]\n' "$CMD" >&2; exit 2 ;; esac
+case "$CMD" in ensure) ;; status|install) ;; *) printf 'error: unknown command %s\nhelp: bin/seat/sessrumnir/sessrumnir-ensure.sh [status|ensure|install]\n' "$CMD" >&2; exit 2 ;; esac
 while [ $# -gt 0 ]; do case "$1" in --install) DO_INSTALL=1; shift ;; *) shift ;; esac; done
 [ "$CMD" = install ] && DO_INSTALL=1
 
@@ -126,6 +127,6 @@ case "$CMD" in
       exit $?
     fi
     status
-    printf 'sessrumnir: not ready — run `bin/sessrumnir-ensure.sh install`\n' >&2
+    printf 'sessrumnir: not ready — run `bin/seat/sessrumnir/sessrumnir-ensure.sh install`\n' >&2
     exit 1 ;;
 esac

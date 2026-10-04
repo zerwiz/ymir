@@ -194,10 +194,10 @@ rodd_read_stdin() {  # <result-var>
 rodd_usage() {
   cat <<'EOF'
 Usage:
-  bin/rodd-operational-input.sh encode <kind>  # body on stdin
-  bin/rodd-operational-input.sh kind           # current input on stdin
-  bin/rodd-operational-input.sh classify       # current or legacy input on stdin
-  bin/rodd-operational-input.sh body           # current input on stdin
+  bin/agents/rodd-operational-input.sh encode <kind>  # body on stdin
+  bin/agents/rodd-operational-input.sh kind           # current input on stdin
+  bin/agents/rodd-operational-input.sh classify       # current or legacy input on stdin
+  bin/agents/rodd-operational-input.sh body           # current input on stdin
 
 Current construction kinds:
   session-start watcher turn-end-guard away-supervisor from-brokk launch-brief

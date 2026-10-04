@@ -21,7 +21,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 SANDBOX="$ROOT/.agents/sandbox"
 TAG="${UTGARD_TAG:-utgard-runner:latest}"
 
@@ -40,8 +41,8 @@ if [ "$CMD" = "sandcastle" ]; then
   exec npx --yes @ai-hero/sandcastle "$@"
 fi
 
-# shellcheck source=bin/ymir-platform.sh
-. "$SCRIPT_DIR/ymir-platform.sh"
+# shellcheck source=bin/fleet/ymir-platform.sh
+. "$SCRIPT_DIR/../fleet/ymir-platform.sh"
 ENGINE="$(ymir_container_engine)" || {
   printf 'error: no container engine (docker/podman) reachable\nhelp: install Docker or Podman, or set YMIR_CONTAINER_ENGINE to the one you use\n' >&2
   exit 1
@@ -64,7 +65,7 @@ case "$CMD" in
       printf 'utgard[1]{image,status,net_default,caps}:\n  "%s","ready","none","cpus+mem+timeout"\n' "$TAG"
     else
       printf 'utgard[1]{image,status,net_default,caps}:\n  "%s","missing","none","cpus+mem+timeout"\n' "$TAG"
-      printf 'help[1]: bin/utgard.sh build\n'
+      printf 'help[1]: bin/forge/utgard.sh build\n'
     fi
     ;;
 
@@ -80,13 +81,13 @@ case "$CMD" in
         *) WT=$1; shift ;;
       esac
     done
-    [ -n "$WT" ] || { printf 'error: run needs a worktree path\nhelp: bin/utgard.sh run <worktree> -- <command>\n' >&2; exit 2; }
+    [ -n "$WT" ] || { printf 'error: run needs a worktree path\nhelp: bin/forge/utgard.sh run <worktree> -- <command>\n' >&2; exit 2; }
     [ -d "$WT" ] || { printf 'error: worktree not found: %s\n' "$WT" >&2; exit 1; }
     [ "$#" -gt 0 ] || { printf 'error: run needs a command after --\n' >&2; exit 2; }
     WT="$(cd "$WT" && pwd)"
     NET="${NET:-none}"; CPUS="${CPUS:-1.0}"; MEM="${MEM:-512m}"; TO="${TO:-30}"
     UID_GID="$(id -u):$(id -g)"
-    "$ENGINE" image inspect "$TAG" >/dev/null 2>&1 || { printf 'error: image %s missing\nhelp: bin/utgard.sh build\n' "$TAG" >&2; exit 1; }
+    "$ENGINE" image inspect "$TAG" >/dev/null 2>&1 || { printf 'error: image %s missing\nhelp: bin/forge/utgard.sh build\n' "$TAG" >&2; exit 1; }
     # Rootless Podman maps the host user differently: use --userns=keep-id so the
     # mounted worktree stays writable by the invoking user; Docker keeps --user.
     ARGS=(run --rm --network "$NET" --cpus "$CPUS" -m "$MEM"
@@ -106,6 +107,6 @@ case "$CMD" in
     ;;
 
   *)
-    printf 'error: unknown command %s\nhelp: bin/utgard.sh [build|status|run|--version]\n' "$CMD" >&2
+    printf 'error: unknown command %s\nhelp: bin/forge/utgard.sh [build|status|run|--version]\n' "$CMD" >&2
     exit 2 ;;
 esac

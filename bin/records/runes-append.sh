@@ -4,7 +4,7 @@
 # Runes are what was carved: an append-only JSONL record of every significant
 # action in the Ymir runtime, each entry chaining to the one before it by folding
 # the previous checksum into its own. The chain law lives in ONE implementation —
-# `src/ymir_runtime/state/runes.py`, reached through `bin/ymir-state.sh`. This
+# `src/ymir_runtime/state/runes.py`, reached through `bin/records/ymir-state.sh`. This
 # file defines no behaviour of its own: `runes_append` maps its arguments onto the
 # module and returns its line; the ledger path, the lock, the head, the escape,
 # the fold, and the append are all the module's. A body added here would be the

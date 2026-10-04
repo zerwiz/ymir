@@ -16,7 +16,7 @@ set -euo pipefail
 if [ -n "${YMIR_WELL:-}" ] || [ -n "${ENGRAM_DB:-}" ]; then
   WELL="${YMIR_WELL:-${ENGRAM_DB:-}}"
 else
-  . "$SCRIPT_DIR/hoard-lib.sh" 2>/dev/null || true
+  . "$SCRIPT_DIR/../vault/hoard-lib.sh" 2>/dev/null || true
   hoard_memory_store WELL
 fi
 BASE="${YMIR_ROUTER_URL:-http://127.0.0.1:1234/v1}"

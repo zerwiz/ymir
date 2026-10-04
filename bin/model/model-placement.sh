@@ -5,7 +5,7 @@
 # body does not download 20 GB to a laptop — it calls a strong box over the
 # tailnet. The rails are a LIVE set: whichever strong box is CONNECTED serves, and
 # a dropped box reroutes. This reports the fleet's rails through the ONE resolver
-# (`bin/rail-resolve.sh` → `src/ymir_runtime/fleet/rail.py`) — the registry's
+# (`bin/model/rail-resolve.sh` → `src/ymir_runtime/fleet/rail.py`) — the registry's
 # `rails` list, else its `ear` list, else its `forge` hosts — whether each answers,
 # and this machine's one-local-model lock. Offline-safe.
 #
@@ -23,7 +23,7 @@ case "${1-}" in --json) MODE=json ;; check) MODE=check ;; esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -54,8 +54,8 @@ fi
 # names must resolve on the RESOLVED provider — whichever strong box serves.
 # `check` exits 1 on a missing alias, so a rename can never silently break a seat.
 ALIAS_VERDICT="skipped"; ALIAS_NOTE="gate absent"
-if [ "${YMIR_ALIAS_CHECK:-on}" != off ] && [ -x "$SCRIPT_DIR/model-alias-check.sh" ]; then
-  _ao="$(bash "$SCRIPT_DIR/model-alias-check.sh" --local 2>/dev/null)" || true
+if [ "${YMIR_ALIAS_CHECK:-on}" != off ] && [ -x "$SCRIPT_DIR/../gates/checks/model-alias-check.sh" ]; then
+  _ao="$(bash "$SCRIPT_DIR/../gates/checks/model-alias-check.sh" --local 2>/dev/null)" || true
   ALIAS_VERDICT="$(printf '%s' "$_ao" | sed -nE 's/^  "verdict","([^"]+)".*/\1/p' | head -1)"
   [ -n "$ALIAS_VERDICT" ] || ALIAS_VERDICT="unknown"
   if [ "$ALIAS_VERDICT" = FAIL ]; then

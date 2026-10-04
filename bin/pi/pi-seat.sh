@@ -2,10 +2,10 @@
 # pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a local
 # model. Reusable for Ymir features and users when the stack is running.
 #
-#   bin/pi-seat.sh                                   # pi + default local model, no task
-#   bin/pi-seat.sh --task "design a hero"            # seat, then prompt
-#   bin/pi-seat.sh -n sindri -m qwen3.6-35b-q4_k_s --task "..."
-#   bin/pi-seat.sh --tab --task "..."               # seat in a new tab
+#   bin/pi/pi-seat.sh                                   # pi + default local model, no task
+#   bin/pi/pi-seat.sh --task "design a hero"            # seat, then prompt
+#   bin/pi/pi-seat.sh -n sindri -m qwen3.6-35b-q4_k_s --task "..."
+#   bin/pi/pi-seat.sh --tab --task "..."               # seat in a new tab
 #
 # Requires HERDR_ENV=1 (run inside a herdr pane). Splits a pane beside you,
 # starts pi with --model <provider>/<id>, and prints the pane + agent name.
@@ -38,8 +38,8 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # Resolve provider + model from the hoard (config/agents.yaml) when the env/flag
 # did not name them: the figure's own model first, else the default_model.
 if [ -z "$PROVIDER" ] || [ -z "$MODEL" ]; then
-  _am="$([ -x "$SCRIPT_DIR/agents-config.sh" ] && "$SCRIPT_DIR/agents-config.sh" get "$NAME" model 2>/dev/null)"
-  [ -n "$_am" ] || _am="$([ -x "$SCRIPT_DIR/agents-config.sh" ] && "$SCRIPT_DIR/agents-config.sh" default 2>/dev/null)"
+  _am="$([ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ] && "$SCRIPT_DIR/../fleet/agents-config.sh" get "$NAME" model 2>/dev/null)"
+  [ -n "$_am" ] || _am="$([ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ] && "$SCRIPT_DIR/../fleet/agents-config.sh" default 2>/dev/null)"
   [ -n "$PROVIDER" ] || PROVIDER="${_am%%/*}"
   [ -n "$MODEL" ] || MODEL="${_am#*/}"
 fi
@@ -53,17 +53,17 @@ have herdr || { printf 'error: herdr not on PATH\n' >&2; exit 1; }
 
 # Isolation is standard: seat in a Yggdrasil worktree, not the main tree, unless
 # the Allfather explicitly asks for main (--main).
-if [ "${MAIN:-0}" != 1 ] && [ -x "$SCRIPT_DIR/yggdrasil.sh" ] && git -C "$PWD" rev-parse --show-toplevel >/dev/null 2>&1; then
+if [ "${MAIN:-0}" != 1 ] && [ -x "$SCRIPT_DIR/../forge/yggdrasil.sh" ] && git -C "$PWD" rev-parse --show-toplevel >/dev/null 2>&1; then
   wt="$(git -C "$PWD" rev-parse --show-toplevel)/.yggdrasil/$NAME"
-  [ -d "$wt" ] || "$SCRIPT_DIR/yggdrasil.sh" create "$NAME" >/dev/null 2>&1
+  [ -d "$wt" ] || "$SCRIPT_DIR/../forge/yggdrasil.sh" create "$NAME" >/dev/null 2>&1
   [ -d "$wt" ] && { DIR="$wt"; printf 'pi-seat[1]{isolation,worktree}:\n  "on","%s"\n' "$DIR" >&2; }
 fi
 
 # 0. the local-model guard: one local inference at a time per machine.
 case "$PROVIDER" in
   llama-swap|llamacpp-whynot|llama.cpp|llama-cpp|lmstudio)
-    if [ -x "$SCRIPT_DIR/local-model-lock.sh" ] && ! "$SCRIPT_DIR/local-model-lock.sh" check >/dev/null 2>&1; then
-      "$SCRIPT_DIR/local-model-lock.sh" check >&2
+    if [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ] && ! "$SCRIPT_DIR/../model/local-model-lock.sh" check >/dev/null 2>&1; then
+      "$SCRIPT_DIR/../model/local-model-lock.sh" check >&2
       printf 'help: a local seat already runs on this machine — wait, or use a remote/online model\n' >&2
       exit 3
     fi
@@ -105,8 +105,8 @@ fi
 # 4. arm the handoff (plan 42). A when-source beside the smith files his report
 # and wakes Brokk the moment he leaves `working`; without it a seat finishes
 # into silence.
-if [ -x "$SCRIPT_DIR/eindri-watch.sh" ]; then
-  "$SCRIPT_DIR/eindri-watch.sh" arm "$NAME" "$DIR" >/dev/null 2>&1 \
+if [ -x "$SCRIPT_DIR/../agents/eindri-watch.sh" ]; then
+  "$SCRIPT_DIR/../agents/eindri-watch.sh" arm "$NAME" "$DIR" >/dev/null 2>&1 \
     && printf 'pi-seat[1]{agent,armed}:\n  "%s","watch-%s"\n' "$NAME" "$NAME" >&2 \
     || printf 'pi-seat[1]{agent,armed}:\n  "%s","failed — wake Brokk by hand"\n' "$NAME" >&2
 fi

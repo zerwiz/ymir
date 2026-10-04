@@ -11,8 +11,8 @@
 # See docs/arm-pretool-check.md for the complete contract and validation record.
 #
 # Usage:
-#   <PreToolUse JSON on stdin> | bin/fm-arm-pretool-check.sh
-#   bin/fm-arm-pretool-check.sh --command '<cmd>' [--background true|false]
+#   <PreToolUse JSON on stdin> | bin/backend/fm-arm-pretool-check.sh
+#   bin/backend/fm-arm-pretool-check.sh --command '<cmd>' [--background true|false]
 #
 # Stdin mode extracts .toolInput.command for Grok or .tool_input.command for
 # Claude and Codex. Cursor delivers the same .tool_input.command shape with
@@ -109,7 +109,7 @@ if [ "$CMD_SET" -eq 0 ]; then
   PAYLOAD=$(cat 2>/dev/null || true)
   [ -n "$PAYLOAD" ] || exit 0
   command -v jq >/dev/null 2>&1 || exit 0
-  # shellcheck source=bin/fm-hook-host-lib.sh
+  # shellcheck source=bin/backend/fm-hook-host-lib.sh
   . "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/fm-hook-host-lib.sh"
   # Cursor's own registration passes --cursor. Without it a Cursor-delivered
   # payload is the Claude-settings duplicate Cursor also loads, already

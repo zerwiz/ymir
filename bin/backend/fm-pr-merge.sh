@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Merge a task's PR or MR after recording pr= and any available pr_head= through
-# bin/fm-pr-check.sh, so teardown can verify landed work after squash merges.
-# The full canonical URL is parsed by bin/fm-pr-lib.sh. A GitHub pull request is
+# bin/backend/fm-pr-check.sh, so teardown can verify landed work after squash merges.
+# The full canonical URL is parsed by bin/backend/fm-pr-lib.sh. A GitHub pull request is
 # addressed through gh-axi by the derived owner and repository; a GitLab merge
 # request is addressed through glab by the project URL rebuilt from the parsed
 # host and path, so any instance works and no host is hardcoded.
@@ -59,7 +59,7 @@
 #
 # On GitLab, this script confirms the MR is actually merged before reporting it;
 # an auto-merge-queued or unconfirmed request leaves the poll armed and records
-# no landed outcome. bin/fm-merge-outcome-lib.sh owns a confirmed merge's
+# no landed outcome. bin/backend/fm-merge-outcome-lib.sh owns a confirmed merge's
 # destination, normal-case deduplication, and at-least-once recovery.
 # A landed merge whose outcome cannot be written is reported loudly rather than
 # misreported as a failed merge.
@@ -71,14 +71,14 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-merge-outcome-lib.sh
+# shellcheck source=bin/backend/fm-merge-outcome-lib.sh
 . "$SCRIPT_DIR/fm-merge-outcome-lib.sh"
 # Role partition: merging is MAIN-owned; the Pi supervision branch reports the
-# green PR and never merges (contract: bin/fm-lease-lib.sh; no-op in homes
+# green PR and never merges (contract: bin/backend/fm-lease-lib.sh; no-op in homes
 # without a branch actor).
-# shellcheck source=bin/fm-lease-lib.sh
+# shellcheck source=bin/backend/fm-lease-lib.sh
 . "$SCRIPT_DIR/fm-lease-lib.sh"
 fm_lease_forbid_branch "PR merge (fm-pr-merge)"
 
@@ -210,7 +210,7 @@ if [ "$PROVIDER" = gitlab ]; then
   fi
 fi
 
-# The recorded head is read before bin/fm-pr-check.sh rewrites the metadata,
+# The recorded head is read before bin/backend/fm-pr-check.sh rewrites the metadata,
 # because that script re-records pr= and drops a pr_head= it cannot resolve.
 RECORDED_HEAD=
 if [ "$PROVIDER" = gitlab ]; then

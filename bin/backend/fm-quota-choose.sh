@@ -38,9 +38,9 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source=bin/fm-quota-axi-lib.sh
+# shellcheck source=bin/backend/fm-quota-axi-lib.sh
 . "$SCRIPT_DIR/fm-quota-axi-lib.sh"
-# shellcheck source=bin/fm-control-lib.sh
+# shellcheck source=bin/backend/fm-control-lib.sh
 . "$SCRIPT_DIR/fm-control-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit 2; }

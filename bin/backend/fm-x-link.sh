@@ -37,7 +37,7 @@
 # state/<task-id>.meta, so it can only bind work this home owns. Work routed to a
 # secondmate lives in that secondmate's home and has no meta here, so a link is
 # impossible and the public promise would be silently orphaned. When the task has
-# no local meta, this refuses with the promised-final path (bin/fm-public-followup.sh
+# no local meta, this refuses with the promised-final path (bin/backend/fm-public-followup.sh
 # register --work-home secondmate:<id>) named, and names the secondmate home the
 # task was actually found in whenever a registered LOCAL route holds it.
 #
@@ -50,13 +50,13 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
-# shellcheck source=bin/fm-x-lib.sh
+# shellcheck source=bin/backend/fm-x-lib.sh
 . "$SCRIPT_DIR/fm-x-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
 
 usage() {
@@ -177,7 +177,7 @@ if [ ! -f "$META" ]; then
       ''|*' '*) ;;
       *) ROUTE_HOME_ARG="secondmate:$ROUTE_MATCHES" ;;
     esac
-    printf 'fm-x-link: bind the public promise through the promised-final path instead: tasks-axi public-followup add + bind-work, then bin/fm-public-followup.sh register <obligation-id> --relation <relation-id> --work-home %s --work-id %s --generation <n>, and put the bin/fm-public-followup.sh brief <obligation-id> command into the routed worker instructions.\n' \
+    printf 'fm-x-link: bind the public promise through the promised-final path instead: tasks-axi public-followup add + bind-work, then bin/backend/fm-public-followup.sh register <obligation-id> --relation <relation-id> --work-home %s --work-id %s --generation <n>, and put the bin/backend/fm-public-followup.sh brief <obligation-id> command into the routed worker instructions.\n' \
       "$ROUTE_HOME_ARG" "$ID" >&2
   fi
   exit 1

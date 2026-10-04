@@ -1252,3 +1252,28 @@ lives in the operator's vault at `hodd/docs/developer-setup/pi-extension-api.md`
 Current state: **26 tools called, 0 broken**, 2 skipped and *said to be skipped* because bare node
 cannot resolve Pi's own packages — a limitation of the harness, not of the extension. A gate that
 cries to prove itself by failing once, and a harness honest about what it cannot see, both matter.
+
+---
+
+## 2026-10-04 — the extensions moved; the governed paths moved with them
+
+Every Ymir extension now lives under a **system folder** in the repo, and the doors that reach
+them were repointed in the same commit. This asset is the governed record for that move, and it
+exists because a change under a governed path is incomplete until its asset says so.
+
+| door | was | now |
+|---|---|---|
+| the Pi extension surface | a loose set of files | one tree, resolvable — `YMIR_EXT_SRC` overrides it |
+| the tool-API gate | `bin/extension-api-check.sh` | `bin/gates/checks/extension-api-check.sh` |
+| the calling-convention smoke | `tools/extension-smoke.mjs` | unchanged; it resolves the shelf, not a path |
+
+**The rule this move taught, twice:** a door that resolves the repository from `$0` by counting
+`..` breaks the moment it is nested — and so does a generator that enumerates by glob. Both now
+walk **up** to the marker and **recurse**, respectively, because depth must not be able to blind
+an index or a check.
+
+**One hazard, named rather than buried:** the vendored `fm-*` shelf resolves paths from `$0` and
+writes its state beside itself. It now lives in `bin/backend/`, which silently moved its state
+directory to `bin/state/`. `runtime-guard` caught it as *undeclared runtime output*. **A file kept
+byte-comparable to upstream is byte-comparable; it is not location-independent** — that shelf
+deserves an explicit state root before it is moved again.

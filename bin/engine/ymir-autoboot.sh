@@ -155,8 +155,8 @@ case "${1-}" in
   roles) roles ;;
   linger) linger ;;
   raise)
-    if [ ! -x "$SCRIPT_DIR/fleet-ensure.sh" ]; then say "error: no fleet-ensure.sh" >&2; exit 2; fi
-    "$SCRIPT_DIR/fleet-ensure.sh" ensure || { say "autoboot: raise failed — see above" >&2; exit 1; }
+    if [ ! -x "$SCRIPT_DIR/../fleet/fleet-ensure.sh" ]; then say "error: no fleet-ensure.sh" >&2; exit 2; fi
+    "$SCRIPT_DIR/../fleet/fleet-ensure.sh" ensure || { say "autoboot: raise failed — see above" >&2; exit 1; }
     verify --quiet
     ;;
   deferred) shift; deferred "${1-}" "${2-}" ;;

@@ -14,7 +14,7 @@
 #   fleet-ensure.sh ensure              # materialize + raise + VERIFY (fails loud)
 #   fleet-ensure.sh verify              # the proof alone (exit non-zero on gaps)
 #   fleet-ensure.sh unit <program>      # materialize ONE unit (the single renderer:
-#                                       #   bin/syn-watch.sh start asks it to seat the arm)
+#                                       #   bin/pi/syn-watch.sh start asks it to seat the arm)
 #   fleet-ensure.sh --well-url <url>    # the served well URL for this seat's mcp
 # Env: BROKK_ROOT_OVERRIDE · BROKK_HOME · YMIR_HOST (role read) · HLIDSKJALF_PORT
 #      · HLIDSKJALF_API_PORT · SMIDJA_VIZ_API_PORT · SMIDJA_DB
@@ -26,7 +26,7 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
-. "$SCRIPT_DIR/autoboot-lib.sh"
+. "$SCRIPT_DIR/../engine/autoboot-lib.sh"
 HOME_ROOT="$AUTOBOOT_HOME_ROOT"
 DST="$HOME/.fleet"
 # The tree that SHIPS the templates may differ from the seat's platform root
@@ -80,7 +80,7 @@ GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
 PORT_BASE="${FLEET_PORT_BASE:-8317}"
 CHECK_ONLY=0
 EMBED_MISSING=0
-# the web-stack roots, resolved once per ensure (bin/fleet-ensure.sh sets them)
+# the web-stack roots, resolved once per ensure (bin/fleet/fleet-ensure.sh sets them)
 APP_DIR=""
 VIZ_DIR=""
 VIZ_DB=""
@@ -92,13 +92,13 @@ SMIDJA_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 say() { printf '%s\n' "$*"; }
 
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
-  for _fec in "$SCRIPT_DIR/app-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/app-lib.sh"; do
+  for _fec in "$SCRIPT_DIR/../seat/sessrumnir/app-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_fec" ] && { . "$_fec"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _fec
 fi
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
-  for _fec in "$SCRIPT_DIR/smidja-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/desktop/smidja-lib.sh"; do
+  for _fec in "$SCRIPT_DIR/../desktop/smidja-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/desktop/smidja-lib.sh"; do
     [ -r "$_fec" ] && { . "$_fec"; YMIR_SMIDJA_LIB_LOADED=1; break; }
   done
   unset _fec
@@ -265,7 +265,7 @@ materialize_units() {  # <owed...> — every owed unit + the target; purge the s
         # remedy loudly rather than writing a unit the engine would own.
         if [ ! -f "$HOME/.config/systemd/user/a2abridge-directory.service" ]; then
           say "fleet: a2abridge-directory — the mesh engine's unit is missing" >&2
-          say "fleet:   remedy: bin/bridge/a2abridge-ensure.sh ensure --install (bin/ymir-install.sh step does this)" >&2
+          say "fleet:   remedy: bin/bridge/a2abridge-ensure.sh ensure --install (bin/engine/ymir-install.sh step does this)" >&2
           A2A_MISSING=1
         fi
         ;;
@@ -402,8 +402,8 @@ raise_verify() {  # <owed...>
     sleep 1
   done
   local ver
-  if [ -x "$SCRIPT_DIR/ymir-autoboot.sh" ]; then
-    "$SCRIPT_DIR/ymir-autoboot.sh" verify --quiet
+  if [ -x "$SCRIPT_DIR/../engine/ymir-autoboot.sh" ]; then
+    "$SCRIPT_DIR/../engine/ymir-autoboot.sh" verify --quiet
     ver=$?
   else
     ver=1
@@ -454,8 +454,8 @@ PY
 }
 
 status() {
-  if [ -x "$SCRIPT_DIR/ymir-autoboot.sh" ]; then
-    "$SCRIPT_DIR/ymir-autoboot.sh" status
+  if [ -x "$SCRIPT_DIR/../engine/ymir-autoboot.sh" ]; then
+    "$SCRIPT_DIR/../engine/ymir-autoboot.sh" status
   else
     say "error: no ymir-autoboot.sh — the proof is missing" >&2
     return 1
@@ -488,8 +488,8 @@ ensure() {
 case "${1-}" in
   status) status ;;
   verify)
-    if [ -x "$SCRIPT_DIR/ymir-autoboot.sh" ]; then
-      shift; "$SCRIPT_DIR/ymir-autoboot.sh" verify "${1-}"
+    if [ -x "$SCRIPT_DIR/../engine/ymir-autoboot.sh" ]; then
+      shift; "$SCRIPT_DIR/../engine/ymir-autoboot.sh" verify "${1-}"
     else
       say "error: no ymir-autoboot.sh — the proof is missing" >&2
       exit 1

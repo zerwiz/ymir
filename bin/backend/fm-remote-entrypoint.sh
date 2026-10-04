@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fixed remote entrypoint for bin/fm-on.sh.
+# Fixed remote entrypoint for bin/backend/fm-on.sh.
 #
 # Install this tracked file as fm-remote-entrypoint.sh on the remote account's
 # non-interactive SSH PATH. It accepts protocol metadata plus a base64-encoded
@@ -37,7 +37,7 @@ REAL_SOURCE=$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' 
   REAL_SOURCE=${BASH_SOURCE[0]}
 SCRIPT_DIR=$(CDPATH='' cd "$(dirname "$REAL_SOURCE")" && pwd -P)
 
-# shellcheck source=bin/fm-remote-job-lib.sh
+# shellcheck source=bin/backend/fm-remote-job-lib.sh
 . "$SCRIPT_DIR/fm-remote-job-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit "${2:-64}"; }

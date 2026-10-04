@@ -27,7 +27,8 @@ fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 YMIR_HOME="${YMIR_HOME}"
 # The well log lives INSIDE the hoard, which is `$YMIR_HOME/hodd/` (Rule 04) — this
 # line omitted the `hodd/` segment, so recall and observe pointed at a path that has

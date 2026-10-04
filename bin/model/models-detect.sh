@@ -15,7 +15,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 MODELS_JSON="${PI_MODELS_JSON:-$HOME/.pi/agent/models.json}"
 CODING_CTX="${YMIR_CODING_CTX:-80000}"
 MODE="report"; WRITE=0; FORCE=0

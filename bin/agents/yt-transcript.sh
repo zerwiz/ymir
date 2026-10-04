@@ -5,9 +5,9 @@
 # GEMINI_API_KEY or a signed-in Chromium and fails closed on a bare box; yt-dlp
 # needs neither. Bragi (marketing) and Huginn (research) reach for this first.
 #
-#   bin/yt-transcript.sh <url>              # metadata + description + transcript
-#   bin/yt-transcript.sh <url> --meta       # metadata + description only (no captions)
-#   bin/yt-transcript.sh <url> --out DIR    # where the transcript lands (default /tmp)
+#   bin/agents/yt-transcript.sh <url>              # metadata + description + transcript
+#   bin/agents/yt-transcript.sh <url> --meta       # metadata + description only (no captions)
+#   bin/agents/yt-transcript.sh <url> --out DIR    # where the transcript lands (default /tmp)
 #
 # Output is Galdr TOON on stdout; the transcript text goes to <out>/<id>.txt.
 # Exit: 0 all three read, 3 partial (metadata yes, transcript no), 1 error, 2 usage.
@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
     *) shift ;;
   esac
 done
-[ -n "$URL" ] || { printf 'error: usage: bin/yt-transcript.sh <url> [--meta] [--out DIR]\n' >&2; exit 2; }
+[ -n "$URL" ] || { printf 'error: usage: bin/agents/yt-transcript.sh <url> [--meta] [--out DIR]\n' >&2; exit 2; }
 
 command -v yt-dlp >/dev/null 2>&1 || { printf 'error: yt-dlp not on PATH\nhelp: install yt-dlp (no key, no account needed)\n' >&2; exit 1; }
 mkdir -p "$OUT" 2>/dev/null || true

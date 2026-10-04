@@ -12,7 +12,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -37,7 +38,7 @@ TEXT="$1"; shift || true
 CHANNEL=telegram; DRY=0
 while [ $# -gt 0 ]; do case "$1" in --channel) CHANNEL=${2-telegram}; shift 2 ;; --dry-run) DRY=1; shift ;; *) shift ;; esac; done
 
-[ -n "$TEXT" ] || { printf 'error: notify needs text\nhelp: bin/gjallarhorn-notify.sh "<text>"\n' >&2; exit 2; }
+[ -n "$TEXT" ] || { printf 'error: notify needs text\nhelp: bin/forge/gjallarhorn-notify.sh "<text>"\n' >&2; exit 2; }
 [ -r "$ENV_FILE" ] || { printf 'error: env file not found: %s\n' "$ENV_FILE" >&2; exit 1; }
 # shellcheck disable=SC1090
 TOKEN=$(grep -E '^TELEGRAM_BOT_TOKEN=' "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2-)
@@ -66,6 +67,6 @@ case "$CHANNEL" in
 esac
 
 # Carve a Rune (best-effort; the ledger is the record).
-if [ -x "$SCRIPT_DIR/runes-append.sh" ]; then
-  "$SCRIPT_DIR/runes-append.sh" brokk notify.reply --message "${TEXT:0:200}" >/dev/null 2>&1 || true
+if [ -x "$SCRIPT_DIR/../records/runes-append.sh" ]; then
+  "$SCRIPT_DIR/../records/runes-append.sh" brokk notify.reply --message "${TEXT:0:200}" >/dev/null 2>&1 || true
 fi

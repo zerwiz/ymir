@@ -16,7 +16,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 MIN_PROTOCOL=14          # agent panes
 MIN_SPACES="0.8.0"       # presentation spaces
 PINNED_INSTALLER="$ROOT/.agents/backend/fm-install-herdr.sh"

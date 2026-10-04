@@ -4,15 +4,16 @@
 # domains. A work workspace attaches to its company's container.
 #
 # Usage:
-#   bin/workspace-provision.sh <name> --kind work|personal [--domains a,b,c] [--company <slug>]
-#   bin/workspace-provision.sh --version
+#   bin/agents/workspace-provision.sh <name> --kind work|personal [--domains a,b,c] [--company <slug>]
+#   bin/agents/workspace-provision.sh --version
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # shellcheck source=bin/vault/hoard-lib.sh
-. "$SCRIPT_DIR/hoard-lib.sh"
+. "$SCRIPT_DIR/../vault/hoard-lib.sh"
 WORKSPACE="$ROOT/workspace"
 DEFAULT_WORK="company,marketing,development,life"
 DEFAULT_PERSONAL="me,life,development"
@@ -20,7 +21,7 @@ DEFAULT_PERSONAL="me,life,development"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
 NAME="${1-}"; shift || true
-[ -n "$NAME" ] || { printf 'error: workspace needs a name\nhelp: bin/workspace-provision.sh <name> --kind work|personal\n' >&2; exit 2; }
+[ -n "$NAME" ] || { printf 'error: workspace needs a name\nhelp: bin/agents/workspace-provision.sh <name> --kind work|personal\n' >&2; exit 2; }
 case "$NAME" in *[!a-z0-9-]*|'') printf 'error: name must be a lowercase slug [a-z0-9-]\n' >&2; exit 2 ;; esac
 
 KIND=""; DOMAINS=""; COMPANY=""

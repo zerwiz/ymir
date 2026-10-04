@@ -151,7 +151,7 @@ electron_runtime_state() {  # <app-dir> [root] [pkg] → ok | partial | absent
 electron_remedy() {
   printf 'the runtime download was skipped by npm — approve and rebuild:\n'
   printf '  npm install-scripts approve electron && npm rebuild electron\n'
-  printf 'yonder: bin/ymir-install.sh --no-desktop if the web surfaces are enough\n'
+  printf 'yonder: bin/engine/ymir-install.sh --no-desktop if the web surfaces are enough\n'
 }
 
 

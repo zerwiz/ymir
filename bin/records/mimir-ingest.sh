@@ -15,9 +15,10 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # shellcheck source=bin/vault/hoard-lib.sh
-. "$SCRIPT_DIR/hoard-lib.sh"
+. "$SCRIPT_DIR/../vault/hoard-lib.sh"
 hoard_root HOARD
 # The business material lives in the hoard (private, untracked). Keep the old
 # location as a fallback so a pre-migration home still works.
@@ -128,4 +129,4 @@ if [ "$QUIET" = 0 ]; then
   done
 fi
 printf 'well: store=%s entries=%s bridge=%s\n' "${STORE#"$ROOT"/}" "$(wc -l <"$STORE" | tr -d ' ')" "$([ "$have_bridge" = 1 ] && echo online || echo offline)"
-printf 'help[1]: query the well with `bin/rodd-operational-input.sh` kinds / the Mimirsbrunn bridge\n'
+printf 'help[1]: query the well with `bin/agents/rodd-operational-input.sh` kinds / the Mimirsbrunn bridge\n'

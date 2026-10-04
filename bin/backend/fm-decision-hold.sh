@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# fm-decision-hold.sh - transitional compatibility shim over bin/fm-captain-hold.sh.
+# fm-decision-hold.sh - transitional compatibility shim over bin/backend/fm-captain-hold.sh.
 #
 # The separate "decision" concept collapsed into the one primitive the captain
-# cares about: a task held for the captain. bin/fm-captain-hold.sh owns every
+# cares about: a task held for the captain. bin/backend/fm-captain-hold.sh owns every
 # surviving behavior; this shim only maps the retired command surface onto it so
 # in-flight work briefed before the collapse keeps working for one release, and
 # it will be removed in the release after the collapse lands.

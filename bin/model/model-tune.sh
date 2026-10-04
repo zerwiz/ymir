@@ -22,9 +22,10 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yc
@@ -66,11 +67,11 @@ for c in "${LLAMA_SERVER_CUDA:-}" llama-server-cuda "$(command -v llama-server 2
   [ -n "$c" ] && [ -x "$c" ] && { CUDA_BIN="$c"; break; }
 done
 if [ -z "$CUDA_BIN" ]; then
-  printf 'error: no llama-server found — a CPU bench would measure a lie\nhelp: bin/llama-ensure.sh ensure\n' >&2
+  printf 'error: no llama-server found — a CPU bench would measure a lie\nhelp: bin/model/llama-ensure.sh ensure\n' >&2
   exit 3
 fi
 if ! timeout 25 "$CUDA_BIN" --list-devices 2>&1 | grep -q 'CUDA[0-9]'; then
-  printf 'error: the llama-server at %s reports no CUDA device\nhelp: bin/llama-ensure.sh status\n' "$CUDA_BIN" >&2
+  printf 'error: the llama-server at %s reports no CUDA device\nhelp: bin/model/llama-ensure.sh status\n' "$CUDA_BIN" >&2
   exit 3
 fi
 

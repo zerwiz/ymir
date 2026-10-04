@@ -4,7 +4,7 @@
 # The standard says: a clause is proved only by a command, and a clause we cannot
 # yet prove is named in public, never dressed up as done. This is the command for
 # the install clause. It never re-derives the installer's opinion: it reads the
-# plan the installer itself computes (bin/ymir-install.sh --plan --json), so the
+# plan the installer itself computes (bin/engine/ymir-install.sh --plan --json), so the
 # proof cannot drift from the thing it proves.
 #
 # The clauses:
@@ -23,7 +23,7 @@
 # Exit: 0 every clause PROVEN (or gaps, unless --strict)
 #       1 a clause FAILED or (with --strict) UNPROVEN/GAP
 #       2 usage
-# Usage: bin/prove-install.sh [--json] [--strict]
+# Usage: bin/engine/prove-install.sh [--json] [--strict]
 set -u
 
 # --- resolve before use: roots come from the libs, never from a literal --------
@@ -41,7 +41,7 @@ _root() {
   printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 }
 ROOT="$(_root)"
-PLAN="$ROOT/bin/ymir-install.sh"
+PLAN="$ROOT/bin/engine/ymir-install.sh"
 
 JSON=0; STRICT=0
 while [ $# -gt 0 ]; do
@@ -49,12 +49,12 @@ while [ $# -gt 0 ]; do
     --json)   JSON=1 ;;
     --strict) STRICT=1 ;;
     -h|--help) sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) printf 'error: unknown argument %s\nhelp: bin/prove-install.sh [--json] [--strict]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown argument %s\nhelp: bin/engine/prove-install.sh [--json] [--strict]\n' "$1" >&2; exit 2 ;;
   esac
   shift
 done
 
-[ -x "$PLAN" ] || { printf 'error: the installer is not executable: %s\nhelp: reinstall, or restore bin/ymir-install.sh\n' "$PLAN" >&2; exit 2; }
+[ -x "$PLAN" ] || { printf 'error: the installer is not executable: %s\nhelp: reinstall, or restore bin/engine/ymir-install.sh\n' "$PLAN" >&2; exit 2; }
 
 TMP="$(mktemp -d)" || { printf 'error: cannot make a temp dir\nhelp: check TMPDIR\n' >&2; exit 2; }
 trap 'rm -rf "$TMP"' EXIT

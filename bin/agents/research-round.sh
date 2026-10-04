@@ -8,10 +8,10 @@
 # law, the state paths, and the model every time — and getting one of them wrong.
 # This is the script (law 7: a recurring task becomes a tool).
 #
-#   bin/research-round.sh "<topic>" [--figure bragi] [--out DIR] [--model M] [--no-arm]
+#   bin/agents/research-round.sh "<topic>" [--figure bragi] [--out DIR] [--model M] [--no-arm]
 #
 # Figure defaults to bragi (the skald, marketing). Huginn is the researcher.
-# The model comes from the private map (bin/agents-config.sh), never a literal.
+# The model comes from the private map (bin/fleet/agents-config.sh), never a literal.
 #
 # What it does, in order:
 #   1. resolve the figure's harness + model from config/agents.yaml
@@ -28,7 +28,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
 fi
@@ -56,16 +56,16 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-[ -n "$TOPIC" ] || { printf 'error: usage: bin/research-round.sh "<topic>" [--figure bragi] [--out DIR] [--model M]\n' >&2; exit 2; }
+[ -n "$TOPIC" ] || { printf 'error: usage: bin/agents/research-round.sh "<topic>" [--figure bragi] [--out DIR] [--model M]\n' >&2; exit 2; }
 command -v herdr >/dev/null 2>&1 || { printf 'error: herdr not on PATH\n' >&2; exit 1; }
 
 # 1. the figure's harness + model, from the private map (Rule 07: no literal).
-if [ -z "$MODEL" ] && [ -x "$SCRIPT_DIR/agents-config.sh" ]; then
-  MODEL="$("$SCRIPT_DIR/agents-config.sh" get "$FIGURE" model 2>/dev/null)"
+if [ -z "$MODEL" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
+  MODEL="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$FIGURE" model 2>/dev/null)"
 fi
 [ -n "$MODEL" ] || { printf 'error: no model resolved — pass --model M or set config/agents.yaml in the hoard\n'; exit 2; }
 HARNESS="pi"
-[ -x "$SCRIPT_DIR/agents-config.sh" ] && HARNESS="$("$SCRIPT_DIR/agents-config.sh" get "$FIGURE" harness 2>/dev/null || printf 'pi')"
+[ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ] && HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$FIGURE" harness 2>/dev/null || printf 'pi')"
 
 # the role file: the chooser speaks short roles, the roster carries the craft
 ROLE_FILE=""
@@ -77,12 +77,12 @@ done
 
 # 2a. the LOCAL-MODEL GUARD. One local inference at a time per machine; a seat
 # whose model is local must not start when the host is already at capacity. This
-# is the law `bin/local-model-lock.sh` exists for and that no seat road called.
+# is the law `bin/model/local-model-lock.sh` exists for and that no seat road called.
 case "$MODEL" in
   llama-swap/*|llamacpp-whynot/*|llama.cpp/*|llama-cpp/*|lmstudio/*)
-    if [ -x "$SCRIPT_DIR/local-model-lock.sh" ]; then
-      if ! "$SCRIPT_DIR/local-model-lock.sh" check >/dev/null 2>&1; then
-        "$SCRIPT_DIR/local-model-lock.sh" check >&2
+    if [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ]; then
+      if ! "$SCRIPT_DIR/../model/local-model-lock.sh" check >/dev/null 2>&1; then
+        "$SCRIPT_DIR/../model/local-model-lock.sh" check >&2
         printf 'help: a local seat already runs on this machine. Wait for it, or seat on a remote/online model.\n' >&2
         exit 3
       fi
@@ -120,7 +120,7 @@ if [ -z "$OUT" ]; then
 fi
 mkdir -p "$OUT" 2>/dev/null || true
 
-BRIEF="Seat law, read first. You are a worker figure, not the primary. There is NO human at this terminal: do NOT use ask_user_question. Decide everything inside your craft yourself. If a genuine fork needs the coordinator, write the QUESTION to $STATE/eindri-questions/$FIGURE.md and stop — Brokk answers with bin/eindri-send.sh. When the errand is DONE, write the report to $STATE/eindri-reports/$FIGURE.md. If the same action fails twice, do not run it a third time.
+BRIEF="Seat law, read first. You are a worker figure, not the primary. There is NO human at this terminal: do NOT use ask_user_question. Decide everything inside your craft yourself. If a genuine fork needs the coordinator, write the QUESTION to $STATE/eindri-questions/$FIGURE.md and stop — Brokk answers with bin/agents/eindri-send.sh. When the errand is DONE, write the report to $STATE/eindri-reports/$FIGURE.md. If the same action fails twice, do not run it a third time.
 
 TASK — a research round. TOPIC: $TOPIC
 
