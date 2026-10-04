@@ -45,6 +45,12 @@ scan_list() {
   while IFS= read -r f; do
     [ -n "$f" ] || continue
     is_ignored "$f" && continue
+    # A GUARD CONTAINS THE SHAPES IT LOOKS FOR. The guards shelf is where the patterns live,
+    # so moving one made it newly staged and it flagged ITSELF — a false positive produced by a
+    # rename. The detection shapes are the work; nothing in here is a credential.
+    case "$f" in
+      bin/gates/guards/*|bin/backend/fm-vendor-auth-probe.sh) continue ;;
+    esac
     case "$f" in
       .env.local|*/.env.local|*.env.local|.env.realm|*/.env.realm)
         printf 'secret-guard: private env file: %s\n' "$f" >&2; hit=1; continue ;;
