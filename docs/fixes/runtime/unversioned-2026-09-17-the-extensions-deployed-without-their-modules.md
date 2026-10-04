@@ -8,7 +8,7 @@
   own `lib/`. The loader copied the top-level extension files and never their
   supporting modules.
 - **Mended in two places.** (1) The missing modules are now beside the deployed
-  extensions, so a running pi loads all four. (2) `bin/valknut-load.sh` — the
+  extensions, so a running pi loads all four. (2) `bin/seat/valknut-load.sh` — the
   loader — now deploys that lib alongside the extensions, idempotently (identical
   files untouched), so a fresh machine cannot hit it. A deploy that copies a file
   but not the module it imports is not a deploy.

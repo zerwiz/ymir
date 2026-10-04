@@ -7,7 +7,7 @@ figure cards lost their pinned `model:`, and dispatch resolves each figure's
 model from the hoard (`config/agents.yaml`, with the per-host overlay) by figure
 name. What remained undeclared was the rest of the shape the plan's folder tree
 names: **role → figure → tools** was still a heredoc inside
-`bin/eindri-role.sh`, and two cards (`brokk`, `galdr`) carried no `role`/tool
+`bin/agents/eindri-role.sh`, and two cards (`brokk`, `galdr`) carried no `role`/tool
 frontmatter at all. A decision table belongs in data, not in a script.
 
 ### The change
@@ -16,7 +16,7 @@ frontmatter at all. A decision table belongs in data, not in a script.
    `figure`, `craft`, `dispatch`, `keywords`, `tools` (and `skills` where the
    figure owns one) — for all 21 figures. It names the file that declares the
    model (`model_from: hoard`) and pins no model itself.
-2. **`bin/eindri-role.sh` reads it** (1.0.0 → 1.1.0): `list`, `choose` and `for`
+2. **`bin/agents/eindri-role.sh` reads it** (1.0.0 → 1.1.0): `list`, `choose` and `for`
    are unchanged in shape and, for the nine dispatch roles, **byte-identical in
    output** — the table was moved, not retuned. `for` now also accepts a role
    key as well as a figure short name. The bare `list` count is now the table's
@@ -49,7 +49,7 @@ frontmatter at all. A decision table belongs in data, not in a script.
   produces identical output by construction.
 - **`roles.yaml` is read, not enforced.** It is deliberately not a JSON-Schema
   gate — that is Phase 7 (SCHEMA THE CONFIG). A missing roles file makes
-  `bin/eindri-role.sh` and `bin/agents-config.sh roster` refuse loudly; a bad one
+  `bin/agents/eindri-role.sh` and `bin/agents-config.sh roster` refuse loudly; a bad one
   is caught by the YAML parse check, not yet by a schema.
 - The `herder` token in the cards' `ymir_tools` (vs the engine's `herdr`) is
   mirrored verbatim, not renamed — a rename is its own change.
@@ -64,10 +64,10 @@ git status --porcelain .agents/agents        -> only the authored card edits, ne
 bin/agents-config.sh apply                   -> cards before == cards after (apply writes no card)
 
 # the chooser is unchanged for the same input
-old vs new bin/eindri-role.sh choose "<task>" -> identical row for 13 task strings
+old vs new bin/agents/eindri-role.sh choose "<task>" -> identical row for 13 task strings
 
 # the loader still binds, and the harness registry resolves figures
-bin/valknut-load.sh --all                    -> pi-local bound (21 links); .opencode/.claude/.codex/.cursor bound (21)
+bin/seat/valknut-load.sh --all                    -> pi-local bound (21 links); .opencode/.claude/.codex/.cursor bound (21)
 ls -l .pi/agents/sindri-developer.md         -> ../../.agents/agents/sindri-developer.md
 ls -l .opencode/agents/sindri.md             -> ../../.agents/agents/sindri-developer.md
 subagent list                                -> 21 figures, all with name+description
@@ -83,7 +83,7 @@ which is the local truth the gate exists to prove.
 ### Files
 
 - `.agents/roles.yaml` (new)
-- `bin/eindri-role.sh`
+- `bin/agents/eindri-role.sh`
 - `bin/agents-config.sh`
 - `.agents/agents/brokk.md`, `.agents/agents/galdr.md`, `.agents/agents/elder.md`
 - `.agents/skills/galdr-ymirsystem/SKILL.md` (the galdr agent's mirror)

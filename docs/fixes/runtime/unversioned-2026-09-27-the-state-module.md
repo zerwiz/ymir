@@ -18,9 +18,9 @@ crafts behind one implementation, with the shell kept as thin shims.
 ```
 state[4]{module,owns,shim}
   "lock.py","Gleipnir: state-dir · machine-state-dir · legacy-lock-path · lock-path · pointer-path · owner · pid-alive · proc-starttime · session-pid · owned · reap · acquire · release — the harness-ancestry pid and the /proc starttime that make pid reuse read as death","bin/gleipnir-lock-lib.sh"
-  "runes.py","the append-only chained ledger: head · escape · fold (prev + \\n + base) · flock · append · verify; never rewrites, never truncates","bin/runes-append.sh"
+  "runes.py","the append-only chained ledger: head · escape · fold (prev + \\n + base) · flock · append · verify; never rewrites, never truncates","bin/records/runes-append.sh"
   "envelope.py","the durable wrapper state files travel in: kind · id · created · payload, encoded as key=value meta or one JSON object, written atomically (temp + os.replace)","—"
-  "queue.py","the durable wake queue: the TSV <epoch>\\t<seq>\\t<kind>\\t<key>\\t<payload> line, cleaned fields, the seq file, one O_APPEND write, distinct-key reads","bin/brokk-wake-lib.sh (fm_wake_append · fm_wake_queued_keys_locked)"
+  "queue.py","the durable wake queue: the TSV <epoch>\\t<seq>\\t<kind>\\t<key>\\t<payload> line, cleaned fields, the seq file, one O_APPEND write, distinct-key reads","bin/time/brokk-wake-lib.sh (fm_wake_append · fm_wake_queued_keys_locked)"
 ```
 
 **The door** is `bin/ymir-state.sh`: it picks the interpreter (the engine venv
@@ -35,9 +35,9 @@ module's own — **0** ran/condition true · **1** condition false or IO failed 
   `gleipnir_*` function delegates, `GLEIPNIR_LOCK_ACQUIRED` is set exactly as
   before, and a door that cannot run fails **loud** (127) rather than resolving an
   empty lock.
-- `bin/runes-append.sh` keeps `runes_append` / `runes_file_path` / `runes_lock_path`
+- `bin/records/runes-append.sh` keeps `runes_append` / `runes_file_path` / `runes_lock_path`
   and `RUNES_LAST_CHECKSUM`; the CLI/library text is unchanged.
-- `bin/brokk-wake-lib.sh`'s `fm_wake_append` keeps its validation and the recovery
+- `bin/time/brokk-wake-lib.sh`'s `fm_wake_append` keeps its validation and the recovery
   marker, holds its own queue lock, and hands the append to `queue.py`;
   `fm_wake_queued_keys_locked` reads through `queue.py`. The append is **not**
   silently dropped: a missing door returns non-zero.
@@ -85,7 +85,7 @@ module together (the engine door already required `src/` and was not shipped).
 - `src/ymir_runtime/tests/test_state.py` · `test_state_parity.py` ·
   `tests/fixtures/state/{gleipnir-lock-lib.legacy.sh,runes-append.legacy.sh}`
 - `bin/ymir-state.sh` (new door) · `bin/gleipnir-lock-lib.sh` ·
-  `bin/runes-append.sh` · `bin/brokk-wake-lib.sh`
+  `bin/records/runes-append.sh` · `bin/time/brokk-wake-lib.sh`
 - `package.json` · `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`
 
 **Correction (2026-09-27, Forseti's stack review — appended, the original stands).**

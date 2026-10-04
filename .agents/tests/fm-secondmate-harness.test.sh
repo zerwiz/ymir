@@ -51,7 +51,7 @@ set -u
 . "$ROOT/bin/fm-config-inherit-lib.sh"
 
 # The harness-detection cases below fake `ps` so process ancestry is fully
-# controlled, but bin/fm-harness.sh checks verified ENV markers before ancestry.
+# controlled, but bin/backend/fm-harness.sh checks verified ENV markers before ancestry.
 # A suite run from inside one of those harnesses inherits its marker, and the
 # highest-precedence one wins over everything these cases set up: with an
 # ambient CLAUDECODE=1, the pi-signed ancestry case resolves "claude". Drop the

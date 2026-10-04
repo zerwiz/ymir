@@ -15,7 +15,7 @@
 # docs/verification/runtime-backends.md "Presentation version floor" entry.
 #
 # Every Herdr invocation, including the downloaded binaries', is routed through
-# bin/fm-herdr-lab.sh against a named non-default lab session. Only the
+# bin/backend/fm-herdr-lab.sh against a named non-default lab session. Only the
 # read-only, session-independent `status --json` client probe is ever run, so no
 # lifecycle operation and no server is involved.
 set -u

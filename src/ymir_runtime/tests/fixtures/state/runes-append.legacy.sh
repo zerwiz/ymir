@@ -14,7 +14,7 @@
 #   runes-append.sh <actor> <event> [--order Wxxxx] [--realm R] --message "..."
 #
 # Library:
-#   . bin/runes-append.sh
+#   . bin/records/runes-append.sh
 #   runes_append <actor> <event> [--order Wxxxx] [--realm R] --message "..."
 #
 # Environment:
@@ -54,7 +54,7 @@ runes_ymir_home() {  # <result-var> — the operator's home, resolved (Rule 07)
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
     local _yr _yc
     _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+    for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
       [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
     done
     unset _yr _yc
@@ -62,7 +62,7 @@ runes_ymir_home() {  # <result-var> — the operator's home, resolved (Rule 07)
   if command -v ymir_home_root >/dev/null 2>&1; then
     ymir_home_root "$result_var"
   else
-    printf 'error: cannot resolve YMIR_HOME — bin/hoard-lib.sh was not found near %s\n' "$0" >&2
+    printf 'error: cannot resolve YMIR_HOME — bin/vault/hoard-lib.sh was not found near %s\n' "$0" >&2
     printf -v "$result_var" '%s' ""
     return 1
   fi
@@ -197,7 +197,7 @@ Usage:
 Appends one chained JSONL entry to workspace/memory/runes_audit.md. Existing
 entries are never rewritten. The checksum folds the previous line's checksum.
 
-Library:  . bin/runes-append.sh ; runes_append <actor> <event> ...
+Library:  . bin/records/runes-append.sh ; runes_append <actor> <event> ...
 EOF
 }
 

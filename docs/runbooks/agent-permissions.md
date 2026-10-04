@@ -33,7 +33,7 @@ permission:
 After editing, rebind:
 
 ```bash
-bin/valknut-load.sh --all
+bin/seat/valknut-load.sh --all
 ```
 
 ## The one rule that matters most
@@ -93,7 +93,7 @@ what you want.
 
 ```bash
 bin/perm-guard.sh          # flags a flat bash:allow, especially with edit/write denied
-bin/valknut-load.sh --all  # rebind after edits
+bin/seat/valknut-load.sh --all  # rebind after edits
 ```
 
 The rule of thumb: **grant the narrowest shell that does the job.**

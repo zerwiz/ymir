@@ -2,7 +2,7 @@
 # Cursor session-open adapter: the RUN tier transport for Cursor Agent CLI.
 #
 # Registered in tracked .cursor/hooks.json for Cursor's `sessionStart` step.
-# It is a thin transport around bin/fm-sessionstart-run.sh, which remains the
+# It is a thin transport around bin/backend/fm-sessionstart-run.sh, which remains the
 # single owner of source routing, eligibility, and the digest itself.
 #
 # Cursor injects a hook's `additional_context` string straight into model

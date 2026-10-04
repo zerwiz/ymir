@@ -30,7 +30,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc

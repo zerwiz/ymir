@@ -22,10 +22,10 @@ it, or one alias table":
 ```
 one_library[5]{native,adapter,evidence_for_native}
   "bin/brokk-classify-lib.sh",".agents/backend/fm-classify-lib.sh","native verbs are Allfather-named; the vendored default crew-state door (brokk-crew-state.sh) does not exist"
-  "bin/brokk-wake-lib.sh",".agents/backend/fm-wake-lib.sh","native calls bin/hamr-harness.sh and names the stall markers eindri-home"
+  "bin/time/brokk-wake-lib.sh",".agents/backend/fm-wake-lib.sh","native calls bin/hamr-harness.sh and names the stall markers eindri-home"
   "bin/brokk-lease-lib.sh",".agents/backend/fm-lease-lib.sh","native carries the resolved state/.lock-path read (Phase 0)"
   "bin/brokk-timeout-lib.sh",".agents/backend/fm-timeout-lib.sh","the native file is the one that exists; the vendored classify's bin/brokk-timeout-lib.sh was missing"
-  "bin/brokk-wake-grant.sh",".agents/backend/fm-wake-grant.sh","native writes brokk-branch-eligible-owner-v1, the marker the Pi branch extension reads"
+  "bin/time/brokk-wake-grant.sh",".agents/backend/fm-wake-grant.sh","native writes brokk-branch-eligible-owner-v1, the marker the Pi branch extension reads"
 ```
 
 - **`bin/brokk-timeout-lib.sh` (new, the missing leg).** The bounded-execution
@@ -45,16 +45,16 @@ one_library[5]{native,adapter,evidence_for_native}
 - **The island's own resolution is preserved.** When a caller set no `FM_`
   location the vendored wake library resolved root = `.agents/`; the adapter
   keeps exactly that default, so a bare island caller reads where it read before.
-  An explicit `FM_STATE_OVERRIDE` (what `bin/eindri-watch.sh` exports) still
+  An explicit `FM_STATE_OVERRIDE` (what `bin/agents/eindri-watch.sh` exports) still
   wins.
 - **The vendored lease door** (`fm-lease.sh`) reads the one library's
   `BROKK_LEASE_*` names, since the lease contract's variables are the native ones.
 
 ### What is NOT touched (the ABI is the point)
-- No `bin/` **door** changed: `bin/brokk-lease.sh`, `bin/brokk-wake-grant.sh`,
+- No `bin/` **door** changed: `bin/brokk-lease.sh`, `bin/time/brokk-wake-grant.sh`,
   `bin/skuld-branch-outcome.sh`, the Pi extension's two calls, and the arm's
   `signal:/stale:/check:/heartbeat:` grammar all resolve the same tools.
-- The live vendored route — `bin/eindri-watch.sh` →
+- The live vendored route — `bin/agents/eindri-watch.sh` →
   `.agents/backend/fm-procevent-when.sh` / `fm-procevent.sh` — loads cleanly and
   reports the same sources and the same state as before.
 - `bin/README.md` gains the new file and its declared count is corrected
@@ -70,14 +70,14 @@ one_library[5]{native,adapter,evidence_for_native}
   `status_is_Allfather_relevant` answers; a bare island caller resolves
   `state = .agents/state` exactly as the original did (probed against `git stash`
   of the same tree).
-- Live parity: `bin/eindri-watch.sh list` and `fm-procevent.sh list` produce the
+- Live parity: `bin/agents/eindri-watch.sh list` and `fm-procevent.sh list` produce the
   same output before and after; `fm-wake-grant.sh` reaches the native door.
-- `bin/guards.sh` — PASS · compliance-check **15/15 PASS**.
+- `bin/gates/guards.sh` — PASS · compliance-check **15/15 PASS**.
 
 ### What remains (one god per PR — said plainly)
 `fm-spawn`/`fm-teardown`/`fm-watch` still stand as gods in the vendored runtime.
 `fm-spawn`'s seat road is owned by `src/ymir_runtime/` (Phase 1) for the herdr
-route, but the **Utgard sandbox** still rides `bin/einherjar-spawn.sh` until
+route, but the **Utgard sandbox** still rides `bin/agents/einherjar-spawn.sh` until
 `container.py` owns it. `fm-teardown` (landed-work gates, PR lookups, backlog
 transitions) and `fm-watch` (the watcher) are not owned by the engine yet. Those
 are the next errands; this one shipped the twins.

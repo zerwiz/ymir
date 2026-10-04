@@ -2,7 +2,7 @@
 
 ### Why
 - **The schedule was half-ungated.** The role gate was in place for the record jobs
-  (`@heart 07:00 bin/nornir-job-daily-briefing.sh`) but the machine jobs carried no gate
+  (`@heart 07:00 bin/time/nornir-job-daily-briefing.sh`) but the machine jobs carried no gate
   at all — `08:00 hall-snapshot`, `02:30 nsr-compliance`, `00:30 skillopt-sleep`,
   `05:30 bragi-scrape`, `06:45 eindri-handoff sweep`. **An ungated line runs on every
   seat**, so with five seats on this box those five jobs fired **twenty-five times a

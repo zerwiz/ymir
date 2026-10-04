@@ -11,7 +11,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-# shellcheck source=bin/hoard-lib.sh
+# shellcheck source=bin/vault/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
 WORKSPACE="$ROOT/workspace"
 DEFAULT_WORK="company,marketing,development,life"

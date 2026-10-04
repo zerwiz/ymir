@@ -602,7 +602,7 @@ test_slow_annotation_does_not_block_append_and_deleted_file_fails_open() {
 # Per-actor consume (docs/watcher-continuity.md "Per-actor acknowledgement").
 # Drives a MIXED queue snapshot - an unacked main-only check row alongside two
 # task-local rows the Pi supervision branch was granted - directly against
-# the real bin/fm-wake-drain.sh, independent of the Pi SDK. This is the core
+# the real bin/backend/fm-wake-drain.sh, independent of the Pi SDK. This is the core
 # safety property: a scoped actor's ack must never remove a row outside its
 # own eligible snapshot, no matter that row's sequence number relative to
 # what the actor presents or acks itself. Do not regress it.

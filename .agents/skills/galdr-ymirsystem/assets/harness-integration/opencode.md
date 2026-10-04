@@ -54,7 +54,7 @@ async function resolveRoot(anchor) {
 }
 ```
 
-`worktree` wins when set, so an Eindri launched by `bin/einherjar-spawn.sh` into `.yggdrasil/<id>` resolves its **own** worktree root and never the primary checkout.
+`worktree` wins when set, so an Eindri launched by `bin/agents/einherjar-spawn.sh` into `.yggdrasil/<id>` resolves its **own** worktree root and never the primary checkout.
 
 ---
 
@@ -62,7 +62,7 @@ async function resolveRoot(anchor) {
 
 | Event | Plugin | Action |
 |---|---|---|
-| `session.created` | `saga-sessionstart.js` | run `bin/saga-sessionstart-run.sh` once per session id; inject its stdout |
+| `session.created` | `saga-sessionstart.js` | run `bin/time/saga-sessionstart-run.sh` once per session id; inject its stdout |
 | `session.idle` | `syn-watch-arm.js` | ensure an arm cycle is running (`sessionOwnsLock`, primary root, `shouldArm`) |
 | `session.idle` | `syn-turnend-guard.js` | first ask the watch-arm coordinator; only if it could not arm, run `bin/syn-turnend-guard.sh` and re-prompt on exit 2 |
 | `tool.execute.before` | `syn-pretool-check.js` | run `bin/syn-arm-pretool-check.sh --command <cmd>`; throw on exit 2 |
@@ -75,7 +75,7 @@ async function resolveRoot(anchor) {
 1. Ignore unless `event.type === "session.created"`.
 2. Extract `sessionID = event.properties?.info?.id ?? event.properties?.sessionID`.
 3. Skip if already handled (`handledSessions` Set) or no root.
-4. Run `${root}/bin/saga-sessionstart-run.sh` with no args.
+4. Run `${root}/bin/time/saga-sessionstart-run.sh` with no args.
 5. If exit ≠ 0 or empty output, silently return (**never block the session**).
 6. Encode the digest via the Rödd bridge; on encoder failure fall back to the raw digest.
 7. `client.session.promptAsync({ path:{id:sessionID}, body:{parts:[{type:"text",text}]} })`; delivery errors are swallowed.
@@ -219,7 +219,7 @@ node --input-type=module -e 'await import("./.opencode/plugins/saga-sessionstart
 
 ```bash
 # 1) session-open: the wrapper the plugin runs
-bin/saga-sessionstart-run.sh | head -n 15 ; echo "exit=$?"
+bin/time/saga-sessionstart-run.sh | head -n 15 ; echo "exit=$?"
 
 # 2) Rödd encode round-trip (what the plugin calls)
 printf 'hello' | bin/rodd-operational-input.sh encode session-start | bin/rodd-operational-input.sh kind
@@ -252,7 +252,7 @@ bin/syn-cd-pretool-check.sh  --command 'cd ../..';              echo "expect 2 -
 
 - **Two `session.idle` plugins race by design — but not for the guard.** `syn-watch-arm.js` and `syn-turnend-guard.js` both listen on `session.idle`; the guard *asks* the arm coordinator first, and only runs the guard when arming failed. Reversing this produces spurious "TURN WOULD END BLIND" prompts during normal operation.
 - **`handledSessions` is per-process, never persisted.** After an OpenCode restart the digest runs again for a new session id; that is intended. Do not persist the Set — a resumed session with a new id must still be seated.
-- **`promptAsync` failures are swallowed.** If OpenCode's SDK errors, the digest is silently dropped. Diagnose by running `bin/saga-sessionstart-run.sh` by hand; the plugin cannot surface a delivery error.
+- **`promptAsync` failures are swallowed.** If OpenCode's SDK errors, the digest is silently dropped. Diagnose by running `bin/time/saga-sessionstart-run.sh` by hand; the plugin cannot surface a delivery error.
 - **`shouldArm` returns false with no `state/*.meta` and no `config/x-mode.env`.** A fresh home therefore arms nothing until there is a task or x-mode. This is deliberate: no fleet, no supervision. Do not "fix" it by always arming.
 - **The arm refuses on a linked worktree.** `isPrimaryRoot` requires `git-dir == git-common-dir`; an Eindri worktree under `.yggdrasil/<id>` will never own supervision. Correct — the primary owns it.
 - **`read-only` is final for the cycle.** If `sessionOwnsLock` is false, `beginArm` returns `read-only` and no retry is scheduled. A second OpenCode session must not fight the lock holder.

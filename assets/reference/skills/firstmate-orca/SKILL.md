@@ -36,23 +36,23 @@ Before switching or spawning against Orca:
 
 ## Spawn
 
-Use `bin/fm-spawn.sh` so firstmate creates the brief, worktree, terminal, metadata, status file, and watcher surface together.
+Use `bin/backend/fm-spawn.sh` so firstmate creates the brief, worktree, terminal, metadata, status file, and watcher surface together.
 Pass `--backend orca` for a one-off Orca task, or rely on the already-selected Orca backend when that selection is intentional.
 
 After spawn, check the task with firstmate helpers:
 
-- `bin/fm-peek.sh fm-<id>` for launch failures, trust dialogs, or first output.
+- `bin/backend/fm-peek.sh fm-<id>` for launch failures, trust dialogs, or first output.
 - `state/<id>.meta` for `backend=orca`, `terminal=`, `orca_worktree_id=`, and `worktree=`.
-- `bin/fm-crew-state.sh <id>` when the current run state matters.
-- `bin/fm-watch.sh` whenever there are tasks in flight and this session owns supervision.
+- `bin/backend/fm-crew-state.sh <id>` when the current run state matters.
+- `bin/backend/fm-watch.sh` whenever there are tasks in flight and this session owns supervision.
 
 Do not manually create the Orca worktree or terminal for a normal firstmate task.
 Do not manually patch metadata to make an externally-created Orca terminal look like a firstmate task.
 
 ## Supervision
 
-Use `bin/fm-peek.sh`, `bin/fm-send.sh`, `bin/fm-crew-state.sh`, and `bin/fm-teardown.sh` for routine operation.
-For steer messages, use `bin/fm-send.sh <id> '...'`; the stable `fm-<id>` alias also works, and ordinary local text steers may contain newlines because they ride the durable inbox.
+Use `bin/backend/fm-peek.sh`, `bin/backend/fm-send.sh`, `bin/backend/fm-crew-state.sh`, and `bin/backend/fm-teardown.sh` for routine operation.
+For steer messages, use `bin/backend/fm-send.sh <id> '...'`; the stable `fm-<id>` alias also works, and ordinary local text steers may contain newlines because they ride the durable inbox.
 Keep initial scope in the task brief; a temporary file remains useful when the instruction includes supporting material the worker should inspect separately.
 
 When supervising, treat `state/<id>.meta` as the routing record and Orca's own ids as backend implementation details.
@@ -83,10 +83,10 @@ Ship work can be torn down only after the work is landed by its project mode.
 Keep Orca smoke tests focused on lifecycle plumbing:
 
 1. Select Orca intentionally for a disposable task or scout.
-2. Spawn through `bin/fm-spawn.sh`.
+2. Spawn through `bin/backend/fm-spawn.sh`.
 3. Confirm metadata records the Orca backend, terminal, Orca worktree id, and isolated worktree path.
-4. Verify `bin/fm-peek.sh`, a short `bin/fm-send.sh` steer, watcher wake behavior, and `bin/fm-crew-state.sh`.
-5. Tear down through `bin/fm-teardown.sh` after the task is safely disposable or landed.
+4. Verify `bin/backend/fm-peek.sh`, a short `bin/backend/fm-send.sh` steer, watcher wake behavior, and `bin/backend/fm-crew-state.sh`.
+5. Tear down through `bin/backend/fm-teardown.sh` after the task is safely disposable or landed.
 6. Restore the previous backend selection if Orca was selected only for the smoke test.
 
 Do not mix a backend smoke test with unrelated feature work.

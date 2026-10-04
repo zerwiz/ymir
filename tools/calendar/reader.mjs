@@ -100,7 +100,7 @@ export const ResultSchema = z.object({
   events: z.array(EventSchema)
 });
 
-// --- the resolver, mirrored from bin/hoard-lib.sh ---------------------------
+// --- the resolver, mirrored from bin/vault/hoard-lib.sh ---------------------------
 // One resolver, one default. The shell door resolves the home with the bash
 // resolver and passes it as MANAGANDR_VAULT; standalone, this mirrors that same
 // order so the two can never disagree about where the home is (Rule 07).

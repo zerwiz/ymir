@@ -5,7 +5,7 @@ TSV record per line, `<epoch>\\t<seq>\\t<kind>\\t<key>\\t<payload>`. The durable
 queue is the authority — a key is present exactly while its record is queued and
 unacknowledged, and the drain consumes it.
 
-`bin/brokk-wake-lib.sh` (`fm_wake_append` / `fm_wake_queued_keys_locked`) is the
+`bin/time/brokk-wake-lib.sh` (`fm_wake_append` / `fm_wake_queued_keys_locked`) is the
 thin shim over this module: the shell keeps the field cleaning and the recovery
 marker, and hands the append here. Two append modes exist and the difference is
 deliberate:

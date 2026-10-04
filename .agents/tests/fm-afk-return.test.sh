@@ -45,7 +45,7 @@ fi
 if [ -s "$file" ]; then
   cat "$file"
   sequence=$(awk -F '\t' '$2 ~ /^[0-9]+$/ && $2 > max { max=$2 } END { print max + 0 }' "$file")
-  printf 'WAKE_ACK_REQUIRED: after handling completes run bin/fm-wake-drain.sh --ack-through %s --recovery-generation fixture-generation\n' "$sequence" >&2
+  printf 'WAKE_ACK_REQUIRED: after handling completes run bin/backend/fm-wake-drain.sh --ack-through %s --recovery-generation fixture-generation\n' "$sequence" >&2
 fi
 SH
   chmod +x "$dir/bin/"*.sh

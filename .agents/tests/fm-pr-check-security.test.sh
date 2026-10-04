@@ -1463,8 +1463,8 @@ test_merged_poll_retires_once() {
 
 # A poll's own retirement state is scoped to ONE registration, so it cannot by
 # itself catch a poll re-registered for a task whose merge was already
-# surfaced (e.g. bin/fm-pr-check.sh re-armed after the fact). The per-task
-# merge-notified marker (bin/fm-pr-lib.sh) is what stops that re-registration
+# surfaced (e.g. bin/backend/fm-pr-check.sh re-armed after the fact). The per-task
+# merge-notified marker (bin/backend/fm-pr-lib.sh) is what stops that re-registration
 # from producing a second main-blocking wake for the identical merge, while a
 # genuinely first notification (test_merged_poll_retires_once above) still
 # reaches main.
@@ -1511,7 +1511,7 @@ test_merged_poll_reregistration_after_notification_is_absorbed() {
 }
 
 # The captain merging a PR himself on the forge is the same outcome as a merge
-# this home performed: bin/fm-merge-outcome-lib.sh carries both to the parent on
+# this home performed: bin/backend/fm-merge-outcome-lib.sh carries both to the parent on
 # the one reply channel, so no second watch path exists for the captain's case.
 # The poll's own durable row still lands here, because the mate that owns the
 # task still has to act on it.

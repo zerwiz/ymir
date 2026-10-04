@@ -33,7 +33,7 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 # The records live outside the code tree (Rule 04): the operator's home, never
 # the packaged tree that an upgrade replaces.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
 fi
@@ -45,7 +45,7 @@ fi
 # (logs, locks, pids) belongs in the home they chose, or the next upgrade erases it.
 STATE="${BROKK_STATE_OVERRIDE:-${YMIR_STATE_DIR:-}}"
 if [ -z "$STATE" ]; then
-  printf 'error: the state dir did not resolve\nhelp: source bin/hoard-lib.sh (it resolves the home), or set BROKK_STATE_OVERRIDE\n' >&2
+  printf 'error: the state dir did not resolve\nhelp: source bin/vault/hoard-lib.sh (it resolves the home), or set BROKK_STATE_OVERRIDE\n' >&2
   exit 1
 fi
 

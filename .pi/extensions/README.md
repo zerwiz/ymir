@@ -20,7 +20,7 @@ factory at all is an error in its own right. So this tree holds exactly two thin
 | File | What it is |
 |---|---|
 | `*.ts` — nine of them | **no-op factories.** Each header says why. They register nothing and exist only so a duplicate cannot collide |
-| `lib/` | **helper modules, not extensions.** Pi does not recurse past one level and a subdirectory loads only with an `index.ts`, so `lib/` is never scanned. The deployed extensions reach these by relative import, and `bin/valknut-load.sh --pi` copies them alongside |
+| `lib/` | **helper modules, not extensions.** Pi does not recurse past one level and a subdirectory loads only with an `index.ts`, so `lib/` is never scanned. The deployed extensions reach these by relative import, and `bin/seat/valknut-load.sh --pi` copies them alongside |
 
 **Two homes, and one of them is wrong:**
 
@@ -30,7 +30,7 @@ factory at all is an error in its own right. So this tree holds exactly two thin
 | `~/.pi/agent/extensions/` | the deployed copy the running harness loads |
 | `.pi/extensions/lib/` | helper modules. **A leftover.** Plan 29 built them in this flat tree; the single-home migration moved the extensions and not their internals, so the loader grew a second copy line to cover the gap |
 
-`bin/valknut-load.sh --check` (added 2026-10-04) fails if the deployed tree drifts
+`bin/seat/valknut-load.sh --check` (added 2026-10-04) fails if the deployed tree drifts
 from source, if a test file is in the live tree, or if anything in this directory
 registers a tool.
 
@@ -52,10 +52,10 @@ registers a tool.
 
 ## Wiring
 
-- **Sága** digest: `bin/saga-session-start.sh`, routed by `bin/saga-sessionstart-run.sh`.
+- **Sága** digest: `bin/time/saga-session-start.sh`, routed by `bin/time/saga-sessionstart-run.sh`.
 - **Gná** watcher: `bin/syn-watch-arm.sh`; turn-end check: `bin/syn-turnend-guard.sh`.
 - **Gleipnir** lock: `bin/gleipnir-lock-lib.sh` (writes `state/.lock`).
-- **Root record:** `~/.pi/agent/extensions/.ymir-root`, written by `bin/valknut-load.sh --pi`
+- **Root record:** `~/.pi/agent/extensions/.ymir-root`, written by `bin/seat/valknut-load.sh --pi`
   and read by `lib/ymir-home.ts` — the deployed extensions live outside this tree, so
   the loader has to tell them where `bin/` is.
 - **Rödd** wire: `bin/rodd-operational-input.sh`.
@@ -71,5 +71,5 @@ OpenCode, Claude Code, Codex, and Cursor adapters are wired too; see
 
 ## Agents
 
-Agents live in `.agents/agents/` and are bound per tool by `bin/valknut-load.sh`
+Agents live in `.agents/agents/` and are bound per tool by `bin/seat/valknut-load.sh`
 (OpenCode reads `.opencode/agents/`; Pi links resolve under `.pi/agents/`).

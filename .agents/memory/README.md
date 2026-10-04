@@ -22,7 +22,7 @@ If a file here is tracked and mutates at runtime, that is a bug: it dirties ever
 checkout and leaks one machine's data to every other.
 
 **Rebuilding the store.** The JSONL log is the source of truth for re-seeding;
-`bin/mimir-ingest.sh` drinks a directory into it. A new machine starts with no
+`bin/records/mimir-ingest.sh` drinks a directory into it. A new machine starts with no
 store and fills it as it works — that is correct, not a failure.
 
 ## Audit ledger note

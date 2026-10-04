@@ -8,7 +8,7 @@ review was a hand-written errand the Allfather had to remember to dispatch (as w
 `review-228/229/230`, whose brief was the charter). A gate that depends on someone
 remembering to feed it is not automatic.
 
-- **The spine.** `bin/eindri-review-spawn.sh <task-id>` reads the PR from the
+- **The spine.** `bin/agents/eindri-review-spawn.sh <task-id>` reads the PR from the
   task's own record (`state/<id>.status` carries `done: opened PR <url>`), fills
   the fierce review brief for THIS task (PR, branch, task id) from
   `.agents/assets/templates/review-brief.template.md`, and seats **Forseti** as a
@@ -17,7 +17,7 @@ remembering to feed it is not automatic.
   --effort high`. The harness is the one the einherjar road launches for the
   figure, resolved from the roster (`bin/agents-config.sh get forseti harness`);
   the model is a per-machine choice with one documented default (Rule 07).
-- **The trigger is the terminal act.** `bin/eindri-acclaim.sh` — the worker's own
+- **The trigger is the terminal act.** `bin/agents/eindri-acclaim.sh` — the worker's own
   finish line — now calls the spine from its `done` path, after the status line,
   shelf, and durable wake are written. No poller, no sweep: the same push path
   that wakes Brokk sends the judge.
@@ -34,16 +34,16 @@ remembering to feed it is not automatic.
   meta, status, ~ brief, and verdict to the SHARED state (the project's `state/`,
   beside the code), never the caller's per-seat `BROKK_STATE_OVERRIDE`; the
   generated review brief's terminal act carries the shared state explicitly, so
-  the verdict reaches the shelf `bin/eindri-handoff.sh` sweeps.
+  the verdict reaches the shelf `bin/agents/eindri-handoff.sh` sweeps.
 - **Where the record lives.** The verdict lands on the wake road at
   `state/eindri-reports/<id>-review.md` — the shelf guarded by the ack-eats-only-
   what-it-saw fix (PR #232).
 
 ### Files
-- `bin/eindri-review-spawn.sh` (new) — the spine: guards, PR/branch resolution,
+- `bin/agents/eindri-review-spawn.sh` (new) — the spine: guards, PR/branch resolution,
   brief fill, the einherjar seat, the `.reviewed` marker, `--dry-run` /
   `YMIR_REVIEW_DRY`.
-- `bin/eindri-acclaim.sh` — the `done` path calls the spine; a failed spawn
+- `bin/agents/eindri-acclaim.sh` — the `done` path calls the spine; a failed spawn
   queues a loud wake (`.reviewed/<id>.failed`) and sounds the alarm.
 - `.agents/assets/templates/review-brief.template.md` (new) — the fierce contract,
   parameterised (the charter exercised by review-228, made a template).
@@ -62,10 +62,10 @@ remembering to feed it is not automatic.
 - `.agents/tests/eindri-review-spine.test.sh` (new) — the spine's regression test.
 
 ### Proof
-- `bin/eindri-review-spawn.sh litmus-ship --dry-run` (fixture with a PR) prints the
+- `bin/agents/eindri-review-spawn.sh litmus-ship --dry-run` (fixture with a PR) prints the
   exact line: `einherjar-spawn.sh litmus-ship-review <project> --scout --backend
   herdr --harness pi --model opencode-go/deepseek-v4.1-flash --effort high`.
-- `bin/eindri-acclaim.sh <id> --terminal done` with a PR-bearing fixture reaches
+- `bin/agents/eindri-acclaim.sh <id> --terminal done` with a PR-bearing fixture reaches
   that spawn (shown with `YMIR_REVIEW_DRY=1`); with `YMIR_AUTO_REVIEW=off` the same
   call prints the loud skip; with the `.reviewed` marker present it skips as
   "already reviewed"; a `kind=scout` task and a `-review` id both skip.

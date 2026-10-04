@@ -42,7 +42,7 @@ gitignored — the user owns it and shares it between computers:
   for sync between machines. It is never gitignored (except runtime
   ephemera like `*.wal`, `*.shm`, `smidja/`, `state/`).
 - **Secrets are referenced, never inlined.** Read them by path — `YMIR_HOARD`
-  (default `$YMIR_HOME`), `bin/hodd.sh emit <file>` to set them in a shell. A
+  (default `$YMIR_HOME`), `bin/vault/hodd.sh emit <file>` to set them in a shell. A
   value never enters a tracked file, a commit, or a document.
 - **Two wards.** `bin/secret-guard.sh` is the outer ward (pre-commit + CI);
   `hodd/.gitignore` is the inner one. Nothing leaves without passing both.
@@ -82,7 +82,7 @@ The truth on a live home, and the intent of this rule:
 - **`$YMIR_HOME/hodd/` *is* the private data path.** There is no second, flat
   copy. `identity/`, `data/`, `docs/`, `secrets/`, `tenants/`, and the memory
   well live **under `hodd/`**.
-- **`bin/hoard-lib.sh` is the single source of truth** for that path: it
+- **`bin/vault/hoard-lib.sh` is the single source of truth** for that path: it
   resolves `${YMIR_HOARD:-${YMIR_HOME:-$HOME/Documents/Ymir}/hodd}`. A script
   that needs the hoard calls `hoard_root`, never a hardcoded path.
 - **`.ymir-layout.yaml` records the real layout** and must name only paths that

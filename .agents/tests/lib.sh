@@ -27,7 +27,7 @@ fi
 FM_TEST_LIB_SOURCED=1
 
 # Exempt firstmate's own test suite from the gate-lifecycle refusal
-# (bin/fm-gate-refuse-lib.sh). The no-mistakes gate runs this suite FROM a gate
+# (bin/backend/fm-gate-refuse-lib.sh). The no-mistakes gate runs this suite FROM a gate
 # worktree - the exact environment that guard refuses - so without this every
 # test that drives the real fm-spawn/fm-send/fm-teardown would be refused during
 # firstmate's own validation. A confused gate agent never sources this helper, so
@@ -94,7 +94,7 @@ FM_TEST_OWNER_IDENTITY=$(fm_test_pid_identity "$$") || {
   # reported as `/<world>/...: No such file or directory`. Say the REAL reason,
   # and stop the caller instead of handing it a corpse.
   if [ -z "${ROOT:-}" ]; then
-    printf 'agents/tests/lib.sh: ROOT is not set — run this suite through bin/fm-test-run.sh (which exports it), or `ROOT=%s bash %s`\n' \
+    printf 'agents/tests/lib.sh: ROOT is not set — run this suite through bin/backend/fm-test-run.sh (which exports it), or `ROOT=%s bash %s`\n' \
       "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)" "${BASH_SOURCE[1]:-the test script}" >&2
   else
     printf 'agents/tests/lib.sh: could not derive this pid identity (ROOT=%s, tmp=%s) — the suite cannot initialise\n' \

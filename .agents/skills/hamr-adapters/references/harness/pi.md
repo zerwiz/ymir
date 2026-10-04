@@ -18,7 +18,7 @@ Verified on 2026-07-27 with Pi and Pi-signed 0.82.0 unless a fact gives another 
 Pi has no permission system, so workers are always autonomous.
 Pi's installed `packages/coding-agent/docs/settings.md` UI and display section documents `regular` as the `tuiMode` default and `fullscreen` as experimental.
 Fullscreen can bury steering messages by rewriting scrollback, so Brokk avoids it when the installed CLI supports the override.
-`../../../bin/einherjar-spawn.sh --help` owns the executable-pinning and version-safe launch mechanics.
+`../../../bin/agents/einherjar-spawn.sh --help` owns the executable-pinning and version-safe launch mechanics.
 
 Pi-signed is the signed wrapper identity verified on version 0.82.0.
 Brokk records `pi-signed` without normalization and refuses rather than falling back to `pi` when that wrapper is unavailable.
@@ -35,7 +35,7 @@ The decision persists per path in `~/.pi/agent/trust.json`, so later spawns in t
 
 ## Worker turn-end extension
 
-`../../../bin/einherjar-spawn.sh` keeps the worker turn-end extension in `state/`, outside the worktree, because project-local extension files worsen the trust gate and pollute the project.
+`../../../bin/agents/einherjar-spawn.sh` keeps the worker turn-end extension in `state/`, outside the worktree, because project-local extension files worsen the trust gate and pollute the project.
 The extension listens for Pi's `turn_end` event, not `agent_end`, so supervision is notified after each completed turn rather than only when the whole run exits.
 Pi sets `PI_CODING_AGENT=true` for its children as its harness-detection marker.
 
@@ -49,8 +49,8 @@ The primary watcher protocol also requires `.pi/extensions/brokk-primary-pi-watc
 The Pi engine auto-discovers both tracked project-local extensions once the project is trusted.
 The model arms through the `fm_watch_arm_pi` tool, never through a foreground shell arm.
 The tool result and clean-exit fallback are owned by `../../../docs/supervision-protocols/pi.md`.
-`../../../bin/saga-session-start.sh` reports when the live Pi-family session has not loaded both extensions and points at the selected executable after project trust as the fix, with `-e` as a trust-free fallback.
+`../../../bin/time/saga-session-start.sh` reports when the live Pi-family session has not loaded both extensions and points at the selected executable after project trust as the fix, with `-e` as a trust-free fallback.
 
-When a Eindri-home is launched on Pi or Pi-signed, `../../../bin/einherjar-spawn.sh --Eindri-home` launches the selected executable with both `-e .pi/extensions/brokk-primary-turnend-guard.ts` and `-e .pi/extensions/brokk-primary-pi-watch.ts`.
+When a Eindri-home is launched on Pi or Pi-signed, `../../../bin/agents/einherjar-spawn.sh --Eindri-home` launches the selected executable with both `-e .pi/extensions/brokk-primary-turnend-guard.ts` and `-e .pi/extensions/brokk-primary-pi-watch.ts`.
 Both files already exist in the Eindri-home home's git worktree.
 The PreToolUse-equivalent watcher-arm seatbelt returns `{block: true}` from the `tool_call` event.

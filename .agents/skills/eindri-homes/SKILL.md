@@ -46,7 +46,7 @@ The `projects:` field is a non-exclusive clone list, not ownership.
 Scaffold a Eindri-home charter with:
 
 ```sh
-bin/erindi-brief.sh <id> --Eindri-home {<project>...|--no-projects}
+bin/agents/erindi-brief.sh <id> --Eindri-home {<project>...|--no-projects}
 ```
 
 The scaffold writes a charter brief instead of a task brief.
@@ -85,12 +85,12 @@ Release happens only on explicit retirement or seed rollback, never on routine r
 
 `bin/brokk-home-seed.sh` copies the charter into the Eindri-home home as `data/charter.md`.
 It also writes the gitignored `.brokk-Eindri-home-parent` durable binding before the required `.brokk-Eindri-home-home` identity marker; the parser header in [`bin/brokk-Eindri-home-parent-lib.sh`](../../../bin/brokk-Eindri-home-parent-lib.sh) owns the record contract, and both files must remain in place.
-`bin/einherjar-spawn.sh --Eindri-home` launches it through the Eindri-home harness path, resolving `config/Eindri-home-harness` -> `config/eindri-harness` -> the primary's own harness unless an explicit per-spawn harness override is passed.
+`bin/agents/einherjar-spawn.sh --Eindri-home` launches it through the Eindri-home harness path, resolving `config/Eindri-home-harness` -> `config/eindri-harness` -> the primary's own harness unless an explicit per-spawn harness override is passed.
 
 `config/Eindri-home-harness` may also pin a concrete model and effort for the Eindri-home agent, in the SAME file rather than a new one: the format is a single whitespace-separated line `<harness> [<model>] [<effort>]`, with only the first non-empty, non-comment line parsed.
 A bare `<harness>` (today's format, e.g. `claude`) behaves exactly as before - harness only, no model/effort flag - so this is fully backward-compatible.
 `bin/hamr-harness.sh Eindri-home-model` and `bin/hamr-harness.sh Eindri-home-effort` print the optional 2nd/3rd tokens (empty when absent, or when the file is absent/`default`/harness-only); they read only `config/Eindri-home-harness`, never `config/eindri-harness`, which stays a bare adapter name.
-For a `--Eindri-home` spawn, `bin/einherjar-spawn.sh` populates `MODEL`/`EFFORT` from those tokens only when the harness itself came from the Eindri-home config path for that spawn.
+For a `--Eindri-home` spawn, `bin/agents/einherjar-spawn.sh` populates `MODEL`/`EFFORT` from those tokens only when the harness itself came from the Eindri-home config path for that spawn.
 For a local route, an explicit per-spawn `--harness` flag, positional harness arg, or raw launch command starts clean on model and effort too, unless the caller also passes explicit `--model` or `--effort`.
 A remote route accepts only a verified harness adapter and refuses a raw launch command at the host boundary.
 When the file's tokens do apply, an explicit per-spawn `--model` or `--effort` flag always wins over the file's token for that axis.
@@ -210,7 +210,7 @@ Do not hand off `local-only` items.
 For local `kind=Eindri-home` meta with no window, treat the Eindri-home as a dead persistent direct report and respawn it with:
 
 ```sh
-bin/einherjar-spawn.sh <id> --Eindri-home
+bin/agents/einherjar-spawn.sh <id> --Eindri-home
 ```
 
 Use the recorded `home=` in meta.
@@ -265,7 +265,7 @@ not written. Keys: `ro: on | off` (Ró calm presentation).
 ## Dispatch (full chain)
 
 Seating a worker is a chain, not a guess: role → **`bin/model-resolve.sh`** →
-harness rule (local→pi, online→opencode) → **`bin/herdr-run.sh eindri`** (pane)
+harness rule (local→pi, online→opencode) → **`bin/seat/herdr-run.sh eindri`** (pane)
 → **`bin/local-model-lock.sh`** → A2A register. Read
 `assets/dispatch.md` before dispatching, and never guess a model.
 
@@ -275,11 +275,11 @@ Use these — never hand-run herdr/tmux:
 
 ```
 tools[6]{tool,plane}:
-  "bin/eindri-start.sh \"<task>\" [--role] [--model] [--pane|--tab|--space]","one command: role -> model-resolve -> seat -> serve"
-  "bin/herdr-run.sh eindri [--model] <role> -- \"<task>\"","the seat engine (pane/tab/space)"
-  "bin/eindri-send.sh <agent> \"<text>\"","DATA plane — talk to a running Eindri"
-  "bin/eindri-control.sh interrupt|exit|read <agent>","CONTROL plane — allowlisted lifecycle"
-  "bin/einherjar-spawn.sh <id> --Eindri-home","launch a persistent home (recovery/retire above)"
+  "bin/agents/eindri-start.sh \"<task>\" [--role] [--model] [--pane|--tab|--space]","one command: role -> model-resolve -> seat -> serve"
+  "bin/seat/herdr-run.sh eindri [--model] <role> -- \"<task>\"","the seat engine (pane/tab/space)"
+  "bin/agents/eindri-send.sh <agent> \"<text>\"","DATA plane — talk to a running Eindri"
+  "bin/agents/eindri-control.sh interrupt|exit|read <agent>","CONTROL plane — allowlisted lifecycle"
+  "bin/agents/einherjar-spawn.sh <id> --Eindri-home","launch a persistent home (recovery/retire above)"
   "bin/model-resolve.sh · bin/local-model-lock.sh","model choice + one-local-at-a-time"
 ```
 

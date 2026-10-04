@@ -7,7 +7,7 @@
   with no key it auto-selects the keyless local provider so a fresh install works.
 - **New:** `.agents/backend/model-bridge.py` (provider-aware, keyless-capable);
   `opencode-go-bridge.py` kept as a delegating shim so existing references work.
-- **`bin/bifrost-bridge.sh` v2:** `--provider`, provider auto-selection, no hard
+- **`bin/bridge/bifrost-bridge.sh` v2:** `--provider`, provider auto-selection, no hard
   env-file requirement, actionable errors per provider.
 - **`bin/ymir-install.sh`:** installs `bun` for real (user-space, then a package
   hint); installs `mcp<2`; `engram` is now an honest `SKIP` with the Python

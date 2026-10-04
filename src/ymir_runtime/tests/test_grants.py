@@ -92,7 +92,7 @@ class KindsTest(unittest.TestCase):
         self.assertEqual(spec_for("grants.yaml").kind, "grants")
 
 
-@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/ymir-engine-ensure.sh ensure")
+@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/engine/ymir-engine-ensure.sh ensure")
 class RegistryTest(unittest.TestCase):
     """The whole road: YAML -> schema -> the realm law."""
 

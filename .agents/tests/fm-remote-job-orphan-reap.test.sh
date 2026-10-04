@@ -7,7 +7,7 @@
 # stops it. Observed 2026-08-07 as 29 workers at ppid 1, 1-2 days old, each
 # still appending to a log in a pruned no-mistakes gate worktree.
 #
-# bin/fm-remote-job-reap-orphans.sh is a machine-wide sweep by design, so these
+# bin/backend/fm-remote-job-reap-orphans.sh is a machine-wide sweep by design, so these
 # cases assert only about their own fixture processes. Any other worker it
 # stops during the run had a pruned code root too, which is exactly the
 # contract.
@@ -90,7 +90,7 @@ start_worker() {
     export FM_REMOTE_JOB_STATE_ROOT="$state_root"
     export FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux
     export FM_REMOTE_JOB_ORPHAN_GRACE_SECONDS=1
-    # shellcheck source=bin/fm-remote-job-lib.sh
+    # shellcheck source=bin/backend/fm-remote-job-lib.sh
     . "$ROOT/bin/fm-remote-job-lib.sh"
     fm_remote_job_start_linux_worker "$root" "$account_home" >&2 || exit 1
     deadline=$(( $(date +%s) + 10 ))

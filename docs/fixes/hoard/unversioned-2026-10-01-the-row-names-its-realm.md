@@ -20,7 +20,7 @@ nothing. So the alias is not politeness — it is the ward, and it is named out 
   documented in the file. `registry/workspaces.yaml.example` states that every `id:` there is a realm.
 - **`bin/registry-lib.sh` (new)** — the ONLY place allowed to resolve the key:
   - `registry_projects_file` — where the master registry is (`PROJECTS_YAML` → the hoard → the repo's
-    shape), resolved through `bin/hoard-lib.sh`, never a restated path (Rule 07).
+    shape), resolved through `bin/vault/hoard-lib.sh`, never a restated path (Rule 07).
   - `registry_realm` — reads `realm`; falls back to `workspace` and warns, **by name**, once per
     resolution. A row carrying both keys resolves to `realm` and does not warn (it is already correct).
   - `registry_deprecated_rows` — every row still on the old key, as `id<TAB>value`.

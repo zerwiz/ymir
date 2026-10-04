@@ -2,7 +2,7 @@
 
 The dispatch layer is a LAYER beside the four verbs, as the config layer is, so
 it keeps its own module CLI and adds no verb to `seat · status · send · stop`.
-The engine's own door (`bin/ymir-engine.sh`) passes its verb straight through.
+The engine's own door (`bin/engine/ymir-engine.sh`) passes its verb straight through.
 
     python3 -m ymir_runtime.dispatch resolve --role developer [--brief FILE] [--toon]
     python3 -m ymir_runtime.dispatch resolve --task "fix the bug" --kind ship

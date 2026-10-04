@@ -51,7 +51,7 @@ The installed pi-signed 0.82.0 wrapper repeated the shared Pi primary extension 
 ### Run-tier source vocabulary and context-reset injection
 
 The run tier depends on three facts only the vendor can supply: the session-open source it reports, whether hook stdout reaches model context on a context-RESET open rather than only a cold one, and whether a worker the hook detaches survives the hook returning.
-The first two were measured on 2026-08-05 against a throwaway Firstmate-shaped lab carrying each harness's own tracked registration with a recorder standing in for `bin/fm-sessionstart-run.sh`.
+The first two were measured on 2026-08-05 against a throwaway Firstmate-shaped lab carrying each harness's own tracked registration with a recorder standing in for `bin/backend/fm-sessionstart-run.sh`.
 Each open printed a source-stamped token, and the model was asked to quote that token back, so producing hook stdout could never be mistaken for delivering it.
 The third is recorded below.
 
@@ -80,14 +80,14 @@ compact
 ```
 
 Pi disagrees with Claude and Codex on `resume`: a new Pi process continuing a session reports `startup`, and Pi's `resume` reason is reserved for an in-process session switch.
-The current adapter classification and baseline mechanics are owned by [`../sessionstart-nudge.md`](../sessionstart-nudge.md#harness-transports) and the `bin/fm-session-start.sh` header.
+The current adapter classification and baseline mechanics are owned by [`../sessionstart-nudge.md`](../sessionstart-nudge.md#harness-transports) and the `bin/backend/fm-session-start.sh` header.
 Their continuation classification is covered by portable tests, not claimed as live validation in this record.
 
 ### Pi `/new` provider prerequisite
 
 The real offline Pi regression ran on 2026-08-26 with Pi 0.84.0, an isolated home and session directory, a barrier-controlled native digest, and a deterministic local `streamSimple` provider.
 The provider makes no HTTP request and requires no user credential.
-Its missing-native branch deliberately requests `bin/fm-session-start.sh`, so an escaped first call reproduces the duplicate-producing manual path rather than passing vacuously.
+Its missing-native branch deliberately requests `bin/backend/fm-session-start.sh`, so an escaped first call reproduces the duplicate-producing manual path rather than passing vacuously.
 
 ```sh
 FM_PI_SESSIONSTART_RACE_LIVE_E2E=1 \
@@ -134,8 +134,8 @@ Codex exec exposes only startup and context-preserving resume through tracked re
 
 ### Detached session-open workers survive the hook
 
-Session start composes its digest from local reads and runs every external-network call in a worker detached by the hook (`bin/fm-startup-network.sh`), so a harness that reaped the hook's process tree would silently stop running the sweeps rather than merely delaying them.
-Verified on 2026-08-06 with Claude Code 2.1.222 in a throwaway lab whose `bin/fm-bootstrap.sh` sleeps 6s before writing a marker, so the marker can exist only if the worker outlived the hook and the whole `claude -p` process.
+Session start composes its digest from local reads and runs every external-network call in a worker detached by the hook (`bin/backend/fm-startup-network.sh`), so a harness that reaped the hook's process tree would silently stop running the sweeps rather than merely delaying them.
+Verified on 2026-08-06 with Claude Code 2.1.222 in a throwaway lab whose `bin/backend/fm-bootstrap.sh` sleeps 6s before writing a marker, so the marker can exist only if the worker outlived the hook and the whole `claude -p` process.
 
 ```text
 $ claude -p --permission-mode bypassPermissions '<quote the session-start token>'
@@ -150,7 +150,7 @@ finished=1786048723
 The worker started before the harness exited and published 6s after it was gone.
 
 The latency this buys was re-measured on 2026-08-06 against default-branch tip `8398d31`, in a throwaway home holding one remote secondmate whose host hangs 25s per SSH connection (an `FM_SSH_BIN`-shaped stub; no real host was contacted).
-Both runs used the same fixture and the same `bin/fm-session-start.sh` invocation, differing only in which checkout supplied the script:
+Both runs used the same fixture and the same `bin/backend/fm-session-start.sh` invocation, differing only in which checkout supplied the script:
 
 ```text
 before (8398d31)   real 1m21.15s   3 blocking SSH attempts inside the digest
@@ -198,7 +198,7 @@ The detailed reconciliation and task chronology stay in the private audit report
 
 ## Semantic busy state
 
-The per-adapter semantic sources behind [`bin/fm-busy-lib.sh`](../../bin/fm-busy-lib.sh) were live-verified on 2026-07-28 against firstmate-launched workers wired exactly as `fm-spawn` writes them.
+The per-adapter semantic sources behind [`bin/backend/fm-busy-lib.sh`](../../bin/fm-busy-lib.sh) were live-verified on 2026-07-28 against firstmate-launched workers wired exactly as `fm-spawn` writes them.
 Each pass polled `state/<id>.busy-state` while a real turn ran.
 
 | Harness | Version verified | Semantic source | Observed result |
@@ -278,7 +278,7 @@ ok - cursor primary: the captain keeps control and the older park stands down af
 ok - cursor primary: an away-mode escalation is delivered, confirmed, and processed
 ```
 
-The live run proved that session start acquires the fleet lock through Cursor's structural process identity in `bin/fm-cursor-lib.sh`; `tests/fm-session-lock-ancestry.test.sh` pins the same ancestry path portably.
+The live run proved that session start acquires the fleet lock through Cursor's structural process identity in `bin/backend/fm-cursor-lib.sh`; `tests/fm-session-lock-ancestry.test.sh` pins the same ancestry path portably.
 It also proved that Cursor's `autoarm` supervision model lets the mid-turn pull guard accept a fresh beacon after the between-turn watcher closes; `tests/fm-guard-stale-banner.test.sh` pins that model-aware verdict.
 The baton is claimed only by the next `stop`, so an actionable close before that claim can still produce one real follow-up from the sole existing park; durable wake handling is idempotent, and any older park still running after the claim stands down.
 Cursor's `beforeSubmitPrompt` step could close that exact window because it fires once on a real captain message and not on hook-driven follow-ups, but registering it is deliberately deferred alongside `preCompact`.
@@ -314,7 +314,7 @@ That inertness result is scoped to the builds it exercised: it did not establish
 
 The secondmate-home scope and manual-repair wake path were measured with Claude Code 2.1.207 on 2026-07-12, when a native background completion re-invoked the idle model with no human input.
 The current Stop-owned main/secondmate inclusion and child-worktree exclusion are covered deterministically by `tests/fm-claude-stop-autoarm.test.sh`.
-Session-lock ownership in `bin/fm-session-lock-lib.sh` is decided against a session's whole contiguous harness ancestry rather than one chosen pid, so the Stop auto-arm reaches its lock owner wherever that owner sits: the outermost pid of Claude Code's multi-level `bg-spare` hook worker chain, or an inner pid when a harness-named daemon parents the session.
+Session-lock ownership in `bin/backend/fm-session-lock-lib.sh` is decided against a session's whole contiguous harness ancestry rather than one chosen pid, so the Stop auto-arm reaches its lock owner wherever that owner sits: the outermost pid of Claude Code's multi-level `bg-spare` hook worker chain, or an inner pid when a harness-named daemon parents the session.
 Harness identity is read from the executable path and `argv[0]` as well as the command basename, because Claude Code's native installer names the per-session executable by its version (`.../share/claude/versions/2.1.220`): `ps -o comm=` reports that path on macOS and the bare version string on Linux, and neither basename names a harness.
 `tests/fm-session-lock-ancestry.test.sh` pins both platforms' reporting semantics behind a deterministic process table and runs the real Stop auto-arm in version-named, daemon-parented, and combined real process trees.
 `tests/fm-watch-arm.test.sh` runs real watcher and arm cycles against durable on-disk state to verify that a delivered reason survives until post-handling acknowledgement and stops replaying after acknowledgement, while an unrelated queue append cannot make a watcher cycle that delivered nothing look successful.
@@ -347,9 +347,9 @@ FM_GROK_STOP_LIVE_E2E=1 FM_GROK_NATIVE_BIN="$native_grok" FM_GROK_LEGACY_BIN="$p
 The Claude auto-arm false-failure, guard-predicate, and monotonic bounded fail-open correction was verified on 2026-08-02 with the installed ShellCheck 0.11.0 and isolated behavior suites.
 
 ```sh
-bin/fm-lint.sh
-bin/fm-doc-audience-check.sh
-bin/fm-test-run.sh tests/fm-claude-stop-autoarm.test.sh tests/fm-guard-stale-banner.test.sh tests/fm-turnend-guard.test.sh tests/fm-supervision-instructions.test.sh
+bin/backend/fm-lint.sh
+bin/backend/fm-doc-audience-check.sh
+bin/backend/fm-test-run.sh tests/fm-claude-stop-autoarm.test.sh tests/fm-guard-stale-banner.test.sh tests/fm-turnend-guard.test.sh tests/fm-supervision-instructions.test.sh
 ```
 
 Observed output:
@@ -360,12 +360,12 @@ fm-doc-audience-check: ok surfaces=61 local_links=174
 FM_TEST_SUMMARY total=4 failed=0 skipped_gate=0 duration_ms=102585
 ```
 
-The model-aware pull-guard predicate correction (`bin/fm-guard.sh` no longer reports a false watcher-down mid-turn under the Claude Stop auto-arm model, where the watcher runs only between turns) was verified on 2026-08-04 with the installed ShellCheck 0.11.0 and the same isolated behavior suites.
+The model-aware pull-guard predicate correction (`bin/backend/fm-guard.sh` no longer reports a false watcher-down mid-turn under the Claude Stop auto-arm model, where the watcher runs only between turns) was verified on 2026-08-04 with the installed ShellCheck 0.11.0 and the same isolated behavior suites.
 
 ```sh
-bin/fm-lint.sh
-bin/fm-doc-audience-check.sh
-bin/fm-test-run.sh tests/fm-claude-stop-autoarm.test.sh tests/fm-guard-stale-banner.test.sh tests/fm-turnend-guard.test.sh tests/fm-supervision-instructions.test.sh
+bin/backend/fm-lint.sh
+bin/backend/fm-doc-audience-check.sh
+bin/backend/fm-test-run.sh tests/fm-claude-stop-autoarm.test.sh tests/fm-guard-stale-banner.test.sh tests/fm-turnend-guard.test.sh tests/fm-supervision-instructions.test.sh
 ```
 
 Observed output:
@@ -376,13 +376,13 @@ fm-doc-audience-check: ok surfaces=64 local_links=188
 FM_TEST_SUMMARY total=4 failed=0 skipped_gate=0 duration_ms=80078
 ```
 
-The Pi extension-model pull-guard correction (`bin/fm-guard.sh` no longer reports a false watcher-down on a Pi primary during the extension's own watcher hand-off) was verified on 2026-08-13 with the installed ShellCheck 0.11.0 and isolated behavior suites.
-The guard verdict itself reads only state files and process liveness, so the portable suites are the enforcing evidence; `bin/fm-harness.sh`'s Pi marker detection, which selects the model, is exercised in the same suite through `PI_CODING_AGENT`.
+The Pi extension-model pull-guard correction (`bin/backend/fm-guard.sh` no longer reports a false watcher-down on a Pi primary during the extension's own watcher hand-off) was verified on 2026-08-13 with the installed ShellCheck 0.11.0 and isolated behavior suites.
+The guard verdict itself reads only state files and process liveness, so the portable suites are the enforcing evidence; `bin/backend/fm-harness.sh`'s Pi marker detection, which selects the model, is exercised in the same suite through `PI_CODING_AGENT`.
 
 ```sh
-bin/fm-lint.sh
-bin/fm-doc-audience-check.sh
-bin/fm-test-run.sh tests/fm-guard-stale-banner.test.sh tests/fm-turnend-guard.test.sh tests/fm-session-start.test.sh tests/fm-pi-watch-extension.test.sh tests/fm-watch-arm.test.sh
+bin/backend/fm-lint.sh
+bin/backend/fm-doc-audience-check.sh
+bin/backend/fm-test-run.sh tests/fm-guard-stale-banner.test.sh tests/fm-turnend-guard.test.sh tests/fm-session-start.test.sh tests/fm-pi-watch-extension.test.sh tests/fm-watch-arm.test.sh
 ```
 
 Observed output:
@@ -398,8 +398,8 @@ The hand-off was captured live at beacon age 63s, then the home's `state/.lock`,
 The fixture's copied beacon was fresh at 0s in the output below; the deterministic stale-beacon case separately verifies the grace boundary.
 
 ```sh
-FM_SUPERVISION_MODEL=persistent FM_GUARD_READ_ONLY=1 bin/fm-guard.sh
-FM_SUPERVISION_MODEL=extension FM_GUARD_READ_ONLY=1 bin/fm-guard.sh
+FM_SUPERVISION_MODEL=persistent FM_GUARD_READ_ONLY=1 bin/backend/fm-guard.sh
+FM_SUPERVISION_MODEL=extension FM_GUARD_READ_ONLY=1 bin/backend/fm-guard.sh
 ```
 
 Observed output, before and after the model correction, then with the recorded Pi session pid replaced by a dead one:
@@ -415,7 +415,7 @@ Observed output, before and after the model correction, then with the recorded P
 The broader relevant regression pass was rerun on 2026-08-02 without live-home or daemon mutation.
 
 ```sh
-bin/fm-test-run.sh tests/fm-watch-triage.test.sh tests/fm-watcher-lock.test.sh tests/fm-afk-inject-e2e.test.sh tests/fm-afk-return.test.sh tests/fm-x-mode.test.sh tests/fm-backend.test.sh tests/fm-backend-tmux-smoke.test.sh tests/fm-secondmate-safety.test.sh
+bin/backend/fm-test-run.sh tests/fm-watch-triage.test.sh tests/fm-watcher-lock.test.sh tests/fm-afk-inject-e2e.test.sh tests/fm-afk-return.test.sh tests/fm-x-mode.test.sh tests/fm-backend.test.sh tests/fm-backend-tmux-smoke.test.sh tests/fm-secondmate-safety.test.sh
 ```
 
 Observed output:
@@ -475,7 +475,7 @@ The once-per-generation recovery bound and immediate handling-successor poll wer
 The regression forced handling confirmation to fail, observed one recovery follow-up across the former repeat window, confirmed the successor remained live, and then proved a separate handling successor durably queued a crew event within the bounded poll window.
 
 ```sh
-bin/fm-test-run.sh tests/fm-watch-recovery-loop.test.sh
+bin/backend/fm-test-run.sh tests/fm-watch-recovery-loop.test.sh
 ```
 
 Observed output:

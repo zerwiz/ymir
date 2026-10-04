@@ -80,7 +80,7 @@ marketing_loop[5]{step,what}:
 pip install firecrawl-py browser-use
 # The keyless video road (section 6) — one binary, no key, no account:
 #   yt-dlp        (already on heimdall at /usr/bin/yt-dlp)
-bin/valknut-load.sh --all      # rebind agents/skills after adding this skill
+bin/seat/valknut-load.sh --all      # rebind agents/skills after adding this skill
 ```
 
 ## 5. The sibling craft — translation (Bragi carries words across tongues)

@@ -22,7 +22,15 @@
 #   YMIR_ALLOW_DELETE="superseded by src/…" bin/no-delete-guard.sh --staged
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 cd "$ROOT" || exit 2
 
 MODE="${1:---staged}"
@@ -43,8 +51,8 @@ reason="${YMIR_ALLOW_DELETE:-}"
 if [ -n "$reason" ]; then
   # The vault, resolved by THE resolver (ymir_home_root). The literal path this line
   # started with was one machine's layout — defaults-guard refused the file for it, rightly.
-  # shellcheck source=bin/hoard-lib.sh
-  . "$ROOT/bin/hoard-lib.sh" 2>/dev/null || true
+  # shellcheck source=bin/vault/hoard-lib.sh
+  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
   _h=""
   if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root _h; fi
   LOG="${YMIR_LOG:-${_h:-${YMIR_HOME:-}}/hodd/memory/deleted-on-purpose.log}"

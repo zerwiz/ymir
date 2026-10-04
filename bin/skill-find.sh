@@ -25,14 +25,22 @@
 #   bin/skill-find.sh --check             # duplicates, missing files, orphans
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 SHIPS="$ROOT/.agents/skills"
 LOCALS="$ROOT/.agents/skills-local"
 PISKILLS="$HOME/.pi/agent/skills"
 # The Allfather's OWN shelf, in the private home. This is where the skills for
 # their projects and their other work live - aigf, the fleet, anything that is
 # about their business rather than about Ymir. The home is RESOLVED by the one
-# resolver (bin/hoard-lib.sh); a literal path here would be one machine's layout.
+# resolver (bin/vault/hoard-lib.sh); a literal path here would be one machine's layout.
 # shellcheck disable=SC1091
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hoard-lib.sh" 2>/dev/null || true
 if command -v ymir_home_root >/dev/null 2>&1; then

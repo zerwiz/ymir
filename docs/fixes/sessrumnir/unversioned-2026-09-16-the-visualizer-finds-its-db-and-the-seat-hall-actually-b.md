@@ -8,7 +8,7 @@ gate. Each failed silently in its own way.
   DB.** `0003-private-data-separation` moved it to `$YMIR_HOME/smidja/smidja.db`,
   but the starter still passed `CMD_DB=<repo>/apps/smidja/smidja_data/smidja.db`
   — so the visualizer API died on boot with `smidja.db not found` and `:8437`
-  answered nothing. It now resolves the same pair `bin/smidja-bootstrap.sh` does
+  answered nothing. It now resolves the same pair `bin/desktop/smidja-bootstrap.sh` does
   (home first, in-repo fallback, `SMIDJA_DB` override). The asset already
   *described* this resolution; the code now implements it.
 - **`bin/sessrumnir-ensure.sh` never built the app.** `[ "$built_present" ]` tests

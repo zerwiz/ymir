@@ -86,7 +86,7 @@ scored trajectory the optimizer can replay.
 
 ### 3. Eindri dispatch instruction optimization
 
-When Ymir dispatches an Eindri worker (via `bin/einherjar-spawn.sh`), it
+When Ymir dispatches an Eindri worker (via `bin/agents/einherjar-spawn.sh`), it
 passes task instructions and context. These templates can be optimized:
 
 - Harvest past dispatch trajectories from the observer log and Smidja trace.
@@ -114,7 +114,7 @@ daily briefing has been written and sessions logged):
 ```yaml
 # config/cron.yaml (add alongside existing jobs)
 - time: "00:30"
-  job: bin/nornir-job-skillopt-sleep.sh
+  job: bin/time/nornir-job-skillopt-sleep.sh
   description: "SkillOpt overnight self-evolution — harvest sessions, mine skills"
 ```
 
@@ -261,7 +261,7 @@ First training run (requires API keys in `config/agents.yaml` or `.env.local`):
   --out_root .agents/skills/galdr-ymirsystem/
 ```
 
-Nightly cron: `00:30 bin/nornir-job-skillopt-sleep.sh`.
+Nightly cron: `00:30 bin/time/nornir-job-skillopt-sleep.sh`.
 
 Deployed `best_skill.md` artifacts live in staging — the Allfather reviews before adopt. Never auto-apply.
 

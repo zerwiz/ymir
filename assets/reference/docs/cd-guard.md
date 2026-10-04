@@ -2,11 +2,11 @@
 
 This document is the authoritative human-readable contract for the cd-guard PreToolUse seatbelt.
 `bin/fm-cd-command-policy.mjs` is the single decision owner.
-`bin/fm-cd-pretool-check.sh` is the stable harness transport, primary-checkout scope, and output renderer.
+`bin/backend/fm-cd-pretool-check.sh` is the stable harness transport, primary-checkout scope, and output renderer.
 The tracked harness adapters forward command text without classifying it.
 
 It is the third member of a family of primary-session guards that share the same cross-harness hook machinery:
-the watcher-arm PreToolUse seatbelt (`bin/fm-arm-pretool-check.sh`, `docs/arm-pretool-check.md`) and the turn-end supervision guard (`bin/fm-turnend-guard.sh`, `docs/turnend-guard.md`).
+the watcher-arm PreToolUse seatbelt (`bin/backend/fm-arm-pretool-check.sh`, `docs/arm-pretool-check.md`) and the turn-end supervision guard (`bin/backend/fm-turnend-guard.sh`, `docs/turnend-guard.md`).
 
 ## Purpose and boundary
 
@@ -24,9 +24,9 @@ Its threat model is agent mistakes, the same as the watcher-arm seatbelt: an acc
 The guard fires only in a plain firstmate checkout where git-dir equals git-common-dir.
 It is a silent no-op (exit 0, no output) everywhere else, so it never interferes with a crewmate or scout that legitimately works inside its own project or firstmate task worktree.
 
-`bin/fm-cd-pretool-check.sh` owns its checkout detection; the turn-end guard's marker-aware scope is a separate contract (`docs/turnend-guard.md`).
+`bin/backend/fm-cd-pretool-check.sh` owns its checkout detection; the turn-end guard's marker-aware scope is a separate contract (`docs/turnend-guard.md`).
 A plain, non-worktree checkout has `git rev-parse --git-dir` equal to `git rev-parse --git-common-dir`.
-A crewmate or scout task worktree - the shape `bin/fm-spawn.sh` always hands out - is a linked git worktree where the two differ, so the guard is inert there.
+A crewmate or scout task worktree - the shape `bin/backend/fm-spawn.sh` always hands out - is a linked git worktree where the two differ, so the guard is inert there.
 The checkout must also carry `AGENTS.md` and `bin/`, and any failure to confirm the primary is treated as inert, never as a block.
 
 The cd-guard does not inspect `.fm-secondmate-home`.
@@ -74,7 +74,7 @@ It does not permit `cd /home/project`, because an absolute-path `cd` remains a p
 
 ## Transport and fail-open behavior
 
-`bin/fm-cd-pretool-check.sh` supports every harness-engine entry shape used by the tracked adapters, with pi-signed sharing Pi's shape:
+`bin/backend/fm-cd-pretool-check.sh` supports every harness-engine entry shape used by the tracked adapters, with pi-signed sharing Pi's shape:
 
 - Claude sends stdin JSON at `.tool_input.command` and adds `--claude` to preserve Claude's stderr-only deny requirement.
 - Codex sends stdin JSON at `.tool_input.command` without `--claude`.
@@ -132,8 +132,8 @@ The suite also proves the end-to-end cwd-leak regression (a firstmate-owned back
 Run:
 
 ```sh
-bash -n bin/fm-cd-pretool-check.sh
-shellcheck bin/fm-cd-pretool-check.sh tests/fm-cd-pretool-check.test.sh
+bash -n bin/backend/fm-cd-pretool-check.sh
+shellcheck bin/backend/fm-cd-pretool-check.sh tests/fm-cd-pretool-check.test.sh
 node --check bin/fm-cd-command-policy.mjs
 node --check bin/fm-arm-command-policy.mjs
 tests/fm-cd-pretool-check.test.sh

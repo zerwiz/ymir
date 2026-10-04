@@ -1,7 +1,7 @@
 ## hoard · unversioned · 2026-09-17 — the hoard encrypts its secrets at rest
 
 ### Why
-- **`bin/hodd.sh` decrypts transparently.** `load`, `emit`, and `tenant` now
+- **`bin/vault/hodd.sh` decrypts transparently.** `load`, `emit`, and `tenant` now
   accept a plaintext file *or* an `.age` ciphertext with the sibling plaintext
   absent. A shared `resolve_secret` finds the readable form; when it decrypts,
   it uses a mode-600 temp and removes it afterward. An agent asks for the

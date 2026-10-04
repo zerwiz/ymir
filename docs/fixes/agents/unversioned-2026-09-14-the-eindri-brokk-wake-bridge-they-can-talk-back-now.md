@@ -4,11 +4,11 @@
 - **Ask:** the seated smiths' reports lived in their panes only; the Allfather
   wanted a feature that wakes Brokk when an Eindri reports, so the fleet's
   doings reach the primary's session — "we are in control, Brokk".
-- **Built:** `bin/eindri-seen.sh` (condition — a report file landed or herdr
-  shows the smith left `working`), `bin/eindri-acclaim.sh` (action — files the
+- **Built:** `bin/agents/eindri-seen.sh` (condition — a report file landed or herdr
+  shows the smith left `working`), `bin/agents/eindri-acclaim.sh` (action — files the
   report durably under state/eindri-reports/, marks done under
   state/eindri-done/, appends the wake to state/.wake-queue for Sága's drain,
-  sounds the desktop note), and `bin/eindri-watch.sh` (the control door —
+  sounds the desktop note), and `bin/agents/eindri-watch.sh` (the control door —
   `arm | retire | list | reconcile`, one when-source per smith on the Norns'
   loom via fm-procevent-when.sh, action hash-bound, fires once on a stable
   true, terminal, re-armable).

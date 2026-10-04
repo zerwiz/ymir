@@ -43,7 +43,7 @@ It can also be runtime auto-detected when Firstmate itself runs inside cmux.
 A spawn stops with an actionable setup message when the app, minimum version, `jq`, socket access, or password is unavailable.
 The adapter may launch the app with `open -a cmux` only when the socket is down; it does not relaunch the app for access-denied or authentication errors.
 
-Routine supervision uses `bin/fm-peek.sh <id>` and `FM_HOME=<home> bin/fm-send.sh <id> '<text>'` without bringing the cmux window forward.
+Routine supervision uses `bin/backend/fm-peek.sh <id>` and `FM_HOME=<home> bin/backend/fm-send.sh <id> '<text>'` without bringing the cmux window forward.
 Task workspace and surface creation use `focus=false`.
 
 Verify setup by spawning a small task and confirming metadata contains `backend=cmux`, `cmux_workspace_id=`, and `cmux_surface_id=`.
@@ -93,7 +93,7 @@ Spawn-time worktree discovery sends begin and end markers around `pwd`, captures
 An ordinary metadata-routed `fm-send.sh` text steer becomes a durable steering-inbox record, and only its best-effort constant doorbell passes through cmux's submit machinery.
 On the typed plane, literal send and Enter are separate calls.
 Enter, Escape, and Ctrl-C are supported.
-The composer verifier is a thin adapter: it captures a bounded plain-text tail and hands it with cmux's capability facts to the fleet-wide classifier in `bin/fm-composer-lib.sh`, which owns every shape, including Claude's borderless `❯` row with its U+00A0 separator.
+The composer verifier is a thin adapter: it captures a bounded plain-text tail and hands it with cmux's capability facts to the fleet-wide classifier in `bin/backend/fm-composer-lib.sh`, which owns every shape, including Claude's borderless `❯` row with its U+00A0 separator.
 `read-screen` is plain text with no cursor primitive, so the shared classifier degrades a glyph row carrying trailing text to `unknown` rather than misreading a harness's own idle suggestion as unsent input.
 An unstructured bare prompt is `unknown`, and a slash-popup placeholder remains `pending`, so only Enter is retried and text is never retyped.
 cmux exposes no native generic agent busy signal, so supervision uses capture/hash polling for screen changes and each harness adapter's semantic lifecycle for worker state.

@@ -207,7 +207,7 @@ def _judge(path: str | Path | None) -> int:
     from .config.schema import ConfigError, ConfigUnavailable, available
 
     if not available():
-        print(_row("grants-check[1]{status,detail}", ("unavailable", "jsonschema missing — bin/ymir-engine-ensure.sh ensure")), end="")
+        print(_row("grants-check[1]{status,detail}", ("unavailable", "jsonschema missing — bin/engine/ymir-engine-ensure.sh ensure")), end="")
         return EXIT_UNAVAILABLE
     try:
         data = load_registry(path)

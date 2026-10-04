@@ -22,7 +22,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yh="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
   for _i in 1 2 3 4 5; do
     [ -n "$_yh" ] || break
-    if [ -r "$_yh/bin/hoard-lib.sh" ]; then . "$_yh/bin/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
+    if [ -r "$_yh/bin/vault/hoard-lib.sh" ]; then . "$_yh/bin/vault/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     if [ -r "$_yh/hoard-lib.sh" ]; then . "$_yh/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     _yh="$(cd "$_yh/.." 2>/dev/null && pwd)"
   done
@@ -37,7 +37,7 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 # The home the operator chose — one answer, never drift (Rule 04/07).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc
@@ -331,7 +331,7 @@ case "$ACTION" in
 esac
 
 # ---- carve the Rune (append-only ledger, in the hoard) -----------------------
-# shellcheck source=bin/runes-append.sh
-. "$ROOT/bin/runes-append.sh" 2>/dev/null || true
+# shellcheck source=bin/records/runes-append.sh
+. "$ROOT/bin/records/runes-append.sh" 2>/dev/null || true
 runes_append "marketing" "stack.$ACTION" --realm "${BROKK_REALM:-}" \
   --message "marketing stack $ACTION (Mautic:$MAUTIC_PORT Postiz:$POSTIZ_PORT Activepieces:$AP_PORT${WITH_FORGEJO:+ Forgejo:$FORGEJO_PORT}) at $DIR" >/dev/null 2>&1 || true

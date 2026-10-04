@@ -84,7 +84,7 @@ Plus `hoard_local_env` → `$YMIR_HOME/.env.local`: the operator's **credentials
 **The home is chosen, not assumed.** A real interactive install asks once
 (`step_home`), records the answer as machine state under `~/.config/ymir/home`
 (the same place `engram-python` and `accounts.json` live), and every later script
-resolves it through `bin/hoard-lib.sh`. `--check` never writes; `--yes` takes what
+resolves it through `bin/vault/hoard-lib.sh`. `--check` never writes; `--yes` takes what
 is recorded, else the documented default.
 
 **No script carries its own default (2026-09-24; widened 2026-09-30).** Every
@@ -92,7 +92,7 @@ governed script that needs the home calls `ymir_home_root`; none restates a path
 Hand-converging this once already failed — nine scripts were fixed and a tenth was
 found a week later only by reading — so the rule is now a **lock**:
 `bin/defaults-guard.sh` refuses a home default anywhere outside the two definition
-sites — `bin/hoard-lib.sh` in bash and `src/ymir_runtime/paths.py` in python — and
+sites — `bin/vault/hoard-lib.sh` in bash and `src/ymir_runtime/paths.py` in python — and
 a waiver must be written on the line it applies to. The same ward also refuses a
 script that *uses* the home without resolving it, which is the class the first
 pass missed: a file can be free of literals and still be unable to find anything.
@@ -115,7 +115,7 @@ covers `bin/ .agents/ tools/ scripts/ src/`: guarding the doors and not the yard
 how `tools/mill/worker.sh` came to carry three absolute paths unchallenged.
 
 ```bash
-bin/hoard-lib.sh                     # the lib (source-safe; functions only)
+bin/vault/hoard-lib.sh                     # the lib (source-safe; functions only)
 ymir_home_root   HOME                # → the home
 hoard_settings_dir SETTINGS          # → <home>/config
 hoard_local_env  ENVFILE             # → <home>/.env.local
@@ -131,15 +131,15 @@ catch.
 The agent-execution road (seat · status · send · stop) lives in the tracked tree
 as `src/ymir_runtime/` — python, **stdlib only**, so a bare `python3` runs it and
 the install has nothing to compile. A harness never reads it: only a `bin/` door
-calls it (`bin/ymir-engine.sh`; behind it `bin/eindri-start.sh` and
-`bin/einherjar-spawn.sh` are thin adapters).
+calls it (`bin/engine/ymir-engine.sh`; behind it `bin/agents/eindri-start.sh` and
+`bin/agents/einherjar-spawn.sh` are thin adapters).
 
 When the engine ever grows a dependency, the venv appears **without the tree
 changing** — a private, machine-local home built at first use, exactly the
 `~/.fleet/well-venv` pattern:
 
 ```bash
-bin/ymir-engine-ensure.sh          # status of the engine's own home (idempotent)
+bin/engine/ymir-engine-ensure.sh          # status of the engine's own home (idempotent)
 # → engine-ensure[1]{venv,state,deps}:
 #     "$HOME/.fleet/ymir-engine-venv","not needed (stdlib only)","0"
 ```
@@ -215,10 +215,10 @@ doors[14]{verb,door,what}:
   "ymir groa migrate","bin/ymir-migrate.sh","heal this home's structure"
   "ymir heimdall","bin/ymir-setup-auth.sh","the way in — status · set · github (the guardian)"
   "ymir invite","bin/ymir-invite.sh","let someone else in — mint · list · revoke"
-  "ymir smidja","bin/smidja-board.sh","the smithy's board on :8437 — build · start · stop · status"
+  "ymir smidja","bin/desktop/smidja-board.sh","the smithy's board on :8437 — build · start · stop · status"
   "ymir hlidskjalf","scripts/electron.sh start --view hlidskjalf","the high seat's window"
   "ymir sessrumnir","scripts/electron.sh start --view sessrumnir","the seat-hall's window"
-  "ymir mimir","bin/mimir.sh","the memory well"
+  "ymir mimir","bin/records/mimir.sh","the memory well"
   "ymir sense","bin/host-sense.sh","what THIS machine is"
 ```
 
@@ -265,7 +265,7 @@ smidja             apps/smidja-factory      node_modules/@zerwiz/smidja-factory
 <surface>` — and **eighteen files** were converted to it: the raise path
 (`scripts/start.sh`), the windows (`scripts/electron.sh`), the invite door, the
 seat-hall trio, Eir, the icon mint, the desktop placement, the hall snapshot, and
-the installer's own SPA and shell steps. `bin/smidja-lib.sh` delegates to it, so
+the installer's own SPA and shell steps. `bin/desktop/smidja-lib.sh` delegates to it, so
 there is **one** truth about where things live.
 
 **`app_class <surface>` is the second answer it owns (added 2026-09-24).** The
@@ -383,14 +383,14 @@ with everything else the cloth renders.
 
 ```
 libs[2]{path,resolves}:
-  "bin/smidja-lib.sh","the smithy: apps/smidja-factory in a clone, node_modules/@zerwiz/smidja-factory in a package — `smidja_factory_dir`, `smidja_visualizer_dir`"
-  "bin/electron-lib.sh","whether a shell's runtime VERIFIES: `electron_runtime_state` (ok · partial · absent) and the exact remedy"
+  "bin/desktop/smidja-lib.sh","the smithy: apps/smidja-factory in a clone, node_modules/@zerwiz/smidja-factory in a package — `smidja_factory_dir`, `smidja_visualizer_dir`"
+  "bin/desktop/electron-lib.sh","whether a shell's runtime VERIFIES: `electron_runtime_state` (ok · partial · absent) and the exact remedy"
 ```
 
 **Why they exist.** A packaged tree has no `apps/`: the smithy arrives as a
 dependency and the skill symlink dangles. Four call sites assumed the clone's
 layout, so the visualizer read as unbuildable in a package. They resolve through
-`bin/smidja-lib.sh` now.
+`bin/desktop/smidja-lib.sh` now.
 
 **And a shell is never declared ready on a directory's presence.** npm gates
 install scripts; a skipped Electron postinstall leaves `dist/` partial and
@@ -456,31 +456,31 @@ carrying it. The operator's live registry is renamed by hand, with his word.
 
 ```
 install[32]{step,what,self-heals}:
-  "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
+  "panes","the run shown in a herdr pane","bin/seat/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "home","the home the operator CHOOSES, recorded under ~/.config/ymir/home","asks once, records the answer; --check never writes, --yes takes what is recorded, else the documented default"
-  "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at the hoard root under the chosen home)","creates if missing; hoard_root resolves through bin/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/hodd.sh emit resolves"
+  "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at the hoard root under the chosen home)","creates if missing; hoard_root resolves through bin/vault/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/vault/hodd.sh emit resolves"
   "apps","the app repos (the app split) — hlidskjalf · hlidskjalf-mobile · odrerir · sessrumnir · smidja","reads $HOARD/identity/projects.yaml (never guesses a remote); clones a missing apps/<path> from its registered git{} block, fast-forwards a present one, and stamps the smithy engine (apps/smidja) from the cloned factory's templates"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "local-model","the local brain for THIS hardware — a CUDA llama.cpp engine, the best model that fits, pi wiring, and Ymir registration","bin/llama-ensure.sh ADOPTS a standing CUDA llama-server (proves CUDA0, never rebuilds it) and only builds with GGML_CUDA=ON when none exists; bin/model-fit.sh picks the largest model that fits the PROBED GPU/VRAM/RAM/disk (generic — never this box); bin/model-fetch.sh downloads it resumable, checksummed, consent first, into the hoard; bin/pi-model-wire.sh wires ~/.pi/agent/models.json (exact served id + key reference) and proves a one-shot; bin/model-register.sh writes the same model into the hoard config/agents.<host>.yaml overlay so Ymir/Smidja share one model road; bin/model-tune.sh measures the real ctx/ngl/n-cpu-moe/kv/fa and replaces the placeholder in data/local-models.md. When a local rail already serves models, NOTHING is downloaded — the operator's registered model is adopted. Loud refusals (no CUDA, unknown hardware, no disk, bad checksum), never a silent skip"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "snotra","the meeting ear's engine — whisper.cpp + a model","bin/snotra-ensure.sh reports the seat's engine and installs what is missing (pacman/apt/build); a voxtype seat keeps its models. The MCP face + unit ride the fleet step — and so does the WATCH (snotra-detect), which the fleet step raises by CAPABILITY on any seat with a microphone: a call seat owes the ear's watch, a headless heart reports a clean skip"
-  "a2a","the A2A mesh engine — a2abridge (MIT): the local directory daemon (:7777) + the bridge that gives each harness the a2a tools","bin/a2abridge-ensure.sh ensure --install fetches the pinned engine and raises its directory unit; bin/a2a-mcp.sh install wires a2abridge + engram into pi + opencode. The unit is the ENGINE's own, Ymir-patched (journal output + the boot hook WantedBy=default.target) with a house template (tools/mill/systemd/a2abridge-directory.service) so a raise seats it by role; the heart's A2A node (:8301) rides the fleet step. Repairable: bin/eir-doctor.sh a2abridge"
+  "a2a","the A2A mesh engine — a2abridge (MIT): the local directory daemon (:7777) + the bridge that gives each harness the a2a tools","bin/bridge/a2abridge-ensure.sh ensure --install fetches the pinned engine and raises its directory unit; bin/bridge/a2a-mcp.sh install wires a2abridge + engram into pi + opencode. The unit is the ENGINE's own, Ymir-patched (journal output + the boot hook WantedBy=default.target) with a house template (tools/mill/systemd/a2abridge-directory.service) so a raise seats it by role; the heart's A2A node (:8301) rides the fleet step. Repairable: bin/eir-doctor.sh a2abridge"
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
-  "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
+  "backend","Þjazi — herdr (protocol 14+) or tmux","bin/seat/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
   "role","what this machine IS — resolved BEFORE the chain, so the whole step set is role-selected","bin/role-lib.sh establish_roles: --role/$YMIR_ROLE → the fleet registry (bin/role.sh) → the machine card in hodd/data/machines.md → ask (interactive) → the safe body dev; step_role reports the role + components + live link, records it with bin/role.sh set, and folds a Machine Card into the ONE registry hodd/data/machines.md (plan 39). An unknown --role is refused (exit 2); --check writes nothing"
-  "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root · snotra, the meeting ear's MCP face) on heart seats, the stone on forge seats, the well door, the MCP gateway and the a2abridge mesh directory on dev seats","bin/fleet-ensure.sh copies tools/ and packages/ to the seat (a DIRECTORY row keeps its relative path, so a cross-package import resolves in the deployed copy as in the repo), plus the snotra operator commands — WITH hoard-lib.sh beside them, because each resolves the operator's home through it and a command without its resolver dies on an unbound YMIR_HOME — to ~/.fleet; materializes ONLY what the roles owe (a2abridge-directory is engine-owned: patched by bin/a2abridge-ensure.sh and materialized from its house template when owed; the arm is seated as the standing unit ymir-syn-watch.service from tools/mill/systemd/), purges stale units, points the seat's pi mcp-adapter.json at THIS body's MCP gateway (bin/mcp-gateway.sh, :8316, which fronts well/bolthorn/skuld and resolves the heart at request time; --well-url still forces an explicit well door), and carries the model rail the same way — bin/mcp-config.sh writes the serving box under the config's `ymir` block, read from the ONE resolver bin/rail-resolve.sh (plan 51 Part 9c: models come from whichever strong box is CONNECTED), enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
-  "mesh","the A2A mesh (Ratatoskr): the local discovery directory (:7777) + the engine","bin/a2abridge-ensure.sh installs the a2abridge engine (A2A_NO_IDE=1), patches its user unit (journal output + the boot hook WantedBy=default.target), and raises the directory; the directory is a role-owed program (heart · dev) in the autoboot ONE table, materialized from tools/mill/systemd/a2abridge-directory.service and verified beside the well/tickets/skills doors"
+  "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root · snotra, the meeting ear's MCP face) on heart seats, the stone on forge seats, the well door, the MCP gateway and the a2abridge mesh directory on dev seats","bin/fleet-ensure.sh copies tools/ and packages/ to the seat (a DIRECTORY row keeps its relative path, so a cross-package import resolves in the deployed copy as in the repo), plus the snotra operator commands — WITH hoard-lib.sh beside them, because each resolves the operator's home through it and a command without its resolver dies on an unbound YMIR_HOME — to ~/.fleet; materializes ONLY what the roles owe (a2abridge-directory is engine-owned: patched by bin/bridge/a2abridge-ensure.sh and materialized from its house template when owed; the arm is seated as the standing unit ymir-syn-watch.service from tools/mill/systemd/), purges stale units, points the seat's pi mcp-adapter.json at THIS body's MCP gateway (bin/bridge/mcp-gateway.sh, :8316, which fronts well/bolthorn/skuld and resolves the heart at request time; --well-url still forces an explicit well door), and carries the model rail the same way — bin/bridge/mcp-config.sh writes the serving box under the config's `ymir` block, read from the ONE resolver bin/rail-resolve.sh (plan 51 Part 9c: models come from whichever strong box is CONNECTED), enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
+  "mesh","the A2A mesh (Ratatoskr): the local discovery directory (:7777) + the engine","bin/bridge/a2abridge-ensure.sh installs the a2abridge engine (A2A_NO_IDE=1), patches its user unit (journal output + the boot hook WantedBy=default.target), and raises the directory; the directory is a role-owed program (heart · dev) in the autoboot ONE table, materialized from tools/mill/systemd/a2abridge-directory.service and verified beside the well/tickets/skills doors"
   "autoboot","the boot law: Linger asserted on headless seats, ymir.target enabled once, the boot proof run","checks loginctl show-user $USER -p Linger (enables it headless or fails with the remedy), reports the value on every seat, and calls bin/ymir-autoboot.sh verify — every role-owed program enabled and standing"
   "heimdall","the ssh-key ward (Heimdall) — entry by the rune carried on GitHub","bin/heimdall-ensure.sh arms it: ward script to ~/.local/bin (stable path, not the repo tree), the operator's GitHub user recorded, keys fetched/validated/merged into ~/.ssh/authorized_keys, 15-min user timer live (loginctl linger note for headless). --install may add openssh via pacman/apt (sudo, system package). Idempotent; a seat can stand warded or bare — reported honestly"
   "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage — the store is ONE well in the hoard ($YMIR_HOME/hodd/memory/kaia.engram), resolved via hoard-lib or ENGRAM_DB"
-  "record","the RECORD's offices — the engram store, the journal fold receiver, the record crons (heart only)","asserts the store is present and bin/journal-receive.sh is executable, and counts the @heart jobs in the cron config; a body SKIPs the whole step with the reason — the record lives on the heart, and a body that ran it would fork the chain (Law 7)"
-  "smidja","smidja/smidja_data/smidja.db","bin/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
+  "record","the RECORD's offices — the engram store, the journal fold receiver, the record crons (heart only)","asserts the store is present and bin/records/journal-receive.sh is executable, and counts the @heart jobs in the cron config; a body SKIPs the whole step with the reason — the record lives on the heart, and a body that ran it would fork the chain (Law 7)"
+  "smidja","smidja/smidja_data/smidja.db","bin/desktop/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
-  "loaders","agents/skills into the harnesses","runs bin/valknut-load.sh, then bin/valknut-load.sh --install to seat the post-merge rebind hook. The harnesses load their surfaces from their OWN homes — Pi reads ${HOME}/.pi/agent/extensions/ — so a merged extension fix is invisible until the bind re-runs. The same rebind rides the updater (bin/groa-update.sh) after every pull, and the post-merge hook after every merge: no install and no update leaves the surfaces stale"
+  "loaders","agents/skills into the harnesses","runs bin/seat/valknut-load.sh, then bin/seat/valknut-load.sh --install to seat the post-merge rebind hook. The harnesses load their surfaces from their OWN homes — Pi reads ${HOME}/.pi/agent/extensions/ — so a merged extension fix is invisible until the bind re-runs. The same rebind rides the updater (bin/groa-update.sh) after every pull, and the post-merge hook after every merge: no install and no update leaves the surfaces stale"
   "gates","the git delivery gates — secret-guard (pre-commit), branch-guard + changelog-guard (pre-push)","bin/secret-guard.sh --install and bin/changelog-guard.sh --install seat the versioned guards into .git/hooks, so the gate is live from the first commit of a fresh clone; idempotent"
   "marks","each app's rune icon + .desktop entry into the operator's own desktop, and the Ymir contract into pi's agent home","bin/design-icon.sh mint --all + install writes to $HOME/.local/share (never a session sandbox), so every app is dockable and pinnable; the contract symlink means every pi session, in ANY folder, loads Brokk"
   "invite","the way in for anyone else — an invite code","bin/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
@@ -562,7 +562,7 @@ this host can reach (`YMIR_CONTAINER_ENGINE` forces one) and exposes:
 - `ymir_rootless_podman` — rootless Podman needs `--userns=keep-id` so a bind
   mount lands owned by the invoking user.
 
-`bin/utgard.sh`, `bin/einherjar-spawn.sh`, `bin/valhalla.sh`, `bin/ymir-validate.sh`,
+`bin/utgard.sh`, `bin/agents/einherjar-spawn.sh`, `bin/valhalla.sh`, `bin/ymir-validate.sh`,
 this installer, and `bin/prereq-ensure.sh` all use these; none names an engine
 directly. **Quadlet**-managed containers (Podman + systemd) surface as
 `systemd --user` units, which the process hall lists. A host-managed deployment
@@ -619,7 +619,7 @@ bin/desktop-verify.sh --live     # with a compositor: a window of the class is h
 bin/desktop-verify.sh --class-only
 ```
 
-For each surface: (a) the runtime resolver (`bin/electron-lib.sh`) yields an
+For each surface: (a) the runtime resolver (`bin/desktop/electron-lib.sh`) yields an
 executable Electron; (b) it answers `--version`; (c) with a compositor present, a
 window of the expected class is held; (d) the class invariant above. It **fails
 loudly**, naming the surface and the resolved path — a runtime that is merely
@@ -641,8 +641,8 @@ backend_priority[3]{rank,backend,note}:
 ```
 
 ```
-bin/herdr-ensure.sh status            # what is present, and does it meet the floor
-bin/herdr-ensure.sh ensure --install  # install via the pinned, SHA-verified installer
+bin/seat/herdr-ensure.sh status            # what is present, and does it meet the floor
+bin/seat/herdr-ensure.sh ensure --install  # install via the pinned, SHA-verified installer
 ```
 
 `ensure` installs through `.agents/backend/fm-install-herdr.sh` (exact version +
@@ -858,10 +858,10 @@ company is the operator's to name; Ymir ships no default.
 ```
 bin/ymir-install.sh --check          # all steps OK/WARN
 bin/ymir-validate.sh                 # the running system actually works
-bin/herdr-ensure.sh status           # the Þjazi backend and its protocol floor
+bin/seat/herdr-ensure.sh status           # the Þjazi backend and its protocol floor
 bin/host-sense.sh                    # sense THIS machine (any host)
 bin/omarchy-sense.sh status          # the Omarchy recording (Omarchy hosts)
-bin/saga-session-start.sh            # the session digest
+bin/time/saga-session-start.sh            # the session digest
 bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh
 ```
 
@@ -913,7 +913,7 @@ root `package.json` declares a workspace (`apps/*`), so npm **HOISTS** each app'
 electron to the ymir ROOT — `ymir/node_modules/electron` — and **never** creates
 `apps/<app>/node_modules/electron`. A probe that looks only app-locally finds
 nothing that can exist (this is what made the shells fail silently). Three rules
-follow, all owned by `bin/electron-lib.sh`:
+follow, all owned by `bin/desktop/electron-lib.sh`:
 
 - **the resolver** — `electron_bin`/`electron_pkg_dir` search, in order: the
   app-local dir, the nearest ancestor hoist (walking up, halting at a foreign
@@ -1034,7 +1034,7 @@ pattern instead:
 | `.pi/mcp-adapter.json.example` | `.pi/mcp-adapter.json` |
 
 Placeholders `__YMIR_HOME__` and `__YMIR_ROOT__` are substituted with `$HOME` and
-the checkout root by `bin/valknut-load.sh` (its `render_config`, run for both
+the checkout root by `bin/seat/valknut-load.sh` (its `render_config`, run for both
 `--pi` and `--opencode`). It is idempotent: identical content is left alone and
 reported as `unchanged`.
 
@@ -1150,7 +1150,7 @@ halves have separate homes, and neither leaks into the other:
 ```
 declared_agents[4]{what,where,read_by}:
   "the figure (prose + frontmatter)",".agents/agents/<figure>.md","the harnesses (symlinked), the roster"
-  "the wiring (role → figure → tools)",".agents/roles.yaml","bin/eindri-role.sh · bin/agents-config.sh roster"
+  "the wiring (role → figure → tools)",".agents/roles.yaml","bin/agents/eindri-role.sh · bin/agents-config.sh roster"
   "the model (per figure)","$YMIR_HOME/config/agents.yaml (+ per-host overlay)","bin/agents-config.sh get <figure> model"
   "the resolved roster","bin/agents-config.sh roster","dispatch doors, reads only"
 ```
@@ -1160,7 +1160,7 @@ declared_agents[4]{what,where,read_by}:
   `workspace_patterns` — never a `model:`. The model is resolved from the hoard
   **by figure name** at dispatch (`bin/agents-config.sh get <figure> model`),
   so one public tree runs on any hardware (Rule 04; plan 56).
-- **`roles.yaml` is the decision table in data.** `bin/eindri-role.sh` reads it
+- **`roles.yaml` is the decision table in data.** `bin/agents/eindri-role.sh` reads it
   — it declares no role in code — and `bin/agents-config.sh roster` joins it to
   the hoard, emitting `role → figure → harness → model → tools`. Two hoard
   YAMLs yield two rosters; the tracked tree never moves.
@@ -1168,11 +1168,11 @@ declared_agents[4]{what,where,read_by}:
   local providers and per-agent models into the *harness's own* config
   (`opencode.json`, untracked) and caches the resolution in state; it never
   rewrites `.agents/agents/*.md`. The roster is resolved, not stamped into the
-  tree, and `bin/valknut-load.sh` still binds every card by symlink.
+  tree, and `bin/seat/valknut-load.sh` still binds every card by symlink.
 
 ```bash
-bin/eindri-role.sh list                 # the dispatch roles and their crafts
-bin/eindri-role.sh choose "<task>"      # the smith whose craft fits
+bin/agents/eindri-role.sh list                 # the dispatch roles and their crafts
+bin/agents/eindri-role.sh choose "<task>"      # the smith whose craft fits
 bin/agents-config.sh roster             # role → figure → harness → model → tools
 bin/agents-config.sh get sindri model   # one figure's model, from the hoard
 ```
@@ -1223,19 +1223,19 @@ backup, it is not carried.
 ### The memory engine is provisioned, not hinted (2026-09-12)
 
 `bin/ymir-install.sh` used to *check* for the well engine and, failing, print
-`SKIP "optional — install engine then run bin/mimir-bridge.sh"`. A SKIP never
+`SKIP "optional — install engine then run bin/bridge/mimir-bridge.sh"`. A SKIP never
 blocks, so the well was silently down on every install — and the hint named the
 wrong package, so following it made things worse.
 
 Now the installer provisions it: `bin/prereq-ensure.sh engram` installs
 **`engdbram`** (the distribution; the *module* is `engram`) into an interpreter
 that can run it (>=3.11; uv supplies 3.12 when the distro's Python is unsuitable),
-and records that interpreter in `~/.config/ymir/engram-python`. `bin/mimir-bridge.sh`
+and records that interpreter in `~/.config/ymir/engram-python`. `bin/bridge/mimir-bridge.sh`
 reads the same file, so the installer and the bridge always agree.
 
 ```bash
 bin/prereq-ensure.sh engram        # install and record the interpreter
-bin/mimir-bridge.sh --start        # the :4602 face over the engine
+bin/bridge/mimir-bridge.sh --start        # the :4602 face over the engine
 curl -s 127.0.0.1:4602/health      # {"status": "up", "store": ".agents/memory/kaia.engram"}
 ```
 
@@ -1249,7 +1249,7 @@ that: `bin/prereq-ensure.sh engram`.
 The `smidja` → `smidja-factory` rename left `smidja-factory-factory` behind in
 **seven** places — `scripts/start.sh` (`VIZ_DIR`), `bin/ymir-validate.sh`,
 `bin/ymir-install.sh` (twice: the dist probe and the build dir),
-`bin/saga-session-start.sh` (the governed-path TOON row), `AGENTS.md` (the
+`bin/time/saga-session-start.sh` (the governed-path TOON row), `AGENTS.md` (the
 `governed[]` table, twice) and the guard's own `asset_for` pattern.
 
 The damage was not cosmetic: a governed path that does not exist makes the

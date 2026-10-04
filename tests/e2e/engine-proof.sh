@@ -4,7 +4,7 @@
 #   tests/e2e/engine-proof.sh proof    seat a REAL errand through the engine,
 #                                      watch it, steer it, and reap it — all
 #                                      four verbs, on a live box
-#   tests/e2e/engine-proof.sh parity   the old door (bin/einherjar-spawn.sh) and
+#   tests/e2e/engine-proof.sh parity   the old door (bin/agents/einherjar-spawn.sh) and
 #                                      the engine, the same errand, the records
 #                                      diffed
 #
@@ -24,8 +24,8 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-ENGINE="$ROOT/bin/ymir-engine.sh"
-OLD_DOOR="$ROOT/bin/einherjar-spawn.sh"
+ENGINE="$ROOT/bin/engine/ymir-engine.sh"
+OLD_DOOR="$ROOT/bin/agents/einherjar-spawn.sh"
 SESSION="${PROOF_TMUX_SESSION:-engine-proof}"
 
 case "${1-}" in
@@ -149,7 +149,7 @@ NEW_ID="parity-engine"
 brief_for "$OLD_ID"
 brief_for "$NEW_ID"
 
-printf 'parity[1]{side,id,door}\n  "old","%s","bin/einherjar-spawn.sh"\n  "new","%s","bin/ymir-engine.sh seat"\n' "$OLD_ID" "$NEW_ID"
+printf 'parity[1]{side,id,door}\n  "old","%s","bin/agents/einherjar-spawn.sh"\n  "new","%s","bin/engine/ymir-engine.sh seat"\n' "$OLD_ID" "$NEW_ID"
 
 # The raw-launch escape hatch is the ONE harness both doors accept identically,
 # so the parity is of the SEAT ROAD (worktree, record, backend), not of a model.

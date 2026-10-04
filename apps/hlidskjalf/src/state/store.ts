@@ -638,7 +638,7 @@ export const useYmir = create<YmirState>((set, get) => ({
       .then(({ reply }) => finish(reply))
       .catch(() =>
         finish({
-          body: 'The bridge did not answer. Check the gate API (npm run api) and Bifrost (bin/bifrost-bridge.sh).',
+          body: 'The bridge did not answer. Check the gate API (npm run api) and Bifrost (bin/bridge/bifrost-bridge.sh).',
           error: true,
         }),
       )

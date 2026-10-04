@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Behavior tests for bin/fm-herdr-lab.sh using a stateful fake Herdr client.
+# Behavior tests for bin/backend/fm-herdr-lab.sh using a stateful fake Herdr client.
 set -u
 
 # shellcheck source=tests/lib.sh

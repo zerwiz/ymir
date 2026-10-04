@@ -25,7 +25,7 @@
  *   CONSTELLATION_REGISTRY  a git URL or a local path of the registry repo
  *   CONSTELLATION_CACHE     optional local cache dir for a pulled copy
  * The cache NEVER lands in the code tree, and the home comes from the one resolver
- * (`ymir_home_root` in `bin/hoard-lib.sh`), never from a literal `$HOME/...`.
+ * (`ymir_home_root` in `bin/vault/hoard-lib.sh`), never from a literal `$HOME/...`.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -208,7 +208,7 @@ export function scanRegistryDir(dir: string): RegistryScan {
 export function resolveYmirHome(root: string): string {
   const result = spawnSync(
     "bash",
-    ["-c", '. "$1/bin/hoard-lib.sh"; ymir_home_root home; printf %s "$home"', "_", root],
+    ["-c", '. "$1/bin/vault/hoard-lib.sh"; ymir_home_root home; printf %s "$home"', "_", root],
     { encoding: "utf8" },
   );
   const home = (result.stdout || "").trim();
@@ -265,7 +265,7 @@ export function resolveRegistry(env: NodeJS.ProcessEnv, root: string): RegistryR
       status: "skip",
       reason:
         `registry ${spec} is a git URL and no cache dir is available: CONSTELLATION_CACHE is unset and ` +
-        `ymir_home_root resolved no home (run bin/hoard-lib.sh's ymir_home_root to check the record).`,
+        `ymir_home_root resolved no home (run bin/vault/hoard-lib.sh's ymir_home_root to check the record).`,
     };
   }
   if (isInside(cache, root)) {

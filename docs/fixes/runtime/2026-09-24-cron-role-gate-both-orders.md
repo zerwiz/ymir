@@ -2,7 +2,7 @@
 
 ## Why
 The home's `config/cron.yaml` writes its role gate **before** the time —
-`@heart 06:00 bin/nornir-job-observer.sh` — while `bin/nornir-cron-start.sh`
+`@heart 06:00 bin/time/nornir-job-observer.sh` — while `bin/time/nornir-cron-start.sh`
 parsed the FIRST token as the time (`at=${line%% *}`) and expected any
 `@role` AFTER the minute. Every role-first line therefore read "time" =
 `@heart`, never matched the clock, and was **silently dead while still counted
@@ -18,7 +18,7 @@ running loop — the seat needs the pull AND a fresh session (or `--stop` +
 start).
 
 ## What
-- `bin/nornir-cron-start.sh` accepts the `@role[,role]` gate **before** the time
+- `bin/time/nornir-cron-start.sh` accepts the `@role[,role]` gate **before** the time
   (`@heart 06:00 cmd`) **or after** it (`06:00 @heart cmd`); the role test
   (`case ",$BROKK_ROLES," in *",$_w,"*`) is unchanged. One grammar for the loop,
   `--status`, and the board's `/api/cron` (same parse, same lines).
@@ -30,11 +30,11 @@ start).
 - Live read: a role-first schedule now matches at its minute on a dev box.
 
 ## Files
-- `bin/nornir-cron-start.sh` · `.agents/tests/cron-role-gate.test.sh`
+- `bin/time/nornir-cron-start.sh` · `.agents/tests/cron-role-gate.test.sh`
 - `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md`
 
 ## Note for the seat
 whynot's loop is ALIVE but holds an old body (spawned 2026-09-24 ~09:00, pid
 34965). After this merges: on whynot run a pull + restart the loop (a fresh
-session or `bin/nornir-cron-start.sh --stop` then start) so the heart's record
+session or `bin/time/nornir-cron-start.sh --stop` then start) so the heart's record
 jobs fire from the next clock.

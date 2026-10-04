@@ -24,7 +24,7 @@ right: *does Brokk get to know there are updates?* He did not.
   newer `@zerwiz/ymir` on npm? Cached **one day** (`state/update-check`), never
   fatal (no network → silence at exit 0), and **exit 3** when a newer version
   stands, with the exact remedy (`npm i -g @zerwiz/ymir`, then `ymir groa`).
-- **`bin/saga-session-start.sh`** — a new **`== UPDATE ==`** section runs the
+- **`bin/time/saga-session-start.sh`** — a new **`== UPDATE ==`** section runs the
   check, so **every session opens knowing** whether the tree is behind.
 
 ### Verification
@@ -38,4 +38,4 @@ right: *does Brokk get to know there are updates?* He did not.
 ### Files
 - `bin/ymir.js`
 - `bin/ymir-update-check.sh` (new)
-- `bin/saga-session-start.sh`
+- `bin/time/saga-session-start.sh`

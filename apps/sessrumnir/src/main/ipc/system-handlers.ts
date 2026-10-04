@@ -113,7 +113,7 @@ export function registerSystemHandlers(ctx: IpcContext): void {
     // seat says empty rather than inventing a fleet.
     try {
       const { execFileSync } = await import('node:child_process');
-      const out = execFileSync(process.env.YMIR_ROOT ? `${process.env.YMIR_ROOT}/bin/hlidskjalf-agents.sh` : 'hlidskjalf-agents.sh',
+      const out = execFileSync(process.env.YMIR_ROOT ? `${process.env.YMIR_ROOT}/bin/desktop/hlidskjalf-agents.sh` : 'hlidskjalf-agents.sh',
         [], { timeout: 4000 }).toString().trim();
       return out.startsWith('[') ? JSON.parse(out) : [];
     } catch {

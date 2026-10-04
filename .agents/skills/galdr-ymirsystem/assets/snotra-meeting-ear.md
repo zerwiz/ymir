@@ -78,7 +78,7 @@ supports this; it is not a rewrite.
 - Stores under `$YMIR_HOME/hodd/life/meetings/`
   (the workspaces shelf: meetings are work-adjacent artifacts that follow the
   operator across domains; the hoard's `workspaces/` is the natural home)
-- Appends a Rune via `bin/runes-append.sh`
+- Appends a Rune via `bin/records/runes-append.sh`
 
 ### M5 — MCP face (`tools/snotra/server.mjs`)
 

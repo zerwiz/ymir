@@ -86,7 +86,7 @@ Never at-least-once, no-loss, or lossless.
 
 ## What the runner does prove
 
-Exercised by `tests/fm-procevent.test.sh` against a fake blocking source whose completion is a process event, not a timer; for the two supervision-delivery rows below, by `tests/fm-watch-triage.test.sh` driving a real `bin/fm-watch.sh` over a real capture; and for adapter-owned application, by `tests/fm-remote-reply.test.sh` driving the real remote-reply relay end to end in an isolated home:
+Exercised by `tests/fm-procevent.test.sh` against a fake blocking source whose completion is a process event, not a timer; for the two supervision-delivery rows below, by `tests/fm-watch-triage.test.sh` driving a real `bin/backend/fm-watch.sh` over a real capture; and for adapter-owned application, by `tests/fm-remote-reply.test.sh` driving the real remote-reply relay end to end in an isolated home:
 
 | Guarantee | How it is proven |
 | --- | --- |
@@ -148,16 +148,16 @@ Run the focused external-binding evidence with:
 
 ```sh
 node --version
-bin/fm-test-run.sh tests/fm-extension-binding.test.sh
-FM_EXTENSION_BINDING_SEGMENT=lifecycle-invocation-cleanup bin/fm-test-run.sh tests/fm-extension-binding.test.sh
-bin/fm-test-run.sh tests/fm-procevent.test.sh
-bin/fm-doc-audience-check.sh
+bin/backend/fm-test-run.sh tests/fm-extension-binding.test.sh
+FM_EXTENSION_BINDING_SEGMENT=lifecycle-invocation-cleanup bin/backend/fm-test-run.sh tests/fm-extension-binding.test.sh
+bin/backend/fm-test-run.sh tests/fm-procevent.test.sh
+bin/backend/fm-doc-audience-check.sh
 ```
 
 ## Harness and session-provider review
 
 The external host runs in the home that owns the process-event source and publishes the same bounded `check` record as every built-in adapter.
-The 2026-08-27 review inspected `bin/fm-harness.sh`, `bin/fm-supervision-instructions.sh`, `bin/fm-supervision-lib.sh`, the process-event delivery and reconcile boundaries in `bin/fm-watch.sh`, `bin/fm-backend.sh`, and `bin/fm-config-inherit-lib.sh` before marking integration axes not applicable.
+The 2026-08-27 review inspected `bin/backend/fm-harness.sh`, `bin/backend/fm-supervision-instructions.sh`, `bin/backend/fm-supervision-lib.sh`, the process-event delivery and reconcile boundaries in `bin/backend/fm-watch.sh`, `bin/backend/fm-backend.sh`, and `bin/backend/fm-config-inherit-lib.sh` before marking integration axes not applicable.
 
 | Axis | Reviewed boundary and result |
 | --- | --- |
@@ -203,6 +203,6 @@ Its `autohandle` command is optional in the same way and defaults to leaving the
 The optional `self-announcing` declaration changes ordering only for an adapter with its own durable downstream announcement; the operating contract in `docs/configuration.md` owns that boundary.
 
 Proactive delivery is inside that same boundary.
-The watcher reports a queued process-event result through the one shared actionable-exit path (`wake` in `bin/fm-push-transition-lib.sh`) that every existing signal, stale, and check wake already uses, so it reads no pane, queries no backend, and names no harness.
+The watcher reports a queued process-event result through the one shared actionable-exit path (`wake` in `bin/backend/fm-push-transition-lib.sh`) that every existing signal, stale, and check wake already uses, so it reads no pane, queries no backend, and names no harness.
 Both axes are therefore unaffected by construction rather than by assumption: every supported primary harness re-arms from that same exit, and every runtime backend supplies endpoint state only to the pane paths this change does not touch.
 While `state/.afk` exists the watcher stays one-shot as before, because this delivery ends the cycle exactly like the existing check path and leaves classification to the daemon.

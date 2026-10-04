@@ -69,7 +69,7 @@ A new skill is dead weight if nothing loads it.
 Every new skill needs its load trigger declared inline: section 13 for agent-only reference skills, or the relevant operating section for anything else.
 State the trigger as a condition ("load before X", "load on Y wake"), never as a vague pointer.
 Briefs for tasks that touch firstmate's own tracked material should tell the crewmate to load this skill.
-`bin/fm-brief.sh`'s `REPO` argument is a caller-supplied string with no reliable signal that it names firstmate's own repo, unlike a project registered in `data/projects.md`, so there is no clean point inside the scaffold to detect this case automatically.
+`bin/backend/fm-brief.sh`'s `REPO` argument is a caller-supplied string with no reliable signal that it names firstmate's own repo, unlike a project registered in `data/projects.md`, so there is no clean point inside the scaffold to detect this case automatically.
 Firstmate adds this skill's load instruction to firstmate-repo briefs by hand instead.
 `CONTRIBUTING.md`'s "Development" section carries the same instruction as a durable reminder.
 
@@ -98,7 +98,7 @@ Every such check needs two tests, because they fail for different reasons:
 - A portable regression in `tests/` that pins the logic with real processes and no harness, so CI enforces the classifier everywhere it runs tmux.
   Drive the signals apart deliberately and assert the verdict survives losing one; assert the divergence itself so the case cannot go quietly vacuous.
   Confirm which signal a given construction actually blinds on each supported platform rather than assuming, because the same trick can break different sources on macOS and Linux.
-- A live guard in the `live-harness-optin` family (`bin/fm-test-run.sh`), env-gated and self-skipping, that exercises every INSTALLED harness for real and fails naming the harness and version.
+- A live guard in the `live-harness-optin` family (`bin/backend/fm-test-run.sh`), env-gated and self-skipping, that exercises every INSTALLED harness for real and fails naming the harness and version.
   Report an absent harness explicitly rather than passing silently over it, and refuse a pass that checked nothing.
   This guard is opt-in and on-demand because standard CI has neither harness binaries nor credentials; run it after every harness upgrade and before trusting refreshed per-harness evidence.
 
@@ -109,7 +109,7 @@ Record the dated per-harness result in `docs/verification/runtime-backends.md`, 
 For every changed maintained prose surface, identify its inventory audience, authoritative owner, current-behavior relevance, destination for supporting evidence, and any unique safety fact that removal could lose.
 Move or delete evidence only after the current owner and regression pointer are verified.
 After all documentation, review-fix, and lint-fix commits, review the complete branch diff again against those criteria rather than reviewing only the latest commit.
-Run `bin/fm-doc-audience-check.sh`; it enforces classification, README setup routing, local link targets, and owner pointers without keyword-linting legitimate evidence prose.
+Run `bin/backend/fm-doc-audience-check.sh`; it enforces classification, README setup routing, local link targets, and owner pointers without keyword-linting legitimate evidence prose.
 
 ## Repo style rules
 
@@ -118,7 +118,7 @@ Run `bin/fm-doc-audience-check.sh`; it enforces classification, README setup rou
 - Plain dash `-`, never an em dash.
 - Never add an agent name as a commit co-author.
 - `bin/*.sh` and `bin/backends/*.sh` must pass `shellcheck`.
-- Run `bin/fm-lint.sh` before treating a script change as done; it is the single owner of the lint definition (file set, config, pinned shellcheck version, and pinned actionlint workflow lint) that CI and the no-mistakes pre-push gate both invoke, and it refuses to run under any other version of either linter.
+- Run `bin/backend/fm-lint.sh` before treating a script change as done; it is the single owner of the lint definition (file set, config, pinned shellcheck version, and pinned actionlint workflow lint) that CI and the no-mistakes pre-push gate both invoke, and it refuses to run under any other version of either linter.
 - When a task names a specific tool, implement the work with that tool, or explicitly flag the substitution and its new dependency footprint for review before shipping.
 - Colocate tests with the existing pattern in `tests/`, name them `<subject>.test.sh`, and extend an existing script rather than inventing a new runner.
 - Tests must exercise behavior through an executable or public interface and must never assert implementation-source bytes, including through parsers, regexes, snapshots, or indirect wrappers.

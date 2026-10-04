@@ -20,7 +20,7 @@ SSE, Agent Cards) via the **`a2abridge`** engine, and coordinate through the
 parts[4]{thing,path,role}:
   "engine","~/.a2abridge/bin/a2abridge","directory (discovery) · bridge (announce) · service · cert · doctor"
   "front door","bin/ratatoskr.sh","status|doctor|directory|service|cert — Ymir's wrapper"
-  "wiring","bin/a2a-mcp.sh","installs both MCP servers into pi + opencode"
+  "wiring","bin/bridge/a2a-mcp.sh","installs both MCP servers into pi + opencode"
   "registration","a2abridge bridge -name -model -skills -directory -advertise-host -id -state-dir","an agent announces by running bridge"
 ```
 
@@ -39,7 +39,7 @@ goes back to Teams. Same `A2A_NAME` in both planes.
 ```bash
 bin/ratatoskr.sh status          # engine + directory + served agents
 bin/ratatoskr.sh doctor          # health-check
-bin/a2a-mcp.sh install           # (re)wire the MCP servers into pi + opencode
+bin/bridge/a2a-mcp.sh install           # (re)wire the MCP servers into pi + opencode
 ```
 
 **Production rules:** stable `-id`, `-advertise-host` = the machine's **Tailscale
@@ -68,8 +68,8 @@ appear in `a2a-agents`, the bridge announced to the wrong directory — the fix 
 in the **skill/config**, not new code: point the bridge at
 `http://127.0.0.1:7777` with `-advertise-host <tailnet-ip>` and `-name <agent>`.
 
-**Outside a session** (Brokk, scripts): `bin/a2a-talk.sh agents` and
-`bin/a2a-talk.sh send <peer> "<text>"`.
+**Outside a session** (Brokk, scripts): `bin/bridge/a2a-talk.sh agents` and
+`bin/bridge/a2a-talk.sh send <peer> "<text>"`.
 
 Rule: the mesh is used through the **skill's tools**, not bespoke code — if a
 capability is missing, extend this skill.
@@ -132,7 +132,7 @@ realm law (Rule 05). It is therefore an **explicit grant**, never a merge:
 federation[3]{piece,where,law}
   "the grants law","src/ymir_runtime/grants.py · hodd/identity/grants.yaml (kind `grants`)","a grant that crosses operators must carry a signature from EACH party's Heimdall; a missing signature is REFUSED, naming the Heimdall"
   "the typed card","packages/contracts AgentInterface {protocol · endpoint · signed}","the grant's `card` block is the SAME shape as the shared agent-card contract — one contract, never a second"
-  "the scoped journal","bin/journal-append.sh --namespace <ns> · bin/journal-receive.sh","a company entry folds into journal/folded/<ns>/<host>.jsonl only; an entry with no namespace reads as the operator's own"
+  "the scoped journal","bin/records/journal-append.sh --namespace <ns> · bin/records/journal-receive.sh","a company entry folds into journal/folded/<ns>/<host>.jsonl only; an entry with no namespace reads as the operator's own"
 ```
 
 - **Signing rides each operator's Heimdall** (`a2abridge cert`, ed25519/JWS). Cards
@@ -165,8 +165,8 @@ Rule: a successful `a2a_call` needs **transport + a live peer + delivery
 
 ```
 tools[4]{tool,does}:
-  "bin/a2a-mcp.sh install","wire the a2abridge (+ wayofteams) MCP servers into pi + opencode"
+  "bin/bridge/a2a-mcp.sh install","wire the a2abridge (+ wayofteams) MCP servers into pi + opencode"
   "bin/ratatoskr.sh status|doctor|directory|service|cert","engine + directory front door"
-  "bin/a2a-talk.sh agents|send <peer> \"<text>\"","Brokk-side A2A talk"
+  "bin/bridge/a2a-talk.sh agents|send <peer> \"<text>\"","Brokk-side A2A talk"
   "bin/a2a-serve.py <pane> <name> <port>","per-Eindri A2A server: inject task -> read reply"
 ```

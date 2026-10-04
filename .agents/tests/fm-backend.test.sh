@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # tests/fm-backend.test.sh - P1 runtime-backend extraction conformance
 # (data/fm-backend-design-d7/report.md, herdr-addendum.md "events as the core
-# abstraction"). bin/fm-backend.sh and bin/backends/tmux.sh move the tmux
+# abstraction"). bin/backend/fm-backend.sh and bin/backends/tmux.sh move the tmux
 # command sequences that fm-send.sh, fm-peek.sh, fm-spawn.sh, and
 # fm-teardown.sh used to run inline into named adapter functions. This suite:
 #
-#   1. Unit-tests bin/fm-backend.sh's selection, meta, and dispatch helpers.
+#   1. Unit-tests bin/backend/fm-backend.sh's selection, meta, and dispatch helpers.
 #   2. Runs the PRE-REFACTOR versions of fm-send.sh, fm-peek.sh, fm-spawn.sh,
 #      and fm-teardown.sh (checked out from the merge-base with `main`, the
 #      commit this branch started from) against the SAME fake tmux/treehouse
@@ -22,7 +22,7 @@
 # fm-watch.sh's signal/stale/check/heartbeat wake-string contract is already
 # exercised end-to-end against this refactor by tests/fm-watch-triage.test.sh
 # and tests/wake-helpers.sh (same fake-tmux convention, run against the
-# now-refactored bin/fm-watch.sh); this suite adds one direct old-vs-new
+# now-refactored bin/backend/fm-watch.sh); this suite adds one direct old-vs-new
 # diff for the stale-pane path specifically, since that is the one wake path
 # that now calls through fm_backend_capture instead of tmux directly.
 # The real tmux smoke test (create session, send text + Enter, capture, list,
@@ -483,9 +483,9 @@ test_backend_source_shell_portable() {
   # zsh does not word-split unquoted expansions; sourcing fm-backend.sh from
   # an interactive zsh session must still recognize known backend names.
   if command -v zsh >/dev/null 2>&1; then
-    zsh -c "cd '$ROOT' && source bin/fm-backend.sh && fm_backend_source herdr && whence -w fm_backend_herdr_capture >/dev/null" 2>/dev/null \
+    zsh -c "cd '$ROOT' && source bin/backend/fm-backend.sh && fm_backend_source herdr && whence -w fm_backend_herdr_capture >/dev/null" 2>/dev/null \
       || fail "zsh: fm_backend_source herdr should load the adapter when sourced"
-    out=$(zsh -c "cd '$ROOT' && source bin/fm-backend.sh && fm_backend_source bogus" 2>&1) \
+    out=$(zsh -c "cd '$ROOT' && source bin/backend/fm-backend.sh && fm_backend_source bogus" 2>&1) \
       && fail "zsh: fm_backend_source bogus should fail"
     assert_contains "$out" "unknown backend 'bogus'" \
       "zsh: fm_backend_source did not reject bogus with the expected error"
@@ -494,9 +494,9 @@ test_backend_source_shell_portable() {
     pass "zsh: shell-portable backend matching skipped (zsh not found)"
   fi
 
-  bash -c "cd '$ROOT' && source bin/fm-backend.sh && fm_backend_source herdr && declare -F fm_backend_herdr_capture >/dev/null" 2>/dev/null \
+  bash -c "cd '$ROOT' && source bin/backend/fm-backend.sh && fm_backend_source herdr && declare -F fm_backend_herdr_capture >/dev/null" 2>/dev/null \
     || fail "bash: fm_backend_source herdr should load the adapter when sourced"
-  out=$(bash -c "cd '$ROOT' && source bin/fm-backend.sh && fm_backend_source bogus" 2>&1) \
+  out=$(bash -c "cd '$ROOT' && source bin/backend/fm-backend.sh && fm_backend_source bogus" 2>&1) \
     && fail "bash: fm_backend_source bogus should fail"
   assert_contains "$out" "unknown backend 'bogus'" \
     "bash: fm_backend_source did not reject bogus with the expected error"
@@ -663,7 +663,7 @@ run_send_case() {  # <bin-root> <fakebin> <log> <home> -- <send args...>
   : > "$log"
   env PATH="$fb:$PATH" FM_ROOT_OVERRIDE="$bin" FM_HOME="$home" FM_TMUX_LOG="$log" \
     FM_SEND_SETTLE=0 FM_SEND_SLEEP=0 \
-    "$bin/bin/fm-send.sh" "$@" >/dev/null 2>&1
+    "$bin/fm-send.sh" "$@" >/dev/null 2>&1
 }
 
 strip_send_preflight() {  # <log>
@@ -752,7 +752,7 @@ test_peek_conformance_old_vs_new() {
 
   : > "$log_old"
   out_old=$(PATH="$fb:$PATH" FM_ROOT_OVERRIDE="$neutral_root" FM_HOME="$home" FM_TMUX_LOG="$log_old" \
-    "$old_bin/bin/fm-peek.sh" "sess:win" 25 2>/dev/null)
+    "$old_bin/fm-peek.sh" "sess:win" 25 2>/dev/null)
   : > "$log_new"
   out_new=$(PATH="$fb:$PATH" FM_ROOT_OVERRIDE="$neutral_root" FM_HOME="$home" FM_TMUX_LOG="$log_new" \
     "$ROOT/bin/fm-peek.sh" "sess:win" 25 2>/dev/null)
@@ -797,7 +797,7 @@ run_spawn_case() {  # <bin-root> <fakebin> <log> <state> <data> <config> <proj> 
     FM_STATE_OVERRIDE="$state" FM_DATA_OVERRIDE="$data" FM_CONFIG_OVERRIDE="$config" \
     FM_PROJECTS_OVERRIDE="$TMP_ROOT/unused-projects" \
     FM_SPAWN_NO_GUARD=1 TMUX="fake,1,0" FM_TMUX_LOG="$log" \
-    "$bin/bin/fm-spawn.sh" "$@"
+    "$bin/fm-spawn.sh" "$@"
 }
 
 # NOTE: the old-vs-new spawn command-log conformance test that used to live here
@@ -829,7 +829,7 @@ run_spawn_case() {  # <bin-root> <fakebin> <log> <state> <data> <config> <proj> 
 # make_spawn_symlink_fakebin's tmux stub returns an unmoved project path on the
 # first pane_current_path poll, then the real worktree path from the second poll
 # onward, so this test fails loudly if the PROJ_ABS/PROJ_ABS_REAL
-# canonicalization in bin/fm-spawn.sh ever regresses.
+# canonicalization in bin/backend/fm-spawn.sh ever regresses.
 make_spawn_symlink_fakebin() {  # <dir> <initial-project-path> <worktree-path> -> echoes fakebin dir
   local dir=$1 initial_path=$2 wt=$3 fb="$1/fakebin" counter="$1/poll-count"
   mkdir -p "$fb"
@@ -926,7 +926,7 @@ SH
 # run_teardown_case <script> <fm-root-override> <fakebin> <log> <state> <data> <config> <id>
 # FM_ROOT_OVERRIDE is passed separately from <script> so both the old and new
 # runs can point it at the SAME neutral (non-git) shim root - that root's
-# bin/fm-guard.sh is a symlink to the real, unchanged script, so the
+# bin/backend/fm-guard.sh is a symlink to the real, unchanged script, so the
 # worktree-tangle check runs identically (and silently) for both, regardless
 # of which fm-teardown.sh (old or new) is actually being invoked.
 run_teardown_case() {
@@ -950,7 +950,7 @@ test_teardown_conformance_old_vs_new() {
   old_tmux_ref=$(resolve_permissive_tmux_kill_ref) \
     || { BASE_REF=$saved_base_ref; fail "unable to locate a historical bin/backends/tmux.sh with permissive kill-window selectors"; }
   old_bin=$(build_old_bin teardown-old)
-  git -C "$ROOT" show "$old_tmux_ref:bin/backends/tmux.sh" > "$old_bin/bin/backends/tmux.sh" \
+  git -C "$ROOT" show "$old_tmux_ref:bin/backends/tmux.sh" > "$old_bin/backends/tmux.sh" \
     || { BASE_REF=$saved_base_ref; fail "could not materialize historical tmux adapter from $old_tmux_ref"; }
   BASE_REF=$saved_base_ref
   proj="$TMP_ROOT/teardown-project"; wt="$TMP_ROOT/teardown-wt"
@@ -975,7 +975,7 @@ test_teardown_conformance_old_vs_new() {
   touch "$state_old/.last-watcher-beat" "$state_new/.last-watcher-beat"
 
   log_old="$TMP_ROOT/teardown-old.log"; log_new="$TMP_ROOT/teardown-new.log"
-  out_old=$(run_teardown_case "$old_bin/bin/fm-teardown.sh" "$old_bin" "$fb" "$log_old" "$state_old" "$data" "$config_old" "$id" 2>&1)
+  out_old=$(run_teardown_case "$old_bin/fm-teardown.sh" "$old_bin" "$fb" "$log_old" "$state_old" "$data" "$config_old" "$id" 2>&1)
   rc_old=$?
   out_new=$(run_teardown_case "$ROOT/bin/fm-teardown.sh" "$old_bin" "$fb" "$log_new" "$state_new" "$data" "$config_new" "$id" 2>&1)
   rc_new=$?

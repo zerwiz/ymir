@@ -899,7 +899,7 @@ test_bootstrap_opt_out_cleanup() {
   assert_contains "$out" "FMX: X mode off" "opt-out must announce X mode off when it removed artifacts"
   assert_contains "$out" "watcher supervision needs Stop-owned automatic recovery" "opt-out remediation must use neutral automatic-recovery guidance"
   assert_not_contains "$out" "is broken" "opt-out remediation claimed an unverified mechanism failure"
-  assert_not_contains "$out" "bin/fm-watch-arm.sh --restart" "opt-out remediation must not hardcode a background-arm restart"
+  assert_not_contains "$out" "bin/backend/fm-watch-arm.sh --restart" "opt-out remediation must not hardcode a background-arm restart"
   assert_absent "$home/state/x-watch.check.sh" "opt-out must remove the shim"
   assert_absent "$home/config/x-mode.env" "opt-out must remove the cadence config"
   # Steady-state off: another run with nothing to remove is silent.

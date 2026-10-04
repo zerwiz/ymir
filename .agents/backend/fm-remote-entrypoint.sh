@@ -37,7 +37,7 @@ REAL_SOURCE=$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' 
   REAL_SOURCE=${BASH_SOURCE[0]}
 SCRIPT_DIR=$(CDPATH='' cd "$(dirname "$REAL_SOURCE")" && pwd -P)
 
-# shellcheck source=bin/fm-remote-job-lib.sh
+# shellcheck source=bin/backend/fm-remote-job-lib.sh
 . "$SCRIPT_DIR/fm-remote-job-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit "${2:-64}"; }

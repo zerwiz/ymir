@@ -8,7 +8,7 @@
  * imitation is not validated at all. `import type` / `export type` are erased by
  * the runtime, so the type half costs nothing at load.
  *
- * The VALUES cannot be a relative import. The loader (`bin/valknut-load.sh`) copies
+ * The VALUES cannot be a relative import. The loader (`bin/seat/valknut-load.sh`) copies
  * `.pi/shared/extensions/*.ts` and `.pi/extensions/lib/*` into ONE global pi
  * extension home (`${HOME}/.pi/agent/extensions/`), which has no `packages/` under
  * it: a deployed `../../../packages/...` would resolve to nothing and the extension
@@ -46,7 +46,7 @@ const contractPath = CONTRACT_CANDIDATES.find((candidate) => existsSync(candidat
 if (!contractPath) {
   throw new Error(
     `constellation: the shared agent-card contract was not found. Looked in: ${CONTRACT_CANDIDATES.join(", ")}. ` +
-      `The loader records the distro root beside the deployed extensions (bin/valknut-load.sh --pi); ` +
+      `The loader records the distro root beside the deployed extensions (bin/seat/valknut-load.sh --pi); ` +
       `re-run it so the deployed copy knows where its tree is.`,
   );
 }

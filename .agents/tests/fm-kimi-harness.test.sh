@@ -5,7 +5,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-# bin/fm-harness.sh checks verified ENV markers before ancestry. A suite run
+# bin/backend/fm-harness.sh checks verified ENV markers before ancestry. A suite run
 # from inside Cursor, Claude, Pi, or Grok inherits those markers, which outrank
 # the fake ancestry the detection cases set up. Drop the ambient markers so the
 # asserted verdict does not depend on which harness launched the suite.

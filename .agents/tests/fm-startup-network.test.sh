@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/fm-startup-network.test.sh - behavior tests for bin/fm-startup-network.sh,
+# tests/fm-startup-network.test.sh - behavior tests for bin/backend/fm-startup-network.sh,
 # the deferred network stage a session start launches instead of running its
 # network work on the blocking path.
 #
@@ -28,7 +28,7 @@ trap fm_test_cleanup EXIT
 # new_world <name>: an FM_HOME plus a fake code root whose bin/ is a real
 # firstmate bin/ except for fm-bootstrap.sh, which is replaced by a scriptable
 # stand-in. The stage's contract is about WHEN and WHETHER the network half runs
-# and how its result is published; bin/fm-bootstrap.sh's own behavior is owned by
+# and how its result is published; bin/backend/fm-bootstrap.sh's own behavior is owned by
 # tests/fm-bootstrap.test.sh, so pinning it here would duplicate that owner and
 # make these assertions depend on unrelated tool detection.
 new_world() {
@@ -560,7 +560,7 @@ test_records_share_one_origin_so_offsets_form_a_timeline() {
   log="$dir/timings.tsv"
 
   (
-    # shellcheck source=bin/fm-timing-lib.sh
+    # shellcheck source=bin/backend/fm-timing-lib.sh
     . "$ROOT/bin/fm-timing-lib.sh"
     unset FM_TIMING_EPOCH_MS
     FM_TIMING_LOG=$log

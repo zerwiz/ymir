@@ -7,13 +7,13 @@
 
 FM_PUSH_TRANSITION_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$FM_PUSH_TRANSITION_LIB_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 . "$FM_PUSH_TRANSITION_LIB_DIR/fm-classify-lib.sh"
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$FM_PUSH_TRANSITION_LIB_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-transition-lib.sh
+# shellcheck source=bin/backend/fm-transition-lib.sh
 . "$FM_PUSH_TRANSITION_LIB_DIR/fm-transition-lib.sh"
 
 TRIAGE_LOG="$STATE/.watch-triage.log"
@@ -96,7 +96,7 @@ wake() {
   if echo "$1"; then
     output_status=0
     watch_delivery_publish "$1" || true
-    # shellcheck disable=SC2034 # Read by bin/fm-watch.sh's EXIT cleanup.
+    # shellcheck disable=SC2034 # Read by bin/backend/fm-watch.sh's EXIT cleanup.
     FM_WATCH_DELIVERED_REASON=$1
   else
     output_status=1

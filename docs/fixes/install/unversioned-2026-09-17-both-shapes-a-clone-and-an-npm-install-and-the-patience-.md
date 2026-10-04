@@ -10,7 +10,7 @@
   `node_modules/@zerwiz/<package>` in a package, with the surface→package map
   (`smidja` → `@zerwiz/smidja-factory`). Wired into the raise path, the windows,
   the invite door, the seat-hall, Eir, the icons, the placement, the hall snapshot
-  and the installer's own SPA and shell steps. `bin/smidja-lib.sh` delegates to it
+  and the installer's own SPA and shell steps. `bin/desktop/smidja-lib.sh` delegates to it
   now, so there is one truth about where things live.
 - **Proven in both trees**: all five surfaces resolve from `$HOME/Ymir`
   (a clone) and from an npm-installed package. And `ymir raise` run against the

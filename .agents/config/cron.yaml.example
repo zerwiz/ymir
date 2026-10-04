@@ -8,7 +8,7 @@
 # machines whose roles match — @heart (the record), @forge (models/GPU),
 # @dev (a full body), @hand. No gate means any role. A dev body must NOT run the
 # record jobs; that is how 8 orphan seat schedulers came to run a heart's work.
-#   @heart 07:00 bin/nornir-job-daily-briefing.sh
+#   @heart 07:00 bin/time/nornir-job-daily-briefing.sh
 #   07:30 bin/nornir-job-ungated.sh        # any role
 #
 # GATE EVERY LINE THAT BELONGS TO A ROLE. An ungated machine job runs on EVERY
@@ -18,15 +18,15 @@
 # record belongs to the heart, the model work to the forge, and a full body keeps
 # the supervision it alone performs.
 
-@heart 07:00 bin/nornir-job-daily-briefing.sh
-@heart 06:00 bin/nornir-job-observer.sh
-@heart 08:00 bin/nornir-job-hall-snapshot.sh
-@heart 02:30 bin/nornir-job-nsr-compliance.sh
-@forge 00:30 bin/nornir-job-skillopt-sleep.sh
-@heart 00:15 bin/nornir-job-memory-housekeeping.sh
-@heart 00:00 bin/nornir-job-git-sync.sh
+@heart 07:00 bin/time/nornir-job-daily-briefing.sh
+@heart 06:00 bin/time/nornir-job-observer.sh
+@heart 08:00 bin/time/nornir-job-hall-snapshot.sh
+@heart 02:30 bin/time/nornir-job-nsr-compliance.sh
+@forge 00:30 bin/time/nornir-job-skillopt-sleep.sh
+@heart 00:15 bin/time/nornir-job-memory-housekeeping.sh
+@heart 00:00 bin/time/nornir-job-git-sync.sh
 # Eir checks every surface daily (P8) — a desktop that cannot open is reported.
-@heart 08:15 bin/nornir-job-doctor.sh
+@heart 08:15 bin/time/nornir-job-doctor.sh
 # The rollover backstop: hand off every repository that carries a .asken state,
 # so a session that died without a reporter still leaves a fresh HANDOFF.md.
-@heart 04:00 bin/nornir-job-asken-handoff.sh
+@heart 04:00 bin/time/nornir-job-asken-handoff.sh

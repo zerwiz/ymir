@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Behavior tests for the explicit per-task delivery contract (AGENTS.md section 7)
-# across bin/fm-spawn.sh, bin/fm-promote.sh, and bin/fm-project-mode.sh.
+# across bin/backend/fm-spawn.sh, bin/backend/fm-promote.sh, and bin/fm-project-mode.sh.
 #
 # A ship task's delivery mode and yolo posture are firstmate's decision at intake,
 # so the tools refuse to guess: the spawn and a scout promotion require both flags,

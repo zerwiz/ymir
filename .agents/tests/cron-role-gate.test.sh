@@ -5,7 +5,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CRON="$ROOT/bin/nornir-cron-start.sh"
+CRON="$ROOT/bin/time/nornir-cron-start.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

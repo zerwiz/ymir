@@ -168,7 +168,7 @@ pass "real zellij: send_key C-c (normalized to the verified 'Ctrl c' name) succe
 
 # --- busy_state: always unknown (D5 - no native agent-state primitive) ------
 # zellij has no native agent-state adapter function; fm_backend_busy_state's
-# dispatcher (bin/fm-backend.sh) falls through to "unknown" for any backend
+# dispatcher (bin/backend/fm-backend.sh) falls through to "unknown" for any backend
 # without one via its wildcard case - verified against the real session here,
 # not just the fake-CLI suite's dispatch-only assertion.
 

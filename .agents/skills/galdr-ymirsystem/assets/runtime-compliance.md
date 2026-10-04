@@ -45,12 +45,12 @@ changed but the asset did not.
 ```
 governed[10]{path,load_first}:
   "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
-  "src/ymir_runtime/** | bin/ymir-engine*.sh | bin/einherjar-spawn.sh | bin/eindri-start.sh",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md"
+  "src/ymir_runtime/** | bin/ymir-engine*.sh | bin/agents/einherjar-spawn.sh | bin/agents/eindri-start.sh",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
   "apps/odrerir/**",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md"
-  "bin/mimir*.sh | bin/mimir-bridge.py",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
+  "bin/mimir*.sh | bin/bridge/mimir-bridge.py",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
-  "bin/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
+  "bin/seat/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
   "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
   "bin/snotra-*",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
   "tools/snotra/**",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
@@ -170,18 +170,18 @@ contract line.
 | Script | Smoke command | Expected |
 |---|---|---|
 | `bin/hamr-harness.sh` | `bin/hamr-harness.sh` | one of `claude codex opencode pi pi-signed grok kimi cursor unknown` |
-| `bin/nornir-cron-start.sh` | `bin/nornir-cron-start.sh --status` | `cron: running … jobs=<n>` or `cron: stopped …` |
+| `bin/time/nornir-cron-start.sh` | `bin/time/nornir-cron-start.sh --status` | `cron: running … jobs=<n>` or `cron: stopped …` |
 | `bin/vor-crew-state.sh <id>` | after a spawn | `state: … · source: … · …` |
-| `bin/runes-append.sh` | `… smoke ledger.append --message x` | `runes: appended … checksum=…` |
-| `bin/einherjar-spawn.sh --help` | `--help` | usage text, exit 0 |
-| `bin/erindi-brief.sh --help` | `--help` | usage text, exit 0 |
-| `bin/saga-session-start.sh` | `bash bin/saga-session-start.sh` | `BROKK SESSION START …` with all stages |
+| `bin/records/runes-append.sh` | `… smoke ledger.append --message x` | `runes: appended … checksum=…` |
+| `bin/agents/einherjar-spawn.sh --help` | `--help` | usage text, exit 0 |
+| `bin/agents/erindi-brief.sh --help` | `--help` | usage text, exit 0 |
+| `bin/time/saga-session-start.sh` | `bash bin/time/saga-session-start.sh` | `BROKK SESSION START …` with all stages |
 
 ```bash
 bin/hamr-harness.sh
-bin/nornir-cron-start.sh --status
-bin/einherjar-spawn.sh --help >/dev/null && bin/erindi-brief.sh --help >/dev/null && echo "help OK"
-bash bin/saga-session-start.sh >/tmp/saga.out && grep -q 'BROKK SESSION START' /tmp/saga.out && echo "G3 PASS"
+bin/time/nornir-cron-start.sh --status
+bin/agents/einherjar-spawn.sh --help >/dev/null && bin/agents/erindi-brief.sh --help >/dev/null && echo "help OK"
+bash bin/time/saga-session-start.sh >/tmp/saga.out && grep -q 'BROKK SESSION START' /tmp/saga.out && echo "G3 PASS"
 ```
 
 **Pass:** every script exits 0 and prints its contract line. **Failure:** a missing line or a
@@ -196,19 +196,19 @@ generic labels are not Ymir components.
 |---|---|---|
 | Primary agent | **Brokk** | `AGENTS.md`, Brokk runtime |
 | Sub-agent worker | **Eindri** | `.agents/subagents/` |
-| Worker gather | **Einherjar** | `bin/einherjar-spawn.sh` |
-| Worker brief | **Erindi** | `bin/erindi-brief.sh` |
+| Worker gather | **Einherjar** | `bin/agents/einherjar-spawn.sh` |
+| Worker brief | **Erindi** | `bin/agents/erindi-brief.sh` |
 | State reconciliation | **Vör** | `bin/vor-crew-state.sh` |
-| Session-start digest | **Sága** | `bin/saga-session-start.sh`, `saga-sessionstart-run.sh` |
+| Session-start digest | **Sága** | `bin/time/saga-session-start.sh`, `saga-sessionstart-run.sh` |
 | Watch / supervision | **Sýn** | `bin/syn-watch-arm.sh`, `syn-turnend-guard.sh` |
 | Session lock | **Gleipnir** | `bin/gleipnir-lock-lib.sh` |
 | Harness detection | **Hamr** | `bin/hamr-harness.sh` |
-| Scheduled jobs | **Nornir** | `bin/nornir-cron-start.sh`, `nornir-job-*.sh` |
-| Daily briefing | **Sága** | `bin/nornir-job-daily-briefing.sh` |
-| Memory housekeeping | **Muninn** | `bin/nornir-job-memory-housekeeping.sh` |
-| Observation | **Huginn** | `bin/nornir-job-observer.sh` |
-| Git sync | **Yggdrasil** | `bin/nornir-job-git-sync.sh` |
-| Audit ledger | **Runes** | `bin/runes-append.sh`, `runes_audit.md` |
+| Scheduled jobs | **Nornir** | `bin/time/nornir-cron-start.sh`, `nornir-job-*.sh` |
+| Daily briefing | **Sága** | `bin/time/nornir-job-daily-briefing.sh` |
+| Memory housekeeping | **Muninn** | `bin/time/nornir-job-memory-housekeeping.sh` |
+| Observation | **Huginn** | `bin/time/nornir-job-observer.sh` |
+| Git sync | **Yggdrasil** | `bin/time/nornir-job-git-sync.sh` |
+| Audit ledger | **Runes** | `bin/records/runes-append.sh`, `runes_audit.md` |
 | Worktree isolation | **Yggdrasil** | `.yggdrasil/` |
 | Sandbox | **Utgard** | `.agents/sandbox/` |
 | Process supervision | **Valhalla** | supervision tree asset |
@@ -240,10 +240,10 @@ in `bin/`: measured, `bin/fm-*` = 0 and `.agents/backend/fm-*` = 163.
 
 ```bash
 # With dispatch active, omitting --harness must refuse.
-bin/einherjar-spawn.sh demo /tmp --mode local-only; echo "exit=$?"   # expect 1, error + help
+bin/agents/einherjar-spawn.sh demo /tmp --mode local-only; echo "exit=$?"   # expect 1, error + help
 
 # An explicitly unverified harness must refuse.
-bin/einherjar-spawn.sh demo /tmp --mode local-only --harness claude; echo "exit=$?"  # expect 1
+bin/agents/einherjar-spawn.sh demo /tmp --mode local-only --harness claude; echo "exit=$?"  # expect 1
 ```
 
 **Pass:** both refuse with a plain reason naming the verified set
@@ -264,7 +264,7 @@ else
 fi
 ```
 
-`bin/saga-session-start.sh` prints `session lock held` or
+`bin/time/saga-session-start.sh` prints `session lock held` or
 `READ-ONLY: session lock held by pid <n> — no spawn, steer, merge, drain, or repair this
 session`. A refused lock is a read-only session by law.
 
@@ -339,9 +339,9 @@ tree (and the `.py` docstrings there) is the upstream record and is out of scope
 job must not run twice in a day.
 
 ```bash
-bin/nornir-cron-start.sh --status
-first=$(bin/nornir-cron-start.sh | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
-second=$(bin/nornir-cron-start.sh | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
+bin/time/nornir-cron-start.sh --status
+first=$(bin/time/nornir-cron-start.sh | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
+second=$(bin/time/nornir-cron-start.sh | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
 [ -n "$first" ] && [ "$first" = "$second" ] && echo "G9 PASS: one loop pid=$first" \
   || echo "G9 FAIL: loop pid changed ($first -> $second)"
 ls state/.cron-fired/ 2>/dev/null   # one date stamp per job
@@ -355,7 +355,7 @@ ls state/.cron-fired/ 2>/dev/null   # one date stamp per job
 **Why:** plan 23 makes the observer self-contained and read-only.
 
 ```bash
-bin/nornir-job-observer.sh >/dev/null
+bin/time/nornir-job-observer.sh >/dev/null
 # The observer must only mutate its own state and the ledger:
 git status --porcelain 2>/dev/null \
   | grep -v -E '^.. (state/|workspace/memory/runes_audit\.md)' || true
@@ -410,12 +410,12 @@ done
 
 echo "== G3 smoke =="
 bin/hamr-harness.sh >/dev/null || { echo "FAIL G3 hamr"; rc=1; }
-bin/nornir-cron-start.sh --status >/dev/null || { echo "FAIL G3 cron"; rc=1; }
-bin/einherjar-spawn.sh --help >/dev/null || { echo "FAIL G3 spawn-help"; rc=1; }
-bin/erindi-brief.sh --help >/dev/null || { echo "FAIL G3 brief-help"; rc=1; }
+bin/time/nornir-cron-start.sh --status >/dev/null || { echo "FAIL G3 cron"; rc=1; }
+bin/agents/einherjar-spawn.sh --help >/dev/null || { echo "FAIL G3 spawn-help"; rc=1; }
+bin/agents/erindi-brief.sh --help >/dev/null || { echo "FAIL G3 brief-help"; rc=1; }
 
 echo "== G5 harness fail-closed =="
-bin/einherjar-spawn.sh compliance /tmp --mode local-only >/dev/null 2>&1 \
+bin/agents/einherjar-spawn.sh compliance /tmp --mode local-only >/dev/null 2>&1 \
   && { echo "FAIL G5: spawn did not refuse"; rc=1; } || echo "G5 PASS"
 
 echo "== G7 turn-end guard =="
@@ -430,8 +430,8 @@ grep -rqE 'TODO|FIXME|MOCK|not implemented' bin/ config/ .agents/sandbox/ \
   && { echo "REVIEW G8"; } || echo "G8 PASS"
 
 echo "== G9 cron idempotence =="
-p1=$(bin/nornir-cron-start.sh | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
-p2=$(bin/nornir-cron-start.sh | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
+p1=$(bin/time/nornir-cron-start.sh | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
+p2=$(bin/time/nornir-cron-start.sh | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
 [ "$p1" = "$p2" ] && echo "G9 PASS pid=$p1" || { echo "FAIL G9"; rc=1; }
 
 echo "== G11 secrets =="

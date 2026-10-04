@@ -25,7 +25,7 @@ The adapter is pure hook JSON. There is no plugin runtime and no `.cursor/rules/
     "sessionStart": [
       {
         "type": "command",
-        "command": "digest=$(\"$CURSOR_PROJECT_DIR\"/bin/saga-sessionstart-run.sh --source startup </dev/null 2>/dev/null); [ -n \"$digest\" ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; jq -n --arg c \"$digest\" '{additional_context:$c}' 2>/dev/null || true",
+        "command": "digest=$(\"$CURSOR_PROJECT_DIR\"/bin/time/saga-sessionstart-run.sh --source startup </dev/null 2>/dev/null); [ -n \"$digest\" ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; jq -n --arg c \"$digest\" '{additional_context:$c}' 2>/dev/null || true",
         "timeout": 180
       }
     ],
@@ -61,7 +61,7 @@ The adapter is pure hook JSON. There is no plugin runtime and no `.cursor/rules/
 ## 3. `sessionStart` — run-tier injection
 
 ```bash
-digest=$("$CURSOR_PROJECT_DIR"/bin/saga-sessionstart-run.sh --source startup </dev/null 2>/dev/null)
+digest=$("$CURSOR_PROJECT_DIR"/bin/time/saga-sessionstart-run.sh --source startup </dev/null 2>/dev/null)
 [ -n "$digest" ] || exit 0                  # no digest → no-op
 command -v jq >/dev/null 2>&1 || exit 0     # jq is required to shape JSON
 jq -n --arg c "$digest" '{additional_context:$c}' 2>/dev/null || true
@@ -141,7 +141,7 @@ command -v jq >/dev/null && echo "jq present" || echo "jq MISSING - adapter will
 ### Verify sessionStart output shape
 
 ```bash
-digest=$("$BROKK_HOME/bin/saga-sessionstart-run.sh" --source startup </dev/null 2>/dev/null)
+digest=$("$BROKK_HOME/bin/time/saga-sessionstart-run.sh" --source startup </dev/null 2>/dev/null)
 echo "digest bytes: ${#digest}"
 jq -n --arg c "$digest" '{additional_context:$c}' | jq -e 'has("additional_context")' && echo "shape ok"
 ```
@@ -190,4 +190,4 @@ bin/syn-cd-pretool-check.sh  --cursor --command 'cd ../..';             echo "cd
 
 Plan 29 §7 describes Cursor as "run interactive only (no headless turn-end)". The code matches that limitation, but it **also** implements a `sessionStart` `additional_context` injection and a `stop` `followup_message`. So Cursor is a full session-open + turn-end surface interactively — not merely a runner.
 
-**Skills.** This harness reads project skills from `.cursor/skills/`; `bin/valknut-load.sh` binds it to the one tree (`.cursor/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.
+**Skills.** This harness reads project skills from `.cursor/skills/`; `bin/seat/valknut-load.sh` binds it to the one tree (`.cursor/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.

@@ -48,7 +48,7 @@ run(){ YMIR_HOME="$TH" node --experimental-strip-types "$HARNESS" "$EXT" "$@" 2>
 TH="$(mktemp -d /tmp/ymirhome-fake.XXXXXX)"
 mkdir -p "$TH/hodd/docs/runbooks" "$TH/hodd/secrets" "$TH/bin"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$TH/hodd.sh"; chmod +x "$TH/hodd.sh"
-cp "$ROOT/bin/hoard-lib.sh" "$TH/bin/" 2>/dev/null || true
+cp "$ROOT/bin/vault/hoard-lib.sh" "$TH/bin/" 2>/dev/null || true
 printf '# a runbook\nbody\n'            > "$TH/hodd/docs/runbooks/deploy.md"
 printf '# another, no header\n'          > "$TH/hodd/docs/runbooks/ops.md"
 printf 'SECRET=hunter2\n'                > "$TH/hodd/secrets/creds.env"

@@ -2,10 +2,10 @@
 
 Brokk talks to a running agent two ways, and they are not the same channel.
 
-The **data plane** is [`bin/fm-send.sh`](../bin/fm-send.sh): conversational text for the agent to read.
+The **data plane** is [`bin/backend/fm-send.sh`](../bin/fm-send.sh): conversational text for the agent to read.
 For a `kind=eindri-home` target it always prepends the routing marker (`[fm-from-firstmate]`), because an Eindri-home runs its own primary Brokk and its reply must come back through the status path rather than a chat nobody reads.
 
-The **control plane** is [`bin/fm-control.sh`](../bin/fm-control.sh): allowlisted lifecycle verbs addressed to an exact task id.
+The **control plane** is [`bin/backend/fm-control.sh`](../bin/fm-control.sh): allowlisted lifecycle verbs addressed to an exact task id.
 
 The split exists because the data plane's marking is exactly right for a message and exactly wrong for a lifecycle command.
 A routing-marked `/quit` arrives as ordinary chat - `[fm-from-firstmate] /quit` - which the agent reasons about instead of executing.
@@ -13,14 +13,14 @@ The failure repeated across harnesses and homes, and the workaround (remember to
 
 ## What the control plane owns
 
-`bin/fm-control-lib.sh` is the single executable owner of three capability tables, with no side effects, so it can be read as a contract:
+`bin/backend/fm-control-lib.sh` is the single executable owner of three capability tables, with no side effects, so it can be read as a contract:
 
 - The **verb allowlist**: `interrupt`, `exit`, `relaunch`.
   There is no arbitrary-text and no generic raw-key entry point.
   A caller either names an allowlisted verb or is refused.
 - **Per-harness mechanics**: the key that cancels a running turn, how many times it must be delivered, whether the composer needs clearing afterwards, the command that exits the agent, and which task kinds the adapter is verified to run.
   These were previously carried only in the [`harness-adapters`](../.agents/skills/harness-adapters/SKILL.md) skill's tool references, which now point here.
-  `bin/fm-send.sh`'s `--key` path reads the composer-clear table from this owner too, rather than keeping a second copy of it.
+  `bin/backend/fm-send.sh`'s `--key` path reads the composer-clear table from this owner too, rather than keeping a second copy of it.
 - **Per-backend capability**: which named keys a runtime backend can deliver, and whether it has a recovery-grade agent-state classifier able to prove an agent stopped.
 
 A recorded `harness=` is not always an exact adapter name: a task launched from a raw command records that command's basename instead.
@@ -45,7 +45,7 @@ The clear is refused before anything is sent when the recorded backend cannot de
 
 **Teardown and discard are not verbs and will not become verbs.**
 `exit` stops an agent and preserves everything else.
-Removing a worktree, closing an endpoint, or discarding work stays with [`bin/fm-teardown.sh`](../bin/fm-teardown.sh), which owns the landed-work test.
+Removing a worktree, closing an endpoint, or discarding work stays with [`bin/backend/fm-teardown.sh`](../bin/fm-teardown.sh), which owns the landed-work test.
 
 **`resume` is not a verb.**
 It is not deterministic across the verified adapters: codex and grok resume only from a session id printed at exit, opencode continues the most recent session for the cwd, and claude, pi, pi-signed, and kimi have no verified pane-resume contract.
@@ -69,7 +69,7 @@ It is not deterministic across the verified adapters: codex and grok resume only
    A ship or scout relaunch requires `--note`, because the replacement inherits the local copy but none of the conversation; the note is appended to the instructions it reads.
    An Eindri-home relaunch does not require one and never rewrites its standing charter.
 4. **Stop the old agent** through the `exit` verb, with its postcondition.
-5. **Launch the replacement** through its single owner, `bin/fm-spawn.sh --relaunch`, which adopts the recorded endpoint and worktree instead of creating either, clears the previous harness's per-task wiring, and arms a fresh busy generation.
+5. **Launch the replacement** through its single owner, `bin/backend/fm-spawn.sh --relaunch`, which adopts the recorded endpoint and worktree instead of creating either, clears the previous harness's per-task wiring, and arms a fresh busy generation.
 
 Switching harness is therefore one ordinary relaunch rather than a separate mechanism.
 
@@ -112,7 +112,7 @@ Backend capability comes from each adapter's real surface, not from a policy cho
 | cmux | yes | yes | yes | yes | no |
 | orca | no | yes | yes | no | no |
 
-Per-harness interrupt keys, repeat counts, composer clears, exit commands, and supported task kinds live in `bin/fm-control-lib.sh` and are exercised for every verified harness by `tests/fm-control.test.sh`.
+Per-harness interrupt keys, repeat counts, composer clears, exit commands, and supported task kinds live in `bin/backend/fm-control-lib.sh` and are exercised for every verified harness by `tests/fm-control.test.sh`.
 The empirical basis for each adapter's value is the `harness-adapters` skill's verification record for that adapter.
 
 ## Verification

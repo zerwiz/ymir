@@ -19,7 +19,7 @@
 # default session remains for the user's work.
 # fm-spawn/fm-send/fm-teardown keep owning the local endpoint mechanics.
 # The home's own workers keep their ordinary backend selection.
-# bin/fm-remote-doctor.sh owns that host's readiness for Herdr.
+# bin/backend/fm-remote-doctor.sh owns that host's readiness for Herdr.
 # docs/remote-secondmates.md owns why.
 # A private parent-route state directory stores only the remote secondmate
 # agent's endpoint record; the home's own
@@ -29,7 +29,7 @@
 #
 # The optional launch traceparent is the per-task W3C trace-context carrier the
 # PARENT home resolved for this secondmate; this host only delivers it to the
-# pane, and fm-spawn validates it (bin/fm-trace-context-lib.sh). Omitting it is
+# pane, and fm-spawn validates it (bin/backend/fm-trace-context-lib.sh). Omitting it is
 # the default-off path. print_route echoes the carrier the endpoint actually
 # holds, including for an already-alive endpoint that was not relaunched, so the
 # parent records the identity the agent really received rather than an intent.
@@ -42,11 +42,11 @@ CONTROL_STATE="$TARGET_HOME/state/parent-route"
 CONTROL_DATA="$TARGET_HOME/data/.parent-route"
 REMOTE_HERDR_SESSION=fm-remote
 
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-pending-reply-lib.sh
+# shellcheck source=bin/backend/fm-pending-reply-lib.sh
 . "$SCRIPT_DIR/fm-pending-reply-lib.sh"
-# shellcheck source=bin/fm-task-inbox-lib.sh
+# shellcheck source=bin/backend/fm-task-inbox-lib.sh
 . "$SCRIPT_DIR/fm-task-inbox-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit 1; }
@@ -147,7 +147,7 @@ cmd_launch() {
   case "$effort" in -|low|medium|high|xhigh|max) ;; *) die "invalid remote secondmate effort: $effort" ;; esac
   # Herdr is required on this host, not merely preferred: its server belongs to
   # the GUI login session, so the endpoint survives every SSH disconnection that
-  # a remote route depends on. bin/fm-remote-doctor.sh is the readiness owner.
+  # a remote route depends on. bin/backend/fm-remote-doctor.sh is the readiness owner.
   case "$selected_backend" in herdr) ;; *) die "a remote secondmate runs only on the herdr backend, not '$selected_backend'" ;; esac
   mkdir -p "$CONTROL_STATE" "$CONTROL_DATA"
   meta=$(meta_path "$id")
@@ -201,7 +201,7 @@ cmd_send() {
   # A remote steer is delivered by durable record, never by typing its payload
   # into the pane: write it into this secondmate's host-local steering inbox,
   # then ring the constant self-describing doorbell into the recorded pane,
-  # best-effort (bin/fm-task-inbox-lib.sh owns the record and doorbell). The
+  # best-effort (bin/backend/fm-task-inbox-lib.sh owns the record and doorbell). The
   # write is idempotent - re-running the same request after an ambiguous
   # transport failure lands on the existing record instead of a duplicate - so
   # the parent may safely repeat this leg. Exit 0 once the record durably

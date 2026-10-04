@@ -6,7 +6,7 @@ durable systemd units came out pointing at that disposable tree:
 
 ```
 ~/.config/systemd/user/nornir.service
-  ExecStart=/bin/bash $HOME_SEAT/ymir/.yggdrasil/ymir-autoboot/bin/nornir-cron-start.sh
+  ExecStart=/bin/bash $HOME_SEAT/ymir/.yggdrasil/ymir-autoboot/bin/time/nornir-cron-start.sh
 ```
 
 Two consequences, both bad:
@@ -20,7 +20,7 @@ Two consequences, both bad:
 The file already had the right idea in `FLEET_TEMPLATE_ROOT` ("the tree that SHIPS the
 templates may differ from the seat's platform root") — but the default WAS the caller's
 tree, so any run from a worktree wrote the worktree's path into the operator's permanent
-units. This is the same defect `bin/eindri-watch.sh` fixed for its watcher specs
+units. This is the same defect `bin/agents/eindri-watch.sh` fixed for its watcher specs
 ("Resolve to the MAIN tree via git's common dir, so an arm from any worktree records the
 same adapter").
 
@@ -38,7 +38,7 @@ same adapter").
 - The resolution, run from a real worktree:
   `ROOT=.yggdrasil/ymir-autoboot` → resolved durable root `$HOME_SEAT/ymir`. Correct.
 - The guard, exercised both ways: a unit naming `.yggdrasil/foo/bin/x.sh` → rc=1 (refused);
-  a unit naming `$HOME_SEAT/ymir/bin/nornir-cron-start.sh` → rc=0.
+  a unit naming `$HOME_SEAT/ymir/bin/time/nornir-cron-start.sh` → rc=0.
 - `bash -n` clean.
 
 ### Files

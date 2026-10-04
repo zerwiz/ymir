@@ -50,9 +50,9 @@
 
 _FM_X_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if ! command -v fm_backlog_atomic_transition >/dev/null 2>&1; then
-  # shellcheck source=bin/fm-tasks-axi-lib.sh
+  # shellcheck source=bin/backend/fm-tasks-axi-lib.sh
   . "$_FM_X_LIB_DIR/fm-tasks-axi-lib.sh"
-  # shellcheck source=bin/fm-backlog-transition-lib.sh
+  # shellcheck source=bin/backend/fm-backlog-transition-lib.sh
   . "$_FM_X_LIB_DIR/fm-backlog-transition-lib.sh"
 fi
 

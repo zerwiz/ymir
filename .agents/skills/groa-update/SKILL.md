@@ -64,8 +64,8 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
 
 5. **Re-check where the apps live — an update can move the shape.**
    `bin/app-lib.sh` resolves a surface in a clone (`apps/<surface>`) or in a
-   package (`node_modules/@zerwiz/<package>`); `bin/smidja-lib.sh` and
-   `bin/electron-lib.sh` do the same for the smithy and a shell's runtime. After a
+   package (`node_modules/@zerwiz/<package>`); `bin/desktop/smidja-lib.sh` and
+   `bin/desktop/electron-lib.sh` do the same for the smithy and a shell's runtime. After a
    fast-forward, run `bin/ymir-plan.sh --phase 5` — if a surface that stood
    installed now reads `BLOCKED`, the layout assumption moved and the resolver
    needs the new shape. A long update should also say so: `style_patience` from
@@ -86,7 +86,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
 
    The **roots law** is the one to watch across an update: the package is the code
    that runs the programs; the operator's info, documents, state, settings and
-   credentials live in the home they chose (`bin/hoard-lib.sh` resolves it). If the
+   credentials live in the home they chose (`bin/vault/hoard-lib.sh` resolves it). If the
    plan's `purity` row reports anything of the operator's inside the code tree,
    that is drift the update should have carried out — name it to the Allfather.
    Owning asset: `.agents/skills/galdr-ymirsystem/assets/installation.md`.
@@ -101,7 +101,7 @@ npm_renewal[6]{step,how,why}:
   "1 choose the number","fetch the registry's latest FIRST (curl …/@zerwiz%2fymir, not memory) and bump one above it","the registry can be AHEAD of main when a publish went out from a branch — main said 0.1.18 while npm served 0.1.25"
   "2 land the bump by PR","branch → commit → gh pr create → merge; never push main (branch-guard refuses)","the delivery gate: a change leaves by PR, and the Allfather's approval is the merge"
   "3 publish","bin/npm-publish.sh — it opens the vault's door for the token","the token is in hodd/secrets/platform.env.age, never in ~/.npmrc (that one has been stale before)"
-  "4 if it says the token is absent","the DOOR is broken, not the key: with `age` present, age -d -i hodd/secrets/age.key hodd/secrets/platform.env.age | sed -n 's/^NPM_TOKEN=//p'","bin/hodd.sh emit currently returns empty for both spellings; the vault is fine, the emit path is not — mend it"
+  "4 if it says the token is absent","the DOOR is broken, not the key: with `age` present, age -d -i hodd/secrets/age.key hodd/secrets/platform.env.age | sed -n 's/^NPM_TOKEN=//p'","bin/vault/hodd.sh emit currently returns empty for both spellings; the vault is fine, the emit path is not — mend it"
   "5 verify","fetch the VERSION document (…/@zerwiz/ymir/<version>) — it answers before the packument does","the registry lags for minutes; the packument can 404 while the version and tarball already resolve"
   "6 the four apps ride along","their pins move in the same release (hlidskjalf · odrerir · sessrumnir · smidja-factory)","the distro depends on them; a pin left behind keeps shipping the old app to every user"
 ```
@@ -115,7 +115,7 @@ npm_renewal[6]{step,how,why}:
   of date (once a day), so a stale install cannot hide.
 - **npm gates install scripts.** Electron's postinstall never runs, so a fresh
   install has web surfaces and no windows; each shell needs `npm rebuild electron`
-  (the installer's `step_desktop` does it, and `bin/electron-lib.sh` verifies).
+  (the installer's `step_desktop` does it, and `bin/desktop/electron-lib.sh` verifies).
 - **A package that ships less than it needs is a fault in its own repo.** Declare
   `name`, `files` and the absence of `private` where the package lives — never
   rewrite a manifest at publish time (that is how `vite.config.ts` went missing and

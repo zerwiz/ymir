@@ -77,7 +77,7 @@ While the flag is present:
 
 Every `/stow` invocation performs this complete pass, even when the session contains no new finding:
 
-1. Run `bin/fm-startup-memory-budget.sh report` before considering a write.
+1. Run `bin/backend/fm-startup-memory-budget.sh report` before considering a write.
    Record its effective budget and each file's estimated-token total.
    The budget is per home: this home's three files against this home's own allowance, never a fleet total.
    The helper's stable estimate is the documented conservative local approximation, not provider-exact accounting.
@@ -115,7 +115,7 @@ Every `/stow` invocation performs this complete pass, even when the session cont
    Convergence precondition: before evicting anything, total the eligible pool and check that archiving all of it would reach the budget; when even that cannot, skip the eviction rung entirely, archive nothing for budget reasons, and carry the concrete inability to the final step, naming the exempt pinned floor that crowds out the budget.
    Automatic processes never move a `pinned` entry: decay clocks, legacy grace cycles, oldest-first budget eviction, immediate budget archiving, and autonomous offload do not apply to it.
    The sole exception is relocation to a JIT owner after explicit, per-item captain approval under the offload flow below, and that entry remains in memory until its destination is live.
-8. Run `bin/fm-startup-memory-budget.sh report` again after the complete pass.
+8. Run `bin/backend/fm-startup-memory-budget.sh report` again after the complete pass.
    Finish at or below the effective budget, or open a concrete captain decision before ending the pass.
    A secondmate must explicitly report `primary-owned-shared-file-alone-exceeds-budget` when the inherited shared file alone exceeds its allowance, because local curation cannot resolve it.
    Route that constraint to the primary owner and open one concrete captain decision at the primary owning level that names the shortfall, with exactly these options: raise the affected home's effective budget, or explicitly approve the primary owner trimming or offloading each named shared-file entry.
@@ -180,7 +180,7 @@ Approved project-level destinations are not produced by stow: they ship normally
   Because this destination is local and untracked, it is also the JIT home for private conditional knowledge that no committed surface may hold.
 - An already-existing user-owned local on-demand note with an established trigger, after confirming it is untracked, private, and able to hold the quoted entry.
   The pass may add the entry to that existing owner but never creates a new note, skill, or trigger for this purpose.
-- A project's existing committed `AGENTS.md`, for project-intrinsic knowledge useful to nearly every session of that project, through a normal crewmate ship task using `bin/fm-ensure-agents-md.sh` and the project's registered delivery mode.
+- A project's existing committed `AGENTS.md`, for project-intrinsic knowledge useful to nearly every session of that project, through a normal crewmate ship task using `bin/backend/fm-ensure-agents-md.sh` and the project's registered delivery mode.
 - A project-level skill in the project's own repository, for situation-conditional knowledge within one project, through the same ship-task path.
 
 Forbidden destinations: any firstmate-repo-tracked skill per the hard rule; firstmate's own `AGENTS.md`, which is always-loaded for every fleet session; `docs/` alone, which is never agent-loaded on demand, though a skill body may point into docs for depth; and any committed surface for private content.
@@ -221,7 +221,7 @@ A local skill exists only in this home, so offloading an entry out of `data/capt
    - In a primary home, curate shared captain preferences only under the existing primary-authoritative shared-preference contract.
      In a secondmate home, route a newly discovered shared preference to the main firstmate through marked status or a document pointer instead of editing the inherited file.
    - Project-intrinsic knowledge never goes directly into a project's `AGENTS.md`.
-     Route it through a normal ship task so a crewmate records it with `bin/fm-ensure-agents-md.sh` and the project's delivery path.
+     Route it through a normal ship task so a crewmate records it with `bin/backend/fm-ensure-agents-md.sh` and the project's delivery path.
    - Knowledge general to every Firstmate user belongs in this repo's shared tracked material through the normal branch, no-mistakes, PR, and captain-merge path.
    - For task-scoped notes, inspect the item with `tasks-axi show <id> --full`, classify the change as new, duplicate, superseding, or obsolete, then use a considered replacement body through `tasks-axi update <id> --body-file <path>`.
      Use `--archive-body` when recoverability matters.
@@ -278,13 +278,13 @@ In a primary home, every `/stow` cascades to every registered secondmate after t
 In a secondmate home, `/stow` curates that home only and never cascades further.
 The cascade changes nothing until `/stow` is invoked: it adds no notification, no digest section, and no background work.
 
-Run `bin/fm-stow-cascade.sh` once the primary's own pass is done.
+Run `bin/backend/fm-stow-cascade.sh` once the primary's own pass is done.
 It enumerates each registered secondmate exactly once, reports that home's own budget accounting, and resolves how the sweep reaches it; its header owns the stanza fields, the bound, and the exit codes.
 Every home is judged against its own `config/startup-memory-budget` allowance, so never add homes together or treat one home's excess as another's.
 
 Act on each home by its reported `transport`:
 
-- `agent` - send the marked request with `bin/fm-send.sh fm-<id> "<request>"` so the live secondmate performs its own `/stow`, including the uncaptured knowledge that exists only in its session.
+- `agent` - send the marked request with `bin/backend/fm-send.sh fm-<id> "<request>"` so the live secondmate performs its own `/stow`, including the uncaptured knowledge that exists only in its session.
   Ask it for the same completion receipt this skill defines, and read its reply from its status file or the document it points to, never from its chat.
 - `direct` - curate that local home's editable memory files yourself under the same retention plan, then re-run the cascade to confirm the after totals.
   `data/captain-shared.md` stays a read-only counted input there, exactly as it is in any secondmate home.

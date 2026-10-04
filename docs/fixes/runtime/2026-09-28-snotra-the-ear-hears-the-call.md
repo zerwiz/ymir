@@ -76,7 +76,7 @@ records so the shell reads them without a second JSON parser.
    anyone held. Mended with a hard one-ear guard in `do_arm` plus
    `stop_lingering_captures`, which kills any ffmpeg still writing into the
    meetings shelf at leave and at start-up.
-3. **The shell wake-lock waits forever.** `bin/brokk-wake-lib.sh`'s
+3. **The shell wake-lock waits forever.** `bin/time/brokk-wake-lib.sh`'s
    `fm_wake_append` takes a lock **directory** at `$STATE/.wake-queue.lock`, while
    the queue itself (`src/ymir_runtime/state/queue.py`) owns a lock **file** at
    the same path. Where the queue's file exists, `fm_lock_try_acquire` can never
@@ -88,7 +88,7 @@ records so the shell reads them without a second JSON parser.
    this errand.)*
 4. **The materialized operator commands could not find the home.**
    `bin/fleet-ensure.sh` copied `snotra-capture.sh` and friends into `~/.fleet`
-   but not `bin/hoard-lib.sh`, so every one of them died on `YMIR_HOME: unbound
+   but not `bin/vault/hoard-lib.sh`, so every one of them died on `YMIR_HOME: unbound
    variable` the moment it ran outside a shell that already knew the home — the
    seated unit included. `hoard-lib.sh` now rides along, and the watch also
    resolves it through the durable tree the unit names.

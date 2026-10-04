@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Parent-owned secondmate pending-reply guards (bin/fm-pending-reply-lib.sh).
+# Parent-owned secondmate pending-reply guards (bin/backend/fm-pending-reply-lib.sh).
 #
 # Reproduces the missed-report experience: a marked request is delivered, the
 # target turn completes, and no correlated parent report arrives. The parent
@@ -26,9 +26,9 @@ set -u
 
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
-# shellcheck source=bin/fm-marker-lib.sh
+# shellcheck source=bin/backend/fm-marker-lib.sh
 . "$ROOT/bin/fm-marker-lib.sh"
-# shellcheck source=bin/fm-pending-reply-lib.sh
+# shellcheck source=bin/backend/fm-pending-reply-lib.sh
 . "$ROOT/bin/fm-pending-reply-lib.sh"
 
 SEND="$ROOT/bin/fm-send.sh"
@@ -99,7 +99,7 @@ phase_of() {  # <state> <corr>
 
 # A local steer now rides the durable steering inbox rather than the typed
 # channel, so marker/corr assertions read the latest enqueued record through
-# the production owner (bin/fm-task-inbox-lib.sh).
+# the production owner (bin/backend/fm-task-inbox-lib.sh).
 latest_record_body() {  # <home> <task>
   local rec
   rec=$(find "$1/state/$2.inbox" -maxdepth 1 -name '*.msg' 2>/dev/null | sort | tail -1)
@@ -764,7 +764,7 @@ test_restart_preserves_expectation_and_parent_destination() {
   parent_status=$(fm_pending_reply_get "$rec" parent_status)
   parent_home=$(fm_pending_reply_get "$rec" parent_home)
   # Simulate process restart: re-source library and re-read the same record.
-  # shellcheck source=bin/fm-pending-reply-lib.sh
+  # shellcheck source=bin/backend/fm-pending-reply-lib.sh
   . "$ROOT/bin/fm-pending-reply-lib.sh"
   [ -f "$rec" ] || fail "record must survive restart"
   [ "$(fm_pending_reply_get "$rec" parent_status)" = "$parent_status" ] \

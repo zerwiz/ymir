@@ -34,7 +34,7 @@ const STATE_DIR = join(ROOT, 'state');
 // The ledger lives in the HOARD, never in the checkout (Rule 04 / migration
 // 0004): $YMIR_HOARD, else $YMIR_HOME/hodd, else the recorded home's hodd.
 /** $YMIR_HOME — the hoard's home: env -> the recorded choice -> ONE default
- * (Rule 07; bin/hoard-lib.sh owns the record file and the default name). */
+ * (Rule 07; bin/vault/hoard-lib.sh owns the record file and the default name). */
 const HOME_DIR = process.env.YMIR_HOME ?? (() => {
   try {
     const rec = readFileSync(join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), 'ymir', 'home'), 'utf8').trim().split('\n')[0].trim();
@@ -431,8 +431,8 @@ async function wellEpisode(id: string) {
 /* ---- /api/processes ------------------------------------------------------ */
 async function processes() {
   const out: unknown[] = [];
-  const cron = await runAsync(['bash', 'bin/nornir-cron-start.sh', '--status']);
-  const bridge = await runAsync(['bash', 'bin/bifrost-bridge.sh', '--status']);
+  const cron = await runAsync(['bash', 'bin/time/nornir-cron-start.sh', '--status']);
+  const bridge = await runAsync(['bash', 'bin/bridge/bifrost-bridge.sh', '--status']);
   out.push({
     id: 'nornir-cron', name: 'Nornir cron', daemon: 'scheduler', manager: 'pm2',
     status: cron.includes('running') ? 'nominal' : 'down', cpu: 0, mem: 12, restarts: 0,
@@ -1072,7 +1072,7 @@ function skills() {
 
 /* ---- /api/runtime -------------------------------------------------------- */
 async function runtime() {
-  const digest = await runAsync(['bash', 'bin/saga-session-start.sh'], 10000);
+  const digest = await runAsync(['bash', 'bin/time/saga-session-start.sh'], 10000);
   const markers = {
     lock: read(join(STATE_DIR, '.lock')).trim(),
     started: existsSync(join(STATE_DIR, '.session-start-complete')),
@@ -1085,7 +1085,7 @@ async function runtime() {
 // The schedule the LOOP reads — never the repo's template. The board used to
 // read join(ROOT,'.agents/config'), which ships ONLY cron.yaml.example, so it
 // painted "0 jobs" while the loop ran the home's real schedule (2026-09-24).
-// bin/nornir-cron-start.sh resolves the config first from $YMIR_HOME/config;
+// bin/time/nornir-cron-start.sh resolves the config first from $YMIR_HOME/config;
 // the board resolves the same way.
 function cronConfigPath(): { path: string; source: string } {
   const home = join(HOME_DIR, 'config', 'cron.yaml');
@@ -1098,7 +1098,7 @@ function cronConfigPath(): { path: string; source: string } {
 }
 
 interface CronJobLine { at: string; role: string; command: string; }
-// Mirror the loop's parse exactly (bin/nornir-cron-start.sh): a `@role[,role]`
+// Mirror the loop's parse exactly (bin/time/nornir-cron-start.sh): a `@role[,role]`
 // gate may sit BEFORE the time (`@heart 06:00 bin/x`) or AFTER (`06:00 @heart
 // bin/x`); no gate means any role. One reality for scheduler, API, and board.
 function parseCronJobs(cfg: string): CronJobLine[] {
@@ -1134,7 +1134,7 @@ async function cron() {
   const { path, source } = cronConfigPath();
   const cfg = path ? read(path) : '';
   const jobs = parseCronJobs(cfg);
-  const status = await runAsync(['bash', 'bin/nornir-cron-start.sh', '--status']);
+  const status = await runAsync(['bash', 'bin/time/nornir-cron-start.sh', '--status']);
   const running = status.includes('running');
   const pid = (status.match(/pid=(\d+)/) ?? [])[1] ?? '';
   // Why a stopped loop is stopped — the log's last word, so 'DOWN' carries a
@@ -1188,7 +1188,7 @@ async function cronSeats() {
   for (const s of serverSeats()) {
     const out = await runAsync(
       ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=3', s.host,
-        `bash -lc 'G=$HOME/ymir; [ -d "$G/bin" ] || G=$(dirname "$(ls -d "$HOME"/*ymir*/bin 2>/dev/null | head -1)" 2>/dev/null); cd "$G" 2>/dev/null || exit 1; bash bin/nornir-cron-start.sh --status; bash bin/topology.sh --json 2>/dev/null'`],
+        `bash -lc 'G=$HOME/ymir; [ -d "$G/bin" ] || G=$(dirname "$(ls -d "$HOME"/*ymir*/bin 2>/dev/null | head -1)" 2>/dev/null); cd "$G" 2>/dev/null || exit 1; bash bin/time/nornir-cron-start.sh --status; bash bin/topology.sh --json 2>/dev/null'`],
       8000);
     if (!out) {
       rows.push({ seat: s.seat, host: s.host, reachable: false, running: false, pid: '', roles: [], jobs: localJobs.length, applies: 0, error: 'unreachable (ssh ring)' });
@@ -1327,7 +1327,7 @@ function parseToon(text: string): Record<string, string>[] {
 }
 
 async function loaders() {
-  return parseToon(await runAsync(['bash', 'bin/valknut-load.sh', '--status']));
+  return parseToon(await runAsync(['bash', 'bin/seat/valknut-load.sh', '--status']));
 }
 async function checks() {
   try {
@@ -1713,7 +1713,7 @@ async function postChat(
     usedModel = out.model;
     live = true;
   } catch (err) {
-    body = `The well is local; no model backend answered (${(err as Error).message}). Recall ran; for a reply, raise a local model (llama-server on :8080) or the Bifrost bridge (\`bin/bifrost-bridge.sh\`).`;
+    body = `The well is local; no model backend answered (${(err as Error).message}). Recall ran; for a reply, raise a local model (llama-server on :8080) or the Bifrost bridge (\`bin/bridge/bifrost-bridge.sh\`).`;
   }
 
   const kaia: ChatRow = {
@@ -2190,7 +2190,7 @@ const server = Bun.serve({
         return json(await memoAsync('usage', 60_000, async () => {
           try {
             const { execFileSync } = await import('node:child_process');
-            const script = new URL('../../../bin/hlidskjalf-usage.sh', import.meta.url).pathname;
+            const script = new URL('../../../bin/desktop/hlidskjalf-usage.sh', import.meta.url).pathname;
             const out = execFileSync(script, ['--days', process.env.YMIR_USAGE_DAYS ?? '30'], { timeout: 60_000 }).toString().trim();
             return JSON.parse(out);
           } catch (e) {
@@ -2210,7 +2210,7 @@ const server = Bun.serve({
         // its kind, state and task. The roster is the fallback, never the answer.
         try {
           const { execFileSync } = await import('node:child_process');
-          const script = new URL('../../../bin/hlidskjalf-agents.sh', import.meta.url).pathname;
+          const script = new URL('../../../bin/desktop/hlidskjalf-agents.sh', import.meta.url).pathname;
           // cwd is ROOT and ROSTER_DIR is the absolute roster, so the connector's
           // roster path cannot resolve against the wrong directory.
           const out = execFileSync(script, [], {

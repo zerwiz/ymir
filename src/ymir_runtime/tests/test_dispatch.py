@@ -154,7 +154,7 @@ class TableTest(unittest.TestCase):
         self.assertIn("summons nothing", str(caught.exception))
 
 
-@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/ymir-engine-ensure.sh ensure")
+@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/engine/ymir-engine-ensure.sh ensure")
 class RegistryTest(unittest.TestCase):
     """The hoard's model — a lookup of declared data, and a delegation for a request."""
 
@@ -225,7 +225,7 @@ class RegistryTest(unittest.TestCase):
             HoardModels(root=self.tmp, override=self.a).request("anything")
 
 
-@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/ymir-engine-ensure.sh ensure")
+@unittest.skipUnless(HAS_VALIDATOR, "jsonschema not installed — bin/engine/ymir-engine-ensure.sh ensure")
 class ResolveTest(unittest.TestCase):
     """One errand → role · figure · tools · model · harness · seat."""
 

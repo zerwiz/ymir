@@ -44,7 +44,7 @@ hole, not a doc slip.
   `*`; `access-control-allow-private-network` is **removed**. A request with no
   `Origin` is a native MCP client (pi/opencode/curl), never a browser, and is
   admitted.
-- **`bin/mcp-gateway.sh`** — the same story in the owning comment (the false
+- **`bin/bridge/mcp-gateway.sh`** — the same story in the owning comment (the false
   "only this body's own pages" invariant is gone), `VERSION="1.2.0"`, and
   `MCP_GATEWAY_ALLOWED_ORIGINS` documented and exported.
 - **`.agents/tests/mcp-gateway.test.sh`** — the browser-road block now proves the
@@ -56,7 +56,7 @@ hole, not a doc slip.
   the request-time plugin (public/); the packaged seat is served by `vite preview`
   from `dist/`, where the job's write now lands. The served feed is the job's
   last write in BOTH shapes; the publish-time bake is superseded in place.
-- **`bin/nornir-job-hall-snapshot.sh`** · **`apps/odrerir/vite.config.ts`** —
+- **`bin/time/nornir-job-hall-snapshot.sh`** · **`apps/odrerir/vite.config.ts`** —
   comments corrected to describe both shapes (the plugin's own code is
   unchanged).
 - **`.agents/skills/galdr-ymirsystem/assets/odrerir-hall.md`** — the two rows now
@@ -68,8 +68,8 @@ hole, not a doc slip.
 
 ## Verified
 
-- `node --check tools/mcp-gateway/server.mjs`; `bash -n` on `bin/mcp-gateway.sh`,
-  `bin/hall-snapshot.sh`, `bin/nornir-job-hall-snapshot.sh`,
+- `node --check tools/mcp-gateway/server.mjs`; `bash -n` on `bin/bridge/mcp-gateway.sh`,
+  `bin/hall-snapshot.sh`, `bin/time/nornir-job-hall-snapshot.sh`,
   `.agents/tests/mcp-gateway.test.sh` — all green.
 - `.agents/tests/mcp-gateway.test.sh` — **ALL PASS**, 25 assertions. The new
   security assertions, live on a real gateway:
@@ -103,7 +103,7 @@ wrote:           apps/odrerir/public/livehall.json  AND  apps/odrerir/dist/liveh
   `cache-control: no-store`, no rebuild. Both shapes serve the living feed.
 - **Item 3:** the asset rows at §1 and §4 now read `VITE_MCP_GATEWAY_PORT`;
   `grep -n 'MCP_GATEWAY_PORT'` shows the app-facing rows agree with the Knobs row.
-- `bash bin/guards.sh` — PASS (runtime-guard, defaults-guard).
+- `bash bin/gates/guards.sh` — PASS (runtime-guard, defaults-guard).
 - `bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh` — 15/15 PASS
   (governed assets current).
 
@@ -117,9 +117,9 @@ overwrites that file on the seat, so the served feed is never the bake.
 
 ## Files
 
-- `tools/mcp-gateway/server.mjs` · `bin/mcp-gateway.sh`
+- `tools/mcp-gateway/server.mjs` · `bin/bridge/mcp-gateway.sh`
 - `.agents/tests/mcp-gateway.test.sh`
-- `bin/hall-snapshot.sh` · `bin/nornir-job-hall-snapshot.sh`
+- `bin/hall-snapshot.sh` · `bin/time/nornir-job-hall-snapshot.sh`
 - `apps/odrerir/vite.config.ts`
 - `.agents/skills/galdr-ymirsystem/assets/odrerir-hall.md`
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`

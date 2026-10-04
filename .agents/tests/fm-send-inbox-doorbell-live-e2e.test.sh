@@ -78,7 +78,7 @@ harness_version() {  # <binary>
 }
 
 # Launch <name> idle with its unattended-autonomy flags (the same posture
-# bin/fm-spawn.sh uses), so the doorbell-triggered shell actions need no
+# bin/backend/fm-spawn.sh uses), so the doorbell-triggered shell actions need no
 # interactive approval.
 launch_cmd() {  # <name>
   case "$1" in

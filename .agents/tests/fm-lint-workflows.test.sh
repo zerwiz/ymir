@@ -459,7 +459,7 @@ test_installer_rejects_unsupported_platform() {
   pass "actionlint installer rejects an unsupported OS or architecture"
 }
 
-# Prove the no-mistakes/local owner (bin/fm-lint.sh with no paths) catches a
+# Prove the no-mistakes/local owner (bin/backend/fm-lint.sh with no paths) catches a
 # self-broken ci.yml. Copy the lint scripts into a fake repo so the default
 # workflow root is the fixture, not this worktree.
 test_fm_lint_default_path_catches_broken_ci_yml() {

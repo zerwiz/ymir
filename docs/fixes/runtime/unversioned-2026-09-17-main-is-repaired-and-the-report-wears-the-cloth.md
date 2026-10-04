@@ -18,7 +18,7 @@
   the data on stdout. It found real drift while it was being written: the SPA down
   on `:3888`, Nornir cron stopped, `sessrumnir`, `mcp` and `hoard` broken.
 - **Eir watches the shells.** A new surface reports the desktop shells' runtime
-  through `bin/electron-lib.sh` — a *partial* Electron runtime is exactly the
+  through `bin/desktop/electron-lib.sh` — a *partial* Electron runtime is exactly the
   quiet failure Eir e
 
 ### Files

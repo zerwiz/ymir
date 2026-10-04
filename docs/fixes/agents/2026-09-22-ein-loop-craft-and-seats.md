@@ -18,7 +18,7 @@ one-command maker. The herdr skill (read) showed the native seat roads.
   `eindri-control.sh read`.
 
 ### Files
-- `bin/eindri-dispatch.sh` (craft enforcement · scout · herdr wiring)
+- `bin/agents/eindri-dispatch.sh` (craft enforcement · scout · herdr wiring)
 - `docs/fixes/agents/2026-09-22-ein-loop.md` (the base note; this is the
   follow-on stroke)
 

@@ -54,7 +54,7 @@ FM_REMOTE_JOB_SUPERVISOR_HEALTHY_SECONDS=$(worker_bounded_setting "${FM_REMOTE_J
 SCRIPT_DIR=$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 FM_ROOT=${FM_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR/.." && pwd -P)}
 
-# shellcheck source=bin/fm-remote-job-lib.sh
+# shellcheck source=bin/backend/fm-remote-job-lib.sh
 . "$SCRIPT_DIR/fm-remote-job-lib.sh"
 
 WORKER_LOCK=

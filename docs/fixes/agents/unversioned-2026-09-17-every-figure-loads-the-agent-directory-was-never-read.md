@@ -8,7 +8,7 @@
   opened, so only `brokk` and `hnoss` — the two declared by hand in
   `opencode.json` — ever appeared.
 - **The directory is fixed and migrated.** `.opencode/agent/` → `.opencode/agents/`
-  (20 links, all resolving). `bin/valknut-load.sh` now writes the plural path and
+  (20 links, all resolving). `bin/seat/valknut-load.sh` now writes the plural path and
   **migrates a legacy singular dir forward**, so an old home heals instead of
   silently keeping its agents invisible.
 - **The roster now declares what it names.** `bin/agents-config.sh apply` only

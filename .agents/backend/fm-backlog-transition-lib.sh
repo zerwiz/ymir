@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # Fused backlog transitions for the scripts that own a task's physical record.
-# Usage: . bin/fm-tasks-axi-lib.sh; . bin/fm-backlog-transition-lib.sh
+# Usage: . bin/backend/fm-tasks-axi-lib.sh; . bin/backend/fm-backlog-transition-lib.sh
 # (this library reads that one's backend gate and never sources it itself, so a
 # caller that already sourced it keeps its memoised compatibility verdict).
 #
@@ -11,10 +11,10 @@
 # same process, under the per-task meta lock it already holds, before it reports
 # success. Nothing else - not a later agent turn, not a printed reminder - is
 # load-bearing for the pairing.
-#   bin/fm-spawn.sh      meta published => `tasks-axi start`
-#   bin/fm-teardown.sh   meta removed => `tasks-axi done`
-#   bin/fm-bootstrap.sh  replays whatever a crash left behind, THIS HOME ONLY.
-# bin/fm-fleet-snapshot.sh's classifier and bin/fm-secondmate-reconcile.sh's
+#   bin/backend/fm-spawn.sh      meta published => `tasks-axi start`
+#   bin/backend/fm-teardown.sh   meta removed => `tasks-axi done`
+#   bin/backend/fm-bootstrap.sh  replays whatever a crash left behind, THIS HOME ONLY.
+# bin/backend/fm-fleet-snapshot.sh's classifier and bin/backend/fm-secondmate-reconcile.sh's
 # cross-home nudge stay defense in depth, not the primary mechanism.
 #
 # SCOPE. fm_backlog_transition_applies is the single gate. It excludes

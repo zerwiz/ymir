@@ -15,7 +15,7 @@ bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-# The primary's runtime state resolves through bin/hoard-lib.sh (Rule 04), so
+# The primary's runtime state resolves through bin/vault/hoard-lib.sh (Rule 04), so
 # pin it to the sandbox: without this the library would touch the operator's
 # real home.
 export YMIR_STATE_DIR="$TMP/state"

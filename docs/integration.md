@@ -26,21 +26,21 @@ in the Ymir directory**; every other project is untouched.
 ```bash
 cd <ymir-checkout>
 bin/prereq-ensure.sh engram        # the well engine (if absent)
-bin/a2abridge-ensure.sh ensure --install   # the A2A mesh engine + directory daemon
-bin/a2a-mcp.sh install --project   # writes THIS repo's config only: engram + a2abridge
-bin/a2a-mcp.sh show --project      # verify
-bin/valknut-load.sh --opencode     # bind Ymir's agents/skills into OpenCode
+bin/bridge/a2abridge-ensure.sh ensure --install   # the A2A mesh engine + directory daemon
+bin/bridge/a2a-mcp.sh install --project   # writes THIS repo's config only: engram + a2abridge
+bin/bridge/a2a-mcp.sh show --project      # verify
+bin/seat/valknut-load.sh --opencode     # bind Ymir's agents/skills into OpenCode
 ```
 
-`bin/a2a-mcp.sh install` (no `--project`) also writes Pi's **global**
+`bin/bridge/a2a-mcp.sh install` (no `--project`) also writes Pi's **global**
 `~/.pi/agent/mcp-adapter.json`. When Pi is used in other areas, prefer `--project`: it
 writes the repo's `.pi/mcp-adapter.json` instead, and Pi picks it up only when launched
 with `pi --mcp-config .pi/mcp-adapter.json`.
 
 ### Order matters
 
-`bin/valknut-load.sh --opencode` renders the project `opencode.json` from its
-`.example`; run it **before** `bin/a2a-mcp.sh install --project` so the MCP block
+`bin/seat/valknut-load.sh --opencode` renders the project `opencode.json` from its
+`.example`; run it **before** `bin/bridge/a2a-mcp.sh install --project` so the MCP block
 is not overwritten. `bin/agents-config.sh apply` merges in local providers and
 should also run before the MCP install.
 
@@ -71,9 +71,9 @@ Ymir binds to **one home**, and the machine has **one Brokk primary**:
 - A pane in another repository does **not** auto-seat Brokk — the adapter lives in
   the Ymir checkout. Panes elsewhere are for observation and terminal work.
 - To have Ymir **work** another project, dispatch it:
-  `bin/einherjar-spawn.sh <task-id> <project-dir>` creates an Yggdrasil worktree of
+  `bin/agents/einherjar-spawn.sh <task-id> <project-dir>` creates an Yggdrasil worktree of
   that project and seats the worker pane there. Herdr panes carry their own cwd
-  (`bin/herdr-run.sh seat_tab <name> <cwd>`), so the pane layout is unchanged.
+  (`bin/seat/herdr-run.sh seat_tab <name> <cwd>`), so the pane layout is unchanged.
 
 Hlidskjalf is the Ymir home's control plane; other projects surface there through
 the project registry and their worktrees.
@@ -82,8 +82,8 @@ the project registry and their worktrees.
 
 ```bash
 systemctl --user status ymir.service        # substrate (Quadlet) — if containerised
-bin/a2abridge-ensure.sh status              # engine / directory / service
-bin/a2a-mcp.sh show --project               # MCP wiring in this repo
+bin/bridge/a2abridge-ensure.sh status              # engine / directory / service
+bin/bridge/a2a-mcp.sh show --project               # MCP wiring in this repo
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4602/health   # the well
 ```
 

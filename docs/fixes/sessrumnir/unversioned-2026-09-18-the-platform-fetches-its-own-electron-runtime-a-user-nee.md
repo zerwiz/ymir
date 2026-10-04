@@ -8,11 +8,11 @@
   exist in every npm; `--allow-scripts` works only at install time, and npm skips
   unchanged packages.
 - **What works everywhere is what the postinstall does:** fetch the release and place it.
-  `electron_fetch_runtime` (`bin/electron-lib.sh`) reads the version from the app's own
+  `electron_fetch_runtime` (`bin/desktop/electron-lib.sh`) reads the version from the app's own
   manifest, fetches that release, places `dist/`, writes `path.txt`, and checks the
   binary. Both mends fall back to it.
 - **Proven on this machine:** the runtime removed, the mend run, `v43.0.0` present and
   answering.
 
 ### Files
-- `bin/electron-lib.sh`
+- `bin/desktop/electron-lib.sh`

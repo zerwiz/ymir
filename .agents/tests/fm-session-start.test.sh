@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/fm-session-start.test.sh - behavior tests for bin/fm-session-start.sh,
+# tests/fm-session-start.test.sh - behavior tests for bin/backend/fm-session-start.sh,
 # the single command that collapses AGENTS.md sections 3 (bootstrap) and 5
 # (recovery) into one ordered digest.
 #
@@ -502,7 +502,7 @@ SH
 }
 
 # run_session_start <home> <root> <path>
-# Drop every harness env marker from bin/fm-harness.sh detect_own so the
+# Drop every harness env marker from bin/backend/fm-harness.sh detect_own so the
 # surrounding interactive shell cannot leak past the suite's fake ps harness.
 # Markers today: CLAUDECODE (claude), PI_CODING_AGENT plus FM_PI_HARNESS
 # (Pi family), GROK_AGENT (grok).
@@ -782,9 +782,9 @@ EOF
   assert_contains "$out" "TANGLE: primary checkout on feature branch 'fm/read-only-tangle'" "read-only bootstrap did not surface the tangle diagnostic"
   assert_contains "$out" "read-only session must leave restore work" "read-only tangle diagnostic did not explain restore ownership"
   assert_contains "$out" "Stay read-only: do not arm" "read-only next step did not block direct watcher repair"
-  assert_not_contains "$out" "drain them with bin/fm-wake-drain.sh" "read-only guard printed a mutating drain instruction"
+  assert_not_contains "$out" "drain them with bin/backend/fm-wake-drain.sh" "read-only guard printed a mutating drain instruction"
   assert_not_contains "$out" "After draining queued wakes" "read-only guard printed a drain-then-rearm instruction"
-  assert_not_contains "$out" "run bin/fm-watch-arm.sh" "read-only guard printed a mutating watcher-arm instruction"
+  assert_not_contains "$out" "run bin/backend/fm-watch-arm.sh" "read-only guard printed a mutating watcher-arm instruction"
   assert_not_contains "$out" "git -C $root checkout main" "read-only bootstrap printed a state-changing checkout remediation"
 
   # Detect-only bootstrap diagnostics still ran (the fakebin's PATH excludes
@@ -2303,7 +2303,7 @@ EOF
   assert_contains "$out" "Away mode is active" "next step did not switch to AFK guidance"
   assert_contains "$out" "daemon owns the watcher" "next step did not delegate watcher ownership to the daemon"
   assert_contains "$out" "- Away mode: active" "supervision block did not include active AFK state"
-  assert_not_contains "$out" "  bin/fm-watch-arm.sh" "AFK next step still told the agent to arm the watcher directly"
+  assert_not_contains "$out" "  bin/backend/fm-watch-arm.sh" "AFK next step still told the agent to arm the watcher directly"
 
   pass "next step delegates watcher ownership to the AFK daemon"
 }

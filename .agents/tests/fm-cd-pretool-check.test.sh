@@ -4,7 +4,7 @@
 #
 # bin/fm-cd-command-policy.mjs is the single owner of the block/allow decision;
 # it reuses the shell classifier owned by bin/fm-arm-command-policy.mjs.
-# bin/fm-cd-pretool-check.sh is the stable transport: it scopes the guard to the
+# bin/backend/fm-cd-pretool-check.sh is the stable transport: it scopes the guard to the
 # real primary checkout, then drives all five harness entry forms. This suite
 # proves the decision matrix, the harness-output shaping, the primary-checkout
 # scoping (including the deliberate secondmate-home difference from the turn-end
@@ -51,7 +51,7 @@ make_secondmate_fixture() {
   printf '%s\n' "$dir"
 }
 
-# A genuine linked git worktree - the shape bin/fm-spawn.sh hands crewmate/scout
+# A genuine linked git worktree - the shape bin/backend/fm-spawn.sh hands crewmate/scout
 # tasks. git-dir and git-common-dir differ, so the guard must be inert.
 make_child_worktree_fixture() {
   local base=$1 dir=$2
@@ -373,7 +373,7 @@ test_policy_cli_direct() {
 
 # --- per-harness wiring -----------------------------------------------------
 
-# Delegated to bin/fm-lint.sh, the single owner of the lint definition including
+# Delegated to bin/backend/fm-lint.sh, the single owner of the lint definition including
 # --external-sources; calling the linter directly here would be a second copy of
 # that definition, and would disagree the moment this checker sourced a shared
 # library.
@@ -381,8 +381,8 @@ test_scripts_are_shellcheck_clean() {
   local out
   command -v shellcheck >/dev/null 2>&1 || { pass "shellcheck not installed, skipping"; return; }
   out=$("$ROOT/bin/fm-lint.sh" "$ROOT/bin/fm-cd-pretool-check.sh" 2>&1) \
-    || fail "bin/fm-cd-pretool-check.sh is not lint-clean under the pinned definition: $out"
-  pass "bin/fm-cd-pretool-check.sh is clean under bin/fm-lint.sh"
+    || fail "bin/backend/fm-cd-pretool-check.sh is not lint-clean under the pinned definition: $out"
+  pass "bin/backend/fm-cd-pretool-check.sh is clean under bin/backend/fm-lint.sh"
 }
 
 test_full_acceptance_matrix

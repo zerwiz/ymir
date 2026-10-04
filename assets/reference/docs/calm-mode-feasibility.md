@@ -138,7 +138,7 @@ None occurred.
 
 The fix installs a separate idempotent presentation adapter, verified on Pi 0.81.1 through 0.82.0, on the exported `InteractiveMode.addMessageToChat` method.
 The adapter probes for that exact method and, per the [compatibility contract](calm.md#pi-compatibility), degrades independently with a diagnostic rather than gating on a version number.
-It delegates current recognition to `bin/fm-operational-input.sh`, adds only the evidence-backed bare-U+2063 `Supervisor escalate (` presentation compatibility shape, mounts a `UserMessageComponent` subclass that preserves Pi's stock row plus leading spacer while Calm is off, and returns zero rendered lines while Calm is on.
+It delegates current recognition to `bin/backend/fm-operational-input.sh`, adds only the evidence-backed bare-U+2063 `Supervisor escalate (` presentation compatibility shape, mounts a `UserMessageComponent` subclass that preserves Pi's stock row plus leading spacer while Calm is off, and returns zero rendered lines while Calm is on.
 It never intercepts the input event, rewrites the message, changes its role, filters model context, or changes session data.
 Messages containing an image are left on Pi's ordinary path even when their text equals an operational envelope because Firstmate's authoritative producers are text-only.
 
@@ -179,7 +179,7 @@ Compaction and retry loaders remain stock because Pi exposes no supported replac
 ## Central visibility and input policy
 
 `.pi/extensions/lib/fm-calm-visibility.ts` owns only the allowlist-style transcript presentation policy.
-`bin/fm-operational-input.sh` owns current cross-language operational-input construction and parsing, while the thin Pi adapter lives at `.pi/extensions/lib/fm-operational-input.ts`.
+`bin/backend/fm-operational-input.sh` owns current cross-language operational-input construction and parsing, while the thin Pi adapter lives at `.pi/extensions/lib/fm-operational-input.ts`.
 Only `genuine-user-prompt`, `genuine-agent-response`, and `working-status` are policy-visible.
 Every other audited class is policy-hidden when Pi exposes a supported presentation boundary, but semantic input is never transformed to enforce that preference.
 The home-local persistence schema is owned by [`docs/configuration.md`](configuration.md#pi-calm-preference-configcalm).
@@ -316,10 +316,10 @@ ok - Pi calm native E2E keeps Working and captain turns visible, hides exact ope
 $ tests/fm-pi-primary-types.test.sh
 ok - tracked Pi extensions pass strict no-emit typecheck against Pi 0.81.1
 
-$ bin/fm-lint.sh
+$ bin/backend/fm-lint.sh
 fm-lint.sh: ShellCheck 0.11.0 (pinned 0.11.0)
 
-$ bin/fm-test-run.sh --changed --base origin/main
+$ bin/backend/fm-test-run.sh --changed --base origin/main
 FM_TEST_SUMMARY total=38 failed=0 skipped_gate=7 duration_ms=166881
 FM_TEST_SUMMARY_FAMILY family=live-harness-optin count=7 duration_ms=192 failed=0
 FM_TEST_SUMMARY_FAMILY family=pure-contract-unit count=31 duration_ms=165384 failed=0
@@ -376,13 +376,13 @@ ok - Pi calm native E2E replaces the stock working row with a moving, resize-cla
 $ tests/fm-pi-primary-types.test.sh
 ok - tracked Pi extensions pass strict no-emit typecheck against Pi 0.81.1
 
-$ bin/fm-lint.sh
+$ bin/backend/fm-lint.sh
 fm-lint.sh: ShellCheck 0.11.0 (pinned 0.11.0)
 
-$ bin/fm-doc-audience-check.sh
+$ bin/backend/fm-doc-audience-check.sh
 fm-doc-audience-check: ok surfaces=57 local_links=160
 
-$ bin/fm-test-run.sh --changed --base origin/main
+$ bin/backend/fm-test-run.sh --changed --base origin/main
 FM_TEST_SUMMARY total=32 failed=0 skipped_gate=7 duration_ms=196009
 FM_TEST_SUMMARY_FAMILY family=live-harness-optin count=7 duration_ms=202 failed=0
 FM_TEST_SUMMARY_FAMILY family=pure-contract-unit count=25 duration_ms=194670 failed=0
@@ -417,13 +417,13 @@ $ pi --version
 $ tests/fm-pi-primary-types.test.sh
 ok - tracked Pi extensions pass strict no-emit typecheck against Pi 0.81.1
 
-$ bin/fm-lint.sh
+$ bin/backend/fm-lint.sh
 fm-lint.sh: ShellCheck 0.11.0 (pinned 0.11.0)
 
-$ bin/fm-doc-audience-check.sh
+$ bin/backend/fm-doc-audience-check.sh
 fm-doc-audience-check: ok surfaces=57 local_links=163
 
-$ bin/fm-test-run.sh --changed --base origin/main
+$ bin/backend/fm-test-run.sh --changed --base origin/main
 FM_TEST_SUMMARY total=32 failed=0 skipped_gate=7 duration_ms=386738
 FM_TEST_SUMMARY_FAMILY family=live-harness-optin count=7 duration_ms=257 failed=0
 FM_TEST_SUMMARY_FAMILY family=pure-contract-unit count=25 duration_ms=383010 failed=0
@@ -506,13 +506,13 @@ ok - Pi calm native E2E replaces the stock working row with a moving, resize-cla
 $ tests/fm-pi-primary-types.test.sh
 ok - tracked Pi extensions pass strict no-emit typecheck against Pi 0.80.10
 
-$ bin/fm-lint.sh
+$ bin/backend/fm-lint.sh
 fm-lint.sh: ShellCheck 0.11.0 (pinned 0.11.0)
 
-$ bin/fm-doc-audience-check.sh
+$ bin/backend/fm-doc-audience-check.sh
 fm-doc-audience-check: ok surfaces=68 local_links=253
 
-$ bin/fm-test-run.sh --changed --base origin/main
+$ bin/backend/fm-test-run.sh --changed --base origin/main
 FM_TEST_SUMMARY total=46 failed=0 skipped_gate=16 duration_ms=279390
 FM_TEST_SUMMARY_FAMILY family=live-harness-optin count=16 duration_ms=431 failed=0
 FM_TEST_SUMMARY_FAMILY family=pure-contract-unit count=30 duration_ms=277700 failed=0
@@ -527,7 +527,7 @@ Calm still hides the complete row while active, restores the probed stock behavi
 The real installed-package comparison and the portable legacy-capability case are both executable through:
 
 ```sh
-bin/fm-test-run.sh tests/fm-pi-branch-extension.test.sh
+bin/backend/fm-test-run.sh tests/fm-pi-branch-extension.test.sh
 ```
 
 Observed against installed `@earendil-works/pi-coding-agent` 0.84.4:

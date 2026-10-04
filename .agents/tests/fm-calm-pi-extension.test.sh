@@ -814,7 +814,7 @@ for (const itemClass of visibility.CALM_TRANSCRIPT_CLASSES) {
 }
 const watcherBody =
   "FIRSTMATE WATCHER WAKE: signal: /tmp/probe.status\n\n" +
-  "Run bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.";
+  "Run bin/backend/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.";
 const watcherMessage = operationalInput.encodeFirstmateOperationalInput("watcher", watcherBody);
 const legacyAwayMessage = "\u2063Supervisor escalate (legacy presentation compatibility)";
 const operationalHistory = [];
@@ -1154,13 +1154,13 @@ const operationalNearMisses = [
     visible: "legacy untyped captain message",
   },
   {
-    content: "Run `bin/fm-session-start.sh` now, exactly once, before executing any other instructions.",
+    content: "Run `bin/backend/fm-session-start.sh` now, exactly once, before executing any other instructions.",
     visible: "before executing any other instructions",
   },
   {
     content:
       "FIRSTMATE WATCHER WAKE: captain-authored legacy-shaped message\n\n" +
-      "Run bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.",
+      "Run bin/backend/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.",
     visible: "captain-authored legacy-shaped message",
   },
   {
@@ -1655,7 +1655,7 @@ let latestInputRole: "user" | "custom" | undefined;
 
 const EXACT_WATCHER_INPUT =
   "\u2063FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /home/fixture/github/kunchenguid/firstmate/state/oss-triage-t4.status\n\n" +
-  "Run bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.";
+  "Run bin/backend/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.";
 
 function monitorInput(suffix: "ONE" | "TWO"): string {
   if (label === "exact_watcher" && suffix === "ONE") return EXACT_WATCHER_INPUT;
@@ -1827,7 +1827,7 @@ TS
       if [ "$label" = exact_watcher ]; then
         assert_not_contains "$pane" "FIRSTMATE WATCHER WAKE: signal: /home/fixture/github/kunchenguid/firstmate/state/oss-triage-t4.status" \
           "Pi exact watcher case rendered the Calm-hidden authoritative payload"
-        assert_not_contains "$pane" "Run bin/fm-wake-drain.sh first and handle the queued wake." \
+        assert_not_contains "$pane" "Run bin/backend/fm-wake-drain.sh first and handle the queued wake." \
           "Pi exact watcher case rendered the Calm-hidden drain instruction"
       elif [ "$label" = legacy_away ]; then
         assert_not_contains "$pane" "LEGACY_AWAY_E2E" \
@@ -1865,7 +1865,7 @@ const handled = expected === 2
 const expectedOperationalTexts = Array.from({ length: expected }, (_, index) => {
   const suffix = index === 0 ? "ONE" : "TWO";
   return label === "exact_watcher" && suffix === "ONE"
-    ? "\u2063FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /home/fixture/github/kunchenguid/firstmate/state/oss-triage-t4.status\n\nRun bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned."
+    ? "\u2063FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /home/fixture/github/kunchenguid/firstmate/state/oss-triage-t4.status\n\nRun bin/backend/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned."
     : label === "legacy_away" && suffix === "ONE"
       ? "\u2063Supervisor escalate (LEGACY_AWAY_E2E)"
       : `\u2063FIRSTMATE_OP: v1 watcher: MONITOR_${label}_${suffix}`;
@@ -1942,7 +1942,7 @@ const entries = fs.readFileSync(process.argv[2], "utf8").trim().split("\n").map(
 const text = (content) => typeof content === "string"
   ? content
   : (content ?? []).filter((item) => item.type === "text").map((item) => item.text).join("");
-const exact = "\u2063FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /home/fixture/github/kunchenguid/firstmate/state/oss-triage-t4.status\n\nRun bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.";
+const exact = "\u2063FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /home/fixture/github/kunchenguid/firstmate/state/oss-triage-t4.status\n\nRun bin/backend/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.";
 const users = entries.filter((entry) => entry.type === "message" && entry.message.role === "user" && text(entry.message.content) === exact);
 const responses = entries.filter((entry) => entry.type === "message" && entry.message.role === "assistant" && text(entry.message.content) === "MONITOR_HANDLED_exact_watcher_ONE");
 if (users.length !== 1 || responses.length !== 1) {
@@ -3311,8 +3311,8 @@ TS
 {"type":"message","id":"a0000006","parentId":"a0000005","timestamp":"$now","message":{"role":"toolResult","toolCallId":"call_find_e2e","toolName":"find","content":[{"type":"text","text":"CALM_EXPORT_FIND.txt"}],"details":{},"isError":false,"timestamp":6}}
 {"type":"message","id":"a0000007","parentId":"a0000006","timestamp":"$now","message":{"role":"assistant","content":[{"type":"thinking","thinking":"third internal reasoning block"},{"type":"toolCall","id":"call_watch_e2e","name":"fm_watch_arm_pi","arguments":{}}],"api":"anthropic-messages","provider":"anthropic","model":"claude-sonnet-4-5","usage":{"input":2,"output":1,"cacheRead":0,"cacheWrite":0,"totalTokens":3,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"toolUse","timestamp":7}}
 {"type":"message","id":"a0000008","parentId":"a0000007","timestamp":"$now","message":{"role":"toolResult","toolCallId":"call_watch_e2e","toolName":"fm_watch_arm_pi","content":[{"type":"text","text":"watcher: started Pi extension arm child 1"}],"details":{"ok":true,"message":"watcher: started Pi extension arm child 1"},"isError":false,"timestamp":8}}
-{"type":"custom","id":"a0000009","parentId":"a0000008","timestamp":"$now","customType":"firstmate-synthetic-input-presentation","data":{"content":"FIRSTMATE WATCHER WAKE: signal: /tmp/probe.status\\n\\nRun bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.","kind":"watcher"}}
-{"type":"custom_message","id":"a0000010","parentId":"a0000009","timestamp":"$now","customType":"firstmate-synthetic-input","content":"FIRSTMATE WATCHER WAKE: signal: /tmp/probe.status\\n\\nRun bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.","display":false,"details":{"kind":"watcher"}}
+{"type":"custom","id":"a0000009","parentId":"a0000008","timestamp":"$now","customType":"firstmate-synthetic-input-presentation","data":{"content":"FIRSTMATE WATCHER WAKE: signal: /tmp/probe.status\\n\\nRun bin/backend/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.","kind":"watcher"}}
+{"type":"custom_message","id":"a0000010","parentId":"a0000009","timestamp":"$now","customType":"firstmate-synthetic-input","content":"FIRSTMATE WATCHER WAKE: signal: /tmp/probe.status\\n\\nRun bin/backend/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.","display":false,"details":{"kind":"watcher"}}
 {"type":"message","id":"a0000011","parentId":"a0000010","timestamp":"$now","message":{"role":"user","content":[{"type":"text","text":"FIRSTMATE WATCHER WAKE: can you explain this phrase?"}],"timestamp":11}}
 {"type":"message","id":"a0000012","parentId":"a0000011","timestamp":"$now","message":{"role":"user","content":[{"type":"text","text":"Captain quote: \u2063FIRSTMATE_OP: v1 watcher: QUOTED_CURRENT_NEAR_MISS"}],"timestamp":12}}
 {"type":"message","id":"a0000013","parentId":"a0000012","timestamp":"$now","message":{"role":"user","content":[{"type":"text","text":"FIRSTMATE_OP: v1 watcher: ASCII_ONLY_NEAR_MISS"}],"timestamp":13}}
@@ -3331,7 +3331,7 @@ JSON
   assert_contains "$(cat "$default_snapshot")" "Thinking..." "reasoning fixture did not render Pi's collapsed thinking label"
   assert_contains "$(cat "$default_snapshot")" "fm-calm.ts" "project-local Pi calm extension did not auto-load"
   # shellcheck disable=SC2016 # Backticks are literal prompt markup.
-  assert_not_contains "$(cat "$default_snapshot")" 'Run `bin/fm-session-start.sh` now' \
+  assert_not_contains "$(cat "$default_snapshot")" 'Run `bin/backend/fm-session-start.sh` now' \
     "native session-start context unexpectedly rendered while Calm was off"
   tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" C-o
   wait_for_text "$expanded_snapshot" "escape to interrupt" \
@@ -3491,7 +3491,7 @@ JS
   done
   assert_not_contains "$(cat "$active_hidden_snapshot")" "/calm-inject-e2e" "synthetic lifecycle command did not leave the editor"
   # shellcheck disable=SC2016 # Backticks are literal prompt markup.
-  assert_not_contains "$(cat "$active_hidden_snapshot")" 'Run `bin/fm-session-start.sh` now' \
+  assert_not_contains "$(cat "$active_hidden_snapshot")" 'Run `bin/backend/fm-session-start.sh` now' \
     "Calm showed the native session-start operational input"
   for hidden in \
     CURRENT_WATCHER_E2E \

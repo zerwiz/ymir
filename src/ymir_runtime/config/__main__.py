@@ -9,7 +9,7 @@ interface.
     python3 -m ymir_runtime.config kinds
 
 Exit: 0 every config valid · 1 a config refused · 2 usage · 3 a dependency is
-missing (run `bin/ymir-engine-ensure.sh ensure`).
+missing (run `bin/engine/ymir-engine-ensure.sh ensure`).
 """
 
 from __future__ import annotations
@@ -133,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.kinds:
         return _judge(args)  # listing kinds needs no validator
     if not available():
-        print(_row("config-check[1]{status,detail}", ("unavailable", "jsonschema missing — bin/ymir-engine-ensure.sh ensure")), end="")
+        print(_row("config-check[1]{status,detail}", ("unavailable", "jsonschema missing — bin/engine/ymir-engine-ensure.sh ensure")), end="")
         return EXIT_UNAVAILABLE
     return _judge(args)
 

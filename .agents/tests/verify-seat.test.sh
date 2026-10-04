@@ -8,7 +8,7 @@
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-DOOR="$ROOT/bin/verify-seat.sh"
+DOOR="$ROOT/bin/seat/verify-seat.sh"
 pass=0; fail=0
 ok(){ printf 'ok - %s\n' "$1"; pass=$((pass+1)); }
 no(){ printf 'not ok - %s\n' "$1" >&2; fail=$((fail+1)); }

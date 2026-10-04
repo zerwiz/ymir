@@ -10,14 +10,14 @@ Law: `RULES/04-hoard.md`.
 Secrets are **referenced by path**, never pasted into a tracked file.
 
 ```bash
-bin/hodd.sh path                                   # the Hoard root (YMIR_HOARD)
-bin/hodd.sh ls                                     # what it holds (names, not values)
-bin/hodd.sh init                                   # create the layout
+bin/vault/hodd.sh path                                   # the Hoard root (YMIR_HOARD)
+bin/vault/hodd.sh ls                                     # what it holds (names, not values)
+bin/vault/hodd.sh init                                   # create the layout
 
 # set an env file's vars in YOUR shell (quoting-safe):
-eval "$(bin/hodd.sh emit secrets/platform.env)"
+eval "$(bin/vault/hodd.sh emit secrets/platform.env)"
 # a tenant's env (into that tenant's work only):
-eval "$(bin/hodd.sh emit tenants/<tenant>/.env)"   # or: bin/hodd.sh tenant <tenant>
+eval "$(bin/vault/hodd.sh emit tenants/<tenant>/.env)"   # or: bin/vault/hodd.sh tenant <tenant>
 ```
 `YMIR_HOARD` overrides the location.
 

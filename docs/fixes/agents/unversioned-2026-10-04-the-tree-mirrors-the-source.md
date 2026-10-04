@@ -93,7 +93,7 @@ component name is invisible to it, so the push was refused with *"no fix note in
 this range"* while three correct notes sat in the range.
 
 **The gate's own map answers the question anyway:** `.pi/*` → **`agents`** and
-`bin/valknut-load.sh` → **`install`**. So the notes moved to the two components the
+`bin/seat/valknut-load.sh` → **`install`**. So the notes moved to the two components the
 gate already knows, rather than the gate being taught a new one.
 
 **Worth noting that the two governing documents disagree.** `AGENTS.md` sends

@@ -33,7 +33,7 @@
   `--model` in its process args, so `/proc` cannot answer either. The guard now
   reads the **whole pane** and matches the provider name anywhere in it —
   verified: a seat on `llama-swap` yields two matches in the full read.
-- **Every seat road now calls it** — `bin/herdr-run.sh` (via a new
+- **Every seat road now calls it** — `bin/seat/herdr-run.sh` (via a new
   `local_model_guard()` beside `seat_guard()`), `bin/pi-seat.sh`, and the new
   `bin/research-round.sh`. A local seat is refused with exit 3 and a plain
   instruction: wait, or use a remote/online model.
@@ -51,6 +51,6 @@
 
 ### Files
 - `bin/local-model-lock.sh`
-- `bin/herdr-run.sh`
+- `bin/seat/herdr-run.sh`
 - `bin/pi-seat.sh`
 - `bin/research-round.sh`

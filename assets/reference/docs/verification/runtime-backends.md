@@ -84,7 +84,7 @@ The portable regression is CI-enforced, while the real-harness drift guard is op
 Run the live guard after any harness upgrade and before trusting or refreshing the table above:
 
 ```sh
-FM_HARNESS_LIVENESS_DRIFT=1 bin/fm-test-run.sh tests/fm-harness-liveness-drift-live-e2e.test.sh
+FM_HARNESS_LIVENESS_DRIFT=1 bin/backend/fm-test-run.sh tests/fm-harness-liveness-drift-live-e2e.test.sh
 ```
 
 Bounded output from the run that produced the table:
@@ -118,7 +118,7 @@ Two checks keep the evidence boundaries separate.
 `tests/fm-harness-adapter-instructions-live-e2e.test.sh` is an opt-in development check that sends the directly loaded router and every operation scenario across all nine harness identities to a local Ollama model, requires the generated plan as normalized JSON, and makes no external-provider call.
 
 ```sh
-FM_HARNESS_ADAPTER_INSTRUCTION_EVAL=1 FM_HARNESS_ADAPTER_LOCAL_MODEL=ambient-router-gemma4:e4b bin/fm-test-run.sh tests/fm-harness-adapter-instructions-live-e2e.test.sh
+FM_HARNESS_ADAPTER_INSTRUCTION_EVAL=1 FM_HARNESS_ADAPTER_LOCAL_MODEL=ambient-router-gemma4:e4b bin/backend/fm-test-run.sh tests/fm-harness-adapter-instructions-live-e2e.test.sh
 ```
 
 That local evaluation demonstrates instruction-driven scenario selection, but it does not claim that a native harness loaded the selected files.
@@ -148,7 +148,7 @@ The isolated process and endpoint checks used:
 tmux display-message -p -t "$target" '#{pane_current_command}'
 ps -o comm= -p "$wrapper_pid"
 ps -o comm= -p "$engine_pid"
-FM_HOME="$fixture_home" bin/fm-crew-state.sh "$task_id"
+FM_HOME="$fixture_home" bin/backend/fm-crew-state.sh "$task_id"
 ```
 
 Observed bounded shapes:
@@ -206,7 +206,7 @@ Claude, Codex, OpenCode, Pi, pi-signed, Grok, Kimi, Cursor, and Muse share that 
 
 ## Composer classification matrix
 
-The shared composer classifier (`bin/fm-composer-lib.sh`, `fm_composer_classify_screen`) owns every composer shape fleet-wide; each backend contributes only a capture and a capability descriptor.
+The shared composer classifier (`bin/backend/fm-composer-lib.sh`, `fm_composer_classify_screen`) owns every composer shape fleet-wide; each backend contributes only a capture and a capability descriptor.
 The live half of that guarantee was verified on 2026-08-10 from an already-trusted checkout at the branch's final validated head, against every installed harness then covered by the empty-composer matrix on tmux 3.6a, macOS arm64, on an isolated private socket, with no prompt submitted to any harness.
 An earlier untrusted-worktree run left Claude, Grok, and Muse unverified because the guard treats first-launch trust dialogs as an unreadable-composer state and never confirms them; this trusted-checkout rerun supersedes those missing results.
 
@@ -240,7 +240,7 @@ Cursor is deliberately outside this cursor-anchored empty-composer matrix becaus
 
 ## Steering-inbox doorbell
 
-The steering channel's one behavioral assumption - a real worker agent follows the constant self-describing doorbell line (list the inbox, read and act on its records in numeric order, then `mv` each into `handled/`) - was verified on 2026-08-23 against every installed verified harness, on tmux 3.6a, macOS arm64, on an isolated private socket, driving the REAL `bin/fm-send.sh` end to end (durable record plus doorbell, with one mid-wait re-ring playing the watcher's role).
+The steering channel's one behavioral assumption - a real worker agent follows the constant self-describing doorbell line (list the inbox, read and act on its records in numeric order, then `mv` each into `handled/`) - was verified on 2026-08-23 against every installed verified harness, on tmux 3.6a, macOS arm64, on an isolated private socket, driving the REAL `bin/backend/fm-send.sh` end to end (durable record plus doorbell, with one mid-wait re-ring playing the watcher's role).
 
 ```sh
 FM_SEND_INBOX_LIVE_E2E=1 tests/fm-send-inbox-doorbell-live-e2e.test.sh
@@ -299,7 +299,7 @@ The CLI matrix was checked directly:
 | Restart | guarded named-session stop then start | Workspace, tab, pane, and labels persisted; the agent process and registration did not. |
 | Close | `herdr pane close <pane> --session <name>` | The exact one-pane task tab closed; closing a final tab could remove the workspace. |
 
-All destructive verification used `bin/fm-herdr-lab.sh` with a non-default `fm-lab-` name and a byte-identical default-session tripwire.
+All destructive verification used `bin/backend/fm-herdr-lab.sh` with a non-default `fm-lab-` name and a byte-identical default-session tripwire.
 No ambient `herdr server stop` command is a supported test operation.
 
 ### Submit confirmation
@@ -326,7 +326,7 @@ ok - live Herdr submit confirm: Claude Code (2.1.236 (Claude Code)) on herdr 0.8
 The real label-collision reproduction is owned by:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-prune-safety-e2e.test.sh
 ```
 
@@ -335,7 +335,7 @@ Observed guarantee: a pre-existing captain-owned workspace with a seed-shaped ta
 Restart-husk replacement is owned by:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-respawn-idem-e2e.test.sh
 ```
 
@@ -346,7 +346,7 @@ Observed guarantee: a restored no-agent tab was replaced create-before-close, wh
 Herdr exports its pane identity into every process it manages, checked on 2026-07-30 against Herdr 0.7.5 protocol 17 inside a guarded lab pane:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh
 "$HERDR_LAB_HELPER" run "$LAB" pane run "$PANE" "sh -c 'env | grep ^HERDR | sort > /tmp/env.txt'"
 ```
 
@@ -375,7 +375,7 @@ Firstmate requires both `HERDR_PANE_ID` and `HERDR_SOCKET_PATH` before accepting
 Placement is owned by:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-launcher-workspace-e2e.test.sh
 ```
 
@@ -395,7 +395,7 @@ ok - real herdr E2E: a --secondmate launch still stands up that secondmate's own
 ok - real herdr E2E: teardown closes only the worker's own pane and leaves the launcher, its workspace, and the same-labeled sibling intact
 ```
 
-That suite's headline case runs `bin/fm-spawn.sh` inside a real Herdr pane, so the parent identity comes from Herdr's own injection rather than a composed environment.
+That suite's headline case runs `bin/backend/fm-spawn.sh` inside a real Herdr pane, so the parent identity comes from Herdr's own injection rather than a composed environment.
 Cross-session and contradictory bindings are covered deterministically in `tests/fm-backend-herdr.test.sh`, which can script a second server's socket without provisioning one.
 
 ### Per-home and presentation topology
@@ -403,7 +403,7 @@ Cross-session and contradictory bindings are covered deterministically in `tests
 Per-home behavior is owned by:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-workspace-per-home-e2e.test.sh
 ```
 
@@ -412,7 +412,7 @@ Observed guarantee: the primary and secondmate used distinct home workspaces, a 
 The complete projection suite ran on 2026-07-21 against Herdr 0.7.4 protocol 16:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-presentation-e2e.test.sh
 ```
 
@@ -432,7 +432,7 @@ The suite also covers lost or failed move responses, active-tab refusal, restart
 The mandatory projection suite ran again on 2026-07-24 against Herdr 0.7.5 protocol 16:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-presentation-e2e.test.sh
 ```
 
@@ -449,7 +449,7 @@ ok - real Herdr lab validation completed on Herdr 0.7.5 with the default-session
 The projection suite ran again on 2026-08-04 against Herdr 0.8.0 protocol 19 for the default-on flip, where an absent `config/herdr-presentation-spaces` enables the projection and the value `off` opts out; since 2026-08-05 an absent file enables the projection only at or above the 0.8.0 floor recorded under "Presentation version floor" below, and `on` is the explicit opt-in that survives the floor:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-presentation-e2e.test.sh
 ```
 
@@ -469,7 +469,7 @@ That run measured the default-on projection on Herdr 0.8.0 only, while the focus
 The restored-shell session-start cleanup ran on 2026-07-24 against Herdr 0.7.5 protocol 17:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-herdr-session-cleanup-e2e.test.sh
 ```
 
@@ -480,7 +480,7 @@ Observed guarantee: one exact home-local, journal-correlated, one-tab and one-pa
 The focus-flash regression ran on 2026-08-05 against both Herdr 0.7.5 protocol 17 and Herdr 0.8.0 protocol 19 on macOS aarch64, with the 0.7.5 run using the pinned upstream release binary first on `PATH`:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-focus-flash-e2e.test.sh
 ```
 
@@ -550,7 +550,7 @@ Observed guarantees: every measured release classifies as the table records; eit
 The whole real-Herdr lane was run on 2026-08-05 against both the CI-pinned Herdr 0.7.4 protocol 16, which is below the floor, and Herdr 0.8.0 protocol 19, which is at it:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh bin/fm-test-run.sh --lane real-herdr-gated
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh bin/backend/fm-test-run.sh --lane real-herdr-gated
 ```
 
 Both runs reported `family=real-herdr-gated count=11 failed=0`.
@@ -619,7 +619,7 @@ FM_SEND_MARKER_HERDR_E2E=1 \
 The protocol-16 event path was measured on 2026-07-11 with Herdr 0.7.3 and Python 3.13:
 
 ```sh
-HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-backend-herdr-eventwait-smoke.test.sh
 ```
 
@@ -659,7 +659,7 @@ That command is the guard that refreshes this record; run it after every Herdr u
 The Pi/Herdr return and injection path was reverified on Herdr 0.7.3 and Pi 0.80.7:
 
 ```sh
-FM_AFK_PI_HERDR_E2E=1 HERDR_LAB_HELPER=bin/fm-herdr-lab.sh \
+FM_AFK_PI_HERDR_E2E=1 HERDR_LAB_HELPER=bin/backend/fm-herdr-lab.sh \
   tests/fm-afk-pi-herdr-return-e2e.test.sh
 ```
 
@@ -787,7 +787,7 @@ The terminal capture contained exactly one submitted `❯ ALBATROSS` row.
 The dated proof used this command:
 
 ```sh
-FM_CMUX_CLAUDE_COMPOSER_LIVE=1 bin/fm-test-run.sh tests/fm-cmux-claude-composer-live-e2e.test.sh
+FM_CMUX_CLAUDE_COMPOSER_LIVE=1 bin/backend/fm-test-run.sh tests/fm-cmux-claude-composer-live-e2e.test.sh
 ```
 
 That guard still addresses the worker by task selector, so it no longer reaches the typed submit path and is not a current refresh entry point for this guarantee.
@@ -850,7 +850,7 @@ Read from the live agent process and from a tool subprocess it spawned:
 | `AGENT_TRANSCRIPTS=<projects-root>/<slug>/agent-transcripts` | child/tool processes |
 
 Cursor does not clear an inherited `CLAUDECODE`, so ordering decides the verdict.
-With both markers set, `bin/fm-harness.sh` reports `cursor`; with `CLAUDECODE` alone it still reports `claude`.
+With both markers set, `bin/backend/fm-harness.sh` reports `cursor`; with `CLAUDECODE` alone it still reports `claude`.
 
 ### Composer
 
@@ -880,9 +880,9 @@ with-cursor : unknown      cursorless : pending   (real typed text, not submitte
 with-cursor : unknown      cursorless : unknown   (agent exited to a shell)
 ```
 
-`bin/fm-tmux-lib.sh` therefore reclassifies cursorlessly only when the pane's foreground process group is provably Cursor, so every other harness keeps the strict blank-cursor-row posture.
+`bin/backend/fm-tmux-lib.sh` therefore reclassifies cursorlessly only when the pane's foreground process group is provably Cursor, so every other harness keeps the strict blank-cursor-row posture.
 That supplies the genuine composer-empty proof required for away-mode escalation delivery.
-A live injection through `bin/fm-supervise-daemon.sh`'s own `inject_msg` into a real Cursor pane returned 0 and the pane processed the typed `FIRSTMATE_OP: v1 away-supervisor:` escalation.
+A live injection through `bin/backend/fm-supervise-daemon.sh`'s own `inject_msg` into a real Cursor pane returned 0 and the pane processed the typed `FIRSTMATE_OP: v1 away-supervisor:` escalation.
 
 `tests/fm-tmux-agent-liveness.test.sh` pins this with real processes and no Cursor installed: it asserts the cursor-anchored source is blind, that the composite still reads `empty` idle and `pending` with typed text, that an identical screen stays `unknown` when the pane is not Cursor, and that a stale Cursor screen over a dead shell never reads `empty`.
 
@@ -894,7 +894,7 @@ Observed closes: `success` for a completed turn, and `aborted` with `"error":"Us
 
 The trailing close landed 0 seconds after the pane's busy footer cleared on a normal turn.
 The transcript does NOT accumulate one close per turn, so a count of closes is not a progress signal; only the trailing record is.
-After an interrupt the aborted close was observed within seconds in some runs and not within twenty seconds in others, so `bin/fm-control-lib.sh` deliberately claims no cancellation acknowledgement for cursor.
+After an interrupt the aborted close was observed within seconds in some runs and not within twenty seconds in others, so `bin/backend/fm-control-lib.sh` deliberately claims no cancellation acknowledgement for cursor.
 
 Binding never reconstructs cursor's workspace-slug directory name, which collapses path separators.
 Cursor records the exact absolute workspace path in each project directory's `.workspace-trusted`, and the binding matches on that value.
@@ -920,20 +920,20 @@ This row is a delivery guard for submit acknowledgement only; recorded worker st
 
 ### End-to-end
 
-A throwaway scout was spawned through `bin/fm-spawn.sh --scout --backend tmux` on a real cursor worker and driven to completion:
+A throwaway scout was spawned through `bin/backend/fm-spawn.sh --scout --backend tmux` on a real cursor worker and driven to completion:
 
 1. the launch delivered its brief positionally and the agent executed it;
 2. `state/<id>.cursor-session` was written with the task worktree;
 3. the transcript fold read `busy` mid-turn and `idle` after it;
-4. `bin/fm-send.sh` delivered a steer through the then-current typed path and exited 0;
-5. `bin/fm-control.sh <id> interrupt` cancelled a running turn;
-6. `bin/fm-control.sh <id> exit` stopped the agent;
-7. `bin/fm-teardown.sh` refused until the scout's report and decision gate were satisfied, then removed the session record.
+4. `bin/backend/fm-send.sh` delivered a steer through the then-current typed path and exited 0;
+5. `bin/backend/fm-control.sh <id> interrupt` cancelled a running turn;
+6. `bin/backend/fm-control.sh <id> exit` stopped the agent;
+7. `bin/backend/fm-teardown.sh` refused until the scout's report and decision gate were satisfied, then removed the session record.
 
 ### Herdr backend
 
 The tmux run above is the reference; this section is the separate Herdr proof, produced on 2026-08-12 against Herdr 0.8.0 (client and server, protocol 19) and the same signed `cursor-agent` 2026.08.11-e8db854 on macOS 26.5.2 arm64.
-Every step ran inside an isolated `fm-lab-` session provisioned by `bin/fm-herdr-lab.sh`, launched from a neutral parent outside any Herdr pane, with the live default session's pane count checked before, during, and after; it stayed at 7 throughout.
+Every step ran inside an isolated `fm-lab-` session provisioned by `bin/backend/fm-herdr-lab.sh`, launched from a neutral parent outside any Herdr pane, with the live default session's pane count checked before, during, and after; it stayed at 7 throughout.
 
 **Herdr's native agent state is unusable for Cursor.**
 A 60-sample probe of `agent get` across a full turn reported `agent_status=blocked` in every state - idle, mid-turn, and after.
@@ -950,15 +950,15 @@ Before those were taught to the shared edge detector, a bare composer's wrap reg
 Measured as an A/B on the same live pane, the pre-fix classifier returned `pending` and the current one returned `empty`.
 
 The idle fix alone did not confirm typed delivery, because the composer branch reads the mid-turn row instead.
-With the rendered-footer transition in place, a typed-plane `bin/fm-send.sh` invocation exited 0 and the steer executed in the pane; the same send previously exited 1 with `delivery unconfirmed; verdict=pending` on a message that had actually landed.
+With the rendered-footer transition in place, a typed-plane `bin/backend/fm-send.sh` invocation exited 0 and the steer executed in the pane; the same send previously exited 1 with `delivery unconfirmed; verdict=pending` on a message that had actually landed.
 
 The rest of the lifecycle was driven end to end on that worker:
 
-1. `bin/fm-spawn.sh --scout --backend herdr` placed the worker and it executed its brief;
+1. `bin/backend/fm-spawn.sh --scout --backend herdr` placed the worker and it executed its brief;
 2. the transcript fold read `busy` mid-turn and `idle` after, unchanged from tmux, so the recorded worker state is backend-agnostic;
-3. `bin/fm-control.sh <id> interrupt` reported `cancel=unconfirmed` by design and the pane showed `Cancelled`, with the footer and the fold both returning to idle;
-4. `bin/fm-control.sh <id> exit` stopped the agent through the slash popup and the pane returned to its shell;
-5. `bin/fm-teardown.sh` refused until the scout's report and decision gate were satisfied, then removed the session record and returned the worktree.
+3. `bin/backend/fm-control.sh <id> interrupt` reported `cancel=unconfirmed` by design and the pane showed `Cancelled`, with the footer and the fold both returning to idle;
+4. `bin/backend/fm-control.sh <id> exit` stopped the agent through the slash popup and the pane returned to its shell;
+5. `bin/backend/fm-teardown.sh` refused until the scout's report and decision gate were satisfied, then removed the session record and returned the worktree.
 
 Other harnesses on Herdr are unaffected by the edge-detector change.
 All seven live panes of the running default session - one Pi, four Claude, two plain shells - classified identically under the pre-fix and current classifiers.
@@ -971,7 +971,7 @@ The portable regression is `tests/fm-cursor-harness.test.sh`, the composer captu
 Refresh this harness-dependent proof before accepting a cursor upgrade:
 
 ```sh
-FM_HARNESS_LIVENESS_DRIFT=1 bin/fm-test-run.sh tests/fm-harness-liveness-drift-live-e2e.test.sh
+FM_HARNESS_LIVENESS_DRIFT=1 bin/backend/fm-test-run.sh tests/fm-harness-liveness-drift-live-e2e.test.sh
 ```
 
 ## Pi supervision branch
@@ -981,7 +981,7 @@ In TUI mode, its `/supervision-model` model list is drawn with Pi's own `SelectL
 
 Evidence produced 2026-08-25 on macOS 26.5.2 arm64, Node v24.13.1:
 
-- Real-SDK guard: `FM_PI_BRANCH_LIVE_E2E=1 bin/fm-test-run.sh tests/fm-pi-branch-live-e2e.test.sh` against the globally installed `@earendil-works/pi-coding-agent` 0.81.1 printed `ok - real Pi SDK 0.81.1 accepts the branch session construction and preserves an unpromptable wake`.
+- Real-SDK guard: `FM_PI_BRANCH_LIVE_E2E=1 bin/backend/fm-test-run.sh tests/fm-pi-branch-live-e2e.test.sh` against the globally installed `@earendil-works/pi-coding-agent` 0.81.1 printed `ok - real Pi SDK 0.81.1 accepts the branch session construction and preserves an unpromptable wake`.
   The guard reads no credentials and makes no provider call: an isolated empty `PI_CODING_AGENT_DIR` leaves model resolution empty, so the branch's first prompt fails fast and must prove the fallback that returns the wake to main.
   The same run confirms that a real `ModelRegistry` over that empty agent dir still exposes the picker-facing availability surface, then pins `openai/no-such-live-model` and proves that the branch's own `ModelRuntime` refuses the unresolvable pin instead of silently running supervision on main's model.
 - Model-pin precedence: the same guard run printed `ok - real Pi SDK 0.81.1 applies an explicit branch model on create and over a reopened session's recorded model`.
@@ -990,12 +990,12 @@ Evidence produced 2026-08-25 on macOS 26.5.2 arm64, Node v24.13.1:
   Over its own local never-contacted provider it confirms that `getSupportedThinkingLevels` still returns `["off","minimal","low","medium","high","xhigh","max"]` for a model mapping every extended level, narrows to `["off","minimal","low","medium","high"]` for a reasoning model mapping none, returns `["off"]` for a non-reasoning model, and that `clampThinkingLevel` lowers `max` to `high` on the narrow model while collapsing an unrecognized token to `off` - which is why the extension rejects an unrecognized pin before that clamp can see it.
   It then proves through `session.thinkingLevel` that an explicit effort is applied on create, that a reopened session with no override restores its own recorded level, that an explicit effort beats that recorded level, and that an over-ceiling effort is clamped rather than refused.
   The recorded-level cases need a session file Pi will actually restore from, and Pi flushes one only once an assistant message exists, so the guard appends the level change and that message through the real `SessionManager` rather than hand-writing the format.
-- Picker primitives: on 2026-08-26, after the final portable-shell and sentinel fixes, `bin/fm-test-run.sh tests/fm-pi-branch-extension.test.sh` again printed `ok - the installed Pi still bounds the picker's list and ranks its search` against the same installed 0.81.1 package.
+- Picker primitives: on 2026-08-26, after the final portable-shell and sentinel fixes, `bin/backend/fm-test-run.sh tests/fm-pi-branch-extension.test.sh` again printed `ok - the installed Pi still bounds the picker's list and ranks its search` against the same installed 0.81.1 package.
   That case imports the real `SelectList`, `Input`, `fuzzyFilter`, and `DynamicBorder`, renders a 42-row catalog through the real `SelectList` at the visible bound the extension asks for, and fails naming the installed version if Pi stops exporting a primitive or stops bounding what it renders; it skips when no npm package is installed, and the portable stubbed cases in the same file hold the ordering, search, and branch-only-pin behavior everywhere.
 - Strict typecheck: `tests/fm-pi-primary-types.test.sh` printed `ok - tracked Pi extensions pass strict no-emit typecheck against Pi 0.81.1` with the branch extension and its imported libraries included.
   This typecheck is also the enforcement for the extension's declared effort vocabulary: its bidirectional assertion against Pi's own `getThinkingLevel` return type fails the moment Pi adds or removes a thinking level, so the runtime list used to reject an unrecognized hand-edited pin cannot drift into a stale Firstmate catalog.
-- Custom-message provider conversion: on 2026-08-26, `FM_PI_BRANCH_LIVE_E2E=1 bin/fm-test-run.sh tests/fm-pi-branch-live-e2e.test.sh` against installed `@earendil-works/pi-coding-agent` 0.84.1 printed `ok - real Pi SDK 0.84.1 delivers a custom message to the provider as user text carrying only content, so the captain outcome's typed envelope is what reaches the model`.
-  The guard passes a typed captain outcome and a plain rendered routine note through Pi's exported `convertToLlm`, proves that `customType` and `display` are not model-visible identity, and classifies the resulting provider text with `bin/fm-operational-input.sh`.
+- Custom-message provider conversion: on 2026-08-26, `FM_PI_BRANCH_LIVE_E2E=1 bin/backend/fm-test-run.sh tests/fm-pi-branch-live-e2e.test.sh` against installed `@earendil-works/pi-coding-agent` 0.84.1 printed `ok - real Pi SDK 0.84.1 delivers a custom message to the provider as user text carrying only content, so the captain outcome's typed envelope is what reaches the model`.
+  The guard passes a typed captain outcome and a plain rendered routine note through Pi's exported `convertToLlm`, proves that `customType` and `display` are not model-visible identity, and classifies the resulting provider text with `bin/backend/fm-operational-input.sh`.
 
 ### 2026-08-28 Pi 0.84.4 SDK compatibility refresh
 
@@ -1004,7 +1004,7 @@ The live guard used an isolated empty `PI_CODING_AGENT_DIR`, inspected no creden
 
 ```sh
 npm exec --yes --package=typescript@5.9.3 -- bash tests/fm-pi-primary-types.test.sh
-FM_PI_BRANCH_LIVE_E2E=1 bin/fm-test-run.sh tests/fm-pi-branch-live-e2e.test.sh
+FM_PI_BRANCH_LIVE_E2E=1 bin/backend/fm-test-run.sh tests/fm-pi-branch-live-e2e.test.sh
 ```
 
 ```text
