@@ -17,7 +17,15 @@
 #                                   # shrink, and shrinking it is an explicit act, not a drift
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 cd "$ROOT" || exit 2
 REG=".agents/assets/agents/capabilities.md"
 REC=".agents/assets/agents/usage-baseline.json"

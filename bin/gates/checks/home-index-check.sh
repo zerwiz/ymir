@@ -12,7 +12,15 @@
 #   bin/home-index-check.sh --strict   # non-zero when any shelf has no index or a stale one
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 # shellcheck source=bin/hoard-lib.sh
 . "$ROOT/bin/hoard-lib.sh" 2>/dev/null || true
 H=""
