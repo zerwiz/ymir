@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Tests for the local-HEAD secondmate sync: every secondmate home tracks the
 # PRIMARY firstmate checkout's current default-branch commit by a purely LOCAL
-# fast-forward (no origin fetch). Two hook points drive it - bin/fm-spawn.sh
-# (before launching a secondmate) and bin/fm-bootstrap.sh (a startup sweep of
+# fast-forward (no origin fetch). Two hook points drive it - bin/backend/fm-spawn.sh
+# (before launching a secondmate) and bin/backend/fm-bootstrap.sh (a startup sweep of
 # every live secondmate home) - and both share the ff machinery in
 # bin/fm-ff-lib.sh.
 #
@@ -25,7 +25,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-# shellcheck source=bin/fm-ff-lib.sh
+# shellcheck source=bin/backend/fm-ff-lib.sh
 . "$ROOT/bin/fm-ff-lib.sh"
 
 BASE_PATH=${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
@@ -96,7 +96,7 @@ head_of() { git -C "$1" rev-parse HEAD; }
 
 # ignore_marker_commit <w>: land THE FIX in the primary - add the seed marker to
 # the tracked .gitignore and commit it on main. The marker (.fm-secondmate-home)
-# is firstmate-generic, written by bin/fm-home-seed.sh into every seeded home; once
+# is firstmate-generic, written by bin/backend/fm-home-seed.sh into every seeded home; once
 # a home fast-forwards past this commit the marker is git-ignored and can no longer
 # read as a dirty working tree to any `git status --porcelain` dirtiness check.
 ignore_marker_commit() {
@@ -107,7 +107,7 @@ ignore_marker_commit() {
 }
 
 # seed_marked_home <w> <id> <commit>: a secondmate home matching what
-# bin/fm-home-seed.sh actually lays down - a detached worktree at <commit>, the
+# bin/backend/fm-home-seed.sh actually lays down - a detached worktree at <commit>, the
 # seed marker, a live kind=secondmate meta, and the gitignored operational dirs
 # with a charter. The ONLY unignored extra file is the seed marker, which is
 # exactly what this fix must keep from dirtying the home.
@@ -817,7 +817,7 @@ SH
 }
 
 # --- T12: a freshly seeded home reads clean once the primary ignores the marker -
-# The seed marker used to leave every home permanently dirty: bin/fm-fleet-sync.sh
+# The seed marker used to leave every home permanently dirty: bin/backend/fm-fleet-sync.sh
 # and any other plain `git status --porcelain` check counts the untracked marker,
 # so a seeded home reported STUCK/dirty forever. With the marker in .gitignore, a
 # home seeded from a primary that carries the fix reads clean to that exact signal.
@@ -828,7 +828,7 @@ test_seed_marker_clean_when_gitignored() {
   base=$(primary_head_commit "$w/main")
   seed_marked_home "$w" sm "$base"          # fresh home at the post-fix HEAD
 
-  # The exact dirtiness signal bin/fm-fleet-sync.sh reads (its line: dirty=yes when
+  # The exact dirtiness signal bin/backend/fm-fleet-sync.sh reads (its line: dirty=yes when
   # `git status --porcelain | head -1` is non-empty).
   [ -z "$(git -C "$w/sm" status --porcelain)" ] \
     || fail "seed marker still dirties a fresh home: $(git -C "$w/sm" status --porcelain)"

@@ -8,9 +8,9 @@ clean. Working in main is possible only when you ask for it.
 
 ```
 isolation[3]{road,default,opt_out}:
-  "bin/eindri-start.sh \"<task>\"","secure worktree .yggdrasil/<id>","--main"
+  "bin/agents/eindri-start.sh \"<task>\"","secure worktree .yggdrasil/<id>","--main"
   "bin/pi-seat.sh --task \"<task>\"","secure worktree","--main"
-  "bin/einherjar-spawn.sh <id>","secure worktree","—"
+  "bin/agents/einherjar-spawn.sh <id>","secure worktree","—"
 ```
 
 - **Default = isolated.** The dispatcher creates (or reuses) `.yggdrasil/<id>`
@@ -19,7 +19,7 @@ isolation[3]{road,default,opt_out}:
 - **`--main` = work in the main tree**, only when you deliberately want the agent
   to help in main:
   ```bash
-  bin/eindri-start.sh "fix the typo in README" --main
+  bin/agents/eindri-start.sh "fix the typo in README" --main
   ```
 
 ## Managing worktrees

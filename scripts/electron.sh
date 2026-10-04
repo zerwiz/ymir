@@ -41,8 +41,8 @@ fi
 # The runtime resolver (P1) and the graphics policy (P7) live in bin/ — every
 # launcher, every doctor, and the installer read the SAME answer, never an
 # app-local hardcode (2026-09-24).
-if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/electron-lib.sh" ]; then
-  . "$ROOT/bin/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
+if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/desktop/electron-lib.sh" ]; then
+  . "$ROOT/bin/desktop/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
 fi
 if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/graphics-lib.sh" ]; then
   . "$ROOT/bin/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
@@ -57,7 +57,7 @@ app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc
@@ -241,7 +241,7 @@ repair_electron() {  # <app-dir>
   ( cd "$dir" && { npm install-scripts approve electron >/dev/null 2>&1 || true; npm rebuild electron >/dev/null 2>&1; } )
 }
 if ! ensure_electron_binary; then
-  # npm-independent: fetch the release as the postinstall would (bin/electron-lib.sh)
+  # npm-independent: fetch the release as the postinstall would (bin/desktop/electron-lib.sh)
   # Top-level scope: `local` is a function-only word and would error at this
   # depth (2026-09-24) — plain assignments, names are mend-scoped by position.
   mend_pkg="$(app_pkg hlidskjalf)"

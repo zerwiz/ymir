@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tests/fm-remote-doctor.test.sh - the remote second-mate readiness gate.
 #
-# Drives the real bin/fm-remote-doctor.sh against a controlled account fixture:
+# Drives the real bin/backend/fm-remote-doctor.sh against a controlled account fixture:
 # a private HOME, a fake launchctl backed by state files, a fake herdr CLI, and
 # a fake uname that selects the platform under test. Nothing here touches the
 # runner's own launch agents, login session, or herdr server.

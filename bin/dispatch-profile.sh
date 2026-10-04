@@ -32,7 +32,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yh="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
   for _i in 1 2 3 4 5; do
     [ -n "$_yh" ] || break
-    if [ -r "$_yh/bin/hoard-lib.sh" ]; then . "$_yh/bin/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
+    if [ -r "$_yh/bin/vault/hoard-lib.sh" ]; then . "$_yh/bin/vault/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     if [ -r "$_yh/hoard-lib.sh" ]; then . "$_yh/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     _yh="$(cd "$_yh/.." 2>/dev/null && pwd)"
   done
@@ -51,7 +51,7 @@ CONFIG="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"
 # The operator's settings and secrets live in the home they chose (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc
@@ -253,7 +253,7 @@ profile = {
      "why": "pi is the verified runner for persistent and background workers; omitting model uses pi's configured default"},
     {"when": "The Allfather names a model, a family/quant, or a locality (local/online)",
      "use": [{"resolve": "bin/model-resolve.sh resolve \"<request>\"",
-              "then": "pass the returned --harness/--model to bin/einherjar-spawn.sh"}],
+              "then": "pass the returned --harness/--model to bin/agents/einherjar-spawn.sh"}],
      "why": "resolve a friendly request to an exact servable id: local -> " + local_harness + ", online -> " + online_harness + ". If it returns unresolved, ask the Allfather; never guess. Local runs are serialized by bin/local-model-lock.sh."}
   ],
   "default": [{"harness": harness, "model": model, "effort": "medium"}]

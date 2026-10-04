@@ -9,7 +9,7 @@
 #
 # The destination is the home's role, never the caller's choice:
 #   - a secondmate home reports upward to its parent on the same reply channel
-#     bin/fm-inactive-reconcile.sh's report_to_parent already uses, in the same
+#     bin/backend/fm-inactive-reconcile.sh's report_to_parent already uses, in the same
 #     "<state> [key=<slug>]: <note>" shape the charter contract defines;
 #   - a main home reports to the captain through the durable wake queue.
 # A poll observed in a secondmate home also receives a local durable wake after
@@ -23,18 +23,18 @@
 # is committed, so a failed commit stays eligible for at-least-once retry and
 # may rarely duplicate rather than leave a merge silent.
 #
-# Sourced by bin/fm-pr-merge.sh, bin/fm-watch.sh, and tests. No side effects on
+# Sourced by bin/backend/fm-pr-merge.sh, bin/backend/fm-watch.sh, and tests. No side effects on
 # source beyond its sourced libraries.
 
 _FM_MERGE_OUTCOME_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$_FM_MERGE_OUTCOME_LIB_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-secondmate-parent-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-parent-lib.sh
 . "$_FM_MERGE_OUTCOME_LIB_DIR/fm-secondmate-parent-lib.sh"
 
 # The secondmate identity of the home reporting, or non-zero when this home is
 # a main home (1) or carries an unusable identity marker (2). Mirrors
-# bin/fm-inactive-reconcile.sh's home_secondmate_id, which owns the same
+# bin/backend/fm-inactive-reconcile.sh's home_secondmate_id, which owns the same
 # marker's contract.
 fm_merge_outcome_home_id() {  # <home>
   local home=$1 marker id
@@ -110,7 +110,7 @@ fm_merge_outcome_report() {  # <home> <state> <task-id> <pr-url> <origin>
   fi
 
   STATE=$state
-  # shellcheck source=bin/fm-wake-lib.sh
+  # shellcheck source=bin/backend/fm-wake-lib.sh
   . "$_FM_MERGE_OUTCOME_LIB_DIR/fm-wake-lib.sh"
   lock="$state/$id.pr-poll-merge-notified.lock"
   fm_lock_acquire_wait "$lock" || return 1

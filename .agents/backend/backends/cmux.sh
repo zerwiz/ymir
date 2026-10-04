@@ -5,7 +5,7 @@
 # section 4) plus the live-app verification pass recorded in
 # docs/cmux-backend.md (real cmux 0.64.17, macOS aarch64, 2026-07-03). cmux is
 # a session provider ONLY, exactly like herdr/zellij: the worktree provider
-# stays treehouse. Sourced only through bin/fm-backend.sh's fm_backend_source
+# stays treehouse. Sourced only through bin/backend/fm-backend.sh's fm_backend_source
 # in normal operation; the unit tests source it directly.
 #
 # Container shape: cmux has no "session" layer to multiplex the way
@@ -111,13 +111,13 @@ FM_BACKEND_CMUX_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 FM_ROOT="${FM_ROOT_OVERRIDE:-${FM_ROOT:-$FM_BACKEND_CMUX_ROOT}}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 
-# shellcheck source=bin/fm-backend-hometag-lib.sh
+# shellcheck source=bin/backend/fm-backend-hometag-lib.sh
 . "$FM_BACKEND_CMUX_ROOT/bin/fm-backend-hometag-lib.sh"
 
 # Shared composer-content classifier (empty|pending|unknown, and the fleet-wide
-# dead-shell-vs-agent-composer rule). Owned by bin/fm-composer-lib.sh, reused by
+# dead-shell-vs-agent-composer rule). Owned by bin/backend/fm-composer-lib.sh, reused by
 # every backend so the decision cannot drift.
-# shellcheck source=bin/fm-composer-lib.sh
+# shellcheck source=bin/backend/fm-composer-lib.sh
 . "$FM_BACKEND_CMUX_ROOT/bin/fm-composer-lib.sh"
 
 # Verified minimum: the version the live pass ran against (docs/cmux-backend.md).
@@ -308,7 +308,7 @@ fm_backend_cmux_container_ensure() {
 # primary homes. Moving an installation changes this tag and old cmux titles
 # stop matching; task meta already records absolute worktree paths, so repo
 # relocation is already outside the supported recovery contract. Derivation
-# itself lives in bin/fm-backend-hometag-lib.sh, shared with zellij's
+# itself lives in bin/backend/fm-backend-hometag-lib.sh, shared with zellij's
 # identical shared-namespace collision fix (docs/zellij-backend.md
 # "Home-scoped tab titles").
 fm_backend_cmux_home_label() {
@@ -540,7 +540,7 @@ fm_backend_cmux_composer_capture() {  # <target> [expected-label]
 }
 
 # fm_backend_cmux_composer_caps: static capability facts, not logic (see the
-# capability model in bin/fm-composer-lib.sh).
+# capability model in bin/backend/fm-composer-lib.sh).
 fm_backend_cmux_composer_caps() {
   printf 'styled=0\ncursor=0\nidentity=0\nrows=%s\n' "$FM_COMPOSER_CAPTURE_LINES"
 }
@@ -548,7 +548,7 @@ fm_backend_cmux_composer_caps() {
 # fm_backend_cmux_composer_state: thin adapter - capture plus capabilities in,
 # shared verdict out. Every shape (including the borderless claude row this
 # adapter once carried its own NBSP workaround for) lives in
-# bin/fm-composer-lib.sh, so a new harness shape is taught there once and
+# bin/backend/fm-composer-lib.sh, so a new harness shape is taught there once and
 # never here. cmux has no identity probe, so the classifier's identity
 # sentinel resolves to unknown.
 fm_backend_cmux_composer_state() {  # <target> [expected-label] -> empty|pending|pending-unproven|unknown
@@ -561,7 +561,7 @@ fm_backend_cmux_composer_state() {  # <target> [expected-label] -> empty|pending
 
 # fm_backend_cmux_send_text_submit: type <text> into <target> once (raw,
 # unsubmitted, via send_literal), then drive the shared verify-and-retry-Enter
-# loop (bin/fm-composer-lib.sh: fm_composer_submit_retry_core) against the
+# loop (bin/backend/fm-composer-lib.sh: fm_composer_submit_retry_core) against the
 # shared composer verdict. Echoes empty|pending|unknown|send-failed, a subset
 # of the proof-carrying submit vocabulary.
 fm_backend_cmux_send_text_submit() {  # <target> <text> <retries> <enter-sleep> <settle> [expected-label]

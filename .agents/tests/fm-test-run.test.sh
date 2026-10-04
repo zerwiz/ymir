@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Contract tests for bin/fm-test-run.sh - the single owner of behavior suite
+# Contract tests for bin/backend/fm-test-run.sh - the single owner of behavior suite
 # selection, portable lane composition, bounded concurrency, budgets, timing
 # markers, JSON artifacts, coverage guard, and aggregate exit status.
 #
@@ -12,8 +12,8 @@ set -u
 
 RUNNER="$ROOT/bin/fm-test-run.sh"
 
-assert_present "$RUNNER" "bin/fm-test-run.sh is missing"
-[ -x "$RUNNER" ] || fail "bin/fm-test-run.sh must be executable"
+assert_present "$RUNNER" "bin/backend/fm-test-run.sh is missing"
+[ -x "$RUNNER" ] || fail "bin/backend/fm-test-run.sh must be executable"
 
 test_list_all_exact_suite_coverage() {
   local listed expected missing extra f
@@ -173,7 +173,7 @@ test_changed_runner_surfaces_select_their_family() {
   # also make any wall-clock claim about the changed suite trivially true by
   # not running the work.
   printf '\n' >>"$repo/bin/fm-test-run.sh"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD | LC_ALL=C sort)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD | LC_ALL=C sort)
   case "$listed" in
     *tests/fm-test-run.test.sh*) ;;
     *) fail "runner change did not select its own contract test: $listed" ;;
@@ -186,13 +186,13 @@ test_changed_runner_surfaces_select_their_family() {
     *tests/fm-ask-user-authority.test.sh*) ;;
     *) fail "runner change did not select its pure-contract-unit family: $listed" ;;
   esac
-  git -C "$repo" add bin/fm-test-run.sh
+  git -C "$repo" add bin/backend/fm-test-run.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm runner-change
 
   # The same holds for the surfaces that document that contract.
   printf '\n' >>"$repo/docs/fm-test-isolation-proof.md"
   printf '\n' >>"$repo/CONTRIBUTING.md"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD | LC_ALL=C sort)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD | LC_ALL=C sort)
   case "$listed" in
     *tests/fm-documentation-audiences.test.sh*) ;;
     *) fail "documentation surface change did not select audience coverage: $listed" ;;
@@ -213,7 +213,7 @@ test_changed_dependency_selection_and_unmapped_failure() {
   init_changed_fixture_repo "$repo"
 
   printf '\n' >>"$repo/tests/lib.sh"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-pr-merge.test.sh" "shared helper selects pr-forge dependents"
   assert_contains "$listed" "tests/fm-secondmate-safety.test.sh" "shared helper selects secondmate dependents"
   assert_contains "$listed" "tests/fm-bearings-snapshot.test.sh" "shared helper selects snapshot dependents"
@@ -221,24 +221,24 @@ test_changed_dependency_selection_and_unmapped_failure() {
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm helper-change
 
   printf '\n' >>"$repo/tests/fm-backend-herdr-eventwait.test.py"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-backend-herdr-smoke.test.sh" "eventwait test selects Herdr coverage"
   assert_contains "$listed" "tests/fm-backend.test.sh" "eventwait test selects backend coverage"
   git -C "$repo" add tests/fm-backend-herdr-eventwait.test.py
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm eventwait-change
 
   printf '\n' >>"$repo/bin/fm-supervisor-target-lib.sh"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-daemon.test.sh" "supervisor target selects daemon coverage"
   assert_contains "$listed" "tests/fm-afk-return.test.sh" "supervisor target selects afk coverage"
-  git -C "$repo" add bin/fm-supervisor-target-lib.sh
+  git -C "$repo" add bin/backend/fm-supervisor-target-lib.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm supervisor-change
 
   printf '\n' >>"$repo/.agents/skills/example/SKILL.md"
   printf '\n' >>"$repo/.claude/settings.json"
   printf '\n' >>"$repo/.pi/extensions/fm-primary-pi-watch.ts"
   printf '\n' >>"$repo/.pi/extensions/fm-primary-turnend-guard.ts"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-ask-user-authority.test.sh" "skill source selects pure contract coverage"
   assert_contains "$listed" "tests/fm-cd-pretool-check.test.sh" "Claude and Pi source selects hook coverage"
   assert_contains "$listed" "tests/fm-pi-watch-extension.test.sh" "Pi source selects watcher coverage"
@@ -246,14 +246,14 @@ test_changed_dependency_selection_and_unmapped_failure() {
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm non-bin-source-change
 
   printf '\n' >>"$repo/.agents/skills/harness-adapters/references/common/dispatch.md"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-harness-adapter-references.test.sh" "harness adapter reference selects portable structural coverage"
   assert_contains "$listed" "tests/fm-harness-adapter-instructions-live-e2e.test.sh" "harness adapter reference selects opt-in instruction coverage"
   git -C "$repo" add .agents/skills/harness-adapters
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm harness-adapter-reference-change
 
   printf '\n' >>"$repo/.agents/skills/harness-adapters/SKILL.md"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-harness-adapter-references.test.sh" "harness adapter router selects portable structural coverage"
   assert_contains "$listed" "tests/fm-harness-adapter-instructions-live-e2e.test.sh" "harness adapter router selects opt-in instruction coverage"
   git -C "$repo" add .agents/skills/harness-adapters/SKILL.md
@@ -261,44 +261,44 @@ test_changed_dependency_selection_and_unmapped_failure() {
 
   printf '\n' >>"$repo/bin/fm-procevent-quota.sh"
   printf '\n' >>"$repo/bin/fm-quota-choose.sh"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-procevent-quota.test.sh" \
     "quota process-event source selects its focused test"
   assert_contains "$listed" "tests/fm-quota-choose.test.sh" \
     "quota chooser source selects its focused test"
-  git -C "$repo" add bin/fm-procevent-quota.sh bin/fm-quota-choose.sh
+  git -C "$repo" add bin/backend/fm-procevent-quota.sh bin/backend/fm-quota-choose.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm quota-source-change
 
   printf '\n' >>"$repo/bin/fm-quota-axi-lib.sh"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-procevent-quota.test.sh" \
     "shared quota validator selects process-event coverage"
   assert_contains "$listed" "tests/fm-quota-choose.test.sh" \
     "shared quota validator selects chooser coverage"
-  git -C "$repo" add bin/fm-quota-axi-lib.sh
+  git -C "$repo" add bin/backend/fm-quota-axi-lib.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm quota-validator-change
 
   printf '\n' >>"$repo/bin/fm-control-lib.sh"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-backend.test.sh" \
     "control library keeps backend coverage"
   assert_contains "$listed" "tests/fm-session-start.test.sh" \
     "control library keeps session coverage"
   assert_contains "$listed" "tests/fm-quota-choose.test.sh" \
     "control library selects chooser coverage"
-  git -C "$repo" add bin/fm-control-lib.sh
+  git -C "$repo" add bin/backend/fm-control-lib.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm control-lib-change
 
   printf '\n' >>"$repo/bin/fm-timeout-lib.sh"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-procevent-quota.test.sh" \
     "timeout library selects quota polling coverage"
-  git -C "$repo" add bin/fm-timeout-lib.sh
+  git -C "$repo" add bin/backend/fm-timeout-lib.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm timeout-lib-change
 
   printf '\n' >>"$repo/src/unmapped.ts"
   set +e
-  (cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD) >"$tmp/out" 2>"$tmp/err"
+  (cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD) >"$tmp/out" 2>"$tmp/err"
   rc=$?
   set -e
   [ "$rc" -eq 2 ] || fail "unmapped changed source must fail with exit 2, got $rc"
@@ -320,7 +320,7 @@ test_changed_bin_reference_selects_per_script_not_per_family() {
   init_changed_fixture_repo "$repo"
 
   printf '\n' >>"$repo/bin/shared-probe-lib.sh"
-  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
 
   assert_contains "$listed" "tests/fm-backend-herdr-smoke.test.sh" \
     "the one gated script that names the helper must still be selected"
@@ -359,14 +359,14 @@ SH
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm fixtures
   printf '\n' >>"$repo/bin/shared-probe-lib.sh"
 
-  (cd "$repo" && bin/fm-test-run.sh --changed --base HEAD --json "$tmp/parallel.json") \
+  (cd "$repo" && bin/backend/fm-test-run.sh --changed --base HEAD --json "$tmp/parallel.json") \
     >"$tmp/parallel.out" 2>"$tmp/parallel.err" \
     || fail "default changed fixture run failed: $(cat "$tmp/parallel.err")"
   parallel_shape=$(grep -E '^FM_TEST_(BEGIN|END)' "$tmp/parallel.out" | head -n 2 | awk '{print $1}' | paste -sd, -)
   [ "$parallel_shape" = FM_TEST_BEGIN,FM_TEST_BEGIN ] \
     || fail "plain --changed did not use bounded concurrent scheduling: $parallel_shape"
 
-  (cd "$repo" && bin/fm-test-run.sh --changed --base HEAD --jobs 1 --json "$tmp/serial.json") \
+  (cd "$repo" && bin/backend/fm-test-run.sh --changed --base HEAD --jobs 1 --json "$tmp/serial.json") \
     >"$tmp/serial.out" 2>"$tmp/serial.err" \
     || fail "explicit serial changed fixture run failed: $(cat "$tmp/serial.err")"
   serial_shape=$(grep -E '^FM_TEST_(BEGIN|END)' "$tmp/serial.out" | head -n 2 | awk '{print $1}' | paste -sd, -)
@@ -409,7 +409,7 @@ SH
   git -C "$timeout_repo" -c user.name=test -c user.email=test@example.invalid commit -qm baseline
   printf '\n' >>"$timeout_repo/$timeout_script"
   set +e
-  (cd "$timeout_repo" && bin/fm-test-run.sh --changed --base HEAD) \
+  (cd "$timeout_repo" && bin/backend/fm-test-run.sh --changed --base HEAD) \
     >"$tmp/timeout.out" 2>"$tmp/timeout.err"
   rc=$?
   set -e
@@ -428,7 +428,7 @@ test_empty_selection_emits_summary() {
   repo="$tmp/repo"
   init_changed_fixture_repo "$repo"
   printf 'documentation only\n' >"$repo/README.md"
-  out=$(cd "$repo" && bin/fm-test-run.sh --changed --base HEAD --json "$tmp/artifacts/timing.json" 2>"$tmp/err") \
+  out=$(cd "$repo" && bin/backend/fm-test-run.sh --changed --base HEAD --json "$tmp/artifacts/timing.json" 2>"$tmp/err") \
     || fail "empty valid changed selection must pass"
   printf '%s\n' "$out" | grep -Eq \
     '^FM_TEST_SUMMARY total=0 failed=0 skipped_gate=0 duration_ms=[0-9]+$' \
@@ -458,7 +458,7 @@ SH
   chmod +x "$fake_bin/git"
   set +e
   (cd "$repo" && PATH="$fake_bin:$PATH" REAL_GIT="$real_git" SLOW_GIT_MARKER="$tmp/slow-git" \
-    bin/fm-test-run.sh --changed --base HEAD --max-wall-ms 100) \
+    bin/backend/fm-test-run.sh --changed --base HEAD --max-wall-ms 100) \
     >"$tmp/slow-selection.out" 2>"$tmp/slow-selection.err"
   rc=$?
   set -e
@@ -469,13 +469,13 @@ SH
     || fail "over-budget empty selection omitted its budget result"
   [ -e "$tmp/slow-git" ] || fail "the slow selection fixture did not run"
   set +e
-  (cd "$repo" && bin/fm-test-run.sh --changed --base HEAD --max-wall-ms nope) \
+  (cd "$repo" && bin/backend/fm-test-run.sh --changed --base HEAD --max-wall-ms nope) \
     >"$tmp/bad-budget.out" 2>"$tmp/bad-budget.err"
   rc=$?
   set -e
   [ "$rc" -eq 2 ] || fail "malformed budget on an empty selection must be refused, got $rc"
   set +e
-  (cd "$repo" && bin/fm-test-run.sh --changed --base HEAD --per-script-timeout-secs nope) \
+  (cd "$repo" && bin/backend/fm-test-run.sh --changed --base HEAD --per-script-timeout-secs nope) \
     >"$tmp/bad-timeout.out" 2>"$tmp/bad-timeout.err"
   rc=$?
   set -e

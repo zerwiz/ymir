@@ -41,7 +41,7 @@ BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$BROKK_ROOT}}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 # shellcheck source=bin/brokk-lease-lib.sh
 . "$SCRIPT_DIR/brokk-lease-lib.sh"
-# shellcheck source=bin/brokk-wake-lib.sh
+# shellcheck source=bin/time/brokk-wake-lib.sh
 . "$SCRIPT_DIR/brokk-wake-lib.sh"
 
 mkdir -p "$STATE"

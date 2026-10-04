@@ -5,9 +5,9 @@
  * support tmux maybe in this extension"*. Both answered here.
  *
  * What already exists (surveyed 2026-10-01, so this door DUPLICATES NONE of it):
- *   bin/herdr-agents.py      the seat/agent inventory
- *   bin/herdr-ensure.sh      guarantee the terminal backend Ymir needs
- *   bin/herdr-run.sh         raise an Eindri, by the grain the errand fits
+ *   bin/seat/herdr-agents.py      the seat/agent inventory
+ *   bin/seat/herdr-ensure.sh      guarantee the terminal backend Ymir needs
+ *   bin/seat/herdr-run.sh         raise an Eindri, by the grain the errand fits
  *   bin/eindri-{control,seat,send}.sh   the errand's own seat + steering
  *   .pi/shared/extensions/herdr-agent-state.ts   reports agent state into the pane
  *
@@ -33,7 +33,7 @@ import { join } from "node:path";
 
 // ── resolution: this file must run on ANY seat, so it may not know a machine ──
 // (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/heimdall/ymir`.)
-// This is the JS mirror of `ymir_root_verified` in bin/valknut-load.sh — same contract,
+// This is the JS mirror of `ymir_root_verified` in bin/seat/valknut-load.sh — same contract,
 // same order: $YMIR_ROOT, then the recorded roots, first one that really holds the house.
 // One reader in the shell, one here; they must agree, or a worktree seat reads a dead path.
 function resolveRoot(): string {
@@ -49,7 +49,7 @@ function resolveRoot(): string {
   }
   throw new Error(
     "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
-    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout — install records " +
+    "Run `bin/seat/valknut-load.sh --all --global` from your Ymir checkout — install records " +
     "the root, and every extension reads it from there.",
   );
 }

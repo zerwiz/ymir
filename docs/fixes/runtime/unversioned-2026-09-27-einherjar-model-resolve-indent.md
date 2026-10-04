@@ -2,7 +2,7 @@
 
 ### Why
 
-Every `bin/einherjar-spawn.sh` run that reached the model-resolution road
+Every `bin/agents/einherjar-spawn.sh` run that reached the model-resolution road
 failed: `agent_yaml_local_providers()` embeds a python heredoc whose statements
 mixed column-zero and two-space indentation, so python raised `IndentationError`
 at `home = os.environ.get("YMIR_HOME")` and the spawn answered *"model request
@@ -22,4 +22,4 @@ block was normalized.
 
 ### Files
 
-- `bin/einherjar-spawn.sh`
+- `bin/agents/einherjar-spawn.sh`

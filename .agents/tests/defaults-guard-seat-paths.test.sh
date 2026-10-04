@@ -26,7 +26,7 @@ seed_repo() {
   mkdir -p "$repo/bin" "$repo/.agents" "$repo/tools" "$repo/scripts" "$repo/src/ymir_runtime"
   cp "$GUARD" "$repo/bin/defaults-guard.sh"
   printf '#!/usr/bin/env bash\nhoard_state_dir() { printf -v "$1" %%s "${YMIR_STATE_DIR:-/nonexistent}"; }\n' \
-    >"$repo/bin/hoard-lib.sh"
+    >"$repo/bin/vault/hoard-lib.sh"
   chmod +x "$repo/bin/defaults-guard.sh"
   git -C "$repo" init -q 2>/dev/null
   git -C "$repo" config user.email t@t; git -C "$repo" config user.name t

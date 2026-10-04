@@ -4,8 +4,8 @@
 - **The `ymir-well` extension crashed at session start with an unhandled
   rejection** — `Extension "…/ymir-well.ts" error: Unable to connect. Is the
   computer able to access the url?` at `ymir-well.ts:25:28`, thrown from the
-  `session_start` probe (line 120). The well (`bin/mimir-bridge.py` on `:4602`)
-  was born **three seconds after** the session: `bin/saga-session-start.sh`
+  `session_start` probe (line 120). The well (`bin/bridge/mimir-bridge.py` on `:4602`)
+  was born **three seconds after** the session: `bin/time/saga-session-start.sh`
   raises it while the digest runs, so the extension's single `/health` fetch
   struck the window when nothing listened yet.
 - **`call()` only understood HTTP answers.** It handled `!res.ok`, but a refused
@@ -25,7 +25,7 @@
   well down and registers the `ymir-well-offline` message renderer. A birth
   race is no longer a crash — it is a beat of patience.
 - A deploy only takes effect in a **new** session — a running one holds the code
-  it loaded. Redeployed via `bin/valknut-load.sh --pi` (the shared source is
+  it loaded. Redeployed via `bin/seat/valknut-load.sh --pi` (the shared source is
   the canonical file; the installed copy is a copy, verified identical after
   the deploy).
 

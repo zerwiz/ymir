@@ -4,7 +4,7 @@
 
 The model lane had no owner. Every surface that needed to know where models came
 from restated it itself: `bin/model-placement.sh` built rail URLs from the
-registry, `bin/eindri-route.sh` assumed a `forge` role, `bin/snotra-transcribe.sh`
+registry, `bin/agents/eindri-route.sh` assumed a `forge` role, `bin/snotra-transcribe.sh`
 defaulted to `http://127.0.0.1:8080/v1`, and the alias gate gathered aliases from
 whichever rails it could reach. The Allfather's word (plan 51 Part 9c): *models
 come from whichever strong box is CONNECTED at the moment* — heimdall · whynot ·
@@ -27,11 +27,11 @@ never be an outage.
   is never emitted. `__main__.py` is its module CLI; `__init__.py` its face.
 - **`bin/rail-resolve.sh`** (new door) — `resolve [alias]` · `status`, TOON for a
   human and `--json` for callers; picks the engine venv or python3, resolves the
-  home through `bin/hoard-lib.sh`, and never restates a path or a rail URL.
+  home through `bin/vault/hoard-lib.sh`, and never restates a path or a rail URL.
 - **The many now call it:**
   - `bin/model-placement.sh` — the ranked rails and their reachability come from
     the resolver; the TOON/JSON fields are unchanged.
-  - `bin/eindri-route.sh` — a `model` errand follows the ranked live set
+  - `bin/agents/eindri-route.sh` — a `model` errand follows the ranked live set
     (first-alive at its head), falling back to the registry's `forge` hosts only
     when nothing is alive; the planner still never invents a box.
   - `bin/model-alias-check.sh` — the served set is the union over the RESOLVED
@@ -39,10 +39,10 @@ never be an outage.
     seat's name resolves against whichever box serves.
   - `bin/snotra-transcribe.sh` — the ear's summary rail defaults to the resolver's
     serving box; `RAIL_URL` still forces one.
-  - `bin/mcp-gateway.sh` — a `rail [resolve|status]` verb delegating to the
+  - `bin/bridge/mcp-gateway.sh` — a `rail [resolve|status]` verb delegating to the
     resolver, and a `rail` row in `status`. The rail is NEVER an MCP upstream (the
     upstream map is handed to the engine verbatim).
-  - `bin/mcp-config.sh` — the resolved rail rides the seat config's `ymir` block
+  - `bin/bridge/mcp-config.sh` — the resolved rail rides the seat config's `ymir` block
     (`host` · `url` · `keyRef`); harnesses read `mcpServers`, so it is advisory
     metadata, and the MCP door/parity are unchanged.
 - **Configs carry the truth.** `config/fleet.json.example` and
@@ -60,11 +60,11 @@ never be an outage.
   `timeout` — matching the tailnet reality (whynot up, omarchy offline).
 - `bin/rail-resolve.sh resolve qwen3.6-35b-a3b@iq3_s` → heimdall, alias verified;
   `resolve no-such-alias@nowhere` → declined, exit 1.
-- `bin/eindri-route.sh model` → `heimdall,whynot` (the live set, first-alive at
+- `bin/agents/eindri-route.sh model` → `heimdall,whynot` (the live set, first-alive at
   its head).
 - `bin/model-alias-check.sh --local` → `pass`, `model_alias_rail` = heimdall,
   live_boxes 2.
-- `bin/mcp-gateway.sh rail status` and `bin/mcp-config.sh show` (`ymir.rail`)
+- `bin/bridge/mcp-gateway.sh rail status` and `bin/bridge/mcp-config.sh show` (`ymir.rail`)
   answer the same serving box.
 - `python3 -m unittest` from the repo root — **296 tests OK** (20 new in
   `test_rail.py`: one box up and one down → the up one serves; both down →
@@ -73,7 +73,7 @@ never be an outage.
 - `.agents/tests/rail-resolve.test.sh` — **ALL PASS** (a stub rail: the alive box
   serves, a dropped box is declined and prints no fake URL, a mocked registry
   flips the answer, and the key value never appears in the answer).
-- `bash bin/guards.sh` — both wards PASS; `bash -n` clean on every changed script.
+- `bash bin/gates/guards.sh` — both wards PASS; `bash -n` clean on every changed script.
 
 galdr-reread: `brokk-distro-runtime.md` (§7.8, the fleet registry readers),
 `harness-integration/README.md` (the MCP door block, the rail resolved the same
@@ -92,11 +92,11 @@ rail).
 - `config/fleet.schema.json`
 - `src/pyproject.toml`
 - `bin/model-placement.sh`
-- `bin/eindri-route.sh`
+- `bin/agents/eindri-route.sh`
 - `bin/model-alias-check.sh`
 - `bin/snotra-transcribe.sh`
-- `bin/mcp-gateway.sh`
-- `bin/mcp-config.sh`
+- `bin/bridge/mcp-gateway.sh`
+- `bin/bridge/mcp-config.sh`
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`

@@ -34,7 +34,7 @@ Read it before changing session-open behavior.
 
 ## Watcher supervision
 
-`../../../bin/saga-session-start.sh` prints exactly one block for the detected primary.
+`../../../bin/time/saga-session-start.sh` prints exactly one block for the detected primary.
 Follow only that rendered protocol.
 When changing a watcher adapter, update its file under `../../../docs/supervision-protocols/`, update `../../../docs/turnend-guard.md` if shared idle or turn-end behavior changed, and refresh the tool fact.
 An identity without a dedicated protocol uses its documented unsupported or unknown boundary; never invent one from a similar TUI.

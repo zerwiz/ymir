@@ -34,7 +34,7 @@ There is no plugin runtime and no per-harness script directory; the adapter is t
         "hooks": [
           {
             "type": "command",
-            "command": "bash -lc 'payload=$(cat 2>/dev/null || true); [ -n \"$payload\" ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; root=$(pwd -P) || exit 0; [ -x \"$root/bin/saga-sessionstart-run.sh\" ] || exit 0; [ -f \"$root/AGENTS.md\" ] || exit 0; [ -f \"$root/.codex/hooks.json\" ] || exit 0; jq -e \"any(.hooks.SessionStart[]?.hooks[]?.command?; type == \\\"string\\\" and contains(\\\"saga-sessionstart-run.sh\\\"))\" \"$root/.codex/hooks.json\" >/dev/null 2>&1 || exit 0; printf \"%s\" \"$payload\" | \"$root/bin/saga-sessionstart-run.sh\"'",
+            "command": "bash -lc 'payload=$(cat 2>/dev/null || true); [ -n \"$payload\" ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; root=$(pwd -P) || exit 0; [ -x \"$root/bin/time/saga-sessionstart-run.sh\" ] || exit 0; [ -f \"$root/AGENTS.md\" ] || exit 0; [ -f \"$root/.codex/hooks.json\" ] || exit 0; jq -e \"any(.hooks.SessionStart[]?.hooks[]?.command?; type == \\\"string\\\" and contains(\\\"saga-sessionstart-run.sh\\\"))\" \"$root/.codex/hooks.json\" >/dev/null 2>&1 || exit 0; printf \"%s\" \"$payload\" | \"$root/bin/time/saga-sessionstart-run.sh\"'",
             "timeout": 180
           }
         ]
@@ -89,9 +89,9 @@ The **self-verification** step (7) is the distinctive Codex safeguard: the hook 
 
 ## 4. Per-event behavior
 
-### 4.1 `SessionStart` → `bin/saga-sessionstart-run.sh`
+### 4.1 `SessionStart` → `bin/time/saga-sessionstart-run.sh`
 
-- Pipes the JSON payload into the wrapper; the wrapper parses `source` without `jq` (`bin/saga-sessionstart-run.sh:34-44`).
+- Pipes the JSON payload into the wrapper; the wrapper parses `source` without `jq` (`bin/time/saga-sessionstart-run.sh:34-44`).
 - Source routing is the same as Claude: `startup`/`new` run the digest; `clear`/`compact` re-emit after a completed startup; `resume`/`reload`/`fork` nudge.
 - `timeout: 180`.
 - The wrapper always exits 0 on the transport path; a run-tier print of the digest reaches model context.
@@ -145,8 +145,8 @@ command -v jq >/dev/null && echo "jq present" || echo "jq MISSING - adapter will
 ### Verify the session-open path
 
 ```bash
-printf '{"source":"startup"}' | bin/saga-sessionstart-run.sh | head -n 20; echo "exit=$?"
-printf '{"source":"compact"}' | bin/saga-sessionstart-run.sh | head -n 3
+printf '{"source":"startup"}' | bin/time/saga-sessionstart-run.sh | head -n 20; echo "exit=$?"
+printf '{"source":"compact"}' | bin/time/saga-sessionstart-run.sh | head -n 3
 ```
 
 ### Verify the self-verification gate
@@ -188,4 +188,4 @@ bin/syn-cd-pretool-check.sh  --command 'cd ../..';             echo "cd  -> $? (
 - **Payload shape is assumed JSON.** A hook with empty stdin no-ops (`[ -n "$payload" ]`).
 - **Do not simplify the preamble.** Each guard (`AGENTS.md`, `.codex/hooks.json`, executable bit, registration self-check) exists to keep the adapter from running in a foreign or partially installed home.
 
-**Skills.** This harness reads project skills from `.codex/skills/`; `bin/valknut-load.sh` binds it to the one tree (`.codex/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.
+**Skills.** This harness reads project skills from `.codex/skills/`; `bin/seat/valknut-load.sh` binds it to the one tree (`.codex/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.

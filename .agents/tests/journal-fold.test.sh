@@ -3,8 +3,8 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-APPEND="$ROOT/bin/journal-append.sh"
-RECEIVE="$ROOT/bin/journal-receive.sh"
+APPEND="$ROOT/bin/records/journal-append.sh"
+RECEIVE="$ROOT/bin/records/journal-receive.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

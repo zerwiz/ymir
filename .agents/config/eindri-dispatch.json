@@ -51,7 +51,7 @@
       "use": [
         {
           "resolve": "bin/model-resolve.sh resolve \"<request>\"",
-          "then": "pass the returned --harness/--model to bin/einherjar-spawn.sh"
+          "then": "pass the returned --harness/--model to bin/agents/einherjar-spawn.sh"
         }
       ],
       "why": "Resolve a friendly request to an exact servable id: local -> pi, online -> opencode. If it returns unresolved (or the requested quant is unavailable, e.g. 'iq2' -> nearest), ASK the Allfather with ask_user_question; never guess. Local runs are serialized by bin/local-model-lock.sh."

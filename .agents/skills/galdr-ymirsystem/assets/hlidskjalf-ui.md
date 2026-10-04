@@ -136,7 +136,7 @@ Rules that hold it honest:
   Brokk as the hub, everyone else in a square-ish grid fan (`cols =
   ceil(sqrt(n))`, pitch ≥ one ring + label) so 20 agents never collide; rings
   carry the house glyph from `DOMAINS[agent.domain]` with a `ymirlabs`
-  fallback, and the live cards come from `bin/hlidskjalf-agents.sh` — which
+  fallback, and the live cards come from `bin/desktop/hlidskjalf-agents.sh` — which
   reads each figure's `domain:` frontmatter (never a hardcoded `ymirlabs` for
   everyone).
 - `.rail` (brand · gates · tenants · status), `.topbar` (realm chip · search ·
@@ -425,7 +425,7 @@ profile in the OpenCode agent directory. That directory is **`.opencode/agents/`
 `.opencode/agent/` was never read by the harness, so twenty correct symlinks sat
 in a directory no loader opened and the gate reported figures unregistered while
 the tree held them all. Any code that resolves an agent profile must use the
-plural path; the loader (`bin/valknut-load.sh`) migrates a legacy singular dir
+plural path; the loader (`bin/seat/valknut-load.sh`) migrates a legacy singular dir
 forward and binds the plural one.
 
 ## Domains, not houses (Rule 01/03)
@@ -733,7 +733,7 @@ gate did not answer at all (`offline`). The board now names the cause:
   when the gate answered and the roster is truly empty — with a matching chip
   and an empty-fleet panel.
 - The roster path is **absolute and read from the repo root**: both
-  `bin/hlidskjalf-agents.sh` and its server copy resolve `REPO_ROOT` (git) and
+  `bin/desktop/hlidskjalf-agents.sh` and its server copy resolve `REPO_ROOT` (git) and
   export `ROSTER_DIR="$REPO_ROOT/.agents/agents"`; `/api/agents` runs the
   connector with `cwd: ROOT` and `ROSTER_DIR: AGENTS_ALT`, and treats an empty
   connector array as **no data**, falling through to the roster rather than

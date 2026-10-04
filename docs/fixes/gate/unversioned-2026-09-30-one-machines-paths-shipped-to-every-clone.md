@@ -13,7 +13,7 @@ this never saw either:
    plan's purity row names"*, and `bin/ymir-plan.sh:165` counts a non-empty
    `$ROOT/state` as that drift. A dangling link cannot even be counted.
 2. **`tools/mill/worker.sh` carried three absolute paths** (`$HOME_SEAT/mill/vector-index.jsonl`,
-   `$HOME_SEAT/ymir` twice) plus `~/ymir/bin/hodd.sh` and `~/Documents/ymirhome`.
+   `$HOME_SEAT/ymir` twice) plus `~/ymir/bin/vault/hodd.sh` and `~/Documents/ymirhome`.
    The ward's scope was `bin/` and `.agents/` only, so `tools/` was never scanned:
    guarding the doors and not the yard.
 
@@ -30,7 +30,7 @@ named. Everywhere else the touch failed into a green run.
 - **`.gitignore`** — `/state`, replacing `state/*` + `!state/.gitkeep`. The rule now
   covers the path *itself*, which is the only shape that stops a link named `state`.
 - **the tracked symlink is untracked and removed.** A clone starts with no `state/`,
-  and every writer creates its own — `bin/journal-append.sh:93` and the rest already
+  and every writer creates its own — `bin/records/journal-append.sh:93` and the rest already
   `mkdir -p` the resolved dir.
 - **`tools/mill/worker.sh`** resolves `MILL_HOME`, `WELL_VENV`, `YMIR_ROOT` (from
   `${BASH_SOURCE}`, not a remembered clone), `VECTOR_INDEX` and `PIPER_MODEL` from
@@ -48,7 +48,7 @@ named. Everywhere else the touch failed into a green run.
 - **the home default is defined once.** `lock.py` and `rail.py` each restated
   `DEFAULT_HOME = "~/Documents/ymirhome"` with no import, and `runes.py` inlined a
   third copy — all three now read `ymir_runtime/paths.py`, which joins
-  `bin/hoard-lib.sh` in the allowlist as the Python twin of the one definition.
+  `bin/vault/hoard-lib.sh` in the allowlist as the Python twin of the one definition.
 - **a ward defect found by widening**: the ward skipped `#` comments but not `//`,
   so a JavaScript comment quoting a path read as a finding.
 - **`.agents/tests/smoke.test.sh`** owns its state in a `mktemp` dir instead of
@@ -78,7 +78,7 @@ named. Everywhere else the touch failed into a green run.
 ### Not claimed / next
 - **The install still does not seat the link.** `compliance-check.sh` says "the
   install seats the Phase-0 link", but no `ln -s … state` exists anywhere in the
-  repo. That claim is stale. Nothing breaks — `bin/hoard-lib.sh:87` resolves the
+  repo. That claim is stale. Nothing breaks — `bin/vault/hoard-lib.sh:87` resolves the
   state to `${YMIR_STATE_DIR:-$home/state}` and no caller *requires* `$ROOT/state`
   (the two `$ROOT/state` fallbacks in `eindri-review-spawn.sh` and `autoboot-lib.sh`
   are guarded existence probes that fall through to the canonical dir). Seating a

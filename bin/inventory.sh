@@ -26,7 +26,7 @@ set -uo pipefail
 
 # Walk UP until we find the repo, rather than assuming one level. `bin/capabilities.sh` and
 # `bin/doors/capabilities.sh` BOTH have to work, and the difference is depth — a fixed `..`
-# made the nested copy resolve ROOT to `bin/`, so it looked for `bin/*.sh` inside `bin/bin/`,
+# made the nested copy resolve ROOT to `bin/`, so it looked for `bin/*.sh` inside `bin/`,
 # found nothing, and rendered a 2-row register over a 400-door house. Nesting must not be able
 # to blind the index. (2026-10-04)
 _root() {
@@ -128,7 +128,9 @@ def analyse(path: Path, shelf: str):
 
     # callers: which other doors invoke it
     called_by = []
-    for other in (BIN.iterdir() if BIN.exists() else []):
+    # RECURSIVE: bin/ now has SYSTEM FOLDERS, and a root-only scan indexes 148 of 398 doors and
+    # calls it current — the same blindness that hid four doors in the first move.
+    for other in ([q for q in BIN.rglob("*") if q.is_file()] if BIN.exists() else []):
         if other == path or not other.is_file(): continue
         if name in read(other, 200000): called_by.append(other.name)
     outside = name in CORPUS
@@ -182,7 +184,7 @@ def tally(rows, key):
 shelves = {}
 for shelf, d in (("bin", BIN), (".agents/backend", BACKEND)):
     if d.exists():
-        shelves[shelf] = [analyse(p, shelf) for p in sorted(d.iterdir()) if p.is_file()]
+        shelves[shelf] = [analyse(p, shelf) for p in sorted(d.rglob("*")) if p.is_file()]
 
 fail = False
 for shelf, rows in shelves.items():

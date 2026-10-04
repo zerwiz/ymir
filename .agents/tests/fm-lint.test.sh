@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Parity guard for firstmate's shell-lint definition.
 #
-# bin/fm-lint.sh must be the single owner that BOTH CI
+# bin/backend/fm-lint.sh must be the single owner that BOTH CI
 # (.github/workflows/ci.yml) and the pre-push gate (.no-mistakes.yaml
 # commands.lint) invoke, so the local lint can never diverge from CI again.
 # Regression origin: with no commands.lint configured, the local no-mistakes
@@ -368,7 +368,7 @@ test_changed_mode_lints_only_the_changed_file() {
   log="$tmp/shellcheck.log"
   fm_lint_stub_shellcheck "$fakebin" "$log"
   diff_file="$tmp/diff.nul"
-  target="bin/fm-install-shellcheck.sh"
+  target="bin/backend/fm-install-shellcheck.sh"
   fm_lint_write_diff_file "$diff_file" "$target" "README.md"
 
   # Clear the ambient CI/GITHUB_ACTIONS signals so changed-file mode is actually
@@ -416,7 +416,7 @@ test_explicit_path_bypasses_changed_logic() {
   fm_lint_stub_git "$fakebin"
   log="$tmp/shellcheck.log"
   fm_lint_stub_shellcheck "$fakebin" "$log"
-  target="bin/fm-install-shellcheck.sh"
+  target="bin/backend/fm-install-shellcheck.sh"
 
   # The git stub reports a broken merge-base, which would force a full lint
   # under the no-args default. Clearing CI/GITHUB_ACTIONS keeps changed-file

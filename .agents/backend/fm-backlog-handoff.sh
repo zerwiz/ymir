@@ -71,18 +71,18 @@ DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 REG="$DATA/secondmates.md"
 MAIN_BACKLOG="$DATA/backlog.md"
-# shellcheck source=bin/fm-tasks-axi-lib.sh disable=SC1091
+# shellcheck source=bin/backend/fm-tasks-axi-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-tasks-axi-lib.sh"
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-public-followup-lib.sh
+# shellcheck source=bin/backend/fm-public-followup-lib.sh
 . "$SCRIPT_DIR/fm-public-followup-lib.sh"
-# shellcheck source=bin/fm-pending-reply-lib.sh
+# shellcheck source=bin/backend/fm-pending-reply-lib.sh
 . "$SCRIPT_DIR/fm-pending-reply-lib.sh"
 
-RECEIVER_WAKE_MESSAGE='New routed work is in your backlog. Run bin/fm-session-start.sh now, then act on the routed task.'
+RECEIVER_WAKE_MESSAGE='New routed work is in your backlog. Run bin/backend/fm-session-start.sh now, then act on the routed task.'
 
 ACTIVE_HANDOFF_LOCK=
 ACTIVE_REGISTRY_LOCK=
@@ -303,11 +303,11 @@ warn_stale_public_commitments() { # <secondmate-id> <moved-key>...
     out=$("$SCRIPT_DIR/fm-public-followup.sh" guard-work main "$key" 2>/dev/null) || rc=$?
     [ "$rc" -ne 0 ] || continue
     [ -z "$out" ] || printf '%s\n' "$out" >&2
-    printf 'warning: %s still owes a public reply bound to main/%s; rebind it to secondmate:%s (tasks-axi public-followup bind-work, then bin/fm-public-followup.sh register <obligation-id> --relation <relation-id> --work-home secondmate:%s --work-id %s --generation <n>) or the promised reply will be reconciled against work this home no longer owns.\n' \
+    printf 'warning: %s still owes a public reply bound to main/%s; rebind it to secondmate:%s (tasks-axi public-followup bind-work, then bin/backend/fm-public-followup.sh register <obligation-id> --relation <relation-id> --work-home secondmate:%s --work-id %s --generation <n>) or the promised reply will be reconciled against work this home no longer owns.\n' \
       "$key" "$key" "$id" "$id" "$key" >&2
   done
   if fm_pf_relay_active "$FM_HOME" && fm_pf_has_delivered_open_loops "$STATE"; then
-    printf 'warning: this home has an open public loop with nothing owed; routing work to secondmate:%s does not close it. Hand it on with bin/fm-public-followup.sh rechain or close it with retire --reason.\n' \
+    printf 'warning: this home has an open public loop with nothing owed; routing work to secondmate:%s does not close it. Hand it on with bin/backend/fm-public-followup.sh rechain or close it with retire --reason.\n' \
       "$id" >&2
   fi
   # Reporting never changes the handoff's own success: the move already landed.
@@ -625,7 +625,7 @@ remote_handoff() { # <secondmate-id> <keys...>
     }
   fi
   fm_tasks_axi_compatible || {
-    echo "error: a compatible tasks-axi with atomic multi-ID mv support is required to stage remote handoffs; run bin/fm-bootstrap.sh for the required version" >&2
+    echo "error: a compatible tasks-axi with atomic multi-ID mv support is required to stage remote handoffs; run bin/backend/fm-bootstrap.sh for the required version" >&2
     return 1
   }
   to_move=()
@@ -840,7 +840,7 @@ if [ "$FAILED" -ne 0 ]; then
 fi
 
 if ! fm_tasks_axi_compatible; then
-  echo "error: a compatible tasks-axi with atomic multi-ID mv support is required to move backlog items; run bin/fm-bootstrap.sh for the required version" >&2
+  echo "error: a compatible tasks-axi with atomic multi-ID mv support is required to move backlog items; run bin/backend/fm-bootstrap.sh for the required version" >&2
   exit 1
 fi
 

@@ -7,7 +7,7 @@
 - `status` skips ledger rows already accepted / returned / failed.
 
 ### Files
-- `bin/eindri-dispatch.sh`
+- `bin/agents/eindri-dispatch.sh`
 
 ### Proof
 syntax green; the figure gate accepts a prefix name; seat_args carries the

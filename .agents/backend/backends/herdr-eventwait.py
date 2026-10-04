@@ -8,7 +8,7 @@ session's control socket, subscribes to pane.agent_status_changed for the given
 panes (all statuses, so working/idle/done edges are seen too), and prints one
 projected line per event to stdout, flushing each so the bash caller can react
 sub-second. The bash side normalizes each line through the shared transition
-shape and applies the single-owner policy table (bin/fm-transition-lib.sh); the
+shape and applies the single-owner policy table (bin/backend/fm-transition-lib.sh); the
 bash side also decides when to stop and kills this reader.
 
 Wire protocol (verified: herdr 0.7.3, protocol 16, newline-delimited JSON):

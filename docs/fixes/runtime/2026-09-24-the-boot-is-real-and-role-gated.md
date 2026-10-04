@@ -24,7 +24,7 @@
   forever.
 - The web stack becomes user units (`tools/web/systemd/`): hlidskjalf-spa ·
   hlidskjalf-gate · mimir · bifrost · smidja · nornir, all joined to `ymir.target`
-  on dev seats. `bin/mimir-bridge.sh` and `bin/bifrost-bridge.sh` gained
+  on dev seats. `bin/bridge/mimir-bridge.sh` and `bin/bridge/bifrost-bridge.sh` gained
   `--foreground` so systemd supervises the process itself.
 - `bin/fleet-ensure.sh ensure` is role-gated (roles from `hodd/data/fleet.json`),
   materializes only what the seat owes, purges stale unit files (the old
@@ -48,6 +48,6 @@
 - tools/mill/systemd/*.service (install contracts + start limits)
 - tools/web/systemd/ (ymir.target + the six web units)
 - bin/fleet-ensure.sh · bin/autoboot-lib.sh · bin/ymir-autoboot.sh (new)
-- bin/mimir-bridge.sh · bin/bifrost-bridge.sh (--foreground)
+- bin/bridge/mimir-bridge.sh · bin/bridge/bifrost-bridge.sh (--foreground)
 - bin/eir-doctor.sh (autoboot surface)
 - bin/ymir-install.sh (fleet/autoboot/services/validate steps)

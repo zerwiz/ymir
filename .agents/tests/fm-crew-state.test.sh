@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Behavior tests for bin/fm-crew-state.sh - the deterministic crew-current-state
+# Behavior tests for bin/backend/fm-crew-state.sh - the deterministic crew-current-state
 # helper.
 #
 # The status file (state/<id>.status) is a best-effort append-only EVENT LOG, so
@@ -791,7 +791,7 @@ test_no_run_busy_pane() {
   make_fakebin "$d" >/dev/null
   fm_write_meta "$d/state/feat-h.meta" "window=fm:fm-feat-h" "worktree=$d/wt" "kind=ship" "harness=claude"
   # No matching run anywhere. The busy verdict comes from the crew's own
-  # semantic lifecycle record (bin/fm-busy-lib.sh), not from rendered text.
+  # semantic lifecycle record (bin/backend/fm-busy-lib.sh), not from rendered text.
   FM_FAKE_AXI_STATUS=""
   FM_FAKE_RUNS_LIST=""
   FM_FAKE_BUSY=1

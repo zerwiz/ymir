@@ -4,7 +4,7 @@
 #
 # Sourced, never executed.
 #
-# WHY THIS EXISTS. The deferred stage (bin/fm-startup-network.sh) publishes one
+# WHY THIS EXISTS. The deferred stage (bin/backend/fm-startup-network.sh) publishes one
 # aggregate started/finished pair, so a run that took a minute could not be
 # attributed to a phase, a host, or a clone without re-running it by hand under
 # manual tracing. These helpers record per-step elapsed times as the run happens,
@@ -18,8 +18,8 @@
 # ENVIRONMENT, both exported by the stage that owns a run:
 #   FM_TIMING_LOG       append-only record file. Unset or empty disables recording.
 #                       Exported across process boundaries on purpose: the phases
-#                       being measured run in bin/fm-bootstrap.sh and
-#                       bin/fm-fleet-sync.sh, which are children of the stage.
+#                       being measured run in bin/backend/fm-bootstrap.sh and
+#                       bin/backend/fm-fleet-sync.sh, which are children of the stage.
 #   FM_TIMING_EPOCH_MS  the run's start instant, so every record carries an offset
 #                       from ONE origin even though the records are written by
 #                       several processes. Defaults to the first recording

@@ -132,7 +132,7 @@ const sessionstartTruncatedMarker =
   "\n\nPI SESSION-START DELIVERY TRUNCATED - the digest exceeded 512 KiB. " +
   "Treat omitted context as unread and inspect the named files directly before acting on it.";
 const sessionstartManualFallback =
-  "Run `bin/saga-session-start.sh` now, exactly once, before executing any other instructions.";
+  "Run `bin/time/saga-session-start.sh` now, exactly once, before executing any other instructions.";
 const sessionstartIneligibleExit = 3;
 const sessionstartRetireTimeoutMs = 1000;
 
@@ -283,7 +283,7 @@ function runSessionstartHook(generation: SessionstartGeneration): Promise<Sessio
       resolveResult(result);
     };
     const supervised = process.platform !== "win32";
-    const runner = `${root}/bin/saga-sessionstart-run.sh`;
+    const runner = `${root}/bin/time/saga-sessionstart-run.sh`;
     let child: ChildProcess;
     try {
       child = spawn(

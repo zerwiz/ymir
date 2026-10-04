@@ -3,7 +3,7 @@
 # WHO a figure is lives in `.agents/agents/<figure>.md` (prose + frontmatter).
 # THIS file is the WIRING: which role summons which figure, what the role does,
 # the words that summon it, and the tools the figure holds at hand. It is DATA,
-# read by the doors — `bin/eindri-role.sh` (the chooser) and
+# read by the doors — `bin/agents/eindri-role.sh` (the chooser) and
 # `bin/agents-config.sh roster` (the resolved roster) — so no script re-declares
 # a role in code.
 #

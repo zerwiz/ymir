@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/fm-session-lock-ancestry.test.sh - session-lock harness identity
-# (bin/fm-session-lock-lib.sh).
+# (bin/backend/fm-session-lock-lib.sh).
 #
 # Two layers. The unit cases drive the library's own functions behind a
 # deterministic fake ps, so both platforms' reporting semantics are covered from

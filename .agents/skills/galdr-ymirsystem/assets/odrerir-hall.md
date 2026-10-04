@@ -84,7 +84,7 @@ odrerir[4]{aspect,detail}:
   "menu","Reload / DevTools / quit (own app menu — no cross-app Sign out)"
 ```
 
-The hall's Electron binary is resolved by `bin/electron-lib.sh` (one resolver,
+The hall's Electron binary is resolved by `bin/desktop/electron-lib.sh` (one resolver,
 app-local → hoisted → sibling); the app directory passed to Electron is
 `apps/odrerir` (its `package.json` `main` → `electron/main.cjs`). The hall has
 **no** gate session — a Sign-out link is never shown.
@@ -156,14 +156,14 @@ board ever needs it again. Everything the hall renders lives under
   `comments_post` · `plans_list` · `plans_get` · `plans_create`. The old hall
   (and the first React port) called them with slashes (`tickets/list`) — a name
   the server never served; the boards rang a dead door. The UI calls the true
-  names; `bin/odrerir-mcp-smoke.sh` asserts that alignment (`tools/list`) so a
+  names; `bin/desktop/odrerir-mcp-smoke.sh` asserts that alignment (`tools/list`) so a
   rename can never silently orphan the UI.
 - **Skuld answers tools/call as SSE** (`event: message` + a `data:` JSON frame);
   the client parses the last data frame, plain JSON otherwise.
 - **The connection is VISIBLE**: `src/skuld.ts` publishes a status and the
   boards render the chip (connected / ringing / NOT connected — the cause +
   retry). A dead door looks dead, never like an empty book.
-- **Smoke**: `bin/odrerir-mcp-smoke.sh` is wired into the lifecycle smoke as
+- **Smoke**: `bin/desktop/odrerir-mcp-smoke.sh` is wired into the lifecycle smoke as
   the `boards` row (real initialize + list + get + comments through this body's
   gateway door, with the alignment assert).
 
@@ -185,7 +185,7 @@ board ever needs it again. Everything the hall renders lives under
   http://whynot.<tailnet>.ts.net:8320`. The 2026-09-27 cutover (plan 51 Part 9)
   retired whynot's Skuld unit and moved the record to the heart (zerwizserver),
   so every board call rang a dead seat and the book read empty. The one gateway
-  (`bin/mcp-gateway.sh`, :8316) fronts skuld over the heart — but the gateway had
+  (`bin/bridge/mcp-gateway.sh`, :8316) fronts skuld over the heart — but the gateway had
   no CORS, so a PAGE still could not read it directly.
 - **The repair (one door, one resolver).** `src/skuld.ts` rings THIS BODY's
   gateway — `http://127.0.0.1:${VITE_MCP_GATEWAY_PORT:-8316}/mcp/skuld` — and
@@ -194,7 +194,7 @@ board ever needs it again. Everything the hall renders lives under
   (`tools/mcp-gateway/server.mjs`, v1.1.0) admits the browser origin again
   (preflight `OPTIONS` → 204 + `access-control-allow-origin`), restoring the road
   the retired skuld server opened (`b0c1569`, "Skuld's CORS opened for the
-  browser"). `bin/mcp-gateway.sh` carries the same note.
+  browser"). `bin/bridge/mcp-gateway.sh` carries the same note.
 - **The saga sample, honestly cleared.** The hall board (`#/`) clears its "Not
   connected — this board is the saga's sample" note only when `/livehall.json`
   answers with a feed (`src/hall/lh-board.js:506`). `bin/hall-snapshot.sh` writes
@@ -208,8 +208,8 @@ board ever needs it again. Everything the hall renders lives under
   own `MCP_GATEWAY_PORT` default); `VITE_SKULD_URL` overrides the whole door.
 - **Deploy note:** the engine change reaches the body's running door by
   restarting it — `systemctl --user restart mcp-gateway` (the unit runs
-  `bin/mcp-gateway.sh serve` from the tree).
-- **Smoke:** `bin/odrerir-mcp-smoke.sh` defaults to the gateway door and parses
+  `bin/bridge/mcp-gateway.sh serve` from the tree).
+- **Smoke:** `bin/desktop/odrerir-mcp-smoke.sh` defaults to the gateway door and parses
   the gateway's plain-JSON `tools/list` as well as the heart's SSE frame; the
   lifecycle `boards` row now probes the gateway's `/health` (a loopback door,
   not another seat's name).

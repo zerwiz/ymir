@@ -4,7 +4,7 @@
 // A registry module can pass every unit test and still be an extension pi refuses:
 // a factory that throws at load, a lib module the deployed copy cannot find, or a
 // duplicate tool name are all load-time failures. So this reproduces the deploy
-// `bin/valknut-load.sh` performs — `.pi/shared/extensions/*.ts` plus
+// `bin/seat/valknut-load.sh` performs — `.pi/shared/extensions/*.ts` plus
 // `.pi/extensions/lib/*` copied into ONE extension home, with `.ymir-root`
 // recording the tree that owns `bin/` — and drives the deployed factory with a stub
 // `pi`, reading back exactly what it registered. That is the question a pi session

@@ -15,20 +15,28 @@
 #   questions.md   the questions      — kind: BLOCKING | SEALED | OWED
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 MODE="${1:-write}"
 # The plan shelf is the HOME's, resolved by the one resolver — never a literal
 # $HOME/... path (defaults-guard refused exactly that on this file's first draft).
 PLAN_DIR="${YMIR_PLAN_DIR:-}"
 if [ -z "$PLAN_DIR" ]; then
   _h="${YMIR_HOME:-}"
-  if [ -z "$_h" ] && [ -r "$ROOT/bin/hoard-lib.sh" ]; then
-    . "$ROOT/bin/hoard-lib.sh" 2>/dev/null || true
+  if [ -z "$_h" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
+    . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
     command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _h
   fi
   # Last resort is hodd.sh's own resolver — never a literal path written here
   # (the ward refuses the literal, and rightly: it is this machine's layout).
-  [ -n "$_h" ] || _h="$(bash "$ROOT/bin/hodd.sh" path 2>/dev/null || true)"
+  [ -n "$_h" ] || _h="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
   PLAN_DIR="$_h/svartalfaheim/whynotproductions/projects/ymir/plans"
 fi
 REG="$PLAN_DIR/register.md"

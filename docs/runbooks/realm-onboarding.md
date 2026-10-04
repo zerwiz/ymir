@@ -43,7 +43,7 @@ boundaries.
 
    ```bash
    test -d svartalfaheim/"$realm"/workspace && echo tree-ok
-   bash bin/valknut-load.sh --status
+   bash bin/seat/valknut-load.sh --status
    bin/brokk status
    bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh
    ```

@@ -34,7 +34,7 @@
 
 set -u
 
-# The operator's home, resolved by the ONE resolver (bin/hoard-lib.sh) — env →
+# The operator's home, resolved by the ONE resolver (bin/vault/hoard-lib.sh) — env →
 # recorded → documented default. It was `${YMIR_HOME:-$HOME/Documents/ymirhome}`,
 # which is one machine's layout, and the defaults-guard refuses it.
 # shellcheck disable=SC1091

@@ -117,9 +117,9 @@ rodd_input_body() {  # <current-message> <result-var>
 # They exist only for persisted pre-protocol transcripts and must never be used
 # by current producers or current-path tests.
 # shellcheck disable=SC2016 # Backticks are literal historical prompt markup.
-RODD_LEGACY_SESSIONSTART='Run `bin/saga-session-start.sh` now, exactly once, before executing any other instructions.'
+RODD_LEGACY_SESSIONSTART='Run `bin/time/saga-session-start.sh` now, exactly once, before executing any other instructions.'
 RODD_LEGACY_WATCHER_PREFIX='BROKK WATCHER WAKE: '
-RODD_LEGACY_WATCHER_SUFFIX=$'\n\nRun bin/saga-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.'
+RODD_LEGACY_WATCHER_SUFFIX=$'\n\nRun bin/time/saga-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.'
 RODD_LEGACY_TURNEND_PREFIX=$'TURN WOULD END BLIND - supervision is off. The watcher cycle is missing, failed, or unhealthy. Follow the harness recovery instruction below before ending the turn.\n\n'
 RODD_LEGACY_AWAY_PREFIX="${RODD_MARK}Supervisor escalate ("
 

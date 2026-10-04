@@ -9,8 +9,8 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SPAWN="$ROOT/bin/eindri-review-spawn.sh"
-ACCLAIM="$ROOT/bin/eindri-acclaim.sh"
+SPAWN="$ROOT/bin/agents/eindri-review-spawn.sh"
+ACCLAIM="$ROOT/bin/agents/eindri-acclaim.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
@@ -45,7 +45,7 @@ printf '%s' "$out" | grep -q 'litmus-ship-review' && ok "the review id is <task>
 brief="$PROJ/data/litmus-ship-review/brief.md"
 [ -s "$brief" ] && ok "the fierce brief is written" || bad "brief missing"
 grep -q 'pull/999' "$brief" && ok "brief names the PR" || bad "brief PR"
-grep -q 'BROKK_STATE_OVERRIDE='"$PROJ"'/state bin/eindri-acclaim.sh litmus-ship-review' "$brief" \
+grep -q 'BROKK_STATE_OVERRIDE='"$PROJ"'/state bin/agents/eindri-acclaim.sh litmus-ship-review' "$brief" \
   && ok "brief's terminal act targets the shared wake road" || bad "brief terminal act"
 grep -q 'Delivery contract: mode=scout' "$brief" && ok "brief carries the scout delivery contract" || bad "brief contract"
 grep -q 'Isolation: herdr' "$brief" && ok "brief declares the ordinary road (herdr)" || bad "brief isolation"

@@ -20,43 +20,8 @@ capabilities[5]{surface,count}:
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
-| a2a-mcp.sh | a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so | tested+named | keep (a human or a cron row must run it) |
-| a2a-serve.sh | a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri. | tested | keep (a human or a cron row must run it) |
-| a2a-talk.sh | a2a-talk.sh — list A2A agents and talk to one (bidirectional reply). | tested+named | keep (a human or a cron row must run it) |
-| a2abridge-ensure.sh | a2abridge-ensure.sh — ensure the A2A mesh engine (a2abridge) is presen | tested+named | keep (a human or a cron row must run it) |
-| agent-run.sh | agent-run.sh — run one agent's errand through the harness the Allfathe | tested+named | keep (a human or a cron row must run it) |
 | agents-config.sh | agents-config.sh — one YAML for the Allfather's agent/harness/model co | tested+named | keep (a human or a cron row must run it) |
-| apodex-smoke-test.sh | apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router | tested+named | keep (a human or a cron row must run it) |
-| app-build.sh | app-build — build the in-tree apps (plan 35). | tested | keep (a human or a cron row must run it) |
-| app-lib.sh | app-lib.sh — where an app actually lives. | tested+named | keep (a human or a cron row must run it) |
-| autoboot-lib.sh | autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs t | tested+named | keep (a human or a cron row must run it) |
-| bifrost-bridge.sh | bifrost-bridge.sh — raise/lower the model bridge (Bifrost: the bridge  | tested | keep (a human or a cron row must run it) |
-| bifrost-ingress.sh | bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdal | tested | keep (a human or a cron row must run it) |
-| bootstrap-macos.sh | bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs. | tested+named | keep (a human or a cron row must run it) |
-| branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
-| brokk-classify-lib.sh | Shared wake classifier: the common source of truth for Allfather-relevan | tested+named | keep (a human or a cron row must run it) |
-| brokk-lease-lib.sh | brokk-lease-lib.sh - the per-task supervision lease contract (one owner) | tested+named | keep (a human or a cron row must run it) |
-| brokk-lease.sh | brokk-lease.sh - claim, release, inspect, and sweep per-task supervision | tested+named | keep (a human or a cron row must run it) |
-| brokk-lint.sh | brokk-lint.sh — the Brokk lint gate. Single owner of lint for CI and | tested | keep (a human or a cron row must run it) |
-| brokk-send.sh | brokk-send.sh — send a one-line steer to a running Brokk/Eindri-home. | tested+named | keep (a human or a cron row must run it) |
-| brokk-timeout-lib.sh | brokk-timeout-lib.sh - the single owner of bounded command execution. | tested+named | keep (a human or a cron row must run it) |
-| brokk-update.sh | brokk-update.sh — back-compat alias. | tested+named | keep (a human or a cron row must run it) |
-| brokk-wake-grant.sh | shellcheck source=bin/brokk-wake-lib.sh | tested+named | keep (a human or a cron row must run it) |
-| brokk-wake-lib.sh | Shared durable wake queue and portable lock helpers. | tested+named | keep (a human or a cron row must run it) |
-| calendar-ask.sh | calendar-ask.sh — the shell door onto Mánagandr, the read calendar. | tested+named | keep (a human or a cron row must run it) |
-| ci-verify.sh | ci-verify.sh — what CI must prove, in one command, for BOTH hosts. | tested+named | keep (a human or a cron row must run it) |
-| contracts-check.sh | contracts-check.sh — the typed surfaces' proof, in one command. | tested | keep (a human or a cron row must run it) |
-| crash-sense.sh | crash-sense.sh — surface machine crashes to the Allfather on Omarchy. | tested+named | keep (a human or a cron row must run it) |
-| daily-log.sh | daily-log.sh — the day's work, recorded where the contract says it liv | tested+named | keep (a human or a cron row must run it) |
-| defaults-guard.sh | defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE. | tested+named | keep (a human or a cron row must run it) |
-| design-check.sh | design-check.sh — one identity, two renderers: they must agree. | tested | keep (a human or a cron row must run it) |
-| design-icon.sh | design-icon.sh — every app wears its own rune. | tested+named | keep (a human or a cron row must run it) |
-| desktop-place.sh | desktop-place.sh — put the Ymir apps on their own Hyprland desktops. | tested+named | keep (a human or a cron row must run it) |
-| desktop-verify.sh | desktop-verify.sh — the INSTALL-time guarantee: every desktop surface  | tested+named | keep (a human or a cron row must run it) |
-| dispatch-profile.sh | dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE,  | tested+named | keep (a human or a cron row must run it) |
-| doc-sweep.sh | doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's docume | tested | keep (a human or a cron row must run it) |
-| docs-guard.sh | docs-guard.sh — docs/ is the PUBLIC, user-facing tree. Block operator- | tested | keep (a human or a cron row must run it) |
-| editor-place.sh | editor-place.sh — the editor is UNMANAGED by default: it opens on the | tested+named | keep (a human or a cron row must run it) |
+| agent-run.sh | agent-run.sh — run one agent's errand through the harness the Allfathe | tested+named | keep (a human or a cron row must run it) |
 | eindri-acclaim-silent.sh | eindri-acclaim-silent.sh — action half of the Eindri silence bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-acclaim.sh | eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-arm.sh | eindri-arm.sh — the Eindri's own arm (plan 42, the automation law). | tested | keep (a human or a cron row must run it) |
@@ -74,17 +39,11 @@ capabilities[5]{surface,count}:
 | eindri-wake-lib.sh | eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push pa | tested+named | keep (a human or a cron row must run it) |
 | eindri-watch.sh | eindri-watch.sh — the control door on the Eindri→Brokk wake bridge. | tested+named | keep (a human or a cron row must run it) |
 | einherjar-spawn.sh | einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who | tested+named | keep (a human or a cron row must run it) |
-| eir-doctor.sh | eir-doctor.sh — Eir, the healer: diagnose the running system, then men | tested+named | keep (a human or a cron row must run it) |
-| electron-lib.sh | electron-lib.sh — is a desktop shell's runtime actually there? | tested+named | keep (a human or a cron row must run it) |
 | erindi-brief.sh | erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brie | tested+named | keep (a human or a cron row must run it) |
-| essence-fetch.sh | essence-fetch.sh — the npm world's self-heal: npm's packer refuses dot | tested | keep (a human or a cron row must run it) |
-| feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
-| fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | tested+named | keep (a human or a cron row must run it) |
-| fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
-| fleet-apply.sh | fleet-apply.sh — apply fleet-wide preferences to every registered Eind | tested+named | keep (a human or a cron row must run it) |
-| fleet-deploy.sh | fleet-deploy.sh — refresh the machine's fleet services from THIS packa | tested+named | keep (a human or a cron row must run it) |
-| fleet-ensure.sh | fleet-ensure.sh — the role-gated RAISE (plan 42's fleet services, plan | tested+named | keep (a human or a cron row must run it) |
-| fleet-version.sh | fleet-version.sh — is the fleet on ONE version? (plan 51, Phase 2) | tested+named | keep (a human or a cron row must run it) |
+| apodex-smoke-test.sh | apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router | tested+named | keep (a human or a cron row must run it) |
+| app-build.sh | app-build — build the in-tree apps (plan 35). | tested | keep (a human or a cron row must run it) |
+| app-lib.sh | app-lib.sh — where an app actually lives. | tested+named | keep (a human or a cron row must run it) |
+| autoboot-lib.sh | autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs t | tested+named | keep (a human or a cron row must run it) |
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
 | fm-afk-return.sh | fm-afk-return.sh - deterministic away-mode return catch-up gate. | tested | keep (a human or a cron row must run it) |
 | fm-afk-start.sh | Enter away mode and run the sub-supervisor daemon in a harness-tracked | tested | keep (a human or a cron row must run it) |
@@ -241,10 +200,79 @@ capabilities[5]{surface,count}:
 | fm-x-link.sh | Link a spawned task to the X-mode mention that triggered it, so firstmat | tested | keep (a human or a cron row must run it) |
 | fm-x-poll.sh | One short-poll of the relay connector for a pending X-mode mention. | tested | keep (a human or a cron row must run it) |
 | fm-x-reply.sh | Post firstmate's composed answer back to the relay for a pending X-mode  | tested | keep (a human or a cron row must run it) |
-| extension-api-check.sh | extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool  | uncalled+named | keep (a human or a cron row must run it) |
-| home-index-check.sh | home-index-check.sh — every shelf in the home has an index, and the in | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
-| usage-ratchet.sh | usage-ratchet.sh — PROVE the doors are used, and fail when the unused  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
-| workflow-check.sh | workflow-check.sh — every GitHub Actions workflow must PARSE, before C | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| bifrost-ingress.sh | bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdal | tested | keep (a human or a cron row must run it) |
+| bootstrap-macos.sh | bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs. | tested+named | keep (a human or a cron row must run it) |
+| a2a-mcp.sh | a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so | tested+named | keep (a human or a cron row must run it) |
+| a2a-serve.sh | a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri. | tested | keep (a human or a cron row must run it) |
+| a2a-talk.sh | a2a-talk.sh — list A2A agents and talk to one (bidirectional reply). | tested+named | keep (a human or a cron row must run it) |
+| a2abridge-ensure.sh | a2abridge-ensure.sh — ensure the A2A mesh engine (a2abridge) is presen | tested+named | keep (a human or a cron row must run it) |
+| bifrost-bridge.sh | bifrost-bridge.sh — raise/lower the model bridge (Bifrost: the bridge  | tested | keep (a human or a cron row must run it) |
+| mcp-config.sh | mcp-config.sh — generate the harness MCP config: ONE local gateway doo | tested+named | keep (a human or a cron row must run it) |
+| mcp-gate.sh | mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-ad | tested | keep (a human or a cron row must run it) |
+| mcp-gateway.sh | mcp-gateway.sh — the body's ONE local door in front of the record MCPs | tested+named | keep (a human or a cron row must run it) |
+| mimir-bridge.sh | mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602). | tested+named | keep (a human or a cron row must run it) |
+| brokk-classify-lib.sh | Shared wake classifier: the common source of truth for Allfather-relevan | tested+named | keep (a human or a cron row must run it) |
+| brokk-lease-lib.sh | brokk-lease-lib.sh - the per-task supervision lease contract (one owner) | tested+named | keep (a human or a cron row must run it) |
+| brokk-lease.sh | brokk-lease.sh - claim, release, inspect, and sweep per-task supervision | tested+named | keep (a human or a cron row must run it) |
+| brokk-lint.sh | brokk-lint.sh — the Brokk lint gate. Single owner of lint for CI and | tested | keep (a human or a cron row must run it) |
+| brokk-send.sh | brokk-send.sh — send a one-line steer to a running Brokk/Eindri-home. | tested+named | keep (a human or a cron row must run it) |
+| brokk-timeout-lib.sh | brokk-timeout-lib.sh - the single owner of bounded command execution. | tested+named | keep (a human or a cron row must run it) |
+| brokk-update.sh | brokk-update.sh — back-compat alias. | tested+named | keep (a human or a cron row must run it) |
+| calendar-ask.sh | calendar-ask.sh — the shell door onto Mánagandr, the read calendar. | tested+named | keep (a human or a cron row must run it) |
+| crash-sense.sh | crash-sense.sh — surface machine crashes to the Allfather on Omarchy. | tested+named | keep (a human or a cron row must run it) |
+| daily-log.sh | daily-log.sh — the day's work, recorded where the contract says it liv | tested+named | keep (a human or a cron row must run it) |
+| design-icon.sh | design-icon.sh — every app wears its own rune. | tested+named | keep (a human or a cron row must run it) |
+| desktop-place.sh | desktop-place.sh — put the Ymir apps on their own Hyprland desktops. | tested+named | keep (a human or a cron row must run it) |
+| desktop-verify.sh | desktop-verify.sh — the INSTALL-time guarantee: every desktop surface  | tested+named | keep (a human or a cron row must run it) |
+| electron-lib.sh | electron-lib.sh — is a desktop shell's runtime actually there? | tested+named | keep (a human or a cron row must run it) |
+| hlidskjalf-agents.sh | hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doi | tested+named | keep (a human or a cron row must run it) |
+| hlidskjalf-usage.sh | hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy. | tested | keep (a human or a cron row must run it) |
+| odrerir-mcp-smoke.sh | odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans throu | tested+named | keep (a human or a cron row must run it) |
+| smidja-board.sh | smidja-board.sh — Smíðja's board, by one name. | tested+named | keep (a human or a cron row must run it) |
+| smidja-bootstrap.sh | smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh in | tested+named | keep (a human or a cron row must run it) |
+| smidja-lib.sh | smidja-lib.sh — where the smithy's parts actually live. | tested+named | keep (a human or a cron row must run it) |
+| smidja-observe.sh | smidja-observe.sh — the smithy's trace, read-only (W0075). Reads the R | tested | keep (a human or a cron row must run it) |
+| dispatch-profile.sh | dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE,  | tested+named | keep (a human or a cron row must run it) |
+| doc-sweep.sh | doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's docume | tested | keep (a human or a cron row must run it) |
+| editor-place.sh | editor-place.sh — the editor is UNMANAGED by default: it opens on the | tested+named | keep (a human or a cron row must run it) |
+| eir-doctor.sh | eir-doctor.sh — Eir, the healer: diagnose the running system, then men | tested+named | keep (a human or a cron row must run it) |
+| ymir-engine-ensure.sh | ymir-engine-ensure.sh — materialize the engine's private python home. | tested+named | keep (a human or a cron row must run it) |
+| ymir-engine.sh | ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`). | tested+named | keep (a human or a cron row must run it) |
+| essence-fetch.sh | essence-fetch.sh — the npm world's self-heal: npm's packer refuses dot | tested | keep (a human or a cron row must run it) |
+| feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
+| fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
+| fleet-apply.sh | fleet-apply.sh — apply fleet-wide preferences to every registered Eind | tested+named | keep (a human or a cron row must run it) |
+| fleet-deploy.sh | fleet-deploy.sh — refresh the machine's fleet services from THIS packa | tested+named | keep (a human or a cron row must run it) |
+| fleet-ensure.sh | fleet-ensure.sh — the role-gated RAISE (plan 42's fleet services, plan | tested+named | keep (a human or a cron row must run it) |
+| fleet-version.sh | fleet-version.sh — is the fleet on ONE version? (plan 51, Phase 2) | tested+named | keep (a human or a cron row must run it) |
+| contracts-check.sh | contracts-check.sh — the typed surfaces' proof, in one command. | tested | keep (a human or a cron row must run it) |
+| design-check.sh | design-check.sh — one identity, two renderers: they must agree. | tested | keep (a human or a cron row must run it) |
+| extension-api-check.sh | extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool  | tested+named | keep (a human or a cron row must run it) |
+| home-index-check.sh | home-index-check.sh — every shelf in the home has an index, and the in | tested | keep (a human or a cron row must run it) |
+| model-alias-check.sh | model-alias-check.sh — does every alias a body names resolve in the fl | tested+named | keep (a human or a cron row must run it) |
+| syn-arm-pretool-check.sh | syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash comm | tested+named | keep (a human or a cron row must run it) |
+| syn-asset-pretool-check.sh | syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths. | tested+named | keep (a human or a cron row must run it) |
+| syn-cd-pretool-check.sh | syn-cd-pretool-check.sh - PreToolUse seatbelt for directory-changing com | tested+named | keep (a human or a cron row must run it) |
+| syn-guard-pretool-check.sh | syn-guard-pretool-check.sh - PreToolUse seatbelt for the runtime's load- | tested+named | keep (a human or a cron row must run it) |
+| syn-spawn-pretool-check.sh | syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for ty | tested | keep (a human or a cron row must run it) |
+| ui-truth-check.sh | ui-truth-check.sh — the panel's number must equal the machine's number | tested | keep (a human or a cron row must run it) |
+| usage-ratchet.sh | usage-ratchet.sh — PROVE the doors are used, and fail when the unused  | tested | keep (a human or a cron row must run it) |
+| workflow-check.sh | workflow-check.sh — every GitHub Actions workflow must PARSE, before C | tested | keep (a human or a cron row must run it) |
+| ymir-config-check.sh | ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime | tested+named | keep (a human or a cron row must run it) |
+| ymir-update-check.sh | ymir-update-check.sh — does a newer Ymir stand on npm? One answer, cac | tested+named | keep (a human or a cron row must run it) |
+| ci-verify.sh | ci-verify.sh — what CI must prove, in one command, for BOTH hosts. | tested+named | keep (a human or a cron row must run it) |
+| guards.sh | guards.sh — every TREE ward, in one command. | tested | keep (a human or a cron row must run it) |
+| branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
+| defaults-guard.sh | defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE. | tested+named | keep (a human or a cron row must run it) |
+| docs-guard.sh | docs-guard.sh — docs/ is the PUBLIC, user-facing tree. Block operator- | tested | keep (a human or a cron row must run it) |
+| fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | tested+named | keep (a human or a cron row must run it) |
+| hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested | keep (a human or a cron row must run it) |
+| perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |
+| private-guard.sh | private-guard.sh — enforce the Hoard boundary (Rule 04). Nothing under | tested | keep (a human or a cron row must run it) |
+| public-guard.sh | public-guard.sh — every PUBLIC, user-facing file must be free of opera | tested+named | keep (a human or a cron row must run it) |
+| runtime-guard.sh | runtime-guard.sh — THE TREE IS NOT A RUNTIME. | tested | keep (a human or a cron row must run it) |
+| secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
+| syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
 | github-deploy.sh | github-deploy.sh — zero-trust deploys (W0035). Sync secrets from the l | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-expose.sh | gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjal | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-notify.sh | gjallarhorn-notify.sh — the horn (W0036). Unified push: Telegram + a w | tested+named | keep (a human or a cron row must run it) |
@@ -253,37 +281,18 @@ capabilities[5]{surface,count}:
 | gleipnir-lock-lib.sh | gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
 | graphics-lib.sh | graphics-lib.sh — the machine's graphics truth, shared by every reader | tested+named | keep (a human or a cron row must run it) |
 | groa-update.sh | groa-update.sh — Gróa, the völva who renews. | tested+named | keep (a human or a cron row must run it) |
-| guards.sh | guards.sh — every TREE ward, in one command. | tested | keep (a human or a cron row must run it) |
 | hall-snapshot.sh | hall-snapshot.sh — the planning feed for the Óðrerir Live Hall. | tested+named | keep (a human or a cron row must run it) |
 | hamr-harness.sh | hamr-harness.sh - detect the agent harness (Hamr) this process tree runs | tested+named | keep (a human or a cron row must run it) |
 | heimdall-ensure.sh | heimdall-ensure.sh — ensure the Heimdall SSH-key ward is present and a | tested+named | keep (a human or a cron row must run it) |
 | heimdall-ssh-keys.sh | heimdall-ssh-keys.sh — Heimdall's SSH-keys surface. | tested+named | keep (a human or a cron row must run it) |
-| herdr-ensure.sh | herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs. | tested+named | keep (a human or a cron row must run it) |
-| herdr-run.sh | herdr-run.sh — raise an Eindri in herdr, by the grain that fits the er | tested+named | keep (a human or a cron row must run it) |
 | hermes-ensure.sh | hermes-ensure.sh — ensure the Hermes agent runtime is present. | tested+named | keep (a human or a cron row must run it) |
-| hlidskjalf-agents.sh | hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doi | tested+named | keep (a human or a cron row must run it) |
-| hlidskjalf-usage.sh | hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy. | tested | keep (a human or a cron row must run it) |
-| hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested | keep (a human or a cron row must run it) |
-| hoard-lib.sh | hoard-lib.sh — where the operator's HOME lives, and the two roots bene | tested+named | keep (a human or a cron row must run it) |
-| hodd.sh | hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant. | tested+named | keep (a human or a cron row must run it) |
 | host-sense.sh | host-sense.sh — learn THIS machine: distro, kernel, session, desktop,  | tested+named | keep (a human or a cron row must run it) |
 | huginn-research-worker.sh | huginn-research-worker — Apodex-powered research worker (Eindri). | tested | keep (a human or a cron row must run it) |
-| journal-append.sh | journal-append.sh — write one idempotent entry to THIS machine's outbo | tested+named | keep (a human or a cron row must run it) |
-| journal-receive.sh | journal-receive.sh — the HEART folds the bodies' journals into one rec | tested+named | keep (a human or a cron row must run it) |
-| journal-reconcile.sh | journal-reconcile.sh — push this machine's outbox to the heart, when i | tested | keep (a human or a cron row must run it) |
 | llama-ensure.sh | llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or a | tested+named | keep (a human or a cron row must run it) |
 | local-model-lock.sh | local-model-lock.sh — serialize LOCAL model inference on one machine. | tested+named | keep (a human or a cron row must run it) |
 | machine-profile.sh | machine-profile.sh — a body reads its OWN card (wave C, the persona lo | tested | keep (a human or a cron row must run it) |
-| mcp-config.sh | mcp-config.sh — generate the harness MCP config: ONE local gateway doo | tested+named | keep (a human or a cron row must run it) |
-| mcp-gate.sh | mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-ad | tested | keep (a human or a cron row must run it) |
-| mcp-gateway.sh | mcp-gateway.sh — the body's ONE local door in front of the record MCPs | tested+named | keep (a human or a cron row must run it) |
-| mimir-bridge.sh | mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602). | tested+named | keep (a human or a cron row must run it) |
-| mimir-ingest.sh | mimir-ingest.sh — ingest the repo's data material into the well (Mimir | tested+named | keep (a human or a cron row must run it) |
-| mimir-reflect.sh | mimir-reflect — smelt the well's episodes into facts, through the LLAM | tested | keep (a human or a cron row must run it) |
-| mimir.sh | mimir.sh — the well (Mimirsbrunn). Drink before you act, water it afte | tested+named | keep (a human or a cron row must run it) |
 | mjollnir-webhook.sh | mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018 | tested | keep (a human or a cron row must run it) |
 | mjollnir.sh | mjollnir.sh — the hammer (W0018). An issue becomes a PR: read the issu | tested+named | keep (a human or a cron row must run it) |
-| model-alias-check.sh | model-alias-check.sh — does every alias a body names resolve in the fl | tested+named | keep (a human or a cron row must run it) |
 | model-fetch.sh | model-fetch.sh — fetch a chosen model into the operator's models direc | tested+named | keep (a human or a cron row must run it) |
 | model-fit.sh | model-fit.sh — choose the best local model for THE USER'S hardware, pr | tested+named | keep (a human or a cron row must run it) |
 | model-hardware.sh | model-hardware.sh — profile THIS machine for local models and record t | tested | keep (a human or a cron row must run it) |
@@ -295,6 +304,65 @@ capabilities[5]{surface,count}:
 | models-report.sh | models-report — the user's OWN models, read from the ROOT pi home. | tested | keep (a human or a cron row must run it) |
 | nidhogg.sh | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination fi | tested | keep (a human or a cron row must run it) |
 | no-delete-guard.sh | no-delete-guard.sh — Rule 11, ENFORCED. A tracked file is never delete | tested | keep (a human or a cron row must run it) |
+| npm-install-local-test.sh | npm-install-local-test.sh — the REAL local installation test. | tested | keep (a human or a cron row must run it) |
+| npm-pretest.sh | npm-pretest.sh — the pre-publish test gate (the Allfather's decree): | tested+named | keep (a human or a cron row must run it) |
+| npm-publish.sh | npm-publish.sh — publish through the HOARD's npm token, every single t | tested+named | keep (a human or a cron row must run it) |
+| omarchy-hook-install.sh | omarchy-hook-install.sh — let Ymir notice when Omarchy updates. | tested+named | keep (a human or a cron row must run it) |
+| omarchy-install.sh | omarchy-install.sh — the Omarchy installation layer (Rule 05). | tested | keep (a human or a cron row must run it) |
+| omarchy-plugins.sh | omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs o | tested+named | keep (a human or a cron row must run it) |
+| omarchy-sense.sh | omarchy-sense.sh — learn the Allfather's Omarchy machine. | tested+named | keep (a human or a cron row must run it) |
+| open-design.sh | open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this se | tested | keep (a human or a cron row must run it) |
+| opendesign.sh | opendesign.sh — start / stop / status for OpenDesign (the design forge | tested | keep (a human or a cron row must run it) |
+| packaged-gate.sh | packaged-gate.sh — prove the PUBLISHED artifact, not the tree. | tested | keep (a human or a cron row must run it) |
+| pi-agent.sh | pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/m | tested | keep (a human or a cron row must run it) |
+| pi-ensure.sh | pi-ensure.sh — ensure the Pi packages Ymir depends on. | tested+named | keep (a human or a cron row must run it) |
+| pi-local.sh | pi-local.sh — run a Pi agent on a LOCAL model, reusable. | tested+named | keep (a human or a cron row must run it) |
+| pi-model-agnostic.sh | pi-model-agnostic — pi must not EXPECT any model. Local and online are | tested | keep (a human or a cron row must run it) |
+| pi-model-wire.sh | pi-model-wire.sh — wire a chosen local model into the operator's pi. | tested+named | keep (a human or a cron row must run it) |
+| pi-seat.sh | pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a  | tested+named | keep (a human or a cron row must run it) |
+| pr-pretest.sh | pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, be | tested+named | keep (a human or a cron row must run it) |
+| prereq-ensure.sh | prereq-ensure.sh — self-healing prerequisite engine for Ymir. | tested+named | keep (a human or a cron row must run it) |
+| project-git.sh | project-git.sh — resolve a project's GitHub block from the master regi | tested+named | keep (a human or a cron row must run it) |
+| prove-install.sh | prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap. | tested | keep (a human or a cron row must run it) |
+| rail-resolve.sh | rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts | tested+named | keep (a human or a cron row must run it) |
+| ratatoskr.sh | ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`). | tested+named | keep (a human or a cron row must run it) |
+| realm-lib.sh | realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the  | tested+named | keep (a human or a cron row must run it) |
+| journal-append.sh | journal-append.sh — write one idempotent entry to THIS machine's outbo | tested+named | keep (a human or a cron row must run it) |
+| journal-receive.sh | journal-receive.sh — the HEART folds the bodies' journals into one rec | tested+named | keep (a human or a cron row must run it) |
+| journal-reconcile.sh | journal-reconcile.sh — push this machine's outbox to the heart, when i | tested | keep (a human or a cron row must run it) |
+| mimir-ingest.sh | mimir-ingest.sh — ingest the repo's data material into the well (Mimir | tested+named | keep (a human or a cron row must run it) |
+| mimir-reflect.sh | mimir-reflect — smelt the well's episodes into facts, through the LLAM | tested | keep (a human or a cron row must run it) |
+| mimir.sh | mimir.sh — the well (Mimirsbrunn). Drink before you act, water it afte | tested+named | keep (a human or a cron row must run it) |
+| runes-append.sh | runes-append.sh — the append-only Runes ledger, a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
+| registry-lib.sh | registry-lib.sh — the ONE reader for the master project registry's row | tested+named | keep (a human or a cron row must run it) |
+| repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
+| research-round.sh | research-round.sh — one reusable research errand: seat a skald or a sa | tested | keep (a human or a cron row must run it) |
+| rodd-operational-input.sh | rodd-operational-input.sh - canonical Rödd operational-input protocol. | tested+named | keep (a human or a cron row must run it) |
+| role-lib.sh | role-lib.sh — what this machine IS, and the components its role owes | tested+named | keep (a human or a cron row must run it) |
+| role.sh | role.sh — declare, read, and validate a machine's ROLE (plan 51, Phase | tested+named | keep (a human or a cron row must run it) |
+| herdr-ensure.sh | herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs. | tested+named | keep (a human or a cron row must run it) |
+| herdr-run.sh | herdr-run.sh — raise an Eindri in herdr, by the grain that fits the er | tested+named | keep (a human or a cron row must run it) |
+| valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into ea | tested+named | keep (a human or a cron row must run it) |
+| sessrumnir-ensure.sh | sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present a | tested+named | keep (a human or a cron row must run it) |
+| sessrumnir-sync.sh | sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmni | tested | keep (a human or a cron row must run it) |
+| sessrumnir.sh | sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall). | tested+named | keep (a human or a cron row must run it) |
+| skill-find.sh | skill-find.sh — find the skill you need, without loading any of them. | tested+named | keep (a human or a cron row must run it) |
+| skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
+| skuld-branch-outcome.sh | skuld-branch-outcome.sh - the durable outcome store for the Pi supervisi | tested+named | keep (a human or a cron row must run it) |
+| skuld-branch-prompt.sh | skuld-branch-prompt.sh - emit the supervision branch's system prompt | tested+named | keep (a human or a cron row must run it) |
+| skuld-sync.sh | skuld-sync.sh — the fleet mirror: the instances pull the heart's whole | tested | keep (a human or a cron row must run it) |
+| snotra-capture.sh | snotra-capture.sh — capture mic + system audio on the meeting seat. | tested+named | keep (a human or a cron row must run it) |
+| snotra-detect.sh | snotra-detect.sh — the ear's watch: pricks up when a call begins, and  | tested+named | keep (a human or a cron row must run it) |
+| snotra-ensure.sh | snotra-ensure.sh — ensure the meeting ear's transcription engine is pr | tested+named | keep (a human or a cron row must run it) |
+| snotra-iscall.sh | snotra-iscall.sh — is a real call in progress on this seat? | tested | keep (a human or a cron row must run it) |
+| snotra-mine.sh | snotra-mine.sh — mine decisions and action items out of a transcript. | tested+named | keep (a human or a cron row must run it) |
+| snotra-transcribe.sh | snotra-transcribe.sh — transcribe a meeting recording and produce minu | tested+named | keep (a human or a cron row must run it) |
+| syn-watch-arm.sh | syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client. | tested+named | keep (a human or a cron row must run it) |
+| syn-watch.sh | syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, se | tested+named | keep (a human or a cron row must run it) |
+| tailscale-sync.sh | tailscale-sync.sh — sync the Allfather's pi data across his OWN machin | tested | keep (a human or a cron row must run it) |
+| telegram-bot.sh | telegram-bot.sh — the horn answers (W0036). Long-poll Telegram for the | tested | keep (a human or a cron row must run it) |
+| brokk-wake-grant.sh | shellcheck source=bin/time/brokk-wake-lib.sh | tested+named | keep (a human or a cron row must run it) |
+| brokk-wake-lib.sh | Shared durable wake queue and portable lock helpers. | tested+named | keep (a human or a cron row must run it) |
 | nornir-cron-start.sh | nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempo | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-asken-handoff.sh | nornir-job-asken-handoff.sh — the rollover, on the schedule. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-bragi-scrape.sh | nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape  | tested+named | keep (a human or a cron row must run it) |
@@ -307,79 +375,15 @@ capabilities[5]{surface,count}:
 | nornir-job-nsr-compliance.sh | nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-observer.sh | nornir-job-observer.sh - Huginn, the raven of observation. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-skillopt-sleep.sh | nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution. | tested | keep (a human or a cron row must run it) |
-| npm-install-local-test.sh | npm-install-local-test.sh — the REAL local installation test. | tested | keep (a human or a cron row must run it) |
-| npm-pretest.sh | npm-pretest.sh — the pre-publish test gate (the Allfather's decree): | tested+named | keep (a human or a cron row must run it) |
-| npm-publish.sh | npm-publish.sh — publish through the HOARD's npm token, every single t | tested+named | keep (a human or a cron row must run it) |
-| odrerir-mcp-smoke.sh | odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans throu | tested+named | keep (a human or a cron row must run it) |
-| omarchy-hook-install.sh | omarchy-hook-install.sh — let Ymir notice when Omarchy updates. | tested+named | keep (a human or a cron row must run it) |
-| omarchy-install.sh | omarchy-install.sh — the Omarchy installation layer (Rule 05). | tested | keep (a human or a cron row must run it) |
-| omarchy-plugins.sh | omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs o | tested+named | keep (a human or a cron row must run it) |
-| omarchy-sense.sh | omarchy-sense.sh — learn the Allfather's Omarchy machine. | tested+named | keep (a human or a cron row must run it) |
-| open-design.sh | open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this se | tested | keep (a human or a cron row must run it) |
-| opendesign.sh | opendesign.sh — start / stop / status for OpenDesign (the design forge | tested | keep (a human or a cron row must run it) |
-| packaged-gate.sh | packaged-gate.sh — prove the PUBLISHED artifact, not the tree. | tested | keep (a human or a cron row must run it) |
-| perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |
-| pi-agent.sh | pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/m | tested | keep (a human or a cron row must run it) |
-| pi-ensure.sh | pi-ensure.sh — ensure the Pi packages Ymir depends on. | tested+named | keep (a human or a cron row must run it) |
-| pi-local.sh | pi-local.sh — run a Pi agent on a LOCAL model, reusable. | tested+named | keep (a human or a cron row must run it) |
-| pi-model-agnostic.sh | pi-model-agnostic — pi must not EXPECT any model. Local and online are | tested | keep (a human or a cron row must run it) |
-| pi-model-wire.sh | pi-model-wire.sh — wire a chosen local model into the operator's pi. | tested+named | keep (a human or a cron row must run it) |
-| pi-seat.sh | pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a  | tested+named | keep (a human or a cron row must run it) |
-| pr-pretest.sh | pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, be | tested+named | keep (a human or a cron row must run it) |
-| prereq-ensure.sh | prereq-ensure.sh — self-healing prerequisite engine for Ymir. | tested+named | keep (a human or a cron row must run it) |
-| private-guard.sh | private-guard.sh — enforce the Hoard boundary (Rule 04). Nothing under | tested | keep (a human or a cron row must run it) |
-| project-git.sh | project-git.sh — resolve a project's GitHub block from the master regi | tested+named | keep (a human or a cron row must run it) |
-| prove-install.sh | prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap. | tested | keep (a human or a cron row must run it) |
-| public-guard.sh | public-guard.sh — every PUBLIC, user-facing file must be free of opera | tested+named | keep (a human or a cron row must run it) |
-| rail-resolve.sh | rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts | tested+named | keep (a human or a cron row must run it) |
-| ratatoskr.sh | ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`). | tested+named | keep (a human or a cron row must run it) |
-| realm-lib.sh | realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the  | tested+named | keep (a human or a cron row must run it) |
-| registry-lib.sh | registry-lib.sh — the ONE reader for the master project registry's row | tested+named | keep (a human or a cron row must run it) |
-| repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
-| research-round.sh | research-round.sh — one reusable research errand: seat a skald or a sa | tested | keep (a human or a cron row must run it) |
-| rodd-operational-input.sh | rodd-operational-input.sh - canonical Rödd operational-input protocol. | tested+named | keep (a human or a cron row must run it) |
-| role-lib.sh | role-lib.sh — what this machine IS, and the components its role owes | tested+named | keep (a human or a cron row must run it) |
-| role.sh | role.sh — declare, read, and validate a machine's ROLE (plan 51, Phase | tested+named | keep (a human or a cron row must run it) |
-| runes-append.sh | runes-append.sh — the append-only Runes ledger, a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
-| runtime-guard.sh | runtime-guard.sh — THE TREE IS NOT A RUNTIME. | tested | keep (a human or a cron row must run it) |
 | saga-session-start.sh | saga-session-start.sh - the one-command Brokk session start. | tested+named | keep (a human or a cron row must run it) |
 | saga-sessionstart-run.sh | saga-sessionstart-run.sh - session-open entry point for run-tier harness | tested+named | keep (a human or a cron row must run it) |
 | saga-wake-drain.sh | saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them. | tested+named | keep (a human or a cron row must run it) |
-| secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
-| sessrumnir-ensure.sh | sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present a | tested+named | keep (a human or a cron row must run it) |
-| sessrumnir-sync.sh | sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmni | tested | keep (a human or a cron row must run it) |
-| sessrumnir.sh | sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall). | tested+named | keep (a human or a cron row must run it) |
-| skill-find.sh | skill-find.sh — find the skill you need, without loading any of them. | tested+named | keep (a human or a cron row must run it) |
-| skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
-| skuld-branch-outcome.sh | skuld-branch-outcome.sh - the durable outcome store for the Pi supervisi | tested+named | keep (a human or a cron row must run it) |
-| skuld-branch-prompt.sh | skuld-branch-prompt.sh - emit the supervision branch's system prompt | tested+named | keep (a human or a cron row must run it) |
-| skuld-sync.sh | skuld-sync.sh — the fleet mirror: the instances pull the heart's whole | tested | keep (a human or a cron row must run it) |
-| smidja-board.sh | smidja-board.sh — Smíðja's board, by one name. | tested+named | keep (a human or a cron row must run it) |
-| smidja-bootstrap.sh | smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh in | tested+named | keep (a human or a cron row must run it) |
-| smidja-lib.sh | smidja-lib.sh — where the smithy's parts actually live. | tested+named | keep (a human or a cron row must run it) |
-| smidja-observe.sh | smidja-observe.sh — the smithy's trace, read-only (W0075). Reads the R | tested | keep (a human or a cron row must run it) |
-| snotra-capture.sh | snotra-capture.sh — capture mic + system audio on the meeting seat. | tested+named | keep (a human or a cron row must run it) |
-| snotra-detect.sh | snotra-detect.sh — the ear's watch: pricks up when a call begins, and  | tested+named | keep (a human or a cron row must run it) |
-| snotra-ensure.sh | snotra-ensure.sh — ensure the meeting ear's transcription engine is pr | tested+named | keep (a human or a cron row must run it) |
-| snotra-iscall.sh | snotra-iscall.sh — is a real call in progress on this seat? | tested | keep (a human or a cron row must run it) |
-| snotra-mine.sh | snotra-mine.sh — mine decisions and action items out of a transcript. | tested+named | keep (a human or a cron row must run it) |
-| snotra-transcribe.sh | snotra-transcribe.sh — transcribe a meeting recording and produce minu | tested+named | keep (a human or a cron row must run it) |
-| syn-arm-pretool-check.sh | syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash comm | tested+named | keep (a human or a cron row must run it) |
-| syn-asset-pretool-check.sh | syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths. | tested+named | keep (a human or a cron row must run it) |
-| syn-cd-pretool-check.sh | syn-cd-pretool-check.sh - PreToolUse seatbelt for directory-changing com | tested+named | keep (a human or a cron row must run it) |
-| syn-guard-pretool-check.sh | syn-guard-pretool-check.sh - PreToolUse seatbelt for the runtime's load- | tested+named | keep (a human or a cron row must run it) |
-| syn-spawn-pretool-check.sh | syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for ty | tested | keep (a human or a cron row must run it) |
-| syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
-| syn-watch-arm.sh | syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client. | tested+named | keep (a human or a cron row must run it) |
-| syn-watch.sh | syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, se | tested+named | keep (a human or a cron row must run it) |
-| tailscale-sync.sh | tailscale-sync.sh — sync the Allfather's pi data across his OWN machin | tested | keep (a human or a cron row must run it) |
-| telegram-bot.sh | telegram-bot.sh — the horn answers (W0036). Long-poll Telegram for the | tested | keep (a human or a cron row must run it) |
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | topology.sh | topology.sh — what IS this machine in the fleet, and is it talking to  | tested+named | keep (a human or a cron row must run it) |
-| ui-truth-check.sh | ui-truth-check.sh — the panel's number must equal the machine's number | tested | keep (a human or a cron row must run it) |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside th | tested+named | keep (a human or a cron row must run it) |
 | valhalla.sh | valhalla.sh — the process hall (Valhalla). List, inspect, revive, and  | tested+named | keep (a human or a cron row must run it) |
-| valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into ea | tested+named | keep (a human or a cron row must run it) |
+| hoard-lib.sh | hoard-lib.sh — where the operator's HOME lives, and the two roots bene | tested+named | keep (a human or a cron row must run it) |
+| hodd.sh | hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant. | tested+named | keep (a human or a cron row must run it) |
 | version-stamp.sh | version-stamp.sh — a seat says exactly which build it runs (2026-09-22 | tested | keep (a human or a cron row must run it) |
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |
@@ -388,11 +392,8 @@ capabilities[5]{surface,count}:
 | wyrd-db.sh | wyrd-db.sh — the database layer (W0040). Applies the platform schema a | tested+named | keep (a human or a cron row must run it) |
 | yggdrasil.sh | yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree). | tested+named | keep (a human or a cron row must run it) |
 | ymir-autoboot.sh | ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whe | tested+named | keep (a human or a cron row must run it) |
-| ymir-config-check.sh | ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime | tested+named | keep (a human or a cron row must run it) |
 | ymir-config.sh | ymir-config.sh — the operator's own preferences, honoured and remember | tested | keep (a human or a cron row must run it) |
 | ymir-edit.sh | ymir-edit.sh — open a file in the Allfather's editor, on its own deskt | tested | keep (a human or a cron row must run it) |
-| ymir-engine-ensure.sh | ymir-engine-ensure.sh — materialize the engine's private python home. | tested+named | keep (a human or a cron row must run it) |
-| ymir-engine.sh | ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`). | tested+named | keep (a human or a cron row must run it) |
 | ymir-fleet.sh | ymir-fleet.sh — FLEET MODE, one command for npm users. Raise (or repor | tested | keep (a human or a cron row must run it) |
 | ymir-install.sh | ymir-install.sh — THE FIRST SETUP. Stand the full Ymir up for the oper | tested+named | keep (a human or a cron row must run it) |
 | ymir-invite.sh | ymir-invite — hand someone a way in to your Ymir, and take it back. | tested+named | keep (a human or a cron row must run it) |
@@ -405,7 +406,6 @@ capabilities[5]{surface,count}:
 | ymir-setup-auth.sh | ymir-setup-auth.sh — set the operator's Ymir credential at first setup | tested+named | keep (a human or a cron row must run it) |
 | ymir-state.sh | ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runti | tested+named | keep (a human or a cron row must run it) |
 | ymir-style.sh | ymir-style.sh — the cloth of the terminal halls. | tested+named | keep (a human or a cron row must run it) |
-| ymir-update-check.sh | ymir-update-check.sh — does a newer Ymir stand on npm? One answer, cac | tested+named | keep (a human or a cron row must run it) |
 | ymir-validate.sh | ymir-validate.sh — verify the installation actually works. | tested+named | keep (a human or a cron row must run it) |
 | yt-transcript.sh | yt-transcript.sh — read a video: metadata, description, and transcript | tested+named | keep (a human or a cron row must run it) |
 

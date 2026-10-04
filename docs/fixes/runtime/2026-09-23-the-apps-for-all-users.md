@@ -15,10 +15,10 @@ wrong for anyone running from the npm installation.
 - The mend's tiers (both `scripts/electron.sh` and `bin/sessrumnir.sh`):
   npm install --include=dev (the deps) -> approve + rebuild -> the
   postinstall's install.js -> `fetch_electron_zip` (the PROVEN direct zip +
-  unzip road, `bin/electron-lib.sh`), so a fresh dash boots itself.
+  unzip road, `bin/desktop/electron-lib.sh`), so a fresh dash boots itself.
 - Proven on omarchy from the npm package: hlidskjalf up :3888, odrerir up
   :4322, smidja up :8437, sessrumnir up; 178 M runtime seated by the zip road.
 
 ## Files
 - `bin/desktop-place.sh` · `scripts/electron.sh` · `bin/sessrumnir.sh`
-- `bin/electron-lib.sh`
+- `bin/desktop/electron-lib.sh`

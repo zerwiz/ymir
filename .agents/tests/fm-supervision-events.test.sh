@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tests/fm-supervision-events.test.sh - unit tests for the watcher's native
-# event-wait splice (event_wait_or_sleep in bin/fm-watch.sh and
-# handle_push_transition in bin/fm-push-transition-lib.sh). The watcher's source
+# event-wait splice (event_wait_or_sleep in bin/backend/fm-watch.sh and
+# handle_push_transition in bin/backend/fm-push-transition-lib.sh). The watcher's source
 # guard lets this file source it to load
 # the functions WITHOUT acquiring the singleton lock or entering the blocking
 # loop; wake/sleep and the backend dispatchers are overridden so the exemptions,

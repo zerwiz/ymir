@@ -79,7 +79,7 @@ model is a claim about someone else's machine.
   (`$YMIR_HOME`, `$YMIR_HOARD`, `$ROOT`, `$SCRIPT_DIR`), or comes from env/config
   with one documented default. Never a literal absolute path.
 - **The home is resolved, not assumed.** `$YMIR_HOME` resolves through
-  `bin/hoard-lib.sh` (`hoard_root`) — never a hardcoded `~/Documents/Ymir`, never
+  `bin/vault/hoard-lib.sh` (`hoard_root`) — never a hardcoded `~/Documents/Ymir`, never
   another user's home.
 - **A test may use a temp dir; it may not use a real home.** `mktemp -d` and
   `$TMPDIR` are correct. A fixture that names a real user's home is a violation

@@ -569,7 +569,7 @@ META
 }
 
 # A persistent REMOTE secondmate's parent metadata never carries spawn_gen
-# (bin/fm-spawn.sh's spawn_remote_secondmate() never writes one). This is the
+# (bin/backend/fm-spawn.sh's spawn_remote_secondmate() never writes one). This is the
 # proven marker-bearing path's counterpart: same durable fire-and-forget
 # delivery and cooldown behavior, driven end to end through the real remote
 # transport, for a mate that legitimately has no generation marker at all.

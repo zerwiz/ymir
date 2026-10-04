@@ -36,7 +36,7 @@ DST="$HOME/.fleet"
 # BUT A CALLER'S TREE MUST NEVER BE WRITTEN INTO THE OPERATOR'S PERMANENT UNITS.
 # 2026-09-24: a smith ran an ensure from its Yggdrasil worktree and this seat's
 # ~/.config/systemd/user/nornir.service came out holding
-#   ExecStart=/bin/bash <main>/.yggdrasil/<id>/bin/nornir-cron-start.sh
+#   ExecStart=/bin/bash <main>/.yggdrasil/<id>/bin/time/nornir-cron-start.sh
 # — a DISPOSABLE path. Pruning the worktree would have broken the seat's cron at
 # boot, silently. So when no explicit override is given, resolve to the MAIN tree
 # through git's common dir (the eindri-watch.sh lesson: a worktree's ensure and
@@ -98,7 +98,7 @@ if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   unset _fec
 fi
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
-  for _fec in "$SCRIPT_DIR/smidja-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/smidja-lib.sh"; do
+  for _fec in "$SCRIPT_DIR/smidja-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/desktop/smidja-lib.sh"; do
     [ -r "$_fec" ] && { . "$_fec"; YMIR_SMIDJA_LIB_LOADED=1; break; }
   done
   unset _fec
@@ -265,7 +265,7 @@ materialize_units() {  # <owed...> — every owed unit + the target; purge the s
         # remedy loudly rather than writing a unit the engine would own.
         if [ ! -f "$HOME/.config/systemd/user/a2abridge-directory.service" ]; then
           say "fleet: a2abridge-directory — the mesh engine's unit is missing" >&2
-          say "fleet:   remedy: bin/a2abridge-ensure.sh ensure --install (bin/ymir-install.sh step does this)" >&2
+          say "fleet:   remedy: bin/bridge/a2abridge-ensure.sh ensure --install (bin/ymir-install.sh step does this)" >&2
           A2A_MISSING=1
         fi
         ;;
@@ -355,11 +355,11 @@ retire_manual_stack() {
   for f in "$ROOT/.run/hlidskjalf.pid" "$ROOT/.run/hlidskjalf-api.pid" "$ROOT/.run/smidja-viz-api.pid"; do
     rm -f "$f"
   done
-  if [ -x "$ROOT/bin/mimir-bridge.sh" ]; then
-    "$ROOT/bin/mimir-bridge.sh" --stop >/dev/null 2>&1 && say "fleet: retired the manual well bridge" || true
+  if [ -x "$ROOT/bin/bridge/mimir-bridge.sh" ]; then
+    "$ROOT/bin/bridge/mimir-bridge.sh" --stop >/dev/null 2>&1 && say "fleet: retired the manual well bridge" || true
   fi
-  if [ -x "$ROOT/bin/bifrost-bridge.sh" ]; then
-    "$ROOT/bin/bifrost-bridge.sh" --stop >/dev/null 2>&1 && say "fleet: retired the manual model bridge" || true
+  if [ -x "$ROOT/bin/bridge/bifrost-bridge.sh" ]; then
+    "$ROOT/bin/bridge/bifrost-bridge.sh" --stop >/dev/null 2>&1 && say "fleet: retired the manual model bridge" || true
   fi
 }
 
@@ -418,7 +418,7 @@ raise_verify() {  # <owed...>
 
 # ── the seat's pi mcp-adapter.json wiring (the doors the harness drinks from) ──────
 wire_mcp() {  # every record MCP is fronted by THIS seat's own gateway
-  # (bin/mcp-gateway.sh, :8316): the harness points at one local door, and the
+  # (bin/bridge/mcp-gateway.sh, :8316): the harness points at one local door, and the
   # gateway resolves the heart's address at request time (tailnet first, LAN
   # fallback, loopback on the heart). A heart-address change is a re-resolve
   # inside the gateway, never a rewire of the seat. Snotra is not yet behind the

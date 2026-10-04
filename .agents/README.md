@@ -76,9 +76,9 @@ table maps every task to its file).
 | `bin/ymir-install.sh` | `installation.md` |
 | `apps/hlidskjalf/**` | `hlidskjalf-ui.md` |
 | `apps/odrerir/**` | `odrerir-hall.md` |
-| `bin/mimir* \| bin/mimir-bridge.py` | `memory-well.md` |
+| `bin/mimir* \| bin/bridge/mimir-bridge.py` | `memory-well.md` |
 | `bin/nornir-* \| config/cron.yaml` | `nornir-jobs.md` |
-| `bin/valknut-load.sh \| .pi/** \| .opencode/**` | `harness-integration/README.md` |
+| `bin/seat/valknut-load.sh \| .pi/** \| .opencode/**` | `harness-integration/README.md` |
 | `bin/smidja* \| .agents/skills/smidja-factory/**` | `smidja.md` |
 
 ---
@@ -210,17 +210,17 @@ Versioned, idempotent home migrations. Run via `bin/ymir-migrate.sh`:
 
 ### Start a Session
 ```bash
-bin/saga-session-start.sh   # Runs fm-bootstrap.sh, emits RODD_OP digest
+bin/time/saga-session-start.sh   # Runs fm-bootstrap.sh, emits RODD_OP digest
 ```
 
 ### Spawn an Eindri
 ```bash
-bin/fm-spawn.sh <agent-role> "<task>"
+bin/backend/fm-spawn.sh <agent-role> "<task>"
 ```
 
 ### Check Fleet Status
 ```bash
-bin/fm-bearings-snapshot.sh
+bin/backend/fm-bearings-snapshot.sh
 ```
 
 ### Run Compliance Check

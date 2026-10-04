@@ -127,7 +127,7 @@ function tagClass(tag: string): string {
     </div>
 
     <div v-if="!health.ok && !apiError" class="empty-state">
-      memory bridge offline — start it with <code>bin/mimir-bridge.sh --start</code>
+      memory bridge offline — start it with <code>bin/bridge/mimir-bridge.sh --start</code>
       (the Well, :4602) or <code>scripts/start.sh</code>
     </div>
 

@@ -6,7 +6,7 @@ PR.** PR #224 shipped the *library* twins (classify/wake/lease/wake-grant behind
 one implementation) and its own confession named what remained: the vendored
 `fm-watch.sh` (1,962 lines) still carried the watcher's judgement, `fm-teardown.sh`
 (2,922) still carried the landed-work gate, and the Utgard seat road still rode
-`bin/einherjar-spawn.sh`.
+`bin/agents/einherjar-spawn.sh`.
 
 Two of those seams are this change. Both were **two copies of one behaviour**:
 `bin/syn-watch.sh` judged the arm's liveness and raise from bash, and
@@ -44,7 +44,7 @@ opened log handle), and a `FileNotFoundError` → `rc=127` in `run()` so a missi
 **2 · The teardown god's landed gate — `src/ymir_runtime/landed.py`.**
 
 Reached two ways: the verb `python3 -m ymir_runtime landed <worktree>` (door:
-`bin/ymir-engine.sh landed`), and `stop --remove-worktree --require-landed`, which
+`bin/engine/ymir-engine.sh landed`), and `stop --remove-worktree --require-landed`, which
 REFUSES to remove a worktree whose work has not landed, naming the proof that said
 so. The proofs are the vendored gate's own, with the vendored gate's own argv:
 remote reachability · a merged PR whose head contains the local work (exact
@@ -58,7 +58,7 @@ remains the approved-discard path.
 
 ```
 vendored_form[3]{file,callers,outcome}
-  ".agents/backend/fm-classify-lib.sh · fm-wake-lib.sh · fm-lease-lib.sh · fm-timeout-lib.sh · fm-wake-grant.sh","the vendored island + the live route (fm-procevent via bin/eindri-watch.sh)","KEPT as thin adapters (#224); the alias-table end-state stands"
+  ".agents/backend/fm-classify-lib.sh · fm-wake-lib.sh · fm-lease-lib.sh · fm-timeout-lib.sh · fm-wake-grant.sh","the vendored island + the live route (fm-procevent via bin/agents/eindri-watch.sh)","KEPT as thin adapters (#224); the alias-table end-state stands"
   ".agents/backend/fm-watch.sh","fm-guard.sh · fm-turnend-guard.sh · fm-watch-arm.sh · fm-watch-checkpoint.sh · fm-supervise-daemon.sh · fm-claude-stop-autoarm.sh + ~10 vendored tests","KEPT — not this change's file, and DELETING it would break every one of those callers. The SEAM it duplicated (the arm's liveness, heartbeat, verdict, raise) is now the engine's, which was the point"
   ".agents/backend/fm-teardown.sh","fm-remote-secondmate-control.sh + the vendored island + its own suite","KEPT — the repoint is DECLARED, not attempted; see below"
 ```
@@ -97,7 +97,7 @@ errand (Phase 8).
   `a-remote-reachable` / `d-local-only-on-remote` → `yes|remote`;
   `b-unlanded` → `no|unlanded`; `e-dirty` → `no|dirty`; `f-forced` → `yes|forced`.
 - `bash -n` clean on `bin/syn-watch.sh`, `tests/e2e/landed-gate-proof.sh`,
-  `bin/ymir-engine.sh` and every other touched script.
+  `bin/engine/ymir-engine.sh` and every other touched script.
 - `bin/syn-watch.sh status --detail` against a scratch state, live:
   `arm=down mode=none unit=absent pid=none heartbeat=-1s session=none`, rc=1.
 
@@ -105,7 +105,7 @@ errand (Phase 8).
 - `src/ymir_runtime/watch.py` (new), `src/ymir_runtime/landed.py` (new)
 - `src/ymir_runtime/proc.py`, `__init__.py`, `__main__.py`, `stop.py`
 - `src/ymir_runtime/tests/test_watch.py` (new), `tests/test_landed.py` (new)
-- `bin/syn-watch.sh`, `bin/ymir-engine.sh`
+- `bin/syn-watch.sh`, `bin/engine/ymir-engine.sh`
 - `tests/e2e/landed-gate-proof.sh` (new)
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md` (§5, §7.1, §7.4)
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md` (the arm table)

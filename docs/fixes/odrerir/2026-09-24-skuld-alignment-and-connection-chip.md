@@ -28,7 +28,7 @@ the UI, and how the user knows whether he is connected. Three real findings:
   <cause>" + a retry that rings again and reloads the board). The empty-sentence
   law: only `|`-shaped lines are rows — a "no plans" sentence is the empty
   state, never a bogus row.
-- **The real smoke, in the house test**: `bin/odrerir-mcp-smoke.sh` walks the
+- **The real smoke, in the house test**: `bin/desktop/odrerir-mcp-smoke.sh` walks the
   same wire the browser walks (initialize → tickets/list → plans/list →
   tickets/get → comments/list → plans/get) and asserts the ALIGNMENT: every
   tool the boards call must exist on the server (`tools/list`), so a rename can
@@ -36,14 +36,14 @@ the UI, and how the user knows whether he is connected. Three real findings:
   `.agents/skills/lifecycle/smoke_test.sh` as the `boards` row.
 
 ## Verified
-- `bin/odrerir-mcp-smoke.sh` live: tickets 13 rows (ymir/13 "The numbered book
+- `bin/desktop/odrerir-mcp-smoke.sh` live: tickets 13 rows (ymir/13 "The numbered book
   is live"), plans honest-empty, tickets/get 11 fields, comments answered,
   `alignment: ok — every tool the boards call exists on the server`.
 - `.agents/skills/lifecycle/smoke_test.sh`: `hall OK` + `boards OK`, exit 0.
 - `tsc --noEmit` + `vite build` green.
 
 ## Files
-- `bin/odrerir-mcp-smoke.sh` (new) · `.agents/skills/lifecycle/smoke_test.sh`
+- `bin/desktop/odrerir-mcp-smoke.sh` (new) · `.agents/skills/lifecycle/smoke_test.sh`
 - `apps/odrerir/src/skuld.ts` (SSE + status) · `src/components/SkuldStatus.tsx` (new)
 - `apps/odrerir/src/components/{TicketsBoard,PlansBoard}.tsx` · `src/hall.css`
 - `.agents/skills/galdr-ymirsystem/assets/odrerir-hall.md` (appended)

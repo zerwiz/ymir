@@ -8,7 +8,7 @@ function resolveHome(): string {
   const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
-  if (!v) throw new Error("the vault path is empty — run `bin/hodd.sh path` and read what it says");
+  if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
   return v;
 }
 
@@ -41,11 +41,11 @@ import { existsSync , readFileSync } from "node:fs";
 
 const HOME = resolveHome();
 // Ymir's TOOLS are the repo's; only its DATA is the home's. So the well's door is
-// bin/mimir.sh beside this extension, and it resolves the home through the env.
+// bin/records/mimir.sh beside this extension, and it resolves the home through the env.
 
 // ── resolution: this file must run on ANY seat, so it may not know a machine ──
 // (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/heimdall/ymir`.)
-// This is the JS mirror of `ymir_root_verified` in bin/valknut-load.sh — same contract,
+// This is the JS mirror of `ymir_root_verified` in bin/seat/valknut-load.sh — same contract,
 // same order: $YMIR_ROOT, then the recorded roots, first one that really holds the house.
 // One reader in the shell, one here; they must agree, or a worktree seat reads a dead path.
 function resolveRoot(): string {
@@ -61,7 +61,7 @@ function resolveRoot(): string {
   }
   throw new Error(
     "YMIR_ROOT is not set and ~/.pi/agent/extensions/.ymir-root holds no usable root. " +
-    "Run `bin/valknut-load.sh --all --global` from your Ymir checkout — install records " +
+    "Run `bin/seat/valknut-load.sh --all --global` from your Ymir checkout — install records " +
     "the root, and every extension reads it from there.",
   );
 }
@@ -160,7 +160,7 @@ export default function ymirhome(pi: any) {
     name: "ymir_recall",
     description:
       "RECALL from the well before acting on anything the home owns. The house law: drink before " +
-      "you act. Thin — it calls bin/mimir.sh, so a human or a cron row recalls the same way.",
+      "you act. Thin — it calls bin/records/mimir.sh, so a human or a cron row recalls the same way.",
     parameters: {
       type: "object",
       properties: {
@@ -172,7 +172,7 @@ export default function ymirhome(pi: any) {
     execute: async (_toolCallId: string, args: any) => {
       try {
         const out = run("bash", ["-c", '"$1" recall "$2" "$3"', "_",
-          `${ROOT_BIN}/bin/mimir.sh`, String(args.query), String(args.limit ?? 5)], HOME);
+          `${ROOT_BIN}/bin/records/mimir.sh`, String(args.query), String(args.limit ?? 5)], HOME);
         return piOut(out || "the well has nothing on that (an empty well is a real answer, not a failure)");
       } catch (e: any) {
         return piOut("the well did not answer: " + String(e?.message ?? e).split("\n")[0]);
@@ -200,7 +200,7 @@ export default function ymirhome(pi: any) {
         const parts = [String(args.lesson)];
         if (args.tags?.length) parts.push(`tags: ${(args.tags as string[]).join(",")}`);
         if (args.actors?.length) parts.push(`actors: ${(args.actors as string[]).join(",")}`);
-        run("bash", ["-c", '"$1" observe "$2"', "_", `${ROOT_BIN}/bin/mimir.sh`, parts.join(" ")], HOME);
+        run("bash", ["-c", '"$1" observe "$2"', "_", `${ROOT_BIN}/bin/records/mimir.sh`, parts.join(" ")], HOME);
         return piOut("observed into the well. Next: ymir_note it into the plan it belongs to, or ymir_push the doc that carries it.");
       } catch (e: any) {
         return piOut("the well did not take it: " + String(e?.message ?? e).split("\n")[0]);

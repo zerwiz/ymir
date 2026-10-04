@@ -4,7 +4,7 @@ set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MP="$ROOT/bin/model-placement.sh"
-ER="$ROOT/bin/eindri-route.sh"
+ER="$ROOT/bin/agents/eindri-route.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

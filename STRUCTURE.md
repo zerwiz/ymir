@@ -78,7 +78,7 @@ ymir/
 ├── .pi/ · .opencode/ · .claude/ · .codex/ · .cursor/     # HARNESS DIRS (adapters + agent links)
 │   ├── .pi/extensions/ · settings.json                           # [d] Pi extension sources + settings
 │   ├── .pi/mcp-adapter.json.example  # [d] the tracked register template; the rendered `.pi/mcp-adapter.json` is [g]
-│   └── agents/ · plugins/ · hooks.json …                 # bound by bin/valknut-load.sh from .agents/
+│   └── agents/ · plugins/ · hooks.json …                 # bound by bin/seat/valknut-load.sh from .agents/
 │
 ├── docs/                           # PLANNING & KNOWLEDGE
 │   ├── Architecture.md · lore.md · design.md · integration.md · session-start.md

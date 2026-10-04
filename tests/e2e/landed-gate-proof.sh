@@ -3,7 +3,7 @@
 #
 # The gate that decides whether a worktree may be discarded used to live in the
 # vendored teardown's shell. It lives in the engine now (`src/ymir_runtime/landed.py`,
-# behind `bin/ymir-engine.sh landed`), and this proof runs the vendored suite's
+# behind `bin/engine/ymir-engine.sh landed`), and this proof runs the vendored suite's
 # own documented matrix against the door, on real repositories with a real bare
 # origin, so the verdicts are earned rather than asserted.
 #
@@ -26,7 +26,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-ENGINE="$ROOT/bin/ymir-engine.sh"
+ENGINE="$ROOT/bin/engine/ymir-engine.sh"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Tests for the Pi supervision branch's fleet-record layer
 # (docs/pi-supervision-branch.md): the byte-stable branch prompt generator
-# (bin/fm-branch-prompt.sh), the append-only outcome store
-# (bin/fm-branch-outcome.sh), the per-task lease contract (bin/fm-lease.sh,
-# bin/fm-lease-lib.sh), the lease and role-partition guards wired into the
+# (bin/backend/fm-branch-prompt.sh), the append-only outcome store
+# (bin/backend/fm-branch-outcome.sh), the per-task lease contract (bin/backend/fm-lease.sh,
+# bin/backend/fm-lease-lib.sh), the lease and role-partition guards wired into the
 # mutating entrypoints, and the proof that a home which never runs the branch
 # is untouched by all of it.
 set -u

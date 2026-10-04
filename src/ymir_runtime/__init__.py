@@ -5,8 +5,8 @@
     send(seat_id, text)             the data plane
     stop(seat_id)                   reap cleanly, no orphans
 
-Everything a door needs is behind those four calls. A door (`bin/eindri-start.sh`,
-`bin/einherjar-spawn.sh`) is a thin adapter: it hands an errand to `seat()` when
+Everything a door needs is behind those four calls. A door (`bin/agents/eindri-start.sh`,
+`bin/agents/einherjar-spawn.sh`) is a thin adapter: it hands an errand to `seat()` when
 the engine can own it, and keeps the old road when the engine refuses — the
 strangler is reversible by design until parity is proven.
 

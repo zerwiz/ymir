@@ -14,7 +14,7 @@ The service behind it was dying before it could serve.
   `smidja.db not found at $HOME_SEAT/Documents/ymirhome/smidja/smidja.db`.
 - **A Rule 07 violation, not a typo.** The path is the operator's, so it must resolve
   through the ONE resolver and never a literal default. `scripts/start.sh` already
-  sources `bin/hoard-lib.sh`; it simply did not use it here.
+  sources `bin/vault/hoard-lib.sh`; it simply did not use it here.
 - **Mended** to resolve the home through `ymir_home_root` (the resolver that
   `hoard_root` itself calls) and to name the DB only when it exists. `hoard_root` was
   tried first and was WRONG: it returns the hoard (`<home>/hodd`), so the path came out
@@ -24,12 +24,12 @@ The service behind it was dying before it could serve.
   `{"ok":true,"db":"$HOME_SEAT/Documents/Ymir/smidja/smidja.db","journal_mode":"wal","sessions":1}`,
   with the UI served from the visualizer's `dist`.
 - **The same defect is still in a sibling, and is named rather than quietly left:**
-  `bin/smidja-board.sh` (lines 46-49) carries the identical `${YMIR_HOME:-$HOME/
+  `bin/desktop/smidja-board.sh` (lines 46-49) carries the identical `${YMIR_HOME:-$HOME/
   Documents/ymirhome}` fallback. It is under `bin/smidja*`, a governed path whose asset
   is `smidja.md`, and the asset must be loaded before that edit. Recorded here so it is
   not lost.
 
-galdr-reread: `smidja.md` (the smithy's board, before mending `bin/smidja-board.sh`).
+galdr-reread: `smidja.md` (the smithy's board, before mending `bin/desktop/smidja-board.sh`).
 
 ### Files
 - `scripts/start.sh`

@@ -8,8 +8,8 @@ step) yet never the engine, its directory, or the MCP wiring. This makes the
 setup reproducible and puts the directory under the one boot table.
 
 - **`step_a2a` added to `bin/ymir-install.sh`** (after `step_snotra`): ensures the
-  engine via `bin/a2abridge-ensure.sh ensure --install`, then wires the mesh via
-  `bin/a2a-mcp.sh install`. Its own post-start probe can race the daemon's first
+  engine via `bin/bridge/a2abridge-ensure.sh ensure --install`, then wires the mesh via
+  `bin/bridge/a2a-mcp.sh install`. Its own post-start probe can race the daemon's first
   bind, so the row is decided by the **status check after**, never the ensure's
   exit alone. Honours `--skip-engines` and `--check` like its siblings.
 - **`a2abridge-directory` added to the ONE boot table** (`bin/autoboot-lib.sh`):

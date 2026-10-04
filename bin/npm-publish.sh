@@ -29,7 +29,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-# shellcheck source=bin/hoard-lib.sh
+# shellcheck source=bin/vault/hoard-lib.sh
 . "$SCRIPT_DIR/hoard-lib.sh"
 
 DRY=0; WHO=0; ALL=0; UNPUBLISH=0; UNPUB_SPEC=""; TARGETS=()

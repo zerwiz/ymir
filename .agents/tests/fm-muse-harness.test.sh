@@ -13,7 +13,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-# bin/fm-harness.sh checks verified ENV markers before ancestry. Muse is
+# bin/backend/fm-harness.sh checks verified ENV markers before ancestry. Muse is
 # markerless, so an inherited Cursor/Claude/Pi/Grok marker would outrank the
 # versioned muse-bin ancestor these detection cases launch. Drop the ambient
 # markers so the asserted verdict does not depend on which harness launched
@@ -526,7 +526,7 @@ EOF
 
 classify_muse() {  # <state-dir> <id>
   (
-    # shellcheck source=bin/fm-busy-lib.sh
+    # shellcheck source=bin/backend/fm-busy-lib.sh
     . "$ROOT/bin/fm-busy-lib.sh"
     fm_busy_classify tmux fake:0 muse "$2" "$1"
   )
@@ -534,7 +534,7 @@ classify_muse() {  # <state-dir> <id>
 
 run_state() {  # <log>
   (
-    # shellcheck source=bin/fm-busy-lib.sh
+    # shellcheck source=bin/backend/fm-busy-lib.sh
     . "$ROOT/bin/fm-busy-lib.sh"
     fm_busy_muse_run_state "$1"
   )
@@ -897,7 +897,7 @@ EOF
 test_muse_trusts_no_record_sources() {
   local out
   out=$(
-    # shellcheck source=bin/fm-busy-lib.sh
+    # shellcheck source=bin/backend/fm-busy-lib.sh
     . "$ROOT/bin/fm-busy-lib.sh"
     fm_busy_sources_for_harness muse
   )

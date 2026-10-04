@@ -48,7 +48,7 @@ which is exactly the impression that sent the question.
 
 ```
 $ python3 — every documented path checked, 0 dead      (15 paths)
-$ bash bin/valknut-load.sh --check
+$ bash bin/seat/valknut-load.sh --check
   valknut-load --check                           PASS
 ```
 

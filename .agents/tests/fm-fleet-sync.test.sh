@@ -19,7 +19,7 @@
 # single-project forms, while a symlinked clone dir still syncs.
 #
 # It also pins the orphaned .git/packed-refs.lock recovery in the fetch step
-# (fetch_with_packed_refs_lock_guard, backed by bin/fm-lock-lib.sh's shared
+# (fetch_with_packed_refs_lock_guard, backed by bin/backend/fm-lock-lib.sh's shared
 # staleness proof): a provably-stale lock is retried then removed and the clone
 # syncs (with a "recovered:" summary on stdout so a session-start refresh, which
 # discards stderr, still surfaces it); a live lock (fake lsof holder) is never

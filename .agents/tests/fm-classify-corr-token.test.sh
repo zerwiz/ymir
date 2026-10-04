@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tests/fm-classify-corr-token.test.sh - a status line may carry the correlation
-# token bin/fm-pending-reply-lib.sh embeds in a marked request and a secondmate
-# echoes back (bin/fm-brief.sh), between the verb and the rest of the line. Every
+# token bin/backend/fm-pending-reply-lib.sh embeds in a marked request and a secondmate
+# echoes back (bin/backend/fm-brief.sh), between the verb and the rest of the line. Every
 # verb-driven classification must read straight through that token, in BOTH
 # directions: a verb parse that keeps the token glued on matches no arm of the
 # decision fold, so the opener never opens, the closer never closes, and a
@@ -13,7 +13,7 @@
 # name=value word all keep their extra words and therefore stay non-transitions.
 #
 # Coverage is split by the interface each claim lives behind: the fold is driven
-# through the REAL bin/fm-wake-drain.sh, the classifier predicates through the
+# through the REAL bin/backend/fm-wake-drain.sh, the classifier predicates through the
 # library's own sourced entry points (as tests/fm-watch-triage.test.sh does), and
 # the token grammar itself is pinned against the REAL writers so this library's
 # second statement of the shape cannot drift from the one that owns it.
@@ -95,7 +95,7 @@ test_token_is_read_through_in_every_position_it_is_written_in() {
 
   # Before the key, after the key, with no key at all, twice on one line (a
   # recovery turn re-embedding), and in the bracketed shape the optional
-  # bin/fm-secondmate-report.sh helper writes. Every one is a real observed shape.
+  # bin/backend/fm-secondmate-report.sh helper writes. Every one is a real observed shape.
   printf 'needs-decision corr=%s [key=before]: token ahead of the key\n' "$CORR" > "$state/t1.status"
   printf 'needs-decision [key=after] corr=%s: token behind the key\n' "$CORR" > "$state/t2.status"
   printf 'blocked corr=%s: token and no key at all\n' "$CORR" > "$state/t3.status"
@@ -327,9 +327,9 @@ test_consumer_verdicts_read_through_the_token() {
 
 test_daemon_and_crew_state_case_arms_read_through_the_token() {
   # Two consumers switch on the verb STRING rather than on a helper, so they
-  # cannot be proven through status_is_*: bin/fm-supervise-daemon.sh matches
+  # cannot be proven through status_is_*: bin/backend/fm-supervise-daemon.sh matches
   # working|resolved|captain-held to take the transient-stale path instead of
-  # the terminal one, and bin/fm-crew-state.sh's map_log_state maps each verb to
+  # the terminal one, and bin/backend/fm-crew-state.sh's map_log_state maps each verb to
   # a run state, falling through to "unknown" on anything else.
   #
   # Before this fix a correlated line matched no arm of either: a correlated
@@ -361,7 +361,7 @@ test_daemon_and_crew_state_case_arms_read_through_the_token() {
 }
 
 test_pending_reply_escalation_matching_is_unaffected() {
-  # bin/fm-pending-reply-lib.sh filters a status file by verb when looking for
+  # bin/backend/fm-pending-reply-lib.sh filters a status file by verb when looking for
   # the escalation IT published, then whole-line matches its own exact payload.
   # Reading through the token widens the verb filter, so this pins that the exact
   # match behind it still refuses everything that is not that library's own line.

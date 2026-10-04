@@ -2,18 +2,18 @@
 # Behavior tests for the backlog<->record pairing invariant:
 # `state/<id>.meta` exists <=> this home's backlog row for that id is In flight.
 #
-# bin/fm-backlog-transition-lib.sh states the contract; the three scripts that
+# bin/backend/fm-backlog-transition-lib.sh states the contract; the three scripts that
 # own a task's physical record enforce it. These tests drive those real scripts
 # against a real backlog file and the real tasks-axi CLI, and assert the
 # resulting RECORD STATE - never the wording of a reminder a later turn was
 # expected to act on, which is exactly what let the two records drift before.
 #
-#   dispatch    bin/fm-spawn.sh moves the row In flight in the same run that
+#   dispatch    bin/backend/fm-spawn.sh moves the row In flight in the same run that
 #               publishes the record, so a live worker the backlog does not own
 #               cannot arise on the ordinary path.
-#   completion  bin/fm-teardown.sh closes the row before it reports success, so
+#   completion  bin/backend/fm-teardown.sh closes the row before it reports success, so
 #               a finished task cannot be left showing as running.
-#   recovery    bin/fm-bootstrap.sh reconciles THIS home's own books at session
+#   recovery    bin/backend/fm-bootstrap.sh reconciles THIS home's own books at session
 #               start, covering the millisecond crash window inside those two
 #               scripts and any drift a home was already carrying.
 #

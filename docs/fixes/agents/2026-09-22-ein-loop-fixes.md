@@ -12,4 +12,4 @@ errands as arming.
 - `status` skips ledger rows already accepted/returned/failed.
 
 ### Files
-- `bin/eindri-dispatch.sh`
+- `bin/agents/eindri-dispatch.sh`

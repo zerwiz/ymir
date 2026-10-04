@@ -2,8 +2,8 @@
 # fm-doc-audience-check.sh - validate the tracked documentation audience inventory.
 #
 # Usage:
-#   bin/fm-doc-audience-check.sh
-#   bin/fm-doc-audience-check.sh --root <repo> [--inventory <path>]
+#   bin/backend/fm-doc-audience-check.sh
+#   bin/backend/fm-doc-audience-check.sh --root <repo> [--inventory <path>]
 #
 # The inventory owns classification and setup routing.
 # This check validates structure only and does not keyword-lint prose.

@@ -67,12 +67,12 @@ witness them.
 
 A PR is not done when it is pushed; it is done when it is AUDITED. The spine
 makes that automatic: a ship errand's terminal `done` calls
-`bin/eindri-review-spawn.sh <task-id>`, which reads the PR from the task's own
+`bin/agents/eindri-review-spawn.sh <task-id>`, which reads the PR from the task's own
 record and seats Forseti as a **scout-kind** `<task-id>-review` errand through
 the einherjar road:
 
 ```
-bin/einherjar-spawn.sh <task-id>-review <project> --scout --backend herdr \
+bin/agents/einherjar-spawn.sh <task-id>-review <project> --scout --backend herdr \
     --harness pi --model opencode-go/deepseek-v4.1-flash --effort high
 ```
 

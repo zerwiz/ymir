@@ -8,14 +8,14 @@
 #                                         [--effort <level>]
 #                                         (--note <text> | --note-file <path>)
 #
-# Why this exists, and how it differs from fm-send.sh. bin/fm-send.sh is the
+# Why this exists, and how it differs from fm-send.sh. bin/backend/fm-send.sh is the
 # DATA plane: conversational text for the agent to read, always routing-marked
 # for a kind=secondmate target so the reply returns through the status path.
 # That marking is right for a message and wrong for a lifecycle command - a
 # marked "/quit" arrives as ordinary chat the agent reasons ABOUT instead of
 # executing. This script is the control plane: semantic process control with a
 # closed verb list, per-harness mechanics owned by an executable adapter
-# (bin/fm-control-lib.sh) rather than improvised in agent prose, and a verified
+# (bin/backend/fm-control-lib.sh) rather than improvised in agent prose, and a verified
 # postcondition for every action. There is deliberately NO arbitrary-text and
 # NO generic raw-key entry point here; fm-send remains the only way to send an
 # agent something to read.
@@ -46,24 +46,24 @@
 #              standing charter is never rewritten.
 #              Records a durable checkpoint and that note, exits the old agent,
 #              then delegates the launch to its single owner,
-#              bin/fm-spawn.sh --relaunch. A failure before publication keeps
+#              bin/backend/fm-spawn.sh --relaunch. A failure before publication keeps
 #              the prior durable record in place and reports the concrete
 #              state; it never leaves a half-transitioned task claiming to be
 #              running.
 #
 # Teardown and discard are NOT verbs here and never will be. `exit` stops an
 # agent and preserves everything else; removing a worktree, killing an
-# endpoint, or discarding work stays with bin/fm-teardown.sh, which owns the
+# endpoint, or discarding work stays with bin/backend/fm-teardown.sh, which owns the
 # landed-work test.
 #
 # `resume` is not a verb: it is not deterministic across the verified adapters
-# (bin/fm-control-lib.sh's header owns that reasoning). `relaunch` covers the
+# (bin/backend/fm-control-lib.sh's header owns that reasoning). `relaunch` covers the
 # same need for every adapter because the brief on disk, not a harness-private
 # session, is the durable instruction.
 #
 # Targeting is EXACT: only a bare task id with a state/<id>.meta record in
 # THIS home is accepted, and the record must pass the shared endpoint-identity
-# validation (bin/fm-backend.sh's fm_backend_validate_task_endpoint). A legacy
+# validation (bin/backend/fm-backend.sh's fm_backend_validate_task_endpoint). A legacy
 # fm-<id> label, an explicit session:window endpoint, and a bare window name
 # are all refused - a lifecycle command delivered to the wrong endpoint is far
 # worse than a loud refusal.
@@ -103,10 +103,10 @@ case "${1:-}" in
   -h|--help) usage; exit 0 ;;
 esac
 
-# shellcheck source=bin/fm-gate-refuse-lib.sh
+# shellcheck source=bin/backend/fm-gate-refuse-lib.sh
 . "$SCRIPT_DIR/fm-gate-refuse-lib.sh"
 # Fail closed before any fleet mutation: a no-mistakes gate agent must never
-# drive a crewmate's lifecycle (see bin/fm-gate-refuse-lib.sh).
+# drive a crewmate's lifecycle (see bin/backend/fm-gate-refuse-lib.sh).
 fm_refuse_if_gate_agent
 
 if [ -z "${FM_HOME+x}" ] || [ -z "${FM_HOME:-}" ]; then
@@ -124,15 +124,15 @@ DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
   exit 1
 }
 
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-busy-lib.sh
+# shellcheck source=bin/backend/fm-busy-lib.sh
 . "$SCRIPT_DIR/fm-busy-lib.sh"
-# shellcheck source=bin/fm-control-lib.sh
+# shellcheck source=bin/backend/fm-control-lib.sh
 . "$SCRIPT_DIR/fm-control-lib.sh"
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 
 POLL=${FM_CONTROL_POLL:-0.5}
@@ -261,8 +261,8 @@ fi
 ID=$RAW_ID
 # Supervision lease guard: lifecycle control is overlap territory between the
 # two Pi supervision actors; refuse while the OTHER actor holds this task's
-# live lease (contract: bin/fm-lease-lib.sh; no-op in homes without leases).
-# shellcheck source=bin/fm-lease-lib.sh
+# live lease (contract: bin/backend/fm-lease-lib.sh; no-op in homes without leases).
+# shellcheck source=bin/backend/fm-lease-lib.sh
 . "$SCRIPT_DIR/fm-lease-lib.sh"
 fm_lease_guard "$ID" "lifecycle control (fm-control)"
 CONTROL_LOCK="$STATE/.control-$ID.lock"
@@ -290,7 +290,7 @@ fi
 # nothing can be delivered to a wrong endpoint either way. What that refusal
 # cannot say is WHY, and "malformed metadata" is the wrong thing to tell an
 # operator about a correctly configured remote route. Name the placement
-# instead, using the same `remote_host` signal bin/fm-send.sh routes on.
+# instead, using the same `remote_host` signal bin/backend/fm-send.sh routes on.
 if [ -n "$(fm_meta_get "$META" remote_host)" ]; then
   die "task $ID is a remotely placed secondmate on $(fm_meta_get "$META" remote_host); its agent runs outside this home, so no lifecycle action here could verify that it interrupted, stopped, or came back. Drive its lifecycle on that host, and reconcile it through the secondmate recovery path rather than this plane"
 fi

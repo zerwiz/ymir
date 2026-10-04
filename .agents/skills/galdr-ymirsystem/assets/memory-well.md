@@ -23,24 +23,24 @@ way in, observe on the way out.
 |---|---|---|
 | Store | `$YMIR_HOME/hodd/memory/kaia.engram` | THE single SQLite memory (episodes, facts, entities) — one well, always in the hoard (Rule 04/07); resolved via `hoard_memory_store` (hoard-lib) or the `ENGRAM_DB` override |
 | Append log | `.agents/memory/well/episodes.jsonl` | the raw episode log (source of truth for re-seeding) |
-| HTTP bridge | `bin/mimir-bridge.py` (+ `bin/mimir-bridge.sh`) | the `:4602` face over the engram library |
-| CLI | `bin/mimir.sh` | operator CLI: `health` `recall` `observe` `timeline` |
-| Ingest | `bin/mimir-ingest.sh` | drinks a directory into the JSONL well + bridge |
+| HTTP bridge | `bin/bridge/mimir-bridge.py` (+ `bin/bridge/mimir-bridge.sh`) | the `:4602` face over the engram library |
+| CLI | `bin/records/mimir.sh` | operator CLI: `health` `recall` `observe` `timeline` |
+| Ingest | `bin/records/mimir-ingest.sh` | drinks a directory into the JSONL well + bridge |
 | Gate API | `apps/hlidskjalf/server/index.ts` | `/api/well`, `/api/well/episode`, `/api/mimir/health` |
 | UI | `apps/hlidskjalf/src/gates/Well.tsx` + `components/RecallPanel.tsx` | recall panel, timeline, click-to-read |
 | MCP server | `engram-mcp` (console script) | stdio MCP: `remember` `recall` `why` `forget` `stats` |
 
 The upstream engine ships a **CLI + MCP stdio server only** — there is no
-`engram.server` HTTP module. `bin/mimir-bridge.py` is Ymir's own face, because
+`engram.server` HTTP module. `bin/bridge/mimir-bridge.py` is Ymir's own face, because
 the gate API, `mimir.sh`, and `mimir-ingest.sh` speak HTTP on `:4602`.
 
-`bin/mimir-ingest.sh` loads every stored hash once into an associative array, so
+`bin/records/mimir-ingest.sh` loads every stored hash once into an associative array, so
 dedupe is O(1) per section rather than rescanning the whole store each time (was
 O(sections × store)); `bin/workspace-rag.sh index` reads the store once and walks
 all files in a single Python pass (was a store read + process spawn per file).
 
 **Where ingest reads from.** Its source is the hoard's `docs/business`, and the
-hoard root resolves through `bin/hoard-lib.sh` (`$YMIR_HOARD`, else `$YMIR_HOME`,
+hoard root resolves through `bin/vault/hoard-lib.sh` (`$YMIR_HOARD`, else `$YMIR_HOME`,
 else `$HOME/Documents/ymirhome`) — the same one default every other script uses, and
 never the repo's `hodd/`, which holds only the guard, README and `*.example`
 scaffolds (Rule 04).
@@ -49,8 +49,8 @@ scaffolds (Rule 04).
 
 ## 2. HTTP bridge (`:4602`)
 
-Raised by `bin/mimir-bridge.sh --start`; also raised by `scripts/start.sh` and
-`bin/saga-session-start.sh`, so it is up whenever the stack is up.
+Raised by `bin/bridge/mimir-bridge.sh --start`; also raised by `scripts/start.sh` and
+`bin/time/saga-session-start.sh`, so it is up whenever the stack is up.
 
 ```
 GET  /health                 -> {status, store, episodes, agents}
@@ -78,7 +78,7 @@ call instead when attribution is wanted.)
 | Harness | Config | Notes |
 |---|---|---|
 | OpenCode (4 accounts: `opencode`, `opencode-rd`, `opencode-work`, `opencode-oczer`) | `<config-dir>/opencode.json` → `mcp.engram` | `{type:"local", command:["engram-mcp","--db",…], enabled:true}` |
-| Pi | `~/.pi/agent/settings.json` → `mcpServers.engram` **and** `~/.pi/agent/mcp-adapter.json` + repo `.pi/mcp-adapter.json` (pass `pi --mcp-config .pi/mcp-adapter.json`) | pi-mcp-adapter. **Scope:** `bin/a2a-mcp.sh install` writes the GLOBAL `~/.pi/agent/mcp-adapter.json`; `install --project` writes the repo's `.pi/mcp-adapter.json` instead and never touches `~/.pi` — use it when Pi is run in other areas. |
+| Pi | `~/.pi/agent/settings.json` → `mcpServers.engram` **and** `~/.pi/agent/mcp-adapter.json` + repo `.pi/mcp-adapter.json` (pass `pi --mcp-config .pi/mcp-adapter.json`) | pi-mcp-adapter. **Scope:** `bin/bridge/a2a-mcp.sh install` writes the GLOBAL `~/.pi/agent/mcp-adapter.json`; `install --project` writes the repo's `.pi/mcp-adapter.json` instead and never touches `~/.pi` — use it when Pi is run in other areas. |
 | Claude Code | `~/.claude.json` → `mcpServers.engram` | |
 | Cursor | `~/.cursor/mcp.json` → `mcpServers.engram` | |
 | Codex | `~/.codex/config.toml` → `[mcp_servers.engram]` | args are a TOML array |
@@ -101,7 +101,7 @@ well_laws[6]{id,law}:
   3,"Water it after — observe a lesson once it lands"
   4,"Hoarded — the store is $YMIR_HOME/hodd/memory/kaia.engram (one well, never a duplicated migrated copy)"
   5,"One well — every harness shares it; scope per-call, never per-server"
-  6,"One resolver — the bridge resolves the home through bin/hoard-lib.sh; a private default is refused by bin/defaults-guard.sh (2026-09-24)"
+  6,"One resolver — the bridge resolves the home through bin/vault/hoard-lib.sh; a private default is refused by bin/defaults-guard.sh (2026-09-24)"
 ```
 
 Words that *discuss* mock data (docs about removing mocks) are real knowledge
@@ -112,10 +112,10 @@ and stay; entries that *are* test/mock are removed.
 ## 5. Operate & verify
 
 ```
-bin/mimir-bridge.sh --status          # well[1]{port,status}: 4602,"up"
-bin/mimir-bridge.sh --foreground      # run under a supervising unit (mimir.service)
-bin/mimir.sh health                   # WARM/COLD + entry count + online
-bin/mimir.sh recall "sales pipeline"  # semantic recall (bridge) with local fallback
+bin/bridge/mimir-bridge.sh --status          # well[1]{port,status}: 4602,"up"
+bin/bridge/mimir-bridge.sh --foreground      # run under a supervising unit (mimir.service)
+bin/records/mimir.sh health                   # WARM/COLD + entry count + online
+bin/records/mimir.sh recall "sales pipeline"  # semantic recall (bridge) with local fallback
 curl -s localhost:4602/health         # {"status":"up","episodes":367,"agents":["well"]}
 curl -s 'localhost:4602/episode?id=<id>'   # full memory text
 ```
@@ -155,10 +155,10 @@ hardcoded timeline is gone.
 - **`ModuleNotFoundError: mcp.server.fastmcp`** → mcp 2.x installed; pin `mcp<2`.
 - **First `observe` slow (~20–30 s)** → the embedding model is warming; later
   writes are instant.
-- **Bridge down / `COLD`** → `bin/mimir-bridge.sh --start`; on a dev seat the
+- **Bridge down / `COLD`** → `bin/bridge/mimir-bridge.sh --start`; on a dev seat the
   mend is `systemctl --user restart mimir.service`; check
   `$YMIR_STATE_DIR/mimir-bridge.log` — runtime state lives in the home the
-  operator chose (`hoard_state_dir` via `bin/hoard-lib.sh`), never in the code
+  operator chose (`hoard_state_dir` via `bin/vault/hoard-lib.sh`), never in the code
   tree: a packaged install replaces its tree on upgrade.
 
 **Portability.** The bridge signals processes through `ymir_kill_matching` from

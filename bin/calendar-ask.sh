@@ -28,7 +28,15 @@
 # ever logged by this door; `probe` prints none unless `--titles` is asked for.
 set -u
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 READER="$ROOT/tools/calendar/reader.mjs"
 
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
@@ -36,7 +44,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yh="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
   for _i in 1 2 3 4 5; do
     [ -n "$_yh" ] || break
-    if [ -r "$_yh/bin/hoard-lib.sh" ]; then . "$_yh/bin/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
+    if [ -r "$_yh/bin/vault/hoard-lib.sh" ]; then . "$_yh/bin/vault/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     if [ -r "$_yh/hoard-lib.sh" ]; then . "$_yh/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     _yh="$(cd "$_yh/.." 2>/dev/null && pwd)"
   done
@@ -90,7 +98,7 @@ command -v node >/dev/null 2>&1 || { printf 'managandr: unknown — node is not 
 # The grant is a CONFIG input, never a build input: load the vault only if it is
 # there. The reader degrades to a NAMED error when this yields no token.
 if [ -z "${MANAGANDR_NO_VAULT:-}" ] && [ -z "$FIXTURE" ] && [ -z "${MANAGANDR_FIXTURE:-}" ]; then
-  if vault_env="$("$ROOT/bin/hodd.sh" emit secrets/platform.env 2>/dev/null)"; then
+  if vault_env="$("$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null)"; then
     eval "$vault_env" 2>/dev/null || true
   fi
 fi

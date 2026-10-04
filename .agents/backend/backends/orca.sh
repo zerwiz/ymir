@@ -7,9 +7,9 @@
 # Target string shape: the Orca terminal id accepted by `orca terminal ...`.
 
 # Shared composer-content classifier (empty|pending|unknown, and the fleet-wide
-# dead-shell-vs-agent-composer rule). Owned by bin/fm-composer-lib.sh, reused by
+# dead-shell-vs-agent-composer rule). Owned by bin/backend/fm-composer-lib.sh, reused by
 # every backend so the decision cannot drift.
-# shellcheck source=bin/fm-composer-lib.sh
+# shellcheck source=bin/backend/fm-composer-lib.sh
 . "$(dirname -- "${BASH_SOURCE[0]}")/../fm-composer-lib.sh"
 
 fm_backend_orca_tool_check() {
@@ -233,7 +233,7 @@ fm_backend_orca_composer_capture() {  # <terminal-id> [expected-label]
 }
 
 # fm_backend_orca_composer_caps: static capability facts, not logic (see the
-# capability model in bin/fm-composer-lib.sh). Orca's `terminal read` returns
+# capability model in bin/backend/fm-composer-lib.sh). Orca's `terminal read` returns
 # plain text; whether it can emit ANSI is unverified (orca is not installed
 # on the verification machine), so styled stays 0 - the conservative
 # degradation - until a live capture proves otherwise.
@@ -271,7 +271,7 @@ fm_backend_orca_send_key() {  # <terminal-id> <key>
 }
 
 # fm_backend_orca_send_text_submit: type <text> once, then drive the shared
-# verify-and-retry-Enter loop (bin/fm-composer-lib.sh:
+# verify-and-retry-Enter loop (bin/backend/fm-composer-lib.sh:
 # fm_composer_submit_retry_core) against the shared composer verdict, so a
 # slash-command popup placeholder fill gets the required second Enter without
 # duplicating text.

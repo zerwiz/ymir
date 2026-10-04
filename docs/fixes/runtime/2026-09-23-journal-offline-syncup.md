@@ -7,11 +7,11 @@
   requires the heart to be the only writer of the canonical record so a chain can
   never fork (which it once did).
 - **Fix:** a durable, local-first outbox.
-  - **`bin/journal-append.sh`** — appends one **idempotent** entry
+  - **`bin/records/journal-append.sh`** — appends one **idempotent** entry
     (`{"key":"<host>:<seq>:<uuid>","ts","actor","op","data"}`) to
     `$STATE/journal/<host>.jsonl`. It never touches the network, so a write
     commits and the machine keeps working with the heart down or fully offline.
-  - **`bin/journal-reconcile.sh`** — runs on a heartbeat. If the heart is not
+  - **`bin/records/journal-reconcile.sh`** — runs on a heartbeat. If the heart is not
     `attached` (per `bin/topology.sh`), the journal **stays queued and exit 0** —
     being offline is fine, never a failure. If the heart answers, each pending
     journal is pushed, then moved to `journal/sent/`, so a machine offline for
@@ -29,6 +29,6 @@
 - `bash -n` clean on both scripts.
 
 ### Files
-- `bin/journal-append.sh`
-- `bin/journal-reconcile.sh`
+- `bin/records/journal-append.sh`
+- `bin/records/journal-reconcile.sh`
 - `.agents/tests/journal.test.sh`

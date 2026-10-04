@@ -615,7 +615,7 @@ of Odin's choice. In Ymir, Valknut is the **load mechanism** — it assembles
 the agent config, the Eindri dispatch, the harness settings, and the startup
 memory budget into a single coherent payload before the first turn.
 
-- `bin/valknut-load.sh` — load the full agent configuration
+- `bin/seat/valknut-load.sh` — load the full agent configuration
 - upstream `crew-dispatch.json` dispatch schema (provenance; Ymir ships `eindri-dispatch.json`)
 - `.agents/config/eindri-dispatch.json` — Eindri dispatch schema
 - `.agents/config/cron.yaml` — Nornir schedule
@@ -651,7 +651,7 @@ the **task brief** — the structured format that carries a task from the Allfat
 through Kaia to an Eindri worker. It defines the scope, the acceptance criteria,
 the constraints, and the expected output.
 
-- `bin/erindi-brief.sh` — generate and validate an erindi brief
+- `bin/agents/erindi-brief.sh` — generate and validate an erindi brief
 
 **Rule:** every task enters as an erindi. No task is dispatched without a brief.
 
@@ -739,7 +739,7 @@ supervision** — when the Allfather is away, Hvíld keeps watch, handles
 routine wakes, and batches escalations.
 
 - `hvild-afk` skill — away-mode supervision
-- `bin/saga-wake-drain.sh` — wake drain for Hvíld
+- `bin/time/saga-wake-drain.sh` — wake drain for Hvíld
 
 **Rule:** Hvíld watches while the Allfather rests. It does not act; it
 escalates.

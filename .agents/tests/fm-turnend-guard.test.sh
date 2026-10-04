@@ -2,9 +2,9 @@
 # Behavior tests for the primary turn-end supervision guard (docs/turnend-guard.md).
 #
 # Two layers:
-#   PREDICATE  - bin/fm-supervision-lib.sh, the shared beacon/status computation
+#   PREDICATE  - bin/backend/fm-supervision-lib.sh, the shared beacon/status computation
 #                used by fm-guard.sh and by the hook's banner details.
-#   HOOK       - bin/fm-turnend-guard.sh, the shared primary hook predicate that
+#   HOOK       - bin/backend/fm-turnend-guard.sh, the shared primary hook predicate that
 #                scopes in-flight work to the PRIMARY checkout only and requires
 #                a live, identity-matched watcher lock plus a fresh beacon.
 # All hermetic over temp dirs; no real agent session is invoked.
@@ -21,7 +21,7 @@ fm_git_identity fmtest fmtest@example.invalid
 
 REQUIRED_REASON='watcher supervision needs Stop-owned automatic recovery; inspect the hook registration and startup status before ending the turn'
 
-# --- PREDICATE: bin/fm-supervision-lib.sh -----------------------------------
+# --- PREDICATE: bin/backend/fm-supervision-lib.sh -----------------------------------
 
 test_predicate_healthy_no_inflight() {
   local state="$TMP_ROOT/pred-empty/state"
@@ -98,7 +98,7 @@ test_predicate_source_needs_supervision() {
   pass "fm_supervision_unhealthy: source-only home needs supervision"
 }
 
-# --- HOOK: bin/fm-turnend-guard.sh ------------------------------------------
+# --- HOOK: bin/backend/fm-turnend-guard.sh ------------------------------------------
 #
 # Each scenario gets its own directory carrying a copy of the two guard scripts
 # under bin/, so the hook (invoked by absolute path) resolves its own FM_ROOT to
@@ -139,7 +139,7 @@ make_primary_dir() {
   printf '%s\n' "$dir"
 }
 
-# Same shape as primary, plus the .fm-secondmate-home marker bin/fm-home-seed.sh
+# Same shape as primary, plus the .fm-secondmate-home marker bin/backend/fm-home-seed.sh
 # writes at seed time (regardless of treehouse-lease or git-clone acquisition).
 make_secondmate_dir() {
   local dir=$1
@@ -148,7 +148,7 @@ make_secondmate_dir() {
   printf '%s\n' "$dir"
 }
 
-# A genuine linked `git worktree` of a base repo - the shape bin/fm-spawn.sh
+# A genuine linked `git worktree` of a base repo - the shape bin/backend/fm-spawn.sh
 # always hands crewmate/scout tasks working on firstmate itself. git-dir and
 # git-common-dir differ here, unlike a plain checkout.
 make_crewmate_worktree_dir() {
@@ -790,7 +790,7 @@ test_grok_adapter_missing_jq_and_no_supervision_allow() {
 # Claude-only Stop auto-arm ran synchronously under Grok, foregrounded the
 # watcher, and wedged the Grok turn for its declared 28800-second timeout.
 #
-# bin/fm-subagent-pretool-check.sh is the deliberate exception: Grok has no
+# bin/backend/fm-subagent-pretool-check.sh is the deliberate exception: Grok has no
 # counterpart registration, so guarding it would REMOVE the guard from Grok
 # rather than deduplicate it (docs/subagent-guard.md "Known residual gap").
 # It is asserted to stay unguarded so the exception cannot be closed silently.

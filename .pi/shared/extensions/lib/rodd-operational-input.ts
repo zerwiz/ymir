@@ -7,7 +7,7 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-// The deploy-time root record (`.ymir-root`, written by bin/valknut-load.sh) — a
+// The deploy-time root record (`.ymir-root`, written by bin/seat/valknut-load.sh) — a
 // DEPLOYED copy cannot find the tree's bin/ by walking up (it reaches
 // ${HOME}/.pi, which holds no bin/), so the root is read back from the record.
 // This module lives in the extensions' lib/, and the record sits beside the

@@ -5,7 +5,7 @@
   (`bolthorn`/`skuld` at `192.168.68.111`), hand-edited per machine. A synced
   config naming one machine's LAN address is the same trap family as the lock
   pointer; and if the heart moved, every body broke.
-- **Fix:** `bin/mcp-config.sh` **generates** the harness MCP config from the
+- **Fix:** `bin/bridge/mcp-config.sh` **generates** the harness MCP config from the
   machine's role:
   - The record servers — **well/engram** (`:8317`), **skills/bolthorn** (`:8319`),
   **tickets/skuld** (`:8320`) — live on the **heart**.
@@ -22,5 +22,5 @@
 - On this box (dev): `well → http://whynot.<tailnet>.ts.net:8317/mcp`.
 
 ### Files
-- `bin/mcp-config.sh`
+- `bin/bridge/mcp-config.sh`
 - `.agents/tests/mcp-config.test.sh`

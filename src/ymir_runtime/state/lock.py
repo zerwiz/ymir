@@ -62,7 +62,7 @@ def _nonempty(*values: object) -> str:
     return ""
 
 
-# --- the home law (mirrors bin/hoard-lib.sh) --------------------------------
+# --- the home law (mirrors bin/vault/hoard-lib.sh) --------------------------------
 
 
 def config_dir(env: Mapping[str, str] | None = None) -> Path:

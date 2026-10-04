@@ -24,4 +24,4 @@ packages = ["ymir_runtime", "ymir_runtime.config", "ymir_runtime.dispatch", "ymi
 [tool.ymir]
 engine = "ymir_runtime"
 interface = ["seat", "status", "send", "stop"]
-strangler = "bin/eindri-start.sh · bin/einherjar-spawn.sh keep the old road until parity is proven"
+strangler = "bin/agents/eindri-start.sh · bin/agents/einherjar-spawn.sh keep the old road until parity is proven"

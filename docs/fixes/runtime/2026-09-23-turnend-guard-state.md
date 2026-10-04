@@ -12,7 +12,7 @@
   state** (`$YMIR_HOME/state`). Measured at the moment of the false alarm: the
   code-tree heartbeat was **4163 s** stale, the hoard heartbeat **2 s** fresh. The
   guard read the wrong place and declared a healthy watcher dead.
-- **Fix:** the guard resolves the operator's state through `bin/hoard-lib.sh`,
+- **Fix:** the guard resolves the operator's state through `bin/vault/hoard-lib.sh`,
   the same order of authority as `syn-watch-arm.sh`, `saga-wake-drain.sh`, and the
   harness readers (`BROKK_STATE_OVERRIDE` → `$YMIR_STATE_DIR` → `$YMIR_HOME/state`
   → the recorded choice → the default). `$BROKK_HOME/state` remains only the last

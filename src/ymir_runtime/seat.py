@@ -56,7 +56,7 @@ def _worth_a_smith(roots: paths.Roots, brief_text: str, runner: proc.Runner) -> 
     """The first law, consulted through the door that owns the heuristic.
 
     The engine does not keep a second copy of "is this worth a smith": it asks
-    `bin/herdr-run.sh worth-a-smith`, the same door the old road asks. The two
+    `bin/seat/herdr-run.sh worth-a-smith`, the same door the old road asks. The two
     guards the old door adds before asking are kept here because they are about
     the BRIEF, not the heuristic.
     """
@@ -205,7 +205,7 @@ def seat(
     if heartbeat.meta_path(state, seat_id).exists():
         raise EngineRefusal(
             f"a seat record already stands for '{seat_id}' at {heartbeat.meta_path(state, seat_id)}",
-            "stop it first, or relaunch it through bin/einherjar-spawn.sh --relaunch",
+            "stop it first, or relaunch it through bin/agents/einherjar-spawn.sh --relaunch",
         )
 
     brief_path = Path(errand.brief).expanduser() if errand.brief else data / seat_id / "brief.md"
@@ -233,7 +233,7 @@ def seat(
         probe=probe,
     )
     if not plan.supported:
-        raise EngineRefusal(plan.refusal, "bin/einherjar-spawn.sh keeps this road until the sandbox module owns it")
+        raise EngineRefusal(plan.refusal, "bin/agents/einherjar-spawn.sh keeps this road until the sandbox module owns it")
 
     try:
         tree = worktree_mod.ensure(seat_id, project, roots.wt_root, runner=runner)

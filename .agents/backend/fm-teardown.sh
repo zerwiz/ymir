@@ -6,7 +6,7 @@
 # secondmates are not backlog items), then refresh/prune the project's clone for
 # PR-based ship tasks.
 # Removing state/<id>.meta and closing the backlog item are one step, not two:
-# bin/fm-backlog-transition-lib.sh owns that invariant, and both halves run under
+# bin/backend/fm-backlog-transition-lib.sh owns that invariant, and both halves run under
 # the task's own meta lock before this script reports success. Because the
 # completion links (the PR, the report path, a local-main note) live only in the
 # record being removed, the intended close is recorded in
@@ -95,7 +95,7 @@
 #   2. Other treehouse return failures still abort immediately and loudly (no retry).
 #   3. If every retry still hits the lock signature and the lock remains, it is removed
 #      and the return tried once more ONLY when the lock is provably stale per
-#      bin/fm-lock-lib.sh's fm_lock_is_provably_stale, passing the worktree dir as the
+#      bin/backend/fm-lock-lib.sh's fm_lock_is_provably_stale, passing the worktree dir as the
 #      companion directory and FM_STALE_WORKTREE_LOCK_AGE_SECS (default 30s) as the age
 #      threshold. That shared proof owns the exact lsof-holder, mtime-age, and fail-safe
 #      rules.
@@ -122,7 +122,7 @@
 #     alone: no-mistakes drives those against its own gate-repo clone, not the
 #     crew's worktree, so they are not orphaned by removing the worktree.
 #     conclude_task_no_mistakes_run attributes the active-or-most-recent run to
-#     THIS task only when its branch AND code identity (bin/fm-nm-run-lib.sh's
+#     THIS task only when its branch AND code identity (bin/backend/fm-nm-run-lib.sh's
 #     strict fm_nm_head_matches_worktree rule) both match this worktree, then
 #     runs `no-mistakes axi abort --run <id>` for
 #     that verified run instance. A run already terminal
@@ -147,7 +147,7 @@
 #     being reachable by Fix 2, because its working directory is wherever it
 #     was launched rather than the task worktree (observed 2026-08-07: 29
 #     workers at ppid 1, 1-2 days old, each still polling and appending to a
-#     log in a pruned no-mistakes gate worktree). bin/fm-remote-job-reap-orphans.sh
+#     log in a pruned no-mistakes gate worktree). bin/backend/fm-remote-job-reap-orphans.sh
 #     owns that sweep and its safety rule; it never touches a worker whose code
 #     root still exists, so the account's healthy LaunchAgent worker and every
 #     live remote secondmate worker are out of scope. Best effort: a sweep
@@ -163,31 +163,31 @@ CONFIG="${FM_CONFIG_OVERRIDE:-$FM_HOME/config}"
 SECONDMATE_REG="$DATA/secondmates.md"
 SUB_HOME_MARKER=".fm-secondmate-home"
 SUB_HOME_PARENT_MARKER=".fm-secondmate-parent"
-# shellcheck source=bin/fm-tasks-axi-lib.sh
+# shellcheck source=bin/backend/fm-tasks-axi-lib.sh
 . "$SCRIPT_DIR/fm-tasks-axi-lib.sh"
-# shellcheck source=bin/fm-backlog-transition-lib.sh
+# shellcheck source=bin/backend/fm-backlog-transition-lib.sh
 . "$SCRIPT_DIR/fm-backlog-transition-lib.sh"
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-control-lib.sh
+# shellcheck source=bin/backend/fm-control-lib.sh
 . "$SCRIPT_DIR/fm-control-lib.sh"
-# shellcheck source=bin/fm-lock-lib.sh
+# shellcheck source=bin/backend/fm-lock-lib.sh
 . "$SCRIPT_DIR/fm-lock-lib.sh"
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 . "$SCRIPT_DIR/fm-classify-lib.sh"
-# shellcheck source=bin/fm-gate-refuse-lib.sh
+# shellcheck source=bin/backend/fm-gate-refuse-lib.sh
 . "$SCRIPT_DIR/fm-gate-refuse-lib.sh"
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-public-followup-lib.sh
+# shellcheck source=bin/backend/fm-public-followup-lib.sh
 . "$SCRIPT_DIR/fm-public-followup-lib.sh"
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
-# shellcheck source=bin/fm-secondmate-parent-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-parent-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-parent-lib.sh"
-# shellcheck source=bin/fm-pending-reply-lib.sh
+# shellcheck source=bin/backend/fm-pending-reply-lib.sh
 . "$SCRIPT_DIR/fm-pending-reply-lib.sh"
-# shellcheck source=bin/fm-nm-run-lib.sh
+# shellcheck source=bin/backend/fm-nm-run-lib.sh
 . "$SCRIPT_DIR/fm-nm-run-lib.sh"
 if [ "$#" -lt 1 ] || ! fm_task_id_path_safe "$1"; then
   echo "error: invalid teardown request" >&2
@@ -199,17 +199,17 @@ fm_backlog_directory_present "$STATE" "state directory" || {
   echo "error: teardown refused: $FM_BACKLOG_TRANSITION_ERROR" >&2
   exit 1
 }
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 # Supervision lease guard: post-landing cleanup is overlap territory between
 # the two Pi supervision actors; refuse while the OTHER actor holds this
-# task's live lease (contract: bin/fm-lease-lib.sh; no-op in homes without
+# task's live lease (contract: bin/backend/fm-lease-lib.sh; no-op in homes without
 # leases).
-# shellcheck source=bin/fm-lease-lib.sh
+# shellcheck source=bin/backend/fm-lease-lib.sh
 . "$SCRIPT_DIR/fm-lease-lib.sh"
 # Role partition: forced teardown discards work, and the supervision branch
 # never discards anything - only an ordinary landed-work teardown is branch
-# territory (contract: bin/fm-lease-lib.sh).
+# territory (contract: bin/backend/fm-lease-lib.sh).
 if [ "$FORCE" = --force ] && [ "$(fm_lease_actor)" = branch ]; then
   echo "error: forced teardown refused - the supervision branch cannot discard work" >&2
   exit "$FM_LEASE_REFUSE_EXIT"
@@ -263,7 +263,7 @@ fm_lock_try_acquire "$CONTROL_LOCK" || {
 }
 CONTROL_LOCK_HELD=1
 # Fail closed before any fleet mutation: a no-mistakes gate agent must never tear
-# down a worktree (see bin/fm-gate-refuse-lib.sh).
+# down a worktree (see bin/backend/fm-gate-refuse-lib.sh).
 fm_refuse_if_gate_agent
 FM_LOCK_LOG_PREFIX=teardown
 
@@ -796,7 +796,7 @@ if [ -f "$FM_HOME/$SUB_HOME_MARKER" ]; then
     PUBLIC_FOLLOWUP_PARENT_UNRESOLVED=1
   elif [ "$PARENT_ROUTE" = remote ]; then
     # The entire promised-public-reply subsystem is same-filesystem by
-    # construction (bin/fm-public-followup-emit.sh header): a parent recorded
+    # construction (bin/backend/fm-public-followup-emit.sh header): a parent recorded
     # on another machine can never hold a delegated promise for this child, so
     # the delegated-parent path is out of scope and never refuses cleanup on
     # its own. A token committed directly to THIS home's own .env is still a
@@ -934,7 +934,7 @@ if [ "$BACKEND" = orca ] && [ "$KIND" != secondmate ]; then
 fi
 
 # Where a harness's firstmate-owned global turn-end registry entry lives is
-# owned by bin/fm-control-lib.sh, so teardown and the control plane's relaunch
+# owned by bin/backend/fm-control-lib.sh, so teardown and the control plane's relaunch
 # retire the same artifact rather than each carrying its own copy of the path.
 remove_grok_turnend_auth() {
   local state_dir=$1 id=$2 token_path token='' path
@@ -1178,7 +1178,7 @@ backlog_done_args() {
 }
 
 # Closing the backlog item is this script's own last act on the record, not a
-# printed instruction for a later turn (bin/fm-backlog-transition-lib.sh owns the
+# printed instruction for a later turn (bin/backend/fm-backlog-transition-lib.sh owns the
 # invariant). This prints what already happened, so the follow-up wording stays
 # only where a human still owes the edit.
 backlog_refresh_reminder() {
@@ -1298,7 +1298,7 @@ worktree_git_lock_path() {
 }
 
 # The lock-staleness proof (lsof holder check, mtime age, fail-safe defaults)
-# is owned by bin/fm-lock-lib.sh's fm_lock_is_provably_stale, sourced above.
+# is owned by bin/backend/fm-lock-lib.sh's fm_lock_is_provably_stale, sourced above.
 # Teardown passes the worktree dir as the companion directory and its own
 # STALE_WORKTREE_LOCK_AGE_SECS threshold.
 
@@ -1454,7 +1454,7 @@ validate_worktree_teardown_safety() {
       echo "REFUSED: local-only worktree $WT has work not yet merged into $DEFAULT and not on any remote." >&2
       [ -n "$dirty" ] && echo "uncommitted changes present" >&2
       [ -n "$unmerged" ] && printf 'commits not yet on %s:\n%s\n' "$DEFAULT" "$unmerged" >&2
-      echo "Merge the branch into local $DEFAULT first (bin/fm-merge-local.sh after the captain approves), or push to a fork/remote, or get the captain's explicit OK to discard, then --force." >&2
+      echo "Merge the branch into local $DEFAULT first (bin/backend/fm-merge-local.sh after the captain approves), or push to a fork/remote, or get the captain's explicit OK to discard, then --force." >&2
       return 1
     fi
   elif [ -n "$dirty" ]; then
@@ -1540,7 +1540,7 @@ task_status_is_run_not_found() {  # <status-error> <run-id>
 # Abort THIS task's own parked no-mistakes run before the worker that would
 # have answered its gate is removed, so no run is left orphaned holding a
 # fleet slot. Only KIND=ship drives a no-mistakes validation of its own
-# worktree (scouts and secondmates never do, mirroring bin/fm-crew-state.sh);
+# worktree (scouts and secondmates never do, mirroring bin/backend/fm-crew-state.sh);
 # a run not attributed to this exact branch+head is left completely alone.
 conclude_task_no_mistakes_run() {  # <worktree>
   local wt=$1 out run_id
@@ -2123,7 +2123,7 @@ cleanup_firstmate_home_process_events() {
   local home=$1 label=$2 runner="$1/bin/fm-procevent.sh"
   firstmate_home_has_process_events "$home" || return 0
   if [ ! -f "$runner" ] || [ -L "$runner" ] || [ ! -x "$runner" ]; then
-    echo "REFUSED: $label $home has process-event state but no sweep-capable bin/fm-procevent.sh; restore the home script and rerun teardown" >&2
+    echo "REFUSED: $label $home has process-event state but no sweep-capable bin/backend/fm-procevent.sh; restore the home script and rerun teardown" >&2
     return 1
   fi
   if ! FM_HOME="$home" FM_ROOT_OVERRIDE="$home" "$runner" sweep-home; then
@@ -2140,7 +2140,7 @@ preflight_firstmate_home_process_events() {
   local home=$1 label=$2 runner="$1/bin/fm-procevent.sh"
   firstmate_home_has_process_events "$home" || return 0
   if [ ! -f "$runner" ] || [ -L "$runner" ] || [ ! -x "$runner" ]; then
-    echo "REFUSED: $label $home has process-event state but no sweep-capable bin/fm-procevent.sh; restore the home script and rerun teardown" >&2
+    echo "REFUSED: $label $home has process-event state but no sweep-capable bin/backend/fm-procevent.sh; restore the home script and rerun teardown" >&2
     return 1
   fi
   if ! FM_HOME="$home" FM_ROOT_OVERRIDE="$home" "$runner" sweep-home --preflight >/dev/null; then
@@ -2190,7 +2190,7 @@ collect_descendant_task_locks() {
   # Freeze this home's task SET before reading it. Everything below locks the
   # tasks that exist right now, but the later cleanup re-enumerates, so without
   # this a fresh spawn could publish a record into the gap and be mutated
-  # without ever having been lifecycle-locked (bin/fm-wake-lib.sh's
+  # without ever having been lifecycle-locked (bin/backend/fm-wake-lib.sh's
   # fm_task_set_lock_path owns why). Taken per home, parent before child, and
   # held until this teardown exits.
   task_set_lock=$(fm_task_set_lock_path "$sub_state") || {
@@ -2240,7 +2240,7 @@ preflight_descendant_task_locks() {
   # home, during collection above), then per-task locks in that same
   # parent-before-child preorder, sorted by id within each home, each control
   # lock before its matching metadata lock. No child lock holder ever reaches
-  # back for a parent lock. bin/fm-spawn.sh takes the same task-set lock before
+  # back for a parent lock. bin/backend/fm-spawn.sh takes the same task-set lock before
   # its own per-task locks when it publishes a fresh record.
   for ((i=0; i < ${#DESCENDANT_TASK_IDS[@]}; i++)); do
     state=${DESCENDANT_TASK_STATES[$i]}
@@ -2358,7 +2358,7 @@ teardown_herdr_require_prerequisites() {  # <task-id>
     fi
   done
   if ! declare -F fm_lock_try_acquire >/dev/null 2>&1; then
-    # shellcheck source=bin/fm-wake-lib.sh
+    # shellcheck source=bin/backend/fm-wake-lib.sh
     . "$SCRIPT_DIR/fm-wake-lib.sh"
   fi
   if ! declare -F fm_lock_try_acquire >/dev/null 2>&1 \
@@ -2611,7 +2611,7 @@ if [ "$KIND" = scout ] && [ "$FORCE" != "--force" ]; then
   if ! FM_HOME="$FM_HOME" FM_STATE_OVERRIDE="$STATE" FM_DATA_OVERRIDE="$DATA" \
       FM_CONFIG_OVERRIDE="$CONFIG" "$SCRIPT_DIR/fm-captain-hold.sh" verify "$ID" >/dev/null; then
     echo "REFUSED: scout task $ID has not passed the captain-call completion gate." >&2
-    echo "Inventory its report and any visual review through bin/fm-captain-hold.sh before teardown." >&2
+    echo "Inventory its report and any visual review through bin/backend/fm-captain-hold.sh before teardown." >&2
     exit 1
   fi
 fi
@@ -2619,7 +2619,7 @@ fi
 # A public commitment is not kept until its final reply lands in the ORIGINAL
 # thread, and this cleanup removes the task records that make the promise
 # reconcilable. Refuse while this home still owes a public reply for exactly this
-# work. Both gates live in bin/fm-public-followup-lib.sh, so a home that never
+# work. Both gates live in bin/backend/fm-public-followup-lib.sh, so a home that never
 # opted into the myfirstmate relay runs one [ -f ] test and nothing else here.
 if [ "$FORCE" != "--force" ] && [ "$PUBLIC_FOLLOWUP_PARENT_UNRESOLVED" = 1 ]; then
   echo "REFUSED: cannot resolve the primary home for marked secondmate $SECOND_MATE_ID; refusing cleanup without its durable parent binding." >&2
@@ -2633,7 +2633,7 @@ if [ "$FORCE" != "--force" ] \
       "$SCRIPT_DIR/fm-public-followup.sh" guard-work "$PUBLIC_FOLLOWUP_WORK_HOME" "$ID" 2>/dev/null); then
     echo "REFUSED: task $ID still owes a public reply through the myfirstmate relay." >&2
     printf '%s\n' "$PUBLIC_FOLLOWUP_BLOCKING" >&2
-    echo "Deliver it with bin/fm-public-followup.sh deliver <obligation-id>, waive it with tasks-axi public-followup waive, or use --force after explicit discard approval." >&2
+    echo "Deliver it with bin/backend/fm-public-followup.sh deliver <obligation-id>, waive it with tasks-axi public-followup waive, or use --force after explicit discard approval." >&2
     exit 1
   fi
 fi
@@ -2645,7 +2645,7 @@ if [ "$KIND" = ship ] && [ -n "$PR_URL" ] \
     && [ -n "$PUBLIC_FOLLOWUP_STATE" ] \
     && [ "${PUBLIC_FOLLOWUP_RELAY_ACTIVE:-0}" = 1 ] \
     && fm_pf_has_delivered_open_loops "$PUBLIC_FOLLOWUP_STATE"; then
-  echo "warning: an open public loop with nothing owed is still recorded in the consent-holding home while cleaning up ship task $ID. Hand it on with bin/fm-public-followup.sh rechain or close it with retire --reason." >&2
+  echo "warning: an open public loop with nothing owed is still recorded in the consent-holding home while cleaning up ship task $ID. Hand it on with bin/backend/fm-public-followup.sh rechain or close it with retire --reason." >&2
 fi
 
 # Non-blocking: the legacy Relay link is not guarded as a refusal.
@@ -2879,7 +2879,7 @@ rm -f "$STATE/$ID.turn-ended" \
   "$STATE/$ID.control-relaunch" "$STATE/$ID.control-relaunch.meta-prior" \
   "$STATE/$ID.control-relaunch.brief-prior" "$STATE/$ID.control-relaunch.note" \
   "$STATE/$ID.reconcile-nudged"
-# The steering inbox (bin/fm-task-inbox-lib.sh) is runtime state for the
+# The steering inbox (bin/backend/fm-task-inbox-lib.sh) is runtime state for the
 # retired endpoint; teardown only runs after landing is confirmed, so any
 # leftover unhandled steer here is moot rather than unlanded work.
 rm -rf "$STATE/$ID.inbox"

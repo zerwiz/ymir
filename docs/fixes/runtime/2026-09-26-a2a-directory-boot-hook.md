@@ -14,7 +14,7 @@ announced to nothing. Measured: `systemctl --user is-enabled` said enabled,
 mis-wired.
 
 ### What
-- **`bin/a2abridge-ensure.sh`** gains `patch_unit_boot()`: when the engine's
+- **`bin/bridge/a2abridge-ensure.sh`** gains `patch_unit_boot()`: when the engine's
   unit says `WantedBy=multi-user.target`, rewrite it to
   `WantedBy=default.target`, `daemon-reload`, and `enable` (the wanted-by
   symlink follows to the user boot target). Called from `ensure()` beside the
@@ -29,7 +29,7 @@ mis-wired.
   materializes the directory from the tree, not from a lingering engine unit.
 
 ### Files
-- `bin/a2abridge-ensure.sh`
+- `bin/bridge/a2abridge-ensure.sh`
 - `bin/autoboot-lib.sh`
 - `tools/mill/systemd/a2abridge-directory.service`
 

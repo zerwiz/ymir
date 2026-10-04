@@ -7,7 +7,7 @@
   whichever machine happens to have a session.
 - **Fix:** a **role gate** on each job.
   - `config/cron.yaml` lines may carry a prefix: `HH:MM @<role>[,<role>] <command>`.
-  - `bin/nornir-cron-start.sh` reads **this machine's roles** from
+  - `bin/time/nornir-cron-start.sh` reads **this machine's roles** from
     `bin/topology.sh` (plan 51 P0), defaulting to `dev`, and runs only jobs whose
     gate includes one of them. **No gate means any role.**
   - Roles: `@heart` owns the record jobs (git-sync, memory housekeeping,
@@ -22,7 +22,7 @@
 - `bash -n` clean.
 
 ### Files
-- `bin/nornir-cron-start.sh`
+- `bin/time/nornir-cron-start.sh`
 - `.agents/config/cron.yaml.example`
 - `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md`
 - `.agents/tests/cron-role-gate.test.sh`

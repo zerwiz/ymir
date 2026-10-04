@@ -11,12 +11,12 @@ Reference is read-only: the upstream distro lives at `$BROKK_UPSTREAM` and is ci
 | What Brokk proved | What Ymir inherited |
 |---|---|
 | Role adoption on launch (`AGENTS.md:1-12`) | `AGENTS.md` mandate: "You are Brokk; the operator is the Allfather" |
-| One-command session start (upstream digest) | `bin/saga-session-start.sh` |
-| Native harness injection (`bin/fm-sessionstart-run.sh`, `.opencode/plugins/fm-primary-sessionstart-nudge.js`, `.pi/extensions/fm-primary-turnend-guard.ts`, `.claude/settings.json`) | `bin/saga-sessionstart-run.sh`, `.opencode/plugins/saga-sessionstart.js`, `.pi/extensions/syn-turnend-guard.ts`, `.claude/settings.json` |
+| One-command session start (upstream digest) | `bin/time/saga-session-start.sh` |
+| Native harness injection (`bin/backend/fm-sessionstart-run.sh`, `.opencode/plugins/fm-primary-sessionstart-nudge.js`, `.pi/extensions/fm-primary-turnend-guard.ts`, `.claude/settings.json`) | `bin/time/saga-sessionstart-run.sh`, `.opencode/plugins/saga-sessionstart.js`, `.pi/extensions/syn-turnend-guard.ts`, `.claude/settings.json` |
 | Home separation (`FM_HOME`, `AGENTS.md:42-54`) | `BROKK_HOME`; private `data/ state/ config/` |
 | Context sources (`data/Allfather.md · projects.md · learnings.md`, state metas) | `data/operator.md · projects.md · learnings.md` |
-| Harness detection + dispatch (`bin/fm-harness.sh`, `bin/fm-spawn.sh`, `config/eindri-harness`, `config/crew-dispatch.json`) | `bin/hamr-harness.sh`, `bin/einherjar-spawn.sh`, `config/eindri-harness`, `config/eindri-dispatch.json` |
-| Supervision, no cron (`bin/fm-watch-arm.sh`, `bin/fm-turnend-guard.sh`, `docs/supervision-protocols/`) | `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`; Nornir added for the scheduled spine |
+| Harness detection + dispatch (`bin/backend/fm-harness.sh`, `bin/backend/fm-spawn.sh`, `config/eindri-harness`, `config/crew-dispatch.json`) | `bin/hamr-harness.sh`, `bin/agents/einherjar-spawn.sh`, `config/eindri-harness`, `config/eindri-dispatch.json` |
+| Supervision, no cron (`bin/backend/fm-watch-arm.sh`, `bin/backend/fm-turnend-guard.sh`, `docs/supervision-protocols/`) | `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`; Nornir added for the scheduled spine |
 | Isolation (Yggdrasil worktrees, Eindri-home homes) | Yggdrasil worktrees; Eindri-home dropped |
 
 **Ymir only builds what differentiates it** — the UI/UX, the agent runtime, and A2A collaboration. Everything else is adopted. The port is therefore a *retarget*, not a rewrite.
@@ -41,19 +41,19 @@ Before retargeting, every upstream file was classified. The rule: **generic mech
 
 | Upstream file | Generic mechanism | Ymir file |
 |---|---|---|
-| `bin/fm-harness.sh` | two-layer harness detection (env markers, ancestry walk) | `bin/hamr-harness.sh` |
-| `bin/fm-session-start.sh` | one ordered startup digest | `bin/saga-session-start.sh` |
-| `bin/fm-sessionstart-run.sh` | source routing (startup/compact/resume) | `bin/saga-sessionstart-run.sh` |
-| `bin/fm-session-lock-lib.sh`, `bin/fm-lock-lib.sh` | per-home lock bound to a live pid | `bin/gleipnir-lock-lib.sh` |
-| `bin/fm-wake-drain.sh` | durable wake presentation | `bin/saga-wake-drain.sh` |
-| `bin/fm-watch-arm.sh` | one event-driven watch cycle | `bin/syn-watch-arm.sh` |
-| `bin/fm-turnend-guard.sh` | refuse a blind turn end | `bin/syn-turnend-guard.sh` |
-| `bin/fm-arm-pretool-check.sh` | deny backgrounding the arm | `bin/syn-arm-pretool-check.sh` |
-| `bin/fm-cd-pretool-check.sh` | deny escaping the home | `bin/syn-cd-pretool-check.sh` |
-| `bin/fm-operational-input.sh` | structured operational wire (encode/kind/classify/body) | `bin/rodd-operational-input.sh` |
-| `bin/fm-brief.sh` | worker brief scaffold with a fixed delivery-contract line | `bin/erindi-brief.sh` |
-| `bin/fm-spawn.sh` | worktree + backend launch + meta record | `bin/einherjar-spawn.sh` |
-| `bin/fm-crew-state.sh` | reconcile status log vs backend liveness | `bin/vor-crew-state.sh` |
+| `bin/backend/fm-harness.sh` | two-layer harness detection (env markers, ancestry walk) | `bin/hamr-harness.sh` |
+| `bin/backend/fm-session-start.sh` | one ordered startup digest | `bin/time/saga-session-start.sh` |
+| `bin/backend/fm-sessionstart-run.sh` | source routing (startup/compact/resume) | `bin/time/saga-sessionstart-run.sh` |
+| `bin/backend/fm-session-lock-lib.sh`, `bin/backend/fm-lock-lib.sh` | per-home lock bound to a live pid | `bin/gleipnir-lock-lib.sh` |
+| `bin/backend/fm-wake-drain.sh` | durable wake presentation | `bin/time/saga-wake-drain.sh` |
+| `bin/backend/fm-watch-arm.sh` | one event-driven watch cycle | `bin/syn-watch-arm.sh` |
+| `bin/backend/fm-turnend-guard.sh` | refuse a blind turn end | `bin/syn-turnend-guard.sh` |
+| `bin/backend/fm-arm-pretool-check.sh` | deny backgrounding the arm | `bin/syn-arm-pretool-check.sh` |
+| `bin/backend/fm-cd-pretool-check.sh` | deny escaping the home | `bin/syn-cd-pretool-check.sh` |
+| `bin/backend/fm-operational-input.sh` | structured operational wire (encode/kind/classify/body) | `bin/rodd-operational-input.sh` |
+| `bin/backend/fm-brief.sh` | worker brief scaffold with a fixed delivery-contract line | `bin/agents/erindi-brief.sh` |
+| `bin/backend/fm-spawn.sh` | worktree + backend launch + meta record | `bin/agents/einherjar-spawn.sh` |
+| `bin/backend/fm-crew-state.sh` | reconcile status log vs backend liveness | `bin/vor-crew-state.sh` |
 | `.pi/extensions/fm-primary-turnend-guard.ts` | inject digest, re-emit on compaction, refuse blind end | `.pi/extensions/syn-turnend-guard.ts` |
 | `.pi/extensions/fm-primary-pi-watch.ts` | watcher continuity (arm/re-arm/deliver) | `.pi/extensions/gna-pi-watch.ts` |
 | `.pi/extensions/lib/fm-sessionstart-supervisor.mjs` | supervise the digest child | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` |
@@ -78,7 +78,7 @@ Before retargeting, every upstream file was classified. The rule: **generic mech
 | Pi supervision branch (`fm-branch-supervision.ts`, `docs/pi-supervision-branch.md`) | Brokk runtime | **deferred** to W0073 |
 | `bin/backends/{zellij,orca,cmux}.sh`, `codex-app` | Brokk backends | **dropped** — Ymir keeps `tmux` and `herdr` (Þjazi 14+) |
 | `bin/fm-voice-*.py`, `fm_voice_*.py`, X/Discord relay (`fm-x-*.sh`, `fm-public-followup*`) | Brokk channels | **dropped** — Ratatoskr/Hlidskjalf own Ymir channels |
-| `bin/fm-bootstrap.sh`, `fm-home-seed.sh`, `fm-remote-*.sh`, quota/procevent | Brokk infra | **dropped** — out of the Ymir surface |
+| `bin/backend/fm-bootstrap.sh`, `fm-home-seed.sh`, `fm-remote-*.sh`, quota/procevent | Brokk infra | **dropped** — out of the Ymir surface |
 | `AGENTS.md:1-...` personality and nautical voice | Brokk identity | **rewritten** into `AGENTS.md` SYSTEM MANDATE (Norse) |
 | `.env`, `config/calm`, `config/startup-memory-budget` | Brokk preferences | **dropped/deferred** |
 
@@ -121,7 +121,7 @@ Figure-prefix mapping for the `fm-` → `<-prefix>` pass:
 | `fm-primary-pi-watch` | `gna-pi-watch.ts` | Gná (messenger) |
 | `fm-primary-*` (OpenCode) | `saga-*` / `syn-*` by role | Sága / Sýn |
 
-Runtime extension beyond the upstream distro: **Nornir** (`bin/nornir-cron-start.sh`, `bin/nornir-job-*.sh`, `config/cron.yaml`) and **Runes** (`bin/runes-append.sh`) have no Brokk equivalent. Brokk used a watcher only; Ymir adds the scheduled spine (plan 29 §6 stage 8) and the chained audit ledger.
+Runtime extension beyond the upstream distro: **Nornir** (`bin/time/nornir-cron-start.sh`, `bin/nornir-job-*.sh`, `config/cron.yaml`) and **Runes** (`bin/records/runes-append.sh`) have no Brokk equivalent. Brokk used a watcher only; Ymir adds the scheduled spine (plan 29 §6 stage 8) and the chained audit ledger.
 
 ## 5. The two critical invariants
 
@@ -199,19 +199,19 @@ node --check .opencode/plugins/*.js .opencode/plugins/lib/*.js 2>/dev/null
 
 | Test | Command | Expected |
 |---|---|---|
-| Digest end-to-end | `bash bin/saga-session-start.sh` | 8 sections; lock line; cron running; context delimited; `ABSENT` explicit |
-| Digest routing | `bash bin/saga-sessionstart-run.sh --source compact` | re-emit text, exit 0 |
+| Digest end-to-end | `bash bin/time/saga-session-start.sh` | 8 sections; lock line; cron running; context delimited; `ABSENT` explicit |
+| Digest routing | `bash bin/time/saga-sessionstart-run.sh --source compact` | re-emit text, exit 0 |
 | Harness detect | `bash bin/hamr-harness.sh` and `… eindri` | prints a verified harness / configured Eindri harness |
 | Lock semantics | open two sessions | second says `READ-ONLY: session lock held by pid N` |
-| Wake drain | `bash bin/saga-wake-drain.sh` | `wake queue: 0 pending` when empty, never blank |
-| Cron status/start | `bash bin/nornir-cron-start.sh --status`; `…` | `cron: running pid=N jobs=4` / idempotent start |
+| Wake drain | `bash bin/time/saga-wake-drain.sh` | `wake queue: 0 pending` when empty, never blank |
+| Cron status/start | `bash bin/time/nornir-cron-start.sh --status`; `…` | `cron: running pid=N jobs=4` / idempotent start |
 | Watch arm | `bash bin/syn-watch-arm.sh --restart` | prints `watcher: started …`, writes `.supervision-armed` + heartbeat, exits on a `signal:`/`stale:`/`check:`/`heartbeat:` line |
 | Turn-end guard inert | run before any arm | exit 0 |
 | Turn-end guard armed+stale | remove heartbeat after arming | prints recovery, exit 2 |
 | Rödd wire | `printf 'hi' \| bash bin/rodd-operational-input.sh encode session-start` | one `\u2063RODD_OP: v1 session-start: hi`; `kind`/`body` round-trip |
-| Runes append | `bash bin/runes-append.sh smoke event --message hi` | `runes: appended … checksum=…`; ledger gains one chained line |
-| Brief scaffold | `bash bin/erindi-brief.sh T-smoke repo --mode local-only` | `data/T-smoke/brief.md` with `Delivery contract: mode=local-only` |
-| Spawn fail-closed | `bash bin/einherjar-spawn.sh T-smoke . --mode local-only --harness bogus` | refuses: not verified |
+| Runes append | `bash bin/records/runes-append.sh smoke event --message hi` | `runes: appended … checksum=…`; ledger gains one chained line |
+| Brief scaffold | `bash bin/agents/erindi-brief.sh T-smoke repo --mode local-only` | `data/T-smoke/brief.md` with `Delivery contract: mode=local-only` |
+| Spawn fail-closed | `bash bin/agents/einherjar-spawn.sh T-smoke . --mode local-only --harness bogus` | refuses: not verified |
 | Dispatch backstop | with an ACTIVE profile (no unfilled `<...>` tokens; `bin/dispatch-profile.sh active`), omit `--harness` | refuses: pass an explicit `--harness`; a template-only host resolves from the machine (D4, 2026-09-24) |
 | Vör read | `bash bin/vor-crew-state.sh T-smoke` | one `state: … · source: … · …` line, exit 0 |
 
@@ -229,21 +229,21 @@ Expected: only provenance citations in this file and the known legacy strings li
 
 | Ymir file | Upstream origin | Status |
 |---|---|---|
-| `bin/saga-session-start.sh` | `bin/fm-session-start.sh` | landed, verified |
-| `bin/saga-sessionstart-run.sh` | `bin/fm-sessionstart-run.sh` | landed, verified |
-| `bin/gleipnir-lock-lib.sh` | `bin/fm-session-lock-lib.sh`, `bin/fm-lock-lib.sh` | landed, verified |
-| `bin/hamr-harness.sh` | `bin/fm-harness.sh` | landed |
-| `bin/einherjar-spawn.sh` | `bin/fm-spawn.sh` | landed; **caller bug** see §9 |
-| `bin/erindi-brief.sh` | `bin/fm-brief.sh` | landed, verified |
-| `bin/vor-crew-state.sh` | `bin/fm-crew-state.sh` | landed, verified |
-| `bin/rodd-operational-input.sh` | `bin/fm-operational-input.sh` | landed, verified |
-| `bin/saga-wake-drain.sh` | `bin/fm-wake-drain.sh` | landed, verified |
-| `bin/syn-watch-arm.sh` | `bin/fm-watch-arm.sh` | landed, verified |
-| `bin/syn-turnend-guard.sh` | `bin/fm-turnend-guard.sh` | landed, verified |
-| `bin/syn-arm-pretool-check.sh` | `bin/fm-arm-pretool-check.sh` | landed, inert v0 |
-| `bin/syn-cd-pretool-check.sh` | `bin/fm-cd-pretool-check.sh` | landed, inert v0 |
-| `bin/nornir-cron-start.sh`, `bin/nornir-job-*.sh` | none (Ymir extension) | landed, verified |
-| `bin/runes-append.sh` | none (Ymir extension) | landed, verified |
+| `bin/time/saga-session-start.sh` | `bin/backend/fm-session-start.sh` | landed, verified |
+| `bin/time/saga-sessionstart-run.sh` | `bin/backend/fm-sessionstart-run.sh` | landed, verified |
+| `bin/gleipnir-lock-lib.sh` | `bin/backend/fm-session-lock-lib.sh`, `bin/backend/fm-lock-lib.sh` | landed, verified |
+| `bin/hamr-harness.sh` | `bin/backend/fm-harness.sh` | landed |
+| `bin/agents/einherjar-spawn.sh` | `bin/backend/fm-spawn.sh` | landed; **caller bug** see §9 |
+| `bin/agents/erindi-brief.sh` | `bin/backend/fm-brief.sh` | landed, verified |
+| `bin/vor-crew-state.sh` | `bin/backend/fm-crew-state.sh` | landed, verified |
+| `bin/rodd-operational-input.sh` | `bin/backend/fm-operational-input.sh` | landed, verified |
+| `bin/time/saga-wake-drain.sh` | `bin/backend/fm-wake-drain.sh` | landed, verified |
+| `bin/syn-watch-arm.sh` | `bin/backend/fm-watch-arm.sh` | landed, verified |
+| `bin/syn-turnend-guard.sh` | `bin/backend/fm-turnend-guard.sh` | landed, verified |
+| `bin/syn-arm-pretool-check.sh` | `bin/backend/fm-arm-pretool-check.sh` | landed, inert v0 |
+| `bin/syn-cd-pretool-check.sh` | `bin/backend/fm-cd-pretool-check.sh` | landed, inert v0 |
+| `bin/time/nornir-cron-start.sh`, `bin/nornir-job-*.sh` | none (Ymir extension) | landed, verified |
+| `bin/records/runes-append.sh` | none (Ymir extension) | landed, verified |
 | `.pi/extensions/syn-turnend-guard.ts` | `.pi/extensions/fm-primary-turnend-guard.ts` | landed, verified |
 | `.pi/extensions/gna-pi-watch.ts` | `.pi/extensions/fm-primary-pi-watch.ts` | landed; calm + supervision branch dropped |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` | `.pi/extensions/lib/fm-sessionstart-supervisor.mjs` | landed |
@@ -266,14 +266,14 @@ These are real mismatches between plan/source docs and the shipped tree, found w
 
 | # | Disagreement | Evidence | Impact |
 |---|---|---|---|
-| 1 | `bin/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, but `bin/hamr-harness.sh:231-236` accepts only `eindri`, `eindri-model`, `eindri-effort` (the upstream `crew` subcommand was renamed to `eindri`). `crew` falls through to `detect_own`. | upstream `bin/fm-harness.sh` header documents `crew`; the port renamed it but did not retarget the caller | Latent: masked while `config/eindri-dispatch.json` forces an explicit `--harness`; would mis-resolve the configured Eindri harness if the dispatch file were removed. Fix: call `hamr-harness.sh eindri`. |
-| 2 | Plan 29 declares a **9-stage** digest (§1, §6, acceptance §8.3 "all nine stages"); the script header and implementation are **8 stages** (`NETWORK CHECKS` is deferred/not implemented). | `docs/plans/29-brokk-distro-runtime.md:171,207` vs `bin/saga-session-start.sh:9-17` | Doc drift; the runtime is correct at 8. Reconcile the plan or implement the network-checks stage. |
+| 1 | `bin/agents/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, but `bin/hamr-harness.sh:231-236` accepts only `eindri`, `eindri-model`, `eindri-effort` (the upstream `crew` subcommand was renamed to `eindri`). `crew` falls through to `detect_own`. | upstream `bin/backend/fm-harness.sh` header documents `crew`; the port renamed it but did not retarget the caller | Latent: masked while `config/eindri-dispatch.json` forces an explicit `--harness`; would mis-resolve the configured Eindri harness if the dispatch file were removed. Fix: call `hamr-harness.sh eindri`. |
+| 2 | Plan 29 declares a **9-stage** digest (§1, §6, acceptance §8.3 "all nine stages"); the script header and implementation are **8 stages** (`NETWORK CHECKS` is deferred/not implemented). | `docs/plans/29-brokk-distro-runtime.md:171,207` vs `bin/time/saga-session-start.sh:9-17` | Doc drift; the runtime is correct at 8. Reconcile the plan or implement the network-checks stage. |
 | 3 | Plan 29 §7/§13 names `.opencode/plugins/syn-sessionstart.js`; the shipped file is `.opencode/plugins/saga-sessionstart.js`. | `docs/plans/29-brokk-distro-runtime.md:139,188` vs the tree | Doc drift; the adapter works, the plan's filename is stale. |
 | 4 | Plan 29 §13 "Still to build" lists `hamr-harness.sh`, the `.opencode`/Claude/Codex/Cursor adapters, `einherjar-spawn.sh`, `erindi-brief.sh`, `vor-crew-state.sh`, `config/eindri-dispatch.json`, `bin/nornir-job-*.sh`, `runes-append.sh`, real `data/`, `config/cron.yaml`, and the `AGENTS.md` header as unbuilt — all now exist. | `docs/plans/29-brokk-distro-runtime.md:318-322` | Stale status; the tree has advanced past the plan. |
 | 5 | `.pi/extensions/README.md` says the `.opencode`/Claude/Codex/Cursor adapters are "not yet wired"; they are wired. | `.pi/extensions/README.md` "Not yet wired" section | Stale doc. |
 | 6 | `AGENTS.md:231-244` (`PI / FIRSTMATE INTEGRATION`) still uses `fm-harness`, `fm-spawn`, `Yggdrasil`, and the `Brokk_crew` schema, contradicting the Norse naming law at `AGENTS.md:6` and the port. | root `AGENTS.md` | Imported terminology in the always-loaded contract. Retarget or strike the section. |
 | 7 | `.claude/settings.json` passes `--claude` to `bin/syn-turnend-guard.sh`; the guard accepts no arguments and ignores it. | `.claude/settings.json` Stop hook vs `bin/syn-turnend-guard.sh` | Harmless argument mismatch. |
-| 8 | `bin/runes-append.sh:101` titles the ledger `# YGGDRASIL Audit Trail` while the subsystem is **Runes**. | `bin/runes-append.sh:101` | Naming inconsistency; changing it must preserve append-only history. |
+| 8 | `bin/records/runes-append.sh:101` titles the ledger `# YGGDRASIL Audit Trail` while the subsystem is **Runes**. | `bin/records/runes-append.sh:101` | Naming inconsistency; changing it must preserve append-only history. |
 
 ### §9 resolutions (2026-09-11)
 
@@ -282,14 +282,14 @@ the historical record.
 
 | # | Resolution |
 |---|---|
-| 1 | **Fixed** — `bin/einherjar-spawn.sh` now calls `hamr-harness.sh eindri`. |
+| 1 | **Fixed** — `bin/agents/einherjar-spawn.sh` now calls `hamr-harness.sh eindri`. |
 | 2 | **Reconciled** — plan 29 acceptance is now "all eight stages"; the network-checks stage remains deferred, not implemented. |
 | 3 | **Fixed** — plan 29 §7/§13 now name `.opencode/plugins/saga-sessionstart.js`. |
 | 4 | **Fixed** — plan 29 §13 now reads "Landed"; every listed component exists. |
 | 5 | **Fixed** — `.pi/extensions/README.md` now lists all wired adapters. |
 | 6 | **Fixed** — `AGENTS.md` §PI PRIMARY BOOT now uses Hamr/Einherjar/Yggdrasil/`rodd`; the imported heading and `Brokk_crew` schema are gone. |
 | 7 | **Left as-is** — the `--claude` argument is ignored by the guard and is harmless. |
-| 8 | **Fixed** — `bin/runes-append.sh` now titles the ledger `# RUNES Audit Trail`.
+| 8 | **Fixed** — `bin/records/runes-append.sh` now titles the ledger `# RUNES Audit Trail`.
 
 ## Maintaining this
 

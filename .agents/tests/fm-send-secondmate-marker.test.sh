@@ -4,7 +4,7 @@
 # A secondmate is itself a firstmate, so a request relayed to it lands in its own
 # chat - which the main firstmate never reads (the only channel back is the terse
 # status file). fm-send therefore prepends a from-firstmate marker
-# (bin/fm-marker-lib.sh) when, and only when, the resolved target is a task
+# (bin/backend/fm-marker-lib.sh) when, and only when, the resolved target is a task
 # selector whose meta records kind=secondmate, so the secondmate can recognize
 # the request and route its reply via the status path. The marker now travels
 # inside the durable inbox record's body (the payload is never typed; only the
@@ -94,7 +94,7 @@ setup_home() {
 }
 
 # The exact enqueued text of one inbox record, read through the production
-# owner (bin/fm-task-inbox-lib.sh). Command substitution strips trailing
+# owner (bin/backend/fm-task-inbox-lib.sh). Command substitution strips trailing
 # newlines, so byte-exact trailing assertions read the raw record instead.
 record_body() {  # <record-path>
   bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$1"

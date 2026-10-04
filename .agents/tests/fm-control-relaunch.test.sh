@@ -249,7 +249,7 @@ SH
 }
 
 # Give a case home a real backlog carrying <id>, so the relaunch path's paired
-# backlog transition (bin/fm-backlog-transition-lib.sh) is live rather than
+# backlog transition (bin/backend/fm-backlog-transition-lib.sh) is live rather than
 # skipped for want of a backlog file.
 seed_backlog() {  # <case-dir> <id> <queued|in_flight>
   local dir=$1 id=$2 want=$3 file="$1/home/data/backlog.md"
@@ -726,7 +726,7 @@ test_secondmate_relaunch_ignores_invalid_configured_effort_before_stop() {
 }
 
 # muse is a verified adapter, but only for crewmates and scouts: it has no
-# primary supervision protocol, so bin/fm-spawn.sh refuses it for a secondmate.
+# primary supervision protocol, so bin/backend/fm-spawn.sh refuses it for a secondmate.
 # That refusal alone is not enough here, because the launch owner is reached
 # only AFTER the running agent has been stopped - a secondmate would be left
 # with no agent at all. The control plane asks the same capability question

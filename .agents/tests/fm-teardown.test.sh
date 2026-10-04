@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests for bin/fm-teardown.sh's landed-work safety and stale-lock recovery.
+# Tests for bin/backend/fm-teardown.sh's landed-work safety and stale-lock recovery.
 #
 # The check refuses to tear down a worktree whose work has not LANDED, because
 # treehouse return hard-resets the worktree. "Landed" means reachable from a remote
@@ -40,7 +40,7 @@
 #   (q) no-mistakes + NO pr= recorded, PR discovered by branch  -> ALLOW  (yolo/no-CI merge)
 #
 # Also covers backlog teardown-lock-race: a git index.lock left in the worktree by a
-# killed crew process (bin/fm-teardown.sh's teardown_treehouse_return).
+# killed crew process (bin/backend/fm-teardown.sh's teardown_treehouse_return).
 #   (r) provably-stale index.lock (old mtime, no live holder) -> lock removed, ALLOW
 #   (s) index.lock with a live holder, any age                -> lock kept, REFUSE
 #   (t) lsof error while checking index.lock                  -> lock kept, REFUSE
@@ -314,7 +314,7 @@ SH
 # git "file exists" lock error whenever the worktree's real index.lock is
 # present, and succeeds once it is gone. This drives the lock through
 # fm-teardown.sh's own retry-then-stale-cleanup logic (teardown_treehouse_return
-# in bin/fm-teardown.sh) rather than hand-simulating that logic in the test.
+# in bin/backend/fm-teardown.sh) rather than hand-simulating that logic in the test.
 add_lock_aware_treehouse() {
   local case_dir=$1
   cat > "$case_dir/fakebin/treehouse" <<'SH'
@@ -2019,11 +2019,11 @@ test_herdr_projection_teardown_surfaces_restore_failure_without_blocking_cleanup
 # --- Fix 1: conclude/abort the task's own parked no-mistakes run before the
 # worker is removed, and Fix 2: reap leaked descendant processes rooted under
 # the task's own worktree/tasktmp - both exercised through the real teardown
-# path (bin/fm-teardown.sh), never by matching its source text. ------------
+# path (bin/backend/fm-teardown.sh), never by matching its source text. ------------
 
 # A parked-at-a-gate `axi status` TOON payload for <branch>/<head>, matching
 # the shape no-mistakes actually emits (see tests/fm-crew-state.test.sh's
-# run_parked fixture, the same shape bin/fm-crew-state.sh's own tests pin).
+# run_parked fixture, the same shape bin/backend/fm-crew-state.sh's own tests pin).
 parked_axi_status_toon() {  # <branch> <head> [run-id]
   cat <<EOF
 run:

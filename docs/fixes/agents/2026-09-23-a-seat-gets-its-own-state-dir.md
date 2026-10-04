@@ -26,7 +26,7 @@
   never contended — only the pointer was, and the pointer was the whole failure.
 
 ### Fix
-- **`bin/herdr-run.sh`** — a seat now gets **both** variables, pointing at one
+- **`bin/seat/herdr-run.sh`** — a seat now gets **both** variables, pointing at one
   private state dir:
   - `BROKK_MACHINE_STATE_DIR=<seat dir>` — the lock.
   - `BROKK_STATE_OVERRIDE=<seat dir>` — the state the pi extension reads the
@@ -61,5 +61,5 @@ in one directory) without touching the primary's contract.
   (`~/.local/state/ymir/brokk.lock`) and the watcher re-armed cleanly.
 
 ### Files
-- `bin/herdr-run.sh`
+- `bin/seat/herdr-run.sh`
 - `bin/pi-seat.sh`

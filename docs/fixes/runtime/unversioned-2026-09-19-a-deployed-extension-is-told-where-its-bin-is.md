@@ -9,12 +9,12 @@
   poll**. No `state/.watch.heartbeat` was written anywhere on the machine, no
   `.supervision-armed` ever appeared, and the watch was dead while every file
   listing looked correct. The Sága digest never arrived either — the turn-end guard
-  spawns `${root}/bin/saga-sessionstart-run.sh` from that same root, so its runner
+  spawns `${root}/bin/time/saga-sessionstart-run.sh` from that same root, so its runner
   was a path that did not exist.
 - **A deploy that copies an extension without telling it where its own `bin/` lives
   is not a deploy.** The copy is necessarily *outside* the tree that owns `bin/`;
   nothing in the copy can discover that tree by walking up from itself.
-- **The root is now recorded at deploy time.** `bin/valknut-load.sh --pi` writes one
+- **The root is now recorded at deploy time.** `bin/seat/valknut-load.sh --pi` writes one
   absolute root per line — most recent first, deduped, capped — to
   `${HOME}/.pi/agent/extensions/.ymir-root`, and `.pi/extensions/lib/ymir-home.ts`
   reads it back for all four extensions (`gna-pi-watch`, `syn-turnend-guard`, `ro`,
@@ -35,12 +35,12 @@
   with no contract at all. It now repoints only when the current target is already
   gone.
 - **Eir carries the surface** (`bin/eir-doctor.sh`: `harness`), so a record with no
-  live root is diagnosed and mended rather than discovered; `bin/valknut-load.sh
+  live root is diagnosed and mended rather than discovered; `bin/seat/valknut-load.sh
   --status` reports the same row.
 
 ### Files
 - `.pi/extensions/lib/ymir-home.ts` — the resolver (new)
 - `.pi/shared/extensions/{gna-pi-watch,syn-turnend-guard,ro,skuld-branch-supervision}.ts` — resolve the recorded root
-- `bin/valknut-load.sh` — record the root at deploy time; guard the global contract
+- `bin/seat/valknut-load.sh` — record the root at deploy time; guard the global contract
 - `bin/eir-doctor.sh` — the `harness` surface
 - `.pi/extensions/README.md` · `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md` — the contract

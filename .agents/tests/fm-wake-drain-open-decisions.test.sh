@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/fm-wake-drain-open-decisions.test.sh - behavior tests for the OPEN
-# DECISIONS section bin/fm-wake-drain.sh prints on every drain (including the
+# DECISIONS section bin/backend/fm-wake-drain.sh prints on every drain (including the
 # empty-queue fast path). The section is pure wiring around
 # fm-classify-lib.sh's status_open_decisions fold (the ONE authoritative
 # open/resolved statement); these tests exercise the real drain script over
@@ -32,7 +32,7 @@ test_buried_decision_still_surfaces() {
   grep -F 'OPEN DECISIONS' "$out" >/dev/null || fail "buried decision produced no OPEN DECISIONS section"
   grep -F 'task1' "$out" | grep -F '[key=api-shape]' | grep -F 'pick REST or RPC' >/dev/null \
     || fail "buried needs-decision was not surfaced with its task, key, and note"
-  grep -F "close one by answering it: bin/fm-send.sh <task> --resolve-key <key>" "$out" >/dev/null \
+  grep -F "close one by answering it: bin/backend/fm-send.sh <task> --resolve-key <key>" "$out" >/dev/null \
     || fail "open section is missing the answerer-closes hint"
   pass "a needs-decision buried under later routine/other-key lines still reports as open"
 }
@@ -59,7 +59,7 @@ test_reserved_key_namespace_is_owned_by_its_library() {
   dir=$(make_case reserved-key)
   state="$dir/state"
   out="$dir/drain.out"
-  # `pending-reply-<id>` names a decision bin/fm-pending-reply-lib.sh raises and
+  # `pending-reply-<id>` names a decision bin/backend/fm-pending-reply-lib.sh raises and
   # is the only writer that closes it. Every writer reaches this same stream - a
   # local mate appends into it directly, and a remote mate's lines are mirrored
   # into it verbatim - so another writer must not be able to take that key over
@@ -178,7 +178,7 @@ test_status_symlink_is_not_followed() {
   pass "the fleet-wide decision scan does not follow status symlinks"
 }
 
-# The per-item cut now comes from bin/fm-line-cap-lib.sh, shared with the
+# The per-item cut now comes from bin/backend/fm-line-cap-lib.sh, shared with the
 # session-start digest's status tails so one truncation marker means the same
 # thing wherever an agent meets it. This pins the drain's own end of that
 # contract: the lede survives, the marker appears, and the item still fits the

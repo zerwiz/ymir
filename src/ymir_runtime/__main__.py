@@ -1,7 +1,7 @@
 """The engine's door face — `python3 -m ymir_runtime <verb>`.
 
-The bash doors (`bin/ymir-engine.sh`, and through it `bin/eindri-start.sh` and
-`bin/einherjar-spawn.sh`) call THIS, never the modules directly. It exists so the
+The bash doors (`bin/engine/ymir-engine.sh`, and through it `bin/agents/eindri-start.sh` and
+`bin/agents/einherjar-spawn.sh`) call THIS, never the modules directly. It exists so the
 four verbs are reachable from a shell without a second interface — plus
 `dispatch`, which resolves an errand to its role, figure, model and seat type
 without adding a fifth verb to the interface.

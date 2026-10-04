@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tests/fm-secondmate-liveness.test.sh - the session-start secondmate liveness
-# guarantee owned by bin/fm-backend.sh's detailed fm_backend_agent_state and
-# bin/fm-bootstrap.sh's secondmate_liveness_sweep that acts on it.
+# guarantee owned by bin/backend/fm-backend.sh's detailed fm_backend_agent_state and
+# bin/backend/fm-bootstrap.sh's secondmate_liveness_sweep that acts on it.
 #
 # The gap under test (AGENTS.md "Session start"; evidence 2026-07-07): a
 # secondmate agent that has exited leaves its backend endpoint alive as a bare
@@ -19,7 +19,7 @@
 #   - The Herdr classifier preserves the proven husk mapping while separating a
 #     missing pane from an existing agent-less pane.
 #   - fm_backend_agent_alive preserves the older three-state compatibility view.
-#   - bin/fm-bootstrap.sh's secondmate_liveness_sweep recovers only dead or
+#   - bin/backend/fm-bootstrap.sh's secondmate_liveness_sweep recovers only dead or
 #     missing endpoints, keeps successful recovery and already-live results
 #     silent by default, and reports ambiguous and unreadable targets distinctly.
 #   - The sweep converges: once a secondmate reads alive, a later run never
@@ -198,9 +198,9 @@ test_agent_state_dispatcher_and_compatibility() {
   pass "fm_backend_agent_state: routes tmux/Herdr and keeps Zellij unverified"
 }
 
-# --- sweep level: bin/fm-bootstrap.sh's secondmate_liveness_sweep -----------
+# --- sweep level: bin/backend/fm-bootstrap.sh's secondmate_liveness_sweep -----------
 
-# make_toolchain <dir>: the fixed set of stubs bin/fm-bootstrap.sh's read-only
+# make_toolchain <dir>: the fixed set of stubs bin/backend/fm-bootstrap.sh's read-only
 # diagnostics need to stay quiet (mirrors tests/fm-secondmate-sync.test.sh's
 # make_fake_toolchain), MINUS tmux - callers add their own controllable tmux.
 make_toolchain() {

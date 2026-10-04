@@ -11,7 +11,7 @@ source of truth; everything else binds to it.
   - OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
   - Pi: `.pi/agents/<profile>.md` → the same canonical files
 - **Never edit** `.opencode/agents` or `.pi/agents` — they are links. Edit
-  `.agents/agents/<profile>.md` and re-run `bin/valknut-load.sh --all`.
+  `.agents/agents/<profile>.md` and re-run `bin/seat/valknut-load.sh --all`.
 
 ## 2. The two kinds of agent
 
@@ -56,7 +56,7 @@ mode/model/permission   the harness binding (OpenCode) — from the canonical
 ## 5. Changing an agent
 
 1. Edit `.agents/agents/<name>-<craft>.md`.
-2. Run `bin/valknut-load.sh --all` to rebind the harness symlinks.
+2. Run `bin/seat/valknut-load.sh --all` to rebind the harness symlinks.
 3. If a governed path changed, update the owning Galdr asset in the same change
    (compliance gate `assets`).
 
@@ -83,11 +83,11 @@ The **reviewer** role is sealed to **Forseti** (`.agents/agents/forseti-reviewer
 the judge of the Eindri. Every ship errand that reaches `done` with a PR has a
 dedicated review errand seated for it — `<id>-review`, a **scout-kind** errand
 launched through the einherjar road on the `pi` harness — before the Allfather's
-seal. The mechanism is `bin/eindri-review-spawn.sh`, called from the terminal act
-(`bin/eindri-acclaim.sh --terminal done`); it fires **once per task** (the
+seal. The mechanism is `bin/agents/eindri-review-spawn.sh`, called from the terminal act
+(`bin/agents/eindri-acclaim.sh --terminal done`); it fires **once per task** (the
 `.reviewed` marker), and `YMIR_AUTO_REVIEW=off` is the loud override.
 
 Law, unchanged and restated: edit the **canonical** card in `.agents/agents/` and
-re-run `bin/valknut-load.sh --all`; **never** edit the harness directories by
+re-run `bin/seat/valknut-load.sh --all`; **never** edit the harness directories by
 hand. The judge's card keeps `edit: deny` / `write: deny` — the spine only ever
 reads the branch it judges.

@@ -11,7 +11,7 @@
   machine (Omarchy version, explicit packages, config files, monitors, scale) into
   `state/omarchy-setup.json`; `bin/omarchy-hook-install.sh` adds an Omarchy
   `post-update` hook so it re-learns after every `omarchy update`.
-- **Þjazi in the installer:** `bin/herdr-ensure.sh` + new `step_backend`
+- **Þjazi in the installer:** `bin/seat/herdr-ensure.sh` + new `step_backend`
   (herdr, else tmux — never a silent fallback).
 - **New `step_omarchy`** (SKIP on a non-Omarchy host).
 - **Desktop fixes:** window placement is now LOGICAL and work-area clamped, and

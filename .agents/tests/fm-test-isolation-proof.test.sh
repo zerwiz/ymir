@@ -8,8 +8,8 @@ set -u
 PROOF="$ROOT/bin/fm-test-isolation-proof.sh"
 RUNNER="$ROOT/bin/fm-test-run.sh"
 
-assert_present "$PROOF" "bin/fm-test-isolation-proof.sh is missing"
-[ -x "$PROOF" ] || fail "bin/fm-test-isolation-proof.sh must be executable"
+assert_present "$PROOF" "bin/backend/fm-test-isolation-proof.sh is missing"
+[ -x "$PROOF" ] || fail "bin/backend/fm-test-isolation-proof.sh must be executable"
 
 test_unknown_pool_is_refused() {
   local tmp rc

@@ -27,7 +27,7 @@ zellij attach <session-name>
 ```
 
 Routine supervision does not require attachment.
-Use `bin/fm-peek.sh <id>` and `FM_HOME=<home> bin/fm-send.sh <id> '<text>'` against the metadata-routed endpoint.
+Use `bin/backend/fm-peek.sh <id>` and `FM_HOME=<home> bin/backend/fm-send.sh <id> '<text>'` against the metadata-routed endpoint.
 
 Verify setup by spawning a small task and confirming metadata contains `backend=zellij`, `zellij_session=`, `zellij_tab_id=`, and `zellij_pane_id=`.
 
@@ -39,7 +39,7 @@ The home label is `firstmate` or `2ndmate-<id>` plus a short stable hash of the 
 This prevents task-id collisions between a primary, secondmates, and separate Firstmate installations sharing one session.
 
 Zellij does not enforce tab-name uniqueness, so the adapter performs its own duplicate check against the scoped title.
-Create, recover, list, and cleanup paths all use the same scoped title owner in `bin/fm-backend-hometag-lib.sh`.
+Create, recover, list, and cleanup paths all use the same scoped title owner in `bin/backend/fm-backend-hometag-lib.sh`.
 Moving a Firstmate installation changes its path hash and leaves old titles unmatched, consistent with worktree paths also becoming stale after a move.
 
 A pre-home-tag task remains reachable through its recorded metadata only when exactly one live tab has the old unscoped title.
@@ -78,7 +78,7 @@ An ordinary metadata-routed `fm-send.sh` text steer becomes a durable steering-i
 On the typed plane, literal send uses bracketed paste followed by a separate explicit Enter.
 Before sending Enter, the adapter proves that the selected composer's normalized content changed by exactly the pasted text; an unreadable composer, a paste that lands elsewhere, or unrelated pane output fails without submitting.
 The adapter supports `Enter`, `Esc`, and the one-argument key expression `Ctrl c` through the shared key vocabulary.
-Zellij exposes no cursor-row or native agent-state signal, but `dump-screen --ansi` (verified at 0.44.0) preserves styling, so the composer is read through the same fleet-wide classifier as tmux and herdr (`bin/fm-composer-lib.sh`), with ghost and placeholder text stripped before the verdict.
+Zellij exposes no cursor-row or native agent-state signal, but `dump-screen --ansi` (verified at 0.44.0) preserves styling, so the composer is read through the same fleet-wide classifier as tmux and herdr (`bin/backend/fm-composer-lib.sh`), with ghost and placeholder text stripped before the verdict.
 Submit acknowledgement requires a positively classified empty composer.
 The retired content-delta acknowledgement could report a message delivered whenever the pane changed for any reason - a spinner, streaming output, a clock - which could silently close a decision record for a message the crew never received; a pane that merely changed no longer confirms anything.
 A dead pane still fails safe: Zellij's unconditional-exit-0 actions dump nothing, and an empty dump classifies `unknown`, never a confirmation.

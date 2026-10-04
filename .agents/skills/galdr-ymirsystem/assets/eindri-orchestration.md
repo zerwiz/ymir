@@ -4,13 +4,13 @@ Purpose: the complete, production-grade reference for how Brokk gathers an **Ein
 (Einherjar → Erindi → Vör → Yggdrasil → Utgard → Valhalla) from dispatch to delivery.
 
 > **One worker, one brief, one worktree.** Every Eindri is gathered by
-> `bin/einherjar-spawn.sh`, reads exactly one brief at `data/<task-id>/brief.md`, and runs in
+> `bin/agents/einherjar-spawn.sh`, reads exactly one brief at `data/<task-id>/brief.md`, and runs in
 > exactly one Yggdrasil worktree at `.yggdrasil/<task-id>`. The brief and the recorded task
 > cannot drift: both carry the same `Delivery contract: mode=<mode>` line.
 >
 > Provenance: the upstream agent-distro spawn/brief/state pattern
 > (`$BROKK_UPSTREAM/bin/fm-spawn.sh`, `fm-brief.sh`, `fm-crew-state.sh`) is the source
-> of the pattern; Ymir's runtime is `bin/einherjar-spawn.sh`, `bin/erindi-brief.sh`, and
+> of the pattern; Ymir's runtime is `bin/agents/einherjar-spawn.sh`, `bin/agents/erindi-brief.sh`, and
 > `bin/vor-crew-state.sh`, retargeted for plan 29. Upstream nautical labels are provenance
 > only — the Ymir names are Norse.
 
@@ -22,15 +22,15 @@ Purpose: the complete, production-grade reference for how Brokk gathers an **Ein
 |---|---|---|---|
 | Dispatch decision | **Brokk** | `config/eindri-dispatch.json` (+ `bin/dispatch-profile.sh`) | repo config |
 | Harness detection | **Hamr** | `bin/hamr-harness.sh` | repo bin |
-| Worker gather | **Einherjar** | `bin/einherjar-spawn.sh` | repo bin |
-| Worker brief | **Erindi** | `bin/erindi-brief.sh` → `data/<id>/brief.md` | private `data/` |
+| Worker gather | **Einherjar** | `bin/agents/einherjar-spawn.sh` | repo bin |
+| Worker brief | **Erindi** | `bin/agents/erindi-brief.sh` → `data/<id>/brief.md` | private `data/` |
 | Worktree isolation | **Yggdrasil** | `.yggdrasil/<id>` (git worktree) | private `.yggdrasil/` |
 | Sandbox seal | **Utgard** | `.agents/sandbox/Dockerfile.utgard` | repo `.agents/` |
 | State reconciliation | **Vör** | `bin/vor-crew-state.sh` | repo bin |
 | Status event log | (Eindri writes) | `state/<id>.status` | private `state/` |
 | Steering inbox | (Brokk writes) | `state/<id>.inbox/*.msg` | private `state/` |
 | Record | (spawn writes) | `state/<id>.meta` | private `state/` |
-| Heartbeat watch | **Valhalla** | `bin/eindri-heartbeat.sh` + `bin/eindri-acclaim-silent.sh` | repo bin |
+| Heartbeat watch | **Valhalla** | `bin/agents/eindri-heartbeat.sh` + `bin/agents/eindri-acclaim-silent.sh` | repo bin |
 | Supervision | **Valhalla** | tmux/herdr pane or supervision tree | backend |
 | Human merge gate | **Glitnir** | PR review card in Hlidskjalf | portal |
 
@@ -40,7 +40,7 @@ surface outside the worktree.
 
 ---
 
-## 2. Spawn interface — `bin/einherjar-spawn.sh`
+## 2. Spawn interface — `bin/agents/einherjar-spawn.sh`
 
 ### 2.0 The rule (settled 2026-09-24)
 
@@ -76,7 +76,7 @@ spawned <id> harness=<h> kind=<kind> mode=<m> yolo=<y> backend=<b> target=<t> wo
 ```
 
 (`--scout` omits `mode=`/`yolo=`; the output shape is defined at
-`bin/einherjar-spawn.sh:550-554`.)
+`bin/agents/einherjar-spawn.sh:550-554`.)
 
 ### 2.2 Flag reference
 
@@ -112,7 +112,7 @@ spawned <id> harness=<h> kind=<kind> mode=<m> yolo=<y> backend=<b> target=<t> wo
 
 ### 2.4 Harness and model resolve FROM THE MACHINE, in a fixed order
 
-`bin/einherjar-spawn.sh` resolves harness + model together (D3, 2026-09-24).
+`bin/agents/einherjar-spawn.sh` resolves harness + model together (D3, 2026-09-24).
 The provenance of every choice is printed and recorded (`harness_provenance=`,
 `model_provenance=` in the meta). Never from a repo template:
 
@@ -141,7 +141,7 @@ Fail-closed rules:
 `--backend` / `BROKK_BACKEND` / `config/backend` win when set; otherwise the default is
 **herdr when the herdr SERVER answers** (`pgrep -f 'herdr server'` or `herdr status --json`
 running=true) and tmux when it does not. The reason is printed (`backend_reason=` recorded).
-The gate is the server's existence, NEVER `bin/herdr-run.sh available` — that verb answers
+The gate is the server's existence, NEVER `bin/seat/herdr-run.sh available` — that verb answers
 for a SESSION's `HERDR_ENV` ("is this shell inside herdr?"), not for whether a server can
 host a worker. A herdr server hosts a worker even when the dispatcher sits outside herdr;
 conflating the two left the backend on tmux while `herdr server` ran (2026-09-24).
@@ -173,7 +173,7 @@ itself, not a command inside the container.
 ### 2.8 worth-a-smith refuses by default
 
 The first law — a SHORT ERRAND IS DONE IN HAND — is enforced here, not only in
-`bin/herdr-run.sh`'s help. The errand is the brief's `# Task` text; a refusal is LOUD with
+`bin/seat/herdr-run.sh`'s help. The errand is the brief's `# Task` text; a refusal is LOUD with
 the reason and the remedy. `--force` overrides and records `force=1` / `worth_a_smith=no` in
 the meta. A brief still carrying the unfilled `{TASK}` text is refused as not an errand yet.
 
@@ -181,7 +181,7 @@ the meta. A brief still carrying the unfilled `{TASK}` text is refused as not an
 
 ## 3. Erindi — the worker brief
 
-`bin/erindi-brief.sh` scaffolds `data/<id>/brief.md`. It **refuses to overwrite** an existing
+`bin/agents/erindi-brief.sh` scaffolds `data/<id>/brief.md`. It **refuses to overwrite** an existing
 brief unless `--relaunch` is given.
 
 ### 3.1 Usage
@@ -194,7 +194,7 @@ erindi-brief.sh <task-id> --relaunch
 
 `--relaunch` regenerates from `state/<id>.meta` so a replacement Eindri receives the **same**
 delivery contract; it re-derives the mode and refuses `--mode`. `--yolo` is rejected here — it
-belongs to spawn (`bin/erindi-brief.sh:70`).
+belongs to spawn (`bin/agents/erindi-brief.sh:70`).
 
 ### 3.2 Brief structure (ship)
 
@@ -212,10 +212,10 @@ belongs to spawn (`bin/erindi-brief.sh:70`).
 ### 3.3 The `Delivery contract:` line
 
 - Written only for ship briefs, as `Delivery contract: mode=<mode>`
-  (`bin/erindi-brief.sh:245`).
-- Read by `bin/einherjar-spawn.sh:327-335`: if present and it disagrees with the explicit
+  (`bin/agents/erindi-brief.sh:245`).
+- Read by `bin/agents/einherjar-spawn.sh:327-335`: if present and it disagrees with the explicit
   `--mode`, the launch is **refused**. A missing line warns but launches on `--mode`.
-- Scout briefs carry `Delivery contract: mode=scout` (`bin/erindi-brief.sh:183`) and are not
+- Scout briefs carry `Delivery contract: mode=scout` (`bin/agents/erindi-brief.sh:183`) and are not
   mode-checked at launch.
 
 ### 3.4 Delivery modes
@@ -341,7 +341,7 @@ bin/hamr-harness.sh eindri-effort   # optional effort token (empty when absent)
 ```
 
 > **D3 (2026-09-24): this file is a query surface, NOT the spawn's resolution
-> authority.** `bin/einherjar-spawn.sh` resolves harness/model from the machine in the
+> authority.** `bin/agents/einherjar-spawn.sh` resolves harness/model from the machine in the
 > §2.4 order (explicit flags → model-resolve → `config/agents.yaml` → fleet law). It no
 > longer falls through to `config/eindri-harness` or process ancestry for the default, so a
 > repo file can never steer dispatch (`opencode` here versus the Allfather's pi-only law).
@@ -350,10 +350,10 @@ bin/hamr-harness.sh eindri-effort   # optional effort token (empty when absent)
 
 ## 6. Yggdrasil — worktree isolation
 
-`bin/einherjar-spawn.sh` creates or reuses the worktree at `$BROKK_HOME/.yggdrasil/<id>`:
+`bin/agents/einherjar-spawn.sh` creates or reuses the worktree at `$BROKK_HOME/.yggdrasil/<id>`:
 
 - Base ref: `origin/HEAD` when resolvable, else `HEAD`; created `--detach` so the worker's
-  branch is its own (`bin/einherjar-spawn.sh:373-386`).
+  branch is its own (`bin/agents/einherjar-spawn.sh:373-386`).
 - A pre-existing directory that is not a worktree root is refused (no silent reuse).
 - A relaunch reuses the exact recorded `worktree` and **refuses if it is gone**.
 - The linked worktree's `.git` file points at the project's common git dir; that dir's path is
@@ -390,7 +390,7 @@ Build the image:
 docker build -f .agents/sandbox/Dockerfile.utgard -t utgard-runner:latest .agents/sandbox
 ```
 
-The exact launch line emitted by `bin/einherjar-spawn.sh:471` (real flags):
+The exact launch line emitted by `bin/agents/einherjar-spawn.sh:471` (real flags):
 
 ```bash
 docker run --rm -it --network none --cpus 1.0 --memory 512m \
@@ -448,18 +448,18 @@ the worktree.
 
 ### 8.1 The silence bridge — a dead worker does not look like a thinking one
 
-`bin/einherjar-spawn.sh` records `launched=`/`launch_iso=` in the meta and appends a heartbeat
+`bin/agents/einherjar-spawn.sh` records `launched=`/`launch_iso=` in the meta and appends a heartbeat
 baseline to `state/<id>.status` before the worker writes anything. The supervisor treats a
 worker with NO status append within a configurable window as SUSPECT and wakes Brokk with the
 worker's id, elapsed time, and last line:
 
-- `bin/eindri-heartbeat.sh check <agent> [--window N]` — the condition (exit 0 = SILENT).
+- `bin/agents/eindri-heartbeat.sh check <agent> [--window N]` — the condition (exit 0 = SILENT).
   Verdicts: `silent | fresh | terminal | absent`; terminal (`done`/`failed` line or a filed
   report) never wakes.
-- `bin/eindri-acclaim-silent.sh <agent>` — the action: an idempotent wake (`state/eindri-silent/`
+- `bin/agents/eindri-acclaim-silent.sh <agent>` — the action: an idempotent wake (`state/eindri-silent/`
   markers, size-tracked so a re-silence after new activity wakes again).
-- `bin/eindri-watch.sh arm-silence <agent> [--window N]` arms the pair as `when-<agent>-silent`;
-  `bin/eindri-watch.sh arm` arms BOTH the report bridge and the silence bridge (best effort),
+- `bin/agents/eindri-watch.sh arm-silence <agent> [--window N]` arms the pair as `when-<agent>-silent`;
+  `bin/agents/eindri-watch.sh arm` arms BOTH the report bridge and the silence bridge (best effort),
   and the spawn arms the silence bridge automatically after a successful launch.
 - The window: `EINDRI_SILENT_WINDOW` (seconds, default 1800) or `--window`.
 
@@ -467,7 +467,7 @@ Inspect a worker:
 
 ```bash
 bin/vor-crew-state.sh <id>
-bin/eindri-heartbeat.sh check <id>
+bin/agents/eindri-heartbeat.sh check <id>
 tmux list-windows -t brokk -F '#{window_name}'
 tmux capture-pane -pt brokk:eindri-<id> | tail -40
 herdr pane list --workspace <ws>
@@ -481,23 +481,23 @@ herdr pane list --workspace <ws>
 
 ```bash
 # 1. Brief (mode resolved at intake; the Isolation: declaration scaffolds as herdr)
-bin/erindi-brief.sh W0123 my-repo --mode direct-PR
+bin/agents/erindi-brief.sh W0123 my-repo --mode direct-PR
 # 2. Brokk replaces {TASK} in data/W0123/brief.md
 # 3. Dry-run first — the whole plan, nothing created
-bin/einherjar-spawn.sh W0123 /home/<user>/repos/my-repo \
+bin/agents/einherjar-spawn.sh W0123 /home/<user>/repos/my-repo \
     --mode direct-PR --dry-run
 # 4. Spawn (harness/model resolve FROM THIS MACHINE — provenance printed)
-bin/einherjar-spawn.sh W0123 /home/<user>/repos/my-repo --mode direct-PR
+bin/agents/einherjar-spawn.sh W0123 /home/<user>/repos/my-repo --mode direct-PR
 # 5. Watch state + heartbeat
 bin/vor-crew-state.sh W0123
-bin/eindri-heartbeat.sh check W0123
+bin/agents/eindri-heartbeat.sh check W0123
 ```
 
 ### 9.2 Scout a codebase (report only)
 
 ```bash
-bin/erindi-brief.sh W0124 my-repo --scout
-bin/einherjar-spawn.sh W0124 /home/<user>/repos/my-repo --scout
+bin/agents/erindi-brief.sh W0124 my-repo --scout
+bin/agents/einherjar-spawn.sh W0124 /home/<user>/repos/my-repo --scout
 ```
 
 Report lands at `data/W0124/report.md`; the worktree is scratch.
@@ -505,8 +505,8 @@ Report lands at `data/W0124/report.md`; the worktree is scratch.
 ### 9.3 Relaunch after a crash
 
 ```bash
-bin/erindi-brief.sh W0123 --relaunch          # same delivery contract
-bin/einherjar-spawn.sh W0123 --relaunch --harness pi --effort high
+bin/agents/erindi-brief.sh W0123 --relaunch          # same delivery contract
+bin/agents/einherjar-spawn.sh W0123 --relaunch --harness pi --effort high
 ```
 
 Worktree, kind, and mode come from `state/W0123.meta`; only harness/model/effort/isolation may
@@ -519,7 +519,7 @@ change. If the worktree is gone, the relaunch is refused — recover it first.
 #   Isolation: utgard — the errand runs untrusted third-party scripts
 # Then the spawn verifies the image; a missing image is a LOUD refusal.
 docker build -f .agents/sandbox/Dockerfile.utgard -t utgard-runner:latest .agents/sandbox
-bin/einherjar-spawn.sh W0125 my-repo --mode local-only --harness opencode
+bin/agents/einherjar-spawn.sh W0125 my-repo --mode local-only --harness opencode
 cat state/W0125.utgard
 ```
 
@@ -535,7 +535,7 @@ printf 'Use the v2 API; the v1 endpoint is deprecated.\n' > state/W0123.inbox/00
 ### 9.6 The silence bridge
 
 ```bash
-bin/eindri-watch.sh arm-silence W0123 --window 1800   # or herdr-run's arm arms both
+bin/agents/eindri-watch.sh arm-silence W0123 --window 1800   # or herdr-run's arm arms both
 # a worker that stops appending inside the window fires the wake with:
 #   eindri W0123 SILENT: no status append for a while (elapsed 2710s) ...
 ```
@@ -571,8 +571,8 @@ shadow a completed record once the atomic `mv` lands.
 
 ```bash
 # 1. Scripts parse
-for f in bin/einherjar-spawn.sh bin/erindi-brief.sh bin/vor-crew-state.sh bin/ymir-platform.sh \
-         bin/dispatch-profile.sh bin/eindri-heartbeat.sh bin/eindri-acclaim-silent.sh; do bash -n "$f" && echo "OK $f"; done
+for f in bin/agents/einherjar-spawn.sh bin/agents/erindi-brief.sh bin/vor-crew-state.sh bin/ymir-platform.sh \
+         bin/dispatch-profile.sh bin/agents/eindri-heartbeat.sh bin/agents/eindri-acclaim-silent.sh; do bash -n "$f" && echo "OK $f"; done
 
 # 2. The shipped dispatch profile is INACTIVE (it carries unfilled tokens)
 bin/dispatch-profile.sh active; echo "exit=$?"   # no -> machine resolution governs
@@ -582,22 +582,22 @@ bin/dispatch-profile.sh validate config/eindri-dispatch.json; echo "exit=$?"  # 
 bin/dispatch-profile.sh derive --out /tmp/dispatch.json && bin/dispatch-profile.sh active
 
 # 4. Help/usage renders (exit 0)
-bin/einherjar-spawn.sh --help >/dev/null && echo "spawn help OK"
-bin/erindi-brief.sh --help   >/dev/null && echo "brief help OK"
+bin/agents/einherjar-spawn.sh --help >/dev/null && echo "spawn help OK"
+bin/agents/erindi-brief.sh --help   >/dev/null && echo "brief help OK"
 
 # 5. Dry-run prints the whole plan and creates nothing (a scratch state dir)
 BROKK_DATA_OVERRIDE=/tmp/d BROKK_STATE_OVERRIDE=/tmp/s BROKK_CONFIG_OVERRIDE=/tmp/c \
-  bin/einherjar-spawn.sh demo /repo --mode direct-PR --dry-run
+  bin/agents/einherjar-spawn.sh demo /repo --mode direct-PR --dry-run
 [ -z "$(ls -A /tmp/s)" ] && echo "dry-run created nothing"
 
 # 6. Fail-closed on a fresh spawn without an explicit harness
-bin/einherjar-spawn.sh demo /tmp/not-a-repo --mode local-only; echo "exit=$?"
+bin/agents/einherjar-spawn.sh demo /tmp/not-a-repo --mode local-only; echo "exit=$?"
 
 # 7. Silence bridge: a fake status with an old timestamp is reported
 old=$(( $(date +%s) - 3600 )); printf 'launched=%s\n' "$old" > /tmp/s/agent.meta
 printf 'working: baseline\n' > /tmp/s/agent.status; touch -d '1 hour ago' /tmp/s/agent.status
-BROKK_STATE_OVERRIDE=/tmp/s bin/eindri-heartbeat.sh check agent   # verdict=silent
-BROKK_STATE_OVERRIDE=/tmp/s bin/eindri-acclaim-silent.sh agent    # wakes with id/elapsed/last line
+BROKK_STATE_OVERRIDE=/tmp/s bin/agents/eindri-heartbeat.sh check agent   # verdict=silent
+BROKK_STATE_OVERRIDE=/tmp/s bin/agents/eindri-acclaim-silent.sh agent    # wakes with id/elapsed/last line
 ```
 
 ---
@@ -634,20 +634,20 @@ BROKK_STATE_OVERRIDE=/tmp/s bin/eindri-acclaim-silent.sh agent    # wakes with i
 - **`paused` ≠ `blocked`.** Paused = known external wait expected to clear; blocked = Brokk
   must act.
 - **Status is an event log, not state.** Always reconcile with `vor-crew-state.sh`, not `tail`.
-- **A silent worker is reported, not assumed thinking.** `bin/eindri-heartbeat.sh` treats no
+- **A silent worker is reported, not assumed thinking.** `bin/agents/eindri-heartbeat.sh` treats no
   status append inside the window as SUSPECT and wakes Brokk with id, elapsed, and last line.
 
 ## 13. Maintaining this
 
 - When a spawn flag or the printed `spawned` line changes, update §2 and the compiled example
   in the plan (`docs/plans/29-brokk-distro-runtime.md`).
-- When a delivery mode is added, update the brief (`bin/erindi-brief.sh`), the dispatch rules,
+- When a delivery mode is added, update the brief (`bin/agents/erindi-brief.sh`), the dispatch rules,
   and the tables in §3.4 in the same change.
 - When the Utgard `docker run` line changes, re-run §11 and update §7 verbatim.
 - When the harness/model ORDER changes, update §2.4 AND the meta keys in §10 in the same pass —
   provenance is part of the record.
 - When the isolation rule changes, update §2.6, §3.2, and the brief scaffold
-  (`bin/erindi-brief.sh`'s `Isolation:` line) in the same change.
+  (`bin/agents/erindi-brief.sh`'s `Isolation:` line) in the same change.
 - When the silence window or the heartbeat files change, update §8.1 and §11 in the same pass.
 - Keep `VERIFIED_HARNESSES`, the dispatch profiles, and `bin/hamr-harness.sh`'s adapter set in
   agreement; a mismatch is a compliance failure (see `runtime-compliance.md`).

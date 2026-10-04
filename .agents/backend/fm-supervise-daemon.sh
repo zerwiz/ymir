@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).
 #
-# Wraps bin/fm-watch.sh: runs it as a child, presents and classifies every
+# Wraps bin/backend/fm-watch.sh: runs it as a child, presents and classifies every
 # durable wake after an actionable close, acknowledges only after routing, and
 # either SELF-HANDLES the routine majority in bash (no firstmate turn) or
 # ESCALATES a batched, distilled digest to the supervisor pane on
@@ -21,7 +21,7 @@
 # state/.subsuper-escalations and are flushed on the next "while you were out"
 # catch-up or when afk is re-entered.
 #
-# IN-BAND OPERATIONAL INPUT. bin/fm-operational-input.sh constructs every
+# IN-BAND OPERATIONAL INPUT. bin/backend/fm-operational-input.sh constructs every
 # current daemon injection as the typed away-supervisor kind after the stable
 # FM_OPERATIONAL_PREFIX. A human cannot type its leading U+2063 from a normal
 # keyboard at the start of a message, and Herdr transports it as text.
@@ -78,7 +78,7 @@
 #                                   FM_SUPERVISOR_BACKEND (below), independently.
 #          FM_SUPERVISOR_BACKEND    supervisor pane BACKEND (tmux|herdr;
 #                                   override; otherwise auto-discovered the same
-#                                   way bin/fm-backend.sh's fm_backend_detect
+#                                   way bin/backend/fm-backend.sh's fm_backend_detect
 #                                   resolves the runtime firstmate itself is
 #                                   executing inside - $TMUX_PANE selects tmux,
 #                                   $HERDR_ENV=1 selects herdr - falling back to
@@ -133,7 +133,7 @@
 #          FM_INJECT_CONFIRM_RETRIES Enter-retry attempts on a swallowed Enter
 #                                   (default 3); the digest is typed once, only
 #                                   Enter is retried. Composer-empty detection is
-#                                   structural and style-aware (bin/fm-tmux-lib.sh):
+#                                   structural and style-aware (bin/backend/fm-tmux-lib.sh):
 #                                   it drops dim/faint ghost text and strips the
 #                                   harness's box borders before deciding, so a
 #                                   ghost-only or bordered-but-empty composer is
@@ -157,38 +157,38 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 # + verify-retry submit). Sourced at top level so BOTH the executed daemon and
 # the unit tests (which source this file for its pure functions) get the
 # corrected composer detection. Stale task rechecks use fm-backend.sh below.
-# shellcheck source=bin/fm-tmux-lib.sh
+# shellcheck source=bin/backend/fm-tmux-lib.sh
 . "$FM_DAEMON_DIR/fm-tmux-lib.sh"
 
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$FM_DAEMON_DIR/fm-backend.sh"
 
 # Canonical construction and parsing for every Firstmate operational input.
-# shellcheck source=bin/fm-operational-input.sh
+# shellcheck source=bin/backend/fm-operational-input.sh
 . "$FM_DAEMON_DIR/fm-operational-input.sh"
 
 # Shared wake classifier (last_status_line, status_is_Allfather_relevant,
 # window_to_task, and the status-span reader). The SAME library backs the
 # always-on watcher's triage, so the captain-relevant verb set and the
 # classification predicates have exactly one definition.
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 . "$FM_DAEMON_DIR/fm-classify-lib.sh"
 
 # Supervisor-pane discovery (FM_SUPERVISOR_TARGET_DEFAULT,
 # FM_SUPERVISOR_BACKEND_DEFAULT, discover_supervisor_target,
 # discover_supervisor_backend). Shared with the script-owned away launcher
-# (bin/fm-afk-launch.sh) so the captain-pane resolution has exactly one owner.
-# shellcheck source=bin/fm-supervisor-target-lib.sh
+# (bin/backend/fm-afk-launch.sh) so the captain-pane resolution has exactly one owner.
+# shellcheck source=bin/backend/fm-supervisor-target-lib.sh
 . "$FM_DAEMON_DIR/fm-supervisor-target-lib.sh"
 
 # The single owner of semantic busy state for recorded tasks
 # (fm_busy_classify).
-# shellcheck source=bin/fm-busy-lib.sh
+# shellcheck source=bin/backend/fm-busy-lib.sh
 . "$FM_DAEMON_DIR/fm-busy-lib.sh"
 
 # --- tunables ---------------------------------------------------------------
 # Supervisor backends this daemon knows how to inject into today. zellij, orca,
-# and cmux are real backends elsewhere in firstmate (bin/fm-backend.sh) but this
+# and cmux are real backends elsewhere in firstmate (bin/backend/fm-backend.sh) but this
 # daemon has no verified composer/busy primitives wired up for them yet - see
 # docs/herdr-backend.md and AGENTS.md section 4's
 # harness-verification discipline. Selecting one refuses loudly at startup
@@ -209,7 +209,7 @@ WEDGE_ALARM_LAST_EPOCH=0
 WEDGE_ALARM_NOTIFIER_PID=
 # The captain-relevant verb set and the status classifiers (last_status_line,
 # status_is_Allfather_relevant, window_to_task, and the status-span reader) now
-# live in bin/fm-classify-lib.sh, shared with the always-on watcher.
+# live in bin/backend/fm-classify-lib.sh, shared with the always-on watcher.
 # Composer-empty detection, submit acknowledgement, and the harness-scoped
 # supervisor-pane busy guard live in bin/fm-tmux-lib.sh.
 # FM_BUSY_REGEX also overrides Grok's isolated task-state fallback.
@@ -224,7 +224,7 @@ LOG_MAX_BYTES_DEFAULT=1048576
 LOG_KEEP_LINES_DEFAULT=2000
 
 # --- presence-gating --------------------------------------------------------
-# bin/fm-operational-input.sh owns the U+2063 FIRSTMATE_OP bytes and typed
+# bin/backend/fm-operational-input.sh owns the U+2063 FIRSTMATE_OP bytes and typed
 # away-supervisor construction. The away-exit predicate intentionally retains
 # its landed leading-U+2063 compatibility behavior.
 AFK_FLAG_NAME=".afk"
@@ -326,13 +326,13 @@ _collapse_newlines() {  # <text>
 }
 
 # discover_supervisor_target / discover_supervisor_backend are owned by
-# bin/fm-supervisor-target-lib.sh (sourced above). fm_super_main below calls
+# bin/backend/fm-supervisor-target-lib.sh (sourced above). fm_super_main below calls
 # them exactly as before; the away launcher reuses the identical resolution to
 # pass the captain pane in as FM_SUPERVISOR_TARGET.
 
 # --- classification helpers (PURE: no side effects, testable) ---------------
 # last_status_line, status_is_Allfather_relevant, window_to_task, and the
-# status-span reader come from bin/fm-classify-lib.sh (sourced above),
+# status-span reader come from bin/backend/fm-classify-lib.sh (sourced above),
 # the single classifier shared with bin/fm-watch.sh. The decision-string wrappers
 # and dedup state below layer the daemon's escalation-digest concerns on top.
 #
@@ -607,12 +607,12 @@ mark_escalated_seen() {  # <state> <captured-endpoint-file>
 # pane_input_pending returns 0 unless the composer is positively proven empty.
 # This includes real unsubmitted text, ambiguous structure, unreadable state,
 # blank or otherwise unidentified rows (the strict container-proof rule owned
-# by bin/fm-composer-lib.sh), and future verdicts. The detector drops
+# by bin/backend/fm-composer-lib.sh), and future verdicts. The detector drops
 # dim/faint ghost text and strips the harness's composer box borders, so an
 # aligned ghost-only or idle bordered claude composer ("│ > … │") is correctly
 # proven empty while a modal dialog or dead shell never is.
 # pane_is_busy / pane_input_pending: BACKEND-AWARE (dispatch goes through
-# bin/fm-backend.sh's generic per-backend primitives rather than a hand-rolled
+# bin/backend/fm-backend.sh's generic per-backend primitives rather than a hand-rolled
 # case statement here). <backend> defaults to tmux when omitted, so every
 # existing caller/test that passes only <target> is unaffected.
 #
@@ -667,7 +667,7 @@ task_window_harness() {  # <window> <state>
 }
 
 # stale_window_is_busy: 0 when the task is PROVABLY working through the
-# semantic busy-state contract (bin/fm-busy-lib.sh), 1 when it is not, and 2
+# semantic busy-state contract (bin/backend/fm-busy-lib.sh), 1 when it is not, and 2
 # when the endpoint could not be read at all. Only an exact busy verdict is
 # working: unknown semantic state never becomes busy and never becomes a
 # silent idle, so a stale pane whose state cannot be proven surfaces.
@@ -1222,7 +1222,7 @@ inject_msg() {  # <message> [state]
   msg=$encoded
   target="${FM_SUPERVISOR_TARGET:-$FM_SUPERVISOR_TARGET_DEFAULT}"
   # BACKEND-AWARE (previously a raw `tmux display-message` pane-exists probe):
-  # dispatches through bin/fm-backend.sh so a herdr supervisor pane is checked
+  # dispatches through bin/backend/fm-backend.sh so a herdr supervisor pane is checked
   # via the herdr adapter instead of always assuming tmux. Falls back to tmux
   # when unset (sourced/test contexts that never ran fm_super_main's startup
   # discovery), matching this function's pre-existing default assumption.
@@ -1235,7 +1235,7 @@ inject_msg() {  # <message> [state]
   fi
   #   b) Composer-guard: inject ONLY into a confirmed-empty GENUINE agent
   #      composer. The shared classifier (fm_backend_composer_state ->
-  #      fm_composer_classify_content, bin/fm-composer-lib.sh) reports 'pending'
+  #      fm_composer_classify_content, bin/backend/fm-composer-lib.sh) reports 'pending'
   #      for real unsubmitted text (a human's half-typed line, or a swallowed
   #      prior injection) and 'unknown' for a bare dead-shell prompt (the agent
   #      exited to its login shell) or an unreadable pane. Neither is a safe
@@ -1251,7 +1251,7 @@ inject_msg() {  # <message> [state]
   # retype) via the shared submit primitive. Success = the backend confirms
   # submit. An unconfirmed/unknown pane does NOT count as delivered, so the
   # buffer is preserved (strict) rather than cleared.
-  # Dispatches through fm_backend_send_text_submit (bin/fm-backend.sh): for
+  # Dispatches through fm_backend_send_text_submit (bin/backend/fm-backend.sh): for
   # backend=tmux this calls fm_backend_tmux_send_text_submit, a verbatim
   # re-export of fm_tmux_submit_core - byte-identical to calling it directly.
   retries=${FM_INJECT_CONFIRM_RETRIES:-$INJECT_CONFIRM_RETRIES_DEFAULT}
@@ -1495,7 +1495,7 @@ fm_super_main() {
 
   # Source the portable lock helpers (works on macOS where flock is absent).
   # Export FM_STATE_OVERRIDE so the lib resolves the same state dir.
-  # shellcheck source=bin/fm-wake-lib.sh
+  # shellcheck source=bin/backend/fm-wake-lib.sh
   FM_STATE_OVERRIDE="$STATE" . "$FM_DAEMON_DIR/fm-wake-lib.sh"
 
   local WATCH="$FM_DAEMON_DIR/fm-watch.sh"
@@ -1585,7 +1585,7 @@ fm_super_main() {
   local TARGET="$FM_SUPERVISOR_TARGET"
 
   # --- validate supervisor target at startup (a missing target is a typo) ---
-  # Dispatches through bin/fm-backend.sh instead of a raw `tmux display-message`
+  # Dispatches through bin/backend/fm-backend.sh instead of a raw `tmux display-message`
   # probe, so a herdr supervisor pane is checked via the herdr adapter; for
   # backend=tmux this runs the exact same `tmux display-message -p -t "$TARGET"
   # '#{pane_id}'` call as before.
@@ -1721,7 +1721,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
   fm_super_main "$@"
 else
   # Library mode: these functions were SOURCED (only tests do this - production
-  # execs the daemon, see bin/fm-afk-start.sh). Make it structurally impossible
+  # execs the daemon, see bin/backend/fm-afk-start.sh). Make it structurally impossible
   # for a sourced context to fire a real desktop notification from the wedge
   # alarm: default the FM_WEDGE_ALARM_EXEC notifier seam to "discard" unless the
   # embedder already wired one (e.g. a recorder in tests/wake-helpers.sh). It is

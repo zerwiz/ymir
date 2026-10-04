@@ -20,7 +20,7 @@ PIPER_MODEL="${PIPER_MODEL:-$MILL_HOME/voices/en_US-lessac-medium.onnx}"
 
 # The hoard emits the platform env (keys, endpoints) in memory; nothing is inlined.
 emit_platform_env() {
-  eval "$("$YMIR_ROOT/bin/hodd.sh" emit secrets/platform.env 2>/dev/null)" 2>/dev/null || true
+  eval "$("$YMIR_ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null)" 2>/dev/null || true
 }
 
 vec_of() { # <json-file> -> "[-0.03,0.01,...]" (first 120 dims), empty on error

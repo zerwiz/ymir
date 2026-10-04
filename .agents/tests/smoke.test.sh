@@ -31,14 +31,14 @@ add() { STEP+=("$1"); S+=("$2"); [ "$2" = FAIL ] && fails=$((fails + 1)); }
 say() { [ "$QUIET" = 1 ] || printf '%s\n' "$1"; }
 
 # 1. loader resolves agents
-if [ -f "$ROOT/bin/valknut-load.sh" ] && bash "$ROOT/bin/valknut-load.sh" --status >/dev/null 2>&1; then
+if [ -f "$ROOT/bin/seat/valknut-load.sh" ] && bash "$ROOT/bin/seat/valknut-load.sh" --status >/dev/null 2>&1; then
   add "loaders" OK
 else
   add "loaders" FAIL
 fi
 
 # 2. Sága digest runs (starts Nornir + lock)
-if out=$(bash "$ROOT/bin/saga-session-start.sh" 2>&1); then
+if out=$(bash "$ROOT/bin/time/saga-session-start.sh" 2>&1); then
   add "saga digest" OK
 else
   add "saga digest" FAIL
@@ -57,7 +57,7 @@ else
 fi
 
 # 4. Nornir cron running
-if bash "$ROOT/bin/nornir-cron-start.sh" --status 2>/dev/null | grep -q 'running'; then
+if bash "$ROOT/bin/time/nornir-cron-start.sh" --status 2>/dev/null | grep -q 'running'; then
   add "nornir cron" OK
 else
   add "nornir cron" FAIL

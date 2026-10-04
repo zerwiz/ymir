@@ -5,7 +5,7 @@ Add `references/common/dispatch.md` for configured profile precedence.
 
 ## Axes and precedence
 
-`../../../bin/einherjar-spawn.sh` accepts concrete `--harness`, `--model`, and `--effort` values selected at intake; scripts never parse natural-language dispatch rules.
+`../../../bin/agents/einherjar-spawn.sh` accepts concrete `--harness`, `--model`, and `--effort` values selected at intake; scripts never parse natural-language dispatch rules.
 The tool reference records verified flags, accepted values, omission behavior, and discovery.
 
 Effort precedence is a per-task Allfather instruction, then applicable dispatch profile or Eindri-home pin, then the fallback below.

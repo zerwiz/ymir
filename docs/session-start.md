@@ -27,13 +27,13 @@ discretion, which is why it is preferred wherever the harness supports it.
 pi_flow[6]{id,step,owner}:
   1,"Pi fires session_start with a reason (startup|new|resume|fork)","Pi"
   2,"the extension maps the reason to a Sága source and starts one digest generation","syn-turnend-guard.ts"
-  3,"the digest runs under a bounded child supervisor","vordr-sessionstart-supervisor.mjs -> bin/saga-sessionstart-run.sh"
+  3,"the digest runs under a bounded child supervisor","vordr-sessionstart-supervisor.mjs -> bin/time/saga-sessionstart-run.sh"
   4,"before_agent_start awaits the generation and returns one persistent message","syn-turnend-guard.ts"
   5,"the message is Rödd-encoded (customType brokk-sessionstart-nudge) and delivered","Rödd"
   6,"compaction re-emits; shutdown retires the generation","syn-turnend-guard.ts"
 ```
 
-Source routing (owned by `bin/saga-sessionstart-run.sh`):
+Source routing (owned by `bin/time/saga-sessionstart-run.sh`):
 
 ```
 sources[4]{source,action}:
@@ -45,7 +45,7 @@ sources[4]{source,action}:
 
 ## The digest (Sága)
 
-`bin/saga-session-start.sh` prints one ordered digest. It starts the runtime
+`bin/time/saga-session-start.sh` prints one ordered digest. It starts the runtime
 pieces the session owns:
 
 ```
@@ -75,7 +75,7 @@ verify[4]{check,how}:
   "injection happened","the session JSONL has a custom_message with customType brokk-sessionstart-nudge"
   "lock bound","state/.lock holds the live harness pid"
   "digest ran","state/.session-start-complete exists for this lock"
-  "cron started","bash bin/nornir-cron-start.sh --status prints running"
+  "cron started","bash bin/time/nornir-cron-start.sh --status prints running"
 ```
 
 One-liners:
@@ -83,7 +83,7 @@ One-liners:
 ```bash
 rg -n "brokk-sessionstart-nudge|CRON START" ~/.pi/agent/sessions/--home-zerwiz-Ymir--/*.jsonl | tail
 cat state/.lock; cat state/.session-start-complete
-bash bin/nornir-cron-start.sh --status
+bash bin/time/nornir-cron-start.sh --status
 ```
 
 ## Make it visible or auto-arm (optional divergence)

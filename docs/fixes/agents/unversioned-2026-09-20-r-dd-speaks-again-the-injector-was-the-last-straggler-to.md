@@ -14,7 +14,7 @@
   from a path that did not exist; the Gná arm child died 127 before its first poll
   and no heartbeat was written for days.
 - **Fixed:** the injector now resolves through `resolveYmirRoot` like its four
-  siblings (relative + recorded, no hardcoded path — Rule 07); `bin/valknut-load.sh --pi`
+  siblings (relative + recorded, no hardcoded path — Rule 07); `bin/seat/valknut-load.sh --pi`
   re-run so `.ymir-root` → `$HOME/ymir` is recorded, `ymir-home.ts` shipped,
   and the six deployed files current. Verified: the deployed helper resolves the root;
   `bin/rodd-operational-input.sh encode session-start` emits a real frame.

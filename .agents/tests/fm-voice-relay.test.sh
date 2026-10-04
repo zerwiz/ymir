@@ -68,7 +68,7 @@ EOF
     pr=https://github.com/example/alpha/pull/7
   fm_write_meta "$HOME_FIXTURE/state/gamma-three.meta" kind=ship mode=direct-PR
   printf 'working: reading the failing test\n' > "$HOME_FIXTURE/state/alpha-one.status"
-  # The bracketed shape, which is what bin/fm-secondmate-report.sh writes and
+  # The bracketed shape, which is what bin/backend/fm-secondmate-report.sh writes and
   # what a keyed decision line looks like. Status metadata sits between the verb
   # and the colon, so a reader that only cuts at the colon reads no verb here.
   printf 'blocked [key=api-shape]: needs a credential (via-helper)\n' \
@@ -3468,8 +3468,8 @@ pass "one deny decision per item covers every list that item could appear in"
 # front of it is the ONE record-derived string a counts-scope answer says out
 # loud. At that scope there is no title and no link, so there is nothing for the
 # deny list to filter and no scope setting that makes it safe. The vocabulary is
-# therefore closed to the states bin/fm-brief.sh gives every crewmate plus the two
-# bin/fm-classify-lib.sh adds when a decision closes, and anything else is a note.
+# therefore closed to the states bin/backend/fm-brief.sh gives every crewmate plus the two
+# bin/backend/fm-classify-lib.sh adds when a decision closes, and anything else is a note.
 VERB_HOME="$TMP_ROOT/status-verbs"
 # Lowercase on purpose. The reader lowercases a verb before it could ever be
 # emitted, and assert_not_contains compares case-sensitively, so an uppercase
@@ -3644,7 +3644,7 @@ pass "the configured read scope is honoured"
 # --- handover ---------------------------------------------------------------
 #
 # The point of the boundary: real work is queued for firstmate, not done by the
-# voice agent. It reuses bin/fm-inbox.sh rather than carrying a second queue.
+# voice agent. It reuses bin/backend/fm-inbox.sh rather than carrying a second queue.
 
 before=$(find "$HOME_FIXTURE/state" -maxdepth 2 -name '*.note' | wc -l | tr -d '[:space:]')
 [ "$before" = 0 ] || fail "fixture should start with an empty inbox"
@@ -3676,7 +3676,7 @@ assert_contains "$paired" '"captain_notes_waiting": 1' \
   "the reader should count the note the handover just queued"
 pass "handover queues the request for firstmate and wakes it exactly once"
 
-# The same pairing when the state directory is moved. bin/fm-inbox.sh resolves
+# The same pairing when the state directory is moved. bin/backend/fm-inbox.sh resolves
 # ${FM_STATE_OVERRIDE:-$FM_HOME/state} and the handover queues through it with
 # the ambient environment, so a reader that ignored the override would count
 # notes in a directory nothing writes to.
@@ -4283,7 +4283,7 @@ check(never not in said and never not in json.dumps(served),
 check(said in transcript, "the captain never saw the answer: %r" % transcript)
 
 # The handover turn queues real work and says so. The note is firstmate's own
-# queue, written by bin/fm-inbox.sh, and the agent's confirmation carries the id
+# queue, written by bin/backend/fm-inbox.sh, and the agent's confirmation carries the id
 # that queue gave it, so it cannot be claiming to have queued something it did
 # not.
 handover = sessions[1]

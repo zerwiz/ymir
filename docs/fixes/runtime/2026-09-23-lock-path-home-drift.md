@@ -18,7 +18,7 @@
      readers used it verbatim, so the arm tried to `mkdir` a foreign home.
 - **Fix:**
   - `bin/gleipnir-lock-lib.sh` — `gleipnir_state_dir` now resolves the operator's
-    **hoard state** via `bin/hoard-lib.sh` for the primary (Rule 04), keeping the
+    **hoard state** via `bin/vault/hoard-lib.sh` for the primary (Rule 04), keeping the
     per-home state for an Eindri-home. Writer and readers now agree.
   - `.pi/shared/extensions/gna-pi-watch.ts` and
     `.agents/harness/opencode/plugins/syn-watch-arm.js` — both resolve the same

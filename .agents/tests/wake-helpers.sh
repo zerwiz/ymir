@@ -130,7 +130,7 @@ SH
 }
 
 # Prime <file>'s .seen-* marker to its CURRENT signature through the production
-# signature owner (bin/fm-wake-lib.sh), so a test can declare "everything in
+# signature owner (bin/backend/fm-wake-lib.sh), so a test can declare "everything in
 # this file was already surfaced or deliberately absorbed" before exercising
 # the next wake, self-announced append, or annotation decision.
 prime_status_seen() {  # <state> <file>

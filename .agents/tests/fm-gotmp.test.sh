@@ -12,7 +12,7 @@
 set -u
 
 # This suite does not source tests/lib.sh, so exempt its teardown subprocess from
-# the gate-lifecycle refusal (bin/fm-gate-refuse-lib.sh) the way lib.sh does for
+# the gate-lifecycle refusal (bin/backend/fm-gate-refuse-lib.sh) the way lib.sh does for
 # the rest of the suite: the no-mistakes gate runs this suite from a gate worktree,
 # which the guard would otherwise refuse.
 export FM_GATE_REFUSE_BYPASS=1

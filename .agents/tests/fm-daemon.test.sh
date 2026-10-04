@@ -17,7 +17,7 @@ AFK_START="$ROOT/bin/fm-afk-start.sh"
 # pane/submit helpers become defined.
 if [ -z "${FM_TEST_DAEMON_SOURCED:-}" ]; then
   export FM_TEST_DAEMON_SOURCED=1
-  # shellcheck source=bin/fm-supervise-daemon.sh
+  # shellcheck source=bin/backend/fm-supervise-daemon.sh
   . "$DAEMON"
 fi
 
@@ -1032,7 +1032,7 @@ test_housekeeping_paused_resumed_cleared() {
 # un-escalated, and migrate_watcher_pause_markers recreated it with a fresh timestamp
 # on the very next tick, so the window restarted forever and the wait never matured
 # into its one recheck. Away mode makes that terminal: the watcher hands a busy
-# declared wait to the daemon exactly once per declaration (bin/fm-watch.sh's
+# declared wait to the daemon exactly once per declaration (bin/backend/fm-watch.sh's
 # busy_turn_bound_check), so this recheck is the only thing left that can re-surface
 # the pane at all. Both declaration forms take the same 2b arm, so both are pinned.
 test_housekeeping_busy_declared_wait_matures_its_window() {
@@ -1223,7 +1223,7 @@ test_housekeeping_resumed_stale_cleared() {
   printf 'working\n' > "$state/res-w6.status"
   printf 'Working...\n' > "$pane"
   # A resumed crew proves it is working through its own semantic busy-state
-  # record (bin/fm-busy-lib.sh), not through the pane's rendered footer.
+  # record (bin/backend/fm-busy-lib.sh), not through the pane's rendered footer.
   fm_write_meta "$state/res-w6.meta" "window=$win" "worktree=$dir/wt" "kind=ship" "harness=pi"
   local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$state" res-w6)
   "$ROOT/bin/fm-busy-event.sh" apply "$state" res-w6 busy --gen "$gen" \

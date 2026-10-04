@@ -21,7 +21,7 @@ function resolveHome(): string {
   const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
-  if (!v) throw new Error("the vault path is empty — run `bin/hodd.sh path` and read what it says");
+  if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
   return v;
 }
 
@@ -111,16 +111,16 @@ function refreshWatchToolShell(
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
 // The distro root is recorded at deploy time (`.ymir-root`, written by
-// bin/valknut-load.sh) and read back here: a deployed copy cannot find its own
+// bin/seat/valknut-load.sh) and read back here: a deployed copy cannot find its own
 // bin/ by walking up from ${HOME}/.pi/agent/extensions. See lib/ymir-home.ts.
 const root = resolveYmirRoot(extensionDir);
 const fmHome = process.env.BROKK_HOME || process.env.BROKK_ROOT_OVERRIDE || root;
 const fmRoot = process.env.BROKK_ROOT_OVERRIDE || root;
 // The runtime's records live in the OPERATOR'S HOME (Rule 04), and every shell
-// tool resolves that through bin/hoard-lib.sh: $YMIR_HOME -> the recorded choice
+// tool resolves that through bin/vault/hoard-lib.sh: $YMIR_HOME -> the recorded choice
 // (~/.config/ymir/home) -> $HOME/Documents/ymirhome. The extension MUST resolve
 // the same place. It once fell back to `${fmHome}/state` — the CODE TREE — while
-// the Eindri handoff (bin/eindri-acclaim.sh) wrote $YMIR_STATE_DIR/.wake-queue in
+// the Eindri handoff (bin/agents/eindri-acclaim.sh) wrote $YMIR_STATE_DIR/.wake-queue in
 // the hoard. Two queues: the handoff filled one, this watched the other, and no
 // wake ever surfaced (2026-09-23). A seat still overrides via BROKK_STATE_OVERRIDE.
 const ymirHome = (() => {
@@ -509,7 +509,7 @@ export default function (pi: ExtensionAPI) {
     lastWatcherWake = message;
     const content = encodeRoddOperationalInput(
       "watcher",
-      `BROKK WATCHER WAKE: ${message}\n\nRun bin/saga-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.`,
+      `BROKK WATCHER WAKE: ${message}\n\nRun bin/time/saga-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.`,
     );
     await pi.sendUserMessage(content, { deliverAs: "followUp" });
   }
@@ -560,11 +560,11 @@ export default function (pi: ExtensionAPI) {
   // after a flap, sweep the handoff shelves immediately — before the arm child
   // is spawned — so recovery reconciles what the dead window missed even if the
   // arm child never becomes ready. Idempotent via the shared delivery ledger
-  // (bin/eindri-wake-lib.sh); the arm script sweeps again on its own cycle.
+  // (bin/agents/eindri-wake-lib.sh); the arm script sweeps again on its own cycle.
   function sweepHandoffCatchUp(): void {
-    if (!existsSync(`${fmRoot}/bin/eindri-handoff.sh`)) return;
+    if (!existsSync(`${fmRoot}/bin/agents/eindri-handoff.sh`)) return;
     try {
-      spawnSync("bash", [`${fmRoot}/bin/eindri-handoff.sh`, "sweep"], {
+      spawnSync("bash", [`${fmRoot}/bin/agents/eindri-handoff.sh`, "sweep"], {
         cwd: fmRoot,
         encoding: "utf8",
         env: { ...process.env, BROKK_HOME: fmHome, BROKK_ROOT_OVERRIDE: fmRoot, BROKK_STATE_OVERRIDE: state },
@@ -866,7 +866,7 @@ export default function (pi: ExtensionAPI) {
   // A NEW WINDOW MUST SEE WHAT WAITED FOR IT.
   //
   // Measured 2026-10-03: `state/.wake-queue` held a wake from 2026-10-01 that was never
-  // presented to anyone, and the reason is here — NOBODY RAN THE DOOR. `bin/saga-session-start.sh`
+  // presented to anyone, and the reason is here — NOBODY RAN THE DOOR. `bin/time/saga-session-start.sh`
   // drains the queue, seeds the digest and raises the bridge, but no extension ever EXECUTED it:
   // four of them mentioned it in a comment and none called it. So the queue was durable, the drain
   // door worked perfectly when a human ran it by hand, and the delivery half of supervision was
@@ -887,7 +887,7 @@ export default function (pi: ExtensionAPI) {
       // Deliberately swallowed, and deliberately SHOUTED: a gate that cannot start must say so,
       // because "the door failed" and "the door was never called" look identical from outside.
       console.error(
-        `gna-pi-watch: could not run bin/saga-session-start.sh — ${
+        `gna-pi-watch: could not run bin/time/saga-session-start.sh — ${
           String(e?.stderr || e?.message || e).split("\n")[0]
         }. Wakes in the queue may wait until a human runs it.`,
       );

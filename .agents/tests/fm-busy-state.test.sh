@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Behavior tests for the semantic busy-state contract (bin/fm-busy-lib.sh and
-# its only writer bin/fm-busy-event.sh).
+# Behavior tests for the semantic busy-state contract (bin/backend/fm-busy-lib.sh and
+# its only writer bin/backend/fm-busy-event.sh).
 #
 # Covers the captain-approved redesign invariants: busy/idle/unknown/dead with
 # explicit source attribution; missing, malformed, stale (gen-mismatch), and

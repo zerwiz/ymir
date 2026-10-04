@@ -9,7 +9,7 @@
 #
 # Safety (2026-07-02 incident, tests/herdr-test-safety.sh): cleanup uses ONLY
 # herdr_safe_stop_and_delete on a private fm-lab-* session, never a bare/ambient
-# `herdr server stop`. Every lifecycle op goes through bin/fm-herdr-lab.sh, which
+# `herdr server stop`. Every lifecycle op goes through bin/backend/fm-herdr-lab.sh, which
 # refuses the default session and verifies the fleet-state tripwire.
 set -u
 

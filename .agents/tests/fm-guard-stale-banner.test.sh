@@ -650,7 +650,7 @@ test_extension_live_watcher_is_healthy_without_ownership_evidence() {
 }
 
 # The cases above pin the model. This one takes the end-user path instead: no
-# FM_SUPERVISION_MODEL at all, so bin/fm-harness.sh must route a Pi primary to the
+# FM_SUPERVISION_MODEL at all, so bin/backend/fm-harness.sh must route a Pi primary to the
 # extension model on its own. Without that routing the tolerance would never reach
 # a real Pi home. The foreign markers are cleared because fm-harness.sh tests them
 # ahead of Pi, and the host running this suite may carry one.

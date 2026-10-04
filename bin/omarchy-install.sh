@@ -29,7 +29,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # must never sit in a tree that ships (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc
@@ -150,7 +150,7 @@ fi
 if [ "$CHECK" = 1 ]; then
   if have herdr || have tmux; then add backend OK "present"; else add backend WARN "no herdr and no tmux"; fi
 elif [ -x "$SCRIPT_DIR/herdr-ensure.sh" ]; then
-  if "$SCRIPT_DIR/herdr-ensure.sh" >/dev/null 2>&1 || have tmux; then add backend OK "herdr or tmux ready"; else add backend WARN "no terminal backend — bin/herdr-ensure.sh"; fi
+  if "$SCRIPT_DIR/herdr-ensure.sh" >/dev/null 2>&1 || have tmux; then add backend OK "herdr or tmux ready"; else add backend WARN "no terminal backend — bin/seat/herdr-ensure.sh"; fi
 else
   add backend SKIP "no herdr-ensure.sh"
 fi

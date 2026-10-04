@@ -19,7 +19,7 @@ cd svartalfaheim/examples/wayof
 cp .env.realm.example .env.realm     # then fill in what this company actually uses
 ```
 
-Nothing else is required: the runtime finds it by path. `bin/saga-session-start.sh`,
+Nothing else is required: the runtime finds it by path. `bin/time/saga-session-start.sh`,
 the `bin/nornir-job-*.sh` jobs, `bin/workspace-rag.sh` and the Hlidskjalf gate all
 read `svartalfaheim/<realm>/.env.realm` for the **active realm** — resolved from
 `data/realm.md`, else the first non-example tenant under `svartalfaheim/`, else

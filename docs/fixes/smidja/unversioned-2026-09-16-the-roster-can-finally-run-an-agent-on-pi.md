@@ -10,7 +10,7 @@ opencode-style ids: there was no working way to put an agent on Pi.
 
 - **`apply` is now harness-aware.** Only `opencode`-harness agents are written
   into `opencode.json`; a `pi` (or `hermes`) agent is left out, its model id going
-  to the resolve cache that `bin/agent-run.sh` reads. The providers block is
+  to the resolve cache that `bin/agents/agent-run.sh` reads. The providers block is
   unchanged — a provider's endpoint is a real fact OpenCode may still want.
 - The way this is meant to be used: declare a local agent's model as its **Pi**
   id (`llamacpp/qwen3.5-9b`, `llamacpp-coder/qwen3-coder-30b` — the ids `pi

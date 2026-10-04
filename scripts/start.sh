@@ -69,10 +69,10 @@ app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
 app_dir odrerir HALL_DIR || HALL_DIR=""
 
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
-# @zerwiz/smidja-factory package in an npm install (bin/smidja-lib.sh).
+# @zerwiz/smidja-factory package in an npm install (bin/desktop/smidja-lib.sh).
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
   _ys="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/smidja-lib.sh"; do
+  for _yc in "$_ys/smidja-lib.sh" "$(dirname "$_ys")/bin/desktop/smidja-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_SMIDJA_LIB_LOADED=1; break; }
   done
   unset _ys _yc
@@ -86,7 +86,7 @@ smidja_factory_dir SMIDJA_FACTORY
 # must never sit in a tree that ships (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc
@@ -192,15 +192,15 @@ else
 fi
 
 # Runtime services: the Nornir schedule and the Bifrost model bridge.
-if [ -x "$ROOT/bin/nornir-cron-start.sh" ]; then
-  if "$ROOT/bin/nornir-cron-start.sh" >/dev/null 2>&1; then echo "Nornir cron: started"; else echo "Nornir cron: start failed" >&2; fi
+if [ -x "$ROOT/bin/time/nornir-cron-start.sh" ]; then
+  if "$ROOT/bin/time/nornir-cron-start.sh" >/dev/null 2>&1; then echo "Nornir cron: started"; else echo "Nornir cron: start failed" >&2; fi
 fi
-if [ -x "$ROOT/bin/bifrost-bridge.sh" ]; then
-  if BROKK_ENV_FILE="$YMIR_ENV_FILE" "$ROOT/bin/bifrost-bridge.sh" --start >/dev/null 2>&1; then echo "Bifrost bridge: up"; else echo "Bifrost bridge: not up (needs OPENCODE_GO_API_KEY)" >&2; fi
+if [ -x "$ROOT/bin/bridge/bifrost-bridge.sh" ]; then
+  if BROKK_ENV_FILE="$YMIR_ENV_FILE" "$ROOT/bin/bridge/bifrost-bridge.sh" --start >/dev/null 2>&1; then echo "Bifrost bridge: up"; else echo "Bifrost bridge: not up (needs OPENCODE_GO_API_KEY)" >&2; fi
 fi
 # The well — Mimirsbrunn (engram) on :4602; the gate API and mimir.sh drink here.
-if [ -x "$ROOT/bin/mimir-bridge.sh" ]; then
-  if "$ROOT/bin/mimir-bridge.sh" --start >/dev/null 2>&1; then echo "Mimir bridge: up"; else echo "Mimir bridge: not up (needs engram)" >&2; fi
+if [ -x "$ROOT/bin/bridge/mimir-bridge.sh" ]; then
+  if "$ROOT/bin/bridge/mimir-bridge.sh" --start >/dev/null 2>&1; then echo "Mimir bridge: up"; else echo "Mimir bridge: not up (needs engram)" >&2; fi
 fi
 
 # Smíðja's eye — the Vue trace visualizer (API :8437, UI :8438). Reads the repo's
@@ -368,8 +368,8 @@ exit 1
 # its vault resolves is not raised — it is merely running. This is that proof, and it
 # FAILS (non-zero) rather than warns: on 2026-09-30 this seat looked healthy with no
 # watch loaded at all.
-if [ -x "$ROOT/bin/verify-seat.sh" ] 2>/dev/null || [ -x "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/bin/verify-seat.sh" ]; then
-  VS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/bin/verify-seat.sh"
+if [ -x "$ROOT/bin/seat/verify-seat.sh" ] 2>/dev/null || [ -x "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/bin/seat/verify-seat.sh" ]; then
+  VS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/bin/seat/verify-seat.sh"
   printf '\n'
-  "$VS" || printf 'WARN — the seat is not whole (see the rows above); run bin/verify-seat.sh\n' >&2
+  "$VS" || printf 'WARN — the seat is not whole (see the rows above); run bin/seat/verify-seat.sh\n' >&2
 fi

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Behavior tests for bin/fm-bearings-board.sh: fail-closed payload validation,
+# Behavior tests for bin/backend/fm-bearings-board.sh: fail-closed payload validation,
 # slot-injection round-trip through the built page, bind-before-arm, and
 # idempotent re-arm of the stable board source.
 set -u

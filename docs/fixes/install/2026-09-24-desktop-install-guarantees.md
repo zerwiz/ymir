@@ -34,7 +34,7 @@ was never called automatically. The install "succeeded" while nothing opened.
   absence for an installed app is a FAILURE (only an uninstalled app is skipped);
   a `graphics` surface reports the sense block and policy. Eir is reached by the
   update path (`bin/groa-update.sh`) and by a new Nornir job
-  (`bin/nornir-job-doctor.sh`, `08:15` in `config/cron.yaml.example`).
+  (`bin/time/nornir-job-doctor.sh`, `08:15` in `config/cron.yaml.example`).
 - `bin/ymir-plan.sh`'s electron row and `bin/ymir-install.sh`'s SPA check use the
   resolver too.
 
@@ -52,5 +52,5 @@ was never called automatically. The install "succeeded" while nothing opened.
 - `bin/desktop-verify.sh` (new) · `bin/app-lib.sh` · `bin/desktop-place.sh`
 - `apps/sessrumnir/resources/ymir-sessrumnir.desktop.in`
 - `bin/omarchy-sense.sh` · `bin/eir-doctor.sh` · `bin/groa-update.sh`
-- `bin/nornir-job-doctor.sh` (new) · `config/cron.yaml.example`
+- `bin/time/nornir-job-doctor.sh` (new) · `config/cron.yaml.example`
 - `bin/ymir-install.sh` · `bin/ymir-plan.sh` · `.agents/tests/desktop-classes.test.sh`

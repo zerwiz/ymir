@@ -18,7 +18,7 @@
   download: three shells each pull a ~100 MB runtime the web surfaces do not need.
 - **The home is the operator's to choose.** `step_home` asks once, records the
   answer as machine state under `~/.config/ymir/home`, and every later script
-  resolves it through `bin/hoard-lib.sh` (`$YMIR_HOME` → the r
+  resolves it through `bin/vault/hoard-lib.sh` (`$YMIR_HOME` → the r
 
 ### Files
 - *(carried from the frozen CHANGELOG.md)*

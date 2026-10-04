@@ -92,7 +92,7 @@ function resolvePath(anchor) {
 }
 
 // The operator's runtime state (Rule 04: state lives in the home, never in the
-// code tree). Mirrors the Pi extension and bin/hoard-lib.sh so both harnesses
+// code tree). Mirrors the Pi extension and bin/vault/hoard-lib.sh so both harnesses
 // read the SAME state/.lock-path the shell tools write.
 function ymirStateDir() {
   if (process.env.YMIR_STATE_DIR) return process.env.YMIR_STATE_DIR;
@@ -108,7 +108,7 @@ function ymirStateDir() {
     if (!home) {
       // No environment and no recorded choice: refuse rather than guess. A guessed home
       // is how this whole class of bug began (Rule 07).
-      throw new Error("cannot resolve the home: set YMIR_HOME, or record it (bin/hoard-lib.sh)");
+      throw new Error("cannot resolve the home: set YMIR_HOME, or record it (bin/vault/hoard-lib.sh)");
     }
   return `${home}/state`;
 }
@@ -334,7 +334,7 @@ async function deliverActionableWake(paths, client, sessionID, message, recovery
 }
 
 function wakePrompt(reason) {
-  return `WATCHER FIRED - drain queued wakes with bin/saga-wake-drain.sh and handle the reported wake. Watcher continuity is plugin-owned.\n\n${reason}`;
+  return `WATCHER FIRED - drain queued wakes with bin/time/saga-wake-drain.sh and handle the reported wake. Watcher continuity is plugin-owned.\n\n${reason}`;
 }
 
 function surfaceFailure(paths, client, sessionID, reason) {

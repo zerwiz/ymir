@@ -20,7 +20,7 @@ that named a glyph nobody had drawn.
   words are never conditional, only the colour is**. The plan renders in the
   cloth on stderr while the TOON stays pipeable; the installer opens with it and
   ends with the next steps.
-- **The packaged tree is told apart from a clone.** `bin/smidja-lib.sh` resolves
+- **The packaged tree is told apart from a clone.** `bin/desktop/smidja-lib.sh` resolves
   the smithy — `apps/smidja-factory` in a clone, `node_modul
 
 ### Files

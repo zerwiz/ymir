@@ -1,7 +1,7 @@
 name: The gates
 
 # One room, two doors. Forgejo Actions and GitHub Actions are two hosts for the SAME
-# command, bin/ci-verify.sh, so the checks have exactly one home and cannot drift between
+# command, bin/gates/ci-verify.sh, so the checks have exactly one home and cannot drift between
 # hosts. If this runner needs a different label, that is one line here and no change to
 # what is proved.
 on:
@@ -15,4 +15,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: The gates
-        run: bash bin/ci-verify.sh
+        run: bash bin/gates/ci-verify.sh

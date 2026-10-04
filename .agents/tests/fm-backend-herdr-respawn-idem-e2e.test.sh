@@ -21,7 +21,7 @@
 # instead of refusing, while a GENUINELY live duplicate (a real registered
 # agent, via herdr's own `pane report-agent`) still refuses exactly as
 # before. Adapter-level (fm_backend_herdr_container_ensure/create_task), not
-# through the full bin/fm-spawn.sh + treehouse pipeline - mirrors
+# through the full bin/backend/fm-spawn.sh + treehouse pipeline - mirrors
 # tests/fm-backend-herdr-prune-safety-e2e.test.sh's own style, and avoids any
 # question of whether treehouse itself supports re-acquiring a worktree for
 # an id that already has one checked out (a separate, out-of-scope concern).
@@ -67,7 +67,7 @@ fm_backend_source herdr || fail "fm_backend_source herdr failed"
 fm_backend_herdr_version_check || fail "version_check failed against the real installed herdr"
 
 # --- 1. spawn two real task tabs (crewmate-shaped and secondmate-shaped) ----
-# fm_backend_herdr_create_task is the ONE function both bin/fm-spawn.sh's
+# fm_backend_herdr_create_task is the ONE function both bin/backend/fm-spawn.sh's
 # ordinary crewmate/scout path and its --secondmate path call, so exercising
 # it directly here covers both paths identically - already proven distinct
 # only in FM_HOME-shadowing (tests/fm-backend-herdr-workspace-per-home-e2e.test.sh),

@@ -7,7 +7,7 @@ the engine may own the seat.
 
 Phase 1 is honest about its own reach: the engine can own a **herdr** seat. It
 canNOT yet launch the Utgard sandbox — that road still belongs to
-`bin/einherjar-spawn.sh` until the container module's own phase. So a declared
+`bin/agents/einherjar-spawn.sh` until the container module's own phase. So a declared
 or forced utgard produces an `EngineRefusal`, never a silent downgrade, and the
 adapter keeps the old road. A declared utgard with no engine or no image is the
 same loud refusal the shell door makes.
@@ -148,7 +148,7 @@ def plan(
             supported=False,
             refusal=(
                 "the engine does not launch the Utgard sandbox yet — Phase 1 seats herdr (the "
-                "ordinary road) only; the sandbox road still belongs to bin/einherjar-spawn.sh"
+                "ordinary road) only; the sandbox road still belongs to bin/agents/einherjar-spawn.sh"
             ),
         )
 

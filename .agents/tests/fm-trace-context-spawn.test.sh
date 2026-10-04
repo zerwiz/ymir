@@ -161,7 +161,7 @@ meta_traceparent() { sed -n 's/^traceparent=//p' "$1"; }
 injected_traceparent() { sed -n 's/^export TRACEPARENT=//p' "$1"; }
 
 # Two-level primary -> secondmate -> worker regression for the FM_TRACE_CONTEXT
-# effective override. Drives bin/fm-spawn.sh TWICE against real homes and a real
+# effective override. Drives bin/backend/fm-spawn.sh TWICE against real homes and a real
 # worktree: first the primary launches a secondmate (capturing the exact env the
 # primary injects into it), then that secondmate launches its OWN worker with
 # exactly that inherited env, reading the secondmate home's own inherited config.

@@ -1,6 +1,6 @@
 """The heartbeat — a dead worker must never look like a thinking one.
 
-The judgement is the same one `bin/eindri-heartbeat.sh` makes, so a seat read
+The judgement is the same one `bin/agents/eindri-heartbeat.sh` makes, so a seat read
 through the engine and a seat read through the old door give the SAME answer:
 
   · the record is `<state>/<id>.meta` (with `launched=<epoch>`) beside

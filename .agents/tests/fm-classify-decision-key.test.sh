@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/fm-classify-decision-key.test.sh - decision-key position tolerance in
-# the open-decisions fold (bin/fm-classify-lib.sh). A "[key=<slug>]" token is
+# the open-decisions fold (bin/backend/fm-classify-lib.sh). A "[key=<slug>]" token is
 # documented between the verb and the colon (needs-decision [key=x]: note), but
 # workers commonly write the colon first (needs-decision: [key=x] note); that
 # stated key must be honored, never silently folded into the shared "default"
@@ -13,7 +13,7 @@
 # functions over crafted status files and assert their folded output, never the
 # fold's own source text. Also covers status_key_closing_verb, which reports how
 # the status side currently reads one key so a consumer can tell a settled key
-# from one handed to a durable captain-held task (bin/fm-captain-hold.sh
+# from one handed to a durable captain-held task (bin/backend/fm-captain-hold.sh
 # diverged). Cross-drain cursor persistence and the incremental
 # cost bound live in tests/fm-wake-drain-open-decisions-cursor.test.sh; the
 # drain wiring lives in tests/fm-wake-drain-open-decisions.test.sh.
@@ -22,7 +22,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 . "$ROOT/bin/fm-classify-lib.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-classify-decision-key-tests)

@@ -33,11 +33,11 @@ The law is restated in four authoritative places; keep them consistent:
 |---|---|---|---|
 | Master platform root | **Ymir** | Base host OS, master daemon | `$YMIR_ROOT` |
 | Primary agent | **Brokk** | Main autonomous worker; forge-master | `AGENTS.md`, `opencode.json`, `.agents/agents/brokk.md` |
-| Sub-agent worker | **Eindri** | Isolated sandboxed worker ("the one who runs the errand") | `.agents/subagents/*.md`, `bin/einherjar-spawn.sh` |
+| Sub-agent worker | **Eindri** | Isolated sandboxed worker ("the one who runs the errand") | `.agents/subagents/*.md`, `bin/agents/einherjar-spawn.sh` |
 | Eindri specialist — code | **Sindri** (smith) | Code synthesis, refactoring, development | `.agents/subagents/developer.md` |
 | Eindri specialist — content | **Bragi** (skald) | Content, SEO, social, marketing campaigns | `.agents/subagents/marketer.md` |
 | Eindri specialist — research | **Huginn** (sage) | RAG, web search, analysis, knowledge discovery | `.agents/subagents/researcher.md` |
-| Git worktree manager | **Yggdrasil** | Branch isolation, zero-collision parallel edits | `.agents/tools/yggdrasil.ts` (planned), `.yggdrasil/<id>/`, `bin/einherjar-spawn.sh` |
+| Git worktree manager | **Yggdrasil** | Branch isolation, zero-collision parallel edits | `.agents/tools/yggdrasil.ts` (planned), `.yggdrasil/<id>/`, `bin/agents/einherjar-spawn.sh` |
 | Docker execution sandbox | **Utgard** | Ephemeral container execution barrier | `.agents/sandbox/Dockerfile.utgard`, image `utgard-runner:latest` |
 | Reverse proxy / gateway | **Bifrost** | HTTP routing, external traffic ingress | platform services |
 | OAuth / security | **Heimdall** | Authentication guardian | platform services |
@@ -48,7 +48,7 @@ The law is restated in four authoritative places; keep them consistent:
 | Global shared workspace | **Midgard** | Cross-tenant shared repos & assets | `midgard/` |
 | Inter-agent A2A bus | **Ratatoskr** | A2A 1.0 backbone: agent cards, task lifecycle, Redis queue | `.agents/bus/protocol.ts` |
 | Vector DB & memory | **Mimirsbrunn** | Long-term memory, embeddings, vector store | `.agents/memory/mimirsbrunn.db` |
-| Audit trail | **Runes** | Append-only system audit ledger | `bin/runes-append.sh`, `workspace/memory/runes_audit.md` |
+| Audit trail | **Runes** | Append-only system audit ledger | `bin/records/runes-append.sh`, `workspace/memory/runes_audit.md` |
 | Issue-to-PR pipeline | **Mjollnir** | Autonomous bug-fix and PR creation | `.agents/github/webhooks/issue_listener.ts` |
 | Process health monitor | **Valhalla** | PM2/Docker process supervisor | platform services |
 | Skill synthesis engine | **Gungnir** | Dynamic skill creation & validation | `.agents/skills/` |
@@ -67,24 +67,24 @@ These are the figures the port actually wired into `bin/` and the harness adapte
 |---|---|---|---|
 | Operator | **Allfather** | The one who sees all realms from Hlidskjalf | (address only) |
 | Primary agent | **Brokk** | The smith who keeps the forge hot | `AGENTS.md`, `opencode.json`, `.agents/agents/brokk.md` |
-| Sub-agent worker | **Eindri** | "The one who runs the errand" | `.agents/subagents/*.md`, `bin/einherjar-spawn.sh` |
-| Session-start digest | **Sága** | The seeress who sees all that happens | `bin/saga-session-start.sh`, `bin/saga-sessionstart-run.sh` |
-| Daily briefing (same seeress, dated) | **Sága** | The daily seeing | `bin/nornir-job-daily-briefing.sh` |
+| Sub-agent worker | **Eindri** | "The one who runs the errand" | `.agents/subagents/*.md`, `bin/agents/einherjar-spawn.sh` |
+| Session-start digest | **Sága** | The seeress who sees all that happens | `bin/time/saga-session-start.sh`, `bin/time/saga-sessionstart-run.sh` |
+| Daily briefing (same seeress, dated) | **Sága** | The daily seeing | `bin/time/nornir-job-daily-briefing.sh` |
 | Watch / supervision | **Sýn** | Watchful sight; guards the turn boundary | `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-watch-arm.js`, `.opencode/plugins/syn-turnend-guard.js` |
 | Watch wake messenger | **Gná** | Frigg's rider who carries word | `.pi/extensions/gna-pi-watch.ts` |
 | Digest process supervisor | **Vörðr** | The warden who holds the child | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` |
 | Operational wire | **Rödd** | The voice between Allfather, Brokk, and Eindri | `bin/rodd-operational-input.sh`, `.pi/extensions/lib/rodd-operational-input.ts`, `.opencode/plugins/lib/rodd-operational-input.js` |
 | Session lock | **Gleipnir** | The impossible chain that binds one session | `bin/gleipnir-lock-lib.sh` → `state/.lock` |
 | Harness detection | **Hamr** | The shape a being wears | `bin/hamr-harness.sh` |
-| Worker spawn | **Einherjar** | The chosen who are gathered to fight | `bin/einherjar-spawn.sh` |
-| Worker brief | **Erindi** | The errand given to a worker | `bin/erindi-brief.sh` → `data/<id>/brief.md` |
+| Worker spawn | **Einherjar** | The chosen who are gathered to fight | `bin/agents/einherjar-spawn.sh` |
+| Worker brief | **Erindi** | The errand given to a worker | `bin/agents/erindi-brief.sh` → `data/<id>/brief.md` |
 | Worker-state reconciliation | **Vör** | Awareness of what is | `bin/vor-crew-state.sh` |
-| Scheduled jobs (the fate-spinners) | **Nornir** | The fates who govern time | `bin/nornir-cron-start.sh`, `bin/nornir-job-*.sh`, `config/cron.yaml` |
-| Memory housekeeping | **Muninn** | The raven of memory (remembers and prunes) | `bin/nornir-job-memory-housekeeping.sh` |
-| External observation | **Huginn** | The raven of thought/observation | `bin/nornir-job-observer.sh` |
-| Git sync | **Yggdrasil** | The world-tree kept in order | `bin/nornir-job-git-sync.sh` |
-| Audit ledger | **Runes** | The carved record | `bin/runes-append.sh`, `workspace/memory/runes_audit.md` |
-| Session wake drain | **Sága** | The seeress who sees the queue | `bin/saga-wake-drain.sh` → `state/.wake-queue` |
+| Scheduled jobs (the fate-spinners) | **Nornir** | The fates who govern time | `bin/time/nornir-cron-start.sh`, `bin/nornir-job-*.sh`, `config/cron.yaml` |
+| Memory housekeeping | **Muninn** | The raven of memory (remembers and prunes) | `bin/time/nornir-job-memory-housekeeping.sh` |
+| External observation | **Huginn** | The raven of thought/observation | `bin/time/nornir-job-observer.sh` |
+| Git sync | **Yggdrasil** | The world-tree kept in order | `bin/time/nornir-job-git-sync.sh` |
+| Audit ledger | **Runes** | The carved record | `bin/records/runes-append.sh`, `workspace/memory/runes_audit.md` |
+| Session wake drain | **Sága** | The seeress who sees the queue | `bin/time/saga-wake-drain.sh` → `state/.wake-queue` |
 | Arm-path seatbelt | **Sýn** | Guards the arm command | `bin/syn-arm-pretool-check.sh` |
 | Directory seatbelt | **Sýn** | Guards the working directory | `bin/syn-cd-pretool-check.sh` |
 | Invariant seatbelt | **Sýn** | Guards the load-bearing invariants (lock, markers, Runes, machinery, secrets, registries) | `bin/syn-guard-pretool-check.sh` |
@@ -107,9 +107,9 @@ Some figures legitimately carry both a *platform subsystem* and a *runtime job* 
 
 | Figure | Role A (subsystem) | Role B (runtime job) |
 |---|---|---|
-| **Yggdrasil** | worktree manager (`AGENTS.md:30`) | `bin/nornir-job-git-sync.sh` (keeps the tree in order) |
-| **Sága** | session-start digest (`bin/saga-session-start.sh`) | 07:00 daily briefing (`bin/nornir-job-daily-briefing.sh`) |
-| **Huginn** | Eindri research specialist (sage) | external observer job (`bin/nornir-job-observer.sh`) — the raven of observation |
+| **Yggdrasil** | worktree manager (`AGENTS.md:30`) | `bin/time/nornir-job-git-sync.sh` (keeps the tree in order) |
+| **Sága** | session-start digest (`bin/time/saga-session-start.sh`) | 07:00 daily briefing (`bin/time/nornir-job-daily-briefing.sh`) |
+| **Huginn** | Eindri research specialist (sage) | external observer job (`bin/time/nornir-job-observer.sh`) — the raven of observation |
 | **Runes** | append-only audit ledger | the ledger head is titled `# YGGDRASIL Audit Trail` (see §5) |
 
 **Vör vs Vörðr are distinct.** **Vör** (`bin/vor-crew-state.sh`) is awareness of a worker's current state. **Vörðr** (`.pi/extensions/lib/vordr-sessionstart-supervisor.mjs`) is the warden that supervises the digest child process. Never collapse them to one spelling.
@@ -185,7 +185,7 @@ These terms must never name a Ymir subsystem, file, config key, environment vari
 All three legacy strings below were corrected in the same working session; the history is
 kept only so the migration is traceable. New tooling must still not reproduce any of them.
 
-- ~~`bin/runes-append.sh:101` seeds the ledger with `# YGGDRASIL Audit Trail`.~~ **Fixed:** now `# RUNES Audit Trail` (append-only history preserved).
+- ~~`bin/records/runes-append.sh:101` seeds the ledger with `# YGGDRASIL Audit Trail`.~~ **Fixed:** now `# RUNES Audit Trail` (append-only history preserved).
 - ~~`AGENTS.md:231-244` (`PI / FIRSTMATE INTEGRATION (W0031)`) uses imported terms.~~ **Fixed:** the section is now §PI PRIMARY BOOT using Hamr, Einherjar, Yggdrasil, and the `rodd` operational schema.
 - ~~`.pi/extensions/README.md` says the other adapters are "not yet wired".~~ **Fixed:** the README now lists OpenCode, Claude Code, Codex, and Cursor as wired (Grok unimplemented).
 
@@ -203,7 +203,7 @@ kept only so the migration is traceable. New tooling must still not reproduce an
 runtime_figures[7]{figure,role,path}:
   "Ró","calm presentation (hides chrome; /ro)","`.pi/extensions/ro.ts` + `lib/ro-*.ts`, `state/ro` (env `YMIR_RO`)"
   "Skuld","supervision branch (routine wakes; /skuld-model)","`.pi/extensions/skuld-branch-supervision.ts` + `lib/skuld-branch-*.ts`, `config/skuld-branch-*`"
-  "Valknut","repo-local loader (binds agents into each tool)","`bin/valknut-load.sh`"
+  "Valknut","repo-local loader (binds agents into each tool)","`bin/seat/valknut-load.sh`"
   "Mímir","Eindri planner (architecture, sequencing)","`.agents/agents/mimir-planner.md`"
   "Forseti","Eindri reviewer (QA, acceptance; changes nothing)","`.agents/agents/forseti-reviewer.md`"
   "Snotra","Eindri documenter (docs, changelogs)","`.agents/agents/snotra-documenter.md`"
@@ -216,7 +216,7 @@ runtime_figures[7]{figure,role,path}:
 runtime_figures[3]{figure,role,path}:
   "Gleipnir","Session lock — binds one session, one reins","bin/gleipnir-lock-lib.sh, bin/brokk-lease.sh"
   "Skuld","Branch outcome tracker — sees the future of every branch","bin/skuld-branch-outcome.sh, bin/skuld-branch-prompt.sh"
-  "Valknut","Load mechanism — assembles agent config at boot","bin/valknut-load.sh"
+  "Valknut","Load mechanism — assembles agent config at boot","bin/seat/valknut-load.sh"
 ```
 
 ### 7.2 Diagnostics and brief figures (lore §XVII)
@@ -224,7 +224,7 @@ runtime_figures[3]{figure,role,path}:
 ```
 runtime_figures[2]{figure,role,path}:
   "Vor","Diagnostics — bootstrap + crew state","bin/vor-crew-state.sh, vor-diagnostics skill"
-  "Erindi","The errand — task brief format","bin/erindi-brief.sh"
+  "Erindi","The errand — task brief format","bin/agents/erindi-brief.sh"
 ```
 
 ### 7.3 Shape-changer and consent figures (lore §XVIII)

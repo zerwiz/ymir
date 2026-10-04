@@ -12,7 +12,15 @@
 # arrives as @zerwiz/smidja-factory) and an app with no build script, naming it.
 set -uo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_root() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$d" != "/" ]; do
+    [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+}
+ROOT="$(_root)"
 want=("$@")
 # Every surface that SERVES a built bundle must be here. The Smíðja visualizer is
 # NESTED (apps/smidja-factory/apps/visualizer) and was missing from this list, so
