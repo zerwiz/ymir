@@ -2,7 +2,7 @@
 # fm-lease.sh - claim, release, inspect, and sweep per-task supervision leases.
 #
 # The lease contract itself (file format, actors, staleness, guard semantics)
-# is owned by bin/fm-lease-lib.sh; this is the command surface the two
+# is owned by bin/backend/fm-lease-lib.sh; this is the command surface the two
 # supervision actors use around the overlap set (steering, stopping, cleanup,
 # backlog status, stuck-worker recovery). "backlog" is the reserved resource
 # the branch prompt claims around its own backlog writes; main's tasks-axi path
@@ -39,9 +39,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FM_ROOT="${FM_ROOT_OVERRIDE:-${FM_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
-# shellcheck source=bin/fm-lease-lib.sh
+# shellcheck source=bin/backend/fm-lease-lib.sh
 . "$SCRIPT_DIR/fm-lease-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 
 mkdir -p "$STATE"

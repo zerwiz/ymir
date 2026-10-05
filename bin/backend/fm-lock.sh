@@ -20,7 +20,7 @@ mkdir -p "$STATE" 2>/dev/null || {
 # Harness identity (FM_HARNESS_RE, ancestry walk, holder liveness) is owned by
 # the shared session-lock lib so the Claude Stop auto-arm applies the exact
 # same identity contract.
-# shellcheck source=bin/fm-session-lock-lib.sh
+# shellcheck source=bin/backend/fm-session-lock-lib.sh
 . "$SCRIPT_DIR/fm-session-lock-lib.sh"
 
 if [ "${1:-}" = "status" ]; then
@@ -42,7 +42,7 @@ rm -f "$probe" 2>/dev/null || {
   echo "error: cannot clean session-lock publication probe; operate read-only until resolved" >&2
   exit 1
 }
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 CLAIM_LOCK="$STATE/.lock.acquire"
 CLAIM_LOCK_HELD=0

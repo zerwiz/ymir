@@ -7,7 +7,7 @@
 # (recorded in state/asset-reads). Advisory routes exist (AGENTS.md, the session
 # digest); this is the enforced one.
 #
-# Contract (same as bin/syn-arm-pretool-check.sh):
+# Contract (same as bin/gates/checks/syn-arm-pretool-check.sh):
 #   syn-asset-pretool-check.sh --path <file> [--tool edit|write]
 #   syn-asset-pretool-check.sh --note <asset-path>   # record an asset as read
 #   syn-asset-pretool-check.sh --status
@@ -15,7 +15,8 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -58,7 +59,7 @@ fi
 # Map a governed path to its owning asset. Order matters — first match wins.
 asset_for() {
   case "$1" in
-    *bin/ymir-install.sh)                         printf '%s' ".agents/skills/galdr-ymirsystem/assets/installation.md" ;;
+    *bin/engine/ymir-install.sh)                         printf '%s' ".agents/skills/galdr-ymirsystem/assets/installation.md" ;;
     *apps/hlidskjalf/*)                           printf '%s' ".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md" ;;
     *bin/mimir*)                                  printf '%s' ".agents/skills/galdr-ymirsystem/assets/memory-well.md" ;;
     *bin/nornir-*|*config/cron.yaml)              printf '%s' ".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md" ;;

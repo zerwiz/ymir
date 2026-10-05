@@ -7,9 +7,9 @@
 # about whether they work — that is the verification pass, and it needs this
 # inventory to exist first.
 #
-#   bin/feature-inventory.sh            # the inventory, as TOON
-#   bin/feature-inventory.sh --counts   # just the tallies
-#   bin/feature-inventory.sh --verify-plan   # the inventory as a checklist to fill in
+#   bin/gates/feature-inventory.sh            # the inventory, as TOON
+#   bin/gates/feature-inventory.sh --counts   # just the tallies
+#   bin/gates/feature-inventory.sh --verify-plan   # the inventory as a checklist to fill in
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -27,7 +27,8 @@ fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 HOARD="${YMIR_HOARD:-${YMIR_HOME}/hodd}"
 
 case "${1-}" in

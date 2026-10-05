@@ -15,7 +15,7 @@
 # that origin and names it as <project>=<origin-url>, so seeding never requires
 # a clone of that project in this home; a bare <project> is accepted only when
 # this home already has projects/<project>, whose origin is then read instead.
-# bin/fm-project-origin-lib.sh owns which URLs are accepted, and this home's
+# bin/backend/fm-project-origin-lib.sh owns which URLs are accepted, and this home's
 # data/projects.md still owns the project's registered delivery mode, so an
 # unregistered or local-only project is refused rather than provisioned.
 # Seeding writes nothing under projects/ and needs no fleet sync first.
@@ -33,15 +33,15 @@ STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 REG="$DATA/secondmates.md"
 MAX_MANIFEST_BYTES=1048576
 
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
-# shellcheck source=bin/fm-secondmate-charter-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-charter-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-charter-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-remote-readiness-lib.sh
+# shellcheck source=bin/backend/fm-remote-readiness-lib.sh
 . "$SCRIPT_DIR/fm-remote-readiness-lib.sh"
-# shellcheck source=bin/fm-project-origin-lib.sh
+# shellcheck source=bin/backend/fm-project-origin-lib.sh
 . "$SCRIPT_DIR/fm-project-origin-lib.sh"
 
 die() { printf 'error: %s\n' "$1" >&2; exit 1; }
@@ -195,7 +195,7 @@ done
   printf 'charter_b64=%s\n' "$(encode < "$TMP/charter.remote")"
   # The SSH alias reaching this host from the parent's own config, carried
   # only so the remote-provisioned home can record durably that its parent
-  # lives on another machine (bin/fm-teardown.sh's cleanup gate). It is
+  # lives on another machine (bin/backend/fm-teardown.sh's cleanup gate). It is
   # diagnostic identity, never a route the remote host could use to reach
   # back; the parent's real filesystem path is never sent, since it names
   # nothing on the remote filesystem.

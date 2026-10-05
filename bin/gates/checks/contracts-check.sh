@@ -15,7 +15,7 @@
 # checks out without an install, and a gate that cannot run must say so, never
 # fail the push.
 #
-# Usage: bin/contracts-check.sh [--version]
+# Usage: bin/gates/checks/contracts-check.sh [--version]
 # Exit: 0 pass · 1 fail · 2 usage.
 set -u
 VERSION="1.0.0"

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # agents-config.sh — one YAML for the Allfather's agent/harness/model combination.
 #
-#   bin/agents-config.sh show                 # the current combination (TOON)
-#   bin/agents-config.sh get <agent> <key>    # key: harness | model
-#   bin/agents-config.sh default [--provider|--model|--harness]
-#   bin/agents-config.sh provider-url <provider>   # the provider's base_url
-#   bin/agents-config.sh resolve              # exact ids for local provider models
-#   bin/agents-config.sh roster               # role → figure → harness → model → tools
+#   bin/fleet/agents-config.sh show                 # the current combination (TOON)
+#   bin/fleet/agents-config.sh get <agent> <key>    # key: harness | model
+#   bin/fleet/agents-config.sh default [--provider|--model|--harness]
+#   bin/fleet/agents-config.sh provider-url <provider>   # the provider's base_url
+#   bin/fleet/agents-config.sh resolve              # exact ids for local provider models
+#   bin/fleet/agents-config.sh roster               # role → figure → harness → model → tools
 #                                             #   (roles.yaml + the hoard; the tree is untouched)
-#   bin/agents-config.sh init                 # seed config/agents.yaml from the template
-#   bin/agents-config.sh apply                # publish it into project harness config
-#   bin/agents-config.sh --version
+#   bin/fleet/agents-config.sh init                 # seed config/agents.yaml from the template
+#   bin/fleet/agents-config.sh apply                # publish it into project harness config
+#   bin/fleet/agents-config.sh --version
 #
 # Source of truth: config/agents.yaml (in the hoard, with a per-host overlay).
 # The figures carry NO model: dispatch resolves each figure's model from this
@@ -22,7 +22,8 @@ set -u
 
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -299,7 +300,7 @@ if os.path.exists(oc):
     with open(oc, "w") as fh:
         json.dump(d, fh, indent=2); fh.write("\n")
 
-# 3. Cache the resolved combination for get / bin/agent-run.sh.
+# 3. Cache the resolved combination for get / bin/agents/agent-run.sh.
 os.makedirs(os.path.dirname(resolved_path), exist_ok=True)
 json.dump({a: {"harness": harness_of(a), "model": harness_model(a)}
            for a in agents}, open(resolved_path, "w"), indent=2)

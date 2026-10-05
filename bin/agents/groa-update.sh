@@ -14,7 +14,7 @@
 #   groa-update.sh [--check] [--remote <name>] [--branch <name>]
 #   groa-update.sh --version
 #
-# The `groa-update` skill invokes her; `bin/brokk-update.sh` is a back-compat
+# The `groa-update` skill invokes her; `bin/agents/brokk-update.sh` is a back-compat
 # alias. Prints one row per target, then the action lines:
 #   reread-Brokk: yes|no
 #   galdr-reread: yes|no                 (Galdr must refresh the owning assets)
@@ -36,12 +36,13 @@ fi
 
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # The registry lives in the hoard (RULES/04-hoard.md; correction 2026-09-17).
 # Resolve through hoard-lib so the path can never drift again.
-if [ -r "$SCRIPT_DIR/hoard-lib.sh" ]; then
+if [ -r "$SCRIPT_DIR/../vault/hoard-lib.sh" ]; then
   # shellcheck source=bin/vault/hoard-lib.sh
-  . "$SCRIPT_DIR/hoard-lib.sh"; hoard_root _hoard
+  . "$SCRIPT_DIR/../vault/hoard-lib.sh"; hoard_root _hoard
 else
   _hoard="${YMIR_HOARD:-$YMIR_HOME/hodd}"
 fi
@@ -54,7 +55,7 @@ while [ $# -gt 0 ]; do
     --check) CHECK=1; shift ;;
     --remote) REMOTE=${2-}; shift 2 ;;
     --branch) BRANCH=${2-}; shift 2 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/groa-update.sh [--check|--remote|--branch]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/agents/groa-update.sh [--check|--remote|--branch]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -110,7 +111,7 @@ if [ -f "$REG" ]; then
     [ -n "$id" ] || continue
     if [ -n "$host" ]; then
       root="$(printf '%s' "$line" | sed -nE 's/.*root: ([^;)]+).*/\1/p' | tr -d ' ')"
-      add_row "  \"$id\",\"remote $host:${root:-$home}\",\"skipped\",\"remote route — run bin/groa-update.sh on $host\""
+      add_row "  \"$id\",\"remote $host:${root:-$home}\",\"skipped\",\"remote route — run bin/agents/groa-update.sh on $host\""
       continue
     fi
     [ -n "$home" ] || home="$id"
@@ -136,10 +137,10 @@ if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS#
 
 # Keep the whole fleet on the fleet preferences (writes each home's gitignored
 # state/; never touches a tracked tree).
-[ -x "$SCRIPT_DIR/fleet-apply.sh" ] && "$SCRIPT_DIR/fleet-apply.sh" >/dev/null 2>&1 || true
+[ -x "$SCRIPT_DIR/../fleet/fleet-apply.sh" ] && "$SCRIPT_DIR/../fleet/fleet-apply.sh" >/dev/null 2>&1 || true
 
 # Heal this home forward (structure migrations) after every update.
-[ -x "$SCRIPT_DIR/ymir-migrate.sh" ] && "$SCRIPT_DIR/ymir-migrate.sh" apply >/dev/null 2>&1 || true
+[ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1 || true
 
 # Eir checks after every update, so a desktop that cannot open is REPORTED and
 # never silently dead (P8, 2026-09-24). The update is never blocked on a
@@ -150,7 +151,7 @@ if [ -x "$SCRIPT_DIR/eir-doctor.sh" ]; then
     printf 'eir: check clean\n'
   else
     eir_broken="$(printf '%s' "$eir_out" | sed -n '2s/.*,\([0-9][0-9]*\)$/\1/p')"
-    printf 'eir: %s surface(s) need mending — bin/eir-doctor.sh (the row above names them)\n' "${eir_broken:-?}"
+    printf 'eir: %s surface(s) need mending — bin/agents/eir-doctor.sh (the row above names them)\n' "${eir_broken:-?}"
   fi
 fi
 
@@ -160,7 +161,7 @@ fi
 # fix sits in the repo while the RUNNING harness keeps the old code, which is how
 # a hand-copy became necessary (2026-09-23). No installation or update should
 # leave the surfaces stale: bind them here, every time.
-if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
+if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
   print_step "loaders" 2>/dev/null || printf '  loaders: '
   # An update that leaves the phone gateway broken is NOT complete, for the same reason the
   # seat is not complete: extensions that were seated but never re-proved stay broken quietly.
@@ -174,7 +175,7 @@ if [ -x "$SCRIPT_DIR/valknut-load.sh" ]; then
     fi
   fi
 
-  if "$SCRIPT_DIR/valknut-load.sh" --all --global >/dev/null 2>&1; then
+  if "$SCRIPT_DIR/../seat/valknut-load.sh" --all --global >/dev/null 2>&1; then
     printf 'rebound (agents · skills · pi extensions)\n'
   else
     # A seat that could NOT be seated is not updated. This used to WARN and carry
@@ -198,7 +199,7 @@ exit "$(( ${seat_failed:-0} || ${GATEWAY_FAILED:-0} ))"
 # What CHANGED for you, since your last update. Every change carries a note in
 # docs/fixes/; until now nothing printed them, so an updating user saw "updated" and
 # nothing else. This is the reader that closes the loop (plan 66 §7).
-if [ -x "$ROOT/bin/update-notes.sh" ]; then
+if [ -x "$ROOT/bin/gates/update-notes.sh" ]; then
   printf '\n'
-  bash "$ROOT/bin/update-notes.sh" || true
+  bash "$ROOT/bin/gates/update-notes.sh" || true
 fi

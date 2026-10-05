@@ -476,7 +476,7 @@ async function claimSessionstartMessage(
 
 function runGuard(): Promise<{ code: number; stderr: string }> {
   return new Promise((resolveResult) => {
-    const child = spawn(`${root}/bin/syn-turnend-guard.sh`, {
+    const child = spawn(`${root}/bin/gates/guards/syn-turnend-guard.sh`, {
       stdio: ["pipe", "ignore", "pipe"],
     });
     let stderr = "";
@@ -489,8 +489,8 @@ function runGuard(): Promise<{ code: number; stderr: string }> {
   });
 }
 
-// PreToolUse seatbelts (bin/syn-arm-pretool-check.sh, docs/arm-pretool-check.md;
-// bin/syn-cd-pretool-check.sh, docs/cd-guard.md). Both piggyback on this same
+// PreToolUse seatbelts (bin/gates/checks/syn-arm-pretool-check.sh, docs/arm-pretool-check.md;
+// bin/gates/checks/syn-cd-pretool-check.sh, docs/cd-guard.md). Both piggyback on this same
 // extension file rather than separate ones so no extra Pi -e flag is needed at
 // launch - the primary already loads this file for the turn-end guard, and
 // pi.on("tool_call", ...) can block (verified 2026-07-09 against pi 0.80.5:
@@ -518,12 +518,12 @@ function runCdCheck(command: string): Promise<{ code: number; stderr: string }> 
   return runChecker("syn-cd-pretool-check.sh", command);
 }
 
-// Asset seatbelt (bin/syn-asset-pretool-check.sh): a governed path may not be
+// Asset seatbelt (bin/gates/checks/syn-asset-pretool-check.sh): a governed path may not be
 // edited until its owning asset has been read this session. The read itself is
 // recorded through the same script, so the gate is self-contained.
 function runAssetCheck(path: string): Promise<{ code: number; stderr: string }> {
   return new Promise((resolveResult) => {
-    const child = spawn(`${root}/bin/syn-asset-pretool-check.sh`, ["--path", path], {
+    const child = spawn(`${root}/bin/gates/checks/syn-asset-pretool-check.sh`, ["--path", path], {
       stdio: ["ignore", "ignore", "pipe"],
     });
     let stderr = "";
@@ -537,7 +537,7 @@ function runAssetCheck(path: string): Promise<{ code: number; stderr: string }> 
 
 function noteAssetRead(path: string): void {
   try {
-    const child = spawn(`${root}/bin/syn-asset-pretool-check.sh`, ["--note", path], {
+    const child = spawn(`${root}/bin/gates/checks/syn-asset-pretool-check.sh`, ["--note", path], {
       stdio: ["ignore", "ignore", "ignore"],
     });
     child.on("error", () => undefined);

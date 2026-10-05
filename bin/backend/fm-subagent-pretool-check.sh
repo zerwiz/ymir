@@ -3,9 +3,9 @@
 #
 # A firstmate primary that delegates through a harness's own delegation,
 # scheduling, or background-work tool creates work with no `state/<id>.meta` and
-# no `data/<id>/brief.md`. Only `bin/fm-spawn.sh` writes that metadata, and
+# no `data/<id>/brief.md`. Only `bin/backend/fm-spawn.sh` writes that metadata, and
 # untracked project work contributes nothing to the in-flight branch of
-# bin/fm-supervision-lib.sh or bin/fm-turnend-guard.sh. So such work is not
+# bin/backend/fm-supervision-lib.sh or bin/backend/fm-turnend-guard.sh. So such work is not
 # merely unsupervised: absent an independent X-mode need, it makes the whole
 # guard stack structurally inert, and it dies with the primary session instead
 # of living in its own backend session.
@@ -31,13 +31,13 @@
 # See docs/subagent-guard.md for the complete contract and validation record.
 #
 # Usage:
-#   <PreToolUse JSON on stdin> | bin/fm-subagent-pretool-check.sh
-#   bin/fm-subagent-pretool-check.sh --tool '<tool-name>'
+#   <PreToolUse JSON on stdin> | bin/backend/fm-subagent-pretool-check.sh
+#   bin/backend/fm-subagent-pretool-check.sh --tool '<tool-name>'
 #
 # Stdin mode extracts .tool_name for Claude and Codex, or .toolName for Grok.
 # CLI mode is for adapters that already hold the tool name (OpenCode, Pi).
 #
-# Exit/output contract (identical shape to bin/fm-cd-pretool-check.sh):
+# Exit/output contract (identical shape to bin/backend/fm-cd-pretool-check.sh):
 #   ALLOW - exit 0 and no output.
 #   DENY - exit 2, a Claude-shaped deny object on stderr, and a Grok-shaped
 #          deny object on stdout unless --claude was supplied.
@@ -70,7 +70,7 @@ OBSERVE_ONLY_TOOLS='taskoutput taskstop taskget tasklist cronlist bashoutput kil
 # executor: it spawns no agent, allocates no worktree, registers no schedule,
 # and starts nothing that could outlive the session or escape a firstmate
 # guard. Denying them stops the primary tracking its own plan while granting no
-# delegation power, and the deny text would tell it to run bin/fm-brief.sh for a
+# delegation power, and the deny text would tell it to run bin/backend/fm-brief.sh for a
 # todo entry, so the stem match here is a false positive rather than a policy.
 # This is a separate list from OBSERVE_ONLY_TOOLS on purpose: these tools WRITE,
 # so folding them into a list documented as observe-or-stop would make that
@@ -178,11 +178,11 @@ STATE=${FM_STATE_OVERRIDE:-$FM_HOME/state}
 # Scope to a genuine primary home, exactly as the session-start nudge and the
 # turn-end guard do. fm_primary_scope_matches accepts a plain checkout or a
 # marked secondmate home - both operate a fleet and must dispatch through it -
-# and rejects a linked task worktree, which is the shape bin/fm-spawn.sh always
+# and rejects a linked task worktree, which is the shape bin/backend/fm-spawn.sh always
 # hands a crewmate. A crewmate using delegation tools inside its own task
 # worktree is legitimate and stays allowed. Any failure to confirm the home is
 # inert (exit 0), never a block, so a broken environment never denies a call.
-# shellcheck source=bin/fm-primary-scope-lib.sh
+# shellcheck source=bin/backend/fm-primary-scope-lib.sh
 . "$SCRIPT_DIR/fm-primary-scope-lib.sh"
 fm_primary_scope_matches "$FM_ROOT" "$STATE" || exit 0
 
@@ -190,9 +190,9 @@ fm_primary_scope_matches "$FM_ROOT" "$STATE" || exit 0
 # to the two-step brief-then-spawn path when it does not, rather than naming a
 # script that is not there.
 if [ -f "$FM_ROOT/bin/fm-scout.sh" ]; then
-  ROUTE='first classify the work under the AGENTS.md intake contract: work already classified as a scout goes to bin/fm-scout.sh "<question>" [project], while authorized ship work and its bounded research go to bin/fm-brief.sh then bin/fm-spawn.sh'
+  ROUTE='first classify the work under the AGENTS.md intake contract: work already classified as a scout goes to bin/fm-scout.sh "<question>" [project], while authorized ship work and its bounded research go to bin/backend/fm-brief.sh then bin/backend/fm-spawn.sh'
 else
-  ROUTE='first classify the work under the AGENTS.md intake contract, then use bin/fm-brief.sh followed by bin/fm-spawn.sh for dispatched work'
+  ROUTE='first classify the work under the AGENTS.md intake contract, then use bin/backend/fm-brief.sh followed by bin/backend/fm-spawn.sh for dispatched work'
 fi
 
 REASON="[subagent-dispatch] the firstmate primary dispatches through the fleet, not the harness's own delegation tools: work started that way has no durable fleet record, leaves every firstmate guard inert, and dies with this session. Instead, $ROUTE (blocked tool: $TOOL, delegation-shaped on \"$MATCHED\"). Launch the session with FM_ALLOW_SUBAGENT=1 for a deliberate exception."

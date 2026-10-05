@@ -27,7 +27,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 VENV="${YMIR_ENGINE_VENV:-$HOME/.fleet/ymir-engine-venv}"
 
 case "${1-}" in
@@ -43,7 +44,7 @@ esac
 PY="${YMIR_ENGINE_PYTHON:-}"
 if [ -z "$PY" ] && [ -x "$VENV/bin/python" ]; then PY="$VENV/bin/python"; fi
 if [ -z "$PY" ]; then PY="$(command -v python3 2>/dev/null || true)"; fi
-[ -n "$PY" ] || { printf 'error: no python3 — the engine cannot run\nhelp: bin/prereq-ensure.sh\n' >&2; exit 1; }
+[ -n "$PY" ] || { printf 'error: no python3 — the engine cannot run\nhelp: bin/engine/prereq-ensure.sh\n' >&2; exit 1; }
 
 if [ "${1-}" = "ensure" ] && [ -x "$SCRIPT_DIR/ymir-engine-ensure.sh" ]; then
   "$SCRIPT_DIR/ymir-engine-ensure.sh" ensure || exit 1

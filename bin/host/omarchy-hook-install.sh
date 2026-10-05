@@ -9,13 +9,14 @@
 # skill: never /usr/share/omarchy/).
 #
 # Usage:
-#   bin/omarchy-hook-install.sh install|status|remove
-#   bin/omarchy-hook-install.sh --version
+#   bin/host/omarchy-hook-install.sh install|status|remove
+#   bin/host/omarchy-hook-install.sh --version
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 HOOK_DIR="$HOME/.config/omarchy/hooks/post-update.d"
 HOOK="$HOOK_DIR/ymir-omarchy-sense.sh"
 
@@ -45,9 +46,9 @@ case "$ACTION" in
     mkdir -p "$HOOK_DIR"
     cat >"$HOOK" <<EOF
 #!/usr/bin/env bash
-# Installed by Ymir (bin/omarchy-hook-install.sh). Re-learns the machine after
+# Installed by Ymir (bin/host/omarchy-hook-install.sh). Re-learns the machine after
 # an Omarchy update so the agent stays current with this user's setup.
-exec "$ROOT/bin/omarchy-sense.sh" observe --quiet
+exec "$ROOT/bin/host/omarchy-sense.sh" observe --quiet
 EOF
     chmod +x "$HOOK"
     printf 'omarchy-hook[1]{hook,state}:\n  "%s","installed"\n' "$HOOK"
@@ -56,5 +57,5 @@ EOF
     rm -f "$HOOK"
     printf 'omarchy-hook[1]{hook,state}:\n  "%s","removed"\n' "$HOOK"
     ;;
-  *) printf 'error: unknown action %s\nhelp: bin/omarchy-hook-install.sh [install|status|remove]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/host/omarchy-hook-install.sh [install|status|remove]\n' "$ACTION" >&2; exit 2 ;;
 esac

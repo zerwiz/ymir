@@ -7,19 +7,20 @@
 # usable; a WARN means a documented-optional part is off.
 #
 # Usage:
-#   bin/ymir-validate.sh [--json] [--quiet]
-#   bin/ymir-validate.sh --version
+#   bin/engine/ymir-validate.sh [--json] [--quiet]
+#   bin/engine/ymir-validate.sh --version
 #
 # Exit: 0 all required checks pass, 1 a required check failed, 2 usage.
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # The cloth: colour and marks for the human reading this report; the TOON rows on
-# stdout stay the data (bin/ymir-style.sh).
+# stdout stay the data (bin/desktop/ymir-style.sh).
 if [ -z "${YMIR_STYLE_LOADED:-}" ]; then
-  . "$SCRIPT_DIR/ymir-style.sh"; YMIR_STYLE_LOADED=1
+  . "$SCRIPT_DIR/../desktop/ymir-style.sh"; YMIR_STYLE_LOADED=1
 fi
 style_init
 # Where the smithy's parts live: apps/smidja-factory in a clone, or the
@@ -34,11 +35,11 @@ fi
 smidja_visualizer_dir SMIDJA_VIZ
 smidja_factory_dir SMIDJA_FACTORY
 
-# shellcheck source=bin/ymir-platform.sh
-. "$SCRIPT_DIR/ymir-platform.sh"
+# shellcheck source=bin/fleet/ymir-platform.sh
+. "$SCRIPT_DIR/../fleet/ymir-platform.sh"
 # The one reader for the master registry's row keys (`realm:`, deprecated `workspace:`).
-# shellcheck source=bin/registry-lib.sh
-if [ -r "$SCRIPT_DIR/registry-lib.sh" ]; then . "$SCRIPT_DIR/registry-lib.sh"; fi
+# shellcheck source=bin/skuld/registry-lib.sh
+if [ -r "$SCRIPT_DIR/../skuld/registry-lib.sh" ]; then . "$SCRIPT_DIR/../skuld/registry-lib.sh"; fi
 # Docker or rootless Podman (Fedora), whichever is present.
 CONTAINER_ENGINE="$(ymir_container_engine_name 2>/dev/null || true)"
 JSON=0; QUIET=0
@@ -51,7 +52,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --json) JSON=1; shift ;;
     --quiet) QUIET=1; shift ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/ymir-validate.sh [--json|--quiet]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/engine/ymir-validate.sh [--json|--quiet]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -79,7 +80,7 @@ elif "$CONTAINER_ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1; the
 elif ! "$CONTAINER_ENGINE" info >/dev/null 2>&1; then
   add sandbox WARN "$CONTAINER_ENGINE not reachable (rootless podman: check login session; docker: check group)"
 else
-  add sandbox FAIL "utgard-runner:latest missing — run bin/utgard.sh build"
+  add sandbox FAIL "utgard-runner:latest missing — run bin/forge/utgard.sh build"
 fi
 
 # ── 3. the gate API (:3889) — the control plane's data face ─────────────────
@@ -193,12 +194,12 @@ fi
 
 # ── 11. the master registry speaks the current key ─────────────────────────
 # Plan 62 renamed a project row's `workspace:` to `realm:`. A row on the old key
-# still resolves (bin/registry-lib.sh), so this is a WARN, never a FAIL — but it is
+# still resolves (bin/skuld/registry-lib.sh), so this is a WARN, never a FAIL — but it is
 # named, because a silent rename is how a registry stops meaning what it says.
 REG_FILE=""
 if command -v registry_projects_file >/dev/null 2>&1; then REG_FILE="$(registry_projects_file 2>/dev/null || true)"; fi
 if [ -z "$REG_FILE" ] || [ ! -r "$REG_FILE" ]; then
-  add registry WARN "no master project registry readable — run bin/ymir-install.sh"
+  add registry WARN "no master project registry readable — run bin/engine/ymir-install.sh"
 else
   legacy=""
   command -v registry_deprecated_rows >/dev/null 2>&1 && legacy="$(registry_deprecated_rows "$REG_FILE" 2>/dev/null || true)"

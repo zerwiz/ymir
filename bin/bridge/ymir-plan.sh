@@ -17,19 +17,19 @@
 #   INFO      a fact about this host, discovered — no change implied
 #
 # Usage:
-#   bin/ymir-plan.sh                 # the plan (TOON)
-#   bin/ymir-plan.sh --json          # the same, as JSON, for automation
-#   bin/ymir-plan.sh --phase 5       # one phase
-#   bin/ymir-plan.sh --blocked       # only what cannot proceed, and why
+#   bin/bridge/ymir-plan.sh                 # the plan (TOON)
+#   bin/bridge/ymir-plan.sh --json          # the same, as JSON, for automation
+#   bin/bridge/ymir-plan.sh --phase 5       # one phase
+#   bin/bridge/ymir-plan.sh --blocked       # only what cannot proceed, and why
 #
 # Exit: 0 the plan was printed (a BLOCKED row is a fact, not a failure), 1 error,
 # 2 usage.
 set -u
 
-# --- portability shim: bin/ymir-platform.sh --------------------------------
+# --- portability shim: bin/fleet/ymir-platform.sh --------------------------------
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
   _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+  for _ymir_c in "${_ymir_dir}/../fleet/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/fleet/ymir-platform.sh"; do
     [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
   done
   unset _ymir_dir _ymir_c
@@ -37,12 +37,13 @@ fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # Whether the home was named explicitly matters: a home that was chosen is not
 # the same as one we defaulted to, and the plan says which.
 YMIR_HOME_WAS_SET=0; [ -n "${YMIR_HOME:-}" ] && YMIR_HOME_WAS_SET=1
 # shellcheck source=bin/vault/hoard-lib.sh
-. "$SCRIPT_DIR/hoard-lib.sh"
+. "$SCRIPT_DIR/../vault/hoard-lib.sh"
 ymir_home_root YMIR_HOME
 hoard_root HOARD
 
@@ -59,7 +60,7 @@ while [ $# -gt 0 ]; do
     --blocked) ONLY_BLOCKED=1; shift ;;
     --role) export YMIR_ROLE="${2-}"; shift 2 ;;
     --role=*) export YMIR_ROLE="${1#--role=}"; shift ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/ymir-plan.sh [--json|--colour] [--phase N] [--blocked] [--role heart|forge|dev|hand]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/bridge/ymir-plan.sh [--json|--colour] [--phase N] [--blocked] [--role heart|forge|dev|hand]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -132,8 +133,8 @@ resolve_phase() {
   # role and where it came from — the preview can no longer read as one shape
   # everywhere on every host.
   local rline="" rroles="" rsrc=""
-  if [ -x "$ROOT/bin/role.sh" ]; then
-    rline="$(bash "$ROOT/bin/role.sh" resolve --why 2>/dev/null | head -1)"
+  if [ -x "$ROOT/bin/skuld/role.sh" ]; then
+    rline="$(bash "$ROOT/bin/skuld/role.sh" resolve --why 2>/dev/null | head -1)"
     rroles="${rline%%$'\t'*}"; rsrc="${rline##*$'\t'}"
   fi
   if [ -n "$rroles" ]; then
@@ -146,7 +147,7 @@ resolve_phase() {
 # ── phase 1 · code — the tree itself, and its purity ────────────────────────
 code_phase() {
   local n=0
-  [ -x "$ROOT/bin/ymir-install.sh" ] && n=$(find "$ROOT/bin" -maxdepth 1 -name '*.sh' 2>/dev/null | wc -l)
+  [ -x "$ROOT/bin/engine/ymir-install.sh" ] && n=$(find "$ROOT/bin" -maxdepth 1 -name '*.sh' 2>/dev/null | wc -l)
   if [ "$n" -gt 0 ] && [ -d "$ROOT/.agents/skills" ] && [ -d "$ROOT/RULES" ]; then
     emit 1 code integrity SKIP "tree intact — $n scripts, .agents/skills, RULES/"
   else
@@ -239,16 +240,16 @@ engines_phase() {
   else emit 4 engines sandcastle DO "install sandcastle (Utgard) if available"; fi
 
   # The local model (plan 57): adopt the engine, fit a model to THIS hardware.
-  if [ -x "$ROOT/bin/llama-ensure.sh" ]; then
-    if "$ROOT/bin/llama-ensure.sh" status >/dev/null 2>&1; then
+  if [ -x "$ROOT/bin/model/llama-ensure.sh" ]; then
+    if "$ROOT/bin/model/llama-ensure.sh" status >/dev/null 2>&1; then
       emit 4 engines local-model SKIP "a CUDA llama-server stands (adopted, not rebuilt)"
-    elif "$ROOT/bin/llama-ensure.sh" status 2>&1 | grep -q 'CPU-ONLY'; then
+    elif "$ROOT/bin/model/llama-ensure.sh" status 2>&1 | grep -q 'CPU-ONLY'; then
       emit 4 engines local-model DO "a CPU-only llama-server stands — install a CUDA build (a CPU bench is ~10x slow)"
     else
       emit 4 engines local-model DO "no llama-server — build llama.cpp with CUDA (GGML_CUDA=ON)"
     fi
   else
-    emit 4 engines local-model BLOCKED "bin/llama-ensure.sh is absent"
+    emit 4 engines local-model BLOCKED "bin/model/llama-ensure.sh is absent"
   fi
 
   if have docker || have podman; then
@@ -294,7 +295,7 @@ apps_phase() {
   # and a skipped Electron postinstall leaves a partial runtime that still builds
   # the web app and still reports success (bin/desktop/electron-lib.sh).
   if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ]; then
-    for c in "$SCRIPT_DIR/electron-lib.sh"; do [ -r "$c" ] && { . "$c"; YMIR_ELECTRON_LIB_LOADED=1; }; done
+    for c in "$SCRIPT_DIR/../desktop/electron-lib.sh"; do [ -r "$c" ] && { . "$c"; YMIR_ELECTRON_LIB_LOADED=1; }; done
   fi
   local shells=0 partial="" missing=0 d
   for d in hlidskjalf odrerir sessrumnir; do
@@ -320,8 +321,8 @@ apps_phase() {
 # ── phase 6 · wire — the way in, and the agent set ──────────────────────────
 wire_phase() {
   local door="none"
-  if [ -x "$ROOT/bin/ymir-setup-auth.sh" ]; then
-    door="$(bash "$ROOT/bin/ymir-setup-auth.sh" status 2>/dev/null | sed -n '2p' | cut -d, -f1 | tr -d ' "')"
+  if [ -x "$ROOT/bin/engine/ymir-setup-auth.sh" ]; then
+    door="$(bash "$ROOT/bin/engine/ymir-setup-auth.sh" status 2>/dev/null | sed -n '2p' | cut -d, -f1 | tr -d ' "')"
   fi
   if [ -n "$door" ] && [ "$door" != none ]; then
     emit 6 wire auth SKIP "an operator credential is set ($door)"
@@ -330,7 +331,7 @@ wire_phase() {
   fi
 
   local codes=""
-  [ -x "$ROOT/bin/ymir-invite.sh" ] && codes="$(bash "$ROOT/bin/ymir-invite.sh" list 2>/dev/null | grep -c '^  "' || true)"
+  [ -x "$ROOT/bin/engine/ymir-invite.sh" ] && codes="$(bash "$ROOT/bin/engine/ymir-invite.sh" list 2>/dev/null | grep -c '^  "' || true)"
   if [ "${codes:-0}" -gt 0 ]; then emit 6 wire invite SKIP "a live invite code exists"
   else emit 6 wire invite CONSENT "mint an invite code — how anyone else is let in (registration stays closed without one)"; fi
 
@@ -338,7 +339,7 @@ wire_phase() {
   # plan row is computed, never recited: a warded seat is a SKIP, a bare one a
   # DO. Never a BLOCKED — a seat can stand without it, it just has no second
   # door.
-  if [ -x "$ROOT/bin/heimdall-ensure.sh" ] && "$ROOT/bin/heimdall-ensure.sh" status >/dev/null 2>&1; then
+  if [ -x "$ROOT/bin/host/heimdall-ensure.sh" ] && "$ROOT/bin/host/heimdall-ensure.sh" status >/dev/null 2>&1; then
     emit 6 wire heimdall SKIP "Heimdall guards this seat (GitHub keys, 15-min refresh)"
   else
     emit 6 wire heimdall DO "arm Heimdall — the ward admits GitHub keys into this seat's authorized_keys (one published key, all doors)"
@@ -365,10 +366,10 @@ raise_phase() {
 
 # ── phase 8 · verify — what stands, honestly ────────────────────────────────
 verify_phase() {
-  if [ -x "$SCRIPT_DIR/ymir-validate.sh" ]; then
+  if [ -x "$SCRIPT_DIR/../engine/ymir-validate.sh" ]; then
     emit 8 verify validate DO "observe the result: ports, stores, processes, the sandbox image"
   else
-    emit 8 verify validate BLOCKED "bin/ymir-validate.sh is absent — the install could not be proven"
+    emit 8 verify validate BLOCKED "bin/engine/ymir-validate.sh is absent — the install could not be proven"
   fi
 }
 
@@ -407,7 +408,7 @@ fi
 # A human sees the same rows, rendered in the cloth, on stderr — the TOON below
 # stays the data on stdout, so a pipeline never parses a decoration.
 if [ "$COLOUR" = 1 ]; then
-  . "$SCRIPT_DIR/ymir-style.sh"
+  . "$SCRIPT_DIR/../desktop/ymir-style.sh"
   style_init
   last_phase=""
   for i in "${!P_STEP[@]}"; do

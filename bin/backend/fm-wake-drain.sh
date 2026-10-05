@@ -9,15 +9,15 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 . "$SCRIPT_DIR/fm-classify-lib.sh"
-# shellcheck source=bin/fm-line-cap-lib.sh
+# shellcheck source=bin/backend/fm-line-cap-lib.sh
 . "$SCRIPT_DIR/fm-line-cap-lib.sh"
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
-# shellcheck source=bin/fm-lease-lib.sh
+# shellcheck source=bin/backend/fm-lease-lib.sh
 . "$SCRIPT_DIR/fm-lease-lib.sh"
 
 DRAIN_TMP=
@@ -285,8 +285,8 @@ EOF
   # Answerer-closes hint, printed at exactly the moment an answer gets written:
   # the send that answers a listed decision also closes it, so closure never
   # depends on the busy worker writing a matching resolved line (contract:
-  # bin/fm-send.sh header).
-  printf "OPEN DECISIONS: close one by answering it: bin/fm-send.sh <task> --resolve-key <key> '<answer>'\n" || return 1
+  # bin/backend/fm-send.sh header).
+  printf "OPEN DECISIONS: close one by answering it: bin/backend/fm-send.sh <task> --resolve-key <key> '<answer>'\n" || return 1
 }
 
 # Print the RECORD DIVERGENCE section: every captain call whose two records
@@ -294,7 +294,7 @@ EOF
 # the task held for the captain is still open. Nothing here closes anything; the
 # section exists because posting the resolution alone reads as complete on the
 # status side, so the durable record can keep saying the captain owes an answer
-# with no warning at all. bin/fm-captain-hold.sh's `diverged` owns which pairs
+# with no warning at all. bin/backend/fm-captain-hold.sh's `diverged` owns which pairs
 # count and why; this prints what it reports.
 #
 # Bounded and silent like OPEN DECISIONS above: nothing prints when the two
@@ -306,7 +306,7 @@ print_record_divergence_section() {
   local diverged task origin key title line shown=0 omitted=0 bound
   local output='' used=0 bytes item_bytes=220 global_bytes=2000
 
-  # A non-positive bound is not a bound (bin/fm-timeout-lib.sh), so a bad
+  # A non-positive bound is not a bound (bin/backend/fm-timeout-lib.sh), so a bad
   # override falls back to the default rather than disabling the deadline.
   bound=${FM_DIVERGENCE_TIMEOUT:-20}
   case "$bound" in ''|*[!0-9]*|0) bound=20 ;; esac
@@ -346,7 +346,7 @@ EOF
   # captain ruled: a call can dissolve, or turn out to have been a question of
   # fact. Reconcile with what actually happened - never by closing on the
   # strength of this line.
-  printf 'RECORD DIVERGENCE: reconcile each one - record the captain'"'"'s own words with bin/fm-captain-hold.sh answer <task> --decision-file <path>, or re-open the status decision when that resolution was not the captain'"'"'s word.\n' || return 1
+  printf 'RECORD DIVERGENCE: reconcile each one - record the captain'"'"'s own words with bin/backend/fm-captain-hold.sh answer <task> --decision-file <path>, or re-open the status decision when that resolution was not the captain'"'"'s word.\n' || return 1
 }
 
 print_status_sections() {
@@ -462,7 +462,7 @@ if [ -n "$ACK_THROUGH" ]; then
       0) ;;
       3) RECOVERY_ACK_MOVED=true ;;
       *)
-        echo "wake drain: recovery episode could not be retired safely; re-run bin/fm-wake-drain.sh and use the new WAKE_ACK_REQUIRED command" >&2
+        echo "wake drain: recovery episode could not be retired safely; re-run bin/backend/fm-wake-drain.sh and use the new WAKE_ACK_REQUIRED command" >&2
         exit 1
         ;;
     esac
@@ -486,7 +486,7 @@ if [ -n "$ACK_THROUGH" ]; then
   fm_lock_release "$FM_WAKE_QUEUE_LOCK"
   DRAIN_LOCK_HELD=false
   if [ "$RECOVERY_ACK_MOVED" = true ]; then
-    printf 'wake drain: acknowledged wakes through %s, but a newer recovery episode is pending; re-run bin/fm-wake-drain.sh and use the new WAKE_ACK_REQUIRED command\n' \
+    printf 'wake drain: acknowledged wakes through %s, but a newer recovery episode is pending; re-run bin/backend/fm-wake-drain.sh and use the new WAKE_ACK_REQUIRED command\n' \
       "$ACK_THROUGH" >&2
   fi
   exit 0
@@ -511,7 +511,7 @@ if [ ! -s "$FM_WAKE_QUEUE" ]; then
   DRAIN_LOCK_HELD=false
   (print_status_presentation) || true
   if [ "$RECOVERY_ACK_REQUIRED" = true ]; then
-    printf 'WAKE_ACK_REQUIRED: after handling completes run bin/fm-wake-drain.sh --ack-through 0 --recovery-generation %s\n' "${RECOVERY_MARKER_TOKEN##*:}" >&2
+    printf 'WAKE_ACK_REQUIRED: after handling completes run bin/backend/fm-wake-drain.sh --ack-through 0 --recovery-generation %s\n' "${RECOVERY_MARKER_TOKEN##*:}" >&2
   fi
   assert_watcher_liveness
   exit 0
@@ -584,7 +584,7 @@ case "$RECOVERY_MARKER_TOKEN" in
 esac
 fm_lock_release "$FM_WAKE_QUEUE_LOCK"
 DRAIN_LOCK_HELD=false
-printf 'WAKE_ACK_REQUIRED: after handling completes run bin/fm-wake-drain.sh --ack-through %s --recovery-generation %s\n' \
+printf 'WAKE_ACK_REQUIRED: after handling completes run bin/backend/fm-wake-drain.sh --ack-through %s --recovery-generation %s\n' \
   "$ACK_THROUGH" "${RECOVERY_MARKER_TOKEN##*:}" >&2
 
 (print_status_presentation "$RAW_ROWS") || true

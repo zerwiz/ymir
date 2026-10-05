@@ -7,7 +7,7 @@
 # `/proc` do not exist there at all. This file is the ONE place that knows a
 # platform difference; every other script calls these functions.
 #
-# Sourced, never executed:   . "$ROOT/bin/ymir-platform.sh"
+# Sourced, never executed:   . "$ROOT/bin/fleet/ymir-platform.sh"
 # It defines functions only and has no side effects.
 #
 # Convention: every function is `ymir_*`, prints to stdout, and never exits the

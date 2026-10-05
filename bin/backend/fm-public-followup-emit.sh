@@ -10,7 +10,7 @@
 #
 # WHAT IT DOES NOT DO: it never posts anything, never reads relay credentials,
 # and never resolves a public thread. Outward delivery stays with the owning
-# home (bin/fm-public-followup.sh deliver).
+# home (bin/backend/fm-public-followup.sh deliver).
 #
 # Usage:
 #   fm-public-followup-emit.sh --home <owning-home> \
@@ -59,7 +59,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/fm-public-followup-lib.sh
+# shellcheck source=bin/backend/fm-public-followup-lib.sh
 . "$SCRIPT_DIR/fm-public-followup-lib.sh"
 
 usage() {

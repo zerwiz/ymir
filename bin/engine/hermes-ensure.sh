@@ -23,7 +23,7 @@ INSTALL_URL="${HERMES_INSTALL_URL:-https://hermes-agent.nousresearch.com/install
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 CMD="${1-}"; shift || true
 DO_INSTALL=0
-case "$CMD" in ensure) ;; status|install) ;; *) printf 'error: unknown command %s\nhelp: bin/hermes-ensure.sh [status|ensure|install]\n' "$CMD" >&2; exit 2 ;; esac
+case "$CMD" in ensure) ;; status|install) ;; *) printf 'error: unknown command %s\nhelp: bin/engine/hermes-ensure.sh [status|ensure|install]\n' "$CMD" >&2; exit 2 ;; esac
 while [ $# -gt 0 ]; do case "$1" in --install) DO_INSTALL=1; shift ;; --quiet) shift ;; *) shift ;; esac; done
 [ "$CMD" = install ] && DO_INSTALL=1
 
@@ -83,6 +83,6 @@ case "$CMD" in
       exit $?
     fi
     printf 'hermes[1]{installed,version,path,method}:\n  "false","—","—","—"\n'
-    printf 'hermes: not installed — run `bin/hermes-ensure.sh install` or curl -fsSL %s | bash\n' "$INSTALL_URL" >&2
+    printf 'hermes: not installed — run `bin/engine/hermes-ensure.sh install` or curl -fsSL %s | bash\n' "$INSTALL_URL" >&2
     exit 1 ;;
 esac

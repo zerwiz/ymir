@@ -34,8 +34,8 @@
 #   MOVE    <from>  ->  <to>   because: <reason>
 #   PROPOSE <from>  ->  <to>   because: <reason>     (a machine proposes; only a word moves)
 #   REPORT  <from>                        because: <reason>     (never moved, by law)
-# so `bin/doc-sweep.sh scan "$root" > plan.txt` hands the operator a plan, and
-# `bin/doc-sweep.sh apply --plan plan.txt` moves exactly the MOVE lines in it.
+# so `bin/gates/doc-sweep.sh scan "$root" > plan.txt` hands the operator a plan, and
+# `bin/gates/doc-sweep.sh apply --plan plan.txt` moves exactly the MOVE lines in it.
 #
 # Env:
 #   YMIR_HOME / YMIR_HOARD / YMIR_STATE_DIR  the resolver's answers (bin/vault/hoard-lib.sh)
@@ -46,7 +46,8 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # ── the ONE resolver (Rule 07: configuration is never hardcoded) ───────────────
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -378,7 +379,7 @@ cmd_scan() {
   [ -n "$ledger_note" ] && printf 'ledger_source: %s\n' "$ledger_note"
   printf 'depth: %s\n' "$depth"
   printf '# doc-sweep report — REPORT ONLY. Nothing was moved, and nothing will be until a human runs:\n'
-  printf '#   bash bin/doc-sweep.sh apply --plan <this-file>\n'
+  printf '#   bash bin/gates/doc-sweep.sh apply --plan <this-file>\n'
   printf '# PROPOSE lines are proposals: a machine never files into the plan ledger.\n'
   printf '\n'
   printf '%s\n' "${lines[@]}"

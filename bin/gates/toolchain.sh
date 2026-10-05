@@ -62,13 +62,13 @@ case "$CMD" in
 
   run)
     p=${1-}; shift || true
-    [ -n "$p" ] || { printf 'error: run needs a provider\nhelp: bin/toolchain.sh run <provider> [args...]\n' >&2; exit 2; }
+    [ -n "$p" ] || { printf 'error: run needs a provider\nhelp: bin/gates/toolchain.sh run <provider> [args...]\n' >&2; exit 2; }
     line=$(rows | awk -F'|' -v p="$p" '$1==p{print; exit}')
-    [ -n "$line" ] || { printf 'error: unknown provider %s\nhelp: bin/toolchain.sh list\n' "$p" >&2; exit 2; }
+    [ -n "$line" ] || { printf 'error: unknown provider %s\nhelp: bin/gates/toolchain.sh list\n' "$p" >&2; exit 2; }
     cli=$(printf '%s' "$line" | cut -d'|' -f2)
     command -v "$cli" >/dev/null 2>&1 || { printf 'error: %s CLI not installed\nhelp: install %s first\n' "$p" "$cli" >&2; exit 1; }
     exec "$cli" "$@"
     ;;
 
-  *) printf 'error: unknown command %s\nhelp: bin/toolchain.sh [list|status|run|--version]\n' "$CMD" >&2; exit 2 ;;
+  *) printf 'error: unknown command %s\nhelp: bin/gates/toolchain.sh [list|status|run|--version]\n' "$CMD" >&2; exit 2 ;;
 esac

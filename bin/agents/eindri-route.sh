@@ -46,7 +46,7 @@ MODE=toon; [ "${1-}" = "--json" ] && MODE=json
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -68,8 +68,8 @@ fi
 # planner falls back to the registry's forge hosts — it names a target; it never
 # invents a box and never dispatches.
 LIVE_RAILS=""
-if [ "$ROLE" = forge ] && [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
-  LIVE_RAILS="$(bash "$SCRIPT_DIR/rail-resolve.sh" status --json 2>/dev/null | python3 -c 'import json,sys
+if [ "$ROLE" = forge ] && [ -x "$SCRIPT_DIR/../model/rail-resolve.sh" ]; then
+  LIVE_RAILS="$(bash "$SCRIPT_DIR/../model/rail-resolve.sh" status --json 2>/dev/null | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)
 except Exception: d={}
 print(",".join(r.get("host","") for r in (d.get("rails") or []) if r.get("live")))' 2>/dev/null || true)"

@@ -129,7 +129,7 @@
 # Keyed captain answers from built-in adapters use one more seam of the same kind,
 # and this runner still decides nothing about them. Some sources carry the
 # captain's answer to a captain-held task. What such an answer MEANS is owned
-# once, by bin/fm-captain-hold.sh's keyed-answer intake, and reaching it must not
+# once, by bin/backend/fm-captain-hold.sh's keyed-answer intake, and reaching it must not
 # depend on an agent remembering. So after capture, a bound source
 # has its result passed to
 # `bin/fm-procevent-<adapter>.sh answers <result-file>`, and whatever that prints
@@ -151,7 +151,7 @@
 # stale: reconcile stops that surviving group and releases its generation before
 # any replacement starts, and keeps the claim for a later retry when it cannot.
 #
-# Durability boundary: see bin/fm-procevent-lib.sh. This runner proves capture
+# Durability boundary: see bin/backend/fm-procevent-lib.sh. This runner proves capture
 # before publication and bounded re-announcement until handled, and nothing
 # about the source side of the handoff.
 set -u
@@ -161,11 +161,11 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 
-# shellcheck source=bin/fm-pr-lib.sh
+# shellcheck source=bin/backend/fm-pr-lib.sh
 . "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-procevent-lib.sh
+# shellcheck source=bin/backend/fm-procevent-lib.sh
 . "$SCRIPT_DIR/fm-procevent-lib.sh"
 
 REG=$(fm_procevent_registry_dir "$STATE")
@@ -492,7 +492,7 @@ cmd_register_extension() {
   extension_lifecycle_lock_release
   printf 'registered: %s (%s from %s@%s)\n' "$id" "$adapter" "$extension_id" "$extension_version"
   printf 'owner-token: %s\n' "$registration_token"
-  printf 'retire: bin/fm-procevent.sh retire %s --if-owner %s\n' "$id" "$registration_token"
+  printf 'retire: bin/backend/fm-procevent.sh retire %s --if-owner %s\n' "$id" "$registration_token"
 }
 
 # Publish every durably captured result with no handled acknowledgement yet.

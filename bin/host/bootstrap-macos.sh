@@ -5,25 +5,26 @@
 # scripts, apt/deb package work, /proc and systemd-adjacent assumptions in the
 # Omarchy-first layer). So macOS gets its Linux host the way Windows does — a
 # VM. This raises one with **Lima** (lightest, brew-installable, no GUI) and then
-# hands the install to bin/ymir-install.sh *inside* the VM.
+# hands the install to bin/engine/ymir-install.sh *inside* the VM.
 #
 # It is a bootstrap, not a hack: the VM is the Ymir host, and the Mac is the
 # desktop in front of it.
 #
 # Usage:
-#   bin/bootstrap-macos.sh                 # raise the VM + install Ymir in it
-#   bin/bootstrap-macos.sh --check         # report readiness, change nothing
-#   bin/bootstrap-macos.sh --name ymir     # VM name (default: ymir)
-#   bin/bootstrap-macos.sh --repo <url>    # clone source (default: this checkout's origin)
-#   bin/bootstrap-macos.sh --version
+#   bin/host/bootstrap-macos.sh                 # raise the VM + install Ymir in it
+#   bin/host/bootstrap-macos.sh --check         # report readiness, change nothing
+#   bin/host/bootstrap-macos.sh --name ymir     # VM name (default: ymir)
+#   bin/host/bootstrap-macos.sh --repo <url>    # clone source (default: this checkout's origin)
+#   bin/host/bootstrap-macos.sh --version
 #
 # Gated on its host (Rule 05): off macOS it skips cleanly and points at
-# bin/host-sense.sh.
+# bin/host/host-sense.sh.
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 VM="ymir"; CHECK=0; REPO=""
 # The VM's home is resolved, never assumed (Rule 07). Inside the Lima VM the
 # operator is `ubuntu`, but that is the VM's fact, not this script's — it comes
@@ -41,7 +42,7 @@ while [ $# -gt 0 ]; do
     --repo) REPO="${2:-}"; shift 2 ;;
     --version|-v|-V) printf '%s\n' "$VERSION"; exit 0 ;;
     -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/bootstrap-macos.sh [--check] [--name VM] [--repo URL]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/host/bootstrap-macos.sh [--check] [--name VM] [--repo URL]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -50,7 +51,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # ── host gate ────────────────────────────────────────────────────────────────
 if [ "$(uname -s 2>/dev/null)" != "Darwin" ]; then
   printf 'macos-bootstrap[1]{step,status,detail}:\n'
-  printf '  "layer","SKIP","not macOS — this layer applies on a Mac; run bin/host-sense.sh for THIS machine"\n'
+  printf '  "layer","SKIP","not macOS — this layer applies on a Mac; run bin/host/host-sense.sh for THIS machine"\n'
   exit 0
 fi
 
@@ -71,14 +72,14 @@ if [ "$CHECK" = 1 ]; then
     "$([ "$LIMA" = yes ] && printf 'limactl present' || printf 'the VM engine has not been installed yet')"
   printf '  "repo","%s","%s"\n' "$([ -n "$REPO" ] && printf OK || printf MISSING)" "${REPO:-no origin remote and no --repo given}"
   printf '  "next","%s","%s"\n' "$([ "$BREW" = yes ] && [ -n "$REPO" ] && printf 'ready' || printf 'resolve the rows above')" \
-    "bin/bootstrap-macos.sh"
+    "bin/host/bootstrap-macos.sh"
   exit 0
 fi
 
 # ── 1. the VM engine ─────────────────────────────────────────────────────────
 if [ "$LIMA" = no ]; then
   if [ "$BREW" = no ]; then
-    printf 'error: Homebrew is required to install Lima\nhelp: https://brew.sh, then re-run bin/bootstrap-macos.sh\n' >&2
+    printf 'error: Homebrew is required to install Lima\nhelp: https://brew.sh, then re-run bin/host/bootstrap-macos.sh\n' >&2
     exit 1
   fi
   echo "installing Lima (the Linux VM engine)…" >&2
@@ -102,13 +103,13 @@ if [ -n "$REPO" ]; then
     command -v git >/dev/null 2>&1 || sudo apt-get update -qq && sudo apt-get install -y -qq git
     [ -d \"\$HOME/Ymir/.git\" ] || git clone '$REPO' \"\$HOME/Ymir\"
     cd \"\$HOME/Ymir\" && git pull --ff-only || true
-    YMIR_HOME='$VM_HOME' bin/ymir-install.sh --yes" >&2 \
-    || { printf 'error: the in-VM install failed\nhelp: limactl shell %s -- bash -lc "cd ~/Ymir && bin/ymir-install.sh"\n' "$VM" >&2; exit 1; }
+    YMIR_HOME='$VM_HOME' bin/engine/ymir-install.sh --yes" >&2 \
+    || { printf 'error: the in-VM install failed\nhelp: limactl shell %s -- bash -lc "cd ~/Ymir && bin/engine/ymir-install.sh"\n' "$VM" >&2; exit 1; }
 fi
 
 printf 'macos-bootstrap[3]{step,status,detail}:\n'
 printf '  "vm","OK","%s (Lima)"\n' "$VM"
 printf '  "engine","OK","%s"\n' "$([ "$LIMA" = yes ] && printf 'limactl (pre-existing)' || printf 'limactl (just installed)')"
 printf '  "ymir","%s","%s"\n' "$([ -n "$REPO" ] && printf OK || printf SKIP)" \
-  "$([ -n "$REPO" ] && printf 'installed inside the VM' || printf 'no repo to clone — run: limactl shell %s -- bash -lc "cd ~/Ymir && bin/ymir-install.sh --yes"' "$VM")"
+  "$([ -n "$REPO" ] && printf 'installed inside the VM' || printf 'no repo to clone — run: limactl shell %s -- bash -lc "cd ~/Ymir && bin/engine/ymir-install.sh --yes"' "$VM")"
 printf '\nnext: limactl shell %s            # the Linux host\n      open http://127.0.0.1:3888/  # Hlidskjalf, forwarded by Lima\n' "$VM"

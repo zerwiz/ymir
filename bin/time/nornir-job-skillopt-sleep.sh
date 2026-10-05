@@ -27,7 +27,7 @@ SKILLOPT_PATH="${SKILLOPT_PATH:-$BROKK_HOME/.venv/bin}"
 SLEEP_OPTS="${SKILLOPT_SLEEP_OPTS:-}"
 
 # shellcheck source=bin/records/runes-append.sh
-. "$SCRIPT_DIR/runes-append.sh"
+. "$SCRIPT_DIR/../records/runes-append.sh"
 
 STAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 STAGING="$BROKK_HOME/.agents/skills/skillopt-staging"
@@ -38,7 +38,7 @@ printf 'SKILLOPT-SLEEP - %s\n' "$STAMP"
 
 # ---- 1. Pre-flight ----------------------------------------------------
 if [ ! -x "$SKILLOPT_PATH/skillopt-sleep" ]; then
-  msg="skillopt-sleep not found at $SKILLOPT_PATH/skillopt-sleep — run bin/skillopt-setup.sh first"
+  msg="skillopt-sleep not found at $SKILLOPT_PATH/skillopt-sleep — run bin/forge/skillopt-setup.sh first"
   printf 'skillopt: %s\n' "$msg"
   runes_append "skillopt" "sleep.skipped" --message "$msg" >/dev/null 2>&1 || true
   exit 0

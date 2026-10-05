@@ -40,8 +40,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
-# shellcheck source=bin/fm-public-followup-lib.sh
-# Also brings in bin/fm-x-lib.sh, which this script's relay client uses.
+# shellcheck source=bin/backend/fm-public-followup-lib.sh
+# Also brings in bin/backend/fm-x-lib.sh, which this script's relay client uses.
 . "$SCRIPT_DIR/fm-public-followup-lib.sh"
 
 fmx_load_config
@@ -51,7 +51,7 @@ fmx_load_config
 # Unreconciled terminal results for a public commitment are actionable even when
 # the relay has no new mention, and they outlive any session, so surface them
 # first. The signature compare keeps this to one wake per new result set instead
-# of one per cycle; bin/fm-public-followup.sh consume clears it.
+# of one per cycle; bin/backend/fm-public-followup.sh consume clears it.
 if fm_pf_has_events "$STATE"; then
   PF_ROOT=$(fm_pf_root "$STATE")
   PF_SIG=$(fm_pf_events_signature "$STATE" 2>/dev/null) || PF_SIG=

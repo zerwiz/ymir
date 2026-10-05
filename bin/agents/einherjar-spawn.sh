@@ -28,7 +28,7 @@
 # worth-a-smith REFUSES by default: an errand that is not worktree-shaped is
 # refused with the reason and the remedy; --force overrides and is recorded.
 # The harness and model resolve from the MACHINE, in order: explicit flags ->
-# a named model via bin/model-resolve.sh -> config/agents.yaml (the private
+# a named model via bin/model/model-resolve.sh -> config/agents.yaml (the private
 # home) -> the fleet law (local model -> pi, hosted -> opencode). Never from a
 # repo template; provenance is printed and recorded.
 #
@@ -63,8 +63,8 @@ log_err() {
 trap 'log_err "$LINENO" "${BASH_COMMAND:-}"' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/ymir-platform.sh
-. "$SCRIPT_DIR/ymir-platform.sh"
+# shellcheck source=bin/fleet/ymir-platform.sh
+. "$SCRIPT_DIR/../fleet/ymir-platform.sh"
 # Docker or rootless Podman (Fedora). Empty when neither is reachable.
 ENGINE="$(ymir_container_engine 2>/dev/null || true)"
 VOL_SUFFIX="$(ymir_volume_suffix)"
@@ -223,7 +223,7 @@ fi
 # NOT active and steers nothing. Only a real profile (a $YMIR_HOME/hodd/config
 # override, or a repo config resolved from the machine) gates the backstop.
 DISPATCH_ACTIVE=
-_disp=$("$SCRIPT_DIR/dispatch-profile.sh" active 2>/dev/null) || _disp=
+_disp=$("$SCRIPT_DIR/../fleet/dispatch-profile.sh" active 2>/dev/null) || _disp=
 if [ -n "$_disp" ]; then
   DISPATCH_ACTIVE=$(printf '%s\n' "$_disp" | sed -n '2p' | sed -E 's/^ *"[^"]+","([^"]+)".*/\1/')
 fi
@@ -340,7 +340,7 @@ fi
 
 # --- worth-a-smith: refuse a smith for work that does not need one ----------
 # D7 (2026-09-24): the first law lives in einherjar-spawn too, not only in
-# bin/herdr-run.sh. The errand is the brief's # Task text. A refusal is LOUD
+# bin/seat/herdr-run.sh. The errand is the brief's # Task text. A refusal is LOUD
 # with the reason and the remedy; --force overrides and is recorded.
 WORTH_VERDICT=yes
 WORTH_WHY=forced
@@ -351,8 +351,8 @@ if printf '%s' "$task_text" | grep -q '{TASK}'; then
 elif [ "${#task_text}" -le 1 ]; then
   WORTH_VERDICT=no
   WORTH_WHY='the brief has no # Task section to judge — fill the errand before dispatch'
-elif [ -x "$SCRIPT_DIR/herdr-run.sh" ]; then
-  wout=$("$SCRIPT_DIR/herdr-run.sh" worth-a-smith "$task_text" 2>/dev/null) || true
+elif [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ]; then
+  wout=$("$SCRIPT_DIR/../seat/herdr-run.sh" worth-a-smith "$task_text" 2>/dev/null) || true
   if [ -n "$wout" ]; then
     _w=$(printf '%s\n' "$wout" | sed -n '2p')
     _verdict=$(printf '%s' "$_w" | sed -E 's/^ *"([^"]*)".*/\1/')
@@ -371,8 +371,8 @@ if [ "$WORTH_VERDICT" = no ] && [ "$FORCE" -ne 1 ]; then
 fi
 
 # --- harness + model resolution FROM THE MACHINE (D3) -----------------------
-# Order: (1) explicit flags; (2) a named model via bin/model-resolve.sh;
-# (3) this machine's agent default (config/agents.yaml / bin/agents-config.sh,
+# Order: (1) explicit flags; (2) a named model via bin/model/model-resolve.sh;
+# (3) this machine's agent default (config/agents.yaml / bin/fleet/agents-config.sh,
 # the PRIVATE home — never a repo template); (4) the fleet law — local model
 # -> pi, hosted -> opencode. Provenance is printed and recorded.
 MODEL_LOCAL=no
@@ -478,35 +478,35 @@ resolve_harness_model() {
       if is_local_provider "${MODEL%%/*}"; then HARNESS=pi; HARNESS_PROV="fleet law (local provider -> pi)"
       else HARNESS=opencode; HARNESS_PROV="fleet law (hosted provider -> opencode)"; fi
     fi
-  # (2) an explicit model REQUEST resolved by bin/model-resolve.sh
+  # (2) an explicit model REQUEST resolved by bin/model/model-resolve.sh
   elif [ "$MODEL_SET" -eq 1 ] && [ -n "$MODEL" ]; then
     req=$MODEL
-    mr=$("$SCRIPT_DIR/model-resolve.sh" resolve "$req" 2>/dev/null) || true
+    mr=$("$SCRIPT_DIR/../model/model-resolve.sh" resolve "$req" 2>/dev/null) || true
     mrow=$(printf '%s\n' "$mr" | sed -n '2p')
     _clean=$(printf '%s' "$mrow" | tr -d '"')
     IFS=',' read -r _f1 _f2 h prov m5 conf <<<"$_clean" || true
     if [ "$conf" = unresolved ] || [ -z "$m5" ] || [ -z "$prov" ]; then
-      echo "error: model request '$req' could not be resolved (bin/model-resolve.sh) - ask the Allfather which model, then pass a concrete --model provider/model" >&2
+      echo "error: model request '$req' could not be resolved (bin/model/model-resolve.sh) - ask the Allfather which model, then pass a concrete --model provider/model" >&2
       exit 1
     fi
     MODEL="${prov}/${m5}"
-    MODEL_PROV="bin/model-resolve.sh resolve \"$req\" (confidence=$conf)"
+    MODEL_PROV="bin/model/model-resolve.sh resolve \"$req\" (confidence=$conf)"
     if [ -z "$HARNESS" ] && [ -n "$h" ] && [ "$h" != default ]; then
       HARNESS=$h
-      HARNESS_PROV="bin/model-resolve.sh (resolved harness)"
+      HARNESS_PROV="bin/model/model-resolve.sh (resolved harness)"
     fi
     unset _clean _f1 _f2
   # (3) this machine's agent default (the private home, never a repo template)
   elif [ "$MODEL_SET" -eq 0 ]; then
-    if [ -x "$SCRIPT_DIR/agents-config.sh" ]; then
-      _m=$("$SCRIPT_DIR/agents-config.sh" get brokk model 2>/dev/null | sed -n '1p')
+    if [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
+      _m=$("$SCRIPT_DIR/../fleet/agents-config.sh" get brokk model 2>/dev/null | sed -n '1p')
       if [ -n "$_m" ] && [ "$_m" != default ]; then
         MODEL=$_m
-        MODEL_PROV="config/agents.yaml via bin/agents-config.sh (this machine)"
+        MODEL_PROV="config/agents.yaml via bin/fleet/agents-config.sh (this machine)"
         if [ -z "$HARNESS" ]; then
-          _h=$("$SCRIPT_DIR/agents-config.sh" get brokk harness 2>/dev/null | sed -n '1p')
+          _h=$("$SCRIPT_DIR/../fleet/agents-config.sh" get brokk harness 2>/dev/null | sed -n '1p')
           HARNESS=$_h
-          [ -n "$HARNESS" ] && HARNESS_PROV="config/agents.yaml via bin/agents-config.sh (harness rule)"
+          [ -n "$HARNESS" ] && HARNESS_PROV="config/agents.yaml via bin/fleet/agents-config.sh (harness rule)"
         fi
       fi
     fi
@@ -538,7 +538,7 @@ resolve_harness_model() {
     if is_local_provider "${MODEL%%/*}"; then MODEL_LOCAL=yes; else MODEL_LOCAL=no; fi
   fi
   if ! serve_ok "$HARNESS" "$MODEL"; then
-    echo "error: harness '$HARNESS' cannot serve model '${MODEL:-<harness default>}' on this machine — resolve a servable token (bin/model-resolve.sh list) or pass an explicit --model provider/model" >&2
+    echo "error: harness '$HARNESS' cannot serve model '${MODEL:-<harness default>}' on this machine — resolve a servable token (bin/model/model-resolve.sh list) or pass an explicit --model provider/model" >&2
     exit 1
   fi
 }
@@ -589,7 +589,7 @@ confirm_utgard_image() {  # -> 0 present (engine + image), else loud refusal
     return 1
   }
   "$ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1 || {
-    echo "error: isolation=utgard requires the Utgard image 'utgard-runner:latest', which is absent — REFUSED, not downgraded. Remedy: build it (bin/utgard.sh build) or edit the brief to 'Isolation: herdr — <why>'." >&2
+    echo "error: isolation=utgard requires the Utgard image 'utgard-runner:latest', which is absent — REFUSED, not downgraded. Remedy: build it (bin/forge/utgard.sh build) or edit the brief to 'Isolation: herdr — <why>'." >&2
     return 1
   }
   return 0
@@ -628,16 +628,16 @@ esac
 # The rail is --models-max 1: one resident model, a request evicts. A local
 # worker must not evict Brokk's own model while he thinks. For a LOCAL model we
 # pre-check the lock (refuse with the holder named when the host is at
-# capacity) and wrap the launched command in bin/local-model-lock.sh so the
+# capacity) and wrap the launched command in bin/model/local-model-lock.sh so the
 # flock is held from before the worker starts until after it exits.
 LOCKED=no
-if [ "$MODEL_LOCAL" = yes ] && [ -x "$SCRIPT_DIR/local-model-lock.sh" ]; then
-  out=$("$SCRIPT_DIR/local-model-lock.sh" check 2>/dev/null) || true
+if [ "$MODEL_LOCAL" = yes ] && [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ]; then
+  out=$("$SCRIPT_DIR/../model/local-model-lock.sh" check 2>/dev/null) || true
   case "$(printf '%s\n' "$out" | sed -n '2p')" in
     '"free"*') LOCKED=yes ;;
     '"busy"*')
       LOCK_HOLDER=$(printf '%s\n' "$out" | sed -n '3p' 2>/dev/null | tr -d '"')
-      [ -n "$LOCK_HOLDER" ] || LOCK_HOLDER="a local seat already runs (bin/local-model-lock.sh check)"
+      [ -n "$LOCK_HOLDER" ] || LOCK_HOLDER="a local seat already runs (bin/model/local-model-lock.sh check)"
       if [ "$DRY" -eq 1 ]; then
         LOCKED=yes
         echo "preflight: local-model-lock BUSY — holder: $LOCK_HOLDER; a real run refuses (the launched command still serializes under the lock if --force)" >&2
@@ -656,7 +656,7 @@ fi
 # unverified harness, a relaunch, a backend that cannot answer) this script runs
 # the road it already had, unchanged. That predicate lives in the engine; there
 # is no second copy of it here. YMIR_ENGINE=off skips the handoff.
-if [ "$DRY" -eq 0 ] && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/ymir-engine.sh" ]; then
+if [ "$DRY" -eq 0 ] && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/../engine/ymir-engine.sh" ]; then
   engine_args=(seat "$ID" --project "$PROJECT_DIR" --kind "$KIND" --mode "${MODE:-scout}" --yolo "$YOLO"
                --backend "$RESOLVED_BACKEND" --harness "${RAW_LAUNCH:-$HARNESS}"
                --worth-a-smith "$WORTH_VERDICT" --worth-why "$WORTH_WHY")
@@ -668,13 +668,13 @@ if [ "$DRY" -eq 0 ] && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/
   else
     engine_args+=(--isolation herdr)
   fi
-  if [ "$LOCKED" = yes ] && [ -x "$SCRIPT_DIR/local-model-lock.sh" ]; then
-    engine_args+=(--lock "$SCRIPT_DIR/local-model-lock.sh")
+  if [ "$LOCKED" = yes ] && [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ]; then
+    engine_args+=(--lock "$SCRIPT_DIR/../model/local-model-lock.sh")
   fi
   if [ "$FORCE" -eq 1 ]; then engine_args+=(--force); fi
   engine_args+=(--compat)
   engine_rc=0
-  "$SCRIPT_DIR/ymir-engine.sh" "${engine_args[@]}" || engine_rc=$?
+  "$SCRIPT_DIR/../engine/ymir-engine.sh" "${engine_args[@]}" || engine_rc=$?
   if [ "$engine_rc" -eq 0 ]; then exit 0; fi
   if [ "$engine_rc" -ne 4 ]; then
     printf 'error: the engine failed to seat %s (exit %s) — the old road was NOT run, because a half-seat is worse than none\nhelp: bin/engine/ymir-engine.sh seat %s --project %s\n' \
@@ -757,7 +757,7 @@ fi
 # the brief. A dry well never blocks; recall is a boost.
 CTX="$DATA/$ID/context.md"
 TITLE=$(grep -m1 -E '^#|title' "$BRIEF" 2>/dev/null | sed 's/^#* *//' || true)
-"$SCRIPT_DIR/mimir.sh" recall "${TITLE:-$ID}" --k 4 >"$CTX" 2>/dev/null || : >"$CTX"
+"$SCRIPT_DIR/../records/mimir.sh" recall "${TITLE:-$ID}" --k 4 >"$CTX" 2>/dev/null || : >"$CTX"
 PROMPT="$DATA/$ID/prompt.md"
 {
   cat "$BRIEF"
@@ -800,7 +800,7 @@ LAUNCH_CMD=$(build_launch_command "$BRIEF_REF")
   printf 'set -eu\n'
   printf 'cd %s\n' "$(shell_quote "$LAUNCH_CWD")"
   if [ "$LOCKED" = yes ]; then
-    printf 'exec %s bash -c %s\n' "$(shell_quote "$SCRIPT_DIR/local-model-lock.sh")" "$(shell_quote "$LAUNCH_CMD")"
+    printf 'exec %s bash -c %s\n' "$(shell_quote "$SCRIPT_DIR/../model/local-model-lock.sh")" "$(shell_quote "$LAUNCH_CMD")"
   else
     printf 'exec %s\n' "$LAUNCH_CMD"
   fi
@@ -834,7 +834,7 @@ EOF
   if [ "$LOCKED" = yes ]; then
     # the flock is HOST-side: it must wrap the docker run itself, not a
     # command inside the container (the lockfile is the host's inode).
-    PANE_CMD="$SCRIPT_DIR/local-model-lock.sh $PANE_CMD"
+    PANE_CMD="$SCRIPT_DIR/../model/local-model-lock.sh $PANE_CMD"
   fi
 else
   rm -f "$STATE/$ID.utgard"

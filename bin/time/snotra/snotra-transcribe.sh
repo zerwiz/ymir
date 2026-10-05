@@ -23,7 +23,7 @@
 #   SNOTRA_WHISPER_MODEL — explicit model override
 #   WHISPER_GPU        — informational (whisper auto-detects CUDA)
 #   RAIL_URL           — the OpenAI-compatible rail for summaries (default: the
-#                        ONE living-rail resolver's serving box, bin/rail-resolve.sh;
+#                        ONE living-rail resolver's serving box, bin/model/rail-resolve.sh;
 #                        set it to force one specific rail)
 #   RAIL_MODEL         — the model alias (env/personal; unset = loud refusal)
 #   RAIL_KEY           — llama-swap API key (from ~/.pi/agent/auth.json)
@@ -58,8 +58,8 @@ WHISPER_GPU="${WHISPER_GPU:-on}"
 # whichever strong box is CONNECTED, resolved by the ONE resolver. An explicit
 # RAIL_URL still wins; the local seat's own rail is the last-ditch default.
 RAIL_URL="${RAIL_URL:-}"
-if [ -z "$RAIL_URL" ] && [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
-  RAIL_URL="$(bash "$SCRIPT_DIR/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
+if [ -z "$RAIL_URL" ] && [ -x "$SCRIPT_DIR/../../model/rail-resolve.sh" ]; then
+  RAIL_URL="$(bash "$SCRIPT_DIR/../../model/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)
 except Exception: d={}
 print((d.get("serving") or {}).get("url",""))' 2>/dev/null || true)"
@@ -180,7 +180,7 @@ run_whisper() {
   rm -f "$TMP_PREFIX.txt"
   # `-di` is the stereo-channel diarization: whisper compares the two channels'
   # energy over each segment and prefixes the text `(speaker 0)` / `(speaker 1)`.
-  # It is only meaningful on a 2-channel capture (bin/snotra-capture.sh's stereo
+  # It is only meaningful on a 2-channel capture (bin/time/snotra/snotra-capture.sh's stereo
   # mode puts the mic on channel 0), and omitting it is harmless — a 2-channel
   # file decoded without `-di` is downmixed to mono by the decoder.
   local DI=""
@@ -437,8 +437,8 @@ except Exception:
   fi
 
   # Step 5: append a Rune
-  if [ -x "$SCRIPT_DIR/runes-append.sh" ]; then
-    "$SCRIPT_DIR/runes-append.sh" snotra \
+  if [ -x "$SCRIPT_DIR/../../records/runes-append.sh" ]; then
+    "$SCRIPT_DIR/../../records/runes-append.sh" snotra \
       "meeting minutes created — $MINUTES_FILE" \
       --message "snotra: meeting minutes created — $MINUTES_FILE" >/dev/null 2>&1 || true
   fi

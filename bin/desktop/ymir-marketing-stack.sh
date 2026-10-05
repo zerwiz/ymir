@@ -8,11 +8,11 @@
 # user; nothing here assumes the server. Ports are env-virtualized so two
 # stacks never collide on one host.
 #
-#   bin/ymir-marketing-stack.sh up [--with-forgejo] [--dir DIR]
+#   bin/desktop/ymir-marketing-stack.sh up [--with-forgejo] [--dir DIR]
 #                                    [--name NAME] [--host-port P]
-#   bin/ymir-marketing-stack.sh status [--dir DIR]
-#   bin/ymir-marketing-stack.sh down [--dir DIR]
-#   bin/ymir-marketing-stack.sh doors [--dir DIR]     # where each service lives
+#   bin/desktop/ymir-marketing-stack.sh status [--dir DIR]
+#   bin/desktop/ymir-marketing-stack.sh down [--dir DIR]
+#   bin/desktop/ymir-marketing-stack.sh doors [--dir DIR]     # where each service lives
 #
 # Config: env vars (see below) or $YMIR_HOME/config/marketing-stack.env.
 # OSS engines only — Mautic 7 (Apache), Postiz, Activepieces, Forgejo.

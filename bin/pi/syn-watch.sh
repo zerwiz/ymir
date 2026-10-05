@@ -25,7 +25,7 @@
 # the argv, and nothing that could drift.
 #
 # The state, all under the resolved state dir (the same dir the harness readers,
-# the turn-end guard, and bin/syn-watch-arm.sh use):
+# the turn-end guard, and bin/pi/syn-watch-arm.sh use):
 #
 #   .watch.heartbeat    epoch seconds, touched every cycle (the liveness door)
 #   .supervision-armed  the armed marker the turn-end guard reads (inert without it)
@@ -35,7 +35,7 @@
 #   .arm.wake           append-only journal of every line this arm has raised
 #
 # The grammar is the contract: the arm raises `signal:` / `stale:` / `check:` /
-# `heartbeat:` lines and nothing else; bin/syn-watch-arm.sh relays them to the
+# `heartbeat:` lines and nothing else; bin/pi/syn-watch-arm.sh relays them to the
 # harness unchanged. This file writes no line to stdout except those.
 set -u
 
@@ -49,4 +49,4 @@ esac
 
 # The engine door owns the interpreter, PYTHONPATH, and the venv choice. This
 # door hands the verb over and keeps none of the judgement.
-exec "$SCRIPT_DIR/ymir-engine.sh" watch "$@"
+exec "$SCRIPT_DIR/../engine/ymir-engine.sh" watch "$@"

@@ -11,10 +11,10 @@
 # including the ones made in a hurry, by a loop, or by an agent that has never
 # heard of it.
 #
-#   bin/hoard-guard.sh            # scan the staged change (used as pre-commit)
-#   bin/hoard-guard.sh --install  # seat it in $YMIR_HOME/.git/hooks/pre-commit
-#   bin/hoard-guard.sh --all      # scan every tracked file in the home
-#   bin/hoard-guard.sh --log-bypass <reason>   # record a --no-verify commit
+#   bin/gates/guards/hoard-guard.sh            # scan the staged change (used as pre-commit)
+#   bin/gates/guards/hoard-guard.sh --install  # seat it in $YMIR_HOME/.git/hooks/pre-commit
+#   bin/gates/guards/hoard-guard.sh --all      # scan every tracked file in the home
+#   bin/gates/guards/hoard-guard.sh --log-bypass <reason>   # record a --no-verify commit
 #
 # Exit 1 on any hit, so the commit is blocked before the secret is committed.
 set -u
@@ -36,7 +36,7 @@ fi
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=bin/vault/hoard-lib.sh
-. "$SCRIPT_DIR/hoard-lib.sh"
+. "$SCRIPT_DIR/../../vault/hoard-lib.sh"
 hoard_root HOARD
 HOME_REPO="$(cd "$HOARD/.." && pwd)"
 LEDGER="$HOARD/memory/runes_audit.md"
@@ -48,7 +48,7 @@ case "${1:-}" in
     [ -d "$HOME_REPO/.git" ] || { printf 'hoard-guard: not a git repo: %s\n' "$HOME_REPO" >&2; exit 1; }
     hook="$HOME_REPO/.git/hooks/pre-commit"
     mkdir -p "$(dirname "$hook")" || exit 1
-    printf '#!/usr/bin/env bash\n# seated by bin/hoard-guard.sh --install — the ward for the private home\nexec "%s/hoard-guard.sh" "$@"\n' "$SCRIPT_DIR" >"$hook"
+    printf '#!/usr/bin/env bash\n# seated by bin/gates/guards/hoard-guard.sh --install — the ward for the private home\nexec "%s/hoard-guard.sh" "$@"\n' "$SCRIPT_DIR" >"$hook"
     chmod +x "$hook"
     printf 'hoard-guard[1]{action,path}:\n  "install","%s"\n' "$hook"
     exit 0 ;;

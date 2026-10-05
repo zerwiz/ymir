@@ -38,7 +38,7 @@ esac
 
 # `pool` delegates straight to the treehouse pool engine (no branch bookkeeping).
 if [ "$CMD" = "pool" ]; then
-  command -v treehouse >/dev/null 2>&1 || { printf 'error: treehouse not installed\nhelp: bin/ymir-install.sh\n' >&2; exit 1; }
+  command -v treehouse >/dev/null 2>&1 || { printf 'error: treehouse not installed\nhelp: bin/engine/ymir-install.sh\n' >&2; exit 1; }
   exec treehouse "$@"
 fi
 
@@ -54,7 +54,7 @@ while [ $# -gt 0 ]; do
     --into) INTO=${2-}; shift 2 ;;
     --force) FORCE=1; shift ;;
     --no-ff) NOFF=1; shift ;;
-    -*) printf 'error: unknown flag %s\nhelp: bin/yggdrasil.sh %s [--repo <p>]\n' "$1" "$CMD" >&2; exit 2 ;;
+    -*) printf 'error: unknown flag %s\nhelp: bin/forge/yggdrasil.sh %s [--repo <p>]\n' "$1" "$CMD" >&2; exit 2 ;;
     *) ID=$1; shift ;;
   esac
 done
@@ -75,10 +75,10 @@ default_branch() {
 
 case "$CMD" in
   create)
-    [ -n "$ID" ] || { printf 'error: create needs an id\nhelp: bin/yggdrasil.sh create <id>\n' >&2; exit 2; }
+    [ -n "$ID" ] || { printf 'error: create needs an id\nhelp: bin/forge/yggdrasil.sh create <id>\n' >&2; exit 2; }
     case "$ID" in *[!A-Za-z0-9._-]*) printf 'error: unsafe id: %s\n' "$ID" >&2; exit 2 ;; esac
     if [ -e "$WTPATH" ] || git -C "$REPO" show-ref --verify --quiet "refs/heads/$BRANCH"; then
-      printf 'error: worktree already exists: %s\nhelp: bin/yggdrasil.sh list\n' "$BRANCH" >&2; exit 1
+      printf 'error: worktree already exists: %s\nhelp: bin/forge/yggdrasil.sh list\n' "$BRANCH" >&2; exit 1
     fi
     BASE="${BASE:-$(default_branch)}"
     mkdir -p "$REPO/$WT"
@@ -99,7 +99,7 @@ case "$CMD" in
 
   status)
     [ -n "$ID" ] || { printf 'error: status needs an id\n' >&2; exit 2; }
-    [ -e "$WTPATH" ] || { printf 'error: no worktree %s\nhelp: bin/yggdrasil.sh list\n' "$ID" >&2; exit 1; }
+    [ -e "$WTPATH" ] || { printf 'error: no worktree %s\nhelp: bin/forge/yggdrasil.sh list\n' "$ID" >&2; exit 1; }
     dirty=$(git -C "$WTPATH" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
     head=$(git -C "$WTPATH" rev-parse --short HEAD 2>/dev/null)
     ahead=$(git -C "$REPO" rev-list --count "$(default_branch)..$BRANCH" 2>/dev/null || echo 0)
@@ -136,7 +136,7 @@ case "$CMD" in
     if [ -e "$WTPATH" ]; then
       dirty=$(git -C "$WTPATH" status --porcelain | wc -l | tr -d ' ')
       if [ "$dirty" != "0" ] && [ "$FORCE" != "1" ]; then
-        printf 'error: worktree %s has unlanded changes (%s)\nhelp: bin/yggdrasil.sh cleanup %s --force  (only after the Allfather approves discarding)\n' "$ID" "$dirty" "$ID" >&2
+        printf 'error: worktree %s has unlanded changes (%s)\nhelp: bin/forge/yggdrasil.sh cleanup %s --force  (only after the Allfather approves discarding)\n' "$ID" "$dirty" "$ID" >&2
         exit 1
       fi
       git -C "$REPO" worktree remove ${FORCE:+--force} "$WTPATH" >/dev/null 2>&1 || true
@@ -147,6 +147,6 @@ case "$CMD" in
     ;;
 
   *)
-    printf 'error: unknown command %s\nhelp: bin/yggdrasil.sh [-v|create|list|status|merge|cleanup]\n' "$CMD" >&2
+    printf 'error: unknown command %s\nhelp: bin/forge/yggdrasil.sh [-v|create|list|status|merge|cleanup]\n' "$CMD" >&2
     exit 2 ;;
 esac

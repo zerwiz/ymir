@@ -13,7 +13,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -68,7 +69,7 @@ if [ -f "$REG" ]; then
     home="$(printf '%s' "$line" | sed -nE 's/.*\(.*home: ([^;)]+).*/\1/p' | tr -d ' ')"
     [ -n "$id" ] || continue
     if [ -n "$host" ]; then
-      ROWS+=("  \"$id\",\"remote $host\",\"skipped\",\"run bin/fleet-apply.sh on $host\""); continue
+      ROWS+=("  \"$id\",\"remote $host\",\"skipped\",\"run bin/fleet/fleet-apply.sh on $host\""); continue
     fi
     [ -n "$home" ] || home="$id"
     apply_home "$id" "$home"

@@ -12,7 +12,7 @@
 # owned by the watcher, not current-state truth.
 #
 # Record file: state/<id>.busy-state - exactly one line, atomically replaced
-# by bin/fm-busy-event.sh (the only writer):
+# by bin/backend/fm-busy-event.sh (the only writer):
 #
 #   v1 gen=<token> seq=<uint> state=<busy|idle|unknown> source=<token> event=<token> ts=<epoch>
 #
@@ -57,7 +57,7 @@
 # The Grok arm is the ONLY rendered-text classification that survives the
 # redesign, because Grok's structured lifecycle was not credited-live-verified
 # in the approved audit; it is scoped to harness=grok and can never classify
-# another adapter. The delivery guards in bin/fm-composer-lib.sh match rendered
+# another adapter. The delivery guards in bin/backend/fm-composer-lib.sh match rendered
 # footers for submit acknowledgement and away-mode supervisor injection only;
 # neither is a recorded worker state source.
 #

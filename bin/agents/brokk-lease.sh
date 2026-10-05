@@ -2,7 +2,7 @@
 # brokk-lease.sh - claim, release, inspect, and sweep per-task supervision leases.
 #
 # The lease contract itself (file format, actors, staleness, guard semantics)
-# is owned by bin/brokk-lease-lib.sh; this is the command surface the two
+# is owned by bin/agents/brokk-lease-lib.sh; this is the command surface the two
 # supervision actors use around the overlap set (steering, stopping, cleanup,
 # backlog status, stuck-worker recovery). "backlog" is the reserved resource
 # the branch prompt claims around its own backlog writes; main's tasks-axi path
@@ -39,10 +39,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BROKK_ROOT="${BROKK_ROOT_OVERRIDE:-${BROKK_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}}"
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$BROKK_ROOT}}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
-# shellcheck source=bin/brokk-lease-lib.sh
+# shellcheck source=bin/agents/brokk-lease-lib.sh
 . "$SCRIPT_DIR/brokk-lease-lib.sh"
 # shellcheck source=bin/time/brokk-wake-lib.sh
-. "$SCRIPT_DIR/brokk-wake-lib.sh"
+. "$SCRIPT_DIR/../time/brokk-wake-lib.sh"
 
 mkdir -p "$STATE"
 LEASE_COMMAND_LOCK="$STATE/.brokk-lease-command.lock"

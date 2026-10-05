@@ -3,7 +3,7 @@
 #
 #   bin/agents/agent-run.sh <agent> "<task>"
 #
-# The harness and model come from config/agents.yaml via bin/agents-config.sh.
+# The harness and model come from config/agents.yaml via bin/fleet/agents-config.sh.
 # Any harness on PATH can be chosen per agent (pi | opencode | claude | codex |
 # gemini | hermes | …), so the same smith can be run on whichever CLI you prefer.
 set -u
@@ -17,9 +17,9 @@ AGENT="${1:-}"; shift || true
 TASK="${*:-}"
 [ -n "$AGENT" ] && [ -n "$TASK" ] || { printf 'error: usage: bin/agents/agent-run.sh <agent> "<task>"\n' >&2; exit 2; }
 
-HARNESS="$("$SCRIPT_DIR/agents-config.sh" get "$AGENT" harness 2>/dev/null)"
-MODEL="$("$SCRIPT_DIR/agents-config.sh" get "$AGENT" model 2>/dev/null)"
-[ -n "$HARNESS" ] || { printf 'error: unknown agent %s\nhelp: bin/agents-config.sh show\n' "$AGENT" >&2; exit 1; }
+HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$AGENT" harness 2>/dev/null)"
+MODEL="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$AGENT" model 2>/dev/null)"
+[ -n "$HARNESS" ] || { printf 'error: unknown agent %s\nhelp: bin/fleet/agents-config.sh show\n' "$AGENT" >&2; exit 1; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 

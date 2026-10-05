@@ -16,7 +16,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 AGENTS="$ROOT/.agents/agents"
 PI_LOCAL="$ROOT/.pi/agents"
 PI_GLOBAL="${HOME}/.pi/agent/agents"
@@ -216,7 +217,7 @@ fi
 # tracked — a tracked copy would hand every operator the previous one's home.
 # They are rendered from the shipped *.example with the real $HOME and root.
 #
-# TWO WRITERS touch opencode.json: this loader, and `bin/agents-config.sh apply`
+# TWO WRITERS touch opencode.json: this loader, and `bin/fleet/agents-config.sh apply`
 # (which owns the ROSTER — providers and per-agent models, from
 # config/agents.yaml). A blind render here DELETED the roster's work: the Apodex
 # provider lived only in the live file and vanished on the next loader run. So
@@ -299,7 +300,7 @@ ymir_root_record() {
   printf '%s\n' "$ROOT" >"$tmp"
   # PRUNE DEAD ROOTS. Measured 2026-10-04: `.ymir-root` carried FOUR roots and TWO of them were
   # `.yggdrasil/` worktrees that no longer exist. Every resolver that reads this file asks "the
-  # first recorded root that really holds bin/syn-watch-arm.sh", so a worktree that survives here
+  # first recorded root that really holds bin/pi/syn-watch-arm.sh", so a worktree that survives here
   # after it is deleted from disk will eventually be picked — and every door an extension calls
   # through it fails at 127. This list is a cache of places that USED to be real; a cache of dead
   # places is worse than no cache.
@@ -309,7 +310,7 @@ ymir_root_record() {
       [ "$line" = "$ROOT" ] && continue
       grep -qxF -- "$line" "$tmp" 2>/dev/null && continue
       # keep a root only while it still IS a root
-      [ -x "$line/bin/syn-watch-arm.sh" ] || continue
+      [ -x "$line/bin/pi/syn-watch-arm.sh" ] || continue
       printf '%s\n' "$line" >>"$tmp"
     done <"$pointer"
   fi
@@ -322,13 +323,13 @@ ymir_root_record() {
   mv "$tmp" "$pointer" && printf 'recorded'
 }
 
-# The first recorded root that really holds bin/syn-watch-arm.sh, or nothing.
+# The first recorded root that really holds bin/pi/syn-watch-arm.sh, or nothing.
 ymir_root_verified() {
   local pointer="$PI_EXT_HOME/.ymir-root" line
   [ -r "$pointer" ] || return 0
   while IFS= read -r line; do
     [ -n "$line" ] || continue
-    [ -x "$line/bin/syn-watch-arm.sh" ] && { printf '%s' "$line"; return 0; }
+    [ -x "$line/bin/pi/syn-watch-arm.sh" ] && { printf '%s' "$line"; return 0; }
   done <"$pointer"
 }
 
@@ -373,7 +374,7 @@ if [ "$MODE_STATUS" = 1 ]; then
   if [ -n "$vroot" ]; then
     add pi-ext-root "$PI_EXT_HOME/.ymir-root" "deployed extensions resolve to $vroot"
   else
-    add pi-ext-root "$PI_EXT_HOME/.ymir-root" "ERROR no recorded root holds bin/syn-watch-arm.sh — deployed extensions cannot find their bin/ (run: bin/seat/valknut-load.sh --pi)"
+    add pi-ext-root "$PI_EXT_HOME/.ymir-root" "ERROR no recorded root holds bin/pi/syn-watch-arm.sh — deployed extensions cannot find their bin/ (run: bin/seat/valknut-load.sh --pi)"
   fi
   for hd in .claude .codex .cursor; do
     [ -d "$ROOT/$hd" ] || continue

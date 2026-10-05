@@ -4,7 +4,7 @@
 # tear it down by that exact id, and reconcile a leaked one after a crash.
 #
 # Why this exists (docs/herdr-backend.md "Away-mode daemon terminal launch"):
-# bin/fm-afk-start.sh execs the supervise daemon in the FOREGROUND of whatever
+# bin/backend/fm-afk-start.sh execs the supervise daemon in the FOREGROUND of whatever
 # terminal it is already in. Harnesses with a native in-pane tracked-background
 # tool (claude, grok) run it there directly and it is fine. A harness with NO
 # native background mechanism (pi) has to manufacture a terminal, and doing that
@@ -40,7 +40,7 @@
 # non-visible-launch primitive here yet and refuse loudly.
 #
 # Test seam: FM_AFK_LAUNCH_ENTRY overrides the command run in the created
-# terminal (default bin/fm-afk-start.sh), so a topology test can run a harmless
+# terminal (default bin/backend/fm-afk-start.sh), so a topology test can run a harmless
 # placeholder instead of a real daemon. FM_SUPERVISOR_TARGET/FM_SUPERVISOR_BACKEND
 # override the captured captain pane/backend (an isolated lab pane in tests).
 set -u
@@ -75,15 +75,15 @@ FM_AFK_LAUNCH_RECORD="$FM_AFK_LAUNCH_STATE/.afk-daemon-terminal"
 FM_AFK_LAUNCH_LOCK="$FM_AFK_LAUNCH_STATE/.afk-launch.lock"
 FM_AFK_LAUNCH_WS_LABEL="firstmate-afk-daemon"
 
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$FM_AFK_LAUNCH_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-supervisor-target-lib.sh
+# shellcheck source=bin/backend/fm-supervisor-target-lib.sh
 . "$FM_AFK_LAUNCH_DIR/fm-supervisor-target-lib.sh"
 # fm-afk-start.sh provides the daemon-lock liveness helpers and
 # fm_afk_clear_stale_artifacts; it is sourceable (BASH_SOURCE guard) and its
 # main does not run on source. It sets `set -eu`, so turn errexit back off for
 # this script's best-effort flow immediately after.
-# shellcheck source=bin/fm-afk-start.sh
+# shellcheck source=bin/backend/fm-afk-start.sh
 . "$FM_AFK_LAUNCH_DIR/fm-afk-start.sh"
 set +e
 
@@ -152,7 +152,7 @@ fm_afk_launch_usage() {
 # The command run inside the created terminal. Real launch runs the shared
 # daemon entry; a test overrides it with a harmless placeholder.
 fm_afk_launch_entry_cmd() {
-  printf '%s' "${FM_AFK_LAUNCH_ENTRY:-$FM_ROOT/bin/fm-afk-start.sh}"
+  printf '%s' "${FM_AFK_LAUNCH_ENTRY:-$FM_ROOT/bin/backend/fm-afk-start.sh}"
 }
 
 fm_afk_launch_record_write() {  # <backend> <target> <extra>
@@ -461,7 +461,7 @@ fm_afk_launch_create_tmux() {  # <captain-target> <captain-backend>
 fm_afk_launch_start() {
   local captain_target captain_backend backup artifact had_afk=0 result
   if [ -e "$FM_AFK_LAUNCH_STATE/.afk-return-catchup" ]; then
-    fm_afk_launch_log "return catch-up is still pending; run bin/fm-afk-return.sh check before re-entering away mode"
+    fm_afk_launch_log "return catch-up is still pending; run bin/backend/fm-afk-return.sh check before re-entering away mode"
     return 1
   fi
   # Capture the captain pane FIRST, before creating anything.
@@ -531,7 +531,7 @@ fm_afk_launch_start_native() {
   local backup artifact had_afk=0 result=0
   mkdir -p "$FM_AFK_LAUNCH_STATE" || return 1
   if [ -e "$FM_AFK_LAUNCH_STATE/.afk-return-catchup" ]; then
-    fm_afk_launch_log "return catch-up is still pending; run bin/fm-afk-return.sh check before re-entering away mode"
+    fm_afk_launch_log "return catch-up is still pending; run bin/backend/fm-afk-return.sh check before re-entering away mode"
     return 1
   fi
   if daemon_lock_held_by_live_daemon; then

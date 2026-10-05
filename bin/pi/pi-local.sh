@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # pi-local.sh — run a Pi agent on a LOCAL model, reusable.
 #
-#   bin/pi-local.sh "<prompt>"                       # default local model
-#   bin/pi-local.sh -m <model> "<prompt>"            # another llama.cpp model
-#   PI_LOCAL_MODEL=... bin/pi-local.sh "<prompt>"
+#   bin/pi/pi-local.sh "<prompt>"                       # default local model
+#   bin/pi/pi-local.sh -m <model> "<prompt>"            # another llama.cpp model
+#   PI_LOCAL_MODEL=... bin/pi/pi-local.sh "<prompt>"
 #
 # The model id is the EXACT llama.cpp served id (…@quant). Defaults come from
 # config/agents.yaml resolution; override with -m/--model or the env vars.
@@ -11,7 +11,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 PROVIDER="${PI_LOCAL_PROVIDER:-}"
 MODEL="${PI_LOCAL_MODEL:-}"
@@ -32,7 +33,7 @@ done
 # Resolve provider + model from the hoard (config/agents.yaml default_model) when
 # the env/flag did not name them. No concrete model lives in the tree.
 if [ -z "$PROVIDER" ] || [ -z "$MODEL" ]; then
-  _d="$([ -x "$SCRIPT_DIR/agents-config.sh" ] && "$SCRIPT_DIR/agents-config.sh" default 2>/dev/null)"
+  _d="$([ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ] && "$SCRIPT_DIR/../fleet/agents-config.sh" default 2>/dev/null)"
   [ -n "$PROVIDER" ] || PROVIDER="${_d%%/*}"
   [ -n "$MODEL" ] || MODEL="${_d#*/}"
 fi
@@ -43,9 +44,9 @@ fi
 }
 
 PROMPT="${*:-}"
-[ -n "$PROMPT" ] || { printf 'error: usage: bin/pi-local.sh [-m model] "<prompt>"\n' >&2; exit 2; }
+[ -n "$PROMPT" ] || { printf 'error: usage: bin/pi/pi-local.sh [-m model] "<prompt>"\n' >&2; exit 2; }
 
 command -v pi >/dev/null 2>&1 || { printf 'error: pi is not on PATH\n' >&2; exit 1; }
 
 printf 'pi-local[1]{provider,model}:\n  "%s","%s"\n' "$PROVIDER" "$MODEL" >&2
-exec "$SCRIPT_DIR/local-model-lock.sh" pi --print --model "$PROVIDER/$MODEL" "$PROMPT"
+exec "$SCRIPT_DIR/../model/local-model-lock.sh" pi --print --model "$PROVIDER/$MODEL" "$PROMPT"

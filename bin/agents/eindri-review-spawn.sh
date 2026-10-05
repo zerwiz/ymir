@@ -45,7 +45,7 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 # The roots that live OUTSIDE the code tree resolve through the one door
 # (Rule 04): the operator's home, not a path baked into the tree.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yc
@@ -193,8 +193,8 @@ fi
 [ -n "$BRANCH" ] || BRANCH="eindri/$ID"
 
 # ── the judge's seat: the roster resolves the figure's harness ───────────────
-if [ -z "$HARNESS" ] && [ -x "$SCRIPT_DIR/agents-config.sh" ]; then
-  HARNESS="$("$SCRIPT_DIR/agents-config.sh" get forseti harness 2>/dev/null | head -n1 || true)"
+if [ -z "$HARNESS" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
+  HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti harness 2>/dev/null | head -n1 || true)"
 fi
 HARNESS="${HARNESS:-pi}"
 

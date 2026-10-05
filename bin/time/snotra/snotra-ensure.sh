@@ -35,13 +35,13 @@ MODEL_BASE="${SNOTRA_MODEL_URL:-https://huggingface.co/ggerganov/whisper.cpp/res
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 CMD="${1-}"; shift || true
 DO_INSTALL=0
-case "$CMD" in ensure|status|install) ;; *) printf 'error: unknown command %s\nhelp: bin/snotra-ensure.sh [status|ensure|install]\n' "$CMD" >&2; exit 2 ;; esac
+case "$CMD" in ensure|status|install) ;; *) printf 'error: unknown command %s\nhelp: bin/time/snotra/snotra-ensure.sh [status|ensure|install]\n' "$CMD" >&2; exit 2 ;; esac
 while [ $# -gt 0 ]; do case "$1" in --install) DO_INSTALL=1; shift ;; *) shift ;; esac; done
 [ "$CMD" = install ] && DO_INSTALL=1
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
-# --- discovery (mirrors bin/snotra-transcribe.sh) ---------------------------
+# --- discovery (mirrors bin/time/snotra/snotra-transcribe.sh) ---------------------------
 
 find_whisper() {
   if [ -n "${SNOTRA_WHISPER_BIN:-}" ] && [ -x "$SNOTRA_WHISPER_BIN" ]; then printf '%s' "$SNOTRA_WHISPER_BIN"; return 0; fi
@@ -167,6 +167,6 @@ case "$CMD" in
       status; exit $?
     fi
     status
-    printf 'snotra: engine or model missing — run `bin/snotra-ensure.sh install`\n' >&2
+    printf 'snotra: engine or model missing — run `bin/time/snotra/snotra-ensure.sh install`\n' >&2
     exit 1 ;;
 esac

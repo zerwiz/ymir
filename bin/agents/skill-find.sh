@@ -18,11 +18,11 @@
 # must be identical on every machine, or two developers get two answers.
 #
 # Usage:
-#   bin/skill-find.sh deploy              # by word
-#   bin/skill-find.sh "how do I make a course"
-#   bin/skill-find.sh --list              # every skill and its one-line purpose
-#   bin/skill-find.sh --where <name>      # the exact path of one skill
-#   bin/skill-find.sh --check             # duplicates, missing files, orphans
+#   bin/agents/skill-find.sh deploy              # by word
+#   bin/agents/skill-find.sh "how do I make a course"
+#   bin/agents/skill-find.sh --list              # every skill and its one-line purpose
+#   bin/agents/skill-find.sh --where <name>      # the exact path of one skill
+#   bin/agents/skill-find.sh --check             # duplicates, missing files, orphans
 set -uo pipefail
 
 _root() {
@@ -126,7 +126,7 @@ fi
 
 # the default: search the descriptions
 QUERY="${*:-}"
-[ -z "$QUERY" ] && { echo "usage: bin/skill-find.sh <words> | --list | --where <name> | --check" >&2; exit 2; }
+[ -z "$QUERY" ] && { echo "usage: bin/agents/skill-find.sh <words> | --list | --where <name> | --check" >&2; exit 2; }
 
 HITS=0
 for shelf in "$SHIPS" "$LOCALS" "$HOMESKILLS" "$PISKILLS"; do

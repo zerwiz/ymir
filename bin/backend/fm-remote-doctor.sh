@@ -2,7 +2,7 @@
 # Check, and optionally repair, one remote account's second-mate readiness.
 #
 # Usage:
-#   bin/fm-on.sh <secondmate-id|ssh-alias> fm-remote-doctor.sh [--fix]
+#   bin/backend/fm-on.sh <secondmate-id|ssh-alias> fm-remote-doctor.sh [--fix]
 #
 # Run it through fm-on.sh so the fixed entrypoint invokes this readiness owner
 # over its plain SSH bootstrap. The command reports the same filesystem-composed
@@ -52,9 +52,9 @@ SCRIPT_DIR=${SCRIPT_SELF%/*}
 [ "$SCRIPT_DIR" != "$SCRIPT_SELF" ] || SCRIPT_DIR=.
 SCRIPT_DIR=$(CDPATH='' cd -- "$SCRIPT_DIR" && pwd -P)
 FM_ROOT="${FM_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR/.." && pwd -P)}"
-# shellcheck source=bin/fm-remote-job-lib.sh
+# shellcheck source=bin/backend/fm-remote-job-lib.sh
 . "$SCRIPT_DIR/fm-remote-job-lib.sh"
-# shellcheck source=bin/fm-tasks-axi-lib.sh
+# shellcheck source=bin/backend/fm-tasks-axi-lib.sh
 . "$SCRIPT_DIR/fm-tasks-axi-lib.sh"
 REQUIRED_TOOLS=(git jq herdr tasks-axi treehouse)
 HARNESS_TOOLS=(claude codex opencode pi pi-signed grok kimi)
@@ -68,7 +68,7 @@ LAUNCH_AGENT_DIR="${HOME:-}/Library/LaunchAgents"
 LAUNCH_AGENT_PLIST="$LAUNCH_AGENT_DIR/$LAUNCH_AGENT_LABEL.plist"
 LAUNCH_AGENT_LOG_DIR="${HOME:-}/Library/Logs"
 LAUNCH_AGENT_LOG="$LAUNCH_AGENT_LOG_DIR/$LAUNCH_AGENT_LABEL.log"
-ENTRYPOINT_LINK="${HOME:-}/.local/bin/fm-remote-entrypoint.sh"
+ENTRYPOINT_LINK="${HOME:-}/.local/bin/backend/fm-remote-entrypoint.sh"
 
 usage() { sed -n '2,5p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
@@ -143,7 +143,7 @@ herdr_adapter_load() {
   [ -z "${FM_REMOTE_DOCTOR_HERDR_LOADED:-}" ] || return 0
   herdr_cli_available || return 1
   [ -f "$SCRIPT_DIR/fm-backend.sh" ] && [ -f "$SCRIPT_DIR/backends/herdr.sh" ] || return 1
-  # shellcheck source=bin/fm-backend.sh
+  # shellcheck source=bin/backend/fm-backend.sh
   . "$SCRIPT_DIR/fm-backend.sh" || return 1
   fm_backend_source herdr || return 1
   FM_REMOTE_DOCTOR_HERDR_LOADED=1
@@ -255,7 +255,7 @@ remote_job_identity_ok() {
 
 check_remote_job_worker() {
   local worker
-  worker="$FM_ROOT/bin/fm-remote-job-worker.sh"
+  worker="$FM_ROOT/bin/backend/fm-remote-job-worker.sh"
   if [ ! -f "$worker" ] || [ -L "$worker" ] || [ ! -x "$worker" ]; then
     record remote-job-worker "human: the configured Firstmate code root has no safe remote job worker" \
       "update the remote Firstmate checkout, then rerun this command with --fix"
@@ -560,7 +560,7 @@ check_entrypoint_link() {
     record entrypoint-link "skip: this run did not come through the fixed remote entrypoint"
     return 0
   fi
-  want="$FM_ROOT_OVERRIDE/bin/fm-remote-entrypoint.sh"
+  want="$FM_ROOT_OVERRIDE/bin/backend/fm-remote-entrypoint.sh"
   if [ -L "$ENTRYPOINT_LINK" ] && [ "$(readlink "$ENTRYPOINT_LINK")" = "$want" ]; then
     record entrypoint-link "ok: $ENTRYPOINT_LINK"
     return 0
@@ -673,7 +673,7 @@ start_herdr_server() {
 }
 
 link_entrypoint() {
-  local want="${FM_ROOT_OVERRIDE:-}/bin/fm-remote-entrypoint.sh"
+  local want="${FM_ROOT_OVERRIDE:-}/bin/backend/fm-remote-entrypoint.sh"
   if ! mkdir -p "$(dirname "$ENTRYPOINT_LINK")" 2>/dev/null; then
     fix_report entrypoint-link failed "cannot create $(dirname "$ENTRYPOINT_LINK")"
     return 1

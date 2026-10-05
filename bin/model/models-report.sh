@@ -5,7 +5,7 @@
 # model this machine has never seen, and a report that says only "models ensured" leaves
 # that broken wiring invisible until an agent fails.
 #
-#   bin/models-report.sh [path]   default: $HOME/.pi/agent/models.json
+#   bin/model/models-report.sh [path]   default: $HOME/.pi/agent/models.json
 #
 # Prints one line:  <n> providers / <m> models · <first four providers>
 # Exits 1 with no output when the file is absent or does not parse.

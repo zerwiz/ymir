@@ -6,7 +6,7 @@
 # cannot be half-done in one place and forgotten in another (the fault class of
 # 2026-09-18: an artefact published without the file it needed).
 #
-#   bin/app-build.sh [surface …]      default: every app that carries a build script
+#   bin/seat/sessrumnir/app-build.sh [surface …]      default: every app that carries a build script
 #
 # Skips an app that has no package.json (smidja's engine is Python; the smithy
 # arrives as @zerwiz/smidja-factory) and an app with no build script, naming it.

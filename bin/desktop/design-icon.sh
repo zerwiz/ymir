@@ -5,9 +5,9 @@
 # rune, stroked at the chisel bevel, tinted by the app's HOUSE colour. Not a
 # generic globe, not an emoji, not a screenshot of a UI.
 #
-#   bin/design-icon.sh list                 # the app -> rune -> house mapping
-#   bin/design-icon.sh mint [app]           # write <app>/public/icon.svg (+ the link hint)
-#   bin/design-icon.sh mint --all
+#   bin/desktop/design-icon.sh list                 # the app -> rune -> house mapping
+#   bin/desktop/design-icon.sh mint [app]           # write <app>/public/icon.svg (+ the link hint)
+#   bin/desktop/design-icon.sh mint --all
 #
 # The tile is stone (--ymir-bg-0) with the rune in the house tint; the SVG is
 # self-contained, so a favicon needs no build step and no raster asset.
@@ -15,12 +15,13 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/app-lib.sh).
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -71,7 +72,7 @@ list() {
 mint() {  # <app-dir> <glyph> <tint> <label>
   local dir=$1 glyph=$2 tint=$3 label=$4
   local g="$ICONS/$glyph.svg"
-  [ -r "$g" ] || { printf 'error: no glyph %s in midgard/design-system/icons/\nhelp: bin/design-icon.sh list\n' "$glyph" >&2; return 1; }
+  [ -r "$g" ] || { printf 'error: no glyph %s in midgard/design-system/icons/\nhelp: bin/desktop/design-icon.sh list\n' "$glyph" >&2; return 1; }
   local path
   path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$g" | head -1)"
   [ -n "$path" ] || { printf 'error: %s carries no <path> to reuse\n' "$glyph" >&2; return 1; }
@@ -290,8 +291,8 @@ case "$ACTION" in
         IFS='|' read -r d g t l _i _e _k _n <<<"$row"
         case "$(basename "$d")" in "$want") mint "$d" "$g" "$t" "$l"; found=1 ;; esac
       done
-      [ "$found" = 1 ] || { printf 'error: unknown app %s\nhelp: bin/design-icon.sh list\n' "$want" >&2; exit 2; }
+      [ "$found" = 1 ] || { printf 'error: unknown app %s\nhelp: bin/desktop/design-icon.sh list\n' "$want" >&2; exit 2; }
     fi ;;
   raster) raster_all ;;  # re-cut the PNG/ICO icons from the SVGs
-  *) printf 'error: unknown action %s\nhelp: bin/design-icon.sh [list|mint|install|raster] [app|--all]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/desktop/design-icon.sh [list|mint|install|raster] [app|--all]\n' "$ACTION" >&2; exit 2 ;;
 esac

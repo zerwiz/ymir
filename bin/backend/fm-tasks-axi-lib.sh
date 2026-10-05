@@ -1,14 +1,14 @@
 # shellcheck shell=bash
 # Shared tasks-axi backend selection and compatibility probe for bootstrap,
 # teardown, and secondmate backlog handoff.
-# Usage: . bin/fm-tasks-axi-lib.sh
+# Usage: . bin/backend/fm-tasks-axi-lib.sh
 #
 # Compatible means tasks-axi --version reports FM_TASKS_AXI_MIN or newer,
 # `tasks-axi update --help` exposes --archive-body for recoverable note rewrites,
 # and `tasks-axi mv --help` exposes [<id>...] for atomic multi-ID moves required
 # by secondmate handoffs.
 # FM_TASKS_AXI_MIN follows the axi-family floor policy owned beside the floor
-# constants in bin/fm-bootstrap.sh.
+# constants in bin/backend/fm-bootstrap.sh.
 # The feature probes are a separate concern and stay as defense in depth for
 # stripped or forked builds that advertise a current version without those flags.
 # `config/backlog-backend=manual` opts out of tasks-axi for routine firstmate
@@ -16,12 +16,12 @@
 # Absent or any other value keeps the default tasks-axi backend path, falling
 # back to manual mutation when the tool is not compatible.
 #
-# This file is the single owner of FM_TASKS_AXI_MIN. bin/fm-bootstrap.sh turns a
+# This file is the single owner of FM_TASKS_AXI_MIN. bin/backend/fm-bootstrap.sh turns a
 # failing check into the operator-facing MISSING diagnostic.
 #
 # COMPATIBILITY VERDICT REUSE. fm_tasks_axi_compatible costs three tasks-axi
 # subprocesses, and one session start needs the same verdict twice: once in
-# bin/fm-session-start.sh's backlog listing and once in the bin/fm-bootstrap.sh
+# bin/backend/fm-session-start.sh's backlog listing and once in the bin/backend/fm-bootstrap.sh
 # child it runs. Two reuse layers collapse that to a single probe:
 #   - Within a process the first probe's answer is memoised.
 #   - Across ONE process hop, a parent that already holds the verdict passes it

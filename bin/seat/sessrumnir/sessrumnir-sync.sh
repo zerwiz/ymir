@@ -4,10 +4,10 @@
 # Ymir-owned files; the branding rides on top and is re-applied by a true
 # 3-way git merge, never by clobbering.
 #
-#   bin/sessrumnir-sync.sh                       # sync to the version pinned in fork/PIN
-#   bin/sessrumnir-sync.sh <tag-or-commit>       # sync to an explicit upstream ref
-#   bin/sessrumnir-sync.sh --check [<ref>]       # dry-run: what would change (no writes)
-#   bin/sessrumnir-sync.sh --regen <ref>         # after hand-resolving conflicts: renumber PIN,
+#   bin/seat/sessrumnir/sessrumnir-sync.sh                       # sync to the version pinned in fork/PIN
+#   bin/seat/sessrumnir/sessrumnir-sync.sh <tag-or-commit>       # sync to an explicit upstream ref
+#   bin/seat/sessrumnir/sessrumnir-sync.sh --check [<ref>]       # dry-run: what would change (no writes)
+#   bin/seat/sessrumnir/sessrumnir-sync.sh --regen <ref>         # after hand-resolving conflicts: renumber PIN,
 #                                                # regenerate mods.patch, run the gate
 #
 # How a sync works (the fork-rebase):
@@ -33,10 +33,10 @@ _root() {
 }
 ROOT="$(_root)"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/app-lib.sh).
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -224,7 +224,7 @@ if [[ -n "$CONFLICTED" ]]; then
   echo "  deleted file either side re-added by upstream means: decide. Present" >&2
   echo "  the changed files and resolve by hand (owned files carry the Ymir text)." >&2
   echo "  When done, re-run the merge and seal with:" >&2
-  echo '    bin/sessrumnir-sync.sh --regen '"$THEIRS_SHORT" >&2
+  echo '    bin/seat/sessrumnir/sessrumnir-sync.sh --regen '"$THEIRS_SHORT" >&2
   exit 2
 fi
 

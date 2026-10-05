@@ -5,13 +5,13 @@
 # engines when present (Caddy for Bifrost, oauth2-proxy for Heimdall, cloudflared
 # for Gjallarhorn) and reports honestly when a binary is missing. Galdr TOON.
 #
-# Usage: bin/bifrost-ingress.sh [start|stop|status|validate]
-#        bin/bifrost-ingress.sh --version
+# Usage: bin/bridge/bifrost-ingress.sh [start|stop|status|validate]
+#        bin/bridge/bifrost-ingress.sh --version
 set -u
 
-# --- portability shim: bin/ymir-platform.sh --------------------------------
+# --- portability shim: bin/fleet/ymir-platform.sh --------------------------------
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
-  for _ymir_c in "$(git rev-parse --show-toplevel 2>/dev/null)/bin/ymir-platform.sh"                  "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/ymir-platform.sh"; do
+  for _ymir_c in "$(git rev-parse --show-toplevel 2>/dev/null)/bin/fleet/ymir-platform.sh"                  "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/fleet/ymir-platform.sh"; do
     [ -n "$_ymir_c" ] && [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
   done
   unset _ymir_c
@@ -19,7 +19,8 @@ fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 ING="$ROOT/midgard/infrastructure/ingress"
 
 case "${1-}" in
@@ -73,5 +74,5 @@ case "$ACTION" in
     printf 'ingress: down\n'
     ;;
 
-  *) printf 'error: unknown action %s\nhelp: bin/bifrost-ingress.sh [start|stop|status|validate]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/bridge/bifrost-ingress.sh [start|stop|status|validate]\n' "$ACTION" >&2; exit 2 ;;
 esac

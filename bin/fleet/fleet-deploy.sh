@@ -3,7 +3,7 @@
 #
 # Why this exists: `npm install -g @zerwiz/ymir` updates the package under
 # node_modules, but a running service executes a copy under `~/.fleet/` (see
-# bin/fleet-ensure.sh). So an install left the LIVE server stale — the ticket
+# bin/fleet/fleet-ensure.sh). So an install left the LIVE server stale — the ticket
 # hall kept running the old code until someone re-ran the deployer by hand
 # (2026-09-23: a `rows(q(...))` bug survived an install for exactly this reason).
 # This is the postinstall step: copy the tools from the package and, where the
@@ -87,8 +87,8 @@ if [ "${YMIR_SKIP_DESKTOP:-0}" != 1 ] && [ -d "$HOME/.local/share/applications" 
   if [ "$DRY" = 1 ]; then
     printf 'fleet-deploy: would refresh desktop entries (design-icon install) + placement\n'
   else
-    [ -x "$ROOT/bin/design-icon.sh" ] && bash "$ROOT/bin/design-icon.sh" install >/dev/null 2>&1 || true
-    [ -x "$ROOT/bin/desktop-place.sh" ] && bash "$ROOT/bin/desktop-place.sh" apply >/dev/null 2>&1 || true
+    [ -x "$ROOT/bin/desktop/design-icon.sh" ] && bash "$ROOT/bin/desktop/design-icon.sh" install >/dev/null 2>&1 || true
+    [ -x "$ROOT/bin/seat/sessrumnir/desktop-place.sh" ] && bash "$ROOT/bin/seat/sessrumnir/desktop-place.sh" apply >/dev/null 2>&1 || true
     printf 'fleet-deploy: desktop entries refreshed\n'
   fi
 fi

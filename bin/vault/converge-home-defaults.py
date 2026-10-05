@@ -27,7 +27,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yh="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
   for _i in 1 2 3 4 5; do
     [ -n "$_yh" ] || break
-    if [ -r "$_yh/bin/hoard-lib.sh" ]; then . "$_yh/bin/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
+    if [ -r "$_yh/bin/vault/hoard-lib.sh" ]; then . "$_yh/bin/vault/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     if [ -r "$_yh/hoard-lib.sh" ]; then . "$_yh/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1; break; fi
     _yh="$(cd "$_yh/.." 2>/dev/null && pwd)"
   done
@@ -38,7 +38,7 @@ if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
 fi
 """
 
-LIBRARIES = {"bin/vault/hoard-lib.sh", "bin/defaults-guard.sh"}
+LIBRARIES = {"bin/vault/hoard-lib.sh", "bin/gates/guards/defaults-guard.sh"}
 # Two shapes: the wrapped default, and the bare guess inside somebody else's override
 # (`${YMIR_HOARD:-$HOME/Documents/ymirhome}`). Both become the resolved variable.
 DEFAULT_EXPR = re.compile(r"\$\{YMIR_HOME:-\$HOME/Doc" r"uments/ymirhome\}"

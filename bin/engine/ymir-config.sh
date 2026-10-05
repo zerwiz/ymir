@@ -25,7 +25,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=bin/vault/hoard-lib.sh
-. "$SCRIPT_DIR/hoard-lib.sh"
+. "$SCRIPT_DIR/../vault/hoard-lib.sh"
 hoard_settings_dir SETTINGS
 STORE="$SETTINGS/notices.conf"
 KNOWN="version patience next hints"
@@ -72,5 +72,5 @@ case "${1-}" in
       [ "$value" = off ] && printf 'this notice will not be shown again — restore it with: ymir config notice %s on\n' "$key"
     fi
     ;;
-  *) printf 'error: unknown action %s\nhelp: bin/ymir-config.sh [show|notice <key> on|off]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/engine/ymir-config.sh [show|notice <key> on|off]\n' "$1" >&2; exit 2 ;;
 esac

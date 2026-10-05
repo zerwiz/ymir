@@ -6,14 +6,15 @@
 # or run by hand). A local merge on a verbal word is a decision, not a
 # delivery — the gate is only fed by a PR (RULES/08-delivery-gate.md).
 #
-#   bin/branch-guard.sh            # pre-push: refs on stdin (hook mode)
-#   bin/branch-guard.sh --branch X # check one branch name
+#   bin/gates/guards/branch-guard.sh            # pre-push: refs on stdin (hook mode)
+#   bin/gates/guards/branch-guard.sh --branch X # check one branch name
 #
 # Exit codes: 0 = clear, 1 = blocked, 2 = usage.
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 PROTECTED="main master release production"
 

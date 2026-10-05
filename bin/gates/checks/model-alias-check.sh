@@ -46,14 +46,14 @@ while [ $# -gt 0 ]; do
     --json)  MODE=json ;;
     check)   MODE=check ;;
     --local) LOCAL=1 ;;
-    *) printf 'error: unknown arg %s\nhelp: bin/model-alias-check.sh [--local] [--json|check]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown arg %s\nhelp: bin/gates/checks/model-alias-check.sh [--local] [--json|check]\n' "$1" >&2; exit 2 ;;
   esac
   shift
 done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -74,8 +74,8 @@ trap 'rm -rf "$TMP"' EXIT
 # The shared rail key: env -> the hoard vault -> the local root pi auth.json. It is
 # only ever used to ask a rail what it serves; it is never written anywhere.
 KEY="${LLAMA_SWAP_API_KEY:-}"
-if [ -z "$KEY" ] && [ -x "$SCRIPT_DIR/hodd.sh" ]; then
-  KEY="$(bash "$SCRIPT_DIR/hodd.sh" emit secrets/platform.env 2>/dev/null | sed -n 's/^LLAMA_SWAP_API_KEY=//p' | head -1)"
+if [ -z "$KEY" ] && [ -x "$SCRIPT_DIR/../../vault/hodd.sh" ]; then
+  KEY="$(bash "$SCRIPT_DIR/../../vault/hodd.sh" emit secrets/platform.env 2>/dev/null | sed -n 's/^LLAMA_SWAP_API_KEY=//p' | head -1)"
 fi
 if [ -z "$KEY" ] && [ -r "${PI_AUTH_JSON:-$HOME/.pi/agent/auth.json}" ]; then
   KEY="$(python3 -c "import json,sys
@@ -168,8 +168,8 @@ done <"$TMP/seats.tsv"
 # The aliases are verified against the LIVING rail set, not one static seat: the
 # ONE resolver names the strong boxes, probes them, and reports what each live
 # box serves. A box that is down is reported offline, never a FAIL.
-if [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
-  bash "$SCRIPT_DIR/rail-resolve.sh" status --json >"$TMP/rail.json" 2>/dev/null || : >"$TMP/rail.json"
+if [ -x "$SCRIPT_DIR/../../model/rail-resolve.sh" ]; then
+  bash "$SCRIPT_DIR/../../model/rail-resolve.sh" status --json >"$TMP/rail.json" 2>/dev/null || : >"$TMP/rail.json"
 else
   : >"$TMP/rail.json"
 fi

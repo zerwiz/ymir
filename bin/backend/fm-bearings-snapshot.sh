@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # fm-bearings-snapshot.sh - compact, bounded, TOON-by-default bearings projection.
 #
-# A thin wrapper OVER the canonical bin/fm-fleet-snapshot.sh. It does not parse
+# A thin wrapper OVER the canonical bin/backend/fm-fleet-snapshot.sh. It does not parse
 # fleet state itself: it shells out to `fm-fleet-snapshot.sh --json`, projects that
 # complete structured contract down to the small set of fields a "pick up where I
 # left off" read needs, and renders TOON at the output boundary. The internal data
@@ -66,7 +66,7 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FLEET="$SCRIPT_DIR/fm-fleet-snapshot.sh"
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
 
@@ -200,7 +200,7 @@ repo_slug() {  # <url>
 }
 
 # Bounded gh call; prints stdout, non-zero on timeout/failure. gh only.
-# bin/fm-timeout-lib.sh owns the bound itself.
+# bin/backend/fm-timeout-lib.sh owns the bound itself.
 gh_bounded() {  # <args...>
   fm_run_timed "$FM_BEARINGS_PR_TIMEOUT" \
     env GH_PROMPT_DISABLED=1 GH_NO_UPDATE_NOTIFIER=1 gh "$@"

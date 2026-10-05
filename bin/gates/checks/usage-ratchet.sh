@@ -11,9 +11,9 @@
 #   · a skill names it             — named by a SKILL.md or an asset under .agents/skills/
 # Both can be false, and a door with both false is UNUSED. That is the whole definition.
 #
-#   bin/usage-ratchet.sh            # measure, record today's baseline if absent, report
-#   bin/usage-ratchet.sh --strict   # non-zero when any shelf has grown its unused pile
-#   bin/usage-ratchet.sh --accept N # a deliberate, recorded step DOWN: the pile may only
+#   bin/gates/checks/usage-ratchet.sh            # measure, record today's baseline if absent, report
+#   bin/gates/checks/usage-ratchet.sh --strict   # non-zero when any shelf has grown its unused pile
+#   bin/gates/checks/usage-ratchet.sh --accept N # a deliberate, recorded step DOWN: the pile may only
 #                                   # shrink, and shrinking it is an explicit act, not a drift
 set -uo pipefail
 
@@ -32,7 +32,7 @@ REC=".agents/assets/agents/usage-baseline.json"
 STRICT=0; ACCEPT=""
 case "${1:-}" in --strict) STRICT=1 ;; --accept) ACCEPT="${2:-}" ;; esac
 
-[ -f "$REG" ] || { echo "usage-ratchet: no register — run bin/capabilities.sh" >&2; exit 1; }
+[ -f "$REG" ] || { echo "usage-ratchet: no register — run bin/gates/capabilities.sh" >&2; exit 1; }
 
 # counts come from the REGISTER (generated), not from a second recount that can disagree
 c() { grep -oE "\| $1 \|" "$REG" | wc -l | tr -d ' '; }
@@ -89,7 +89,7 @@ usage_ratchet: the UNUSED pile grew BEYOND new doors — $prev -> $UNUSED_BIN (a
        (Rule 11; bin/no-delete-guard.sh refuses a deletion, so moving is the only exit).
 
   If the growth is deliberate, say so out loud and step the baseline down:
-      bin/usage-ratchet.sh --accept $(($UNUSED_BIN - 1))
+      bin/gates/checks/usage-ratchet.sh --accept $(($UNUSED_BIN - 1))
 MSG
   [ "$STRICT" = 1 ] && exit 1
   exit 1

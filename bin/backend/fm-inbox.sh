@@ -153,7 +153,7 @@ aws_call() {
 # Failure to wake is NOT allowed to lose the note: the record is already on
 # disk, so we report the wake failure and still exit non-zero loudly.
 wake_for() {
-  local id=$1 summary=$2 lib="$FM_ROOT/bin/fm-wake-lib.sh"
+  local id=$1 summary=$2 lib="$FM_ROOT/bin/backend/fm-wake-lib.sh"
   if [ ! -r "$lib" ]; then
     printf 'fm-inbox: note saved but NOT announced (missing %s)\n' "$lib" >&2
     return 1
