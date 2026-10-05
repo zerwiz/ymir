@@ -33,7 +33,7 @@
 #     by the branch extension's generation-activation cleanup.
 #
 # THREAT MODEL (deliberate, Allfather-decided): these guards are
-# CONFUSED-AGENT-GRADE, the same grade bin/brokk-gate-refuse-lib.sh documents
+# CONFUSED-AGENT-GRADE, the same grade bin/backend/fm-gate-refuse-lib.sh documents
 # for the gate refusal. They stop non-deliberate misuse - the injected actor
 # identity, the loud refusals, and the session-bound staleness make every
 # accidental cross-actor mutation fail loudly. A deliberately forging shell
@@ -58,7 +58,7 @@
 #     branch-side containment only; main's tasks-axi path has no executable
 #     backlog lease guard in this scope.
 #
-# Sourced by bin/agents/brokk-send.sh, bin/brokk-control.sh, bin/brokk-teardown.sh,
+# Sourced by bin/agents/brokk-send.sh, bin/backend/fm-control.sh, bin/backend/fm-teardown.sh,
 # bin/brokk-pr-merge.sh, bin/brokk-merge-local.sh, bin/agents/einherjar-spawn.sh, and
 # bin/agents/brokk-lease.sh. Callers must have $STATE resolved before calling. No side
 # effects on source. set -u / set -e safe.

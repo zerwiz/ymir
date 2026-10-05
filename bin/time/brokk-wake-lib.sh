@@ -142,7 +142,7 @@ fm_watcher_healthy() {
 
 # fm_watcher_healthy above is the PID-STRICT primitive: true only when a live,
 # identity-matched watcher PROCESS holds this home's lock with a fresh beacon. The
-# arm layer (bin/pi/syn-watch-arm.sh, bin/brokk-claude-stop-autoarm.sh) needs exactly
+# arm layer (bin/pi/syn-watch-arm.sh, bin/backend/fm-claude-stop-autoarm.sh) needs exactly
 # that - it decides whether to start, attach to, or replace a real watcher
 # process, so a leftover beacon must never satisfy it. bin/gates/guards/syn-turnend-guard.sh
 # also keeps this strict check because it fires at the turn boundary where the
@@ -1042,7 +1042,7 @@ fm_failure_episode_reset() {
 }
 
 # --- Claude Stop auto-arm generation claims -----------------------------------
-# Both Stop-event participants (bin/brokk-claude-stop-autoarm.sh and
+# Both Stop-event participants (bin/backend/fm-claude-stop-autoarm.sh and
 # bin/gates/guards/syn-turnend-guard.sh --claude) coordinate through the epoch ledger
 # state/.claude-autoarm-epoch, whose monotonic epoch sequence IS the claim
 # generation. This is an optimistic, generation-based single-flight design:
@@ -1561,7 +1561,7 @@ fm_wake_print_deduped() {
 
 # --- signal announcement signatures -----------------------------------------
 #
-# The watcher's per-file signal scan (bin/brokk-watch.sh scan_signals) detects a
+# The watcher's per-file signal scan (bin/backend/fm-watch.sh scan_signals) detects a
 # status or turn-ended change by comparing a file signature against a persisted
 # state/.seen-* marker.
 # brokk-classify-lib.sh's header owns the status marker contract, including its

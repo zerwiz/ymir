@@ -3,7 +3,7 @@
 # tests, declared-external-wait vocabulary, and the working/paused absorb
 # classification that makes no-verb signal and stale-pane wakes safe to absorb.
 # Sourced by BOTH the always-on watcher
-# (bin/brokk-watch.sh) and the away-mode daemon (bin/brokk-supervise-daemon.sh) so the
+# (bin/backend/fm-watch.sh) and the away-mode daemon (bin/backend/fm-supervise-daemon.sh) so the
 # overlapping triage policy lives in one place instead of two copies that can
 # drift apart.
 #
