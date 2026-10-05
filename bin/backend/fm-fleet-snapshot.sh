@@ -31,7 +31,7 @@
 #     It never changes captain_actionable; renderers may use it to keep
 #     prose-deferred rows out of default views.
 #   tasks[]: one row per state/<id>.meta, sorted by id.
-#     current_state is parsed from bin/fm-crew-state.sh <id> and preserves
+#     current_state is parsed from bin/backend/fm-crew-state.sh <id> and preserves
 #     state, source, detail, and raw line separately.
 #     paths.status_log.last_event is historical wake-event data only, never
 #     current state.
@@ -150,16 +150,16 @@ validate_positive_bound FM_SNAPSHOT_REGISTRY_BYTES "$FM_SNAPSHOT_REGISTRY_BYTES"
 validate_positive_bound FM_SNAPSHOT_REGISTRY_RECORDS "$FM_SNAPSHOT_REGISTRY_RECORDS"
 validate_positive_bound FM_SNAPSHOT_REGISTRY_TIMEOUT "$FM_SNAPSHOT_REGISTRY_TIMEOUT"
 
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-classify-lib.sh"
-# shellcheck source=bin/fm-ff-lib.sh
+# shellcheck source=bin/backend/fm-ff-lib.sh
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-ff-lib.sh"  # validate_secondmate_home: shared seeded-home boundary checks
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-timeout-lib.sh"  # fm_run_timed: the shared hard bound
 
@@ -637,12 +637,12 @@ task_json_lines() {
         },
         actions:(
           if $kind == "secondmate" then
-            {send:"bin/fm-send.sh fm-\($id) \u0027<request>\u0027",
+            {send:"bin/backend/fm-send.sh fm-\($id) \u0027<request>\u0027",
              watch:"read status/doc return channel; do not routinely fm-peek a secondmate for answers",
              return_channel_note:"Secondmate answers come back through status/doc paths after a marked fm-send request."}
           else
-            {watch:"bin/fm-peek.sh fm-\($id)",
-             steer:"bin/fm-send.sh fm-\($id) \u0027<instruction>\u0027",
+            {watch:"bin/backend/fm-peek.sh fm-\($id)",
+             steer:"bin/backend/fm-send.sh fm-\($id) \u0027<instruction>\u0027",
              return_channel_note:null}
           end)
       }'

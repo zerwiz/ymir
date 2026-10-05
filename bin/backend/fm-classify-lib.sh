@@ -3,7 +3,7 @@
 # tests, declared-external-wait vocabulary, and the working/paused absorb
 # classification that makes no-verb signal and stale-pane wakes safe to absorb.
 # Sourced by BOTH the always-on watcher
-# (bin/fm-watch.sh) and the away-mode daemon (bin/fm-supervise-daemon.sh) so the
+# (bin/backend/fm-watch.sh) and the away-mode daemon (bin/backend/fm-supervise-daemon.sh) so the
 # overlapping triage policy lives in one place instead of two copies that can
 # drift apart.
 #
@@ -29,7 +29,7 @@
 #
 # There are three documented exceptions. The absorb classification
 # (crew_absorb_class and its working/paused wrappers) is NOT a pure status-file
-# read: it reuses bin/fm-crew-state.sh, which may make a bounded no-mistakes call,
+# read: it reuses bin/backend/fm-crew-state.sh, which may make a bounded no-mistakes call,
 # to decide whether a crew that just stopped its turn or went stale is working,
 # deliberately paused, or neither. Callers run it ONLY on no-verb signal handling
 # and first sighting of a stale hash, never on every wake, so the per-wake triage
@@ -52,13 +52,13 @@ _FM_CLASSIFY_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)"
 FM_CREW_STATE_BIN="${FM_CREW_STATE_BIN:-$_FM_CLASSIFY_LIB_DIR/fm-crew-state.sh}"
 
 # fm_run_timed, the shared hard bound the worktree write probe below puts around
-# its one filesystem walk. bin/fm-timeout-lib.sh owns bounded execution for this
+# its one filesystem walk. bin/backend/fm-timeout-lib.sh owns bounded execution for this
 # repo, so nothing here re-derives the coreutils/BSD/perl selection. That library
 # declares `set -u` for its own hygiene, which a sourced sibling must not impose on
 # THIS library's consumers - several of them deliberately run without it - so the
 # caller's setting is restored around the source.
 case $- in *u*) _fm_classify_nounset=on ;; *) _fm_classify_nounset=off ;; esac
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 # shellcheck disable=SC1091
 . "$_FM_CLASSIFY_LIB_DIR/fm-timeout-lib.sh"
 [ "$_fm_classify_nounset" = on ] || set +u
@@ -196,8 +196,8 @@ status_is_paused_or_captain_held() {  # <status-line>
 # captain-held backlog transfer referencing that key CLOSES it; a later unrelated
 # terminal line never clears an open captain decision.
 # Who WRITES the closing line is owned elsewhere: the answering firstmate closes
-# at answer time through fm-send's --resolve-key (bin/fm-send.sh header), and a
-# worker self-closes only a blocker that cleared without an answer (bin/fm-brief.sh
+# at answer time through fm-send's --resolve-key (bin/backend/fm-send.sh header), and a
+# worker self-closes only a blocker that cleared without an answer (bin/backend/fm-brief.sh
 # rule 6), so closure never depends on a busy worker's discipline.
 #
 # Decision key grammar (backward-compatible with the existing "<verb>: <note>"
@@ -223,10 +223,10 @@ status_is_paused_or_captain_held() {  # <status-line>
 # ends at the first tag rather than special-casing "[key=...]".
 #
 # Correlation tokens. That bracket rule already covers every BRACKETED tag,
-# including the "[corr=<16 hex>]" form bin/fm-secondmate-report.sh writes. It
-# does not cover the UNBRACKETED token that bin/fm-pending-reply-lib.sh writes
+# including the "[corr=<16 hex>]" form bin/backend/fm-secondmate-report.sh writes. It
+# does not cover the UNBRACKETED token that bin/backend/fm-pending-reply-lib.sh writes
 # (fm_pending_reply_corr_token), which a secondmate answering a marked request
-# echoes on its parent status line ahead of the key tag (bin/fm-brief.sh), so a
+# echoes on its parent status line ahead of the key tag (bin/backend/fm-brief.sh), so a
 # real transition routinely arrives as
 #   needs-decision corr=<16 hex> [key=texte-du-mur]: <summary>
 #   resolved       corr=<16 hex> [key=texte-du-mur]: <how it was decided>
@@ -238,7 +238,7 @@ status_is_paused_or_captain_held() {  # <status-line>
 # keeps that token, so its following word cannot impersonate a transition and
 # close a decision the captain is owed.
 #
-# The token grammar is OWNED by bin/fm-pending-reply-lib.sh
+# The token grammar is OWNED by bin/backend/fm-pending-reply-lib.sh
 # (fm_pending_reply_corr_token, FM_PENDING_REPLY_CORR_RE). That library sources
 # this one, so it cannot be sourced back here; the pattern below is a deliberate
 # second statement of the SHAPE alone, and tests/fm-classify-corr-token.test.sh
@@ -257,7 +257,7 @@ status_is_paused_or_captain_held() {  # <status-line>
 # extra words and therefore stays a non-transition, exactly as before.
 #
 # The 16 hex classes are written out literally rather than built from a
-# variable, the same way bin/fm-secondmate-report.sh validates the id it is
+# variable, the same way bin/backend/fm-secondmate-report.sh validates the id it is
 # handed: a variable holding a glob is only re-read as a pattern under some
 # shells' expansion rules, and a safety parse must not turn on that.
 #
@@ -613,7 +613,7 @@ EOF
 # side effect (state/.<task>.open-decisions-cursor), the library's second
 # documented exception to the pure-read rule after crew_absorb_class. The write
 # is atomic (temp file + rename), so a crash between calls leaves either the
-# prior cursor or the new one, never a partial one. bin/fm-wake-drain.sh calls
+# prior cursor or the new one, never a partial one. bin/backend/fm-wake-drain.sh calls
 # this only after releasing the wake-queue lock, so a hypothetical race between
 # two overlapping drains can at worst redo a little folding work twice - never
 # drop an open decision - because a losing writer's offset can only ever be
@@ -1581,7 +1581,7 @@ status_span_has_actionable() {  # <status-file> <start-offset>
 }
 
 # Classify WHY an idle/stale crew MIGHT be safely absorbed instead of surfaced,
-# from bin/fm-crew-state.sh's one authoritative current-state line
+# from bin/backend/fm-crew-state.sh's one authoritative current-state line
 # ("state: <s> · source: <src> · <detail>"). Prints exactly one token:
 #   working - an actively-running no-mistakes step (running/fixing/ci) or a busy
 #             pane; the crew is legitimately mid-work on a static-looking pane

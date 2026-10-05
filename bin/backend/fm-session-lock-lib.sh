@@ -3,17 +3,17 @@
 #
 # ONE owner of the "which verified-harness process holds this home's session
 # lock, and does the current process descend from that same harness?" decision.
-# bin/fm-lock.sh uses it to acquire and inspect state/.lock;
-# bin/fm-claude-stop-autoarm.sh uses it to prove a Stop hook fires inside the
+# bin/backend/fm-lock.sh uses it to acquire and inspect state/.lock;
+# bin/backend/fm-claude-stop-autoarm.sh uses it to prove a Stop hook fires inside the
 # lock-owning primary session before it may arm or rewake.
 # This file is sourced by scripts and has no side effects on source.
 
 # Cursor process identity is NOT expressible as a command-name pattern and is
 # deliberately not added to the tables below: Cursor's installed names are
 # cursor-agent and the far-too-generic legacy alias `agent`, and it runs as a
-# bundled node script. bin/fm-cursor-lib.sh is the fleet's single owner of that
+# bundled node script. bin/backend/fm-cursor-lib.sh is the fleet's single owner of that
 # decision, so this file delegates to it rather than widening the name match.
-# shellcheck source=bin/fm-cursor-lib.sh
+# shellcheck source=bin/backend/fm-cursor-lib.sh
 . "$(dirname -- "${BASH_SOURCE[0]}")/fm-cursor-lib.sh"
 
 # Known harness command names; extend when a new adapter is verified.
@@ -22,7 +22,7 @@ FM_HARNESS_RE='claude|codex|opencode|grok|kimi|^pi$|^pi-signed$'
 # The same harnesses as exact executable names. Keep in sync with
 # FM_HARNESS_RE. Used only for the stricter path evidence below, where the
 # loose regex would also match ordinary firstmate paths such as
-# bin/fm-claude-stop-autoarm.sh.
+# bin/backend/fm-claude-stop-autoarm.sh.
 FM_HARNESS_NAMES=(claude codex opencode grok kimi pi-signed pi)
 
 # Print the exact harness name carried by executable path $1 - its own basename
@@ -32,7 +32,7 @@ FM_HARNESS_NAMES=(claude codex opencode grok kimi pi-signed pi)
 # executable by its version (~/.local/share/claude/versions/2.1.220), so the
 # basename identifies nothing while the install path still says claude. Matching
 # whole path components only is what keeps that widening safe: an ordinary path
-# such as bin/fm-claude-stop-autoarm.sh or ~/.claude/hooks/notify.sh has no
+# such as bin/backend/fm-claude-stop-autoarm.sh or ~/.claude/hooks/notify.sh has no
 # "claude" component and is correctly not a harness process.
 fm_harness_path_name() {  # <path>
   local path=$1 name
@@ -56,7 +56,7 @@ fm_harness_path_name() {  # <path>
 #      name and ignores argv[0] entirely, so a version-named Claude Code binary
 #      is identified by its install path on macOS and by argv[0] on Linux.
 #   3. a bare interpreter (node, python) running a harness script path.
-#   4. Cursor's own structural identity, owned by bin/fm-cursor-lib.sh.
+#   4. Cursor's own structural identity, owned by bin/backend/fm-cursor-lib.sh.
 FM_HARNESS_IS_CLAUDE=0
 fm_harness_process_matches() {  # <comm> <args>
   local comm=$1 args=$2 base argv0 name

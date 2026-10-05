@@ -2,7 +2,7 @@
 # nornir-job-forgejo-git.sh — the local git round: issues and PRs on the forge.
 #
 # The Forgejo door (forgejo.zerwiz.org → the server's :3030, or a locally
-# provisioned forge via bin/ymir-marketing-stack.sh --with-forgejo) holds the
+# provisioned forge via bin/desktop/ymir-marketing-stack.sh --with-forgejo) holds the
 # Allfather's issue-to-PR loop. Each morning this job reads the forge's open
 # issues, lands a public-safe digest in the hoard, and carves a Rune with the
 # tally — so a broken door or an accumulating queue is seen at sunrise, never

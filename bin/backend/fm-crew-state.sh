@@ -8,7 +8,7 @@
 # or blocked and the crew resumes (responds to the gate, the pipeline fixes, it
 # re-validates), the log's last line stays stale. This helper never infers the
 # current state from a tail of the log: it reads the authoritative source (a
-# no-mistakes run-step attributed under bin/fm-nm-run-lib.sh's contract, else
+# no-mistakes run-step attributed under bin/backend/fm-nm-run-lib.sh's contract, else
 # the pane busy-signature) and reconciles the possibly-stale log against it.
 #
 # The determinism lives entirely here - only run-step / pane / log reads plus
@@ -27,7 +27,7 @@
 #      unreachable or unreadable remote reports unknown-remote, never a false
 #      gone/dead.
 #   2. Attribute an active or terminal no-mistakes run under the branch, head,
-#      pipeline-custody, and newest-first rules owned by bin/fm-nm-run-lib.sh.
+#      pipeline-custody, and newest-first rules owned by bin/backend/fm-nm-run-lib.sh.
 #      The run-step is AUTHORITATIVE: running/fixing -> working, ci -> working,
 #      awaiting_approval/fix_review -> parked (with gate findings), terminal
 #      passed/checks-passed -> done, failed/cancelled -> failed. EXCEPT: while
@@ -56,15 +56,15 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 
-# shellcheck source=bin/fm-tmux-lib.sh
+# shellcheck source=bin/backend/fm-tmux-lib.sh
 . "$SCRIPT_DIR/fm-tmux-lib.sh"
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 . "$SCRIPT_DIR/fm-classify-lib.sh"
-# shellcheck source=bin/fm-busy-lib.sh
+# shellcheck source=bin/backend/fm-busy-lib.sh
 . "$SCRIPT_DIR/fm-busy-lib.sh"
-# shellcheck source=bin/fm-nm-run-lib.sh
+# shellcheck source=bin/backend/fm-nm-run-lib.sh
 . "$SCRIPT_DIR/fm-nm-run-lib.sh"
 
 ID=${1:-}
@@ -196,7 +196,7 @@ pane_readable() {  # <target>
   esac
 }
 # crew_busy_verdict: the crew's semantic busy state from the one contract
-# owner (bin/fm-busy-lib.sh), as "<busy|idle|unknown> <source>". A converted
+# owner (bin/backend/fm-busy-lib.sh), as "<busy|idle|unknown> <source>". A converted
 # adapter answers from its own lifecycle record; Grok answers from its
 # isolated rendered-tail fallback; a herdr crew's native `busy` is accepted
 # when no record exists, but its native `idle` is NOT, because agent.get
@@ -213,7 +213,7 @@ crew_busy_verdict() {  # <target>
 # --- no-mistakes run lookup (authoritative when a run matches this branch) --
 # trim, strip_quotes, the bounded nm_run call, nm_field's TOON parse, and the
 # attribution helpers below are thin wrappers over the ONE owner in
-# bin/fm-nm-run-lib.sh, shared with fm-teardown.sh's pre-teardown run abort.
+# bin/backend/fm-nm-run-lib.sh, shared with fm-teardown.sh's pre-teardown run abort.
 
 trim() { fm_nm_trim "$@"; }
 strip_quotes() { fm_nm_strip_quotes "$@"; }
@@ -363,7 +363,7 @@ nm_ci_checks_state() {
 # status` answer was not this crew's own branch, attribution always failed and
 # the caller fell straight through to the pane/log fallback below. (The
 # PRIMARY cause of the 2026-07 herdr false-surface incidents turned out to be
-# a separate bug in bin/fm-watch.sh's stale_is_terminal precedence - see that
+# a separate bug in bin/backend/fm-watch.sh's stale_is_terminal precedence - see that
 # file's history - but this cross-branch path was independently confirmed
 # dead code and is worth having actually work.)
 #
@@ -413,7 +413,7 @@ CREW_BRANCH=$(git -C "$WT" symbolic-ref --quiet --short HEAD 2>/dev/null || true
 
 # 0 if the active axi-status run's head field matches this worktree's code
 # identity. Branch match is a precondition (caller). Rule owned by
-# fm_nm_head_matches_worktree in bin/fm-nm-run-lib.sh.
+# fm_nm_head_matches_worktree in bin/backend/fm-nm-run-lib.sh.
 nm_run_head_matches_worktree() {
   local run_head
   run_head=$(strip_quotes "$(nm_field head)")
@@ -443,7 +443,7 @@ if [ "$KIND" = ship ] && [ -n "$CREW_BRANCH" ] && command -v no-mistakes >/dev/n
     # Head equality, or the pipeline-owned-active exemption: while the
     # pipeline owns this branch, the daemon's own branch attribution is
     # authoritative and the lane head need not be a git object here
-    # (fm_nm_run_is_pipeline_owned_active in bin/fm-nm-run-lib.sh).
+    # (fm_nm_run_is_pipeline_owned_active in bin/backend/fm-nm-run-lib.sh).
     if [ -n "$run_branch" ] && [ "$run_branch" = "$CREW_BRANCH" ] \
       && { nm_run_head_matches_worktree || fm_nm_run_is_pipeline_owned_active "$RUN_OUT"; }; then
       HAVE_RUN=1

@@ -4,10 +4,10 @@
 # Source this file and call:
 #   fm_remote_readiness_ensure <bin-dir> <secondmate-id>
 #
-# It runs bin/fm-remote-doctor.sh on that route's configured host, and when the
+# It runs bin/backend/fm-remote-doctor.sh on that route's configured host, and when the
 # read-only run reports any gap it runs the doctor again with --fix and then a
 # third read-only time. That last read-only run is the verdict, so a repair is
-# never trusted on its own word. bin/fm-remote-doctor.sh remains the single
+# never trusted on its own word. bin/backend/fm-remote-doctor.sh remains the single
 # owner of every check, every repair, and every message; nothing here restates
 # them.
 #

@@ -38,7 +38,7 @@ BROKK_HOME="${BROKK_HOME:-$ROOT}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
 # shellcheck source=bin/records/runes-append.sh
-. "$SCRIPT_DIR/runes-append.sh"
+. "$SCRIPT_DIR/../records/runes-append.sh"
 
 REALM="${BROKK_REALM:-}"
 if [ -z "$REALM" ] && [ -r "$DATA/realm.md" ]; then
@@ -46,7 +46,7 @@ if [ -z "$REALM" ] && [ -r "$DATA/realm.md" ]; then
 fi
 REALM="${REALM:-}"
 # Never assume the company's slug: resolve the operator's realm neutrally.
-if [ -z "$REALM" ]; then . "$SCRIPT_DIR/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
+if [ -z "$REALM" ]; then . "$SCRIPT_DIR/../skuld/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
 
 DATE=$(date +%Y-%m-%d)
 BRIEF_DIR="${BROKK_BRIEF_DIR:-${YMIR_HOME}/svartalfaheim/$REALM/workspace/memory/daily}"

@@ -8,7 +8,7 @@
 # The DECISION TABLE is data: `.agents/roles.yaml` (role → figure → tools). This
 # door only reads it — it declares no role in code (plan 58 Phase 4). The figure
 # cards in `.agents/agents/*.md` carry the prose and the frontmatter; the ROSTER
-# (`bin/agents-config.sh roster`) joins this table to the hoard's model choice.
+# (`bin/fleet/agents-config.sh roster`) joins this table to the hoard's model choice.
 #
 # Usage:
 #   bin/agents/eindri-role.sh list
@@ -21,7 +21,8 @@ set -u
 
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 ROLES="${YMIR_ROLES_YAML:-$ROOT/.agents/roles.yaml}"
 
 case "${1-}" in

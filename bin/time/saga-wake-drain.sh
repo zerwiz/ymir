@@ -17,7 +17,7 @@ BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # reported "0 pending" while the hoard queue held unhandled wakes (2026-09-23).
 if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-    for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+    for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
       [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
     done
     unset _c
@@ -32,7 +32,7 @@ QUEUE="$STATE/.wake-queue"
 # The FM runner's own durable queue (its published check-wakes) lives under the
 # .agents home, not the main state. The watcher hollers on BOTH doors; a drain
 # that reads only one lets strikes hide in the other. Combine them here.
-FMQ="$SCRIPT_DIR/../.agents/state/.wake-queue"
+FMQ="$SCRIPT_DIR/../../state/procevent/.wake-queue"
 
 case "${1:-drain}" in
   -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;

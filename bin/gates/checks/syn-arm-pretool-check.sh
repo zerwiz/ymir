@@ -3,7 +3,7 @@
 #
 # Sýn guards the arm path: the arm is owned by the harness extension (a
 # plugin-owned child process), so the residual risk is the agent shelling
-# `bin/syn-watch-arm.sh` wrong through its own bash tool — backgrounding it,
+# `bin/pi/syn-watch-arm.sh` wrong through its own bash tool — backgrounding it,
 # detaching it with nohup/setsid/disown, or bundling it so continuity escapes
 # the extension. Reading it, or merely checking its syntax, is fine.
 #

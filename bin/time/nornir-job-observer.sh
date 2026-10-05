@@ -39,7 +39,7 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 # shellcheck source=bin/records/runes-append.sh
-. "$SCRIPT_DIR/runes-append.sh"
+. "$SCRIPT_DIR/../records/runes-append.sh"
 
 WORKTREE_ROOT="${BROKK_YGGDRASIL_ROOT:-$HOME/.treehouse}"
 YMIR_HOME="${YMIR_HOME}"

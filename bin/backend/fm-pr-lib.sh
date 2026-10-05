@@ -162,7 +162,7 @@ fm_pr_gitlab_path_valid() {
 # loosened GitHub rule.
 #
 # FM_PR_OWNER and FM_PR_REPO are additionally set for github because
-# bin/fm-pr-merge.sh addresses GitHub by owner/repository. A gitlab URL leaves
+# bin/backend/fm-pr-merge.sh addresses GitHub by owner/repository. A gitlab URL leaves
 # them empty, and that path addresses the project by FM_PR_HOST and FM_PR_PATH
 # instead, so a merge request on any instance resolves without a hardcoded host.
 fm_pr_url_parse() {
@@ -183,7 +183,7 @@ fm_pr_url_parse() {
     FM_PR_URL=$raw
     FM_PR_HOST=github.com
     FM_PR_PATH="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
-    # Consumed by bin/fm-pr-merge.sh, which addresses GitHub by owner/repository.
+    # Consumed by bin/backend/fm-pr-merge.sh, which addresses GitHub by owner/repository.
     # shellcheck disable=SC2034
     FM_PR_OWNER=${BASH_REMATCH[1]}
     # shellcheck disable=SC2034
@@ -1005,7 +1005,7 @@ fm_pr_poll_merge_mark_notified() {  # <state> <id> <provider> <host> <path> <num
 }
 
 # Removed at teardown alongside the other per-task PR-poll artifacts
-# (bin/fm-teardown.sh) so a retired task id leaves no residue behind.
+# (bin/backend/fm-teardown.sh) so a retired task id leaves no residue behind.
 fm_pr_poll_merge_notified_remove() {  # <state> <id>
   local state=$1 id=$2 marker
   fm_pr_task_id_valid "$id" || return 1

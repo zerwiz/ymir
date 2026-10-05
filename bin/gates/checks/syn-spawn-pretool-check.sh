@@ -49,7 +49,7 @@ case "$command_text" in
       *"llama-cpp/"*|*"llama.cpp/"*|*"lmstudio/"*|*"ollama/"*)
         if ! (exec 3<>/dev/tcp/127.0.0.1/8080) 2>/dev/null; then
           printf 'denied: a local model was requested but no local server answers on :8080 — the worker will start, fail, and leave a shell\n' >&2
-          printf 'help: raise the llama-router (bin/models-detect.sh reports what is served), or seat the worker on an online model\n' >&2
+          printf 'help: raise the llama-router (bin/model/models-detect.sh reports what is served), or seat the worker on an online model\n' >&2
           exit 2
         fi ;;
     esac ;;

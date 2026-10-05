@@ -128,11 +128,11 @@ else
     eindri_queue_wake "eindri $AGENT reported: $detail"
   fi
   eindri_mark_delivered "$AGENT" "$wake_kind"
-  if [ -x "$SCRIPT_DIR/ymir-say.sh" ]; then
+  if [ -x "$SCRIPT_DIR/../time/snotra/ymir-say.sh" ]; then
     if [ "$kind" = "QUESTION" ]; then
-      "$SCRIPT_DIR/ymir-say.sh" alarm "Eindri $AGENT asks — answer it" >/dev/null 2>&1 || true
+      "$SCRIPT_DIR/../time/snotra/ymir-say.sh" alarm "Eindri $AGENT asks — answer it" >/dev/null 2>&1 || true
     else
-      "$SCRIPT_DIR/ymir-say.sh" note "Eindri $AGENT reported" >/dev/null 2>&1 || true
+      "$SCRIPT_DIR/../time/snotra/ymir-say.sh" note "Eindri $AGENT reported" >/dev/null 2>&1 || true
     fi
   fi
 fi
@@ -150,8 +150,8 @@ if [ "$TERMINAL" = done ] && [ -x "$SCRIPT_DIR/eindri-review-spawn.sh" ]; then
       mkdir -p "$STATE/.reviewed" 2>/dev/null || true
       printf '%s\n' "$_rv_out" >"$STATE/.reviewed/$AGENT.failed" 2>/dev/null || true
       eindri_queue_wake "eindri $AGENT review spawn FAILED (rc=$_rv_rc): $(printf '%s' "$_rv_out" | grep -m1 . || true)"
-      if [ -x "$SCRIPT_DIR/ymir-say.sh" ]; then
-        "$SCRIPT_DIR/ymir-say.sh" alarm "Forseti's review spawn failed for $AGENT" >/dev/null 2>&1 || true
+      if [ -x "$SCRIPT_DIR/../time/snotra/ymir-say.sh" ]; then
+        "$SCRIPT_DIR/../time/snotra/ymir-say.sh" alarm "Forseti's review spawn failed for $AGENT" >/dev/null 2>&1 || true
       fi
     fi
   fi

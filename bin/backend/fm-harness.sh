@@ -27,7 +27,7 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 CONFIG="${FM_CONFIG_OVERRIDE:-$FM_HOME/config}"
 
-# shellcheck source=bin/fm-cursor-lib.sh
+# shellcheck source=bin/backend/fm-cursor-lib.sh
 . "$SCRIPT_DIR/fm-cursor-lib.sh"
 
 detect_own() {
@@ -42,7 +42,7 @@ detect_own() {
   # an inherited CLAUDECODE, so a cursor worker launched from a claude primary
   # carries BOTH markers and whichever is tested first wins. Cursor's own
   # markers are unambiguous when present, so ordering them first is what makes
-  # the verdict correct; bin/fm-spawn.sh additionally clears the foreign markers
+  # the verdict correct; bin/backend/fm-spawn.sh additionally clears the foreign markers
   # at the launch boundary. Both are kept: the launch sanitization only covers
   # sessions fm-spawn started, while this ordering also covers a cursor session
   # a human started by hand. Verified live on cursor-agent 2026.08.11-e8db854:

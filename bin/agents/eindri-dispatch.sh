@@ -35,7 +35,7 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 # restated. The four-shelf skill walk below reads the home shelf from here, and
 # $HOME/Documents/ymirhome is NOT a default: it is one machine's layout.
 # shellcheck disable=SC1091
-. "$SCRIPT_DIR/hoard-lib.sh" 2>/dev/null || true
+. "$SCRIPT_DIR/../vault/hoard-lib.sh" 2>/dev/null || true
 if command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root YMIR_HOME
 fi
@@ -228,7 +228,7 @@ cmd_new() {
       elif [ -f "$HOME/.pi/agent/skills/$s/SKILL.md" ]; then
         printf '%s\n' "- skill: \`$s\` → ~/.pi/agent/skills/$s/SKILL.md (load it before acting)"
       else
-        printf '%s\n' "- skill: \`$s\` — NOT FOUND in .agents/skills, .agents/skills-local, the home shelf, or the pi skills. Find it: bash bin/skill-find.sh \"$s\". If it is genuinely absent, report the gap — do not improvise."
+        printf '%s\n' "- skill: \`$s\` — NOT FOUND in .agents/skills, .agents/skills-local, the home shelf, or the pi skills. Find it: bash bin/agents/skill-find.sh \"$s\". If it is genuinely absent, report the gap — do not improvise."
       fi
     done
     [ -z "$FIGURE" ] && [ -z "$SKILLS" ] && printf '%s\n' "(no craft given — declared --no-skill)"

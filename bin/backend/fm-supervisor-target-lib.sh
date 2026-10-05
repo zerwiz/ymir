@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # fm-supervisor-target-lib.sh - the single owner of supervisor-pane discovery.
 #
-# The away-mode daemon (bin/fm-supervise-daemon.sh) must know which pane runs
+# The away-mode daemon (bin/backend/fm-supervise-daemon.sh) must know which pane runs
 # firstmate itself, both to inject escalations into it and, for the daemon, to
 # validate that target at startup. The script-owned away launcher
-# (bin/fm-afk-launch.sh) must resolve the SAME captain pane BEFORE it creates a
+# (bin/backend/fm-afk-launch.sh) must resolve the SAME captain pane BEFORE it creates a
 # separate, non-visible terminal for the daemon, so it can pass that pane in as
 # FM_SUPERVISOR_TARGET (otherwise the daemon, running in its own terminal, would
 # auto-discover its OWN pane and inject there instead of into the captain's).
 #
 # Because both callers need the identical resolution, it lives here once. The
 # function names and precedence are unchanged from when this logic lived inline
-# in bin/fm-supervise-daemon.sh, so its unit tests (tests/fm-daemon.test.sh)
+# in bin/backend/fm-supervise-daemon.sh, so its unit tests (tests/fm-daemon.test.sh)
 # keep exercising the same names after the daemon sources this file.
 
 # Default supervisor pane target/backend when nothing is configured or detected.
@@ -55,7 +55,7 @@ discover_supervisor_target() {
 # discover_supervisor_backend: resolve the supervisor pane's BACKEND, independent
 # of the target string so an explicit FM_SUPERVISOR_TARGET override still knows
 # which primitives (tmux vs herdr) to dispatch through. Priority mirrors
-# discover_supervisor_target and bin/fm-backend.sh's fm_backend_detect:
+# discover_supervisor_target and bin/backend/fm-backend.sh's fm_backend_detect:
 #   1. FM_SUPERVISOR_BACKEND env (explicit override).
 #   2. $TMUX_PANE set - tmux.
 #   3. $HERDR_ENV=1 (with $HERDR_PANE_ID present) - herdr.

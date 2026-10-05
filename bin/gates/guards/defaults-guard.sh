@@ -39,7 +39,7 @@ case "${1-}" in
 esac
 
 # The ONE definition site. Everything else must call it.
-ALLOWLIST="bin/vault/hoard-lib.sh bin/defaults-guard.sh src/ymir_runtime/paths.py"
+ALLOWLIST="bin/vault/hoard-lib.sh bin/gates/guards/defaults-guard.sh src/ymir_runtime/paths.py"
 
 # A home guessed, a second root, or a synced-home name. Written as parts so this
 # ward does not fire on itself. The seat rule is general on purpose: ANY absolute

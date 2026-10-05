@@ -1,0 +1,298 @@
+#!/usr/bin/env bash
+# design-icon.sh — every app wears its own rune.
+#
+# The icon set is runecoded (midgard/design-system/icons.md): an Elder Futhark
+# rune, stroked at the chisel bevel, tinted by the app's HOUSE colour. Not a
+# generic globe, not an emoji, not a screenshot of a UI.
+#
+#   bin/desktop/design-icon.sh list                 # the app -> rune -> house mapping
+#   bin/desktop/design-icon.sh mint [app]           # write <app>/public/icon.svg (+ the link hint)
+#   bin/desktop/design-icon.sh mint --all
+#
+# The tile is stone (--ymir-bg-0) with the rune in the house tint; the SVG is
+# self-contained, so a favicon needs no build step and no raster asset.
+set -u
+
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
+# Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
+if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
+  _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
+    [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
+  done
+  unset _ya _yac
+fi
+app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
+app_dir hlidskjalf-mobile APP_HLIDSKJALF_MOBILE || APP_HLIDSKJALF_MOBILE=""
+app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
+app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
+app_dir smidja-factory APP_SMIDJA_FACTORY || APP_SMIDJA_FACTORY=""
+
+ICONS="$ROOT/midgard/design-system/icons"
+STONE="#0e0c09"
+
+case "${1-}" in
+  -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+  -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
+ACTION="${1:-list}"; shift || true
+
+# dir|glyph|tint|says|icon-name|exec|wm-class
+# FIVE UI surfaces, FIVE DIFFERENT glyphs — no app borrows another's rune.
+APPS=(
+  "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane|ymir-hlidskjalf|ymir hlidskjalf|ymir-hlidskjalf|Ymir · Hlidskjalf"
+  "apps/hlidskjalf-mobile|raidho|#c9973f|the road — the seat carried, Hlidskjalf on a phone|ymir-hlidskjalf-mobile|ymir hlidskjalf|ymir-hlidskjalf-mobile|Ymir · Hlidskjalf Mobile"
+  "apps/odrerir|ansuz|#c9973f|the mead — Óðrerir, the Live Hall (Odin's breath, inspiration)|ymir-odrerir|ymir odrerir|ymir-odrerir|Ymir · Óðrerir"
+  "apps/sessrumnir|othala|#c9973f|the hall — Sessrúmnir, the seat that holds the cloth|ymir-sessrumnir|ymir sessrumnir|ymir-sessrumnir|Ymir · Sessrúmnir"
+  "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-smidja|ymir smidja|ymir-smidja|Ymir · Smíðja"
+)
+
+list() {
+  printf 'app_icons[%d]{app,rune,tint,says}:\n' "${#APPS[@]}"
+  for row in "${APPS[@]}"; do
+    IFS='|' read -r dir glyph tint says icon _exec _klass _name <<<"$row"
+    # The surface's name is the one the desktop knows it by (ymir-smidja →
+    # smidja), never the directory's leaf — a path is not a name (the naming law).
+    surface="${icon#ymir-}"
+    printf '  "%s","%s","%s","%s"\n' "$surface" "$glyph" "$tint" "$says"
+  done
+  printf 'runes[6]{glyph,name,meaning}:\n'
+  printf '  "algiz","ᛉ","the Ymir emblem — the platform itself"\n'
+  printf '  "ehwaz","ᛖ","horse/journey — the seat and its transit"\n'
+  printf '  "ansuz","ᚨ","Odin'"'"'s breath — the forge"\n'
+  printf '  "sowilo","ᛊ","sun — light on the tree"\n'
+  printf '  "valhalla","ᚹ","the hall"\n'
+  printf '  "gjallarhorn","ᚷ","the horn — the tunnel"\n'
+}
+
+mint() {  # <app-dir> <glyph> <tint> <label>
+  local dir=$1 glyph=$2 tint=$3 label=$4
+  local g="$ICONS/$glyph.svg"
+  [ -r "$g" ] || { printf 'error: no glyph %s in midgard/design-system/icons/\nhelp: bin/desktop/design-icon.sh list\n' "$glyph" >&2; return 1; }
+  local path
+  path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$g" | head -1)"
+  [ -n "$path" ] || { printf 'error: %s carries no <path> to reuse\n' "$glyph" >&2; return 1; }
+  # A clone keeps the app at $ROOT/apps/<name>; a package keeps it under
+  # node_modules/@zerwiz/<package>. The mint resolves both, so a packaged install
+  # gets its favicon too — the same resolver every other script uses.
+  local base outdir surface
+  base="$ROOT/$dir"
+  if [ ! -d "$base" ]; then
+    surface="$(basename "$dir")"
+    case "$surface" in smidja-factory) surface=smidja ;; esac
+    app_dir "$surface" base 2>/dev/null || base=""
+  fi
+  [ -n "$base" ] && [ -d "$base" ] || { printf '  "%s","SKIP (no such app)"\n' "$dir"; return 0; }
+  outdir="$base/public"
+  mkdir -p "$outdir"
+  {
+    printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="%s">\n' "$label"
+    printf '  <title>%s</title>\n' "$label"
+    printf '  <rect width="32" height="32" rx="7" fill="%s"/>\n' "$STONE"
+    printf '  <g transform="translate(4 4) scale(1.0)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">\n' "$tint"
+    printf '    <path d="%s"/>\n' "$path"
+    printf '  </g>\n</svg>\n'
+  } >"$outdir/icon.svg"
+  printf '  "%s","%s","%s","<link rel=\\"icon\\" href=\\"/icon.svg\\" type=\\"image/svg+xml\\">"\n' \
+    "$(basename "$dir")" "$glyph" "${outdir#"$ROOT"/}/icon.svg"
+}
+
+
+# ── install into the user's system ───────────────────────────────────────────
+# An icon that only exists in the checkout is an icon the operator cannot pin.
+# This writes the rune into the user's icon theme and a .desktop entry per app,
+# rendered with THIS machine's root (never a hardcoded home), so every app is
+# dockable and carries the house mark. Idempotent.
+# The DESKTOP the operator actually sees, not whatever a session happened to
+# export: an agent harness may set XDG_DATA_HOME to a sandbox (this one does),
+# and an icon written there is an icon nobody can pin. YMIR_DESKTOP_DATA_HOME
+# exists for a test that genuinely wants a throwaway target.
+data_home="${YMIR_DESKTOP_DATA_HOME:-$HOME/.local/share}"
+icons_dir="$data_home/icons/hicolor/scalable/apps"
+apps_dir="$data_home/applications"
+# app | entry name | Exec | StartupWMClass
+ENTRIES=(
+  "hlidskjalf|Ymir · Hlidskjalf|ymir hlidskjalf|ymir-hlidskjalf"
+  "odrerir|Ymir · Óðrerir|ymir odrerir|ymir-odrerir"
+  "sessrumnir|Ymir · Sessrúmnir|ymir sessrumnir|ymir-sessrumnir"
+  "visualizer|Ymir · Smíðja|ymir smidja|ymir-smidja"
+  "hlidskjalf-mobile|Ymir · Hlidskjalf Mobile|ymir hlidskjalf|ymir-hlidskjalf-mobile"
+)
+install_all() {
+  # A phone app gets an icon for its own bundle, never a desktop entry.
+  local EXCLUDE=" hlidskjalf-mobile "
+
+  mkdir -p "$icons_dir" "$apps_dir" || { printf 'error: cannot write %s / %s\n' "$icons_dir" "$apps_dir" >&2; exit 1; }
+  printf 'installed[%d]{app,icon,entry}:\n' "${#APPS[@]}"
+  local row dir glyph tint says iconname exec klass src
+  for row in "${APPS[@]}"; do
+    IFS='|' read -r dir glyph tint says iconname exec klass display <<<"$row"
+    case "$EXCLUDE" in *" $(basename "$dir") "*) continue ;; esac
+    src="$ROOT/$dir/public/icon.svg"
+    if [ ! -f "$src" ]; then
+      # mint it first — the icon is defined by this table, so it is never absent
+      if [ -r "$ICONS/$glyph.svg" ]; then
+        mkdir -p "$(dirname "$src")" 2>/dev/null
+        path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$ICONS/$glyph.svg" | head -1)"
+        { printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="%s">\n' "$says"
+          printf '  <title>%s</title>\n  <rect width="32" height="32" rx="7" fill="%s"/>\n' "$says" "$STONE"
+          printf '  <g transform="translate(4 4)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">\n' "$tint"
+          printf '    <path d="%s"/>\n  </g>\n</svg>\n' "$path"
+        } >"$src" 2>/dev/null || true
+      fi
+    fi
+    cp -f "$src" "$icons_dir/$iconname.svg" 2>/dev/null || { printf '  "%s","FAILED","-","no icon at %s"\n' "$dir" "${src#"$ROOT"/}"; continue; }
+    {
+      printf '[Desktop Entry]\nType=Application\nVersion=1.0\n'
+      printf 'Name=%s\n' "$display"
+      printf 'Comment=%s\n' "$says"
+      # The door, never a path: a launcher entry outlives the tree that wrote it,
+      # and `ymir <door>` reaches whichever install is live. (The CLI is on PATH
+      # from npm's global bin, and from bin/ in a clone — ymir.js is a bin entry.)
+      printf 'Exec=%s\n' "$exec"
+      printf 'Icon=%s\n' "$iconname"
+      printf 'Terminal=false\nCategories=Development;Utility;\n'
+      printf 'StartupWMClass=%s\nStartupNotify=true\n' "$klass"
+    } >"$apps_dir/$iconname.desktop"
+    printf '  "%s","%s.svg","%s.desktop"\n' "$iconname" "$iconname" "$iconname"
+  done
+  # Names we have retired, swept on every install: a launcher entry that points at
+  # an icon nobody ships is a blank square, and the naming law does not let an old
+  # name linger beside the new one. (ymir-visualizer → ymir-smidja.)
+  for stale in ymir-hlidskjalf-mobile ymir-visualizer; do
+    rm -f "$apps_dir/$stale.desktop" "$icons_dir/$stale.svg"
+  done
+  command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
+}
+
+# ── raster — re-cut the PNG/ICO icons from the minted SVGs ──────────────────
+# The SVGs carry the design (stone + rune + tint); the launcher icons are
+# rasterised copies, and they go stale (blue, pink, grayscale) the moment the
+# design moves. This re-cuts each app's icons from its own icon.svg, the Ymir
+# emblem (algiz on stone) onto ymir-icon.png, and the smithy's icon into the
+# electron dir — so the menu never shows an old fire.
+rasterize() {  # <svg> <out> <size>
+  local svg=$1 out=$2 size=$3
+  [ -r "$svg" ] || return 1
+  mkdir -p "$(dirname "$out")" || return 1
+  if command -v rsvg-convert >/dev/null 2>&1; then
+    rsvg-convert -w "$size" -h "$size" "$svg" -o "$out" 2>/dev/null
+  elif command -v magick >/dev/null 2>&1; then
+    magick -background none -density 512 -resize "${size}x${size}" "$svg" "$out" 2>/dev/null
+  else
+    return 1
+  fi
+}
+
+emblem_svg() {  # <glyph> <tint> <out.svg>
+  local glyph=$1 tint=$2 out=$3 g="$ICONS/$1.svg" path
+  [ -r "$g" ] || return 1
+  path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$g" | head -1)"
+  [ -n "$path" ] || return 1
+  { printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">\n'
+    printf '  <rect width="32" height="32" rx="7" fill="%s"/>\n' "$STONE"
+    printf '  <g transform="translate(4 4) scale(1.0)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">\n' "$tint"
+    printf '    <path d="%s"/>\n  </g>\n</svg>\n' "$path"; } >"$out"
+}
+
+rune_svg() {  # <glyph> <tint> <out.svg> -- the rune alone, no stone (an Android foreground layer)
+  local g="$ICONS/$1.svg" path
+  [ -r "$g" ] || return 1
+  path="$(sed -n 's/.*<path d="\([^"]*\)".*/\1/p' "$g" | head -1)"
+  [ -n "$path" ] || return 1
+  { printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">\n'
+    printf '  <g transform="translate(4 4)" fill="none" stroke="%s" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">\n' "$2"
+    printf '    <path d="%s"/>\n  </g>\n</svg>\n' "$path"; } >"$3"
+}
+
+raster_targets() {  # <surface> -> "<out>:<size>" lines
+  case "$1" in
+    hlidskjalf) printf '%s\n' "$ROOT/apps/hlidskjalf/electron/icon.png:512" "$ROOT/apps/hlidskjalf/public/apple-touch-icon.png:180" ;;
+    odrerir)    printf '%s\n' "$ROOT/apps/odrerir/electron/icon.png:512" "$ROOT/apps/odrerir/public/apple-touch-icon.png:180" ;;
+    smidja)     printf '%s\n' "$ROOT/apps/smidja-factory/apps/visualizer/desktop/icon.png:512" ;;
+    sessrumnir) for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon-$s.png:$s"; done
+                printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon.png:512" "$ROOT/apps/sessrumnir/public/apple-touch-icon.png:180" ;;
+  esac
+}
+
+raster_all() {
+  local n=0 row d glyph tint says icon surface svg out size tmp
+  printf 'rasters[9]{surface,file,size}:\n'
+  for row in "${APPS[@]}"; do
+    IFS='|' read -r d glyph tint says icon _e _k _n <<<"$row"
+    surface="${icon#ymir-}"
+    case "$surface" in
+      hlidskjalf) svg="$ROOT/apps/hlidskjalf/public/icon.svg" ;;
+      odrerir)    svg="$ROOT/apps/odrerir/public/icon.svg" ;;
+      sessrumnir) svg="$ROOT/apps/sessrumnir/public/icon.svg" ;;
+      smidja)     svg="$ROOT/apps/smidja-factory/apps/visualizer/public/icon.svg" ;;
+      *) continue ;;
+    esac
+    while IFS=: read -r out size; do
+      [ -n "$out" ] || continue
+      if rasterize "$svg" "$out" "$size"; then printf '  "%s","%s","%s"\n' "$surface" "${out#"$ROOT"/}" "$size"; n=$((n+1)); fi
+    done < <(raster_targets "$surface")
+  done
+  # the platform emblem (algiz on stone) onto ymir-icon.png
+  tmp="$(mktemp --suffix=.svg)"
+  if emblem_svg algiz "#c9973f" "$tmp" && rasterize "$tmp" "$ROOT/apps/hlidskjalf/public/ymir-icon.png" 512; then printf '  "ymir","apps/hlidskjalf/public/ymir-icon.png","512"\n'; n=$((n+1)); fi
+  rm -f "$tmp"
+  # the smithy's own icon inside hlidskjalf's electron dir
+  if rasterize "$ROOT/apps/smidja-factory/apps/visualizer/public/icon.svg" "$ROOT/apps/hlidskjalf/electron/smidja-icon.png" 512; then printf '  "smidja","apps/hlidskjalf/electron/smidja-icon.png","512"\n'; n=$((n+1)); fi
+  # Android launcher tiles (all 512 today): the stone tile, its round twin, and the
+  # rune-only foreground layer -- the launcher icons were a stale grayscale relic.
+  if [ -d "$ROOT/apps/hlidskjalf/android/app/src/main/res" ]; then
+    fg="$(mktemp --suffix=.svg)"; rune_svg ehwaz "#c9973f" "$fg"
+    for d in "$ROOT"/apps/hlidskjalf/android/app/src/main/res/mipmap-*/; do
+      [ -d "$d" ] || continue
+      rasterize "$ROOT/apps/hlidskjalf/public/icon.svg" "$d/ic_launcher.png" 512 && n=$((n+1))
+      rasterize "$ROOT/apps/hlidskjalf/public/icon.svg" "$d/ic_launcher_round.png" 512 && n=$((n+1))
+      rasterize "$fg" "$d/ic_launcher_foreground.png" 512 && n=$((n+1))
+    done
+    rm -f "$fg"
+    printf '  "android","apps/hlidskjalf/android/.../mipmap-*/ic_launcher*.png","512"\n'
+  fi
+  # Android splash screens -- they were a plain WHITE relic; re-cut each to the
+  # stone ground with the app icon centred, at its existing size.
+  if command -v magick >/dev/null 2>&1; then
+    for sp in "$ROOT"/apps/hlidskjalf/android/app/src/main/res/drawable*/splash.png; do
+      [ -f "$sp" ] || continue
+      wh="$(identify -format '%wx%h' "$sp" 2>/dev/null)"; [ -n "$wh" ] || continue
+      w="${wh%x*}"; h="${wh#*x}"
+      magick -size "${w}x${h}" xc:#0e0c09 \( "$ROOT/apps/hlidskjalf/public/icon.svg" -background none -resize "$((h/3))x" \) -gravity center -composite "$sp" 2>/dev/null && n=$((n+1))
+    done
+    printf '  "android-splash","apps/hlidskjalf/android/.../drawable*/splash.png","as-is"\n'
+  fi
+  # the Windows .ico files, from the freshly-cut 256 tile
+  if command -v magick >/dev/null 2>&1 && [ -r "$ROOT/apps/sessrumnir/resources/icons/icon-256.png" ]; then
+    for ico in "$ROOT/apps/sessrumnir/resources/icons/icon.ico" "$ROOT/apps/sessrumnir/docs/favicon.ico"; do
+      [ -d "$(dirname "$ico")" ] || continue
+      if magick "$ROOT/apps/sessrumnir/resources/icons/icon-256.png" -define icon:auto-resize=256,128,64,48,32,16 "$ico" 2>/dev/null; then printf '  "%s","%s","ico"\n' "sessrumnir" "${ico#"$ROOT"/}"; n=$((n+1)); fi
+    done
+  fi
+  printf '  "total","%s files"\n' "$n"
+}
+
+case "$ACTION" in
+  list) list ;;
+  install) install_all ;;
+  mint)
+    if [ "${1:-}" = "--all" ]; then
+      printf 'minted[%d]{app,rune,file,link}:\n' "${#APPS[@]}"
+      for row in "${APPS[@]}"; do IFS='|' read -r d g t l _i _e _k _n <<<"$row"; mint "$d" "$g" "$t" "$l"; done
+    else
+      want="${1:-}"; found=0
+      printf 'minted[1]{app,rune,file,link}:\n'
+      for row in "${APPS[@]}"; do
+        IFS='|' read -r d g t l _i _e _k _n <<<"$row"
+        case "$(basename "$d")" in "$want") mint "$d" "$g" "$t" "$l"; found=1 ;; esac
+      done
+      [ "$found" = 1 ] || { printf 'error: unknown app %s\nhelp: bin/desktop/design-icon.sh list\n' "$want" >&2; exit 2; }
+    fi ;;
+  raster) raster_all ;;  # re-cut the PNG/ICO icons from the SVGs
+  *) printf 'error: unknown action %s\nhelp: bin/desktop/design-icon.sh [list|mint|install|raster] [app|--all]\n' "$ACTION" >&2; exit 2 ;;
+esac

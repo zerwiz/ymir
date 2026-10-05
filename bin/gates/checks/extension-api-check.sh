@@ -18,8 +18,8 @@
 #            https://pi.dev/docs/latest/extensions
 #            ~/.npm-global/.../pi-coding-agent/examples/extensions/hello.ts
 #
-#   bin/extension-api-check.sh           # check every source extension
-#   bin/extension-api-check.sh --quiet   # exit code only, for CI
+#   bin/gates/checks/extension-api-check.sh           # check every source extension
+#   bin/gates/checks/extension-api-check.sh --quiet   # exit code only, for CI
 #
 # It checks the SOURCE shelf (.pi/shared/extensions). The seat copies it; verify-seat proves the
 # copy parses. Copying the mistake faithfully is not a new mistake.
@@ -35,7 +35,7 @@ _root() {
 }
 ROOT="$(_root)"
 cd "$ROOT" || exit 2
-SRC="$ROOT/.pi/shared/extensions"
+SRC="${YMIR_EXT_SRC:-$ROOT/.pi/extensions}"   # resolvable, because another agent owns that layout
 QUIET=0; [ "${1:-}" = "--quiet" ] && QUIET=1
 
 [ -d "$SRC" ] || { echo "extension-api-check: no $SRC" >&2; exit 1; }

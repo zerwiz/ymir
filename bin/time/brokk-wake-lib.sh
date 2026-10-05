@@ -10,7 +10,7 @@ BROKK_WAKE_QUEUE="${BROKK_WAKE_QUEUE:-$STATE/.wake-queue}"
 BROKK_WAKE_QUEUE_LOCK="${BROKK_WAKE_QUEUE_LOCK:-$STATE/.wake-queue.lock}"
 # The queue's append and key reads live in ONE implementation
 # (src/ymir_runtime/state/queue.py) and this door is how the shell reaches it.
-BROKK_WAKE_STATE_DOOR="${BROKK_WAKE_STATE_DOOR:-$BROKK_WAKE_LIB_DIR/ymir-state.sh}"
+BROKK_WAKE_STATE_DOOR="${BROKK_WAKE_STATE_DOOR:-${BROKK_WAKE_LIB_DIR}/../records/ymir-state.sh}"
 BROKK_LOCK_STALE_AFTER="${BROKK_LOCK_STALE_AFTER:-2}"
 # Resolved once at source time: fm_pid_identity and fm_path_mtime run inside 0.2s
 # confirm and 0.5s attach polls, and forking uname per call is a measurable cost on
@@ -23,8 +23,8 @@ mkdir -p "$STATE"
 # Load the classifier only when a status presentation helper is actually used.
 _fm_wake_require_classify() {
   command -v status_observed_signature >/dev/null 2>&1 && return 0
-  # shellcheck source=bin/brokk-classify-lib.sh
-  . "$BROKK_WAKE_LIB_DIR/brokk-classify-lib.sh"
+  # shellcheck source=bin/agents/brokk-classify-lib.sh
+  . "${BROKK_WAKE_LIB_DIR}/../agents/brokk-classify-lib.sh"
 }
 
 fm_current_pid() {
@@ -142,9 +142,9 @@ fm_watcher_healthy() {
 
 # fm_watcher_healthy above is the PID-STRICT primitive: true only when a live,
 # identity-matched watcher PROCESS holds this home's lock with a fresh beacon. The
-# arm layer (bin/syn-watch-arm.sh, bin/brokk-claude-stop-autoarm.sh) needs exactly
+# arm layer (bin/pi/syn-watch-arm.sh, bin/brokk-claude-stop-autoarm.sh) needs exactly
 # that - it decides whether to start, attach to, or replace a real watcher
-# process, so a leftover beacon must never satisfy it. bin/syn-turnend-guard.sh
+# process, so a leftover beacon must never satisfy it. bin/gates/guards/syn-turnend-guard.sh
 # also keeps this strict check because it fires at the turn boundary where the
 # auto-arm brings a fresh watcher up. The pull warning (bin/brokk-guard.sh) fires
 # mid-turn, where the auto-arm model runs no watcher at all, so it wants a
@@ -165,14 +165,14 @@ fm_watcher_healthy() {
 #               background arm, tmux, unknown): the watcher runs as a tracked live
 #               process, so a live identity-matched pid is the real liveness signal.
 # BROKK_SUPERVISION_MODEL overrides detection (tests, and callers that already know
-# the harness). Otherwise bin/hamr-harness.sh is the single detection owner, so this
+# the harness). Otherwise bin/fleet/hamr-harness.sh is the single detection owner, so this
 # stays consistent with the harness-specific repair line the guards already emit.
 fm_supervision_model() {
   local harness
   case "${BROKK_SUPERVISION_MODEL:-}" in
     autoarm|extension|persistent) printf '%s\n' "$BROKK_SUPERVISION_MODEL"; return 0 ;;
   esac
-  harness=$("$BROKK_WAKE_LIB_DIR/hamr-harness.sh" 2>/dev/null || printf unknown)
+  harness=$("${BROKK_WAKE_LIB_DIR}/../fleet/hamr-harness.sh" 2>/dev/null || printf unknown)
   case "$harness" in
     claude|cursor) printf 'autoarm\n' ;;
     pi|pi-signed) printf 'extension\n' ;;
@@ -1043,7 +1043,7 @@ fm_failure_episode_reset() {
 
 # --- Claude Stop auto-arm generation claims -----------------------------------
 # Both Stop-event participants (bin/brokk-claude-stop-autoarm.sh and
-# bin/syn-turnend-guard.sh --claude) coordinate through the epoch ledger
+# bin/gates/guards/syn-turnend-guard.sh --claude) coordinate through the epoch ledger
 # state/.claude-autoarm-epoch, whose monotonic epoch sequence IS the claim
 # generation. This is an optimistic, generation-based single-flight design:
 #

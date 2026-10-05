@@ -13,8 +13,8 @@
 # See docs/cd-guard.md for the complete contract and validation record.
 #
 # Usage:
-#   <PreToolUse JSON on stdin> | bin/fm-cd-pretool-check.sh
-#   bin/fm-cd-pretool-check.sh --command '<cmd>'
+#   <PreToolUse JSON on stdin> | bin/backend/fm-cd-pretool-check.sh
+#   bin/backend/fm-cd-pretool-check.sh --command '<cmd>'
 #
 # Stdin mode extracts .toolInput.command for Grok or .tool_input.command for
 # Claude, Codex, and Cursor. CLI mode is used by OpenCode and Pi after their
@@ -22,7 +22,7 @@
 # rendering and marks this invocation as the Cursor registration rather than the
 # Claude-settings duplicate Cursor also loads.
 #
-# Exit/output contract (identical shape to bin/fm-arm-pretool-check.sh):
+# Exit/output contract (identical shape to bin/backend/fm-arm-pretool-check.sh):
 #   ALLOW - exit 0 and no output.
 #   DENY - exit 2, a Claude-shaped deny object on stderr, and a Grok-shaped
 #          deny object on stdout unless --claude was supplied.
@@ -99,7 +99,7 @@ if [ "$CMD_SET" -eq 0 ]; then
   PAYLOAD=$(cat 2>/dev/null || true)
   [ -n "$PAYLOAD" ] || exit 0
   command -v jq >/dev/null 2>&1 || exit 0
-  # shellcheck source=bin/fm-hook-host-lib.sh
+  # shellcheck source=bin/backend/fm-hook-host-lib.sh
   . "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/fm-hook-host-lib.sh"
   # Cursor's own registration passes --cursor. Without it a Cursor-delivered
   # payload is the Claude-settings duplicate Cursor also loads, already
@@ -144,7 +144,7 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && 
 FM_ROOT=${FM_ROOT_OVERRIDE:-$(CDPATH='' cd -- "$SCRIPT_DIR/.." 2>/dev/null && pwd -P)} || exit 0
 
 # Scope to a plain, non-worktree firstmate checkout, where git-dir equals
-# git-common-dir. A crewmate/scout task worktree - the shape bin/fm-spawn.sh
+# git-common-dir. A crewmate/scout task worktree - the shape bin/backend/fm-spawn.sh
 # always hands out - is a linked git worktree where the two differ. This guard
 # does not inspect .fm-secondmate-home, so it applies in a git-cloned secondmate
 # home but remains inert when the secondmate home is itself a treehouse-leased
