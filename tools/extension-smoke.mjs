@@ -44,7 +44,11 @@ for (const name of names) {
           ? readFileSync(pointer, "utf8").split("\n").map((l) => l.trim())
               .find((l) => l && existsSync(join(l, "bin", "syn-watch-arm.sh")))
           : "")
-      || (existsSync(join(checkout, ".pi", "shared", "extensions")) ? checkout : "");
+      // The extension shelf has two homes across this repo's history — .pi/shared/extensions (the
+      // consolidated tree) and .pi/extensions. Accept EITHER, or the third door refuses to open
+      // on a seat that has one but not the other.
+      || (existsSync(join(checkout, ".pi", "shared", "extensions"))
+          || existsSync(join(checkout, ".pi", "extensions")) ? checkout : "");
     if (!root) {
       console.log(`  ${name.padEnd(28)} NO ROOT — set YMIR_ROOT or run bin/seat/valknut-load.sh --all --global`);
       bad++;
@@ -54,7 +58,9 @@ for (const name of names) {
     // DIRECTORY whose entry point is `index.ts`. Pi's loader does exactly this and does
     // not recurse deeper, so anything else is not an extension. Hard-coding `${name}.ts`
     // is what broke this gate the moment a multi-file extension became a folder.
-    const shelf = join(root, ".pi", "shared", "extensions");
+    const shelf = existsSync(join(root, ".pi", "shared", "extensions"))
+      ? join(root, ".pi", "shared", "extensions")
+      : join(root, ".pi", "extensions");   // either home will do
     const asFile = join(shelf, `${name}.ts`);
     const asDir = join(shelf, name, "index.ts");
     const entry = existsSync(asFile) ? asFile

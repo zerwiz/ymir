@@ -162,7 +162,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-turnend-guard-grok.sh","Grok Stop-hook adapter for the firstmate PRIMARY turn-end guard.","provenance","tested","keep",1,91
   "fm-turnend-guard.sh","Turn-end guard for any firstmate PRIMARY session: the main home OR a","provenance","tested","keep",7,433
   "fm-update.sh","Self-update a running firstmate and its secondmates to the latest origin.","provenance","tested","keep",5,111
-  "fm-vendor-auth-probe.sh","fm-vendor-auth-probe.sh - one hard-bounded, non-destructive authentication","provenance","tested","keep",3,191
+  "fm-vendor-auth-probe.sh","fm-vendor-auth-probe.sh - one hard-bounded, non-destructive authentication","provenance","tested","keep",4,191
   "fm-voice-client.py","'''fm-voice-client.py - the captain's laptop end of the spoken interface.","provenance","tested","keep",0,1374
   "fm-voice-relay.py","'''fm-voice-relay.py - hold the Nova Sonic session on this desktop, on behalf of the laptop.","provenance","tested","keep",1,1257
   "fm-wake-drain.sh","Present durable watcher wake records, optionally acknowledge handled records,","provenance","tested","keep",12,593
