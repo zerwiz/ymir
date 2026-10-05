@@ -93,7 +93,7 @@ case "$ACTION" in
     command -v bun >/dev/null 2>&1 || { printf 'error: bun is needed to run the visualizer\nhelp: bin/engine/prereq-ensure.sh bun\n' >&2; exit 1; }
     [ -n "$SMIDJA_DB_PATH" ] && [ -f "$SMIDJA_DB_PATH" ] || {
       printf 'error: no smidja.db found\nhelp: bin/desktop/smidja-bootstrap.sh (creates $YMIR_HOME/smidja/smidja.db)\n' >&2; exit 1; }
-    [ -d "$VIZ/dist" ] || printf 'note: the UI is unbuilt — the API will answer and show no interface\nnote: mend it with: bin/ymir-visualizer.sh build\n' >&2
+    [ -d "$VIZ/dist" ] || printf 'note: the UI is unbuilt — the API will answer and show no interface\nnote: mend it with: bin/desktop/smidja-board.sh build\n' >&2
     if alive; then
       printf 'visualizer[1]{state,pid,url}:\n  "already running","%s","http://127.0.0.1:%s/"\n' "$(cat "$PID_FILE")" "$PORT"
       exit 0
