@@ -2,7 +2,7 @@
 # model-register.sh — register the chosen model with Ymir, in the hoard.
 #
 # Writes the same model the engine serves into the operator's private
-# config/agents.<host>.yaml OVERLAY (which bin/agents-config.sh deep-merges over
+# config/agents.<host>.yaml OVERLAY (which bin/fleet/agents-config.sh deep-merges over
 # config/agents.yaml). This keeps Ymir and Smíðja on ONE model road: the hoard's
 # default_model + providers block, resolved by the one resolver — no second
 # translation table, and the operator's annotated base file is never rewritten.
@@ -17,9 +17,10 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yc
@@ -53,7 +54,7 @@ if [ "$SHOW" = 1 ]; then
   exit 0
 fi
 
-[ -n "$PROVIDER" ] && [ -n "$MODEL" ] || { printf 'error: usage: bin/model-register.sh --provider P --model ID [--base-url URL]\n' >&2; exit 2; }
+[ -n "$PROVIDER" ] && [ -n "$MODEL" ] || { printf 'error: usage: bin/model/model-register.sh --provider P --model ID [--base-url URL]\n' >&2; exit 2; }
 
 mkdir -p "$YMIR_SETTINGS_DIR"
 python3 - "$OVERLAY" "$PROVIDER" "$MODEL" "${BASE_URL:-}" "${CTX:-0}" <<'PY'
@@ -84,7 +85,7 @@ if not isinstance(models, list):
 if model not in models:
     models.append(model)
 
-header = ("# Machine overlay written by bin/model-register.sh — do not hand-edit lightly.\n"
+header = ("# Machine overlay written by bin/model/model-register.sh — do not hand-edit lightly.\n"
           "# Deep-merges over config/agents.yaml (the one model road). It names the\n"
           "# model this seat stands up; the base file stays the operator's.\n")
 with open(overlay_path, "w") as fh:

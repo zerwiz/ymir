@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # model-resolve.sh — resolve a human model request to a concrete harness+model.
 #
-#   bin/model-resolve.sh resolve "qwen 3.6 iq2"
-#   bin/model-resolve.sh resolve "deepseek"
-#   bin/model-resolve.sh resolve "llama.cpp/qwen3.6-35b-a3b@q2_k_xl"
-#   bin/model-resolve.sh list
+#   bin/model/model-resolve.sh resolve "qwen 3.6 iq2"
+#   bin/model/model-resolve.sh resolve "deepseek"
+#   bin/model/model-resolve.sh resolve "llama.cpp/qwen3.6-35b-a3b@q2_k_xl"
+#   bin/model/model-resolve.sh list
 #
 # Sources of truth: config/agents.yaml (providers, harness rule, local models)
 # and the live local catalog (`pi --list-models`). Local → pi, online → opencode.
@@ -14,7 +14,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -158,6 +159,6 @@ if best_o and best_os >= 1:
 
 # 4. unknown → ask
 print(f'model-resolve[1]{{request,resolution,ask}}:\n  "{req}","unresolved","yes"')
-print('help: bin/model-resolve.sh list  — or ask the Allfather with ask_user_question')
+print('help: bin/model/model-resolve.sh list  — or ask the Allfather with ask_user_question')
 sys.exit(0)
 PY

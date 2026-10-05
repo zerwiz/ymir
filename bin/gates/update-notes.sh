@@ -7,16 +7,16 @@
 # Both halves were true and neither was good:
 #   1. every change carries a fix note in `docs/fixes/` — and **nothing read them**. A note that
 #      no door prints is a note that exists for the author, not for the user.
-#   2. a user running `bin/groa-update.sh` saw "updated" and nothing else. They could not tell
+#   2. a user running `bin/agents/groa-update.sh` saw "updated" and nothing else. They could not tell
 #      what they had just received, so they could not tell what to re-check.
 #
 # So the notes become a CONSUMED artefact: this door prints what landed since a ref (or since the
-# last update), and `bin/groa-update.sh` calls it. The record and the reader close.
+# last update), and `bin/agents/groa-update.sh` calls it. The record and the reader close.
 #
-#   bin/update-notes.sh                    # since the last tag/commit recorded in state/
-#   bin/update-notes.sh --since v0.1.50    # since a ref
-#   bin/update-notes.sh --since 3d          # since N days ago
-#   bin/update-notes.sh --all               # the whole record, newest first
+#   bin/gates/update-notes.sh                    # since the last tag/commit recorded in state/
+#   bin/gates/update-notes.sh --since v0.1.50    # since a ref
+#   bin/gates/update-notes.sh --since 3d          # since N days ago
+#   bin/gates/update-notes.sh --all               # the whole record, newest first
 set -uo pipefail
 
 _root() {

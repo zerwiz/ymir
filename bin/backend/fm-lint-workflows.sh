@@ -4,7 +4,7 @@
 # Runs pinned actionlint on every .github/workflows/*.{yml,yaml} so a malformed
 # workflow, including a self-broken ci.yml, fails in the local and no-mistakes
 # lint lane before merge. A broken ci.yml cannot report its own breakage, so
-# this check must not live only as a step inside that workflow. bin/fm-lint.sh
+# this check must not live only as a step inside that workflow. bin/backend/fm-lint.sh
 # invokes this owner on its default (no explicit-path) path, which CI and
 # commands.lint both use.
 #
@@ -108,7 +108,7 @@ else
 fi
 
 if ! command -v actionlint >/dev/null 2>&1; then
-  printf 'fm-lint-workflows.sh: actionlint not found; install actionlint %s with bin/fm-install-actionlint.sh <destination-directory> and put that directory on PATH.\n' \
+  printf 'fm-lint-workflows.sh: actionlint not found; install actionlint %s with bin/backend/fm-install-actionlint.sh <destination-directory> and put that directory on PATH.\n' \
     "$REQUIRED_ACTIONLINT" >&2
   exit 1
 fi
@@ -116,7 +116,7 @@ ACTIONLINT_BIN=$(command -v actionlint)
 resolved=$("$ACTIONLINT_BIN" -version | awk 'NR==1 {print; exit}')
 printf 'fm-lint-workflows.sh: actionlint %s (pinned %s)\n' "$resolved" "$REQUIRED_ACTIONLINT" >&2
 if [ "$resolved" != "$REQUIRED_ACTIONLINT" ]; then
-  printf 'fm-lint-workflows.sh: actionlint %s required for CI parity, found %s. Install %s with bin/fm-install-actionlint.sh <destination-directory>.\n' \
+  printf 'fm-lint-workflows.sh: actionlint %s required for CI parity, found %s. Install %s with bin/backend/fm-install-actionlint.sh <destination-directory>.\n' \
     "$REQUIRED_ACTIONLINT" "$resolved" "$REQUIRED_ACTIONLINT" >&2
   exit 1
 fi

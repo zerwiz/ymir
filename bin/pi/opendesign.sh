@@ -13,9 +13,9 @@
 # 10+ hours on 2026-10-02 (71–72 MB each). Nothing calls a stdio server after the session ends, so
 # stopping the design plane means stopping those too.
 #
-#   bin/opendesign.sh start    # raise the studio, print where it is
-#   bin/opendesign.sh stop     # lower the studio and sweep its stdio children
-#   bin/opendesign.sh status        # what is up, on both the daemon and the children
+#   bin/pi/opendesign.sh start    # raise the studio, print where it is
+#   bin/pi/opendesign.sh stop     # lower the studio and sweep its stdio children
+#   bin/pi/opendesign.sh status        # what is up, on both the daemon and the children
 set -uo pipefail
 
 PORT="${OD_PORT:-7456}"

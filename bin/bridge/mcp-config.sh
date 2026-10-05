@@ -10,7 +10,7 @@
 #
 # The MODEL rail is the same law (Part 9c): the config carries where models come
 # from as RESOLVED metadata under `ymir.rail`, read from the ONE resolver
-# (`bin/rail-resolve.sh`), so no surface restates a rail URL. Harnesses read
+# (`bin/model/rail-resolve.sh`), so no surface restates a rail URL. Harnesses read
 # `mcpServers`; the `ymir` block is advisory and ignored by them.
 #
 #   mcp-config.sh            # this machine's config (JSON) to stdout
@@ -29,7 +29,7 @@ MODE="${1:-show}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -42,8 +42,8 @@ GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
 # The model rail, resolved once (plan 51 Part 9c): the serving URL and its key
 # REFERENCE, never a value. A declined answer (no live rail) leaves the block out.
 RAIL_HOST=""; RAIL_URL=""; RAIL_KEY="LLAMA_SWAP_API_KEY"; _rail=""
-if [ -x "$SCRIPT_DIR/rail-resolve.sh" ]; then
-  _rail="$(bash "$SCRIPT_DIR/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
+if [ -x "$SCRIPT_DIR/../model/rail-resolve.sh" ]; then
+  _rail="$(bash "$SCRIPT_DIR/../model/rail-resolve.sh" resolve --json 2>/dev/null | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)
 except Exception: d={}
 s=d.get("serving") or {}
@@ -68,7 +68,7 @@ doc = {
 }
 if rail_host:
     doc["ymir"] = {"rail": {"host": rail_host, "url": rail_url, "keyRef": rail_key,
-                             "resolver": "bin/rail-resolve.sh"}}
+                             "resolver": "bin/model/rail-resolve.sh"}}
 print(json.dumps(doc, indent=2))
 PY
 )"

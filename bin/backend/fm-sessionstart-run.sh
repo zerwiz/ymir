@@ -4,7 +4,7 @@
 # invoke, and it decides, from the session-open source, whether this open needs
 # the full digest, a context re-emit, or nothing at all.
 #
-# Why running beats nudging: bin/fm-sessionstart-nudge.sh can only ASK the agent
+# Why running beats nudging: bin/backend/fm-sessionstart-nudge.sh can only ASK the agent
 # to take the helm, and an agent can defer that, including when a first-command
 # skill has its own read-only path. When the native adapter injects this
 # command's stdout into model context, running the digest here removes that
@@ -50,13 +50,13 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 COMPLETION_FILE="$STATE/.session-start-complete"
 
-# shellcheck source=bin/fm-gate-refuse-lib.sh
+# shellcheck source=bin/backend/fm-gate-refuse-lib.sh
 . "$SCRIPT_DIR/fm-gate-refuse-lib.sh"
-# shellcheck source=bin/fm-primary-scope-lib.sh
+# shellcheck source=bin/backend/fm-primary-scope-lib.sh
 . "$SCRIPT_DIR/fm-primary-scope-lib.sh"
-# shellcheck source=bin/fm-session-lock-lib.sh
+# shellcheck source=bin/backend/fm-session-lock-lib.sh
 . "$SCRIPT_DIR/fm-session-lock-lib.sh"
-# shellcheck source=bin/fm-hook-host-lib.sh
+# shellcheck source=bin/backend/fm-hook-host-lib.sh
 . "$SCRIPT_DIR/fm-hook-host-lib.sh"
 
 SOURCE=

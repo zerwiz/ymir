@@ -104,7 +104,7 @@ export default function odrerir(pi: ExtensionAPI) {
 
       // 2 · the capability register's own counts (the register, not a recount)
       const reg = `${ROOT}/.agents/assets/agents/capabilities.md`;
-      if (!existsSync(reg)) missing("capabilities", "no register generated yet — bin/capabilities.sh");
+      if (!existsSync(reg)) missing("capabilities", "no register generated yet — bin/gates/capabilities.sh");
       else {
         const t = readFileSync(reg, "utf8");
         const g = (k: string) => new RegExp(`"${k}",(\\d+)`).exec(t)?.[1] ?? "?";
@@ -112,13 +112,13 @@ export default function odrerir(pi: ExtensionAPI) {
       }
 
       // 3 · the derived queue's tally
-      const q = run([`${ROOT}/bin/queue.sh`, "--check"]);
+      const q = run([`${ROOT}/bin/gates/queue.sh`, "--check"]);
       const tally = /blocked=(\d+) owed=(\d+) open=(\d+) done=(\d+)/.exec(q);
-      out.push(`  ${"queue".padEnd(14)} ${tally ? `blocked=${tally[1]} owed=${tally[2]} open=${tally[3]} done=${tally[4]}` : "UNABLE — bin/queue.sh did not answer"}`);
+      out.push(`  ${"queue".padEnd(14)} ${tally ? `blocked=${tally[1]} owed=${tally[2]} open=${tally[3]} done=${tally[4]}` : "UNABLE — bin/gates/queue.sh did not answer"}`);
 
       // 4 · the doors, by verdict (the inventory, not a guess)
       const inv = `${ROOT}/bin/README.md`;
-      if (!existsSync(inv)) missing("inventory", "bin/README.md not generated — bin/inventory.sh");
+      if (!existsSync(inv)) missing("inventory", "bin/README.md not generated — bin/gates/inventory.sh");
       else {
         const t = readFileSync(inv, "utf8");
         const verdict = /verdict: (.+)/.exec(t)?.[1] ?? "?";

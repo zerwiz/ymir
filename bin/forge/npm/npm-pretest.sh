@@ -8,9 +8,9 @@
 # sandbox-installs it, and smokes the installed essence — local leg first, the
 # remote leg second. PASS, and a publish is safe; FAIL, and nothing sails.
 #
-# Usage:   bin/npm-pretest.sh            local leg + the remote leg
-#          bin/npm-pretest.sh local      local only
-#          bin/npm-pretest.sh remote     remote only (needs the local tarball)
+# Usage:   bin/forge/npm/npm-pretest.sh            local leg + the remote leg
+#          bin/forge/npm/npm-pretest.sh local      local only
+#          bin/forge/npm/npm-pretest.sh remote     remote only (needs the local tarball)
 # Env:     NPM_PRETEST_HOSTS  the remote seats, space-separated
 #                             (default: omarchy whynot; a seat that IS this
 #                             machine runs its leg locally, no loopback ssh)
@@ -50,14 +50,14 @@ HULL=(
 pack_and_hull() {
   say "== building every surface that serves a bundle (the prepack, run for real) =="
   # npm pack runs with --ignore-scripts below, so the package.json `prepack`
-  # (bin/app-build.sh) never fires. Build explicitly, or the tarball ships
+  # (bin/seat/sessrumnir/app-build.sh) never fires. Build explicitly, or the tarball ships
   # without the visualizer's interface — which is exactly what happened.
-  if [ -x "$ROOT/bin/app-build.sh" ]; then
+  if [ -x "$ROOT/bin/seat/sessrumnir/app-build.sh" ]; then
     # NO PIPE. `app-build | tail -3` makes the pipeline's status tail's, so a FAILED
     # build could not fail this gate: the pretest went on to pack a tarball with no
     # surfaces and reported the symptom three steps later as "sessrumnir web surface
     # not built" (2026-09-30). A gate that cannot fail is not a gate.
-    if "$ROOT/bin/app-build.sh" >"$WORK/app-build.log" 2>&1; then
+    if "$ROOT/bin/seat/sessrumnir/app-build.sh" >"$WORK/app-build.log" 2>&1; then
       tail -3 "$WORK/app-build.log"
     else
       fail "app-build failed — packing now would ship a tarball with no app surfaces"
@@ -99,8 +99,8 @@ smoke() {  # <pkg-dir>
   [ "$tools" -ge 100 ] && ok "bin tools: $tools" || fail "bin tools: $tools (expected 100+)"
   node "$P/bin/ymir.js" --version >/dev/null 2>&1 && ok "ymir.js --version answers" || fail "ymir.js --version silent"
   [ -d "$P/.agents" ] && ok "the .agents dotfolders ship in the package" || { n=1; }
-  if [ -x "$P/bin/essence-fetch.sh" ]; then
-    BROKK_ROOT_OVERRIDE="$P" bash "$P/bin/essence-fetch.sh" >/dev/null 2>&1
+  if [ -x "$P/bin/forge/npm/essence-fetch.sh" ]; then
+    BROKK_ROOT_OVERRIDE="$P" bash "$P/bin/forge/npm/essence-fetch.sh" >/dev/null 2>&1
     [ -d "$P/RULES" ] && [ -d "$P/.agents" ] && ok "the dotfolders + RULES stand after the fetch" || fail "essence-fetch left no RULES at the root"
   else
     fail "essence-fetch.sh absent from the package"
@@ -112,8 +112,8 @@ smoke() {  # <pkg-dir>
   # fresh package has no electron until the launcher's first-run install lands
   # it at the workspace root, but the SHAPE must resolve and the gate must never
   # lie (a crash here means the resolver cannot read the packaged layout).
-  if [ -r "$P/bin/app-lib.sh" ] && [ -r "$P/bin/desktop/electron-lib.sh" ]; then
-    . "$P/bin/app-lib.sh"; . "$P/bin/desktop/electron-lib.sh"
+  if [ -r "$P/bin/seat/sessrumnir/app-lib.sh" ] && [ -r "$P/bin/desktop/electron-lib.sh" ]; then
+    . "$P/bin/seat/sessrumnir/app-lib.sh"; . "$P/bin/desktop/electron-lib.sh"
     local sdir shape_ok=1
     for sh in hlidskjalf odrerir sessrumnir smidja; do
       sdir=""

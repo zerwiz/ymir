@@ -11,15 +11,16 @@
 # This is that notifier on an Omarchy host: an Omarchy desktop notification, and
 # the same line appended to a durable file so a missed popup is still found.
 #
-# Usage (as the seam):  FM_WEDGE_ALARM_EXEC=bin/wedge-notify.sh
-#   bin/wedge-notify.sh <channel> <summary>
+# Usage (as the seam):  FM_WEDGE_ALARM_EXEC=bin/gates/wedge-notify.sh
+#   bin/gates/wedge-notify.sh <channel> <summary>
 # Exit: 0 fired (or discarded), 1 could not fire at all.
 set -u
 
 CHANNEL="${1:-unknown}"
 SUMMARY="${2:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -44,9 +45,9 @@ mkdir -p "$STATE_DIR" 2>/dev/null || true
 printf '%s\twedge\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CHANNEL" "$SUMMARY" >>"$LOG" 2>/dev/null || true
 
 fired=0
-# Speak through the one voice: bin/ymir-say.sh owns the desktop manner.
-if [ -x "$ROOT/bin/ymir-say.sh" ]; then
-  "$ROOT/bin/ymir-say.sh" --mark-alarm "wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
+# Speak through the one voice: bin/time/snotra/ymir-say.sh owns the desktop manner.
+if [ -x "$ROOT/bin/time/snotra/ymir-say.sh" ]; then
+  "$ROOT/bin/time/snotra/ymir-say.sh" --mark-alarm "wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
 elif command -v omarchy-notification-send >/dev/null 2>&1; then
   omarchy-notification-send -u critical -g "" "Ymir wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
 elif command -v notify-send >/dev/null 2>&1; then

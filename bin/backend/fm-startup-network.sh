@@ -14,7 +14,7 @@
 # detached worker, and their result is reported back inline when it finishes in
 # time, or as a durable wake when it does not.
 #
-# WHAT IS PRESERVED. Nothing is dropped. bin/fm-bootstrap.sh remains the single
+# WHAT IS PRESERVED. Nothing is dropped. bin/backend/fm-bootstrap.sh remains the single
 # owner of every one of these sweeps and still runs all of them, unchanged, via
 # its FM_BOOTSTRAP_NETWORK=only phase. Deferral changes WHEN they run, not
 # WHETHER, and three properties make the later run safe:
@@ -55,7 +55,7 @@
 #          directly to redo the stage by hand from the lock-owning harness.
 #        fm-startup-network.sh harvest --pid <pid>
 #          Print the digest's NETWORK CHECKS section and release the inline-print
-#          claim. Called by bin/fm-session-start.sh, not by hand.
+#          claim. Called by bin/backend/fm-session-start.sh, not by hand.
 #        fm-startup-network.sh report
 #          Print the current state and report without changing anything, then the
 #          last run's per-step elapsed times. This is the ONLY command that prints
@@ -72,7 +72,7 @@
 #                             whether the report was published. The single
 #                             source of truth for what ran and how it ended.
 #   .startup-network.report   the sweep output, byte for byte as
-#                             bin/fm-bootstrap.sh produced it, plus a
+#                             bin/backend/fm-bootstrap.sh produced it, plus a
 #                             NETWORK_CHECKS: line whenever the stage itself
 #                             could not complete or had to downgrade.
 #   .startup-network.claim    the generation and pid of a session start that
@@ -83,7 +83,7 @@
 #                             current finished result; only this suppresses its
 #                             wake.
 #   .startup-network.timings  per-step elapsed times for the last run, in
-#                             bin/fm-timing-lib.sh's tab-separated format: the
+#                             bin/backend/fm-timing-lib.sh's tab-separated format: the
 #                             stage total, one record per network phase (gh auth,
 #                             secondmate liveness, secondmate convergence, handoff
 #                             delivery, fleet sync), one per secondmate for the
@@ -113,18 +113,18 @@ DELIVERED_FILE="$STATE/.startup-network.delivered"
 TIMINGS_FILE="$STATE/.startup-network.timings"
 PUBLISH_LOCK="$STATE/.startup-network.lock"
 
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/backend/fm-timeout-lib.sh
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
 # fm-timing-lib.sh owns the per-step elapsed record this stage publishes beside
 # its report. Recording is opt-in per run: it stays inert until cmd_run points
 # FM_TIMING_LOG at a file, so nothing else that sources these scripts pays for it.
-# shellcheck source=bin/fm-timing-lib.sh
+# shellcheck source=bin/backend/fm-timing-lib.sh
 . "$SCRIPT_DIR/fm-timing-lib.sh"
 # fm-wake-lib.sh owns both the portable lock helpers used below and the durable
 # wake queue this stage publishes into.
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-session-lock-lib.sh
+# shellcheck source=bin/backend/fm-session-lock-lib.sh
 . "$SCRIPT_DIR/fm-session-lock-lib.sh"
 
 usage() {
@@ -287,7 +287,7 @@ EOF
 # The question is deliberately "does the lock still name the session that asked
 # for this work?", not "is that session still alive". The hazard being closed is
 # a SECOND session sweeping concurrently, and taking the lock is exactly what
-# rewrites this value - bin/fm-lock.sh overwrites a dead holder's pid with its
+# rewrites this value - bin/backend/fm-lock.sh overwrites a dead holder's pid with its
 # own. An unchanged value therefore proves no one else owns the sweeps, which is
 # the whole guarantee. Requiring liveness instead would refuse to finish work
 # nobody else has claimed, and the sweeps are idempotent, so finishing it is
@@ -344,7 +344,7 @@ EOF
     if [ "$claim_live" -eq 0 ]; then
       if report_requires_wake "$state"; then
         fm_wake_append check startup-network \
-          "check: startup-network: deferred startup network checks finished ($state); read them with $FM_ROOT/bin/fm-startup-network.sh report" \
+          "check: startup-network: deferred startup network checks finished ($state); read them with $FM_ROOT/bin/backend/fm-startup-network.sh report" \
           || true
       fi
       fm_lock_release "$PUBLISH_LOCK"
@@ -361,7 +361,7 @@ EOF
   fi
   if report_requires_wake "$state"; then
     fm_wake_append check startup-network \
-      "check: startup-network: deferred startup network checks finished ($state); read them with $FM_ROOT/bin/fm-startup-network.sh report" \
+      "check: startup-network: deferred startup network checks finished ($state); read them with $FM_ROOT/bin/backend/fm-startup-network.sh report" \
       || true
   fi
   fm_lock_release "$PUBLISH_LOCK"
@@ -455,7 +455,7 @@ EOF
   # Recorded into a temp file rather than straight into state/ so a run that is
   # killed mid-sweep cannot leave a half-written artifact where the previous
   # run's complete one used to be; publish() promotes it atomically at the end.
-  # Sweeps run in child processes (bin/fm-bootstrap.sh, and bin/fm-fleet-sync.sh
+  # Sweeps run in child processes (bin/backend/fm-bootstrap.sh, and bin/backend/fm-fleet-sync.sh
   # below it), so FM_TIMING_LOG is exported and appended to by all of them.
   timings=$(mktemp "${TMPDIR:-/tmp}/fm-startup-network-timings.XXXXXX" 2>/dev/null) || timings=
   [ -z "$timings" ] || fm_timing_start "$timings"
@@ -489,12 +489,12 @@ EOF
   case "$rc" in
     0) publish "$generation" 'done' "$phases" "$sweep_locked" "$started" "$rc" "$out" "$timings" ;;
     124)
-      printf 'NETWORK_CHECKS: hit the %ss bound before finishing, so %s may be incomplete; rerun %s/bin/fm-startup-network.sh run --locked %s\n' \
+      printf 'NETWORK_CHECKS: hit the %ss bound before finishing, so %s may be incomplete; rerun %s/bin/backend/fm-startup-network.sh run --locked %s\n' \
         "$budget" "$(phase_label "$phases")" "$FM_ROOT" "$sweep_locked" >> "$out"
       publish "$generation" timeout "$phases" "$sweep_locked" "$started" "$rc" "$out" "$timings"
       ;;
     *)
-      printf 'NETWORK_CHECKS: the deferred check worker exited %s, so %s may be incomplete; rerun %s/bin/fm-startup-network.sh run --locked %s\n' \
+      printf 'NETWORK_CHECKS: the deferred check worker exited %s, so %s may be incomplete; rerun %s/bin/backend/fm-startup-network.sh run --locked %s\n' \
         "$rc" "$(phase_label "$phases")" "$FM_ROOT" "$sweep_locked" >> "$out"
       publish "$generation" failed "$phases" "$sweep_locked" "$started" "$rc" "$out" "$timings"
       ;;
@@ -519,7 +519,7 @@ print_finished() {  # <state>
   printf 'completed off the startup path in %ss: %s.\n' "$took" "$(phase_label "$phases")"
   [ "$state" = 'done' ] || printf 'The stage itself did not finish cleanly (%s) - the NETWORK_CHECKS line below names what to rerun.\n' "$state"
   if [ "$report_published" = 0 ]; then
-    printf 'NETWORK_CHECKS: could not publish the deferred check report, so %s results are unavailable; rerun %s/bin/fm-startup-network.sh run --locked %s\n' \
+    printf 'NETWORK_CHECKS: could not publish the deferred check report, so %s results are unavailable; rerun %s/bin/backend/fm-startup-network.sh run --locked %s\n' \
       "$(phase_label "$phases")" "$FM_ROOT" "$(status_get locked)"
   elif [ -s "$REPORT_FILE" ]; then
     cat "$REPORT_FILE"
@@ -548,7 +548,7 @@ print_pending() {
   [ -z "$age" ] || printf 'Started %ss ago, bounded at %ss.\n' "$age" "$(stage_budget)"
   # shellcheck disable=SC2016  # The backticked wake name is literal digest text.
   printf 'Only a FAILED or otherwise actionable result arrives as a `check: startup-network` wake; a clean success stays silent.\n'
-  printf 'The durable result is readable on demand with %s/bin/fm-startup-network.sh report; until it finishes, treat none of it as confirmed.\n' "$FM_ROOT"
+  printf 'The durable result is readable on demand with %s/bin/backend/fm-startup-network.sh report; until it finishes, treat none of it as confirmed.\n' "$FM_ROOT"
 }
 
 print_state() {
@@ -558,7 +558,7 @@ print_state() {
       if worker_alive; then
         print_pending
       else
-        printf 'NETWORK_CHECKS: the deferred check worker stopped before publishing, so %s did not complete; rerun %s/bin/fm-startup-network.sh run --locked %s\n' \
+        printf 'NETWORK_CHECKS: the deferred check worker stopped before publishing, so %s did not complete; rerun %s/bin/backend/fm-startup-network.sh run --locked %s\n' \
           "$(phase_label "$(status_get phases)")" "$FM_ROOT" "$(status_get locked)"
       fi
       ;;

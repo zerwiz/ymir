@@ -47,7 +47,7 @@
 #                   selected scripts are admissible.
 #                   N>1 is allowed only when every selected script is proven
 #                   safe to run concurrently: individually in the proven-isolated
-#                   set (bin/fm-test-isolation-proof.sh --list), or in a family
+#                   set (bin/backend/fm-test-isolation-proof.sh --list), or in a family
 #                   carrying a recorded concurrent proof
 #                   (list_concurrent_safe_families below). Overall cap is 8;
 #                   family proofs may impose a lower cap. Unproven stateful
@@ -91,7 +91,7 @@
 #
 # Family labels, the changed-file map, and production portable-shard composition
 # live in this script only (one owner). The proven-isolated candidate set remains
-# owned by bin/fm-test-isolation-proof.sh; portable parallel shards are a
+# owned by bin/backend/fm-test-isolation-proof.sh; portable parallel shards are a
 # duration-balanced partition of that exact set (see docs/fm-test-portable-shards.md).
 #
 # portable-serial stays strictly serial. Its CI shards (portable-serial-<k>of<n>)
@@ -129,7 +129,7 @@ ROOT="$(_root)"
 cd "$ROOT" || exit 1
 # ROOT must reach the SCRIPTS, not just this runner. Every test resolves its
 # fixtures and libs through `$ROOT` (`.agents/tests/lib.sh` calls
-# `$ROOT/bin/fm-wake-lib.sh`), and it was never exported — so the identity call
+# `$ROOT/bin/backend/fm-wake-lib.sh`), and it was never exported — so the identity call
 # failed, lib.sh `return`ed out of a SOURCED file, and the test came up
 # half-built: `fm_test_cleanup: command not found`, `TMP_ROOT` empty, and every
 # fixture path collapsing to `/start-nonblocking/...` with no reason printed.
@@ -364,7 +364,7 @@ list_known_lanes() {
 }
 
 # Exact proven-isolated candidate set (same paths as
-# bin/fm-test-isolation-proof.sh --list). Do not expand without a new concurrent
+# bin/backend/fm-test-isolation-proof.sh --list). Do not expand without a new concurrent
 # isolation proof archive.
 list_proven_isolated() {
   cat <<'EOF'
@@ -440,7 +440,7 @@ EOF
 # only gain concurrency for a local run.
 #
 # Membership is empirical, never assumed:
-# `bin/fm-test-isolation-proof.sh --pool <family> --jobs 4` is the owner of the
+# `bin/backend/fm-test-isolation-proof.sh --pool <family> --jobs 4` is the owner of the
 # proof, and docs/fm-test-isolation-proof.md records the dated result.
 list_concurrent_safe_families() {
   cat <<'EOF'
@@ -868,10 +868,10 @@ run_coverage_guard() {
     return 1
   fi
 
-  if [ -x "$ROOT/bin/fm-test-isolation-proof.sh" ]; then
-    "$ROOT/bin/fm-test-isolation-proof.sh" --list | LC_ALL=C sort -u >"$tmp/proof_list"
+  if [ -x "$ROOT/bin/backend/fm-test-isolation-proof.sh" ]; then
+    "$ROOT/bin/backend/fm-test-isolation-proof.sh" --list | LC_ALL=C sort -u >"$tmp/proof_list"
     if ! cmp -s "$tmp/proven" "$tmp/proof_list"; then
-      log "coverage guard: embedded proven-isolated set diverges from bin/fm-test-isolation-proof.sh --list"
+      log "coverage guard: embedded proven-isolated set diverges from bin/backend/fm-test-isolation-proof.sh --list"
       comm -3 "$tmp/proven" "$tmp/proof_list" >&2 || true
       rm -rf "$tmp"
       return 1
@@ -1093,19 +1093,19 @@ families_for_changed_path() {
       # resolution in the caller; emit a marker family of __script__
       printf '%s\n' "__script__:$(basename "$path")"
       ;;
-    bin/fm-test-run.sh|bin/fm-test-isolation-proof.sh)
+    bin/backend/fm-test-run.sh|bin/backend/fm-test-isolation-proof.sh)
       # Deliberately the WHOLE family, not just the two contract tests. This
       # runner executes every pure-contract-unit script, so a change to it is
       # only proven by running them: its own contract test passing says the
       # runner's logic is right, not that the suite it drives still runs.
       printf '%s\n' pure-contract-unit
       ;;
-    bin/backends/herdr*|bin/fm-herdr-lab.sh|tests/herdr-test-safety.sh)
+    bin/backends/herdr*|bin/backend/fm-herdr-lab.sh|tests/herdr-test-safety.sh)
       printf '%s\n' real-herdr-gated
       printf '%s\n' backend-dispatch
       printf '%s\n' pure-contract-unit
       ;;
-    bin/fm-herdr-session-cleanup.sh)
+    bin/backend/fm-herdr-session-cleanup.sh)
       printf '%s\n' session-bootstrap
       printf '%s\n' real-herdr-gated
       printf '%s\n' backend-dispatch
@@ -1122,67 +1122,67 @@ families_for_changed_path() {
       printf '%s\n' backend-dispatch
       printf '%s\n' orca
       ;;
-    bin/fm-backend.sh|bin/fm-backend-hometag-lib.sh)
+    bin/backend/fm-backend.sh|bin/backend/fm-backend-hometag-lib.sh)
       printf '%s\n' backend-dispatch
       printf '%s\n' real-herdr-gated
       ;;
-    bin/fm-watch*|bin/fm-wake*|bin/fm-inactive-reconcile.sh|\
-    bin/fm-classify-lib.sh|bin/fm-daemon*|bin/fm-turnend-guard*|bin/fm-guard.sh)
+    bin/fm-watch*|bin/fm-wake*|bin/backend/fm-inactive-reconcile.sh|\
+    bin/backend/fm-classify-lib.sh|bin/fm-daemon*|bin/fm-turnend-guard*|bin/backend/fm-guard.sh)
       printf '%s\n' watcher-wake-lock
       ;;
     bin/fm-afk*)
       printf '%s\n' afk
       printf '%s\n' real-herdr-gated
       ;;
-    bin/fm-supervisor-target-lib.sh)
+    bin/backend/fm-supervisor-target-lib.sh)
       printf '%s\n' watcher-wake-lock
       printf '%s\n' real-herdr-gated
       printf '%s\n' live-harness-optin
       printf '%s\n' afk
       ;;
-    bin/fm-startup-memory-budget.sh|bin/fm-startup-memory-budget-lib.sh)
+    bin/backend/fm-startup-memory-budget.sh|bin/backend/fm-startup-memory-budget-lib.sh)
       printf '%s\n' secondmate
       printf '%s\n' session-bootstrap
       ;;
-    bin/fm-secondmate*|bin/fm-remote*|bin/fm-on.sh|bin/fm-home-seed.sh|\
-    bin/fm-backlog-handoff.sh|bin/fm-backlog-receive.sh|bin/fm-procevent-remote-reply.sh|\
-    bin/fm-config-inherit-lib.sh|bin/fm-config-push.sh|bin/fm-shared*|\
-    bin/fm-stow-cascade.sh)
+    bin/fm-secondmate*|bin/fm-remote*|bin/backend/fm-on.sh|bin/backend/fm-home-seed.sh|\
+    bin/backend/fm-backlog-handoff.sh|bin/backend/fm-backlog-receive.sh|bin/backend/fm-procevent-remote-reply.sh|\
+    bin/backend/fm-config-inherit-lib.sh|bin/backend/fm-config-push.sh|bin/fm-shared*|\
+    bin/backend/fm-stow-cascade.sh)
       printf '%s\n' secondmate
       ;;
-    bin/fm-session-start.sh|bin/fm-bootstrap.sh|bin/fm-fleet-sync.sh|\
-    bin/fm-sessionstart-nudge.sh|bin/fm-startup-network.sh|bin/fm-tangle*|bin/fm-update.sh|\
+    bin/backend/fm-session-start.sh|bin/backend/fm-bootstrap.sh|bin/backend/fm-fleet-sync.sh|\
+    bin/backend/fm-sessionstart-nudge.sh|bin/backend/fm-startup-network.sh|bin/fm-tangle*|bin/backend/fm-update.sh|\
     bin/fm-gate-refuse*|bin/fm-lock*)
       printf '%s\n' session-bootstrap
       ;;
-    bin/fm-quota-axi-lib.sh)
+    bin/backend/fm-quota-axi-lib.sh)
       printf '%s\n' session-bootstrap
       printf '%s\n' "__script__:fm-procevent-quota.test.sh"
       printf '%s\n' "__script__:fm-quota-choose.test.sh"
       ;;
-    bin/fm-procevent-quota.sh)
+    bin/backend/fm-procevent-quota.sh)
       printf '%s\n' "__script__:fm-procevent-quota.test.sh"
       ;;
-    bin/fm-quota-choose.sh)
+    bin/backend/fm-quota-choose.sh)
       printf '%s\n' "__script__:fm-quota-choose.test.sh"
       ;;
-    bin/fm-sessionstart-run.sh|.claude/settings.json|.codex/hooks.json|\
+    bin/backend/fm-sessionstart-run.sh|.claude/settings.json|.codex/hooks.json|\
     .pi/extensions/fm-primary-turnend-guard.ts)
       # The run tier's two harness-supplied facts (source vocabulary and
       # context-reset stdout injection) only show up against a real harness.
       printf '%s\n' session-bootstrap
       printf '%s\n' live-harness-optin
       ;;
-    bin/fm-extension.mjs|bin/fm-extension.sh|docs/examples/process-event-extension/*)
+    bin/fm-extension.mjs|bin/backend/fm-extension.sh|docs/examples/process-event-extension/*)
       printf '%s\n' __script__:fm-extension-binding.test.sh
       ;;
-    bin/fm-procevent.sh|bin/fm-procevent-lib.sh|bin/fm-procevent-extension-capture.pl)
+    bin/backend/fm-procevent.sh|bin/backend/fm-procevent-lib.sh|bin/fm-procevent-extension-capture.pl)
       printf '%s\n' __script__:fm-extension-binding.test.sh
       printf '%s\n' __script__:fm-procevent.test.sh
       printf '%s\n' __script__:fm-procevent-when.test.sh
       printf '%s\n' __script__:fm-remote-reply.test.sh
       ;;
-    bin/fm-timeout-lib.sh)
+    bin/backend/fm-timeout-lib.sh)
       # The shared hard bound: session start's runtime bound, the fleet/bearings
       # snapshots, the vendor auth probe, the stow cascade's per-home step, and
       # the wedge detector's worktree write probe all depend on it.
@@ -1193,23 +1193,23 @@ families_for_changed_path() {
       printf '%s\n' watcher-wake-lock
       printf '%s\n' "__script__:fm-procevent-quota.test.sh"
       ;;
-    bin/fm-pr-*|bin/fm-merge-local.sh|bin/fm-teardown.sh|bin/fm-review-diff.sh|\
+    bin/fm-pr-*|bin/backend/fm-merge-local.sh|bin/backend/fm-teardown.sh|bin/backend/fm-review-diff.sh|\
     bin/fm-x-*|bin/fm-check*)
       printf '%s\n' pr-forge
       ;;
-    bin/fm-nm-run-lib.sh)
+    bin/backend/fm-nm-run-lib.sh)
       # Shared no-mistakes run-attribution primitives, sourced by both
-      # bin/fm-crew-state.sh (pure-contract-unit) and bin/fm-teardown.sh's
+      # bin/backend/fm-crew-state.sh (pure-contract-unit) and bin/backend/fm-teardown.sh's
       # pre-teardown run abort (pr-forge).
       printf '%s\n' pure-contract-unit
       printf '%s\n' pr-forge
       ;;
-    bin/fm-control-lib.sh)
+    bin/backend/fm-control-lib.sh)
       printf '%s\n' backend-dispatch
       printf '%s\n' session-bootstrap
       printf '%s\n' "__script__:fm-quota-choose.test.sh"
       ;;
-    bin/fm-composer-lib.sh)
+    bin/backend/fm-composer-lib.sh)
       # The shared shape catalogue is vendor-rendered signal; a change to it
       # re-selects the live guard (fm-composer-matrix-live-e2e) alongside the
       # portable families.
@@ -1217,12 +1217,12 @@ families_for_changed_path() {
       printf '%s\n' pure-contract-unit
       printf '%s\n' live-harness-optin
       ;;
-    bin/fm-spawn.sh|bin/fm-send.sh|bin/fm-harness.sh|\
-    bin/fm-peek.sh|bin/fm-composer*)
+    bin/backend/fm-spawn.sh|bin/backend/fm-send.sh|bin/backend/fm-harness.sh|\
+    bin/backend/fm-peek.sh|bin/fm-composer*)
       printf '%s\n' backend-dispatch
       printf '%s\n' pure-contract-unit
       ;;
-    bin/fm-task-inbox-lib.sh)
+    bin/backend/fm-task-inbox-lib.sh)
       # The steering-inbox record/doorbell/ladder owner: fm-send's data plane
       # (backend-dispatch), the watcher's re-ring check (watcher-wake-lock),
       # and the live doorbell guard against real harnesses.
@@ -1230,24 +1230,24 @@ families_for_changed_path() {
       printf '%s\n' watcher-wake-lock
       printf '%s\n' live-harness-optin
       ;;
-    bin/fm-bearings-snapshot.sh|bin/fm-fleet-snapshot.sh|bin/fm-fleet-view.sh|\
-    bin/fm-home-summary-refresh.sh)
+    bin/backend/fm-bearings-snapshot.sh|bin/backend/fm-fleet-snapshot.sh|bin/backend/fm-fleet-view.sh|\
+    bin/backend/fm-home-summary-refresh.sh)
       printf '%s\n' snapshot-bearings
       ;;
-    bin/fm-install-herdr.sh|bin/fm-install-treehouse.sh|bin/fm-herdr-ci-cleanup.sh)
+    bin/backend/fm-install-herdr.sh|bin/backend/fm-install-treehouse.sh|bin/backend/fm-herdr-ci-cleanup.sh)
       printf '%s\n' pure-contract-unit
       # Pin or cleanup changes also select the real-Herdr family so the required
       # lane's contract coverage re-runs.
       printf '%s\n' real-herdr-gated
       ;;
-    bin/fm-lint.sh|bin/fm-lint-workflows.sh|bin/fm-install-shellcheck.sh|\
-    bin/fm-install-actionlint.sh|\
-    bin/fm-brief.sh|bin/fm-ensure-agents-md.sh|bin/fm-crew-state.sh|\
-    bin/fm-captain-hold.sh|bin/fm-decision-hold.sh|bin/fm-supervision*|bin/fm-transition-lib.sh|\
-    bin/fm-tmux-lib.sh|bin/fm-marker-lib.sh|bin/fm-operational-input.sh|bin/fm-tasks-axi-lib.sh|\
-    bin/fm-vendor-auth-probe.sh|\
-    bin/fm-primary-scope-lib.sh|bin/fm-project-mode.sh|bin/fm-promote.sh|\
-    bin/fm-ff-lib.sh|bin/fm-gotmp*|bin/*pretool*)
+    bin/backend/fm-lint.sh|bin/backend/fm-lint-workflows.sh|bin/backend/fm-install-shellcheck.sh|\
+    bin/backend/fm-install-actionlint.sh|\
+    bin/backend/fm-brief.sh|bin/backend/fm-ensure-agents-md.sh|bin/backend/fm-crew-state.sh|\
+    bin/backend/fm-captain-hold.sh|bin/backend/fm-decision-hold.sh|bin/fm-supervision*|bin/backend/fm-transition-lib.sh|\
+    bin/backend/fm-tmux-lib.sh|bin/backend/fm-marker-lib.sh|bin/backend/fm-operational-input.sh|bin/backend/fm-tasks-axi-lib.sh|\
+    bin/backend/fm-vendor-auth-probe.sh|\
+    bin/backend/fm-primary-scope-lib.sh|bin/backend/fm-project-mode.sh|bin/backend/fm-promote.sh|\
+    bin/backend/fm-ff-lib.sh|bin/fm-gotmp*|bin/*pretool*)
       printf '%s\n' pure-contract-unit
       ;;
     .agents/skills/quota-array-dispatch/SKILL.md)
@@ -1827,7 +1827,7 @@ fi
 if [ "$JOBS" -gt 1 ] && [ "$AUTO_CONCURRENCY" -eq 0 ]; then
   for s in "${SCRIPTS[@]}"; do
     if ! script_allows_concurrency "$s"; then
-      die "--jobs $JOBS refused: $s is not in the proven-isolated set (see bin/fm-test-isolation-proof.sh --list) and its family has no recorded concurrent proof. Unproven stateful scripts stay serial."
+      die "--jobs $JOBS refused: $s is not in the proven-isolated set (see bin/backend/fm-test-isolation-proof.sh --list) and its family has no recorded concurrent proof. Unproven stateful scripts stay serial."
     fi
     if ! is_proven_isolated_script "$s"; then
       family=$(family_for_basename "$(basename "$s")")
@@ -1869,9 +1869,9 @@ if [ "$JOBS" -gt 1 ]; then
 fi
 
 if [ "$PER_SCRIPT_TIMEOUT_SECS" -gt 0 ]; then
-  [ -r "$ROOT/bin/fm-timeout-lib.sh" ] || die "per-script timeout helper not found: bin/fm-timeout-lib.sh"
-  # shellcheck source=bin/fm-timeout-lib.sh
-  . "$ROOT/bin/fm-timeout-lib.sh"
+  [ -r "$ROOT/bin/backend/fm-timeout-lib.sh" ] || die "per-script timeout helper not found: bin/backend/fm-timeout-lib.sh"
+  # shellcheck source=bin/backend/fm-timeout-lib.sh
+  . "$ROOT/bin/backend/fm-timeout-lib.sh"
 fi
 
 RUN_TMP=$(mktemp -d "${TMPDIR:-/tmp}/fm-test-run.XXXXXX")

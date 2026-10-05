@@ -22,7 +22,7 @@ _root() {
   printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 }
 ROOT="$(_root)"
-VERSION="$("$ROOT/bin/fm-lint-workflows.sh" --required-version)"
+VERSION="$("$ROOT/bin/backend/fm-lint-workflows.sh" --required-version)"
 
 die() {
   printf 'fm-install-actionlint.sh: %s\n' "$*" >&2

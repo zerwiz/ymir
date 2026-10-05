@@ -10,8 +10,8 @@
 # This prunes unreachable LOCAL providers from pi's models config, keeping every seat
 # that answers and every online provider untouched.
 #
-#   bin/pi-model-agnostic.sh            # report and prune
-#   bin/pi-model-agnostic.sh --dry-run  # report only
+#   bin/pi/pi-model-agnostic.sh            # report and prune
+#   bin/pi/pi-model-agnostic.sh --dry-run  # report only
 set -euo pipefail
 
 CFG="${PI_MODELS_JSON:-$HOME/.pi/agent/models.json}"

@@ -12,7 +12,7 @@
 #     exact fm-turnend-guard.sh scope. Child crew/scout worktrees stay inert.
 #   - Identity: only when THIS session's harness ancestor holds state/.lock.
 #     When an existing numeric owner fails the shared harness-liveness predicate,
-#     the hook delegates guarded recovery to bin/fm-lock.sh and then re-verifies
+#     the hook delegates guarded recovery to bin/backend/fm-lock.sh and then re-verifies
 #     ownership. A live owner, missing lock, malformed lock, or unresolved
 #     ancestry remains inert, so a competing session never arms or rewakes.
 #   - AFK: while state/.afk exists the away daemon owns the watcher and triage;
@@ -30,9 +30,9 @@
 #     and a superseded owner goes completely silent: ownership is re-verified
 #     before every arm invocation, episode-state mutation, ledger write, and
 #     continuation (fm_autoarm_claim_open/fm_autoarm_claim_next in
-#     bin/fm-wake-lib.sh own the contract, including the legacy shim for a
+#     bin/backend/fm-wake-lib.sh own the contract, including the legacy shim for a
 #     pre-generation lock).
-#   - Foreground arm: the owner runs bin/fm-watch-arm.sh in the FOREGROUND of
+#   - Foreground arm: the owner runs bin/backend/fm-watch-arm.sh in the FOREGROUND of
 #     this hook-owned process tree (never shell &); Claude owns the process
 #     group, so its timeout/session teardown kills arm and watcher together.
 #   - Translation: while supervision is still needed and AFK remains inactive,
@@ -54,7 +54,7 @@
 #
 # The epoch ledger state/.claude-autoarm-epoch records the latest claim
 # generation and outcome so the synchronous Stop guard
-# (bin/fm-turnend-guard.sh --claude) can allow a stop whose recovery this hook
+# (bin/backend/fm-turnend-guard.sh --claude) can allow a stop whose recovery this hook
 # already owns, instead of forcing a duplicate continuation for the same event
 # epoch. The failure marker
 # state/.claude-autoarm-failure-notified deduplicates the last-resort notice,
@@ -83,15 +83,15 @@ case "$AUTOARM_ATTEMPTS" in
   *) AUTOARM_ATTEMPTS=2 ;;
 esac
 
-# shellcheck source=bin/fm-primary-scope-lib.sh
+# shellcheck source=bin/backend/fm-primary-scope-lib.sh
 . "$SCRIPT_DIR/fm-primary-scope-lib.sh"
-# shellcheck source=bin/fm-supervision-lib.sh
+# shellcheck source=bin/backend/fm-supervision-lib.sh
 . "$SCRIPT_DIR/fm-supervision-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
+# shellcheck source=bin/backend/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-session-lock-lib.sh
+# shellcheck source=bin/backend/fm-session-lock-lib.sh
 . "$SCRIPT_DIR/fm-session-lock-lib.sh"
-# shellcheck source=bin/fm-hook-host-lib.sh
+# shellcheck source=bin/backend/fm-hook-host-lib.sh
 . "$SCRIPT_DIR/fm-hook-host-lib.sh"
 
 # Consume the Stop payload once. The decisions below are state-based; the
@@ -149,7 +149,7 @@ fi
 # generation owner arms and translates per event epoch: every firing defers to
 # a live open claim, and a stuck, dead, identity-mismatched, or finished claim
 # is superseded by taking the next generation (fm_autoarm_claim_open and
-# fm_autoarm_claim_next in bin/fm-wake-lib.sh own the contract). No mutex is
+# fm_autoarm_claim_next in bin/backend/fm-wake-lib.sh own the contract). No mutex is
 # held past this point. A micro-mutex contention with a bare hold is another
 # participant's short ledger section and the next Stop firing simply retries,
 # while a role-carrying hold is a legacy lock-holding claim from a
@@ -294,7 +294,7 @@ if [ "$ACTIONABLE" -eq 1 ]; then
   {
     printf 'firstmate watcher wake - one supervision event needs a handling turn now.\n'
     [ -n "$OUT" ] && grep -E '^(signal:|stale:|check:|heartbeat)' "$OUT" 2>/dev/null | head -8
-    printf 'Run bin/fm-wake-drain.sh first, handle the wake, then run its exact WAKE_ACK_REQUIRED --ack-through command. Until that post-handling acknowledgement, interruption leaves the wake durable for idempotent re-handling. This Stop hook owns watcher continuity: when the handling turn ends, the next needed cycle arms automatically - do NOT run bin/fm-watch-arm.sh after an ordinary wake.\n'
+    printf 'Run bin/backend/fm-wake-drain.sh first, handle the wake, then run its exact WAKE_ACK_REQUIRED --ack-through command. Until that post-handling acknowledgement, interruption leaves the wake durable for idempotent re-handling. This Stop hook owns watcher continuity: when the handling turn ends, the next needed cycle arms automatically - do NOT run bin/backend/fm-watch-arm.sh after an ordinary wake.\n'
   } >&2
   if autoarm_commit rewake; then
     [ -z "$OUT" ] || rm -f "$OUT" 2>/dev/null || true

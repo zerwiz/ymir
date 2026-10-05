@@ -18,7 +18,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -57,7 +58,7 @@ done
 [ -n "$REQ" ] || { printf 'error: eindri-start needs a request\nhelp: bin/agents/eindri-start.sh "build the login page"\n' >&2; exit 2; }
 
 # 1. Backend: ensure herdr (or a usable backend) exists.
-[ -x "$SCRIPT_DIR/herdr-ensure.sh" ] && "$SCRIPT_DIR/herdr-ensure.sh" ensure --install >/dev/null 2>&1 || true
+[ -x "$SCRIPT_DIR/../seat/herdr-ensure.sh" ] && "$SCRIPT_DIR/../seat/herdr-ensure.sh" ensure --install >/dev/null 2>&1 || true
 
 # 2. The right smith for the request.
 if [ -z "$ROLE" ] && [ -x "$SCRIPT_DIR/eindri-role.sh" ]; then
@@ -72,12 +73,12 @@ LABEL="${ROLE}-${SLUG:-task}"
 #    A seat hint (--pane/--tab/--space/--main) is the old road's grain, so those
 #    callers keep the road below; YMIR_ENGINE=off skips the handoff entirely.
 if [ -n "$TASK_ID" ] && [ -z "$SEAT" ] && [ -z "$MAIN" ] \
-   && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/ymir-engine.sh" ]; then
+   && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/../engine/ymir-engine.sh" ]; then
   PROJECT_DIR="${PROJECT_DIR:-$PWD}"
   engine_args=(seat "$TASK_ID" --project "$PROJECT_DIR" --harness "$KIND" --request "$REQ" --role "$ROLE")
   if [ -n "$MODEL" ]; then engine_args+=(--model "$MODEL"); fi
   engine_rc=0
-  engine_out="$("$SCRIPT_DIR/ymir-engine.sh" "${engine_args[@]}")" || engine_rc=$?
+  engine_out="$("$SCRIPT_DIR/../engine/ymir-engine.sh" "${engine_args[@]}")" || engine_rc=$?
   if [ "$engine_rc" -eq 0 ]; then
     printf '%s' "$engine_out"
     printf 'eindri-start[1]{role,seat,a2a,request,label}:\n  "%s","engine","none","%s","%s"\n' "$ROLE" "$REQ" "$LABEL"
@@ -96,8 +97,8 @@ mkdir -p "$STATE"
 # 3. Seat: herdr first, tmux fallback — always produce a seat.
 #    rc 3 from herdr-run means "not worth a smith" — report it, do NOT fake a seat.
 seat="none"; refuse=0; rc=0
-if [ -x "$SCRIPT_DIR/herdr-run.sh" ]; then
-  "$SCRIPT_DIR/herdr-run.sh" eindri $SEAT $MAIN ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
+if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ]; then
+  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $MAIN ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
 fi
 if [ "$rc" = 0 ]; then
   seat="herdr"
@@ -115,10 +116,10 @@ fi
 # 4. Serve the Eindri over A2A (best effort): its tasks are delivered by
 #    injection into the seated agent's chat; reachable at A2A_URL.
 A2A_URL=""
-if [ "$seat" = herdr ] && [ -f "$SCRIPT_DIR/a2a-serve.py" ]; then
+if [ "$seat" = herdr ] && [ -f "$SCRIPT_DIR/../bridge/a2a-serve.py" ]; then
   PORT=$((7800 + (RANDOM % 100)))
   mkdir -p "$STATE"
-  nohup python3 "$SCRIPT_DIR/a2a-serve.py" "$ROLE" "$ROLE" "$PORT" >"$STATE/a2a-$ROLE.log" 2>&1 &
+  nohup python3 "$SCRIPT_DIR/../bridge/a2a-serve.py" "$ROLE" "$ROLE" "$PORT" >"$STATE/a2a-$ROLE.log" 2>&1 &
   A2A_URL="http://127.0.0.1:$PORT/"
 fi
 

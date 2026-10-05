@@ -20,7 +20,7 @@ mkdir -p "$STATE"
 # Load the classifier only when a status presentation helper is actually used.
 _fm_wake_require_classify() {
   command -v status_observed_signature >/dev/null 2>&1 && return 0
-  # shellcheck source=bin/fm-classify-lib.sh
+  # shellcheck source=bin/backend/fm-classify-lib.sh
   . "$FM_WAKE_LIB_DIR/fm-classify-lib.sh"
 }
 
@@ -139,11 +139,11 @@ fm_watcher_healthy() {
 
 # fm_watcher_healthy above is the PID-STRICT primitive: true only when a live,
 # identity-matched watcher PROCESS holds this home's lock with a fresh beacon. The
-# arm layer (bin/fm-watch-arm.sh, bin/fm-claude-stop-autoarm.sh) needs exactly
+# arm layer (bin/backend/fm-watch-arm.sh, bin/backend/fm-claude-stop-autoarm.sh) needs exactly
 # that - it decides whether to start, attach to, or replace a real watcher
-# process, so a leftover beacon must never satisfy it. bin/fm-turnend-guard.sh
+# process, so a leftover beacon must never satisfy it. bin/backend/fm-turnend-guard.sh
 # also keeps this strict check because it fires at the turn boundary where the
-# auto-arm brings a fresh watcher up. The pull warning (bin/fm-guard.sh) fires
+# auto-arm brings a fresh watcher up. The pull warning (bin/backend/fm-guard.sh) fires
 # mid-turn, where the auto-arm model runs no watcher at all, so it wants a
 # different, model-aware question:
 
@@ -162,7 +162,7 @@ fm_watcher_healthy() {
 #               background arm, tmux, unknown): the watcher runs as a tracked live
 #               process, so a live identity-matched pid is the real liveness signal.
 # FM_SUPERVISION_MODEL overrides detection (tests, and callers that already know
-# the harness). Otherwise bin/fm-harness.sh is the single detection owner, so this
+# the harness). Otherwise bin/backend/fm-harness.sh is the single detection owner, so this
 # stays consistent with the harness-specific repair line the guards already emit.
 fm_supervision_model() {
   local harness
@@ -237,7 +237,7 @@ fm_pi_extension_owns_supervision() {
 
 # fm_watcher_supervision_verdict <state> <watch-path> [grace] [home] [root]
 # Model-aware "is supervision healthy right now" verdict for the pull warning
-# guard (bin/fm-guard.sh), NOT the arm layer or the turn-end guard. Sets:
+# guard (bin/backend/fm-guard.sh), NOT the arm layer or the turn-end guard. Sets:
 #   FM_WATCHER_VERDICT_OK      true when supervision is healthy for this model
 #   FM_WATCHER_VERDICT_REASON  when not ok, the true failing condition:
 #                              no-watcher   - a live watcher process is the real
@@ -1009,8 +1009,8 @@ fm_failure_episode_reset() {
 }
 
 # --- Claude Stop auto-arm generation claims -----------------------------------
-# Both Stop-event participants (bin/fm-claude-stop-autoarm.sh and
-# bin/fm-turnend-guard.sh --claude) coordinate through the epoch ledger
+# Both Stop-event participants (bin/backend/fm-claude-stop-autoarm.sh and
+# bin/backend/fm-turnend-guard.sh --claude) coordinate through the epoch ledger
 # state/.claude-autoarm-epoch, whose monotonic epoch sequence IS the claim
 # generation. This is an optimistic, generation-based single-flight design:
 #
@@ -1536,7 +1536,7 @@ fm_wake_print_deduped() {
 
 # --- signal announcement signatures -----------------------------------------
 #
-# The watcher's per-file signal scan (bin/fm-watch.sh scan_signals) detects a
+# The watcher's per-file signal scan (bin/backend/fm-watch.sh scan_signals) detects a
 # status or turn-ended change by comparing a file signature against a persisted
 # state/.seen-* marker.
 # fm-classify-lib.sh's header owns the status marker contract, including its

@@ -14,7 +14,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 SCHEMA="$ROOT/midgard/infrastructure/db/schema.sql"
 
 case "${1-}" in
@@ -43,5 +44,5 @@ case "$CMD" in
   psql)
     exec "${PSQL[@]}" "$@"
     ;;
-  *) printf 'error: unknown command %s\nhelp: bin/wyrd-db.sh [status|apply|psql|--version]\n' "$CMD" >&2; exit 2 ;;
+  *) printf 'error: unknown command %s\nhelp: bin/records/wyrd-db.sh [status|apply|psql|--version]\n' "$CMD" >&2; exit 2 ;;
 esac

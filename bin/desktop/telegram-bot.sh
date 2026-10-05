@@ -11,7 +11,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
@@ -40,7 +41,7 @@ TOKEN=$(grep -E '^TELEGRAM_BOT_TOKEN=' "$ENV_FILE" | head -1 | cut -d= -f2-)
 OWNER=$(grep -E '^TELEGRAM_OWNER_ID=' "$ENV_FILE" | head -1 | cut -d= -f2-)
 [ -n "$TOKEN" ] && [ -n "$OWNER" ] || { printf 'error: TELEGRAM_BOT_TOKEN / TELEGRAM_OWNER_ID unset\n' >&2; exit 1; }
 
-reply() { "$SCRIPT_DIR/gjallarhorn-notify.sh" "$1" >/dev/null 2>&1 || true; }
+reply() { "$SCRIPT_DIR/../forge/gjallarhorn-notify.sh" "$1" >/dev/null 2>&1 || true; }
 
 handle() { # <text>
   local t=$1 cmd
@@ -48,7 +49,7 @@ handle() { # <text>
   case "$cmd" in
     /status) reply "$("$SCRIPT_DIR/brokk" status 2>/dev/null)" ;;
     /runes) reply "$("$SCRIPT_DIR/brokk" runes 5 2>/dev/null)" ;;
-    /well) reply "$("$SCRIPT_DIR/mimir.sh" health 2>/dev/null)" ;;
+    /well) reply "$("$SCRIPT_DIR/../records/mimir.sh" health 2>/dev/null)" ;;
     /help|*) reply "Ymir commands: /status /runes /well" ;;
   esac
 }

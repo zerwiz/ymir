@@ -12,9 +12,9 @@
 # installed (the npm line has run ahead of the tree before).
 #
 # Usage:
-#   bin/npm-install-local-test.sh            # install for real, smoke, restore
-#   bin/npm-install-local-test.sh --keep     # leave the new version installed
-#   bin/npm-install-local-test.sh --prefix <dir>
+#   bin/forge/npm/npm-install-local-test.sh            # install for real, smoke, restore
+#   bin/forge/npm/npm-install-local-test.sh --keep     # leave the new version installed
+#   bin/forge/npm/npm-install-local-test.sh --prefix <dir>
 # Env:
 #   NPM_INSTALL_PREFIX   override the global prefix (default: `npm prefix -g`)
 set -u
@@ -90,7 +90,7 @@ out="$("$BIN" --version 2>/dev/null)"; [ -n "$out" ] && ok "ymir --version: $out
 
 # The lock library must resolve the operator's HOARD state, not the code tree:
 # that is the fix this test guards (2026-09-23).
-installed_lock="$PKG/bin/gleipnir-lock-lib.sh"
+installed_lock="$PKG/bin/vault/gleipnir-lock-lib.sh"
 if [ -r "$installed_lock" ]; then
   resolved="$(bash -c '. "$0"; gleipnir_state_dir s; printf "%s" "$s"' "$installed_lock" 2>/dev/null)"
   case "$resolved" in
@@ -98,7 +98,7 @@ if [ -r "$installed_lock" ]; then
     *) fail "gleipnir_state_dir -> $resolved (expected the hoard state, not the code tree)" ;;
   esac
 else
-  fail "installed package lacks bin/gleipnir-lock-lib.sh"
+  fail "installed package lacks bin/vault/gleipnir-lock-lib.sh"
 fi
 
 # — restore the previous version unless asked to keep —

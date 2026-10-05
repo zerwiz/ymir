@@ -17,7 +17,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 HERDR="${HERDR_BIN_PATH:-herdr}"
 MODE="json"
 [ "${1:-}" = "--toon" ] && MODE="toon"
@@ -32,7 +33,8 @@ raw="$("$HERDR" pane list 2>/dev/null)"
 # point it at the wrong directory (the Fleet showed an empty board because a
 # relative .agents/agents resolved against the server's cwd, not the repo). An
 # explicit ROSTER_DIR in the environment always wins.
-if REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null)"; then :; else REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"; fi
+if REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null)"; then :; else REPO_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"; fi
 export ROSTER_DIR="${ROSTER_DIR:-$REPO_ROOT/.agents/agents}"
 
 MODE="$MODE" RAW="$raw" python3 - <<'PY'

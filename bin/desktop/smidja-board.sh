@@ -20,7 +20,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # bun installs to ~/.bun/bin and is often absent from a non-login PATH; adopt it
 # once so the board's build/run steps are not refused on a machine that HAS bun.
 if ! command -v bun >/dev/null 2>&1 && [ -x "$HOME/.bun/bin/bun" ]; then
@@ -31,7 +32,7 @@ fi
 # (Rule 07). No literal here — a literal would win over the resolver below and
 # pin the machine to a dead path.
 # shellcheck source=bin/vault/hoard-lib.sh
-. "$SCRIPT_DIR/hoard-lib.sh"
+. "$SCRIPT_DIR/../vault/hoard-lib.sh"
 ymir_home_root YMIR_HOME
 hoard_state_dir STATE
 # shellcheck source=bin/desktop/smidja-lib.sh
@@ -75,7 +76,7 @@ fi
 case "$ACTION" in
   build)
     if ! command -v bun >/dev/null 2>&1; then
-      printf 'error: bun is needed to build the UI\nhelp: bin/prereq-ensure.sh bun\n' >&2; exit 1
+      printf 'error: bun is needed to build the UI\nhelp: bin/engine/prereq-ensure.sh bun\n' >&2; exit 1
     fi
     printf 'visualizer_build[1]{step,state}:\n'
     if [ ! -d "$VIZ/node_modules" ]; then
@@ -89,7 +90,7 @@ case "$ACTION" in
     fi
     ;;
   start)
-    command -v bun >/dev/null 2>&1 || { printf 'error: bun is needed to run the visualizer\nhelp: bin/prereq-ensure.sh bun\n' >&2; exit 1; }
+    command -v bun >/dev/null 2>&1 || { printf 'error: bun is needed to run the visualizer\nhelp: bin/engine/prereq-ensure.sh bun\n' >&2; exit 1; }
     [ -n "$SMIDJA_DB_PATH" ] && [ -f "$SMIDJA_DB_PATH" ] || {
       printf 'error: no smidja.db found\nhelp: bin/desktop/smidja-bootstrap.sh (creates $YMIR_HOME/smidja/smidja.db)\n' >&2; exit 1; }
     [ -d "$VIZ/dist" ] || printf 'note: the UI is unbuilt — the API will answer and show no interface\nnote: mend it with: bin/ymir-visualizer.sh build\n' >&2

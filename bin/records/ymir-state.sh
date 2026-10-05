@@ -12,14 +12,15 @@
 #   ymir-state.sh queue keys <kind> [--queue P] | queue read [--queue P]
 #
 # Exit codes are the module's own: 0 ran (condition true) · 1 ran (condition
-# false / IO failed) · 2 usage. `bin/gleipnir-lock-lib.sh` and
+# false / IO failed) · 2 usage. `bin/vault/gleipnir-lock-lib.sh` and
 # `bin/records/runes-append.sh` are thin shims over this door; a body added in bash
 # would be the second implementation this door exists to remove.
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 VENV="${YMIR_ENGINE_VENV:-$HOME/.fleet/ymir-engine-venv}"
 
 case "${1-}" in
@@ -35,7 +36,7 @@ esac
 PY="${YMIR_ENGINE_PYTHON:-}"
 if [ -z "$PY" ] && [ -x "$VENV/bin/python" ]; then PY="$VENV/bin/python"; fi
 if [ -z "$PY" ]; then PY="$(command -v python3 2>/dev/null || true)"; fi
-[ -n "$PY" ] || { printf 'error: no python3 — the state module cannot run\nhelp: bin/prereq-ensure.sh\n' >&2; exit 1; }
+[ -n "$PY" ] || { printf 'error: no python3 — the state module cannot run\nhelp: bin/engine/prereq-ensure.sh\n' >&2; exit 1; }
 
 export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
 export YMIR_ENGINE_ROOT="$ROOT"

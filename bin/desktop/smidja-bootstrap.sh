@@ -23,7 +23,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # The operator's home: env -> the recorded choice -> the ONE documented default
 # (Rule 07; the default lives in bin/vault/hoard-lib.sh, never in a script).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -91,7 +92,7 @@ t.session_start("bootstrap", "install", smidja_name="ymir-install")
 t.session_finish("bootstrap", ok=True)
 ' )
 else
-  printf 'error: uv not found (needed to create the smidja schema)\nhelp: bin/prereq-ensure.sh uv\n' >&2
+  printf 'error: uv not found (needed to create the smidja schema)\nhelp: bin/engine/prereq-ensure.sh uv\n' >&2
   exit 1
 fi
 

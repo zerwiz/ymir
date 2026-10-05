@@ -8,15 +8,15 @@
  * accident of wiring, and a 17-tool door is the wrong home for a sixteenth concern.
  *
  * It was also BROKEN there: it passed the literal string
- * `"${YMIR_HOME:-$HOME/Documents/ymirhome}/bin/calendar-ask.sh"` to bash as an argv entry,
+ * `"${YMIR_HOME:-$HOME/Documents/ymirhome}/bin/time/snotra/calendar-ask.sh"` to bash as an argv entry,
  * and bash does not expand a variable inside an argument it was handed. So the tool had
  * never once reached the calendar on any seat — and nothing had noticed, because a broken
  * tool and an absent tool look identical from the outside.
  *
  * THIN by construction: it calls the door, so a human and a cron row get the same answer.
- *   what  → bin/calendar-ask.sh               the next 7 days (or `at`)
- *   free  → bin/calendar-ask.sh free <minutes> when a meeting fits
- *   probe → bin/calendar-ask.sh probe         is the consent still good?
+ *   what  → bin/time/snotra/calendar-ask.sh               the next 7 days (or `at`)
+ *   free  → bin/time/snotra/calendar-ask.sh free <minutes> when a meeting fits
+ *   probe → bin/time/snotra/calendar-ask.sh probe         is the consent still good?
  */
 
 import { execFileSync } from "node:child_process";
@@ -66,7 +66,7 @@ export default function managandr(pi: ExtensionAPI) {
     description:
       "Read the Allfather's calendar through Mánagandr: what is coming (default the next 7 " +
       "days, or `at` for an ISO date), when a meeting of N minutes fits (`free`), or whether " +
-      "the Google consent is still good (`probe`). Thin: it calls bin/calendar-ask.sh, so a " +
+      "the Google consent is still good (`probe`). Thin: it calls bin/time/snotra/calendar-ask.sh, so a " +
       "human and a cron row read the same calendar.",
     parameters: {
       type: "object",
@@ -95,7 +95,7 @@ export default function managandr(pi: ExtensionAPI) {
         return piOut(out);
       } catch (e: any) {
         const msg = String(e?.stderr || e?.message || e).trim().split("\n")[0];
-        return piOut(`Mánagandr is not answering: ${msg}\n  check: bin/calendar-ask.sh probe`);
+        return piOut(`Mánagandr is not answering: ${msg}\n  check: bin/time/snotra/calendar-ask.sh probe`);
       }
     },
   });

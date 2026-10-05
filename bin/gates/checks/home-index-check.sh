@@ -6,10 +6,10 @@
 # older"*. A shelf whose README is missing cannot be navigated, and a README that lists
 # fewer files than the shelf holds is **worse than none** — it is a confident, wrong map. That
 # is the same failure as an authored register, and it is the reason this door checks the
-# VAULT's own indexes the way `bin/inventory.sh --check` checks the repo's.
+# VAULT's own indexes the way `bin/gates/inventory.sh --check` checks the repo's.
 #
-#   bin/home-index-check.sh            # report
-#   bin/home-index-check.sh --strict   # non-zero when any shelf has no index or a stale one
+#   bin/gates/checks/home-index-check.sh            # report
+#   bin/gates/checks/home-index-check.sh --strict   # non-zero when any shelf has no index or a stale one
 set -uo pipefail
 
 _root() {

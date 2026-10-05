@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # skillopt-setup.sh — one-time SkillOpt installation for Ymir.
 #
-# Usage: bin/skillopt-setup.sh [--dry-run]
+# Usage: bin/forge/skillopt-setup.sh [--dry-run]
 #
 # What it does:
 #   1. Creates the venv (uv venv .venv) if it doesn't exist

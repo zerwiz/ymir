@@ -18,7 +18,7 @@ BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # the hoard heartbeat was seconds fresh (2026-09-23).
 if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-    for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+    for _c in "$SCRIPT_DIR/../../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
       [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
     done
     unset _c

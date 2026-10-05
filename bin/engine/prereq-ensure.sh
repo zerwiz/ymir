@@ -13,18 +13,19 @@
 #   pythonX.Y — fetched by uv in user space when a package needs another Python
 #
 # Usage:
-#   bin/prereq-ensure.sh bun | uv | mcp | python <X.Y> | all
-#   bin/prereq-ensure.sh status
-#   bin/prereq-ensure.sh --version
+#   bin/engine/prereq-ensure.sh bun | uv | mcp | python <X.Y> | all
+#   bin/engine/prereq-ensure.sh status
+#   bin/engine/prereq-ensure.sh --version
 #
 # Output: Galdr TOON. Exit 0 when the target is present afterwards, 1 otherwise.
 set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=bin/ymir-platform.sh
-[ -r "$SCRIPT_DIR/ymir-platform.sh" ] && . "$SCRIPT_DIR/ymir-platform.sh"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=bin/fleet/ymir-platform.sh
+[ -r "$SCRIPT_DIR/../fleet/ymir-platform.sh" ] && . "$SCRIPT_DIR/../fleet/ymir-platform.sh"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 BUN_HOME="${BUN_INSTALL:-$HOME/.bun}"
 
 add_path() { case ":$PATH:" in *":$1:"*) ;; *) PATH="$1:$PATH" ;; esac; }
@@ -107,7 +108,7 @@ ensure_engram() {
     why="pip could not install engdbram under $(engram_v "$py")"
   fi
 
-  say engram absent "$why — help: bin/prereq-ensure.sh uv, then bin/prereq-ensure.sh engram"
+  say engram absent "$why — help: bin/engine/prereq-ensure.sh uv, then bin/engine/prereq-ensure.sh engram"
   return 1
 }
 
@@ -197,5 +198,5 @@ case "$1" in
     ensure_uv  || rc=1
     ensure_mcp || rc=1
     exit $rc ;;
-  *) printf 'error: unknown target %s\nhelp: bin/prereq-ensure.sh [bun|uv|mcp|engram|python X.Y|status|all]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown target %s\nhelp: bin/engine/prereq-ensure.sh [bun|uv|mcp|engram|python X.Y|status|all]\n' "$1" >&2; exit 2 ;;
 esac

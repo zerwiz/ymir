@@ -20,7 +20,7 @@
  *   2. the recorded roots, first one that verifies
  *   3. `resolve(extensionDir, "../..")` — the pre-pointer contract, unchanged
  *
- * A candidate only counts if it really holds `bin/syn-watch-arm.sh`, so a root
+ * A candidate only counts if it really holds `bin/pi/syn-watch-arm.sh`, so a root
  * that no longer exists (a merged-and-removed Yggdrasil worktree, an uninstalled
  * npm prefix) is skipped rather than trusted. Nothing here is hardcoded: the
  * record is written by the loader that performed the deploy (Rule 07).

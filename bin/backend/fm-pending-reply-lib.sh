@@ -19,7 +19,7 @@
 #
 # Record location (parent FM_HOME):
 #   state/pending-replies/<corr_id>
-# One more durable input, owned by bin/fm-procevent-remote-reply.sh and read
+# One more durable input, owned by bin/backend/fm-procevent-remote-reply.sh and read
 # here: state/remote-replies/<task_id>.caught-up, the remote reply mirror's
 # watermark (see the remote reply-channel freshness section below).
 # Each record is a key=value file owned by this library. Schema:
@@ -58,7 +58,7 @@
 #   grace_secs=             bounded grace before recovery is eligible
 #
 # Escalation lifecycle: an escalation is not just a message, it OPENS a durable
-# keyed decision in the parent status log, and bin/fm-classify-lib.sh's fold is
+# keyed decision in the parent status log, and bin/backend/fm-classify-lib.sh's fold is
 # the one owner of what closes it. So this library owns both ends of that
 # decision: fm_pending_reply_maybe_escalate opens it under a per-request key, and
 # fm_pending_reply_close_escalation closes it once the record resolves. Resolving
@@ -67,9 +67,9 @@
 # That per-request key lives in a namespace the fold reserves to this library, so
 # no other writer into the same status stream - a local mate appending directly,
 # or a remote mate's mirrored line - can take the key over or clear it; see the
-# reserved-key rule in bin/fm-classify-lib.sh.
+# reserved-key rule in bin/backend/fm-classify-lib.sh.
 #
-# Sourced by bin/fm-send.sh, bin/fm-watch.sh, bin/fm-secondmate-report.sh, and
+# Sourced by bin/backend/fm-send.sh, bin/backend/fm-watch.sh, bin/backend/fm-secondmate-report.sh, and
 # tests. No side effects on source. set -u / set -e safe.
 #
 # Tunables (env):
@@ -79,15 +79,15 @@
 #                                 (tests); receives task_id and full message as args
 #   FM_PENDING_REPLY_NOW          optional fixed epoch for deterministic tests
 
-# shellcheck source=bin/fm-marker-lib.sh
+# shellcheck source=bin/backend/fm-marker-lib.sh
 _FM_PENDING_REPLY_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd 2>/dev/null)" || _FM_PENDING_REPLY_LIB_DIR="."
-# shellcheck source=bin/fm-marker-lib.sh
+# shellcheck source=bin/backend/fm-marker-lib.sh
 . "$_FM_PENDING_REPLY_LIB_DIR/fm-marker-lib.sh"
-# shellcheck source=bin/fm-backend.sh
+# shellcheck source=bin/backend/fm-backend.sh
 . "$_FM_PENDING_REPLY_LIB_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-tmux-lib.sh
+# shellcheck source=bin/backend/fm-tmux-lib.sh
 . "$_FM_PENDING_REPLY_LIB_DIR/fm-tmux-lib.sh"
-# shellcheck source=bin/fm-classify-lib.sh
+# shellcheck source=bin/backend/fm-classify-lib.sh
 . "$_FM_PENDING_REPLY_LIB_DIR/fm-classify-lib.sh"
 
 FM_PENDING_REPLY_SCHEMA='fm-pending-reply.v1'
@@ -573,7 +573,7 @@ fm_pending_reply_resolve_via_of_line() {  # <line>
 # Returns 0 when the record is resolved after the call (already or newly).
 fm_pending_reply_try_resolve() {  # <state-dir> <corr_id> [status-file-override]
   # Serialized per correlation so a resolution and an escalation cannot interleave.
-  # bin/fm-wake-lib.sh owns the lock primitives but assigns its own globals when
+  # bin/backend/fm-wake-lib.sh owns the lock primitives but assigns its own globals when
   # sourced, so they are declared local here: that contains them to this call
   # instead of leaking into every script that sources this library, without the
   # subshell that would make every later use of them read as a lost write.
@@ -583,7 +583,7 @@ fm_pending_reply_try_resolve() {  # <state-dir> <corr_id> [status-file-override]
   local STATE FM_WAKE_QUEUE FM_WAKE_QUEUE_LOCK
   STATE=$state
   lock="$state/.pending-reply-$corr.lock"
-  # shellcheck source=bin/fm-wake-lib.sh
+  # shellcheck source=bin/backend/fm-wake-lib.sh
   . "$_FM_PENDING_REPLY_LIB_DIR/fm-wake-lib.sh"
   fm_lock_acquire_wait "$lock" || return 1
   _fm_pending_reply_try_resolve_locked "$@" || rc=$?
@@ -714,13 +714,13 @@ fm_pending_reply_fallback_idle_eligible() {  # <record-path>
 # fm_pending_reply_backend_observation: one busy/idle observation of a
 # SECONDMATE endpoint, without ever reading its conversation.
 #
-# Deliberately NOT the semantic busy-state contract (bin/fm-busy-lib.sh).
+# Deliberately NOT the semantic busy-state contract (bin/backend/fm-busy-lib.sh).
 # That contract covers ordinary task workers, whose turn lifecycle firstmate
 # wires at spawn; a secondmate has no such wiring because an idle secondmate
 # pane is healthy and it runs no supervised turn sequence of its own. This
 # observation exists only to notice a busy-then-idle transition around one
 # delivered request, so it is a delivery-confirmation signal in the same
-# category as the submit acknowledgement matcher in bin/fm-composer-lib.sh - never task
+# category as the submit acknowledgement matcher in bin/backend/fm-composer-lib.sh - never task
 # state, and never a source consumers can confuse with semantic state.
 #
 # It stays harness-scoped (fm_busy_lines_match with the recorded harness, no
@@ -785,7 +785,7 @@ fm_pending_reply_mark_turn_completed() {  # <state-dir> <corr_id> [which: reques
 # A LOCAL secondmate appends its report straight into the parent's
 # state/<id>.status, so an absent correlated line there is immediate evidence
 # that no report was written. A REMOTE mate's reports reach that same file only
-# through the asynchronous mirror in bin/fm-procevent-remote-reply.sh, so the
+# through the asynchronous mirror in bin/backend/fm-procevent-remote-reply.sh, so the
 # same absence proves nothing until that mirror has actually been read past the
 # turn that should have produced the report. Without this distinction the guard
 # nags a REPOST REQUIRED for a reply the mate did write and the parent simply
@@ -1034,10 +1034,10 @@ fm_pending_reply_escalation_line() {  # <status-file> <record-path> <corr_id>
 # Close the durable status decision a previous escalation opened for <corr_id>.
 # Idempotent, and safe to retry until it succeeds: it appends the closing line
 # only while that exact keyed decision is still open in
-# bin/fm-classify-lib.sh's fold. Records that never escalated are left untouched.
+# bin/backend/fm-classify-lib.sh's fold. Records that never escalated are left untouched.
 fm_pending_reply_close_escalation() {  # <state-dir> <corr_id>
   # Serialized per correlation so a resolution and an escalation cannot interleave.
-  # bin/fm-wake-lib.sh owns the lock primitives but assigns its own globals when
+  # bin/backend/fm-wake-lib.sh owns the lock primitives but assigns its own globals when
   # sourced, so they are declared local here: that contains them to this call
   # instead of leaking into every script that sources this library, without the
   # subshell that would make every later use of them read as a lost write.
@@ -1047,7 +1047,7 @@ fm_pending_reply_close_escalation() {  # <state-dir> <corr_id>
   local STATE FM_WAKE_QUEUE FM_WAKE_QUEUE_LOCK
   STATE=$state
   lock="$state/.pending-reply-$corr.lock"
-  # shellcheck source=bin/fm-wake-lib.sh
+  # shellcheck source=bin/backend/fm-wake-lib.sh
   . "$_FM_PENDING_REPLY_LIB_DIR/fm-wake-lib.sh"
   fm_lock_acquire_wait "$lock" || return 1
   _fm_pending_reply_close_escalation_locked "$@" || rc=$?
@@ -1080,7 +1080,7 @@ _fm_pending_reply_close_escalation_locked() {  # <state-dir> <corr_id>
       [ "$open_note" = "$note" ] || continue
       # This close is the home's own bookkeeping, written by the same resolve
       # or tick that already consumed the reply, so it uses the guarded
-      # self-announced append (bin/fm-wake-lib.sh, sourced by this function's
+      # self-announced append (bin/backend/fm-wake-lib.sh, sourced by this function's
       # wrappers) and does not wake the home that wrote it; the escalation
       # OPEN above stays a plain append because a new blocker must wake.
       close_line=$(printf 'resolved [key=%s]: pending-reply-resolved: task=%s pending-reply-id=%s via=%s' \
@@ -1103,7 +1103,7 @@ EOF
 # Retains the durable unresolved record. Never loops.
 fm_pending_reply_maybe_escalate() {  # <state-dir> <corr_id>
   # Serialized per correlation so a resolution and an escalation cannot interleave.
-  # bin/fm-wake-lib.sh owns the lock primitives but assigns its own globals when
+  # bin/backend/fm-wake-lib.sh owns the lock primitives but assigns its own globals when
   # sourced, so they are declared local here: that contains them to this call
   # instead of leaking into every script that sources this library, without the
   # subshell that would make every later use of them read as a lost write.
@@ -1113,7 +1113,7 @@ fm_pending_reply_maybe_escalate() {  # <state-dir> <corr_id>
   local STATE FM_WAKE_QUEUE FM_WAKE_QUEUE_LOCK
   STATE=$state
   lock="$state/.pending-reply-$corr.lock"
-  # shellcheck source=bin/fm-wake-lib.sh
+  # shellcheck source=bin/backend/fm-wake-lib.sh
   . "$_FM_PENDING_REPLY_LIB_DIR/fm-wake-lib.sh"
   fm_lock_acquire_wait "$lock" || return 1
   _fm_pending_reply_maybe_escalate_locked "$@" || rc=$?

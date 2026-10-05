@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
 fi
@@ -51,7 +51,7 @@ last_line=$(tail -n1 "$STATUS" 2>/dev/null || echo "(no status lines)")
 printf 'eindri %s SILENT: no status append for a while (elapsed %s) — last line: %s\n' \
   "$AGENT" "$elapsed" "$last_line" >>"$STATE/.wake-queue"
 printf '%s\n%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "elapsed=$elapsed last_line=$last_line" >"$STATE/eindri-silent/$AGENT.md"
-if [ -x "$SCRIPT_DIR/ymir-say.sh" ]; then
-  "$SCRIPT_DIR/ymir-say.sh" note "Eindri $AGENT may be silent — check it" >/dev/null 2>&1 || true
+if [ -x "$SCRIPT_DIR/../time/snotra/ymir-say.sh" ]; then
+  "$SCRIPT_DIR/../time/snotra/ymir-say.sh" note "Eindri $AGENT may be silent — check it" >/dev/null 2>&1 || true
 fi
 printf 'eindri-acclaim-silent[1]{agent,elapsed,last_line}:\n  "%s","%s","%s"\n' "$AGENT" "$elapsed" "$last_line"

@@ -22,10 +22,11 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yc
@@ -47,7 +48,7 @@ while [ $# -gt 0 ]; do case "$1" in
   -*) shift ;;
   *) [ -z "$ID" ] && ID="$1"; shift ;;
 esac; done
-[ -n "$ID" ] || { printf 'error: usage: bin/model-fetch.sh <candidate-id> [--consent] [--force]\n' >&2; exit 2; }
+[ -n "$ID" ] || { printf 'error: usage: bin/model/model-fetch.sh <candidate-id> [--consent] [--force]\n' >&2; exit 2; }
 [ "${YMIR_FETCH_CONSENT:-0}" = "1" ] && CONSENT=1
 [ "${YMIR_ALLOW_UNVERIFIED:-0}" = "1" ] || true
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -75,7 +76,7 @@ PY
 )"
 META_URL="${META_URL:-}"; META_SHA="${META_SHA:-}"; META_SIZE="${META_SIZE:-}"
 
-[ -n "${META_SIZE:-}" ] || { printf 'error: no candidate %s in %s\nhelp: bin/model-fit.sh or edit the catalog\n' "$ID" "$CATALOG" >&2; exit 3; }
+[ -n "${META_SIZE:-}" ] || { printf 'error: no candidate %s in %s\nhelp: bin/model/model-fit.sh or edit the catalog\n' "$ID" "$CATALOG" >&2; exit 3; }
 [ -n "${META_URL:-}" ] || { printf 'error: candidate %s has no url in %s\n' "$ID" "$CATALOG" >&2; exit 3; }
 [ -n "${META_SHA:-}" ] || [ "${YMIR_ALLOW_UNVERIFIED:-0}" = "1" ] || {
   printf 'error: candidate %s has no sha256 — refusing an unverified download\n' "$ID" >&2

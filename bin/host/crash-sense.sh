@@ -9,9 +9,9 @@
 # changes anything on the machine.
 #
 # Usage:
-#   bin/crash-sense.sh check [--quiet] [--no-notify]
-#   bin/crash-sense.sh status
-#   bin/crash-sense.sh --version
+#   bin/host/crash-sense.sh check [--quiet] [--no-notify]
+#   bin/host/crash-sense.sh status
+#   bin/host/crash-sense.sh --version
 #
 # State: state/crash-seen.json  (gitignored — per machine)
 # Output: Galdr TOON.
@@ -19,7 +19,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -68,11 +69,11 @@ fingerprints() {
 notify() {  # <headline> <body> [urgency]
   local h="$1" b="$2" u="${3:-normal}"
   [ "$NOTIFY" = 1 ] || return 0
-  # One voice: bin/ymir-say.sh owns the desktop manner.
-  if [ -x "$ROOT/bin/ymir-say.sh" ]; then
+  # One voice: bin/time/snotra/ymir-say.sh owns the desktop manner.
+  if [ -x "$ROOT/bin/time/snotra/ymir-say.sh" ]; then
     local mark=note
     [ "$u" = critical ] && mark=alarm
-    "$ROOT/bin/ymir-say.sh" --mark "$mark" "$h" "$b" >/dev/null 2>&1 || true
+    "$ROOT/bin/time/snotra/ymir-say.sh" --mark "$mark" "$h" "$b" >/dev/null 2>&1 || true
     return 0
   fi
   if have omarchy-notification-send; then
@@ -129,7 +130,7 @@ d = json.load(sys.stdin)["new"]
 for c in d[-3:]:
     print(c["comm"] + "\t" + c["sig"] + "\t" + c["when"] + "\t" + c["pid"])
 ' | while IFS=$'\t' read -r comm sig when pid; do
-        notify "Process crashed: $comm" "$sig at $when (pid $pid) — run bin/crash-sense.sh status, or ask Brokk to diagnose." "critical"
+        notify "Process crashed: $comm" "$sig at $when (pid $pid) — run bin/host/crash-sense.sh status, or ask Brokk to diagnose." "critical"
       done
     fi
 
@@ -169,5 +170,5 @@ for c in json.load(sys.stdin)["new"][-5:]:
         awk '{printf "  \"%s\",%s\n", $2, $1}'
     fi
     ;;
-  *) printf 'error: unknown action %s\nhelp: bin/crash-sense.sh [check|status]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/host/crash-sense.sh [check|status]\n' "$ACTION" >&2; exit 2 ;;
 esac

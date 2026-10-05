@@ -27,18 +27,19 @@ fi
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_HOME/state}"
 
 # The cloth: colour and marks for the human reading this report; the TOON rows on
-# stdout stay the data (bin/ymir-style.sh).
-if [ -z "${YMIR_STYLE_LOADED:-}" ]; then . "$SCRIPT_DIR/ymir-style.sh"; YMIR_STYLE_LOADED=1; fi
+# stdout stay the data (bin/desktop/ymir-style.sh).
+if [ -z "${YMIR_STYLE_LOADED:-}" ]; then . "$SCRIPT_DIR/../desktop/ymir-style.sh"; YMIR_STYLE_LOADED=1; fi
 style_init
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/app-lib.sh).
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -55,25 +56,25 @@ say_ok() { return 0; }
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
 SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot)
 
-s_floors()    { [ -x "$SCRIPT_DIR/prereq-ensure.sh" ] && "$SCRIPT_DIR/prereq-ensure.sh" status >/dev/null 2>&1; }
-f_floors()    { "$SCRIPT_DIR/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
-s_herdr()     { [ -x "$SCRIPT_DIR/herdr-ensure.sh" ] && "$SCRIPT_DIR/herdr-ensure.sh" status >/dev/null 2>&1; }
-f_herdr()     { "$SCRIPT_DIR/herdr-ensure.sh" ensure --install >/dev/null 2>&1; }
-s_a2abridge() { [ -x "$SCRIPT_DIR/a2abridge-ensure.sh" ] && "$SCRIPT_DIR/a2abridge-ensure.sh" status >/dev/null 2>&1; }
-f_a2abridge() { "$SCRIPT_DIR/a2abridge-ensure.sh" ensure --install >/dev/null 2>&1; }
-s_hermes()    { [ -x "$SCRIPT_DIR/hermes-ensure.sh" ] && "$SCRIPT_DIR/hermes-ensure.sh" status >/dev/null 2>&1; }
-f_hermes()    { "$SCRIPT_DIR/hermes-ensure.sh" ensure --install >/dev/null 2>&1; }
+s_floors()    { [ -x "$SCRIPT_DIR/../engine/prereq-ensure.sh" ] && "$SCRIPT_DIR/../engine/prereq-ensure.sh" status >/dev/null 2>&1; }
+f_floors()    { "$SCRIPT_DIR/../engine/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
+s_herdr()     { [ -x "$SCRIPT_DIR/../seat/herdr-ensure.sh" ] && "$SCRIPT_DIR/../seat/herdr-ensure.sh" status >/dev/null 2>&1; }
+f_herdr()     { "$SCRIPT_DIR/../seat/herdr-ensure.sh" ensure --install >/dev/null 2>&1; }
+s_a2abridge() { [ -x "$SCRIPT_DIR/../bridge/a2abridge-ensure.sh" ] && "$SCRIPT_DIR/../bridge/a2abridge-ensure.sh" status >/dev/null 2>&1; }
+f_a2abridge() { "$SCRIPT_DIR/../bridge/a2abridge-ensure.sh" ensure --install >/dev/null 2>&1; }
+s_hermes()    { [ -x "$SCRIPT_DIR/../engine/hermes-ensure.sh" ] && "$SCRIPT_DIR/../engine/hermes-ensure.sh" status >/dev/null 2>&1; }
+f_hermes()    { "$SCRIPT_DIR/../engine/hermes-ensure.sh" ensure --install >/dev/null 2>&1; }
 # The meeting ear's engine (whisper.cpp + a model); the MCP face + unit ride
 # the fleet surface below. A seat that captures but transcribes elsewhere still
 # passes (voxtype counts as an engine).
-s_snotra()    { [ -x "$SCRIPT_DIR/snotra-ensure.sh" ] && "$SCRIPT_DIR/snotra-ensure.sh" status >/dev/null 2>&1; }
-f_snotra()    { "$SCRIPT_DIR/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
-s_sessrumnir(){ [ -x "$SCRIPT_DIR/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
-f_sessrumnir(){ "$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+s_snotra()    { [ -x "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ] && "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" status >/dev/null 2>&1; }
+f_snotra()    { "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
+s_sessrumnir(){ [ -x "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
+f_sessrumnir(){ "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
 # The boot law (2026-09-24): every role-owed program enabled and standing. The
 # mend for a stopped boot IS the raise — re-materialize, re-enable, re-verify.
-s_autoboot()  { [ -x "$SCRIPT_DIR/ymir-autoboot.sh" ] && "$SCRIPT_DIR/ymir-autoboot.sh" verify >/dev/null 2>&1; }
-f_autoboot()  { [ -x "$SCRIPT_DIR/fleet-ensure.sh" ] && "$SCRIPT_DIR/fleet-ensure.sh" ensure >/dev/null 2>&1; }
+s_autoboot()  { [ -x "$SCRIPT_DIR/../engine/ymir-autoboot.sh" ] && "$SCRIPT_DIR/../engine/ymir-autoboot.sh" verify >/dev/null 2>&1; }
+f_autoboot()  { [ -x "$SCRIPT_DIR/../fleet/fleet-ensure.sh" ] && "$SCRIPT_DIR/../fleet/fleet-ensure.sh" ensure >/dev/null 2>&1; }
 # The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
 # workspace-hoisted, or the sibling package (bin/desktop/electron-lib.sh). ABSENT for
 # an app the operator has installed is a FAILURE, never healthy: a desktop
@@ -93,12 +94,12 @@ s_shells() {
   return 0
 }
 f_shells() {
-  printf 'eir: the shells need mending — bin/ymir-install.sh (the desktop step) mends them; or by hand:\n' >&2
+  printf 'eir: the shells need mending — bin/engine/ymir-install.sh (the desktop step) mends them; or by hand:\n' >&2
   electron_remedy >&2
   return 1
 }
-if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/electron-lib.sh" ]; then
-  . "$SCRIPT_DIR/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
+if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/../desktop/electron-lib.sh" ]; then
+  . "$SCRIPT_DIR/../desktop/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
 fi
 # Graphics (P8): the DRM truth and the effective GPU policy. A host with a
 # display but NO DRM card cannot render at all — that is a named failure, not
@@ -109,15 +110,15 @@ s_graphics() {
   return 0
 }
 f_graphics() {
-  printf 'eir: a display is up but no DRM card is sensed — inspect the driver (bin/omarchy-sense.sh observe) and the kernel log\n' >&2
+  printf 'eir: a display is up but no DRM card is sensed — inspect the driver (bin/host/omarchy-sense.sh observe) and the kernel log\n' >&2
   return 1
 }
-if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/graphics-lib.sh" ]; then
-  . "$SCRIPT_DIR/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
+if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/../host/graphics-lib.sh" ]; then
+  . "$SCRIPT_DIR/../host/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
 fi
 
-s_well()      { [ -x "$SCRIPT_DIR/mimir.sh" ] && "$SCRIPT_DIR/mimir.sh" health >/dev/null 2>&1; }
-f_well()      { "$SCRIPT_DIR/mimir.sh" start >/dev/null 2>&1; }
+s_well()      { [ -x "$SCRIPT_DIR/../records/mimir.sh" ] && "$SCRIPT_DIR/../records/mimir.sh" health >/dev/null 2>&1; }
+f_well()      { "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1; }
 # MCP: both A2A servers wired into opencode + pi.
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp-adapter.json" oc="$ROOT/opencode.json"
@@ -137,7 +138,7 @@ s_mcp() {
   fi
   return 0
 }
-f_mcp()       { [ -x "$SCRIPT_DIR/a2a-mcp.sh" ] && "$SCRIPT_DIR/a2a-mcp.sh" install >/dev/null 2>&1; }
+f_mcp()       { [ -x "$SCRIPT_DIR/../bridge/a2a-mcp.sh" ] && "$SCRIPT_DIR/../bridge/a2a-mcp.sh" install >/dev/null 2>&1; }
 # Harness: the Pi extensions are DEPLOYED away from this tree, so a copy cannot
 # find bin/ by walking up — it reads the root recorded beside it (`.ymir-root`,
 # written by bin/seat/valknut-load.sh, resolved by .pi/extensions/lib/ymir-home.ts).
@@ -153,19 +154,19 @@ s_harness() {
   local line
   while IFS= read -r line; do
     [ -n "$line" ] || continue
-    [ -x "$line/bin/syn-watch-arm.sh" ] && return 0
+    [ -x "$line/bin/pi/syn-watch-arm.sh" ] && return 0
   done <"$PI_EXT_HOME/.ymir-root"
   return 1
 }
-f_harness()   { [ -x "$SCRIPT_DIR/valknut-load.sh" ] && "$SCRIPT_DIR/valknut-load.sh" --pi >/dev/null 2>&1 && s_harness; }
+f_harness()   { [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ] && "$SCRIPT_DIR/../seat/valknut-load.sh" --pi >/dev/null 2>&1 && s_harness; }
 # Arm: Sýn as a SERVICE (plan 58, Phase 2) — one standing watcher per home that
 # idles when no session is seated, never retires with one. The surface is the
-# arm's own door (bin/syn-watch.sh): a live lease with a fresh heartbeat is
+# arm's own door (bin/pi/syn-watch.sh): a live lease with a fresh heartbeat is
 # healthy whether a session is up (state=up) or none is (state=idle). A missing
 # or stale arm is a NAMED failure — command merges and a blind turn end are what
 # a dead watch costs — and the mend is to seat the service again.
-s_arm()      { [ -x "$SCRIPT_DIR/syn-watch.sh" ] && "$SCRIPT_DIR/syn-watch.sh" status >/dev/null 2>&1; }
-f_arm()      { [ -x "$SCRIPT_DIR/syn-watch.sh" ] && "$SCRIPT_DIR/syn-watch.sh" start >/dev/null 2>&1 && s_arm; }
+s_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" status >/dev/null 2>&1; }
+f_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" start >/dev/null 2>&1 && s_arm; }
 # Lock: absent, or held by a live pid.
 s_lock() {
   local f="$STATE/.lock" pid
@@ -185,14 +186,14 @@ f_lock() {
     fi
   fi
 }
-s_migrations(){ [ ! -x "$SCRIPT_DIR/ymir-migrate.sh" ] || "$SCRIPT_DIR/ymir-migrate.sh" status >/dev/null 2>&1; }
-f_migrations(){ [ -x "$SCRIPT_DIR/ymir-migrate.sh" ] && "$SCRIPT_DIR/ymir-migrate.sh" apply >/dev/null 2>&1; }
+s_migrations(){ [ ! -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] || "$SCRIPT_DIR/../engine/ymir-migrate.sh" status >/dev/null 2>&1; }
+f_migrations(){ [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1; }
 # Hoard: private data sits under the hoard, and .ymir-layout.yaml tells the truth.
 # Two failures this catches: (1) a declared layout path that does not exist — a
 # stale map is what lets private work land outside the hoard; (2) a flat
 # $YMIR_HOME/{identity,data,docs,secrets,tenants} duplicate beside hodd/ — the
 # drift that RULES/04-hoard.md (correction 2026-09-17) forbids.
-_hoard_root() { local r; if [ -x "$SCRIPT_DIR/hoard-lib.sh" ]; then . "$SCRIPT_DIR/hoard-lib.sh"; hoard_root r; printf '%s' "$r"; else printf '%s' "${YMIR_HOARD:-$YMIR_HOME/hodd}"; fi; }
+_hoard_root() { local r; if [ -x "$SCRIPT_DIR/../vault/hoard-lib.sh" ]; then . "$SCRIPT_DIR/../vault/hoard-lib.sh"; hoard_root r; printf '%s' "$r"; else printf '%s' "${YMIR_HOARD:-$YMIR_HOME/hodd}"; fi; }
 s_hoard() {
   local h; h="$(_hoard_root)"
   [ -d "$h" ] || return 1
@@ -276,7 +277,7 @@ f_hoard() {
 # the `arm` surface is the one the plan's proof asks to NAME the arm, 2026-09-27).
 detail() { # <name> -> the command that prints one short fact
   case "$1" in
-    floors)    printf '%s\n' "[ -x $SCRIPT_DIR/prereq-ensure.sh ] && echo 'tool floors'" ;;
+    floors)    printf '%s\n' "[ -x $SCRIPT_DIR/../engine/prereq-ensure.sh ] && echo 'tool floors'" ;;
     herdr)     printf '%s\n' "have herdr && herdr --version 2>/dev/null | head -1 || echo 'herdr absent'" ;;
     a2abridge) printf '%s\n' "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
@@ -285,12 +286,12 @@ detail() { # <name> -> the command that prints one short fact
     mcp)       printf '%s\n' "echo 'a2abridge + engram'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
-    arm)       printf '%s\n' "$SCRIPT_DIR/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
+    arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)printf '%s\n' "echo 'structure'" ;;
     shells)    printf '%s\n' 'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
     hoard)     printf '%s\n' "printf 'hoard %s' \"\$(_hoard_root)\" ; [ -d \"\$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\n'" ;;
-    autoboot)  printf '%s\n' "$SCRIPT_DIR/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/ymir-autoboot.sh verify'" ;;
+    autoboot)  printf '%s\n' "$SCRIPT_DIR/../engine/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/engine/ymir-autoboot.sh verify'" ;;
   esac
 }
 
@@ -324,7 +325,7 @@ if [ -t 2 ]; then
   done <<<"$(printf '%b' "$rows" | sed 's/^  //; s/"//g; s/,/|/; s/,/|/')"
 fi
 if [ "$broken" != 0 ]; then
-  printf 'eir: %s surface(s) need mending — run: bin/eir-doctor.sh fix\n' "$broken"
+  printf 'eir: %s surface(s) need mending — run: bin/agents/eir-doctor.sh fix\n' "$broken"
   exit 1
 fi
 exit 0

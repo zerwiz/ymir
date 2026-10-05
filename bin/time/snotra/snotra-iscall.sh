@@ -2,7 +2,7 @@
 # snotra-iscall.sh — is a real call in progress on this seat?
 #
 # WHY THIS EXISTS
-# The watch (bin/snotra-detect.sh) must never treat "an application opened the
+# The watch (bin/time/snotra/snotra-detect.sh) must never treat "an application opened the
 # microphone" as a meeting. A browser tab, a dictation daemon, a test harness, the
 # ear's own capture and a stray Discord connection all take the mic with nobody in
 # a call — and on 2026-09-28 that fired the watch repeatedly on a seat where no

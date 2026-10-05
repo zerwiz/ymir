@@ -20,11 +20,11 @@
 #   BROKK_CRON_LOG_MAX_BYTES  rotation threshold for state/cron.log (default 1 MiB)
 set -u
 
-# --- portability shim: bin/ymir-platform.sh --------------------------------
+# --- portability shim: bin/fleet/ymir-platform.sh --------------------------------
 # One place knows the OS differences (readlink -f, /proc, setsid, stat, nproc).
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
   _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+  for _ymir_c in "${_ymir_dir}/../fleet/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/fleet/ymir-platform.sh"; do
     [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
   done
   unset _ymir_dir _ymir_c
@@ -40,7 +40,7 @@ STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 if [ -n "${BROKK_CONFIG_OVERRIDE:-}" ]; then
   CONFIG="$BROKK_CONFIG_OVERRIDE"
 else
-  . "$SCRIPT_DIR/hoard-lib.sh"  # ymir_home_root — one answer, never drift
+  . "$SCRIPT_DIR/../vault/hoard-lib.sh"  # ymir_home_root — one answer, never drift
   ymir_home_root _h
   if [ -r "$_h/config/cron.yaml" ]; then
     CONFIG="$_h/config"
@@ -231,8 +231,8 @@ rotate_log
 # an unconfigured box runs only ungated jobs (and never a heart's record jobs).
 if [ -z "${BROKK_ROLES:-}" ]; then
   _roles="dev"
-  if [ -x "$SCRIPT_DIR/topology.sh" ]; then
-    _roles="$(bash "$SCRIPT_DIR/topology.sh" --json 2>/dev/null \
+  if [ -x "$SCRIPT_DIR/../fleet/topology.sh" ]; then
+    _roles="$(bash "$SCRIPT_DIR/../fleet/topology.sh" --json 2>/dev/null \
       | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)
 except Exception: d={}

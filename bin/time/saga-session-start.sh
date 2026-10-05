@@ -31,7 +31,7 @@ BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # while the real files sat in $YMIR_HOME/hodd/data/ (2026-09-23). A digest that
 # cannot see its own records is worse than no digest.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -41,8 +41,8 @@ STATE="${BROKK_STATE_OVERRIDE:-${_HS:-$BROKK_HOME/state}}"
 DATA="${BROKK_DATA_OVERRIDE:-${_HD:-$BROKK_HOME/data}}"
 CONFIG="${BROKK_CONFIG_OVERRIDE:-${_HC:-$BROKK_HOME/config}}"
 unset _HS _HD _HC
-# shellcheck source=bin/gleipnir-lock-lib.sh
-. "$SCRIPT_DIR/gleipnir-lock-lib.sh"
+# shellcheck source=bin/vault/gleipnir-lock-lib.sh
+. "$SCRIPT_DIR/../vault/gleipnir-lock-lib.sh"
 gleipnir_lock_reap
 
 REALM="${BROKK_REALM:-}"
@@ -51,7 +51,7 @@ if [ -z "$REALM" ] && [ -r "$DATA/realm.md" ]; then
 fi
 REALM="${REALM:-}"
 # Never assume the company's slug: resolve the operator's realm neutrally.
-if [ -z "$REALM" ]; then . "$SCRIPT_DIR/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
+if [ -z "$REALM" ]; then . "$SCRIPT_DIR/../skuld/realm-lib.sh"; ymir_active_realm "$ROOT" REALM; fi
 
 section() { printf '\n== %s ==\n' "$1"; }
 
@@ -84,16 +84,16 @@ else
   printf 'tool floors OK\n'
 fi
 # Model bridge: keep Pi's opencode-go endpoint alive so a session never 401s.
-if [ -x "$SCRIPT_DIR/bifrost-bridge.sh" ]; then
-  if BROKK_ENV_FILE="$BROKK_HOME/.env.local" "$SCRIPT_DIR/bifrost-bridge.sh" --start >/dev/null 2>&1; then
+if [ -x "$SCRIPT_DIR/../bridge/bifrost-bridge.sh" ]; then
+  if BROKK_ENV_FILE="$BROKK_HOME/.env.local" "$SCRIPT_DIR/../bridge/bifrost-bridge.sh" --start >/dev/null 2>&1; then
     printf 'model bridge: up\n'
   else
     printf 'model bridge: not up (see state/model-bridge.log)\n'
   fi
 fi
 # The well: keep the Mimirsbrunn (engram) bridge alive so recall never fires dry.
-if [ -x "$SCRIPT_DIR/mimir-bridge.sh" ]; then
-  if "$SCRIPT_DIR/mimir-bridge.sh" --start >/dev/null 2>&1; then
+if [ -x "$SCRIPT_DIR/../bridge/mimir-bridge.sh" ]; then
+  if "$SCRIPT_DIR/../bridge/mimir-bridge.sh" --start >/dev/null 2>&1; then
     printf 'well bridge: up\n'
   else
     printf 'well bridge: not up (see state/mimir-bridge.log)\n'
@@ -123,8 +123,8 @@ section "WAKE QUEUE"
 # The fast road is the when-adapter; this is the slow road that cannot be missed
 # (the runner may be down, or a spec may have been written into a worktree).
 # Without it, a finished Eindri's work sits on the shelf unseen.
-if [ -x "$SCRIPT_DIR/eindri-handoff.sh" ]; then
-  BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/eindri-handoff.sh" sweep 2>/dev/null || true
+if [ -x "$SCRIPT_DIR/../agents/eindri-handoff.sh" ]; then
+  BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/../agents/eindri-handoff.sh" sweep 2>/dev/null || true
 fi
 if [ -x "$SCRIPT_DIR/saga-wake-drain.sh" ]; then
   BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/saga-wake-drain.sh" || true
@@ -133,14 +133,14 @@ else
 fi
 
 section "SUPERVISION"
-printf 'harness next step: arm supervision via the installed harness adapter; never run bin/syn-watch-arm.sh by hand.\n'
+printf 'harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.\n'
 
 section "UPDATE"
 # Does a newer Ymir stand on npm? The CLI told the USER; the RUNTIME had no such
 # sense, so a session could run for days on an old tree and never know a fix had
 # shipped (2026-09-23). One cached lookup a day; silence when there is no news.
-if [ -x "$SCRIPT_DIR/ymir-update-check.sh" ]; then
-  out="$(BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/ymir-update-check.sh" 2>/dev/null)"; rc=$?
+if [ -x "$SCRIPT_DIR/../gates/checks/ymir-update-check.sh" ]; then
+  out="$(BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/../gates/checks/ymir-update-check.sh" 2>/dev/null)"; rc=$?
   if [ "$rc" = "3" ]; then printf '%s\n' "$out"
   else printf 'current — no newer Ymir on npm\n'; fi
 else
@@ -182,11 +182,11 @@ emit_context "$HOOD_FILE" "hood"
 
 section "TODAY"
 # The day's work, so a session opens knowing what was already forged. Written by
-# bin/daily-log.sh into the hoard shelf the contract names
+# bin/records/daily-log.sh into the hoard shelf the contract names
 # ($YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md) — the record a random document in
 # hodd/docs is not.
-if [ -x "$SCRIPT_DIR/daily-log.sh" ]; then
-  BROKK_HOME="$BROKK_HOME" "$SCRIPT_DIR/daily-log.sh" today 2>/dev/null | head -24 || printf 'no entries yet\n'
+if [ -x "$SCRIPT_DIR/../records/daily-log.sh" ]; then
+  BROKK_HOME="$BROKK_HOME" "$SCRIPT_DIR/../records/daily-log.sh" today 2>/dev/null | head -24 || printf 'no entries yet\n'
 else
   printf 'daily-log.sh not installed\n'
 fi
@@ -195,7 +195,7 @@ section "ASSET ROUTING"
 # Load the owning asset BEFORE editing a governed path. A code change not
 # reflected in its asset is an incomplete change. Router: galdr/SKILL.md.
 printf 'governed[6]{path,load_first}:\n'
-printf '  "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"\n'
+printf '  "bin/engine/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"\n'
 printf '  "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"\n'
 printf '  "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"\n'
 printf '  "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"\n'
@@ -208,8 +208,8 @@ section "TOOL SURFACE"
 # would reach for one.
 printf 'tools[4]{handle,what}:\n'
 printf '  "/edit <path>","open a file in his own editor (ctrl+shift+e for the picker)"\n'
-printf '  "bin/ymir-say.sh","Ymir speaks on the desktop (done/alarm/fail/note)"\n'
-printf '  "bin/omarchy-plugins.sh","the suggested Omarchy shell plugins; add/list"\n'
+printf '  "bin/time/snotra/ymir-say.sh","Ymir speaks on the desktop (done/alarm/fail/note)"\n'
+printf '  "bin/host/omarchy-plugins.sh","the suggested Omarchy shell plugins; add/list"\n'
 printf '  "bin/seat/herdr-run.sh","seat an Eindri in a herdr tab, or a disposable space"\n'
 
 section "CRON START"

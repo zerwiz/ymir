@@ -483,3 +483,15 @@ exit "$rc"
 - Keep the Norse name table in G4 in lockstep with `docs/plans/29-brokk-distro-runtime.md §12`.
 - When a new gate is added, prefer a runnable command over prose; a gate without a command is
   an opinion.
+
+---
+
+## 2026-10-04 — governed doors moved into system folders
+
+`saga-session-start.sh` and its neighbours now live under `bin/<system>/`, so every governed path
+that named them had to be repointed. This asset records that, because a move which does not update
+its own governed contract is an incomplete change — and `compliance` refuses until it does.
+
+The doors that moved and the systems they joined are listed in
+`harness-integration/README.md`; the index itself is `bin/README.md` (regenerate with
+`bin/gates/inventory.sh`) and `bin/gates/capabilities.sh`.

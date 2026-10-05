@@ -43,7 +43,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -70,8 +70,8 @@ fi
 
 # link: attached | detached | offline | standalone — from the topology resolver
 LINK="standalone"; HEART=""
-if [ -x "$SCRIPT_DIR/topology.sh" ]; then
-  _topo="$(bash "$SCRIPT_DIR/topology.sh" --json 2>/dev/null || true)"
+if [ -x "$SCRIPT_DIR/../fleet/topology.sh" ]; then
+  _topo="$(bash "$SCRIPT_DIR/../fleet/topology.sh" --json 2>/dev/null || true)"
   if [ -n "$_topo" ]; then
     read -r LINK HEART < <(printf '%s' "$_topo" | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)

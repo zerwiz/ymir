@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).
-# Ensures deps + build are present (bin/sessrumnir-ensure.sh), then raises the
+# Ensures deps + build are present (bin/seat/sessrumnir/sessrumnir-ensure.sh), then raises the
 # Electron window via the app's own launcher. Galdr-style TOON.
 #
 # Usage:
@@ -13,12 +13,13 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/app-lib.sh).
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -111,7 +112,7 @@ case "$ACTION" in
     printf 'sessrumnir: stopped\n'
     exit 0 ;;
   start) ;;
-  *) printf 'error: unknown action %s\nhelp: bin/sessrumnir.sh [start|status|stop]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/desktop/sessrumnir.sh [start|status|stop]\n' "$ACTION" >&2; exit 2 ;;
 esac
 
 if is_running; then
@@ -120,8 +121,8 @@ if is_running; then
   exit 0
 fi
 
-"$SCRIPT_DIR/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1 || {
-  printf 'error: Sessrúmnir is not ready — run bin/sessrumnir-ensure.sh install\n' >&2
+"$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1 || {
+  printf 'error: Sessrúmnir is not ready — run bin/seat/sessrumnir/sessrumnir-ensure.sh install\n' >&2
   exit 1
 }
 
@@ -133,11 +134,11 @@ args=()
 # beside a dGPU) Electron's GPU process dies for want of a fence and the browser
 # makes SIGTRAP suicide once the process is judged unusable — sessrumnir crashed
 # exactly this way twice on this box. Resolve the ONE machine-wide answer the
-# same way scripts/electron.sh does (bin/graphics-lib.sh, never a hardcode) and
+# same way scripts/electron.sh does (bin/host/graphics-lib.sh, never a hardcode) and
 # export the EFFECTIVE override for the app's node launcher, which appends the
 # --disable-gpu flags. 1/true/yes and 0/false/no remain the human override.
 if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ]; then
-  for _gc in "$SCRIPT_DIR/graphics-lib.sh" "$ROOT/bin/graphics-lib.sh"; do
+  for _gc in "$SCRIPT_DIR/../host/graphics-lib.sh" "$ROOT/bin/host/graphics-lib.sh"; do
     [ -r "$_gc" ] && { . "$_gc"; YMIR_GRAPHICS_LIB_LOADED=1; break; }
   done
   unset _gc

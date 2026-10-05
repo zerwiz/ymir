@@ -36,7 +36,8 @@ set -u
 
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -150,7 +151,7 @@ worth_a_smith() {
 # A worker must never contend for the primary's helm, and must never write the
 # primary's lock POINTER either. Both are keyed off the state dir, so the seat
 # gets its own: BROKK_MACHINE_STATE_DIR resolves its lock
-# (bin/gleipnir-lock-lib.sh), and BROKK_STATE_OVERRIDE resolves the state the
+# (bin/vault/gleipnir-lock-lib.sh), and BROKK_STATE_OVERRIDE resolves the state the
 # pi extension reads the `.lock-path` pointer from. Setting only the former left
 # the pointer shared: a seat wrote its own pointer over the primary's, the
 # primary's extension read the seat's lock, called itself read-only, and
@@ -188,15 +189,15 @@ seat_guard() {  # <name>; non-zero if the seat would share the primary's lock
   [ "$seat_dir" != "$primary_dir" ]
 }
 
-# One local inference at a time per machine (bin/local-model-lock.sh). A seat
+# One local inference at a time per machine (bin/model/local-model-lock.sh). A seat
 # whose resolved model is local must not start when the host is at capacity —
 # this is the law the lock exists for and that no seat road once called, which
 # let three agents infer against one rail at once. Non-zero = at capacity.
 local_model_guard() {  # <model-string>
   case "${1:-}" in
     *llama-swap*|*llamacpp-whynot*|*llama.cpp*|*llama-cpp*|*lmstudio*)
-      [ -x "$SCRIPT_DIR/local-model-lock.sh" ] || return 0
-      "$SCRIPT_DIR/local-model-lock.sh" check >/dev/null 2>&1
+      [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ] || return 0
+      "$SCRIPT_DIR/../model/local-model-lock.sh" check >/dev/null 2>&1
       ;;
     *) return 0 ;;
   esac
@@ -368,8 +369,8 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     fi
 
     # The right smith for the right metal.
-    if [ -z "$ROLE" ] && [ -x "$SCRIPT_DIR/eindri-role.sh" ]; then
-      ROLE="$("$SCRIPT_DIR/eindri-role.sh" choose "$PROMPT" 2>/dev/null | sed -n '2p' | sed -E 's/^ *"([^"]+)".*/\1/')"
+    if [ -z "$ROLE" ] && [ -x "$SCRIPT_DIR/../agents/eindri-role.sh" ]; then
+      ROLE="$("$SCRIPT_DIR/../agents/eindri-role.sh" choose "$PROMPT" 2>/dev/null | sed -n '2p' | sed -E 's/^ *"([^"]+)".*/\1/')"
     fi
     [ -n "$NAME" ] || NAME="${ROLE:-eindri}"
     KIND="${YMIR_HERDR_KIND:-pi}"
@@ -377,8 +378,8 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     # Resolve a model request (friendly or exact) to harness+provider+model.
     # local -> pi, online -> opencode. Unresolved -> report and continue default.
     MODEL_ARGS=()
-    if [ -n "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/model-resolve.sh" ]; then
-      r="$("$SCRIPT_DIR/model-resolve.sh" resolve "$MODEL_REQ" 2>/dev/null | sed -n '2p')"
+    if [ -n "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/../model/model-resolve.sh" ]; then
+      r="$("$SCRIPT_DIR/../model/model-resolve.sh" resolve "$MODEL_REQ" 2>/dev/null | sed -n '2p')"
       case "$r" in
         ""|*unresolved*)
           printf 'herdr-run[1]{model,state}:\n  "%s","unresolved — ask the Allfather"\n' "$MODEL_REQ" >&2 ;;
@@ -403,9 +404,9 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
 
     # No explicit model: use the AGENT'S configured harness+model from
     # config/agents.yaml (local->pi, online->opencode) — never default silently.
-    if [ -z "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/agents-config.sh" ]; then
-      _h="$("$SCRIPT_DIR/agents-config.sh" get "$ROLE" harness 2>/dev/null)"
-      _m="$("$SCRIPT_DIR/agents-config.sh" get "$ROLE" model 2>/dev/null)"
+    if [ -z "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
+      _h="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$ROLE" harness 2>/dev/null)"
+      _m="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$ROLE" model 2>/dev/null)"
       [ -n "$_h" ] && KIND="$_h"
       [ -n "$_m" ] && MODEL_ARGS=(-- --model "$_m")
       printf 'herdr-run[1]{agent,harness,model}:\n  "%s","%s","%s"\n' "$ROLE" "${_h:-?}" "${_m:-?}" >&2
@@ -434,7 +435,7 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
 
     # Guard: one local inference at a time per machine.
     if ! local_model_guard "${MODEL_ARGS[*]:-}"; then
-      "$SCRIPT_DIR/local-model-lock.sh" check >&2
+      "$SCRIPT_DIR/../model/local-model-lock.sh" check >&2
       printf 'help: a local seat already runs on this machine — wait, or use a remote/online model\n' >&2
       exit 3
     fi
@@ -448,18 +449,18 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     SEAT_CWD="$PWD"
     if [ "${MAIN:-0}" = 1 ]; then
       printf 'herdr-run[1]{isolation,worktree}:\n  "off (main tree — Allfather chose --main)"\n' >&2
-    elif [ -x "$SCRIPT_DIR/yggdrasil.sh" ]; then
+    elif [ -x "$SCRIPT_DIR/../forge/yggdrasil.sh" ]; then
       # Reuse an existing worktree for this id; create only when absent.
       wt_path="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)/.yggdrasil/$NAME"
       if [ ! -d "$wt_path" ]; then
-        wt_out="$("$SCRIPT_DIR/yggdrasil.sh" create "$NAME" 2>/dev/null)"
+        wt_out="$("$SCRIPT_DIR/../forge/yggdrasil.sh" create "$NAME" 2>/dev/null)"
         wt_path="$(printf '%s' "$wt_out" | sed -n '2p' | cut -d'"' -f6)"
       fi
       if [ -n "$wt_path" ] && [ -d "$wt_path" ]; then
         SEAT_CWD="$(cd "$wt_path" && pwd)"
         printf 'herdr-run[1]{isolation,worktree}:\n  "on","%s"\n' "$SEAT_CWD" >&2
       else
-        printf 'error: isolation — could not create a Yggdrasil worktree; refusing to seat in the main tree\nhelp: bin/yggdrasil.sh create %s\n' "$NAME" >&2
+        printf 'error: isolation — could not create a Yggdrasil worktree; refusing to seat in the main tree\nhelp: bin/forge/yggdrasil.sh create %s\n' "$NAME" >&2
         exit 4
       fi
     fi
@@ -509,8 +510,8 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     # Brokk through state/.wake-queue. Without this a seated worker finishes
     # into silence and the coordinator has to poll by hand — the exact failure
     # plan 42 exists to kill.
-    if [ -x "$SCRIPT_DIR/eindri-watch.sh" ]; then
-      if "$SCRIPT_DIR/eindri-watch.sh" arm "$NAME" "$SEAT_CWD" >/dev/null 2>&1; then
+    if [ -x "$SCRIPT_DIR/../agents/eindri-watch.sh" ]; then
+      if "$SCRIPT_DIR/../agents/eindri-watch.sh" arm "$NAME" "$SEAT_CWD" >/dev/null 2>&1; then
         printf 'herdr-run[1]{eindri,armed}:\n  "%s","watch-%s"\n' "$NAME" "$NAME" >&2
       else
         printf 'herdr-run[1]{eindri,armed}:\n  "%s","failed — the handoff will not fire; wake Brokk by hand"\n' "$NAME" >&2

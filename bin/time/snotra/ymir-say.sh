@@ -10,12 +10,12 @@
 # calls it, so the manner (glyph, urgency, app identity) cannot drift.
 #
 # Usage:
-#   bin/ymir-say.sh <headline> [body] [--urgency low|normal|critical] [--glyph G]
-#   bin/ymir-say.sh --mark-done "<what>"     # a job finished
-#   bin/ymir-say.sh --mark-alarm "<what>"    # something needs him soon
-#   bin/ymir-say.sh --mark-fail "<what>"     # something went wrong
-#   bin/ymir-say.sh status                   # what has been said, and where it went
-#   bin/ymir-say.sh --version
+#   bin/time/snotra/ymir-say.sh <headline> [body] [--urgency low|normal|critical] [--glyph G]
+#   bin/time/snotra/ymir-say.sh --mark-done "<what>"     # a job finished
+#   bin/time/snotra/ymir-say.sh --mark-alarm "<what>"    # something needs him soon
+#   bin/time/snotra/ymir-say.sh --mark-fail "<what>"     # something went wrong
+#   bin/time/snotra/ymir-say.sh status                   # what has been said, and where it went
+#   bin/time/snotra/ymir-say.sh --version
 #
 # The desktop notifier is Omarchy's own when present, else notify-send. With
 # neither, the line is still recorded — a silent host is not a lost message.
@@ -23,7 +23,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
@@ -76,7 +77,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-[ -n "$HEADLINE" ] || { printf 'error: ymir-say needs a headline\nhelp: bin/ymir-say.sh "<headline>" ["<body>"]\n' >&2; exit 2; }
+[ -n "$HEADLINE" ] || { printf 'error: ymir-say needs a headline\nhelp: bin/time/snotra/ymir-say.sh "<headline>" ["<body>"]\n' >&2; exit 2; }
 
 WHO="${YMIR_SAY_WHO:-Ymir}"
 [ -n "$GLYPH" ] || GLYPH="•"

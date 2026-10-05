@@ -136,14 +136,14 @@ const ymirHome = (() => {
 })();
 const state = process.env.BROKK_STATE_OVERRIDE || `${ymirHome}/state`;
 const config = process.env.BROKK_CONFIG_OVERRIDE || `${fmHome}/config`;
-const armScript = `${fmRoot}/bin/syn-watch-arm.sh`;
+const armScript = `${fmRoot}/bin/pi/syn-watch-arm.sh`;
 const marker = `${state}/.pi-watch-extension-loaded`;
 const extensionVersion = `sha256:${createHash("sha256").update(readFileSync(extensionFile)).digest("hex")}`;
 const retryBaseMs = positiveInteger("BROKK_WATCH_REARM_RETRY_BASE_MS", 250);
 const retryMaxMs = positiveInteger("BROKK_WATCH_REARM_RETRY_MAX_MS", 4000);
 const retryLimit = positiveInteger("BROKK_WATCH_REARM_RETRY_LIMIT", 5);
 // 35s on Windows so the budget stays above arm's MSYS confirm default (30s in
-// bin/syn-watch-arm.sh): a slow but successful Git Bash cold start must not be
+// bin/pi/syn-watch-arm.sh): a slow but successful Git Bash cold start must not be
 // SIGTERMed mid-confirmation. Conditioned on win32 so other platforms keep 12s.
 const armReadyTimeoutMs = positiveInteger(
   "BROKK_PI_ARM_READY_TIMEOUT_MS",
@@ -214,7 +214,7 @@ function pidAlive(pid: string, starttime = ""): boolean {
 }
 
 // The machine-global state dir — the primary's lock lives here, never in the
-// tree (mirrors gleipnir_machine_state_dir in bin/gleipnir-lock-lib.sh).
+// tree (mirrors gleipnir_machine_state_dir in bin/vault/gleipnir-lock-lib.sh).
 function machineStateDir(): string {
   const env = process.env.BROKK_MACHINE_STATE_DIR;
   if (env) return env;
@@ -339,7 +339,7 @@ function lockOwnership(): LockOwnership {
 
 // A stale lock (owner dead / zombie / pid reused) is cleared and the helm is
 // taken directly, so a leftover lock can never strand supervision. This mirrors
-// gleipnir_lock_acquire in bin/gleipnir-lock-lib.sh (pid + starttime sidecar +
+// gleipnir_lock_acquire in bin/vault/gleipnir-lock-lib.sh (pid + starttime sidecar +
 // state/.lock-path pointer; the legacy state/.lock is dropped).
 function reclaimStaleLock(lockPath: string): void {
   mkdirSync(dirname(lockPath), { recursive: true });
@@ -908,10 +908,10 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool?.({
     name: "gna_watch_arm",
     label: "Arm brokk watcher",
-    description: "Start the first required Pi watcher cycle, or repair one only after a notification says the cycle is missing, failed, or unhealthy. Do not call after ordinary work or ordinary notifications; the Pi extension re-arms automatically. Never run bin/syn-watch-arm.sh through bash.",
+    description: "Start the first required Pi watcher cycle, or repair one only after a notification says the cycle is missing, failed, or unhealthy. Do not call after ordinary work or ordinary notifications; the Pi extension re-arms automatically. Never run bin/pi/syn-watch-arm.sh through bash.",
     promptSnippet: "Start the first required Pi watcher cycle or repair a cycle reported missing, failed, or unhealthy; ordinary re-arming is automatic.",
     promptGuidelines: [
-      "Call gna_watch_arm only for the first required cycle or after a notification says the cycle is missing, failed, or unhealthy. Do not call it after ordinary work, turn completion, or ordinary signal, stale, check, or heartbeat handling because the Pi extension owns re-arming. Never run bin/syn-watch-arm.sh through bash.",
+      "Call gna_watch_arm only for the first required cycle or after a notification says the cycle is missing, failed, or unhealthy. Do not call it after ordinary work, turn completion, or ordinary signal, stale, check, or heartbeat handling because the Pi extension owns re-arming. Never run bin/pi/syn-watch-arm.sh through bash.",
     ],
     parameters: Type.Object({}),
     renderShell: "self",

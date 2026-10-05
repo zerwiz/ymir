@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# bin/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:
+# bin/backend/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:
 # every shape a verified harness draws, every glyph, every container proof, and
 # the empty|pending|pending-unproven|unknown verdict, shared by every
-# session-provider adapter (tmux via bin/fm-tmux-lib.sh, and
+# session-provider adapter (tmux via bin/backend/fm-tmux-lib.sh, and
 # bin/backends/{herdr,orca,cmux,zellij}.sh) and by fm-spawn.sh's kimi
 # launch-readiness check.
 #
@@ -103,7 +103,7 @@
 # one CHARACTER under UTF-8, which used to leave partial multibyte residue.
 #
 # Re-sourcing is a cheap idempotent redefinition, so this file needs no
-# include guard (matching bin/fm-tmux-lib.sh).
+# include guard (matching bin/backend/fm-tmux-lib.sh).
 
 # fm_composer_strip_ansi: drop every CSI escape sequence, leaving plain text.
 # Used for STRUCTURAL row/shape detection, where ghost text must be KEPT so the
@@ -130,7 +130,7 @@ fm_composer_strip_ansi() {
 # U+200B ZERO WIDTH SPACE is deliberately absent: Unicode gives it
 # White_Space=No (a format character), so listing it would substitute this
 # owner's own guess for the property it claims to follow. The live harness
-# guard (bin/fm-test-run.sh, live-harness-optin) is what catches a harness
+# guard (bin/backend/fm-test-run.sh, live-harness-optin) is what catches a harness
 # that starts drawing its composer with a character outside this property.
 FM_COMPOSER_UNICODE_SPACES=()
 for _fm_composer_space_octal in \
@@ -279,14 +279,14 @@ fm_composer_strip_ghost() {
 #
 # These live here, in the ONE shared composer/delivery owner, rather than in any
 # single backend adapter, because every backend needs them for the SAME job:
-# proving a submitted Enter actually landed. Keeping them in bin/fm-tmux-lib.sh
+# proving a submitted Enter actually landed. Keeping them in bin/backend/fm-tmux-lib.sh
 # made cursor's signature reachable only from tmux, even though herdr, zellij,
 # cmux, and orca run the same harnesses and face the same acknowledgement
 # problem.
 #
 # This is a DELIVERY guard, deliberately NOT a worker-state source. The semantic
 # busy contract - what firstmate records and supervises on - is owned by
-# bin/fm-busy-lib.sh, which forbids classifying a harness from rendered text.
+# bin/backend/fm-busy-lib.sh, which forbids classifying a harness from rendered text.
 # Matching a footer to confirm a keystroke landed is a different question from
 # asking what a worker is doing, and the two must not be conflated.
 # Delivery-only rendered busy footers per harness. claude/codex: "esc to
@@ -323,7 +323,7 @@ FM_DELIVERY_GROK_BUSY_REGEX_DEFAULT='Ctrl\+c:cancel'
 # turn and absent the instant it ended (verified live, 2026.08.11-e8db854).
 # This is a DELIVERY guard only - it acknowledges a submit and gates away-mode
 # injection. Cursor's recorded worker state comes from its transcript fold in
-# bin/fm-busy-lib.sh, never from this row.
+# bin/backend/fm-busy-lib.sh, never from this row.
 FM_DELIVERY_CURSOR_BUSY_REGEX_DEFAULT='ctrl\+c to stop'
 FM_DELIVERY_KIMI_BUSY_REGEX_DEFAULT='^[[:space:]]*(🌑|🌒|🌓|🌔|🌕|🌖|🌗|🌘)[[:space:]]+·[[:space:]]+'
 

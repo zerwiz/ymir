@@ -22,10 +22,10 @@ VERSION="1.0.0"
 
 # Where the ward lives once ensured — a stable path, independent of the repo
 # tree, so the systemd user timer keeps working across repo moves/upgrades.
-WARD_DEST="${HEIMDALL_WARD_DEST:-$HOME/.local/bin/heimdall-ssh-keys.sh}"
+WARD_DEST="${HEIMDALL_WARD_DEST:-$HOME/.local/bin/host/heimdall-ssh-keys.sh}"
 CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/heimdall"
 USERS_FILE="$CONF_DIR/gh-users"
-DISTRO_URL="${HEIMDALL_DISTRO_URL:-https://raw.githubusercontent.com/zerwiz/ymir/main/bin/heimdall-ssh-keys.sh}"
+DISTRO_URL="${HEIMDALL_DISTRO_URL:-https://raw.githubusercontent.com/zerwiz/ymir/main/bin/host/heimdall-ssh-keys.sh}"
 # The GitHub user(s) whose keys the seat admits. Resolved: env > recorded file
 # > the owner of this distro checkout's remote > empty (reported honestly).
 gh_users_of() {
@@ -86,7 +86,7 @@ ensure_openssh() {  # only with --install; honest WARN, never a silent lockout
 }
 
 fetch_ward() {
-  command -v curl >/dev/null 2>&1 || { printf 'heimdall: curl missing — cannot fetch the ward\nhelp: copy bin/heimdall-ssh-keys.sh to %s and re-run\n' "$WARD_DEST" >&2; return 1; }
+  command -v curl >/dev/null 2>&1 || { printf 'heimdall: curl missing — cannot fetch the ward\nhelp: copy bin/host/heimdall-ssh-keys.sh to %s and re-run\n' "$WARD_DEST" >&2; return 1; }
   mkdir -p "$(dirname "$WARD_DEST")"
   curl -fsSL --max-time 30 "$DISTRO_URL" -o "$WARD_DEST.tmp" || { rm -f "$WARD_DEST.tmp"; return 1; }
   chmod +x "$WARD_DEST.tmp" && mv "$WARD_DEST.tmp" "$WARD_DEST"
@@ -116,7 +116,7 @@ CMD="${1-}"; shift || true
 DO_OPENSSH=0
 case "$CMD" in
   ensure|status|install) ;;
-  *) printf 'error: unknown command %s\nhelp: bin/heimdall-ensure.sh [status|ensure|install]\n' "$CMD" >&2; exit 2 ;;
+  *) printf 'error: unknown command %s\nhelp: bin/host/heimdall-ensure.sh [status|ensure|install]\n' "$CMD" >&2; exit 2 ;;
 esac
 while [ $# -gt 0 ]; do
   case "$1" in

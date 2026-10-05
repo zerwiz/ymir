@@ -21,9 +21,10 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _yc in "$SCRIPT_DIR/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yc
@@ -52,7 +53,7 @@ while [ $# -gt 0 ]; do case "$1" in
   --install-pi) INSTALL_PI=1; shift ;;
   *) shift ;;
 esac; done
-[ -n "$PROVIDER" ] && [ -n "$MODEL" ] || { printf 'error: usage: bin/pi-model-wire.sh --provider P --model ID [--base-url URL]\n' >&2; exit 2; }
+[ -n "$PROVIDER" ] && [ -n "$MODEL" ] || { printf 'error: usage: bin/pi/pi-model-wire.sh --provider P --model ID [--base-url URL]\n' >&2; exit 2; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
@@ -61,7 +62,7 @@ if ! have pi; then
   if [ "$INSTALL_PI" = 1 ] && [ -x "$SCRIPT_DIR/pi-ensure.sh" ]; then
     "$SCRIPT_DIR/pi-ensure.sh" install >/dev/null 2>&1 || true
   fi
-  have pi || { printf 'error: pi is not installed\nhelp: re-run with --install-pi, or bin/pi-ensure.sh install\n' >&2; exit 3; }
+  have pi || { printf 'error: pi is not installed\nhelp: re-run with --install-pi, or bin/pi/pi-ensure.sh install\n' >&2; exit 3; }
 fi
 
 # 2. the provider key — a REFERENCE: reuse what auth.json holds, else resolve it

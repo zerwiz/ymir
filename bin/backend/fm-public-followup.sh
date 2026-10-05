@@ -10,8 +10,8 @@
 # OWNERSHIP BOUNDARIES (do not re-implement any of these here):
 #   tasks-axi public-followup   the typed obligation and its state machine.
 #   state/x-context/            the private full request context (fm-x-lib.sh).
-#   bin/fm-x-reply.sh           posting to the relay, thread splitting, dry run.
-#   bin/fm-public-followup-lib.sh  the activation gate and private transport.
+#   bin/backend/fm-x-reply.sh           posting to the relay, thread splitting, dry run.
+#   bin/backend/fm-public-followup-lib.sh  the activation gate and private transport.
 # This script composes them; it never restates their contracts or schemas.
 #
 # ZERO OVERHEAD FOR HOMES THAT DO NOT USE THE RELAY: every subcommand gates
@@ -120,9 +120,9 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 
-# shellcheck source=bin/fm-public-followup-lib.sh
+# shellcheck source=bin/backend/fm-public-followup-lib.sh
 . "$SCRIPT_DIR/fm-public-followup-lib.sh"
-# shellcheck source=bin/fm-secondmate-registry-lib.sh
+# shellcheck source=bin/backend/fm-secondmate-registry-lib.sh
 . "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
 
 RETRY_BACKOFF=${FM_PF_RETRY_BACKOFF_SECS:-900}
@@ -190,7 +190,7 @@ require_tools() {
 }
 
 # Every tasks-axi call runs from the home whose backlog owns the obligation, the
-# same convention bin/fm-captain-hold.sh uses for typed backlog state.
+# same convention bin/backend/fm-captain-hold.sh uses for typed backlog state.
 tx() { (cd "$FM_HOME" && tasks-axi "$@"); }
 
 # obligation_json <id>: the complete typed obligation payload on stdout, empty
@@ -369,7 +369,7 @@ EOF
 When this work reaches its promised terminal outcome, report it as typed data
 (never as a sentence for someone to parse) by running exactly:
 
-  $FM_ROOT/bin/fm-public-followup-emit.sh \\
+  $FM_ROOT/bin/backend/fm-public-followup-emit.sh \\
     --home $FM_HOME \\
     --obligation $id \\
     --relation $relation \\
@@ -591,7 +591,7 @@ cmd_pending() {
       printed=1
     fi
     if fm_pf_has_events "$STATE"; then
-      printf 'unconsumed terminal results are waiting; run %s/bin/fm-public-followup.sh consume\n' "$FM_ROOT"
+      printf 'unconsumed terminal results are waiting; run %s/bin/backend/fm-public-followup.sh consume\n' "$FM_ROOT"
       printed=1
     fi
     [ "$printed" -eq 1 ] || exit 0
@@ -649,7 +649,7 @@ EOF
   # Events that arrived while no agent was present are actionable on their own,
   # so surface them even when every registration currently looks settled.
   if fm_pf_has_events "$STATE"; then
-    printf 'unconsumed terminal results are waiting; run %s/bin/fm-public-followup.sh consume\n' "$FM_ROOT"
+    printf 'unconsumed terminal results are waiting; run %s/bin/backend/fm-public-followup.sh consume\n' "$FM_ROOT"
     printed=1
   fi
   [ "$printed" -eq 1 ] || exit 0
@@ -730,7 +730,7 @@ clear_public_followup_link() {
     *) return 1 ;;
   esac
   FM_HOME="$home" FM_STATE_OVERRIDE="$state" FM_ROOT_OVERRIDE="$FM_ROOT" \
-    "$FM_ROOT/bin/fm-x-followup.sh" --clear "$work_id" >/dev/null
+    "$FM_ROOT/bin/backend/fm-x-followup.sh" --clear "$work_id" >/dev/null
 }
 
 public_followup_legacy_link_status() {
@@ -917,7 +917,7 @@ cmd_deliver() {
 
   rc=0
   FMX_REPLY_PLATFORM="$platform" FM_HOME="$FM_HOME" \
-    "$FM_ROOT/bin/fm-x-reply.sh" "$request" --followup --receipt-file "$receipt" \
+    "$FM_ROOT/bin/backend/fm-x-reply.sh" "$request" --followup --receipt-file "$receipt" \
     --text-file "$tmp_text" >/dev/null || rc=$?
 
   if [ "$rc" -eq 0 ]; then

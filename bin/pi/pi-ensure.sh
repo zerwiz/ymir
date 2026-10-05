@@ -29,7 +29,8 @@ set -u
 
 VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)"
 SETTINGS="${PI_SETTINGS:-$HOME/.pi/agent/settings.json}"
 REQUIRED=(pi-mcp-adapter pi-web-access pi-lmstudio)
 

@@ -7,11 +7,11 @@
 set -u
 case "${1-}" in
   -h|--help|"") sed -n '1,9p' "$0" | sed 's/^# \{0,1\}//' ;;
-  status) bin/fleet-ensure.sh status ;;
+  status) bin/fleet/fleet-ensure.sh status ;;
   ensure|"")
-    bin/essence-fetch.sh >/dev/null 2>&1 || true   # the npm world's dotfolders self-heal
-    bin/fleet-ensure.sh ensure
-    bin/fleet-ensure.sh ensure "${2:+--well-url $2}"
+    bin/forge/npm/essence-fetch.sh >/dev/null 2>&1 || true   # the npm world's dotfolders self-heal
+    bin/fleet/fleet-ensure.sh ensure
+    bin/fleet/fleet-ensure.sh ensure "${2:+--well-url $2}"
     echo "fleet mode: the well URL is the seat's mcp-adapter.json (well) — run 'pi' and your tools drink one store."
     ;;
   *) echo "error: ymir-fleet.sh [status|ensure [--well-url <url>]]" >&2; exit 2 ;;

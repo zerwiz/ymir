@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.
 #
-# ONE table, shared by bin/ymir-autoboot.sh (the proof), bin/fleet-ensure.sh
+# ONE table, shared by bin/engine/ymir-autoboot.sh (the proof), bin/fleet/fleet-ensure.sh
 # (the raise) and the installer's autoboot step. A program's role gate and its
 # unit name live HERE and nowhere else, so the seat's raise and its proof can
 # never disagree (the class of lie this platform keeps paying for).
@@ -43,7 +43,7 @@ set -u
 AUTOBOOT_LIB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AUTOBOOT_ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$AUTOBOOT_LIB_SCRIPT_DIR/.." && pwd)}"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _ab_c in "$AUTOBOOT_LIB_SCRIPT_DIR/hoard-lib.sh" "$(dirname "$AUTOBOOT_LIB_SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _ab_c in "${AUTOBOOT_LIB_SCRIPT_DIR}/../vault/hoard-lib.sh" "$(dirname "$AUTOBOOT_LIB_SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
     [ -r "$_ab_c" ] && { . "$_ab_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _ab_c
@@ -183,7 +183,7 @@ autoboot_owed_roles() {  # <result-var> — the roles used for the owe computati
 
 autoboot_unit_of() {  # <program|target> — the unit file name (the ONE target has none)
   # The name is almost always <program>.service, but the arm's own door is
-  # bin/syn-watch.sh while its unit is ymir-syn-watch.service: the map lives HERE
+  # bin/pi/syn-watch.sh while its unit is ymir-syn-watch.service: the map lives HERE
   # so the raise, the proof, the purge, and the materializer all agree.
   case "${1-}" in
     ymir.target) printf '%s\n' "ymir.target" ;;
@@ -244,7 +244,7 @@ autoboot_cron_alive_owner() {  # exit 0 iff a live session lock exists (Nornir l
 
 # --- the deferred record --------------------------------------------------
 # An OPERATOR override, never a silent default: a program a seat owes may be
-# marked deferred with a reason (bin/ymir-autoboot.sh deferred <p> <why>), and
+# marked deferred with a reason (bin/engine/ymir-autoboot.sh deferred <p> <why>), and
 # then verify treats its inactivity as understood. Nothing writes this record
 # by itself — absence and silence are not success.
 AUTOBOOT_DEFERRED_FILE="$AUTOBOOT_STATE_DIR/autoboot-deferred"
