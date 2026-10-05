@@ -11,8 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[404]{file,does,kind,verdict,disposition,callers,lines}:
-  ".session-start-complete","(no header)","data","tested","keep",5,1
+bin[403]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",11,-
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",4,156
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",3,104
@@ -229,7 +228,7 @@ bin[404]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-turnend-guard-grok.sh","Grok Stop-hook adapter for the firstmate PRIMARY turn-end guard.","provenance","tested","keep",1,91
   "fm-turnend-guard.sh","Turn-end guard for any firstmate PRIMARY session: the main home OR a","provenance","tested","keep",7,433
   "fm-update.sh","Self-update a running firstmate and its secondmates to the latest origin.","provenance","tested","keep",4,111
-  "fm-vendor-auth-probe.sh","fm-vendor-auth-probe.sh - one hard-bounded, non-destructive authentication","provenance","tested","keep",2,191
+  "fm-vendor-auth-probe.sh","fm-vendor-auth-probe.sh - one hard-bounded, non-destructive authentication","provenance","tested","keep",3,191
   "fm-wake-drain.sh","Present durable watcher wake records, optionally acknowledge handled records,","provenance","tested","keep",11,593
   "fm-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","provenance","tested","keep",1,128
   "fm-wake-lib.sh","Shared durable wake queue and portable lock helpers.","provenance","tested","keep",54,1867
@@ -347,7 +346,7 @@ bin[404]{file,does,kind,verdict,disposition,callers,lines}:
   "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",4,230
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",1,91
   "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",6,110
-  "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",4,65
+  "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",4,71
   "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",4,132
   "sessrumnir-sync.sh","sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmnir fork","tool","wired","keep",1,256
   "sessrumnir.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",3,173
@@ -417,6 +416,6 @@ bin[404]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",6,243
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
 
-**Tally.** verdict: wired=209, tested=195
+**Tally.** verdict: wired=209, tested=194
 
-**Tally.** disposition: keep=395, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=394, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
