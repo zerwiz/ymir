@@ -7,4 +7,4 @@
 - editor-place keeps the window on the desktop where the work is
 
 ### Files
-- bin/editor-place.sh
+- bin/seat/sessrumnir/editor-place.sh

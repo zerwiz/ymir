@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # alias-conformance-proof.sh — the plan 51 alias gate, proven offline.
 #
-# A proof is a command, not a claim. This drives `bin/model-alias-check.sh`
+# A proof is a command, not a claim. This drives `bin/gates/checks/model-alias-check.sh`
 # against fixtures, so it needs no rail and no network, and asserts:
 #   1. a healthy registry whose every named alias the rail serves  -> pass, 0
 #   2. a registry naming an alias NO rail serves                   -> FAIL, names the seat + alias
@@ -12,7 +12,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CHECK="$ROOT/bin/model-alias-check.sh"
+CHECK="$ROOT/bin/gates/checks/model-alias-check.sh"
 [ -x "$CHECK" ] || { printf 'proof[1]{gate,result}:\n  "missing","%s"\n' "$CHECK"; exit 1; }
 
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT

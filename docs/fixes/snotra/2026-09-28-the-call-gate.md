@@ -3,7 +3,7 @@
 ### Why
 - **The meeting ear's watch armed and recorded on a seat where nobody was in a
   call, and re-announced the same capture again and again.** Observed on heimdall
-  the same day: `bin/snotra-detect.sh status` reported `phase=in-call` with no
+  the same day: `bin/time/snotra/snotra-detect.sh status` reported `phase=in-call` with no
   meeting in existence; the same minutes file appeared repeatedly in the Runes
   `meeting.captured` chain; and **four separate `check meeting:parec` rows**
   accumulated in the operator's wake queue from one synthetic capture.
@@ -23,7 +23,7 @@
   wake — so one wrong trigger became a stream of them.
 
 ### Fix
-- **`bin/snotra-iscall.sh` — the call predicate, one owner of the judgement.**
+- **`bin/time/snotra/snotra-iscall.sh` — the call predicate, one owner of the judgement.**
   Exit 0 only when (a) an explicit arm marker exists (`<state>/.snotra-arm` — the
   Þing room's door or the operator's own hand), or (b) a microphone stream
   **carries a call role** (`SNOTRA_CALL_ROLES`, default `communication phone`)
@@ -58,15 +58,15 @@
 
 ### Wiring: the merged watch now consults the gate, and delivery is once per meeting
 
-When this landed, the merged watch (`bin/snotra-detect.sh`, merged via
+When this landed, the merged watch (`bin/time/snotra/snotra-detect.sh`, merged via
 `eindri/ping-meetings-delivered`, PR #243) still asked only "does an app hold the mic?".
 Three wirings were missing; all are in this change:
 
 - **The arm path consults the predicate.** Immediately before `do_arm`, the watch runs
-  `bin/snotra-iscall.sh` and, when it says no, logs the reason and refuses to arm:
+  `bin/time/snotra/snotra-iscall.sh` and, when it says no, logs the reason and refuses to arm:
   `no call: no stream carries a call role (communication phone)`. The guard is skipped
   when the predicate is absent, so a seat without it keeps the ear rather than losing it.
-- **`bin/fleet-ensure.sh` materializes `snotra-iscall.sh`** beside the other ear scripts,
+- **`bin/fleet/fleet-ensure.sh` materializes `snotra-iscall.sh`** beside the other ear scripts,
   so the guard travels to every seat.
 - **`deliver()` is now idempotent.** The gate stopped the false *captures*; it did not
   stop the same capture being *announced* over and over — which is what the Allfather saw.
@@ -94,7 +94,7 @@ ledger entries: 1        suppressions: 1        real deliveries: 1
 
 ### Also in this pass: the two channels, and the trap in them
 
-`bin/snotra-capture.sh` and `bin/snotra-transcribe.sh` changed in the same pass, so
+`bin/time/snotra/snotra-capture.sh` and `bin/time/snotra/snotra-transcribe.sh` changed in the same pass, so
 they carry this note too.
 
 - **Dual-channel capture.** The capture mixed mic and system audio with
@@ -120,13 +120,13 @@ they carry this note too.
   N-speaker diarization.
 
 ### Files
-- `bin/snotra-iscall.sh` (new) — the call predicate
+- `bin/time/snotra/snotra-iscall.sh` (new) — the call predicate
 - `.agents/tests/snotra-iscall.test.sh` (new) — 12 assertions
-- `bin/snotra-detect.sh` — the arm path consults the gate; `deliver()` carries the
+- `bin/time/snotra/snotra-detect.sh` — the arm path consults the gate; `deliver()` carries the
   once-only `meetings-delivered/` ledger
-- `bin/fleet-ensure.sh` — materializes `snotra-iscall.sh`
-- `bin/snotra-capture.sh` — dual-channel capture (`SNOTRA_CHANNELS`), the
+- `bin/fleet/fleet-ensure.sh` — materializes `snotra-iscall.sh`
+- `bin/time/snotra/snotra-capture.sh` — dual-channel capture (`SNOTRA_CHANNELS`), the
   channel-order fix, the channels announcement
-- `bin/snotra-transcribe.sh` — `-di` on a 2-channel input, `audio_channels()`,
+- `bin/time/snotra/snotra-transcribe.sh` — `-di` on a 2-channel input, `audio_channels()`,
   and the `[Me]`/`[Others]` label render (in the transcript **and** in the
   timestamped file the miner reads)

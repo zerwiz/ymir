@@ -52,8 +52,8 @@ cp "$ROOT/.pi/extensions/lib/fm-branch-model-picker.ts" "$repo/.pi/extensions/li
 cp "$ROOT/.pi/extensions/lib/fm-calm-visibility.ts" "$repo/.pi/extensions/lib/fm-calm-visibility.ts"
 cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" "$repo/.pi/extensions/lib/fm-operational-input.ts"
 mkdir -p "$repo/bin"
-cp "$ROOT/bin/fm-operational-input.sh" "$repo/bin/fm-operational-input.sh"
-chmod +x "$repo/bin/fm-operational-input.sh"
+cp "$ROOT/bin/backend/fm-operational-input.sh" "$repo/bin/backend/fm-operational-input.sh"
+chmod +x "$repo/bin/backend/fm-operational-input.sh"
 ln -s "$PI_PACKAGE_DIR" "$repo/node_modules/@earendil-works/pi-coding-agent"
 ln -s "$PI_PACKAGE_DIR/node_modules/@earendil-works/pi-tui" "$repo/node_modules/@earendil-works/pi-tui"
 ln -s "$PI_PACKAGE_DIR/node_modules/@earendil-works/pi-ai" "$repo/node_modules/@earendil-works/pi-ai"
@@ -468,7 +468,7 @@ pass "real Pi SDK $PI_VERSION reports its own supported effort levels and applie
 # model-visible text back to the real parser, proving the delivery path end to
 # end instead of assuming it.
 captain_payload=$(printf 'relay this\n\ntask-9: PR ready' \
-  | "$ROOT/bin/fm-operational-input.sh" encode branch-outcome) \
+  | "$ROOT/bin/backend/fm-operational-input.sh" encode branch-outcome) \
   || fail "the operational-input owner does not encode the branch-outcome kind"
 CAPTAIN_PAYLOAD="$captain_payload" ROUTINE_PAYLOAD="⛵ task-9: worker healthy" \
   DELIVERY_DIR="$TMP_ROOT" PI_PACKAGE_DIR="$PI_PACKAGE_DIR" \
@@ -517,11 +517,11 @@ out=$(cat "$TMP_ROOT/delivery-output")
 if [ "$status" -ne 0 ] || [ "$out" != "DELIVERY_OK" ]; then
   fail "real-SDK custom-message delivery guard failed against pi-coding-agent $PI_VERSION: $out"
 fi
-delivered_kind=$("$ROOT/bin/fm-operational-input.sh" kind < "$TMP_ROOT/live-delivered-captain") \
+delivered_kind=$("$ROOT/bin/backend/fm-operational-input.sh" kind < "$TMP_ROOT/live-delivered-captain") \
   || fail "pi-coding-agent $PI_VERSION delivered the captain outcome as text the protocol cannot type"
 [ "$delivered_kind" = branch-outcome ] \
   || fail "pi-coding-agent $PI_VERSION delivered the captain outcome as kind '$delivered_kind'"
-if "$ROOT/bin/fm-operational-input.sh" kind < "$TMP_ROOT/live-delivered-routine" >/dev/null 2>&1; then
+if "$ROOT/bin/backend/fm-operational-input.sh" kind < "$TMP_ROOT/live-delivered-routine" >/dev/null 2>&1; then
   fail "a routine note survived Pi conversion as typed operational input"
 fi
 pass "real Pi SDK $PI_VERSION delivers a custom message to the provider as user text carrying only content, so the captain outcome's typed envelope is what reaches the model"

@@ -25,7 +25,7 @@
   the gotchas learned the hard way (429 throttling and how to report it
   honestly; `--write-auto-sub` when none is published; write to `/tmp`, never
   the tree; cite the video and timestamp, never "the transcript says").
-- **`bin/yt-transcript.sh`** — the recipe as a script (law 7: a recurring task
+- **`bin/agents/yt-transcript.sh`** — the recipe as a script (law 7: a recurring task
   becomes a tool, not prose). One command reads all three; `--meta` skips the
   captions; **exit 3 means partial** (metadata read, captions refused), so a
   throttled run is reported, never faked.
@@ -39,4 +39,4 @@
 
 ### Files
 - `.agents/skills/bragi-marketing/SKILL.md`
-- `bin/yt-transcript.sh`
+- `bin/agents/yt-transcript.sh`

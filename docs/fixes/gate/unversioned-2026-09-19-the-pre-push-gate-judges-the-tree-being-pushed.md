@@ -20,8 +20,8 @@
 - **`--install` seats the hook in the common git dir** (`git rev-parse
   --git-common-dir`), which is where git reads it and where every worktree shares
   it — so the gate can be installed from any tree.
-- **Same family, not yet mended:** `bin/secret-guard.sh --install` (`$ROOT/.git/hooks/pre-commit`)
-  and `step_gates` in `bin/ymir-install.sh` still name `$ROOT/.git/hooks` directly,
+- **Same family, not yet mended:** `bin/gates/guards/secret-guard.sh --install` (`$ROOT/.git/hooks/pre-commit`)
+  and `step_gates` in `bin/engine/ymir-install.sh` still name `$ROOT/.git/hooks` directly,
   so they are worktree-fragile in the same way. Recorded here rather than silently
   widened in this change.
 

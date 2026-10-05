@@ -10,8 +10,8 @@ teaches the wrong machine.
 
 ## What
 - `docs/Architecture.md` §3.9 gains the UI/runtime truths: the resolver +
-  absence-is-never-success, `bin/desktop-verify.sh` + the class invariant,
-  `bin/graphics-lib.sh` (hybrid → software render, `YMIR_DESKTOP_DISABLE_GPU`
+  absence-is-never-success, `bin/seat/sessrumnir/desktop-verify.sh` + the class invariant,
+  `bin/host/graphics-lib.sh` (hybrid → software render, `YMIR_DESKTOP_DISABLE_GPU`
   overrides), the Cron gate's `/api/cron` + `/api/cron/seats` (ssh ring,
   machine-local), and the folding Files tree.
 - §3.10 gains Nornir/Glitnir truths: the role gate parses before OR after the

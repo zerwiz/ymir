@@ -17,7 +17,7 @@
 # No new state file and no new transport are involved.
 #
 # Normal operation deduplicates the task's latest canonical PR identity through
-# the merge-notification marker owned by bin/fm-pr-lib.sh. Main-home wake keys
+# the merge-notification marker owned by bin/backend/fm-pr-lib.sh. Main-home wake keys
 # also include that PR identity so distinct PRs for a reused task remain
 # distinct in queue presentation. The outcome is published before the marker
 # is committed, so a failed commit stays eligible for at-least-once retry and

@@ -7,10 +7,10 @@ this never saw either:
 1. **`state` was a tracked symlink** to `$HOME_SEAT/Documents/ymirhome/state`
    (blob `e93a784`, mode `120000`). Every clone on every other machine inherited a
    dead link. It was invisible in review because a symlink's content is its target
-   in the index, and `bin/defaults-guard.sh` read file *content* — it was
+   in the index, and `bin/gates/guards/defaults-guard.sh` read file *content* — it was
    structurally blind to the class. It also violated the tree's own stated law:
    `scripts/electron.sh` says *"Never mkdir `$ROOT/state` — that is the drift the
-   plan's purity row names"*, and `bin/ymir-plan.sh:165` counts a non-empty
+   plan's purity row names"*, and `bin/bridge/ymir-plan.sh:165` counts a non-empty
    `$ROOT/state` as that drift. A dangling link cannot even be counted.
 2. **`tools/mill/worker.sh` carried three absolute paths** (`$HOME_SEAT/mill/vector-index.jsonl`,
    `$HOME_SEAT/ymir` twice) plus `~/ymir/bin/vault/hodd.sh` and `~/Documents/ymirhome`.
@@ -37,7 +37,7 @@ named. Everywhere else the touch failed into a green run.
   env with one documented default each, and takes the vector index into python as an
   **argument** instead of a literal. Fixing that also caught a latent bug: the
   replacement landed on `sys.argv[1]` (the query vector) rather than `argv[2]`.
-- **`bin/defaults-guard.sh` 1.0.0 → 1.1.0**, now three classes:
+- **`bin/gates/guards/defaults-guard.sh` 1.0.0 → 1.1.0**, now three classes:
   - a guessed default — the pattern is **general** (`/home/<seat>/`, `/Users/<seat>/`),
     not only a known subdirectory, and deliberately still ignores system prefixes
     (`/opt/homebrew`, `/usr/local/cuda`) — Rule 05 owns those;
@@ -55,7 +55,7 @@ named. Everywhere else the touch failed into a green run.
   pointing at the tree.
 
 ### The proofs (run, not asserted)
-- `bash bin/defaults-guard.sh check` — **exit 0**, all three sections `"none"`, over
+- `bash bin/gates/guards/defaults-guard.sh check` — **exit 0**, all three sections `"none"`, over
   the widened scope.
 - **Planted violations, caught:** a forced absolute symlink
   (`git add -f state`) → `"absolute symlink ships a machine path","state","$HOME_SEAT/Documents/ymirhome/state"`,
@@ -83,7 +83,7 @@ named. Everywhere else the touch failed into a green run.
   (the two `$ROOT/state` fallbacks in `eindri-review-spawn.sh` and `autoboot-lib.sh`
   are guarded existence probes that fall through to the canonical dir). Seating a
   per-machine link at install time is the honest fix for the stale claim and is a
-  separate errand on `bin/ymir-install.sh`.
+  separate errand on `bin/engine/ymir-install.sh`.
 - **`lock.py` still duplicates four resolver functions** (`config_dir`,
   `recorded_home`, `ymir_home`, `repo_root`) that `paths.py` already owns. This
   change removed the duplicated *literal* — the hardcoded-path defect — and left the
@@ -95,7 +95,7 @@ named. Everywhere else the touch failed into a green run.
 
 ### Files
 - `.gitignore` · `state` (untracked, removed)
-- `bin/defaults-guard.sh` (1.0.0 → 1.1.0)
+- `bin/gates/guards/defaults-guard.sh` (1.0.0 → 1.1.0)
 - `tools/mill/worker.sh`
 - `src/ymir_runtime/paths.py` (allowlisted definition site) ·
   `src/ymir_runtime/state/lock.py` · `src/ymir_runtime/state/runes.py` ·

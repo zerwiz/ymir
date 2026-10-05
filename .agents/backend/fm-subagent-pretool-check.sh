@@ -5,7 +5,7 @@
 # scheduling, or background-work tool creates work with no `state/<id>.meta` and
 # no `data/<id>/brief.md`. Only `bin/backend/fm-spawn.sh` writes that metadata, and
 # untracked project work contributes nothing to the in-flight branch of
-# bin/backend/fm-supervision-lib.sh or bin/fm-turnend-guard.sh. So such work is not
+# bin/backend/fm-supervision-lib.sh or bin/backend/fm-turnend-guard.sh. So such work is not
 # merely unsupervised: absent an independent X-mode need, it makes the whole
 # guard stack structurally inert, and it dies with the primary session instead
 # of living in its own backend session.

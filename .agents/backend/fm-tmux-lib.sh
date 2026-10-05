@@ -6,7 +6,7 @@
 # Both the away-mode daemon and bin/backend/fm-send.sh reach these primitives through
 # backend dispatch, while bin/backend/fm-composer-lib.sh owns the shared verdict.
 #
-# Composer shapes and verdicts are owned by bin/fm-composer-lib.sh.
+# Composer shapes and verdicts are owned by bin/backend/fm-composer-lib.sh.
 # This file owns only tmux's styled capture, cursor and Pi identity primitives,
 # delivery busy read, and submit conversions that consume the shared verdict.
 # Styled captures remain internal; fm-peek and every human-facing capture stay
@@ -133,7 +133,7 @@ EOF
 # fm_tmux_composer_state: the tmux composer verdict - a thin adapter over the
 # shared screen classifier. The verdict contract (empty | pending |
 # pending-unproven | unknown, positive proof required for empty, unrecognized
-# future verdicts failing safe) is owned by bin/fm-composer-lib.sh. Identity
+# future verdicts failing safe) is owned by bin/backend/fm-composer-lib.sh. Identity
 # is fetched lazily, only when the classifier reports the verdict depends on
 # it (a pi separator pair under the cursor), so the common read never pays
 # for the process probe.

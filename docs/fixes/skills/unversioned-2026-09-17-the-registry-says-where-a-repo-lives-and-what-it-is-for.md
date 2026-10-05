@@ -6,7 +6,7 @@
   zerwiz, zerwizserver live on the tailnet). A repo is no longer assumed to be
   on the box you happen to be standing on.
 - **A project entry can now say what it is for.** `about:` is one plain
-  sentence per repo. `bin/project-git.sh list --field about` prints the whole
+  sentence per repo. `bin/agents/project-git.sh list --field about` prints the whole
   inventory without opening the YAML.
 - **`project-git.sh` resolves more of the block.** `--field` now accepts
   `machine`, `company`, `workspace` and `about` alongside the git fields, and

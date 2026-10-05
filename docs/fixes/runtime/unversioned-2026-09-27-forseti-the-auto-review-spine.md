@@ -15,7 +15,7 @@ remembering to feed it is not automatic.
   scout-kind `<id>-review` errand through the einherjar road:
   `--scout --backend herdr --harness pi --model opencode-go/deepseek-v4.1-flash
   --effort high`. The harness is the one the einherjar road launches for the
-  figure, resolved from the roster (`bin/agents-config.sh get forseti harness`);
+  figure, resolved from the roster (`bin/fleet/agents-config.sh get forseti harness`);
   the model is a per-machine choice with one documented default (Rule 07).
 - **The trigger is the terminal act.** `bin/agents/eindri-acclaim.sh` — the worker's own
   finish line — now calls the spine from its `done` path, after the status line,

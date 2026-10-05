@@ -41,7 +41,7 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > every key present, not a fixed list.
 >
 > **The MCP doors point at ONE local gateway** (`bin/bridge/mcp-gateway.sh`, :8316),
-> raised per body by `bin/fleet-ensure.sh ensure` (the `mcp-gateway` unit). The
+> raised per body by `bin/fleet/fleet-ensure.sh ensure` (the `mcp-gateway` unit). The
 > seat's `mcp-adapter.json` names the gateway for the record MCPs — `well`,
 > `bolthorn`, `skuld` all resolve to `http://127.0.0.1:8316/mcp/<server>` — so a
 > change to the heart's address re-resolves inside the gateway and never moves the
@@ -66,11 +66,11 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > are a LIVE set — models come from whichever strong box is CONNECTED (heimdall ·
 > whynot · omarchy) — so `bin/bridge/mcp-config.sh` carries the resolved rail under the
 > seat config's `ymir` block (`host`, `url`, `keyRef`), read from the ONE
-> resolver `bin/rail-resolve.sh` (`src/ymir_runtime/fleet/rail.py`). Harnesses
+> resolver `bin/model/rail-resolve.sh` (`src/ymir_runtime/fleet/rail.py`). Harnesses
 > read `mcpServers`; the `ymir` block is advisory metadata. `bin/bridge/mcp-gateway.sh
 > rail [resolve|status]` answers the same question over the gateway door, and
 > the rail is NEVER an MCP upstream — the upstream map is handed to the engine
-> verbatim. The served set decides alias conformance too: `bin/model-alias-check.sh`
+> verbatim. The served set decides alias conformance too: `bin/gates/checks/model-alias-check.sh`
 > verifies a seat's names against the RESOLVED provider, not one static seat.
 >
 > **Typed surfaces — the servers' home is `packages/` (plan 58 Phase 6).** The
@@ -82,7 +82,7 @@ The governing plan is [`docs/plans/29-brokk-distro-runtime.md`](../../../../../d
 > contract, two consumers, contract tests in `packages/contracts/test/`. The
 > first MCP server moved is Bölþorn — `packages/mcp/skills/server.mjs` (:8319);
 > the rest still stand in `tools/` (well-mcp, tickets-mcp, snotra, mcp-gateway)
-> until their own PRs. `bin/fleet-ensure.sh` / `bin/fleet-deploy.sh` copy a
+> until their own PRs. `bin/fleet/fleet-ensure.sh` / `bin/fleet/fleet-deploy.sh` copy a
 > DIRECTORY row whole, preserving the `packages/` anchor, so a relative import
 > across packages resolves in the deployed `~/.fleet` copy exactly as it does in
 > the repo. No door, unit, or config name changes: `ratatoskr.service` (:8301)
@@ -157,20 +157,20 @@ Bind the harness's "session is opening" event to `bin/time/saga-sessionstart-run
 ### Part 2 — Watch arm (Sýn supervision)
 
 Bind a "session is idle / turn ended" event to run **one thin client cycle** —
-`bin/syn-watch-arm.sh --restart` — and let the adapter own **continuity**
+`bin/pi/syn-watch-arm.sh --restart` — and let the adapter own **continuity**
 (re-arming) so no model tokens are spent on ordinary re-arms. The **watch itself
 is a SERVICE** (plan 58, Phase 2 — 2026-09-27), seated once and standing.
 
 ```bash
-bin/syn-watch-arm.sh --restart
+bin/pi/syn-watch-arm.sh --restart
 ```
 
 | Piece | Door | What it owns |
 |---|---|---|
-| The arm (the loop) | `bin/syn-watch.sh run` | the poll, the heartbeat, the wake raise, the lease — standing, session-independent; the BEHAVIOUR is `src/ymir_runtime/watch.py` (plan 58, Phase 5), so this door only names the verb |
-| The door | `bin/syn-watch.sh status\|start\|stop\|restart` | the operator's truth (`up` · `idle` · `stale` · `down`, exit non-zero on a gap) and the raise/lower |
-| The unit | `tools/mill/systemd/ymir-syn-watch.service` | `Type=simple`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; seated by `bin/fleet-ensure.sh` (program `syn-watch`, roles heart+dev) |
-| The thin client | `bin/syn-watch-arm.sh` | the helm, attach, and the relay of what the arm raised — what the harness adapters spawn |
+| The arm (the loop) | `bin/pi/syn-watch.sh run` | the poll, the heartbeat, the wake raise, the lease — standing, session-independent; the BEHAVIOUR is `src/ymir_runtime/watch.py` (plan 58, Phase 5), so this door only names the verb |
+| The door | `bin/pi/syn-watch.sh status\|start\|stop\|restart` | the operator's truth (`up` · `idle` · `stale` · `down`, exit non-zero on a gap) and the raise/lower |
+| The unit | `tools/mill/systemd/ymir-syn-watch.service` | `Type=simple`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; seated by `bin/fleet/fleet-ensure.sh` (program `syn-watch`, roles heart+dev) |
+| The thin client | `bin/pi/syn-watch-arm.sh` | the helm, attach, and the relay of what the arm raised — what the harness adapters spawn |
 | The tests | `.agents/tests/syn-watch-arm-silent-exit.test.sh` · `tests/e2e/arm-service-proof.sh` | the flood brake + the live service proofs (both run the engine's `watch.py` through the door) |
 
 **Why the shape changed.** The loop used to live INSIDE the arm script, so it
@@ -205,7 +205,7 @@ The arm:
   turn ending blind;
 - writes `state/.arm.lease` — `pid=<pid> starttime=<st> gen=<n>`
   `mode=<systemd|daemon> session=<pid|none> heartbeat=<epoch> state=<dir>` — the
-  lease-based liveness `bin/syn-watch.sh status`, the thin client, and Eir's `arm`
+  lease-based liveness `bin/pi/syn-watch.sh status`, the thin client, and Eir's `arm`
   surface all read.
 
 The thin client's CLI is **unchanged**, so every adapter works as it stands:
@@ -267,7 +267,7 @@ the old two-ledger shape never re-fires news the operator already saw. The repor
 shelf is the ONE contract; `acclaim` heals it from a terminal status line when a
 worker wrote only the wrong shelf.
 
-**Catch-up on re-arm.** Recovery is not blind. `bin/syn-watch-arm.sh` sweeps the
+**Catch-up on re-arm.** Recovery is not blind. `bin/pi/syn-watch-arm.sh` sweeps the
 handoff shelves into the durable queue *before* the session lock and the poll loop,
 and prints its own reconciliation:
 
@@ -302,7 +302,7 @@ bin/agents/einherjar-spawn.sh <id>-review <project> --scout --backend herdr \
 ```
 
 The harness is the one the einherjar road launches for this figure — `pi`,
-resolved from the roster (`bin/agents-config.sh get forseti harness`). The fierce
+resolved from the roster (`bin/fleet/agents-config.sh get forseti harness`). The fierce
 brief is filled from `.agents/assets/templates/review-brief.template.md` for THIS
 task (PR, branch, task id), and the verdict lands on the wake road at
 `state/eindri-reports/<id>-review.md` — the shelf Part 2b already sweeps.
@@ -323,10 +323,10 @@ meta, status, and verdict belong where Brokk and the sweep read them.
 
 ### Part 3 — Turn-end guard
 
-Bind the harness's "turn is about to end" event to `bin/syn-turnend-guard.sh`. If the guard prints the recovery instruction and exits **2**, the adapter must re-prompt instead of letting the turn end blind.
+Bind the harness's "turn is about to end" event to `bin/gates/guards/syn-turnend-guard.sh`. If the guard prints the recovery instruction and exits **2**, the adapter must re-prompt instead of letting the turn end blind.
 
 ```bash
-bin/syn-turnend-guard.sh [--claude]
+bin/gates/guards/syn-turnend-guard.sh [--claude]
 # reads Claude/Codex-shaped {"stop_hook_active":false} on stdin (ignored)
 # exit 0 = supervision healthy OR never armed (inert)
 # exit 2 = supervision was armed and the watcher is missing/stale; stderr carries recovery
@@ -335,14 +335,14 @@ bin/syn-turnend-guard.sh [--claude]
 The guard is **inert until the first successful arm** writes `state/.supervision-armed`:
 
 ```bash
-# bin/syn-turnend-guard.sh:20
+# bin/gates/guards/syn-turnend-guard.sh:20
 [ -f "$STATE/.supervision-armed" ] || exit 0
 ```
 
 It goes stale when `now - state/.watch.heartbeat > BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60).
 
 > **`$STATE` is the operator's hoard state, never the code tree (2026-09-23).**
-> `bin/syn-turnend-guard.sh` resolves `$STATE` through `bin/vault/hoard-lib.sh`, exactly
+> `bin/gates/guards/syn-turnend-guard.sh` resolves `$STATE` through `bin/vault/hoard-lib.sh`, exactly
 > as the watcher and the wake drain do. It once defaulted to `$BROKK_HOME/state`
 > (the **tree**), so it read a stale code-tree heartbeat and fired *"turn would
 > end blind"* every turn while the live watcher beat into the hoard seconds
@@ -353,26 +353,26 @@ It goes stale when `now - state/.watch.heartbeat > BROKK_WATCH_HEARTBEAT_STALE_S
 Bind the harness's pre-tool event for shell commands to the two owner scripts. Exit **2** (or throw) blocks the tool call.
 
 ```bash
-bin/syn-arm-pretool-check.sh --command "<bash command>"   # denies backgrounding the watcher arm
-bin/syn-cd-pretool-check.sh  --command "<bash command>"   # denies a persistent escaping `cd`
+bin/gates/checks/syn-arm-pretool-check.sh --command "<bash command>"   # denies backgrounding the watcher arm
+bin/gates/checks/syn-cd-pretool-check.sh  --command "<bash command>"   # denies a persistent escaping `cd`
 ```
 
 Both are **v0 inert-by-default** contracts: `syn-arm-pretool-check.sh` blocks only a command that backgrounds `syn-watch-arm.sh`; `syn-cd-pretool-check.sh` blocks only `cd .../../`. Owner scripts hold the policy; adapters only relay.
 
-**A third seatbelt guards the assets** — `bin/syn-asset-pretool-check.sh` denies an
+**A third seatbelt guards the assets** — `bin/gates/checks/syn-asset-pretool-check.sh` denies an
 `edit`/`write` of a governed path until its owning asset has been read in the
 session (reads are recorded in `state/asset-reads`).
 
 ```bash
-bin/syn-asset-pretool-check.sh --path "<file>"          # exit 2 when the asset is not loaded
-bin/syn-asset-pretool-check.sh --note "<asset path>"     # record an asset as read
+bin/gates/checks/syn-asset-pretool-check.sh --path "<file>"          # exit 2 when the asset is not loaded
+bin/gates/checks/syn-asset-pretool-check.sh --note "<asset path>"     # record an asset as read
 ```
 
 Who governs what:
 
 ```
 governed[6]{path,load_first}:
-  "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
+  "bin/engine/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
   "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
@@ -448,7 +448,7 @@ Every adapter and script resolves the same runtime roots. The overrides exist so
 | `BROKK_SESSION_PID` | **live harness PID** bound by the session lock | `${BROKK_SESSION_PID:-$$}` |
 | `BROKK_SESSIONSTART_INELIGIBLE` | `1` makes Pi's prerequisite exit 3 | unset |
 
-`BROKK_SESSION_PID` is the load-bearing variable. The lock must bind to the **live harness process**, not the short-lived digest helper: Pi/OpenCode adapters pass `BROKK_SESSION_PID=String(process.pid)` into the spawned digest/arm child (`.pi/shared/extensions/syn-turnend-guard.ts:277`, `.agents/harness/opencode/plugins/syn-watch-arm.js:428`). `bin/gleipnir-lock-lib.sh` writes it to `state/.lock`.
+`BROKK_SESSION_PID` is the load-bearing variable. The lock must bind to the **live harness process**, not the short-lived digest helper: Pi/OpenCode adapters pass `BROKK_SESSION_PID=String(process.pid)` into the spawned digest/arm child (`.pi/shared/extensions/syn-turnend-guard.ts:277`, `.agents/harness/opencode/plugins/syn-watch-arm.js:428`). `bin/vault/gleipnir-lock-lib.sh` writes it to `state/.lock`.
 
 Full variable inventory: [`../runtime-components.md`](../runtime-components.md) §5.
 
@@ -458,8 +458,8 @@ An adapter never parses a registry itself. Two files, two shapes, one reader.
 
 | Registry | Shape | Who reads it |
 |---|---|---|
-| `$YMIR_HOME/hodd/identity/projects.yaml` (private) | one `git{}` block per project | `bin/project-git.sh`, `bin/mjollnir.sh`, `bin/yggdrasil.sh`, `bin/github-deploy.sh` |
-| `$YMIR_HOME/hodd/identity/workspaces.yaml` (private) | one entry per **realm** | the gate API (`apps/hlidskjalf/server/index.ts`), `bin/workspace-provision.sh` |
+| `$YMIR_HOME/hodd/identity/projects.yaml` (private) | one `git{}` block per project | `bin/agents/project-git.sh`, `bin/forge/mjollnir.sh`, `bin/forge/yggdrasil.sh`, `bin/forge/github-deploy.sh` |
+| `$YMIR_HOME/hodd/identity/workspaces.yaml` (private) | one entry per **realm** | the gate API (`apps/hlidskjalf/server/index.ts`), `bin/agents/workspace-provision.sh` |
 
 The repo ships only the shapes: `registry/projects.yaml.example`, `registry/workspaces.yaml.example`
 (plan 62 moved them out of the old `workspace/`, so the word means one thing again).
@@ -467,12 +467,12 @@ The repo ships only the shapes: `registry/projects.yaml.example`, `registry/work
 > **A project row names its REALM: `realm:` (2026-10-01, plan 62).** The key used to read
 > `workspace:` — a row never named a workspace, it named the realm whose shelf
 > (`svartalfaheim/<realm>/projects/`) the project lives under. Every reader of that key now goes
-> through **`bin/registry-lib.sh`**, which is the only place allowed to resolve it: `realm` first,
+> through **`bin/skuld/registry-lib.sh`**, which is the only place allowed to resolve it: `realm` first,
 > `workspace` as a **deprecated alias that always names itself on stderr**
-> (`deprecated-registry-key: row "<id>" carries \`workspace:\` …`). `bin/ymir-validate.sh` gained the
+> (`deprecated-registry-key: row "<id>" carries \`workspace:\` …`). `bin/engine/ymir-validate.sh` gained the
 > `registry` check — PASS when every row names its realm, WARN naming each row still on the old key,
 > never FAIL. A harness adapter that needs the realm of a project calls
-> `bin/project-git.sh <id> --field realm` and gets the same answer, warning included. Never read the
+> `bin/agents/project-git.sh <id> --field realm` and gets the same answer, warning included. Never read the
 > key with `grep`/`awk` in a new script: that is how a rename lands as a silent break. The ward is
 > `.agents/tests/registry-realm-key.test.sh` (new key silent · old key resolves AND names itself · a
 > row with both keys reads the new one and stays quiet · the block still prints), and
@@ -515,13 +515,13 @@ Answer these before writing anything:
 
 ### Stage 1 — Add detection to Hamr
 
-`bin/hamr-harness.sh` (Norse: **Hamr**, "the shape a being wears") is the single source of harness identity. Two layers, in precedence order:
+`bin/fleet/hamr-harness.sh` (Norse: **Hamr**, "the shape a being wears") is the single source of harness identity. Two layers, in precedence order:
 
-- **Layer 1 — verified env markers** (`bin/hamr-harness.sh:112-135`). Add your marker *after* the Cursor/Claude/Pi/Grok markers, documenting the version you verified it on.
-- **Layer 2 — process ancestry** (`bin/hamr-harness.sh:136-169`). Add a `*<name>*` case to the `comm` matcher and to the bare-interpreter `args` matcher.
+- **Layer 1 — verified env markers** (`bin/fleet/hamr-harness.sh:112-135`). Add your marker *after* the Cursor/Claude/Pi/Grok markers, documenting the version you verified it on.
+- **Layer 2 — process ancestry** (`bin/fleet/hamr-harness.sh:136-169`). Add a `*<name>*` case to the `comm` matcher and to the bare-interpreter `args` matcher.
 
 ```bash
-# bin/hamr-harness.sh — Layer 1 pattern
+# bin/fleet/hamr-harness.sh — Layer 1 pattern
 [ "${MYHARNESS_AGENT:-}" = "1" ] && { echo myharness; return; }
 # Layer 2 pattern
 case "$(basename -- "$comm")" in
@@ -604,7 +604,7 @@ test -f state/.session-start-complete && bin/time/saga-sessionstart-run.sh --sou
 
 ```bash
 # In one shell (must own the lock):
-bin/syn-watch-arm.sh --restart        # prints "watcher: started pid=... recovery-generation=..."
+bin/pi/syn-watch-arm.sh --restart        # prints "watcher: started pid=... recovery-generation=..."
 test -f state/.supervision-armed && echo "armed marker written"
 test -s state/.watch.heartbeat && echo "heartbeat written"
 # In another shell, drop a wake and watch the arm exit with "signal: wake queue":
@@ -616,20 +616,20 @@ test -s state/.watch.heartbeat && echo "heartbeat written"
 ```bash
 # Inert before first arm:
 rm -f state/.supervision-armed
-echo '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh; echo "expected 0, got $?"
+echo '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh; echo "expected 0, got $?"
 # Armed but stale heartbeat → exit 2:
 touch state/.supervision-armed
 rm -f state/.watch.heartbeat
-echo '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh; echo "expected 2, got $?"
+echo '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh; echo "expected 2, got $?"
 ```
 
 ### Seatbelts
 
 ```bash
-bin/syn-arm-pretool-check.sh --command 'bin/syn-watch-arm.sh --restart &'; echo "expected 2, got $?"
-bin/syn-arm-pretool-check.sh --command 'bin/syn-watch-arm.sh --restart';  echo "expected 0, got $?"
-bin/syn-cd-pretool-check.sh  --command 'cd ../../etc';                    echo "expected 2, got $?"
-bin/syn-cd-pretool-check.sh  --command 'ls -la';                          echo "expected 0, got $?"
+bin/gates/checks/syn-arm-pretool-check.sh --command 'bin/pi/syn-watch-arm.sh --restart &'; echo "expected 2, got $?"
+bin/gates/checks/syn-arm-pretool-check.sh --command 'bin/pi/syn-watch-arm.sh --restart';  echo "expected 0, got $?"
+bin/gates/checks/syn-cd-pretool-check.sh  --command 'cd ../../etc';                    echo "expected 2, got $?"
+bin/gates/checks/syn-cd-pretool-check.sh  --command 'ls -la';                          echo "expected 0, got $?"
 ```
 
 ### Session lock ownership
@@ -646,10 +646,10 @@ bin/time/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-O
 - **`saga-session-start.sh` acquires the lock but never releases it.** Release is the harness's business (process exit). A refused lock means **read-only**: no spawn, steer, merge, drain, or repair.
 - **Don't call `bin/time/saga-session-start.sh` directly from an adapter.** Use `bin/time/saga-sessionstart-run.sh`; only the wrapper knows the source-routing rules (`startup` runs, `clear`/`compact` re-emits, `resume`/`reload`/`fork` nudges).
 - **The turn-end guard is inert until `.supervision-armed` exists.** A guard test that never arms proves nothing. Arm first, then force a stale heartbeat.
-- **`session.idle` fires often.** On OpenCode, the watch-arm plugin acts first and publishes `globalThis.__brokkOpenCodeWatchArm`; the guard plugin consults it and only calls `bin/syn-turnend-guard.sh` when the coordinator could not arm. Calling the guard first produces a false "turn would end blind" prompt during normal re-arms.
+- **`session.idle` fires often.** On OpenCode, the watch-arm plugin acts first and publishes `globalThis.__brokkOpenCodeWatchArm`; the guard plugin consults it and only calls `bin/gates/guards/syn-turnend-guard.sh` when the coordinator could not arm. Calling the guard first produces a false "turn would end blind" prompt during normal re-arms.
 - **Never background the arm from the model's bash tool.** `syn-arm-pretool-check.sh` denies it; the adapter owns continuity. The arm is a plugin/extension child, not a tool call.
 - **Exit-code semantics differ by host.** Claude's `SessionStart` exit 2 blocks initialization, so the run wrapper always exits 0 on the transport path; Pi's prerequisite uses exit 3 internally so preflight can distinguish a stand-down from a silent failure.
-- **`hamr-harness.sh` has no `crew` subcommand — its subcommand is `eindri`.** `bin/agents/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, which falls through to `detect_own` (`bin/hamr-harness.sh:231-236`); see §11. Until that call is fixed, `config/eindri-harness` is only honoured by the inline fallback, not the Hamr path.
+- **`hamr-harness.sh` has no `crew` subcommand — its subcommand is `eindri`.** `bin/agents/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, which falls through to `detect_own` (`bin/fleet/hamr-harness.sh:231-236`); see §11. Until that call is fixed, `config/eindri-harness` is only honoured by the inline fallback, not the Hamr path.
 - **Plugin auto-loading is path-based, not declared.** OpenCode loads `.agents/harness/opencode/plugins/*.js` automatically; there is no `plugin` array in `opencode.json`. The `package.json` only declares `"type": "module"`.
 - **Grok is not wired in Ymir.** Upstream Brokk ships `.grok/hooks/*.json`; Ymir has no `.grok/`. Treat Grok as unverified (see §11).
 - **Windows timing.** OpenCode and Pi raise the arm-ready budget to 35s on `win32` so a slow Git Bash cold start is not SIGTERMed mid-confirmation (`.agents/harness/opencode/plugins/syn-watch-arm.js:17-19`, `.pi/shared/extensions/gna-pi-watch.ts:91-94`).
@@ -662,7 +662,7 @@ bin/time/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-O
 |---|---|
 | `.agents/harness/opencode/plugins/syn-sessionstart.js` | actual file is `.agents/harness/opencode/plugins/saga-sessionstart.js` |
 | `.agents/harness/opencode/plugins/gna-watch-arm.js` (plan §1) | actual file is `.agents/harness/opencode/plugins/syn-watch-arm.js` (OpenCode's watcher is **Sýn**, not Gná; Gná exists only on Pi) |
-| Plan §13 "still to build: `bin/hamr-harness.sh`; the `.opencode`/Claude/Codex/Cursor adapters; `bin/agents/einherjar-spawn.sh`; …" | all of these are **now landed**; plan §13 is stale |
+| Plan §13 "still to build: `bin/fleet/hamr-harness.sh`; the `.opencode`/Claude/Codex/Cursor adapters; `bin/agents/einherjar-spawn.sh`; …" | all of these are **now landed**; plan §13 is stale |
 | Digest §6 lists 9 stages including **NETWORK CHECKS** and **FLEET DIGEST from `data/backlog.md`** | `bin/time/saga-session-start.sh` currently prints **8** sections (LOCK, BOOTSTRAP, WAKE QUEUE, SUPERVISION, FLEET DIGEST, CONTEXT DIGEST, CRON START, NEXT STEP); there is **no NETWORK CHECKS section**, and the fleet digest counts `state/*.meta` + `docs/masterplan.md` orders, not `data/backlog.md` |
 | Plan §7 "Cursor … run interactive only (no headless turn-end)" | `.cursor/hooks.json` **does** implement `sessionStart` (`additional_context`) and `stop` (`followup_message`) |
 | Plan §7 "Codex … bounded foreground checkpoint … nudge-tier" | `.codex/hooks.json` implements run-tier `SessionStart` + `PreToolUse` + `Stop` |
@@ -771,9 +771,9 @@ Agent profiles live **only** in `.agents/agents/*.md` (the canonical, with the
 harness config like `mode`/`permission` in their frontmatter, and the figure's
 `role`/`norse_name`/`ymir_tools` beside them). A card carries **no model**: the
 model is resolved from the hoard by figure name at dispatch
-(`bin/agents-config.sh get <figure> model`), and the role → figure → tools wiring
+(`bin/fleet/agents-config.sh get <figure> model`), and the role → figure → tools wiring
 lives in `.agents/roles.yaml` — a file the harness never reads (it is read by the
-*doors*, `bin/agents/eindri-role.sh` and `bin/agents-config.sh roster`). The harness
+*doors*, `bin/agents/eindri-role.sh` and `bin/fleet/agents-config.sh roster`). The harness
 directories **bind** them by symlink — they are never hand-written duplicates:
 
 - OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
@@ -788,8 +788,8 @@ hand-made subset. Naming differs by harness and must be respected:
 their surfaces from their **own** homes — Pi reads `${HOME}/.pi/agent/extensions/`
 — so a change merged into the repo is INVISIBLE to a running harness until the
 bind re-runs. A hand-copied extension was the symptom; the cure is to make the
-bind automatic: `bin/ymir-install.sh` runs `valknut-load.sh --install` (which
-seats a **post-merge** hook), `bin/groa-update.sh` runs `--all --global` after
+bind automatic: `bin/engine/ymir-install.sh` runs `valknut-load.sh --install` (which
+seats a **post-merge** hook), `bin/agents/groa-update.sh` runs `--all --global` after
 every pull, and the hook runs it after every merge. Two further truths:
 > **a running session keeps the code it loaded** (so a fixed extension is live
 > from the NEXT pi session, never the current one), and the hooks dir is found by
@@ -833,7 +833,7 @@ every recursive scanner (the `harnesses` gate refuses it).
 ```
 writers[2]{writer,owns}:
   "bin/seat/valknut-load.sh","STRUCTURE — the base keys, the agent blocks, the skills path; rendered from opencode.json.example"
-  "bin/agents-config.sh apply","the ROSTER — providers and per-agent models, from config/agents.yaml"
+  "bin/fleet/agents-config.sh apply","the ROSTER — providers and per-agent models, from config/agents.yaml"
 ```
 
 **Both merge; neither overwrites.** The loader's `config_out` adds missing keys (
@@ -985,7 +985,7 @@ absolute root per line — most recent first, deduped, capped — to
 `${HOME}/.pi/agent/extensions/.ymir-root`, and the deployed copy of
 `.pi/extensions/lib/ymir-home.ts` reads it back for all four extensions
 (`gna-pi-watch`, `syn-turnend-guard`, `ro`, `skuld-branch-supervision`). Every
-recorded root is validated against `bin/syn-watch-arm.sh` and any that no longer
+recorded root is validated against `bin/pi/syn-watch-arm.sh` and any that no longer
 exists is skipped, so a merged-and-removed worktree in the record is skipped
 rather than trusted. Resolution order:
 
@@ -995,7 +995,7 @@ rather than trusted. Resolution order:
 3. resolve(extensionDir, "../..")                 — the pre-pointer contract
 ```
 
-A candidate counts only if it really holds `bin/syn-watch-arm.sh`, so a root that
+A candidate counts only if it really holds `bin/pi/syn-watch-arm.sh`, so a root that
 no longer exists (a merged-and-removed Yggdrasil worktree, an uninstalled npm
 prefix) is skipped rather than trusted. That is why the record is a *list*:
 deploying from a worktree records the worktree **and** keeps the durable root
@@ -1007,15 +1007,15 @@ performed the deploy (Rule 07).
 (`gna-pi-watch`, `syn-turnend-guard`, `ro`, `skuld-branch-supervision`) and left
 `rodd-operational-input.ts` — the shared **lib** module whose
 `encodeRoddOperationalInput()` those four call — still walking its own
-`../../../bin/rodd-operational-input.sh`. From the deployed home that resolved
-`${HOME}/.pi/bin/rodd-operational-input.sh`, which does not exist, so `spawnSync`
+`../../../bin/agents/rodd-operational-input.sh`. From the deployed home that resolved
+`${HOME}/.pi/bin/agents/rodd-operational-input.sh`, which does not exist, so `spawnSync`
 failed, `encode` threw, and **no RÖDD operational input was injected at all** —
 not session-start, not watcher, not turn-end-guard, not branch-outcome. The fix is
 the same one the four already use: the lib module resolves through
 `resolveYmirRoot(resolve(dirname(import.meta.url), ".."))` — the extensions dir,
 where `.ymir-root` sits. Measured before the fix: `~/.pi/bin/` absent, no arm
 process, both heartbeats stale for days; after: the deployed helper resolves
-`$HOME/ymir` and `bin/rodd-operational-input.sh encode session-start`
+`$HOME/ymir` and `bin/agents/rodd-operational-input.sh encode session-start`
 emits a real frame. A deploy only takes effect in a **new** session — an already
 running session holds the code it loaded.
 
@@ -1031,7 +1031,7 @@ Two consequences worth stating:
   with no contract at all. It now repoints only when the current target is already
   gone.
 
-`bin/eir-doctor.sh` carries the **`harness`** surface, so this is diagnosed rather
+`bin/agents/eir-doctor.sh` carries the **`harness`** surface, so this is diagnosed rather
 than discovered: a record with no live root is `broken`, and `fix` re-runs
 `valknut-load.sh --pi`. `bin/seat/valknut-load.sh --status` reports the same row.
 
@@ -1125,12 +1125,12 @@ the logic stays in `bin/`, where a human or a cron row can run the same thing.**
 | `ymir_push` | `git` in the vault — named paths only, refuses secrets, **refuses to delete a tracked file** (Rule 11) |
 | `ymir_note` · `ymir_plan` · `ymir_daily` | the append-only operations (a dated section, the next numbered plan, today's log) |
 | `ymir_secret_keys` | key **names** only — a name may print, a value never leaves |
-| `ymir_free` | `bin/calendar-ask.sh` — the operator's own calendar, read-only |
+| `ymir_free` | `bin/time/snotra/calendar-ask.sh` — the operator's own calendar, read-only |
 | `ymir_dellingr` | grades documents `nýr · eldri · forn · safn`; **known defect — its age signal reads 0d, so it currently grades everything fresh. It must refuse rather than guess.** |
 
 **The shape every extension here shares** (plan 66 §8): one home (`.pi/shared/extensions` →
 `~/.pi/agent/extensions`), every tool THIN, every tool saying **no** when it cannot do the job,
-and `bin/ymir-install.sh` + `bin/groa-update.sh` **seating it and failing loudly** — because a
+and `bin/engine/ymir-install.sh` + `bin/agents/groa-update.sh` **seating it and failing loudly** — because a
 capability that exists in the repo but is never seated is exactly the silent absence that cost
 the watch on 2026-09-30.
 
@@ -1176,14 +1176,14 @@ those stay doors.
 ### Three bugs the audit found by looking, not by reading
 
 1. **A literal that bash never expands.** The calendar tool passed
-   `"${YMIR_HOME:-$HOME/Documents/ymirhome}/bin/calendar-ask.sh"` to `bash` as an *argument*.
+   `"${YMIR_HOME:-$HOME/Documents/ymirhome}/bin/time/snotra/calendar-ask.sh"` to `bash` as an *argument*.
    Bash does not expand variables inside an argument it was handed, so **that tool had never once
    reached the calendar on any seat** — and nothing noticed, because a broken tool and an absent
    tool look identical from outside.
 2. **Five extensions carried a hardcoded `/home/heimdall/ymir`.** Rule 07, introduced by me. The
    contract now: `YMIR_ROOT`, else the root `bin/seat/valknut-load.sh` records in
    `~/.pi/agent/extensions/.ymir-root` — **the first recorded root that really holds
-   `bin/syn-watch-arm.sh`**, else a loud failure naming the fix. Note the pointer lives *inside*
+   `bin/pi/syn-watch-arm.sh`**, else a loud failure naming the fix. Note the pointer lives *inside*
    `extensions/`, and a root may be a **list**: a worktree seat is recorded beside the main one,
    and only the entry that holds the house is used.
 3. **`join` imported from `node:fs`.** A type-stripping parser and esbuild both accept it; only
@@ -1246,7 +1246,7 @@ lives in the operator's vault at `hodd/docs/developer-setup/pi-extension-api.md`
 
 | gate | refuses |
 |---|---|
-| `bin/extension-api-check.sh` | `handler:` **inside a `registerTool` block** (commands and `pi.on` handlers legitimately take `handler`), an `execute` whose first parameter is `args`, and any `return { output: … }` |
+| `bin/gates/checks/extension-api-check.sh` | `handler:` **inside a `registerTool` block** (commands and `pi.on` handlers legitimately take `handler`), an `execute` whose first parameter is `args`, and any `return { output: … }` |
 | `tools/extension-smoke.mjs` | a tool that is **not callable**, or returns no `content[]` — called as `execute(toolCallId, params, signal, onUpdate, ctx)`, i.e. **the harness's own convention** |
 
 Current state: **26 tools called, 0 broken**, 2 skipped and *said to be skipped* because bare node
@@ -1264,7 +1264,7 @@ exists because a change under a governed path is incomplete until its asset says
 | door | was | now |
 |---|---|---|
 | the Pi extension surface | a loose set of files | one tree, resolvable — `YMIR_EXT_SRC` overrides it |
-| the tool-API gate | `bin/extension-api-check.sh` | `bin/gates/checks/extension-api-check.sh` |
+| the tool-API gate | `bin/gates/checks/extension-api-check.sh` | `bin/gates/checks/extension-api-check.sh` |
 | the calling-convention smoke | `tools/extension-smoke.mjs` | unchanged; it resolves the shelf, not a path |
 
 **The rule this move taught, twice:** a door that resolves the repository from `$0` by counting

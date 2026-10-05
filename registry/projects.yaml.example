@@ -13,6 +13,6 @@
 #     posture: local-only
 #     git: { host: github.com, owner: <you>, repo: my-project, remote: origin, default_branch: main, auth: gh }
 #
-# DEPRECATED: `workspace:` still resolves wherever `realm:` does — bin/registry-lib.sh
+# DEPRECATED: `workspace:` still resolves wherever `realm:` does — bin/skuld/registry-lib.sh
 # reads both and names the old key out loud — but the row should be renamed.
 projects: []

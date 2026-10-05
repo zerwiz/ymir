@@ -18,8 +18,8 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 TMP_ROOT=$(fm_test_tmproot fm-procevent-when-tests)
 export FM_PROCEVENT_CLAIM_ROOT="$TMP_ROOT/claims"
 
-pe()   { FM_HOME="$1" "$ROOT/bin/fm-procevent.sh" "${@:2}"; }
-when() { FM_HOME="$1" "$ROOT/bin/fm-procevent-when.sh" "${@:2}"; }
+pe()   { FM_HOME="$1" "$ROOT/bin/backend/fm-procevent.sh" "${@:2}"; }
+when() { FM_HOME="$1" "$ROOT/bin/backend/fm-procevent-when.sh" "${@:2}"; }
 
 # Every home this suite arms is tracked so teardown can stop any runner still
 # blocked on a condition that never fires.
@@ -31,7 +31,7 @@ when_teardown() {
       *$'\n'"$home"$'\n'*) continue ;;
     esac
     seen+="$home"$'\n'
-    FM_HOME="$home" "$ROOT/bin/fm-procevent.sh" sweep-home >/dev/null 2>&1 || true
+    FM_HOME="$home" "$ROOT/bin/backend/fm-procevent.sh" sweep-home >/dev/null 2>&1 || true
   done
   fm_test_cleanup
 }
@@ -102,7 +102,7 @@ assert_present "$H/state/when/when-arm-test.spec" "arm writes the private spec"
 assert_present "$H/state/when/when-arm-test.trust" "arm writes the trust binding"
 assert_present "$H/state/procevent/when-arm-test.source" "arm registers the process-event source"
 mode=$(PATH="${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" bash -c \
-  '. "$1/bin/fm-pr-lib.sh"; fm_pr_file_mode "$2"' _ "$ROOT" "$H/state/when/when-arm-test.spec")
+  '. "$1/bin/backend/fm-pr-lib.sh"; fm_pr_file_mode "$2"' _ "$ROOT" "$H/state/when/when-arm-test.spec")
 assert_contains "$mode" 600 "the spec is private"
 if when "$H" arm arm-test --condition true --action true 2>"$TMP_ROOT/dup.err"; then
   fail "re-arming an existing watch must be refused"

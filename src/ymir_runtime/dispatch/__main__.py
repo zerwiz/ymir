@@ -140,7 +140,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--kind", default="ship", choices=("ship", "scout"))
     parser.add_argument("--effort", default="")
     parser.add_argument("--isolation", default="", choices=("", "herdr", "utgard"))
-    parser.add_argument("--request", default="", help="a model request resolved by bin/model-resolve.sh")
+    parser.add_argument("--request", default="", help="a model request resolved by bin/model/model-resolve.sh")
     parser.add_argument("--root", default="", help="the code tree holding .agents/roles.yaml (tests)")
     parser.add_argument("--toon", action="store_true")
     return parser

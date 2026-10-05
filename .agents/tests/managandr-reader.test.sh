@@ -18,7 +18,7 @@ set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 READER="$ROOT/tools/calendar/reader.mjs"
-DOOR="$ROOT/bin/calendar-ask.sh"
+DOOR="$ROOT/bin/time/snotra/calendar-ask.sh"
 FIX="$ROOT/.agents/tests/assets/managandr-google-events.json"
 
 fail=0

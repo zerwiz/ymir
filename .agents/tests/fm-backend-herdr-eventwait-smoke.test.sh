@@ -43,7 +43,7 @@ fm_herdr_lab_prepare "$SESSION" || fail "could not prepare the isolated Herdr la
 # The dispatcher is a separately linted production boundary. Its dynamic
 # adapter source edges stop at each independently linted canonical adapter.
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 fm_backend_source herdr || fail "fm_backend_source herdr failed"
 
 HERDR_VERSION=$(herdr --version 2>/dev/null | head -1)

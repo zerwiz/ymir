@@ -11,10 +11,10 @@ The install no longer asks with a recited paragraph — it prints a plan **probe
 this host**, one row per step, each with its state and the reason for it.
 
 ```bash
-bin/ymir-plan.sh                # the plan (TOON)
-bin/ymir-plan.sh --blocked      # only what cannot proceed, and why
-bin/ymir-plan.sh --json         # for automation
-bin/ymir-install.sh --plan      # the same, through the installer's door
+bin/bridge/ymir-plan.sh                # the plan (TOON)
+bin/bridge/ymir-plan.sh --blocked      # only what cannot proceed, and why
+bin/bridge/ymir-plan.sh --json         # for automation
+bin/engine/ymir-install.sh --plan      # the same, through the installer's door
 ```
 
 ```
@@ -46,7 +46,7 @@ Resolution order, always through `bin/vault/hoard-lib.sh`:
 To move an existing home to a new place, re-run the install with the new value:
 
 ```bash
-YMIR_HOME=/path/to/new-home bin/ymir-install.sh
+YMIR_HOME=/path/to/new-home bin/engine/ymir-install.sh
 ```
 
 ## The doors — what the operator types afterwards
@@ -67,13 +67,13 @@ ymir mimir · sense · plan
 ## Both shapes — a clone and an npm install
 
 The operator may have cloned the tree or installed the package; the scripts must
-not care. `bin/app-lib.sh` resolves a surface either way (`apps/<surface>`, else
+not care. `bin/seat/sessrumnir/app-lib.sh` resolves a surface either way (`apps/<surface>`, else
 `node_modules/@zerwiz/<package>`), `bin/desktop/smidja-lib.sh` resolves the smithy, and
 `bin/desktop/electron-lib.sh` verifies a shell's runtime. To exercise the *other* shape
 without a second machine:
 
 ```bash
-YMIR_ROOT_DIR=/path/to/an/npm/@zerwiz/ymir bash bin/app-lib.sh   # resolve against it
+YMIR_ROOT_DIR=/path/to/an/npm/@zerwiz/ymir bash bin/seat/sessrumnir/app-lib.sh   # resolve against it
 ```
 
 That variable is how a resolver is tested against a package from a clone.

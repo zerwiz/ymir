@@ -35,5 +35,5 @@ Three faults met in one release (0.1.50 → 0.1.52), each able to drown a publis
   their staging.
 
 ### Verify
-`bin/npm-pretest.sh` (local leg) packed the exact 0.1.52 tarball, checked the hull
+`bin/forge/npm/npm-pretest.sh` (local leg) packed the exact 0.1.52 tarball, checked the hull
 inside it, sandbox-installed it, and smoked the installed essence — PASS.

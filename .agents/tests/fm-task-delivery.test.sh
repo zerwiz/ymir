@@ -17,8 +17,8 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-SPAWN="$ROOT/bin/fm-spawn.sh"
-BRIEF="$ROOT/bin/fm-brief.sh"
+SPAWN="$ROOT/bin/backend/fm-spawn.sh"
+BRIEF="$ROOT/bin/backend/fm-brief.sh"
 PROMOTE="$ROOT/bin/fm-promote.sh"
 PROJECT_MODE="$ROOT/bin/fm-project-mode.sh"
 TMP_ROOT=$(fm_test_tmproot fm-task-delivery)
@@ -301,12 +301,12 @@ test_promotion_delivers_the_real_definition_of_done() {
   home="$TMP_ROOT/promote-dod/home"
   sendroot="$TMP_ROOT/promote-dod/sendroot"
   mkdir -p "$home/state" "$sendroot/bin"
-  cat > "$sendroot/bin/fm-send.sh" <<'STUB'
+  cat > "$sendroot/bin/backend/fm-send.sh" <<'STUB'
 #!/usr/bin/env bash
 # Capture the message a promoted worker would receive, instead of steering one.
 printf '%s' "$2" > "$FM_TEST_CAPTURE"
 STUB
-  chmod +x "$sendroot/bin/fm-send.sh"
+  chmod +x "$sendroot/bin/backend/fm-send.sh"
 
   for mode in no-mistakes direct-PR local-only; do
     id="promote-dod-$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"

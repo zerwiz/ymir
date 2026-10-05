@@ -24,7 +24,7 @@ the seat.
 Two support modules own behaviour the doors used to carry themselves:
 `watch.py` is Sýn — the standing arm's lease, heartbeat, verdict, and raise
 grammar — and `landed.py` is the teardown gate, so a worktree is never removed
-while its work has not landed. Both are reached through `bin/syn-watch.sh` and
+while its work has not landed. Both are reached through `bin/pi/syn-watch.sh` and
 `stop --require-landed`.
 
 Plan 58, Phase 1. Read `docs/fixes/runtime/` for what each release changed.

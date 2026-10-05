@@ -8,7 +8,7 @@
   behaved as though every machine were the same machine. That gap is what let a
   dev box run the record jobs, a hand-placed server file pass unnoticed, and 8
   seat schedulers leak.
-- **Fix (Phase 0 of plan 51):** `bin/topology.sh` — a sensor that reports, and
+- **Fix (Phase 0 of plan 51):** `bin/fleet/topology.sh` — a sensor that reports, and
   changes nothing:
   - **host · roles · shape · heart · link · journal**, from ONE registry
     (`$YMIR_HOME/hodd/data/fleet.json`, one row per machine, read by hostname) plus
@@ -31,7 +31,7 @@
 - `smoke_test.sh` — **exit 0**, no FAILs.
 
 ### Files
-- `bin/topology.sh`
+- `bin/fleet/topology.sh`
 - `config/fleet.json.example`
 - `.agents/tests/topology.test.sh`
 - `.agents/skills/lifecycle/smoke_test.sh`

@@ -103,12 +103,12 @@ needs no key, no account, and no signed-in browser. This is the road to reach fo
 first; the Pi harness's own YouTube mode needs `GEMINI_API_KEY` or a
 signed-in Chromium, so it fails closed on a bare box.
 
-**The tool is `bin/yt-transcript.sh`** — one command, all three reads:
+**The tool is `bin/agents/yt-transcript.sh`** — one command, all three reads:
 
 ```sh
-bin/yt-transcript.sh <url>                 # metadata + description + transcript
-bin/yt-transcript.sh <url> --meta          # metadata + description only
-bin/yt-transcript.sh <url> --out DIR       # where the transcript lands (default /tmp)
+bin/agents/yt-transcript.sh <url>                 # metadata + description + transcript
+bin/agents/yt-transcript.sh <url> --meta          # metadata + description only
+bin/agents/yt-transcript.sh <url> --out DIR       # where the transcript lands (default /tmp)
 ```
 
 It exits **3** when the captions are refused but the metadata was read — partial

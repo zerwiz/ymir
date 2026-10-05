@@ -4,14 +4,14 @@
 # THIS file is the WIRING: which role summons which figure, what the role does,
 # the words that summon it, and the tools the figure holds at hand. It is DATA,
 # read by the doors — `bin/agents/eindri-role.sh` (the chooser) and
-# `bin/agents-config.sh roster` (the resolved roster) — so no script re-declares
+# `bin/fleet/agents-config.sh roster` (the resolved roster) — so no script re-declares
 # a role in code.
 #
 # WHAT MODEL: never here, and never in a figure card. The model is resolved from
 # the hoard (`$YMIR_HOME/config/agents.yaml`, with the per-host overlay) BY
 # FIGURE NAME at dispatch:
 #
-#   bin/agents-config.sh get <figure> model
+#   bin/fleet/agents-config.sh get <figure> model
 #
 # The public tree carries no model for hardware it has never seen (Rule 04,
 # plan 56; plan 58 Phase 4).

@@ -47,7 +47,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-control.sh","fm-control.sh - the CONTROL PLANE for a firstmate-owned agent: allowlisted","provenance","tested","keep",8,879
   "fm-crew-state.sh","fm-crew-state.sh - deterministic read of a crew's CURRENT state.","provenance","tested","keep",13,626
   "fm-cursor-lib.sh","Cursor executable resolution and Cursor process identity.","provenance","tested","keep",6,244
-  "fm-decision-hold.sh","fm-decision-hold.sh - transitional compatibility shim over bin/fm-captain-hold.sh.","provenance","tested","keep",4,233
+  "fm-decision-hold.sh","fm-decision-hold.sh - transitional compatibility shim over bin/backend/fm-captain-hold.sh.","provenance","tested","keep",4,233
   "fm-doc-audience-check.sh","fm-doc-audience-check.sh - validate the tracked documentation audience inventory.","provenance","tested","keep",2,270
   "fm-dod-lib.sh","Single owner of a ship task's mode-specific 'Definition of done' block.","provenance","wired","keep",3,68
   "fm-ensure-agents-md.sh","Ensure a project worktree follows the agent-memory file convention.","provenance","tested","keep",4,254
@@ -112,7 +112,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-quota-choose.sh","Choose the first quota-eligible candidate from a ranked list.","provenance","tested","keep",3,385
   "fm-remote-delta-read.sh","Blocking, non-destructive delta read for a remote secondmate append-only log.","provenance","tested","keep",4,190
   "fm-remote-doctor.sh","Check, and optionally repair, one remote account's second-mate readiness.","provenance","tested","keep",9,801
-  "fm-remote-entrypoint.sh","Fixed remote entrypoint for bin/fm-on.sh.","provenance","tested","keep",5,194
+  "fm-remote-entrypoint.sh","Fixed remote entrypoint for bin/backend/fm-on.sh.","provenance","tested","keep",5,194
   "fm-remote-file.sh","Path-confined remote file transfer for fm-on.sh.","provenance","tested","keep",5,235
   "fm-remote-home-provision.sh","Provision the FM_HOME selected by the fixed remote entrypoint.","provenance","tested","keep",4,260
   "fm-remote-home-seed.sh","Register and provision a whole secondmate home on an SSH-reachable host.","provenance","tested","keep",3,260

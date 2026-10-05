@@ -26,12 +26,12 @@ Never use raw `git worktree` commands directly.
 
 | Operation | Command |
 |-----------|---------|
-| Create worktree | `bin/yggdrasil.sh create <branch>` |
-| List worktrees | `bin/yggdrasil.sh list` |
-| Remove worktree | `bin/yggdrasil.sh remove <branch>` |
-| Sync worktree | `bin/yggdrasil.sh sync <branch>` |
+| Create worktree | `bin/forge/yggdrasil.sh create <branch>` |
+| List worktrees | `bin/forge/yggdrasil.sh list` |
+| Remove worktree | `bin/forge/yggdrasil.sh remove <branch>` |
+| Sync worktree | `bin/forge/yggdrasil.sh sync <branch>` |
 
-The `bin/yggdrasil.sh` script is the Norse shell over the treehouse engine.
+The `bin/forge/yggdrasil.sh` script is the Norse shell over the treehouse engine.
 It handles:
 - Branch creation from correct base
 - Worktree path management under `.yggdrasil/<agent-id>/`
@@ -46,26 +46,26 @@ Never run untrusted code on the host.
 
 | Operation | Command |
 |-----------|---------|
-| Spawn sandbox | `bin/utgard.sh spawn <profile>` |
-| Run in sandbox | `bin/utgard.sh run <profile> <cmd>` |
-| Destroy sandbox | `bin/utgard.sh destroy <id>` |
+| Spawn sandbox | `bin/forge/utgard.sh spawn <profile>` |
+| Run in sandbox | `bin/forge/utgard.sh run <profile> <cmd>` |
+| Destroy sandbox | `bin/forge/utgard.sh destroy <id>` |
 
 Utgard enforces: CPU/RAM/timeout caps, no host root, no network by default.
 A failed Utgard execution never touches main.
 
 ## 08.4 Enforcement
 
-- **Pre-push hook** (installed by `bin/ymir-install.sh`) rejects direct pushes
+- **Pre-push hook** (installed by `bin/engine/ymir-install.sh`) rejects direct pushes
   to protected branches
 - **CI gate** (`.no-mistakes.yaml` + `no-mistakes` skill) validates PRs before
   merge
-- **Mjollnir pipeline** (`bin/mjollnir.sh`) automates issue → worktree → PR
+- **Mjollnir pipeline** (`bin/forge/mjollnir.sh`) automates issue → worktree → PR
 
 ## 08.5 References
 
-- `bin/yggdrasil.sh` — treehouse wrapper
-- `bin/utgard.sh` — sandcastle wrapper
-- `bin/mjollnir.sh` — issue→PR pipeline
+- `bin/forge/yggdrasil.sh` — treehouse wrapper
+- `bin/forge/utgard.sh` — sandcastle wrapper
+- `bin/forge/mjollnir.sh` — issue→PR pipeline
 - `.no-mistakes.yaml` — clean-PR gate config
 - `RULES/02-agents.md` — agents are canonical, harness dirs are symlinks
 - `RULES/05-platforms.md` — core portable, per-OS layers updated together

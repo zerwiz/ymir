@@ -1,7 +1,7 @@
 {
   "version": 1,
   "platform": "ymir",
-  "notes": "TEMPLATE \u2014 copy to $YMIR_HOME/hodd/config/eindri-dispatch.json and fill in YOUR models. Brokk reads these rules before dispatching an Eindri and passes only concrete --harness/--model/--effort flags to bin/einherjar-spawn.sh. Model tokens must match a model your harness can run on your host, or be omitted to use the harness default. effort values: low|medium|high|xhigh|max.",
+  "notes": "TEMPLATE \u2014 copy to $YMIR_HOME/hodd/config/eindri-dispatch.json and fill in YOUR models. Brokk reads these rules before dispatching an Eindri and passes only concrete --harness/--model/--effort flags to bin/agents/einherjar-spawn.sh. Model tokens must match a model your harness can run on your host, or be omitted to use the harness default. effort values: low|medium|high|xhigh|max.",
   "rules": [
     {
       "when": "General implementation, refactoring, or bug fixes in a codebase",
@@ -50,11 +50,11 @@
       "when": "The Allfather names a model, a family/quant, or a locality (local/online)",
       "use": [
         {
-          "resolve": "bin/model-resolve.sh resolve \"<request>\"",
+          "resolve": "bin/model/model-resolve.sh resolve \"<request>\"",
           "then": "pass the returned --harness/--model to bin/agents/einherjar-spawn.sh"
         }
       ],
-      "why": "Resolve a friendly request to an exact servable id: local -> pi, online -> opencode. If it returns unresolved (or the requested quant is unavailable, e.g. 'iq2' -> nearest), ASK the Allfather with ask_user_question; never guess. Local runs are serialized by bin/local-model-lock.sh."
+      "why": "Resolve a friendly request to an exact servable id: local -> pi, online -> opencode. If it returns unresolved (or the requested quant is unavailable, e.g. 'iq2' -> nearest), ASK the Allfather with ask_user_question; never guess. Local runs are serialized by bin/model/local-model-lock.sh."
     }
   ],
   "default": [

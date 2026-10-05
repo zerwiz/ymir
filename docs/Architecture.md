@@ -169,10 +169,10 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
   behind — app-local, the nearest ancestor hoist (workspace root), the sibling
   package — and every guard returns *failure* when nothing resolves. The
   first-run install is workspace-aware (a member's local `node_modules` would
-  be reconciled away). `bin/desktop-verify.sh` proves each surface runs
+  be reconciled away). `bin/seat/sessrumnir/desktop-verify.sh` proves each surface runs
   (`--version`) and is routed right: the class invariant — `app_class` ==
   `.desktop` StartupWMClass == window rule == the app's own slug.
-  `bin/graphics-lib.sh` classifies the DRM devices and decides the GPU policy
+  `bin/host/graphics-lib.sh` classifies the DRM devices and decides the GPU policy
   (software render on a fragile hybrid; `YMIR_DESKTOP_DISABLE_GPU` overrides).
 - **The Cron gate shows local AND server schedules.** `/api/cron` reads the
   scheduler's OWN config (`$YMIR_HOME/config/cron.yaml`), reporting
@@ -296,8 +296,8 @@ THE RECORD (store/serve)  the heart — minutes in the vault, synced by the home
                           road, the read-only MCP face served there.
 ```
 
-- **Snotra** — the meeting ear (plan 52). `bin/snotra-capture.sh` records mic +
-  system audio via PipeWire (no virtual loopback device); `bin/snotra-transcribe.sh`
+- **Snotra** — the meeting ear (plan 52). `bin/time/snotra/snotra-capture.sh` records mic +
+  system audio via PipeWire (no virtual loopback device); `bin/time/snotra/snotra-transcribe.sh`
   discovers the seat's whisper engine (env → PATH → build trees → `voxtype`),
   normalises to 16 kHz mono, and writes Markdown minutes under
   `$YMIR_HOME/hodd/life/meetings/` with a Rune per meeting. Minutes are
@@ -313,16 +313,16 @@ THE RECORD (store/serve)  the heart — minutes in the vault, synced by the home
 - **The engine is per-seat** (open-source-first, no duplicate vendored): heimdall
   and whynot carry CUDA whisper.cpp builds; omarchy's `voxtype` already bundles
   whisper (models + a full `meeting` mode) and gained `extra/whisper-cpp` only for
-  a uniform CLI. `bin/snotra-ensure.sh` reports and installs per-OS; the
-  `snotra` step of `bin/ymir-install.sh` and the `snotra` surface of
-  `bin/eir-doctor.sh` keep a fresh seat whole.
+  a uniform CLI. `bin/time/snotra/snotra-ensure.sh` reports and installs per-OS; the
+  `snotra` step of `bin/engine/ymir-install.sh` and the `snotra` surface of
+  `bin/agents/eir-doctor.sh` keep a fresh seat whole.
 - **First Law:** audio and transcripts are private data — the hoard, never the
   repo. The repo carries the wiring, never a recording, a name, or a minute.
 
 ### 3.14 The shelf-sweeper — the operator's documents, found and filed (plan 63)
 
 Documents do not stay in the vault: they end up loose beside it, named for nothing.
-`bin/doc-sweep.sh` is the tool that reads that pile and says where each thing
+`bin/gates/doc-sweep.sh` is the tool that reads that pile and says where each thing
 belongs — and refuses to act on its own judgement.
 
 - **`scan` is a report, never a move.** It classifies by evidence, in this order: a
@@ -539,7 +539,7 @@ failsafe (`bin/agents/eindri-handoff.sh`) read different shelves.
   or `HH:MM @heart <cmd>`. **Both orders parse** (the 2026-09-24 fault: only the
   after-time shape matched, so every role-first line silently never ran).
 - The scheduler runs only the jobs this machine's roles own; roles resolve from
-  `bin/topology.sh` / `$YMIR_HOME/hodd/data/fleet.json`.
+  `bin/fleet/topology.sh` / `$YMIR_HOME/hodd/data/fleet.json`.
 - **Record jobs ride the heart** (git-sync · memory housekeeping · daily briefing ·
   observer); model and bench crons ride the **forge** where the GPU is; a dev body
   runs only its own session jobs.
@@ -560,7 +560,7 @@ topology[5]{machine,role,why}:
 
 Roles are **data** — a machine may carry two (`heart+forge` on whynot before the
 move). Nothing starts at boot: Sága stage 7 raises the loop, and the scheduler
-binds to the machine's role, not a session. `bin/topology.sh` reports the live
+binds to the machine's role, not a session. `bin/fleet/topology.sh` reports the live
 shape — `single` | `connected` | `detached` — and changes nothing.
 
 ### A.6 Corrections to this draft (append, never rewrite)

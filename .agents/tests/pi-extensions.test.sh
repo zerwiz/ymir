@@ -178,24 +178,24 @@ done
 # ── 7. the root pointer resolves, and validation is what saves it ────────────
 ptr="$HOME_EXT/.ymir-root"
 if [ -f "$ptr" ]; then
-  if grep -q 'bin/syn-watch-arm.sh' "${ptr%%$'\n'*}"; then :; fi
+  if grep -q 'bin/pi/syn-watch-arm.sh' "${ptr%%$'\n'*}"; then :; fi
   first_valid=""
   while IFS= read -r line; do
     [ -n "$line" ] || continue
-    if [ -x "$line/bin/syn-watch-arm.sh" ]; then first_valid="$line"; break; fi
+    if [ -x "$line/bin/pi/syn-watch-arm.sh" ]; then first_valid="$line"; break; fi
   done <"$ptr"
   if [ -n "$first_valid" ]; then
     ok "the first VALID root in .ymir-root resolves ($first_valid)"
     # Stale roots are SKIPPED by validation (ymir-home.ts checks each against
-    # bin/syn-watch-arm.sh), so they are hygiene and not a failure — reported so
+    # bin/pi/syn-watch-arm.sh), so they are hygiene and not a failure — reported so
     # the record does not quietly grow.
     dead=$(while IFS= read -r line; do
             [ -n "$line" ] || continue
-            [ -x "$line/bin/syn-watch-arm.sh" ] || echo x
+            [ -x "$line/bin/pi/syn-watch-arm.sh" ] || echo x
           done <"$ptr" | wc -l | tr -d ' ')
     [ "$dead" -gt 0 ] && printf '# note: %s stale root(s) in .ymir-root — skipped by validation, not a failure\n' "$dead"
   else
-    bad "no recorded root holds bin/syn-watch-arm.sh — deployed extensions cannot find their bin/"
+    bad "no recorded root holds bin/pi/syn-watch-arm.sh — deployed extensions cannot find their bin/"
   fi
 else
   ok "no .ymir-root record (nothing deployed yet)"

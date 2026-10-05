@@ -29,5 +29,5 @@ Changes made by Ymir beyond the upstream source:
   - Added the Sessrúmnir built-in theme (Ymir way-of palette: sky #38bdf8 on
     deep navy) and made it the default.
   - Replaced the Pi logo asset with the Sessrúmnir Sowilo rune mark.
-  - Added bin/sessrumnir.sh and bin/sessrumnir-ensure.sh and wired the app into
-    bin/ymir-install.sh.
+  - Added bin/desktop/sessrumnir.sh and bin/seat/sessrumnir/sessrumnir-ensure.sh and wired the app into
+    bin/engine/ymir-install.sh.

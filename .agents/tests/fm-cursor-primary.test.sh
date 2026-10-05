@@ -94,12 +94,12 @@ make_primary_dir() {
   printf '%s\n' "$dir"
 }
 
-# An arm fixture standing in for bin/fm-watch-arm.sh. Real process, real output.
+# An arm fixture standing in for bin/backend/fm-watch-arm.sh. Real process, real output.
 write_arm_fixture() {  # <dir> <kind>
   local dir=$1 kind=$2
   case "$kind" in
     actionable)
-      cat > "$dir/bin/fm-watch-arm.sh" <<'SH'
+      cat > "$dir/bin/backend/fm-watch-arm.sh" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$$" >> "$FM_HOME/state/arm-ran"
 printf 'watcher: started pid=%s (beacon fresh)\n' "$$"
@@ -108,7 +108,7 @@ exit 0
 SH
       ;;
     failed)
-      cat > "$dir/bin/fm-watch-arm.sh" <<'SH'
+      cat > "$dir/bin/backend/fm-watch-arm.sh" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$$" >> "$FM_HOME/state/arm-ran"
 printf 'watcher: FAILED - no live watcher with a fresh beacon\n'
@@ -118,7 +118,7 @@ SH
     switchable)
       # Slow until state/arm-fast appears, so a second invocation can be made
       # fast WITHOUT rewriting a script the first one is still executing.
-      cat > "$dir/bin/fm-watch-arm.sh" <<'SH'
+      cat > "$dir/bin/backend/fm-watch-arm.sh" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$$" >> "$FM_HOME/state/arm-ran"
 if [ -e "$FM_HOME/state/arm-fast" ]; then
@@ -131,7 +131,7 @@ exit 0
 SH
       ;;
   esac
-  chmod +x "$dir/bin/fm-watch-arm.sh"
+  chmod +x "$dir/bin/backend/fm-watch-arm.sh"
 }
 
 # The park's child body: claim the home lock as this fake harness process, then
@@ -175,7 +175,7 @@ kind_of_followup() {  # <json> -> the operational kind
   local body
   body=$(followup_of "$1")
   [ -n "$body" ] || return 1
-  printf '%s' "$body" | "$ROOT/bin/fm-operational-input.sh" kind
+  printf '%s' "$body" | "$ROOT/bin/backend/fm-operational-input.sh" kind
 }
 
 # --- HOST GUARD --------------------------------------------------------------
@@ -184,10 +184,10 @@ test_turnend_guard_stands_down_on_cursor_payload() {
   local dir out status
   dir=$(make_primary_dir "$TMP_ROOT/host-turnend")
   : > "$dir/state/task1.meta"
-  out=$(printf '%s' "$CURSOR_PAYLOAD" | bash "$dir/bin/fm-turnend-guard.sh" 2>&1); status=$?
+  out=$(printf '%s' "$CURSOR_PAYLOAD" | bash "$dir/bin/backend/fm-turnend-guard.sh" 2>&1); status=$?
   expect_code 0 "$status" "a Cursor-delivered Stop payload must not block through the Claude-settings duplicate"
   [ -z "$out" ] || fail "duplicate entry produced output: $out"
-  out=$(printf '%s' "$CURSOR_PAYLOAD" | bash "$dir/bin/fm-turnend-guard.sh" --cursor 2>&1); status=$?
+  out=$(printf '%s' "$CURSOR_PAYLOAD" | bash "$dir/bin/backend/fm-turnend-guard.sh" --cursor 2>&1); status=$?
   expect_code 2 "$status" "--cursor must let Cursor's own adapter reach the shared block decision"
   case "$out" in *'TURN WOULD END BLIND'*) ;; *) fail "expected the shared banner, got: $out" ;; esac
   pass "fm-turnend-guard: Cursor payload is inert without --cursor and blocks with it"
@@ -197,7 +197,7 @@ test_turnend_guard_still_blocks_for_claude_payload() {
   local dir status
   dir=$(make_primary_dir "$TMP_ROOT/host-claude")
   : > "$dir/state/task1.meta"
-  printf '%s' "$CLAUDE_STOP_PAYLOAD" | bash "$dir/bin/fm-turnend-guard.sh" >/dev/null 2>&1
+  printf '%s' "$CLAUDE_STOP_PAYLOAD" | bash "$dir/bin/backend/fm-turnend-guard.sh" >/dev/null 2>&1
   status=$?
   expect_code 2 "$status" "the host guard must not disturb a genuine Claude Stop payload"
   pass "fm-turnend-guard: a non-Cursor payload keeps blocking"
@@ -221,12 +221,12 @@ test_autoarm_stands_down_on_cursor_payload() {
 test_sessionstart_run_stands_down_on_cursor_payload() {
   local dir out
   dir=$(make_primary_dir "$TMP_ROOT/host-sessionstart")
-  cat > "$dir/bin/fm-session-start.sh" <<'SH'
+  cat > "$dir/bin/backend/fm-session-start.sh" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$$" >> "$FM_HOME/state/digest-ran"
 printf 'DIGEST BODY\n'
 SH
-  chmod +x "$dir/bin/fm-session-start.sh"
+  chmod +x "$dir/bin/backend/fm-session-start.sh"
   out=$(printf '%s' "$CURSOR_PAYLOAD" | FM_HOME="$dir" bash "$dir/bin/fm-sessionstart-run.sh" 2>&1)
   [ -z "$out" ] || fail "the run wrapper emitted a digest for the Cursor duplicate: $out"
   [ ! -e "$dir/state/digest-ran" ] || fail "the run wrapper took the helm twice under Cursor"
@@ -239,11 +239,11 @@ test_pretool_guards_deduplicate_and_render_cursor_deny() {
   local dir payload out status decision
   dir=$(make_primary_dir "$TMP_ROOT/host-pretool")
   payload='{"tool_name":"Shell","tool_input":{"command":"bin/backend/fm-watch-arm.sh &"},"cursor_version":"2026.08.11-e8db854"}'
-  out=$(printf '%s' "$payload" | bash "$dir/bin/fm-arm-pretool-check.sh" 2>&1); status=$?
+  out=$(printf '%s' "$payload" | bash "$dir/bin/backend/fm-arm-pretool-check.sh" 2>&1); status=$?
   expect_code 0 "$status" "the Claude-settings duplicate must allow under Cursor"
   [ -z "$out" ] || fail "duplicate pretool entry produced output: $out"
 
-  out=$(printf '%s' "$payload" | bash "$dir/bin/fm-arm-pretool-check.sh" --cursor 2>/dev/null); status=$?
+  out=$(printf '%s' "$payload" | bash "$dir/bin/backend/fm-arm-pretool-check.sh" --cursor 2>/dev/null); status=$?
   expect_code 0 "$status" "Cursor reads the decision object, so the deny path exits 0"
   decision=$(printf '%s' "$out" | jq -r '.permission // empty' 2>/dev/null)
   [ "$decision" = deny ] || fail "expected a Cursor deny object on stdout, got: $out"
@@ -256,10 +256,10 @@ test_cd_guard_renders_cursor_deny() {
   local dir payload out decision
   dir=$(make_primary_dir "$TMP_ROOT/host-cd")
   payload='{"tool_name":"Shell","tool_input":{"command":"cd projects/example"},"cursor_version":"2026.08.11-e8db854"}'
-  out=$(printf '%s' "$payload" | FM_HOME="$dir" bash "$dir/bin/fm-cd-pretool-check.sh" --cursor 2>/dev/null)
+  out=$(printf '%s' "$payload" | FM_HOME="$dir" bash "$dir/bin/backend/fm-cd-pretool-check.sh" --cursor 2>/dev/null)
   decision=$(printf '%s' "$out" | jq -r '.permission // empty' 2>/dev/null)
   [ "$decision" = deny ] || fail "expected a Cursor deny object from the cd guard, got: $out"
-  out=$(printf '%s' "$payload" | FM_HOME="$dir" bash "$dir/bin/fm-cd-pretool-check.sh" 2>&1)
+  out=$(printf '%s' "$payload" | FM_HOME="$dir" bash "$dir/bin/backend/fm-cd-pretool-check.sh" 2>&1)
   [ -z "$out" ] || fail "the cd guard's Claude-settings duplicate produced output under Cursor: $out"
   pass "fm-cd-pretool-check: Cursor duplicate allows, --cursor denies in Cursor's own shape"
 }
@@ -392,7 +392,7 @@ test_park_serializes_supersession_with_followup_commit() {
   : > "$dir/state/task1.meta"
   printf 'session=sess-cursor\ncount=1\n' > "$dir/state/.turnend-cursor-blocks"
   write_arm_fixture "$dir" actionable
-  cat >> "$dir/bin/fm-operational-input.sh" <<'SH'
+  cat >> "$dir/bin/backend/fm-operational-input.sh" <<'SH'
 fm_operational_input_encode() {
   local kind=${1-} body=${2-} result_var=${3-}
   [ -n "$result_var" ] && fm_operational_kind_is_current "$kind" && [ -n "$body" ] || return 2
@@ -429,7 +429,7 @@ test_superseded_park_does_not_consume_nag_budget() {
   dir=$(make_primary_dir "$TMP_ROOT/park-nag-supersede")
   : > "$dir/state/task1.meta"
   write_arm_fixture "$dir" failed
-  cat > "$dir/bin/fm-turnend-guard.sh" <<'SH'
+  cat > "$dir/bin/backend/fm-turnend-guard.sh" <<'SH'
 #!/usr/bin/env bash
 if ( set -C; : > "$FM_HOME/state/first-guard-entered" ) 2>/dev/null; then
   while [ ! -e "$FM_HOME/state/first-guard-release" ]; do sleep 0.05; done
@@ -437,7 +437,7 @@ fi
 printf 'fixture supervision failure\n' >&2
 exit 2
 SH
-  chmod +x "$dir/bin/fm-turnend-guard.sh"
+  chmod +x "$dir/bin/backend/fm-turnend-guard.sh"
   ( run_park "$dir" > "$dir/state/first-nag-out" ) &
   first_pid=$!
   waited=0
@@ -517,7 +517,7 @@ test_park_stands_down_when_away_mode_activates_before_commit() {
   : > "$dir/state/task1.meta"
   printf 'session=sess-cursor\ncount=1\n' > "$dir/state/.turnend-cursor-blocks"
   write_arm_fixture "$dir" actionable
-  cat >> "$dir/bin/fm-operational-input.sh" <<'SH'
+  cat >> "$dir/bin/backend/fm-operational-input.sh" <<'SH'
 fm_operational_input_encode() {
   local kind=${1-} body=${2-} result_var=${3-}
   [ -n "$result_var" ] && fm_operational_kind_is_current "$kind" && [ -n "$body" ] || return 2
@@ -608,12 +608,12 @@ test_park_ignores_malformed_payload() {
 # --- SESSION -----------------------------------------------------------------
 
 install_digest_fixture() {  # <dir>
-  cat > "$1/bin/fm-session-start.sh" <<'SH'
+  cat > "$1/bin/backend/fm-session-start.sh" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$FM_HOME/state/digest-args"
 printf 'FIRSTMATE DIGEST "quoted" line\nsecond line\n'
 SH
-  chmod +x "$1/bin/fm-session-start.sh"
+  chmod +x "$1/bin/backend/fm-session-start.sh"
 }
 
 test_sessionstart_emits_additional_context() {

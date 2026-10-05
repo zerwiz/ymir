@@ -5,14 +5,14 @@ import { fileURLToPath } from "node:url";
 
 const adapterRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
-// Cross-language adapter only. bin/rodd-operational-input.sh owns the protocol,
+// Cross-language adapter only. bin/agents/rodd-operational-input.sh owns the protocol,
 // accepted kinds, marker bytes, and serialization grammar.
 export function encodeRoddOperationalInput(root, kind, content) {
   return new Promise((resolveResult, reject) => {
-    const requested = `${root}/bin/rodd-operational-input.sh`;
+    const requested = `${root}/bin/agents/rodd-operational-input.sh`;
     const script = existsSync(requested)
       ? requested
-      : `${adapterRoot}/bin/rodd-operational-input.sh`;
+      : `${adapterRoot}/bin/agents/rodd-operational-input.sh`;
     const child = spawn(script, ["encode", kind], {
       stdio: ["pipe", "pipe", "pipe"],
     });

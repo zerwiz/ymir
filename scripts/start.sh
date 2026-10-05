@@ -35,11 +35,11 @@ case "${1-}" in
   --version)    printf 'ymir-start 1.0.0\n'; exit 0 ;;
 esac
 
-# --- portability shim: bin/ymir-platform.sh --------------------------------
+# --- portability shim: bin/fleet/ymir-platform.sh --------------------------------
 # One place knows the OS differences (readlink -f, /proc, setsid, stat, nproc).
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
   _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/fleet/ymir-platform.sh"; do
     [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
   done
   unset _ymir_dir _ymir_c
@@ -48,19 +48,19 @@ fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # bun installs to ~/.bun/bin and is often absent from a non-login PATH. Adopt it
 # once, here, so the gate API and the Smiðja visualizer are not needlessly
-# skipped — the installer already does this (bin/ymir-install.sh).
+# skipped — the installer already does this (bin/engine/ymir-install.sh).
 if ! command -v bun >/dev/null 2>&1 && [ -x "$HOME/.bun/bin/bun" ]; then
   PATH="$HOME/.bun/bin:$PATH"; export PATH
 fi
-# The cloth (bin/ymir-style.sh) — colour and words for the human watching.
-if [ -z "${YMIR_STYLE_LOADED:-}" ] && [ -r "$ROOT/bin/ymir-style.sh" ]; then
-  . "$ROOT/bin/ymir-style.sh"; YMIR_STYLE_LOADED=1; style_init
+# The cloth (bin/desktop/ymir-style.sh) — colour and words for the human watching.
+if [ -z "${YMIR_STYLE_LOADED:-}" ] && [ -r "$ROOT/bin/desktop/ymir-style.sh" ]; then
+  . "$ROOT/bin/desktop/ymir-style.sh"; YMIR_STYLE_LOADED=1; style_init
 fi
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/app-lib.sh).
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -107,7 +107,7 @@ LOG="$RUN/hlidskjalf.log"
 # Load the platform env once (Rule 04): the gate, the Bifrost bridge and Mimir
 # all read their credentials from .env.local — 0600, gitignored, never printed.
 # The bun gate reads process.env, and nothing loaded the file for it, so a
-# credential set by bin/ymir-setup-auth.sh never reached it — and the gate treats
+# credential set by bin/engine/ymir-setup-auth.sh never reached it — and the gate treats
 # an empty GATE_AUTH as "open". Loaded before the ports below so those may be
 # overridden from it too.
 if [ -r "$YMIR_ENV_FILE" ]; then
@@ -146,16 +146,16 @@ if [[ ! -d "$APP/node_modules" ]]; then
 echo "Installing dependencies…"
   (# Sessrúmnir — the seat-hall. Its own Electron app (not a browser surface), so it
 # rises here rather than with the SPA: four surfaces, one raise.
-if [ -x "$ROOT/bin/sessrumnir.sh" ]; then
+if [ -x "$ROOT/bin/desktop/sessrumnir.sh" ]; then
   if app_dir sessrumnir APP_SESSRUMNIR; then
-    if "$ROOT/bin/sessrumnir.sh" start >/dev/null 2>&1; then
+    if "$ROOT/bin/desktop/sessrumnir.sh" start >/dev/null 2>&1; then
       echo "Sessrúmnir — the seat-hall raised → (its own window)"
     else
-      echo "Sessrúmnir — the seat-hall did not rise (run: bin/sessrumnir.sh start)" >&2
+      echo "Sessrúmnir — the seat-hall did not rise (run: bin/desktop/sessrumnir.sh start)" >&2
     fi
   else
     echo "Sessrúmnir — NOT raised: the sessrumnir surface is missing from this install" >&2
-    echo "help: npm i -g @zerwiz/ymir (it is a dependency), or from a clone: bin/sessrumnir-ensure.sh install" >&2
+    echo "help: npm i -g @zerwiz/ymir (it is a dependency), or from a clone: bin/seat/sessrumnir/sessrumnir-ensure.sh install" >&2
   fi
 fi
 
@@ -168,7 +168,7 @@ fi
 # Raise the gate API (real runtime data) when bun is available. Demo mode works
 # without it; live data needs it.
 API_PORT="${HLIDSKJALF_API_PORT:-3889}"
-# The public hostnames the gate fronts (written by bin/gjallarhorn-expose.sh):
+# The public hostnames the gate fronts (written by bin/forge/gjallarhorn-expose.sh):
 # without them the gate cannot route a host to its app, and the login page for
 # that app would never be reached.
 [ -r "$YMIR_STATE_DIR/gjallarhorn-hosts.env" ] && . "$YMIR_STATE_DIR/gjallarhorn-hosts.env" && \

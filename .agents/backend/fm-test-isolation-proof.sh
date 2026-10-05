@@ -349,14 +349,14 @@ pool_candidates() {
       list_parallel_candidates
       ;;
     portable:0)
-      "$ROOT/bin/fm-test-run.sh" --list-scheduled --proven-isolated
+      "$ROOT/bin/backend/fm-test-run.sh" --list-scheduled --proven-isolated
       ;;
     *:1)
-      "$ROOT/bin/fm-test-run.sh" --list --family "$POOL" \
+      "$ROOT/bin/backend/fm-test-run.sh" --list --family "$POOL" \
         || die "--pool $POOL is not a known family (see bin/backend/fm-test-run.sh --list-families)"
       ;;
     *)
-      "$ROOT/bin/fm-test-run.sh" --list-scheduled --family "$POOL" \
+      "$ROOT/bin/backend/fm-test-run.sh" --list-scheduled --family "$POOL" \
         || die "--pool $POOL is not a known family (see bin/backend/fm-test-run.sh --list-families)"
       ;;
   esac
@@ -573,8 +573,8 @@ if [ -n "$JSON_PATH" ]; then
   sort -t$'\t' -k1,1 "$RECORDS" -o "$RECORDS"
   jobs_enabled=0
   jobs_max=0
-  if "$ROOT/bin/fm-test-run.sh" --list-concurrent-safe-families | grep -Fxq "$POOL"; then
-    jobs_max=$("$ROOT/bin/fm-test-run.sh" --concurrent-safe-family-jobs-max "$POOL")
+  if "$ROOT/bin/backend/fm-test-run.sh" --list-concurrent-safe-families | grep -Fxq "$POOL"; then
+    jobs_max=$("$ROOT/bin/backend/fm-test-run.sh" --concurrent-safe-family-jobs-max "$POOL")
   fi
   if [ "$AGG_RC" -eq 0 ] && [ "$JOBS" -gt 1 ] && [ "$JOBS" -le "$jobs_max" ]; then
     jobs_enabled=1

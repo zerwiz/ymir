@@ -51,7 +51,7 @@ hole, not a doc slip.
   pin: the hall's own origin answers `204` and is echoed (not `*`); a foreign
   origin is refused on the preflight (`403`, no `204`), on a READ, and on a
   WRITE; no answer carries `allow-private-network`.
-- **`bin/hall-snapshot.sh`** — writes the snapshot to `public/livehall.json` AND,
+- **`bin/time/snotra/hall-snapshot.sh`** — writes the snapshot to `public/livehall.json` AND,
   when the app carries a `dist/`, to `dist/livehall.json`. The clone is served by
   the request-time plugin (public/); the packaged seat is served by `vite preview`
   from `dist/`, where the job's write now lands. The served feed is the job's
@@ -69,7 +69,7 @@ hole, not a doc slip.
 ## Verified
 
 - `node --check tools/mcp-gateway/server.mjs`; `bash -n` on `bin/bridge/mcp-gateway.sh`,
-  `bin/hall-snapshot.sh`, `bin/time/nornir-job-hall-snapshot.sh`,
+  `bin/time/snotra/hall-snapshot.sh`, `bin/time/nornir-job-hall-snapshot.sh`,
   `.agents/tests/mcp-gateway.test.sh` — all green.
 - `.agents/tests/mcp-gateway.test.sh` — **ALL PASS**, 25 assertions. The new
   security assertions, live on a real gateway:
@@ -93,7 +93,7 @@ ok - an answered call carries the pinned origin
 
 ```
 before the job:  {"generated_at":"2026-09-25T05:00:37Z","stale":true}   (the bake)
-run: YMIR_ROOT_DIR=<fake root> bin/hall-snapshot.sh
+run: YMIR_ROOT_DIR=<fake root> bin/time/snotra/hall-snapshot.sh
 after the job:   generated_at: 2026-09-28T01:56:27Z | stale flag: None   (no rebuild, no restart)
 wrote:           apps/odrerir/public/livehall.json  AND  apps/odrerir/dist/livehall.json
 ```
@@ -119,7 +119,7 @@ overwrites that file on the seat, so the served feed is never the bake.
 
 - `tools/mcp-gateway/server.mjs` · `bin/bridge/mcp-gateway.sh`
 - `.agents/tests/mcp-gateway.test.sh`
-- `bin/hall-snapshot.sh` · `bin/time/nornir-job-hall-snapshot.sh`
+- `bin/time/snotra/hall-snapshot.sh` · `bin/time/nornir-job-hall-snapshot.sh`
 - `apps/odrerir/vite.config.ts`
 - `.agents/skills/galdr-ymirsystem/assets/odrerir-hall.md`
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`

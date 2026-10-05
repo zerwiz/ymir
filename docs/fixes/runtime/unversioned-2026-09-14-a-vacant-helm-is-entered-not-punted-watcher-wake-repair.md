@@ -5,7 +5,7 @@
   continuity — "this session no longer owns the lock". Root cause found by
   inspection: an **empty/truncated** machine lock (`~/.local/state/ymir/brokk.lock`)
   was classified by `gna-pi-watch.ts` `lockOwnership()` as `other` (another
-  live session) and by `bin/syn-watch-arm.sh`'s gate as read-only — so a helm
+  live session) and by `bin/pi/syn-watch-arm.sh`'s gate as read-only — so a helm
   with *no verifiably-live holder* was refused and punted to a manual
   `saga-session-start.sh` reclaim.
 - **Fix (both seams in one change):** the extension now classifies an empty

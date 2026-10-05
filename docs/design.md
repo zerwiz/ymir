@@ -300,7 +300,7 @@ All components read tokens from `tokens.css`; color-only states are forbidden
   `/api/health` ride outside it.
 - **Operator credential** (`HLIDSKJALF_AUTH="user:pass"` from `.env.local`,
   never inline) opens the gate and seeds the allfather account row.
-- **Invite-gated registration** (`bin/ymir-invite.sh`): a code with a use-limit
+- **Invite-gated registration** (`bin/engine/ymir-invite.sh`): a code with a use-limit
   is minted when nothing is live (idempotent) and printed at the end of an
   install. `register` re-checks the invite under a re-read of the store, so two
   simultaneous registrations cannot both spend the last use. Account passwords

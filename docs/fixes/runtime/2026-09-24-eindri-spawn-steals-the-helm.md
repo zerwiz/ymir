@@ -8,7 +8,7 @@ by and dies — reporting only *"cannot restore continuity because this session 
 owns the lock"*. Observed **three times in one afternoon**: after each spawn the lock was
 gone, the arm children count fell to 0, and the heartbeat stopped.
 
-`bin/seat/herdr-run.sh:211` and `bin/pi-seat.sh:66` already solved this — they pass
+`bin/seat/herdr-run.sh:211` and `bin/pi/pi-seat.sh:66` already solved this — they pass
 `--env BROKK_MACHINE_STATE_DIR=<seat dir> --env BROKK_STATE_OVERRIDE=<seat dir>` when the
 pane/tab is CREATED, which is why their seats (`~/.local/state/ymir/seats/kvasir`,
 `sindri-arm`, …) each hold their own `brokk.lock`. `einherjar-spawn.sh` launched through a

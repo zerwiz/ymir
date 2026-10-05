@@ -12,10 +12,10 @@ npm path alone to be true.
   the last lines of the log when the port does not answer instead of claiming
   success.
 - **Óðrerir was skipped on a packaged install** — `HALL_DIR="$ROOT/apps/odrerir"`,
-  the clone's layout again. It resolves through `bin/app-lib.sh` now
+  the clone's layout again. It resolves through `bin/seat/sessrumnir/app-lib.sh` now
   (`app_dir odrerir`), like every other surface.
 - **The launcher entries and the icons are the freedesktop half, not Omarchy's.**
-  Both halves of `bin/desktop-place.sh` sat behind the Omarchy gate, so a GNOME
+  Both halves of `bin/seat/sessrumnir/desktop-place.sh` sat behind the Omarchy gate, so a GNOME
   operator got *nothing* — no entries, no rune icons — which is why the desktop
   marks from the clone existed and the ones from npm never appeared. `entries` is
   its own verb now (any Linux desktop), the installer's `marks` step calls it, and

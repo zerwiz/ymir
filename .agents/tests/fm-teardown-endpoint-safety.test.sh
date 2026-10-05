@@ -5,7 +5,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-TEARDOWN="$ROOT/bin/fm-teardown.sh"
+TEARDOWN="$ROOT/bin/backend/fm-teardown.sh"
 TMP_ROOT=$(fm_test_tmproot fm-teardown-endpoint-safety)
 REAL_TMUX=$(command -v tmux || true)
 
@@ -102,7 +102,7 @@ test_control_lock_contention_refuses_before_mutation() {
   lock="$dir/home/state/.control-$id.lock"
   (
     # shellcheck source=/dev/null
-    . "$ROOT/bin/fm-wake-lib.sh"
+    . "$ROOT/bin/backend/fm-wake-lib.sh"
     fm_lock_try_acquire "$lock" || exit 1
     sleep 30
   ) &
@@ -148,7 +148,7 @@ test_metadata_lock_serializes_destructive_cleanup() {
   release="$dir/meta-lock-release"
   (
     # shellcheck source=/dev/null
-    . "$ROOT/bin/fm-wake-lib.sh"
+    . "$ROOT/bin/backend/fm-wake-lib.sh"
     fm_lock_try_acquire "$lock" || exit 1
     trap 'fm_lock_release "$lock"' EXIT
     : > "$ready"
@@ -194,7 +194,7 @@ test_supported_backend_endpoint_records_validate() {
   local dir id backend target
   dir=$(make_case valid-backends)
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-backend.sh"
+  . "$ROOT/bin/backend/fm-backend.sh"
 
   id=tmux-task
   fm_write_meta "$dir/home/state/$id.meta" \
@@ -248,7 +248,7 @@ test_tmux_empty_target_refuses_without_invocation() {
   dir=$(make_case direct-empty)
   set +e
   FM_RUNTIME_LOG="$dir/runtime.log" PATH="$dir/fakebin:$PATH" \
-    bash -c '. "$1/bin/fm-backend.sh"; fm_backend_source tmux; fm_backend_tmux_kill ""' _ "$ROOT" \
+    bash -c '. "$1/bin/backend/fm-backend.sh"; fm_backend_source tmux; fm_backend_tmux_kill ""' _ "$ROOT" \
     > "$dir/stdout" 2> "$dir/stderr"
   rc=$?
   set -e
@@ -328,7 +328,7 @@ SH
   # shellcheck disable=SC2016 # $1 expands inside the isolated child shell.
   env -u TMUX -u TMUX_PANE FM_TEST_TMUX_SOCKET="$socket_id" FM_RUNTIME_LOG="$dir/runtime.log" \
     PATH="$dir/fakebin:$PATH" bash -c \
-    '. "$1/bin/fm-backend.sh"; fm_backend_source tmux; fm_backend_tmux_kill ""' _ "$ROOT" \
+    '. "$1/bin/backend/fm-backend.sh"; fm_backend_source tmux; fm_backend_tmux_kill ""' _ "$ROOT" \
     > "$dir/empty.out" 2> "$dir/empty.err"
   rc=$?
   set -e
@@ -341,7 +341,7 @@ SH
   # shellcheck disable=SC2016 # $1 and $2 expand inside the isolated child shell.
   env -u TMUX -u TMUX_PANE FM_TEST_TMUX_SOCKET="$socket_id" FM_RUNTIME_LOG="$dir/runtime.log" \
     PATH="$dir/fakebin:$PATH" bash -c \
-    '. "$1/bin/fm-backend.sh"; fm_backend_source tmux; fm_backend_tmux_kill "$2"' _ "$ROOT" "$session:$prefix_target"
+    '. "$1/bin/backend/fm-backend.sh"; fm_backend_source tmux; fm_backend_tmux_kill "$2"' _ "$ROOT" "$session:$prefix_target"
   isolated_tmux_window_exists "$dir" "$socket" "$session" "$prefix_survivor" \
     || fail "missing exact target cleanup removed its prefix-matched neighbor"
 

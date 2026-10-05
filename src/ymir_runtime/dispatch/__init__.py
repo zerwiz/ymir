@@ -9,7 +9,7 @@ seat**:
                   craft, tools, keywords, dispatch — the WIRING, declared in data
     registry.py   the hoard's model, read at runtime from `$YMIR_HOME/config/
                   agents.yaml` (schema-validated); a model REQUEST is resolved by
-                  the fleet's own door `bin/model-resolve.sh`, never re-implemented
+                  the fleet's own door `bin/model/model-resolve.sh`, never re-implemented
     resolve.py    one errand -> one `Resolution`
 
 The module is a LAYER beside the four verbs, exactly as the config layer is; it

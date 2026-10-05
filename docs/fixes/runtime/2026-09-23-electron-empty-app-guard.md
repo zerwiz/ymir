@@ -12,7 +12,7 @@ Resolve-or-die guards in both launchers: an empty/unresolvable app path now
 prints a clear error + the mend (npm ci) and exits — **electron is never
 launched with an empty or concatenated path again**.
 - `scripts/electron.sh` — the guard after the app resolution.
-- `bin/sessrumnir.sh` — the guard before the launch.
+- `bin/desktop/sessrumnir.sh` — the guard before the launch.
 
 ### Files
-- `scripts/electron.sh` · `bin/sessrumnir.sh`
+- `scripts/electron.sh` · `bin/desktop/sessrumnir.sh`

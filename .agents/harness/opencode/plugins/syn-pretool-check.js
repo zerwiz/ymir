@@ -4,8 +4,8 @@ import { spawn } from "node:child_process";
 
 // Sýn — PreToolUse seatbelt for OpenCode: the watcher arm itself is owned by
 // syn-watch-arm.js (a plugin-owned child process, never a model tool call), so
-// the residual risk is the agent shelling bin/syn-watch-arm.sh wrong through
-// its own bash tool. bin/syn-arm-pretool-check.sh is the owner of that decision.
+// the residual risk is the agent shelling bin/pi/syn-watch-arm.sh wrong through
+// its own bash tool. bin/gates/checks/syn-arm-pretool-check.sh is the owner of that decision.
 // tool.execute.before can block by throwing. Ported from the upstream
 // agent-distro reference and retargeted to the Brokk runtime.
 

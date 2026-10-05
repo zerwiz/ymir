@@ -39,4 +39,4 @@ for the machine that owns the home, and the readers learn to look again.
 
 ### Files
 - `.agents/skills/lifecycle/smoke_test.sh`
-- `bin/eir-doctor.sh`
+- `bin/agents/eir-doctor.sh`

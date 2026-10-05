@@ -25,7 +25,7 @@ pass() { printf 'ok - %s\n' "$1"; }
 command -v jq >/dev/null 2>&1 || { echo "skip: jq not found (required by the cmux adapter)"; exit 0; }
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 fm_backend_source cmux || { echo "skip: could not source the cmux adapter"; exit 0; }
 
 fm_backend_cmux_tool_check >/dev/null 2>&1 || { echo "skip: cmux CLI not found on PATH or at the bundle path"; exit 0; }

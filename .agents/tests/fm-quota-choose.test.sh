@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unit tests for bin/fm-quota-choose.sh.
+# Unit tests for bin/backend/fm-quota-choose.sh.
 # Drives the public argv interface with a mocked quota-axi JSON source.
 set -u
 

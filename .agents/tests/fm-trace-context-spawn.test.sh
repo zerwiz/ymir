@@ -9,7 +9,7 @@ set -u
 # shellcheck source=/dev/null
 . "$ROOT/bin/fm-trace-context-lib.sh"
 
-SPAWN="$ROOT/bin/fm-spawn.sh"
+SPAWN="$ROOT/bin/backend/fm-spawn.sh"
 TMP_ROOT=$(fm_test_tmproot fm-trace-context-spawn)
 
 # Fake tmux: answers the pane-path query and logs every literal `send-keys -l`

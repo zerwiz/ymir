@@ -9,7 +9,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-CASCADE="$ROOT/bin/fm-stow-cascade.sh"
+CASCADE="$ROOT/bin/backend/fm-stow-cascade.sh"
 TMP_ROOT=$(fm_test_tmproot fm-stow-cascade)
 mkdir -p "$TMP_ROOT"
 TMP_ROOT=$(cd "$TMP_ROOT" && pwd -P)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Behavior tests for the per-adapter semantic busy-state wiring that
-# bin/backend/fm-spawn.sh installs under the contract owned by bin/fm-busy-lib.sh.
+# bin/backend/fm-spawn.sh installs under the contract owned by bin/backend/fm-busy-lib.sh.
 #
 # These tests run the REAL fm-spawn against a fake tmux pane and an isolated
 # git worktree, then drive the generated adapter artifact (the Pi extension,
@@ -13,7 +13,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/fixtures.sh"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-busy-lib.sh"
+. "$ROOT/bin/backend/fm-busy-lib.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-busy-adapter-wiring)
 
@@ -140,7 +140,7 @@ test_pi_extension_stale_incarnation_rejected() {
   ext="$state/$id.pi-ext.ts"
   # A re-arm (a rewired incarnation) supersedes the gen embedded in the old
   # extension file: its late events must be rejected and never change state.
-  "$ROOT/bin/fm-busy-event.sh" arm "$state" "$id" >/dev/null
+  "$ROOT/bin/backend/fm-busy-event.sh" arm "$state" "$id" >/dev/null
   out=$(drive_pi_ext "$ext" settle-idle) || fail "stale settle drive failed: $out"
   out=$(classify pi "$id" "$state")
   [ "$out" = "busy fm-spawn" ] || fail "a stale extension event must not change state, got '$out'"
@@ -272,7 +272,7 @@ test_claude_hooks_stale_incarnation_harmless() {
   expect_code 0 $? "claude spawn should succeed: $out"
   state="$HOME_DIR/state"
   settings="$WT_DIR/.claude/settings.local.json"
-  "$ROOT/bin/fm-busy-event.sh" arm "$state" "$id" >/dev/null
+  "$ROOT/bin/backend/fm-busy-event.sh" arm "$state" "$id" >/dev/null
   run_claude_hook "$settings" UserPromptSubmit \
     || fail "a stale-gen hook must still exit 0 so Claude's lifecycle is never broken"
   out=$(classify claude "$id" "$state")

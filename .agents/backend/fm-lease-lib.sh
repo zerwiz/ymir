@@ -3,7 +3,7 @@
 # library (plan 58, Phase 5: one name, one behaviour).
 #
 # This file defines no behaviour of its own. It maps the upstream dialect onto
-# `bin/brokk-lease-lib.sh` and sources it, so the vendored callers in this
+# `bin/agents/brokk-lease-lib.sh` and sources it, so the vendored callers in this
 # folder keep resolving while the implementation lives in exactly one place. The
 # lease contract's own variables are the native ones (`BROKK_LEASE_*`); the
 # vendored door that read the old `FM_LEASE_*` names was repointed in the same
@@ -31,6 +31,6 @@ done
 unset _ymir_v
 unset -f _ymir_bridge
 
-# shellcheck source=bin/brokk-lease-lib.sh
-. "$_ymir_repo/bin/brokk-lease-lib.sh"
+# shellcheck source=bin/agents/brokk-lease-lib.sh
+. "$_ymir_repo/bin/agents/brokk-lease-lib.sh"
 unset _ymir_backend_dir _ymir_repo

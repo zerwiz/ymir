@@ -907,9 +907,9 @@ seed_home() {
     }
     [ -d "$DATA/$id" ] || SEED_PARENT_BRIEF_DIR_CREATED=1
     if [ "$no_projects" -eq 1 ]; then
-      "$FM_ROOT/bin/fm-brief.sh" "$id" --secondmate --no-projects
+      "$FM_ROOT/bin/backend/fm-brief.sh" "$id" --secondmate --no-projects
     else
-      "$FM_ROOT/bin/fm-brief.sh" "$id" --secondmate "$@"
+      "$FM_ROOT/bin/backend/fm-brief.sh" "$id" --secondmate "$@"
     fi
     SEED_PARENT_BRIEF_CREATED=1
   fi

@@ -3,7 +3,7 @@
 # ONE library (plan 58, Phase 5: one name, one behaviour).
 #
 # This file defines no behaviour of its own. It maps the upstream dialect onto
-# `bin/brokk-classify-lib.sh`, sources it, and re-exports the upstream verb
+# `bin/agents/brokk-classify-lib.sh`, sources it, and re-exports the upstream verb
 # names as one-line aliases, so the vendored callers in this folder keep
 # resolving while the implementation lives in exactly one place. A body added
 # here would be the second implementation this file exists to remove.
@@ -39,8 +39,8 @@ _ymir_bridge FM_CLASSIFY_CAPTAIN_RE_DEFAULT BROKK_CLASSIFY_ALLFATHER_RE_DEFAULT
 _ymir_bridge FM_CLASSIFY_CAPTAIN_HELD_VERB_DEFAULT BROKK_CLASSIFY_ALLFATHER_HELD_VERB_DEFAULT
 unset -f _ymir_bridge
 
-# shellcheck source=bin/brokk-classify-lib.sh
-. "$_ymir_repo/bin/brokk-classify-lib.sh"
+# shellcheck source=bin/agents/brokk-classify-lib.sh
+. "$_ymir_repo/bin/agents/brokk-classify-lib.sh"
 unset _ymir_backend_dir _ymir_repo
 
 # The upstream callers that used the older verb names were repointed onto the

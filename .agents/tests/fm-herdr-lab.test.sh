@@ -72,7 +72,7 @@ SH
 chmod +x "$FAKEBIN/herdr"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-herdr-lab.sh"
+. "$ROOT/bin/backend/fm-herdr-lab.sh"
 
 run_with_fake() {
   PATH="$FAKEBIN:$PATH" \

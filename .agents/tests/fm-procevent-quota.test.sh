@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Behavioral tests for bin/fm-procevent-quota.sh.
+# Behavioral tests for bin/backend/fm-procevent-quota.sh.
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

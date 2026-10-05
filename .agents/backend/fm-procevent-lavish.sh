@@ -63,10 +63,10 @@
 # This adapter is deliberately thin. It owns only what is specific to Lavish:
 # canonical source identity, the argv for the currently published poll command,
 # and how to read a completed result. Ownership, durable capture, publication,
-# and restart recovery all belong to bin/fm-procevent.sh.
+# and restart recovery all belong to bin/backend/fm-procevent.sh.
 #
 # `answers` is this adapter's half of the generic keyed-answer contract in
-# bin/fm-procevent.sh. It reports what the captain actually chose, as
+# bin/backend/fm-procevent.sh. It reports what the captain actually chose, as
 # `<task-id>\t<answer>\t<label>` lines, and stops there. It maps nothing to a
 # task, records no decision, and closes nothing: a captain answer is not special
 # to Lavish, so every rule about what a keyed answer DOES belongs to the one

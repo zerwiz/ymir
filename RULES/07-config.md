@@ -7,7 +7,7 @@ on someone else's machine — or someone else's server.
 ## The law
 
 - **One default, one place.** A value has exactly one documented default, owned by
-  the portability layer (`bin/ymir-platform.sh`) or a config file (e.g.
+  the portability layer (`bin/fleet/ymir-platform.sh`) or a config file (e.g.
   `config/agents.yaml`). Everywhere else reads it; nothing else restates it.
 - **Env first, then config, then the documented default.** Resolve as
   `${VAR:-default}` (or the app's equivalent) — never a bare literal.
@@ -63,10 +63,10 @@ model is a claim about someone else's machine.
   **template** (`config/agents.yaml.example`) with placeholders; the live file is
   the user's, and it is private (Rule 04).
 - **Resolve, never restate.** Code reads a model or provider through the resolver
-  (`bin/model-resolve.sh`, `bin/agents-config.sh`) or from env. It never embeds
+  (`bin/model/model-resolve.sh`, `bin/fleet/agents-config.sh`) or from env. It never embeds
   the id.
 - **A comment may name an example; code may not.** A usage line in a header
-  (`#   bin/pi-seat.sh -m <model>`) is documentation. A literal assigned to a
+  (`#   bin/pi/pi-seat.sh -m <model>`) is documentation. A literal assigned to a
   variable, written into a config, or passed as a default is a violation.
 
 ### B. No hardcoded absolute file paths

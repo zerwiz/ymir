@@ -6,7 +6,7 @@ directories**, and both ends were individually correct:
 
 | | resolved state |
 |---|---|
-| **The watcher** (Sýn, `bin/syn-watch-arm.sh`) | `$BROKK_STATE_OVERRIDE` else `$BROKK_HOME/state` — the **code tree**, `$HOME_SEAT/ymir/state` |
+| **The watcher** (Sýn, `bin/pi/syn-watch-arm.sh`) | `$BROKK_STATE_OVERRIDE` else `$BROKK_HOME/state` — the **code tree**, `$HOME_SEAT/ymir/state` |
 | **The handoff** (`bin/agents/eindri-acclaim.sh`) | `$YMIR_STATE_DIR` via `bin/vault/hoard-lib.sh` — the **hoard**, `~/Documents/ymirhome/state` |
 
 So the handoff wrote the wake into the hoard's `.wake-queue` while the watcher
@@ -27,7 +27,7 @@ at the tree. **The task wrote, the watcher watched, and the two never met.**
   (`~/.config/ymir/home`) → `$HOME/Documents/ymirhome`; then
   `state = BROKK_STATE_OVERRIDE || <home>/state`. A seat still isolates through
   `BROKK_STATE_OVERRIDE`.
-- **`bin/syn-watch-arm.sh`** — defense in depth: when `BROKK_STATE_OVERRIDE` is
+- **`bin/pi/syn-watch-arm.sh`** — defense in depth: when `BROKK_STATE_OVERRIDE` is
   unset, resolve the state through `bin/vault/hoard-lib.sh` instead of defaulting to
   `$BROKK_HOME/state`.
 
@@ -43,4 +43,4 @@ Both now resolve to `$HOME_SEAT/Documents/ymirhome/state` — **one queue**.
 
 ### Files
 - `.pi/shared/extensions/gna-pi-watch.ts`
-- `bin/syn-watch-arm.sh`
+- `bin/pi/syn-watch-arm.sh`

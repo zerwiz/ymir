@@ -24,7 +24,7 @@ set -u
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 # shellcheck source=bin/backend/fm-timeout-lib.sh
-. "$ROOT/bin/fm-timeout-lib.sh"
+. "$ROOT/bin/backend/fm-timeout-lib.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-remote-transport-lanes)
 mkdir -p "$TMP_ROOT"
@@ -47,14 +47,14 @@ cleanup_lane_fixture() {
 }
 trap cleanup_lane_fixture EXIT
 
-cp "$ROOT/bin/fm-remote-job-lib.sh" "$ROOT/bin/fm-remote-job-worker.sh" \
-  "$ROOT/bin/fm-remote-entrypoint.sh" "$ROOT/bin/fm-remote-delta-read.sh" \
-  "$ROOT/bin/fm-remote-secondmate-control.sh" "$ROOT/bin/fm-backend.sh" \
-  "$ROOT/bin/fm-pending-reply-lib.sh" "$ROOT/bin/fm-task-inbox-lib.sh" \
-  "$ROOT/bin/fm-wake-lib.sh" "$ROOT/bin/fm-marker-lib.sh" \
-  "$ROOT/bin/fm-operational-input.sh" "$ROOT/bin/fm-tmux-lib.sh" \
-  "$ROOT/bin/fm-composer-lib.sh" "$ROOT/bin/fm-cursor-lib.sh" \
-  "$ROOT/bin/fm-classify-lib.sh" "$ROOT/bin/fm-timeout-lib.sh" \
+cp "$ROOT/bin/backend/fm-remote-job-lib.sh" "$ROOT/bin/fm-remote-job-worker.sh" \
+  "$ROOT/bin/backend/fm-remote-entrypoint.sh" "$ROOT/bin/backend/fm-remote-delta-read.sh" \
+  "$ROOT/bin/backend/fm-remote-secondmate-control.sh" "$ROOT/bin/backend/fm-backend.sh" \
+  "$ROOT/bin/backend/fm-pending-reply-lib.sh" "$ROOT/bin/backend/fm-task-inbox-lib.sh" \
+  "$ROOT/bin/backend/fm-wake-lib.sh" "$ROOT/bin/backend/fm-marker-lib.sh" \
+  "$ROOT/bin/backend/fm-operational-input.sh" "$ROOT/bin/backend/fm-tmux-lib.sh" \
+  "$ROOT/bin/backend/fm-composer-lib.sh" "$ROOT/bin/fm-cursor-lib.sh" \
+  "$ROOT/bin/backend/fm-classify-lib.sh" "$ROOT/bin/backend/fm-timeout-lib.sh" \
   "$REMOTE_ROOT/bin/"
 mkdir -p "$REMOTE_ROOT/bin/backends"
 cp "$ROOT/bin/backends/herdr.sh" "$REMOTE_ROOT/bin/backends/herdr.sh"
@@ -115,7 +115,7 @@ export FM_REMOTE_JOB_QUEUE_TIMEOUT=60
 export FM_REMOTE_JOB_TIMEOUT=30
 export FM_REMOTE_JOB_STAGE_REAP_SECONDS=1
 # shellcheck source=bin/backend/fm-remote-job-lib.sh
-. "$ROOT/bin/fm-remote-job-lib.sh"
+. "$ROOT/bin/backend/fm-remote-job-lib.sh"
 
 fm_remote_job_prepare_state "$ACCOUNT_HOME" || fail "$FM_REMOTE_JOB_ERROR"
 rm -f -- "$STATE_ROOT/seq"
@@ -152,8 +152,8 @@ fm_on() {
   FM_HOME="$LOCAL_HOME" \
   FM_ROOT_OVERRIDE="$REMOTE_ROOT" \
   FM_SSH_BIN="$FAKEBIN/fake-ssh" \
-  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
-  "$ROOT/bin/fm-on.sh" "$@"
+  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" \
+  "$ROOT/bin/backend/fm-on.sh" "$@"
 }
 
 job_state() { # <id>
@@ -332,10 +332,10 @@ ORPHAN_FINISH="$TMP_ROOT/orphan-cancel-finish"
 # shellcheck disable=SC2016 # Expansion is deliberately deferred to the child shell.
 env FM_HOME="$LOCAL_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" \
   FM_SSH_BIN="$FAKEBIN/fake-ssh" \
-  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
+  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" \
   FM_REMOTE_JOB_STATE_ROOT="$STATE_ROOT" FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
   bash -c '
-    "$1/bin/fm-on.sh" build fm-two-phase-job.sh "$2" "$3" 12 >/dev/null 2>&1 &
+    "$1/bin/backend/fm-on.sh" build fm-two-phase-job.sh "$2" "$3" 12 >/dev/null 2>&1 &
     while [ ! -f "$2" ]; do sleep 0.1; done
   ' _ "$ROOT" "$ORPHAN_START" "$ORPHAN_FINISH"
 assert_present "$ORPHAN_START" "the orphan-cancellation fixture never started"
@@ -359,9 +359,9 @@ for tag in c1 c2 c3; do
   rc=0
   fm_run_timed 15 env FM_HOME="$LOCAL_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" \
     FM_SSH_BIN="$FAKEBIN/fake-ssh" \
-    FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
+    FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" \
     FM_REMOTE_JOB_STATE_ROOT="$STATE_ROOT" FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
-    "$ROOT/bin/fm-on.sh" ios fm-touch-job.sh "$TMP_ROOT/burst-$tag" >/dev/null 2>&1 || rc=$?
+    "$ROOT/bin/backend/fm-on.sh" ios fm-touch-job.sh "$TMP_ROOT/burst-$tag" >/dev/null 2>&1 || rc=$?
   [ "$rc" -eq 0 ] || fail "post-cancellation burst command $tag failed with $rc"
   assert_present "$TMP_ROOT/burst-$tag" "post-cancellation burst command $tag did not run"
 done
@@ -377,9 +377,9 @@ mkdir -p "$HOME_A/state" "$HOME_A/bin"
 rc=0
 fm_run_timed 20 env FM_HOME="$LOCAL_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" \
   FM_SSH_BIN="$FAKEBIN/fake-ssh" \
-  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
+  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" \
   FM_REMOTE_JOB_STATE_ROOT="$STATE_ROOT" FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
-  "$ROOT/bin/fm-on.sh" ios fm-remote-secondmate-control.sh state rsm \
+  "$ROOT/bin/backend/fm-on.sh" ios fm-remote-secondmate-control.sh state rsm \
   < <(sleep 30) > "$TMP_ROOT/state-out" 2> "$TMP_ROOT/state-err" || rc=$?
 [ "$rc" -ne 124 ] || fail "a control-state call with an open stdin pipe wedged staging"
 assert_grep 'missing' "$TMP_ROOT/state-out" \

@@ -38,13 +38,13 @@ on this Intel+discrete hybrid the guard never fired.
   halting at a foreign ymir root), then the sibling package. No caller
   hardcodes an app-local electron path.
 - **Truth-telling guards (P2)** — `ensure_electron_binary` (scripts/electron.sh,
-  bin/sessrumnir-ensure.sh) returns failure unless the resolver yields an
+  bin/seat/sessrumnir/sessrumnir-ensure.sh) returns failure unless the resolver yields an
   executable that answers `--version`. The absent branch's `return 0` is gone;
   the guard shape is proven by `.agents/tests/electron-lib.test.sh`.
 - **The first-run install never deletes the runtime (P3)** — installs at the
   workspace root when the app is a member, app-local only for a standalone app
   (`electron_is_workspace_member`), and fetches land in the resolved dir.
-- **The GPU guard sees Intel (P7)** — `bin/graphics-lib.sh` classifies DRM
+- **The GPU guard sees Intel (P7)** — `bin/host/graphics-lib.sh` classifies DRM
   cards (integrated/discrete/hybrid), reads GTT where exposed, and decides the
   effective policy: software rendering on a fragile hybrid unless
   `YMIR_DESKTOP_DISABLE_GPU` overrides. `igpu_vram_small` and the launcher's
@@ -59,5 +59,5 @@ on this Intel+discrete hybrid the guard never fired.
   `card2` (i915 drives fb0).
 
 ### Files
-- `bin/desktop/electron-lib.sh` · `bin/graphics-lib.sh` (new) · `scripts/electron.sh`
-- `bin/sessrumnir.sh` · `bin/sessrumnir-ensure.sh` · `.agents/tests/electron-lib.test.sh`
+- `bin/desktop/electron-lib.sh` · `bin/host/graphics-lib.sh` (new) · `scripts/electron.sh`
+- `bin/desktop/sessrumnir.sh` · `bin/seat/sessrumnir/sessrumnir-ensure.sh` · `.agents/tests/electron-lib.test.sh`

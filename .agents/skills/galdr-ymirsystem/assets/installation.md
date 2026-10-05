@@ -10,16 +10,16 @@ this host, not a recited paragraph — and it **validates at the end** that what
 claims is actually running.
 
 ```
-bin/ymir-install.sh               # the first setup (idempotent; asks to proceed)
-bin/ymir-install.sh --plan        # the plan, probed — changes nothing (--json too)
-bin/ymir-install.sh --check       # report only, no writes, no prompt
-bin/ymir-install.sh --yes         # non-interactive (accept the plan)
-bin/ymir-install.sh --skip-engines --skip-services
-bin/ymir-install.sh --no-desktop  # don't open the desktop apps at the end
-bin/ymir-install.sh --status      # alias of --check
+bin/engine/ymir-install.sh               # the first setup (idempotent; asks to proceed)
+bin/engine/ymir-install.sh --plan        # the plan, probed — changes nothing (--json too)
+bin/engine/ymir-install.sh --check       # report only, no writes, no prompt
+bin/engine/ymir-install.sh --yes         # non-interactive (accept the plan)
+bin/engine/ymir-install.sh --skip-engines --skip-services
+bin/engine/ymir-install.sh --no-desktop  # don't open the desktop apps at the end
+bin/engine/ymir-install.sh --status      # alias of --check
 ```
 
-## The plan comes first — `bin/ymir-plan.sh`
+## The plan comes first — `bin/bridge/ymir-plan.sh`
 
 The consent a real install asks for is a **computed plan**, one row per step, each
 carrying its state and the reason for it. A hardcoded paragraph cannot know the
@@ -27,10 +27,10 @@ host: the old one named an Omarchy version on a Mac, promised a workspace tree t
 already stood, and never mentioned that no application had been installed at all.
 
 ```
-bin/ymir-plan.sh              # the plan (TOON)
-bin/ymir-plan.sh --json       # the same, for automation
-bin/ymir-plan.sh --phase 5    # one phase
-bin/ymir-plan.sh --blocked    # only what cannot proceed, and why
+bin/bridge/ymir-plan.sh              # the plan (TOON)
+bin/bridge/ymir-plan.sh --json       # the same, for automation
+bin/bridge/ymir-plan.sh --phase 5    # one phase
+bin/bridge/ymir-plan.sh --blocked    # only what cannot proceed, and why
 ```
 
 ```
@@ -57,7 +57,7 @@ plan_phases[9]{n,name,gate}:
 
 `ymir-install.sh` prints the plan at the consent prompt; `--plan`/`--dry-run` prints
 it and exits without writing. The plan is recomputed on every run, so it cannot
-drift behind the code the way a paragraph did. `bin/ymir-plan.sh` is the ward for
+drift behind the code the way a paragraph did. `bin/bridge/ymir-plan.sh` is the ward for
 the law below: its phase-1 `purity` row names any of the operator's things found in
 the code tree.
 
@@ -91,7 +91,7 @@ is recorded, else the documented default.
 governed script that needs the home calls `ymir_home_root`; none restates a path.
 Hand-converging this once already failed — nine scripts were fixed and a tenth was
 found a week later only by reading — so the rule is now a **lock**:
-`bin/defaults-guard.sh` refuses a home default anywhere outside the two definition
+`bin/gates/guards/defaults-guard.sh` refuses a home default anywhere outside the two definition
 sites — `bin/vault/hoard-lib.sh` in bash and `src/ymir_runtime/paths.py` in python — and
 a waiver must be written on the line it applies to. The same ward also refuses a
 script that *uses* the home without resolving it, which is the class the first
@@ -189,9 +189,9 @@ real path (the tree's `config` is a symlink into `.agents/config`, and git track
 what the index holds, not the link). Idempotent: a second run changes nothing.
 
 ```bash
-bin/ymir-migrate.sh status            # pending / applied
-bin/ymir-migrate.sh apply --dry-run   # name the migration, touch nothing
-bin/ymir-migrate.sh apply             # carry it
+bin/engine/ymir-migrate.sh status            # pending / applied
+bin/engine/ymir-migrate.sh apply --dry-run   # name the migration, touch nothing
+bin/engine/ymir-migrate.sh apply             # carry it
 ```
 
 Stop the runtime first if you want no stale pid files; nothing is lost either way.
@@ -207,26 +207,26 @@ needs is a door on `ymir` — never a script path inside `node_modules`.
 ```
 doors[14]{verb,door,what}:
   "ymir","first setup (a bare call installs)","the plan, then consent, then the work"
-  "ymir install [...]","bin/ymir-install.sh","the same, said out loud"
-  "ymir plan","bin/ymir-plan.sh","what an install would do here — writes nothing"
+  "ymir install [...]","bin/engine/ymir-install.sh","the same, said out loud"
+  "ymir plan","bin/bridge/ymir-plan.sh","what an install would do here — writes nothing"
   "ymir raise / lower","scripts/start.sh · stop.sh","lift the hall, or lay it down"
-  "ymir eir","bin/eir-doctor.sh","what stands, and mend what does not (the healer)"
-  "ymir groa","bin/groa-update.sh","take the latest, then mend this home forward"
-  "ymir groa migrate","bin/ymir-migrate.sh","heal this home's structure"
-  "ymir heimdall","bin/ymir-setup-auth.sh","the way in — status · set · github (the guardian)"
-  "ymir invite","bin/ymir-invite.sh","let someone else in — mint · list · revoke"
+  "ymir eir","bin/agents/eir-doctor.sh","what stands, and mend what does not (the healer)"
+  "ymir groa","bin/agents/groa-update.sh","take the latest, then mend this home forward"
+  "ymir groa migrate","bin/engine/ymir-migrate.sh","heal this home's structure"
+  "ymir heimdall","bin/engine/ymir-setup-auth.sh","the way in — status · set · github (the guardian)"
+  "ymir invite","bin/engine/ymir-invite.sh","let someone else in — mint · list · revoke"
   "ymir smidja","bin/desktop/smidja-board.sh","the smithy's board on :8437 — build · start · stop · status"
   "ymir hlidskjalf","scripts/electron.sh start --view hlidskjalf","the high seat's window"
   "ymir sessrumnir","scripts/electron.sh start --view sessrumnir","the seat-hall's window"
   "ymir mimir","bin/records/mimir.sh","the memory well"
-  "ymir sense","bin/host-sense.sh","what THIS machine is"
+  "ymir sense","bin/host/host-sense.sh","what THIS machine is"
 ```
 
 A name the law has not given a home is still answered, once, with the name that
 has it: `ymir doctor` → *the door is named `ymir eir` now*. Colour appears only
 where a human watches.
 
-### The cloth — `bin/ymir-style.sh`
+### The cloth — `bin/desktop/ymir-style.sh`
 
 Ymir had correct output and no design. The cloth is cut from the same stone as
 the halls (`midgard/design-system/tokens.css`): **bone** `#cfc3a9` for words,
@@ -242,11 +242,11 @@ cloth_rules[4]{rule,why}:
   "no banner over four lines, no rule longer than its text","density first (Monoline TUI · cli-guidelines)"
 ```
 
-`bin/ymir-plan.sh --colour` renders the plan in the cloth on stderr while the
+`bin/bridge/ymir-plan.sh --colour` renders the plan in the cloth on stderr while the
 TOON stays on stdout. The installer prints it at the consent, and ends with the
 next steps — *a reaction for every action, a next step for every ending*.
 
-### A clone and a package are one tree — `bin/app-lib.sh`
+### A clone and a package are one tree — `bin/seat/sessrumnir/app-lib.sh`
 
 The apps are the only thing that differs between the two shapes, and only in
 where they live:
@@ -261,7 +261,7 @@ sessrumnir         apps/sessrumnir          node_modules/@zerwiz/sessrumnir
 smidja             apps/smidja-factory      node_modules/@zerwiz/smidja-factory
 ```
 
-`bin/app-lib.sh` answers for both — `app_dir <surface> <var>`, `app_pkg
+`bin/seat/sessrumnir/app-lib.sh` answers for both — `app_dir <surface> <var>`, `app_pkg
 <surface>` — and **eighteen files** were converted to it: the raise path
 (`scripts/start.sh`), the windows (`scripts/electron.sh`), the invite door, the
 seat-hall trio, Eir, the icon mint, the desktop placement, the hall snapshot, and
@@ -273,10 +273,10 @@ window class a surface PRESENTS (`ymir-hlidskjalf` · `ymir-smidja` ·
 `ymir-odrerir` · `ymir-sessrumnir`) is decided here once. It must equal the
 surface's `.desktop` `StartupWMClass`, the generated Hyprland window rule, and
 the slug the Electron sets (`app.setName` / `appendSwitch('class')`). It did not:
-`bin/desktop-place.sh` declared `CLASS_sessrumnir="sessrumnir"` while the app
+`bin/seat/sessrumnir/desktop-place.sh` declared `CLASS_sessrumnir="sessrumnir"` while the app
 presents `ymir-sessrumnir`, so the rule and the entry matched nothing and every
 Ymir key seemed to open one app. Rename a class HERE first;
-`bin/desktop-verify.sh --class-only` asserts the invariant and
+`bin/seat/sessrumnir/desktop-verify.sh --class-only` asserts the invariant and
 `.agents/tests/desktop-classes.test.sh` holds it in the tree.
 
 **The trap that named itself.** `printf -v <name>` writes to the *function's*
@@ -305,12 +305,12 @@ spa_serving[2]{shape,how}:
 
 A bare `npm run dev` lets Vite take 5173 and the hall silently answers on the
 wrong port; the raise now prints the log's last lines when the port stays silent
-rather than claiming success. Óðrerir resolves through `bin/app-lib.sh` like every
+rather than claiming success. Óðrerir resolves through `bin/seat/sessrumnir/app-lib.sh` like every
 other surface (it read as `missing apps/odrerir` on a packaged install).
 
 ### The marks land on any desktop — not only Omarchy's
 
-`bin/desktop-place.sh` holds **two kinds of thing**, and they were behind one gate:
+`bin/seat/sessrumnir/desktop-place.sh` holds **two kinds of thing**, and they were behind one gate:
 
 ```
 desktop_halves[2]{half,who_reads_it}:
@@ -320,7 +320,7 @@ desktop_halves[2]{half,who_reads_it}:
 
 A GNOME operator gets entries and icons and no window rules, which is the correct
 answer — and the reason a packaged install on GNOME placed *nothing* while the
-clone's marks already existed. `bin/desktop-place.sh entries` is the launcher half
+clone's marks already existed. `bin/seat/sessrumnir/desktop-place.sh entries` is the launcher half
 alone (any Linux desktop), the installer's `marks` step calls it, and both the
 desktop database and the icon cache are refreshed after.
 
@@ -366,7 +366,7 @@ transition **once**, on the first run after an update:
 
 ### The patience words — `style_patience`
 
-A long hour must say what it is doing. `bin/ymir-style.sh` carries the line, and
+A long hour must say what it is doing. `bin/desktop/ymir-style.sh` carries the line, and
 the installer's long chain and the raise path's build open with it:
 
 ```
@@ -422,10 +422,10 @@ A global install nests them under the distro's own `node_modules`
 hoists them to `node_modules/@zerwiz/<app>`. The plan checks both shapes.
 
 ```
-bin/npm-publish.sh                       # the platform only
-bin/npm-publish.sh --all                 # the platform + every app package
-bin/npm-publish.sh --dry-run --all       # what would go out, and from where
-bin/npm-publish.sh --unpublish @zerwiz/ymir@0.1.5   # take ONE version back
+bin/forge/npm/npm-publish.sh                       # the platform only
+bin/forge/npm/npm-publish.sh --all                 # the platform + every app package
+bin/forge/npm/npm-publish.sh --dry-run --all       # what would go out, and from where
+bin/forge/npm/npm-publish.sh --unpublish @zerwiz/ymir@0.1.5   # take ONE version back
 ```
 
 **A version can be taken back, and the window is short.** npm permits unpublishing
@@ -448,8 +448,8 @@ manifests. The token comes from the hoard, never from `~/.npmrc`.
 The seeded `projects.yaml` teaches the **current** key: a project row names its
 **realm** (`realm: personal`), not a workspace — that key was `workspace:` before
 plan 62 (2026-10-01). A registry written before the rename still works: readers
-resolve both through `bin/registry-lib.sh` and name the old key when they see it,
-and `bin/ymir-validate.sh`'s `registry` check warns (never fails) about rows still
+resolve both through `bin/skuld/registry-lib.sh` and name the old key when they see it,
+and `bin/engine/ymir-validate.sh`'s `registry` check warns (never fails) about rows still
 carrying it. The operator's live registry is renamed by hand, with his word.
 
 ## The steps
@@ -457,37 +457,37 @@ carrying it. The operator's live registry is renamed by hand, with his word.
 ```
 install[32]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/seat/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
-  "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
+  "prereqs","git python3 bun docker|podman gh · mcp<2","bin/engine/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "home","the home the operator CHOOSES, recorded under ~/.config/ymir/home","asks once, records the answer; --check never writes, --yes takes what is recorded, else the documented default"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at the hoard root under the chosen home)","creates if missing; hoard_root resolves through bin/vault/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/vault/hodd.sh emit resolves"
   "apps","the app repos (the app split) — hlidskjalf · hlidskjalf-mobile · odrerir · sessrumnir · smidja","reads $HOARD/identity/projects.yaml (never guesses a remote); clones a missing apps/<path> from its registered git{} block, fast-forwards a present one, and stamps the smithy engine (apps/smidja) from the cloned factory's templates"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
-  "local-model","the local brain for THIS hardware — a CUDA llama.cpp engine, the best model that fits, pi wiring, and Ymir registration","bin/llama-ensure.sh ADOPTS a standing CUDA llama-server (proves CUDA0, never rebuilds it) and only builds with GGML_CUDA=ON when none exists; bin/model-fit.sh picks the largest model that fits the PROBED GPU/VRAM/RAM/disk (generic — never this box); bin/model-fetch.sh downloads it resumable, checksummed, consent first, into the hoard; bin/pi-model-wire.sh wires ~/.pi/agent/models.json (exact served id + key reference) and proves a one-shot; bin/model-register.sh writes the same model into the hoard config/agents.<host>.yaml overlay so Ymir/Smidja share one model road; bin/model-tune.sh measures the real ctx/ngl/n-cpu-moe/kv/fa and replaces the placeholder in data/local-models.md. When a local rail already serves models, NOTHING is downloaded — the operator's registered model is adopted. Loud refusals (no CUDA, unknown hardware, no disk, bad checksum), never a silent skip"
-  "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
-  "snotra","the meeting ear's engine — whisper.cpp + a model","bin/snotra-ensure.sh reports the seat's engine and installs what is missing (pacman/apt/build); a voxtype seat keeps its models. The MCP face + unit ride the fleet step — and so does the WATCH (snotra-detect), which the fleet step raises by CAPABILITY on any seat with a microphone: a call seat owes the ear's watch, a headless heart reports a clean skip"
-  "a2a","the A2A mesh engine — a2abridge (MIT): the local directory daemon (:7777) + the bridge that gives each harness the a2a tools","bin/bridge/a2abridge-ensure.sh ensure --install fetches the pinned engine and raises its directory unit; bin/bridge/a2a-mcp.sh install wires a2abridge + engram into pi + opencode. The unit is the ENGINE's own, Ymir-patched (journal output + the boot hook WantedBy=default.target) with a house template (tools/mill/systemd/a2abridge-directory.service) so a raise seats it by role; the heart's A2A node (:8301) rides the fleet step. Repairable: bin/eir-doctor.sh a2abridge"
-  "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
+  "local-model","the local brain for THIS hardware — a CUDA llama.cpp engine, the best model that fits, pi wiring, and Ymir registration","bin/model/llama-ensure.sh ADOPTS a standing CUDA llama-server (proves CUDA0, never rebuilds it) and only builds with GGML_CUDA=ON when none exists; bin/model/model-fit.sh picks the largest model that fits the PROBED GPU/VRAM/RAM/disk (generic — never this box); bin/model/model-fetch.sh downloads it resumable, checksummed, consent first, into the hoard; bin/pi/pi-model-wire.sh wires ~/.pi/agent/models.json (exact served id + key reference) and proves a one-shot; bin/model/model-register.sh writes the same model into the hoard config/agents.<host>.yaml overlay so Ymir/Smidja share one model road; bin/model/model-tune.sh measures the real ctx/ngl/n-cpu-moe/kv/fa and replaces the placeholder in data/local-models.md. When a local rail already serves models, NOTHING is downloaded — the operator's registered model is adopted. Loud refusals (no CUDA, unknown hardware, no disk, bad checksum), never a silent skip"
+  "hermes","the Nous Research agent runtime","installs via bin/engine/hermes-ensure.sh when absent"
+  "snotra","the meeting ear's engine — whisper.cpp + a model","bin/time/snotra/snotra-ensure.sh reports the seat's engine and installs what is missing (pacman/apt/build); a voxtype seat keeps its models. The MCP face + unit ride the fleet step — and so does the WATCH (snotra-detect), which the fleet step raises by CAPABILITY on any seat with a microphone: a call seat owes the ear's watch, a headless heart reports a clean skip"
+  "a2a","the A2A mesh engine — a2abridge (MIT): the local directory daemon (:7777) + the bridge that gives each harness the a2a tools","bin/bridge/a2abridge-ensure.sh ensure --install fetches the pinned engine and raises its directory unit; bin/bridge/a2a-mcp.sh install wires a2abridge + engram into pi + opencode. The unit is the ENGINE's own, Ymir-patched (journal output + the boot hook WantedBy=default.target) with a house template (tools/mill/systemd/a2abridge-directory.service) so a raise seats it by role; the heart's A2A node (:8301) rides the fleet step. Repairable: bin/agents/eir-doctor.sh a2abridge"
+  "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/seat/sessrumnir/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/desktop/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/seat/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
-  "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
-  "role","what this machine IS — resolved BEFORE the chain, so the whole step set is role-selected","bin/role-lib.sh establish_roles: --role/$YMIR_ROLE → the fleet registry (bin/role.sh) → the machine card in hodd/data/machines.md → ask (interactive) → the safe body dev; step_role reports the role + components + live link, records it with bin/role.sh set, and folds a Machine Card into the ONE registry hodd/data/machines.md (plan 39). An unknown --role is refused (exit 2); --check writes nothing"
-  "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root · snotra, the meeting ear's MCP face) on heart seats, the stone on forge seats, the well door, the MCP gateway and the a2abridge mesh directory on dev seats","bin/fleet-ensure.sh copies tools/ and packages/ to the seat (a DIRECTORY row keeps its relative path, so a cross-package import resolves in the deployed copy as in the repo), plus the snotra operator commands — WITH hoard-lib.sh beside them, because each resolves the operator's home through it and a command without its resolver dies on an unbound YMIR_HOME — to ~/.fleet; materializes ONLY what the roles owe (a2abridge-directory is engine-owned: patched by bin/bridge/a2abridge-ensure.sh and materialized from its house template when owed; the arm is seated as the standing unit ymir-syn-watch.service from tools/mill/systemd/), purges stale units, points the seat's pi mcp-adapter.json at THIS body's MCP gateway (bin/bridge/mcp-gateway.sh, :8316, which fronts well/bolthorn/skuld and resolves the heart at request time; --well-url still forces an explicit well door), and carries the model rail the same way — bin/bridge/mcp-config.sh writes the serving box under the config's `ymir` block, read from the ONE resolver bin/rail-resolve.sh (plan 51 Part 9c: models come from whichever strong box is CONNECTED), enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
+  "host","this machine — sensed on EVERY host","bin/host/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/host/omarchy-sense.sh observe), places the apps (bin/seat/sessrumnir/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/fleet/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
+  "role","what this machine IS — resolved BEFORE the chain, so the whole step set is role-selected","bin/skuld/role-lib.sh establish_roles: --role/$YMIR_ROLE → the fleet registry (bin/skuld/role.sh) → the machine card in hodd/data/machines.md → ask (interactive) → the safe body dev; step_role reports the role + components + live link, records it with bin/skuld/role.sh set, and folds a Machine Card into the ONE registry hodd/data/machines.md (plan 39). An unknown --role is refused (exit 2); --check writes nothing"
+  "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root · snotra, the meeting ear's MCP face) on heart seats, the stone on forge seats, the well door, the MCP gateway and the a2abridge mesh directory on dev seats","bin/fleet/fleet-ensure.sh copies tools/ and packages/ to the seat (a DIRECTORY row keeps its relative path, so a cross-package import resolves in the deployed copy as in the repo), plus the snotra operator commands — WITH hoard-lib.sh beside them, because each resolves the operator's home through it and a command without its resolver dies on an unbound YMIR_HOME — to ~/.fleet; materializes ONLY what the roles owe (a2abridge-directory is engine-owned: patched by bin/bridge/a2abridge-ensure.sh and materialized from its house template when owed; the arm is seated as the standing unit ymir-syn-watch.service from tools/mill/systemd/), purges stale units, points the seat's pi mcp-adapter.json at THIS body's MCP gateway (bin/bridge/mcp-gateway.sh, :8316, which fronts well/bolthorn/skuld and resolves the heart at request time; --well-url still forces an explicit well door), and carries the model rail the same way — bin/bridge/mcp-config.sh writes the serving box under the config's `ymir` block, read from the ONE resolver bin/model/rail-resolve.sh (plan 51 Part 9c: models come from whichever strong box is CONNECTED), enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
   "mesh","the A2A mesh (Ratatoskr): the local discovery directory (:7777) + the engine","bin/bridge/a2abridge-ensure.sh installs the a2abridge engine (A2A_NO_IDE=1), patches its user unit (journal output + the boot hook WantedBy=default.target), and raises the directory; the directory is a role-owed program (heart · dev) in the autoboot ONE table, materialized from tools/mill/systemd/a2abridge-directory.service and verified beside the well/tickets/skills doors"
-  "autoboot","the boot law: Linger asserted on headless seats, ymir.target enabled once, the boot proof run","checks loginctl show-user $USER -p Linger (enables it headless or fails with the remedy), reports the value on every seat, and calls bin/ymir-autoboot.sh verify — every role-owed program enabled and standing"
-  "heimdall","the ssh-key ward (Heimdall) — entry by the rune carried on GitHub","bin/heimdall-ensure.sh arms it: ward script to ~/.local/bin (stable path, not the repo tree), the operator's GitHub user recorded, keys fetched/validated/merged into ~/.ssh/authorized_keys, 15-min user timer live (loginctl linger note for headless). --install may add openssh via pacman/apt (sudo, system package). Idempotent; a seat can stand warded or bare — reported honestly"
-  "sandbox","utgard-runner:latest image","builds via bin/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
+  "autoboot","the boot law: Linger asserted on headless seats, ymir.target enabled once, the boot proof run","checks loginctl show-user $USER -p Linger (enables it headless or fails with the remedy), reports the value on every seat, and calls bin/engine/ymir-autoboot.sh verify — every role-owed program enabled and standing"
+  "heimdall","the ssh-key ward (Heimdall) — entry by the rune carried on GitHub","bin/host/heimdall-ensure.sh arms it: ward script to ~/.local/bin (stable path, not the repo tree), the operator's GitHub user recorded, keys fetched/validated/merged into ~/.ssh/authorized_keys, 15-min user timer live (loginctl linger note for headless). --install may add openssh via pacman/apt (sudo, system package). Idempotent; a seat can stand warded or bare — reported honestly"
+  "sandbox","utgard-runner:latest image","builds via bin/forge/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage — the store is ONE well in the hoard ($YMIR_HOME/hodd/memory/kaia.engram), resolved via hoard-lib or ENGRAM_DB"
   "record","the RECORD's offices — the engram store, the journal fold receiver, the record crons (heart only)","asserts the store is present and bin/records/journal-receive.sh is executable, and counts the @heart jobs in the cron config; a body SKIPs the whole step with the reason — the record lives on the heart, and a body that ran it would fork the chain (Law 7)"
   "smidja","smidja/smidja_data/smidja.db","bin/desktop/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
-  "loaders","agents/skills into the harnesses","runs bin/seat/valknut-load.sh, then bin/seat/valknut-load.sh --install to seat the post-merge rebind hook. The harnesses load their surfaces from their OWN homes — Pi reads ${HOME}/.pi/agent/extensions/ — so a merged extension fix is invisible until the bind re-runs. The same rebind rides the updater (bin/groa-update.sh) after every pull, and the post-merge hook after every merge: no install and no update leaves the surfaces stale"
-  "gates","the git delivery gates — secret-guard (pre-commit), branch-guard + changelog-guard (pre-push)","bin/secret-guard.sh --install and bin/changelog-guard.sh --install seat the versioned guards into .git/hooks, so the gate is live from the first commit of a fresh clone; idempotent"
-  "marks","each app's rune icon + .desktop entry into the operator's own desktop, and the Ymir contract into pi's agent home","bin/design-icon.sh mint --all + install writes to $HOME/.local/share (never a session sandbox), so every app is dockable and pinnable; the contract symlink means every pi session, in ANY folder, loads Brokk"
-  "invite","the way in for anyone else — an invite code","bin/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
+  "loaders","agents/skills into the harnesses","runs bin/seat/valknut-load.sh, then bin/seat/valknut-load.sh --install to seat the post-merge rebind hook. The harnesses load their surfaces from their OWN homes — Pi reads ${HOME}/.pi/agent/extensions/ — so a merged extension fix is invisible until the bind re-runs. The same rebind rides the updater (bin/agents/groa-update.sh) after every pull, and the post-merge hook after every merge: no install and no update leaves the surfaces stale"
+  "gates","the git delivery gates — secret-guard (pre-commit), branch-guard + changelog-guard (pre-push)","bin/gates/guards/secret-guard.sh --install and bin/changelog-guard.sh --install seat the versioned guards into .git/hooks, so the gate is live from the first commit of a fresh clone; idempotent"
+  "marks","each app's rune icon + .desktop entry into the operator's own desktop, and the Ymir contract into pi's agent home","bin/desktop/design-icon.sh mint --all + install writes to $HOME/.local/share (never a session sandbox), so every app is dockable and pinnable; the contract symlink means every pi session, in ANY folder, loads Brokk"
+  "invite","the way in for anyone else — an invite code","bin/engine/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
   "register","workspace/INSTALL.md","writes the record"
-  "services","gate API, SPA, Nornir, bridges, visualizer — as USER UNITS on dev seats (hlidskjalf-spa · hlidskjalf-gate · mimir · bifrost · smidja · nornir, all joined to ymir.target)","raised by the fleet step; this step PROVES the raise with bin/ymir-autoboot.sh verify — the old run-scripts/start.sh road is retired for boot (it stays as the manual raise for a window an operator opens)"
-  "desktop","Hlidskjalf + Smíðja desktop apps","bin/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
-  "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
+  "services","gate API, SPA, Nornir, bridges, visualizer — as USER UNITS on dev seats (hlidskjalf-spa · hlidskjalf-gate · mimir · bifrost · smidja · nornir, all joined to ymir.target)","raised by the fleet step; this step PROVES the raise with bin/engine/ymir-autoboot.sh verify — the old run-scripts/start.sh road is retired for boot (it stays as the manual raise for a window an operator opens)"
+  "desktop","Hlidskjalf + Smíðja desktop apps","bin/seat/sessrumnir/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
+  "validate","the running system","bin/engine/ymir-validate.sh — live port/store/process checks"
 ```
 
 **33** `step_*` functions are defined (`home` asks, `tree` builds); **27** run as the
@@ -497,8 +497,8 @@ several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 role-owned step opens with a `role_gate`** (plan 51 P1): a component this
 machine's roles do not own becomes a `SKIP` naming the role that does, so the
 install never stands up another role's parts. The fleet
-step raises every role-owed program (the role gates live in `bin/ymir-autoboot.sh`
-— ONE table, shared with `bin/fleet-ensure.sh`); the `autoboot` step asserts
+step raises every role-owed program (the role gates live in `bin/engine/ymir-autoboot.sh`
+— ONE table, shared with `bin/fleet/fleet-ensure.sh`); the `autoboot` step asserts
 Linger and runs the boot proof. `--check`
 skips the runtime-only steps (`services`, `desktop`, `validate`), which have
 nothing to report when the runtime is not raised, so a real run prints those
@@ -506,12 +506,12 @@ three in addition. The exact set is whatever the host honestly has — never
 assume the count:
 
 ```bash
-bash bin/ymir-install.sh --check | grep -cE '^  "'   # the honest count, on your host
+bash bin/engine/ymir-install.sh --check | grep -cE '^  "'   # the honest count, on your host
 ```
 
 ## The Pi binary is the operator's, not Ymir's
 
-`bin/pi-ensure.sh` ensures Ymir's **Pi packages** and nothing more:
+`bin/pi/pi-ensure.sh` ensures Ymir's **Pi packages** and nothing more:
 
 ```
 npm:pi-mcp-adapter   MCP servers (from mcp.json: a2abridge, engram)
@@ -551,7 +551,7 @@ host reads `HLIDSKJALF_HOST`, and a deployment overrides them in its env file
 
 ## Container engine: Docker **or** rootless Podman
 
-The core never assumes an engine binary. `bin/ymir-platform.sh` resolves whichever
+The core never assumes an engine binary. `bin/fleet/ymir-platform.sh` resolves whichever
 this host can reach (`YMIR_CONTAINER_ENGINE` forces one) and exposes:
 
 - `ymir_container_engine` / `ymir_container_engine_name` — `docker` or `podman`.
@@ -562,8 +562,8 @@ this host can reach (`YMIR_CONTAINER_ENGINE` forces one) and exposes:
 - `ymir_rootless_podman` — rootless Podman needs `--userns=keep-id` so a bind
   mount lands owned by the invoking user.
 
-`bin/utgard.sh`, `bin/agents/einherjar-spawn.sh`, `bin/valhalla.sh`, `bin/ymir-validate.sh`,
-this installer, and `bin/prereq-ensure.sh` all use these; none names an engine
+`bin/forge/utgard.sh`, `bin/agents/einherjar-spawn.sh`, `bin/agents/valhalla.sh`, `bin/engine/ymir-validate.sh`,
+this installer, and `bin/engine/prereq-ensure.sh` all use these; none names an engine
 directly. **Quadlet**-managed containers (Podman + systemd) surface as
 `systemd --user` units, which the process hall lists. A host-managed deployment
 layer (Quadlet, compose, bare) sits **over** this agnostic core — never inside it.
@@ -579,7 +579,7 @@ now build it when absent:
 (cd apps/smidja-factory/apps/visualizer && bun run build)   # vue-tsc + vite
 ```
 
-`bin/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing **and**
+`bin/engine/ymir-validate.sh` reports `visualizer` FAIL when `./dist` is missing **and**
 when the build exists but nothing is listening on `:8437`. A PASS means the UI is
 built *and* the API is up — so a built-but-dead visualizer (a bad `CMD_DB`, a
 crashed API) can no longer read as green.
@@ -587,14 +587,14 @@ crashed API) can no longer read as green.
 ## Desktop placement (Omarchy desktops, not monitors)
 
 On Omarchy the numbered **desktops** (1 2 3 4 5 …) are the "screens" an operator
-switches between. `bin/desktop-place.sh` gives each Ymir app its **own** desktop,
+switches between. `bin/seat/sessrumnir/desktop-place.sh` gives each Ymir app its **own** desktop,
 **preferring an empty one**, so the apps open separated and reachable with
 `Super+<n>` rather than stacking on the active desktop.
 
 ```
-bin/desktop-place.sh plan            # which desktop each app would take
-bin/desktop-place.sh apply           # write the rules + hyprctl reload
-bin/desktop-place.sh status          # what is installed
+bin/seat/sessrumnir/desktop-place.sh plan            # which desktop each app would take
+bin/seat/sessrumnir/desktop-place.sh apply           # write the rules + hyprctl reload
+bin/seat/sessrumnir/desktop-place.sh status          # what is installed
 ```
 
 It writes `~/.config/hypr/ymir-desktops.lua` using Omarchy's own idiom —
@@ -603,20 +603,20 @@ It writes `~/.config/hypr/ymir-desktops.lua` using Omarchy's own idiom —
 touches `/usr/share/omarchy/`. Verify with `hyprctl configerrors` (must be empty).
 On a non-Omarchy host the step is a clean SKIP.
 
-The class names come from `app_class` (`bin/app-lib.sh`) — one source. A change
+The class names come from `app_class` (`bin/seat/sessrumnir/app-lib.sh`) — one source. A change
 to a class (the 2026-09-24 `ymir-sessrumnir` correction) needs `apply` re-run so
 the generated rule is regenerated; a stale rule is caught by
-`bin/desktop-verify.sh --class-only`.
+`bin/seat/sessrumnir/desktop-verify.sh --class-only`.
 
 ### The install verifies the shelves can open (2026-09-24)
 
-`bin/desktop-verify.sh` checks every surface — hlidskjalf · smidja · odrerir ·
+`bin/seat/sessrumnir/desktop-verify.sh` checks every surface — hlidskjalf · smidja · odrerir ·
 sessrumnir — and its answer is the install's guarantee:
 
 ```bash
-bin/desktop-verify.sh            # resolve + --version + the class invariant
-bin/desktop-verify.sh --live     # with a compositor: a window of the class is held
-bin/desktop-verify.sh --class-only
+bin/seat/sessrumnir/desktop-verify.sh            # resolve + --version + the class invariant
+bin/seat/sessrumnir/desktop-verify.sh --live     # with a compositor: a window of the class is held
+bin/seat/sessrumnir/desktop-verify.sh --class-only
 ```
 
 For each surface: (a) the runtime resolver (`bin/desktop/electron-lib.sh`) yields an
@@ -624,7 +624,7 @@ executable Electron; (b) it answers `--version`; (c) with a compositor present, 
 window of the expected class is held; (d) the class invariant above. It **fails
 loudly**, naming the surface and the resolved path — a runtime that is merely
 absent is a FAILURE, never a silent SKIP. The desktop step of
-`bin/ymir-install.sh` runs it **before** any window is claimed (and again
+`bin/engine/ymir-install.sh` runs it **before** any window is claimed (and again
 `--live` after the raise); a broken surface exits the install nonzero.
 
 ## The Þjazi backend (herdr-first)
@@ -653,14 +653,14 @@ Selection order for the running system: `config/backend` → `BROKK_BACKEND` →
 ## Suggested Omarchy plugins (offered, never forced)
 
 Omarchy's shell is plugin-shaped, and a few registry plugins are Ymir's own organs
-rendered on the desktop. `bin/omarchy-plugins.sh` suggests them and installs only
+rendered on the desktop. `bin/host/omarchy-plugins.sh` suggests them and installs only
 what the Allfather accepts.
 
 ```
-bin/omarchy-plugins.sh list        # what Ymir suggests, and why
-bin/omarchy-plugins.sh installed   # reads omarchy's own plugin list
-bin/omarchy-plugins.sh suggest     # the offer (no install)
-bin/omarchy-plugins.sh add <id>    # install one, with consent
+bin/host/omarchy-plugins.sh list        # what Ymir suggests, and why
+bin/host/omarchy-plugins.sh installed   # reads omarchy's own plugin list
+bin/host/omarchy-plugins.sh suggest     # the offer (no install)
+bin/host/omarchy-plugins.sh add <id>    # install one, with consent
 ```
 
 The core three are Ymir's organs: **Herdr Watch** (Þjazi in the bar), **Hermes
@@ -674,7 +674,7 @@ non-interactive callers; without it a non-interactive `add` refuses with exit 3)
 The installer only *offers*.
 
 ## Consent
-A real install prints **the plan it computed** (`bin/ymir-plan.sh`) and waits for
+A real install prints **the plan it computed** (`bin/bridge/ymir-plan.sh`) and waits for
 `[y/N]`. Declining changes nothing (exit 3). `--check` and `--plan` never prompt.
 A non-interactive caller without `--yes` is refused rather than silently
 proceeding.
@@ -684,26 +684,26 @@ home the operator is asked to choose, the four app surfaces and whether each can
 be installed at all, the terminal backend, and what will be skipped and why. The
 state vocabulary is `DO · SKIP · INFO · BLOCKED · CONSENT`.
 
-`--check` writes nothing — and that includes the migrations. `bin/ymir-migrate.sh
+`--check` writes nothing — and that includes the migrations. `bin/engine/ymir-migrate.sh
 apply` **moves private data**, so the step chain runs it only on a real run;
 a preview leaves the home exactly as it found it. (It used to apply them even
 under `--check`, which moved a home during a "report only" pass.)
 
-`--check` writes nothing — and that includes the migrations. `bin/ymir-migrate.sh
+`--check` writes nothing — and that includes the migrations. `bin/engine/ymir-migrate.sh
 apply` **moves private data**, so the step chain runs it only on a real run;
 a preview leaves the home exactly as it found it. (It used to apply them even
 under `--check`, which moved a home during a "report only" pass.)
 
-## The operator's way in (auth) — `bin/ymir-setup-auth.sh`
+## The operator's way in (auth) — `bin/engine/ymir-setup-auth.sh`
 
 A fresh checkout seeds **no credential**, so the gate has no way in until the
 operator sets one. `step_auth` (interactive install prompts; `--yes`/non-tty
 defers) covers two doors:
 
 ```bash
-bin/ymir-setup-auth.sh status            # which door (if any) is configured
-bin/ymir-setup-auth.sh set [--user U]    # a local password -> HLIDSKJALF_AUTH in .env.local
-bin/ymir-setup-auth.sh github            # GitHub sign-in -> GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET
+bin/engine/ymir-setup-auth.sh status            # which door (if any) is configured
+bin/engine/ymir-setup-auth.sh set [--user U]    # a local password -> HLIDSKJALF_AUTH in .env.local
+bin/engine/ymir-setup-auth.sh github            # GitHub sign-in -> GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET
 ```
 
 Both write `.env.local` (0600, gitignored); a secret is never printed or put in a
@@ -721,10 +721,10 @@ else can create their own account at the gate login screen. Registration is
 closed unless a live code exists, so an instance is never accidentally open.
 
 ```bash
-bin/ymir-invite.sh mint [--limit N]   # a new code (default ceiling 5 accounts)
-bin/ymir-invite.sh list               # every code, what is spent, who is in
-bin/ymir-invite.sh revoke <CODE>      # take one back, now
-bin/ymir-invite.sh where              # where the accounts live on this machine
+bin/engine/ymir-invite.sh mint [--limit N]   # a new code (default ceiling 5 accounts)
+bin/engine/ymir-invite.sh list               # every code, what is spent, who is in
+bin/engine/ymir-invite.sh revoke <CODE>      # take one back, now
+bin/engine/ymir-invite.sh where              # where the accounts live on this machine
 ```
 
 Accounts are stored in `~/.config/ymir/accounts.json` (mode `0600`), machine
@@ -734,24 +734,24 @@ credentials stay `HLIDSKJALF_AUTH` in `.env.local` — invites are for everyone
 
 ## Validation
 
-After the runtime is up, `bin/ymir-validate.sh` observes the result: prerequisites,
+After the runtime is up, `bin/engine/ymir-validate.sh` observes the result: prerequisites,
 the Utgard image, the gate API (`:3889`), the SPA (`:3888`), Bifrost (`:4603`),
 Nornir cron, `smidja.db`, the desktop apps, the well (`:4602`), and the audit
 ledger. A FAIL means the install is not usable; a WARN means a documented-optional
 part is off. `--json` for machine consumption.
 
-### The PR-time real-install gate (2026-09-24, `bin/pr-pretest.sh`)
+### The PR-time real-install gate (2026-09-24, `bin/forge/npm/pr-pretest.sh`)
 
 The Allfather's law: *when PRs are made, do a REAL local npm installation for
 testing, so the updates work when they are pushed to npm later.* One wrapper
-stands at the PR door: `bin/pr-pretest.sh` packs the exact publish artifact
+stands at the PR door: `bin/forge/npm/pr-pretest.sh` packs the exact publish artifact
 (what `npm pack` would push), installs it with a genuine `npm install
 <tarball>` into a fresh sandbox prefix, and smokes the installed essence (bin
 tools, `ymir.js --version`, the hull files, the desktop resolver shape over the
-packaged tree — `bin/npm-pretest.sh local`). PASS, open the PR with the proof
-line; FAIL, no PR — the pack is mended first (`bin/npm-pretest.sh` names the
+packaged tree — `bin/forge/npm/npm-pretest.sh local`). PASS, open the PR with the proof
+line; FAIL, no PR — the pack is mended first (`bin/forge/npm/npm-pretest.sh` names the
 wound). `--body` prints the proof block to paste under the PR description,
-and the external publish gate (`bin/npm-pretest.sh` full) still runs the remote
+and the external publish gate (`bin/forge/npm/npm-pretest.sh` full) still runs the remote
 seat legs before the shelf ever sails. **Bootability is proven, not assumed**
 (2026-09-24): the same leg runs the launcher first-run install in the package
 and verifies every surface resolves an executable electron that answers
@@ -771,7 +771,7 @@ never opens.
 ## Missing dependencies
 
 - **Fixable in user space** (no sudo): `bun`, `uv`, `mcp<2>` — via
-  `bin/prereq-ensure.sh`. `treehouse`, `no-mistakes`, **Hermes**, and the **Þjazi
+  `bin/engine/prereq-ensure.sh`. `treehouse`, `no-mistakes`, **Hermes**, and the **Þjazi
   backend** (herdr, or tmux) are installed by their own ensure/steps.
 - **Needs a system package** (reported with the exact command): `git`,
   `python3`, `docker`, `gh`.
@@ -781,7 +781,7 @@ never opens.
 - **Offline:** engine/Hermes/herdr installers fail gracefully and are reported;
   re-run when the network returns.
 
-## Hermes specifically (`bin/hermes-ensure.sh`)
+## Hermes specifically (`bin/engine/hermes-ensure.sh`)
 
 ```
 hermes-ensure.sh status           # hermes[1]{installed,version,path,method}
@@ -792,7 +792,7 @@ hermes-ensure.sh install          # curl -fsSL https://hermes-agent.nousresearch
 A user who lacks Hermes gets it at setup (`hermes` step). Config/identity
 (`hermes setup`, auth) stays the user's own; Ymir guarantees only the runtime.
 
-## Heimdall specifically (`bin/heimdall-ensure.sh`, `bin/heimdall-ssh-keys.sh`)
+## Heimdall specifically (`bin/host/heimdall-ensure.sh`, `bin/host/heimdall-ssh-keys.sh`)
 
 ```
 heimdall-ensure.sh status             # heimdall[1]{ward,version,gh_users,keys,timer,linger,sshd}
@@ -812,7 +812,7 @@ Hardening (`harden`) disables password logins — a console sudo action, never
 taken by an agent, and refused while zero keys are seated (a machine with no
 key inside is a machine nobody can enter).
 
-## Sessrúmnir specifically (`bin/sessrumnir-ensure.sh`, `bin/sessrumnir.sh`)
+## Sessrúmnir specifically (`bin/seat/sessrumnir/sessrumnir-ensure.sh`, `bin/desktop/sessrumnir.sh`)
 
 ```
 sessrumnir-ensure.sh status           # sessrumnir[1]{dir,deps,built,electron}
@@ -826,16 +826,16 @@ Deps are never committed; the ensure step installs them on first run, exactly as
 `scripts/electron.sh` does for the other desktop apps. The external engine keeps
 its product name `pi-desktop`; the GUI the user sees is Sessrúmnir, themed with
 Ymir's deep-navy palette. The Omarchy launcher entry is rendered from
-`apps/sessrumnir/resources/ymir-sessrumnir.desktop.in` by `bin/desktop-place.sh`
+`apps/sessrumnir/resources/ymir-sessrumnir.desktop.in` by `bin/seat/sessrumnir/desktop-place.sh`
 (placement + `SUPER+B`).
 
 ## Neutral tenant defaults — a fresh Ymir is a distro, not the company
 
-A fresh install ships **no company of its own**. `bin/ymir-install.sh` seeds one
+A fresh install ships **no company of its own**. `bin/engine/ymir-install.sh` seeds one
 `personal` workspace and an **empty** projects registry (a commented example
 only); it never writes a company slug, a company remote, or a `work (company: …)`
 line. The runtime resolves the active realm **neutrally** through
-`bin/realm-lib.sh` (`ymir_active_realm`): `data/realm.md` (first line) → the first
+`bin/skuld/realm-lib.sh` (`ymir_active_realm`): `data/realm.md` (first line) → the first
 non-example tenant under `svartalfaheim/` → `default`. **No script may fall back
 to a company slug.** The reference tenant the distro was built for lives at
 `svartalfaheim/examples/wayof/` — an example to copy, never the default. A `work`
@@ -845,7 +845,7 @@ workspace must name its own company: `workspace-provision.sh` requires
 ## Per-workspace provisioning
 
 ```
-bin/workspace-provision.sh <name> --kind work|personal [--domains a,b,c] [--company <slug>]
+bin/agents/workspace-provision.sh <name> --kind work|personal [--domains a,b,c] [--company <slug>]
 ```
 
 Creates `workspace/<name>/<domains>/`, registers it in `workspaces.yaml`, and
@@ -856,17 +856,17 @@ company is the operator's to name; Ymir ships no default.
 ## Verify
 
 ```
-bin/ymir-install.sh --check          # all steps OK/WARN
-bin/ymir-validate.sh                 # the running system actually works
+bin/engine/ymir-install.sh --check          # all steps OK/WARN
+bin/engine/ymir-validate.sh                 # the running system actually works
 bin/seat/herdr-ensure.sh status           # the Þjazi backend and its protocol floor
-bin/host-sense.sh                    # sense THIS machine (any host)
-bin/omarchy-sense.sh status          # the Omarchy recording (Omarchy hosts)
+bin/host/host-sense.sh                    # sense THIS machine (any host)
+bin/host/omarchy-sense.sh status          # the Omarchy recording (Omarchy hosts)
 bin/time/saga-session-start.sh            # the session digest
 bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh
 ```
 
-On **every** host the installer senses the machine with `bin/host-sense.sh`. On
-an **Omarchy** host the layer also *records* it (`bin/omarchy-sense.sh observe`)
+On **every** host the installer senses the machine with `bin/host/host-sense.sh`. On
+an **Omarchy** host the layer also *records* it (`bin/host/omarchy-sense.sh observe`)
 and installs a `post-update` hook so Ymir re-learns it every time Omarchy
 updates. On a non-Omarchy host that layer step is a clean SKIP.
 
@@ -957,7 +957,7 @@ chmod +x node_modules/electron/dist/electron
 
 **Verify the install as a whole**, not just that a build passed: the electron and
 esbuild binaries report versions, both `dist/` directories exist, and
-`bin/ymir-install.sh --check` reports the visualizer and smidja green.
+`bin/engine/ymir-install.sh --check` reports the visualizer and smidja green.
 
 ## Platform support — Linux, macOS, Windows
 
@@ -968,11 +968,11 @@ GPU and service paths behave normally.
 
 ### One place knows the difference
 
-`bin/ymir-platform.sh` is the portability layer. It defines functions only and is
+`bin/fleet/ymir-platform.sh` is the portability layer. It defines functions only and is
 sourced, never executed:
 
 ```bash
-. "$ROOT/bin/ymir-platform.sh"     # scripts already do this via the shim block
+. "$ROOT/bin/fleet/ymir-platform.sh"     # scripts already do this via the shim block
 ```
 
 | Need | Function | Why it exists |
@@ -996,7 +996,7 @@ and sources the library, then marks it loaded so a second source is a no-op:
 ```bash
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
   _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/ymir-platform.sh"; do
+  for _ymir_c in "$_ymir_dir/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/fleet/ymir-platform.sh"; do
     [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
   done
   unset _ymir_dir _ymir_c
@@ -1075,14 +1075,14 @@ portable terms the code now uses, not the Omarchy-only terms it used before.
 
 ### The machine's role — the install's component set (plan 51, P1)
 
-**Role is resolved before the first step runs.** `bin/ymir-install.sh` calls
-`establish_roles` (`bin/role-lib.sh`) right after consent and **before** the step
+**Role is resolved before the first step runs.** `bin/engine/ymir-install.sh` calls
+`establish_roles` (`bin/skuld/role-lib.sh`) right after consent and **before** the step
 chain, because the role is what selects the components the chain installs.
 
 ```
 role_resolution[4]{source,when}:
   "--role <r> | $YMIR_ROLE","the operator names it for this run — the strongest statement; an unknown name is REFUSED (exit 2), never guessed"
-  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/role.sh)"
+  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/skuld/role.sh)"
   "the machine card","the host's own row in $YMIR_HOME/hodd/data/machines.md — a role token in that row"
   "ask -> the safe body","a host in none of them is ASKED on a real interactive run; a run that cannot ask (--check, --yes, no tty) takes the documented safe body `dev` (owns no record, runs no record job) and says so — never the union of every role's parts"
 ```
@@ -1096,7 +1096,7 @@ of the roles that own the component, emits a `SKIP` that names why:
 "local-model","SKIP","not this machine's role (forge,dev only) — the model rail"
 ```
 
-The components each role owes (the ONE table, `bin/role-lib.sh` `components_for`):
+The components each role owes (the ONE table, `bin/skuld/role-lib.sh` `components_for`):
 
 ```
 role_components[4]{role,components}:
@@ -1106,7 +1106,7 @@ role_components[4]{role,components}:
   "hand","core only — nothing persistent"
 ```
 
-`step_role` then **records** what was resolved: `bin/role.sh set` writes the fleet
+`step_role` then **records** what was resolved: `bin/skuld/role.sh set` writes the fleet
 registry, and `machine_card_write` folds this machine into the ONE registry,
 `hodd/data/machines.md` (plan 39's fold — no parallel card). The card is keyed by
 a deterministic heading (`## Machine card — <host> (role: <roles>)`), so a repeat
@@ -1114,10 +1114,10 @@ install writes nothing and a role change APPENDS a new card — the registry's
 history is never rewritten (Rule 06).
 
 ```bash
-bin/ymir-install.sh --check                 # this host's role + component set, no writes
-bin/ymir-install.sh --check --role heart    # read AS a heart: the dev desktop layer and the rail SKIP
-bin/ymir-install.sh --role forge            # declare it for the run (and record it)
-bin/role.sh set <host> heart,forge          # change it afterwards
+bin/engine/ymir-install.sh --check                 # this host's role + component set, no writes
+bin/engine/ymir-install.sh --check --role heart    # read AS a heart: the dev desktop layer and the rail SKIP
+bin/engine/ymir-install.sh --role forge            # declare it for the run (and record it)
+bin/skuld/role.sh set <host> heart,forge          # change it afterwards
 ```
 
 **Rule 05 holds:** the role layer is **host-neutral** — it selects components,
@@ -1130,17 +1130,17 @@ owns are in `README.md` (*"The Fleet — many machines, one record"*) and Plan 5
 
 The boot obeys the role too: **what a seat owes at boot is its roles'
 programs** — the heart's offices, the forge's stone, a dev body's own web stack.
-`bin/ymir-autoboot.sh status` prints the per-role truth, and
-`bin/ymir-autoboot.sh verify` is the boot proof the install's final step runs.
+`bin/engine/ymir-autoboot.sh status` prints the per-role truth, and
+`bin/engine/ymir-autoboot.sh verify` is the boot proof the install's final step runs.
 
 ### The dispatch profile is derived, never left as a template (D4)
 
-`step_host` also runs `bin/dispatch-profile.sh derive` into
+`step_host` also runs `bin/fleet/dispatch-profile.sh derive` into
 `$YMIR_HOME/hodd/config/eindri-dispatch.json` (once — a private override that
 wins over the repo file thereafter). The derivation reads `config/agents.yaml`
 plus the live pi catalog, so the rules carry the machine's real harness/model;
 a template still holding unfilled model tokens is NOT active and steers
-nothing (`bin/dispatch-profile.sh active` decides — see `eindri-orchestration.md` §5.1).
+nothing (`bin/fleet/dispatch-profile.sh active` decides — see `eindri-orchestration.md` §5.1).
 
 ### The agents are declared, not scripted (plan 58 Phase 4)
 
@@ -1150,21 +1150,21 @@ halves have separate homes, and neither leaks into the other:
 ```
 declared_agents[4]{what,where,read_by}:
   "the figure (prose + frontmatter)",".agents/agents/<figure>.md","the harnesses (symlinked), the roster"
-  "the wiring (role → figure → tools)",".agents/roles.yaml","bin/agents/eindri-role.sh · bin/agents-config.sh roster"
-  "the model (per figure)","$YMIR_HOME/config/agents.yaml (+ per-host overlay)","bin/agents-config.sh get <figure> model"
-  "the resolved roster","bin/agents-config.sh roster","dispatch doors, reads only"
+  "the wiring (role → figure → tools)",".agents/roles.yaml","bin/agents/eindri-role.sh · bin/fleet/agents-config.sh roster"
+  "the model (per figure)","$YMIR_HOME/config/agents.yaml (+ per-host overlay)","bin/fleet/agents-config.sh get <figure> model"
+  "the resolved roster","bin/fleet/agents-config.sh roster","dispatch doors, reads only"
 ```
 
 - **No model is pinned in the tree.** A figure card carries `role`,
   `norse_name`, `descriptor`, `capabilities`, `skills`, `ymir_tools` and
   `workspace_patterns` — never a `model:`. The model is resolved from the hoard
-  **by figure name** at dispatch (`bin/agents-config.sh get <figure> model`),
+  **by figure name** at dispatch (`bin/fleet/agents-config.sh get <figure> model`),
   so one public tree runs on any hardware (Rule 04; plan 56).
 - **`roles.yaml` is the decision table in data.** `bin/agents/eindri-role.sh` reads it
-  — it declares no role in code — and `bin/agents-config.sh roster` joins it to
+  — it declares no role in code — and `bin/fleet/agents-config.sh roster` joins it to
   the hoard, emitting `role → figure → harness → model → tools`. Two hoard
   YAMLs yield two rosters; the tracked tree never moves.
-- **Apply writes nothing canonical.** `bin/agents-config.sh apply` publishes
+- **Apply writes nothing canonical.** `bin/fleet/agents-config.sh apply` publishes
   local providers and per-agent models into the *harness's own* config
   (`opencode.json`, untracked) and caches the resolution in state; it never
   rewrites `.agents/agents/*.md`. The roster is resolved, not stamped into the
@@ -1173,17 +1173,17 @@ declared_agents[4]{what,where,read_by}:
 ```bash
 bin/agents/eindri-role.sh list                 # the dispatch roles and their crafts
 bin/agents/eindri-role.sh choose "<task>"      # the smith whose craft fits
-bin/agents-config.sh roster             # role → figure → harness → model → tools
-bin/agents-config.sh get sindri model   # one figure's model, from the hoard
+bin/fleet/agents-config.sh roster             # role → figure → harness → model → tools
+bin/fleet/agents-config.sh get sindri model   # one figure's model, from the hoard
 ```
 
 ### What the Omarchy layer installs
 
 ```bash
-bin/omarchy-sense.sh observe          # learn packages, configs, Omarchy version
-bin/omarchy-plugins.sh add            # the suggested shell plugins (never forced)
-bin/omarchy-hook-install.sh install   # re-learn after every `omarchy update`
-bin/desktop-place.sh apply            # Hyprland desktops + launcher entries
+bin/host/omarchy-sense.sh observe          # learn packages, configs, Omarchy version
+bin/host/omarchy-plugins.sh add            # the suggested shell plugins (never forced)
+bin/host/omarchy-hook-install.sh install   # re-learn after every `omarchy update`
+bin/seat/sessrumnir/desktop-place.sh apply            # Hyprland desktops + launcher entries
 ```
 
 `desktop-place.sh apply` does both halves of the desktop integration: it writes
@@ -1222,19 +1222,19 @@ backup, it is not carried.
 
 ### The memory engine is provisioned, not hinted (2026-09-12)
 
-`bin/ymir-install.sh` used to *check* for the well engine and, failing, print
+`bin/engine/ymir-install.sh` used to *check* for the well engine and, failing, print
 `SKIP "optional — install engine then run bin/bridge/mimir-bridge.sh"`. A SKIP never
 blocks, so the well was silently down on every install — and the hint named the
 wrong package, so following it made things worse.
 
-Now the installer provisions it: `bin/prereq-ensure.sh engram` installs
+Now the installer provisions it: `bin/engine/prereq-ensure.sh engram` installs
 **`engdbram`** (the distribution; the *module* is `engram`) into an interpreter
 that can run it (>=3.11; uv supplies 3.12 when the distro's Python is unsuitable),
 and records that interpreter in `~/.config/ymir/engram-python`. `bin/bridge/mimir-bridge.sh`
 reads the same file, so the installer and the bridge always agree.
 
 ```bash
-bin/prereq-ensure.sh engram        # install and record the interpreter
+bin/engine/prereq-ensure.sh engram        # install and record the interpreter
 bin/bridge/mimir-bridge.sh --start        # the :4602 face over the engine
 curl -s 127.0.0.1:4602/health      # {"status": "up", "store": ".agents/memory/kaia.engram"}
 ```
@@ -1242,13 +1242,13 @@ curl -s 127.0.0.1:4602/health      # {"status": "up", "store": ".agents/memory/k
 **Never `pip install engram`.** PyPI's `engram` is an unrelated rendering library
 (mitsuba/drjit/torch) whose install pulls gigabytes of CUDA wheels and still
 leaves Ymir with no engine. The prerequisite target exists so nobody has to know
-that: `bin/prereq-ensure.sh engram`.
+that: `bin/engine/prereq-ensure.sh engram`.
 
 ### The rename sweep broke governed paths, not just prose (2026-09-12)
 
 The `smidja` → `smidja-factory` rename left `smidja-factory-factory` behind in
-**seven** places — `scripts/start.sh` (`VIZ_DIR`), `bin/ymir-validate.sh`,
-`bin/ymir-install.sh` (twice: the dist probe and the build dir),
+**seven** places — `scripts/start.sh` (`VIZ_DIR`), `bin/engine/ymir-validate.sh`,
+`bin/engine/ymir-install.sh` (twice: the dist probe and the build dir),
 `bin/time/saga-session-start.sh` (the governed-path TOON row), `AGENTS.md` (the
 `governed[]` table, twice) and the guard's own `asset_for` pattern.
 
@@ -1258,7 +1258,7 @@ check still passed. A `governed` check now exists in
 `compliance-check.sh` for exactly this class (see `runtime-compliance.md` §G13);
 it reports `all 25 governed paths exist`.
 
-`bin/ymir-install.sh` and `bin/ymir-validate.sh` are the two files of this asset
+`bin/engine/ymir-install.sh` and `bin/engine/ymir-validate.sh` are the two files of this asset
 that the sweep corrected. The visualizer path is
 `apps/smidja-factory/apps/visualizer` (the smidja repo clone) — **not** the
 skill tree (dropped 2026-09-17, the skill carries no copy), not a doubled

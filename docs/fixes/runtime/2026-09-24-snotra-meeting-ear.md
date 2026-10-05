@@ -11,11 +11,11 @@ into the hoard where the fleet's agents can read it.
   Resource: `snotra://ear`.
 - **`tools/mill/systemd/snotra.service`** — user unit, `WantedBy=default.target`,
   joins the auto-boot law. Runs `node ~/.fleet/snotra-server.mjs`.
-- **`bin/snotra-capture.sh`** — PipeWire mic + system monitor capture. Writes
+- **`bin/time/snotra/snotra-capture.sh`** — PipeWire mic + system monitor capture. Writes
   dated WAV to the hoard. Listening indicator via `state/.snotra-listening`.
-- **`bin/snotra-transcribe.sh`** — whisper.cpp transcription (local GPU),
+- **`bin/time/snotra/snotra-transcribe.sh`** — whisper.cpp transcription (local GPU),
   structured Markdown minutes, Rune appended.
-- **`bin/fleet-ensure.sh`** — updated to materialize `snotra-server.mjs`,
+- **`bin/fleet/fleet-ensure.sh`** — updated to materialize `snotra-server.mjs`,
   wire `snotra` into the seat's `mcp.json`, and raise the unit.
 - **`.agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md`** — owning
   Galdr asset.
@@ -34,8 +34,8 @@ requires transferring the recording. Configurable via `WHISPER_GPU=off`.
 ### Files
 - `tools/snotra/server.mjs`
 - `tools/mill/systemd/snotra.service`
-- `bin/snotra-capture.sh`
-- `bin/snotra-transcribe.sh`
-- `bin/fleet-ensure.sh` (updated)
+- `bin/time/snotra/snotra-capture.sh`
+- `bin/time/snotra/snotra-transcribe.sh`
+- `bin/fleet/fleet-ensure.sh` (updated)
 - `AGENTS.md` (governed[] updated)
 - `.agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md`

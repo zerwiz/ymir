@@ -87,12 +87,12 @@ commands[5]{command,purpose}:
   "bin/agents/eindri-seen.sh","bridge condition: has the smith reported? (report file, or herdr left working)"
   "bin/agents/eindri-acclaim.sh","the push path: file the report/status, mark the ONE shared ledger (bin/agents/eindri-wake-lib.sh), append the durable wake queue + desktop note; the worker's own terminal act"
   "bin/agents/eindri-handoff.sh","the handoff failsafe: sweep undelivered reports/questions into the wake queue, idempotent on the shared ledger (run on re-arm and on the 06:45 cron row)"
-  "bin/hall-snapshot.sh","the planning feed: real system state -> public-safe livehall.json for the Óðrerir Hall"
+  "bin/time/snotra/hall-snapshot.sh","the planning feed: real system state -> public-safe livehall.json for the Óðrerir Hall"
 ```
 
 ## The marketing stack doors (provisionable — one stack, any computer)
 
-`bin/ymir-marketing-stack.sh up|status|down|doors` stands Mautic + Postiz +
+`bin/desktop/ymir-marketing-stack.sh up|status|down|doors` stands Mautic + Postiz +
 Activepieces (+ optionally Forgejo) on ANY computer — same OSS engines the
 server runs, env-driven, ports virtualized, secrets in the home, never inline.
 The Allfather's server stack (zerwizserver) and the public doors agents reach:
@@ -108,7 +108,7 @@ marketing_doors[6]{service,door,reach_note}:
 ```
 
 An agent (Bragi for marketing, Sindri for git) provisions the stack locally for
-any user with `bin/ymir-marketing-stack.sh`; the server stack is the Allfather's
+any user with `bin/desktop/ymir-marketing-stack.sh`; the server stack is the Allfather's
 live one. Public-door exposure on the server is tunnel-driven (cloudflared) —
 mend the door layer on the server, not in the tree.
 

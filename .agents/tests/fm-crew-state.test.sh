@@ -30,9 +30,9 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-classify-lib.sh"
+. "$ROOT/bin/backend/fm-classify-lib.sh"
 
-CREW_STATE="$ROOT/bin/fm-crew-state.sh"
+CREW_STATE="$ROOT/bin/backend/fm-crew-state.sh"
 TMP_ROOT=$(fm_test_tmproot fm-crew-state)
 fm_git_identity fmtest fmtest@example.invalid
 
@@ -151,8 +151,8 @@ new_case() {  # <name> -> echoes case dir with an empty state/
 
 arm_idle_record() {  # <state-dir> <id>
   local state=$1 id=$2 gen
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$state" "$id")
-  "$ROOT/bin/fm-busy-event.sh" apply "$state" "$id" idle --gen "$gen" \
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$state" "$id")
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$state" "$id" idle --gen "$gen" \
     --source claude-hook --event stop
 }
 
@@ -795,8 +795,8 @@ test_no_run_busy_pane() {
   FM_FAKE_AXI_STATUS=""
   FM_FAKE_RUNS_LIST=""
   FM_FAKE_BUSY=1
-  local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$d/state" feat-h)
-  "$ROOT/bin/fm-busy-event.sh" apply "$d/state" feat-h busy --gen "$gen" \
+  local gen; gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$d/state" feat-h)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$d/state" feat-h busy --gen "$gen" \
     --source claude-hook --event user-prompt-submit
   local out; out=$(run_crew_state "$d" feat-h)
   assert_contains "$out" "state: working" "busy record -> working"
@@ -889,8 +889,8 @@ test_no_run_herdr_idle_agent_status_outranked_by_record() {
   FM_FAKE_TMUX_MISSING=1
   FM_FAKE_HERDR_AGENT_STATUS=idle
   FM_FAKE_HERDR_BUSY=0
-  local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$d/state" feat-herdr-idle)
-  "$ROOT/bin/fm-busy-event.sh" apply "$d/state" feat-herdr-idle busy --gen "$gen" \
+  local gen; gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$d/state" feat-herdr-idle)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$d/state" feat-herdr-idle busy --gen "$gen" \
     --source claude-hook --event user-prompt-submit
   local out; out=$(run_crew_state "$d" feat-herdr-idle)
   assert_contains "$out" "state: working" "a busy record with herdr idle agent_status -> working"
@@ -914,8 +914,8 @@ test_no_run_herdr_idle_agent_status_and_idle_record_stays_idle() {
   FM_FAKE_TMUX_MISSING=1
   FM_FAKE_HERDR_AGENT_STATUS=idle
   FM_FAKE_HERDR_BUSY=0
-  local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$d/state" feat-herdr-stopped)
-  "$ROOT/bin/fm-busy-event.sh" apply "$d/state" feat-herdr-stopped idle --gen "$gen" \
+  local gen; gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$d/state" feat-herdr-stopped)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$d/state" feat-herdr-stopped idle --gen "$gen" \
     --source claude-hook --event stop
   local out; out=$(run_crew_state "$d" feat-herdr-stopped)
   assert_not_contains "$out" "source: pane" "an idle record must not read as busy"
@@ -1102,8 +1102,8 @@ SH
   fm_write_meta "$d/state/feat-timeout.meta" "window=fm:fm-feat-timeout" "worktree=$d/wt" "kind=ship" \
     "harness=claude"
   FM_FAKE_BUSY=1
-  local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$d/state" feat-timeout)
-  "$ROOT/bin/fm-busy-event.sh" apply "$d/state" feat-timeout busy --gen "$gen" \
+  local gen; gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$d/state" feat-timeout)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$d/state" feat-timeout busy --gen "$gen" \
     --source claude-hook --event user-prompt-submit
   start=$SECONDS
   out=$(FM_FAKE_NM_CALLS="$calls_file" PATH="$d/fakebin:$toolbin" FM_STATE_OVERRIDE="$d/state" FM_CREW_STATE_NM_TIMEOUT=1 "$CREW_STATE" feat-timeout)
@@ -1127,8 +1127,8 @@ test_scout_skips_run_lookup() {
   # Even if a run existed on this branch, a scout must not read it.
   FM_FAKE_AXI_STATUS="$(run_running fm/scout-j)"
   FM_FAKE_BUSY=1
-  local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$d/state" scout-j)
-  "$ROOT/bin/fm-busy-event.sh" apply "$d/state" scout-j busy --gen "$gen" \
+  local gen; gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$d/state" scout-j)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$d/state" scout-j busy --gen "$gen" \
     --source claude-hook --event user-prompt-submit
   local out; out=$(run_crew_state "$d" scout-j)
   assert_not_contains "$out" "source: run-step" "scout ignores no-mistakes run-step"
@@ -1478,8 +1478,8 @@ test_coarse_unresolvable_active_row_never_falls_to_older_row() {
 EOF
 )"
   FM_FAKE_BUSY=1
-  local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$d/state" feat-f10c)
-  "$ROOT/bin/fm-busy-event.sh" apply "$d/state" feat-f10c busy --gen "$gen" \
+  local gen; gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$d/state" feat-f10c)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$d/state" feat-f10c busy --gen "$gen" \
     --source claude-hook --event user-prompt-submit
   local out; out=$(run_crew_state "$d" feat-f10c)
   assert_not_contains "$out" "state: failed" "an unresolvable active row must not fall to the older failed row"

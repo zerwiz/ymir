@@ -11,19 +11,19 @@
   2. **An install never refreshed the entries.** The launcher entries outlive the
      tree that wrote them; `npm install` updated the package but left the menu
      untouched, so a stale or missing entry stayed invisible until an operator
-     looked. `bin/fleet-deploy.sh` (the postinstall deployer) now also runs
-     `bin/design-icon.sh install` and `bin/desktop-place.sh apply` — best-effort
+     looked. `bin/fleet/fleet-deploy.sh` (the postinstall deployer) now also runs
+     `bin/desktop/design-icon.sh install` and `bin/seat/sessrumnir/desktop-place.sh apply` — best-effort
      and host-gated, opt out with `YMIR_SKIP_DESKTOP=1`.
 - **Result:** four entries stand — Hlidskjalf · Óðrerir · Sessrúmnir · Smíðja —
   and an install keeps them current.
 
 ### Verified
-- `bin/design-icon.sh install` now reports **all four** and
+- `bin/desktop/design-icon.sh install` now reports **all four** and
   `~/.local/share/applications/` holds `ymir-hlidskjalf · ymir-odrerir ·
   ymir-sessrumnir · ymir-smidja .desktop` (Smiðja present again).
-- `bin/fleet-deploy.sh --dry-run` reports the desktop refresh step.
+- `bin/fleet/fleet-deploy.sh --dry-run` reports the desktop refresh step.
 - `bash -n` clean.
 
 ### Files
-- `bin/design-icon.sh`
-- `bin/fleet-deploy.sh`
+- `bin/desktop/design-icon.sh`
+- `bin/fleet/fleet-deploy.sh`

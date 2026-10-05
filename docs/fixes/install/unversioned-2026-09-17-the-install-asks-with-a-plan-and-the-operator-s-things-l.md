@@ -4,7 +4,7 @@
 - **The consent a real install asks for is now computed, not recited.** The old
   prompt was a hardcoded paragraph, and a paragraph cannot know the host: it named
   an Omarchy version on a Mac, promised a workspace tree that already stood, and
-  never mentioned that no application had been installed at all. `bin/ymir-plan.sh`
+  never mentioned that no application had been installed at all. `bin/bridge/ymir-plan.sh`
   probes this machine and prints one row per step with its state and the reason —
   `DO · SKIP · INFO · BLOCKED · CONSENT` — across nine phases (resolve · code ·
   home · runtimes · engines · apps · wire · raise · verify). `ymir-install.sh`

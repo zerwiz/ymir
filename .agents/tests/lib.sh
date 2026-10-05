@@ -38,8 +38,8 @@ export FM_GATE_REFUSE_BYPASS=1
 # Resolve the repo root from this library's own location. Consumed by sourcing
 # test files, not by this library, so it reads as "unused" here.
 # TWO levels up, not one. This file lives at .agents/tests/lib.sh, so its parent
-# is .agents/ — and `$ROOT/bin/fm-wake-lib.sh` then resolved to
-# .agents/bin/fm-wake-lib.sh, which has never existed. It was wrong from the
+# is .agents/ — and `$ROOT/bin/backend/fm-wake-lib.sh` then resolved to
+# .agents/bin/backend/fm-wake-lib.sh, which has never existed. It was wrong from the
 # repository's first commit (3c99ba0), and because lib.sh is SOURCED it failed
 # SILENTLY: the pid-identity call failed, lib.sh returned 1 out of a sourced
 # file, and every test came up half-built with no reason printed
@@ -84,7 +84,7 @@ FM_TEST_CLEANUP_REGISTRY=$(mktemp "${TMPDIR:-/tmp}/.fm-test-cleanup.$$.XXXXXX") 
 fm_test_pid_identity() {
   local pid=$1
   FM_STATE_OVERRIDE="${TMPDIR:-/tmp}" bash -c \
-    '. "$1"; fm_pid_identity "$2"' _ "$ROOT/bin/fm-wake-lib.sh" "$pid"
+    '. "$1"; fm_pid_identity "$2"' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$pid"
 }
 
 FM_TEST_OWNER_IDENTITY=$(fm_test_pid_identity "$$") || {

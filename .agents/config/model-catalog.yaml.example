@@ -1,5 +1,5 @@
 # config/model-catalog.yaml.example — a MENU of public model artifacts, not a
-# choice. bin/model-fit.sh reads the operator's hoard copy
+# choice. bin/model/model-fit.sh reads the operator's hoard copy
 # ($YMIR_HOME/config/model-catalog.yaml) and picks the largest candidate that
 # fits the hardware PROBED AT RUN TIME. Nothing here is pinned: the selection is
 # the machine's, so two operators get two models with this tree untouched.

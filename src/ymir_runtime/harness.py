@@ -1,7 +1,7 @@
 """Hamr — which harness wears this errand, and the exact line that launches it.
 
 The engine owns the *choice* and the *line*; it does not own how a harness
-behaves (that is `bin/hamr-harness.sh` and the harness itself). Resolution is
+behaves (that is `bin/fleet/hamr-harness.sh` and the harness itself). Resolution is
 the machine's, never a repo template's, and the provenance is always named:
 
   1. an explicit flag                      → "explicit flag"

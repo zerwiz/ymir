@@ -41,7 +41,7 @@ const pkg = (() => {
   try { return require(path.join(ROOT, 'package.json')); } catch { return { version: '0.0.0' }; }
 })();
 
-// ── the cloth (the same palette as bin/ymir-style.sh, cut from the tokens) ───
+// ── the cloth (the same palette as bin/desktop/ymir-style.sh, cut from the tokens) ───
 const colour = process.stderr.isTTY && !process.env.NO_COLOR && process.env.TERM !== 'dumb';
 const wrap = (code) => (s) => (colour ? `\u001b[${code}m${s}\u001b[0m` : `${s}`);
 const bone = wrap('38;2;207;195;169');
@@ -121,23 +121,23 @@ function checkForUpdate() {
 // verb → { script, args } — args are prepended to whatever the operator passes,
 // so a verb can be a doorway to a sub-verb of a script that has several.
 const DOORS = {
-  install:    { script: 'bin/ymir-install.sh',    about: 'first setup (idempotent, self-healing)' },
+  install:    { script: 'bin/engine/ymir-install.sh',    about: 'first setup (idempotent, self-healing)' },
   raise:      { script: 'scripts/start.sh',       about: 'lift the hall — SPA, gate API, Nornir, bridges, the board' },
   lower:      { script: 'scripts/stop.sh',        about: 'lay the hall down' },
-  eir:        { script: 'bin/eir-doctor.sh',      about: 'diagnose every surface; mend what is broken' },
-  groa:       { script: 'bin/groa-update.sh',     about: 'take the latest, then mend this home forward' },
-  heimdall:   { script: 'bin/ymir-setup-auth.sh', about: 'the way in — your credential (status · set · github)' },
-  invite:     { script: 'bin/ymir-invite.sh',     about: 'let someone else in (mint · list · revoke)' },
+  eir:        { script: 'bin/agents/eir-doctor.sh',      about: 'diagnose every surface; mend what is broken' },
+  groa:       { script: 'bin/agents/groa-update.sh',     about: 'take the latest, then mend this home forward' },
+  heimdall:   { script: 'bin/engine/ymir-setup-auth.sh', about: 'the way in — your credential (status · set · github)' },
+  invite:     { script: 'bin/engine/ymir-invite.sh',     about: 'let someone else in (mint · list · revoke)' },
   smidja:     { script: 'bin/desktop/smidja-board.sh',    about: "the smithy's board on :8437 (build · start · stop · status)" },
   hlidskjalf: { script: 'scripts/electron.sh',    about: "the high seat's window", args: ['start', '--view', 'hlidskjalf'] },
   sessrumnir: { script: 'scripts/electron.sh',    about: "the seat-hall's window", args: ['start', '--view', 'sessrumnir'] },
   odrerir:    { script: 'scripts/electron.sh',    about: "the live hall's window", args: ['start', '--view', 'odrerir'] },
   mimir:      { script: 'bin/records/mimir.sh',           about: 'the memory well' },
-  config:     { script: 'bin/ymir-config.sh',     about: 'your preferences — which notices are shown (stay silent with `notice <key> off`)' },
-  sense:      { script: 'bin/host-sense.sh',      about: 'what THIS machine is' },
-  plan:       { script: 'bin/ymir-plan.sh',       about: 'what an install would do here — writes nothing' },
-  migrate:    { script: 'bin/ymir-migrate.sh',    about: "heal this home's structure forward (Gr\u00f3a's mend)" },
-  validate:   { script: 'bin/ymir-validate.sh',   about: 'alias of `ymir eir`' },
+  config:     { script: 'bin/engine/ymir-config.sh',     about: 'your preferences — which notices are shown (stay silent with `notice <key> off`)' },
+  sense:      { script: 'bin/host/host-sense.sh',      about: 'what THIS machine is' },
+  plan:       { script: 'bin/bridge/ymir-plan.sh',       about: 'what an install would do here — writes nothing' },
+  migrate:    { script: 'bin/engine/ymir-migrate.sh',    about: "heal this home's structure forward (Gr\u00f3a's mend)" },
+  validate:   { script: 'bin/engine/ymir-validate.sh',   about: 'alias of `ymir eir`' },
 };
 
 // Names the law has not given a home are kept for a while, so a muscle memory

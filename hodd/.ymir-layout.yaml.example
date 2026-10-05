@@ -2,7 +2,7 @@
 #
 # Every new ymir seat raises its private home from this skeleton. Copy it to
 # $YMIR_HOME/.ymir-layout.yaml and point each key at the REAL directory —
-# the placement ward (bin/eir-doctor.sh, "hoard" surface) validates that every
+# the placement ward (bin/agents/eir-doctor.sh, "hoard" surface) validates that every
 # mapped path EXISTS; a stale map is how private work lands outside the well.
 #
 # THE LAW OF THIS EXAMPLE: it mirrors the home's true map by NAME, one shelf

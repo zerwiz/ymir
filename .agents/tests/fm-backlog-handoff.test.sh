@@ -44,7 +44,7 @@ inbox_body_stream() { # <state-dir> <task-id>
   for rec in "$1/$2.inbox"/*.msg; do
     [ -f "$rec" ] || continue
     bash -c '. "$1"; fm_task_inbox_body "$2"' _ \
-      "$ROOT/bin/fm-task-inbox-lib.sh" "$rec"
+      "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$rec"
   done
 }
 
@@ -240,7 +240,7 @@ SH
   FM_PENDING_REPLY_NOW=9999999999 bash -c '
     . "$1"
     fm_pending_reply_reconcile_delivery "$2" "$3"
-  ' _ "$ROOT/bin/fm-pending-reply-lib.sh" "$home/state" "$corr" \
+  ' _ "$ROOT/bin/backend/fm-pending-reply-lib.sh" "$home/state" "$corr" \
     || fail "concurrent watcher could not reconcile the durable enqueue"
   phase=$(sed -n 's/^phase=//p' "$home/state/pending-replies/$corr")
   [ "$phase" = awaiting_report ] \
@@ -648,7 +648,7 @@ SH
     FM_FAKE_TMUX_WINDOW='firstmate:fm-design' \
     FM_FAKE_TMUX_LOG="$TMP_ROOT/teardown-race-tmux.log" \
     FM_FAKE_TMUX_CAPTURE="$TMP_ROOT/teardown-race-fake/pane.txt" \
-    "$ROOT/bin/fm-teardown.sh" design --force > "$TMP_ROOT/teardown-race-teardown.out" 2>&1 &
+    "$ROOT/bin/backend/fm-teardown.sh" design --force > "$TMP_ROOT/teardown-race-teardown.out" 2>&1 &
   teardown=$!
   sleep 0.3
   kill -0 "$teardown" 2>/dev/null \
@@ -674,7 +674,7 @@ test_local_teardown_preserves_wake_when_home_removal_fails() {
   corr=$(FM_HOME="$home" bash -c '
     . "$1"
     fm_pending_reply_create "$2" "$2/state" design "New routed work is in your backlog."
-  ' _ "$ROOT/bin/fm-pending-reply-lib.sh" "$home") \
+  ' _ "$ROOT/bin/backend/fm-pending-reply-lib.sh" "$home") \
     || fail "could not seed teardown wake state"
   marker="$home/state/.backlog-handoff-design.wake-pending"
   rec="$home/state/pending-replies/$corr"
@@ -699,7 +699,7 @@ SH
     FM_FAKE_TMUX_WINDOW='firstmate:fm-design' \
     FM_FAKE_TMUX_LOG="$TMP_ROOT/teardown-home-fail-tmux.log" \
     FM_FAKE_TMUX_CAPTURE="$TMP_ROOT/teardown-home-fail-fake/pane.txt" \
-    "$ROOT/bin/fm-teardown.sh" design --force > "$TMP_ROOT/teardown-home-fail.out" 2>&1
+    "$ROOT/bin/backend/fm-teardown.sh" design --force > "$TMP_ROOT/teardown-home-fail.out" 2>&1
   rc=$?
   set -e
   [ "$rc" -ne 0 ] || fail "teardown ignored the receiver-home removal failure"
@@ -716,7 +716,7 @@ SH
     FM_FAKE_TMUX_WINDOW='firstmate:fm-design' \
     FM_FAKE_TMUX_LOG="$TMP_ROOT/teardown-home-fail-tmux.log" \
     FM_FAKE_TMUX_CAPTURE="$TMP_ROOT/teardown-home-fail-fake/pane.txt" \
-    "$ROOT/bin/fm-teardown.sh" design --force > "$TMP_ROOT/teardown-home-retry.out" 2>&1 \
+    "$ROOT/bin/backend/fm-teardown.sh" design --force > "$TMP_ROOT/teardown-home-retry.out" 2>&1 \
     || fail "teardown retry did not retire the preserved wake: $(cat "$TMP_ROOT/teardown-home-retry.out")"
   assert_absent "$sub" "teardown retry left the receiver home"
   assert_absent "$marker" "teardown retry left the pending wake marker"
@@ -782,7 +782,7 @@ seed_public_commitment() {
   (cd "$home" && tasks-axi public-followup bind-work "$obligation" \
     --relation-file "$home/relation.json") >/dev/null \
     || fail "could not bind work to the public commitment"
-  FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$home" "$ROOT/bin/fm-public-followup.sh" register \
+  FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$home" "$ROOT/bin/backend/fm-public-followup.sh" register \
     "$obligation" --relation rel-code --work-home "$work_home" --work-id "$work_id" \
     --generation 1 >/dev/null \
     || fail "could not register the public commitment"
@@ -1278,7 +1278,7 @@ test_registry_home_with_pre_home_parentheses() {
   # Prose parentheses before (home: ...) and punctuation inside scope match the live registry shape.
   printf -- '- %s - issue triage (id is legacy) (home: %s; scope: issue triage (child); semicolon is meaningful; projects: alpha; added 2026-07-09)\n' \
     "$id" "$sub_abs" > "$home/data/secondmates.md"
-  FM_HOME="$home" "$ROOT/bin/fm-home-seed.sh" validate >/dev/null \
+  FM_HOME="$home" "$ROOT/bin/backend/fm-home-seed.sh" validate >/dev/null \
     || fail "home-seed validation rejected punctuation-bearing registry fields"
 
   cat > "$home/data/backlog.md" <<'EOF'

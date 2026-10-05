@@ -33,7 +33,7 @@ printf '%s\n' "$@"
 SH
 chmod +x "$BLOCKER"
 
-pe() { FM_HOME="$1" "$ROOT/bin/fm-procevent.sh" "${@:2}"; }
+pe() { FM_HOME="$1" "$ROOT/bin/backend/fm-procevent.sh" "${@:2}"; }
 
 # Every source this suite registers is tracked so teardown can stop its runner.
 # A runner started by reconcile is detached and reparented, so a source that
@@ -55,7 +55,7 @@ procevent_teardown() {
       *$'\n'"$home"$'\n'*) continue ;;
     esac
     seen+="$home"$'\n'
-    FM_HOME="$home" "$ROOT/bin/fm-procevent.sh" sweep-home >/dev/null 2>&1 || true
+    FM_HOME="$home" "$ROOT/bin/backend/fm-procevent.sh" sweep-home >/dev/null 2>&1 || true
   done
   fm_test_cleanup
 }
@@ -105,8 +105,8 @@ wait_for_lines() {
 hold_source_lock() {  # <source-id> <ready-file> <release-file>
   local id=$1 ready=$2 release=$3 parent=$$
   FM_HOME="$TMP_ROOT/lock-helper-home" bash -c '
-    . "$1/bin/fm-pr-lib.sh"
-    . "$1/bin/fm-wake-lib.sh"
+    . "$1/bin/backend/fm-pr-lib.sh"
+    . "$1/bin/backend/fm-wake-lib.sh"
     . "$1/bin/fm-procevent-lib.sh"
     fm_procevent_source_lock_acquire "$2" || exit 1
     trap "fm_procevent_source_lock_release \"$2\"" EXIT
@@ -122,8 +122,8 @@ hold_source_lock() {  # <source-id> <ready-file> <release-file>
 hold_source_lock_then_handle() {  # <home> <source-id> <sequence> <ready-file> <release-file>
   local home=$1 id=$2 seq=$3 ready=$4 release=$5 parent=$$
   FM_HOME="$home" bash -c '
-    . "$1/bin/fm-pr-lib.sh"
-    . "$1/bin/fm-wake-lib.sh"
+    . "$1/bin/backend/fm-pr-lib.sh"
+    . "$1/bin/backend/fm-wake-lib.sh"
     . "$1/bin/fm-procevent-lib.sh"
     fm_procevent_source_lock_acquire "$2" || exit 1
     trap "fm_procevent_source_lock_release \"$2\"" EXIT
@@ -179,7 +179,7 @@ pass "one blocking completion yields exactly one bounded normalized event"
 RESULT=$(first_result "$H1" src-one || true)
 [ -n "$RESULT" ] || fail "no durable result was captured"
 mode=$(PATH="${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" bash -c \
-  '. "$1/bin/fm-pr-lib.sh"; fm_pr_file_mode "$2"' _ "$ROOT" "$RESULT")
+  '. "$1/bin/backend/fm-pr-lib.sh"; fm_pr_file_mode "$2"' _ "$ROOT" "$RESULT")
 assert_contains "$mode" 600 "the captured result is private"
 assert_grep 'payload one' "$RESULT" "the captured result holds the source output verbatim"
 assert_grep 'lavish' "${RESULT%.result}.adapter" "the captured result retains its immutable adapter"
@@ -236,7 +236,7 @@ exit 0;
 PL
 pe_register "$HPG" lavish shared-src -- "$BLOCKER" "$SHARED_TRIGGER" "shared result" >/dev/null
 FM_HOME="$HPG" perl "$SHARED_LAUNCHER" "$SHARED_SIBLING" \
-  "$ROOT/bin/fm-procevent.sh" start shared-src > "$TMP_ROOT/shared-start.out" &
+  "$ROOT/bin/backend/fm-procevent.sh" start shared-src > "$TMP_ROOT/shared-start.out" &
 shared_launcher=$!
 wait_for "$SHARED_SIBLING" || fail "shared caller group never started its unrelated sibling"
 wait_for "$FM_PROCEVENT_CLAIM_ROOT/shared-src.claim" || fail "shared-group start never claimed its source"
@@ -331,7 +331,7 @@ assert_absent "$HPRIVATE/state/procevent-inbox/private-src.1.handled" "failed mo
 private_out=$(umask 000; pe "$HPRIVATE" handled private-src 1)
 assert_contains "$private_out" "handled: private-src 1" "handling succeeds after private mode enforcement recovers"
 private_mode=$(PATH="${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" bash -c \
-  '. "$1/bin/fm-pr-lib.sh"; fm_pr_file_mode "$2"' _ "$ROOT" "$HPRIVATE/state/procevent-inbox/private-src.1.handled")
+  '. "$1/bin/backend/fm-pr-lib.sh"; fm_pr_file_mode "$2"' _ "$ROOT" "$HPRIVATE/state/procevent-inbox/private-src.1.handled")
 assert_contains "$private_mode" 600 "the handled marker is private under a permissive caller umask"
 pass "handled acknowledgement creation is private and fails safely"
 
@@ -388,8 +388,8 @@ chmod +x "$ADAPTER_ROOT/bin/fm-procevent-endnow.sh" "$ADAPTER_ROOT/bin/fm-procev
 pe_adapter() {  # <home> <command>...: run the runner against the fixture adapters
   local home=$1
   shift
-  FM_ROOT_OVERRIDE="$ADAPTER_ROOT" FM_PROCEVENT_UNDER_TEST="$ROOT/bin/fm-procevent.sh" \
-    FM_HOME="$home" "$ROOT/bin/fm-procevent.sh" "$@"
+  FM_ROOT_OVERRIDE="$ADAPTER_ROOT" FM_PROCEVENT_UNDER_TEST="$ROOT/bin/backend/fm-procevent.sh" \
+    FM_HOME="$home" "$ROOT/bin/backend/fm-procevent.sh" "$@"
 }
 
 HPUBLISH="$TMP_ROOT/hpublish"; new_home "$HPUBLISH"
@@ -412,7 +412,7 @@ out=$(pe_adapter "$HPUBLISH" reconcile)
 assert_contains "$out" "published=1" "the unpublished capture was not announced on later reconciliation"
 assert_contains "$out" "started=0" "reconcile started an always-ready poll that races the recovery assertions"
 assert_contains "$(wake_payloads "$HPUBLISH")" "procevent applying publish-src 1" "later reconciliation did not deliver the capture to a handler"
-FM_HOME="$HPUBLISH" FM_PROCEVENT_UNDER_TEST="$ROOT/bin/fm-procevent.sh" \
+FM_HOME="$HPUBLISH" FM_PROCEVENT_UNDER_TEST="$ROOT/bin/backend/fm-procevent.sh" \
   "$ADAPTER_ROOT/bin/fm-procevent-applying.sh" autohandle publish-src 1 \
     "$HPUBLISH/state/procevent-inbox/publish-src.1.result"
 assert_grep 'publish-src 1' "$HPUBLISH/state/applied" "the handler could not apply the later announcement"
@@ -573,9 +573,9 @@ SH
 chmod +x "$LAVISH_BIN/lavish-axi"
 REVIEW_ART="$TMP_ROOT/review.html"
 printf '<h1>review</h1>\n' > "$REVIEW_ART"
-lavish_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$REVIEW_ART")
+lavish_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$REVIEW_ART")
 PE_TRACKED+=("$HLT|$lavish_id")
-PATH="$LAVISH_BIN:$PATH" FM_HOME="$HLT" "$ROOT/bin/fm-procevent-lavish.sh" arm "$REVIEW_ART" >/dev/null
+PATH="$LAVISH_BIN:$PATH" FM_HOME="$HLT" "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$REVIEW_ART" >/dev/null
 for _ in $(seq 1 6); do
   PATH="$LAVISH_BIN:$PATH" pe "$HLT" reconcile >/dev/null
   sleep 0.3
@@ -591,7 +591,7 @@ assert_absent "$HLT/state/procevent/$lavish_id.source" "the ended review source 
 assert_absent "$FM_PROCEVENT_CLAIM_ROOT/$lavish_id.claim" "the ended review releases its owned claim"
 LAVISH_RESULT=$(first_result "$HLT" "$lavish_id" || true)
 assert_grep 'ship it' "$LAVISH_RESULT" "automatic retirement retains the human's final feedback"
-out=$(PATH="$LAVISH_BIN:$PATH" FM_HOME="$HLT" "$ROOT/bin/fm-procevent-lavish.sh" retire "$REVIEW_ART")
+out=$(PATH="$LAVISH_BIN:$PATH" FM_HOME="$HLT" "$ROOT/bin/backend/fm-procevent-lavish.sh" retire "$REVIEW_ART")
 assert_contains "$out" "retired: $lavish_id" "explicit adapter retirement stays supported after automatic retirement"
 pass "one Send & End yields exactly one captured result, automatic retirement, and no recurring poll"
 
@@ -613,10 +613,10 @@ SH
 chmod +x "$EMPTY_BIN/lavish-axi"
 QUIET_ART="$TMP_ROOT/quiet-board.html"
 printf '<h1>quiet</h1>\n' > "$QUIET_ART"
-quiet_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$QUIET_ART")
+quiet_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$QUIET_ART")
 PE_TRACKED+=("$HEMPTY|$quiet_id")
 PATH="$EMPTY_BIN:$PATH" FM_HOME="$HEMPTY" \
-  "$ROOT/bin/fm-procevent-lavish.sh" arm "$QUIET_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$QUIET_ART" >/dev/null
 quiet_out=$(PATH="$EMPTY_BIN:$PATH" pe "$HEMPTY" start "$quiet_id" 2>&1)
 assert_not_contains "$quiet_out" "not-autohandled" \
   "a durably silenced result was reported as still unacknowledged"
@@ -659,10 +659,10 @@ SH
 chmod +x "$ANSWER_BIN/lavish-axi"
 ANSWER_ART="$TMP_ROOT/answered-board.html"
 printf '<h1>answered</h1>\n' > "$ANSWER_ART"
-answer_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$ANSWER_ART")
+answer_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$ANSWER_ART")
 PE_TRACKED+=("$HANSWER|$answer_id")
 PATH="$ANSWER_BIN:$PATH" FM_HOME="$HANSWER" \
-  "$ROOT/bin/fm-procevent-lavish.sh" arm "$ANSWER_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$ANSWER_ART" >/dev/null
 PATH="$ANSWER_BIN:$PATH" pe "$HANSWER" reconcile >/dev/null
 wait_for "$HANSWER/state/.wake-queue" \
   || fail "a board close carrying the captain's real answer produced no wake"
@@ -721,11 +721,11 @@ export FM_LAVISH_POLL_RETRY_DELAY=0
 HRETRY="$TMP_ROOT/hretry"; new_home "$HRETRY"
 RETRY_ART="$TMP_ROOT/retry-board.html"
 printf '<h1>retry</h1>\n' > "$RETRY_ART"
-retry_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$RETRY_ART")
+retry_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$RETRY_ART")
 PE_TRACKED+=("$HRETRY|$retry_id")
 LAVISH_COUNT="$TMP_ROOT/retry-count"; LAVISH_SCRIPT="interrupt interrupt feedback"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HRETRY" \
-  "$ROOT/bin/fm-procevent-lavish.sh" arm "$RETRY_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$RETRY_ART" >/dev/null
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" pe "$HRETRY" reconcile >/dev/null
 wait_for "$HRETRY/state/.wake-queue" || fail "feedback after interrupted polls produced no wake"
 [ "$(cat "$LAVISH_COUNT")" = 3 ] \
@@ -745,11 +745,11 @@ pass "a transient Lavish poll interruption is retried quietly and never announce
 HEXH="$TMP_ROOT/hexh"; new_home "$HEXH"
 EXH_ART="$TMP_ROOT/exhaust-board.html"
 printf '<h1>exhaust</h1>\n' > "$EXH_ART"
-exh_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$EXH_ART")
+exh_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$EXH_ART")
 PE_TRACKED+=("$HEXH|$exh_id")
 LAVISH_COUNT="$TMP_ROOT/exhaust-count"; LAVISH_SCRIPT="interrupt"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HEXH" \
-  "$ROOT/bin/fm-procevent-lavish.sh" arm "$EXH_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$EXH_ART" >/dev/null
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" pe "$HEXH" start "$exh_id" >/dev/null
 [ "$(cat "$LAVISH_COUNT")" = 13 ] \
   || fail "the retry bound polled $(cat "$LAVISH_COUNT") times, not the first poll plus 12 bounded retries"
@@ -760,7 +760,7 @@ assert_contains "$(wake_payloads "$HEXH")" "procevent lavish $exh_id 1" \
 assert_grep 'poll response was interrupted' "$(first_result "$HEXH" "$exh_id")" \
   "the announced result is the exact interruption the server returned"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HEXH" \
-  "$ROOT/bin/fm-procevent-lavish.sh" retire "$EXH_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" retire "$EXH_ART" >/dev/null
 pass "an interruption that outlives the bounded retries is captured and announced"
 
 # A different SERVER_ERROR is a genuine error, never a retry: no fail-open drift
@@ -768,18 +768,18 @@ pass "an interruption that outlives the bounded retries is captured and announce
 HOTHER="$TMP_ROOT/hother"; new_home "$HOTHER"
 OTHER_ART="$TMP_ROOT/other-board.html"
 printf '<h1>other</h1>\n' > "$OTHER_ART"
-other_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$OTHER_ART")
+other_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$OTHER_ART")
 PE_TRACKED+=("$HOTHER|$other_id")
 LAVISH_COUNT="$TMP_ROOT/other-count"; LAVISH_SCRIPT="other-server-error"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HOTHER" \
-  "$ROOT/bin/fm-procevent-lavish.sh" arm "$OTHER_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$OTHER_ART" >/dev/null
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" pe "$HOTHER" start "$other_id" >/dev/null
 [ "$(cat "$LAVISH_COUNT")" = 1 ] \
   || fail "an unrelated SERVER_ERROR was retried $(cat "$LAVISH_COUNT") times instead of surfacing at once"
 assert_contains "$(wake_payloads "$HOTHER")" "procevent lavish $other_id 1" \
   "an unrelated SERVER_ERROR is captured and announced immediately"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HOTHER" \
-  "$ROOT/bin/fm-procevent-lavish.sh" retire "$OTHER_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" retire "$OTHER_ART" >/dev/null
 pass "only the exact interruption is retried; an unrelated SERVER_ERROR still surfaces"
 unset FM_LAVISH_POLL_RETRY_DELAY
 
@@ -788,18 +788,18 @@ unset FM_LAVISH_POLL_RETRY_DELAY
 HNEAR="$TMP_ROOT/hnear"; new_home "$HNEAR"
 NEAR_ART="$TMP_ROOT/near-board.html"
 printf '<h1>near</h1>\n' > "$NEAR_ART"
-near_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$NEAR_ART")
+near_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$NEAR_ART")
 PE_TRACKED+=("$HNEAR|$near_id")
 LAVISH_COUNT="$TMP_ROOT/near-count"; LAVISH_SCRIPT="near-interrupt feedback"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HNEAR" FM_LAVISH_POLL_RETRY_DELAY=0 \
-  "$ROOT/bin/fm-procevent-lavish.sh" arm "$NEAR_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$NEAR_ART" >/dev/null
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HNEAR" pe "$HNEAR" start "$near_id" >/dev/null
 [ "$(cat "$LAVISH_COUNT")" = 1 ] \
   || fail "a near-match interruption was retried instead of surfacing on its first poll"
 assert_contains "$(wake_payloads "$HNEAR")" "procevent lavish $near_id 1" \
   "a whitespace variant of the interruption is captured and announced immediately"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HNEAR" \
-  "$ROOT/bin/fm-procevent-lavish.sh" retire "$NEAR_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" retire "$NEAR_ART" >/dev/null
 pass "only the literal two-line interruption enters the quiet retry policy"
 
 # The public arm boundary refuses invalid retry intervals before it publishes a
@@ -807,12 +807,12 @@ pass "only the literal two-line interruption enters the quiet retry policy"
 HINVALID="$TMP_ROOT/hinvalid"; new_home "$HINVALID"
 INVALID_ART="$TMP_ROOT/invalid-delay-board.html"
 printf '<h1>invalid delay</h1>\n' > "$INVALID_ART"
-invalid_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$INVALID_ART")
+invalid_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$INVALID_ART")
 for invalid_delay in 61 invalid; do
   invalid_status=0
   invalid_out=$(PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HINVALID" \
     FM_LAVISH_POLL_RETRY_DELAY="$invalid_delay" \
-    "$ROOT/bin/fm-procevent-lavish.sh" arm "$INVALID_ART" 2>&1) || invalid_status=$?
+    "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$INVALID_ART" 2>&1) || invalid_status=$?
   [ "$invalid_status" -ne 0 ] \
     || fail "arm accepted invalid retry delay: $invalid_delay"
   assert_contains "$invalid_out" "must be whole seconds from 0 to 60" \
@@ -827,7 +827,7 @@ QUOTED_TMPDIR="$TMP_ROOT/poll's-stage"
 mkdir -p "$QUOTED_TMPDIR"
 LAVISH_COUNT="$TMP_ROOT/quoted-count"; LAVISH_SCRIPT="feedback"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" TMPDIR="$QUOTED_TMPDIR" \
-  "$ROOT/bin/fm-procevent-lavish.sh" poll "$NEAR_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" poll "$NEAR_ART" >/dev/null
 quoted_staged=("$QUOTED_TMPDIR"/fm-lavish-poll.*)
 [ ! -e "${quoted_staged[0]}" ] \
   || fail "poll left its staged response behind in an apostrophe-containing TMPDIR"
@@ -840,11 +840,11 @@ LAVISH_STREAM_READY="$TMP_ROOT/stream-ready"
 LAVISH_STREAM_RELEASE="$TMP_ROOT/stream-release"
 mkdir -p "$STREAM_TMPDIR"
 printf '<h1>stream</h1>\n' > "$STREAM_ART"
-stream_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$STREAM_ART")
+stream_id=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$STREAM_ART")
 PE_TRACKED+=("$HSTREAM|$stream_id")
 LAVISH_COUNT="$TMP_ROOT/stream-count"; LAVISH_SCRIPT="stream"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HSTREAM" \
-  "$ROOT/bin/fm-procevent-lavish.sh" arm "$STREAM_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" arm "$STREAM_ART" >/dev/null
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" TMPDIR="$STREAM_TMPDIR" \
   LAVISH_STREAM_READY="$LAVISH_STREAM_READY" LAVISH_STREAM_RELEASE="$LAVISH_STREAM_RELEASE" \
   FM_PROCEVENT_MAX_OUTPUT_BYTES=100 pe "$HSTREAM" reconcile >/dev/null
@@ -859,7 +859,7 @@ stream_result=$(first_result "$HSTREAM" "$stream_id" || true)
 [ "$(wc -c < "$stream_result" | tr -d ' ')" -le 100 ] \
   || fail "streaming poll bypassed the runner output bound"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HSTREAM" \
-  "$ROOT/bin/fm-procevent-lavish.sh" retire "$STREAM_ART" >/dev/null
+  "$ROOT/bin/backend/fm-procevent-lavish.sh" retire "$STREAM_ART" >/dev/null
 pass "Lavish classification staging stays bounded while nonmatches stream"
 
 # --- end-user-aligned regression: the exact drain-before-handling restart cut
@@ -935,7 +935,7 @@ expected=$(printf '%s\n' \
 [ "$pending" = "$expected" ] || fail "pending results were not emitted in numeric sequence order: $pending"
 pe "$HP" reconcile >/dev/null
 deduped=$(FM_HOME="$HP" bash -c '
-  . "$1/bin/fm-wake-lib.sh"
+  . "$1/bin/backend/fm-wake-lib.sh"
   fm_wake_print_deduped "$2/state/.wake-queue" | awk -F "\t" "{print \$5}"
 ' _ "$ROOT" "$HP")
 expected=$(printf '%s\n' \
@@ -1315,7 +1315,7 @@ pass "nonzero exit with no output stays armed and silent"
 HF="$TMP_ROOT/hf"; new_home "$HF"
 # shellcheck disable=SC2016  # single quotes are deliberate: the child shell expands this.
 pe_register "$HF" lavish big-src -- /bin/sh -c 'printf "x%.0s" $(seq 1 5000)' >/dev/null
-FM_PROCEVENT_MAX_OUTPUT_BYTES=100 FM_HOME="$HF" "$ROOT/bin/fm-procevent.sh" start big-src >/dev/null 2>&1
+FM_PROCEVENT_MAX_OUTPUT_BYTES=100 FM_HOME="$HF" "$ROOT/bin/backend/fm-procevent.sh" start big-src >/dev/null 2>&1
 RB=$(first_result "$HF" big-src || true)
 [ -n "$RB" ] || fail "bounded output was not captured at all"
 [ "$(wc -c < "$RB" | tr -d ' ')" -le 100 ] || fail "output bound was not enforced"
@@ -1365,19 +1365,19 @@ pass "invalid output bounds fail closed"
 # --- the Lavish adapter uses the published poll shape -----------------------
 ART="$TMP_ROOT/artifact.html"
 printf '<h1>fixture</h1>\n' > "$ART"
-sid=$(FM_HOME="$TMP_ROOT/hg" "$ROOT/bin/fm-procevent-lavish.sh" source-id "$ART")
+sid=$(FM_HOME="$TMP_ROOT/hg" "$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$ART")
 case "$sid" in lavish-*) : ;; *) fail "adapter source id has an unexpected shape: $sid" ;; esac
-sid2=$(FM_HOME="$TMP_ROOT/hg" "$ROOT/bin/fm-procevent-lavish.sh" source-id "$ART")
+sid2=$(FM_HOME="$TMP_ROOT/hg" "$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$ART")
 [ "$sid" = "$sid2" ] || fail "adapter source id is not stable"
 ART_ALIAS="$TMP_ROOT/artifact-alias.html"
 ln -s "$ART" "$ART_ALIAS"
-sid3=$(FM_HOME="$TMP_ROOT/hg" "$ROOT/bin/fm-procevent-lavish.sh" source-id "$ART_ALIAS")
+sid3=$(FM_HOME="$TMP_ROOT/hg" "$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$ART_ALIAS")
 [ "$sid" = "$sid3" ] || fail "a final-component symlink produced a second source id"
 ART_NEWLINE="$TMP_ROOT/line-ending"$'\n'
 printf '<h1>newline fixture</h1>\n' > "$ART_NEWLINE"
 printf '<h1>sibling fixture</h1>\n' > "$TMP_ROOT/line-ending"
 newline_artifact_status=0
-newline_artifact_out=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$ART_NEWLINE" 2>&1) || newline_artifact_status=$?
+newline_artifact_out=$("$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$ART_NEWLINE" 2>&1) || newline_artifact_status=$?
 [ "$newline_artifact_status" -ne 0 ] || fail "Lavish source identity accepted an artifact path ending in a newline"
 assert_contains "$newline_artifact_out" "cannot contain newlines" "Lavish rejects newline paths before canonicalization"
 pass "the adapter derives physical identity without newline path corruption"
@@ -1386,7 +1386,7 @@ HS="$TMP_ROOT/hs"; new_home "$HS"
 mkdir -p "$HS/state/procevent"
 : > "$HS/state/procevent/source-only.source"
 guard_out=$(FM_ROOT_OVERRIDE="$TMP_ROOT/guard-root" FM_HOME="$HS" FM_GUARD_GRACE=1 \
-  "$ROOT/bin/fm-guard.sh" 2>&1)
+  "$ROOT/bin/backend/fm-guard.sh" 2>&1)
 assert_contains "$guard_out" "WATCHER DOWN - SUPERVISION IS OFF" \
   "the general guard warns when only a process-event source needs supervision"
 assert_contains "$guard_out" "1 process-event source(s) registered" \
@@ -1395,16 +1395,16 @@ pass "source-only homes trigger the general supervision guard"
 
 CLS="$TMP_ROOT/cls"
 printf 'session:\n  file: /a.html\n  status: feedback\nprompts[1]{uid}:\n  p1\n' > "$CLS"
-out=$("$ROOT/bin/fm-procevent-lavish.sh" classify "$CLS")
+out=$("$ROOT/bin/backend/fm-procevent-lavish.sh" classify "$CLS")
 assert_contains "$out" feedback "the adapter reads the indented session status"
 printf 'session:\n  file: /a.html\n  status: feedback\nprompts[1]{text}:\n  No active Lavish Editor session; code: NOT_FOUND\n' > "$CLS"
-assert_contains "$("$ROOT/bin/fm-procevent-lavish.sh" classify "$CLS")" feedback "prompt text cannot override a valid session status"
+assert_contains "$("$ROOT/bin/backend/fm-procevent-lavish.sh" classify "$CLS")" feedback "prompt text cannot override a valid session status"
 printf 'session:\n  file: /a.html\n  status: ended\n' > "$CLS"
-assert_contains "$("$ROOT/bin/fm-procevent-lavish.sh" classify "$CLS")" ended "an ended session classifies as ended"
+assert_contains "$("$ROOT/bin/backend/fm-procevent-lavish.sh" classify "$CLS")" ended "an ended session classifies as ended"
 printf 'error: No active Lavish Editor session for this file\ncode: NOT_FOUND\n' > "$CLS"
-assert_contains "$("$ROOT/bin/fm-procevent-lavish.sh" classify "$CLS")" missing "an explicit missing session classifies as missing"
+assert_contains "$("$ROOT/bin/backend/fm-procevent-lavish.sh" classify "$CLS")" missing "an explicit missing session classifies as missing"
 printf 'garbage that is not a session block\n' > "$CLS"
-assert_contains "$("$ROOT/bin/fm-procevent-lavish.sh" classify "$CLS")" unknown "malformed output classifies as unknown rather than a lifecycle state"
+assert_contains "$("$ROOT/bin/backend/fm-procevent-lavish.sh" classify "$CLS")" unknown "malformed output classifies as unknown rather than a lifecycle state"
 pass "the adapter classifies published poll output safely"
 
 # The adapter, not the runner, decides which results end a Lavish source. A
@@ -1413,23 +1413,23 @@ pass "the adapter classifies published poll output safely"
 # session_ended and stops producing results afterward.
 TRM="$TMP_ROOT/terminal-verdict"
 printf 'session:\n  file: /a.html\n  status: feedback\n  session_ended: true\n  ended_by: user\n' > "$TRM"
-assert_contains "$("$ROOT/bin/fm-procevent-lavish.sh" classify "$TRM")" feedback \
+assert_contains "$("$ROOT/bin/backend/fm-procevent-lavish.sh" classify "$TRM")" feedback \
   "a final feedback delivery still classifies as feedback for the handler"
-"$ROOT/bin/fm-procevent-lavish.sh" terminal "$TRM" \
+"$ROOT/bin/backend/fm-procevent-lavish.sh" terminal "$TRM" \
   || fail "a feedback delivery carrying session_ended was not reported terminal"
 printf 'session:\n  file: /a.html\n  status: feedback\n' > "$TRM"
-"$ROOT/bin/fm-procevent-lavish.sh" terminal "$TRM" \
+"$ROOT/bin/backend/fm-procevent-lavish.sh" terminal "$TRM" \
   && fail "an ordinary feedback delivery was reported terminal"
 printf 'session:\n  file: /a.html\n  status: ended\n  ended_by: user\n' > "$TRM"
-"$ROOT/bin/fm-procevent-lavish.sh" terminal "$TRM" || fail "an ended session was not reported terminal"
+"$ROOT/bin/backend/fm-procevent-lavish.sh" terminal "$TRM" || fail "an ended session was not reported terminal"
 printf 'error: No active Lavish Editor session for this file\ncode: NOT_FOUND\n' > "$TRM"
-"$ROOT/bin/fm-procevent-lavish.sh" terminal "$TRM" || fail "a missing session was not reported terminal"
+"$ROOT/bin/backend/fm-procevent-lavish.sh" terminal "$TRM" || fail "a missing session was not reported terminal"
 printf 'session:\n  file: /a.html\n  status: waiting\n' > "$TRM"
-"$ROOT/bin/fm-procevent-lavish.sh" terminal "$TRM" && fail "a waiting session was reported terminal"
+"$ROOT/bin/backend/fm-procevent-lavish.sh" terminal "$TRM" && fail "a waiting session was reported terminal"
 printf 'garbage that is not a session block\n' > "$TRM"
-"$ROOT/bin/fm-procevent-lavish.sh" terminal "$TRM" && fail "an unreadable result was reported terminal"
+"$ROOT/bin/backend/fm-procevent-lavish.sh" terminal "$TRM" && fail "an unreadable result was reported terminal"
 printf 'session:\n  file: /a.html\n  status: feedback\nfeedback[1]{text}:\n  session_ended: true\n' > "$TRM"
-"$ROOT/bin/fm-procevent-lavish.sh" terminal "$TRM" \
+"$ROOT/bin/backend/fm-procevent-lavish.sh" terminal "$TRM" \
   && fail "prompt payload text was read as a session-level terminal marker"
 pass "the adapter owns which Lavish results end a source, and payload text cannot forge one"
 
@@ -1438,7 +1438,7 @@ pass "the adapter owns which Lavish results end a source, and payload text canno
 # `silent` command's exit status, which is the whole contract the runner reads.
 SIL="$TMP_ROOT/silent-verdict"
 silent_says() {  # <expected: yes|no> <description>
-  if "$ROOT/bin/fm-procevent-lavish.sh" silent "$SIL" >/dev/null 2>&1; then
+  if "$ROOT/bin/backend/fm-procevent-lavish.sh" silent "$SIL" >/dev/null 2>&1; then
     [ "$1" = yes ] || fail "silent suppressed a result that must reach the handler: $2"
   else
     [ "$1" = no ] || fail "silent announced a result that carries no news: $2"
@@ -1482,7 +1482,7 @@ pass "the adapter owns which Lavish results are silent, and fails closed on ever
 # adapter's source. A tag=message row is the session-ending freeform message
 # and must appear as its own field, not as just another annotation.
 READ="$TMP_ROOT/read-result"
-read_out() { "$ROOT/bin/fm-procevent-lavish.sh" read "$READ"; }
+read_out() { "$ROOT/bin/backend/fm-procevent-lavish.sh" read "$READ"; }
 cat > "$READ" <<'EOF'
 session:
   file: /review.html
@@ -1727,7 +1727,7 @@ pass "an adapter with no silence verdict keeps announcing every result"
 # --- the loss limitation is stated on the public interface ------------------
 # Checked through --help, the operator-facing surface, rather than by reading
 # implementation bytes.
-adapter_help=$("$ROOT/bin/fm-procevent-lavish.sh" --help 2>&1 || true)
+adapter_help=$("$ROOT/bin/backend/fm-procevent-lavish.sh" --help 2>&1 || true)
 assert_contains "$adapter_help" "destructively clears" \
   "the adapter's help states the destructive-source loss limitation"
 assert_contains "$adapter_help" "Never describe" \
@@ -1735,7 +1735,7 @@ assert_contains "$adapter_help" "Never describe" \
 assert_contains "$adapter_help" "read <result-file>" \
   "the adapter's help publishes the structured read command"
 
-runner_help=$("$ROOT/bin/fm-procevent.sh" --help 2>&1 || true)
+runner_help=$("$ROOT/bin/backend/fm-procevent.sh" --help 2>&1 || true)
 assert_contains "$runner_help" "Durability boundary" \
   "the runner's help scopes what it actually proves"
 assert_not_contains "$runner_help" "exactly-once" \

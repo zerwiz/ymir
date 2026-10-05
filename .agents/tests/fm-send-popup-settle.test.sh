@@ -38,7 +38,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-SEND="$ROOT/bin/fm-send.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-send-popup-settle)
 

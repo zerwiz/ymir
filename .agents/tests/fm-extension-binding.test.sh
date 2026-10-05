@@ -23,7 +23,7 @@ case "$extension_segment" in
 esac
 
 HOST="$ROOT/bin/fm-extension.mjs"
-PROCEVENT="$ROOT/bin/fm-procevent.sh"
+PROCEVENT="$ROOT/bin/backend/fm-procevent.sh"
 TMP_ROOT_RAW=$(fm_test_tmproot fm-extension-binding)
 TMP_ROOT=$(cd "$TMP_ROOT_RAW" && pwd -P)
 first_bind_pid=
@@ -98,11 +98,11 @@ extension_test_cleanup() {
     kill -TERM "$section_coordinator_pid" 2>/dev/null || true
     wait "$section_coordinator_pid" 2>/dev/null || true
   fi
-  if [ -f "$TMP_ROOT/remote-jobs/worker.pid" ] && [ -f "${REMOTE_ROOT:-}/bin/fm-remote-job-lib.sh" ]; then
+  if [ -f "$TMP_ROOT/remote-jobs/worker.pid" ] && [ -f "${REMOTE_ROOT:-}/bin/backend/fm-remote-job-lib.sh" ]; then
     (
       # worker.pid names the serving child; the copied remote helper stops its
       # known isolated supervisor tree so it cannot respawn during teardown.
-      . "$REMOTE_ROOT/bin/fm-remote-job-lib.sh"
+      . "$REMOTE_ROOT/bin/backend/fm-remote-job-lib.sh"
       fm_remote_job_stop_worker_tree "$(cat "$TMP_ROOT/remote-jobs/worker.pid")"
     ) 2>/dev/null || true
   fi
@@ -1406,7 +1406,7 @@ forged_reservation_root="$TMP_ROOT/forged-capture-reservations"
 mkdir "$forged_reservation_root"
 forged_reservation_token=$(printf 'c%.0s' {1..64})
 forged_claim_identity=$(FM_HOME="$TMP_ROOT/forged-identity-home" FM_STATE_OVERRIDE="$TMP_ROOT/forged-identity-state" \
-  bash -c '. "$1"; fm_pid_identity "$2"' sh "$ROOT/bin/fm-wake-lib.sh" "$$")
+  bash -c '. "$1"; fm_pid_identity "$2"' sh "$ROOT/bin/backend/fm-wake-lib.sh" "$$")
 printf '%s\n' '{"schema":"fm-procevent-capture-reservation.v1","token":"'"$forged_reservation_token"'","operation":"result.silent","source_id":"forged-source","sequence":1,"inbox_device":"1","inbox_inode":"1","result_device":"1","result_inode":"1","claim_pid":"'"$$"'","claim_identity":"'"$forged_claim_identity"'","claim_token":"forged-claim","binding_digest":"'"$override_binding"'"}' \
   > "$forged_reservation_root/.extension-capture-forged-claim.$forged_reservation_token.json"
 chmod 0600 "$forged_reservation_root/.extension-capture-forged-claim.$forged_reservation_token.json"
@@ -1852,17 +1852,17 @@ remote_on() {
   FM_ROOT_OVERRIDE="$REMOTE_ROOT" \
   FM_SSH_BIN="$REMOTE_FAKEBIN/fake-ssh" \
   FM_FAKE_SSH_COUNT="$REMOTE_SSH_COUNT" \
-  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
+  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" \
   FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
   FM_REMOTE_JOB_STATE_ROOT="$TMP_ROOT/remote-jobs" \
-  "$ROOT/bin/fm-on.sh" --stdin ios "$@"
+  "$ROOT/bin/backend/fm-on.sh" --stdin ios "$@"
 }
 remote_controller() {
   FM_HOME="$H_REMOTE_CONTROL" \
   FM_ROOT_OVERRIDE="$REMOTE_ROOT" \
   FM_SSH_BIN="$REMOTE_FAKEBIN/fake-ssh" \
   FM_FAKE_SSH_COUNT="$REMOTE_SSH_COUNT" \
-  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
+  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" \
   FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
   FM_REMOTE_JOB_STATE_ROOT="$TMP_ROOT/remote-jobs" \
   "$@"
@@ -1956,7 +1956,7 @@ pass "failed activation cannot partially publish and retains exact transfer evid
 fi
 
 if section_enabled remote-activation; then
-remote_bind=$(remote_controller "$ROOT/bin/fm-extension.sh" remote-bind ios "$P_REMOTE" --adapter ext-remote --trust-same-user-code)
+remote_bind=$(remote_controller "$ROOT/bin/backend/fm-extension.sh" remote-bind ios "$P_REMOTE" --adapter ext-remote --trust-same-user-code)
 assert_contains "$remote_bind" "bound: org.example.remote@1.2.3" "remote transport did not publish the binding"
 remote_transfer_digest=$(printf '%s\n' "$remote_bind" | sed -n 's/^transfer-digest: //p')
 case "$remote_transfer_digest" in sha256:*) ;; *) fail "remote bind returned no transfer identity" ;; esac
@@ -1993,7 +1993,7 @@ pass "remote registration owner transitions observe the active runner boundary"
 fi
 
 if section_enabled remote-lifecycle; then
-remote_bind=$(remote_controller "$ROOT/bin/fm-extension.sh" remote-bind ios "$P_REMOTE" --adapter ext-remote --trust-same-user-code)
+remote_bind=$(remote_controller "$ROOT/bin/backend/fm-extension.sh" remote-bind ios "$P_REMOTE" --adapter ext-remote --trust-same-user-code)
 assert_contains "$remote_bind" "bound: org.example.remote@1.2.3" "remote transport did not publish the binding"
 remote_transfer_digest=$(printf '%s\n' "$remote_bind" | sed -n 's/^transfer-digest: //p')
 case "$remote_transfer_digest" in sha256:*) ;; *) fail "remote bind returned no transfer identity" ;; esac

@@ -10,8 +10,8 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-DAEMON="$ROOT/bin/fm-supervise-daemon.sh"
-AFK_START="$ROOT/bin/fm-afk-start.sh"
+DAEMON="$ROOT/bin/backend/fm-supervise-daemon.sh"
+AFK_START="$ROOT/bin/backend/fm-afk-start.sh"
 # Source the daemon's pure functions once. Its main loop is skipped under sourcing
 # via a BASH_SOURCE guard, so only classify_*/housekeeping/escalate_*/afk_* and the
 # pane/submit helpers become defined.
@@ -317,13 +317,13 @@ test_escalation_buffer_failure_retains_wake_and_position() {
   buffer="$state/.subsuper-escalations"
   printf 'blocked: release approval required\nworking: preparing notes\n' > "$state/write-r1.status"
   mkdir -p "$fakebin" "$buffer"
-  cat > "$fakebin/fm-wake-drain.sh" <<EOF
+  cat > "$fakebin/backend/fm-wake-drain.sh" <<EOF
 #!/usr/bin/env bash
 if [ "\${1:-}" = --ack-through ]; then printf '%s\n' ack >> "$dir/acked"; exit 0; fi
 printf '1\t1\tsignal\twrite-r1.status\tsignal: $state/write-r1.status\n'
 printf 'WAKE_ACK_REQUIRED: retry --ack-through 1 --recovery-generation gen\n' >&2
 EOF
-  chmod +x "$fakebin/fm-wake-drain.sh"
+  chmod +x "$fakebin/backend/fm-wake-drain.sh"
 
   ! FM_DAEMON_DIR="$fakebin" handle_durable_wakes fallback "$state" 2>/dev/null \
     || fail "an unwritable escalation buffer acknowledged the wake"
@@ -372,13 +372,13 @@ test_durable_wake_failure_retains_entire_batch() {
   local dir state fakebin attempts
   dir=$(make_supercase durable-failure); state="$dir/state"; fakebin="$dir/daemon-bin"; attempts="$dir/attempts"
   mkdir -p "$fakebin"
-  cat > "$fakebin/fm-wake-drain.sh" <<EOF
+  cat > "$fakebin/backend/fm-wake-drain.sh" <<EOF
 #!/usr/bin/env bash
 if [ "\${1:-}" = --ack-through ]; then printf ack > "$dir/acked"; exit 0; fi
 printf '1\t1\tsignal\ttask.status\tsignal: first\n1\t2\theartbeat\theartbeat\theartbeat\n'
 printf 'WAKE_ACK_REQUIRED: retry --ack-through 2 --recovery-generation gen\n' >&2
 EOF
-  chmod +x "$fakebin/fm-wake-drain.sh"
+  chmod +x "$fakebin/backend/fm-wake-drain.sh"
   (
     FM_DAEMON_DIR="$fakebin"
     handle_wake() { printf '%s\n' "$1" >> "$attempts"; [ "$1" != 'signal: first' ]; }
@@ -394,13 +394,13 @@ test_missing_status_stale_is_acknowledged_without_diagnostic() {
   local dir state fakebin
   dir=$(make_supercase durable-no-status); state="$dir/state"; fakebin="$dir/daemon-bin"
   mkdir -p "$fakebin"
-  cat > "$fakebin/fm-wake-drain.sh" <<EOF
+  cat > "$fakebin/backend/fm-wake-drain.sh" <<EOF
 #!/usr/bin/env bash
 if [ "\${1:-}" = --ack-through ]; then printf '%s\n' ack >> "$dir/acked"; exit 0; fi
 printf '1\t1\tstale\tmissing-r8\tstale: sess:fm-missing-r8\n'
 printf 'WAKE_ACK_REQUIRED: ordinary --ack-through 1 --recovery-generation gen\n' >&2
 EOF
-  chmod +x "$fakebin/fm-wake-drain.sh"
+  chmod +x "$fakebin/backend/fm-wake-drain.sh"
   FM_DAEMON_DIR="$fakebin" handle_durable_wakes fallback "$state" \
     || fail "a stale wake without a status file was retained for retry"
   FM_DAEMON_DIR="$fakebin" handle_durable_wakes fallback "$state" \
@@ -417,13 +417,13 @@ test_transient_unreadable_signal_recovers_without_advancing() {
   dir=$(make_supercase durable-unreadable); state="$dir/state"; fakebin="$dir/daemon-bin"
   printf 'blocked: status cannot be classified\n' > "$state/unreadable-r7.status"
   mkdir -p "$fakebin"
-  cat > "$fakebin/fm-wake-drain.sh" <<EOF
+  cat > "$fakebin/backend/fm-wake-drain.sh" <<EOF
 #!/usr/bin/env bash
 if [ "\${1:-}" = --ack-through ]; then printf '%s\n' ack >> "$dir/acked"; exit 0; fi
 printf '1\t1\tsignal\tunreadable-r7.status\tsignal: $state/unreadable-r7.status\n'
 printf 'WAKE_ACK_REQUIRED: retry --ack-through 1 --recovery-generation gen\n' >&2
 EOF
-  chmod +x "$fakebin/fm-wake-drain.sh"
+  chmod +x "$fakebin/backend/fm-wake-drain.sh"
   (
     FM_DAEMON_DIR="$fakebin"
     # shellcheck disable=SC2329 # Invoked indirectly by the function under test.
@@ -494,13 +494,13 @@ test_permanent_classification_failure_is_reported_and_acknowledged() {
   printf 'blocked: first target\n' > "$dir/target-one"
   ln -s "$dir/target-one" "$state/symlink-r9.status"
   mkdir -p "$fakebin"
-  cat > "$fakebin/fm-wake-drain.sh" <<EOF
+  cat > "$fakebin/backend/fm-wake-drain.sh" <<EOF
 #!/usr/bin/env bash
 if [ "\${1:-}" = --ack-through ]; then printf '%s\n' ack >> "$dir/acked"; exit 0; fi
 printf '1\t1\tsignal\tsymlink-r9.status\tsignal: $state/symlink-r9.status\n'
 printf 'WAKE_ACK_REQUIRED: bounded --ack-through 1 --recovery-generation gen\n' >&2
 EOF
-  chmod +x "$fakebin/fm-wake-drain.sh"
+  chmod +x "$fakebin/backend/fm-wake-drain.sh"
 
   FM_DAEMON_DIR="$fakebin" handle_durable_wakes fallback "$state" \
     || fail "a permanent classification failure left its wake unacknowledged"
@@ -1010,8 +1010,8 @@ test_housekeeping_paused_resumed_cleared() {
     > "$state/held-w12.status"
   printf 'Working...\n' > "$pane"
   fm_write_meta "$state/held-w12.meta" "window=$win" "worktree=$dir/wt" "kind=ship" "harness=pi"
-  local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$state" held-w12)
-  "$ROOT/bin/fm-busy-event.sh" apply "$state" held-w12 busy --gen "$gen" \
+  local gen; gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$state" held-w12)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$state" held-w12 busy --gen "$gen" \
     --source pi-ext --event agent-start
   key=$(printf '%s' "held-w12" | tr ':/.' '___')
   echo $(( $(date +%s) - 5000 )) > "$state/.subsuper-paused-$key"
@@ -1049,8 +1049,8 @@ test_housekeeping_busy_declared_wait_matures_its_window() {
     esac
     printf 'Working...\n' > "$pane"
     fm_write_meta "$state/$task.meta" "window=$win" "worktree=$dir/wt" "kind=ship" "harness=pi"
-    gen=$("$ROOT/bin/fm-busy-event.sh" arm "$state" "$task")
-    "$ROOT/bin/fm-busy-event.sh" apply "$state" "$task" busy --gen "$gen" \
+    gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$state" "$task")
+    "$ROOT/bin/backend/fm-busy-event.sh" apply "$state" "$task" busy --gen "$gen" \
       --source pi-ext --event agent-start
     key=$(printf '%s' "$task" | tr ':/.' '___')
     PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$win" FM_FAKE_TMUX_CAPTURE="$pane" \
@@ -1225,8 +1225,8 @@ test_housekeeping_resumed_stale_cleared() {
   # A resumed crew proves it is working through its own semantic busy-state
   # record (bin/backend/fm-busy-lib.sh), not through the pane's rendered footer.
   fm_write_meta "$state/res-w6.meta" "window=$win" "worktree=$dir/wt" "kind=ship" "harness=pi"
-  local gen; gen=$("$ROOT/bin/fm-busy-event.sh" arm "$state" res-w6)
-  "$ROOT/bin/fm-busy-event.sh" apply "$state" res-w6 busy --gen "$gen" \
+  local gen; gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$state" res-w6)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$state" res-w6 busy --gen "$gen" \
     --source pi-ext --event agent-start
   key=$(printf '%s' "res-w6" | tr ':/.' '___')
   echo $(( $(date +%s) - 500 )) > "$state/.subsuper-stale-$key"
@@ -1275,8 +1275,8 @@ test_housekeeping_herdr_idle_busy_record_clears_stale() {
   state="$dir/state"
   fm_write_meta "$state/herdr-footer.meta" "window=default:w1:p4" "backend=herdr" "harness=claude"
   printf 'working\n' > "$state/herdr-footer.status"
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$state" herdr-footer)
-  "$ROOT/bin/fm-busy-event.sh" apply "$state" herdr-footer busy --gen "$gen" \
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$state" herdr-footer)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$state" herdr-footer busy --gen "$gen" \
     --source claude-hook --event user-prompt-submit
   key=$(printf '%s' "herdr-footer" | tr ':/.' '___')
   echo $(( $(date +%s) - 500 )) > "$state/.subsuper-stale-$key"
@@ -2351,7 +2351,7 @@ test_fm_send_reports_delivered_unconfirmed_submit() {
   fakebin="$dir/fakebin"; err="$dir/send.err"
   # Clean submit -> exit 0.
   PATH="$fakebin:$PATH" FM_HOME="$dir" FM_STATE_OVERRIDE="$dir/state" FM_FAKE_COMPOSER="$dir/composer" \
-    FM_SEND_SLEEP=0.05 "$ROOT/bin/fm-send.sh" sess:win 'route this work' >/dev/null 2>"$err" \
+    FM_SEND_SLEEP=0.05 "$ROOT/bin/backend/fm-send.sh" sess:win 'route this work' >/dev/null 2>"$err" \
     || fail "fm-send exited non-zero on a clean submit: $(cat "$err")"
   # Persistent composer text after Enter -> delivered-unconfirmed exit 3 with
   # a non-error warning that explicitly tells the operator not to resend.
@@ -2359,7 +2359,7 @@ test_fm_send_reports_delivered_unconfirmed_submit() {
   touch "$dir/.swallow"
   if PATH="$fakebin:$PATH" FM_HOME="$dir" FM_STATE_OVERRIDE="$dir/state" FM_FAKE_COMPOSER="$dir/composer" \
     FM_FAKE_SWALLOW="$dir/.swallow" FM_FAKE_PERSIST_SWALLOW=1 FM_SEND_SLEEP=0.05 \
-    "$ROOT/bin/fm-send.sh" sess:win 'fix findings 1 and 3, skip 2' >/dev/null 2>"$err"; then
+    "$ROOT/bin/backend/fm-send.sh" sess:win 'fix findings 1 and 3, skip 2' >/dev/null 2>"$err"; then
     rc=0
   else
     rc=$?
@@ -2381,7 +2381,7 @@ test_fm_send_exits_nonzero_on_initial_send_failure() {
   fakebin="$dir/fakebin"; err="$dir/send.err"
   if PATH="$fakebin:$PATH" FM_HOME="$dir" FM_STATE_OVERRIDE="$dir/state" FM_FAKE_COMPOSER="$dir/composer" \
     FM_FAKE_SEND_FAIL=1 FM_SEND_SLEEP=0.05 \
-    "$ROOT/bin/fm-send.sh" sess:win 'route this work' >/dev/null 2>"$err"; then
+    "$ROOT/bin/backend/fm-send.sh" sess:win 'route this work' >/dev/null 2>"$err"; then
     fail "fm-send exited zero despite initial tmux send-keys failure"
   fi
   grep -F 'text not sent' "$err" >/dev/null || fail "fm-send did not explain initial send failure: $(cat "$err")"
@@ -2395,7 +2395,7 @@ test_fm_send_exits_nonzero_on_unproven_submit() {
   touch "$dir/.swallow"
   if PATH="$fakebin:$PATH" FM_HOME="$dir" FM_STATE_OVERRIDE="$dir/state" FM_FAKE_COMPOSER="$dir/composer" \
     FM_FAKE_SWALLOW="$dir/.swallow" FM_FAKE_PERSIST_SWALLOW=1 FM_SEND_SLEEP=0.05 \
-    "$ROOT/bin/fm-send.sh" sess:win '修复' >/dev/null 2>"$err"; then
+    "$ROOT/bin/backend/fm-send.sh" sess:win '修复' >/dev/null 2>"$err"; then
     fail "fm-send exited zero when submit proof remained pending-unproven"
   fi
   grep -F 'verdict=pending-unproven' "$err" >/dev/null \

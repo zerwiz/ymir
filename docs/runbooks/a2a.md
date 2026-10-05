@@ -12,17 +12,17 @@ a2a[4]{piece,what,path}:
   "engine","a2abridge — directory (discovery) · bridge (announce) · service · cert · doctor","~/.a2abridge/bin/a2abridge"
   "MCP (mesh)","a2abridge — a2a_* tools for the agents","~/.pi/agent/mcp-adapter.json, opencode.json"
   "MCP (control plane)","wayofteams-* — tickets, plans, memory, knowledge (NEEDS AUTH)","WOTEAMS_URL / WOTEAMS_TOKEN"
-  "Ymir front door","bin/ratatoskr.sh, bin/bridge/a2a-mcp.sh","bin/"
+  "Ymir front door","bin/bridge/ratatoskr.sh, bin/bridge/a2a-mcp.sh","bin/"
 ```
 
 ## Setup
 
 ```bash
 bin/bridge/a2a-mcp.sh install     # wires the MCP servers into pi + opencode
-bin/ratatoskr.sh status    # engine + directory + served agents
-bin/ratatoskr.sh doctor    # health-check
+bin/bridge/ratatoskr.sh status    # engine + directory + served agents
+bin/bridge/ratatoskr.sh doctor    # health-check
 ```
-`bin/ymir-install.sh` and `bin/brokk-update.sh` run the migration that does this.
+`bin/engine/ymir-install.sh` and `bin/agents/brokk-update.sh` run the migration that does this.
 
 **The control plane needs auth.** In an MCP host you may see:
 ```

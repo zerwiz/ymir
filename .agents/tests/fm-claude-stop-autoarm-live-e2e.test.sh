@@ -80,7 +80,7 @@ printf '9999999\n' > "$HOME_DIR/state/.lock"
 # Rapid-death arm fixture: started plus an immediate actionable reason, the
 # exact spent-Stop edge shape. Runs 1-2 close actionable; run 3 closes clean so
 # a misbehaving session can never loop forever.
-cat > "$PROJECT/bin/fm-watch-arm.sh" <<'SH'
+cat > "$PROJECT/bin/backend/fm-watch-arm.sh" <<'SH'
 #!/usr/bin/env bash
 N=$(cat "$FM_HOME/state/arm-count" 2>/dev/null || echo 0); N=$((N+1)); echo "$N" > "$FM_HOME/state/arm-count"
 echo "arm-run=$N pid=$$" >> "$FM_HOME/state/arm-ran"
@@ -96,7 +96,7 @@ SH
 # Drain fixture: session start invokes it once, then the model invokes it once
 # per rewake. The third total drain ends the in-flight need after two complete
 # Stop-owned cycles.
-cat > "$PROJECT/bin/fm-wake-drain.sh" <<'SH'
+cat > "$PROJECT/bin/backend/fm-wake-drain.sh" <<'SH'
 #!/usr/bin/env bash
 N=$(cat "$FM_HOME/state/drain-count" 2>/dev/null || echo 0); N=$((N+1)); echo "$N" > "$FM_HOME/state/drain-count"
 echo "drain-run=$N" >> "$FM_HOME/state/drain-ran"
@@ -105,7 +105,7 @@ if [ "$N" -ge 3 ]; then
 fi
 printf 'stale: fixture-rapid drained\n'
 SH
-chmod +x "$PROJECT/bin/fm-watch-arm.sh" "$PROJECT/bin/fm-wake-drain.sh"
+chmod +x "$PROJECT/bin/backend/fm-watch-arm.sh" "$PROJECT/bin/backend/fm-wake-drain.sh"
 
 PROMPT='Run exactly `bin/backend/fm-session-start.sh` with Bash as your first tool call. After reading its complete digest, reply with exactly CYCLE0 and stop. Whenever a Stop hook feedback message wakes you, run exactly `bin/backend/fm-wake-drain.sh` once with Bash, then reply with exactly ACK and stop. Never run bin/backend/fm-watch-arm.sh or any other arm command, and never use any other tool.'
 

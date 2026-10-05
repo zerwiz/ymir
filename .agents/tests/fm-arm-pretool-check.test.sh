@@ -8,9 +8,9 @@
 # Empirical harness evidence lives in docs/arm-pretool-check.md.
 set -u
 
-# --- portability shim: bin/ymir-platform.sh --------------------------------
+# --- portability shim: bin/fleet/ymir-platform.sh --------------------------------
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
-  for _ymir_c in "$(git rev-parse --show-toplevel 2>/dev/null)/bin/ymir-platform.sh"                  "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/ymir-platform.sh"; do
+  for _ymir_c in "$(git rev-parse --show-toplevel 2>/dev/null)/bin/fleet/ymir-platform.sh"                  "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/bin/fleet/ymir-platform.sh"; do
     [ -n "$_ymir_c" ] && [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
   done
   unset _ymir_c
@@ -19,7 +19,7 @@ fi
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-CHECK="$ROOT/bin/fm-arm-pretool-check.sh"
+CHECK="$ROOT/bin/backend/fm-arm-pretool-check.sh"
 POLICY="$ROOT/bin/fm-arm-command-policy.mjs"
 
 # --- full cross-harness acceptance matrix ----------------------------------
@@ -35,11 +35,11 @@ matrix_case() {
 }
 
 matrix_case A01 allow 'bin/backend/fm-watch-arm.sh'
-matrix_case A02 allow './bin/fm-watch-arm.sh --restart'
+matrix_case A02 allow './bin/backend/fm-watch-arm.sh --restart'
 matrix_case A03 allow 'exec bin/backend/fm-watch-arm.sh'
 matrix_case A04 allow 'bin/backend/fm-watch-checkpoint.sh --seconds 180'
 matrix_case A05 allow 'exec bin/backend/fm-watch-checkpoint.sh --seconds 180'
-matrix_case A06 allow "$ROOT/bin/fm-watch-checkpoint.sh --seconds 180"
+matrix_case A06 allow "$ROOT/bin/backend/fm-watch-checkpoint.sh --seconds 180"
 matrix_case A07 allow "cd '$ROOT'; exec bin/backend/fm-watch-arm.sh"
 matrix_case A08 allow "cd '../firstmate'; bin/backend/fm-watch-checkpoint.sh --seconds 180"
 matrix_case A09 allow "export FM_HOME='$ROOT'; bin/backend/fm-watch-checkpoint.sh --seconds 180"
@@ -50,10 +50,10 @@ matrix_case A13 allow "source '$ROOT/config/x-mode.env'; bin/backend/fm-watch-ch
 matrix_case A14 allow "[ -f 'config/x-mode.env' ] && source 'config/x-mode.env'; exec bin/backend/fm-watch-arm.sh"
 matrix_case A15 allow "cd $ROOT && exec bin/backend/fm-watch-arm.sh"
 matrix_case A16 allow "export FM_HOME=$ROOT && bin/backend/fm-watch-checkpoint.sh --seconds 180"
-matrix_case A17 allow $'source "config/x-mode.env"\nbin/fm-watch-checkpoint.sh --seconds 180'
+matrix_case A17 allow $'source "config/x-mode.env"\nbin/backend/fm-watch-checkpoint.sh --seconds 180'
 
-matrix_case R01 allow "pgrep -fl '/bin/fm-watch.sh' || true"
-matrix_case R02 allow "ps aux | rg '/bin/fm-watch.sh'"
+matrix_case R01 allow "pgrep -fl '/bin/backend/fm-watch.sh' || true"
+matrix_case R02 allow "ps aux | rg '/bin/backend/fm-watch.sh'"
 matrix_case R03 allow "rg -n 'fm-watch-arm.sh &' docs tests"
 matrix_case R04 allow "rg -n 'bin/backend/fm-watch-arm.sh; echo bad' docs"
 matrix_case R05 allow "git grep 'fm-watch-checkpoint.sh && echo bad'"
@@ -89,21 +89,21 @@ matrix_case D14 deny 'echo before; bin/backend/fm-watch-arm.sh'
 matrix_case D15 deny 'bin/backend/fm-watch-checkpoint.sh --seconds 180; echo after'
 matrix_case D16 deny 'true && bin/backend/fm-watch-arm.sh'
 matrix_case D17 deny 'bin/backend/fm-watch-checkpoint.sh --seconds 180 || true'
-matrix_case D18 deny $'bin/backend/fm-watch-arm.sh\nbin/fm-watch-checkpoint.sh --seconds 180'
-matrix_case D19 deny "ymir_kill_matching '/bin/fm-watch.sh'"
-matrix_case D20 deny "command ymir_kill_matching '/bin/fm-watch.sh'"
-matrix_case D21 deny "/usr/bin/ymir_kill_matching '/bin/fm-watch.sh'"
-matrix_case D22 deny "sudo ymir_kill_matching '/bin/fm-watch.sh'"
-matrix_case D23 deny 'kill "$(pgrep -f '\''/bin/fm-watch.sh'\'')"'
+matrix_case D18 deny $'bin/backend/fm-watch-arm.sh\nbin/backend/fm-watch-checkpoint.sh --seconds 180'
+matrix_case D19 deny "ymir_kill_matching '/bin/backend/fm-watch.sh'"
+matrix_case D20 deny "command ymir_kill_matching '/bin/backend/fm-watch.sh'"
+matrix_case D21 deny "/usr/bin/ymir_kill_matching '/bin/backend/fm-watch.sh'"
+matrix_case D22 deny "sudo ymir_kill_matching '/bin/backend/fm-watch.sh'"
+matrix_case D23 deny 'kill "$(pgrep -f '\''/bin/backend/fm-watch.sh'\'')"'
 matrix_case D24 deny $'bin/fm-watc\\\nh-arm.sh &'
 matrix_case D25 deny 'sudo -u root bin/backend/fm-watch-arm.sh &'
 matrix_case D26 deny 'env -u PATH bin/backend/fm-watch-arm.sh &'
 matrix_case D27 deny "bash -c \$'bin/backend/fm-watch-arm.sh &'"
-matrix_case D28 deny $'bash <<\'EOF\'\nbin/fm-watch-arm.sh &\nEOF'
+matrix_case D28 deny $'bash <<\'EOF\'\nbin/backend/fm-watch-arm.sh &\nEOF'
 matrix_case D29 deny "WATCHER='bin/backend/fm-watch-arm.sh &' bash -c 'eval \"\$WATCHER\"'"
-matrix_case D30 deny "p=\$(pgrep -f '/bin/fm-watch.sh'); kill \"\$p\""
+matrix_case D30 deny "p=\$(pgrep -f '/bin/backend/fm-watch.sh'); kill \"\$p\""
 matrix_case D31 deny "env -S 'bin/backend/fm-watch-arm.sh &'"
-matrix_case D32 deny "env --split-string='$ROOT/bin/fm-watch-arm.sh &'"
+matrix_case D32 deny "env --split-string='$ROOT/bin/backend/fm-watch-arm.sh &'"
 matrix_case D33 deny 'bin/fm-"watch-arm.sh" &'
 matrix_case D34 deny "WATCHER='bin/backend/fm-watch-arm.sh'; \"\$WATCHER\" &"
 matrix_case D35 deny "bash -c -- 'bin/backend/fm-watch-arm.sh &'"
@@ -116,13 +116,13 @@ matrix_case D41 deny 'gtimeout 30 bin/backend/fm-watch-arm.sh &'
 matrix_case D42 deny 'bin/fm-watch-{arm,checkpoint}.sh &'
 matrix_case D43 deny 'bin/backend/fm-watch-arm.sh* &'
 matrix_case D44 deny "pattern='fm-watch'; ymir_kill_matching \"\$pattern\""
-matrix_case D45 deny "p=\$(pgrep -f '/bin/fm-watch.sh'); q=\$p; kill \$q"
-matrix_case D46 deny '$FM_HOME/bin/fm-watch-arm.sh &'
-matrix_case D47 deny '$HOME/firstmate/bin/fm-watch-arm.sh | cat'
-matrix_case D48 deny '~/firstmate/bin/fm-watch-arm.sh &'
+matrix_case D45 deny "p=\$(pgrep -f '/bin/backend/fm-watch.sh'); q=\$p; kill \$q"
+matrix_case D46 deny '$FM_HOME/bin/backend/fm-watch-arm.sh &'
+matrix_case D47 deny '$HOME/firstmate/bin/backend/fm-watch-arm.sh | cat'
+matrix_case D48 deny '~/firstmate/bin/backend/fm-watch-arm.sh &'
 matrix_case D49 deny 'bin/backend/fm-watch.sh'
-matrix_case D50 deny '$FM_HOME/bin/fm-watch.sh'
-matrix_case D51 deny '~/firstmate/bin/fm-watch.sh --restart'
+matrix_case D50 deny '$FM_HOME/bin/backend/fm-watch.sh'
+matrix_case D51 deny '~/firstmate/bin/backend/fm-watch.sh --restart'
 matrix_case D52 deny "bin/fm-\$'\x77'atch-arm.sh &"
 matrix_case D53 deny 'bin/fm-$"watch"-arm.sh &'
 matrix_case D54 deny 'bin/fm-watch-$"arm".sh &'
@@ -134,7 +134,7 @@ matrix_case D58 deny 'until false; do kill $(pgrep -f fm-watch); done'
 matrix_case E01 allow "bin/backend/fm-watch-checkpoint.sh --seconds '180;still-one-arg'"
 matrix_case E02 allow "bin/backend/fm-watch-checkpoint.sh --label 'fm-watch-arm.sh; literal argument'"
 matrix_case E03 allow 'bin/backend/fm-watch-arm.sh # output > file &'
-matrix_case E04 allow $'# setup comment with fm-watch.sh; && >\nsource "config/x-mode.env"\nbin/fm-watch-checkpoint.sh --seconds 180'
+matrix_case E04 allow $'# setup comment with fm-watch.sh; && >\nsource "config/x-mode.env"\nbin/backend/fm-watch-checkpoint.sh --seconds 180'
 matrix_case E05 deny "FM_HOME=$ROOT bin/backend/fm-watch-checkpoint.sh --seconds 180"
 matrix_case E06 deny "env FM_HOME=$ROOT bin/backend/fm-watch-arm.sh"
 matrix_case E07 deny "source '/tmp/not-firstmate/config/x-mode.env'; bin/backend/fm-watch-checkpoint.sh --seconds 180"
@@ -144,9 +144,9 @@ matrix_case E10 deny "eval 'bin/backend/fm-watch-arm.sh &'"
 matrix_case E11 deny "exec bash -lc 'bin/backend/fm-watch-arm.sh &'"
 matrix_case E12 allow 'bash -lc "$WATCHER_COMMAND" # fm-watch-arm.sh'
 matrix_case E13 allow "printf '%s\\n' 'argument has ; and fm-watch-arm.sh and &&'"
-matrix_case E14 allow '$FM_HOME/bin/fm-teardown.sh &'
-matrix_case E15 allow '$FM_HOME/bin/fm-watch-arm.sh'
-matrix_case E16 allow '~/firstmate/bin/fm-watch-checkpoint.sh --seconds 180'
+matrix_case E14 allow '$FM_HOME/bin/backend/fm-teardown.sh &'
+matrix_case E15 allow '$FM_HOME/bin/backend/fm-watch-arm.sh'
+matrix_case E16 allow '~/firstmate/bin/backend/fm-watch-checkpoint.sh --seconds 180'
 matrix_case E17 allow 'for f in 1; do echo fm-watch; done'
 
 MATRIX_TMP=$(mktemp -d "${TMPDIR:-/tmp}/fm-arm-policy-matrix.XXXXXX")
@@ -225,7 +225,7 @@ assert_policy() {
 test_direct_policy_contract() {
   local heredoc_data heredoc_watcher
   assert_policy direct-data-ymir_kill_matching allow "echo 'ymir_kill_matching fm-watch'"
-  assert_policy direct-broad-ymir_kill_matching $'deny\tbroad-watcher-kill' "ymir_kill_matching '/bin/fm-watch.sh'"
+  assert_policy direct-broad-ymir_kill_matching $'deny\tbroad-watcher-kill' "ymir_kill_matching '/bin/backend/fm-watch.sh'"
   assert_policy direct-loop-broad-ymir_kill_matching $'deny\tbroad-watcher-kill' 'while true; do ymir_kill_matching fm-watch; done'
   assert_policy direct-loop-broad-kill-pgrep $'deny\tbroad-watcher-kill' 'until false; do kill $(pgrep -f fm-watch); done'
   assert_policy direct-loop-no-kill-allowed allow 'for f in 1; do echo fm-watch; done'
@@ -235,13 +235,13 @@ test_direct_policy_contract() {
   assert_policy direct-unsupported $'deny\tunclassifiable-protected-command' 'if true; then bin/backend/fm-watch-arm.sh; fi'
   assert_policy direct-constructed-payload $'deny\twatcher-nested' "WATCHER='bin/backend/fm-watch-arm.sh &'; bash -lc \"\$WATCHER\""
   assert_policy direct-parameter-export allow 'export FM_HOME=${HOME}; bin/backend/fm-watch-checkpoint.sh --seconds 180'
-  assert_policy direct-expanded-arm-blessed allow '$FM_HOME/bin/fm-watch-arm.sh'
-  assert_policy direct-expanded-arm-background $'deny\twatcher-background' '$FM_HOME/bin/fm-watch-arm.sh &'
-  assert_policy direct-expanded-arm-pipeline $'deny\twatcher-pipeline' '$HOME/firstmate/bin/fm-watch-arm.sh | cat'
+  assert_policy direct-expanded-arm-blessed allow '$FM_HOME/bin/backend/fm-watch-arm.sh'
+  assert_policy direct-expanded-arm-background $'deny\twatcher-background' '$FM_HOME/bin/backend/fm-watch-arm.sh &'
+  assert_policy direct-expanded-arm-pipeline $'deny\twatcher-pipeline' '$HOME/firstmate/bin/backend/fm-watch-arm.sh | cat'
   assert_policy direct-watch-not-blessed $'deny\twatcher-direct' 'bin/backend/fm-watch.sh'
-  assert_policy direct-watch-expanded $'deny\twatcher-direct' '$FM_HOME/bin/fm-watch.sh'
+  assert_policy direct-watch-expanded $'deny\twatcher-direct' '$FM_HOME/bin/backend/fm-watch.sh'
   assert_policy direct-watch-safe-shape $'deny\twatcher-direct' 'cd /tmp; bin/backend/fm-watch.sh'
-  heredoc_data=$'cat <<\'EOF\'\nbin/fm-watch-arm.sh &\nEOF'
+  heredoc_data=$'cat <<\'EOF\'\nbin/backend/fm-watch-arm.sh &\nEOF'
   heredoc_watcher=$'bin/backend/fm-watch-arm.sh <<\'EOF\'\ndata only\nEOF'
   assert_policy direct-heredoc-data allow "$heredoc_data"
   assert_policy direct-heredoc-watcher $'deny\twatcher-redirection' "$heredoc_watcher"
@@ -320,7 +320,7 @@ test_prefilter_is_strict_superset() {
   rc=$?
   [ "$rc" -eq 2 ] || fail "prefilter must delegate a deniable fm-watch command, not fast-allow it, got exit $rc"
   # A broad watcher kill also contains the fm-watch bytes and must still deny.
-  "$CHECK" --command "ymir_kill_matching '/bin/fm-watch.sh'" >/dev/null 2>&1
+  "$CHECK" --command "ymir_kill_matching '/bin/backend/fm-watch.sh'" >/dev/null 2>&1
   rc=$?
   [ "$rc" -eq 2 ] || fail "prefilter must delegate a broad watcher kill, not fast-allow it, got exit $rc"
   # Obfuscated protected paths lose the literal fm-watch bytes (a line
@@ -345,7 +345,7 @@ test_prefilter_is_strict_superset() {
   [ "$rc" -eq 2 ] || fail "prefilter must delegate a locale-string-encoded protected path, not fast-allow it, got exit $rc"
   # The marker is specifically $ followed by a quote, not any $ expansion: an
   # ordinary $VAR that is not a watcher reference still takes the fast path.
-  "$CHECK" --command '$FM_HOME/bin/fm-teardown.sh &' >/dev/null 2>&1
+  "$CHECK" --command '$FM_HOME/bin/backend/fm-teardown.sh &' >/dev/null 2>&1
   rc=$?
   [ "$rc" -eq 0 ] || fail "a benign \$VAR non-watcher command must still fast-allow, got exit $rc"
   "$CHECK" --command 'echo "$HOME/scratch" && ls -la' >/dev/null 2>&1
@@ -458,7 +458,7 @@ test_allow_is_silent_both_modes() {
 test_shellcheck_clean() {
   local out
   command -v shellcheck >/dev/null 2>&1 || { pass "shellcheck not installed, skipping"; return; }
-  out=$("$ROOT/bin/fm-lint.sh" "$CHECK" 2>&1)     || fail "bin/backend/fm-arm-pretool-check.sh is not lint-clean under the pinned definition: $out"
+  out=$("$ROOT/bin/backend/fm-lint.sh" "$CHECK" 2>&1)     || fail "bin/backend/fm-arm-pretool-check.sh is not lint-clean under the pinned definition: $out"
   pass "bin/backend/fm-arm-pretool-check.sh is clean under bin/backend/fm-lint.sh"
 }
 

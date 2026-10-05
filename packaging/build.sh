@@ -58,7 +58,7 @@ pkg() {
   rm -rf "$stage"; mkdir -p "$stage/Applications/Ymir"
   cp "$ROOT/packaging/macos/Ymir Installer.command" "$stage/Applications/Ymir/"
   chmod +x "$stage/Applications/Ymir/Ymir Installer.command"
-  cp "$ROOT/bin/bootstrap-macos.sh" "$stage/Applications/Ymir/" 2>/dev/null || true
+  cp "$ROOT/bin/host/bootstrap-macos.sh" "$stage/Applications/Ymir/" 2>/dev/null || true
   pkgbuild --root "$stage" --identifier com.ymir.installer --version "$VERSION" --install-location / "$OUT/Ymir-$VERSION.pkg" >/dev/null \
     || { printf 'error: pkgbuild failed\nhelp: run it by hand to see why\n' >&2; exit 1; }
   printf 'installers[1]{target,artifact}:\n  "macos .pkg","%s"\n' "$OUT/Ymir-$VERSION.pkg"

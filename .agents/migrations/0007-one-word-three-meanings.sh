@@ -27,7 +27,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # guessed. `hoard_root` answers `$YMIR_HOME/hodd` (the private MATERIAL root);
 # using it here made every path in this migration one level wrong, so it moved
 # nothing, verified nothing, and still reported success (2026-09-30). The one
-# resolver for the operator's home is `ymir_home_root` in bin/hoard-lib.sh.
+# resolver for the operator's home is `ymir_home_root` in bin/vault/hoard-lib.sh.
 # shellcheck source=bin/vault/hoard-lib.sh
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 HOME_DIR=""

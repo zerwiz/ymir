@@ -14,8 +14,8 @@ set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-# shellcheck source=bin/gleipnir-lock-lib.sh
-. "$ROOT/bin/gleipnir-lock-lib.sh"
+# shellcheck source=bin/vault/gleipnir-lock-lib.sh
+. "$ROOT/bin/vault/gleipnir-lock-lib.sh"
 
 gleipnir_lock_path want
 gleipnir_lock_pointer_path pointer

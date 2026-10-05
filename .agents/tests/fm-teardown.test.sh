@@ -55,8 +55,8 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 fm_git_identity fmtest fmtest@example.invalid
 
-TEARDOWN="$ROOT/bin/fm-teardown.sh"
-PR_CHECK="$ROOT/bin/fm-pr-check.sh"
+TEARDOWN="$ROOT/bin/backend/fm-teardown.sh"
+PR_CHECK="$ROOT/bin/backend/fm-pr-check.sh"
 TMP_ROOT=$(fm_test_tmproot fm-teardown-tests)
 REAL_GIT_FOR_TEST=$(command -v git)
 export REAL_GIT_FOR_TEST
@@ -1323,7 +1323,7 @@ test_teardown_missing_busy_sidecar_completes() {
   local case_dir gen rc
   case_dir=$(make_case missing-busy-sidecar)
   write_meta "$case_dir" local-only ship
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$case_dir/state" task-x1)
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$case_dir/state" task-x1)
   printf 'busy_gen=%s\n' "$gen" >> "$case_dir/state/task-x1.meta"
   rm -f "$case_dir/state/task-x1.busy-gen"
 
@@ -1461,7 +1461,7 @@ SH
     || fail "herdr-orphan-refusal: could not resolve the fixture presentation lock path"
   ready="$case_dir/lock-ready"; release="$case_dir/lock-release"
   ROOT="$ROOT" LOCK="$lock" READY="$ready" RELEASE="$release" bash -c '
-    . "$ROOT/bin/fm-wake-lib.sh"
+    . "$ROOT/bin/backend/fm-wake-lib.sh"
     fm_lock_try_acquire "$LOCK" || exit 1
     : > "$READY"
     while [ ! -e "$RELEASE" ]; do sleep 0.1; done
@@ -1568,7 +1568,7 @@ SH
           "$case_dir/test-root/bin/backends/herdr.sh"
         rm -f "$case_dir/test-root/bin/backends/herdr.sh.bak"
       fi
-      teardown_bin="$case_dir/test-root/bin/fm-teardown.sh"
+      teardown_bin="$case_dir/test-root/bin/backend/fm-teardown.sh"
       ;;
   esac
   rc=0
@@ -1726,7 +1726,7 @@ SH
   ROOT="$ROOT" LOCK="$lock" READY="$ready" RELEASE="$release" \
     HOME_STATE="$home/state" OWNER_PID="$$" bash -c '
     export FM_STATE_OVERRIDE="$HOME_STATE"
-    . "$ROOT/bin/fm-wake-lib.sh"
+    . "$ROOT/bin/backend/fm-wake-lib.sh"
     fm_lock_try_acquire "$LOCK" || exit 1
     : > "$READY"
     while [ ! -e "$RELEASE" ] && kill -0 "$OWNER_PID" 2>/dev/null; do sleep 0.1; done

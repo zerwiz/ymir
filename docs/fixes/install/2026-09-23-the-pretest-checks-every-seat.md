@@ -27,4 +27,4 @@ fleet.
 `bash -n` clean. Compliance 15/15.
 
 ### Files
-- `bin/npm-pretest.sh`
+- `bin/forge/npm/npm-pretest.sh`

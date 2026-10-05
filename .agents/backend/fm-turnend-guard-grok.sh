@@ -47,10 +47,10 @@ CAPABILITY=$(printf '%s' "$PAYLOAD" | jq -ser '
 ROOT=${GROK_WORKSPACE_ROOT:-${CLAUDE_PROJECT_DIR:-}}
 [ -n "$ROOT" ] || exit 0
 ROOT=${ROOT%/}
-[ -x "$ROOT/bin/fm-turnend-guard.sh" ] || exit 0
+[ -x "$ROOT/bin/backend/fm-turnend-guard.sh" ] || exit 0
 
 if [ "$CAPABILITY" = native ]; then
-  printf '%s' "$PAYLOAD" | "$ROOT/bin/fm-turnend-guard.sh"
+  printf '%s' "$PAYLOAD" | "$ROOT/bin/backend/fm-turnend-guard.sh"
   RC=$?
   case "$RC" in
     0|2) exit "$RC" ;;
@@ -68,14 +68,14 @@ command -v grok >/dev/null 2>&1 || exit 0
 ERR=$(mktemp "${TMPDIR:-/tmp}/fm-turnend-grok.XXXXXX") || exit 0
 trap 'rm -f "$ERR"' EXIT
 
-printf '%s' "$PAYLOAD" | "$ROOT/bin/fm-turnend-guard.sh" 2>"$ERR"
+printf '%s' "$PAYLOAD" | "$ROOT/bin/backend/fm-turnend-guard.sh" 2>"$ERR"
 RC=$?
 [ "$RC" -eq 2 ] || exit 0
 
 REASON=$(cat "$ERR" 2>/dev/null || true)
 [ -n "$REASON" ] || REASON='tasks in flight, no live watcher - repair missing watcher supervision according to the session-start operating block before ending the turn'
 # shellcheck source=bin/backend/fm-operational-input.sh
-. "$ROOT/bin/fm-operational-input.sh"
+. "$ROOT/bin/backend/fm-operational-input.sh"
 fm_operational_input_encode turn-end-guard \
   "TURN WOULD END BLIND - supervision is off. Repair missing watcher supervision according to the session-start operating block before ending the turn.
 

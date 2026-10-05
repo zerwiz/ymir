@@ -18,7 +18,7 @@ nothing. So the alias is not politeness — it is the ward, and it is named out 
 
 - `registry/projects.yaml.example` — the row shape now shows `realm:`; the deprecated key is
   documented in the file. `registry/workspaces.yaml.example` states that every `id:` there is a realm.
-- **`bin/registry-lib.sh` (new)** — the ONLY place allowed to resolve the key:
+- **`bin/skuld/registry-lib.sh` (new)** — the ONLY place allowed to resolve the key:
   - `registry_projects_file` — where the master registry is (`PROJECTS_YAML` → the hoard → the repo's
     shape), resolved through `bin/vault/hoard-lib.sh`, never a restated path (Rule 07).
   - `registry_realm` — reads `realm`; falls back to `workspace` and warns, **by name**, once per
@@ -26,18 +26,18 @@ nothing. So the alias is not politeness — it is the ward, and it is named out 
   - `registry_deprecated_rows` — every row still on the old key, as `id<TAB>value`.
   - `registry_deprecated_key_warn` — the one wording of the warning, so the reader and the ward can
     never disagree.
-- `bin/project-git.sh` — sources the lib; prints `realm` in its row header and resolves
+- `bin/agents/project-git.sh` — sources the lib; prints `realm` in its row header and resolves
   `--field realm`. `--field workspace` still resolves and says it is `realm`. **It prints its block**;
   a reader that prints nothing is not a reader.
-- `bin/ymir-validate.sh` — a new `registry` check: **PASS** when every project row names its realm,
+- `bin/engine/ymir-validate.sh` — a new `registry` check: **PASS** when every project row names its realm,
   **WARN** naming each row still on `workspace:`, and never FAIL (a registry written before the
   rename is not a broken install).
-- `bin/ymir-install.sh` — the seeded registry's example row teaches `realm:`.
+- `bin/engine/ymir-install.sh` — the seeded registry's example row teaches `realm:`.
 
 ## The ward, measured
 
 ```
-$ bin/project-git.sh ymir-platform
+$ bin/agents/project-git.sh ymir-platform
 deprecated-registry-key: row "ymir-platform" carries `workspace:` in …/hodd/identity/projects.yaml; renamed to `realm:` (plan 62) — the value still resolves, but the row should be renamed.
 project[1]{id,host,owner,repo,remote,default_branch,auth,machine,company,realm}:
   "ymir-platform","github.com","zerwiz","ymir","origin","main","gh","omarchy","whynotproductions","work"
@@ -48,7 +48,7 @@ why the alias exists: until he renames them, every reader works and every reader
 
 ## Files
 
-- `bin/registry-lib.sh` (new), `bin/project-git.sh`, `bin/ymir-validate.sh`, `bin/ymir-install.sh`
+- `bin/skuld/registry-lib.sh` (new), `bin/agents/project-git.sh`, `bin/engine/ymir-validate.sh`, `bin/engine/ymir-install.sh`
 - `registry/projects.yaml.example`, `registry/workspaces.yaml.example`, `bin/README.md`
 - `.agents/tests/registry-realm-key.test.sh` (new) — the ward, runnable by hand
 - `.agents/skills/lifecycle/smoke_test.sh` — `rename-realm` (registry-lib.sh is the only reader of the
@@ -57,7 +57,7 @@ why the alias exists: until he renames them, every reader works and every reader
   resolves), `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md` (registry section — the
   rename is now shipped, not promised), `.agents/skills/galdr-ymirsystem/assets/installation.md`
   (the seeded registry teaches `realm:`) — the gate demands the owning asset of every touched script
-- `bin/ymir-install.sh` taught `realm:` in the registry it seeds.
+- `bin/engine/ymir-install.sh` taught `realm:` in the registry it seeds.
 
 ## A mend that is NOT taken here (recorded, not swallowed)
 

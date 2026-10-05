@@ -29,7 +29,7 @@ AHOY_PROJECT="$LAB/ahoy-project"
 HOME_DIR="$LAB/fmhome"
 PI_VERSION=$(pi --version)
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-operational-input.sh"
+. "$ROOT/bin/backend/fm-operational-input.sh"
 # shellcheck disable=SC2016 # Backticks are literal prompt markup.
 LEGACY_START='Run `bin/backend/fm-session-start.sh` now, exactly once, before executing any other instructions.'
 LEGACY_AWAY=$'\xE2\x81\xA3Supervisor escalate (1 event(s)): done: legacy rollout'
@@ -180,8 +180,8 @@ run_native_ahoy_regressions() {
   cp \
     "$ROOT/bin/fm-sessionstart-nudge.sh" \
     "$ROOT/bin/fm-primary-scope-lib.sh" \
-    "$ROOT/bin/fm-gate-refuse-lib.sh" \
-    "$ROOT/bin/fm-operational-input.sh" \
+    "$ROOT/bin/backend/fm-gate-refuse-lib.sh" \
+    "$ROOT/bin/backend/fm-operational-input.sh" \
     "$AHOY_PROJECT/bin/"
   cp "$ROOT/.agents/skills/ahoy/SKILL.md" "$AHOY_PROJECT/.agents/skills/ahoy/SKILL.md"
   chmod +x "$AHOY_PROJECT/bin/fm-sessionstart-nudge.sh"
@@ -195,8 +195,8 @@ run_native_ahoy_regressions() {
     'count=$((count + 1))' \
     'printf "%s\n" "$count" > "$file"' \
     'printf "SESSION_START_DONE count=%s\n" "$count"' \
-    > "$AHOY_PROJECT/bin/fm-session-start.sh"
-  chmod +x "$AHOY_PROJECT/bin/fm-session-start.sh"
+    > "$AHOY_PROJECT/bin/backend/fm-session-start.sh"
+  chmod +x "$AHOY_PROJECT/bin/backend/fm-session-start.sh"
   # shellcheck disable=SC2016 # Backticks are literal prompt markup.
   printf '%s\n' \
     '---' \
@@ -258,10 +258,10 @@ cp "$ROOT/.pi/extensions/lib/fm-calm-working-ship.ts" "$PROJECT/.pi/extensions/l
 cp "$ROOT/.pi/extensions/lib/fm-branch-dispatch.ts" "$PROJECT/.pi/extensions/lib/fm-branch-dispatch.ts"
 cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" "$PROJECT/.pi/extensions/lib/fm-operational-input.ts"
 cp "$ROOT/.pi/extensions/fm-primary-turnend-guard.ts" "$PROJECT/.pi/extensions/fm-primary-turnend-guard.ts"
-cp "$ROOT/bin/fm-watch-arm.sh" "$PROJECT/bin/fm-watch-arm.sh"
-cp "$ROOT/bin/fm-operational-input.sh" "$PROJECT/bin/fm-operational-input.sh"
+cp "$ROOT/bin/backend/fm-watch-arm.sh" "$PROJECT/bin/backend/fm-watch-arm.sh"
+cp "$ROOT/bin/backend/fm-operational-input.sh" "$PROJECT/bin/backend/fm-operational-input.sh"
 cp "$ROOT/bin/fm-supervision-instructions.sh" "$PROJECT/bin/fm-supervision-instructions.sh"
-chmod +x "$PROJECT/bin/fm-operational-input.sh"
+chmod +x "$PROJECT/bin/backend/fm-operational-input.sh"
 mkdir -p "$HOME_DIR/state" "$HOME_DIR/config"
 
 "$TMUX" -L "$SOCKET" new-session -d -s "$SESSION" -c "$PROJECT" \

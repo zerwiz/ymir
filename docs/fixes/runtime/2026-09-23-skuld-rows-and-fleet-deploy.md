@@ -12,23 +12,23 @@ Two problems, found while filing a ticket through the `skuld` MCP.
    and the snapshot.
 2. **`npm install` never refreshed the running server.** The package updates
    under `node_modules`, but a service executes a copy under `~/.fleet/` (made by
-   `bin/fleet-ensure.sh`). So an install left the LIVE server on the old code —
+   `bin/fleet/fleet-ensure.sh`). So an install left the LIVE server on the old code —
    which is exactly how the bug above survived an install.
-   - **`bin/fleet-deploy.sh`** (new): copies the tools from the package into
+   - **`bin/fleet/fleet-deploy.sh`** (new): copies the tools from the package into
      `~/.fleet/` and `try-restart`s the units that are installed. Best-effort,
      `--dry-run` supported, and **Rule 10's deployer** for the postinstall path.
-   - **`package.json`** gains `postinstall: bash bin/fleet-deploy.sh || true`, so
+   - **`package.json`** gains `postinstall: bash bin/fleet/fleet-deploy.sh || true`, so
      an install now updates the running fleet too.
 
 ### Verified
 - `node --check tools/tickets-mcp/server.mjs` clean; no `rows(q(` without `.out`
   remains.
-- `bin/fleet-deploy.sh --dry-run` reports the files it would refresh and the
+- `bin/fleet/fleet-deploy.sh --dry-run` reports the files it would refresh and the
   units it would restart.
 - After deploying the fix to `whynot` and restarting `skuld`, the ticket hall
   creates tickets again (a real ticket filed through the MCP).
 
 ### Files
 - `tools/tickets-mcp/server.mjs`
-- `bin/fleet-deploy.sh`
+- `bin/fleet/fleet-deploy.sh`
 - `package.json`

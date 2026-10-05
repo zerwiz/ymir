@@ -19,7 +19,7 @@ set -u
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 TMP_ROOT=$(fm_test_tmproot fm-remote-job-orphan-reap)
 TMP_ROOT=$(cd "$TMP_ROOT" && pwd -P)
-REAPER="$ROOT/bin/fm-remote-job-reap-orphans.sh"
+REAPER="$ROOT/bin/backend/fm-remote-job-reap-orphans.sh"
 
 TRACKED_PIDS=()
 orphan_cleanup() {
@@ -68,7 +68,7 @@ wait_child() { # <pid> <seconds>
 build_remote_root() {
   local root=$1
   mkdir -p "$root/bin"
-  cp "$ROOT/bin/fm-remote-job-lib.sh" "$ROOT/bin/fm-remote-job-worker.sh" "$root/bin/"
+  cp "$ROOT/bin/backend/fm-remote-job-lib.sh" "$ROOT/bin/fm-remote-job-worker.sh" "$root/bin/"
   chmod +x "$root/bin"/*.sh
   printf 'fixture\n' > "$root/AGENTS.md"
   git -C "$root" init -q -b main
@@ -91,7 +91,7 @@ start_worker() {
     export FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux
     export FM_REMOTE_JOB_ORPHAN_GRACE_SECONDS=1
     # shellcheck source=bin/backend/fm-remote-job-lib.sh
-    . "$ROOT/bin/fm-remote-job-lib.sh"
+    . "$ROOT/bin/backend/fm-remote-job-lib.sh"
     fm_remote_job_start_linux_worker "$root" "$account_home" >&2 || exit 1
     deadline=$(( $(date +%s) + 10 ))
     while [ "$(date +%s)" -lt "$deadline" ]; do

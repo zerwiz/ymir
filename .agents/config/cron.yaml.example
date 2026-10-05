@@ -2,7 +2,7 @@
 # Copy to YOUR home and edit there:  cp config/cron.yaml.example $YMIR_HOME/config/cron.yaml
 # The runtime reads the operator's own schedule from $YMIR_HOME/config/cron.yaml
 # (or BROKK_CONFIG_OVERRIDE) — the tracked tree ships only this shape.
-# Format: HH:MM <command>. Started idempotently by bin/nornir-cron-start.sh.
+# Format: HH:MM <command>. Started idempotently by bin/time/nornir-cron-start.sh.
 #
 # ROLE GATE (plan 51): prefix a job with @<role>[,<role>] so it runs only on the
 # machines whose roles match — @heart (the record), @forge (models/GPU),

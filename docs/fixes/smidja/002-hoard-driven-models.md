@@ -13,8 +13,8 @@ environment; a missing model at the end is a LOUD refusal naming the key and the
 
 1. **`.agents/agents/*.md` (20 figures)** — dropped the `model:` front-matter. The
    dispatch road resolves each figure's model from the hoard by figure name via
-   `bin/agents-config.sh get <figure> model`.
-2. **`bin/agents-config.sh`** — `apply` no longer rewrites tracked `.agents/agents/*.md`;
+   `bin/fleet/agents-config.sh get <figure> model`.
+2. **`bin/fleet/agents-config.sh`** — `apply` no longer rewrites tracked `.agents/agents/*.md`;
    added a `default [--provider|--model|--harness]` verb; `get` now ignores a stale
    resolved cache (cache mtime must beat the hoard YAML) so an old model cannot be served.
 3. **`apps/smidja/smidja_smidja_config/smidja.config.yaml`** +
@@ -23,13 +23,13 @@ environment; a missing model at the end is a LOUD refusal naming the key and the
    The template ships placeholders only.
 4. **`apps/smidja/smidja_modules/agents.py`** (+ the factory template copy) — `load_config`
    now fills empty roster models from the hoard: env first (expansion), then the hoard
-   `default_model` / `smidja_roles:` via `bin/agents-config.sh default`, then a loud
+   `default_model` / `smidja_roles:` via `bin/fleet/agents-config.sh default`, then a loud
    refusal in `validate` naming `SMIDJA_LOCAL_MODEL` and the hoard `agents.yaml`.
-5. **`bin/research-round.sh`** — the last-resort literal became a loud refusal; the chain
+5. **`bin/agents/research-round.sh`** — the last-resort literal became a loud refusal; the chain
    is `--model` → `agents-config.sh get <figure> model` → refuse.
-6. **`bin/snotra-transcribe.sh`** — `RAIL_MODEL` default emptied; added a loud refusal
+6. **`bin/time/snotra/snotra-transcribe.sh`** — `RAIL_MODEL` default emptied; added a loud refusal
    naming the key.
-7. **`bin/pi-agent.sh` / `bin/pi-local.sh` / `bin/pi-seat.sh`** — provider and model
+7. **`bin/pi/pi-agent.sh` / `bin/pi/pi-local.sh` / `bin/pi/pi-seat.sh`** — provider and model
    resolve from the hoard (the figure's own model, else `default_model`); the
    `PI_LOCAL_PROVIDER:-llama-cpp` literal is gone.
 8. **Docstrings/AGENTS.md examples** (`agents.py`, `apps/smidja-factory/AGENTS.md`) —
@@ -37,11 +37,11 @@ environment; a missing model at the end is a LOUD refusal naming the key and the
 
 ## 57 — installation stands the local model up (see `docs/fixes/runtime/`)
 
-Built on that road: `bin/llama-ensure.sh` (adopt-or-install a CUDA `llama-server`,
-`CUDA0` proved), `bin/model-fit.sh` (best model for the probed hardware, generic),
-`bin/model-fetch.sh` (resumable, checksummed, consent-first), pi wiring
+Built on that road: `bin/model/llama-ensure.sh` (adopt-or-install a CUDA `llama-server`,
+`CUDA0` proved), `bin/model/model-fit.sh` (best model for the probed hardware, generic),
+`bin/model/model-fetch.sh` (resumable, checksummed, consent-first), pi wiring
 (`~/.pi/agent/models.json` + one-shot proof), ymir registration (the same model into
-the hoard `agents.yaml`), and `bin/model-tune.sh` (the modelfesting bench writes the
+the hoard `agents.yaml`), and `bin/model/model-tune.sh` (the modelfesting bench writes the
 tuned row).
 
 ## Proof
@@ -58,7 +58,7 @@ $ YMIR_AGENTS_YAML=/tmp/userA.yaml ... load_config → planner: llama-swap/model
 $ YMIR_AGENTS_YAML=/tmp/userB.yaml ... load_config → planner: llama-swap/model-B-70b@q8_0
 
 # (c) the Allfather's own hoard resolves live:
-$ bin/agents-config.sh default
+$ bin/fleet/agents-config.sh default
 llama-swap/qwen3.6-35b-a3b@q4_k_xl-mtp
 ```
 
@@ -67,9 +67,9 @@ Concrete model strings left in the tree are only docstring/UI examples
 examples in `agent_pi.py`/`model-resolve.sh`) — documentation and UI data, never the
 model/env road, never a fallback.
 
-**Files changed:** `.agents/agents/*.md` (20) · `bin/agents-config.sh` ·
-`bin/research-round.sh` · `bin/snotra-transcribe.sh` · `bin/pi-agent.sh` ·
-`bin/pi-local.sh` · `bin/pi-seat.sh` ·
+**Files changed:** `.agents/agents/*.md` (20) · `bin/fleet/agents-config.sh` ·
+`bin/agents/research-round.sh` · `bin/time/snotra/snotra-transcribe.sh` · `bin/pi/pi-agent.sh` ·
+`bin/pi/pi-local.sh` · `bin/pi/pi-seat.sh` ·
 `apps/smidja/smidja_smidja_config/smidja.config.yaml` ·
 `apps/smidja-factory/templates/smidja.config.yaml` ·
 `apps/smidja/smidja_modules/{agents,data_types}.py` ·
@@ -78,10 +78,10 @@ model/env road, never a fallback.
 
 ### Files
 - `.agents/agents/*.md` (20) — dropped the pinned `model:` front-matter.
-- `bin/agents-config.sh` — `default`/`provider-url` verbs; `apply` no longer rewrites
+- `bin/fleet/agents-config.sh` — `default`/`provider-url` verbs; `apply` no longer rewrites
   tracked agent files; `get` ignores a stale resolved cache.
-- `bin/research-round.sh`, `bin/snotra-transcribe.sh`, `bin/pi-agent.sh`,
-  `bin/pi-local.sh`, `bin/pi-seat.sh` — fallbacks emptied; resolve from the hoard or
+- `bin/agents/research-round.sh`, `bin/time/snotra/snotra-transcribe.sh`, `bin/pi/pi-agent.sh`,
+  `bin/pi/pi-local.sh`, `bin/pi/pi-seat.sh` — fallbacks emptied; resolve from the hoard or
   refuse loudly.
 - `apps/smidja/smidja_smidja_config/smidja.config.yaml`,
   `apps/smidja-factory/templates/smidja.config.yaml` — empty env placeholders.

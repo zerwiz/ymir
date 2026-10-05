@@ -23,7 +23,7 @@ export FM_ROOT_OVERRIDE="$ROOT"
 # Production modules are independently linted canonical roots. Keep this test's
 # ShellCheck context local while preserving its unchanged runtime source path.
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-watch.sh"
+. "$ROOT/bin/backend/fm-watch.sh"
 
 # Overrides: capture wake reasons and neutralize real sleeps (POLL is 15s).
 WAKE_LOG="$TMP/wakes"

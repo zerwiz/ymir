@@ -50,8 +50,8 @@ fi
 if [ "$GATES" = 1 ] && [ -x "$ROOT/.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh" ]; then
   if bash "$ROOT/.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh" >/dev/null 2>&1; then G+=("compliance"); S+=("pass"); else G+=("compliance"); S+=("FAIL"); fi
 fi
-if [ "$GATES" = 1 ] && [ -x "$ROOT/bin/brokk-lint.sh" ]; then
-  if bash "$ROOT/bin/brokk-lint.sh" >/dev/null 2>&1; then G+=("lint"); S+=("pass"); else G+=("lint"); S+=("FAIL"); fi
+if [ "$GATES" = 1 ] && [ -x "$ROOT/bin/agents/brokk-lint.sh" ]; then
+  if bash "$ROOT/bin/agents/brokk-lint.sh" >/dev/null 2>&1; then G+=("lint"); S+=("pass"); else G+=("lint"); S+=("FAIL"); fi
 fi
 
 bad=0

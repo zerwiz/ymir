@@ -1,5 +1,5 @@
 {
-  "$comment": "The seams this package cannot carry, and why. npm does not pack a symlink as a symlink: it is dropped or dereferenced, so a path that exists in the git tree can be absent from the published tarball. Every entry here is a path the compliance wards would otherwise report as missing/dead INSIDE the artifact, with the door that seats it on a real machine. Read by bin/packaged-gate.sh and by the compliance wards when they run against an unpacked artifact.",
+  "$comment": "The seams this package cannot carry, and why. npm does not pack a symlink as a symlink: it is dropped or dereferenced, so a path that exists in the git tree can be absent from the published tarball. Every entry here is a path the compliance wards would otherwise report as missing/dead INSIDE the artifact, with the door that seats it on a real machine. Read by bin/forge/npm/packaged-gate.sh and by the compliance wards when they run against an unpacked artifact.",
   "seams": [
     {
       "path": ".claude/skills",
@@ -26,7 +26,7 @@
       "path": ".agents/skills/smidja-factory",
       "kind": "symlink",
       "target": "../../apps/smidja-factory",
-      "seated_by": "bin/ymir-install.sh (apps step) — the smithy is cloned from zerwiz/smidja",
+      "seated_by": "bin/engine/ymir-install.sh (apps step) — the smithy is cloned from zerwiz/smidja",
       "why": "The factory is a clone of another repository and is deliberately not tracked here; shipping a copy would defeat the clone."
     },
     {

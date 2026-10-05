@@ -39,13 +39,13 @@ Muse is verified only for Eindri and scout work, never a Eindri-home or primary.
 
 ## Detection
 
-`../../../bin/hamr-harness.sh` prints Brokk's own harness from verified environment markers, then process ancestry.
+`../../../bin/fleet/hamr-harness.sh` prints Brokk's own harness from verified environment markers, then process ancestry.
 Only `BROKK_PI_HARNESS=pi-signed` at the launch boundary together with `PI_CODING_AGENT=true` selects Pi-signed; shared unmarked launcher ancestry remains Pi.
 `../../../bin/agents/einherjar-spawn.sh` owns worker marker establishment, while the README launch command owns the signed-primary boundary.
-`../../../bin/hamr-harness.sh crew` resolves `config/crew-harness`, where absent or `default` means Brokk's own harness.
-`../../../bin/hamr-harness.sh Eindri-home` resolves `config/Eindri-home-harness` -> `config/crew-harness` -> Brokk's own harness.
+`../../../bin/fleet/hamr-harness.sh crew` resolves `config/crew-harness`, where absent or `default` means Brokk's own harness.
+`../../../bin/fleet/hamr-harness.sh Eindri-home` resolves `config/Eindri-home-harness` -> `config/crew-harness` -> Brokk's own harness.
 `../../../bin/agents/einherjar-spawn.sh` re-resolves on every spawn, and an explicit per-spawn argument wins for that spawn.
-A new adapter's verified marker and command name must land in `../../../bin/hamr-harness.sh`.
+A new adapter's verified marker and command name must land in `../../../bin/fleet/hamr-harness.sh`.
 
 ## Operation-to-reference matrix
 
@@ -114,7 +114,7 @@ truth is `RULES/`:
   - OpenCode: `.opencode/agents/<name>.md` → `../../.agents/agents/<profile>.md`
   - Pi: `.pi/agents/<profile>.md` → the same canonical files
 - Never edit `.opencode/agents/` or `.pi/agents/`; edit `.agents/agents/<profile>.md`
-  and run `bin/seat/valknut-load.sh --all` to rebind. `bin/hamr-harness.sh` only
+  and run `bin/seat/valknut-load.sh --all` to rebind. `bin/fleet/hamr-harness.sh` only
   *detects* the harness shape; it never writes agents.
 - **No mock agents:** ids, names, domains, models, and status are real and
   sourced. The demo roster is the single, labelled mock (demo mode only).

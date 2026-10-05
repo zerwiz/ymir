@@ -11,7 +11,7 @@ set -u
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-BOARD="$ROOT/bin/fm-bearings-board.sh"
+BOARD="$ROOT/bin/backend/fm-bearings-board.sh"
 HARNESS="$ROOT/tests/assets/board-render-harness.mjs"
 TMP_ROOT=$(fm_test_tmproot fm-bearings-board-render)
 

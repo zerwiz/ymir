@@ -10,11 +10,11 @@
   package identity, tray/autostart strings, data-dir name, and the Pi logo
   (now a Sowilo rune bolt) are rebranded; upstream `LICENSE` is preserved and
   `NOTICE` records the adoption.
-- **Forge scripts:** `bin/sessrumnir-ensure.sh` (status/ensure/install — deps
+- **Forge scripts:** `bin/seat/sessrumnir/sessrumnir-ensure.sh` (status/ensure/install — deps
   are never committed, installed on first run with the electron-binary heal
-  `scripts/electron.sh` already uses) and `bin/sessrumnir.sh`
+  `scripts/electron.sh` already uses) and `bin/desktop/sessrumnir.sh`
   (start/status/stop with a workspace argument).
-- **Install wiring:** `bin/ymir-install.sh` gains a `sessrumnir` step (after
+- **Install wiring:** `bin/engine/ymir-install.sh` gains a `sessrumnir` step (after
   `hermes`) and lists Sessrúmnir in `workspace/INSTALL.md`; the
   `installation.md` asset's step table, adopted-engines table, and Hermes-style
   section are updated in the same change.

@@ -18,9 +18,9 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-busy-lib.sh"
+. "$ROOT/bin/backend/fm-busy-lib.sh"
 
-SEND="$ROOT/bin/fm-send.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-send-settle)
 
@@ -127,7 +127,7 @@ test_claude_escape_records_interrupt_idle() {
   fm_write_meta "$home/state/task.meta" \
     "window=sess:win" "worktree=$home/wt" "project=$home/project" \
     "harness=claude" "kind=ship" "mode=no-mistakes" "yolo=off"
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$home/state" task)
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$home/state" task)
   printf 'busy_gen=%s\n' "$gen" >> "$home/state/task.meta"
   : > "$log"
 

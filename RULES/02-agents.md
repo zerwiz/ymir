@@ -73,7 +73,7 @@ mode/model/permission   the harness binding (OpenCode) — from the canonical
   network), not on the host behind a permissive shell.
 - `mode: all` (runnable) plus a full shell is the widest door — usually not what
   you want.
-- `bin/perm-guard.sh` flags any profile with a flat `bash: allow`
+- `bin/gates/guards/perm-guard.sh` flags any profile with a flat `bash: allow`
   (`--strict` exits 1). Run it before claiming an agent change done; see the
   runbook `docs/runbooks/agent-permissions.md`.
 

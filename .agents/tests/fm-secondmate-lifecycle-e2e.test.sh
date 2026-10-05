@@ -71,7 +71,7 @@ EOF
 phase_seed() {
   local out
   out=$(PATH="$FAKEBIN:$PATH" FM_HOME="$HOME_DIR" \
-    "$ROOT/bin/fm-home-seed.sh" design "$SUB" alpha beta gamma) \
+    "$ROOT/bin/backend/fm-home-seed.sh" design "$SUB" alpha beta gamma) \
     || fail "seed failed"
   SUB_ABS=$(cd "$SUB" && pwd -P)
 
@@ -105,7 +105,7 @@ phase_seed() {
     || fail "alpha delivery mode not preserved in the subhome"
   [ "$(FM_HOME="$SUB" "$ROOT/bin/fm-project-mode.sh" beta)" = "direct-PR off" ] \
     || fail "beta delivery mode not preserved in the subhome"
-  FM_HOME="$HOME_DIR" "$ROOT/bin/fm-home-seed.sh" validate >/dev/null || fail "registry validation failed after seed"
+  FM_HOME="$HOME_DIR" "$ROOT/bin/backend/fm-home-seed.sh" validate >/dev/null || fail "registry validation failed after seed"
 
   pass "seed: registry scope+projects, charter copied, clones+origins, no-mistakes init in subhome only"
 }
@@ -114,7 +114,7 @@ phase_spawn() {
   : > "$LOG"
   PATH="$FAKEBIN:$PATH" FM_HOME="$HOME_DIR" FM_CONFIG_OVERRIDE="$HOME_DIR/parent-config" \
     FM_FAKE_TMUX_LOG="$LOG" FM_FAKE_TMUX_CAPTURE="$PANE" \
-    "$ROOT/bin/fm-spawn.sh" design "$SUB" codex --secondmate >/dev/null \
+    "$ROOT/bin/backend/fm-spawn.sh" design "$SUB" codex --secondmate >/dev/null \
     || fail "secondmate spawn failed"
 
   local meta="$HOME_DIR/state/design.meta"
@@ -140,14 +140,14 @@ phase_send() {
   # window returned by list-windows.
   PATH="$FAKEBIN:$PATH" FM_HOME="$HOME_DIR" FM_FAKE_TMUX_WINDOW="other-session:fm-design" \
     FM_FAKE_TMUX_LOG="$LOG" FM_FAKE_TMUX_CAPTURE="$PANE" \
-    "$ROOT/bin/fm-send.sh" fm-design 'route this work' >/dev/null 2>&1 \
+    "$ROOT/bin/backend/fm-send.sh" fm-design 'route this work' >/dev/null 2>&1 \
     || fail "fm-send failed for a bare firstmate window with home metadata"
   # design is a kind=secondmate target, so the durable inbox record carries the
   # from-firstmate marker and original payload. The terminal receives only the
   # constant doorbell, routed through this home's authoritative meta window.
   local record="$HOME_DIR/state/design.inbox/001.msg" body
   assert_present "$record" "send did not enqueue the secondmate request"
-  body=$(bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$record")
+  body=$(bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$record")
   assert_contains "$body" '[fm-from-firstmate]' "the inbox request was not marked as from-firstmate"
   assert_contains "$body" 'route this work' "the original request text did not survive the marker"
   assert_grep 'send-keys -t firstmate:fm-design -l Firstmate instruction waiting:' "$LOG" "send did not ring the window recorded in this home's meta"
@@ -209,7 +209,7 @@ phase_recovery() {
   # persistent home (no explicit home argument).
   rm -f "$HOME_DIR/state/design.meta"
   PATH="$FAKEBIN:$PATH" FM_HOME="$HOME_DIR" FM_FAKE_TMUX_LOG="$LOG" FM_FAKE_TMUX_CAPTURE="$PANE" \
-    "$ROOT/bin/fm-spawn.sh" design "echo relaunch" --secondmate >/dev/null 2>&1 \
+    "$ROOT/bin/backend/fm-spawn.sh" design "echo relaunch" --secondmate >/dev/null 2>&1 \
     || fail "recovery respawn failed"
   local meta="$HOME_DIR/state/design.meta"
   assert_grep "home=$SUB_ABS" "$meta" "respawn did not preserve the persistent home from the registry"
@@ -223,19 +223,19 @@ phase_teardown() {
   corr=$(FM_HOME="$HOME_DIR" bash -c '
     . "$1"
     fm_pending_reply_create "$2" "$2/state" design "New routed work is in your backlog."
-  ' _ "$ROOT/bin/fm-pending-reply-lib.sh" "$HOME_DIR") \
+  ' _ "$ROOT/bin/backend/fm-pending-reply-lib.sh" "$HOME_DIR") \
     || fail "could not seed receiver wake retirement state"
   rec="$HOME_DIR/state/pending-replies/$corr"
   FM_HOME="$HOME_DIR" bash -c '
     . "$1"
     fm_pending_reply_set "$2" phase resolved
     fm_pending_reply_set "$2" delivered_epoch 1
-  ' _ "$ROOT/bin/fm-pending-reply-lib.sh" "$rec" \
+  ' _ "$ROOT/bin/backend/fm-pending-reply-lib.sh" "$rec" \
     || fail "could not settle receiver wake retirement state"
   printf 'confirmed:%s\n' "$corr" > "$HOME_DIR/state/.backlog-handoff-design.wake-pending"
   : > "$LOG"
   teardown_out=$(PATH="$FAKEBIN:$PATH" FM_HOME="$HOME_DIR" FM_FAKE_TMUX_LOG="$LOG" FM_FAKE_TMUX_CAPTURE="$PANE" \
-    "$ROOT/bin/fm-teardown.sh" design 2>&1) \
+    "$ROOT/bin/backend/fm-teardown.sh" design 2>&1) \
     || fail "teardown failed for the empty secondmate home"
   printf '%s\n' "$teardown_out" | grep -F 'Backlog:' >/dev/null \
     && fail "secondmate teardown emitted a main-backlog completion reminder"

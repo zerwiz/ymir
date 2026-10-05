@@ -9,9 +9,9 @@ Purpose: the complete, production-grade reference for how Brokk gathers an **Ein
 > cannot drift: both carry the same `Delivery contract: mode=<mode>` line.
 >
 > Provenance: the upstream agent-distro spawn/brief/state pattern
-> (`$BROKK_UPSTREAM/bin/fm-spawn.sh`, `fm-brief.sh`, `fm-crew-state.sh`) is the source
+> (`$BROKK_UPSTREAM/bin/backend/fm-spawn.sh`, `fm-brief.sh`, `fm-crew-state.sh`) is the source
 > of the pattern; Ymir's runtime is `bin/agents/einherjar-spawn.sh`, `bin/agents/erindi-brief.sh`, and
-> `bin/vor-crew-state.sh`, retargeted for plan 29. Upstream nautical labels are provenance
+> `bin/records/vor-crew-state.sh`, retargeted for plan 29. Upstream nautical labels are provenance
 > only — the Ymir names are Norse.
 
 ---
@@ -20,13 +20,13 @@ Purpose: the complete, production-grade reference for how Brokk gathers an **Ein
 
 | Stage | Norse name | Owner artifact | Lives at |
 |---|---|---|---|
-| Dispatch decision | **Brokk** | `config/eindri-dispatch.json` (+ `bin/dispatch-profile.sh`) | repo config |
-| Harness detection | **Hamr** | `bin/hamr-harness.sh` | repo bin |
+| Dispatch decision | **Brokk** | `config/eindri-dispatch.json` (+ `bin/fleet/dispatch-profile.sh`) | repo config |
+| Harness detection | **Hamr** | `bin/fleet/hamr-harness.sh` | repo bin |
 | Worker gather | **Einherjar** | `bin/agents/einherjar-spawn.sh` | repo bin |
 | Worker brief | **Erindi** | `bin/agents/erindi-brief.sh` → `data/<id>/brief.md` | private `data/` |
 | Worktree isolation | **Yggdrasil** | `.yggdrasil/<id>` (git worktree) | private `.yggdrasil/` |
 | Sandbox seal | **Utgard** | `.agents/sandbox/Dockerfile.utgard` | repo `.agents/` |
-| State reconciliation | **Vör** | `bin/vor-crew-state.sh` | repo bin |
+| State reconciliation | **Vör** | `bin/records/vor-crew-state.sh` | repo bin |
 | Status event log | (Eindri writes) | `state/<id>.status` | private `state/` |
 | Steering inbox | (Brokk writes) | `state/<id>.inbox/*.msg` | private `state/` |
 | Record | (spawn writes) | `state/<id>.meta` | private `state/` |
@@ -67,7 +67,7 @@ einherjar-spawn.sh <task-id> --relaunch
     [--force] [--dry-run]
 ```
 
-`--dry-run` resolves and PRINTS the whole plan before anything is created — engine, isolation (+ reason), backend (+ why), harness, model (+ provenance), worktree, brief, mode, yolo, worth-a-smith verdict, and the launch shape — and creates nothing. `--model <request>` (no `/`) is resolved by `bin/model-resolve.sh`; a concrete `provider/model` token is used as-is.
+`--dry-run` resolves and PRINTS the whole plan before anything is created — engine, isolation (+ reason), backend (+ why), harness, model (+ provenance), worktree, brief, mode, yolo, worth-a-smith verdict, and the launch shape — and creates nothing. `--model <request>` (no `/`) is resolved by `bin/model/model-resolve.sh`; a concrete `provider/model` token is used as-is.
 
 Every spawn prints exactly one record line to stdout:
 
@@ -89,7 +89,7 @@ spawned <id> harness=<h> kind=<kind> mode=<m> yolo=<y> backend=<b> target=<t> wo
 | `--relaunch` | flag | off | Reuse recorded worktree/kind/mode from `state/<id>.meta`; only harness/model/effort/isolation may change. |
 | `--yolo` | `on`, `off` | `off` | Merge posture recorded in the meta for a ship task; not a brief input. |
 | `--harness` | name **or** raw command | machine-resolved | Verified: `opencode pi pi-signed`. A value containing whitespace is a raw launch escape hatch. |
-| `--model` | token **or** request | machine-resolved | `provider/model[@quant]` passed through; a request (no `/`) resolves via `bin/model-resolve.sh`. |
+| `--model` | token **or** request | machine-resolved | `provider/model[@quant]` passed through; a request (no `/`) resolves via `bin/model/model-resolve.sh`. |
 | `--effort` | `low`, `medium`, `high`, `xhigh`, `max` | harness default | Passed to `pi` as `--thinking`; opencode ignores it. |
 | `--backend` | `tmux`, `herdr` | herdr when the server answers | See §2.5 — the server's existence, never `herdr-run.sh available`. |
 | `--isolation` | `on`, `off`, `auto` | `auto` | `auto` HONOURS the brief's `Isolation:` declaration (see §2.6). `auto` never downgrades a declared utgard. |
@@ -118,10 +118,10 @@ The provenance of every choice is printed and recorded (`harness_provenance=`,
 
 1. **Explicit `--harness <name>` / `--model provider/model`** — used as-is; a bare
    token's harness follows locality (local provider → fleet law -> pi, hosted -> opencode).
-2. **`--model <request>`** (a name/family/quant without `/`) → `bin/model-resolve.sh resolve "<request>"`;
+2. **`--model <request>`** (a name/family/quant without `/`) → `bin/model/model-resolve.sh resolve "<request>"`;
    the resolved harness is adopted only when no explicit `--harness` was given; an unresolved
    request is a refusal (ask the Allfather).
-3. **This machine's agent default** → `config/agents.yaml` via `bin/agents-config.sh get brokk model|harness`
+3. **This machine's agent default** → `config/agents.yaml` via `bin/fleet/agents-config.sh get brokk model|harness`
    (the PRIVATE home — the Allfather's own combination, per-machine overlay included).
 4. **The fleet law** → local model -> `pi`, hosted -> opencode. With no configured model,
    a live pi catalog (`pi --list-models`) means the local road exists -> `pi` + first served model.
@@ -164,7 +164,7 @@ isolation from the task text:
 
 The rail is `--models-max 1` (one resident model, a request evicts; two local workers — or a
 worker plus Brokk — thrash the rail). For a LOCAL model the spawn pre-checks
-`bin/local-model-lock.sh check` and REFUSES with the holder named when the host is at
+`bin/model/local-model-lock.sh check` and REFUSES with the holder named when the host is at
 capacity, then wraps the launched command in the lock so the flock is held from before the
 worker starts until after it exits (`locked=yes` in the meta; the launch script's first
 `exec` is the lock). The flock is HOST-side: for a sealed run it wraps the `docker run`
@@ -259,7 +259,7 @@ again and eventually treats the worker as stuck.
 
 ## 4. Vör — deterministic state reconciliation
 
-`bin/vor-crew-state.sh <task-id>` reads the current state without a model and without trusting
+`bin/records/vor-crew-state.sh <task-id>` reads the current state without a model and without trusting
 a `tail -1` of the append-only log. Output is one stable line:
 
 ```
@@ -269,7 +269,7 @@ state: <working|parked|done|blocked|paused|failed|unknown> · source: <backend|s
 The separator is a middle dot surrounded by spaces (` · `). Exit code is **0** on any
 successful read regardless of state; **2** on a usage error (no id).
 
-### 4.1 Reconciliation order (`bin/vor-crew-state.sh:40-124`)
+### 4.1 Reconciliation order (`bin/records/vor-crew-state.sh:40-124`)
 
 1. Read `worktree`, `kind`, `backend`, `window` from `state/<id>.meta`.
 2. Missing/gone worktree → `state: unknown · source: none · worktree gone (torn down?)`.
@@ -283,7 +283,7 @@ successful read regardless of state; **2** on a usage error (no id).
 5. Backend target **gone**: a terminal log verdict is durable truth; otherwise
    `state: unknown · source: none · backend target gone: <t>`.
 
-### 4.2 Verb → state map (`bin/vor-crew-state.sh:71-81`)
+### 4.2 Verb → state map (`bin/records/vor-crew-state.sh:71-81`)
 
 | Log verb | Canonical state |
 |---|---|
@@ -307,7 +307,7 @@ state, and reconciliation.
 Brokk reads the dispatch rules **before** dispatching and passes concrete flags. Schema:
 `version`, `platform`, `notes`, `rules[]` (`when`, `use[]`, `why`), `default[]`.
 
-**Activation (D4, 2026-09-24) — decided by `bin/dispatch-profile.sh`, never by file existence:**
+**Activation (D4, 2026-09-24) — decided by `bin/fleet/dispatch-profile.sh`, never by file existence:**
 
 1. `$YMIR_HOME/hodd/config/eindri-dispatch.json` (the private override) wins when present and coherent.
 2. The repo `config/eindri-dispatch.json` counts as ACTIVE only when it parses, carries no unfilled
@@ -315,14 +315,14 @@ Brokk reads the dispatch rules **before** dispatching and passes concrete flags.
 3. No active profile → machine resolution governs (see §2.4). The shipped template is INACTIVE:
    its `<your-model-id>` tokens would silently steer an opencode worker the fleet never chose.
 
-The install (`bin/ymir-install.sh` step host) DERIVES a real profile from the machine —
+The install (`bin/engine/ymir-install.sh` step host) DERIVES a real profile from the machine —
 `config/agents.yaml` + the live pi catalog — into `$YMIR_HOME/hodd/config/eindri-dispatch.json`
-(`bin/dispatch-profile.sh derive`), so a fresh host never runs on the template.
+(`bin/fleet/dispatch-profile.sh derive`), so a fresh host never runs on the template.
 
 ```bash
-bin/dispatch-profile.sh active        # the ACTIVE profile path, or none
-bin/dispatch-profile.sh validate      # a profile is coherent + servable here
-bin/dispatch-profile.sh derive --out $YMIR_HOME/hodd/config/eindri-dispatch.json
+bin/fleet/dispatch-profile.sh active        # the ACTIVE profile path, or none
+bin/fleet/dispatch-profile.sh validate      # a profile is coherent + servable here
+bin/fleet/dispatch-profile.sh derive --out $YMIR_HOME/hodd/config/eindri-dispatch.json
 ```
 
 The consultation backstop still holds for an ACTIVE profile: with a real profile governing
@@ -332,12 +332,12 @@ read the rules and pass concrete flags, so the profiles are never silently skipp
 ### 5.2 `config/eindri-harness` (query surface only)
 
 Single first non-empty, non-comment line: `<harness> [<model>] [<effort>]`
-(`bin/hamr-harness.sh:21-24`). Today's file is just `opencode` (harness-only).
+(`bin/fleet/hamr-harness.sh:21-24`). Today's file is just `opencode` (harness-only).
 
 ```bash
-bin/hamr-harness.sh eindri          # effective Eindri harness
-bin/hamr-harness.sh eindri-model    # optional model token (empty when absent)
-bin/hamr-harness.sh eindri-effort   # optional effort token (empty when absent)
+bin/fleet/hamr-harness.sh eindri          # effective Eindri harness
+bin/fleet/hamr-harness.sh eindri-model    # optional model token (empty when absent)
+bin/fleet/hamr-harness.sh eindri-effort   # optional effort token (empty when absent)
 ```
 
 > **D3 (2026-09-24): this file is a query surface, NOT the spawn's resolution
@@ -466,7 +466,7 @@ worker's id, elapsed time, and last line:
 Inspect a worker:
 
 ```bash
-bin/vor-crew-state.sh <id>
+bin/records/vor-crew-state.sh <id>
 bin/agents/eindri-heartbeat.sh check <id>
 tmux list-windows -t brokk -F '#{window_name}'
 tmux capture-pane -pt brokk:eindri-<id> | tail -40
@@ -489,7 +489,7 @@ bin/agents/einherjar-spawn.sh W0123 /home/<user>/repos/my-repo \
 # 4. Spawn (harness/model resolve FROM THIS MACHINE — provenance printed)
 bin/agents/einherjar-spawn.sh W0123 /home/<user>/repos/my-repo --mode direct-PR
 # 5. Watch state + heartbeat
-bin/vor-crew-state.sh W0123
+bin/records/vor-crew-state.sh W0123
 bin/agents/eindri-heartbeat.sh check W0123
 ```
 
@@ -558,7 +558,7 @@ Line-oriented `key=value` written atomically by spawn:
 | `brief`, `launch` | Paths to `brief.md` and the generated `.launch.sh`. |
 | `isolation`, `isolation_declared`, `isolation_reason` | Effective seal, the brief's declaration, and WHY. |
 | `worth_a_smith`, `worth_why`, `force` | The worth-a-smith verdict, its reason, and whether `--force` overrode a refusal. |
-| `locked` | `yes` = a LOCAL model, so the launch runs under `bin/local-model-lock.sh`. |
+| `locked` | `yes` = a LOCAL model, so the launch runs under `bin/model/local-model-lock.sh`. |
 | `launched`, `launch_iso` | The heartbeat baseline (epoch + ISO) for the silence bridge. |
 | `spawn_gen` | Unique spawn generation (`s<epoch>.<pid>.<rand>`). |
 
@@ -571,15 +571,15 @@ shadow a completed record once the atomic `mv` lands.
 
 ```bash
 # 1. Scripts parse
-for f in bin/agents/einherjar-spawn.sh bin/agents/erindi-brief.sh bin/vor-crew-state.sh bin/ymir-platform.sh \
-         bin/dispatch-profile.sh bin/agents/eindri-heartbeat.sh bin/agents/eindri-acclaim-silent.sh; do bash -n "$f" && echo "OK $f"; done
+for f in bin/agents/einherjar-spawn.sh bin/agents/erindi-brief.sh bin/records/vor-crew-state.sh bin/fleet/ymir-platform.sh \
+         bin/fleet/dispatch-profile.sh bin/agents/eindri-heartbeat.sh bin/agents/eindri-acclaim-silent.sh; do bash -n "$f" && echo "OK $f"; done
 
 # 2. The shipped dispatch profile is INACTIVE (it carries unfilled tokens)
-bin/dispatch-profile.sh active; echo "exit=$?"   # no -> machine resolution governs
-bin/dispatch-profile.sh validate config/eindri-dispatch.json; echo "exit=$?"  # fail, named
+bin/fleet/dispatch-profile.sh active; echo "exit=$?"   # no -> machine resolution governs
+bin/fleet/dispatch-profile.sh validate config/eindri-dispatch.json; echo "exit=$?"  # fail, named
 
 # 3. A derived profile IS active (on a machine with config/agents.yaml + pi)
-bin/dispatch-profile.sh derive --out /tmp/dispatch.json && bin/dispatch-profile.sh active
+bin/fleet/dispatch-profile.sh derive --out /tmp/dispatch.json && bin/fleet/dispatch-profile.sh active
 
 # 4. Help/usage renders (exit 0)
 bin/agents/einherjar-spawn.sh --help >/dev/null && echo "spawn help OK"
@@ -607,7 +607,7 @@ BROKK_STATE_OVERRIDE=/tmp/s bin/agents/eindri-acclaim-silent.sh agent    # wakes
 - **Ymir itself is not a git repo.** `git -C $YMIR_ROOT rev-parse` fails; a spawn's
   `<project-dir>` must be a real git working tree or Yggdrasil cannot create the worktree.
 - **The shipped dispatch profile is INACTIVE (unfilled tokens), and that is the point.**
-  Activation is decided by `bin/dispatch-profile.sh`, never by file existence; only a real
+  Activation is decided by `bin/fleet/dispatch-profile.sh`, never by file existence; only a real
   profile (the `$YMIR_HOME/hodd/config` override, or a machine-derived repo profile) triggers
   the "consult the rules" backstop. Omitting `--harness` under an ACTIVE profile is a hard
   error, not a fallback.
@@ -623,7 +623,7 @@ BROKK_STATE_OVERRIDE=/tmp/s bin/agents/eindri-acclaim-silent.sh agent    # wakes
   it, and a declared `utgard` with no image is a refusal (never a silent downgrade).
 - **`herdr-run.sh available` ≠ the backend gate.** `available` answers for a session's
   `HERDR_ENV`; the backend default asks whether the herdr SERVER runs (`pgrep`/status API).
-- **A local model is serialized.** `bin/local-model-lock.sh` pre-checks (refuse with the
+- **A local model is serialized.** `bin/model/local-model-lock.sh` pre-checks (refuse with the
   holder named when busy) and wraps the launch; two local workers — or a worker + Brokk —
   thrash the rail (`--models-max 1`) without it.
 - **`worth-a-smith` refuses by default.** Not-worktree-shaped errands are refused with the
@@ -649,5 +649,5 @@ BROKK_STATE_OVERRIDE=/tmp/s bin/agents/eindri-acclaim-silent.sh agent    # wakes
 - When the isolation rule changes, update §2.6, §3.2, and the brief scaffold
   (`bin/agents/erindi-brief.sh`'s `Isolation:` line) in the same change.
 - When the silence window or the heartbeat files change, update §8.1 and §11 in the same pass.
-- Keep `VERIFIED_HARNESSES`, the dispatch profiles, and `bin/hamr-harness.sh`'s adapter set in
+- Keep `VERIFIED_HARNESSES`, the dispatch profiles, and `bin/fleet/hamr-harness.sh`'s adapter set in
   agreement; a mismatch is a compliance failure (see `runtime-compliance.md`).

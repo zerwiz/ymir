@@ -77,7 +77,7 @@ bin/agents/einherjar-spawn.sh <task-id>-review <project> --scout --backend herdr
 ```
 
 The harness is the one the einherjar road launches — `pi` — resolved for this
-figure from the roster (`bin/agents-config.sh get forseti harness`); the model
+figure from the roster (`bin/fleet/agents-config.sh get forseti harness`); the model
 is a per-machine choice, never written in this card (Rule 07). The fierce brief
 is filled from `.agents/assets/templates/review-brief.template.md` for THIS task
 (PR, branch, task id) and the verdict lands on the wake road at

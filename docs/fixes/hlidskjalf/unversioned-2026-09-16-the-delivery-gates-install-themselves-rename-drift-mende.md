@@ -1,8 +1,8 @@
 ## hlidskjalf · unversioned · 2026-09-16 — the delivery gates install themselves; rename drift mended
 
 ### Why
-- **Install seam.** `bin/ymir-install.sh` gains step **`gates`** (after
-  `loaders`): `bin/secret-guard.sh --install` seats the pre-commit guard and
+- **Install seam.** `bin/engine/ymir-install.sh` gains step **`gates`** (after
+  `loaders`): `bin/gates/guards/secret-guard.sh --install` seats the pre-commit guard and
   `bin/changelog-guard.sh --install` the pre-push (branch + changelog). A fresh
   clone now gets the delivery gate without a manual step — `--check` reports it
   as `gates OK|WARN`, the consent preamble names it, and

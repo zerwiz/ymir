@@ -17,13 +17,13 @@ crafts behind one implementation, with the shell kept as thin shims.
 
 ```
 state[4]{module,owns,shim}
-  "lock.py","Gleipnir: state-dir · machine-state-dir · legacy-lock-path · lock-path · pointer-path · owner · pid-alive · proc-starttime · session-pid · owned · reap · acquire · release — the harness-ancestry pid and the /proc starttime that make pid reuse read as death","bin/gleipnir-lock-lib.sh"
+  "lock.py","Gleipnir: state-dir · machine-state-dir · legacy-lock-path · lock-path · pointer-path · owner · pid-alive · proc-starttime · session-pid · owned · reap · acquire · release — the harness-ancestry pid and the /proc starttime that make pid reuse read as death","bin/vault/gleipnir-lock-lib.sh"
   "runes.py","the append-only chained ledger: head · escape · fold (prev + \\n + base) · flock · append · verify; never rewrites, never truncates","bin/records/runes-append.sh"
   "envelope.py","the durable wrapper state files travel in: kind · id · created · payload, encoded as key=value meta or one JSON object, written atomically (temp + os.replace)","—"
   "queue.py","the durable wake queue: the TSV <epoch>\\t<seq>\\t<kind>\\t<key>\\t<payload> line, cleaned fields, the seq file, one O_APPEND write, distinct-key reads","bin/time/brokk-wake-lib.sh (fm_wake_append · fm_wake_queued_keys_locked)"
 ```
 
-**The door** is `bin/ymir-state.sh`: it picks the interpreter (the engine venv
+**The door** is `bin/records/ymir-state.sh`: it picks the interpreter (the engine venv
 when present, else system `python3`), sets `PYTHONPATH` to the tree, exports
 `YMIR_ENGINE_ROOT`, and execs `python3 -m ymir_runtime.state`. Exit codes are the
 module's own — **0** ran/condition true · **1** condition false or IO failed ·
@@ -31,7 +31,7 @@ module's own — **0** ran/condition true · **1** condition false or IO failed 
 `<result-var>` conventions, so no caller changes.
 
 **The shims keep their names, their lines, and their side effects:**
-- `bin/gleipnir-lock-lib.sh` defines no behaviour: every
+- `bin/vault/gleipnir-lock-lib.sh` defines no behaviour: every
   `gleipnir_*` function delegates, `GLEIPNIR_LOCK_ACQUIRED` is set exactly as
   before, and a door that cannot run fails **loud** (127) rather than resolving an
   empty lock.
@@ -84,7 +84,7 @@ module together (the engine door already required `src/` and was not shipped).
 - `src/ymir_runtime/state/{__init__,lock,runes,envelope,queue,__main__}.py`
 - `src/ymir_runtime/tests/test_state.py` · `test_state_parity.py` ·
   `tests/fixtures/state/{gleipnir-lock-lib.legacy.sh,runes-append.legacy.sh}`
-- `bin/ymir-state.sh` (new door) · `bin/gleipnir-lock-lib.sh` ·
+- `bin/records/ymir-state.sh` (new door) · `bin/vault/gleipnir-lock-lib.sh` ·
   `bin/records/runes-append.sh` · `bin/time/brokk-wake-lib.sh`
 - `package.json` · `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`
 

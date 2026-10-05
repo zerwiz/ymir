@@ -4,16 +4,16 @@
 - **Everything in the new tree:** the Sessrúmnir work plus the orphaned fixes
   were migrated from the `ymir-old` working tree into this canonical tree —
   `apps/sessrumnir/` (deps vendored locally, never committed), the two
-  `bin/sessrumnir-*.sh` scripts, `step_sessrumnir` in `bin/ymir-install.sh`,
+  `bin/sessrumnir-*.sh` scripts, `step_sessrumnir` in `bin/engine/ymir-install.sh`,
   the Hoard registry entry, the `installation.md` asset, and the
   `syn-watch-arm.js` continuity fix (re-arm when `.supervision-armed` exists
   even with no task metadata). The superseded self-service register-gate work
   was **not** ported — this tree's committed invite-gate is canonical.
 - **Full install ran green** in the new tree: every step OK, invite minted
-  (`YMIR-DBN4-FXEX`), all five services up, `bin/ymir-validate.sh` 11/11 PASS.
+  (`YMIR-DBN4-FXEX`), all five services up, `bin/engine/ymir-validate.sh` 11/11 PASS.
 - **Ratatoskr mesh healed:** the `a2abridge` engine (MIT,
   `vbcherepanov/a2abridge` v3.0.0) is installed at `~/.a2abridge/bin/`, its
-  directory daemon runs on `127.0.0.1:7777`, and `bin/ratatoskr.sh
+  directory daemon runs on `127.0.0.1:7777`, and `bin/bridge/ratatoskr.sh
   status|doctor` pass. Forged `bin/bridge/a2abridge-ensure.sh` (installs the engine,
   patches the systemd unit's unwritable `/var/log` log paths to journal,
   keeps the directory up) and wired it into migration `0002-a2a-mcp.sh`, so

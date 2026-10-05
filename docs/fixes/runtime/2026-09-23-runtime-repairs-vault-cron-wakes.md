@@ -27,7 +27,7 @@ Four runtime defects the new smoke test (PR #152) and the session exposed:
 - `bin/vault/hodd.sh`
 - `bin/time/nornir-cron-start.sh`
 - `bin/time/saga-wake-drain.sh`
-- `bin/eir-doctor.sh`
+- `bin/agents/eir-doctor.sh`
 
 ### Verified
 - `hodd.sh emit` decrypts and emits **74 keys** even with an empty plaintext present.

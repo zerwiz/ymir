@@ -29,7 +29,7 @@ strangler doors, what it does not own yet), the gateway (ports, the record MCP
 doors, the `.pi/mcp-adapter.json` bind, the `a2abridge` mesh), the report-shelf
 handoff (status line + `$STATE/eindri-reports/<id>.md`, the failsafe's scope, the
 fourth failure mode), role-gated crons (`@heart`/`@forge`, both orders, roles from
-`bin/topology.sh` / `fleet.json`), the topology (heart on zerwizserver, plan 51
+`bin/fleet/topology.sh` / `fleet.json`), the topology (heart on zerwizserver, plan 51
 Part 7), and four corrections to the stale draft (single tenant, SQLite/engram,
 plans in the hoard, the Rut port deferred).
 

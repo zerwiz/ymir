@@ -74,7 +74,7 @@ data/*
 !data/*.example
 # The state dir is DERIVED per machine: bin/vault/hoard-lib.sh resolves it to
 # ${YMIR_STATE_DIR:-$YMIR_HOME/state} (Rule 04/07 — the operator's home owns
-# it, never the tree; bin/ymir-plan.sh's purity row names a repo state/ as the
+# it, never the tree; bin/bridge/ymir-plan.sh's purity row names a repo state/ as the
 # drift it is). The rule must cover the path ITSELF, not only what sits inside
 # it — `state/*` cannot match a symlink NAMED state, which is how one pointing
 # at another machine's home ($HOME_SEAT/Documents/ymirhome/state) came to be

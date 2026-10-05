@@ -8,7 +8,7 @@ BOOT from the installed package: a merged change could publish a tarball whose
 windows never open.
 
 ## What
-`bin/npm-pretest.sh`'s local smoke now walks the launcher's own first-run road:
+`bin/forge/npm/npm-pretest.sh`'s local smoke now walks the launcher's own first-run road:
 - The workspace-aware first-run install at the packaged root
   (`cd <package> && npm install` — the exact road `scripts/electron.sh` walks
   on a fresh package, the P3 law), which lands the hoisted electron runtimes.
@@ -20,6 +20,6 @@ windows never open.
 - FAIL refuses the PR: a tarball that cannot boot never sails.
 
 ## Files
-- `bin/npm-pretest.sh`
-- `bin/pr-pretest.sh` (the gate wrapper now proves bootability too)
+- `bin/forge/npm/npm-pretest.sh`
+- `bin/forge/npm/pr-pretest.sh` (the gate wrapper now proves bootability too)
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`

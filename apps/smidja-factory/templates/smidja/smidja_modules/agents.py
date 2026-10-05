@@ -168,14 +168,14 @@ def _expand_env(value):
 # ── the hoard road (Rule 07 / plan 56) ───────────────────────────────────────
 # The roster carries no concrete model: an empty `model:` is filled from the
 # operator's hoard (`config/agents.yaml`, per-host overlay), resolved by the ONE
-# resolver `bin/agents-config.sh`. Env wins (already expanded above); then the
+# resolver `bin/fleet/agents-config.sh`. Env wins (already expanded above); then the
 # hoard; then the roster refuses loudly. Two operators, two models, tree untouched.
 
 _HOARD_CACHE: dict[str, str] = {}
 
 
 def _repo_root() -> Optional[Path]:
-    """The tree that owns bin/agents-config.sh (found, never assumed)."""
+    """The tree that owns bin/fleet/agents-config.sh (found, never assumed)."""
     for cand in Path(__file__).resolve().parents:
         if (cand / "bin" / "agents-config.sh").is_file():
             return cand
@@ -298,7 +298,7 @@ def validate(cfg: smidjaConfig, required: list[str]) -> None:
             problems.append(
                 f"agent {name!r}: no model — set SMIDJA_LOCAL_MODEL (or "
                 f"SMIDJA_{name.upper()}_MODEL), or default_model in your hoard "
-                f"config/agents.yaml (resolve with bin/agents-config.sh)")
+                f"config/agents.yaml (resolve with bin/fleet/agents-config.sh)")
         elif agent.coding_agent == "pi":
             try:
                 agent_pi.resolve_model(agent.model)

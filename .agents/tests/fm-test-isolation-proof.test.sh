@@ -5,8 +5,8 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-PROOF="$ROOT/bin/fm-test-isolation-proof.sh"
-RUNNER="$ROOT/bin/fm-test-run.sh"
+PROOF="$ROOT/bin/backend/fm-test-isolation-proof.sh"
+RUNNER="$ROOT/bin/backend/fm-test-run.sh"
 
 assert_present "$PROOF" "bin/backend/fm-test-isolation-proof.sh is missing"
 [ -x "$PROOF" ] || fail "bin/backend/fm-test-isolation-proof.sh must be executable"
@@ -28,14 +28,14 @@ test_family_pool_json_identifies_admission() {
   local tmp repo proof json admitted_json capped_json skipped_json rc
   tmp=$(mktemp -d "${TMPDIR:-/tmp}/fm-test-isolation-proof-json.XXXXXX")
   repo="$tmp/repo"
-  proof="$repo/bin/fm-test-isolation-proof.sh"
+  proof="$repo/bin/backend/fm-test-isolation-proof.sh"
   json="$tmp/proof.json"
   admitted_json="$tmp/admitted-proof.json"
   capped_json="$tmp/capped-proof.json"
   skipped_json="$tmp/skipped-proof.json"
   mkdir -p "$repo/bin" "$repo/tests"
   cp "$PROOF" "$proof"
-  cat >"$repo/bin/fm-test-run.sh" <<'SH'
+  cat >"$repo/bin/backend/fm-test-run.sh" <<'SH'
 #!/usr/bin/env bash
 if { [ "$1" = --list ] || [ "$1" = --list-scheduled ]; } && [ "$2" = --family ]; then
   case "$3" in
@@ -102,7 +102,7 @@ SH
 echo
 echo "skip: herdr not found"
 SH
-  chmod +x "$proof" "$repo/bin/fm-test-run.sh" "$repo/tests/fm-proof-"*.test.sh
+  chmod +x "$proof" "$repo/bin/backend/fm-test-run.sh" "$repo/tests/fm-proof-"*.test.sh
   set +e
   "$proof" --pool fixture-family --jobs 1 --json "$json" >"$tmp/out" 2>"$tmp/err"
   rc=$?

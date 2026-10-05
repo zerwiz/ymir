@@ -1,7 +1,7 @@
 ## install · unversioned · 2026-09-23 — the installer captures the machine's role (plan 51 P1, install half)
 
 ### Why
-- **Problem:** Plan 51's P1 was half-built: `bin/role.sh` could declare and
+- **Problem:** Plan 51's P1 was half-built: `bin/skuld/role.sh` could declare and
   validate a role, but the **installer never called it**, so a fresh machine
   arrived with no role and every role-aware surface (cron gates, MCP config,
   model placement, dispatch) had nothing to read.
@@ -15,7 +15,7 @@
     (it warns instead of registering).
 
 ### Verified
-- `bin/ymir-install.sh --check` on this box (registry: `dev`) →
+- `bin/engine/ymir-install.sh --check` on this box (registry: `dev`) →
   `"role","OK","role: dev (link: attached)"`.
 - As `whynot` (registry: `heart,forge`) →
   `"role","OK","role: heart,forge (link: attached)"`.
@@ -24,4 +24,4 @@
 - `bash -n` clean; `compliance` clean.
 
 ### Files
-- `bin/ymir-install.sh`
+- `bin/engine/ymir-install.sh`

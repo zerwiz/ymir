@@ -11,8 +11,8 @@ set -u
 # asserted verdict does not depend on which harness launched the suite.
 unset CLAUDECODE PI_CODING_AGENT FM_PI_HARNESS GROK_AGENT CURSOR_AGENT CURSOR_INVOKED_AS
 
-SPAWN="$ROOT/bin/fm-spawn.sh"
-TEARDOWN="$ROOT/bin/fm-teardown.sh"
+SPAWN="$ROOT/bin/backend/fm-spawn.sh"
+TEARDOWN="$ROOT/bin/backend/fm-teardown.sh"
 KIMI_HOOK="$ROOT/bin/fm-kimi-turnend-hook.sh"
 TMP_ROOT=$(fm_test_tmproot fm-kimi-harness)
 KIMI_RUNTIME_TASK_TMP=
@@ -541,10 +541,10 @@ SH
 
   out=$(env -u CLAUDECODE -u PI_CODING_AGENT -u FM_PI_HARNESS -u GROK_AGENT \
     -u CURSOR_AGENT -u CURSOR_INVOKED_AS \
-    PATH="$fakebin:$BASE_PATH" FM_CONFIG_OVERRIDE="$cfg" "$ROOT/bin/fm-harness.sh")
+    PATH="$fakebin:$BASE_PATH" FM_CONFIG_OVERRIDE="$cfg" "$ROOT/bin/backend/fm-harness.sh")
   [ "$out" = kimi ] || fail "kimi ancestry detection returned '$out'"
   out=$(env -u CURSOR_AGENT -u CURSOR_INVOKED_AS \
-    CLAUDECODE=1 PATH="$fakebin:$BASE_PATH" FM_CONFIG_OVERRIDE="$cfg" "$ROOT/bin/fm-harness.sh")
+    CLAUDECODE=1 PATH="$fakebin:$BASE_PATH" FM_CONFIG_OVERRIDE="$cfg" "$ROOT/bin/backend/fm-harness.sh")
   [ "$out" = claude ] || fail "verified env-marker precedence changed, got '$out'"
   pass "fm-harness: markerless kimi is detected by ancestry after env-marker precedence"
 }
@@ -564,13 +564,13 @@ exit 1
 SH
   chmod +x "$fakebin/ps"
 
-  FM_HOME="$home" PATH="$fakebin:$BASE_PATH" "$ROOT/bin/fm-lock.sh" \
+  FM_HOME="$home" PATH="$fakebin:$BASE_PATH" "$ROOT/bin/backend/fm-lock.sh" \
     || fail "fm-lock did not acquire from Kimi ancestry"
   case "$(cat "$home/state/.lock")" in
     ''|*[!0-9]*) fail "fm-lock did not record the Kimi harness ancestor" ;;
   esac
   printf '%s\n' "$$" > "$home/state/.lock"
-  out=$(FM_HOME="$home" PATH="$fakebin:$BASE_PATH" "$ROOT/bin/fm-lock.sh" status)
+  out=$(FM_HOME="$home" PATH="$fakebin:$BASE_PATH" "$ROOT/bin/backend/fm-lock.sh" status)
   assert_contains "$out" "lock: held by live harness pid" \
     "fm-lock did not recognize Kimi as a live holder"
   pass "fm-lock recognizes Kimi ancestry and live lock holders"
@@ -579,7 +579,7 @@ SH
 test_kimi_busy_signature_is_scoped_to_spinner_lines() {
   local capture
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-tmux-lib.sh"
+  . "$ROOT/bin/backend/fm-tmux-lib.sh"
   unset FM_BUSY_REGEX
   capture="$TMP_ROOT/busy-pane"
   tmux() {
@@ -632,7 +632,7 @@ test_watcher_never_classifies_kimi_from_its_spinner() (
   FM_STATE_OVERRIDE="$state"
   export FM_HOME FM_STATE_OVERRIDE
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-watch.sh"
+  . "$ROOT/bin/backend/fm-watch.sh"
   # shellcheck disable=SC2329 # Runtime override called by the sourced watcher.
   fm_backend_busy_state() { printf 'unknown'; }
   # Standalone Kimi has no verified semantic busy source, so it classifies
@@ -660,7 +660,7 @@ test_watcher_never_classifies_kimi_from_its_spinner() (
 test_kimi_bordered_prompt_needs_no_override() {
   local out
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-composer-lib.sh"
+  . "$ROOT/bin/backend/fm-composer-lib.sh"
   out=$(fm_composer_classify_content 1 '>')
   [ "$out" = empty ] || fail "kimi's bordered bare > composer should read empty, got '$out'"
   out=$(fm_composer_classify_content 0 '>')

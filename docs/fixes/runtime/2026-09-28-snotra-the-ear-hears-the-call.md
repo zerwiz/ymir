@@ -2,7 +2,7 @@
 
 ### Why
 
-Snotra's ear (`bin/snotra-capture.sh` + `bin/snotra-transcribe.sh`) could hear a
+Snotra's ear (`bin/time/snotra/snotra-capture.sh` + `bin/time/snotra/snotra-transcribe.sh`) could hear a
 meeting, but only if a hand armed it. Nothing watched for a call beginning, so a
 ping meeting passed unheard. The design named the missing half plainly: **P0b the
 detector** (watch PipeWire for an app taking the microphone, arm the capture,
@@ -16,7 +16,7 @@ leave**.
 
 ### The fix
 
-**The watch — `bin/snotra-detect.sh`.** A standing watch on the PipeWire graph,
+**The watch — `bin/time/snotra/snotra-detect.sh`.** A standing watch on the PipeWire graph,
 read through the portable `pactl` surface (PipeWire serves the PulseAudio
 protocol on every seat). One snapshot per tick carries the four graphs it reasons
 over (sources, source-outputs, sinks, sink-inputs), emitted as tab-separated
@@ -44,17 +44,17 @@ records so the shell reads them without a second JSON parser.
   whisper (the same engine the ear serves to the fleet) → mine decisions and
   actions → write the dated minutes, the actions list and a timestamped
   transcript to `$YMIR_HOME/hodd/workspaces/meetings/<date>-<lane>-<slug>.md` →
-  **deliver**: a desktop note (`bin/ymir-say.sh --mark-done`) and a durable wake
-  (`bin/ymir-state.sh queue append check meeting:<slug> …`), so the meeting comes
+  **deliver**: a desktop note (`bin/time/snotra/ymir-say.sh --mark-done`) and a durable wake
+  (`bin/records/ymir-state.sh queue append check meeting:<slug> …`), so the meeting comes
   to the Allfather with no arm and no sweep.
-- **The miner — `bin/snotra-mine.sh`.** Mechanical commitment cues over the
+- **The miner — `bin/time/snotra/snotra-mine.sh`.** Mechanical commitment cues over the
   transcript, every line carrying its verbatim quote and its timestamp, with the
   honest trust note written into the header (machine STT, no speaker
   diarization, owners never assigned, nothing invented).
 - **The boot — `tools/mill/systemd/snotra-detect.service`.** A user unit,
   `WantedBy=ymir.target`, raised by **capability** and never by role: a seat with
   a microphone owes the watch, a headless heart reports a clean skip. It joins
-  the one table in `bin/autoboot-lib.sh` (`AUTOBOOT_CAPABILITY_PROGRAMS`), so the
+  the one table in `bin/engine/autoboot-lib.sh` (`AUTOBOOT_CAPABILITY_PROGRAMS`), so the
   raise and the proof can never disagree about what a seat owes.
 - **The manual door stays.** `snotra-detect.sh arm [slug]` / `leave`, and the
   existing `snotra-capture.sh` / `snotra-transcribe.sh` by hand, for any call the
@@ -82,12 +82,12 @@ records so the shell reads them without a second JSON parser.
    the same path. Where the queue's file exists, `fm_lock_try_acquire` can never
    succeed and `fm_lock_acquire_wait` loops for ever — a watch that waits for
    ever is an ear that never leaves. The watch now appends through the queue's
-   own door (`bin/ymir-state.sh queue append`) and the append is **bounded**
+   own door (`bin/records/ymir-state.sh queue append`) and the append is **bounded**
    (`timeout 20`), so no queue pathology can wedge a delivery. *(The shell
    helper's incompatibility is named, not changed — other callers are outside
    this errand.)*
 4. **The materialized operator commands could not find the home.**
-   `bin/fleet-ensure.sh` copied `snotra-capture.sh` and friends into `~/.fleet`
+   `bin/fleet/fleet-ensure.sh` copied `snotra-capture.sh` and friends into `~/.fleet`
    but not `bin/vault/hoard-lib.sh`, so every one of them died on `YMIR_HOME: unbound
    variable` the moment it ran outside a shell that already knew the home — the
    seated unit included. `hoard-lib.sh` now rides along, and the watch also
@@ -145,14 +145,14 @@ the materialized commands), `installation.md` (the capability raise and
 
 ### Files
 
-- `bin/snotra-detect.sh` (new) — the watch: edges, pipeline, delivery
-- `bin/snotra-mine.sh` (new) — the mechanical decisions/actions miner
+- `bin/time/snotra/snotra-detect.sh` (new) — the watch: edges, pipeline, delivery
+- `bin/time/snotra/snotra-mine.sh` (new) — the mechanical decisions/actions miner
 - `tools/mill/systemd/snotra-detect.service` (new) — the unit, joined to `ymir.target`
-- `bin/autoboot-lib.sh` — the capability axis (`snotra-detect`), the program row
-- `bin/fleet-ensure.sh` — the unit's template row, the templated raise, and
+- `bin/engine/autoboot-lib.sh` — the capability axis (`snotra-detect`), the program row
+- `bin/fleet/fleet-ensure.sh` — the unit's template row, the templated raise, and
   `hoard-lib.sh` materialized beside the operator commands
-- `bin/snotra-capture.sh` — `SNOTRA_OUTFILE` (a named recording) + `state/.snotra-outfile`
-- `bin/snotra-transcribe.sh` — explicit minutes/transcript paths, a timestamped
+- `bin/time/snotra/snotra-capture.sh` — `SNOTRA_OUTFILE` (a named recording) + `state/.snotra-outfile`
+- `bin/time/snotra/snotra-transcribe.sh` — explicit minutes/transcript paths, a timestamped
   transcript from whisper's SRT, and the fleet ear lane when the seat has no engine
-- `bin/ymir-install.sh` — the watch named in the snotra step (the fleet step raises it)
+- `bin/engine/ymir-install.sh` — the watch named in the snotra step (the fleet step raises it)
 - `.agents/skills/galdr-ymirsystem/assets/{snotra-meeting-ear,runtime-components,registry,installation,README}.md`

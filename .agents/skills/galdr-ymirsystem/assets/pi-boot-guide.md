@@ -8,10 +8,10 @@ surface.
 
 ```
 pi_boot[6]{figure,mechanism,file}:
-  "Hamr","harness resolution (Pi default profile)","bin/hamr-harness.sh"
+  "Hamr","harness resolution (Pi default profile)","bin/fleet/hamr-harness.sh"
   "Einherjar","dispatch Eindri workers from an Erindi brief","bin/agents/einherjar-spawn.sh"
   "Runtime backend","herdr/tmux pane supervision (Þjazi protocol 14+)","bin/backend/*"
-  "Supervision","Sýn/Gná watcher + Pi supervision branch under Valhalla","bin/syn-watch-arm.sh, .pi/extensions/gna-pi-watch.ts"
+  "Supervision","Sýn/Gná watcher + Pi supervision branch under Valhalla","bin/pi/syn-watch-arm.sh, .pi/extensions/gna-pi-watch.ts"
   "Worktrees","Yggdrasil (`.yggdrasil/<id>/`) zero-collision isolation","bin/agents/einherjar-spawn.sh"
   "Huginn observer","read-only (W0012) until Ratatoskr two-way","bin/time/nornir-job-observer.sh"
 ```
@@ -44,10 +44,10 @@ pi_boot_assets[4]{file,purpose}:
 ## Verification
 
 ```
-bash -n bin/hamr-harness.sh bin/agents/einherjar-spawn.sh
+bash -n bin/fleet/hamr-harness.sh bin/agents/einherjar-spawn.sh
 python3 -m json.tool .agents/skills/galdr-ymirsystem/assets/pi-boot/einherjar-spawn.schema.json
-bash bin/hamr-harness.sh            # prints the current harness
-bash bin/hamr-harness.sh eindri     # prints the effective Eindri harness
+bash bin/fleet/hamr-harness.sh            # prints the current harness
+bash bin/fleet/hamr-harness.sh eindri     # prints the effective Eindri harness
 ```
 
 ## Maintaining this

@@ -9,7 +9,7 @@
   the home (`hodd/docs/masterplan.md`).
 - **bin/time/nornir-job-daily-briefing.sh** — message/comment paths updated to the
   same doors.
-- **bin/docs-guard.sh** — block message names both new homes (hodd/docs,
+- **bin/gates/guards/docs-guard.sh** — block message names both new homes (hodd/docs,
   memory/plans).
 - **.agents/agents/{brokk,forseti-reviewer,mimir-planner}.md** — the plan
   shelf, masterplan, and append-only log pointers moved to their hoard

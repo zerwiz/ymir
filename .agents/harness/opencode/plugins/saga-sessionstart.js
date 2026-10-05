@@ -51,7 +51,7 @@ export const SagaSessionstart = async ({ client, directory, worktree }) => {
       if (!sessionID || handledSessions.has(sessionID) || !root) return;
       handledSessions.add(sessionID);
 
-      const result = await runProcess(`${root}/bin/saga-sessionstart-run.sh`, []);
+      const result = await runProcess(`${root}/bin/time/saga-sessionstart-run.sh`, []);
       if (result.code !== 0) return;
       const digest = result.stdout.trim();
       if (!digest) return;

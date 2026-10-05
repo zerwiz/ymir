@@ -45,7 +45,7 @@ runes_home() {  # <result-var>
 
 runes_ymir_home() {  # <result-var> — the operator's home, resolved (Rule 07)
   # env -> the recorded choice -> the ONE documented default, all owned by
-  # bin/hoard-lib.sh. Never a literal path in this file.
+  # bin/vault/hoard-lib.sh. Never a literal path in this file.
   local result_var=${1-}
   [ -n "$result_var" ] || return 2
   if [ -n "${YMIR_HOME:-}" ]; then

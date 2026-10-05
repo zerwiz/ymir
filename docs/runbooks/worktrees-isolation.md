@@ -9,7 +9,7 @@ clean. Working in main is possible only when you ask for it.
 ```
 isolation[3]{road,default,opt_out}:
   "bin/agents/eindri-start.sh \"<task>\"","secure worktree .yggdrasil/<id>","--main"
-  "bin/pi-seat.sh --task \"<task>\"","secure worktree","--main"
+  "bin/pi/pi-seat.sh --task \"<task>\"","secure worktree","--main"
   "bin/agents/einherjar-spawn.sh <id>","secure worktree","—"
 ```
 
@@ -25,11 +25,11 @@ isolation[3]{road,default,opt_out}:
 ## Managing worktrees
 
 ```bash
-bin/yggdrasil.sh create <id>      # create .yggdrasil/<id> on branch yggdrasil/<id>
-bin/yggdrasil.sh list             # every worktree: id · branch · path · head
-bin/yggdrasil.sh status <id>      # one worktree's state
-bin/yggdrasil.sh merge  <id>      # merge yggdrasil/<id> into main  (human-gated)
-bin/yggdrasil.sh cleanup <id>     # remove the worktree after merge
+bin/forge/yggdrasil.sh create <id>      # create .yggdrasil/<id> on branch yggdrasil/<id>
+bin/forge/yggdrasil.sh list             # every worktree: id · branch · path · head
+bin/forge/yggdrasil.sh status <id>      # one worktree's state
+bin/forge/yggdrasil.sh merge  <id>      # merge yggdrasil/<id> into main  (human-gated)
+bin/forge/yggdrasil.sh cleanup <id>     # remove the worktree after merge
 ```
 A worktree lives at `<repo>/.yggdrasil/<id>/` on its own branch `yggdrasil/<id>`.
 
@@ -52,18 +52,18 @@ work in — including the artifact each produced.
 
 The work does **not** auto-return. When an Eindri finishes:
 
-1. Inspect it in the Worktrees gate (or `bin/yggdrasil.sh status <id>`).
+1. Inspect it in the Worktrees gate (or `bin/forge/yggdrasil.sh status <id>`).
 2. **Merge on approval** (law 4 — human-gated):
    ```bash
-   bin/yggdrasil.sh merge <id>
+   bin/forge/yggdrasil.sh merge <id>
    ```
-3. `bin/yggdrasil.sh cleanup <id>` once merged.
+3. `bin/forge/yggdrasil.sh cleanup <id>` once merged.
 
 ## Troubleshooting
 
 - **`could not create a Yggdrasil worktree; refusing to seat`** — the worktree
   couldn't be made (usually already exists under a different state, or the repo
-  isn't a git worktree). Check `bin/yggdrasil.sh list`; the seat **reuses** an
+  isn't a git worktree). Check `bin/forge/yggdrasil.sh list`; the seat **reuses** an
   existing `.yggdrasil/<id>`.
 - **An agent wrote to `~/Ymir/...` (main)** — that was pre-isolation, or `--main`
   was passed. Check the Worktrees gate: an isolated run's files live under

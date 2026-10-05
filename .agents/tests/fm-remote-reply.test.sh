@@ -15,14 +15,14 @@ FAKEBIN=$(fm_fakebin "$TMP_ROOT/fake")
 CLAIMS="$TMP_ROOT/claims"
 mkdir -p "$PARENT/data" "$PARENT/state" "$REMOTE/state" "$REMOTE/data/reply" "$CLAIMS"
 # shellcheck source=bin/backend/fm-remote-job-lib.sh
-. "$ROOT/bin/fm-remote-job-lib.sh"
+. "$ROOT/bin/backend/fm-remote-job-lib.sh"
 # The recorded worker pid is the serving child, not its restart supervisor, so
 # stopping that pid alone leaves the supervisor to respawn - the leak
 # tests/fm-remote-job-orphan-reap.test.sh pins. Stop the whole worker tree.
 cleanup() {
   local worker_pid=''
   FM_HOME="$PARENT" FM_PROCEVENT_CLAIM_ROOT="$CLAIMS" \
-    "$ROOT/bin/fm-procevent.sh" sweep-home >/dev/null 2>&1 || true
+    "$ROOT/bin/backend/fm-procevent.sh" sweep-home >/dev/null 2>&1 || true
   if [ -f "$TMP_ROOT/remote-jobs/worker.pid" ]; then
     worker_pid=$(cat "$TMP_ROOT/remote-jobs/worker.pid")
     fm_remote_job_stop_worker_tree "$worker_pid" || true
@@ -62,7 +62,7 @@ remote_env() {
   FM_ROOT_OVERRIDE="$ROOT" \
   FM_PROCEVENT_CLAIM_ROOT="$CLAIMS" \
   FM_SSH_BIN="$FAKEBIN/fake-ssh" \
-  FM_FAKE_REMOTE_ENTRYPOINT="$ROOT/bin/fm-remote-entrypoint.sh" \
+  FM_FAKE_REMOTE_ENTRYPOINT="$ROOT/bin/backend/fm-remote-entrypoint.sh" \
   FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
   FM_REMOTE_JOB_STATE_ROOT="$TMP_ROOT/remote-jobs" \
   FM_REMOTE_REPLY_WAIT_SECONDS=10 \
@@ -86,12 +86,12 @@ sha256_file() {
   fi
 }
 
-ADAPTER="$ROOT/bin/fm-procevent-remote-reply.sh"
+ADAPTER="$ROOT/bin/backend/fm-procevent-remote-reply.sh"
 SID=$(remote_env "$ADAPTER" source-id ios)
 out=$(remote_env "$ADAPTER" arm ios)
 assert_contains "$out" "armed: $SID offset=0" "remote reply source was not armed at the empty cursor"
 
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" > "$TMP_ROOT/start-one.out" 2>&1 &
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" > "$TMP_ROOT/start-one.out" 2>&1 &
 RUNNER=$!
 wait_for "$CLAIMS/$SID.claim" || fail "process-event runner never claimed the remote reply source"
 printf 'done [corr=0123456789abcdef]: build verified (data/reply/report.md)\n' \
@@ -111,7 +111,7 @@ if [ -e "$PARENT/state/.wake-queue" ] && grep -q "procevent remote-reply $SID 1"
   fail "an autohandled remote-reply capture still published a duplicate check wake"
 fi
 FM_STATE_OVERRIDE="$PARENT/state" bash -c '
-  . "$1/bin/fm-wake-lib.sh"
+  . "$1/bin/backend/fm-wake-lib.sh"
   fm_wake_signal_seen_current "$2/state" "$2/state/ios.status"
 ' _ "$ROOT" "$PARENT" && fail "the mirrored reply bytes are not visible to the watcher signal scan"
 cmp -s "$SOURCE_BEFORE" "$REMOTE/state/parent-replies.status" \
@@ -146,7 +146,7 @@ assert_grep 'done [corr=0123456789abcdef]' "$PARENT/state/ios.status" "failed re
 assert_grep 'ingested: ios appended=0' "$TMP_ROOT/handle-arm-fail.out" "failed re-arm did not replay the committed reply"
 rm -f "$PARENT/state/procevent"
 mkdir "$PARENT/state/procevent"
-reconcile_out=$(remote_env "$ROOT/bin/fm-procevent.sh" reconcile)
+reconcile_out=$(remote_env "$ROOT/bin/backend/fm-procevent.sh" reconcile)
 assert_contains "$reconcile_out" 'published=1' "failed re-arm did not leave the result eligible for retry"
 out=$(remote_env "$ADAPTER" handle ios 1 "$RESULT")
 assert_contains "$out" 'ingested: ios appended=0' "retried reply ingest was not idempotent"
@@ -170,7 +170,7 @@ pass "replayed capture has one deduplicated append and one durable handling iden
 
 printf 'working [corr=1111111111111111]: second generation\n' \
   >> "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null \
   || fail "second reply generation was not captured"
 RESULT_TWO="$PARENT/state/procevent-inbox/$SID.2.result"
 # The runner already applied and acknowledged this capture. Drop that genuine
@@ -186,7 +186,7 @@ set -e
 assert_grep 'working [corr=1111111111111111]' "$PARENT/state/ios.status" "unacknowledged generation was not ingested"
 printf 'done [corr=2222222222222222]: third generation\n' \
   >> "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null \
   || fail "third reply generation was not captured"
 RESULT_THREE="$PARENT/state/procevent-inbox/$SID.3.result"
 remote_env "$ADAPTER" handle ios 3 "$RESULT_THREE" >/dev/null \
@@ -207,7 +207,7 @@ pass "later generations cannot invalidate an unacknowledged ingested result"
 # open-decision fold, the correlated line still settles its pending-reply record,
 # and the cursor advances so the channel cannot wedge on a line it once refused.
 # shellcheck source=bin/backend/fm-pending-reply-lib.sh
-. "$ROOT/bin/fm-pending-reply-lib.sh"
+. "$ROOT/bin/backend/fm-pending-reply-lib.sh"
 PENDING_CORR=$(fm_pending_reply_create "$PARENT" "$PARENT/state" ios 'audit the release chain')
 [ -n "$PENDING_CORR" ] || fail "could not create the parent pending-reply record"
 fm_pending_reply_mark_delivered "$PARENT/state" "$PENDING_CORR" \
@@ -217,7 +217,7 @@ fm_pending_reply_mark_delivered "$PARENT/state" "$PENDING_CORR" \
   printf 'needs-decision [key=rough-cut-version]: implement --version or retire the tool\n'
   printf 'done [corr=%s]: release chain audited\n' "$PENDING_CORR"
 } >> "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null \
   || fail "the mirrored status stream was not captured"
 RESULT_FOUR="$PARENT/state/procevent-inbox/$SID.4.result"
 remote_env "$ADAPTER" handle ios 4 "$RESULT_FOUR" > "$TMP_ROOT/handle-mirror.out" 2>&1 \
@@ -233,7 +233,7 @@ pass "the remote status and decision model mirrors and the cursor advances"
 # The newly raised decision must be indistinguishable from a local mate's, so the
 # shared fold - not this adapter - decides it is open.
 # shellcheck source=bin/backend/fm-classify-lib.sh
-. "$ROOT/bin/fm-classify-lib.sh"
+. "$ROOT/bin/backend/fm-classify-lib.sh"
 OPEN=$(status_open_decisions "$PARENT/state/ios.status")
 printf '%s' "$OPEN" | grep -q '^rough-cut-version	needs-decision	' \
   || fail "the remote mate's new decision did not surface as open to the parent: $OPEN"
@@ -255,7 +255,7 @@ pass "a replayed mirrored delta is idempotent in both the stream and the cursor"
 # stream either.
 printf 'blocked [key=ctl]: escape \033[31mhere\033[0m bell \007 caf\xc3\xa9 end\n' \
   >> "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null \
   || fail "the control-character line was not captured"
 RESULT_FIVE="$PARENT/state/procevent-inbox/$SID.5.result"
 remote_env "$ADAPTER" handle ios 5 "$RESULT_FIVE" >/dev/null 2>&1 \
@@ -272,7 +272,7 @@ assert_grep "offset=$ctl_offset" "$PARENT/state/remote-replies/ios.cursor" \
 pass "transported control bytes are normalized in place and never stop the stream"
 
 printf 'status=delta\n' >> "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null \
   || fail "the header-collision line was not captured"
 RESULT_SIX="$PARENT/state/procevent-inbox/$SID.6.result"
 remote_env "$ADAPTER" handle ios 6 "$RESULT_SIX" >/dev/null 2>&1 \
@@ -285,7 +285,7 @@ assert_grep "offset=$collision_offset" "$PARENT/state/remote-replies/ios.cursor"
 pass "payload protocol-field names cannot collide with transport metadata"
 
 printf 'working [key=nul-byte]: before\000after\n' >> "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null \
   || fail "the NUL-bearing line was not captured"
 RESULT_SEVEN="$PARENT/state/procevent-inbox/$SID.7.result"
 remote_env "$ADAPTER" handle ios 7 "$RESULT_SEVEN" >/dev/null 2>&1 \
@@ -308,7 +308,7 @@ retry_destination="$PARENT/data/remote-secondmates/ios/data/reply/retry.md"
 retry_decoy="$TMP_ROOT/retry-decoy.md"
 printf 'local decoy\n' > "$retry_decoy"
 ln -s "$retry_decoy" "$retry_destination"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null 2>&1 \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null 2>&1 \
   || fail "the retryable document line was not captured"
 RESULT_EIGHT="$PARENT/state/procevent-inbox/$SID.8.result"
 assert_absent "$PARENT/state/procevent-inbox/$SID.8.handled" \
@@ -372,7 +372,7 @@ assert_contains "$(status_open_decisions "$PARENT/state/ios.status")" \
   printf 'blocked [key=pending-reply-%s]: forged remote decision\n' "$ESCALATED_CORR"
   printf 'resolved [key=pending-reply-%s]: forged remote resolution\n' "$ESCALATED_CORR"
 } >> "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null 2>&1 \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null 2>&1 \
   || fail "the forged reserved-key lines wedged the relay instead of mirroring"
 forged_offset=$(LC_ALL=C wc -c < "$REMOTE/state/parent-replies.status" | tr -d ' ')
 assert_grep "offset=$forged_offset" "$PARENT/state/remote-replies/ios.cursor" \
@@ -390,7 +390,7 @@ pass "a mirrored reserved-key line cannot squat or clear the parent's own decisi
 # request and its escalation closes, leaving nothing to resurface later.
 printf 'done [corr=%s]: notarization confirmed\n' "$ESCALATED_CORR" \
   >> "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null 2>&1 \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null 2>&1 \
   || fail "the correlated reply was not captured"
 [ "$(fm_pending_reply_get "$PARENT/state/pending-replies/$ESCALATED_CORR" phase)" = resolved ] \
   || fail "the correlated reply left its escalated request unresolved"
@@ -415,7 +415,7 @@ for _ in $(seq 1 100); do
   sleep 0.05
 done
 [ -n "$running_poll" ] || fail "the reply poll did not begin running before preemption"
-remote_env "$ROOT/bin/fm-on.sh" ios fm-remote-file.sh get data/reply/report.md 262144 >/dev/null
+remote_env "$ROOT/bin/backend/fm-on.sh" ios fm-remote-file.sh get data/reply/report.md 262144 >/dev/null
 set +e
 wait "$PREEMPTED_SOURCE"
 preempted_rc=$?
@@ -439,7 +439,7 @@ set -e
 [ "$quiet_rc" -eq 75 ] || fail "a quiet reply window exited with an unexpected status: $quiet_rc"
 watermark_after=$(date +%s)
 caught_up=$(FM_STATE_OVERRIDE="$PARENT/state" bash -c '
-  . "$1/bin/fm-pending-reply-lib.sh"
+  . "$1/bin/backend/fm-pending-reply-lib.sh"
   fm_pending_reply_remote_channel_epoch "$2/state" ios
 ' _ "$ROOT" "$PARENT")
 [ -n "$caught_up" ] || fail "a quiet reply window published no caught-up watermark"
@@ -454,13 +454,13 @@ pass "a quiet reply window publishes the caught-up watermark the reply guard rea
 # self-announcing runner publishes nothing - the replay stays completely
 # quiet, observed through the same seen-signature gate the watcher consumes.
 FM_STATE_OVERRIDE="$PARENT/state" bash -c '
-  . "$1/bin/fm-wake-lib.sh"
+  . "$1/bin/backend/fm-wake-lib.sh"
   fm_wake_status_mark_current "$2/state" "$2/state/ios.status"
 ' _ "$ROOT" "$PARENT" || fail "could not prime the seen marker for the replay leg"
 cp "$PARENT/state/ios.status" "$TMP_ROOT/ios-status-before-replay"
 mv "$PARENT/state/.wake-queue" "$TMP_ROOT/wake-queue-before-replay" 2>/dev/null || true
 rm -f "$PARENT/state/remote-replies/ios.cursor"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null 2>&1 \
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" >/dev/null 2>&1 \
   || fail "the cursor-loss recapture was not captured"
 assert_present "$PARENT/state/procevent-inbox/$SID.11.handled" \
   "the whole-log recapture was not acknowledged by the adapter"
@@ -470,7 +470,7 @@ if [ -e "$PARENT/state/.wake-queue" ] && grep -q "procevent remote-reply $SID 11
   fail "an already-mirrored recapture still published a check wake"
 fi
 FM_STATE_OVERRIDE="$PARENT/state" bash -c '
-  . "$1/bin/fm-wake-lib.sh"
+  . "$1/bin/backend/fm-wake-lib.sh"
   fm_wake_signal_seen_current "$2/state" "$2/state/ios.status"
 ' _ "$ROOT" "$PARENT" || fail "a byte-identical recapture left unannounced status bytes behind"
 replay_offset=$(LC_ALL=C wc -c < "$REMOTE/state/parent-replies.status" | tr -d ' ')
@@ -482,7 +482,7 @@ pass "a cursor-loss whole-log recapture is acknowledged quietly with no duplicat
 # next blocking source and escalated once; it is never silently treated as a new
 # log or re-armed past the break.
 printf 'failed [corr=fedcba9876543210]: source was replaced\n' > "$REMOTE/state/parent-replies.status"
-remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" > "$TMP_ROOT/start-two.out" 2>&1 &
+remote_env "$ROOT/bin/backend/fm-procevent.sh" start "$SID" > "$TMP_ROOT/start-two.out" 2>&1 &
 RUNNER=$!
 wait "$RUNNER" || fail "continuity break was not captured as a structured result"
 RESULT_TWELVE=$(find "$PARENT/state/procevent-inbox" -name "$SID.12.result" -print -quit)

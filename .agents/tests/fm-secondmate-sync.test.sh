@@ -4,7 +4,7 @@
 # fast-forward (no origin fetch). Two hook points drive it - bin/backend/fm-spawn.sh
 # (before launching a secondmate) and bin/backend/fm-bootstrap.sh (a startup sweep of
 # every live secondmate home) - and both share the ff machinery in
-# bin/fm-ff-lib.sh.
+# bin/backend/fm-ff-lib.sh.
 #
 # The guarantees under test:
 #   - The shared ff helper, driven with a LOCAL commit base, advances a behind
@@ -26,7 +26,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # shellcheck source=bin/backend/fm-ff-lib.sh
-. "$ROOT/bin/fm-ff-lib.sh"
+. "$ROOT/bin/backend/fm-ff-lib.sh"
 
 BASE_PATH=${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
 
@@ -415,7 +415,7 @@ test_bootstrap_sweep_nudges_only_instruction_change() {
   log="$w/tmux.log"
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
     FM_SEND_SETTLE=0 FM_FAKE_TMUX_LOG="$log" \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
 
   info_line=$(printf '%s\n' "$out" | grep '^BOOTSTRAP_INFO: nudged fm-sm-instr ' || true)
   [ -n "$info_line" ] || fail "no BOOTSTRAP_INFO nudge line emitted (got: $out)"
@@ -459,7 +459,7 @@ test_bootstrap_nudge_send_uses_state_override() {
 
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
     FM_STATE_OVERRIDE="$override_state" FM_SEND_SETTLE=0 FM_FAKE_TMUX_LOG="$log" \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
 
   assert_contains "$out" "BOOTSTRAP_INFO: nudged fm-sm-instr with" \
     "nudge send should resolve fm-sm-instr through the effective state dir"
@@ -499,7 +499,7 @@ test_bootstrap_nudge_retry_rejects_malformed_marker_id() {
 
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
     FM_SEND_SETTLE=0 FM_FAKE_TMUX_LOG="$log" \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
 
   assert_contains "$out" "NUDGE_SECONDMATES: secondmate ../escape: send failed: retry marker has unsafe id" \
     "malformed retry marker id should be rejected before target resolution"
@@ -523,7 +523,7 @@ test_bootstrap_nudge_failure_records_retry_marker() {
 
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
     FM_SEND_SETTLE=0 \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
 
   assert_contains "$out" "NUDGE_SECONDMATES: secondmate sm-instr: send failed:" \
     "failed nudge send should be surfaced as actionable bootstrap output"
@@ -546,7 +546,7 @@ test_bootstrap_nudge_retry_is_idempotent() {
 
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
     FM_SEND_SETTLE=0 \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
   assert_contains "$out" "NUDGE_SECONDMATES: secondmate sm-instr: send failed:" \
     "precondition: first nudge should fail"
   marker="$w/home/state/.secondmate-nudge-pending/sm-instr.pending"
@@ -554,13 +554,13 @@ test_bootstrap_nudge_retry_is_idempotent() {
 
   rm -f "$w/home/state/sm-instr.inbox"   # unblock: the steer record can be written again
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
-    FM_SEND_SETTLE=0 "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    FM_SEND_SETTLE=0 "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
   assert_contains "$out" "BOOTSTRAP_INFO: nudged fm-sm-instr with" \
     "retry should send the pending nudge once the endpoint works"
   assert_absent "$marker" "successful retry should clear the marker"
 
   out2=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
-    FM_SEND_SETTLE=0 "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    FM_SEND_SETTLE=0 "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
   [ -z "$out2" ] || fail "idempotent retry should converge to silence, got: $out2"
   pass "T8d bootstrap nudge retry is idempotent after success"
 }
@@ -576,7 +576,7 @@ test_bootstrap_nudge_retry_refuses_changed_home() {
 
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
     FM_SEND_SETTLE=0 \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
   assert_contains "$out" "NUDGE_SECONDMATES: secondmate sm-instr: send failed:" \
     "precondition: first nudge should fail"
   marker="$w/home/state/.secondmate-nudge-pending/sm-instr.pending"
@@ -590,7 +590,7 @@ test_bootstrap_nudge_retry_refuses_changed_home() {
   rm -f "$w/home/state/sm-instr.meta.bak"
 
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
-    FM_SEND_SETTLE=0 "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    FM_SEND_SETTLE=0 "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
   assert_contains "$out" "NUDGE_SECONDMATES: secondmate sm-instr: send failed: retry target home changed" \
     "retry must not infer a nudge target outside the recorded failed home"
   assert_present "$marker" "ambiguous retry should keep marker for operator inspection"
@@ -676,7 +676,7 @@ rm -f "\$meta.bak"
 exit 0
 SH
   chmod +x "$spawn_stub"
-  cp "$spawn_stub" "$w/main/bin/fm-spawn.sh"
+  cp "$spawn_stub" "$w/main/bin/backend/fm-spawn.sh"
 
   herdrfb=$(make_nudge_herdr_fake "$w/herdr" "$stale" "$fresh")
   toolchain=$(make_fake_toolchain "$w")
@@ -687,7 +687,7 @@ SH
   out=$(PATH="$herdrfb:$toolchain:$BASE_PATH" HERDR_ENV=1 FM_BACKEND=herdr \
     FM_SEND_SETTLE=0 \
     FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
 
   # The nudge now rides the durable inbox: a stale endpoint can only swallow
   # the best-effort doorbell, never the steer itself, so the nudge is SENT
@@ -705,17 +705,17 @@ SH
   assert_absent "$marker" "a durably enqueued nudge owes no retry marker"
 
   # shellcheck disable=SC2016  # $0/$1 belong to the inner bash -c process.
-  resolved=$(bash -c '. "$0/bin/fm-backend.sh"; fm_backend_resolve_selector fm-sm-instr "$1"' "$ROOT" "$w/home/state")
+  resolved=$(bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_resolve_selector fm-sm-instr "$1"' "$ROOT" "$w/home/state")
   [ "$resolved" = "$fresh" ] || fail "fm-<id> should resolve through post-respawn meta, got '$resolved'"
 
   # shellcheck disable=SC2016  # $0/$1 belong to the inner bash -c process.
   stale_send=$(PATH="$herdrfb:$toolchain:$BASE_PATH" bash -c \
-    '. "$0/bin/fm-backend.sh"; fm_backend_source herdr; fm_backend_herdr_send_literal "$1" "nudge"' "$ROOT" "$stale" 2>/dev/null; printf '%s' "$?")
+    '. "$0/bin/backend/fm-backend.sh"; fm_backend_source herdr; fm_backend_herdr_send_literal "$1" "nudge"' "$ROOT" "$stale" 2>/dev/null; printf '%s' "$?")
   [ "$stale_send" != 0 ] || fail "explicit stale herdr endpoint send should fail"
 
   # shellcheck disable=SC2016  # $0/$1 belong to the inner bash -c process.
   fresh_send=$(PATH="$herdrfb:$toolchain:$BASE_PATH" bash -c \
-    '. "$0/bin/fm-backend.sh"; fm_backend_source herdr; fm_backend_herdr_send_literal "$1" "nudge"' "$ROOT" "$fresh" 2>/dev/null; printf '%s' "$?")
+    '. "$0/bin/backend/fm-backend.sh"; fm_backend_source herdr; fm_backend_herdr_send_literal "$1" "nudge"' "$ROOT" "$fresh" 2>/dev/null; printf '%s' "$?")
   [ "$fresh_send" = 0 ] || fail "send through fm-<id>-resolved fresh endpoint should succeed"
 
   pass "T8b a stale herdr endpoint cannot lose a durably enqueued nudge, and fm-<id> resolves through post-respawn metadata"
@@ -734,7 +734,7 @@ test_bootstrap_sweep_surfaces_skipped_home() {
 
   fakebin=$(make_fake_toolchain "$w")
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
 
   skip_line=$(printf '%s\n' "$out" | grep '^SECONDMATE_SYNC: secondmate sm-dirty: skipped:' || true)
   [ -n "$skip_line" ] || fail "no SECONDMATE_SYNC skip line emitted (got: $out)"
@@ -772,7 +772,7 @@ SH
     FM_STATE_OVERRIDE="$w/home/state" FM_DATA_OVERRIDE="$w/home/data" \
     FM_PROJECTS_OVERRIDE="$w/home/projects" FM_CONFIG_OVERRIDE="$w/home/config" \
     FM_SPAWN_NO_GUARD=1 \
-    "$ROOT/bin/fm-spawn.sh" sm "$w/sm" codex --secondmate >/dev/null 2>&1 || true
+    "$ROOT/bin/backend/fm-spawn.sh" sm "$w/sm" codex --secondmate >/dev/null 2>&1 || true
 
   [ "$(head_of "$w/sm")" = "$c2" ] \
     || fail "spawn did not fast-forward the secondmate worktree to the primary's HEAD"
@@ -806,7 +806,7 @@ SH
     FM_STATE_OVERRIDE="$w/home/state" FM_DATA_OVERRIDE="$w/home/data" \
     FM_PROJECTS_OVERRIDE="$w/home/projects" FM_CONFIG_OVERRIDE="$w/home/config" \
     FM_SPAWN_NO_GUARD=1 \
-    "$ROOT/bin/fm-spawn.sh" sm "$w/sm" codex --secondmate >/dev/null 2>"$err" || true
+    "$ROOT/bin/backend/fm-spawn.sh" sm "$w/sm" codex --secondmate >/dev/null 2>"$err" || true
 
   assert_contains "$(cat "$err")" \
     "warning: secondmate sm sync skipped before launch: dirty working tree" \

@@ -68,7 +68,7 @@ LAUNCH_AGENT_DIR="${HOME:-}/Library/LaunchAgents"
 LAUNCH_AGENT_PLIST="$LAUNCH_AGENT_DIR/$LAUNCH_AGENT_LABEL.plist"
 LAUNCH_AGENT_LOG_DIR="${HOME:-}/Library/Logs"
 LAUNCH_AGENT_LOG="$LAUNCH_AGENT_LOG_DIR/$LAUNCH_AGENT_LABEL.log"
-ENTRYPOINT_LINK="${HOME:-}/.local/bin/fm-remote-entrypoint.sh"
+ENTRYPOINT_LINK="${HOME:-}/.local/bin/backend/fm-remote-entrypoint.sh"
 
 usage() { sed -n '2,5p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
@@ -560,7 +560,7 @@ check_entrypoint_link() {
     record entrypoint-link "skip: this run did not come through the fixed remote entrypoint"
     return 0
   fi
-  want="$FM_ROOT_OVERRIDE/bin/fm-remote-entrypoint.sh"
+  want="$FM_ROOT_OVERRIDE/bin/backend/fm-remote-entrypoint.sh"
   if [ -L "$ENTRYPOINT_LINK" ] && [ "$(readlink "$ENTRYPOINT_LINK")" = "$want" ]; then
     record entrypoint-link "ok: $ENTRYPOINT_LINK"
     return 0
@@ -673,7 +673,7 @@ start_herdr_server() {
 }
 
 link_entrypoint() {
-  local want="${FM_ROOT_OVERRIDE:-}/bin/fm-remote-entrypoint.sh"
+  local want="${FM_ROOT_OVERRIDE:-}/bin/backend/fm-remote-entrypoint.sh"
   if ! mkdir -p "$(dirname "$ENTRYPOINT_LINK")" 2>/dev/null; then
     fix_report entrypoint-link failed "cannot create $(dirname "$ENTRYPOINT_LINK")"
     return 1

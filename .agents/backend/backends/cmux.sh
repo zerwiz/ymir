@@ -118,7 +118,7 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 # dead-shell-vs-agent-composer rule). Owned by bin/backend/fm-composer-lib.sh, reused by
 # every backend so the decision cannot drift.
 # shellcheck source=bin/backend/fm-composer-lib.sh
-. "$FM_BACKEND_CMUX_ROOT/bin/fm-composer-lib.sh"
+. "$FM_BACKEND_CMUX_ROOT/bin/backend/fm-composer-lib.sh"
 
 # Verified minimum: the version the live pass ran against (docs/cmux-backend.md).
 FM_BACKEND_CMUX_MIN_MAJOR=0

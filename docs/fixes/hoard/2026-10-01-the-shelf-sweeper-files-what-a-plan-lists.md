@@ -1,6 +1,6 @@
 ## hoard · 2026-10-01 — the shelf-sweeper finds the documents and proposes where each belongs
 
-**Plan 63.** `bin/doc-sweep.sh` — three verbs, in this order, because the order is the law.
+**Plan 63.** `bin/gates/doc-sweep.sh` — three verbs, in this order, because the order is the law.
 
 ```
 doc-sweep.sh scan  [root …]         # REPORT ONLY — classifies, proposes, writes nothing else
@@ -77,7 +77,7 @@ exits non-zero if any is missing or changed.
 
 ### Verified on the Allfather's own root (2026-10-01)
 
-`bash bin/doc-sweep.sh scan ~/Documents` covered **all 81 items** (64 loose files, 16
+`bash bin/gates/doc-sweep.sh scan ~/Documents` covered **all 81 items** (64 loose files, 16
 directories, 1 symlink) with a reason per line, and the root was byte-identical
 afterwards — `find ~/Documents -maxdepth 1 | sort | md5sum` = `7714ce5a…` before and
 after. Tally: 1 move, 3 propose, 64 unplaceable, 8 report, 5 hold.
@@ -95,7 +95,7 @@ the whole point of the tool.
 
 ### Files
 
-- `bin/doc-sweep.sh` — the sweeper (new)
+- `bin/gates/doc-sweep.sh` — the sweeper (new)
 - `.agents/tests/doc-sweep.test.sh` — 28 assertions over synthetic fixtures only
   (a temp home, a temp root, names that exist nowhere else)
 - `docs/Architecture.md` — §3.14, the component's own entry

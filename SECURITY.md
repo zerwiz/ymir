@@ -6,13 +6,13 @@ Never commit a secret. Credentials live in the gitignored `.env.local`
 (platform) or `svartalfaheim/<realm>/.env.realm` (realm); committed examples
 end in `.example` and carry empty values.
 
-`bin/secret-guard.sh` scans the staged change (installed as the `pre-commit`
+`bin/gates/guards/secret-guard.sh` scans the staged change (installed as the `pre-commit`
 hook) and every tracked file (`--all`, run in CI) for private env files and
 obvious keys (`AKIA…`, `ghp_…`, `sk-…`, `xox…`, `AIza…`, private keys). A hit
 blocks the commit.
 
 **If a secret reaches a commit:** rotate it immediately — rewriting history does
-not un-leak it — then purge it with `bin/repo-scrub.sh --yes`.
+not un-leak it — then purge it with `bin/gates/repo-scrub.sh --yes`.
 
 ## Private data
 

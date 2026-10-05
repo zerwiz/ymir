@@ -1,7 +1,7 @@
 ## install · unversioned · 2026-09-17 — the house gains an unpublish door
 
 ### Why
-- **`bin/npm-publish.sh --unpublish @scope/name@<version>`.** Publishing had a
+- **`bin/forge/npm/npm-publish.sh --unpublish @scope/name@<version>`.** Publishing had a
   door in this house and unpublishing had none, so the act was done by hand on a
   machine whose `~/.npmrc` holds a stale token — the very reason the door exists.
   The new mode resolves the token from the hoard exactly as publishing does,

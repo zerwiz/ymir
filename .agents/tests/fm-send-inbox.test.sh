@@ -30,9 +30,9 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-marker-lib.sh"
+. "$ROOT/bin/backend/fm-marker-lib.sh"
 
-SEND="$ROOT/bin/fm-send.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-send-inbox)
 TMP_ROOT=$(cd "$TMP_ROOT" && pwd)
@@ -111,7 +111,7 @@ run_send() {  # <case-dir> <err-file> [env...] -- <fm-send args...>
 }
 
 record_body() {  # <record>
-  bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$2"
+  bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$2"
 }
 
 test_text_steer_rides_inbox() {
@@ -306,7 +306,7 @@ test_meta_lock_contention_fails_bounded() {
     fm_lock_acquire_wait "$2"
     touch "$3"
     sleep 30
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$lock" "$marker" &
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$lock" "$marker" &
   holder=$!
   i=0
   while [ ! -e "$marker" ] && [ "$i" -lt 100 ]; do

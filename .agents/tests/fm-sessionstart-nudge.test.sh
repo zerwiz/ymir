@@ -32,7 +32,7 @@ TMP_ROOT=$(fm_test_tmproot fm-sessionstart-nudge)
 NUDGE="$ROOT/bin/fm-sessionstart-nudge.sh"
 RUN="$ROOT/bin/fm-sessionstart-run.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-operational-input.sh"
+. "$ROOT/bin/backend/fm-operational-input.sh"
 NUDGE_TEXT="Run \`bin/backend/fm-session-start.sh\` now, exactly once, before executing any other instructions."
 fm_operational_input_encode session-start "$NUDGE_TEXT" NUDGE_LINE \
   || fail "could not construct expected session-start nudge"
@@ -135,7 +135,7 @@ test_opencode_plugin_delivers_exact_nudge_once() {
   local root="$TMP_ROOT/opencode-primary" out status=0
   make_primary "$root"
   cp "$ROOT/bin/fm-sessionstart-nudge.sh" "$ROOT/bin/fm-primary-scope-lib.sh" \
-    "$ROOT/bin/fm-gate-refuse-lib.sh" "$ROOT/bin/fm-operational-input.sh" "$root/bin/"
+    "$ROOT/bin/backend/fm-gate-refuse-lib.sh" "$ROOT/bin/backend/fm-operational-input.sh" "$root/bin/"
   chmod +x "$root/bin/fm-sessionstart-nudge.sh"
   out=$(PLUGIN="$ROOT/.opencode/plugins/fm-primary-sessionstart-nudge.js" \
     WORKTREE="$root" EXPECTED="$NUDGE_LINE" node --input-type=module 2>&1 <<'EOF'
@@ -343,7 +343,7 @@ while [ $# -gt 0 ]; do
 done
 printf '%s\n' "$source_name" >> "${FM_HOME:?}/state/sources"
 SH
-  cat > "$fixture/bin/fm-turnend-guard.sh" <<'SH'
+  cat > "$fixture/bin/backend/fm-turnend-guard.sh" <<'SH'
 #!/usr/bin/env bash
 exit 0
 SH
@@ -430,8 +430,8 @@ test_pi_sessionstart_generation_prerequisite() {
   cp "$ROOT/.pi/extensions/fm-primary-turnend-guard.ts" "$fixture/.pi/extensions/"
   cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" \
     "$ROOT/.pi/extensions/lib/fm-sessionstart-supervisor.mjs" "$fixture/.pi/extensions/lib/"
-  cp "$ROOT/bin/fm-operational-input.sh" "$fixture/bin/"
-  cat > "$fixture/bin/fm-turnend-guard.sh" <<'SH'
+  cp "$ROOT/bin/backend/fm-operational-input.sh" "$fixture/bin/"
+  cat > "$fixture/bin/backend/fm-turnend-guard.sh" <<'SH'
 #!/usr/bin/env bash
 exit 0
 SH
@@ -756,8 +756,8 @@ test_pi_reload_releases_sessionstart_exit_listener() {
   cp "$ROOT/.pi/extensions/fm-primary-turnend-guard.ts" "$fixture/.pi/extensions/"
   cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" \
     "$ROOT/.pi/extensions/lib/fm-sessionstart-supervisor.mjs" "$fixture/.pi/extensions/lib/"
-  cp "$ROOT/bin/fm-operational-input.sh" "$fixture/bin/"
-  cat > "$fixture/bin/fm-turnend-guard.sh" <<'SH'
+  cp "$ROOT/bin/backend/fm-operational-input.sh" "$fixture/bin/"
+  cat > "$fixture/bin/backend/fm-turnend-guard.sh" <<'SH'
 #!/usr/bin/env bash
 exit 0
 SH
@@ -891,10 +891,10 @@ test_pi_large_sessionstart_digest_is_delivered_loudly() {
   cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" \
     "$ROOT/.pi/extensions/lib/fm-sessionstart-supervisor.mjs" "$fixture/.pi/extensions/lib/"
   cp "$ROOT/bin/fm-sessionstart-run.sh" "$ROOT/bin/fm-sessionstart-nudge.sh" \
-    "$ROOT/bin/fm-primary-scope-lib.sh" "$ROOT/bin/fm-gate-refuse-lib.sh" \
+    "$ROOT/bin/fm-primary-scope-lib.sh" "$ROOT/bin/backend/fm-gate-refuse-lib.sh" \
     "$ROOT/bin/fm-hook-host-lib.sh" \
-    "$ROOT/bin/fm-operational-input.sh" "$fixture/bin/"
-  cat > "$fixture/bin/fm-session-start.sh" <<'SH'
+    "$ROOT/bin/backend/fm-operational-input.sh" "$fixture/bin/"
+  cat > "$fixture/bin/backend/fm-session-start.sh" <<'SH'
 #!/usr/bin/env bash
 printf 'PI_LARGE_DIGEST_PREFIX\n'
 i=0

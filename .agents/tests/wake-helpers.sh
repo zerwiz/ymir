@@ -45,7 +45,7 @@ export FM_WEDGE_ALARM_EXEC="$_fm_wedge_rec_dir/rec"
 # append_wake <state> <kind> <key> <payload>: append a wake record to the durable
 # queue in a subshell scoped to <state>, using the production wake library.
 append_wake() {
-  local state=$1 kind=$2 key=$3 payload=$4 lib="$ROOT/bin/fm-wake-lib.sh"
+  local state=$1 kind=$2 key=$3 payload=$4 lib="$ROOT/bin/backend/fm-wake-lib.sh"
   FM_STATE_OVERRIDE="$state" bash -c '
     # shellcheck disable=SC1090,SC1091
     . "$1"
@@ -115,7 +115,7 @@ SH
 # safe default so a test that forgets to set one surfaces rather than absorbs.
 make_fake_crew_state() {  # <fakebin>
   local fakebin=$1
-  cat > "$fakebin/fm-crew-state.sh" <<'SH'
+  cat > "$fakebin/backend/fm-crew-state.sh" <<'SH'
 #!/usr/bin/env bash
 set -u
 id=${1:-}
@@ -125,8 +125,8 @@ val=${!var:-${FM_FAKE_CREW_STATE:-}}
 printf '%s\n' "${val:-state: unknown · source: none · fake default}"
 exit 0
 SH
-  chmod +x "$fakebin/fm-crew-state.sh"
-  printf '%s\n' "$fakebin/fm-crew-state.sh"
+  chmod +x "$fakebin/backend/fm-crew-state.sh"
+  printf '%s\n' "$fakebin/backend/fm-crew-state.sh"
 }
 
 # Prime <file>'s .seen-* marker to its CURRENT signature through the production
@@ -137,7 +137,7 @@ prime_status_seen() {  # <state> <file>
   FM_STATE_OVERRIDE="$1" bash -c '
     . "$1"
     fm_wake_status_mark_current "$2" "$3"
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$1" "$2"
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$1" "$2"
 }
 
 # Print the generation from a recovery marker token of any status/kind.
@@ -151,7 +151,7 @@ ack_drain_err() {  # <state> <stderr-file>
   sequence=$(sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' "$err")
   generation=$(sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' "$err")
   [ -n "$sequence" ] && [ -n "$generation" ] || return 1
-  FM_STATE_OVERRIDE="$state" "$ROOT/bin/fm-wake-drain.sh" \
+  FM_STATE_OVERRIDE="$state" "$ROOT/bin/backend/fm-wake-drain.sh" \
     --ack-through "$sequence" --recovery-generation "$generation"
 }
 

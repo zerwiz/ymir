@@ -6,8 +6,8 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-UNREGISTER="$ROOT/bin/fm-check-unregister.sh"
-REGISTER="$ROOT/bin/fm-check-register.sh"
+UNREGISTER="$ROOT/bin/backend/fm-check-unregister.sh"
+REGISTER="$ROOT/bin/backend/fm-check-register.sh"
 TMP_ROOT=$(fm_test_tmproot fm-check-unregister)
 REAL_RM=$(command -v rm)
 

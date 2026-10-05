@@ -231,7 +231,7 @@ doctor() {
     FM_FAKE_LAUNCH_AGENT_LOG="$CASE_HOME/Library/Logs/$LABEL.log" \
     FM_REMOTE_JOB_PLATFORM_OVERRIDE="${CASE_PLATFORM_OVERRIDE-}" \
     FM_REMOTE_JOB_ACTIVE="${CASE_REMOTE_JOB_ACTIVE-1}" \
-    "$ROOT/bin/fm-remote-doctor.sh" "$@" 2>&1
+    "$ROOT/bin/backend/fm-remote-doctor.sh" "$@" 2>&1
   )
   DOCTOR_RC=$?
   set -e
@@ -605,21 +605,21 @@ pass "doctor refreshes stale worker identity before probing tools"
 new_case Linux with-herdr no-gui
 REMOTE_ROOT="$CASE_DIR/remote-root"
 mkdir -p "$REMOTE_ROOT/bin"
-printf '#!/usr/bin/env bash\n' > "$REMOTE_ROOT/bin/fm-remote-entrypoint.sh"
+printf '#!/usr/bin/env bash\n' > "$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh"
 export FM_ROOT_OVERRIDE="$REMOTE_ROOT"
 doctor
 assert_contains "$DOCTOR_OUT" 'check entrypoint-link=fixable:' "a missing entrypoint symlink was not tagged fixable"
 doctor --fix
 assert_contains "$DOCTOR_OUT" 'fix entrypoint-link=applied:' "--fix did not report linking the entrypoint"
 assert_contains "$DOCTOR_OUT" 'check entrypoint-link=ok:' "the recreated entrypoint symlink was not confirmed"
-[ "$(readlink "$CASE_HOME/.local/bin/fm-remote-entrypoint.sh")" = "$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" ] \
+[ "$(readlink "$CASE_HOME/.local/bin/backend/fm-remote-entrypoint.sh")" = "$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" ] \
   || fail "the entrypoint symlink does not point at this code root"
 printf 'not a symlink\n' > "$CASE_HOME/.local/bin/other"
-rm -f "$CASE_HOME/.local/bin/fm-remote-entrypoint.sh"
-printf 'operator wrapper\n' > "$CASE_HOME/.local/bin/fm-remote-entrypoint.sh"
+rm -f "$CASE_HOME/.local/bin/backend/fm-remote-entrypoint.sh"
+printf 'operator wrapper\n' > "$CASE_HOME/.local/bin/backend/fm-remote-entrypoint.sh"
 doctor --fix
 assert_contains "$DOCTOR_OUT" 'check entrypoint-link=human:' "an operator-owned entrypoint file was not left to the operator"
-[ "$(cat "$CASE_HOME/.local/bin/fm-remote-entrypoint.sh")" = 'operator wrapper' ] \
+[ "$(cat "$CASE_HOME/.local/bin/backend/fm-remote-entrypoint.sh")" = 'operator wrapper' ] \
   || fail "--fix overwrote a file it did not create"
 unset FM_ROOT_OVERRIDE
 pass "the entrypoint symlink is recreated when absent and never overwritten when operator-owned"

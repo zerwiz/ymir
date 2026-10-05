@@ -34,8 +34,8 @@ if [ "$WHAT" != "web" ]; then
   for v in smidja odrerir; do
     "$ROOT/scripts/electron.sh" start --view "$v" || printf 'raise: %s failed\n' "$v" >&2
   done
-  if [ -x "$ROOT/bin/sessrumnir.sh" ]; then
-    "$ROOT/bin/sessrumnir.sh" start || printf 'raise: sessrumnir failed\n' >&2
+  if [ -x "$ROOT/bin/desktop/sessrumnir.sh" ]; then
+    "$ROOT/bin/desktop/sessrumnir.sh" start || printf 'raise: sessrumnir failed\n' >&2
   fi
   printf '\n'
   "$ROOT/scripts/electron.sh" status

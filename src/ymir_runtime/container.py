@@ -133,7 +133,7 @@ def plan(
                 supported=False,
                 refusal=(
                     f"isolation=utgard requires the Utgard image '{image}', which is absent — "
-                    "REFUSED, not downgraded. Remedy: build it (bin/utgard.sh build) or edit the "
+                    "REFUSED, not downgraded. Remedy: build it (bin/forge/utgard.sh build) or edit the "
                     "brief to 'Isolation: herdr — <why>'."
                 ),
             )

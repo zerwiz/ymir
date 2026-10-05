@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unit tests for bin/doc-sweep.sh — the shelf-sweeper (plan 63).
+# Unit tests for bin/gates/doc-sweep.sh — the shelf-sweeper (plan 63).
 #
 # Every fixture here is SYNTHETIC: a temp home, a temp documents root, names that
 # exist nowhere else. The sweeper's whole errand is moving private material, so a
@@ -17,7 +17,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SWEEP="$ROOT/bin/doc-sweep.sh"
+SWEEP="$ROOT/bin/gates/doc-sweep.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

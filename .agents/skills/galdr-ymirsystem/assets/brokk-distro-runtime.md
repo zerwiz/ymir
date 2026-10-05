@@ -59,9 +59,9 @@ Resolution order used by every script (all overridable):
 |---|---|
 | `AGENTS.md` | The always-loaded contract: mandate, naming, laws, routing |
 | `opencode.json` | `default_agent: "brokk"`, the `brokk` primary, subagent profiles, `skills.paths: [".agents/skills"]` |
-| `bin/` | Every runtime script (Sága, Sýn, Gná, Gleipnir, Nornir, Einherjar, Erindi, Vör, Rödd, Runes, Hamr) — and the engine's own doors (`bin/engine/ymir-engine.sh`, `bin/ymir-state.sh`) |
+| `bin/` | Every runtime script (Sága, Sýn, Gná, Gleipnir, Nornir, Einherjar, Erindi, Vör, Rödd, Runes, Hamr) — and the engine's own doors (`bin/engine/ymir-engine.sh`, `bin/records/ymir-state.sh`) |
 | `src/ymir_runtime/` | **THE ENGINE** — `seat · status · send · stop` behind one interface, with `worktree · harness · backend · container · heartbeat` below it, and the state crafts under `state/` (`lock` · `runes` · `envelope` · `queue`). A harness never reads it; only a `bin/` door calls it |
-| `src/ymir_runtime/state/` | **THE STATE** (plan 58's `state/` shape) — `lock.py` (Gleipnir) · `runes.py` · `envelope.py` · `queue.py`, with `bin/ymir-state.sh` as their door. `bin/gleipnir-lock-lib.sh`, `bin/records/runes-append.sh`, and the wake-queue primitives in `bin/time/brokk-wake-lib.sh` are THIN SHIMS over them; parity is the proof |
+| `src/ymir_runtime/state/` | **THE STATE** (plan 58's `state/` shape) — `lock.py` (Gleipnir) · `runes.py` · `envelope.py` · `queue.py`, with `bin/records/ymir-state.sh` as their door. `bin/vault/gleipnir-lock-lib.sh`, `bin/records/runes-append.sh`, and the wake-queue primitives in `bin/time/brokk-wake-lib.sh` are THIN SHIMS over them; parity is the proof |
 | `tests/` | Unit tests BESIDE the modules (`src/ymir_runtime/tests/`, reached by a bare `python3 -m unittest` from the root) and the e2e proofs (`tests/e2e/engine-proof.sh`) |
 | `.agents/` | Skills (`skills/`), Eindri profiles (`subagents/`), sandbox (`sandbox/Dockerfile.utgard`), tools, bus |
 | `.pi/extensions/` | `syn-turnend-guard.ts` (Sýn), `gna-pi-watch.ts` (Gná), `lib/vordr-sessionstart-supervisor.mjs` (Vörðr), `lib/rodd-operational-input.ts` (Rödd) |
@@ -84,7 +84,7 @@ Resolution order used by every script (all overridable):
 | `data/backlog.md` | pointer to `docs/masterplan.md` open orders | never replaces the masterplan |
 | `data/<id>/brief.md` | the Erindi brief handed to an Eindri | fixed `Delivery contract: mode=<mode>` line |
 | `data/<id>/report.md` | a scout Eindri's deliverable | report only, no branch/PR |
-| `state/.lock` | Gleipnir session lock (bare pid) | written by `bin/gleipnir-lock-lib.sh`, the shim over `src/ymir_runtime/state/lock.py` |
+| `state/.lock` | Gleipnir session lock (bare pid) | written by `bin/vault/gleipnir-lock-lib.sh`, the shim over `src/ymir_runtime/state/lock.py` |
 | `state/<id>.meta` | task metadata (harness, model, worktree, backend…) | authoritative task record |
 | `state/<id>.status` | append-only best-effort event log | last line = last event, not current state |
 | `state/<id>.inbox/` | Brokk→Eindri steering message files | `mv NNN.msg handled/` is the ack |
@@ -92,7 +92,7 @@ Resolution order used by every script (all overridable):
 | `state/.cron-fired/`, `state/.cron-locks/` | once-a-day date guards + per-job flock | chronological edge protection |
 | `state/.wake-queue` | durable Sága wakes | drained, stay until acknowledged; the TSV `<epoch>\t<seq>\t<kind>\t<key>\t<payload>` line is written by `src/ymir_runtime/state/queue.py` through the `bin/time/brokk-wake-lib.sh` shim |
 | `state/.supervision-armed`, `state/.watch.heartbeat` | Sýn arm marker + liveness | guard is inert until the first arm; the arm is a SERVICE (plan 58 Phase 2) and keeps both written whether or not a session is seated |
-| `state/.arm.lease`, `state/.arm.event`, `state/.arm.wake` | the arm's lease, its delivery slot, its append-only journal | `pid=<pid> starttime=<st> gen=<n> mode=<systemd\|daemon> session=<pid\|none> heartbeat=<epoch> state=<dir>`; `bin/syn-watch.sh status` and Eir's `arm` surface read the lease, `bin/syn-watch-arm.sh` carries the event out |
+| `state/.arm.lease`, `state/.arm.event`, `state/.arm.wake` | the arm's lease, its delivery slot, its append-only journal | `pid=<pid> starttime=<st> gen=<n> mode=<systemd\|daemon> session=<pid\|none> heartbeat=<epoch> state=<dir>`; `bin/pi/syn-watch.sh status` and Eir's `arm` surface read the lease, `bin/pi/syn-watch-arm.sh` carries the event out |
 | `state/.lock-path` | resolved session-lock path | pointer the harness extensions read; written by `gleipnir_lock_acquire`. The lock is machine-local but the pointer lives in the synced home, so a pointer outside the current user's home is stale: both harness readers validate it and heal it (2026-09-23) |
 | `state/backups/` | Muninn memory snapshots | written before any prune |
 | `state/observer.log`, `state/observer.last` | Huginn observation output | read-only bridge |
@@ -104,16 +104,16 @@ Resolution order used by every script (all overridable):
 
 | # | Stage | What it emits | Source / helper |
 |---|---|---|---|
-| 1 | **LOCK** | `session lock held (pid N)` or `READ-ONLY: session lock held by pid N - no spawn, steer, merge, drain, or repair this session` | `bin/gleipnir-lock-lib.sh` → machine-global `brokk.lock` for the primary, per-home `state/.lock` for an Eindri-home |
+| 1 | **LOCK** | `session lock held (pid N)` or `READ-ONLY: session lock held by pid N - no spawn, steer, merge, drain, or repair this session` | `bin/vault/gleipnir-lock-lib.sh` → machine-global `brokk.lock` for the primary, per-home `state/.lock` for an Eindri-home |
 | 2 | **BOOTSTRAP** | `tool floors OK` or `MISSING: …`; `realm env: present` or `realm env: ABSENT (svartalfaheim/<realm>/.env.realm)` | checks `git bash node`; checks `.env.realm` in `$BROKK_HOME` then `$ROOT` |
 | 3 | **WAKE QUEUE** | `wake queue: N pending`, each `WAKE <record>`, `WAKE_ACK_REQUIRED`, `open decisions: N` | `bin/agents/eindri-handoff.sh sweep` (the failsafe — sweeps undelivered reports/questions into the queue) **then** `bin/time/saga-wake-drain.sh` → `state/.wake-queue`, `state/*.decision` |
-| 4 | **SUPERVISION** | one operating block: `harness next step: arm supervision via the installed harness adapter; never run bin/syn-watch-arm.sh by hand.` | Sýn/Gná per-harness protocols |
-| 4b | **UPDATE** | `current — no newer Ymir on npm`, or the newer version with its remedy (`npm i -g @zerwiz/ymir`, then `ymir groa`) | `bin/ymir-update-check.sh` — one cached lookup a day; silent with no network; **exit 3** when a newer version stands |
+| 4 | **SUPERVISION** | one operating block: `harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.` | Sýn/Gná per-harness protocols |
+| 4b | **UPDATE** | `current — no newer Ymir on npm`, or the newer version with its remedy (`npm i -g @zerwiz/ymir`, then `ymir groa`) | `bin/gates/checks/ymir-update-check.sh` — one cached lookup a day; silent with no network; **exit 3** when a newer version stands |
 | 5 | **FLEET DIGEST** | `task metadata records: N` (count of `state/*.meta`) and `open forge orders: N` (`grep -c '^- Status: ADDED' docs/masterplan.md`) | `state/*.meta`, `docs/masterplan.md` |
 | 6 | **CONTEXT DIGEST** | `--- realm ---`, then `data/operator.md`, `data/projects.md`, `data/learnings.md`, each delimited; `ABSENT: <path>` when missing | **`$YMIR_HOME/hodd/data/`** via `bin/vault/hoard-lib.sh` (`BROKK_DATA_OVERRIDE` wins) — never `$BROKK_HOME/data`, the code tree, which no operator record has ever occupied |
-| 6b | **TODAY** | the day's work, appended blocks under each actor | `bin/daily-log.sh today` → `$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md` |
+| 6b | **TODAY** | the day's work, appended blocks under each actor | `bin/records/daily-log.sh today` → `$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md` |
 | 7 | **CRON START** | `cron: running pid=N jobs=M` or `cron: started …` / `cron: no jobs configured …` | `bin/time/nornir-cron-start.sh` (idempotent) |
-| 7b | **TOOL SURFACE** | the Allfather's own handles: `/edit <path>`, `bin/ymir-say.sh`, `bin/omarchy-plugins.sh`, `bin/seat/herdr-run.sh` | inline |
+| 7b | **TOOL SURFACE** | the Allfather's own handles: `/edit <path>`, `bin/time/snotra/ymir-say.sh`, `bin/host/omarchy-plugins.sh`, `bin/seat/herdr-run.sh` | inline |
 | 8 | **NEXT STEP** | `Ascend Hlidskjalf as Brokk. Address the Allfather. Read once; act.` | closing pointer |
 
 **Read-once contract.** The digest is this turn's startup and recovery input. Brokk must **not** re-read the context/backlog/status it just printed unless a source was reported `ABSENT` or corrupt.
@@ -146,7 +146,7 @@ the well extension's `session_start` probe finds it up even on a re-emit or nudg
 | Cursor | `.cursor/hooks.json` | `sessionStart` captures digest and returns `{additional_context}`; `stop` returns `{followup_message}` on guard exit 2; `preToolUse` runs seatbelts | interactive only |
 | Grok / Kimi | not yet ported (see `.claude/settings.json` guards `${GROK_AGENT}`/`${GROK_HOOK_EVENT}` to avoid double-fire) | — | — |
 
-`bin/hamr-harness.sh` (Hamr) detects the harness this process tree wears, in two layers: verified environment markers first (`CURSOR_AGENT=1`, `CURSOR_INVOKED_AS=cursor-agent`, `CLAUDECODE=1`, `PI_CODING_AGENT=true`, `GROK_AGENT=1`), then an 8-hop process-ancestry walk. It prints `claude|codex|opencode|pi|pi-signed|grok|kimi|cursor|unknown`. Subcommands: `eindri`, `eindri-model`, `eindri-effort` resolve the configured Eindri harness/model/effort from `config/eindri-harness` (format `<harness> [<model>] [<effort>]`; `default`/absent resolves to own).
+`bin/fleet/hamr-harness.sh` (Hamr) detects the harness this process tree wears, in two layers: verified environment markers first (`CURSOR_AGENT=1`, `CURSOR_INVOKED_AS=cursor-agent`, `CLAUDECODE=1`, `PI_CODING_AGENT=true`, `GROK_AGENT=1`), then an 8-hop process-ancestry walk. It prints `claude|codex|opencode|pi|pi-signed|grok|kimi|cursor|unknown`. Subcommands: `eindri`, `eindri-model`, `eindri-effort` resolve the configured Eindri harness/model/effort from `config/eindri-harness` (format `<harness> [<model>] [<effort>]`; `default`/absent resolves to own).
 
 Dispatch is **fail-closed**: `bin/agents/einherjar-spawn.sh` refuses any harness outside the verified set `opencode pi pi-signed` unless a raw launch command (a `--harness` value containing whitespace) is supplied as the deliberate escape hatch.
 
@@ -155,7 +155,7 @@ Dispatch is **fail-closed**: `bin/agents/einherjar-spawn.sh` refuses any harness
 Gleipnir is the impossible chain that binds one live Brokk session per home so a second session cannot mutate shared state.
 
 - **File:** `state/.lock` (a bare PID) for an Eindri-home, machine-global `brokk.lock` for the primary — the pointer `state/.lock-path` is read by the Pi extensions.
-- **Library:** `bin/gleipnir-lock-lib.sh` (source-safe) is a **thin shim** over `src/ymir_runtime/state/lock.py` through `bin/ymir-state.sh`; the shell keeps its names (`gleipnir_lock_acquire`, `gleipnir_lock_release`, `gleipnir_lock_owner`, `gleipnir_lock_owned`, `gleipnir_pid_alive`, `gleipnir_lock_path`, `gleipnir_state_dir`, `gleipnir_root`) and the Python module owns the correctness. Verified by parity: the lock cycle through the shim is byte-identical to the shell it replaced, and the live readers resolve the same path, owner, and starttime.
+- **Library:** `bin/vault/gleipnir-lock-lib.sh` (source-safe) is a **thin shim** over `src/ymir_runtime/state/lock.py` through `bin/records/ymir-state.sh`; the shell keeps its names (`gleipnir_lock_acquire`, `gleipnir_lock_release`, `gleipnir_lock_owner`, `gleipnir_lock_owned`, `gleipnir_pid_alive`, `gleipnir_lock_path`, `gleipnir_state_dir`, `gleipnir_root`) and the Python module owns the correctness. Verified by parity: the lock cycle through the shim is byte-identical to the shell it replaced, and the live readers resolve the same path, owner, and starttime.
 - **Critical invariant:** the lock must bind to the **live harness process**, not the short-lived digest helper. Harnesses pass `BROKK_SESSION_PID`; when it is absent, `gleipnir_session_pid` walks the ancestry (up to 8 levels) for the harness itself (`pi`, `opencode`, `claude`, `cursor`, `codex`, `grok`, `kimi`, `muse`, `hermes`) and binds to that — only a run with no harness ancestor falls back to `$$`.
 - **Why the walk matters:** running `bin/time/saga-session-start.sh` **manually** leaves `BROKK_SESSION_PID` unset. Writing `$$` recorded the digest helper's pid, which is dead a second later — an orphan lock that reads as "no live session" and silently blocks supervision from arming. The ancestry walk is the fix; a helper's pid is never authoritative.
 - `gleipnir_lock_owned` walks up to 8 ancestry levels so a helper can prove the session owns the lock.
@@ -169,17 +169,17 @@ Supervision is **event-driven and zero-token**: no polling by the model, no baby
 
 | Piece | Figure | Owns | Files |
 |---|---|---|---|
-| The arm (the watch loop) | **Sýn** | one standing arm per home: polls the state dir, raises `signal:`/`stale:`/`check:`/`heartbeat:` when the primary is needed, and IDLES (never retires) when no session is seated | `bin/syn-watch.sh` (thin door; `run` is the loop), `src/ymir_runtime/watch.py` (the behaviour), `tools/mill/systemd/ymir-syn-watch.service` |
-| The thin client | **Sýn** | enters a vacant helm, seats/attaches to the arm, relays the raised line, exits | `bin/syn-watch-arm.sh` |
-| Turn-boundary guard | **Sýn** | refuses a blind turn end when supervision is off | `bin/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-turnend-guard.js` |
+| The arm (the watch loop) | **Sýn** | one standing arm per home: polls the state dir, raises `signal:`/`stale:`/`check:`/`heartbeat:` when the primary is needed, and IDLES (never retires) when no session is seated | `bin/pi/syn-watch.sh` (thin door; `run` is the loop), `src/ymir_runtime/watch.py` (the behaviour), `tools/mill/systemd/ymir-syn-watch.service` |
+| The thin client | **Sýn** | enters a vacant helm, seats/attaches to the arm, relays the raised line, exits | `bin/pi/syn-watch-arm.sh` |
+| Turn-boundary guard | **Sýn** | refuses a blind turn end when supervision is off | `bin/gates/guards/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-turnend-guard.js` |
 | Continuity messenger | **Gná** | arms, re-arms, delivers actionable wakes to the Pi session | `.pi/extensions/gna-pi-watch.ts` |
 | Digest child warden | **Vörðr** | supervises the Sága digest child so Pi can stream and cap its output | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` |
 
 Mechanics:
 
-- **The arm is a SERVICE (plan 58, Phase 2 — 2026-09-27), and its BEHAVIOUR is the ENGINE's (plan 58, Phase 5 — 2026-09-27).** The loop is `bin/syn-watch.sh run`, seated once per home by `ymir-syn-watch.service` (`systemd --user`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; materialized by `bin/fleet-ensure.sh`, program `syn-watch`, roles heart+dev) or, where the one unit does not serve a state (a seat's private state, a probe), by a detached daemon. The lease, the heartbeat, the `up`/`idle`/`stale`/`down` verdict, the raise grammar, and the wake-queue flood brake live in `src/ymir_runtime/watch.py`; `bin/syn-watch.sh` is only the interpreter and the argv, and defines nothing that could drift (it `exec`s `bin/engine/ymir-engine.sh watch`). `bin/syn-watch-arm.sh` is the arm's **thin client**: it runs `gleipnir_lock_acquire` on a vacant helm, attaches to the arm for this home, writes nothing itself, and exits on a `signal:`/`stale:`/`check:`/`heartbeat:` line. The arm writes `state/.supervision-armed`, touches `state/.watch.heartbeat` and its lease every cycle, and **keeps standing when the session's lock owner dies** — a session-owned arm that dies with its session is exactly the fault this replaced (it flapped through 2026-09-27 and needed three hand re-arms). `bin/syn-watch.sh status` reports `up` · `idle` · `stale` · `down` and exits non-zero on a gap; Eir's `arm` surface composes it; `BROKK_WATCH_INLINE=1` keeps the loop in the client for a probe, and an explicit `BROKK_STATE_OVERRIDE` gets its own detached daemon rather than commandeering the machine's unit.
-- `bin/syn-turnend-guard.sh` is **inert until the first successful arm** (it returns 0 unless `state/.supervision-armed` exists). When armed, if the heartbeat is missing or older than `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60), it prints the recovery instruction and exits 2 so the adapter re-prompts.
-- **Do not arm before the first successful arm** and **never run `bin/syn-watch-arm.sh` by hand** — the Pi/OpenCode extensions own continuity (arming THIS client, whose watch stands on its own). The PreToolUse seatbelts exist so the extension can deny a bash command that violates an invariant: `bin/syn-arm-pretool-check.sh` blocks backgrounding/detaching the arm (a real `&` or nohup/setsid/disown; `&&` chaining and `bash -n` are allowed), and `bin/syn-guard-pretool-check.sh` blocks destructive shapes against the session lock, the supervision markers, the append-only Runes ledger, the guard/extension machinery itself, secrets, and the fleet-steering registries. They are best-effort guardrails, not a security boundary.
+- **The arm is a SERVICE (plan 58, Phase 2 — 2026-09-27), and its BEHAVIOUR is the ENGINE's (plan 58, Phase 5 — 2026-09-27).** The loop is `bin/pi/syn-watch.sh run`, seated once per home by `ymir-syn-watch.service` (`systemd --user`, `Restart=always` + `StartLimitIntervalSec=60`/`StartLimitBurst=10`, `WantedBy=ymir.target`; materialized by `bin/fleet/fleet-ensure.sh`, program `syn-watch`, roles heart+dev) or, where the one unit does not serve a state (a seat's private state, a probe), by a detached daemon. The lease, the heartbeat, the `up`/`idle`/`stale`/`down` verdict, the raise grammar, and the wake-queue flood brake live in `src/ymir_runtime/watch.py`; `bin/pi/syn-watch.sh` is only the interpreter and the argv, and defines nothing that could drift (it `exec`s `bin/engine/ymir-engine.sh watch`). `bin/pi/syn-watch-arm.sh` is the arm's **thin client**: it runs `gleipnir_lock_acquire` on a vacant helm, attaches to the arm for this home, writes nothing itself, and exits on a `signal:`/`stale:`/`check:`/`heartbeat:` line. The arm writes `state/.supervision-armed`, touches `state/.watch.heartbeat` and its lease every cycle, and **keeps standing when the session's lock owner dies** — a session-owned arm that dies with its session is exactly the fault this replaced (it flapped through 2026-09-27 and needed three hand re-arms). `bin/pi/syn-watch.sh status` reports `up` · `idle` · `stale` · `down` and exits non-zero on a gap; Eir's `arm` surface composes it; `BROKK_WATCH_INLINE=1` keeps the loop in the client for a probe, and an explicit `BROKK_STATE_OVERRIDE` gets its own detached daemon rather than commandeering the machine's unit.
+- `bin/gates/guards/syn-turnend-guard.sh` is **inert until the first successful arm** (it returns 0 unless `state/.supervision-armed` exists). When armed, if the heartbeat is missing or older than `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60), it prints the recovery instruction and exits 2 so the adapter re-prompts.
+- **Do not arm before the first successful arm** and **never run `bin/pi/syn-watch-arm.sh` by hand** — the Pi/OpenCode extensions own continuity (arming THIS client, whose watch stands on its own). The PreToolUse seatbelts exist so the extension can deny a bash command that violates an invariant: `bin/gates/checks/syn-arm-pretool-check.sh` blocks backgrounding/detaching the arm (a real `&` or nohup/setsid/disown; `&&` chaining and `bash -n` are allowed), and `bin/gates/checks/syn-guard-pretool-check.sh` blocks destructive shapes against the session lock, the supervision markers, the append-only Runes ledger, the guard/extension machinery itself, secrets, and the fleet-steering registries. They are best-effort guardrails, not a security boundary.
 - **Proofs:** `tests/e2e/arm-service-proof.sh [proof|systemd]` (the plan's gate, live: idle with no session, kill → returns, heartbeat fresh, `status` non-zero on an induced gap, Eir names it) and `.agents/tests/syn-watch-arm-silent-exit.test.sh` (the flood brake + the client relay).
 - **Calm presentation** and the **Pi supervision branch** were deliberately dropped from the port; they are deferred (see `porting-upstream-to-norse.md` §6).
 
@@ -187,7 +187,7 @@ Mechanics:
 
 Nornir are the fates who govern time. `bin/time/nornir-cron-start.sh` keeps exactly **one** lightweight scheduler loop alive (idempotent), started by Sága stage 7 at every session start.
 
-- **Schedule:** `config/cron.yaml`, one `HH:MM <command>` per line, `#` comments, with an optional **role gate**: `@heart[,role] HH:MM <cmd>` or `HH:MM @heart <cmd>`. Both orders parse (the 2026-09-24 fault: only the after-time shape matched, so every role-first line silently never ran). The scheduler runs only the jobs this machine's roles own, resolved from `bin/topology.sh` / `$YMIR_HOME/hodd/data/fleet.json` — record jobs ride the heart, model/bench jobs ride the forge, a dev body runs only its session jobs.
+- **Schedule:** `config/cron.yaml`, one `HH:MM <command>` per line, `#` comments, with an optional **role gate**: `@heart[,role] HH:MM <cmd>` or `HH:MM @heart <cmd>`. Both orders parse (the 2026-09-24 fault: only the after-time shape matched, so every role-first line silently never ran). The scheduler runs only the jobs this machine's roles own, resolved from `bin/fleet/topology.sh` / `$YMIR_HOME/hodd/data/fleet.json` — record jobs ride the heart, model/bench jobs ride the forge, a dev body runs only its session jobs.
 - **PID/log:** `state/cron.pid`, `state/cron.log` (rotates at `BROKK_CRON_LOG_MAX_BYTES`, default 1 MiB).
 - **Once-a-day guard:** `state/.cron-fired/<key>` stores the date; the loop matches `HH:MM` once per day so a job cannot double-run in the same minute or across a loop restart.
 - **No overlap:** each job runs under a per-job `flock` in `state/.cron-locks/`; a busy job is skipped with `cron skip (busy)`.
@@ -210,12 +210,12 @@ All jobs are **stateless spawns**: fresh process → inject directives → execu
 
 A machine's **role** is ONE fact, declared once, and read by every surface that
 would otherwise install, boot, schedule, or route wrongly. It is captured at
-install time, before the step chain runs, by `bin/role-lib.sh` `establish_roles`:
+install time, before the step chain runs, by `bin/skuld/role-lib.sh` `establish_roles`:
 
 ```
 role_resolution[4]{source,when}:
   "--role <r> | $YMIR_ROLE","the operator names it for this run; an unknown name is refused (exit 2)"
-  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/role.sh)"
+  "the fleet registry","$YMIR_HOME/hodd/data/fleet.json, read by hostname (bin/skuld/role.sh)"
   "the machine card","the host's own row in hodd/data/machines.md"
   "ask -> the safe body","asked interactively; a run that cannot ask takes `dev` (owns no record) and says so"
 ```
@@ -233,10 +233,10 @@ role_components[4]{role,components}:
 
 Three surfaces derive from it, and no surface re-decides it:
 
-- **install** — `bin/ymir-install.sh` `role_gate`s each role-owned step; a
+- **install** — `bin/engine/ymir-install.sh` `role_gate`s each role-owned step; a
   component this machine's roles do not own is a `SKIP` naming the owning role.
-- **boot** — `bin/ymir-autoboot.sh` holds the ONE role→program table, shared with
-  `bin/fleet-ensure.sh`.
+- **boot** — `bin/engine/ymir-autoboot.sh` holds the ONE role→program table, shared with
+  `bin/fleet/fleet-ensure.sh`.
 - **cron** — `config/cron.yaml` lines carry `@<role>[,<role>]`; a dev body runs no
   `@heart` job.
 
@@ -251,7 +251,7 @@ part.
 |---|---|---|---|
 | Write the errand | **Erindi** | `bin/agents/erindi-brief.sh <id> <repo> --mode <…>` | `data/<id>/brief.md` |
 | Gather + launch the worker | **Einherjar** | `bin/agents/einherjar-spawn.sh <id> <project> --mode <…>` | Yggdrasil worktree + backend pane + `state/<id>.meta` |
-| Read the worker's true state | **Vör** | `bin/vor-crew-state.sh <id>` | one line: `state: <…> · source: <backend|status-log|none> · <detail>` |
+| Read the worker's true state | **Vör** | `bin/records/vor-crew-state.sh <id>` | one line: `state: <…> · source: <backend|status-log|none> · <detail>` |
 | Judge the PR (automatic) | **Forseti** | `bin/agents/eindri-review-spawn.sh <id>` | a scout-kind `<id>-review` errand + the verdict shelf |
 
 **Delivery contract.** A ship brief carries a fixed machine-readable line `Delivery contract: mode=<mode>`; `bin/agents/einherjar-spawn.sh` refuses to launch a ship task whose explicit `--mode` disagrees, so an adjusted brief and the recorded task cannot drift. A scout brief carries `Delivery contract: mode=scout` and delivers `data/<id>/report.md` (no branch, no push, no PR).
@@ -272,7 +272,7 @@ part.
 
 **Backends.** `tmux` (verified reference) or `herdr` (Þjazi protocol 14+). `config/backend` / `BROKK_BACKEND` / `TMUX` / `HERDR_ENV=1` select it. Spawn prints one line: `spawned <id> harness=<h> kind=<ship|scout> [mode=<m> yolo=<y>] backend=<b> target=<t> worktree=<wt> isolation=<on|off>`.
 
-**Dispatch profiles.** `config/eindri-dispatch.json` holds natural-language rules choosing a per-task harness/model/effort. A profile is ACTIVE only when it parses, carries no unfilled `<...>` model tokens, and every rule's model is servable on THIS machine (`bin/dispatch-profile.sh active|validate`); the `$YMIR_HOME/hodd/config/eindri-dispatch.json` override wins when present. Install derives a real profile from the machine. When a profile is ACTIVE, `bin/agents/einherjar-spawn.sh` requires an explicit `--harness`/`--model` resolved from those rules (consultation backstop, so profiles are never silently skipped); with no active profile the spawn resolves harness/model FROM THE MACHINE (explicit flags → `bin/model-resolve.sh` → `config/agents.yaml` → the fleet law: local → pi, hosted → opencode, provenance printed and recorded) and never from a repo template. Verified harnesses: `opencode pi pi-signed`; effort values are `low|medium|high|xhigh|max`.
+**Dispatch profiles.** `config/eindri-dispatch.json` holds natural-language rules choosing a per-task harness/model/effort. A profile is ACTIVE only when it parses, carries no unfilled `<...>` model tokens, and every rule's model is servable on THIS machine (`bin/fleet/dispatch-profile.sh active|validate`); the `$YMIR_HOME/hodd/config/eindri-dispatch.json` override wins when present. Install derives a real profile from the machine. When a profile is ACTIVE, `bin/agents/einherjar-spawn.sh` requires an explicit `--harness`/`--model` resolved from those rules (consultation backstop, so profiles are never silently skipped); with no active profile the spawn resolves harness/model FROM THE MACHINE (explicit flags → `bin/model/model-resolve.sh` → `config/agents.yaml` → the fleet law: local → pi, hosted → opencode, provenance printed and recorded) and never from a repo template. Verified harnesses: `opencode pi pi-signed`; effort values are `low|medium|high|xhigh|max`.
 
 ### 7.1 The engine — the road itself, with one interface (2026-09-27)
 
@@ -321,7 +321,7 @@ now the engine's — see 7.4.
 (`$HOME/.fleet/ymir-engine-venv`) at first use when `src/pyproject.toml` declares
 dependencies. Since Phase 7 it declares `jsonschema` + `PyYAML` for the config
 layer, so the venv is built and both `bin/engine/ymir-engine.sh` and
-`bin/ymir-config-check.sh` prefer it; nothing is ever committed (the venv's
+`bin/gates/checks/ymir-config-check.sh` prefer it; nothing is ever committed (the venv's
 `*.egg-info/` is ignored). `bin/engine/ymir-engine.sh` sets `YMIR_ENGINE_ROOT`
 so the engine knows the CODE tree it came from — which is not always what
 `BROKK_HOME` points at (a caller may point the home at a project so its worktrees
@@ -329,7 +329,7 @@ land there).
 
 ### 7.2 One library, two names — the port twins collapsed (plan 58, Phase 5)
 
-The port was **duplicated, not adapted**: `bin/brokk-classify-lib.sh` 1770 =
+The port was **duplicated, not adapted**: `bin/agents/brokk-classify-lib.sh` 1770 =
 `.agents/backend/fm-classify-lib.sh` 1770, and three siblings, drifting apart by
 hand (classify 262 diff-lines, wake 384, lease 110, wake-grant 24). The collapse
 keeps the **native side as the one implementation** and turns the vendored name
@@ -338,10 +338,10 @@ or one alias table" shape:
 
 ```
 one_library[5]{native,adapter,why_native_wins}
-  "bin/brokk-classify-lib.sh",".agents/backend/fm-classify-lib.sh","the native verbs are Allfather-named and the vendored default crew-state door was missing"
-  "bin/time/brokk-wake-lib.sh",".agents/backend/fm-wake-lib.sh","the native stall markers are eindri-home-named and it calls bin/hamr-harness.sh"
-  "bin/brokk-lease-lib.sh",".agents/backend/fm-lease-lib.sh","the native lib carries the resolved state/.lock-path read (Phase 0)"
-  "bin/brokk-timeout-lib.sh",".agents/backend/fm-timeout-lib.sh","the native file is the one that actually exists; the vendored classify sourced a missing bin/brokk-timeout-lib.sh"
+  "bin/agents/brokk-classify-lib.sh",".agents/backend/fm-classify-lib.sh","the native verbs are Allfather-named and the vendored default crew-state door was missing"
+  "bin/time/brokk-wake-lib.sh",".agents/backend/fm-wake-lib.sh","the native stall markers are eindri-home-named and it calls bin/fleet/hamr-harness.sh"
+  "bin/agents/brokk-lease-lib.sh",".agents/backend/fm-lease-lib.sh","the native lib carries the resolved state/.lock-path read (Phase 0)"
+  "bin/agents/brokk-timeout-lib.sh",".agents/backend/fm-timeout-lib.sh","the native file is the one that actually exists; the vendored classify sourced a missing bin/agents/brokk-timeout-lib.sh"
   "bin/time/brokk-wake-grant.sh",".agents/backend/fm-wake-grant.sh","the native door writes brokk-branch-eligible-owner-v1, the marker the Pi branch extension reads"
 ```
 
@@ -369,11 +369,11 @@ refused, never returned unvalidated. `load_config(path)` is the one entry
 
 ```
 kinds[5]{kind,schema,readers}
-  "agents.yaml","agents.schema.json","bin/agents-config.sh · bin/dispatch-profile.sh · bin/local-model-lock.sh · bin/agents/einherjar-spawn.sh"
-  "cron.yaml","cron.schema.json","bin/time/nornir-cron-start.sh · bin/hall-snapshot.sh"
-  "fleet.json","fleet.schema.json","bin/topology.sh · bin/agents/eindri-route.sh · bin/bridge/mcp-gateway.sh · bin/model-placement.sh · bin/rail-resolve.sh"
-  "eindri-dispatch.json","eindri-dispatch.schema.json","bin/dispatch-profile.sh"
-  "grants.yaml","grants.schema.json","src/ymir_runtime/grants.py · bin/ymir-config-check.sh"
+  "agents.yaml","agents.schema.json","bin/fleet/agents-config.sh · bin/fleet/dispatch-profile.sh · bin/model/local-model-lock.sh · bin/agents/einherjar-spawn.sh"
+  "cron.yaml","cron.schema.json","bin/time/nornir-cron-start.sh · bin/time/snotra/hall-snapshot.sh"
+  "fleet.json","fleet.schema.json","bin/fleet/topology.sh · bin/agents/eindri-route.sh · bin/bridge/mcp-gateway.sh · bin/model/model-placement.sh · bin/model/rail-resolve.sh"
+  "eindri-dispatch.json","eindri-dispatch.schema.json","bin/fleet/dispatch-profile.sh"
+  "grants.yaml","grants.schema.json","src/ymir_runtime/grants.py · bin/gates/checks/ymir-config-check.sh"
 ```
 
 Three invariants JSON Schema cannot state are semantic checks in `load.py`: an agent
@@ -382,7 +382,7 @@ name must be a rostered figure (`.agents/agents/` is canonical), the fleet
 refused when the host is known — and every grant must obey the realm law (see
 §7.4).
 
-The door `bin/ymir-config-check.sh [examples|validate <file>…|kinds]` picks the
+The door `bin/gates/checks/ymir-config-check.sh [examples|validate <file>…|kinds]` picks the
 engine venv, prints TOON, and exits **0** every config valid · **1** a config
 refused · **2** usage · **3** the validator is missing. The engine's own module CLI
 is `python3 -m ymir_runtime.config`, so the four-verb interface is unbroken; the
@@ -419,7 +419,7 @@ and validator travel with the code. A machine with no registry has no grants.
 
 The door is `python3 -m ymir_runtime.grants [check|signers|default]`; the config
 door reaches the same check as
-`bin/ymir-config-check.sh validate <grants.yaml>`. Proven offline by
+`bin/gates/checks/ymir-config-check.sh validate <grants.yaml>`. Proven offline by
 `tests/e2e/several-ymirs-foundation-proof.sh`.
 
 ### 7.5 The namespace-scoped journal (plan 58, Several Ymirs)
@@ -443,7 +443,7 @@ model → seat: Python + YAML; a decision table belongs in data, not in a
 ```
 dispatch[4]{module,owns}
   "table.py","`.agents/roles.yaml` (canonical, shipped by #223): role → figure · craft · tools · keywords · dispatch. Declares no role; an unrostered figure or a table claiming `model_from` other than `hoard` is a loud refusal"
-  "registry.py","the hoard's model, read at runtime from `$YMIR_HOME/config/agents.yaml` (schema-validated by the config layer); a human model REQUEST is resolved by `bin/model-resolve.sh` and its TOON is read back — never re-implemented"
+  "registry.py","the hoard's model, read at runtime from `$YMIR_HOME/config/agents.yaml` (schema-validated by the config layer); a human model REQUEST is resolved by `bin/model/model-resolve.sh` and its TOON is read back — never re-implemented"
   "resolve.py","one errand → one `Resolution` (role · figure · craft · tools · model · harness · effort · seat · kind, with provenance)"
   "__main__.py","`python3 -m ymir_runtime.dispatch [resolve|roles|choose|request]` — the layer's own door face"
 ```
@@ -469,7 +469,7 @@ role/figure lists every name the table knows; an absent hoard config names
 tree — two hoard YAMLs resolve two different models with the tree untouched.
 
 **What stays with the shell doors.** `bin/agents/eindri-role.sh` (the chooser) and
-`bin/model-resolve.sh` (the model-request loop) remain the doors the shell
+`bin/model/model-resolve.sh` (the model-request loop) remain the doors the shell
 surface uses; the Python layer reads the same data and calls the same resolver,
 so neither is forked. `bin/agents/eindri-role.sh` may become a thin adapter over this
 layer in a later pass (the strangler), as the config layer's doors did not need to.
@@ -482,16 +482,16 @@ is a thin shim. The Python owns the rule; the shell owns its name and its line.
 
 ```
 state[4]{module,owns,shim}
-  "lock.py","Gleipnir: state-dir · lock-path · owner · pid-alive · reap · acquire · release, with the harness-ancestry session pid and the /proc starttime that makes pid reuse read as death","bin/gleipnir-lock-lib.sh"
+  "lock.py","Gleipnir: state-dir · lock-path · owner · pid-alive · reap · acquire · release, with the harness-ancestry session pid and the /proc starttime that makes pid reuse read as death","bin/vault/gleipnir-lock-lib.sh"
   "runes.py","the append-only chained ledger: head · escape · fold (prev + \\n + base) · flock · append; never rewrites, never truncates","bin/records/runes-append.sh"
   "envelope.py","the durable wrapper state files travel in: kind · id · created · payload, encoded as key=value meta or one JSON object, written atomically (temp + os.replace)","—"
   "queue.py","the durable wake queue: the TSV <epoch>\\t<seq>\\t<kind>\\t<key>\\t<payload> line, cleaned fields, the seq file, one O_APPEND write","bin/time/brokk-wake-lib.sh (fm_wake_append · fm_wake_queued_keys_locked)"
 ```
 
-The door is `bin/ymir-state.sh` (picks the interpreter, sets `PYTHONPATH` to the
+The door is `bin/records/ymir-state.sh` (picks the interpreter, sets `PYTHONPATH` to the
 tree, execs `python3 -m ymir_runtime.state`); exit codes are the module's own —
 **0** ran/condition true · **1** condition false or IO failed · **2** usage. A shim
-that cannot reach the door fails **loud** (`bin/gleipnir-lock-lib.sh` refuses
+that cannot reach the door fails **loud** (`bin/vault/gleipnir-lock-lib.sh` refuses
 non-zero), so a wake or a lock is never dropped silently. The npm `files` array
 ships `src/`, so a packaged install carries the door and its module together.
 
@@ -506,7 +506,7 @@ The rails are a LIVE set, not a single point: models come from whichever strong
 box is CONNECTED at the moment (heimdall · whynot · omarchy), and a box that
 drops out of the tailnet drops out of the lane — a lane reroute, never an outage.
 The WHERE-MODELS-COME-FROM rule now lives ONCE in `src/ymir_runtime/fleet/rail.py`,
-reached by the door `bin/rail-resolve.sh`; every surface that states a rail URL
+reached by the door `bin/model/rail-resolve.sh`; every surface that states a rail URL
 calls it, and none restates one.
 
 ```
@@ -515,14 +515,14 @@ fleet_rail[5]{piece,owns}
   "liveness","`GET /health` first (keyless, cheap), then `GET /v1/models` with the shared key; a key refused still reads ALIVE — only the served set is unknown"
   "the answer","rank first-alive → the serving `http://<box>:8080/v1`; with an alias, the first live box that SERVES it. Every rail down, or no live box serving the name, is a DECLINED answer (exit 1) — never a fake URL"
   "the key","a REFERENCE — the env `LLAMA_SWAP_API_KEY` (env → the hoard vault → pi auth.json); the value is read only to ask a rail what it serves, and is never emitted"
-  "the door","`bin/rail-resolve.sh resolve|status [--json]` → `python3 -m ymir_runtime.fleet`; TOON for a human, `--json` for callers"
+  "the door","`bin/model/rail-resolve.sh resolve|status [--json]` → `python3 -m ymir_runtime.fleet`; TOON for a human, `--json` for callers"
 ```
 
-**Who calls it.** `bin/model-placement.sh` (the ranked rails + reachability),
+**Who calls it.** `bin/model/model-placement.sh` (the ranked rails + reachability),
 `bin/agents/eindri-route.sh` (a model errand follows the live set, first-alive at its
-head), `bin/model-alias-check.sh` (an alias is verified against the RESOLVED
+head), `bin/gates/checks/model-alias-check.sh` (an alias is verified against the RESOLVED
 provider — a seat's name resolves against whichever box serves),
-`bin/snotra-transcribe.sh` (the ear's summaries ride the live rail),
+`bin/time/snotra/snotra-transcribe.sh` (the ear's summaries ride the live rail),
 `bin/bridge/mcp-gateway.sh` (a `rail` verb and a `rail` row in `status`; the rail is
 never an MCP upstream — the upstream map is handed to the engine verbatim), and
 `bin/bridge/mcp-config.sh` (the resolved rail under the config's `ymir` block, advisory
@@ -539,15 +539,15 @@ box up and one down → the up one serves; both down → declined — and
 Phase 5 is "split the gods, delete the twins", **one god per PR**. Two of the
 three seams landed in this change; the third is named below.
 
-**The watcher god — Sýn's behaviour is the engine's.** `bin/syn-watch.sh` carried
+**The watcher god — Sýn's behaviour is the engine's.** `bin/pi/syn-watch.sh` carried
 the arm's whole judgement in 409 lines of bash, while the vendored watcher
 (`.agents/backend/fm-watch.sh`, 1962 lines) carried a second, drifting copy of the
 same questions over the same record. The judgement now lives ONCE in
 `src/ymir_runtime/watch.py`: the lease (`pid`/`starttime`/`gen`/`mode`/`session`),
 the heartbeat, the `up`·`idle`·`stale`·`down` verdict, the session-owner read
-(asked of `bin/gleipnir-lock-lib.sh`, never re-derived), the raise grammar
+(asked of `bin/vault/gleipnir-lock-lib.sh`, never re-derived), the raise grammar
 (`.wake-queue` with its content-hash flood brake, `*.signal`, `*.check`,
-`.watcher-stop`), and the delivery slot + journal. `bin/syn-watch.sh` is a thin
+`.watcher-stop`), and the delivery slot + journal. `bin/pi/syn-watch.sh` is a thin
 door into it (`exec bin/engine/ymir-engine.sh watch …`), keeping the exact CLI, the exact
 TOON row, the exact stderr remedies, and the exact exit codes; the systemd unit is
 unchanged (`ExecStart=/bin/bash <bin>/syn-watch.sh run`), because the door `exec`s
@@ -560,7 +560,7 @@ arm[6]{verb,what,proven_by}
   "stop","unit stop plus the lease holder's TERM, then prove it let go","arm-service-proof.sh proof"
   "restart","stop then start","arm-service-proof.sh systemd"
   "run [--emit]","the one loop; --emit is the pre-service probe shape",".agents/tests/syn-watch-arm-silent-exit.test.sh"
-  "session_owner","the lock law asked of bin/gleipnir-lock-lib.sh","the arm tests' session cases"
+  "session_owner","the lock law asked of bin/vault/gleipnir-lock-lib.sh","the arm tests' session cases"
 ```
 
 **The teardown god's landed gate — `landed.py`.** The gate that decides whether a
@@ -575,7 +575,7 @@ refusal, never a guess — the vendored gate's fail-safe posture, kept.
 What the engine does NOT yet do with it, said plainly: the vendored
 `fm-teardown.sh` still holds its own shell copy of the gate, because its suite
 (`.agents/tests/fm-teardown.test.sh`) **cannot run on this tree at all** — it
-drives `$ROOT/bin/fm-teardown.sh`, and `.agents/bin/` was never vendored. Blind
+drives `$ROOT/bin/backend/fm-teardown.sh`, and `.agents/bin/` was never vendored. Blind
 repointing without that suite is the gamble the plan forbids, so the repoint rides
 the next errand, with the suite made runnable first.
 
@@ -602,8 +602,8 @@ Absence is meaningful: **an absent file is never confused with an empty-but-pres
 
 ## 9. Runes and Rödd
 
-- **Runes** (`bin/records/runes-append.sh`): append-only chained JSONL under `hodd/memory/runes_audit.md`. Each entry folds the previous checksum into its own (`"prev"` field), so a line cannot be altered or removed without breaking every later line. CLI/library: `runes-append.sh <actor> <event> [--order Wxxxx] [--realm R] --message "…"`; exit 0 appended, 1 IO error, 2 usage. The chain is owned by `src/ymir_runtime/state/runes.py` through `bin/ymir-state.sh`, and `bin/records/runes-append.sh` is a **thin shim** over it — locked with `flock` on `state/runes.lock` so concurrent writers cannot fork the chain, and proven byte-identical to the shell it replaced. **Never rewrites, never truncates.**
-- **Rödd** (`bin/rodd-operational-input.sh`): the structured wire between the primary and workers. Form `U+2063 RODD_OP: v1 <kind>: <body>`; kinds `session-start watcher turn-end-guard away-supervisor launch-brief branch-outcome` plus the `from-brokk` carrier. CLI `encode|kind|classify|body`; the `.pi` and `.opencode` adapters call it rather than re-parsing the wire. This file is the **single owner** of the protocol; callers must never re-parse it.
+- **Runes** (`bin/records/runes-append.sh`): append-only chained JSONL under `hodd/memory/runes_audit.md`. Each entry folds the previous checksum into its own (`"prev"` field), so a line cannot be altered or removed without breaking every later line. CLI/library: `runes-append.sh <actor> <event> [--order Wxxxx] [--realm R] --message "…"`; exit 0 appended, 1 IO error, 2 usage. The chain is owned by `src/ymir_runtime/state/runes.py` through `bin/records/ymir-state.sh`, and `bin/records/runes-append.sh` is a **thin shim** over it — locked with `flock` on `state/runes.lock` so concurrent writers cannot fork the chain, and proven byte-identical to the shell it replaced. **Never rewrites, never truncates.**
+- **Rödd** (`bin/agents/rodd-operational-input.sh`): the structured wire between the primary and workers. Form `U+2063 RODD_OP: v1 <kind>: <body>`; kinds `session-start watcher turn-end-guard away-supervisor launch-brief branch-outcome` plus the `from-brokk` carrier. CLI `encode|kind|classify|body`; the `.pi` and `.opencode` adapters call it rather than re-parsing the wire. This file is the **single owner** of the protocol; callers must never re-parse it.
 
 ## 10. Restart semantics
 
@@ -637,9 +637,9 @@ Restart is a non-event: **durable `data/` + `state/` + live backend inventory ar
 | `BROKK_PAUSED_VERB` | Erindi, Vör | status verb for deliberate idling (default `paused`) |
 | `BROKK_WATCH_POLL_SECONDS` | Sýn | watcher poll interval (default 5) |
 | `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` | Sýn | staleness threshold (default 60) |
-| `BROKK_WATCH_INLINE` | Sýn | `1` keeps the watch loop inside `bin/syn-watch-arm.sh` (the pre-service shape; a probe) |
+| `BROKK_WATCH_INLINE` | Sýn | `1` keeps the watch loop inside `bin/pi/syn-watch-arm.sh` (the pre-service shape; a probe) |
 | `BROKK_WATCH_DAEMON_GRACE_SECONDS` | Sýn | seconds the client waits for a re-seated arm before crying `stale:` (default 15) |
-| `SYN_WATCH_UNIT` | Sýn | the unit `bin/syn-watch.sh` reports/starts (default `ymir-syn-watch.service`) |
+| `SYN_WATCH_UNIT` | Sýn | the unit `bin/pi/syn-watch.sh` reports/starts (default `ymir-syn-watch.service`) |
 | `BROKK_WATCH_PREDECESSOR_ARM_PID` | Sýn/Gná | watch generation identity |
 | `BROKK_WATCH_ARM_SCRIPT` | Gná | arm script path override |
 | `BROKK_PI_ARM_READY_TIMEOUT_MS`, `BROKK_OPENCODE_ARM_READY_TIMEOUT_MS` | adapters | arm readiness timeout |
@@ -671,16 +671,16 @@ Additional runtime invariants that must hold:
 - Every script is `bash -n` clean and smoke-tested; every failure reports a plain reason, never a silent fallback.
 - The lock binds to the live session pid via `BROKK_SESSION_PID`.
 - The turn-end guard is inert until the first successful arm writes `state/.supervision-armed`.
-- The arm is a standing service: `bin/syn-watch.sh status` exits 0 (`up` or `idle`) while the lease is live and the heartbeat is fresh, and non-zero on a gap; a killed arm returns (systemd `Restart=always`, or the thin client re-seating it).
+- The arm is a standing service: `bin/pi/syn-watch.sh status` exits 0 (`up` or `idle`) while the lease is live and the heartbeat is fresh, and non-zero on a gap; a killed arm returns (systemd `Restart=always`, or the thin client re-seating it).
 - `rodd-operational-input.sh` is the single owner of the wire; callers never re-parse it.
 - `runes-append.sh` never rewrites or truncates; the chain stays unbroken.
 - A scout spawn never carries `--mode`; a relaunch re-derives kind/mode from `state/<id>.meta`.
 - Dispatch on an unverified adapter is fail-closed.
-- **The install is role-selected.** `bin/ymir-install.sh` resolves the role
+- **The install is role-selected.** `bin/engine/ymir-install.sh` resolves the role
   before its step chain and gates every role-owned step; a component the
   machine's roles do not own is a SKIP naming the owning role, and an unknown
   `--role` is refused. The same role picks the boot set
-  (`bin/ymir-autoboot.sh`), the cron gate (`config/cron.yaml` `@role`), and the
+  (`bin/engine/ymir-autoboot.sh`), the cron gate (`config/cron.yaml` `@role`), and the
   MCP config (`bin/bridge/mcp-config.sh`).
 - **No mocks, no examples, no placeholders** in the shipped runtime.
 
@@ -694,9 +694,9 @@ bash bin/time/saga-session-start.sh
 bash bin/time/saga-sessionstart-run.sh --source compact
 
 # Harness detection
-bash bin/hamr-harness.sh                 # own harness
-bash bin/hamr-harness.sh eindri          # configured Eindri harness
-bash bin/hamr-harness.sh eindri-model    # optional model token
+bash bin/fleet/hamr-harness.sh                 # own harness
+bash bin/fleet/hamr-harness.sh eindri          # configured Eindri harness
+bash bin/fleet/hamr-harness.sh eindri-model    # optional model token
 
 # Cron spine
 bash bin/time/nornir-cron-start.sh --status
@@ -707,7 +707,7 @@ bash bin/time/nornir-cron-start.sh --stop
 bash bin/agents/erindi-brief.sh T42 my-repo --mode direct-PR
 # edit data/T42/brief.md, replace {TASK}
 bash bin/agents/einherjar-spawn.sh T42 projects/my-repo --mode direct-PR --isolation auto
-bash bin/vor-crew-state.sh T42
+bash bin/records/vor-crew-state.sh T42
 
 # Audit
 bash bin/records/runes-append.sh brokk order.completed --order W0031 --realm way-of --message "…"
@@ -758,17 +758,17 @@ $YMIR_HOME/
 ```
 
 - `bin/vault/hoard-lib.sh` → `hoard_root` = `$YMIR_HOARD`, else `$YMIR_HOME/hodd`.
-- `bin/realm-lib.sh` → root `$YMIR_HOME`; the realm marker is read from
+- `bin/skuld/realm-lib.sh` → root `$YMIR_HOME`; the realm marker is read from
   `hodd/data/realm.md`, and the realms live under `svartalfaheim/`.
 - **One resolver, every script** — `ymir_home_root` (env → the recorded choice in
   `~/.config/ymir/home` → the ONE documented default). A script must **not** carry
   its own default path: a literal `$HOME/Documents/…` both drifts from the recorded
   home and, in `bin/desktop/smidja-board.sh`'s case, *won over* the resolver because it set
   `YMIR_HOME` before the call, pinning the machine to a dead path. `bin/records/runes-append.sh`
-  (the ledger), `bin/ymir-validate.sh`, `bin/desktop/smidja-bootstrap.sh`, `bin/ymir-style.sh`,
-  `bin/time/saga-session-start.sh`, `bin/bridge/mimir-bridge.py`, `bin/bootstrap-macos.sh` and
+  (the ledger), `bin/engine/ymir-validate.sh`, `bin/desktop/smidja-bootstrap.sh`, `bin/desktop/ymir-style.sh`,
+  `bin/time/saga-session-start.sh`, `bin/bridge/mimir-bridge.py`, `bin/host/bootstrap-macos.sh` and
   `.agents/skills/lifecycle/smoke_test.sh` now resolve through the lib (2026-09-20).
-- `bin/gjallarhorn-expose.sh` — the tunnel **domain and suffix are the operator's**,
+- `bin/forge/gjallarhorn-expose.sh` — the tunnel **domain and suffix are the operator's**,
   read from `$YMIR_HOME/config/tunnel.env` (env wins); the public tree carries no
   operator domain as a default.
 - The Sága digest reads the realm env and the realm's HOOD file from

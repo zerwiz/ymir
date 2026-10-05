@@ -99,37 +99,37 @@ test_tmux_agent_state_classifies() {
 
   for harness in claude codex opencode grok kimi pi pi-signed pi-launcher Pi; do
     fb=$(make_probe_tmux "$TMP_ROOT/tmux-$harness" "$harness")
-    out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state tmux sess:win' "$ROOT")
+    out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state tmux sess:win' "$ROOT")
     [ "$out" = alive ] || fail "a live $harness foreground process should classify as alive, got '$out'"
   done
 
   for shell in zsh bash -zsh; do
     fb=$(make_probe_tmux "$TMP_ROOT/tmux-${shell#-}" "$shell")
-    out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state tmux sess:win' "$ROOT")
+    out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state tmux sess:win' "$ROOT")
     [ "$out" = dead ] || fail "a bare $shell foreground process should classify as dead, got '$out'"
   done
 
   fb=$(make_probe_tmux "$TMP_ROOT/tmux-node" node)
-  out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state tmux sess:win' "$ROOT")
+  out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state tmux sess:win' "$ROOT")
   [ "$out" = ambiguous ] || fail "an existing node process should classify as ambiguous, got '$out'"
-  [ "$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_alive tmux sess:win' "$ROOT")" = unknown ] \
+  [ "$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_alive tmux sess:win' "$ROOT")" = unknown ] \
     || fail "the compatibility view must keep an existing node process unknown"
 
   fb=$(make_failed_probe_tmux "$TMP_ROOT/tmux-missing" missing)
-  out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state tmux sess:fm-sm1' "$ROOT")
+  out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state tmux sess:fm-sm1' "$ROOT")
   [ "$out" = missing ] || fail "a readable inventory omitting the target should classify as missing, got '$out'"
-  [ "$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_alive tmux sess:fm-sm1' "$ROOT")" = dead ] \
+  [ "$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_alive tmux sess:fm-sm1' "$ROOT")" = dead ] \
     || fail "the compatibility view should treat an authoritatively missing target as dead"
 
   for inventory in present unreadable; do
     fb=$(make_failed_probe_tmux "$TMP_ROOT/tmux-$inventory" "$inventory")
-    out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state tmux sess:fm-sm1' "$ROOT")
+    out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state tmux sess:fm-sm1' "$ROOT")
     [ "$out" = unreadable ] || fail "a $inventory inventory case should stay unreadable, got '$out'"
   done
 
   for inventory in missing-session missing-server missing-socket; do
     fb=$(make_failed_probe_tmux "$TMP_ROOT/tmux-$inventory" "$inventory")
-    out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state tmux sess:fm-sm1' "$ROOT")
+    out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state tmux sess:fm-sm1' "$ROOT")
     [ "$out" = missing ] || fail "a confirmed $inventory inventory failure should classify as missing, got '$out'"
   done
 
@@ -149,7 +149,7 @@ SH
 
   for target in sess sess: :win sess:win:extra; do
     out=$(PATH="$fakebin:$BASE_PATH" FM_TEST_TMUX_MARKER="$marker" \
-      bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state tmux "$1"' "$ROOT" "$target")
+      bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state tmux "$1"' "$ROOT" "$target")
     [ "$out" = unreadable ] || fail "malformed tmux target '$target' should classify as unreadable, got '$out'"
     [ ! -e "$marker" ] || fail "malformed tmux target '$target' invoked tmux"
   done
@@ -184,15 +184,15 @@ test_agent_state_dispatcher_and_compatibility() {
   local fb out
 
   fb=$(make_probe_tmux "$TMP_ROOT/dispatch-tmux" claude)
-  out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state tmux sess:win' "$ROOT")
+  out=$(PATH="$fb:$BASE_PATH" bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state tmux sess:win' "$ROOT")
   [ "$out" = alive ] || fail "detailed dispatcher should route tmux, got '$out'"
 
-  out=$(bash -c '. "$0/bin/fm-backend.sh"; fm_backend_source herdr; fm_backend_herdr_pane_agent_state() { printf "live"; }; fm_backend_agent_state herdr sess:p1' "$ROOT")
+  out=$(bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_source herdr; fm_backend_herdr_pane_agent_state() { printf "live"; }; fm_backend_agent_state herdr sess:p1' "$ROOT")
   [ "$out" = alive ] || fail "detailed dispatcher should route Herdr, got '$out'"
 
-  out=$(bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_state zellij sess:7' "$ROOT")
+  out=$(bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_state zellij sess:7' "$ROOT")
   [ "$out" = unverified ] || fail "Zellij should remain unverified, got '$out'"
-  out=$(bash -c '. "$0/bin/fm-backend.sh"; fm_backend_agent_alive zellij sess:7' "$ROOT")
+  out=$(bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_agent_alive zellij sess:7' "$ROOT")
   [ "$out" = unknown ] || fail "the compatibility dispatcher should map unverified to unknown, got '$out'"
 
   pass "fm_backend_agent_state: routes tmux/Herdr and keeps Zellij unverified"
@@ -312,7 +312,7 @@ SH
 # harness) with no kind=secondmate meta yet. FM_ROOT is left to resolve
 # naturally to the real checkout under test ($ROOT), exactly as production
 # always has it - this sweep's own fm-spawn.sh invocation resolves the
-# secondmate harness through $FM_ROOT/bin/fm-harness.sh, which only exists in
+# secondmate harness through $FM_ROOT/bin/backend/fm-harness.sh, which only exists in
 # the real tree. The harness is pinned because ambient own-harness detection is
 # environment-dependent: interactive harness sessions expose markers or parent
 # process names, while a plain pipeline shell can fall through to "unknown",
@@ -349,7 +349,7 @@ run_bootstrap() {  # <fakebin> <home> <pane-cmd> <call-log> [extra env...] -> st
   local fb=$1 home=$2 cmd=$3 log=$4; shift 4
   PATH="$fb:$BASE_PATH" TMUX='' FM_BACKEND=tmux FM_HOME="$home" \
     FM_TEST_PANE_CMD="$cmd" FM_TMUX_CALL_LOG="$log" \
-    env "$@" "$ROOT/bin/fm-bootstrap.sh" 2>&1
+    env "$@" "$ROOT/bin/backend/fm-bootstrap.sh" 2>&1
 }
 
 test_sweep_respawns_confirmed_dead_secondmate() {

@@ -1,8 +1,8 @@
 ## runtime · unversioned · 2026-09-12 — The well actually installs (it never did)
 
 ### Why
-- **The memory engine was never installed by the installer.** `bin/prereq-ensure.sh`
-  had no `engram` target at all, and `bin/ymir-install.sh` only *checked* for it
+- **The memory engine was never installed by the installer.** `bin/engine/prereq-ensure.sh`
+  had no `engram` target at all, and `bin/engine/ymir-install.sh` only *checked* for it
   and printed `SKIP "optional — install engine then run bin/bridge/mimir-bridge.sh"`. A
   SKIP never blocks, so the well was silently down on every install.
 - **The hint named the wrong package.** PyPI's `engram` is an unrelated

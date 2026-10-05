@@ -11,22 +11,22 @@ Three independent causes, each sufficient on its own:
 1. **A blanket ignore.** `.gitignore` line 13 is `dist/`, and **npm honours
    `.gitignore` when no `.npmignore` exists**. So every built bundle under a
    `dist/` was silently dropped from the package.
-2. **A build list that could not reach a nested app.** `bin/app-build.sh`
+2. **A build list that could not reach a nested app.** `bin/seat/sessrumnir/app-build.sh`
    defaulted to `(hlidskjalf odrerir sessrumnir)` and resolved each as
    `apps/<name>/`. The visualizer lives at
    `apps/smidja-factory/apps/visualizer` — nested, and never in the list.
-3. **A pack that skipped the prepack.** `bin/npm-pretest.sh` packs with
+3. **A pack that skipped the prepack.** `bin/forge/npm/npm-pretest.sh` packs with
    `npm pack --ignore-scripts`, so `package.json`'s `prepack` (which runs
-   `bin/app-build.sh`) **never fired** — even for the apps that were listed.
+   `bin/seat/sessrumnir/app-build.sh`) **never fired** — even for the apps that were listed.
 
 ### Fix
 - **`.gitignore`** — un-ignore `apps/smidja-factory/apps/visualizer/dist/` and its
   contents by name. It is a build artifact, but it is also **part of the shipped
   product**, and npm reads this file.
-- **`bin/app-build.sh`** — the default list gains
+- **`bin/seat/sessrumnir/app-build.sh`** — the default list gains
   `smidja-factory/apps/visualizer` (a nested path is joined onto `apps/`), so the
   visualizer is built like every other surface.
-- **`bin/npm-pretest.sh`** — builds every surface **before** packing (the prepack,
+- **`bin/forge/npm/npm-pretest.sh`** — builds every surface **before** packing (the prepack,
   run for real, since `--ignore-scripts` skips it), and the **hull** gains
   `apps/smidja-factory/apps/visualizer/dist/index.html`, so a blank app view can
   never pass the gate again.
@@ -41,6 +41,6 @@ Three independent causes, each sufficient on its own:
 
 ### Files
 - `.gitignore`
-- `bin/app-build.sh`
-- `bin/npm-pretest.sh`
+- `bin/seat/sessrumnir/app-build.sh`
+- `bin/forge/npm/npm-pretest.sh`
 - `package.json`

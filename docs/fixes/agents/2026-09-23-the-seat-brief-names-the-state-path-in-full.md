@@ -13,7 +13,7 @@
   a genuine fork (the release version), and did exactly as told:
 
   > *"Question written. Snotra stands down — awaiting Brokk's answer via
-  > bin/eindri-send.sh."*
+  > bin/agents/eindri-send.sh."*
 
   The file landed at `$HOME_SEAT/ymir/state/eindri-questions/snotra.md` — in
   the **repo tree**. `eindri-seen.sh` read *false*, the wake queue stayed empty,

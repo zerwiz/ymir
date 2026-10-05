@@ -5,12 +5,12 @@ On 2026-09-24 every fault that cost hours was a silence: the dispatcher died mut
 
 ### Files
 - `bin/agents/einherjar-spawn.sh`
-- `bin/ymir-platform.sh`
+- `bin/fleet/ymir-platform.sh`
 - `bin/agents/erindi-brief.sh`
 - `bin/agents/eindri-watch.sh`
-- `bin/local-model-lock.sh`
-- `bin/ymir-install.sh`
-- `bin/dispatch-profile.sh`
+- `bin/model/local-model-lock.sh`
+- `bin/engine/ymir-install.sh`
+- `bin/fleet/dispatch-profile.sh`
 - `bin/agents/eindri-heartbeat.sh`
 - `bin/agents/eindri-acclaim-silent.sh`
 - `.agents/skills/galdr-ymirsystem/assets/eindri-orchestration.md`

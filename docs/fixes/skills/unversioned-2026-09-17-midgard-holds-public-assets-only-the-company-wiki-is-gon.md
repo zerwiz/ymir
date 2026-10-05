@@ -10,7 +10,7 @@
   assets" in one place and "cross-tenant" in another; a wiki is neither. The
   contract says **public assets**, and `midgard/README.md` names what does *not*
   belong: company knowledge, which lives at `$YMIR_HOME/hodd/identity/companies/`.
-- **`bin/private-guard.sh` gains a tenant-document rule** so the shape cannot
+- **`bin/gates/guards/private-guard.sh` gains a tenant-document rule** so the shape cannot
   return: a `company_wiki/`, `wiki/`, `policies/`, `handbook/` or `vision`/
   `strategy`/`roadmap` document staged in the public tree is refused, with a
   message naming where it belongs. Verified by planting `midgard/company_wiki/policies.md`.

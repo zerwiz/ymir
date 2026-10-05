@@ -22,14 +22,14 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-control-lib.sh"
+. "$ROOT/bin/backend/fm-control-lib.sh"
 # shellcheck source=/dev/null
 . "$ROOT/bin/fm-trace-context-lib.sh"
 
-CONTROL="$ROOT/bin/fm-control.sh"
-SPAWN="$ROOT/bin/fm-spawn.sh"
+CONTROL="$ROOT/bin/backend/fm-control.sh"
+SPAWN="$ROOT/bin/backend/fm-spawn.sh"
 PROMOTE="$ROOT/bin/fm-promote.sh"
-X_LINK="$ROOT/bin/fm-x-link.sh"
+X_LINK="$ROOT/bin/backend/fm-x-link.sh"
 # fm_test_tmproot's own cleanup trap fires when its command substitution exits,
 # so recreate the root before resolving it and clean it up from this file's trap.
 TMP_ROOT=$(fm_test_tmproot fm-control-relaunch)
@@ -286,7 +286,7 @@ test_same_harness_relaunch_keeps_identity_and_reuses_the_endpoint() {
   local dir out rc gen_before gen_after
   dir=$(new_case same rl1)
   add_ship_task "$dir" rl1 claude
-  gen_before=$("$ROOT/bin/fm-busy-event.sh" arm "$dir/home/state" rl1)
+  gen_before=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$dir/home/state" rl1)
   printf 'busy_gen=%s\n' "$gen_before" >> "$dir/home/state/rl1.meta"
   out=$(run_control "$dir" rl1 relaunch --note "stopped mid-refactor"); rc=$?
   expect_code 0 "$rc" "a same-harness relaunch should succeed"$'\n'"$out"
@@ -1229,7 +1229,7 @@ test_concurrent_relaunch_is_refused() {
   # library fm-control uses.
   (
     # shellcheck source=/dev/null
-    . "$ROOT/bin/fm-wake-lib.sh"
+    . "$ROOT/bin/backend/fm-wake-lib.sh"
     fm_lock_try_acquire "$lock" || exit 1
     sleep 30
   ) &
@@ -1259,7 +1259,7 @@ test_direct_spawn_relaunch_participates_in_the_lifecycle_lock() {
   printf 'zsh' > "$dir/fake/command"
   lock="$dir/home/state/.control-rl26.lock"
   (
-    . "$ROOT/bin/fm-wake-lib.sh"
+    . "$ROOT/bin/backend/fm-wake-lib.sh"
     fm_lock_try_acquire "$lock" || exit 1
     sleep 30
   ) &
@@ -1286,7 +1286,7 @@ test_promotion_participates_in_the_lifecycle_lock_before_metadata_resolution() {
   add_ship_task "$dir" rl29 claude
   lock="$dir/home/state/.control-rl29.lock"
   (
-    . "$ROOT/bin/fm-wake-lib.sh"
+    . "$ROOT/bin/backend/fm-wake-lib.sh"
     fm_lock_try_acquire "$lock" || exit 1
     sleep 30
   ) &

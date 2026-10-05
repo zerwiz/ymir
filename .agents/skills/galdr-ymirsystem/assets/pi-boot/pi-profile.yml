@@ -3,7 +3,7 @@
 # Rule 07A: a model id is the USER's, not the repo's. Every operator's differ, so
 # this template carries a placeholder; the live values come from the user's own
 # roster at $YMIR_HOME/hodd/config/agents.yaml, resolved through
-# bin/agents-config.sh. Never commit a real model id here.
+# bin/fleet/agents-config.sh. Never commit a real model id here.
 
 profile:
   name: "pi"

@@ -12,7 +12,7 @@ that named a glyph nobody had drawn.
   **hlidskjalf** · **sessrumnir** · **mimir** · **sense** · **plan**. A name the
   law has not given a home — `doctor`, `validate`, `auth` — still answers, once,
   with the name that has it.
-- **The cloth: `bin/ymir-style.sh`.** Ymir had correct output and no design. The
+- **The cloth: `bin/desktop/ymir-style.sh`.** Ymir had correct output and no design. The
   palette is cut from the halls' own tokens — bone for words, bronze for what
   acts, steel for what stands, blood for what is wrong — with a mark per state
   (`◆ · — ✕ ? ✓`). Colour and marks appear only where a human is watching

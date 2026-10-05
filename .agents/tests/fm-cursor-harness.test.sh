@@ -28,9 +28,9 @@ set -u
 # shellcheck source=bin/backend/fm-cursor-lib.sh
 . "$ROOT/bin/fm-cursor-lib.sh"
 # shellcheck source=bin/backend/fm-busy-lib.sh
-. "$ROOT/bin/fm-busy-lib.sh"
+. "$ROOT/bin/backend/fm-busy-lib.sh"
 
-HARNESS="$ROOT/bin/fm-harness.sh"
+HARNESS="$ROOT/bin/backend/fm-harness.sh"
 TMP_ROOT=$(fm_test_tmproot fm-cursor-harness)
 trap 'rm -rf "$TMP_ROOT"' EXIT
 

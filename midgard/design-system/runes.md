@@ -64,7 +64,7 @@ app_runes[5]{app,glyph,rune,house_tint}:
   "Smíðja (visualizer)","ᚲ","kaunan — the torch, the forge's eye","#f59e0b amber (brokkforge)"
 ```
 
-Minted and installed by `bin/design-icon.sh` (`list` · `mint --all` · `install`):
+Minted and installed by `bin/desktop/design-icon.sh` (`list` · `mint --all` · `install`):
 the icon into the user's icon theme, the `.desktop` entry into their applications
 dir, so every app is dockable and carries the house mark.
 
@@ -74,5 +74,5 @@ dir, so every app is dockable and carries the house mark.
    `stroke="currentColor"`, a `<title>` naming the rune and its use.
 2. Add its row to `icons.md` **and** to the futhark table above, in the same
    change. Keep both counts true (the TOON check counts rows).
-3. If an app should wear it, add the app to `bin/design-icon.sh`'s table and run
+3. If an app should wear it, add the app to `bin/desktop/design-icon.sh`'s table and run
    `mint --all && install`.

@@ -71,14 +71,14 @@ invisible to the governed-path contract and to anyone auditing it.
 
 ## The change
 
-1. **`bin/snotra-detect.sh`** — `ear_up` / `ear_down` / `ear_seat_unit`, and four hooks:
+1. **`bin/time/snotra/snotra-detect.sh`** — `ear_up` / `ear_down` / `ear_seat_unit`, and four hooks:
    `ear_up` after a capture is confirmed alive in `do_arm`; `ear_down` on **all three**
    exits out of `do_leave`; `ear_down` in `back_to_idle` as the net for a watch that
    restarted mid-meeting.
 2. **`tools/mill/systemd/snotra-ear.service`** — new in the tree, with **no `[Install]`
    section**, so nothing can put it back in `ymir.target`. Seated into
    `~/.config/systemd/user/` by the watch at arm time from the durable tree.
-3. **`bin/snotra-transcribe.sh`** — `SNOTRA_FREE_RAIL` default `0` → `1`. The
+3. **`bin/time/snotra/snotra-transcribe.sh`** — `SNOTRA_FREE_RAIL` default `0` → `1`. The
    rail-yielding path was already written and shipped; it was simply off. A meeting is
    the thing that matters while it is happening, and the rail is the largest claim on
    the card, so the rail is the one that gives way. `SNOTRA_FREE_RAIL=0` remains the

@@ -122,11 +122,11 @@ make_lab() {  # <harness> -> echoes lab dir
   # re-creation of it. Its bootstrap child is a stub: what is under test here is
   # survival across the hook boundary, not the sweeps, which
   # tests/fm-bootstrap.test.sh already owns.
-  ln -sf "$ROOT/bin/fm-startup-network.sh" "$lab/bin/fm-startup-network.sh"
-  ln -sf "$ROOT/bin/fm-timeout-lib.sh" "$lab/bin/fm-timeout-lib.sh"
-  ln -sf "$ROOT/bin/fm-wake-lib.sh" "$lab/bin/fm-wake-lib.sh"
+  ln -sf "$ROOT/bin/backend/fm-startup-network.sh" "$lab/bin/backend/fm-startup-network.sh"
+  ln -sf "$ROOT/bin/backend/fm-timeout-lib.sh" "$lab/bin/backend/fm-timeout-lib.sh"
+  ln -sf "$ROOT/bin/backend/fm-wake-lib.sh" "$lab/bin/backend/fm-wake-lib.sh"
   ln -sf "$ROOT/bin/fm-session-lock-lib.sh" "$lab/bin/fm-session-lock-lib.sh"
-  cat > "$lab/bin/fm-bootstrap.sh" <<'SH'
+  cat > "$lab/bin/backend/fm-bootstrap.sh" <<'SH'
 #!/usr/bin/env bash
 # Outlives the hook on purpose: the marker can only appear if the worker was
 # still running well after the harness finished with its session-open hook.
@@ -135,7 +135,7 @@ sleep 6
 printf 'detached worker survived the hook\n' > "${FM_LIVE_DETACH_MARKER:?}"
 exit 0
 SH
-  chmod +x "$lab/bin/fm-bootstrap.sh"
+  chmod +x "$lab/bin/backend/fm-bootstrap.sh"
 
   cat > "$lab/bin/fm-sessionstart-run.sh" <<'SH'
 #!/usr/bin/env bash
@@ -178,7 +178,7 @@ SH
       cp "$ROOT/.pi/extensions/fm-primary-turnend-guard.ts" "$lab/.pi/extensions/"
       cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" \
         "$ROOT/.pi/extensions/lib/fm-sessionstart-supervisor.mjs" "$lab/.pi/extensions/lib/"
-      cp "$ROOT/bin/fm-operational-input.sh" "$lab/bin/"
+      cp "$ROOT/bin/backend/fm-operational-input.sh" "$lab/bin/"
       printf '%s\n' '{"compaction":{"keepRecentTokens":200}}' > "$lab/.pi/settings.json"
       ;;
   esac
@@ -354,8 +354,8 @@ probe_pi_sessionstart_prerequisite() {
   cp "$ROOT/.pi/extensions/fm-primary-turnend-guard.ts" "$project/.pi/extensions/"
   cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" \
     "$ROOT/.pi/extensions/lib/fm-sessionstart-supervisor.mjs" "$project/.pi/extensions/lib/"
-  cp "$ROOT/bin/fm-operational-input.sh" "$project/bin/"
-  cat > "$project/bin/fm-turnend-guard.sh" <<'SH'
+  cp "$ROOT/bin/backend/fm-operational-input.sh" "$project/bin/"
+  cat > "$project/bin/backend/fm-turnend-guard.sh" <<'SH'
 #!/usr/bin/env bash
 exit 0
 SH
@@ -382,7 +382,7 @@ printf 'RACE_NATIVE generation=%s\n' "$count"
 : > "$state/native-completed-$count"
 printf 'clear-complete:%s:%s\n' "$count" "$$" >> "$state/events"
 SH
-  cat > "$project/bin/fm-session-start.sh" <<'SH'
+  cat > "$project/bin/backend/fm-session-start.sh" <<'SH'
 #!/usr/bin/env bash
 set -u
 state=${FM_HOME:?}/state

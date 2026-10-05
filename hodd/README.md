@@ -12,7 +12,7 @@ tracks the guard and this map, never the treasure.
 - **Secrets are referenced, never inlined.** Scripts read secrets from
   `$YMIR_HOME/secrets/` (`YMIR_HOARD`, default `$HOME/Documents/Ymir`);
   a value never enters a tracked file.
-- **`bin/secret-guard.sh` is the outer ward** (pre-commit + CI); Hodd is the
+- **`bin/gates/guards/secret-guard.sh` is the outer ward** (pre-commit + CI); Hodd is the
   inner one. Nothing leaves without passing both.
 - **Realm boundaries hold.** Data at `$YMIR_HOME` is scoped per operator;
   a clone must never inherit another's secrets.

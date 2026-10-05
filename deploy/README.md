@@ -19,7 +19,7 @@ contract[6]{needs,example}:
   "a raise command","scripts/start.sh (lower with scripts/stop.sh)"
 ```
 
-The engine is resolved by the core (`bin/ymir-platform.sh` → `ymir_container_engine`),
+The engine is resolved by the core (`bin/fleet/ymir-platform.sh` → `ymir_container_engine`),
 not by the deployment. A layer never names `docker` or `podman`.
 
 ## Shapes (pick one; they are equivalent)
@@ -79,7 +79,7 @@ bwrap needs to create a **nested user namespace**. Rootless Podman containers ar
 already inside a user namespace, and many hardened configs disallow nesting — then
 bwrap fails with `Creating new namespace failed: Operation not permitted`.
 
-So: **do not force it.** The core probes with `bin/ymir-isolation.sh probe` and falls
+So: **do not force it.** The core probes with `bin/engine/ymir-isolation.sh probe` and falls
 back to the container boundary when nested namespaces are unavailable. If you want
 bwrap *inside* the Quadlet, the container must opt in (and that loosens it — weigh
 it against the boundary you gain):

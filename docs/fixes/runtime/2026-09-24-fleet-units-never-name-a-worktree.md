@@ -1,7 +1,7 @@
 ## runtime · 2026-09-24 — the fleet's permanent units must never name a worktree
 
 ### Why
-A smith ran `bin/fleet-ensure.sh ensure` **from its Yggdrasil worktree**. The seat's
+A smith ran `bin/fleet/fleet-ensure.sh ensure` **from its Yggdrasil worktree**. The seat's
 durable systemd units came out pointing at that disposable tree:
 
 ```
@@ -13,7 +13,7 @@ Two consequences, both bad:
 - **A silent boot failure waiting.** Pruning the worktree leaves the unit execing a path
   that no longer exists. The seat's cron would die at boot with nothing said.
 - **A confused proof.** The live scheduler carries the worktree's identity, so
-  `autoboot_cron_up` answered `no` and `bin/ymir-autoboot.sh verify` reported the seat
+  `autoboot_cron_up` answered `no` and `bin/engine/ymir-autoboot.sh verify` reported the seat
   FAIL for `nornir` — a false negative, because the loop it was hunting was the wrong
   tree's.
 
@@ -25,7 +25,7 @@ units. This is the same defect `bin/agents/eindri-watch.sh` fixed for its watche
 same adapter").
 
 ### What
-- `bin/fleet-ensure.sh` — when no explicit `FLEET_TEMPLATE_ROOT` is given, resolve it to
+- `bin/fleet/fleet-ensure.sh` — when no explicit `FLEET_TEMPLATE_ROOT` is given, resolve it to
   the **MAIN tree** through `git rev-parse --git-common-dir` (in the main tree it resolves
   to itself, so it stays idempotent). An explicit override still wins, which is the
   documented way a changed tree raises an existing seat.
@@ -42,4 +42,4 @@ same adapter").
 - `bash -n` clean.
 
 ### Files
-- `bin/fleet-ensure.sh`
+- `bin/fleet/fleet-ensure.sh`
