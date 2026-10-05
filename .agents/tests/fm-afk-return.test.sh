@@ -16,13 +16,13 @@ TMP_ROOT=$(fm_test_tmproot fm-afk-return-tests)
 install_runner() {  # <case-dir>
   local dir=$1
   mkdir -p "$dir/bin" "$dir/home/state" "$dir/home/data" "$dir/home/config"
-  cp "$ROOT/bin/fm-afk-return.sh" "$dir/bin/"
-  cp "$ROOT/bin/fm-wake-lib.sh" "$dir/bin/"
-  cp "$ROOT/bin/fm-classify-lib.sh" "$dir/bin/"
+  cp "$ROOT/bin/backend/fm-afk-return.sh" "$dir/bin/"
+  cp "$ROOT/bin/backend/fm-wake-lib.sh" "$dir/bin/"
+  cp "$ROOT/bin/backend/fm-classify-lib.sh" "$dir/bin/"
   # fm-timeout-lib.sh: the shared hard bound fm-classify-lib.sh sources for the
   # wedge detector's bounded worktree write probe.
-  cp "$ROOT/bin/fm-timeout-lib.sh" "$dir/bin/"
-  cat > "$dir/bin/fm-afk-launch.sh" <<'SH'
+  cp "$ROOT/bin/backend/fm-timeout-lib.sh" "$dir/bin/"
+  cat > "$dir/bin/backend/fm-afk-launch.sh" <<'SH'
 #!/usr/bin/env bash
 [ "${1:-}" = stop ] || exit 2
 printf 'stop\n' >> "$FM_HOME/stop.log"
@@ -33,7 +33,7 @@ if [ -e "$FM_HOME/state/.fail-terminal-stop-once" ]; then
 fi
 rm -f "$FM_HOME/state/.afk-daemon-terminal"
 SH
-  cat > "$dir/bin/fm-wake-drain.sh" <<'SH'
+  cat > "$dir/bin/backend/fm-wake-drain.sh" <<'SH'
 #!/usr/bin/env bash
 file="$FM_HOME/state/.fake-drain"
 if [ "${1:-}" = --ack-through ]; then
@@ -53,7 +53,7 @@ SH
 
 run_return() {  # <case-dir> <mode>
   local dir=$1 mode=$2
-  FM_HOME="$dir/home" FM_STATE_OVERRIDE="$dir/home/state" "$dir/bin/fm-afk-return.sh" "$mode" 2>&1
+  FM_HOME="$dir/home" FM_STATE_OVERRIDE="$dir/home/state" "$dir/bin/backend/fm-afk-return.sh" "$mode" 2>&1
 }
 
 ack_return() {  # <case-dir> <return-output>
@@ -62,7 +62,7 @@ ack_return() {  # <case-dir> <return-output>
   generation=$(printf '%s\n' "$output" | sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' | tail -1)
   [ -n "$sequence" ] && [ -n "$generation" ] || fail "return output lacked a generation-bound post-handling acknowledgement: $output"
   FM_HOME="$dir/home" FM_STATE_OVERRIDE="$dir/home/state" \
-    "$dir/bin/fm-wake-drain.sh" --ack-through "$sequence" --recovery-generation "$generation"
+    "$dir/bin/backend/fm-wake-drain.sh" --ack-through "$sequence" --recovery-generation "$generation"
 }
 
 seed_live_blocker() {  # <case-dir> <backend> <key>
@@ -112,7 +112,7 @@ test_return_gate_orders_catchup_before_bearings() {
   # The exact incident regression: Bearings is an ordinary request and must
   # refuse before reading/rendering while this shared gate remains open.
   set +e
-  out=$(FM_HOME="$dir/home" FM_STATE_OVERRIDE="$dir/home/state" "$ROOT/bin/fm-bearings-snapshot.sh" --json 2>&1)
+  out=$(FM_HOME="$dir/home" FM_STATE_OVERRIDE="$dir/home/state" "$ROOT/bin/backend/fm-bearings-snapshot.sh" --json 2>&1)
   rc=$?
   set -e
   [ "$rc" -eq 3 ] || fail "Bearings should refuse behind the return gate (rc=$rc): $out"
@@ -210,7 +210,7 @@ test_evidence_publication_failure_preserves_wake_for_redrain() {
 
   set +e
   FM_HOME="$dir/home" FM_STATE_OVERRIDE="$dir/home/state" \
-    "$dir/bin/fm-afk-return.sh" begin 3< "$dir/read-only-output" >&3 2> "$dir/failed.err"
+    "$dir/bin/backend/fm-afk-return.sh" begin 3< "$dir/read-only-output" >&3 2> "$dir/failed.err"
   rc=$?
   set -e
   [ "$rc" -eq 3 ] || fail "evidence publication failure should retain catch-up (rc=$rc)"
@@ -241,7 +241,7 @@ test_away_reentry_refuses_pending_return_gate() {
   mkdir -p "$dir/home/state" "$dir/home/data" "$dir/home/config"
   printf 'schema\tfm-afk-return.v1\nphase\tblocked\n' > "$dir/home/state/.afk-return-catchup"
   set +e
-  out=$(FM_HOME="$dir/home" FM_STATE_OVERRIDE="$dir/home/state" "$ROOT/bin/fm-afk-launch.sh" start-native 2>&1)
+  out=$(FM_HOME="$dir/home" FM_STATE_OVERRIDE="$dir/home/state" "$ROOT/bin/backend/fm-afk-launch.sh" start-native 2>&1)
   rc=$?
   set -e
   [ "$rc" -ne 0 ] || fail "away re-entry succeeded while return catch-up was pending"

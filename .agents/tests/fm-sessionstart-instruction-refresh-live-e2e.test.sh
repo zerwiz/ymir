@@ -122,8 +122,8 @@ git -C "$PROJECT" config user.name fmtest
 mkdir -p "$HOME_DIR/state" "$HOME_DIR/data" "$HOME_DIR/config"
 # Preserve the production wrapper's argv and exec it unchanged, while recording
 # the Pi extension's actual event source in this scratch home for the E2E gate.
-mv "$PROJECT/bin/fm-sessionstart-run.sh" "$PROJECT/bin/.fm-sessionstart-run.real.sh"
-cat > "$PROJECT/bin/fm-sessionstart-run.sh" <<'SH'
+mv "$PROJECT/bin/backend/fm-sessionstart-run.sh" "$PROJECT/bin/.fm-sessionstart-run.real.sh"
+cat > "$PROJECT/bin/backend/fm-sessionstart-run.sh" <<'SH'
 #!/usr/bin/env bash
 set -o pipefail
 set -u
@@ -133,7 +133,7 @@ printf 'argv=%s pi=%s root=%s home=%s\n' "$*" "${PI_CODING_AGENT:-absent}" "${FM
 "$(dirname "$0")/.fm-sessionstart-run.real.sh" "$@" | tee -a "$state/.sessionstart-e2e-output"
 exit "${PIPESTATUS[0]}"
 SH
-chmod +x "$PROJECT/bin/fm-sessionstart-run.sh"
+chmod +x "$PROJECT/bin/backend/fm-sessionstart-run.sh"
 cat > "$PROJECT/AGENTS.md" <<EOF
 When asked exactly "Which validation contract marker is active?", reply with exactly "$OLD_MARKER" and no other text.
 EOF

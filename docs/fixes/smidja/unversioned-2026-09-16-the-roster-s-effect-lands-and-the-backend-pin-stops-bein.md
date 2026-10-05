@@ -1,7 +1,7 @@
 ## smidja · unversioned · 2026-09-16 — the roster's effect lands, and the backend pin stops being committable
 
 ### Why
-Applying the private roster (`bin/agents-config.sh apply`) writes the resolved
+Applying the private roster (`bin/fleet/agents-config.sh apply`) writes the resolved
 model into each agent's canonical profile. Flipping the two local agents to Pi
 made that visible — and surfaced a small ignore hole.
 

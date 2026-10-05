@@ -76,7 +76,7 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 # dead-shell-vs-agent-composer rule). Owned by bin/backend/fm-composer-lib.sh, reused by
 # every backend so the decision cannot drift.
 # shellcheck source=bin/backend/fm-composer-lib.sh
-. "$FM_BACKEND_HERDR_ROOT/bin/fm-composer-lib.sh"
+. "$FM_BACKEND_HERDR_ROOT/bin/backend/fm-composer-lib.sh"
 
 # Shared, backend-neutral normalized-transition shape and the single-owner
 # status->action policy table (bin/backend/fm-transition-lib.sh). This adapter's event
@@ -84,7 +84,7 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 # pane.agent_status_changed edge through fm_transition_record and routes it
 # through fm_transition_policy - it never re-encodes the mapping.
 # shellcheck source=bin/backend/fm-transition-lib.sh
-. "$FM_BACKEND_HERDR_ROOT/bin/fm-transition-lib.sh"
+. "$FM_BACKEND_HERDR_ROOT/bin/backend/fm-transition-lib.sh"
 
 FM_BACKEND_HERDR_MIN_PROTOCOL=14
 # events.subscribe (the native pane.agent_status_changed push stream) and its
@@ -2916,7 +2916,7 @@ fm_backend_herdr_kill() {  # <target>
   local lock_path attempt=0 lock_held=0
   if ! declare -F fm_lock_try_acquire >/dev/null 2>&1; then
     # shellcheck source=bin/backend/fm-wake-lib.sh
-    . "$FM_BACKEND_HERDR_ROOT/bin/fm-wake-lib.sh"
+    . "$FM_BACKEND_HERDR_ROOT/bin/backend/fm-wake-lib.sh"
   fi
   if lock_path=$(fm_backend_herdr_presentation_session_lock_path "$session"); then
     while [ "$attempt" -lt 50 ]; do

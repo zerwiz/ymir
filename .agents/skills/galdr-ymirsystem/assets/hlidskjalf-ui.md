@@ -11,9 +11,9 @@ surfaces[6]{part,where,note}:
   "SPA",":3888 (vite) / built dist served by the gate","React app; gates: Fleet, Chat, Runes, …"
   "gate API",":3889 (bun apps/hlidskjalf/server/index.ts)","auth + /api/* + serves dist/; static types + caching"
   "login","in-app modal → /api/login → session cookie","user/pass from .env.local HLIDSKJALF_AUTH; Heimdall (oauth2-proxy) is the target"
-  "register","in-app modal → /api/register → spends an invite code","bin/ymir-invite.sh mints a limited-use code when nothing is live; argon2id account in state/accounts.json (0600, gitignored)"
+  "register","in-app modal → /api/register → spends an invite code","bin/engine/ymir-invite.sh mints a limited-use code when nothing is live; argon2id account in state/accounts.json (0600, gitignored)"
   "desktop","apps/hlidskjalf/electron/main.cjs + scripts/electron.sh","single instance + one window (never stack); see the ymir skill assets/desktop.md"
-  "tunnel","gjallarhorn → your hostname → :3889","outbound only; `bin/gjallarhorn-tunnel.sh`"
+  "tunnel","gjallarhorn → your hostname → :3889","outbound only; `bin/forge/gjallarhorn-tunnel.sh`"
 ```
 
 Quick rules:
@@ -34,19 +34,19 @@ registry/projects.yaml.example    # one git{} block per project (host/owner/repo
 registry/workspaces.yaml.example
 ```
 
-The gate API reads `join(ROOT, 'registry/workspaces.yaml')` and `bin/project-git.sh` falls back to
+The gate API reads `join(ROOT, 'registry/workspaces.yaml')` and `bin/agents/project-git.sh` falls back to
 `$ROOT/registry/projects.yaml`; both were rewritten in the same change that moved the templates.
 
 > **The VALUE rename shipped 2026-10-01 (plan 62 item 6).** A project row's `workspace:` was never a
 > workspace — it named the **realm** — so the key is now `realm:` in `registry/projects.yaml.example`,
-> in `bin/ymir-install.sh`'s seeded registry, and in every row of the operator's home registry (by his
-> hand, not by a script). The readers resolve **both** keys through `bin/registry-lib.sh`: `realm`
+> in `bin/engine/ymir-install.sh`'s seeded registry, and in every row of the operator's home registry (by his
+> hand, not by a script). The readers resolve **both** keys through `bin/skuld/registry-lib.sh`: `realm`
 > first, `workspace` as a deprecated alias that is **named on stderr** every time it is used
-> (`deprecated-registry-key: row "<id>" carries \`workspace:\` …`). `bin/ymir-validate.sh` gained the
+> (`deprecated-registry-key: row "<id>" carries \`workspace:\` …`). `bin/engine/ymir-validate.sh` gained the
 > `registry` check: PASS when every row names its realm, WARN naming each row still on the old key —
 > never FAIL, because a registry rewrite must not break a reader silently. `--field workspace` on
-> `bin/project-git.sh` likewise resolves and says it is `realm`. Never resolve the realm key outside
-> `bin/registry-lib.sh`.
+> `bin/agents/project-git.sh` likewise resolves and says it is `realm`. Never resolve the realm key outside
+> `bin/skuld/registry-lib.sh`.
 
 ## Location & stack
 
@@ -56,7 +56,7 @@ The gate API reads `join(ROOT, 'registry/workspaces.yaml')` and `bin/project-git
   points it at `repo: apps/hlidskjalf` with posture `direct-PR`. (An earlier
   version of this guide claimed it lived in its own repo (`zerwiz/hlidskjalf`)
   that the monorepo never tracked; that is **stale** and was corrected
-  2026-09-30 in the same change that added the Mánagandr gate. `bin/ymir-install.sh`'s
+  2026-09-30 in the same change that added the Mánagandr gate. `bin/engine/ymir-install.sh`'s
   `apps` step still materializes a checkout at install, but a working checkout is
   the tree.)
 - Gate API: `apps/hlidskjalf/server/index.ts` — **Bun + `bun:sqlite`**, read-only,
@@ -221,7 +221,7 @@ the SERVER seats' (whynot · zerwizserver). Two read-only routes feed it:
   so it painted "0 jobs" while the loop ran the home's real schedule. It now
   resolves as the loop does: `$YMIR_HOME/config/cron.yaml` → repo `cron.yaml` →
   the example (flagged). The answer carries `source`, each job's `role` gate and
-  whether it `applies` to this seat's roles (from `bin/topology.sh`), the fired
+  whether it `applies` to this seat's roles (from `bin/fleet/topology.sh`), the fired
   markers (`state/.cron-fired`), and — when stopped — a `why` read from
   `state/cron.log` (e.g. `no live session lock`).
 - **`/api/cron/seats`** — one ssh round-trip per server seat (BatchMode,
@@ -382,23 +382,23 @@ line (the per-view `--user-data-dir` is stable), which is what `electron.sh` doe
 **One class per app, and the install proves it (2026-09-24).** Each surface
 presents its own window class — `ymir-hlidskjalf` · `ymir-smidja` ·
 `ymir-odrerir` · `ymir-sessrumnir` — decided once in `app_class`
-(`bin/app-lib.sh`), set by the Electron mains (`app.setName(APP_SLUG)` +
+(`bin/seat/sessrumnir/app-lib.sh`), set by the Electron mains (`app.setName(APP_SLUG)` +
 `appendSwitch('class', APP_SLUG)`). The `.desktop` `StartupWMClass`, the
 generated Hyprland rule, and the launchers must all name the same string; they
 once did not (`CLASS_sessrumnir="sessrumnir"` vs the app's `ymir-sessrumnir`,
 which made every Ymir key seem to open one app). The desktop step of
-`bin/ymir-install.sh` runs `bin/desktop-verify.sh` before any window is claimed
+`bin/engine/ymir-install.sh` runs `bin/seat/sessrumnir/desktop-verify.sh` before any window is claimed
 and after the raise (`--live`), so a misrouted or unopenable surface is a loud
 FAIL, never green.
 
 **GUI.** On a small-VRAM iGPU the Wayland `--type=gpu-process` can die with
 `amdgpu: Not enough memory for command submission` (SIGSEGV, not an OOM). The
-effective policy is one decision in `bin/graphics-lib.sh`: a shared-memory
+effective policy is one decision in `bin/host/graphics-lib.sh`: a shared-memory
 integrated device beside a discrete one (a hybrid — i915 exposes no
 `mem_info_vram_total`, so Intel is classified by presence, GTT read where amdgpu
 exposes it) defaults the shells to software rendering. `YMIR_DESKTOP_DISABLE_GPU`
 remains the override: `1` forces software, `0` forces the GPU path. The sense
-snapshots record the policy (`bin/omarchy-sense.sh observe`, `gpu_policy`) so the
+snapshots record the policy (`bin/host/omarchy-sense.sh observe`, `gpu_policy`) so the
 next decision is evidence-based.
 
 ## Verification
@@ -465,12 +465,12 @@ fields from the server template in `apps/hlidskjalf/server/index.ts`. Neither th
 placeholder nor any default may name the operator: the field says `username`, and
 the password comes from `HLIDSKJALF_AUTH` in `.env.local`, never inline. A
 hardcoded name here is both a leak into the public tree and wrong for any other
-operator — `bin/public-guard.sh` exists to catch exactly that class of mistake.
+operator — `bin/gates/guards/public-guard.sh` exists to catch exactly that class of mistake.
 
 **The gate must actually receive it.** `scripts/start.sh` loads `.env.local`
 (mode `0600`, gitignored) into the environment before raising the gate, because
 the bun process reads `process.env.HLIDSKJALF_AUTH` and nothing else was loading
-it — so a credential set by `bin/ymir-setup-auth.sh` never took effect, and an
+it — so a credential set by `bin/engine/ymir-setup-auth.sh` never took effect, and an
 empty `GATE_AUTH` makes the gate treat every request as authenticated. After
 setting a credential, restart the gate: `scripts/stop.sh; scripts/start.sh`.
 
@@ -529,7 +529,7 @@ GET  /api/invites                               → {invites,accounts}   (authed
   (`YMIR_CONFIG_DIR` overrides, for tests). Machine state, never in the repo.
 - **Passwords:** `Bun.password` argon2id via `Bun.password.hash/verify`. The
   plaintext is never written; only the hash lands.
-- **The operator's own tool:** `bin/ymir-invite.sh {mint,list,revoke,where,ensure}`.
+- **The operator's own tool:** `bin/engine/ymir-invite.sh {mint,list,revoke,where,ensure}`.
   `ensure` mints only when nothing is live, so the installer stays idempotent.
 - **The UI:** `LoginModal` offers "I have an invite code" **only while
   `/api/session.registration` is true**. A spent or revoked code removes the
@@ -598,7 +598,7 @@ Four gaps closed in one pass:
 - **Switcher**: `Halls.tsx` also exports `HallsSwitcher` (three rune buttons),
   which replaces the lone Smíðja speed-start button in the Topbar. Smíðja's own
   topbar and Sessrúmnir's menu carry matching switchers; all route through the
-  gate's `/api/desktop`, which now raises Sessrúmnir too (`bin/sessrumnir.sh`).
+  gate's `/api/desktop`, which now raises Sessrúmnir too (`bin/desktop/sessrumnir.sh`).
 - **Search box**: `.topbar .search` `min-width` was 120px — narrower than the
   text "Search work workspace…", so the placeholder clipped. Raised to 280px;
   the input may shrink (`min-width: 0`).
@@ -617,7 +617,7 @@ Four gaps closed in one pass:
   `github: !!(GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET)` and `LoginModal` renders
   the "Continue with GitHub" button (and its `or` divider) only when true. The
   password door (`HLIDSKJALF_AUTH`) is always present. Configure GitHub with
-  `bin/ymir-setup-auth.sh github`.
+  `bin/engine/ymir-setup-auth.sh github`.
 
 Rule: a Hlidskjalf code change updates this asset in the same pass — the
 compliance gate (`assets/governed assets current`) fails otherwise.
@@ -639,7 +639,7 @@ new tab — **never** a launcher call.
   (tokens only, no raw hex), press feedback in `styles/overlays.css`.
 - **The hall app:** `apps/odrerir` — an Astro board (the Óðrerir Live Hall) that
   serves `:4322` and reads `public/livehall.json`, written by
-  `bin/hall-snapshot.sh` (planning glass; public-safe). Its own Electron shell:
+  `bin/time/snotra/hall-snapshot.sh` (planning glass; public-safe). Its own Electron shell:
   `apps/odrerir/electron/main.cjs`, raised by `scripts/electron.sh --view odrerir`.
 - **Target rule — one rule for all of Ymir's apps:** `HALL_URL` in
   `src/data/metadata.ts`. `window.location.host` starting with `localhost` or
@@ -701,7 +701,7 @@ Verified both ways: `GET /api/session` without a cookie is `authed:false` and
 The SVGs carry the design (stone + rune + tint); the launcher icons are
 **rasterised copies**, and they go stale the moment the design moves — the
 electron icons for Hlidskjalf and Óðrerir were still **blue**, and
-`ymir-icon.png` was a **grayscale** relic. `bin/design-icon.sh raster` re-cuts
+`ymir-icon.png` was a **grayscale** relic. `bin/desktop/design-icon.sh raster` re-cuts
 every app icon from its own `public/icon.svg` (rsvg-convert, else magick):
 
 - hlidskjalf → `electron/icon.png` (512), `public/apple-touch-icon.png` (180);

@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 
 // Sýn — PreToolUse seatbelt for OpenCode: block a stray persistent top-level
 // `cd` in the primary Brokk checkout before the agent's bash tool relocates the
-// shell out of the home. bin/syn-cd-pretool-check.sh is the owner of that
+// shell out of the home. bin/gates/checks/syn-cd-pretool-check.sh is the owner of that
 // decision. tool.execute.before can block by throwing. Ported from the upstream
 // agent-distro reference and retargeted to the Brokk runtime.
 
@@ -51,7 +51,7 @@ export const SynCdCheck = async ({ directory, worktree }) => {
       const command = output?.args?.command;
       if (!command || typeof command !== "string") return;
 
-      const result = await runProcess(`${root}/bin/syn-cd-pretool-check.sh`, ["--command", command]);
+      const result = await runProcess(`${root}/bin/gates/checks/syn-cd-pretool-check.sh`, ["--command", command]);
       if (result.code !== 2) return;
 
       const reason = result.stderr.trim() || "denied by the cd-guard PreToolUse seatbelt";

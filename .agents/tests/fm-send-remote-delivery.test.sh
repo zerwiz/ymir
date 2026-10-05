@@ -34,14 +34,14 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=bin/backend/fm-pending-reply-lib.sh
-. "$ROOT/bin/fm-pending-reply-lib.sh"
+. "$ROOT/bin/backend/fm-pending-reply-lib.sh"
 # shellcheck source=bin/backend/fm-marker-lib.sh
-. "$ROOT/bin/fm-marker-lib.sh"
+. "$ROOT/bin/backend/fm-marker-lib.sh"
 # shellcheck source=bin/backend/fm-task-inbox-lib.sh
-. "$ROOT/bin/fm-task-inbox-lib.sh"
+. "$ROOT/bin/backend/fm-task-inbox-lib.sh"
 
-SEND="$ROOT/bin/fm-send.sh"
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-send-remote-delivery)
 TMP_ROOT=$(cd "$TMP_ROOT" && pwd)
@@ -409,13 +409,13 @@ test_remote_send_revalidates_after_retirement_lock() {
     while [ ! -e "$4" ]; do sleep 0.05; done
     rm -f "$5"
     fm_lock_release "$2"
-  ' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$lock" "$ready" "$release" "$meta" &
+  ' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$lock" "$ready" "$release" "$meta" &
   holder_pid=$!
   while [ ! -e "$ready" ]; do kill -0 "$holder_pid" 2>/dev/null || fail "metadata-lock holder exited early"; sleep 0.05; done
 
   rc=0
   env FM_HOME="$rhome" FM_ROOT_OVERRIDE="$ROOT" \
-    "$ROOT/bin/fm-remote-secondmate-control.sh" send rsm "retirement-race steer" \
+    "$ROOT/bin/backend/fm-remote-secondmate-control.sh" send rsm "retirement-race steer" \
     >"$dir/out" 2>"$dir/err" &
   sender_pid=$!
   sleep 0.2
@@ -445,7 +445,7 @@ test_remote_send_revalidates_parent_route_after_retirement_lock() {
     while [ ! -e "$4" ]; do sleep 0.05; done
     rm -f "$5"
     fm_lock_release "$2"
-  ' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$lock" "$ready" "$release" "$meta" &
+  ' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$lock" "$ready" "$release" "$meta" &
   holder_pid=$!
   while [ ! -e "$ready" ]; do kill -0 "$holder_pid" 2>/dev/null || fail "parent metadata-lock holder exited early"; sleep 0.05; done
 

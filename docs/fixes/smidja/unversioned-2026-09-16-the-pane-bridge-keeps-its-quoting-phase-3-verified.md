@@ -2,7 +2,7 @@
 
 ### Why
 - **The Apodex plan's last open verification is closed.** Run in a herdr pane —
-  `bin/seat/herdr-run.sh run huginn-research -- bin/huginn-research-worker.sh --brief
+  `bin/seat/herdr-run.sh run huginn-research -- bin/fleet/huginn-research-worker.sh --brief
   "…" --output-dir …` — the worker recalled, dispatched to the Apodex seat, wrote
   its verdict, and observed it into Mimirsbrunn (`status: completed`, verdict
   *"The capital of Norway is Oslo."*). Phase 3 needed a spawn, which the

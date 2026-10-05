@@ -17,8 +17,8 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-LINT="$ROOT/bin/fm-lint.sh"
-INSTALLER="$ROOT/bin/fm-install-shellcheck.sh"
+LINT="$ROOT/bin/backend/fm-lint.sh"
+INSTALLER="$ROOT/bin/backend/fm-install-shellcheck.sh"
 # The pinned version, read from the single source (the one owner itself).
 REQUIRED=$("$LINT" --required-version)
 

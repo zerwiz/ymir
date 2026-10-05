@@ -122,7 +122,7 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 # Shared composer classification (the fleet-wide shape catalogue and verdict
 # owner; this adapter contributes only capture and capability facts).
 # shellcheck source=bin/backend/fm-composer-lib.sh
-. "$FM_BACKEND_ZELLIJ_ROOT/bin/fm-composer-lib.sh"
+. "$FM_BACKEND_ZELLIJ_ROOT/bin/backend/fm-composer-lib.sh"
 
 # Verified minimum: report.md recommends "likely Zellij 0.44 or newer" for
 # returned pane/tab IDs and dump-screen --pane-id; empirically verified

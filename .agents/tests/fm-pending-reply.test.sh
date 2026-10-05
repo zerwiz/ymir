@@ -27,12 +27,12 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=bin/backend/fm-marker-lib.sh
-. "$ROOT/bin/fm-marker-lib.sh"
+. "$ROOT/bin/backend/fm-marker-lib.sh"
 # shellcheck source=bin/backend/fm-pending-reply-lib.sh
-. "$ROOT/bin/fm-pending-reply-lib.sh"
+. "$ROOT/bin/backend/fm-pending-reply-lib.sh"
 
-SEND="$ROOT/bin/fm-send.sh"
-REPORT="$ROOT/bin/fm-secondmate-report.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
+REPORT="$ROOT/bin/backend/fm-secondmate-report.sh"
 TMP_ROOT=$(fm_test_tmproot fm-pending-reply)
 
 export FM_PENDING_REPLY_GRACE_SECS=0
@@ -104,7 +104,7 @@ latest_record_body() {  # <home> <task>
   local rec
   rec=$(find "$1/state/$2.inbox" -maxdepth 1 -name '*.msg' 2>/dev/null | sort | tail -1)
   [ -n "$rec" ] || return 1
-  bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$rec"
+  bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$rec"
 }
 
 # --- tests ------------------------------------------------------------------
@@ -323,12 +323,12 @@ test_second_missed_turn_escalates_once_and_stays_durable() {
 # these assertions consume the exact gate the watcher's signal scan uses.
 seen_gate() {  # <state> <file>: 0 when every byte is already announced
   FM_STATE_OVERRIDE="$1" bash -c '. "$1"; fm_wake_signal_seen_current "$2" "$3"' \
-    _ "$ROOT/bin/fm-wake-lib.sh" "$1" "$2"
+    _ "$ROOT/bin/backend/fm-wake-lib.sh" "$1" "$2"
 }
 prime_seen() {  # <state> <file>
   FM_STATE_OVERRIDE="$1" bash -c '
     . "$1"; fm_wake_status_mark_current "$2" "$3"
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$1" "$2"
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$1" "$2"
 }
 
 test_escalation_wakes_and_its_close_stays_quiet() {
@@ -601,7 +601,7 @@ test_delivery_confirmation_fallback_reconciles() {
     [ -f "$marker" ] || fail "delivery confirmation fallback marker should persist"
     [ -z "$(fm_pending_reply_get "$rec" delivered_epoch)" ] \
       || fail "failed primary commit should leave delivered_epoch empty"
-    . "$ROOT/bin/fm-pending-reply-lib.sh"
+    . "$ROOT/bin/backend/fm-pending-reply-lib.sh"
     fm_pending_reply_tick_one "$state" "$corr" unknown \
       || fail "watcher should reconcile the delivery marker"
     [ "$(fm_pending_reply_get "$rec" delivered_epoch)" = 5750 ] \
@@ -765,7 +765,7 @@ test_restart_preserves_expectation_and_parent_destination() {
   parent_home=$(fm_pending_reply_get "$rec" parent_home)
   # Simulate process restart: re-source library and re-read the same record.
   # shellcheck source=bin/backend/fm-pending-reply-lib.sh
-  . "$ROOT/bin/fm-pending-reply-lib.sh"
+  . "$ROOT/bin/backend/fm-pending-reply-lib.sh"
   [ -f "$rec" ] || fail "record must survive restart"
   [ "$(fm_pending_reply_get "$rec" parent_status)" = "$parent_status" ] \
     || fail "parent_status must be stable across restart"

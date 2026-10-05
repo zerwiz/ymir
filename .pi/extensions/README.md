@@ -53,12 +53,12 @@ registers a tool.
 ## Wiring
 
 - **Sága** digest: `bin/time/saga-session-start.sh`, routed by `bin/time/saga-sessionstart-run.sh`.
-- **Gná** watcher: `bin/syn-watch-arm.sh`; turn-end check: `bin/syn-turnend-guard.sh`.
-- **Gleipnir** lock: `bin/gleipnir-lock-lib.sh` (writes `state/.lock`).
+- **Gná** watcher: `bin/pi/syn-watch-arm.sh`; turn-end check: `bin/gates/guards/syn-turnend-guard.sh`.
+- **Gleipnir** lock: `bin/vault/gleipnir-lock-lib.sh` (writes `state/.lock`).
 - **Root record:** `~/.pi/agent/extensions/.ymir-root`, written by `bin/seat/valknut-load.sh --pi`
   and read by `lib/ymir-home.ts` — the deployed extensions live outside this tree, so
   the loader has to tell them where `bin/` is.
-- **Rödd** wire: `bin/rodd-operational-input.sh`.
+- **Rödd** wire: `bin/agents/rodd-operational-input.sh`.
 
 The harness passes `BROKK_SESSION_PID` so the session lock is bound to the live
 Pi process, not the short-lived digest helper.

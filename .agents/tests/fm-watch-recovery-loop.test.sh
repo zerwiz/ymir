@@ -6,7 +6,7 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-WATCH="$ROOT/bin/fm-watch.sh"
+WATCH="$ROOT/bin/backend/fm-watch.sh"
 TMP_ROOT=$(fm_test_tmproot fm-watch-recovery-loop)
 export NODE_NO_WARNINGS=1
 
@@ -22,8 +22,8 @@ install_pi_watch_extension_fixture() {
   cp "$ROOT/.pi/extensions/lib/fm-branch-dispatch.ts" "$repo/.pi/extensions/lib/fm-branch-dispatch.ts"
   cp "$ROOT/.pi/extensions/lib/fm-calm-visibility.ts" "$repo/.pi/extensions/lib/fm-calm-visibility.ts"
   cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" "$repo/.pi/extensions/lib/fm-operational-input.ts"
-  cp "$ROOT/bin/fm-operational-input.sh" "$repo/bin/fm-operational-input.sh"
-  chmod +x "$repo/bin/fm-operational-input.sh"
+  cp "$ROOT/bin/backend/fm-operational-input.sh" "$repo/bin/backend/fm-operational-input.sh"
+  chmod +x "$repo/bin/backend/fm-operational-input.sh"
   cat > "$repo/node_modules/@earendil-works/pi-coding-agent/package.json" <<'JSON'
 {"name":"@earendil-works/pi-coding-agent","type":"module","exports":"./index.js"}
 JSON
@@ -75,16 +75,16 @@ test_unacknowledged_recovery_is_announced_once_per_generation() {
 exit 0
 SH
   chmod +x "$fakebin/tmux"
-  cat > "$repo/bin/fm-watch-arm.sh" <<SH
+  cat > "$repo/bin/backend/fm-watch-arm.sh" <<SH
 #!/usr/bin/env bash
 if [ "\${1:-}" = --handling-delivered ]; then
   exit 1
 fi
 export FM_ROOT_OVERRIDE="$ROOT"
 export PATH="$fakebin:\$PATH"
-exec "$ROOT/bin/fm-watch-arm.sh" "\$@"
+exec "$ROOT/bin/backend/fm-watch-arm.sh" "\$@"
 SH
-  chmod +x "$repo/bin/fm-watch-arm.sh"
+  chmod +x "$repo/bin/backend/fm-watch-arm.sh"
   : > "$home/state/seed.meta"
   printf 'pending:downtime:seed.1.aaa\n' > "$home/state/.watcher-down"
   chmod 600 "$home/state/.watcher-down"

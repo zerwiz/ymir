@@ -14,19 +14,19 @@
     timeout 5 pi mcp 2>&1 | head -20
   ```
 
-  `bin/nidhogg.sh scan` counted **15 identical executions** of it. The pane's
+  `bin/gates/nidhogg.sh scan` counted **15 identical executions** of it. The pane's
   own meter told the same story: `↑53k ↓18k R10M CH99.9%` — ten million
   cache-read tokens at 99.9% cache hit, the signature of a prompt replayed with
   no progress. The worker was not stuck on a hard problem; it was stuck on a
   *belief* (that `pi mcp` was a door) and nothing existed to tell it otherwise.
 - **The belief-loop hides from a command-repeat check.** A second worker,
   `sindri`, spent turns re-deriving the fixes-guard's component matching, which
-  the guard answers in one line (`bin/fixes-guard.sh:105-112` — it exits 0
+  the guard answers in one line (`bin/gates/guards/fixes-guard.sh:105-112` — it exits 0
   either way, warning and never blocking). Reasoning in circles repeats no
   command, so a stall signal is needed beside the repeat signal.
 
 ### Fix
-- **`bin/nidhogg.sh`** — Níðhöggr, the gnawer at the root. The serpent gnaws
+- **`bin/gates/nidhogg.sh`** — Níðhöggr, the gnawer at the root. The serpent gnaws
   Yggdrasil forever and accomplishes nothing; this names the endless loop and
   breaks it. Three verbs:
   - `scan [--threshold N] [<agent>...]` — for every seated agent (or the named
@@ -51,11 +51,11 @@
 
 ### Verification
 - `bash -n` clean.
-- Live: `bin/nidhogg.sh scan` against the seated fleet reported
+- Live: `bin/gates/nidhogg.sh scan` against the seated fleet reported
   `"galdr","done",15,3,"LOOP — the same command ran 15 times", …` and exited 3.
 - No false positive: a scan of an actively-working agent (its pane moving)
   stayed `clean`, so the stall signal does not fire on healthy progress.
 
 ### Files
-- `bin/nidhogg.sh`
+- `bin/gates/nidhogg.sh`
 - `.agents/assets/agents/naming.md`

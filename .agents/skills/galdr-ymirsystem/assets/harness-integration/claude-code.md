@@ -37,11 +37,11 @@ There is **no** PreToolUse seatbelt in Ymir's `.claude/settings.json` (upstream 
         "hooks": [
           {
             "type": "command",
-            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; exec \"$CLAUDE_PROJECT_DIR\"/bin/syn-turnend-guard.sh --claude"
+            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; exec \"$CLAUDE_PROJECT_DIR\"/bin/gates/guards/syn-turnend-guard.sh --claude"
           },
           {
             "type": "command",
-            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; out=$(exec \"$CLAUDE_PROJECT_DIR\"/bin/syn-watch-arm.sh --restart); rc=$?; case \"$out\" in *signal:*|*stale:*|*check:*|*heartbeat:*) printf '%s\n' \"$out\" >&2; exit 2;; esac; exit $rc",
+            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; out=$(exec \"$CLAUDE_PROJECT_DIR\"/bin/pi/syn-watch-arm.sh --restart); rc=$?; case \"$out\" in *signal:*|*stale:*|*check:*|*heartbeat:*) printf '%s\n' \"$out\" >&2; exit 2;; esac; exit $rc",
             "asyncRewake": true,
             "timeout": 28800
           }
@@ -93,7 +93,7 @@ Stop runs **two independent commands**, in order.
 
 ```bash
 [ -z "${GROK_AGENT:-}${GROK_HOOK_EVENT:-}" ] || exit 0
-exec "$CLAUDE_PROJECT_DIR"/bin/syn-turnend-guard.sh --claude
+exec "$CLAUDE_PROJECT_DIR"/bin/gates/guards/syn-turnend-guard.sh --claude
 ```
 
 - `--claude` is a compatibility tag. The current guard has **no argument parsing**, so it is ignored; do not rely on it changing behavior. (The peer `--cursor` tags *are* parsed by the seatbelt scripts, which ignore them via a `*)` branch.)
@@ -109,7 +109,7 @@ exec "$CLAUDE_PROJECT_DIR"/bin/syn-turnend-guard.sh --claude
 ### 4.2 Async re-arm
 
 ```bash
-out=$(exec "$CLAUDE_PROJECT_DIR"/bin/syn-watch-arm.sh --restart); rc=$?
+out=$(exec "$CLAUDE_PROJECT_DIR"/bin/pi/syn-watch-arm.sh --restart); rc=$?
 case "$out" in *signal:*|*stale:*|*check:*|*heartbeat:*) printf '%s\n' "$out" >&2; exit 2;; esac
 exit $rc
 ```
@@ -151,14 +151,14 @@ printf '{"source":"resume"}' | "$BROKK_HOME/bin/time/saga-sessionstart-run.sh" |
 ```bash
 # Guard, inert:
 rm -f state/.supervision-armed
-echo '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh --claude; echo "inert -> $? (expect 0)"
+echo '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh --claude; echo "inert -> $? (expect 0)"
 # Guard, armed + stale:
 touch state/.supervision-armed; rm -f state/.watch.heartbeat
-echo '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh --claude; echo "armed+stale -> $? (expect 2)"
+echo '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh --claude; echo "armed+stale -> $? (expect 2)"
 
 # Re-arm command body, emulated (must own the lock):
 state=$(mktemp -d)
-out=$(BROKK_STATE_OVERRIDE="$state" BROKK_HOME="$BROKK_HOME" bin/syn-watch-arm.sh --restart); rc=$?
+out=$(BROKK_STATE_OVERRIDE="$state" BROKK_HOME="$BROKK_HOME" bin/pi/syn-watch-arm.sh --restart); rc=$?
 case "$out" in *signal:*|*stale:*|*check:*|*heartbeat:*) echo "would rewake";; esac
 echo "arm rc=$rc"
 ```
@@ -192,6 +192,6 @@ GROK_AGENT=1 bash -c '[ -z "${GROK_AGENT:-}${GROK_HOOK_EVENT:-}" ] || exit 0; ec
 | Claude Code is `SessionStart` + `Stop` | correct — those are the only two hook groups present |
 | (implicit: same four contract parts as other harnesses) | **no `PreToolUse`** arm/cd seatbelts are registered |
 
-Upstream Brokk registers two `PreToolUse` entries (`Bash` matcher → `fm-arm-pretool-check.sh --claude`, `fm-cd-pretool-check.sh --claude`). To close the gap, add the equivalent `PreToolUse` block calling `bin/syn-arm-pretool-check.sh --claude` and `bin/syn-cd-pretool-check.sh --claude`. Do not assume the seatbelt is active until it is added and smoke-tested.
+Upstream Brokk registers two `PreToolUse` entries (`Bash` matcher → `fm-arm-pretool-check.sh --claude`, `fm-cd-pretool-check.sh --claude`). To close the gap, add the equivalent `PreToolUse` block calling `bin/gates/checks/syn-arm-pretool-check.sh --claude` and `bin/gates/checks/syn-cd-pretool-check.sh --claude`. Do not assume the seatbelt is active until it is added and smoke-tested.
 
 **Skills.** This harness reads project skills from `.claude/skills/`; `bin/seat/valknut-load.sh` binds it to the one tree (`.claude/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.

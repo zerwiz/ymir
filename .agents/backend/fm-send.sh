@@ -68,7 +68,7 @@
 # failure); any other nonzero = the send failed and nothing may be assumed
 # delivered. Submission dispatches through the target's recorded backend; the
 # tmux adapter shares its composer/submit core with the away-mode daemon via
-# bin/fm-tmux-lib.sh. Tune with FM_SEND_RETRIES (default 3) / FM_SEND_SLEEP
+# bin/backend/fm-tmux-lib.sh. Tune with FM_SEND_RETRIES (default 3) / FM_SEND_SLEEP
 # (0.4). Slash commands, and codex `$...` skill invocations resolved through
 # harness meta, get a longer pre-Enter settle so completion popups do not
 # swallow Enter. A remote secondmate target has no typed text plane at all:
@@ -283,10 +283,10 @@ fm_send_record_interrupt() {  # <key>
   [ -f "$STATE/$id.busy-gen" ] || return 0
   gen=$(fm_meta_get "$TARGET_META" busy_gen)
   if [ -n "$gen" ]; then
-    "$FM_ROOT/bin/fm-busy-event.sh" apply "$STATE" "$id" idle \
+    "$FM_ROOT/bin/backend/fm-busy-event.sh" apply "$STATE" "$id" idle \
       --gen "$gen" --source fm-interrupt --event interrupt
   else
-    "$FM_ROOT/bin/fm-busy-event.sh" apply "$STATE" "$id" idle \
+    "$FM_ROOT/bin/backend/fm-busy-event.sh" apply "$STATE" "$id" idle \
       --current-gen --source fm-interrupt --event interrupt
   fi || {
     echo "error: key '$key' reached $T, but the Claude interrupt state could not be recorded for $id" >&2

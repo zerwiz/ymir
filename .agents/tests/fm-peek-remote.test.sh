@@ -16,7 +16,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-PEEK="$ROOT/bin/fm-peek.sh"
+PEEK="$ROOT/bin/backend/fm-peek.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-peek-remote)
 

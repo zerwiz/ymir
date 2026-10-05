@@ -60,7 +60,7 @@ project-local extension file must either not exist, or register nothing.
 
 - **`.ymir-root` lists two dead Yggdrasil worktrees.** Reported as a defect and
   then withdrawn: `lib/ymir-home.ts` already validates every recorded root against
-  `bin/syn-watch-arm.sh` and skips any that no longer exists, and the multi-line
+  `bin/pi/syn-watch-arm.sh` and skips any that no longer exists, and the multi-line
   record is by design (*"one absolute root per line, most recent first"*). It is
   hygiene, not a bug, and it is left alone.
 - **The layout fault is not fixed here.** `lib/` is still sourced from the old flat

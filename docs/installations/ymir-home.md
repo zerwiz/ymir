@@ -89,5 +89,5 @@ private repo (rebuilt per machine).
 
 Scripts fall back to `$ROOT/hodd` (legacy Hoard in repo) when
 `YMIR_HOARD` and `YMIR_HOME` are both unset. The migration script
-(`bin/ymir-migrate.sh private-data`) copies data to `$YMIR_HOME` and
+(`bin/engine/ymir-migrate.sh private-data`) copies data to `$YMIR_HOME` and
 writes `.ymir-layout.yaml`.

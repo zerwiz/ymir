@@ -7,15 +7,15 @@
 # and flaps — a single unacknowledged wake stranded supervision (2026-09-23).
 # An unchanged queue must keep the watch watching; a changed one signals once.
 #
-# The watch loop is now the SERVICE (bin/syn-watch.sh run) and bin/syn-watch-arm.sh
+# The watch loop is now the SERVICE (bin/pi/syn-watch.sh run) and bin/pi/syn-watch-arm.sh
 # is its thin client. So this asserts BOTH halves: the loop's flood brake, and
 # the client relaying what the service raised — including a line raised while no
 # client was attached, and a service the client had to re-seat itself.
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-ARM="$ROOT/bin/syn-watch-arm.sh"
-WATCH="$ROOT/bin/syn-watch.sh"
+ARM="$ROOT/bin/pi/syn-watch-arm.sh"
+WATCH="$ROOT/bin/pi/syn-watch.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

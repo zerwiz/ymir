@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fixed remote entrypoint for bin/fm-on.sh.
+# Fixed remote entrypoint for bin/backend/fm-on.sh.
 #
 # Install this tracked file as fm-remote-entrypoint.sh on the remote account's
 # non-interactive SSH PATH. It accepts protocol metadata plus a base64-encoded

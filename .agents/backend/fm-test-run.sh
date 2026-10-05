@@ -852,8 +852,8 @@ run_coverage_guard() {
     return 1
   fi
 
-  if [ -x "$ROOT/bin/fm-test-isolation-proof.sh" ]; then
-    "$ROOT/bin/fm-test-isolation-proof.sh" --list | LC_ALL=C sort -u >"$tmp/proof_list"
+  if [ -x "$ROOT/bin/backend/fm-test-isolation-proof.sh" ]; then
+    "$ROOT/bin/backend/fm-test-isolation-proof.sh" --list | LC_ALL=C sort -u >"$tmp/proof_list"
     if ! cmp -s "$tmp/proven" "$tmp/proof_list"; then
       log "coverage guard: embedded proven-isolated set diverges from bin/backend/fm-test-isolation-proof.sh --list"
       comm -3 "$tmp/proven" "$tmp/proof_list" >&2 || true
@@ -1853,9 +1853,9 @@ if [ "$JOBS" -gt 1 ]; then
 fi
 
 if [ "$PER_SCRIPT_TIMEOUT_SECS" -gt 0 ]; then
-  [ -r "$ROOT/bin/fm-timeout-lib.sh" ] || die "per-script timeout helper not found: bin/backend/fm-timeout-lib.sh"
+  [ -r "$ROOT/bin/backend/fm-timeout-lib.sh" ] || die "per-script timeout helper not found: bin/backend/fm-timeout-lib.sh"
   # shellcheck source=bin/backend/fm-timeout-lib.sh
-  . "$ROOT/bin/fm-timeout-lib.sh"
+  . "$ROOT/bin/backend/fm-timeout-lib.sh"
 fi
 
 RUN_TMP=$(mktemp -d "${TMPDIR:-/tmp}/fm-test-run.XXXXXX")

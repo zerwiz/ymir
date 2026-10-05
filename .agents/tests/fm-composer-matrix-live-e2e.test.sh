@@ -66,7 +66,7 @@ SH
 chmod +x "$SHIM_DIR/tmux"
 PATH="$SHIM_DIR:$PATH"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-tmux-lib.sh"
+. "$ROOT/bin/backend/fm-tmux-lib.sh"
 
 tmux -L "$SOCKET" new-session -d -s "$SESSION" -x 220 -y 50 -c "$ROOT"
 
@@ -153,7 +153,7 @@ if command -v zellij >/dev/null 2>&1; then
   [ -n "$zj_version" ] || zj_version='version-unknown'
   export FM_ROOT_OVERRIDE="$ROOT"
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-backend.sh"
+  . "$ROOT/bin/backend/fm-backend.sh"
   fm_backend_source zellij 2>/dev/null \
     || fail "zellij ($zj_version): adapter source failed"
 

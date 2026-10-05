@@ -129,8 +129,8 @@ function launch() {
 
   // Build electron args.
   // --no-sandbox is required so Pi subprocesses can spawn.
-  // GPU safety (P7, 2026-09-24): bin/sessrumnir.sh resolves the ONE machine-wide
-  // graphics policy (bin/graphics-lib.sh) and exports the effective override in
+  // GPU safety (P7, 2026-09-24): bin/desktop/sessrumnir.sh resolves the ONE machine-wide
+  // graphics policy (bin/host/graphics-lib.sh) and exports the effective override in
   // YMIR_DESKTOP_DISABLE_GPU (1 = software rendering). On a fragile hybrid the
   // Electron GPU process dies for want of a fence and the browser makes SIGTRAP
   // suicide once the process is judged unusable — the same fix scripts/electron.sh

@@ -19,7 +19,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 ### A1. Ymir learns the user's machine — DONE
 - **Asked:** "omar should learn more and more of the user's setup ... if they're
   making package and changes to their machine."
-- **Done:** `bin/omarchy-sense.sh` records a comparable snapshot
+- **Done:** `bin/host/omarchy-sense.sh` records a comparable snapshot
   (omarchy version, explicit package count, config-file count, monitors, scale)
   to `state/omarchy-setup.json` and **diffs it**, reporting what changed.
   Verified: detects an Omarchy version change and a package-count change.
@@ -28,7 +28,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 
 ### A2. Update when Omarchy updates — DONE
 - **Asked:** "if updates are happening to omarchy omar needs to update."
-- **Done:** `bin/omarchy-hook-install.sh` installs an Omarchy `post-update.d`
+- **Done:** `bin/host/omarchy-hook-install.sh` installs an Omarchy `post-update.d`
   hook that re-runs the sensor after every `omarchy update`. Installed and run.
 
 ### A3. Þjazi installed at install time — DONE
@@ -94,7 +94,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 ### A2. Validate the installation — DONE (extends further)
 - **Asked:** "we should have a validation of the installation script so we
   validate that everything is running and installed correctly."
-- **Done:** new `bin/ymir-validate.sh` — 10 live checks (prereqs, sandbox, gate API,
+- **Done:** new `bin/engine/ymir-validate.sh` — 10 live checks (prereqs, sandbox, gate API,
   SPA, Bifrost, cron, smidja.db, desktop, memory well, runes) with `--json`;
   wired as `step_validate` in the installer.
 - **Verified:** all required checks pass on the live system.
@@ -135,7 +135,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 - **Remains:** rewrite the asset to match, or revert the code to match doctrine.
 
 ### B4. The install-hardening work is not yet committed — OPEN
-- `bin/ymir-install.sh`, `bin/ymir-validate.sh`, `scripts/electron.sh` are changed
+- `bin/engine/ymir-install.sh`, `bin/engine/ymir-validate.sh`, `scripts/electron.sh` are changed
   in the working tree on `main` (plus the `install-validate` worktree holds the
   same edits). **Remains:** commit, merge, push. Verify on a fresh checkout first.
 
@@ -174,7 +174,7 @@ exists now, and what remains. Nothing here is claimed done unless verified.
 - **Done:** (1) `AGENTS.md` `governed[6]` path→asset table + `manual[]` rows;
   (2) session digest prints `ASSET ROUTING`; (3) `galdr`'s
   `disable-model-invocation` removed; (4) enforced seatbelt
-  `bin/syn-asset-pretool-check.sh` (denies a governed edit until its asset is
+  `bin/gates/checks/syn-asset-pretool-check.sh` (denies a governed edit until its asset is
   read, relayed by the Pi extension); (5) `compliance-check.sh` `assets` gate
   fails on a governed path changed without its asset.
 - **Verified:** the new gate caught its own change (stale harness README) and

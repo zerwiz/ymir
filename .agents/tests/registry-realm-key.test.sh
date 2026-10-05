@@ -6,8 +6,8 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PG="$ROOT/bin/project-git.sh"
-LIB="$ROOT/bin/registry-lib.sh"
+PG="$ROOT/bin/agents/project-git.sh"
+LIB="$ROOT/bin/skuld/registry-lib.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

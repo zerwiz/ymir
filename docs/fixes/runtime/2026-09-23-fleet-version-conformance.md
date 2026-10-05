@@ -4,7 +4,7 @@
 - **Problem:** the fleet had three different versions with no alarm — tree
   `0.1.39`, npm `latest` `0.1.50`, installed `0.1.45`. Law 5 says the fleet is
   versioned together; nothing read the three and judged them.
-- **Fix:** `bin/fleet-version.sh` reports the **tree** (repo `package.json`), the
+- **Fix:** `bin/fleet/fleet-version.sh` reports the **tree** (repo `package.json`), the
   **installed** (`@zerwiz/ymir` in the global prefix), and the **published**
   (`npm view`, network-optional), and gives a **verdict**:
   `in sync · drift · ahead · behind · unknown`, with semver-ish comparison
@@ -22,6 +22,6 @@
   (published `0.1.50`).
 
 ### Files
-- `bin/fleet-version.sh`
+- `bin/fleet/fleet-version.sh`
 - `.agents/tests/fleet-version.test.sh`
 - `.agents/skills/lifecycle/smoke_test.sh`

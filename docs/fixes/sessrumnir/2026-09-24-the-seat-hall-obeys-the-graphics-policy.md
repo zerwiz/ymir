@@ -19,7 +19,7 @@ renderer, and Chromium committed suicide. The launcher held an old comment —
 ### What
 The DECISION lives in the launcher, never a hardcode (P7):
 
-- `bin/sessrumnir.sh` sources `bin/graphics-lib.sh`, resolves the ONE machine
+- `bin/desktop/sessrumnir.sh` sources `bin/host/graphics-lib.sh`, resolves the ONE machine
   policy exactly as `scripts/electron.sh` does (human override
   `YMIR_DESKTOP_DISABLE_GPU` = 1/0/auto), and exports the EFFECTIVE override.
 - `apps/sessrumnir/bin/sessrumnir.js` reads that override and appends
@@ -28,13 +28,13 @@ The DECISION lives in the launcher, never a hardcode (P7):
   entry to the repo launcher (machine property; not in this change).
 
 ### Verified
-- `bash ~/ymir/bin/sessrumnir.sh start` → electron runs with
+- `bash ~/ymir/bin/desktop/sessrumnir.sh start` → electron runs with
   `--no-sandbox --disable-gpu --disable-gpu-compositing`; the GPU process starts
   as `--use-gl=disabled`; process family stable, no suicide.
-- `bash -n` clean on `bin/sessrumnir.sh`; `node --check` clean on the app launcher.
+- `bash -n` clean on `bin/desktop/sessrumnir.sh`; `node --check` clean on the app launcher.
 - `graphics_policy` → `software` → effective override `1` confirmed on heimdall.
 
 ### Files
-- `bin/sessrumnir.sh`
+- `bin/desktop/sessrumnir.sh`
 - `apps/sessrumnir/bin/sessrumnir.js`
 - this note (same commit — a note travels WITH its change)

@@ -32,4 +32,4 @@ The app-boot probe now:
    where it can be honored.
 
 ### Files
-- `bin/npm-pretest.sh`
+- `bin/forge/npm/npm-pretest.sh`

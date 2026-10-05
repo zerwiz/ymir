@@ -4,7 +4,7 @@
 - **The watch never armed on a deployed machine.** Every Pi extension resolved its
   distro root as `resolve(extensionDir, "../..")`. Deployed to
   `${HOME}/.pi/agent/extensions/`, that reaches `${HOME}/.pi` — a directory holding
-  pi's own config and **no `bin/` at all**. So `~/.pi/bin/syn-watch-arm.sh` was
+  pi's own config and **no `bin/` at all**. So `~/.pi/bin/pi/syn-watch-arm.sh` was
   exec'd, did not exist, and the Gná arm child died with **exit 127 before its first
   poll**. No `state/.watch.heartbeat` was written anywhere on the machine, no
   `.supervision-armed` ever appeared, and the watch was dead while every file
@@ -20,7 +20,7 @@
   reads it back for all four extensions (`gna-pi-watch`, `syn-turnend-guard`, `ro`,
   `skuld-branch-supervision`). Resolution order: `BROKK_ROOT_OVERRIDE` ·
   `BROKK_HOME` · `YMIR_ROOT` → the recorded roots → `resolve(extensionDir, "../..")`.
-- **A candidate counts only if it really holds `bin/syn-watch-arm.sh`.** A root that
+- **A candidate counts only if it really holds `bin/pi/syn-watch-arm.sh`.** A root that
   no longer exists — a merged-and-removed Yggdrasil worktree, an uninstalled npm
   prefix — is skipped rather than trusted. That is why the record is a *list*:
   deploying from a worktree records the worktree **and** keeps the durable root
@@ -34,7 +34,7 @@
   `.yggdrasil/<id>` it would die with the worktree and leave every later session
   with no contract at all. It now repoints only when the current target is already
   gone.
-- **Eir carries the surface** (`bin/eir-doctor.sh`: `harness`), so a record with no
+- **Eir carries the surface** (`bin/agents/eir-doctor.sh`: `harness`), so a record with no
   live root is diagnosed and mended rather than discovered; `bin/seat/valknut-load.sh
   --status` reports the same row.
 
@@ -42,5 +42,5 @@
 - `.pi/extensions/lib/ymir-home.ts` — the resolver (new)
 - `.pi/shared/extensions/{gna-pi-watch,syn-turnend-guard,ro,skuld-branch-supervision}.ts` — resolve the recorded root
 - `bin/seat/valknut-load.sh` — record the root at deploy time; guard the global contract
-- `bin/eir-doctor.sh` — the `harness` surface
+- `bin/agents/eir-doctor.sh` — the `harness` surface
 - `.pi/extensions/README.md` · `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md` — the contract

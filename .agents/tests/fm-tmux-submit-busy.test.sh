@@ -7,7 +7,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-tmux-lib.sh"
+. "$ROOT/bin/backend/fm-tmux-lib.sh"
 
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/fm-tmux-submit-busy.XXXXXX")
 trap 'rm -rf "$TMP_ROOT"' EXIT
@@ -262,7 +262,7 @@ test_claude_busy_signature_uses_real_capture_shapes() {
   composer="$dir/composer"
   pane_busy() {
     PATH="$fakebin:$PATH" FM_FAKE_COMPOSER="$composer" \
-      bash -c '. "$1/bin/fm-tmux-lib.sh"; fm_pane_is_busy "$2" "$3"' \
+      bash -c '. "$1/bin/backend/fm-tmux-lib.sh"; fm_pane_is_busy "$2" "$3"' \
       _ "$ROOT" "$1" "${2:-}"
   }
 

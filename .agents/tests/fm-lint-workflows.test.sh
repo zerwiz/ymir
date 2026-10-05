@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GitHub workflow lint gate owned by bin/fm-lint-workflows.sh.
+# GitHub workflow lint gate owned by bin/backend/fm-lint-workflows.sh.
 #
 # A malformed .github/workflows/*.yml, including a self-broken ci.yml, must fail
 # in the local/no-mistakes lint path before merge. Regression origin: #2512 put
@@ -10,9 +10,9 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-LINT_WF="$ROOT/bin/fm-lint-workflows.sh"
-LINT="$ROOT/bin/fm-lint.sh"
-INSTALLER="$ROOT/bin/fm-install-actionlint.sh"
+LINT_WF="$ROOT/bin/backend/fm-lint-workflows.sh"
+LINT="$ROOT/bin/backend/fm-lint.sh"
+INSTALLER="$ROOT/bin/backend/fm-install-actionlint.sh"
 REQUIRED=$("$LINT_WF" --required-version)
 
 # Official sha256 values from actionlint_1.7.12_checksums.txt on the v1.7.12
@@ -466,9 +466,9 @@ test_fm_lint_default_path_catches_broken_ci_yml() {
   local tmp fakebin log diff_file out rc
   tmp=$(fm_test_tmproot fm-lint-wf-default)
   mkdir -p "$tmp/bin" "$tmp/.github/workflows"
-  cp "$LINT" "$tmp/bin/fm-lint.sh"
-  cp "$LINT_WF" "$tmp/bin/fm-lint-workflows.sh"
-  chmod +x "$tmp/bin/fm-lint.sh" "$tmp/bin/fm-lint-workflows.sh"
+  cp "$LINT" "$tmp/bin/backend/fm-lint.sh"
+  cp "$LINT_WF" "$tmp/bin/backend/fm-lint-workflows.sh"
+  chmod +x "$tmp/bin/backend/fm-lint.sh" "$tmp/bin/backend/fm-lint-workflows.sh"
   write_col0_heredoc_workflow "$tmp/.github/workflows/ci.yml"
 
   fakebin=$(fm_fakebin "$tmp")
@@ -505,7 +505,7 @@ SH
 
   rc=0
   out=$(PATH="$fakebin:$PATH" GITHUB_ACTIONS='' CI='' FM_LINT_JOBS=1 \
-    FM_TEST_GIT_DIFF_FILE="$diff_file" "$tmp/bin/fm-lint.sh" 2>&1) || rc=$?
+    FM_TEST_GIT_DIFF_FILE="$diff_file" "$tmp/bin/backend/fm-lint.sh" 2>&1) || rc=$?
   [ "$rc" -ne 0 ] || fail "fm-lint.sh default path missed a broken ci.yml"$'\n'"$out"
   assert_contains "$out" "could not parse as YAML" \
     "fm-lint.sh default path did not surface the workflow YAML error"

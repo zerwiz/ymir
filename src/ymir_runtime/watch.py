@@ -3,15 +3,15 @@
 The arm is a SERVICE (plan 58, Phase 2): it keeps its own lease, beats a
 heartbeat every cycle, IDLES when no session is seated instead of retiring, and
 raises exactly one `signal:` / `stale:` / `check:` / `heartbeat:` line when the
-primary is needed. Until now that judgement lived in bash (`bin/syn-watch.sh`,
+primary is needed. Until now that judgement lived in bash (`bin/pi/syn-watch.sh`,
 409 lines), while the vendored watcher (`.agents/backend/fm-watch.sh`, 1962
 lines) carried a second, drifting copy of the same questions over the same
 record: is the arm live, is the beat fresh, what is due to be raised.
 
 Plan 58, Phase 5 folds that seam HERE. This module is the ONE owner of "where is
-the arm, is it live, what does it raise"; `bin/syn-watch.sh` becomes a thin door
+the arm, is it live, what does it raise"; `bin/pi/syn-watch.sh` becomes a thin door
 over it, and every caller that reads the state — Eir's `arm` surface, the thin
-client `bin/syn-watch-arm.sh`, the harness adapters — gets the same answer, in
+client `bin/pi/syn-watch-arm.sh`, the harness adapters — gets the same answer, in
 the same grammar, with the same exit codes.
 
 The state, all under the resolved state dir (Rule 04: the home, never the tree):
@@ -276,7 +276,7 @@ def session_owner(
 ) -> str:
     """The live session that holds this home's helm, or `none`.
 
-    The lock law is Gleipnir's (`bin/gleipnir-lock-lib.sh`): the machine-global
+    The lock law is Gleipnir's (`bin/vault/gleipnir-lock-lib.sh`): the machine-global
     lock for the primary, the per-home lock for an Eindri-home, the legacy path
     honoured for a session that started before the contract. This module does not
     re-derive it — it asks the library, exactly as the bash arm did.
@@ -609,7 +609,7 @@ def start_service(
         fleet_ensure = paths.root / "bin" / "fleet-ensure.sh"
         if os.access(fleet_ensure, os.X_OK):
             if not proc.ok(runner([str(fleet_ensure), "unit", "syn-watch"])):
-                say_err(f"could not materialize {paths.unit} (bin/fleet-ensure.sh unit syn-watch)")
+                say_err(f"could not materialize {paths.unit} (bin/fleet/fleet-ensure.sh unit syn-watch)")
         runner(["systemctl", "--user", "daemon-reload"])
         seated = proc.ok(runner(["systemctl", "--user", "enable", "--now", paths.unit]))
         if seated:
@@ -820,12 +820,12 @@ def _remedy(paths: ArmPaths) -> list[str]:
     if state == DOWN:
         return [
             f"syn-watch: the arm is DOWN — no live lease for {paths.state}",
-            "remedy: bin/syn-watch.sh start",
+            "remedy: bin/pi/syn-watch.sh start",
         ]
     if state == STALE:
         return [
             "syn-watch: the arm is STALE — heartbeat age "
             f"{heartbeat_age(paths)}s exceeds {paths.stale_seconds}s",
-            "remedy: bin/syn-watch.sh restart",
+            "remedy: bin/pi/syn-watch.sh restart",
         ]
     return []

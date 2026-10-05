@@ -10,7 +10,7 @@ subsystem was never loaded before the code changed. Five layers now prevent it:
   every session, so the mapping is always in context.
 - **3. Router loadable:** `galdr`'s `disable-model-invocation` is removed (it hid
   the one router that owns the assets); `tyr-check` keeps it (deliberate).
-- **4. Enforced seatbelt:** new `bin/syn-asset-pretool-check.sh` denies an
+- **4. Enforced seatbelt:** new `bin/gates/checks/syn-asset-pretool-check.sh` denies an
   `edit`/`write` of a governed path until its asset was read (`state/asset-reads`);
   the Pi extension relays it and records asset reads.
 - **5. Compliance gate:** `compliance-check.sh` gains an `assets` check that

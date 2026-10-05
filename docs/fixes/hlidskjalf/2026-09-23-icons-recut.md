@@ -16,7 +16,7 @@
   - the **Android splash screens** (`drawable*/splash.png`) — a plain **white**
     relic, re-cut to the stone ground with the icon centred at each size.
   Nothing regenerated them, so the design and the launch icons drifted apart.
-- **Fix (Rule 7, script-first):** a new **`bin/design-icon.sh raster`** action —
+- **Fix (Rule 7, script-first):** a new **`bin/desktop/design-icon.sh raster`** action —
   idempotent, writes nothing else — re-cuts every app icon from its own
   `public/icon.svg` (via `rsvg-convert`, else `magick`):
   - hlidskjalf → `electron/icon.png` (512), `public/apple-touch-icon.png` (180);
@@ -36,7 +36,7 @@
   action).
 
 ### Files
-- `bin/design-icon.sh` (+ `raster`)
+- `bin/desktop/design-icon.sh` (+ `raster`)
 - 47 raster icons under `apps/hlidskjalf` (incl. the Android `mipmap-*` and
   `drawable*`), `apps/odrerir`, `apps/sessrumnir`,
   `apps/smidja-factory/apps/visualizer`

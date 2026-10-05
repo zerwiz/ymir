@@ -235,10 +235,10 @@ uv pip install --python .venv/bin/python skillopt skillopt-sleep
 .venv/bin/skillopt-eval --help
 ```
 
-One-time setup (also available as `bin/skillopt-setup.sh --dry-run` to preview):
+One-time setup (also available as `bin/forge/skillopt-setup.sh --dry-run` to preview):
 
 ```bash
-bin/skillopt-setup.sh
+bin/forge/skillopt-setup.sh
 ```
 
 Register Ymir's highest-ROI skills for the first training cycle:

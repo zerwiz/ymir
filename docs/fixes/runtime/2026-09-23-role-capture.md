@@ -4,7 +4,7 @@
 - **Problem:** role is the one fact every surface should derive from — install,
   update, MCP config, the cron set, the model rail, dispatch — but nothing could
   *declare or validate* it. The registry existed only as seed data.
-- **Fix:** `bin/role.sh` — the writer and the validator for the fleet registry
+- **Fix:** `bin/skuld/role.sh` — the writer and the validator for the fleet registry
   (`$YMIR_HOME/hodd/data/fleet.json`):
   - `show [host]` — this machine's roles and the whole roster (heart included).
   - `set <host> <role[,role]>` — sets a host's roles, **refusing an unknown role**
@@ -21,5 +21,5 @@
   whynot heart,forge · zerwizserver forge`.
 
 ### Files
-- `bin/role.sh`
+- `bin/skuld/role.sh`
 - `.agents/tests/role.test.sh`

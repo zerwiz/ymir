@@ -32,7 +32,7 @@
   ],
   "bin": {
     "ymir": "bin/ymir.js",
-    "ymir-install": "bin/ymir-install.sh"
+    "ymir-install": "bin/engine/ymir-install.sh"
   },
   "files": [
     "bin/",
@@ -93,8 +93,8 @@
   "scripts": {
     "test": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
     "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
-    "prepack": "bin/app-build.sh",
-    "postinstall": "bash bin/fleet-deploy.sh || true"
+    "prepack": "bin/seat/sessrumnir/app-build.sh",
+    "postinstall": "bash bin/fleet/fleet-deploy.sh || true"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "^1.7.0",

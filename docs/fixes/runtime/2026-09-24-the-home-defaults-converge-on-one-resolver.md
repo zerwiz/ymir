@@ -2,7 +2,7 @@
 
 ### Why
 Nine scripts once carried their own home default, and a tenth was found a week later only by
-reading. Hand-convergence does not hold. Lock 3 (`bin/defaults-guard.sh`) found **45 sites**, so
+reading. Hand-convergence does not hold. Lock 3 (`bin/gates/guards/defaults-guard.sh`) found **45 sites**, so
 the convergence was done as a reviewed transform with a dry run, not by hand and not by blind sed.
 
 ### What
@@ -13,7 +13,7 @@ the convergence was done as a reviewed transform with a dry run, not by hand and
     the line: naming the old name is the point of the migration;
   - the macOS bootstrap keeps a guest default under a waiver, because a fresh guest has no
     recorded choice yet and that bootstrap seeds it;
-  - `bin/npm-install-local-test.sh` **recognizes** another seat's path shape; it does not guess one;
+  - `bin/forge/npm/npm-install-local-test.sh` **recognizes** another seat's path shape; it does not guess one;
   - the embedded Python in `bin/agents/einherjar-spawn.sh` now resolves `env → the recorded choice → a
     loud failure` instead of guessing, and the Node plugin
     (`syn-watch-arm.js`) now **throws rather than assuming a home**.
@@ -31,7 +31,7 @@ Both were found by verification, not by luck, and both are recorded because the 
 ### The lock gained its second class
 **The literal rule is structurally blind to the interesting case.** A file can be entirely free of a
 default and still not know where anything is, which is precisely how ten scripts were converged and
-left unable to run. `bin/defaults-guard.sh` now also refuses a shell script that **uses the home and
+left unable to run. `bin/gates/guards/defaults-guard.sh` now also refuses a shell script that **uses the home and
 never resolves it**, exempting a deliberate assignment and honouring a written waiver. On its first
 run it found **11 more**, pre-existing and invisible to the literal rule.
 
@@ -43,7 +43,7 @@ run it found **11 more**, pre-existing and invisible to the literal rule.
   this same change, which is the rule the gate exists to enforce) and `config` (Rule 07).
 
 ### Files
-- `bin/converge-home-defaults.py` (the reviewed transform, kept)
-- `bin/defaults-guard.sh` (the second class)
+- `bin/vault/converge-home-defaults.py` (the reviewed transform, kept)
+- `bin/gates/guards/defaults-guard.sh` (the second class)
 - the 39 converged files
 - `.agents/skills/galdr-ymirsystem/assets/{installation,memory-well,nornir-jobs}.md`

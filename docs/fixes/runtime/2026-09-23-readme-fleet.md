@@ -9,12 +9,12 @@
 - **Fix (appended, nothing rewritten):**
   - **README** gains *"The Fleet — many machines, one record"*: the four roles
     (`heart · forge · dev · hand`) with what each owns/runs/does not; the registry
-    and `bin/topology.sh`; **offline-first** (cache + journal + reconciler, the
+    and `bin/fleet/topology.sh`; **offline-first** (cache + journal + reconciler, the
     heart folds, the chain cannot fork); **MCP by role** (well/skuld/bolthorn on
     the heart, addressed by name — Rule 10 linked); **crons by role**; **models**
     (the forge owns the rail); **Eindri routing**; **one version across the
     fleet**; a nine-command **operations index**; and the **health** story
-    (35-check smoke test, `bin/eir-doctor.sh`).
+    (35-check smoke test, `bin/agents/eir-doctor.sh`).
   - **`package.json`** — the `description` now names the fleet, offline-first,
     the MCP servers, and role-gated crons; `keywords` gain `agent-os`, `eindri`,
     `fleet`, `multi-machine`, `offline-first`, `self-hosted`, `local-models`,

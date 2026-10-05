@@ -31,10 +31,10 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-marker-lib.sh"
+. "$ROOT/bin/backend/fm-marker-lib.sh"
 
-SEND="$ROOT/bin/fm-send.sh"
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-send-resolve-key)
 
@@ -153,7 +153,7 @@ test_answer_close_is_self_announced() {
   FM_STATE_OVERRIDE="$home/state" bash -c '
     . "$1"
     fm_wake_status_mark_current "$2" "$3"
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$home/state" "$home/state/t9.status" \
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$home/state" "$home/state/t9.status" \
     || fail "could not prime the announced baseline"
 
   run_send "$fb" "$home" "$log" t9 --resolve-key port-choice "use 9090"; rc=$?
@@ -162,13 +162,13 @@ test_answer_close_is_self_announced() {
     || fail "the closing resolved line is missing"
   FM_STATE_OVERRIDE="$home/state" bash -c '
     . "$1"; fm_wake_signal_seen_current "$2" "$3"
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$home/state" "$home/state/t9.status" \
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$home/state" "$home/state/t9.status" \
     || fail "the answerer's own close was left to re-wake this same home"
 
   printf 'done: worker finished after the answer\n' >> "$home/state/t9.status"
   if FM_STATE_OVERRIDE="$home/state" bash -c '
     . "$1"; fm_wake_signal_seen_current "$2" "$3"
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$home/state" "$home/state/t9.status"; then
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$home/state" "$home/state/t9.status"; then
     fail "a later worker line after the self-announced close was swallowed"
   fi
   pass "fm-send --resolve-key: the close never re-wakes its own home, later lines still do"
@@ -361,7 +361,7 @@ test_local_secondmate_answer_marked_and_closed() {
 
   run_send "$fb" "$home" "$log" fm-domain --resolve-key fleet-split "shard by team"; rc=$?
   expect_code 0 "$rc" "a secondmate answer send should succeed"
-  got=$(bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" \
+  got=$(bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" \
     "$home/state/domain.inbox/001.msg")
   case "$got" in
     "$FM_FROMFIRST_MARK"corr=*) : ;;

@@ -1,6 +1,6 @@
 """`python3 -m ymir_runtime.state` — the door the shims call.
 
-The bash libraries (`bin/gleipnir-lock-lib.sh`, `bin/records/runes-append.sh`,
+The bash libraries (`bin/vault/gleipnir-lock-lib.sh`, `bin/records/runes-append.sh`,
 `bin/time/brokk-wake-lib.sh`) never re-implement a rule; they resolve the interpreter
 and hand the verb here. Exit codes are part of the shim contract:
 

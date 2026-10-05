@@ -6,16 +6,16 @@ tree (`state/`), where the next upgrade would erase them. It was not one bug. It
 one fallback pattern, repeated.
 
 - **Four writers fell back to `$ROOT/state`** whenever the home failed to resolve:
-  `bin/nidhogg.sh`, `bin/research-round.sh` and `bin/ymir-update-check.sh` each
+  `bin/gates/nidhogg.sh`, `bin/agents/research-round.sh` and `bin/gates/checks/ymir-update-check.sh` each
   ended their resolution with `${...:-$ROOT/state}`, and `scripts/electron.sh` both
   mkdir'd the tree's state and wrote its pid and log files there
   (`pid_file`/`log_file`). All four now **resolve-or-refuse**: the home resolves via
   `bin/vault/hoard-lib.sh`, and a failure to resolve is said out loud rather than written
   into the tree. A silent write is how drift becomes history.
-- **Three neighbours were correct and were left alone:** `bin/autoboot-lib.sh`,
-  `bin/topology.sh` and `bin/fleet-ensure.sh` resolve `$YMIR_HOME/state` through
+- **Three neighbours were correct and were left alone:** `bin/engine/autoboot-lib.sh`,
+  `bin/fleet/topology.sh` and `bin/fleet/fleet-ensure.sh` resolve `$YMIR_HOME/state` through
   their home root, not the tree.
-- **One reader is the detector and must not change:** `bin/ymir-plan.sh` reads
+- **One reader is the detector and must not change:** `bin/bridge/ymir-plan.sh` reads
   `$ROOT/state` on purpose — it is the `purity` row. Changing it would hide the very
   drift it exists to show.
 - **Fifteen drift artifacts were cleared** from the tree: `cron.log`, `observer.log`,
@@ -32,7 +32,7 @@ one fallback pattern, repeated.
 galdr-reread: `installation.md` (Rule 04; the `purity` row: never write `$ROOT/state`).
 
 ### Files
-- `bin/nidhogg.sh`
-- `bin/research-round.sh`
-- `bin/ymir-update-check.sh`
+- `bin/gates/nidhogg.sh`
+- `bin/agents/research-round.sh`
+- `bin/gates/checks/ymir-update-check.sh`
 - `scripts/electron.sh`

@@ -44,7 +44,7 @@ LONG_CWD=$(cd "$LONG_CWD" && pwd -P) || fail "could not resolve long cwd fixture
 printf -v LONG_CWD_Q '%q' "$LONG_CWD"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 fm_backend_source zellij || fail "fm_backend_source zellij failed"
 
 # --- version gate + container ensure -----------------------------------------

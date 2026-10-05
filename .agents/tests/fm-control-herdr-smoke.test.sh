@@ -57,7 +57,7 @@ git -C "$PROJ" -c user.name='Firstmate Tests' -c user.email='tests@example.inval
 git -C "$PROJ" worktree add --quiet -b hsmoke "$WT"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 fm_backend_source herdr || fail "fm_backend_source herdr failed"
 
 CONTAINER_RAW=$(fm_backend_herdr_container_ensure "$WT") || fail "container_ensure failed"
@@ -92,7 +92,7 @@ EOF
 run_control() {
   env FM_HOME="$HOME_DIR" HERDR_SESSION="$SESSION" \
     FM_CONTROL_POLL=0.2 FM_CONTROL_EXIT_WAIT=2 \
-    "$ROOT/bin/fm-control.sh" "$@" 2>&1
+    "$ROOT/bin/backend/fm-control.sh" "$@" 2>&1
 }
 
 # --- no registered agent: the endpoint exists but hosts no agent ------------

@@ -19,7 +19,7 @@ SSE, Agent Cards) via the **`a2abridge`** engine, and coordinate through the
 ```
 parts[4]{thing,path,role}:
   "engine","~/.a2abridge/bin/a2abridge","directory (discovery) · bridge (announce) · service · cert · doctor"
-  "front door","bin/ratatoskr.sh","status|doctor|directory|service|cert — Ymir's wrapper"
+  "front door","bin/bridge/ratatoskr.sh","status|doctor|directory|service|cert — Ymir's wrapper"
   "wiring","bin/bridge/a2a-mcp.sh","installs both MCP servers into pi + opencode"
   "registration","a2abridge bridge -name -model -skills -directory -advertise-host -id -state-dir","an agent announces by running bridge"
 ```
@@ -37,8 +37,8 @@ goes back to Teams. Same `A2A_NAME` in both planes.
 ## Use it
 
 ```bash
-bin/ratatoskr.sh status          # engine + directory + served agents
-bin/ratatoskr.sh doctor          # health-check
+bin/bridge/ratatoskr.sh status          # engine + directory + served agents
+bin/bridge/ratatoskr.sh doctor          # health-check
 bin/bridge/a2a-mcp.sh install           # (re)wire the MCP servers into pi + opencode
 ```
 
@@ -139,7 +139,7 @@ federation[3]{piece,where,law}
   are UNSIGNED until `cert` has run; a card claiming `signed: true` without a
   signature is refused by the law.
 - **Judge a registry:** `python3 -m ymir_runtime.grants check` (or
-  `bin/ymir-config-check.sh validate <grants.yaml>`); `... signers` prints who
+  `bin/gates/checks/ymir-config-check.sh validate <grants.yaml>`); `... signers` prints who
   must sign which grant.
 - **Proven offline:** `tests/e2e/several-ymirs-foundation-proof.sh`.
 - **Honest state:** the foundation — grants + namespace-scoped journal — stands;
@@ -166,7 +166,7 @@ Rule: a successful `a2a_call` needs **transport + a live peer + delivery
 ```
 tools[4]{tool,does}:
   "bin/bridge/a2a-mcp.sh install","wire the a2abridge (+ wayofteams) MCP servers into pi + opencode"
-  "bin/ratatoskr.sh status|doctor|directory|service|cert","engine + directory front door"
+  "bin/bridge/ratatoskr.sh status|doctor|directory|service|cert","engine + directory front door"
   "bin/bridge/a2a-talk.sh agents|send <peer> \"<text>\"","Brokk-side A2A talk"
-  "bin/a2a-serve.py <pane> <name> <port>","per-Eindri A2A server: inject task -> read reply"
+  "bin/bridge/a2a-serve.py <pane> <name> <port>","per-Eindri A2A server: inject task -> read reply"
 ```

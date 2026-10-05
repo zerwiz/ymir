@@ -4,7 +4,7 @@
 // The subsystem is Mánagandr, the Old Norse month-reckoner. In code the id is
 // ASCII (`managandr`); the label keeps the Norse. This module is the single
 // implementation behind every door: the mesh face (`tools/calendar/server.mjs`),
-// the shell door (`bin/calendar-ask.sh`) and the high seat (the gate API). Any
+// the shell door (`bin/time/snotra/calendar-ask.sh`) and the high seat (the gate API). Any
 // second place that talks to Google is a design that has already failed.
 //
 // READ-ONLY, as a hard boundary. There is no create, update, delete, move or

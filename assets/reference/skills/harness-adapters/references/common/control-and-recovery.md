@@ -5,8 +5,8 @@ Load this with the running or recorded tool reference for trust, skill invocatio
 ## Typed data and lifecycle control
 
 The router owns lifecycle-only control and recorded-harness selection.
-Conversation and harness-native skill invocation use `../../../bin/fm-send.sh`.
-`../../../.agents/skills/eindri-homes/assets/control-plane.md` owns the data-plane split, and `../../../bin/fm-control-lib.sh` owns executable capabilities.
+Conversation and harness-native skill invocation use `../../../bin/backend/fm-send.sh`.
+`../../../.agents/skills/eindri-homes/assets/control-plane.md` owns the data-plane split, and `../../../bin/backend/fm-control-lib.sh` owns executable capabilities.
 Tool-reference exit and interrupt values are empirical records, not keys to improvise; a new adapter remains uncontrollable until they land in that owner.
 Let the control plane verify postconditions.
 
@@ -18,7 +18,7 @@ No observed dialog proves only that launch.
 
 Use the tool's exact skill form, or natural language only when no separate command is verified or the form remains uncertain.
 A successful send or key return is not proof of submission; require the tool-specific postcondition.
-Popup, queued-input, and readiness handling belongs to `../../../bin/fm-composer-lib.sh` and the selected backend.
+Popup, queued-input, and readiness handling belongs to `../../../bin/backend/fm-composer-lib.sh` and the selected backend.
 
 ## Interrupt and exit
 

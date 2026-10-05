@@ -11,7 +11,7 @@
     "stop": [
       {
         "type": "command",
-        "command": "guard=$(\"$CURSOR_PROJECT_DIR\"/bin/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?; [ \"$rc\" -eq 2 ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; jq -n --arg m \"$guard\" '{followup_message:$m}' 2>/dev/null || true",
+        "command": "guard=$(\"$CURSOR_PROJECT_DIR\"/bin/gates/guards/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?; [ \"$rc\" -eq 2 ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; jq -n --arg m \"$guard\" '{followup_message:$m}' 2>/dev/null || true",
         "timeout": 30
       }
     ],
@@ -19,13 +19,13 @@
       {
         "matcher": "Shell",
         "type": "command",
-        "command": "\"$CURSOR_PROJECT_DIR\"/bin/syn-arm-pretool-check.sh --cursor",
+        "command": "\"$CURSOR_PROJECT_DIR\"/bin/gates/checks/syn-arm-pretool-check.sh --cursor",
         "timeout": 10
       },
       {
         "matcher": "Shell",
         "type": "command",
-        "command": "\"$CURSOR_PROJECT_DIR\"/bin/syn-cd-pretool-check.sh --cursor",
+        "command": "\"$CURSOR_PROJECT_DIR\"/bin/gates/checks/syn-cd-pretool-check.sh --cursor",
         "timeout": 10
       }
     ]

@@ -42,7 +42,7 @@ state[9]{path,holds,owner}:
 ```
 
 Rule: a `state/*.status` line is a **wake event**, never current-state truth;
-use `bin/vor-crew-state.sh` to reconcile reality.
+use `bin/records/vor-crew-state.sh` to reconcile reality.
 
 ## Reference skills → Norse (adopted)
 
@@ -82,7 +82,7 @@ Sixteen skills adopted under `.agents/skills/`; see the registry in
 ```
 doc_map[8]{upstream,adopt_as}:
   "supervision-protocols/*","`.agents/skills/galdr-ymirsystem/assets/harness-integration/` (per-harness tier)"
-  "turnend-guard.md","`bin/syn-turnend-guard.sh` + `.pi/extensions/syn-turnend-guard.ts`"
+  "turnend-guard.md","`bin/gates/guards/syn-turnend-guard.sh` + `.pi/extensions/syn-turnend-guard.ts`"
   "trace-context.md","W3C trace propagation (W0094)"
   "subagent-guard.md","Eindri pretool seatbelts (syn-*-pretool-check.sh)"
   "architecture.md","`.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`"

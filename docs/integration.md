@@ -25,7 +25,7 @@ in the Ymir directory**; every other project is untouched.
 
 ```bash
 cd <ymir-checkout>
-bin/prereq-ensure.sh engram        # the well engine (if absent)
+bin/engine/prereq-ensure.sh engram        # the well engine (if absent)
 bin/bridge/a2abridge-ensure.sh ensure --install   # the A2A mesh engine + directory daemon
 bin/bridge/a2a-mcp.sh install --project   # writes THIS repo's config only: engram + a2abridge
 bin/bridge/a2a-mcp.sh show --project      # verify
@@ -41,14 +41,14 @@ with `pi --mcp-config .pi/mcp-adapter.json`.
 
 `bin/seat/valknut-load.sh --opencode` renders the project `opencode.json` from its
 `.example`; run it **before** `bin/bridge/a2a-mcp.sh install --project` so the MCP block
-is not overwritten. `bin/agents-config.sh apply` merges in local providers and
+is not overwritten. `bin/fleet/agents-config.sh apply` merges in local providers and
 should also run before the MCP install.
 
 ## Models
 
 `config/agents.yaml` (private, gitignored) is the roster: local providers, the
-default model, and per-agent `model:`/`harness:`. `bin/models-detect.sh` reports
-what is running; `bin/agents-config.sh apply` writes the local providers into the
+default model, and per-agent `model:`/`harness:`. `bin/model/models-detect.sh` reports
+what is running; `bin/fleet/agents-config.sh apply` writes the local providers into the
 project `opencode.json` and the chosen `model:` into `.agents/agents/*.md`. Rule:
 local models via `pi`, hosted via `opencode` — an agent may override `harness:`.
 

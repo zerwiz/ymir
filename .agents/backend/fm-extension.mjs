@@ -35,7 +35,7 @@
 //           bindings, verify it and its handshake, and print one bounded
 //           machine-readable identity record.
 // process-event
-//           Internal invocation boundary used by bin/fm-procevent.sh. It
+//           Internal invocation boundary used by bin/backend/fm-procevent.sh. It
 //           revalidates the exact registration-pinned binding and package,
 //           handshakes, then invokes source.poll, result.classify,
 //           result.terminal, or result.silent through strict JSON.

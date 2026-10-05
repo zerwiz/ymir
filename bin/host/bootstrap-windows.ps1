@@ -2,7 +2,7 @@
 #
 # Ymir's core is portable, but what it installs is a Linux runtime. On Windows
 # the host is Ubuntu inside WSL2. This enables WSL, installs Ubuntu, and then
-# hands the install to bin/ymir-install.sh *inside* that distro.
+# hands the install to bin/engine/ymir-install.sh *inside* that distro.
 #
 # Run elevated (WSL needs it). Expect ONE reboot on a machine that has never had
 # WSL — the script says so plainly and tells you the single command to run after.
@@ -26,7 +26,7 @@ function Row($step, $status, $detail) { Write-Host ("  `"{0}`",`"{1}`",`"{2}`"" 
 
 if (-not ($env:OS -eq "Windows_NT")) {
   Write-Host 'windows-bootstrap[1]{step,status,detail}:'
-  Row "layer" "SKIP" "not Windows - this layer applies on Windows; run bin/host-sense.sh for THIS machine"
+  Row "layer" "SKIP" "not Windows - this layer applies on Windows; run bin/host/host-sense.sh for THIS machine"
   exit 0
 }
 
@@ -91,14 +91,14 @@ if [ -n "%REPO%" ]; then
   [ -d "$HOME/Ymir/.git" ] || git clone "%REPO%" "$HOME/Ymir"
   cd "$HOME/Ymir" && { git pull --ff-only || true; }
 fi
-cd "$HOME/Ymir" && bin/ymir-install.sh --yes
+cd "$HOME/Ymir" && bin/engine/ymir-install.sh --yes
 '@
 $inner = $inner.Replace("%REPO%", $Repo)
 
 & wsl.exe -d $Distro -- bash -lc $inner
 if ($LASTEXITCODE -ne 0) {
   Write-Host "the in-distro install failed." -ForegroundColor Red
-  Write-Host "help: wsl -d $Distro -- bash -lc 'cd ~/Ymir && bin/ymir-install.sh'"
+  Write-Host "help: wsl -d $Distro -- bash -lc 'cd ~/Ymir && bin/engine/ymir-install.sh'"
   exit 1
 }
 

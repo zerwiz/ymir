@@ -32,7 +32,7 @@ The adapter is pure hook JSON. There is no plugin runtime and no `.cursor/rules/
     "stop": [
       {
         "type": "command",
-        "command": "guard=$(\"$CURSOR_PROJECT_DIR\"/bin/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?; [ \"$rc\" -eq 2 ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; jq -n --arg m \"$guard\" '{followup_message:$m}' 2>/dev/null || true",
+        "command": "guard=$(\"$CURSOR_PROJECT_DIR\"/bin/gates/guards/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?; [ \"$rc\" -eq 2 ] || exit 0; command -v jq >/dev/null 2>&1 || exit 0; jq -n --arg m \"$guard\" '{followup_message:$m}' 2>/dev/null || true",
         "timeout": 30
       }
     ],
@@ -40,13 +40,13 @@ The adapter is pure hook JSON. There is no plugin runtime and no `.cursor/rules/
       {
         "matcher": "Shell",
         "type": "command",
-        "command": "\"$CURSOR_PROJECT_DIR\"/bin/syn-arm-pretool-check.sh --cursor",
+        "command": "\"$CURSOR_PROJECT_DIR\"/bin/gates/checks/syn-arm-pretool-check.sh --cursor",
         "timeout": 10
       },
       {
         "matcher": "Shell",
         "type": "command",
-        "command": "\"$CURSOR_PROJECT_DIR\"/bin/syn-cd-pretool-check.sh --cursor",
+        "command": "\"$CURSOR_PROJECT_DIR\"/bin/gates/checks/syn-cd-pretool-check.sh --cursor",
         "timeout": 10
       }
     ]
@@ -81,7 +81,7 @@ Cursor also loads the tracked Claude settings, so upstream guards against double
 ## 4. `stop` — turn-end guard
 
 ```bash
-guard=$("$CURSOR_PROJECT_DIR"/bin/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?
+guard=$("$CURSOR_PROJECT_DIR"/bin/gates/guards/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?
 [ "$rc" -eq 2 ] || exit 0
 command -v jq >/dev/null 2>&1 || exit 0
 jq -n --arg m "$guard" '{followup_message:$m}' 2>/dev/null || true
@@ -101,8 +101,8 @@ There is **no re-arm** hook: Cursor has no async/background Stop continuation in
 Two entries, both `"matcher": "Shell"`:
 
 ```bash
-"$CURSOR_PROJECT_DIR"/bin/syn-arm-pretool-check.sh --cursor   # timeout 10
-"$CURSOR_PROJECT_DIR"/bin/syn-cd-pretool-check.sh  --cursor   # timeout 10
+"$CURSOR_PROJECT_DIR"/bin/gates/checks/syn-arm-pretool-check.sh --cursor   # timeout 10
+"$CURSOR_PROJECT_DIR"/bin/gates/checks/syn-cd-pretool-check.sh  --cursor   # timeout 10
 ```
 
 - `--cursor` selects Cursor's transport semantics in the owner scripts.
@@ -151,12 +151,12 @@ jq -n --arg c "$digest" '{additional_context:$c}' | jq -e 'has("additional_conte
 ```bash
 # Inert guard:
 rm -f state/.supervision-armed
-guard=$(bin/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?
+guard=$(bin/gates/guards/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?
 echo "rc=$rc (expect 0; no followup_message emitted)"
 
 # Armed + stale → emit followup_message:
 touch state/.supervision-armed; rm -f state/.watch.heartbeat
-guard=$(bin/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?
+guard=$(bin/gates/guards/syn-turnend-guard.sh 2>&1 </dev/null); rc=$?
 echo "rc=$rc (expect 2)"
 [ "$rc" -eq 2 ] && jq -n --arg m "$guard" '{followup_message:$m}' | jq -e 'has("followup_message")' && echo "shape ok"
 ```
@@ -164,8 +164,8 @@ echo "rc=$rc (expect 2)"
 ### Verify preToolUse
 
 ```bash
-bin/syn-arm-pretool-check.sh --cursor --command 'bin/syn-watch-arm.sh &'; echo "arm -> $? (expect 2)"
-bin/syn-cd-pretool-check.sh  --cursor --command 'cd ../..';             echo "cd  -> $? (expect 2)"
+bin/gates/checks/syn-arm-pretool-check.sh --cursor --command 'bin/pi/syn-watch-arm.sh &'; echo "arm -> $? (expect 2)"
+bin/gates/checks/syn-cd-pretool-check.sh  --cursor --command 'cd ../..';             echo "cd  -> $? (expect 2)"
 ```
 
 > Note: `--command` and `--cursor` are both parsed by the owner scripts; the hook commands above pass only `--cursor` because in the real hook the command text arrives on stdin. For a local smoke test, pass `--command` explicitly.

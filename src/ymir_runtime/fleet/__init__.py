@@ -12,7 +12,7 @@ fleet[1]{module,owns}:
   "rail.py","the strong boxes · liveness (health, then /v1/models) · the ranked live set · the first-alive serving URL · the shared key as a REFERENCE"
 ```
 
-The layer is reached by `bin/rail-resolve.sh` (the door) and its own module CLI
+The layer is reached by `bin/model/rail-resolve.sh` (the door) and its own module CLI
 `python3 -m ymir_runtime.fleet`. It decides; it launches nothing.
 """
 

@@ -20,10 +20,10 @@ first_law{one,rule}:
 none. So a skill is *found* on demand and read then:
 
 ```bash
-bash bin/skill-find.sh "the words you would use"   # search the descriptions
-bash bin/skill-find.sh --list                       # every skill, one line each
-bash bin/skill-find.sh --where <name>               # the exact path
-bash bin/skill-find.sh --check                      # duplicates, unfindable skills
+bash bin/agents/skill-find.sh "the words you would use"   # search the descriptions
+bash bin/agents/skill-find.sh --list                       # every skill, one line each
+bash bin/agents/skill-find.sh --where <name>               # the exact path
+bash bin/agents/skill-find.sh --check                      # duplicates, unfindable skills
 ```
 
 **Four shelves, searched in order, first hit wins:**
@@ -76,7 +76,7 @@ read it once and trust it. If the harness already injected the Sága digest, do 
 run it again. Start the Nornir jobs if the digest reports them stopped.
 
 **Fixes:** read `docs/fixes/<component>/` for recent runtime and policy changes —
-**one file per fix**, never rewritten (`bin/fixes.sh list|show`; the component's
+**one file per fix**, never rewritten (`bin/gates/fixes.sh list|show`; the component's
 directory is its history). The old `CHANGELOG.md` monolith is retired.
 
 ## Mandate
@@ -114,7 +114,7 @@ manual[9]{asset,path,load_when}:
   "registry",".agents/assets/agents/registry.md","skills, assets, tools, commands inventories"
   "runtime",".agents/assets/agents/runtime.md","how Ymir boots / supervises the primary"
   "toon-tasks",".agents/assets/agents/toon-tasks-cli.md","building agent-facing output / tasks-cli"
-  "installation",".agents/skills/galdr-ymirsystem/assets/installation.md","changing bin/ymir-install.sh, engines, first setup"
+  "installation",".agents/skills/galdr-ymirsystem/assets/installation.md","changing bin/engine/ymir-install.sh, engines, first setup"
   "ui",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
   "hall",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md","any change under apps/odrerir"
   "runtime-spec",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md","the runtime, digest, lock, supervision, cron"
@@ -181,7 +181,7 @@ and starting the other, or re-point the router.
 
 Set `OPENAI_BASE_URL` and `OPENAI_MODEL` env vars to route through any
 provider. Both providers are configured in `opencode.json`; which one
-handles a given task depends on dispatch. Run `bin/apodex-smoke-test.sh`
+handles a given task depends on dispatch. Run `bin/model/apodex-smoke-test.sh`
 to validate Apodex before routing research tasks through it.
 
 ### Apodex Licence — Apache 2.0
@@ -351,8 +351,8 @@ See `.agents/assets/agents/naming.md` for the full component map.
   later). Never a shared token.
 - Every project's `host/owner/repo/remote/default_branch/auth` is recorded in the
   **master project registry** (`$YMIR_HOME/hodd/identity/projects.yaml`, a `git{}` block)
-  consumed by `bin/mjollnir.sh` (issue→PR), `bin/yggdrasil.sh` (worktree), and
-  `bin/github-deploy.sh` (deploy). Auth is a **reference**, never a value —
+  consumed by `bin/forge/mjollnir.sh` (issue→PR), `bin/forge/yggdrasil.sh` (worktree), and
+  `bin/forge/github-deploy.sh` (deploy). Auth is a **reference**, never a value —
   `GITHUB_TOKEN`, `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`,
   `GITHUB_INSTALLATION_ID` — resolved from
   `$YMIR_HOME/hodd/secrets/platform.env`. Never hardcode or commit a secret.
@@ -373,8 +373,8 @@ See `.agents/assets/agents/naming.md` for the full component map.
   Allfather seals → merge. If work is already sitting on local `main`, ship it as
   a PR (a branch at that commit) before doing anything else.
   The gate is enforced in git hooks, seated by the install step `gates`:
-  `bin/branch-guard.sh` refuses a push to a protected branch, and
-  `bin/fixes-guard.sh` refuses a push whose range carries no new fix note in
+  `bin/gates/guards/branch-guard.sh` refuses a push to a protected branch, and
+  `bin/gates/guards/fixes-guard.sh` refuses a push whose range carries no new fix note in
   `docs/fixes/` and names the component it covers (`YMIR_SKIP_FIXES_GUARD=1` is
   the loud override).
 
@@ -383,8 +383,8 @@ See `.agents/assets/agents/naming.md` for the full component map.
 - **Hermes** — the Nous Research agent runtime
   (`hermes-agent.nousresearch.com`, `github.com/NousResearch/hermes-agent`, MIT)
   — is an adopted **worker runtime** with its own brain, memory, skills, and
-  isolated subagents. `bin/hermes-ensure.sh` provisions it for any user who
-  lacks it (the `hermes` step of `bin/ymir-install.sh` installs it when absent).
+  isolated subagents. `bin/engine/hermes-ensure.sh` provisions it for any user who
+  lacks it (the `hermes` step of `bin/engine/ymir-install.sh` installs it when absent).
   Config/identity stays the user's own; Ymir only guarantees the runtime exists.
 
 ## Starting the system (for the Allfather)
@@ -395,7 +395,7 @@ See `.agents/assets/agents/naming.md` for the full component map.
 - `scripts/electron.sh start [--view hlidskjalf|smidja]` — the desktop shell
   (an Electron window over Hlidskjalf by default, or the Smiðja visualizer with
   `--view smidja`), app icon + stable "Ymir" title. `stop` / `status` too.
-- `bin/gjallarhorn-tunnel.sh start` — exposes Hlidskjalf at
+- `bin/forge/gjallarhorn-tunnel.sh start` — exposes Hlidskjalf at
   the operator's own hostname (Cloudflare tunnel → `:3889`).
 - The **Smiðja visualizer** lives at
   `.agents/skills/smidja-factory/apps/visualizer` and is started by `scripts/start.sh`
@@ -404,7 +404,7 @@ See `.agents/assets/agents/naming.md` for the full component map.
 Access: the gate shows an **in-app login** (no browser prompt; there is no
 browser prompt and no operator name baked in). The operator's own credentials
 come from `HLIDSKJALF_AUTH` in `.env.local`, never inline, and everyone else is
-let in with an invite code (`bin/ymir-invite.sh`). GitHub sign-in is the same
+let in with an invite code (`bin/engine/ymir-invite.sh`). GitHub sign-in is the same
 gate by another door, once `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set.
 
 ## The rules (law)
@@ -475,9 +475,9 @@ from `$YMIR_HOME`, never from the repo tree.
   The hoard stores them encrypted (`platform.env.age`); `hodd.sh` decrypts in
   memory. The design and its one invariant (the home repo IS the vault and must
   stay private) are in `hodd/docs/secrets-vault.md`.
-- **Outer ward:** `bin/secret-guard.sh` (pre-commit + CI) refuses a commit carrying
+- **Outer ward:** `bin/gates/guards/secret-guard.sh` (pre-commit + CI) refuses a commit carrying
   a secret into this repo.
-- **Placement ward:** `bin/eir-doctor.sh`'s `hoard` surface fails when private data
+- **Placement ward:** `bin/agents/eir-doctor.sh`'s `hoard` surface fails when private data
   drifts outside the hoard, or when `.ymir-layout.yaml` names a path that does not
   exist (a stale map is how private work lands outside the vault).
 - **Inner ward:** `$YMIR_HOME/.gitignore`.
@@ -497,7 +497,7 @@ incident is recorded in `hodd/docs/secrets-vault.md`.
 
 The repo contains only public artifacts (source code, public docs, `*.example`
 scaffolds). All private data lives at `$YMIR_HOME` and syncs between machines
-via the user's private GitHub repo. A fresh clone → `bin/ymir-install.sh` →
+via the user's private GitHub repo. A fresh clone → `bin/engine/ymir-install.sh` →
 choose `$YMIR_HOME` → optionally link a private GitHub repo → done.
 
 ## Platform installations (Rule 05)
@@ -529,22 +529,22 @@ Law: `RULES/06-append-only.md`.
 
 ## Keeping a home current
 
-- **Structure updates:** `bin/ymir-migrate.sh status|apply` — versioned,
+- **Structure updates:** `bin/engine/ymir-migrate.sh status|apply` — versioned,
   idempotent migrations in `.agents/migrations/` heal an old home forward
-  (e.g. `0001-hodd-layout`). Run after an update; `bin/ymir-install.sh` and
-  `bin/groa-update.sh` call it.
-- **Update — Gróa (the updater shaman):** `bin/groa-update.sh [--check]`
+  (e.g. `0001-hodd-layout`). Run after an update; `bin/engine/ymir-install.sh` and
+  `bin/agents/groa-update.sh` call it.
+- **Update — Gróa (the updater shaman):** `bin/agents/groa-update.sh [--check]`
   fast-forwards Brokk and every registered Eindri-home (never forced), then
-  mends forward; `bin/brokk-update.sh` is her alias. Her door is the
+  mends forward; `bin/agents/brokk-update.sh` is her alias. Her door is the
   `groa-update` skill (`/updateBrokk`). She reports `reread-Brokk` and
   `galdr-reread` — when the instruction surface moved, re-read `AGENTS.md` and
   reflect it in the owning Galdr asset.
-- **Repair — Eir (the healer):** `bin/eir-doctor.sh [check|fix]` composes every
+- **Repair — Eir (the healer):** `bin/agents/eir-doctor.sh [check|fix]` composes every
   `*-ensure.sh` surface, diagnoses the system, and mends the broken. Gróa keeps
   it current; Eir makes it work.
 - **Your agent set:** `config/agents.yaml` (template `.example`, private;
   at `$YMIR_HOME/config/agents.yaml` after install) picks
-  each agent's harness + model; `bin/agents-config.sh show|apply`, and
+  each agent's harness + model; `bin/fleet/agents-config.sh show|apply`, and
   `bin/agents/agent-run.sh <agent> "<task>"`. Rule: local models → **pi**, hosted →
   **opencode**.
 - **Skills:** one galdr-style skill per figure (a `SKILL.md` router + `assets/`);

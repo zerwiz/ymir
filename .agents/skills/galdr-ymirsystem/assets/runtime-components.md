@@ -52,28 +52,28 @@ Per-component variable lists appear in each section below.
 | `bin/time/saga-session-start.sh` | **Sága** | one-command session-start digest (8 stages) | `saga-session-start.sh` | 0 |
 | `bin/time/saga-sessionstart-run.sh` | **Sága** | session-open router for run-tier harnesses | `saga-sessionstart-run.sh [--source <s>] [--pi-prerequisite]` | 0 (3 if Pi stand-down) |
 | `bin/time/saga-wake-drain.sh` | **Sága** | present durable wakes + open decisions | `saga-wake-drain.sh` | 0 |
-| `bin/syn-watch-arm.sh` | **Sýn** | arm one watcher cycle | `syn-watch-arm.sh --restart` / `--handling-delivered <g> --watcher-pid <p>` | 0 |
-| `bin/syn-turnend-guard.sh` | **Sýn** | refuse a blind turn end | `syn-turnend-guard.sh [--claude]` | 0 healthy/inert; 2 off |
-| `bin/syn-arm-pretool-check.sh` | **Sýn** | deny backgrounding/detaching the arm (real `&`/nohup/setsid/disown; `&&` and `bash -n` allowed) | `... --command <cmd>` | 0 allow; 2 block |
-| `bin/syn-cd-pretool-check.sh` | **Sýn** | deny escaping `cd` | `... --command <cmd>` | 0 allow; 2 block |
-| `bin/syn-guard-pretool-check.sh` | **Sýn** | deny destructive shapes against the lock, supervision markers, the append-only Runes ledger, the guard machinery, secrets, and the fleet registries | `... --command <cmd>` | 0 allow; 2 block |
-| `bin/gleipnir-lock-lib.sh` | **Gleipnir** | session lock library: machine-global for the primary, per-home for an Eindri-home (`state/.lock-path` pointer) | source only | fn return 0/1 |
-| `bin/rodd-operational-input.sh` | **Rödd** | operational wire encode/kind/classify/body | `... encode <kind>` \| `kind` \| `classify` \| `body` \| `--help` | 0; 1 non-match; 2 usage |
-| `bin/hamr-harness.sh` | **Hamr** | detect harness identity | `hamr-harness.sh` \| `eindri` \| `eindri-model` \| `eindri-effort` | 0 |
+| `bin/pi/syn-watch-arm.sh` | **Sýn** | arm one watcher cycle | `syn-watch-arm.sh --restart` / `--handling-delivered <g> --watcher-pid <p>` | 0 |
+| `bin/gates/guards/syn-turnend-guard.sh` | **Sýn** | refuse a blind turn end | `syn-turnend-guard.sh [--claude]` | 0 healthy/inert; 2 off |
+| `bin/gates/checks/syn-arm-pretool-check.sh` | **Sýn** | deny backgrounding/detaching the arm (real `&`/nohup/setsid/disown; `&&` and `bash -n` allowed) | `... --command <cmd>` | 0 allow; 2 block |
+| `bin/gates/checks/syn-cd-pretool-check.sh` | **Sýn** | deny escaping `cd` | `... --command <cmd>` | 0 allow; 2 block |
+| `bin/gates/checks/syn-guard-pretool-check.sh` | **Sýn** | deny destructive shapes against the lock, supervision markers, the append-only Runes ledger, the guard machinery, secrets, and the fleet registries | `... --command <cmd>` | 0 allow; 2 block |
+| `bin/vault/gleipnir-lock-lib.sh` | **Gleipnir** | session lock library: machine-global for the primary, per-home for an Eindri-home (`state/.lock-path` pointer) | source only | fn return 0/1 |
+| `bin/agents/rodd-operational-input.sh` | **Rödd** | operational wire encode/kind/classify/body | `... encode <kind>` \| `kind` \| `classify` \| `body` \| `--help` | 0; 1 non-match; 2 usage |
+| `bin/fleet/hamr-harness.sh` | **Hamr** | detect harness identity | `hamr-harness.sh` \| `eindri` \| `eindri-model` \| `eindri-effort` | 0 |
 | `bin/agents/einherjar-spawn.sh` | **Einherjar** | spawn an Eindri worker | `einherjar-spawn.sh <id> <project> --mode <m> [flags]` | 0; 1 error; 2 usage |
 | `bin/agents/erindi-brief.sh` | **Erindi** | scaffold a worker brief | `erindi-brief.sh <id> <repo> --mode <m>` \| `--scout` \| `--relaunch` | 0; 1 error; 2 usage |
-| `bin/vor-crew-state.sh` | **Vör** | read a worker's current state | `vor-crew-state.sh <id>` | 0; 2 usage |
+| `bin/records/vor-crew-state.sh` | **Vör** | read a worker's current state | `vor-crew-state.sh <id>` | 0; 2 usage |
 | `bin/time/nornir-cron-start.sh` | **Nornir** | ensure scheduled jobs run (idempotent) | `nornir-cron-start.sh [--status\|--stop]` | 0 |
 | `bin/time/nornir-job-daily-briefing.sh` | **Sága** | 07:00 deterministic briefing | `nornir-job-daily-briefing.sh` | 0; 1 IO |
 | `bin/time/nornir-job-git-sync.sh` | **Yggdrasil** | safe git fetch/push | `nornir-job-git-sync.sh` | 0; 1 git missing; 2 bad mode |
 | `bin/time/nornir-job-memory-housekeeping.sh` | **Muninn** | backup-gated memory snapshot/prune | `nornir-job-memory-housekeeping.sh` | 0 |
 | `bin/time/nornir-job-observer.sh` | **Huginn** | read-only observation of command + Brokk | `nornir-job-observer.sh` | 0 |
 | `bin/records/runes-append.sh` | **Runes** | append-only chained audit ledger | `... <actor> <event> [--order W] [--realm R] --message "..."` \| `--help` | 0; 1 IO; 2 usage |
-| `bin/snotra-detect.sh` | **Snotra** | the ear's watch: reads the PipeWire graph, arms the capture of the conversation pair when an app takes the mic, and leaves (stop + transcribe + mine + deliver) when the room empties. Raised by capability as `snotra-detect.service` | `snotra-detect.sh run` \| `status` \| `scan` \| `once` \| `arm [slug]` \| `leave` | 0; 1 idle or unreadable graph; 2 usage |
-| `bin/snotra-mine.sh` | **Snotra** | mine decisions and action items out of a transcript — mechanical cues, verbatim quotes, timestamps; no owner is ever assigned | `snotra-mine.sh <transcript> <out-actions.md> [minutes]` | 0 mined; 1 usage/IO |
-| `bin/snotra-capture.sh` | **Snotra** | capture mic + system monitor (PipeWire) to a dated WAV in the hoard; writes the Listening indicator and `state/.snotra-outfile`. `SNOTRA_OUTFILE` names the recording, `SNOTRA_MONITOR`/`SNOTRA_MIC` the conversation pair | `snotra-capture.sh start [secs]` \| `stop` \| `status` \| `devices` | 0; 1 no device; 2 usage |
-| `bin/snotra-transcribe.sh` | **Snotra** | transcribe a recording (engine discovered), write Markdown minutes + a Rune | `snotra-transcribe.sh <wav> [topic]` | 0; 1 no recording |
-| `bin/snotra-ensure.sh` | **Snotra** | ensure the seat's whisper engine + model (per-OS) | `snotra-ensure.sh status` \| `ensure [--install]` \| `install` | 0 present; 1 absent; 2 usage |
+| `bin/time/snotra/snotra-detect.sh` | **Snotra** | the ear's watch: reads the PipeWire graph, arms the capture of the conversation pair when an app takes the mic, and leaves (stop + transcribe + mine + deliver) when the room empties. Raised by capability as `snotra-detect.service` | `snotra-detect.sh run` \| `status` \| `scan` \| `once` \| `arm [slug]` \| `leave` | 0; 1 idle or unreadable graph; 2 usage |
+| `bin/time/snotra/snotra-mine.sh` | **Snotra** | mine decisions and action items out of a transcript — mechanical cues, verbatim quotes, timestamps; no owner is ever assigned | `snotra-mine.sh <transcript> <out-actions.md> [minutes]` | 0 mined; 1 usage/IO |
+| `bin/time/snotra/snotra-capture.sh` | **Snotra** | capture mic + system monitor (PipeWire) to a dated WAV in the hoard; writes the Listening indicator and `state/.snotra-outfile`. `SNOTRA_OUTFILE` names the recording, `SNOTRA_MONITOR`/`SNOTRA_MIC` the conversation pair | `snotra-capture.sh start [secs]` \| `stop` \| `status` \| `devices` | 0; 1 no device; 2 usage |
+| `bin/time/snotra/snotra-transcribe.sh` | **Snotra** | transcribe a recording (engine discovered), write Markdown minutes + a Rune | `snotra-transcribe.sh <wav> [topic]` | 0; 1 no recording |
+| `bin/time/snotra/snotra-ensure.sh` | **Snotra** | ensure the seat's whisper engine + model (per-OS) | `snotra-ensure.sh status` \| `ensure [--install]` \| `install` | 0 present; 1 absent; 2 usage |
 
 ### 3.2 `bin/time/saga-session-start.sh` — Sága, the session digest
 
@@ -130,7 +130,7 @@ open decisions: N
 
 Records stay durable until acknowledged. Env: `BROKK_ROOT_OVERRIDE`, `BROKK_HOME`, `BROKK_STATE_OVERRIDE`.
 
-### 3.5 `bin/syn-watch-arm.sh` — Sýn, the watcher cycle
+### 3.5 `bin/pi/syn-watch-arm.sh` — Sýn, the watcher cycle
 
 Arms one supervision cycle. `--restart` prints `watcher: started pid=<pid> recovery-generation=<gen>`, writes `state/.supervision-armed`, and loops.
 
@@ -148,7 +148,7 @@ Arms one supervision cycle. `--restart` prints `watcher: started pid=<pid> recov
 - Env: `BROKK_ROOT_OVERRIDE`, `BROKK_HOME`, `BROKK_STATE_OVERRIDE`, `BROKK_WATCH_POLL_SECONDS` (5), `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (60), `BROKK_WATCH_PREDECESSOR_ARM_PID`.
 - Sources `gleipnir-lock-lib.sh`.
 
-### 3.6 `bin/syn-turnend-guard.sh` — Sýn, the blind-turn refusal
+### 3.6 `bin/gates/guards/syn-turnend-guard.sh` — Sýn, the blind-turn refusal
 
 ```
 syn-turnend-guard.sh [--claude]
@@ -159,7 +159,7 @@ syn-turnend-guard.sh [--claude]
 
 On exit 2 stderr carries the recovery instruction. Env: `BROKK_ROOT_OVERRIDE`, `BROKK_HOME`, `BROKK_STATE_OVERRIDE`, `BROKK_WATCH_HEARTBEAT_STALE_SECONDS`.
 
-### 3.7 `bin/syn-arm-pretool-check.sh` / `bin/syn-cd-pretool-check.sh` — Sýn, seatbelts
+### 3.7 `bin/gates/checks/syn-arm-pretool-check.sh` / `bin/gates/checks/syn-cd-pretool-check.sh` — Sýn, seatbelts
 
 v0 inert-by-default policy owners.
 
@@ -171,7 +171,7 @@ syn-cd-pretool-check.sh  --command <cmd>   # denies *'cd '*'/../'*
 
 Unknown flags are ignored (`shift`). No env. Both accept `--claude`/`--cursor` as ignored transport tags.
 
-### 3.8 `bin/gleipnir-lock-lib.sh` — Gleipnir, the session lock (source library)
+### 3.8 `bin/vault/gleipnir-lock-lib.sh` — Gleipnir, the session lock (source library)
 
 Source-safe. Writes/releases `state/.lock` as a bare pid.
 
@@ -188,7 +188,7 @@ Source-safe. Writes/releases `state/.lock` as a bare pid.
 
 Exports `GLEIPNIR_LOCK_ACQUIRED=0`. Env: `BROKK_ROOT_OVERRIDE`, `BROKK_HOME`, `BROKK_STATE_OVERRIDE`, `BROKK_SESSION_PID`.
 
-### 3.9 `bin/rodd-operational-input.sh` — Rödd, the operational wire
+### 3.9 `bin/agents/rodd-operational-input.sh` — Rödd, the operational wire
 
 Both a source-safe library and the cross-language CLI. **Single owner** of the wire grammar; callers never re-parse.
 
@@ -204,7 +204,7 @@ Wire form: `<U+2063>RODD_OP: v1 <kind>: <body>`.
 
 Current kinds (`RODD_KINDS`): `session-start watcher turn-end-guard away-supervisor launch-brief branch-outcome`, plus the `from-brokk` compatibility carrier (`RODD_FROMBROKK_MARK`). Legacy detection exists only for persisted pre-protocol transcripts. Bash 3.2 compatible. No env required; the Pi Rödd lib may set `RODD_OPERATIONAL_INPUT_SCRIPT`.
 
-### 3.10 `bin/hamr-harness.sh` — Hamr, the shape detector
+### 3.10 `bin/fleet/hamr-harness.sh` — Hamr, the shape detector
 
 Prints the harness identity of the current process tree.
 
@@ -235,12 +235,12 @@ einherjar-spawn.sh <task-id> --relaunch [--harness ...] [--model ...] [--effort 
 Behavior:
 
 1. Validates the task id (no `/`, no leading `.`, no spaces).
-2. Resolves harness + model FROM THE MACHINE (2026-09-24): explicit flags → `bin/model-resolve.sh` for a model request → `config/agents.yaml` via `bin/agents-config.sh` → the fleet law (local → pi, hosted → opencode). Provenance is printed and recorded. **Fails closed** against `VERIFIED_HARNESSES='opencode pi pi-signed'`; a `--harness` with whitespace is a raw launch escape hatch. A model the chosen harness cannot serve is refused. Only an ACTIVE dispatch profile (`bin/dispatch-profile.sh active` — never a template carrying unfilled tokens, and the `$YMIR_HOME/hodd/config` override wins) forces an explicit `--harness` (consultation backstop).
+2. Resolves harness + model FROM THE MACHINE (2026-09-24): explicit flags → `bin/model/model-resolve.sh` for a model request → `config/agents.yaml` via `bin/fleet/agents-config.sh` → the fleet law (local → pi, hosted → opencode). Provenance is printed and recorded. **Fails closed** against `VERIFIED_HARNESSES='opencode pi pi-signed'`; a `--harness` with whitespace is a raw launch escape hatch. A model the chosen harness cannot serve is refused. Only an ACTIVE dispatch profile (`bin/fleet/dispatch-profile.sh active` — never a template carrying unfilled tokens, and the `$YMIR_HOME/hodd/config` override wins) forces an explicit `--harness` (consultation backstop).
 3. Requires the brief at `data/<id>/brief.md`; a ship launch refuses if the brief's `Delivery contract: mode=` disagrees with `--mode`.
 4. Consults **worth-a-smith** (D7): a not-worktree-shaped errand is REFUSED with the reason and remedy; `--force` overrides and records `force=1`.
 5. Creates/reuses a Yggdrasil worktree at `$BROKK_HOME/.yggdrasil/<id>` (detached at `origin/HEAD` or `HEAD`).
 6. Resolves isolation from the brief's `Isolation:` declaration (herdr = ordinary road); `--isolation auto` honours it and a declared utgard with no image is a LOUD refusal, never a silent downgrade; `on` requires docker + `utgard-runner:latest`; `off` is refused against a declared utgard.
-7. Takes the local-model lock for a LOCAL model (`bin/local-model-lock.sh` pre-check refuses with the holder named; the launched command runs under the flock) and records a heartbeat baseline (`launched=`, first status line) for the silence bridge.
+7. Takes the local-model lock for a LOCAL model (`bin/model/local-model-lock.sh` pre-check refuses with the holder named; the launched command runs under the flock) and records a heartbeat baseline (`launched=`, first status line) for the silence bridge.
 6. Builds `state/<id>.launch.sh`, writes `state/<id>.utgard` when isolated, then launches in tmux (`eindri-<id>` window) or herdr (`eindri-<id>` workspace).
 7. Records `state/<id>.meta` and prints `spawned <id> harness=... kind=... mode=... yolo=... backend=... target=... worktree=... isolation=...`.
 
@@ -265,7 +265,7 @@ erindi-brief.sh <task-id> --relaunch
 - Steering inbox: `state/<id>.inbox/NNN.msg`; moving to `handled/` is the acknowledgement.
 - Env: `BROKK_ROOT_OVERRIDE`, `BROKK_HOME`, `BROKK_DATA_OVERRIDE`, `BROKK_STATE_OVERRIDE`, `BROKK_PAUSED_VERB` (default `paused`).
 
-### 3.13 `bin/vor-crew-state.sh` — Vör, the state reconciler
+### 3.13 `bin/records/vor-crew-state.sh` — Vör, the state reconciler
 
 Read-only deterministic read of a worker's **current** state, reconciling the append-only status log against the live backend endpoint recorded in the meta.
 
@@ -388,8 +388,8 @@ Full deep dive: [`harness-integration/opencode.md`](harness-integration/opencode
 | File | Format | Purpose |
 |---|---|---|
 | `config/cron.yaml` | `HH:MM <command>` lines, `#` comments | Nornir schedule. Current jobs: `07:00` daily briefing, `06:00` observer, `00:30` memory housekeeping, `00:00` git sync |
-| `config/eindri-harness` | one line `<harness> [<model>] [<effort>]` | `bin/hamr-harness.sh` query surface only — NOT the spawn's resolution authority (2026-09-24). Current: `opencode` |
-| `config/eindri-dispatch.json` | JSON (rules + default) | per-task harness/model/effort rules. ACTIVE only when it parses, carries no unfilled `<...>` tokens, and every rule's model is servable here (`bin/dispatch-profile.sh`); the `$YMIR_HOME/hodd/config` override wins. Active ⇒ `einherjar-spawn.sh` requires an explicit `--harness` |
+| `config/eindri-harness` | one line `<harness> [<model>] [<effort>]` | `bin/fleet/hamr-harness.sh` query surface only — NOT the spawn's resolution authority (2026-09-24). Current: `opencode` |
+| `config/eindri-dispatch.json` | JSON (rules + default) | per-task harness/model/effort rules. ACTIVE only when it parses, carries no unfilled `<...>` tokens, and every rule's model is servable here (`bin/fleet/dispatch-profile.sh`); the `$YMIR_HOME/hodd/config` override wins. Active ⇒ `einherjar-spawn.sh` requires an explicit `--harness` |
 | `config/backend` *(optional)* | one word `tmux`/`herdr` | backend override for `einherjar-spawn.sh`; absent here |
 | `config/x-mode.env` *(optional)* | shell env | sourced by the OpenCode arm spawn; makes `shouldArm` true. Absent by default |
 
@@ -459,7 +459,7 @@ for f in bin/*.sh; do bash -n "$f" || echo "SYNTAX FAIL: $f"; done && echo "bash
 ### 10.2 Libs behave under `set -u` when sourced
 
 ```bash
-bash -c '. bin/gleipnir-lock-lib.sh; . bin/records/runes-append.sh; . bin/rodd-operational-input.sh; echo "sourced ok"'
+bash -c '. bin/vault/gleipnir-lock-lib.sh; . bin/records/runes-append.sh; . bin/agents/rodd-operational-input.sh; echo "sourced ok"'
 ```
 
 ### 10.3 JSON and YAML-shaped config
@@ -482,30 +482,30 @@ bin/time/saga-session-start.sh | grep -E '^== '
 
 ```bash
 bin/time/saga-wake-drain.sh
-: > state/.wake-queue; bin/syn-watch-arm.sh --restart   # exits "signal: wake queue"
+: > state/.wake-queue; bin/pi/syn-watch-arm.sh --restart   # exits "signal: wake queue"
 rm -f state/.supervision-armed
-echo '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh; echo "inert -> $? (0)"
+echo '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh; echo "inert -> $? (0)"
 touch state/.supervision-armed; rm -f state/.watch.heartbeat
-echo '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh; echo "stale -> $? (2)"
+echo '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh; echo "stale -> $? (2)"
 ```
 
 ### 10.6 Harness detection
 
 ```bash
-bin/hamr-harness.sh
-bin/hamr-harness.sh eindri        # honour config/eindri-harness
-bin/hamr-harness.sh eindri-model
-bin/hamr-harness.sh eindri-effort
+bin/fleet/hamr-harness.sh
+bin/fleet/hamr-harness.sh eindri        # honour config/eindri-harness
+bin/fleet/hamr-harness.sh eindri-model
+bin/fleet/hamr-harness.sh eindri-effort
 ```
 
 ### 10.7 Rödd round-trip
 
 ```bash
-printf 'hello' | bin/rodd-operational-input.sh encode watcher \
-  | bin/rodd-operational-input.sh kind        # → watcher
-printf 'hello' | bin/rodd-operational-input.sh encode watcher \
-  | bin/rodd-operational-input.sh body        # → hello
-bin/rodd-operational-input.sh --help >/dev/null && echo "rodd help ok"
+printf 'hello' | bin/agents/rodd-operational-input.sh encode watcher \
+  | bin/agents/rodd-operational-input.sh kind        # → watcher
+printf 'hello' | bin/agents/rodd-operational-input.sh encode watcher \
+  | bin/agents/rodd-operational-input.sh body        # → hello
+bin/agents/rodd-operational-input.sh --help >/dev/null && echo "rodd help ok"
 ```
 
 ### 10.8 Runes append (safe in a temp home)
@@ -529,8 +529,8 @@ bin/time/nornir-cron-start.sh --status       # → cron: running pid=... jobs=4
 - **`saga-session-start.sh` acquires but never releases the lock.** A refused lock means the whole session is read-only. Release is process-exit bound.
 - **The fleet digest counts `state/*.meta`, not `data/backlog.md`.** Plan §6 claims `data/backlog.md` feeds the fleet digest; the code does not read it there.
 - **The digest has 8 sections, not the 9 in plan §6.** There is no `NETWORK CHECKS` stage.
-- **`bin/agents/einherjar-spawn.sh` resolves harness/model FROM THE MACHINE (D3).** `config/eindri-harness` is a query surface for `bin/hamr-harness.sh`; it is NOT the spawn's authority (2026-09-24).
-- **An ACTIVE dispatch profile makes fresh spawns require an explicit `--harness`.** The shipped template with unfilled `<...>` tokens is NOT active (`bin/dispatch-profile.sh`); only a real profile triggers the consultation backstop.
+- **`bin/agents/einherjar-spawn.sh` resolves harness/model FROM THE MACHINE (D3).** `config/eindri-harness` is a query surface for `bin/fleet/hamr-harness.sh`; it is NOT the spawn's authority (2026-09-24).
+- **An ACTIVE dispatch profile makes fresh spawns require an explicit `--harness`.** The shipped template with unfilled `<...>` tokens is NOT active (`bin/fleet/dispatch-profile.sh`); only a real profile triggers the consultation backstop.
 - **`--relaunch` cannot change mode/kind/project.** Only harness/model/effort/isolation may change; mode is re-derived from the meta.
 - **The daily briefing is deterministic by design.** No model call; do not "improve" it into an LLM summary.
 - **Muninn never prunes without a successful backup.** `BROKK_MEMORY_PRUNE=1` is inert if the backup failed.
@@ -549,7 +549,7 @@ bin/time/nornir-cron-start.sh --status       # → cron: running pid=... jobs=4
 |---|---|
 | Plan §12/§13 and `.pi/extensions/README.md` name OpenCode adapter files `syn-sessionstart.js` / `gna-watch-arm.js` | actual: `saga-sessionstart.js`, `syn-watch-arm.js` |
 | `.pi/extensions/README.md:36-38` says OpenCode/Claude/Codex/Cursor adapters "are still to come" | all four are landed (`.opencode/plugins/*`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`) |
-| Plan §13 lists `bin/hamr-harness.sh`, `bin/agents/einherjar-spawn.sh`, `bin/agents/erindi-brief.sh`, `bin/vor-crew-state.sh`, `bin/nornir-job-*.sh`, `bin/records/runes-append.sh`, `config/eindri-dispatch.json` as "still to build" | all are present and `bash -n` clean |
+| Plan §13 lists `bin/fleet/hamr-harness.sh`, `bin/agents/einherjar-spawn.sh`, `bin/agents/erindi-brief.sh`, `bin/records/vor-crew-state.sh`, `bin/nornir-job-*.sh`, `bin/records/runes-append.sh`, `config/eindri-dispatch.json` as "still to build" | all are present and `bash -n` clean |
 | Plan §6 digest: 9 stages incl. `NETWORK CHECKS`, fleet digest from `data/backlog.md` | 8 sections; no NETWORK CHECKS; fleet digest reads `state/*.meta` + `docs/masterplan.md` |
 | Plan §7 OpenCode session-start file `syn-sessionstart.js` | `saga-sessionstart.js` |
 | Plan §7 Grok "project hooks (`grok --trust`)" | no `.grok/` exists in Ymir; Grok unimplemented |

@@ -12,7 +12,7 @@ OPERATIONAL_USER_LAYOUT="$ROOT/.pi/extensions/lib/fm-calm-operational-user-layou
 VISIBILITY="$ROOT/.pi/extensions/lib/fm-calm-visibility.ts"
 WORKING_SHIP="$ROOT/.pi/extensions/lib/fm-calm-working-ship.ts"
 WATCH_EXT="$ROOT/.pi/extensions/fm-primary-pi-watch.ts"
-OPERATIONAL_INPUT="$ROOT/bin/fm-operational-input.sh"
+OPERATIONAL_INPUT="$ROOT/bin/backend/fm-operational-input.sh"
 PI_OPERATIONAL_INPUT="$ROOT/.pi/extensions/lib/fm-operational-input.ts"
 PI_PACKAGE_DIR=${FM_PI_PACKAGE_DIR:-"$(npm root -g 2>/dev/null)/@earendil-works/pi-coding-agent"}
 TMUX_SOCKET="fm-calm-$$"
@@ -3129,18 +3129,18 @@ test_interactive_terminal_e2e() {
   cp "$WATCH_EXT" "$project/.pi/extensions/fm-primary-pi-watch.ts"
   cp "$ROOT/.pi/extensions/fm-primary-turnend-guard.ts" "$project/.pi/extensions/fm-primary-turnend-guard.ts"
   cp \
-    "$ROOT/bin/fm-sessionstart-run.sh" \
-    "$ROOT/bin/fm-sessionstart-nudge.sh" \
-    "$ROOT/bin/fm-primary-scope-lib.sh" \
-    "$ROOT/bin/fm-gate-refuse-lib.sh" \
-    "$ROOT/bin/fm-operational-input.sh" \
+    "$ROOT/bin/backend/fm-sessionstart-run.sh" \
+    "$ROOT/bin/backend/fm-sessionstart-nudge.sh" \
+    "$ROOT/bin/backend/fm-primary-scope-lib.sh" \
+    "$ROOT/bin/backend/fm-gate-refuse-lib.sh" \
+    "$ROOT/bin/backend/fm-operational-input.sh" \
     "$project/bin/"
   # The real digest is out of scope here: this lab is about how Calm RENDERS the
   # session-open message and whether it keeps its operational provenance, not
   # about what session start reports. A stub keeps the run tier's real routing
   # and the extension's real encoding in the path without dragging a whole
   # fleet home into a rendering test.
-  cat >"$project/bin/fm-session-start.sh" <<'SH'
+  cat >"$project/bin/backend/fm-session-start.sh" <<'SH'
 #!/usr/bin/env bash
 printf 'CALM_E2E_SESSION_START_DIGEST\n'
 exit 0

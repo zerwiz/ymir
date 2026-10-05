@@ -118,7 +118,7 @@ def resolve(
             raise ModelUnavailable(
                 f"the fleet registry could not resolve '{model_request}'",
                 key="model",
-                remedy="ask the Allfather, or run bin/model-resolve.sh list",
+                remedy="ask the Allfather, or run bin/model/model-resolve.sh list",
             )
         model = requested.model or model
         harness = requested.harness or harness

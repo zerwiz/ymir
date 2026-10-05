@@ -26,7 +26,7 @@ contract (packages/contracts `AgentInterface`: protocol · endpoint · signed) �
 contract for the card, one for the grant, never a second.
 
 The door is `python3 -m ymir_runtime.grants` (and, through the config layer,
-`bin/ymir-config-check.sh validate <grants.yaml>`). This module is not one of the
+`bin/gates/checks/ymir-config-check.sh validate <grants.yaml>`). This module is not one of the
 engine's four verbs; it is a support law beside them.
 """
 

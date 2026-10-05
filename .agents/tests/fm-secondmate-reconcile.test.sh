@@ -12,7 +12,7 @@ set -u
 # shellcheck source=tests/secondmate-helpers.sh disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/secondmate-helpers.sh"
 
-RECONCILE="$ROOT/bin/fm-secondmate-reconcile.sh"
+RECONCILE="$ROOT/bin/backend/fm-secondmate-reconcile.sh"
 TMP_ROOT=$(fm_test_tmproot fm-secondmate-reconcile)
 
 command -v jq >/dev/null 2>&1 || { echo "skip: jq not found"; exit 0; }
@@ -187,7 +187,7 @@ inbox_text() {  # <state-dir> <task-id>
   local rec
   for rec in "$1/$2.inbox"/*.msg; do
     [ -f "$rec" ] || continue
-    bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$rec"
+    bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$rec"
   done
 }
 
@@ -198,7 +198,7 @@ hold_lock_until_released() {  # <lock> <ready> <release>
     : > "$3"
     while [ ! -f "$4" ]; do sleep 0.01; done
     fm_lock_release "$2"
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$1" "$2" "$3" &
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$1" "$2" "$3" &
 }
 
 
@@ -349,7 +349,7 @@ test_the_ask_never_arms_a_reply_expectation_or_a_re_ring() {
   # The record stays unhandled. With the ladder's grace elapsed, an ordinary
   # steer in that position is due for a re-ring; this one must stay invisible.
   ladder=$(FM_TASK_INBOX_GRACE_SECS=0 bash -c '. "$1"; fm_task_inbox_due_action "$2" "$3"' _ \
-    "$ROOT/bin/fm-task-inbox-lib.sh" "$home/state" mate 2>&1 || true)
+    "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$home/state" mate 2>&1 || true)
   [ "$ladder" = quiet ] \
     || fail "the unacknowledged reconcile record entered the re-ring ladder: $ladder"
 
@@ -360,10 +360,10 @@ test_the_ask_never_arms_a_reply_expectation_or_a_re_ring() {
     FM_FAKE_TMUX_WINDOW="firstmate:fm-mate" \
     FM_FAKE_TMUX_LOG="$TMP_ROOT/fireforget-tmux.log" \
     FM_FAKE_TMUX_CAPTURE="$TMP_ROOT/fireforget-fake/pane.txt" \
-    "$ROOT/bin/fm-send.sh" mate "an ordinary steer that does expect handling" >/dev/null 2>&1 \
+    "$ROOT/bin/backend/fm-send.sh" mate "an ordinary steer that does expect handling" >/dev/null 2>&1 \
     || fail "the control steer could not be recorded"
   ladder=$(FM_TASK_INBOX_GRACE_SECS=0 bash -c '. "$1"; fm_task_inbox_due_action "$2" "$3"' _ \
-    "$ROOT/bin/fm-task-inbox-lib.sh" "$home/state" mate 2>&1 || true)
+    "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$home/state" mate 2>&1 || true)
   case "$ladder" in
     ring\ *) ;;
     *) fail "the ladder ignored an ordinary steer too, so the quiet verdict proved nothing: $ladder" ;;
@@ -538,7 +538,7 @@ SH
   while [ ! -f "$signal" ]; do sleep 0.01; done
 
   (
-    . "$ROOT/bin/fm-wake-lib.sh"
+    . "$ROOT/bin/backend/fm-wake-lib.sh"
     fm_lock_acquire_wait "$home/state/.control-mate.lock"
     fm_lock_acquire_wait "$home/state/.meta-mate.lock"
     rm -rf "$home/state/mate.inbox"
@@ -662,7 +662,7 @@ SH
     sleep 0.01
   done
 
-  . "$ROOT/bin/fm-wake-lib.sh"
+  . "$ROOT/bin/backend/fm-wake-lib.sh"
   fm_lock_acquire_wait "$home/state/.control-remote-send-race-mate.lock"
   fm_lock_acquire_wait "$home/state/.meta-remote-send-race-mate.lock"
   sed 's/^remote_host=.*/remote_host=new-host/' \

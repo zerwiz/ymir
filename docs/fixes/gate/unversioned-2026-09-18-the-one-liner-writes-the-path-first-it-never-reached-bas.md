@@ -11,7 +11,7 @@
 > **Frozen 2026-09-18.** This file is the historical record and is no longer
 > written to (Rule 06: a record is never rewritten). New work is recorded as fix
 > notes — one file per fix, per component — under `docs/fixes/`, written with
-> `bin/fixes.sh record` and guarded by `bin/fixes-guard.sh`.
+> `bin/gates/fixes.sh record` and guarded by `bin/gates/guards/fixes-guard.sh`.
 
 ### Files
-- `bin/fixes-guard.sh`
+- `bin/gates/guards/fixes-guard.sh`

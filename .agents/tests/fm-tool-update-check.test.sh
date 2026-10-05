@@ -21,8 +21,8 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-CHECK="$ROOT/bin/fm-tool-update-check.sh"
-CHECKPOINT="$ROOT/bin/fm-watch-checkpoint.sh"
+CHECK="$ROOT/bin/backend/fm-tool-update-check.sh"
+CHECKPOINT="$ROOT/bin/backend/fm-watch-checkpoint.sh"
 TMP_ROOT=$(fm_test_tmproot fm-tool-update-check)
 
 # Exported here, at the top level, because git_fixture runs inside a command

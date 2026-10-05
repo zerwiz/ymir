@@ -8,7 +8,7 @@ set -u
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-BOARD="$ROOT/bin/fm-bearings-board.sh"
+BOARD="$ROOT/bin/backend/fm-bearings-board.sh"
 TMP_ROOT=$(fm_test_tmproot fm-bearings-board)
 
 command -v jq >/dev/null 2>&1 || { echo "skip: jq not found"; exit 0; }
@@ -36,7 +36,7 @@ run_procevent() {  # <home> <command args...>
   PATH="$home/fakebin:$PATH" FM_HOME="$home" \
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
     FM_PROCEVENT_CLAIM_ROOT="$home/procevent-claims" \
-    "$ROOT/bin/fm-procevent.sh" "$@"
+    "$ROOT/bin/backend/fm-procevent.sh" "$@"
 }
 
 run_decisions() {  # <home> <command args...>
@@ -44,7 +44,7 @@ run_decisions() {  # <home> <command args...>
   shift
   PATH="$home/fakebin:$PATH" FM_HOME="$home" \
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
-    "$ROOT/bin/fm-decision-hold.sh" "$@"
+    "$ROOT/bin/backend/fm-decision-hold.sh" "$@"
 }
 
 # A realistic payload: a cross-origin full-identity decision key past the old
@@ -270,7 +270,7 @@ EOF
 
   mkdir -p "$runtime"
   cp -R "$ROOT/bin" "$runtime/bin"
-  cat > "$runtime/bin/fm-procevent-lavish.sh" <<'SH'
+  cat > "$runtime/bin/backend/fm-procevent-lavish.sh" <<'SH'
 #!/usr/bin/env bash
 set -eu
 if [ "${1:-}" = arm ]; then
@@ -282,7 +282,7 @@ if [ "${1:-}" = arm ]; then
 fi
 exec "$REAL_LAVISH_ADAPTER" "$@"
 SH
-  chmod +x "$runtime/bin/fm-procevent-lavish.sh"
+  chmod +x "$runtime/bin/backend/fm-procevent-lavish.sh"
   cat > "$home/fakebin/lavish-axi" <<'SH'
 #!/usr/bin/env bash
 if [ "${1:-}" != poll ]; then
@@ -302,9 +302,9 @@ SH
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
     FM_PROCEVENT_CLAIM_ROOT="$home/procevent-claims" \
     FM_BEARINGS_BOARD_TEMPLATE="$ROOT/.agents/skills/bearings/assets/board-template.html" \
-    REAL_LAVISH_ADAPTER="$ROOT/bin/fm-procevent-lavish.sh" \
-    REAL_PROCEVENT="$ROOT/bin/fm-procevent.sh" ORDER_PROOF_HOLD="$hold" \
-    "$runtime/bin/fm-bearings-board.sh" build "$data" >/dev/null \
+    REAL_LAVISH_ADAPTER="$ROOT/bin/backend/fm-procevent-lavish.sh" \
+    REAL_PROCEVENT="$ROOT/bin/backend/fm-procevent.sh" ORDER_PROOF_HOLD="$hold" \
+    "$runtime/bin/backend/fm-bearings-board.sh" build "$data" >/dev/null \
     || fail "the order-proof board build failed"
 
   show=$(cd "$home" && tasks-axi show "$hold" --full) \
@@ -348,7 +348,7 @@ run_lavish_source_id() {  # <home> <artifact>
   PATH="$home/fakebin:$PATH" FM_HOME="$home" \
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
     FM_PROCEVENT_CLAIM_ROOT="$home/procevent-claims" \
-    "$ROOT/bin/fm-procevent-lavish.sh" source-id "$2"
+    "$ROOT/bin/backend/fm-procevent-lavish.sh" source-id "$2"
 }
 
 test_rebuild_is_idempotent_and_does_not_double_arm() {

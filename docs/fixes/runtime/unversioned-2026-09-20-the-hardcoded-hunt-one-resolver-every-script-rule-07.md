@@ -6,9 +6,9 @@ of them silently won over its own fix.
 
 - **Nine scripts carried their own home default**, and some still named the
   **dead** `$HOME/Documents/Ymir` (the home moved to `Documents/ymirhome`): the
-  ledger (`bin/records/runes-append.sh`), `bin/ymir-validate.sh`, `bin/desktop/smidja-bootstrap.sh`,
-  `bin/ymir-style.sh`, `bin/time/saga-session-start.sh`, `bin/bridge/mimir-bridge.py`,
-  `bin/bootstrap-macos.sh` (a `/home/${VM_USER}` literal), and
+  ledger (`bin/records/runes-append.sh`), `bin/engine/ymir-validate.sh`, `bin/desktop/smidja-bootstrap.sh`,
+  `bin/desktop/ymir-style.sh`, `bin/time/saga-session-start.sh`, `bin/bridge/mimir-bridge.py`,
+  `bin/host/bootstrap-macos.sh` (a `/home/${VM_USER}` literal), and
   `.agents/skills/lifecycle/smoke_test.sh`. All now resolve through
   `ymir_home_root` (env → the recorded choice → the ONE default in
   `bin/vault/hoard-lib.sh`).
@@ -16,7 +16,7 @@ of them silently won over its own fix.
   `YMIR_HOME` from a literal first, so the resolver saw a non-empty value and kept
   the **dead** path. A literal before the call is not a default; it is an override.
   The literal is gone.
-- **Tunnel names are the operator's** (`bin/gjallarhorn-expose.sh`): the domain and
+- **Tunnel names are the operator's** (`bin/forge/gjallarhorn-expose.sh`): the domain and
   suffix no longer default to one operator's (`zerwiz.org` / `dell`) — they read
   `$YMIR_HOME/config/tunnel.env`, env first, and skip honestly when unset.
 - **Two assets carried a domain that does not exist** — `hall.ymir.zerw.org`
@@ -26,20 +26,20 @@ of them silently won over its own fix.
 - `apps/hlidskjalf/server/index.ts` reads the recorded home before its default.
 
 Not leaks, and left alone: the public owner identity (`zerwiz`, `zerwiz.org`) is
-deliberately allowed by `bin/public-guard.sh`; the guard is silent on the tree.
+deliberately allowed by `bin/gates/guards/public-guard.sh`; the guard is silent on the tree.
 
 galdr-reread: `brokk-distro-runtime.md` (one resolver, every script).
 
 ### Files
 - `.agents/skills/lifecycle/smoke_test.sh`
 - `apps/hlidskjalf/server/index.ts`
-- `bin/bootstrap-macos.sh`
-- `bin/gjallarhorn-expose.sh`
+- `bin/host/bootstrap-macos.sh`
+- `bin/forge/gjallarhorn-expose.sh`
 - `bin/vault/hoard-lib.sh`
 - `bin/bridge/mimir-bridge.py`
-- `bin/public-guard.sh`
+- `bin/gates/guards/public-guard.sh`
 - `bin/records/runes-append.sh`
 - `bin/time/saga-session-start.sh`
 - `bin/desktop/smidja-board.sh`
 - `bin/desktop/smidja-bootstrap.sh`
-- `bin/ymir-style.sh`
+- `bin/desktop/ymir-style.sh`

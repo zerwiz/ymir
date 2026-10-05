@@ -11,7 +11,7 @@ gate. Each failed silently in its own way.
   answered nothing. It now resolves the same pair `bin/desktop/smidja-bootstrap.sh` does
   (home first, in-repo fallback, `SMIDJA_DB` override). The asset already
   *described* this resolution; the code now implements it.
-- **`bin/sessrumnir-ensure.sh` never built the app.** `[ "$built_present" ]` tests
+- **`bin/seat/sessrumnir/sessrumnir-ensure.sh` never built the app.** `[ "$built_present" ]` tests
   a **literal, non-empty string** — always true — so `ensure --install` skipped
   `build_app` and reported `built: no` with exit 0. Sessrúmnir only built when the
   build was run by hand. Now `built_present` (the function) is called.

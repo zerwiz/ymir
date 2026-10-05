@@ -20,8 +20,8 @@ printf '{"heart":"","hosts":{}}\n' >"$YMIR_FLEET_REGISTRY"
 printf '# Machines\n\n| machine | hostname | role |\n|---|---|---|\n' >"$YMIR_MACHINES_MD"
 unset YMIR_ROLE
 
-# shellcheck source=bin/role-lib.sh
-. "$ROOT/bin/role-lib.sh"
+# shellcheck source=bin/skuld/role-lib.sh
+. "$ROOT/bin/skuld/role-lib.sh"
 
 # ── the ONE component table ─────────────────────────────────────────────────
 [ "$(components_for heart)" = "core,record,well,web,mesh" ] && ok "heart owes the record, not the desktop/rail" || bad "heart: $(components_for heart)"
@@ -37,7 +37,7 @@ establish_roles
   && ok "a host declared nowhere takes the safe BODY (dev), not the union" || bad "missing role: $ROLE_SET/$ROLE_SRC"
 case ",$ROLE_COMPONENTS," in *,record,*) bad "the safe body installed a heart office" ;; *) ok "the safe body installs no heart office" ;; esac
 
-bash "$ROOT/bin/role.sh" set box1 forge >/dev/null 2>&1
+bash "$ROOT/bin/skuld/role.sh" set box1 forge >/dev/null 2>&1
 unset YMIR_ROLE; establish_roles
 [ "$ROLE_SET" = forge ] && [ "$ROLE_SRC" = registry ] && ok "the registry answers when it has the host" || bad "registry: $ROLE_SET/$ROLE_SRC"
 
@@ -54,7 +54,7 @@ printf '{"heart":"","hosts":{}}\n' >"$YMIR_FLEET_REGISTRY"
 printf '# Machines\n\n' >"$YMIR_MACHINES_MD"
 unset YMIR_ROLE
 if command -v script >/dev/null 2>&1; then
-  out="$(printf 'f\n' | script -qec "bash -c '. \"$ROOT/bin/role-lib.sh\"; export YMIR_HOME=\"$YMIR_HOME\" YMIR_FLEET_REGISTRY=\"$YMIR_FLEET_REGISTRY\" YMIR_MACHINES_MD=\"$YMIR_MACHINES_MD\" YMIR_HOST=box1; CHECK=0; ASSUME_YES=0; establish_roles; printf \"ROLES=%s SRC=%s COMP=%s\\\\n\" \"\$ROLE_SET\" \"\$ROLE_SRC\" \"\$ROLE_COMPONENTS\"'" /dev/null 2>&1)"
+  out="$(printf 'f\n' | script -qec "bash -c '. \"$ROOT/bin/skuld/role-lib.sh\"; export YMIR_HOME=\"$YMIR_HOME\" YMIR_FLEET_REGISTRY=\"$YMIR_FLEET_REGISTRY\" YMIR_MACHINES_MD=\"$YMIR_MACHINES_MD\" YMIR_HOST=box1; CHECK=0; ASSUME_YES=0; establish_roles; printf \"ROLES=%s SRC=%s COMP=%s\\\\n\" \"\$ROLE_SET\" \"\$ROLE_SRC\" \"\$ROLE_COMPONENTS\"'" /dev/null 2>&1)"
   printf '%s' "$out" | grep -q 'ROLES=forge SRC=declared' \
     && ok "an undeclared role is ASKED on a tty, and the answer is used" || bad "ask path: $out"
 else

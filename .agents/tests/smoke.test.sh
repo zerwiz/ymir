@@ -47,7 +47,7 @@ fi
 # 3. a session lock exists and its owner is live (or is this test). The lock the
 #    primary resolves is MACHINE-GLOBAL (one helm per machine, plan 58 Phase 0),
 #    so ask the lib for the path rather than assuming the tree's state dir.
-. "$ROOT/bin/gleipnir-lock-lib.sh"
+. "$ROOT/bin/vault/gleipnir-lock-lib.sh"
 gleipnir_lock_path lockfile
 owner=$(tr -d "[:space:]" <"$lockfile" 2>/dev/null)
 if [ -n "$owner" ] && { [ "$owner" = "$$" ] || kill -0 "$owner" 2>/dev/null; }; then
@@ -64,10 +64,10 @@ else
 fi
 
 # 5. Sýn arms and exits on a signal. The watch loop now normally stands in the
-# ARM SERVICE (bin/syn-watch.sh run); this smoke proves the loop and the grammar
+# ARM SERVICE (bin/pi/syn-watch.sh run); this smoke proves the loop and the grammar
 # in-process, and the standing-service proofs are tests/e2e/arm-service-proof.sh.
 touch "$STATE/smoke.signal"
-if out=$(BROKK_WATCH_INLINE=1 timeout 8 bash "$ROOT/bin/syn-watch-arm.sh" --restart 2>&1) && printf '%s' "$out" | grep -q '^signal:'; then
+if out=$(BROKK_WATCH_INLINE=1 timeout 8 bash "$ROOT/bin/pi/syn-watch-arm.sh" --restart 2>&1) && printf '%s' "$out" | grep -q '^signal:'; then
   add "syn watch-arm" OK
 else
   add "syn watch-arm" FAIL
@@ -75,7 +75,7 @@ fi
 rm -f "$STATE/smoke.signal" "$STATE/.supervision-armed"
 
 # 6. turn-end guard inert when not armed
-if echo '{}' | bash "$ROOT/bin/syn-turnend-guard.sh"; then
+if echo '{}' | bash "$ROOT/bin/gates/guards/syn-turnend-guard.sh"; then
   add "syn guard inert" OK
 else
   add "syn guard inert" FAIL

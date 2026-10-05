@@ -98,7 +98,7 @@ master. Neither is optional: a crawler fetches a file, not a build.
   **browser caches and sessionStorage** keep old pages alive:
   - sessionStorage brand → bump `brandDataKey` (above)
   - browser HTML cache → hard refresh (`Ctrl+Shift+R`) or a cache-busting query
-  - edge → `bin/gjallarhorn-purge.sh ping.zerwiz.org` if a PoP held a copy
+  - edge → `bin/forge/gjallarhorn-purge.sh ping.zerwiz.org` if a PoP held a copy
 - Debug by driving a headless Chromium at the public URL and reading the
   rendered DOM (the wire usually serves the new page while a browser shows the
   old one — that asymmetry is the tell).

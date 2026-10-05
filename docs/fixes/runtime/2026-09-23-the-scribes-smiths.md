@@ -2,7 +2,7 @@
 
 ## Why
 The hall board (Odrerir) showed 0 smiths while the fleet lived: the scribe
-(bin/hall-snapshot.sh) read the herdr's `name` field and filtered to three
+(bin/time/snotra/hall-snapshot.sh) read the herdr's `name` field and filtered to three
 hall-pane names. The herdr names a pane in `terminal_title` and marks the
 harness in `agent` — so every smith resolved empty.
 
@@ -14,4 +14,4 @@ harness in `agent` — so every smith resolved empty.
   OpenCode — tally 223 runes, 3 smiths.
 
 ## Files
-- `bin/hall-snapshot.sh`
+- `bin/time/snotra/hall-snapshot.sh`

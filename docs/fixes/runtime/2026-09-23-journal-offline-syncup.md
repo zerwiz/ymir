@@ -12,7 +12,7 @@
     `$STATE/journal/<host>.jsonl`. It never touches the network, so a write
     commits and the machine keeps working with the heart down or fully offline.
   - **`bin/records/journal-reconcile.sh`** — runs on a heartbeat. If the heart is not
-    `attached` (per `bin/topology.sh`), the journal **stays queued and exit 0** —
+    `attached` (per `bin/fleet/topology.sh`), the journal **stays queued and exit 0** —
     being offline is fine, never a failure. If the heart answers, each pending
     journal is pushed, then moved to `journal/sent/`, so a machine offline for
     days reconciles in one pass with no double-send. The push is pluggable

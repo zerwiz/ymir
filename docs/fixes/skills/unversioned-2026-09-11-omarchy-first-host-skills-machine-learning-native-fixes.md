@@ -7,9 +7,9 @@
   placement, and a safe-customisation table.
 - **New skill `ymir-thjazi`:** Þjazi (herdr-first) — protocol floors (14+ panes,
   0.8.0 presentation spaces), verification, installation.
-- **Ymir learns the host:** `bin/omarchy-sense.sh` snapshots and *diffs* the
+- **Ymir learns the host:** `bin/host/omarchy-sense.sh` snapshots and *diffs* the
   machine (Omarchy version, explicit packages, config files, monitors, scale) into
-  `state/omarchy-setup.json`; `bin/omarchy-hook-install.sh` adds an Omarchy
+  `state/omarchy-setup.json`; `bin/host/omarchy-hook-install.sh` adds an Omarchy
   `post-update` hook so it re-learns after every `omarchy update`.
 - **Þjazi in the installer:** `bin/seat/herdr-ensure.sh` + new `step_backend`
   (herdr, else tmux — never a silent fallback).

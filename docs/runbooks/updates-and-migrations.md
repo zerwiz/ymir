@@ -3,7 +3,7 @@
 ## Update the code
 
 ```bash
-bin/brokk-update.sh          # fast-forward this home + every registered Eindri-home
+bin/agents/brokk-update.sh          # fast-forward this home + every registered Eindri-home
 ```
 It never forces or stashes; it reports one row per target. After updating, run
 the structure migrations below.
@@ -15,25 +15,25 @@ into the current layout (e.g. `0001-ymir-home` moves private material into
 `$YMIR_HOME`).
 
 ```bash
-bin/ymir-migrate.sh status            # what exists / what is applied
-bin/ymir-migrate.sh apply --dry-run   # show what would run
-bin/ymir-migrate.sh apply             # apply pending, in order
+bin/engine/ymir-migrate.sh status            # what exists / what is applied
+bin/engine/ymir-migrate.sh apply --dry-run   # show what would run
+bin/engine/ymir-migrate.sh apply             # apply pending, in order
 ```
 Applied ids are recorded in `state/migrations` (private). Each migration must be
-idempotent — re-running is safe. `bin/ymir-install.sh` and `bin/brokk-update.sh`
+idempotent — re-running is safe. `bin/engine/ymir-install.sh` and `bin/agents/brokk-update.sh`
 call `apply` after an update.
 
 ## Add a migration
 
 1. Create `.agents/migrations/NNNN-<name>.sh` (next number), idempotent.
 2. It runs with `bash` from the repo; move/transform, print what it did.
-3. Test: `bin/ymir-migrate.sh apply --dry-run`, then `apply`.
+3. Test: `bin/engine/ymir-migrate.sh apply --dry-run`, then `apply`.
 
 ## First-time setup
 
 ```bash
-bin/ymir-install.sh            # full setup (idempotent)
-bin/ymir-install.sh --check    # all steps OK/WARN
+bin/engine/ymir-install.sh            # full setup (idempotent)
+bin/engine/ymir-install.sh --check    # all steps OK/WARN
 ```
 
 ## Re-cloning a home whose history has diverged
@@ -83,8 +83,8 @@ for b in $(git branch --format='%(refname:short)' | grep '^yggdrasil/'); do
 done
 
 # 6. Heal forward and verify.
-bin/ymir-migrate.sh status && bin/ymir-migrate.sh apply
-bin/ymir-install.sh --check
+bin/engine/ymir-migrate.sh status && bin/engine/ymir-migrate.sh apply
+bin/engine/ymir-install.sh --check
 ```
 
 **Traps this procedure was learned from**

@@ -5,7 +5,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-CHECKPOINT="$ROOT/bin/fm-watch-checkpoint.sh"
+CHECKPOINT="$ROOT/bin/backend/fm-watch-checkpoint.sh"
 TMP_ROOT=$(fm_test_tmproot fm-watch-checkpoint)
 
 make_home() {
@@ -41,7 +41,7 @@ test_signal_passes_through_and_exits_zero() {
   FM_HOME="$home" FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 "$CHECKPOINT" --seconds 8 >"$out" 2>"$err" || status=$?
   expect_code 0 "$status" "signal checkpoint exit"
   assert_contains "$(cat "$out")" "signal:" "signal wake was not passed through"
-  drained=$(FM_HOME="$home" "$ROOT/bin/fm-wake-drain.sh")
+  drained=$(FM_HOME="$home" "$ROOT/bin/backend/fm-wake-drain.sh")
   assert_contains "$drained" $'\tsignal\tdemo.status\t' "signal wake was not queued durably"
   pass "checkpoint passes through a real watcher wake and leaves the queue for drain"
 }
@@ -56,7 +56,7 @@ test_registered_check_uses_preserved_watcher_environment() {
 printf 'env check fired with FM_CHECK_INTERVAL=%s\n' "${FM_CHECK_INTERVAL:-missing}"
 SH
   chmod 0700 "$home/state/env-check.check.sh"
-  FM_HOME="$home" "$ROOT/bin/fm-check-register.sh" env-check >/dev/null \
+  FM_HOME="$home" "$ROOT/bin/backend/fm-check-register.sh" env-check >/dev/null \
     || fail "could not register checkpoint custom check"
   status=0
   FM_HOME="$home" FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=1 "$CHECKPOINT" --seconds 5 >"$out" 2>"$err" || status=$?

@@ -107,7 +107,7 @@ fi
 
 # --- mocks ------------------------------------------------------------------
 # A legitimate filename is not a stub: TODO.md appears in an allowlist in
-# bin/public-guard.sh, so ignore that filename (not the word) here.
+# bin/gates/guards/public-guard.sh, so ignore that filename (not the word) here.
 #
 # Comments are excluded: a header that explains WHY a guard exists may use the
 # word ("it was an empty placeholder, but the shape invited the leak"), and that
@@ -364,10 +364,10 @@ fi
 # in the same change, or the runtime has drifted from its documentation.
 asset_for() {
   case "$1" in
-    *bin/ymir-install.sh)                      printf '%s' "$GALDR/assets/installation.md" ;;
+    *bin/engine/ymir-install.sh)                      printf '%s' "$GALDR/assets/installation.md" ;;
     *apps/hlidskjalf/*)                        printf '%s' "$GALDR/assets/hlidskjalf-ui.md" ;;
     *bin/mimir*)                               printf '%s' "$GALDR/assets/memory-well.md" ;;
-    *bin/gleipnir-lock-lib.sh|*bin/time/saga-session-start.sh|*state/.lock) printf '%s' "$GALDR/assets/brokk-distro-runtime.md" ;;
+    *bin/vault/gleipnir-lock-lib.sh|*bin/time/saga-session-start.sh|*state/.lock) printf '%s' "$GALDR/assets/brokk-distro-runtime.md" ;;
     *bin/nornir-*|*config/cron.yaml*)           printf '%s' "$GALDR/assets/nornir-jobs.md" ;;
     *bin/seat/valknut-load.sh|*/.pi/*|*/.opencode/*) printf '%s' "$GALDR/assets/harness-integration/README.md" ;;
     *bin/smidja*|*.agents/skills/smidja-factory/*) printf '%s' "$GALDR/assets/smidja.md" ;;
@@ -424,14 +424,14 @@ esac
 # tokens from (themes/fensalir.json, the reference form). Two carriers of one
 # identity drift the moment someone edits one, so they are checked against each
 # other here: a colour may not change in one place only.
-if [ -x "$ROOT/bin/design-check.sh" ]; then
-  if "$ROOT/bin/design-check.sh" >/dev/null 2>&1; then
+if [ -x "$ROOT/bin/gates/checks/design-check.sh" ]; then
+  if "$ROOT/bin/gates/checks/design-check.sh" >/dev/null 2>&1; then
     add design "one cloth (tokens = seeds)" PASS "the 7 pairs agree — stone, bone, bronze, blood"
   else
-    add design "one cloth (tokens = seeds)" FAIL "drifted — run bin/design-check.sh to see which pair"
+    add design "one cloth (tokens = seeds)" FAIL "drifted — run bin/gates/checks/design-check.sh to see which pair"
   fi
 else
-  add design "one cloth (tokens = seeds)" SKIP "bin/design-check.sh absent"
+  add design "one cloth (tokens = seeds)" SKIP "bin/gates/checks/design-check.sh absent"
 fi
 
 # --- duplicates -------------------------------------------------------------

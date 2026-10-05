@@ -20,7 +20,7 @@
     `opencode-go/deepseek-v4.1-flash`. Now a template with `<your-model-id>`.
   - `.agents/skills/galdr-ymirsystem/assets/pi-boot/pi-profile.yml` — the PI boot
     profile named `lmstudio/qwen3.6-35b-a3b`. Now a placeholder.
-  - `bin/bootstrap-macos.sh` — `$HOME/Documents/Ymir`. Now resolve
+  - `bin/host/bootstrap-macos.sh` — `$HOME/Documents/Ymir`. Now resolve
 
 ### Files
 - *(carried from the frozen CHANGELOG.md)*

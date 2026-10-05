@@ -318,7 +318,7 @@ test_dispatch_routes_cmux_backend() {
 
 test_dispatch_busy_state_unknown_for_cmux() {
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-backend.sh"
+  . "$ROOT/bin/backend/fm-backend.sh"
   [ "$(fm_backend_busy_state cmux '11111111-1111-1111-1111-111111111111:22222222-2222-2222-2222-222222222222')" = unknown ] \
     || fail "fm_backend_busy_state should report unknown for cmux (no native agent-state primitive)"
   pass "fm_backend_busy_state: cmux (no native primitive) always reports unknown, same as tmux/zellij/orca"
@@ -332,7 +332,7 @@ test_dispatch_composer_state_routes_cmux() {
   cmux_read_screen_response "$dir" 2 $'  ╭────────────────────────╮\n  │ ❯ hello captain        │\n  ╰──────── Composer ──────╯'
   fb=$(make_cmux_fakebin "$dir")
   out=$( PATH="$fb:$PATH" FM_CMUX_LOG="$dir/log" FM_CMUX_RESPONSES="$dir/responses" \
-    bash -c '. "$0/bin/fm-backend.sh"; fm_backend_composer_state cmux "$1"' "$ROOT" "$target" )
+    bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_composer_state cmux "$1"' "$ROOT" "$target" )
   [ "$out" = pending ] || fail "fm_backend_composer_state should route cmux to its classifier, got '$out'"
   pass "fm_backend_composer_state: routes cmux to the cmux composer classifier"
 }
@@ -1093,7 +1093,7 @@ test_secondmate_spawn_refuses_cmux_backend() {
   dir="$TMP_ROOT/secondmate-refuse"; state="$dir/state"; data="$dir/data"; config="$dir/config"; projects="$dir/projects"
   mkdir -p "$state" "$data" "$config" "$projects"
   out=$( FM_STATE_OVERRIDE="$state" FM_DATA_OVERRIDE="$data" FM_CONFIG_OVERRIDE="$config" FM_PROJECTS_OVERRIDE="$projects" \
-    "$ROOT/bin/fm-spawn.sh" sm-cmux-test --secondmate --backend cmux 2>&1 )
+    "$ROOT/bin/backend/fm-spawn.sh" sm-cmux-test --secondmate --backend cmux 2>&1 )
   status=$?
   [ "$status" -ne 0 ] || fail "fm-spawn.sh should refuse a --secondmate spawn with --backend cmux"
   assert_contains "$out" "does not support --secondmate" "fm-spawn.sh did not report the cmux secondmate refusal"
@@ -1101,7 +1101,7 @@ test_secondmate_spawn_refuses_cmux_backend() {
 }
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 
 test_version_check_accepts_current_version
 test_version_check_accepts_newer_version

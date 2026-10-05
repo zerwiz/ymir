@@ -123,9 +123,9 @@ docs/fixes/<component>/<version>-<slug>.md     ONE FILE PER FIX
 - **Components:** `install runtime skills agents hlidskjalf odrerir sessrumnir
   smidja hoard gate`. Two branches never write the same path, so the collision a
   monolith invites is impossible, and a component's history is its directory.
-- **`bin/fixes.sh record|list|show|diff|validate|components`** writes and reads
+- **`bin/gates/fixes.sh record|list|show|diff|validate|components`** writes and reads
   the notes. Nothing is assembled at push time.
-- **`bin/fixes-guard.sh`** is the pre-push gate: it only READS, requires at least
+- **`bin/gates/guards/fixes-guard.sh`** is the pre-push gate: it only READS, requires at least
   one new note in the pushed range, and names the component the note must cover.
   `bin/changelog-guard.sh` and `bin/changelog-assemble.sh` are removed with the
   system they served.

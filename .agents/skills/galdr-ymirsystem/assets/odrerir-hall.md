@@ -135,7 +135,7 @@ files[6]{path,what}:
 Door plumbing that reaches the hall from other apps: `HALL_URL` in
 `apps/hlidskjalf/src/data/metadata.ts` (`localhost|127.0.0.1` → `:4322`, else the
 public hall), surface rules in `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md`
-("The Hall door" section), and `bin/hall-snapshot.sh` for the livehall feed if a
+("The Hall door" section), and `bin/time/snotra/hall-snapshot.sh` for the livehall feed if a
 board ever needs it again. Everything the hall renders lives under
 `apps/odrerir/`.
 ### The three doors + the raise hinge (2026-09-24, follow-up)
@@ -197,7 +197,7 @@ board ever needs it again. Everything the hall renders lives under
   browser"). `bin/bridge/mcp-gateway.sh` carries the same note.
 - **The saga sample, honestly cleared.** The hall board (`#/`) clears its "Not
   connected — this board is the saga's sample" note only when `/livehall.json`
-  answers with a feed (`src/hall/lh-board.js:506`). `bin/hall-snapshot.sh` writes
+  answers with a feed (`src/hall/lh-board.js:506`). `bin/time/snotra/hall-snapshot.sh` writes
   `public/livehall.json`, but a build bakes that file into `dist/` and a
   packaged install (gitignored snapshot) carries none — so the note could stand
   forever. `vite.config.ts` now serves that file from disk on EVERY request in
@@ -228,7 +228,7 @@ held the seal with three items; this section records the mend.
   body without a preflight). `access-control-allow-private-network` is removed
   and the origin is echoed, never `*`. A request with no Origin is a native MCP
   client and is admitted.
-- **The packaged feed (F1).** `bin/hall-snapshot.sh` now writes the snapshot to
+- **The packaged feed (F1).** `bin/time/snotra/hall-snapshot.sh` now writes the snapshot to
   `public/livehall.json` AND, when the app carries a `dist/`, to
   `dist/livehall.json`. A clone is served by `vite dev`/`vite preview` through
   the `ymir-livehall-feed` plugin (public/, request time); a packaged seat has

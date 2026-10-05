@@ -16,12 +16,12 @@ set -u
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-PF="$ROOT/bin/fm-public-followup.sh"
-EMIT="$ROOT/bin/fm-public-followup-emit.sh"
-POLL="$ROOT/bin/fm-x-poll.sh"
-TEARDOWN="$ROOT/bin/fm-teardown.sh"
-PROMOTE="$ROOT/bin/fm-promote.sh"
-SESSION_START="$ROOT/bin/fm-session-start.sh"
+PF="$ROOT/bin/backend/fm-public-followup.sh"
+EMIT="$ROOT/bin/backend/fm-public-followup-emit.sh"
+POLL="$ROOT/bin/backend/fm-x-poll.sh"
+TEARDOWN="$ROOT/bin/backend/fm-teardown.sh"
+PROMOTE="$ROOT/bin/backend/fm-promote.sh"
+SESSION_START="$ROOT/bin/backend/fm-session-start.sh"
 TMP_ROOT=$(fm_test_tmproot fm-public-followup)
 PF_TEST_NOW=1787539200
 
@@ -145,7 +145,7 @@ seed_commitment() {
   chmod 700 "$home/state/x-inbox"
   chmod 600 "$home/state/x-inbox/$request.json"
   FM_HOME="$home" FMX_NOW_OVERRIDE="$PF_TEST_NOW" bash -c \
-    ". '$ROOT/bin/fm-x-lib.sh'; fmx_context_registry_set '$home/state' '$request' '$platform' 1900" \
+    ". '$ROOT/bin/backend/fm-x-lib.sh'; fmx_context_registry_set '$home/state' '$request' '$platform' 1900" \
     || fail "could not retain the private request context"
 
   run_pf "$home" register "$obligation" --relation rel-code \
@@ -175,7 +175,7 @@ seed_repro_commitment() {   # <home> <obligation> <request> <work-home> <work-id
   tasks_in "$home" public-followup bind-work "$obligation" --relation-file "$home/relation.json" >/dev/null \
     || fail "bind-work failed"
   FM_HOME="$home" FMX_NOW_OVERRIDE="$PF_TEST_NOW" bash -c \
-    ". '$ROOT/bin/fm-x-lib.sh'; fmx_context_registry_set '$home/state' '$request' discord 2000" \
+    ". '$ROOT/bin/backend/fm-x-lib.sh'; fmx_context_registry_set '$home/state' '$request' discord 2000" \
     || fail "context retain failed"
   run_pf "$home" register "$obligation" --relation rel-code --work-home "$work_home" \
     --work-id "$work_id" --generation 1 >/dev/null || fail "register failed"
@@ -522,7 +522,7 @@ test_typed_terminal_clear_only_removes_legacy_link() {
     'x_followups=2' 'x_platform=discord' 'x_reply_max_chars=1900' > "$meta"
 
   out=$(PATH="$home/fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$home" \
-    FM_STATE_OVERRIDE="$home/state" "$ROOT/bin/fm-x-followup.sh" --clear work-clear) \
+    FM_STATE_OVERRIDE="$home/state" "$ROOT/bin/backend/fm-x-followup.sh" --clear work-clear) \
     || fail "the typed terminal clear transition must succeed"
   [ "$out" = work-clear ] || fail "the clear-only transition must identify the task"
   assert_grep 'status=working' "$meta" "clear-only transition must preserve unrelated task metadata"
@@ -640,7 +640,7 @@ test_secondmate_teardown_requires_parent_binding() {
   printf '%s\n' mate > "$child/.fm-secondmate-home"
   printf -- '- mate - synthetic (id is legacy); preserve this (home: %s; scope: synthetic (child); semicolon remains meaningful; projects: ; added 2026-07-30)\n' \
     "$child" > "$parent/data/secondmates.md"
-  FM_HOME="$parent" "$ROOT/bin/fm-home-seed.sh" validate >/dev/null \
+  FM_HOME="$parent" "$ROOT/bin/backend/fm-home-seed.sh" validate >/dev/null \
     || fail "home-seed validation rejected a punctuation-bearing operational registry record"
   registry_before=$(cat "$parent/data/secondmates.md")
   marker_before=$(cat "$child/.fm-secondmate-home")
@@ -719,7 +719,7 @@ SH
     FM_SECONDMATE_CHARTER='Local publication-order regression charter.' \
     FM_TEST_REAL_MV="$real_mv" FM_TEST_PUBLISH_ENTERED="$entered" \
     FM_TEST_PUBLISH_RELEASE="$release" \
-    "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects > "$manifest_out" 2>&1 &
+    "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects > "$manifest_out" 2>&1 &
   seed_pid=$!
   wait_count=0
   while [ ! -f "$entered" ]; do
@@ -744,7 +744,7 @@ test_secondmate_teardown_resolves_parent_from_durable_record_when_env_lost() {
   parent=$(make_home teardown-durable-parent)
   child="$TMP_ROOT/teardown-durable-child"
   FM_SECONDMATE_CHARTER='Durable-record regression charter.' \
-    FM_HOME="$parent" "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
+    FM_HOME="$parent" "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
     || fail "real secondmate seeding failed"
   child=$(cd "$child" && pwd -P)
   parent_resolved=$(cd "$parent" && pwd -P)
@@ -781,7 +781,7 @@ test_secondmate_teardown_durable_record_missing_parent_registration_still_refuse
   parent=$(make_home teardown-durable-missing-parent relay-off)
   child="$TMP_ROOT/teardown-durable-missing-child"
   FM_SECONDMATE_CHARTER='Durable-record missing-registration regression charter.' \
-    FM_HOME="$parent" "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
+    FM_HOME="$parent" "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
     || fail "real secondmate seeding failed"
   child=$(cd "$child" && pwd -P)
   parent_resolved=$(cd "$parent" && pwd -P)
@@ -812,7 +812,7 @@ test_secondmate_teardown_durable_record_with_unknown_field_succeeds() {
   parent=$(make_home teardown-durable-clean-parent relay-off)
   child="$TMP_ROOT/teardown-durable-clean-child"
   FM_SECONDMATE_CHARTER='Durable-record clean-cleanup regression charter.' \
-    FM_HOME="$parent" "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
+    FM_HOME="$parent" "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
     || fail "real secondmate seeding failed"
   child=$(cd "$child" && pwd -P)
   parent_resolved=$(cd "$parent" && pwd -P)
@@ -847,7 +847,7 @@ test_secondmate_teardown_rejects_conflicting_live_and_durable_parent_bindings() 
   live_parent=$(make_home teardown-durable-conflict-live relay-off)
   child="$TMP_ROOT/teardown-durable-conflict-child"
   FM_SECONDMATE_CHARTER='Durable-record conflict regression charter.' \
-    FM_HOME="$durable_parent" "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
+    FM_HOME="$durable_parent" "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
     || fail "real secondmate seeding failed"
   child=$(cd "$child" && pwd -P)
   parent_resolved=$(cd "$durable_parent" && pwd -P)
@@ -880,7 +880,7 @@ test_secondmate_teardown_rejects_unsafe_durable_parent_records() {
     parent=$(make_home "teardown-durable-$case_name-parent" relay-off)
     child="$TMP_ROOT/teardown-durable-$case_name-child"
     FM_SECONDMATE_CHARTER='Unsafe durable-record regression charter.' \
-      FM_HOME="$parent" "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
+      FM_HOME="$parent" "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
       || fail "real secondmate seeding failed for $case_name"
     child=$(cd "$child" && pwd -P)
     make_fake_curl "$child" >/dev/null
@@ -941,7 +941,7 @@ test_secondmate_teardown_rejects_nul_bearing_durable_parent_record() {
   parent=$(make_home teardown-durable-nul-parent relay-off)
   child="$TMP_ROOT/teardown-durable-nul-child"
   FM_SECONDMATE_CHARTER='Durable-record NUL regression charter.' \
-    FM_HOME="$parent" "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
+    FM_HOME="$parent" "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects >/dev/null \
     || fail "real secondmate seeding failed"
   child=$(cd "$child" && pwd -P)
   parent_resolved=$(cd "$parent" && pwd -P)
@@ -1203,7 +1203,7 @@ SH
 
   # New fields and the open-loop gate must not create work in a disabled home.
   # shellcheck disable=SC1091
-  . "$ROOT/bin/fm-public-followup-lib.sh"
+  . "$ROOT/bin/backend/fm-public-followup-lib.sh"
   fm_pf_has_open_loops "$home/state" \
     && fail "a relay-disabled home must not grow an open-loop registry"
   fm_pf_has_delivered_open_loops "$home/state" \
@@ -1374,7 +1374,7 @@ test_dropped_baton_now_surfaces_open_loop() {
   parent=$(make_home baton-parent)
   child="$TMP_ROOT/baton-child"
   FM_SECONDMATE_CHARTER='Baton repro charter.' FM_HOME="$parent" \
-    "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects >/dev/null || fail "seed failed"
+    "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects >/dev/null || fail "seed failed"
   child=$(cd "$child" && pwd -P)
   make_fake_curl "$child" >/dev/null
   fm_fake_exit0 "$child/fakebin" tmux treehouse no-mistakes gh gh-axi
@@ -1424,7 +1424,7 @@ test_control_registered_followon_is_guarded() {
   parent=$(make_home baton-control-parent)
   child="$TMP_ROOT/baton-control-child"
   FM_SECONDMATE_CHARTER='Baton control charter.' FM_HOME="$parent" \
-    "$ROOT/bin/fm-home-seed.sh" mate "$child" --no-projects >/dev/null || fail "seed failed"
+    "$ROOT/bin/backend/fm-home-seed.sh" mate "$child" --no-projects >/dev/null || fail "seed failed"
   child=$(cd "$child" && pwd -P)
   make_fake_curl "$child" >/dev/null
   fm_fake_exit0 "$child/fakebin" tmux treehouse no-mistakes gh gh-axi
@@ -1468,12 +1468,12 @@ printf '%s\n' "$@" > "$RECORD_ARGS"
 SH
   chmod +x "$parent/fakebin/record-emit"
   command=$(printf '%s\n' "$out" | awk '
-    index($0, "/bin/fm-public-followup-emit.sh") { capture=1 }
+    index($0, "/bin/backend/fm-public-followup-emit.sh") { capture=1 }
     capture { if ($0 == "") exit; print }
   ')
   assert_contains "$command" "--outcome-text" \
     "the exact rechain command must remain continuous through outcome text"
-  command=${command/"$ROOT/bin/fm-public-followup-emit.sh"/"$parent/fakebin/record-emit"}
+  command=${command/"$ROOT/bin/backend/fm-public-followup-emit.sh"/"$parent/fakebin/record-emit"}
   command=${command//<value>/https://github.com/example/repo/pull/99}
   RECORD_ARGS="$command_log" bash -c "$command" \
     || fail "the exact rechain command must execute after filling its deliverable value"
@@ -1872,7 +1872,7 @@ test_pending_skips_concurrent_retirement() {
   seed_commitment "$home" pf-race-other req-race-other discord main work-race-other
 
   FM_RACE_HOME="$home" FM_RACE_ROOT="$ROOT" bash -c '
-    . "$FM_RACE_ROOT/bin/fm-public-followup-lib.sh"
+    . "$FM_RACE_ROOT/bin/backend/fm-public-followup-lib.sh"
     fm_pf_registry_lock_acquire "$FM_RACE_HOME/state" pf-race || exit 1
     : > "$FM_RACE_HOME/lock-ready"
     while [ ! -e "$FM_RACE_HOME/release-lock" ]; do sleep 0.02; done

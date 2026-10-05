@@ -17,10 +17,10 @@ test would recreate `mcp.json` — a file the adapter ignores — and the warnin
 return. The change aligns the whole pi-MCP surface to `mcp-adapter.json`:
 
 - **Renderers/writers:** `bin/seat/valknut-load.sh` (renders the project register from the
-  example), `bin/fleet-ensure.sh` (writes the seat's global register at raise),
+  example), `bin/fleet/fleet-ensure.sh` (writes the seat's global register at raise),
   `bin/bridge/a2a-mcp.sh` (both scopes), `bin/bridge/mcp-config.sh` (global), `bin/bridge/mcp-gate.sh`
   (default target).
-- **Probes/readers:** `bin/eir-doctor.sh` (hoard `mcp` surface), the lifecycle
+- **Probes/readers:** `bin/agents/eir-doctor.sh` (hoard `mcp` surface), the lifecycle
   smoke test's MCP probe.
 - **Example + ignore:** `.pi/mcp.json.example` → `.pi/mcp-adapter.json.example`
   (git mv), `.gitignore` names `mcp-adapter.json`.
@@ -43,7 +43,7 @@ galdr-reread: `harness-integration/README.md`, `installation.md`, `memory-well.m
 - `.gitignore`
 - `.pi/mcp.json.example` → `.pi/mcp-adapter.json.example`
 - `bin/seat/valknut-load.sh`, `bin/bridge/mcp-config.sh`, `bin/bridge/mcp-gate.sh`, `bin/bridge/a2a-mcp.sh`,
-  `bin/fleet-ensure.sh`, `bin/ymir-fleet.sh`, `bin/eir-doctor.sh`
+  `bin/fleet/fleet-ensure.sh`, `bin/fleet/ymir-fleet.sh`, `bin/agents/eir-doctor.sh`
 - `.agents/skills/lifecycle/smoke_test.sh`
 - `README.md`, `STRUCTURE.md`
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`,

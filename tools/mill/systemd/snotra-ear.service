@@ -11,7 +11,7 @@ Description=Snotra's ear — the whisper engine served to the fleet (:8322, stro
 # 2026-10-01; see docs/fixes/snotra/2026-10-01-the-ear-follows-the-gate.md.
 #
 # So its lifecycle belongs to the WATCH, which already knows whether a meeting
-# is happening: bin/snotra-detect.sh raises it once a capture is confirmed alive
+# is happening: bin/time/snotra/snotra-detect.sh raises it once a capture is confirmed alive
 # and lowers it after the minutes are written. That is a stricter gate than
 # "this seat has a GPU" (a capability raise) and a stricter one than "the seat
 # booted" — only a meeting can start it.

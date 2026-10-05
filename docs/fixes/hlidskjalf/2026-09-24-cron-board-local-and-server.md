@@ -18,7 +18,7 @@ want of a live session lock (the plan 29 law). Two read-path faults:
 - **`/api/cron` is now the loop's own reader**: `cronConfigPath()` resolves
   `$YMIR_HOME/config/cron.yaml` → repo `cron.yaml` → the example (flagged as
   such). The answer carries `source`, each job's `role` and whether it `applies`
-  to this seat's roles (`bin/topology.sh --json`), the fired markers from
+  to this seat's roles (`bin/fleet/topology.sh --json`), the fired markers from
   `state/.cron-fired`, and — when stopped — a `why` parsed from `state/cron.log`
   (so "DOWN" says *why*: `no live session lock`, `never started this session`,
   …).

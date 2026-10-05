@@ -140,9 +140,9 @@ PATH="$LAB/bin:$PATH"
 export PATH
 
 # shellcheck source=bin/backend/fm-busy-lib.sh
-. "$ROOT/bin/fm-busy-lib.sh"
+. "$ROOT/bin/backend/fm-busy-lib.sh"
 # shellcheck source=bin/backend/fm-tmux-lib.sh
-. "$ROOT/bin/fm-tmux-lib.sh"
+. "$ROOT/bin/backend/fm-tmux-lib.sh"
 
 "$REAL_TMUX" -L "$SOCKET" new-session -d -s "$SESSION" -n control -c "$WORKSPACE" \
   || fail "could not start the isolated tmux server"

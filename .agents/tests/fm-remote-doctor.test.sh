@@ -227,11 +227,11 @@ doctor() {
     FM_FAKE_HERDR_BIN="$CASE_BIN/herdr" \
     FM_FAKE_PLIST="$CASE_PLIST" \
     FM_FAKE_JOB_PLIST="$CASE_JOB_PLIST" \
-    FM_FAKE_JOB_WORKER="$ROOT/bin/fm-remote-job-worker.sh" \
+    FM_FAKE_JOB_WORKER="$ROOT/bin/backend/fm-remote-job-worker.sh" \
     FM_FAKE_LAUNCH_AGENT_LOG="$CASE_HOME/Library/Logs/$LABEL.log" \
     FM_REMOTE_JOB_PLATFORM_OVERRIDE="${CASE_PLATFORM_OVERRIDE-}" \
     FM_REMOTE_JOB_ACTIVE="${CASE_REMOTE_JOB_ACTIVE-1}" \
-    "$ROOT/bin/fm-remote-doctor.sh" "$@" 2>&1
+    "$ROOT/bin/backend/fm-remote-doctor.sh" "$@" 2>&1
   )
   DOCTOR_RC=$?
   set -e
@@ -333,7 +333,7 @@ assert_grep '<string>fm-remote</string>' "$CASE_PLIST" "the written plist does n
 assert_no_grep '<string>default</string>' "$CASE_PLIST" "the written plist pins the interactive default session"
 assert_grep "<string>$JOB_LABEL</string>" "$CASE_JOB_PLIST" "the worker plist does not carry the Firstmate label"
 assert_grep '<string>Aqua</string>' "$CASE_JOB_PLIST" "the worker plist is not Aqua-scoped"
-assert_grep "$ROOT/bin/fm-remote-job-worker.sh" "$CASE_JOB_PLIST" "the worker plist does not use the configured code root"
+assert_grep "$ROOT/bin/backend/fm-remote-job-worker.sh" "$CASE_JOB_PLIST" "the worker plist does not use the configured code root"
 assert_grep "gui/$(id -u)" "$CASE_LAUNCHCTL_LOG" "the launch agent was not bootstrapped into the GUI domain"
 cmp -s "$CASE_STATE/interactive-before.plist" "$CASE_INTERACTIVE_PLIST" \
   || fail "the fm-remote repair rewrote the interactive default launch agent"
@@ -568,7 +568,7 @@ for tool in herdr tasks-axi treehouse claude; do
   ln -s "$CASE_BIN/$tool" "$CASE_HOME/.local/bin/$tool"
 done
 HOME="$CASE_HOME" FM_ROOT_OVERRIDE="$ROOT" FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
-  "$ROOT/bin/fm-remote-job-worker.sh" > "$CASE_STATE/worker.out" 2> "$CASE_STATE/worker.err" &
+  "$ROOT/bin/backend/fm-remote-job-worker.sh" > "$CASE_STATE/worker.out" 2> "$CASE_STATE/worker.err" &
 DOCTOR_WORKER_PID=$!
 for _ in $(seq 1 100); do
   [ -f "$CASE_HOME/.firstmate/remote-job/worker.ready" ] && break
@@ -605,21 +605,21 @@ pass "doctor refreshes stale worker identity before probing tools"
 new_case Linux with-herdr no-gui
 REMOTE_ROOT="$CASE_DIR/remote-root"
 mkdir -p "$REMOTE_ROOT/bin"
-printf '#!/usr/bin/env bash\n' > "$REMOTE_ROOT/bin/fm-remote-entrypoint.sh"
+printf '#!/usr/bin/env bash\n' > "$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh"
 export FM_ROOT_OVERRIDE="$REMOTE_ROOT"
 doctor
 assert_contains "$DOCTOR_OUT" 'check entrypoint-link=fixable:' "a missing entrypoint symlink was not tagged fixable"
 doctor --fix
 assert_contains "$DOCTOR_OUT" 'fix entrypoint-link=applied:' "--fix did not report linking the entrypoint"
 assert_contains "$DOCTOR_OUT" 'check entrypoint-link=ok:' "the recreated entrypoint symlink was not confirmed"
-[ "$(readlink "$CASE_HOME/.local/bin/fm-remote-entrypoint.sh")" = "$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" ] \
+[ "$(readlink "$CASE_HOME/.local/bin/backend/fm-remote-entrypoint.sh")" = "$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" ] \
   || fail "the entrypoint symlink does not point at this code root"
 printf 'not a symlink\n' > "$CASE_HOME/.local/bin/other"
-rm -f "$CASE_HOME/.local/bin/fm-remote-entrypoint.sh"
-printf 'operator wrapper\n' > "$CASE_HOME/.local/bin/fm-remote-entrypoint.sh"
+rm -f "$CASE_HOME/.local/bin/backend/fm-remote-entrypoint.sh"
+printf 'operator wrapper\n' > "$CASE_HOME/.local/bin/backend/fm-remote-entrypoint.sh"
 doctor --fix
 assert_contains "$DOCTOR_OUT" 'check entrypoint-link=human:' "an operator-owned entrypoint file was not left to the operator"
-[ "$(cat "$CASE_HOME/.local/bin/fm-remote-entrypoint.sh")" = 'operator wrapper' ] \
+[ "$(cat "$CASE_HOME/.local/bin/backend/fm-remote-entrypoint.sh")" = 'operator wrapper' ] \
   || fail "--fix overwrote a file it did not create"
 unset FM_ROOT_OVERRIDE
 pass "the entrypoint symlink is recreated when absent and never overwritten when operator-owned"

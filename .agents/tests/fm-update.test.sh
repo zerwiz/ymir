@@ -22,7 +22,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-UPDATE="$ROOT/bin/fm-update.sh"
+UPDATE="$ROOT/bin/backend/fm-update.sh"
 
 # Deterministic, isolated git identity for fixture commits.
 fm_git_identity fmtest fmtest@example.com

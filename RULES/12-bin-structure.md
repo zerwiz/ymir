@@ -26,7 +26,7 @@ not tidiness, it is that no one can tell which file does what without opening al
 
 ## The failure this rule exists to prevent
 
-An attempted move (`bin/capabilities.sh` → `bin/doors/capabilities.sh`) rendered a register with
+An attempted move (`bin/gates/capabilities.sh` → `bin/gates/capabilities.sh`) rendered a register with
 **2 rows instead of 437**. Cause: `ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"` — one
 level up from the script. Nested, it resolved `ROOT` to `bin/`, then searched for `bin/*.sh`
 *inside* `bin/`, found nothing, and reported a healthy-looking empty index.

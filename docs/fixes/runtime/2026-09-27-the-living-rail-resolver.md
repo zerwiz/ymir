@@ -3,8 +3,8 @@
 ### Why
 
 The model lane had no owner. Every surface that needed to know where models came
-from restated it itself: `bin/model-placement.sh` built rail URLs from the
-registry, `bin/agents/eindri-route.sh` assumed a `forge` role, `bin/snotra-transcribe.sh`
+from restated it itself: `bin/model/model-placement.sh` built rail URLs from the
+registry, `bin/agents/eindri-route.sh` assumed a `forge` role, `bin/time/snotra/snotra-transcribe.sh`
 defaulted to `http://127.0.0.1:8080/v1`, and the alias gate gathered aliases from
 whichever rails it could reach. The Allfather's word (plan 51 Part 9c): *models
 come from whichever strong box is CONNECTED at the moment* — heimdall · whynot ·
@@ -25,19 +25,19 @@ never be an outage.
   a fake URL. The shared key is a REFERENCE (`LLAMA_SWAP_API_KEY`: env → the hoard
   vault → pi auth.json); the value is read only to ask a rail what it serves and
   is never emitted. `__main__.py` is its module CLI; `__init__.py` its face.
-- **`bin/rail-resolve.sh`** (new door) — `resolve [alias]` · `status`, TOON for a
+- **`bin/model/rail-resolve.sh`** (new door) — `resolve [alias]` · `status`, TOON for a
   human and `--json` for callers; picks the engine venv or python3, resolves the
   home through `bin/vault/hoard-lib.sh`, and never restates a path or a rail URL.
 - **The many now call it:**
-  - `bin/model-placement.sh` — the ranked rails and their reachability come from
+  - `bin/model/model-placement.sh` — the ranked rails and their reachability come from
     the resolver; the TOON/JSON fields are unchanged.
   - `bin/agents/eindri-route.sh` — a `model` errand follows the ranked live set
     (first-alive at its head), falling back to the registry's `forge` hosts only
     when nothing is alive; the planner still never invents a box.
-  - `bin/model-alias-check.sh` — the served set is the union over the RESOLVED
+  - `bin/gates/checks/model-alias-check.sh` — the served set is the union over the RESOLVED
     provider's live rails, and a `model_alias_rail` row names the serving box: a
     seat's name resolves against whichever box serves.
-  - `bin/snotra-transcribe.sh` — the ear's summary rail defaults to the resolver's
+  - `bin/time/snotra/snotra-transcribe.sh` — the ear's summary rail defaults to the resolver's
     serving box; `RAIL_URL` still forces one.
   - `bin/bridge/mcp-gateway.sh` — a `rail [resolve|status]` verb delegating to the
     resolver, and a `rail` row in `status`. The rail is NEVER an MCP upstream (the
@@ -55,14 +55,14 @@ never be an outage.
 
 ### Proof (live, on heimdall)
 
-- `bin/rail-resolve.sh resolve` → `heimdall · http://127.0.0.1:8080/v1 ·
+- `bin/model/rail-resolve.sh resolve` → `heimdall · http://127.0.0.1:8080/v1 ·
   LLAMA_SWAP_API_KEY`; `status` → heimdall `health`, whynot `health`, omarchy
   `timeout` — matching the tailnet reality (whynot up, omarchy offline).
-- `bin/rail-resolve.sh resolve qwen3.6-35b-a3b@iq3_s` → heimdall, alias verified;
+- `bin/model/rail-resolve.sh resolve qwen3.6-35b-a3b@iq3_s` → heimdall, alias verified;
   `resolve no-such-alias@nowhere` → declined, exit 1.
 - `bin/agents/eindri-route.sh model` → `heimdall,whynot` (the live set, first-alive at
   its head).
-- `bin/model-alias-check.sh --local` → `pass`, `model_alias_rail` = heimdall,
+- `bin/gates/checks/model-alias-check.sh --local` → `pass`, `model_alias_rail` = heimdall,
   live_boxes 2.
 - `bin/bridge/mcp-gateway.sh rail status` and `bin/bridge/mcp-config.sh show` (`ymir.rail`)
   answer the same serving box.
@@ -85,16 +85,16 @@ rail).
 - `src/ymir_runtime/fleet/rail.py` (new)
 - `src/ymir_runtime/fleet/__init__.py` (new)
 - `src/ymir_runtime/fleet/__main__.py` (new)
-- `bin/rail-resolve.sh` (new)
+- `bin/model/rail-resolve.sh` (new)
 - `src/ymir_runtime/tests/test_rail.py` (new)
 - `.agents/tests/rail-resolve.test.sh` (new)
 - `config/fleet.json.example`
 - `config/fleet.schema.json`
 - `src/pyproject.toml`
-- `bin/model-placement.sh`
+- `bin/model/model-placement.sh`
 - `bin/agents/eindri-route.sh`
-- `bin/model-alias-check.sh`
-- `bin/snotra-transcribe.sh`
+- `bin/gates/checks/model-alias-check.sh`
+- `bin/time/snotra/snotra-transcribe.sh`
 - `bin/bridge/mcp-gateway.sh`
 - `bin/bridge/mcp-config.sh`
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`
@@ -106,4 +106,4 @@ rail).
 Two one-line truths mended: (1) the template's `rails`/`ear` arrays name only
 DECLARED hosts (`heart-host` · `dev-host`) — the undeclared "rail-host" is gone,
 honouring the file's own line 3; (2) `config/load.py`'s fleet.json readers table
-now names all five doors including `bin/rail-resolve.sh` — code and asset agree.
+now names all five doors including `bin/model/rail-resolve.sh` — code and asset agree.

@@ -11,27 +11,27 @@ installations[15]{tool,role,oss,install,used_by}:
   "treehouse","worktree pool (Yggdrasil)","kunchenguid/treehouse","curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh","yggdrasil.sh · Eindri workers"
   "sandcastle","sandbox engine (Utgard)","mattpocock/sandcastle","npm i @ai-hero/sandcastle","utgard.sh · einherjar-spawn"
   "no-mistakes","clean-PR gate (Mjollnir/Glitnir)","kunchenguid/no-mistakes","curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh","mjollnir.sh (mode no-mistakes)"
-  "hermes","worker agent runtime","NousResearch/hermes-agent","curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash","bin/hermes-ensure.sh"
+  "hermes","worker agent runtime","NousResearch/hermes-agent","curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash","bin/engine/hermes-ensure.sh"
   "opendesign","design engine (Hnoss)","nexu-io/open-design","od mcp install <agent>","skills/hnoss · design Eindri"
   "firecrawl","web crawl/scrape","firecrawl.dev","pip install firecrawl-py","skills/bragi (research/SEO)"
   "scrapy","optional scraper (large/custom crawls)","scrapy.org","pip install scrapy","skills/bragi (optional)"
   "browser-use","agentic browser","browser-use/browser-use","pip install browser-use","skills/bragi (publish/post)"
   "chrome-devtools","browser debugging","developer.chrome.com/docs/devtools","Chrome DevTools MCP / built-in","Sindri (developer craft)"
-  "engdbram","the well (Mimirsbrunn) — module name is engram","engdbram","bin/prereq-ensure.sh engram (pip install --user engdbram; NOT the PyPI 'engram', which is a renderer)","bin/bridge/mimir-bridge.py · well"
+  "engdbram","the well (Mimirsbrunn) — module name is engram","engdbram","bin/engine/prereq-ensure.sh engram (pip install --user engdbram; NOT the PyPI 'engram', which is a renderer)","bin/bridge/mimir-bridge.py · well"
   "mcp","MCP SDK (engram-mcp needs <2)","modelcontextprotocol","pip install --user --break-system-packages 'mcp<2'","engram MCP for all harnesses"
   "electron","desktop shell","electron","npm i -D electron@^33","apps/hlidskjalf/electron · scripts/electron.sh"
   "capacitor","mobile APK shell","capacitor","npm i @capacitor/core @capacitor/android @capacitor/cli","apps/hlidskjalf/android"
-  "cloudflared","tunnel (Gjallarhorn)","cloudflare/cloudflared","(system package)","bin/gjallarhorn-tunnel.sh"
+  "cloudflared","tunnel (Gjallarhorn)","cloudflare/cloudflared","(system package)","bin/forge/gjallarhorn-tunnel.sh"
   "jdk17","Android build toolchain","Adoptium Temurin 17","user-space tarball → ~/.local/jdk-17","gradlew assembleDebug"
 ```
 
 ## Engine installs (one command)
 
 ```sh
-bin/ymir-install.sh          # prereqs, tree, engines, hermes, sandbox, memory, loaders, services
+bin/engine/ymir-install.sh          # prereqs, tree, engines, hermes, sandbox, memory, loaders, services
 ```
 
-`bin/ymir-install.sh` self-heals the fixable gaps (`engram`, `mcp<2`, `treehouse`,
+`bin/engine/ymir-install.sh` self-heals the fixable gaps (`engram`, `mcp<2`, `treehouse`,
 `no-mistakes`, **Hermes**) and reports the system-level ones (`git`, `python3`,
 `bun`, `docker`, `gh`). See [`../.agents/skills/galdr-ymirsystem/assets/installation.md`].
 
@@ -52,12 +52,12 @@ bin/ymir-install.sh          # prereqs, tree, engines, hermes, sandbox, memory, 
   JDK 17 + Android SDK — see `docs/installations/`).
 - **Electron** is the desktop shell (`scripts/electron.sh`).
 - **cloudflared** exposes Hlidskjalf at your own hostname (`YMIR_TUNNEL_HOST`)
-  (`bin/gjallarhorn-tunnel.sh`); cache purge needs `CLOUDFLARE_API_TOKEN`.
+  (`bin/forge/gjallarhorn-tunnel.sh`); cache purge needs `CLOUDFLARE_API_TOKEN`.
 
 ## Rules
 
 1. **OSS first.** Adopt the validated engine; never rebuild what exists.
 2. **Keys via env.** `FIRECRAWL_API_KEY`, `OD_API_TOKEN`, `CLOUDFLARE_API_TOKEN`,
    provider keys — `$YMIR_HOME/secrets/platform.env` only.
-3. **No mock.** A tool reported present must be real; `bin/ymir-install.sh --check`
+3. **No mock.** A tool reported present must be real; `bin/engine/ymir-install.sh --check`
    tells the truth.

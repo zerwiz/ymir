@@ -5,7 +5,7 @@
   within a second, the Pi extension classified the close as
   `watcher: FAILED - arm cycle ended without an actionable reason`, retried five
   times, and gave up. `gna_watch_arm` had to be called again and again.
-- **Root cause:** in `bin/syn-watch-arm.sh`, `actionable()` treated a **non-empty
+- **Root cause:** in `bin/pi/syn-watch-arm.sh`, `actionable()` treated a **non-empty
   but unchanged** wake queue as actionable *and returned success without printing
   anything*:
   ```sh
@@ -29,7 +29,7 @@
   supervision no longer flaps and the turn-end guard stops firing blind.
 
 ### Files
-- `bin/syn-watch-arm.sh`
+- `bin/pi/syn-watch-arm.sh`
 - `.agents/tests/syn-watch-arm-silent-exit.test.sh` — regression: an unchanged
   queue keeps the watcher alive (it must not exit); a changed queue signals once
   and exits.

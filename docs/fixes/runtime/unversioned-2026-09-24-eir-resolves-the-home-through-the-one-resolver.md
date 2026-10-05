@@ -1,7 +1,7 @@
 ## runtime · unversioned · 2026-09-24 — Eir resolves the home through the one resolver
 
 ### Why
-`bin/eir-doctor.sh` carried its own home default:
+`bin/agents/eir-doctor.sh` carried its own home default:
 
 ```bash
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
@@ -27,4 +27,4 @@ container and its host cannot agree on it. Reported here rather than papered ove
 wants a decision (a machine-local pointer path, or accepting the conflict).
 
 ### Files
-- `bin/eir-doctor.sh`
+- `bin/agents/eir-doctor.sh`

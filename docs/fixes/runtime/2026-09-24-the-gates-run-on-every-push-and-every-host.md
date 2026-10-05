@@ -15,7 +15,7 @@ and two hosts listing them is a third. So the steps live in one command and both
   gates, and the real local npm install. `--fast` skips the heavy third.
 - **the pre-push hook** now runs `guards.sh` **first**, before the branch and fix-note guards,
   because a dirty tree should fail before anything else is argued about. Re-seated by
-  `bin/fixes-guard.sh --install`, which is where the hook template lives.
+  `bin/gates/guards/fixes-guard.sh --install`, which is where the hook template lives.
 - **`.github/workflows/ymir-gates.yml`** and **`.forgejo/workflows/ymir-gates.yml`** — identical
   files, one job, one step, calling `bash bin/gates/ci-verify.sh`. Two doors, one room. If a host
   needs a different runner label, that is one line in one file and no change to what is proved.
@@ -30,6 +30,6 @@ and two hosts listing them is a third. So the steps live in one command and both
 ### Files
 - `bin/gates/guards.sh`
 - `bin/gates/ci-verify.sh`
-- `bin/fixes-guard.sh`
+- `bin/gates/guards/fixes-guard.sh`
 - `.github/workflows/ymir-gates.yml`
 - `.forgejo/workflows/ymir-gates.yml`

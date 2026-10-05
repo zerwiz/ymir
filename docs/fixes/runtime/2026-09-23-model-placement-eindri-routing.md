@@ -7,7 +7,7 @@
   20 GB model onto a laptop, and an errand went wherever the session happened to
   be.
 - **Fix, two role-aware planners:**
-  - **`bin/model-placement.sh`** — reports every **forge** host's rail
+  - **`bin/model/model-placement.sh`** — reports every **forge** host's rail
     (`http://<tailnet>:8080`), whether it answers (offline-safe), and this
     machine's one-local-model lock. The forge owns the heavy rail; a body calls it
     over the tailnet instead of downloading.
@@ -25,6 +25,6 @@
 - On this box: rails `whynot` (reachable), `zerwizserver` (no); `record → whynot`.
 
 ### Files
-- `bin/model-placement.sh`
+- `bin/model/model-placement.sh`
 - `bin/agents/eindri-route.sh`
 - `.agents/tests/model-eindri.test.sh`

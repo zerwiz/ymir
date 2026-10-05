@@ -8,9 +8,9 @@ The supervision arm lived and died with its session. When the session's lock own
 
 ```
 doors[5]{path,shape}
-  "bin/syn-watch.sh run","the arm: the poll loop, the heartbeat, the wake raise, the lease — one per home, session-independent"
-  "bin/syn-watch.sh status|start|stop|restart","the operator's truth and the raise/lower: up | idle | stale | down, exit non-zero on a gap"
-  "bin/syn-watch-arm.sh","the thin client the harness adapters spawn: enter a vacant helm, seat/attach, relay the raised line, exit"
+  "bin/pi/syn-watch.sh run","the arm: the poll loop, the heartbeat, the wake raise, the lease — one per home, session-independent"
+  "bin/pi/syn-watch.sh status|start|stop|restart","the operator's truth and the raise/lower: up | idle | stale | down, exit non-zero on a gap"
+  "bin/pi/syn-watch-arm.sh","the thin client the harness adapters spawn: enter a vacant helm, seat/attach, relay the raised line, exit"
   "tools/mill/systemd/ymir-syn-watch.service","Type=simple, Restart=always + StartLimitIntervalSec=60/StartLimitBurst=10, Environment=BROKK_STATE_OVERRIDE=__YMIR_OPERATOR_STATE__, WantedBy=ymir.target"
   "tests/e2e/arm-service-proof.sh","the plan's gate, runnable: proof (detached) and systemd (Restart=always through a transient unit)"
 ```
@@ -39,11 +39,11 @@ The readiness line is `watcher: started pid=<client-pid> recovery-generation=svc
 `watcher: attached - arm service up ...`. `.pi/**` and `.opencode/**` are untouched;
 both harness adapters were read to confirm the contract.
 
-**Seating.** `syn-watch` joins the ONE autoboot table (`bin/autoboot-lib.sh`) as a
+**Seating.** `syn-watch` joins the ONE autoboot table (`bin/engine/autoboot-lib.sh`) as a
 heart+dev program, its unit name resolved by `autoboot_unit_of` (door `syn-watch`
-→ unit `ymir-syn-watch.service`), materialized by `bin/fleet-ensure.sh` from the
-mill template and enabled onto `ymir.target`. `bin/syn-watch.sh start` asks the
-SAME renderer (`bin/fleet-ensure.sh unit syn-watch`) — one renderer, so a seat's
+→ unit `ymir-syn-watch.service`), materialized by `bin/fleet/fleet-ensure.sh` from the
+mill template and enabled onto `ymir.target`. `bin/pi/syn-watch.sh start` asks the
+SAME renderer (`bin/fleet/fleet-ensure.sh unit syn-watch`) — one renderer, so a seat's
 unit and the door's unit can never drift — and refuses nothing the fleet's own
 `refuse_disposable_path` would refuse.
 
@@ -55,9 +55,9 @@ instance per seat is Phase 3's seam and is named as such in the asset.
 **Loud failure, three ways:** `Restart=always` + `StartLimit` (systemd), the
 client re-seating a dead arm inside `BROKK_WATCH_DAEMON_GRACE_SECONDS` (15s) and
 printing `stale: arm service is down - ...` when it cannot, and
-`bin/syn-watch.sh status` (exit 1) composed by Eir's new `arm` surface.
+`bin/pi/syn-watch.sh status` (exit 1) composed by Eir's new `arm` surface.
 
-**Drive-by, same file (named honestly):** `bin/eir-doctor.sh`'s `detail()` branches
+**Drive-by, same file (named honestly):** `bin/agents/eir-doctor.sh`'s `detail()` branches
 were bare command text — a single quoted word, which bash runs as a command NAME —
 so EVERY surface row's detail printed empty. They now print the command and the
 caller evaluates it; that is what makes the `arm` row actually name the arm
@@ -86,17 +86,17 @@ steps pass now.
 - `.agents/tests/syn-watch-arm-silent-exit.test.sh` — **ALL PASS**, 8/8: the flood
   brake (an unchanged queue keeps the watch watching), the client's attach lines,
   a line raised with no client attached delivered to the next, the re-seat, the loud gap.
-- `bash -n` clean on every edited/added script; `bin/syn-watch.sh status --detail`
-  and `bin/eir-doctor.sh check` exercised live.
+- `bash -n` clean on every edited/added script; `bin/pi/syn-watch.sh status --detail`
+  and `bin/agents/eir-doctor.sh check` exercised live.
 
 ### Files
-- `bin/syn-watch.sh`
-- `bin/syn-watch-arm.sh`
-- `bin/eir-doctor.sh`
+- `bin/pi/syn-watch.sh`
+- `bin/pi/syn-watch-arm.sh`
+- `bin/agents/eir-doctor.sh`
 - `tools/mill/systemd/ymir-syn-watch.service`
-- `bin/autoboot-lib.sh`
-- `bin/fleet-ensure.sh`
-- `bin/ymir-autoboot.sh`
+- `bin/engine/autoboot-lib.sh`
+- `bin/fleet/fleet-ensure.sh`
+- `bin/engine/ymir-autoboot.sh`
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`

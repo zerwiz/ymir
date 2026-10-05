@@ -44,7 +44,7 @@ gitignored — the user owns it and shares it between computers:
 - **Secrets are referenced, never inlined.** Read them by path — `YMIR_HOARD`
   (default `$YMIR_HOME`), `bin/vault/hodd.sh emit <file>` to set them in a shell. A
   value never enters a tracked file, a commit, or a document.
-- **Two wards.** `bin/secret-guard.sh` is the outer ward (pre-commit + CI);
+- **Two wards.** `bin/gates/guards/secret-guard.sh` is the outer ward (pre-commit + CI);
   `hodd/.gitignore` is the inner one. Nothing leaves without passing both.
 - **Realm boundaries are sacred.** Private data at YMIR_HOME is
   scoped per operator; a clone must never inherit another's hoard.
@@ -60,7 +60,7 @@ read. Operator-private documents — plans, strategy, roadmaps, the masterplan,
 `append-only-log`, and project planning — belong in `hodd/docs/` at the repo
 (never `docs/`), or live at `$YMIR_HOME/docs/` in the private repo.
 
-`bin/docs-guard.sh` blocks a commit that stages such a document under `docs/`
+`bin/gates/guards/docs-guard.sh` blocks a commit that stages such a document under `docs/`
 (wired into the pre-commit hook beside `secret-guard.sh`). When it fires, move
 the file to `$YMIR_HOME/docs/` in the private repo.
 
@@ -94,4 +94,4 @@ The truth on a live home, and the intent of this rule:
   `$YMIR_HOME/docs/`") is likewise read as **`$YMIR_HOME/hodd/docs/`**.
 
 Confirmed by the Allfather 2026-09-17. Drift of this kind is caught by
-`bin/eir-doctor.sh`'s hoard placement check.
+`bin/agents/eir-doctor.sh`'s hoard placement check.

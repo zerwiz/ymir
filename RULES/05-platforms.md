@@ -43,8 +43,8 @@ layers[4]{layer,host,owns}:
 
 | Place | What carries the rule |
 |---|---|
-| `bin/ymir-platform.sh` | the capability shim: the one place a platform difference is known |
-| `bin/ymir-install.sh` | runs the core; Omarchy steps are gated on the host |
+| `bin/fleet/ymir-platform.sh` | the capability shim: the one place a platform difference is known |
+| `bin/engine/ymir-install.sh` | runs the core; Omarchy steps are gated on the host |
 | the Omarchy layer (`omarchy-sense`, `omarchy-plugins`, `omarchy-hook-install`, `desktop-place`) | Omarchy only, each reporting a clean skip elsewhere |
 | `galdr/assets/installation.md` | the two-layer model, and the rule for new desktop features |
 | `galdr/assets/build-method.md` | the maintenance duty: a core change updates every layer |

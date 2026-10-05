@@ -39,7 +39,7 @@ SCRIPT_DIR=$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 . "$SCRIPT_DIR/fm-remote-job-lib.sh"
 
 DRY_RUN=0
-REAP_SUFFIX=/bin/fm-remote-job-worker.sh
+REAP_SUFFIX=/bin/backend/fm-remote-job-worker.sh
 
 reap_die() { printf 'fm-remote-job-reap-orphans: %s\n' "$1" >&2; exit 2; }
 

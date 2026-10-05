@@ -64,9 +64,9 @@ async function resolveRoot(anchor) {
 |---|---|---|
 | `session.created` | `saga-sessionstart.js` | run `bin/time/saga-sessionstart-run.sh` once per session id; inject its stdout |
 | `session.idle` | `syn-watch-arm.js` | ensure an arm cycle is running (`sessionOwnsLock`, primary root, `shouldArm`) |
-| `session.idle` | `syn-turnend-guard.js` | first ask the watch-arm coordinator; only if it could not arm, run `bin/syn-turnend-guard.sh` and re-prompt on exit 2 |
-| `tool.execute.before` | `syn-pretool-check.js` | run `bin/syn-arm-pretool-check.sh --command <cmd>`; throw on exit 2 |
-| `tool.execute.before` | `syn-cd-check.js` | run `bin/syn-cd-pretool-check.sh --command <cmd>`; throw on exit 2 |
+| `session.idle` | `syn-turnend-guard.js` | first ask the watch-arm coordinator; only if it could not arm, run `bin/gates/guards/syn-turnend-guard.sh` and re-prompt on exit 2 |
+| `tool.execute.before` | `syn-pretool-check.js` | run `bin/gates/checks/syn-arm-pretool-check.sh --command <cmd>`; throw on exit 2 |
+| `tool.execute.before` | `syn-cd-check.js` | run `bin/gates/checks/syn-cd-pretool-check.sh --command <cmd>`; throw on exit 2 |
 
 ### 3.1 `session.created` — Sága injection
 
@@ -120,7 +120,7 @@ The spawned command is:
 ```js
 // .opencode/plugins/syn-watch-arm.js:355
 const armChild = spawn("bash", ["-lc",
-  'config_dir="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"; [ -f "$config_dir/x-mode.env" ] && . "$config_dir/x-mode.env"; exec "$BROKK_ROOT_OVERRIDE/bin/syn-watch-arm.sh" --restart'],
+  'config_dir="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"; [ -f "$config_dir/x-mode.env" ] && . "$config_dir/x-mode.env"; exec "$BROKK_ROOT_OVERRIDE/bin/pi/syn-watch-arm.sh" --restart'],
   { cwd: paths.root, env, stdio: ["ignore","pipe","pipe"] });
 ```
 
@@ -135,7 +135,7 @@ Continuity: on any non-actionable close, `scheduleRetry` re-arms with exponentia
 1. Ignore unless `event.type === "session.idle"`.
 2. If `skipNextIdle`, clear and return (prevents a re-prompt loop).
 3. `letWatchArmRun(sessionID, client)` calls `globalThis.__brokkOpenCodeWatchArm.ensureArmed(...)`; return early on `armed`, `wake`, or `failed`.
-4. Otherwise run `${root}/bin/syn-turnend-guard.sh` with stdin `{"stop_hook_active":false}`.
+4. Otherwise run `${root}/bin/gates/guards/syn-turnend-guard.sh` with stdin `{"stop_hook_active":false}`.
 5. Only on exit **2**: encode the fixed recovery text + stderr through Rödd and `promptAsync`; set `skipNextIdle`.
 
 The ordering matters: **watch-arm is asked first**. The guard exists for the residual case where the coordinator could not arm.
@@ -149,32 +149,32 @@ The ordering matters: **watch-arm is asked first**. The guard exists for the res
   if (!root || input?.tool !== "bash") return;
   const command = output?.args?.command;
   if (!command || typeof command !== "string") return;
-  const result = await runProcess(`${root}/bin/syn-arm-pretool-check.sh`, ["--command", command]);
+  const result = await runProcess(`${root}/bin/gates/checks/syn-arm-pretool-check.sh`, ["--command", command]);
   if (result.code !== 2) return;
   throw new Error(result.stderr.trim() || "denied by the watcher-arm PreToolUse seatbelt");
 }
 ```
 
-`.opencode/plugins/syn-cd-check.js` is identical but calls `bin/syn-cd-pretool-check.sh`. A thrown error blocks the tool call; the owner scripts hold the policy (`syn-arm-pretool-check.sh` denies backgrounding `syn-watch-arm.sh`; `syn-cd-pretool-check.sh` denies `cd .../../`).
+`.opencode/plugins/syn-cd-check.js` is identical but calls `bin/gates/checks/syn-cd-pretool-check.sh`. A thrown error blocks the tool call; the owner scripts hold the policy (`syn-arm-pretool-check.sh` denies backgrounding `syn-watch-arm.sh`; `syn-cd-pretool-check.sh` denies `cd .../../`).
 
 ---
 
 ## 4. The Rödd bridge
 
-`.opencode/plugins/lib/rodd-operational-input.js` is the **only** way the plugins encode operational text. It is a cross-language adapter; `bin/rodd-operational-input.sh` owns the protocol.
+`.opencode/plugins/lib/rodd-operational-input.js` is the **only** way the plugins encode operational text. It is a cross-language adapter; `bin/agents/rodd-operational-input.sh` owns the protocol.
 
 ```js
 // .opencode/plugins/lib/rodd-operational-input.js:6-15
 const adapterRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 export function encodeRoddOperationalInput(root, kind, content) {
-  const requested = `${root}/bin/rodd-operational-input.sh`;
-  const script = existsSync(requested) ? requested : `${adapterRoot}/bin/rodd-operational-input.sh`;
+  const requested = `${root}/bin/agents/rodd-operational-input.sh`;
+  const script = existsSync(requested) ? requested : `${adapterRoot}/bin/agents/rodd-operational-input.sh`;
   // spawn(script, ["encode", kind], ...) ; stdin = content ; stdout = encoded
 }
 ```
 
 - Signature: `encodeRoddOperationalInput(root, kind, content) => Promise<string>`.
-- It spawns `bin/rodd-operational-input.sh encode <kind>` with the body on stdin.
+- It spawns `bin/agents/rodd-operational-input.sh encode <kind>` with the body on stdin.
 - It prefers the runtime's own `bin/` and falls back to the adapter's repo `bin/` (three levels up from `.opencode/plugins/lib/`).
 - Valid `kind`s are owned by the shell script (`RODD_KINDS`): `session-start watcher turn-end-guard away-supervisor launch-brief branch-outcome`, plus the special `from-brokk` carrier.
 - Wire form: `U+2063 RODD_OP: v1 <kind>: <body>`.
@@ -222,19 +222,19 @@ node --input-type=module -e 'await import("./.opencode/plugins/saga-sessionstart
 bin/time/saga-sessionstart-run.sh | head -n 15 ; echo "exit=$?"
 
 # 2) Rödd encode round-trip (what the plugin calls)
-printf 'hello' | bin/rodd-operational-input.sh encode session-start | bin/rodd-operational-input.sh kind
+printf 'hello' | bin/agents/rodd-operational-input.sh encode session-start | bin/agents/rodd-operational-input.sh kind
 # expected: session-start
 
 # 3) watch arm + heartbeat + wake exit
-bin/syn-watch-arm.sh --restart &   # only with a live lock; prints watcher: started...
+bin/pi/syn-watch-arm.sh --restart &   # only with a live lock; prints watcher: started...
 sleep 1
 test -s state/.watch.heartbeat && echo "heartbeat ok"
 : > state/.wake-queue              # arm should exit with "signal: wake queue"
 
 # 4) seatbelts (exit 2 = block)
-bin/syn-arm-pretool-check.sh --command 'foo & bar';             echo "expect 0 -> $?"
-bin/syn-arm-pretool-check.sh --command 'bin/syn-watch-arm.sh &'; echo "expect 2 -> $?"
-bin/syn-cd-pretool-check.sh  --command 'cd ../..';              echo "expect 2 -> $?"
+bin/gates/checks/syn-arm-pretool-check.sh --command 'foo & bar';             echo "expect 0 -> $?"
+bin/gates/checks/syn-arm-pretool-check.sh --command 'bin/pi/syn-watch-arm.sh &'; echo "expect 2 -> $?"
+bin/gates/checks/syn-cd-pretool-check.sh  --command 'cd ../..';              echo "expect 2 -> $?"
 ```
 
 ### End-to-end smoke

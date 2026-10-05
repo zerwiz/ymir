@@ -153,11 +153,11 @@ make_firstmate_git_root() {
   local home=$1
   mkdir -p "$home/bin"
   printf '# Firstmate\n' > "$home/AGENTS.md"
-  cat > "$home/bin/fm-guard.sh" <<'SH'
+  cat > "$home/bin/backend/fm-guard.sh" <<'SH'
 #!/usr/bin/env bash
 exit 0
 SH
-  chmod +x "$home/bin/fm-guard.sh"
+  chmod +x "$home/bin/backend/fm-guard.sh"
   git -C "$home" init -q
   git -C "$home" add AGENTS.md bin/backend/fm-guard.sh
   git -C "$home" -c user.name='Firstmate Tests' -c user.email='tests@example.invalid' commit -qm initial
@@ -168,7 +168,7 @@ SH
 scaffold_secondmate_charter() {
   local home=$1 id=$2 charter=$3
   shift 3
-  FM_HOME="$home" FM_SECONDMATE_CHARTER="$charter" "$ROOT/bin/fm-brief.sh" "$id" --secondmate "$@" >/dev/null
+  FM_HOME="$home" FM_SECONDMATE_CHARTER="$charter" "$ROOT/bin/backend/fm-brief.sh" "$id" --secondmate "$@" >/dev/null
 }
 
 # Make a directory look like a genuine seeded secondmate home (for handoff tests).

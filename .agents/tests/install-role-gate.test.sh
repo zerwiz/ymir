@@ -21,7 +21,7 @@ printf '{"heart":"","hosts":{"box1":{"roles":["dev"]}}}\n' >"$YMIR_FLEET_REGISTR
 
 run() {  # <role> -> --check TOON
   printf '{"heart":"","hosts":{"box1":{"roles":["%s"]}}}\n' "$1" >"$YMIR_FLEET_REGISTRY"
-  timeout 300 bash "$ROOT/bin/ymir-install.sh" --check --role "$1" 2>/dev/null
+  timeout 300 bash "$ROOT/bin/engine/ymir-install.sh" --check --role "$1" 2>/dev/null
 }
 row() { printf '%s\n' "$1" | grep -E "\\\"$2\\\",\\\"$3\\\"" ; }
 
@@ -58,7 +58,7 @@ printf '%s' "$hand" | grep -q '"apps","SKIP"' && printf '%s' "$hand" | grep -q '
   && ok "hand: only the role-neutral core installs" || bad "hand"
 
 # ── an unknown role is refused before anything changes ───────────────────────
-bash "$ROOT/bin/ymir-install.sh" --check --role wizard >/dev/null 2>&1 \
+bash "$ROOT/bin/engine/ymir-install.sh" --check --role wizard >/dev/null 2>&1 \
   && bad "an unknown --role was accepted" || ok "an unknown --role is refused (exit 2)"
 
 # ── --check writes nothing: the registry is untouched, no card is made ───────
@@ -69,7 +69,7 @@ grep -q '^## Machine card' "$YMIR_MACHINES_MD" 2>/dev/null \
 
 # ── no network at all: the check still completes (plan 51 Part 2.5 rule 7) ──
 if command -v unshare >/dev/null 2>&1 && unshare -rn true 2>/dev/null; then
-  out="$(unshare -rn bash -c 'ip link set lo up 2>/dev/null; export YMIR_HOME="'"$YMIR_HOME"'" YMIR_FLEET_REGISTRY="'"$YMIR_FLEET_REGISTRY"'" YMIR_MACHINES_MD="'"$YMIR_MACHINES_MD"'" YMIR_HOST=box1; timeout 300 bash "'"$ROOT"'/bin/ymir-install.sh" --check 2>/dev/null | grep -cE "^  ."' 2>/dev/null)"
+  out="$(unshare -rn bash -c 'ip link set lo up 2>/dev/null; export YMIR_HOME="'"$YMIR_HOME"'" YMIR_FLEET_REGISTRY="'"$YMIR_FLEET_REGISTRY"'" YMIR_MACHINES_MD="'"$YMIR_MACHINES_MD"'" YMIR_HOST=box1; timeout 300 bash "'"$ROOT"'/bin/engine/ymir-install.sh" --check 2>/dev/null | grep -cE "^  ."' 2>/dev/null)"
   [ "${out:-0}" -gt 20 ] && ok "--check completes with no route to any machine ($out rows)" || bad "offline check: $out rows"
 else
   printf 'ok - skipped (no unshare for a network namespace)\n'

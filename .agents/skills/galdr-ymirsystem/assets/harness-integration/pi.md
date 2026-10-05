@@ -51,7 +51,7 @@ Pi emits the following events the adapter binds (via `pi.on?.(...)`). The adapte
 | `before_agent_start` | Sýn | `(_event, ctx)` | claim and return the digest as a message (`{ message }`) |
 | `session_compact` | Sýn | `(_event, ctx)` | create a `compact` generation and `pi.sendMessage(...)` the re-emit |
 | `session_shutdown` | both | `()` | stop the active generation (Sýn/Gná) |
-| `agent_settled` | Sýn | `()` | run `bin/syn-turnend-guard.sh`; on exit 2, `pi.sendUserMessage(content,{deliverAs:"followUp"})` |
+| `agent_settled` | Sýn | `()` | run `bin/gates/guards/syn-turnend-guard.sh`; on exit 2, `pi.sendUserMessage(content,{deliverAs:"followUp"})` |
 | `tool_call` | Sýn | `(event)`; `event.toolName`, `event.input.command` | for `bash`, run cd-check then arm-check; return `{block:true, reason}` on exit 2 |
 
 Sýn also registers a `process.once("exit", ...)` cleanup that SIGKILLs the digest process group.
@@ -98,7 +98,7 @@ Manual compaction is idle and auto-compaction may retry without another `before_
 ```ts
 pi.on("agent_settled", async () => {
   if (guardFollowupActive) { guardFollowupActive = false; return; }
-  const result = await runGuard();                 // spawns bin/syn-turnend-guard.sh, stdin {"stop_hook_active":false}
+  const result = await runGuard();                 // spawns bin/gates/guards/syn-turnend-guard.sh, stdin {"stop_hook_active":false}
   if (result.code !== 2) return;
   guardFollowupActive = true;
   const content = encodeRoddOperationalInput("turn-end-guard",
@@ -115,9 +115,9 @@ pi.on("agent_settled", async () => {
 pi.on("tool_call", async (event) => {
   if (event.type !== "tool_call" || event.toolName !== "bash") return {};
   const command = String(event.input?.command ?? "");
-  const cdResult = await runCdCheck(command);              // bin/syn-cd-pretool-check.sh
+  const cdResult = await runCdCheck(command);              // bin/gates/checks/syn-cd-pretool-check.sh
   if (cdResult.code === 2) return { block: true, reason: cdResult.stderr.trim() || "..." };
-  const result = await runPretoolCheck(command);           // bin/syn-arm-pretool-check.sh
+  const result = await runPretoolCheck(command);           // bin/gates/checks/syn-arm-pretool-check.sh
   if (result.code !== 2) return {};
   return { block: true, reason: result.stderr.trim() || "..." };
 });
@@ -161,7 +161,7 @@ Sýn therefore treats the **result message** as the completion signal, not the `
 
 ### `BROKK_SESSION_PID` lock binding
 
-The digest child is launched with `env.BROKK_SESSION_PID = String(process.pid)` — the **live Pi process**. `bin/gleipnir-lock-lib.sh` writes that pid to `state/.lock` (`gleipnir_lock_acquire`), so the lock survives the short-lived digest helper. Both Sýn and Gná verify ownership by walking `ps -o ppid=` ancestry up to 8 levels and comparing to the `.lock` pid (`lockOwnership()` in both files). `other` means read-only; `missing` means the lock is gone/stale.
+The digest child is launched with `env.BROKK_SESSION_PID = String(process.pid)` — the **live Pi process**. `bin/vault/gleipnir-lock-lib.sh` writes that pid to `state/.lock` (`gleipnir_lock_acquire`), so the lock survives the short-lived digest helper. Both Sýn and Gná verify ownership by walking `ps -o ppid=` ancestry up to 8 levels and comparing to the `.lock` pid (`lockOwnership()` in both files). `other` means read-only; `missing` means the lock is gone/stale.
 
 Liveness sees real death (`gleipnir_pid_alive` / `pidAlive`). `kill(0)` alone reports a zombie (dead but unreaped) and a recycled pid as “alive”, which stranded the machine lock after an agent was turned off. The lock therefore also records the owner's starttime in a sidecar (`brokk.lock.starttime`, `/proc/<pid>/stat` field 22) and rejects a holder whose state is `Z`/`X` or whose recorded starttime no longer matches. `gleipnir_lock_reap` (session start) and `gleipnir_lock_acquire` clear such locks, and Gná releases its own lock on real process exit (`releaseLockIfOwned` in the `exit` hook) so a clean quit never leaves the helm behind.
 
@@ -206,7 +206,7 @@ const armChild = spawn("bash", ["-lc", 'exec "$BROKK_WATCH_ARM_SCRIPT" --restart
 
 Continuity: `classifyClose` separates **actionable** (`signal:`/`stale:`/`check:`/`heartbeat:` line) from **failure**. Actionable → `restoreAfterActionableClose` (retries with backoff) then `deliverActionableWake` (encodes a `watcher` Rödd message and `pi.sendUserMessage(..., {deliverAs:"followUp"})`). Failure → `scheduleRetry`. Retry knobs: `BROKK_WATCH_REARM_RETRY_BASE_MS` (250), `..._MAX_MS` (4000), `..._LIMIT` (5); readiness `BROKK_PI_ARM_READY_TIMEOUT_MS` (12s, 35s on win32); retire `BROKK_WATCH_ARM_RETIRE_TIMEOUT_MS` (1000).
 
-On an actionable close, Gná calls `bin/syn-watch-arm.sh --handling-delivered <generation> --watcher-pid <pid>` to acknowledge handling; the script prints `watcher: handling delivered ...` and exits 0 (`bin/syn-watch-arm.sh:26-31`).
+On an actionable close, Gná calls `bin/pi/syn-watch-arm.sh --handling-delivered <generation> --watcher-pid <pid>` to acknowledge handling; the script prints `watcher: handling delivered ...` and exits 0 (`bin/pi/syn-watch-arm.sh:26-31`).
 
 Loaded markers written by the extensions (skipped while lock is `other`):
 
@@ -237,7 +237,7 @@ Use this only for diagnosis or an untrusted checkout; the production path is the
 
 ### Enable
 
-Extension files must be present under `.pi/extensions/`. Signing/selection is a Pi-side concern (`BROKK_PI_HARNESS=pi-signed` selects the `pi-signed` identity in `bin/hamr-harness.sh`).
+Extension files must be present under `.pi/extensions/`. Signing/selection is a Pi-side concern (`BROKK_PI_HARNESS=pi-signed` selects the `pi-signed` identity in `bin/fleet/hamr-harness.sh`).
 
 ### Verify loading
 
@@ -262,25 +262,25 @@ bin/time/saga-sessionstart-run.sh --source startup --pi-prerequisite | head -n 5
 
 ```bash
 rm -f state/.supervision-armed
-echo '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh; echo "inert -> $? (expect 0)"
+echo '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh; echo "inert -> $? (expect 0)"
 touch state/.supervision-armed; rm -f state/.watch.heartbeat
-echo '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh; echo "armed+stale -> $? (expect 2)"
+echo '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh; echo "armed+stale -> $? (expect 2)"
 ```
 
 ### Verify the seatbelts as `tool_call` would
 
 ```bash
-bin/syn-cd-pretool-check.sh  --command 'cd ../../etc';            echo "cd -> $? (expect 2)"
-bin/syn-arm-pretool-check.sh --command 'bin/syn-watch-arm.sh &';  echo "arm -> $? (expect 2)"
+bin/gates/checks/syn-cd-pretool-check.sh  --command 'cd ../../etc';            echo "cd -> $? (expect 2)"
+bin/gates/checks/syn-arm-pretool-check.sh --command 'bin/pi/syn-watch-arm.sh &';  echo "arm -> $? (expect 2)"
 ```
 
 ### Verify Gná's arm tool path
 
 ```bash
 # With a live lock owned by this process tree:
-bash -lc 'BROKK_SESSION_PID=$$ exec bin/syn-watch-arm.sh --restart' &
+bash -lc 'BROKK_SESSION_PID=$$ exec bin/pi/syn-watch-arm.sh --restart' &
 sleep 1; test -s state/.watch.heartbeat && echo "heartbeat ok"
-bin/syn-watch-arm.sh --handling-delivered test-gen --watcher-pid 12345
+bin/pi/syn-watch-arm.sh --handling-delivered test-gen --watcher-pid 12345
 ```
 
 ---

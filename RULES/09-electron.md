@@ -50,7 +50,7 @@ down first**, so no shell is left watching a port that has just vanished.
 
 - `apps/hlidskjalf/electron/`, `apps/odrerir/electron/`, `apps/sessrumnir/src/main/`
 - `scripts/electron.sh` — the shell lifecycle; `scripts/raise.sh` / `scripts/lower.sh`
-- `bin/design-icon.sh` — the rune and the entry, installed
+- `bin/desktop/design-icon.sh` — the rune and the entry, installed
 - Rule 05 (platforms), Rule 07 (config resolves from env, never a literal)
 
 ---

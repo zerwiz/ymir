@@ -152,7 +152,7 @@ fm_afk_launch_usage() {
 # The command run inside the created terminal. Real launch runs the shared
 # daemon entry; a test overrides it with a harmless placeholder.
 fm_afk_launch_entry_cmd() {
-  printf '%s' "${FM_AFK_LAUNCH_ENTRY:-$FM_ROOT/bin/fm-afk-start.sh}"
+  printf '%s' "${FM_AFK_LAUNCH_ENTRY:-$FM_ROOT/bin/backend/fm-afk-start.sh}"
 }
 
 fm_afk_launch_record_write() {  # <backend> <target> <extra>

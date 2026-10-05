@@ -8,11 +8,11 @@ and no runtime — the windows never open, and the entries' repo-path Exec was
 wrong for anyone running from the npm installation.
 
 ## What
-- `bin/desktop-place.sh` — the placement resolves the RUNTIME root: when the
+- `bin/seat/sessrumnir/desktop-place.sh` — the placement resolves the RUNTIME root: when the
   `ymir` CLI resolves into the npm package, the entries' __YMIR_ROOT__ becomes
   the package's own root (its scripts + bin); else the repo. The apps run from
   the npm installation, whichever it is.
-- The mend's tiers (both `scripts/electron.sh` and `bin/sessrumnir.sh`):
+- The mend's tiers (both `scripts/electron.sh` and `bin/desktop/sessrumnir.sh`):
   npm install --include=dev (the deps) -> approve + rebuild -> the
   postinstall's install.js -> `fetch_electron_zip` (the PROVEN direct zip +
   unzip road, `bin/desktop/electron-lib.sh`), so a fresh dash boots itself.
@@ -20,5 +20,5 @@ wrong for anyone running from the npm installation.
   :4322, smidja up :8437, sessrumnir up; 178 M runtime seated by the zip road.
 
 ## Files
-- `bin/desktop-place.sh` · `scripts/electron.sh` · `bin/sessrumnir.sh`
+- `bin/seat/sessrumnir/desktop-place.sh` · `scripts/electron.sh` · `bin/desktop/sessrumnir.sh`
 - `bin/desktop/electron-lib.sh`

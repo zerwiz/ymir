@@ -4,7 +4,7 @@
 - Every unit template in `tools/mill/systemd/` shipped an `[Install]` header with
   **no `WantedBy`**, and `ratatoskr.service` had no `[Install]` at all. A unit
   with no `WantedBy` is `static`: `systemctl --user enable` is a **silent no-op**.
-- `bin/fleet-ensure.sh` bet the whole raise on that broken enable and swallowed
+- `bin/fleet/fleet-ensure.sh` bet the whole raise on that broken enable and swallowed
   every failure with `|| say "$u: could not raise (warn)"`. A fresh seat booted
   with none of the fleet services running, and no install surface said so.
 - Four services nevertheless looked enabled on whynot because symlinks from an
@@ -26,12 +26,12 @@
   hlidskjalf-gate · mimir · bifrost · smidja · nornir, all joined to `ymir.target`
   on dev seats. `bin/bridge/mimir-bridge.sh` and `bin/bridge/bifrost-bridge.sh` gained
   `--foreground` so systemd supervises the process itself.
-- `bin/fleet-ensure.sh ensure` is role-gated (roles from `hodd/data/fleet.json`),
+- `bin/fleet/fleet-ensure.sh ensure` is role-gated (roles from `hodd/data/fleet.json`),
   materializes only what the seat owes, purges stale unit files (the old
   accidental enables), retires the manual start.sh stack by port, asserts Linger
   on headless seats, and then **verifies**: a role-owed program that is not
   enabled or not active is a FAILURE with its reason — never a `warn`.
-- `bin/ymir-autoboot.sh status|verify` is the boot proof — per role, every
+- `bin/engine/ymir-autoboot.sh status|verify` is the boot proof — per role, every
   program with enabled/active; `verify` exits non-zero when a role-owed program
   is disabled or not standing. Nornir's truth is its scheduler loop (the unit is
   a oneshot wrapper); its down-with-no-session state is understood, its
@@ -41,13 +41,13 @@
   rail for the GPU), and its unit is written only when both the binary and the
   model exist; otherwise the install fails loudly with the remedy. No written
   unit, no loop.
-- `bin/eir-doctor.sh` gained the `autoboot` surface: `verify` is the health,
+- `bin/agents/eir-doctor.sh` gained the `autoboot` surface: `verify` is the health,
   `fleet-ensure ensure` is the mend.
 
 ### Files
 - tools/mill/systemd/*.service (install contracts + start limits)
 - tools/web/systemd/ (ymir.target + the six web units)
-- bin/fleet-ensure.sh · bin/autoboot-lib.sh · bin/ymir-autoboot.sh (new)
+- bin/fleet/fleet-ensure.sh · bin/engine/autoboot-lib.sh · bin/engine/ymir-autoboot.sh (new)
 - bin/bridge/mimir-bridge.sh · bin/bridge/bifrost-bridge.sh (--foreground)
-- bin/eir-doctor.sh (autoboot surface)
-- bin/ymir-install.sh (fleet/autoboot/services/validate steps)
+- bin/agents/eir-doctor.sh (autoboot surface)
+- bin/engine/ymir-install.sh (fleet/autoboot/services/validate steps)

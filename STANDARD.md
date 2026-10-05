@@ -19,7 +19,7 @@ true while its command is missing.
 
 ```
 purpose[5]{clause,the_assertion,the_command,status}:
-  "install on a machine you own","a fresh machine reaches the governed state in one unattended action; running it twice changes nothing; removing it leaves the operator's home untouched","bin/prove-install.sh --fresh","GAP"
+  "install on a machine you own","a fresh machine reaches the governed state in one unattended action; running it twice changes nothing; removing it leaves the operator's home untouched","bin/engine/prove-install.sh --fresh","GAP"
   "your data never leaves","with a canary planted in the home, the full exercise runs under recorded egress; the canary appears in no outbound payload, and only allowlisted endpoints are contacted","bin/prove-egress.sh","GAP (same machinery as the Utgard sandbox, so not extra work)"
   "agents work under your standards","for a named standard set the compliance rate clears a stated threshold at a stated n, with intervals reported, and the instrument passes its own discriminative-power test","bin/prove-standard.sh --set <name> --models <a,b>","INSTRUMENT EXISTS for one rule set; wrapper missing"
   "the behaviour is provable","a stranger re-runs every substantive claim and gets the same verdict; no claim escapes a command; no figure in the material is untagged","bin/prove-claims.sh","PARTIAL: the ledger exists, the claims registry does not"

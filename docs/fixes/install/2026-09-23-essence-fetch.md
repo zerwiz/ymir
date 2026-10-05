@@ -5,9 +5,9 @@ The #119 merge dropped `ymir-fleet.sh` (its push was guard-refused), and npm's
 packer refuses `.agents`/`RULES` — an npm-installed essence stayed blocked.
 
 ### What
-- `bin/ymir-fleet.sh` (shipped) — the user's fleet-mode door.
-- `bin/essence-fetch.sh` — seats `.agents` + `RULES` from the repo when absent;
+- `bin/fleet/ymir-fleet.sh` (shipped) — the user's fleet-mode door.
+- `bin/forge/npm/essence-fetch.sh` — seats `.agents` + `RULES` from the repo when absent;
   wired into `ymir-fleet.sh ensure` so the npm world self-heals first.
 
 ### Files
-- `bin/ymir-fleet.sh` · `bin/essence-fetch.sh`
+- `bin/fleet/ymir-fleet.sh` · `bin/forge/npm/essence-fetch.sh`

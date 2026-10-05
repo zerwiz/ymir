@@ -1,7 +1,7 @@
 """locks (Gleipnir) — the session lock, in Python, as the ONE implementation.
 
 Gleipnir is the impossible chain that bound Fenrir: here it binds ONE live
-Brokk primary per MACHINE. `bin/gleipnir-lock-lib.sh` is now a THIN SHIM over
+Brokk primary per MACHINE. `bin/vault/gleipnir-lock-lib.sh` is now a THIN SHIM over
 this module — every function there resolves its answer here, so the lock has
 exactly one implementation and two readers (the shell doors and the harness
 extensions, which read the `.lock-path` pointer this module writes).

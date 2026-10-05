@@ -5,7 +5,7 @@ set -u
 # shellcheck source=tests/fixtures.sh
 . "$(dirname "${BASH_SOURCE[0]}")/fixtures.sh"
 
-TEARDOWN="$ROOT/bin/fm-teardown.sh"
+TEARDOWN="$ROOT/bin/backend/fm-teardown.sh"
 TMP_ROOT=$(fm_test_tmproot fm-grok-harness)
 
 make_spawn_case() {
@@ -107,7 +107,7 @@ esac
 exit 1
 SH
   chmod +x "$fakebin/ps"
-  out=$(FM_HOME="$home" PATH="$fakebin:$PATH" "$ROOT/bin/fm-lock.sh" status)
+  out=$(FM_HOME="$home" PATH="$fakebin:$PATH" "$ROOT/bin/backend/fm-lock.sh" status)
   assert_contains "$out" "lock: held by live harness pid" "fm-lock did not recognize grok as a live holder"
   pass "fm-lock recognizes grok harness processes"
 }

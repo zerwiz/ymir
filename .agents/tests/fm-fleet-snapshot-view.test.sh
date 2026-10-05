@@ -6,8 +6,8 @@ set -u
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-SNAPSHOT="$ROOT/bin/fm-fleet-snapshot.sh"
-VIEW="$ROOT/bin/fm-fleet-view.sh"
+SNAPSHOT="$ROOT/bin/backend/fm-fleet-snapshot.sh"
+VIEW="$ROOT/bin/backend/fm-fleet-view.sh"
 TMP_ROOT=$(fm_test_tmproot fm-fleet-snapshot)
 
 command -v jq >/dev/null 2>&1 || { echo "skip: jq not found"; exit 0; }
@@ -64,8 +64,8 @@ make_home() {  # <name>
 
 record_claude_idle() {  # <state-dir> <id>
   local state=$1 id=$2 gen
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$state" "$id")
-  "$ROOT/bin/fm-busy-event.sh" apply "$state" "$id" idle --gen "$gen" \
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$state" "$id")
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$state" "$id" idle --gen "$gen" \
     --source claude-hook --event stop
 }
 
@@ -100,8 +100,8 @@ EOF
   # A working ship task proves it through its own semantic busy-state record
   # (bin/backend/fm-busy-lib.sh), which is what the snapshot's current-state read
   # consults; rendered pane text is no longer a state source.
-  fixture_gen=$("$ROOT/bin/fm-busy-event.sh" arm "$home/state" ship-task)
-  "$ROOT/bin/fm-busy-event.sh" apply "$home/state" ship-task busy --gen "$fixture_gen" \
+  fixture_gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$home/state" ship-task)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$home/state" ship-task busy --gen "$fixture_gen" \
     --source claude-hook --event user-prompt-submit
   fm_write_meta "$home/state/scout-task.meta" \
     "window=firstmate:fm-scout-task" \
@@ -388,8 +388,8 @@ test_event_hints_follow_reconciled_current_state() {
     "harness=claude" \
     "kind=ship" \
     "mode=ship"
-  hint_gen=$("$ROOT/bin/fm-busy-event.sh" arm "$home/state" stale-decision)
-  "$ROOT/bin/fm-busy-event.sh" apply "$home/state" stale-decision busy --gen "$hint_gen" \
+  hint_gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$home/state" stale-decision)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$home/state" stale-decision busy --gen "$hint_gen" \
     --source claude-hook --event user-prompt-submit
   printf 'needs-decision: already answered\n' > "$home/state/stale-decision.status"
   fm_write_meta "$home/state/stale-blocked.meta" \
@@ -399,8 +399,8 @@ test_event_hints_follow_reconciled_current_state() {
     "harness=claude" \
     "kind=ship" \
     "mode=ship"
-  hint_gen=$("$ROOT/bin/fm-busy-event.sh" arm "$home/state" stale-blocked)
-  "$ROOT/bin/fm-busy-event.sh" apply "$home/state" stale-blocked busy --gen "$hint_gen" \
+  hint_gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$home/state" stale-blocked)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$home/state" stale-blocked busy --gen "$hint_gen" \
     --source claude-hook --event user-prompt-submit
   printf 'blocked: old failure\n' > "$home/state/stale-blocked.status"
   fakebin=$(make_fakebin "$home")

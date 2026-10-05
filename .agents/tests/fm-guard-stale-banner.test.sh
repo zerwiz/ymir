@@ -33,11 +33,11 @@ case_root() {
 record_live_watcher() {
   local dir=$1 pid=$2 home identity
   home=$(case_home "$dir")
-  identity=$(FM_STATE_OVERRIDE="$home/state" bash -c '. "$1"; fm_pid_identity "$2"' _ "$ROOT/bin/fm-wake-lib.sh" "$pid") || return 1
+  identity=$(FM_STATE_OVERRIDE="$home/state" bash -c '. "$1"; fm_pid_identity "$2"' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$pid") || return 1
   mkdir -p "$home/state/.watch.lock"
   printf '%s\n' "$pid" > "$home/state/.watch.lock/pid"
   printf '%s\n' "$home" > "$home/state/.watch.lock/fm-home"
-  printf '%s\n' "$ROOT/bin/fm-watch.sh" > "$home/state/.watch.lock/watcher-path"
+  printf '%s\n' "$ROOT/bin/backend/fm-watch.sh" > "$home/state/.watch.lock/watcher-path"
   printf '%s\n' "$identity" > "$home/state/.watch.lock/pid-identity"
 }
 
@@ -50,7 +50,7 @@ run_guard_case() {
     FM_HOME="$(case_home "$dir")" \
     FM_GUARD_GRACE=999 \
     FM_SUPERVISION_MODEL=persistent \
-    "$ROOT/bin/fm-guard.sh" 2>&1
+    "$ROOT/bin/backend/fm-guard.sh" 2>&1
 }
 
 run_guard_case_read_only() {
@@ -60,7 +60,7 @@ run_guard_case_read_only() {
     FM_GUARD_GRACE=999 \
     FM_SUPERVISION_MODEL=persistent \
     FM_GUARD_READ_ONLY=1 \
-    "$ROOT/bin/fm-guard.sh" 2>&1
+    "$ROOT/bin/backend/fm-guard.sh" 2>&1
 }
 
 # The Claude Stop auto-arm model: the watcher runs only between turns, so a fresh
@@ -71,7 +71,7 @@ run_guard_case_autoarm() {
     FM_HOME="$(case_home "$dir")" \
     FM_GUARD_GRACE=999 \
     FM_SUPERVISION_MODEL=autoarm \
-    "$ROOT/bin/fm-guard.sh" 2>&1
+    "$ROOT/bin/backend/fm-guard.sh" 2>&1
 }
 
 # The Pi extension model: .pi/extensions/fm-primary-pi-watch.ts tears the watcher
@@ -83,7 +83,7 @@ run_guard_case_extension() {
     FM_HOME="$(case_home "$dir")" \
     FM_GUARD_GRACE=999 \
     FM_SUPERVISION_MODEL=extension \
-    "$ROOT/bin/fm-guard.sh" 2>&1
+    "$ROOT/bin/backend/fm-guard.sh" 2>&1
 }
 
 # Stand up the durable evidence a live Pi session leaves behind: both primary
@@ -112,7 +112,7 @@ record_pi_extension_session() {
       version="sha256:0000000000000000000000000000000000000000000000000000000000000000"
     else
       version=$(FM_STATE_OVERRIDE="$home/state" bash -c '. "$1"; fm_pi_extension_version "$2"' \
-        _ "$ROOT/bin/fm-wake-lib.sh" "$root/.pi/extensions/$source") || return 1
+        _ "$ROOT/bin/backend/fm-wake-lib.sh" "$root/.pi/extensions/$source") || return 1
     fi
     printf '%s\n%s\n' "$version" "$session_pid" > "$home/state/$marker"
   done
@@ -579,7 +579,7 @@ test_extension_stale_beacon_alarms_despite_live_session() {
     FM_HOME="$home" \
     FM_GUARD_GRACE=1 \
     FM_SUPERVISION_MODEL=extension \
-    "$ROOT/bin/fm-guard.sh" 2>&1)
+    "$ROOT/bin/backend/fm-guard.sh" 2>&1)
   kill "$pid" 2>/dev/null || true
   wait "$pid" 2>/dev/null || true
   [ "$(count_text "$out" "WATCHER DOWN - SUPERVISION IS OFF")" -eq 1 ] \
@@ -671,7 +671,7 @@ test_pi_harness_routes_itself_to_the_extension_model() {
       FM_ROOT_OVERRIDE="$(case_root "$dir")" \
       FM_HOME="$home" \
       FM_GUARD_GRACE=999 \
-      "$ROOT/bin/fm-guard.sh" 2>&1)
+      "$ROOT/bin/backend/fm-guard.sh" 2>&1)
     kill "$pid" 2>/dev/null || true
     wait "$pid" 2>/dev/null || true
     [ -z "$out" ] \

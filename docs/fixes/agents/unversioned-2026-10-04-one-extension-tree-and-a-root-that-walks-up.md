@@ -41,7 +41,7 @@ must not be able to blind the resolver. The same law, the same reason — this f
 not learned it. It now **walks up** until it finds a directory owning `bin/`.
 
 **2. A hardcoded door as the root marker.** Twelve files decided "is this a Ymir
-root?" by testing for `bin/syn-watch-arm.sh`. The 250-door restructure moved it to
+root?" by testing for `bin/pi/syn-watch-arm.sh`. The 250-door restructure moved it to
 `bin/pi/`, so `.ymir-root` was correct and **every check still failed**.
 
 **A root owns `bin/`. It does not own any particular door.** All twelve now test for
@@ -65,11 +65,11 @@ The same hardcoded-door fault, but in paths the extensions **run** rather than t
 These fail silently the way Sýn's own header warns: exit 127, no heartbeat, watch
 dead, every listing correct.
 
-`bin/syn-watch-arm.sh` · `bin/syn-turnend-guard.sh` · `bin/syn-arm-pretool-check.sh`
-· `bin/syn-cd-pretool-check.sh` · `bin/syn-asset-pretool-check.sh` ·
-`bin/gleipnir-lock-lib.sh` · `bin/groa-update.sh` · `bin/queue.sh` ·
-`bin/capabilities.sh` · `bin/inventory.sh` · `bin/home-index-check.sh` ·
-`bin/brokk-lease-lib.sh`
+`bin/pi/syn-watch-arm.sh` · `bin/gates/guards/syn-turnend-guard.sh` · `bin/gates/checks/syn-arm-pretool-check.sh`
+· `bin/gates/checks/syn-cd-pretool-check.sh` · `bin/gates/checks/syn-asset-pretool-check.sh` ·
+`bin/vault/gleipnir-lock-lib.sh` · `bin/agents/groa-update.sh` · `bin/gates/queue.sh` ·
+`bin/gates/capabilities.sh` · `bin/gates/inventory.sh` · `bin/gates/checks/home-index-check.sh` ·
+`bin/agents/brokk-lease-lib.sh`
 
 They belong to the `bin/` restructure and its callers. **Guessing at destinations
 from six extensions is how the wrong door gets exec'd silently**, so this records

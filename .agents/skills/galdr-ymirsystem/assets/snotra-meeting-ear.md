@@ -36,7 +36,7 @@ supports this; it is not a rewrite.
 ### M1 — Fleet tool (`tools/snotra/`)
 
 - `server.mjs` — MCP server (read-only minutes access, streamable HTTP, port 8321)
-- Materialized into `~/.fleet/snotra-server.mjs` by `bin/fleet-ensure.sh`
+- Materialized into `~/.fleet/snotra-server.mjs` by `bin/fleet/fleet-ensure.sh`
 - The operator commands (`snotra-capture.sh`, `snotra-transcribe.sh`,
   `snotra-detect.sh`, `snotra-mine.sh`, `snotra-ensure.sh`, `runes-append.sh`)
   are materialized into `~/.fleet` too — **with `hoard-lib.sh` beside them**: each
@@ -45,14 +45,14 @@ supports this; it is not a rewrite.
   outside a shell that already knew the home
 - Pinned version: Meetily-Local AppImage (see fetch below)
 
-### M0 — the engine ensure (`bin/snotra-ensure.sh`)
+### M0 — the engine ensure (`bin/time/snotra/snotra-ensure.sh`)
 
 - Reports the seat's engine + model; installs what is missing
 - Per-OS: `pacman -S whisper-cpp` (Arch/omarchy), `apt-get install whisper.cpp`
   (Debian), else build-from-source guidance
 - Model fetched from the whisper.cpp Hugging Face release; a voxtype seat keeps
   its models
-- Wired into `bin/ymir-install.sh` (`step_snotra`) and `bin/eir-doctor.sh`
+- Wired into `bin/engine/ymir-install.sh` (`step_snotra`) and `bin/agents/eir-doctor.sh`
   (`snotra` surface)
 
 ### M2 — Systemd unit (`tools/mill/systemd/snotra.service`)
@@ -63,7 +63,7 @@ supports this; it is not a rewrite.
 - Runs `node ~/.fleet/snotra-server.mjs` on port 8321
 - Depends on `$YMIR_HOME` being mounted (the hoard)
 
-### M3 — Capture road (`bin/snotra-capture.sh`)
+### M3 — Capture road (`bin/time/snotra/snotra-capture.sh`)
 
 - `start` — PipeWire mic + system monitor → dated WAV under the hoard
 - `stop` — kills the ffmpeg process
@@ -71,7 +71,7 @@ supports this; it is not a rewrite.
 - Listening indicator: writes `state/.snotra-listening` (value: `recording`)
   so the bar can display it alongside ScreenRecording and Dictation
 
-### M4 — Minutes into the vault (`bin/snotra-transcribe.sh`)
+### M4 — Minutes into the vault (`bin/time/snotra/snotra-transcribe.sh`)
 
 - Transcribes WAV with whisper.cpp (local GPU)
 - Produces structured Markdown minutes
@@ -89,7 +89,7 @@ supports this; it is not a rewrite.
 
 ### M6 — Summaries on the living rail
 
-- Rides the ONE resolver (`bin/rail-resolve.sh`, `src/ymir_runtime/fleet/rail.py`, plan 51 Parts 9a/9c): the serving strong box's `http://<box>:8080/v1`, first-alive — a dropped box reroutes, never an outage
+- Rides the ONE resolver (`bin/model/rail-resolve.sh`, `src/ymir_runtime/fleet/rail.py`, plan 51 Parts 9a/9c): the serving strong box's `http://<box>:8080/v1`, first-alive — a dropped box reroutes, never an outage
 - `RAIL_URL` forces one specific rail when set; unset, the resolver's serving box wins (the ear's summaries ride whichever strong box is CONNECTED)
 - Model: resolved from the hoard/env (`RAIL_MODEL`; unset = loud refusal — the tree carries no concrete model id)
 - No cloud key needed — the rail key is a REFERENCE (env `LLAMA_SWAP_API_KEY` → the hoard vault → `~/.pi/agent/auth.json`), never a value in the tree
@@ -106,7 +106,7 @@ supports this; it is not a rewrite.
 - This asset updated in the same change
 - `compliance-check.sh` clean
 
-### M9 — The watch (`bin/snotra-detect.sh`)
+### M9 — The watch (`bin/time/snotra/snotra-detect.sh`)
 
 - `run` — the standing watch (the unit's `ExecStart`); `status` — TOON row;
   `scan` — the PipeWire picture, once; `once` — one scan and act
@@ -152,13 +152,13 @@ serves) → mine → write → deliver:
 - `<date>-<lane>-<slug>.actions.md` — the mined decisions and actions
 - `<date>-<lane>-<slug>.transcript.txt` — the transcript with its timestamps
 - `<date>-<lane>-<slug>.wav` — the recording
-- **delivery**: `bin/ymir-say.sh --mark-done` (a desktop note) AND a durable wake
-  through the queue's own door — `bin/ymir-state.sh queue append check
+- **delivery**: `bin/time/snotra/ymir-say.sh --mark-done` (a desktop note) AND a durable wake
+  through the queue's own door — `bin/records/ymir-state.sh queue append check
   "meeting:<slug>" "check: …"` — so the meeting reaches Brokk with no arm and no
   sweep. The append is **bounded** (`timeout 20`): no queue pathology may wedge a
   delivery.
 
-### M11 — The miner (`bin/snotra-mine.sh`)
+### M11 — The miner (`bin/time/snotra/snotra-mine.sh`)
 
 - Mechanical commitment cues over the transcript: decisions ("we decided",
   "agreed", "confirmed", "the decision is", …) and action items ("I will",
@@ -177,7 +177,7 @@ serves) → mine → write → deliver:
 - A user unit, `WantedBy=ymir.target`, seated from the seat's materialized copy
   (`%h/.fleet/snotra-detect.sh`) with `SNOTRA_DOORS_DIR` naming the durable tree
 - Raised by **capability**, never by role: it joins the one table in
-  `bin/autoboot-lib.sh` (`AUTOBOOT_CAPABILITY_PROGRAMS`), so a seat's raise and
+  `bin/engine/autoboot-lib.sh` (`AUTOBOOT_CAPABILITY_PROGRAMS`), so a seat's raise and
   its proof can never disagree about what it owes. A seat with a microphone owes
   the watch; a headless heart reports a clean skip.
 - `ExecStop=-… leave` closes the book on a stop; a stop with nothing armed is a
@@ -262,7 +262,7 @@ capturer the seat uses.
 
 `tools/mill/systemd/snotra-ear.service` — the whisper engine on `:8322` — is
 **not a boot resident and carries no `[Install]` section**, so nothing can put
-it in `ymir.target`. `bin/snotra-detect.sh` seats it into
+it in `ymir.target`. `bin/time/snotra/snotra-detect.sh` seats it into
 `~/.config/systemd/user/` at arm time and owns its whole lifecycle:
 
 | when | what | why there |
@@ -302,7 +302,7 @@ that need the fix most. A seat that hand-wrote its own engine unit is **not**
 refused: the watch warns and leaves it standing, because silently replacing a
 hand-made unit is the same sin in the other direction.
 
-**The rail yields during transcription.** `bin/snotra-transcribe.sh` defaults
+**The rail yields during transcription.** `bin/time/snotra/snotra-transcribe.sh` defaults
 `SNOTRA_FREE_RAIL=1`: when the GPU is starved it sources
 `~/.local/bin/voice-gpu-lib.sh` and calls `voice_ensure_vram 2048`, unloading the
 resident rail model and retrying on GPU. A meeting is the thing that matters while

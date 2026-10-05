@@ -1,7 +1,7 @@
 ## install · unversioned · 2026-09-23 — the pre-publish gate can run on its own remote seat
 
 ### Why
-`bin/npm-pretest.sh` is the Allfather's decree: the exact tarball a publish would
+`bin/forge/npm/npm-pretest.sh` is the Allfather's decree: the exact tarball a publish would
 ship must **install and smoke on this seat AND on a remote seat** before the shelf
 sees it. It defaulted that remote to `heimdall` — and on heimdall itself the leg
 died:
@@ -18,7 +18,7 @@ to travel. So the gate failed on the very seat it was packed on, and a publish
 that would have been safe looked unsafe.
 
 ### Fix
-- **`bin/npm-pretest.sh`** — when `$REMOTE` equals this machine's hostname (full
+- **`bin/forge/npm/npm-pretest.sh`** — when `$REMOTE` equals this machine's hostname (full
   or short), the remote leg runs **locally**: the same sandbox install and the
   same smoke, with no ssh. The artifact under test is identical, and the leg's
   purpose — prove the hull installs somewhere other than where it was packed — is
@@ -40,4 +40,4 @@ that would have been safe looked unsafe.
   - **whynot** — `REMOTE_PASS`
 
 ### Files
-- `bin/npm-pretest.sh`
+- `bin/forge/npm/npm-pretest.sh`

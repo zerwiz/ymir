@@ -74,7 +74,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 fm_git_identity fmtest fmtest@example.invalid
 
-PR_MERGE="$ROOT/bin/fm-pr-merge.sh"
+PR_MERGE="$ROOT/bin/backend/fm-pr-merge.sh"
 TMP_ROOT=$(fm_test_tmproot fm-pr-merge-tests)
 BASE_PATH=$PATH
 
@@ -1991,7 +1991,7 @@ test_distinct_merged_prs_keep_distinct_wakes() {
     || fail "distinct-merge-wakes: first merge wake was missing or duplicated"
   [ "$(grep -c -F "$second_url" "$case_dir/state/.wake-queue")" -eq 1 ] \
     || fail "distinct-merge-wakes: second merge wake was missing or duplicated"
-  FM_STATE_OVERRIDE="$case_dir/state" "$ROOT/bin/fm-wake-drain.sh" \
+  FM_STATE_OVERRIDE="$case_dir/state" "$ROOT/bin/backend/fm-wake-drain.sh" \
     >"$case_dir/drain.out" 2>"$case_dir/drain.err" \
     || fail "distinct-merge-wakes: wake drain failed"
   assert_grep "$first_url" "$case_dir/drain.out" \

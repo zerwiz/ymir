@@ -5,9 +5,9 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-RECON="$ROOT/bin/fm-inactive-reconcile.sh"
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
-WATCH="$ROOT/bin/fm-watch.sh"
+RECON="$ROOT/bin/backend/fm-inactive-reconcile.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
+WATCH="$ROOT/bin/backend/fm-watch.sh"
 TMP_ROOT=$(fm_test_tmproot fm-inactive-reconcile)
 
 set_mtime() { # <epoch> <path>
@@ -100,7 +100,7 @@ run_reconcile() { # <home> [--startup]
   local home=$1 option=${2:-}
   PATH="$WORLD/fakebin:$PATH" FM_ROOT_OVERRIDE="$WORLD/root" FM_HOME="$home" \
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" FM_CONFIG_OVERRIDE="$home/config" \
-    FM_INACTIVE_RECONCILE_SECS=60 FM_INACTIVE_CREW_STATE_BIN="$WORLD/fakebin/fm-crew-state.sh" \
+    FM_INACTIVE_RECONCILE_SECS=60 FM_INACTIVE_CREW_STATE_BIN="$WORLD/fakebin/backend/fm-crew-state.sh" \
     FM_FORGE_LOG="$WORLD/forge.log" "$RECON" scan ${option:+"$option"}
 }
 
@@ -116,7 +116,7 @@ prime_seen() { # <state> <status>
   FM_STATE_OVERRIDE="$1" bash -c '
     . "$1"
     fm_wake_status_mark_current "$2" "$3"
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$1" "$2"
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$1" "$2"
 }
 
 reap() { kill "$1" 2>/dev/null || true; wait "$1" 2>/dev/null || true; }
@@ -254,13 +254,13 @@ test_relaunch_cannot_replace_metadata_during_state_snapshot() {
   local recon_pid update_pid record i
   make_world relaunch-race; bind_secondmate remote
   write_child "$MATE" child 'failed: terminal' spawn-old
-  cat > "$WORLD/fakebin/fm-crew-state.sh" <<'SH'
+  cat > "$WORLD/fakebin/backend/fm-crew-state.sh" <<'SH'
 #!/usr/bin/env bash
 : > "${FM_RACE_WORLD:?}/state-started"
 while [ ! -e "$FM_RACE_WORLD/state-release" ]; do sleep 0.05; done
 printf 'state: failed · source: fake\n'
 SH
-  chmod +x "$WORLD/fakebin/fm-crew-state.sh"
+  chmod +x "$WORLD/fakebin/backend/fm-crew-state.sh"
 
   FM_RACE_WORLD="$WORLD" run_reconcile "$MATE" --startup &
   recon_pid=$!
@@ -269,7 +269,7 @@ SH
   [ -e "$WORLD/state-started" ] || fail "reconciliation did not begin its state snapshot"
 
   FM_HOME="$MATE" FM_STATE_OVERRIDE="$MATE/state" bash -c '
-    . "$1/bin/fm-wake-lib.sh"
+    . "$1/bin/backend/fm-wake-lib.sh"
     meta="$FM_STATE_OVERRIDE/child.meta"
     lock=$(fm_meta_lock_path "$meta")
     fm_lock_acquire_wait "$lock"
@@ -336,7 +336,7 @@ test_watcher_hook_and_idle_secondmate_exemption() {
   make_world watcher; write_child "$MAIN" child 'done: green'; prime_seen "$MAIN/state" "$MAIN/state/child.status"
   out="$WORLD/watch.out"
   PATH="$WORLD/fakebin:$PATH" FM_HOME="$MAIN" FM_STATE_OVERRIDE="$MAIN/state" \
-    FM_INACTIVE_RECONCILE_SECS=60 FM_INACTIVE_CREW_STATE_BIN="$WORLD/fakebin/fm-crew-state.sh" \
+    FM_INACTIVE_RECONCILE_SECS=60 FM_INACTIVE_CREW_STATE_BIN="$WORLD/fakebin/backend/fm-crew-state.sh" \
     FM_FORGE_LOG="$WORLD/forge.log" FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
     FM_FAKE_CREW_STATE='done' "$WATCH" > "$out" 2>&1 &
   pid=$!
@@ -365,7 +365,7 @@ test_stalled_state_read_is_bounded_and_scan_progresses() {
   local started elapsed
   make_world bounded
   write_child "$MAIN" a 'working: state read will stall'
-  cat > "$WORLD/fakebin/fm-crew-state.sh" <<'SH'
+  cat > "$WORLD/fakebin/backend/fm-crew-state.sh" <<'SH'
 #!/usr/bin/env bash
 if [ "$1" = a ]; then
   sleep 30
@@ -373,7 +373,7 @@ else
   printf 'state: done · source: fake\n'
 fi
 SH
-  chmod +x "$WORLD/fakebin/fm-crew-state.sh"
+  chmod +x "$WORLD/fakebin/backend/fm-crew-state.sh"
 
   started=$(date +%s)
   FM_INACTIVE_RECONCILE_BUDGET_SECS=1 run_reconcile "$MAIN" --startup
@@ -391,7 +391,7 @@ test_full_scan_budget_includes_wake_lock_wait() {
   local holder started elapsed i
   make_world wake-lock; write_child "$MAIN" child 'done: green'
   FM_HOME="$MAIN" FM_STATE_OVERRIDE="$MAIN/state" bash -c '
-    . "$1/bin/fm-wake-lib.sh"
+    . "$1/bin/backend/fm-wake-lib.sh"
     fm_lock_acquire_wait "$FM_WAKE_QUEUE_LOCK"
     : > "$2"
     sleep 30

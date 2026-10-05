@@ -12,7 +12,7 @@ bug — it cannot be reviewed, versioned, updated, rolled back, or reproduced.
   repo path and is tracked in git.
 - **Deployment copies from the repo; it never hand-places.** A machine's runtime
   copy (`~/.fleet/<name>` or the service's working directory) is produced by a
-  repo script (`bin/fleet-ensure.sh`), idempotently. Editing the deployed file by
+  repo script (`bin/fleet/fleet-ensure.sh`), idempotently. Editing the deployed file by
   hand is drift, not a fix.
 - **The launch manifest lives in the repo too.** The systemd unit (or
   Quadlet/Compose file) ships in `tools/mill/systemd/` and is installed from
@@ -32,7 +32,7 @@ or worker a harness launches.
 
 ## Enforcement
 
-- `bin/fleet-ensure.sh` is the one deployer: it copies from `$ROOT/tools/` and
+- `bin/fleet/fleet-ensure.sh` is the one deployer: it copies from `$ROOT/tools/` and
   installs units from `$ROOT/tools/mill/systemd/`. Run it; never hand-place.
 - `bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh` plus the
   lifecycle smoke test prove the running surface (the smoke test does a real MCP

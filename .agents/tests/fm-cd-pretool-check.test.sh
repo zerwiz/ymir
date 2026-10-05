@@ -26,11 +26,11 @@ TMP_ROOT=$(fm_test_tmproot fm-cd-pretool-check)
 install_cd_scripts() {
   local dir=$1
   mkdir -p "$dir/bin"
-  cp "$ROOT/bin/fm-cd-pretool-check.sh" "$dir/bin/fm-cd-pretool-check.sh"
-  cp "$ROOT/bin/fm-hook-host-lib.sh" "$dir/bin/fm-hook-host-lib.sh"
+  cp "$ROOT/bin/backend/fm-cd-pretool-check.sh" "$dir/bin/backend/fm-cd-pretool-check.sh"
+  cp "$ROOT/bin/backend/fm-hook-host-lib.sh" "$dir/bin/backend/fm-hook-host-lib.sh"
   cp "$ROOT/bin/fm-cd-command-policy.mjs" "$dir/bin/fm-cd-command-policy.mjs"
   cp "$ROOT/bin/fm-arm-command-policy.mjs" "$dir/bin/fm-arm-command-policy.mjs"
-  chmod +x "$dir/bin/fm-cd-pretool-check.sh" "$dir/bin/fm-cd-command-policy.mjs"
+  chmod +x "$dir/bin/backend/fm-cd-pretool-check.sh" "$dir/bin/fm-cd-command-policy.mjs"
 }
 
 make_primary_fixture() {
@@ -62,7 +62,7 @@ make_child_worktree_fixture() {
 }
 
 PRIMARY=$(make_primary_fixture "$TMP_ROOT/primary")
-CHECK="$PRIMARY/bin/fm-cd-pretool-check.sh"
+CHECK="$PRIMARY/bin/backend/fm-cd-pretool-check.sh"
 
 # --- full cross-harness acceptance matrix ----------------------------------
 
@@ -209,7 +209,7 @@ test_full_acceptance_matrix() {
 test_fires_in_secondmate_home() {
   local dir out rc
   dir=$(make_secondmate_fixture "$TMP_ROOT/secondmate")
-  out=$("$dir/bin/fm-cd-pretool-check.sh" --claude --command 'cd projects/foo' 2>&1); rc=$?
+  out=$("$dir/bin/backend/fm-cd-pretool-check.sh" --claude --command 'cd projects/foo' 2>&1); rc=$?
   expect_code 2 "$rc" "cd-guard must fire in a secondmate's own primary session (unlike the turn-end guard)"
   assert_contains "$out" '[persistent-cd]' "secondmate-home block must carry the reason code"
   pass "cd-guard: fires in a secondmate home (its own primary session is a primary)"
@@ -220,7 +220,7 @@ test_inert_in_child_worktree() {
   base="$TMP_ROOT/child-base"
   dir="$TMP_ROOT/child-wt"
   make_child_worktree_fixture "$base" "$dir" >/dev/null
-  out=$("$dir/bin/fm-cd-pretool-check.sh" --claude --command 'cd projects/foo' 2>&1); rc=$?
+  out=$("$dir/bin/backend/fm-cd-pretool-check.sh" --claude --command 'cd projects/foo' 2>&1); rc=$?
   expect_code 0 "$rc" "cd-guard must be inert in a crewmate/scout linked worktree"
   [ -z "$out" ] || fail "cd-guard produced output in a child worktree: $out"
   pass "cd-guard: inert in a crewmate/scout task worktree (linked git worktree)"
@@ -232,7 +232,7 @@ test_inert_when_not_firstmate_repo() {
   git init -q "$dir"
   git -C "$dir" commit -q --allow-empty -m init
   install_cd_scripts "$dir"   # bin/ present but no AGENTS.md
-  out=$("$dir/bin/fm-cd-pretool-check.sh" --claude --command 'cd projects/foo' 2>&1); rc=$?
+  out=$("$dir/bin/backend/fm-cd-pretool-check.sh" --claude --command 'cd projects/foo' 2>&1); rc=$?
   expect_code 0 "$rc" "cd-guard must be inert without AGENTS.md (not a firstmate checkout)"
   [ -z "$out" ] || fail "cd-guard produced output outside a firstmate checkout: $out"
   pass "cd-guard: inert in a non-firstmate repo (no AGENTS.md)"
@@ -244,7 +244,7 @@ test_inert_when_not_a_git_repo() {
   mkdir -p "$dir"
   : > "$dir/AGENTS.md"
   install_cd_scripts "$dir"   # AGENTS.md + bin/ but no git repo
-  out=$("$dir/bin/fm-cd-pretool-check.sh" --claude --command 'cd projects/foo' 2>&1); rc=$?
+  out=$("$dir/bin/backend/fm-cd-pretool-check.sh" --claude --command 'cd projects/foo' 2>&1); rc=$?
   expect_code 0 "$rc" "cd-guard must be inert when the checkout is not a git repo"
   [ -z "$out" ] || fail "cd-guard produced output in a non-git dir: $out"
   pass "cd-guard: inert when not inside a git repo"
@@ -348,7 +348,7 @@ EOF
   chmod +x "$fakebin/node"
   # No cd/pushd/popd substring: the prefilter must fast-allow before scoping or
   # the policy runtime is ever consulted.
-  out=$(PATH="$fakebin" "$dir/bin/fm-cd-pretool-check.sh" --command 'git status' 2>&1); rc=$?
+  out=$(PATH="$fakebin" "$dir/bin/backend/fm-cd-pretool-check.sh" --command 'git status' 2>&1); rc=$?
   expect_code 0 "$rc" "prefilter must fast-allow a command with no cd/pushd/popd substring"
   [ -z "$out" ] || fail "prefilter fast-allow produced output: $out"
   [ ! -e "$marker" ] || fail "prefilter fast-allow still invoked the node policy owner"
@@ -380,7 +380,7 @@ test_policy_cli_direct() {
 test_scripts_are_shellcheck_clean() {
   local out
   command -v shellcheck >/dev/null 2>&1 || { pass "shellcheck not installed, skipping"; return; }
-  out=$("$ROOT/bin/fm-lint.sh" "$ROOT/bin/fm-cd-pretool-check.sh" 2>&1) \
+  out=$("$ROOT/bin/backend/fm-lint.sh" "$ROOT/bin/backend/fm-cd-pretool-check.sh" 2>&1) \
     || fail "bin/backend/fm-cd-pretool-check.sh is not lint-clean under the pinned definition: $out"
   pass "bin/backend/fm-cd-pretool-check.sh is clean under bin/backend/fm-lint.sh"
 }

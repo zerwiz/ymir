@@ -13,10 +13,10 @@ same day and was referenced by `SKILL.md` but registered nowhere else.
   (`assets[]` 24 → 26; the Þing row arrived with the asset).
 - **`assets/norse-naming.md`** — **Snotra** (the ear) and **Þing** (the assembly
   hall) rows in the platform component map.
-- **`assets/runtime-components.md`** — `bin/snotra-capture.sh`,
-  `bin/snotra-transcribe.sh`, `bin/snotra-ensure.sh` in the `bin/` inventory.
+- **`assets/runtime-components.md`** — `bin/time/snotra/snotra-capture.sh`,
+  `bin/time/snotra/snotra-transcribe.sh`, `bin/time/snotra/snotra-ensure.sh` in the `bin/` inventory.
 - **`assets/registry.md`** — a **Fleet services** section: the eight services
-  `bin/fleet-ensure.sh` materializes (`well-mcp` · `ratatoskr` · `mill-worker` ·
+  `bin/fleet/fleet-ensure.sh` materializes (`well-mcp` · `ratatoskr` · `mill-worker` ·
   `embed` · `cards` · `skills-mcp` · `skuld` · `snotra` on :8321).
 - **`assets/installation.md`** — the `snotra` step row and the `fleet` row now
   names the ear's MCP face and the `~/.fleet` command materialization.

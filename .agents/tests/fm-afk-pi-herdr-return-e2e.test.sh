@@ -16,9 +16,9 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-supervise-daemon.sh"
+. "$ROOT/bin/backend/fm-supervise-daemon.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 
 if [ "${FM_AFK_PI_HERDR_E2E:-0}" != 1 ]; then
   echo "skip: set FM_AFK_PI_HERDR_E2E=1 to run the real Pi/Herdr away-return regression"
@@ -29,7 +29,7 @@ for tool in herdr jq pi python3; do
   command -v "$tool" >/dev/null 2>&1 || { echo "skip: $tool not found"; exit 0; }
 done
 
-LAB_HELPER=${HERDR_LAB_HELPER:-$ROOT/bin/fm-herdr-lab.sh}
+LAB_HELPER=${HERDR_LAB_HELPER:-$ROOT/bin/backend/fm-herdr-lab.sh}
 SESSION=$("$LAB_HELPER" name fm-afk-pi-return-e2e)
 TMP_ROOT=$(fm_test_tmproot fm-afk-pi-return-e2e)
 HOME_DIR="$TMP_ROOT/home"
@@ -51,7 +51,7 @@ cleanup() {
   if [ "$DAEMON_STARTED" -eq 1 ]; then
     PATH="$FAKEBIN:$ORIGINAL_PATH" HERDR_SESSION="$SESSION" FM_HOME="$HOME_DIR" FM_STATE_OVERRIDE="$STATE" \
       FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET="$PRIMARY_TARGET" \
-      "$ROOT/bin/fm-afk-launch.sh" stop >/dev/null 2>&1 || true
+      "$ROOT/bin/backend/fm-afk-launch.sh" stop >/dev/null 2>&1 || true
   fi
   if ! "$LAB_HELPER" teardown "$SESSION"; then
     rc=1
@@ -124,7 +124,7 @@ export FM_CHECK_INTERVAL=999999
 export FM_MAX_DEFER_SECS=3
 export FM_STALE_ESCALATE_SECS=999999
 export FM_WEDGE_ALARM_EXEC='$TMP_ROOT/wedge-recorder'
-exec '$ROOT/bin/fm-afk-start.sh'
+exec '$ROOT/bin/backend/fm-afk-start.sh'
 EOF
 chmod +x "$TMP_ROOT/daemon-entry"
 
@@ -192,7 +192,7 @@ EOF
 
 PATH="$FAKEBIN:$ORIGINAL_PATH" HERDR_SESSION="$SESSION" FM_HOME="$HOME_DIR" FM_STATE_OVERRIDE="$STATE" \
   FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET="$PRIMARY_TARGET" FM_AFK_LAUNCH_ENTRY="$TMP_ROOT/daemon-entry" \
-  "$ROOT/bin/fm-afk-launch.sh" start >/dev/null
+  "$ROOT/bin/backend/fm-afk-launch.sh" start >/dev/null
 DAEMON_STARTED=1
 for _ in $(seq 1 100); do [ -s "$STATE/.supervise-daemon.pid" ] && break; sleep 0.1; done
 [ -s "$STATE/.supervise-daemon.pid" ] || fail "away daemon did not start"
@@ -260,7 +260,7 @@ assert_blocker_open 'before return catch-up'
 
 set +e
 RETURN_OUT=$(PATH="$FAKEBIN:$ORIGINAL_PATH" HERDR_SESSION="$SESSION" FM_ROOT_OVERRIDE="$PROJECT" FM_HOME="$HOME_DIR" FM_STATE_OVERRIDE="$STATE" \
-  FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET="$PRIMARY_TARGET" "$ROOT/bin/fm-afk-return.sh" begin 2>&1)
+  FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET="$PRIMARY_TARGET" "$ROOT/bin/backend/fm-afk-return.sh" begin 2>&1)
 RETURN_RC=$?
 set -e
 DAEMON_STARTED=0
@@ -268,7 +268,7 @@ DAEMON_STARTED=0
 assert_contains "$RETURN_OUT" 'firstmate-actionable blocker: repair-task [key=synthetic-dependency]' "return gate did not assign remediation"
 set +e
 BEARINGS_OUT=$(PATH="$FAKEBIN:$ORIGINAL_PATH" HERDR_SESSION="$SESSION" FM_ROOT_OVERRIDE="$PROJECT" FM_HOME="$HOME_DIR" FM_STATE_OVERRIDE="$STATE" \
-  "$ROOT/bin/fm-bearings-snapshot.sh" --json 2>&1)
+  "$ROOT/bin/backend/fm-bearings-snapshot.sh" --json 2>&1)
 BEARINGS_RC=$?
 set -e
 [ "$BEARINGS_RC" -eq 3 ] || fail "Bearings bypassed the return gate (rc=$BEARINGS_RC): $BEARINGS_OUT"
@@ -276,18 +276,18 @@ pass "real unmarked Pi return opens catch-up and blocks Bearings before the unre
 
 printf 'resolved [key=synthetic-dependency]: refreshed the synthetic token and resumed the task\n' >> "$STATE/repair-task.status"
 PATH="$FAKEBIN:$ORIGINAL_PATH" HERDR_SESSION="$SESSION" FM_ROOT_OVERRIDE="$PROJECT" FM_HOME="$HOME_DIR" FM_STATE_OVERRIDE="$STATE" \
-  "$ROOT/bin/fm-afk-return.sh" check >/dev/null || fail "remediated blocker did not clear return catch-up"
+  "$ROOT/bin/backend/fm-afk-return.sh" check >/dev/null || fail "remediated blocker did not clear return catch-up"
 PATH="$FAKEBIN:$ORIGINAL_PATH" HERDR_SESSION="$SESSION" FM_ROOT_OVERRIDE="$PROJECT" FM_HOME="$HOME_DIR" FM_STATE_OVERRIDE="$STATE" \
-  "$ROOT/bin/fm-bearings-snapshot.sh" --json >/dev/null || fail "Bearings remained gated after blocker remediation"
+  "$ROOT/bin/backend/fm-bearings-snapshot.sh" --json >/dev/null || fail "Bearings remained gated after blocker remediation"
 
 # A clean re-entry creates no stale delivery or alert, and an immediate return is
 # idempotently clear because the keyed blocker is resolved.
 PATH="$FAKEBIN:$ORIGINAL_PATH" HERDR_SESSION="$SESSION" FM_HOME="$HOME_DIR" FM_STATE_OVERRIDE="$STATE" \
   FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET="$PRIMARY_TARGET" FM_AFK_LAUNCH_ENTRY="$TMP_ROOT/daemon-entry" \
-  "$ROOT/bin/fm-afk-launch.sh" start >/dev/null
+  "$ROOT/bin/backend/fm-afk-launch.sh" start >/dev/null
 DAEMON_STARTED=1
 PATH="$FAKEBIN:$ORIGINAL_PATH" HERDR_SESSION="$SESSION" FM_ROOT_OVERRIDE="$PROJECT" FM_HOME="$HOME_DIR" FM_STATE_OVERRIDE="$STATE" \
-  FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET="$PRIMARY_TARGET" "$ROOT/bin/fm-afk-return.sh" begin >/dev/null \
+  FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET="$PRIMARY_TARGET" "$ROOT/bin/backend/fm-afk-return.sh" begin >/dev/null \
   || fail "clean away re-entry/return was not idempotent"
 DAEMON_STARTED=0
 [ "$(wc -l < "$NOTIFY_LOG" | tr -d ' ')" -eq 1 ] || fail "clean re-entry duplicated the historical wedge alert"

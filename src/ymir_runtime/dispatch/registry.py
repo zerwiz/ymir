@@ -14,7 +14,7 @@ committed to a public tree:
 
   * **request(text)** — a human model request ("qwen 3.6 iq3", "deepseek",
     `llama.cpp/…@q2_k_xl`) is RESOLVED by the fleet's own door
-    `bin/model-resolve.sh` (the loop is bash), whose TOON row is read back. This
+    `bin/model/model-resolve.sh` (the loop is bash), whose TOON row is read back. This
     module never re-implements that fuzzy match; it may CALL the door or read its
     output, and it does exactly that. The door is the fleet registry; a second
     copy of its logic would be the drift this package exists to prevent.
@@ -136,7 +136,7 @@ class HoardModels:
 
     @property
     def root(self) -> Path:
-        """The CODE tree — where `bin/model-resolve.sh` and the schemas live."""
+        """The CODE tree — where `bin/model/model-resolve.sh` and the schemas live."""
         return self._root or paths.resolve(self._env).root
 
     def _environ(self) -> dict[str, str]:
@@ -161,7 +161,7 @@ class HoardModels:
                 f"no model is configured for '{figure}': {path} is absent",
                 key=f"agents.{figure}.model",
                 path=path,
-                remedy="write config/agents.yaml under the operator's home (bin/agents-config.sh init) — the tree ships no model value",
+                remedy="write config/agents.yaml under the operator's home (bin/fleet/agents-config.sh init) — the tree ships no model value",
             )
         try:
             document = load_config(path, kind="agents", root=self.root)
@@ -201,12 +201,12 @@ class HoardModels:
     # ── the request road (delegated, never forked) ───────────────────────────
 
     def request(self, text: str) -> ModelRequest:
-        """Resolve a model request through `bin/model-resolve.sh` and read its TOON."""
+        """Resolve a model request through `bin/model/model-resolve.sh` and read its TOON."""
         door = self.root / MODEL_RESOLVE
         if not door.is_file():
             raise ModelUnavailable(
                 f"the fleet registry door is absent: {door}",
-                remedy="bin/model-resolve.sh ships with the code tree",
+                remedy="bin/model/model-resolve.sh ships with the code tree",
             )
         result = self._runner([str(door), "resolve", text], env=self._environ())
         if not proc.ok(result):

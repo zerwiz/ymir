@@ -135,7 +135,7 @@ The daemon still clears its buffer only on the backend's `empty` success verdict
 The daemon wraps `brokk-watch.sh`, runs the watcher as a child, presents every durable wake after each actionable watcher close, classifies each presented record in bash, and acknowledges the presented generation only after routing completes.
 It self-handles the routine majority without consuming a Brokk turn.
 Allfather-relevant events, plus a bounded recheck of a declared wait that is still declared, escalate to Brokk's context as one pre-read, single-line, batched digest.
-The Allfather-relevant verb set, declared-wait vocabulary, status-span classifier, and presentation-marker contract live in shared `bin/brokk-classify-lib.sh`, while each supervisor owns its routing and fleet scan as a consumer of that policy.
+The Allfather-relevant verb set, declared-wait vocabulary, status-span classifier, and presentation-marker contract live in shared `bin/agents/brokk-classify-lib.sh`, while each supervisor owns its routing and fleet scan as a consumer of that policy.
 While `state/.hvild` exists the daemon owns the watcher, so the watcher reverts to one-shot and lets the daemon do the triage - the two never run their triage at the same time.
 
 Classify each wake this way:
@@ -199,7 +199,7 @@ the operational prefix lets Brokk distinguish it from a real Allfather message.
   text Brokk sees is clean.
 - **Portable singleton lock** - the daemon uses the repo's portable lock helper
   (`brokk-wake-lib.sh`) instead of `flock`, which is absent on macOS.
-- **Dedupe across signal/stale/scan** - all three paths use the shared status presentation markers defined by `bin/brokk-classify-lib.sh`, so a successfully classified span is not re-escalated by another path in the same digest.
+- **Dedupe across signal/stale/scan** - all three paths use the shared status presentation markers defined by `bin/agents/brokk-classify-lib.sh`, so a successfully classified span is not re-escalated by another path in the same digest.
   Never treat a reported unreadable state as classified; the shared library header owns that marker contract, and the marker does not clear or suppress possible-wedge aging for a nonterminal progress line.
 - **Auto-discovered supervisor pane** - the daemon resolves its own BACKEND
   (tmux vs herdr) and TARGET independently, mirroring
