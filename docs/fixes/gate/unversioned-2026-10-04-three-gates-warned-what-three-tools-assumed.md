@@ -15,7 +15,7 @@ at what it moved.
 
 ### The one that mattered
 
-`bin/capabilities.sh:28` counted registered tools with a **flat glob**:
+`bin/gates/capabilities.sh:28` counted registered tools with a **flat glob**:
 
 ```bash
 grep -rhoE 'pi\.registerTool\(\{|name: "[a-z_]+"' .pi/shared/extensions/*.ts
@@ -31,7 +31,7 @@ wrong one passes, and every future number copied from it is wrong. The count is
 
 ### Fix
 
-- **`bin/capabilities.sh` enumerates recursively**, excluding tests, so it reads the
+- **`bin/gates/capabilities.sh` enumerates recursively**, excluding tests, so it reads the
   tree the way pi reads it.
 - **`tools/extension-smoke.mjs` resolves an extension the way pi resolves it** — a
   direct `.ts`, or a directory whose entry point is `index.ts`. It hard-coded
@@ -57,8 +57,8 @@ than after the next three.
 ### Verified
 
 ```
-$ bash bin/capabilities.sh --check    → PASS   ("Pi extension tools",39)
-$ bash bin/inventory.sh --check       → PASS   (401 files)
+$ bash bin/gates/capabilities.sh --check    → PASS   ("Pi extension tools",39)
+$ bash bin/gates/inventory.sh --check       → PASS   (401 files)
 $ node --experimental-strip-types tools/extension-smoke.mjs
     extension_smoke{called,verified_not_executed,broken,skipped} = 9, 17, 0, 2
 $ bash .agents/tests/pi-extensions.test.sh   → PASS

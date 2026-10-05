@@ -19,7 +19,7 @@ set -u
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 TMP_ROOT=$(fm_test_tmproot fm-remote-job-orphan-reap)
 TMP_ROOT=$(cd "$TMP_ROOT" && pwd -P)
-REAPER="$ROOT/bin/fm-remote-job-reap-orphans.sh"
+REAPER="$ROOT/bin/backend/fm-remote-job-reap-orphans.sh"
 
 TRACKED_PIDS=()
 orphan_cleanup() {
@@ -68,7 +68,7 @@ wait_child() { # <pid> <seconds>
 build_remote_root() {
   local root=$1
   mkdir -p "$root/bin"
-  cp "$ROOT/bin/fm-remote-job-lib.sh" "$ROOT/bin/fm-remote-job-worker.sh" "$root/bin/"
+  cp "$ROOT/bin/backend/fm-remote-job-lib.sh" "$ROOT/bin/backend/fm-remote-job-worker.sh" "$root/bin/"
   chmod +x "$root/bin"/*.sh
   printf 'fixture\n' > "$root/AGENTS.md"
   git -C "$root" init -q -b main
@@ -91,11 +91,11 @@ start_worker() {
     export FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux
     export FM_REMOTE_JOB_ORPHAN_GRACE_SECONDS=1
     # shellcheck source=bin/backend/fm-remote-job-lib.sh
-    . "$ROOT/bin/fm-remote-job-lib.sh"
+    . "$ROOT/bin/backend/fm-remote-job-lib.sh"
     fm_remote_job_start_linux_worker "$root" "$account_home" >&2 || exit 1
     deadline=$(( $(date +%s) + 10 ))
     while [ "$(date +%s)" -lt "$deadline" ]; do
-      pid=$(pgrep -f "^/bin/bash $root/bin/fm-remote-job-worker.sh\$" | head -n 1)
+      pid=$(pgrep -f "^/bin/bash $root/bin/backend/fm-remote-job-worker.sh\$" | head -n 1)
       if pid_is_numeric "$pid"; then
         printf '%s\n' "$pid"
         exit 0
@@ -161,7 +161,7 @@ pass "a worker stops its whole tree once its code root is pruned"
 
 CASE2="$TMP_ROOT/case2"
 mkdir -p "$CASE2/remote-root/bin"
-cat > "$CASE2/remote-root/bin/fm-remote-job-worker.sh" <<'SH'
+cat > "$CASE2/remote-root/bin/backend/fm-remote-job-worker.sh" <<'SH'
 #!/bin/bash
 # Stand-in for a worker predating self-termination: a supervisor that always
 # respawns its serving child and never inspects its own code root.
@@ -175,11 +175,11 @@ while :; do
   sleep 0.2
 done
 SH
-chmod +x "$CASE2/remote-root/bin/fm-remote-job-worker.sh"
+chmod +x "$CASE2/remote-root/bin/backend/fm-remote-job-worker.sh"
 printf 'fixture\n' > "$CASE2/remote-root/AGENTS.md"
 
 set -m
-"$CASE2/remote-root/bin/fm-remote-job-worker.sh" >/dev/null 2>&1 &
+"$CASE2/remote-root/bin/backend/fm-remote-job-worker.sh" >/dev/null 2>&1 &
 STALE=$!
 set +m
 track "$STALE"

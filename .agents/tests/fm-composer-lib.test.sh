@@ -19,7 +19,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-composer-lib.sh"
+. "$ROOT/bin/backend/fm-composer-lib.sh"
 
 # classify <bordered> <content> [idle_re] -> echoes the verdict.
 classify() { fm_composer_classify_content "$@"; }

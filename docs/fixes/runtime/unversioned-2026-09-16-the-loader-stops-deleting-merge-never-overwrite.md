@@ -3,7 +3,7 @@
 ### Why
 - **Root cause of the Apodex-provider loss, mended at the source.** Two writers
   share the untracked `opencode.json`: `bin/seat/valknut-load.sh` (structure, from
-  `opencode.json.example`) and `bin/agents-config.sh apply` (the roster —
+  `opencode.json.example`) and `bin/fleet/agents-config.sh apply` (the roster —
   providers and per-agent models, from `config/agents.yaml`). The loader
   re-rendered with `sed` + `mv`, so because the example carried only
   `llama.cpp`, **every loader run silently deleted the Apodex provider** that

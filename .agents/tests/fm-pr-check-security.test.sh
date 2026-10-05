@@ -6,16 +6,16 @@ set -u
 # shellcheck source=tests/lib.sh disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-pr-lib.sh"
+. "$ROOT/bin/backend/fm-pr-lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-check-lib.sh"
+. "$ROOT/bin/backend/fm-check-lib.sh"
 
-PR_CHECK="$ROOT/bin/fm-pr-check.sh"
-PR_MERGE="$ROOT/bin/fm-pr-merge.sh"
-POLL="$ROOT/bin/fm-pr-poll.sh"
-WATCH="$ROOT/bin/fm-watch.sh"
-TEARDOWN="$ROOT/bin/fm-teardown.sh"
-REGISTER="$ROOT/bin/fm-check-register.sh"
+PR_CHECK="$ROOT/bin/backend/fm-pr-check.sh"
+PR_MERGE="$ROOT/bin/backend/fm-pr-merge.sh"
+POLL="$ROOT/bin/backend/fm-pr-poll.sh"
+WATCH="$ROOT/bin/backend/fm-watch.sh"
+TEARDOWN="$ROOT/bin/backend/fm-teardown.sh"
+REGISTER="$ROOT/bin/backend/fm-check-register.sh"
 TMP_ROOT=$(fm_test_tmproot fm-pr-check-security)
 BASE_PATH=${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
 REAL_CP=$(command -v cp)
@@ -30,12 +30,12 @@ REAL_JQ=$(command -v jq) || fail "these tests read glab's JSON with the real jq,
 ack_watcher_cycle() {  # <state>
   local state=$1 err sequence generation
   err="$state/.test-wake-drain.err"
-  FM_STATE_OVERRIDE="$state" "$ROOT/bin/fm-wake-drain.sh" >/dev/null 2> "$err" || return 1
+  FM_STATE_OVERRIDE="$state" "$ROOT/bin/backend/fm-wake-drain.sh" >/dev/null 2> "$err" || return 1
   sequence=$(sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' "$err")
   generation=$(sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' "$err")
   rm -f "$err"
   [ -n "$sequence" ] && [ -n "$generation" ] || return 1
-  FM_STATE_OVERRIDE="$state" "$ROOT/bin/fm-wake-drain.sh" --ack-through "$sequence" \
+  FM_STATE_OVERRIDE="$state" "$ROOT/bin/backend/fm-wake-drain.sh" --ack-through "$sequence" \
     --recovery-generation "$generation"
 }
 
@@ -117,11 +117,11 @@ make_case() {
   fakebin="$dir/fakebin"
   fake_root="$dir/root"
   mkdir -p "$dir/home/state" "$dir/home/data" "$dir/home/config" "$dir/wt" "$fakebin" "$fake_root/bin"
-  cat > "$fake_root/bin/fm-guard.sh" <<'SH'
+  cat > "$fake_root/bin/backend/fm-guard.sh" <<'SH'
 #!/usr/bin/env bash
 printf 'guard\n' >> "$FM_TEST_GUARD_LOG"
 SH
-  chmod +x "$fake_root/bin/fm-guard.sh"
+  chmod +x "$fake_root/bin/backend/fm-guard.sh"
   cat > "$fakebin/gh" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$FM_TEST_GH_LOG"
@@ -587,7 +587,7 @@ SH
     [ -d "$dir/home/state/$id.check.sh" ] \
       || fail "legacy task teardown changed the unsafe direct artifact"
     rmdir "$dir/home/state/$id.check.sh"
-    FM_HOME="$dir/home" "$ROOT/bin/fm-x-link.sh" "$id" req-legacy \
+    FM_HOME="$dir/home" "$ROOT/bin/backend/fm-x-link.sh" "$id" req-legacy \
       --carry-count 0 --carry-ts 1700000000 --carry-platform x --carry-max 280 \
       > "$dir/x-link.out" 2> "$dir/x-link.err" \
       || fail "path-safe legacy task ID could not link an X request"
@@ -1007,7 +1007,7 @@ test_bootstrap_leaves_unauthenticated_checks() {
   printf '%s\n' manual > "$dir/home/config/backlog-backend"
   FM_HOME="$dir/home" FM_ROOT_OVERRIDE="$ROOT" FM_BOOTSTRAP_NETWORK=skip \
     PATH="$dir/fakebin:$BASE_PATH" \
-    "$ROOT/bin/fm-bootstrap.sh" > "$dir/bootstrap.out" 2> "$dir/bootstrap.err" \
+    "$ROOT/bin/backend/fm-bootstrap.sh" > "$dir/bootstrap.out" 2> "$dir/bootstrap.err" \
     || fail "bootstrap failed after migration retirement"
   [ "$(cat "$state/task-a.check.sh")" = 'legacy bytes' ] \
     || fail "bootstrap rewrote an unauthenticated check after migration retirement"
@@ -1782,7 +1782,7 @@ test_retirement_crash_recovery() {
   write_poll_meta "$state" task-a https://github.com/o/r/pull/3
   seed_canonical_poll "$dir" task-a https://github.com/o/r/pull/3
   FM_STATE_OVERRIDE="$state" bash -c '. "$1"; fm_wake_append check "$2" "$3"' _ \
-    "$ROOT/bin/fm-wake-lib.sh" "$state/task-a.check.sh" "check: $state/task-a.check.sh: merged" \
+    "$ROOT/bin/backend/fm-wake-lib.sh" "$state/task-a.check.sh" "check: $state/task-a.check.sh: merged" \
     || fail "could not seed post-queue crash"
   FM_TEST_GH_STATE=MERGED run_watcher_bounded "$dir/home" "$dir/fakebin" > "$dir/recovery.out" 2> "$dir/recovery.err" \
     || fail "post-queue crash recovery wake failed: $(cat "$dir/recovery.err")"
@@ -1798,7 +1798,7 @@ test_retirement_crash_recovery() {
   raw_count=$(grep -cF "$(printf '\tcheck\tmerged-task-a-https://github.com/o/r/pull/3\t')" \
     "$state/.wake-queue" || true)
   [ "$raw_count" -eq 1 ] || fail "post-queue retry did not publish exactly one new terminal row"
-  FM_HOME="$dir/home" FM_ROOT_OVERRIDE="$ROOT" "$ROOT/bin/fm-wake-drain.sh" > "$dir/drain.out" 2>/dev/null
+  FM_HOME="$dir/home" FM_ROOT_OVERRIDE="$ROOT" "$ROOT/bin/backend/fm-wake-drain.sh" > "$dir/drain.out" 2>/dev/null
   drain_count=$(grep -cF "$(printf '\tcheck\tmerged-task-a-https://github.com/o/r/pull/3\t')" \
     "$dir/drain.out" || true)
   [ "$drain_count" -eq 1 ] || fail "same-key crash retry rows did not deduplicate at drain"
@@ -1876,7 +1876,7 @@ test_retirement_crash_recovery() {
   write_poll_meta "$state" task-a https://github.com/o/r/pull/22
   seed_canonical_poll "$dir" task-a https://github.com/o/r/pull/22 "$historical_poll"
   FM_STATE_OVERRIDE="$state" bash -c '. "$1"; fm_wake_append check "$2" "$3"' _ \
-    "$ROOT/bin/fm-wake-lib.sh" "$state/task-a.check.sh" "check: $state/task-a.check.sh: merged" \
+    "$ROOT/bin/backend/fm-wake-lib.sh" "$state/task-a.check.sh" "check: $state/task-a.check.sh: merged" \
     || fail "could not seed pre-update terminal wake"
   fm_pr_poll_snapshot_capture "$state" task-a "$historical_poll" \
     || fail "could not snapshot pre-update retirement fixture"

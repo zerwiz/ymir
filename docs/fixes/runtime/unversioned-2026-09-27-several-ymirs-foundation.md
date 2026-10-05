@@ -29,7 +29,7 @@ kind, `grants`, over `hodd/identity/grants.yaml`:
   foreign signer is refused; a grant naming one Heimdall on both sides is
   refused; a duplicated `grant_id` is refused. The door is
   `python3 -m ymir_runtime.grants [check|signers|default]`, and the config door
-  reaches it as `bin/ymir-config-check.sh validate <grants.yaml>`.
+  reaches it as `bin/gates/checks/ymir-config-check.sh validate <grants.yaml>`.
 - The data resolves from the hoard (`default_registry()` →
   `<hoard>/identity/grants.yaml`); no operator identity is written into the tree.
   `config/grants.yaml.example` is a placeholder scaffold only.

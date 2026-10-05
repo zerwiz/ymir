@@ -65,5 +65,5 @@ The exact running Stop payload selects same-process continuation on 0.2.112; 0.2
 
 Grok also loads Claude project settings, so Claude entries for Grok-covered events stand down under `GROK_AGENT` or `GROK_HOOK_EVENT`; that owner records the exact set and why `GROK_SESSION_ID` is excluded.
 Project-local hooks require launch-time `--trust`; without it the guard steps aside and `../../../bin/brokk-guard.sh` is the next-command alarm.
-Watcher supervision remains tracked background notification around `../../../bin/syn-watch-arm.sh`, not Pi-style extension ownership.
+Watcher supervision remains tracked background notification around `../../../bin/pi/syn-watch-arm.sh`, not Pi-style extension ownership.
 PreToolUse blocks directly, but every `$VAR` in a hook command needs inline `:-default` or Grok refuses the hook.

@@ -10,7 +10,7 @@
 - `config/cron.yaml` → `config/cron.yaml.example` (the tracked template stays;
   the live schedule lives in the operator's home).
 - **The marketing stack can be provisioned on any computer** —
-  `bin/ymir-marketing-stack.sh up|status|down|doors` stands Mautic + Postiz +
+  `bin/desktop/ymir-marketing-stack.sh up|status|down|doors` stands Mautic + Postiz +
   Activepieces (+ optionally Forgejo) from the same OSS engines the server
   runs, env-driven, ports virtualized, secrets generated once into the home
   (never inline); agents (Bragi · Sindri) provision it for any user.

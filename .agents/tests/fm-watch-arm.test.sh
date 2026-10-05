@@ -16,9 +16,9 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-WATCH="$ROOT/bin/fm-watch.sh"
-WATCH_ARM="$ROOT/bin/fm-watch-arm.sh"
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
+WATCH="$ROOT/bin/backend/fm-watch.sh"
+WATCH_ARM="$ROOT/bin/backend/fm-watch-arm.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-watch-arm-tests)
 
@@ -101,7 +101,7 @@ status_signature() {  # <status-path>
     size=$(_fm_status_file_size "$2") || exit 1
     ident=$(_fm_open_decisions_file_ident "$2") || exit 1
     printf "v2\t%s\t%s@%s" "$reported" "$size" "$ident"
-  ' _ "$ROOT/bin/fm-classify-lib.sh" "$1"
+  ' _ "$ROOT/bin/backend/fm-classify-lib.sh" "$1"
 }
 
 wait_for_file_text() {  # <file> <fixed-text>
@@ -259,7 +259,7 @@ test_rearm_resurfaces_durable_queue_and_remote_open_decision() {
   write_remote_delta "$result" \
     'needs-decision [key=remote-signoff]: remote secondmate is held for captain sign-off'
   FM_HOME="$home" FM_STATE_OVERRIDE="$state" FM_DATA_OVERRIDE="$home/data" \
-    "$ROOT/bin/fm-procevent-remote-reply.sh" ingest ios "$result" >/dev/null \
+    "$ROOT/bin/backend/fm-procevent-remote-reply.sh" ingest ios "$result" >/dev/null \
     || fail "remote parent-reply ingest failed"
 
   # Drain once before the outage to establish the incremental cursor and the

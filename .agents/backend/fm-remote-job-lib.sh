@@ -835,7 +835,7 @@ fm_remote_job_plist_safe_path() {
 
 fm_remote_job_render_launchagent() { # <remote-root> <account-home>
   local root=$1 account_home=$2 worker
-  worker="$root/bin/fm-remote-job-worker.sh"
+  worker="$root/bin/backend/fm-remote-job-worker.sh"
   fm_remote_job_launchagent_paths "$account_home"
   fm_remote_job_plist_safe_path "$worker" && fm_remote_job_plist_safe_path "$account_home" &&
     fm_remote_job_plist_safe_path "$FM_REMOTE_JOB_LAUNCH_AGENT_LOG" || return 1
@@ -889,7 +889,7 @@ fm_remote_job_gui_available() { # <uid>
 fm_remote_job_launchagent_loaded() { # <remote-root> <account-home> <uid>
   local root=$1 account_home=$2 uid=$3 worker loaded compact
   fm_remote_job_launchagent_paths "$account_home"
-  worker="$root/bin/fm-remote-job-worker.sh"
+  worker="$root/bin/backend/fm-remote-job-worker.sh"
   loaded=$(launchctl print "gui/$uid/$FM_REMOTE_JOB_LABEL" 2>/dev/null) || return 1
   compact=$(printf '%s' "$loaded" | tr -d ' \t\r\n') || return 1
   [[ "$compact" == *"$FM_REMOTE_JOB_LABEL"* ]] || return 1
@@ -937,7 +937,7 @@ fm_remote_job_root_is_live() { # <remote-root>
   [ -n "$root" ] || return 1
   [ -d "$root" ] && [ ! -L "$root" ] || return 1
   [ -f "$root/AGENTS.md" ] && [ ! -L "$root/AGENTS.md" ] || return 1
-  [ -f "$root/bin/fm-remote-job-worker.sh" ] && [ ! -L "$root/bin/fm-remote-job-worker.sh" ]
+  [ -f "$root/bin/backend/fm-remote-job-worker.sh" ] && [ ! -L "$root/bin/backend/fm-remote-job-worker.sh" ]
 }
 
 # The isolated process group that owns <pid>'s whole worker tree, echoed only
@@ -1041,21 +1041,21 @@ fm_remote_job_worker_owned_alive() {
     [ ! -e "$lock/command" ] && [ ! -L "$lock/command" ] || return 1
   if [ -x /bin/ps ]; then ps_bin=/bin/ps; elif [ -x /usr/bin/ps ]; then ps_bin=/usr/bin/ps; else return 1; fi
   command=$("$ps_bin" -p "$pid" -o command= 2>/dev/null) || return 1
-  case "$command" in *"$root/bin/fm-remote-job-worker.sh"*) FM_REMOTE_JOB_OWNER_PID=$pid; return 0 ;; esac
+  case "$command" in *"$root/bin/backend/fm-remote-job-worker.sh"*) FM_REMOTE_JOB_OWNER_PID=$pid; return 0 ;; esac
   return 1
 }
 
 fm_remote_job_code_identity() { # <remote-root> <account-home>
   local root=$1 account_home=$2 git_bin root_hash library_hash worker_hash
   root=$(fm_remote_job_canonical_existing_dir "$root") || return 1
-  [ -f "$root/bin/fm-remote-job-lib.sh" ] && [ ! -L "$root/bin/fm-remote-job-lib.sh" ] || return 1
-  [ -f "$root/bin/fm-remote-job-worker.sh" ] && [ ! -L "$root/bin/fm-remote-job-worker.sh" ] || return 1
+  [ -f "$root/bin/backend/fm-remote-job-lib.sh" ] && [ ! -L "$root/bin/backend/fm-remote-job-lib.sh" ] || return 1
+  [ -f "$root/bin/backend/fm-remote-job-worker.sh" ] && [ ! -L "$root/bin/backend/fm-remote-job-worker.sh" ] || return 1
   fm_remote_job_compose_operator_path "$account_home" >/dev/null
   git_bin=$(fm_remote_job_operator_tool git 2>/dev/null || true)
   [ -n "$git_bin" ] || return 1
   root_hash=$(printf '%s' "$root" | "$git_bin" hash-object --stdin 2>/dev/null) || return 1
-  library_hash=$("$git_bin" hash-object -- "$root/bin/fm-remote-job-lib.sh" 2>/dev/null) || return 1
-  worker_hash=$("$git_bin" hash-object -- "$root/bin/fm-remote-job-worker.sh" 2>/dev/null) || return 1
+  library_hash=$("$git_bin" hash-object -- "$root/bin/backend/fm-remote-job-lib.sh" 2>/dev/null) || return 1
+  worker_hash=$("$git_bin" hash-object -- "$root/bin/backend/fm-remote-job-worker.sh" 2>/dev/null) || return 1
   case "$root_hash:$library_hash:$worker_hash" in *[!0-9a-f:]*) return 1 ;; esac
   [ -n "$root_hash" ] && [ -n "$library_hash" ] && [ -n "$worker_hash" ] || return 1
   printf '%s:%s:%s\n' "$root_hash" "$library_hash" "$worker_hash"
@@ -1148,7 +1148,7 @@ fm_remote_job_reload_launchagent() { # <account-home> <uid>
 
 fm_remote_job_start_linux_worker() { # <remote-root> <account-home>
   local root=$1 account_home=$2 worker pid
-  worker="$root/bin/fm-remote-job-worker.sh"
+  worker="$root/bin/backend/fm-remote-job-worker.sh"
   [ -f "$worker" ] && [ ! -L "$worker" ] && [ -x "$worker" ] || {
     FM_REMOTE_JOB_ERROR="remote job worker is not a genuine executable in the configured code root"
     return 1
@@ -1195,8 +1195,8 @@ fm_remote_job_ensure_worker() { # <remote-root> <account-home>
     FM_REMOTE_JOB_ERROR="remote account home is unavailable or unsafe"
     return 1
   }
-  [ -f "$root/bin/fm-remote-job-worker.sh" ] && [ ! -L "$root/bin/fm-remote-job-worker.sh" ] &&
-    [ -x "$root/bin/fm-remote-job-worker.sh" ] || {
+  [ -f "$root/bin/backend/fm-remote-job-worker.sh" ] && [ ! -L "$root/bin/backend/fm-remote-job-worker.sh" ] &&
+    [ -x "$root/bin/backend/fm-remote-job-worker.sh" ] || {
     FM_REMOTE_JOB_ERROR="configured remote root has no safe executable remote job worker"
     return 1
   }

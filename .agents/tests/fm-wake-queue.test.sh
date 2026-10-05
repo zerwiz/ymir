@@ -11,9 +11,9 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-WATCH="$ROOT/bin/fm-watch.sh"
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
-GRANT="$ROOT/bin/fm-wake-grant.sh"
+WATCH="$ROOT/bin/backend/fm-watch.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
+GRANT="$ROOT/bin/backend/fm-wake-grant.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-wake-tests)
 
@@ -142,7 +142,7 @@ test_not_working_stale_enqueue_before_suppressor() {
   # fake fm-crew-state.sh the watcher reads via FM_CREW_STATE_BIN.)
   export FM_FAKE_CREW_STATE='state: unknown · source: none · no current-state source available'
   PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
-    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" \
+    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/backend/fm-crew-state.sh" \
     FM_STALE_ESCALATE_SECS=999 FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$WATCH" > "$out" &
   wait_for_exit "$!" 40 || fail "watcher did not surface a not-provably-working stale"
   grep -Fx "stale: $window" "$out" >/dev/null || fail "watcher did not print the immediate stale wake"
@@ -166,7 +166,7 @@ test_check_output_is_queued() {
 printf 'merged: https://example.test/pr/1\n'
 SH
   chmod 0700 "$check_file"
-  FM_STATE_OVERRIDE="$state" "$ROOT/bin/fm-check-register.sh" task >/dev/null \
+  FM_STATE_OVERRIDE="$state" "$ROOT/bin/backend/fm-check-register.sh" task >/dev/null \
     || fail "could not register queue custom check"
   PATH="$fakebin:$PATH" FM_STATE_OVERRIDE="$state" FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=0 FM_HEARTBEAT=999999 "$WATCH" > "$out" &
   wait_for_exit "$!" 40 || fail "watcher did not exit for check output"
@@ -263,7 +263,7 @@ SH
     FM_FAKE_TMUX_LOG="$dir/tmux.log" FM_FAKE_TMUX_CAPTURE="$dir/fake-tmux/pane.txt" \
     FM_SECONDMATE_WAKE_STALL_SECS=1 FM_POLL=1 FM_SIGNAL_GRACE=0 \
     FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
-    "$ROOT/bin/fm-watch-checkpoint.sh" --seconds 3 > "$out" 2> "$dir/watch.err" || true
+    "$ROOT/bin/backend/fm-watch-checkpoint.sh" --seconds 3 > "$out" 2> "$dir/watch.err" || true
   grep -F 'check: secondmate wake-loop stalled: mate=mate row=7' "$out" >/dev/null \
     || fail "an aged foreign row did not wake the parent checkpoint: $(cat "$out"); err=$(cat "$dir/watch.err"); meta=$(cat "$state/mate.meta"); foreign=$(cat "$sub/state/.wake-queue")"
   [ -s "$state/.wake-queue" ] || fail "the parent notification was not durable"
@@ -283,7 +283,7 @@ SH
     FM_FAKE_TMUX_LOG="$dir/tmux.log" FM_FAKE_TMUX_CAPTURE="$dir/fake-tmux/pane.txt" \
     FM_SECONDMATE_WAKE_STALL_SECS=1 FM_POLL=1 FM_SIGNAL_GRACE=0 \
     FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
-    "$ROOT/bin/fm-watch-checkpoint.sh" --seconds 2 > "$dir/watch-second.out" 2> "$dir/watch-second.err" || true
+    "$ROOT/bin/backend/fm-watch-checkpoint.sh" --seconds 2 > "$dir/watch-second.out" 2> "$dir/watch-second.err" || true
   [ ! -s "$state/.wake-queue" ] || {
     stall_count=$(grep -c 'secondmate-wake-loop-mate-' "$state/.wake-queue" || true)
     [ "$stall_count" -eq 0 ] || fail "repeated checkpoint re-published the same stall notification"
@@ -297,7 +297,7 @@ SH
     FM_FAKE_TMUX_LOG="$dir/tmux.log" FM_FAKE_TMUX_CAPTURE="$dir/fake-tmux/pane.txt" \
     FM_SECONDMATE_WAKE_STALL_SECS=1 FM_POLL=1 FM_SIGNAL_GRACE=0 \
     FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
-    "$ROOT/bin/fm-watch-checkpoint.sh" --seconds 2 > "$dir/watch-empty.out" 2> "$dir/watch-empty.err" || true
+    "$ROOT/bin/backend/fm-watch-checkpoint.sh" --seconds 2 > "$dir/watch-empty.out" 2> "$dir/watch-empty.err" || true
   ! grep -F 'secondmate wake-loop stalled' "$dir/watch-empty.out" >/dev/null \
     || fail "an empty foreign queue produced a stall notification"
 
@@ -307,7 +307,7 @@ SH
     FM_FAKE_TMUX_LOG="$dir/tmux.log" FM_FAKE_TMUX_CAPTURE="$dir/fake-tmux/pane.txt" \
     FM_SECONDMATE_WAKE_STALL_SECS=60 FM_POLL=1 FM_SIGNAL_GRACE=0 \
     FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
-    "$ROOT/bin/fm-watch-checkpoint.sh" --seconds 2 > "$dir/watch-healthy.out" 2> "$dir/watch-healthy.err" || true
+    "$ROOT/bin/backend/fm-watch-checkpoint.sh" --seconds 2 > "$dir/watch-healthy.out" 2> "$dir/watch-healthy.err" || true
   ! grep -F 'secondmate wake-loop stalled' "$dir/watch-healthy.out" >/dev/null \
     || fail "a healthy foreign queue produced a stall notification"
   pass "foreign secondmate queue stalls notify once, remain byte-stable, and stay quiet when empty or healthy"
@@ -342,7 +342,7 @@ SH
   PATH="$fakebin:$PATH" FM_HOME="$dir" FM_ROOT_OVERRIDE="$ROOT" \
     FM_STATE_OVERRIDE="$state" FM_SECONDMATE_WAKE_STALL_SECS=1 FM_POLL=1 \
     FM_SIGNAL_GRACE=0 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
-    "$ROOT/bin/fm-watch-checkpoint.sh" --seconds 2 \
+    "$ROOT/bin/backend/fm-watch-checkpoint.sh" --seconds 2 \
     > "$dir/watch.out" 2> "$dir/watch.err" || true
   [ "$(cat "$outside")" = "$expected" ] || fail "stall marker write followed an unsafe symlink"
   [ -L "$marker" ] || fail "stall marker write replaced rather than rejected an unsafe path"
@@ -378,7 +378,7 @@ test_acknowledged_stall_publication_survives_pre_marker_crash() {
     FM_FAKE_TMUX_LOG="$dir/tmux.log" FM_FAKE_TMUX_CAPTURE="$dir/fake-tmux/pane.txt" \
     FM_SECONDMATE_WAKE_STALL_SECS=1 FM_POLL=1 FM_SIGNAL_GRACE=0 \
     FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
-    "$ROOT/bin/fm-watch-checkpoint.sh" --seconds 2 > "$out" 2> "$dir/watch.err" || true
+    "$ROOT/bin/backend/fm-watch-checkpoint.sh" --seconds 2 > "$out" 2> "$dir/watch.err" || true
   ! grep -F 'secondmate wake-loop stalled' "$out" >/dev/null \
     || fail "an acknowledged publication was duplicated after the pre-marker crash state"
   [ ! -s "$state/.wake-queue" ] \
@@ -420,7 +420,7 @@ test_empty_prefix_mate_preserves_other_mate_receipt() {
       FM_FAKE_TMUX_LOG="$dir/tmux.log" FM_FAKE_TMUX_CAPTURE="$dir/fake-tmux/pane.txt" \
       FM_SECONDMATE_WAKE_STALL_SECS=1 FM_POLL=1 FM_SIGNAL_GRACE=0 \
       FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
-      "$ROOT/bin/fm-watch-checkpoint.sh" --seconds 2 \
+      "$ROOT/bin/backend/fm-watch-checkpoint.sh" --seconds 2 \
       > "$dir/watch-$round.out" 2> "$dir/watch-$round.err" || true
     ! grep -F 'secondmate wake-loop stalled' "$dir/watch-$round.out" >/dev/null \
       || fail "empty ios queue erased ios-ui idempotency on checkpoint $round"
@@ -442,7 +442,7 @@ test_drain_asserts_watcher_liveness() {
   FM_STATE_OVERRIDE="$state" "$DRAIN" >/dev/null 2> "$err" || fail "drain failed while asserting liveness"
   grep -F 'WATCHER DOWN' "$err" >/dev/null || fail "drain did not surface the watcher-down banner with work in flight and no live watcher"
   : > "$err"
-  identity=$(FM_STATE_OVERRIDE="$state" bash -c '. "$1"; fm_pid_identity "$2"' _ "$ROOT/bin/fm-wake-lib.sh" "$$") \
+  identity=$(FM_STATE_OVERRIDE="$state" bash -c '. "$1"; fm_pid_identity "$2"' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$$") \
     || fail "could not identify the live watcher fixture"
   mkdir "$state/.watch.lock"
   printf '%s\n' "$$" > "$state/.watch.lock/pid"
@@ -496,7 +496,7 @@ SH
   append_wake "$state" heartbeat heartbeat heartbeat || fail "heartbeat wake append failed"
 
   FM_STATE_OVERRIDE="$state" bash -c '. "$1"; fm_wake_print_deduped "$2"' _ \
-    "$ROOT/bin/fm-wake-lib.sh" "$state/.wake-queue" > "$expected"
+    "$ROOT/bin/backend/fm-wake-lib.sh" "$state/.wake-queue" > "$expected"
   PATH="$dir/fakebin:$PATH" FM_STATE_OVERRIDE="$state" FM_WAKE_ENRICH_SWAP_PATH="$state/task.status" \
     FM_WAKE_ENRICH_SWAP_TARGET="$outside" FM_WAKE_ENRICH_REAL_PERL="$perl_bin" "$DRAIN" > "$out" \
     || fail "structural enrichment drain failed"
@@ -1065,7 +1065,7 @@ test_self_announced_append_guards() {
   run_wake_lib() {
     FM_STATE_OVERRIDE="$state" bash -c '
       . "$1"; shift; "$@"
-    ' _ "$ROOT/bin/fm-wake-lib.sh" "$@"
+    ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$@"
   }
 
   # FIRST status change: a fresh file with no marker is unannounced (wakes).
@@ -1130,7 +1130,7 @@ test_self_held_lock_reclaims_instead_of_deadlocking() {
     fm_lock_try_acquire "$lock" || exit 11
     fm_lock_release "$lock"
     [ ! -e "$lock" ] && [ ! -L "$lock" ] || exit 12
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$state" || rc=$?
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$state" || rc=$?
   [ "$rc" -eq 0 ] || fail "self-held lock was not reclaimed cleanly (rc=$rc)"
   rc=0
   FM_STATE_OVERRIDE="$state" bash -c '
@@ -1139,7 +1139,7 @@ test_self_held_lock_reclaims_instead_of_deadlocking() {
     fm_lock_acquire_wait "$lock" || exit 10
     ( fm_lock_try_acquire "$lock" && exit 13; exit 0 ) || exit 13
     fm_lock_release "$lock"
-  ' _ "$ROOT/bin/fm-wake-lib.sh" "$state" || rc=$?
+  ' _ "$ROOT/bin/backend/fm-wake-lib.sh" "$state" || rc=$?
   [ "$rc" -eq 0 ] || fail "a subshell reclaimed its parent's live hold (rc=$rc)"
   pass "an abandoned same-process lock hold is reclaimed; a parent's live hold is not"
 }

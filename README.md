@@ -96,8 +96,8 @@ registry and served never; it ships as `@zerwiz/smidja-factory`, which resolves.
 
 Ymir runs the same either way; the only difference is where the apps live — a
 clone's `apps/<surface>`, or the package's `node_modules/@zerwiz/<surface>`. One
-resolver (`bin/app-lib.sh`) answers for both, so no script has to care which shape
-it woke in. Colour is for the eye, never for the pipe: `bin/ymir-style.sh` renders
+resolver (`bin/seat/sessrumnir/app-lib.sh`) answers for both, so no script has to care which shape
+it woke in. Colour is for the eye, never for the pipe: `bin/desktop/ymir-style.sh` renders
 in the halls' own cloth, and what a pipeline reads on stdout stays plain TOON.
 
 ### After it installs — the doors
@@ -170,7 +170,7 @@ merely tolerated.
 
 | Identity | What it means | Where it lives |
 |---|---|---|
-| **Omarchy-native** | The host desktop is Omarchy (Arch + Hyprland). Ymir reads monitors/scale, lets Hyprland own window placement, mitigates the amdgpu GPU crash, and **learns the user's setup** — packages, configs, Omarchy version — re-learning after every `omarchy update` via a `post-update` hook. | `bin/omarchy-sense.sh`, `bin/omarchy-hook-install.sh`, skill `ymir` |
+| **Omarchy-native** | The host desktop is Omarchy (Arch + Hyprland). Ymir reads monitors/scale, lets Hyprland own window placement, mitigates the amdgpu GPU crash, and **learns the user's setup** — packages, configs, Omarchy version — re-learning after every `omarchy update` via a `post-update` hook. | `bin/host/omarchy-sense.sh`, `bin/host/omarchy-hook-install.sh`, skill `ymir` |
 | **herdr-first (Þjazi)** | Agent panes need a terminal backend. **herdr** is preferred (Þjazi protocol **14+**; presentation spaces at **0.8.0+**), **tmux** is the accepted reference backend. A missing backend is reported, never silently degraded. | `bin/seat/herdr-ensure.sh`, skill `ymir` |
 | **pi-native** | The [pi](https://pi.dev) coding harness is a first-class surface: extensions, skills, prompt templates, themes, custom providers, and **pi packages** (npm/git) are all live. This is where Ymir gains reach — a new capability can be a pi extension or a packaged bundle, not just a shell script. | `.pi/extensions/`, `.pi/settings.json`, `.pi/mcp-adapter.json` |
 
@@ -192,13 +192,13 @@ desktop, and mixing the two is the classic placement bug), and **lets Hyprland o
 placement** rather than fighting the compositor.
 
 - **Desktop placement.** On Omarchy the numbered **desktops** (`1 2 3 4 5 …`) are
-the operator's "screens". `bin/desktop-place.sh` gives each Ymir app its **own
+the operator's "screens". `bin/seat/sessrumnir/desktop-place.sh` gives each Ymir app its **own
 desktop, preferring an empty one**, via Omarchy's own rule idiom
 (`o.window({ class = "^ymir-hlidskjalf$" }, { workspace = "2" })`), and never
 edits `/usr/share/omarchy/`.
-- **It learns the machine.** `bin/omarchy-sense.sh` records a comparable snapshot
+- **It learns the machine.** `bin/host/omarchy-sense.sh` records a comparable snapshot
 (Omarchy version, explicit packages, config files, monitors, scale) and **diffs**
-it, so Ymir can advise on *this* setup. `bin/omarchy-hook-install.sh` installs a
+it, so Ymir can advise on *this* setup. `bin/host/omarchy-hook-install.sh` installs a
 `post-update.d` hook, so **every `omarchy update` re-teaches it**.
 - **It survives the hardware.** On a small-VRAM iGPU the Wayland GPU process can
 die with `amdgpu: Not enough memory for command submission` (SIGSEGV, not an OOM);
@@ -355,10 +355,10 @@ and inject it; nudge-tier harnesses are asked.
 | **Codex** | `.codex/hooks.json` — `SessionStart` + `PreToolUse` + `Stop` |
 
 - **Seat:** `bin/time/saga-session-start.sh` — the one ordered digest.
-- **Lock:** `bin/gleipnir-lock-lib.sh` — bound to the live session pid.
+- **Lock:** `bin/vault/gleipnir-lock-lib.sh` — bound to the live session pid.
 - **Bridge:** `bin/bridge/bifrost-bridge.sh` — raises the local model endpoint.
 - **Jobs:** `bin/time/nornir-cron-start.sh` — daily briefing 07:00, observer, housekeeping, git sync.
-- **Watch:** `bin/syn-watch.sh` — the arm as a standing service (`status|start|stop`, unit `ymir-syn-watch.service`) — plus `bin/syn-watch-arm.sh`, the thin client the harness adapter spawns.
+- **Watch:** `bin/pi/syn-watch.sh` — the arm as a standing service (`status|start|stop`, unit `ymir-syn-watch.service`) — plus `bin/pi/syn-watch-arm.sh`, the thin client the harness adapter spawns.
 
 Details: [`docs/session-start.md`](docs/session-start.md).
 
@@ -388,7 +388,7 @@ git clone <this-repo> ~/Ymir && cd ~/Ymir
 cp .env.example .env.local          # fill in your keys (never committed)
 
 # 1) First setup — prints a plan, asks you to accept, then validates itself
-bin/ymir-install.sh                 # add --yes for non-interactive, or --check to preview
+bin/engine/ymir-install.sh                 # add --yes for non-interactive, or --check to preview
 
 # 2) The control plane (live data)
 scripts/start.sh                    # → http://127.0.0.1:3888/
@@ -401,7 +401,7 @@ The installer is idempotent and self-healing: it provisions what it can in user
 space (`bun`, `uv`, `mcp`, the Þjazi backend), installs the OSS engines, learns
 the machine, places the desktop apps, and — on an **Omarchy** host — sets the
 update hook that re-teaches it after every `omarchy update`. It ends by opening
-both desktop apps and running `bin/ymir-validate.sh` to prove what stands.
+both desktop apps and running `bin/engine/ymir-validate.sh` to prove what stands.
 
 ### What each platform buys you
 
@@ -427,25 +427,25 @@ the seat as **Brokk**. Read [`AGENTS.md`](AGENTS.md) for the operating laws and
 
 Ymir is **Omarchy-first**: the Omarchy layer is first-class. But *first* is not
 *only*. The core is portable, and every other host gets a layer of its own.
-`bin/host-sense.sh` is the one place that looks before anything acts — distro,
+`bin/host/host-sense.sh` is the one place that looks before anything acts — distro,
 kernel, session (Wayland/X11), desktop, and what that desktop can actually do:
 
 ```bash
-bin/host-sense.sh                     # THIS machine, as TOON
-bin/host-sense.sh capability tray     # yes | partial | no — for scripting
+bin/host/host-sense.sh                     # THIS machine, as TOON
+bin/host/host-sense.sh capability tray     # yes | partial | no — for scripting
 ```
 
 ```
 hosts[4]{host,how_you_get_it,what_it_is}:
-  "Omarchy","bin/ymir-install.sh","the first-class layer: numbered desktops, launcher entries, the post-update hook"
-  "other Linux (Ubuntu · Fedora · Debian · Arch)","bin/ymir-install.sh","the portable core; the Omarchy layer skips cleanly, never faked"
+  "Omarchy","bin/engine/ymir-install.sh","the first-class layer: numbered desktops, launcher entries, the post-update hook"
+  "other Linux (Ubuntu · Fedora · Debian · Arch)","bin/engine/ymir-install.sh","the portable core; the Omarchy layer skips cleanly, never faked"
   "Windows","Ymir-Setup.exe — or bin/bootstrap-windows.ps1","Ubuntu on WSL2 is the host; Ymir installs inside it"
-  "macOS","Ymir Installer.command (or the .pkg) — or bin/bootstrap-macos.sh","Ubuntu in a Lima VM is the host; Ymir installs inside it"
+  "macOS","Ymir Installer.command (or the .pkg) — or bin/host/bootstrap-macos.sh","Ubuntu in a Lima VM is the host; Ymir installs inside it"
 ```
 
 Windows and macOS do not run Ymir natively: what Ymir installs is a Linux
 runtime, so those layers raise a Linux host and hand the work to
-`bin/ymir-install.sh` inside it. Each is gated on its host and skips cleanly
+`bin/engine/ymir-install.sh` inside it. Each is gated on its host and skips cleanly
 everywhere else — no layer asserts a machine it is not standing on.
 
 **Build the installers** — neither needs a matching host:
@@ -534,18 +534,18 @@ ymir/
 ## Key combinations
 
 Every key Ymir binds. On Omarchy they live in
-`~/.config/hypr/ymir-launchers.lua` (generated by `bin/desktop-place.sh apply`)
+`~/.config/hypr/ymir-launchers.lua` (generated by `bin/seat/sessrumnir/desktop-place.sh apply`)
 and are required from `hyprland.lua`. See what is live with
 `omarchy menu keybindings --print`.
 
 | Key | What it does | Declared by |
 |---|---|---|
-| **SUPER + Y** | raise **Hlidskjalf** — the control plane | `bin/desktop-place.sh` → `~/.config/hypr/ymir-launchers.lua` |
+| **SUPER + Y** | raise **Hlidskjalf** — the control plane | `bin/seat/sessrumnir/desktop-place.sh` → `~/.config/hypr/ymir-launchers.lua` |
 | **SUPER + M** | raise **Smiðja** — the visualizer | same file |
 | **ctrl + shift + e** | open the **file picker** over the working directory | `.pi/extensions/open-editor.ts` |
 
 Each app window opens on **its own numbered desktop** (the placement rules in
-`bin/desktop-place.sh` send it there), so a speed-start both raises the app and
+`bin/seat/sessrumnir/desktop-place.sh` send it there), so a speed-start both raises the app and
 keeps it off the desktop you are working on. `/edit [path]` is the same editor
 surface as a slash command, with tab-completion over the directory.
 
@@ -565,9 +565,9 @@ try yours without being handed your account. The installer mints an **invite
 code** and prints it at the end of the run:
 
 ```bash
-bin/ymir-invite.sh mint --limit 3   # a code that admits 3 accounts
-bin/ymir-invite.sh list             # every code, what is spent, who is in
-bin/ymir-invite.sh revoke CODE      # take one back, now
+bin/engine/ymir-invite.sh mint --limit 3   # a code that admits 3 accounts
+bin/engine/ymir-invite.sh list             # every code, what is spent, who is in
+bin/engine/ymir-invite.sh revoke CODE      # take one back, now
 ```
 
 They open the gate and choose **“I have an invite code”**, then pick their own
@@ -719,7 +719,7 @@ The public repository lives at **zerwiz/ymir** on GitHub:
 - **Pull Requests** — all changes ship via PR; every PR requires
   explicit Allfather approval before merge. No force-pushes. No auto-merge.
 - **Projects** — the board tracks every workstream across the hall.
-- **Actions** — CI runs `bin/secret-guard.sh` and `bin/docs-guard.sh`
+- **Actions** — CI runs `bin/gates/guards/secret-guard.sh` and `bin/gates/guards/docs-guard.sh`
   on every push and PR. A violation blocks the build.
 
 Your own login is always your own: **never** share a token, never
@@ -750,15 +750,15 @@ one registry (`$YMIR_HOME/hodd/data/fleet.json`):
 | **hand** | the phone (PWA) | — | anything long-running |
 
 ```bash
-bin/role.sh show                  # this machine's role + the whole roster
-bin/role.sh set whynot heart,forge
-bin/role.sh validate              # every role known; the named heart is a real row
+bin/skuld/role.sh show                  # this machine's role + the whole roster
+bin/skuld/role.sh set whynot heart,forge
+bin/skuld/role.sh validate              # every role known; the named heart is a real row
 ```
 
 ### Topology — is this box alone, a client, or a node?
 
 ```bash
-bin/topology.sh
+bin/fleet/topology.sh
 ```
 ```text
 topology[7]{fact,value}:
@@ -836,7 +836,7 @@ Models are hardware-bound; a body does not download 20 GB to a laptop, it calls
 the forge over the tailnet.
 
 ```bash
-bin/model-placement.sh    # every forge rail (http://<tailnet>:8080), reachable or not
+bin/model/model-placement.sh    # every forge rail (http://<tailnet>:8080), reachable or not
 ```
 The one-local-model constraint is per machine. Aliases are a fleet contract:
 never rename a preset without updating every seat's registry.
@@ -853,8 +853,8 @@ bin/agents/eindri-route.sh --kinds   # the whole table
 ### One version across the fleet
 
 ```bash
-bin/fleet-version.sh          # tree · installed · published + a verdict
-bin/fleet-version.sh check    # exit 1 on drift
+bin/fleet/fleet-version.sh          # tree · installed · published + a verdict
+bin/fleet/fleet-version.sh check    # exit 1 on drift
 ```
 `in sync · drift · ahead · behind · unknown`. Drift is loud, not silent.
 
@@ -862,14 +862,14 @@ bin/fleet-version.sh check    # exit 1 on drift
 
 ```text
 fleet_ops[9]{command,what}:
-  "bin/topology.sh","this machine: role, shape, link, journal"
-  "bin/role.sh","declare / read / validate a machine's role"
-  "bin/fleet-version.sh","tree vs installed vs published, with a verdict"
+  "bin/fleet/topology.sh","this machine: role, shape, link, journal"
+  "bin/skuld/role.sh","declare / read / validate a machine's role"
+  "bin/fleet/fleet-version.sh","tree vs installed vs published, with a verdict"
   "bin/records/journal-append.sh","commit a write to the offline outbox"
   "bin/records/journal-reconcile.sh","push the outbox when the heart answers"
   "bin/records/journal-receive.sh","the heart folds journals in (idempotent)"
   "bin/bridge/mcp-config.sh","generate the harness MCP config from role"
-  "bin/model-placement.sh","the fleet's forge rails and the local model lock"
+  "bin/model/model-placement.sh","the fleet's forge rails and the local model lock"
   "bin/agents/eindri-route.sh","route an errand to the role that fits it"
 ```
 
@@ -889,8 +889,8 @@ FAIL; offline is healthy.
 And the whole system has a **doctor**:
 
 ```bash
-bin/eir-doctor.sh check      # composes every *-ensure.sh surface
-bin/eir-doctor.sh fix        # mends what is broken
+bin/agents/eir-doctor.sh check      # composes every *-ensure.sh surface
+bin/agents/eir-doctor.sh fix        # mends what is broken
 ```
 
 ---

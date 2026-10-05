@@ -6,7 +6,7 @@ import { encodeRoddOperationalInput } from "./lib/rodd-operational-input.js";
 // Sýn — Brokk primary watcher-arm continuity for OpenCode.
 //
 // Sýn ("watchful sight") owns the watcher cycle in the persistent OpenCode TUI.
-// The plugin listens for session.idle, spawns bin/syn-watch-arm.sh --restart
+// The plugin listens for session.idle, spawns bin/pi/syn-watch-arm.sh --restart
 // without awaiting it, and owns every later successor launch so no model tool
 // call and no model tokens are spent on ordinary re-arming. Ported from the
 // upstream agent-distro reference and retargeted to the Brokk runtime
@@ -14,7 +14,7 @@ import { encodeRoddOperationalInput } from "./lib/rodd-operational-input.js";
 
 const COORDINATOR_KEY = "__brokkOpenCodeWatchArm";
 // 35s on Windows so the budget stays above arm's MSYS confirm default (30s in
-// bin/syn-watch-arm.sh): a slow but successful Git Bash cold start must not be
+// bin/pi/syn-watch-arm.sh): a slow but successful Git Bash cold start must not be
 // SIGTERMed mid-confirmation. Conditioned on win32 so other platforms keep 12s.
 const ARM_READY_TIMEOUT_DEFAULT_MS = process.platform === "win32" ? 35000 : 12000;
 const ARM_READY_TIMEOUT_MS = positiveInteger("BROKK_OPENCODE_ARM_READY_TIMEOUT_MS", ARM_READY_TIMEOUT_DEFAULT_MS);
@@ -146,7 +146,7 @@ function shouldArm(paths) {
 }
 
 // The machine-global state dir — the primary's lock lives here, never in the
-// tree (mirrors gleipnir_machine_state_dir in bin/gleipnir-lock-lib.sh).
+// tree (mirrors gleipnir_machine_state_dir in bin/vault/gleipnir-lock-lib.sh).
 function machineStateDir() {
   if (process.env.BROKK_MACHINE_STATE_DIR) return process.env.BROKK_MACHINE_STATE_DIR;
   const xdg = process.env.XDG_STATE_HOME;
@@ -287,7 +287,7 @@ function confirmHandlingDelivery(paths, recovery) {
   try {
     const result = spawnSync(
       "bash",
-      [`${paths.root}/bin/syn-watch-arm.sh`, "--handling-delivered", recovery.generation, "--watcher-pid", recovery.watcherPid],
+      [`${paths.root}/bin/pi/syn-watch-arm.sh`, "--handling-delivered", recovery.generation, "--watcher-pid", recovery.watcherPid],
       {
         cwd: paths.root,
         encoding: "utf8",
@@ -432,7 +432,7 @@ function spawnArm(paths, sessionID, client, predecessorArmPid = "") {
     BROKK_STATE_OVERRIDE: paths.state,
     BROKK_WATCH_PREDECESSOR_ARM_PID: predecessorArmPid,
   };
-  const armChild = spawn("bash", ["-lc", 'config_dir="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"; [ -f "$config_dir/x-mode.env" ] && . "$config_dir/x-mode.env"; exec "$BROKK_ROOT_OVERRIDE/bin/syn-watch-arm.sh" --restart'], {
+  const armChild = spawn("bash", ["-lc", 'config_dir="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"; [ -f "$config_dir/x-mode.env" ] && . "$config_dir/x-mode.env"; exec "$BROKK_ROOT_OVERRIDE/bin/pi/syn-watch-arm.sh" --restart'], {
     cwd: paths.root,
     env,
     stdio: ["ignore", "pipe", "pipe"],

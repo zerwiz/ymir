@@ -21,11 +21,11 @@ hard-blocked (every skuld tool refuses) until the operator clears
   tickets/get, tickets/update, tickets/close, plans/create, plans/list,
   blocks/status, blocks/clear; resources `skuld://book`.
 - `tools/mill/systemd/skuld.service` — the %h-native unit, mcp-proxy on :8320.
-- `bin/fleet-ensure.sh` — raises skuld, mirrors the server, and writes the
+- `bin/fleet/fleet-ensure.sh` — raises skuld, mirrors the server, and writes the
   `skuld` MCP door beside well/bolthorn in the seat's pi mcp.json.
 - Store: `skuld` database (tickets · plans · blocks · namespaces) with the
   skuld role's grants; seeded namespaces: ymir, whynotproductions.
 
 ## Files
 - `tools/tickets-mcp/server.mjs` · `tools/mill/systemd/skuld.service`
-- `bin/fleet-ensure.sh`
+- `bin/fleet/fleet-ensure.sh`

@@ -15,10 +15,10 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-busy-lib.sh"
+. "$ROOT/bin/backend/fm-busy-lib.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-busy-state)
-EV="$ROOT/bin/fm-busy-event.sh"
+EV="$ROOT/bin/backend/fm-busy-event.sh"
 
 new_state_dir() {  # <name>
   local d="$TMP_ROOT/$1/state"
@@ -406,7 +406,7 @@ test_record_read_leaves_caller_shell_intact() {
   "$EV" arm "$state" t1 >/dev/null
   out=$(bash -c '
     set -f
-    . "$1/bin/fm-busy-lib.sh"
+    . "$1/bin/backend/fm-busy-lib.sh"
     set -- keepme second
     fm_busy_record_read "$2" t1 >/dev/null
     printf "%s|%s|%s" "$1" "$#" "$-"

@@ -128,7 +128,7 @@ def main(
     assertable without a pane, exactly as the modules' is."""
     arguments = list(argv) if argv is not None else sys.argv[1:]
     # The arm's own surface (`watch status|start|stop|restart|run`), dispatched
-    # before argparse: the verb carries its own flags through to `bin/syn-watch.sh`
+    # before argparse: the verb carries its own flags through to `bin/pi/syn-watch.sh`
     # unchanged, and the shape of `run --emit` must not be re-spelled here.
     if arguments[:1] == ["watch"]:
         return watch.main(

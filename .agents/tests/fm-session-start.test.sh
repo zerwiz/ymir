@@ -36,7 +36,7 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-SESSION_START="$ROOT/bin/fm-session-start.sh"
+SESSION_START="$ROOT/bin/backend/fm-session-start.sh"
 BASE_PATH=${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
 TMP_ROOT=$(fm_test_tmproot fm-session-start-tests)
 SESSION_START_TEST_HARNESS_PID=$$
@@ -638,7 +638,7 @@ run_session_start_herdr_secondmate() {
 wait_for_network_stage() {
   local home=$1 root=$2 limit=${3:-30}
   FM_HOME="$home" FM_ROOT_OVERRIDE="$root" \
-    "$ROOT/bin/fm-startup-network.sh" wait "$limit"
+    "$ROOT/bin/backend/fm-startup-network.sh" wait "$limit"
 }
 
 wait_for_network_wake() {
@@ -653,7 +653,7 @@ wait_for_network_wake() {
 
 network_stage_report() {
   local home=$1 root=$2
-  FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$ROOT/bin/fm-startup-network.sh" report
+  FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$ROOT/bin/backend/fm-startup-network.sh" report
 }
 
 hash_file_for_test() {
@@ -917,7 +917,7 @@ SH
       done
       if FM_HOME="$home" FM_FAKE_LOCK_STATE="$home/state" \
         FM_FAKE_HARNESS_PID="$harness_pid" PATH="$fakebin:$BASE_PATH" \
-        "$ROOT/bin/fm-lock.sh" >/dev/null 2>&1; then
+        "$ROOT/bin/backend/fm-lock.sh" >/dev/null 2>&1; then
         printf '%s\n' "$harness_pid" >> "$winners"
       fi
       : > "$completed/$i"
@@ -1387,11 +1387,11 @@ EOF
   # A crash window the locked start must close: the supervision branch stored
   # an outcome durably that never reached main, plus one lease whose
   # supervising process died and one still held by a live process.
-  FM_HOME="$home" "$ROOT/bin/fm-branch-outcome.sh" append \
+  FM_HOME="$home" "$ROOT/bin/backend/fm-branch-outcome.sh" append \
     --task task-b --verdict captain --summary 'PR https://example.com/pr/b checks green' >/dev/null \
     || fail "could not seed the unread branch outcome"
   printf 'branch\t999999\t123\n' > "$home/state/.lease-task-dead"
-  FM_HOME="$home" FM_SUPERVISION_ACTOR=branch FM_LEASE_HOLDER_PID=$$ "$ROOT/bin/fm-lease.sh" claim task-live --actor branch \
+  FM_HOME="$home" FM_SUPERVISION_ACTOR=branch FM_LEASE_HOLDER_PID=$$ "$ROOT/bin/backend/fm-lease.sh" claim task-live --actor branch \
     || fail "could not seed the live lease"
 
   out=$(run_pi_session_start "$home" "$root" "$fakebin:$BASE_PATH")
@@ -1419,7 +1419,7 @@ EOF
   make_fake_toolchain "$fakebin"
   make_fake_ps_claude "$fakebin"
 
-  FM_HOME="$home" "$ROOT/bin/fm-branch-outcome.sh" append \
+  FM_HOME="$home" "$ROOT/bin/backend/fm-branch-outcome.sh" append \
     --task task-b --verdict captain --summary 'unread Pi branch outcome' >/dev/null \
     || fail "could not seed the non-Pi unread branch outcome"
   rm -f "$home/state/.branch-outcomes-cursor"
@@ -1821,7 +1821,7 @@ EOF
   make_hanging_tool "$fakebin" git
 
   mechanism=$(FM_TIMEOUT_MECHANISM_OVERRIDE=bash bash -c '. "$1"; fm_timeout_mechanism' \
-    _ "$ROOT/bin/fm-timeout-lib.sh")
+    _ "$ROOT/bin/backend/fm-timeout-lib.sh")
   [ "$mechanism" = bash ] || fail "the forced pure-Bash timeout fixture selected '$mechanism'"
 
   out=$(FM_TIMEOUT_MECHANISM_OVERRIDE=bash FM_SESSION_START_TIMEOUT=3 FM_STARTUP_NETWORK_TIMEOUT=2 \
@@ -1847,14 +1847,14 @@ EOF
   # it was never waiting for. So the guarantee asserted here is the one that
   # actually matters: once BOTH deadlines have passed, nothing hung is left.
   FM_HOME="$home" FM_ROOT_OVERRIDE="$root" FM_STARTUP_NETWORK_TIMEOUT=2 \
-    "$ROOT/bin/fm-startup-network.sh" wait 30 >/dev/null || true
+    "$ROOT/bin/backend/fm-startup-network.sh" wait 30 >/dev/null || true
   sleep 1
   stray=$(pgrep -f "$fakebin/git" 2>/dev/null | wc -l | tr -d ' ')
   [ "$stray" -eq 0 ] || fail "the runtime bound left $stray hung subprocess(es) behind"
 
   status=0
   FM_TIMEOUT_MECHANISM_OVERRIDE=bash bash -c \
-    '. "$1"; fm_run_timed 2 bash -c "exit 137"' _ "$ROOT/bin/fm-timeout-lib.sh" || status=$?
+    '. "$1"; fm_run_timed 2 bash -c "exit 137"' _ "$ROOT/bin/backend/fm-timeout-lib.sh" || status=$?
   expect_code 137 "$status" "pure-Bash natural command exit 137"
 
   pass "the pure-Bash watchdog bounds session start, kills its hung grandchild, and emits the truncation contract"
@@ -1881,12 +1881,12 @@ SH
     alarm 5;
     waitpid $pid, 0;
     exit($? >> 8);
-  ' env PATH="$fakebin:$BASE_PATH" "$driver" "$ROOT/bin/fm-timeout-lib.sh" \
+  ' env PATH="$fakebin:$BASE_PATH" "$driver" "$ROOT/bin/backend/fm-timeout-lib.sh" \
     perl -e '$SIG{TERM} = "IGNORE"; sleep 600' || status=$?
 
   expect_code 124 "$status" "portable timeout TERM-resistant escalation"
   status=0
-  env PATH="$fakebin:$BASE_PATH" "$driver" "$ROOT/bin/fm-timeout-lib.sh" \
+  env PATH="$fakebin:$BASE_PATH" "$driver" "$ROOT/bin/backend/fm-timeout-lib.sh" \
     bash -c 'exit 137' || status=$?
   expect_code 137 "$status" "natural command exit 137"
   pass "the portable timeout path force-kills a command that ignores TERM"
@@ -2012,7 +2012,7 @@ EOF
   generation=$(printf '%s\n' "$reemit" | sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' | tail -1)
   [ -n "$sequence" ] && [ -n "$generation" ] \
     || fail "--reemit omitted the generation-bound wake acknowledgement"
-  FM_STATE_OVERRIDE="$home/state" "$ROOT/bin/fm-wake-drain.sh" --ack-through "$sequence" \
+  FM_STATE_OVERRIDE="$home/state" "$ROOT/bin/backend/fm-wake-drain.sh" --ack-through "$sequence" \
     --recovery-generation "$generation" || fail "--reemit wake acknowledgement failed"
   [ ! -s "$home/state/.wake-queue" ] || fail "--reemit acknowledgement left queued wakes behind"
   assert_contains "$reemit" "CONTEXT" "--reemit dropped the context digest"

@@ -28,7 +28,7 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-WATCH="$ROOT/bin/fm-watch.sh"
+WATCH="$ROOT/bin/backend/fm-watch.sh"
 TMP_ROOT=$(fm_test_tmproot fm-task-inbox)
 # The doorbell line canonicalizes its paths, so keep the fixture root
 # canonical too (a trailing-slash TMPDIR otherwise yields a double slash).
@@ -45,7 +45,7 @@ inbox_lib() {  # <state> <function> [args...]
     fn=$2
     shift 2
     "$fn" "$@"
-  ' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$@"
+  ' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$@"
 }
 
 # A fake tmux for the watcher cases: capture-pane replays FM_FAKE_TMUX_CAPTURE,
@@ -98,7 +98,7 @@ watch_bg() {  # <state> <fakebin> <out> [extra env assignments...]
   local state=$1 fakebin=$2 out=$3
   shift 3
   PATH="$fakebin:$PATH" FM_STATE_OVERRIDE="$state" \
-    FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" \
+    FM_CREW_STATE_BIN="$fakebin/backend/fm-crew-state.sh" \
     FM_FAKE_CREW_STATE='state: working · source: run-step · validating (running)' \
     FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 \
     FM_TASK_INBOX_GRACE_SECS=1 \
@@ -211,7 +211,7 @@ test_idempotent_write_follows_concurrent_ack() {
       _original_fm_task_inbox_body "$candidate"
     }
     fm_task_inbox_write_idempotent "$2" t1 "$3"
-  ' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$state" "$text") \
+  ' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$state" "$text") \
     || fail "idempotent enqueue failed while acknowledgement moved its candidate"
   [ "$result" = "$state/t1.inbox/handled/${rec##*/}" ] \
     || fail "dedup did not follow the concurrently acknowledged record: $result"

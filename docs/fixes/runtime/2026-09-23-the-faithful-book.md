@@ -23,7 +23,7 @@ the assignee's pick and the comments thread; /plans is its own house.
   (the browser couldn't read the session id — the page died silent), and the
   statuses' vocabulary with the review march (Backlog -> Done, the human gate
   at Submitted for Review, Changes Requested's loop).
-- `bin/hall-snapshot.sh` — the scribe reads the smiths true (terminal_title).
+- `bin/time/snotra/hall-snapshot.sh` — the scribe reads the smiths true (terminal_title).
 
 ## Walls slain along the way
 - the server's list rows led with `#` and the parser swallowed it — every
@@ -34,4 +34,4 @@ the assignee's pick and the comments thread; /plans is its own house.
 ## Files
 - `apps/odrerir/src/pages/{tickets,plans,lore}.astro` · `apps/odrerir/src/index.html`
 - `apps/odrerir/src/styles/livehall.css` · `tools/tickets-mcp/server.mjs`
-- `bin/hall-snapshot.sh`
+- `bin/time/snotra/hall-snapshot.sh`

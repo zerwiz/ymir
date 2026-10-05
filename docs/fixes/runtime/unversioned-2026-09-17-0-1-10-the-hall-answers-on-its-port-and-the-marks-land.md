@@ -4,7 +4,7 @@
 - **The SPA listens where it is asked.** A bare `npm run dev` let Vite take 5173,
   so `:3888` answered nothing in either shape; a packaged tree now serves its built
   `./dist` and every shape passes `--port "$HLIDSKJALF_PORT" --strictPort`.
-- **Óðrerir resolves** through `bin/app-lib.sh` instead of the clone's `apps/`.
+- **Óðrerir resolves** through `bin/seat/sessrumnir/app-lib.sh` instead of the clone's `apps/`.
 - **The launcher entries and rune icons land on any Linux desktop** — the
   freedesktop half of desktop integration is no longer behind Omarchy's gate, so a
   GNOME operator gets marks at all.

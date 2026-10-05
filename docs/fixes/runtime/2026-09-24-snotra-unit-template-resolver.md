@@ -22,7 +22,7 @@ the exact missing artifact — which is precisely what the 2026-09-24 autoboot w
 do. A gap this shape used to be invisible.
 
 ### What
-- `bin/fleet-ensure.sh` — `PROGRAM_UNIT_SRC()` now resolves `snotra` with the rest of the
+- `bin/fleet/fleet-ensure.sh` — `PROGRAM_UNIT_SRC()` now resolves `snotra` with the rest of the
   mill/offices.
 
 ### Verified
@@ -30,4 +30,4 @@ do. A gap this shape used to be invisible.
   `ymir.target.wants/`, and raises it; `:8321` answers.
 
 ### Files
-- `bin/fleet-ensure.sh`
+- `bin/fleet/fleet-ensure.sh`

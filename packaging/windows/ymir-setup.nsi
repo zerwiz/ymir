@@ -2,7 +2,7 @@
 ;
 ; It does one honest thing: install the Windows bootstrap and run it. Ymir's host
 ; on Windows is Ubuntu inside WSL2, so the "installer" sets that up and then
-; hands over to bin/ymir-install.sh inside the distro. It is not a native
+; hands over to bin/engine/ymir-install.sh inside the distro. It is not a native
 ; Windows build of Ymir, and it does not pretend to be.
 ;
 ; Build (from the repo root, on Linux or Windows):

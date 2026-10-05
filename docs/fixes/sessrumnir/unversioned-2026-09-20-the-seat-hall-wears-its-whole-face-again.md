@@ -20,10 +20,10 @@
   regenerated here.
 - **The window's class is `ymir-sessrumnir` now**, not `sessrumnir` — the seat
   shares the house naming with the other halls. The door's focus spell
-  (`bin/sessrumnir.sh`) still hunted the old class, so a click on the icon could
+  (`bin/desktop/sessrumnir.sh`) still hunted the old class, so a click on the icon could
   not raise an already-running window. Mended to `^ymir-sessrumnir$`; the
   `.desktop` entry's `StartupWMClass` already named it right.
 
 ### Files
 - `apps/sessrumnir/package.json`
-- `bin/sessrumnir.sh`
+- `bin/desktop/sessrumnir.sh`

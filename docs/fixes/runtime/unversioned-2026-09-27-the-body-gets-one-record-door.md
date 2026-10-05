@@ -16,7 +16,7 @@ that remembers how to degrade.
 
 - **`bin/bridge/mcp-gateway.sh`** — the door: `serve` (foreground), `start`/`stop`
   (background, pidfile), `status`, `resolve` (the role-resolved upstream map),
-  `sync`, `catalog`. It resolves upstreams through `bin/topology.sh`'s registry
+  `sync`, `catalog`. It resolves upstreams through `bin/fleet/topology.sh`'s registry
   (`$YMIR_HOME/hodd/data/fleet.json`, read at runtime, never shipped) with
   tailnet → LAN → loopback preference, and degrades cleanly when the registry is
   absent (the well still serves loopback).
@@ -31,11 +31,11 @@ that remembers how to degrade.
 - **`bin/bridge/mcp-config.sh`** — now emits the gateway as the door for well/bolthorn/
   skuld (`http://127.0.0.1:8316/mcp/<server>`); the config is role- and
   heart-address-independent, so a heart move is a re-resolve, not a rewire.
-- **`bin/fleet-ensure.sh`** — `wire_mcp` writes the gateway door for the record
+- **`bin/fleet/fleet-ensure.sh`** — `wire_mcp` writes the gateway door for the record
   MCPs (snotra still resolves the heart directly); the `mcp-gateway` unit is
   materialized (web-style, `__YMIR_BIN_DIR__`) and raised; `--well-url` still
   forces an explicit well door past the gateway.
-- **`bin/autoboot-lib.sh`** — `mcp-gateway` is a role-owed program (heart ·
+- **`bin/engine/autoboot-lib.sh`** — `mcp-gateway` is a role-owed program (heart ·
   forge · dev) with its description and the new unit template
   `tools/mill/systemd/mcp-gateway.service`.
 - **`bin/bridge/mcp-gate.sh`** default target unchanged (`mcp-adapter.json`); no door
@@ -56,7 +56,7 @@ that remembers how to degrade.
 Honest scope (also in the PR body): the gateway caches the tool **catalog** and
 last read **results**; it does not replay arbitrary detached writes at the heart
 beyond the journal the P2b fold already owns. Snotra is not behind the gateway
-yet. The unit is raised by `bin/fleet-ensure.sh ensure`; a seat not yet raised
+yet. The unit is raised by `bin/fleet/fleet-ensure.sh ensure`; a seat not yet raised
 reports `mcp:gateway` as a skip, and its configured record doors fail the
 handshake until the raise runs.
 
@@ -68,8 +68,8 @@ galdr-reread: `harness-integration/README.md`, `installation.md`.
 - `tools/mcp-gateway/server.mjs` (new)
 - `tools/mill/systemd/mcp-gateway.service` (new)
 - `bin/bridge/mcp-config.sh`
-- `bin/fleet-ensure.sh`
-- `bin/autoboot-lib.sh`
+- `bin/fleet/fleet-ensure.sh`
+- `bin/engine/autoboot-lib.sh`
 - `.agents/tests/mcp-gateway.test.sh` (new)
 - `.agents/tests/mcp-config.test.sh`
 - `.agents/skills/lifecycle/smoke_test.sh`

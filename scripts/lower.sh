@@ -22,8 +22,8 @@ esac
 
 if [ "$WHAT" != "web" ]; then
   printf '\n— the windows —\n'
-  if [ -x "$ROOT/bin/sessrumnir.sh" ]; then
-    "$ROOT/bin/sessrumnir.sh" stop || printf 'lower: sessrumnir did not stop cleanly\n' >&2
+  if [ -x "$ROOT/bin/desktop/sessrumnir.sh" ]; then
+    "$ROOT/bin/desktop/sessrumnir.sh" stop || printf 'lower: sessrumnir did not stop cleanly\n' >&2
   fi
   "$ROOT/scripts/electron.sh" stop || printf 'lower: electron.sh stop reported errors\n' >&2
 fi

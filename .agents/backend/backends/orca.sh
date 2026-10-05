@@ -244,7 +244,7 @@ fm_backend_orca_composer_caps() {
 # fm_backend_orca_composer_state: thin adapter - capture plus capabilities in,
 # shared verdict out. Every shape (bordered boxes AND the borderless bare-glyph
 # row this adapter never learned, which left every claude/codex/pi/muse steer
-# unconfirmed) lives in bin/fm-composer-lib.sh.
+# unconfirmed) lives in bin/backend/fm-composer-lib.sh.
 fm_backend_orca_composer_state() {  # <terminal-id> [expected-label] -> empty|pending|pending-unproven|unknown
   local cap verdict
   cap=$(fm_backend_orca_composer_capture "$1") || { printf 'unknown'; return 0; }

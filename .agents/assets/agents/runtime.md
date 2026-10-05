@@ -7,10 +7,10 @@ The full runtime spec is `.agents/skills/galdr-ymirsystem/assets/brokk-distro-ru
 
 ```
 pi_boot[6]{figure,mechanism,file}:
-  "Hamr","harness resolution (Pi default profile)","bin/hamr-harness.sh"
+  "Hamr","harness resolution (Pi default profile)","bin/fleet/hamr-harness.sh"
   "Einherjar","dispatch Eindri workers from an Erindi brief","bin/agents/einherjar-spawn.sh"
   "Runtime backend","herdr/tmux pane supervision (Þjazi protocol 14+)","runtime backend"
-  "Supervision","Sýn/Gná watcher + Pi supervision branch under Valhalla","bin/syn-watch-arm.sh, .pi/extensions/gna-pi-watch.ts"
+  "Supervision","Sýn/Gná watcher + Pi supervision branch under Valhalla","bin/pi/syn-watch-arm.sh, .pi/extensions/gna-pi-watch.ts"
   "Worktrees","Yggdrasil (`.yggdrasil/<id>/`) isolation","bin/agents/einherjar-spawn.sh"
   "Huginn observer","read-only (W0012) until Ratatoskr two-way","bin/time/nornir-job-observer.sh"
 ```

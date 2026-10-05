@@ -20,7 +20,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 // THE HALL'S LIVE FEED, AT REQUEST TIME (plan 51 P9c doctrine: resolve at the
 // request, never restate at build). The board reads `/livehall.json`;
-// `bin/hall-snapshot.sh` writes `public/livehall.json` from the real system
+// `bin/time/snotra/hall-snapshot.sh` writes `public/livehall.json` from the real system
 // state (runes · projects · cron · wake · smiths), and ALSO `dist/livehall.json`
 // whenever a dist/ exists. This plugin serves the public/ snapshot from disk on
 // EVERY request, so in the CLONE shape (vite dev, or vite preview with this

@@ -8,7 +8,7 @@ updated): saga-session-start.sh"*.
 ### Fix
 - **`.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md`** — the
   emitted-headers list gains `== UPDATE ==`, and the stage table gains its row
-  (4b): the source is `bin/ymir-update-check.sh`, one cached lookup a day, silent
+  (4b): the source is `bin/gates/checks/ymir-update-check.sh`, one cached lookup a day, silent
   with no network, **exit 3** when a newer version stands.
 
 ### Verification

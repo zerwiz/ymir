@@ -54,10 +54,10 @@ herdr agent list            # states: working · blocked · done · idle · unkn
 
 ## In Ymir
 
-- `bin/pi-seat.sh [--tab] [--task …]` — seat a pi agent (local model) visibly.
+- `bin/pi/pi-seat.sh [--tab] [--task …]` — seat a pi agent (local model) visibly.
 - `bin/agents/eindri-start.sh "<task>" [--pane|--tab|--space]` — role → seat → task.
-- `bin/pi-local.sh` — run a local model headless (print mode).
-- One **local model at a time per machine** — see `bin/local-model-lock.sh` and
+- `bin/pi/pi-local.sh` — run a local model headless (print mode).
+- One **local model at a time per machine** — see `bin/model/local-model-lock.sh` and
   `local_concurrency` in `config/agents.yaml`. Different machines, different
   models; local inference is serialized on a box.
 
@@ -66,7 +66,7 @@ herdr agent list            # states: working · blocked · done · idle · unkn
 ```
 tools[4]{tool,does}:
   "bin/agents/eindri-start.sh \"<task>\" [--pane|--tab|--space]","one command to seat an Eindri visibly"
-  "bin/pi-seat.sh [-n name] [-m model] [--task]","seat a pi agent (local model) in a pane"
+  "bin/pi/pi-seat.sh [-n name] [-m model] [--task]","seat a pi agent (local model) in a pane"
   "bin/agents/eindri-send.sh <agent> \"<text>\" · bin/agents/eindri-control.sh ...","talk to / control a seated agent (data · control plane)"
   "bin/seat/herdr-run.sh","the seat engine that calls herdr agent start/prompt"
 ```
@@ -99,7 +99,7 @@ seat_laws[2]{law,why,how}:
   "a seat never takes the helm","there is ONE lock per machine (brokk.lock); a seat in the main home contends with the primary and evicts its watcher (watcher: FAILED ... no longer owns the lock)","a private BROKK_MACHINE_STATE_DIR per seat, set with --env on tab/pane create"
 ```
 
-Both are wired into `bin/seat/herdr-run.sh` and `bin/pi-seat.sh`. **Note:**
+Both are wired into `bin/seat/herdr-run.sh` and `bin/pi/pi-seat.sh`. **Note:**
 `herdr agent start` has no `--env`; set the variable when the pane or tab is
 created so the shell inherits it. Do not hand-roll a seat with a bare `pi` in the
 main home — that is exactly what breaks both laws.

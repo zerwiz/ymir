@@ -8,7 +8,7 @@ import { encodeRoddOperationalInput } from "./lib/rodd-operational-input.js";
 // Sýn refuses to let a turn end blind. The watcher-arm coordinator acts first on
 // session.idle, so this plugin never races it for the same lifecycle event; only
 // when the coordinator could not arm does the guard call
-// bin/syn-turnend-guard.sh and re-prompt on exit 2. Ported from the upstream
+// bin/gates/guards/syn-turnend-guard.sh and re-prompt on exit 2. Ported from the upstream
 // agent-distro reference and retargeted to the Brokk runtime.
 
 const COORDINATOR_KEY = "__brokkOpenCodeWatchArm";
@@ -52,7 +52,7 @@ function resolvePath(anchor) {
 
 function runGuard(root) {
   if (!root) return Promise.resolve({ code: 0, stderr: "" });
-  return runProcess(`${root}/bin/syn-turnend-guard.sh`, [], '{"stop_hook_active":false}');
+  return runProcess(`${root}/bin/gates/guards/syn-turnend-guard.sh`, [], '{"stop_hook_active":false}');
 }
 
 async function letWatchArmRun(sessionID, client) {

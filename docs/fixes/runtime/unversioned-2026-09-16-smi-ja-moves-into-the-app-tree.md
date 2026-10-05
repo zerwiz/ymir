@@ -6,7 +6,7 @@
   hlidskjalf, odrerir and sessrumnir under `apps/`.
 - **Path-transparent.** `.agents/skills/smidja-factory` is now a symlink to
   `../../apps/smidja-factory`, so every existing path resolves unchanged —
-  `scripts/start.sh`, `bin/ymir-install.sh`, `bin/ymir-validate.sh`, and the
+  `scripts/start.sh`, `bin/engine/ymir-install.sh`, `bin/engine/ymir-validate.sh`, and the
   skill loader (`.agents/skills` is a skills path). `node_modules/` stays
   gitignored and is not carried.
 - **Still open** (recorded, not done): the root `smidja/` runtime tree

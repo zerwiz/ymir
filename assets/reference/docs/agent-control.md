@@ -2,10 +2,10 @@
 
 Firstmate talks to a running agent two ways, and they are not the same channel.
 
-The **data plane** is [`bin/backend/fm-send.sh`](../bin/fm-send.sh): conversational text for the agent to read.
+The **data plane** is [`bin/backend/fm-send.sh`](../bin/backend/fm-send.sh): conversational text for the agent to read.
 For a `kind=secondmate` target it always prepends the from-firstmate routing marker, because a secondmate is itself a firstmate and its reply must come back through the status path rather than a chat nobody reads.
 
-The **control plane** is [`bin/backend/fm-control.sh`](../bin/fm-control.sh): allowlisted lifecycle verbs addressed to an exact task id.
+The **control plane** is [`bin/backend/fm-control.sh`](../bin/backend/fm-control.sh): allowlisted lifecycle verbs addressed to an exact task id.
 
 The split exists because the data plane's marking is exactly right for a message and exactly wrong for a lifecycle command.
 A routing-marked `/quit` arrives as ordinary chat - `[fm-from-firstmate] /quit` - which the agent reasons about instead of executing.
@@ -45,7 +45,7 @@ The clear is refused before anything is sent when the recorded backend cannot de
 
 **Teardown and discard are not verbs and will not become verbs.**
 `exit` stops an agent and preserves everything else.
-Removing a worktree, closing an endpoint, or discarding work stays with [`bin/backend/fm-teardown.sh`](../bin/fm-teardown.sh), which owns the landed-work test.
+Removing a worktree, closing an endpoint, or discarding work stays with [`bin/backend/fm-teardown.sh`](../bin/backend/fm-teardown.sh), which owns the landed-work test.
 
 **`resume` is not a verb.**
 It is not deterministic across the verified adapters: codex and grok resume only from a session id printed at exit, opencode continues the most recent session for the cwd, and claude, pi, pi-signed, and kimi have no verified pane-resume contract.

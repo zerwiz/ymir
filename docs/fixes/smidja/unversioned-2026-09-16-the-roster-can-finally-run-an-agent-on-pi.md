@@ -1,7 +1,7 @@
 ## smidja · unversioned · 2026-09-16 — the roster can finally run an agent on Pi
 
 ### Why
-`bin/agents-config.sh apply` wrote **every** agent's model into `opencode.json`'s
+`bin/fleet/agents-config.sh apply` wrote **every** agent's model into `opencode.json`'s
 agent block, whatever harness that agent used. So an agent set to run on **Pi**
 (native local models) would have had its Pi model id —
 `llamacpp/qwen3.5-9b` — written into OpenCode's config, which cannot resolve it.

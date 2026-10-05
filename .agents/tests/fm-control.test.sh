@@ -22,12 +22,12 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-control-lib.sh"
+. "$ROOT/bin/backend/fm-control-lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-marker-lib.sh"
+. "$ROOT/bin/backend/fm-marker-lib.sh"
 
-CONTROL="$ROOT/bin/fm-control.sh"
-SEND="$ROOT/bin/fm-send.sh"
+CONTROL="$ROOT/bin/backend/fm-control.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
 # fm_test_tmproot's own cleanup trap fires when its command substitution exits,
 # so recreate the root before resolving it and clean it up from this file's trap.
 TMP_ROOT=$(fm_test_tmproot fm-control)
@@ -534,7 +534,7 @@ test_remote_secondmate_is_refused_by_placement() {
 
 hold_lifecycle_lock() {  # <lock-path>
   local lifecycle_lock_path=$1
-  . "$ROOT/bin/fm-wake-lib.sh"
+  . "$ROOT/bin/backend/fm-wake-lib.sh"
   fm_lock_try_acquire "$lifecycle_lock_path" || return 1
   sleep 30
 }
@@ -670,7 +670,7 @@ test_busy_agent_is_interrupted_before_the_exit_command() {
   alive_as "$dir" claude
   # Arm the semantic busy contract and record a busy turn, exactly as the
   # harness's own lifecycle hook would.
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$dir/home/state" t1)
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$dir/home/state" t1)
   printf 'busy_gen=%s\n' "$gen" >> "$dir/home/state/t1.meta"
   out=$(run_control "$dir" t1 exit); rc=$?
   expect_code 0 "$rc" "exiting a busy agent should succeed"$'\n'"$out"
@@ -685,7 +685,7 @@ test_idle_agent_is_not_interrupted() {
   dir=$(new_case idle)
   add_task "$dir" t1 claude
   alive_as "$dir" claude
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$dir/home/state" t1 --state idle --source fm-spawn --event seed)
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$dir/home/state" t1 --state idle --source fm-spawn --event seed)
   printf 'busy_gen=%s\n' "$gen" >> "$dir/home/state/t1.meta"
   out=$(run_control "$dir" t1 exit); rc=$?
   expect_code 0 "$rc" "exiting an idle agent should succeed"$'\n'"$out"
@@ -700,7 +700,7 @@ test_interrupt_without_acknowledgement_preserves_busy_state() {
   dir=$(new_case unconfirmed)
   add_task "$dir" t1 claude
   alive_as "$dir" claude
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$dir/home/state" t1)
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$dir/home/state" t1)
   printf 'busy_gen=%s\n' "$gen" >> "$dir/home/state/t1.meta"
   before=$(cat "$dir/home/state/t1.busy-state")
   out=$(run_control "$dir" t1 interrupt); rc=$?
@@ -762,7 +762,7 @@ test_exit_accepts_agent_stopped_by_busy_interrupt() {
   dir=$(new_case interrupt-stops)
   add_task "$dir" t1 claude
   alive_as "$dir" claude
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$dir/home/state" t1)
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$dir/home/state" t1)
   printf 'busy_gen=%s\n' "$gen" >> "$dir/home/state/t1.meta"
   out=$(FM_FAKE_INTERRUPT_STOPS_AGENT=1 run_control "$dir" t1 exit); rc=$?
   expect_code 0 "$rc" "exit should accept a busy agent stopped by interrupt"$'\n'"$out"
@@ -782,7 +782,7 @@ test_agent_that_does_not_stop_fails_closed() {
   dir=$(new_case stubborn)
   add_task "$dir" t1 claude
   alive_as "$dir" claude
-  gen=$("$ROOT/bin/fm-busy-event.sh" arm "$dir/home/state" t1)
+  gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$dir/home/state" t1)
   printf 'busy_gen=%s\n' "$gen" >> "$dir/home/state/t1.meta"
   out=$(env FM_FAKE_NEVER_DIES=1 PATH="$dir/fakebin:$PATH" FM_HOME="$dir/home" \
     FM_FAKE_DIR="$dir/fake" FM_CONTROL_POLL=0.01 FM_CONTROL_EXIT_WAIT=0.05 \
@@ -865,7 +865,7 @@ test_fm_send_still_marks_the_same_secondmate_task() {
   expect_code 0 "$rc" "fm-send to a secondmate should still succeed"$'\n'"$out"
   # The marked steer rides fm-send's durable inbox plane; only the doorbell is
   # typed, so the marker is asserted on the recorded body.
-  case "$(bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" \
+  case "$(bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" \
     "$dir/home/state/domain.inbox/001.msg")" in
     "$FM_FROMFIRST_MARK"*) : ;;
     *) fail "fm-send must still mark a kind=secondmate target: $(literals "$dir")" ;;

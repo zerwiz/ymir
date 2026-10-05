@@ -586,9 +586,9 @@ reins. When Sága speaks at session open, she binds Gleipnir so no other harness
 may hold the seat. The lock is a file (`.lock`) that holds the live PID of the
 harness process; when the process dies, the lock breaks.
 
-- `bin/gleipnir-lock-lib.sh` — lock/unlock primitives
-- `bin/brokk-lease.sh` — acquire/release a lease (Gleipnir's grip)
-- `bin/brokk-lease-lib.sh` — lease helpers
+- `bin/vault/gleipnir-lock-lib.sh` — lock/unlock primitives
+- `bin/agents/brokk-lease.sh` — acquire/release a lease (Gleipnir's grip)
+- `bin/agents/brokk-lease-lib.sh` — lease helpers
 
 **Rule:** a broken lock means the seat is free; a held lock means the seat is
 occupied. No two sessions may hold the same seat.
@@ -601,8 +601,8 @@ is the **branch outcome tracker** — every branch that enters the tree is given
 a prompt, a review, and an outcome. The outcomes are durable; they survive
 reboots, resets, and context compaction.
 
-- `bin/skuld-branch-prompt.sh` — generate the review prompt for a branch
-- `bin/skuld-branch-outcome.sh` — record the outcome (approved, rejected,
+- `bin/skuld/skuld-branch-prompt.sh` — generate the review prompt for a branch
+- `bin/skuld/skuld-branch-outcome.sh` — record the outcome (approved, rejected,
   merged, abandoned)
 
 **Rule:** no branch merges without Skuld's verdict. The outcome is carved into
@@ -638,7 +638,7 @@ monitored.
 nothing escapes her. In Ymir, Vor is the **diagnostics and Eindri state** engine.
 She bootstraps the fleet, checks Eindri state, and reports health.
 
-- `bin/vor-crew-state.sh` — check the state of all Eindri workers
+- `bin/records/vor-crew-state.sh` — check the state of all Eindri workers
 - `vor-diagnostics` skill — bootstrap + diagnostic reasoning
 
 **Rule:** Vor runs before every dispatch. If the Eindri are unhealthy, the dispatch
@@ -668,7 +668,7 @@ forms to accomplish different tasks. In Ymir, Hamr is the **harness adapter** �
 it translates between different agent harnesses (Pi, OpenCode, Claude Code,
 Cursor) and presents a unified interface.
 
-- `bin/hamr-harness.sh` — harness adapter script
+- `bin/fleet/hamr-harness.sh` — harness adapter script
 - `hamr` skill — per-harness adapter reference
 
 **Rule:** Hamr adapts; it does not decide. The harness shape changes; the
@@ -766,8 +766,8 @@ the tools.
 channels (X/Twitter, Discord) from inside the fleet.
 
 - `gjallarhorn-relay` skill — public relay replies (X/Discord)
-- `bin/gjallarhorn-notify.sh` — notify script
-- `bin/telegram-bot.sh` — Telegram bot integration
+- `bin/forge/gjallarhorn-notify.sh` — notify script
+- `bin/desktop/telegram-bot.sh` — Telegram bot integration
 
 **Rule:** Gjallarhorn-relay speaks only what the fleet has decided. It does
 not originate; it broadcasts.
@@ -837,8 +837,8 @@ company's internals in a public repo.
 **workspace RAG database** — it indexes every file, every commit, every change,
 so that recall is fast and accurate.
 
-- `bin/wyrd-db.sh` — Wyrd database operations
-- `bin/workspace-rag.sh` — workspace RAG indexing
+- `bin/records/wyrd-db.sh` — Wyrd database operations
+- `bin/records/workspace-rag.sh` — workspace RAG indexing
 
 **Rule:** Wyrd remembers everything. It does not judge; it retrieves.
 
@@ -849,7 +849,7 @@ so that recall is fast and accurate.
 **The toolchain** is the unified entry point for all Ymir operations. It wraps
 individual scripts, validates arguments, and routes to the right tool.
 
-- `bin/toolchain.sh` — unified toolchain entry point
+- `bin/gates/toolchain.sh` — unified toolchain entry point
 - `justfile` — task runner (replaces Makefile)
 
 **Rule:** The toolchain is the door. Everything enters through it.
@@ -1018,7 +1018,7 @@ fast-forward, and skipping anything dirty, diverged, or offline — then mends t
 tree forward through its migrations and fleet preferences. **Brokk** runs her;
 **Galdr** owns the assets she must be reflected in the moment the instruction
 surface moves (`galdr-reread`); the `groa-update` skill (`/updateBrokk`) is her
-door. She lives in `bin/groa-update.sh`; `bin/brokk-update.sh` is her old name,
+door. She lives in `bin/agents/groa-update.sh`; `bin/agents/brokk-update.sh` is her old name,
 kept as an alias.
 
 **Eir** is the goddess of healing, counted the best of physicians — she who
@@ -1026,7 +1026,7 @@ mends and spares. In Ymir she is the **doctor**: she composes every surface that
 owns its own health (the `*-ensure.sh` tools, the memory well, the MCP wiring,
 the session lock, the migrations), tells the Allfather plainly which are whole
 and which are broken, and — on `fix` — mends what can be mended safely. Gróa
-keeps the tree *current*; Eir makes it *work*. She lives in `bin/eir-doctor.sh`.
+keeps the tree *current*; Eir makes it *work*. She lives in `bin/agents/eir-doctor.sh`.
 
 Where **Gleipnir** binds one session to the reins and **Sýn** keeps the watch,
 Gróa and Eir keep the machine itself alive between those sessions: the one

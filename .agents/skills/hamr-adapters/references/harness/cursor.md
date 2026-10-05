@@ -26,7 +26,7 @@ The slash popup consumes the first Enter; that Enter closes it and a genuine sec
 ## Detection
 
 Cursor does not clear inherited `CLAUDECODE`, so a Cursor worker under Claude carries both markers.
-`../../../bin/hamr-harness.sh` tests Cursor first, and launch also clears foreign markers.
+`../../../bin/fleet/hamr-harness.sh` tests Cursor first, and launch also clears foreign markers.
 Both remain necessary: sanitization covers Brokk launches, ordering covers hand-started sessions.
 
 Cursor is a bundled Node script, so tmux can report bare `node` while `ps -o comm=` carries its install path.

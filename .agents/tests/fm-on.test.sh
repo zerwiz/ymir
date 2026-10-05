@@ -21,8 +21,8 @@ SSH_LOG="$TMP_ROOT/ssh.log"
 SSH_COUNT="$TMP_ROOT/ssh.count"
 mkdir -p "$LOCAL_HOME/data" "$REMOTE_ROOT/bin" "$REMOTE_HOME"
 printf 'fixture\n' > "$REMOTE_ROOT/AGENTS.md"
-cp "$ROOT/bin/fm-remote-entrypoint.sh" "$ROOT/bin/fm-remote-job-lib.sh" \
-  "$ROOT/bin/fm-remote-job-worker.sh" "$REMOTE_ROOT/bin/"
+cp "$ROOT/bin/backend/fm-remote-entrypoint.sh" "$ROOT/bin/backend/fm-remote-job-lib.sh" \
+  "$ROOT/bin/backend/fm-remote-job-worker.sh" "$REMOTE_ROOT/bin/"
 
 cat > "$REMOTE_ROOT/bin/fm-probe-one.sh" <<'SH'
 #!/usr/bin/env bash
@@ -54,8 +54,8 @@ case "\${1:-}:\${2:-}" in
   mv:--help) printf '%s\n' 'usage: tasks-axi mv <id> [<id>...]' ;;
 esac
 SH
-cp "$ROOT/bin/fm-remote-doctor.sh" "$ROOT/bin/fm-tasks-axi-lib.sh" \
-  "$ROOT/bin/fm-backend.sh" "$REMOTE_ROOT/bin/"
+cp "$ROOT/bin/backend/fm-remote-doctor.sh" "$ROOT/bin/backend/fm-tasks-axi-lib.sh" \
+  "$ROOT/bin/backend/fm-backend.sh" "$REMOTE_ROOT/bin/"
 mkdir -p "$REMOTE_ROOT/bin/backends"
 cp "$ROOT/bin/backends/herdr.sh" "$REMOTE_ROOT/bin/backends/herdr.sh"
 cat > "$REMOTE_ROOT/bin/fm-mutate.sh" <<'SH'
@@ -111,10 +111,10 @@ fm_on() {
   FM_SSH_BIN="$FAKEBIN/fake-ssh" \
   FM_FAKE_SSH_COUNT="$SSH_COUNT" \
   FM_FAKE_SSH_LOG="$SSH_LOG" \
-  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
+  FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" \
   FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
   FM_REMOTE_JOB_STATE_ROOT="$TMP_ROOT/remote-jobs" \
-  "$ROOT/bin/fm-on.sh" "$@"
+  "$ROOT/bin/backend/fm-on.sh" "$@"
 }
 
 # The pre-feature user path had no executable transport at all. The regression
@@ -324,7 +324,7 @@ printf 'Linux\n'
 SH
 chmod +x "$DOCTOR_BIN/uname"
 set +e
-out=$(HOME="$DOCTOR_HOME" PATH="$DOCTOR_BIN:/usr/bin:/bin:/usr/sbin:/sbin" "$ROOT/bin/fm-remote-doctor.sh" 2>&1)
+out=$(HOME="$DOCTOR_HOME" PATH="$DOCTOR_BIN:/usr/bin:/bin:/usr/sbin:/sbin" "$ROOT/bin/backend/fm-remote-doctor.sh" 2>&1)
 rc=$?
 set -e
 [ "$rc" -ne 0 ] || fail "the remote doctor passed with a missing required tool"
@@ -350,7 +350,7 @@ printf '#!/usr/bin/env bash\nexit 0\n' > "$DOCTOR_BIN/treehouse"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$DOCTOR_BIN/claude"
 chmod +x "$DOCTOR_BIN/jq" "$DOCTOR_BIN/herdr" "$DOCTOR_BIN/tasks-axi" "$DOCTOR_BIN/treehouse" "$DOCTOR_BIN/claude"
 set +e
-out=$(HOME="$DOCTOR_HOME" PATH="$DOCTOR_BIN:/usr/bin:/bin:/usr/sbin:/sbin" "$ROOT/bin/fm-remote-doctor.sh" 2>&1)
+out=$(HOME="$DOCTOR_HOME" PATH="$DOCTOR_BIN:/usr/bin:/bin:/usr/sbin:/sbin" "$ROOT/bin/backend/fm-remote-doctor.sh" 2>&1)
 rc=$?
 set -e
 assert_contains "$out" "required git=$DOCTOR_BIN/git" "the remote doctor did not report where the required tool resolved"
@@ -403,7 +403,7 @@ untracked_home_b64=$(printf '%s' "$REMOTE_HOME" | base64 | tr -d '\n')
 untracked_argv_b64=$(printf '%s\0' fm-untracked.sh | base64 | tr -d '\n')
 set +e
 out=$(FM_GIT_SHADOW_LOG="$GIT_SHADOW_LOG" FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
-  FM_REMOTE_JOB_STATE_ROOT="$TMP_ROOT/remote-jobs" "$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
+  FM_REMOTE_JOB_STATE_ROOT="$TMP_ROOT/remote-jobs" "$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" \
   1 "$untracked_root_b64" "$untracked_home_b64" "$untracked_argv_b64" 2>&1)
 rc=$?
 set -e
@@ -427,7 +427,7 @@ out=$(
 )
 set -e
 assert_contains "$out" 'mode=check' "the trusted doctor could not bootstrap while git was unavailable"
-printf '\n' >> "$REMOTE_ROOT/bin/fm-remote-doctor.sh"
+printf '\n' >> "$REMOTE_ROOT/bin/backend/fm-remote-doctor.sh"
 set +e
 out=$(
   # shellcheck disable=SC2329 # Exported for indirect use by fm_on.
@@ -443,12 +443,12 @@ set -e
 [ "$rc" -ne 0 ] || fail "an altered doctor bootstrapped without tracked-command validation"
 assert_contains "$out" 'doctor does not match the trusted bootstrap identity' \
   "an altered doctor did not fail closed when git was unavailable"
-cp "$ROOT/bin/fm-remote-doctor.sh" "$REMOTE_ROOT/bin/fm-remote-doctor.sh"
-chmod +x "$REMOTE_ROOT/bin/fm-remote-doctor.sh"
+cp "$ROOT/bin/backend/fm-remote-doctor.sh" "$REMOTE_ROOT/bin/backend/fm-remote-doctor.sh"
+chmod +x "$REMOTE_ROOT/bin/backend/fm-remote-doctor.sh"
 pass "doctor bootstrap remains authenticated when git is unavailable"
 
 if FM_HOME="$LOCAL_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" FM_SSH_BIN="$FAKEBIN/fake-ssh" \
-  "$ROOT/bin/fm-on.sh" '-oProxyCommand=bad' fm-probe-two.sh >/dev/null 2>&1; then
+  "$ROOT/bin/backend/fm-on.sh" '-oProxyCommand=bad' fm-probe-two.sh >/dev/null 2>&1; then
   fail "an option-shaped SSH route was accepted"
 fi
 ssh_before_bad_path=$(cat "$SSH_COUNT")
@@ -465,11 +465,11 @@ pass "transport rejects shell escape, traversal, symlink, and option-injection s
 root_b64=$(printf '%s' "$REMOTE_ROOT" | base64 | tr -d '\n')
 home_b64=$(printf '%s' "$REMOTE_HOME" | base64 | tr -d '\n')
 argv_b64=$(printf '%s\0' fm-probe-two.sh | base64 | tr -d '\n')
-if "$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" 2 "$root_b64" "$home_b64" "$argv_b64" >/dev/null 2>&1; then
+if "$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" 2 "$root_b64" "$home_b64" "$argv_b64" >/dev/null 2>&1; then
   fail "an incompatible transport protocol was accepted"
 fi
 traversal_root_b64=$(printf '%s' "$REMOTE_ROOT/../remote-root" | base64 | tr -d '\n')
-if "$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" 1 "$traversal_root_b64" "$home_b64" "$argv_b64" >/dev/null 2>&1; then
+if "$REMOTE_ROOT/bin/backend/fm-remote-entrypoint.sh" 1 "$traversal_root_b64" "$home_b64" "$argv_b64" >/dev/null 2>&1; then
   fail "the fixed entrypoint accepted traversal in the configured root"
 fi
 pass "the fixed entrypoint refuses incompatible protocols and unsafe roots"

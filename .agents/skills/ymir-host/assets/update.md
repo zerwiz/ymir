@@ -26,7 +26,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
 
 1. **Run the updater:**
    ```sh
-   bin/brokk-update.sh
+   bin/agents/brokk-update.sh
    ```
    It fast-forwards this Brokk repo's default branch from origin, then updates every registered local or remote Eindri-home home through its placement-specific guarded path.
    It prints one status line per target (`updated <old>..<new>` / `already current` / `skipped: <reason>`), followed by two action lines that tell you exactly what to do next:
@@ -41,7 +41,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
 3. **Nudge each updated live Eindri-home.**
    For every target listed on the `nudge-eindri-homes:` line (do nothing when it says `none`), send a one-line re-read nudge so that Eindri-home picks up its new instructions too:
    ```sh
-   BROKK_HOME=<this-Brokk-home> bin/brokk-send.sh <id> 'Brokk was updated to the latest - please re-read your AGENTS.md to pick up the new instructions.'
+   BROKK_HOME=<this-Brokk-home> bin/agents/brokk-send.sh <id> 'Brokk was updated to the latest - please re-read your AGENTS.md to pick up the new instructions.'
    ```
    Include `BROKK_HOME=<this-Brokk-home>` unless `BROKK_HOME` is already set to the active Brokk home.
    This is a gentle steer, not an interruption: the Eindri-home already got a safe tracked-files fast-forward, and the nudge never forces, tears down, or discards its work.

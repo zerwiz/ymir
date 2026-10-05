@@ -23,11 +23,11 @@ eval "$(bin/vault/hodd.sh emit tenants/<tenant>/.env)"   # or: bin/vault/hodd.sh
 
 ## The guards
 
-- **Outer ward** — `bin/secret-guard.sh`: blocks a commit that stages a private
+- **Outer ward** — `bin/gates/guards/secret-guard.sh`: blocks a commit that stages a private
   env file or an obvious secret. Install once:
   ```bash
-  bin/secret-guard.sh --install     # .git/hooks/pre-commit
-  bin/secret-guard.sh --all         # scan every tracked file (also runs in CI)
+  bin/gates/guards/secret-guard.sh --install     # .git/hooks/pre-commit
+  bin/gates/guards/secret-guard.sh --all         # scan every tracked file (also runs in CI)
   ```
   Test fixtures that contain fake secret-shaped strings go in
   `.secret-guardignore`.
@@ -42,11 +42,11 @@ Rotation first — rewriting history does not un-leak a key.
 # 1) revoke the key at the provider, mint a new one, update where it lives
 # 2) purge it from history:
 cd ~/Ymir && git status --porcelain          # must be empty
-bin/repo-scrub.sh --dry-run <paths…>
-bin/repo-scrub.sh --yes <paths…>             # mirrors a backup to /tmp, rewrites
+bin/gates/repo-scrub.sh --dry-run <paths…>
+bin/gates/repo-scrub.sh --yes <paths…>             # mirrors a backup to /tmp, rewrites
 git remote add origin <url>                  # filter-repo drops origin
 git push --force --all && git push --force --tags
-bin/secret-guard.sh --all                    # expect CLEAN
+bin/gates/guards/secret-guard.sh --all                    # expect CLEAN
 ```
 Force-push rewrites the remote — any other clone must be re-cloned.
 

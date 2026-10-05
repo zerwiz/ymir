@@ -6,7 +6,7 @@
   `heimdall` (the way in) · `invite` · `smidja` (the board) · `hlidskjalf` ·
   `sessrumnir` · `mimir` · `sense` · `plan`. Before this, the package put two
   commands on PATH and neither could raise the app or the board.
-- **The cloth.** `bin/ymir-style.sh` — colour and marks cut from the halls' own
+- **The cloth.** `bin/desktop/ymir-style.sh` — colour and marks cut from the halls' own
   tokens (bone · bronze · steel · blood), shown only where a human watches, with
   the data left as TOON on stdout. The plan, the installer, the validate report
   and Eir all wear it.
@@ -17,7 +17,7 @@
 - **The icons.** One truth where three maps disagreed, and no claim of a glyph
   nobody drew: Óðrerir wears ansuz, Sessrúmnir othala, the smithy's icon is named
   for the smithy.
-- **The repair.** `4dd7273`'s hand-merge left `bin/ymir-install.sh` and
+- **The repair.** `4dd7273`'s hand-merge left `bin/engine/ymir-install.sh` and
   `scripts/start.sh` unparseable on main; both restored. Every runtime script
   parses again.
 

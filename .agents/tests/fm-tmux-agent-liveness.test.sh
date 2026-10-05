@@ -78,7 +78,7 @@ SH
 chmod +x "$LAB/bin/agent-launcher"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 fm_backend_source tmux || fail "fm_backend_source tmux failed"
 
 "$REAL_TMUX" -L "$SOCKET" new-session -d -s "$SESSION" -n idle -c "$LAB/wt" \
@@ -266,7 +266,7 @@ pass "tmux liveness: an absent window classifies missing rather than inheriting 
 # blind so the case cannot go quietly vacuous.
 
 # shellcheck source=bin/backend/fm-tmux-lib.sh
-. "$ROOT/bin/fm-tmux-lib.sh"
+. "$ROOT/bin/backend/fm-tmux-lib.sh"
 
 ln -s "$SLEEP_BIN" "$LAB/bin/cursor-agent"
 ln -s "$SLEEP_BIN" "$LAB/bin/notcursor"

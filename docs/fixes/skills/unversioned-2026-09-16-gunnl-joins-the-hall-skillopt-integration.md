@@ -6,7 +6,7 @@
   self-evolution (`skillopt-sleep`) available for Smíðja prompts and
   Ymir skills. Nightly Nornir job at 00:30 (bin/time/nornir-job-skillopt-sleep.sh),
   staged artifacts only — Allfather approves before adopt. One-time setup:
-  `bin/skillopt-setup.sh`.
+  `bin/forge/skillopt-setup.sh`.
 - **Naming.** SkillOpt adopted the name **Gunnlöð** (keeper of the mead of
   poetry — distills trajectories into refined skill artifacts). Added to
   `.agents/assets/agents/naming.md` (platform map, 28 subsystems),

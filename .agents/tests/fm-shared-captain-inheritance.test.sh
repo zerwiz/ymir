@@ -9,7 +9,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-config-inherit-lib.sh"
+. "$ROOT/bin/backend/fm-config-inherit-lib.sh"
 
 BASE_PATH=${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
 TMP_ROOT=$(fm_test_tmproot fm-shared-captain)
@@ -274,7 +274,7 @@ new_git_world() {
   } > "$root/.gitignore"
   printf '%s\n' "instructions" > "$root/AGENTS.md"
   mkdir -p "$root/bin" "$root/.agents/skills"
-  printf '%s\n' "echo spawn" > "$root/bin/fm-spawn.sh"
+  printf '%s\n' "echo spawn" > "$root/bin/backend/fm-spawn.sh"
   printf '%s\n' "skill" > "$root/.agents/skills/example.md"
   git -C "$root" add -A
   git -C "$root" commit -qm initial
@@ -303,7 +303,7 @@ EOF
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$data_override" \
     FM_PROJECTS_OVERRIDE="$home/projects" FM_CONFIG_OVERRIDE="$home/config" \
     FM_SPAWN_NO_GUARD=1 \
-    "$ROOT/bin/fm-spawn.sh" sm "$sm" codex --secondmate >/dev/null 2>&1 || true
+    "$ROOT/bin/backend/fm-spawn.sh" sm "$sm" codex --secondmate >/dev/null 2>&1 || true
 
   cmp -s "$data_override/captain-shared.md" "$sm/data/captain-shared.md" \
     || fail "spawn convergence point did not copy shared captain preferences from FM_DATA_OVERRIDE"
@@ -331,7 +331,7 @@ EOF
 
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$root" \
     FM_DATA_OVERRIDE="$data_override" \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null)
 
   assert_not_contains "$out" "SECONDMATE_SYNC: secondmate sm: skipped: inheritance failed" \
     "bootstrap inheritance should succeed"
@@ -360,7 +360,7 @@ EOF
 
   out=$(PATH="$BASE_PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$root" \
     FM_DATA_OVERRIDE="$data_override" \
-    "$ROOT/bin/fm-config-push.sh" 2>/dev/null)
+    "$ROOT/bin/backend/fm-config-push.sh" 2>/dev/null)
 
   assert_contains "$out" "data/captain-shared.md: pushed - quarantined local drift at" \
     "config-push should report the shared file update and quarantine"
@@ -381,7 +381,7 @@ EOF
   fm_fake_exit0 "$fakebin" pgrep
 
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$root" \
-    "$ROOT/bin/fm-session-start.sh")
+    "$ROOT/bin/backend/fm-session-start.sh")
 
   assert_contains "$out" "data/captain-shared.md (shared, main-authoritative, read-only in secondmate homes)" \
     "session-start digest should label the shared captain file unmistakably"

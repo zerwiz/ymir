@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Compatibility source for real-Herdr tests.
 # The production owner of the isolation, refuse-default, teardown, and
-# fleet-state tripwire contract is bin/fm-herdr-lab.sh.
+# fleet-state tripwire contract is bin/backend/fm-herdr-lab.sh.
 set -u
 
 # Herdr backend tests drive the real fm-spawn/fm-teardown but do not source
@@ -12,7 +12,7 @@ export FM_GATE_REFUSE_BYPASS=1
 
 HERDR_TEST_SAFETY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=/dev/null
-. "$HERDR_TEST_SAFETY_DIR/bin/fm-herdr-lab.sh"
+. "$HERDR_TEST_SAFETY_DIR/bin/backend/fm-herdr-lab.sh"
 
 # herdr_forget_inherited_pane: drop the Herdr PANE identity this test process
 # inherited from whatever terminal it was started in.

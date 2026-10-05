@@ -12,7 +12,7 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-wake-drain-unread-status-tests)
 
@@ -193,8 +193,8 @@ test_snapshot_does_not_ack_a_later_append() {
 
   FM_STATE_OVERRIDE="$state" bash -c '
     set -u
-    . "$1/bin/fm-wake-lib.sh"
-    . "$1/bin/fm-classify-lib.sh"
+    . "$1/bin/backend/fm-wake-lib.sh"
+    . "$1/bin/backend/fm-classify-lib.sh"
     snapshot=$(status_presentation_snapshot "$STATE")
     scan_unread_surface_snapshot "$STATE" "$snapshot" > "$2"
     printf "note: appended after presentation snapshot\n" >> "$STATE/task-race.status"
@@ -222,8 +222,8 @@ test_retired_task_id_starts_new_status_unread() {
     || fail "drain failed while acknowledging pre-retirement histories"
 
   FM_STATE_OVERRIDE="$state" bash -c '
-    . "$1/bin/fm-wake-lib.sh"
-    . "$1/bin/fm-classify-lib.sh"
+    . "$1/bin/backend/fm-wake-lib.sh"
+    . "$1/bin/backend/fm-classify-lib.sh"
     _fm_open_decisions_file_ident "$STATE/reused.status" > "$2"
     printf "40@$(cat "$2")" > "$(status_signal_seen_marker_path "$STATE" reused)"
     printf "40@$(cat "$2")" > "$(status_heartbeat_seen_marker_path "$STATE" reused)"
@@ -241,13 +241,13 @@ test_retired_task_id_starts_new_status_unread() {
   old_ident=$(cat "$dir/old-ident")
   printf '40@%s' "$old_ident" > "$state/.seen-reused_status"
   offset=$(bash -c '
-    . "$1/bin/fm-wake-lib.sh"
-    . "$1/bin/fm-classify-lib.sh"
+    . "$1/bin/backend/fm-wake-lib.sh"
+    . "$1/bin/backend/fm-classify-lib.sh"
     fm_wake_signal_seen_size "$2" "$2/reused.status"
   ' _ "$ROOT" "$state")
   [ "$offset" = 0 ] || fail "a retired file identity restored a stale offset after task reuse"
   event=$(bash -c '
-    . "$1/bin/fm-classify-lib.sh"
+    . "$1/bin/backend/fm-classify-lib.sh"
     status_span_first_actionable "$2/reused.status" "$3"
   ' _ "$ROOT" "$state" "$offset")
   [ "$event" = 'blocked: release host unavailable' ] \

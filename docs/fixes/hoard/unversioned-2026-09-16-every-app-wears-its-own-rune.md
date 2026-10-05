@@ -5,7 +5,7 @@ The icon set is runecoded (`midgard/design-system/icons.md`): an Elder Futhark
 rune, stroked at the chisel bevel, tinted by the app's house colour. The apps were
 wearing the generic Ymir mark — or, worse, the old **blue** logo.
 
-- **`bin/design-icon.sh`** mints an app's icon from a glyph plus a house tint: a
+- **`bin/desktop/design-icon.sh`** mints an app's icon from a glyph plus a house tint: a
   stone tile with the rune stroked in bronze. `list` shows the mapping.
 - Minted and wired: **Hlidskjalf** `ehwaz` ᛖ (the seat), **Óðrerir** `valhalla` ᚹ
   (the hall), **Sessrúmnir** `sowilo` ᛊ (the sun), **Smíðja** `ansuz` ᚨ (Odin's

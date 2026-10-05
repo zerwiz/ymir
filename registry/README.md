@@ -13,5 +13,5 @@ memory, companies). It is deliberately untracked:
   never inherits another operator's data.
 - Only the scaffold (`README.md`, `INSTALL.md`, `*.yaml`) and config examples
   are tracked, so the runtime has a shape without carrying private content.
-- `bin/secret-guard.sh` blocks a commit that stages a private env file or an
-  obvious secret. Wire it once with `bin/secret-guard.sh --install`.
+- `bin/gates/guards/secret-guard.sh` blocks a commit that stages a private env file or an
+  obvious secret. Wire it once with `bin/gates/guards/secret-guard.sh --install`.

@@ -5,28 +5,28 @@ rewrite of it.*
 
 ### Why
 The first landing gave the ear to heimdall: the MCP face and the unit were
-materialized by `bin/fleet-ensure.sh`, but the **transcription engine had no
+materialized by `bin/fleet/fleet-ensure.sh`, but the **transcription engine had no
 ensure step** and the capture/transcribe commands were not materialized. The
 Allfather asked whether this was functional *on installations* — it was not.
 
 ### What landed
-- **`bin/snotra-ensure.sh`** (new) — reports the seat's whisper engine + model
+- **`bin/time/snotra/snotra-ensure.sh`** (new) — reports the seat's whisper engine + model
   and installs what is missing. Per-OS: `pacman -S whisper-cpp` (Arch/omarchy),
   `apt-get install whisper.cpp` (Debian), else build-from-source guidance. Model
   fetched from the whisper.cpp Hugging Face release; a voxtype seat keeps its
   models. `status` / `ensure [--install]` / `install`.
-- **`bin/ymir-install.sh`** — `step_snotra` ("the meeting ear") registered in the
+- **`bin/engine/ymir-install.sh`** — `step_snotra` ("the meeting ear") registered in the
   run list; `STEP_TOTAL` 23 → 24. A fresh install now ensures the engine.
-- **`bin/eir-doctor.sh`** — the `snotra` surface (`s_snotra` / `f_snotra`),
+- **`bin/agents/eir-doctor.sh`** — the `snotra` surface (`s_snotra` / `f_snotra`),
   composed with the other ensure scripts.
-- **`bin/fleet-ensure.sh`** — materializes `snotra-capture.sh`,
+- **`bin/fleet/fleet-ensure.sh`** — materializes `snotra-capture.sh`,
   `snotra-transcribe.sh`, `snotra-ensure.sh` and `runes-append.sh` into
   `~/.fleet`, so any seat runs them without a repo checkout on its PATH.
-- **`bin/snotra-transcribe.sh`** — portable engine discovery (env → PATH → the
+- **`bin/time/snotra/snotra-transcribe.sh`** — portable engine discovery (env → PATH → the
   fleet's build trees → `voxtype transcribe`); 16 kHz mono normalisation;
   `LD_LIBRARY_PATH` set for a build-tree binary (whynot's `libwhisper.so.1` is
   not system-wide); GPU/CPU chosen by free VRAM, with a CPU retry on GPU failure.
-- **`bin/snotra-capture.sh`** — the duration bug fixed (see below); `-t` is now
+- **`bin/time/snotra/snotra-capture.sh`** — the duration bug fixed (see below); `-t` is now
   an output option with a default safety cap; stale `state/.snotra-*` markers are
   cleared on start; `devices` subcommand added.
 
@@ -53,11 +53,11 @@ Proven end-to-end on all three seats: a real speech WAV transcribed and
 summarised on heimdall, whynot and omarchy.
 
 ### Files
-- `bin/snotra-ensure.sh` (new)
-- `bin/snotra-capture.sh`
-- `bin/snotra-transcribe.sh`
-- `bin/fleet-ensure.sh`
-- `bin/ymir-install.sh`
-- `bin/eir-doctor.sh`
+- `bin/time/snotra/snotra-ensure.sh` (new)
+- `bin/time/snotra/snotra-capture.sh`
+- `bin/time/snotra/snotra-transcribe.sh`
+- `bin/fleet/fleet-ensure.sh`
+- `bin/engine/ymir-install.sh`
+- `bin/agents/eir-doctor.sh`
 - `.agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md`
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`

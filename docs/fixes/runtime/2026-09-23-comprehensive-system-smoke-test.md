@@ -24,7 +24,7 @@
   - **governance** (deep) — compliance gates and the secret ward
 - Optional surfaces (Bifrost without a key, an idle model rail, a stdio MCP, an
   unraised dev UI) report **SKIP**, never FAIL; every check is independent.
-- `bin/npm-install-local-test.sh` is the companion real-install gate (PR #150).
+- `bin/forge/npm/npm-install-local-test.sh` is the companion real-install gate (PR #150).
 
 ### Files
 - `.agents/skills/lifecycle/smoke_test.sh`

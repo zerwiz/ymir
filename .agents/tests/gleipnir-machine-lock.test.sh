@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unit tests for the machine-scoped primary session lock (bin/gleipnir-lock-lib.sh).
+# Unit tests for the machine-scoped primary session lock (bin/vault/gleipnir-lock-lib.sh).
 #
 # The primary holds ONE machine-global lock so a second checkout of the same
 # machine cannot run a competing session; an Eindri-home keeps its own per-home
@@ -8,7 +8,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-LIB="$ROOT/bin/gleipnir-lock-lib.sh"
+LIB="$ROOT/bin/vault/gleipnir-lock-lib.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

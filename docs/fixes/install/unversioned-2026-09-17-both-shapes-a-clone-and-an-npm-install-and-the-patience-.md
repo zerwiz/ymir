@@ -6,7 +6,7 @@
   `apps/`, where a package keeps nothing. `scripts/start.sh` died on
   `cd …/apps/hlidskjalf: No such file or directory`. **Eighteen files assumed the
   clone's layout.**
-- **One resolver, both shapes:** `bin/app-lib.sh` — `apps/<surface>` in a clone,
+- **One resolver, both shapes:** `bin/seat/sessrumnir/app-lib.sh` — `apps/<surface>` in a clone,
   `node_modules/@zerwiz/<package>` in a package, with the surface→package map
   (`smidja` → `@zerwiz/smidja-factory`). Wired into the raise path, the windows,
   the invite door, the seat-hall, Eir, the icons, the placement, the hall snapshot

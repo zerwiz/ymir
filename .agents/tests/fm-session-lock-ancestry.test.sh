@@ -19,7 +19,7 @@ set -u
 TMP_ROOT=$(fm_test_tmproot fm-session-lock-ancestry)
 fm_git_identity fmtest fmtest@example.invalid
 
-LIB="$ROOT/bin/fm-session-lock-lib.sh"
+LIB="$ROOT/bin/backend/fm-session-lock-lib.sh"
 
 # Claude Code's native installer names the per-session executable by its version,
 # so the harness identity has to survive a basename that says nothing.
@@ -68,7 +68,7 @@ case "$pid:$field:${FM_TEST_CLAUDE_SHAPE:-linux}" in
   700:args=:macos) printf '%s\n' '/Users/u/.local/share/claude/versions/2.1.220 --resume' ;;
   700:ppid=:*) printf '%s\n' 1 ;;
   *:comm=:*) printf '%s\n' bash ;;
-  *:args=:*) printf '%s\n' 'bash /repo/bin/fm-claude-stop-autoarm.sh' ;;
+  *:args=:*) printf '%s\n' 'bash /repo/bin/backend/fm-claude-stop-autoarm.sh' ;;
   *:ppid=:*) printf '%s\n' 700 ;;
 esac
 SH
@@ -110,7 +110,7 @@ case "$pid:$field:${FM_TEST_PATH_SHAPE:-hookdir}" in
   810:args=:piprefix) printf '%s\n' '/opt/pipeline/bin/runner --once' ;;
   810:ppid=:*) printf '%s\n' 1 ;;
   *:comm=:*) printf '%s\n' bash ;;
-  *:args=:*) printf '%s\n' 'bash /repo/bin/fm-watch-arm.sh' ;;
+  *:args=:*) printf '%s\n' 'bash /repo/bin/backend/fm-watch-arm.sh' ;;
   *:ppid=:*) printf '%s\n' 810 ;;
 esac
 SH
@@ -225,23 +225,23 @@ SH
 install_autoarm_scripts() {
   local dir=$1
   mkdir -p "$dir/bin"
-  cp "$ROOT/bin/fm-claude-stop-autoarm.sh" "$dir/bin/fm-claude-stop-autoarm.sh"
-  cp "$ROOT/bin/fm-primary-scope-lib.sh" "$dir/bin/fm-primary-scope-lib.sh"
-  cp "$ROOT/bin/fm-supervision-lib.sh" "$dir/bin/fm-supervision-lib.sh"
-  cp "$ROOT/bin/fm-wake-lib.sh" "$dir/bin/fm-wake-lib.sh"
-  cp "$ROOT/bin/fm-session-lock-lib.sh" "$dir/bin/fm-session-lock-lib.sh"
-  cp "$ROOT/bin/fm-cursor-lib.sh" "$dir/bin/fm-cursor-lib.sh"
-  cp "$ROOT/bin/fm-hook-host-lib.sh" "$dir/bin/fm-hook-host-lib.sh"
-  cp "$ROOT/bin/fm-lock.sh" "$dir/bin/fm-lock.sh"
-  chmod +x "$dir/bin/fm-claude-stop-autoarm.sh" "$dir/bin/fm-lock.sh"
-  cat > "$dir/bin/fm-watch-arm.sh" <<'SH'
+  cp "$ROOT/bin/backend/fm-claude-stop-autoarm.sh" "$dir/bin/backend/fm-claude-stop-autoarm.sh"
+  cp "$ROOT/bin/backend/fm-primary-scope-lib.sh" "$dir/bin/backend/fm-primary-scope-lib.sh"
+  cp "$ROOT/bin/backend/fm-supervision-lib.sh" "$dir/bin/backend/fm-supervision-lib.sh"
+  cp "$ROOT/bin/backend/fm-wake-lib.sh" "$dir/bin/backend/fm-wake-lib.sh"
+  cp "$ROOT/bin/backend/fm-session-lock-lib.sh" "$dir/bin/backend/fm-session-lock-lib.sh"
+  cp "$ROOT/bin/backend/fm-cursor-lib.sh" "$dir/bin/backend/fm-cursor-lib.sh"
+  cp "$ROOT/bin/backend/fm-hook-host-lib.sh" "$dir/bin/backend/fm-hook-host-lib.sh"
+  cp "$ROOT/bin/backend/fm-lock.sh" "$dir/bin/backend/fm-lock.sh"
+  chmod +x "$dir/bin/backend/fm-claude-stop-autoarm.sh" "$dir/bin/backend/fm-lock.sh"
+  cat > "$dir/bin/backend/fm-watch-arm.sh" <<'SH'
 #!/usr/bin/env bash
 echo "$$" >> "$FM_HOME/state/arm-ran"
 printf 'watcher: started pid=%s (beacon fresh)\n' "$$"
 printf 'stale: fixture-win actionable\n'
 exit 0
 SH
-  chmod +x "$dir/bin/fm-watch-arm.sh"
+  chmod +x "$dir/bin/backend/fm-watch-arm.sh"
 }
 
 # A primary home with one task in flight, so the hook's scope and supervision-need
@@ -267,7 +267,7 @@ if [ "${FM_FIXTURE_ORPHAN_HERE:-0}" = 1 ]; then
 fi
 printf '%s\n' "$$" > "$FM_HOME/state/session-pid"
 printf '%s\n' "$$" > "$FM_HOME/state/.lock"
-"$FM_HOME/bin/fm-claude-stop-autoarm.sh" </dev/null > "$FM_HOME/state/hook.out" 2>&1
+"$FM_HOME/bin/backend/fm-claude-stop-autoarm.sh" </dev/null > "$FM_HOME/state/hook.out" 2>&1
 printf '%s\n' "$?" > "$FM_HOME/state/hook.rc"
 SH
   cat > "$dir/daemon.sh" <<'SH'

@@ -13,7 +13,7 @@ any skill from any seat — served, always the master, no per-seat binds.
 - `tools/skills-mcp/server.mjs` — a deps-free stdio MCP server: resources
   (`skills://<name>`, + assets) + a `load_skill` tool; a traversal guard; served
   through `mcp-proxy` on :8319 (`skills-mcp.service`, the unit `%h`-native).
-- `bin/fleet-ensure.sh` — mirrors the master `.agents/skills` into
+- `bin/fleet/fleet-ensure.sh` — mirrors the master `.agents/skills` into
   `~/.fleet/skills` (refreshed each ensure), raises the unit (gated on
   mcp-proxy + the mirror), and writes the `skills` MCP entry beside `well` in
   the seat's pi mcp.json.
@@ -22,4 +22,4 @@ any skill from any seat — served, always the master, no per-seat binds.
 
 ## Files
 - `tools/skills-mcp/server.mjs` · `tools/mill/systemd/skills-mcp.service`
-- `bin/fleet-ensure.sh`
+- `bin/fleet/fleet-ensure.sh`

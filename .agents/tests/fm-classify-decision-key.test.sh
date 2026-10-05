@@ -23,7 +23,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # shellcheck source=bin/backend/fm-classify-lib.sh
-. "$ROOT/bin/fm-classify-lib.sh"
+. "$ROOT/bin/backend/fm-classify-lib.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-classify-decision-key-tests)
 

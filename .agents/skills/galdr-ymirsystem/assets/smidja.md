@@ -57,7 +57,7 @@ smidja/smidja_*.py` directly.
   and each agent's `model:` are **`provider/id`** resolved by **pi** from
   `~/.pi/agent/models.json`. List what resolves with `pi --list-models`.
 - Models come from the **hoard** (`config/agents.yaml` + per-host overlay),
-  resolved by `bin/agents-config.sh resolve` → `state/agents-resolved.json`.
+  resolved by `bin/fleet/agents-config.sh resolve` → `state/agents-resolved.json`.
   The shipped config carries **empty** env-expandable placeholders:
   `${SMIDJA_LOCAL_MODEL:-}` and per-role `${SMIDJA_<ROLE>_MODEL:-}`.
   `just` loads `.env` (`set dotenv-load`). Set `SMIDJA_LOCAL_MODEL` to pick

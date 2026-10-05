@@ -30,10 +30,10 @@ set -u
 # shellcheck source=tests/fixtures.sh
 . "$(dirname "${BASH_SOURCE[0]}")/fixtures.sh"
 
-GATE_LIB="$ROOT/bin/fm-gate-refuse-lib.sh"
-SPAWN="$ROOT/bin/fm-spawn.sh"
-SEND="$ROOT/bin/fm-send.sh"
-TEARDOWN="$ROOT/bin/fm-teardown.sh"
+GATE_LIB="$ROOT/bin/backend/fm-gate-refuse-lib.sh"
+SPAWN="$ROOT/bin/backend/fm-spawn.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
+TEARDOWN="$ROOT/bin/backend/fm-teardown.sh"
 
 TMP=$(fm_test_tmproot fm-gate-refuse)
 fm_git_identity fmtest fmtest@example.invalid
@@ -251,7 +251,7 @@ test_send_refuses_and_admits() {
   expect_code 0 "$rc" "send: a normal session must still send"
   assert_not_contains "$out" "$ENV_MSG" "send: normal send must not print the gate refusal"
   assert_not_contains "$out" "$PATH_MSG" "send: normal send must not print the backstop refusal"
-  [ "$(bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" \
+  [ "$(bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" \
       "$home/state/lane-ok.inbox/001.msg")" = "hello captain" ] \
     || fail "send: normal steer was not durably enqueued"
   assert_not_contains "$(cat "$log")" "literal=1 arg=hello captain" \

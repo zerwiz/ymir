@@ -20,7 +20,7 @@ right: *does Brokk get to know there are updates?* He did not.
   intent: `begin` · `keep it` · `lift it` · `the way in` · `your own`. It shows
   the chosen home, and closes with *"Nothing here changes this machine until you
   say so."* Setup is a door, entered on purpose.
-- **`bin/ymir-update-check.sh`** (new) — the runtime's own sense of drift: is a
+- **`bin/gates/checks/ymir-update-check.sh`** (new) — the runtime's own sense of drift: is a
   newer `@zerwiz/ymir` on npm? Cached **one day** (`state/update-check`), never
   fatal (no network → silence at exit 0), and **exit 3** when a newer version
   stands, with the exact remedy (`npm i -g @zerwiz/ymir`, then `ymir groa`).
@@ -37,5 +37,5 @@ right: *does Brokk get to know there are updates?* He did not.
 
 ### Files
 - `bin/ymir.js`
-- `bin/ymir-update-check.sh` (new)
+- `bin/gates/checks/ymir-update-check.sh` (new)
 - `bin/time/saga-session-start.sh`

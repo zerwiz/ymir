@@ -3,7 +3,7 @@
 ### Why
 - **Main was broken and nobody had noticed.** A merge resolved by hand
   (`4dd7273`, from a parallel branch) kept *both* sides of a conflict in
-  `bin/ymir-install.sh` and `scripts/start.sh`: a stray `<`, a duplicated step
+  `bin/engine/ymir-install.sh` and `scripts/start.sh`: a stray `<`, a duplicated step
   line, orphaned comments, an `if` with no `fi`. The installer could not parse at
   all — `bash -n` failed on main — and PR #53's merge carried the breakage
   forward. Both files are restored from the last revision that parses (`5b7fc66`),

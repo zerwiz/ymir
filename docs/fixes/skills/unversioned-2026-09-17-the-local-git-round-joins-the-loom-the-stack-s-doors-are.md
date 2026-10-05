@@ -10,7 +10,7 @@
   `marketing_doors[6]` (Mautic · Postiz · Activepieces · Forgejo · SearXNG ·
   Grafana) with reach notes, mirrored to the Galdr asset. Agents (Bragi ·
   Sindri) provision the stack for any user via
-  `bin/ymir-marketing-stack.sh`, or reach the Allfather's live server stack.
+  `bin/desktop/ymir-marketing-stack.sh`, or reach the Allfather's live server stack.
 
 galdr-reread: `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md` — §3.7
 (Forgejo round) and §3.8 (marketing stack provisioner); registry mirrored.

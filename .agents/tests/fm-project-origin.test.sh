@@ -12,7 +12,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=bin/backend/fm-project-origin-lib.sh
-. "$ROOT/bin/fm-project-origin-lib.sh"
+. "$ROOT/bin/backend/fm-project-origin-lib.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-project-origin)
 FAKEBIN=$(fm_fakebin "$TMP_ROOT/fake")

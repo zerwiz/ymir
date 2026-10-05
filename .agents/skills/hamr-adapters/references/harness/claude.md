@@ -14,7 +14,7 @@ Busy hooks verified 2026-07-28 on Claude Code 2.1.220.
 | Effort | `--effort <low\|medium\|high\|xhigh\|max>`, verified on 2.1.196. |
 
 Fresh-worktree or first-machine launch may show trust or bypass-permissions confirmation.
-Inspect within about 20 seconds, accept the required choice with `BROKK_HOME=<active-home> ../../../bin/brokk-send.sh <window> --key Enter` unless already bound, and verify instructions started.
+Inspect within about 20 seconds, accept the required choice with `BROKK_HOME=<active-home> ../../../bin/agents/brokk-send.sh <window> --key Enter` unless already bound, and verify instructions started.
 
 ## Composer ghost
 
@@ -31,7 +31,7 @@ Styled capture stays internal to the boolean detector; `brokk-peek` and model-fa
 Primary behavior was verified 2026-07-04 on 2.1.201, preserved 2026-07-08 on 2.1.204, and Stop auto-arm revalidated 2026-07-24 on 2.1.219.
 This differs from the worker hook, which only touches a task marker through `.claude/settings.local.json`.
 
-Primary `.claude/settings.json` registers `../../../bin/syn-turnend-guard.sh --claude` and `../../../bin/brokk-claude-stop-autoarm.sh` with `asyncRewake: true` and `timeout: 28800`.
+Primary `.claude/settings.json` registers `../../../bin/gates/guards/syn-turnend-guard.sh --claude` and `../../../bin/brokk-claude-stop-autoarm.sh` with `asyncRewake: true` and `timeout: 28800`.
 Guard exit 2 plus stderr forces continuation.
 Stop payload `stop_hook_active=true` follows any hook-driven continuation, including async reawakening, so Claude mode ignores it and uses cooperative claim and epoch plus bounded re-block; default Codex mode keeps it as a one-block loop guard.
 
@@ -39,7 +39,7 @@ Project `.claude/settings.json` loads only when the exact project root is the se
 Hooks still run through cwd-sensitive `/bin/sh`, so tracked commands anchor through `"$CLAUDE_PROJECT_DIR"/bin/...`.
 `../../../docs/turnend-guard.md` owns details.
 
-The Stop-owned watcher hook runs every Stop, foregrounds `../../../bin/syn-watch-arm.sh` only when eligible, and uses exit-2 async reawakening as notification.
+The Stop-owned watcher hook runs every Stop, foregrounds `../../../bin/pi/syn-watch-arm.sh` only when eligible, and uses exit-2 async reawakening as notification.
 The model handles notifications but never routine re-arm.
 Claude's PreToolUse seatbelt blocks directly, and its deny is honored only with empty stdout; `../../../docs/arm-pretool-check.md` owns that contract.
 

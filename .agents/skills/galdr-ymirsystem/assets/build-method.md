@@ -24,8 +24,8 @@ build_assets[6]{step,asset}:
    exact hook surface, event names, and file paths.
 3. **Reuse the runtime scripts** — the harness adapter never reimplements the digest,
    the lock, the watcher, or the guard; it invokes `bin/time/saga-session-start.sh`,
-   `bin/time/saga-sessionstart-run.sh`, `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`,
-   `bin/rodd-operational-input.sh`, `bin/gleipnir-lock-lib.sh`.
+   `bin/time/saga-sessionstart-run.sh`, `bin/pi/syn-watch-arm.sh`, `bin/gates/guards/syn-turnend-guard.sh`,
+   `bin/agents/rodd-operational-input.sh`, `bin/vault/gleipnir-lock-lib.sh`.
 4. **Wire the contract** — session-open injection (run or nudge tier), watch arm,
    turn-end guard, pretool seatbelts.
 5. **Bind the lock to the live session** — pass `BROKK_SESSION_PID` so Gleipnir holds

@@ -137,9 +137,9 @@ else skip models "no model rail on :${MODEL_PORT} (optional)"; fi
 # ── runtime ──────────────────────────────────────────────────────────────────
 
 # 8. the session lock is held by a LIVE pid (Gleipnir)
-if [ -r "$ROOT/bin/gleipnir-lock-lib.sh" ]; then
-  # shellcheck source=bin/gleipnir-lock-lib.sh
-  . "$ROOT/bin/gleipnir-lock-lib.sh"
+if [ -r "$ROOT/bin/vault/gleipnir-lock-lib.sh" ]; then
+  # shellcheck source=bin/vault/gleipnir-lock-lib.sh
+  . "$ROOT/bin/vault/gleipnir-lock-lib.sh"
   _owner=""
   gleipnir_lock_owner _owner 2>/dev/null || true
   if [ -n "$_owner" ] && gleipnir_pid_alive "$_owner"; then
@@ -151,7 +151,7 @@ if [ -r "$ROOT/bin/gleipnir-lock-lib.sh" ]; then
     bad lock "session lock names dead pid $_owner — reaped on next start"
   fi
 else
-  bad lock "bin/gleipnir-lock-lib.sh missing"
+  bad lock "bin/vault/gleipnir-lock-lib.sh missing"
 fi
 
 # 9. the lock pointer must name THIS machine's home (the synced-home trap)
@@ -164,7 +164,7 @@ else
   elif [ "$_rec" = "$HOME" ] || [ "${_rec#"$HOME"/}" != "$_rec" ]; then
     ok lock-pointer "pointer names this machine's home"
   else
-    bad lock-pointer "pointer names a foreign home ($_rec) — bin/ymir-migrate.sh apply"
+    bad lock-pointer "pointer names a foreign home ($_rec) — bin/engine/ymir-migrate.sh apply"
   fi
 fi
 
@@ -201,13 +201,13 @@ fi
 # 12b. every config the runtime reads passes its JSON Schema (plan 58 P7).
 #      Validate the SHIPPED shapes, which are always here. A missing validator
 #      SKIPs (the engine venv is not provisioned yet); a bad config FAILs.
-if [ -x "$ROOT/bin/ymir-config-check.sh" ]; then
-  bash "$ROOT/bin/ymir-config-check.sh" examples >/dev/null 2>&1
+if [ -x "$ROOT/bin/gates/checks/ymir-config-check.sh" ]; then
+  bash "$ROOT/bin/gates/checks/ymir-config-check.sh" examples >/dev/null 2>&1
   _cfg_rc=$?
   case "$_cfg_rc" in
     0) ok config "the shipped config shapes pass their schemas (agents · cron · fleet · eindri-dispatch)" ;;
     3) skip config "jsonschema not installed — bin/engine/ymir-engine-ensure.sh ensure" ;;
-    *) bad config "a shipped config refused its schema — bin/ymir-config-check.sh examples" ;;
+    *) bad config "a shipped config refused its schema — bin/gates/checks/ymir-config-check.sh examples" ;;
   esac
 else
   skip config "ymir-config-check.sh absent"
@@ -235,10 +235,10 @@ if [ "${_cron_procs:-0}" -le 3 ]; then ok cron-leak "${_cron_procs} cron loop(s)
 else bad cron-leak "${_cron_procs} cron loops running — ended seats left schedulers behind"; fi
 
 # 14. the home's structure migrations are applied (in the OPERATOR's state)
-if [ -x "$ROOT/bin/ymir-migrate.sh" ]; then
-  _mig="$(BROKK_STATE_OVERRIDE="$STATE" bash "$ROOT/bin/ymir-migrate.sh" status 2>/dev/null || true)"
+if [ -x "$ROOT/bin/engine/ymir-migrate.sh" ]; then
+  _mig="$(BROKK_STATE_OVERRIDE="$STATE" bash "$ROOT/bin/engine/ymir-migrate.sh" status 2>/dev/null || true)"
   if printf '%s' "$_mig" | grep -qE '"(pending|available)"'; then
-    bad migrations "structure migrations pending — bin/ymir-migrate.sh apply"
+    bad migrations "structure migrations pending — bin/engine/ymir-migrate.sh apply"
   elif [ -n "$_mig" ]; then
     ok migrations "structure migrations applied"
   else
@@ -249,8 +249,8 @@ else
 fi
 
 # 14b. topology — role + shape + link to the heart (plan 51, Phase 0)
-if [ -x "$ROOT/bin/topology.sh" ]; then
-  _topo="$(bash "$ROOT/bin/topology.sh" 2>/dev/null || true)"
+if [ -x "$ROOT/bin/fleet/topology.sh" ]; then
+  _topo="$(bash "$ROOT/bin/fleet/topology.sh" 2>/dev/null || true)"
   _link="$(printf '%s' "$_topo" | sed -nE 's/^  "link","([^"]+)".*/\1/p')"
   _shape="$(printf '%s' "$_topo" | sed -nE 's/^  "shape","([^"]+)".*/\1/p')"
   case "$_link" in
@@ -264,8 +264,8 @@ else
 fi
 
 # 14c. fleet version — the tree, the install, and the published line agree
-if [ -x "$ROOT/bin/fleet-version.sh" ]; then
-  _fv="$(bash "$ROOT/bin/fleet-version.sh" 2>/dev/null || true)"
+if [ -x "$ROOT/bin/fleet/fleet-version.sh" ]; then
+  _fv="$(bash "$ROOT/bin/fleet/fleet-version.sh" 2>/dev/null || true)"
   _vd="$(printf '%s' "$_fv" | sed -nE 's/^  "verdict","([^"]+)".*/\1/p')"
   case "$_vd" in
     "in sync"|ahead) ok version "$_vd" ;;
@@ -279,8 +279,8 @@ fi
 # 14d. alias conformance — every alias this seat's registry names resolves on a
 #      rail (plan 51 §6). Local-only: the ring-wide check is the gate's own job,
 #      and an offline seat is reported there, never a FAIL here.
-if [ -x "$ROOT/bin/model-alias-check.sh" ]; then
-  _aa="$(bash "$ROOT/bin/model-alias-check.sh" --local 2>/dev/null || true)"
+if [ -x "$ROOT/bin/gates/checks/model-alias-check.sh" ]; then
+  _aa="$(bash "$ROOT/bin/gates/checks/model-alias-check.sh" --local 2>/dev/null || true)"
   _av="$(printf '%s' "$_aa" | sed -nE 's/^  "verdict","([^"]+)".*/\1/p')"
   case "$_av" in
     pass) ok alias "alias conformance — every alias this seat names resolves" ;;
@@ -343,7 +343,7 @@ if [ -n "${_ymh:-}" ] && [ -d "$_ymh" ]; then
       _badlay="$_badlay $_p"
     done < <(sed -nE 's/^  [a-z_]+: "([^"]+)".*/\1/p' "$_lay")
   fi
-  if [ -n "$_flat" ]; then bad hoard "flat duplicates beside hodd/:$_flat — bin/eir-doctor.sh fix"
+  if [ -n "$_flat" ]; then bad hoard "flat duplicates beside hodd/:$_flat — bin/agents/eir-doctor.sh fix"
   elif [ -n "$_badlay" ]; then bad hoard "layout map names paths absent here:$_badlay — repoint to this machine's home"
   else ok hoard "layout honest; map paths exist"; fi
 else
@@ -466,8 +466,8 @@ if command -v herdr >/dev/null 2>&1; then ok herdr "herdr present ($(herdr --ver
 else skip herdr "herdr absent (panes unavailable)"; fi
 
 # 25. the one-local-model lock is coherent
-if [ -x "$ROOT/bin/local-model-lock.sh" ]; then
-  if bash "$ROOT/bin/local-model-lock.sh" check >/dev/null 2>&1; then ok local-model "one-local-model lock coherent"
+if [ -x "$ROOT/bin/model/local-model-lock.sh" ]; then
+  if bash "$ROOT/bin/model/local-model-lock.sh" check >/dev/null 2>&1; then ok local-model "one-local-model lock coherent"
   else bad local-model "local-model lock reported a problem"; fi
 else skip local-model "local-model-lock.sh absent"; fi
 
@@ -488,7 +488,7 @@ else bad models-registry "pi models.json missing or invalid"; fi
 # 28. the pre-push delivery gate is installed
 _hookdir="$(git -C "$ROOT" rev-parse --git-path hooks 2>/dev/null || true)"
 if [ -n "$_hookdir" ] && [ -x "$_hookdir/pre-push" ]; then ok gates "pre-push gate installed"
-else bad gates "pre-push hook missing — bin/fixes-guard.sh --install"; fi
+else bad gates "pre-push hook missing — bin/gates/guards/fixes-guard.sh --install"; fi
 
 # ── governance (deep) ────────────────────────────────────────────────────────
 
@@ -511,7 +511,7 @@ if [ "$DEEP" = 1 ]; then
   else
     bad rename-repo "expected registry/projects.yaml.example and no workspace/ in the repo"
   fi
-  for rd in "$ROOT"/bin/project-git.sh "$ROOT"/bin/syn-guard-pretool-check.sh; do
+  for rd in "$ROOT"/bin/agents/project-git.sh "$ROOT"/bin/gates/checks/syn-guard-pretool-check.sh; do
     [ -f "$rd" ] || continue
     if grep -q '"$ROOT/workspace/\|workspace/projects.yaml\|workspace/workspaces.yaml' "$rd" 2>/dev/null; then
       bad rename-readers "$(basename "$rd") still names the old workspace path"
@@ -519,21 +519,21 @@ if [ "$DEEP" = 1 ]; then
   done
   ok rename-readers "no bin/ reader still names the old workspace path"
   # 18c-bis. the VALUE rename (plan 62 item 6): `workspace:` was never a workspace, it names
-  # the realm. The ward is that bin/registry-lib.sh is the ONLY place that resolves the
+  # the realm. The ward is that bin/skuld/registry-lib.sh is the ONLY place that resolves the
   # key — a reader that greps for it is a reader a rename breaks silently.
-  if [ -r "$ROOT/bin/registry-lib.sh" ]; then
+  if [ -r "$ROOT/bin/skuld/registry-lib.sh" ]; then
     if grep -lE "^[[:space:]]*(realm|workspace):" "$ROOT"/bin/*.sh 2>/dev/null | grep -v 'registry-lib.sh$' | grep -q .; then
-      bad rename-realm "a bin/ script resolves the realm key outside bin/registry-lib.sh"
+      bad rename-realm "a bin/ script resolves the realm key outside bin/skuld/registry-lib.sh"
     else
-      ok rename-realm "bin/registry-lib.sh is the one reader of the realm key"
+      ok rename-realm "bin/skuld/registry-lib.sh is the one reader of the realm key"
     fi
-    if grep -q 'deprecated-registry-key' "$ROOT/bin/registry-lib.sh" && bash "$ROOT/.agents/tests/registry-realm-key.test.sh" >/dev/null 2>&1; then
+    if grep -q 'deprecated-registry-key' "$ROOT/bin/skuld/registry-lib.sh" && bash "$ROOT/.agents/tests/registry-realm-key.test.sh" >/dev/null 2>&1; then
       ok rename-alias "the deprecated key still resolves, and names itself"
     else
       bad rename-alias "the deprecated `workspace:` key does not resolve-with-a-warning (run .agents/tests/registry-realm-key.test.sh)"
     fi
   else
-    bad rename-realm "bin/registry-lib.sh is missing — no reader resolves the realm key"
+    bad rename-realm "bin/skuld/registry-lib.sh is missing — no reader resolves the realm key"
   fi
   # the home half, only meaningful where a home exists on this seat
   HM=""
@@ -555,7 +555,7 @@ if [ "$DEEP" = 1 ]; then
     if [ -d "$HM/hodd/life" ] && [ ! -d "$HM/hodd/workspaces" ]; then
       ok rename-home "hodd/life/ present, hodd/workspaces/ gone"
     else
-      skip rename-home "home present but the life shelf is not renamed yet (run bin/ymir-migrate.sh apply)"
+      skip rename-home "home present but the life shelf is not renamed yet (run bin/engine/ymir-migrate.sh apply)"
     fi
     if [ -d "$HM/hodd/hodd" ]; then
       bad rename-home "the stray hodd/hodd/ is still there"
@@ -606,8 +606,8 @@ if [ "$DEEP" = 1 ]; then
   fi
 
   # 19. the secret ward (no secret in the tree)
-  if [ -x "$ROOT/bin/secret-guard.sh" ]; then
-    if bash "$ROOT/bin/secret-guard.sh" >/dev/null 2>&1; then ok secrets "secret ward clean"
+  if [ -x "$ROOT/bin/gates/guards/secret-guard.sh" ]; then
+    if bash "$ROOT/bin/gates/guards/secret-guard.sh" >/dev/null 2>&1; then ok secrets "secret ward clean"
     else bad secrets "secret-guard reported a finding"; fi
   else
     skip secrets "secret-guard.sh absent"

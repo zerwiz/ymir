@@ -8,7 +8,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-transition-lib.sh"
+. "$ROOT/bin/backend/fm-transition-lib.sh"
 
 # --- record construction + accessors ----------------------------------------
 

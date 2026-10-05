@@ -20,8 +20,8 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LAUNCH="$ROOT/bin/fm-afk-launch.sh"
-START="$ROOT/bin/fm-afk-start.sh"
+LAUNCH="$ROOT/bin/backend/fm-afk-launch.sh"
+START="$ROOT/bin/backend/fm-afk-start.sh"
 
 FAILED=0
 fail() { printf 'not ok - %s\n' "$1" >&2; FAILED=1; }
@@ -135,7 +135,7 @@ unit_fresh_vs_refresh() {
   lock="$st/state/.supervise-daemon.lock"
   mkdir -p "$lock"
   printf '%s' "$sleep_pid" > "$lock/pid"
-  ( . "$ROOT/bin/fm-wake-lib.sh"; fm_pid_identity "$sleep_pid" > "$lock/pid-identity" 2>/dev/null ) || true
+  ( . "$ROOT/bin/backend/fm-wake-lib.sh"; fm_pid_identity "$sleep_pid" > "$lock/pid-identity" 2>/dev/null ) || true
   FM_HOME="$st" FM_STATE_OVERRIDE="$st/state" "$START" >/dev/null 2>&1
   if [ -e "$st/state/.subsuper-escalations" ] && [ -e "$st/state/.subsuper-inject-wedged" ]; then
     pass "refresh: daemon already alive - stale artifacts preserved (current session's buffer kept)"
@@ -166,7 +166,7 @@ unit_stop_ordering() {
   lock="$st/state/.supervise-daemon.lock"
   mkdir -p "$lock"
   printf '%s' "$daemon_pid" > "$lock/pid"
-  ( . "$ROOT/bin/fm-wake-lib.sh"; fm_pid_identity "$daemon_pid" > "$lock/pid-identity" 2>/dev/null ) || true
+  ( . "$ROOT/bin/backend/fm-wake-lib.sh"; fm_pid_identity "$daemon_pid" > "$lock/pid-identity" 2>/dev/null ) || true
   printf 'none\t-\tnative\n' > "$st/state/.afk-daemon-terminal"
   FM_HOME="$st" FM_STATE_OVERRIDE="$st/state" "$LAUNCH" stop >/dev/null 2>&1
   # shellcheck disable=SC2031 # The background daemon writes this shared file; no shell variable is reassigned.
@@ -266,7 +266,7 @@ unit_lock_initialization_grace() {
     sleep 0.15
     if [ -d "$st/state/.afk-launch.lock" ]; then
       printf '%s' "$$" > "$st/state/.afk-launch.lock/pid"
-      ( . "$ROOT/bin/fm-wake-lib.sh"; fm_pid_identity "$$" > "$st/state/.afk-launch.lock/pid-identity" 2>/dev/null ) || true
+      ( . "$ROOT/bin/backend/fm-wake-lib.sh"; fm_pid_identity "$$" > "$st/state/.afk-launch.lock/pid-identity" 2>/dev/null ) || true
       # shellcheck disable=SC2031 # The subshell writes the path value; it does not reassign the variable.
       : > "$marker"
       sleep 0.15
@@ -654,7 +654,7 @@ unit_stop_validates_before_signal() {
   sleep 30 & sleeper_pid=$!
   mkdir -p "$st/state/.supervise-daemon.lock"
   printf '%s' "$sleeper_pid" > "$st/state/.supervise-daemon.lock/pid"
-  ( . "$ROOT/bin/fm-wake-lib.sh"; fm_pid_identity "$sleeper_pid" > "$st/state/.supervise-daemon.lock/pid-identity" )
+  ( . "$ROOT/bin/backend/fm-wake-lib.sh"; fm_pid_identity "$sleeper_pid" > "$st/state/.supervise-daemon.lock/pid-identity" )
   FM_HOME="$st" FM_STATE_OVERRIDE="$st/state" "$LAUNCH" stop >/dev/null 2>&1 || true
   if kill -0 "$sleeper_pid" 2>/dev/null && [ -e "$st/state/.afk" ]; then
     pass "stop validation: malformed record causes no daemon or state side effects"
@@ -708,7 +708,7 @@ unit_stop_confirms_daemon_exit() {
   bash -c 'trap "" TERM; while :; do sleep 1; done' &
   daemon_pid=$!
   printf '%s' "$daemon_pid" > "$st/state/.supervise-daemon.lock/pid"
-  ( . "$ROOT/bin/fm-wake-lib.sh"; fm_pid_identity "$daemon_pid" > "$st/state/.supervise-daemon.lock/pid-identity" )
+  ( . "$ROOT/bin/backend/fm-wake-lib.sh"; fm_pid_identity "$daemon_pid" > "$st/state/.supervise-daemon.lock/pid-identity" )
   if FM_HOME="$st" FM_STATE_OVERRIDE="$st/state" bash -c '
     . "$1"
     seq() { printf "1\n"; }
@@ -739,7 +739,7 @@ unit_refresh_validates_record() {
   printf 'tmux\tonly-two-fields\n' > "$st/state/.afk-daemon-terminal"
   sleep 30 & daemon_pid=$!
   printf '%s' "$daemon_pid" > "$st/state/.supervise-daemon.lock/pid"
-  ( . "$ROOT/bin/fm-wake-lib.sh"; fm_pid_identity "$daemon_pid" > "$st/state/.supervise-daemon.lock/pid-identity" )
+  ( . "$ROOT/bin/backend/fm-wake-lib.sh"; fm_pid_identity "$daemon_pid" > "$st/state/.supervise-daemon.lock/pid-identity" )
   if FM_HOME="$st" FM_STATE_OVERRIDE="$st/state" FM_SUPERVISOR_TARGET=unused \
     FM_SUPERVISOR_BACKEND=tmux bash -c '
       . "$1"
@@ -834,7 +834,7 @@ e2e_herdr() {
   # shellcheck source=tests/herdr-test-safety.sh
   . "$ROOT/tests/herdr-test-safety.sh"
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-backend.sh"
+  . "$ROOT/bin/backend/fm-backend.sh"
 
   local SESSION home_tmp cap_ws cap_tab cap_pane target
   local before during after ws_before ws_during ws_after out dtgt dtab

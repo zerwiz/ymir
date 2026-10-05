@@ -21,7 +21,7 @@ Plan 58, Part 1: *Dispatch — role → figure → model → seat: Python + YAML
 ```
 dispatch[4]{module,owns}
   "table.py","`.agents/roles.yaml`: role → figure · craft · tools · keywords · dispatch — the WIRING, declared in data. Declares no role; a table claiming `model_from` other than `hoard`, a role with no figure, or a figure nobody rostered is a loud refusal naming the key"
-  "registry.py","the hoard's model, read at runtime from `$YMIR_HOME/config/agents.yaml` (schema-validated by the config layer); a model REQUEST is resolved by `bin/model-resolve.sh` and its TOON read back"
+  "registry.py","the hoard's model, read at runtime from `$YMIR_HOME/config/agents.yaml` (schema-validated by the config layer); a model REQUEST is resolved by `bin/model/model-resolve.sh` and its TOON read back"
   "resolve.py","one errand → one `Resolution` (role · figure · craft · tools · model · harness · effort · seat · kind, with provenance)"
   "__main__.py","`python3 -m ymir_runtime.dispatch [resolve|roles|choose|request]` — the layer's own door face"
 ```
@@ -46,16 +46,16 @@ role/figure lists every name the table knows; an absent hoard config names
 `agents.<figure>.model` and the exact path — never a silent default.
 
 ### Honesty — how model resolution rides the fleet registry
-`bin/model-resolve.sh` owns the *resolution loop* (fuzzy request → concrete
+`bin/model/model-resolve.sh` owns the *resolution loop* (fuzzy request → concrete
 harness/provider/model, the bash loop). The Python module **calls that door** —
-`HoardModels.request()` runs `bin/model-resolve.sh resolve "<text>"` and parses
+`HoardModels.request()` runs `bin/model/model-resolve.sh resolve "<text>"` and parses
 its TOON row — and never re-implements a line of it. The *configured* road is a
 LOOKUP, not resolution: the hoard already carries a concrete `provider/model`
 token, so the module reads `agents.<figure>.model` (through the config layer's
 schema validation) and applies only the rule the YAML itself declares
 (`harness.local · harness.online · harness.local_providers`). No model value ever
 ships in the tree, and the provider-rename-per-harness stays with the harness
-binder (`bin/agents-config.sh apply`), not a second copy here.
+binder (`bin/fleet/agents-config.sh apply`), not a second copy here.
 
 ### Proof (run, not asserted)
 - **Two synthetic hoard YAMLs → two resolutions, tree untouched:**

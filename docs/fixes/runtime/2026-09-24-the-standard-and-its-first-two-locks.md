@@ -18,10 +18,10 @@ enforce: **a rule without a lock is a wish.**
   the two modes a checkout can be in, the acceptance test a stranger applies, and an explicit
   list of what we do not claim. Two clauses are named as debts; one is marked not provable by
   us, because only a buyer can close it.
-- **`bin/runtime-guard.sh`** — *the tree is not a runtime.* Declared means ignored, tracked, or
+- **`bin/gates/guards/runtime-guard.sh`** — *the tree is not a runtime.* Declared means ignored, tracked, or
   named in `RUNTIME-GUARD.allow`. It also carries `snapshot` and `verify`, which cover the other
   half: run the stack, then prove the tree did not move.
-- **`bin/defaults-guard.sh`** — *one place knows where things live.* It reads code, not prose,
+- **`bin/gates/guards/defaults-guard.sh`** — *one place knows where things live.* It reads code, not prose,
   so a runbook may quote a path and an executable may not guess one. One allowlist (the
   resolver), and a waiver written on the line it applies to.
 - **`RUNTIME-GUARD.allow`** — the declaration mechanism, and it was created by lock 1's first
@@ -51,5 +51,5 @@ the declaration line is deleted.
 ### Files
 - `STANDARD.md`
 - `RUNTIME-GUARD.allow`
-- `bin/defaults-guard.sh`
-- `bin/runtime-guard.sh`
+- `bin/gates/guards/defaults-guard.sh`
+- `bin/gates/guards/runtime-guard.sh`

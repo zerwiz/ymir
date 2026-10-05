@@ -56,7 +56,7 @@ The law is restated in four authoritative places; keep them consistent:
 | MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal (agent↔agent) | `.agents/skills/galdr-ymirsystem/assets/pi-boot/herdr-profile.toml` (pane layout) |
 | Software smidja | **Smíðja** | Repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace | `.agents/skills/smidja-factory/` |
 | Smíðja orchestrator | **Völundr** | The master smith who runs Smíðja — the smidja's Kaia (Kaia's seat inside the smidja) | `.agents/skills/smidja-factory/skills/volundr/` |
-| Meeting ear (capture · transcribe · minutes) | **Snotra** | The wise one, mistress of counsel — the minutes-maker; hears the meeting, keeps the record | `bin/snotra-capture.sh`, `bin/snotra-transcribe.sh`, `bin/snotra-ensure.sh`, `tools/snotra/`, `tools/mill/systemd/snotra.service` |
+| Meeting ear (capture · transcribe · minutes) | **Snotra** | The wise one, mistress of counsel — the minutes-maker; hears the meeting, keeps the record | `bin/time/snotra/snotra-capture.sh`, `bin/time/snotra/snotra-transcribe.sh`, `bin/time/snotra/snotra-ensure.sh`, `tools/snotra/`, `tools/mill/systemd/snotra.service` |
 | Meeting room (our own hall) | **Þing** | The assembly, the law-meeting — a hall of our own (MiroTalk P2P fork on whynot) where the ear knows the room, the participants, and the moment it began | `zerwiz/mirotalk` (fork), deployed `~/thing/mirotalk` on whynot (unit `thing.service`) |
 
 ### 3.2 Brokk distro runtime components (`docs/plans/29-brokk-distro-runtime.md:270-297`)
@@ -70,26 +70,26 @@ These are the figures the port actually wired into `bin/` and the harness adapte
 | Sub-agent worker | **Eindri** | "The one who runs the errand" | `.agents/subagents/*.md`, `bin/agents/einherjar-spawn.sh` |
 | Session-start digest | **Sága** | The seeress who sees all that happens | `bin/time/saga-session-start.sh`, `bin/time/saga-sessionstart-run.sh` |
 | Daily briefing (same seeress, dated) | **Sága** | The daily seeing | `bin/time/nornir-job-daily-briefing.sh` |
-| Watch / supervision | **Sýn** | Watchful sight; guards the turn boundary | `bin/syn-watch-arm.sh`, `bin/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-watch-arm.js`, `.opencode/plugins/syn-turnend-guard.js` |
+| Watch / supervision | **Sýn** | Watchful sight; guards the turn boundary | `bin/pi/syn-watch-arm.sh`, `bin/gates/guards/syn-turnend-guard.sh`, `.pi/extensions/syn-turnend-guard.ts`, `.opencode/plugins/syn-watch-arm.js`, `.opencode/plugins/syn-turnend-guard.js` |
 | Watch wake messenger | **Gná** | Frigg's rider who carries word | `.pi/extensions/gna-pi-watch.ts` |
 | Digest process supervisor | **Vörðr** | The warden who holds the child | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` |
-| Operational wire | **Rödd** | The voice between Allfather, Brokk, and Eindri | `bin/rodd-operational-input.sh`, `.pi/extensions/lib/rodd-operational-input.ts`, `.opencode/plugins/lib/rodd-operational-input.js` |
-| Session lock | **Gleipnir** | The impossible chain that binds one session | `bin/gleipnir-lock-lib.sh` → `state/.lock` |
-| Harness detection | **Hamr** | The shape a being wears | `bin/hamr-harness.sh` |
+| Operational wire | **Rödd** | The voice between Allfather, Brokk, and Eindri | `bin/agents/rodd-operational-input.sh`, `.pi/extensions/lib/rodd-operational-input.ts`, `.opencode/plugins/lib/rodd-operational-input.js` |
+| Session lock | **Gleipnir** | The impossible chain that binds one session | `bin/vault/gleipnir-lock-lib.sh` → `state/.lock` |
+| Harness detection | **Hamr** | The shape a being wears | `bin/fleet/hamr-harness.sh` |
 | Worker spawn | **Einherjar** | The chosen who are gathered to fight | `bin/agents/einherjar-spawn.sh` |
 | Worker brief | **Erindi** | The errand given to a worker | `bin/agents/erindi-brief.sh` → `data/<id>/brief.md` |
-| Worker-state reconciliation | **Vör** | Awareness of what is | `bin/vor-crew-state.sh` |
+| Worker-state reconciliation | **Vör** | Awareness of what is | `bin/records/vor-crew-state.sh` |
 | Scheduled jobs (the fate-spinners) | **Nornir** | The fates who govern time | `bin/time/nornir-cron-start.sh`, `bin/nornir-job-*.sh`, `config/cron.yaml` |
 | Memory housekeeping | **Muninn** | The raven of memory (remembers and prunes) | `bin/time/nornir-job-memory-housekeeping.sh` |
 | External observation | **Huginn** | The raven of thought/observation | `bin/time/nornir-job-observer.sh` |
 | Git sync | **Yggdrasil** | The world-tree kept in order | `bin/time/nornir-job-git-sync.sh` |
 | Audit ledger | **Runes** | The carved record | `bin/records/runes-append.sh`, `workspace/memory/runes_audit.md` |
 | Session wake drain | **Sága** | The seeress who sees the queue | `bin/time/saga-wake-drain.sh` → `state/.wake-queue` |
-| Arm-path seatbelt | **Sýn** | Guards the arm command | `bin/syn-arm-pretool-check.sh` |
-| Directory seatbelt | **Sýn** | Guards the working directory | `bin/syn-cd-pretool-check.sh` |
-| Invariant seatbelt | **Sýn** | Guards the load-bearing invariants (lock, markers, Runes, machinery, secrets, registries) | `bin/syn-guard-pretool-check.sh` |
-| Updater shaman | **Gróa** | The völva who renews — fast-forwards Brokk and its homes, then mends forward | `bin/groa-update.sh` (alias `bin/brokk-update.sh`), `.agents/skills/groa-update/` |
-| Doctor / healer | **Eir** | The goddess of healing — diagnoses every surface, then mends the broken | `bin/eir-doctor.sh` |
+| Arm-path seatbelt | **Sýn** | Guards the arm command | `bin/gates/checks/syn-arm-pretool-check.sh` |
+| Directory seatbelt | **Sýn** | Guards the working directory | `bin/gates/checks/syn-cd-pretool-check.sh` |
+| Invariant seatbelt | **Sýn** | Guards the load-bearing invariants (lock, markers, Runes, machinery, secrets, registries) | `bin/gates/checks/syn-guard-pretool-check.sh` |
+| Updater shaman | **Gróa** | The völva who renews — fast-forwards Brokk and its homes, then mends forward | `bin/agents/groa-update.sh` (alias `bin/agents/brokk-update.sh`), `.agents/skills/groa-update/` |
+| Doctor / healer | **Eir** | The goddess of healing — diagnoses every surface, then mends the broken | `bin/agents/eir-doctor.sh` |
 
 ### 3.3 The Galdr skill family
 
@@ -112,7 +112,7 @@ Some figures legitimately carry both a *platform subsystem* and a *runtime job* 
 | **Huginn** | Eindri research specialist (sage) | external observer job (`bin/time/nornir-job-observer.sh`) — the raven of observation |
 | **Runes** | append-only audit ledger | the ledger head is titled `# YGGDRASIL Audit Trail` (see §5) |
 
-**Vör vs Vörðr are distinct.** **Vör** (`bin/vor-crew-state.sh`) is awareness of a worker's current state. **Vörðr** (`.pi/extensions/lib/vordr-sessionstart-supervisor.mjs`) is the warden that supervises the digest child process. Never collapse them to one spelling.
+**Vör vs Vörðr are distinct.** **Vör** (`bin/records/vor-crew-state.sh`) is awareness of a worker's current state. **Vörðr** (`.pi/extensions/lib/vordr-sessionstart-supervisor.mjs`) is the warden that supervises the digest child process. Never collapse them to one spelling.
 
 ## 4. Galdr aett prefixes (`SKILL.md:288-301`, `AGENTS.md:127`)
 
@@ -168,7 +168,7 @@ These terms must never name a Ymir subsystem, file, config key, environment vari
 
 | Rejected name | Why | Correct choice |
 |---|---|---|
-| `agent` | Generic; collides with Cursor's legacy alias and countless tools | detected structurally in `bin/hamr-harness.sh`, never named |
+| `agent` | Generic; collides with Cursor's legacy alias and countless tools | detected structurally in `bin/fleet/hamr-harness.sh`, never named |
 | `MainThread` | Runtime-internal Cursor marker, not a figure | never named |
 | `Vordr` (unaccented, for Vör) | Collides with **Vörðr** (the warden) | `vor-crew-state.sh` = Vör; `vordr-*` = Vörðr |
 | `Yggdrasil` for the audit ledger | Collides with the worktree manager | **Runes** (the ledger head string is legacy; see below) |
@@ -214,8 +214,8 @@ runtime_figures[7]{figure,role,path}:
 
 ```
 runtime_figures[3]{figure,role,path}:
-  "Gleipnir","Session lock — binds one session, one reins","bin/gleipnir-lock-lib.sh, bin/brokk-lease.sh"
-  "Skuld","Branch outcome tracker — sees the future of every branch","bin/skuld-branch-outcome.sh, bin/skuld-branch-prompt.sh"
+  "Gleipnir","Session lock — binds one session, one reins","bin/vault/gleipnir-lock-lib.sh, bin/agents/brokk-lease.sh"
+  "Skuld","Branch outcome tracker — sees the future of every branch","bin/skuld/skuld-branch-outcome.sh, bin/skuld/skuld-branch-prompt.sh"
   "Valknut","Load mechanism — assembles agent config at boot","bin/seat/valknut-load.sh"
 ```
 
@@ -223,7 +223,7 @@ runtime_figures[3]{figure,role,path}:
 
 ```
 runtime_figures[2]{figure,role,path}:
-  "Vor","Diagnostics — bootstrap + crew state","bin/vor-crew-state.sh, vor-diagnostics skill"
+  "Vor","Diagnostics — bootstrap + crew state","bin/records/vor-crew-state.sh, vor-diagnostics skill"
   "Erindi","The errand — task brief format","bin/agents/erindi-brief.sh"
 ```
 
@@ -231,7 +231,7 @@ runtime_figures[2]{figure,role,path}:
 
 ```
 runtime_figures[2]{figure,role,path}:
-  "Hamr","Shape-changer — harness adapter","bin/hamr-harness.sh, hamr skill"
+  "Hamr","Shape-changer — harness adapter","bin/fleet/hamr-harness.sh, hamr skill"
   "Frigg","Consent gate — ask-user authority","frigg-consent skill"
 ```
 
@@ -271,8 +271,8 @@ runtime_figures[2]{figure,role,path}:
 
 ```
 runtime_figures[2]{figure,role,path}:
-  "Wyrd","Workspace RAG database","bin/wyrd-db.sh, bin/workspace-rag.sh"
-  "Toolchain","Unified entry point for all Ymir operations","bin/toolchain.sh, justfile"
+  "Wyrd","Workspace RAG database","bin/records/wyrd-db.sh, bin/records/workspace-rag.sh"
+  "Toolchain","Unified entry point for all Ymir operations","bin/gates/toolchain.sh, justfile"
 ```
 
 ### 7.9 Veil and gate figures (lore §XXVII)

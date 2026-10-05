@@ -44,15 +44,15 @@ There is no plugin runtime and no per-harness script directory; the adapter is t
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "bash -lc '... | \"$root/bin/syn-arm-pretool-check.sh\"'", "timeout": 10 },
-          { "type": "command", "command": "bash -lc '... | \"$root/bin/syn-cd-pretool-check.sh\"'",  "timeout": 10 }
+          { "type": "command", "command": "bash -lc '... | \"$root/bin/gates/checks/syn-arm-pretool-check.sh\"'", "timeout": 10 },
+          { "type": "command", "command": "bash -lc '... | \"$root/bin/gates/checks/syn-cd-pretool-check.sh\"'",  "timeout": 10 }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "bash -lc '... | \"$root/bin/syn-turnend-guard.sh\"'", "timeout": 30 }
+          { "type": "command", "command": "bash -lc '... | \"$root/bin/gates/guards/syn-turnend-guard.sh\"'", "timeout": 30 }
         ]
       }
     ]
@@ -101,15 +101,15 @@ The **self-verification** step (7) is the distinctive Codex safeguard: the hook 
 Two hooks, each piping the payload to an owner script:
 
 ```bash
-... printf "%s" "$payload" | "$root/bin/syn-arm-pretool-check.sh"
-... printf "%s" "$payload" | "$root/bin/syn-cd-pretool-check.sh"
+... printf "%s" "$payload" | "$root/bin/gates/checks/syn-arm-pretool-check.sh"
+... printf "%s" "$payload" | "$root/bin/gates/checks/syn-cd-pretool-check.sh"
 ```
 
 - `timeout: 10`.
 - Exit **2** blocks the Bash call; the reason is on stderr.
 - These scripts normally take `--command <cmd>`; in the Codex flow the command is carried in the payload. The owner scripts are the policy holders either way.
 
-### 4.3 `Stop` → `bin/syn-turnend-guard.sh`
+### 4.3 `Stop` → `bin/gates/guards/syn-turnend-guard.sh`
 
 - Pipes the payload (typically `{"stop_hook_active":false}`) into the guard.
 - Exit **2** surfaces the recovery instruction and re-prompts instead of letting the turn end blind.
@@ -163,16 +163,16 @@ jq -e 'any(.hooks.Stop[]?.hooks[]?.command?; type == "string" and contains("syn-
 
 ```bash
 rm -f state/.supervision-armed
-printf '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh; echo "inert -> $? (expect 0)"
+printf '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh; echo "inert -> $? (expect 0)"
 touch state/.supervision-armed; rm -f state/.watch.heartbeat
-printf '{"stop_hook_active":false}' | bin/syn-turnend-guard.sh; echo "armed+stale -> $? (expect 2)"
+printf '{"stop_hook_active":false}' | bin/gates/guards/syn-turnend-guard.sh; echo "armed+stale -> $? (expect 2)"
 ```
 
 ### Verify seatbelts
 
 ```bash
-bin/syn-arm-pretool-check.sh --command 'bin/syn-watch-arm.sh &'; echo "arm -> $? (expect 2)"
-bin/syn-cd-pretool-check.sh  --command 'cd ../..';             echo "cd  -> $? (expect 2)"
+bin/gates/checks/syn-arm-pretool-check.sh --command 'bin/pi/syn-watch-arm.sh &'; echo "arm -> $? (expect 2)"
+bin/gates/checks/syn-cd-pretool-check.sh  --command 'cd ../..';             echo "cd  -> $? (expect 2)"
 ```
 
 ---

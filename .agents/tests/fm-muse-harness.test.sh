@@ -20,9 +20,9 @@ set -u
 # the suite.
 unset CLAUDECODE PI_CODING_AGENT FM_PI_HARNESS GROK_AGENT CURSOR_AGENT CURSOR_INVOKED_AS
 
-SPAWN="$ROOT/bin/fm-spawn.sh"
-TEARDOWN="$ROOT/bin/fm-teardown.sh"
-HARNESS="$ROOT/bin/fm-harness.sh"
+SPAWN="$ROOT/bin/backend/fm-spawn.sh"
+TEARDOWN="$ROOT/bin/backend/fm-teardown.sh"
+HARNESS="$ROOT/bin/backend/fm-harness.sh"
 TMP_ROOT=$(fm_test_tmproot fm-muse-harness)
 
 # --- session-log fixtures ---------------------------------------------------
@@ -466,7 +466,7 @@ SH
 run_send_key() {  # <home> <fakebin> <id> <key> <keylog>
   FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$1" FM_STATE_OVERRIDE="$1/state" \
     FM_FAKE_KEY_LOG="$5" PATH="$2:$PATH" \
-    "$ROOT/bin/fm-send.sh" "$3" --key "$4" 2>&1
+    "$ROOT/bin/backend/fm-send.sh" "$3" --key "$4" 2>&1
 }
 
 test_muse_escape_aliases_clear_the_composer() {
@@ -527,7 +527,7 @@ EOF
 classify_muse() {  # <state-dir> <id>
   (
     # shellcheck source=bin/backend/fm-busy-lib.sh
-    . "$ROOT/bin/fm-busy-lib.sh"
+    . "$ROOT/bin/backend/fm-busy-lib.sh"
     fm_busy_classify tmux fake:0 muse "$2" "$1"
   )
 }
@@ -535,7 +535,7 @@ classify_muse() {  # <state-dir> <id>
 run_state() {  # <log>
   (
     # shellcheck source=bin/backend/fm-busy-lib.sh
-    . "$ROOT/bin/fm-busy-lib.sh"
+    . "$ROOT/bin/backend/fm-busy-lib.sh"
     fm_busy_muse_run_state "$1"
   )
 }
@@ -898,7 +898,7 @@ test_muse_trusts_no_record_sources() {
   local out
   out=$(
     # shellcheck source=bin/backend/fm-busy-lib.sh
-    . "$ROOT/bin/fm-busy-lib.sh"
+    . "$ROOT/bin/backend/fm-busy-lib.sh"
     fm_busy_sources_for_harness muse
   )
   [ -z "$out" ] || fail "muse trusts record sources it has no writer for: '$out'"

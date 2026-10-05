@@ -17,7 +17,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 fm_git_identity fmtest fmtest@example.invalid
 
-REVIEW_DIFF="$ROOT/bin/fm-review-diff.sh"
+REVIEW_DIFF="$ROOT/bin/backend/fm-review-diff.sh"
 TMP_ROOT=$(fm_test_tmproot fm-review-diff-tests)
 
 make_case() {

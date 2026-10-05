@@ -10,7 +10,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-RUNNER="$ROOT/bin/fm-test-run.sh"
+RUNNER="$ROOT/bin/backend/fm-test-run.sh"
 
 assert_present "$RUNNER" "bin/backend/fm-test-run.sh is missing"
 [ -x "$RUNNER" ] || fail "bin/backend/fm-test-run.sh must be executable"
@@ -91,8 +91,8 @@ test_changed_file_selection_is_conservative() {
 init_changed_fixture_repo() {
   local repo=$1 script
   mkdir -p "$repo/bin" "$repo/tests"
-  cp "$RUNNER" "$repo/bin/fm-test-run.sh"
-  chmod +x "$repo/bin/fm-test-run.sh"
+  cp "$RUNNER" "$repo/bin/backend/fm-test-run.sh"
+  chmod +x "$repo/bin/backend/fm-test-run.sh"
   for script in \
     fm-brief.test.sh \
     fm-ask-user-authority.test.sh \
@@ -124,8 +124,8 @@ init_changed_fixture_repo() {
   : >"$repo/tests/lib.sh"
   : >"$repo/tests/fm-backend-herdr-eventwait.test.py"
   : >"$repo/bin/fm-supervisor-target-lib.sh"
-  : >"$repo/bin/fm-control-lib.sh"
-  : >"$repo/bin/fm-timeout-lib.sh"
+  : >"$repo/bin/backend/fm-control-lib.sh"
+  : >"$repo/bin/backend/fm-timeout-lib.sh"
   : >"$repo/bin/fm-procevent-quota.sh"
   : >"$repo/bin/fm-quota-axi-lib.sh"
   : >"$repo/bin/fm-quota-choose.sh"
@@ -172,7 +172,7 @@ test_changed_runner_surfaces_select_their_family() {
   # suite it drives still runs. Narrowing this to the contract owners would
   # also make any wall-clock claim about the changed suite trivially true by
   # not running the work.
-  printf '\n' >>"$repo/bin/fm-test-run.sh"
+  printf '\n' >>"$repo/bin/backend/fm-test-run.sh"
   listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD | LC_ALL=C sort)
   case "$listed" in
     *tests/fm-test-run.test.sh*) ;;
@@ -278,7 +278,7 @@ test_changed_dependency_selection_and_unmapped_failure() {
   git -C "$repo" add bin/backend/fm-quota-axi-lib.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm quota-validator-change
 
-  printf '\n' >>"$repo/bin/fm-control-lib.sh"
+  printf '\n' >>"$repo/bin/backend/fm-control-lib.sh"
   listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-backend.test.sh" \
     "control library keeps backend coverage"
@@ -289,7 +289,7 @@ test_changed_dependency_selection_and_unmapped_failure() {
   git -C "$repo" add bin/backend/fm-control-lib.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm control-lib-change
 
-  printf '\n' >>"$repo/bin/fm-timeout-lib.sh"
+  printf '\n' >>"$repo/bin/backend/fm-timeout-lib.sh"
   listed=$(cd "$repo" && bin/backend/fm-test-run.sh --list --changed --base HEAD)
   assert_contains "$listed" "tests/fm-procevent-quota.test.sh" \
     "timeout library selects quota polling coverage"
@@ -346,7 +346,7 @@ test_changed_uses_bounded_automatic_concurrency() {
   tmp=$(mktemp -d "${TMPDIR:-/tmp}/fm-test-run-changed-consent.XXXXXX")
   repo="$tmp/repo"
   init_changed_fixture_repo "$repo"
-  cp "$ROOT/bin/fm-timeout-lib.sh" "$repo/bin/fm-timeout-lib.sh"
+  cp "$ROOT/bin/backend/fm-timeout-lib.sh" "$repo/bin/backend/fm-timeout-lib.sh"
   for script in fm-backend-herdr-smoke.test.sh fm-daemon.test.sh fm-pi-watch-extension.test.sh; do
     cat >"$repo/tests/$script" <<'SH'
 #!/usr/bin/env bash
@@ -391,8 +391,8 @@ PY
   timeout_repo="$tmp/timeout-repo"
   timeout_script=tests/fm-calm-pi-extension.test.sh
   mkdir -p "$timeout_repo/bin" "$timeout_repo/tests"
-  cp "$RUNNER" "$timeout_repo/bin/fm-test-run.sh"
-  cat >"$timeout_repo/bin/fm-timeout-lib.sh" <<'SH'
+  cp "$RUNNER" "$timeout_repo/bin/backend/fm-test-run.sh"
+  cat >"$timeout_repo/bin/backend/fm-timeout-lib.sh" <<'SH'
 fm_run_timed() {
   [ "$1" -eq 900 ] || return 99
   return 124
@@ -403,7 +403,7 @@ SH
 touch should-not-run
 echo "not ok - automatic timeout helper was bypassed"
 SH
-  chmod +x "$timeout_repo/bin/fm-test-run.sh" "$timeout_repo/$timeout_script"
+  chmod +x "$timeout_repo/bin/backend/fm-test-run.sh" "$timeout_repo/$timeout_script"
   git -C "$timeout_repo" init -q
   git -C "$timeout_repo" add .
   git -C "$timeout_repo" -c user.name=test -c user.email=test@example.invalid commit -qm baseline
@@ -842,11 +842,11 @@ test_per_script_timeout_bounds_a_hang() {
   local tmp repo runner hang rc began ended grandchild_pid grandchild waited
   tmp=$(mktemp -d "${TMPDIR:-/tmp}/fm-test-run-hang.XXXXXX")
   repo="$tmp/repo"
-  runner="$repo/bin/fm-test-run.sh"
+  runner="$repo/bin/backend/fm-test-run.sh"
   hang=tests/fm-hang-fixture.test.sh
   mkdir -p "$repo/bin" "$repo/tests"
   cp "$RUNNER" "$runner"
-  cp "$ROOT/bin/fm-timeout-lib.sh" "$repo/bin/fm-timeout-lib.sh"
+  cp "$ROOT/bin/backend/fm-timeout-lib.sh" "$repo/bin/backend/fm-timeout-lib.sh"
   grandchild_pid="$tmp/grandchild.pid"
   cat >"$repo/$hang" <<'SH'
 #!/usr/bin/env bash
@@ -905,7 +905,7 @@ test_max_wall_ms_is_a_result_not_advice() {
   local tmp repo runner fast rc summary_duration budget_duration
   tmp=$(mktemp -d "${TMPDIR:-/tmp}/fm-test-run-budget.XXXXXX")
   repo="$tmp/repo"
-  runner="$repo/bin/fm-test-run.sh"
+  runner="$repo/bin/backend/fm-test-run.sh"
   fast=tests/fm-budget-fixture.test.sh
   mkdir -p "$repo/bin" "$repo/tests"
   cp "$RUNNER" "$runner"
@@ -964,7 +964,7 @@ test_jobs_parallel_scheduler_and_failure_propagation() {
   local tmp repo runner evidence fake_bin a b c d rc begin_n end_n
   tmp=$(mktemp -d "${TMPDIR:-/tmp}/fm-test-run-jobs-sched.XXXXXX")
   repo="$tmp/repo"
-  runner="$repo/bin/fm-test-run.sh"
+  runner="$repo/bin/backend/fm-test-run.sh"
   evidence="$tmp/evidence"
   fake_bin="$tmp/fake-bin"
   a=tests/fm-brief.test.sh

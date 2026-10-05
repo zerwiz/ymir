@@ -73,7 +73,7 @@ table maps every task to its file).
 
 | Path | Asset |
 |------|-------|
-| `bin/ymir-install.sh` | `installation.md` |
+| `bin/engine/ymir-install.sh` | `installation.md` |
 | `apps/hlidskjalf/**` | `hlidskjalf-ui.md` |
 | `apps/odrerir/**` | `odrerir-hall.md` |
 | `bin/mimir* \| bin/bridge/mimir-bridge.py` | `memory-well.md` |
@@ -178,7 +178,7 @@ harness/
 
 ## Migrations (`.agents/migrations/`)
 
-Versioned, idempotent home migrations. Run via `bin/ymir-migrate.sh`:
+Versioned, idempotent home migrations. Run via `bin/engine/ymir-migrate.sh`:
 
 | Migration | Purpose |
 |-----------|---------|
@@ -230,12 +230,12 @@ bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh
 
 ### Update Brokk (Gróa)
 ```bash
-bin/groa-update.sh [--check]
+bin/agents/groa-update.sh [--check]
 ```
 
 ### Repair System (Eir)
 ```bash
-bin/eir-doctor.sh [check|fix]
+bin/agents/eir-doctor.sh [check|fix]
 ```
 
 ---

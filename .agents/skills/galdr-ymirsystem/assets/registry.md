@@ -64,7 +64,7 @@ tools[8]{tool,path,purpose,status}:
 
 Usage: `python3 .agents/tools/bin/tasks-cli <command>`. All tools emit TOON.
 
-## Fleet services (`tools/`, deployed by `bin/fleet-ensure.sh`)
+## Fleet services (`tools/`, deployed by `bin/fleet/fleet-ensure.sh`)
 
 The heart's offices materialize from `tools/` into `~/.fleet` and rise as user
 units joined to `ymir.target` (the auto-boot law). The snotra operator commands
@@ -83,7 +83,7 @@ fleet[9]{service,source,unit,port,role}:
   "skills-mcp","packages/mcp/skills/server.mjs","skills-mcp.service","8319","heart + dev"
   "skuld","tools/tickets-mcp/server.mjs","skuld.service","8320","heart"
   "snotra","tools/snotra/server.mjs","snotra.service","8321","heart (read-only minutes)"
-  "snotra-detect","bin/snotra-detect.sh","snotra-detect.service","—","CAPABILITY: any seat with a microphone (the ear's watch; never the heart)"
+  "snotra-detect","bin/time/snotra/snotra-detect.sh","snotra-detect.service","—","CAPABILITY: any seat with a microphone (the ear's watch; never the heart)"
 ```
 
 ## OpenCode commands
@@ -108,12 +108,12 @@ commands[5]{command,purpose}:
   "bin/agents/eindri-seen.sh","bridge condition: has the smith reported? (report file, or herdr left working)"
   "bin/agents/eindri-acclaim.sh","the push path: file the report/status, mark the ONE shared ledger (bin/agents/eindri-wake-lib.sh), append the durable wake queue + desktop note; the worker's own terminal act"
   "bin/agents/eindri-handoff.sh","the handoff failsafe: sweep undelivered reports/questions into the wake queue, idempotent on the shared ledger (run on re-arm and on the 06:45 cron row)"
-  "bin/hall-snapshot.sh","the planning feed: real system state -> public-safe livehall.json for the Óðrerir Hall"
+  "bin/time/snotra/hall-snapshot.sh","the planning feed: real system state -> public-safe livehall.json for the Óðrerir Hall"
 ```
 
 ## The marketing stack doors (provisionable — one stack, any computer)
 
-`bin/ymir-marketing-stack.sh up|status|down|doors` stands Mautic + Postiz +
+`bin/desktop/ymir-marketing-stack.sh up|status|down|doors` stands Mautic + Postiz +
 Activepieces (+ optionally Forgejo) on ANY computer — same OSS engines the
 server runs, env-driven, ports virtualized, secrets in the home, never inline.
 The Allfather's server stack (zerwizserver) and the public doors agents reach:
@@ -129,7 +129,7 @@ marketing_doors[6]{service,door,reach_note}:
 ```
 
 An agent (Bragi for marketing, Sindri for git) provisions the stack locally for
-any user with `bin/ymir-marketing-stack.sh`; the server stack is the Allfather's
+any user with `bin/desktop/ymir-marketing-stack.sh`; the server stack is the Allfather's
 live one. Public-door exposure on the server is tunnel-driven (cloudflared) —
 mend the door layer on the server, not in the tree.
 

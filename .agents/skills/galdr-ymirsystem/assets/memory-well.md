@@ -11,7 +11,7 @@ The well is **Mimirsbrunn**, backed by the validated OSS engine **engdbram**
 > **The name trap.** PyPI's `engram` is an unrelated *rendering* library
 > (mitsuba/drjit/torch). Installing it pulls gigabytes of CUDA wheels and still
 > leaves Ymir with no memory engine. The distribution is **`engdbram`**;
-> `bin/prereq-ensure.sh engram` installs the right one. It is **one repo-local store** shared by every agent and
+> `bin/engine/prereq-ensure.sh engram` installs the right one. It is **one repo-local store** shared by every agent and
 every harness. Motto: **drink before you act, water it after** — recall on the
 way in, observe on the way out.
 
@@ -36,7 +36,7 @@ the gate API, `mimir.sh`, and `mimir-ingest.sh` speak HTTP on `:4602`.
 
 `bin/records/mimir-ingest.sh` loads every stored hash once into an associative array, so
 dedupe is O(1) per section rather than rescanning the whole store each time (was
-O(sections × store)); `bin/workspace-rag.sh index` reads the store once and walks
+O(sections × store)); `bin/records/workspace-rag.sh index` reads the store once and walks
 all files in a single Python pass (was a store read + process spawn per file).
 
 **Where ingest reads from.** Its source is the hoard's `docs/business`, and the
@@ -101,7 +101,7 @@ well_laws[6]{id,law}:
   3,"Water it after — observe a lesson once it lands"
   4,"Hoarded — the store is $YMIR_HOME/hodd/memory/kaia.engram (one well, never a duplicated migrated copy)"
   5,"One well — every harness shares it; scope per-call, never per-server"
-  6,"One resolver — the bridge resolves the home through bin/vault/hoard-lib.sh; a private default is refused by bin/defaults-guard.sh (2026-09-24)"
+  6,"One resolver — the bridge resolves the home through bin/vault/hoard-lib.sh; a private default is refused by bin/gates/guards/defaults-guard.sh (2026-09-24)"
 ```
 
 Words that *discuss* mock data (docs about removing mocks) are real knowledge
@@ -162,5 +162,5 @@ hardcoded timeline is gone.
   tree: a packaged install replaces its tree on upgrade.
 
 **Portability.** The bridge signals processes through `ymir_kill_matching` from
-`bin/ymir-platform.sh` rather than calling `pkill` directly, because `pkill` is
+`bin/fleet/ymir-platform.sh` rather than calling `pkill` directly, because `pkill` is
 absent on some MSYS/WSL images (Rule 05, one place knows the difference).

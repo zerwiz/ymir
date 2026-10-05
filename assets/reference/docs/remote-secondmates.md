@@ -15,14 +15,14 @@ Local second mates are unaffected and keep their ordinary backend and session se
 Configure an SSH alias in the primary account's normal OpenSSH configuration.
 Use ordinary public-key authentication, strict host-key verification, and a dedicated remote account where practical.
 Do not enable agent forwarding for Firstmate.
-`fm-on.sh` also disables agent forwarding, forwarding setup, and configured `SendEnv` patterns on every call, and arms bounded SSH dead-peer detection so a vanished host (a reboot, a dropped link) fails within a bounded window instead of hanging indefinitely; its [script header](../bin/fm-on.sh) owns the keepalive defaults and environment overrides.
+`fm-on.sh` also disables agent forwarding, forwarding setup, and configured `SendEnv` patterns on every call, and arms bounded SSH dead-peer detection so a vanished host (a reboot, a dropped link) fails within a bounded window instead of hanging indefinitely; its [script header](../bin/backend/fm-on.sh) owns the keepalive defaults and environment overrides.
 
 Clone Firstmate on the remote host at an absolute code-root path.
 Expose that clone's fixed entrypoint on the account's non-interactive SSH `PATH`, for example:
 
 ```sh
 mkdir -p ~/.local/bin
-ln -s /absolute/path/to/firstmate/bin/fm-remote-entrypoint.sh ~/.local/bin/fm-remote-entrypoint.sh
+ln -s /absolute/path/to/firstmate/bin/backend/fm-remote-entrypoint.sh ~/.local/bin/backend/fm-remote-entrypoint.sh
 ```
 
 The entrypoint accepts encoded argv for genuine executable `bin/fm-*.sh` files only.
@@ -32,7 +32,7 @@ The entrypoint authorizes that bootstrap with normal git tracking when git resol
 After setup, every other command verifies Firstmate's account-owned remote job worker, stages the encoded argv and stdin bytes, waits for its result, and relays stdout, stderr, and the exit status separately.
 On macOS the worker is `dev.firstmate.remote-job`, an Aqua-scoped LaunchAgent at `~/Library/LaunchAgents/dev.firstmate.remote-job.plist` with logs under `~/Library/Logs/`.
 After that bootstrap every non-doctor `fm-on.sh` target runs through that worker in the remote account's GUI session, never in the SSH process or a Herdr pane.
-The worker serves one lane per staged home: jobs for the same home follow the staging-order contract owned by [`bin/backend/fm-remote-job-lib.sh`](../bin/fm-remote-job-lib.sh), while different homes' lanes run concurrently so one home's long job never delays another home's commands.
+The worker serves one lane per staged home: jobs for the same home follow the staging-order contract owned by [`bin/backend/fm-remote-job-lib.sh`](../bin/backend/fm-remote-job-lib.sh), while different homes' lanes run concurrently so one home's long job never delays another home's commands.
 Within a home's lane the worker preempts a running reply long-poll as soon as any command other than another reply long-poll is queued for that home, so interactive commands and startup checks are never serialized behind a poll window.
 `bin/backend/fm-remote-job-lib.sh` owns that preemption contract and distinguishes preemption from a wait window that closes with no data, so only a genuinely quiet window proves channel freshness while either outcome can re-arm without losing data.
 A caller that disconnects or whose caller-side wait expires before its job completes cancels it instead of abandoning it: cancelled queued work is skipped, cancelled running work is stopped, and the finalized record is cleaned up, so retries never convoy behind abandoned work.
@@ -97,7 +97,7 @@ bin/backend/fm-on.sh <secondmate-id|ssh-alias> fm-remote-doctor.sh --fix
 ```
 
 Over the plain SSH doctor bootstrap, it writes and reloads the Firstmate-owned `dev.firstmate.remote-job` and `dev.firstmate.herdr.fm-remote` launch agents on macOS, both scoped with `LimitLoadToSessionType=Aqua` and bootstrapped in `gui/<uid>`.
-It starts the same workers directly on Linux, recreates the `~/.local/bin/fm-remote-entrypoint.sh` symlink when it is absent, and creates only Firstmate-owned required-tool wrappers that it can prove resolve to a version-manager target, stopping after one harness satisfies the at-least-one requirement.
+It starts the same workers directly on Linux, recreates the `~/.local/bin/backend/fm-remote-entrypoint.sh` symlink when it is absent, and creates only Firstmate-owned required-tool wrappers that it can prove resolve to a version-manager target, stopping after one harness satisfies the at-least-one requirement.
 It never installs packages or overwrites a non-Firstmate file at a reserved wrapper path.
 The dedicated Herdr launch agent owns only the remote-secondmate `fm-remote` server and does not inspect, rewrite, start, stop, or require the user's interactive `default` session or its `dev.firstmate.herdr` launch agent.
 It re-derives every check from the host afterwards, so what it prints is the state after the repair rather than the intent of one.
@@ -111,7 +111,7 @@ These steps are never automated and are always reported rather than silently att
 - Each worker runtime's own `/login`, and any keychain password prompt that login needs.
 
 Firstmate never writes an auto-login password, never changes FileVault, and never stores an account password.
-A file at `~/.local/bin/fm-remote-entrypoint.sh` that is not Firstmate's own symlink is reported for the operator to inspect and is never overwritten.
+A file at `~/.local/bin/backend/fm-remote-entrypoint.sh` that is not Firstmate's own symlink is reported for the operator to inspect and is never overwritten.
 
 ## Provision a route
 
@@ -128,7 +128,7 @@ Name each project's origin as `<project>=<origin-url>`.
 Resolve the concrete origin from the captain, the project registry, an existing clone anywhere, the forge, or an explicit paste rather than imposing one URL template.
 Seeding a project this machine has never cloned needs no clone under `projects/`, no `no-mistakes` initialization here, and no fleet sync first.
 A bare `<project>` is still accepted when this machine happens to have `projects/<project>`, whose configured origin is then read instead of being retyped.
-[`bin/backend/fm-project-origin-lib.sh`](../bin/fm-project-origin-lib.sh) owns which URLs are accepted; it decides on structure and safety alone, so no forge, domain, or host is privileged and a self-hosted server works exactly as a hosted one does.
+[`bin/backend/fm-project-origin-lib.sh`](../bin/backend/fm-project-origin-lib.sh) owns which URLs are accepted; it decides on structure and safety alone, so no forge, domain, or host is privileged and a self-hosted server works exactly as a hosted one does.
 The primary validates every resolved origin before transport, and the receiving host validates it again before cloning.
 The project's registered delivery mode still comes from this machine's `data/projects.md`, so an unregistered or `local-only` project is refused rather than provisioned.
 
@@ -165,7 +165,7 @@ Backends that already refuse secondmate launch, currently Orca and cmux, remain 
 Startup liveness recovery relaunches a dead or missing remote second mate through this same command, so recovery passes the same readiness gate rather than a weaker one.
 
 A persistent remote route's parent metadata intentionally has no local spawn-generation marker and identifies the route by its recorded host instead.
-The Bearings inventory-reconcile hook therefore accepts these markerless routes, revalidates the sampled host at delivery, and refuses a route that changed hosts; [`fm-secondmate-reconcile.sh`](../bin/fm-secondmate-reconcile.sh) owns the exact cooldown, identity, and reporting contract.
+The Bearings inventory-reconcile hook therefore accepts these markerless routes, revalidates the sampled host at delivery, and refuses a route that changed hosts; [`fm-secondmate-reconcile.sh`](../bin/backend/fm-secondmate-reconcile.sh) owns the exact cooldown, identity, and reporting contract.
 
 Send routed requests normally:
 
@@ -173,7 +173,7 @@ Send routed requests normally:
 FM_HOME=<primary-home> bin/backend/fm-send.sh fm-<id> '<request>'
 ```
 
-The [`fm-send.sh` header](../bin/fm-send.sh) owns the exact delivery-status contract.
+The [`fm-send.sh` header](../bin/backend/fm-send.sh) owns the exact delivery-status contract.
 A routed request is delivered as a durable record in the remote home's steering inbox plus a best-effort doorbell, never by typing the payload into the pane; exit 0 means the record durably exists.
 Every remote transport attempt is bounded by `FM_SEND_REMOTE_BUDGET`; that header owns the setting's default and validation contract.
 An unconfirmed SSH transport (exit 255) is retried identically once, while a budget expiry is not retried because completion is unknown; either outcome preserves this ordinary reply-bearing request's pending-reply expectation for the record that may have landed.

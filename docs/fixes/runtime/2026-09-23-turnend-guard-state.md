@@ -5,7 +5,7 @@
   supervision is off"*, even while the watcher was provably alive (heartbeat
   seconds old) and `gna_watch_arm` refused to re-arm because it already owned the
   arm child.
-- **Root cause:** `bin/syn-turnend-guard.sh` resolved
+- **Root cause:** `bin/gates/guards/syn-turnend-guard.sh` resolved
   `STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"` — for the primary that is
   the **code tree** (`$HOME_SEAT/ymir/state`). The live watcher writes its
   `.supervision-armed` marker and `.watch.heartbeat` into the **operator's hoard
@@ -25,5 +25,5 @@
 - Old guard at the same instant: **exit 2** (the false alarm).
 
 ### Files
-- `bin/syn-turnend-guard.sh`
+- `bin/gates/guards/syn-turnend-guard.sh`
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md`

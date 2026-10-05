@@ -6,7 +6,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-supervision-instructions)
-RENDER="$ROOT/bin/fm-supervision-instructions.sh"
+RENDER="$ROOT/bin/backend/fm-supervision-instructions.sh"
 
 test_selected_harness_block_only() {
   local out

@@ -1,7 +1,7 @@
 """`python3 -m ymir_runtime.config` — the door face of the config layer.
 
 Plan 58, Phase 7. This keeps the config check callable from a shell (via
-`bin/ymir-config-check.sh`) without adding a verb to the engine's four-verb
+`bin/gates/checks/ymir-config-check.sh`) without adding a verb to the engine's four-verb
 interface.
 
     python3 -m ymir_runtime.config examples [--root DIR]

@@ -5,7 +5,7 @@ Load this with the running or recorded tool reference for trust, skill invocatio
 ## Typed data and lifecycle control
 
 The router owns lifecycle-only control and recorded-harness selection.
-Conversation and harness-native skill invocation use `../../../bin/brokk-send.sh`.
+Conversation and harness-native skill invocation use `../../../bin/agents/brokk-send.sh`.
 `../../../docs/agent-control.md` owns the data-plane split, and `../../../bin/brokk-control-lib.sh` owns executable capabilities.
 Tool-reference exit and interrupt values are empirical records, not keys to improvise; a new adapter remains uncontrollable until they land in that owner.
 Let the control plane verify postconditions.

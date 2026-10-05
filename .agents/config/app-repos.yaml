@@ -1,7 +1,7 @@
 # App repositories — PUBLIC map (the five surfaces)
 #
 # The fork path: a fresh clone has no private hoard (no
-# `$YMIR_HOME/hodd/identity/projects.yaml`), so bin/ymir-install.sh's `apps`
+# `$YMIR_HOME/hodd/identity/projects.yaml`), so bin/engine/ymir-install.sh's `apps`
 # step falls back to THIS file to clone the five app repos. The hoard registry
 # stays authoritative when present; this file is the fork's road.
 #

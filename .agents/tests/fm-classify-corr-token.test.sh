@@ -22,10 +22,10 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-classify-lib.sh"
+. "$ROOT/bin/backend/fm-classify-lib.sh"
 
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
-REPORT="$ROOT/bin/fm-secondmate-report.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
+REPORT="$ROOT/bin/backend/fm-secondmate-report.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-classify-corr-token-tests)
 
@@ -414,9 +414,9 @@ test_incremental_and_whole_file_folds_agree_over_correlated_lines() {
     printf 'needs-decision corr=%s [key=k%s]: decision %s\n' "$CORR" "$round" "$round" >> "$status"
     printf 'working corr=%s: routine progress %s\n' "$CORR2" "$round" >> "$status"
     whole=$(FM_STATE_OVERRIDE="$state" bash -c '. "$1"; status_open_decisions "$2"' _ \
-      "$ROOT/bin/fm-classify-lib.sh" "$status")
+      "$ROOT/bin/backend/fm-classify-lib.sh" "$status")
     inc=$(FM_STATE_OVERRIDE="$state" bash -c '. "$1"; status_open_decisions_incremental "$2"' _ \
-      "$ROOT/bin/fm-classify-lib.sh" "$status")
+      "$ROOT/bin/backend/fm-classify-lib.sh" "$status")
     [ "$whole" = "$inc" ] \
       || fail "folds disagreed after opening k$round: whole=[$whole] incremental=[$inc]"
     # Agreement alone would be satisfied by both folds being blind in the same
@@ -434,9 +434,9 @@ test_incremental_and_whole_file_folds_agree_over_correlated_lines() {
   while [ "$round" -lt 6 ]; do
     printf 'resolved corr=%s [key=k%s]: answered %s\n' "$CORR" "$round" "$round" >> "$status"
     whole=$(FM_STATE_OVERRIDE="$state" bash -c '. "$1"; status_open_decisions "$2"' _ \
-      "$ROOT/bin/fm-classify-lib.sh" "$status")
+      "$ROOT/bin/backend/fm-classify-lib.sh" "$status")
     inc=$(FM_STATE_OVERRIDE="$state" bash -c '. "$1"; status_open_decisions_incremental "$2"' _ \
-      "$ROOT/bin/fm-classify-lib.sh" "$status")
+      "$ROOT/bin/backend/fm-classify-lib.sh" "$status")
     [ "$whole" = "$inc" ] \
       || fail "folds disagreed after closing k$round: whole=[$whole] incremental=[$inc]"
     [ "$(printf '%s' "$whole" | grep -c .)" -eq "$((5 - round))" ] \
@@ -470,7 +470,7 @@ test_a_cursor_written_before_this_change_is_rebuilt() {
     printf 'version=4\n'
     printf 'offset=%s\n' "$(LC_ALL=C wc -c < "$status" | tr -d '[:space:]')"
     printf 'ident=%s\n' "$(bash -c '. "$1"; _fm_open_decisions_file_ident "$2"' _ \
-      "$ROOT/bin/fm-classify-lib.sh" "$status")"
+      "$ROOT/bin/backend/fm-classify-lib.sh" "$status")"
   } > "$cursor"
 
   out="$dir/drain.out"
@@ -497,10 +497,10 @@ test_the_real_writers_produce_tokens_this_library_reads() {
   # Writer 1: the correlation library's own token builder, over ids it generates.
   local i=0 corr
   while [ "$i" -lt 5 ]; do
-    corr=$(bash -c '. "$1"; fm_pending_reply_new_id' _ "$ROOT/bin/fm-pending-reply-lib.sh")
+    corr=$(bash -c '. "$1"; fm_pending_reply_new_id' _ "$ROOT/bin/backend/fm-pending-reply-lib.sh")
     [ -n "$corr" ] || fail "the correlation library produced an empty id"
     token=$(bash -c '. "$1"; fm_pending_reply_corr_token "$2"' _ \
-      "$ROOT/bin/fm-pending-reply-lib.sh" "$corr")
+      "$ROOT/bin/backend/fm-pending-reply-lib.sh" "$corr")
     line="needs-decision $token [key=pinned]: a decision"
     verb=$(status_line_verb "$line")
     [ "$verb" = needs-decision ] \

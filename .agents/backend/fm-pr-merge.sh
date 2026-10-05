@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Merge a task's PR or MR after recording pr= and any available pr_head= through
 # bin/backend/fm-pr-check.sh, so teardown can verify landed work after squash merges.
-# The full canonical URL is parsed by bin/fm-pr-lib.sh. A GitHub pull request is
+# The full canonical URL is parsed by bin/backend/fm-pr-lib.sh. A GitHub pull request is
 # addressed through gh-axi by the derived owner and repository; a GitLab merge
 # request is addressed through glab by the project URL rebuilt from the parsed
 # host and path, so any instance works and no host is hardcoded.

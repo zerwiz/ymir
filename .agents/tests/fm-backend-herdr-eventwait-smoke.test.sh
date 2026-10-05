@@ -43,7 +43,7 @@ fm_herdr_lab_prepare "$SESSION" || fail "could not prepare the isolated Herdr la
 # The dispatcher is a separately linted production boundary. Its dynamic
 # adapter source edges stop at each independently linted canonical adapter.
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 fm_backend_source herdr || fail "fm_backend_source herdr failed"
 
 HERDR_VERSION=$(herdr --version 2>/dev/null | head -1)
@@ -123,7 +123,7 @@ pass "real herdr ($HERDR_VERSION): a driven idle->blocked transition returns the
 export FM_STATE_OVERRIDE="$STATE"
 export FM_ROOT_OVERRIDE="$ROOT"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-push-transition-lib.sh"
+. "$ROOT/bin/backend/fm-push-transition-lib.sh"
 wake() { return 0; }
 handle_push_transition herdr "$SESSION" "$REC"
 [ -e "$STATE/.wake-queue" ] || fail "handle_push_transition did not create the wake queue"

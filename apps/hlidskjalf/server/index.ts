@@ -444,7 +444,7 @@ async function processes() {
     uptime: 3600, realm: 'platform',
   });
   // The fleet's daemons across PM2/Docker/systemd, read-only from Valhalla.
-  for (const r of parseToon(await runAsync(['bash', 'bin/valhalla.sh', 'list']))) {
+  for (const r of parseToon(await runAsync(['bash', 'bin/agents/valhalla.sh', 'list']))) {
     const st = /running|active|online/i.test(r.status)
       ? 'nominal'
       : /exit|fail|inactive|dead|stop/i.test(r.status)
@@ -954,7 +954,7 @@ async function reviews() {
 
   // 2. The compliance card (lint + governed-path checks) always stands, but IT
   //    IS NOT A PULL REQUEST — the board counts real PRs (number > 0) apart.
-  const out = await runAsync(['bash', 'bin/brokk-lint.sh', '--quiet'], 60000);
+  const out = await runAsync(['bash', 'bin/agents/brokk-lint.sh', '--quiet'], 60000);
   const compliance = await runAsync(['bash', '.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh', '--json'], 60000);
   let gates: { id: string; status: string; detail: string }[] = [];
   try {
@@ -1146,7 +1146,7 @@ async function cron() {
     : 'never started this session');
   // The seat's own roles, so the board can say which jobs run HERE (plan 51).
   let roles: string[] = [];
-  try { roles = ((JSON.parse(await runAsync(['bash', 'bin/topology.sh', '--json'])) as { roles?: string[] }).roles ?? []) as string[]; } catch { /* no topology */ }
+  try { roles = ((JSON.parse(await runAsync(['bash', 'bin/fleet/topology.sh', '--json'])) as { roles?: string[] }).roles ?? []) as string[]; } catch { /* no topology */ }
   // Last fire per job, from the loop's date-guard stamps.
   const last: Record<string, string> = {};
   const stampDir = join(STATE_DIR, '.cron-fired');
@@ -1188,7 +1188,7 @@ async function cronSeats() {
   for (const s of serverSeats()) {
     const out = await runAsync(
       ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=3', s.host,
-        `bash -lc 'G=$HOME/ymir; [ -d "$G/bin" ] || G=$(dirname "$(ls -d "$HOME"/*ymir*/bin 2>/dev/null | head -1)" 2>/dev/null); cd "$G" 2>/dev/null || exit 1; bash bin/time/nornir-cron-start.sh --status; bash bin/topology.sh --json 2>/dev/null'`],
+        `bash -lc 'G=$HOME/ymir; [ -d "$G/bin" ] || G=$(dirname "$(ls -d "$HOME"/*ymir*/bin 2>/dev/null | head -1)" 2>/dev/null); cd "$G" 2>/dev/null || exit 1; bash bin/time/nornir-cron-start.sh --status; bash bin/fleet/topology.sh --json 2>/dev/null'`],
       8000);
     if (!out) {
       rows.push({ seat: s.seat, host: s.host, reachable: false, running: false, pid: '', roles: [], jobs: localJobs.length, applies: 0, error: 'unreachable (ssh ring)' });
@@ -1803,13 +1803,13 @@ function workspaces(): { id: string; name: string; kind: string; company?: strin
 }
 
 async function setupStatus() {
-  return parseToon(await runAsync(['bash', 'bin/ymir-install.sh', '--check'], 30000));
+  return parseToon(await runAsync(['bash', 'bin/engine/ymir-install.sh', '--check'], 30000));
 }
 function setupRun() {
-  return parseToon(run(['bash', 'bin/ymir-install.sh', '--skip-services']));
+  return parseToon(run(['bash', 'bin/engine/ymir-install.sh', '--skip-services']));
 }
 function workspaceProvision(name: string, kind: string, domains: string) {
-  return parseToon(run(['bash', 'bin/workspace-provision.sh', name, '--kind', kind, '--domains', domains]));
+  return parseToon(run(['bash', 'bin/agents/workspace-provision.sh', name, '--kind', kind, '--domains', domains]));
 }
 
 /* ---- tunnel gate (hardcoded for now) ------------------------------------- */

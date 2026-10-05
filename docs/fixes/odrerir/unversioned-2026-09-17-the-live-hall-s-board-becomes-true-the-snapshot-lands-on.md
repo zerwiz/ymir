@@ -5,7 +5,7 @@
   `apps/odrerir/public/livehall.json` same-origin, but nothing wrote it on a
   schedule — the board showed the saga's own static count and said so.
   `bin/time/nornir-job-hall-snapshot.sh` (08:00, after the 06:00 observer and the
-  07:00 briefing) now drives `bin/hall-snapshot.sh` from real state — runes,
+  07:00 briefing) now drives `bin/time/snotra/hall-snapshot.sh` from real state — runes,
   projects, the cron gauge, the wake queue, standing smiths, armed when-
   sources, landed errands — and carves Rune `odrerir / hall.snapshot`.
 - The snapshot is runtime, never repo: `apps/odrerir/public/livehall.json` is

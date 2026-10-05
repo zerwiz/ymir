@@ -344,7 +344,7 @@ EOF
     if [ "$claim_live" -eq 0 ]; then
       if report_requires_wake "$state"; then
         fm_wake_append check startup-network \
-          "check: startup-network: deferred startup network checks finished ($state); read them with $FM_ROOT/bin/fm-startup-network.sh report" \
+          "check: startup-network: deferred startup network checks finished ($state); read them with $FM_ROOT/bin/backend/fm-startup-network.sh report" \
           || true
       fi
       fm_lock_release "$PUBLISH_LOCK"
@@ -361,7 +361,7 @@ EOF
   fi
   if report_requires_wake "$state"; then
     fm_wake_append check startup-network \
-      "check: startup-network: deferred startup network checks finished ($state); read them with $FM_ROOT/bin/fm-startup-network.sh report" \
+      "check: startup-network: deferred startup network checks finished ($state); read them with $FM_ROOT/bin/backend/fm-startup-network.sh report" \
       || true
   fi
   fm_lock_release "$PUBLISH_LOCK"
@@ -489,12 +489,12 @@ EOF
   case "$rc" in
     0) publish "$generation" 'done' "$phases" "$sweep_locked" "$started" "$rc" "$out" "$timings" ;;
     124)
-      printf 'NETWORK_CHECKS: hit the %ss bound before finishing, so %s may be incomplete; rerun %s/bin/fm-startup-network.sh run --locked %s\n' \
+      printf 'NETWORK_CHECKS: hit the %ss bound before finishing, so %s may be incomplete; rerun %s/bin/backend/fm-startup-network.sh run --locked %s\n' \
         "$budget" "$(phase_label "$phases")" "$FM_ROOT" "$sweep_locked" >> "$out"
       publish "$generation" timeout "$phases" "$sweep_locked" "$started" "$rc" "$out" "$timings"
       ;;
     *)
-      printf 'NETWORK_CHECKS: the deferred check worker exited %s, so %s may be incomplete; rerun %s/bin/fm-startup-network.sh run --locked %s\n' \
+      printf 'NETWORK_CHECKS: the deferred check worker exited %s, so %s may be incomplete; rerun %s/bin/backend/fm-startup-network.sh run --locked %s\n' \
         "$rc" "$(phase_label "$phases")" "$FM_ROOT" "$sweep_locked" >> "$out"
       publish "$generation" failed "$phases" "$sweep_locked" "$started" "$rc" "$out" "$timings"
       ;;
@@ -519,7 +519,7 @@ print_finished() {  # <state>
   printf 'completed off the startup path in %ss: %s.\n' "$took" "$(phase_label "$phases")"
   [ "$state" = 'done' ] || printf 'The stage itself did not finish cleanly (%s) - the NETWORK_CHECKS line below names what to rerun.\n' "$state"
   if [ "$report_published" = 0 ]; then
-    printf 'NETWORK_CHECKS: could not publish the deferred check report, so %s results are unavailable; rerun %s/bin/fm-startup-network.sh run --locked %s\n' \
+    printf 'NETWORK_CHECKS: could not publish the deferred check report, so %s results are unavailable; rerun %s/bin/backend/fm-startup-network.sh run --locked %s\n' \
       "$(phase_label "$phases")" "$FM_ROOT" "$(status_get locked)"
   elif [ -s "$REPORT_FILE" ]; then
     cat "$REPORT_FILE"
@@ -548,7 +548,7 @@ print_pending() {
   [ -z "$age" ] || printf 'Started %ss ago, bounded at %ss.\n' "$age" "$(stage_budget)"
   # shellcheck disable=SC2016  # The backticked wake name is literal digest text.
   printf 'Only a FAILED or otherwise actionable result arrives as a `check: startup-network` wake; a clean success stays silent.\n'
-  printf 'The durable result is readable on demand with %s/bin/fm-startup-network.sh report; until it finishes, treat none of it as confirmed.\n' "$FM_ROOT"
+  printf 'The durable result is readable on demand with %s/bin/backend/fm-startup-network.sh report; until it finishes, treat none of it as confirmed.\n' "$FM_ROOT"
 }
 
 print_state() {
@@ -558,7 +558,7 @@ print_state() {
       if worker_alive; then
         print_pending
       else
-        printf 'NETWORK_CHECKS: the deferred check worker stopped before publishing, so %s did not complete; rerun %s/bin/fm-startup-network.sh run --locked %s\n' \
+        printf 'NETWORK_CHECKS: the deferred check worker stopped before publishing, so %s did not complete; rerun %s/bin/backend/fm-startup-network.sh run --locked %s\n' \
           "$(phase_label "$(status_get phases)")" "$FM_ROOT" "$(status_get locked)"
       fi
       ;;

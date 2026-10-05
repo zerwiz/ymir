@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # desktop-classes.test.sh — the routing invariant (P5, 2026-09-24): one string
-# per surface, four writers. app_class (bin/app-lib.sh) must equal the
+# per surface, four writers. app_class (bin/seat/sessrumnir/app-lib.sh) must equal the
 # surface's .desktop template StartupWMClass AND the slug the app's own source
 # sets (app.setName / appendSwitch('class')). A future rename cannot silently
 # orphan a window rule or a launcher.
@@ -16,8 +16,8 @@ fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
 
-# shellcheck source=bin/app-lib.sh
-. "$ROOT/bin/app-lib.sh"
+# shellcheck source=bin/seat/sessrumnir/app-lib.sh
+. "$ROOT/bin/seat/sessrumnir/app-lib.sh"
 
 # The .desktop template each surface ships.
 template_for() {  # <surface>

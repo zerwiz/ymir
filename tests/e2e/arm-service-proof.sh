@@ -25,8 +25,8 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-WATCH="$ROOT/bin/syn-watch.sh"
-ARM="$ROOT/bin/syn-watch-arm.sh"
+WATCH="$ROOT/bin/pi/syn-watch.sh"
+ARM="$ROOT/bin/pi/syn-watch-arm.sh"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -124,7 +124,7 @@ case "$ACTION" in
     fi
     # 7. Eir names the arm (and mends it back).
     "$WATCH" start >/dev/null 2>&1
-    arm_row="$(timeout 120 bash "$ROOT/bin/eir-doctor.sh" check 2>/dev/null | grep -m1 '^  "arm",')"
+    arm_row="$(timeout 120 bash "$ROOT/bin/agents/eir-doctor.sh" check 2>/dev/null | grep -m1 '^  "arm",')"
     case "$arm_row" in
       *'"ok"'*) record "eir-names-it" ok "${arm_row#  }" ;;
       *)        record "eir-names-it" FAIL "${arm_row:-no arm row in eir-doctor output}" ;;

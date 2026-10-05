@@ -15,14 +15,14 @@
 - New `step_autoboot` checks `loginctl show-user $USER -p Linger`, enables linger
   on headless seats (or fails with the exact remedy), and reports the Linger
   value on every seat in the install summary.
-- `step_services` proves the raise with `bin/ymir-autoboot.sh verify` instead of
+- `step_services` proves the raise with `bin/engine/ymir-autoboot.sh verify` instead of
   re-running the old start.sh road (the road is retired for boot; the services
   are units).
 - `step_validate` runs both the live checks and the boot proof as the final gate.
 - The step table and this asset document the role-gated program sets
-  (`bin/ymir-autoboot.sh` owns the one table).
+  (`bin/engine/ymir-autoboot.sh` owns the one table).
 
 ### Files
-- bin/ymir-install.sh (step_fleet · step_autoboot · step_services · step_validate)
+- bin/engine/ymir-install.sh (step_fleet · step_autoboot · step_services · step_validate)
 - .agents/skills/galdr-ymirsystem/assets/installation.md (+ tyr mirror)
 - .agents/skills/galdr-ymirsystem/assets/memory-well.md (+ tyr mirror)

@@ -649,7 +649,7 @@ remote_secondmate_teardown() {
     echo "REFUSED: remote secondmate $ID still has an unhandled captured reply" >&2
     return 1
   }
-  "$FM_ROOT/bin/fm-guard.sh" || true
+  "$FM_ROOT/bin/backend/fm-guard.sh" || true
   if [ "$FORCE" = --force ]; then
     if out=$("$SCRIPT_DIR/fm-on.sh" "$ID" fm-remote-secondmate-control.sh retire "$ID" --force < /dev/null 2>&1); then rc=0; else rc=$?; fi
   else
@@ -728,7 +728,7 @@ PROJ=$(fm_meta_get "$META" project)
 T_ORCA=
 [ "$BACKEND" != orca ] || T_ORCA=$T
 if [ "${FM_TEARDOWN_GUARD_DONE:-0}" != 1 ]; then
-  "$FM_ROOT/bin/fm-guard.sh" || true
+  "$FM_ROOT/bin/backend/fm-guard.sh" || true
 fi
 HOME_PATH=$(grep '^home=' "$META" | cut -d= -f2- || true)
 PR_URL=$(grep '^pr=' "$META" | tail -1 | cut -d= -f2- || true)
@@ -2108,7 +2108,7 @@ restore_firstmate_home_process_events() {
       return "$TEARDOWN_PROCEVENT_RESTORE_FAILED"
     fi
   done
-  runner="$home/bin/fm-procevent.sh"
+  runner="$home/bin/backend/fm-procevent.sh"
   if [ ! -f "$runner" ] || [ -L "$runner" ] || [ ! -x "$runner" ]; then
     runner="$SCRIPT_DIR/fm-procevent.sh"
   fi
@@ -2120,7 +2120,7 @@ restore_firstmate_home_process_events() {
 }
 
 cleanup_firstmate_home_process_events() {
-  local home=$1 label=$2 runner="$1/bin/fm-procevent.sh"
+  local home=$1 label=$2 runner="$1/bin/backend/fm-procevent.sh"
   firstmate_home_has_process_events "$home" || return 0
   if [ ! -f "$runner" ] || [ -L "$runner" ] || [ ! -x "$runner" ]; then
     echo "REFUSED: $label $home has process-event state but no sweep-capable bin/backend/fm-procevent.sh; restore the home script and rerun teardown" >&2
@@ -2137,7 +2137,7 @@ cleanup_firstmate_home_process_events() {
 }
 
 preflight_firstmate_home_process_events() {
-  local home=$1 label=$2 runner="$1/bin/fm-procevent.sh"
+  local home=$1 label=$2 runner="$1/bin/backend/fm-procevent.sh"
   firstmate_home_has_process_events "$home" || return 0
   if [ ! -f "$runner" ] || [ -L "$runner" ] || [ ! -x "$runner" ]; then
     echo "REFUSED: $label $home has process-event state but no sweep-capable bin/backend/fm-procevent.sh; restore the home script and rerun teardown" >&2
@@ -2911,7 +2911,7 @@ fi
 fm_lock_release "$META_LOCK"
 META_LOCK_HELD=0
 if [ "$KIND" != scout ] && [ "$KIND" != secondmate ] && [ "$MODE" != local-only ]; then
-  "$FM_ROOT/bin/fm-fleet-sync.sh" "$PROJ" || true
+  "$FM_ROOT/bin/backend/fm-fleet-sync.sh" "$PROJ" || true
 fi
 # A secondmate retirement may remove the home containing an overridden control
 # state directory. Do not let the side-band refresh recreate that retired home.

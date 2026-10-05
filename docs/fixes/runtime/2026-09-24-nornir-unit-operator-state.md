@@ -23,5 +23,5 @@
 
 ## Files
 - tools/web/systemd/nornir.service — two Environment lines with the placeholders
-- bin/fleet-ensure.sh — two `sed` substitutions (operator state/config)
+- bin/fleet/fleet-ensure.sh — two `sed` substitutions (operator state/config)
 - .agents/skills/galdr-ymirsystem/assets/nornir-jobs.md — §1.4 note (asset law)

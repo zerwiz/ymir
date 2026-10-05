@@ -89,7 +89,7 @@ It also writes the gitignored `.brokk-Eindri-home-parent` durable binding before
 
 `config/Eindri-home-harness` may also pin a concrete model and effort for the Eindri-home agent, in the SAME file rather than a new one: the format is a single whitespace-separated line `<harness> [<model>] [<effort>]`, with only the first non-empty, non-comment line parsed.
 A bare `<harness>` (today's format, e.g. `claude`) behaves exactly as before - harness only, no model/effort flag - so this is fully backward-compatible.
-`bin/hamr-harness.sh Eindri-home-model` and `bin/hamr-harness.sh Eindri-home-effort` print the optional 2nd/3rd tokens (empty when absent, or when the file is absent/`default`/harness-only); they read only `config/Eindri-home-harness`, never `config/eindri-harness`, which stays a bare adapter name.
+`bin/fleet/hamr-harness.sh Eindri-home-model` and `bin/fleet/hamr-harness.sh Eindri-home-effort` print the optional 2nd/3rd tokens (empty when absent, or when the file is absent/`default`/harness-only); they read only `config/Eindri-home-harness`, never `config/eindri-harness`, which stays a bare adapter name.
 For a `--Eindri-home` spawn, `bin/agents/einherjar-spawn.sh` populates `MODEL`/`EFFORT` from those tokens only when the harness itself came from the Eindri-home config path for that spawn.
 For a local route, an explicit per-spawn `--harness` flag, positional harness arg, or raw launch command starts clean on model and effort too, unless the caller also passes explicit `--model` or `--effort`.
 A remote route accepts only a verified harness adapter and refuses a raw launch command at the host boundary.
@@ -256,17 +256,17 @@ Never use `--force` unless the Allfather explicitly said to discard the work.
 ## Fleet preferences
 
 Fleet-wide per-user settings live in `data/fleet.md` (gitignored), one
-`key: value` per line. `bin/fleet-apply.sh` writes each into THIS home and every
+`key: value` per line. `bin/fleet/fleet-apply.sh` writes each into THIS home and every
 registered home's gitignored `state/` (for `ro`: `state/ro`), and
-`bin/brokk-update.sh` re-applies them on every sweep — so one fleet setting
+`bin/agents/brokk-update.sh` re-applies them on every sweep — so one fleet setting
 reaches every home without dirtying any tracked tree. Remote routes are reported,
 not written. Keys: `ro: on | off` (Ró calm presentation).
 
 ## Dispatch (full chain)
 
-Seating a worker is a chain, not a guess: role → **`bin/model-resolve.sh`** →
+Seating a worker is a chain, not a guess: role → **`bin/model/model-resolve.sh`** →
 harness rule (local→pi, online→opencode) → **`bin/seat/herdr-run.sh eindri`** (pane)
-→ **`bin/local-model-lock.sh`** → A2A register. Read
+→ **`bin/model/local-model-lock.sh`** → A2A register. Read
 `assets/dispatch.md` before dispatching, and never guess a model.
 
 ## Tools this skill drives (in `bin/`)
@@ -280,7 +280,7 @@ tools[6]{tool,plane}:
   "bin/agents/eindri-send.sh <agent> \"<text>\"","DATA plane — talk to a running Eindri"
   "bin/agents/eindri-control.sh interrupt|exit|read <agent>","CONTROL plane — allowlisted lifecycle"
   "bin/agents/einherjar-spawn.sh <id> --Eindri-home","launch a persistent home (recovery/retire above)"
-  "bin/model-resolve.sh · bin/local-model-lock.sh","model choice + one-local-at-a-time"
+  "bin/model/model-resolve.sh · bin/model/local-model-lock.sh","model choice + one-local-at-a-time"
 ```
 
 ## Assets

@@ -25,7 +25,7 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
 - Exactly **one** lightweight scheduler loop is kept alive, tracked by `state/cron.pid`.
 - **Role gate (2026-09-23, plan 51 P4).** A job may carry a role prefix:
   `HH:MM @<role>[,<role>] <command>`. The scheduler reads THIS machine's roles
-  from `bin/topology.sh` (default `dev`) and runs only the jobs whose gate
+  from `bin/fleet/topology.sh` (default `dev`) and runs only the jobs whose gate
   includes one of them; no gate means any role. The record jobs belong to
   `@heart`, the model jobs to `@forge`, and a `dev` body runs neither — this is
   what stops a dev box from running a heart's work.
@@ -98,7 +98,7 @@ operator's home (`<home>/state` and `<home>/config`) — the scheduler and the s
 read the same state.
 
 **No job carries its own home default (2026-09-24).** The scheduler and every job
-resolve the home through `bin/vault/hoard-lib.sh`; `bin/defaults-guard.sh` refuses a private
+resolve the home through `bin/vault/hoard-lib.sh`; `bin/gates/guards/defaults-guard.sh` refuses a private
 default, so a job cannot drift back to a path that is not this machine's. The ward also
 refuses a script that uses the home without resolving it.
 
@@ -234,7 +234,7 @@ removed and the failure is reported plainly.
 
 The Live Hall is a glass: it reads `/livehall.json` (same-origin,
 `cache: no-store`). This job writes that snapshot from real state via
-`bin/hall-snapshot.sh` — runes, the project registry, the cron gauge, the wake
+`bin/time/snotra/hall-snapshot.sh` — runes, the project registry, the cron gauge, the wake
 queue, standing smiths, armed `when-` sources, and the landed errands — then
 carves Rune `odrerir / hall.snapshot`. The snapshot is written for BOTH install
 shapes: `apps/odrerir/public/livehall.json` (a clone, served at request time by
@@ -284,20 +284,20 @@ at sunrise. The forge address is the user's, from the home — never the tree:
 - No `FORGEJO_URL` configured → clean exit (the loop is not armed); a closed
   door (tunnel down) → exit 1 and Rune `forgejo / git.door-down`.
 - The forge may be the server's (`forgejo.zerwiz.org` → :3030) or a locally
-  provisioned one (`bin/ymir-marketing-stack.sh --with-forgejo`).
+  provisioned one (`bin/desktop/ymir-marketing-stack.sh --with-forgejo`).
 
-### 3.8 The marketing stack (`bin/ymir-marketing-stack.sh`)
+### 3.8 The marketing stack (`bin/desktop/ymir-marketing-stack.sh`)
 
 ### 3.9 Eir — the daily doctor round (`bin/time/nornir-job-doctor.sh`, 08:15, added 2026-09-24)
 
 Every surface is checked daily so a desktop that cannot open is REPORTED, never
-silently dead: `bin/eir-doctor.sh check` (floors, herdr, a2abridge, hermes,
+silently dead: `bin/agents/eir-doctor.sh check` (floors, herdr, a2abridge, hermes,
 sessrumnir, **shells**, **graphics**, well, mcp, harness, lock, migrations,
 hoard). The `shells` surface uses the runtime resolver (`bin/desktop/electron-lib.sh`) —
 absence for an installed app is a FAILURE, and the `graphics` surface reports the
-DRM truth and the effective GPU policy (`bin/graphics-lib.sh`). A broken surface
+DRM truth and the effective GPU policy (`bin/host/graphics-lib.sh`). A broken surface
 appends a `doctor.broken` rune and exits 1 so the cron log carries it. Eir is
-also reached after every update (`bin/groa-update.sh`).
+also reached after every update (`bin/agents/groa-update.sh`).
 
 ### 3.10 The role gate parses BOTH orders (added 2026-09-24, plan 54)
 
@@ -322,7 +322,7 @@ Env-driven (ports virtualized), secrets generated once into the home, never
 inline. Agents (Bragi for marketing, Sindri for git) run it for any user.
 
 ```
-bin/ymir-marketing-stack.sh up|status|down|doors
+bin/desktop/ymir-marketing-stack.sh up|status|down|doors
 # doors: Mautic :8001 · Postiz :8003 · Activepieces :8005 · Forgejo :8007 (defaults)
 ```
 

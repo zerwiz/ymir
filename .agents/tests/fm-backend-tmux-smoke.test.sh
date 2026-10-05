@@ -50,7 +50,7 @@ PATH="$SHIM_DIR:$PATH"
 export PATH
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 fm_backend_source tmux || fail "fm_backend_source tmux failed"
 
 SESSION="smoke"

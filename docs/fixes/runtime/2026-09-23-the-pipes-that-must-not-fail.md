@@ -36,7 +36,7 @@ Four pipes were built but never carried anything.
   `FIRECRAWL_API_URL` (env → home env → the documented default `:3002`), and
   **curl instead of the SDK** (`/v2/scrape` for a URL, `/v2/search` for a query).
   The source list resolves to `$YMIR_HOME/config/`, matching its own header.
-- **`bin/daily-log.sh`** — the day's work recorded where the contract says:
+- **`bin/records/daily-log.sh`** — the day's work recorded where the contract says:
   `daily-log.sh add "<what>" [--actor NAME] [--tag T]`, appended dated blocks in
   `$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md`; `today`/`show`/`list` read it
   back. Also surfaced by the session-start digest under a **TODAY** section.
@@ -54,7 +54,7 @@ Four pipes were built but never carried anything.
 
 ### Files
 - `bin/agents/eindri-handoff.sh` (new)
-- `bin/daily-log.sh` (new)
+- `bin/records/daily-log.sh` (new)
 - `bin/time/saga-session-start.sh`
 - `bin/agents/eindri-watch.sh`
 - `bin/time/nornir-job-bragi-scrape.sh`

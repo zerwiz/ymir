@@ -7,9 +7,9 @@ set -u
 # shellcheck disable=SC1091
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-WRITER="$ROOT/bin/fm-home-summary-refresh.sh"
-SNAPSHOT="$ROOT/bin/fm-fleet-snapshot.sh"
-WATCH="$ROOT/bin/fm-watch.sh"
+WRITER="$ROOT/bin/backend/fm-home-summary-refresh.sh"
+SNAPSHOT="$ROOT/bin/backend/fm-fleet-snapshot.sh"
+WATCH="$ROOT/bin/backend/fm-watch.sh"
 TMP_ROOT=$(fm_test_tmproot fm-home-summary-refresh)
 HOME_DIR="$TMP_ROOT/mate-home"
 CADENCE_HOME="$TMP_ROOT/cadence-home"
@@ -79,8 +79,8 @@ fm_write_meta "$HOME_DIR/state/ledger-task.meta" \
   "kind=ship" \
   "mode=no-mistakes" \
   "spawn_gen=fm.ledger123456"
-busy_gen=$("$ROOT/bin/fm-busy-event.sh" arm "$HOME_DIR/state" ledger-task)
-"$ROOT/bin/fm-busy-event.sh" apply "$HOME_DIR/state" ledger-task idle \
+busy_gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$HOME_DIR/state" ledger-task)
+"$ROOT/bin/backend/fm-busy-event.sh" apply "$HOME_DIR/state" ledger-task idle \
   --gen "$busy_gen" --source claude-hook --event stop
 
 NOW_ONE=2026-08-28T10:00:00Z
@@ -349,7 +349,7 @@ pass "best-effort publication logs and continues"
 LOCK_MARKER="$TMP_ROOT/lock-held"
 rm -f "$HOME_DIR/state/.home-summary-refresh.log"
 FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$HOME_DIR" bash -c '
-  . "$1/bin/fm-wake-lib.sh"
+  . "$1/bin/backend/fm-wake-lib.sh"
   fm_lock_acquire_wait "$2/state/.home-summary-refresh.lock"
   : > "$3"
   sleep 30
@@ -536,8 +536,8 @@ fm_write_meta "$COST_HOME/state/cost-task.meta" \
   "kind=ship" \
   "mode=no-mistakes" \
   "spawn_gen=fm.cost123456"
-cost_busy_gen=$("$ROOT/bin/fm-busy-event.sh" arm "$COST_HOME/state" cost-task)
-"$ROOT/bin/fm-busy-event.sh" apply "$COST_HOME/state" cost-task idle \
+cost_busy_gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$COST_HOME/state" cost-task)
+"$ROOT/bin/backend/fm-busy-event.sh" apply "$COST_HOME/state" cost-task idle \
   --gen "$cost_busy_gen" --source claude-hook --event stop
 python3 - "$COST_HOME/state/cost-task.status" <<'PY'
 import sys
@@ -642,7 +642,7 @@ cat > "$BEAT_HOME/data/backlog.md" <<'EOF'
 EOF
 BEAT_LOCK_MARKER="$TMP_ROOT/beat-lock-held"
 FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$BEAT_HOME" bash -c '
-  . "$1/bin/fm-wake-lib.sh"
+  . "$1/bin/backend/fm-wake-lib.sh"
   fm_lock_acquire_wait "$2/state/.home-summary-refresh.lock"
   : > "$3"
   sleep 120
@@ -719,7 +719,7 @@ fm_write_meta "$RESTART_HOME/state/restart-task.meta" \
   "spawn_gen=fm.restart123456"
 RESTART_LOCK_MARKER="$TMP_ROOT/restart-lock-held"
 FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$RESTART_HOME" bash -c '
-  . "$1/bin/fm-wake-lib.sh"
+  . "$1/bin/backend/fm-wake-lib.sh"
   fm_lock_acquire_wait "$2/state/.home-summary-refresh.lock"
   : > "$3"
   sleep 30
@@ -834,7 +834,7 @@ run_bootstrap_detect() {
   PATH="$FAKEBIN:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$1" \
     FM_HOME_SUMMARY_FAILURE_REPORT="$threshold" \
     FM_BOOTSTRAP_DETECT_ONLY=1 FM_BOOTSTRAP_NETWORK=skip \
-    "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null
+    "$ROOT/bin/backend/fm-bootstrap.sh" 2>/dev/null
 }
 
 COMPAT_HOME="$TMP_ROOT/compat-home"
@@ -913,7 +913,7 @@ SH
 chmod +x "$ORDER_DATE_BIN/date"
 ORDER_LOCK_MARKER="$TMP_ROOT/order-lock-held"
 FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$ORDER_HOME" bash -c '
-  . "$1/bin/fm-wake-lib.sh"
+  . "$1/bin/backend/fm-wake-lib.sh"
   fm_lock_acquire_wait "$2/state/.home-summary-refresh.lock"
   : > "$3"
   sleep 30

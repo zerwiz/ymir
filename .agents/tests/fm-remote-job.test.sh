@@ -36,8 +36,8 @@ cleanup_remote_job_fixture() {
 }
 trap cleanup_remote_job_fixture EXIT
 
-cp "$ROOT/bin/fm-remote-job-lib.sh" "$ROOT/bin/fm-remote-job-worker.sh" \
-  "$ROOT/bin/fm-remote-delta-read.sh" "$REMOTE_ROOT/bin/"
+cp "$ROOT/bin/backend/fm-remote-job-lib.sh" "$ROOT/bin/backend/fm-remote-job-worker.sh" \
+  "$ROOT/bin/backend/fm-remote-delta-read.sh" "$REMOTE_ROOT/bin/"
 printf 'fixture\n' > "$REMOTE_ROOT/AGENTS.md"
 cat > "$REMOTE_ROOT/bin/fm-probe-job.sh" <<'SH'
 #!/bin/bash
@@ -99,7 +99,7 @@ DEFAULT_BOUNDS=$(
   FM_REMOTE_JOB_STATE_ROOT="$DEFAULT_STATE"
   export FM_REMOTE_JOB_STATE_ROOT
   # shellcheck source=bin/backend/fm-remote-job-lib.sh
-  . "$ROOT/bin/fm-remote-job-lib.sh"
+  . "$ROOT/bin/backend/fm-remote-job-lib.sh"
   fm_remote_job_stage "$ACCOUNT_HOME" "$REMOTE_ROOT" "$REMOTE_HOME" fm-probe-job.sh </dev/null >/dev/null
   printf '%s %s\n' \
     "$(cat "$DEFAULT_STATE/jobs/$FM_REMOTE_JOB_ID/queue_deadline")" \
@@ -119,7 +119,7 @@ export FM_REMOTE_JOB_QUEUE_TIMEOUT=5
 # shellcheck disable=SC2031 # The sourced defaults above were confined to DEFAULT_BOUNDS.
 export FM_REMOTE_JOB_TIMEOUT=5
 # shellcheck source=bin/backend/fm-remote-job-lib.sh
-. "$ROOT/bin/fm-remote-job-lib.sh"
+. "$ROOT/bin/backend/fm-remote-job-lib.sh"
 
 LOCAL_BIN_PARENT="$ACCOUNT_HOME/.local"
 LOCAL_BIN_TARGET="$TMP_ROOT/local-bin-target"
@@ -189,7 +189,7 @@ pass "operator PATH orders discovered tool installs deterministically"
 HOME="$ACCOUNT_HOME" PATH="$RUNTIME_BIN:/usr/bin:/bin:/usr/sbin:/sbin" FM_FAKE_PERL_LOG="$FAKE_PERL_LOG" \
   FM_ROOT_OVERRIDE="$REMOTE_ROOT" FM_REMOTE_JOB_STATE_ROOT="$STATE_ROOT" \
   FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux FM_REMOTE_JOB_TIMEOUT=5 \
-  "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" > "$TMP_ROOT/worker.out" 2> "$TMP_ROOT/worker.err" &
+  "$REMOTE_ROOT/bin/backend/fm-remote-job-worker.sh" > "$TMP_ROOT/worker.out" 2> "$TMP_ROOT/worker.err" &
 for _ in $(seq 1 100); do
   [ -f "$STATE_ROOT/worker.ready" ] && break
   sleep 0.05
@@ -258,7 +258,7 @@ fm_remote_job_reap "$ACCOUNT_HOME" "$JOB_ID" || fail "the active readiness job c
 pass "active jobs keep the worker ready for concurrent requests"
 
 OLD_WORKER_PID=$(cat "$STATE_ROOT/worker.pid")
-printf '\n' >> "$REMOTE_ROOT/bin/fm-remote-job-worker.sh"
+printf '\n' >> "$REMOTE_ROOT/bin/backend/fm-remote-job-worker.sh"
 fm_remote_job_ensure_worker "$REMOTE_ROOT" "$ACCOUNT_HOME" \
   || fail "$FM_REMOTE_JOB_ERROR"
 NEW_WORKER_PID=$(cat "$STATE_ROOT/worker.pid")
@@ -460,7 +460,7 @@ done
 kill -0 "$WORKER_PID" 2>/dev/null && fail "the worker did not finish its TERM shutdown"
 HOME="$ACCOUNT_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" FM_REMOTE_JOB_STATE_ROOT="$STATE_ROOT" \
   FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux FM_REMOTE_JOB_TIMEOUT=1 \
-  "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" >> "$TMP_ROOT/worker.out" 2>> "$TMP_ROOT/worker.err" &
+  "$REMOTE_ROOT/bin/backend/fm-remote-job-worker.sh" >> "$TMP_ROOT/worker.out" 2>> "$TMP_ROOT/worker.err" &
 for _ in $(seq 1 100); do
   [ -f "$STATE_ROOT/worker.ready" ] && break
   sleep 0.05
@@ -581,7 +581,7 @@ assert_present "$STATE_ROOT/worker.lock/quarantine" "failed shutdown released wo
 fm_remote_job_probe "$ACCOUNT_HOME" && fail "quarantined worker ownership still reported ready"
 set +e
 HOME="$ACCOUNT_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" FM_REMOTE_JOB_STATE_ROOT="$STATE_ROOT" \
-  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" \
+  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/backend/fm-remote-job-worker.sh" \
   >> "$TMP_ROOT/worker.out" 2>> "$TMP_ROOT/worker.err"
 REPLACEMENT_RC=$?
 set -e
@@ -618,7 +618,7 @@ chmod 600 "$RECOVERY_STATE/worker.lock"/* "$RECOVERY_JOB/state" "$RECOVERY_JOB/.
 touch -t 200001010000 "$RECOVERY_STATE/worker.lock"
 set +e
 HOME="$RECOVERY_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" FM_REMOTE_JOB_STATE_ROOT="$RECOVERY_STATE" \
-  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" \
+  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/backend/fm-remote-job-worker.sh" \
   > "$TMP_ROOT/recovery-refused.out" 2> "$TMP_ROOT/recovery-refused.err"
 RECOVERY_REFUSED_RC=$?
 set -e
@@ -630,7 +630,7 @@ printf 'stale supervisor identity\n' > "$RECOVERY_JOB/.claim/supervisor_start"
 chmod 600 "$RECOVERY_JOB/.claim/owner" "$RECOVERY_JOB/.claim/owner_start" \
   "$RECOVERY_JOB/.claim/supervisor_start"
 HOME="$RECOVERY_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" FM_REMOTE_JOB_STATE_ROOT="$RECOVERY_STATE" \
-  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" \
+  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/backend/fm-remote-job-worker.sh" \
   > "$TMP_ROOT/recovery-worker.out" 2> "$TMP_ROOT/recovery-worker.err" &
 RECOVERY_WORKER_PID=$!
 for _ in $(seq 1 300); do
@@ -671,7 +671,7 @@ REPEAT_STATE="$TMP_ROOT/repeat-signal-jobs"
 mkdir -p "$REPEAT_HOME"
 chmod 700 "$REPEAT_HOME"
 HOME="$REPEAT_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" FM_REMOTE_JOB_STATE_ROOT="$REPEAT_STATE" \
-  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" --serve \
+  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/backend/fm-remote-job-worker.sh" --serve \
   > "$TMP_ROOT/repeat-signal.out" 2> "$TMP_ROOT/repeat-signal.err" &
 REPEAT_WORKER_PID=$!
 for _ in $(seq 1 300); do
@@ -702,7 +702,7 @@ assert_absent "$REPEAT_STATE/worker.lock" \
 assert_absent "$REPEAT_STATE/worker.ready" \
   "a repeatedly signalled shutdown left its readiness heartbeat behind"
 HOME="$REPEAT_HOME" FM_ROOT_OVERRIDE="$REMOTE_ROOT" FM_REMOTE_JOB_STATE_ROOT="$REPEAT_STATE" \
-  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" --serve \
+  FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux "$REMOTE_ROOT/bin/backend/fm-remote-job-worker.sh" --serve \
   >> "$TMP_ROOT/repeat-signal.out" 2>> "$TMP_ROOT/repeat-signal.err" &
 REPEAT_WORKER_PID=$!
 for _ in $(seq 1 600); do
@@ -726,10 +726,10 @@ RESTART_HOME="$TMP_ROOT/restart-account"
 RESTART_STATE="$TMP_ROOT/restart-state"
 RESTART_CHILD_LOG="$TMP_ROOT/restart-children"
 mkdir -p "$RESTART_ROOT/bin" "$RESTART_HOME"
-cp "$ROOT/bin/fm-remote-job-lib.sh" "$RESTART_ROOT/bin/"
-cp "$ROOT/bin/fm-remote-job-worker.sh" "$RESTART_ROOT/bin/fm-remote-job-supervisor-under-test.sh"
+cp "$ROOT/bin/backend/fm-remote-job-lib.sh" "$RESTART_ROOT/bin/"
+cp "$ROOT/bin/backend/fm-remote-job-worker.sh" "$RESTART_ROOT/bin/fm-remote-job-supervisor-under-test.sh"
 printf 'fixture\n' > "$RESTART_ROOT/AGENTS.md"
-cat > "$RESTART_ROOT/bin/fm-remote-job-worker.sh" <<'SH'
+cat > "$RESTART_ROOT/bin/backend/fm-remote-job-worker.sh" <<'SH'
 #!/bin/bash
 set -u
 [ "${1:-}" = --serve ] || exit 2

@@ -9,7 +9,7 @@ one implementation) and its own confession named what remained: the vendored
 `bin/agents/einherjar-spawn.sh`.
 
 Two of those seams are this change. Both were **two copies of one behaviour**:
-`bin/syn-watch.sh` judged the arm's liveness and raise from bash, and
+`bin/pi/syn-watch.sh` judged the arm's liveness and raise from bash, and
 `.agents/backend/fm-watch.sh` judged the same record again; the teardown gate
 decided "may this work be discarded?" in shell, with no owner in the engine that
 the lifecycle verbs could call.
@@ -22,13 +22,13 @@ one_behaviour[7]{judgement,owner}
   "the lease (pid, starttime, gen, mode, session, state)","watch.read_lease / write_lease / lease_alive / next_generation"
   "the heartbeat (touch, age, staleness)","watch.heartbeat_touch / heartbeat_age"
   "the verdict: up | idle | stale | down","watch.status_state"
-  "the session owner","watch.session_owner — asks bin/gleipnir-lock-lib.sh, never re-derives the lock law"
+  "the session owner","watch.session_owner — asks bin/vault/gleipnir-lock-lib.sh, never re-derives the lock law"
   "the raise grammar: .wake-queue (content-hash flood brake), *.signal, *.check, .watcher-stop","watch.raise_line"
   "the delivery slot + the append-only journal","watch.publish"
   "the cycle and the daemon loop","watch.cycle / watch.run_daemon"
 ```
 
-`bin/syn-watch.sh` is now a **thin door**: help, `-v`, then
+`bin/pi/syn-watch.sh` is now a **thin door**: help, `-v`, then
 `exec "$SCRIPT_DIR/ymir-engine.sh" watch "$@"`. It defines no behaviour, so there
 is nothing left to drift against a twin. The CLI, the TOON row, the stderr
 remedies, and the exit codes are unchanged — the door `exec`s the interpreter, so
@@ -65,7 +65,7 @@ vendored_form[3]{file,callers,outcome}
 
 **The honest refusal to repoint `fm-teardown.sh`.** Its suite
 (`.agents/tests/fm-teardown.test.sh`, 87 KB, ~20 landed-work shapes) **cannot run
-on this tree**: it drives `$ROOT/bin/fm-teardown.sh` (`.agents/tests/lib.sh`'s
+on this tree**: it drives `$ROOT/bin/backend/fm-teardown.sh` (`.agents/tests/lib.sh`'s
 `ROOT` is `.agents/`), and `.agents/bin/` was never vendored — the island's
 `bin/` does not exist here. Repointing the shell gate onto `landed.py` without that
 suite is exactly the blind gamble the plan forbids ("a proof is run on a live
@@ -75,7 +75,7 @@ door-level proof below, which is more than the shell copy has ever had here.
 
 **Drive-by finding (named, not fixed):** `bin/README.md` is auto-generated from
 script headers but its `bin[103]` count and its row set are stale — `bin/` holds
-221 entries / 213 `*.sh`, and `bin/syn-watch.sh` has no row at all. No guard reads
+221 entries / 213 `*.sh`, and `bin/pi/syn-watch.sh` has no row at all. No guard reads
 it, so it was left alone rather than half-regenerated; it belongs to the wards
 errand (Phase 8).
 
@@ -96,16 +96,16 @@ errand (Phase 8).
   with a real bare origin: `c-local-only-merged` → `yes|local-default`;
   `a-remote-reachable` / `d-local-only-on-remote` → `yes|remote`;
   `b-unlanded` → `no|unlanded`; `e-dirty` → `no|dirty`; `f-forced` → `yes|forced`.
-- `bash -n` clean on `bin/syn-watch.sh`, `tests/e2e/landed-gate-proof.sh`,
+- `bash -n` clean on `bin/pi/syn-watch.sh`, `tests/e2e/landed-gate-proof.sh`,
   `bin/engine/ymir-engine.sh` and every other touched script.
-- `bin/syn-watch.sh status --detail` against a scratch state, live:
+- `bin/pi/syn-watch.sh status --detail` against a scratch state, live:
   `arm=down mode=none unit=absent pid=none heartbeat=-1s session=none`, rc=1.
 
 ### Files
 - `src/ymir_runtime/watch.py` (new), `src/ymir_runtime/landed.py` (new)
 - `src/ymir_runtime/proc.py`, `__init__.py`, `__main__.py`, `stop.py`
 - `src/ymir_runtime/tests/test_watch.py` (new), `tests/test_landed.py` (new)
-- `bin/syn-watch.sh`, `bin/engine/ymir-engine.sh`
+- `bin/pi/syn-watch.sh`, `bin/engine/ymir-engine.sh`
 - `tests/e2e/landed-gate-proof.sh` (new)
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md` (§5, §7.1, §7.4)
 - `.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md` (the arm table)

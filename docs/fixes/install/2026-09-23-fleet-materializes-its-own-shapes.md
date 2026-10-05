@@ -19,4 +19,4 @@ which only whynot ever had — the install raised units at shapes it never laid.
 
 ## Files
 - `tools/mill/systemd/{ratatoskr,mill-worker,well-mcp,cards,embed}.service`
-- `bin/fleet-ensure.sh`
+- `bin/fleet/fleet-ensure.sh`

@@ -7,7 +7,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-HERDR_LAB_HELPER=${HERDR_LAB_HELPER:-$ROOT/bin/fm-herdr-lab.sh}
+HERDR_LAB_HELPER=${HERDR_LAB_HELPER:-$ROOT/bin/backend/fm-herdr-lab.sh}
 
 fail() { printf 'not ok - %s\n' "$1" >&2; cleanup_all; exit 1; }
 pass() { printf 'ok - %s\n' "$1"; }
@@ -385,7 +385,7 @@ make_project() {  # <dir>
 spawn_task() {  # <id> <home> <project>
   local id=$1 home=$2 project=$3
   FM_GATE_REFUSE_BYPASS=1 FM_SPAWN_NO_GUARD=1 FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
-    "$ROOT/bin/fm-spawn.sh" "$id" "$project" "sh -c 'sleep 120'" --mode no-mistakes --yolo off --backend herdr
+    "$ROOT/bin/backend/fm-spawn.sh" "$id" "$project" "sh -c 'sleep 120'" --mode no-mistakes --yolo off --backend herdr
 }
 
 finish_concurrent_spawn() {  # <id> <status> <stdout> <stderr>
@@ -410,7 +410,7 @@ finish_concurrent_expected_abort() {  # <id> <status> <stdout> <stderr>
 spawn_secondmate_task() {
   local id=$1 home=$2
   FM_GATE_REFUSE_BYPASS=1 FM_SPAWN_NO_GUARD=1 FM_HOME="$HOME_DIR" FM_ROOT_OVERRIDE="$ROOT" \
-    "$ROOT/bin/fm-spawn.sh" "$id" "$home" "sh -c 'sleep 120'" --secondmate --backend herdr
+    "$ROOT/bin/backend/fm-spawn.sh" "$id" "$home" "sh -c 'sleep 120'" --secondmate --backend herdr
 }
 
 teardown_task() {  # <id> <home>
@@ -418,7 +418,7 @@ teardown_task() {  # <id> <home>
   FM_GATE_REFUSE_BYPASS=1 FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
     FM_CONFIG_OVERRIDE="$home/config" \
-    "$ROOT/bin/fm-teardown.sh" "$id" --force
+    "$ROOT/bin/backend/fm-teardown.sh" "$id" --force
 }
 
 finish_concurrent_teardown() {  # <id> <status> <stdout> <stderr>
@@ -679,7 +679,7 @@ ACTIVE_SEEDED_CLEANUP_FOCUS_START=$(focus_audit_line_count)
 ACTIVE_SEEDED_LOCK=$(session_presentation_lock_path) \
   || fail "could not resolve the session presentation lock for active-seeded cleanup"
 PATH="$FAKEBIN:$PATH" FM_HOME="$HOME_DIR" bash -c '
-  . "$0/bin/fm-wake-lib.sh"
+  . "$0/bin/backend/fm-wake-lib.sh"
   . "$0/bin/backends/herdr.sh"
   lock=$1
   fm_lock_acquire_wait "$lock"
@@ -697,7 +697,7 @@ LOCK_CONTENTION_PATH=$(session_presentation_lock_path) \
   || fail "could not resolve the session presentation lock for contention"
 ROOT="$ROOT" READY="$LOCK_CONTENTION_READY" RELEASE="$LOCK_CONTENTION_RELEASE" \
   LOCK="$LOCK_CONTENTION_PATH" bash -c '
-  . "$ROOT/bin/fm-wake-lib.sh"
+  . "$ROOT/bin/backend/fm-wake-lib.sh"
   fm_lock_try_acquire "$LOCK" || exit 1
   : > "$READY"
   while [ ! -e "$RELEASE" ]; do sleep 0.05; done
@@ -1004,7 +1004,7 @@ if sed -n "$((SECOND_SPAWN_LOG_START + 1)),\$p" "$HERDR_CALL_LOG" \
   fail "secondmate spawn attempted presentation ordering"
 fi
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-config-inherit-lib.sh"
+. "$ROOT/bin/backend/fm-config-inherit-lib.sh"
 propagate_inheritable_config "$HOME_DIR/config" "$SECOND_HOME_A/config" \
   || fail "inheritance into secondmate A failed"
 propagate_inheritable_config "$HOME_DIR/config" "$SECOND_HOME_B/config" \
@@ -1125,7 +1125,7 @@ CROSS_LOCK_RELEASE="$TMP_ROOT/cross-lock-release"
 CROSS_LOCK_PATH=$(session_presentation_lock_path) \
   || fail "could not resolve session lock for cross-home contention"
 ROOT="$ROOT" READY="$CROSS_LOCK_READY" RELEASE="$CROSS_LOCK_RELEASE" LOCK="$CROSS_LOCK_PATH" bash -c '
-  . "$ROOT/bin/fm-wake-lib.sh"
+  . "$ROOT/bin/backend/fm-wake-lib.sh"
   fm_lock_try_acquire "$LOCK" || exit 1
   : > "$READY"
   while [ ! -e "$RELEASE" ]; do sleep 0.05; done

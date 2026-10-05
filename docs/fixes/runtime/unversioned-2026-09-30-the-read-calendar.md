@@ -19,7 +19,7 @@
   (PORT, `MANAGANDR_VAULT`, `MANAGANDR_OAUTH_KEY` and friends), zod-shaped, and the
   home resolves through the resolver's discipline, never a literal path. `--fixture`
   runs the whole path offline against a synthetic `events.list` response.
-- **`bin/calendar-ask.sh` — the shell door.** `probe`, `busy`, `free`, `json`; exits
+- **`bin/time/snotra/calendar-ask.sh` — the shell door.** `probe`, `busy`, `free`, `json`; exits
   **0 free**, **10 busy**, **20 unknown**, **2 usage**, so a cron job branches with
   no parsing and no jq. Dry-run flags (`--fixture`, `--now`, `--cache`) keep it
   provable offline.

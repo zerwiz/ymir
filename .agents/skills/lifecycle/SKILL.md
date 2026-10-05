@@ -45,8 +45,8 @@ these.
 `smoke_test.sh` is the one that adds something: it answers *"is it working"*
 rather than *"is a socket open"* — it fetches the SPA over HTTP, asks the well
 bridge, checks the Smiðja schema has tables, proves the agents are bound, and
-reads the fleet's own gates (`bin/topology.sh`, `bin/fleet-version.sh`,
-`bin/model-alias-check.sh`): an alias a seat names that no rail serves is a
+reads the fleet's own gates (`bin/fleet/topology.sh`, `bin/fleet/fleet-version.sh`,
+`bin/gates/checks/model-alias-check.sh`): an alias a seat names that no rail serves is a
 FAIL, while an unreachable seat is only ever reported offline. It exits
 non-zero on failure so a gate can rely on it.
 

@@ -150,9 +150,9 @@ class SeatTest(unittest.TestCase):
 
     def test_a_local_model_lock_wraps_the_launch(self) -> None:
         runner = Recorder(responses=tmux_responses())
-        seat_verb(self._errand(lock="/bin/local-model-lock.sh"), runner=runner, env=self.env, probe=available)
+        seat_verb(self._errand(lock="/bin/model/local-model-lock.sh"), runner=runner, env=self.env, probe=available)
         body = (self.state / "errand-one.launch.sh").read_text(encoding="utf-8")
-        self.assertIn("exec '/bin/local-model-lock.sh' bash -c '", body)
+        self.assertIn("exec '/bin/model/local-model-lock.sh' bash -c '", body)
         meta = heartbeat.read_meta(self.state, "errand-one")
         self.assertEqual(meta["locked"], "yes")
 

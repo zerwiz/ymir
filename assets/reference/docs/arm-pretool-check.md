@@ -67,7 +67,7 @@ bin/backend/fm-watch.sh              (watch; protected but never blessed)
 ```
 
 The relative form, the `<code-root>`-anchored absolute form, and any word ending in `/bin/<script>` all resolve to that identity.
-Suffix matching recognizes an expanded-path prefix statically, so `$FM_HOME/bin/fm-watch-arm.sh`, `$HOME/firstmate/bin/fm-watch-arm.sh`, and `~/firstmate/bin/fm-watch-arm.sh` are the arm identity.
+Suffix matching recognizes an expanded-path prefix statically, so `$FM_HOME/bin/backend/fm-watch-arm.sh`, `$HOME/firstmate/bin/backend/fm-watch-arm.sh`, and `~/firstmate/bin/backend/fm-watch-arm.sh` are the arm identity.
 The classifier never expands the variable or tilde; it matches the literal bytes only.
 Static quote forms are cooked before the suffix match, so a command word split by ordinary quotes (`fm-"watch"-arm.sh`), ANSI-C quoting (`fm-$'\x77'atch-arm.sh`), or a bash locale string (`fm-$"watch"-arm.sh`) all resolve to the same identity; this reads the fixed literal bytes as the shell would cook them and never runs an expansion or a command.
 This covers statically-visible literal words in command position; opaque dynamic dataflow such as `bash -lc "$WHOLE_COMMAND"` remains out of scope.
@@ -116,7 +116,7 @@ Inline environment assignments, `env`, `sudo`, `nohup`, nested shells, `eval`, s
 An actually executed `pkill` command is denied when its parsed pattern arguments target `fm-watch`.
 Path-qualified `pkill`, `command pkill`, and `sudo pkill` are recognized.
 
-`kill "$(pgrep -f '/bin/fm-watch.sh')"` is also denied because the executed `kill` consumes an executed watcher-wide `pgrep` substitution.
+`kill "$(pgrep -f '/bin/backend/fm-watch.sh')"` is also denied because the executed `kill` consumes an executed watcher-wide `pgrep` substitution.
 A standalone read-only `pgrep` is allowed.
 Quoted text such as `echo 'pkill -f fm-watch'` is data and is allowed.
 
@@ -193,7 +193,7 @@ Every harness was instructed to issue these exact shell command strings as separ
 
 ```sh
 printf 'UNRELATED_EXECUTED\n'
-pgrep -fl '/bin/fm-watch.sh' || true
+pgrep -fl '/bin/backend/fm-watch.sh' || true
 source '<scratch-project>/config/x-mode.env'; bin/backend/fm-watch-checkpoint.sh --seconds 180
 tmux send-keys -t isolated-pi-lab "printf '%s\n' 'bin/backend/fm-watch-arm.sh &'"; tmux send-keys -t isolated-pi-lab Enter
 bin/backend/fm-watch-arm.sh &

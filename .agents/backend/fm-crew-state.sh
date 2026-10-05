@@ -27,7 +27,7 @@
 #      unreachable or unreadable remote reports unknown-remote, never a false
 #      gone/dead.
 #   2. Attribute an active or terminal no-mistakes run under the branch, head,
-#      pipeline-custody, and newest-first rules owned by bin/fm-nm-run-lib.sh.
+#      pipeline-custody, and newest-first rules owned by bin/backend/fm-nm-run-lib.sh.
 #      The run-step is AUTHORITATIVE: running/fixing -> working, ci -> working,
 #      awaiting_approval/fix_review -> parked (with gate findings), terminal
 #      passed/checks-passed -> done, failed/cancelled -> failed. EXCEPT: while
@@ -413,7 +413,7 @@ CREW_BRANCH=$(git -C "$WT" symbolic-ref --quiet --short HEAD 2>/dev/null || true
 
 # 0 if the active axi-status run's head field matches this worktree's code
 # identity. Branch match is a precondition (caller). Rule owned by
-# fm_nm_head_matches_worktree in bin/fm-nm-run-lib.sh.
+# fm_nm_head_matches_worktree in bin/backend/fm-nm-run-lib.sh.
 nm_run_head_matches_worktree() {
   local run_head
   run_head=$(strip_quotes "$(nm_field head)")

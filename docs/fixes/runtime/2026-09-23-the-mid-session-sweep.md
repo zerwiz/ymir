@@ -8,7 +8,7 @@ told. That is the same failure as the original one, one layer in: the sweep
 existed but had no mid-session beat.
 
 ### Fix
-- **`bin/syn-watch-arm.sh`** — the watcher's poll loop now runs
+- **`bin/pi/syn-watch-arm.sh`** — the watcher's poll loop now runs
   `eindri-handoff.sh sweep` **every cycle** (before its `actionable` check), so a
   filed report or question becomes a wake within seconds of landing. The watcher
   is already the only thing polling during a session, so it is the natural beat;
@@ -20,11 +20,11 @@ existed but had no mid-session beat.
 This fix, like the extension fix, is **not live in the current session**:
 
 ```
-worktree bin/syn-watch-arm.sh : 3 refs to eindri-handoff.sh   ← the fix
-main     bin/syn-watch-arm.sh : 0 refs                        ← what runs
+worktree bin/pi/syn-watch-arm.sh : 3 refs to eindri-handoff.sh   ← the fix
+main     bin/pi/syn-watch-arm.sh : 0 refs                        ← what runs
 ```
 
-The extension spawns `${fmRoot}/bin/syn-watch-arm.sh` — the **main tree's** copy —
+The extension spawns `${fmRoot}/bin/pi/syn-watch-arm.sh` — the **main tree's** copy —
 so the sweep is live only after the merge lands and pi restarts with the fixed
 extension. A running session keeps both the extension and the watcher script it
 started with.
@@ -42,4 +42,4 @@ the fix — which is the point of the change.
 - The call sits inside the watcher loop, immediately before `actionable`.
 
 ### Files
-- `bin/syn-watch-arm.sh`
+- `bin/pi/syn-watch-arm.sh`

@@ -10,10 +10,10 @@ decree's job.
 ## What
 - `package.json` files[] re-gains `tools/` (+ the node_modules/__pycache__/pyc
   exclusions).
-- `bin/npm-pretest.sh` — the pre-publish gate: pack → the hull inside the
+- `bin/forge/npm/npm-pretest.sh` — the pre-publish gate: pack → the hull inside the
   tarball → sandbox install → smokes (bins 100+, ymir.js answers,
   essence-fetch heals, fleet servers present) on THIS seat and on heimdall
   (the remote leg). PRETEST FAIL, and nothing sails.
 
 ## Files
-- `package.json` · `bin/npm-pretest.sh`
+- `package.json` · `bin/forge/npm/npm-pretest.sh`

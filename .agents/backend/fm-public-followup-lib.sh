@@ -251,7 +251,7 @@ EOF
 }
 
 # fm_pf_now_epoch: wall clock as epoch seconds. FMX_NOW_OVERRIDE pins it for
-# tests, matching bin/fm-x-lib.sh.
+# tests, matching bin/backend/fm-x-lib.sh.
 fm_pf_now_epoch() {
   printf '%s\n' "${FMX_NOW_OVERRIDE:-$(date +%s)}"
 }

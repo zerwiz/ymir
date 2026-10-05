@@ -20,9 +20,9 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-WATCH="$ROOT/bin/fm-watch.sh"
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
-DAEMON="$ROOT/bin/fm-supervise-daemon.sh"
+WATCH="$ROOT/bin/backend/fm-watch.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
+DAEMON="$ROOT/bin/backend/fm-supervise-daemon.sh"
 
 # Source the daemon's pure functions (its main loop is guarded out under sourcing).
 if [ -z "${FM_TEST_DAEMON_SOURCED:-}" ]; then
@@ -156,8 +156,8 @@ test_stale_pane_transient_persistent_resume() {
   echo $(( $(date +%s) - 500 )) > "$state/.subsuper-stale-$key"
   printf 'Working...\n' > "$dir/pane.txt"
   fm_write_meta "$state/stale-w2.meta" "window=$win" "worktree=$dir/wt" "kind=ship" "harness=pi"
-  resumed_gen=$("$ROOT/bin/fm-busy-event.sh" arm "$state" stale-w2)
-  "$ROOT/bin/fm-busy-event.sh" apply "$state" stale-w2 busy --gen "$resumed_gen" \
+  resumed_gen=$("$ROOT/bin/backend/fm-busy-event.sh" arm "$state" stale-w2)
+  "$ROOT/bin/backend/fm-busy-event.sh" apply "$state" stale-w2 busy --gen "$resumed_gen" \
     --source pi-ext --event agent-start
   : > "$state/.subsuper-escalations"
   PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$win" FM_FAKE_TMUX_CAPTURE="$dir/pane.txt" \

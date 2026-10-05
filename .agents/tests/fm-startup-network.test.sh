@@ -40,8 +40,8 @@ new_world() {
   for f in "$ROOT"/bin/*.sh; do
     ln -s "$f" "$root/bin/$(basename "$f")"
   done
-  rm -f "$root/bin/fm-bootstrap.sh"
-  cat > "$root/bin/fm-bootstrap.sh" <<'SH'
+  rm -f "$root/bin/backend/fm-bootstrap.sh"
+  cat > "$root/bin/backend/fm-bootstrap.sh" <<'SH'
 #!/usr/bin/env bash
 # Scriptable stand-in: records how it was invoked, then behaves as the test asks.
 set -u
@@ -62,7 +62,7 @@ fi
 [ -z "${FM_FAKE_BOOTSTRAP_OUT:-}" ] || printf '%s\n' "$FM_FAKE_BOOTSTRAP_OUT"
 exit "${FM_FAKE_BOOTSTRAP_RC:-0}"
 SH
-  chmod +x "$root/bin/fm-bootstrap.sh"
+  chmod +x "$root/bin/backend/fm-bootstrap.sh"
   cat > "$root/bin/ps" <<'SH'
 #!/usr/bin/env bash
 pid=
@@ -115,7 +115,7 @@ run_stage() {  # <home> <root> <args...>
   local home=$1 root=$2
   shift 2
   PATH="$root/bin:$PATH" FM_FAKE_HARNESS_PID="${FM_FAKE_HARNESS_PID_OVERRIDE:-$$}" \
-    FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/fm-startup-network.sh" "$@"
+    FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/backend/fm-startup-network.sh" "$@"
 }
 
 wait_for_startup_network_wake() {  # <home> [tenths]
@@ -156,7 +156,7 @@ EOF
     || fail "the worker was not actually still running: $pending"
   assert_contains "$pending" "Only a FAILED or otherwise actionable result arrives as a \`check: startup-network\` wake; a clean success stays silent." \
     "the pending guidance still promised a wake for clean success"
-  assert_contains "$pending" "$root/bin/fm-startup-network.sh report" \
+  assert_contains "$pending" "$root/bin/backend/fm-startup-network.sh report" \
     "the pending guidance omitted the durable on-demand report path"
   run_stage "$home" "$root" wait 30 >/dev/null || fail "the worker never published"
   assert_grep 'network=only' "$log" "the worker did not run bootstrap's network-only phase"
@@ -527,7 +527,7 @@ EOF
   started=$(date +%s)
   rc=0
   out=$(PATH="$root/bin:$PATH" FM_FAKE_HARNESS_PID="$next_owner" \
-    FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/fm-lock.sh" 2>&1) || rc=$?
+    FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/backend/fm-lock.sh" 2>&1) || rc=$?
   elapsed=$(( $(date +%s) - started ))
   [ "$rc" -ne 0 ] || fail "lock takeover succeeded while the prior sweep was mutating"
   [ "$elapsed" -lt 4 ] || fail "lock takeover blocked ${elapsed}s behind deferred network work"
@@ -538,7 +538,7 @@ EOF
 
   run_stage "$home" "$root" wait 30 >/dev/null || fail "the leased sweep never settled"
   out=$(PATH="$root/bin:$PATH" FM_FAKE_HARNESS_PID="$next_owner" \
-    FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/fm-lock.sh" 2>&1) \
+    FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/backend/fm-lock.sh" 2>&1) \
     || fail "lock takeover still failed after the sweep released its lease"
   new_owner=$(cat "$home/state/.lock")
   assert_contains "$out" "lock acquired: harness pid $new_owner" \
@@ -561,7 +561,7 @@ test_records_share_one_origin_so_offsets_form_a_timeline() {
 
   (
     # shellcheck source=bin/backend/fm-timing-lib.sh
-    . "$ROOT/bin/fm-timing-lib.sh"
+    . "$ROOT/bin/backend/fm-timing-lib.sh"
     unset FM_TIMING_EPOCH_MS
     FM_TIMING_LOG=$log
     export FM_TIMING_LOG

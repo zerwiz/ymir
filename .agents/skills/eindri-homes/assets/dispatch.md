@@ -7,10 +7,10 @@ chain must never guess a model or skip the lock.
 dispatch[8]{step,who,what}:
   "1 request","Allfather / Brokk","a task, optionally naming a model or locality"
   "2 role","bin/agents/eindri-role.sh choose","pick the smith by craft (whole-word match)"
-  "3 model","bin/model-resolve.sh resolve","friendly/exact -> {locality,harness,provider,model}; unresolved -> ASK"
+  "3 model","bin/model/model-resolve.sh resolve","friendly/exact -> {locality,harness,provider,model}; unresolved -> ASK"
   "4 harness","config/agents.yaml harness rule","local -> pi, online -> opencode (agent may pin harness:)"
   "5 seat","bin/seat/herdr-run.sh eindri (or bin/agents/eindri-start.sh)","herdr pane/tab/space; --model resolution happens here"
-  "6 lock","bin/local-model-lock.sh","serialize local inference per host (local_concurrency)"
+  "6 lock","bin/model/local-model-lock.sh","serialize local inference per host (local_concurrency)"
   "7 register","a2a MCP (a2abridge bridge)","agent announces its card; reachable over A2A"
   "8 report","herdr agent list / Hlidskjalf Fleet","state: working/blocked/done; tasks from Runes"
 ```
@@ -19,7 +19,7 @@ dispatch[8]{step,who,what}:
 
 ```bash
 # resolve a request (no side effects)
-bin/model-resolve.sh resolve "qwen 3.6 iq2"
+bin/model/model-resolve.sh resolve "qwen 3.6 iq2"
 #  -> locality=local harness=pi provider=llama-cpp model=qwen3.6-35b-a3b@q2_k_xl
 
 # seat the right smith on the right model, in a visible pane
@@ -31,7 +31,7 @@ bin/agents/eindri-start.sh "do marketing research"        # role + seat; add --m
 ## Rules (non-negotiable)
 
 - **One local model at a time per machine** — route local runs through
-  `bin/local-model-lock.sh` (`local_concurrency` in `config/agents.yaml`).
+  `bin/model/local-model-lock.sh` (`local_concurrency` in `config/agents.yaml`).
 - **Local → `pi`, online → `opencode`** — unless an agent pins `harness:`.
 - **Never guess a model** — a low/medium confidence resolve for an explicit
   request must **ask** (`ask_user_question`).

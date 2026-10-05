@@ -11,7 +11,7 @@ set -u
 # shellcheck source=tests/wake-helpers.sh
 . "$(dirname "${BASH_SOURCE[0]}")/wake-helpers.sh"
 
-DRAIN="$ROOT/bin/fm-wake-drain.sh"
+DRAIN="$ROOT/bin/backend/fm-wake-drain.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-wake-drain-open-decisions-tests)
 

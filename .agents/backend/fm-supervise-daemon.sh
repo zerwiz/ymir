@@ -211,7 +211,7 @@ WEDGE_ALARM_NOTIFIER_PID=
 # status_is_Allfather_relevant, window_to_task, and the status-span reader) now
 # live in bin/backend/fm-classify-lib.sh, shared with the always-on watcher.
 # Composer-empty detection, submit acknowledgement, and the harness-scoped
-# supervisor-pane busy guard live in bin/fm-tmux-lib.sh.
+# supervisor-pane busy guard live in bin/backend/fm-tmux-lib.sh.
 # FM_BUSY_REGEX also overrides Grok's isolated task-state fallback.
 INJECT_FAIL_SLEEP_DEFAULT=30
 INJECT_CONFIRM_RETRIES_DEFAULT=3
@@ -333,7 +333,7 @@ _collapse_newlines() {  # <text>
 # --- classification helpers (PURE: no side effects, testable) ---------------
 # last_status_line, status_is_Allfather_relevant, window_to_task, and the
 # status-span reader come from bin/backend/fm-classify-lib.sh (sourced above),
-# the single classifier shared with bin/fm-watch.sh. The decision-string wrappers
+# the single classifier shared with bin/backend/fm-watch.sh. The decision-string wrappers
 # and dedup state below layer the daemon's escalation-digest concerns on top.
 #
 # Decision protocol: every classifier prints exactly one line on stdout of the

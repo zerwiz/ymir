@@ -325,7 +325,7 @@
 ## Phase 3: Factory-Wide Integration & Polish (Week 4)
 
 ### 3.1 Update `fm-brief.sh` — Master Scaffold
-**File**: `$HOME/firstmate/bin/fm-brief.sh`
+**File**: `$HOME/firstmate/bin/backend/fm-brief.sh`
 
 **Changes**:
 - Scaffold includes ALL four layers as mandatory sections:
@@ -344,7 +344,7 @@
 ---
 
 ### 3.2 Update `fm-session-start.sh` — Context Budget Init
-**File**: `$HOME/firstmate/bin/fm-session-start.sh`
+**File**: `$HOME/firstmate/bin/backend/fm-session-start.sh`
 
 **Changes**:
 - Initialize context budget tracking per task
@@ -354,7 +354,7 @@
 ---
 
 ### 3.3 Update `fm-teardown.sh` — Goal Validation
-**File**: `$HOME/firstmate/bin/fm-teardown.sh`
+**File**: `$HOME/firstmate/bin/backend/fm-teardown.sh`
 
 **Changes**:
 - Require measurable goal validation before teardown (for ship tasks)

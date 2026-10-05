@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # fm-bearings-snapshot.sh - compact, bounded, TOON-by-default bearings projection.
 #
-# A thin wrapper OVER the canonical bin/fm-fleet-snapshot.sh. It does not parse
+# A thin wrapper OVER the canonical bin/backend/fm-fleet-snapshot.sh. It does not parse
 # fleet state itself: it shells out to `fm-fleet-snapshot.sh --json`, projects that
 # complete structured contract down to the small set of fields a "pick up where I
 # left off" read needs, and renders TOON at the output boundary. The internal data

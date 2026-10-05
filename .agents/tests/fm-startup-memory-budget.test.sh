@@ -8,9 +8,9 @@ set -u
 
 BASE_PATH=${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
 TMP_ROOT=$(fm_test_tmproot fm-startup-memory-budget)
-BUDGET="$ROOT/bin/fm-startup-memory-budget.sh"
-BOOTSTRAP="$ROOT/bin/fm-bootstrap.sh"
-CONFIG_PUSH="$ROOT/bin/fm-config-push.sh"
+BUDGET="$ROOT/bin/backend/fm-startup-memory-budget.sh"
+BOOTSTRAP="$ROOT/bin/backend/fm-bootstrap.sh"
+CONFIG_PUSH="$ROOT/bin/backend/fm-config-push.sh"
 
 make_fake_toolchain() {
   local dir=$1 fakebin
@@ -241,7 +241,7 @@ latest_reread_instruction() {
 }
 
 inbox_record_body() {  # <record>
-  bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$1"
+  bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$1"
 }
 
 run_config_push() {

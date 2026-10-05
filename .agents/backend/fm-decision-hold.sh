@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# fm-decision-hold.sh - transitional compatibility shim over bin/fm-captain-hold.sh.
+# fm-decision-hold.sh - transitional compatibility shim over bin/backend/fm-captain-hold.sh.
 #
 # The separate "decision" concept collapsed into the one primitive the captain
 # cares about: a task held for the captain. bin/backend/fm-captain-hold.sh owns every

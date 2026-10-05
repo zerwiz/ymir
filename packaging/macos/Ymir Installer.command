@@ -2,7 +2,7 @@
 # Ymir Installer.command — double-click this on a Mac.
 #
 # macOS gets its Linux host the same way Windows does: a VM. This launcher finds
-# the Ymir checkout and hands over to bin/bootstrap-macos.sh, which raises Ubuntu
+# the Ymir checkout and hands over to bin/host/bootstrap-macos.sh, which raises Ubuntu
 # in Lima and installs Ymir inside it. It is a .command file so Finder runs it on
 # a double-click — no terminal knowledge required of the operator.
 #
@@ -18,7 +18,7 @@ echo
 # 1. find a checkout: beside this file, ~/Ymir, or clone one.
 ROOT=""
 for cand in "$HERE/../.." "$HOME/Ymir" "$HOME/Documents/Ymir-src"; do
-  [ -x "$cand/bin/bootstrap-macos.sh" ] && { ROOT="$(cd "$cand" && pwd)"; break; }
+  [ -x "$cand/bin/host/bootstrap-macos.sh" ] && { ROOT="$(cd "$cand" && pwd)"; break; }
 done
 if [ -z "$ROOT" ]; then
   echo "cloning Ymir into $HOME/Ymir …"
@@ -31,11 +31,11 @@ echo
 
 # 2. readiness, then the bootstrap. The bootstrap itself is gated on macOS and
 #    refuses politely anywhere else, so this launcher stays dumb on purpose.
-"$ROOT/bin/bootstrap-macos.sh" --check
+"$ROOT/bin/host/bootstrap-macos.sh" --check
 echo
 read -r -p "Proceed with the install? [y/N] " reply
 case "$reply" in
-  y|Y|yes|YES) "$ROOT/bin/bootstrap-macos.sh" ;;
+  y|Y|yes|YES) "$ROOT/bin/host/bootstrap-macos.sh" ;;
   *) echo "nothing changed." ;;
 esac
 

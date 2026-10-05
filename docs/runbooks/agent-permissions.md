@@ -92,7 +92,7 @@ what you want.
 ## Check your posture
 
 ```bash
-bin/perm-guard.sh          # flags a flat bash:allow, especially with edit/write denied
+bin/gates/guards/perm-guard.sh          # flags a flat bash:allow, especially with edit/write denied
 bin/seat/valknut-load.sh --all  # rebind after edits
 ```
 

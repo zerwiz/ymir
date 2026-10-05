@@ -55,9 +55,9 @@ PATH="$LAB/shim:$PATH"
 export PATH
 
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-cursor-lib.sh"
+. "$ROOT/bin/backend/fm-cursor-lib.sh"
 fm_backend_source tmux || fail "fm_backend_source tmux failed"
 
 "$REAL_TMUX" -L "$SOCKET" new-session -d -s "$SESSION" -n control -c "$LAB/wt" \

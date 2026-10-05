@@ -31,8 +31,8 @@ install_pi_branch_extension_fixture() {
   cp "$ROOT/.pi/extensions/lib/fm-calm-visibility.ts" "$repo/.pi/extensions/lib/fm-calm-visibility.ts"
   cp "$ROOT/.pi/extensions/lib/fm-operational-input.ts" "$repo/.pi/extensions/lib/fm-operational-input.ts"
   mkdir -p "$repo/bin"
-  cp "$ROOT/bin/fm-operational-input.sh" "$repo/bin/fm-operational-input.sh"
-  chmod +x "$repo/bin/fm-operational-input.sh"
+  cp "$ROOT/bin/backend/fm-operational-input.sh" "$repo/bin/backend/fm-operational-input.sh"
+  chmod +x "$repo/bin/backend/fm-operational-input.sh"
   cat > "$repo/node_modules/@earendil-works/pi-coding-agent/package.json" <<'JSON'
 {"name":"@earendil-works/pi-coding-agent","type":"module","exports":"./index.js"}
 JSON
@@ -546,7 +546,7 @@ async function settle(predicate, label) {
   throw new Error(`timed out waiting for ${label}`);
 }
 function outcomeScript(args) {
-  const result = spawnSync("bash", [`${realRoot}/bin/fm-branch-outcome.sh`, ...args], {
+  const result = spawnSync("bash", [`${realRoot}/bin/backend/fm-branch-outcome.sh`, ...args], {
     encoding: "utf8",
     env: { ...process.env, FM_HOME: home, FM_STATE_OVERRIDE: `${home}/state` },
   });
@@ -805,11 +805,11 @@ EOF
   # extracts the body, so this asserts delivered behavior rather than a shape
   # this test already knows.
   local kind body
-  kind=$(./bin/fm-operational-input.sh kind < "$home/state/delivered-captain-note") \
+  kind=$(./bin/backend/fm-operational-input.sh kind < "$home/state/delivered-captain-note") \
     || fail "captain outcome reaches main's model as unattributed text the model cannot tell from its own answer"
   [ "$kind" = branch-outcome ] \
     || fail "captain outcome delivered as kind '$kind', not branch-outcome"
-  body=$(./bin/fm-operational-input.sh body < "$home/state/delivered-captain-note") \
+  body=$(./bin/backend/fm-operational-input.sh body < "$home/state/delivered-captain-note") \
     || fail "captain outcome envelope carries no readable body"
   case "$body" in
     *"This is a supervision outcome delivered automatically by the supervision branch."*"It was not typed by the captain."*"task-9: PR https://example.com/pr/9"*) ;;
@@ -832,7 +832,7 @@ EOF
   esac
   # The routine note is rendered in the TUI, and its renderer reads the glyph off
   # the front of this same string, so it must stay plain text.
-  if ./bin/fm-operational-input.sh kind < "$home/state/delivered-routine-note" >/dev/null 2>&1; then
+  if ./bin/backend/fm-operational-input.sh kind < "$home/state/delivered-routine-note" >/dev/null 2>&1; then
     fail "routine note must stay plain rendered text, not typed operational input"
   fi
   pass "a captain outcome reaches main's model as typed, self-describing input while routine notes stay plain"
@@ -856,7 +856,7 @@ const fleetOperations = [];
 globalThis.__fmExecuteBranchBash = async (context) => {
   const actor = spawnSync(
     "bash",
-    ["-c", '. "$1"; fm_lease_actor', "_", `${realRoot}/bin/fm-lease-lib.sh`],
+    ["-c", '. "$1"; fm_lease_actor', "_", `${realRoot}/bin/backend/fm-lease-lib.sh`],
     { encoding: "utf8", cwd: context.cwd, env: context.env },
   );
   if (actor.status !== 0) throw new Error(`branch bash actor resolution failed: ${actor.stderr}`);
@@ -941,7 +941,7 @@ const mainCtx = {
 };
 const operational = spawnSync(
   "bash",
-  [`${realRoot}/bin/fm-operational-input.sh`, "encode", "watcher"],
+  [`${realRoot}/bin/backend/fm-operational-input.sh`, "encode", "watcher"],
   { encoding: "utf8", input: "operational watcher injection" },
 );
 if (operational.status !== 0) throw new Error(`could not create operational input: ${operational.stderr}`);
@@ -1125,13 +1125,13 @@ test_branch_default_on_heartbeat_afk_and_fallback() {
   home="$TMP_ROOT/gating-home"
   mkdir -p "$home/state" "$home/config" "$broken/bin"
   install_pi_branch_extension_fixture "$repo"
-  cp "$ROOT/bin/fm-lease.sh" "$ROOT/bin/fm-lease-lib.sh" "$ROOT/bin/fm-wake-lib.sh" "$ROOT/bin/fm-wake-grant.sh" "$broken/bin/"
-  cat > "$broken/bin/fm-branch-prompt.sh" <<'SH'
+  cp "$ROOT/bin/backend/fm-lease.sh" "$ROOT/bin/backend/fm-lease-lib.sh" "$ROOT/bin/backend/fm-wake-lib.sh" "$ROOT/bin/backend/fm-wake-grant.sh" "$broken/bin/"
+  cat > "$broken/bin/backend/fm-branch-prompt.sh" <<'SH'
 #!/usr/bin/env bash
 echo "synthetic generator failure" >&2
 exit 1
 SH
-  chmod +x "$broken/bin/fm-branch-prompt.sh"
+  chmod +x "$broken/bin/backend/fm-branch-prompt.sh"
   PLUGIN="$repo/.pi/extensions/fm-branch-supervision.ts" FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
     DRIVER_PRELUDE="$DRIVER_PRELUDE" node --input-type=module > "$TMP_ROOT/node-output" 2>&1 <<'EOF'
 const prelude = process.env.DRIVER_PRELUDE;
@@ -1400,7 +1400,7 @@ for (let i = 0; i < 250 && existsSync(`${home}/state/.branch-eligible-rows`); i 
 if (existsSync(`${home}/state/.branch-eligible-rows`)) {
   throw new Error("settled prompt left its unacknowledged grant active");
 }
-const drain = spawnSync("bash", [`${realRoot}/bin/fm-wake-drain.sh`], {
+const drain = spawnSync("bash", [`${realRoot}/bin/backend/fm-wake-drain.sh`], {
   encoding: "utf8",
   env: { ...process.env, FM_HOME: home, FM_STATE_OVERRIDE: `${home}/state`, FM_ROOT_OVERRIDE: realRoot },
 });
@@ -2470,7 +2470,7 @@ exec "$FM_TEST_REAL_BASH" "$@"
 SH
   chmod +x "$fakebin/bash"
   PATH="$fakebin:$PATH" PLUGIN="$repo/.pi/extensions/fm-branch-supervision.ts" FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
-    FM_TEST_REAL_BASH="$real_bash" FM_TEST_LEASE_SCRIPT="$ROOT/bin/fm-lease.sh" \
+    FM_TEST_REAL_BASH="$real_bash" FM_TEST_LEASE_SCRIPT="$ROOT/bin/backend/fm-lease.sh" \
     FM_TEST_FAIL_MARKER="$home/state/release-failed-once" DRIVER_PRELUDE="$DRIVER_PRELUDE" \
     node --input-type=module > "$TMP_ROOT/node-output" 2>&1 <<'EOF'
 const prelude = process.env.DRIVER_PRELUDE;
@@ -2777,7 +2777,7 @@ test_branch_dispatch_classifies_main_only_rows_and_writes_the_eligible_snapshot(
   cp "$ROOT/.pi/extensions/lib/fm-branch-dispatch.ts" "$repo/.pi/extensions/lib/fm-branch-dispatch.ts"
   cp "$ROOT/.pi/extensions/lib/fm-branch-model-picker.ts" "$repo/.pi/extensions/lib/fm-branch-model-picker.ts"
   printf 'project=%s/projects/approved\nwindow=fm-window\n' "$home" > "$home/state/task-a.meta"
-  LIB="$repo/.pi/extensions/lib/fm-branch-dispatch.ts" FM_HOME="$home" GRANT="$ROOT/bin/fm-wake-grant.sh" \
+  LIB="$repo/.pi/extensions/lib/fm-branch-dispatch.ts" FM_HOME="$home" GRANT="$ROOT/bin/backend/fm-wake-grant.sh" \
     node --input-type=module > "$TMP_ROOT/node-output" 2>&1 <<'EOF'
 import { pathToFileURL } from "node:url";
 import { readFileSync, writeFileSync } from "node:fs";

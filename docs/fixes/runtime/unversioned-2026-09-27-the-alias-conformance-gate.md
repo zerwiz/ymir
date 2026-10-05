@@ -9,7 +9,7 @@ names breaks that body silently, and until now nothing checked it. The law was
 written; the gate was missing.
 
 ### What
-**The gate — `bin/model-alias-check.sh` (new).** It reads every reachable seat's
+**The gate — `bin/gates/checks/model-alias-check.sh` (new).** It reads every reachable seat's
 registry over the tailnet ring (resolved from `fleet.json`, never a literal IP),
 asks every reachable rail what it serves (its written presets **and** the live
 `/v1/models`), and verifies every alias a provider block names resolves — on the
@@ -24,7 +24,7 @@ empty set is likewise no evidence, so its aliases fall to `offline`, not
 `missing`. Exit is non-zero only for a genuine unresolved alias.
 
 ```
-$ bin/model-alias-check.sh            # whole reachable ring, TOON
+$ bin/gates/checks/model-alias-check.sh            # whole reachable ring, TOON
 model_alias_seats[4]{seat,state,served_aliases}:
   "whynot","ok","5"
   "zerwizserver","ok","0"
@@ -40,7 +40,7 @@ model_alias_check[4]{fact,value,note}:
 ```
 
 **The wiring — the rename road cannot drift unnoticed.**
-- `bin/model-placement.sh` now runs the gate for this seat and reports an
+- `bin/model/model-placement.sh` now runs the gate for this seat and reports an
   `alias_conformance` row; its new `check` mode exits 1 on an unresolved alias
   (`YMIR_ALIAS_CHECK=off` is the loud opt-out).
 - `.agents/skills/lifecycle/smoke_test.sh` gains check **14d `alias`**: it runs
@@ -64,7 +64,7 @@ alias_conformance_proof_verdict[1]{verdict}:
   "PASS"
 ```
 
-**Live, on the real fleet** (`bin/model-alias-check.sh`):
+**Live, on the real fleet** (`bin/gates/checks/model-alias-check.sh`):
 - Healthy ring: `verdict pass`, `checked 162`, `missing 0`, `omarchy offline`
   (exit 0) — an unreachable seat is `offline`, never a FAIL.
 - A deliberately-broken registry (one ghost alias appended to the seat's
@@ -94,8 +94,8 @@ gates pass.
   alias road.
 
 ### Files
-- `bin/model-alias-check.sh` (new — the gate)
-- `bin/model-placement.sh` (runs the gate; `check` mode)
+- `bin/gates/checks/model-alias-check.sh` (new — the gate)
+- `bin/model/model-placement.sh` (runs the gate; `check` mode)
 - `.agents/skills/lifecycle/smoke_test.sh` (check 14d `alias`)
 - `.agents/skills/lifecycle/SKILL.md` (the check is documented)
 - `tests/e2e/alias-conformance-proof.sh` (new — the offline proof)

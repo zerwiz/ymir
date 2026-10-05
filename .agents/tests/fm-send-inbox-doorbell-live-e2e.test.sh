@@ -67,9 +67,9 @@ SH
 chmod +x "$SHIM_DIR/tmux"
 PATH="$SHIM_DIR:$PATH"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-tmux-lib.sh"
+. "$ROOT/bin/backend/fm-tmux-lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-task-inbox-lib.sh"
+. "$ROOT/bin/backend/fm-task-inbox-lib.sh"
 
 tmux -L "$SOCKET" new-session -d -s "$SESSION" -x 220 -y 50 -c "$ROOT"
 
@@ -144,7 +144,7 @@ check_harness_doorbell() {  # <name>
   fi
   [ "$ready_rc" -eq 0 ] || note "$name ($version): idle composer never classified empty; proceeding as production does (advisory check skips only on pending)"
   printf 'window=%s:%s\nkind=ship\nharness=%s\n' "$SESSION" "$win" "$name" > "$home/state/$task.meta"
-  if ! FM_HOME="$home" FM_ROOT_OVERRIDE="$home" "$ROOT/bin/fm-send.sh" "$task" \
+  if ! FM_HOME="$home" FM_ROOT_OVERRIDE="$home" "$ROOT/bin/backend/fm-send.sh" "$task" \
     "Firstmate live check: run exactly this shell command now: touch $acted - then follow the mv instruction you were given for this message. Reply with one short line." \
     >/dev/null 2>&1; then
     FAILED=1

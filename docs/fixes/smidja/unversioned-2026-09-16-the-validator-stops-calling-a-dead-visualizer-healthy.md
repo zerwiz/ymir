@@ -1,7 +1,7 @@
 ## smidja · unversioned · 2026-09-16 — the validator stops calling a dead visualizer healthy
 
 ### Why
-`bin/ymir-validate.sh` reported `visualizer PASS "UI built and served on :8437"`
+`bin/engine/ymir-validate.sh` reported `visualizer PASS "UI built and served on :8437"`
 by looking at `./dist` alone. When the API had crashed on a bad `CMD_DB` and
 nothing was listening on `:8437`, the validator still said PASS — the false-pass
 class this night kept surfacing, in the very tool meant to catch it.

@@ -2,7 +2,7 @@
 Description=Ymir arm — Sýn, the standing supervision watcher (one per home, idle-not-dead)
 # A flap is bounded and named: Restart=always brings the watch back; ten rapid
 # failures in a minute is a real fault systemd stops shouting about (the unit
-# goes failed, bin/eir-doctor.sh's `arm` surface and bin/syn-watch.sh status
+# goes failed, bin/agents/eir-doctor.sh's `arm` surface and bin/pi/syn-watch.sh status
 # both name it).
 StartLimitIntervalSec=60
 StartLimitBurst=10

@@ -20,7 +20,7 @@ measured.
 3. **The hall board's sample flag is governed by the FEED, not by Skuld.** The
    "Not connected — this board is the saga's sample" note
    (`src/hall/lh-board.js:506`) is removed only when `/livehall.json` answers a
-   feed. `bin/hall-snapshot.sh` writes `public/livehall.json`, but a build bakes
+   feed. `bin/time/snotra/hall-snapshot.sh` writes `public/livehall.json`, but a build bakes
    that file into `dist/` — and a packaged install carries NO snapshot (the file
    is gitignored), so the saga note could stand forever with a perfectly healthy
    Skuld door. The measurement in the errand ("falls when skuldInit cannot reach

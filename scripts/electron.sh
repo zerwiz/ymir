@@ -14,10 +14,10 @@
 #   electron.sh --version
 set -u
 
-# --- portability shim: bin/ymir-platform.sh --------------------------------
+# --- portability shim: bin/fleet/ymir-platform.sh --------------------------------
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
   _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-  for _ymir_c in "$(dirname "$_ymir_dir")/bin/ymir-platform.sh" "$_ymir_dir/bin/ymir-platform.sh"; do
+  for _ymir_c in "$(dirname "$_ymir_dir")/bin/fleet/ymir-platform.sh" "$_ymir_dir/bin/fleet/ymir-platform.sh"; do
     [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
   done
   unset _ymir_dir _ymir_c
@@ -30,10 +30,10 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # below, once hoard-lib has resolved it. Never mkdir "$ROOT/state" here — that is
 # the drift the plan's purity row names.
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/app-lib.sh).
+# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -44,8 +44,8 @@ fi
 if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/desktop/electron-lib.sh" ]; then
   . "$ROOT/bin/desktop/electron-lib.sh"; YMIR_ELECTRON_LIB_LOADED=1
 fi
-if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/graphics-lib.sh" ]; then
-  . "$ROOT/bin/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
+if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/host/graphics-lib.sh" ]; then
+  . "$ROOT/bin/host/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
 fi
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
 app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
@@ -106,13 +106,13 @@ IGPU_VRAM_SMALL_MIB="${YMIR_IGPU_VRAM_SMALL_MIB:-2048}"
 # exposes that file — so on this Intel + discrete hybrid the guard never fired
 # and the GPU process died for want of a fence (SIGABRT, no OOM). The fragile
 # case is now classified from the DRM devices themselves: a shared-memory
-# integrated device beside a discrete one (bin/graphics-lib.sh). GTT is read
+# integrated device beside a discrete one (bin/host/graphics-lib.sh). GTT is read
 # where amdgpu exposes it; the small-carve-out read remains only as the
 # fallback when the lib is not present.
 igpu_vram_small() {
   local d total
-  if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/graphics-lib.sh" ]; then
-    . "$ROOT/bin/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
+  if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$ROOT/bin/host/graphics-lib.sh" ]; then
+    . "$ROOT/bin/host/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
   fi
   if [ "${YMIR_GRAPHICS_LIB_LOADED:-0}" = 1 ] && graphics_hybrid_fragile; then return 0; fi
   for d in /sys/class/drm/card*/device; do
@@ -328,7 +328,7 @@ start_one() {
   [ -n "$bin" ] && [ -x "$bin" ] || { printf 'error: no Electron runtime for %s — run the installer or npm install at the workspace root\n' "$v" >&2; exit 1; }
   local -a extra=()
   # GPU safety — see igpu_vram_small() above for why this exists. The effective
-  # policy is ONE decision (bin/graphics-lib.sh), recorded by the sense snapshots;
+  # policy is ONE decision (bin/host/graphics-lib.sh), recorded by the sense snapshots;
   # YMIR_DESKTOP_DISABLE_GPU remains the human override (P7, 2026-09-24).
   #   1            force software rendering
   #   0            force the GPU path

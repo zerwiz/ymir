@@ -22,9 +22,9 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 # shellcheck source=/dev/null
-. "$ROOT/bin/fm-marker-lib.sh"
+. "$ROOT/bin/backend/fm-marker-lib.sh"
 
-SEND="$ROOT/bin/fm-send.sh"
+SEND="$ROOT/bin/backend/fm-send.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-send-marker)
 
@@ -97,7 +97,7 @@ setup_home() {
 # owner (bin/backend/fm-task-inbox-lib.sh). Command substitution strips trailing
 # newlines, so byte-exact trailing assertions read the raw record instead.
 record_body() {  # <record-path>
-  bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$1"
+  bash -c '. "$1"; fm_task_inbox_body "$2"' _ "$ROOT/bin/backend/fm-task-inbox-lib.sh" "$1"
 }
 
 test_secondmate_target_is_marked() {
@@ -121,7 +121,7 @@ test_secondmate_target_is_marked() {
     *"$FM_FROMFIRST_MARK"*) fail "the marker must ride the record, never the typed doorbell" ;;
   esac
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-pending-reply-lib.sh"
+  . "$ROOT/bin/backend/fm-pending-reply-lib.sh"
   corr=$(fm_pending_reply_extract_corr "$got")
   [ -f "$(fm_pending_reply_path "$home/state" "$corr")" ] \
     || fail "marked secondmate send should create a parent pending-reply record"
@@ -142,7 +142,7 @@ test_exact_secondmate_task_id_is_marked() {
     *) fail "exact secondmate send: the recorded steer should be marker+corr+text"$'\n'"--- bytes ---"$'\n'"$(printf '%s' "$got" | od -An -c)" ;;
   esac
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-pending-reply-lib.sh"
+  . "$ROOT/bin/backend/fm-pending-reply-lib.sh"
   corr=$(fm_pending_reply_extract_corr "$got")
   # Resend with the same corr already present: embed is idempotent for that corr.
   already_marked="${FM_FROMFIRST_MARK}corr=${corr} already routed"
@@ -255,7 +255,7 @@ test_marked_send_preserves_trailing_newlines() {
   run_send "$fb" "$home" "$log" "domain" "$payload"; rc=$?
   expect_code 0 "$rc" "marked send with trailing newlines should succeed"
   # shellcheck source=/dev/null
-  . "$ROOT/bin/fm-pending-reply-lib.sh"
+  . "$ROOT/bin/backend/fm-pending-reply-lib.sh"
   corr=$(fm_pending_reply_extract_corr "$(record_body "$home/state/domain.inbox/001.msg")")
   [ -n "$corr" ] || fail "marked send should embed a corr id"
   fm_pending_reply_embed_corr "$payload" "$corr" expected_message

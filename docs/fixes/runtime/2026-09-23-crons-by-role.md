@@ -8,7 +8,7 @@
 - **Fix:** a **role gate** on each job.
   - `config/cron.yaml` lines may carry a prefix: `HH:MM @<role>[,<role>] <command>`.
   - `bin/time/nornir-cron-start.sh` reads **this machine's roles** from
-    `bin/topology.sh` (plan 51 P0), defaulting to `dev`, and runs only jobs whose
+    `bin/fleet/topology.sh` (plan 51 P0), defaulting to `dev`, and runs only jobs whose
     gate includes one of them. **No gate means any role.**
   - Roles: `@heart` owns the record jobs (git-sync, memory housekeeping,
     briefing), `@forge` the model jobs, `@dev` a full body — and a `dev` body runs

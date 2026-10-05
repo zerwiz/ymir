@@ -11,11 +11,11 @@
 # Run explicitly with FM_HERDR_SUBMIT_CONFIRM_LIVE=1 after a Herdr or Claude
 # upgrade, and before trusting a refreshed docs/verification/runtime-backends.md
 # "Herdr submit confirmation" entry.
-# Every Herdr call, including adapter calls, is routed through bin/fm-herdr-lab.sh.
+# Every Herdr call, including adapter calls, is routed through bin/backend/fm-herdr-lab.sh.
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LAB_HELPER=${HERDR_LAB_HELPER:-$ROOT/bin/fm-herdr-lab.sh}
+LAB_HELPER=${HERDR_LAB_HELPER:-$ROOT/bin/backend/fm-herdr-lab.sh}
 
 fail() { printf 'not ok - %s\n' "$1" >&2; exit 1; }
 pass() { printf 'ok - %s\n' "$1"; }

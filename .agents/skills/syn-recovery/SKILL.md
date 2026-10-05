@@ -43,7 +43,7 @@ For a REMOTE Eindri-home, `brokk-crew-state` and `brokk-peek` read the actual re
 Recover a genuinely stuck remote mate only through `bin/agents/einherjar-spawn.sh <id> --Eindri-home`, never raw herdr pane close/kill surgery, which strands the endpoint binding.
 
 Treat the digest's endpoint result as a presence signal, not proof that the task's work or validation run is gone.
-Read the targeted current state with `bin/vor-crew-state.sh <id>` before deciding to relaunch.
+Read the targeted current state with `bin/records/vor-crew-state.sh <id>` before deciding to relaunch.
 A no-mistakes run matched to the crew's branch and current code remains authoritative when the endpoint is dead: handle a terminal or parked run through the normal lifecycle, and keep supervising an active run instead of creating a duplicate worker.
 
 When no authoritative run accounts for the task, inspect only its recorded backend and worktree inventory.
@@ -60,7 +60,7 @@ If the worktree or ownership cannot be reconciled safely, leave all state intact
 Escalate in order:
 
 1. Peek the pane, and check the task's steering inbox (`state/<id>.inbox/`) for unhandled `*.msg` records - a stale wake naming an unread Brokk instruction means the worker never acknowledged a durable steer, and the record itself shows exactly what was intended.
-2. If the Eindri is waiting on a question its brief already answers, answer in one line via `BROKK_HOME=<this-Brokk-home> bin/brokk-send.sh` from an active Brokk session unless `BROKK_HOME` is already set to the active Brokk home.
+2. If the Eindri is waiting on a question its brief already answers, answer in one line via `BROKK_HOME=<this-Brokk-home> bin/agents/brokk-send.sh` from an active Brokk session unless `BROKK_HOME` is already set to the active Brokk home.
 3. If the Eindri is confused or looping, interrupt with `bin/agents/eindri-control.sh <id> interrupt`, then redirect with one corrective line through `brokk-send` (note: `brokk-send` resolves a *registered* `eindri-homes.md` home; a local worktree errand has none, so use the errand's own wake queue).
 4. If the Eindri is genuinely wedged after redirection, relaunch it with
    `bash bin/agents/erindi-brief.sh <id> --relaunch` (refill its brief with what it did and what is left),

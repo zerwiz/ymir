@@ -37,14 +37,14 @@ siblings of this file (`eindri-orchestration.md`, `nornir-jobs.md`). The runtime
 
 ### Governed paths — load the asset before you edit
 
-The `assets` gate and the `bin/syn-asset-pretool-check.sh` seatbelt both use this
+The `assets` gate and the `bin/gates/checks/syn-asset-pretool-check.sh` seatbelt both use this
 map. The seatbelt **denies the edit** until the asset was read this session
 (reads recorded in `state/asset-reads`); the gate **fails the run** when the code
 changed but the asset did not.
 
 ```
 governed[10]{path,load_first}:
-  "bin/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
+  "bin/engine/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
   "src/ymir_runtime/** | bin/ymir-engine*.sh | bin/agents/einherjar-spawn.sh | bin/agents/eindri-start.sh",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
   "apps/odrerir/**",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md"
@@ -169,16 +169,16 @@ contract line.
 
 | Script | Smoke command | Expected |
 |---|---|---|
-| `bin/hamr-harness.sh` | `bin/hamr-harness.sh` | one of `claude codex opencode pi pi-signed grok kimi cursor unknown` |
+| `bin/fleet/hamr-harness.sh` | `bin/fleet/hamr-harness.sh` | one of `claude codex opencode pi pi-signed grok kimi cursor unknown` |
 | `bin/time/nornir-cron-start.sh` | `bin/time/nornir-cron-start.sh --status` | `cron: running … jobs=<n>` or `cron: stopped …` |
-| `bin/vor-crew-state.sh <id>` | after a spawn | `state: … · source: … · …` |
+| `bin/records/vor-crew-state.sh <id>` | after a spawn | `state: … · source: … · …` |
 | `bin/records/runes-append.sh` | `… smoke ledger.append --message x` | `runes: appended … checksum=…` |
 | `bin/agents/einherjar-spawn.sh --help` | `--help` | usage text, exit 0 |
 | `bin/agents/erindi-brief.sh --help` | `--help` | usage text, exit 0 |
 | `bin/time/saga-session-start.sh` | `bash bin/time/saga-session-start.sh` | `BROKK SESSION START …` with all stages |
 
 ```bash
-bin/hamr-harness.sh
+bin/fleet/hamr-harness.sh
 bin/time/nornir-cron-start.sh --status
 bin/agents/einherjar-spawn.sh --help >/dev/null && bin/agents/erindi-brief.sh --help >/dev/null && echo "help OK"
 bash bin/time/saga-session-start.sh >/tmp/saga.out && grep -q 'BROKK SESSION START' /tmp/saga.out && echo "G3 PASS"
@@ -198,11 +198,11 @@ generic labels are not Ymir components.
 | Sub-agent worker | **Eindri** | `.agents/subagents/` |
 | Worker gather | **Einherjar** | `bin/agents/einherjar-spawn.sh` |
 | Worker brief | **Erindi** | `bin/agents/erindi-brief.sh` |
-| State reconciliation | **Vör** | `bin/vor-crew-state.sh` |
+| State reconciliation | **Vör** | `bin/records/vor-crew-state.sh` |
 | Session-start digest | **Sága** | `bin/time/saga-session-start.sh`, `saga-sessionstart-run.sh` |
-| Watch / supervision | **Sýn** | `bin/syn-watch-arm.sh`, `syn-turnend-guard.sh` |
-| Session lock | **Gleipnir** | `bin/gleipnir-lock-lib.sh` |
-| Harness detection | **Hamr** | `bin/hamr-harness.sh` |
+| Watch / supervision | **Sýn** | `bin/pi/syn-watch-arm.sh`, `syn-turnend-guard.sh` |
+| Session lock | **Gleipnir** | `bin/vault/gleipnir-lock-lib.sh` |
+| Harness detection | **Hamr** | `bin/fleet/hamr-harness.sh` |
 | Scheduled jobs | **Nornir** | `bin/time/nornir-cron-start.sh`, `nornir-job-*.sh` |
 | Daily briefing | **Sága** | `bin/time/nornir-job-daily-briefing.sh` |
 | Memory housekeeping | **Muninn** | `bin/time/nornir-job-memory-housekeeping.sh` |
@@ -271,7 +271,7 @@ session`. A refused lock is a read-only session by law.
 **Pass:** the lock is either absent/stale (acquirable) or held by a live PID.
 **Failure:** a lock names a live PID owned by another session yet this session mutates state.
 
-> **Gotcha.** `bin/gleipnir-lock-lib.sh:87-88` declares `GLEIPNIR_LOCK_ACQUIRED=0` and never
+> **Gotcha.** `bin/vault/gleipnir-lock-lib.sh:87-88` declares `GLEIPNIR_LOCK_ACQUIRED=0` and never
 > updates it. Callers must use `gleipnir_lock_acquire`'s **return code**, not that variable.
 
 ### G7 — turn-end guard inert until armed
@@ -282,12 +282,12 @@ refuse a blind turn end once armed and the watcher is stale.
 ```bash
 # Inert before the first arm:
 rm -f state/.supervision-armed
-echo '{"stop_hook_active":false}' | bash bin/syn-turnend-guard.sh; echo "unarmed exit=$?"   # expect 0
+echo '{"stop_hook_active":false}' | bash bin/gates/guards/syn-turnend-guard.sh; echo "unarmed exit=$?"   # expect 0
 
 # Armed + stale heartbeat → refuse:
 : > state/.supervision-armed
 printf '0\n' > state/.watch.heartbeat
-echo '{"stop_hook_active":false}' | bash bin/syn-turnend-guard.sh; echo "armed-stale exit=$?"  # expect 2
+echo '{"stop_hook_active":false}' | bash bin/gates/guards/syn-turnend-guard.sh; echo "armed-stale exit=$?"  # expect 2
 rm -f state/.supervision-armed state/.watch.heartbeat
 ```
 
@@ -409,7 +409,7 @@ done
 [ "$rc" = 0 ] && echo "G2 PASS"
 
 echo "== G3 smoke =="
-bin/hamr-harness.sh >/dev/null || { echo "FAIL G3 hamr"; rc=1; }
+bin/fleet/hamr-harness.sh >/dev/null || { echo "FAIL G3 hamr"; rc=1; }
 bin/time/nornir-cron-start.sh --status >/dev/null || { echo "FAIL G3 cron"; rc=1; }
 bin/agents/einherjar-spawn.sh --help >/dev/null || { echo "FAIL G3 spawn-help"; rc=1; }
 bin/agents/erindi-brief.sh --help >/dev/null || { echo "FAIL G3 brief-help"; rc=1; }
@@ -420,9 +420,9 @@ bin/agents/einherjar-spawn.sh compliance /tmp --mode local-only >/dev/null 2>&1 
 
 echo "== G7 turn-end guard =="
 rm -f state/.supervision-armed
-echo '{}' | bash bin/syn-turnend-guard.sh; [ $? = 0 ] || { echo "FAIL G7 unarmed"; rc=1; }
+echo '{}' | bash bin/gates/guards/syn-turnend-guard.sh; [ $? = 0 ] || { echo "FAIL G7 unarmed"; rc=1; }
 : > state/.supervision-armed; printf '0\n' > state/.watch.heartbeat
-echo '{}' | bash bin/syn-turnend-guard.sh; [ $? = 2 ] || { echo "FAIL G7 armed-stale"; rc=1; }
+echo '{}' | bash bin/gates/guards/syn-turnend-guard.sh; [ $? = 2 ] || { echo "FAIL G7 armed-stale"; rc=1; }
 rm -f state/.supervision-armed state/.watch.heartbeat
 
 echo "== G8 no placeholders =="

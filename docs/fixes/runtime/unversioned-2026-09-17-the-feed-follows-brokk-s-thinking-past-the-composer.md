@@ -11,7 +11,7 @@
   the composer (still only when Auto Scroll is on and the reader is at the
   bottom — scrolling up to re-read never gets yanked).
 - Live hall updated: rebuilt renderer delivered to the running Sessrúmnir and
-  the app restarted via `bin/sessrumnir.sh` (window back on workspace 8).
+  the app restarted via `bin/desktop/sessrumnir.sh` (window back on workspace 8).
 
 ### Files
 - *(carried from the frozen CHANGELOG.md)*

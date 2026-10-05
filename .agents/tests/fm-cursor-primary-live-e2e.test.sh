@@ -194,7 +194,7 @@ export FM_STATE_OVERRIDE="$HOME_DIR/state"
 export FM_SUPERVISOR_TARGET=primary
 export FM_SUPERVISOR_BACKEND=tmux
 export FM_DAEMON_PRIMARY_HARNESS=cursor
-. "$HOME_DIR/bin/fm-supervise-daemon.sh"
+. "$HOME_DIR/bin/backend/fm-supervise-daemon.sh"
 composer=\$(fm_backend_composer_state tmux primary)
 printf 'composer=%s\n' "\$composer"
 [ "\$composer" = empty ] || exit 3

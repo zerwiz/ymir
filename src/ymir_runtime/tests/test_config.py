@@ -170,7 +170,7 @@ class BrokenConfigTest(unittest.TestCase):
         self.assertIn("roles", str(caught.exception))
 
     def test_dispatch_use_must_be_a_list(self) -> None:
-        """bin/dispatch-profile.sh iterates `use`; a single object used to be skipped silently."""
+        """bin/fleet/dispatch-profile.sh iterates `use`; a single object used to be skipped silently."""
         profile = {
             "version": 1,
             "rules": [{"when": "anything", "use": {"harness": "pi"}}],

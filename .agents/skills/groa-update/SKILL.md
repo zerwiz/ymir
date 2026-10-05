@@ -30,13 +30,13 @@ It never forces, never creates a merge commit, never stashes, and advances a tar
 A tracked-files fast-forward leaves the gitignored operational dirs (data/, state/, config/, projects/, .no-mistakes/) untouched, so a Eindri-home's in-flight work is never disrupted.
 This touches only the Brokk repo and its own worktrees, never anything under `projects/`.
 
-> `bin/brokk-update.sh` is a back-compat alias; the updater is `bin/groa-update.sh`.
+> `bin/agents/brokk-update.sh` is a back-compat alias; the updater is `bin/agents/groa-update.sh`.
 
 ## What it does
 
 1. **Run the updater (Gróa):**
    ```sh
-   bin/groa-update.sh
+   bin/agents/groa-update.sh
    ```
    She fast-forwards this Brokk repo's default branch from origin, then updates every registered local or remote Eindri-home home through its placement-specific guarded path.
    She prints a `groa[1]` header, one status row per target (`updated` / `current` / `skipped: <reason>`), then the action lines:
@@ -53,7 +53,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
 3. **Nudge each updated live Eindri-home.**
    For every target on the `nudge-eindri-homes:` line (do nothing when it says `none`), send a one-line re-read nudge:
    ```sh
-   BROKK_HOME=<this-Brokk-home> bin/brokk-send.sh <id> 'Brokk was updated to the latest — please re-read your AGENTS.md to pick up the new instructions.'
+   BROKK_HOME=<this-Brokk-home> bin/agents/brokk-send.sh <id> 'Brokk was updated to the latest — please re-read your AGENTS.md to pick up the new instructions.'
    ```
    Include `BROKK_HOME=<this-Brokk-home>` unless `BROKK_HOME` is already set to the active Brokk home.
    This is a gentle steer, not an interruption.
@@ -63,24 +63,24 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
    Surface any skipped target whose reason needs the Allfather's attention (a home with un-landed changes, local edits).
 
 5. **Re-check where the apps live — an update can move the shape.**
-   `bin/app-lib.sh` resolves a surface in a clone (`apps/<surface>`) or in a
+   `bin/seat/sessrumnir/app-lib.sh` resolves a surface in a clone (`apps/<surface>`) or in a
    package (`node_modules/@zerwiz/<package>`); `bin/desktop/smidja-lib.sh` and
    `bin/desktop/electron-lib.sh` do the same for the smithy and a shell's runtime. After a
-   fast-forward, run `bin/ymir-plan.sh --phase 5` — if a surface that stood
+   fast-forward, run `bin/bridge/ymir-plan.sh --phase 5` — if a surface that stood
    installed now reads `BLOCKED`, the layout assumption moved and the resolver
    needs the new shape. A long update should also say so: `style_patience` from
-   `bin/ymir-style.sh` opens the slow part in the house's own voice.
+   `bin/desktop/ymir-style.sh` opens the slow part in the house's own voice.
 
 5. **Read the plan after an update — the new version may expect more of this host.**
    A tracked change can add a step, a root, or a setting the running machine has not
    met yet. After a fast-forward that moved the instruction surface, ask what the
    new code expects:
    ```sh
-   bin/ymir-plan.sh --blocked     # what the new version cannot do yet, and why
-   bin/ymir-plan.sh               # the whole plan: DO · SKIP · INFO · BLOCKED · CONSENT
+   bin/bridge/ymir-plan.sh --blocked     # what the new version cannot do yet, and why
+   bin/bridge/ymir-plan.sh               # the whole plan: DO · SKIP · INFO · BLOCKED · CONSENT
    ```
    A `DO` row means the update wrote code this host has not yet applied — run
-   `bin/ymir-install.sh` when the Allfather wants it applied. A `BLOCKED` row is a
+   `bin/engine/ymir-install.sh` when the Allfather wants it applied. A `BLOCKED` row is a
    fact to report, never a failure to hide. The plan is computed from this host, so
    it never drifts behind the code the way a recited list does.
 
@@ -100,7 +100,7 @@ the traps here are quiet ones. In order:
 npm_renewal[6]{step,how,why}:
   "1 choose the number","fetch the registry's latest FIRST (curl …/@zerwiz%2fymir, not memory) and bump one above it","the registry can be AHEAD of main when a publish went out from a branch — main said 0.1.18 while npm served 0.1.25"
   "2 land the bump by PR","branch → commit → gh pr create → merge; never push main (branch-guard refuses)","the delivery gate: a change leaves by PR, and the Allfather's approval is the merge"
-  "3 publish","bin/npm-publish.sh — it opens the vault's door for the token","the token is in hodd/secrets/platform.env.age, never in ~/.npmrc (that one has been stale before)"
+  "3 publish","bin/forge/npm/npm-publish.sh — it opens the vault's door for the token","the token is in hodd/secrets/platform.env.age, never in ~/.npmrc (that one has been stale before)"
   "4 if it says the token is absent","the DOOR is broken, not the key: with `age` present, age -d -i hodd/secrets/age.key hodd/secrets/platform.env.age | sed -n 's/^NPM_TOKEN=//p'","bin/vault/hodd.sh emit currently returns empty for both spellings; the vault is fine, the emit path is not — mend it"
   "5 verify","fetch the VERSION document (…/@zerwiz/ymir/<version>) — it answers before the packument does","the registry lags for minutes; the packument can 404 while the version and tarball already resolve"
   "6 the four apps ride along","their pins move in the same release (hlidskjalf · odrerir · sessrumnir · smidja-factory)","the distro depends on them; a pin left behind keeps shipping the old app to every user"
@@ -143,4 +143,4 @@ artefact — the only thing a user ever touches.
 - **Fast-forward only.** Dirty, diverged, offline, or non-default-branch targets are skipped and reported, never forced or stashed. Nothing with unlanded work is ever discarded.
 - **Only the Brokk repo and its worktrees** are touched, never `projects/`.
 - **Eindri-homes are never disrupted** — a tracked-files fast-forward only when safe, plus a gentle re-read nudge when it changed.
-- **When something is broken rather than outdated**, that is Eir's work, not Gróa's: `bin/eir-doctor.sh` diagnoses and mends.
+- **When something is broken rather than outdated**, that is Eir's work, not Gróa's: `bin/agents/eir-doctor.sh` diagnoses and mends.

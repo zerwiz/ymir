@@ -1,7 +1,7 @@
 ## install · unversioned · 2026-09-24 — the engram provisioning names its real cause
 
 ### Why
-`bin/prereq-ensure.sh engram` reported a version problem that was not a version problem:
+`bin/engine/prereq-ensure.sh engram` reported a version problem that was not a version problem:
 
 ```
 "engram","absent","install failed (engdbram needs Python >=3.11) — try: uv python install 3.12"
@@ -32,4 +32,4 @@ Two confusions, both now written down in the script:
 - `engram_version_ok` and `engram_v` are small helpers, so the conditions read once.
 
 ### Files
-- `bin/prereq-ensure.sh`
+- `bin/engine/prereq-ensure.sh`

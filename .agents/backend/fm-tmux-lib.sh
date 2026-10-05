@@ -6,7 +6,7 @@
 # Both the away-mode daemon and bin/backend/fm-send.sh reach these primitives through
 # backend dispatch, while bin/backend/fm-composer-lib.sh owns the shared verdict.
 #
-# Composer shapes and verdicts are owned by bin/fm-composer-lib.sh.
+# Composer shapes and verdicts are owned by bin/backend/fm-composer-lib.sh.
 # This file owns only tmux's styled capture, cursor and Pi identity primitives,
 # delivery busy read, and submit conversions that consume the shared verdict.
 # Styled captures remain internal; fm-peek and every human-facing capture stay
@@ -133,7 +133,7 @@ EOF
 # fm_tmux_composer_state: the tmux composer verdict - a thin adapter over the
 # shared screen classifier. The verdict contract (empty | pending |
 # pending-unproven | unknown, positive proof required for empty, unrecognized
-# future verdicts failing safe) is owned by bin/fm-composer-lib.sh. Identity
+# future verdicts failing safe) is owned by bin/backend/fm-composer-lib.sh. Identity
 # is fetched lazily, only when the classifier reports the verdict depends on
 # it (a pi separator pair under the cursor), so the common read never pays
 # for the process probe.
@@ -169,7 +169,7 @@ fm_tmux_composer_state() {  # <target> -> empty|pending|pending-unproven|unknown
 # a genuine Cursor Agent CLI process. Cursor runs as a bundled node script, so
 # tmux's own #{pane_current_command} reports a bare `node`; identity therefore
 # comes from Cursor's name or install tree in the command path or argv[0], whose
-# single owner is bin/fm-cursor-lib.sh. The foreground scoping (pgid = tpgid)
+# single owner is bin/backend/fm-cursor-lib.sh. The foreground scoping (pgid = tpgid)
 # matches fm_tmux_composer_identity, so a pane whose agent exited to a shell has
 # no Cursor foreground process and gets no reclassification.
 fm_tmux_pane_is_cursor() {  # <target>

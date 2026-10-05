@@ -19,7 +19,7 @@
     `makeMcp()` (with the other tools); the file starts and the per-session
     transport map works.
   - Redeployed to the **repo's** fleet path (`~/.fleet/tickets-mcp-server.mjs`)
-    and re-pointed the unit's `ExecStart` there (per `bin/fleet-ensure.sh` and
+    and re-pointed the unit's `ExecStart` there (per `bin/fleet/fleet-ensure.sh` and
     `tools/mill/systemd/skuld.service`), abandoning the ad-hoc `tickets-mcp-v2`.
   - **New law: `RULES/10-deployed-servers.md`** — every server/service/worker/MCP
     runs from a file the repo owns and is deployed from it; never hand-placed.

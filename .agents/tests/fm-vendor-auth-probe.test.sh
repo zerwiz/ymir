@@ -26,7 +26,7 @@ set -u
 
 BASE_PATH=${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
 TMP_ROOT=$(fm_test_tmproot fm-vendor-auth-probe-tests)
-SCRIPT="$ROOT/bin/fm-vendor-auth-probe.sh"
+SCRIPT="$ROOT/bin/backend/fm-vendor-auth-probe.sh"
 
 # A stdin payload the script must never leak into a probed vendor CLI.
 STDIN_SENTINEL='SENTINEL-STDIN-MUST-NOT-REACH-VENDOR-CLI'

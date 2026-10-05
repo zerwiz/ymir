@@ -67,7 +67,7 @@
 # That per-request key lives in a namespace the fold reserves to this library, so
 # no other writer into the same status stream - a local mate appending directly,
 # or a remote mate's mirrored line - can take the key over or clear it; see the
-# reserved-key rule in bin/fm-classify-lib.sh.
+# reserved-key rule in bin/backend/fm-classify-lib.sh.
 #
 # Sourced by bin/backend/fm-send.sh, bin/backend/fm-watch.sh, bin/backend/fm-secondmate-report.sh, and
 # tests. No side effects on source. set -u / set -e safe.

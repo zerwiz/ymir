@@ -3754,7 +3754,7 @@ test_composer_state_guard_still_refuses_real_pending_text_after_submit_confirmat
   printf '  \xe2\x9d\xaf hello there this is a test message\n' > "$resp/1.out"
   fb=$(make_herdr_fakebin "$dir")
   out=$( PATH="$fb:$PATH" FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" \
-    bash -c '. "$0/bin/fm-backend.sh"; fm_backend_composer_state herdr default:w1:p2' "$ROOT" )
+    bash -c '. "$0/bin/backend/fm-backend.sh"; fm_backend_composer_state herdr default:w1:p2' "$ROOT" )
   [ "$out" = pending ] || fail "the pre-injection empty-box guard must still refuse real unsubmitted composer text after this change, got '$out'"
   pass "fm_backend_composer_state (herdr): the pre-injection empty-box guard still refuses a genuinely non-empty composer, unaffected by the submit-confirmation change"
 }
@@ -3830,7 +3830,7 @@ test_dispatch_routes_herdr_backend() {
 
 test_dispatch_busy_state_unknown_for_tmux() {
   # shellcheck source=bin/backend/fm-backend.sh
-  . "$ROOT/bin/fm-backend.sh"
+  . "$ROOT/bin/backend/fm-backend.sh"
   [ "$(fm_backend_busy_state tmux 'sess:win')" = unknown ] \
     || fail "fm_backend_busy_state should report unknown for tmux (no native agent-state primitive; watcher falls back to regex)"
   pass "fm_backend_busy_state: tmux (no native primitive) always reports unknown, preserving the P1 regex-only path"
@@ -3847,7 +3847,7 @@ test_dispatch_composer_state_routes_by_backend() {
   # never clobbered by the real per-backend files trying (and failing) a live call.
   (
     # shellcheck source=bin/backend/fm-backend.sh
-    . "$ROOT/bin/fm-backend.sh"
+    . "$ROOT/bin/backend/fm-backend.sh"
     _FM_BACKEND_TMUX_SOURCED=1
     _FM_BACKEND_HERDR_SOURCED=1
     _FM_BACKEND_ORCA_SOURCED=1
@@ -3884,7 +3884,7 @@ SH
 
   out=$( PATH="$fb:$PATH" FM_ROOT_OVERRIDE="$neutral" FM_STATE_OVERRIDE="$state" \
     FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" \
-    "$ROOT/bin/fm-peek.sh" default:w1:p2 5 2>/dev/null )
+    "$ROOT/bin/backend/fm-peek.sh" default:w1:p2 5 2>/dev/null )
   [ "$out" = "captured herdr pane" ] || fail "fm-peek did not capture through herdr for an explicit metadata-matched target, got '$out'"
   assert_contains "$(cat "$log")" $'\x1f''pane'$'\x1f''read'$'\x1f''w1:p2' \
     "fm-peek did not route the explicit stale target through herdr capture"
@@ -3892,7 +3892,7 @@ SH
   : > "$log"
   PATH="$fb:$PATH" FM_ROOT_OVERRIDE="$neutral" FM_HOME="$neutral" FM_STATE_OVERRIDE="$state" \
     FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" \
-    "$ROOT/bin/fm-send.sh" default:w1:p2 --key Escape >/dev/null 2>&1
+    "$ROOT/bin/backend/fm-send.sh" default:w1:p2 --key Escape >/dev/null 2>&1
   expect_code 0 $? "fm-send --key should route an explicit metadata-matched target through herdr"
   assert_contains "$(cat "$log")" $'\x1f''pane'$'\x1f''send-keys'$'\x1f''w1:p2'$'\x1f''escape' \
     "fm-send did not route the explicit stale target through herdr send-key"
@@ -4197,11 +4197,11 @@ set_fake_agent() {  # <agent-dir> <window-or-pane> <status>
 test_normalize_event_leaves_from_empty() {
   local rec
   rec=$(bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_normalize_event wG:pQ wG blocked claude' "$ROOT")
-  [ "$(bash -c '. "$0/bin/fm-transition-lib.sh"; fm_transition_pane_id "$1"' "$ROOT" "$rec")" = "wG:pQ" ] \
+  [ "$(bash -c '. "$0/bin/backend/fm-transition-lib.sh"; fm_transition_pane_id "$1"' "$ROOT" "$rec")" = "wG:pQ" ] \
     || fail "normalize_event pane_id wrong: $rec"
-  [ "$(bash -c '. "$0/bin/fm-transition-lib.sh"; fm_transition_from_status "$1"' "$ROOT" "$rec")" = "" ] \
+  [ "$(bash -c '. "$0/bin/backend/fm-transition-lib.sh"; fm_transition_from_status "$1"' "$ROOT" "$rec")" = "" ] \
     || fail "normalize_event should leave from_status empty (herdr carries no previous status): $rec"
-  [ "$(bash -c '. "$0/bin/fm-transition-lib.sh"; fm_transition_to_status "$1"' "$ROOT" "$rec")" = "blocked" ] \
+  [ "$(bash -c '. "$0/bin/backend/fm-transition-lib.sh"; fm_transition_to_status "$1"' "$ROOT" "$rec")" = "blocked" ] \
     || fail "normalize_event to_status wrong: $rec"
   pass "fm_backend_herdr_normalize_event routes through the shared record with an empty from_status"
 }
@@ -4217,7 +4217,7 @@ test_escalation_marker_keys_like_watcher() {
 test_apply_transition_blocked_requires_commit_to_dedupe() {
   local dir state rec out rc marker
   dir="$TMP_ROOT/apply-blocked"; state="$dir/state"; mkdir -p "$state"
-  rec=$(bash -c '. "$0/bin/fm-transition-lib.sh"; fm_transition_record wG:pQ wG "" blocked claude' "$ROOT")
+  rec=$(bash -c '. "$0/bin/backend/fm-transition-lib.sh"; fm_transition_record wG:pQ wG "" blocked claude' "$ROOT")
   marker="$state/.herdr-escalated-default_wG_pQ"
   out=$(bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_apply_transition "$1" "$2" "$3"' "$ROOT" "$state" default "$rec"); rc=$?
   [ "$rc" = 0 ] || fail "a fresh blocked edge must return 0 (actionable), got $rc"
@@ -4236,8 +4236,8 @@ test_apply_transition_working_clears_marker() {
   local dir state blocked working marker rc
   dir="$TMP_ROOT/apply-working"; state="$dir/state"; mkdir -p "$state"
   marker="$state/.herdr-escalated-default_wG_pQ"
-  blocked=$(bash -c '. "$0/bin/fm-transition-lib.sh"; fm_transition_record wG:pQ wG "" blocked claude' "$ROOT")
-  working=$(bash -c '. "$0/bin/fm-transition-lib.sh"; fm_transition_record wG:pQ wG "" working claude' "$ROOT")
+  blocked=$(bash -c '. "$0/bin/backend/fm-transition-lib.sh"; fm_transition_record wG:pQ wG "" blocked claude' "$ROOT")
+  working=$(bash -c '. "$0/bin/backend/fm-transition-lib.sh"; fm_transition_record wG:pQ wG "" working claude' "$ROOT")
   bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_commit_transition "$1" "$2" "$3"' "$ROOT" "$state" default "$blocked"
   [ -e "$marker" ] || fail "setup: committed blocked edge should have set the marker"
   bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_apply_transition "$1" "$2" "$3"' "$ROOT" "$state" default "$working"; rc=$?
@@ -4265,7 +4265,7 @@ test_apply_transition_defer_and_fallback_are_noops() {
   marker="$state/.herdr-escalated-default_wG_pQ"
   for s in idle "done" unknown ""; do
     local rec
-    rec=$(bash -c '. "$0/bin/fm-transition-lib.sh"; fm_transition_record wG:pQ wG "" "$1" claude' "$ROOT" "$s")
+    rec=$(bash -c '. "$0/bin/backend/fm-transition-lib.sh"; fm_transition_record wG:pQ wG "" "$1" claude' "$ROOT" "$s")
     bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_apply_transition "$1" "$2" "$3"' "$ROOT" "$state" default "$rec"; rc=$?
     [ "$rc" = 1 ] || fail "defer/fallback status '$s' must return 1 (no fast action), got $rc"
     [ ! -e "$marker" ] || fail "defer/fallback status '$s' must not touch the escalation marker"
@@ -4421,7 +4421,7 @@ test_wait_transition_clean_timeout_returns_1() {
 }
 
 # shellcheck source=bin/backend/fm-backend.sh
-. "$ROOT/bin/fm-backend.sh"
+. "$ROOT/bin/backend/fm-backend.sh"
 
 test_version_check_accepts_current_protocol
 test_version_check_refuses_old_protocol

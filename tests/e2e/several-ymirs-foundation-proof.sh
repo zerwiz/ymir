@@ -15,7 +15,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CHECK="$ROOT/bin/ymir-config-check.sh"
+CHECK="$ROOT/bin/gates/checks/ymir-config-check.sh"
 APPEND="$ROOT/bin/records/journal-append.sh"
 RECEIVE="$ROOT/bin/records/journal-receive.sh"
 for f in "$CHECK" "$APPEND" "$RECEIVE"; do
