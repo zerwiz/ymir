@@ -88,6 +88,34 @@ STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
 CONFIG="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"
 
+# --- one identity, or a refusal ----------------------------------------------
+# Overrides may MOVE the house; they may never SPLIT it. Each *_OVERRIDE is
+# honoured on its own, so a caller that sets only BROKK_STATE_OVERRIDE gets a
+# STATE from one root while DATA and WT_ROOT still resolve from another. That is
+# how one errand id came to own TWO Yggdrasil worktrees on 2026-10-06
+# (dag-runes-p1), with the task record naming one and the worker seated in the
+# other — so `--relaunch` and `start` disagreed about what existed.
+#
+# ROOT is the ENGINE root (this script lives in <root>/bin/agents), which is why
+# it is not the checkout root; that is long-standing and correct. What was not
+# correct was letting the derived paths disagree with an override.
+_state_base="$(dirname "$STATE")"
+_data_base="$(dirname "$DATA")"
+_config_base="$(dirname "$CONFIG")"
+if [ "$_state_base" != "$_data_base" ] || [ "$_state_base" != "$_config_base" ]; then
+  {
+    echo "error: the house is split — state, data and config resolve to different bases."
+    echo "  state: $STATE"
+    echo "  data:  $DATA"
+    echo "  config:$CONFIG"
+    echo "help: move the whole house with BROKK_HOME (or BROKK_ROOT_OVERRIDE),"
+    echo "      or override NONE. Overriding one path alone is refused, because one"
+    echo "      errand with two homes names a worktree its worker is not sitting in."
+  } >&2
+  exit 1
+fi
+unset _state_base _data_base _config_base
+
 # Adapters this platform has verified for direct launches. An adapter outside
 # this set is refused unless a raw launch command is supplied.
 VERIFIED_HARNESSES='opencode pi pi-signed'
