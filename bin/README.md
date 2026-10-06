@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[403]{file,does,kind,verdict,disposition,callers,lines}:
+bin[404]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",11,-
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",4,156
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",3,104
@@ -26,6 +26,7 @@ bin[403]{file,does,kind,verdict,disposition,callers,lines}:
   "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,275
   "bifrost-bridge.sh","bifrost-bridge.sh — raise/lower the model bridge (Bifrost: the bridge between","tool","wired","keep",5,142
   "bifrost-ingress.sh","bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdall · Gjallarhorn).","tool","wired","keep",1,79
+  "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",1,82
   "bootstrap-macos.sh","bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs.","tool","wired","keep",1,116
   "bootstrap-windows.ps1","bootstrap-windows.ps1 — give a Windows operator the Ubuntu host Ymir needs.","data","wired","keep",1,113
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","wired","keep",2,66
@@ -416,6 +417,6 @@ bin[403]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",6,243
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
 
-**Tally.** verdict: wired=209, tested=194
+**Tally.** verdict: wired=210, tested=194
 
-**Tally.** disposition: keep=394, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=395, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

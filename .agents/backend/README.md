@@ -39,12 +39,12 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-check-register.sh","Bind an intentional custom watcher check to its current bytes.","provenance","tested","keep",4,43
   "fm-check-unregister.sh","Retire an intentional custom watcher check and its trust binding.","provenance","tested","keep",3,53
   "fm-classify-lib.sh","fm-classify-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","tested","keep",16,48
-  "fm-claude-stop-autoarm.sh","Claude Stop-owned watcher auto-arm (asyncRewake hook).","provenance","tested","keep",6,335
+  "fm-claude-stop-autoarm.sh","Claude Stop-owned watcher auto-arm (asyncRewake hook).","provenance","tested","keep",7,335
   "fm-composer-lib.sh","bin/backend/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:","provenance","tested","keep",10,1421
   "fm-config-inherit-lib.sh","shellcheck shell=bash","provenance","tested","keep",9,1203
   "fm-config-push.sh","Push declared inherited local material to live secondmate homes.","provenance","tested","keep",4,255
   "fm-control-lib.sh","fm-control-lib.sh - the ONE executable owner of firstmate's agent lifecycle","provenance","tested","keep",8,252
-  "fm-control.sh","fm-control.sh - the CONTROL PLANE for a firstmate-owned agent: allowlisted","provenance","tested","keep",8,879
+  "fm-control.sh","fm-control.sh - the CONTROL PLANE for a firstmate-owned agent: allowlisted","provenance","tested","keep",9,879
   "fm-crew-state.sh","fm-crew-state.sh - deterministic read of a crew's CURRENT state.","provenance","tested","keep",13,626
   "fm-cursor-lib.sh","Cursor executable resolution and Cursor process identity.","provenance","tested","keep",6,244
   "fm-decision-hold.sh","fm-decision-hold.sh - transitional compatibility shim over bin/backend/fm-captain-hold.sh.","provenance","tested","keep",4,233
@@ -58,7 +58,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-fleet-snapshot.sh","fm-fleet-snapshot.sh - read-only structured fleet snapshot.","provenance","tested","keep",8,1464
   "fm-fleet-sync.sh","Refresh project clones: fast-forward the checked-out local default branch to","provenance","tested","keep",10,459
   "fm-fleet-view.sh","fm-fleet-view.sh - human renderer over fm-fleet-snapshot.sh.","provenance","tested","keep",3,97
-  "fm-gate-refuse-lib.sh","fm-gate-refuse-lib.sh - fail-closed refusal that keeps a no-mistakes GATE agent","provenance","tested","keep",9,103
+  "fm-gate-refuse-lib.sh","fm-gate-refuse-lib.sh - fail-closed refusal that keeps a no-mistakes GATE agent","provenance","tested","keep",10,103
   "fm-guard.sh","Watcher liveness and worktree-tangle guard, called by supervision scripts, by","provenance","tested","keep",22,243
   "fm-harness.sh","Detect the agent harness this process tree runs on.","provenance","tested","keep",11,196
   "fm-herdr-ci-cleanup.sh","fm-herdr-ci-cleanup.sh - bounded cleanup of CI-owned Herdr lab sessions.","provenance","wired","keep",3,116
@@ -142,14 +142,14 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-startup-network.sh","fm-startup-network.sh - the deferred network stage of a session start.","provenance","tested","keep",6,643
   "fm-stow-cascade.sh","Enumerate this home's registered secondmates for an internal /stow cascade.","provenance","tested","keep",3,252
   "fm-subagent-pretool-check.sh","PreToolUse guard against primary-session delegation outside the fleet.","provenance","tested","keep",2,208
-  "fm-supervise-daemon.sh","fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).","provenance","tested","keep",7,1733
+  "fm-supervise-daemon.sh","fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).","provenance","tested","keep",8,1733
   "fm-supervision-instructions.sh","Render the primary-harness supervision operating block for session start and","provenance","tested","keep",6,216
   "fm-supervision-lib.sh","shellcheck shell=bash","provenance","tested","keep",7,91
   "fm-supervisor-target-lib.sh","fm-supervisor-target-lib.sh - the single owner of supervisor-pane discovery.","provenance","tested","keep",5,79
   "fm-tangle-lib.sh","shellcheck shell=bash","provenance","tested","keep",4,54
   "fm-task-inbox-lib.sh","fm-task-inbox-lib.sh - the per-task steering inbox: durable records plus a","provenance","tested","keep",8,403
   "fm-tasks-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",14,124
-  "fm-teardown.sh","Tear down a finished task: return the treehouse worktree, release the Orca","provenance","tested","keep",21,2923
+  "fm-teardown.sh","Tear down a finished task: return the treehouse worktree, release the Orca","provenance","tested","keep",22,2923
   "fm-test-isolation-proof.sh","fm-test-isolation-proof.sh - bounded concurrent isolation proofs for portable","provenance","tested","keep",3,589
   "fm-test-run.sh","fm-test-run.sh - single owner of Firstmate's behavior-test runner, lane","provenance","tested","keep",4,2192
   "fm-timeout-lib.sh","fm-timeout-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","tested","keep",18,25
@@ -170,7 +170,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-wake-lib.sh","fm-wake-lib.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","tested","keep",54,60
   "fm-watch-arm.sh","Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.","provenance","tested","keep",5,603
   "fm-watch-checkpoint.sh","Run one bounded foreground watcher checkpoint for harnesses that should not","provenance","tested","keep",3,110
-  "fm-watch.sh","Firstmate watcher.","provenance","tested","keep",22,1963
+  "fm-watch.sh","Firstmate watcher.","provenance","tested","keep",24,1963
   "fm-x-dismiss.sh","Dismiss a pending X-mode mention at the relay WITHOUT replying to it.","provenance","tested","keep",2,117
   "fm-x-followup.sh","Post a completion follow-up for an X-mode-linked task, up to three within a","provenance","tested","keep",6,287
   "fm-x-lib.sh","Shared config resolution for the X-mode connector client (fm-x-poll.sh and","provenance","tested","keep",10,1001

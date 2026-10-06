@@ -12,11 +12,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",398
+  "shell doors (bin/*.sh)",399
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",27
   "Pi extension tools",0
-  "generated","2026-10-05"
+  "generated","2026-10-06"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -211,6 +211,7 @@ capabilities[5]{surface,count}:
 | fm-x-link.sh | Link a spawned task to the X-mode mention that triggered it, so firstmat | tested | keep (a human or a cron row must run it) |
 | fm-x-poll.sh | One short-poll of the relay connector for a pending X-mode mention. | tested | keep (a human or a cron row must run it) |
 | fm-x-reply.sh | Post firstmate's composed answer back to the relay for a pending X-mode  | tested | keep (a human or a cron row must run it) |
+| bitrate-gate.sh | bitrate-gate.sh — a diffusion clip that "completes" is not a clip that | tested | keep (a human or a cron row must run it) |
 | a2a-mcp.sh | a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so | tested+named | keep (a human or a cron row must run it) |
 | a2a-serve.sh | a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri. | tested | keep (a human or a cron row must run it) |
 | a2a-talk.sh | a2a-talk.sh — list A2A agents and talk to one (bidirectional reply). | tested+named | keep (a human or a cron row must run it) |
