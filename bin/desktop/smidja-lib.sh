@@ -32,8 +32,26 @@ smidja_factory_dir() {  # <result-var> — the smithy's directory, or empty
   if app_dir smidja _smd_c 2>/dev/null && [ -d "$_smd_c/apps/visualizer" ]; then
     printf -v "$_smd_rv" '%s' "$_smd_c"; return 0
   fi
-  _smd_c="${YMIR_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}/.agents/skills/$SMIDJA_PACKAGE"
-  [ -d "$_smd_c/apps/visualizer" ] && { printf -v "$_smd_rv" '%s' "$_smd_c"; return 0; }
+  # The root must be the CHECKOUT, not this script's parent: from bin/desktop/ a
+  # single `..` is <repo>/bin, and <repo>/bin/.agents has never existed — so the
+  # visualizer resolved to nothing and `scripts/start.sh` died under `set -e`
+  # with no output at all (2026-10-06). Ask git first, then try both depths, the
+  # same shape bifrost-bridge.sh and mimir-bridge.sh already use.
+  _smd_root=""
+  if [ -n "${YMIR_ROOT_DIR:-}" ]; then
+    _smd_root="$YMIR_ROOT_DIR"
+  else
+    _smd_root="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [ -z "$_smd_root" ] || [ ! -d "$_smd_root/.agents" ]; then
+      for _smd_c in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)" \
+                     "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"; do
+        if [ -n "$_smd_c" ] && [ -d "$_smd_c/.agents" ]; then _smd_root="$_smd_c"; break; fi
+      done
+    fi
+  fi
+  _smd_c="${_smd_root:+$_smd_root/.agents/skills/$SMIDJA_PACKAGE}"
+  [ -n "$_smd_c" ] && [ -d "$_smd_c/apps/visualizer" ] && { printf -v "$_smd_rv" '%s' "$_smd_c"; return 0; }
+  unset _smd_root _smd_c
   printf -v "$_smd_rv" '%s' ""
   return 1
 }

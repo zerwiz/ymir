@@ -140,7 +140,37 @@ This design is not a new idea. It applies the same law to the ledger. And the sa
    will have re-created the *"five ways to start one thing"* seam that `register.md` already
    records as a live defect.
 
-## 7. Related
+## 8. Measured: the fork has already happened four times
+
+**Added 2026-10-07.** Section 2 said, carefully, that the fork was *read from the code, not
+observed*. That distinction is now closed:
+
+```
+$ runes.verify()
+runes verify -> False   chain break at 2026-09-12T01:11:28Z
+```
+
+366 entries parsed; **four `prev` values are each claimed by two entries.** The first is the
+proof of the whole thesis:
+
+| `prev` | claimed by |
+|---|---|
+| `f039a97562bf2a89…` | `2026-09-12T01:11:28Z brokk harness.open-editor` · `2026-09-12T21:00:08Z yggdrasil git.sync` |
+| `0aeae70cb3e01de9…` | `2026-09-20T00:29:41Z brokk pr.reconcile…` · `2026-09-20T17:03:20Z brokk well.birth-race.fixed` |
+| `f6a915a21504fbb7…` | `2026-09-21T21:15:09Z muninn memory.housekeeping` · `2026-09-21T21:15:44Z muninn memory.housekeeping` |
+| *(fourth, same shape)* | — |
+
+Two different writers claiming one parent twenty hours apart is two seats, each folding a
+valid checksum from the tail it could see. The ledger has been **unverifiable for twenty-four
+days** — and the failure has the shape this document is about: it still *accepts* appends and
+still *returns* a checksum. It only fails when something asks it to **prove itself**.
+
+**What this changes:** nothing in the design, and it sharpens the scope. The projector must
+reconcile **four real forks**, and consensus order *across* a fork must be defined and tested
+before any migration. The forks are **not** to be collapsed to one branch: two branches is the
+honest record that two seats were writing at once, and Rule 06 forbids the alternative.
+
+## 9. Related
 
 - **Plan 71** (vault) — the phases, the acceptance criteria, and what is dropped if the premise changes.
 - **Fix note** `docs/fixes/agents/unversioned-2026-10-06-the-errand-door-reported-every-verdict-wrong.md`
