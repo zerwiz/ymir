@@ -50,10 +50,19 @@ type RunResult = { rc: number; out: string };
 
 function run(cmd: string, args: string[], quiet = true): RunResult {
   try {
+    // With stdio:"inherit" execFileSync returns NULL, not a string — the child
+    // wrote to our terminal and there is nothing to capture. Calling .trim() on
+    // that null threw, the throw was caught as a failure, and EVERY non-quiet
+    // call (start, steer, close) reported rc=1 with a JavaScript error even when
+    // the command had succeeded.
     const out = execFileSync(cmd, args, { encoding: "utf8", stdio: quiet ? ["ignore", "pipe", "ignore"] : "inherit" });
-    return { rc: 0, out: out.trim() };
+    return { rc: 0, out: (out ?? "").trim() };
   } catch (e: any) {
-    return { rc: e?.status ?? 1, out: String(e?.stdout ?? "").trim() || String(e?.message ?? "").split("\n")[0] };
+    if (e instanceof TypeError || e?.status === undefined) {
+      // Not an exit status: the process was killed by a signal or never ran.
+      return { rc: 1, out: String(e?.message ?? "unknown failure").split("\n")[0] };
+    }
+    return { rc: e.status, out: String(e?.stdout ?? "").trim() || String(e?.message ?? "").split("\n")[0] };
   }
 }
 

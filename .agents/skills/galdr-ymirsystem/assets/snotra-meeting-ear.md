@@ -241,6 +241,50 @@ The transcribe script discovers the engine (env → PATH → build trees →
 build-tree binary, and picks GPU vs CPU by free VRAM (a resident rail model
 starves CUDA — whynot's <gpu> always falls to the CPU).
 
+### M13 — The live tail (`bin/time/snotra/snotra-live.sh`), 2026-10-07
+
+The ear above is **batch**: it records, and it writes the minutes **at the leave**.
+The live tail is the other door — text that grows while the mouth moves.
+
+```
+snotra-live.sh start <slug> [topic]   begin; the document grows as spoken
+snotra-live.sh status                 one TOON row + the newest line
+snotra-live.sh tail                   follow the document
+snotra-live.sh stop                   close -> mine -> minutes -> Rune
+```
+
+- **A chunked tail, deliberately.** ffmpeg segments the microphone into `N`s
+  slices (`SNOTRA_LIVE_SEGMENT_SECONDS`, default 6); a worker transcribes each
+  finished slice and appends `[hh:mm:ss] text`. Chosen over `whisper-server`'s SSE
+  because it **resumes** — a crash loses at most one slice — and because it rides
+  the engine discovery, the VRAM choice and the rail-yield the transcribe script
+  already owns. The price is ~6-9 s behind the voice, and that was the trade.
+- **A slice is complete only when the NEXT slice exists** (the segment muxer writes
+  sequentially), so the loop can never transcribe half a word.
+- **ONE document, ONE door.** Every writer and reader names the path through
+  `doc_path()`; an earlier draft appended to a copy under `state/` while `tail` read
+  the hoard copy, and the words grew where nobody looked.
+- **This machine's microphone only.** `SNOTRA_LIVE_MONITOR=1` adds the default
+  sink's monitor when a room needs both sides. Off is the truth of what one seat hears.
+- **The source is the sentinel, not an unset.** `SNOTRA_MONITOR` unset resolves to
+  the default sink, so `SNOTRA_MONITOR=off` was added to `snotra-capture.sh` to
+  mean *microphone only*; unset behaviour is unchanged for the watch.
+- **At the leave it calls the SAME pipeline `finalize` calls** —
+  `snotra-transcribe.sh` with `SNOTRA_MINUTES_FILE`/`SNOTRA_TRANSCRIPT_FILE`, then
+  `snotra-mine.sh`, then a Rune. The live document keeps its own `.live.md` name so
+  the rolling record and the polished minutes never overwrite each other.
+  `SNOTRA_LIVE_SKIP_MINUTES=1` skips the re-transcription when only the rolling
+  record is wanted.
+- **The rail model is resolved in order:** `SNOTRA_RAIL_MODEL` → the seat's recorded
+  systemd drop-in choice → the resolver's `models[0]`. **Never `models[0]` first** —
+  on a seat where that is a 21.7 GB model, taking it is a 3x slower summary.
+- **THE WATCH IS UNTOUCHED.** `snotra-detect.sh` does not know this script exists; a
+  call is still recorded by the ear exactly as before. The tail is a manual door.
+
+Records: `docs/fixes/snotra/2026-10-07-the-live-tail-listens-and-writes.md`, and for
+the resolver defect it leans on,
+`docs/fixes/runtime/2026-10-07-the-living-rail-resolver-walked-one-level-short.md`.
+
 ## Dependencies
 
 - **PipeWire** (system audio capture) — already present on Omarchy

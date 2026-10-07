@@ -53,7 +53,19 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
   local _apd_surface="${1-}" _apd_rv="${2-}" _apd_root _apd_pkg _apd_c
   [ -n "$_apd_surface" ] && [ -n "$_apd_rv" ] || return 2
   _apd_root="${YMIR_ROOT_DIR:-}"
-  if [ -z "$_apd_root" ]; then _apd_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; fi
+  if [ -z "$_apd_root" ]; then
+    # The CHECKOUT, not this script's parent: from bin/seat/sessrumnir a single
+    # `..` is <repo>/bin/seat, where no apps/ and no .agents/ has ever lived, so
+    # every app surface resolved to empty (2026-10-06). Ask git first, then try
+    # both depths -- the shape bifrost-bridge.sh already uses.
+    _apd_root="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [ -z "$_apd_root" ] || [ ! -d "$_apd_root/apps" ]; then
+      for _apd_d in "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." 2>/dev/null && pwd)" \
+                     "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)"; do
+        if [ -n "$_apd_d" ] && [ -d "$_apd_d/apps" ]; then _apd_root="$_apd_d"; break; fi
+      done
+    fi
+  fi
   _apd_pkg="$(app_pkg "$_apd_surface")"
   # Three shapes, and npm uses the third more than anyone expects:
   #   a clone            apps/<surface> — or apps/<package>, when the surface's

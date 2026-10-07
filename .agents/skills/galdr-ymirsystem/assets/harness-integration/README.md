@@ -1277,3 +1277,30 @@ writes its state beside itself. It now lives in `bin/backend/`, which silently m
 directory to `bin/state/`. `runtime-guard` caught it as *undeclared runtime output*. **A file kept
 byte-comparable to upstream is byte-comparable; it is not location-independent** — that shelf
 deserves an explicit state root before it is moved again.
+
+#### Correction (2026-10-07) — the errand door reported every verdict wrong
+
+`.pi/extensions/eindri.ts`'s `run()` spawned with `stdio: "inherit"` for the three
+**non-quiet** calls — `start`, `steer`, `close` — and then read the result as if it were
+a string. With inherited stdio `execFileSync` returns **`null`**, not a string: the child
+wrote straight to the terminal and there was nothing to capture. Calling `.trim()` on
+that `null` threw, the throw was caught by the `catch` as a failure, and the door returned
+`rc: 1` with a JavaScript error message **even when the command had succeeded**.
+
+So every spawn, steer and close of an errand was reported as failed while the work
+actually proceeded. A supervisor reading that door could not tell a real refusal from a
+successful launch — the failure mode is silence mistaken for failure, in the one place
+whose whole job is telling the truth about another process.
+
+Two changes, both in `run()`:
+
+1. `(out ?? "").trim()` — an inherited-stdio child has no captured output, and that is
+   not an error.
+2. The `catch` distinguishes **an exit status** from **no status at all**. A signal kill
+   or a process that never ran throws something with `status === undefined`; conflating
+   that with `status === 1` reports a killed child as a child that exited 1.
+
+Record: `docs/fixes/agents/unversioned-2026-10-06-the-errand-door-reported-every-verdict-wrong.md`.
+This is the same class as the resolver's one-level-short walk: a door that is **honest
+about the wrong thing** is more expensive than one that is silent, because it sends the
+reader looking for the fault somewhere it is not.
