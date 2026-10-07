@@ -1345,6 +1345,62 @@ function settings() {
   });
 }
 
+/* ---- the live tail (Snotra) — a FRONT for snotra-live.sh, never a second --- *
+ * pipeline. The SCRIPT owns the truth: the gate asks it and reports what the
+ * script says. Nothing here re-implements transcription, slice timing or engine
+ * discovery. The document stays in the hoard (`$YMIR_HOME/hodd/life/meetings/`);
+ * only these three authenticated routes read it, and only for the operator. */
+const LIVE_SCRIPT = 'bin/time/snotra/snotra-live.sh';
+
+/** A `stop` this gate spawned, still running. `stop` joins every slice into one
+ *  WAV, re-transcribes the recording, asks the rail for a summary, writes the
+ *  minutes and carves a Rune — MINUTES on a long meeting. So the POST answers at
+ *  once, and this is how the surface says "closing the book…" rather than
+ *  "stopped": the script silences ffmpeg in its first seconds, so `status`
+ *  alone would report stopped while the minutes are still being written. */
+let liveClosing: { since: number; done: Promise<unknown> } | null = null;
+
+/** Parse the script's one TOON row: `live_tail{state:listening,doc:/path,…}`. */
+function parseLiveRow(out: string): Record<string, string> {
+  const row: Record<string, string> = {};
+  const m = out.match(/live_tail\{([^}]*)\}/);
+  if (!m) return row;
+  for (const part of m[1].split(',')) {
+    const i = part.indexOf(':');
+    if (i > 0) row[part.slice(0, i).trim()] = part.slice(i + 1).trim();
+  }
+  return row;
+}
+
+/** The newest `[hh:mm:ss] text` lines of the document the SCRIPT named. A read
+ *  only — the words are the operator's own, never copied into the tree. */
+function liveLines(doc: string, max = 40): string[] {
+  if (!doc || !existsSync(doc)) return [];
+  return read(doc)
+    .split('\n')
+    .filter((l) => /^\[\d{2}:\d{2}:\d{2}\]/.test(l))
+    .slice(-max);
+}
+
+/** The honest state: `closing` outranks the script's own `stopped`, because the
+ *  gate KNOWS a drain is in flight and the surface must never claim a state the
+ *  work contradicts. */
+async function liveStatus() {
+  const out = await runAsync(['bash', LIVE_SCRIPT, 'status'], 1200);
+  const row = parseLiveRow(out);
+  const listening = row.state === 'listening';
+  const doc = row.doc ?? '';
+  return {
+    state: liveClosing ? ('closing' as const) : listening ? ('listening' as const) : ('idle' as const),
+    pid: row.ffmpeg || undefined,
+    slices: row.slices_done ? Number(row.slices_done) : undefined,
+    doc: doc || undefined,
+    lines: listening || liveClosing ? liveLines(doc) : [],
+    /** The script's own sentence after the row (the newest line, or its refusal). */
+    said: out.split('\n').slice(1).join('\n').trim() || undefined,
+  };
+}
+
 /* ---- /api/stream (SSE): new runes lines ---------------------------------- */
 function stream() {
   let cursor = 0;
@@ -2277,6 +2333,62 @@ const server = Bun.serve({
       if (p === '/api/smidja/sessions') return json(smidjaSessions());
       if (p === '/api/smidja/decisions') return json(smidjaDecisions());
       if (p === '/api/smidja/stats') return json(smidjaStats());
+      if (p === '/api/snotra/live') {
+        if (req.method !== 'GET') return json({ error: 'method not allowed' }, 405);
+        return json(await liveStatus());
+      }
+      if (p === '/api/snotra/live/start' && req.method === 'POST') {
+        const b = (await req.json().catch(() => ({}))) as { slug?: string; topic?: string };
+        // The script sanitises the slug itself; the gate does the SAME shaping so
+        // the operator is shown the name that will actually be written.
+        const slug =
+          (b.slug ?? '')
+            .trim()
+            .replace(/[^a-zA-Z0-9._-]/g, '-')
+            .replace(/^-+|-+$/g, '') || 'note';
+        const topic = (b.topic ?? '').trim();
+        const script = join(ROOT, LIVE_SCRIPT);
+        if (!existsSync(script)) return json({ ok: false, error: 'snotra-live.sh is not on this seat' }, 500);
+        // A stop that is still draining owns the ear; opening a second one now
+        // would race it. The gate KNOWS this — the script's own probe cannot see
+        // its own detached child.
+        if (liveClosing) return json({ ok: false, error: 'the last book is still closing — wait for it' }, 409);
+        // `start` returns as soon as the capture is alive, so a bounded wait is
+        // right here (the /api/desktop precedent). `stop` is the slow one.
+        const proc = Bun.spawnSync(['timeout', '20', 'bash', script, 'start', slug, ...(topic ? [topic] : [])], {
+          cwd: ROOT,
+          stdout: 'pipe',
+          stderr: 'pipe',
+          env: process.env,
+        });
+        const out = new TextDecoder().decode(proc.stdout ?? new Uint8Array()).trim();
+        const err = new TextDecoder().decode(proc.stderr ?? new Uint8Array()).trim();
+        if (proc.exitCode !== 0) {
+          // ONE EAR AT A TIME: the refusal is the SCRIPT'S OWN sentence (it says
+          // which ear is busy), never a generic error invented by the surface.
+          const said = (out || err).split('\n').find((l) => l.trim()) ?? 'the live tail refused to open';
+          return json({ ok: false, error: said.trim() }, 409);
+        }
+        return json({ ok: true, slug, said: out });
+      }
+      if (p === '/api/snotra/live/stop' && req.method === 'POST') {
+        const script = join(ROOT, LIVE_SCRIPT);
+        if (!existsSync(script)) return json({ closing: false, error: 'snotra-live.sh is not on this seat' }, 500);
+        if (liveClosing) return json({ closing: true });
+        const before = parseLiveRow(await runAsync(['bash', LIVE_SCRIPT, 'status'], 0));
+        if (before.state !== 'listening') {
+          // The script's own wording for this door, so the surface never invents one.
+          return json({ closing: false, error: 'no live tail is running' }, 409);
+        }
+        // DETACHED ON PURPOSE. `stop` joins every slice, re-transcribes the
+        // recording, asks the rail for a summary, writes the minutes and carves
+        // a Rune — MINUTES on a long meeting. A browser waiting on that POST
+        // times out and looks broken while the work is fine. Answer now, let the
+        // surface poll `closing` until the script has finished.
+        const proc = Bun.spawn(['bash', script, 'stop'], { cwd: ROOT, stdout: 'ignore', stderr: 'ignore', env: process.env });
+        liveClosing = { since: Date.now(), done: proc.exited.then(() => { liveClosing = null; }) };
+        return json({ closing: true });
+      }
       if (p.startsWith('/api/smidja/sessions/')) {
         const id = decodeURIComponent(p.slice('/api/smidja/sessions/'.length));
         const detail = smidjaSession(id);

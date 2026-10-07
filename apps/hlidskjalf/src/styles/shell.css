@@ -369,6 +369,135 @@
   color: var(--ymir-text-0);
 }
 
+/* --- The live tail (Snotra) — one chip, one panel ------------------------- *
+ * The chip is a rune and a word, never colour alone; the panel is the document
+ * growing. Tokens only — no raw hex is carved here. */
+.snotra-live {
+  position: relative;
+}
+
+.snotra-live-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ymir-border);
+  background: transparent;
+  color: var(--ymir-text-1);
+  font-family: var(--ymir-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.snotra-live-btn .glyph {
+  font-family: var(--ymir-font-head);
+  font-size: 13px;
+}
+.snotra-live-btn:hover:not(:disabled) {
+  color: var(--ymir-text-0);
+  border-color: var(--ymir-steel-2);
+}
+.snotra-live-btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+/* Idle is deliberately quiet — this is the affordance, not an alarm. */
+.snotra-live-btn.snotra-live-idle:hover:not(:disabled) {
+  border-color: var(--realm-tint);
+  color: var(--realm-tint);
+}
+.snotra-live-btn.snotra-live-listening {
+  border-color: color-mix(in srgb, var(--ymir-warn) 45%, transparent);
+  background: var(--ymir-warn-dim);
+  color: var(--ymir-warn);
+}
+.snotra-live-btn.snotra-live-closing {
+  border-color: color-mix(in srgb, var(--ymir-info) 45%, transparent);
+  background: var(--ymir-info-dim);
+  color: var(--ymir-info);
+}
+
+.snotra-live-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  width: min(420px, 78vw);
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ymir-space-2);
+  padding: var(--ymir-space-3);
+  border-radius: var(--ymir-radius-panel);
+  border: var(--ymir-border);
+  background: var(--ymir-bg-2);
+  box-shadow: var(--ymir-shadow-raise);
+}
+
+.snotra-live-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ymir-space-2);
+}
+.snotra-live-meta {
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--ymir-text-2);
+}
+
+.snotra-live-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ymir-text-1);
+}
+
+.snotra-live-lines {
+  overflow-y: auto;
+  min-height: 0;
+  border-top: var(--ymir-border);
+  border-bottom: var(--ymir-border);
+  padding: var(--ymir-space-2) 0;
+}
+.snotra-live-line {
+  margin: 0;
+  display: flex;
+  gap: var(--ymir-space-2);
+  padding: 2px 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.snotra-live-stamp {
+  flex: none;
+  font-family: var(--ymir-font-mono);
+  font-size: 11px;
+  color: var(--realm-tint);
+}
+.snotra-live-text-line {
+  color: var(--ymir-text-0);
+}
+
+.snotra-live-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ymir-space-2);
+}
+.snotra-live-doc {
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  color: var(--ymir-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl; /* the tail of the path is the useful half */
+  text-align: left;
+}
+
 .user-menu {
   display: flex;
   align-items: center;
