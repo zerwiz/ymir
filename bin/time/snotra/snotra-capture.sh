@@ -21,7 +21,9 @@
 #
 # Env:
 #   YMIR_HOME          — the hoard root (default ~/Documents/ymirhome)
-#   SNOTRA_MONITOR     — sink monitor name (default: the running/default sink)
+#   SNOTRA_MONITOR     — sink monitor name (default: the running/default sink).
+#                        The literal `off` means MICROPHONE ONLY — no system
+#                        audio at all (the live tail's own source).
 #   SNOTRA_MIC         — source name (default: the running/default input)
 #   SNOTRA_OUTFILE     — explicit WAV path (default: <hoard>/meeting-<stamp>.wav).
 #                        The watch (bin/time/snotra/snotra-detect.sh) uses it to name the
@@ -76,7 +78,14 @@ default_source() {
 resolve_devices() {
   local sink source
   sink="${SNOTRA_MONITOR:-}"
-  if [ -z "$sink" ]; then
+  # `SNOTRA_MONITOR=off` is the explicit MICS-ONLY door (added 2026-10-07 with
+  # the live tail, snotra-live.sh). It has to exist because "unset" cannot mean
+  # "no system audio": unset resolves to the default sink, so before this there
+  # was no way to ask for the microphone alone. The default is UNCHANGED — the
+  # watch still captures the conversation pair.
+  if [ "$sink" = "off" ] || [ "$sink" = "none" ]; then
+    sink=""
+  elif [ -z "$sink" ]; then
     sink="$(default_sink)"
     # the monitor of the default sink is what carries system audio
     [ -n "$sink" ] && case "$sink" in *.monitor) ;; *) sink="$sink.monitor" ;; esac

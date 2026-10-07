@@ -106,5 +106,9 @@
     "apps/odrerir",
     "apps/sessrumnir",
     "apps/smidja-factory"
-  ]
+  ],
+  "allowScripts": {
+    "electron@43.7.3": true,
+    "electron@33.4.11": true
+  }
 }

@@ -29,7 +29,15 @@ case "${1-}" in
 esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+# The repo ROOT, not `bin/`. This script lives at <root>/bin/model, so the root is
+# two levels up. It walked only ONE level up (2026-10-07, fixed), which resolved
+# ROOT to <root>/bin and then refused with "the fleet module is missing at
+# <root>/bin/src/ymir_runtime/fleet" — a path that can never exist, since the
+# module lives at <root>/src/ymir_runtime/fleet. The refusal was truthful about
+# the (wrong) path it looked at, which is why it read as a missing module rather
+# than a broken root. Every summary that resolves its rail model through this
+# door got the same refusal.
+ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 
 # The ONE resolver (Rule 07): env → the recorded choice, through `bin/vault/hoard-lib.sh`.
 # This door never restates a path; when no home can be resolved the module reports
