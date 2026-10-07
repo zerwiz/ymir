@@ -99,7 +99,7 @@ export default function rules(pi: ExtensionAPI) {
     parameters: { type: "object", properties: { surface: { type: "string" } } },
     execute: async (_toolCallId: string) => {
       const rows: string[] = [];
-      const ci = read(join(ROOT, "bin", "ci-verify.sh"));
+      const ci = read(join(ROOT, "bin", "gates", "ci-verify.sh"));
       const gates = [...ci.matchAll(/^gate\s+(\S+)\s+"([^"]+)"/gm)].map((m) => [m[1], m[2]]);
       if (!gates.length) return piOut("no gates found in bin/gates/ci-verify.sh — the gate list itself is unreadable.");
       rows.push(`ci-verify[${gates.length}]{gate,covers}:`);

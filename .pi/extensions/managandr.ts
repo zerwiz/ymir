@@ -43,7 +43,7 @@ function resolveRoot(): string {
 }
 
 function ask(args: string[]): string {
-  return execFileSync("bash", [join(resolveRoot(), "bin", "calendar-ask.sh"), ...args], {
+  return execFileSync("bash", [join(resolveRoot(), "bin", "time", "snotra", "calendar-ask.sh"), ...args], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "ignore"],
   }).trim();

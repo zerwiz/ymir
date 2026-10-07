@@ -18,7 +18,7 @@ function resolveRoot(): string {
 function resolveHome(): string {
   const fromEnv = process.env.YMIR_HOME?.trim();
   if (fromEnv) return fromEnv;
-  const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
+  const v = execFileSync("bash", [join(resolveRoot(), "bin", "vault", "hodd.sh"), "path"], {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
   if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
@@ -35,9 +35,10 @@ function resolveHome(): string {
 // a new live generation so monitoring can arm again without restarting Pi. Terminal
 // quit leaves the final generation stopped so late callbacks cannot rearm. Stale
 // callbacks from a prior generation are no-ops against the active replacement.
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, isAbsolute, sep, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
@@ -877,7 +878,7 @@ export default function (pi: ExtensionAPI) {
   function seatTheSession(): void {
     const ctxState = process.env.YMIR_STATE_DIR?.trim() || `${resolvedLockPath().split("/.local/")[0]}/.local/state/ymir`;
     try {
-      execFileSync("bash", [join(resolvedRoot(), "bin", "saga-session-start.sh")], {
+      execFileSync("bash", [join(resolvedRoot(), "bin", "time", "saga-session-start.sh")], {
         encoding: "utf8",
         timeout: 120_000,
         stdio: ["ignore", "pipe", "pipe"],

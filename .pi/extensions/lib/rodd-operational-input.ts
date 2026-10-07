@@ -19,7 +19,7 @@ const ymirRoot = resolveYmirRoot(extensionDir);
 
 const operationalInputScript =
   process.env.RODD_OPERATIONAL_INPUT_SCRIPT ||
-  resolve(ymirRoot, "bin", "rodd-operational-input.sh");
+  resolve(ymirRoot, "bin", "agents", "rodd-operational-input.sh");
 
 export const RODD_CURRENT_OPERATIONAL_KINDS = [
   "session-start",

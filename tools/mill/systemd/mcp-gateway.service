@@ -5,7 +5,7 @@ Description=MCP gateway — the body's one record door (:8316), proxying the hea
 Type=simple
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 Environment=MCP_GATEWAY_STATE=__YMIR_OPERATOR_STATE__
-ExecStart=/bin/bash __YMIR_BIN_DIR__/mcp-gateway.sh serve
+ExecStart=/bin/bash __YMIR_BIN_DIR__/bridge/mcp-gateway.sh serve
 Restart=on-failure
 RestartSec=5
 StartLimitIntervalSec=120

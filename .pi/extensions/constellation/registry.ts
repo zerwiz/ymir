@@ -432,9 +432,10 @@ export function findPeer(
   );
 }
 
-/** The tree that owns `bin/`, found from this module's own location. */
+/** The tree that owns `bin/`, found from this module's own location. A root is
+ * the directory owning `bin/` — never a particular door, which may move (Rule 12). */
 export function repoRootFromHere(): string {
   const here = dirname(fileURLToPath(import.meta.url));
   const candidates = [resolve(here, "../../.."), resolve(here, "..", "..", "..")];
-  return candidates.find((candidate) => existsSync(join(candidate, "bin", "hoard-lib.sh"))) ?? candidates[0];
+  return candidates.find((candidate) => existsSync(join(candidate, "bin"))) ?? candidates[0];
 }

@@ -7,7 +7,7 @@ Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 Environment=BROKK_ENV_FILE=__YMIR_ENV_FILE__
 # --foreground keeps the bridge under systemd's supervision: no self-daemon,
 # no pid file — the unit IS the process the way the law wants it.
-ExecStart=/bin/bash __YMIR_BIN_DIR__/bifrost-bridge.sh --foreground
+ExecStart=/bin/bash __YMIR_BIN_DIR__/bridge/bifrost-bridge.sh --foreground
 Restart=on-failure
 RestartSec=5
 StartLimitIntervalSec=120
