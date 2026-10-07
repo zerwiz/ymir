@@ -25,10 +25,19 @@ ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; 
 # must never sit in a tree that ships (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$_yr/../vault/hoard-lib.sh" "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc
+  # A resolver that did not load is a REFUSAL, never a shrug. Sourcing silently
+  # and falling through used to surface as four "command not found" lines and an
+  # unbound YMIR_SETTINGS_DIR — inside a seat launcher, where nobody reads a
+  # scrollback, so the seat died and the record still said it launched.
+  if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+    printf 'error: hoard-lib.sh could not be sourced; the home is unresolvable\n' >&2
+    printf 'help: expected bin/vault/hoard-lib.sh beside this script (looked in bin/vault/)\n' >&2
+    exit 127
+  fi
 fi
 hoard_settings_dir YMIR_SETTINGS_DIR
 hoard_local_env YMIR_ENV_FILE
