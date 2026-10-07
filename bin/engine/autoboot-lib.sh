@@ -41,9 +41,9 @@ set -u
 
 # --- provenance -----------------------------------------------------------
 AUTOBOOT_LIB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AUTOBOOT_ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$AUTOBOOT_LIB_SCRIPT_DIR/.." && pwd)}"
+AUTOBOOT_ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$AUTOBOOT_LIB_SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _ab_c in "${AUTOBOOT_LIB_SCRIPT_DIR}/../vault/hoard-lib.sh" "$(dirname "$AUTOBOOT_LIB_SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _ab_c in "${AUTOBOOT_LIB_SCRIPT_DIR}/../vault/hoard-lib.sh" "$AUTOBOOT_LIB_SCRIPT_DIR/../vault/hoard-lib.sh" "$AUTOBOOT_LIB_SCRIPT_DIR/../../vault/hoard-lib.sh"; do
     [ -r "$_ab_c" ] && { . "$_ab_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _ab_c
@@ -234,6 +234,7 @@ autoboot_cron_alive_owner() {  # exit 0 iff a live session lock exists (Nornir l
   local mach lockf owner st
   mach="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
   lockf="$mach/brokk.lock"
+  [ -r "$lockf" ] || return 1
   owner=$(tr -d '[:space:]' <"$lockf" 2>/dev/null || true)
   case "$owner" in ''|*[!0-9]*) return 1 ;; esac
   [ -d "/proc/$owner" ] || return 1

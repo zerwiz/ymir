@@ -101,13 +101,13 @@ SMIDJA_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 say() { printf '%s\n' "$*"; }
 
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
-  for _fec in "$SCRIPT_DIR/../seat/sessrumnir/app-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/seat/sessrumnir/app-lib.sh"; do
+  for _fec in "$SCRIPT_DIR/../seat/sessrumnir/app-lib.sh" "$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_fec" ] && { . "$_fec"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _fec
 fi
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
-  for _fec in "$SCRIPT_DIR/../desktop/smidja-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/desktop/smidja-lib.sh"; do
+  for _fec in "$SCRIPT_DIR/../desktop/smidja-lib.sh" "$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/desktop/smidja-lib.sh"; do
     [ -r "$_fec" ] && { . "$_fec"; YMIR_SMIDJA_LIB_LOADED=1; break; }
   done
   unset _fec

@@ -36,7 +36,7 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BROKK_ROOT="${BROKK_ROOT_OVERRIDE:-${BROKK_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}}"
+BROKK_ROOT="${BROKK_ROOT_OVERRIDE:-${BROKK_ROOT:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}}"
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$BROKK_ROOT}}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 # shellcheck source=bin/agents/brokk-lease-lib.sh

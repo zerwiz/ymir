@@ -24,7 +24,7 @@ eindri_wake_init() {
   local _d _hs
   _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-    for _c in "$_d/hoard-lib.sh" "$(dirname "$_d")/bin/vault/hoard-lib.sh"; do
+    for _c in "$_d/hoard-lib.sh" "$_d/../vault/hoard-lib.sh" "$_d/../../vault/hoard-lib.sh"; do
       [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
     done
   fi

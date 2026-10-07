@@ -2,7 +2,7 @@
 # Shared durable wake queue and portable lock helpers.
 
 BROKK_WAKE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BROKK_WAKE_DEFAULT_ROOT="$(cd "$BROKK_WAKE_LIB_DIR/.." && pwd)"
+BROKK_WAKE_DEFAULT_ROOT="$(CDPATH='' cd "$BROKK_WAKE_LIB_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 BROKK_ROOT="${BROKK_ROOT_OVERRIDE:-${BROKK_ROOT:-$BROKK_WAKE_DEFAULT_ROOT}}"
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$BROKK_ROOT}}"
 STATE="${BROKK_STATE_OVERRIDE:-${STATE:-$BROKK_HOME/state}}"

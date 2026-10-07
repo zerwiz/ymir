@@ -21,7 +21,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 
 # The operator's records live in the HOME they chose, never in the code tree
@@ -31,7 +31,7 @@ BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # while the real files sat in $YMIR_HOME/hodd/data/ (2026-09-23). A digest that
 # cannot see its own records is worse than no digest.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../../vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
@@ -103,7 +103,7 @@ fi
 # (Rule 07; the default lives in bin/vault/hoard-lib.sh, never in a script).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _ymir_yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$(dirname "$_ymir_yr")/bin/vault/hoard-lib.sh"; do
+  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$_ymir_yr/../vault/hoard-lib.sh" "$_ymir_yr/../../vault/hoard-lib.sh"; do
     [ -r "$_ymir_yc" ] && { . "$_ymir_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _ymir_yr _ymir_yc

@@ -32,7 +32,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # The wake queue is written by the Eindri handoff (bin/agents/eindri-acclaim.sh) into the
 # OPERATOR'S HOME state — never the code tree. Both sides resolve it the same way,
@@ -42,7 +42,7 @@ BROKK_HOME="${BROKK_HOME:-$ROOT}"
 _STATE_GIVEN="${BROKK_STATE_OVERRIDE:-}"
 if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-    for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+    for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../../vault/hoard-lib.sh"; do
       [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
     done
     unset _c

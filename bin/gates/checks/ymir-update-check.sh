@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ymir-update-check.sh — does a newer Ymir stand on npm? One answer, cached daily.
 #
-# The CLI tells the USER when a newer package is on the shelf (bin/ymir.js). The
+# The CLI tells the USER when a newer package is on the shelf (bin/engine/ymir.js). The
 # RUNTIME had no such sense: a session could run for days on an old tree and
 # never know a fix had shipped — so Brokk could not offer to update, and the
 # Allfather had to remember to look. This is the runtime's own sense of drift.
@@ -16,10 +16,10 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/../../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../../vault/hoard-lib.sh" "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../../vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c

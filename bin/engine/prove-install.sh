@@ -28,7 +28,7 @@ set -u
 
 # --- resolve before use: roots come from the libs, never from a literal --------
 _yd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-for _c in "$_yd/hoard-lib.sh" "$(dirname "$_yd")/bin/vault/hoard-lib.sh"; do
+for _c in "$_yd/hoard-lib.sh" "$_yd/../vault/hoard-lib.sh" "$_yd/../../vault/hoard-lib.sh"; do
   [ -r "$_c" ] && { . "$_c"; break; }
 done
 unset _yd _c

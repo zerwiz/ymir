@@ -29,7 +29,7 @@ set -u
 
 ROLE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _rl in "${ROLE_LIB_DIR}/../vault/hoard-lib.sh" "$(dirname "$ROLE_LIB_DIR")/bin/vault/hoard-lib.sh"; do
+  for _rl in "${ROLE_LIB_DIR}/../vault/hoard-lib.sh" "$ROLE_LIB_DIR/../vault/hoard-lib.sh" "$ROLE_LIB_DIR/../../vault/hoard-lib.sh"; do
     [ -r "$_rl" ] && { . "$_rl"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _rl

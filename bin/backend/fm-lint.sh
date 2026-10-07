@@ -49,7 +49,7 @@ set -u
 REQUIRED_SHELLCHECK=0.11.0
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SELF="$SELF_DIR/fm-lint.sh"
-ROOT="$(cd "$SELF_DIR/.." && pwd)"
+ROOT="$(CDPATH='' cd "$SELF_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 cd "$ROOT" || exit 1
 
 FM_LINT_WORKER_SHELLCHECK_PID=

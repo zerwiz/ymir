@@ -19,7 +19,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 WORK="$(mktemp -d /tmp/npm-pretest-XXXXXX)"
 REMOTE="${NPM_PRETEST_HOST:-${NPM_PRETEST_HOSTS:-omarchy whynot}}"
 PASS=1
@@ -95,9 +95,9 @@ sandbox_install() {  # <tgz> <dest>
 smoke() {  # <pkg-dir>
   local P="$1" n=0
   say "== the installed essence smokes =="
-  local tools; tools="$(ls "$P/bin" 2>/dev/null | wc -l)"
+  local tools; tools="$(find "$P/bin" -type f \( -name '*.sh' -o -name '*.py' -o -name '*.js' -o -name '*.mjs' \) 2>/dev/null | wc -l)"
   [ "$tools" -ge 100 ] && ok "bin tools: $tools" || fail "bin tools: $tools (expected 100+)"
-  node "$P/bin/ymir.js" --version >/dev/null 2>&1 && ok "ymir.js --version answers" || fail "ymir.js --version silent"
+  node "$P/bin/engine/ymir.js" --version >/dev/null 2>&1 && ok "ymir.js --version answers" || fail "ymir.js --version silent"
   [ -d "$P/.agents" ] && ok "the .agents dotfolders ship in the package" || { n=1; }
   if [ -x "$P/bin/forge/npm/essence-fetch.sh" ]; then
     BROKK_ROOT_OVERRIDE="$P" bash "$P/bin/forge/npm/essence-fetch.sh" >/dev/null 2>&1

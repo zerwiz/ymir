@@ -349,7 +349,7 @@ for _ in $(seq 1 30); do
       "$ROOT/scripts/electron.sh" start --view hlidskjalf >/dev/null 2>&1 &
       "$ROOT/scripts/electron.sh" start --view odrerir >/dev/null 2>&1 &
       "$ROOT/scripts/electron.sh" start --view smidja >/dev/null 2>&1 &
-      "$ROOT/bin/ymir.js" sessrumnir >/dev/null 2>&1 &
+      "$ROOT/bin/engine/ymir.js" sessrumnir >/dev/null 2>&1 &
     fi
     echo "Hlidskjalf raised (pid $PID) → http://127.0.0.1:${PORT}/"
     echo "Logs: $LOG"
