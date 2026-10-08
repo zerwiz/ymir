@@ -401,6 +401,53 @@ remains the override: `1` forces software, `0` forces the GPU path. The sense
 snapshots record the policy (`bin/host/omarchy-sense.sh observe`, `gpu_policy`) so the
 next decision is evidence-based.
 
+## The live tail (Snotra) — one chip, three routes
+
+`bin/time/snotra/snotra-live.sh` transcribes this machine as you speak and writes the
+words into a document under `$YMIR_HOME/hodd/life/meetings/`. **The UI is a front for
+that script and never a second pipeline**: it calls the script and reports what the
+script says. No transcription, slice timing or engine discovery is re-implemented in
+`apps/hlidskjalf/`.
+
+```
+live[4]{part,where,note}:
+  "control","src/components/SnotraLive.tsx, in src/app/Topbar.tsx beside HallsSwitcher","one chip; a form modal for the name; the readout panel below it"
+  "routes","server/index.ts","GET /api/snotra/live · POST …/start · POST …/stop"
+  "client","src/services/api.ts","gateApi.liveStatus / liveStart / liveStop"
+  "styles","src/styles/shell.css","`.snotra-live*`, tokens only"
+```
+
+**The fact that decides the design: `stop` is SLOW.** It joins every slice into one WAV,
+re-transcribes the recording, asks the rail for a summary, writes the minutes and
+carves a Rune — *minutes* on a one-hour meeting. So `POST …/stop` **spawns the script
+detached and answers `{closing:true}` at once**; the surface polls until the script
+reports itself stopped. A browser that waits minutes on that POST times out and looks
+broken while the work is fine.
+
+- **`closing` outranks the script's own `stopped`.** The script silences ffmpeg in its
+  first seconds, so `status` alone would say "stopped" while the minutes are still
+  being written. The gate holds a `liveClosing` latch (cleared when the detached child
+  exits) and says `closing` — *"closing the book…"* in the surface.
+- **The latch also refuses a second `start`** while a drain is in flight: a race the
+  script's own probe cannot see, because the drain is the gate's detached child.
+- **One ear at a time.** `start` returns the script's refusal **verbatim** (HTTP 409),
+  including which ear is busy. Never surface a generic error the operator cannot act on.
+- `start` is bounded (`timeout 20`) and may block — it returns once the capture is
+  alive. `stop` may NOT.
+- **Poll only while listening or closing** (3 s). Idle never polls: a readout that
+  polls forever is a readout that never sleeps.
+- **No tail running is a state to say**, never an empty panel drawn as truth. Every
+  status carries glyph + colour + text; the glyphs are runes (`ᛟ` listening, `ᛪ`
+  idle/stop, `ᛃ` closing), never emoji.
+- **Transcript content is private.** The document stays in the hoard; only these three
+  authenticated routes read it, for the operator. Never write transcript text into the
+  repo, a fixture, a log or a PR body.
+
+No new GATE was registered for this — a topbar control plus a panel is the surface the
+ask needed, and a gate is a bigger surface than "simple" is worth. Should a gate ever
+be added, it must be registered in `GATES` (`src/data/realms.ts`), routed in
+`src/app/Shell.tsx` and declared in `GATE_META` (`src/data/metadata.ts`).
+
 ## Verification
 
 ```bash

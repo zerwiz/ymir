@@ -5,6 +5,7 @@ import { gateApi, type WorkspaceRow } from '../services/api';
 import { AccentPicker } from '../components/AccentPicker';
 import { AccountMenu } from '../components/AccountMenu';
 import { HallsSwitcher, raise } from '../components/Halls';
+import { SnotraLive } from '../components/SnotraLive';
 
 export function Topbar() {
   const realm = useYmir((s) => s.realm);
@@ -96,6 +97,11 @@ export function Topbar() {
       {/* The three halls: raise Hlidskjalf, Smíðja, or Sessrúmnir from anywhere.
           The same gate launcher the Omarchy key bindings and the chooser use. */}
       <HallsSwitcher current="hlidskjalf" />
+
+      {/* The live tail: ONE click to start listening, one to close the book, and
+          the words as they are spoken. A front for snotra-live.sh, never a
+          second pipeline. */}
+      <SnotraLive />
 
       {/* The Óðrerir Live Hall — the landing's live board, not one of the three
           apps: it opens as a page in its own tab. The rune is Othala, the hall. */}

@@ -29,6 +29,35 @@ export interface RuntimeInfo {
   doc: string;
 }
 
+/* ---- the live tail (Snotra) ----------------------------------------------- *
+ * The gate is a FRONT for bin/time/snotra/snotra-live.sh; these shapes are
+ * what that script says, never a second opinion. `closing` is the gate's own
+ * word for a stop it spawned and has not finished draining (stop takes minutes:
+ * it re-transcribes the recording and asks the rail for the summary). */
+export interface LiveTailStatus {
+  state: 'idle' | 'listening' | 'closing';
+  pid?: string;
+  slices?: number;
+  doc?: string;
+  /** Newest-last, as the document grows: `[hh:mm:ss] text`. */
+  lines?: string[];
+  /** The script's own sentence after the row. */
+  said?: string;
+}
+
+export interface LiveTailStartResponse {
+  ok: boolean;
+  slug?: string;
+  said?: string;
+  /** The SCRIPT's refusal sentence, verbatim ("ONE ear at a time" and friends). */
+  error?: string;
+}
+
+export interface LiveTailStopResponse {
+  closing: boolean;
+  error?: string;
+}
+
 export interface CronJob {
   at: string;
   command: string;
@@ -457,4 +486,7 @@ export const gateApi = {
   setupStatus: () => get<SetupStep[]>('/api/setup/status'),
   setupRun: () => post<SetupStep[]>('/api/setup/run', {}),
   wellEpisode: (id: string) => get<{ episode: WellEpisode }>(`/api/well/episode?id=${encodeURIComponent(id)}`),
+  liveStatus: () => get<LiveTailStatus>('/api/snotra/live'),
+  liveStart: (slug: string, topic?: string) => post<LiveTailStartResponse>('/api/snotra/live/start', { slug, topic }),
+  liveStop: () => post<LiveTailStopResponse>('/api/snotra/live/stop', {}),
 };
