@@ -30,7 +30,7 @@ VERSION="1.0.0"
 # shellcheck disable=SC1091
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/ymir-platform.sh" 2>/dev/null || true
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 # The operator's home, resolved by the ONE resolver (bin/vault/hoard-lib.sh) — never
 # restated. The four-shelf skill walk below reads the home shelf from here, and
 # $HOME/Documents/ymirhome is NOT a default: it is one machine's layout.

@@ -51,7 +51,7 @@ SCRIPT_SELF=${BASH_SOURCE[0]}
 SCRIPT_DIR=${SCRIPT_SELF%/*}
 [ "$SCRIPT_DIR" != "$SCRIPT_SELF" ] || SCRIPT_DIR=.
 SCRIPT_DIR=$(CDPATH='' cd -- "$SCRIPT_DIR" && pwd -P)
-FM_ROOT="${FM_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR/.." && pwd -P)}"
+FM_ROOT="${FM_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd -P)}"
 # shellcheck source=bin/backend/fm-remote-job-lib.sh
 . "$SCRIPT_DIR/fm-remote-job-lib.sh"
 # shellcheck source=bin/backend/fm-tasks-axi-lib.sh

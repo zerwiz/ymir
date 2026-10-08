@@ -81,7 +81,7 @@ export default function eir(pi: ExtensionAPI) {
     },
     execute: async (_toolCallId: string, args: any) => {
       const mode = String(args?.mode ?? "check");
-      const r = run("eir-doctor.sh", [mode], mode === "fix" ? 300_000 : 180_000);
+      const r = run("agents/eir-doctor.sh", [mode], mode === "fix" ? 300_000 : 180_000);
       const verdict = r.rc === 0 ? "whole" : `not whole (exit ${r.rc})`;
       return piOut(`eir_heal[2]{mode,verdict}:\n  "${mode}","${verdict}"\n\n${r.out || "(the healer said nothing — that is itself a finding)"}`);
     },
@@ -104,7 +104,7 @@ export default function eir(pi: ExtensionAPI) {
     },
     execute: async (_toolCallId: string, args: any) => {
       const mode = String(args?.mode ?? "check");
-      const r = run("groa-update.sh", [mode === "update" ? "" : "--check"], 600_000);
+      const r = run("agents/groa-update.sh", [mode === "update" ? "" : "--check"], 600_000);
       const note =
         mode === "update" && r.rc !== 0
           ? `\n  Gróa did not finish cleanly (exit ${r.rc}). The seat may be partly renewed — read the output before running it again.`

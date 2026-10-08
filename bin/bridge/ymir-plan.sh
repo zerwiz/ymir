@@ -29,7 +29,7 @@ set -u
 # --- portability shim: bin/fleet/ymir-platform.sh --------------------------------
 if [ -z "${YMIR_PLATFORM_LOADED:-}" ]; then
   _ymir_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-  for _ymir_c in "${_ymir_dir}/../fleet/ymir-platform.sh" "$(dirname "$_ymir_dir")/bin/fleet/ymir-platform.sh"; do
+  for _ymir_c in "${_ymir_dir}/../fleet/ymir-platform.sh" "$(CDPATH='' cd "$_ymir_dir" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/fleet/ymir-platform.sh"; do
     [ -r "$_ymir_c" ] && { . "$_ymir_c"; YMIR_PLATFORM_LOADED=1; break; }
   done
   unset _ymir_dir _ymir_c

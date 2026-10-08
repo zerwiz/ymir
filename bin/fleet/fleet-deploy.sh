@@ -23,7 +23,7 @@ DRY=0
 [ "${1-}" = "--dry-run" ] && DRY=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 DST="${YMIR_FLEET_DIR:-$HOME/.fleet}"
 
 # tool file (or directory) in the package -> deployed path under ~/.fleet

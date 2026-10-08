@@ -25,7 +25,16 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+# Rule 12: never resolve the repo by counting ".." — a door that lives in
+# bin/<sub>/ lands on bin/ (which owns no tools/ or apps/). Walk up to the tree
+# that owns .pi/ and RULES/ — the repo root — so the template root is the same
+# whether this door sits at bin/ or bin/fleet/.
+ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)}"
+# app-lib.sh's app_dir prefers YMIR_ROOT_DIR over its own location: a surface
+# resolved from bin/seat/sessrumnir/ would otherwise read _apd_root=bin/seat and
+# never find apps/. Export the walked root once, here.
+export YMIR_ROOT_DIR="$ROOT"
 . "$SCRIPT_DIR/../engine/autoboot-lib.sh"
 HOME_ROOT="$AUTOBOOT_HOME_ROOT"
 DST="$HOME/.fleet"
@@ -92,13 +101,13 @@ SMIDJA_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 say() { printf '%s\n' "$*"; }
 
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
-  for _fec in "$SCRIPT_DIR/../seat/sessrumnir/app-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/seat/sessrumnir/app-lib.sh"; do
+  for _fec in "$SCRIPT_DIR/../seat/sessrumnir/app-lib.sh" "$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/seat/sessrumnir/app-lib.sh"; do
     [ -r "$_fec" ] && { . "$_fec"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _fec
 fi
 if [ -z "${YMIR_SMIDJA_LIB_LOADED:-}" ]; then
-  for _fec in "$SCRIPT_DIR/../desktop/smidja-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/desktop/smidja-lib.sh"; do
+  for _fec in "$SCRIPT_DIR/../desktop/smidja-lib.sh" "$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/desktop/smidja-lib.sh"; do
     [ -r "$_fec" ] && { . "$_fec"; YMIR_SMIDJA_LIB_LOADED=1; break; }
   done
   unset _fec

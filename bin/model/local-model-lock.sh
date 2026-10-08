@@ -25,7 +25,7 @@ ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; 
 # must never sit in a tree that ships (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/../vault/hoard-lib.sh" "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$_yr/../vault/hoard-lib.sh" "$_yr/hoard-lib.sh" "$_yr/../vault/hoard-lib.sh" "$_yr/../../vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc

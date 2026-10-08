@@ -52,7 +52,7 @@ function resolveRoot(): string {
 function resolveHome(): string {
   const fromEnv = process.env.YMIR_HOME?.trim();
   if (fromEnv) return fromEnv;
-  const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
+  const v = execFileSync("bash", [join(resolveRoot(), "bin", "vault", "hodd.sh"), "path"], {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
   if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");

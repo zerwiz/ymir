@@ -31,7 +31,7 @@
     "wsl"
   ],
   "bin": {
-    "ymir": "bin/ymir.js",
+    "ymir": "bin/engine/ymir.js",
     "ymir-install": "bin/engine/ymir-install.sh"
   },
   "files": [

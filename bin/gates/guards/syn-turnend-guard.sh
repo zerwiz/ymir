@@ -9,7 +9,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # The watcher writes BOTH its arm marker and its heartbeat into the OPERATOR's
 # state, never the code tree (Rule 04). Resolve the same place here, or a live
@@ -18,7 +18,7 @@ BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # the hoard heartbeat was seconds fresh (2026-09-23).
 if [ -z "${BROKK_STATE_OVERRIDE:-}" ]; then
   if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-    for _c in "$SCRIPT_DIR/../../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+    for _c in "$SCRIPT_DIR/../../vault/hoard-lib.sh" "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../../vault/hoard-lib.sh"; do
       [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
     done
     unset _c

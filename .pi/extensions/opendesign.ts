@@ -62,7 +62,7 @@ export default function opendesign(pi: ExtensionAPI) {
     execute: async (_toolCallId: string, args: any) => {
       const action = String(args?.action ?? "status");
       try {
-        const out = execFileSync("bash", [join(resolveRoot(), "bin", "opendesign.sh"), action], {
+        const out = execFileSync("bash", [join(resolveRoot(), "bin", "pi", "opendesign.sh"), action], {
           encoding: "utf8",
           timeout: 120_000,
           stdio: ["ignore", "pipe", "pipe"],

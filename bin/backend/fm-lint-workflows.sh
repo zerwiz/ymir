@@ -19,7 +19,7 @@ set -eu
 REQUIRED_ACTIONLINT=1.7.12
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SELF="$SELF_DIR/fm-lint-workflows.sh"
-ROOT="$(cd "$SELF_DIR/.." && pwd)"
+ROOT="$(CDPATH='' cd "$SELF_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 if [ "${1:-}" = "--required-version" ]; then
   printf '%s\n' "$REQUIRED_ACTIONLINT"

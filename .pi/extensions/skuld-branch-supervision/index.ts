@@ -5,7 +5,7 @@
 function resolveHome(): string {
   const fromEnv = process.env.YMIR_HOME?.trim();
   if (fromEnv) return fromEnv;
-  const v = execFileSync("bash", [join(resolveRoot(), "bin", "hodd.sh"), "path"], {
+  const v = execFileSync("bash", [join(resolveRoot(), "bin", "vault", "hodd.sh"), "path"], {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
   if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
@@ -132,10 +132,10 @@ const afkFlag = join(state, ".afk");
 const sessionsDir = join(state, "branch-session");
 const sessionPointer = join(state, ".branch-session");
 const mirrorCursorFile = join(state, ".branch-mirror-cursor");
-const promptScript = join(fmRoot, "bin", "skuld-branch-prompt.sh");
-const outcomeScript = join(fmRoot, "bin", "skuld-branch-outcome.sh");
-const leaseScript = join(fmRoot, "bin", "brokk-lease.sh");
-const wakeGrantScript = join(fmRoot, "bin", "brokk-wake-grant.sh");
+const promptScript = join(fmRoot, "bin", "skuld", "skuld-branch-prompt.sh");
+const outcomeScript = join(fmRoot, "bin", "skuld", "skuld-branch-outcome.sh");
+const leaseScript = join(fmRoot, "bin", "agents", "brokk-lease.sh");
+const wakeGrantScript = join(fmRoot, "bin", "time", "brokk-wake-grant.sh");
 const loadedMarker = join(state, ".pi-branch-extension-loaded");
 const modelPinFile = join(config, "skuld-branch-model");
 const effortPinFile = join(config, "skuld-branch-effort");
@@ -1642,7 +1642,7 @@ pi.registerTool?.({
     },
     execute: async (_toolCallId: string, args: any) => {
       try {
-        const q = execFileSync("bash", [join(resolveRoot(), "bin", "queue.sh"), "--check"], { encoding: "utf8" });
+        const q = execFileSync("bash", [join(resolveRoot(), "bin", "gates", "queue.sh"), "--check"], { encoding: "utf8" });
         const lines = q.split("\n").filter((l) => l.startsWith("| "));
         const want = args.state ? String(args.state).toLowerCase() : null;
         const head = lines.find((l) => l.startsWith("| # "));

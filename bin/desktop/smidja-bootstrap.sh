@@ -29,7 +29,7 @@ ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; 
 # (Rule 07; the default lives in bin/vault/hoard-lib.sh, never in a script).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _ymir_yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$(dirname "$_ymir_yr")/bin/vault/hoard-lib.sh"; do
+  for _ymir_yc in "$_ymir_yr/hoard-lib.sh" "$_ymir_yr/../vault/hoard-lib.sh" "$_ymir_yr/../../vault/hoard-lib.sh"; do
     [ -r "$_ymir_yc" ] && { . "$_ymir_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _ymir_yr _ymir_yc

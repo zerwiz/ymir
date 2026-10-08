@@ -26,7 +26,7 @@ set -u
 VERSION="1.0.0"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; esac
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 . "$SCRIPT_DIR/autoboot-lib.sh"
 
 say() { printf '%s\n' "$*"; }

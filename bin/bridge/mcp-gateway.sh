@@ -52,11 +52,15 @@ case "${1-}" in
 esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+# Rule 12: never resolve the repo by counting ".." — from bin/bridge a single
+# level up is bin/, which owns no tools/. Walk up to the tree that owns .pi/ and
+# RULES/ (the checkout), so the engine lookup finds tools/mcp-gateway/server.mjs.
+ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../../vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c

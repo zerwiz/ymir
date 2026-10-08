@@ -12,7 +12,7 @@ Type=simple
 Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
 Environment=BROKK_STATE_OVERRIDE=__YMIR_OPERATOR_STATE__
 Environment=SYN_WATCH_MODE=systemd
-ExecStart=/bin/bash __YMIR_BIN_DIR__/syn-watch.sh run
+ExecStart=/bin/bash __YMIR_BIN_DIR__/pi/syn-watch.sh run
 Restart=always
 RestartSec=2
 TimeoutStopSec=10

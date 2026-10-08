@@ -19,14 +19,14 @@
 # Usage: bin/agents/eindri-acclaim.sh <agent> [<worktree-root>] [--terminal done|failed|needs-decision] [--line "<text>"]
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$(dirname "$_yr")/bin/vault/hoard-lib.sh"; do
+  for _yc in "$_yr/hoard-lib.sh" "$_yr/../vault/hoard-lib.sh" "$_yr/../../vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _yr _yc

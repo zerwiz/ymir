@@ -41,7 +41,7 @@ case "${1-}" in --dry-run) MODE=dry ;; --status) MODE=status ;; ""|fold) ;; *) p
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$(dirname "$SCRIPT_DIR")/bin/vault/hoard-lib.sh"; do
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../../vault/hoard-lib.sh"; do
     [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
   unset _c
