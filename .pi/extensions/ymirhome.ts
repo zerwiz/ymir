@@ -9,7 +9,11 @@ function resolveHome(): string {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
   if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
-  return v;
+  // hodd.sh path answers the HOARD (…/ymirhome/hodd); the shelf strings every door
+  // builds are home-relative WITH the hodd/ prefix — join them on the wrong base
+  // and a move doubles the prefix (measured 2026-10-08: ymir_place and ymir_import
+  // both aimed at home/hodd/hodd/…). The HOME is the hoard's parent.
+  return dirname(v);
 }
 
 /**
@@ -34,7 +38,7 @@ function resolveHome(): string {
  *     would otherwise be swept into a commit and pushed.
  */
 
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { homedir } from "node:os";
 import { existsSync , readFileSync } from "node:fs";
@@ -553,7 +557,7 @@ export default function ymirhome(pi: any) {
     execute: async (_toolCallId: string, args: any) => {
       if (args.path) {
         const v = classify(String(args.path));
-        return piOut(v.ok ? `${v.path}\n  shelf: ${v.shelf}\n  because: ${v.why}` : `refused: ${v.why}`);
+        return piOut(v.ok ? `${String(args.path)}\n  shelf: ${v.shelf}\n  because: ${v.why}` : `refused: ${v.why}`);
       }
       return piOut("hodd/            private material (docs · data · memory · identity · life/<domain>)\n" +
           "  hodd/life/<domain>/   the operator's own domains: marketing · personal · work · meetings\n" +
