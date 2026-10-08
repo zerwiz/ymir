@@ -380,7 +380,7 @@ governed[6]{path,load_first}:
   "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
 
-The Pi extension `.pi/shared/extensions/syn-turnend-guard.ts` relays it: `read` of an
+The Pi extension `.pi/extensions/syn-turnend-guard.ts` relays it: `read` of an
 asset is recorded, and an `edit`/`write` of a governed path is blocked with the
 reason. The guard's own liveness check is **zombie-aware** too — `/proc/<pid>/stat`
 field 3 (Z/X = a killed-but-unreaped or dead holder) fails a stale lock even when
@@ -402,7 +402,7 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 | Harness | Session-open injection | Watch arm owner | Turn-end guard | Pretool (arm) | Pretool (cd) | Re-arm |
 |---|---|---|---|---|---|---|
 | **OpenCode** | ✅ `.agents/harness/opencode/plugins/saga-sessionstart.js` | ✅ `.agents/harness/opencode/plugins/syn-watch-arm.js` (`session.idle`, coordinator key) | ✅ `.agents/harness/opencode/plugins/syn-turnend-guard.js` | ✅ `syn-pretool-check.js` | ✅ `syn-cd-check.js` | ✅ plugin-owned retries |
-| **Pi** | ✅ `.pi/shared/extensions/syn-turnend-guard.ts` (`before_agent_start`) | ✅ `.pi/shared/extensions/gna-pi-watch.ts` (`gna_watch_arm` tool) | ✅ same extension (`agent_settled`) | ✅ same extension (`tool_call`) | ✅ same extension (`tool_call`) | ✅ Gná retry/backoff |
+| **Pi** | ✅ `.pi/extensions/syn-turnend-guard.ts` (`before_agent_start`) | ✅ `.pi/extensions/gna-pi-watch.ts` (`gna_watch_arm` tool) | ✅ same extension (`agent_settled`) | ✅ same extension (`tool_call`) | ✅ same extension (`tool_call`) | ✅ Gná retry/backoff |
 | **Claude Code** | ✅ `.claude/settings.json` `SessionStart` | ✅ `Stop` + `syn-watch-arm.sh --restart` (`asyncRewake`) | ✅ `Stop` + `syn-turnend-guard.sh --claude` | ❌ | ❌ | ✅ async rewake |
 | **Codex** | ✅ `.codex/hooks.json` `SessionStart` | ⚠️ no long-lived arm | ✅ `Stop` + `syn-turnend-guard.sh` | ✅ `PreToolUse` matcher `Bash` | ✅ `PreToolUse` matcher `Bash` | ❌ |
 | **Cursor** | ✅ `.cursor/hooks.json` `sessionStart` | ⚠️ interactive only | ✅ `stop` → `{"followup_message":...}` | ✅ `preToolUse` matcher `Shell` | ✅ `preToolUse` matcher `Shell` | ❌ |
@@ -418,13 +418,13 @@ Legend: ✅ implemented · ⚠️ partial/inert-by-design · ❌ not implemented
 | `.agents/harness/opencode/plugins/syn-pretool-check.js` | `export const SynPretoolCheck` | 4 (arm) |
 | `.agents/harness/opencode/plugins/syn-cd-check.js` | `export const SynCdCheck` | 4 (cd) |
 | `.agents/harness/opencode/plugins/lib/rodd-operational-input.js` | `encodeRoddOperationalInput(root, kind, content)` | shared wire |
-| `.pi/shared/extensions/syn-turnend-guard.ts` | `export default function (pi: ExtensionAPI)` | 1, 3, 4 |
-| `.pi/shared/extensions/gna-pi-watch.ts` | `export default function (pi: ExtensionAPI)` | 2 |
-| `.pi/shared/extensions/ro.ts` | Ró — the calm presentation preference (`/calm`), state/ro | user |
-| `.pi/shared/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor; strictly user-facing, no LLM tool. **Resolution:** `$VISUAL` → `$EDITOR` → the first editor that exists (`code cursor zed subl nvim vim hx helix nano micro emacs vi`), so a host that is not Omarchy — where Omarchy's own launcher or a bare `vi` may be absent — still gets a working editor instead of an ENOENT | user |
-| `.pi/shared/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
-| `.pi/shared/extensions/todo.ts` | the todo surface | user |
-| `.pi/shared/extensions/ymir-subagents.ts` | **the Eindri roster as a Pi tool** — reads the canonical `.agents/agents/*.md` tree and exposes every figure through a `subagent` tool (and a `/subagents` command). See "Pi has no agent loader" below | user |
+| `.pi/extensions/syn-turnend-guard.ts` | `export default function (pi: ExtensionAPI)` | 1, 3, 4 |
+| `.pi/extensions/gna-pi-watch.ts` | `export default function (pi: ExtensionAPI)` | 2 |
+| `.pi/extensions/ro.ts` | Ró — the calm presentation preference (`/calm`), state/ro | user |
+| `.pi/extensions/open-editor.ts` | `/edit [path]` and `ctrl+shift+e` — opens files from cwd in the Allfather's editor; strictly user-facing, no LLM tool. **Resolution:** `$VISUAL` → `$EDITOR` → the first editor that exists (`code cursor zed subl nvim vim hx helix nano micro emacs vi`), so a host that is not Omarchy — where Omarchy's own launcher or a bare `vi` may be absent — still gets a working editor instead of an ENOENT | user |
+| `.pi/extensions/herdr-agent-state.ts` | reports pane agent lifecycle state to herdr | 2 |
+| `.pi/extensions/todo.ts` | the todo surface | user |
+| `.pi/extensions/ymir-subagents.ts` | **the Eindri roster as a Pi tool** — reads the canonical `.agents/agents/*.md` tree and exposes every figure through a `subagent` tool (and a `/subagents` command). See "Pi has no agent loader" below | user |
 | `extensions/lib/rodd-operational-input.ts` (helper tree, deployed) | `encodeRoddOperationalInput`, `classifyRoddOperationalText`, `classifyRoddCurrentOperationalText` | shared wire |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` (helper tree — see the 2026-10-04 correction) | detached child supervisor (Vörðr) | 1 (transport) |
 | `.claude/settings.json` | `hooks.SessionStart[]`, `hooks.Stop[]` | 1, 3, 5 |
@@ -448,7 +448,7 @@ Every adapter and script resolves the same runtime roots. The overrides exist so
 | `BROKK_SESSION_PID` | **live harness PID** bound by the session lock | `${BROKK_SESSION_PID:-$$}` |
 | `BROKK_SESSIONSTART_INELIGIBLE` | `1` makes Pi's prerequisite exit 3 | unset |
 
-`BROKK_SESSION_PID` is the load-bearing variable. The lock must bind to the **live harness process**, not the short-lived digest helper: Pi/OpenCode adapters pass `BROKK_SESSION_PID=String(process.pid)` into the spawned digest/arm child (`.pi/shared/extensions/syn-turnend-guard.ts:277`, `.agents/harness/opencode/plugins/syn-watch-arm.js:428`). `bin/vault/gleipnir-lock-lib.sh` writes it to `state/.lock`.
+`BROKK_SESSION_PID` is the load-bearing variable. The lock must bind to the **live harness process**, not the short-lived digest helper: Pi/OpenCode adapters pass `BROKK_SESSION_PID=String(process.pid)` into the spawned digest/arm child (`.pi/extensions/syn-turnend-guard.ts:277`, `.agents/harness/opencode/plugins/syn-watch-arm.js:428`). `bin/vault/gleipnir-lock-lib.sh` writes it to `state/.lock`.
 
 Full variable inventory: [`../runtime-components.md`](../runtime-components.md) §5.
 
@@ -652,7 +652,7 @@ bin/time/saga-session-start.sh | sed -n '1,12p'   # LOCK section: held vs READ-O
 - **`hamr-harness.sh` has no `crew` subcommand — its subcommand is `eindri`.** `bin/agents/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, which falls through to `detect_own` (`bin/fleet/hamr-harness.sh:231-236`); see §11. Until that call is fixed, `config/eindri-harness` is only honoured by the inline fallback, not the Hamr path.
 - **Plugin auto-loading is path-based, not declared.** OpenCode loads `.agents/harness/opencode/plugins/*.js` automatically; there is no `plugin` array in `opencode.json`. The `package.json` only declares `"type": "module"`.
 - **Grok is not wired in Ymir.** Upstream Brokk ships `.grok/hooks/*.json`; Ymir has no `.grok/`. Treat Grok as unverified (see §11).
-- **Windows timing.** OpenCode and Pi raise the arm-ready budget to 35s on `win32` so a slow Git Bash cold start is not SIGTERMed mid-confirmation (`.agents/harness/opencode/plugins/syn-watch-arm.js:17-19`, `.pi/shared/extensions/gna-pi-watch.ts:91-94`).
+- **Windows timing.** OpenCode and Pi raise the arm-ready budget to 35s on `win32` so a slow Git Bash cold start is not SIGTERMed mid-confirmation (`.agents/harness/opencode/plugins/syn-watch-arm.js:17-19`, `.pi/extensions/gna-pi-watch.ts:91-94`).
 
 ---
 
@@ -889,7 +889,7 @@ installs none of them. So `.pi/agents/` held twenty correct profile links that
 **nothing in Pi ever read** — the same failure as OpenCode's singular
 `.opencode/agent/`, arrived at from the other side.
 
-The fix lives in the repo, not in a root-pi package: **`.pi/shared/extensions/ymir-subagents.ts`**
+The fix lives in the repo, not in a root-pi package: **`.pi/extensions/ymir-subagents.ts`**
 discovers the canonical `.agents/agents/*.md` tree itself and registers a
 `subagent` tool. A call runs the chosen figure as a nested model call in the
 current session — the figure's markdown body is its system prompt, its
@@ -908,8 +908,8 @@ Rules this extension follows, learned the hard way:
   working extension in this tree takes `pi` as `any` and declares tool
   `parameters` as a plain JSON schema object. `typebox` *is* installed, but the
   plain object needs nothing.
-- **One home.** It lives in `.pi/shared/extensions/` (deployed), never in
-  `.pi/extensions/` — a copy in both makes pi refuse the duplicate tool.
+- **One home.** It lives in `.pi/extensions/` — the one home. The global
+  `~/.pi/agent/extensions/` must hold no copy, or pi refuses the duplicate tool.
 - **The canonical tree is the source.** It reads `.agents/agents/`; it never
   copies from it (Rule 02).
 
@@ -944,30 +944,26 @@ extension or tool name, an extension present in both makes `pi` exit with
 
 Rule: **one home per extension.**
 
-- Shared extensions (`todo.ts`, `herdr-agent-state.ts`, `open-editor.ts`) live
-  **only** in `~/.pi/agent/extensions/` — used by every project, Ymir and
-  Omarchy alike.
-- **Everything Ymir ships is in `.pi/shared/extensions/`**, governance and
-  user-facing alike, and is deployed to the one global home. (Corrected
-  2026-10-04: this bullet previously put `gna-pi-watch.ts`, `ro.ts`,
-  `skuld-branch-supervision.ts` and `syn-turnend-guard.ts` in the repo's
-  `.pi/extensions/`; it does not. That tree holds no-op stubs and `lib/`.)
-- Never copy a shared extension back into the repo; that re-arms the collision.
+- **Everything Ymir ships is in `.pi/extensions/`** — the one home, governance
+  and user-facing alike. Nothing is deployed to `~/.pi/agent/extensions/`; that
+  global tree holds only the `.ymir-root` record. (Corrected 2026-10-07: the
+  2026-10-04 text still described a source tree and a deploy — commit `ac5fd8ad`
+  already ended that.)
+- Never copy an extension into `~/.pi/agent/extensions/`; that re-arms the
+  collision.
 
-**Shipping the shared extensions (added 2026-09-12).** A rule that keeps the
-extensions outside the repo would also keep them from every new operator, so the
-repo carries their **source** at `.pi/shared/extensions/` — a path pi does not
-load, therefore collision-free — and the loader deploys it into the single home:
+**Shipping the extensions (corrected 2026-10-07).** The repo carries the
+extensions themselves in `.pi/extensions/` — the one home pi loads, so there is no
+deploy and nothing to collide:
 
 ```bash
-bin/seat/valknut-load.sh --pi      # deploys .pi/shared/extensions/*.ts -> ~/.pi/agent/extensions/
+bin/seat/valknut-load.sh --pi   # keeps the global home clear of duplicates; writes .ymir-root
 ```
 
-The deploy copies (never links: a broken link would silently disable a tool),
-skips files that are already identical, and reports what it placed. It runs
-whenever the Pi surface is bound, with or without `--global`. Adding a shared
-extension is therefore two steps: put the source in `.pi/shared/extensions/`, and
-let the loader place it — **never** place it in `.pi/extensions/`.
+The loader removes any `~/.pi/agent/extensions/<name>` that also stands in
+`.pi/extensions/`, and writes the `.ymir-root` record the extensions read back.
+Adding an extension is therefore one step: put it in `.pi/extensions/` (a
+directory with an `index.ts` if it has helpers of its own).
 
 **The deployed copy must be told where `bin/` is (2026-09-19).** A deploy that
 copies an extension without telling it where its own `bin/` lives is not a deploy.
@@ -1078,42 +1074,38 @@ from `@juicesharp/rpiv-ask-user-question` (MIT), pinned **project-locally** in
 - Config (read-only): `~/.config/rpiv-ask-user-question/config.json`.
 - Use it at real decision points — where a wrong assumption costs a rework.
 
-**Two extension paths, and they are not interchangeable** (2026-09-12; **corrected
-2026-10-04**):
+**One extension path** (2026-09-12; **rewritten 2026-10-07**):
 
 | Path | Loaded by | Holds |
 |---|---|---|
-| `.pi/extensions/` | pi, as **project-local** extensions | **NOTHING that registers a tool.** It holds no-op stubs only — see the correction below |
-| `.pi/shared/extensions/` | **the source**, deployed by `bin/seat/valknut-load.sh --pi` into `${HOME}/.pi/agent/extensions/` | **every Ymir extension**, governance and user-facing alike |
-| `.pi/extensions/lib/` | nothing — pi does not recurse past one level | the helper modules the shared extensions import |
+| `.pi/extensions/` | pi, as **project-local** extensions | **every Ymir extension** — the one home, source and live tree the same |
+| `.pi/extensions/<name>/` | pi, when it holds an `index.ts` | a multi-file extension and its helpers |
+| `.pi/extensions/lib/` | nothing — pi does not recurse past one level | the helper modules the extensions import |
+| `~/.pi/agent/extensions/.ymir-root` | the extensions, as a record | a root pointer, **not** an extension |
 
-**The 2026-10-04 correction.** This table previously said `.pi/extensions/` holds
-"the governance set: `syn-turnend-guard.ts`, `gna-pi-watch.ts`, `ro.ts`,
-`skuld-branch-supervision.ts`". **That is no longer true of any of them.** They all
-live in `.pi/shared/extensions/` and are deployed to the single global home. What
-`.pi/extensions/` actually contains is **nine no-op factories that register
-nothing**, each kept only so a duplicate tool cannot collide with the deployed copy.
+**The 2026-10-04 correction, completed 2026-10-07.** This section used to describe
+two trees — a separate shared source tree and a deployed copy in
+`~/.pi/agent/extensions/`. Commit `ac5fd8ad` deleted the source tree: the
+extensions live in `.pi/extensions/`, and nothing is deployed. `.pi/extensions/`
+holds the real files, not no-op stubs.
 
 **Pi's loader rule, from the installed
 `dist/core/extensions/loader.js`:** *"No recursion beyond one level."* A direct
 `.ts`/`.js` file is an extension; a **subdirectory** is one only if it has an
-`index.ts`/`index.js`. `lib/` has neither, so pi never loads it — the shared
-extensions reach those modules by relative import, and the loader must therefore
-deploy them too. **A deploy that copies the top-level files without `lib/` ships
-extensions that cannot load.**
+`index.ts`/`index.js`. `lib/` has neither, so pi never loads it — the extensions
+reach those modules by relative import, beside them in the one tree.
 
-Verified with `bin/seat/valknut-load.sh --check` (added 2026-10-04): it fails when the
-deployed tree differs from source, when a test file is in the live tree, or when an
-extension exists in two load paths.
+Verified with `bin/seat/valknut-load.sh --check` (one-home, 2026-10-07): it fails
+when an extension exists in two load paths, or when the `.ymir-root` record is
+missing.
 
 The same extension in **both** paths makes pi exit with a tool-name conflict and
-no agent can be seated — which is why the shared trio has exactly one home and is
-deployed, never duplicated. Editing a path from the table above without checking
-which of the two it is will edit a file that is not there.
+no agent can be seated — which is why there is exactly one home (`.pi/extensions/`)
+and the global tree holds no extension at all.
 
 ## The ymirhome extension — a Pi surface over doors that already exist (2026-10-02)
 
-`.pi/shared/extensions/ymirhome.ts` (deployed by `bin/seat/valknut-load.sh --all --global`) is the
+`.pi/extensions/ymirhome.ts` (the one home) is the
 first capability built under the destination rule: **what the harness should feel is an extension;
 the logic stays in `bin/`, where a human or a cron row can run the same thing.**
 
@@ -1128,8 +1120,7 @@ the logic stays in `bin/`, where a human or a cron row can run the same thing.**
 | `ymir_free` | `bin/time/snotra/calendar-ask.sh` — the operator's own calendar, read-only |
 | `ymir_dellingr` | grades documents `nýr · eldri · forn · safn`; **known defect — its age signal reads 0d, so it currently grades everything fresh. It must refuse rather than guess.** |
 
-**The shape every extension here shares** (plan 66 §8): one home (`.pi/shared/extensions` →
-`~/.pi/agent/extensions`), every tool THIN, every tool saying **no** when it cannot do the job,
+**The shape every extension here shares** (plan 66 §8): one home (`.pi/extensions/`, with `~/.pi/agent/extensions/.ymir-root` as the root record), every tool THIN, every tool saying **no** when it cannot do the job,
 and `bin/engine/ymir-install.sh` + `bin/agents/groa-update.sh` **seating it and failing loudly** — because a
 capability that exists in the repo but is never seated is exactly the silent absence that cost
 the watch on 2026-09-30.
@@ -1137,7 +1128,7 @@ the watch on 2026-09-30.
 
 ## The rules door — the house law as a surface (2026-10-01)
 
-`.pi/shared/extensions/rules.ts` (deployed by `bin/seat/valknut-load.sh --all --global`). The Allfather:
+`.pi/extensions/rules.ts`. The Allfather:
 *"we need to build for rules."* An agent that does not know the laws either reads ten files and
 misses the one that matters, or invents — and `RULES/` was prose no tool could read.
 

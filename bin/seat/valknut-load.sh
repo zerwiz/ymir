@@ -21,18 +21,15 @@ ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; 
 AGENTS="$ROOT/.agents/agents"
 PI_LOCAL="$ROOT/.pi/agents"
 PI_GLOBAL="${HOME}/.pi/agent/agents"
-# Shared Pi extensions have ONE home: ${HOME}/.pi/agent/extensions/ (see
-# galdr/assets/harness-integration/README.md). The repo keeps their SOURCE at
-# .pi/shared/extensions/ — never at .pi/extensions/, because an extension present
-# in both load paths makes pi exit with a tool-name conflict and no agent can be
-# seated. This loader DEPLOYS that source into the single home.
-PI_EXT_SRC="$ROOT/.pi/shared/extensions"
+# Pi extensions have ONE home: the repo's `.pi/extensions/` tree (RULES/13;
+# commit ac5fd8ad, 2026-10-04). Pi loads BOTH that project tree and the global
+# ${HOME}/.pi/agent/extensions/ and does not de-duplicate, so an extension in both
+# registers its tools twice and pi exits with a tool-name conflict — no agent can be
+# seated. This loader therefore DEPLOYS NOTHING: it keeps the global home free of any
+# extension that also stands in the project tree, and writes the root record the
+# extensions read back.
+PI_EXT_SRC="$ROOT/.pi/extensions"
 PI_EXT_HOME="${HOME}/.pi/agent/extensions"
-# The helper modules the shared extensions import. Still sourced from the OLD flat
-# tree (`.pi/extensions/lib`) because plan 29 built them there and the single-home
-# migration moved the extensions but not their internals — see the harness-integration
-# asset. Named separately so --check can see it without running a deploy.
-PI_EXT_LIB_SRC="$ROOT/.pi/extensions/lib"
 OC_LOCAL="$ROOT/.opencode/agents"
 SKILLS="$ROOT/.agents/skills"
 
@@ -80,98 +77,44 @@ done
 # in CI and in the post-merge hook rather than in someone's memory.
 if [ "$MODE_CHECK" = "1" ]; then
   fails=0
-  printf 'check{pi-extensions-deployed}:\n'
-  if [ ! -d "$PI_EXT_HOME" ]; then
-    printf '  %-46s %s\n' "deployed tree" "MISSING — run: bin/seat/valknut-load.sh --pi"
-    exit 1
-  fi
-
-  # 1. every deployed extension must be byte-identical to its source
-  stale=0
-  for f in "$PI_EXT_SRC"/*.ts "$PI_EXT_SRC"/*.js; do
-    [ -e "$f" ] || continue
-    b=$(basename "$f")
-    if [ ! -f "$PI_EXT_HOME/$b" ]; then
-      printf '  %-46s %s\n' "$b" "NOT DEPLOYED"
-      stale=$((stale+1))
-    elif ! cmp -s "$f" "$PI_EXT_HOME/$b"; then
-      printf '  %-46s %s\n' "$b" "STALE — deployed differs from source"
-      stale=$((stale+1))
-    fi
-  done
-  [ "$stale" -eq 0 ] && printf '  %-46s %s\n' "all extensions byte-identical to source" "PASS" \
-                     || { printf '  %-46s %s\n' "stale or undeployed extensions" "FAIL ($stale)"; fails=$((fails+1)); }
-
-  # 2. the helper modules the shared set imports must be deployed too — deploying
-  #    the top-level files ALONE ships extensions that cannot load
-  if [ -d "$PI_EXT_LIB_SRC" ]; then
-    miss=0
-    for f in "$PI_EXT_LIB_SRC"/*; do
-      [ -e "$f" ] || continue
-      b=$(basename "$f")
-      case "$b" in *.test.*|*.spec.*) continue ;; esac
-      if [ ! -f "$PI_EXT_HOME/lib/$b" ]; then
-        printf '  %-46s %s\n' "lib/$b" "NOT DEPLOYED"
-        miss=$((miss+1))
-      elif ! cmp -s "$f" "$PI_EXT_HOME/lib/$b"; then
-        printf '  %-46s %s\n' "lib/$b" "STALE"
-        miss=$((miss+1))
-      fi
-    done
-    [ "$miss" -eq 0 ] && printf '  %-46s %s\n' "all helper modules byte-identical" "PASS" \
-                      || { printf '  %-46s %s\n' "helper modules" "FAIL ($miss)"; fails=$((fails+1)); }
-  fi
-
-  # 3. nothing that is not a test may live in the live tree
-  leaked=0
-  for f in "$PI_EXT_HOME"/lib/*.test.* "$PI_EXT_HOME"/*.test.*; do
-    [ -e "$f" ] || continue
-    printf '  %-46s %s\n' "$(basename "$f")" "LEAKED — a test is in the live tree"
-    leaked=$((leaked+1))
-  done
-  [ "$leaked" -eq 0 ] && printf '  %-46s %s\n' "no test files in the deployed tree" "PASS" \
-                      || { printf '  %-46s %s\n' "test files deployed" "FAIL ($leaked)"; fails=$((fails+1)); }
-
-  # 4. no extension may exist in BOTH load paths. This is the collision that makes
-  #    pi exit with a tool-name conflict, and no agent can be seated.
-  #
-  #    Tested by fault injection, and the first version of this check was WRONG: it
-  #    skipped any project-local file byte-identical to the source, on the theory that
-  #    only a *different* file collides. A file copied VERBATIM from the source
-  #    collides just as hard — it registers the same tools from a second directory pi
-  #    already scanned. So the rule is the plain one: a project-local extension file
-  #    must either not exist, or register nothing at all.
+  printf 'check{pi-extensions-one-home}:
+'
+  n_src=0
+  for f in "$PI_EXT_SRC"/*.ts "$PI_EXT_SRC"/*.js; do [ -e "$f" ] && n_src=$((n_src+1)); done
+  [ "$n_src" -gt 0 ] && printf '  %-46s %s
+' "project home holds extensions ($n_src)" "PASS" \
+                     || { printf '  %-46s %s
+' "project home holds extensions" "FAIL"; fails=$((fails+1)); }
   dupes=0
-  for f in "$ROOT/.pi/extensions"/*.ts "$ROOT/.pi/extensions"/*.js; do
-    [ -e "$f" ] || continue
-    b=$(basename "$f")
-    sz=$(stat -c%s "$f")
-    if [ "$sz" -gt 1024 ]; then
-      printf '  %-46s %s\n' "$b" "DUPLICATE — ${sz}B in the project tree registers tools pi already loaded"
-      dupes=$((dupes+1))
-    elif [ -f "$PI_EXT_SRC/$b" ] && cmp -s "$f" "$PI_EXT_SRC/$b"; then
-      printf '  %-46s %s\n' "$b" "DUPLICATE — byte-identical to the deployed source"
+  for ext in "$PI_EXT_SRC"/*; do
+    [ -e "$ext" ] || continue
+    b=$(basename "$ext")
+    case "$b" in node_modules|lib) continue ;; esac
+    if [ -e "$PI_EXT_HOME/$b" ]; then
+      printf '  %-46s %s
+' "$b" "DUPLICATE — also in the global home; pi would double-register it"
       dupes=$((dupes+1))
     fi
   done
-  [ "$dupes" -eq 0 ] && printf '  %-46s %s\n' "no extension in two load paths" "PASS" \
-                     || { printf '  %-46s %s\n' "double-registered extensions" "FAIL ($dupes)"; fails=$((fails+1)); }
-
-  # 5. A no-op stub is allowed only while it stays a no-op. List them, so the
-  #    eventual deletion of this tree is a decision rather than a surprise.
-  stubs=0
-  for f in "$ROOT/.pi/extensions"/*.ts; do
-    [ -e "$f" ] || continue
-    stubs=$((stubs+1))
-  done
-  printf '  %-46s %s\n' "project-local no-op stubs" "$stubs present (each must register nothing)"
-
-  printf 'check{pi-extension-check}:\n'
+  [ "$dupes" -eq 0 ] && printf '  %-46s %s
+' "no extension in two load paths" "PASS" \
+                     || { printf '  %-46s %s
+' "double-registered extensions" "FAIL ($dupes)"; fails=$((fails+1)); }
+  pointer="$PI_EXT_HOME/.ymir-root"; vroot=""
+  if [ -r "$pointer" ]; then while IFS= read -r line; do [ -n "$line" ] || continue; [ -d "$line/bin" ] && { vroot="$line"; break; }; done <"$pointer"; fi
+  if [ -n "$vroot" ]; then printf '  %-46s %s
+' ".ymir-root record" "PASS -> $vroot"
+  else printf '  %-46s %s
+' ".ymir-root record" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1)); fi
+  printf 'check{pi-extension-check}:
+'
   if [ "$fails" -eq 0 ]; then
-    printf '  %-46s %s\n' "valknut-load --check" "PASS"
+    printf '  %-46s %s
+' "valknut-load --check" "PASS"
     exit 0
   fi
-  printf '  %-46s %s\n' "valknut-load --check" "FAIL ($fails) — run: bin/seat/valknut-load.sh --pi"
+  printf '  %-46s %s
+' "valknut-load --check" "FAIL ($fails) — run: bin/seat/valknut-load.sh --pi"
   exit 1
 fi
 
@@ -448,71 +391,30 @@ if [ "$MODE_PI" = 1 ]; then
 
   if [ -d "$PI_EXT_SRC" ]; then
     mkdir -p "$PI_EXT_HOME" 2>/dev/null
-    dep_n=0
-    # The source is ONE tree (Rule 13): top-level single-file extensions, plus one
-    # directory per multi-file extension (pi loads a subdirectory only when it has
-    # an index.ts), plus lib/ for what is genuinely shared. The deploy MIRRORS that
-    # tree — copying the top-level files alone ships extensions that cannot load,
-    # which is exactly the "Cannot find module ./lib/..." pi reported.
-    #
-    # Tests never deploy. A *.test.ts is not a discoverable entry point, so it is
-    # harmless in the live tree — but it would be copied on every run and then read
-    # as part of the shipped extension set. The repo keeps its tests; the deploy
-    # does not.
-    deploy_ext_tree() {
-      local src="$1" dst="$2" rel f b
-      for f in "$src"/*; do
-        [ -e "$f" ] || continue
-        b=$(basename "$f")
-        if [ -d "$f" ]; then
-          [ "$b" = "node_modules" ] && continue
-          mkdir -p "$dst/$b" 2>/dev/null
-          deploy_ext_tree "$f" "$dst/$b" && true
-          continue
-        fi
-        case "$b" in
-          *.test.ts|*.test.js|*.test.mjs|*.spec.ts|*.spec.js) continue ;;
-        esac
-        rel="${f#$src/}"
-        mkdir -p "$(dirname "$dst/$rel")" 2>/dev/null
-        if [ -f "$dst/$rel" ] && cmp -s "$f" "$dst/$rel"; then continue; fi
-        cp -f "$f" "$dst/$rel" && dep_n=$((dep_n+1))
-      done
-    }
-    deploy_ext_tree "$PI_EXT_SRC" "$PI_EXT_HOME"
-
-    # PRUNE. A deploy only ever ADDS, so a restructure leaves the old file beside
-    # the new directory — and that is the collision Rule 13 §1 exists to prevent:
-    # `ro.ts` and `ro/index.ts` both load, both register Ro's tools, and pi exits
-    # with a tool-name conflict so no agent can be seated.
-    #
-    # The rule is EXACT: remove a deployed file only when the source has no file
-    # at the same relative path. An earlier version of this block removed
-    # everything not named `.ymir-root` and wiped the live tree — 43 files — which
-    # is what a prune must never do.
+    # ONE home. The project tree IS the home; the global tree must hold NO Ymir
+    # extension, or pi loads each one twice and refuses to seat. Remove any global
+    # file or folder that shares a name with a project extension (a flat `ro.ts`
+    # beside a project `ro/` counts), keeping the .ymir-root record beside them.
     pruned=0
+    for ext in "$PI_EXT_SRC"/*; do
+      [ -e "$ext" ] || continue
+      b=$(basename "$ext")
+      [ "$b" = "node_modules" ] && continue
+      if [ -e "$PI_EXT_HOME/$b" ]; then rm -rf "$PI_EXT_HOME/$b" && pruned=$((pruned+1)); fi
+    done
     for stale in "$PI_EXT_HOME"/*.ts "$PI_EXT_HOME"/*.js "$PI_EXT_HOME"/*.mjs; do
       [ -e "$stale" ] || continue
-      b=$(basename "$stale")
-      [ -e "$PI_EXT_SRC/$b" ] || { rm -f "$stale" && pruned=$((pruned+1)); }
+      b=$(basename "$stale"); stem="${b%.*}"
+      if [ -e "$PI_EXT_SRC/$b" ] || [ -e "$PI_EXT_SRC/$stem" ]; then rm -f "$stale" && pruned=$((pruned+1)); fi
     done
-    if [ -d "$PI_EXT_HOME/lib" ]; then
-      for stale in "$PI_EXT_HOME"/lib/*; do
-        [ -e "$stale" ] || continue
-        b=$(basename "$stale")
-        [ -e "$PI_EXT_SRC/lib/$b" ] || { rm -f "$stale" && pruned=$((pruned+1)); }
-      done
-    fi
     for d in "$PI_EXT_HOME"/*/; do
       [ -d "$d" ] || continue
-      b=$(basename "$d")
-      [ -d "$PI_EXT_SRC/$b" ] || { rm -rf "$d" && pruned=$((pruned+1)); }
+      b=$(basename "$d"); stem="${b%.*}"
+      if [ -e "$PI_EXT_SRC/$b" ] || [ -e "$PI_EXT_SRC/$stem" ]; then rm -rf "$d" && pruned=$((pruned+1)); fi
     done
-    [ "$pruned" -gt 0 ] && add pi-ext-prune "$PI_EXT_HOME" "$pruned removed (source no longer has them — a leftover would double-register)"
-    add pi-extensions "$PI_EXT_HOME" "$dep_n deployed (one tree mirrored: files, extension folders, lib)"
-    # …and record the tree that owns bin/, because the deployed copy cannot find
-    # it by walking up. Read back by .pi/extensions/lib/ymir-home.ts.
-    add pi-ext-root "$PI_EXT_HOME/.ymir-root" "$(ymir_root_record) → $ROOT"
+    [ "$pruned" -gt 0 ] && add pi-ext-prune "$PI_EXT_HOME" "$pruned removed (one home — a duplicate would double-register)"
+    add pi-extensions "$PI_EXT_SRC" "one tree — the project home (nothing deployed)"
+    add pi-ext-root "$PI_EXT_HOME/.ymir-root" "$(ymir_root_record) -> $ROOT"
   fi
 fi
 

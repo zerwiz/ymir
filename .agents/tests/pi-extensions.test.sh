@@ -1,227 +1,127 @@
 #!/usr/bin/env bash
 # pi-extensions.test.sh — the smoke test for Rule 13, the Pi extension surface.
 #
-# WHY THIS EXISTS (measured 2026-10-04): nothing in the extension tree is wrong in
-# a way that throws. A deploy can be three days stale, one system can have its
-# source split across two directories, and the document that governs it can answer
-# "where does an extension live?" two incompatible ways — and every file listing
-# still looks correct. This test asserts the shape, so those failures have a sound
-# instead of a memory.
+# WHY THIS EXISTS (measured 2026-10-04, rewritten 2026-10-07): nothing in the
+# extension tree is wrong in a way that throws. Two load paths seat nobody, a stale
+# deploy is invisible, and the doc that governs it can answer "where does an
+# extension live?" two incompatible ways — and every file listing still looks right.
 #
-# Rule 13 in one line: ONE HOME per extension. `.pi/shared/extensions/` is the
-# source, `~/.pi/agent/extensions/` is the deployed copy, and an extension in both
-# makes pi exit with a tool-name conflict so that no agent can be seated.
+# Rule 13 in one line, since ac5fd8ad (2026-10-04): ONE HOME per extension, and that
+# home is the repo's `.pi/extensions/`. Pi loads BOTH the project tree and the global
+# `~/.pi/agent/extensions/` and does not de-duplicate, so an extension in both makes
+# pi exit with a tool-name conflict — no agent can be seated. Nothing is deployed.
 #
 # Run standalone, or through bin/backend/fm-test-run.sh like any other tests/*.test.sh.
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SRC="$ROOT/.pi/shared/extensions"
-LIB_SRC="$SRC/lib"
-PROJECT="$ROOT/.pi/extensions"
-HOME_EXT="${PI_EXT_HOME:-$HOME/.pi/agent/extensions}"
+HOME_TREE="$ROOT/.pi/extensions"          # THE home (source of truth)
+HOME_EXT="${PI_EXT_HOME:-$HOME/.pi/agent/extensions}"   # global; must hold NO extension
 
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
-skip_all() { printf '1..0 # skip %s\n' "$1"; exit 0; }
 
 # ── 0. the rule exists and is registered ────────────────────────────────────
-if [ ! -f "$ROOT/RULES/13-pi-extensions.md" ]; then
-  bad "Rule 13 exists at RULES/13-pi-extensions.md"
-else
-  ok "Rule 13 exists"
-fi
+[ -f "$ROOT/RULES/13-pi-extensions.md" ] \
+  && ok "Rule 13 exists" || bad "Rule 13 exists at RULES/13-pi-extensions.md"
 grep -q '13-pi-extensions.md' "$ROOT/RULES/README.md" 2>/dev/null \
-  && ok "Rule 13 is registered in RULES/README.md" \
-  || bad "Rule 13 is registered in RULES/README.md"
+  && ok "Rule 13 is registered in RULES/README.md" || bad "Rule 13 is registered in RULES/README.md"
 grep -q 'RULES/13-pi-extensions.md' "$ROOT/AGENTS.md" 2>/dev/null \
   && ok "Rule 13 is reachable from the always-loaded contract (AGENTS.md)" \
   || bad "Rule 13 is reachable from the always-loaded contract (AGENTS.md)"
 
-# ── 1. the three trees are what Rule 13 says they are ───────────────────────
-[ -d "$SRC" ] && ok "source tree exists: .pi/shared/extensions/" \
-  || { bad "source tree exists: .pi/shared/extensions/"; skip_all "no source tree"; }
+# ── 1. the ONE home holds extensions ────────────────────────────────────────
+[ -d "$HOME_TREE" ] && ok "the home exists: .pi/extensions/" \
+  || { bad "the home exists: .pi/extensions/"; printf '1..0 # skip no home tree\n'; exit 1; }
+n_src=$(find "$HOME_TREE" -maxdepth 1 -type f \( -name '*.ts' -o -name '*.js' \) | wc -l | tr -d ' ')
+[ "$n_src" -gt 0 ] && ok "the home holds extensions ($n_src)" || bad "the home holds extensions"
+[ -d "$ROOT/.pi/shared/extensions" ] \
+  && bad ".pi/shared/extensions/ still exists — the retired two-home source" \
+  || ok ".pi/shared/extensions/ is gone (one home)"
 
-n_src=$(find "$SRC" -maxdepth 1 -type f \( -name '*.ts' -o -name '*.js' \) | wc -l | tr -d ' ')
-[ "$n_src" -gt 0 ] && ok "source holds extensions ($n_src)" || bad "source holds extensions"
-
-# ── 2. every project-local file registers NOTHING (Rule 13 §2) ───────────────
-# A no-op stub is the only permitted occupant of .pi/extensions/. Anything past
-# a kilobyte is a second copy of an extension waiting to collide.
-heavy=0
-for f in "$PROJECT"/*.ts "$PROJECT"/*.js; do
-  [ -e "$f" ] || continue
-  b="$(basename "$f")"
-  sz=$(stat -c%s "$f" 2>/dev/null || echo 0)
-  if [ "$sz" -gt 1024 ]; then
-    bad "project-local $b is ${sz}B — it registers tools pi already loaded"
-    heavy=1
-  elif ! grep -q 'export default function' "$f"; then
-    bad "project-local $b exports no factory — pi errors on a file with none"
-    heavy=1
-  fi
-done
-[ "$heavy" -eq 0 ] && ok "every .pi/extensions/*.ts is a no-op factory"
-
-# ── 3. directory shape: index.ts where there is a directory (Rule 13 §3) ─────
-# Pi loads a subdirectory ONLY when it holds index.ts. So every extension folder
-# must have one, and lib/ must NOT have one — it is the shared set, not an
-# extension.
+# ── 2. directory shape: index.ts where there is a directory (Rule 13 §3) ─────
+# Pi loads a subdirectory ONLY when it holds index.ts. lib/ is the helper tree and
+# must NOT have one.
 nodirs=0; withidx=0
-for d in "$SRC"/*/; do
+for d in "$HOME_TREE"/*/; do
   [ -d "$d" ] || continue
   b=$(basename "$d")
   if [ "$b" = "lib" ]; then
     [ -f "$d/index.ts" ] && { bad "lib/ has an index.ts — pi would load it as an extension"; nodirs=1; } \
-                         || ok "lib/ has no index.ts — shared modules, never an extension"
+                         || ok "lib/ has no index.ts — helper modules, never an extension"
     continue
   fi
   if [ -f "$d/index.ts" ]; then withidx=$((withidx+1)); else bad "$b/ has no index.ts — pi would not discover it"; nodirs=1; fi
 done
 [ "$nodirs" -eq 0 ] && [ "$withidx" -gt 0 ] && ok "every extension folder has an index.ts ($withidx)"
 
-# ── 4. every relative import RESOLVES — where the extension actually runs ─────
-# An extension's imports must resolve in the DEPLOYED tree, because that is where
-# pi loads it. Checking the source tree instead would be checking a layout that
-# does not exist at runtime.
-#
-# This is also where the unfinished migration shows itself: the source extensions
-# say `./lib/ro-visibility.ts`, and in the SOURCE tree `lib/` is not beside them —
-# it is at `.pi/extensions/lib/`. It resolves only after the loader copies it in.
-# So: deployed tree = must resolve, always. Source tree = reported as a NOTE tied
-# to the known gap, not a failure, until the internals move beside their owner.
-tree_of="$HOME_EXT"
-[ -d "$HOME_EXT" ] || tree_of="$SRC"
+# ── 3. every relative import resolves IN THE HOME (where pi loads it) ────────
 TMP_MISSING=$(mktemp); trap 'rm -f "$TMP_MISSING"' EXIT
-for f in "$tree_of"/*.ts "$tree_of"/*.js; do
+for f in "$HOME_TREE"/*.ts "$HOME_TREE"/*.js "$HOME_TREE"/*/*.ts; do
   [ -e "$f" ] || continue
   d="$(dirname "$f")"
-  grep -oE 'from\s+"\./[^"]+"' "$f" 2>/dev/null | sed 's/.*"\(\(\.[^"]*\)\)"/\1/' | while read -r rel; do
+  grep -oE 'from[[:space:]]+"\./[^"]+"' "$f" 2>/dev/null | sed 's/.*"\(\(\.[^"]*\)\)"/\1/' | while read -r rel; do
     [ -n "$rel" ] || continue
     [ -e "$d/$rel" ] || echo "        missing: $rel (in $(basename "$f"))" >&2
   done
 done > "$TMP_MISSING" 2>&1
-if [ -s "$TMP_MISSING" ]; then
-  bad "every relative import resolves where extensions run"
-  cat "$TMP_MISSING" >&2
-else
-  ok "every relative import resolves where extensions run ($(basename "$tree_of"))"
-fi
+if [ -s "$TMP_MISSING" ]; then bad "every relative import resolves in the home"; cat "$TMP_MISSING" >&2
+else ok "every relative import resolves in the home"; fi
 
-# Every lib/ module must be genuinely SHARED — Rule 13 §3. One importer means the
-# module has an owner and belongs inside that extension's folder instead.
-# A module with at most one importer and no path reference is misplaced: it has
-# an owner and belongs inside that extension's folder. A module referenced BY PATH
-# (spawned as a child process rather than imported) is a different case — it has no
-# import graph to sit in, so lib/ is its correct home.
-solo=$(for m in "$LIB_SRC"/*.ts "$LIB_SRC"/*.mjs; do
-          [ -e "$m" ] || continue
-          b=$(basename "$m")
-          n=$(grep -l -- "\./lib/$b\|\.\./lib/$b" "$SRC"/*.ts "$SRC"/*/*.ts 2>/dev/null | wc -l | tr -d ' ')
-          if [ "$n" -le 1 ]; then
-            p=$(grep -l -- "$b" "$SRC"/*.ts "$SRC"/*/*.ts 2>/dev/null | wc -l | tr -d ' ')
-            [ "$p" -eq 0 ] && echo "$b"
-          fi
-        done | tr '\n' ' ')
-spawned=$(for m in "$LIB_SRC"/*.mjs; do
-            [ -e "$m" ] || continue
-            b=$(basename "$m")
-            grep -l -- "$b" "$SRC"/*.ts "$SRC"/*/*.ts 2>/dev/null >/dev/null && echo "$b"
-          done | tr '\n' ' ')
-if [ -n "$solo" ]; then
-  bad "lib/ holds module(s) with no owner and no path reference: $solo"
-else
-  ok "every lib/ module is shared by 2+ extensions, or is spawned by path${spawned:+ ($spawned)}"
-fi
-
-# ── 5. the deployed tree agrees with the source ─────────────────────────────
+# ── 4. no extension in TWO load paths (Rule 13 §1) ──────────────────────────
 if [ ! -d "$HOME_EXT" ]; then
-  ok "deployed tree absent — nothing to reconcile (run: bin/seat/valknut-load.sh --pi)"
+  ok "the global home is absent — nothing can double-register"
 else
-  drift=0
-  for f in "$SRC"/*.ts "$SRC"/*.js; do
-    [ -e "$f" ] || continue
-    b="$(basename "$f")"
-    case "$b" in *.test.ts|*.test.js|*.test.mjs|*.spec.ts) continue ;; esac
-    if [ ! -f "$HOME_EXT/$b" ]; then
-      bad "deployed: $b is NOT DEPLOYED"
-      drift=1
-    elif ! cmp -s "$f" "$HOME_EXT/$b"; then
-      bad "deployed: $b is STALE ($(stat -c%s "$HOME_EXT/$b") vs source $(stat -c%s "$f"))"
-      drift=1
+  dupe=0
+  for ext in "$HOME_TREE"/*; do
+    [ -e "$ext" ] || continue
+    b=$(basename "$ext")
+    case "$b" in node_modules|lib) continue ;; esac
+    if [ -e "$HOME_EXT/$b" ]; then
+      bad "DUPLICATE: $b stands in both .pi/extensions/ and ~/.pi/agent/extensions/ — registers twice"
+      dupe=1
     fi
-  done < <(find "$SRC" -type f \( -name '*.ts' -o -name '*.js' -o -name '*.mjs' \) | sort)
-  [ "$drift" -eq 0 ] && ok "the whole deployed tree is byte-identical to source"
-
-  leaked=0
-  for f in "$HOME_EXT"/lib/*.test.* "$HOME_EXT"/*.test.*; do
-    [ -e "$f" ] || continue
-    bad "a test file is in the live tree: $(basename "$f")"
-    leaked=1
   done
-  [ "$leaked" -eq 0 ] && ok "no test files in the deployed tree"
+  [ "$dupe" -eq 0 ] && ok "no extension is present in two load paths"
 fi
 
-# ── 6. no extension in two load paths (Rule 13 §1) ───────────────────────────
-dupe=0
-for f in "$PROJECT"/*.ts "$PROJECT"/*.js; do
-  [ -e "$f" ] || continue
-  b="$(basename "$f")"
-  if [ -f "$SRC/$b" ] && [ -f "$HOME_EXT/$b" ] && cmp -s "$f" "$SRC/$b"; then
-    bad "DUPLICATE: $b is byte-identical to the deployed source — registers twice"
-    dupe=1
-  fi
-done
-[ "$dupe" -eq 0 ] && ok "no extension is present in two load paths"
-
-# ── 7. the root pointer resolves, and validation is what saves it ────────────
+# ── 5. the root record resolves (walk, never count — Rule 12) ───────────────
 ptr="$HOME_EXT/.ymir-root"
-if [ -f "$ptr" ]; then
-  if grep -q 'bin/pi/syn-watch-arm.sh' "${ptr%%$'\n'*}"; then :; fi
-  first_valid=""
+found=""
+if [ -r "$ptr" ]; then
   while IFS= read -r line; do
     [ -n "$line" ] || continue
-    if [ -x "$line/bin/pi/syn-watch-arm.sh" ]; then first_valid="$line"; break; fi
+    { [ -d "$line/bin" ] && [ -d "$line/.pi" ]; } && { found="$line"; break; }
   done <"$ptr"
-  if [ -n "$first_valid" ]; then
-    ok "the first VALID root in .ymir-root resolves ($first_valid)"
-    # Stale roots are SKIPPED by validation (ymir-home.ts checks each against
-    # bin/pi/syn-watch-arm.sh), so they are hygiene and not a failure — reported so
-    # the record does not quietly grow.
-    dead=$(while IFS= read -r line; do
-            [ -n "$line" ] || continue
-            [ -x "$line/bin/pi/syn-watch-arm.sh" ] || echo x
-          done <"$ptr" | wc -l | tr -d ' ')
-    [ "$dead" -gt 0 ] && printf '# note: %s stale root(s) in .ymir-root — skipped by validation, not a failure\n' "$dead"
-  else
-    bad "no recorded root holds bin/pi/syn-watch-arm.sh — deployed extensions cannot find their bin/"
-  fi
+fi
+if [ -n "$found" ]; then
+  ok "the recorded root resolves to a Ymir tree ($found)"
 else
-  ok "no .ymir-root record (nothing deployed yet)"
+  # No record: the extensions can still walk up from their own directory.
+  { [ -d "$HOME_TREE/../.." ] && [ -d "$ROOT/bin" ]; } \
+    && ok "no .ymir-root record — the home resolves by walk-up" \
+    || bad "no usable root: neither .ymir-root nor a walk-up finds the tree owning bin/"
 fi
 
-# ── 8. the gate itself exists and is wired ──────────────────────────────────
+# ── 6. the gate exists and the loader keeps one home ────────────────────────
 grep -q 'MODE_CHECK' "$ROOT/bin/seat/valknut-load.sh" 2>/dev/null \
   && ok "bin/seat/valknut-load.sh carries --check (Rule 13 §9)" \
   || bad "bin/seat/valknut-load.sh carries --check (Rule 13 §9)"
-grep -q 'no-delete-guard\|\*\.test\.\*' "$ROOT/bin/seat/valknut-load.sh" 2>/dev/null \
-  && ok "the loader excludes test files from the deploy" \
-  || bad "the loader excludes test files from the deploy"
+grep -q 'PI_EXT_HOME' "$ROOT/bin/seat/valknut-load.sh" 2>/dev/null \
+  && ok "the loader prunes any duplicate from the global home" \
+  || bad "the loader does not keep the global home clear of duplicates"
 
-# ── 9. the docs answer the question once ────────────────────────────────────
+# ── 7. the docs answer the question once ────────────────────────────────────
 ASSET="$ROOT/.agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
 if [ -f "$ASSET" ]; then
-  # Any .pi/extensions/<ext>.ts path claiming to hold a real extension is the
-  # contradiction that sent the question in the first place.
-  stale=$(grep -oE '`\.pi/extensions/[a-z-]+\.(ts|js|mjs)`' "$ASSET" 2>/dev/null \
-    | grep -v 'lib/' | wc -l | tr -d ' ')
+  stale=$(grep -c '\.pi/shared/extensions/' "$ASSET" 2>/dev/null)
   [ "$stale" -eq 0 ] \
-    && ok "the harness-integration asset names no extension at the wrong path" \
-    || bad "the harness-integration asset still points $stale extension path(s) at .pi/extensions/"
+    && ok "the harness-integration asset names no retired .pi/shared/extensions/ path" \
+    || bad "the harness-integration asset still points $stale path(s) at .pi/shared/extensions/"
 else
   ok "harness-integration asset absent — nothing to contradict"
 fi
 
-printf '# pi-extensions: all checks pass\n' || printf '# pi-extensions: FAILURES above\n'
+if [ "$fail" -eq 0 ]; then printf '# pi-extensions: all checks pass\n'; else printf '# pi-extensions: FAILURES above\n' >&2; fi
 exit "$fail"

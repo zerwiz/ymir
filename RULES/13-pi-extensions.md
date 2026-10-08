@@ -75,3 +75,31 @@ descriptions all survived until somebody went looking.
 extensions). **MCP servers** are `pi.registerMcpServer()` or `mcp.json`, not extensions. **The
 other harnesses** — OpenCode, Claude Code, Codex, Cursor — have their own adapters and their own
 governed asset; this rule is about the **Pi** extension surface only.
+
+---
+
+## 2026-10-07 — the one tree (the two-home half of this rule is retired)
+
+Commit `ac5fd8ad` (2026-10-04) ended the two-home design this rule was written
+around: **`.pi/shared/extensions/` no longer exists — the extensions live in
+`.pi/extensions/`, and nothing is deployed to `~/.pi/agent/extensions/`.** The law
+this rule exists for still holds — **one home per extension** — but *which* tree is
+the home changed, and the loader no longer copies.
+
+What stands now:
+
+1. **One home: `.pi/extensions/`.** Source and live tree are the same directory. A
+   multi-file extension is a directory with an `index.ts`; a bare `lib/` is a helper
+   tree pi never scans, so it is not an extension.
+2. **The global home holds no extension.** `bin/seat/valknut-load.sh` removes any
+   `~/.pi/agent/extensions/<name>` that also stands in the project tree, and writes
+   only `.ymir-root` there — a root record, not an extension.
+3. **The gate is still `bin/seat/valknut-load.sh --check`.** It fails when an
+   extension stands in two load paths, or when the root record is missing.
+4. **Roots are walked, not counted (Rule 12).** An extension finds the repo through
+   the `.ymir-root` record and a walk to the tree owning `.pi/` and `RULES/`.
+
+**Superseded text, named so a reader is not misled:** this rule's §1 "source is
+`.pi/shared/extensions/`", §2 "`.pi/extensions/` holds no-op stubs", and any sentence
+describing a *deploy* to the global home. The failures table above is kept unchanged
+— it still teaches *why*: two load paths seat nobody.

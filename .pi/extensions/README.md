@@ -1,4 +1,4 @@
-# Pi extensions — Brokk distro runtime
+# Pi extensions — the Brokk distro runtime, ONE home
 
 These extensions make a Pi session open as **Brokk** the way Ymir intends: the
 primary takes the high seat automatically, the Sága session-start context is
@@ -6,33 +6,33 @@ injected before the first turn, and supervision stays alive across the session.
 Ported from the validated upstream agent-distro reference for
 [plan 29](../../docs/plans/29-brokk-distro-runtime.md).
 
-## This tree is NOT the extension home
+## This tree IS the home (one home, 2026-10-04)
 
-**Every file here is a no-op that registers nothing, and that is deliberate.**
-The real extensions live in **`.pi/shared/extensions/`** and are deployed by copy
-to **`~/.pi/agent/extensions/`**.
+Pi auto-discovers **two** extension locations and does **not** de-duplicate:
+`.pi/extensions/` (project) and `~/.pi/agent/extensions/` (global). An extension
+present in both registers its tools twice, pi exits with
+`Tool "…" conflicts with …`, and **no agent can be seated**.
 
-Pi loads both this project directory and the global one, and it does **not**
-de-duplicate. An extension present in both registers its tools twice and pi exits
-with a tool-name conflict, so **no agent can be seated**. A file exporting no
-factory at all is an error in its own right. So this tree holds exactly two things:
+So the extensions live in exactly one tree — this one — and **nothing is
+deployed** to the global home. Commit `ac5fd8ad` (2026-10-04) moved the last
+files out of `.pi/shared/extensions/` and removed that tree.
 
-| File | What it is |
+| Path | What it is |
 |---|---|
-| `*.ts` — nine of them | **no-op factories.** Each header says why. They register nothing and exist only so a duplicate cannot collide |
-| `lib/` | **helper modules, not extensions.** Pi does not recurse past one level and a subdirectory loads only with an `index.ts`, so `lib/` is never scanned. The deployed extensions reach these by relative import, and `bin/seat/valknut-load.sh --pi` copies them alongside |
+| `.pi/extensions/*.ts` | single-file extensions — the source of truth |
+| `.pi/extensions/<name>/` | a multi-file extension, with an `index.ts` pi loads (pi does not recurse past one level) |
+| `.pi/extensions/lib/` | helper modules the extensions import. Pi never scans a bare `lib/`, so it is not an extension |
+| `~/.pi/agent/extensions/.ymir-root` | **only** a root record (not an extension), written by `bin/seat/valknut-load.sh --pi` |
 
-**Two homes, and one of them is wrong:**
+`bin/seat/valknut-load.sh --check` fails if any extension also stands in the
+global home, or if the root record is absent. `bin/seat/valknut-load.sh --pi`
+removes any global duplicate and writes the record.
 
-| Path | Holds |
-|---|---|
-| `.pi/shared/extensions/` | **every extension** — the source of truth |
-| `~/.pi/agent/extensions/` | the deployed copy the running harness loads |
-| `.pi/extensions/lib/` | helper modules. **A leftover.** Plan 29 built them in this flat tree; the single-home migration moved the extensions and not their internals, so the loader grew a second copy line to cover the gap |
-
-`bin/seat/valknut-load.sh --check` (added 2026-10-04) fails if the deployed tree drifts
-from source, if a test file is in the live tree, or if anything in this directory
-registers a tool.
+**Root resolution (Rule 12 — walk, never count).** An extension locates the repo
+that owns `bin/` through the `.ymir-root` record (`.pi/extensions/lib/ymir-home.ts`)
+and a walk up to the tree owning `.pi/` and `RULES/`. `.pi/shared/extensions/` and
+the old "project tree holds no-op stubs, global tree holds the real files" design
+are **retired**.
 
 ## The extensions themselves
 
@@ -40,15 +40,16 @@ registers a tool.
 |---|---|---|
 | `syn-turnend-guard.ts` | **Sýn** (watchful sight) | inject the Sága digest at session start, re-emit on compaction, refuse a blind turn end, PreToolUse seatbelts |
 | `gna-pi-watch.ts` | **Gná** (Frigg's messenger) | watcher continuity: arm, re-arm, deliver actionable wakes; emits the Skuld dispatch offer |
-| `ro.ts` | **Ró** (calm/peace) | calm presentation: hides transcript chrome, replaces the working row with a longship, `/ro` toggle |
-| `skuld-branch-supervision.ts` | **Skuld** (the Norn of what shall be) | supervision branch: handles routine wakes with a cheaper model; `/skuld-model` |
-| `lib/vordr-sessionstart-supervisor.mjs` | **Vörðr** (warden) | supervise the digest child process |
-| `lib/rodd-operational-input.ts` | **Rödd** (voice) | structured operational-message wire bridge |
-| `lib/ro-*.ts` | **Ró** helpers | visibility, assistant/user layout adapters, working longship |
-| `lib/skuld-branch-*.ts` | **Skuld** helpers | dispatch handshake + model picker |
-| `lib/ymir-home.ts` | deploy plumbing | resolve the distro root the loader recorded (`.ymir-root`) — a deployed copy cannot find its own `bin/` by walking up from `~/.pi` |
-
-*All of the above paths are in `.pi/shared/extensions/`, except the `lib/` entries.*
+| `skuld-branch-supervision/index.ts` | **Skuld** (the Norn of what shall be) | supervision branch: handles routine wakes with a cheaper model; `/skuld-model` |
+| `ymir-well.ts` | **Mimirsbrunn** (the well) | `well_recall` / `well_observe` over the `:4602` bridge |
+| `ymirhome.ts` | the ymirhome door | the door into `$YMIR_HOME` |
+| `ymir-subagents.ts` | the Eindri roster | exposes every `.agents/agents/*.md` figure through a `subagent` tool |
+| `todo.ts` | — | the todo surface |
+| `open-editor.ts` | — | `/edit [path]` and `ctrl+shift+e` — open files in the operator's editor |
+| `elder.ts`, `eir.ts`, `groa`-door, `rules.ts` | the records council | plan ledger, diagnostics, self-update, house law as a surface |
+| `constellation/index.ts` | the mesh | peer discovery over the A2A directory |
+| `managandr.ts`, `odrerir.ts`, `opendesign.ts`, `herdr*.ts` | the hall | calendar, the Óðrerir boards, design, pane state |
+| `lib/*` | helpers | `rodd-operational-input` (voice wire), `skuld-branch-*`, `ro-*`, `ymir-home`, `vordr-sessionstart-supervisor` |
 
 ## Wiring
 
@@ -56,8 +57,7 @@ registers a tool.
 - **Gná** watcher: `bin/pi/syn-watch-arm.sh`; turn-end check: `bin/gates/guards/syn-turnend-guard.sh`.
 - **Gleipnir** lock: `bin/vault/gleipnir-lock-lib.sh` (writes `state/.lock`).
 - **Root record:** `~/.pi/agent/extensions/.ymir-root`, written by `bin/seat/valknut-load.sh --pi`
-  and read by `lib/ymir-home.ts` — the deployed extensions live outside this tree, so
-  the loader has to tell them where `bin/` is.
+  and read by `.pi/extensions/lib/ymir-home.ts` — the extensions read the tree the loader recorded.
 - **Rödd** wire: `bin/agents/rodd-operational-input.sh`.
 
 The harness passes `BROKK_SESSION_PID` so the session lock is bound to the live
