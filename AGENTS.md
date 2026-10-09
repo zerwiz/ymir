@@ -79,6 +79,14 @@ run it again. Start the Nornir jobs if the digest reports them stopped.
 **one file per fix**, never rewritten (`bin/gates/fixes.sh list|show`; the component's
 directory is its history). The old `CHANGELOG.md` monolith is retired.
 
+**A note must speak to the push, and must name its owner** (amendment of 2026-10-10 to
+`RULES/06-append-only.md`). `fixes-guard.sh` refuses a push whose new notes cover nothing the
+range touched — a note about another component is not a record of this change — and refuses a
+new note with no `**Owner:**` line. `bin/gates/fixes.sh record` writes the Owner from
+`YMIR_FIX_OWNER`, falling back to git's configured user. Notes written before 2026-10-10 are
+grandfathered: **a new rule binds forward, and never rewrites history.** The loud override is
+`YMIR_SKIP_FIXES_GUARD=1`, and reaching for it is itself a record that the gate is wrong.
+
 ## Mandate
 
 You are the Allfather's **counsellor and helper**, covering **Development**, **Marketing**,
@@ -375,8 +383,8 @@ See `.agents/assets/agents/naming.md` for the full component map.
   The gate is enforced in git hooks, seated by the install step `gates`:
   `bin/gates/guards/branch-guard.sh` refuses a push to a protected branch, and
   `bin/gates/guards/fixes-guard.sh` refuses a push whose range carries no new fix note in
-  `docs/fixes/` and names the component it covers (`YMIR_SKIP_FIXES_GUARD=1` is
-  the loud override).
+  `docs/fixes/`, **whose notes name no component the range touched**, or **whose new notes
+  carry no `**Owner:**`** (`YMIR_SKIP_FIXES_GUARD=1` is the loud override).
 
 ## Hermes runtime (worker agents)
 

@@ -136,3 +136,39 @@ docs/fixes/<component>/<version>-<slug>.md     ONE FILE PER FIX
 - The `append_only[]` table above still names `CHANGELOG.md`: that row is
   **superseded by this amendment** and remains readable as the history of the law,
   never edited in place.
+
+---
+
+## Amendment 2026-10-10 — a note that does not speak to the push is no record at all
+
+**Building on the amendment above** (2026-09-20, "the changelog is retired; a fix IS a file").
+That amendment made a note a file and the guard read-only. It left one hole, and the hole is
+the one the changelog had: **a gate that passes when the record does not describe the change.**
+
+`fixes-guard.sh` required *at least one* new note in the pushed range, then asked whether that
+note's component owned any path the push touched — and when the answer was no, it printed a
+note to stderr and **exited 0**. A push that changed the runtime and carried a note about the
+gate sailed through, green, with a warning nobody reads. A record of something else is not a
+record of this.
+
+```
+fix_coverage[4]{rule,detail}:
+  "every push carries a note","docs/fixes/<component>/ — unchanged from 2026-09-20"
+  "the note must cover the push","a note whose component owns no touched path is NOT a record of this change"
+  "uncovered is refused","exit 1, not a warning. The loud override remains YMIR_SKIP_FIXES_GUARD=1"
+  "a new note names its owner","**Owner:** @handle — who did this, and who the next reader asks"
+```
+
+Two additions, both narrow:
+
+- **Uncovered is now fatal.** `fixes-guard.sh` exits 1 when no note in the range covers the
+  change, naming the components the push actually touched. The path→component map is the one
+  already in that script; it is unchanged, only its consequence is.
+- **New notes carry an Owner.** `bin/gates/fixes.sh record` writes `**Owner:**` from
+  `YMIR_FIX_OWNER`, falling back to git's configured user. Notes written before this amendment
+  are **grandfathered** — the guard judges only notes ADDED in the pushed range, so 400+ notes
+  are not rewritten to satisfy a rule they predate. That is the whole point of append-only: a
+  new rule binds forward.
+
+What this does **not** do: it does not judge whether a note is *good*, only whether it speaks to
+the push. Quality of the record is still a reviewer's eye, and no gate can fake that.

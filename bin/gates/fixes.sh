@@ -110,8 +110,18 @@ case "$action" in
     dir="$FIXES/$component"; mkdir -p "$dir"
     f="$dir/${version}-$(slugify "$title").md"
     [ -e "$f" ] && die "that note already exists: ${f#"$ROOT"/}" "bin/gates/fixes.sh show ${f#"$ROOT"/}"
+    # Who did this. YMIR_FIX_OWNER wins, then git's configured user — a note without a name
+    # on it is work with no owner, which the 2026-10-10 amendment to RULES/06 makes a refusal.
+    owner="${YMIR_FIX_OWNER:-}"
+    if [ -z "$owner" ]; then
+      gh_user="$(git config --get github.user 2>/dev/null || true)"
+      [ -z "$gh_user" ] && gh_user="$(git config user.name 2>/dev/null || true)"
+      [ -z "$gh_user" ] && gh_user="unattributed"
+      owner="@$gh_user"
+    fi
     {
       printf '## %s · %s · %s — %s\n\n' "$component" "$version" "$date" "$title"
+      printf '**Owner:** %s\n\n' "$owner"
       [ -n "$why" ] && printf '### Why\n%s\n\n' "$why"
       printf '### Files\n'
       if [ -n "$files" ]; then printf '%s' "$files" | tr ',' '\n' | sed 's/^ *//; s/^/- `/; s/$/`/'

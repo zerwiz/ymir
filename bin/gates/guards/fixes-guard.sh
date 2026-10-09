@@ -8,9 +8,14 @@
 # had just made.
 #
 # This gate only READS. A push must carry at least one new fix note
-# (`docs/fixes/<component>/<version>-<slug>.md`), and it says which of the push's
-# touched paths that note's component covers — a mismatch is reported, never
-# silently accepted.
+# (`docs/fixes/<component>/<version>-<slug>.md`), AND that note's component must own
+# something the push touched — an unrelated note is not a record of this change.
+#
+# Both are refusals, not warnings. Until 2026-10-10 a mismatch printed to stderr and
+# exited 0: a push that changed the runtime and carried a gate note passed, green. A record
+# of something else is not a record. New notes must also carry `**Owner:**`; notes written
+# before that amendment are grandfathered, because a new rule binds forward.
+# See the amendment of 2026-10-10 in RULES/06-append-only.md.
 #
 #   fixes-guard.sh --install     # seat it as the pre-push hook (replacing the old one)
 #   fixes-guard.sh --check       # judge the current branch against its base, by hand
@@ -115,6 +120,7 @@ path_component() {  # <path> -> the component it belongs to, or empty
     bin/engine/ymir-install.sh|bin/agents/groa-update.sh|bin/seat/valknut-load.sh|bin/engine/ymir-migrate.sh) echo install ;;
     .pi/*|.agents/skills/*|bin/agents/skill-find.sh|bin/gates/fixes.sh|bin/gates/guards/fixes-guard.sh) echo agents ;;
     bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/queue.sh|bin/gates/checks/home-index-check.sh|bin/no-delete-guard.sh) echo gate ;;
+    RULES/*|docs/*|bin/gates/*|bin/gates/guards/*|*.md) echo gate ;;
     .agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md|apps/hlidskjalf/*) echo hlidskjalf ;;
     .agents/skills/galdr-ymirsystem/assets/smidja.md|.agents/skills/smidja-factory/*) echo smidja ;;
     .agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md|bin/snotra*|tools/snotra/*) echo snotra ;;
@@ -137,11 +143,38 @@ EOF2
 done
 
 count="$(printf '%s\n' "$notes" | grep -c . || true)"
-if [ "$covered" -gt 0 ]; then
-  printf 'fixes-guard[1]{gate,result}:\n  "push","ok — %s note(s), and the record speaks to the change"\n' "$count"
-else
-  printf 'fixes-guard[1]{gate,result}:\n  "push","ok — %s note(s); none names a path this range touched"\n' "$count"
-  printf 'note: a note for another component is still a record — but say what THIS push changed.\n' >&2
-  printf '      components touched: %s\n' "$(printf '%s' "$touched" | head -4 | tr '\n' ' ')" >&2
+
+# The Owner. Only for notes DATED on or after the 2026-10-10 amendment — a new rule binds
+# forward, and 400+ notes that predate it are not rewritten to satisfy it. Keying on the
+# note's own date (not on the range) is what makes that true: an old note can sit in a range
+# and must not block anyone.
+missing_owner=0
+for n in $notes; do
+  grep -q '^\*\*Owner:\*\*' "$ROOT/$n" 2>/dev/null && continue
+  ndate="$(sed -n '1p' "$ROOT/$n" 2>/dev/null | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1)"
+  [ -n "$ndate" ] && [[ "$ndate" < "2026-10-10" ]] && continue
+  printf 'fixes-guard[1]{gate,result}:\n  "owner","%s has no **Owner:** line — record who did this"\n' "$n" >&2
+  missing_owner=$((missing_owner+1))
+done
+
+if [ "$covered" -eq 0 ]; then
+  printf 'fixes-guard[1]{gate,result}:\n  "push","refused — no note in this range speaks to what the push changed"\n' >&2
+  comp="$(printf '%s\n' "$touched" | while IFS= read -r f; do path_component "$f"; done | grep . | head -1)"
+  [ -n "$comp" ] || comp=gate
+  printf 'note: a record of something else is not a record of this change. Write one for the\n' >&2
+  printf '      component that owns the work:\n' >&2
+  printf '        bin/gates/fixes.sh record --component=%s --version=<v|unversioned> --title="what changed"\n' "$comp" >&2
+  printf '      components touched: %s\n' "$(printf '%s\n' "$touched" | head -6 | tr '\n' ' ')" >&2
+  printf '      override, loudly: YMIR_SKIP_FIXES_GUARD=1 git push\n' >&2
+  exit 1
 fi
+
+if [ "$missing_owner" -gt 0 ]; then
+  printf 'fixes-guard[1]{gate,result}:\n  "push","refused — %s new note(s) with no Owner"\n' "$missing_owner" >&2
+  printf 'help: add "**Owner:** @your-handle" to each, or re-record with\n' >&2
+  printf '      YMIR_FIX_OWNER=@your-handle bin/gates/fixes.sh record …\n' >&2
+  exit 1
+fi
+
+printf 'fixes-guard[1]{gate,result}:\n  "push","ok — %s note(s), and the record speaks to the change"\n' "$count"
 exit 0
