@@ -8,7 +8,7 @@ galdr[1]{role}:
 ## Routing
 
 ```
-assets[28]{path,load_when}:
+assets[29]{path,load_when}:
   "principles.md","the 10 CLI design principles (full doctrine)"
   "build-method.md","building/maintaining the runtime; forging a new skill"
   "registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -19,6 +19,7 @@ assets[28]{path,load_when}:
   "runtime-compliance.md","the runtime acceptance gates + runnable checklist"
   "installation.md",  # first setup / install
   "memory-well.md","the well: Mimirsbrunn/engram store, bridge, MCP, laws"
+  "vault.md","Hnitbjörg — the encrypted document vault: LUKS container, sealed-by-default law, fleet sync, FIDO2"
   "harness-integration/README.md","choosing a harness; adding a new harness"
   "harness-integration/opencode.md","building/using the OpenCode adapter"
   "harness-integration/pi.md","building/using the Pi adapter"

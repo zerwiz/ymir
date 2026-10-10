@@ -36,6 +36,7 @@ platform[39]{subsystem,norse,role}:
   "Smíðja orchestrator","Völundr","the master smith who runs Smíðja (Kaia's seat inside the smidja)"
   "Control-plane hub / federation & sync","Vingólf","the assembly hall: coordination, identity, and sync across substrates; never executes code"
   "Records keeper (plans · docs · memory)","Reginn (the Elder)","the keeper who remembers — the plan ledger, the documentation shelves, and the well/runes; reads the elders before writing, reconciles never contradicts"
+  "Encrypted document vault","Hnitbjörg","the mountain stronghold where the mead was hidden; a LUKS2 container, sealed by default, opened only by the operator (bin/vault/hnitbjorg.sh)"
   "Standing supervision watch (service)","Sýn (reforged)","the arm as a service — one standing watcher per hall, idle-not-dead, lease; a child of systemd, cannot fall with a session"
   "Dedicated PR reviewer / judge","Forseti","fierce read-only audit of every harvest; verdict (APPROVE / NEEDS-REWORK) holds the seal; auto-spawned on every done"
   "Durable wake messenger","Gná","the wake road — self-wake at the source, failsafe sweep, re-arm catch-up, an ack that eats only what it saw"

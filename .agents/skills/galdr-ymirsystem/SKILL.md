@@ -52,7 +52,7 @@ Nornir jobs run, and how it is all verified. A runtime change not reflected in
 ## Routing (load one row)
 
 ```
-assets[26]{path,load_when}:
+assets[27]{path,load_when}:
   "assets/principles.md","the 10 CLI design principles (full doctrine)"
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -62,6 +62,7 @@ assets[26]{path,load_when}:
   "assets/local-models.md","Vog — local models: engines (llama.cpp, LM Studio, Ollama), detection, harness wiring, honest measurement"
   "assets/runtime-compliance.md","runtime acceptance gates + runnable checklist"
   "assets/memory-well.md","Mimirsbrunn/engram: the well, bridge, MCP, harness wiring, laws"
+  "assets/vault.md","Hnitbjörg — the encrypted document vault: the LUKS container, the sealed-by-default law, fleet sync, FIDO2"
   "assets/installation.md","first setup / install: the computed plan (bin/bridge/ymir-plan.sh), the home the operator chooses, the roots law (code in the package, the operator's things in the home), engines, hermes"
   "assets/harness-integration/README.md","choosing a harness; adding one"
   "assets/harness-integration/opencode.md","OpenCode adapter"
