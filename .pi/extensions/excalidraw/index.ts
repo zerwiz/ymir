@@ -4,6 +4,7 @@
  * What the fork can do, as tools an agent can actually use:
  *
  *   · read the tickets — the behaviour contracts, straight from the files
+ *   · write a real, editable diagram from a plain spec — NO model, no browser
  *   · probe / raise / lower the fork's three services
  *   · open and close the desktop app
  *
@@ -31,6 +32,35 @@ const bad = (text: string) => ({
   content: [{ type: "text" as const, text }],
   isError: true,
 });
+
+/** Runs a fork script, optionally feeding it stdin, and returns its output. */
+const run = (
+  script: string,
+  args: string[],
+  stdin?: string,
+): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> =>
+  new Promise((resolve) => {
+    const child = spawn(process.execPath, [script, ...args], {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let out = "";
+    let err = "";
+    child.stdout.on("data", (chunk) => {
+      out += chunk.toString();
+    });
+    child.stderr.on("data", (chunk) => {
+      err += chunk.toString();
+    });
+    child.on("error", (error) => resolve(bad(error.message)));
+    child.on("close", (code) => {
+      const text = [out.trim(), err.trim()].filter(Boolean).join("\n") || "(no output)";
+      resolve(code === 0 ? ok(text) : bad(`${text}\n(exit ${code})`));
+    });
+    if (stdin !== undefined) {
+      child.stdin.write(stdin);
+    }
+    child.stdin.end();
+  });
 
 export default function excalidraw(pi: any) {
   const root = () => excalidrawRoot();
@@ -227,6 +257,79 @@ export default function excalidraw(pi: any) {
       }
 
       return bad(`unknown action '${action}'`);
+    },
+  });
+
+  pi.registerTool({
+    name: "excalidraw_diagram",
+    description:
+      "Write a real, editable Excalidraw diagram from a plain spec — headlessly, " +
+      "with NO model and no browser. action=create takes {title?, nodes:[{id,label?,shape?}], " +
+      "edges:[{from,to}]} and writes a .excalidraw file; action=describe reads one back and " +
+      "reports what is in it. shape is rectangle (default), ellipse or diamond. The output is " +
+      "deterministic — the same spec gives a byte-identical file, so a diff means the spec changed.",
+    parameters: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["create", "describe"],
+          description: "create (default) writes a scene; describe reads one back",
+        },
+        spec: {
+          type: "object",
+          description:
+            "the diagram spec: {title?, nodes:[{id,label?,shape?}], edges:[{from,to}]}",
+        },
+        out: {
+          type: "string",
+          description: "for action=create: the file to write (default ./diagram.excalidraw)",
+        },
+        path: {
+          type: "string",
+          description: "for action=describe: the .excalidraw file to read",
+        },
+        columns: {
+          type: "number",
+          description: "for action=create: how many nodes per row (default: square-ish)",
+        },
+      },
+      required: [],
+    },
+    async execute(_id: string, params: any) {
+      if (!rootExists()) {
+        return bad(
+          `no Excalidraw fork at ${root()} — set EXCALIDRAW_ROOT to the checkout.`,
+        );
+      }
+      const script = join(root(), "server", "diagram", "write.mjs");
+      if (!existsSync(script)) {
+        return bad(`missing ${script} — the diagram writer is not in this checkout.`);
+      }
+
+      if (params?.action === "describe") {
+        if (!params?.path) {
+          return bad("action=describe needs a path.");
+        }
+        return run(script, ["--describe", String(params.path)], undefined);
+      }
+
+      const spec = params?.spec;
+      if (!spec || !Array.isArray(spec.nodes)) {
+        return bad(
+          "action=create needs spec.nodes — an array of {id, label?, shape?}.",
+        );
+      }
+      const out = String(params?.out ?? join(root(), "diagram.excalidraw"));
+      const args = ["--out", out];
+      if (params?.columns) {
+        args.push("--columns", String(params.columns));
+      }
+      const result = await run(script, args, JSON.stringify(spec));
+      if (!result.isError) {
+        result.content[0].text += `\n\nopen it with: open "${out}"  (or drag it onto the app)`;
+      }
+      return result;
     },
   });
 

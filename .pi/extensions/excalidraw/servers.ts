@@ -6,6 +6,7 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { SERVICES, excalidrawRoot, isServiceName } from "./paths.ts";
@@ -73,8 +74,17 @@ export const start = async (
   }
 
   const root = excalidrawRoot();
-  const script = join(root, service.script);
-  const child = spawn(process.execPath, [script], {
+  // Prefer the service's own start.sh: it sources that service's `.env`, which is
+  // where THIS install keeps its model and ports. Falls back to node directly.
+  const startScript = service.startScript
+    ? join(root, service.startScript)
+    : undefined;
+  const useScript = startScript && existsSync(startScript);
+  const [command, args] = useScript
+    ? [startScript, [] as string[]]
+    : [process.execPath, [join(root, service.script)]];
+
+  const child = spawn(command, args, {
     cwd: root,
     env: { ...process.env, ...env },
     detached: true,

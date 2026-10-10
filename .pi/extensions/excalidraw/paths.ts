@@ -16,6 +16,12 @@ export type ServiceName = "board" | "bridge" | "collab";
 
 export type Service = {
   name: ServiceName;
+  /**
+   * The door to prefer when raising it. A service that has a `start.sh` gets it,
+   * because that script sources the service's own `.env` — which is how each
+   * install carries its own model, port and origins without anything hardcoded.
+   */
+  startScript?: string;
   /** what it is for, in one line — the agent reads this */
   purpose: string;
   script: string;
@@ -38,6 +44,7 @@ export const SERVICES: Record<ServiceName, Service> = {
     purpose:
       "Text-to-diagram backend: forwards the AI panel's prompt to an OpenAI-compatible model.",
     script: "server/ttd-bridge/index.mjs",
+    startScript: "server/ttd-bridge/start.sh",
     port: Number(process.env.TTD_BRIDGE_PORT) || 4173,
     ticket: "feature-0005",
   },
@@ -50,6 +57,15 @@ export const SERVICES: Record<ServiceName, Service> = {
     ticket: "feature-0003",
   },
 };
+
+/**
+ * This install's model, from the environment. Documented defaults only: a base
+ * URL of "" means "not configured", never a hosted host.
+ */
+export const modelDefaults = () => ({
+  baseURL: process.env.TTD_MODEL_BASE_URL ?? process.env.EXCALIDRAW_MODEL_BASE_URL ?? "",
+  model: process.env.TTD_MODEL ?? process.env.EXCALIDRAW_MODEL ?? "",
+});
 
 export const serviceList = (): Service[] =>
   Object.values(SERVICES).sort((a, b) => a.port - b.port);
