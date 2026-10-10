@@ -30,6 +30,7 @@ PI_GLOBAL="${HOME}/.pi/agent/agents"
 # extensions read back.
 PI_EXT_SRC="$ROOT/.pi/extensions"
 PI_EXT_HOME="${HOME}/.pi/agent/extensions"
+PI_SETTINGS="${HOME}/.pi/agent/settings.json"
 OC_LOCAL="$ROOT/.opencode/agents"
 SKILLS="$ROOT/.agents/skills"
 
@@ -75,6 +76,91 @@ done
 # A deploy is a COPY. Nothing re-runs the loader on its own, so the only thing that
 # can catch a stale deploy is a check that asks. Exit 1 on any failure, so it can sit
 # in CI and in the post-merge hook rather than in someone's memory.
+# Make Ymir's extensions GLOBAL — loaded in every pi session, from any cwd.
+#
+# Measured against pi's own loader
+# (`dist/core/extensions/loader.js: discoverAndLoadExtensions`): pi's discovery is
+#   1. <cwd>/.pi/extensions   2. ~/.pi/agent/extensions   3. settings `extensions[]`
+# and `addPaths` skips a path already `seen`, keyed on `path.resolve(p)`. Both (1)
+# and (3) yield ABSOLUTE paths for the same files, so the same directory listed in
+# user settings is de-duplicated when a session sits inside the repo — one home,
+# no double registration. That is what makes this safe where a COPY or a SYMLINK
+# would not be (a symlink resolves to a different string and would double-register,
+# which is the failure Rule 13 exists to prevent).
+#
+# Prints `added`, `unchanged`, or `ERROR`.
+pi_settings_extension_root() {
+  [ -d "$PI_EXT_SRC" ] || return 0
+  command -v python3 >/dev/null 2>&1 || { printf 'ERROR'; return 0; }
+  [ -d "${HOME}/.pi/agent" ] || mkdir -p "${HOME}/.pi/agent" 2>/dev/null || { printf 'ERROR'; return 0; }
+
+  PI_SETTINGS="$PI_SETTINGS" PI_EXT_SRC="$PI_EXT_SRC" python3 - <<'PY'
+import json, os, shutil, sys
+
+settings = os.environ["PI_SETTINGS"]
+src = os.environ["PI_EXT_SRC"]
+
+data = {}
+if os.path.exists(settings):
+    try:
+        with open(settings) as handle:
+            data = json.load(handle)
+    except Exception:
+        print("ERROR")
+        sys.exit(0)
+    if not isinstance(data, dict):
+        print("ERROR")
+        sys.exit(0)
+
+extensions = data.get("extensions")
+if not isinstance(extensions, list):
+    extensions = []
+
+# Drop any path entry into some OTHER checkout's extensions tree, then add ours.
+# Flags such as `-builtin:mcp` are left exactly as they are.
+def is_other_ymir_extensions(entry):
+    if not isinstance(entry, str):
+        return False
+    if entry.startswith("-") or entry.startswith("+"):
+        entry = entry[1:]
+    if not entry.endswith(".pi/extensions"):
+        return False
+    expanded = os.path.expanduser(entry)
+    return expanded != src and os.path.isdir(expanded)
+
+kept = [entry for entry in extensions if not is_other_ymir_extensions(entry)]
+kept.append(src)
+
+if kept == extensions:
+    print("unchanged")
+    sys.exit(0)
+
+data["extensions"] = kept
+if os.path.exists(settings):
+    shutil.copy2(settings, settings + ".bak-ymir")
+with open(settings, "w") as handle:
+    json.dump(data, handle, indent=2)
+    handle.write("\n")
+print("added")
+PY
+}
+
+# Does the user settings `extensions` array already name THIS checkout?
+pi_settings_extension_root_present() {
+  [ -r "$PI_SETTINGS" ] || return 1
+  command -v python3 >/dev/null 2>&1 || return 1
+  PI_SETTINGS="$PI_SETTINGS" PI_EXT_SRC="$PI_EXT_SRC" python3 - <<'PY' >/dev/null 2>&1
+import json, os, sys
+try:
+    with open(os.environ["PI_SETTINGS"]) as handle:
+        data = json.load(handle)
+except Exception:
+    sys.exit(1)
+entries = data.get("extensions") if isinstance(data, dict) else None
+sys.exit(0 if isinstance(entries, list) and os.environ["PI_EXT_SRC"] in entries else 1)
+PY
+}
+
 if [ "$MODE_CHECK" = "1" ]; then
   fails=0
   printf 'check{pi-extensions-one-home}:
@@ -106,6 +192,15 @@ if [ "$MODE_CHECK" = "1" ]; then
 ' ".ymir-root record" "PASS -> $vroot"
   else printf '  %-46s %s
 ' ".ymir-root record" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1)); fi
+  # Global reach: the user settings must name THIS checkout's extensions tree, or
+  # the extensions load only when a session happens to sit inside the repo.
+  if pi_settings_extension_root_present; then
+    printf '  %-46s %s
+' "pi settings name the extensions tree" "PASS -> $PI_EXT_SRC"
+  else
+    printf '  %-46s %s
+' "pi settings name the extensions tree" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1))
+  fi
   printf 'check{pi-extension-check}:
 '
   if [ "$fails" -eq 0 ]; then
@@ -415,6 +510,16 @@ if [ "$MODE_PI" = 1 ]; then
     [ "$pruned" -gt 0 ] && add pi-ext-prune "$PI_EXT_HOME" "$pruned removed (one home — a duplicate would double-register)"
     add pi-extensions "$PI_EXT_SRC" "one tree — the project home (nothing deployed)"
     add pi-ext-root "$PI_EXT_HOME/.ymir-root" "$(ymir_root_record) -> $ROOT"
+
+    # GLOBAL REACH, ONE HOME. The project tree is still the only home; the user
+    # settings `extensions` array names it so pi loads it from ANY cwd. Pi
+    # de-duplicates on the resolved path, so a session inside the repo loads it
+    # once (see pi_settings_extension_root above for the measured evidence).
+    case "$(pi_settings_extension_root)" in
+      added)     add pi-ext-global "$PI_SETTINGS" "extensions[] += $PI_EXT_SRC (loaded in every pi session)" ;;
+      unchanged) add pi-ext-global "$PI_SETTINGS" "already names $PI_EXT_SRC" ;;
+      *)         add pi-ext-global "$PI_SETTINGS" "ERROR could not be written" ;;
+    esac
   fi
 fi
 
