@@ -455,7 +455,7 @@ carrying it. The operator's live registry is renamed by hand, with his word.
 ## The steps
 
 ```
-install[32]{step,what,self-heals}:
+install[33]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/seat/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/engine/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -478,6 +478,7 @@ install[32]{step,what,self-heals}:
   "sandbox","utgard-runner:latest image","builds via bin/forge/utgard.sh build on Docker or rootless Podman; distinguishes an unreachable engine from a build failure"
   "memory","engram store + harness MCP registrations","raises the bridge; reports MCP coverage — the store is ONE well in the hoard ($YMIR_HOME/hodd/memory/kaia.engram), resolved via hoard-lib or ENGRAM_DB"
   "record","the RECORD's offices — the engram store, the journal fold receiver, the record crons (heart only)","asserts the store is present and bin/records/journal-receive.sh is executable, and counts the @heart jobs in the cron config; a body SKIPs the whole step with the reason — the record lives on the heart, and a body that ran it would fork the chain (Law 7)"
+  "vault","Hnitbjörg — the encrypted document vault: a LUKS2 container (bin/vault/hnitbjorg.sh), sealed by default, opened only with sudo and the operator's passphrase","bin/vault/hnitbjorg-ensure.sh ensures cryptsetup + the vault dir and NEVER creates a vault — init asks for a passphrase only the operator may type; repairable via bin/agents/eir-doctor.sh vault"
   "smidja","smidja/smidja_data/smidja.db","bin/desktop/smidja-bootstrap.sh creates it from the tracer schema + a bootstrap session"
   "visualizer","the Smíðja visualizer UI (Vue, served on :8437)","builds ./dist with bun when absent — the API serves the UI from dist, and without it the API answers but shows no interface"
   "loaders","agents/skills into the harnesses","runs bin/seat/valknut-load.sh, then bin/seat/valknut-load.sh --install to seat the post-merge rebind hook. The harnesses load their surfaces from their OWN homes — Pi reads ${HOME}/.pi/agent/extensions/ — so a merged extension fix is invisible until the bind re-runs. The same rebind rides the updater (bin/agents/groa-update.sh) after every pull, and the post-merge hook after every merge: no install and no update leaves the surfaces stale"
@@ -490,7 +491,7 @@ install[32]{step,what,self-heals}:
   "validate","the running system","bin/engine/ymir-validate.sh — live port/store/process checks"
 ```
 
-**33** `step_*` functions are defined (`home` asks, `tree` builds); **27** run as the
+**33** `step_*` functions are defined (`home` asks, `tree` builds); **28** run as the
 visible progress chain. A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 `smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. **Every

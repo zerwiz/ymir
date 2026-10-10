@@ -1047,6 +1047,29 @@ step_loaders() {
 # only reads .git/hooks, so the install seats them there — the gate is live
 # from the first commit of a fresh clone. Idempotent: each --install rewrites
 # its own hook.
+# ── 6a. the vault — Hnitbjörg, the encrypted document stronghold ─────────────
+# A LUKS2 container, sealed by default, opened only with sudo and the operator's
+# passphrase. This step ensures cryptsetup and the vault directory; it NEVER
+# creates a vault — init asks for a passphrase only the operator may type.
+step_vault() {
+  local ens="$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh"
+  [ -x "$ens" ] || { add vault SKIP "no hnitbjorg-ensure.sh"; return; }
+  if [ "$CHECK" = 1 ]; then
+    add vault OK "would ensure cryptsetup + the vault path (init offered, never automatic)"
+    return
+  fi
+  if "$ens" ensure --install >/dev/null 2>&1; then
+    . "$SCRIPT_DIR/../vault/hoard-lib.sh" 2>/dev/null || true
+    local home="" img="" state="absent"
+    command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root home
+    img="${YMIR_VAULT_DIR:-${home:-$HOME/Documents/ymirhome}/vault}/hnitbjorg.img"
+    [ -e "$img" ] && state="sealed"
+    add vault OK "cryptsetup present · vault $state (init: bin/vault/hnitbjorg.sh init)"
+  else
+    add vault WARN "cryptsetup absent — bin/vault/hnitbjorg-ensure.sh ensure --install"
+  fi
+}
+
 step_gates() {
   local hooks="$ROOT/.git/hooks" pre_commit="$ROOT/.git/hooks/pre-commit" pre_push="$ROOT/.git/hooks/pre-push"
   if [ ! -d "$hooks" ]; then add gates SKIP "not a git checkout"; return; fi
@@ -1388,6 +1411,7 @@ run_step step_smidja "the smithy"
 run_step step_spa "the spa"
 run_step step_omarchy "omarchy layer"
 run_step step_loaders "loaders"
+run_step step_vault "the vault"
 run_step step_gates "gates"
 run_step step_marks "marks"
 # Migrations MOVE private data — that is a write, and `--check` promises none.

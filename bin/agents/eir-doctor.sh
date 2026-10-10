@@ -54,7 +54,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot)
+SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot vault)
 
 s_floors()    { [ -x "$SCRIPT_DIR/../engine/prereq-ensure.sh" ] && "$SCRIPT_DIR/../engine/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/../engine/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -75,6 +75,10 @@ f_sessrumnir(){ "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ensure --i
 # mend for a stopped boot IS the raise — re-materialize, re-enable, re-verify.
 s_autoboot()  { [ -x "$SCRIPT_DIR/../engine/ymir-autoboot.sh" ] && "$SCRIPT_DIR/../engine/ymir-autoboot.sh" verify >/dev/null 2>&1; }
 f_autoboot()  { [ -x "$SCRIPT_DIR/../fleet/fleet-ensure.sh" ] && "$SCRIPT_DIR/../fleet/fleet-ensure.sh" ensure >/dev/null 2>&1; }
+# Hnitbjörg — the encrypted vault. The surface checks only that the tooling and
+# the vault directory stand; a sealed vault is HEALTHY, not a fault to mend.
+s_vault()     { [ -x "$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh" ] && "$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh" status >/dev/null 2>&1; }
+f_vault()     { "$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh" ensure --install >/dev/null 2>&1; }
 # The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
 # workspace-hoisted, or the sibling package (bin/desktop/electron-lib.sh). ABSENT for
 # an app the operator has installed is a FAILURE, never healthy: a desktop
