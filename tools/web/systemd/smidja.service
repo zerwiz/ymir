@@ -6,6 +6,7 @@ Type=simple
 WorkingDirectory=__YMIR_VIZ_DIR__
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 Environment=CMD_DB=__YMIR_VIZ_DB__
+Environment=HOST=127.0.0.1
 Environment=PORT=__YMIR_SMIDJA_PORT__
 ExecStart=%h/.bun/bin/bun run server/index.ts
 Restart=on-failure

@@ -20,6 +20,7 @@ import * as settingsApi from "./settings.ts";
 import { isPiResolvable, piModels } from "./model-catalog.ts";
 
 const PORT = Number(process.env.PORT ?? 8437);
+const HOST = process.env.HOST ?? "127.0.0.1";
 const DIST_DIR = resolve(import.meta.dir, "..", "dist");
 
 /** Kaia's engram memory bridge (Python, see scripts/kaia-memory-bridge.py). */
@@ -153,6 +154,7 @@ async function serveStatic(req: Request): Promise<Response> {
 
 const server = Bun.serve({
   port: PORT,
+  hostname: HOST,
   routes: {
     "/api/health": safely(
       (req) =>
