@@ -362,13 +362,13 @@ export default function excalidraw(pi: any) {
 
       if ((params?.action ?? "status") === "status") {
         try {
-          const response = await fetch("http://127.0.0.1:4172/", {
+          const response = await fetch("http://127.0.0.1:7311/", {
             signal: AbortSignal.timeout(1200),
           });
-          return ok(`the app's dev server answers on :4172 (${response.status}).`);
+          return ok(`the app's dev server answers on :7311 (${response.status}).`);
         } catch (error) {
           return ok(
-            `the app is not up on :4172 (${(error as Error)?.message ?? error}).`,
+            `the app is not up on :7311 (${(error as Error)?.message ?? error}).`,
           );
         }
       }

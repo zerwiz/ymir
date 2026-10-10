@@ -182,12 +182,12 @@ fi
 # wards over the whole tracked tree — secret-guard for credential values,
 # private-guard for operator identity/topology. Either red fails the gate.
 hoard_detail=""
-if out="$(bash "$ROOT/bin/secret-guard.sh" --all 2>&1)"; then
+if out="$(bash "$ROOT/bin/gates/guards/secret-guard.sh" --all 2>&1)"; then
   hoard_detail="secret-guard clean"
 else
   hoard_detail="secret-guard: $(printf '%s' "$out" | grep -m1 'secret-guard:' | cut -c1-120)"
 fi
-if out="$(bash "$ROOT/bin/private-guard.sh" --all 2>&1)"; then
+if out="$(bash "$ROOT/bin/gates/guards/private-guard.sh" --all 2>&1)"; then
   add hoard "the hoard boundary (Rule 04)" PASS "$hoard_detail · private-guard clean"
 else
   hoard_detail="private-guard: $(printf '%s' "$out" | grep -m1 'private-guard:' | cut -c1-120)"
