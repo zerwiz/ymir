@@ -42,6 +42,7 @@ are **retired**.
 | `gna-pi-watch.ts` | **Gná** (Frigg's messenger) | watcher continuity: arm, re-arm, deliver actionable wakes; emits the Skuld dispatch offer |
 | `skuld-branch-supervision/index.ts` | **Skuld** (the Norn of what shall be) | supervision branch: handles routine wakes with a cheaper model; `/skuld-model` |
 | `ymir-well.ts` | **Mimirsbrunn** (the well) | `well_recall` / `well_observe` over the `:4602` bridge |
+| `excalidraw/index.ts` | the excalidraw door | the team whiteboard fork: read its `tickets/` from the files, and probe/raise/lower its board, text-to-diagram bridge and room server |
 | `ymirhome.ts` | the ymirhome door | the door into `$YMIR_HOME` |
 | `ymir-subagents.ts` | the Eindri roster | exposes every `.agents/agents/*.md` figure through a `subagent` tool |
 | `todo.ts` | — | the todo surface |
