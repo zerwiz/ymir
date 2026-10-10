@@ -112,6 +112,7 @@ fi
 path_component() {  # <path> -> the component it belongs to, or empty
   case "$1" in
     src/ymir_runtime/*|bin/mimir*|bin/records/mimir.sh|bin/seat/verify-seat.sh|bin/time/saga-wake-drain.sh) echo runtime ;;
+    tools/mcp-gateway/*|bin/bridge/mcp-gateway.sh|bin/records/journal-*.sh) echo runtime ;;
     bin/engine/ymir-install.sh|bin/agents/groa-update.sh|bin/seat/valknut-load.sh|bin/engine/ymir-migrate.sh) echo install ;;
     .pi/*|.agents/skills/*|bin/agents/skill-find.sh|bin/gates/fixes.sh|bin/gates/guards/fixes-guard.sh) echo agents ;;
     bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/queue.sh|bin/gates/checks/home-index-check.sh|bin/no-delete-guard.sh) echo gate ;;

@@ -17,7 +17,8 @@
 // Env:
 //   MCP_GATEWAY_UPSTREAMS           JSON map: {"skuld":{"urls":[...],"local_first":bool}}
 //   MCP_GATEWAY_STATE               the body state dir (journal lives here)
-//   MCP_GATEWAY_BIN                 the platform bin/ (journal-append/reconcile)
+//   MCP_GATEWAY_BIN                 a bin dir the journal scripts resolve from
+//                                   (journal-append/reconcile; they live under records/)
 //   MCP_GATEWAY_PORT                listen port (default 8316)
 //   MCP_GATEWAY_HOST                the seat's short hostname (report only)
 //   MCP_GATEWAY_UPSTREAM_TIMEOUT_MS per-upstream request timeout (default 1500)
@@ -45,6 +46,24 @@ const TIMEOUT = Number(process.env.MCP_GATEWAY_UPSTREAM_TIMEOUT_MS || 1500);
 const PROTOCOL = "2024-11-05";
 
 fs.mkdirSync(RECDIR, { recursive: true });
+
+// The journal scripts (journal-append.sh · journal-reconcile.sh) live under the
+// platform bin's records/ dir. Resolve them wherever the gateway is deployed
+// rather than assuming one layout: a bin/ move once left these callers pointing
+// at a path that no longer held the script, and the reconcile silently no-opped
+// (it printed 'No such file or directory' and the queue was never pushed).
+function journalScript(name) {
+  if (!BIN) return "";
+  const candidates = [
+    path.join(BIN, name),
+    path.join(BIN, "records", name),
+    path.join(BIN, "..", "records", name),
+  ];
+  for (const candidate of candidates) {
+    try { if (fs.existsSync(candidate)) return candidate; } catch { /* ignore */ }
+  }
+  return path.join(BIN, "records", name);
+}
 
 let UPSTREAMS = {};
 try { UPSTREAMS = JSON.parse(process.env.MCP_GATEWAY_UPSTREAMS || "{}"); } catch { UPSTREAMS = {}; }
@@ -205,7 +224,7 @@ async function refreshCatalog(server) {
 function journalCall(server, tool, args) {
   if (!BIN) return "(no bin dir configured; call not journaled)";
   const data = JSON.stringify({ server, tool, args: args || {} });
-  const r = spawnSync("bash", [path.join(BIN, "journal-append.sh"), "--op", `mcp.call.${server}`, "--data", data], {
+  const r = spawnSync("bash", [journalScript("journal-append.sh"), "--op", `mcp.call.${server}`, "--data", data], {
     encoding: "utf8", env: { ...process.env }
   });
   const out = String(r.stdout || "").trim().split("\n").filter(Boolean).pop();
@@ -214,7 +233,7 @@ function journalCall(server, tool, args) {
 
 function journalReconcile() {
   if (!BIN) return "(no bin dir configured; journal not pushed)";
-  const r = spawnSync("bash", [path.join(BIN, "journal-reconcile.sh")], { encoding: "utf8", env: { ...process.env } });
+  const r = spawnSync("bash", [journalScript("journal-reconcile.sh")], { encoding: "utf8", env: { ...process.env } });
   return (String(r.stdout || "") + String(r.stderr || "")).trim() || "(reconcile ran)";
 }
 
