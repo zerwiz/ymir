@@ -103,3 +103,53 @@ What stands now:
 `.pi/shared/extensions/`", §2 "`.pi/extensions/` holds no-op stubs", and any sentence
 describing a *deploy* to the global home. The failures table above is kept unchanged
 — it still teaches *why*: two load paths seat nobody.
+
+---
+
+## 2026-10-10 — global reach, still ONE home: the user-settings extension path
+
+Appended, not rewritten. The 2026-10-07 correction moved the home to `.pi/extensions/` and
+retired the global copy. It left one gap: a project tree is **only** discovered when a session's
+cwd sits inside it, so a session working in another repository (`~/CodeP/excalidraw`, say) loaded
+none of Ymir's extensions. The fix is not a second home — it is telling pi where the one home is.
+
+**Pi's discovery has three sources, not two** (measured in pi's own loader,
+`dist/core/extensions/loader.js: discoverAndLoadExtensions`):
+
+```
+discovery[3]{order,source}:
+  "1","<cwd>/.pi/extensions — the project tree"
+  "2","~/.pi/agent/extensions — the global home"
+  "3","the user settings `extensions[]` array — absolute paths and ~ are supported"
+```
+
+Source 3 is what we use. `bin/seat/valknut-load.sh --pi` now also writes this checkout's
+`.pi/extensions` into `~/.pi/agent/settings.json`'s `extensions` array, idempotently, keeping
+every other entry (a flag such as `-builtin:mcp` is left untouched) and pruning a path that
+points at some *other* checkout's extensions tree. `--check` asserts it and fails without it.
+
+**Why this does not create the double registration this rule exists to prevent.** Sources 1 and 3
+yield **absolute paths to the same files**, and the loader de-duplicates:
+
+```
+seen[2]{fact,evidence}:
+  "the loader keeps a Set","`const seen = new Set()` … `if (!seen.has(resolved))` — discoverAndLoadExtensions"
+  "both sources resolve identically","discoverExtensionsInDir returns path.join(dir, name), absolute; the configured path is resolved and then enumerated the same way"
+```
+
+Measured 2026-10-10, calling pi's own `discoverAndLoadExtensions` with the real
+`~/.pi/agent/settings.json`, from three cwds:
+
+| cwd | extensions loaded | duplicates | the door present |
+|---|---|---|---|
+| `~/CodeP/excalidraw` | 20 | **0** | yes |
+| `~/ymir` | 20 | **0** | yes |
+| `/tmp` | 20 | **0** | yes |
+
+**A copy would double-register; a symlink would too** — a symlink resolves to a different string
+and the Set is keyed on the resolved path, not on `realpath`. Naming the same directory is the
+only mechanism that keeps one home *and* reaches every session, which is why it is the one this
+rule now records.
+
+Superseded sentence, named so a reader is not misled: *"Pi reads `${HOME}/.pi/agent/extensions/`"*
+in the harness-integration asset — still true, and no longer the whole truth.

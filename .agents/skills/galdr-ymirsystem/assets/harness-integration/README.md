@@ -784,6 +784,18 @@ directories **bind** them by symlink — they are never hand-written duplicates:
 are bound by the same loader pass as pi, so no harness is left holding a
 hand-made subset. Naming differs by harness and must be respected:
 
+> **The extension tree is GLOBAL since 2026-10-10 — one home, named in user settings.** The
+> paragraph below says Pi reads `${HOME}/.pi/agent/extensions/`. That is still true and is no
+> longer the whole truth: pi's discovery has **three** sources — `<cwd>/.pi/extensions`,
+> `~/.pi/agent/extensions`, and the user settings `extensions[]` array — and
+> `bin/seat/valknut-load.sh --pi` now writes this checkout's `.pi/extensions` into
+> `~/.pi/agent/settings.json`, so the extensions load in **every** pi session, from **any** cwd,
+> not only one started inside the repo. Pi de-duplicates on the resolved absolute path, so a
+> session inside the repo still loads each extension once (measured: 20 extensions, 0 duplicates,
+> from `~/CodeP/excalidraw`, `~/ymir` and `/tmp`). A copy or a symlink would double-register —
+> which is why the mechanism is a named path and not a second home. Law:
+> `RULES/13-pi-extensions.md`, correction 2026-10-10.
+
 > **Rebind on every install, update and merge (2026-09-23).** The harnesses load
 their surfaces from their **own** homes — Pi reads `${HOME}/.pi/agent/extensions/`
 — so a change merged into the repo is INVISIBLE to a running harness until the
