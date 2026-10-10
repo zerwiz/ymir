@@ -10,7 +10,7 @@
 # A test that cannot fail on the leak is not a test. This one plants the leak.
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-GUARD="$ROOT/bin/private-guard.sh"
+GUARD="$ROOT/bin/gates/guards/private-guard.sh"
 rc=0
 ok()  { printf 'ok   %s\n' "$1"; }
 bad() { printf 'FAIL %s\n' "$1"; rc=1; }
