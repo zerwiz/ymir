@@ -19,7 +19,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { execFileSync } from "node:child_process";
 import { homedir } from "node:os";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 
 // ── resolution: this file must run on ANY seat, so it may not know a machine ──
@@ -56,7 +56,11 @@ function resolveHome(): string {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
   if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
-  return v;
+  // hodd.sh path answers the HOARD (…/ymirhome/hodd); this file builds
+  // `${resolveHome()}/hodd/memory/runes_audit.md`, which is home-relative WITH the
+  // hodd/ prefix — so the base must be the hoard's PARENT. Same lesson, same line, as
+  // ymirhome.ts:8 (learned there 2026-10-08; measured here 2026-10-11).
+  return dirname(v);
 }
 
 const ROOT = resolveRoot();

@@ -9,7 +9,10 @@ function resolveHome(): string {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
   if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
-  return v;
+  // hodd.sh path answers the HOARD (…/ymirhome/hodd); the ledger this file reads is
+  // built as `${resolveHome()}/svartalfaheim/…`, home-relative and NOT under the hoard,
+  // so the base is the hoard's PARENT. Same lesson, same line, as ymirhome.ts:8.
+  return dirname(v);
 }
 
 // Brokk supervision branch for Pi (docs/pi-supervision-branch.md).
