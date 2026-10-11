@@ -425,6 +425,26 @@ rules[7]{file,governs}:
 A change that contradicts a rule must change the rule first (append-only). The
 eight Labs are **domains**, not houses; **WayOf** is the house.
 
+## Feature how-tos — `docs/features/` and `FEATURES.md` (Rule 14)
+
+`FEATURES.md` (repo root) is the **master, append-only catalogue** of every feature
+and function Ymir has. `docs/features/` is where a **person using Ymir** learns to
+use it: one plain-language page per feature — *what it is · what you need · the
+commands · limits · if it does not work* — written for the operator, never for the
+agent building it. `README.md` links both; the index lists every page.
+
+```
+feature_howtos[4]{rule}:
+  "A user-facing feature has a page under docs/features/ — a feature with no page is not finished"
+  "The SAME change adds the FEATURES.md row and the page (or updates them)"
+  "FEATURES.md is append-only (Rule 06): add a row; correct by a new entry, never by erasing"
+  "Keep them current: when a command, flag, or limit moves, the page moves with it"
+```
+
+The deep reference stays where the code lives (the Galdr assets under
+`.agents/skills/galdr-ymirsystem/assets/`); these two are the front door.
+**When you build a feature, write its how-to before you call it done.**
+
 ## Private data — YMIR_HOME (Rule 04)
 
 **The one law, stated first: never store personal or private data in this repo.**
