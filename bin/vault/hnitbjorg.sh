@@ -13,6 +13,9 @@
 #   bin/vault/hnitbjorg.sh passwd             # change the passphrase (luksChangeKey)
 #   bin/vault/hnitbjorg.sh fido2-enroll       # add a FIDO2 slot (needs a token)
 #   bin/vault/hnitbjorg.sh fido2-list         # list enrolled FIDO2 tokens
+#   bin/vault/hnitbjorg.sh phone-enroll       # hold an unlock key on the phone (USB/MTP)
+#   bin/vault/hnitbjorg.sh phone-status       # is a phone key enrolled, and is the phone here?
+#   bin/vault/hnitbjorg.sh phone-remove       # revoke the phone key (removes its LUKS slot)
 #
 # The law of the vault:
 #   · It is SEALED by default and NEVER automounts. While sealed, only LUKS
@@ -57,6 +60,16 @@ VAULT_MNT="${YMIR_VAULT_MNT:-$HOME/Vault}"
 VAULT_IMG="$VAULT_DIR/hnitbjorg.img"
 VAULT_MAPPER="hnitbjorg"
 
+# The phone key — a random LUKS keyfile held in the phone's storage (MTP over
+# USB). `open` reads it back once the phone is unlocked; the operator's phone
+# lock IS the validation. A marker records that a phone key is enrolled.
+VAULT_PHONE_KEY="${YMIR_VAULT_PHONE_KEY:-Download/hnitbjorg.key}"
+PHONE_MARKER="$VAULT_DIR/.phone-key"
+# the phone library lives beside this door (MTP over USB; test seam YMIR_PHONE_ROOT)
+_vd="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+[ -r "$_vd/phone-lib.sh" ] && . "$_vd/phone-lib.sh"
+unset _vd
+
 say()  { printf '%s\n' "$*" >&2; }
 die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "$1 is not installed — help: sudo pacman -S $2"; }
@@ -95,9 +108,26 @@ cmd_open() {
   [ -e "$VAULT_IMG" ] || die "no vault at $VAULT_IMG — run: $(basename "$0") init"
   is_open && { say "already open."; exit 0; }
   mkdir -p "$VAULT_MNT"; chmod 700 "$VAULT_MNT" 2>/dev/null || true
-  sudo cryptsetup open "$VAULT_IMG" "$VAULT_MAPPER" || die "could not open the vault"
+  local opened_by="passphrase"
+  # If a phone key is enrolled AND the phone is here, unlock with it. The phone
+  # must be unlocked (biometrics) to expose its storage — that IS the validation.
+  # A failure (phone absent, file gone, wrong key) falls through to the prompt.
+  if [ -r "$PHONE_MARKER" ] && command -v phone_get >/dev/null 2>&1; then
+    local rel tmp root=""
+    rel="$(cat "$PHONE_MARKER" 2>/dev/null)"
+    if [ -n "$rel" ] && phone_root root; then
+      tmp="$(mktemp)"; chmod 600 "$tmp"
+      if phone_get "$rel" "$tmp" && sudo cryptsetup open --key-file "$tmp" "$VAULT_IMG" "$VAULT_MAPPER" 2>/dev/null; then
+        opened_by="phone"
+      fi
+      shred -u "$tmp" 2>/dev/null || rm -f "$tmp"
+    fi
+  fi
+  if [ "$opened_by" != "phone" ]; then
+    sudo cryptsetup open "$VAULT_IMG" "$VAULT_MAPPER" || die "could not open the vault"
+  fi
   sudo mount "/dev/mapper/$VAULT_MAPPER" "$VAULT_MNT" || { sudo cryptsetup close "$VAULT_MAPPER"; die "mount failed"; }
-  printf 'vault[1]{action,state,img,mount}:\n  "open","open","%s","%s"\n' "$VAULT_IMG" "$VAULT_MNT"
+  printf 'vault[1]{action,state,img,mount,by}:\n  "open","open","%s","%s","%s"\n' "$VAULT_IMG" "$VAULT_MNT" "$opened_by"
 }
 
 cmd_close() {
@@ -145,6 +175,58 @@ cmd_fido2_list() {
   sudo systemd-cryptenroll --fido2-device=list "$VAULT_IMG"
 }
 
+# --- the phone key (MTP over USB) --------------------------------------------
+# Enroll: make a random keyfile, place it on the phone, add it as a LUKS slot.
+# The key is NEVER kept on this machine (only the phone holds it), so this costs
+# no local secret. Open: read it back after the phone is unlocked.
+cmd_phone_enroll() {
+  need cryptsetup cryptsetup
+  [ -e "$VAULT_IMG" ] || die "no vault at $VAULT_IMG — run: $(basename "$0") init"
+  command -v phone_put >/dev/null 2>&1 || die "phone-lib.sh is missing beside this door"
+  local root=""
+  phone_root root || die "no phone found — $(phone_hint)"
+  local tmp; tmp="$(mktemp)"; chmod 600 "$tmp"
+  head -c 64 /dev/urandom > "$tmp" || { rm -f "$tmp"; die "could not make a key"; }
+  say "Placing the key on the phone at '$VAULT_PHONE_KEY' ..."
+  phone_put "$tmp" "$VAULT_PHONE_KEY" || { rm -f "$tmp"; die "could not write the key to the phone — $(phone_hint)"; }
+  say "Adding it as a vault slot (you will be asked for your EXISTING passphrase) ..."
+  sudo cryptsetup luksAddKey "$VAULT_IMG" "$tmp" || { rm -f "$tmp"; die "luksAddKey failed"; }
+  shred -u "$tmp" 2>/dev/null || rm -f "$tmp"
+  printf '%s\n' "$VAULT_PHONE_KEY" > "$PHONE_MARKER"; chmod 600 "$PHONE_MARKER" 2>/dev/null || true
+  printf 'vault[1]{action,state,phone-key}:\n  "phone-enroll","enrolled","%s"\n' "$VAULT_PHONE_KEY"
+}
+
+cmd_phone_status() {
+  local enrolled="no" rel="-" here="no" root=""
+  [ -r "$PHONE_MARKER" ] && { enrolled="yes"; rel="$(cat "$PHONE_MARKER" 2>/dev/null)"; }
+  command -v phone_root >/dev/null 2>&1 && phone_root root && here="yes"
+  printf 'vault[1]{enrolled,key-path,phone-present}:\n  "%s","%s","%s"\n' "$enrolled" "$rel" "$here"
+}
+
+# Revoke: remove the key's LUKS slot (using the key from the phone), then delete
+# the phone copy and the marker. With no phone present, the slot cannot be
+# removed by this door — say so plainly rather than leaving a live slot quietly.
+cmd_phone_remove() {
+  need cryptsetup cryptsetup
+  [ -r "$PHONE_MARKER" ] || die "no phone key is enrolled"
+  local rel; rel="$(cat "$PHONE_MARKER" 2>/dev/null)"
+  local root="" tmp=""
+  if command -v phone_root >/dev/null 2>&1 && phone_root root; then
+    tmp="$(mktemp)"; chmod 600 "$tmp"
+    if phone_get "$rel" "$tmp"; then
+      sudo cryptsetup luksRemoveKey "$VAULT_IMG" "$tmp" || { shred -u "$tmp" 2>/dev/null; die "could not remove the LUKS slot"; }
+      shred -u "$tmp" 2>/dev/null || rm -f "$tmp"
+      rm -f "$root/$rel" 2>/dev/null || true
+    else
+      rm -f "$tmp"; die "the phone is here but the key file '$rel' was not found — $(phone_hint)"
+    fi
+  else
+    die "the phone is not here — plug it in to revoke its slot (the LUKS slot is NOT removed yet)"
+  fi
+  rm -f "$PHONE_MARKER"
+  printf 'vault[1]{action,state,phone-key}:\n  "phone-remove","removed","%s"\n' "$rel"
+}
+
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -159,5 +241,8 @@ case "$ACTION" in
   passwd)        cmd_passwd "$@" ;;
   fido2-enroll)  cmd_fido2_enroll "$@" ;;
   fido2-list)    cmd_fido2_list "$@" ;;
+  phone-enroll)  cmd_phone_enroll "$@" ;;
+  phone-status)  cmd_phone_status "$@" ;;
+  phone-remove)  cmd_phone_remove "$@" ;;
   *) die "unknown action: $ACTION — help: $(basename "$0") --help" ;;
 esac
