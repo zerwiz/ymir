@@ -20,7 +20,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
 | Install | `install.sh` / `bin/engine/ymir-install.sh` | One command installs Ymir into a prefix you own, writes PATH, runs first setup, then proves it | — |
-| Runtime | The engine (`src/ymir_runtime/`) | The runtime core behind every door: `seat · status · send · stop` | — |
+| Runtime | The engine (`src/ymir_runtime/`) | The runtime core behind every door: `seat · status · send · stop` | [docs/features/the-engine.md](docs/features/the-engine.md) |
 | Agent | Brokk (the primary) | The counsellor: plans, steers, reviews, dispatches — one agent, any harness (Pi · OpenCode · Claude Code · Codex · Cursor) | — |
 | Workers | Eindri (isolated sub-agents) | Complex work forged in isolation, never in the main tree | — |
 | Isolation | Yggdrasil (worktrees) + Utgard (sandbox) | Parallel branches, zero collision; untrusted code runs sandboxed | — |
@@ -38,7 +38,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Secrets | The secrets vault (`$YMIR_HOME/hodd/secrets`, age) | Credentials encrypted at rest, referenced by path, never inlined | [docs/guides/SECRETS.md](docs/guides/SECRETS.md) |
 | Vault | **Hnitbjörg — the encrypted document vault** | A LUKS2 container for private documents, sealed by default | — |
 | Vault | **Unlock the vault with your phone** | The vault carries a key on your phone; unlock it (biometrics) and plug it in | [docs/features/unlock-the-vault-with-your-phone.md](docs/features/unlock-the-vault-with-your-phone.md) |
-| Vault | FIDO2 unlock | Open the vault with a hardware security key (a physical touch) | — |
+| Vault | FIDO2 unlock | Open the vault with a hardware security key (a physical touch) | [docs/features/fido2-unlock-the-vault.md](docs/features/fido2-unlock-the-vault.md) |
 | Vault | **Confidential session** | Work on vault content with **no route off the vault** — confined workdir, doors off, model tier (local/none/remote), `--airlock` for no network | [docs/features/confidential-session.md](docs/features/confidential-session.md) |
 
 ## Agents, work & collaboration
@@ -47,27 +47,27 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 |---|---|---|---|
 | Work | Mjollnir (issue → PR) | GitHub issue → isolated worker → tests → PR; a human always seals | — |
 | Factory | Smíðja + Völundr | Repeatable agent+code pipelines: rosters, bounded phases, typed envelopes, trace | — |
-| Tickets | Skuld (ticket hall) | The project ledger of tickets and plans, on the heart | — |
-| Collaboration | Ratatoskr (A2A 1.0) | Agent-to-agent tasks over an open protocol; agent cards, lifecycle | — |
-| Skills | Galdr + Gungnir | The craft: skills, standards, and synthesis of a missing capability | — |
-| Workers | Hermes runtime | An adopted worker runtime with its own brain, memory, and subagents | — |
-| Meetings | Snotra (the meeting ear) | Captures a call (PipeWire), transcribes (whisper.cpp), mines minutes into the hoard | — |
+| Tickets | Skuld (ticket hall) | The project ledger of tickets and plans, on the heart | [docs/features/skuld-the-ticket-hall.md](docs/features/skuld-the-ticket-hall.md) |
+| Collaboration | Ratatoskr (A2A 1.0) | Agent-to-agent tasks over an open protocol; agent cards, lifecycle | [docs/features/ratatoskr-a2a.md](docs/features/ratatoskr-a2a.md) |
+| Skills | Galdr + Gungnir | The craft: skills, standards, and synthesis of a missing capability | [docs/features/galdr-and-gungnir-skills.md](docs/features/galdr-and-gungnir-skills.md) |
+| Workers | Hermes runtime | An adopted worker runtime with its own brain, memory, and subagents | [docs/features/hermes-the-worker-runtime.md](docs/features/hermes-the-worker-runtime.md) |
+| Meetings | Snotra (the meeting ear) | Captures a call (PipeWire), transcribes (whisper.cpp), mines minutes into the hoard | [docs/features/snotra-the-meeting-ear.md](docs/features/snotra-the-meeting-ear.md) |
 
 ## Surfaces — what you look at
 
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
 | Portal | Hlidskjalf (control plane) | The dashboard: live data, one tenant, enforced at the proxy | — |
-| Board | Óðrerir (live hall) | The fleet's planning glass — a live board of what is happening | — |
-| Desktop | Sessrúmnir (desktop shell) | The desktop app for the portal | — |
-| Ingress | Bifrost + Heimdall + Gjallarhorn | Routing, OAuth guard, and the outbound tunnel | — |
+| Board | Óðrerir (live hall) | The fleet's planning glass — a live board of what is happening | [docs/features/odrerir-the-live-hall.md](docs/features/odrerir-the-live-hall.md) |
+| Desktop | Sessrúmnir (desktop shell) | The desktop app for the portal | [docs/features/sessrumnir-the-desktop.md](docs/features/sessrumnir-the-desktop.md) |
+| Ingress | Bifrost + Heimdall + Gjallarhorn | Routing, OAuth guard, and the outbound tunnel | [docs/features/bifrost-and-heimdall-the-doors.md](docs/features/bifrost-and-heimdall-the-doors.md) |
 
 ## Fleet & models
 
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
-| Fleet | Fleet sync (Tailscale) | Keep the operator's data on every own machine; no central server | — |
-| Models | The local model rail (llama-router) | Local models, OpenAI-compatible, one resident at a time | — |
+| Fleet | Fleet sync (Tailscale) | Keep the operator's data on every own machine; no central server | [docs/features/the-fleet-sync.md](docs/features/the-fleet-sync.md) |
+| Models | The local model rail (llama-router) | Local models, OpenAI-compatible, one resident at a time | [docs/features/the-model-rail.md](docs/features/the-model-rail.md) |
 | Time | Nornir (the schedule) | Cron jobs per seat/role: briefing, observer, housekeeping, git-sync, well-sync | — |
 | Schedules | The well sync (`bin/time/well-vault-sync.sh`) | Checkpoint and ride the memory across the fleet | — |
 
