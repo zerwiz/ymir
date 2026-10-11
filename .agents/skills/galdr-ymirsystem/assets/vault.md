@@ -53,6 +53,9 @@ bin/vault/hnitbjorg.sh backup --to PATH # copy the encrypted container (header i
 bin/vault/hnitbjorg.sh passwd           # change the passphrase (luksChangeKey)
 bin/vault/hnitbjorg.sh fido2-enroll     # enroll a FIDO2 token (needs a key)
 bin/vault/hnitbjorg.sh fido2-list       # list enrolled tokens
+bin/vault/hnitbjorg.sh phone-enroll     # hold an unlock key on the phone (USB/MTP)
+bin/vault/hnitbjorg.sh phone-status     # enrolled? is the phone here?
+bin/vault/hnitbjorg.sh phone-remove     # revoke the phone key (removes its LUKS slot)
 ```
 
 ## Fleet reach
@@ -85,6 +88,34 @@ Recommend a **YubiKey 5C NFC**, **Nitrokey 3**, or **Token2/Tillitis**. A TPM-on
 slot is *not* agent-resistant — it is machine-bound, so anything on the box could
 unlock it; FIDO2-with-touch is.
 
+## Phone key — unlock with the phone (USB/MTP)
+
+The vault can hold an unlock key **on the operator's phone**: `phone-enroll`
+generates a random keyfile, places it in the phone's storage, and adds the matching
+LUKS slot; `open` reads it back once the phone is unlocked — the phone's biometric
+lock IS the validation — and falls back to the passphrase when the phone is absent.
+
+```bash
+bin/vault/hnitbjorg.sh phone-enroll   # place a key on the phone + add its LUKS slot
+bin/vault/hnitbjorg.sh phone-status   # enrolled? is the phone here?
+bin/vault/hnitbjorg.sh phone-remove   # revoke (removes the LUKS slot + the phone copy)
+```
+
+- **Transport: MTP over USB.** MTP-over-Bluetooth is in the spec but Android does
+  *not* implement it, and no Linux MTP client supports it — so this is **USB-only**.
+  MTP is reached through GVfs (`gvfs-mtp`, present on this seat); **no app on the
+  phone is needed**, so it is license-clean (Apache-2.0).
+- **Honest limit:** the keyfile can be copied off a compromised phone; the gate is
+  the phone's lock, not a per-unlock touch. For a true per-unlock fingerprint, a
+  FIDO2 token (§FIDO2) is stronger. (The external `android-luks` app gives the
+  per-unlock prompt but is **GPL-3.0** — it must never be vendored into Apache-2.0
+  Ymir; it is used only as an external tool.)
+- **Test seam:** `YMIR_PHONE_ROOT=<dir>` makes the library read/write a plain
+  directory, so the flow is provable without a phone
+  (`tests/e2e/vault-phone-proof.sh`).
+- The key sits at `$YMIR_VAULT_PHONE_KEY` (default `Download/hnitbjorg.key`); the
+  enrolled path is recorded in `<vault>/.phone-key`.
+
 ## Install & update
 
 - The installer (`bin/engine/ymir-install.sh`, `step_vault`) ensures `cryptsetup`
@@ -98,4 +129,5 @@ unlock it; FIDO2-with-touch is.
 ## Tests
 
 `tests/` covers the contract: `--version`/help fast paths, `status` TOON shape,
-and the sealed-by-default guarantee (init is never automatic).
+the sealed-by-default guarantee (init is never automatic), and the phone key flow
+(`tests/e2e/vault-phone-proof.sh`, via the `YMIR_PHONE_ROOT` test seam).
