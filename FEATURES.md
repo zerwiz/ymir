@@ -34,7 +34,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
-| Memory | The well (Mimirsbrunn / engram) | One long-term memory: embeddings, recall, per-session knowledge | — |
+| Memory | The well (Mimirsbrunn / engram) | One long-term memory: embeddings, recall, per-session knowledge | [docs/features/the-well-recall-and-remember.md](docs/features/the-well-recall-and-remember.md) |
 | Secrets | The secrets vault (`$YMIR_HOME/hodd/secrets`, age) | Credentials encrypted at rest, referenced by path, never inlined | [docs/guides/SECRETS.md](docs/guides/SECRETS.md) |
 | Vault | **Hnitbjörg — the encrypted document vault** | A LUKS2 container for private documents, sealed by default | — |
 | Vault | **Unlock the vault with your phone** | The vault carries a key on your phone; unlock it (biometrics) and plug it in | [docs/features/unlock-the-vault-with-your-phone.md](docs/features/unlock-the-vault-with-your-phone.md) |
@@ -45,7 +45,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
-| Work | Mjollnir (issue → PR) | GitHub issue → isolated worker → tests → PR; a human always seals | — |
+| Work | Mjollnir (issue → PR) | GitHub issue → isolated worker → tests → PR; a human always seals | [docs/features/mjollnir-issue-to-pr.md](docs/features/mjollnir-issue-to-pr.md) |
 | Factory | Smíðja + Völundr | Repeatable agent+code pipelines: rosters, bounded phases, typed envelopes, trace | — |
 | Tickets | Skuld (ticket hall) | The project ledger of tickets and plans, on the heart | — |
 | Collaboration | Ratatoskr (A2A 1.0) | Agent-to-agent tasks over an open protocol; agent cards, lifecycle | — |
@@ -57,7 +57,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
-| Portal | Hlidskjalf (control plane) | The dashboard: live data, one tenant, enforced at the proxy | — |
+| Portal | Hlidskjalf (control plane) | The dashboard: live data, one tenant, enforced at the proxy | [docs/features/hlidskjalf-the-control-plane.md](docs/features/hlidskjalf-the-control-plane.md) |
 | Board | Óðrerir (live hall) | The fleet's planning glass — a live board of what is happening | — |
 | Desktop | Sessrúmnir (desktop shell) | The desktop app for the portal | — |
 | Ingress | Bifrost + Heimdall + Gjallarhorn | Routing, OAuth guard, and the outbound tunnel | — |
