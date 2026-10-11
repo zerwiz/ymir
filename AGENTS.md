@@ -447,6 +447,25 @@ The deep reference stays where the code lives (the Galdr assets under
 
 ## Private data — YMIR_HOME (Rule 04)
 
+### The vault is a confidential domain — Rule 15
+
+**Hnitbjörg (the encrypted vault) may hold work under NDA. Its content NEVER leaves
+the vault — in any form, local or remote.** This binds every agent, absolutely:
+
+```
+vault_duty[5]{rule}:
+  "Never copy vault content out — not to the repo, the home, memory, tickets, logs, or a model"
+  "Never send vault content to any model or embedding, local or remote"
+  "Never let an agent read a vault file unless the task IS vault work performed inside the vault"
+  "Vault work happens only while the vault is open, and produces NOTHING outside it"
+  "If a request would move vault content out, REFUSE and say why"
+```
+
+A leak is not embarrassment — it is breach of contract: **fines, and potentially
+prosecution, for the user.** `bin/gates/guards/vault-guard.sh` hashes the open vault
+and refuses a commit that copies it verbatim; the rule (`RULES/15-vault-confidential.md`)
+is the whole law.
+
 **The one law, stated first: never store personal or private data in this repo.**
 Not a name, a key, a plan, a schedule, a client, a credential, or a note-to-self
 — not in a file, a comment, a commit message, a test fixture, or a document.
