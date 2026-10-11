@@ -116,6 +116,10 @@ path_component() {  # <path> -> the component it belongs to, or empty
     bin/engine/ymir-install.sh|bin/agents/groa-update.sh|bin/seat/valknut-load.sh|bin/engine/ymir-migrate.sh) echo install ;;
     .pi/*|.agents/skills/*|bin/agents/skill-find.sh|bin/gates/fixes.sh|bin/gates/guards/fixes-guard.sh) echo agents ;;
     bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/queue.sh|bin/gates/checks/home-index-check.sh|bin/no-delete-guard.sh) echo gate ;;
+    # The registry readers: a fix here is a runtime fix, and before this row
+    # bin/skuld/* mapped to NO component — so a correct note under runtime/ covered
+    # nothing and the gate passed on a technicality while saying it could not tell.
+    bin/skuld/*|bin/agents/project-git.sh) echo runtime ;;
     .agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md|apps/hlidskjalf/*) echo hlidskjalf ;;
     .agents/skills/galdr-ymirsystem/assets/smidja.md|.agents/skills/smidja-factory/*) echo smidja ;;
     .agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md|bin/snotra*|tools/snotra/*) echo snotra ;;
