@@ -19,10 +19,10 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
-| Install | `install.sh` / `bin/engine/ymir-install.sh` | One command installs Ymir into a prefix you own, writes PATH, runs first setup, then proves it | — |
+| Install | `install.sh` / `bin/engine/ymir-install.sh` | One command installs Ymir into a prefix you own, writes PATH, runs first setup, then proves it | [docs/features/install-ymir.md](docs/features/install-ymir.md) |
 | Runtime | The engine (`src/ymir_runtime/`) | The runtime core behind every door: `seat · status · send · stop` | — |
-| Agent | Brokk (the primary) | The counsellor: plans, steers, reviews, dispatches — one agent, any harness (Pi · OpenCode · Claude Code · Codex · Cursor) | — |
-| Workers | Eindri (isolated sub-agents) | Complex work forged in isolation, never in the main tree | — |
+| Agent | Brokk (the primary) | The counsellor: plans, steers, reviews, dispatches — one agent, any harness (Pi · OpenCode · Claude Code · Codex · Cursor) | [docs/features/brokk-the-primary-agent.md](docs/features/brokk-the-primary-agent.md) |
+| Workers | Eindri (isolated sub-agents) | Complex work forged in isolation, never in the main tree | [docs/features/eindri-isolated-workers.md](docs/features/eindri-isolated-workers.md) |
 | Isolation | Yggdrasil (worktrees) + Utgard (sandbox) | Parallel branches, zero collision; untrusted code runs sandboxed | — |
 | Session | Sága (session-start digest) | Boots a session: what stands, what is owed, what the seat is | — |
 | Record | The plan ledger + Runes (audit) | Every plan and every significant action, written down, never lost | — |
