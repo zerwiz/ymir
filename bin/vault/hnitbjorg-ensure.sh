@@ -30,7 +30,7 @@ fi
 
 _home=""
 command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _home
-[ -n "$_home" ] || _home="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+[ -n "$_home" ] || { printf 'error: cannot resolve the operator home — bin/vault/hoard-lib.sh is missing\n' >&2; exit 2; }
 VAULT_DIR="${YMIR_VAULT_DIR:-$_home/vault}"
 VAULT_IMG="$VAULT_DIR/hnitbjorg.img"
 

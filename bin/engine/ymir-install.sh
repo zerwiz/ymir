@@ -1062,8 +1062,10 @@ step_vault() {
     . "$SCRIPT_DIR/../vault/hoard-lib.sh" 2>/dev/null || true
     local home="" img="" state="absent"
     command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root home
-    img="${YMIR_VAULT_DIR:-${home:-$HOME/Documents/ymirhome}/vault}/hnitbjorg.img"
-    [ -e "$img" ] && state="sealed"
+    if [ -n "$home" ]; then
+      img="${YMIR_VAULT_DIR:-$home/vault}/hnitbjorg.img"
+      [ -e "$img" ] && state="sealed"
+    fi
     add vault OK "cryptsetup present · vault $state (init: bin/vault/hnitbjorg.sh init)"
   else
     add vault WARN "cryptsetup absent — bin/vault/hnitbjorg-ensure.sh ensure --install"
