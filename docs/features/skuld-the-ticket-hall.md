@@ -19,6 +19,7 @@ Agents use the **MCP tools** (the ticket hall is a service, not a shell script):
 
 ```
 skuld_namespaces_list      the registered projects
+skuld_namespaces_create    register one — a slug + a display name (tickets and plans refuse an unregistered namespace)
 skuld_tickets_list         filter by namespace/status/priority
 skuld_tickets_create       a registered namespace, title, description, priority
 skuld_tickets_get          one ticket
@@ -50,4 +51,4 @@ bin/skuld/role-lib.sh        # the role resolution used by the installer
 |---|---|
 | `blocked: illegal march …` | You attempted an illegal transition. The operator clears it (`skuld_blocks_clear`); then walk the steps in order. |
 | A write is `queued to the journal` | The heart is unreachable; it will flush on `skuld_sync` — the write is not lost. |
-| A create is refused | The namespace is not registered — `skuld_namespaces_list`. |
+| A create is refused | The namespace is not registered — `skuld_namespaces_list`, then `skuld_namespaces_create` (a slug like `odrerir` and a display name). |

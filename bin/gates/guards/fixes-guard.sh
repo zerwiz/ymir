@@ -123,6 +123,7 @@ path_component() {  # <path> -> the component it belongs to, or empty
     .agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md|apps/hlidskjalf/*) echo hlidskjalf ;;
     .agents/skills/galdr-ymirsystem/assets/smidja.md|.agents/skills/smidja-factory/*) echo smidja ;;
     .agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md|bin/snotra*|tools/snotra/*) echo snotra ;;
+    tools/tickets-mcp/*|bin/desktop/odrerir*|apps/odrerir/*) echo odrerir ;;
   esac
 }
 covered=0
