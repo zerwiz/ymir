@@ -12,11 +12,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",399
+  "shell doors (bin/*.sh)",411
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",27
   "Pi extension tools",0
-  "generated","2026-10-06"
+  "generated","2026-10-11"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -261,7 +261,7 @@ capabilities[5]{surface,count}:
 | fleet-version.sh | fleet-version.sh — is the fleet on ONE version? (plan 51, Phase 2) | tested+named | keep (a human or a cron row must run it) |
 | hamr-harness.sh | hamr-harness.sh - detect the agent harness (Hamr) this process tree runs | tested+named | keep (a human or a cron row must run it) |
 | huginn-research-worker.sh | huginn-research-worker — Apodex-powered research worker (Eindri). | tested | keep (a human or a cron row must run it) |
-| tailscale-sync.sh | tailscale-sync.sh — sync the Allfather's pi data across his OWN machin | tested | keep (a human or a cron row must run it) |
+| tailscale-sync.sh | tailscale-sync.sh — sync the Allfather's pi data across his OWN machin | tested+named | keep (a human or a cron row must run it) |
 | topology.sh | topology.sh — what IS this machine in the fleet, and is it talking to  | tested+named | keep (a human or a cron row must run it) |
 | ymir-fleet.sh | ymir-fleet.sh — FLEET MODE, one command for npm users. Raise (or repor | tested | keep (a human or a cron row must run it) |
 | ymir-platform.sh | ymir-platform.sh — the portability layer. | tested+named | keep (a human or a cron row must run it) |
@@ -302,16 +302,21 @@ capabilities[5]{surface,count}:
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
 | guards.sh | guards.sh — every TREE ward, in one command. | tested | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
+| confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
+| cron-guard.sh | cron-guard.sh — the shipped tree must satisfy its own schedule. | tested | keep (a human or a cron row must run it) |
+| dead-code-guard.sh | dead-code-guard.sh — code that exists and is never reached is a claim  | tested | keep (a human or a cron row must run it) |
 | defaults-guard.sh | defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE. | tested+named | keep (a human or a cron row must run it) |
 | docs-guard.sh | docs-guard.sh — docs/ is the PUBLIC, user-facing tree. Block operator- | tested | keep (a human or a cron row must run it) |
+| features-guard.sh | features-guard.sh — every feature page is catalogued (Rule 14). | tested | keep (a human or a cron row must run it) |
 | fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | tested+named | keep (a human or a cron row must run it) |
-| hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested | keep (a human or a cron row must run it) |
+| hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested+named | keep (a human or a cron row must run it) |
 | perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |
 | private-guard.sh | private-guard.sh — enforce the Hoard boundary (Rule 04). Nothing under | tested | keep (a human or a cron row must run it) |
 | public-guard.sh | public-guard.sh — every PUBLIC, user-facing file must be free of opera | tested+named | keep (a human or a cron row must run it) |
 | runtime-guard.sh | runtime-guard.sh — THE TREE IS NOT A RUNTIME. | tested | keep (a human or a cron row must run it) |
 | secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
 | syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
+| vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested+named | keep (a human or a cron row must run it) |
 | nidhogg.sh | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination fi | tested | keep (a human or a cron row must run it) |
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
@@ -359,6 +364,7 @@ capabilities[5]{surface,count}:
 | mimir-reflect.sh | mimir-reflect — smelt the well's episodes into facts, through the LLAM | tested | keep (a human or a cron row must run it) |
 | mimir.sh | mimir.sh — the well (Mimirsbrunn). Drink before you act, water it afte | tested+named | keep (a human or a cron row must run it) |
 | runes-append.sh | runes-append.sh — the append-only Runes ledger, a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
+| runes-project.sh | runes-project.sh — the DAG projector, regenerates runes_audit.md from  | tested | keep (a human or a cron row must run it) |
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | tested+named | keep (a human or a cron row must run it) |
 | workspace-rag.sh | workspace-rag.sh — memory over the realm workspaces (W0038). | tested+named | keep (a human or a cron row must run it) |
 | wyrd-db.sh | wyrd-db.sh — the database layer (W0040). Applies the platform schema a | tested+named | keep (a human or a cron row must run it) |
@@ -403,12 +409,18 @@ capabilities[5]{surface,count}:
 | snotra-detect.sh | snotra-detect.sh — the ear's watch: pricks up when a call begins, and  | tested+named | keep (a human or a cron row must run it) |
 | snotra-ensure.sh | snotra-ensure.sh — ensure the meeting ear's transcription engine is pr | tested+named | keep (a human or a cron row must run it) |
 | snotra-iscall.sh | snotra-iscall.sh — is a real call in progress on this seat? | tested | keep (a human or a cron row must run it) |
+| snotra-live.sh | snotra-live.sh — THE LIVE TAIL: listen through this machine's micropho | tested+named | keep (a human or a cron row must run it) |
 | snotra-mine.sh | snotra-mine.sh — mine decisions and action items out of a transcript. | tested+named | keep (a human or a cron row must run it) |
 | snotra-transcribe.sh | snotra-transcribe.sh — transcribe a meeting recording and produce minu | tested+named | keep (a human or a cron row must run it) |
 | ymir-say.sh | ymir-say.sh — let Ymir speak on the Allfather's desktop. | tested+named | keep (a human or a cron row must run it) |
+| well-vault-sync.sh | well-vault-sync.sh — Kaia's memory across the Allfather's machines. | tested | keep (a human or a cron row must run it) |
+| confidential.sh | confidential.sh — a session where vault work has no route off the vaul | tested+named | keep (a human or a cron row must run it) |
 | gleipnir-lock-lib.sh | gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
+| hnitbjorg-ensure.sh | hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path i | tested+named | keep (a human or a cron row must run it) |
+| hnitbjorg.sh | hnitbjorg.sh — Hnitbjörg: the encrypted document vault. | tested+named | keep (a human or a cron row must run it) |
 | hoard-lib.sh | hoard-lib.sh — where the operator's HOME lives, and the two roots bene | tested+named | keep (a human or a cron row must run it) |
 | hodd.sh | hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant. | tested+named | keep (a human or a cron row must run it) |
+| phone-lib.sh | phone-lib.sh — reach the operator's phone storage for the vault's phon | tested | keep (a human or a cron row must run it) |
 
 ## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)
 

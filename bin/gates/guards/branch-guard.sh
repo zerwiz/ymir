@@ -2,7 +2,7 @@
 # branch-guard.sh — Rule 08: no push may land on a protected branch.
 #
 # Extracted from the ad-hoc .git/hooks/pre-push so the delivery gate is
-# versioned and reproducible (installed by bin/changelog-guard.sh --install,
+# versioned and reproducible (installed by bin/gates/guards/fixes-guard.sh --install,
 # or run by hand). A local merge on a verbal word is a decision, not a
 # delivery — the gate is only fed by a PR (RULES/08-delivery-gate.md).
 #

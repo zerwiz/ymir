@@ -43,7 +43,14 @@ ALLOW='^(hodd/(README\.md|\.gitignore|AGENTS\.example\.md|[^/]+\.example(\.md)?)
 # NOT the bare word. `docs/guides/SECRETS.md` is a public how-to (it
 # teaches where secrets go and holds no value), so a bare `secrets` match would
 # be a false positive.
-TENANT_DOC='((^|/)(company_wiki|wiki|policies|handbook|playbook|internal|confidential)(/|\.)|(^|/)(vision|strategy|roadmap|policies)[^/]*\.(md|txt|rst|pdf|docx?)$)'
+# The pattern below had drifted from that doctrine: `(…)(/|\.)` matched the bare word
+# with ANY extension, so it bit `bin/vault/confidential.sh` (Rule 16's own door) and
+# `docs/features/confidential-session.md` (Rule 14's public feature doc) — the exact
+# false-positive class the paragraph above warns about. Restored to the doctrine:
+# a company SHELF is a directory, and a tenant DOCUMENT is one of the words that is
+# tenant content in a document's NAME (vision · strategy · roadmap · policies).
+# Measured 2026-10-11: those two fair files were the compliance row's whole red.
+TENANT_DOC='((^|/)(company_wiki|wiki|handbook|playbook|internal|confidential)/|(^|/)(vision|strategy|roadmap|policies)[^/]*\.(md|txt|rst|pdf|docx?)$)'
 # Public exceptions: a wiki-shaped name that is a genuine scaffold or doc.
 TENANT_DOC_ALLOW='(\.example$|\.example\.md$|README\.md$|/\.gitkeep$)'
 
@@ -81,7 +88,17 @@ scan_list() {
     fi
     # Synthetic fixtures are not the operator. A test's /h[o]me/alice and a
     # fleet.json.example's host.tail.ts.net are teaching shapes, not identity.
+    #
+    # THE FIX NOTES ARE A RECORD, NOT A DOCUMENT (Rule 06). A note that proves a leak
+    # was removed must QUOTE the value it removed — `docs/fixes/gate/0.1.101-…` and
+    # `0.1.102-…` are exactly that, and one of them is the note about THIS ward catching
+    # its own files. Append-only history may never be rewritten, so a ward that demands
+    # it be rewritten is a ward fighting the law. Exempt the shelf; the live tree is
+    # still judged in full. (Measured 2026-10-11: these 10 notes were the whole reason
+    # the compliance row was red, and the ward had been failing SILENTLY with an empty
+    # reason until the day before — its caller named the pre-move path.)
     case "$f" in
+      docs/fixes/*) continue ;;
       *.test.sh|*.test.ts|*.test.py|*/tests/*|tests/*|*.example|*.example.*|*/fixtures/*) continue ;;
     esac
     if [ -f "$ROOT/$f" ] && grep -Eq "$PERSONAL" "$ROOT/$f" 2>/dev/null && ! grep -Eq "$PERSONAL_OK" "$ROOT/$f" 2>/dev/null; then

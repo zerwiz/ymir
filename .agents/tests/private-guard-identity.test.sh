@@ -69,6 +69,45 @@ fi
 git -C "$ROOT" rm -f --cached "$f" >/dev/null 2>&1
 rm -f "$ROOT/$f"
 
+# The tenant-doc rule judges a company SHELF or a tenant DOCUMENT — never the bare word.
+# Measured 2026-10-11: the old pattern matched the bare word with any extension, so it bit
+# `bin/vault/confidential.sh` (Rule 16's own door) and `docs/features/confidential-session.md`
+# (Rule 14's public feature doc) and held the compliance row red.
+mkdir -p "$ROOT/qprobe/wiki"
+for probe in 'qprobe/confidential.sh:#!/bin/sh|# the confidential-session door (Rule 16)' \
+             'qprobe/confidential-session.md:# the user-facing how-to for Rule 16' ; do
+  f="${probe%%:*}"
+  printf '%s\n' "${probe#*:}" >"$ROOT/$f"
+  git -C "$ROOT" add -- "$f" 2>/dev/null
+  if bash "$GUARD" >/dev/null 2>&1; then
+    ok "allows a fair file: $f"
+  else
+    bad "allows a fair file: $f (the bare word is not company knowledge)"
+  fi
+  git -C "$ROOT" rm -f --cached "$f" >/dev/null 2>&1
+  rm -f "$ROOT/$f"
+done
+
+# ...and still bites the tenant SHAPE: a company shelf, and a document named for one.
+for probe in 'qprobe/wiki/notes.md:a company shelf' \
+             'qprobe/strategy-2026.md:a tenant document' ; do
+  f="${probe%%:*}" label="${probe#*:}"
+  printf '%s\n' "$label" >"$ROOT/$f"
+  git -C "$ROOT" add -- "$f" 2>/dev/null
+  if out="$(bash "$GUARD" 2>&1)"; then
+    bad "blocks $label ($f)"
+  else
+    case "$out" in
+      *"tenant/company document"*) ok "blocks $label ($f)" ;;
+      *) bad "blocks $label — wrong reason"
+         printf '     %s\n' "$out" | head -2 >&2 ;;
+    esac
+  fi
+  git -C "$ROOT" rm -f --cached "$f" >/dev/null 2>&1
+  rm -f "$ROOT/$f"
+done
+rmdir "$ROOT/qprobe/wiki" "$ROOT/qprobe" 2>/dev/null
+
 # The guard itself must never name the operator.
 if grep -Eq 'tailefab|zwrtzk|100\.69\.' "$GUARD" 2>/dev/null; then
   bad "the guard names no operator value"
