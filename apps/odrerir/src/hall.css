@@ -544,5 +544,9 @@ body {
     width: 100%;
   }
 }
-/* the ORIGINAL hall board kit, scoped to #livehall (2026-09-24: never simplify) */
-@import "./hall/lh-scoped.css";
+/* the ORIGINAL hall board kit, scoped to #livehall (2026-09-24: never simplify)
+   is imported by JS, not by @import HERE: CSS requires @import to precede every other
+   statement, so an import at the END of this file was silently DROPPED by the build —
+   `#livehall` appeared 0 times in the bundle and the board rendered with no kit at all.
+   It is imported in src/main.tsx after this file, which keeps the kit's intended order
+   (the kit wins over the hall's own rules). Measured 2026-10-11. */
