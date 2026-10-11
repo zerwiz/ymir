@@ -23,9 +23,9 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Runtime | The engine (`src/ymir_runtime/`) | The runtime core behind every door: `seat · status · send · stop` | — |
 | Agent | Brokk (the primary) | The counsellor: plans, steers, reviews, dispatches — one agent, any harness (Pi · OpenCode · Claude Code · Codex · Cursor) | [docs/features/brokk-the-primary-agent.md](docs/features/brokk-the-primary-agent.md) |
 | Workers | Eindri (isolated sub-agents) | Complex work forged in isolation, never in the main tree | [docs/features/eindri-isolated-workers.md](docs/features/eindri-isolated-workers.md) |
-| Isolation | Yggdrasil (worktrees) + Utgard (sandbox) | Parallel branches, zero collision; untrusted code runs sandboxed | — |
+| Isolation | Yggdrasil (worktrees) + Utgard (sandbox) | Parallel branches, zero collision; untrusted code runs sandboxed | [docs/features/yggdrasil-and-utgard-isolation.md](docs/features/yggdrasil-and-utgard-isolation.md) |
 | Session | Sága (session-start digest) | Boots a session: what stands, what is owed, what the seat is | [docs/features/saga-the-session-start.md](docs/features/saga-the-session-start.md) |
-| Record | The plan ledger + Runes (audit) | Every plan and every significant action, written down, never lost | — |
+| Record | The plan ledger + Runes (audit) | Every plan and every significant action, written down, never lost | [docs/features/the-plan-ledger-and-runes.md](docs/features/the-plan-ledger-and-runes.md) |
 | Updates | Gróa (updater) | Fast-forwards Brokk and its homes, then mends forward | [docs/features/groa-and-eir-update-and-heal.md](docs/features/groa-and-eir-update-and-heal.md) |
 | Health | Eir (the healer) | Diagnoses every surface, then mends what is broken | [docs/features/groa-and-eir-update-and-heal.md](docs/features/groa-and-eir-update-and-heal.md) |
 | Gate | The wards (`bin/gates/guards/*`) | secret · private · public · defaults · cron · branch · fixes — the delivery gate | [docs/features/the-wards-the-delivery-gate.md](docs/features/the-wards-the-delivery-gate.md) |
@@ -35,7 +35,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
 | Memory | The well (Mimirsbrunn / engram) | One long-term memory: embeddings, recall, per-session knowledge | [docs/features/the-well-recall-and-remember.md](docs/features/the-well-recall-and-remember.md) |
-| Secrets | The secrets vault (`$YMIR_HOME/hodd/secrets`, age) | Credentials encrypted at rest, referenced by path, never inlined | [docs/guides/SECRETS.md](docs/guides/SECRETS.md) |
+| Secrets | The secrets vault (`$YMIR_HOME/hodd/secrets`, age) | Credentials encrypted at rest, referenced by path, never inlined | [docs/features/the-secrets-vault.md](docs/features/the-secrets-vault.md) |
 | Vault | **Hnitbjörg — the encrypted document vault** | A LUKS2 container for private documents, sealed by default | — |
 | Vault | **Unlock the vault with your phone** | The vault carries a key on your phone; unlock it (biometrics) and plug it in | [docs/features/unlock-the-vault-with-your-phone.md](docs/features/unlock-the-vault-with-your-phone.md) |
 | Vault | FIDO2 unlock | Open the vault with a hardware security key (a physical touch) | — |
