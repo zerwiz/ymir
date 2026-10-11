@@ -23,8 +23,14 @@ _registry_dir() { cd "$(dirname "${BASH_SOURCE[0]}")" && pwd; }
 _registry_load_hoard() {
   [ -z "${REGISTRY_LIB_HOARD_LOADED:-}" ] || return 0
   local d; d="$(_registry_dir)"
+  # The library lives under bin/vault, not beside this file. The path here used to
+  # be the sibling "$d/hoard-lib.sh" — which does not exist — so the hoard was never
+  # loaded, `hoard_root` was empty, and every reader of the master project registry
+  # (bin/agents/project-git.sh and everything downstream of it) fell back to
+  # bin/registry/projects.yaml and reported "registry not found". The shellcheck
+  # directive below was already correct; only the code was wrong.
   # shellcheck source=bin/vault/hoard-lib.sh
-  [ -r "$d/hoard-lib.sh" ] && . "$d/hoard-lib.sh" && REGISTRY_LIB_HOARD_LOADED=1
+  [ -r "$d/../vault/hoard-lib.sh" ] && . "$d/../vault/hoard-lib.sh" && REGISTRY_LIB_HOARD_LOADED=1
   return 0
 }
 
