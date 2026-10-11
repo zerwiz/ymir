@@ -36,7 +36,7 @@ export const SERVICES: Record<ServiceName, Service> = {
     purpose:
       "Read-only HTTP view of tickets/ — open · in-progress · review · done.",
     script: "server/tickets/index.mjs",
-    port: Number(process.env.TICKETS_PORT) || 4174,
+    port: Number(process.env.TICKETS_PORT) || 7314,
     ticket: "feature-0006",
   },
   bridge: {
@@ -45,7 +45,7 @@ export const SERVICES: Record<ServiceName, Service> = {
       "Text-to-diagram backend: forwards the AI panel's prompt to an OpenAI-compatible model.",
     script: "server/ttd-bridge/index.mjs",
     startScript: "server/ttd-bridge/start.sh",
-    port: Number(process.env.TTD_BRIDGE_PORT) || 4173,
+    port: Number(process.env.TTD_BRIDGE_PORT) || 7313,
     ticket: "feature-0005",
   },
   collab: {
@@ -53,7 +53,7 @@ export const SERVICES: Record<ServiceName, Service> = {
     purpose:
       "Room server. Relays encrypted bytes only — it cannot read a room (the key is in the URL fragment).",
     script: "server/collab/index.mjs",
-    port: Number(process.env.COLLAB_PORT) || 3002,
+    port: Number(process.env.COLLAB_PORT) || 7312,
     ticket: "feature-0003",
   },
 };
