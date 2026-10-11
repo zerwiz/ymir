@@ -49,5 +49,15 @@ out="$( cd "$REPO" && YMIR_VAULT_GUARD_SRC="" bash "$GUARD" check 2>/dev/null )"
 printf '%s' "$out" | grep -q 'sealed' && ok "a sealed vault is reported, not silently passed" \
   || bad "sealed-vault message: $out"
 
+# 4. NO ARGS scans the staged change — the pre-commit path (a guard that prints
+#    help on no args is a guard that never runs).
+cp "$VAULT/secret.txt" "$REPO/copied2.txt"
+( cd "$REPO" && git add copied2.txt )
+if ( cd "$REPO" && YMIR_VAULT_GUARD_SRC="$VAULT" bash "$GUARD" >/dev/null 2>&1 ); then
+  bad "no-args (pre-commit) did not scan"
+else
+  ok "no-args (pre-commit) scans the staged change"
+fi
+
 [ "$fail" = 0 ] && { printf '  "ok","all vault-guard proofs passed"\n'; exit 0; }
 printf '  "FAIL","vault-guard proofs failed"\n'; exit 1

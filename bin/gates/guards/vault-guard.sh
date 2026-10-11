@@ -31,7 +31,7 @@ ROOT="$(_root)"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   check|--all|"") ;;
   *) printf 'error: unknown action %s\nhelp: vault-guard.sh [check|--all]\n' "${1-}" >&2; exit 2 ;;
 esac
@@ -67,7 +67,7 @@ vault_count="$(wc -l < "$tmp" | tr -d ' ')"
 
 # Candidate files: the staged change (pre-commit) or every tracked file (--all).
 git_dir="$(git rev-parse --git-dir 2>/dev/null || true)"
-if [ "$1" = "--all" ]; then
+if [ "${1-}" = "--all" ]; then
   files="$(git ls-files 2>/dev/null)"
 else
   files="$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null)"
