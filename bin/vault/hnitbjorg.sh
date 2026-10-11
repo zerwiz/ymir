@@ -53,8 +53,9 @@ fi
 # $YMIR_VAULT_DIR wins; else <home>/vault. The mount point is $YMIR_VAULT_MNT,
 # else ~/Vault. One documented default each.
 _ymir_home=""
-if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root _ymir_home; fi
-[ -n "$_ymir_home" ] || _ymir_home="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _ymir_home
+# The home is NEVER guessed here — hoard-lib.sh owns the one default (Rule 07).
+[ -n "$_ymir_home" ] || { printf 'error: cannot resolve the operator home — bin/vault/hoard-lib.sh is missing beside this door\n' >&2; exit 2; }
 VAULT_DIR="${YMIR_VAULT_DIR:-$_ymir_home/vault}"
 VAULT_MNT="${YMIR_VAULT_MNT:-$HOME/Vault}"
 VAULT_IMG="$VAULT_DIR/hnitbjorg.img"

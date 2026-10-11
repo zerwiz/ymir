@@ -35,3 +35,12 @@ GPL-3.0 and is therefore **not** vendored — see tickets ymir/28–30.
 - `bin/vault/hnitbjorg.sh`
 - `.agents/skills/galdr-ymirsystem/assets/vault.md`
 - `tests/e2e/vault-phone-proof.sh` (new)
+
+### Also (found by the delivery gate)
+
+The push's `defaults-guard` refused the tree: three places **guessed the operator
+home** with `"${YMIR_HOME:-$HOME/Documents/ymirhome}"` — `bin/vault/hnitbjorg.sh`,
+`bin/vault/hnitbjorg-ensure.sh`, and the installer's `step_vault` in
+`bin/engine/ymir-install.sh`. Rule 07 gives the ONE default to `bin/vault/hoard-lib.sh`
+alone. All three now resolve through `ymir_home_root` and fail loudly if the resolver
+is absent, instead of restating where the home lives. `defaults-guard check` is clean.
