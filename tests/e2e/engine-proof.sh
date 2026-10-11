@@ -32,7 +32,7 @@ case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   proof|parity) ACTION="$1" ;;
-  *) printf 'error: unknown verb %s\nhelp: bin/engine-proof.sh [proof|parity]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown verb %s\nhelp: tests/e2e/engine-proof.sh [proof|parity]\n' "$1" >&2; exit 2 ;;
 esac
 
 fail() { printf 'proof: FAIL — %s\n' "$1" >&2; exit 1; }

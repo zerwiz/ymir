@@ -112,9 +112,17 @@ fi
 # Comments are excluded: a header that explains WHY a guard exists may use the
 # word ("it was an empty placeholder, but the shape invited the leak"), and that
 # is documentation, not a stub. The gate is about shipped BEHAVIOUR.
+#
+# The ALLOWLIST REASON VOCABULARY is a token pair RULES/17 makes LAW —
+# `consumer: <who>` and `todo:<section>` — and the dead-code ward both PARSES it and
+# teaches it in a printf. A word that is a documented vocabulary token is not a stub.
+# (Measured 2026-10-11: those two lines were the compliance row's whole red.)
+# The exclusion demands the consumer/todo PAIR, so a lone `todo` in shipped code is
+# still caught — see the probe in the same change's fix note.
 mock_hits=$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
   | grep -viE '^[^:]+:[0-9]+:[[:space:]]*#' \
-  | grep -v 'PUBLIC=' || true)
+  | grep -v 'PUBLIC=' \
+  | grep -vE 'consumer:.*todo:|todo:.*consumer:' || true)
 if [ -z "$mock_hits" ]; then
   add mocks "no mocks in shipped runtime" PASS "bin/ clean"
 else

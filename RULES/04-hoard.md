@@ -301,3 +301,28 @@ corrected to the moved paths.
 
 Confirmed by the Allfather 2026-10-10. Appended under Law 06; a correction is a
 new entry citing this one.
+
+## Correction — 2026-10-11 · the two wards moved, and the check kept calling the old paths
+
+**Cites:** the ward paragraphs above (the lines naming `bin/private-guard.sh` and
+`bin/secret-guard.sh`) and the appended Rule 04 section of 2026-10-01.
+
+The `bin/` move seated both wards under `bin/gates/guards/`:
+
+```
+  the private ward   bin/gates/guards/private-guard.sh
+  the secret ward    bin/gates/guards/secret-guard.sh
+```
+
+`bin/private-guard.sh` and `bin/secret-guard.sh` no longer exist. Every reference
+above is therefore a path to nothing — and the compliance gate, which called them
+by those paths, was failing with an **empty** reason: bash answered
+`No such file or directory`, the ward's own summary line never printed, and the row
+read `FAIL — private-guard: `. The hoard boundary went **unjudged**, silently, from
+the move until this correction, while the gate looked merely red with nothing to
+say. The one test that proves the ward fails on personal data,
+`.agents/tests/private-guard-identity.test.sh`, was dead the same way.
+
+**The law stands unchanged.** What is recorded here is where the ward lives, not
+what it judges: a wrong path is a silent ward, and a silent ward is no ward.
+Correction, not rewrite — the text above is left exactly as it was written.
