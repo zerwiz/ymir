@@ -36,7 +36,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 |---|---|---|---|
 | Memory | The well (Mimirsbrunn / engram) | One long-term memory: embeddings, recall, per-session knowledge | [docs/features/the-well-recall-and-remember.md](docs/features/the-well-recall-and-remember.md) |
 | Secrets | The secrets vault (`$YMIR_HOME/hodd/secrets`, age) | Credentials encrypted at rest, referenced by path, never inlined | [docs/features/the-secrets-vault.md](docs/features/the-secrets-vault.md) |
-| Vault | **Hnitbjörg — the encrypted document vault** | A LUKS2 container for private documents, sealed by default | — |
+| Vault | **Hnitbjörg — the encrypted document vault** | A LUKS2 container for private documents, sealed by default | [docs/features/the-vault-hnitbjorg.md](docs/features/the-vault-hnitbjorg.md) |
 | Vault | **Unlock the vault with your phone** | The vault carries a key on your phone; unlock it (biometrics) and plug it in | [docs/features/unlock-the-vault-with-your-phone.md](docs/features/unlock-the-vault-with-your-phone.md) |
 | Vault | FIDO2 unlock | Open the vault with a hardware security key (a physical touch) | [docs/features/fido2-unlock-the-vault.md](docs/features/fido2-unlock-the-vault.md) |
 | Vault | **Confidential session** | Work on vault content with **no route off the vault** — confined workdir, doors off, model tier (local/none/remote), `--airlock` for no network | [docs/features/confidential-session.md](docs/features/confidential-session.md) |
@@ -46,7 +46,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
 | Work | Mjollnir (issue → PR) | GitHub issue → isolated worker → tests → PR; a human always seals | [docs/features/mjollnir-issue-to-pr.md](docs/features/mjollnir-issue-to-pr.md) |
-| Factory | Smíðja + Völundr | Repeatable agent+code pipelines: rosters, bounded phases, typed envelopes, trace | — |
+| Factory | Smíðja + Völundr | Repeatable agent+code pipelines: rosters, bounded phases, typed envelopes, trace | [docs/features/smidja-and-volundr.md](docs/features/smidja-and-volundr.md) |
 | Tickets | Skuld (ticket hall) | The project ledger of tickets and plans, on the heart | [docs/features/skuld-the-ticket-hall.md](docs/features/skuld-the-ticket-hall.md) |
 | Collaboration | Ratatoskr (A2A 1.0) | Agent-to-agent tasks over an open protocol; agent cards, lifecycle | [docs/features/ratatoskr-a2a.md](docs/features/ratatoskr-a2a.md) |
 | Skills | Galdr + Gungnir | The craft: skills, standards, and synthesis of a missing capability | [docs/features/galdr-and-gungnir-skills.md](docs/features/galdr-and-gungnir-skills.md) |
@@ -68,8 +68,8 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 |---|---|---|---|
 | Fleet | Fleet sync (Tailscale) | Keep the operator's data on every own machine; no central server | [docs/features/the-fleet-sync.md](docs/features/the-fleet-sync.md) |
 | Models | The local model rail (llama-router) | Local models, OpenAI-compatible, one resident at a time | [docs/features/the-model-rail.md](docs/features/the-model-rail.md) |
-| Time | Nornir (the schedule) | Cron jobs per seat/role: briefing, observer, housekeeping, git-sync, well-sync | — |
-| Schedules | The well sync (`bin/time/well-vault-sync.sh`) | Checkpoint and ride the memory across the fleet | — |
+| Time | Nornir (the schedule) | Cron jobs per seat/role: briefing, observer, housekeeping, git-sync, well-sync | [docs/features/nornir-the-schedule.md](docs/features/nornir-the-schedule.md) |
+| Schedules | The well sync (`bin/time/well-vault-sync.sh`) | Checkpoint and ride the memory across the fleet | [docs/features/the-well-sync.md](docs/features/the-well-sync.md) |
 
 ---
 
