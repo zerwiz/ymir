@@ -1,0 +1,17 @@
+# dead-code.allow — code this tree cannot reach today, and what will resolve it.
+#
+# RULES/16-no-dead-code.md. Two kinds of line, and neither is a deferral:
+#
+#   path/to/file    # consumer: <who reads it, outside this tree>
+#   path/to/file    # ticket:<type>-<NNNN> — <what will resolve it>
+#
+# "we might need it later" is not a reason. A ticket line is a work queue with a date on it:
+# closing the ticket DELETES the line, and the guard fails if a line outlives its code.
+#
+# First run, 2026-10-10 — five files, 327 scanned. Reported by the guard itself, not by hand.
+
+apps/hlidskjalf/src/components/Emblem.tsx                   # todo: G1 — a component no view imports; use it or delete it
+apps/odrerir/src/hall/lh-board.js                           # todo: G1 — reached by nothing; use it or delete it
+apps/sessrumnir/src/web-server.ts                           # todo: G1 — no importer; confirm it is not an unregistered entry point, then delete
+apps/smidja-factory/apps/visualizer/src/lib/chat-store.ts   # todo: G1 — no importer; use it or delete it
+apps/smidja-factory/apps/visualizer/src/lib/router.ts       # todo: G1 — no importer; use it or delete it

@@ -220,3 +220,28 @@ all required checks pass (2 warnings)
 
 Up: SPA :3888 · gate API :3889 · Bifrost :4603 (lmstudio, keyless) · cron ·
 Hlidskjalf + Smíðja desktop apps.
+
+---
+
+## G. No dead code (NEW — Rule 16, and the guard that found these)
+
+### G1. Five files nothing reaches — OPEN
+- **Asked:** "all dead code must work. make a rule for no dead code" and "a guard for finding that
+  in ymir also."
+- **Done:** `RULES/16-no-dead-code.md`; `bin/gates/guards/dead-code-guard.sh`, registered in
+  `bin/gates/guards.sh` (the one ward list, so it runs wherever the wards run);
+  `dead-code.allow` for the two kinds of exception.
+- **Measured:** first run, 2026-10-10 — **307 files scanned, 5 findings**. The guard excludes
+  templates, fixtures, build output, config files, service workers and Electron preloads, because
+  each of those was a false positive on this tree and a guard that is wrong on its own input gets
+  switched off.
+- **Remains — each is dead TODAY and baselined against this section:**
+  - `apps/hlidskjalf/src/components/Emblem.tsx` — a component no view imports.
+  - `apps/odrerir/src/hall/lh-board.js` — reached by nothing.
+  - `apps/sessrumnir/src/web-server.ts` — no importer; confirm it is not an unregistered entry
+    point before deleting.
+  - `apps/smidja-factory/apps/visualizer/src/lib/chat-store.ts` — no importer.
+  - `apps/smidja-factory/apps/visualizer/src/lib/router.ts` — no importer.
+- **For each: use it, or delete it.** Closing an item **deletes its line from `dead-code.allow`** —
+  the guard rejects a line whose reason is a deferral, and an entry that outlives its code is the
+  lie the rule exists to stop.
