@@ -49,6 +49,28 @@ install_cryptsetup() {
   have cryptsetup
 }
 
+# The phone key (MTP over USB) needs an MTP backend: GVfs's mtp backend on a
+# desktop seat, or simple-mtpfs. It is OPTIONAL — a vault without a phone key
+# needs none of it — so a missing backend is reported, never a hard failure.
+mtp_present() {
+  [ -e /usr/lib/gvfsd-mtp ] && return 0
+  have gio && [ -e /usr/lib/gvfsd-mtp ] && return 0
+  have simple-mtpfs && return 0
+  return 1
+}
+
+install_mtp() {
+  case "$(uname -s)" in
+    Linux)
+      if have pacman;  then sudo pacman -S --needed --noconfirm gvfs-mtp >/dev/null 2>&1
+      elif have apt-get; then sudo apt-get install -y gvfs-backends >/dev/null 2>&1
+      elif have dnf;   then sudo dnf install -y gvfs-mtp >/dev/null 2>&1
+      else return 1; fi ;;
+    *) return 1 ;;
+  esac
+  mtp_present
+}
+
 state() {  # prints sealed|open|absent
   if [ -e "$VAULT_IMG" ]; then
     if cryptsetup status hnitbjorg >/dev/null 2>&1; then printf 'open'; else printf 'sealed'; fi
@@ -66,10 +88,12 @@ while [ $# -gt 0 ]; do case "$1" in --install) DO_INSTALL=1; shift ;; *) shift ;
 
 if [ "$CMD" = status ]; then
   have cryptsetup || { printf 'vault[1]{component,status,detail}:\n  "cryptsetup","missing","install it: sudo pacman -S cryptsetup"\n'; exit 1; }
-  printf 'vault[3]{component,status,detail}:\n'
+  printf 'vault[4]{component,status,detail}:\n'
   printf '  "cryptsetup","ok","%s"\n' "$(cryptsetup --version 2>/dev/null | head -1)"
   printf '  "vault-dir","%s","%s"\n' "$([ -d "$VAULT_DIR" ] && echo ok || echo missing)" "$VAULT_DIR"
   printf '  "vault","%s","%s"\n' "$(state)" "$VAULT_IMG"
+  # phone key is optional; its dependency is reported, not required
+  printf '  "phone-mtp","%s","%s"\n' "$(mtp_present && echo ok || echo missing)" "the phone-key backend (gvfs-mtp / simple-mtpfs)"
   # A sealed or absent vault is healthy; a missing directory is not yet ready.
   [ -d "$VAULT_DIR" ] || exit 1
   exit 0
@@ -78,7 +102,9 @@ fi
 # ensure
 have cryptsetup || { [ "$DO_INSTALL" = 1 ] && install_cryptsetup; }
 have cryptsetup || { printf 'error: cryptsetup absent — install it (bin/vault/hnitbjorg-ensure.sh ensure --install)\n' >&2; exit 1; }
+# the phone-key backend is optional; install it when asked, never fail on it
+mtp_present || { [ "$DO_INSTALL" = 1 ] && install_mtp; }
 mkdir -p "$VAULT_DIR" 2>/dev/null || true
 chmod 700 "$VAULT_DIR" 2>/dev/null || true
-printf 'vault[2]{component,status}:\n  "cryptsetup","ok"\n  "vault-dir","ok"\n'
+printf 'vault[3]{component,status}:\n  "cryptsetup","ok"\n  "vault-dir","ok"\n  "phone-mtp","%s"\n' "$(mtp_present && echo ok || echo missing)"
 exit 0
