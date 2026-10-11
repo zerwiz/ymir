@@ -24,11 +24,11 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Agent | Brokk (the primary) | The counsellor: plans, steers, reviews, dispatches — one agent, any harness (Pi · OpenCode · Claude Code · Codex · Cursor) | [docs/features/brokk-the-primary-agent.md](docs/features/brokk-the-primary-agent.md) |
 | Workers | Eindri (isolated sub-agents) | Complex work forged in isolation, never in the main tree | [docs/features/eindri-isolated-workers.md](docs/features/eindri-isolated-workers.md) |
 | Isolation | Yggdrasil (worktrees) + Utgard (sandbox) | Parallel branches, zero collision; untrusted code runs sandboxed | — |
-| Session | Sága (session-start digest) | Boots a session: what stands, what is owed, what the seat is | — |
+| Session | Sága (session-start digest) | Boots a session: what stands, what is owed, what the seat is | [docs/features/saga-the-session-start.md](docs/features/saga-the-session-start.md) |
 | Record | The plan ledger + Runes (audit) | Every plan and every significant action, written down, never lost | — |
-| Updates | Gróa (updater) | Fast-forwards Brokk and its homes, then mends forward | — |
-| Health | Eir (the healer) | Diagnoses every surface, then mends what is broken | — |
-| Gate | The wards (`bin/gates/guards/*`) | secret · private · public · defaults · cron · branch · fixes — the delivery gate | — |
+| Updates | Gróa (updater) | Fast-forwards Brokk and its homes, then mends forward | [docs/features/groa-and-eir-update-and-heal.md](docs/features/groa-and-eir-update-and-heal.md) |
+| Health | Eir (the healer) | Diagnoses every surface, then mends what is broken | [docs/features/groa-and-eir-update-and-heal.md](docs/features/groa-and-eir-update-and-heal.md) |
+| Gate | The wards (`bin/gates/guards/*`) | secret · private · public · defaults · cron · branch · fixes — the delivery gate | [docs/features/the-wards-the-delivery-gate.md](docs/features/the-wards-the-delivery-gate.md) |
 
 ## Memory & secrets
 
