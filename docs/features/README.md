@@ -1,0 +1,22 @@
+# Features — how to *use* Ymir
+
+Plain-language, task-first guides for the person running Ymir (the Allfather):
+**what a feature is, what it gives you, and the exact commands** — not a spec for
+the agents building it. If you are looking for how something is *built*, read the
+code and its Galdr asset; if you are looking for how to *use* it, you are here.
+
+**One file per feature.** A feature that ships without a page here is not finished.
+Agents: any change that adds or changes a user-facing feature **must** add or update
+its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
+
+| Feature | Page |
+|---|---|
+| Unlock the vault (Hnitbjörg) with your phone | [unlock-the-vault-with-your-phone.md](unlock-the-vault-with-your-phone.md) |
+
+## The shape of a page
+
+- **What it is** — one paragraph, no jargon.
+- **What you need** — hardware, packages, prerequisites.
+- **Do it** — the exact commands, in order, each with what you should see.
+- **Notes & limits** — the honest caveats.
+- **If it does not work** — the common failures and their fix.

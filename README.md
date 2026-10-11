@@ -120,6 +120,17 @@ ymir mimir · sense · plan
 A name the law has not given a home still answers, once, and tells you the name that
 has it: `ymir doctor` replies *the door is named `ymir eir` now*.
 
+## Features — how to use Ymir
+
+Every user-facing feature has a **plain-language how-to**: what it is, what you
+need, and the exact commands.
+
+- **[docs/features/](docs/features/)** — the index.
+- [Unlock the vault (Hnitbjörg) with your phone](docs/features/unlock-the-vault-with-your-phone.md)
+
+A feature that ships without a page here is **not finished** — agents add or update
+the page in the same change (see `AGENTS.md` → *Feature how-tos*).
+
 ## The Lore (short version)
 
 Ymir is not a theme — the myths are **load-bearing allegory**. Every subsystem is
