@@ -16,7 +16,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { homedir } from "node:os";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -44,7 +44,13 @@ function resolveHome(): string {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
   }).trim();
   if (!v) throw new Error("the vault path is empty — run `bin/vault/hodd.sh path` and read what it says");
-  return v;
+  // hodd.sh path answers the HOARD (…/ymirhome/hodd), but the shelf strings this file
+  // builds are home-relative WITH the hodd/ prefix — join them on the wrong base and a
+  // move doubles the prefix. Measured 2026-10-11: ymir_daily wrote to
+  // hodd/hodd/memory/daily/<day>.md, and ymir_push ran git from the hoard so a push by
+  // name never matched a file. The HOME is the hoard's parent. Same lesson, same line,
+  // as ymirhome.ts:8 — that copy learned it on 2026-10-08; this one did not.
+  return dirname(v);
 }
 
 const ROOT_BIN = resolveRoot();
