@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # cron-guard.sh — the shipped tree must satisfy its own schedule.
 #
-# Every command a Nornir cron line runs must resolve to a script that SHIPS in
-# this repo: the scheduler runs each job from the repo root, so `bin/x.sh` means
-# `<repo>/bin/x.sh`. A line naming a script that lives only in the operator's home
-# — or nowhere — is a job no other seat, and no fresh user, can run. This ward
-# refuses it, and it is the same law the cron header already states
+# The Nornir scheduler runs every job from the REPO root (`home=$ROOT`), so in a
+# cron line `bin/x.sh` ALWAYS means `<repo>/bin/x.sh`. Schedules differ per user
+# and per seat — times, roles, which jobs — but the COMMANDS must resolve to a
+# script that SHIPS in this repo. A line naming a script that lives only in the
+# operator's home (or nowhere) is a job no other seat, and no fresh user, can run.
+# This ward refuses it, and it is the same law the cron header already states
 # ("every path must be a REPO-relative command (bin/…)").
 #
 #   cron-guard.sh            # check the effective cron and the shipped example
@@ -64,5 +65,5 @@ if [ "$missing" -eq 0 ]; then
   printf '  "none","","every referenced script ships in the repo"\n'
   exit 0
 fi
-printf 'cron-guard: %s referenced script(s) do not ship in the repo\nhelp: move the script into the repo (bin/…) or fix the cron line — a job must resolve for every seat, not only the author'"'"'s\n' "$missing" >&2
+printf 'cron-guard: %s referenced script(s) do not ship in the repo\nhelp: jobs run from the REPO root, so bin/… always means the repo — a script kept only in a home cannot resolve; move it into the repo (bin/…) or reference it absolutely where the runner allows it\n' "$missing" >&2
 exit 1
