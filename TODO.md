@@ -223,12 +223,12 @@ Hlidskjalf + Smíðja desktop apps.
 
 ---
 
-## G. No dead code (NEW — Rule 16, and the guard that found these)
+## G. No dead code (NEW — Rule 17, and the guard that found these)
 
 ### G1. Five files nothing reaches — OPEN
 - **Asked:** "all dead code must work. make a rule for no dead code" and "a guard for finding that
   in ymir also."
-- **Done:** `RULES/16-no-dead-code.md`; `bin/gates/guards/dead-code-guard.sh`, registered in
+- **Done:** `RULES/17-no-dead-code.md`; `bin/gates/guards/dead-code-guard.sh`, registered in
   `bin/gates/guards.sh` (the one ward list, so it runs wherever the wards run);
   `dead-code.allow` for the two kinds of exception.
 - **Measured:** first run, 2026-10-10 — **307 files scanned, 5 findings**. The guard excludes

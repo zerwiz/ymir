@@ -1,4 +1,4 @@
-# Rule 16 — No dead code
+# Rule 17 — No dead code
 
 **Code that exists and is never reached is a claim that a feature exists.** A file nothing imports,
 a shell function nothing calls, a branch that cannot run, a constant nothing reads — each one tells

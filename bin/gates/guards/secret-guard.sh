@@ -34,7 +34,7 @@ case "${1:-}" in
   --install)
     hook="$ROOT/.git/hooks/pre-commit"
     mkdir -p "$(dirname "$hook")" || exit 1
-    printf '#!/usr/bin/env bash\n"%s/public-guard.sh" "$@" || exit 1\n"%s/docs-guard.sh" "$@" || exit 1\n"%s/private-guard.sh" "$@" || exit 1\nif [ -x "%s/vault-guard.sh" ]; then "%s/vault-guard.sh" "$@" || exit 1; fi\nexec "%s/secret-guard.sh" "$@"\n' "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" >"$hook"
+    printf '#!/usr/bin/env bash\n"%s/public-guard.sh" "$@" || exit 1\n"%s/docs-guard.sh" "$@" || exit 1\n"%s/private-guard.sh" "$@" || exit 1\nif [ -x "%s/vault-guard.sh" ]; then "%s/vault-guard.sh" "$@" || exit 1; fi\nif [ -x "%s/confidential-guard.sh" ]; then "%s/confidential-guard.sh" "$@" || exit 1; fi\nexec "%s/secret-guard.sh" "$@"\n' "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" >"$hook"
     chmod +x "$hook"
     printf 'secret-guard[1]{action,path}:\n  "install","%s"\n' "$hook"
     exit 0 ;;

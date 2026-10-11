@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # dead-code-guard.sh — code that exists and is never reached is a claim that a feature exists.
 #
-# Rule: RULES/16-no-dead-code.md
+# Rule: RULES/17-no-dead-code.md
 #
 # Two shapes, because this tree has two kinds of code and each fails differently:
 #
@@ -193,7 +193,7 @@ printf 'dead-code-guard[3]{scanned,findings,bad_allowlist}:\n'
 printf '  "%s","%s","%s"\n' "$scanned" "$findings" "$badallow"
 if [ "$findings" -gt 0 ] || [ "$badallow" -gt 0 ]; then
   printf 'note: use it, or delete it, or add a line to %s naming WHO consumes it.\n' "${DEAD_ALLOW#$ROOT/}" >&2
-  printf 'note: "we might need it later" is not a consumer — RULES/16-no-dead-code.md\n' >&2
+  printf 'note: "we might need it later" is not a consumer — RULES/17-no-dead-code.md\n' >&2
   exit 1
 fi
 exit 0

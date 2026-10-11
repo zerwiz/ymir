@@ -1,6 +1,6 @@
 # dead-code.allow — code this tree cannot reach today, and what will resolve it.
 #
-# RULES/16-no-dead-code.md. Two kinds of line, and neither is a deferral:
+# RULES/17-no-dead-code.md. Two kinds of line, and neither is a deferral:
 #
 #   path/to/file    # consumer: <who reads it, outside this tree>
 #   path/to/file    # ticket:<type>-<NNNN> — <what will resolve it>

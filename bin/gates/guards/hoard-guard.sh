@@ -48,7 +48,7 @@ case "${1:-}" in
     [ -d "$HOME_REPO/.git" ] || { printf 'hoard-guard: not a git repo: %s\n' "$HOME_REPO" >&2; exit 1; }
     hook="$HOME_REPO/.git/hooks/pre-commit"
     mkdir -p "$(dirname "$hook")" || exit 1
-    printf '#!/usr/bin/env bash\n# seated by bin/gates/guards/hoard-guard.sh --install — the ward for the private home\n"%s/hoard-guard.sh" "$@" || exit 1\nif [ -x "%s/vault-guard.sh" ]; then "%s/vault-guard.sh" "$@" || exit 1; fi\nexit 0\n' "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" >"$hook"
+    printf '#!/usr/bin/env bash\n# seated by bin/gates/guards/hoard-guard.sh --install — the ward for the private home\n"%s/hoard-guard.sh" "$@" || exit 1\nif [ -x "%s/vault-guard.sh" ]; then "%s/vault-guard.sh" "$@" || exit 1; fi\nif [ -x "%s/confidential-guard.sh" ]; then "%s/confidential-guard.sh" "$@" || exit 1; fi\nexit 0\n' "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" "$SCRIPT_DIR" >"$hook"
     chmod +x "$hook"
     printf 'hoard-guard[1]{action,path}:\n  "install","%s"\n' "$hook"
     exit 0 ;;
