@@ -256,3 +256,48 @@ Rules:
 Confirmed by the Allfather 2026-10-01. Appended under Law 06; a correction is a
 new entry citing this one.
 
+
+---
+
+## Appended 2026-10-10 — the repo is the door users install; the home is personal; every command must resolve to shipped craft
+
+Laid down by the Allfather, asking: *"are all needed scripts for Ymir function
+getting from the ymir repo? That's the door the users get. And the ymir home is
+personal, so those scripts are not reachable for a user except us."*
+
+The answer, and the law:
+
+1. **The repo is the door.** A user installs Ymir from this repo (clone,
+   `install.sh`, or the npm package). Every script the runtime *needs* to
+   function must ship here. Nothing a job runs may live only on the author's
+   machine.
+2. **The home is personal.** `$YMIR_HOME` holds **data** — config, secrets, state,
+   workspaces, plans, the vault. It is not a delivery channel: a script kept only
+   in a home is invisible to every other user, and to a fresh install.
+3. **Cron law — commands must ship, schedules may differ.** Nornir runs every job
+   from the **repo root** (`home=$ROOT`; measured 2026-10-10), so in a cron line
+   `bin/…` ALWAYS means `<repo>/bin/…`. Schedules are per user and per seat —
+   times, roles, which jobs — and that is deliberate and fine; but the
+   **commands** must resolve to a script that **ships in the repo**. A personal
+   script referenced as `bin/…` can never resolve: the job fires and the command
+   is not found. A script the schedule needs belongs in the repo.
+4. **Secrets.** `bin/gates/guards/secret-guard.sh --all` is **clean** — no secret
+   value lives in this repo. Secrets live at `$YMIR_HOME/hodd/secrets/`
+   (age-encrypted; read through `bin/vault/hodd.sh`).
+
+**The ward:** `bin/gates/guards/cron-guard.sh`, seated in `guards.sh`'s `WARDS`
+(so the pre-push hook and CI run it). It reads the effective cron
+(`$YMIR_CRON_FILE` → the operator's home cron → the shipped
+`config/cron.yaml.example`), extracts every `bin/*.sh` on a non-comment line, and
+refuses any that does not ship under the repo root.
+
+**What it found on 2026-10-10 (11 findings):** the operator's private home cron
+used pre-`bin/`-move paths (`bin/nornir-job-*.sh` where the scripts live at
+`bin/time/…`; `bin/eindri-handoff.sh` at `bin/agents/…`) — every job unfindable —
+and named `bin/well-vault-sync.sh`, which existed **only in the home**. Fixed: the
+well sync now ships as `bin/time/well-vault-sync.sh` (generic; it resolves the
+home through `bin/vault/hoard-lib.sh`, never guesses it), and the private cron was
+corrected to the moved paths.
+
+Confirmed by the Allfather 2026-10-10. Appended under Law 06; a correction is a
+new entry citing this one.
