@@ -1307,3 +1307,22 @@ Record: `docs/fixes/agents/unversioned-2026-10-06-the-errand-door-reported-every
 This is the same class as the resolver's one-level-short walk: a door that is **honest
 about the wrong thing** is more expensive than one that is silent, because it sends the
 reader looking for the fault somewhere it is not.
+
+## 2026-10-11 — four of five copies of the vault resolver returned the hoard, not its parent
+
+`bin/vault/hodd.sh path` answers the **hoard** (`$YMIR_HOME/hodd`). The shelf
+strings every door builds are home-relative *with* the `hodd/` prefix, so the base
+must be the hoard's **parent**. `ymirhome.ts` learned that on 2026-10-08
+(`return dirname(v)`, lesson in the comment); the other four copies of the same
+resolver — `elder.ts`, `odrerir.ts`, `gna-pi-watch.ts` and
+`skuld-branch-supervision/index.ts` — never got the lesson and returned the hoard.
+
+Measured: `ymir_daily` wrote the day's line to `hodd/hodd/memory/daily/…` (outside
+every legal shelf) and `ymir_push` ran git from the hoard, so a push by name matched
+nothing. All four now `return dirname(v)`, each carrying the lesson.
+
+The deeper debt this exposes: five private copies of one resolver is five chances to
+drift. The remedy is one resolver in `lib/ymir-home.ts`, which all five import — left
+owed rather than half-done, because the extensions must stay loadable by every harness.
+
+Record: this change's fix note under `docs/fixes/agents/`.
