@@ -466,6 +466,13 @@ prosecution, for the user.** `bin/gates/guards/vault-guard.sh` hashes the open v
 and refuses a commit that copies it verbatim; the rule (`RULES/15-vault-confidential.md`)
 is the whole law.
 
+**For vault work, use a confidential session** (`bin/vault/confidential.sh`, Rule 16):
+it confines the work to the vault (workdir inside the mount), turns every off-vault door
+OFF (well, tickets, runes, daily log), sets an explicit model tier — `local` (on-machine
+only), `none`, or `remote` — and with `--airlock` runs under `bwrap --unshare-net` (no
+network at all). While a session is live, `confidential-guard` refuses any commit outside
+the vault. **Do not work on vault content outside a session.**
+
 **The one law, stated first: never store personal or private data in this repo.**
 Not a name, a key, a plan, a schedule, a client, a credential, or a note-to-self
 — not in a file, a comment, a commit message, a test fixture, or a document.

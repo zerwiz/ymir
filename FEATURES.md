@@ -39,6 +39,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Vault | **Hnitbjörg — the encrypted document vault** | A LUKS2 container for private documents, sealed by default | — |
 | Vault | **Unlock the vault with your phone** | The vault carries a key on your phone; unlock it (biometrics) and plug it in | [docs/features/unlock-the-vault-with-your-phone.md](docs/features/unlock-the-vault-with-your-phone.md) |
 | Vault | FIDO2 unlock | Open the vault with a hardware security key (a physical touch) | — |
+| Vault | **Confidential session** | Work on vault content with **no route off the vault** — confined workdir, doors off, model tier (local/none/remote), `--airlock` for no network | [docs/features/confidential-session.md](docs/features/confidential-session.md) |
 
 ## Agents, work & collaboration
 
