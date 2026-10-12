@@ -1072,6 +1072,25 @@ step_vault() {
   fi
 }
 
+step_room() {
+  # Gladsheim — the fleet room (plan 73/75). ROLE-AWARE by construction: the engine runs
+  # ONCE per operator install — here on a lone box, on the HEART in a fleet — and every
+  # other seat is a client that skips cleanly. gladsheim-ensure.sh asks the ONE shape
+  # resolver (bin/fleet/topology.sh) rather than re-deriving it (plan 76).
+  local ens="$SCRIPT_DIR/../room/gladsheim-ensure.sh"
+  [ -x "$ens" ] || { add room SKIP "no gladsheim-ensure.sh"; return; }
+  if [ "$CHECK" = 1 ]; then
+    add room OK "would seat the room's role for this machine's shape (engine on the heart; client on a seat)"
+    return
+  fi
+  if "$ens" ensure >/dev/null 2>&1; then
+    local role="engine"; "$ens" status 2>/dev/null | grep -q '"holds_engine","no"' && role="client"
+    add room OK "the room's role is seated ($role) · bin/room/gladsheim.sh send|read"
+  else
+    add room WARN "could not seat the room — bin/room/gladsheim-ensure.sh ensure"
+  fi
+}
+
 step_gates() {
   local hooks="$ROOT/.git/hooks" pre_commit="$ROOT/.git/hooks/pre-commit" pre_push="$ROOT/.git/hooks/pre-push"
   if [ ! -d "$hooks" ]; then add gates SKIP "not a git checkout"; return; fi
@@ -1399,6 +1418,7 @@ run_step step_local_model "the local model"
 run_step step_hermes "hermes"
 run_step step_snotra "the meeting ear"
 run_step step_a2a "the A2A mesh"
+run_step step_room "the room"
 run_step step_sessrumnir "the seat"
 run_step step_backend "backend"
 run_step step_host "host"
