@@ -182,9 +182,19 @@ def tally(rows, key):
     return ", ".join(f"{k}={v}" for k, v in sorted(d.items(), key=lambda kv: -kv[1]))
 
 shelves = {}
+# TRACKED files only, as the header above promises. This walked the filesystem
+# (`rglob`), so untracked live state — bin/state/cron.log, .session-start-complete —
+# was counted, its "called-by" totals moved as the machine ran, and the committed
+# index could not match a clean checkout: `--check` was the lottery this file warns
+# about. A generated index must be a function of the tree, not of the seat.
+tracked_set = set(tracked)
 for shelf, d in (("bin", BIN), (".agents/backend", BACKEND)):
     if d.exists():
-        shelves[shelf] = [analyse(p, shelf) for p in sorted(d.rglob("*")) if p.is_file()]
+        shelves[shelf] = [
+            analyse(p, shelf)
+            for p in sorted(d.rglob("*"))
+            if p.is_file() and p.relative_to(ROOT).as_posix() in tracked_set
+        ]
 
 fail = False
 for shelf, rows in shelves.items():
