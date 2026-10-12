@@ -31,34 +31,7 @@ _run_python() {
   python3 "$door" "$@"
 }
 
-runes_project() {
-  local seat="${1-}" output="${2-}"
-  [ -n "$seat" ] || seat="heimdall"
-  
-  local _out _rc
-  _out=$(_run_python project "$seat" "$output")
-  _rc=$?
-  [ "$_rc" = "0" ] || return "$_rc"
-  printf '%s' "$_out"
-  return 0
-}
 
-runes_project_usage() {
-  cat <<'EOF'
-Usage:
-  runes-project.sh [--seat SEAT] [--output FILE]
-
-Regenerates runes_audit.md from the event set under events/<seat>/, deterministically:
-  - Topological (causal) order: self_parent -> timestamp -> hash
-  - Equivocation quarantine: events sharing self_parent are excluded from projection
-  - Identical input gives byte-identical output on every seat
-
-Environment:
-  BROKK_RUNES_DIR  directory holding runes_audit.md and events/ (default: $BROKK_HOME/hodd/memory/runes)
-
-Exit: 0 success, 1 error.
-EOF
-}
 
 runes_project_main() {
   local rc=0

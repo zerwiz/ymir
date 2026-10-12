@@ -46,18 +46,6 @@ for m in d.get("data", []) or []:
     if i: print(i)
 ' 2>/dev/null
 }
-ollama_ids() {
-  curl -fsS --max-time 3 http://127.0.0.1:11434/api/tags 2>/dev/null | python3 -c '
-import json,sys
-try:
-    d=json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-for m in d.get("models", []) or []:
-    n=m.get("name")
-    if n: print(n)
-' 2>/dev/null
-}
 
 LLAMACPP_URL=""; OLLAMA=0; LMSTUDIO_TREE=0
 for u in http://127.0.0.1:8080/v1/models http://127.0.0.1:8090/v1/models; do

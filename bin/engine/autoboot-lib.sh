@@ -74,23 +74,6 @@ autoboot_role_programs() {  # <role> → prints the program ids the role owes
   esac
 }
 
-autoboot_program_roles() {  # <program> → prints the roles that owe it
-  case "${1-}" in
-    a2abridge-directory) printf '%s\n' "heart dev" ;;
-    well-mcp)       printf '%s\n' "heart dev" ;;
-    mcp-gateway)    printf '%s\n' "heart forge dev" ;;
-    ratatoskr|mill-worker|cards|skills-mcp|skuld|snotra) printf '%s\n' "heart" ;;
-    # snotra-detect is owed by CAPABILITY (a seat with a microphone), not by
-    # role — see autoboot_capability_programs below.
-    snotra-detect)  printf '%s\n' "" ;;
-    a2abridge-directory) printf '%s\n' "heart dev" ;;
-    embed)          printf '%s\n' "heart forge" ;;
-    hlidskjalf-spa|hlidskjalf-gate|mimir|bifrost|smidja) printf '%s\n' "dev" ;;
-    nornir)         printf '%s\n' "heart dev" ;;
-    syn-watch)      printf '%s\n' "heart dev" ;;
-    *)              printf '%s\n' "" ;;
-  esac
-}
 
 autoboot_program_desc() {  # <program> → one human line
   case "${1-}" in

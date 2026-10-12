@@ -1527,15 +1527,6 @@ fm_wake_commit_eindri-home_stall_receipts_through() { # <cutoff> [<rows-file>]
   ' "$BROKK_WAKE_QUEUE" 2>/dev/null)
 }
 
-fm_wake_restore_queue() {
-  local drained=$1 restore
-  restore="$STATE/.wake-queue.restore.$(fm_current_pid)"
-  if [ -e "$BROKK_WAKE_QUEUE" ]; then
-    cat "$drained" "$BROKK_WAKE_QUEUE" > "$restore" && mv "$restore" "$BROKK_WAKE_QUEUE"
-  else
-    mv "$drained" "$BROKK_WAKE_QUEUE"
-  fi
-}
 
 fm_wake_print_deduped() {
   local file=$1
