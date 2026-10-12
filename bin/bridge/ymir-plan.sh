@@ -39,6 +39,18 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
+
+# --- where an app lives: bin/seat/sessrumnir/app-lib.sh --------------------------
+# apps/<surface> in a clone, node_modules/@zerwiz/<package> in an npm install —
+# both shapes, ONE resolver (Rule 07). Seated HERE, at the top, because the plan
+# resolves apps both in app_row and in the shell check below, and a resolver that
+# arrives after its callers is the same as no resolver at all (2026-10-12).
+if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
+  for _app_c in "${SCRIPT_DIR}/../seat/sessrumnir/app-lib.sh" "$ROOT/bin/seat/sessrumnir/app-lib.sh"; do
+    [ -r "$_app_c" ] && { . "$_app_c"; YMIR_APP_LIB_LOADED=1; break; }
+  done
+  unset _app_c
+fi
 # Whether the home was named explicitly matters: a home that was chosen is not
 # the same as one we defaulted to, and the plan says which.
 YMIR_HOME_WAS_SET=0; [ -n "${YMIR_HOME:-}" ] && YMIR_HOME_WAS_SET=1
@@ -73,18 +85,12 @@ port_up() {  # <port>
   if have ss; then ss -ltn 2>/dev/null | grep -q ":$1 " && return 0; fi
   return 1
 }
-# An app is ours by one of two shapes: a source checkout under apps/, or a
-# published package under node_modules/@zerwiz/. Neither is guessed.
-# A surface has a name the operator knows and a PACKAGE has a name npm serves;
-# they are not always the same (the smithy is `smidja` to us and
-# `@zerwiz/smidja-factory` on the registry). <surface> [<package>]
-app_dir() {
-  local n="$1" pkg="${2:-$1}" c
-  for c in "$ROOT/apps/$n" "$ROOT/node_modules/@zerwiz/$pkg"; do
-    [ -d "$c" ] && { printf '%s' "$c"; return 0; }
-  done
-  return 1
-}
+# Where an app lives is NOT decided here. bin/seat/sessrumnir/app-lib.sh owns that
+# question (apps/<surface> in a clone, node_modules/@zerwiz/<package> in an install),
+# and the loader at the top of this file seats it before any row is emitted. A local
+# second copy of the resolver is exactly how the two shapes drifted apart: this file
+# kept the OLD signature and the canonical lib kept the new one, so sourcing the lib
+# here would have silently blanked every app path (2026-10-12).
 
 # ── phase 0 · resolve — where this runs, and against what ────────────────────
 resolve_phase() {
@@ -271,7 +277,7 @@ engines_phase() {
 # The apps are their own packages (@zerwiz/<app>) — the distro depends on them.
 app_row() {  # <surface> <about> [<package>]
   local name="$1" about="$2" pkg="${3:-$1}" dir
-  if dir="$(app_dir "$name" "$pkg")"; then
+  if app_dir "$name" dir; then
     if [ -d "$dir/dist" ] || [ -d "$dir/out" ]; then
       emit 5 apps "$name" SKIP "$about — installed, and its build shipped with it"
     else
@@ -299,7 +305,7 @@ apps_phase() {
   fi
   local shells=0 partial="" missing=0 d
   for d in hlidskjalf odrerir sessrumnir; do
-    dir="$(app_dir "$d" 2>/dev/null || true)"
+    dir=""; app_dir "$d" dir 2>/dev/null || true
     if [ -z "$dir" ]; then missing=$((missing+1)); continue; fi
     case "$(electron_runtime_state "$dir" "$ROOT" "$(app_pkg "$d")" 2>/dev/null || true)" in
       ok) shells=$((shells+1)) ;;
