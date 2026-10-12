@@ -252,3 +252,18 @@ held the seal with three items; this section records the mend.
 - **The knob name (F3).** This asset now names `VITE_MCP_GATEWAY_PORT` (the
   app's build knob, `src/skuld.ts:24`) in every row; the gateway's own
   `MCP_GATEWAY_PORT` stays the server-side default the build knob mirrors.
+
+### The board's kit never reached the bundle (2026-10-11, found diagnosing odrerir/1)
+- `src/hall.css` ended with `@import "./hall/lh-scoped.css";` — and CSS requires
+  `@import` to precede every other statement, so PostCSS **dropped it** and the
+  original board's kit (108 lines of `#livehall` rules, carried under the
+  never-simplify law) never reached the output. The board rendered with markup and
+  no styling, while `tsc --noEmit && vite build` passed — a build that passes is not
+  a hall that works.
+- Measured: built CSS **11,021 → 33,627 bytes**, `#livehall` occurrences **0 → 199**,
+  the postcss warning gone.
+- The kit is now imported by JS in `src/main.tsx` (Vite's way to order stylesheets),
+  placed AFTER `./hall.css` so the scoped kit keeps the cascade position it was
+  written for.
+- **When adding CSS here, do not use a trailing `@import`.** A file-level `@import`
+  is only legal at the top; for a kit that must win, import it from the JS.
