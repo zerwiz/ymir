@@ -164,3 +164,48 @@ hardcoded timeline is gone.
 **Portability.** The bridge signals processes through `ymir_kill_matching` from
 `bin/fleet/ymir-platform.sh` rather than calling `pkill` directly, because `pkill` is
 absent on some MSYS/WSL images (Rule 05, one place knows the difference).
+
+---
+
+## 8. The log is the truth; the engram is derived (2026-10-12)
+
+**Appended — the shape above still holds; this names which artifact carries the
+memory across machines.** The fleet's wells had forked: the heart published its
+engram and no seat pulled it, while every seat's bridge wrote its own local index.
+The law is now explicit.
+
+```
+truth[3]{artifact,role,merges_by}:
+  "hodd/memory/well/episodes.jsonl","the append log — the durable, unionable record","union (text, hash-deduped)"
+  "hodd/memory/kaia.engram","a derived, PER-SEAT index rebuilt from the log","never — export -> union -> reseed"
+  "hodd/memory/runes_audit.md","the chained ledger — it has its own fusion process","quarantine + ONE ledger.fusion entry"
+```
+
+**Every observe reaches the log.** `bin/bridge/mimir-bridge.py` appends each
+observation (full record, hash-deduped) as it writes the store. The bridge is the
+one door every harness passes through (`pi`, `opencode`, `claude`, `cursor`, `codex`),
+so the log is complete by construction — before this, only `mimir.sh` and
+`mimir-ingest.sh` appended, and the log held 5 lines against 101 episodes.
+
+**`bin/records/mimir-log.{py,sh}` — the reconciliation, both ways:**
+
+```
+mimir-log[4]{verb,direction,meaning}:
+  "export","engram -> log","append every episode the log lacks (hash-deduped)"
+  "reseed","log -> engram","observe every record the index lacks (hash-deduped)"
+  "union","other -> log","append another log's records we lack — APPEND-ONLY, never a rewrite"
+  "verify","both counts","the gap that must be zero"
+```
+
+**`bin/time/well-vault-sync.sh`** rides only the log. `--mode push` exports then
+publishes it; `--mode pull` exports this seat's memory, unions origin's log, and
+re-seeds the local index. `--mode sync` is both. The binary engram is never
+git-merged, and a pull that would overwrite a dirty tracked file is *refused* —
+so a seat's memory is never lost. Because the whole log rides the vault, **a seat
+holds the whole memory with the heart down**, and publishes its own when the heart
+returns: the heart is the main port, never a single point of failure.
+
+**One interpreter.** `bin/bridge/mimir-bridge.sh --python` prints the resolved
+engram interpreter; `mimir-log.sh` calls it, so the log tool and the bridge never
+disagree about which python owns the store.
+
