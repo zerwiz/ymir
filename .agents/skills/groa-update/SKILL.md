@@ -179,3 +179,10 @@ fail on a machine it does not apply to — it **skips cleanly and says so** (the
 law: a layer gated on its host reports a clean skip elsewhere, never a false failure).
 
 **See:** plan 75 Part 9 (the shipping law) and Part 11 (the fleet shape) · ticket ymir/57.
+
+**One resolver, never a private check.** The answer to "which shape am I?" already ships:
+**`bin/fleet/topology.sh`** reports `shape` (`single` | `fleet`), `roles`, `heart`, and
+`link` (`standalone` | `attached` | `detached` | `offline`) from ONE registry, and degrades
+cleanly to `single`/`standalone` on a box with no registry. Every shape‑dependent step —
+this one included — **asks it**, and none re‑derives the shape by hand (plan 76, the shape
+law; Rule 07's reason applied to topology).
