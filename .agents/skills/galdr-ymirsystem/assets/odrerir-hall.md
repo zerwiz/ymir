@@ -150,10 +150,25 @@ board ever needs it again. Everything the hall renders lives under
 - The plans board wears the tickets' skin exactly: the same status badges
   (`src/board.ts` — one palette), the same inline +new panel, the same table.
 
+### The book had no door to register a namespace (2026-10-11)
+- The server served **`namespaces_list` and no way to add one**, while `tickets_create`
+  and `plans_create` both REFUSE an unregistered namespace. So the registry could only be
+  extended by hand with `psql` against the heart's Postgres — a door nobody could run, and
+  the one gap the Allfather named: *"can we add the namespace thru the mcp?"*
+- Now served: **`namespaces_create`** — a slug (2..40, lower-case letters/digits/`-`, folded
+  to lower case) and a display name (`about`, 2+). A malformed slug or a thin display name
+  is REFUSED **and blocks the agent** (the same blocking law as a bad ticket); registering one
+  that already exists is a no-op, not an error; a store refusal is reported verbatim.
+- Proven without a heart: the real `server.mjs`, its real handler, with a stub `psql` —
+  `tools registered: 16 · has namespaces_create: true`, the bad slug and the thin `about` both
+  refused, `Probe-NS` folded to `probe-ns`, and the wire shows
+  `INSERT INTO namespaces (name, about) VALUES ('probe-ns', 'Probe Namespace') RETURNING name, COALESCE(about, name)`.
+
 ### The boards' MCP alignment + the connection chip (2026-09-24)
 - **The server's true tool names are underscored, un-prefixed**: `tickets_list`
   · `tickets_get` · `tickets_update` · `tickets_create` · `comments_list` ·
-  `comments_post` · `plans_list` · `plans_get` · `plans_create`. The old hall
+  `comments_post` · `plans_list` · `plans_get` · `plans_create` · `namespaces_list` ·
+  `namespaces_create`. The old hall
   (and the first React port) called them with slashes (`tickets/list`) — a name
   the server never served; the boards rang a dead door. The UI calls the true
   names; `bin/desktop/odrerir-mcp-smoke.sh` asserts that alignment (`tools/list`) so a

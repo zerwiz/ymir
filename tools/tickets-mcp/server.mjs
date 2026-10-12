@@ -143,6 +143,24 @@ server.registerTool("namespaces_list", { title: "The projects", description: "Th
   const r = q(`SELECT name, COALESCE(about, name) FROM namespaces ORDER BY name`);
   return { content: [{ type: "text", text: rows(r.out).join("\n") || "(no namespaces)" }] };
 });
+server.registerTool("namespaces_create", {
+  title: "Register a project", description: "The door that registers a namespace — until it exists, tickets_create and plans_create REFUSE ('not on the registry'). A slug (2..40: lower-case letters, digits and '-') and a display name (the 'about'). Registering one that exists is a no-op, not an error.",
+  inputSchema: { name: z.string(), about: z.string() }
+}, async (a) => {
+  const agent = agentOf();
+  const g = guarded("namespaces_create", a);
+  if (g) return { content: [{ type: "text", text: g }], isError: true };
+  const name = String(a.name || "").trim().toLowerCase();
+  const about = String(a.about || "").trim();
+  if (!/^[a-z0-9][a-z0-9-]{1,39}$/.test(name)) { violation(agent, "namespaces/create refused: slug shape"); return { content: [{ type: "text", text: "refused: a namespace is a SLUG — lower-case letters, digits and '-', 2..40 chars (e.g. odrerir)" }], isError: true }; }
+  if (about.length < 2) { violation(agent, "namespaces/create refused: about"); return { content: [{ type: "text", text: "refused: a namespace needs a display name (2+ chars) — it is what the pickers show" }], isError: true }; }
+  if (rows(q(`SELECT 1 FROM namespaces WHERE name = :'n'`, { n: name }).out).length) {
+    return { content: [{ type: "text", text: `already on the registry: ${name} — nothing to do` }] };
+  }
+  const r = q(`INSERT INTO namespaces (name, about) VALUES (:'n', :'a') RETURNING name, COALESCE(about, name)`, { n: name, a: about });
+  if (!r.ok) return { content: [{ type: "text", text: `store refused: ${String(r.err).split("\n")[0].slice(0, 200)}` }], isError: true };
+  return { content: [{ type: "text", text: `registered: ${rows(r.out).join(" ") || name}` }] };
+});
 
 server.registerTool("plans_create", { title: "Cut a plan", description: "A title (6+), a body (40+), its tickets[] must exist. The law is on.",
   inputSchema: { namespace: z.string(), title: z.string(), body: z.string(), tickets: z.array(z.number()).optional() }
