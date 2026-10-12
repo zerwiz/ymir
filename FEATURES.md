@@ -71,6 +71,19 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Time | Nornir (the schedule) | Cron jobs per seat/role: briefing, observer, housekeeping, git-sync, well-sync | [docs/features/nornir-the-schedule.md](docs/features/nornir-the-schedule.md) |
 | Schedules | The well sync (`bin/time/well-vault-sync.sh`) | Checkpoint and ride the memory across the fleet | [docs/features/the-well-sync.md](docs/features/the-well-sync.md) |
 
+## Planned and new — the fleet, the team, and the gates
+
+Rows land here while a feature is being built; when one is whole, its row moves into the
+section above. Each links a real page — a feature with no page is a feature no user can use.
+
+| Area | Feature | What it gives you | how-to |
+|---|---|---|---|
+| Rooms | **Gladsheim — the fleet room** *(planned)* | One durable room where your whole fleet talks and you answer back | [docs/features/gladsheim-the-fleet-room.md](docs/features/gladsheim-the-fleet-room.md) |
+| Rooms | **Brimir — the hall of Allfathers** *(planned)* | A self-hosted, federated room across operators, their Ymirs joining by A2A | [docs/features/brimir-the-hall-of-allfathers.md](docs/features/brimir-the-hall-of-allfathers.md) |
+| Team | **Team places — a wall, not a permission** *(partly built)* | A team's own files, room, board and record; outside them a member sees nothing — not even a list | [docs/features/team-places.md](docs/features/team-places.md) |
+| Security | **Distinct gates** *(law — Rule 18)* | One class per service, one gate per class: public · team · client · operator · confidential · fleet | [docs/features/distinct-gates.md](docs/features/distinct-gates.md) |
+| Security | **Encryption and sensitive data** *(partly built)* | At rest, in transit, and end to end — and an encrypted room is only encrypted if every client encrypts | [docs/features/encryption-and-sensitive-data.md](docs/features/encryption-and-sensitive-data.md) |
+
 ---
 
 *Append a row when a feature lands. Correct by appending, never by erasing.*

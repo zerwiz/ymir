@@ -195,7 +195,9 @@ PY
     write_config
     if [ "$INSTALL" = 1 ]; then docker pull -q "$IMAGE" >/dev/null 2>&1 || true; fi
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-    if docker run -d --name "$CONTAINER" -p "$BIND:$PORT:$PORT" \
+    # BOTH loopback and the tailnet: loopback so the host's own tools (and a local tunnel)
+    # reach it; the tailnet so the fleet does; NEVER 0.0.0.0, so the LAN is not a door.
+    if docker run -d --name "$CONTAINER" -p "127.0.0.1:$PORT:$PORT" -p "$BIND:$PORT:$PORT" \
         -v "$STATE_DIR/conduwuit.toml:/etc/conduwuit/conduwuit.toml:ro" \
         -v "$STATE_DIR/data:/var/lib/conduwuit" \
         --restart unless-stopped "$IMAGE" /sbin/conduwuit -c /etc/conduwuit/conduwuit.toml >/dev/null 2>&1; then
