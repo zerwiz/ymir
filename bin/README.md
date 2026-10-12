@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[416]{file,does,kind,verdict,disposition,callers,lines}:
+bin[417]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",11,-
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",4,156
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",3,104
@@ -22,7 +22,7 @@ bin[416]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",13,310
   "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",1,119
   "app-build.sh","app-build — build the in-tree apps (plan 35).","tool","wired","keep",2,57
-  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",15,107
+  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",16,107
   "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,276
   "bifrost-bridge.sh","bifrost-bridge.sh — raise/lower the model bridge (Bifrost: the bridge between","tool","wired","keep",7,142
   "bifrost-ingress.sh","bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdall · Gjallarhorn).","tool","wired","keep",1,79
@@ -43,7 +43,7 @@ bin[416]{file,does,kind,verdict,disposition,callers,lines}:
   "calendar-ask.sh","calendar-ask.sh — the shell door onto Mánagandr, the read calendar.","tool","tested","keep",1,126
   "capabilities.md","What Ymir can do — the capability register","data","wired","keep",3,28
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",6,238
-  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,75
+  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,76
   "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",3,63
   "confidential.sh","confidential.sh — a session where vault work has no route off the vault (Rule 16).","tool","tested","keep",3,156
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",2,122
@@ -389,6 +389,7 @@ bin[416]{file,does,kind,verdict,disposition,callers,lines}:
   "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",1,75
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",5,131
   "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","wired","keep",1,77
+  "unit-template-check.sh","unit-template-check.sh — every shipped systemd unit template must be a unit systemd","tool","wired","keep",2,96
   "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",3,76
   "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",2,99
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",5,113
@@ -417,7 +418,7 @@ bin[416]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","data","wired","keep",1,89
   "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",2,337
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","wired","keep",6,76
-  "ymir-plan.sh","ymir-plan.sh — THE INSTALL PLAN.","tool","wired","keep",3,432
+  "ymir-plan.sh","ymir-plan.sh — THE INSTALL PLAN.","tool","wired","keep",3,438
   "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",19,357
   "ymir-say.sh","ymir-say.sh — let Ymir speak on the Allfather's desktop.","tool","wired","keep",8,112
   "ymir-setup-auth.sh","ymir-setup-auth.sh — set the operator's Ymir credential at first setup.","tool","wired","keep",4,121
@@ -429,6 +430,6 @@ bin[416]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",6,243
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
 
-**Tally.** verdict: wired=220, tested=196
+**Tally.** verdict: wired=221, tested=196
 
-**Tally.** disposition: keep=407, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=408, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

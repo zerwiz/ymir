@@ -1,5 +1,8 @@
 [Unit]
 Description=Embedding stone — nomic embed (:8500, heart/forge seats only)
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
 [Service]
 Type=simple
 # The engine is the fleet's ONE canonical llama.cpp (the rail's binary,
@@ -10,7 +13,5 @@ Type=simple
 ExecStart=/usr/local/bin/llama-server -m %h/Models/embed/nomic-embed-text-v1.5.Q4_K_M.gguf --embedding --port 8500 --alias embed --ctx-size 8192 -ngl 0
 Restart=on-failure
 RestartSec=3
-StartLimitIntervalSec=120
-StartLimitBurst=10
 [Install]
 WantedBy=ymir.target

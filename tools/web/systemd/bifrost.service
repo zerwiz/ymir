@@ -1,5 +1,7 @@
 [Unit]
 Description=Bifrost — the model bridge, the OpenAI-compatible face (:4603, dev seats)
+StartLimitIntervalSec=120
+StartLimitBurst=10
 
 [Service]
 Type=simple
@@ -10,8 +12,6 @@ Environment=BROKK_ENV_FILE=__YMIR_ENV_FILE__
 ExecStart=/bin/bash __YMIR_BIN_DIR__/bridge/bifrost-bridge.sh --foreground
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=120
-StartLimitBurst=10
 
 [Install]
 WantedBy=ymir.target

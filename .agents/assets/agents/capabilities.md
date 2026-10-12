@@ -12,11 +12,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",411
+  "shell doors (bin/*.sh)",412
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",27
   "Pi extension tools",0
-  "generated","2026-10-11"
+  "generated","2026-10-12"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -292,6 +292,7 @@ capabilities[5]{surface,count}:
 | syn-guard-pretool-check.sh | syn-guard-pretool-check.sh - PreToolUse seatbelt for the runtime's load- | tested+named | keep (a human or a cron row must run it) |
 | syn-spawn-pretool-check.sh | syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for ty | tested | keep (a human or a cron row must run it) |
 | ui-truth-check.sh | ui-truth-check.sh — the panel's number must equal the machine's number | tested | keep (a human or a cron row must run it) |
+| unit-template-check.sh | unit-template-check.sh — every shipped systemd unit template must be a | tested | keep (a human or a cron row must run it) |
 | usage-ratchet.sh | usage-ratchet.sh — PROVE the doors are used, and fail when the unused  | tested | keep (a human or a cron row must run it) |
 | workflow-check.sh | workflow-check.sh — every GitHub Actions workflow must PARSE, before C | tested | keep (a human or a cron row must run it) |
 | ymir-config-check.sh | ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime | tested+named | keep (a human or a cron row must run it) |
