@@ -73,4 +73,18 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 
 ---
 
+## Planned — named and designed, not yet built
+
+These are **not features yet**; they are named, planned, and paid for by a plan. They are
+listed here so a reader knows what is coming, and so nobody rebuilds the design. Each has a
+plain-language page; when one **lands**, its row moves into its proper section above and its
+page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
+
+| Area | Feature | What it gives you | how-to |
+|---|---|---|---|
+| Rooms | **Gladsheim — the fleet room** *(planned)* | One durable room where your whole fleet talks and you answer back | [docs/features/gladsheim-the-fleet-room.md](docs/features/gladsheim-the-fleet-room.md) |
+| Rooms | **Brimir — the hall of Allfathers** *(planned)* | A self-hosted, federated room across operators, their Ymirs joining by A2A | [docs/features/brimir-the-hall-of-allfathers.md](docs/features/brimir-the-hall-of-allfathers.md) |
+
+---
+
 *Append a row when a feature lands. Correct by appending, never by erasing.*
