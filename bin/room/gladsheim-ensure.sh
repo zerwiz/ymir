@@ -122,6 +122,14 @@ case "$ACTION" in
     printf '  "config_seated","%s"\n' "$([ -r "$CONFIG" ] && echo yes || echo no)"
     ;;
   ensure)
+    # THE DOOR IS NARROW ON PURPOSE (the gate law, plan 75 Part 13): the HOST side publishes
+    # on the tailnet interface only (or loopback with no tailnet), never 0.0.0.0 — the LAN
+    # must not be a door. Inside the container the engine still hears 0.0.0.0 (docker's
+    # published port is what narrows it); binding the in-container address to a tailnet IP
+    # makes the service UNREACHABLE, because that address does not exist in the container.
+    local BIND="127.0.0.1"
+    command -v tailscale >/dev/null 2>&1 && BIND="$(tailscale ip -4 2>/dev/null | head -1)"
+    [ -n "$BIND" ] || BIND="127.0.0.1"
     if [ "$ENGINE_HERE" = 0 ]; then
       # A SEAT: a client only. Ensure the client config points at the heart, and stop.
       [ "$INSTALL" = 1 ] && printf 'gladsheim: this seat is a client — the engine belongs to the heart (%s); skipping cleanly\n' "${HEART:-?}"
@@ -143,7 +151,7 @@ case "$ACTION" in
     write_config
     if [ "$INSTALL" = 1 ]; then docker pull -q "$IMAGE" >/dev/null 2>&1 || true; fi
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-    if docker run -d --name "$CONTAINER" -p "$PORT:$PORT" \
+    if docker run -d --name "$CONTAINER" -p "$BIND:$PORT:$PORT" \
         -v "$STATE_DIR/conduwuit.toml:/etc/conduwuit/conduwuit.toml:ro" \
         -v "$STATE_DIR/data:/var/lib/conduwuit" \
         --restart unless-stopped "$IMAGE" /sbin/conduwuit -c /etc/conduwuit/conduwuit.toml >/dev/null 2>&1; then
@@ -151,6 +159,7 @@ case "$ACTION" in
       printf 'gladsheim-ensure[3]{fact,result}:\n'
       printf '  "role","engine"\n'
       printf '  "container","%s"\n' "$CONTAINER"
+      printf '  "reachable_at","%s:%s (tailnet/loopback only — never the LAN)"\n' "$BIND" "$PORT"
       printf '  "engine","%s"\n' "$st"
       printf '  "bootstrap_token","pinned in %s"\n' "$SECRETS"
     else
