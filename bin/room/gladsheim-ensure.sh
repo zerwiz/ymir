@@ -18,6 +18,17 @@
 # REFERENCE (Rule 04), and the bootstrap token is PINNED before first boot — the live
 # proof (2026-10-12) showed a generated registration token changes across restarts, so an
 # installer that reads it from a log is racing the server.
+#
+# THE ONE GOTCHA, MEASURED (2026-10-12, on the heart): continuwuity IGNORES the configured
+# `registration_token` until the FIRST account exists. It prints its own first-boot token,
+# which is the ONLY one that works for that first account; from the second account onward
+# the pinned token governs. So the bootstrap sequence is:
+#
+#   1. the engine comes up and prints a first-boot token (or the admin console creates user 1)
+#   2. create the OPERATOR's account with that token
+#   3. from then on the pinned ROOM_BOOTSTRAP_TOKEN registers every agent
+#
+#   gladsheim-ensure.sh bootstrap   # prints the first-boot token and what to do with it
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -89,6 +100,16 @@ EOF
 }
 
 case "$ACTION" in
+  bootstrap)
+    # The first account's token is the engine's own, not the pinned one (measured 2026-10-12).
+    # Print it, and say plainly what to do with it.
+    [ "$ENGINE_HERE" = 1 ] || { printf 'gladsheim-ensure: this seat holds no engine — the token is on the heart%s\n' "${HEART:+ ($HEART)}"; exit 0; }
+    tok="$(docker logs "$CONTAINER" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -oE 'registration token [A-Za-z0-9]{16}' | tail -1 | awk '{print $3}')"
+    printf 'gladsheim-bootstrap[3]{fact,value}:\n'
+    printf '  "first_user_token","%s"\n' "${tok:-none — is the engine running?}"
+    printf '  "use_for","the OPERATOR account ONLY (the first user)"\n'
+    printf '  "after_that","the pinned token in %s registers every agent"\n' "$SECRETS"
+    ;;
   status)
     up="down"; engine_up && up="up"
     printf 'gladsheim-ensure[7]{fact,value}:\n'
