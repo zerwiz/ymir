@@ -1,5 +1,7 @@
 [Unit]
 Description=Mimir — the well bridge, the engram HTTP face (:4602, dev seats)
+StartLimitIntervalSec=120
+StartLimitBurst=10
 
 [Service]
 Type=simple
@@ -9,8 +11,6 @@ Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 ExecStart=/bin/bash __YMIR_BIN_DIR__/bridge/mimir-bridge.sh --foreground
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=120
-StartLimitBurst=10
 
 [Install]
 WantedBy=ymir.target

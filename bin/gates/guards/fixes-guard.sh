@@ -115,7 +115,13 @@ path_component() {  # <path> -> the component it belongs to, or empty
     tools/mcp-gateway/*|bin/bridge/mcp-gateway.sh|bin/records/journal-*.sh) echo runtime ;;
     bin/engine/ymir-install.sh|bin/agents/groa-update.sh|bin/seat/valknut-load.sh|bin/engine/ymir-migrate.sh) echo install ;;
     .pi/*|.agents/skills/*|bin/agents/skill-find.sh|bin/gates/fixes.sh|bin/gates/guards/fixes-guard.sh) echo agents ;;
-    bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/queue.sh|bin/gates/checks/home-index-check.sh|bin/no-delete-guard.sh) echo gate ;;
+    bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/queue.sh|bin/gates/ci-verify.sh|bin/gates/checks/*|bin/no-delete-guard.sh) echo gate ;;
+    # The unit templates and the renderer that seats them: the seat's services, so a fix
+    # here is a runtime fix. Before this row tools/{mill,web}/systemd/* mapped to NO
+    # component — a correct runtime note covered nothing and the gate passed on a
+    # technicality while saying it could not tell. Same defect as the bin/skuld/* row
+    # above, found again on 2026-10-12 by the StartLimit mend.
+    tools/mill/systemd/*|tools/web/systemd/*|bin/fleet/fleet-ensure.sh|bin/engine/autoboot-lib.sh) echo runtime ;;
     # The registry readers: a fix here is a runtime fix, and before this row
     # bin/skuld/* mapped to NO component — so a correct note under runtime/ covered
     # nothing and the gate passed on a technicality while saying it could not tell.

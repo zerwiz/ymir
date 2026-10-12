@@ -58,6 +58,7 @@ gate home-index "the home's shelves are navigable"             bash "$ROOT/bin/g
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/gates/checks/usage-ratchet.sh"
 gate inventory  "the bin/backend index is current"            bash "$ROOT/bin/gates/inventory.sh" --check
 gate workflows  "every Actions workflow parses"               bash "$ROOT/bin/gates/checks/workflow-check.sh" --quiet
+gate units      "systemd reads every key in every unit template" bash "$ROOT/bin/gates/checks/unit-template-check.sh" --quiet
 gate ext-api    "extensions speak Pi's real tool API"          bash "$ROOT/bin/gates/checks/extension-api-check.sh" --quiet
 gate ext-smoke  "every Ymir tool ANSWERS when called like Pi calls it" \
                node --experimental-strip-types "$ROOT/tools/extension-smoke.mjs"

@@ -1,5 +1,7 @@
 [Unit]
 Description=MCP gateway — the body's one record door (:8316), proxying the heart and degrading to the local cache + journal when it is dark
+StartLimitIntervalSec=120
+StartLimitBurst=10
 
 [Service]
 Type=simple
@@ -8,8 +10,6 @@ Environment=MCP_GATEWAY_STATE=__YMIR_OPERATOR_STATE__
 ExecStart=/bin/bash __YMIR_BIN_DIR__/bridge/mcp-gateway.sh serve
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=120
-StartLimitBurst=10
 
 [Install]
 WantedBy=ymir.target
