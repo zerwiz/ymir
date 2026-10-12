@@ -35,6 +35,13 @@ OC="$ROOT/opencode.json"
 A2AB="${A2ABRIDGE_BIN:-$HOME/.a2abridge/bin/a2abridge}"
 DIR="${A2A_DIRECTORY:-http://127.0.0.1:7777}"
 ADVERT="${A2A_ADVERTISE_HOST:-$(tailscale ip -4 2>/dev/null | head -1)}"
+# A2A is a PEER service: the bridge must bind where PEERS can reach it, on a
+# STABLE port, and advertise that same address. Bound to loopback on a random
+# port (the old default) the card's URL is a lie — no peer can connect, and the
+# port changes every run so a card cannot name it. Bind the tailnet address on a
+# fixed port (A2A_PORT, default 8391); with no tailnet, fall back to loopback.
+A2A_PORT="${A2A_PORT:-8391}"
+A2A_BIND="${A2A_BIND:-${ADVERT:-127.0.0.1}:$A2A_PORT}"
 [ -n "$ADVERT" ] || ADVERT="127.0.0.1"
 
 PROJECT=0; ACTION="show"
@@ -77,10 +84,10 @@ platform_env_val() {  # <KEY>
 TEAMS_URL="${WAYOFTEAMS_MCP_URL:-}";  [ -n "$TEAMS_URL" ]  || TEAMS_URL="$(platform_env_val WAYOFTEAMS_MCP_URL)"
 ANCHOR_URL="${ANCHOR_MCP_URL:-}";     [ -n "$ANCHOR_URL" ] || ANCHOR_URL="$(platform_env_val ANCHOR_MCP_URL)"
 
-python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" "$TEAMS_URL" "$ANCHOR_URL" <<'PY'
+python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" "$TEAMS_URL" "$ANCHOR_URL" "$A2A_BIND" <<'PY'
 import sys, os, json
 (root, pi_path, oc_path, a2ab, durl, advert, wotes, action, engram_bin, engram_db,
- teams_url, anchor_url) = sys.argv[1:13]
+ teams_url, anchor_url, a2a_bind) = sys.argv[1:14]
 
 def load(p, default):
     try: return json.load(open(p))
@@ -88,9 +95,9 @@ def load(p, default):
 
 ones = {
     "a2abridge": {
-        "pi":  {"command": a2ab, "args": ["bridge"],
+        "pi":  {"command": a2ab, "args": ["bridge", "-bind", a2a_bind, "-advertise-host", advert],
                 "env": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
-        "oc":  {"type": "local", "command": [a2ab, "bridge"],
+        "oc":  {"type": "local", "command": [a2ab, "bridge", "-bind", a2a_bind, "-advertise-host", advert],
                 "environment": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
     },
     "engram": {
