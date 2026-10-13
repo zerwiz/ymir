@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[16]{file,subject}:
+rules_index[17]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -24,6 +24,8 @@ rules_index[16]{file,subject}:
   "20-the-well-appends.md","the well appends: an episode is never replaced, rebuilt-over or lost to a restore; the count never falls"
   "21-company-documents.md","a company document is written in business language: no internal names, no persona, no infrastructure detail, no third party the reader need not know"
   "22-home-layout.md","the home has a layout: one resolver, one purpose per shelf, state only in the home, a company document only in a company or project shelf, discovery by registry, creation refused elsewhere, one name one meaning"
+  "20-company-documents.md","a company document is written in business language: no internal names, no persona, no infrastructure detail, no third party the reader need not know"
+  "22-home-layout.md","the home has a layout: one resolver, one purpose per shelf, state only in the home, a company document only in a company or project shelf, discovery by registry, creation refused elsewhere, one name one meaning"
   "README.md","this index"
 ```
 
@@ -37,6 +39,8 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | 19 | `19-two-planes.md` | **Two planes:** OURS (the operator + fleet — the well, Runes, plans, the vault, the agents) and **THE TEAM'S** (places, the suite, their chat/files/record). A function belongs to one plane; **there is no team well**. |
 | 20 | `20-the-well-appends.md` | **The well appends:** an episode is written once and stays. A fork is a UNION, a repair ADDS, and the episode count and the log's lines never fall — enforced by `bin/records/well-guard.sh` (the `well` surface of Eir). |
 | 21 | `21-company-documents.md` | **Company documents are written in business language.** Plain professional English; no internal names, no persona or allegory, no infrastructure detail, no third party the reader need not know. A document that cannot be written without internal terms is an **internal** document. |
+| 22 | `22-home-layout.md` | **The home has a layout, and nothing is created outside it.** One resolver; one purpose per shelf; state in `$YMIR_HOME/state` and nowhere else; a company document in a company or project shelf, never in the operator's own; discovery by registry, never by walking the tree; creation refused elsewhere; one name, one meaning. |
+| 20 | `20-company-documents.md` | **Company documents are written in business language.** Plain professional English; no internal names, no persona or allegory, no infrastructure detail, no third party the reader need not know. A document that cannot be written without internal terms is an **internal** document. |
 | 22 | `22-home-layout.md` | **The home has a layout, and nothing is created outside it.** One resolver; one purpose per shelf; state in `$YMIR_HOME/state` and nowhere else; a company document in a company or project shelf, never in the operator's own; discovery by registry, never by walking the tree; creation refused elsewhere; one name, one meaning. |
 | 15 | `15-vault-confidential.md` | The vault is a **confidential domain**: content under NDA never leaves it, in any form, local or remote; no model, log, embedding, ticket, or network ever sees it; enforced by `bin/gates/guards/vault-guard.sh`. |
 | 16 | `16-confidential-session.md` | A **confidential session** (`bin/vault/confidential.sh`): work on the vault with no route off it — confined workdir, off-vault doors off, an explicit model tier (local/none/remote), and `--airlock` for no network at all; `confidential-guard` refuses out-of-vault commits. |
