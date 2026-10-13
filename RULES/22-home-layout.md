@@ -24,9 +24,9 @@ home_layout_law[6]{rule}:
 ## The shelves, and what each holds
 
 ```
-hodd/identity/companies/<company>/   a company: what it is, its documents
-hodd/identity/projects.yaml          the ONE registry of projects (company · realm · path · git)
-hodd/identity/                       realms, entity cards, the operator's own identity
+hodd/identity/projects.yaml          the ONE registry of projects (kind · company · realm · path · git)
+hodd/identity/                       the operator's own identity, and the registry — nothing company-shaped
+svartalfaheim/<company>/             A COMPANY IS A REALM: its memory, its projects, its products, its marketing
 hodd/memory/                         the well, the daily logs, the append-only audit ledger
 hodd/plans/                          live personal working plans
 hodd/docs/                           machine notes, runbooks, diagnostics, reference
@@ -60,6 +60,19 @@ Measured on 2026-10-13:
 4. **Two things share one name.** `svartalfaheim/work/` is a **realm**; `hodd/life/work/` is a
    **shelf**. A name may not mean two things in one home — that is how a person, and a script,
    lands in the wrong place.
+
+## The three kinds — company, product, project
+
+```
+COMPANY   a realm               svartalfaheim/<company>/     e.g. Whynot Productions · WayOf
+PRODUCT   what a company makes  belongs to its company       e.g. GIMLE — a product of Whynot Productions, for the operator's server
+PROJECT   the work behind it    the project shelf            e.g. the code, plans and docs of a product or a venture
+```
+
+**A product is not a company.** Filing one as the other is how a shelf is created twice — and how
+`hodd/identity/companies/gimle/` came to exist, wrong in the **tree** and wrong in the **kind**
+(measured 2026-10-13, on the Allfather's word: *"gimle are not a company that's a product for my
+server from whynot productions"*).
 
 ## Finding: the registry, not a search
 
