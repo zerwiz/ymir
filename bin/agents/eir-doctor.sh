@@ -204,19 +204,48 @@ s_hoard() {
     local lay="$YMIR_HOME/.ymir-layout.yaml" k p rp maproot
     if [ -f "$lay" ]; then
       # A path naming the SAME home under another root is not foreign: a substrate
-      # container bind-mounts the home at its own prefix. Retry under this root.
+      # THE MAP MUST DESCRIBE *THIS* MACHINE. The previous code RETRIED a foreign path
+      # under this root, which made a map naming another computer pass as 'ok' —
+      # masking the very fault this surface exists to catch (measured 2026-10-13:
+      # .ymir-layout.yaml pointed at /home/heimdall/… for every path, and this
+      # surface still reported 'ok'). A foreign map is now a FAILURE.
       maproot="$(sed -nE 's/^git_repo: "([^"]+)".*/\1/p' "$lay" 2>/dev/null | head -1)"
+      if [ -n "$maproot" ] && [ "$maproot" != "$YMIR_HOME" ]; then
+        return 1   # the map names another machine's home — regenerate it on this one
+      fi
       for k in config secrets identity workspaces memory smidja state data; do
         p="$(sed -nE "s/^  $k: \"([^\"]+)\".*/\1/p" "$lay" | head -1)"
         [ -n "$p" ] || continue
-        rp="$p"
-        if [ ! -d "$rp" ] && [ -n "$maproot" ] && [ "${p#"$maproot"}" != "$p" ]; then
-          rp="$YMIR_HOME/${p#"$maproot"/}"
-        fi
-        [ ! -d "$rp" ] && [ "${p#/}" != "$p" ] && return 1
-        [ ! -d "$rp" ] && [ "${p#/}" = "$p" ] && [ ! -d "$YMIR_HOME/$p" ] && return 1
+        if [ "${p#/}" != "$p" ]; then [ -d "$p" ] || return 1
+        else [ -d "$YMIR_HOME/$p" ] || return 1; fi
       done
     fi
+  # STATE LIVES IN THE HOME AND NOWHERE ELSE (Rule 21). Two faults measured 2026-10-13:
+  # state beside the home (~/Documents/Ymir/state) and state INSIDE the public repo
+  # (ymir/.agents/state, ymir/bin/state — git-ignored, so no guard could see it either).
+  [ -d "$YMIR_HOME/state" ] || return 1
+  local baddir
+  for baddir in "$HOME/Documents/Ymir" "$HOME/hodd"; do
+    [ -e "$baddir" ] && return 1
+  done
+  if [ -n "${ROOT:-}" ]; then
+    for baddir in "$ROOT/.agents/state" "$ROOT/bin/state"; do
+      [ -e "$baddir" ] && return 1
+    done
+  fi
+  # A COMPANY OR PROJECT DOCUMENT MUST NOT SIT IN THE OPERATOR'S OWN SHELF (Rule 21):
+  # hodd/life is the operator's own, never a company's or a project's.
+  local life="$YMIR_HOME/hodd/life"
+  if [ -d "$life" ]; then
+    [ -d "$life/work" ] && return 1
+    local cid
+    for cid in "$YMIR_HOME"/hodd/identity/companies/*/; do
+      [ -d "$cid" ] || continue
+      cid="$(basename "$cid")"
+      [ "$cid" = '*' ] && continue
+      find "$life" -maxdepth 3 -iname "*$cid*" -print -quit 2>/dev/null | grep -q . && return 1
+    done
+  fi
   for k in identity data docs secrets tenants; do
     [ -d "$YMIR_HOME/$k" ] && return 1
   done
