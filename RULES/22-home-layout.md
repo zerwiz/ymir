@@ -18,6 +18,7 @@ home_layout_law[6]{rule}:
   "A COMPANY DOCUMENT LIVES IN A COMPANY OR PROJECT SHELF — never in the personal shelf (hodd/life)"
   "DISCOVERY IS BY REGISTRY, NOT BY WALKING — a document, project or company is FOUND through its index, never by searching the tree"
   "CREATION OUTSIDE A SHELF IS REFUSED — by the script, by the template, and by a ward; the refusal names the right destination"
+  "ONE NAME, ONE MEANING — a realm and a shelf may not share a name (two things called 'work' is how a file lands in the wrong one)"
 ```
 
 ## The shelves, and what each holds
@@ -31,7 +32,7 @@ hodd/plans/                          live personal working plans
 hodd/docs/                           machine notes, runbooks, diagnostics, reference
 hodd/security/                       the secrets design (values live in hodd/secrets/)
 hodd/data/                           records about machines, the fleet, inventories
-hodd/life/                           THE OPERATOR'S PERSONAL LIFE ONLY — personal · meetings · marketing of the person
+hodd/life/                           THE OPERATOR'S OWN — his personal life, the meetings he attends, the marketing he runs, his own working notes. NOT a company's and NOT a project's
 svartalfaheim/<realm>/projects/<project>/   a project, inside its realm
 config/                              agents.yaml · cron.yaml · the room · per-machine overlays
 state/                               RUNTIME STATE — ephemeral; never committed, never elsewhere
@@ -51,9 +52,14 @@ Measured on 2026-10-13:
    `ymir/.agents/state` and `ymir/bin/state` — git-ignored, so the guards could not see it either.
 2. **A stray hoard.** `~/hodd/` existed because one line of instructions named it; it held one
    misplaced document.
-3. **Company documents in the personal shelf.** `hodd/life/marketing/`, `hodd/life/meetings/` and
-   `hodd/life/work/` hold company material — a WayOf/ForemanAI meeting, marketing for a company,
-   project notes. `hodd/life` is the operator's own life, not a company's shelf.
+3. **Company and project material in the operator's own shelf.** `hodd/life/marketing/`,
+   `hodd/life/meetings/` and `hodd/life/work/` hold material belonging to a **company** or a
+   **project** — a WayOf/ForemanAI meeting, marketing for a company, and seven project notes
+   (`investready-project.md`, `treasury-demo-project.md`, `wayofteams-tickets-ui-anatomy.md`).
+   A company's material belongs in its company shelf; a project's, in the project's shelf.
+4. **Two things share one name.** `svartalfaheim/work/` is a **realm**; `hodd/life/work/` is a
+   **shelf**. A name may not mean two things in one home — that is how a person, and a script,
+   lands in the wrong place.
 
 ## Finding: the registry, not a search
 
