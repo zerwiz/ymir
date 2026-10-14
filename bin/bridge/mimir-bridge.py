@@ -19,11 +19,12 @@ No secrets here; the store is repo-local. Stdlib only.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sqlite3
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -59,6 +60,85 @@ STORE = Path(os.environ.get(
 HOST = os.environ.get("MIMIRSBRUNN_HOST", "127.0.0.1")
 PORT = int(os.environ.get("MIMIRSBRUNN_PORT", os.environ.get("ENGRAM_PORT", "4602")))
 DEFAULT_AGENT = os.environ.get("ENGRAM_AGENT_ID", "kaia")
+
+# --- the append log (the source of truth for re-seeding) ---------------------
+# The engram is DERIVED; the JSONL log is the durable, append-only, unionable
+# record it is rebuilt from. That only holds if EVERY observe reaches the log.
+# The bridge is the one door all harnesses pass through (pi, opencode, claude,
+# cursor, codex), so the append lives here. Hash-deduped, never rewritten.
+LOG = Path(os.environ.get(
+    "ENGRAM_LOG",
+    str(STORE.parent / "well" / "episodes.jsonl"),
+)).expanduser()
+_log_lock = threading.Lock()
+_log_state: dict = {"sig": None, "hashes": set()}
+
+
+def _log_hashes() -> set:
+    """The content hashes already in the log, reloaded when the file moves.
+
+    Another writer (mimir.sh, mimir-ingest.sh) may append between our calls, so
+    the file's (mtime, size) is the signal to re-read rather than trust a stale
+    in-memory set."""
+    try:
+        st = LOG.stat()
+        sig = (st.st_mtime_ns, st.st_size)
+    except OSError:
+        sig = None
+    with _log_lock:
+        if _log_state["sig"] != sig:
+            found = set()
+            try:
+                for line in LOG.read_text(encoding="utf-8", errors="replace").splitlines():
+                    line = line.strip()
+                    if not line.startswith("{"):
+                        continue
+                    try:
+                        h = json.loads(line).get("hash")
+                    except Exception:
+                        continue
+                    if h:
+                        found.add(h)
+            except OSError:
+                pass
+            _log_state["sig"] = sig
+            _log_state["hashes"] = found
+        return _log_state["hashes"]
+
+
+def append_log(content: str, actors, tags, salience, importance, agent: str, when) -> bool:
+    """Append one full episode to the log; False if it was already there."""
+    digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    hashes = _log_hashes()
+    with _log_lock:
+        if digest in hashes:
+            return False
+        moment = when or datetime.now(timezone.utc)
+        rec = {
+            "timestamp": moment.isoformat().replace("+00:00", "Z"),
+            "source": agent,
+            "actors": list(actors or [agent]),
+            "tags": list(tags or ["well"]),
+            "content": content,
+            "salience": salience,
+            "importance": importance,
+            "agent_id": agent,
+            "hash": digest,
+        }
+        try:
+            LOG.parent.mkdir(parents=True, exist_ok=True)
+            with LOG.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        except OSError:
+            return False
+        hashes.add(digest)
+        try:
+            st = LOG.stat()
+            _log_state["sig"] = (st.st_mtime_ns, st.st_size)
+        except OSError:
+            _log_state["sig"] = None
+        return True
+
 
 from engram import Engram  # noqa: E402  (after env is read)
 
@@ -259,13 +339,19 @@ class Handler(BaseHTTPRequestHandler):
                 agent = body.get("agent_id") or body.get("source") or DEFAULT_AGENT
                 ts = body.get("timestamp")
                 when = datetime.fromisoformat(ts) if ts else None
+                actors = body.get("actors") or None
+                tags = body.get("tags") or None
+                salience = float(body.get("salience", 0.5))
                 eid = engine(agent).observe(
                     content,
-                    actors=body.get("actors") or None,
-                    tags=body.get("tags") or None,
-                    salience=float(body.get("salience", 0.5)),
+                    actors=actors,
+                    tags=tags,
+                    salience=salience,
                     timestamp=when,
                 )
+                # The log is the truth; the engram is derived from it. Write the
+                # log AFTER the store, so a failed observe never logs a phantom.
+                append_log(content, actors, tags, salience, body.get("importance"), agent, when)
                 return self._json(200, {"id": eid, "agent_id": agent, "episodes": count_episodes()})
             return self._json(404, {"error": f"no route {u.path}"})
         except Exception as exc:  # noqa: BLE001

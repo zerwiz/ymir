@@ -17,24 +17,6 @@ set -u
 
 # Fill EINDRI_STATE from the caller's STATE, or resolve it exactly as every
 # other shell tool does (bin/vault/hoard-lib.sh). Idempotent.
-eindri_wake_init() {
-  [ -n "${EINDRI_STATE:-}" ] && return 0
-  if [ -n "${STATE:-}" ]; then EINDRI_STATE="$STATE"; return 0; fi
-  if [ -n "${BROKK_STATE_OVERRIDE:-}" ]; then EINDRI_STATE="$BROKK_STATE_OVERRIDE"; return 0; fi
-  local _d _hs
-  _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-    for _c in "$_d/hoard-lib.sh" "$_d/../vault/hoard-lib.sh" "$_d/../../vault/hoard-lib.sh"; do
-      [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
-    done
-  fi
-  if declare -F hoard_state_dir >/dev/null 2>&1 && hoard_state_dir _hs && [ -n "$_hs" ]; then
-    EINDRI_STATE="$_hs"
-    return 0
-  fi
-  printf 'eindri-wake-lib: cannot resolve the runtime state dir — call the resolver (bin/vault/hoard-lib.sh)\n' >&2
-  return 1
-}
 
 # 0 when (id, kind) has already been delivered by EITHER road. The legacy
 # markers are honoured so a home that fed the old two-ledger shape never

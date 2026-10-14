@@ -77,10 +77,6 @@ for n in range(1,11):
 
 # Read the desktops already claimed in the rule file, so we do not collide with
 # the apps (or the editor, on a re-run).
-claimed_desktops() {
-  [ -r "$RULE_FILE" ] || return 0
-  grep -oE 'workspace = "[0-9]+"' "$RULE_FILE" 2>/dev/null | grep -oE '[0-9]+' | sort -n -u
-}
 
 plan_desktop() {
   local cls; cls="$(editor_class)"

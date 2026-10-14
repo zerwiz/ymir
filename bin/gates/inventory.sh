@@ -84,6 +84,7 @@ def first_sentence(text, limit=140):
 # reproducible from a clean checkout by construction, or its `--check` is a lottery.
 TEXTY = (".sh", ".md", ".ts", ".tsx", ".py", ".yaml", ".yml", ".json", ".toml", ".mjs", ".js")
 tracked = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True).stdout.split()
+tracked_set = set(tracked)
 corpus_paths = [ROOT / p for p in tracked if p.endswith(TEXTY)]
 corpus = []
 for p in corpus_paths:
@@ -116,6 +117,16 @@ def counterpart(stem):
             return PY_MODULE_PATHS.get(cand)
     return None
 
+# The doors that may call a door: TRACKED bin files only, computed ONCE.
+# This was `BIN.rglob("*")` INSIDE analyse() — a filesystem walk per file (quadratic)
+# that also counted untracked scripts, so a seat's `called-by` totals ran higher than a
+# clean checkout's and the committed index could never match CI.
+BIN_TRACKED = (
+    [p for p in sorted(BIN.rglob("*")) if p.is_file() and p.relative_to(ROOT).as_posix() in tracked_set]
+    if BIN.exists() else []
+)
+
+
 def analyse(path: Path, shelf: str):
     name = path.name
     # README.md is the inventory's OWN output: emitting its line count makes the
@@ -130,8 +141,9 @@ def analyse(path: Path, shelf: str):
     called_by = []
     # RECURSIVE: bin/ now has SYSTEM FOLDERS, and a root-only scan indexes 148 of 398 doors and
     # calls it current — the same blindness that hid four doors in the first move.
-    for other in ([q for q in BIN.rglob("*") if q.is_file()] if BIN.exists() else []):
-        if other == path or not other.is_file(): continue
+    for other in BIN_TRACKED:
+        if other == path:
+            continue
         if name in read(other, 200000): called_by.append(other.name)
     outside = name in CORPUS
     tested = name in TESTS
@@ -182,9 +194,19 @@ def tally(rows, key):
     return ", ".join(f"{k}={v}" for k, v in sorted(d.items(), key=lambda kv: -kv[1]))
 
 shelves = {}
+# TRACKED files only, as the header above promises. This walked the filesystem
+# (`rglob`), so untracked live state — bin/state/cron.log, .session-start-complete —
+# was counted, its "called-by" totals moved as the machine ran, and the committed
+# index could not match a clean checkout: `--check` was the lottery this file warns
+# about. A generated index must be a function of the tree, not of the seat.
+tracked_set = set(tracked)
 for shelf, d in (("bin", BIN), (".agents/backend", BACKEND)):
     if d.exists():
-        shelves[shelf] = [analyse(p, shelf) for p in sorted(d.rglob("*")) if p.is_file()]
+        shelves[shelf] = [
+            analyse(p, shelf)
+            for p in sorted(d.rglob("*"))
+            if p.is_file() and p.relative_to(ROOT).as_posix() in tracked_set
+        ]
 
 fail = False
 for shelf, rows in shelves.items():

@@ -75,7 +75,7 @@ while IFS= read -r hit; do
 done < <(grep -rnE "$PAT" "${TARGETS[@]}" 2>/dev/null \
            --include='*.sh' --include='*.bash' --include='*.py' --include='*.js' \
            --include='*.mjs' --include='*.cjs' --include='*.ts' \
-           $NOT_CODE --exclude-dir=node_modules --exclude-dir=.git || true)
+           $NOT_CODE --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.yggdrasil || true)
 
 if [ "$findings" -eq 0 ]; then
   printf '  "none","","","every path resolves through the one resolver"\n'
@@ -127,7 +127,8 @@ while IFS= read -r f; do
   unresolved=$((unresolved + 1))
 done < <(find "${TARGETS[@]}" -type f \( -name '*.sh' -o -name '*.bash' -o -name '*.py' \
            -o -name '*.ts' -o -name '*.mjs' -o -name '*.js' \) \
-           -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/target/*' 2>/dev/null | sort)
+           -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/target/*' \
+           -not -path '*/.yggdrasil/*' 2>/dev/null | sort)
 
 if [ "$unresolved" -eq 0 ]; then
   printf '  "none","",""\n'

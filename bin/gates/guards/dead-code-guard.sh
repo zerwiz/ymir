@@ -170,16 +170,72 @@ done
 # ── 2. shell functions defined and never called ──────────────────────────────
 # A function defined in bin/ or scripts/ that no other script references. Small, well-named
 # helpers are the usual case, and they are the ones that read as working plumbing.
-mapfile -t SHELLS < <(find "$ROOT/bin" "$ROOT/scripts" -type f -name '*.sh' 2>/dev/null)
-for f in "${SHELLS[@]}"; do
+#
+# O(tree), not O(names × tree). The first version ran a FULL-TREE grep per function
+# name (~6,600 names over ~1,260 scripts ≈ 8.3M file scans — minutes per push, so the
+# hook looked like it had hung). The tree ward must run on every push, so every name is
+# a pattern in ONE pass: `grep -F -f` is multi-pattern, never a loop. The semantics are
+# unchanged — a name is "used" if it appears on any line that is not a function
+# definition, exactly what the per-name count asked.
+mapfile -t SHELLS < <(find "$ROOT/bin" "$ROOT/scripts" -type f -name '*.sh' -not -path '*/.yggdrasil/*' -not -path '*/node_modules/*' 2>/dev/null)
+# The USAGE index covers the WHOLE tree: a bin/ function is called from skill scripts
+# under .agents/, from tests under tools/, from apps — a search that reads only bin/
+# and scripts/ reports those callers missing and calls a live function dead. Only the
+# JUDGED set (the definitions above) is bin/ and scripts/.
+USAGE_FILES=()
+for r in bin scripts apps packages tools src .agents; do
+  [ -d "$ROOT/$r" ] || continue
+  while IFS= read -r _f; do USAGE_FILES+=("$_f"); done < <(
+    find "$ROOT/$r" -type f -name '*.sh' -not -path '*/.yggdrasil/*' -not -path '*/node_modules/*' 2>/dev/null)
+done
+NAMES="$(mktemp)"; DEFCOUNT="$(mktemp)"; OCC="$(mktemp)"
+for f in "${SHELLS[@]:-}"; do
+  [ -n "$f" ] || continue
+  grep -ohE '^[[:space:]]*(function[[:space:]]+)?[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*\(\)' "$f" 2>/dev/null \
+    | sed -E 's/^[[:space:]]*(function[[:space:]]+)?//; s/[[:space:]]*\(\)//'
+done > "$NAMES.raw"
+sort -u "$NAMES.raw" > "$NAMES"
+sort "$NAMES.raw" | uniq -c > "$DEFCOUNT"
+# A name is USED iff it occurs as a WORD on a line other than its own definition.
+# Word matching (`-w`) is what keeps meta_get from counting because fm_meta_get exists;
+# COUNTING occurrences minus definitions — rather than excluding every definition line —
+# is what keeps a call inside a one-liner definition from being lost:
+#   fm_transition_pane_id() { fm_transition_field "$1" 1; }   # calls fm_transition_field
+if [ "${#USAGE_FILES[@]}" -gt 0 ] && [ -s "$NAMES" ]; then
+  grep -hF -o -w -f "$NAMES" -- "${USAGE_FILES[@]}" 2>/dev/null | sort | uniq -c > "$OCC"
+fi
+declare -A TOTAL=() DEFS=()
+while read -r _c _n; do [ -n "$_n" ] && TOTAL["$_n"]="$_c"; done < "$OCC"
+while read -r _c _n; do [ -n "$_n" ] && DEFS["$_n"]="$_c"; done < "$DEFCOUNT"
+
+# Dynamic dispatch: `"s_$s"` builds a command name at runtime, so no static search can
+# ever see `s_floors`. Any literal identifier PREFIX the tree uses to BUILD a command
+# (`"prefix_$x"`) marks every defined name with that prefix reachable — the dispatcher
+# is the consumer. A bare `"$x"` has no literal prefix and marks nothing.
+DISPATCH="$(mktemp)"
+trap 'rm -f "$INDEX" "$NAMES" "$NAMES.raw" "$DEFCOUNT" "$OCC" "$DISPATCH"' EXIT
+grep -rhoE "['\"][A-Za-z_][A-Za-z0-9_]*\\\$" --include='*.sh' \
+  --exclude-dir=.yggdrasil --exclude-dir=node_modules \
+  "$ROOT/bin" "$ROOT/scripts" 2>/dev/null \
+  | sed -E "s/^['\"]//; s/\\\$//" | sort -u > "$DISPATCH"
+dispatched() {  # a name the tree can construct, so "unused" would be a false finding
+  local name="$1" p
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    case "$name" in "$p"*) return 0 ;; esac
+  done < "$DISPATCH"
+  return 1
+}
+
+for f in "${SHELLS[@]:-}"; do
+  [ -n "$f" ] || continue
   rel="${f#$ROOT/}"
   # `name() {` or `function name {`
   while IFS= read -r fn; do
     [ -n "$fn" ] || continue
     case "$fn" in main|usage|help|die|log|warn|err) continue ;; esac
-    # Defined and used only once in its own file = never called; also search the whole tree.
-    uses="$(grep -rF "$fn" --include='*.sh' "$ROOT/bin" "$ROOT/scripts" 2>/dev/null | grep -cvE "^[^:]*:[0-9]+:[[:space:]]*(function[[:space:]]+)?$fn[[:space:]]*\(\)")"
-    [ "$uses" -gt 0 ] && continue
+    [ "${TOTAL[$fn]:-0}" -gt "${DEFS[$fn]:-0}" ] && continue
+    dispatched "$fn" && continue
     allowed "$rel"; rc=$?
     if [ "$rc" = "2" ]; then badallow=$((badallow + 1)); continue; fi
     [ "$rc" = "0" ] && continue

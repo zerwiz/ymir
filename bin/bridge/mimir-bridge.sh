@@ -71,13 +71,32 @@ while [ $# -gt 0 ]; do
     --status) ACTION=status; shift ;;
     --foreground) FOREGROUND=1; shift ;;
     --port) PORT=${2-}; shift 2 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/bridge/mimir-bridge.sh [--start|--stop|--status|--foreground]\n' "$1" >&2; exit 2 ;;
+    --python) ACTION=python; shift ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/bridge/mimir-bridge.sh [--start|--stop|--status|--foreground|--python]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
 listening() { (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null && return 0 || return 1; }
 
+# The ONE engram-interpreter resolver. engram needs Python >=3.12,<3.14, which the
+# system python may not be: prefer a recorded interpreter, then a compatible one
+# on PATH, and only then python3. `--python` prints it, so the well's log tool and
+# the bridge itself never disagree about which python owns the store.
+resolve_python() {
+  local py="${YMIR_ENGRAM_PYTHON:-}"
+  if [ -z "$py" ] && [ -r "${YMIR_ENGRAM_PY:-$HOME/.config/ymir/engram-python}" ]; then
+    py="$(cat "${YMIR_ENGRAM_PY:-$HOME/.config/ymir/engram-python}" 2>/dev/null)"
+  fi
+  if [ -z "$py" ]; then
+    for c in python3.12 python3.13; do command -v "$c" >/dev/null 2>&1 && { py="$c"; break; }; done
+  fi
+  [ -n "$py" ] || py=python3
+  printf '%s' "$py"
+}
+
 case "$ACTION" in
+  python)
+    resolve_python; printf '\n'; exit 0 ;;
   status)
     if listening; then printf 'well[1]{port,status}:\n  %s,"up"\n' "$PORT"; else printf 'well[1]{port,status}:\n  %s,"down"\n' "$PORT"; fi
     exit 0 ;;
@@ -95,17 +114,7 @@ if listening; then
   exit 0
 fi
 [ -e "$BRIDGE" ] || { printf 'error: bridge not found: %s\nhelp: expected bin/bridge/mimir-bridge.py\n' "$BRIDGE" >&2; exit 1; }
-# engram needs Python >=3.12,<3.14, which the system python may not be. Prefer a
-# recorded interpreter, then a compatible one on PATH, and only then python3.
-PY="${YMIR_ENGRAM_PYTHON:-}"
-if [ -z "$PY" ] && [ -r "${YMIR_ENGRAM_PY:-$HOME/.config/ymir/engram-python}" ]; then
-  PY="$(cat "${YMIR_ENGRAM_PY:-$HOME/.config/ymir/engram-python}" 2>/dev/null)"
-fi
-if [ -z "$PY" ]; then
-  for c in python3.12 python3.13; do command -v "$c" >/dev/null 2>&1 && { PY="$c"; break; }; done
-fi
-[ -n "$PY" ] || PY=python3
-
+PY="$(resolve_python)"
 if ! "$PY" -c "import engram" 2>/dev/null; then
   printf 'error: engram not installed for %s\nhelp: bin/engine/prereq-ensure.sh engram   (installs it into a compatible Python)\n' "$PY" >&2; exit 1
 fi

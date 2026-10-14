@@ -193,9 +193,6 @@ CARD
 # ── the embed gate (A7): the stone is heart/forge-owed; nothing on this seat
 # ── writes its unit unless BOTH artifacts exist — so a missing stone FAILS
 # ── loudly with the remedy, and a unit that cannot run never loops.
-embed_artifacts_present() {
-  [ -x "$HOME/.fleet/embed/llama-server" ] && [ -f "$HOME/Models/embed/nomic-embed-text-v1.5.Q4_K_M.gguf" ]
-}
 
 materialize_embed() {
   # The stone rides the fleet's ONE canonical engine — the rail's binary,

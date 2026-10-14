@@ -96,11 +96,3 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
 # Some callers need the directory a mint writes INTO (an app's public/, electron/,
 # dist/…). A packaged app is read-only in spirit, so the clone's apps/ is preferred
 # when it exists; otherwise the package is the only truth there is.
-app_root() {  # <result-var> — where apps live in THIS tree
-  local _apr_rv="${1-}" _apr_root
-  [ -n "$_apr_rv" ] || return 2
-  _apr_root="${YMIR_ROOT_DIR:-}"
-  if [ -z "$_apr_root" ]; then _apr_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; fi
-  if [ -d "$_apr_root/apps" ]; then printf -v "$_apr_rv" '%s' "$_apr_root/apps"; return 0; fi
-  printf -v "$_apr_rv" '%s' "$_apr_root/node_modules/@zerwiz"
-}

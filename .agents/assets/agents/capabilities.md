@@ -12,7 +12,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",412
+  "shell doors (bin/*.sh)",414
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",27
   "Pi extension tools",0
@@ -362,6 +362,7 @@ capabilities[5]{surface,count}:
 | journal-receive.sh | journal-receive.sh — the HEART folds the bodies' journals into one rec | tested+named | keep (a human or a cron row must run it) |
 | journal-reconcile.sh | journal-reconcile.sh — push this machine's outbox to the heart, when i | tested | keep (a human or a cron row must run it) |
 | mimir-ingest.sh | mimir-ingest.sh — ingest the repo's data material into the well (Mimir | tested+named | keep (a human or a cron row must run it) |
+| mimir-log.sh | mimir-log.sh — move memory between the engram and the append log (a th | tested+named | keep (a human or a cron row must run it) |
 | mimir-reflect.sh | mimir-reflect — smelt the well's episodes into facts, through the LLAM | tested | keep (a human or a cron row must run it) |
 | mimir.sh | mimir.sh — the well (Mimirsbrunn). Drink before you act, water it afte | tested+named | keep (a human or a cron row must run it) |
 | runes-append.sh | runes-append.sh — the append-only Runes ledger, a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
@@ -414,7 +415,7 @@ capabilities[5]{surface,count}:
 | snotra-mine.sh | snotra-mine.sh — mine decisions and action items out of a transcript. | tested+named | keep (a human or a cron row must run it) |
 | snotra-transcribe.sh | snotra-transcribe.sh — transcribe a meeting recording and produce minu | tested+named | keep (a human or a cron row must run it) |
 | ymir-say.sh | ymir-say.sh — let Ymir speak on the Allfather's desktop. | tested+named | keep (a human or a cron row must run it) |
-| well-vault-sync.sh | well-vault-sync.sh — Kaia's memory across the Allfather's machines. | tested | keep (a human or a cron row must run it) |
+| well-vault-sync.sh | well-vault-sync.sh — Kaia's memory across the Allfather's machines. | tested+named | keep (a human or a cron row must run it) |
 | confidential.sh | confidential.sh — a session where vault work has no route off the vaul | tested+named | keep (a human or a cron row must run it) |
 | gleipnir-lock-lib.sh | gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
 | hnitbjorg-ensure.sh | hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path i | tested+named | keep (a human or a cron row must run it) |
