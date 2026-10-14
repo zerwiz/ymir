@@ -144,3 +144,45 @@ artefact — the only thing a user ever touches.
 - **Only the Brokk repo and its worktrees** are touched, never `projects/`.
 - **Eindri-homes are never disrupted** — a tracked-files fast-forward only when safe, plus a gentle re-read nudge when it changed.
 - **When something is broken rather than outdated**, that is Eir's work, not Gróa's: `bin/agents/eir-doctor.sh` diagnoses and mends.
+
+
+## Planned — the fleet room (Gladsheim) and how Gróa will mend it forward
+
+**Status: planned, not yet shipped (2026-10-12).** When the room lands, an existing home
+must heal forward into it **without a hand on the box** — which is Gróa's whole job:
+
+```
+groa does   fast-forward || then bin/engine/ymir-migrate.sh apply
+new piece   .agents/migrations/0008-room  (versioned, idempotent — a no-op if already seated)
+then        bin/fleet/fleet-ensure.sh ensure   (the engine role on the heart, the client on seats)
+then        report, so a broken room is named rather than silently absent
+```
+
+**The rule Gróa must keep:** the migration is **idempotent** (re-running it changes nothing)
+and **role-aware** (engine on the heart, client on the seats) — a seat that runs the
+migration must never raise a second homeserver. And the report must say the room's state
+plainly, because *a feature a user cannot get by updating is not shipped.*
+
+### The two shapes, and the update must know which it is in
+
+An update runs on **both kinds of machine** — a lone box and a fleet seat — and must do the
+right thing on each:
+
+```
+  single machine  →  the migration seats the engine + client here
+  a fleet seat    →  the migration seats the CLIENT only; the engine belongs to the HEART
+  the heart       →  the migration (re)asserts the engine role here
+```
+
+**Never** does a plain seat raise a second homeserver, and **never** does the migration
+fail on a machine it does not apply to — it **skips cleanly and says so** (the platform-layer
+law: a layer gated on its host reports a clean skip elsewhere, never a false failure).
+
+**See:** plan 75 Part 9 (the shipping law) and Part 11 (the fleet shape) · ticket ymir/57.
+
+**One resolver, never a private check.** The answer to "which shape am I?" already ships:
+**`bin/fleet/topology.sh`** reports `shape` (`single` | `fleet`), `roles`, `heart`, and
+`link` (`standalone` | `attached` | `detached` | `offline`) from ONE registry, and degrades
+cleanly to `single`/`standalone` on a box with no registry. Every shape‑dependent step —
+this one included — **asks it**, and none re‑derives the shape by hand (plan 76, the shape
+law; Rule 07's reason applied to topology).

@@ -1265,3 +1265,64 @@ that the sweep corrected. The visualizer path is
 skill tree (dropped 2026-09-17, the skill carries no copy), not a doubled
 `smidja-factory-factory`, and not the abandoned `.agents/skills/smidja/` tree
 (stale build output, moved aside).
+
+
+## Planned — the fleet room (Gladsheim), and how it will be seated here
+
+**Status: planned, not yet shipped (2026-10-12).** The room's engine is **proven** — a
+continuwuity homeserver was raised by hand on one seat and a message was posted and read
+back — but **no step installs it yet**, so a user who installs Ymir today gets **no room**.
+
+When it lands, it takes its place in **this** document's pattern, as one more step and one
+more role:
+
+```
+install   a step_room in bin/engine/ymir-install.sh, beside the other service steps
+update    a migration .agents/migrations/0008-room — heals an old home forward
+boot      a repo-owned unit + a fleet-ensure role (Rule 10 — never hand-placed)
+heal      an *-ensure.sh surface composed by bin/agents/eir-doctor.sh
+```
+
+**Role-aware, because a fleet is not one machine.** The engine role runs **once, on the
+heart**; every other seat runs the **client** role and speaks to the heart. A seat must
+never raise a second homeserver. Token provisioning is **pinned, not scraped**: the
+bootstrap registration token is written to the hoard *before* first boot (the live proof
+showed the token changes across restarts, so reading it from a log races the server).
+
+**The prerequisite is a word, not a step:** a Matrix `server_name` is **permanent** and is
+what peers resolve to federate, so a fleet must choose a **stable name with DNS + TLS** —
+never a tailnet IP, never a placeholder. That choice is the Allfather's, and it comes
+before the first line of this step.
+
+### The two shapes, and the install must know which it is in
+
+**A single machine and a fleet are not the same install**, and the step must act
+accordingly — never assume, always detect (the fleet already knows its role: `step_role`,
+`config/agents.yaml`, `bin/fleet/topology.sh`).
+
+```
+shapes[3]{shape,how Ymir knows,what the install/update seats}
+  "single machine","no fleet declared / one seat","engine + client on THIS machine"
+  "fleet — the heart","this seat carries the heart role","the engine role, ONCE, here"
+  "fleet — a seat","this seat is a body, not the heart","the CLIENT role only — never a second homeserver"
+```
+
+**The law that follows:** *the engine runs once per operator install.* On a single machine
+that means here; in a fleet it means **the heart**, and every other seat is a **client**.
+The **update** carries the same logic — the migration must be **role-aware**, so a seat
+running it seats a client (or skips cleanly) and never raises a server the heart already
+owns.
+
+**Token provisioning follows the same split:** on a single machine the token is minted and
+read locally; in a fleet the heart **mints once** and the **one hoard** carries it to every
+seat (plan 37), so a new seat is a new *identity*, not a copied credential.
+
+**See:** plan 75 (`Part 9` shipping law · `Part 10` identity & provisioning · `Part 11`
+the fleet shape) · plan 73 (Gladsheim) · tickets ymir/55, ymir/57.
+
+**One resolver, never a private check.** The answer to "which shape am I?" already ships:
+**`bin/fleet/topology.sh`** reports `shape` (`single` | `fleet`), `roles`, `heart`, and
+`link` (`standalone` | `attached` | `detached` | `offline`) from ONE registry, and degrades
+cleanly to `single`/`standalone` on a box with no registry. Every shape‑dependent step —
+this one included — **asks it**, and none re‑derives the shape by hand (plan 76, the shape
+law; Rule 07's reason applied to topology).
