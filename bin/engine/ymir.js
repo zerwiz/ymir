@@ -54,11 +54,31 @@ const bold = wrap('1');
 // `npm install -g` prints "changed 266 packages" and no versions, so an operator
 // cannot see what moved. We can: record the version we last ran, and say the
 // transition once, on the first run after an update.
-const STATE_DIR = process.env.YMIR_STATE_DIR || path.join(process.env.YMIR_HOME || path.join(require('node:os').homedir(), 'Documents', 'Ymir'), 'state');
+// The operator's home, resolved the SAME way every script does (Rule 07):
+// env → the recorded choice (~/.config/ymir/home) → the ONE documented default
+// (`$HOME/Documents/ymirhome`). The old literal `$HOME/Documents/Ymir` was a stale
+// name: on any machine whose real home is `ymirhome` (or a phone's Termux path) every
+// run created a phantom `~/Documents/Ymir/state`, which the eir hoard check then refused
+// as a foreign/duplicate map. Paths differ per machine — resolve, never assume.
+function resolveHome() {
+  if (process.env.YMIR_HOME) return process.env.YMIR_HOME;
+  try {
+    const cfg = process.env.YMIR_CONFIG_DIR
+      || path.join(process.env.XDG_CONFIG_HOME || path.join(require('node:os').homedir(), '.config'), 'ymir');
+    const f = path.join(cfg, 'home');
+    if (fs.existsSync(f)) {
+      const v = fs.readFileSync(f, 'utf8').trim();
+      if (v) return v;
+    }
+  } catch { /* fall through to the default */ }
+  return process.env.YMIR_HOME_DEFAULT
+    || path.join(require('node:os').homedir(), 'Documents', 'ymirhome');
+}
+const YMIR_HOME_RESOLVED = resolveHome();
+const STATE_DIR = process.env.YMIR_STATE_DIR || path.join(YMIR_HOME_RESOLVED, 'state');
 function noticeState(key) {
   try {
-    const s = process.env.YMIR_SETTINGS_DIR
-      || path.join(process.env.YMIR_HOME || path.join(require('node:os').homedir(), 'Documents', 'Ymir'), 'config');
+    const s = process.env.YMIR_SETTINGS_DIR || path.join(YMIR_HOME_RESOLVED, 'config');
     const f = path.join(s, 'notices.conf');
     if (!fs.existsSync(f)) return 'on';
     const line = fs.readFileSync(f, 'utf8').split('\n').find((l) => l.startsWith(key + '='));
