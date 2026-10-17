@@ -121,8 +121,12 @@ if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/../host/graphics-
   . "$SCRIPT_DIR/../host/graphics-lib.sh"; YMIR_GRAPHICS_LIB_LOADED=1
 fi
 
-s_well()      { [ -x "$SCRIPT_DIR/../records/mimir.sh" ] && "$SCRIPT_DIR/../records/mimir.sh" health >/dev/null 2>&1; }
-f_well()      { "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1; }
+# The well: the door answers AND the store is whole (Rule 20). A memory that
+# shrank is a loss even while the bridge still serves — so the ward rides this
+# surface, and the mend re-checks before rolling the checkpoint forward.
+s_well()      { [ -x "$SCRIPT_DIR/../records/mimir.sh" ] && "$SCRIPT_DIR/../records/mimir.sh" health >/dev/null 2>&1 \
+                && [ -x "$SCRIPT_DIR/../records/well-guard.sh" ] && "$SCRIPT_DIR/../records/well-guard.sh" check >/dev/null 2>&1; }
+f_well()      { "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1; "$SCRIPT_DIR/../records/well-guard.sh" record >/dev/null 2>&1; }
 # MCP: both A2A servers wired into opencode + pi.
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp-adapter.json" oc="$ROOT/opencode.json"
