@@ -76,11 +76,18 @@ PY
 case "$MODE" in
   show|--json|"") printf '%s\n' "$CONFIG" ;;
   write)
-    dest="$HOME/.pi/agent/mcp-adapter.json"
-    mkdir -p "$(dirname "$dest")"
-    [ -f "$dest" ] && cp "$dest" "$dest.bak-$(date -u +%Y%m%dT%H%M%SZ)" 2>/dev/null || true
-    printf '%s\n' "$CONFIG" >"$dest"
-    printf 'mcp-config: wrote %s (gateway :%s)\n' "$dest" "$GATEWAY_PORT"
+    # TWO names, ONE document. pi (1.3+) reads `~/.pi/agent/mcp.json`; Ymir's own tools
+    # (mcp-gate.sh, a2a-mcp.sh, eir-doctor.sh) name `mcp-adapter.json`. Before this the
+    # generator wrote ONLY the adapter name, so `pi mcp list` answered "No MCP servers
+    # configured" after a clean install — a config pi never read. Write both; keep the
+    # adapter name so ymir's tools do not drift.
+    dir="$HOME/.pi/agent"
+    mkdir -p "$dir"
+    for dest in "$dir/mcp.json" "$dir/mcp-adapter.json"; do
+      [ -f "$dest" ] && cp "$dest" "$dest.bak-$(date -u +%Y%m%dT%H%M%SZ)" 2>/dev/null || true
+      printf '%s\n' "$CONFIG" >"$dest"
+    done
+    printf 'mcp-config: wrote %s/mcp.json + mcp-adapter.json (gateway :%s)\n' "$dir" "$GATEWAY_PORT"
     ;;
   *) printf 'error: unknown action %s\nhelp: mcp-config.sh [show|write]\n' "$MODE" >&2; exit 2 ;;
 esac

@@ -11,6 +11,17 @@ echo "0003-private-data-separation"
 echo "  source:  $ROOT (repo)"
 echo "  target:  $YMIR_HOME"
 
+# An EXISTING home is already laid out. This migration CREATES the layout; it must
+# never clobber one. Before this guard it rewrote a modern hoard's .gitignore down to
+# three rules — dropping `hodd/secrets/` and `.env*`, so a stray `git add -A` could
+# commit live secrets — and blanked `.ymir-layout.yaml`'s github_repo and
+# secrets_encrypted. `state/` (where applied ids live) is per-machine, so every fresh
+# clone re-ran the move. Idempotence means no-op on a home that already has the record.
+if [ -f "$YMIR_HOME/.ymir-layout.yaml" ]; then
+  echo "  home already laid out (has .ymir-layout.yaml) — nothing to do"
+  exit 0
+fi
+
 # 1. Create target layout
 mkdir -p "$YMIR_HOME"/{config,secrets,identity,workspaces/{work,personal},memory/{daily,well},smidja,state,data}
 
@@ -66,8 +77,11 @@ copy "$ROOT/smidja/smidja_data/smidja.db"          "$YMIR_HOME/smidja/smidja.db"
 copy "$ROOT/smidja/smidja_data/smidja.db-wal"      "$YMIR_HOME/smidja/smidja.db-wal"
 copy "$ROOT/smidja/smidja_data/smidja.db-shm"      "$YMIR_HOME/smidja/smidja.db-shm"
 
-# 10. Create .gitignore for private repo
-cat >"$YMIR_HOME/.gitignore" <<'GITIGNORE'
+# 10. Create .gitignore for private repo — ONLY when absent, and with the secrets
+# guard the canonical hoard carries. A pre-existing .gitignore is the operator's (or
+# a modern hoard's) and is never overwritten.
+if [ ! -e "$YMIR_HOME/.gitignore" ]; then
+  cat >"$YMIR_HOME/.gitignore" <<'GITIGNORE'
 # Runtime — rebuilt per machine
 smidja/
 state/
@@ -78,7 +92,13 @@ state/
 
 # Local overlays
 config/agents.*.yaml
+
+# Secrets and env — never committed, never swept.
+hodd/secrets/
+secrets/
+.env*
 GITIGNORE
+fi
 
 # 11. Initialize git repo if not already
 if [ ! -d "$YMIR_HOME/.git" ]; then
@@ -99,7 +119,9 @@ if [ -d "$YMIR_HOME/.git" ] && [ -t 0 ]; then
   esac
 fi
 
-# 13. Write layout record
+# 13. Write layout record — only when absent (the guard above also covers this, but
+# a partial home without the file should still get one, never a clobber).
+if [ ! -e "$YMIR_HOME/.ymir-layout.yaml" ]; then
 cat >"$YMIR_HOME/.ymir-layout.yaml" <<YAML
 version: 1
 migrated_from: "$ROOT"
@@ -115,7 +137,8 @@ layout:
   data: "$YMIR_HOME/data"
 git_repo: "$YMIR_HOME"
 github_repo: "${gh_url:-}"
-secrets_encrypted: false
+secrets_encrypted: true
 YAML
+fi
 
 echo "0003-private-data-separation: done — private data now at $YMIR_HOME"

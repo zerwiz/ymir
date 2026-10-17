@@ -180,7 +180,7 @@ PLAN
     y|Y|yes|YES)
       # Consent must not be followed by silence: the install is minutes of work, so say
       # how much follows and let each step name itself as it runs.
-      printf '\n  proceeding — %s steps. Each names itself as it runs, with its time.\n\n' "${STEP_TOTAL:-19}"
+      printf '\n  proceeding — %s steps. Each names itself as it runs, with its time.\n\n' "${STEP_TOTAL:-29}"
       ;;
     *) printf 'install declined — nothing was changed.\n'; exit 3 ;;
   esac
@@ -1416,7 +1416,12 @@ establish_roles
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=27
+# The step count is the number of `^run_step ` calls below — counted from THIS file so
+# adding a step cannot silently drift the [N/M] counter (it read 29/27 after the last
+# three steps were added, and the spoken count once said 19). Falls back to a literal
+# when the script cannot read itself (e.g. piped from curl | bash).
+STEP_TOTAL="$(grep -c '^run_step ' "${BASH_SOURCE[0]}" 2>/dev/null || true)"
+case "$STEP_TOTAL" in ''|0|*[!0-9]*) STEP_TOTAL=29 ;; esac
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))

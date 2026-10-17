@@ -23,7 +23,9 @@ export YMIR_STATE_DIR="$TMP/state"
 # ── a scratch tree the ward can root at, so a planted link never touches ours ──
 seed_repo() {
   local repo="$1"
-  mkdir -p "$repo/bin" "$repo/.agents" "$repo/tools" "$repo/scripts" "$repo/src/ymir_runtime"
+  # `.pi` and `RULES` at the root are what the ward's _root() walks up to find; without
+  # them it roots at $repo/bin and scans nothing — so a planted violation was never seen.
+  mkdir -p "$repo/bin/gates/guards" "$repo/bin/vault" "$repo/.agents" "$repo/tools" "$repo/scripts" "$repo/src/ymir_runtime" "$repo/.pi" "$repo/RULES"
   cp "$GUARD" "$repo/bin/gates/guards/defaults-guard.sh"
   printf '#!/usr/bin/env bash\nhoard_state_dir() { printf -v "$1" %%s "${YMIR_STATE_DIR:-/nonexistent}"; }\n' \
     >"$repo/bin/vault/hoard-lib.sh"
