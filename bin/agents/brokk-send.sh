@@ -34,14 +34,29 @@ MSG="${*:-}"
 if [ "$ID" = "this" ] || [ "$ID" = "brokk" ]; then HOME_DIR="$ROOT"; HOST=""; else
   HOME_DIR=""; HOST=""
   if [ -f "$REG" ]; then
-    line="$(grep -E "^- ${ID} " "$REG" | head -1)"
+    line="$(grep -E "^[[:space:]]*- ${ID} " "$REG" | head -1)"   # rows are indented in the registry
     HOST="$(printf '%s' "$line" | sed -nE 's/.*\(host: ([^;)]+).*/\1/p' | tr -d ' ')"
     HOME_DIR="$(printf '%s' "$line" | sed -nE 's/.*\(.*home: ([^;)]+).*/\1/p' | tr -d ' ')"
+    RROOT="$(printf '%s' "$line" | sed -nE 's/.*\(.*root: ([^;)]+).*/\1/p' | tr -d ' ')"
   fi
 fi
 
 if [ -n "$HOST" ]; then
-  printf 'send[1]{id,state,detail}:\n  "%s","remote","run bin/agents/brokk-send.sh %s on host %s"\n' "$ID" "$ID" "$HOST"
+  # REMOTE ROUTE — deliver straight into the TARGET's durable queue over SSH, using
+  # the registry's `home:` (the target's own home, per-machine paths). The wake lands
+  # in <target-home>/state/.wake-queue; a live session there drains it (Sága/Gná) and
+  # the message becomes a turn. No herdr, no pane — the fleet's injection floor.
+  # base64 so quotes/newlines cannot break the remote command.
+  [ -n "$HOME_DIR" ] || { printf 'send[1]{id,state,detail}:\n  "%s","unknown","no home for id (see %s)"\n' "$ID" "${REG}"; exit 1; }
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  line="$(printf 'from=brokk to=%s at=%s msg=%s\n' "$ID" "$ts" "$MSG")"
+  b64="$(printf '%s' "$line" | base64 | tr -d '\n')"
+  if ssh -o BatchMode=yes -o ConnectTimeout=8 "$HOST" \
+       "mkdir -p '$HOME_DIR/state' && printf '%s' '$b64' | base64 -d >> '$HOME_DIR/state/.wake-queue'" >/dev/null 2>&1; then
+    printf 'send[1]{id,state,detail}:\n  "%s","remote-queued","%s (via ssh → its state/.wake-queue)"\n' "$ID" "$HOST"
+    exit 0
+  fi
+  printf 'send[1]{id,state,detail}:\n  "%s","remote-failed","ssh %s did not answer — check the mesh"\n' "$ID" "$HOST"
   exit 1
 fi
 [ -n "$HOME_DIR" ] && [ -d "$HOME_DIR" ] || { printf 'send[1]{id,state,detail}:\n  "%s","unknown","no home for id (see %s)"\n' "$ID" "${REG#"$ROOT"/}"; exit 1; }
