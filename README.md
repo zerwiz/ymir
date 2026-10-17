@@ -500,7 +500,7 @@ What Android changes, and how each is handled — no manual workaround:
 | Desktop assumption | What breaks | What Ymir does |
 |---|---|---|
 | the npm engine gate | `EBADPLATFORM … os: linux,darwin` | `package.json` lists `android`; `install.sh` forces it |
-| `bun` is available | `bun.sh` has no Android build | `step_prereqs` provisions `bun` only for `dev`; a `hand` never asks |
+| `bun` is available | bun's installer skips Android (the `bun-linux-aarch64-android` asset exists; it is not fetched) | `step_prereqs` provisions `bun` only for `dev`; a `hand` never asks |
 | the well engine installs | `engdbram` needs `sqlite-vec` — no `aarch64-android` wheel | a `hand` reaches the heart's well as a **door**; `YMIR_ENGRAM_LOCAL=1` opts into a source build |
 | systemd · `loginctl` · `$USER` | `USER: unbound variable` under `set -u` | `step_autoboot` skips cleanly; boot units are the heart's |
 

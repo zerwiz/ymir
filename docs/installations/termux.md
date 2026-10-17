@@ -19,7 +19,7 @@ someone's shell history.
 | Break | Error | Fix |
 |---|---|---|
 | npm's engine gate | `EBADPLATFORM … wanted {"os":"linux,darwin"} (current: {"os":"android"})` | `package.json` now lists `android`; `install.sh` also forces it |
-| `bun` has no Android build | prereqs hang on `bun.sh/install` | `step_prereqs` provisions `bun` only for `dev`; a `hand` never asks |
+| `bun` | bun's installer skips Android | `step_prereqs` provisions `bun` only for `dev`; a `hand` never asks (bun *does* publish a `bun-linux-aarch64-android` asset — unverified on Termux) |
 | `engdbram` needs `sqlite-vec` | `ResolutionImpossible … no matching distributions: sqlite-vec` | a `hand` reaches the heart's well as a door; `YMIR_ENGRAM_LOCAL=1` opts into a source build |
 | no systemd / no `loginctl` | `USER: unbound variable` under `set -u` | `step_autoboot` skips cleanly and never dereferences `$USER` |
 
