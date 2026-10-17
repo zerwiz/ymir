@@ -32,6 +32,12 @@ add_path() { case ":$PATH:" in *":$1:"*) ;; *) PATH="$1:$PATH" ;; esac; }
 have() { command -v "$1" >/dev/null 2>&1; }
 say()  { printf 'prereq[1]{name,state,detail}:\n  "%s","%s","%s"\n' "$1" "$2" "$3"; }
 
+# Android/Termux: the well engine's sqlite-vec dependency publishes wheels for
+# linux/macos/windows but NONE for aarch64-android, and there is no sdist. A phone
+# is a `hand` — it reaches the heart's well as a door — so the local engine is an
+# explicit opt-in (`YMIR_ENGRAM_LOCAL=1`) rather than a step that fails at install.
+is_termux() { [ -n "${TERMUX_VERSION:-}" ] || { [ -n "${PREFIX:-}" ] && [ "${PREFIX#*com.termux}" != "$PREFIX" ]; }; }
+
 # ── the memory engine (engram) ───────────────────────────────────────────────
 # engram needs Python >=3.12,<3.14. A modern distro may ship something newer
 # (this box: 3.14), so the engine is installed into a COMPATIBLE interpreter and
@@ -80,6 +86,13 @@ ensure_engram() {
     printf '%s\n' "$py" >"$ENGRAM_PY_FILE" 2>/dev/null
     say engram present "importable under $(engram_v "$py")"
     return 0
+  fi
+
+  # Android/Termux has no sqlite-vec wheel and no sdist. A `hand` reaches the
+  # heart's well over the gateway; only an explicit opt-in builds it from source.
+  if is_termux && [ "${YMIR_ENGRAM_LOCAL:-0}" != 1 ]; then
+    say engram skipped "Android/Termux — the well is the heart's door here; set YMIR_ENGRAM_LOCAL=1 to build sqlite-vec from source (docs/installations/termux.md)"
+    return 1
   fi
 
   # Name the real cause, not a guess: an old interpreter, or one that cannot install.

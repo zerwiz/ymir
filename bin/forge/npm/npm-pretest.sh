@@ -20,7 +20,7 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
-WORK="$(mktemp -d /tmp/npm-pretest-XXXXXX)"
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/npm-pretest-XXXXXX")
 REMOTE="${NPM_PRETEST_HOST:-${NPM_PRETEST_HOSTS:-omarchy whynot}}"
 PASS=1
 TARBALL=""

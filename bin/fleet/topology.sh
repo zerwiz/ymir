@@ -85,7 +85,15 @@ if [ "$HEART" = "-" ] || [ "$HEART" = "none" ]; then HEART=""; fi
 [ "$HEART_ADDR" = "-" ] && HEART_ADDR=""
 
 # ── the live link: offline · detached · attached ─────────────────────────────
-has_route() { ip route show default 2>/dev/null | grep -q 'default'; }
+has_route() {  # is there a way out? `ip route` binds netlink, which Android/Termux denies.
+  # A non-zero exit means the table could NOT be read — that is not proof of no route,
+  # so treat it as present (a phone on wifi is not offline). Only a successful read with
+  # no default route counts as offline.
+  local out rc
+  out="$(ip route show default 2>/dev/null)"; rc=$?
+  [ "$rc" -ne 0 ] && return 0
+  printf '%s' "$out" | grep -q 'default'
+}
 heart_up() {  # <addr-or-name>
   [ -n "$1" ] || return 1
   if command -v getent >/dev/null 2>&1; then getent hosts "$1" >/dev/null 2>&1 || true; fi

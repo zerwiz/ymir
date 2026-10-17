@@ -180,7 +180,7 @@ PLAN
     y|Y|yes|YES)
       # Consent must not be followed by silence: the install is minutes of work, so say
       # how much follows and let each step name itself as it runs.
-      printf '\n  proceeding — %s steps. Each names itself as it runs, with its time.\n\n' "${STEP_TOTAL:-19}"
+      printf '\n  proceeding — %s steps. Each names itself as it runs, with its time.\n\n' "${STEP_TOTAL:-29}"
       ;;
     *) printf 'install declined — nothing was changed.\n'; exit 3 ;;
   esac
@@ -193,25 +193,44 @@ PLAN
 # exact command. engram is OPTIONAL and reported honestly, never as a failure.
 ENGRAM_PY=""
 step_prereqs() {
+  # Provision only what THIS role owes (plan 51 P1 · the components table). A
+  # `hand` — the phone — owns `core` alone: it builds no visualizer, so it owes no
+  # bun (and Android ships none), and it runs no sandbox, so it owes no
+  # docker/podman. Requiring either on a hand is how a phone install hung at step
+  # 2/27; the role table already answers the question.
+  local need_bun=0 need_engine=0 need_well=0
+  role_has dev && need_bun=1
+  { role_has forge || role_has dev; } && need_engine=1
+  { role_has heart || role_has dev; } && need_well=1
   if [ "$CHECK" = 0 ] && [ -x "$SCRIPT_DIR/prereq-ensure.sh" ]; then
-    "$SCRIPT_DIR/prereq-ensure.sh" bun >/dev/null 2>&1 || true
+    [ "$need_bun" = 1 ] && "$SCRIPT_DIR/prereq-ensure.sh" bun >/dev/null 2>&1 || true
     "$SCRIPT_DIR/prereq-ensure.sh" uv  >/dev/null 2>&1 || true
     "$SCRIPT_DIR/prereq-ensure.sh" mcp >/dev/null 2>&1 || true
     # bun installs to ~/.bun/bin; adopt it for the rest of this run.
     [ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
     [ -x "$HOME/.local/bin/uv" ] && export PATH="$HOME/.local/bin:$PATH"
   fi
-  local miss="" engine
-  for c in git python3 bun; do have "$c" || miss="$miss $c"; done
+  local miss="" engine="" ready="git python3"
+  for c in git python3; do have "$c" || miss="$miss $c"; done
+  if [ "$need_bun" = 1 ]; then have bun || miss="$miss bun"; ready="$ready bun"; fi
   python3 -c "from mcp.server.fastmcp import FastMCP" >/dev/null 2>&1 || miss="$miss mcp<2"
   # Docker or Podman — whichever this host has; never assume the binary name.
-  engine="$(ymir_container_engine_name 2>/dev/null || true)"
-  [ -n "$engine" ] || miss="$miss docker/podman"
+  if [ "$need_engine" = 1 ]; then
+    engine="$(ymir_container_engine_name 2>/dev/null || true)"
+    [ -n "$engine" ] || miss="$miss docker/podman"
+    [ -n "$engine" ] && ready="$ready $engine"
+  fi
   have gh || miss="$miss gh"
-  if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "git python3 bun $engine gh mcp<2"; fi
-  # The well engine: attempt to provision it rather than leaving a hint. engram
-  # needs Python 3.12/3.13, so prereq-ensure installs it into a compatible
-  # interpreter and records which one — the bridge then reuses it.
+  # mcp<2 is needed by every role's harness doors; name it in the OK row too.
+  [ -z "$miss" ] && ready="$ready gh mcp<2"
+  if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "$ready"; fi
+  # The well engine: a `hand` reaches the heart's well as a door and does not run
+  # the engine locally; heart/dev provision it. engram needs Python 3.12/3.13, so
+  # prereq-ensure installs it into a compatible interpreter and records which one.
+  if [ "$need_well" = 0 ]; then
+    add memory-well SKIP "not this machine's role (heart,dev) — the well is the heart's door"
+    return 0
+  fi
   if [ -x "$SCRIPT_DIR/prereq-ensure.sh" ]; then
     if "$SCRIPT_DIR/prereq-ensure.sh" engram >/dev/null 2>&1; then
       add memory-well OK "engram installed for the engine's Python"
@@ -827,8 +846,16 @@ step_fleet() {
 # did it) and the seat's user units survive a reboot (Linger, on a headless
 # seat). The Linger value is reported here on EVERY seat — the DoD.
 step_autoboot() {
+  # A phone (Android/Termux) has no systemd and no loginctl; boot units are the
+  # heart's concern. Report honestly and never dereference $USER — Termux leaves
+  # it unset, and `set -u` turns that into a crash at step 19/27.
+  local user="${USER:-$(id -un 2>/dev/null || printf '%s' unknown)}"
+  if ! have loginctl || [ ! -d /run/systemd/system ]; then
+    add autoboot SKIP "no systemd/loginctl on this host — boot services are the heart's"
+    return 0
+  fi
   local v=""
-  v="$(loginctl show-user "$USER" -p Linger 2>/dev/null | sed 's/^Linger=//')"
+  v="$(loginctl show-user "$user" -p Linger 2>/dev/null | sed 's/^Linger=//')"
   case "$v" in yes) ;; *) v="no" ;; esac
   if [ "$CHECK" = 1 ]; then
     add autoboot OK "Linger=$v · would enable ymir.target + assert linger on a real run"
@@ -839,14 +866,14 @@ step_autoboot() {
   # and no surface says so. Enable it, or fail with the exact remedy.
   if [ "$v" = no ]; then
     if { [ -z "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ "$(ymir_os 2>/dev/null || echo other)" != macos ]; }; then
-      if loginctl enable-linger "$USER" 2>/dev/null; then
-        v="$(loginctl show-user "$USER" -p Linger 2>/dev/null | sed 's/^Linger=//')"; [ "$v" = yes ] || v="no"
+      if loginctl enable-linger "$user" 2>/dev/null; then
+        v="$(loginctl show-user "$user" -p Linger 2>/dev/null | sed 's/^Linger=//')"; [ "$v" = yes ] || v="no"
         if [ "$v" = yes ]; then
-          add autoboot OK "Linger enabled ($USER) — headless boot services will rise"
+          add autoboot OK "Linger enabled ($user) — headless boot services will rise"
           return
         fi
       fi
-      add autoboot FAIL "Linger=no on a headless seat — boot services would never rise; remedy: sudo loginctl enable-linger $USER"
+      add autoboot FAIL "Linger=no on a headless seat — boot services would never rise; remedy: sudo loginctl enable-linger $user"
       return
     fi
   fi
@@ -1389,7 +1416,12 @@ establish_roles
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=27
+# The step count is the number of `^run_step ` calls below — counted from THIS file so
+# adding a step cannot silently drift the [N/M] counter (it read 29/27 after the last
+# three steps were added, and the spoken count once said 19). Falls back to a literal
+# when the script cannot read itself (e.g. piped from curl | bash).
+STEP_TOTAL="$(grep -c '^run_step ' "${BASH_SOURCE[0]}" 2>/dev/null || true)"
+case "$STEP_TOTAL" in ''|0|*[!0-9]*) STEP_TOTAL=29 ;; esac
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))

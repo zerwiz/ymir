@@ -85,7 +85,8 @@
   },
   "os": [
     "linux",
-    "darwin"
+    "darwin",
+    "android"
   ],
   "publishConfig": {
     "access": "public"

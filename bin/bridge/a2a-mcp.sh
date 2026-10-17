@@ -149,6 +149,11 @@ for name, spec in ones.items():
     pid["mcpServers"][name] = spec["pi"]
 os.makedirs(os.path.dirname(pi_path), exist_ok=True)
 json.dump(pid, open(pi_path, "w"), indent=2)
+# pi 1.3+ reads `mcp.json`; Ymir's tools name `mcp-adapter.json`. Write both so the
+# servers are actually seen (a config pi never reads is a door that looks shut).
+if pi_path.endswith("mcp-adapter.json"):
+    alt = pi_path[:-len("mcp-adapter.json")] + "mcp.json"
+    json.dump(pid, open(alt, "w"), indent=2)
 
 # opencode.json mcp block
 ocd = load(oc_path, {"mcp": {}})

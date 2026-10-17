@@ -33,7 +33,6 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   done
 fi
 HOME_ROOT="${YMIR_HOME:-}"; command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_ROOT
-HOME_ROOT="${HOME_ROOT:-$HOME/Documents/ymirhome}"
 # places are REALMS — they live where realms live
 PLACES_DIR="${YMIR_PLACES_DIR:-$HOME_ROOT/svartalfaheim}"
 

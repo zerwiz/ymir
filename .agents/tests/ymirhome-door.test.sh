@@ -18,14 +18,14 @@
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-EXT="$ROOT/.pi/shared/extensions/ymirhome.ts"
+EXT="$ROOT/.pi/extensions/ymirhome.ts"
 pass=0; fail=0
 ok(){ printf 'ok - %s\n' "$1"; pass=$((pass+1)); }
 no(){ printf 'not ok - %s\n' "$1" >&2; fail=$((fail+1)); }
 
 [ -r "$EXT" ] || { printf 'not ok - the extension source is missing at %s\n' "$EXT" >&2; exit 1; }
 
-HARNESS="$(mktemp /tmp/ymirhome-door-test.XXXXXX.mjs)"
+HARNESS=$(mktemp "${TMPDIR:-/tmp}/ymirhome-door-test.XXXXXX.mjs")
 cat > "$HARNESS" <<'MJS'
 const mod = await import(process.argv[2]);
 const tools = [];
@@ -45,7 +45,7 @@ MJS
 run(){ YMIR_HOME="$TH" node --experimental-strip-types "$HARNESS" "$EXT" "$@" 2>/dev/null; }
 
 # a REAL home in a REAL repo, so git and the resolver behave as they do in the house
-TH="$(mktemp -d /tmp/ymirhome-fake.XXXXXX)"
+TH=$(mktemp -d "${TMPDIR:-/tmp}/ymirhome-fake.XXXXXX")
 mkdir -p "$TH/hodd/docs/runbooks" "$TH/hodd/secrets" "$TH/bin"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$TH/hodd.sh"; chmod +x "$TH/hodd.sh"
 cp "$ROOT/bin/vault/hoard-lib.sh" "$TH/bin/" 2>/dev/null || true

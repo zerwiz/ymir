@@ -65,15 +65,32 @@ http_code() {  # <url> -> status code, or 000
 }
 port_open() { (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
 
+# ── the role — a `hand` (phone) owns no services; a `dev`/`heart` does. Validate
+# must SKIP what this role was never meant to run, never FAIL it for a service it
+# does not hold. Resolved the same way the installer does (env → registry/card by
+# hostname → the safe body, dev).
+ROLE_SET="${YMIR_ROLE:-}"
+if [ -z "$ROLE_SET" ] && [ -x "$ROOT/bin/skuld/role.sh" ]; then
+  _t="$(printf '\t')"
+  _rv="$(bash "$ROOT/bin/skuld/role.sh" resolve --host "${YMIR_HOST:-$(hostname -s 2>/dev/null)}" 2>/dev/null | head -1 || true)"
+  case "$_rv" in
+    *"$_t"registry|*"$_t"card|*"$_t"env) ROLE_SET="${_rv%%"$_t"*}" ;;
+  esac
+fi
+ROLE_SET="${ROLE_SET:-dev}"
+role_owns() { case ",$ROLE_SET," in *",$1,"*) return 0 ;; esac; return 1; }
+
 # ── 1. prerequisites present ────────────────────────────────────────────────
 miss=""
-for c in git python3 bun gh; do command -v "$c" >/dev/null 2>&1 || miss="$miss $c"; done
-[ -n "$CONTAINER_ENGINE" ] || miss="$miss docker/podman"
-if [ -z "$miss" ]; then add prereqs PASS "git python3 bun $CONTAINER_ENGINE gh present"
-else add prereqs FAIL "missing:$miss"; fi
+for c in git python3 gh; do command -v "$c" >/dev/null 2>&1 || miss="$miss $c"; done
+role_owns dev && { command -v bun >/dev/null 2>&1 || miss="$miss bun"; }
+{ role_owns forge || role_owns dev; } && { [ -n "$CONTAINER_ENGINE" ] || miss="$miss docker/podman"; }
+if [ -z "$miss" ]; then add prereqs PASS "git python3 gh present"; else add prereqs FAIL "missing:$miss"; fi
 
 # ── 2. Utgard sandbox image ─────────────────────────────────────────────────
-if [ -z "$CONTAINER_ENGINE" ]; then
+if ! role_owns forge && ! role_owns dev; then
+  add sandbox SKIP "not this machine's role (forge,dev only) — the sandbox"
+elif [ -z "$CONTAINER_ENGINE" ]; then
   add sandbox WARN "no container engine (docker/podman) — sandbox unavailable"
 elif "$CONTAINER_ENGINE" image inspect utgard-runner:latest >/dev/null 2>&1; then
   add sandbox PASS "utgard-runner:latest present ($CONTAINER_ENGINE)"
@@ -84,6 +101,9 @@ else
 fi
 
 # ── 3. the gate API (:3889) — the control plane's data face ─────────────────
+if ! role_owns heart && ! role_owns dev; then
+  add gate-api SKIP "not this machine's role (heart,dev only) — the control plane"
+else
 code="$(http_code http://127.0.0.1:3889/api/health)"
 case "$code" in
   200) add gate-api PASS "GET /api/health -> 200" ;;
@@ -91,14 +111,21 @@ case "$code" in
   000) add gate-api FAIL "no response on :3889 — run scripts/start.sh" ;;
   *)   add gate-api WARN "unexpected status $code on :3889" ;;
 esac
+fi
 
 # ── 4. the SPA (:3888) ──────────────────────────────────────────────────────
+if ! role_owns heart && ! role_owns dev; then
+  add spa SKIP "not this machine's role (heart,dev only) — the SPA"
+else
 code="$(http_code http://127.0.0.1:3888/)"
 if [ "$code" = 200 ]; then add spa PASS "GET / -> 200"
 else add spa FAIL "no 200 on :3888 (got $code) — run scripts/start.sh"; fi
+fi
 
 # ── 5. Bifrost model bridge (:4603) — provider-aware, keyless-capable ───────
-if port_open 4603; then
+if ! role_owns heart && ! role_owns dev; then
+  add bifrost SKIP "not this machine's role (heart,dev only) — the model bridge"
+elif port_open 4603; then
   provider="$(curl -s --max-time 5 http://127.0.0.1:4603/v1/models 2>/dev/null | head -c 40)"
   if [ -n "$provider" ]; then add bifrost PASS "bridge up on :4603 (models served)"
   else add bifrost WARN "port 4603 open but /v1/models empty"; fi
@@ -109,7 +136,9 @@ fi
 # ── 6. Nornir cron running ──────────────────────────────────────────────────
 # The scheduler's cmdline is `bash -c <body>` and carries no "nornir" token, so
 # ask nornir-cron-start.sh itself (it owns the identity check) instead of pgrep.
-if [ -x "$ROOT/bin/time/nornir-cron-start.sh" ]; then
+if ! role_owns heart && ! role_owns dev; then
+  add cron SKIP "not this machine's role (heart,dev only) — the record's schedule"
+elif [ -x "$ROOT/bin/time/nornir-cron-start.sh" ]; then
   cron_out="$("$ROOT/bin/time/nornir-cron-start.sh" 2>/dev/null || true)"
   if printf '%s' "$cron_out" | grep -q 'cron: running'; then
     add cron PASS "$(printf '%s' "$cron_out" | grep -m1 'cron: running')"
@@ -140,7 +169,9 @@ if [ -z "$SMIDJA_DB_PATH" ]; then
   done
   SMIDJA_DB_PATH="${SMIDJA_DB_PATH:-$YMIR_HOME/smidja/smidja.db}"
 fi
-if [ -f "$SMIDJA_DB_PATH" ]; then
+if ! role_owns heart && ! role_owns dev; then
+  add smidja-db SKIP "not this machine's role (heart,dev only) — the smithy"
+elif [ -f "$SMIDJA_DB_PATH" ]; then
   add smidja-db PASS "smidja.db present"
 else
   add smidja-db FAIL "smidja.db missing — run bin/desktop/smidja-bootstrap.sh"
@@ -151,7 +182,9 @@ fi
 # built-but-dead visualizer (a bad CMD_DB, a crashed API) is a FAIL, not green.
 VIZ="${SMIDJA_VIZ:-}"
 VIZ_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
-if [ ! -d "$VIZ" ]; then
+if ! role_owns dev; then
+  add visualizer SKIP "not this machine's role (dev only) — the visualizer"
+elif [ ! -d "$VIZ" ]; then
   add visualizer SKIP "no visualizer tree at $VIZ"
 elif [ ! -d "$VIZ/dist" ]; then
   add visualizer FAIL "UI not built (./dist missing) — (cd $VIZ && bun run build)"
@@ -162,7 +195,9 @@ else
 fi
 
 # ── 8. desktop apps (both Electron windows) ─────────────────────────────────
-if [ -x "$ROOT/scripts/electron.sh" ]; then
+if ! role_owns dev; then
+  add desktop SKIP "not this machine's role (dev only) — the desktop apps"
+elif [ -x "$ROOT/scripts/electron.sh" ]; then
   st="$("$ROOT/scripts/electron.sh" status 2>/dev/null || true)"
   up_h=$(printf '%s' "$st" | grep -c '"hlidskjalf","up"' || true)
   up_s=$(printf '%s' "$st" | grep -c '"smidja","up"' || true)

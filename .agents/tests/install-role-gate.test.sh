@@ -29,8 +29,16 @@ row() { printf '%s\n' "$1" | grep -E "\\\"$2\\\",\\\"$3\\\"" ; }
 dev="$(run dev)"
 printf '%s' "$dev" | grep -q '"record","SKIP","not this machine.s role (heart only)' \
   && ok "dev: the record SKIPs with its reason (no heart office installed)" || bad "dev record: $(printf '%s' "$dev" | grep record)"
-printf '%s' "$dev" | grep -q '"local-model","OK"' && ok "dev: the local rail installs" || bad "dev local-model"
-printf '%s' "$dev" | grep -q '"omarchy","OK"' && ok "dev: the desktop layer installs" || bad "dev omarchy"
+# The rail is ATTEMPTED on dev/forge. Its OUTCOME (OK/WARN/CONSENT) depends on the
+# HOST — a CUDA build, a model on disk — which this test does not own; the ROLE GATE
+# is what it owns. So assert it is NOT skipped FOR THE ROLE, never that it succeeded
+# (the old `OK` assertion passed only on an Omarchy host with a live local rail).
+printf '%s' "$dev" | grep -q '"local-model","SKIP","not this machine.s role' \
+  && bad "dev local-model: wrongly role-skipped" \
+  || ok "dev: the local rail is attempted (host decides OK vs WARN)"
+printf '%s' "$dev" | grep -q '"omarchy","SKIP","not this machine.s role (dev only)' \
+  && bad "dev omarchy: wrongly role-skipped" \
+  || ok "dev: the desktop layer is attempted (Omarchy host, else a clean host-skip)"
 
 # ── heart — the record services, and NO dev desktop layer ────────────────────
 heart="$(run heart)"
@@ -44,7 +52,9 @@ printf '%s' "$heart" | grep -q '"local-model","SKIP","not this machine.s role (f
 
 # ── forge — the rail, and NO desktop / NO record ─────────────────────────────
 forge="$(run forge)"
-printf '%s' "$forge" | grep -q '"local-model","OK"' && ok "forge: the rail installs" || bad "forge local-model"
+printf '%s' "$forge" | grep -q '"local-model","SKIP","not this machine.s role' \
+  && bad "forge local-model: wrongly role-skipped" \
+  || ok "forge: the rail is attempted (host decides OK vs WARN)"
 printf '%s' "$forge" | grep -q '"omarchy","SKIP","not this machine.s role (dev only)' \
   && ok "forge: the desktop layer SKIPs" || bad "forge omarchy"
 printf '%s' "$forge" | grep -q '"record","SKIP","not this machine.s role (heart only)' \

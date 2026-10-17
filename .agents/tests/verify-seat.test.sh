@@ -15,7 +15,7 @@ no(){ printf 'not ok - %s\n' "$1" >&2; fail=$((fail+1)); }
 
 [ -x "$DOOR" ] || { printf 'not ok - no %s\n' "$DOOR" >&2; exit 1; }
 
-TMP="$(mktemp -d /tmp/verify-seat.XXXXXX)"
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/verify-seat.XXXXXX")
 trap 'rm -rf "$TMP"' EXIT
 
 # ── 1. a seat with everything present must PASS and say WHOLE ─────────────────
