@@ -17,6 +17,12 @@
 # Env: YMIR_NPM_PREFIX (default ~/.npm-global), YMIR_PKG (default @zerwiz/ymir).
 set -eu
 
+# Android/Termux: the phone is a `hand`. Detect BEFORE PREFIX is repointed at the
+# npm bin (Termux ships its own $PREFIX): the package's os gate rejects android, so
+# force the install, and the first setup takes the `hand` role with no prompt.
+ON_TERMUX=0
+{ [ -n "${TERMUX_VERSION:-}" ] || { [ -n "${PREFIX:-}" ] && [ "${PREFIX#*com.termux}" != "$PREFIX" ]; }; } && ON_TERMUX=1
+
 PREFIX="${YMIR_NPM_PREFIX:-$HOME/.npm-global}"
 PKG="${YMIR_PKG:-@zerwiz/ymir}"
 
@@ -52,6 +58,7 @@ say "installing $PKG into $PREFIX …"
 # `@latest` AND --prefer-online: a stale cached `latest` is how an install
 # succeeds while changing nothing, and the user is left on an old build.
 install_args=(-g "$PKG@latest" --prefer-online)
+[ "$ON_TERMUX" = 1 ] && install_args+=(--force)
 [ "$#" -gt 0 ] && install_args+=("$@")
 if ! npm install "${install_args[@]}"; then
   say "error: the install failed — see npm's output above."
@@ -67,7 +74,9 @@ fi
 if [ "${YMIR_SKIP_SETUP:-0}" != 1 ]; then
   say ""
   say "the first setup — the plan, then the work. This takes a few minutes."
-  if ! ymir install --yes; then
+  setup_args=(install --yes)
+  [ "$ON_TERMUX" = 1 ] && setup_args+=(--role hand)
+  if ! ymir "${setup_args[@]}"; then
     say "warn: the setup did not finish cleanly — nothing is lost; run \`ymir\` again to continue."
   fi
 fi

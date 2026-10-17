@@ -447,11 +447,12 @@ bin/host/host-sense.sh capability tray     # yes | partial | no — for scriptin
 ```
 
 ```
-hosts[4]{host,how_you_get_it,what_it_is}:
+hosts[5]{host,how_you_get_it,what_it_is}:
   "Omarchy","bin/engine/ymir-install.sh","the first-class layer: numbered desktops, launcher entries, the post-update hook"
   "other Linux (Ubuntu · Fedora · Debian · Arch)","bin/engine/ymir-install.sh","the portable core; the Omarchy layer skips cleanly, never faked"
   "Windows","Ymir-Setup.exe — or bin/bootstrap-windows.ps1","Ubuntu on WSL2 is the host; Ymir installs inside it"
   "macOS","Ymir Installer.command (or the .pkg) — or bin/host/bootstrap-macos.sh","Ubuntu in a Lima VM is the host; Ymir installs inside it"
+  "Android (Termux)","curl … | bash — the command detects Termux","the phone, role `hand`: pi + its extensions, the hoard, and the heart's doors — no record, no rail, no bun"
 ```
 
 Windows and macOS do not run Ymir natively: what Ymir installs is a Linux
@@ -470,6 +471,43 @@ packaging/build.sh --mac       # Ymir-<version>.pkg         (pkgbuild — Apple-
 CI builds both (`.github/workflows/ymir-installers.yml`): NSIS on an Ubuntu
 runner, pkgbuild on a macOS runner. Signing and notarisation need the operator's
 own Apple and Windows credentials, so the artefacts ship unsigned.
+
+### Termux / Android — the phone is a `hand`
+
+A phone is not a small `dev`. `bin/skuld/role-lib.sh` names the shape itself —
+`h = heart · f = forge · d = dev · n = hand (phone)` — and `components_for hand`
+returns `core` alone: no record, no well, no web, no mesh. A phone holds the
+**harness** (pi and its Ymir extensions), the **sync** (the private hoard), and the
+**door** to the heart's services. It never folds the record.
+
+The one-liner detects Termux and does the right thing — forces the npm install past
+the engine gate, and runs the first setup as `--role hand`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/install.sh | bash
+```
+
+Already have the tree:
+
+```bash
+npm install -g @zerwiz/ymir --force          # --force is npm's engine gate (Android)
+export YMIR_HOME="$HOME/ymir-home"           # the private hoard
+bash bin/engine/ymir-install.sh --role hand --yes
+```
+
+What Android changes, and how each is handled — no manual workaround:
+
+| Desktop assumption | What breaks | What Ymir does |
+|---|---|---|
+| the npm engine gate | `EBADPLATFORM … os: linux,darwin` | `package.json` lists `android`; `install.sh` forces it |
+| `bun` is available | `bun.sh` has no Android build | `step_prereqs` provisions `bun` only for `dev`; a `hand` never asks |
+| the well engine installs | `engdbram` needs `sqlite-vec` — no `aarch64-android` wheel | a `hand` reaches the heart's well as a **door**; `YMIR_ENGRAM_LOCAL=1` opts into a source build |
+| systemd · `loginctl` · `$USER` | `USER: unbound variable` under `set -u` | `step_autoboot` skips cleanly; boot units are the heart's |
+
+The heart's gateway and well are **localhost-only**, so a hand reaches them over an
+SSH tunnel — never a LAN IP — and pi reads the doors from `~/.pi/agent/mcp.json`. The
+full path, the MCP config, and the source-build opt-in are in
+[`docs/installations/termux.md`](docs/installations/termux.md).
 
 ---
 
