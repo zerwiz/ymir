@@ -42,8 +42,8 @@ command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_ROOT
 HOARD="${YMIR_HOARD:-}"
 command -v hoard_root >/dev/null 2>&1 && hoard_root HOARD
 
-CONFIG="${YMIR_ROOM_CONFIG:-${HOME_ROOT:-$HOME/Documents/ymirhome}/config/room.yaml}"
-SECRETS="${YMIR_ROOM_SECRETS:-${HOARD:-${HOME_ROOT:-$HOME/Documents/ymirhome}/hodd}/secrets/room.env}"
+CONFIG="${YMIR_ROOM_CONFIG:-$HOME_ROOT/config/room.yaml}"
+SECRETS="${YMIR_ROOM_SECRETS:-${HOARD:-$HOME_ROOT/hodd}/secrets/room.env}"
 
 die() { printf 'gladsheim: %s\n' "$*" >&2; exit 1; }
 
@@ -96,9 +96,6 @@ auth() { printf 'Authorization: Bearer %s' "$TOKEN"; }
 
 api_get() {  # <path>
   curl -s --max-time 8 "$API$1" -H "$(auth)"
-}
-api_post() {  # <path> <json>
-  curl -s --max-time 10 -X POST "$API$1" -H "$(auth)" -H 'Content-Type: application/json' -d "$2"
 }
 api_put() {  # <path> <json>  — Matrix's send is PUT (idempotent per txnId)
   curl -s --max-time 10 -X PUT "$API$1" -H "$(auth)" -H 'Content-Type: application/json' -d "$2"

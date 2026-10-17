@@ -225,7 +225,7 @@ s_hoard() {
   # (ymir/.agents/state, ymir/bin/state — git-ignored, so no guard could see it either).
   [ -d "$YMIR_HOME/state" ] || return 1
   local baddir
-  for baddir in "$HOME/Documents/Ymir" "$HOME/hodd"; do
+  for baddir in "$HOME/Documents/Ymir" "$HOME/hodd"; do  # allow-home-default: names the LEGACY drift paths on purpose (Rule 21)
     [ -e "$baddir" ] && return 1
   done
   if [ -n "${ROOT:-}" ]; then

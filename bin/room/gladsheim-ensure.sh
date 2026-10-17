@@ -40,7 +40,6 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   done
 fi
 HOME_ROOT="${YMIR_HOME:-}"; command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_ROOT
-HOME_ROOT="${HOME_ROOT:-$HOME/Documents/ymirhome}"
 STATE_DIR="${YMIR_GLADSHEIM_STATE:-${YMIR_STATE_DIR:-$HOME_ROOT/state}/gladsheim}"
 CONFIG="$HOME_ROOT/config/room.yaml"
 SECRETS="${YMIR_GLADSHEIM_SECRETS:-$HOME_ROOT/hodd/secrets/room.env}"
