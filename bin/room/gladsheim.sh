@@ -51,7 +51,7 @@ die() { printf 'gladsheim: %s\n' "$*" >&2; exit 1; }
 
 # Read the config (YAML) — one small python, because bash is the wrong tool for YAML.
 read_cfg() {  # <key>  — homeserver | server_name | room | agent (the name for THIS seat)
-  python3 - "$CONFIG" "$1" "$(hostname -s)" <<'PY'
+  python3 - "$CONFIG" "$1" "${YMIR_HOST:-$(hostname -s)}" <<'PY'
 import sys
 cfg_path, key, host = sys.argv[1:4]
 try:

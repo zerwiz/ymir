@@ -64,7 +64,7 @@ if [ -r "$_topo" ]; then
 fi
 
 # Does THIS machine hold the engine? single → yes; fleet → only a heart role.
-HOST="$(hostname -s)"
+HOST="${YMIR_HOST:-$(hostname -s)}"
 ENGINE_HERE=1
 if [ "$SHAPE" = "fleet" ]; then
   ENGINE_HERE=0
@@ -137,7 +137,7 @@ case "$ACTION" in
       cfg="${HOME_ROOT}/config/room.yaml" sec="${HOME_ROOT}/hodd/secrets/room.env"
       hs="" rm="" ag="" tk="no" reach="down"
       if [ -r "$cfg" ]; then
-        eval "$(python3 - "$cfg" "$(hostname -s)" <<'PY'
+        eval "$(python3 - "$cfg" "${YMIR_HOST:-$(hostname -s)}" <<'PY'
 import sys
 cfg, host = sys.argv[1], sys.argv[2]
 doc = {}; cur = None
