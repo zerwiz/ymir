@@ -209,3 +209,49 @@ returns: the heart is the main port, never a single point of failure.
 engram interpreter; `mimir-log.sh` calls it, so the log tool and the bridge never
 disagree about which python owns the store.
 
+
+## The law the well obeys: IT APPENDS (2026-10-17)
+
+**Appended at the Allfather's word:** *"the well must always append only."* The rule
+is `RULES/20-the-well-appends.md`; the ward is `bin/records/well-guard.sh`.
+
+```
+well_law[4]{rule}:
+  "APPEND, never replace","an episode is written once and stays. No rebuild, no regenerate, no recover-over, no resync in place."
+  "A SECOND TRUTH IS A LOSS","two wells fork into a UNION — every record from both is appended. `resync` on a well means append, never overwrite."
+  "REPAIR ADDS, IT DOES NOT SUBTRACT","a corrupt store is preserved as found; recovery APPENDS beside the live one; what cannot be read is recorded as a known gap."
+  "THE COUNT NEVER FALLS","the episode count and the log's line count are monotonic. A run that lowers either is a failure, not a tidy-up."
+```
+
+**Why it is law, not preference — the incident:** on **2026-10-07** the store was
+malformed (`btreeInitPage() error code 11`). It was preserved by hand and salvaged
+with `sqlite3 .recover`, which keeps only the pages it can read: **134 episodes became
+98 — 36 lost.** Sixteen were later restored from `git` (the 2026-09-28 blob); twenty
+(date-range 2026-10-04..06) existed nowhere else. **Nothing noticed for ten days** —
+the store had shrunk by a third and the loss rode the vault. The missing ward, not the
+missing tooling, is what this asset and Rule 20 make impossible to repeat.
+
+**What is permitted:** appending; appending a fork's missing records (the log union);
+restoring a lost episode from git or another seat (with provenance tags); annotating an
+episode — a tag — without touching its content; removing an episode from a **derived**
+index (a vector row, an FTS row) while the record stays.
+**What is forbidden:** deleting an episode; rebuilding the store from a subset;
+restoring an older snapshot *over* a newer one; `git checkout` of the binary store over
+a live one; a "merge" that picks one side.
+
+**The ward (`bin/records/well-guard.sh`):**
+
+```
+well-guard[3]{verb,what,exit}:
+  "check","episode count and log lines against the checkpoint, junk content (empty or `undefined`), episodes with no vector","1 on any loss, junk or unindexed row; 1 when the store cannot be read at all"
+  "record","roll the checkpoint forward AFTER a passing check","1 when the check fails (never records a loss as the new normal)"
+  "--self-test","build a temp well, record, check, remove one episode, prove the ward bites","0 when the ward bites"
+```
+
+A row declared void by an appended correction (tag `void:…`) is counted as *recorded*,
+not as junk — the record keeps it, the ward does not nag about it, and the episode is
+excluded from the vector index so it cannot be recalled as fact.
+
+Eir composes it as the `well` surface, so a loss is reported the next time anyone
+diagnoses the house; `check` rides `record` after a passing run, so the checkpoint
+follows a healthy well forward.
