@@ -16,10 +16,19 @@
 
 # ── platform ─────────────────────────────────────────────────────────────────
 
-ymir_os() {  # linux | macos | wsl | msys | unknown
+ymir_os() {  # linux | macos | wsl | msys | android | unknown
   case "$(uname -s 2>/dev/null)" in
     Linux*)
-      if [ -r /proc/version ] && grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null; then
+      # Android/Termux says "Linux", but it is not a desktop distribution: there is no
+      # /home/<user>/Documents, $PREFIX is Termux's, and `USER` is unset. Detected by
+      # `uname -o`, Termux's own version var, or the Termux prefix — any one suffices.
+      _android=0
+      [ "$(uname -o 2>/dev/null)" = "Android" ] && _android=1
+      [ -n "${TERMUX_VERSION:-}" ] && _android=1
+      case "${PREFIX:-}" in *com.termux*) _android=1 ;; esac
+      if [ "$_android" = 1 ]; then
+        printf 'android'
+      elif [ -r /proc/version ] && grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null; then
         printf 'wsl'
       else
         printf 'linux'
