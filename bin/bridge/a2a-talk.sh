@@ -11,18 +11,33 @@ set -u
 DIR="${A2A_DIRECTORY:-http://127.0.0.1:7777}"
 ACTION="${1:-agents}"; shift || true
 
-agents_json() { curl -s --max-time 6 "$DIR/" 2>/dev/null; }
+agents_json() {
+  # a2abridge 3.0.0 serves the registry at `/agents` (a bare JSON array); the
+  # older directory served it at `/` as {"served_agents":[...]}. Try the current
+  # door first, then the legacy one — never report "unreachable" for a 404 on one path.
+  local body
+  body="$(curl -s --max-time 6 "$DIR/agents" 2>/dev/null)"
+  case "$body" in
+    '['*|'{'*) printf '%s' "$body"; return ;;
+  esac
+  curl -s --max-time 6 "$DIR/" 2>/dev/null
+}
 
 case "$ACTION" in
   agents)
     agents_json | python3 -c 'import json,sys
+raw=sys.stdin.read()
 try:
-    d=json.load(sys.stdin); ags=d.get("served_agents",[])
-    print("a2a-agents[%d]{name,url,local}:" % len(ags))
-    for a in ags:
-        print("  \"%s\",\"%s\",\"%s\"" % (a.get("name"), a.get("url"), str(bool(a.get("local"))).lower()))
+    d=json.loads(raw) if raw.strip() else None
 except Exception:
-    print("error: directory unreachable")' ;;
+    d=None
+if d is None:
+    print("error: directory unreachable (%s)" % (raw[:60].strip() or "no response")); raise SystemExit(1)
+ags=(d.get("served_agents") or d.get("agents") or []) if isinstance(d,dict) else d
+print("a2a-agents[%d]{name,url,local}:" % len(ags))
+for a in ags:
+    a=a if isinstance(a,dict) else {"name":str(a)}
+    print("  \"%s\",\"%s\",\"%s\"" % (a.get("name") or a.get("id") or "?", a.get("url") or a.get("endpoint") or "", str(bool(a.get("local"))).lower()))' ;;
   send)
     PEER="${1:-}"; shift || true; TEXT="${*:-}"
     [ -n "$PEER" ] && [ -n "$TEXT" ] || { printf 'error: send <peer> "<text>"\n' >&2; exit 2; }
@@ -30,9 +45,12 @@ except Exception:
 peer=sys.argv[1]
 try:
     d=json.load(sys.stdin)
-    for a in d.get("served_agents",[]):
-        if a.get("name")==peer or (a.get("name") or "").startswith(peer):
-            print(a.get("url")); break
+    ags=(d.get("served_agents") or d.get("agents") or []) if isinstance(d,dict) else d
+    for a in ags:
+        a=a if isinstance(a,dict) else {"name":str(a)}
+        n=a.get("name") or a.get("id") or ""
+        if n==peer or n.startswith(peer):
+            print(a.get("url") or a.get("endpoint") or ""); break
 except Exception: pass' "$PEER")"
     [ -n "$URL" ] || { printf 'error: no peer matching "%s"\nhelp: bin/bridge/a2a-talk.sh agents\n' "$PEER" >&2; exit 1; }
     curl -s --max-time 90 -X POST "$URL" -H 'Content-Type: application/json' \
