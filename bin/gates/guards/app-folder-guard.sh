@@ -35,7 +35,7 @@ _root() {
   done
   printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 }
-ROOT="$(_root)"
+ROOT="${YMIR_GUARD_ROOT:-$(_root)}"   # a test points this at a throwaway tree
 
 # The application names, read from apps/ — never a hardcoded list.
 app_names() {
@@ -86,7 +86,25 @@ check_tree() {
     [ -n "$f" ] || continue
     say "a layer's tool inside apps/" "${f#"$ROOT"/}" "Rule 23 §5" "an application's folder is not a toolbox"
   done < <(find "$ROOT/apps" -maxdepth 2 -type f \( -name 'desktop-place.sh' -o -name 'editor-place.sh' -o -name 'display-lib.sh' -o -name 'open-on.sh' -o -name 'app-build.sh' -o -name 'app-lib.sh' \) 2>/dev/null)
+  # 4 · a SHARED thing inside an application's folder — the commons is not per-app.
+  # The fault found 2026-10-18: `midgard/design-system/` (the canonical cloth, which the
+  # root already holds) was copied byte-identical into apps/hlidskjalf/ and
+  # apps/odrerir/, and different files imported DIFFERENT copies. A shared asset that
+  # lives in two app folders has already begun to drift; one that lives in an app folder
+  # at all has the wrong owner.
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    say "a shared-commons folder inside apps/" "${d#"$ROOT"/}" "Rule 23 §5" "the canonical copy belongs at the root (midgard/…, packages/…); the app imports it, never carries it"
+  done < <(find "$ROOT/apps" -maxdepth 2 -type d \( -name midgard -o -name packages -o -name tools \) -not -path '*/node_modules/*' 2>/dev/null)
+
+  # 5 · an `apps/` directory inside an application — a registry inside a registry.
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    say "an apps/ folder inside an app" "${d#"$ROOT"/}" "Rule 23 §3" "one registry: the applications live at apps/; an app's own UI is part of the app, not a second registry"
+  done < <(find "$ROOT/apps" -mindepth 2 -maxdepth 3 -type d -name apps -not -path '*/node_modules/*' 2>/dev/null \
+             | grep -v "/apps/smidja-factory/" )   # a VENDORED UPSTREAM (zerwiz/smidja) keeps its own layout; Rule 23 binds OUR code — see apps/README.md
 }
+
 
 case "${1:-check}" in
   --list-apps) app_names | sed 's/^/app: /' ;;

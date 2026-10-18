@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { startEmbers } from '../../midgard/design-system/ember.js';
+import { startEmbers } from '../../../../midgard/design-system/ember.js';
 
 /**
  * The hearth — the hall's glow, carried in this repo (not shared or borrowed),
