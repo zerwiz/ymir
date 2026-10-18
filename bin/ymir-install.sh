@@ -558,6 +558,26 @@ step_snotra() {
   fi
 }
 
+# ── 3b1c. the voice engines: whisper (STT) + piper (TTS) ──────────────────────
+# Voice is a machine property: the engines and models live on the host / in the
+# hoard. This step ADOPTS what stands and installs what is missing; the whisper
+# half is owned by bin/snotra-ensure.sh (one road), so voice-ensure delegates it.
+step_voice() {
+  [ "$SKIP_ENGINES" = 1 ] && { add voice SKIP "--skip-engines"; return; }
+  [ "${YMIR_SKIP_VOICE:-0}" = 1 ] && { add voice SKIP "YMIR_SKIP_VOICE=1"; return; }
+  if [ ! -x "$SCRIPT_DIR/voice-ensure.sh" ]; then add voice SKIP "no voice-ensure.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if "$SCRIPT_DIR/voice-ensure.sh" status >/dev/null 2>&1; then add voice OK "whisper (STT) + piper (TTS) present (adopted)"
+    else add voice DO "would install whisper.cpp (STT) + piper (TTS) + models"; fi
+    return
+  fi
+  if "$SCRIPT_DIR/voice-ensure.sh" ensure --install >/dev/null 2>&1; then
+    add voice OK "whisper (STT) + piper (TTS) present"
+  else
+    add voice WARN "voice engine or model missing (run bin/voice-ensure.sh install)"
+  fi
+}
+
 # ── 3b2. Sessrúmnir desktop GUI ──────────────────────────────────────────────
 # The seat-hall: a vendored, re-themed fork of pi-desktop (Apache-2.0) at
 # apps/sessrumnir. Deps are never committed; the ensure step installs them on
@@ -1204,7 +1224,7 @@ step_panes() {
 # announces itself before it runs and reports its elapsed time after, so a slow step
 # reads as work and a hung one is obvious. Progress goes to stderr: the TOON report
 # on stdout stays clean for anything that parses it.
-STEP_TOTAL=25
+STEP_TOTAL=26
 STEP_N=0
 run_step() {  # <runner-function> <label spoken to the user>
   STEP_N=$((STEP_N + 1))
@@ -1237,6 +1257,7 @@ run_step step_models "models"
 run_step step_local_model "the local model"
 run_step step_hermes "hermes"
 run_step step_snotra "the meeting ear"
+run_step step_voice "the voice engines"
 run_step step_sessrumnir "the seat"
 run_step step_backend "backend"
 run_step step_host "host"

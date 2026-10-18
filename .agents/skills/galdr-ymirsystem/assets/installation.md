@@ -422,7 +422,7 @@ manifests. The token comes from the hoard, never from `~/.npmrc`.
 ## The steps
 
 ```
-install[28]{step,what,self-heals}:
+install[29]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
@@ -433,6 +433,7 @@ install[28]{step,what,self-heals}:
   "local-model","the local brain for THIS hardware — a CUDA llama.cpp engine, the best model that fits, pi wiring, and Ymir registration","bin/llama-ensure.sh ADOPTS a standing CUDA llama-server (proves CUDA0, never rebuilds it) and only builds with GGML_CUDA=ON when none exists; bin/model-fit.sh picks the largest model that fits the PROBED GPU/VRAM/RAM/disk (generic — never this box); bin/model-fetch.sh downloads it resumable, checksummed, consent first, into the hoard; bin/pi-model-wire.sh wires ~/.pi/agent/models.json (exact served id + key reference) and proves a one-shot; bin/model-register.sh writes the same model into the hoard config/agents.<host>.yaml overlay so Ymir/Smidja share one model road; bin/model-tune.sh measures the real ctx/ngl/n-cpu-moe/kv/fa and replaces the placeholder in data/local-models.md. When a local rail already serves models, NOTHING is downloaded — the operator's registered model is adopted. Loud refusals (no CUDA, unknown hardware, no disk, bad checksum), never a silent skip"
   "hermes","the Nous Research agent runtime","installs via bin/hermes-ensure.sh when absent"
   "snotra","the meeting ear's engine — whisper.cpp + a model","bin/snotra-ensure.sh reports the seat's engine and installs what is missing (pacman/apt/build); a voxtype seat keeps its models. The MCP face + unit ride the fleet step"
+  "voice","the voice engines — whisper.cpp (speech → text) + piper (text → speech), each with a model","bin/voice-ensure.sh ADOPTS what stands and installs what is missing: the whisper half is delegated to bin/snotra-ensure.sh (one road), the piper half installs via pipx or a venv under $YMIR_HOME and fetches a voice (.onnx) into $YMIR_HOME/voices. Machine property, in the hoard — never the tree. Loud refusals (no python/pip, no network, no model), never a silent skip; --skip-engines / YMIR_SKIP_VOICE honored"
   "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/sessrumnir.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
   "host","this machine — sensed on EVERY host","bin/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/omarchy-sense.sh observe), places the apps (bin/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
@@ -453,7 +454,7 @@ install[28]{step,what,self-heals}:
   "validate","the running system","bin/ymir-validate.sh — live port/store/process checks"
 ```
 
-**30** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
+**31** `step_*` functions are defined (`home` asks, `tree` builds). A step is not a row: one step may emit
 several. `prereqs` also emits `memory-well`, `host` also emits `agents-config`,
 `smidja` also emits `visualizer`, and `spa` also emits `hlidskjalf`. The Omarchy
 layer (`step_omarchy`) runs **last** by default; `--omarchy-first` raises it
