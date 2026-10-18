@@ -100,6 +100,31 @@ else
   bad "the finder did not heal the index"
 fi
 
+# ── 4. a worktree must not fight the canonical index ─────────────────────────
+# The index is ONE shared file in the home. A Yggdrasil worktree walking its own
+# shipped skills would rewrite it and call every canonical skill INCOMPLETE.
+( set -e
+  export YMIR_HOME="$TMP/home2"
+  REPO2="$TMP/gitrepo"
+  mkdir -p "$REPO2/bin/agents" "$REPO2/bin/vault" "$REPO2/.pi" "$REPO2/RULES" \
+           "$REPO2/.agents/skills/shipped" "$YMIR_HOME/.agents/skills" "$YMIR_HOME/hodd/docs"
+  cp "$IDX" "$REPO2/bin/agents/skill-index.sh"; chmod +x "$REPO2/bin/agents/"*.sh
+  printf '#!/usr/bin/env bash\nymir_home_root() { printf -v "$1" %%s "${YMIR_HOME:-/nonexistent}"; }\n' \
+    > "$REPO2/bin/vault/hoard-lib.sh"
+  printf -- '---\nname: shipped-skill\ndescription: A canonical shipped skill.\n---\n' \
+    > "$REPO2/.agents/skills/shipped/SKILL.md"
+  git -C "$REPO2" init -q; git -C "$REPO2" config user.email t@t; git -C "$REPO2" config user.name t
+  git -C "$REPO2" add -A >/dev/null; git -C "$REPO2" commit -qm seed
+  ( cd "$REPO2" && bash bin/agents/skill-index.sh >/dev/null 2>&1 )
+  git -C "$REPO2" worktree add -q --detach "$TMP/wt" HEAD 2>/dev/null || true
+  if ( cd "$TMP/wt" && bash bin/agents/skill-index.sh --check >/dev/null 2>&1 ); then
+    printf 'ok - %s\n' "a worktree does not spuriously stale the shared index"
+  else
+    printf 'not ok - %s\n' "--check from a worktree called the canonical index stale" >&2
+    exit 7
+  fi
+) || fail=1
+
 printf '\n%s\n' "----------------------------------------"
 if [ "$fail" = 0 ]; then printf 'skill-index.test.sh: all passed\n'; else printf 'skill-index.test.sh: FAILED\n' >&2; fi
 exit "$fail"
