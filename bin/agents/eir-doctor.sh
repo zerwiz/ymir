@@ -36,10 +36,10 @@ STATE="${BROKK_STATE_OVERRIDE:-$YMIR_HOME/state}"
 if [ -z "${YMIR_STYLE_LOADED:-}" ]; then . "$SCRIPT_DIR/../desktop/ymir-style.sh"; YMIR_STYLE_LOADED=1; fi
 style_init
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
+# npm install — both shapes, one resolver (bin/desktop/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(CDPATH='' cd "$_ya" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/seat/sessrumnir/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(CDPATH='' cd "$_ya" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/desktop/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -69,8 +69,8 @@ f_hermes()    { "$SCRIPT_DIR/../engine/hermes-ensure.sh" ensure --install >/dev/
 # passes (voxtype counts as an engine).
 s_snotra()    { [ -x "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ] && "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" status >/dev/null 2>&1; }
 f_snotra()    { "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
-s_sessrumnir(){ [ -x "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
-f_sessrumnir(){ "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+s_sessrumnir(){ [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
+f_sessrumnir(){ "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
 # The boot law (2026-09-24): every role-owed program enabled and standing. The
 # mend for a stopped boot IS the raise — re-materialize, re-enable, re-verify.
 s_autoboot()  { [ -x "$SCRIPT_DIR/../engine/ymir-autoboot.sh" ] && "$SCRIPT_DIR/../engine/ymir-autoboot.sh" verify >/dev/null 2>&1; }

@@ -40,13 +40,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
-# --- where an app lives: bin/seat/sessrumnir/app-lib.sh --------------------------
+# --- where an app lives: bin/desktop/app-lib.sh --------------------------
 # apps/<surface> in a clone, node_modules/@zerwiz/<package> in an npm install —
 # both shapes, ONE resolver (Rule 07). Seated HERE, at the top, because the plan
 # resolves apps both in app_row and in the shell check below, and a resolver that
 # arrives after its callers is the same as no resolver at all (2026-10-12).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
-  for _app_c in "${SCRIPT_DIR}/../seat/sessrumnir/app-lib.sh" "$ROOT/bin/seat/sessrumnir/app-lib.sh"; do
+  for _app_c in "${SCRIPT_DIR}/../desktop/app-lib.sh" "$ROOT/bin/desktop/app-lib.sh"; do
     [ -r "$_app_c" ] && { . "$_app_c"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _app_c
@@ -85,7 +85,7 @@ port_up() {  # <port>
   if have ss; then ss -ltn 2>/dev/null | grep -q ":$1 " && return 0; fi
   return 1
 }
-# Where an app lives is NOT decided here. bin/seat/sessrumnir/app-lib.sh owns that
+# Where an app lives is NOT decided here. bin/desktop/app-lib.sh owns that
 # question (apps/<surface> in a clone, node_modules/@zerwiz/<package> in an install),
 # and the loader at the top of this file seats it before any row is emitted. A local
 # second copy of the resolver is exactly how the two shapes drifted apart: this file

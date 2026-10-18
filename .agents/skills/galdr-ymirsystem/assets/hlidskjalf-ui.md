@@ -382,12 +382,12 @@ line (the per-view `--user-data-dir` is stable), which is what `electron.sh` doe
 **One class per app, and the install proves it (2026-09-24).** Each surface
 presents its own window class — `ymir-hlidskjalf` · `ymir-smidja` ·
 `ymir-odrerir` · `ymir-sessrumnir` — decided once in `app_class`
-(`bin/seat/sessrumnir/app-lib.sh`), set by the Electron mains (`app.setName(APP_SLUG)` +
+(`bin/desktop/app-lib.sh`), set by the Electron mains (`app.setName(APP_SLUG)` +
 `appendSwitch('class', APP_SLUG)`). The `.desktop` `StartupWMClass`, the
 generated Hyprland rule, and the launchers must all name the same string; they
 once did not (`CLASS_sessrumnir="sessrumnir"` vs the app's `ymir-sessrumnir`,
 which made every Ymir key seem to open one app). The desktop step of
-`bin/engine/ymir-install.sh` runs `bin/seat/sessrumnir/desktop-verify.sh` before any window is claimed
+`bin/engine/ymir-install.sh` runs `bin/desktop/desktop-verify.sh` before any window is claimed
 and after the raise (`--live`), so a misrouted or unopenable surface is a loud
 FAIL, never green.
 
@@ -645,7 +645,7 @@ Four gaps closed in one pass:
 - **Switcher**: `Halls.tsx` also exports `HallsSwitcher` (three rune buttons),
   which replaces the lone Smíðja speed-start button in the Topbar. Smíðja's own
   topbar and Sessrúmnir's menu carry matching switchers; all route through the
-  gate's `/api/desktop`, which now raises Sessrúmnir too (`bin/desktop/sessrumnir.sh`).
+  gate's `/api/desktop`, which now raises Sessrúmnir too (`bin/desktop/sessrumnir-launch.sh`).
 - **Search box**: `.topbar .search` `min-width` was 120px — narrower than the
   text "Search work workspace…", so the placeholder clipped. Raised to 280px;
   the input may shrink (`min-width: 0`).

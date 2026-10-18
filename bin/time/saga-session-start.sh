@@ -63,7 +63,13 @@ else
   gleipnir_lock_owner owner
 fi
 
-printf 'BROKK SESSION START - %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+# The clock comes through its own door (bin/time/sol.sh) when it is there, so every
+# session and every log line wears the same instant — and falls back to `date`.
+if [ -x "$SCRIPT_DIR/sol.sh" ]; then
+  printf 'BROKK SESSION START - %s\n' "$(bash "$SCRIPT_DIR/sol.sh" utc --plain 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
+else
+  printf 'BROKK SESSION START - %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+fi
 printf 'home=%s realm=%s\n' "$BROKK_HOME" "$REALM"
 
 section "LOCK"
@@ -179,6 +185,14 @@ emit_context "$DATA/learnings.md" "learnings"
 HOOD_FILE="$ROOT/svartalfaheim/$REALM/HOOD.md"
 [ -r "${YMIR_HOME}/svartalfaheim/$REALM/HOOD.md" ] && HOOD_FILE="${YMIR_HOME}/svartalfaheim/$REALM/HOOD.md"
 emit_context "$HOOD_FILE" "hood"
+
+section "CLOCK"
+# Sól: what time it is, in the house's own zone, with the UTC stamp the logs use.
+if [ -x "$SCRIPT_DIR/sol.sh" ]; then
+  bash "$SCRIPT_DIR/sol.sh" context 2>/dev/null || printf 'no clock\n'
+else
+  printf 'no clock (bin/time/sol.sh absent)\n'
+fi
 
 section "TODAY"
 # The day's work, so a session opens knowing what was already forged. Written by

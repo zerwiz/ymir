@@ -54,7 +54,7 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
   [ -n "$_apd_surface" ] && [ -n "$_apd_rv" ] || return 2
   _apd_root="${YMIR_ROOT_DIR:-}"
   if [ -z "$_apd_root" ]; then
-    # The CHECKOUT, not this script's parent: from bin/seat/sessrumnir a single
+    # The CHECKOUT, not this script's parent: from bin/desktop a single
     # `..` is <repo>/bin/seat, where no apps/ and no .agents/ has ever lived, so
     # every app surface resolved to empty (2026-10-06). Ask git first, then try
     # both depths -- the shape bifrost-bridge.sh already uses.

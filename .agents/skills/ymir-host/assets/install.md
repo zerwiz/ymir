@@ -67,13 +67,13 @@ ymir mimir · sense · plan
 ## Both shapes — a clone and an npm install
 
 The operator may have cloned the tree or installed the package; the scripts must
-not care. `bin/seat/sessrumnir/app-lib.sh` resolves a surface either way (`apps/<surface>`, else
+not care. `bin/desktop/app-lib.sh` resolves a surface either way (`apps/<surface>`, else
 `node_modules/@zerwiz/<package>`), `bin/desktop/smidja-lib.sh` resolves the smithy, and
 `bin/desktop/electron-lib.sh` verifies a shell's runtime. To exercise the *other* shape
 without a second machine:
 
 ```bash
-YMIR_ROOT_DIR=/path/to/an/npm/@zerwiz/ymir bash bin/seat/sessrumnir/app-lib.sh   # resolve against it
+YMIR_ROOT_DIR=/path/to/an/npm/@zerwiz/ymir bash bin/desktop/app-lib.sh   # resolve against it
 ```
 
 That variable is how a resolver is tested against a package from a clone.
