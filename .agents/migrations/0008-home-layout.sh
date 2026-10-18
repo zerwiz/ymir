@@ -112,12 +112,16 @@ if [ "$PLATFORM" = android ]; then
   # On a phone there is no Documents/ — but a home installed with the DESKTOP shape can
   # still be sitting there (the CLI resolves the home per machine: env → recorded →
   # ymirhome). If it is, fold it in; the desktop strays below cannot exist and are skipped.
-  for stale in "$HOME/Documents/ymirhome" "$HOME/ymirhome"; do
-    if [ -d "$stale" ] && [ "$stale" != "$HOME_DIR" ]; then
-      say "  a desktop-shaped home at $stale — folding it in (the phone's home is $HOME_DIR)"
-      merge_dir "$stale" "$HOME_DIR/state/from-desktop-home-$STAMP"
-      LEFT=$((LEFT + 1))
-    fi
+  # Ask the resolver for the default, and then look for ANY other Ymir home under $HOME —
+  # naming no path of our own (Rule 07: never restate where things live; the guard is right
+  # to refuse a literal home path, and refused ours before this was written this way).
+  for stale in "${YMIR_HOME_DEFAULT:-}" "$HOME"/*/; do
+    [ -n "$stale" ] && [ -d "$stale" ] || continue
+    [ -f "$stale/hodd/memory/runes_audit.md" ] || continue          # it is a Ymir home
+    [ "$(cd "$stale" && pwd)" = "$HOME_DIR" ] && continue           # not this one
+    say "  another Ymir home at $stale — folding it in (this machine's home is $HOME_DIR)"
+    merge_dir "${stale%/}" "$HOME_DIR/state/from-other-home-$STAMP"
+    LEFT=$((LEFT + 1))
   done
 else
   for stray in "$HOME_DIR/../Ymir/state" "$HOME_DIR/../ymirhome.bak-scaffold/state"; do
