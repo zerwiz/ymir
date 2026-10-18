@@ -79,7 +79,7 @@ These are the figures the port actually wired into `bin/` and the harness adapte
 | Worker spawn | **Einherjar** | The chosen who are gathered to fight | `bin/agents/einherjar-spawn.sh` |
 | Worker brief | **Erindi** | The errand given to a worker | `bin/agents/erindi-brief.sh` → `data/<id>/brief.md` |
 | Worker-state reconciliation | **Vör** | Awareness of what is | `bin/records/vor-crew-state.sh` |
-| Scheduled jobs (the fate-spinners) | **Nornir** | The fates who govern time | `bin/time/nornir-cron-start.sh`, `bin/nornir-job-*.sh`, `config/cron.yaml` |
+| Scheduled jobs (the fate-spinners) | **Nornir** | The fates who govern time | `bin/time/nornir-cron-start.sh`, `bin/time/nornir-job-*.sh`, `config/cron.yaml` |
 | Memory housekeeping | **Muninn** | The raven of memory (remembers and prunes) | `bin/time/nornir-job-memory-housekeeping.sh` |
 | External observation | **Huginn** | The raven of thought/observation | `bin/time/nornir-job-observer.sh` |
 | Git sync | **Yggdrasil** | The world-tree kept in order | `bin/time/nornir-job-git-sync.sh` |

@@ -2,14 +2,14 @@
 # Copy to YOUR home and edit there:  cp config/cron.yaml.example $YMIR_HOME/config/cron.yaml
 # The runtime reads the operator's own schedule from $YMIR_HOME/config/cron.yaml
 # (or BROKK_CONFIG_OVERRIDE) — the tracked tree ships only this shape.
-# Format: HH:MM <command>. Started idempotently by bin/nornir-cron-start.sh.
+# Format: HH:MM <command>. Started idempotently by bin/time/nornir-cron-start.sh.
 #
 # ROLE GATE (plan 51): prefix a job with @<role>[,<role>] so it runs only on the
 # machines whose roles match — @heart (the record), @forge (models/GPU),
 # @dev (a full body), @hand. No gate means any role. A dev body must NOT run the
 # record jobs; that is how 8 orphan seat schedulers came to run a heart's work.
 #   @heart 07:00 bin/time/nornir-job-daily-briefing.sh
-#   07:30 bin/nornir-job-ungated.sh        # any role
+#   07:30 bin/time/nornir-job-ungated.sh   # any role
 #
 # GATE EVERY LINE THAT BELONGS TO A ROLE. An ungated machine job runs on EVERY
 # seat of every machine, so with N sessions on one box it fires N times a day

@@ -1,0 +1,120 @@
+# paths-ledger.yaml — every path that has MOVED, and where it went.
+#
+# Rule 25 ("a move is a migration"): when a script, unit, config key or shelf is renamed
+# or relocated, its old spelling goes here in the SAME change, together with the migration
+# that heals existing homes (.agents/migrations/) and the ward that refuses a stale
+# reference in the shipped tree (bin/gates/guards/path-ledger-guard.sh).
+#
+# Why it exists (2026-10-18): `bin/nornir-job-*.sh` became `bin/time/nornir-job-*.sh`, the
+# operator's cron kept the old spelling for three weeks, and the scheduler read a schedule
+# whose commands did not exist — on every seat that had not hand-fixed it. A path is an
+# interface; a move without a ledger is an interface broken in silence.
+#
+# Format:
+#   moves:
+#     - old: "bin/nornir-job-"          # the OLD spelling (a prefix or a full path)
+#       new: "bin/time/nornir-job-"     # the NEW spelling (matched by substring)
+#       date: "2026-10-18"
+#       why: "the bin/ reorganisation (Rule 23): a layer per directory"
+#       migration: "0009-flat-bin-paths"
+#       superseded: true                # may NOT appear in a shipped file (history excepted)
+#
+# A check may be waived, loudly, on a line that QUOTES history rather than uses it:
+#   # allow-superseded-path: this line records the move, it does not make it
+moves:
+  - old: "bin/nornir-job-"
+    new: "bin/time/nornir-job-"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23): a layer per directory"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/nornir-cron-start.sh"
+    new: "bin/time/nornir-cron-start.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/well-vault-sync.sh"
+    new: "bin/time/well-vault-sync.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/ymir-install.sh"
+    new: "bin/engine/ymir-install.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/ymir-plan.sh"
+    new: "bin/bridge/ymir-plan.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/ymir-validate.sh"
+    new: "bin/engine/ymir-validate.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/snotra-ensure.sh"
+    new: "bin/time/snotra/snotra-ensure.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/voice-ensure.sh"
+    new: "bin/voice/voice-ensure.sh"
+    date: "2026-10-18"
+    why: "the voice shelf (Rule 12/23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/desktop-place.sh"
+    new: "bin/desktop/desktop-place.sh"
+    date: "2026-10-18"
+    why: "out of the application's folder (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/editor-place.sh"
+    new: "bin/desktop/editor-place.sh"
+    date: "2026-10-18"
+    why: "out of the application's folder (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/sessrumnir.sh"
+    new: "bin/desktop/sessrumnir-launch.sh"
+    date: "2026-10-18"
+    why: "a name with a function (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/mimir.sh"
+    new: "bin/records/mimir.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/runes-append.sh"
+    new: "bin/records/runes-append.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/fleet-ensure.sh"
+    new: "bin/fleet/fleet-ensure.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/prereq-ensure.sh"
+    new: "bin/engine/prereq-ensure.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true
+  - old: "bin/herdr-ensure.sh"
+    new: "bin/seat/herdr-ensure.sh"
+    date: "2026-10-18"
+    why: "the bin/ reorganisation (Rule 23)"
+    migration: "0009-flat-bin-paths"
+    superseded: true

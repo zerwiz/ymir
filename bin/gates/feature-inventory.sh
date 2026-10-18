@@ -38,7 +38,7 @@ esac
 MODE="${1:-all}"
 
 n_tools=$(find "$ROOT/bin" -maxdepth 1 -type f \( -name '*.sh' -o -name '*.py' -o -name '*.js' \) 2>/dev/null | wc -l | tr -d ' ')
-n_jobs=$(ls "$ROOT"/bin/nornir-job-*.sh 2>/dev/null | wc -l | tr -d ' ')
+n_jobs=$(ls "$ROOT"/bin/time/nornir-job-*.sh 2>/dev/null | wc -l | tr -d ' ')
 n_skills=$(find -L "$ROOT/.agents/skills" -mindepth 2 -maxdepth 2 -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 n_agents=$(ls "$ROOT"/.agents/agents/*.md 2>/dev/null | wc -l | tr -d ' ')
 n_workflows=$(ls "$ROOT"/.github/workflows/*.yml 2>/dev/null | wc -l | tr -d ' ')
@@ -78,7 +78,7 @@ for f in "$ROOT"/bin/*; do
 done
 
 printf 'jobs[%s]{job}:\n' "$n_jobs"
-for f in "$ROOT"/bin/nornir-job-*.sh; do [ -f "$f" ] && printf '  "%s"\n' "$(basename "$f")"; done
+for f in "$ROOT"/bin/time/nornir-job-*.sh; do [ -f "$f" ] && printf '  "%s"\n' "$(basename "$f")"; done
 
 printf 'apps[%s]{app}:\n' "$n_apps"
 for d in "$ROOT"/apps/*/; do [ -d "$d" ] && printf '  "%s"\n' "$(basename "$d")"; done

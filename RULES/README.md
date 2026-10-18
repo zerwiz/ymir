@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[24]{file,subject}:
+rules_index[25]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -26,6 +26,7 @@ rules_index[24]{file,subject}:
   "22-home-layout.md","the home has a layout: one resolver, one purpose per shelf, state only in the home, a company document only in a company or project shelf, discovery by registry, creation refused elsewhere, one name one meaning"
   "23-no-code-in-app-folders.md","an application lives in apps/; bin/ holds function-named machine tools — never an application's name in a path"
   "24-the-ward.md","a door is named or it is closed: nothing public without a credential, keys not passwords, the audit is a cron"
+  "25-agnostic-by-construction.md","one core, every device: three axes, probe never assume, a clean skip is a pass, a move is a migration"
   "README.md","this index"
 ```
 
@@ -44,6 +45,7 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | 22 | `22-home-layout.md` | **The home has a layout, and nothing is created outside it.** One resolver; one purpose per shelf; state in `$YMIR_HOME/state` and nowhere else; a company document in a company or project shelf, never in the operator's own; discovery by registry, never by walking the tree; creation refused elsewhere; one name, one meaning. |
 | 23 | `23-no-code-in-app-folders.md` | **An application lives in `apps/`.** `bin/` holds the machine's tools, named for the LAYER and then the FUNCTION; no directory under `bin/` may be named after an app, and an app-named file there must carry a function (`<app>-ensure.sh`). Enforced by `bin/gates/guards/app-folder-guard.sh`. |
 | 24 | `24-the-ward.md` | **The ward:** a non-loopback socket is named or closed; anything public authenticates or does not exist; ssh is keys-only on the LAN and the tailnet; the audit is a cron; secrets at rest are 0600; a mend that could lock the operator out is his to make. Enforced by `bin/ward/{security-audit,verdr,harden}.sh` and Eir's `ward` surface. *(23 is held by the app-folders rule in flight.)* |
+| 25 | `25-agnostic-by-construction.md` | **One core, every device.** Three axes (device · hardware · OS); capability is PROBED, never assumed; a layer that does not apply reports SKIP and exits 0; a core change ships its layer change in the same commit; **a move is a migration** — the new path, a migration that heals existing homes, and a ward that would have caught it (`.agents/paths-ledger.yaml` + `bin/gates/guards/path-ledger-guard.sh`). |
 
 | 15 | `15-vault-confidential.md` | The vault is a **confidential domain**: content under NDA never leaves it, in any form, local or remote; no model, log, embedding, ticket, or network ever sees it; enforced by `bin/gates/guards/vault-guard.sh`. |
 | 16 | `16-confidential-session.md` | A **confidential session** (`bin/vault/confidential.sh`): work on the vault with no route off it — confined workdir, off-vault doors off, an explicit model tier (local/none/remote), and `--airlock` for no network at all; `confidential-guard` refuses out-of-vault commits. |
