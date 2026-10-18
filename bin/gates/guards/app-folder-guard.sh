@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# app-folder-guard.sh — Rule 22: no code in an application's folder, and no
+# app-folder-guard.sh — Rule 23: no code in an application's folder, and no
 # application's folder inside bin/.
 #
 # Why (2026-10-18): a display/opening tool was written into `bin/desktop/` — a
 # directory named after an APPLICATION — because a file it was modelled on happened to
 # live there. The Allfather's verdict: *"we can't have random code in the application
-# folders."* The rule is RULES/22; this is the ward that makes it bite instead of
+# folders."* The rule is RULES/23; this is the ward that makes it bite instead of
 # asking nicely.
 #
 # What it refuses:
@@ -68,7 +68,7 @@ check_tree() {
     # 1 · a DIRECTORY under bin/ named after the app
     while IFS= read -r d; do
       [ -n "$d" ] || continue
-      say "an application's folder in bin/" "$d" "Rule 22 §3" "the folder is the app's name; everything in it is misfiled by association"
+      say "an application's folder in bin/" "$d" "Rule 23 §3" "the folder is the app's name; everything in it is misfiled by association"
     done < <(find "$ROOT/bin" -type d -name "$app" 2>/dev/null)
 
     # 2 · an app-named FILE with no function in its name
@@ -77,14 +77,14 @@ check_tree() {
       base="$(basename "$f")"
       case "$base" in "$app.sh"|"$app.py") ;; *) continue ;; esac
       is_function_name "$base" && continue
-      say "app-named file, no function" "${f#"$ROOT"/}" "Rule 22 §4" "name it <app>-<function>.sh, or move the logic into apps/$app/"
+      say "app-named file, no function" "${f#"$ROOT"/}" "Rule 23 §4" "name it <app>-<function>.sh, or move the logic into apps/$app/"
     done < <(find "$ROOT/bin" -type f \( -name "$app.sh" -o -name "$app.py" \) 2>/dev/null)
   done < <(app_names)
 
   # 3 · a layer's tool inside an application's folder
   while IFS= read -r f; do
     [ -n "$f" ] || continue
-    say "a layer's tool inside apps/" "${f#"$ROOT"/}" "Rule 22 §5" "an application's folder is not a toolbox"
+    say "a layer's tool inside apps/" "${f#"$ROOT"/}" "Rule 23 §5" "an application's folder is not a toolbox"
   done < <(find "$ROOT/apps" -maxdepth 2 -type f \( -name 'desktop-place.sh' -o -name 'editor-place.sh' -o -name 'display-lib.sh' -o -name 'open-on.sh' -o -name 'app-build.sh' -o -name 'app-lib.sh' \) 2>/dev/null)
 }
 
@@ -102,7 +102,7 @@ case "${1:-check}" in
       printf 'app-folder-guard: clean — no application folder under bin/, no app-named file without a function\n'
       exit 0
     fi
-    printf 'app-folder-guard: %s finding(s)\nhelp: RULES/22 — the apps live in apps/; bin/ is never an app; a bin/ path carrying an app name is a misfiled tool (name it for the function, or make it <app>-<function>.sh in the layer that deploys it)\n' "$findings" >&2
+    printf 'app-folder-guard: %s finding(s)\nhelp: RULES/23 — the apps live in apps/; bin/ is never an app; a bin/ path carrying an app name is a misfiled tool (name it for the function, or make it <app>-<function>.sh in the layer that deploys it)\n' "$findings" >&2
     exit 1 ;;
   *) printf 'usage: app-folder-guard.sh [check|--list-apps|--version]\n' >&2; exit 2 ;;
 esac

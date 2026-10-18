@@ -421,7 +421,7 @@ rules[9]{file,governs}:
   "RULES/07-config.md","configuration is never hardcoded: ports, hosts, paths, credentials resolve from env/config with one documented default"
   "RULES/13-pi-extensions.md","Pi extensions: one home per extension, pi's layout (a directory needs index.ts), and valknut-load --check as the gate — two load paths seats nobody"
   "RULES/20-the-well-appends.md","the well appends: an episode is never replaced, rebuilt-over or lost to a restore; the count never falls"
-  "RULES/22-no-code-in-app-folders.md","an application lives in apps/; bin/ holds function-named machine tools — never an application's name in a path"
+  "RULES/23-no-code-in-app-folders.md","an application lives in apps/; bin/ holds function-named machine tools — never an application's name in a path"
 ```
 
 A change that contradicts a rule must change the rule first (append-only). The

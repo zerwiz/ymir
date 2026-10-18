@@ -1,4 +1,4 @@
-# 22 — No code in an application's folder (and no application's folder in `bin/`)
+# 23 — No code in an application's folder (and no application's folder in `bin/`)
 
 ## 0 · What an application IS — the registry (the list this rule is about)
 
@@ -29,7 +29,7 @@ to live there. His words: *"sessrumnir have nothing to do with the displays, ses
 application. how could this fatal mistake happen?"* and then *"we can't have random code in
 the application folders."*
 
-*(Number 21 is spoken for by the state-lives-in-the-home rule, which code already cites.)*
+*(Numbered 23: 20 is the well appends, 21 is company documents, 22 is the home layout — all merged on `main` before this rule.)*
 
 ```
 app_folder_law[5]{rule}:
