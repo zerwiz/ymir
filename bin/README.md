@@ -31,7 +31,7 @@ bin[434]{file,does,kind,verdict,disposition,callers,lines}:
   "bootstrap-macos.sh","bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs.","tool","wired","keep",1,116
   "bootstrap-windows.ps1","bootstrap-windows.ps1 — give a Windows operator the Ubuntu host Ymir needs.","data","wired","keep",1,113
   "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
-  "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","wired","keep",2,66
+  "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",2,78
   "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",38,74
   "brokk-classify-lib.sh","Shared wake classifier: the common source of truth for Allfather-relevant status","lib","wired","keep",2,1771
   "brokk-lease-lib.sh","brokk-lease-lib.sh - the per-task supervision lease contract (one owner).","lib","wired","keep",2,223
@@ -447,6 +447,6 @@ bin[434]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",6,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
 
-**Tally.** verdict: wired=228, tested=206
+**Tally.** verdict: wired=227, tested=207
 
 **Tally.** disposition: keep=425, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
