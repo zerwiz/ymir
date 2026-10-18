@@ -88,7 +88,7 @@ bin[434]{file,does,kind,verdict,disposition,callers,lines}:
   "extension-api-check.sh","extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool API.","tool","wired","keep",2,113
   "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",1,88
   "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",1,58
-  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","wired","keep",4,165
+  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",4,178
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",2,159
   "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",2,83
   "fleet-deploy.sh","fleet-deploy.sh — refresh the machine's fleet services from THIS package.","tool","wired","keep",1,98
@@ -447,6 +447,6 @@ bin[434]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",6,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
 
-**Tally.** verdict: wired=227, tested=207
+**Tally.** verdict: wired=226, tested=208
 
 **Tally.** disposition: keep=425, migrate → src/ymir_runtime/send.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
