@@ -426,7 +426,7 @@ gate by another door, once `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set.
 `RULES/` holds the numbered house law. Read the rule that governs the task:
 
 ```
-rules[9]{file,governs}:
+rules[10]{file,governs}:
   "RULES/01-domains.md","domains (Greinar) · houses · Eindri"
   "RULES/02-agents.md","agents: .agents/agents is canonical; harness dirs are symlinks; no mock"
   "RULES/03-houses.md","a house is a company (WayOf); domains are never houses"

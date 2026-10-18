@@ -680,10 +680,28 @@ MIT License, © kunchenguid). Ymir adopts and retargets firstmate's mechanism un
 its open-source-first law; upstream names survive only as provenance. See
 [`NOTICE`](NOTICE).
 
+## Security — the ward
+
+Ymir has two security halves: the **agent side** (what our own agents may do — 16 gate
+wards, the vault, the airlock) and the **host side** (the machine's doors, the firewall,
+intrusion, and the network it joins). The `ward` covers both: it measures, reports, and
+writes the mend — it never closes a door for the operator.
+
+```bash
+bin/ward/security-audit.sh check     # the eyes: a TOON report, exit 1 on HIGH/CRITICAL
+bin/ward/verdr.sh report             # Vörðr, the warden: the dated report, speaks on HIGH
+bin/agents/eir-doctor.sh check       # the ward as one surface of the house's health
+```
+
+Law: [`RULES/24-the-ward.md`](RULES/24-the-ward.md) — *a door is named, or it is closed.*
+Doctrine, threat model, the local-network checks, and the roadmap (S0–S8):
+**[`docs/security.md`](docs/security.md)**.
+
 ---
 
 ## Docs
 
+- [`docs/security.md`](docs/security.md) — the ward: the law, the threat model, the checks, the roadmap
 - [`docs/lore.md`](docs/lore.md) — the mythos, realm by realm
 - [`docs/session-start.md`](docs/session-start.md) — how the seat is taken
 - [`docs/Architecture.md`](docs/Architecture.md) — the 7 realms, A2A, memory, migration

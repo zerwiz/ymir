@@ -95,16 +95,6 @@ for n in range(1,11):
 ' 2>/dev/null
 }
 
-move_window_to() {  # <desktop> <class-regex>
-  local d=$1 cls=$2
-  command -v hyprctl >/dev/null 2>&1 || return 1
-  # Hyprland 0.56 here wraps dispatch in Lua, so the comma form can fail; try
-  # both the classic and the keyword form, and report honestly if neither lands.
-  hyprctl dispatch movetoworkspacesilent "$d,class:$cls" >/dev/null 2>&1 && return 0
-  hyprctl keyword windowrulev2 "workspace $d silent,class:$cls" >/dev/null 2>&1 || true
-  return 0
-}
-
 [ -n "$TARGET" ] || { printf 'error: ymir-edit needs a path\nhelp: bin/engine/ymir-edit.sh <path>\n' >&2; exit 2; }
 
 EDITOR_BIN="$(pick_editor)"
