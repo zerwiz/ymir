@@ -52,14 +52,26 @@ case "${1:-}" in
   *) usage ;;
 esac
 
-current="$(git -C "$ROOT" symbolic-ref --short HEAD 2>/dev/null || echo '')"
-is_protected "$current" && block "$current"
-
+# Judge the DESTINATION refs the push names, and nothing else. A push lands only
+# on the branch it names, so standing on `main` while pushing — or deleting — a
+# FEATURE branch is legal. The earlier "block when HEAD is protected" pre-check
+# refused every such push, so deleting a merged branch from `main` needed
+# --no-verify (found 2026-10-18). RULES/08 is about where a push LANDS, not about
+# where the operator happens to be standing.
+saw_ref=0
 while read -r _local_ref _local_sha remote_ref _remote_sha; do
   [ -n "${remote_ref:-}" ] || continue
+  saw_ref=1
   rb="${remote_ref#refs/heads/}"
   is_protected "$rb" && block "$rb"
 done
+
+# No refs on stdin — run by hand rather than as a pre-push hook: judge the
+# current branch, which is what a bare `git push` would land on.
+if [ "$saw_ref" = 0 ]; then
+  current="$(git -C "$ROOT" symbolic-ref --short HEAD 2>/dev/null || echo '')"
+  is_protected "$current" && block "$current"
+fi
 
 printf 'branch-guard[1]{gate,result}:\n  "branch","ok"\n'
 exit 0
