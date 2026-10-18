@@ -66,12 +66,25 @@ esac
 # The range: from stdin when a hook calls us, else the branch against its base.
 refs="$(cat 2>/dev/null || true)"
 head_sha=""; remote_sha=""
+saw_ref=0; delete_only=1
 if [ -n "$refs" ]; then
   while read -r _local local_sha _remote remote_sha2; do
     [ -n "${local_sha:-}" ] || continue
+    saw_ref=1
     case "$local_sha" in 000000*) continue ;; esac
+    delete_only=0
     head_sha="$local_sha"; remote_sha="${remote_sha2:-}"
   done <<<"$refs"
+fi
+# A branch DELETION delivers no content, so there is nothing to record. Git feeds
+# a delete as an all-zero local sha; a push whose every ref is a delete is a
+# cleanup, and a gate that judges a push's CONTENT must not demand a fix note for
+# it (found 2026-10-18, deleting a merged branch after #349 — it needed
+# --no-verify, and a gate that must be routinely overridden is a gate nobody
+# trusts). Landing on, or deleting, a PROTECTED branch is branch-guard's job.
+if [ "$saw_ref" = 1 ] && [ "$delete_only" = 1 ]; then
+  printf 'fixes-guard[1]{gate,result}:\n  "push","ok — a branch deletion carries no content to record"\n'
+  exit 0
 fi
 [ -n "$head_sha" ] || head_sha="$(git rev-parse HEAD)"
 
