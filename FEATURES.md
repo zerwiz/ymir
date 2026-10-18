@@ -100,4 +100,6 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 
 ---
 
+| Desktop | **Opening a file on the right display** | `open-on.sh` opens a document in your editor on the screen its ROLE says — the largest monitor for reading, the focused one for code — reusing the window if the file is already open, and it speaks whichever dispatcher dialect the Hyprland session uses (Lua on 0.56, classic before) | [docs/features/open-on-the-right-display.md](docs/features/open-on-the-right-display.md) |
+
 *Append a row when a feature lands. Correct by appending, never by erasing.*

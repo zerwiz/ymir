@@ -26,6 +26,24 @@ import { basename, dirname, join, resolve } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import type { AutocompleteItem } from "@mariozechner/pi-tui";
 
+// The seat's display-aware opener (bin/seat/sessrumnir/open-on.sh), found by walking
+// up from the working directory. When it is there, a GUI editor is opened THROUGH it so
+// the window lands on the right monitor for its role; when it is not, the raw spawn
+// below is unchanged. (2026-10-18)
+function findOpener(start: string): string | null {
+	let dir = resolve(start);
+	for (let i = 0; i < 8; i++) {
+		const candidate = join(dir, "bin", "seat", "sessrumnir", "open-on.sh");
+		try {
+			if (statSync(candidate).isFile()) return candidate;
+		} catch {}
+		const parent = dirname(dir);
+		if (parent === dir) break;
+		dir = parent;
+	}
+	return null;
+}
+
 // Editors that open in their own window / don't occupy the terminal.
 // We launch these detached so pi keeps running.
 const GUI_EDITORS = new Set([
@@ -402,6 +420,27 @@ async function openFile(ctx: ExtensionContext, relPath: string): Promise<void> {
 	}
 
 	if (editor.isGui) {
+		// The display-aware road first: the opener places the window by role.
+		const opener = findOpener(ctx.cwd);
+		if (opener) {
+			try {
+				const child = spawn(opener, [absPath, "--editor", basename(editor.command), "--role", "reading"], {
+					detached: true,
+					stdio: "ignore",
+					env: process.env,
+					cwd: ctx.cwd,
+				});
+				child.on("error", (err) => {
+					ctx.ui.notify(`Opener failed: ${err.message}`, "error");
+				});
+				child.unref();
+				ctx.ui.notify(`Opened ${relPath || "."} in ${basename(editor.command)} — display-aware`, "info");
+			} catch (err) {
+				const msg = err instanceof Error ? err.message : String(err);
+				ctx.ui.notify(`Failed to open ${relPath || "."}: ${msg}`, "error");
+			}
+			return;
+		}
 		try {
 			const child = spawn(editor.command, [...editor.argv, absPath], {
 				detached: true,
