@@ -246,7 +246,7 @@ cloth_rules[4]{rule,why}:
 TOON stays on stdout. The installer prints it at the consent, and ends with the
 next steps — *a reaction for every action, a next step for every ending*.
 
-### A clone and a package are one tree — `bin/seat/sessrumnir/app-lib.sh`
+### A clone and a package are one tree — `bin/desktop/app-lib.sh`
 
 The apps are the only thing that differs between the two shapes, and only in
 where they live:
@@ -261,7 +261,7 @@ sessrumnir         apps/sessrumnir          node_modules/@zerwiz/sessrumnir
 smidja             apps/smidja-factory      node_modules/@zerwiz/smidja-factory
 ```
 
-`bin/seat/sessrumnir/app-lib.sh` answers for both — `app_dir <surface> <var>`, `app_pkg
+`bin/desktop/app-lib.sh` answers for both — `app_dir <surface> <var>`, `app_pkg
 <surface>` — and **eighteen files** were converted to it: the raise path
 (`scripts/start.sh`), the windows (`scripts/electron.sh`), the invite door, the
 seat-hall trio, Eir, the icon mint, the desktop placement, the hall snapshot, and
@@ -273,10 +273,10 @@ window class a surface PRESENTS (`ymir-hlidskjalf` · `ymir-smidja` ·
 `ymir-odrerir` · `ymir-sessrumnir`) is decided here once. It must equal the
 surface's `.desktop` `StartupWMClass`, the generated Hyprland window rule, and
 the slug the Electron sets (`app.setName` / `appendSwitch('class')`). It did not:
-`bin/seat/sessrumnir/desktop-place.sh` declared `CLASS_sessrumnir="sessrumnir"` while the app
+`bin/desktop/desktop-place.sh` declared `CLASS_sessrumnir="sessrumnir"` while the app
 presents `ymir-sessrumnir`, so the rule and the entry matched nothing and every
 Ymir key seemed to open one app. Rename a class HERE first;
-`bin/seat/sessrumnir/desktop-verify.sh --class-only` asserts the invariant and
+`bin/desktop/desktop-verify.sh --class-only` asserts the invariant and
 `.agents/tests/desktop-classes.test.sh` holds it in the tree.
 
 **The trap that named itself.** `printf -v <name>` writes to the *function's*
@@ -305,12 +305,12 @@ spa_serving[2]{shape,how}:
 
 A bare `npm run dev` lets Vite take 5173 and the hall silently answers on the
 wrong port; the raise now prints the log's last lines when the port stays silent
-rather than claiming success. Óðrerir resolves through `bin/seat/sessrumnir/app-lib.sh` like every
+rather than claiming success. Óðrerir resolves through `bin/desktop/app-lib.sh` like every
 other surface (it read as `missing apps/odrerir` on a packaged install).
 
 ### The marks land on any desktop — not only Omarchy's
 
-`bin/seat/sessrumnir/desktop-place.sh` holds **two kinds of thing**, and they were behind one gate:
+`bin/desktop/desktop-place.sh` holds **two kinds of thing**, and they were behind one gate:
 
 ```
 desktop_halves[2]{half,who_reads_it}:
@@ -320,7 +320,7 @@ desktop_halves[2]{half,who_reads_it}:
 
 A GNOME operator gets entries and icons and no window rules, which is the correct
 answer — and the reason a packaged install on GNOME placed *nothing* while the
-clone's marks already existed. `bin/seat/sessrumnir/desktop-place.sh entries` is the launcher half
+clone's marks already existed. `bin/desktop/desktop-place.sh entries` is the launcher half
 alone (any Linux desktop), the installer's `marks` step calls it, and both the
 desktop database and the icon cache are refreshed after.
 
@@ -467,9 +467,9 @@ install[33]{step,what,self-heals}:
   "hermes","the Nous Research agent runtime","installs via bin/engine/hermes-ensure.sh when absent"
   "snotra","the meeting ear's engine — whisper.cpp + a model","bin/time/snotra/snotra-ensure.sh reports the seat's engine and installs what is missing (pacman/apt/build); a voxtype seat keeps its models. The MCP face + unit ride the fleet step — and so does the WATCH (snotra-detect), which the fleet step raises by CAPABILITY on any seat with a microphone: a call seat owes the ear's watch, a headless heart reports a clean skip"
   "a2a","the A2A mesh engine — a2abridge (MIT): the local directory daemon (:7777) + the bridge that gives each harness the a2a tools","bin/bridge/a2abridge-ensure.sh ensure --install fetches the pinned engine and raises its directory unit; bin/bridge/a2a-mcp.sh install wires a2abridge + engram into pi + opencode. The unit is the ENGINE's own, Ymir-patched (journal output + the boot hook WantedBy=default.target) with a house template (tools/mill/systemd/a2abridge-directory.service) so a raise seats it by role; the heart's A2A node (:8301) rides the fleet step. Repairable: bin/agents/eir-doctor.sh a2abridge"
-  "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/seat/sessrumnir/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/desktop/sessrumnir.sh"
+  "sessrumnir","the Sessrúmnir desktop GUI (its own repo; lands via the `apps` step at apps/sessrumnir)","bin/desktop/sessrumnir-ensure.sh installs deps + builds on first run (deps are never committed); launch via bin/desktop/sessrumnir-launch.sh"
   "backend","Þjazi — herdr (protocol 14+) or tmux","bin/seat/herdr-ensure.sh detects/tests version, installs via the pinned installer or falls back to tmux"
-  "host","this machine — sensed on EVERY host","bin/host/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/host/omarchy-sense.sh observe), places the apps (bin/seat/sessrumnir/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/fleet/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
+  "host","this machine — sensed on EVERY host","bin/host/host-sense.sh senses the setup on ANY host (Rule 05); the Omarchy layer then RECORDS it (bin/host/omarchy-sense.sh observe), places the apps (bin/desktop/desktop-place.sh), installs the post-update hook and the wedge-alarm channel, and (on Omarchy) offers the suggested shell plugins — listed, never installed unbidden; seeds the private config/agents.yaml from its example and DERIVES the Eindri dispatch profile from the machine into $YMIR_HOME/hodd/config/eindri-dispatch.json (bin/fleet/dispatch-profile.sh derive — the shipped template with unfilled model tokens is never left to look active; the private override wins over the repo file)"
   "role","what this machine IS — resolved BEFORE the chain, so the whole step set is role-selected","bin/skuld/role-lib.sh establish_roles: --role/$YMIR_ROLE → the fleet registry (bin/skuld/role.sh) → the machine card in hodd/data/machines.md → ask (interactive) → the safe body dev; step_role reports the role + components + live link, records it with bin/skuld/role.sh set, and folds a Machine Card into the ONE registry hodd/data/machines.md (plan 39). An unknown --role is refused (exit 2); --check writes nothing"
   "fleet","the role-gated fleet services: the heart's offices (well-mcp · ratatoskr A2A node · the mill worker · the embedding stone · the cards root · snotra, the meeting ear's MCP face) on heart seats, the stone on forge seats, the well door, the MCP gateway and the a2abridge mesh directory on dev seats","bin/fleet/fleet-ensure.sh copies tools/ and packages/ to the seat (a DIRECTORY row keeps its relative path, so a cross-package import resolves in the deployed copy as in the repo), plus the snotra operator commands — WITH hoard-lib.sh beside them, because each resolves the operator's home through it and a command without its resolver dies on an unbound YMIR_HOME — to ~/.fleet; materializes ONLY what the roles owe (a2abridge-directory is engine-owned: patched by bin/bridge/a2abridge-ensure.sh and materialized from its house template when owed; the arm is seated as the standing unit ymir-syn-watch.service from tools/mill/systemd/), purges stale units, points the seat's pi mcp-adapter.json at THIS body's MCP gateway (bin/bridge/mcp-gateway.sh, :8316, which fronts well/bolthorn/skuld and resolves the heart at request time; --well-url still forces an explicit well door), and carries the model rail the same way — bin/bridge/mcp-config.sh writes the serving box under the config's `ymir` block, read from the ONE resolver bin/model/rail-resolve.sh (plan 51 Part 9c: models come from whichever strong box is CONNECTED), enables the ONE target (ymir.target), raises them, and VERIFIES — a program that cannot rise is a FAILURE with its reason, never a warn"
   "mesh","the A2A mesh (Ratatoskr): the local discovery directory (:7777) + the engine","bin/bridge/a2abridge-ensure.sh installs the a2abridge engine (A2A_NO_IDE=1), patches its user unit (journal output + the boot hook WantedBy=default.target), and raises the directory; the directory is a role-owed program (heart · dev) in the autoboot ONE table, materialized from tools/mill/systemd/a2abridge-directory.service and verified beside the well/tickets/skills doors"
@@ -487,7 +487,7 @@ install[33]{step,what,self-heals}:
   "invite","the way in for anyone else — an invite code","bin/engine/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
   "register","workspace/INSTALL.md","writes the record"
   "services","gate API, SPA, Nornir, bridges, visualizer — as USER UNITS on dev seats (hlidskjalf-spa · hlidskjalf-gate · mimir · bifrost · smidja · nornir, all joined to ymir.target)","raised by the fleet step; this step PROVES the raise with bin/engine/ymir-autoboot.sh verify — the old run-scripts/start.sh road is retired for boot (it stays as the manual raise for a window an operator opens)"
-  "desktop","Hlidskjalf + Smíðja desktop apps","bin/seat/sessrumnir/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
+  "desktop","Hlidskjalf + Smíðja desktop apps","bin/desktop/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
   "validate","the running system","bin/engine/ymir-validate.sh — live port/store/process checks"
 ```
 
@@ -588,14 +588,14 @@ crashed API) can no longer read as green.
 ## Desktop placement (Omarchy desktops, not monitors)
 
 On Omarchy the numbered **desktops** (1 2 3 4 5 …) are the "screens" an operator
-switches between. `bin/seat/sessrumnir/desktop-place.sh` gives each Ymir app its **own** desktop,
+switches between. `bin/desktop/desktop-place.sh` gives each Ymir app its **own** desktop,
 **preferring an empty one**, so the apps open separated and reachable with
 `Super+<n>` rather than stacking on the active desktop.
 
 ```
-bin/seat/sessrumnir/desktop-place.sh plan            # which desktop each app would take
-bin/seat/sessrumnir/desktop-place.sh apply           # write the rules + hyprctl reload
-bin/seat/sessrumnir/desktop-place.sh status          # what is installed
+bin/desktop/desktop-place.sh plan            # which desktop each app would take
+bin/desktop/desktop-place.sh apply           # write the rules + hyprctl reload
+bin/desktop/desktop-place.sh status          # what is installed
 ```
 
 It writes `~/.config/hypr/ymir-desktops.lua` using Omarchy's own idiom —
@@ -604,20 +604,20 @@ It writes `~/.config/hypr/ymir-desktops.lua` using Omarchy's own idiom —
 touches `/usr/share/omarchy/`. Verify with `hyprctl configerrors` (must be empty).
 On a non-Omarchy host the step is a clean SKIP.
 
-The class names come from `app_class` (`bin/seat/sessrumnir/app-lib.sh`) — one source. A change
+The class names come from `app_class` (`bin/desktop/app-lib.sh`) — one source. A change
 to a class (the 2026-09-24 `ymir-sessrumnir` correction) needs `apply` re-run so
 the generated rule is regenerated; a stale rule is caught by
-`bin/seat/sessrumnir/desktop-verify.sh --class-only`.
+`bin/desktop/desktop-verify.sh --class-only`.
 
 ### The install verifies the shelves can open (2026-09-24)
 
-`bin/seat/sessrumnir/desktop-verify.sh` checks every surface — hlidskjalf · smidja · odrerir ·
+`bin/desktop/desktop-verify.sh` checks every surface — hlidskjalf · smidja · odrerir ·
 sessrumnir — and its answer is the install's guarantee:
 
 ```bash
-bin/seat/sessrumnir/desktop-verify.sh            # resolve + --version + the class invariant
-bin/seat/sessrumnir/desktop-verify.sh --live     # with a compositor: a window of the class is held
-bin/seat/sessrumnir/desktop-verify.sh --class-only
+bin/desktop/desktop-verify.sh            # resolve + --version + the class invariant
+bin/desktop/desktop-verify.sh --live     # with a compositor: a window of the class is held
+bin/desktop/desktop-verify.sh --class-only
 ```
 
 For each surface: (a) the runtime resolver (`bin/desktop/electron-lib.sh`) yields an
@@ -813,7 +813,7 @@ Hardening (`harden`) disables password logins — a console sudo action, never
 taken by an agent, and refused while zero keys are seated (a machine with no
 key inside is a machine nobody can enter).
 
-## Sessrúmnir specifically (`bin/seat/sessrumnir/sessrumnir-ensure.sh`, `bin/desktop/sessrumnir.sh`)
+## Sessrúmnir specifically (`bin/desktop/sessrumnir-ensure.sh`, `bin/desktop/sessrumnir-launch.sh`)
 
 ```
 sessrumnir-ensure.sh status           # sessrumnir[1]{dir,deps,built,electron}
@@ -827,7 +827,7 @@ Deps are never committed; the ensure step installs them on first run, exactly as
 `scripts/electron.sh` does for the other desktop apps. The external engine keeps
 its product name `pi-desktop`; the GUI the user sees is Sessrúmnir, themed with
 Ymir's deep-navy palette. The Omarchy launcher entry is rendered from
-`apps/sessrumnir/resources/ymir-sessrumnir.desktop.in` by `bin/seat/sessrumnir/desktop-place.sh`
+`apps/sessrumnir/resources/ymir-sessrumnir.desktop.in` by `bin/desktop/desktop-place.sh`
 (placement + `SUPER+B`).
 
 ## Neutral tenant defaults — a fresh Ymir is a distro, not the company
@@ -1184,7 +1184,7 @@ bin/fleet/agents-config.sh get sindri model   # one figure's model, from the hoa
 bin/host/omarchy-sense.sh observe          # learn packages, configs, Omarchy version
 bin/host/omarchy-plugins.sh add            # the suggested shell plugins (never forced)
 bin/host/omarchy-hook-install.sh install   # re-learn after every `omarchy update`
-bin/seat/sessrumnir/desktop-place.sh apply            # Hyprland desktops + launcher entries
+bin/desktop/desktop-place.sh apply            # Hyprland desktops + launcher entries
 ```
 
 `desktop-place.sh apply` does both halves of the desktop integration: it writes

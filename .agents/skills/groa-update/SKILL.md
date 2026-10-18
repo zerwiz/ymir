@@ -63,7 +63,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
    Surface any skipped target whose reason needs the Allfather's attention (a home with un-landed changes, local edits).
 
 5. **Re-check where the apps live — an update can move the shape.**
-   `bin/seat/sessrumnir/app-lib.sh` resolves a surface in a clone (`apps/<surface>`) or in a
+   `bin/desktop/app-lib.sh` resolves a surface in a clone (`apps/<surface>`) or in a
    package (`node_modules/@zerwiz/<package>`); `bin/desktop/smidja-lib.sh` and
    `bin/desktop/electron-lib.sh` do the same for the smithy and a shell's runtime. After a
    fast-forward, run `bin/bridge/ymir-plan.sh --phase 5` — if a surface that stood

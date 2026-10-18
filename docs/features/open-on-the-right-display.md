@@ -1,7 +1,7 @@
 # Opening a file on the right display
 
-> **Status: built and tested (2026-10-18).** `bin/seat/sessrumnir/open-on.sh` +
-> `bin/seat/sessrumnir/display-lib.sh`, with `.agents/tests/open-on.test.sh`.
+> **Status: built and tested (2026-10-18).** `bin/desktop/open-on.sh` +
+> `bin/desktop/display-lib.sh`, with `.agents/tests/open-on.test.sh`.
 
 ## What it is
 
@@ -29,7 +29,7 @@ know **which screen it belongs on**, not drop it wherever the mouse happens to b
 ## The commands
 
 ```sh
-bin/seat/sessrumnir/open-on.sh <file> [--role reading|code|primary|<MONITOR>]
+bin/desktop/open-on.sh <file> [--role reading|code|primary|<MONITOR>]
                                       [--editor marktext] [--new] [--fullscreen]
                                       [--dry-run] [--wait <seconds>]
 ```

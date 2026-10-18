@@ -14,23 +14,23 @@ plane (Hlidskjalf) you look at the system from.
 ## Do it
 
 ```bash
-bin/desktop/sessrumnir.sh                 # launch (deps installed on first run)
-bin/desktop/sessrumnir.sh start ~/project # launch with a workspace
-bin/desktop/sessrumnir.sh status
-bin/desktop/sessrumnir.sh stop
+bin/desktop/sessrumnir-launch.sh                 # launch (deps installed on first run)
+bin/desktop/sessrumnir-launch.sh start ~/project # launch with a workspace
+bin/desktop/sessrumnir-launch.sh status
+bin/desktop/sessrumnir-launch.sh stop
 ```
 
 The underlying ensure surface builds it:
 
 ```bash
-bin/seat/sessrumnir/sessrumnir-ensure.sh   # deps + build
+bin/desktop/sessrumnir-ensure.sh   # deps + build
 ```
 
 There is also a desk placement helper that puts its window on its **own numbered
 desktop**:
 
 ```bash
-bin/seat/sessrumnir/desktop-place.sh       # prefers an EMPTY desktop
+bin/desktop/desktop-place.sh       # prefers an EMPTY desktop
 ```
 
 ## Notes and limits
@@ -47,4 +47,4 @@ bin/seat/sessrumnir/desktop-place.sh       # prefers an EMPTY desktop
 |---|---|
 | First run hangs | It is building; let it finish, or run `sessrumnir-ensure.sh` and read the output. |
 | A blank window | Rebuild: `sessrumnir-ensure.sh ensure --install`. |
-| It opens on the wrong desktop | `bin/seat/sessrumnir/desktop-place.sh` to place it deliberately. |
+| It opens on the wrong desktop | `bin/desktop/desktop-place.sh` to place it deliberately. |

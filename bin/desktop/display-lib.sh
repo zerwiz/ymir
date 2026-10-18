@@ -160,3 +160,16 @@ for w in ws:
         print(v); break
 '
 }
+
+# Move a window to a numbered desktop (workspace) — the other placement axis.
+# Hyprland 0.56 rejects the classic `movetoworkspacesilent <n>,class:x` string for
+# this too, so the Lua form is the one to reach for when it is available.
+window_to_desktop() {  # <address> <n>
+  local a="${1:?}" n="${2:?}"
+  case "$(display_dialect)" in
+    lua)     hypr dispatch "hl.dsp.window.move({ window = \"address:$a\", workspace = $n })" >/dev/null ;;
+    classic) hypr dispatch focuswindow "address:$a" >/dev/null
+             hypr dispatch movetoworkspacesilent "$n" >/dev/null ;;
+    *)       return 3 ;;
+  esac
+}

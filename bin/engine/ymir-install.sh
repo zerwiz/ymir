@@ -59,8 +59,8 @@ hoard_local_env YMIR_ENV_FILE
 if [ -z "${YMIR_ROLE_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/../skuld/role-lib.sh" ]; then
   . "$SCRIPT_DIR/../skuld/role-lib.sh"; YMIR_ROLE_LIB_LOADED=1
 fi
-# shellcheck source=bin/seat/sessrumnir/app-lib.sh
-. "$SCRIPT_DIR/../seat/sessrumnir/app-lib.sh"
+# shellcheck source=bin/desktop/app-lib.sh
+. "$SCRIPT_DIR/../desktop/app-lib.sh"
 # The runtime resolver answers for every desktop surface (P1, 2026-09-24); load
 # it beside app-lib so the install steps and the verifier speak its language.
 if [ -z "${YMIR_ELECTRON_LIB_LOADED:-}" ] && [ -r "$SCRIPT_DIR/../desktop/electron-lib.sh" ]; then
@@ -654,11 +654,11 @@ step_a2a() {
 step_sessrumnir() {
   role_gate sessrumnir dev "the dev desktop layer" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add sessrumnir SKIP "--skip-engines"; return; }
-  if [ -x "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ]; then
+  if [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ]; then
     if [ "$CHECK" = 1 ]; then
-      if "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" status >/dev/null 2>&1; then add sessrumnir OK "ready"; else add sessrumnir WARN "not ready (run bin/seat/sessrumnir/sessrumnir-ensure.sh install)"; fi
+      if "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" status >/dev/null 2>&1; then add sessrumnir OK "ready"; else add sessrumnir WARN "not ready (run bin/desktop/sessrumnir-ensure.sh install)"; fi
     else
-      if "$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; then add sessrumnir OK "ready"; else add sessrumnir WARN "not ready — run bin/seat/sessrumnir/sessrumnir-ensure.sh install"; fi
+      if "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; then add sessrumnir OK "ready"; else add sessrumnir WARN "not ready — run bin/desktop/sessrumnir-ensure.sh install"; fi
     fi
   else add sessrumnir SKIP "no sessrumnir-ensure.sh"; fi
 }
@@ -1173,8 +1173,8 @@ step_marks() {
   # integration, for ANY Linux desktop), and the rune marks are minted and
   # installed over them — so the themed rune name wins for the surfaces that have
   # one, instead of a template's absolute .png.
-  if [ -x "$SCRIPT_DIR/../seat/sessrumnir/desktop-place.sh" ]; then
-    "$SCRIPT_DIR/../seat/sessrumnir/desktop-place.sh" entries >/dev/null 2>&1 || true
+  if [ -x "$SCRIPT_DIR/../desktop/desktop-place.sh" ]; then
+    "$SCRIPT_DIR/../desktop/desktop-place.sh" entries >/dev/null 2>&1 || true
   fi
   "$SCRIPT_DIR/../desktop/design-icon.sh" mint --all >/dev/null 2>&1 || true
     "$SCRIPT_DIR/../desktop/design-icon.sh" install >/dev/null 2>&1 || true
@@ -1237,10 +1237,10 @@ step_desktop() {
   if [ ! -x "$ROOT/scripts/electron.sh" ]; then add desktop SKIP "no scripts/electron.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
     # A check probes: every surface must RESOLVE an executable runtime and be
-    # routed by the right class (bin/seat/sessrumnir/desktop-verify.sh — read-only, few
+    # routed by the right class (bin/desktop/desktop-verify.sh — read-only, few
     # seconds). Fails loudly, naming the surface and the resolved path.
-    if [ -x "$ROOT/bin/seat/sessrumnir/desktop-verify.sh" ]; then
-      if out="$("$ROOT/bin/seat/sessrumnir/desktop-verify.sh" 2>&1)"; then
+    if [ -x "$ROOT/bin/desktop/desktop-verify.sh" ]; then
+      if out="$("$ROOT/bin/desktop/desktop-verify.sh" 2>&1)"; then
         add desktop OK "verified: every surface resolves a runnable Electron and is routed right"
       else
         add desktop FAIL "$(printf '%s' "$out" | grep -m1 'FAIL' | sed 's/^  //')"
@@ -1261,9 +1261,9 @@ step_desktop() {
   # is routed by the right class. A runtime that is merely absent is a FAILURE,
   # never the old silent SKIP: the launcher must not proceed into a path that
   # npm will never make.
-  if [ -x "$ROOT/bin/seat/sessrumnir/desktop-verify.sh" ]; then
+  if [ -x "$ROOT/bin/desktop/desktop-verify.sh" ]; then
     local vout vrc
-    vout="$("$ROOT/bin/seat/sessrumnir/desktop-verify.sh" 2>&1)"
+    vout="$("$ROOT/bin/desktop/desktop-verify.sh" 2>&1)"
     vrc=$?
     if [ "$vrc" != 0 ]; then
       add desktop FAIL "$(printf '%s' "$vout" | grep -m1 'FAIL' | sed 's/^  //')"
@@ -1275,7 +1275,7 @@ step_desktop() {
   for _v in hlidskjalf smidja odrerir; do
     "$ROOT/scripts/electron.sh" start --view "$_v" >/dev/null 2>&1 && raised=$((raised+1))
   done
-  [ -x "$ROOT/bin/desktop/sessrumnir.sh" ] && "$ROOT/bin/desktop/sessrumnir.sh" start >/dev/null 2>&1 && raised=$((raised+1))
+  [ -x "$ROOT/bin/desktop/sessrumnir-launch.sh" ] && "$ROOT/bin/desktop/sessrumnir-launch.sh" start >/dev/null 2>&1 && raised=$((raised+1))
   if [ "$raised" -ge 2 ]; then
     add desktop OK "verified + raised $raised window(s) — Hlidskjalf · Smíðja · Óðrerir · Sessrúmnir"
   else
@@ -1283,13 +1283,13 @@ step_desktop() {
   fi
   # The routing is then proven LIVE (P5): with the windows up, the compositor
   # must actually hold each surface's class. One retry lets a slow map settle.
-  if [ -x "$ROOT/bin/seat/sessrumnir/desktop-verify.sh" ] && command -v hyprctl >/dev/null 2>&1; then
+  if [ -x "$ROOT/bin/desktop/desktop-verify.sh" ] && command -v hyprctl >/dev/null 2>&1; then
     local t=0
-    while [ "$t" -lt 2 ] && ! "$ROOT/bin/seat/sessrumnir/desktop-verify.sh" --live >/dev/null 2>&1; do
+    while [ "$t" -lt 2 ] && ! "$ROOT/bin/desktop/desktop-verify.sh" --live >/dev/null 2>&1; do
       t=$((t+1)); sleep 3
     done
-    if ! "$ROOT/bin/seat/sessrumnir/desktop-verify.sh" --live >/dev/null 2>&1; then
-      add desktop FAIL "a raised surface's window is missing its class on the compositor — bin/seat/sessrumnir/desktop-verify.sh --live names it"
+    if ! "$ROOT/bin/desktop/desktop-verify.sh" --live >/dev/null 2>&1; then
+      add desktop FAIL "a raised surface's window is missing its class on the compositor — bin/desktop/desktop-verify.sh --live names it"
     fi
   fi
 }

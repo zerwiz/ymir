@@ -26,7 +26,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import type { AutocompleteItem } from "@mariozechner/pi-tui";
 
-// The seat's display-aware opener (bin/seat/sessrumnir/open-on.sh), found by walking
+// The seat's display-aware opener (bin/desktop/open-on.sh), found by walking
 // up from the working directory. When it is there, a GUI editor is opened THROUGH it so
 // the window lands on the right monitor for its role; when it is not, the raw spawn
 // below is unchanged. (2026-10-18)
@@ -424,7 +424,7 @@ async function openFile(ctx: ExtensionContext, relPath: string): Promise<void> {
 		const opener = findOpener(ctx.cwd);
 		if (opener) {
 			try {
-				const child = spawn(opener, [absPath, "--editor", basename(editor.command), "--role", "reading"], {
+				const child = spawn(opener, ["--role", "reading", absPath], {
 					detached: true,
 					stdio: "ignore",
 					env: process.env,
