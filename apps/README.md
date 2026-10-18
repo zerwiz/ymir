@@ -26,3 +26,13 @@ deploys it.
 **Adding an application:** create `apps/<figure>/` with its README and its build,
 add its row here, and — if a layer must deploy or check it — add one shim in that
 layer named `<figure>-<function>.sh`. That is the whole procedure.
+
+## A vendored upstream keeps its own layout
+
+`apps/smidja-factory/` is a **clone of `zerwiz/smidja`** (the upstream that stamps
+`smidja/`), vendored into this tree. It carries its own `apps/visualizer` and its own
+`scripts/` — **its** layout, not ours — and Rule 23 binds *our* code: the ward allows
+this one path by name, and nothing else under `apps/` may nest an `apps/`.
+
+If the factory is ever un-vendored (a package dependency instead of a clone), this
+exception dies with it.
