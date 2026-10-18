@@ -1218,3 +1218,148 @@ The films obey the same law as the halls: append-only, no readable text in the
 picture, the palette never mixed, and the **turn** in every episode — the
 moment the myth and the machine diverge, which is the only reason to film a
 myth at all.
+
+---
+
+## XXXV. The Forgotten Names — the clock, the calendar, and what landed without its entry (2026-10-18)
+
+The Allfather said it plainly: *"we are missing a lot in lore.md."* He is right, and the cause
+is worth writing down with the repair. **The naming law is not a ceremony — it is how the house
+remembers what a thing IS.** A capability that lands without its figure is a capability nobody
+can speak about: it gets called by a filename, and the filename then drifts (which is exactly how
+a display tool came to live inside an application's folder, Rule 23).
+
+This section is the repair, appended (Rule 06) — one entry per figure that was absent, with what
+it is, why the name fits, and whether it is **built** or **planned**.
+
+### Sól — the clock (built 2026-10-18)
+
+**Sól** is the sun, and she does not decide anything: she *marks the time*. She rides ahead of
+the wolf and never turns back — which is what a timestamp is. `bin/time/sol.sh` is her door:
+`now` (local, UTC, epoch, the zone and where it came from), `iso`, `utc`, `epoch`, `stamp`, `tz`,
+`add`, `diff`, `context`, `check`.
+
+Her law, learned on the day she was forged: **time is measured on instants, never on the wall
+clock.** Subtracting two zone-aware datetimes in Python is *wall-clock* arithmetic, and the
+skipped hour of a daylight-saving change vanishes in silence — measured: 2026-03-29
+`01:00 → 04:00` in Europe/Helsinki is **two hours elapsed and three on the calendar**. Sól
+answers both and never confuses them; a wall time that never existed is normalised to the real
+reading. Her `check` refuses to call an unsynchronised clock sane, because Runes, the log and
+every scheduler read her. Companion: **Mánagandr**, below, counts the months.
+
+### Mánagandr — the calendar
+
+**Mánagandr** ("the moon's pursuer", the wolf that runs after Máni) is why time *passes*: the
+month-devourer. He is the Allfather's calendar — meetings, free windows, and what is coming —
+read through Snotra's ear. Where Sól says *what time it is*, Mánagandr says *what is on the day
+and when a meeting fits*. Rule: the calendar never speaks for the clock, and the clock never
+guesses the calendar.
+
+### Himinbjörg — the watchtower (planned, with the security ward)
+
+**Himinbjörg** is Heimdall's hall at the edge of heaven, from which he sees every road. It is the
+place the *warden's eyes* live: what is listening on this machine, what changed, what tried to
+come in, what is unpatched. **Vörðr** (below) is the warden who walks; Himinbjörg is where he
+looks from. Planned, not built: plan 81, phases S0–S8 — and the door that made it urgent was
+`random.zerwiz.org`, a public tunnel answering **200 with no login** until it was taken down on
+2026-10-18.
+
+### Vörðr — the warden (planned)
+
+**Vörðr** is the warden: not a gate (that is Heimdall's) and not a judge (that is Forseti's), but
+the one who **composes the wards and watches the house** — the 16 gate guards, the vault, the
+ssh keys, the ports. He does not replace a guard; he keeps them, counts them, and reports what he
+sees from Himinbjörg. Planned: plan 81.
+
+### Hnitbjörg — the vault (built)
+
+**Hnitbjörg** is the mountain stronghold where Suttungr hid the mead of poetry; Gunnlöð kept it.
+It is Ymir's **encrypted document vault** (`bin/vault/hnitbjorg.sh`): a LUKS2 container, sealed by
+default, opened only by the operator — and the unlock key may live *on the operator's phone*
+(`bin/vault/phone-lib.sh`), so the phone's own biometric lock is the second factor. The lore had
+the *idea* of a vault; it never had the name. Now it does.
+
+### Gunnlöð — the keeper of the mead (built)
+
+**Gunnlöð** guarded the mead that made whoever drank it a poet; Odin won three sips of it. Ymir's
+Gunnlöð is the **skill refiner**: she distils what a run actually did — the trajectories, the
+mistakes, the working recipe — into sharpened skill artefacts. Where Gungnir *forges* a skill,
+Gunnlöð *keeps and improves* the ones we have.
+
+### Níðhöggr — the serpent at the root (built)
+
+**Níðhöggr** gnaws the root of Yggdrasil forever, and will not stop. The name goes to the thing
+that **breaks an endless loop**: the hallucination loop-breaker that recognises an agent turning
+on the same spot and stops it, naming what it is doing. A loop is not patience; it is the serpent.
+
+### Vingólf — the assembly hall (built)
+
+**Vingólf** is the hall of the gods *before* they go to war — the place of assembly, not of arms.
+Ymir's Vingólf is the **control-plane hub**: coordination, identity and sync across substrates.
+Its law is in its name: **it never executes code.** A hall assembles; it does not fight.
+
+### Reginn — the keeper who remembers (built)
+
+**Reginn** was the smith who raised Sigurd — patient, exact, and the one who remembered the
+history of the hoard. Ymir's **Reginn the Elder** is the **records keeper**: the plan ledger, the
+documentation shelves, and the well. He **reads the elders before writing** and reconciles; he
+never contradicts the record. He is the reason this very section could be written at all.
+
+### Herdr — the seat backend (built)
+
+**Herdr** is Ymir's terminal-backend: the panes a sub-agent is seated in, the tab a worker owns,
+the session a shell survives in (`bin/seat/herdr-*`, protocol 14+). He is the *bench* rather than
+a god — the lore's own register for a tool that holds others steady. **Þjazi** is the
+presentation layer above him; Herdr is where the work actually sits.
+
+### Sessrúmnir — the seat of many (built)
+
+**Sessrúmnir** is Freyja's hall — "seat-room", the hall that seats many at once. It names the
+**desktop seat**: the GUI window over the Pi and OMP coding agents (`apps/sessrumnir`). The lore
+listed the *seats* as a concept and never named the hall — which is how the display tool came to
+be filed inside it (Rule 23). A hall is where the seats are; it is not a toolbox.
+
+### Brimir — the hall of Allfathers (planned)
+
+**Brimir** is the hall of the *good* — the place where the righteous gather after Ragnarök. Ymir's
+Brimir is the **federated room across operators**: their Ymirs joining by A2A, each keeping its
+own record. Planned: plan 74.
+
+### Gladsheim — the fleet room (planned)
+
+**Gladsheim** is the gods' own hall — the great one, where they sit in council. Ymir's Gladsheim
+is the **fleet room**: one durable room where the whole fleet talks and the operator answers
+back. Distinct from Brimir by *who* is in it: Gladsheim is our fleet; Brimir is many operators.
+Planned: plan 73.
+
+### Gimlé — a product, and the lesson of Rule 21
+
+**Gimlé** is the hall that survives — "the place of flame", the hall brighter than the sun, where
+the good live after the world ends. It is **a product of Whynot Productions, not a company** —
+and the reason Rule 21 says a realm and a shelf may not share a name (the `life/work` collision
+recorded there). The lore did not know this name; the rule file did.
+
+### Kádlín — the broad slice (built)
+
+**Kádlín** is the figure of the *broad* task: the one who takes a large slice at once, many files
+in one pass, when the work is wide rather than deep. She rounds out the Eindri specialists beside
+**Kvasir** (recon), **Sindri** (the code smith), **Bragi** (the voice) and **Huginn** (the raven
+that reads).
+
+### Jev — the decision layer, and the naming question left open
+
+**Jev** (TypeSafe AI) is not a Norse figure, and the law is clear: **an adopted engine keeps its
+own name** — as `llama.cpp` does. What needs a name is the *capability*: Ymir asking a question
+and getting a **choice with a confidence** in milliseconds instead of a paragraph. Built
+2026-10-18: `/v1/systemone` served locally on `:8090` — `Julia-1`, `Kev-4B`, `Clef` and OpenJev —
+answering routing, yes/no and ordered-score questions. The naming is **left to the Allfather**,
+with candidates in the register (Ullr, the sure aim; Víðarr, the silent one who acts at the
+decisive moment) rather than chosen here.
+
+### Why they were missing — and the law this repairs
+
+Each of these landed as **code before lore**: a script, an app, a service. The registry
+(`.agents/assets/agents/naming.md`) gained the row; this document — where a reader *learns what
+the house is for* — did not. From here the order is the reverse: **a capability gets its figure
+when its plan is written, not when someone notices the lore has a hole.** A name is how the house
+thinks; a filename is how it forgets.

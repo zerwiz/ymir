@@ -339,6 +339,20 @@ Quick reference:
 | **Þjazi** | Terminal backend — sub-agent panes, protocol 14+ |
 | **Gróa** | Updater shaman — the völva who renews: fast-forwards Brokk and its homes, then mends forward |
 | **Eir** | The healer — diagnoses every surface, then mends what is broken |
+| **Sól** | The clock — one door for time (`bin/time/sol.sh`); arithmetIc on instants, so daylight-saving cannot lie about elapsed time |
+| **Mánagandr** | The calendar — what is on the day, and when a meeting fits |
+| **Hnitbjörg** | The encrypted vault — LUKS2, sealed by default, opened only by the operator |
+| **Gunnlöð** | Skill refinement — distils a run's trajectory into a sharper skill |
+| **Níðhöggr** | The loop-breaker — names the endless loop and stops it |
+| **Vingólf** | The assembly hall — coordination, identity and sync across substrates; never executes code |
+| **Reginn** | The records keeper — the plan ledger, the docs, the well; reads the elders before writing |
+| **Herdr** | The seat backend — panes, tabs and sessions a worker is seated in (protocol 14+) |
+| **Sessrúmnir** | The desktop seat — the GUI over the Pi and OMP agents (`apps/sessrumnir`) |
+| **Vörðr** | The warden — composes the wards and watches the house (planned, plan 81) |
+| **Himinbjörg** | The watchtower — where the warden looks from: ports, changes, attempts (planned, plan 81) |
+| **Kádlín** | The broad slice — many files in one pass, when the work is wide rather than deep |
+| **Brimir** | The hall of Allfathers — a federated room across operators (planned, plan 74) |
+| **Gladsheim** | The fleet room — one durable room where the whole fleet talks (planned, plan 73) |
 
 The lore is not optional reading — it is the naming law. Every subsystem, every
 component, every process must be named for the figure whose role matches its work.

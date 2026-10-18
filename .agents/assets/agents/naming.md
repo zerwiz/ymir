@@ -4,7 +4,7 @@ The full Norse component map. AGENTS.md loads this when a task names a subsystem
 Deep doctrine (law, aetts, reject list): `.agents/skills/galdr-ymirsystem/assets/norse-naming.md`.
 
 ```
-platform[39]{subsystem,norse,role}:
+platform[55]{subsystem,norse,role}:
   "Master platform root","Ymir","base host OS, master daemon"
   "Primary agent","Brokk","main autonomous worker"
   "Sub-agent worker","Eindri","isolated sandboxed workers"
@@ -45,6 +45,21 @@ platform[39]{subsystem,norse,role}:
   "Body MCP gateway","The Gateway","one local door per body fronting well/tickets/skills; attached proxies the heart, dark serves the cache and queues the journal"
   "The heart on the always-on box","(topology)","the record's home is the always-on machine; compute rides the forge; the headless heart's schedule persists"
   "Rules-keeper of the fleet",".agents/skills/elder-home","the elder council — plans, docs, memory; append-only, reconcile never contradict"
+  "The clock","Sól","the sun's wheel: one door for time and date (bin/time/sol.sh) — arithmetic on instants, so daylight-saving cannot lie about elapsed time"
+  "The calendar","Mánagandr","the month-pursuer: what is on the day, and when a meeting fits"
+  "The warden","Vörðr","composes the wards and watches the house — ports, changes, attempts (planned, plan 81)"
+  "The watchtower","Himinbjörg","where the warden looks from: what listens, what changed, what tried to come in (planned, plan 81)"
+  "The document vault","Hnitbjörg","LUKS2 container, sealed by default, opened only by the operator (bin/vault/hnitbjorg.sh)"
+  "Skill refinement","Gunnlöð","keeps and sharpens the mead: distils a run's trajectory into refined skill artefacts"
+  "The loop-breaker","Níðhöggr","gnaws the root forever: names the endless loop and stops it"
+  "The assembly hall","Vingólf","coordination, identity and sync across substrates; never executes code"
+  "The records keeper","Reginn (the Elder)","the plan ledger, the documentation shelves and the well; reads the elders before writing"
+  "The seat backend","Herdr","panes, tabs and sessions a worker is seated in (protocol 14+)"
+  "The desktop seat","Sessrúmnir","the GUI over the Pi and OMP coding agents (apps/sessrumnir)"
+  "The broad slice","Kádlín","many files in one pass — the wide task beside Kvasir, Sindri, Bragi, Huginn"
+  "The hall of Allfathers","Brimir","a federated room across operators, joined by A2A (planned, plan 74)"
+  "The fleet room","Gladsheim","one durable room where the whole fleet talks (planned, plan 73)"
+  "The decision layer","(unnamed — the Allfather's to name)","Jev / System One: a typed question answered with a choice and a confidence in milliseconds (/v1/systemone, local :8090)"
 ```
 
 ```
