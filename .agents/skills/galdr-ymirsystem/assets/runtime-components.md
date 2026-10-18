@@ -549,7 +549,7 @@ bin/time/nornir-cron-start.sh --status       # → cron: running pid=... jobs=4
 |---|---|
 | Plan §12/§13 and `.pi/extensions/README.md` name OpenCode adapter files `syn-sessionstart.js` / `gna-watch-arm.js` | actual: `saga-sessionstart.js`, `syn-watch-arm.js` |
 | `.pi/extensions/README.md:36-38` says OpenCode/Claude/Codex/Cursor adapters "are still to come" | all four are landed (`.opencode/plugins/*`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`) |
-| Plan §13 lists `bin/fleet/hamr-harness.sh`, `bin/agents/einherjar-spawn.sh`, `bin/agents/erindi-brief.sh`, `bin/records/vor-crew-state.sh`, `bin/nornir-job-*.sh`, `bin/records/runes-append.sh`, `config/eindri-dispatch.json` as "still to build" | all are present and `bash -n` clean |
+| Plan §13 lists `bin/fleet/hamr-harness.sh`, `bin/agents/einherjar-spawn.sh`, `bin/agents/erindi-brief.sh`, `bin/records/vor-crew-state.sh`, `bin/time/nornir-job-*.sh`, `bin/records/runes-append.sh`, `config/eindri-dispatch.json` as "still to build" | all are present and `bash -n` clean |
 | Plan §6 digest: 9 stages incl. `NETWORK CHECKS`, fleet digest from `data/backlog.md` | 8 sections; no NETWORK CHECKS; fleet digest reads `state/*.meta` + `docs/masterplan.md` |
 | Plan §7 OpenCode session-start file `syn-sessionstart.js` | `saga-sessionstart.js` |
 | Plan §7 Grok "project hooks (`grok --trust`)" | no `.grok/` exists in Ymir; Grok unimplemented |

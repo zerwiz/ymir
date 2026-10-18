@@ -8,7 +8,7 @@
 # piper for the voice, each on its own per-OS road, each with a model. Loud
 # refusals (no python/pip, no network, no model) — never a silent skip.
 #
-# The speech→text engine is owned by bin/snotra-ensure.sh (one whisper road), so
+# The speech→text engine is owned by bin/time/snotra/snotra-ensure.sh (one whisper road), so
 # this script DELEGATES that half rather than growing a second installer.
 #
 # Usage:
@@ -143,7 +143,7 @@ install_voice() {
 }
 
 install_all() {
-  # whisper (STT) — one road: bin/snotra-ensure.sh owns it.
+  # whisper (STT) — one road: bin/time/snotra/snotra-ensure.sh owns it.
   if [ -x "$SNOTRA_ENSURE" ] && ! whisper_status >/dev/null 2>&1; then
     "$SNOTRA_ENSURE" install >/dev/null 2>&1 || true
   fi

@@ -121,7 +121,7 @@ Figure-prefix mapping for the `fm-` → `<-prefix>` pass:
 | `fm-primary-pi-watch` | `gna-pi-watch.ts` | Gná (messenger) |
 | `fm-primary-*` (OpenCode) | `saga-*` / `syn-*` by role | Sága / Sýn |
 
-Runtime extension beyond the upstream distro: **Nornir** (`bin/time/nornir-cron-start.sh`, `bin/nornir-job-*.sh`, `config/cron.yaml`) and **Runes** (`bin/records/runes-append.sh`) have no Brokk equivalent. Brokk used a watcher only; Ymir adds the scheduled spine (plan 29 §6 stage 8) and the chained audit ledger.
+Runtime extension beyond the upstream distro: **Nornir** (`bin/time/nornir-cron-start.sh`, `bin/time/nornir-job-*.sh`, `config/cron.yaml`) and **Runes** (`bin/records/runes-append.sh`) have no Brokk equivalent. Brokk used a watcher only; Ymir adds the scheduled spine (plan 29 §6 stage 8) and the chained audit ledger.
 
 ## 5. The two critical invariants
 
@@ -242,7 +242,7 @@ Expected: only provenance citations in this file and the known legacy strings li
 | `bin/gates/guards/syn-turnend-guard.sh` | `bin/backend/fm-turnend-guard.sh` | landed, verified |
 | `bin/gates/checks/syn-arm-pretool-check.sh` | `bin/backend/fm-arm-pretool-check.sh` | landed, inert v0 |
 | `bin/gates/checks/syn-cd-pretool-check.sh` | `bin/backend/fm-cd-pretool-check.sh` | landed, inert v0 |
-| `bin/time/nornir-cron-start.sh`, `bin/nornir-job-*.sh` | none (Ymir extension) | landed, verified |
+| `bin/time/nornir-cron-start.sh`, `bin/time/nornir-job-*.sh` | none (Ymir extension) | landed, verified |
 | `bin/records/runes-append.sh` | none (Ymir extension) | landed, verified |
 | `.pi/extensions/syn-turnend-guard.ts` | `.pi/extensions/fm-primary-turnend-guard.ts` | landed, verified |
 | `.pi/extensions/gna-pi-watch.ts` | `.pi/extensions/fm-primary-pi-watch.ts` | landed; calm + supervision branch dropped |
@@ -269,7 +269,7 @@ These are real mismatches between plan/source docs and the shipped tree, found w
 | 1 | `bin/agents/einherjar-spawn.sh:170` calls `hamr-harness.sh crew`, but `bin/fleet/hamr-harness.sh:231-236` accepts only `eindri`, `eindri-model`, `eindri-effort` (the upstream `crew` subcommand was renamed to `eindri`). `crew` falls through to `detect_own`. | upstream `bin/backend/fm-harness.sh` header documents `crew`; the port renamed it but did not retarget the caller | Latent: masked while `config/eindri-dispatch.json` forces an explicit `--harness`; would mis-resolve the configured Eindri harness if the dispatch file were removed. Fix: call `hamr-harness.sh eindri`. |
 | 2 | Plan 29 declares a **9-stage** digest (§1, §6, acceptance §8.3 "all nine stages"); the script header and implementation are **8 stages** (`NETWORK CHECKS` is deferred/not implemented). | `docs/plans/29-brokk-distro-runtime.md:171,207` vs `bin/time/saga-session-start.sh:9-17` | Doc drift; the runtime is correct at 8. Reconcile the plan or implement the network-checks stage. |
 | 3 | Plan 29 §7/§13 names `.opencode/plugins/syn-sessionstart.js`; the shipped file is `.opencode/plugins/saga-sessionstart.js`. | `docs/plans/29-brokk-distro-runtime.md:139,188` vs the tree | Doc drift; the adapter works, the plan's filename is stale. |
-| 4 | Plan 29 §13 "Still to build" lists `hamr-harness.sh`, the `.opencode`/Claude/Codex/Cursor adapters, `einherjar-spawn.sh`, `erindi-brief.sh`, `vor-crew-state.sh`, `config/eindri-dispatch.json`, `bin/nornir-job-*.sh`, `runes-append.sh`, real `data/`, `config/cron.yaml`, and the `AGENTS.md` header as unbuilt — all now exist. | `docs/plans/29-brokk-distro-runtime.md:318-322` | Stale status; the tree has advanced past the plan. |
+| 4 | Plan 29 §13 "Still to build" lists `hamr-harness.sh`, the `.opencode`/Claude/Codex/Cursor adapters, `einherjar-spawn.sh`, `erindi-brief.sh`, `vor-crew-state.sh`, `config/eindri-dispatch.json`, `bin/time/nornir-job-*.sh`, `runes-append.sh`, real `data/`, `config/cron.yaml`, and the `AGENTS.md` header as unbuilt — all now exist. | `docs/plans/29-brokk-distro-runtime.md:318-322` | Stale status; the tree has advanced past the plan. |
 | 5 | `.pi/extensions/README.md` says the `.opencode`/Claude/Codex/Cursor adapters are "not yet wired"; they are wired. | `.pi/extensions/README.md` "Not yet wired" section | Stale doc. |
 | 6 | `AGENTS.md:231-244` (`PI / FIRSTMATE INTEGRATION`) still uses `fm-harness`, `fm-spawn`, `Yggdrasil`, and the `Brokk_crew` schema, contradicting the Norse naming law at `AGENTS.md:6` and the port. | root `AGENTS.md` | Imported terminology in the always-loaded contract. Retarget or strike the section. |
 | 7 | `.claude/settings.json` passes `--claude` to `bin/gates/guards/syn-turnend-guard.sh`; the guard accepts no arguments and ignores it. | `.claude/settings.json` Stop hook vs `bin/gates/guards/syn-turnend-guard.sh` | Harmless argument mismatch. |

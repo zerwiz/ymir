@@ -20,7 +20,7 @@ cp .env.realm.example .env.realm     # then fill in what this company actually u
 ```
 
 Nothing else is required: the runtime finds it by path. `bin/time/saga-session-start.sh`,
-the `bin/nornir-job-*.sh` jobs, `bin/workspace-rag.sh` and the Hlidskjalf gate all
+the `bin/time/nornir-job-*.sh` jobs, `bin/workspace-rag.sh` and the Hlidskjalf gate all
 read `svartalfaheim/<realm>/.env.realm` for the **active realm** — resolved from
 `data/realm.md`, else the first non-example tenant under `svartalfaheim/`, else
 `default`; it can also be set with `BROKK_REALM`. The values are loaded into the

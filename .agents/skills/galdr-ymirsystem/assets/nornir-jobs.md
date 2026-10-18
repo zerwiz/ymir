@@ -129,7 +129,7 @@ bin/time/nornir-cron-start.sh            # resolve + start (idempotent)
 
 ```
 # Nornir cron schedule — the user's own jobs
-# Format: HH:MM <command>. Started idempotently by bin/nornir-cron-start.sh.
+# Format: HH:MM <command>. Started idempotently by bin/time/nornir-cron-start.sh.
 07:00 bin/time/nornir-job-daily-briefing.sh
 06:00 bin/time/nornir-job-observer.sh
 00:30 bin/time/nornir-job-memory-housekeeping.sh
@@ -457,22 +457,22 @@ Violations are a runtime-compliance failure (see `runtime-compliance.md`).
 
 ## 6. Add a new job
 
-1. **Write the runner** at `bin/nornir-job-<name>.sh`:
+1. **Write the runner** at `bin/time/nornir-job-<name>.sh`:
    - `#!/usr/bin/env bash` + `set -u`, header comment naming the Norse figure and purpose.
    - Source the ledger: `. "$SCRIPT_DIR/runes-append.sh"`.
    - Resolve `ROOT`, `BROKK_HOME`, `STATE`, `DATA` from `BROKK_*_OVERRIDE`.
    - Read only inputs; write outputs atomically (`.tmp.$$` then `mv`).
    - End with one `runes_append "<actor>" "<event>" [--realm R] --message "..."`.
    - `bash -n` clean; fail loudly with `error:` + `help:` on stdout.
-2. **Register it** in `config/cron.yaml` as `HH:MM bin/nornir-job-<name>.sh`.
+2. **Register it** in `config/cron.yaml` as `HH:MM bin/time/nornir-job-<name>.sh`.
 3. **(Re)start** the scheduler: `bin/time/nornir-cron-start.sh`.
 4. **Prove idempotence**: run the job twice; the date guard must suppress a second dispatch the
    same day, and the job itself must be safe to re-run.
 
 ```bash
-chmod +x bin/nornir-job-example.sh
-bash -n bin/nornir-job-example.sh
-printf '05:00 bin/nornir-job-example.sh\n' >> config/cron.yaml
+chmod +x bin/time/nornir-job-example.sh
+bash -n bin/time/nornir-job-example.sh
+printf '05:00 bin/time/nornir-job-example.sh\n' >> config/cron.yaml
 bin/time/nornir-cron-start.sh --status
 bin/time/nornir-cron-start.sh
 ```
@@ -486,7 +486,7 @@ bin/time/nornir-cron-start.sh
 bin/time/nornir-cron-start.sh --status          # cron: running pid=… jobs=4
 
 # 2. All job scripts and the ledger parse
-for f in bin/nornir-job-*.sh bin/time/nornir-cron-start.sh bin/records/runes-append.sh; do
+for f in bin/time/nornir-job-*.sh bin/time/nornir-cron-start.sh bin/records/runes-append.sh; do
   bash -n "$f" && echo "OK $f"
 done
 
@@ -515,7 +515,7 @@ git -C $BROKK_UPSTREAM status --porcelain    # must not contain observer edits
 ## 8. Gotchas
 
 - **Stamps are written before the run.** A job that fails mid-run will not retry until the next
-  day. Make jobs safe to invoke by hand (`bash bin/nornir-job-*.sh`) for recovery.
+  day. Make jobs safe to invoke by hand (`bash bin/time/nornir-job-*.sh`) for recovery.
 - **PID reuse guard.** A stale `state/cron.pid` whose process is alive but whose cmdline lacks
   `cron run:` is treated as stopped; `--stop` removes it.
 - **`bash -lc` means login shell.** A job that depends on a non-login shell environment

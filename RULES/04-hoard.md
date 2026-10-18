@@ -292,9 +292,9 @@ The answer, and the law:
 refuses any that does not ship under the repo root.
 
 **What it found on 2026-10-10 (11 findings):** the operator's private home cron
-used pre-`bin/`-move paths (`bin/nornir-job-*.sh` where the scripts live at
+used pre-`bin/`-move paths (`bin/nornir-job-*.sh` where the scripts live at  # allow-superseded-path: this line RECORDS the move, it does not make it
 `bin/time/…`; `bin/eindri-handoff.sh` at `bin/agents/…`) — every job unfindable —
-and named `bin/well-vault-sync.sh`, which existed **only in the home**. Fixed: the
+and named `bin/well-vault-sync.sh`, which existed **only in the home**. Fixed: the  # allow-superseded-path: this line RECORDS the move
 well sync now ships as `bin/time/well-vault-sync.sh` (generic; it resolves the
 home through `bin/vault/hoard-lib.sh`, never guesses it), and the private cron was
 corrected to the moved paths.
