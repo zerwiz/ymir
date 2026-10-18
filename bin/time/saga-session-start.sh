@@ -191,6 +191,23 @@ else
   printf 'daily-log.sh not installed\n'
 fi
 
+section "SKILLS"
+# Sága's sight over the crafts. The index is the read-first artifact: it is
+# REFRESHED here so a session opens knowing every skill we hold, and never has
+# to search to find out what it has. The loop cannot go dead the way the old
+# hand-made inventory did — the generator walks the shelves, and the digest runs
+# the generator every session.
+if [ -x "$SCRIPT_DIR/../agents/skill-index.sh" ]; then
+  YMIR_HOME="${YMIR_HOME:-}" "$SCRIPT_DIR/../agents/skill-index.sh" >/dev/null 2>&1 || true
+  SKILL_IDX="$(YMIR_HOME="${YMIR_HOME:-}" "$SCRIPT_DIR/../agents/skill-index.sh" --print 2>/dev/null | head -1)"
+  SKILL_TOT="$(grep -m1 '^total:' "$SKILL_IDX" 2>/dev/null | sed 's/^total:[[:space:]]*//')"
+  printf 'index: %s (%s skills across 4 shelves)\n' "$SKILL_IDX" "${SKILL_TOT:-?}"
+  printf 'read the index, or ask: bin/agents/skill-find.sh "<words>" | --where <name> | --list\n'
+  printf 'a stale index fails loudly: bin/agents/skill-index.sh --check\n'
+else
+  printf 'skill-index: not installed\n'
+fi
+
 section "ASSET ROUTING"
 # Load the owning asset BEFORE editing a governed path. A code change not
 # reflected in its asset is an incomplete change. Router: galdr/SKILL.md.

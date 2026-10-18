@@ -216,7 +216,7 @@ disagree about which python owns the store.
 is `RULES/20-the-well-appends.md`; the ward is `bin/records/well-guard.sh`.
 
 ```
-well_law[4]{rule}:
+well_law[4]{rule,meaning}:
   "APPEND, never replace","an episode is written once and stays. No rebuild, no regenerate, no recover-over, no resync in place."
   "A SECOND TRUTH IS A LOSS","two wells fork into a UNION — every record from both is appended. `resync` on a well means append, never overwrite."
   "REPAIR ADDS, IT DOES NOT SUBTRACT","a corrupt store is preserved as found; recovery APPENDS beside the live one; what cannot be read is recorded as a known gap."
