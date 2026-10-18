@@ -211,12 +211,22 @@ elif cmd == "check":
             ("epoch", str(int(now.timestamp()))), ("rtc_utc_consistent", "yes")]
     synced = None
     try:
-        import subprocess
+        import re as _re, subprocess
+        # `timedatectl show` is the machine-readable form, but it can refuse without a
+        # seat in the logind session; the human form is the fallback, and both say the
+        # same thing. A clock door that reports "unknown" on a synced machine is a door
+        # nobody trusts.
         out = subprocess.run(["timedatectl", "show", "-p", "NTPSynchronized", "-p", "NTP"],
                              capture_output=True, text=True, timeout=5).stdout
         d = dict(l.split("=", 1) for l in out.strip().splitlines() if "=" in l)
-        synced = d.get("NTPSynchronized")
-        rows += [("ntp", d.get("NTP", "unknown")), ("ntp_synchronized", synced or "unknown")]
+        synced = d.get("NTPSynchronized"); ntp = d.get("NTP")
+        if synced is None:
+            human = subprocess.run(["timedatectl"], capture_output=True, text=True, timeout=5).stdout
+            m = _re.search(r"System clock synchronized:\s*(\w+)", human)
+            if m: synced = "yes" if m.group(1).lower() == "yes" else "no"
+            m2 = _re.search(r"NTP service:\s*(\w+)", human)
+            if m2: ntp = m2.group(1).lower()
+        rows += [("ntp", ntp or "unknown"), ("ntp_synchronized", synced or "unknown")]
     except Exception:
         rows += [("ntp", "unknown (timedatectl absent)")]
     # A clock that has drifted is worse than a clock that is merely wrong-looking:
