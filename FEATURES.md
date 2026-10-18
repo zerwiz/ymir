@@ -101,5 +101,6 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 ---
 
 | Security | **The ward — Vörðr** | `bin/ward/security-audit.sh` reads every door this machine opens (ports, ufw by source, the effective sshd policy, public tunnels and whether they ask for a login, secret file modes, whether anything watches the host) and fails on a HIGH or CRITICAL; `verdr.sh` walks the house, writes the dated report into the home and speaks on a HIGH; `harden.sh` writes every mend with its revert line, applies the safe ones, and **refuses** the firewall change without the operator's word | [docs/features/the-ward.md](docs/features/the-ward.md) |
+| Runtime | **The clock and the date** | `bin/time/sol.sh` (**Sól**) answers the time once — local with its offset, UTC, epoch, a sortable stamp, the zone and its source — and does `add`/`diff` correctly across daylight-saving, reporting elapsed and calendar distance separately. Wired into the session digest; `check` refuses to call an unsynchronised clock sane | [docs/features/the-clock.md](docs/features/the-clock.md) |
 
 *Append a row when a feature lands. Correct by appending, never by erasing.*
