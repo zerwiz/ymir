@@ -12,11 +12,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",414
+  "shell doors (bin/*.sh)",420
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",27
   "Pi extension tools",0
-  "generated","2026-10-12"
+  "generated","2026-10-18"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -52,6 +52,8 @@ capabilities[5]{surface,count}:
 | research-round.sh | research-round.sh — one reusable research errand: seat a skald or a sa | tested | keep (a human or a cron row must run it) |
 | rodd-operational-input.sh | rodd-operational-input.sh - canonical Rödd operational-input protocol. | tested+named | keep (a human or a cron row must run it) |
 | skill-find.sh | skill-find.sh — find the skill you need, without loading any of them. | tested+named | keep (a human or a cron row must run it) |
+| skill-index.sh | skill-index.sh — Sága's sight over the crafts: one index of EVERY ski | tested | keep (a human or a cron row must run it) |
+| skill-vendor-sync.sh | skill-vendor-sync.sh — keep imported third-party skill packs current. | tested | keep (a human or a cron row must run it) |
 | valhalla.sh | valhalla.sh — the process hall (Valhalla). List, inspect, revive, and  | tested+named | keep (a human or a cron row must run it) |
 | workspace-provision.sh | workspace-provision.sh — carve one workspace for the operator. Single  | tested+named | keep (a human or a cron row must run it) |
 | yt-transcript.sh | yt-transcript.sh — read a video: metadata, description, and transcript | tested+named | keep (a human or a cron row must run it) |
@@ -357,6 +359,7 @@ capabilities[5]{surface,count}:
 | pi-seat.sh | pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a  | tested+named | keep (a human or a cron row must run it) |
 | syn-watch-arm.sh | syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client. | tested+named | keep (a human or a cron row must run it) |
 | syn-watch.sh | syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, se | tested+named | keep (a human or a cron row must run it) |
+| place.sh | place.sh — team PLACES: a wall, not a permission (Rule 18; plan 77 Par | tested+named | keep (a human or a cron row must run it) |
 | daily-log.sh | daily-log.sh — the day's work, recorded where the contract says it liv | tested+named | keep (a human or a cron row must run it) |
 | journal-append.sh | journal-append.sh — write one idempotent entry to THIS machine's outbo | tested+named | keep (a human or a cron row must run it) |
 | journal-receive.sh | journal-receive.sh — the HEART folds the bodies' journals into one rec | tested+named | keep (a human or a cron row must run it) |
@@ -368,9 +371,12 @@ capabilities[5]{surface,count}:
 | runes-append.sh | runes-append.sh — the append-only Runes ledger, a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
 | runes-project.sh | runes-project.sh — the DAG projector, regenerates runes_audit.md from  | tested | keep (a human or a cron row must run it) |
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | tested+named | keep (a human or a cron row must run it) |
+| well-guard.sh | well-guard.sh — the WARD behind RULES/20-the-well-appends.md. | tested+named | keep (a human or a cron row must run it) |
 | workspace-rag.sh | workspace-rag.sh — memory over the realm workspaces (W0038). | tested+named | keep (a human or a cron row must run it) |
 | wyrd-db.sh | wyrd-db.sh — the database layer (W0040). Applies the platform schema a | tested+named | keep (a human or a cron row must run it) |
 | ymir-state.sh | ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runti | tested+named | keep (a human or a cron row must run it) |
+| gladsheim-ensure.sh | gladsheim-ensure.sh — seat the fleet room, whatever shape this machine | tested | keep (a human or a cron row must run it) |
+| gladsheim.sh | gladsheim.sh — the door to Gladsheim, the fleet room. | tested | keep (a human or a cron row must run it) |
 | herdr-ensure.sh | herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs. | tested+named | keep (a human or a cron row must run it) |
 | herdr-run.sh | herdr-run.sh — raise an Eindri in herdr, by the grain that fits the er | tested+named | keep (a human or a cron row must run it) |
 | app-build.sh | app-build — build the in-tree apps (plan 35). | tested | keep (a human or a cron row must run it) |
