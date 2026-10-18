@@ -54,7 +54,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot vault)
+SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot vault ward)
 
 s_floors()    { [ -x "$SCRIPT_DIR/../engine/prereq-ensure.sh" ] && "$SCRIPT_DIR/../engine/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/../engine/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -78,6 +78,11 @@ f_autoboot()  { [ -x "$SCRIPT_DIR/../fleet/fleet-ensure.sh" ] && "$SCRIPT_DIR/..
 # Hnitbjörg — the encrypted vault. The surface checks only that the tooling and
 # the vault directory stand; a sealed vault is HEALTHY, not a fault to mend.
 s_vault()     { [ -x "$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh" ] && "$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh" status >/dev/null 2>&1; }
+# The ward (Rule 24): Vörðr's audit says whether this machine has a door above the floor.
+# A green house with an open port is exactly the state that let a public tunnel answer
+# 200 with no login for ten days (2026-10-18).
+s_ward()      { [ -x "$SCRIPT_DIR/../ward/security-audit.sh" ] && "$SCRIPT_DIR/../ward/security-audit.sh" check --quiet >/dev/null 2>&1; }
+f_ward()      { "$SCRIPT_DIR/../ward/harden.sh" apply --ssh-keys-perm >/dev/null 2>&1; }
 f_vault()     { "$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh" ensure --install >/dev/null 2>&1; }
 # The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
 # workspace-hoisted, or the sibling package (bin/desktop/electron-lib.sh). ABSENT for
