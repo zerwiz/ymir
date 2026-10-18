@@ -13,15 +13,15 @@
 #   (b) that binary answers `--version`
 #   (c) --live, with a compositor present: a window of the surface's class is
 #       actually held by the compositor (proves the route end to end)
-#   (d) the class invariant ALWAYS: the one class in bin/seat/sessrumnir/app-lib.sh equals the
+#   (d) the class invariant ALWAYS: the one class in bin/desktop/app-lib.sh equals the
 #       surface's .desktop StartupWMClass, the generated Hyprland window rule,
 #       the installed launcher entry, and the slug the app's own source sets —
 #       a future rename cannot silently orphan a rule
 #
 # Usage:
-#   bin/seat/sessrumnir/desktop-verify.sh [--live]     # runtime + class checks for every surface
-#   bin/seat/sessrumnir/desktop-verify.sh --class-only # just the routing invariant (no binary)
-#   bin/seat/sessrumnir/desktop-verify.sh --version
+#   bin/desktop/desktop-verify.sh [--live]     # runtime + class checks for every surface
+#   bin/desktop/desktop-verify.sh --class-only # just the routing invariant (no binary)
+#   bin/desktop/desktop-verify.sh --version
 #
 # Exit: 0 every surface verifies; 1 any check failed (the failures are named).
 set -u
@@ -31,7 +31,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
-for _dc in "$SCRIPT_DIR/app-lib.sh" "$ROOT/bin/seat/sessrumnir/app-lib.sh"; do
+for _dc in "$SCRIPT_DIR/app-lib.sh" "$ROOT/bin/desktop/app-lib.sh"; do
   [ -r "$_dc" ] && { . "$_dc"; break; }
 done
 for _dc in "$SCRIPT_DIR/../../desktop/electron-lib.sh" "$ROOT/bin/desktop/electron-lib.sh"; do
@@ -50,7 +50,7 @@ for a in "$@"; do
   case "$a" in
     --live) LIVE=1 ;;
     --class-only) CLASS_ONLY=1 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/seat/sessrumnir/desktop-verify.sh [--live|--class-only]\n' "$a" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/desktop/desktop-verify.sh [--live|--class-only]\n' "$a" >&2; exit 2 ;;
   esac
 done
 

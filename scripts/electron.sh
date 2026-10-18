@@ -30,10 +30,10 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # below, once hoard-lib has resolved it. Never mkdir "$ROOT/state" here — that is
 # the drift the plan's purity row names.
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
+# npm install — both shapes, one resolver (bin/desktop/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/desktop/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac

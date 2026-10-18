@@ -32,7 +32,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 # app-lib.sh's app_dir prefers YMIR_ROOT_DIR over its own location: a surface
-# resolved from bin/seat/sessrumnir/ would otherwise read _apd_root=bin/seat and
+# resolved from bin/desktop/ would otherwise read _apd_root=bin/seat and
 # never find apps/. Export the walked root once, here.
 export YMIR_ROOT_DIR="$ROOT"
 . "$SCRIPT_DIR/../engine/autoboot-lib.sh"
@@ -101,7 +101,7 @@ SMIDJA_PORT="${SMIDJA_VIZ_API_PORT:-8437}"
 say() { printf '%s\n' "$*"; }
 
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
-  for _fec in "$SCRIPT_DIR/../seat/sessrumnir/app-lib.sh" "$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/seat/sessrumnir/app-lib.sh"; do
+  for _fec in "$SCRIPT_DIR/../desktop/app-lib.sh" "$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/desktop/app-lib.sh"; do
     [ -r "$_fec" ] && { . "$_fec"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _fec

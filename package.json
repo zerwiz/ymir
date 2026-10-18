@@ -94,7 +94,7 @@
   "scripts": {
     "test": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
     "compliance": "bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh",
-    "prepack": "bin/seat/sessrumnir/app-build.sh",
+    "prepack": "bin/desktop/app-build.sh",
     "postinstall": "bash bin/fleet/fleet-deploy.sh || true"
   },
   "dependencies": {

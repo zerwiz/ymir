@@ -169,7 +169,7 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
   behind — app-local, the nearest ancestor hoist (workspace root), the sibling
   package — and every guard returns *failure* when nothing resolves. The
   first-run install is workspace-aware (a member's local `node_modules` would
-  be reconciled away). `bin/seat/sessrumnir/desktop-verify.sh` proves each surface runs
+  be reconciled away). `bin/desktop/desktop-verify.sh` proves each surface runs
   (`--version`) and is routed right: the class invariant — `app_class` ==
   `.desktop` StartupWMClass == window rule == the app's own slug.
   `bin/host/graphics-lib.sh` classifies the DRM devices and decides the GPU policy

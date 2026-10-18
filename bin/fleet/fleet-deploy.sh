@@ -88,7 +88,7 @@ if [ "${YMIR_SKIP_DESKTOP:-0}" != 1 ] && [ -d "$HOME/.local/share/applications" 
     printf 'fleet-deploy: would refresh desktop entries (design-icon install) + placement\n'
   else
     [ -x "$ROOT/bin/desktop/design-icon.sh" ] && bash "$ROOT/bin/desktop/design-icon.sh" install >/dev/null 2>&1 || true
-    [ -x "$ROOT/bin/seat/sessrumnir/desktop-place.sh" ] && bash "$ROOT/bin/seat/sessrumnir/desktop-place.sh" apply >/dev/null 2>&1 || true
+    [ -x "$ROOT/bin/desktop/desktop-place.sh" ] && bash "$ROOT/bin/desktop/desktop-place.sh" apply >/dev/null 2>&1 || true
     printf 'fleet-deploy: desktop entries refreshed\n'
   fi
 fi

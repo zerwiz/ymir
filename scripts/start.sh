@@ -57,10 +57,10 @@ if [ -z "${YMIR_STYLE_LOADED:-}" ] && [ -r "$ROOT/bin/desktop/ymir-style.sh" ]; 
   . "$ROOT/bin/desktop/ymir-style.sh"; YMIR_STYLE_LOADED=1; style_init
 fi
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
+# npm install — both shapes, one resolver (bin/desktop/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/seat/sessrumnir/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(dirname "$_ya")/bin/desktop/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -146,16 +146,16 @@ if [[ ! -d "$APP/node_modules" ]]; then
 echo "Installing dependencies…"
   (# Sessrúmnir — the seat-hall. Its own Electron app (not a browser surface), so it
 # rises here rather than with the SPA: four surfaces, one raise.
-if [ -x "$ROOT/bin/desktop/sessrumnir.sh" ]; then
+if [ -x "$ROOT/bin/desktop/sessrumnir-launch.sh" ]; then
   if app_dir sessrumnir APP_SESSRUMNIR; then
-    if "$ROOT/bin/desktop/sessrumnir.sh" start >/dev/null 2>&1; then
+    if "$ROOT/bin/desktop/sessrumnir-launch.sh" start >/dev/null 2>&1; then
       echo "Sessrúmnir — the seat-hall raised → (its own window)"
     else
-      echo "Sessrúmnir — the seat-hall did not rise (run: bin/desktop/sessrumnir.sh start)" >&2
+      echo "Sessrúmnir — the seat-hall did not rise (run: bin/desktop/sessrumnir-launch.sh start)" >&2
     fi
   else
     echo "Sessrúmnir — NOT raised: the sessrumnir surface is missing from this install" >&2
-    echo "help: npm i -g @zerwiz/ymir (it is a dependency), or from a clone: bin/seat/sessrumnir/sessrumnir-ensure.sh install" >&2
+    echo "help: npm i -g @zerwiz/ymir (it is a dependency), or from a clone: bin/desktop/sessrumnir-ensure.sh install" >&2
   fi
 fi
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).
-# Ensures deps + build are present (bin/seat/sessrumnir/sessrumnir-ensure.sh), then raises the
+# Ensures deps + build are present (bin/desktop/sessrumnir-ensure.sh), then raises the
 # Electron window via the app's own launcher. Galdr-style TOON.
 #
 # Usage:
@@ -16,10 +16,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 # Where an app lives: apps/<surface> in a clone, node_modules/@zerwiz/<pkg> in an
-# npm install — both shapes, one resolver (bin/seat/sessrumnir/app-lib.sh).
+# npm install — both shapes, one resolver (bin/desktop/app-lib.sh).
 if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   _ya="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yac in "$_ya/app-lib.sh" "$(CDPATH='' cd "$_ya" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/seat/sessrumnir/app-lib.sh"; do
+  for _yac in "$_ya/app-lib.sh" "$(CDPATH='' cd "$_ya" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)/bin/desktop/app-lib.sh"; do
     [ -r "$_yac" ] && { . "$_yac"; YMIR_APP_LIB_LOADED=1; break; }
   done
   unset _ya _yac
@@ -101,8 +101,8 @@ if is_running; then
   exit 0
 fi
 
-"$SCRIPT_DIR/../seat/sessrumnir/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1 || {
-  printf 'error: Sessrúmnir is not ready — run bin/seat/sessrumnir/sessrumnir-ensure.sh install\n' >&2
+"$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1 || {
+  printf 'error: Sessrúmnir is not ready — run bin/desktop/sessrumnir-ensure.sh install\n' >&2
   exit 1
 }
 

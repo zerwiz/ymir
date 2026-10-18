@@ -116,8 +116,8 @@ fi
 if [ "$CHECK" = 1 ]; then
   add desktops OK "would place each app on its own numbered desktop + install the entries"
 else
-  if [ -x "$SCRIPT_DIR/../seat/sessrumnir/desktop-place.sh" ]; then
-    if "$SCRIPT_DIR/../seat/sessrumnir/desktop-place.sh" apply >/dev/null 2>&1; then
+  if [ -x "$SCRIPT_DIR/../desktop/desktop-place.sh" ]; then
+    if "$SCRIPT_DIR/../desktop/desktop-place.sh" apply >/dev/null 2>&1; then
       n=$(ls "$HOME/.local/share/applications"/ymir-*.desktop 2>/dev/null | wc -l | tr -d ' ')
       add desktops OK "numbered desktops placed; $n launcher entr(y|ies) installed"
     else
@@ -129,8 +129,8 @@ else
 fi
 
 # ── 5. the editor's own desktop ──────────────────────────────────────────────
-if [ -x "$SCRIPT_DIR/../seat/sessrumnir/editor-place.sh" ]; then
-  run editor "the editor opens on its own desktop" "$SCRIPT_DIR/../seat/sessrumnir/editor-place.sh" apply
+if [ -x "$SCRIPT_DIR/../desktop/editor-place.sh" ]; then
+  run editor "the editor opens on its own desktop" "$SCRIPT_DIR/../desktop/editor-place.sh" apply
 else
   add editor SKIP "no editor-place.sh"
 fi

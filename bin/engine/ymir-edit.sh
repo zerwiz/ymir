@@ -3,7 +3,7 @@
 #
 # Why a wrapper: an editor window that lands on the desktop you are working on
 # steals the place you were reading. Ymir's law for its own windows is "own
-# numbered desktop, preferring an empty one" (bin/seat/sessrumnir/desktop-place.sh), and the
+# numbered desktop, preferring an empty one" (bin/desktop/desktop-place.sh), and the
 # editor deserves the same treatment — open the file, then move that window off
 # to a free desktop so the work you were doing stays where it was.
 #
@@ -15,7 +15,16 @@
 #   bin/engine/ymir-edit.sh <path>          # open, then move to a free desktop
 #   bin/engine/ymir-edit.sh --desktop <n> <path>
 #   bin/engine/ymir-edit.sh --here <path>   # open on the current desktop (no move)
+#   bin/engine/ymir-edit.sh --role reading <path>   # open on a DISPLAY, by role
+#   bin/engine/ymir-edit.sh --role code --fullscreen <path>
+#   bin/engine/ymir-edit.sh --new <path>    # force a second window for the same file
 #   bin/engine/ymir-edit.sh --version
+#
+# Roles come from bin/desktop/display-lib.sh: `reading` is the largest screen,
+# `code` / `primary` the focused one, and a monitor name passes through. The
+# dispatcher dialect is PROBED (Hyprland 0.56 speaks Lua, earlier ones the classic
+# strings) — the old comma-form move failed silently here, which is why windows did
+# not land where they were asked to.
 #
 # Env:
 #   YMIR_EDITOR          the real editor (default: code, else nvim, else vi)
@@ -27,16 +36,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
+. "$ROOT/bin/desktop/display-lib.sh" 2>/dev/null || true
+
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 
 MODE="${YMIR_EDITOR_DESKTOP:-free}"
-case "${1-}" in
-  --desktop) MODE=${2-}; shift 2 ;;
-  --here) MODE=here; shift ;;
-esac
+ROLE="" NEW=0 FULL=0 DRY=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --desktop) MODE=${2-}; shift 2 ;;
+    --here)    MODE=here; shift ;;
+    --role)    ROLE=${2:?--role needs a value}; shift 2 ;;
+    --new)     NEW=1; shift ;;
+    --fullscreen) FULL=1; shift ;;
+    --dry-run) DRY=1; shift ;;
+    *) break ;;
+  esac
+done
 TARGET="${1:-}"
 
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -54,13 +73,13 @@ pick_editor() {
 # Is this editor a GUI one (safe to launch detached and move)?
 is_gui() {
   case "$(basename "$1")" in
-    code|code-insiders|codium|cursor|windsurf|subl|sublime_text|mate|atom|gedit|kate|zed) return 0 ;;
+    code|code-insiders|codium|cursor|windsurf|subl|sublime_text|mate|atom|gedit|kate|zed|marktext|obsidian|typora|ghostwriter|logseq) return 0 ;;
   esac
   return 1
 }
 
 # An empty numbered desktop, preferring the lowest free one. Mirrors
-# bin/seat/sessrumnir/desktop-place.sh's rule: on Omarchy the numbered desktops are the screens.
+# bin/desktop/desktop-place.sh's rule: on Omarchy the numbered desktops are the screens.
 free_desktop() {
   command -v hyprctl >/dev/null 2>&1 || return 1
   hyprctl workspaces -j 2>/dev/null | python3 -c '
@@ -90,6 +109,8 @@ move_window_to() {  # <desktop> <class-regex>
 
 EDITOR_BIN="$(pick_editor)"
 EDITOR_BASE="$(basename "$EDITOR_BIN")"
+# The window class Hyprland reports — from the display library, one place knows it.
+CLASS="$(editor_class "$EDITOR_BIN")"
 
 if ! is_gui "$EDITOR_BIN"; then
   # A terminal editor cannot be moved to another desktop: it lives in this
@@ -97,50 +118,69 @@ if ! is_gui "$EDITOR_BIN"; then
   exec "$EDITOR_BIN" "$TARGET"
 fi
 
-# Where should it land?
-DEST=""
-case "$MODE" in
-  here) DEST="" ;;
-  free) DEST="$(free_desktop)" ;;
-  ''|*[!0-9]*) DEST="$(free_desktop)" ;;
-  *) DEST="$MODE" ;;
-esac
-
-# Launch detached — the GUI editor must not block the caller.
-"$EDITOR_BIN" "$TARGET" >/dev/null 2>&1 < /dev/null &
-disown 2>/dev/null || true
-
-if [ -z "$DEST" ]; then
-  printf 'ymir-edit[1]{editor,path,desktop}:\n  "%s","%s","current"\n' "$EDITOR_BASE" "$TARGET"
+if [ "$DRY" = 1 ]; then
+  if [ -n "$ROLE" ]; then
+    printf 'ymir-edit-plan[1]{editor,path,role,monitor,dialect}:\n  "%s","%s","%s","%s","%s"\n' \
+      "$EDITOR_BASE" "$TARGET" "$ROLE" "$(display_name_for "$ROLE")" "$(display_dialect)"
+  else
+    printf 'ymir-edit-plan[1]{editor,path,desktop,dialect}:\n  "%s","%s","%s","%s"\n' \
+      "$EDITOR_BASE" "$TARGET" "$MODE" "$(display_dialect)"
+  fi
   exit 0
 fi
 
-# Give the window a moment to map, then move it to its own desktop. The class
-# for VS Code is `code`; for others use the binary's own name.
-case "$EDITOR_BASE" in
-  code|code-insiders|codium) CLASS="code" ;;
-  cursor) CLASS="cursor" ;;
-  zed) CLASS="dev.zed.Zed" ;;
-  subl|sublime_text) CLASS="sublime_text" ;;
-  *) CLASS="$EDITOR_BASE" ;;
-esac
+# One window per file: focus the one already open unless --new was given.
+BASE="$(basename "$TARGET")"
+ESC="$(printf '%s' "$BASE" | sed 's/[][\.*^$/]/\\&/g')"
+REUSED=0
+ADDR=""
+if [ "$NEW" = 0 ] && command -v "${YMIR_HYPRCTL:-hyprctl}" >/dev/null 2>&1; then
+  ADDR="$(window_find "$CLASS" "$ESC")"
+  [ -n "$ADDR" ] && REUSED=1
+fi
 
-moved=no
-for _ in $(seq 1 20); do
-  sleep 0.25
-  if hyprctl clients -j 2>/dev/null | python3 -c '
-import json,sys
-cls=sys.argv[1]
-try:
-    cs=json.load(sys.stdin)
-except Exception:
-    sys.exit(1)
-sys.exit(0 if any(cls.lower() in (c.get("class") or "").lower() for c in cs) else 1)
-' "$CLASS" 2>/dev/null; then
-    move_window_to "$DEST" "^($CLASS)\$" && moved=yes
-    break
+if [ "$REUSED" = 0 ]; then
+  # Launch detached — the GUI editor must not block the caller.
+  "$EDITOR_BIN" "$TARGET" >/dev/null 2>&1 < /dev/null &
+  disown 2>/dev/null || true
+  # Give the window a moment to map.
+  for _ in $(seq 1 40); do
+    sleep 0.25
+    ADDR="$(window_find "$CLASS" "$ESC")"
+    [ -n "$ADDR" ] && break
+  done
+fi
+
+# Where should it land? A ROLE names a display; otherwise a numbered desktop.
+DEST=""
+if [ -z "$ROLE" ]; then
+  case "$MODE" in
+    here) DEST="" ;;
+    free) DEST="$(free_desktop)" ;;
+    ''|*[!0-9]*) DEST="$(free_desktop)" ;;
+    *) DEST="$MODE" ;;
+  esac
+fi
+
+MON=""; PLACED="no"
+if [ "$ROLE" != "" ]; then
+  MON="$(display_name_for "$ROLE")"
+  if [ -n "$ADDR" ] && [ -n "$MON" ]; then
+    window_to_monitor "$ADDR" "$MON" && PLACED="yes"
+    window_focus "$ADDR" || true
+    [ "$FULL" = 1 ] && window_fullscreen "$ADDR" 1 || true
   fi
-done
+  printf 'ymir-edit[1]{editor,path,role,monitor,reused,placed}:\n  "%s","%s","%s","%s","%s","%s"\n' \
+    "$EDITOR_BASE" "$TARGET" "$ROLE" "${MON:--}" "$REUSED" "$PLACED"
+  exit 0
+fi
 
-printf 'ymir-edit[1]{editor,path,desktop,moved}:\n  "%s","%s","%s","%s"\n' \
-  "$EDITOR_BASE" "$TARGET" "$DEST" "$moved"
+if [ -z "$DEST" ]; then
+  printf 'ymir-edit[1]{editor,path,desktop,reused}:\n  "%s","%s","current","%s"\n' "$EDITOR_BASE" "$TARGET" "$REUSED"
+  exit 0
+fi
+
+[ -n "$ADDR" ] && window_to_desktop "$ADDR" "$DEST" >/dev/null 2>&1 && PLACED="yes"
+
+printf 'ymir-edit[1]{editor,path,desktop,reused,moved}:\n  "%s","%s","%s","%s","%s"\n' \
+  "$EDITOR_BASE" "$TARGET" "$DEST" "$REUSED" "$PLACED"

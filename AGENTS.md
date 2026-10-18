@@ -436,6 +436,7 @@ rules[9]{file,governs}:
   "RULES/13-pi-extensions.md","Pi extensions: one home per extension, pi's layout (a directory needs index.ts), and valknut-load --check as the gate — two load paths seats nobody"
   "RULES/24-the-ward.md","the ward: a door is named or closed; nothing public without a credential; keys not passwords; the audit is a cron"
   "RULES/20-the-well-appends.md","the well appends: an episode is never replaced, rebuilt-over or lost to a restore; the count never falls"
+  "RULES/23-no-code-in-app-folders.md","an application lives in apps/; bin/ holds function-named machine tools — never an application's name in a path"
 ```
 
 A change that contradicts a rule must change the rule first (append-only). The
