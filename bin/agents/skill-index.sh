@@ -45,6 +45,17 @@ HOME_ROOT="${YMIR_HOME:-$ROOT}"
 
 SHIPS="$ROOT/.agents/skills"
 LOCALS="$ROOT/.agents/skills-local"
+# The ships/local shelves belong to the CANONICAL checkout, not to whichever
+# worktree happens to run this. The index is ONE shared file in the home; if each
+# Yggdrasil worktree walked its own shipped skills and rewrote it, two worktrees
+# would fight over it and a plain --check from one would call every canonical
+# skill INCOMPLETE (found 2026-10-18). Resolve the common dir's parent instead.
+_gd="$(git -C "$ROOT" rev-parse --git-common-dir 2>/dev/null || true)"
+if [ -n "$_gd" ]; then
+  case "$_gd" in /*) ;; *) _gd="$ROOT/$_gd" ;; esac
+  _canon="$(cd "$(dirname "$_gd")" 2>/dev/null && pwd)" || _canon=""
+  [ -n "$_canon" ] && [ -d "$_canon/.agents/skills" ] && { SHIPS="$_canon/.agents/skills"; LOCALS="$_canon/.agents/skills-local"; }
+fi
 HOMESKILLS="$HOME_ROOT/.agents/skills"
 PISKILLS="$HOME/.pi/agent/skills"
 
