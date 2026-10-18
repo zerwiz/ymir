@@ -603,6 +603,28 @@ step_hermes() {
 # (snotra-detect), which the fleet step raises by CAPABILITY on any seat with a
 # microphone: a call seat owes the ear's watch, a headless heart reports a
 # clean skip.
+# ── 3b1c. the voice engines: whisper (STT) + piper (TTS) ──────────────────────
+# Voice is a machine property: the engines and models live on the host / in the
+# hoard. This step ADOPTS what stands and installs what is missing; the whisper
+# half is owned by bin/time/snotra/snotra-ensure.sh (one road), so voice-ensure
+# delegates it rather than growing a second whisper installer.
+step_voice() {
+  [ "$SKIP_ENGINES" = 1 ] && { add voice SKIP "--skip-engines"; return; }
+  [ "${YMIR_SKIP_VOICE:-0}" = 1 ] && { add voice SKIP "YMIR_SKIP_VOICE=1"; return; }
+  local ve="$SCRIPT_DIR/../voice/voice-ensure.sh"
+  if [ ! -x "$ve" ]; then add voice SKIP "no bin/voice/voice-ensure.sh"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if "$ve" status >/dev/null 2>&1; then add voice OK "whisper (STT) + piper (TTS) present (adopted)"
+    else add voice DO "would install whisper.cpp (STT) + piper (TTS) + models"; fi
+    return
+  fi
+  if "$ve" ensure --install >/dev/null 2>&1; then
+    add voice OK "whisper (STT) + piper (TTS) present"
+  else
+    add voice WARN "voice engine or model missing (run bin/voice/voice-ensure.sh install)"
+  fi
+}
+
 step_snotra() {
   role_gate snotra heart,dev "the meeting ear" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add snotra SKIP "--skip-engines"; return; }
@@ -1449,6 +1471,7 @@ run_step step_models "models"
 run_step step_local_model "the local model"
 run_step step_hermes "hermes"
 run_step step_snotra "the meeting ear"
+run_step step_voice "the voice engines"
 run_step step_a2a "the A2A mesh"
 run_step step_room "the room"
 run_step step_sessrumnir "the seat"

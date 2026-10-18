@@ -258,6 +258,15 @@ engines_phase() {
     emit 4 engines local-model BLOCKED "bin/model/llama-ensure.sh is absent"
   fi
 
+  # The voice engines: whisper (STT) + piper (TTS). Adopt-first, in the voice shelf.
+  if [ -x "$ROOT/bin/voice/voice-ensure.sh" ]; then
+    if "$ROOT/bin/voice/voice-ensure.sh" status >/dev/null 2>&1; then
+      emit 4 engines voice SKIP "whisper (STT) + piper (TTS) present (adopted)"
+    else
+      emit 4 engines voice DO "install whisper.cpp (STT) + piper (TTS) and their models"
+    fi
+  fi
+
   if have docker || have podman; then
     local img
     if have docker && docker image inspect utgard-runner:latest >/dev/null 2>&1; then
