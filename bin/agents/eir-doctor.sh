@@ -54,7 +54,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes snotra sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot vault ward)
+SURFACES=(floors herdr a2abridge hermes snotra voice sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot vault ward)
 
 s_floors()    { [ -x "$SCRIPT_DIR/../engine/prereq-ensure.sh" ] && "$SCRIPT_DIR/../engine/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/../engine/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -68,6 +68,9 @@ f_hermes()    { "$SCRIPT_DIR/../engine/hermes-ensure.sh" ensure --install >/dev/
 # the fleet surface below. A seat that captures but transcribes elsewhere still
 # passes (voxtype counts as an engine).
 s_snotra()    { [ -x "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ] && "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" status >/dev/null 2>&1; }
+# The voice engines (whisper STT + piper TTS): a machine property, adopted or installed.
+s_voice()     { [ -x "$SCRIPT_DIR/../voice/voice-ensure.sh" ] && "$SCRIPT_DIR/../voice/voice-ensure.sh" status >/dev/null 2>&1; }
+f_voice()     { "$SCRIPT_DIR/../voice/voice-ensure.sh" ensure --install >/dev/null 2>&1; }
 f_snotra()    { "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
