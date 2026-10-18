@@ -43,12 +43,16 @@ case "${1-}" in
 #                     before anything else is argued about.
 #   2. branch-guard — never push a protected branch.
 #   3. fixes-guard  — every push carries a fix note for what it changed.
+#   4. branch-current — the branch is based on CURRENT main before it is offered
+#                     (a branch six commits behind main arrives with conflicts and
+#                     stale rule numbers; caught 2026-10-18 by asking "did you pull")
 set -u
 refs="\$(mktemp)"; trap 'rm -f "\$refs"' EXIT
 cat >"\$refs"
 "$ROOT/bin/gates/guards.sh" || exit 1
 "$ROOT/bin/gates/guards/branch-guard.sh" <"\$refs" || exit 1
 "$ROOT/bin/gates/guards/fixes-guard.sh" <"\$refs" || exit 1
+"$ROOT/bin/gates/branch-current.sh" check || exit 1
 EOF
     chmod +x "$H"
     printf 'fixes-guard[1]{gate,result}:\n  "hook","installed at %s"\n' "${H#"$ROOT"/}"
