@@ -447,9 +447,10 @@ bin/host/host-sense.sh capability tray     # yes | partial | no — for scriptin
 ```
 
 ```
-hosts[5]{host,how_you_get_it,what_it_is}:
+hosts[6]{host,how_you_get_it,what_it_is}:
   "Omarchy","bin/engine/ymir-install.sh","the first-class layer: numbered desktops, launcher entries, the post-update hook"
   "other Linux (Ubuntu · Fedora · Debian · Arch)","bin/engine/ymir-install.sh","the portable core; the Omarchy layer skips cleanly, never faked"
+  "Steam Deck (SteamOS)","bin/engine/ymir-install.sh --role dev","Arch-based and immutable — a full desk install on the gaming handheld (verified 2026-10-19); see the SteamOS section below"
   "Windows","Ymir-Setup.exe — or bin/bootstrap-windows.ps1","Ubuntu on WSL2 is the host; Ymir installs inside it"
   "macOS","Ymir Installer.command (or the .pkg) — or bin/host/bootstrap-macos.sh","Ubuntu in a Lima VM is the host; Ymir installs inside it"
   "Android (Termux)","curl … | bash — the command detects Termux","the phone, role `hand`: pi + its extensions, the hoard, and the heart's doors — no record, no rail, no bun"
@@ -508,6 +509,32 @@ The heart's gateway and well are **localhost-only**, so a hand reaches them over
 SSH tunnel — never a LAN IP — and pi reads the doors from `~/.pi/agent/mcp.json`. The
 full path, the MCP config, and the source-build opt-in are in
 [`docs/installations/termux.md`](docs/installations/termux.md).
+
+### SteamOS / Steam Deck — a full seat on the handheld
+
+A Steam Deck is an Arch machine with a console's manners, and Ymir treats it as a
+**`dev` seat**: the whole desk install — Hlidskjalf, the smithy, the bridges, the
+well, the sandbox — verified end to end on SteamOS 3 (2026-10-19).
+
+```bash
+bash bin/engine/ymir-install.sh --role dev --yes
+```
+
+What SteamOS changes, and how each is handled:
+
+| SteamOS fact | What it breaks | What you do |
+|---|---|---|
+| the rootfs is immutable | `pacman -S` can stop at a read-only filesystem | the installer needs **no** system packages; anything it wants, it reports |
+| the keyring is not populated | `pacman -S tailscale age …` fails, "invalid or corrupted package" | `sudo pacman-key --populate archlinux holo` |
+| tools are user-local | node (nvm), python (uv), bun, `gh` live under `~/.local` and `~/.nvm`, and the **user units** do not see them (`status=127`) | give the units the user's PATH — `%h/.local/bin` and the node bin dir, not just `/usr/bin` |
+| container DNS | `resolv.conf` → `127.0.0.53` (the resolved stub) is unreachable inside a rootless build — image builds **hang** | `~/.config/containers/containers.conf`: `dns_servers = ["<lan-dns>", "1.1.1.1"]` |
+| no `hostname` binary | `hostname -s` is a missing command | the SteamOS spelling is `hostnamectl --static` |
+| `extra` has no `whisper-cpp` | the meeting ear (`snotra`) cannot find an engine, and there is no build toolchain by default | leave the ear off, or build whisper.cpp (needs `base-devel` + `cmake`) |
+| the gaming session | gamescope owns the panel; the desktop session is KDE | the Omarchy layer SKIPs entirely — the portable core runs unchanged |
+
+The harness side is the same as every other seat: `pi` plus its packages
+(`bin/pi/pi-ensure.sh`), the tree's extensions loaded from `$YMIR_ROOT`, and the
+fleet's model rail.
 
 ---
 
