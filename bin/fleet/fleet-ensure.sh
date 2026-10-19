@@ -160,8 +160,17 @@ materialize_tools() {
   # operator's home through it, and a seat that has the command without the
   # resolver dies on an unbound YMIR_HOME the moment it runs outside a shell
   # that already knew the home.
-  for f in hoard-lib.sh snotra-capture.sh snotra-transcribe.sh snotra-detect.sh snotra-iscall.sh snotra-mine.sh snotra-ensure.sh runes-append.sh; do
-    [ -f "$ROOT/bin/$f" ] && cp -f "$ROOT/bin/$f" "$DST/$f" 2>/dev/null && chmod +x "$DST/$f" 2>/dev/null || true
+  # They live on their own shelves since the 2026-09-20 reorganization — resolve
+  # each where it is (the flat `bin/<name>.sh` path predates the move, so every
+  # one of them silently failed to deploy: no copies, no error).
+  for rel in \
+    "time/snotra/snotra-capture.sh" "time/snotra/snotra-transcribe.sh" \
+    "time/snotra/snotra-detect.sh" "time/snotra/snotra-iscall.sh" \
+    "time/snotra/snotra-mine.sh" "time/snotra/snotra-ensure.sh" \
+    "time/snotra/snotra-live.sh" \
+    "vault/hoard-lib.sh" "records/runes-append.sh"; do
+    f="${rel##*/}"
+    [ -f "$ROOT/bin/$rel" ] && cp -f "$ROOT/bin/$rel" "$DST/$f" 2>/dev/null && chmod +x "$DST/$f" 2>/dev/null || true
   done
   # the skills mirror — the master .agents/skills tree, refreshed each ensure
   if [ -d "$ROOT/.agents/skills" ]; then
