@@ -89,14 +89,14 @@ status() {
   vx="$(find_voxtype || true)"
   printf 'snotra[1]{engine,model,voxtype,seat}:\n'
   if [ -n "$w" ] && [ -n "$m" ]; then
-    printf '  "%s","%s","%s","%s"\n' "$w" "$m" "${vx:-—}" "$(hostname -s 2>/dev/null || hostname)"
+    printf '  "%s","%s","%s","%s"\n' "$w" "$m" "${vx:-—}" "$(hostname -s 2>/dev/null || hostnamectl --static 2>/dev/null || printf seat)"
     return 0
   fi
   if [ -n "$vx" ] && [ -n "$m" ]; then
-    printf '  "voxtype","%s","%s","%s"\n' "$m" "$vx" "$(hostname -s 2>/dev/null || hostname)"
+    printf '  "voxtype","%s","%s","%s"\n' "$m" "$vx" "$(hostname -s 2>/dev/null || hostnamectl --static 2>/dev/null || printf seat)"
     return 0
   fi
-  printf '  "%s","%s","%s","%s"\n' "${w:-—}" "${m:-—}" "${vx:-—}" "$(hostname -s 2>/dev/null || hostname)"
+  printf '  "%s","%s","%s","%s"\n' "${w:-—}" "${m:-—}" "${vx:-—}" "$(hostname -s 2>/dev/null || hostnamectl --static 2>/dev/null || printf seat)"
   return 1
 }
 
