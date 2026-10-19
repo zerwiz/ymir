@@ -99,6 +99,12 @@ ex() {
 # yaml_escape <text> -> a double-quoted-safe YAML scalar body
 yaml_escape() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
+# _mtime <path> -> epoch seconds. GNU stat and BSD/macOS stat differ; PROBE, never
+# assume (Rule 25). Empty when neither works, so a check degrades instead of lying.
+_mtime() {
+  stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || true
+}
+
 # --- the generic walk -------------------------------------------------------
 # Every SKILL.md under a shelf, at any depth. No pack is known by name.
 walk() {
@@ -144,7 +150,7 @@ write_inventory() {
   total="$(printf '%s\n' "$rows" | grep -c . || true)"
   {
     printf '# Skills inventory — everything the Allfather'"'"'s world holds\n\n'
-    printf -- '- **Generated:** %s · **Owner:** Brokk · **Generator:** `bin/agents/skill-index.sh` · **Machine index:** `%s`\n' "$(date -Iseconds)" "$INDEX"
+    printf -- '- **Generated:** %s · **Owner:** Brokk · **Generator:** `bin/agents/skill-index.sh` · **Machine index:** `$YMIR_HOME/.agents/skills/skills.yaml`\n' "$(date -Iseconds)"
     printf -- '- **This file is regenerated, never hand-edited.** The machine reads `skills.yaml`; this page is its human twin.\n'
     printf -- '- **Read the index first.** `bin/agents/skill-find.sh` reads it before grepping; a skill absent from it is a skill nobody finds.\n\n'
     printf -- '**Totals: %s skills across 4 shelves.**\n\n' "$total"
@@ -174,7 +180,10 @@ write_index() {
   {
     printf '# Sága'"'"'s skill index — GENERATED, do not edit by hand.\n'
     printf '# Generator: bin/agents/skill-index.sh   Read-first artifact for agents.\n'
-    printf 'version: 1\n'
+    printf '# `path` is RELATIVE to the shelf root named by `shelf`, so the index is\n'
+    printf '# portable: the reader anchors it to ITS OWN machine, and no machine path is\n'
+    printf '# ever written here (Rule 25 — a path that exists on this box is not a path).\n'
+    printf 'version: 2\n'
     printf 'generated: "%s"\n' "$(date -Iseconds)"
     printf 'total: %s\n' "$total"
     printf 'shelves:\n'
@@ -188,7 +197,7 @@ write_index() {
       printf '  - name: "%s"\n' "$(yaml_escape "$name")"
       printf '    shelf: %s\n' "$sid"
       printf '    pack: "%s"\n' "$(yaml_escape "$pack")"
-      printf '    path: "%s"\n' "$(yaml_escape "$path")"
+      printf '    path: "%s"\n' "$(yaml_escape "${path#"$root"/}")"
       printf '    description: "%s"\n' "$(yaml_escape "$desc")"
     done
   } > "$INDEX"
@@ -204,8 +213,8 @@ case "${1:-}" in
       printf 'STALE: no index at %s — run bin/agents/skill-index.sh\n' "$INDEX" >&2
       exit 1
     fi
-    newest="$(collect | cut -f5 | while read -r p; do [ -f "$p" ] && stat -c %Y "$p"; done | sort -n | tail -1)"
-    idx_age="$(stat -c %Y "$INDEX")"
+    newest="$(collect | cut -f5 | while read -r p; do [ -f "$p" ] && _mtime "$p"; done | sort -n | tail -1)"
+    idx_age="$(_mtime "$INDEX")"
     if [ -n "$newest" ] && [ "$newest" -gt "$idx_age" ]; then
       printf 'STALE: a SKILL.md is newer than the index (%s) — run bin/agents/skill-index.sh\n' "$INDEX" >&2
       fail=1
@@ -213,7 +222,8 @@ case "${1:-}" in
     missing=0
     while IFS=$'\t' read -r _sid _root _pack name path _desc; do
       [ -n "$path" ] || continue
-      grep -q -- "path: \"$path\"" "$INDEX" 2>/dev/null || { [ "$missing" -eq 0 ] && printf 'INCOMPLETE: skills present but absent from the index:\n' >&2; printf '  %s\n' "$path" >&2; missing=$((missing+1)); fail=1; }
+      rel="${path#"$_root"/}"
+      grep -q -- "path: \"$rel\"" "$INDEX" 2>/dev/null || { [ "$missing" -eq 0 ] && printf 'INCOMPLETE: skills present but absent from the index:\n' >&2; printf '  %s\n' "$rel" >&2; missing=$((missing+1)); fail=1; }
     done < <(collect)
     [ "$fail" = 0 ] && printf 'index fresh: %s skills\n' "$(grep -c '^  - name:' "$INDEX")"
     exit "$fail"

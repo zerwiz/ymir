@@ -71,6 +71,13 @@ ward_tools[3]{tool,role,changes anything?}:
 They are composed into **the `ward` surface of Eir** (`bin/agents/eir-doctor.sh`), so a
 machine with an open door is never reported green.
 
+**Every check probes, and a check that does not apply reports SKIP and exits 0
+(Rule 25).** The ward is not a Linux-only instrument: `ufw`, `sshd`, `systemd`,
+`ss` and `/etc/…` are *this* platform's doors, discovered at run time — a macOS or
+Android seat has its own, and a surface it does not have is a clean skip, never a
+failure and never a pretended pass. The same holds for the index and the finder:
+their paths are shelf-relative and anchored to whichever machine reads them.
+
 The ward composes what Ymir already had, rather than replacing it:
 
 | existing part | what it gives the ward |
