@@ -91,14 +91,17 @@ index_tsv() {
                         d=desc; gsub(/\\"/,"\"",d); gsub(/\\\\/,"\\",d)
                         printf "%s\t%s\t%s\t%s\t%s\n", shelf, pack, name, path, d; next }
   ' "$INDEX" |
-  while IFS=$'\t' read -r shelf pack name path desc; do
+  # `path` is RELATIVE to the shelf root; anchor it to THIS machine (Rule 25).
+  # An older/absolute path is passed through unchanged, so a v1 index still reads.
+  while IFS=$'\t' read -r shelf pack name rel desc; do
     case "$shelf" in
-      ships)   label="ships" ;;
-      local)   label="LOCAL — this machine only" ;;
-      home)    label="home — your own craft" ;;
-      pi)      label="yours" ;;
-      *)       label="$shelf" ;;
+      ships) label="ships";        root="$SHIPS" ;;
+      local) label="LOCAL — this machine only"; root="$LOCALS" ;;
+      home)  label="home — your own craft";     root="$HOMESKILLS" ;;
+      pi)    label="yours";        root="$PISKILLS" ;;
+      *)     label="$shelf";       root="" ;;
     esac
+    case "$rel" in /*) path="$rel" ;; *) path="$root/$rel" ;; esac
     printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$shelf" "$label" "$pack" "$name" "$path" "$desc"
   done
 }

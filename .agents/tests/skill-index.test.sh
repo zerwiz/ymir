@@ -125,6 +125,17 @@ fi
   fi
 ) || fail=1
 
+# ── 5. the index carries NO machine path (Rule 25 — it must be portable) ─────
+# The index is written shelf-RELATIVE, so a copy on another machine anchors to its
+# OWN roots instead of naming paths that do not exist there. This is the fault of
+# 2026-10-18: a committed index carried 192 absolute /home/<seat>/… paths into a
+# home that syncs to a second machine, where every one of them was a lie.
+if grep -q 'path: "/' "$INDEX_FILE"; then
+  bad "the index wrote an absolute machine path (not portable)"
+else
+  ok "the index stores shelf-relative paths only — no machine path"
+fi
+
 printf '\n%s\n' "----------------------------------------"
 if [ "$fail" = 0 ]; then printf 'skill-index.test.sh: all passed\n'; else printf 'skill-index.test.sh: FAILED\n' >&2; fi
 exit "$fail"
