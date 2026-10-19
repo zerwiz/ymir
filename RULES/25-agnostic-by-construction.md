@@ -28,3 +28,38 @@ agnostic_law[8]{rule,what it means}:
 path from the ledger) · the platform layer probes (`bin/fleet/ymir-platform.sh`, `bin/host/*-sense.sh`)
 · the clean-skip convention every `*-ensure.sh` follows · and `bin/engine/ymir-migrate.sh`, which
 runs the migrations that heal an existing home.
+
+## 2026-10-18 (appended) — the instance that proves the rule, found the day after it was written
+
+**A derived artifact broke "PATHS RESOLVE, NEVER HARDCODE" in the one place nobody
+reads.** On 2026-10-18 a session added `bin/agents/skill-index.sh` — a generated
+index of every skill a machine holds — and committed its output into the **home
+repo, which syncs to every machine**. The index wrote each skill's `path`
+**absolute**: **192** entries under `/home/<this-seat>/…`.
+
+On the **second machine (heimdall)** it therefore did not work at all:
+
+- the finder resolved **nothing** — every path named a home that is not there;
+- `--check` read the index as **incomplete forever**;
+- the **home went dirty on every session**, as the index regenerated against the
+  local tree.
+
+The law was already written. What it cost to break it in a *generated file* rather
+than in code is the part worth appending: **code is reviewed, and a generated file
+is read by nobody and synced to everybody.** A derived artifact is not exempt from
+this rule — it is the likeliest place to break it.
+
+**Mended in `zerwiz/ymir` #354 and the home `12981df`:**
+
+- the index stores `path` **relative to the shelf root** named by its `shelf`
+  (`ships · local · home · pi`), and the **reader anchors it to its own machine**;
+- the index and its human twin are **untracked and gitignored in the home**, beside
+  `.ymir-layout.yaml` — a per-machine map must not travel;
+- `stat` is **probed** (`-c %Y` → `-f %m`), never assumed, so the freshness check
+  travels to BSD/macOS;
+- `.agents/tests/skill-index.test.sh` **fails the build if a machine path ever
+  reappears in the index** — the ward the "A MOVE IS A MIGRATION" clause asks for,
+  applied to a generated file.
+
+**The sentence to carry forward:** *any file a machine generates for itself belongs
+to that machine — keep it out of the shared tree, or keep it relative.*
