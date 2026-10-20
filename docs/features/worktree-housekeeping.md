@@ -29,14 +29,19 @@ bin/forge/housekeeping.sh report --json
 bin/forge/housekeeping.sh check       # exit 1 when anything is unpushed (cron/gate friendly)
 bin/forge/housekeeping.sh clean       # the PLAN — nothing is removed
 bin/forge/housekeeping.sh clean --yes # remove only what was proved reclaimable
+bin/forge/housekeeping.sh clean --yes --merged-only   # only work already IN origin/main
 ```
 
 ## How it stays safe
 
 - **Prove, then act.** `clean` re-asks each verdict immediately before touching it; if the
   state changed, it says so and moves on.
-- **The safe git forms only.** `git worktree remove` (no `--force`) and `git branch -d`
-  (never `-D`), so even a bug in this script cannot delete unmerged work.
+- **The safe git forms only.** `git worktree remove` (no `--force`) and `git branch -d`.
+  `git branch -D` is used ONLY when the tip is proven an ancestor of the base — because `-d`
+  judges "merged" against the *current* checkout, which may sit on a feature branch (it did:
+  `feat/snotra-letter`), and would otherwise refuse a branch that is fully merged into `main`.
+- **`--merged-only`** is the strictest form: only work already in `origin/main` is reclaimed.
+  A pushed branch with an open PR is deliberately kept, because you may still be working in it.
 - **The main checkout and `main` are never candidates.**
 - **The cron row is report-only** (`bin/time/nornir-job-worktree-housekeeping.sh`, `@heart
   00:45`): it writes the reckoning into `hodd/memory/worktrees/<date>.md` and exits non-zero

@@ -13,6 +13,10 @@
 #   housekeeping.sh report --json   # the same, machine-readable
 #   housekeeping.sh clean           # the PLAN (nothing is removed)
 #   housekeeping.sh clean --yes     # remove only what the plan proved reclaimable
+#   housekeeping.sh clean --yes --merged-only   # only work already IN origin/main (the
+#                                              # strictest form: a pushed branch with an open
+#                                              # PR is deliberately kept, because you may still
+#                                              # be working in it)
 #   housekeeping.sh check           # exit 1 when any work is unpushed (for a cron/gate)
 #
 # Verdicts:
@@ -35,13 +39,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
-CMD="report"; YES=0; JSON=0
+CMD="report"; YES=0; JSON=0; MERGED_ONLY=0
 for a in "$@"; do
   case "$a" in
     -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
     -h|--help) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     report|clean|check) CMD="$a" ;;
     --yes|-y) YES=1 ;;
+    --merged-only) MERGED_ONLY=1 ;;
     --json) JSON=1 ;;
     *) printf 'error: unknown flag %s\nhelp: bin/forge/housekeeping.sh [report|clean|check] [--yes] [--json]\n' "$a" >&2; exit 2 ;;
   esac
@@ -119,7 +124,7 @@ while IFS=$'\t' read -r path br; do
     keep:dirty) DIRTY=$((DIRTY + 1)) ;;
   esac
   idx="${path#$ROOT/.yggdrasil/}"
-  LINES+=("$(printf '%s\t%s\t%s\t%s' "$idx" "$br" "$v" "${s:-?}")")
+  LINES+=("$(printf "%s\t%s\t%s\t%s\t%s" "$idx" "$br" "$v" "${s:-?}" "$path")")
 done < <(wt_rows)
 
 declare -a BRANCHES=()
@@ -143,7 +148,7 @@ if [ "$JSON" = 1 ]; then
   printf '{"worktrees":['
   first=1
   for l in "${LINES[@]}"; do
-    IFS=$'\t' read -r p b v s <<<"$l"
+    IFS=$'\t' read -r p b v s _abs <<<"$l"
     [ "$first" = 1 ] || printf ','
     first=0
     printf '{"path":"%s","branch":"%s","verdict":"%s","size":"%s"}' "$p" "$b" "$v" "$s"
@@ -162,7 +167,7 @@ else
   printf '  "%s",%s,%s,%s,%s,%s\n' "$BASE" "$TOTAL_WT" "$(git branch | wc -l | tr -d ' ')" "$TOTAL_RECLAIM" "$UNPUSHED" "$DIRTY"
   printf 'worktrees[%s]{path,branch,verdict,size}:\n' "${#LINES[@]}"
   for l in "${LINES[@]}"; do
-    IFS=$'\t' read -r p b v s <<<"$l"
+    IFS=$'\t' read -r p b v s _abs <<<"$l"
     printf '  "%s","%s","%s","%s"\n' "$p" "$b" "$v" "$s"
   done
   if [ "${#BRANCHES[@]}" -gt 0 ]; then
@@ -187,22 +192,37 @@ if [ "$CMD" = "clean" ]; then
   if [ "$YES" = 0 ]; then
     printf 'plan[%s]{action,target,why}:\n' "$TOTAL_RECLAIM"
     for l in "${LINES[@]}"; do
-      IFS=$'\t' read -r p b v s <<<"$l"
+      IFS=$'\t' read -r p b v s _abs <<<"$l"
+      case "$v" in reclaimable:merged) ;; reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;; reclaimable:*) ;; *) continue ;; esac
       case "$v" in reclaimable:*) printf '  "worktree-remove","%s (%s, %s)","%s"\n' "$p" "$b" "$s" "$v" ;; esac
     done
     for l in "${BRANCHES[@]}"; do
       IFS=$'\t' read -r b v <<<"$l"
-      case "$v" in reclaimable:*) printf '  "branch-delete","%s","%s"\n' "$b" "$v" ;; esac
+      case "$v" in
+        reclaimable:merged) ;;
+        reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;;
+        reclaimable:*) ;;
+        *) continue ;;
+      esac
+      printf '  "branch-delete","%s","%s"\n' "$b" "$v"
     done
     printf 'nothing was removed. re-run with --yes to reclaim.\n'
     exit 0
   fi
 
-  removed=0; freed_before="$(du -sh "$ROOT/.yggdrasil" 2>/dev/null | awk '{print $1}')"
+  WT_ROOT="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null | xargs -r dirname)/.yggdrasil"
+  [ -d "$WT_ROOT" ] || WT_ROOT="$ROOT/.yggdrasil"
+  removed=0; freed_before="$(du -sh "$WT_ROOT" 2>/dev/null | awk '{print $1}')"
   for l in "${LINES[@]}"; do
-    IFS=$'\t' read -r p b v s <<<"$l"
-    case "$v" in reclaimable:*) ;; *) continue ;; esac
-    full="$ROOT/.yggdrasil/$p"
+    IFS=$'\t' read -r p b v s _abs <<<"$l"
+    case "$v" in
+      reclaimable:merged) ;;
+      reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;;
+      *) continue ;;
+    esac
+    # `$_abs` is the ABSOLUTE path git reported; the first field is the short display index.
+    # Using the display index here is what made one run remove nothing at all.
+    full="$_abs"
     [ -d "$full" ] || continue
     # Double guard: re-ask the verdict immediately before touching it.
     now="$(verdict "$full" "$b")"
@@ -217,12 +237,25 @@ if [ "$CMD" = "clean" ]; then
 
   for l in "${BRANCHES[@]}"; do
     IFS=$'\t' read -r b v <<<"$l"
-    case "$v" in reclaimable:*) ;; *) continue ;; esac
-    git branch -d "$b" >/dev/null 2>&1 && { printf '  removed-branch:"%s"\n' "$b"; removed=$((removed + 1)); } \
-      || printf '  kept-branch:"%s" (git refused — not merged)\n' "$b"
+    case "$v" in
+      reclaimable:merged) ;;
+      reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;;
+      *) continue ;;
+    esac
+    # `git branch -d` judges "merged" against the CURRENT HEAD, and this checkout may sit on
+    # a feature branch (it did: feat/snotra-letter), so a branch fully merged into main was
+    # refused. The safety proof is the one the verdict already made — the tip is an ancestor
+    # of the base — so -D is used ONLY under that proof, and said out loud.
+    if git merge-base --is-ancestor "$b" "$BASE" 2>/dev/null; then
+      git branch -D "$b" >/dev/null 2>&1 && { printf '  removed-branch:"%s"\n' "$b"; removed=$((removed + 1)); } \
+        || printf '  kept-branch:"%s" (git refused)\n' "$b"
+    else
+      git branch -d "$b" >/dev/null 2>&1 && { printf '  removed-branch:"%s"\n' "$b"; removed=$((removed + 1)); } \
+        || printf '  kept-branch:"%s" (not merged)\n' "$b"
+    fi
   done
 
-  printf 'housekeeping[1]{removed,freed_overall}:\n  %s,"%s (whole .yggdrasil now)"\n' "$removed" "$(du -sh "$ROOT/.yggdrasil" 2>/dev/null | awk '{print $1}')"
+  printf 'housekeeping[1]{removed,freed_overall}:\n  %s,"%s (whole .yggdrasil now)"\n' "$removed" "$(du -sh "$WT_ROOT" 2>/dev/null | awk '{print $1}')"
   [ -n "${freed_before:-}" ] && printf 'was %s\n' "$freed_before"
   exit 0
 fi
