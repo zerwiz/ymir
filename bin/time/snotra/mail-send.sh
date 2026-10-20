@@ -38,6 +38,8 @@ draft(){
     --dry-run) dry=1; shift ;;
     *) die "unknown option: $1" ;; esac; done
   [ -n "$subject" ] && [ -n "$body" ] || die "draft needs --subject --body"
+  # --body is a FILE (the help says so). Read it; a plain string still works.
+  if [ -f "$body" ]; then body="$(cat "$body")"; fi
   if [ -n "$from_record" ]; then
     [ -r "$from_record" ] || die "record not readable: $from_record"
     local extra; extra="$(python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));print(",".join(p["email"] for p in d.get("participants",[]) if p.get("email")))' "$from_record")"
