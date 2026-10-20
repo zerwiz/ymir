@@ -14,7 +14,7 @@ REG = os.path.join(ymir_home(), 'hodd/identity/confidential.yaml')
 FIND = False
 PATTERNS = [
     (re.compile(r'/home/|/Users/|[A-Z]:\\'), 'absolute path'),
-    (re.compile(r'\$YMIR_HOME|~'+r'/Documents/ymirhome|(?:^|[\s`(])hodd/|svartalfaheim/|\.yggdrasil/'), 'private hoard path'),
+    (re.compile(r'\$YMIR_HOME|~/[A-Za-z]|(?:^|[\s`(])hodd/|svartalfaheim/|\.yggdrasil/'), 'private hoard path'),
     (re.compile(r'platform\.env|age\.key|secrets/|\.age\b'), 'vault filename'),
     (re.compile(r'\bsk-[A-Za-z0-9]|\bghp_[A-Za-z0-9]|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY|password=|api_key=|Bearer [A-Za-z0-9._-]{12,}'), 'secret shape'),
 ]

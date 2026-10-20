@@ -112,7 +112,7 @@ doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" c
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f6;padding:30px 12px;"><tr><td align="center">
 <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(18,38,63,.08);">
 <tr><td style="background:#12263f;padding:26px 34px 24px;">
-<div style="color:#9fb3c8;font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;">Synteon Technologies</div>
+<div style="color:#9fb3c8;font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;">{html.escape(op.get('company') or op.get('organization') or '')}</div>
 <div style="color:#ffffff;font-size:23px;font-weight:600;margin-top:7px;line-height:1.25;">{html.escape(title)}</div>
 <div style="color:#9fb3c8;font-size:13px;margin-top:7px;">{html.escape(date)} &nbsp;·&nbsp; {html.escape(', '.join(names))}</div>
 </td></tr>

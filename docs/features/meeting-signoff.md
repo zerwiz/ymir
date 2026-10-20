@@ -12,7 +12,7 @@ OUT="$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
 bin/time/snotra/snotra-signoff.sh init   "$OUT"   # one entry per participant
 bin/time/snotra/snotra-signoff.sh ask    "$OUT"   # one Gmail draft per pending person
 bin/time/snotra/snotra-signoff.sh sync   "$OUT"   # read confirm / objection: replies
-bin/time/snotra/snotra-signoff.sh record "$OUT" "Isabella Jakobsson" confirmed --note "checked the patent wording"
+bin/time/snotra/snotra-signoff.sh record "$OUT" "A Participant" confirmed --note "checked the patent wording"
 bin/time/snotra/snotra-signoff.sh render "$OUT"   # signoff.md
 bin/time/snotra/snotra-signoff.sh status "$OUT"
 ```

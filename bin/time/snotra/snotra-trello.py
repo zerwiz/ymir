@@ -129,7 +129,7 @@ def ensure_board(d, rec):
     if not board:
         org = state.get('organizationId') or os.environ.get('TRELLO_ORG_ID', '6ad238393bae14df5e25c980')
         r = api('POST', '/boards', {
-            'name': 'Synteon — Meetings',
+            'name': os.environ.get('TRELLO_BOARD_NAME') or 'Meetings',
             'defaultLists': 'false',
             'prefs_permissionLevel': 'private',
             'idOrganization': org,
@@ -195,7 +195,7 @@ def ensure_members(board, rec):
 
 PRIVATE = [
     (re.compile(r'/home/|/Users/|[A-Z]:\\'), 'absolute path'),
-    (re.compile(r'\$YMIR_HOME|~'+r'/Documents/ymirhome|(?:^|[\s`(])hodd/|svartalfaheim/|\.yggdrasil/'), 'private hoard path'),
+    (re.compile(r'\$YMIR_HOME|~/[A-Za-z]|(?:^|[\s`(])hodd/|svartalfaheim/|\.yggdrasil/'), 'private hoard path'),
     (re.compile(r'platform\.env|age\.key|secrets/|\.age\b'), 'vault filename'),
     (re.compile(r'\bsk-[A-Za-z0-9]|\bghp_[A-Za-z0-9]|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY|password=|api_key=|Bearer [A-Za-z0-9._-]{12,}'), 'secret shape'),
 ]

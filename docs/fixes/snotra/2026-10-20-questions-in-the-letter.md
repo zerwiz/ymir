@@ -8,7 +8,7 @@ registers. The PDF prints the questions register too.
 
 ### Verified
 
-- Synteon pilot: letter lists 7 questions (3 blocking); PDF 344 KB; test message
+- the company pilot: letter lists 7 questions (3 blocking); PDF 344 KB; test message
   `1a15a986b22a42e9` carries 11 attachments.
 
 ### Not verified

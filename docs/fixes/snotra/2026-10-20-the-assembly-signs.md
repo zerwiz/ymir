@@ -18,7 +18,7 @@ accepts silence.
 
 ### Verified
 
-- Synteon pilot: sign-off initialised for 4 people and 10 decisions; state `draft`;
+- the company pilot: sign-off initialised for 4 people and 10 decisions; state `draft`;
   `signoff.md` rendered; test message `1a15a9ccfec4ede5` carries 12 attachments.
 - Team draft prepared, unsent: `r4113750804890987305`.
 

@@ -1,6 +1,6 @@
 # The Þing — how a meeting is run
 
-**What it is.** Synteon's meeting framework: four roles, decisions by consent with one
+**What it is.** the house meeting framework: four roles, decisions by consent with one
 Approver, grades A/B/C, and a sign-off that makes the record official.
 
 ## The four roles
@@ -34,5 +34,4 @@ Daily written check-in · Monday 45 min (the week) · monthly 90 min (trajectory
 quarterly half day (strategy, roles, the A decisions). A question from a higher layer is
 parked, not decided, in a lower one.
 
-The full framework is in
-`$YMIR_HOME/svartalfaheim/synteon/framework/meeting-framework.md`; templates are beside it.
+The generic framework and templates ship with the `snotra-meeting-outcomes` skill under `assets/meeting-framework.example.md` and `assets/templates/`; a house copies and adopts them.
