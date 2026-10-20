@@ -47,6 +47,11 @@ body.append(f"The decisions ({len(decisions)})")
 for x in decisions:
     who=x.get('decided_by') or 'unrecorded'
     body.append(f"- {x.get('statement')} ({who})")
+board=''
+try:
+    board=json.load(open(os.path.join(d,'trello.json'),encoding='utf-8')).get('board','')
+except OSError:
+    pass
 qs=rec.get('questions',[])
 blocking=[q for q in qs if q.get('blocking')]
 if qs:
@@ -59,7 +64,10 @@ body.append(f"Who does what ({len(actions)} action{plural})")
 for who,n in sorted(by_owner.items(), key=lambda kv:(-kv[1],kv[0])):
     body.append(f"- {who} — {n}")
 body.append("")
-body.append("Attached: the Meeting Record (PDF and Markdown), the raw transcript, the Decision Log, the Action Register, the Dependency Map, and your own brief.")
+body.append("Attached: the Meeting Record (PDF and Markdown), the raw transcript, the Decision Log, the Action Register, the Open Questions, the Sign-off sheet, the Dependency Map, and your own brief.")
+if board:
+    body.append("")
+    body.append(f"The board: {board}")
 body.append("")
 body.append("Two questions:")
 body.append("1. Is the record right — anything missing, misheard or attributed to the wrong person?")
@@ -115,6 +123,7 @@ doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" c
 </div></td></tr>
 <tr><td style="padding:24px 34px 0;font-size:14.5px;line-height:1.6;">
 <p style="margin:0 0 10px;">Attached:</p><div>{chips}</div>
+{('<p style="margin:14px 0 0;"><a href="'+html.escape(board)+'" style="color:#2f6f8f;font-weight:600;">Open the meeting board in Trello →</a></p>') if board else ''}
 </td></tr>
 <tr><td style="padding:20px 34px 0;">
 <div style="border-left:3px solid #2f6f8f;background:#f7fafc;padding:16px 18px;font-size:14.5px;line-height:1.55;">

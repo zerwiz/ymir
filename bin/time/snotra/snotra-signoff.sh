@@ -4,6 +4,7 @@
 #   snotra-signoff.sh init   <meeting-dir>
 #   snotra-signoff.sh record <meeting-dir> <name> confirmed|objected|abstained [--note TEXT]
 #   snotra-signoff.sh ask    <meeting-dir> [--dry-run]     # one request per participant
+#   snotra-signoff.sh sync   <meeting-dir> [--dry-run]     # read Gmail replies
 #   snotra-signoff.sh render <meeting-dir>
 #   snotra-signoff.sh status <meeting-dir>
 #
@@ -114,6 +115,69 @@ TXT
     rm -f "$body"
   done < /tmp/signoff-ask.tsv
 }
+sync(){
+  local dry=0; [ "${1-}" = "--dry-run" ] && dry=1
+  local sec="$HOME/Documents/ymirhome/hodd/secrets"
+  [ -r "$sec/age.key" ] || { echo "error: vault key missing" >&2; exit 1; }
+  local val; val="$(age -d -i "$sec/age.key" "$sec/platform.env.age" 2>/dev/null || true)"
+  get(){ printf '%s\n' "$val" | sed -n "s/^$1=//p" | head -1 | sed "s/^['\"]//; s/['\"]$//"; }
+  local cid csec rt; cid="$(get GOOGLE_MCP_CLIENT_ID)"; csec="$(get GOOGLE_MCP_CLIENT_SECRET)"; rt="$(get SNOTRA_GOOGLE_REFRESH_TOKEN)"
+  [ -n "$cid" ] && [ -n "$csec" ] && [ -n "$rt" ] || { echo "error: google grant missing" >&2; exit 1; }
+  local token; token="$(curl -sS -m 20 -X POST https://oauth2.googleapis.com/token -d "client_id=$cid" -d "client_secret=$csec" -d "refresh_token=$rt" -d "grant_type=refresh_token" | python3 -c "import json,sys;print(json.load(sys.stdin).get('access_token',''))")"
+  [ -n "$token" ] || { echo "error: token refresh failed" >&2; exit 1; }
+  local title; title="$(python3 -c "import json;print(json.load(open('$STATE')).get('meeting',''))")"
+  local q="subject:(\"Sign-off: $title\" OR \"$title — the record\") newer_than:14d"
+  local list; list="$(curl -sS -G "https://gmail.googleapis.com/gmail/v1/users/me/messages" --data-urlencode "q=$q" -H "Authorization: Bearer $token")"
+  python3 - "$list" "$token" "$STATE" "$dry" "$title" <<'PY'
+import json,sys,base64,re,urllib.request
+raw,token,state,dry,title=sys.argv[1:]
+dry=int(dry or 0)
+try: ids=[m['id'] for m in json.loads(raw).get('messages',[])]
+except Exception: ids=[]
+def get(i):
+    req=urllib.request.Request(f'https://gmail.googleapis.com/gmail/v1/users/me/messages/{i}?format=full',headers={'Authorization':'Bearer '+token})
+    return json.load(urllib.request.urlopen(req,timeout=30))
+def body(p):
+    if p.get('mimeType')=='text/plain' and p.get('body',{}).get('data'):
+        return base64.urlsafe_b64decode(p['body']['data']+'==').decode('utf-8','replace')
+    for c in p.get('parts',[]) or []:
+        t=body(c)
+        if t: return t
+    return ''
+def email_of(h):
+    m=re.search(r'<([^>]+)>',h or ''); return (m.group(1) if m else (h or '')).strip().lower()
+d=json.load(open(state)); by={p['email'].lower():p for p in d['people'] if p.get('email')}
+seen=0
+for i in ids:
+    try: msg=get(i)
+    except Exception: continue
+    hdr={h['name'].lower():h['value'] for h in msg['payload'].get('headers',[])}
+    if 'from' not in hdr: continue
+    who=email_of(hdr['from']); person=by.get(who)
+    if not person: continue
+    text=body(msg['payload'])
+    lines=[l.strip() for l in text.splitlines()]
+    # ignore quoted history
+    lines=[l for l in lines if l and not l.startswith('>') and not l.lower().startswith('on ')]
+    status=None; note=''
+    for l in lines:
+        if re.fullmatch(r'(?i)confirm',l): status='confirmed'; break
+        m=re.match(r'(?i)objection\s*:\s*(.*)',l)
+        if m: status='objected'; note=m.group(1); break
+    if not status: continue
+    seen+=1
+    if dry:
+        print(f'would record\t{person["name"]}\t{status}\t{note}')
+        continue
+    person['status']=status; person['note']=note or None
+    import datetime; person['at']=datetime.datetime.now().astimezone().isoformat(timespec='seconds')
+    print(f'recorded\t{person["name"]}\t{status}\t{note}')
+if not seen: print('no replies found')
+if not dry:
+    if d['people'] and all(p['status'] in ('confirmed','abstained') for p in d['people']): d['state']='approved'
+    json.dump(d,open(state,'w'),indent=2,ensure_ascii=False)
+PY
+}
 status(){
   [ -r "$STATE" ] || { echo "no sign-off state (run init)"; exit 1; }
   python3 -c "
@@ -121,4 +185,4 @@ import json;d=json.load(open('$STATE'));print('state',d.get('state'))
 for p in d.get('people',[]): print(p['name'],p['status'],p.get('at') or '')
 "
 }
-case "$ACTION" in init) init;; record) record "$@";; ask) ask "${1-}";; render) render;; status) status;; *) echo "usage" >&2; exit 2;; esac
+case "$ACTION" in init) init;; record) record "$@";; ask) ask "${1-}";; sync) sync "${1-}";; render) render;; status) status;; *) echo "usage" >&2; exit 2;; esac
