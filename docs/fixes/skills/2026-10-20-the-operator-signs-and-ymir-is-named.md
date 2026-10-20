@@ -49,3 +49,10 @@ Prepared with Snotra, Ymir's meeting assistant. Reviewed by Lars-Josef Lindbom.
 
 - No unit assertion yet for the signature block; add one to the render suite.
 - No mail transport is wired: the email is rendered, not sent.
+
+### Appended 2026-10-20 — the dependency map
+
+The renderer now writes `dependency-map.md`: a Mermaid `graph TD` grouped by owner,
+one node per action with its due date, and an edge for every `dependency` naming
+another action. The pilot renders 16 actions across four owners — what waits on what,
+in one view.

@@ -778,6 +778,35 @@ def render_followup(rec: dict) -> str:
     return "\n".join(out)
 
 
+
+def render_dependencies(rec: dict) -> str:
+    """A Mermaid map of actions and what each one waits on."""
+    actions = rec.get("actions", [])
+    by_owner: dict[str, list[dict]] = {}
+    for a in actions:
+        by_owner.setdefault(a.get("owner") or "Unassigned", []).append(a)
+    lines = [f"# Dependency map — {rec['meeting'].get('title')}", "",
+             "```mermaid", "graph TD"]
+    for owner, items in by_owner.items():
+        safe = re.sub(r"[^A-Za-z0-9_]", "_", owner)
+        lines.append(f'  subgraph {safe}["{owner}"]')
+        for a in items:
+            label = (a.get("deliverable") or a["action_id"])[:60].replace('"', "'")
+            due = a.get("due_at") or "unresolved"
+            lines.append(f'    {a["action_id"]}["{label}<br/><small>{due}</small>"]')
+        lines.append("  end")
+    ids = {a["action_id"] for a in actions}
+    for a in actions:
+        dep = a.get("dependency") or ""
+        for ref in re.findall(r"ACT-\d{8}-\d{2}", dep):
+            if ref in ids:
+                lines.append(f'  {ref} --> {a["action_id"]}')
+    lines += ["```", "", "| Action | Owner | Depends on | Due |", "|---|---|---|---|"]
+    for a in actions:
+        lines.append(f"| {a['action_id']} | {a.get('owner')} | {a.get('dependency') or '—'} | {a.get('due_at') or 'unresolved'} |")
+    lines.append("")
+    return "\n".join(lines)
+
 def render_all(rec: dict, outdir: Path) -> list[Path]:
     outdir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
@@ -786,6 +815,7 @@ def render_all(rec: dict, outdir: Path) -> list[Path]:
         "actions.md": render_actions(rec),
         "decisions.md": render_decisions(rec),
         "followup-email.md": render_followup(rec),
+        "dependency-map.md": render_dependencies(rec),
     }
     for name, text in files.items():
         p = outdir / name
