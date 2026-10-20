@@ -111,6 +111,43 @@ enforce() {
   else echo "retained	$age of $days days"; fi
 }
 
+worm_s3() {
+  python3 - "$DIR" "$ROOT_HASH" "$DRY" <<'PY'
+import boto3,hashlib,json,os,sys,datetime
+d,root,dry=sys.argv[1],sys.argv[2],int(sys.argv[3])
+endpoint=os.environ.get('SNOTRA_WORM_ENDPOINT'); bucket=os.environ.get('SNOTRA_WORM_BUCKET')
+mode=os.environ.get('SNOTRA_WORM_MODE','COMPLIANCE'); days=int(os.environ.get('SNOTRA_WORM_RETENTION_DAYS','3650'))
+ak=os.environ.get('SNOTRA_WORM_ACCESS_KEY'); sk=os.environ.get('SNOTRA_WORM_SECRET_KEY')
+if not endpoint or not bucket: raise SystemExit('error: set SNOTRA_WORM_ENDPOINT and SNOTRA_WORM_BUCKET')
+prefix=f"meetings/{os.path.basename(d.rstrip('/'))}-{root[:12]}"
+files=[]
+for base,dirs,names in os.walk(d):
+    for n in sorted(names):
+        p=os.path.join(base,n); rel=os.path.relpath(p,d)
+        if rel.startswith('access.jsonl') or rel.startswith('worm.json'): continue
+        files.append((p,rel))
+if dry:
+    print(f"dry-run\t{endpoint}\t{bucket}\t{prefix}\t{len(files)} files\t{mode} {days}d"); raise SystemExit(0)
+s3=boto3.client('s3',endpoint_url=endpoint,aws_access_key_id=ak,aws_secret_access_key=sk)
+until=datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(days=days)
+for p,rel in files:
+    body=open(p,'rb').read(); sha=hashlib.sha256(body).hexdigest(); key=f"{prefix}/{rel}"
+    s3.put_object(Bucket=bucket,Key=key,Body=body,ChecksumAlgorithm='SHA256',
+                  ObjectLockMode=mode,ObjectLockRetainUntilDate=until,
+                  Metadata={'root':root,'sha256':sha,'meeting':os.path.basename(d)})
+    print('put',key)
+json.dump({'endpoint':endpoint,'bucket':bucket,'prefix':prefix,'root':root,'mode':mode,'until':until.isoformat(),'files':len(files)},open(os.path.join(d,'worm-s3.json'),'w'),indent=2)
+print('worm-s3',prefix,len(files),'files')
+PY
+}
+
+verify_ts() {
+  local ts="$DIR/timestamp/response.tsr" ca="${SNOTRA_TSA_CA:-$DIR/timestamp/ca.pem}"
+  if [ ! -f "$ts" ]; then echo "no timestamp token"; return 1; fi
+  if [ ! -f "$ca" ]; then echo "no CA bundle ($ca); set SNOTRA_TSA_CA"; return 1; fi
+  openssl ts -verify -in "$ts" -data "$PROV" -CAfile "$ca" >/dev/null 2>&1 && { echo "timestamp	valid	$ROOT_HASH"; return 0; } || { echo "timestamp	INVALID"; return 1; }
+}
+
 status(){ python3 - "$DIR" <<'PY'
 import json,sys,os
 d=sys.argv[1]
@@ -118,4 +155,4 @@ for f in ('provenance.json','timestamp/timestamp.json','worm.json','certificatio
  p=os.path.join(d,f); print(f, 'present' if os.path.isfile(p) else 'missing')
 PY
 }
-case "$ACTION" in timestamp) timestamp;; worm) worm;; certify) certify;; retention) retention;; enforce) enforce;; status) status;; *) echo "usage" >&2; exit 2;; esac
+case "$ACTION" in timestamp) timestamp;; worm) worm;; worm-s3) worm_s3;; certify) certify;; retention) retention;; enforce) enforce;; verify-ts) verify_ts;; status) status;; *) echo "usage" >&2; exit 2;; esac

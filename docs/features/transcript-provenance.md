@@ -86,6 +86,23 @@ bin/time/snotra/snotra-evidence.sh enforce <meeting-dir> --dry-run
 ```
 
 Without `--tsa`, the timestamp is stored as **local-unqualified** and labelled as such.
+With a TSA, the token and response text are stored; `verify-ts` checks the token against
+the provider CA (`SNOTRA_TSA_CA` or `timestamp/ca.pem`).
+
+## WORM upload
+
+```sh
+SNOTRA_WORM_ENDPOINT=https://s3.eu-central-2.wasabisys.com \
+SNOTRA_WORM_BUCKET=evidence \
+SNOTRA_WORM_MODE=COMPLIANCE \
+SNOTRA_WORM_RETENTION_DAYS=3650 \
+bin/time/snotra/snotra-evidence.sh worm-s3 <meeting-dir> [--dry-run]
+```
+
+`worm-s3` uploads every artifact except the mutable access log with S3 Object Lock in
+COMPLIANCE mode, a SHA-256 checksum and the manifest root as metadata. It needs
+`SNOTRA_WORM_ACCESS_KEY` / `SNOTRA_WORM_SECRET_KEY` from the vault. Without credentials,
+`--dry-run` prints the endpoint, bucket, prefix, file count and retention.
 A local read-only copy is **not** object-lock WORM; it is a second copy with permissions
 removed. Neither is a substitute for a qualified timestamp or a WORM store.
 
