@@ -768,3 +768,34 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
 .topbar .search {
   min-width: 280px;
 }
+
+/* ── Þráðr — the terminal gate (plan 93) ─────────────────────────────────────
+   The terminal wears the house cloth: background, text and the ember accent all come
+   from the same variables the rest of the seat uses, so it is not a foreign black box. */
+.thradr { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
+.thradr-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.thradr-title { font-size: 15px; letter-spacing: 0.08em; color: var(--fg, #d8d8d8); }
+.thradr-sub { font-size: 12px; color: var(--dim, #8a8a8a); margin-top: 2px; }
+.thradr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.thradr-btn {
+  font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 6px; cursor: pointer;
+  color: var(--fg, #d8d8d8); background: var(--panel, #14141a);
+  border: 1px solid var(--line, #2a2a33);
+}
+.thradr-btn:hover { border-color: var(--ember, #e68e0d); }
+.thradr-btn.primary { border-color: var(--ember, #e68e0d); color: var(--ember, #e68e0d); }
+.thradr-status { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--dim, #8a8a8a); }
+.thradr-status .ok { color: #98c379; }
+.thradr-status .bad { color: #e06c75; }
+.thradr-error { font-size: 12px; color: #e06c75; border: 1px solid #e06c7555; padding: 6px 10px; border-radius: 6px; }
+.thradr-terminal { display: flex; flex-direction: column; min-height: 0; flex: 1; border: 1px solid var(--line, #2a2a33); border-radius: 8px; overflow: hidden; }
+.thradr-bar { display: flex; align-items: center; gap: 10px; padding: 6px 10px; font-size: 11px; color: var(--dim, #8a8a8a); background: var(--panel, #14141a); border-bottom: 1px solid var(--line, #2a2a33); }
+.thradr-pill { text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; padding: 2px 6px; border-radius: 999px; border: 1px solid currentColor; }
+.thradr-pill.live { color: #98c379; }
+.thradr-pill.connecting { color: var(--ember, #e68e0d); }
+.thradr-pill.closed, .thradr-pill.refused { color: #e06c75; }
+.thradr-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thradr-bar .thradr-btn { margin-left: auto; padding: 3px 8px; font-size: 11px; }
+.thradr-refused { padding: 8px 10px; font-size: 12px; color: #e06c75; background: #e06c7511; border-bottom: 1px solid #e06c7533; }
+.thradr-host { flex: 1; min-height: 320px; padding: 6px; background: var(--bg, #0b0b0c); }
+.thradr-host .xterm { height: 100%; }

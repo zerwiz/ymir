@@ -73,7 +73,8 @@ export type GateId =
   | 'decisions'
   | 'stats'
   | 'managandr'
-  | 'snotra';
+  | 'snotra'
+  | 'thradr';
 
 export interface SkillDef {
   id: string;
