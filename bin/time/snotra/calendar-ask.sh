@@ -101,6 +101,12 @@ if [ -z "${MANAGANDR_NO_VAULT:-}" ] && [ -z "$FIXTURE" ] && [ -z "${MANAGANDR_FI
   if vault_env="$("$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null)"; then
     eval "$vault_env" 2>/dev/null || true
   fi
+  # The vault names the Google client GOOGLE_OAUTH_*; the reader asks for
+  # MANAGANDR_CLIENT_*. Map the one to the other here (Rule 07: one resolver, no
+  # second copy of the secret). Never printed.
+  : "${MANAGANDR_CLIENT_ID:=${GOOGLE_OAUTH_CLIENT_ID:-}}"
+  : "${MANAGANDR_CLIENT_SECRET:=${GOOGLE_OAUTH_CLIENT_SECRET:-}}"
+  export MANAGANDR_CLIENT_ID MANAGANDR_CLIENT_SECRET
 fi
 
 ARGS=()
