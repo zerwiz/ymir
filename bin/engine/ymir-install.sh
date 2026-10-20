@@ -638,6 +638,15 @@ step_snotra() {
   else
     add snotra WARN "engine or model missing (run bin/time/snotra/snotra-ensure.sh install)"
   fi
+  # The lifecycle skeleton, agnostic: shelf, operator template, register, framework,
+  # cron. Never a company or a participant.
+  if [ -x "$SCRIPT_DIR/../time/snotra/snotra-init.sh" ]; then
+    if "$SCRIPT_DIR/../time/snotra/snotra-init.sh" apply >/dev/null 2>&1; then
+      add snotra-meetings OK "meetings shelf + framework + cron skeleton"
+    else
+      add snotra-meetings WARN "run bin/time/snotra/snotra-init.sh apply"
+    fi
+  fi
 }
 
 # ── 3b1c. Ratatoskr — the A2A mesh engine (a2abridge) ───────────────────────

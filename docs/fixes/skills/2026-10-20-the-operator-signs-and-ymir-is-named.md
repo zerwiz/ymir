@@ -8,17 +8,17 @@ The follow-up signature was a document edit. It is now a system record:
 signature style, and whether AI assistance is disclosed:
 
 ```yaml
-name: Lars-Josef Lindbom
-email: josef@way-of.com
-organization: Synteon Technologies
-partners: [Reygan Assareh, Isabella Jakobsson, Craig Martin]
+name: the operator
+email: operator@example.com
+organization: the company
+partners: [a participant, a participant, a participant]
 signature:
   style: team                 # team | minimal
   disclose_assistants: true
   assistants:
     - name: Snotra
       system: Ymir
-      note: "Prepared with Snotra, Ymir's meeting assistant. Reviewed by Lars-Josef Lindbom."
+      note: "Prepared with Snotra, Ymir's meeting assistant. Reviewed by the operator."
 ```
 
 The pipeline reads it and fills `meeting.sender`, `sender_email`, `sender_org`,
@@ -29,13 +29,13 @@ Rendered signature (team style):
 ```
 Kind regards,
 
-Lars-Josef Lindbom
-Synteon Technologies
-josef@way-of.com
+the operator
+the company
+operator@example.com
 
-Partners: Reygan Assareh, Isabella Jakobsson, Craig Martin
+Partners: a participant, a participant, a participant
 
-Prepared with Snotra, Ymir's meeting assistant. Reviewed by Lars-Josef Lindbom.
+Prepared with Snotra, Ymir's meeting assistant. Reviewed by the operator.
 ```
 
 ### Verified

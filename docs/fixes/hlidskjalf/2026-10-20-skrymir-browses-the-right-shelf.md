@@ -6,8 +6,8 @@ The Files gate was missing the project trees and therefore every meeting folder.
 causes:
 
 1. **Wrong shelf.** `workspaceRoot('work')` resolved the workspace's `company`
-   (`whynotproductions`) before the realm's own tree, so Skrymir browsed
-   `svartalfaheim/whynotproductions` while the work projects (and Synteon's meetings)
+   (`a company`) before the realm's own tree, so Skrymir browsed
+   `svartalfaheim/a company` while the work projects (and the house’s meetings)
    live under `svartalfaheim/work/projects`. The realm tree is now preferred; the
    company mapping is a display owner, not the shelf.
 2. **Too shallow.** The walk stopped at depth 3; a meeting sits at depth 5

@@ -56,19 +56,6 @@ slugify() {
     | sed 's/[^a-z0-9]\+/-/g; s/^-//; s/-$//' | cut -c1-48
 }
 
-now_id() { date +%Y%m%d-%H%M; }
-
-json_get() { python3 - "$1" "$2" <<'PY'
-import json,sys
-try: d=json.load(open(sys.argv[1]))
-except Exception: sys.exit(1)
-v=d
-for k in sys.argv[2].split('.'):
-    if not isinstance(v,dict) or k not in v: sys.exit(1)
-    v=v[k]
-print(v if not isinstance(v,(dict,list)) else json.dumps(v))
-PY
-}
 
 json_set() { python3 - "$1" "$2" "$3" <<'PY'
 import json,sys

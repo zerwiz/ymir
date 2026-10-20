@@ -47,12 +47,19 @@ case "${1-}" in
 #                     (a branch six commits behind main arrives with conflicts and
 #                     stale rule numbers; caught 2026-10-18 by asking "did you pull")
 set -u
+# Judge the checkout the push comes FROM, not the one that installed the hook. Git runs a
+# pre-push hook with cwd at the pushing worktree's root, and this hook used to bake in the
+# installing checkout's absolute path: when that worktree was reclaimed, the hook pointed at
+# a directory that no longer existed and every push died with "No such file or directory"
+# (measured 2026-10-20). A hook that names a path a cleanup can remove is a gate that can
+# be deleted by housekeeping.
+ROOT="\$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 refs="\$(mktemp)"; trap 'rm -f "\$refs"' EXIT
 cat >"\$refs"
-"$ROOT/bin/gates/guards.sh" || exit 1
-"$ROOT/bin/gates/guards/branch-guard.sh" <"\$refs" || exit 1
-"$ROOT/bin/gates/guards/fixes-guard.sh" <"\$refs" || exit 1
-"$ROOT/bin/gates/branch-current.sh" check || exit 1
+"\$ROOT/bin/gates/guards.sh" || exit 1
+"\$ROOT/bin/gates/guards/branch-guard.sh" <"\$refs" || exit 1
+"\$ROOT/bin/gates/guards/fixes-guard.sh" <"\$refs" || exit 1
+"\$ROOT/bin/gates/branch-current.sh" check || exit 1
 EOF
     chmod +x "$H"
     printf 'fixes-guard[1]{gate,result}:\n  "hook","installed at %s"\n' "${H#"$ROOT"/}"

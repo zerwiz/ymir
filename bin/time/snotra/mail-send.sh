@@ -36,12 +36,13 @@ gmail(){
 }
 
 draft(){
-  local to="" subject="" body="" html="" dry=0 record="" from_record=""; local attaches=()
+  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir=""; local attaches=()
   while [ $# -gt 0 ]; do case "$1" in
     --to) to="${2-}"; shift 2 ;;
     --subject) subject="${2-}"; shift 2 ;;
     --body) body="${2-}"; shift 2 ;;
     --html) html="${2-}"; shift 2 ;;
+    --meeting-dir) meeting_dir="${2-}"; shift 2 ;;
     --attach) attaches+=("${2-}"); shift 2 ;;
     --record) record="${2-}"; shift 2 ;;
     --from-record) from_record="${2-}"; shift 2 ;;
@@ -57,6 +58,17 @@ draft(){
     [ -n "$extra" ] && to="${to:+$to,}$extra"
   fi
   [ -n "$to" ] || die "draft needs --to or --from-record with participant emails"
+  # Rule 26 + Rule 27: the sensitive gate first, then the private guard.
+  if [ -n "$meeting_dir" ] && [ -x "$ROOT/bin/gates/guards/sensitive-gate.sh" ]; then
+    "$ROOT/bin/gates/guards/sensitive-gate.sh" "$meeting_dir" --surface email --to "$to" >/dev/null 2>&1 || die "sensitive gate refused this meeting for email"
+  fi
+  local guard="$ROOT/bin/gates/guards/private-guard.sh"
+  if [ -x "$guard" ]; then
+    local gtmp; gtmp="$(mktemp)"; printf '%s\n%s\n' "$body" "$html" > "$gtmp"
+    "$guard" check --surface email --to "$to" "$gtmp" >/dev/null 2>&1 || { rm -f "$gtmp"; die "private-guard refused the letter (run the guard to see the finding)"; }
+    rm -f "$gtmp"
+    for a in "${attaches[@]:-}"; do [ -f "$a" ] && { "$guard" check --surface email --to "$to" "$a" >/dev/null 2>&1 || die "private-guard refused attachment: $(basename "$a")"; }; done
+  fi
   local eml; eml="$(mktemp --suffix=.eml)"
   python3 - "$to" "$subject" "$body" "$eml" "$html" "${attaches[@]}" <<'PY'
 import sys, os, mimetypes

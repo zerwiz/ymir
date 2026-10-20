@@ -9,7 +9,7 @@ silently skipped one recipient.
 
 ### Verified
 
-- Synteon pilot: 4 briefs, **4 drafts prepared** (Reygan, Isabella, Craig, Lars-Josef);
+- the company pilot: 4 briefs, **4 drafts prepared** (all four participants);
   none sent.
 - The manual draft path was proven separately with `mail-send.sh draft`.
 

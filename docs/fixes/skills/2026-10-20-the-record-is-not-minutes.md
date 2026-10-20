@@ -8,7 +8,7 @@ mail door; the visible name is what the Allfather reads.
 
 ### Verified
 
-- The Synteon pilot rendered 9 documents: Meeting Record, decisions, actions,
+- The the company pilot rendered 9 documents: Meeting Record, decisions, actions,
   dependency map (Mermaid), follow-up, cards, record, segments, candidates.
 - Title line: `# Meeting Record — Road map & Trello`.
 
