@@ -24,6 +24,10 @@
 @heart 02:30 bin/time/nornir-job-nsr-compliance.sh
 @forge 00:30 bin/time/nornir-job-skillopt-sleep.sh
 @heart 00:15 bin/time/nornir-job-memory-housekeeping.sh
+# The worktrees' daily reckoning: how many stand, how much is provably reclaimable, and how
+# much work exists ONLY on this machine. REPORT ONLY — removing a worktree is a human's
+# `bin/forge/housekeeping.sh clean --yes`, never a cron row's decision.
+@heart 00:45 bin/time/nornir-job-worktree-housekeeping.sh
 @heart 00:00 bin/time/nornir-job-git-sync.sh
 # Eir checks every surface daily (P8) — a desktop that cannot open is reported.
 @heart 08:15 bin/time/nornir-job-doctor.sh
