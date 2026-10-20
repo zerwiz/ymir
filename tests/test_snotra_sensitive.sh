@@ -31,5 +31,16 @@ bash "$ROOT/bin/time/snotra/snotra-evidence.sh" timestamp "$T/held" >/dev/null
 bash "$ROOT/bin/time/snotra/snotra-evidence.sh" certify "$T/held" --reviewer "Test Reviewer" >/dev/null
 [ -f "$T/held/timestamp/timestamp.json" ] && ok "timestamp written" || bad "timestamp missing"
 [ -f "$T/held/certified-copy.md" ] && ok "certified copy written" || bad "certified copy missing"
+# access-log chain
+bash "$ROOT/bin/gates/guards/sensitive-gate.sh" "$T/held" --surface private >/dev/null
+if bash "$ROOT/bin/time/snotra/snotra-evidence.sh" verify-access "$T/held" >/dev/null 2>&1; then ok "access chain valid"; else bad "access chain invalid"; fi
+python3 - "$T/held/access.jsonl" <<'PY2'
+import json,sys
+p=sys.argv[1]; rows=[json.loads(l) for l in open(p) if l.strip()]
+for r in rows:
+    if r.get('entry'): r['verdict']='ALLOWED'; break
+open(p,'w').write('\n'.join(json.dumps(r,sort_keys=True) for r in rows)+'\n')
+PY2
+if bash "$ROOT/bin/time/snotra/snotra-evidence.sh" verify-access "$T/held" >/dev/null 2>&1; then bad "tampered access chain passed"; else ok "tampered access chain refused"; fi
 printf 'test_snotra_sensitive: %d pass, %d fail\n' "$pass" "$fail"
 [ "$fail" = 0 ]

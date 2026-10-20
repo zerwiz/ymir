@@ -21,13 +21,13 @@ python3 - "$DIR" "$ACTION" "$NOTE" "$ROOT" <<'PY'
 import hashlib,json,os,sys,datetime
 d,action,note,root=sys.argv[1:5]
 manifest=os.path.join(d,'provenance.json'); log=os.path.join(d,'provenance.jsonl')
-skip={'provenance.json','provenance.jsonl','record.pdf','TEST-REPORT.md'}
+skip={'provenance.json','provenance.jsonl','record.pdf','TEST-REPORT.md','access.jsonl'}
 def files():
     out=[]
     for base,dirs,names in os.walk(d):
         for n in sorted(names):
             p=os.path.join(base,n); rel=os.path.relpath(p,d)
-            if rel in skip: continue
+            if rel in skip or rel.startswith('timestamp/'): continue
             h=hashlib.sha256(open(p,'rb').read()).hexdigest()
             out.append({'path':rel,'sha256':h,'bytes':os.path.getsize(p)})
     return sorted(out,key=lambda x:x['path'])
