@@ -107,4 +107,6 @@ A local read-only copy is **not** object-lock WORM; it is a second copy with per
 removed. Neither is a substitute for a qualified timestamp or a WORM store.
 
 The gate (`bin/gates/guards/sensitive-gate.sh`) checks classification, hold, access list,
-provenance and the NDA/private guard before any external surface.
+provenance and the NDA/private guard before any external surface. Every allow/refuse is
+appended to a **hash-chained** `access.jsonl`; `snotra-evidence.sh verify-access` recomputes
+the chain and names the first broken entry.

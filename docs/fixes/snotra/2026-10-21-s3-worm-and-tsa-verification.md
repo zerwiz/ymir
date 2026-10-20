@@ -19,3 +19,10 @@
 
 - A real Wasabi bucket upload and restore; no credentials/bucket yet.
 - A qualified provider token (Signicat/Datasure); the client is standard RFC3161.
+
+### Appended 2026-10-21 — access log chain
+
+The gate's `access.jsonl` is now hash-chained: each entry carries `prev` and `entry`, and
+`snotra-evidence.sh verify-access` recomputes the chain. The synthetic test verifies a
+valid chain and refuses a tampered entry (8/8 tests pass). Legacy unchained entries are
+counted, not silently accepted as chained.

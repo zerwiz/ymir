@@ -14,9 +14,16 @@ while [ $# -gt 0 ]; do case "$1" in --surface) SURFACE="${2-}"; shift 2;; --to) 
 fail(){ printf 'gate refused: %s\n' "$1" >&2; log refused "$1"; exit 1; }
 log(){
   python3 - "$DIR/access.jsonl" "$AT" "$ACTOR" "$SURFACE" "$TO" "$1" "$2" <<'PY'
-import json,sys,os
+import json,sys,os,hashlib
 p,at,actor,surface,to,verdict,why=sys.argv[1:]
-with open(p,'a') as f: f.write(json.dumps({'at':at,'actor':actor,'surface':surface,'to':to,'verdict':verdict,'why':why},sort_keys=True)+'\n')
+prev=''
+if os.path.isfile(p):
+    rows=[json.loads(l) for l in open(p) if l.strip()]
+    for r in reversed(rows):
+        if r.get('entry'): prev=r['entry']; break
+base={'at':at,'actor':actor,'surface':surface,'to':to,'verdict':verdict,'why':why,'prev':prev}
+base['entry']=hashlib.sha256(json.dumps(base,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+with open(p,'a') as f: f.write(json.dumps(base,sort_keys=True)+'\n')
 os.chmod(p,0o600)
 PY
 }

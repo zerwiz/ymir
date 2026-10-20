@@ -148,6 +148,26 @@ verify_ts() {
   openssl ts -verify -in "$ts" -data "$PROV" -CAfile "$ca" >/dev/null 2>&1 && { echo "timestamp	valid	$ROOT_HASH"; return 0; } || { echo "timestamp	INVALID"; return 1; }
 }
 
+verify_access() {
+  python3 - "$DIR/access.jsonl" <<'PY'
+import json,sys,os,hashlib
+p=sys.argv[1]
+if not os.path.isfile(p): print('no access log'); raise SystemExit(1)
+rows=[json.loads(l) for l in open(p) if l.strip()]
+prev=''; checked=0; legacy=0
+for r in rows:
+    if not r.get('entry'):
+        legacy+=1; continue
+    claimed=r.pop('entry')
+    ok=(r.get('prev')==prev)
+    calc=hashlib.sha256(json.dumps(r,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    if not ok or calc!=claimed:
+        print('access log INVALID at',r.get('at')); raise SystemExit(1)
+    prev=claimed; checked+=1
+print(f'access log valid\t{checked} chained\t{legacy} legacy')
+PY
+}
+
 status(){ python3 - "$DIR" <<'PY'
 import json,sys,os
 d=sys.argv[1]
@@ -155,4 +175,4 @@ for f in ('provenance.json','timestamp/timestamp.json','worm.json','certificatio
  p=os.path.join(d,f); print(f, 'present' if os.path.isfile(p) else 'missing')
 PY
 }
-case "$ACTION" in timestamp) timestamp;; worm) worm;; worm-s3) worm_s3;; certify) certify;; retention) retention;; enforce) enforce;; verify-ts) verify_ts;; status) status;; *) echo "usage" >&2; exit 2;; esac
+case "$ACTION" in timestamp) timestamp;; worm) worm;; worm-s3) worm_s3;; certify) certify;; retention) retention;; enforce) enforce;; verify-ts) verify_ts;; verify-access) verify_access;; status) status;; *) echo "usage" >&2; exit 2;; esac
