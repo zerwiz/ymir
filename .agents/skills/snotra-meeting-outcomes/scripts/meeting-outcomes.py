@@ -586,7 +586,7 @@ def fmt_person(name: str) -> str:
 def render_minutes(rec: dict) -> str:
     m = rec["meeting"]
     out: list[str] = []
-    out.append(f"# {m.get('title')} — Minutes")
+    out.append(f"# Meeting Record — {m.get('title')}")
     out.append("")
     out.append(f"**Date:** {m.get('started_at')}  ")
     out.append(f"**Duration:** {m.get('duration_minutes') or '—'} minutes  ")
