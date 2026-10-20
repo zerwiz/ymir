@@ -109,3 +109,4 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 
 *Append a row when a feature lands. Correct by appending, never by erasing.*
 | Agents | Seat identity (`bin/agents/seat-identity.sh`) | Each machine names its own primary; `set` renames, `ensure` runs at install, `check` fails a drifted seat, `render` writes the contract | [docs/features/the-seat-name.md](docs/features/the-seat-name.md) |
+| Agents | **The council of models** | `logretta_sit` seats 2–5 different models on one question, each through a remit (architect · security · cost · skeptic · operator · recon), runs a debate round where each seat reads the others and may change its mind, then an arbiter merges one verdict and names the disagreements. Every seat is a clean-room read-only `pi` child; nothing is written; a budget line stops it loudly | [docs/features/the-council-of-models.md](docs/features/the-council-of-models.md) |
