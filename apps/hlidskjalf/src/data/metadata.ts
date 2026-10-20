@@ -117,6 +117,11 @@ export const GATE_META: Record<GateId, PageMeta> = {
     description:
       'The read calendar: the month grid, the Nornir collision hairlines, the smithy\u2019s lanes, and the well\u2019s density. No write path.',
   },
+  snotra: {
+    title: 'Snotra',
+    description:
+      'The meeting record: the shelf, the record, the participants, and the follow-up draft. Prepare, approve, send — never edit.',
+  },
   thradr: {
     title: 'Þráðr',
     description:

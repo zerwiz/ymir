@@ -47,6 +47,28 @@ import { join, dirname } from "node:path";
 import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 
+
+function conferenceUrl(raw) {
+  if (raw.hangoutLink) return raw.hangoutLink;
+  const eps = raw.conferenceData && raw.conferenceData.entryPoints;
+  if (Array.isArray(eps)) {
+    const v = eps.find((e) => e && (e.entryPointType === "video") && e.uri);
+    if (v) return v.uri;
+  }
+  const text = `${raw.location || ""} ${raw.description || ""}`;
+  const m = text.match(/https?:\/\/[^\s)>"']+/);
+  return m ? m[0].replace(/[.,;]+$/, "") : "";
+}
+function conferenceType(raw) {
+  const u = conferenceUrl(raw);
+  if (u.includes("meet.google.")) return "google_meet";
+  if (u.includes("zoom.us")) return "zoom";
+  if (u.includes("teams.microsoft.")) return "teams";
+  if (u.includes("jitsi")) return "jitsi";
+  if (u.includes("ping.zerwiz.org")) return "ping";
+  return u ? "other" : "";
+}
+
 const DEFAULT_WINDOW = "6w";
 const DEFAULT_CALENDAR_ID = "primary";
 const DEFAULT_CACHE_TTL_SECONDS = 600;
@@ -67,6 +89,9 @@ export const EventSchema = z.object({
   all_day: z.boolean(),
   summary: z.string(),
   location: z.string(),
+  conference_url: z.string(),
+  conference_type: z.string(),
+  visibility: z.string(),
   attendee_count: z.number().int().nonnegative(),
   start: z.string(),
   end: z.string(),
@@ -241,6 +266,9 @@ export function normalizeEvent(raw, calendarId, zone) {
     all_day: allDay,
     summary: raw.summary || "",
     location: raw.location || "",
+    conference_url: conferenceUrl(raw),
+    conference_type: conferenceType(raw),
+    visibility: raw.visibility || "",
     attendee_count: Array.isArray(raw.attendees) ? raw.attendees.length : 0,
     start,
     end,

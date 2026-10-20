@@ -24,6 +24,7 @@ import { Trace } from '../gates/Trace';
 import { Decisions } from '../gates/Decisions';
 import { Stats } from '../gates/Stats';
 import { Managandr } from '../gates/Managandr';
+import { Snotra } from '../gates/Snotra';
 import { Thradr } from '../gates/Thradr';
 
 function Stage() {
@@ -65,6 +66,8 @@ function Stage() {
       return <Stats />;
     case 'managandr':
       return <Managandr />;
+    case 'snotra':
+      return <Snotra />;
     case 'thradr':
       return <Thradr />;
     default:

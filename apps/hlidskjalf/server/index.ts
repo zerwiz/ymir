@@ -12,6 +12,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
 import { dirname, extname, join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import {
   TerminalRegistry,
@@ -996,13 +997,17 @@ function workspaceRoot(realm: string): string {
   // <realm>; the checkout is only a legacy fallback for a home not yet migrated.
   // Skrymir was browsing the repo's own directories and reading files whose links
   // point into the hoard — which is why a listed file answered "not found".
+  // The realm's OWN tree first. A workspace may name a company, but the operator's
+  // projects live under svartalfaheim/<realm>/projects — the company mapping is a
+  // display owner, not the shelf. This is why Skrymir showed whynotproductions and
+  // not the work tree that holds the meetings.
+  const realmTree = join(HOME_DIR, 'svartalfaheim', realm);
+  if (existsSync(realmTree)) return realmTree;
   const ws = workspaces().find((w) => w.id === realm);
   if (ws?.company) {
     const company = join(HOME_DIR, 'svartalfaheim', ws.company);
     if (existsSync(company)) return company;
   }
-  const realmTree = join(HOME_DIR, 'svartalfaheim', realm);
-  if (existsSync(realmTree)) return realmTree;
   const scope = join(HOME_DIR, 'workspace', realm);
   if (existsSync(scope)) return scope;
   const slug = realm.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1018,7 +1023,8 @@ function files(realm: string) {
   const walk = (dir: string, rel: string, depth: number): unknown => {
     const name = rel === '' ? (realm || 'svartalfaheim') : rel.split('/').pop()!;
     const node: Record<string, unknown> = { name, type: 'dir', path: rel || '/', children: [] as unknown[] };
-    if (depth > 3 || !existsSync(dir)) return node;
+    const maxDepth = Number(process.env.SKRYMIR_MAX_DEPTH ?? 6);
+    if (depth > maxDepth || !existsSync(dir)) return node;
     let entries: string[] = [];
     try {
       entries = readdirSync(dir);
@@ -1312,6 +1318,134 @@ function calendar(): CalendarAnswer {
     return { as_of: asOf, state: 'unknown', source, events };
   }
   return { as_of: asOf, state: fresh ? 'ok' : 'unknown', source, events };
+}
+
+
+/* ---- /api/snotra (the meeting record, plan 93) --------------------------- */
+// Reads the store and the project meeting shelves. Draft/send call the Snotra
+// doors; they never write a record and never send without the approval call.
+const SNOTRA_STORE = process.env.SNOTRA_MEETINGS_DIR ?? join(HOARD, 'life', 'meetings');
+const SNOTRA_ROOTS = [SNOTRA_STORE, join(HOME_DIR, 'svartalfaheim')];
+
+interface SnotraMeetingOut {
+  id: string; title: string; started_at: string | null; workspace: string;
+  source: string; state: string; decisions: number; actions: number;
+  has_record: boolean; dir: string; scope: string;
+  participants: { name: string; email: string | null }[];
+  draft?: string | null;
+}
+
+function snotraDirs(): { dir: string; file: string }[] {
+  const out: { dir: string; file: string }[] = [];
+  const push = (dir: string) => {
+    for (const f of ['record.json', 'meeting.json']) {
+      const p = join(dir, f);
+      if (existsSync(p)) { out.push({ dir, file: p }); return; }
+    }
+  };
+  try {
+    for (const lane of readdirSync(SNOTRA_STORE, { withFileTypes: true })) {
+      if (!lane.isDirectory()) continue;
+      const laneDir = join(SNOTRA_STORE, lane.name);
+      for (const m of readdirSync(laneDir, { withFileTypes: true })) {
+        if (m.isDirectory()) push(join(laneDir, m.name));
+      }
+    }
+  } catch { /* store absent is not an error */ }
+  // Private meetings: the hoard's own shelf.
+  try {
+    for (const m of readdirSync(join(HOARD, 'workspaces', 'meetings'), { withFileTypes: true })) {
+      if (m.isDirectory()) push(join(HOARD, 'workspaces', 'meetings', m.name));
+    }
+  } catch { /* no private shelf */ }
+  try {
+    for (const realm of readdirSync(SNOTRA_ROOTS[1], { withFileTypes: true })) {
+      if (!realm.isDirectory()) continue;
+      const companyMeetings = join(SNOTRA_ROOTS[1], realm.name, 'meetings');
+      if (existsSync(companyMeetings)) {
+        for (const m of readdirSync(companyMeetings, { withFileTypes: true })) {
+          if (m.isDirectory()) push(join(companyMeetings, m.name));
+        }
+      }
+      const projects = join(SNOTRA_ROOTS[1], realm.name, 'projects');
+      if (!existsSync(projects)) continue;
+      for (const project of readdirSync(projects, { withFileTypes: true })) {
+        if (!project.isDirectory()) continue;
+        const meetings = join(projects, project.name, 'meetings');
+        if (!existsSync(meetings)) continue;
+        for (const m of readdirSync(meetings, { withFileTypes: true })) {
+          if (m.isDirectory()) push(join(meetings, m.name));
+        }
+      }
+    }
+  } catch { /* no project meetings */ }
+  return out;
+}
+
+function snotraMeetings(): SnotraMeetingOut[] {
+  const rows: SnotraMeetingOut[] = [];
+  for (const { dir, file } of snotraDirs()) {
+    try {
+      const d = JSON.parse(readFileSync(file, 'utf8')) as Record<string, any>;
+      const m = (d.meeting && typeof d.meeting === 'object') ? d.meeting : d;
+      const participants = (d.participants ?? m.participants ?? []) as any[];
+      rows.push({
+        id: String(m.id ?? m.meeting_id ?? dir.split('/').pop()),
+        title: String(m.title ?? m.summary ?? '(untitled)'),
+        started_at: m.started_at ?? m.start ?? null,
+        workspace: String(m.workspace ?? (dir.includes('/hodd/workspaces/meetings/') ? 'private'
+          : dir.includes('/personal/') ? 'personal'
+          : (dir.match(/svartalfaheim\/([^/]+)\/(?:meetings|projects)\//) ?? [])[1] ?? 'work')),
+        scope: dir.includes('/hodd/workspaces/meetings/') ? 'private'
+          : dir.includes('/projects/') ? 'project'
+          : dir.includes('/hodd/life/meetings/') ? 'store'
+          : 'company',
+        source: String(m.source ?? 'manual'),
+        state: String(m.state ?? d.state ?? 'captured'),
+        decisions: Array.isArray(d.decisions) ? d.decisions.length : 0,
+        actions: Array.isArray(d.actions) ? d.actions.length : 0,
+        has_record: existsSync(join(dir, 'minutes.md')) || existsSync(join(dir, 'record.md')),
+        dir,
+        participants: participants.map((p: any) => ({ name: String(p.name ?? ''), email: p.email ?? null })),
+      });
+    } catch { /* a broken record is skipped, never crashes the shelf */ }
+  }
+  return rows.sort((a, b) => String(b.started_at ?? '').localeCompare(String(a.started_at ?? '')));
+}
+
+function snotraFind(id: string): SnotraMeetingOut | undefined {
+  return snotraMeetings().find((m) => m.id === id || m.dir.endsWith('/' + id));
+}
+
+function snotraDraft(id: string): { draftId: string } | { error: string } {
+  const m = snotraFind(id);
+  if (!m) return { error: `no meeting ${id}` };
+  const body = join(m.dir, 'followup-email.md');
+  if (!existsSync(body)) return { error: 'no follow-up body (run the record pipeline first)' };
+  const att: string[] = [];
+  for (const f of ['minutes.md', 'record.md', 'decisions.md', 'actions.md']) {
+    const p = join(m.dir, f);
+    if (existsSync(p)) att.push('--attach', p);
+  }
+  const record = join(m.dir, 'record.json');
+  const args = [join(ROOT, 'bin/time/snotra/mail-send.sh'), 'draft',
+    '--from-record', record, '--subject', `${m.title} — Meeting Record`,
+    '--body', body, ...att, '--record', m.id];
+  const r = spawnSync('bash', args, { encoding: 'utf8', timeout: 120_000 });
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  const hit = out.match(/^draft\t(r-\d+)/m);
+  if (!hit) return { error: out.trim().split('\n').slice(-2).join(' · ') || 'draft failed' };
+  return { draftId: hit[1] };
+}
+
+function snotraSend(draftId: string): { sent: string } | { error: string } {
+  if (!/^r-\d+$/.test(draftId)) return { error: 'invalid draft id' };
+  const r = spawnSync('bash', [join(ROOT, 'bin/time/snotra/mail-send.sh'), 'send', draftId],
+    { encoding: 'utf8', timeout: 120_000 });
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  const hit = out.match(/^sent\t(\S+)/m);
+  if (!hit) return { error: out.trim().split('\n').slice(-2).join(' · ') || 'send failed' };
+  return { sent: hit[1] };
 }
 
 /* ---- /api/loaders, /api/checks, /api/settings ---------------------------- */
@@ -2403,6 +2537,28 @@ const server = Bun.serve({
         const id = decodeURIComponent(p.slice('/api/smidja/sessions/'.length));
         const detail = smidjaSession(id);
         return detail ? json(detail) : json({ error: `no session ${id}` }, 404);
+      }
+      if (p === '/api/snotra/meetings' && req.method === 'GET') return json({ meetings: snotraMeetings() });
+      if (p === '/api/snotra/meeting' && req.method === 'GET') {
+        const id = url.searchParams.get('id') ?? '';
+        const m = snotraFind(id);
+        if (!m) return json({ error: 'no meeting' }, 404);
+        const body = ['minutes.md', 'record.md'].map((f) => join(m.dir, f)).find(existsSync);
+        const src = ['record.json', 'meeting.json'].map((f) => join(m.dir, f)).find(existsSync);
+        let detail: Record<string, unknown> = {};
+        if (src) { try { detail = JSON.parse(readFileSync(src, 'utf8')); } catch { /* broken record */ } }
+        return json({ ...m, record: body ? readFileSync(body, 'utf8') : null,
+          decisions: (detail as any).decisions ?? [], actions: (detail as any).actions ?? [] });
+      }
+      if (p === '/api/snotra/draft' && req.method === 'POST') {
+        const b = (await req.json().catch(() => ({}))) as { id?: string };
+        const r = snotraDraft(String(b.id ?? ''));
+        return 'error' in r ? json(r, 400) : json(r);
+      }
+      if (p === '/api/snotra/send' && req.method === 'POST') {
+        const b = (await req.json().catch(() => ({}))) as { draftId?: string };
+        const r = snotraSend(String(b.draftId ?? ''));
+        return 'error' in r ? json(r, 400) : json(r);
       }
       if (p === '/api/settings') return json(settings());
       if (p === '/api/workspaces' && req.method === 'GET') return json(workspaces());
