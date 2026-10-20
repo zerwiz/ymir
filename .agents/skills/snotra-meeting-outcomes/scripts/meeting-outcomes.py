@@ -764,6 +764,8 @@ def render_questions(rec: dict) -> str:
         out.append("")
         out.append(q.get("question", ""))
         out.append("")
+        if q.get('context'):
+            out.append(f"**Context:** {q['context']}  ")
         out.append(f"**Decider:** {q.get('decider')}  ")
         out.append(f"**Needed by:** {q.get('needed_by') or 'next meeting'}  ")
         out.append(f"**Status:** {q.get('status') or 'open'}  ")
@@ -786,6 +788,8 @@ def render_brief(rec: dict, person: str) -> str:
         out.append(f"## {a['action_id']} — {a.get('deliverable')}")
         out.append("")
         out.append(f"**Due:** {a.get('due_at') or 'date unresolved'}  ")
+        if a.get("context"):
+            out.append(f"**Context:** {a['context']}  ")
         if a.get("definition_of_done"):
             out.append(f"**Done when:** {a['definition_of_done']}  ")
         if a.get("dependency"):
@@ -880,6 +884,98 @@ def render_dependencies(rec: dict) -> str:
     lines.append("")
     return "\n".join(lines)
 
+def _cadence() -> dict:
+    """The weekly rhythm, from the house if it said one; Monday 09:00/45 otherwise."""
+    import os
+    cfg = {'weekday': 0, 'time': '09:00', 'minutes': 45}
+    base = os.environ.get('YMIR_HOME', '')
+    path = os.path.join(base, 'hodd/identity/cadence.yaml') if base else ''
+    if path and os.path.isfile(path):
+        try:
+            import yaml
+            data = yaml.safe_load(open(path, encoding='utf-8')) or {}
+            if int(data.get('version', 1)) != 1:
+                return cfg
+            w = (data.get('weekly') or {})
+            days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+            if str(w.get('weekday', '')).lower() in days:
+                cfg['weekday'] = days.index(str(w['weekday']).lower())
+            if w.get('time'):
+                cfg['time'] = str(w['time'])
+            if w.get('minutes'):
+                cfg['minutes'] = int(w['minutes'])
+        except Exception:
+            pass
+    return cfg
+
+
+def render_next_agenda(rec: dict) -> str:
+    from datetime import date, timedelta, datetime
+    m = rec["meeting"]
+    try:
+        d = date.fromisoformat(str(m.get("started_at", ""))[:10])
+    except ValueError:
+        d = date.today()
+    cad = _cadence()
+    days = (cad['weekday'] - d.weekday()) % 7 or 7
+    nxt = d + timedelta(days=days)
+    start = datetime.strptime(cad['time'], '%H:%M')
+    end = start + timedelta(minutes=cad['minutes'])
+    who = m.get("sender") or (rec.get("participants") or [{}])[0].get("name") or "to confirm"
+    out = [f"# Proposed agenda — {m.get('title')}", ""]
+    out.append(f"**Next meeting:** {nxt.strftime('%A %d %B %Y')}, {start.strftime('%H:%M')}–{end.strftime('%H:%M')} (proposed)")
+    out.append(f"**Chair:** to confirm at the opening · **Secretary:** {who} · **Notetaker:** Snotra · **Adjuster:** to confirm")
+    people = ", ".join(p.get("name", "") for p in rec.get("participants", []) if p.get("name"))
+    out.append(f"**Everyone:** {people}")
+    out.append("")
+    out.append("**Purpose:** clear the blocking questions, confirm the decisions that are ready, and leave with one owner and one date for every action.")
+    out.append("")
+    out.append("## 1. Previous record (2 min)")
+    out.append("")
+    out.append("Any correction to the record? If none, it stands; corrections are appended.")
+    out.append("")
+    blocking = [q for q in rec.get("questions", []) if q.get("blocking")]
+    out.append(f"## 2. Blocking questions ({max(10, len(blocking) * 5)} min)")
+    out.append("")
+    if blocking:
+        for q in blocking:
+            out.append(f"- **{q.get('question_id')}** — {q.get('question')} · *{q.get('decider') or 'unassigned'}* · needed by {q.get('needed_by') or 'this meeting'}")
+    else:
+        out.append("- none recorded; confirm nothing has become blocking since the last meeting.")
+    out.append("")
+    out.append("## 3. Decisions ready to confirm (10 min)")
+    out.append("")
+    proposed = [x for x in rec.get("decisions", []) if (x.get("status") or "decided") == "proposed"]
+    if proposed:
+        for x in proposed:
+            out.append(f"- **{x.get('decision_id')}** — {x.get('statement')} · Approver {x.get('decided_by')}")
+    else:
+        out.append("- none in `proposed`; the Chair may table one. Every decision needs one Approver before discussion.")
+    out.append("")
+    out.append("## 4. Actions that need a decision (10 min)")
+    out.append("")
+    blocked = [a for a in rec.get("actions", []) if a.get("dependency")]
+    if blocked:
+        for a in blocked[:8]:
+            out.append(f"- **{a.get('action_id')}** — {a.get('deliverable')} · {a.get('owner')} · waits on {a.get('dependency')}")
+    else:
+        out.append("- none recorded; review the blocked list on the board.")
+    out.append("")
+    out.append("## 5. Open floor — questions and anything not yet on the agenda (10 min)")
+    out.append("")
+    out.append("Every meeting ends here before the close. Anyone may raise an open question, a concern or a proposal. "
+               "It is recorded as a question with a decider and a needed-by date, or as an action with one owner and one date. "
+               "Nothing is left as \"we will talk about it\" — it becomes a card, a question or a decision.")
+    out.append("")
+    out.append("To add an item before the meeting, reply to the Secretary; the Trello `Agenda` list is the shared queue.")
+    out.append("")
+    out.append("## 6. Close (3 min)")
+    out.append("")
+    out.append("Name the Secretary for the record, the sign-off window (two business days), and the date of the next meeting.")
+    out.append("")
+    return "\n".join(out)
+
+
 def render_transcript(rec: dict, outdir: Path) -> str | None:
     """Raw transcript, one line per segment, exactly as the source gave it."""
     p = outdir / "segments.json"
@@ -910,6 +1006,7 @@ def render_all(rec: dict, outdir: Path) -> list[Path]:
         "followup-email.md": render_followup(rec),
         "dependency-map.md": render_dependencies(rec),
         "questions.md": render_questions(rec),
+        "agenda-next.md": render_next_agenda(rec),
     }
     transcript = render_transcript(rec, outdir)
     if transcript:

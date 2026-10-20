@@ -303,6 +303,12 @@
               "c",
               null
             ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }
@@ -415,6 +421,18 @@
               "machine",
               "curated"
             ]
+          },
+          "context": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }
@@ -465,6 +483,18 @@
               "answered",
               "deferred",
               null
+            ]
+          },
+          "context": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
             ]
           }
         }
