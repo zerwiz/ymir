@@ -64,3 +64,30 @@ Not implemented, and needed before calling it court-grade: a **qualified eIDAS
 timestamp**, WORM storage, an access log, a certified-copy workflow, retention/legal
 hold, key custody, and an independent verification note. Those are operational and
 contractual controls, not regexes.
+
+## The evidence bundle — timestamp, immutable copy, certification, retention
+
+```sh
+# 1. seal the artifact set
+bin/time/snotra/snotra-provenance.sh seal <meeting-dir>
+
+# 2. timestamp the root (with a QTSP/RFC 3161 authority if you have one)
+bin/time/snotra/snotra-evidence.sh timestamp <meeting-dir> --tsa https://tsa.example/rfc3161
+
+# 3. a local read-only copy (not object-lock, but tamper-resistant)
+bin/time/snotra/snotra-evidence.sh worm <meeting-dir>
+
+# 4. human certification
+bin/time/snotra/snotra-evidence.sh certify <meeting-dir> --reviewer "Reviewer Name" --note "corrections"
+
+# 5. retention policy (enforce moves, never deletes)
+bin/time/snotra/snotra-evidence.sh retention <meeting-dir> --days 365
+bin/time/snotra/snotra-evidence.sh enforce <meeting-dir> --dry-run
+```
+
+Without `--tsa`, the timestamp is stored as **local-unqualified** and labelled as such.
+A local read-only copy is **not** object-lock WORM; it is a second copy with permissions
+removed. Neither is a substitute for a qualified timestamp or a WORM store.
+
+The gate (`bin/gates/guards/sensitive-gate.sh`) checks classification, hold, access list,
+provenance and the NDA/private guard before any external surface.

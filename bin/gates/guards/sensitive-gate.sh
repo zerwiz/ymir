@@ -9,9 +9,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 DIR="${1-}"; shift || true
 [ -n "$DIR" ] && [ -d "$DIR" ] || { echo "usage: sensitive-gate.sh <dir> --surface ..." >&2; exit 2; }
-SURFACE="private"; TO=""
-while [ $# -gt 0 ]; do case "$1" in --surface) SURFACE="${2-}"; shift 2;; --to) TO="${2-}"; shift 2;; *) shift;; esac; done
-ACTOR="${USER:-unknown}"; AT="$(date --iso-8601=seconds)"; WHY=""
+SURFACE="private"; TO=""; ACTOR="${SNOTRA_ACTOR:-${USER:-unknown}}"
+while [ $# -gt 0 ]; do case "$1" in --surface) SURFACE="${2-}"; shift 2;; --to) TO="${2-}"; shift 2;; --actor) ACTOR="${2-}"; shift 2;; *) shift;; esac; done; AT="$(date --iso-8601=seconds)"; WHY=""
 fail(){ printf 'gate refused: %s\n' "$1" >&2; log refused "$1"; exit 1; }
 log(){
   python3 - "$DIR/access.jsonl" "$AT" "$ACTOR" "$SURFACE" "$TO" "$1" "$2" <<'PY'
@@ -46,6 +45,19 @@ case "$CLASS" in
   *patent*|*restricted*|*confidential*) [ "$SURFACE" = private ] || fail "classification $CLASS does not cross to $SURFACE" ;;
 esac
 [ "$HOLD" = 0 ] || [ "$SURFACE" = private ] || fail "hold is active"
+# 1b. access list, when the set declares one
+if [ "$SURFACE" != private ] && [ -f "$DIR/access.yaml" ]; then
+  ALLOWED="$(python3 - "$DIR/access.yaml" <<'PY'
+import sys,yaml
+d=yaml.safe_load(open(sys.argv[1],encoding='utf-8')) or {}
+names={str(x) for x in (d.get('allowed') or [])+ (d.get('counsel') or [])}
+if d.get('owner'): names.add(str(d['owner']))
+print(','.join(sorted(names)))
+PY
+)"
+  case ",$ALLOWED," in *",$ACTOR,"*) ;; *) fail "actor $ACTOR is not on the access list" ;; esac
+fi
+
 # 2. provenance for held/sensitive sets
 if [ "$SURFACE" != private ] && [ -f "$DIR/provenance.json" ]; then
   "$ROOT/bin/time/snotra/snotra-provenance.sh" verify "$DIR" >/dev/null 2>&1 || fail "provenance verify failed"

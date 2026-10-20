@@ -15,3 +15,4 @@ apps/odrerir/src/hall/lh-board.js                           # todo: G1 — reach
 apps/sessrumnir/src/web-server.ts                           # todo: G1 — no importer; confirm it is not an unregistered entry point, then delete
 apps/smidja-factory/apps/visualizer/src/lib/chat-store.ts   # todo: G1 — no importer; use it or delete it
 apps/smidja-factory/apps/visualizer/src/lib/router.ts       # todo: G1 — no importer; use it or delete it
+apps/hlidskjalf/src/gates/Thradr.tsx                       # todo: plan 93 T3 — register the terminal gate; the file is preserved, not deleted here

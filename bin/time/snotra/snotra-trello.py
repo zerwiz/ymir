@@ -126,6 +126,17 @@ def load(path):
 
 
 def record(d):
+    hold = os.path.join(d, 'classification.yaml')
+    if os.path.isfile(hold):
+        try:
+            import yaml
+            c = yaml.safe_load(open(hold, encoding='utf-8')) or {}
+            if c.get('hold') or 'patent' in str(c.get('classification', '')).lower():
+                die(f"export hold: {d} is {c.get('classification', 'restricted')} — no Trello export")
+        except SystemExit:
+            raise
+        except Exception:
+            die(f'classification.yaml unreadable in {d}')
     for n in ('record.json', 'meeting.json'):
         p = os.path.join(d, n)
         if os.path.isfile(p):
