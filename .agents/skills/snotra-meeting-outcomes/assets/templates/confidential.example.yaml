@@ -1,0 +1,16 @@
+# Protected material — the private guard reads this before any external surface.
+# Add each protected document's SHA-256 and the people allowed to receive it.
+# Surfaces: private allow · email parties-only · trello deny · public deny.
+version: 1
+authorized_emails: []
+protected: []
+markers:
+  - "Confidential Information"
+  - "CONFIDENTIAL"
+  - "Mutual Non-Disclosure"
+  - "Background IP"
+surfaces:
+  private: allow
+  email: parties-only
+  trello: deny
+  public: deny

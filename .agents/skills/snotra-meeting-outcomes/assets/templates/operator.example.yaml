@@ -1,0 +1,9 @@
+# Operator identity — the one file Snotra reads for the letter and the board.
+# Fill it in; no name, email or company is assumed.
+name: ""
+email: ""
+organization: ""
+partners: []
+signature:
+  prepared_with: "Snotra, Ymir's meeting assistant"
+  reviewed_by: ""          # defaults to name

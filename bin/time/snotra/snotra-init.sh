@@ -44,38 +44,13 @@ check() {
 apply() {
   mkdir -p "$MEETINGS" "$TPL" "$(dirname "$CRON")"
   if [ ! -f "$OP" ]; then
-    cat > "$OP" <<'YML'
-# Operator identity — fill this in. It is read by Snotra for the letter and the board;
-# no name, email or company is assumed. Private: lives only in the home.
-name: ""
-email: ""
-organization: ""
-partners: []
-signature:
-  prepared_with: "Snotra, Ymir's meeting assistant"
-YML
+    cp "$ROOT/.agents/skills/snotra-meeting-outcomes/assets/templates/operator.example.yaml" "$OP"
     echo "created	$OP"
   else
     echo "kept	$OP"
   fi
   if [ ! -f "$CONF" ]; then
-    cat > "$CONF" <<'YML'
-# Protected material — the private guard reads this before an external surface.
-# Add each protected document's SHA-256 and the people allowed to receive it.
-version: 1
-authorized_emails: []
-protected: []
-markers:
-  - "Confidential Information"
-  - "CONFIDENTIAL"
-  - "Mutual Non-Disclosure"
-  - "Background IP"
-surfaces:
-  private: allow
-  email: parties-only
-  trello: deny
-  public: deny
-YML
+    cp "$ROOT/.agents/skills/snotra-meeting-outcomes/assets/templates/confidential.example.yaml" "$CONF"
     echo "created	$CONF"
   else
     echo "kept	$CONF"
