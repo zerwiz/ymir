@@ -12,8 +12,9 @@
  * So: the CHAT picker shows the pi catalog; roster lists gain an `available`
  * flag by matching against it. One module, cached, used everywhere.
  */
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { accessSync, constants, existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { delimiter, join } from "node:path";
 
 export interface PiModel {
   id: string;       // provider/name — what pi resolves
@@ -31,10 +32,91 @@ let cache: { at: number; cwd: string; models: PiModel[] } | null = null;
  * For calls that carry free text (chat prompts) the args array is passed
  * through cmd's command-line builder, which quotes them safely.
  */
+/**
+ * WHERE `pi` IS — resolved, never assumed.
+ *
+ * Measured 2026-10-20: the visualizer runs as a systemd USER service whose PATH is
+ * `%h/.bun/bin:/usr/bin:/bin`, and pi installs to `~/.npm-global/bin`. Every chat
+ * message died with `Executable not found in $PATH: "pi"` while `pi` worked perfectly in
+ * a terminal — the classic service-PATH failure, and the reason "Kaia is offline" was
+ * showing for a healthy bridge.
+ *
+ * Order (Rule 07 — one documented default, overridable):
+ *   1. `YMIR_PI_BIN` — an explicit path, for a unit or a wrapper that knows better
+ *   2. `PI_BIN`      — the conventional name other tools use
+ *   3. PATH          — whatever the environment already resolves
+ *   4. the install locations a bare npm prefix produces, in this house's order
+ *
+ * A path that does not exist is skipped, not trusted: a stale override must not win over
+ * a real binary on PATH.
+ */
+const PI_FALLBACKS = [
+  "~/.npm-global/bin/pi",
+  "~/.local/bin/pi",
+  "/usr/local/bin/pi",
+  "/opt/homebrew/bin/pi",
+  "/usr/bin/pi",
+];
+
+function expandHome(p: string): string {
+  return p.startsWith("~/") ? join(homedir(), p.slice(2)) : p;
+}
+
+/** True when `candidate` is an executable file (or a Windows shim). */
+function executable(candidate: string): boolean {
+  if (!existsSync(candidate)) return false;
+  try {
+    accessSync(candidate, constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+let cachedPi: { at: number; path: string } | null = null;
+
+/** Tests and a service that changed its environment both need a fresh answer. */
+export function resetPiPathCache(): void {
+  cachedPi = null;
+}
+
+/** The absolute path to `pi`, or "pi" when nothing was found (the OS reports it then). */
+export function piPath(): string {
+  if (process.platform === "win32") return "pi";
+  const now = Date.now();
+  if (cachedPi && now - cachedPi.at < CACHE_TTL_MS) return cachedPi.path;
+
+  const explicit = process.env.YMIR_PI_BIN?.trim() || process.env.PI_BIN?.trim();
+  if (explicit) {
+    const abs = expandHome(explicit);
+    if (executable(abs)) {
+      cachedPi = { at: now, path: abs };
+      return abs;
+    }
+  }
+
+  for (const dir of (process.env.PATH ?? "").split(delimiter)) {
+    if (!dir) continue;
+    const candidate = join(dir, "pi");
+    if (executable(candidate)) {
+      cachedPi = { at: now, path: candidate };
+      return candidate;
+    }
+  }
+
+  for (const fallback of PI_FALLBACKS) {
+    const abs = expandHome(fallback);
+    if (executable(abs)) {
+      cachedPi = { at: now, path: abs };
+      return abs;
+    }
+  }
+  return "pi";
+}
+
 export function piCommand(args: string[]): string[] {
-  return process.platform === "win32"
-    ? ["cmd", "/c", "pi", ...args]
-    : ["pi", ...args];
+  if (process.platform === "win32") return ["cmd", "/c", "pi", ...args];
+  return [piPath(), ...args];
 }
 
 /** Shell `pi --list-models` (in the repo root) and normalize to {provider/name}. */

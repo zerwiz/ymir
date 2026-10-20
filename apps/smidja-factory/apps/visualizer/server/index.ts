@@ -18,6 +18,7 @@ import * as rosterApi from "./roster-api.ts";
 import * as chat from "./chat.ts";
 import * as settingsApi from "./settings.ts";
 import { isPiResolvable, piModels } from "./model-catalog.ts";
+import { adaptMemoryPayload } from "./memory-adapt.ts";
 
 const PORT = Number(process.env.PORT ?? 8437);
 const HOST = process.env.HOST ?? "127.0.0.1";
@@ -103,17 +104,17 @@ async function memoryProxy(req: Request, path: string): Promise<Response> {
     body: req.method === "POST" ? await req.text() : undefined,
   });
   const raw = await upstream.text();
-  // Normalize health: the bridge reports `status: "up"`, but the UI checks
-  // `ok` — set it so a healthy bridge is never shown as offline.
+  // One translation, at the boundary (server/memory-adapt.ts). The bridge is flat; the
+  // UI contract is nested; nothing translated, and the Memory page rendered blank.
   let body = raw;
-  if (path === "/health") {
-    try {
-      const d = JSON.parse(raw);
-      if (d && typeof d === "object" && d.ok === undefined) d.ok = d.status === "up";
-      body = JSON.stringify(d);
-    } catch {
-      /* leave raw */
+  try {
+    const parsed = JSON.parse(raw);
+    body = JSON.stringify(adaptMemoryPayload(path, parsed));
+    if (path === "/health" && (!parsed || typeof parsed !== "object")) {
+      body = JSON.stringify({ ok: false, db: null, error: "unexpected bridge payload" });
     }
+  } catch {
+    /* a non-JSON body is passed through untouched */
   }
   return new Response(body, {
     status: upstream.status,

@@ -111,15 +111,15 @@ function tagClass(tag: string): string {
       <div class="title">Kaia's memory <span class="dim">(engram)</span></div>
       <div v-if="health.ok" class="stat-row">
         <span class="stat">
-          <b>{{ inspect?.counts.episodes ?? health.episodes ?? '—' }}</b>
+          <b>{{ inspect?.counts?.episodes ?? health.episodes ?? '—' }}</b>
           episodes
         </span>
         <span class="stat">
-          <b>{{ inspect?.counts.facts ?? health.facts ?? '—' }}</b>
+          <b>{{ inspect?.counts?.facts ?? health.facts ?? '—' }}</b>
           facts
         </span>
         <span class="stat">
-          <b>{{ inspect?.counts.entities ?? health.entities ?? '—' }}</b>
+          <b>{{ inspect?.counts?.entities ?? health.entities ?? '—' }}</b>
           entities
         </span>
         <span v-if="inspect?.db" class="dim db">db: {{ inspect.db }}</span>
