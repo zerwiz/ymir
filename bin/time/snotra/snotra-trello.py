@@ -12,10 +12,40 @@ import json, os, re, sys, time, subprocess, urllib.parse, urllib.request, dateti
 HOME = os.path.expanduser('~')
 AUTH = os.path.join(HOME, '.pi/agent/mcp-auth.json')
 BASE = 'https://api.trello.com/1'
-LISTS = ['Meetings', 'Agenda', 'Proposed', 'Decided', 'Actions', 'Blocked', 'Done',
-         'Open Questions', 'Sign-off', 'Signed']
-COLORS = {'Grade A': 'red', 'Grade B': 'orange', 'Grade C': 'green',
-          'Blocking': 'purple', 'Question': 'sky'}
+DEFAULT_LISTS = ['Meetings', 'Agenda', 'Proposed', 'Decided', 'Actions', 'Blocked', 'Done',
+                 'Open Questions', 'Sign-off', 'Signed']
+DEFAULT_COLORS = {'Grade A': 'red', 'Grade B': 'orange', 'Grade C': 'green',
+                  'Blocking': 'purple', 'Question': 'sky'}
+
+
+def home_dir():
+    h = os.environ.get('YMIR_HOME')
+    if h:
+        return h
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    return subprocess.check_output(['bash', '-c', f'. "{root}/bin/vault/hoard-lib.sh"; ymir_home_root']).decode().strip()
+
+
+def load_trello_config():
+    cfg = {'version': 1, 'board': 'Meetings', 'lists': DEFAULT_LISTS, 'labels': DEFAULT_COLORS}
+    p = os.path.join(home_dir(), 'hodd/identity/trello.yaml')
+    if os.path.isfile(p):
+        try:
+            import yaml
+            data = yaml.safe_load(open(p, encoding='utf-8')) or {}
+            if int(data.get('version', 1)) != 1:
+                die(f"trello.yaml: unsupported version {data.get('version')}")
+            for k in ('board', 'lists', 'labels'):
+                if data.get(k):
+                    cfg[k] = data[k]
+        except Exception as e:
+            die(f'trello.yaml: {e}')
+    return cfg
+
+
+CONFIG = load_trello_config()
+LISTS = CONFIG['lists']
+COLORS = CONFIG['labels']
 
 
 def die(msg):
@@ -129,7 +159,7 @@ def ensure_board(d, rec):
     if not board:
         org = state.get('organizationId') or os.environ.get('TRELLO_ORG_ID', '6ad238393bae14df5e25c980')
         r = api('POST', '/boards', {
-            'name': os.environ.get('TRELLO_BOARD_NAME') or 'Meetings',
+            'name': os.environ.get('TRELLO_BOARD_NAME') or CONFIG.get('board') or 'Meetings',
             'defaultLists': 'false',
             'prefs_permissionLevel': 'private',
             'idOrganization': org,

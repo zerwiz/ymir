@@ -1,6 +1,7 @@
 # Where meeting records live, by scope. Copy to hodd/identity/meeting-locations.yaml
 # and edit the shelves to match the house. One meeting, one shelf.
 version: 1
+version: 1
 shelves:
   - id: private
     path: hodd/life/meetings
