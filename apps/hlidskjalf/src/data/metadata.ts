@@ -122,11 +122,6 @@ export const GATE_META: Record<GateId, PageMeta> = {
     description:
       'The meeting record: the shelf, the record, the participants, and the follow-up draft. Prepare, approve, send — never edit.',
   },
-  thradr: {
-    title: 'Þráðr',
-    description:
-      'A real shell in the high seat: a pty through the gate, so herdr opens here with its panes and agents. Loopback-only by default; every open and close is a rune.',
-  },
 };
 
 function setMeta(attr: 'name' | 'property', key: string, content: string): void {

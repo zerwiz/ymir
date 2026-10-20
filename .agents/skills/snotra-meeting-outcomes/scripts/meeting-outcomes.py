@@ -673,10 +673,6 @@ def render_actions(rec: dict) -> str:
     out = [f"# Action register — {rec['meeting'].get('title')}", ""]
     out.append("| ID | Verb | Deliverable | Owner | Due | Board | Status | Evidence |")
     out.append("|---|---|---|---|---|---|---|---|")
-    out.append("**The action standard:** one owner, one verb, one deliverable, one date, a "
-               "definition of done, and a source line. An action missing any of these is "
-               "printed as unresolved, never guessed.")
-    out.append("")
     for a in sorted(rec.get("actions", []), key=lambda x: (x.get("owner") or "", x.get("due_at") or "9999")):
         ev = a.get("evidence", {})
         out.append(f"| {a['action_id']} | {a.get('verb')} | {a.get('deliverable')} | "
@@ -689,19 +685,6 @@ def render_actions(rec: dict) -> str:
 
 def render_decisions(rec: dict) -> str:
     out = [f"# Decision log — {rec['meeting'].get('title')}", ""]
-    out.append("## The decision standard")
-    out.append("")
-    out.append("A decision enters this log only if it passes all six tests:")
-    out.append("")
-    out.append("1. **One sentence.** The decision is stated so it can be repeated without the discussion.")
-    out.append("2. **One decider.** A named person, not \"the team\".")
-    out.append("3. **A reason.** The rationale is written, not remembered.")
-    out.append("4. **A reversal cost.** `easy`, `costly` or `one-way`; a one-way door needs a review date.")
-    out.append("5. **Options ruled out.** What else was on the table, and why it lost.")
-    out.append("6. **A witness.** The timestamp and quote from the transcript.")
-    out.append("7. **A next look.** A review date, or an explicit `—` meaning \"no review needed\".")
-    out.append("8. **Dissent, if any.** A decision with no recorded dissent is not a claim that everyone agreed.")
-    out.append("")
     for d in rec.get("decisions", []):
         out.append(f"## {d['decision_id']}")
         out.append("")
@@ -711,20 +694,7 @@ def render_decisions(rec: dict) -> str:
         out.append(f"**Rationale:** {d.get('rationale') or 'not stated'}  ")
         out.append(f"**Reversibility:** {d.get('reversibility') or '—'}  ")
         out.append(f"**Review date:** {d.get('review_date') or '—'}  ")
-        out.append(f"**Status:** {d.get('status') or 'decided'}  ")
-        if d.get("impact"):
-            out.append(f"**Impact:** {d['impact']}  ")
-        alts = d.get("options") or d.get("alternatives") or []
-        if alts:
-            out.append(f"**Options considered:** {'; '.join(alts)}  ")
-        if d.get("tradeoffs"):
-            out.append(f"**Trade-offs accepted:** {d['tradeoffs']}  ")
-        if d.get("benefits"):
-            out.append(f"**Expected benefit:** {d['benefits']}  ")
-        if d.get("authority_limit"):
-            out.append(f"**What this does not authorise:** {d['authority_limit']}  ")
-        if d.get("dissent"):
-            out.append(f"**Dissent:** {d['dissent']}  ")
+        out.append(f"**Status:** {d.get('status')}")
         out.append("")
         out.append(f"> [{d['evidence']['timestamp']}] \"{d['evidence']['quote']}\"")
         out.append("")
@@ -837,26 +807,6 @@ def render_dependencies(rec: dict) -> str:
     lines.append("")
     return "\n".join(lines)
 
-def render_transcript(rec: dict, outdir: Path) -> str | None:
-    """Raw transcript, one line per segment, exactly as the source gave it."""
-    p = outdir / "segments.json"
-    if not p.is_file():
-        return None
-    data = json.loads(p.read_text(encoding="utf-8"))
-    segs = data.get("segments", data) if isinstance(data, dict) else data
-    lines = [f"# Raw transcript — {rec['meeting'].get('title')}", ""]
-    lines.append("Verbatim, in order, with the timestamps the source recorded. The record "
-                 "above is the curated reading; this is the evidence it rests on.")
-    lines.append("")
-    for seg in segs:
-        text = " ".join(str(seg.get("text", "")).split())
-        if not text:
-            continue
-        lines.append(f"[{seg.get('timestamp') or '—'}] **{seg.get('speaker') or 'Unknown'}:** {text}")
-    lines.append("")
-    return "\n".join(lines)
-
-
 def render_all(rec: dict, outdir: Path) -> list[Path]:
     outdir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
@@ -867,9 +817,6 @@ def render_all(rec: dict, outdir: Path) -> list[Path]:
         "followup-email.md": render_followup(rec),
         "dependency-map.md": render_dependencies(rec),
     }
-    transcript = render_transcript(rec, outdir)
-    if transcript:
-        files["transcript.md"] = transcript
     for name, text in files.items():
         p = outdir / name
         p.write_text(text, encoding="utf-8")

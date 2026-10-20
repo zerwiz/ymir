@@ -1,0 +1,15 @@
+# The meeting rhythm. Copy to hodd/identity/cadence.yaml.
+# weekday: Monday..Sunday; time is local house time; minutes is the length.
+version: 1
+weekly:
+  weekday: Monday
+  time: "09:00"
+  minutes: 45
+monthly:
+  weekday: Monday
+  time: "09:00"
+  minutes: 90
+quarterly:
+  weekday: Monday
+  time: "09:00"
+  minutes: 240

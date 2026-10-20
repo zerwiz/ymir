@@ -6,26 +6,16 @@
 # Writes email.md (plain text) and email.html (the same letter, designed) beside the
 # record. Nothing is hand-maintained: counts, decisions and owners come from record.json.
 set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+if [ -z "${YMIR_HOME:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; ymir_home_root YMIR_HOME 2>/dev/null || true; fi
+export YMIR_HOME
 DIR="${1-}"; [ -n "$DIR" ] && [ -d "$DIR" ] || { echo "usage: snotra-render-email.sh <meeting-dir>" >&2; exit 2; }
 python3 - "$DIR" <<'PY'
 import sys, os, json, html
 d=sys.argv[1]
 def operator():
     """Who writes the letter. Identity lives in the hoard, never in this script."""
-    base=os.environ.get('YMIR_HOME') or ''
-    if not base:
-        # Rule 07: the home is resolved by the house, never guessed here.
-        import subprocess
-        for cand in (os.environ.get('YMIR_ROOT',''), os.getcwd()):
-            if cand:
-                try:
-                    base=subprocess.run(['bash', os.path.join(cand,'bin/vault/hodd.sh'), 'path'],
-                                        capture_output=True, text=True, timeout=10).stdout.strip()
-                except Exception:
-                    base=''
-                if base:
-                    base=os.path.dirname(base)
-                    break
+    base=os.environ.get('YMIR_HOME','')
     path=os.path.join(base,'hodd','identity','operator.yaml')
     out={}
     try:
@@ -60,18 +50,46 @@ body.append(f"The decisions ({len(decisions)})")
 for x in decisions:
     who=x.get('decided_by') or 'unrecorded'
     body.append(f"- {x.get('statement')} ({who})")
+board=''
+try:
+    board=json.load(open(os.path.join(d,'trello.json'),encoding='utf-8')).get('board','')
+except OSError:
+    pass
+agenda=''
+try:
+    agenda=open(os.path.join(d,'agenda-next.md'),encoding='utf-8').read()
+except OSError:
+    pass
+agenda_date=next((l.replace('**Next meeting:** ','').strip() for l in agenda.splitlines() if l.startswith('**Next meeting:**')),'')
+qs=rec.get('questions',[])
+blocking=[q for q in qs if q.get('blocking')]
+if qs:
+    body.append("")
+    body.append(f"Open questions ({len(qs)}{', ' + str(len(blocking)) + ' blocking' if blocking else ''})")
+    for q in qs:
+        body.append(f"- {q.get('question')} ({q.get('decider')}{'; by ' + q['needed_by'] if q.get('needed_by') else ''})")
 body.append("")
 body.append(f"Who does what ({len(actions)} action{plural})")
 for who,n in sorted(by_owner.items(), key=lambda kv:(-kv[1],kv[0])):
     body.append(f"- {who} — {n}")
 body.append("")
-body.append("Attached: the Meeting Record (PDF and Markdown), the raw transcript, the Decision Log, the Action Register, the Dependency Map, and your own brief.")
+body.append("Attached: the Meeting Record (PDF and Markdown), the raw transcript, the Decision Log, the Action Register, the Open Questions, the Sign-off sheet, the Dependency Map, and your own brief.")
+if board:
+    body.append("")
+    body.append(f"The board: {board}")
 body.append("")
 body.append("Two questions:")
 body.append("1. Is the record right — anything missing, misheard or attributed to the wrong person?")
 body.append("2. Would you like this after every meeting, or only the ones that decide something — and in this shape: one team record, a short brief of your own actions, or both?")
 body.append("")
+if agenda:
+    body.append("Next meeting — proposed")
+    body.append(agenda_date)
+    body.append("The proposed agenda is attached. Reply to the Secretary to add an item; the Trello Agenda list is the shared queue.")
+    body.append("")
 body.append("A short reply is enough. If the format is wrong, say so plainly.")
+body.append("")
+body.append("To sign the record, reply `confirm`; to correct it, reply `objection: <what is wrong>`. The record becomes official when the Chair signs it.")
 body.append("")
 body.append("Best,")
 body.append((op.get('name') or sender).split()[0])
@@ -85,15 +103,16 @@ body.append(f"Prepared with Snotra, Ymir's meeting assistant. Reviewed by {op.ge
 text='\n'.join(body)+'\n'
 open(os.path.join(d,'email.md'),'w',encoding='utf-8').write(text)
 
+q_html=''.join(f'<li style="margin:0 0 8px;">{html.escape(q.get("question",""))} <span style="color:#7b8794;font-size:13px;">— {html.escape(q.get("decider") or "unassigned")}{"; by " + html.escape(q["needed_by"]) if q.get("needed_by") else ""}</span></li>' for q in qs)
 dec_html=''.join(f'<li style="margin:0 0 9px;"><span style="color:#12263f;">{html.escape(x.get("statement",""))}</span> <span style="color:#7b8794;font-size:13px;">— {html.escape(x.get("decided_by") or "unrecorded")}</span></li>' for x in decisions)
 owner_rows=''.join(f'<tr><td style="padding:7px 0;border-bottom:1px solid #edf1f5;color:#243b53;">{html.escape(who)}</td><td style="padding:7px 0;border-bottom:1px solid #edf1f5;text-align:right;color:#12263f;font-weight:600;">{n}</td></tr>' for who,n in sorted(by_owner.items(), key=lambda kv:(-kv[1],kv[0])))
-chips=''.join(f'<span style="display:inline-block;margin:0 6px 8px 0;padding:6px 11px;background:#f2f6fa;border:1px solid #dbe4ec;border-radius:14px;font-size:12.5px;color:#243b53;">{html.escape(x)}</span>' for x in ['Meeting Record (PDF)','Raw transcript','Decision Log','Action Register','Dependency Map','Your brief'])
+chips=''.join(f'<span style="display:inline-block;margin:0 6px 8px 0;padding:6px 11px;background:#f2f6fa;border:1px solid #dbe4ec;border-radius:14px;font-size:12.5px;color:#243b53;">{html.escape(x)}</span>' for x in ['Meeting Record (PDF)','Raw transcript','Decision Log','Action Register','Open Questions','Next agenda','Dependency Map','Your brief'])
 doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#eef2f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#243b53;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f6;padding:30px 12px;"><tr><td align="center">
 <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(18,38,63,.08);">
 <tr><td style="background:#12263f;padding:26px 34px 24px;">
-<div style="color:#9fb3c8;font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;">Synteon Technologies</div>
+<div style="color:#9fb3c8;font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;">{html.escape(op.get('company') or op.get('organization') or '')}</div>
 <div style="color:#ffffff;font-size:23px;font-weight:600;margin-top:7px;line-height:1.25;">{html.escape(title)}</div>
 <div style="color:#9fb3c8;font-size:13px;margin-top:7px;">{html.escape(date)} &nbsp;·&nbsp; {html.escape(', '.join(names))}</div>
 </td></tr>
@@ -106,6 +125,11 @@ doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" c
 <div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#7b8794;margin-bottom:10px;">The decisions ({len(decisions)})</div>
 <ul style="margin:0;padding-left:19px;font-size:14.5px;line-height:1.55;">{dec_html}</ul>
 </div></td></tr>
+{f"""<tr><td style="padding:18px 34px 0;">
+<div style="border-top:1px solid #e5ebf1;padding-top:16px;">
+<div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#7b8794;margin-bottom:10px;">Open questions ({len(qs)})</div>
+<ul style="margin:0;padding-left:19px;font-size:14.5px;line-height:1.55;">{q_html}</ul>
+</div></td></tr>""" if qs else ""}
 <tr><td style="padding:22px 34px 0;">
 <div style="background:#f7f9fc;border:1px solid #e2e9f1;border-radius:8px;padding:18px 20px;">
 <div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#7b8794;margin-bottom:8px;">Who does what ({len(actions)} action{plural})</div>
@@ -113,6 +137,7 @@ doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" c
 </div></td></tr>
 <tr><td style="padding:24px 34px 0;font-size:14.5px;line-height:1.6;">
 <p style="margin:0 0 10px;">Attached:</p><div>{chips}</div>
+{('<p style="margin:14px 0 0;"><a href="'+html.escape(board)+'" style="color:#2f6f8f;font-weight:600;">Open the meeting board in Trello →</a></p>') if board else ''}
 </td></tr>
 <tr><td style="padding:20px 34px 0;">
 <div style="border-left:3px solid #2f6f8f;background:#f7fafc;padding:16px 18px;font-size:14.5px;line-height:1.55;">
@@ -122,8 +147,14 @@ doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" c
 <li>Would you like this after every meeting, or only the ones that decide something — and in this shape: one team record, a short brief of your own actions, or both?</li>
 </ol></div>
 </td></tr>
+{f"""<tr><td style="padding:20px 34px 0;">
+<div style="background:#f7fafc;border:1px solid #e2e9f1;border-radius:8px;padding:16px 18px;font-size:14.5px;line-height:1.55;">
+<strong style="color:#12263f;">Next meeting — proposed</strong><br><span style="color:#5b6b7c;">{html.escape(agenda_date)}</span>
+<p style="margin:8px 0 0;">The proposed agenda is attached. Reply to the Secretary to add an item; the Trello <strong>Agenda</strong> list is the shared queue.</p>
+</div></td></tr>""" if agenda else ""}
 <tr><td style="padding:22px 34px 30px;font-size:14.5px;line-height:1.6;">
 <p style="margin:0 0 15px;">A short reply is enough. If the format is wrong, say so plainly.</p>
+<p style="margin:0 0 15px;">To sign the record, reply <strong>confirm</strong>; to correct it, reply <strong>objection: &lt;what is wrong&gt;</strong>. The record becomes official when the Chair signs it.</p>
 <p style="margin:0 0 3px;">Best,<br>{html.escape((op.get('name') or sender).split()[0])}</p>
 <div style="margin-top:22px;padding-top:14px;border-top:1px solid #e5ebf1;color:#7b8794;font-size:12.5px;line-height:1.55;">{html.escape(op.get('name') or sender)}<br>{html.escape(op.get('company') or op.get('organization') or '')} &nbsp;·&nbsp; {html.escape(op.get('email') or '')}</div>
 <div style="margin-top:12px;color:#9aa8b6;font-size:11.5px;">Prepared with Snotra, Ymir's meeting assistant. Reviewed by {html.escape(op.get('name') or sender)}.</div>

@@ -327,25 +327,6 @@ bind host is `HLIDSKJALF_HOST` (default `127.0.0.1`); inside a container set it 
 `0.0.0.0` so the published port reaches it, and pin the host-side publish to
 `127.0.0.1` so the surface stays private.
 
-## Þráðr — the terminal gate (2026-10-20, plan 93)
-
-A **real pty** in the high seat, so `herdr` opens inside the app. Not read-only, and therefore
-the one gate with a door of its own:
-
-```
-thradr[6]{piece,where,law}:
-  "the gate","src/gates/Thradr.tsx (#/thradr)","three actions: open herdr · who stands (herdr agent list) · plain shell"
-  "the view","src/components/Terminal.tsx","xterm.js themed from the app's CSS variables; the socket owns the shell"
-  "the laws","server/pty.ts","opt-out (YMIR_TERMINAL=0) · cap 4 per owner · 30 min idle · every open/close a rune"
-  "the broker","server/pty-broker.mjs","the shell is spawned by NODE over a Unix socket — node-pty dies under Bun (SIGHUP within a tick)"
-  "the door","/api/terminal (WS upgrade) + /api/terminal/status","gate cookie session · Origin must equal the gate's host · **loopback-only** unless YMIR_TERMINAL_ALLOW_REMOTE=1"
-  "the theme","src/styles/shell.css (.thradr*)","tokens only — never a hardcoded colour"
-```
-
-**The rule this gate adds to the surface:** a gate that can execute is not a gate that reads.
-Any future write-capable gate follows the same shape — session check on the transport itself,
-not only on the page.
-
 ## Smíðja in the UI
 
 The smithy's trace (its own `smidja/smidja_data/smidja.db`) is rendered by four gates:
