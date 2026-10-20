@@ -510,6 +510,11 @@ if [ "$MODE_PI" = 1 ]; then
     [ "$pruned" -gt 0 ] && add pi-ext-prune "$PI_EXT_HOME" "$pruned removed (one home — a duplicate would double-register)"
     add pi-extensions "$PI_EXT_SRC" "one tree — the project home (nothing deployed)"
     add pi-ext-root "$PI_EXT_HOME/.ymir-root" "$(ymir_root_record) -> $ROOT"
+    # The seat's own name. One source (hodd/identity/seats.yaml), one artefact per
+    # seat; a host with no identity line fails loudly rather than inherit "Brokk".
+    if [ -x "$ROOT/bin/agents/seat-identity.sh" ]; then
+      add seat-identity "$PI_EXT_HOME/.ymir-seat" "$("$ROOT/bin/agents/seat-identity.sh" --install "$(hostname -s)" 2>&1 | tail -1)"
+    fi
 
     # GLOBAL REACH, ONE HOME. The project tree is still the only home; the user
     # settings `extensions` array names it so pi loads it from ANY cwd. Pi

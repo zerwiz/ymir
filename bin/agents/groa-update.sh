@@ -133,6 +133,14 @@ printf 'reread-Brokk: %s\n' "$reread"
 # Galdr owns the assets; when the instruction surface moved she must be reflected
 # in the same pass (the code/plan/asset agreement law).
 printf 'galdr-reread: %s\n' "$reread"
+# The seat's name is part of the update surface: scan the collision registry and
+# report a drifted seat instead of silently keeping the old identity.
+if [ -x "$SCRIPT_DIR/../agents/name-registry.sh" ]; then
+  "$SCRIPT_DIR/../agents/name-registry.sh" scan >/dev/null 2>&1 || true
+fi
+if [ -x "$SCRIPT_DIR/../agents/seat-identity.sh" ]; then
+  printf 'seat-identity: %s\n' "$("$SCRIPT_DIR/../agents/seat-identity.sh" --check "$(hostname -s)" 2>&1 | tail -1)"
+fi
 if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS# }"; else printf 'nudge-eindri-homes: none\n'; fi
 
 # Keep the whole fleet on the fleet preferences (writes each home's gitignored

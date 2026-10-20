@@ -106,3 +106,4 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 | Voice | **The voice engines — whisper + piper** | `bin/voice/voice-ensure.sh` adopts the ear (whisper.cpp, owned by Snotra's road) and the voice (piper + a `.onnx` model), installing only what is missing, into the hoard; it is the installer's `voice` step, a row in the plan's engines phase, and Eir's `voice` surface | [docs/features/the-voice-engines.md](docs/features/the-voice-engines.md) |
 
 *Append a row when a feature lands. Correct by appending, never by erasing.*
+| Agents | Seat identity (`bin/agents/seat-identity.sh`) | Each machine names its own primary; `set` renames, `ensure` runs at install, `check` fails a drifted seat, `render` writes the contract | [docs/features/the-seat-name.md](docs/features/the-seat-name.md) |
