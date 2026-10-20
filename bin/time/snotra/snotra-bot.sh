@@ -27,24 +27,37 @@ ACTION="${1-}"; shift || true
 [ -n "$ACTION" ] || { sed -n '2,18p' "$0" >&2; exit 2; }
 
 die(){ printf 'error: %s\n' "$*" >&2; exit 1; }
+# URLs and key are REFERENCES: env first, then the vault. Never inline.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  _sd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _c in "$_sd/../../vault/hoard-lib.sh" "$_sd/../vault/hoard-lib.sh"; do
+    [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _sd _c
+fi
+KEY="${VEXA_API_KEY:-}"
+if [ -z "${VEXA_API_URLS:-}" ] || [ -z "${VEXA_API_URL:-}" ] || [ -z "$KEY" ]; then
+  _have=""
+  ymir_home_root _have 2>/dev/null || true
+  if [ -n "${_have:-}" ] && [ -r "$_have/hodd/secrets/platform.env.age" ]; then
+    _v="$(age -d -i "$_have/hodd/secrets/age.key" "$_have/hodd/secrets/platform.env.age" 2>/dev/null || true)"
+    [ -n "${VEXA_API_URLS:-}" ] || VEXA_API_URLS="$(printf '%s\n' "$_v" | sed -n 's/^VEXA_API_URLS=//p' | head -1 | sed "s/^['\"]//; s/['\"]$//")"
+    [ -n "${VEXA_API_URL:-}" ] || VEXA_API_URL="$(printf '%s\n' "$_v" | sed -n 's/^VEXA_API_URL=//p' | head -1 | sed "s/^['\"]//; s/['\"]$//")"
+    [ -n "$KEY" ] || KEY="$(printf '%s\n' "$_v" | sed -n 's/^VEXA_API_KEY=//p' | head -1 | sed "s/^['\"]//; s/['\"]$//")"
+  fi
+fi
 CANDIDATES="${VEXA_API_URLS:-${VEXA_API_URL:-}}"
 [ -n "$CANDIDATES" ] || die "VEXA_API_URL or VEXA_API_URLS is not set"
 IFS=',' read -r -a _urls <<< "$CANDIDATES"
 for u in "${_urls[@]}"; do
   case "$u" in
     https://*) ;;
+    http://127.0.0.1*|http://localhost*) ;;  # loopback is inside one host (network law)
     http://*) [ "${VEXA_ALLOW_HTTP:-0}" = 1 ] || die "refusing plain HTTP: $u (set VEXA_ALLOW_HTTP=1 only for tests)" ;;
     *) die "endpoint must be absolute: $u" ;;
   esac
 done
-KEY="${VEXA_API_KEY:-}"
-if [ -z "$KEY" ] && command -v ymir_home_root >/dev/null 2>&1; then
-  ymir_home_root _h 2>/dev/null || true
-  if [ -n "${_h:-}" ] && [ -r "$_h/hodd/secrets/platform.env" ]; then
-    KEY="$(sed -n 's/^VEXA_API_KEY=//p' "$_h/hodd/secrets/platform.env" | head -1)"
-  fi
-fi
-[ -n "$KEY" ] || die "VEXA_API_KEY is not set (env or platform.env)"
+[ -n "$KEY" ] || die "VEXA_API_KEY is not set (env or vault)"
 
 # Health-failover: whynot may be down; a local Vexa or a hosted one may not be.
 pick_url(){
