@@ -28,6 +28,7 @@ case "$HOST" in
   --list) MODE="list"; HOST="" ;;
   --file|--json|--install|--check|--render|--ensure) MODE="${HOST#--}"; HOST="${2:-$(hostname -s)}" ;;
   set) MODE="set"; HOST="${2:-$(hostname -s)}"; NEWNAME="${3-}"; NEWROLE="${4-}" ;;
+  names|--names) MODE="names"; HOST="" ;;
 esac
 
 role_file(){
@@ -40,8 +41,25 @@ role_file(){
   esac
 }
 
+if [ "$MODE" = names ]; then
+  # The naming law is the source: a seat's primary must be a figure with a role file.
+  for f in "$ROOT"/.agents/agents/*.md; do
+    n="$(basename "$f" .md)"
+    case "$n" in *-*) n="${n%%-*}" ;; esac
+    printf '%s\n' "$n"
+  done | sort -u
+  exit 0
+fi
+
 if [ "$MODE" = set ]; then
   [ -n "${NEWNAME:-}" ] || { printf 'error: set needs <host> <name> [role]\n' >&2; exit 2; }
+  if ! bash "$0" --names | grep -qxF "$NEWNAME"; then
+    if [ "${YMIR_ALLOW_UNKNOWN_NAME:-0}" != 1 ]; then
+      printf 'refused\t"%s" is not a name in the naming law\n' "$NEWNAME" >&2
+      printf 'help: seat-identity.sh --names   (or YMIR_ALLOW_UNKNOWN_NAME=1 to override)\n' >&2
+      exit 3
+    fi
+  fi
   python3 - "$ROSTER" "$HOST" "$NEWNAME" "${NEWROLE:-}" <<'PY'
 import sys
 try: import yaml
