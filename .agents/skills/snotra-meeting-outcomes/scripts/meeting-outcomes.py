@@ -731,7 +731,8 @@ def render_followup(rec: dict) -> str:
     out.append("")
     out.append("Kind regards,")
     out.append("")
-    out.append(m.get("organizer") or "")
+    # Who SENDS the follow-up is not always who ORGANISED the meeting.
+    out.append(m.get("sender") or m.get("organizer") or "")
     out.append("")
     return "\n".join(out)
 
