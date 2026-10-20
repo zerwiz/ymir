@@ -5,8 +5,9 @@
 # without either --send (an approved send) or --draft (default).
 #
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
-#       [--attach FILE ...] [--record ID] [--dry-run]
+#       [--html FILE] [--attach FILE ...] [--record ID] [--dry-run]
 #   mail-send.sh send <draft-id>
+#   mail-send.sh discard <draft-id>
 #   mail-send.sh status
 set -euo pipefail
 VERSION="1.0.0"
@@ -24,14 +25,23 @@ CID="$(get GOOGLE_MCP_CLIENT_ID)"; CSEC="$(get GOOGLE_MCP_CLIENT_SECRET)"; RT="$
 [ -n "$CID" ] && [ -n "$CSEC" ] && [ -n "$RT" ] || die "google credentials missing"
 TOKEN="$(curl -sS -m 20 -X POST https://oauth2.googleapis.com/token -d "client_id=$CID" -d "client_secret=$CSEC" -d "refresh_token=$RT" -d "grant_type=refresh_token" | python3 -c "import json,sys;print(json.load(sys.stdin).get('access_token',''))")"
 [ -n "$TOKEN" ] || die "token refresh failed"
-gmail(){ local method=$1 path=$2 body=${3-}; local a=(-sS -m 60 -X "$method" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -w '\n%{http_code}'); [ -n "$body" ] && a+=(-d "$body"); curl "${a[@]}" "https://gmail.googleapis.com/gmail/v1$path"; }
+gmail(){
+  local method=$1 path=$2 body=${3-}; local tmp=""
+  local a=(-sS -m 60 -X "$method" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -w '\n%{http_code}')
+  # A raw message with a PDF can exceed MAX_ARG_STRLEN; never put it in argv.
+  if [ -n "$body" ]; then tmp="$(mktemp)"; printf '%s' "$body" > "$tmp"; a+=(--data-binary "@$tmp"); fi
+  local out; out="$(curl "${a[@]}" "https://gmail.googleapis.com/gmail/v1$path")"
+  [ -n "$tmp" ] && rm -f "$tmp"
+  printf '%s' "$out"
+}
 
 draft(){
-  local to="" subject="" body="" dry=0 record="" from_record=""; local attaches=()
+  local to="" subject="" body="" html="" dry=0 record="" from_record=""; local attaches=()
   while [ $# -gt 0 ]; do case "$1" in
     --to) to="${2-}"; shift 2 ;;
     --subject) subject="${2-}"; shift 2 ;;
     --body) body="${2-}"; shift 2 ;;
+    --html) html="${2-}"; shift 2 ;;
     --attach) attaches+=("${2-}"); shift 2 ;;
     --record) record="${2-}"; shift 2 ;;
     --from-record) from_record="${2-}"; shift 2 ;;
@@ -40,6 +50,7 @@ draft(){
   [ -n "$subject" ] && [ -n "$body" ] || die "draft needs --subject --body"
   # --body is a FILE (the help says so). Read it; a plain string still works.
   if [ -f "$body" ]; then body="$(cat "$body")"; fi
+  [ -n "$html" ] && [ -f "$html" ] && html="$(cat "$html")"
   if [ -n "$from_record" ]; then
     [ -r "$from_record" ] || die "record not readable: $from_record"
     local extra; extra="$(python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));print(",".join(p["email"] for p in d.get("participants",[]) if p.get("email")))' "$from_record")"
@@ -47,16 +58,20 @@ draft(){
   fi
   [ -n "$to" ] || die "draft needs --to or --from-record with participant emails"
   local eml; eml="$(mktemp --suffix=.eml)"
-  python3 - "$to" "$subject" "$body" "$eml" "${attaches[@]}" <<'PY'
-import sys, os
+  python3 - "$to" "$subject" "$body" "$eml" "$html" "${attaches[@]}" <<'PY'
+import sys, os, mimetypes
 from email.message import EmailMessage
-to,subject,body,out,*att=sys.argv[1:]
+to,subject,body,out,html,*att=sys.argv[1:]
 m=EmailMessage(); m["To"]=to; m["Subject"]=subject; m.set_content(body)
+if html: m.add_alternative(html, subtype="html")
 for p in att:
     if not os.path.isfile(p): continue
     data=open(p,"rb").read()
-    m.add_attachment(data, maintype="text", subtype="markdown" if p.endswith(".md") else "plain",
-                     filename=os.path.basename(p))
+    if p.endswith(".md"):
+        maintype, subtype = "text", "markdown"
+    else:
+        maintype, subtype = mimetypes.guess_type(p)[0].split("/", 1) if mimetypes.guess_type(p)[0] else ("application", "octet-stream")
+    m.add_attachment(data, maintype=maintype, subtype=subtype, filename=os.path.basename(p))
 open(out,"wb").write(bytes(m))
 PY
   if [ "$dry" = 1 ]; then printf 'eml\t%s\n' "$eml"; return 0; fi
@@ -65,11 +80,9 @@ import base64,sys
 print(base64.urlsafe_b64encode(open(sys.argv[1],'rb').read()).decode())
 PY
 )"
-  local payload; payload="$(python3 - "$raw" <<'PY'
-import json,sys
-print(json.dumps({"message":{"raw":sys.argv[1]}}))
-PY
-)"
+  # The raw message can exceed MAX_ARG_STRLEN (a PDF attachment does), so it
+  # reaches Python on stdin, never as an argument.
+  local payload; payload="$(printf '%s' "$raw" | python3 -c 'import json,sys;print(json.dumps({"message":{"raw":sys.stdin.read()}}))')"
   local out code body2; out="$(gmail POST "/users/me/drafts" "$payload")"; code="${out##*$'\n'}"; body2="${out%$'\n'*}"
   case "$code" in 200|201) ;; *) die "draft failed (HTTP $code): $body2" ;; esac
   python3 - "$body2" "$eml" <<'PY'
@@ -85,10 +98,18 @@ import json,sys;d=json.loads(sys.argv[1]);print(f'sent\t{d.get("id")}')
 PY
   ;; *) die "send failed (HTTP $code): $body" ;; esac
 }
+discard(){
+  local id="${1-}"; [ -n "$id" ] || die "discard needs a draft id"
+  local out code body; out="$(gmail DELETE "/users/me/drafts/$id")"; code="${out##*$'
+'}"; body="${out%$'
+'*}"
+  case "$code" in 200|204) printf 'discarded\t%s\n' "$id" ;; 404) printf 'gone\t%s\n' "$id" ;; *) die "discard failed (HTTP $code): $body" ;; esac
+}
 status(){ local out code; out="$(gmail GET "/users/me/profile")"; code="${out##*$'\n'}"; [ "$code" = 200 ] && printf 'gmail\tready\n' || die "gmail not ready (HTTP $code)"; }
 case "$ACTION" in
   draft) draft "$@" ;;
   send) send "$@" ;;
+  discard) discard "$@" ;;
   status) status ;;
   *) printf 'usage: mail-send.sh draft|send|status\n' >&2; exit 2 ;;
 esac
