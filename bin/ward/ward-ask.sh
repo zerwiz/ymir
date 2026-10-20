@@ -32,9 +32,11 @@ AUDIT="$(bash "$SCRIPT_DIR/security-audit.sh" check 2>/dev/null)" || true
 HIGH="$(printf '%s' "$AUDIT" | grep -cE '"(HIGH|CRITICAL)"' || true)"
 CRIT="$(printf '%s' "$AUDIT" | grep -c '"CRITICAL"' || true)"
 
-python3 - "$AUDIT" "$OUT" "$STAMP" "$JSON" <<'PY'
-import sys, re, json, datetime
-audit, out, stamp, as_json = sys.argv[1:5]
+python3 - "$AUDIT" "$OUT" "$STAMP" "$JSON" "$WARD_DIR/answers.yaml" <<'PY'
+import sys, re, json, datetime, yaml
+audit, out, stamp, as_json, answers_path = sys.argv[1:6]
+try: answers = (yaml.safe_load(open(answers_path)) or {}).get("answers", {})
+except Exception: answers = {}
 rows = []
 for line in audit.splitlines():
     m = re.match(r'\s*"(CRITICAL|HIGH|MEDIUM|LOW)","([^"]*)","([^"]*)","([^"]*)"', line)
@@ -44,9 +46,11 @@ decisions = []
 seen = set()
 for r in rows:
     if r["severity"] not in ("HIGH", "CRITICAL"): continue
-    key = (r["what"], r["detail"])
+    key = f'{r["what"]}|{r["detail"]}'
     if key in seen: continue
-    seen.add(key); decisions.append(r)
+    seen.add(key)
+    if answers.get(key, {}).get("status") in ("close", "keep"): continue
+    decisions.append(r)
 for i, d in enumerate(decisions, 1):
     d["id"] = f"WARD-{stamp.replace('-','')}-{i:02d}"
     d["options"] = ["close it (run the command)", "keep it (write the reason)", "ask for a plan first"]
