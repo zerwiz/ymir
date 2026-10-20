@@ -240,6 +240,21 @@
               "string",
               "null"
             ]
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "alternatives": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
