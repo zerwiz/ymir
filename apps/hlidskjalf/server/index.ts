@@ -990,13 +990,17 @@ function workspaceRoot(realm: string): string {
   // <realm>; the checkout is only a legacy fallback for a home not yet migrated.
   // Skrymir was browsing the repo's own directories and reading files whose links
   // point into the hoard — which is why a listed file answered "not found".
+  // The realm's OWN tree first. A workspace may name a company, but the operator's
+  // projects live under svartalfaheim/<realm>/projects — the company mapping is a
+  // display owner, not the shelf. This is why Skrymir showed whynotproductions and
+  // not the work tree that holds the meetings.
+  const realmTree = join(HOME_DIR, 'svartalfaheim', realm);
+  if (existsSync(realmTree)) return realmTree;
   const ws = workspaces().find((w) => w.id === realm);
   if (ws?.company) {
     const company = join(HOME_DIR, 'svartalfaheim', ws.company);
     if (existsSync(company)) return company;
   }
-  const realmTree = join(HOME_DIR, 'svartalfaheim', realm);
-  if (existsSync(realmTree)) return realmTree;
   const scope = join(HOME_DIR, 'workspace', realm);
   if (existsSync(scope)) return scope;
   const slug = realm.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1012,7 +1016,8 @@ function files(realm: string) {
   const walk = (dir: string, rel: string, depth: number): unknown => {
     const name = rel === '' ? (realm || 'svartalfaheim') : rel.split('/').pop()!;
     const node: Record<string, unknown> = { name, type: 'dir', path: rel || '/', children: [] as unknown[] };
-    if (depth > 3 || !existsSync(dir)) return node;
+    const maxDepth = Number(process.env.SKRYMIR_MAX_DEPTH ?? 6);
+    if (depth > maxDepth || !existsSync(dir)) return node;
     let entries: string[] = [];
     try {
       entries = readdirSync(dir);
