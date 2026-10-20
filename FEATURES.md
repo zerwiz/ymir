@@ -51,6 +51,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Collaboration | Ratatoskr (A2A 1.0) | Agent-to-agent tasks over an open protocol; agent cards, lifecycle | [docs/features/ratatoskr-a2a.md](docs/features/ratatoskr-a2a.md) |
 | Skills | Galdr + Gungnir | The craft: skills, standards, and synthesis of a missing capability | [docs/features/galdr-and-gungnir-skills.md](docs/features/galdr-and-gungnir-skills.md) |
 | Workers | Hermes runtime | An adopted worker runtime with its own brain, memory, and subagents | [docs/features/hermes-the-worker-runtime.md](docs/features/hermes-the-worker-runtime.md) |
+| Meetings | Snotra doors (`snotra-store`, `ping-room`, `snotra-autojoin`, `snotra-bot`) | One record contract for every meeting: lane directories, append-only writes, generated index, on-demand Þing room, calendar auto-join, and a bot named Snotra | [docs/features/snotra-meetings.md](docs/features/snotra-meetings.md) |
 | Meetings | Snotra (the meeting ear) | Captures a call (PipeWire), transcribes (whisper.cpp), mines minutes into the hoard | [docs/features/snotra-the-meeting-ear.md](docs/features/snotra-the-meeting-ear.md) |
 
 ## Surfaces — what you look at

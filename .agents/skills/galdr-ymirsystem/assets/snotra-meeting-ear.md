@@ -384,3 +384,38 @@ version pinned. The ensure script can include this fetch step.
 - The miner is the **counsel** (what was decided, and who owes what)
 - The minutes are the **record** (what was decided)
 - The MCP face is the **voice** (speaks the record to agents)
+
+---
+
+## The store contract and the four doors (appended 2026-10-20)
+
+The ear is one transport. The record is now a contract every transport writes into:
+
+```
+$YMIR_HOME/hodd/life/meetings/<work|personal>/<YYYYMMDD-HHMM>-<slug>/
+  meeting.json  transcript.md  minutes.md  decisions.md  actions.md  cards.json
+  audio/  .owner  .state  .transcribe.lock  .corrections.md
+```
+
+The lane is a **directory**; `meeting.json.workspace` must equal it. Audio is never in
+git; `put` refuses it when the home does not ignore it. The record is append-only:
+`put` refuses to overwrite, and a correction is `--as corrections`. `index.md` is
+generated, never hand-edited.
+
+| Door | Does |
+|---|---|
+| `bin/time/snotra/snotra-store.sh` | `new · put · state · index · list · verify · path` |
+| `bin/thing/ping-room.sh` | raises MiroTalk on the current seat, `local|tailnet|public`, exclusive `ping.zerwiz.org` claim |
+| `bin/time/snotra/snotra-autojoin.sh` | calendar scan → plan → bot dispatch (dry-run unless `--apply`) |
+| `bin/time/snotra/snotra-bot.sh` | Vexa API door; the participant name is **Snotra**; HTTPS and a vault key required |
+
+Transport is recorded, not inferred: `source` (`ear|bot|ping|telegram`), `transport`
+(`pipewire|webrtc`), `platform` (`google_meet|zoom|teams|jitsi|ping|local`). If two
+transports hear one room, the bot's transcript is authoritative for speaker labels and
+the ear's audio is kept as evidence.
+
+The private network law that governs where these run is `$YMIR_HOME/RULES/network.md`:
+the always-on control plane is zerwizserver; whynot is compute; the dev seats are where
+the operator is; and Þing is raised on demand, never assumed.
+
+Tests: `bash tests/run.sh` — four suites, 61 assertions.
