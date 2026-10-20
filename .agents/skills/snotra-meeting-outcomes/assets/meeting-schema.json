@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ymir.local/schemas/meeting-outcomes/meeting-schema.json",
+  "title": "Meeting outcomes record",
+  "type": "object",
+  "required": ["meeting", "participants", "decisions", "actions"],
+  "additionalProperties": false,
+  "properties": {
+    "meeting": {
+      "type": "object",
+      "required": ["meeting_id", "title", "started_at", "source", "classification"],
+      "additionalProperties": false,
+      "properties": {
+        "meeting_id": { "type": "string", "minLength": 3 },
+        "title": { "type": "string", "minLength": 3 },
+        "started_at": { "type": "string", "format": "date-time" },
+        "ended_at": { "type": ["string", "null"], "format": "date-time" },
+        "duration_minutes": { "type": ["integer", "null"], "minimum": 0 },
+        "organizer": { "type": ["string", "null"] },
+        "source": { "enum": ["read_ai", "fathom", "snotra", "manual"] },
+        "source_ref": { "type": ["string", "null"] },
+        "classification": { "enum": ["internal", "confidential", "restricted"] },
+        "purpose": { "type": ["string", "null"] },
+        "next_meeting": { "type": ["string", "null"] }
+      }
+    },
+    "participants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "present"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 2 },
+          "email": { "type": ["string", "null"] },
+          "role": { "type": ["string", "null"] },
+          "present": { "type": "boolean" },
+          "timezone": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "agenda": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["item"],
+        "additionalProperties": false,
+        "properties": {
+          "item": { "type": "string" },
+          "presenter": { "type": ["string", "null"] },
+          "outcome": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["decision_id", "statement", "decided_by", "evidence", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "decision_id": { "type": "string", "pattern": "^DEC-[0-9]{8}-[0-9]{2}$" },
+          "statement": { "type": "string", "minLength": 8 },
+          "context": { "type": ["string", "null"] },
+          "rationale": { "type": ["string", "null"] },
+          "decided_by": { "type": "string", "minLength": 2 },
+          "authority": { "type": ["string", "null"] },
+          "decided_at": { "type": ["string", "null"] },
+          "reversibility": { "enum": ["easy", "costly", "irreversible", null] },
+          "review_date": { "type": ["string", "null"] },
+          "evidence": { "$ref": "#/$defs/evidence" },
+          "status": { "enum": ["proposed", "decided", "superseded", "reversed"] },
+          "supersedes": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action_id", "verb", "deliverable", "owner", "due_at", "evidence", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "action_id": { "type": "string", "pattern": "^ACT-[0-9]{8}-[0-9]{2}$" },
+          "verb": { "type": "string", "minLength": 2 },
+          "deliverable": { "type": "string", "minLength": 3 },
+          "owner": { "type": "string", "minLength": 2 },
+          "accountable": { "type": ["string", "null"] },
+          "due_at": { "type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+          "date_unresolved": { "type": "boolean" },
+          "decide_by": { "type": ["string", "null"] },
+          "dependency": { "type": ["string", "null"] },
+          "definition_of_done": { "type": ["string", "null"] },
+          "board": { "type": ["string", "null"] },
+          "list": { "type": ["string", "null"] },
+          "card_ref": { "type": ["string", "null"] },
+          "evidence": { "$ref": "#/$defs/evidence" },
+          "confidence": { "enum": ["high", "medium", "low"] },
+          "status": { "enum": ["proposed", "accepted", "in_progress", "blocked", "done", "dropped"] },
+          "source": { "enum": ["machine", "curated"] }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question_id", "question", "decider", "needed_by"],
+        "additionalProperties": false,
+        "properties": {
+          "question_id": { "type": "string", "pattern": "^OQ-[0-9]{8}-[0-9]{2}$" },
+          "question": { "type": "string", "minLength": 8 },
+          "decider": { "type": "string", "minLength": 2 },
+          "needed_by": { "type": ["string", "null"] },
+          "blocking": { "type": "boolean" },
+          "evidence": { "$ref": "#/$defs/evidence" }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risk_id", "description", "owner"],
+        "additionalProperties": false,
+        "properties": {
+          "risk_id": { "type": "string", "pattern": "^RSK-[0-9]{8}-[0-9]{2}$" },
+          "description": { "type": "string", "minLength": 8 },
+          "likelihood": { "enum": ["low", "medium", "high", null] },
+          "impact": { "enum": ["low", "medium", "high", null] },
+          "mitigation": { "type": ["string", "null"] },
+          "owner": { "type": "string", "minLength": 2 }
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["timestamp", "quote"],
+      "additionalProperties": false,
+      "properties": {
+        "timestamp": { "type": "string", "pattern": "^[0-9]{1,3}:[0-9]{2}(:[0-9]{2})?$" },
+        "quote": { "type": "string", "minLength": 4, "maxLength": 600 },
+        "segment_index": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    }
+  }
+}
