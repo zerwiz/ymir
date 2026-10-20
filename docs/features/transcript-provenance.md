@@ -106,6 +106,19 @@ COMPLIANCE mode, a SHA-256 checksum and the manifest root as metadata. It needs
 A local read-only copy is **not** object-lock WORM; it is a second copy with permissions
 removed. Neither is a substitute for a qualified timestamp or a WORM store.
 
+## Signature and bundle
+
+```sh
+snotra-evidence.sh sign <meeting-dir>          # SSH key signs the certified copy
+snotra-evidence.sh verify-sign <meeting-dir>
+snotra-evidence.sh bundle <meeting-dir>        # tar.gz + SHA-256 of the evidence set
+```
+
+The signer's public key and fingerprint are stored with the record; the bundle contains
+the manifest, chained log, timestamp token, certified copy, signature and verification
+note. A self-signed operator key is not a qualified signature; it proves the key holder
+approved the copy.
+
 The gate (`bin/gates/guards/sensitive-gate.sh`) checks classification, hold, access list,
 provenance and the NDA/private guard before any external surface. Every allow/refuse is
 appended to a **hash-chained** `access.jsonl`; `snotra-evidence.sh verify-access` recomputes

@@ -42,5 +42,12 @@ for r in rows:
 open(p,'w').write('\n'.join(json.dumps(r,sort_keys=True) for r in rows)+'\n')
 PY2
 if bash "$ROOT/bin/time/snotra/snotra-evidence.sh" verify-access "$T/held" >/dev/null 2>&1; then bad "tampered access chain passed"; else ok "tampered access chain refused"; fi
+# signature and bundle, when the operator key exists
+if [ -f "$HOME/.ssh/id_ed25519" ]; then
+  bash "$ROOT/bin/time/snotra/snotra-evidence.sh" sign "$T/held" >/dev/null
+  if bash "$ROOT/bin/time/snotra/snotra-evidence.sh" verify-sign "$T/held" >/dev/null 2>&1; then ok "signature valid"; else bad "signature invalid"; fi
+  bash "$ROOT/bin/time/snotra/snotra-evidence.sh" bundle "$T/held" >/dev/null
+  [ -f "$T/held/evidence-bundle.tar.gz" ] && ok "bundle written" || bad "bundle missing"
+fi
 printf 'test_snotra_sensitive: %d pass, %d fail\n' "$pass" "$fail"
 [ "$fail" = 0 ]
