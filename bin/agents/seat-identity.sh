@@ -85,7 +85,7 @@ PY
     [ -n "$nm" ] || { printf 'error: no name given\n' >&2; exit 1; }
     exec bash "$0" set "$HOST" "$nm"
   fi
-  printf 'error: no primary for %s — run: seat-identity.sh set %s <name>\n' "$HOST" "$HOST" >&2
+  printf 'error: no primary recorded for %s — run: seat-identity.sh set %s <name>\n' "$HOST" "$HOST" >&2
   exit 1
 fi
 
