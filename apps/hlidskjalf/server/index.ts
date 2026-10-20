@@ -1323,7 +1323,8 @@ const SNOTRA_ROOTS = [SNOTRA_STORE, join(HOME_DIR, 'svartalfaheim')];
 interface SnotraMeetingOut {
   id: string; title: string; started_at: string | null; workspace: string;
   source: string; state: string; decisions: number; actions: number;
-  has_record: boolean; dir: string; participants: { name: string; email: string | null }[];
+  has_record: boolean; dir: string; scope: string;
+  participants: { name: string; email: string | null }[];
   draft?: string | null;
 }
 
@@ -1344,9 +1345,21 @@ function snotraDirs(): { dir: string; file: string }[] {
       }
     }
   } catch { /* store absent is not an error */ }
+  // Private meetings: the hoard's own shelf.
+  try {
+    for (const m of readdirSync(join(HOARD, 'workspaces', 'meetings'), { withFileTypes: true })) {
+      if (m.isDirectory()) push(join(HOARD, 'workspaces', 'meetings', m.name));
+    }
+  } catch { /* no private shelf */ }
   try {
     for (const realm of readdirSync(SNOTRA_ROOTS[1], { withFileTypes: true })) {
       if (!realm.isDirectory()) continue;
+      const companyMeetings = join(SNOTRA_ROOTS[1], realm.name, 'meetings');
+      if (existsSync(companyMeetings)) {
+        for (const m of readdirSync(companyMeetings, { withFileTypes: true })) {
+          if (m.isDirectory()) push(join(companyMeetings, m.name));
+        }
+      }
       const projects = join(SNOTRA_ROOTS[1], realm.name, 'projects');
       if (!existsSync(projects)) continue;
       for (const project of readdirSync(projects, { withFileTypes: true })) {
@@ -1373,7 +1386,13 @@ function snotraMeetings(): SnotraMeetingOut[] {
         id: String(m.id ?? m.meeting_id ?? dir.split('/').pop()),
         title: String(m.title ?? m.summary ?? '(untitled)'),
         started_at: m.started_at ?? m.start ?? null,
-        workspace: String(m.workspace ?? (dir.includes('/personal/') ? 'personal' : 'work')),
+        workspace: String(m.workspace ?? (dir.includes('/hodd/workspaces/meetings/') ? 'private'
+          : dir.includes('/personal/') ? 'personal'
+          : (dir.match(/svartalfaheim\/([^/]+)\/(?:meetings|projects)\//) ?? [])[1] ?? 'work')),
+        scope: dir.includes('/hodd/workspaces/meetings/') ? 'private'
+          : dir.includes('/projects/') ? 'project'
+          : dir.includes('/hodd/life/meetings/') ? 'store'
+          : 'company',
         source: String(m.source ?? 'manual'),
         state: String(m.state ?? d.state ?? 'captured'),
         decisions: Array.isArray(d.decisions) ? d.decisions.length : 0,
