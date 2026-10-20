@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[25]{file,subject}:
+rules_index[26]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -27,6 +27,7 @@ rules_index[25]{file,subject}:
   "23-no-code-in-app-folders.md","an application lives in apps/; bin/ holds function-named machine tools — never an application's name in a path"
   "24-the-ward.md","a door is named or it is closed: nothing public without a credential, keys not passwords, the audit is a cron"
   "25-agnostic-by-construction.md","one core, every device: three axes, probe never assume, a clean skip is a pass, a move is a migration"
+  "26-external-surfaces.md","private structure and NDA material never cross an external surface: no paths, vault names, secrets or classified material in Trello, email, Chat or a public PR"
   "README.md","this index"
 ```
 
@@ -50,3 +51,4 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | 15 | `15-vault-confidential.md` | The vault is a **confidential domain**: content under NDA never leaves it, in any form, local or remote; no model, log, embedding, ticket, or network ever sees it; enforced by `bin/gates/guards/vault-guard.sh`. |
 | 16 | `16-confidential-session.md` | A **confidential session** (`bin/vault/confidential.sh`): work on the vault with no route off it — confined workdir, off-vault doors off, an explicit model tier (local/none/remote), and `--airlock` for no network at all; `confidential-guard` refuses out-of-vault commits. |
 | 17 | `17-no-dead-code.md` | **No dead code**: an unreached file, function, branch or constant reads as a working feature and is not one; enforced by `bin/gates/guards/dead-code-guard.sh`. |
+| 26 | `26-external-surfaces.md` | **Private data does not cross an external surface.** No vault path, vault filename, secret or NDA/classified material in a Trello card, email, Chat or public PR; enforced by `bin/gates/guards/private-guard.sh` in mail and Trello. |

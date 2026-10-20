@@ -20,7 +20,7 @@ MODE="${1:---url}"; shift || true
 case "$MODE" in --url|--store) ;; *) sed -n '2,16p' "$0" >&2; exit 2 ;; esac
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+YMIR_HOME="${YMIR_HOME:-}"
 [ -r "$ROOT/bin/vault/hoard-lib.sh" ] && . "$ROOT/bin/vault/hoard-lib.sh" && ymir_home_root YMIR_HOME 2>/dev/null || true
 SEC="$YMIR_HOME/hodd/secrets"
 [ -r "$SEC/platform.env.age" ] || { printf 'error: no vault at %s\n' "$SEC" >&2; exit 1; }

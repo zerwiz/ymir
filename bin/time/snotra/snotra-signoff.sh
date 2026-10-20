@@ -117,7 +117,8 @@ TXT
 }
 sync(){
   local dry=0; [ "${1-}" = "--dry-run" ] && dry=1
-  local sec="$HOME/Documents/ymirhome/hodd/secrets"
+  local sec="${YMIR_HOME:-}/hodd/secrets"
+  if [ ! -r "$sec/age.key" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; ymir_home_root YMIR_HOME 2>/dev/null || true; sec="$YMIR_HOME/hodd/secrets"; fi
   [ -r "$sec/age.key" ] || { echo "error: vault key missing" >&2; exit 1; }
   local val; val="$(age -d -i "$sec/age.key" "$sec/platform.env.age" 2>/dev/null || true)"
   get(){ printf '%s\n' "$val" | sed -n "s/^$1=//p" | head -1 | sed "s/^['\"]//; s/['\"]$//"; }

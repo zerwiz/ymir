@@ -7,7 +7,7 @@ Production rules:
 - members are real Trello users from the workspace, never text pretending to be a tag;
 - a missing grant or a failed call stops loudly, it never writes half a board silently.
 """
-import json, os, re, sys, time, urllib.parse, urllib.request, datetime
+import json, os, re, sys, time, subprocess, urllib.parse, urllib.request, datetime
 
 HOME = os.path.expanduser('~')
 AUTH = os.path.join(HOME, '.pi/agent/mcp-auth.json')
@@ -193,6 +193,47 @@ def ensure_members(board, rec):
     return by_name
 
 
+PRIVATE = [
+    (re.compile(r'/home/|/Users/|[A-Z]:\\'), 'absolute path'),
+    (re.compile(r'\$YMIR_HOME|~'+r'/Documents/ymirhome|(?:^|[\s`(])hodd/|svartalfaheim/|\.yggdrasil/'), 'private hoard path'),
+    (re.compile(r'platform\.env|age\.key|secrets/|\.age\b'), 'vault filename'),
+    (re.compile(r'\bsk-[A-Za-z0-9]|\bghp_[A-Za-z0-9]|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY|password=|api_key=|Bearer [A-Za-z0-9._-]{12,}'), 'secret shape'),
+]
+
+
+def assert_external(text, where):
+    for pat, kind in PRIVATE:
+        if pat.search(str(text or '')):
+            die(f'private-guard refused {where}: {kind} (value redacted)')
+    # Rule 26 + the NDA registry: protected markers never go on a Trello card.
+    try:
+        import yaml
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+        home = os.environ.get('YMIR_HOME') or subprocess.check_output(['bash', '-c', f'. "{root}/bin/vault/hoard-lib.sh"; ymir_home_root']).decode().strip()
+        reg = yaml.safe_load(open(os.path.join(home, 'hodd/identity/confidential.yaml'), encoding='utf-8')) or {}
+        for marker in reg.get('markers', []):
+            if re.search(re.escape(marker), str(text or ''), re.I):
+                die(f'private-guard refused {where}: classified material (value redacted)')
+    except OSError:
+        pass
+
+
+def ensure_card_members(cid, ids):
+    ids = [i for i in (ids or []) if i]
+    if not ids:
+        return
+    try:
+        have = {m['id'] for m in api('GET', f'/cards/{cid}/members')}
+    except SystemExit:
+        have = set()
+    for mid in ids:
+        if mid not in have:
+            try:
+                api('POST', f'/cards/{cid}/idMembers', {'value': mid})
+            except SystemExit:
+                pass
+
+
 def esc(s):
     return str(s or '')
 
@@ -264,6 +305,7 @@ def ensure_checklist(cid, name, items):
         existing = {i.get('name') for i in cl.get('checkItems', [])}
         for text, checked in items:
             if text and text not in existing:
+                assert_external(text, f'checklist {name}')
                 try:
                     api('POST', f'/checklists/{cl["id"]}/checkItems', {'name': text[:500], 'checked': 'true' if checked else 'false'})
                 except SystemExit:
@@ -289,6 +331,7 @@ def export_cards(board, state, rec):
     out = []
 
     def upsert(ref, list_name, title, desc, due_date, member, label_names, checklist):
+        assert_external(title + '\n' + desc, ref)
         c = by_ref.get(ref)
         params = {'name': title[:500], 'desc': desc[:16000], 'idList': lists[list_name]}
         if due_date:
@@ -317,11 +360,15 @@ def export_cards(board, state, rec):
              f"**Board purpose:** every record, decision, action, open question and sign-off.\n\n"
              f"{len(rec.get('decisions', []))} decisions · {len(rec.get('actions', []))} actions · "
              f"{len(rec.get('questions', []))} open questions.")
+    assert_external(mdesc, 'meeting card')
+    all_members = ','.join(str(v) for v in members.values() if v)
     mparams = {'name': f"{m.get('title')} — {date}", 'desc': mdesc, 'idList': lists['Meetings'],
                'due': date + 'T12:00:00.000Z'}
+
     mid = met['id'] if met else api('POST', '/cards', mparams)['id']
     if met:
         api('PUT', f'/cards/{mid}', mparams)
+    ensure_card_members(mid, list(members.values()))
     ensure_checklist(mid, 'Meeting checks', [('Record published within 24 h', False),
                                              ('Sign-off request sent', False),
                                              ('Every reply recorded', False),
@@ -348,16 +395,62 @@ def export_cards(board, state, rec):
                ('Resolution', [('Answer recorded and the card moved to Signed', False)]))
     # sign-off card
     soc = next((c for c in existing if c.get('name', '').startswith('Sign-off —')), None)
-    sdesc = ("Reply `confirm` or `objection: <what is wrong>` within two business days. "
-             "Grade A needs every participant; Grade B the Approver and owners; Grade C accepts silence. "
-             "The Chair signs last.")
+    deadline = datetime.date.fromisoformat(date) + datetime.timedelta(days=2)
+    murl = api('GET', f'/cards/{mid}', {'fields': 'shortUrl'}).get('shortUrl') or state.get('board', '')
+    sdesc = (
+        "**What this is**\n"
+        "The meeting record is written. Before it becomes official, every participant confirms that it is accurate.\n\n"
+        "**What you need to do — about two minutes**\n"
+        f"1. Open the meeting card: {murl}\n"
+        "2. Read the decisions and the actions assigned to you.\n"
+        "3. Reply to the Secretary's email with one of these two lines:\n"
+        "\n"
+        "   `confirm`\n"
+        "\n"
+        "   `objection: <what is wrong or missing>`\n"
+        "\n"
+        f"4. Do it by **{deadline.strftime('%a %d %b %Y')}** (two business days).\n\n"
+        "**What `confirm` means**\n"
+        "It means the record is accurate — **not** that you agree with every decision. "
+        "An objection names a correction; it is not a re-vote.\n\n"
+        "**How the grade changes the rule**\n"
+        "- **Grade A** (one-way, strategic): every participant must confirm explicitly.\n"
+        "- **Grade B** (costly to reverse): the Approver and every affected owner must confirm.\n"
+        "- **Grade C** (easily reversed): silence after two business days counts as acceptance.\n\n"
+        "**What happens next**\n"
+        "- The Secretary ticks your name in the checklist below when your reply arrives.\n"
+        "- If you object, the Secretary appends the correction to the record and re-circulates only that change.\n"
+        "- When the required replies are in, the **Chair signs last**. The card moves to **Signed** and the record is official.\n"
+        "- After signing, corrections are appended, never rewritten.\n\n"
+        "**Who does what**\n"
+        "- **You:** confirm or object by the deadline.\n"
+        "- **Secretary:** records every reply and appends corrections.\n"
+        "- **Chair:** signs the record when the confirmations are complete.\n\n"
+        f"**Record:** the PDF and the full register were sent with the meeting email. "
+        f"**Board:** {state.get('board', '')}"
+    )
     sp = {'name': f"Sign-off — {m.get('title')}", 'desc': sdesc, 'idList': lists['Sign-off'],
-          'due': (datetime.date.fromisoformat(date) + datetime.timedelta(days=2)).isoformat() + 'T12:00:00.000Z'}
+          'due': deadline.isoformat() + 'T12:00:00.000Z'}
     sid = soc['id'] if soc else api('POST', '/cards', sp)['id']
     if soc:
         api('PUT', f'/cards/{sid}', sp)
     ensure_checklist(sid, 'Sign-off', [(p.get('name'), False) for p in rec.get('participants', [])])
     out.append({'ref': 'SIGNOFF', 'id': sid, 'list': 'Sign-off', 'name': sp['name']})
+    # next-meeting agenda card (record-driven)
+    ap = os.path.join(rec.get('_dir', ''), 'agenda-next.md')
+    if os.path.isfile(ap):
+        atext = open(ap, encoding='utf-8').read()
+        assert_external(atext, 'agenda card')
+        ac = next((c for c in existing if c.get('name', '').startswith('Agenda — next meeting')), None)
+        aparams = {'name': 'Agenda — next meeting (proposed)', 'desc': atext[:16000], 'idList': lists['Agenda']}
+
+        aid = ac['id'] if ac else api('POST', '/cards', aparams)['id']
+        if ac:
+            api('PUT', f'/cards/{aid}', aparams)
+        ensure_card_members(aid, list(members.values()))
+        headings = [l.lstrip('# ').strip() for l in atext.splitlines() if l.startswith('## ')]
+        ensure_checklist(aid, 'Agenda', [(h, False) for h in headings])
+        out.append({'ref': 'AGENDA', 'id': aid, 'list': 'Agenda', 'name': aparams['name']})
     state['cards'] = out
     state['members'] = {k: v for k, v in members.items()}
     link_workstreams(state, rec, out)

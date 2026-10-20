@@ -57,6 +57,14 @@ draft(){
     [ -n "$extra" ] && to="${to:+$to,}$extra"
   fi
   [ -n "$to" ] || die "draft needs --to or --from-record with participant emails"
+  # Rule 26: private structure never crosses to an external surface.
+  local guard="$ROOT/bin/gates/guards/private-guard.sh"
+  if [ -x "$guard" ]; then
+    local gtmp; gtmp="$(mktemp)"; printf '%s\n%s\n' "$body" "$html" > "$gtmp"
+    "$guard" check --surface email --to "$to" "$gtmp" >/dev/null 2>&1 || { rm -f "$gtmp"; die "private-guard refused the letter (run the guard to see the finding)"; }
+    rm -f "$gtmp"
+    for a in "${attaches[@]:-}"; do [ -f "$a" ] && { "$guard" check --surface email --to "$to" "$a" >/dev/null 2>&1 || die "private-guard refused attachment: $(basename "$a")"; }; done
+  fi
   local eml; eml="$(mktemp --suffix=.eml)"
   python3 - "$to" "$subject" "$body" "$eml" "$html" "${attaches[@]}" <<'PY'
 import sys, os, mimetypes
