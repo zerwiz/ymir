@@ -800,6 +800,23 @@ step_profile() {
   add profile OK "$(printf '%s' "$out" | tail -1)"
 }
 
+
+# ── the ward (2026-10-20) ────────────────────────────────────────────────────
+# Security is measured and ASKED, never silently changed. The install reports the
+# findings and writes the decisions; closing a door stays the Allfather's act.
+step_ward() {
+  if [ "$CHECK" = 1 ]; then add ward WARN "not audited in --check"; return 0; fi
+  if [ -x "$SCRIPT_DIR/../ward/verdr.sh" ]; then
+    "$SCRIPT_DIR/../ward/verdr.sh" report --no-alert >/dev/null 2>&1 || true
+  fi
+  if [ -x "$SCRIPT_DIR/../ward/ward-ask.sh" ]; then
+    local out rc
+    out="$("$SCRIPT_DIR/../ward/ward-ask.sh" 2>&1)"; rc=$?
+    if [ "$rc" -eq 3 ]; then add ward WARN "$(printf '%s' "$out" | grep -c '^  "WARD-' | tr -d ' ') decision(s) waiting — bin/ward/ward-ask.sh"
+    else add ward OK "nothing above the floor"; fi
+  else add ward SKIP "no ward-ask.sh"; fi
+}
+
 # ── the seat's name (2026-10-20) ─────────────────────────────────────────────
 # A seat must not inherit "Brokk". The roster is the one source; the registry is
 # the collision system; --ensure asks, takes YMIR_SEAT_NAME, or refuses loudly.
@@ -1500,6 +1517,7 @@ run_step step_local_model "the local model"
 run_step step_hermes "hermes"
 run_step step_profile "the machine's profile"
 run_step step_identity "the seat's name"
+run_step step_ward "the ward"
 run_step step_snotra "the meeting ear"
 run_step step_voice "the voice engines"
 run_step step_a2a "the A2A mesh"
