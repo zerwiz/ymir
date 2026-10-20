@@ -20,6 +20,12 @@ slugify(){ printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\+/-/
 
 prepare(){
   local followup=0; [ "${1-}" = "--followup" ] && followup=1
+  # Replace is the default: an old draft with a broken body is discarded, never left
+  # in the mailbox beside the new one.
+  if [ -r "$STATE" ]; then
+    python3 -c "import json;d=json.load(open('$STATE'));print('\n'.join(p.get('draftId','') for p in d.get('people',[]) if not p.get('sent')))" \
+      | while read -r old; do [ -n "$old" ] && bash "$MAIL" discard "$old" >/dev/null 2>&1 || true; done
+  fi
   python3 - "$REC" "$STATE" "$DIR" <<'PY' > /tmp/dispatch-plan.tsv
 import json,sys
 rec,state,dirp=sys.argv[1:]
@@ -36,7 +42,7 @@ PY
     local slug brief; slug="$(slugify "$name")"; brief="$DIR/briefs/$slug.md"
     [ -r "$brief" ] || { echo "skip\t$name\tno brief" >&2; continue; }
     local res id; res="$(bash "$MAIL" draft --to "$email" --subject "Your actions — $title" --body "$brief" --record "$meeting")"
-    id="$(printf '%s\n' "$res" | awk -F'\t' '$1=="draft" && $2 ~ /^r-[0-9]+$/ {print $2; exit}')"
+    id="$(printf '%s\n' "$res" | awk -F'\t' '$1=="draft" && $2 ~ /^r-?[0-9]+$/ {print $2; exit}')"
     [ -n "$id" ] || { echo "failed\t$name\t$res" >&2; continue; }
     out="$(python3 - "$out" "$name" "$email" "$id" <<'PY'
 import json,sys
