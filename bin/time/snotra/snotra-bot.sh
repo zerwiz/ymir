@@ -10,7 +10,9 @@
 #   snotra-bot.sh stop <id>
 #
 # Env:
-#   VEXA_API_URL       base URL, HTTPS (required)
+#   VEXA_API_URL       base URL, HTTPS (required unless VEXA_API_URLS is set)
+#   VEXA_API_URLS      comma-separated endpoints; the first healthy one wins
+#                      (e.g. whynot, then a local Vexa, then hosted)
 #   VEXA_API_KEY       bearer token (or SNOTRA_VAULT_KEY name; see below)
 #   VEXA_JOIN_PATH     default /meetings
 #   VEXA_STATUS_PATH   default /meetings/{id}
@@ -25,12 +27,16 @@ ACTION="${1-}"; shift || true
 [ -n "$ACTION" ] || { sed -n '2,18p' "$0" >&2; exit 2; }
 
 die(){ printf 'error: %s\n' "$*" >&2; exit 1; }
-[ -n "${VEXA_API_URL:-}" ] || die "VEXA_API_URL is not set"
-case "$VEXA_API_URL" in
-  https://*) ;;
-  http://*) [ "${VEXA_ALLOW_HTTP:-0}" = 1 ] || die "refusing plain HTTP: $VEXA_API_URL (set VEXA_ALLOW_HTTP=1 only for tests)" ;;
-  *) die "VEXA_API_URL must be an absolute URL" ;;
-esac
+CANDIDATES="${VEXA_API_URLS:-${VEXA_API_URL:-}}"
+[ -n "$CANDIDATES" ] || die "VEXA_API_URL or VEXA_API_URLS is not set"
+IFS=',' read -r -a _urls <<< "$CANDIDATES"
+for u in "${_urls[@]}"; do
+  case "$u" in
+    https://*) ;;
+    http://*) [ "${VEXA_ALLOW_HTTP:-0}" = 1 ] || die "refusing plain HTTP: $u (set VEXA_ALLOW_HTTP=1 only for tests)" ;;
+    *) die "endpoint must be absolute: $u" ;;
+  esac
+done
 KEY="${VEXA_API_KEY:-}"
 if [ -z "$KEY" ] && command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root _h 2>/dev/null || true
@@ -39,6 +45,18 @@ if [ -z "$KEY" ] && command -v ymir_home_root >/dev/null 2>&1; then
   fi
 fi
 [ -n "$KEY" ] || die "VEXA_API_KEY is not set (env or platform.env)"
+
+# Health-failover: whynot may be down; a local Vexa or a hosted one may not be.
+pick_url(){
+  local u code
+  for u in "${_urls[@]}"; do
+    code="$(curl -sS -o /dev/null -w '%{http_code}' -m 3 -H "Authorization: Bearer $KEY" "${u%/}/health" 2>/dev/null || echo 000)"
+    [ "$code" = 200 ] && { printf '%s' "${u%/}"; return 0; }
+  done
+  return 1
+}
+VEXA_API_URL="$(pick_url)" || die "no healthy Vexa endpoint among: $CANDIDATES"
+export VEXA_API_URL
 
 api(){ # method path json
   local method=$1 path=$2 body=${3-}

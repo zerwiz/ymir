@@ -23,6 +23,7 @@ class H(BaseHTTPRequestHandler):
         self._send(201,{"id":"b1","status":"queued"})
     def do_GET(self):
         log.write(json.dumps({"method":"GET","path":self.path,"auth":self.headers.get("Authorization")})+"\n"); log.flush()
+        if self.path == '/health': return self._send(200,{"status":"ok"})
         self._send(200,{"id":"b1","status":"joining","failure_reason":None})
     def log_message(self,*a): pass
 HTTPServer(('127.0.0.1',int(sys.argv[1])),H).serve_forever()
@@ -33,16 +34,26 @@ export VEXA_API_URL="http://127.0.0.1:18099" VEXA_API_KEY="test-key" VEXA_ALLOW_
 
 check "join succeeds" bash -c "'$DOOR' join 'https://meet.google.com/abc' --workspace work | grep -q 'joined'"
 check "request names the bot Snotra" python3 -c "
-import json;l=json.loads(open('$TMP/req.log').readline());b=json.loads(l['body']);assert b['bot_name']=='Snotra'"
+import json
+rows=[json.loads(l) for l in open('$TMP/req.log')]
+b=json.loads([r for r in rows if r['method']=='POST' and 'body' in r][0]['body']);assert b['bot_name']=='Snotra'"
 check "request carries the platform" python3 -c "
-import json;l=json.loads(open('$TMP/req.log').readline());b=json.loads(l['body']);assert b['platform']=='google_meet'"
+import json
+rows=[json.loads(l) for l in open('$TMP/req.log')]
+b=json.loads([r for r in rows if r['method']=='POST' and 'body' in r][0]['body']);assert b['platform']=='google_meet'"
 check "request carries the workspace" python3 -c "
-import json;l=json.loads(open('$TMP/req.log').readline());b=json.loads(l['body']);assert b['workspace']=='work'"
+import json
+rows=[json.loads(l) for l in open('$TMP/req.log')]
+b=json.loads([r for r in rows if r['method']=='POST' and 'body' in r][0]['body']);assert b['workspace']=='work'"
 check "request carries the bearer token" bash -c "grep -q 'Bearer test-key' '$TMP/req.log'"
 check "status answers" bash -c "'$DOOR' status b1 | grep -q 'joining'"
 check "stop answers" bash -c "'$DOOR' stop b1 | grep -q 'stopped'"
 unset VEXA_ALLOW_HTTP
 refute "plain HTTP is refused without the test flag" "$DOOR" join "http://127.0.0.1:18099/x"
 VEXA_ALLOW_HTTP=1 VEXA_API_KEY="" refute "missing key is refused" "$DOOR" join "http://127.0.0.1:18099/x"
+
+# failover: the first endpoint is down, the second answers — clean child env
+check "failover skips a dead endpoint" env VEXA_API_URLS='http://127.0.0.1:18098,http://127.0.0.1:18099' VEXA_API_KEY=test-key VEXA_ALLOW_HTTP=1 "$DOOR" join 'https://meet.google.com/abc'
+refute "all endpoints down is refused" env VEXA_API_URLS='http://127.0.0.1:18098,http://127.0.0.1:18097' VEXA_API_KEY=test-key VEXA_ALLOW_HTTP=1 "$DOOR" join 'https://meet.google.com/abc' 
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"; [ "$FAIL" -eq 0 ]
