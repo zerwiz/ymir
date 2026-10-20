@@ -47,6 +47,13 @@ body.append(f"The decisions ({len(decisions)})")
 for x in decisions:
     who=x.get('decided_by') or 'unrecorded'
     body.append(f"- {x.get('statement')} ({who})")
+qs=rec.get('questions',[])
+blocking=[q for q in qs if q.get('blocking')]
+if qs:
+    body.append("")
+    body.append(f"Open questions ({len(qs)}{', ' + str(len(blocking)) + ' blocking' if blocking else ''})")
+    for q in qs:
+        body.append(f"- {q.get('question')} ({q.get('decider')}{'; by ' + q['needed_by'] if q.get('needed_by') else ''})")
 body.append("")
 body.append(f"Who does what ({len(actions)} action{plural})")
 for who,n in sorted(by_owner.items(), key=lambda kv:(-kv[1],kv[0])):
@@ -72,9 +79,10 @@ body.append(f"Prepared with Snotra, Ymir's meeting assistant. Reviewed by {op.ge
 text='\n'.join(body)+'\n'
 open(os.path.join(d,'email.md'),'w',encoding='utf-8').write(text)
 
+q_html=''.join(f'<li style="margin:0 0 8px;">{html.escape(q.get("question",""))} <span style="color:#7b8794;font-size:13px;">— {html.escape(q.get("decider") or "unassigned")}{"; by " + html.escape(q["needed_by"]) if q.get("needed_by") else ""}</span></li>' for q in qs)
 dec_html=''.join(f'<li style="margin:0 0 9px;"><span style="color:#12263f;">{html.escape(x.get("statement",""))}</span> <span style="color:#7b8794;font-size:13px;">— {html.escape(x.get("decided_by") or "unrecorded")}</span></li>' for x in decisions)
 owner_rows=''.join(f'<tr><td style="padding:7px 0;border-bottom:1px solid #edf1f5;color:#243b53;">{html.escape(who)}</td><td style="padding:7px 0;border-bottom:1px solid #edf1f5;text-align:right;color:#12263f;font-weight:600;">{n}</td></tr>' for who,n in sorted(by_owner.items(), key=lambda kv:(-kv[1],kv[0])))
-chips=''.join(f'<span style="display:inline-block;margin:0 6px 8px 0;padding:6px 11px;background:#f2f6fa;border:1px solid #dbe4ec;border-radius:14px;font-size:12.5px;color:#243b53;">{html.escape(x)}</span>' for x in ['Meeting Record (PDF)','Raw transcript','Decision Log','Action Register','Dependency Map','Your brief'])
+chips=''.join(f'<span style="display:inline-block;margin:0 6px 8px 0;padding:6px 11px;background:#f2f6fa;border:1px solid #dbe4ec;border-radius:14px;font-size:12.5px;color:#243b53;">{html.escape(x)}</span>' for x in ['Meeting Record (PDF)','Raw transcript','Decision Log','Action Register','Open Questions','Dependency Map','Your brief'])
 doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#eef2f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#243b53;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f6;padding:30px 12px;"><tr><td align="center">
@@ -93,6 +101,11 @@ doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" c
 <div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#7b8794;margin-bottom:10px;">The decisions ({len(decisions)})</div>
 <ul style="margin:0;padding-left:19px;font-size:14.5px;line-height:1.55;">{dec_html}</ul>
 </div></td></tr>
+{f"""<tr><td style="padding:18px 34px 0;">
+<div style="border-top:1px solid #e5ebf1;padding-top:16px;">
+<div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#7b8794;margin-bottom:10px;">Open questions ({len(qs)})</div>
+<ul style="margin:0;padding-left:19px;font-size:14.5px;line-height:1.55;">{q_html}</ul>
+</div></td></tr>""" if qs else ""}
 <tr><td style="padding:22px 34px 0;">
 <div style="background:#f7f9fc;border:1px solid #e2e9f1;border-radius:8px;padding:18px 20px;">
 <div style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#7b8794;margin-bottom:8px;">Who does what ({len(actions)} action{plural})</div>

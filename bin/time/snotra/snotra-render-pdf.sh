@@ -64,6 +64,7 @@ footer {{ margin-top:8mm; border-top:1px solid #d8dee6; padding-top:2mm; color:#
 {md('decisions.md')}
 {md('actions.md')}
 {dep_table}
+{md('questions.md')}
 {briefs}
 <footer>Prepared with Snotra, Ymir's meeting assistant. Reviewed by Lars-Josef Lindbom.</footer>
 </body></html>"""
