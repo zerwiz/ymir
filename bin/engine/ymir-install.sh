@@ -787,6 +787,22 @@ step_host() {
   fi
 }
 
+
+# ── the seat's name (2026-10-20) ─────────────────────────────────────────────
+# A seat must not inherit "Brokk". The roster is the one source; the registry is
+# the collision system; --ensure asks, takes YMIR_SEAT_NAME, or refuses loudly.
+step_identity() {
+  if [ ! -x "$SCRIPT_DIR/../agents/seat-identity.sh" ]; then add identity SKIP "no seat-identity.sh"; return 0; fi
+  local host; host="$(hostname -s)"
+  if [ "$CHECK" = 1 ]; then add identity WARN "not installed in --check"; return 0; fi
+  if [ -x "$SCRIPT_DIR/../agents/name-registry.sh" ]; then
+    "$SCRIPT_DIR/../agents/name-registry.sh" scan >/dev/null 2>&1 || true
+  fi
+  local out rc
+  out="$("$SCRIPT_DIR/../agents/seat-identity.sh" --ensure "$host" 2>&1)"; rc=$?
+  if [ "$rc" -eq 0 ]; then add identity OK "$out"; else add identity WARN "$out"; fi
+}
+
 # ── 3c-bis. the role — what this machine IS in the fleet (plan 51, P1) ────────
 # Role is the one fact every surface derives from: install, update, the MCP
 # config, the cron set, the model rail, and dispatch. It is resolved BEFORE the
@@ -1470,6 +1486,7 @@ run_step step_engines "engines"
 run_step step_models "models"
 run_step step_local_model "the local model"
 run_step step_hermes "hermes"
+run_step step_identity "the seat's name"
 run_step step_snotra "the meeting ear"
 run_step step_voice "the voice engines"
 run_step step_a2a "the A2A mesh"

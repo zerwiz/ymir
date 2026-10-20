@@ -53,6 +53,13 @@ fi
 
 if [ "$MODE" = set ]; then
   [ -n "${NEWNAME:-}" ] || { printf 'error: set needs <host> <name> [role]\n' >&2; exit 2; }
+  # Collisions belong to the registry, not to this door: it knows every name
+  # across subsystems, hosts, agents, skills and extensions.
+  if [ -x "$ROOT/bin/agents/name-registry.sh" ] && [ -r "$YMIR_HOME/hodd/identity/names.yaml" ]; then
+    if ! bash "$ROOT/bin/agents/name-registry.sh" check "$NEWNAME" --as seat-persona; then
+      printf 'help: name-registry.sh list --kind agent\n' >&2; exit 3
+    fi
+  fi
   if ! bash "$0" --names | grep -qxF "$NEWNAME"; then
     if [ "${YMIR_ALLOW_UNKNOWN_NAME:-0}" != 1 ]; then
       printf 'refused\t"%s" is not a name in the naming law\n' "$NEWNAME" >&2
