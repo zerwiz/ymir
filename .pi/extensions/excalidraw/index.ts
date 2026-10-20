@@ -175,7 +175,7 @@ export default function excalidraw(pi: any) {
       "The Excalidraw fork's three services, as status / start / stop. " +
       "board (:4174) reads tickets over HTTP; bridge (:4173) answers the AI panel " +
       "and needs TTD_MODEL_BASE_URL; collab (:3002) is the room server. Actions are " +
-      "probes and spawns, never a blanket pkill — stop kills only the pid holding " +
+      "probes and spawns, never a blanket kill — stop kills only the pid holding " +
       "the port. Use status first; start only what you need.",
     parameters: {
       type: "object",

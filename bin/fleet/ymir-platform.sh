@@ -94,15 +94,22 @@ ymir_pid_cmdline() {  # the command line of a pid, one line; empty when gone
 
 
 ymir_kill_matching() {  # <pattern> [signal] — signal processes whose cmdline matches
+  # NEVER a blanket kill: a pattern matcher that knows its own line takes the caller
+  # with it (measured 2026-10-20 — twice). So the match is done here, by pid, and the
+  # caller's own pid, its parent, and this function's own shell are excluded by name.
   local pat=${1:-} sig=${2:-TERM}
   [ -n "$pat" ] || return 1
-  if command -v pkill >/dev/null 2>&1; then
-    pkill -"$sig" -f -- "$pat" 2>/dev/null || true
-    return 0
-  fi
-  # No pkill (some MSYS/WSL images): ps + kill, never matching our own line.
-  local pids
-  pids=$(ps -eo pid=,args= 2>/dev/null | grep -F -- "$pat" | grep -v -e grep -e ymir_kill_matching | awk '{print $1}')
+  local self=$$ parent=0 pids="" pid args
+  parent=$(ps -o ppid= -p "$self" 2>/dev/null | tr -d ' ')
+  for pid in $(ps -eo pid= 2>/dev/null); do
+    [ "$pid" = "$self" ] && continue
+    [ "$pid" = "$parent" ] && continue
+    args=$(ymir_pid_cmdline "$pid") || continue
+    case "$args" in
+      *"$pat"*) case "$args" in *ymir_kill_matching*|*"ps -eo pid="*) continue ;; esac
+                pids="$pids $pid" ;;
+    esac
+  done
   [ -n "$pids" ] && kill -s "$sig" $pids 2>/dev/null || true
   return 0
 }
