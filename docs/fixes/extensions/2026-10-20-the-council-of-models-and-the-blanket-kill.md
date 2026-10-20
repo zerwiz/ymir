@@ -78,3 +78,23 @@ rail holds one model at a time. That wall clock is the honest cost of a local-on
 - The verdict is not written automatically (plan 92 L4: Elder + the well + Skuld).
 - No herdr-pane mode yet (L3) — the watchable shape.
 - Vault mode (`confidential.sh` + refusing hosted rails) is documented, not enforced by code (L5).
+
+## 2026-10-20 (later) — the install now SEATS the council (plan 66 §7)
+
+**The Allfather's question:** *"are this coming in the updates and installations of ymir now."*
+It was not. The extension shipped, but nothing left a stack behind — so `logretta_sit` on a fresh
+install would answer *"no stack at …"*, which is a loud skip and still not a feature.
+
+**What was added so the answer is yes:**
+
+| piece | what it does |
+|---|---|
+| `bin/pi/logretta-ensure.sh` | `status` / `ensure [--check]`; seeds `<home>/config/logretta-stack.yaml` from the template **only when absent**, never overwrites the operator's models, and validates the file with the extension's own parser (node) |
+| `bin/engine/ymir-install.sh` → `step_council` | runs next to `step_loaders`: a fresh install seats the roster and says so; `--check` reports what it would do |
+| `.agents/migrations/0010-logretta-stack.sh` | an EXISTING home is healed by `ymir-migrate` on update (Rule 25 — a new capability that needs a file in the home is not installed until the home has it) |
+| `bin/agents/eir-doctor.sh` → `council` surface | "is the council seated" is now a health surface; `fix` calls the ensure door |
+
+**Proved:** `logretta.test.sh` grew five cases — an absent stack reports unhealthy, `ensure` seeds
+it, a second `ensure` says `"kept"` (never overwritten), the seeded stack validates, an invalid
+stack reports unhealthy. Eir on this machine reports `council: broken` **correctly** (this home has
+no stack yet), which is the surface doing its job.

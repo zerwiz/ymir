@@ -168,5 +168,19 @@ chmod +x "$TMP/bin/pi"
 res="$(run_tool logretta_sit '{"topic":"spend everything"}')"
 if grep -q "BUDGET" <<<"$res"; then ok "the budget line stops the council loudly"; else bad "budget not enforced"; fi
 
+# ── 6: the install seats the roster (plan 66 §7) ─────────────────────────────
+ENS="$ROOT/bin/pi/logretta-ensure.sh"
+TH="$TMP/home"; mkdir -p "$TH"
+if YMIR_HOME="$TH" "$ENS" status >/dev/null 2>&1; then bad "an absent stack must report unhealthy"; else ok "an absent stack reports unhealthy"; fi
+if YMIR_HOME="$TH" "$ENS" ensure >/dev/null 2>&1 && [ -f "$TH/config/logretta-stack.yaml" ]; then
+  ok "ensure seeds the roster from the template"
+else
+  bad "ensure did not seed the roster"
+fi
+if YMIR_HOME="$TH" "$ENS" ensure 2>&1 | grep -q '"kept"'; then ok "ensure never overwrites an existing stack"; else bad "ensure overwrote a stack"; fi
+if YMIR_HOME="$TH" "$ENS" status >/dev/null 2>&1; then ok "the seeded stack validates"; else bad "the seeded stack does not validate"; fi
+printf 'slots:\n  - name: a\n    model: x/y\n    lens: architect\n    rail: local\n' >"$TH/config/logretta-stack.yaml"
+if YMIR_HOME="$TH" "$ENS" status >/dev/null 2>&1; then bad "an invalid stack must report unhealthy"; else ok "an invalid stack reports unhealthy"; fi
+
 [ "$fail" = 0 ] && printf '\nlogretta: all laws hold\n'
 exit "$fail"

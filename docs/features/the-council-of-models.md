@@ -15,10 +15,14 @@ down one judgement. This is that council, for models.
 ## What you need
 
 - **pi** on `PATH` (the seats are clean-room `pi` children — that is how two seats are two models).
-- **A stack file** at `$YMIR_HOME/config/logretta-stack.yaml`. Copy the template:
+- **A stack file** at `$YMIR_HOME/config/logretta-stack.yaml`. **The installer and every
+  update seed it for you** (`step_council` → `bin/pi/logretta-ensure.sh`), copying the
+  template only when the home has none — an existing stack is never overwritten. To seat or
+  repair it by hand:
 
   ```sh
-  cp <repo>/config/logretta-stack.example.yaml "$YMIR_HOME/config/logretta-stack.yaml"
+  bin/pi/logretta-ensure.sh status     # seated? valid?
+  bin/pi/logretta-ensure.sh ensure     # seed from the template if absent
   ```
 
   Two to five slots; each slot is a `name`, a `model` (a fully-qualified `provider/id` exactly as
