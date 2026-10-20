@@ -39,6 +39,23 @@ from pathlib import Path
 
 VERSION = "1.0.0"
 
+
+def load_operator() -> dict:
+    """Who everything is sent from. The home owns it; no document hardcodes a name."""
+    import os
+    path = os.environ.get("YMIR_OPERATOR", "")
+    if not path:
+        home = os.environ.get("YMIR_HOME", "")
+        if home:
+            path = str(Path(home) / "hodd" / "identity" / "operator.yaml")
+    if not path or not Path(path).is_file():
+        return {}
+    try:
+        import yaml
+        return yaml.safe_load(Path(path).read_text()) or {}
+    except Exception:
+        return {}
+
 TS_RE = re.compile(r"^\[(\d{1,3}:\d{2}(?::\d{2})?)\]\s*(.*)$")
 MONTHS = {
     "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
@@ -466,6 +483,20 @@ def merge_record(candidates: dict, review: dict, base: date,
             if k not in known_d:
                 rec["decisions"].append(d)
                 known_d.add(k)
+    op = load_operator()
+    sig = op.get("signature") or {}
+    meeting = rec["meeting"]
+    if not meeting.get("sender"):
+        meeting["sender"] = op.get("name") or meeting.get("organizer")
+    if not meeting.get("sender_email"):
+        meeting["sender_email"] = op.get("email")
+    meeting.setdefault("sender_org", op.get("organization"))
+    if (sig.get("style") == "team") and op.get("partners") and not meeting.get("partners_line"):
+        meeting["partners_line"] = ", ".join(op["partners"])
+    if sig.get("disclose_assistants") and not meeting.get("signature_note"):
+        notes = [a.get("note") for a in (sig.get("assistants") or []) if a.get("note")]
+        if notes:
+            meeting["signature_note"] = " ".join(notes)
     rec["meeting"].setdefault("meeting_id", f"M-{base.strftime('%Y%m%d')}")
     rec["meeting"].setdefault("source", "manual")
     rec["meeting"].setdefault("classification", "internal")
@@ -733,6 +764,16 @@ def render_followup(rec: dict) -> str:
     out.append("")
     # Who SENDS the follow-up is not always who ORGANISED the meeting.
     out.append(m.get("sender") or m.get("organizer") or "")
+    if m.get("sender_org"):
+        out.append(m["sender_org"])
+    if m.get("sender_email"):
+        out.append(m["sender_email"])
+    if m.get("partners_line"):
+        out.append("")
+        out.append(f"Partners: {m['partners_line']}")
+    if m.get("signature_note"):
+        out.append("")
+        out.append(m["signature_note"])
     out.append("")
     return "\n".join(out)
 
