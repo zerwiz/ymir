@@ -27,16 +27,23 @@ TOKEN="$(curl -sS -m 20 -X POST https://oauth2.googleapis.com/token -d "client_i
 gmail(){ local method=$1 path=$2 body=${3-}; local a=(-sS -m 60 -X "$method" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -w '\n%{http_code}'); [ -n "$body" ] && a+=(-d "$body"); curl "${a[@]}" "https://gmail.googleapis.com/gmail/v1$path"; }
 
 draft(){
-  local to="" subject="" body="" dry=0 record=""; local attaches=()
+  local to="" subject="" body="" dry=0 record="" from_record=""; local attaches=()
   while [ $# -gt 0 ]; do case "$1" in
     --to) to="${2-}"; shift 2 ;;
     --subject) subject="${2-}"; shift 2 ;;
     --body) body="${2-}"; shift 2 ;;
     --attach) attaches+=("${2-}"); shift 2 ;;
     --record) record="${2-}"; shift 2 ;;
+    --from-record) from_record="${2-}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
     *) die "unknown option: $1" ;; esac; done
-  [ -n "$to" ] && [ -n "$subject" ] && [ -n "$body" ] || die "draft needs --to --subject --body"
+  [ -n "$subject" ] && [ -n "$body" ] || die "draft needs --subject --body"
+  if [ -n "$from_record" ]; then
+    [ -r "$from_record" ] || die "record not readable: $from_record"
+    local extra; extra="$(python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));print(",".join(p["email"] for p in d.get("participants",[]) if p.get("email")))' "$from_record")"
+    [ -n "$extra" ] && to="${to:+$to,}$extra"
+  fi
+  [ -n "$to" ] || die "draft needs --to or --from-record with participant emails"
   local eml; eml="$(mktemp --suffix=.eml)"
   python3 - "$to" "$subject" "$body" "$eml" "${attaches[@]}" <<'PY'
 import sys, os

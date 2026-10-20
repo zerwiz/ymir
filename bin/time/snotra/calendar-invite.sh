@@ -29,7 +29,7 @@ TOKEN="$(curl -sS -m 20 -X POST https://oauth2.googleapis.com/token -d "client_i
 api(){ local method=$1 path=$2 body=${3-}; local a=(-sS -m 30 -X "$method" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -w '\n%{http_code}'); [ -n "$body" ] && a+=(-d "$body"); curl "${a[@]}" "https://www.googleapis.com/calendar/v3$path"; }
 
 create(){
-  local title="" start="" end="" attendees="" meet=0 record="" dry=0
+  local title="" start="" end="" attendees="" meet=0 record="" dry=0 from_record=""
   while [ $# -gt 0 ]; do case "$1" in
     --title) title="${2-}"; shift 2 ;;
     --start) start="${2-}"; shift 2 ;;
@@ -37,16 +37,27 @@ create(){
     --attendees) attendees="${2-}"; shift 2 ;;
     --meet) meet=1; shift ;;
     --record) record="${2-}"; shift 2 ;;
+    --from-record) from_record="${2-}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
     *) die "unknown option: $1" ;; esac; done
   [ -n "$title" ] && [ -n "$start" ] && [ -n "$end" ] || die "create needs --title --start --end"
+  if [ -n "$from_record" ]; then
+    [ -r "$from_record" ] || die "record not readable: $from_record"
+    local extra; extra="$(python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));print(",".join((p.get("name") or "")+" <"+p["email"]+">" for p in d.get("participants",[]) if p.get("email")))' "$from_record")"
+    [ -n "$extra" ] && attendees="${attendees:+$attendees,}$extra"
+  fi
   local payload; payload="$(python3 - "$title" "$start" "$end" "$attendees" "$meet" "$record" "$TZ_NAME" <<'PY'
-import json,sys
+import json,sys,re
 title,start,end,att,meet,record,tz=sys.argv[1:]
+def _person(a):
+    a=a.strip()
+    m=re.match(r"^(.*)<([^>]+)>$",a)
+    if m: return {"displayName":m.group(1).strip(),"email":m.group(2).strip()}
+    return {"email":a}
 ev={"summary":title,
     "start":{"dateTime":start,"timeZone":tz},
     "end":{"dateTime":end,"timeZone":tz},
-    "attendees":[{"email":a.strip()} for a in att.split(",") if a.strip()],
+    "attendees":[_person(a) for a in att.split(",") if a.strip()],
     "guestsCanModify":False}
 if meet=="1":
     ev["conferenceData"]={"createRequest":{"requestId":f"snotra-{record or 'meeting'}","conferenceSolutionKey":{"type":"hangoutsMeet"}}}
