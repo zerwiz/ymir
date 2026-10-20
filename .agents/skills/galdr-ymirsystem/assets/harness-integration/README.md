@@ -1175,6 +1175,7 @@ those stay doors.
 | **`managandr.ts`** (new) — `ymir_calendar` | the calendar is **not a home concern**. It reached `ymirhome` because that door already knew how to reach the vault |
 | **`eir.ts`** (new) — `ymir_heal · ymir_update` | *"is the house healthy"* and *"renew Brokk"* had no tool at all. Two tools, not one `ymir_maintain`: a healer and an updater are two decisions |
 | **`opendesign.ts`** (new) — `ymir_studio` | the studio's door existed with no tool. **Never Maestro** — this one never touches :7860 |
+| **`logretta/`** (new, a directory with `index.ts`) — `logretta_stack · logretta_sit` | **Lögrétta, the council of models** (plan 92): 2–5 different models on one question, each a clean-room read-only `pi` child with its own remit, a debate round, and an arbiter's verdict that keeps the disagreements. It writes nothing; a `max_total_chars` budget stops it loudly. A directory because it ships a stack parser, a runner and the prompt library beside its entry point (Rule 13) |
 
 ### Three bugs the audit found by looking, not by reading
 

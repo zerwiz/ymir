@@ -281,13 +281,17 @@ def session_owner(
     honoured for a session that started before the contract. This module does not
     re-derive it — it asks the library, exactly as the bash arm did.
     """
-    library = paths.root / "bin" / "gleipnir-lock-lib.sh"
+    library = paths.root / "bin" / "vault" / "gleipnir-lock-lib.sh"
     if not library.is_file():
         return "none"
     script = "\n".join(
         [
             f'. "{library}" 2>/dev/null || exit 1',
             "gleipnir_lock_owner _ymir_owner 2>/dev/null || true",
+            # Fallback: the owner reader can answer empty when the lock exists but
+            # its starttime sidecar is missing (a stale or hand-written lock). The
+            # pid in the lock file is still the truth; the caller checks liveness.
+            'if [ -z "${_ymir_owner:-}" ]; then gleipnir_lock_path _p 2>/dev/null || true; [ -n "${_p:-}" ] && [ -r "$_p" ] && _ymir_owner="$(cat "$_p" 2>/dev/null)"; fi',
             'printf "%s" "${_ymir_owner:-}"',
             "",
         ]

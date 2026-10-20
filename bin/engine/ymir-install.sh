@@ -1100,6 +1100,30 @@ step_spa() {
   fi
 }
 
+# ── 5i. the council of models ────────────────────────────────────────────────
+# Plan 92. The extension ships in `.pi/extensions/logretta/`, but a council with no
+# stack is a loud skip — and plan 66 §7 is the law here: a feature is not done when its
+# code exists, it is done when the install seats it. The ensure door seeds the roster
+# from the template ONLY when the home has none; an existing stack is the operator's
+# models and is never overwritten.
+step_council() {
+  local ens="$SCRIPT_DIR/../pi/logretta-ensure.sh"
+  [ -x "$ens" ] || { add council SKIP "no logretta-ensure.sh"; return; }
+  if [ "$CHECK" = 1 ]; then
+    add council OK "would seat the council's roster (<home>/config/logretta-stack.yaml) if absent"
+    return
+  fi
+  if out="$("$ens" ensure 2>&1)"; then
+    if printf '%s' "$out" | grep -q '"seeded"'; then
+      add council OK "roster seeded — name YOUR models: logretta_stack"
+    else
+      add council OK "roster already seated"
+    fi
+  else
+    add council WARN "the council's roster is invalid — run bin/pi/logretta-ensure.sh status"
+  fi
+}
+
 # ── 6. loaders ───────────────────────────────────────────────────────────────
 step_loaders() {
   if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
@@ -1542,6 +1566,7 @@ run_step step_smidja "the smithy"
 run_step step_spa "the spa"
 run_step step_omarchy "omarchy layer"
 run_step step_loaders "loaders"
+run_step step_council "the council of models"
 run_step step_vault "the vault"
 run_step step_gates "gates"
 run_step step_marks "marks"

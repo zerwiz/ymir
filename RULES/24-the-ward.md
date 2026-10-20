@@ -35,3 +35,21 @@ exit 1 on HIGH or CRITICAL) · `bin/ward/verdr.sh` (**Vörðr**, the warden — 
 explicit word) · and the **`ward` surface of Eir**, so a house with an open door is never reported
 green. Plan **81** carries the phases (S0–S8) and the stack to adopt (CrowdSec or fail2ban, Lynis,
 AIDE, auditd, trivy/grype, gitleaks, and the agent-sandbox work).
+
+## 2026-10-20 — a kill names a pid, never a pattern (appended)
+
+**The ward's law gains its process form.** Measured twice in one session: `pkill -f "<pattern>"`
+matched **the shell that ran it**, because `pkill -f` matches the whole command line and the
+caller's own command line carries the pattern. A blanket kill does not know what it is killing —
+it takes an agent's own process tree, a sibling's pane, or the next unrelated process that happens
+to carry the name.
+
+```
+kill_law[3]{rule,why}:
+  "kill the pid that OWNS the thing","a unit, a pane id, the pid holding the port — all name a target; pkill -f names a guess"
+  "a blanket kill is refused at the gate","bin/gates/guards/pkill-guard.sh blocks a push whose added lines invoke pkill or killall"
+  "an escape is written on the same line","`# pkill-allowed: <why a pid will not do>` — or YMIR_ALLOW_PKILL=1 for one push, loudly"
+```
+
+The same law covers `killall`. `--scan` audits the tree and tells an invocation apart from a mention
+(a comment, a vendored banned-pattern list, the tool's own name).

@@ -1,0 +1,42 @@
+# logretta-stack — the council's roster (template)
+#
+# Copy to <YMIR_HOME>/config/logretta-stack.yaml and name YOUR models.
+# Nothing in the repo hardcodes a model for you (Rule 07).
+#
+# Slots: 2–5. Each slot is `name`, `model` (a fully-qualified `provider/id` as pi
+# serves it), `lens`, and `rail`:
+#
+#   rail: local    on this machine — llama-swap runs --models-max 1, so local
+#                  seats speak IN TURN (each load evicts the last)
+#   rail: fleet    another seat's rail over the tailnet — parallel with the above
+#   rail: hosted   a paid API — truly parallel, and NEVER lawful for vault content
+#
+# Lenses: architect · security · cost · skeptic · operator · recon (or any name —
+# an unknown lens falls back to "judge this as <name>").
+#
+# rounds: 1 = opinions + verdict · 2 = add the debate round (default) · 3 = as 2
+# timeout_seconds: per seat · max_total_chars: the budget line for one sitting
+#
+# arbiter: the seat that merges. Defaults to the first slot.
+
+name: council-default
+arbiter: architect
+rounds: 2
+timeout_seconds: 180
+max_total_chars: 60000
+
+slots:
+  - name: architect
+    model: llama-swap/qwen3.6-35b-a3b@iq3_s
+    lens: architect
+    rail: local
+
+  - name: skeptic
+    model: llama-swap/qwen3.5-9b@q4_k_s-summarizer
+    lens: skeptic
+    rail: local
+
+  - name: security
+    model: opencode-go/deepseek-v4.1-flash
+    lens: security
+    rail: hosted
