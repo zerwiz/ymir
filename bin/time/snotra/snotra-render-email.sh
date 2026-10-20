@@ -12,7 +12,20 @@ import sys, os, json, html
 d=sys.argv[1]
 def operator():
     """Who writes the letter. Identity lives in the hoard, never in this script."""
-    base=os.environ.get('YMIR_HOME') or os.path.expanduser('~/Documents/ymirhome')
+    base=os.environ.get('YMIR_HOME') or ''
+    if not base:
+        # Rule 07: the home is resolved by the house, never guessed here.
+        import subprocess
+        for cand in (os.environ.get('YMIR_ROOT',''), os.getcwd()):
+            if cand:
+                try:
+                    base=subprocess.run(['bash', os.path.join(cand,'bin/vault/hodd.sh'), 'path'],
+                                        capture_output=True, text=True, timeout=10).stdout.strip()
+                except Exception:
+                    base=''
+                if base:
+                    base=os.path.dirname(base)
+                    break
     path=os.path.join(base,'hodd','identity','operator.yaml')
     out={}
     try:

@@ -23,6 +23,7 @@
 #   reclaimable:merged   every commit is already in origin/main — the worktree/branch is a copy
 #   reclaimable:pushed   HEAD is exactly the remote branch — the work lives on the remote
 #   keep:dirty           uncommitted changes (tracked or untracked) — never touched
+#   keep:in-use          a live process is working inside it (an agent's shell, a herdr pane)
 #   keep:unpushed:N      N commits that exist nowhere but this machine — never touched.
 #                        (No separate "unmerged" verdict: a commit on no remote IS unpushed,
 #                        and the remedy is the same — push it or merge it.)
@@ -80,6 +81,20 @@ bare_branches() {
 
 size_of() { du -sh "$1" 2>/dev/null | awk '{print $1}'; }
 
+# Is any live process working INSIDE this path? A merged worktree can still be someone's
+# shell — the Allfather's own agent may be sitting in it. Measured 2026-10-20: reclaiming a
+# tree holds a cwd a live shell depends on (my own session was killed twice by exactly that
+# class of shortcut). `$PWD` of a process is `/proc/<pid>/cwd`.
+in_use() {  # <abs-path> → exit 0 when a live process stands inside it
+  local target="$1" pid cwd
+  for pid in /proc/[0-9]*; do
+    cwd="$(readlink -f "$pid/cwd" 2>/dev/null)" || continue
+    [ -n "$cwd" ] || continue
+    case "$cwd" in "$target"|"$target"/*) return 0 ;; esac
+  done
+  return 1
+}
+
 # verdict <path> <branch> → one of the five, with a count where useful
 verdict() {
   local path=$1 br=$2
@@ -88,6 +103,7 @@ verdict() {
   [ "$br" = "(detached)" ] && { printf 'keep:detached'; return; }
 
   if [ -n "$(git -C "$path" status --porcelain 2>/dev/null)" ]; then printf 'keep:dirty'; return; fi
+  if in_use "$path"; then printf 'keep:in-use'; return; fi
 
   local head up_name ahead
   head="$(git -C "$path" rev-parse HEAD 2>/dev/null)" || { printf 'keep:unreadable'; return; }
@@ -111,7 +127,7 @@ verdict() {
 }
 
 # ── gather ───────────────────────────────────────────────────────────────────
-TOTAL_WT=0; TOTAL_RECLAIM=0; UNPUSHED=0; DIRTY=0
+TOTAL_WT=0; TOTAL_RECLAIM=0; UNPUSHED=0; DIRTY=0; IN_USE=0
 declare -a LINES=()
 while IFS=$'\t' read -r path br; do
   [ -n "${path:-}" ] || continue
@@ -122,6 +138,7 @@ while IFS=$'\t' read -r path br; do
     reclaimable:*) TOTAL_RECLAIM=$((TOTAL_RECLAIM + 1)) ;;
     keep:unpushed*) UNPUSHED=$((UNPUSHED + 1)) ;;
     keep:dirty) DIRTY=$((DIRTY + 1)) ;;
+    keep:in-use) IN_USE=$((IN_USE + 1)) ;;
   esac
   idx="${path#$ROOT/.yggdrasil/}"
   LINES+=("$(printf "%s\t%s\t%s\t%s\t%s" "$idx" "$br" "$v" "${s:-?}" "$path")")
@@ -163,8 +180,8 @@ if [ "$JSON" = 1 ]; then
   done
   printf ']}\n'
 else
-  printf 'housekeeping[1]{base,worktrees,branches,reclaimable,unpushed,dirty}:\n'
-  printf '  "%s",%s,%s,%s,%s,%s\n' "$BASE" "$TOTAL_WT" "$(git branch | wc -l | tr -d ' ')" "$TOTAL_RECLAIM" "$UNPUSHED" "$DIRTY"
+  printf 'housekeeping[1]{base,worktrees,branches,reclaimable,unpushed,dirty,in_use}:\n'
+  printf '  "%s",%s,%s,%s,%s,%s,%s\n' "$BASE" "$TOTAL_WT" "$(git branch | wc -l | tr -d ' ')" "$TOTAL_RECLAIM" "$UNPUSHED" "$DIRTY" "$IN_USE"
   printf 'worktrees[%s]{path,branch,verdict,size}:\n' "${#LINES[@]}"
   for l in "${LINES[@]}"; do
     IFS=$'\t' read -r p b v s _abs <<<"$l"
