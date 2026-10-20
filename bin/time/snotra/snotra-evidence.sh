@@ -17,8 +17,8 @@ HOME_DIR="${YMIR_HOME:-}"; [ -n "$HOME_DIR" ] || ymir_home_root HOME_DIR 2>/dev/
 [ -n "$HOME_DIR" ] || { echo "error: no Ymir home" >&2; exit 1; }
 ACTION="${1:-status}"; DIR="${2-}"; shift 2 2>/dev/null || true
 [ -n "$DIR" ] && [ -d "$DIR" ] || { echo "usage: snotra-evidence.sh timestamp|worm|certify|retention|enforce|status <dir>" >&2; exit 2; }
-TSA=""; REVIEWER=""; NOTE=""; DAYS=""; DRY=0
-while [ $# -gt 0 ]; do case "$1" in --tsa) TSA="${2-}"; shift 2;; --reviewer) REVIEWER="${2-}"; shift 2;; --note) NOTE="${2-}"; shift 2;; --days) DAYS="${2-}"; shift 2;; --dry-run) DRY=1; shift;; *) shift;; esac; done
+TSA=""; REVIEWER=""; NOTE=""; DAYS=""; DRY=0; KEY="${HOME}/.ssh/id_ed25519"
+while [ $# -gt 0 ]; do case "$1" in --tsa) TSA="${2-}"; shift 2;; --reviewer) REVIEWER="${2-}"; shift 2;; --note) NOTE="${2-}"; shift 2;; --days) DAYS="${2-}"; shift 2;; --key) KEY="${2-}"; shift 2;; --dry-run) DRY=1; shift;; *) shift;; esac; done
 PROV="$DIR/provenance.json"; [ -f "$PROV" ] || { echo "error: seal the record first (snotra-provenance.sh seal)" >&2; exit 1; }
 ROOT_HASH="$(python3 -c "import json,sys;print(json.load(open('$PROV'))['root'])")"
 
@@ -148,6 +148,33 @@ verify_ts() {
   openssl ts -verify -in "$ts" -data "$PROV" -CAfile "$ca" >/dev/null 2>&1 && { echo "timestamp	valid	$ROOT_HASH"; return 0; } || { echo "timestamp	INVALID"; return 1; }
 }
 
+sign() {
+  [ -f "$DIR/certified-copy.md" ] || { echo "error: certify first" >&2; exit 1; }
+  [ -f "$KEY" ] || { echo "error: key not found: $KEY" >&2; exit 1; }
+  ssh-keygen -Y sign -f "$KEY" -n snotra-evidence "$DIR/certified-copy.md" >/dev/null 2>&1 || { echo "error: signing failed" >&2; exit 1; }
+  cp "${KEY}.pub" "$DIR/signer.pub"
+  { printf 'operator '; cat "${KEY}.pub"; } > "$DIR/allowed_signers"
+  ssh-keygen -lf "$DIR/signer.pub" | awk '{print $2}' > "$DIR/signer.fingerprint"
+  chmod 600 "$DIR/certified-copy.md.sig" "$DIR/allowed_signers" "$DIR/signer.fingerprint" 2>/dev/null || true
+  echo "signed	$(cat "$DIR/signer.fingerprint")"
+}
+
+verify_sign() {
+  [ -f "$DIR/certified-copy.md.sig" ] || { echo "no signature"; exit 1; }
+  [ -f "$DIR/allowed_signers" ] || { echo "no allowed_signers"; exit 1; }
+  ssh-keygen -Y verify -f "$DIR/allowed_signers" -I operator -n snotra-evidence -s "$DIR/certified-copy.md.sig" < "$DIR/certified-copy.md" >/dev/null 2>&1 && echo "signature	valid" || { echo "signature	INVALID"; exit 1; }
+}
+
+bundle() {
+  local out="$DIR/evidence-bundle.tar.gz"
+  local files="provenance.json provenance.jsonl timestamp certified-copy.md certification.jsonl verification-note.md signer.pub allowed_signers certified-copy.md.sig signer.fingerprint"
+  local present=""; for f in $files; do [ -e "$DIR/$f" ] && present="$present $f"; done
+  tar -czf "$out" -C "$DIR" $present 2>/dev/null || { echo "error: bundle failed" >&2; exit 1; }
+  sha256sum "$out" | awk '{print $1}' > "$out.sha256"
+  chmod 600 "$out" "$out.sha256"
+  echo "bundle	$out	$(cat "$out.sha256")"
+}
+
 verify_access() {
   python3 - "$DIR/access.jsonl" <<'PY'
 import json,sys,os,hashlib
@@ -175,4 +202,4 @@ for f in ('provenance.json','timestamp/timestamp.json','worm.json','certificatio
  p=os.path.join(d,f); print(f, 'present' if os.path.isfile(p) else 'missing')
 PY
 }
-case "$ACTION" in timestamp) timestamp;; worm) worm;; worm-s3) worm_s3;; certify) certify;; retention) retention;; enforce) enforce;; verify-ts) verify_ts;; verify-access) verify_access;; status) status;; *) echo "usage" >&2; exit 2;; esac
+case "$ACTION" in timestamp) timestamp;; worm) worm;; worm-s3) worm_s3;; certify) certify;; retention) retention;; enforce) enforce;; verify-ts) verify_ts;; verify-access) verify_access;; sign) sign;; verify-sign) verify_sign;; bundle) bundle;; status) status;; *) echo "usage" >&2; exit 2;; esac
