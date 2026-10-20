@@ -21,7 +21,15 @@
 #
 # Verdicts:
 #   reclaimable:merged   every commit is already in origin/main — the worktree/branch is a copy
+#   reclaimable:upstream every PATCH is already in main (rebase/cherry-pick merge — different
+#                        SHAs, same content). The commit count lies; `git cherry` does not.
 #   reclaimable:pushed   HEAD is exactly the remote branch — the work lives on the remote
+#   reclaimable:content-in-main  every file the branch changed is byte-identical in main
+#                        (merged under a different patch, e.g. a rebase with a change). The
+#                        plain answer to "is this code already in main?" — it is.
+#   keep:archive         no common history with main: a different lineage (pre-rebuild
+#                        history). Its "N ahead" is meaningless and deleting it destroys a
+#                        record — a human decides.
 #   keep:dirty           uncommitted changes (tracked or untracked) — never touched
 #   keep:in-use          a live process is working inside it (an agent's shell, a herdr pane)
 #   keep:unpushed:N      N commits that exist nowhere but this machine — never touched.
@@ -81,6 +89,49 @@ bare_branches() {
 
 size_of() { du -sh "$1" 2>/dev/null | awk '{print $1}'; }
 
+# The commit COUNT is not the question — the PATCH is. A branch merged by rebase or by
+# cherry-pick keeps different SHAs, so `rev-list --count` calls it "1000 commits ahead" while
+# every change in it is already in main. `git cherry` compares patch-ids and answers the real
+# question: how many of this branch's commits are NOT already upstream. Measured 2026-10-20:
+# feat/snotra-voice showed 12 "unpushed" commits and cherry said 0 — it was merged all along.
+patches_not_upstream() {  # <ref> → count of commits whose patch main does not have
+  git cherry "$BASE" "$1" 2>/dev/null | grep -c '^+' || true
+}
+
+shares_history() {  # <ref> → 0 when a merge-base with BASE exists
+  [ -n "$(git merge-base "$BASE" "$1" 2>/dev/null || true)" ]
+}
+
+own_diffstat() {  # <ref> → the branch's own change relative to its fork point
+  local mb; mb="$(git merge-base "$BASE" "$1" 2>/dev/null || true)"
+  [ -n "$mb" ] || return 0
+  git diff --shortstat "$mb" "$1" 2>/dev/null | sed 's/^ *//'
+}
+
+# THE QUESTION THE OPERATOR ACTUALLY ASKS: "is this code already in main?"
+#
+# Neither the commit count nor `git cherry` answers it exactly. A branch that was rebased
+# WITH A CHANGE, or merged under a slightly different patch, keeps patches `git cherry` calls
+# unique while every file it touched is byte-identical in main (measured 2026-10-20:
+# fix/one-extension-tree's constellation work sits in main as ac5fd8ad, and main has the
+# exact file). So the last test is the plain one: compare the BLOB of every file the branch
+# changed against main's blob. If they all match, the branch contributes no content.
+content_in_main() {  # <ref> → 0 when every changed file already matches main's copy
+  local ref=$1 mb changed path a b n=0 same=0
+  mb="$(git merge-base "$BASE" "$ref" 2>/dev/null || true)"
+  [ -n "$mb" ] || return 1
+  changed="$(git diff --name-only "$mb" "$ref" 2>/dev/null)"
+  [ -n "$changed" ] || return 0
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    n=$((n + 1))
+    a="$(git rev-parse "$ref:$path" 2>/dev/null || echo MISSING)"
+    b="$(git rev-parse "$BASE:$path" 2>/dev/null || echo MISSING)"
+    [ "$a" = "$b" ] && same=$((same + 1))
+  done <<<"$changed"
+  [ "$n" -gt 0 ] && [ "$same" = "$n" ]
+}
+
 # Is any live process working INSIDE this path? A merged worktree can still be someone's
 # shell — the Allfather's own agent may be sitting in it. Measured 2026-10-20: reclaiming a
 # tree holds a cwd a live shell depends on (my own session was killed twice by exactly that
@@ -108,6 +159,16 @@ verdict() {
   local head up_name ahead
   head="$(git -C "$path" rev-parse HEAD 2>/dev/null)" || { printf 'keep:unreadable'; return; }
   if git merge-base --is-ancestor "$head" "$BASE" 2>/dev/null; then printf 'reclaimable:merged'; return; fi
+  # SAFETY ORDER: "is this content held elsewhere?" first. An unrelated-history branch that
+  # is ALSO identical to its remote branch loses nothing by going — the remote keeps it.
+  if git rev-parse --verify --quiet "origin/$br" >/dev/null 2>&1 \
+     && [ "$(git rev-parse "origin/$br" 2>/dev/null)" = "$head" ]; then
+    printf 'reclaimable:pushed'; return
+  fi
+  if ! shares_history "$br"; then printf 'keep:archive'; return; fi
+  # Every patch already upstream (rebase/cherry-pick merge): nothing here is missing from main.
+  if [ "$(patches_not_upstream "$br")" = 0 ]; then printf 'reclaimable:upstream'; return; fi
+  if content_in_main "$br"; then printf 'reclaimable:content-in-main'; return; fi
 
   up_name="$(git -C "$path" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
   if [ -n "$up_name" ]; then
@@ -122,8 +183,7 @@ verdict() {
   fi
   # `-C "$path"`: measured in the fixture — counting from the repo root counted MAIN's
   # commits, not the worktree's, and called real local work "0".
-  local solo; solo="$(git -C "$path" rev-list --count "$BASE..HEAD" 2>/dev/null || echo 0)"
-  printf 'keep:unpushed:%s' "${solo:-0}"
+  printf 'keep:unpushed:%s' "$(patches_not_upstream "$br")"
 }
 
 # ── gather ───────────────────────────────────────────────────────────────────
@@ -141,7 +201,9 @@ while IFS=$'\t' read -r path br; do
     keep:in-use) IN_USE=$((IN_USE + 1)) ;;
   esac
   idx="${path#$ROOT/.yggdrasil/}"
-  LINES+=("$(printf "%s\t%s\t%s\t%s\t%s" "$idx" "$br" "$v" "${s:-?}" "$path")")
+  detail=""
+  case "$v" in keep:*) detail="$(own_diffstat "$br")" ;; esac
+  LINES+=("$(printf "%s\t%s\t%s\t%s\t%s\t%s" "$idx" "$br" "$v" "${s:-?}" "$path" "$detail")")
 done < <(wt_rows)
 
 declare -a BRANCHES=()
@@ -150,6 +212,18 @@ while IFS=$'\t' read -r br up; do
   [ "$br" = "main" ] && continue
   if git merge-base --is-ancestor "$br" "$BASE" 2>/dev/null; then
     v="reclaimable:merged"
+  elif [ -n "${up:-}" ] && [ "$(git rev-list --count "$up..$br" 2>/dev/null || echo 0)" = 0 ]; then
+    # identical to its remote branch: the content is held elsewhere, whatever its lineage.
+    v="reclaimable:pushed"
+  elif ! shares_history "$br"; then
+    # no common ancestor AND not held on a remote: a different lineage (the pre-rebuild
+    # history, an examined archive). Its commit count says nothing about pending work, and
+    # deleting it destroys the only copy of a record.
+    v="keep:archive"
+  elif [ "$(patches_not_upstream "$br")" = 0 ]; then
+    v="reclaimable:upstream"
+  elif content_in_main "$br"; then
+    v="reclaimable:content-in-main"
   elif [ -n "${up:-}" ]; then
     ahead="$(git rev-list --count "$up..$br" 2>/dev/null || echo 0)"
     if [ "${ahead:-0}" = 0 ]; then v="reclaimable:pushed"; else v="keep:unpushed:$ahead"; UNPUSHED=$((UNPUSHED + 1)); fi
@@ -157,7 +231,9 @@ while IFS=$'\t' read -r br up; do
     v="keep:unpushed:$(git rev-list --count "$BASE..$br" 2>/dev/null || echo 0)"
   fi
   case "$v" in reclaimable:*) TOTAL_RECLAIM=$((TOTAL_RECLAIM + 1)) ;; esac
-  BRANCHES+=("$(printf '%s\t%s' "$br" "$v")")
+  bdetail=""
+  case "$v" in keep:*) bdetail="$(own_diffstat "$br")" ;; esac
+  BRANCHES+=("$(printf '%s\t%s\t%s' "$br" "$v" "$bdetail")")
 done < <(bare_branches)
 
 # ── report ───────────────────────────────────────────────────────────────────
@@ -182,16 +258,16 @@ if [ "$JSON" = 1 ]; then
 else
   printf 'housekeeping[1]{base,worktrees,branches,reclaimable,unpushed,dirty,in_use}:\n'
   printf '  "%s",%s,%s,%s,%s,%s,%s\n' "$BASE" "$TOTAL_WT" "$(git branch | wc -l | tr -d ' ')" "$TOTAL_RECLAIM" "$UNPUSHED" "$DIRTY" "$IN_USE"
-  printf 'worktrees[%s]{path,branch,verdict,size}:\n' "${#LINES[@]}"
+  printf 'worktrees[%s]{path,branch,verdict,size,detail}:\n' "${#LINES[@]}"
   for l in "${LINES[@]}"; do
-    IFS=$'\t' read -r p b v s _abs <<<"$l"
-    printf '  "%s","%s","%s","%s"\n' "$p" "$b" "$v" "$s"
+    IFS=$'\t' read -r p b v s _abs detail <<<"$l"
+    printf '  "%s","%s","%s","%s","%s"\n' "$p" "$b" "$v" "$s" "${detail:-}"
   done
   if [ "${#BRANCHES[@]}" -gt 0 ]; then
-    printf 'branches[%s]{branch,verdict}:\n' "${#BRANCHES[@]}"
+    printf 'branches[%s]{branch,verdict,detail}:\n' "${#BRANCHES[@]}"
     for l in "${BRANCHES[@]}"; do
-      IFS=$'\t' read -r b v <<<"$l"
-      printf '  "%s","%s"\n' "$b" "$v"
+      IFS=$'\t' read -r b v bdetail <<<"$l"
+      printf '  "%s","%s","%s"\n' "$b" "$v" "${bdetail:-}"
     done
   fi
 fi
