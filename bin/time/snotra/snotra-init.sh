@@ -34,9 +34,17 @@ check() {
   [ -d "$MEETINGS" ] && have "$MEETINGS" || need "$MEETINGS"
   [ -f "$OP" ] && have "$OP" || need "$OP (operator identity)"
   [ -f "$CONF" ] && have "$CONF" || need "$CONF (confidential register)"
+  [ -f "$HOME_DIR/hodd/identity/trello.yaml" ] && have "trello.yaml" || need "trello.yaml (board/lists/labels)"
+  [ -f "$HOME_DIR/hodd/identity/cadence.yaml" ] && have "cadence.yaml" || need "cadence.yaml (rhythm)"
+  [ -f "$HOME_DIR/hodd/identity/meeting-locations.yaml" ] && have "meeting-locations.yaml" || need "meeting-locations.yaml (shelves)"
   [ -f "$FRAME" ] && have "$FRAME" || need "$FRAME (framework)"
   [ -d "$TPL" ] && have "$TPL" || need "$TPL (templates)"
   if [ -f "$CRON" ] && grep -q "Snotra meeting maintenance" "$CRON"; then have "cron Snotra block"; else need "cron Snotra block"; fi
+  for f in "$OP" "$CONF" "$HOME_DIR/hodd/identity/trello.yaml" "$HOME_DIR/hodd/identity/cadence.yaml" "$HOME_DIR/hodd/identity/meeting-locations.yaml"; do
+    [ -f "$f" ] || continue
+    v="$(sed -n 's/^version: *//p' "$f" | head -1)"
+    [ -z "$v" ] || [ "$v" = "1" ] || { echo "unsupported version $v in $f" >&2; MISSING=$((MISSING+1)); }
+  done
   printf 'snotra-init\t%s\t%d missing\n' "$HOME_DIR" "$MISSING"
   [ "$MISSING" = 0 ]
 }
@@ -55,6 +63,11 @@ apply() {
   else
     echo "kept	$CONF"
   fi
+  for pair in "trello.example.yaml:trello.yaml" "cadence.example.yaml:cadence.yaml" "meeting-locations.example.yaml:meeting-locations.yaml"; do
+    src="${pair%%:*}"; dst="${pair##*:}"
+    [ -f "$ROOT/.agents/skills/snotra-meeting-outcomes/assets/templates/$src" ] || continue
+    [ -f "$HOME_DIR/hodd/identity/$dst" ] || cp "$ROOT/.agents/skills/snotra-meeting-outcomes/assets/templates/$src" "$HOME_DIR/hodd/identity/$dst"
+  done
   if [ ! -f "$FRAME" ]; then
     cp "$ROOT/.agents/skills/snotra-meeting-outcomes/assets/meeting-framework.example.md" "$FRAME"
     echo "created	$FRAME"
