@@ -788,6 +788,18 @@ step_host() {
 }
 
 
+
+# ── the machine's profile (2026-10-20) ───────────────────────────────────────
+# Probe what this box actually is before installing anything for it: OS, GPU,
+# RAM, disk, tools, and the capabilities they imply. A missing capability is
+# recorded as absent, never assumed (Rule 25).
+step_profile() {
+  if [ ! -x "$SCRIPT_DIR/../agents/profile.sh" ]; then add profile SKIP "no profile.sh"; return 0; fi
+  if [ "$CHECK" = 1 ]; then add profile WARN "not probed in --check"; return 0; fi
+  local out; out="$("$SCRIPT_DIR/../agents/profile.sh" probe 2>&1)" || { add profile WARN "$out"; return 0; }
+  add profile OK "$(printf '%s' "$out" | tail -1)"
+}
+
 # ── the seat's name (2026-10-20) ─────────────────────────────────────────────
 # A seat must not inherit "Brokk". The roster is the one source; the registry is
 # the collision system; --ensure asks, takes YMIR_SEAT_NAME, or refuses loudly.
@@ -1486,6 +1498,7 @@ run_step step_engines "engines"
 run_step step_models "models"
 run_step step_local_model "the local model"
 run_step step_hermes "hermes"
+run_step step_profile "the machine's profile"
 run_step step_identity "the seat's name"
 run_step step_snotra "the meeting ear"
 run_step step_voice "the voice engines"
