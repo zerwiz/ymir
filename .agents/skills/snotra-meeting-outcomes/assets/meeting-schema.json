@@ -288,6 +288,21 @@
               "string",
               "null"
             ]
+          },
+          "grade": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "a",
+              "b",
+              "c",
+              null
+            ]
           }
         }
       }
@@ -439,6 +454,18 @@
           },
           "evidence": {
             "$ref": "#/$defs/evidence"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "open",
+              "answered",
+              "deferred",
+              null
+            ]
           }
         }
       }

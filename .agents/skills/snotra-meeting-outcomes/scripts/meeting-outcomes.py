@@ -702,6 +702,12 @@ def render_decisions(rec: dict) -> str:
     out.append("7. **A next look.** A review date, or an explicit `—` meaning \"no review needed\".")
     out.append("8. **Dissent, if any.** A decision with no recorded dissent is not a claim that everyone agreed.")
     out.append("")
+    out.append("**Grading.** Every decision carries a grade, because not every decision deserves the same scrutiny:")
+    out.append("")
+    out.append("- **A — one-way / strategic.** Hard to reverse, moves the company. Needs a review date.")
+    out.append("- **B — costly to reverse.** Cross-team or product-wide. Needs a named owner and a review.")
+    out.append("- **C — easily reversed.** Process and operations. Record it and move on.")
+    out.append("")
     for d in rec.get("decisions", []):
         out.append(f"## {d['decision_id']}")
         out.append("")
@@ -712,6 +718,10 @@ def render_decisions(rec: dict) -> str:
         out.append(f"**Reversibility:** {d.get('reversibility') or '—'}  ")
         out.append(f"**Review date:** {d.get('review_date') or '—'}  ")
         out.append(f"**Status:** {d.get('status') or 'decided'}  ")
+        g = (d.get('grade') or '').upper()
+        if g:
+            label = {'A': 'one-way / strategic', 'B': 'costly to reverse', 'C': 'easily reversed'}.get(g, 'ungraded')
+            out.append(f"**Grade:** {g} — {label}  ")
         if d.get("impact"):
             out.append(f"**Impact:** {d['impact']}  ")
         alts = d.get("options") or d.get("alternatives") or []
@@ -727,6 +737,39 @@ def render_decisions(rec: dict) -> str:
             out.append(f"**Dissent:** {d['dissent']}  ")
         out.append("")
         out.append(f"> [{d['evidence']['timestamp']}] \"{d['evidence']['quote']}\"")
+        out.append("")
+    return "\n".join(out)
+
+
+def render_questions(rec: dict) -> str:
+    out = [f"# Open questions — {rec['meeting'].get('title')}", ""]
+    qs = rec.get("questions", [])
+    if not qs:
+        return "\n".join(out + ["No open questions were recorded.", ""])
+    blocking = [q for q in qs if q.get("blocking")]
+    out.append(f"{len(qs)} recorded, **{len(blocking)} blocking**. A question is open until the "
+               "named person answers it; an unanswered blocking question is a risk, not a note.")
+    out.append("")
+    out.append("| ID | Question | Decider | Needed by | Blocking | Evidence |")
+    out.append("|---|---|---|---|---|---|")
+    for q in qs:
+        ev = q.get("evidence", {})
+        out.append(f"| {q.get('question_id')} | {q.get('question')} | {q.get('decider')} | "
+                   f"{q.get('needed_by') or 'next meeting'} | {'yes' if q.get('blocking') else 'no'} | "
+                   f"`{ev.get('timestamp')}` |")
+    out.append("")
+    for q in qs:
+        ev = q.get("evidence", {})
+        out.append(f"### {q.get('question_id')}")
+        out.append("")
+        out.append(q.get("question", ""))
+        out.append("")
+        out.append(f"**Decider:** {q.get('decider')}  ")
+        out.append(f"**Needed by:** {q.get('needed_by') or 'next meeting'}  ")
+        out.append(f"**Status:** {q.get('status') or 'open'}  ")
+        out.append(f"**Blocking:** {'yes' if q.get('blocking') else 'no'}")
+        out.append("")
+        out.append(f"> [{ev.get('timestamp')}] \"{ev.get('quote')}\"")
         out.append("")
     return "\n".join(out)
 
@@ -866,6 +909,7 @@ def render_all(rec: dict, outdir: Path) -> list[Path]:
         "decisions.md": render_decisions(rec),
         "followup-email.md": render_followup(rec),
         "dependency-map.md": render_dependencies(rec),
+        "questions.md": render_questions(rec),
     }
     transcript = render_transcript(rec, outdir)
     if transcript:
