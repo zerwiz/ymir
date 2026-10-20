@@ -240,6 +240,75 @@
               "string",
               "null"
             ]
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "alternatives": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "options": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "tradeoffs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "benefits": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dissent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "authority_limit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grade": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "a",
+              "b",
+              "c",
+              null
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }
@@ -352,6 +421,18 @@
               "machine",
               "curated"
             ]
+          },
+          "context": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }
@@ -391,6 +472,30 @@
           },
           "evidence": {
             "$ref": "#/$defs/evidence"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "open",
+              "answered",
+              "deferred",
+              null
+            ]
+          },
+          "context": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }

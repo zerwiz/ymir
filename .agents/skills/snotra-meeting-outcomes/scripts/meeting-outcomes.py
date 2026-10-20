@@ -673,6 +673,10 @@ def render_actions(rec: dict) -> str:
     out = [f"# Action register — {rec['meeting'].get('title')}", ""]
     out.append("| ID | Verb | Deliverable | Owner | Due | Board | Status | Evidence |")
     out.append("|---|---|---|---|---|---|---|---|")
+    out.append("**The action standard:** one owner, one verb, one deliverable, one date, a "
+               "definition of done, and a source line. An action missing any of these is "
+               "printed as unresolved, never guessed.")
+    out.append("")
     for a in sorted(rec.get("actions", []), key=lambda x: (x.get("owner") or "", x.get("due_at") or "9999")):
         ev = a.get("evidence", {})
         out.append(f"| {a['action_id']} | {a.get('verb')} | {a.get('deliverable')} | "
@@ -685,6 +689,25 @@ def render_actions(rec: dict) -> str:
 
 def render_decisions(rec: dict) -> str:
     out = [f"# Decision log — {rec['meeting'].get('title')}", ""]
+    out.append("## The decision standard")
+    out.append("")
+    out.append("A decision enters this log only if it passes all six tests:")
+    out.append("")
+    out.append("1. **One sentence.** The decision is stated so it can be repeated without the discussion.")
+    out.append("2. **One decider.** A named person, not \"the team\".")
+    out.append("3. **A reason.** The rationale is written, not remembered.")
+    out.append("4. **A reversal cost.** `easy`, `costly` or `one-way`; a one-way door needs a review date.")
+    out.append("5. **Options ruled out.** What else was on the table, and why it lost.")
+    out.append("6. **A witness.** The timestamp and quote from the transcript.")
+    out.append("7. **A next look.** A review date, or an explicit `—` meaning \"no review needed\".")
+    out.append("8. **Dissent, if any.** A decision with no recorded dissent is not a claim that everyone agreed.")
+    out.append("")
+    out.append("**Grading.** Every decision carries a grade, because not every decision deserves the same scrutiny:")
+    out.append("")
+    out.append("- **A — one-way / strategic.** Hard to reverse, moves the company. Needs a review date.")
+    out.append("- **B — costly to reverse.** Cross-team or product-wide. Needs a named owner and a review.")
+    out.append("- **C — easily reversed.** Process and operations. Record it and move on.")
+    out.append("")
     for d in rec.get("decisions", []):
         out.append(f"## {d['decision_id']}")
         out.append("")
@@ -694,9 +717,61 @@ def render_decisions(rec: dict) -> str:
         out.append(f"**Rationale:** {d.get('rationale') or 'not stated'}  ")
         out.append(f"**Reversibility:** {d.get('reversibility') or '—'}  ")
         out.append(f"**Review date:** {d.get('review_date') or '—'}  ")
-        out.append(f"**Status:** {d.get('status')}")
+        out.append(f"**Status:** {d.get('status') or 'decided'}  ")
+        g = (d.get('grade') or '').upper()
+        if g:
+            label = {'A': 'one-way / strategic', 'B': 'costly to reverse', 'C': 'easily reversed'}.get(g, 'ungraded')
+            out.append(f"**Grade:** {g} — {label}  ")
+        if d.get("impact"):
+            out.append(f"**Impact:** {d['impact']}  ")
+        alts = d.get("options") or d.get("alternatives") or []
+        if alts:
+            out.append(f"**Options considered:** {'; '.join(alts)}  ")
+        if d.get("tradeoffs"):
+            out.append(f"**Trade-offs accepted:** {d['tradeoffs']}  ")
+        if d.get("benefits"):
+            out.append(f"**Expected benefit:** {d['benefits']}  ")
+        if d.get("authority_limit"):
+            out.append(f"**What this does not authorise:** {d['authority_limit']}  ")
+        if d.get("dissent"):
+            out.append(f"**Dissent:** {d['dissent']}  ")
         out.append("")
         out.append(f"> [{d['evidence']['timestamp']}] \"{d['evidence']['quote']}\"")
+        out.append("")
+    return "\n".join(out)
+
+
+def render_questions(rec: dict) -> str:
+    out = [f"# Open questions — {rec['meeting'].get('title')}", ""]
+    qs = rec.get("questions", [])
+    if not qs:
+        return "\n".join(out + ["No open questions were recorded.", ""])
+    blocking = [q for q in qs if q.get("blocking")]
+    out.append(f"{len(qs)} recorded, **{len(blocking)} blocking**. A question is open until the "
+               "named person answers it; an unanswered blocking question is a risk, not a note.")
+    out.append("")
+    out.append("| ID | Question | Decider | Needed by | Blocking | Evidence |")
+    out.append("|---|---|---|---|---|---|")
+    for q in qs:
+        ev = q.get("evidence", {})
+        out.append(f"| {q.get('question_id')} | {q.get('question')} | {q.get('decider')} | "
+                   f"{q.get('needed_by') or 'next meeting'} | {'yes' if q.get('blocking') else 'no'} | "
+                   f"`{ev.get('timestamp')}` |")
+    out.append("")
+    for q in qs:
+        ev = q.get("evidence", {})
+        out.append(f"### {q.get('question_id')}")
+        out.append("")
+        out.append(q.get("question", ""))
+        out.append("")
+        if q.get('context'):
+            out.append(f"**Context:** {q['context']}  ")
+        out.append(f"**Decider:** {q.get('decider')}  ")
+        out.append(f"**Needed by:** {q.get('needed_by') or 'next meeting'}  ")
+        out.append(f"**Status:** {q.get('status') or 'open'}  ")
+        out.append(f"**Blocking:** {'yes' if q.get('blocking') else 'no'}")
+        out.append("")
+        out.append(f"> [{ev.get('timestamp')}] \"{ev.get('quote')}\"")
         out.append("")
     return "\n".join(out)
 
@@ -713,6 +788,8 @@ def render_brief(rec: dict, person: str) -> str:
         out.append(f"## {a['action_id']} — {a.get('deliverable')}")
         out.append("")
         out.append(f"**Due:** {a.get('due_at') or 'date unresolved'}  ")
+        if a.get("context"):
+            out.append(f"**Context:** {a['context']}  ")
         if a.get("definition_of_done"):
             out.append(f"**Done when:** {a['definition_of_done']}  ")
         if a.get("dependency"):
@@ -807,6 +884,118 @@ def render_dependencies(rec: dict) -> str:
     lines.append("")
     return "\n".join(lines)
 
+def _cadence() -> dict:
+    """The weekly rhythm, from the house if it said one; Monday 09:00/45 otherwise."""
+    import os
+    cfg = {'weekday': 0, 'time': '09:00', 'minutes': 45}
+    base = os.environ.get('YMIR_HOME', '')
+    path = os.path.join(base, 'hodd/identity/cadence.yaml') if base else ''
+    if path and os.path.isfile(path):
+        try:
+            import yaml
+            data = yaml.safe_load(open(path, encoding='utf-8')) or {}
+            if int(data.get('version', 1)) != 1:
+                return cfg
+            w = (data.get('weekly') or {})
+            days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+            if str(w.get('weekday', '')).lower() in days:
+                cfg['weekday'] = days.index(str(w['weekday']).lower())
+            if w.get('time'):
+                cfg['time'] = str(w['time'])
+            if w.get('minutes'):
+                cfg['minutes'] = int(w['minutes'])
+        except Exception:
+            pass
+    return cfg
+
+
+def render_next_agenda(rec: dict) -> str:
+    from datetime import date, timedelta, datetime
+    m = rec["meeting"]
+    try:
+        d = date.fromisoformat(str(m.get("started_at", ""))[:10])
+    except ValueError:
+        d = date.today()
+    cad = _cadence()
+    days = (cad['weekday'] - d.weekday()) % 7 or 7
+    nxt = d + timedelta(days=days)
+    start = datetime.strptime(cad['time'], '%H:%M')
+    end = start + timedelta(minutes=cad['minutes'])
+    who = m.get("sender") or (rec.get("participants") or [{}])[0].get("name") or "to confirm"
+    out = [f"# Proposed agenda — {m.get('title')}", ""]
+    out.append(f"**Next meeting:** {nxt.strftime('%A %d %B %Y')}, {start.strftime('%H:%M')}–{end.strftime('%H:%M')} (proposed)")
+    out.append(f"**Chair:** to confirm at the opening · **Secretary:** {who} · **Notetaker:** Snotra · **Adjuster:** to confirm")
+    people = ", ".join(p.get("name", "") for p in rec.get("participants", []) if p.get("name"))
+    out.append(f"**Everyone:** {people}")
+    out.append("")
+    out.append("**Purpose:** clear the blocking questions, confirm the decisions that are ready, and leave with one owner and one date for every action.")
+    out.append("")
+    out.append("## 1. Previous record (2 min)")
+    out.append("")
+    out.append("Any correction to the record? If none, it stands; corrections are appended.")
+    out.append("")
+    blocking = [q for q in rec.get("questions", []) if q.get("blocking")]
+    out.append(f"## 2. Blocking questions ({max(10, len(blocking) * 5)} min)")
+    out.append("")
+    if blocking:
+        for q in blocking:
+            out.append(f"- **{q.get('question_id')}** — {q.get('question')} · *{q.get('decider') or 'unassigned'}* · needed by {q.get('needed_by') or 'this meeting'}")
+    else:
+        out.append("- none recorded; confirm nothing has become blocking since the last meeting.")
+    out.append("")
+    out.append("## 3. Decisions ready to confirm (10 min)")
+    out.append("")
+    proposed = [x for x in rec.get("decisions", []) if (x.get("status") or "decided") == "proposed"]
+    if proposed:
+        for x in proposed:
+            out.append(f"- **{x.get('decision_id')}** — {x.get('statement')} · Approver {x.get('decided_by')}")
+    else:
+        out.append("- none in `proposed`; the Chair may table one. Every decision needs one Approver before discussion.")
+    out.append("")
+    out.append("## 4. Actions that need a decision (10 min)")
+    out.append("")
+    blocked = [a for a in rec.get("actions", []) if a.get("dependency")]
+    if blocked:
+        for a in blocked[:8]:
+            out.append(f"- **{a.get('action_id')}** — {a.get('deliverable')} · {a.get('owner')} · waits on {a.get('dependency')}")
+    else:
+        out.append("- none recorded; review the blocked list on the board.")
+    out.append("")
+    out.append("## 5. Open floor — questions and anything not yet on the agenda (10 min)")
+    out.append("")
+    out.append("Every meeting ends here before the close. Anyone may raise an open question, a concern or a proposal. "
+               "It is recorded as a question with a decider and a needed-by date, or as an action with one owner and one date. "
+               "Nothing is left as \"we will talk about it\" — it becomes a card, a question or a decision.")
+    out.append("")
+    out.append("To add an item before the meeting, reply to the Secretary; the Trello `Agenda` list is the shared queue.")
+    out.append("")
+    out.append("## 6. Close (3 min)")
+    out.append("")
+    out.append("Name the Secretary for the record, the sign-off window (two business days), and the date of the next meeting.")
+    out.append("")
+    return "\n".join(out)
+
+
+def render_transcript(rec: dict, outdir: Path) -> str | None:
+    """Raw transcript, one line per segment, exactly as the source gave it."""
+    p = outdir / "segments.json"
+    if not p.is_file():
+        return None
+    data = json.loads(p.read_text(encoding="utf-8"))
+    segs = data.get("segments", data) if isinstance(data, dict) else data
+    lines = [f"# Raw transcript — {rec['meeting'].get('title')}", ""]
+    lines.append("Verbatim, in order, with the timestamps the source recorded. The record "
+                 "above is the curated reading; this is the evidence it rests on.")
+    lines.append("")
+    for seg in segs:
+        text = " ".join(str(seg.get("text", "")).split())
+        if not text:
+            continue
+        lines.append(f"[{seg.get('timestamp') or '—'}] **{seg.get('speaker') or 'Unknown'}:** {text}")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def render_all(rec: dict, outdir: Path) -> list[Path]:
     outdir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
@@ -816,7 +1005,12 @@ def render_all(rec: dict, outdir: Path) -> list[Path]:
         "decisions.md": render_decisions(rec),
         "followup-email.md": render_followup(rec),
         "dependency-map.md": render_dependencies(rec),
+        "questions.md": render_questions(rec),
+        "agenda-next.md": render_next_agenda(rec),
     }
+    transcript = render_transcript(rec, outdir)
+    if transcript:
+        files["transcript.md"] = transcript
     for name, text in files.items():
         p = outdir / name
         p.write_text(text, encoding="utf-8")
