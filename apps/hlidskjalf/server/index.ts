@@ -2510,7 +2510,11 @@ const server = Bun.serve({
         const m = snotraFind(id);
         if (!m) return json({ error: 'no meeting' }, 404);
         const body = ['minutes.md', 'record.md'].map((f) => join(m.dir, f)).find(existsSync);
-        return json({ ...m, record: body ? readFileSync(body, 'utf8') : null });
+        const src = ['record.json', 'meeting.json'].map((f) => join(m.dir, f)).find(existsSync);
+        let detail: Record<string, unknown> = {};
+        if (src) { try { detail = JSON.parse(readFileSync(src, 'utf8')); } catch { /* broken record */ } }
+        return json({ ...m, record: body ? readFileSync(body, 'utf8') : null,
+          decisions: (detail as any).decisions ?? [], actions: (detail as any).actions ?? [] });
       }
       if (p === '/api/snotra/draft' && req.method === 'POST') {
         const b = (await req.json().catch(() => ({}))) as { id?: string };
