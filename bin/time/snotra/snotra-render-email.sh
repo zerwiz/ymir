@@ -67,6 +67,8 @@ body.append("2. Would you like this after every meeting, or only the ones that d
 body.append("")
 body.append("A short reply is enough. If the format is wrong, say so plainly.")
 body.append("")
+body.append("To sign the record, reply `confirm`; to correct it, reply `objection: <what is wrong>`. The record becomes official when the Chair signs it.")
+body.append("")
 body.append("Best,")
 body.append((op.get('name') or sender).split()[0])
 body.append("")
@@ -124,6 +126,7 @@ doc=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" c
 </td></tr>
 <tr><td style="padding:22px 34px 30px;font-size:14.5px;line-height:1.6;">
 <p style="margin:0 0 15px;">A short reply is enough. If the format is wrong, say so plainly.</p>
+<p style="margin:0 0 15px;">To sign the record, reply <strong>confirm</strong>; to correct it, reply <strong>objection: &lt;what is wrong&gt;</strong>. The record becomes official when the Chair signs it.</p>
 <p style="margin:0 0 3px;">Best,<br>{html.escape((op.get('name') or sender).split()[0])}</p>
 <div style="margin-top:22px;padding-top:14px;border-top:1px solid #e5ebf1;color:#7b8794;font-size:12.5px;line-height:1.55;">{html.escape(op.get('name') or sender)}<br>{html.escape(op.get('company') or op.get('organization') or '')} &nbsp;·&nbsp; {html.escape(op.get('email') or '')}</div>
 <div style="margin-top:12px;color:#9aa8b6;font-size:11.5px;">Prepared with Snotra, Ymir's meeting assistant. Reviewed by {html.escape(op.get('name') or sender)}.</div>
