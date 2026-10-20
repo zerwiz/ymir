@@ -638,6 +638,15 @@ step_snotra() {
   else
     add snotra WARN "engine or model missing (run bin/time/snotra/snotra-ensure.sh install)"
   fi
+  # The lifecycle skeleton, agnostic: shelf, operator template, register, framework,
+  # cron. Never a company or a participant.
+  if [ -x "$SCRIPT_DIR/../time/snotra/snotra-init.sh" ]; then
+    if "$SCRIPT_DIR/../time/snotra/snotra-init.sh" apply >/dev/null 2>&1; then
+      add snotra-meetings OK "meetings shelf + framework + cron skeleton"
+    else
+      add snotra-meetings WARN "run bin/time/snotra/snotra-init.sh apply"
+    fi
+  fi
 }
 
 # ── 3b1c. Ratatoskr — the A2A mesh engine (a2abridge) ───────────────────────
@@ -1075,12 +1084,6 @@ step_spa() {
     fi
     if [ ! -d "$app/node_modules" ] && ! (cd "$app" && npm install --no-audit --no-fund >/dev/null 2>&1); then
       add hlidskjalf WARN "npm install failed — (cd $app && npm install --no-audit --no-fund)"; return 0
-    fi
-    # Þráðr's pty is a NATIVE module (plan 93). `node-pty` ships prebuilds for darwin and
-    # win32 only, so on Linux it must be compiled — and an install that skips the build
-    # leaves a terminal that opens and dies. Build it here, once, and say so.
-    if [ -d "$app/node_modules/node-pty" ] && [ ! -f "$app/node_modules/node-pty/build/Release/pty.node" ]; then
-      ( cd "$app/node_modules/node-pty" && npx --yes node-gyp rebuild >/dev/null 2>&1 ) || true
     fi
     if [ ! -d "$app/dist" ] && ! (cd "$app" && npm run build >/dev/null 2>&1); then
       add hlidskjalf WARN "installed, build failed — (cd $app && npm run build)"; return 0

@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+# snotra-evidence.sh — timestamp, immutable copy, certification and retention.
+#
+#   snotra-evidence.sh timestamp <dir> [--tsa URL]
+#   snotra-evidence.sh worm      <dir>
+#   snotra-evidence.sh certify   <dir> --reviewer NAME [--note TEXT]
+#   snotra-evidence.sh retention <dir> --days N
+#   snotra-evidence.sh enforce   <dir> [--dry-run]
+#   snotra-evidence.sh status    <dir>
+#
+# Local controls are labelled as such. A qualified eIDAS timestamp requires a QTSP/RFC
+# 3161 authority; without one the token is stored as local-unqualified.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+HOME_DIR="${YMIR_HOME:-}"; [ -n "$HOME_DIR" ] || ymir_home_root HOME_DIR 2>/dev/null || true
+[ -n "$HOME_DIR" ] || { echo "error: no Ymir home" >&2; exit 1; }
+ACTION="${1:-status}"; DIR="${2-}"; shift 2 2>/dev/null || true
+[ -n "$DIR" ] && [ -d "$DIR" ] || { echo "usage: snotra-evidence.sh timestamp|worm|certify|retention|enforce|status <dir>" >&2; exit 2; }
+TSA=""; REVIEWER=""; NOTE=""; DAYS=""; DRY=0
+while [ $# -gt 0 ]; do case "$1" in --tsa) TSA="${2-}"; shift 2;; --reviewer) REVIEWER="${2-}"; shift 2;; --note) NOTE="${2-}"; shift 2;; --days) DAYS="${2-}"; shift 2;; --dry-run) DRY=1; shift;; *) shift;; esac; done
+PROV="$DIR/provenance.json"; [ -f "$PROV" ] || { echo "error: seal the record first (snotra-provenance.sh seal)" >&2; exit 1; }
+ROOT_HASH="$(python3 -c "import json,sys;print(json.load(open('$PROV'))['root'])")"
+
+timestamp() {
+  local out="$DIR/timestamp"; mkdir -p "$out"
+  if [ -n "$TSA" ]; then
+    openssl ts -query -data "$PROV" -sha256 -cert -out "$out/request.tsq" >/dev/null 2>&1 || { echo "error: openssl ts query failed" >&2; exit 1; }
+    curl -sS -m 30 -H 'Content-Type: application/timestamp-query' --data-binary "@$out/request.tsq" "$TSA" -o "$out/response.tsr" || { echo "error: TSA request failed" >&2; exit 1; }
+    openssl ts -reply -in "$out/response.tsr" -text > "$out/response.txt" 2>/dev/null || true
+    python3 - "$out" "$ROOT_HASH" "$TSA" <<'PY'
+import json,sys,os,datetime
+out,root,tsa=sys.argv[1:]
+json.dump({'type':'rfc3161','root':root,'tsa':tsa,'at':datetime.datetime.now().astimezone().isoformat(timespec='seconds'),'request':'request.tsq','response':'response.tsr'},open(os.path.join(out,'timestamp.json'),'w'),indent=2)
+PY
+    echo "timestamp	rfc3161	$ROOT_HASH"
+  else
+    python3 - "$out" "$ROOT_HASH" <<'PY'
+import json,sys,os,datetime
+out,root=sys.argv[1:]
+json.dump({'type':'local-unqualified','root':root,'at':datetime.datetime.now().astimezone().isoformat(timespec='seconds'),'note':'Not an eIDAS qualified timestamp; use --tsa with a QTSP for legal weight.'},open(os.path.join(out,'timestamp.json'),'w'),indent=2)
+PY
+    echo "timestamp	local-unqualified	$ROOT_HASH"
+  fi
+  chmod 600 "$out"/* 2>/dev/null || true
+}
+
+worm() {
+  local dest="$HOME_DIR/hodd/evidence/$(basename "$DIR")-$ROOT_HASH"
+  mkdir -p "$dest"
+  cp -a "$DIR/." "$dest/"
+  chmod -R a-w "$dest"
+  python3 - "$DIR" "$dest" "$ROOT_HASH" <<'PY'
+import json,sys,datetime,os
+src,dest,root=sys.argv[1:]
+json.dump({'root':root,'copy':os.path.basename(dest),'at':datetime.datetime.now().astimezone().isoformat(timespec='seconds'),'type':'local-immutable-copy','note':'Local read-only copy; object-lock/WORM storage is an external facility.'},open(os.path.join(src,'worm.json'),'w'),indent=2)
+PY
+  echo "worm	local-immutable-copy	$dest"
+}
+
+certify() {
+  [ -n "$REVIEWER" ] || { echo "error: --reviewer is required" >&2; exit 1; }
+  local at; at="$(date --iso-8601=seconds)"
+  cat > "$DIR/certified-copy.md" <<MD
+# Certified copy — $(basename "$DIR")
+
+**Reviewer:** $REVIEWER  
+**Reviewed at:** $at  
+**Provenance root:** \`$ROOT_HASH\`  
+**Scope:** the reviewer compared the transcript against the audio and checked every decision and action against the record.
+
+**Statement:** I certify that this copy accurately reflects the transcript and the record, subject to the corrections below. The machine transcript remains the evidence; this copy is the human reading of it.
+
+**Corrections:** ${NOTE:-none}
+MD
+  printf '{"at":"%s","reviewer":"%s","root":"%s","note":"%s"}\n' "$at" "$REVIEWER" "$ROOT_HASH" "${NOTE//\"/\'}" >> "$DIR/certification.jsonl"
+  chmod 600 "$DIR/certified-copy.md" "$DIR/certification.jsonl"
+  cat > "$DIR/verification-note.md" <<MD
+# How to verify this record
+
+1. Recompute the SHA-256 of each file listed in \`provenance.json\`.
+2. Confirm the manifest root is \`$ROOT_HASH\`.
+3. Check the timestamp token in \`timestamp/\` against the same root.
+4. Compare the certified copy with the transcript and the correction log.
+5. Do not rely on a local clock alone; a qualified timestamp is the external proof.
+MD
+  chmod 600 "$DIR/verification-note.md"
+  echo "certified	$REVIEWER	$ROOT_HASH"
+}
+
+retention() {
+  [ -n "$DAYS" ] || { echo "error: --days is required" >&2; exit 1; }
+  cat > "$DIR/retention.yaml" <<YML
+version: 1
+days: $DAYS
+legal_hold: false
+YML
+  echo "retention	$DAYS days"
+}
+
+enforce() {
+  [ -f "$DIR/retention.yaml" ] || { echo "error: no retention.yaml" >&2; exit 1; }
+  local days hold
+  days="$(sed -n 's/^days: *//p' "$DIR/retention.yaml")"; hold="$(sed -n 's/^legal_hold: *//p' "$DIR/retention.yaml")"
+  [ "$hold" = "true" ] && { echo "held	legal hold is active"; exit 0; }
+  local age=$(( ( $(date +%s) - $(stat -c %Y "$DIR") ) / 86400 ))
+  if [ "$age" -gt "$days" ]; then
+    if [ "$DRY" = 1 ]; then echo "would-retire	$age days"; else
+      local ref="$HOME_DIR/hodd/reference/retired-$(basename "$DIR")"; mkdir -p "$ref"; mv "$DIR" "$ref"; echo "retired	$ref"
+    fi
+  else echo "retained	$age of $days days"; fi
+}
+
+status(){ python3 - "$DIR" <<'PY'
+import json,sys,os
+d=sys.argv[1]
+for f in ('provenance.json','timestamp/timestamp.json','worm.json','certification.jsonl','retention.yaml','access.jsonl'):
+ p=os.path.join(d,f); print(f, 'present' if os.path.isfile(p) else 'missing')
+PY
+}
+case "$ACTION" in timestamp) timestamp;; worm) worm;; certify) certify;; retention) retention;; enforce) enforce;; status) status;; *) echo "usage" >&2; exit 2;; esac

@@ -15,13 +15,6 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import {
-  TerminalRegistry,
-  defaultCwd,
-  terminalsAllowRemote,
-  terminalsEnabled,
-  terminalStatus,
-} from './pty.ts';
-import {
   findAccount,
   invitesOpen,
   listAccounts,
@@ -2241,9 +2234,6 @@ function serveStatic(pathname: string): Response {
 /* ---- server -------------------------------------------------------------- */
 // Sessions are in-memory only: a gate restart ends them, and nothing on disk can
 // revive one. That is the point — no bearer is kept at rest.
-/** One registry for the seat: the cap and the idle timeout are its business. */
-const TERMINALS = new TerminalRegistry();
-
 const server = Bun.serve({
   port: PORT,
   async fetch(req, srv) {
@@ -2596,119 +2586,13 @@ const server = Bun.serve({
         if (!content) return json({ error: 'chat needs content' }, 400);
         return json(await postChat(body.session ?? 'default', content, body.model, body.agents));
       }
-      if (p === '/api/terminal') {
-        // Þráðr (plan 93). A shell is remote code execution by design, so the door is
-        // checked three ways before a pty exists: terminals must be enabled, the caller
-        // must hold a live gate session, and a NON-loopback peer needs an explicit word
-        // from the Allfather (YMIR_TERMINAL_ALLOW_REMOTE=1) — never a config default.
-        if (!terminalsEnabled()) return json({ error: 'terminals are disabled on this seat' }, 403);
-        if (req.headers.get('upgrade')?.toLowerCase() !== 'websocket') {
-          return json({ error: 'upgrade required' }, 426);
-        }
-        if (!isAuthed(req)) return json({ error: 'not signed in' }, 401);
-        const ip = REQUEST_IP.get(req) ?? '';
-        const bare = ip.startsWith('::ffff:') ? ip.slice('::ffff:'.length) : ip;
-        const loopback = bare === '127.0.0.1' || bare === '::1' || bare === '';
-        if (!loopback && !terminalsAllowRemote()) {
-          return json({ error: 'a terminal is loopback-only on this seat' }, 403);
-        }
-        const origin = req.headers.get('origin');
-        const host = req.headers.get('host');
-        if (origin && host) {
-          let originHost = '';
-          try {
-            originHost = new URL(origin).host;
-          } catch {
-            /* a malformed Origin fails the check below */
-          }
-          if (originHost !== host) return json({ error: 'origin refused' }, 403);
-        }
-        const cols = Number(url.searchParams.get('cols') ?? 0) || undefined;
-        const rows = Number(url.searchParams.get('rows') ?? 0) || undefined;
-        const ok = srv.upgrade(req, {
-          data: {
-            id: crypto.randomUUID(),
-            owner: loginOf(req) ?? 'desktop',
-            cwd: url.searchParams.get('cwd') || defaultCwd(),
-            cols,
-            rows,
-            opened: false,
-          },
-        });
-        return ok ? undefined : json({ error: 'could not upgrade' }, 500);
-      }
-      if (p === '/api/terminal/status') {
-        if (!isAuthed(req)) return json({ error: 'not signed in' }, 401);
-        return json(terminalStatus(TERMINALS));
-      }
       if (p.startsWith('/api/')) return json({ error: `no route ${p}` }, 404);
       return serveStatic(p);
     } catch (err) {
       return json({ error: (err as Error).message }, 500);
     }
   },
-  websocket: {
-    // A shell per socket. `open` is where the pty is actually born: the upgrade only
-    // checked the door, it did not spend a process.
-    async open(ws) {
-      const d = ws.data as { id: string; owner: string; cwd: string; cols?: number; rows?: number };
-      try {
-        const t = await TERMINALS.open(
-          { id: d.id, owner: d.owner, cwd: d.cwd, cols: d.cols, rows: d.rows },
-          {
-            onData: (chunk) => {
-              try {
-                ws.send(JSON.stringify({ t: 'o', d: chunk }));
-              } catch {
-                /* the socket went away; `close` will reap the pty */
-              }
-            },
-            onExit: (info) => {
-              try {
-                ws.send(JSON.stringify({ t: 'exit', code: info.exitCode }));
-              } catch {
-                /* nothing to tell */
-              }
-              try {
-                ws.close();
-              } catch {
-                /* already closed */
-              }
-            },
-          },
-        );
-        d.opened = true;
-        ws.send(JSON.stringify({ t: 'ready', id: t.id, shell: t.shell, cwd: t.cwd, pid: t.pid }));
-      } catch (err) {
-        ws.send(JSON.stringify({ t: 'error', m: (err as Error).message }));
-        ws.close();
-      }
-    },
-    message(ws, raw) {
-      const d = ws.data as { id: string };
-      let msg: { t?: string; d?: string; cols?: number; rows?: number };
-      try {
-        msg = JSON.parse(typeof raw === 'string' ? raw : new TextDecoder().decode(raw as ArrayBuffer));
-      } catch {
-        return;
-      }
-      if (msg.t === 'i' && typeof msg.d === 'string') TERMINALS.write(d.id, msg.d);
-      else if (msg.t === 'r') TERMINALS.resize(d.id, Number(msg.cols), Number(msg.rows));
-    },
-    close(ws) {
-      // The socket OWNS the pty: a closed tab is a dead shell, always.
-      TERMINALS.close((ws.data as { id: string }).id, 'socket-closed');
-    },
-  },
 });
-
-// A gate that dies must not leave shells behind.
-for (const sig of ['SIGINT', 'SIGTERM'] as const) {
-  process.on(sig, () => {
-    TERMINALS.closeAll('gate-shutdown');
-    process.exit(0);
-  });
-}
 
 console.log(`[hlidskjalf] gate api   http://127.0.0.1:${server.port}`);
 console.log(`[hlidskjalf] runtime    ${ROOT}`);

@@ -13,7 +13,7 @@
 
 ### Verified
 
-- Created an event with `Lars-Josef Lindbom <josef@way-of.com>`; `participants-fill`
+- Created an event with `the operator <operator@example.com>`; `participants-fill`
   filled the address; the event was cancelled.
 - Created a Gmail draft with `--from-record`; recipients came from the record; the test
   draft was deleted.

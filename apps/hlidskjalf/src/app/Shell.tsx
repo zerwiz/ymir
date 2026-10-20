@@ -25,7 +25,6 @@ import { Decisions } from '../gates/Decisions';
 import { Stats } from '../gates/Stats';
 import { Managandr } from '../gates/Managandr';
 import { Snotra } from '../gates/Snotra';
-import { Thradr } from '../gates/Thradr';
 
 function Stage() {
   const gate = useYmir((s) => s.gate);
@@ -68,8 +67,6 @@ function Stage() {
       return <Managandr />;
     case 'snotra':
       return <Snotra />;
-    case 'thradr':
-      return <Thradr />;
     default:
       return <Fleet />;
   }
