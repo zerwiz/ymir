@@ -255,6 +255,39 @@
             "items": {
               "type": "string"
             }
+          },
+          "options": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "tradeoffs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "benefits": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dissent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "authority_limit": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }

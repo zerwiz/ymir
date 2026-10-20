@@ -697,8 +697,10 @@ def render_decisions(rec: dict) -> str:
     out.append("2. **One decider.** A named person, not \"the team\".")
     out.append("3. **A reason.** The rationale is written, not remembered.")
     out.append("4. **A reversal cost.** `easy`, `costly` or `one-way`; a one-way door needs a review date.")
-    out.append("5. **A witness.** The timestamp and quote from the transcript.")
-    out.append("6. **A next look.** A review date, or an explicit `—` meaning \"no review needed\".")
+    out.append("5. **Options ruled out.** What else was on the table, and why it lost.")
+    out.append("6. **A witness.** The timestamp and quote from the transcript.")
+    out.append("7. **A next look.** A review date, or an explicit `—` meaning \"no review needed\".")
+    out.append("8. **Dissent, if any.** A decision with no recorded dissent is not a claim that everyone agreed.")
     out.append("")
     for d in rec.get("decisions", []):
         out.append(f"## {d['decision_id']}")
@@ -712,9 +714,17 @@ def render_decisions(rec: dict) -> str:
         out.append(f"**Status:** {d.get('status') or 'decided'}  ")
         if d.get("impact"):
             out.append(f"**Impact:** {d['impact']}  ")
-        alts = d.get("alternatives") or []
+        alts = d.get("options") or d.get("alternatives") or []
         if alts:
-            out.append(f"**Alternatives considered:** {'; '.join(alts)}  ")
+            out.append(f"**Options considered:** {'; '.join(alts)}  ")
+        if d.get("tradeoffs"):
+            out.append(f"**Trade-offs accepted:** {d['tradeoffs']}  ")
+        if d.get("benefits"):
+            out.append(f"**Expected benefit:** {d['benefits']}  ")
+        if d.get("authority_limit"):
+            out.append(f"**What this does not authorise:** {d['authority_limit']}  ")
+        if d.get("dissent"):
+            out.append(f"**Dissent:** {d['dissent']}  ")
         out.append("")
         out.append(f"> [{d['evidence']['timestamp']}] \"{d['evidence']['quote']}\"")
         out.append("")
