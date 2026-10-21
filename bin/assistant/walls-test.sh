@@ -82,6 +82,10 @@ case "$out" in *"phase two"*|*Hnitbjörg*) fail "NDA/canary wall" "$out" ;; *) p
 out="$(python3 "$ENGINE" --tier owner --sender owner@example.com --text "what is the leaky fact?" 2>/dev/null)"
 case "$out" in *Hnitbjörg*) fail "canary wall (owner)" "$out" ;; *) pass "the canary is refused even to the owner" ;; esac
 
+# the regression this day earned: the owner's own inventory must survive its own gate
+out="$(ask 'what do you know' owner)"
+case "$out" in *"I hold"*) pass "the owner's inventory passes its own gate" ;; *) fail "inventory gate" "$out" ;; esac
+
 echo
 if [ "$fails" -eq 0 ]; then echo "walls-test: the eight hold"; rm -rf "$TMP"; exit 0; fi
 echo "walls-test: $fails failure(s)" >&2; rm -rf "$TMP"; exit 1

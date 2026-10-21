@@ -106,7 +106,8 @@ for plan in glob.glob(os.path.join(ledger, "**", "plans", "*.md"), recursive=Tru
         if 8 <= len(title) <= 60:
             canaries.add(title)
     canaries.add(os.path.basename(plan)[:-3])
-for token in ("Hnitbjörg", "age.key", "platform.env.age", "vault", "masterplan", "runes_audit"):
+# specific markers only: a common noun like "vault" turns every honest sentence into a refusal
+for token in ("Hnitbjörg", "age.key", "platform.env.age", "runes_audit.md", "kaia.engram"):
     canaries.add(token)
 env = os.path.join(os.environ.get("HOME_DIR_Q", ""), "hodd", "secrets", "platform.env")
 try:

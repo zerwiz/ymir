@@ -488,7 +488,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             names = [f["claim"].split(" is ")[0] for f in facts.values() if f.get("class") == "contacts"]
             reply = (f"I hold {len(facts)} approved facts — {listing}. "
                      + (f"People I know: {', '.join(names[:8])}. " if names else "")
-                     + "Nothing from the vault, the plans, the ward or the well; if it isn't approved, I don't have it.")
+                     + "Nothing from the private records; if it isn't approved, I don't have it.")
         else:
             reply = "I can tell you what Ymir and the projects are, and take a message. The rest is his."
     elif intent == "directory":
@@ -561,7 +561,9 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     if not ok:  # fail closed: nothing leaves, ever
         ledger(question, why, tier, channel, "gate-refusal", used, True, dh)
         escalate(question, why, tier, channel)
-        reply = "I can't answer that here. I've flagged it for the Allfather."
+        reply = ("My own gate refused that answer — it contained something it must not say. "
+                 "I've flagged it, and the reason is in the log." if tier == "owner"
+                 else "I can't answer that here. I've flagged it for the Allfather.")
         return {"answer": reply, "refused": True, "reason": why, "tier": tier, "digest": dh}
 
     ledger(question, reply, tier, channel, intent, used, intent == "unknown", dh)
