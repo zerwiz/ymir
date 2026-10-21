@@ -37,6 +37,18 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# The hoard is RESOLVED, never restated (Rule 07/25): ask the one resolver, and
+# export the answer so the Python sense modules agree with this script.
+if [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$ROOT/bin/vault/hoard-lib.sh" >/dev/null 2>&1 || true
+  if command -v ymir_home_root >/dev/null 2>&1; then
+    garmr_home=""
+    ymir_home_root garmr_home 2>/dev/null || true
+    [ -n "$garmr_home" ] && export YMIR_HOME="$garmr_home"
+  fi
+fi
 GARMR="$ROOT/bin/ward/garmr"
 PY="$(command -v python3 || echo /usr/bin/python3)"
 STATE_ROOT="/var/log/ymir/garmr"
