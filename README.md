@@ -140,8 +140,26 @@ model is a thing you ask for, not a thing a cron does.
 **Silence is a finding.** A hound that is dead looks exactly like a hound that found nothing, so his
 own heartbeat is watched too: a silent guardian is a CRITICAL, not a quiet night.
 
+**He can bite — but only in a way that is written down.** Seeing an open door and doing nothing is
+not vigilance, so the hound carries a short, fixed **allowlist** of containments: close a listener
+nobody named, stop a unit that started behaving oddly, kill a process that has no unit and came from
+a writable path, block egress to a host that is not a named peer, quarantine a file that ran without
+being in the manifest, revoke a token that appeared without an approval record. Nothing else.
+
+Four rules make biting safe. **No bite without a rule** — a finding that matches no written rule is a
+bark, never a bite. **Every bite is recorded before it happens**, with the command that undoes it, so
+a guard can never become a vandal. **It never touches the operator's own hands** — not his terminal,
+not an open vault, not a model mid-generation. And **every bite is announced** at CRITICAL with its
+un-bite included, because nobody should learn a door was closed by finding it closed.
+
+**He does not strike back at anyone.** A blocked destination is a door *we* closed, not a
+counter-attack: nothing leaves the machine, and there is no retaliation, ever. The switch —
+`off · report · contain · hard` — is the Allfather's, and it ships at `report`, so the machine says
+what it *would* do before it does anything at all.
+
 What he notices, Vörðr reports, Gná carries, and Runes keeps. That division is the point: one thing
-watches, another judges, a third speaks, and the ledger remembers — and none of them can open a door.
+watches, another judges, a third speaks, the ledger remembers — and the hound may close a door, but
+only one it was told it may close.
 
 ## The council — several minds, one verdict
 
