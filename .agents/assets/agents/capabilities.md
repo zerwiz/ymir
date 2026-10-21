@@ -7,16 +7,14 @@
 for it* — an unlisted job is an **open row**, not a new `bin/whatever.sh`. That is the answer to
 the register becoming a to-do list twice, and to 390 doors with no name for the work.
 
-
-
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",430
+  "shell doors (bin/*.sh)",504
   "runtime modules (src/ymir_runtime/*.py)",54
-  "skills (.agents/skills/*)",27
+  "skills (.agents/skills/*)",28
   "Pi extension tools",0
-  "generated","2026-10-19"
+  "generated","2026-10-21"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -48,15 +46,33 @@ capabilities[5]{surface,count}:
 | eir-doctor.sh | eir-doctor.sh — Eir, the healer: diagnose the running system, then men | tested+named | keep (a human or a cron row must run it) |
 | erindi-brief.sh | erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brie | tested+named | keep (a human or a cron row must run it) |
 | groa-update.sh | groa-update.sh — Gróa, the völva who renews. | tested+named | keep (a human or a cron row must run it) |
+| name-registry.sh | name-registry.sh — the collision system for Ymir's names. | tested | keep (a human or a cron row must run it) |
+| profile.sh | profile.sh — what THIS user's machine actually is, probed not assumed. | tested+named | keep (a human or a cron row must run it) |
 | project-git.sh | project-git.sh — resolve a project's GitHub block from the master regi | tested+named | keep (a human or a cron row must run it) |
 | research-round.sh | research-round.sh — one reusable research errand: seat a skald or a sa | tested | keep (a human or a cron row must run it) |
 | rodd-operational-input.sh | rodd-operational-input.sh - canonical Rödd operational-input protocol. | tested+named | keep (a human or a cron row must run it) |
+| seat-identity.sh | seat-identity.sh — print a seat's primary agent and its role file. | tested+named | keep (a human or a cron row must run it) |
 | skill-find.sh | skill-find.sh — find the skill you need, without loading any of them. | tested+named | keep (a human or a cron row must run it) |
 | skill-index.sh | skill-index.sh — Sága's sight over the crafts: one index of EVERY ski | tested | keep (a human or a cron row must run it) |
 | skill-vendor-sync.sh | skill-vendor-sync.sh — keep imported third-party skill packs current. | tested | keep (a human or a cron row must run it) |
 | valhalla.sh | valhalla.sh — the process hall (Valhalla). List, inspect, revive, and  | tested+named | keep (a human or a cron row must run it) |
 | workspace-provision.sh | workspace-provision.sh — carve one workspace for the operator. Single  | tested+named | keep (a human or a cron row must run it) |
 | yt-transcript.sh | yt-transcript.sh — read a video: metadata, description, and transcript | tested+named | keep (a human or a cron row must run it) |
+| adapter-test.sh | adapter-test.sh — the Telegram layer's own suite: tiers, the addressee | tested | keep (a human or a cron row must run it) |
+| approve-fact.sh | approve-fact.sh — promote a pending fact into the approved digest. Run | tested | keep (a human or a cron row must run it) |
+| ask.sh | ask.sh — the door to Skírnir, the Allfather's assistant. | tested+named | keep (a human or a cron row must run it) |
+| ban.sh | ban.sh — refuse a chat outright, and write down why. | tested | keep (a human or a cron row must run it) |
+| escalate.sh | escalate.sh — when Skírnir wonders, he asks the Allfather where the A | tested | keep (a human or a cron row must run it) |
+| escalation-timer.sh | escalation-timer.sh — the fifth part of a stop rule: what happens if n | tested | keep (a human or a cron row must run it) |
+| group-allow.sh | group-allow.sh — let Skírnir speak in ONE Telegram group, after the A | tested | keep (a human or a cron row must run it) |
+| kb-export.sh | kb-export.sh — build Skírnir's digest from facts the Allfather APPROV | tested | keep (a human or a cron row must run it) |
+| learn.sh | learn.sh — a fact learned in conversation, waiting for the Allfather's | tested | keep (a human or a cron row must run it) |
+| query.sh | query.sh — the ONLY way Skírnir reads his database: three fixed queri | tested | keep (a human or a cron row must run it) |
+| room-squad.sh | room-squad.sh — raise the figures of a room, each with its own name an | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| room.sh | room.sh — the record of a room: append an utterance, or read what was  | uncalled+named | keep (a human or a cron row must run it) |
+| telegram.sh | telegram.sh — the door to Skírnir's own bot (the adapter lives in tel | tested | keep (a human or a cron row must run it) |
+| voice.sh | voice.sh — talk to Skírnir with a voice, and hear him answer while he | tested | keep (a human or a cron row must run it) |
+| walls-test.sh | walls-test.sh — Skírnir's red-team suite. Eight assertions, each an a | tested | keep (a human or a cron row must run it) |
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
 | fm-afk-return.sh | fm-afk-return.sh - deterministic away-mode return catch-up gate. | tested | keep (a human or a cron row must run it) |
 | fm-afk-start.sh | Enter away mode and run the sub-supervisor daemon in a harness-tracked | tested | keep (a human or a cron row must run it) |
@@ -280,6 +296,7 @@ capabilities[5]{surface,count}:
 | gjallarhorn-notify.sh | gjallarhorn-notify.sh — the horn (W0036). Unified push: Telegram + a w | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-purge.sh | gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname. | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-tunnel.sh | gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjal | tested+named | keep (a human or a cron row must run it) |
+| housekeeping.sh | housekeeping.sh — what the worktrees cost, what is already safe to for | tested+named | keep (a human or a cron row must run it) |
 | mjollnir-webhook.sh | mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018 | tested | keep (a human or a cron row must run it) |
 | mjollnir.sh | mjollnir.sh — the hammer (W0018). An issue becomes a PR: read the issu | tested+named | keep (a human or a cron row must run it) |
 | essence-fetch.sh | essence-fetch.sh — the npm world's self-heal: npm's packer refuses dot | tested | keep (a human or a cron row must run it) |
@@ -297,6 +314,7 @@ capabilities[5]{surface,count}:
 | extension-api-check.sh | extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool  | tested+named | keep (a human or a cron row must run it) |
 | home-index-check.sh | home-index-check.sh — every shelf in the home has an index, and the in | tested | keep (a human or a cron row must run it) |
 | model-alias-check.sh | model-alias-check.sh — does every alias a body names resolve in the fl | tested+named | keep (a human or a cron row must run it) |
+| readme-claims.sh | readme-claims.sh — the user-facing documents must not claim what the t | tested | keep (a human or a cron row must run it) |
 | syn-arm-pretool-check.sh | syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash comm | tested+named | keep (a human or a cron row must run it) |
 | syn-asset-pretool-check.sh | syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths. | tested+named | keep (a human or a cron row must run it) |
 | syn-cd-pretool-check.sh | syn-cd-pretool-check.sh - PreToolUse seatbelt for directory-changing com | tested+named | keep (a human or a cron row must run it) |
@@ -319,17 +337,22 @@ capabilities[5]{surface,count}:
 | cron-guard.sh | cron-guard.sh — the shipped tree must satisfy its own schedule. | tested | keep (a human or a cron row must run it) |
 | dead-code-guard.sh | dead-code-guard.sh — code that exists and is never reached is a claim  | tested | keep (a human or a cron row must run it) |
 | defaults-guard.sh | defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE. | tested+named | keep (a human or a cron row must run it) |
+| docs-claims-guard.sh | docs-claims-guard.sh — Rule 27: a user-facing document may not name a  | tested | keep (a human or a cron row must run it) |
 | docs-guard.sh | docs-guard.sh — docs/ is the PUBLIC, user-facing tree. Block operator- | tested | keep (a human or a cron row must run it) |
 | features-guard.sh | features-guard.sh — every feature page is catalogued (Rule 14). | tested | keep (a human or a cron row must run it) |
 | fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | tested+named | keep (a human or a cron row must run it) |
+| git-clobber-guard.sh | git-clobber-guard.sh — no command that throws away uncommitted work. | tested | keep (a human or a cron row must run it) |
 | hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested+named | keep (a human or a cron row must run it) |
 | path-ledger-guard.sh | path-ledger-guard.sh — Rule 25: a path that MOVED may not be reference | tested | keep (a human or a cron row must run it) |
+| people-guard.sh | people-guard.sh — the public tree holds no people. | tested | keep (a human or a cron row must run it) |
 | perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |
-| private-guard.sh | private-guard.sh — enforce the Hoard boundary (Rule 04). Nothing under | tested | keep (a human or a cron row must run it) |
+| pkill-guard.sh | pkill-guard.sh — no blanket kill in the tree, and the audit that finds | tested | keep (a human or a cron row must run it) |
+| private-guard.sh | private-guard.sh — private structure and NDA material never cross a su | tested | keep (a human or a cron row must run it) |
 | public-guard.sh | public-guard.sh — every PUBLIC, user-facing file must be free of opera | tested+named | keep (a human or a cron row must run it) |
 | rules-number-guard.sh | rules-number-guard.sh — the house law is NUMBERED, so no two rules may | tested | keep (a human or a cron row must run it) |
 | runtime-guard.sh | runtime-guard.sh — THE TREE IS NOT A RUNTIME. | tested | keep (a human or a cron row must run it) |
 | secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
+| sensitive-gate.sh | sensitive-gate.sh — one gate for every external surface of a sensitive | tested | keep (a human or a cron row must run it) |
 | syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
 | vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested+named | keep (a human or a cron row must run it) |
 | nidhogg.sh | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination fi | tested | keep (a human or a cron row must run it) |
@@ -337,6 +360,7 @@ capabilities[5]{surface,count}:
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |
 | bootstrap-macos.sh | bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs. | tested+named | keep (a human or a cron row must run it) |
+| browser-watch.sh | browser-watch.sh — record when a browser leaves, so a disappearance is | tested | keep (a human or a cron row must run it) |
 | crash-sense.sh | crash-sense.sh — surface machine crashes to the Allfather on Omarchy. | tested+named | keep (a human or a cron row must run it) |
 | graphics-lib.sh | graphics-lib.sh — the machine's graphics truth, shared by every reader | tested+named | keep (a human or a cron row must run it) |
 | heimdall-ensure.sh | heimdall-ensure.sh — ensure the Heimdall SSH-key ward is present and a | tested+named | keep (a human or a cron row must run it) |
@@ -361,6 +385,12 @@ capabilities[5]{surface,count}:
 | models-report.sh | models-report — the user's OWN models, read from the ROOT pi home. | tested | keep (a human or a cron row must run it) |
 | rail-resolve.sh | rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts | tested+named | keep (a human or a cron row must run it) |
 | no-delete-guard.sh | no-delete-guard.sh — Rule 11, ENFORCED. A tracked file is never delete | tested | keep (a human or a cron row must run it) |
+| approve.sh | approve.sh — one gesture answers one question. | tested | keep (a human or a cron row must run it) |
+| send.sh | send.sh — THE HOTLINE: one door a system calls when it has something t | tested+named | keep (a human or a cron row must run it) |
+| collaborators.sh | collaborators.sh — the people we work with: clients, collaborators, ad | tested | keep (a human or a cron row must run it) |
+| inbox-watch.sh | inbox-watch.sh — notice when someone answers, without a human opening  | tested | keep (a human or a cron row must run it) |
+| inbox.sh | inbox.sh — read the mail that matters to a collaborator, and prove you | tested | keep (a human or a cron row must run it) |
+| logretta-ensure.sh | logretta-ensure.sh — seat the council's roster on this machine. | tested | keep (a human or a cron row must run it) |
 | open-design.sh | open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this se | tested | keep (a human or a cron row must run it) |
 | opendesign.sh | opendesign.sh — start / stop / status for OpenDesign (the design forge | tested | keep (a human or a cron row must run it) |
 | pi-agent.sh | pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/m | tested | keep (a human or a cron row must run it) |
@@ -399,8 +429,11 @@ capabilities[5]{surface,count}:
 | skuld-branch-outcome.sh | skuld-branch-outcome.sh - the durable outcome store for the Pi supervisi | tested+named | keep (a human or a cron row must run it) |
 | skuld-branch-prompt.sh | skuld-branch-prompt.sh - emit the supervision branch's system prompt | tested+named | keep (a human or a cron row must run it) |
 | skuld-sync.sh | skuld-sync.sh — the fleet mirror: the instances pull the heart's whole | tested | keep (a human or a cron row must run it) |
+| ping-room.sh | ping-room.sh — Þing on demand: raise a MiroTalk room on the computer  | tested+named | keep (a human or a cron row must run it) |
 | brokk-wake-grant.sh | shellcheck source=bin/time/brokk-wake-lib.sh | tested+named | keep (a human or a cron row must run it) |
 | brokk-wake-lib.sh | Shared durable wake queue and portable lock helpers. | tested+named | keep (a human or a cron row must run it) |
+| calendar-watch.sh | calendar-watch.sh — do not walk into a meeting by accident. | tested | keep (a human or a cron row must run it) |
+| housewatch.sh | housewatch.sh — the quiet parts of the house, checked on a timer so th | tested | keep (a human or a cron row must run it) |
 | nornir-cron-start.sh | nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempo | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-asken-handoff.sh | nornir-job-asken-handoff.sh — the rollover, on the schedule. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-bragi-scrape.sh | nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape  | tested+named | keep (a human or a cron row must run it) |
@@ -413,18 +446,40 @@ capabilities[5]{surface,count}:
 | nornir-job-nsr-compliance.sh | nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-observer.sh | nornir-job-observer.sh - Huginn, the raven of observation. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-skillopt-sleep.sh | nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution. | tested | keep (a human or a cron row must run it) |
+| nornir-job-worktree-housekeeping.sh | nornir-job-worktree-housekeeping.sh — the daily reckoning of what the  | tested | keep (a human or a cron row must run it) |
 | saga-session-start.sh | saga-session-start.sh - the one-command Brokk session start. | tested+named | keep (a human or a cron row must run it) |
 | saga-sessionstart-run.sh | saga-sessionstart-run.sh - session-open entry point for run-tier harness | tested+named | keep (a human or a cron row must run it) |
 | saga-wake-drain.sh | saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them. | tested+named | keep (a human or a cron row must run it) |
 | calendar-ask.sh | calendar-ask.sh — the shell door onto Mánagandr, the read calendar. | tested+named | keep (a human or a cron row must run it) |
+| calendar-attendees.sh | calendar-attendees.sh — the participants of ONE meeting, read live fro | tested | keep (a human or a cron row must run it) |
+| calendar-auth.sh | calendar-auth.sh — re-grant Mánagandr's read-only calendar and store  | tested | keep (a human or a cron row must run it) |
+| calendar-invite.sh | calendar-invite.sh — create or cancel the next meeting in Google Calen | tested | keep (a human or a cron row must run it) |
+| google-auth.sh | google-auth.sh — one consent for the meeting powers: calendar write an | tested | keep (a human or a cron row must run it) |
 | hall-snapshot.sh | hall-snapshot.sh — the planning feed for the Óðrerir Live Hall. | tested+named | keep (a human or a cron row must run it) |
+| mail-send.sh | mail-send.sh — the follow-up email with the record attached, as a draf | tested | keep (a human or a cron row must run it) |
+| participants-fill.sh | participants-fill.sh — fill participant emails from the meeting's cale | tested | keep (a human or a cron row must run it) |
+| snotra-autojoin.sh | snotra-autojoin.sh — read the calendar, decide which meetings Snotra j | tested+named | keep (a human or a cron row must run it) |
+| snotra-bot.sh | snotra-bot.sh — send Snotra into a meeting, through the Vexa API. | tested+named | keep (a human or a cron row must run it) |
 | snotra-capture.sh | snotra-capture.sh — capture mic + system audio on the meeting seat. | tested+named | keep (a human or a cron row must run it) |
+| snotra-cron.sh | snotra-cron.sh — scheduled maintenance for the meeting system. | tested | keep (a human or a cron row must run it) |
 | snotra-detect.sh | snotra-detect.sh — the ear's watch: pricks up when a call begins, and  | tested+named | keep (a human or a cron row must run it) |
+| snotra-dispatch.sh | snotra-dispatch.sh — one draft per person, and the team follow-up, fro | tested | keep (a human or a cron row must run it) |
 | snotra-ensure.sh | snotra-ensure.sh — ensure the meeting ear's transcription engine is pr | tested+named | keep (a human or a cron row must run it) |
+| snotra-evidence.sh | snotra-evidence.sh — timestamp, immutable copy, certification and rete | tested | keep (a human or a cron row must run it) |
+| snotra-init.sh | snotra-init.sh — the first-run setup for the meeting system, agnostic  | tested | keep (a human or a cron row must run it) |
 | snotra-iscall.sh | snotra-iscall.sh — is a real call in progress on this seat? | tested | keep (a human or a cron row must run it) |
 | snotra-live.sh | snotra-live.sh — THE LIVE TAIL: listen through this machine's micropho | tested+named | keep (a human or a cron row must run it) |
 | snotra-mine.sh | snotra-mine.sh — mine decisions and action items out of a transcript. | tested+named | keep (a human or a cron row must run it) |
+| snotra-provenance.sh | snotra-provenance.sh — a tamper-evident record of every meeting artifa | tested | keep (a human or a cron row must run it) |
+| snotra-render-email.sh | snotra-render-email.sh — the follow-up letter, generated from the reco | tested | keep (a human or a cron row must run it) |
+| snotra-render-pdf.sh | snotra-render-pdf.sh — one printable PDF from a meeting record. | tested | keep (a human or a cron row must run it) |
+| snotra-signoff.sh | snotra-signoff.sh — the assembly signs the record, not the decision. | tested | keep (a human or a cron row must run it) |
+| snotra-store.sh | snotra-store.sh — ONE contract for every meeting record, whichever tra | tested+named | keep (a human or a cron row must run it) |
+| snotra-stream.sh | snotra-stream.sh — Snotra's voice into a meeting: say, and (later) the | tested | keep (a human or a cron row must run it) |
 | snotra-transcribe.sh | snotra-transcribe.sh — transcribe a meeting recording and produce minu | tested+named | keep (a human or a cron row must run it) |
+| snotra-trello.sh | snotra-trello.sh — the meeting board, generated from the record. | tested | keep (a human or a cron row must run it) |
+| snotra-voice-device.sh | snotra-voice-device.sh — the virtual microphone a meeting can hear Sno | tested | keep (a human or a cron row must run it) |
+| trello-due.sh | trello-due.sh — a card's due date is a promise; say when it is broken. | tested | keep (a human or a cron row must run it) |
 | ymir-say.sh | ymir-say.sh — let Ymir speak on the Allfather's desktop. | tested+named | keep (a human or a cron row must run it) |
 | sol.sh | sol.sh — Sól, the sun's wheel: THE clock and date door. | tested+named | keep (a human or a cron row must run it) |
 | well-vault-sync.sh | well-vault-sync.sh — Kaia's memory across the Allfather's machines. | tested+named | keep (a human or a cron row must run it) |
@@ -433,12 +488,17 @@ capabilities[5]{surface,count}:
 | hnitbjorg-ensure.sh | hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path i | tested+named | keep (a human or a cron row must run it) |
 | hnitbjorg.sh | hnitbjorg.sh — Hnitbjörg: the encrypted document vault. | tested+named | keep (a human or a cron row must run it) |
 | hoard-lib.sh | hoard-lib.sh — where the operator's HOME lives, and the two roots bene | tested+named | keep (a human or a cron row must run it) |
+| hodd-set.sh | hodd-set.sh — set ONE key in an age-encrypted secret file, with guards | tested | keep (a human or a cron row must run it) |
 | hodd.sh | hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant. | tested+named | keep (a human or a cron row must run it) |
 | phone-lib.sh | phone-lib.sh — reach the operator's phone storage for the vault's phon | tested | keep (a human or a cron row must run it) |
 | voice-ensure.sh | voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → te | tested+named | keep (a human or a cron row must run it) |
+| garmr-smoke.sh | garmr-smoke.sh — GARMR's smoke test. Is the hound listening, or merely | tested | keep (a human or a cron row must run it) |
+| garmr.sh | garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian. | tested | keep (a human or a cron row must run it) |
 | harden.sh | harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones | tested | keep (a human or a cron row must run it) |
 | security-audit.sh | security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPO | tested | keep (a human or a cron row must run it) |
 | verdr.sh | verdr.sh — VÖRÐR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |
+| ward-answer.sh | ward-answer.sh — answer a ward decision. close · keep (with a reason) | tested | keep (a human or a cron row must run it) |
+| ward-ask.sh | ward-ask.sh — Vörðr reports, then ASKS. A finding is not a decision. | tested | keep (a human or a cron row must run it) |
 
 ## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)
 
