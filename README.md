@@ -18,6 +18,31 @@ your primary agent; **Eindri** are the isolated workers it dispatches. Everythin
 development, marketing, business strategy, life — runs from one repository, with an
 audit ledger, a memory well, one tenant and its workspaces, and a control plane you actually look at.
 
+One operator, one repository, no tenancy machinery to please. There is no organisation chart
+here, no seat licensing, no dashboard whose only job is to be looked at by nobody: there is a
+machine you own, a hall you sit in, and a crew that is expected to *return with an artefact* or
+say plainly that it could not.
+
+**What is in it.** One checkout holds the runtime, the agents, the skills, the gates and the
+apps. Engines are adopted, never rebuilt — git worktrees for isolation, sandboxes for untrusted
+work, an embedding store for memory, a ledger that chains every entry — and each engine wears a
+Norse name so that the thing's *job* is legible from its name. **Brokk** plans, steers, reviews
+and dispatches from the main hall; the **Eindri** forge in isolation and hand back work a human
+can seal; a **council** argues a question from five lenses and a chair that is paid to be
+unimpressed; **Skírnir**, the assistant, answers people while you are away and carries his own
+walls. They talk to each other in **rooms** — attributed, append-only, so the house argues in
+the open instead of in five private contexts.
+
+**What it refuses.** Private data never enters this repository: plans, names, secrets and
+schedules live in a separate private vault, and the tree you are reading is public because it
+holds craft, not clients. Every change leaves by a pull request, because a merge is a decision
+and decisions are the Allfather's. And nothing here is allowed to be a mock in the shipped path:
+either a door answers, or it says loudly that it cannot.
+
+**What it is not.** Not a multi-tenant platform, not a framework for you to host, not a chat
+window with tools bolted on. It is one operator's workshop, built the way a workshop is built —
+by using it every day, and by naming every part after the work it actually does.
+
 ---
 
 ## The Allfather's Chain
