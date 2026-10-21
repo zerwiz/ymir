@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
-S="$HOME_R/hodd/state/assistant"
+S="$HOME_R/hodd/identity/assistant"
 SLUG="${1:-}"; [ -n "$SLUG" ] || { printf 'usage: approve-fact.sh <slug>\n' >&2; exit 2; }
 P="$S/pending/$SLUG.md"; [ -r "$P" ] || { printf 'approve-fact: no pending fact %s\n' "$SLUG" >&2; exit 2; }
 python3 - "$P" "$S/approved/$SLUG.md" <<'PY'

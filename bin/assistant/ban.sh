@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
-F="$HOME_R/hodd/state/assistant/banned.yaml"
+F="$HOME_R/hodd/identity/assistant/banned.yaml"
 [ -f "$F" ] || printf 'banned: []\n' > "$F"
 case "${1:-}" in
   --list) sed -n 's/^- //p' "$F" ;;

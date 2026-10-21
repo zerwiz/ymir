@@ -11,7 +11,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
-S="$HOME_R/hodd/state/assistant"
+S="$HOME_R/hodd/identity/assistant"
+R="$HOME_R/hodd/state/assistant"
 TIER=""; CHAT=""; FACT=""
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -23,7 +24,7 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$FACT" ] || { printf 'usage: learn.sh --tier owner --chat ID --fact "…"\n' >&2; exit 2; }
 SLUG="learned-$(printf '%s' "$FACT" | sha256sum | cut -c1-10)"
-mkdir -p "$S/pending" "$S/approved"
+mkdir -p "$S/pending" "$S/approved" "$R"
 cat > "$S/pending/$SLUG.md" <<DOC
 ---
 approved_by: (pending)

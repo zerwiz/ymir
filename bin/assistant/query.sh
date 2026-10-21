@@ -24,11 +24,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$MODE" ] || { printf 'usage: query.sh --tier T (--who NAME | --search TEXT | --fact SLUG)\n' >&2; exit 2; }
-TIER="$TIER" MODE="$MODE" ARG="$ARG" CHANNEL="$CHANNEL" STATE="$HOME_R/hodd/state/assistant" python3 - <<'PY'
+TIER="$TIER" MODE="$MODE" ARG="$ARG" CHANNEL="$CHANNEL" STATE="$HOME_R/hodd/state/assistant"
+IDENTITY="$HOME_R/hodd/identity/assistant" python3 - <<'PY'
 import json, os, re, sqlite3, time, yaml
 state = os.environ["STATE"]
 db = os.path.join(state, "kb.db")
-grants = yaml.safe_load(open(os.path.join(state, "grants.yaml"))) or {}
+grants = yaml.safe_load(open(os.path.join(os.environ.get("IDENTITY", state), "grants.yaml"))) or {}
 allowed = {k: set(v or []) for k, v in (grants.get("classes") or {}).items()}
 tier, mode, arg, channel = os.environ["TIER"], os.environ["MODE"], os.environ["ARG"], os.environ["CHANNEL"]
 con = sqlite3.connect(db)

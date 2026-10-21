@@ -17,13 +17,14 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
-APPROVED="$HOME_R/hodd/state/assistant/approved"
+APPROVED="$HOME_R/hodd/identity/assistant/approved"
 DIGEST="$HOME_R/hodd/state/assistant/digest.jsonl"
+IDENTITY="$HOME_R/hodd/identity/assistant"
 
 [ "${1:-}" = "--list" ] && { ls -1 "$APPROVED"/*.md 2>/dev/null | sed 's|.*/||;s|\.md$||'; exit 0; }
 
-ROOT_DIR="$ROOT" HOME_DIR_Q="$HOME_R" APPROVED_Q="$APPROVED" DIGEST_Q="$DIGEST" python3 - <<'PY'
-import hashlib, json, os, re, subprocess, sys
+ROOT_DIR="$ROOT" HOME_DIR_Q="$HOME_R" IDENTITY_Q="$IDENTITY" APPROVED_Q="$APPROVED" DIGEST_Q="$DIGEST" python3 - <<'PY'
+import hashlib, json, os, re, subprocess, sys, time
 
 approved = os.environ["APPROVED_Q"]
 digest = os.environ["DIGEST_Q"]
@@ -54,6 +55,7 @@ for name in sorted(os.listdir(approved) if os.path.isdir(approved) else []):
         continue
     claim = re.sub(r"\s+", " ", body).strip()
     rows.append({"slug": name[:-3], "class": meta.get("class", "public"),
+                 "audience_declared": meta.get("audience", ""),
                  "approved_by": meta.get("approved_by"), "approved_at": meta.get("approved_at", ""),
                  "expires": meta.get("expires", ""), "claim": claim,
                  "hash": hashlib.sha256(claim.encode()).hexdigest()[:16],
@@ -120,6 +122,25 @@ with open(canary_path, "w") as fh:
     for token in sorted(c for c in canaries if c):
         fh.write(token + "\n")
 
+def audience_for(row):
+    if row.get("audience_declared"):
+        return row["audience_declared"]
+    klass = str(row.get("class", "public")).lower()
+    if klass == "public":
+        return "public"
+    if klass in ("logistics", "role"):
+        return "public,owner"
+    if klass == "contacts":
+        return "owner"
+    if klass in ("nda", "contracted", "restricted"):
+        parties = [p.strip() for p in str(row.get("parties", "")).split(",") if p.strip()]
+        return "owner," + ",".join(f"person:{p}" for p in parties) if parties else "owner"
+    return "owner"
+
+
+for row in rows:
+    row["audience"] = audience_for(row)
+
 os.makedirs(os.path.dirname(digest), exist_ok=True)
 with open(digest, "w") as fh:
     for row in rows:
@@ -132,20 +153,69 @@ import sqlite3
 db = os.path.join(os.path.dirname(digest), "kb.db")
 con = sqlite3.connect(db)
 con.executescript("""
+CREATE TABLE IF NOT EXISTS schema_version (version INTEGER, applied TEXT);
 DROP TABLE IF EXISTS facts;
 CREATE TABLE facts (
   slug TEXT PRIMARY KEY, class TEXT NOT NULL, claim TEXT NOT NULL,
-  hash TEXT, source TEXT, approved_at TEXT, expires TEXT, parties TEXT
+  hash TEXT, source TEXT, approved_at TEXT, expires TEXT, parties TEXT,
+  audience TEXT DEFAULT 'public'
+);
+CREATE TABLE IF NOT EXISTS people (
+  id TEXT PRIMARY KEY, name TEXT, kind TEXT, status TEXT, org TEXT,
+  project TEXT, nda TEXT, emails TEXT, telegram_ids TEXT
+);
+CREATE TABLE IF NOT EXISTS projects (
+  id TEXT PRIMARY KEY, name TEXT, status TEXT, classification TEXT
 );
 CREATE TABLE IF NOT EXISTS read_audit (
   ts TEXT, tier TEXT, channel TEXT, query TEXT, hits INTEGER
 );
 """)
+if not con.execute("SELECT 1 FROM schema_version LIMIT 1").fetchone():
+    con.execute("INSERT INTO schema_version VALUES (1, ?)", (time.strftime("%Y-%m-%dT%H:%M:%S%z"),))
+
+# ── people and projects, from the operator's own registries ───────────────────────────────────
+ident = {}
+try:
+    import yaml as _yaml
+    gpath = os.path.join(os.environ.get("IDENTITY_Q", ""), "grants.yaml")
+    grants = _yaml.safe_load(open(gpath)) or {}
+    ident = {str(k): str(v) for k, v in (grants.get("identities") or {}).items()}
+except Exception:
+    pass
+for person in people:
+    pid = person.get("id", "")
+    tids = ",".join(k for k, v in ident.items() if v == pid)
+    con.execute("INSERT OR REPLACE INTO people VALUES (?,?,?,?,?,?,?,?,?)",
+                (pid, person.get("name", ""), person.get("kind", ""), person.get("status", ""),
+                 person.get("org", ""), person.get("project", ""), str(person.get("nda", "")),
+                 ",".join(person.get("emails") or []), tids))
+    if person.get("project"):
+        con.execute("INSERT OR REPLACE INTO projects VALUES (?,?,?,?)",
+                    (person["project"], person["project"], person.get("status", ""), "business"))
+# the AUDIENCE a fact carries: who may hear it. A class is a kind; an audience is a door.
+def audience_for(row):
+    if row.get("audience_declared"):
+        return row["audience_declared"]
+    klass = str(row.get("class", "public")).lower()
+    slug = row.get("slug", "")
+    if klass == "public":
+        return "public"
+    if klass in ("logistics", "role"):
+        return "public,owner"
+    if klass == "contacts":
+        return "owner"
+    if klass in ("nda", "contracted", "restricted"):
+        parties = [p.strip() for p in str(row.get("parties", "")).split(",") if p.strip()]
+        return "owner," + ",".join(f"person:{p}" for p in parties) if parties else "owner"
+    return "owner"
+
 for row in rows:
-    con.execute("INSERT OR REPLACE INTO facts VALUES (?,?,?,?,?,?,?,?)",
+    row["audience"] = audience_for(row)
+    con.execute("INSERT OR REPLACE INTO facts VALUES (?,?,?,?,?,?,?,?,?)",
                 (row["slug"], row.get("class", "public"), row["claim"], row.get("hash", ""),
                  row.get("source", ""), row.get("approved_at", ""), row.get("expires", ""),
-                 row.get("parties", "")))
+                 row.get("parties", ""), row["audience"]))
 con.commit(); con.close()
 print(f'kb-export[1]{{approved,refused,digest}}:"{len(rows)}","{len(refused)}","{digest}"')
 for name, why in refused:

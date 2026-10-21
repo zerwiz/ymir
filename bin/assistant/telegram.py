@@ -47,7 +47,8 @@ def home() -> str:
 STATE = os.path.join(home(), "hodd", "state", "assistant")
 SEEN = os.path.join(STATE, "seen-groups.json")
 OFFSET = os.path.join(STATE, "telegram.offset")
-GROUPS = os.path.join(STATE, "groups.yaml")
+IDENTITY = os.path.join(home(), "hodd", "identity", "assistant")
+GROUPS = os.path.join(IDENTITY, "groups.yaml")
 LIMITS = os.path.join(STATE, "telegram.limits.json")
 OWNER_ID = os.environ.get("TELEGRAM_OWNER_ID", "")
 
@@ -126,16 +127,18 @@ def tier_for(chat: dict) -> tuple[str, str]:
     return "stranger", "telegram-dm"
 
 
-def answer(text: str, tier: str, channel: str, sender: str, chat_id: str = "") -> str:
-    proc = subprocess.run([sys.executable, os.path.join(HERE, "skirnir.py"),
-                           "--tier", tier if tier != "unknown-group" else "stranger",
-                           "--channel", channel, "--sender", sender, "--text", text,
-                           "--chat", str(chat_id)],
-                          capture_output=True, text=True, timeout=120)
+def answer(text: str, tier: str, channel: str, sender: str, chat_id: str = "", sender_id: str = "",
+           members: list | None = None) -> str:
+    args = [sys.executable, os.path.join(HERE, "skirnir.py"),
+            "--tier", tier if tier != "unknown-group" else "stranger",
+            "--channel", channel, "--sender", sender, "--text", text,
+            "--chat", str(chat_id), "--sender-id", str(sender_id)]
+    if members:
+        args += ["--group-members", ",".join(members)]
+    proc = subprocess.run(args, capture_output=True, text=True, timeout=120)
     for line in proc.stdout.splitlines():
         if line.strip().startswith("{"):
             return json.loads(line).get("answer", "")
-    # never fail silently: the reason goes to the journal, the person gets an honest line
     tail = (proc.stderr or "").strip().splitlines()[-1:] or ["no stderr"]
     print(f"telegram: skirnir.py failed — {tail[0][:200]}", file=sys.stderr)
     return "I'm having trouble answering just now — I'll ask the Allfather."
@@ -210,7 +213,7 @@ def main() -> int:
             # a banned chat is not answered at all, and not told why
             try:
                 import yaml as _y
-                _b = _y.safe_load(open(os.path.join(STATE, "banned.yaml"))) or {}
+                _b = _y.safe_load(open(os.path.join(IDENTITY, "banned.yaml"))) or {}
                 if str(chat.get("id")) in {str(x) for x in (_b.get("banned") or [])}:
                     continue
             except Exception:
@@ -220,7 +223,11 @@ def main() -> int:
                 api("sendChatAction", chat_id=chat.get("id"), action="typing")
             except Exception:
                 pass
-            reply = answer(text, tier, channel, sender.get("username", ""), chat.get("id"))
+            members = None
+            if chat.get("type") in ("group", "supergroup"):
+                members = (load_groups().get(str(chat.get("id"))) or {}).get("members") or []
+            reply = answer(text, tier, channel, sender.get("username", ""), chat.get("id"),
+                           sender.get("id", ""), members)
             if not reply:
                 continue
             try:

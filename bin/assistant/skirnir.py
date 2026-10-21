@@ -97,6 +97,7 @@ def home() -> str:
 
 
 STATE = os.path.join(home(), "hodd", "state", "assistant")
+IDENTITY = os.path.join(home(), "hodd", "identity", "assistant")
 DIGEST = os.path.join(STATE, "digest.jsonl")
 DB = os.path.join(STATE, "assistant.db")
 CANARIES = os.path.join(HERE, "canaries.txt")
@@ -138,11 +139,12 @@ def load_digest() -> dict[str, dict]:
     if os.path.exists(db):
         try:
             con = sqlite3.connect(db)
-            for slug, klass, claim, h, source, approved_at, expires, parties in con.execute(
-                    "SELECT slug,class,claim,hash,source,approved_at,expires,parties FROM facts"):
+            for slug, klass, claim, h, source, approved_at, expires, parties, audience in con.execute(
+                    "SELECT slug,class,claim,hash,source,approved_at,expires,parties,audience FROM facts"):
                 facts[slug] = {"slug": slug, "class": klass, "claim": claim, "hash": h,
                                "source": source, "approved_at": approved_at,
-                               "expires": expires, "parties": parties}
+                               "expires": expires, "parties": parties,
+                               "audience": audience}
             con.close()
         except sqlite3.Error:
             facts = {}
@@ -195,10 +197,86 @@ def remember(chat: str, user_text: str, assistant_text: str) -> None:
         pass
 
 
+def identities() -> dict:
+    try:
+        import yaml
+        grants = yaml.safe_load(open(os.path.join(IDENTITY, "grants.yaml"))) or {}
+        return {str(k): str(v) for k, v in (grants.get("identities") or {}).items()}
+    except Exception:
+        return {}
+
+
+def audiences_for(tier: str, chat: str, sender_id: str = "", members: list[str] | None = None,
+                  sender: str = "", channel: str = "") -> set[str]:
+    """What THIS asker may hear. The chat decides the tier; the identity decides the person.
+
+    A group is other people: `person:` audiences are never granted there, whatever the identity.
+    """
+    allowed = {"public"}
+    if members is not None:            # a group: the intersection, never a union
+        return group_audience(members)
+    # the owner's own handle counts as the owner in a DM only — never in a room
+    handle_owner = (identities().get(str(sender).lstrip("@"), "") == "owner"
+                    and "group" not in (channel or ""))
+    if tier == "owner" or handle_owner:
+        return {"public", "owner"} | {"person:" + p for p in identities().values() if p != "owner"} \
+            | {"project:" + p for p in identities().values() if p != "owner"}
+    ids = identities()
+    person = ids.get(str(sender_id), "") or ids.get(str(sender).lstrip("@"), "")
+    if person:
+        allowed.add("person:" + person)
+        try:
+            con = sqlite3.connect(os.path.join(STATE, "kb.db"))
+            row = con.execute("SELECT project FROM people WHERE id=?", (person,)).fetchone()
+            con.close()
+            if row and row[0]:
+                allowed.add("project:" + str(row[0]))
+        except sqlite3.Error:
+            pass
+    if "group" in (chat_type := "") if False else False:
+        pass
+    return allowed
+
+
+def group_audience(members: list[str]) -> set[str]:
+    """What a GROUP may hear: only what EVERY member may hear.
+
+    Craig may know the NDA facts and Andre may not — so in a room with both, the answer is neither:
+    the group's audience is the intersection, and a `person:` fact is never part of it.
+    """
+    if not members:
+        return {"public"}
+    allowed: set[str] | None = None
+    for pid in members:
+        if pid == "owner":
+            continue
+        mine = {"public", "person:" + pid}
+        try:
+            con = sqlite3.connect(os.path.join(STATE, "kb.db"))
+            row = con.execute("SELECT project FROM people WHERE id=?", (pid,)).fetchone()
+            con.close()
+            if row and row[0]:
+                mine.add("project:" + str(row[0]))
+        except sqlite3.Error:
+            pass
+        allowed = mine if allowed is None else (allowed & mine)
+    return allowed or {"public"}
+
+
+def audience_ok(fact: dict, allowed: set[str], channel: str) -> bool:
+    tokens = [t.strip() for t in str(fact.get("audience") or "public").split(",") if t.strip()]
+    if "public" in tokens:
+        return True
+    if "group" in (channel or ""):
+        # a group hears public facts and, at most, the project it is about — never a person's fact
+        return any(t.startswith("project:") and t in allowed for t in tokens)
+    return any(t in allowed for t in tokens)
+
+
 def banned(channel_id: str) -> bool:
     try:
         import yaml
-        data = yaml.safe_load(open(os.path.join(STATE, "banned.yaml"))) or {}
+        data = yaml.safe_load(open(os.path.join(IDENTITY, "banned.yaml"))) or {}
         return str(channel_id) in {str(x) for x in (data.get("banned") or [])}
     except Exception:
         return False
@@ -322,13 +400,15 @@ def say_unknown(tier: str = "stranger") -> str:
             "I've passed it to the Allfather and he will come back to you.")
 
 
-def answer(text: str, tier: str, channel: str, sender: str = "", model: str = "", chat: str = "") -> dict:
+def answer(text: str, tier: str, channel: str, sender: str = "", model: str = "", chat: str = "", sender_id: str = "", members: list[str] | None = None) -> dict:
     if banned(chat):
         return {"answer": "", "refused": True, "intent": "banned", "tier": "banned", "digest": ""}
     facts = load_digest()
     today = time.strftime("%Y-%m-%d")
     facts = {k: v for k, v in facts.items()
              if not (v.get("expires") or "").strip() or v["expires"] >= today}
+    allowed = audiences_for(tier, chat, sender_id, members, sender, channel)
+    facts = {k: v for k, v in facts.items() if audience_ok(v, allowed, channel)}
     dh = digest_hash(facts)
     canaries = load_canaries()
     question = text.strip()
@@ -344,6 +424,9 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     for phrase in sorted(INTENTS, key=len, reverse=True):
         this_kind, slug = INTENTS[phrase]
         if re.search(r"(?<![a-z0-9])" + re.escape(phrase.strip()) + r"(?![a-z0-9])", key):
+            # "what do you know ABOUT X" is a question about X, not the inventory
+            if re.match(r"^\s*" + re.escape(phrase.strip()) + r"\s+(about|on|regarding)\b", key):
+                continue
             intent, kind = phrase, this_kind
             if slug:
                 used = [slug]
@@ -357,6 +440,17 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             kind = INTENTS[close[0]][0]
             if INTENTS[close[0]][1]:
                 used = [INTENTS[close[0]][1]]
+
+    # "what does <name> prefer" / "what do you know about <name>" — a fact search by subject
+    if intent == "unknown":
+        m = re.search(r"(?:what does|what do you know about|what about)\s+([a-z]+)", key)
+        if m:
+            needle = m.group(1)
+            for slug, fact in facts.items():
+                if needle in fact["claim"].lower():
+                    used = [slug]
+                    intent = f"fact:{slug}"
+                    break
 
     # a dynamic lookup: "who is <name>" over the digest, so the directory is answerable without
     # a phrase in the table for every person the Allfather ever meets
@@ -488,9 +582,12 @@ def main() -> int:
     ap.add_argument("--channel", default="console")
     ap.add_argument("--sender", default="", help="the sender's address, when the channel knows it")
     ap.add_argument("--chat", default="", help="the chat id — the key for the conversation's memory")
+    ap.add_argument("--sender-id", default="", help="the sender's numeric id, to resolve who they are")
+    ap.add_argument("--group-members", default="", help="comma-separated person ids in a group")
     ap.add_argument("--model", default="", help="a local model id for free text (owner tier only)")
     args = ap.parse_args()
-    result = answer(args.text, args.tier, args.channel, args.sender, args.model, args.chat)
+    members = [m.strip() for m in args.group_members.split(',') if m.strip()] or None
+    result = answer(args.text, args.tier, args.channel, args.sender, args.model, args.chat, args.sender_id, members)
     print(json.dumps(result, ensure_ascii=False))
     return 0
 
