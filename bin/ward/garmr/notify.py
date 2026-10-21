@@ -62,8 +62,8 @@ def _save_state(state: dict) -> None:
         pass
 
 
-def _token(cfg: dict) -> str:
-    ref = (cfg.get("alert", {}).get("gotify", {}) or {}).get("token_ref", "GARMR_GOTIFY_TOKEN")
+def _secret(ref: str) -> str:
+    """A secret by REFERENCE (Rule 07): environment first, then the vault."""
     value = os.environ.get(ref, "")
     if value:
         return value
@@ -79,6 +79,10 @@ def _token(cfg: dict) -> str:
         except Exception:
             pass
     return ""
+
+
+def _token(cfg: dict) -> str:
+    return _secret((cfg.get("alert", {}).get("gotify", {}) or {}).get("token_ref", "GARMR_GOTIFY_TOKEN"))
 
 
 def _url(cfg: dict) -> str:
@@ -169,9 +173,11 @@ def send_ntfy(severity: str, line: str, rune: str, cfg: dict) -> dict:
     Auth is optional but ALWAYS used when a token is present: a topic anyone may post to
     can be made to say "all clear", which is the one lie a guardian must not carry.
     """
-    url = (os.environ.get("GARMR_NTFY_URL") or "").rstrip("/")
-    topic = os.environ.get("GARMR_NTFY_TOPIC") or (cfg.get("alert", {}).get("ntfy", {}) or {}).get("topic", "")
-    token = os.environ.get("GARMR_NTFY_TOKEN", "")
+    ntfy_cfg = (cfg.get("alert", {}).get("ntfy", {}) or {})
+    # the URL and the topic are machine facts: env, then the vault, then the config
+    url = (_secret("GARMR_NTFY_URL") or ntfy_cfg.get("url", "") or "").rstrip("/")
+    topic = (_secret("GARMR_NTFY_TOPIC") or ntfy_cfg.get("topic", "") or "")
+    token = _secret(ntfy_cfg.get("token_ref", "GARMR_NTFY_TOKEN"))
     if not url or not topic:
         return {"sent": False, "reason": "GARMR_NTFY_URL or GARMR_NTFY_TOPIC is missing (vault: secrets/platform.env)"}
 
