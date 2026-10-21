@@ -39,6 +39,40 @@ holds craft, not clients. Every change leaves by a pull request, because a merge
 and decisions are the Allfather's. And nothing here is allowed to be a mock in the shipped path:
 either a door answers, or it says loudly that it cannot.
 
+## The council — several minds, one verdict
+
+When a question deserves more than one opinion, Ymir convenes a **council**: not a swarm, not a
+vote — a small bench of seats, each with its own **lens**, and a **chair** that decides.
+
+A seat is a figure with a job: an architect weighs the shape, a security seat weighs the door, a
+cost seat weighs the bill, a skeptic tries to break the proposal, an operator weighs whether it can
+be lived with. The same model can sit in all five chairs, and that is still worth doing — five
+lenses on one mind find more than one mind with no lens. The council is not told what to agree on.
+
+**The chair is the point.** Móðguðr, the bridge-keeper, presides — she stands at the crossing and
+challenges every passer-by before they may cross, so her seat is not there to be encouraging. Her
+laws: *a claim is false until a command proves it · the house's own best story is my first suspect ·
+security is a door, not a section · production readiness is a list, not a feeling · a refusal names
+the one thing that would change my mind · I do not grade on effort.* A chair that repairs what it
+audits has no verdict, so she never edits.
+
+```
+modes[4]{mode,who_moves,use_when}:
+  "divide","the chair splits the task, sends each seat out on its slice, reports back with what returned","a task with parts"
+  "sortie","every seat out at once on the same quest; the chair reads the sweep after","breadth over judgement"
+  "report","seats report UP to the chair, the chair rules, and a failed seat is told what it must bring back","an audit"
+  "debate","seats answer each other, by name, in the record","a disagreement worth airing"
+```
+
+**It remembers.** The chair drinks the **well** before she sits and waters it with the verdict
+after, so the next council starts warmer than this one — and every word of a sitting lands in the
+**rooms**, attributed, because a council whose argument exists only inside five model contexts
+never happened.
+
+**What a council will not do.** It writes no code, merges nothing, and pushes nothing. A verdict is
+a *record*; the build is a separate errand with its own gate, and the chain stays in the Allfather's
+hand.
+
 ## Skírnir — the mouth with no hands
 
 **Skírnir** answers people while you are away. He is not Brokk and cannot act as him: the figure
