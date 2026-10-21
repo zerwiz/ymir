@@ -152,6 +152,15 @@ a guard can never become a vandal. **It never touches the operator's own hands**
 not an open vault, not a model mid-generation. And **every bite is announced** at CRITICAL with its
 un-bite included, because nobody should learn a door was closed by finding it closed.
 
+**A model may advise, and only in one narrow place.** When a CRITICAL finding arrives that no
+written rule covers, one short question goes to a **small local model** — given *metadata only*
+(class, severity, pid, port, path, destination, never a payload) — and it may answer with one of the
+six bites, or `none`. Its answer is then checked against the allowlist and against the classes
+actually armed in the rules file. If the class is not armed, the hound refuses and tells you the one
+line to edit. **The model never acts, never decides policy, and is never called by a loop**: a
+finding stays a template built from measurement, and the model at most says which already-unlocked
+door to close.
+
 **He does not strike back at anyone.** A blocked destination is a door *we* closed, not a
 counter-attack: nothing leaves the machine, and there is no retaliation, ever. The switch —
 `off · report · contain · hard` — is the Allfather's, and it ships at `report`, so the machine says
