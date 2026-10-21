@@ -106,6 +106,34 @@ actually look at, and **Herdr** is the seat backend where workers stand in panes
 the one that watches rather than gates: it sees what moved, runs the smoke test, and holds the
 switch.
 
+## Garmr — the hound at the gate
+
+**Garmr** is the house's watchman, and he is a different animal from the wards. A ward stands in a
+doorway and refuses; Garmr walks the house and **notices**. He watches what moves in the tree, what
+listens on the machine, what tries to leave it, and what the kernel's own audit has recorded — and he
+reports, judged, with the worst first.
+
+Four things are deliberately true of him.
+
+**He is read-only against the machine.** He never closes a door, never kills a process, never edits a
+tree. A watchman who can also act is a second hand on the wheel; Garmr exists to make sure the
+Allfather *knows*, not to make decisions for him.
+
+**A fact never passes through a model.** The alarm itself is always a template — a sentence built
+from what was measured, not written by a language model — so a finding cannot be reworded, softened
+or invented. A reasoner, when one is asked at all, is asked only to write the paragraph *beneath* the
+fact, never to produce the fact.
+
+**The loop never calls a model.** A watcher that asks a model every minute would evict whatever the
+operator was working on — the rail holds one model at a time — so the loop is deterministic, and a
+model is a thing you ask for, not a thing a cron does.
+
+**Silence is a finding.** A hound that is dead looks exactly like a hound that found nothing, so his
+own heartbeat is watched too: a silent guardian is a CRITICAL, not a quiet night.
+
+What he notices, Vörðr reports, Gná carries, and Runes keeps. That division is the point: one thing
+watches, another judges, a third speaks, and the ledger remembers — and none of them can open a door.
+
 ## The council — several minds, one verdict
 
 When a question deserves more than one opinion, Ymir convenes a **council**: not a swarm, not a
