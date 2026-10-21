@@ -6,8 +6,10 @@ must make a rule for keeping documentation up to date."*
 
 **Why it exists.** On that day the README told a user the smithy's npm name "was accepted twice by
 the registry and served never" — while `npm view @zerwiz/smidja` answered **0.1.1**. It named
-`docs/plans/README.md` for the plan index, which had moved into the vault. It pointed at
-`docs/masterplan.md`, which is private and never shipped. It described `config/cron.yaml` as if a
+`docs/plans/README.md` <!-- stale-ok: quoted as the stale claim this rule was written for --> for the plan
+index, which had moved into the vault. It pointed at
+`docs/masterplan.md` <!-- stale-ok: quoted as the stale claim, not as a live path -->, which is
+private and never shipped. It described `config/cron.yaml` as if a
 clone held it, when a clone holds only `cron.yaml.example`. **Five instructions, five closed roads,
 and not one of them looked wrong while reading.** That is the failure this rule is for.
 

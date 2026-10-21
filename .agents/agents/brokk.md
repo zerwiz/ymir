@@ -299,37 +299,39 @@ Full index: `.agents/skills/README.md` — always load that file for the canonic
 
 ## 14. INTERNAL ASSETS INVENTORY
 
+*Corrected 2026-10-21: this table named a shelf that no longer exists (`.agents/subagents/` <!-- stale-ok: quoted as the shelf that was removed -->,
+`pi-boot/`, `assets/schemas/`). It now names what is in the tree, and a claim about the tree is
+checked by the `docs-claims-guard` (Rule 27) — so it cannot drift again unnoticed.*
+
 | Asset | Path | Purpose |
 |-------|------|---------|
-| Eindri profiles | `.agents/subagents/developer.md` | Code synthesis, refactoring, test writing |
-|  | `.agents/subagents/marketer.md` | Content, SEO, social, campaigns |
-|  | `.agents/subagents/researcher.md` | RAG, web search, analysis |
-| Build tool categories | `.agents/skills/galdr-ymirsystem/assets/build-tool-categories.md` | 7 tool categories for synthesis |
-| TOON schemas | `.agents/skills/galdr-ymirsystem/schemas/toon-schemas.md` | 7 schema types for validation |
-| Compliance requirements | `.agents/skills/galdr-ymirsystem/assets/compliance-requirements.md` | 5 Utgard gates + PI gate |
-| Brokk/PI config | `.agents/skills/galdr-ymirsystem/assets/pi-boot/pi-profile.yml` | PI harness profile |
-|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/herdr-profile.toml` | Hermóðr pane layout |
-|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/einherjar-spawn.schema.json` | Dispatch payload schema |
-|  | `.agents/skills/galdr-ymirsystem/assets/pi-boot/supervision-tree.yml` | Valhalla supervision |
-| Templates | `.agents/assets/templates/PRD_template.md` | PRD boilerplate |
-|  | `.agents/assets/templates/env.template` | Environment template |
-|  | `.agents/assets/templates/system_prompt.template` | System prompt template |
-| Schemas | `.agents/assets/schemas/tool_manifest.json` | Tool manifest schema |
+| The agent roster | `.agents/agents/*.md` | one profile per figure — `sindri-developer`, `bragi-marketer`, `huginn-researcher`, `kvasir-scout`, `mimir-planner`, `tyr-check`, and the rest |
+| Role → figure → tools | `.agents/roles.yaml` | the wiring the doors read; the harness never reads it |
+| Dispatch | `.agents/skills/galdr-ymirsystem/assets/eindri-orchestration.md` | how an errand is spawned, seated and collected |
+| Profiles | `.agents/skills/galdr-ymirsystem/assets/eindri-profiles.md` | what a worker profile must carry |
+| The harness matrix | `.agents/skills/galdr-ymirsystem/assets/harness-integration/` | one deep-dive per harness (pi · opencode · claude · codex · cursor) |
+| TOON schemas | `.agents/skills/galdr-ymirsystem/schemas/toon-schemas.md` | the schema types the output validates against |
+| Compliance | `.agents/skills/galdr-ymirsystem/assets/runtime-compliance.md` | the runtime's compliance gates |
+| Build categories | `.agents/skills/galdr-ymirsystem/assets/build-tool-categories.md` | the tool categories used for synthesis |
+| Templates | `.agents/assets/templates/` | `company_entity.template.md`, `review-brief.template.md` |
+
 
 ---
 
 ## 15. INTERNAL TOOLS INVENTORY
 
-| Tool | Path | Purpose |
-|------|------|---------|
-| `tasks-cli` | `.agents/tools/bin/tasks-cli` | AXI-compliant task manager (list/view/create/close) — TOON output |
-| `tasks-cli.ts` | `.agents/tools/tasks-cli.ts` | TypeScript source for tasks-cli |
-| `yggdrasil.ts` | `.agents/tools/yggdrasil.ts` | Worktree CLI harness (planned) |
-| `hermes_runner.ts` | `.agents/tools/hermes_runner.ts` | Realm agent CLI orchestrator (planned) |
-| `herder.ts` | `.agents/tools/herder.ts` | Terminal multiplexer & pane state tracker (planned) |
-| `vector_db.ts` | `.agents/tools/vector_db.ts` | Vector indexing & RAG search (planned) |
-| `firebase.ts` | `.agents/tools/firebase.ts` | Backend provisioning (planned) |
-| `supabase.ts` | `.agents/tools/supabase.ts` | DB & edge function setup (planned) |
+*Corrected 2026-10-21: this table listed eight TypeScript tools under `.agents/tools/` that were
+never built — seven marked "(planned)", all of them unreachable. What follows is what does the
+same jobs today, in the tree.*
+
+| Job | Where it lives now |
+|-----|--------------------|
+| Worktrees (Yggdrasil) | `bin/forge/yggdrasil.sh` — pool, create, list, exit |
+| Sandboxes (Utgard) | `bin/forge/utgard.sh` — run a command sealed, no network by default |
+| Panes and seats (Herdr) | `bin/seat/herdr-run.sh` — seat an Eindri in a tab, or a disposable space |
+| Errands | `ymir_errand` / `bin/agents/einherjar-spawn.sh` — one spawn path, one record |
+| Tasks and the queue | `bin/gates/queue.sh` (derived) · `bin/gates/fixes.sh` (the record) |
+| The well | `bin/records/mimir.sh` — recall before acting, observe after |
 
 **Usage:** Run `python3 .agents/tools/bin/tasks-cli <command>` for task management. All tools emit TOON format and follow Galdr principles.
 

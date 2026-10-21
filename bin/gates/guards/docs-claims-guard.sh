@@ -19,8 +19,16 @@ esac
 [ "$CMD" = "check" ] || { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
 
 # every document a user reads: the front doors, the field notes, and each feature how-to
+# Scope (Rule 27): the documents that describe THIS tree, right now.
+#   * docs/fixes/ are historical records — they name the world as it was, on purpose
+#   * assets/reference/ is a vendored shelf of other projects' documents — judged by
+#     their owners, not by us
+#   * .agents/skills/ is named debt in the rule: 40 skill files still carry ~400 claims
+#     from an upstream lineage, and a regex is not how those get repaired
 files=("$ROOT/README.md" "$ROOT/FEATURES.md")
 while IFS= read -r page; do files+=("$page"); done < <(ls "$ROOT"/docs/*.md "$ROOT"/docs/features/*.md 2>/dev/null)
+while IFS= read -r page; do files+=("$page"); done < <(ls "$ROOT"/RULES/*.md 2>/dev/null)
+while IFS= read -r page; do files+=("$page"); done < <(ls "$ROOT"/.agents/agents/*.md 2>/dev/null)
 
 if out="$(bash "$ROOT/bin/gates/checks/readme-claims.sh" "${files[@]}" 2>&1)"; then
   printf 'docs-claims-guard[1]{ward,result}:\n  "documentation","every claim resolves across %s page(s)"\n' "${#files[@]}"

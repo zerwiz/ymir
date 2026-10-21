@@ -36,7 +36,7 @@ level up from the script. Nested, it resolved `ROOT` to `bin/`, then searched fo
 
 ## Enforcement
 
-- `bin/bin-shape-check.sh` fails when a **new** door appears loose in `bin/`, or when a system
+- `bin/bin-shape-check.sh` <!-- stale-ok: the check moved under bin/gates/checks/ --> fails when a **new** door appears loose in `bin/`, or when a system
   folder contains no door.
 - The capability register's `--check` fails if the door count drops **without** the change being a
   recorded move — a silent collapse can never again look like a clean run.

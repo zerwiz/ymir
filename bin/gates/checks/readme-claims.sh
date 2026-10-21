@@ -62,6 +62,8 @@ for file in "${FILES[@]}"; do
       case "$tok" in *'<'*|*'>'*|*'*'*|*'…'*) continue ;; esac   # a placeholder is not a claim
       # a JSON-RPC method, not a file (`tools/list` in an MCP handshake)
       case "$tok" in tools/list|tools/call|resources/list|prompts/list) continue ;; esac
+      # `RULES/15` is a rule NUMBER, not a directory
+      case "$tok" in RULES/[0-9]|RULES/[0-9][0-9]) continue ;; esac
       checked=$((checked + 1))
       if [ -e "$ROOT/$tok" ]; then continue; fi
       waived "$tok" && continue

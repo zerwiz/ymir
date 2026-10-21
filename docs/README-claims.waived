@@ -7,3 +7,14 @@
 # .example forms only. A page may name the live path because that is where a user will find it.
 config/cron.yaml
 config/tailscale-sync.yaml
+# ── files a SEAT writes at runtime (the tree ships only their .example forms, or nothing)
+config/backend
+config/crew-harness
+config/secondmate-harness
+config/Eindri-home-harness
+config/herdr-presentation-spaces
+config/trace-context
+config/x-mode.env
+config/fleet.json
+config/grants.yaml
+config/model-catalog.yaml

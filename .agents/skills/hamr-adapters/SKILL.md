@@ -120,4 +120,4 @@ truth is `RULES/`:
   sourced. The demo roster is the single, labelled mock (demo mode only).
 
 In the code the eight are `DOMAINS` (`DomainId`/`DomainDef`) and an agent carries
-`domain` (not `house`) — see `src/data/realms.ts` and `AgentCard`.
+`domain` (not `house`) — see `apps/hlidskjalf/src/data/realms.ts` and `AgentCard`.

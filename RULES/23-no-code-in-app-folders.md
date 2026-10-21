@@ -23,7 +23,7 @@ every application (it is updated in the same change that adds one).
 named for the layer and, inside it, for the **function** — never for an application.
 
 **Appended 2026-10-18** at the Allfather's word, after a real mistake: an opening tool
-(`display-lib.sh`, `open-on.sh`) was written into **`bin/seat/sessrumnir/`** — a directory
+(`display-lib.sh`, `open-on.sh`) was written into **`bin/seat/sessrumnir/` <!-- stale-ok: named as the retired shape this rule forbids; the door is bin/seat/ -->** — a directory
 named after an *application* — because the file that inspired it (`editor-place.sh`) happened
 to live there. His words: *"sessrumnir have nothing to do with the displays, sessrumnir are an
 application. how could this fatal mistake happen?"* and then *"we can't have random code in
