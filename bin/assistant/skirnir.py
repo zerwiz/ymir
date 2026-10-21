@@ -43,6 +43,22 @@ TIERS = ("owner", "collaborator", "known", "stranger")
 # What he may answer without a model at all. Each intent has its facts and its phrasing; the
 # template IS the safety, because a template cannot be talked into saying something else.
 INTENTS = {
+    # greetings and identity come first: a person who says hello deserves an answer, not a refusal
+    "/start": ("greeting", None),
+    "start": ("greeting", None),
+    "hello": ("greeting", None),
+    "hi": ("greeting", None),
+    "hey": ("greeting", None),
+    "help": ("greeting", None),
+    "what do you have in your database": ("inventory", None),
+    "what do you know": ("inventory", None),
+    "what have you got": ("inventory", None),
+    "what is in your database": ("inventory", None),
+    "list your facts": ("inventory", None),
+    "who am i": ("identity", None),
+    "iam the allfather": ("identity", None),
+    "i am the allfather": ("identity", None),
+    "do you know who i am": ("identity", None),
     "what is ymir": ("public", "what-ymir-is"),
     "what is opti cat": ("public", "what-opti-cat-is"),
     "what is opticat": ("public", "what-opti-cat-is"),
@@ -119,7 +135,10 @@ def ledger(question: str, answer: str, tier: str, channel: str, intent: str,
 
 
 def escalate(question: str, reason: str, tier: str) -> None:
+    """Never escalate to the Allfather when he is the one asking — that is a loop, not a service."""
     """The only road to a human — guarded so a test or a flood cannot page him 200 times."""
+    if tier == "owner":
+        return          # he is right here; there is nobody to ask
     if os.environ.get("SKIRNIR_NO_ESCALATE") == "1":
         return
     marker = os.path.join(STATE, "escalations.json")
@@ -135,13 +154,18 @@ def escalate(question: str, reason: str, tier: str) -> None:
     stamps.append(now)
     os.makedirs(STATE, exist_ok=True)
     json.dump(stamps, open(marker, "w"))
-    door = os.path.join(ROOT, "bin", "notify", "send.sh")
-    if not os.path.isfile(door):
+    script = os.path.join(ROOT, "bin", "assistant", "escalate.sh")
+    if os.path.isfile(script):
+        # his own bot's DM first (so the Allfather can simply reply), then the hotline
+        subprocess.run(["bash", script, "--tier", tier, "--text", f"{reason} — {question[:200]}"],
+                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return
-    subprocess.run(["bash", door, "--source", "assistant", "--severity", "HIGH",
-                    "--message", f"Skírnir needs you ({tier}): {reason} — “{question[:80]}”",
-                    "--key", f"assistant:{hashlib.sha256(question.encode()).hexdigest()[:12]}"],
-                   check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    door = os.path.join(ROOT, "bin", "notify", "send.sh")
+    if os.path.isfile(door):
+        subprocess.run(["bash", door, "--source", "assistant", "--severity", "HIGH",
+                        "--message", f"Skírnir needs you ({tier}): {reason} — “{question[:80]}”",
+                        "--key", f"assistant:{hashlib.sha256(question.encode()).hexdigest()[:12]}"],
+                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def model_answer(question: str, facts: dict, model: str) -> str | None:
@@ -190,7 +214,10 @@ def gate(answer: str, canaries: list[str]) -> tuple[bool, str]:
     return True, "ok"
 
 
-def say_unknown() -> str:
+def say_unknown(tier: str = "stranger") -> str:
+    if tier == "owner":
+        return ("I don't have that in what's approved yet — tell me the fact and I'll put it up for "
+                "your approval, or ask me something I hold.")
     return ("I don't have that, and I would rather say so than guess. "
             "I've passed it to the Allfather and he will come back to you.")
 
@@ -202,17 +229,79 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     question = text.strip()
     key = re.sub(r"[^a-z0-9 ]", "", question.lower()).strip()
 
-    intent, used = "unknown", []
-    for phrase, (_, slug) in INTENTS.items():
-        if phrase in key:
-            intent = phrase
+    # longest phrase first, matched on word boundaries — "hi" must not fire inside "this"
+    intent, used, kind = "unknown", [], ""
+    for phrase in sorted(INTENTS, key=len, reverse=True):
+        this_kind, slug = INTENTS[phrase]
+        if re.search(r"(?<![a-z0-9])" + re.escape(phrase.strip()) + r"(?![a-z0-9])", key):
+            intent, kind = phrase, this_kind
             if slug:
                 used = [slug]
             break
+    if intent == "unknown" and key:
+        # a typo is not a refusal: "whata do you have in your database" is the same question
+        import difflib
+        close = difflib.get_close_matches(key, list(INTENTS), n=1, cutoff=0.70)
+        if close:
+            intent = close[0]
+            kind = INTENTS[close[0]][0]
+            if INTENTS[close[0]][1]:
+                used = [INTENTS[close[0]][1]]
 
-    if intent == "who are you":
+    # a dynamic lookup: "who is <name>" over the digest, so the directory is answerable without
+    # a phrase in the table for every person the Allfather ever meets
+    if intent == "unknown":
+        m = re.search(r"(?:who is|who's|tell me about|what about)\s+(.{2,60}?)\??$", key.strip())
+        if m:
+            needle = m.group(1).strip()
+            for slug, fact in facts.items():
+                claim = fact["claim"].lower()
+                if claim.startswith(needle) or (needle in claim and slug.startswith("contact-")):
+                    used = [slug]
+                    intent = "directory" if fact.get("class") == "contacts" else f"fact:{slug}"
+                    break
+
+    if kind == "inventory":
+        by_class: dict[str, int] = {}
+        for fact in facts.values():
+            by_class[fact.get("class", "public")] = by_class.get(fact.get("class", "public"), 0) + 1
+        if tier == "owner":
+            listing = ", ".join(f"{k} {v}" for k, v in sorted(by_class.items()))
+            names = [f["claim"].split(" is ")[0] for f in facts.values() if f.get("class") == "contacts"]
+            reply = (f"I hold {len(facts)} approved facts — {listing}. "
+                     + (f"People I know: {', '.join(names[:8])}. " if names else "")
+                     + "Nothing from the vault, the plans, the ward or the well; if it isn't approved, I don't have it.")
+        else:
+            reply = "I can tell you what Ymir and the projects are, and take a message. The rest is his."
+    elif intent == "directory":
+        fact = facts[used[0]]
+        if tier != "owner":
+            reply = "I can say who I am, but not who he works with. Ask him directly."
+        else:
+            reply = fact["claim"]
+    elif kind == "greeting":
+        if tier == "owner":
+            reply = ("Hello, Allfather. I'm Skírnir, your assistant — I answer people while you are away, "
+                     "and I pass everything I can't answer to you. Ask me what I know, and I'll say when I don't.")
+        else:
+            reply = ("I'm Skírnir, the Allfather's assistant. I can tell you a little about his work, "
+                     "take a message, and pass anything else to him. I won't act on his behalf.")
+    elif kind == "identity":
+        if tier == "owner":
+            reply = "You're the Allfather — this chat is yours, and I know your voice here."
+        else:
+            reply = ("I can't confirm that from here, and I won't take a claim as a credential. "
+                     "If you are the Allfather, write to me in your own chat.")
+    elif kind == "role":
         reply = ("I'm Skírnir, the Allfather's assistant. I answer what I can about his work and "
                  "pass the rest to him — I don't act on his behalf.")
+    elif intent.startswith("fact:") and used and used[0] in facts:
+        funt = facts[used[0]]
+        reply = funt["claim"]
+        kls = str(funt.get("class", "public")).lower()
+        if kls not in ("public", "logistics") and tier != "owner":
+            reply = say_unknown(tier)
+            intent = "unknown"
     elif used and used[0] in facts:
         fact = facts[used[0]]
         reply = fact["claim"]
@@ -220,22 +309,27 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         parties = [x.strip().lower() for x in str(fact.get("parties", "")).split(",") if x.strip()]
         # NDA / contracted material: only the operator, or a NAMED party, may hear it.
         if klass in ("nda", "contracted", "restricted"):
-            if tier != "owner" and (not sender or sender.lower() not in parties):
-                reply = say_unknown()
+            # a GROUP is other people: no NDA material there, whatever the tier or party list
+            in_group = "group" in (channel or "")
+            if in_group or (tier != "owner" and (not sender or sender.lower() not in parties)):
+                reply = say_unknown(tier)
                 intent = "unknown"
-        elif klass != "public" and tier == "stranger":
-            reply = say_unknown()
+        elif klass == "contacts" and tier != "owner":
+            reply = "I can say who I am, but not who he works with. Ask him directly."
             intent = "unknown"
-    elif model and tier == "owner":
-        generated = model_answer(question, facts, model)
+        elif klass != "public" and tier == "stranger":
+            reply = say_unknown(tier)
+            intent = "unknown"
+    elif (model or os.environ.get("SKIRNIR_MODEL")) and tier == "owner":
+        generated = model_answer(question, facts, model or os.environ["SKIRNIR_MODEL"])
         if generated:
             reply = generated
             intent = "model"
         else:
-            reply = say_unknown()
+            reply = say_unknown(tier)
             intent = "unknown"
     else:
-        reply = say_unknown()
+        reply = say_unknown(tier)
         intent = "unknown"
 
     ok, why = gate(reply, canaries)

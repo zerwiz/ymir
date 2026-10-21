@@ -2,7 +2,7 @@
 
 **What it is.** `bin/people/inbox-watch.sh` reads the mailbox for replies from the people in the
 collaborator registry, and says so in three places: the **Runes** ledger, the desktop, and the
-phone. `bin/people/inbox.sh` is the read door underneath it — "has Andrej answered?" asked as a
+phone. `bin/people/inbox.sh` is the read door underneath it — "has that person answered?" asked as a
 command.
 
 **What you need.** The Gmail grant in the vault (`SNOTRA_GOOGLE_REFRESH_TOKEN` with its client id and
@@ -11,8 +11,8 @@ secret), and a registry entry for the person (`bin/people/collaborators.sh add �
 **The commands**
 
 ```sh
-bin/people/inbox.sh --from andre.matejic@gmail.com --days 7      # what he wrote to us
-bin/people/inbox.sh --to   andre.matejic@gmail.com --days 1      # what we sent him
+bin/people/inbox.sh --from someone@example.com --days 7      # what they wrote to us
+bin/people/inbox.sh --to   someone@example.com --days 1      # what we sent them
 bin/people/inbox.sh --unread --days 2                            # anything unread
 bin/people/inbox-watch.sh                                        # everyone in the registry
 bin/people/inbox-watch.sh --dry-run                              # say what it would announce

@@ -4,7 +4,7 @@
 
 ## What was wrong
 
-Two letters went to Andrej Matejic — an introduction and a technical read — through a door that
+Two letters went to a prospective collaborator — an introduction and a technical read — through a door that
 **sends** (`bin/time/snotra/mail-send.sh`). If he answered, nothing in the house would have known:
 there was no read door for people's mail, and the only Gmail read path in the tree belonged to the
 meeting sign-off flow, scoped to a meeting's participants.
@@ -26,9 +26,9 @@ meeting sign-off flow, scoped to a meeting's participants.
 
 ## Proved, not promised
 
-`inbox.sh --to andre.matejic@gmail.com --days 1` returned **both letters we sent today**, with their
+`inbox.sh --to <that address> --days 1` returned **both letters we sent today**, with their
 real message ids, timestamps, subjects and snippets — so the read path works end to end, and the
-watcher's `--dry-run` reported `andre-matejic … 0 new` (nothing from him yet, correctly).
+watcher's `--dry-run` reported `one registry entry … 0 new` (nothing from him yet, correctly).
 
 ## What is still a human's
 

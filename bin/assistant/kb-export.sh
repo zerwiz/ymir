@@ -22,7 +22,7 @@ DIGEST="$HOME_R/hodd/state/assistant/digest.jsonl"
 
 [ "${1:-}" = "--list" ] && { ls -1 "$APPROVED"/*.md 2>/dev/null | sed 's|.*/||;s|\.md$||'; exit 0; }
 
-ROOT_DIR="$ROOT" APPROVED_Q="$APPROVED" DIGEST_Q="$DIGEST" python3 - <<'PY'
+ROOT_DIR="$ROOT" HOME_DIR_Q="$HOME_R" APPROVED_Q="$APPROVED" DIGEST_Q="$DIGEST" python3 - <<'PY'
 import hashlib, json, os, re, sys
 
 approved = os.environ["APPROVED_Q"]
@@ -59,10 +59,58 @@ for name in sorted(os.listdir(approved) if os.path.isdir(approved) else []):
                  "hash": hashlib.sha256(claim.encode()).hexdigest()[:16],
                  "source": os.path.basename(path)})
 
+# ── the directory: who the Allfather works with, from the collaborators registry ──────────
+# Names, organisations and roles are facts he asked Skírnir to know. Addresses are NOT exported:
+# they are personal data, and the engine never needs them to say who someone is.
+reg = os.path.join(os.environ["HOME_DIR_Q"], "hodd", "identity", "collaborators.yaml")
+try:
+    import yaml
+    with open(reg) as fh:
+        people = (yaml.safe_load(fh) or {}).get("people", []) or []
+except Exception:
+    people = []
+for person in people:
+    name = (person.get("name") or "").strip()
+    if not name:
+        continue
+    kind = person.get("kind", "contact")
+    org = (person.get("org") or "").strip()
+    project = (person.get("project") or "").strip()
+    claim = f"{name} is a {kind}" + (f" at {org}" if org else "") + \
+            (f", working on {project}" if project else "") + "."
+    slug = "contact-" + re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    rows.append({"slug": slug, "class": "contacts", "approved_by": "the Allfather",
+                 "approved_at": "2026-10-21", "expires": "",
+                 "claim": claim, "hash": hashlib.sha256(claim.encode()).hexdigest()[:16],
+                 "source": "collaborators.yaml"})
+
 os.makedirs(os.path.dirname(digest), exist_ok=True)
 with open(digest, "w") as fh:
     for row in rows:
         fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+# ── the DATABASE: the same rows, in a shape a query door can enforce ───────────────────────
+# He is given a database, not a filesystem. Every read goes through a fixed query with the class
+# and the tier applied, and every read is audited. No SQL ever comes from the model.
+import sqlite3
+db = os.path.join(os.path.dirname(digest), "kb.db")
+con = sqlite3.connect(db)
+con.executescript("""
+DROP TABLE IF EXISTS facts;
+CREATE TABLE facts (
+  slug TEXT PRIMARY KEY, class TEXT NOT NULL, claim TEXT NOT NULL,
+  hash TEXT, source TEXT, approved_at TEXT, expires TEXT, parties TEXT
+);
+CREATE TABLE IF NOT EXISTS read_audit (
+  ts TEXT, tier TEXT, channel TEXT, query TEXT, hits INTEGER
+);
+""")
+for row in rows:
+    con.execute("INSERT OR REPLACE INTO facts VALUES (?,?,?,?,?,?,?,?)",
+                (row["slug"], row.get("class", "public"), row["claim"], row.get("hash", ""),
+                 row.get("source", ""), row.get("approved_at", ""), row.get("expires", ""),
+                 row.get("parties", "")))
+con.commit(); con.close()
 print(f'kb-export[1]{{approved,refused,digest}}:"{len(rows)}","{len(refused)}","{digest}"')
 for name, why in refused:
     print(f'  "refused {name}: {why}"')
