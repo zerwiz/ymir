@@ -99,7 +99,7 @@ systemctl --user stop ymir.service          # the substrate
 
 - **Do not run `scripts/start.sh` on the host while a container runs the
   substrate** — the ports collide.
-- The **seatbelts** (`bin/syn-pretool-check.sh`, `syn-cd-check.sh`) refuse some
+- The **seatbelts** (`bin/gates/checks/syn-guard-pretool-check.sh`, `syn-cd-check.sh`) refuse some
   dangerous shell operations *inside the checkout*; that is the feature.
 - One**helm per home**: a second session in the same checkout should use an
   Yggdrasil worktree.

@@ -133,7 +133,7 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
 - Every A2A message is **observed into Mimirsbrunn** and **logged to Runes**.
 - The `a2a-bridge` skill is the canonical collaboration skill (inbox per turn,
   complete tasks, FYI peers on contract/schema/infra changes).
-- Plan: `docs/plans/25-ratatoskr-a2a.md`.
+- Plan: `$YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/` (the ledger; Ratatoskr's plan is numbered 25 there).
 
 ### 3.6 Multi-Tenancy — Svartalfaheim
 - Each realm = isolated domain: `.env.realm`, `Brokk.md`, `projects/`, `companies/`,
@@ -212,7 +212,7 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
 ### 3.11 Þjazi Backend Integration
 - **Þjazi** is an experimental agent-native terminal backend with native per-pane agent state and push events, required when running sub-agents inside terminal panes.
 - **Protocol floor**: Þjazi protocol 14 or newer is required; broad backend verification covers versions 0.7.1, 0.7.3, 0.7.4, 0.7.5, and 0.8.0, while protocol-16 features remain gated by availability.
-- **Default-on presentation spaces** have a higher floor of Þjazi 0.8.0; homes can opt out by writing `off` into local `config/herdr-presentation-spaces`, and opt in by writing `on`.
+- **Default-on presentation spaces** have a higher floor of Þjazi 0.8.0; homes can opt out by writing `off` into local `config/herdr-presentation-spaces` <!-- stale-ok: the seat writes this at runtime; a fresh clone has no such file -->, and opt in by writing `on`.
 - **Endpoint metadata** recorded per task: `backend=herdr`, `window=<session>:<pane-id>`, `herdr_session=<session>`, `herdr_workspace_id=<workspace-id>`, `herdr_tab_id=<tab-id>`, `herdr_pane_id=<pane-id>`.
 - **Transport behavior**: Adapter starts and polls a named server before workspace/tab/pane/agent calls. Every Þjazi invocation goes through `fm_backend_herdr_cli`, which sets the environment and passes an explicit trailing `--session <name>`.
 - **Push events**: Protocol 16 can subscribe to `pane.agent_status_changed` over a bounded Unix-socket reader. Polling runs every cycle and remains the permanent fallback when protocol 16, the event schema, Python, connection, subscription, or repeated reader execution is unavailable.
@@ -448,8 +448,8 @@ On success: cleanup(merge=true) → merged to main, worktree removed
 | P11 | **Ymir Rut port** (Rust/NATS/gRPC re-floor) — only after P0–P10 work end-to-end | P0–P10 |
 | P12 | **Meeting layer** — Snotra (the ear: PipeWire capture, whisper.cpp, minutes in the hoard, the read-only MCP face) + Þing (the assembly hall) | P2, P4 |
 
-Detailed per-feature plans: `docs/plans/`. Full v2.6 target spec: `docs/ymir-rut.md`.
-Mythos & houses: `docs/lore.md`. Decision history: `docs/append-only-log.md`.
+Detailed per-feature plans: `$YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/`. Full v2.6 target spec: `docs/ymir-rut.md`.
+Mythos & houses: `docs/lore.md`. Decision history: `$YMIR_HOME/docs/append-only-log.md` (the vault holds the log).
 
 ---
 
@@ -571,7 +571,7 @@ shape — `single` | `connected` | `detached` — and changes nothing.
 - **Persistence.** SQLite + engram (`:4602`) + the chained JSONL Runes ledger are
   the current store; Postgres 16 in §6 belongs to the Rut target only.
 - **Plans.** Ymir's plans live in the operator's hoard under `$YMIR_HOME`, never
-  in this public tree (Rule 04). References above to `docs/plans/` are the design
+  in this public tree (Rule 04). References above to `$YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/` are the design
   era's shape.
 - **The Rut port** (§6, Rust/NATS/gRPC) remains a post-end-to-end target, not
   current code.

@@ -18,8 +18,9 @@ case "$CMD" in
 esac
 [ "$CMD" = "check" ] || { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
 
-files=("$ROOT/README.md" "$ROOT/FEATURES.md" "$ROOT/docs/lore.md")
-while IFS= read -r page; do files+=("$page"); done < <(ls "$ROOT"/docs/features/*.md 2>/dev/null)
+# every document a user reads: the front doors, the field notes, and each feature how-to
+files=("$ROOT/README.md" "$ROOT/FEATURES.md")
+while IFS= read -r page; do files+=("$page"); done < <(ls "$ROOT"/docs/*.md "$ROOT"/docs/features/*.md 2>/dev/null)
 
 if out="$(bash "$ROOT/bin/gates/checks/readme-claims.sh" "${files[@]}" 2>&1)"; then
   printf 'docs-claims-guard[1]{ward,result}:\n  "documentation","every claim resolves across %s page(s)"\n' "${#files[@]}"
