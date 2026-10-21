@@ -32,6 +32,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
+export ROOT  # the job wrapper needs it after bash -c
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 # The schedule is the USER'S, not the distro's: an explicit BROKK_CONFIG_OVERRIDE
@@ -181,9 +182,23 @@ scheduler='
         ( flock -n 8 || { printf "%s cron skip (busy): %s\n" "$ts" "$cmd" >>"$log"; exit 0; }
           cd "$home" 2>/dev/null || true
           bash -lc "$cmd" >>"$log" 2>&1
+          _rc=$?
+          if [ "$_rc" -ne 0 ]; then
+            _tail="$(tail -n 4 "$log" 2>/dev/null | grep -v '^$' | tail -n 1 | cut -c1-160)"
+            [ -x "$ROOT/bin/notify/send.sh" ] && bash "$ROOT/bin/notify/send.sh" --source cron --severity HIGH \
+              --key "cron-fail:$key:$today" --message "job failed (rc=$_rc): $cmd — ${_tail:-no output}" >/dev/null 2>&1 || true
+          fi
         ) 8>>"$lock" &
       else
-        ( cd "$home" 2>/dev/null || true; bash -lc "$cmd" >>"$log" 2>&1 ) &
+        ( cd "$home" 2>/dev/null || true
+          bash -lc "$cmd" >>"$log" 2>&1
+          _rc=$?
+          if [ "$_rc" -ne 0 ]; then
+            _tail="$(tail -n 4 "$log" 2>/dev/null | grep -v '^$' | tail -n 1 | cut -c1-160)"
+            [ -x "$ROOT/bin/notify/send.sh" ] && bash "$ROOT/bin/notify/send.sh" --source cron --severity HIGH \
+              --key "cron-fail:$key:$today" --message "job failed (rc=$_rc): $cmd — ${_tail:-no output}" >/dev/null 2>&1 || true
+          fi
+        ) &
       fi
     done <"$config"
     sleep 45

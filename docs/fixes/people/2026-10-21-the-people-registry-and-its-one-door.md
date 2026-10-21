@@ -32,9 +32,9 @@ The door is the safe path, so the unsafe path is harder to take by accident:
 
 ## First record
 
-**Andrej Matejic** (OptiCat), `status: prospect`, `kind: collaborator`, emailed an introduction to
+**One collaborator** (an HVAC/OvK product builder, `status: prospect`), emailed an introduction to
 Ymir and a collaboration proposal the same hour. **His address is unverified**: the Allfather gave it
-three ways in one message (`andre.matejic@`, `andrej.matejic@`, `andrej.matej@`), so the record says
+three different ways in one message, so the record says
 so in `notes` and the send went to the middle reading. A record that hides its own uncertainty is how
 a person gets emailed at an address that belongs to a stranger.
 

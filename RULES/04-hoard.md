@@ -326,3 +326,32 @@ say. The one test that proves the ward fails on personal data,
 **The law stands unchanged.** What is recorded here is where the ward lives, not
 what it judges: a wrong path is a silent ward, and a silent ward is no ward.
 Correction, not rewrite — the text above is left exactly as it was written.
+
+## 2026-10-21 — a person is private data (appended)
+
+**Measured, and merged before it was noticed.** The public repository carried a collaborator's **full
+name and two email addresses** in `FEATURES.md`, a feature page and two fix notes. Every ward passed.
+
+Three reasons, each worth keeping:
+
+1. **`private-guard` watches paths, vault references and secret shapes** — not names. A name is not a
+   path and not a key.
+2. **Rule 26 explicitly allows a participant's name** — correctly, on a *meeting record*, which is an
+   external artifact. A **public repository is not a meeting record**; it is the store from which every
+   artifact and every clone is made.
+3. **Nothing said "a person is private data."** A missing sentence is how a gate passes.
+
+```
+person_law[4]{rule,why}:
+  "a person named in the operator's registries is PRIVATE DATA","their name, their address, their number — the widest surface in the house is the public tree, and a clone outlives any correction"
+  "the registries are the source of the prohibition, not a dictionary of names","a public author quoted in research is not a 'person' in this sense; the guard compares against `collaborators.yaml` and the NDA register"
+  "the public tree names a ROLE, never a person","'a prospective collaborator', 'the client', 'the operator' — the record still says what happened without saying who"
+  "history is not rewritten to hide it","a name already merged stays in history; removing it means a force-push across every clone, which is the operator's explicit decision and never a tidiness edit"
+```
+
+**Enforced by `bin/gates/guards/people-guard.sh`** (in `guards.sh`): it builds the list from the
+registries at push time and fails on any occurrence in the tree, with file and line. Proved to fail on
+a probe file, and clean afterwards.
+
+**And one plain instruction for every agent:** when a document needs to say *who*, write the role.
+A name in this tree is not a detail — it is a person's data, published for ever.

@@ -55,6 +55,7 @@ case "$SEVERITY" in INFO|MEDIUM|HIGH|CRITICAL) ;; *) printf 'error: severity mus
 
 [ -n "$KEY" ] || KEY="$(printf '%s|%s' "$SOURCE" "$MESSAGE" | sha256sum | cut -c1-16)"
 STATE_DIR="$HOME_R/hodd/state/notify"
+APPROVALS="$STATE_DIR/approvals"
 STATE_FILE="$STATE_DIR/state.json"
 WAKE_QUEUE="$HOME_R/hodd/state/.wake-queue"
 mkdir -p "$STATE_DIR" 2>/dev/null || true
@@ -117,12 +118,32 @@ if [ "$DECISION" = "send" ]; then
       "${RECORD:+ (record $RECORD)}" >> "$WAKE_QUEUE" 2>/dev/null && SAID_ARM=1
   fi
 
+  # ── an approval: the message becomes a question a click can answer ─────────
+  APPROVAL_ID=""
+  if [ "$ASK" = 1 ] && [ "$DRY" = 0 ]; then
+    mkdir -p "$APPROVALS" 2>/dev/null || true
+    APPROVAL_ID="$(printf '%s' "$KEY$(date +%s)" | sha256sum | cut -c1-12)"
+    APPROVAL_ID="$APPROVAL_ID" APPROVAL_SRC="$SOURCE" APPROVAL_SEV="$SEVERITY" \
+    APPROVAL_Q="$MESSAGE" APPROVAL_REC="$RECORD" APPROVALUES="$APPROVALS" python3 - <<'INNER'
+import json, os, time
+path = os.path.join(os.environ["APPROVALUES"], os.environ["APPROVAL_ID"] + ".json")
+json.dump({"id": os.environ["APPROVAL_ID"], "source": os.environ["APPROVAL_SRC"],
+           "severity": os.environ["APPROVAL_SEV"], "question": os.environ["APPROVAL_Q"],
+           "record": os.environ["APPROVAL_REC"],
+           "asked_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "decision": None}, open(path, "w"))
+INNER
+  fi
+
   # ── the desktop: MEDIUM+, but not at 03:00 for a MEDIUM ────────────────────
   if [ "$SEVERITY" != "INFO" ] && [ "$DRY" = 0 ]; then
     if [ "$QUIET" = 1 ] && [ "$SEVERITY" = "MEDIUM" ]; then
       :
     else
-      bash "$ROOT/bin/time/snotra/ymir-say.sh" "$MESSAGE" >/dev/null 2>&1 && SAID_DESKTOP=1
+      if [ -n "$APPROVAL_ID" ]; then
+        bash "$ROOT/bin/time/snotra/ymir-say.sh" "$MESSAGE" --exec "$ROOT/bin/notify/approve.sh $APPROVAL_ID" >/dev/null 2>&1 && SAID_DESKTOP=1
+      else
+        bash "$ROOT/bin/time/snotra/ymir-say.sh" "$MESSAGE" >/dev/null 2>&1 && SAID_DESKTOP=1
+      fi
     fi
   fi
 
@@ -139,7 +160,13 @@ if [ "$DECISION" = "send" ]; then
     if [ "$QUIET" = 1 ] && [ "$SEVERITY" = "MEDIUM" ] && [ "$ASK" = 0 ]; then
       :
     elif [ "$DRY" = 0 ]; then
-      eval "$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null | grep -E '^export TELEGRAM_(BOT_TOKEN|OWNER_ID)=')"
+      eval "$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null | grep -E '^export (TELEGRAM|SKIRNIR_TELEGRAM)_(BOT_TOKEN|OWNER_ID|ALERT_CHAT)=')"
+      # the alarm room is NOT the conversation: a dedicated chat if one is configured,
+      # posted by the assistant's own bot (the one that is an admin there).
+      if [ -n "${TELEGRAM_ALERT_CHAT:-}" ]; then
+        TELEGRAM_OWNER_ID="$TELEGRAM_ALERT_CHAT"
+        [ -n "${SKIRNIR_TELEGRAM_BOT_TOKEN:-}" ] && TELEGRAM_BOT_TOKEN="$SKIRNIR_TELEGRAM_BOT_TOKEN"
+      fi
       if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_OWNER_ID:-}" ]; then
         if curl -s -m 10 -o /dev/null -w '%{http_code}' \
           "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \

@@ -1,20 +1,16 @@
-# docs/README-claims.waived — claims a document may make without the token existing in a clone.
+# Claims waived in writing — Rule 27 (bin/gates/guards/docs-claims-guard.sh).
 #
-# One token per line, no reasons here: the reason belongs in the document that names it and in
-# the commit that added the line (Rule 27). Anything not listed here must resolve.
+# One path per line. A path belongs here when a document names it ON PURPOSE and the repo does
+# not ship it, because it is not the repo's to ship. Everything else must resolve.
 #
-# The live schedule and the fleet-sync map are the OPERATOR'S, in the hoard: a clone ships the
-# .example forms only. A page may name the live path because that is where a user will find it.
+# config/agents.yaml — the OPERATOR'S own file, written into the home by the install (the repo
+# ships config/agents.yaml.example, which is the template those documents are describing).
+config/agents.yaml
+# .agents/skills-local/ — the per-machine skill shelf, gitignored by design: it is the one shelf
+# that must never travel, and a document naming it is describing a shelf that exists only here.
+.agents/skills-local/
+# apps/odrerir/public/livehall.json — generated at runtime from the hall's own state; the repo
+# ships the generator, not its output.
+apps/odrerir/public/livehall.json
 config/cron.yaml
 config/tailscale-sync.yaml
-# ── files a SEAT writes at runtime (the tree ships only their .example forms, or nothing)
-config/backend
-config/crew-harness
-config/secondmate-harness
-config/Eindri-home-harness
-config/herdr-presentation-spaces
-config/trace-context
-config/x-mode.env
-config/fleet.json
-config/grants.yaml
-config/model-catalog.yaml

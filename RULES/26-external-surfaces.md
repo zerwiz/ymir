@@ -109,3 +109,13 @@ those markers inherits the rule: the NDA says derivatives are confidential too.
 
 This section is a guard, not legal advice. The NDA's own clauses govern; where they are
 stricter than the guard, the NDA wins.
+
+## 2026-10-21 — and the public tree is not a meeting record (appended)
+
+The clarification this rule needed, from the incident above: **Rule 26's permission to name a
+participant applies to a meeting record, an email to the parties, or a board shared with them — it does
+NOT apply to this repository.** The public tree is the widest external surface there is: a name there is
+indexed, mirrored and copied, and no correction can follow it.
+
+So `private-guard`'s silence on a name was correct and insufficient. `people-guard` covers the tree:
+**a person from the operator's registries never appears in it — a role does.**

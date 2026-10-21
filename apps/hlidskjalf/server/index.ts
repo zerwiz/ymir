@@ -2638,7 +2638,32 @@ function wardState() {
   const findingsLines = existsSync(findingsFile)
     ? read(findingsFile).split('\n').filter((l) => l.trim()).length : 0;
 
-  return {
+  // Skírnir: a bot that stopped answering must be visible, not discovered
+  const assistantDir = join(home, 'hodd/state/assistant');
+  const beatFile = join(assistantDir, 'telegram.heartbeat');
+  const assistantBeat = existsSync(beatFile) ? read(beatFile).trim() : '';
+  const beatAge = assistantBeat ? Math.max(0, Math.round((Date.now() - Date.parse(assistantBeat)) / 1000)) : -1;
+  let lastAnswer = '';
+  let refusalsToday = 0;
+  let turnsToday = 0;
+  const assistantDb = join(assistantDir, 'assistant.db');
+  if (existsSync(assistantDb)) {
+    try {
+      const db = new Database(assistantDb, { readonly: true });
+      const today = new Date().toISOString().slice(0, 10);
+      const last = db.query('select ts from turns order by rowid desc limit 1').get() as { ts?: string } | null;
+      lastAnswer = last?.ts ?? '';
+      const refused = db.query('select count(*) as n from conversations where ts like ? and refused = 1').get(`${today}%`) as { n: number };
+      const all = db.query('select count(*) as n from conversations where ts like ?').get(`${today}%`) as { n: number };
+      refusalsToday = refused?.n ?? 0;
+      turnsToday = all?.n ?? 0;
+      db.close();
+    } catch { /* the assistant is new: report zero rather than fail the panel */ }
+  }
+  const assistant = { heartbeat: assistantBeat, heartbeatAgeSeconds: beatAge,
+                      live: beatAge >= 0 && beatAge < 300,
+                      lastAnswer, refusalsToday, turnsToday };
+
     paused: existsSync(pausedMarker),
     heartbeat: beat,
     heartbeatAgeSeconds: beatAgeSeconds,

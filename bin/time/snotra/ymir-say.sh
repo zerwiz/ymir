@@ -87,9 +87,15 @@ printf '%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$MARK" "$HEADLINE" "
 
 TITLE="$GLYPH $WHO — $HEADLINE"
 fired=0
+# A click can run a command (`--exec`), which is how an approval becomes one gesture.
+EXEC_ARGS=()
+for _a in "$@"; do
+  case "$_a" in --exec) _want=1; continue ;; esac
+  if [ "${_want:-0}" = 1 ]; then EXEC_ARGS+=(--exec "$_a"); _want=0; fi
+done
 if command -v omarchy-notification-send >/dev/null 2>&1; then
   if [ -n "$BODY" ]; then
-    omarchy-notification-send -u "$URGENCY" -g "$GLYPH" "$TITLE" "$BODY" >/dev/null 2>&1 && fired=1
+    omarchy-notification-send -u "$URGENCY" -g "$GLYPH" "$TITLE" "$BODY" "${EXEC_ARGS[@]}" >/dev/null 2>&1 && fired=1
   else
     omarchy-notification-send -u "$URGENCY" -g "$GLYPH" "$TITLE" >/dev/null 2>&1 && fired=1
   fi
