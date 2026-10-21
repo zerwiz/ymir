@@ -23,11 +23,12 @@ YMIR_HOME="${YMIR_HOME:?YMIR_HOME unresolved}"
 ROSTER="${SEAT_ROSTER:-$YMIR_HOME/hodd/identity/seats.yaml}"
 [ -r "$ROSTER" ] || { printf 'error: roster not readable: %s\n' "$ROSTER" >&2; exit 1; }
 
+SELF="${YMIR_HOST:-$(hostname -s)}"
 HOST="${1-}"; MODE="name"
 case "$HOST" in
   --list) MODE="list"; HOST="" ;;
-  --file|--json|--install|--check|--render|--ensure) MODE="${HOST#--}"; HOST="${2:-$(hostname -s)}" ;;
-  set) MODE="set"; HOST="${2:-$(hostname -s)}"; NEWNAME="${3-}"; NEWROLE="${4-}" ;;
+  --file|--json|--install|--check|--render|--ensure) MODE="${HOST#--}"; HOST="${2:-$SELF}" ;;
+  set) MODE="set"; HOST="${2:-$SELF}"; NEWNAME="${3-}"; NEWROLE="${4-}" ;;
   names|--names) MODE="names"; HOST="" ;;
 esac
 
@@ -114,7 +115,7 @@ PY
   exit 1
 fi
 
-if [ "$MODE" = install ] && [ "$HOST" != "$(hostname -s)" ]; then
+if [ "$MODE" = install ] && [ "$HOST" != "$SELF" ]; then
   printf 'skipped\t%s is not this host\n' "$HOST"; exit 0
 fi
 if [ "$MODE" = install ] || [ "$MODE" = check ] || [ "$MODE" = render ]; then

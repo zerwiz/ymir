@@ -513,7 +513,7 @@ if [ "$MODE_PI" = 1 ]; then
     # The seat's own name. One source (hodd/identity/seats.yaml), one artefact per
     # seat; a host with no identity line fails loudly rather than inherit "Brokk".
     if [ -x "$ROOT/bin/agents/seat-identity.sh" ]; then
-      add seat-identity "$PI_EXT_HOME/.ymir-seat" "$("$ROOT/bin/agents/seat-identity.sh" --install "$(hostname -s)" 2>&1 | tail -1)"
+      add seat-identity "$PI_EXT_HOME/.ymir-seat" "$("$ROOT/bin/agents/seat-identity.sh" --install "${YMIR_HOST:-$(hostname -s)}" 2>&1 | tail -1)"
     fi
 
     # GLOBAL REACH, ONE HOME. The project tree is still the only home; the user

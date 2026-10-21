@@ -139,7 +139,7 @@ if [ -x "$SCRIPT_DIR/../agents/name-registry.sh" ]; then
   "$SCRIPT_DIR/../agents/name-registry.sh" scan >/dev/null 2>&1 || true
 fi
 if [ -x "$SCRIPT_DIR/../agents/seat-identity.sh" ]; then
-  printf 'seat-identity: %s\n' "$("$SCRIPT_DIR/../agents/seat-identity.sh" --check "$(hostname -s)" 2>&1 | tail -1)"
+  printf 'seat-identity: %s\n' "$("$SCRIPT_DIR/../agents/seat-identity.sh" --check "${YMIR_HOST:-$(hostname -s)}" 2>&1 | tail -1)"
 fi
 if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS# }"; else printf 'nudge-eindri-homes: none\n'; fi
 
