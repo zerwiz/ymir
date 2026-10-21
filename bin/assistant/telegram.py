@@ -198,6 +198,13 @@ def main() -> int:
                     os.makedirs(STATE, exist_ok=True)
                     json.dump(seen, open(SEEN, "w"), ensure_ascii=False, indent=1)
                     print(f"telegram: learned a chat from a forward — {cid} {fwd.get('title')!r}", file=sys.stderr)
+                    try:
+                        api("sendMessage", chat_id=chat.get("id"),
+                            text=f"Learned that chat: “{fwd.get('title','')}” — id {cid}. "
+                                 f"Say `allow {cid}` and I will answer there.",
+                            disable_web_page_preview="true")
+                    except Exception:
+                        pass
             if verbose:
                 print(f"telegram: update {update.get('update_id')} kind={[k for k in update if k != 'update_id']} "
                       f"chat={chat.get('id')} type={chat.get('type')} title={chat.get('title')!r}", file=sys.stderr)
@@ -234,6 +241,22 @@ def main() -> int:
                                         f"Skírnir was added to a group: “{chat.get('title','')}”. Allow him to answer there?",
                                         "--exec", f"{approve} {cid}"],
                                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            # `allow <id>` in the owner's DM: the one-word path from a phone
+            if chat.get("type") == "private" and is_owner(sender):
+                m = __import__("re").match(r"^\s*allow\s+(-?\d{6,})\s*$", text.strip(), __import__("re").I)
+                if m:
+                    cid = m.group(1)
+                    subprocess.run(["bash", os.path.join(HERE, "group-allow.sh"), cid,
+                                    "allowed from the owner's DM"], check=False,
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    try:
+                        api("sendMessage", chat_id=chat.get("id"),
+                            text=f"Allowed {cid}. Write there and I will answer.",
+                            disable_web_page_preview="true")
+                    except Exception:
+                        pass
+                    continue
 
             tier, channel = tier_for(chat, sender)
             if tier == "unknown-group":
