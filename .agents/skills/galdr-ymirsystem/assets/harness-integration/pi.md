@@ -20,11 +20,27 @@ Pi is a **run-tier** harness with an in-process extension API: the extension run
 |---|---|---|
 | `.pi/extensions/syn-turnend-guard.ts` | **Sýn** — session-start injection + compaction re-emit + turn-end guard + PreToolUse seatbelts | 1, 3, 4 |
 | `.pi/extensions/gna-pi-watch.ts` | **Gná** — watcher continuity (arm, re-arm, deliver actionable wakes) | 2 |
+| `.pi/extensions/nidhogg-notice-gate.ts` | **Níðhöggr** — the console ward: collapse, de-duplicate and log extension warnings so they cannot paint over the editor | — |
 | `.pi/extensions/lib/vordr-sessionstart-supervisor.mjs` | **Vörðr** — detached child supervisor for the digest | 1 (transport) |
 | `.pi/extensions/lib/rodd-operational-input.ts` | **Rödd** — TypeScript wire bridge | shared |
 | `.pi/extensions/README.md` | prose inventory (see §11: partially stale) | — |
 
 `.pi/extensions/` has **no** `package.json`; Pi loads the `.ts` sources directly and they import `@earendil-works/pi-coding-agent` (types), `@earendil-works/pi-tui` (Gná render), and `typebox` (tool schema).
+
+### The console is not ours to shout in — the notice gate
+
+Pi's warning channel is `ctx.ui.notify()` and `ctx.ui.setStatus()`; raw `console.warn` writes
+at a terminal the TUI owns and paints over the editor. A foreign package will not change, so
+`nidhogg-notice-gate.ts` (Níðhöggr) wraps `console.warn`/`console.error` at load and enforces
+four rules: **one line** (first line + `(+N lines)`), **one time** per session, **the whole
+record** appended to `<state>/pi-notices.log`, and **no gate without UI** (print/JSON/RPC get
+the collapsed line through the original writer). The gate installs once per process, so even a
+duplicated load path cannot stack two.
+
+The other half of the same fault lives in `bin/seat/valknut-load.sh`: it must never append its
+extensions tree to the settings `extensions[]` when the tree is already named. Pi does **not**
+de-duplicate that array — a repeated entry loads the whole tree again, registering every tool
+again and multiplying every extension warning. `--check` fails on a duplicated entry.
 
 Both extensions use `import.meta.url` to locate themselves and derive the root as `resolve(extensionDir, "../..")` — i.e. the repo root that holds `bin/`:
 
