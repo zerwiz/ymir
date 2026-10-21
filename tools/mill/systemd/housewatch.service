@@ -1,0 +1,8 @@
+[Unit]
+Description=House watch — rail, MCP gateway, well bridge and the hound's heartbeat
+Documentation=file://__YMIR_ROOT__/docs/features/the-hotline.md
+
+[Service]
+Type=oneshot
+ExecStart=__PYTHON__ __YMIR_ROOT__/bin/time/housewatch.sh
+Nice=10
