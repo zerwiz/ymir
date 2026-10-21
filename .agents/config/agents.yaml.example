@@ -61,6 +61,8 @@ agents:
   # The council's chair: Móðguðr, the bridge-keeper. Read-only, and the seat that decides
   # what may cross. Her audit is the point of her, so she is never the cheapest model.
   modgud:  { model: opencode-go/deepseek-v4.1-flash }
+  # The defender. He fights with the allowlist, not with a mood — and the fast road is the point.
+  vidarr:  { model: opencode-go/deepseek-v4.1-flash }
   saga:    { model: opencode-go/deepseek-v4.1-flash }
   muninn:  { model: opencode-go/deepseek-v4.1-flash }
   urdh:    { model: opencode-go/deepseek-v4.1-flash }

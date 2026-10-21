@@ -42,7 +42,7 @@ either a door answers, or it says loudly that it cannot.
 ## Contents
 
 - [What Ymir is](#what-ymir-is) · [The crew](#the-crew--twenty-two-figures-and-one-assistant) · [The skills](#the-skills--craft-on-demand-never-preloaded) · [The house itself](#the-house-itself--the-engines-under-the-names) · [Garmr](#garmr--the-hound-at-the-gate)
-- [The council](#the-council--several-minds-one-verdict) · [Skírnir](#skírnir--the-mouth-with-no-hands) · [Snotra](#snotra--the-ear-at-the-table) · [The rest of the hall](#the-rest-of-the-hall)
+- [The council](#the-council--several-minds-one-verdict) · [Víðarr the defender](#víðarr--the-defender) · [Skírnir](#skírnir--the-mouth-with-no-hands) · [Snotra](#snotra--the-ear-at-the-table) · [The rest of the hall](#the-rest-of-the-hall)
 - [The Allfather's Chain](#the-allfathers-chain) · [Install](#install) · [After it installs — the doors](#after-it-installs--the-doors) · [Features — how to use Ymir](#features--how-to-use-ymir)
 - [Host platforms](#host-platforms--three-first-class-identities) · [Bringing your own machine](#bringing-your-own-machine--windows-macos-linux) · [Termux](#termux--android--the-phone-is-a-hand) · [SteamOS](#steamos--steam-deck--a-full-seat-on-the-handheld)
 - [Running on more than one machine](#running-ymir-on-more-than-one-machine) · [Key combinations](#key-combinations) · [Inviting someone else in](#inviting-someone-else-in)
@@ -169,6 +169,31 @@ what it *would* do before it does anything at all.
 What he notices, Vörðr reports, Gná carries, and Runes keeps. That division is the point: one thing
 watches, another judges, a third speaks, the ledger remembers — and the hound may close a door, but
 only one it was told it may close.
+
+## Víðarr — the defender
+
+**Víðarr** is the hand of the defence. At Ragnarök the wolf swallows the Allfather, and it is the
+silent one — who wears an iron shoe and speaks little — who puts a foot in the wolf's jaw and ends it.
+The house's defence is three figures, and the division is the design:
+
+- **Garmr** the hound notices: executed programs, sensitive reads, new listeners, egress, changed files.
+- **Vörðr** the ward refuses at a gate: a protected branch, a secret, a person's name, a vault copy.
+- **Víðarr** the hand contains: he closes the door the intruder opened, stops the unit, kills the
+  process that should not run, quarantines the file, and **keeps the evidence**.
+
+He is a live agent — a pi session on `opencode-go/deepseek-v4.1-flash`, seated with
+`bin/ward/vidarr-agent.sh`, addressed in the room **`the-watch`** — and his powers are the six
+allowlisted bites and nothing else, because `bin/ward/garmr-bite.sh` owns the allowlist and refuses
+what is not on it. Every action is recorded *before* it is taken, with the command that undoes it, and
+every incident leaves a **report** in `hodd/security/incidents/`: what was seen, what was decided, by
+which rule, what was done, what can undo it, and what is still owed. A containment that leaves no
+account of itself is indistinguishable from an accident.
+
+He is connected to the **Gná arm**: a bite and an opened incident speak through Hófvarpnir at
+CRITICAL, so the session that has to answer is **woken**, not polled. And he has his own hard limits —
+never the operator's terminal, never an open vault, never a model mid-generation, never a policy
+change, and **never a counter-strike**: nothing leaves the machine. A blocked destination is a door
+we closed, not an attack on anyone else.
 
 ## The council — several minds, one verdict
 

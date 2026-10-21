@@ -59,7 +59,7 @@ platform[55]{subsystem,norse,role}:
   "The desktop seat","Sessrúmnir","the GUI over the Pi and OMP coding agents (apps/sessrumnir)"
   "The broad slice","Kádlín","many files in one pass — the wide task beside Kvasir, Sindri, Bragi, Huginn"
   "The hall of Allfathers","Brimir","a federated room across operators, joined by A2A (planned, plan 74)"
-  "The fleet room","Gladsheim","one durable room where the whole fleet talks (planned, plan 73)"
+  "The fleet room","Gladsheim","one durable room where the whole fleet talks (LIVE: measured 2026-10-21, the map was behind the machine)"
   "The decision layer","(unnamed — the Allfather's to name)","Jev / System One: a typed question answered with a choice and a confidence in milliseconds (/v1/systemone, local :8090)"
 ```
 
