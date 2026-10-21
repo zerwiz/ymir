@@ -89,8 +89,10 @@ packages[5]{package,what}:
   "@zerwiz/sessrumnir","the seat-hall — the desktop where you speak with Brokk"
 ```
 
-**Why the smithy is not `@zerwiz/smidja`:** that name was accepted twice by the
-registry and served never; it ships as `@zerwiz/smidja-factory`, which resolves.
+**The smithy's package is `@zerwiz/smidja-factory`** (0.1.7) — the one `npm install -g`
+pulls and the one the door resolves. An older `@zerwiz/smidja` (0.1.1) also resolves on the
+registry; it is not what ships, and nothing here installs it. *Corrected 2026-10-21: this
+paragraph used to say the name "served never", which stopped being true when it resolved.*
 
 ### A clone and a package are one tree
 
@@ -241,7 +243,7 @@ backend_priority[3]{rank,backend,note}:
 
 `bin/seat/herdr-ensure.sh` verifies the *version* (not just presence) and installs via
 the pinned, SHA-256-verified installer when herdr is absent. Selection order:
-`config/backend` → `BROKK_BACKEND` → `HERDR_ENV=1` → else tmux. Full reference:
+`config/backend` <!-- stale-ok: the seat writes this at runtime; a fresh clone has no such file --> → `BROKK_BACKEND` → `HERDR_ENV=1` → else tmux. Full reference:
 the `ymir` skill.
 
 ### pi-native
@@ -741,8 +743,8 @@ Doctrine, threat model, the local-network checks, and the roadmap (S0–S8):
 - [`docs/lore.md`](docs/lore.md) — the mythos, realm by realm
 - [`docs/session-start.md`](docs/session-start.md) — how the seat is taken
 - [`docs/Architecture.md`](docs/Architecture.md) — the 7 realms, A2A, memory, migration
-- [`docs/masterplan.md`](docs/masterplan.md) — the append-only forge orders
-- [`docs/plans/README.md`](docs/plans/README.md) — the feature plan index
+- **the masterplan** — `$YMIR_HOME/hodd/docs/masterplan.md` in the vault (it is private: forge orders are not published)
+- **the plan ledger** — `$YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/` (numbered, append-only, with `README.md` as its index)
 - [`docs/design.md`](docs/design.md) — the design system
 - [`docs/ymir-rut.md`](docs/ymir-rut.md) — the Rust re-forging spec
 - [`AGENTS.md`](AGENTS.md) — Brokk's always-loaded operating contract
@@ -922,7 +924,7 @@ repo** and are deployed from it — never hand-placed (Rule 10,
 
 ### Crons by role — a dev body runs no record jobs
 
-Nornir's schedule (`config/cron.yaml`) is shared across the fleet, so each line
+Nornir's schedule (`config/cron.yaml` <!-- stale-ok: the tree ships the .example; the live file is the hoard's -->) is shared across the fleet, so each line
 declares the role that owns it:
 
 ```yaml

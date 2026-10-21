@@ -1,0 +1,9 @@
+# docs/README-claims.waived — claims a document may make without the token existing in a clone.
+#
+# One token per line, no reasons here: the reason belongs in the document that names it and in
+# the commit that added the line (Rule 27). Anything not listed here must resolve.
+#
+# The live schedule and the fleet-sync map are the OPERATOR'S, in the hoard: a clone ships the
+# .example forms only. A page may name the live path because that is where a user will find it.
+config/cron.yaml
+config/tailscale-sync.yaml

@@ -1,7 +1,12 @@
 # Opening a file on the right display
 
-> **Status: built and tested (2026-10-18).** `bin/desktop/open-on.sh` +
-> `bin/desktop/display-lib.sh`, with `.agents/tests/open-on.test.sh`.
+> **Status, corrected 2026-10-21:** the *library* is in the tree —
+> `bin/desktop/display-lib.sh`, which probes the dispatcher dialect and resolves a target
+> display. The **opener itself is not**: `bin/desktop/open-on.sh` <!-- stale-ok: removed in a72ba5f6; named here as the thing to rebuild --> and
+> `.agents/tests/open-on.test.sh` <!-- stale-ok: removed in a72ba5f6; named here as history --> were removed in commit `a72ba5f6` ("an application lives in
+> `apps/` — Rule 22, the audit, and one editor door"). So the *behaviour* described below is
+> **not shipped today**; what ships is the library, and this page is the case for rebuilding
+> the door on top of it. Named debt, not a delivery.
 
 ## What it is
 
