@@ -12,7 +12,11 @@ ENGINE="$SCRIPT_DIR/skirnir.py"
 TMP="$(mktemp -d)"; export YMIR_HOME="$TMP/home"
 export SKIRNIR_NO_ESCALATE=1   # a test must never page the operator
 mkdir -p "$YMIR_HOME/hodd/state/assistant/approved"
-cp "$HOME/Documents/ymirhome/hodd/state/assistant/approved/"*.md "$YMIR_HOME/hodd/state/assistant/approved/" 2>/dev/null || true
+# the approved facts are the OPERATOR's: resolve the hoard, never guess it (Rule 07)
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+real_home=""; ymir_home_root real_home 2>/dev/null || true
+[ -n "$real_home" ] && cp "$real_home/hodd/state/assistant/approved/"*.md \
+  "$YMIR_HOME/hodd/state/assistant/approved/" 2>/dev/null || true
 fails=0; pass() { printf '  PASS %s\n' "$1"; }; fail() { printf '  FAIL %s — %s\n' "$1" "$2" >&2; fails=$((fails+1)); }
 ask() { python3 "$ENGINE" --tier "${2:-stranger}" --text "$1" 2>/dev/null; }
 

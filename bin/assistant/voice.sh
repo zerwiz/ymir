@@ -19,7 +19,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 SECONDS_TO_REC=6; TEXT=""; WAV=""; MODEL=""; SPEAK=1; KOKORO_URL="${KOKORO_URL:-http://127.0.0.1:8765/v1/audio/speech}"
-KOKORO_VOICE="${KOKORO_VOICE:-am_michael}"   # am_michael · af_heart · bm_george · am_echo …
+# ONE setting for the voice: whatever `kokoro-voice` reports (F11 and SUPER+CTRL+U use the same).
+if [ -z "${KOKORO_VOICE:-}" ] && [ -x "$HOME/.local/bin/kokoro-voice" ]; then
+  KOKORO_VOICE="$("$HOME/.local/bin/kokoro-voice" 2>/dev/null | sed -n 's/.*voice: \([a-z_0-9]*\).*/\1/p' | head -1)"
+fi
+KOKORO_VOICE="${KOKORO_VOICE:-af_nicole}"
 PIPER_VOICE_MODEL="${PIPER_VOICE:-$HOME/.local/share/piper-voices/en_US-lessac-medium.onnx}"
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -38,17 +42,34 @@ WHISPER="${WHISPER_CLI:-$HOME/whisper.cpp.src/build/bin/whisper-cli}"
 WHISPER_MODEL="${WHISPER_MODEL:-$HOME/whisper.cpp/models/ggml-small.en.bin}"
 PIPER="${PIPER_BIN:-$HOME/.local/bin/piper}"
 
+# Listen with the GPU: the same clip measured 1.5 s on CUDA and 10 s on CPU here, so a silent
+# CPU fallback is the difference between a conversation and a wait. It is announced, not hidden.
+transcribe() {
+  local wav="$1" t0 t1
+  t0=$(date +%s%N)
+  if "$WHISPER" -m "$WHISPER_MODEL" -f "$wav" -nt -otxt -of /tmp/skirnir-ask >/dev/null 2>/tmp/skirnir-whisper.err; then
+    :
+  else
+    printf 'voice: the GPU pass failed (%s) — falling back to CPU, this will be slow\n' \
+      "$(tail -n 1 /tmp/skirnir-whisper.err 2>/dev/null | cut -c1-80)" >&2
+    "$WHISPER" -m "$WHISPER_MODEL" -f "$wav" -ng 0 -nt -otxt -of /tmp/skirnir-ask >/dev/null 2>&1 || true
+  fi
+  t1=$(date +%s%N)
+  printf 'voice: transcribed in %s ms\n' "$(( (t1 - t0) / 1000000 ))" >&2
+  tr -d '\n' < /tmp/skirnir-ask.txt 2>/dev/null
+}
+
 # ── 1 · hear ─────────────────────────────────────────────────────────────────
 if [ -n "$TEXT" ]; then
   :
 elif [ -n "$WAV" ]; then
-  TEXT="$("$WHISPER" -m "$WHISPER_MODEL" -f "$WAV" -nt -otxt -of /tmp/skirnir-ask 2>/dev/null >/dev/null; cat /tmp/skirnir-ask.txt 2>/dev/null | tr -d '\n')"
+  TEXT="$(transcribe "$WAV")"
 else
   TMPWAV="$(mktemp --suffix=.wav)"
   printf 'listening for %ss…\n' "$SECONDS_TO_REC" >&2
   arecord -q -f cd -t wav -d "$SECONDS_TO_REC" "$TMPWAV" 2>/dev/null || {
     printf 'error: recording failed (is the microphone free?)\n' >&2; exit 1; }
-  TEXT="$("$WHISPER" -m "$WHISPER_MODEL" -f "$TMPWAV" -nt -otxt -of /tmp/skirnir-ask 2>/dev/null >/dev/null; cat /tmp/skirnir-ask.txt 2>/dev/null | tr -d '\n')"
+  TEXT="$(transcribe "$TMPWAV")"
   rm -f "$TMPWAV"
 fi
 [ -n "${TEXT:-}" ] || { printf 'voice: nothing heard\n' >&2; exit 1; }
