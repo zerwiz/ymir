@@ -37,10 +37,12 @@ record** appended to `<state>/pi-notices.log`, and **no gate without UI** (print
 the collapsed line through the original writer). The gate installs once per process, so even a
 duplicated load path cannot stack two.
 
-The other half of the same fault lives in `bin/seat/valknut-load.sh`: it must never append its
-extensions tree to the settings `extensions[]` when the tree is already named. Pi does **not**
-de-duplicate that array — a repeated entry loads the whole tree again, registering every tool
-again and multiplying every extension warning. `--check` fails on a duplicated entry.
+The other half of the same surface lives in `bin/seat/valknut-load.sh`: it must never append
+its extensions tree to the settings `extensions[]` when the tree is already named. pi
+de-duplicates by **resolved path** (`loader.js:666-673`), so identical strings are harmless —
+but a differently spelled path to the same tree (a symlink, a trailing slash, a second
+checkout) resolves to a different string and double-registers every tool, which is the
+`Tool "…" conflicts with …` failure. `--check` fails on a duplicated entry.
 
 Both extensions use `import.meta.url` to locate themselves and derive the root as `resolve(extensionDir, "../..")` — i.e. the repo root that holds `bin/`:
 
