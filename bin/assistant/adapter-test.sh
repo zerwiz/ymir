@@ -9,15 +9,20 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TMP="$(mktemp -d)"; export YMIR_HOME="$TMP/home" SKIRNIR_NO_ESCALATE=1
-S="$YMIR_HOME/hodd/state/assistant"; mkdir -p "$S/approved"
-cp "$HOME/Documents/ymirhome/hodd/state/assistant/approved/"*.md "$S/approved/" 2>/dev/null || true
-cat > "$S/groups.yaml" <<'YAML'
+# the hoard is RESOLVED, never guessed (Rule 07)
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+real_home=""; ymir_home_root real_home 2>/dev/null || true
+S="$YMIR_HOME/hodd/state/assistant"; I="$YMIR_HOME/hodd/identity/assistant"
+mkdir -p "$S" "$I/approved"
+[ -n "$real_home" ] && cp "$real_home/hodd/identity/assistant/approved/"*.md "$I/approved/" 2>/dev/null || true
+[ -n "$real_home" ] && cp "$real_home/hodd/identity/assistant/grants.yaml" "$I/grants.yaml" 2>/dev/null || true
+cat > "$I/groups.yaml" <<'YAML'
 groups:
   - id: "-100"
     name: "Test group"
     tier: collaborator
 YAML
-printf 'banned: ["-200"]\n' > "$S/banned.yaml"
+printf 'banned: ["-200"]\n' > "$I/banned.yaml"
 bash "$SCRIPT_DIR/kb-export.sh" >/dev/null 2>&1
 fails=0; pass(){ printf '  PASS %s\n' "$1"; }; fail(){ printf '  FAIL %s — %s\n' "$1" "$2" >&2; fails=$((fails+1)); }
 

@@ -83,13 +83,15 @@ def api(method: str, **params):
 
 
 def load_groups() -> dict:
+    """chat id → {tier, members}. The members matter: a group's audience is their INTERSECTION."""
     groups = {}
     try:
         import yaml
         with open(GROUPS) as fh:
             data = yaml.safe_load(fh) or {}
         for row in data.get("groups", []) or []:
-            groups[str(row.get("id"))] = row.get("tier", "collaborator")
+            groups[str(row.get("id"))] = {"tier": row.get("tier", "collaborator"),
+                                          "members": row.get("members") or []}
     except Exception:
         pass
     return groups
@@ -122,7 +124,7 @@ def tier_for(chat: dict) -> tuple[str, str]:
     if kind in ("group", "supergroup"):
         groups = load_groups()
         if chat_id in groups:
-            return groups[chat_id], "telegram-group"
+            return groups[chat_id].get("tier", "collaborator"), "telegram-group"
         return "unknown-group", "telegram-group"
     return "stranger", "telegram-dm"
 
