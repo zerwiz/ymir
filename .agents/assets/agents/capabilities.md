@@ -10,7 +10,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",504
+  "shell doors (bin/*.sh)",509
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",28
   "Pi extension tools",0
@@ -68,8 +68,9 @@ capabilities[5]{surface,count}:
 | kb-export.sh | kb-export.sh — build Skírnir's digest from facts the Allfather APPROV | tested | keep (a human or a cron row must run it) |
 | learn.sh | learn.sh — a fact learned in conversation, waiting for the Allfather's | tested | keep (a human or a cron row must run it) |
 | query.sh | query.sh — the ONLY way Skírnir reads his database: three fixed queri | tested | keep (a human or a cron row must run it) |
-| room-squad.sh | room-squad.sh — raise the figures of a room, each with its own name an | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
-| room.sh | room.sh — the record of a room: append an utterance, or read what was  | uncalled+named | keep (a human or a cron row must run it) |
+| room-squad.sh | room-squad.sh — raise the figures of a room, each with its own name an | tested | keep (a human or a cron row must run it) |
+| room-wall-test.sh | room-wall-test.sh — the room door's assertions, deterministic and offl | tested | keep (a human or a cron row must run it) |
+| room.sh | room.sh — the record of a room: append an utterance, or read what was  | tested+named | keep (a human or a cron row must run it) |
 | telegram.sh | telegram.sh — the door to Skírnir's own bot (the adapter lives in tel | tested | keep (a human or a cron row must run it) |
 | voice.sh | voice.sh — talk to Skírnir with a voice, and hear him answer while he | tested | keep (a human or a cron row must run it) |
 | walls-test.sh | walls-test.sh — Skírnir's red-team suite. Eight assertions, each an a | tested | keep (a human or a cron row must run it) |
@@ -390,7 +391,11 @@ capabilities[5]{surface,count}:
 | collaborators.sh | collaborators.sh — the people we work with: clients, collaborators, ad | tested | keep (a human or a cron row must run it) |
 | inbox-watch.sh | inbox-watch.sh — notice when someone answers, without a human opening  | tested | keep (a human or a cron row must run it) |
 | inbox.sh | inbox.sh — read the mail that matters to a collaborator, and prove you | tested | keep (a human or a cron row must run it) |
+| logretta-council.sh | logretta-council.sh — the council's MODES: who divides the work, who i | tested | keep (a human or a cron row must run it) |
+| logretta-debate.sh | logretta-debate.sh — the council's second round: seats answering SEATS | tested | keep (a human or a cron row must run it) |
 | logretta-ensure.sh | logretta-ensure.sh — seat the council's roster on this machine. | tested | keep (a human or a cron row must run it) |
+| logretta-panes.sh | logretta-panes.sh — the council, in herdr: one pane per seat, so it ca | tested | keep (a human or a cron row must run it) |
+| logretta-report.sh | logretta-report.sh — the council's chain: every seat reports to the CH | tested | keep (a human or a cron row must run it) |
 | open-design.sh | open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this se | tested | keep (a human or a cron row must run it) |
 | opendesign.sh | opendesign.sh — start / stop / status for OpenDesign (the design forge | tested | keep (a human or a cron row must run it) |
 | pi-agent.sh | pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/m | tested | keep (a human or a cron row must run it) |
