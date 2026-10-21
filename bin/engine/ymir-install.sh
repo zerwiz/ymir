@@ -1520,6 +1520,20 @@ establish_roles
 # adding a step cannot silently drift the [N/M] counter (it read 29/27 after the last
 # three steps were added, and the spoken count once said 19). Falls back to a literal
 # when the script cannot read itself (e.g. piped from curl | bash).
+# The hound: auditd senses + two units. It needs root for the system unit and the
+# audit rules, so a machine without passwordless sudo reports a clean skip rather
+# than pretending. Its settings are the operator's, in the hoard.
+step_garmr() {
+  local door="$ROOT/bin/ward/garmr.sh"
+  [ -x "$door" ] || { add garmr SKIP "bin/ward/garmr.sh is absent"; return 0; }
+  if sudo -n true 2>/dev/null; then
+    bash "$door" install >/dev/null 2>&1 && add garmr OK "senses armed, hound and brain seated" \
+      || add garmr WARN "install failed — run bin/ward/garmr.sh install by hand"
+  else
+    add garmr SKIP "needs one sudo — run: bin/ward/garmr.sh install"
+  fi
+}
+
 STEP_TOTAL="$(grep -c '^run_step ' "${BASH_SOURCE[0]}" 2>/dev/null || true)"
 case "$STEP_TOTAL" in ''|0|*[!0-9]*) STEP_TOTAL=29 ;; esac
 STEP_N=0
@@ -1571,6 +1585,7 @@ run_step step_omarchy "omarchy layer"
 run_step step_loaders "loaders"
 run_step step_council "the council of models"
 run_step step_vault "the vault"
+run_step step_garmr "the hound"
 run_step step_gates "gates"
 run_step step_marks "marks"
 # Migrations MOVE private data — that is a write, and `--check` promises none.

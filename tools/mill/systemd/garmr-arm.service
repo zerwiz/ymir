@@ -1,0 +1,21 @@
+# Arm the senses at every boot. auditctl needs CAP_AUDIT_CONTROL, which the hound's
+# own unit deliberately drops — so arming is its own small root unit rather than an
+# ExecStartPre inside a capability-stripped service (that failed with NOPERMISSION
+# 51 times in a row on 2026-10-21 and the hound never started).
+[Unit]
+Description=Garmr — arm the audit senses from /etc/audit/rules.d/ymir.rules
+Documentation=file://__YMIR_ROOT__/docs/features/the-guardian.md
+After=auditd.service
+Wants=auditd.service
+Before=garmr-hound.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# auditctl -R aborts on the first rule that already exists, so each line is loaded
+# on its own; "rule exists" is the expected, healthy outcome.
+ExecStart=/bin/sh -c 'test -s /etc/audit/rules.d/ymir.rules || exit 0; while IFS= read -r line; do case "$line" in ""|\#*) continue;; esac; auditctl $line >/dev/null 2>&1 || true; done < /etc/audit/rules.d/ymir.rules'
+ExecStartPost=/bin/sh -c 'auditctl -l 2>/dev/null | grep -q ymir-exec'
+
+[Install]
+WantedBy=multi-user.target

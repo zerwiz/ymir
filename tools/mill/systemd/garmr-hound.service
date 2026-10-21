@@ -1,0 +1,32 @@
+# Garmr's senses — read-only, root, because the audit log is root's to read.
+# Rendered by `bin/ward/garmr.sh install` (__YMIR_ROOT__ is replaced there).
+[Unit]
+Description=Garmr the hound — what executes, who touches the sensitive shelves, what listens and what leaves (read-only senses)
+Documentation=file://__YMIR_ROOT__/docs/features/the-guardian.md
+After=auditd.service
+Wants=auditd.service garmr-arm.service
+After=garmr-arm.service
+
+[Service]
+Type=simple
+# root's HOME is /root; the hoard and the state are the operator's
+Environment=YMIR_HOME=/home/heimdall/Documents/ymirhome
+Environment=GARMR_STATE_DIR=/var/log/ymir/garmr/state
+# a reboot clears runtime rules; garmr-arm.service re-arms them. Here we only refuse
+# to run deaf — a read-only test, because this unit drops the audit capabilities.
+ExecStartPre=/bin/sh -c 'test -s /etc/audit/rules.d/ymir.rules || { echo "garmr: no /etc/audit/rules.d/ymir.rules — the senses would be deaf"; exit 1; }'
+ExecStart=/usr/bin/python3 __YMIR_ROOT__/bin/ward/garmr/hound.py
+Restart=always
+RestartSec=5
+# it reads the audit log and /proc, and writes findings — nothing else
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/log/ymir
+PrivateTmp=yes
+# the home is 0700, so root needs the one capability that reads past it; nothing else
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH
+AmbientCapabilities=CAP_DAC_READ_SEARCH
+
+[Install]
+WantedBy=multi-user.target
