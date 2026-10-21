@@ -1,0 +1,44 @@
+# garmr-rules — WHEN the hound may bite (plan 98 §"the bite").
+#
+# Copy to $YMIR_HOME/config/garmr-rules.yaml and edit. **No bite happens without a rule here**:
+# a finding whose class is not in `enabled` is a BARK, never a bite. That is the whole safety
+# model — the policy is a file you can read, not a model's opinion at 3 a.m.
+#
+# The switch that decides whether rules are ACTED on lives in guardian.yaml (`hound.bite`):
+#   off | report | contain | hard          — and it ships at `report`.
+
+# Which bite classes are armed. Start with ONE (egress), the least destructive.
+enabled:
+  - egress-unapproved          # → block the destination (nft), never a counter-strike
+  # - listener-unknown         # → close the port (ufw)
+  # - process-no-unit          # → SIGTERM a pid with no unit, from a writable path
+  # - file-unmanifested        # → quarantine the file, keep the hash
+  # - unit-anomaly             # → systemctl stop the unit (never a pid)
+  # - token-no-approval        # → REFUSED automatically: reissued through its door, never un-revoked
+
+# Peers that are NEVER blocked — by name, never by a LAN address (the network law).
+peers:
+  - "*.tailefab81.ts.net"      # the tailnet
+  - "cloudflare.com"
+  - "api.anthropic.com"        # a named model host, if hosted models are used
+  - "registry.npmjs.org"
+  - "github.com"
+
+# Ports that are doors the house named. A listener on anything else is a finding.
+allowed_ports:
+  - 22      # ssh
+  - 8080    # the model rail (tailnet + LAN only, per the network law)
+  - 3888    # Hlidskjalf
+  - 3889    # the gate API
+  - 4602    # the well bridge
+  - 4603    # the model bridge
+
+# Paths where a binary is EXPECTED to live; a file that ran from outside these is a finding.
+allowed_paths:
+  - "/usr/"
+  - "/opt/"
+  - "$HOME/.local/bin/"
+
+# Pids the hound must never touch — filled in at runtime by the ward when the operator's own
+# session pids are known (terminal, session lock, the rail). Listed here for an explicit override.
+operator_pids: []
