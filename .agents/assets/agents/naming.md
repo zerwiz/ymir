@@ -13,6 +13,7 @@ platform[55]{subsystem,norse,role}:
   "Reverse proxy / gateway","Bifrost","HTTP routing, external traffic ingress"
   "OAuth / security","Heimdall","authentication guardian"
   "Cloudflare tunnel","Gjallarhorn","outbound encrypted tunnel"
+  "Notification door","Hófvarpnir","the horse that carries every rider's word — one door Runes, the arm, the desktop, the pocket and Telegram all send by (plan 100)
   "User dashboard","Hlidskjalf","observability, monitoring, control panel"
   "Live hall board","Óðrerir","fleet planning glass (:4322); app of its own at apps/odrerir"
   "Web file browser","Skrymir","web-based file explorer"

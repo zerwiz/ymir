@@ -75,12 +75,9 @@ PY
       new_count=$((new_count + 1))
       line="REPLY from ${id} <${addr}>: ${subject}"
       if [ "$DRY" = 0 ]; then
-        bash "$ROOT/bin/records/runes-append.sh" brokk inbox --message "$line" >/dev/null 2>&1 || true
-        [ "$QUIET" = 0 ] && bash "$ROOT/bin/time/snotra/ymir-say.sh" "reply from ${id}" >/dev/null 2>&1 || true
-        # the pocket, through the hound's own mouth (the threshold lives in its config)
-        [ -f "$ROOT/bin/ward/garmr/notify.py" ] && \
-          GARMR_STATE_DIR="$HOME_R/hodd/state/garmr" python3 "$ROOT/bin/ward/garmr/notify.py" \
-            --severity HIGH --line "reply from ${id}: ${subject}" >/dev/null 2>&1 || true
+        # one door, one policy (plan 100): record, arm, desktop, pocket and Telegram together
+        bash "$ROOT/bin/notify/send.sh" --source people --severity HIGH \
+          --key "inbox:${mid}" --message "$line" >/dev/null 2>&1 || true
         python3 - "$SEEN" "$mid" <<'PY'
 import json, sys
 path, mid = sys.argv[1], sys.argv[2]
