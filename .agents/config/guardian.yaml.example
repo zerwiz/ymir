@@ -35,7 +35,14 @@ allow:
 
 alert:
   desktop: true                # ymir-say.sh on a HIGH or worse
-  phone: none                  # none | ntfy:<topic> | gotify:<url>
+  phone: none                  # none | gotify | ntfy  (see plan 99 for why it is one, not three)
+  phone_at: high               # a finding at or above this severity reaches the phone
+  quiet_hours: "23:00-07:00"   # MEDIUM is suppressed here; CRITICAL never is
+  gotify:                      # self-hosted, one user, one app token per SENDER
+    url: ""                    # e.g. https://notify.example.org  — the token is a REFERENCE
+    token_ref: GARMR_GOTIFY_TOKEN
+  ntfy:                        # a topic, not an app: several devices or people may hear it
+    topic: ""                  # GARMR_NTFY_TOPIC; GARMR_NTFY_URL and GARMR_NTFY_TOKEN if used
 
 escalate:                      # the severity ladder (plan 98 §'the severity ladder')
   medium: local                # local | fleet | online

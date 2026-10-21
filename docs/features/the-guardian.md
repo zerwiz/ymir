@@ -57,6 +57,25 @@ and the newest serious findings with the reasoner that answered, if one did.
   is recorded with its rung and model.
 - It never closes anything. A finding is a report; the mend is yours.
 
+**The pocket.** A finding at or above `alert.phone_at` (default **HIGH**) is sent to your phone
+through **Gotify** or **ntfy** — one channel, chosen in the config, never both:
+
+```yaml
+alert:
+  phone: gotify              # none | gotify | ntfy
+  phone_at: high
+  quiet_hours: "23:00-07:00" # MEDIUM is suppressed here; CRITICAL never is
+  gotify:
+    url: https://notify.example.org
+    token_ref: GARMR_GOTIFY_TOKEN   # a REFERENCE to the vault, never a value
+```
+
+The message carries the **severity, the finding line and the Rune id** — pid, process name, a
+hashed sensitive path. Never content. `notify.py --test` sends one message so you can confirm the
+road before you need it. Delivery is **proved**: the server's message id comes back and a failure
+says whether it was the channel or the network. Ten messages an hour at most, and a storm collapses
+to one line — a channel that cries wolf gets muted, and a muted guardian is a dead one.
+
 **Settings.** `$YMIR_HOME/config/guardian.yaml` (copy `config/guardian.yaml.example`).
 Allow-lists for readers and ports, the poll interval, whether the desktop speaks, the
 escalation ladder (local model → fleet rail → online), and a daily budget for the online

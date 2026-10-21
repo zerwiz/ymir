@@ -129,6 +129,66 @@ out2="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/state4" GARMR_ESCALATE_BASE=
   GARMR_ESCALATE_TIMEOUT=2 python3 "$GARMR/escalate.py" --finding "$FINDING" --severity CRITICAL 2>&1)"
 case "$out2" in *'"degraded": true'*) pass "an unreachable ladder degrades loudly" ;; *) fail "ladder degrade" "$out2" ;; esac
 
+
+echo "garmr.test — the mouth (a stub channel stands in for the phone)"
+cat > "$TMP/home/config/guardian.yaml" <<'YAML'
+alert:
+  phone: gotify
+  phone_at: high
+  quiet_hours: ""
+  gotify:
+    token_ref: GARMR_GOTIFY_TOKEN
+escalate:
+  on: high
+  budget:
+    online_calls_per_day: 5
+YAML
+cat > "$TMP/push.py" <<'PUSH'
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json, sys
+CAP = sys.argv[1]
+class H(BaseHTTPRequestHandler):
+    def do_POST(self):
+        n = int(self.headers.get('content-length', 0))
+        body = self.rfile.read(n).decode('utf8', 'replace')
+        with open(CAP, 'a') as fh:
+            fh.write(json.dumps({"path": self.path, "auth": self.headers.get('authorization', ''),
+                                 "title": self.headers.get('title', ''), "body": body}) + "\n")
+        self.send_response(200)
+        self.send_header('content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({"id": 7}).encode())
+    def log_message(self, *a):
+        pass
+HTTPServer(('127.0.0.1', 18442), H).serve_forever()
+PUSH
+CAP="$TMP/pushed.jsonl"
+python3 "$TMP/push.py" "$CAP" & PUSH_PID=$!
+sleep 1
+out="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/state5" GOTIFY_URL=http://127.0.0.1:18442 \
+  GARMR_GOTIFY_TOKEN=testtoken python3 "$GARMR/notify.py" --severity CRITICAL \
+  --line "CRITICAL: curl (pid 1) opened protected <sensitive:abc> at 03:12" 2>&1)"
+case "$out" in *'"sent": true'*) pass "a CRITICAL reaches the channel" ;; *) fail "notify send" "$out" ;; esac
+case "$out" in *'"priority": 10'*) pass "CRITICAL maps to priority 10" ;; *) fail "notify priority" "$out" ;; esac
+post="$(tail -1 "$CAP" 2>/dev/null)"
+case "$post" in *testtoken*) pass "the token travels as Gotify expects" ;; *) fail "notify token" "$post" ;; esac
+case "$post" in *ghp_*|*"Bearer abc") fail "notify leak" "$post" ;; *) pass "the body carries no secret" ;; esac
+out="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/state5" GOTIFY_URL=http://127.0.0.1:18442 \
+  GARMR_GOTIFY_TOKEN=testtoken python3 "$GARMR/notify.py" --severity INFO --line "INFO: nothing" 2>&1)"
+case "$out" in *'"sent": false'*) pass "INFO never pages" ;; *) fail "notify INFO" "$out" ;; esac
+python3 - "$TMP/home/config/guardian.yaml" <<'YAML2'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
+p.write_text(p.read_text().replace("phone: gotify", "phone: ntfy"))
+YAML2
+out="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/state7" GARMR_NTFY_URL=http://127.0.0.1:18442 \
+  GARMR_NTFY_TOPIC=test-topic GARMR_NTFY_TOKEN=ntfytoken python3 "$GARMR/notify.py" \
+  --severity CRITICAL --line "CRITICAL: a stranger opened a protected shelf" 2>&1)"
+case "$out" in *'"channel": "ntfy"'*) pass "the ntfy leg sends too" ;; *) fail "ntfy send" "$out" ;; esac
+post="$(tail -1 "$CAP" 2>/dev/null)"
+case "$post" in *ntfytoken*|*"Bearer ntfytoken"*) pass "ntfy authenticates when a token is set" ;; *) fail "ntfy auth" "$post" ;; esac
+kill "$PUSH_PID" 2>/dev/null
+
 echo
 if [ "$fails" -eq 0 ]; then
   echo "garmr.test: all assertions pass"
