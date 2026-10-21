@@ -120,6 +120,30 @@ by using it every day, and by naming every part after the work it actually does.
 
 ---
 
+## The rest of the hall
+
+The front door names what Ymir is; this is the rest of the catalogue, so nothing that exists is
+invisible from outside. Each one has its own how-to under the field notes.
+
+```
+hall[12]{area,thing,what_it_is}:
+  "rooms","Gladsheim — the fleet room","a Matrix hall where every SEAT speaks under its own name (one identity per machine), distinct from the rooms above, which are per-conversation records"
+  "rooms","Brimir — the hall of Allfathers","PLANNED: one federated room across operators, so several Allfathers can sit in one hall — designed, not built"
+  "meetings","the Trello board","the board read as a record: overdue cards and cards due today, so the digest is not the only thing that knows what is late"
+  "meetings","sign-off by email","minutes and decisions leave as a signed, attributable message rather than a file nobody opens"
+  "meetings","first-run setup","one command that seats the meeting skeleton — framework, agenda templates, the cron row — on a new seat"
+  "security","distinct gates","each gate answers for ONE surface; a gate that measures something else is a lie with a green tick"
+  "security","encryption and sensitive data","secrets live in an encrypted vault and are referenced, never inlined; the tree you are reading holds craft, not clients"
+  "runtime","the notification door","one way for any process to reach the operator — a severity, a key so it cannot repeat, and a record of what was said"
+  "runtime","approvals","a notification that can be ANSWERED: the click runs the decision, records it, and carves a rune — asking was one-way before this"
+  "vault","confidential session","work under seal: the workdir lives inside the vault, every off-vault door is switched off, the model tier is local or none, and with `--airlock` there is no network at all"
+  "desktop","the high seat","a real terminal inside the desktop shell, so the control plane can be operated without leaving it"
+  "people","collaborators and clients","the people Ymir knows, with tiers — owner, named collaborator, stranger — which is why the assistant answers each of them differently"
+```
+
+Where a thing is **planned**, it says so. A catalogue that cannot tell built from intended is a
+wish list wearing a documentation's clothes.
+
 ## The Allfather's Chain
 
 **The Allfather holds the only chain.** Not the primary agent, not the council, not a cron
