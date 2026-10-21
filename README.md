@@ -39,6 +39,31 @@ holds craft, not clients. Every change leaves by a pull request, because a merge
 and decisions are the Allfather's. And nothing here is allowed to be a mock in the shipped path:
 either a door answers, or it says loudly that it cannot.
 
+## Skírnir — the mouth with no hands
+
+**Skírnir** answers people while you are away. He is not Brokk and cannot act as him: the figure
+is Freyr's messenger, who goes in his lord's place, speaks his words, and **leaves the sword
+behind**. He is a separate presence with his own bot, his own token and his own walls, and if he
+is compromised the door to close is his alone.
+
+Four walls, each one a refusal rather than a promise:
+
+```
+walls[4]{wall,what_it_means}:
+  "the digest","his only knowledge: one file per fact, each approved by the Allfather with a source hash. The vault is never read and the plans are never indexed — he cannot leak what he was never given"
+  "the quarantine","no tool calls, no credentials, no shell. The model, when it is used at all, only paraphrases an approved fact"
+  "the gate","no URL, no link, no image, no code block; an intent allowlist on top; then the canaries — and a canary hit FAILS CLOSED, it is never a warning"
+  "the ledger","every question, answer, refusal and escalation, with the digest hash that produced it"
+```
+
+What he will do: answer from approved facts, take a message, escalate to the Allfather when the
+answer is not his to give, and say honestly *"I don't have that, and I would rather say so than
+guess."* What he will not do: guess, act, browse, or speak about NDA material to anyone but the
+operator or a named party — and never in a group, because a group is other people.
+
+A mouth with no hands is not a limitation to fix later. It is the design: an assistant who can
+only speak cannot be used to open a door for someone who is not the Allfather.
+
 ## Snotra — the ear at the table
 
 **Snotra** is the meeting ear. Where Skírnir is a mouth — answering people on his own bot — Snotra
