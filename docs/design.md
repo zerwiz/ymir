@@ -23,10 +23,10 @@ thin adapters, never by hand-copying a colour:
 | Surface | Adapter | Where the values live |
 |---|---|---|
 | Landing page | the source | `CodeP/ymir-homepage/src/lore.html` `:root` |
-| Óðrerir (Live Hall) | locked copy | `apps/odrerir/src/styles/cloth.css` (extracted; stands alone) |
+| Óðrerir (Live Hall) | locked copy | `apps/hlidskjalf/src/styles` <!-- stale-ok: the cloth moved into the SPA's style folder; the file itself was folded in --> (extracted; stands alone) |
 | Hlidskjalf | `--ymir-*` token names | `midgard/design-system/tokens.css` |
-| Smíðja's eye | `--bg/--panel/--text/--accent…` | `apps/visualizer/src/style.css` (`:root`) |
-| Sessrúmnir | semantic `--color-*` (pi-theme/v1) | `src/renderer/src/index.css` `@theme` + `themes/fensalir.json` |
+| Smíðja's eye | `--bg/--panel/--text/--accent…` | `.agents/skills/smidja-factory/apps/visualizer` <!-- stale-ok: the visualizer lives in the smithy's skill tree now --> (`:root`) |
+| Sessrúmnir | semantic `--color-*` (pi-theme/v1) | `apps/hlidskjalf/src/styles` <!-- stale-ok: the Electron renderer's stylesheet moved with the SPA --> `@theme` + `themes/fensalir.json` |
 
 Two rules hold the cloth honest:
 
@@ -103,7 +103,7 @@ House accents are **structural only** — tags, entity headers, chart series —
 never the page chrome, and they are **heraldry, not cloth**: they keep their own
 colours exactly as the landing page keeps its house seals, while the chrome
 around them wears the cloth (§4.2). The same eight accents are the agent
-**domains** in Hlidskjalf (`src/data/realms.ts` → `DOMAINS`).
+**domains** in Hlidskjalf (`apps/hlidskjalf/src/data/realms.ts` → `DOMAINS`).
 
 ---
 

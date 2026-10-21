@@ -5,7 +5,7 @@ When a harness opens in `$YMIR_ROOT`, Brokk must take the high seat
 raised, the Nornir jobs start, and the session lock binds to the live process.
 This document records how that mechanism works, how it compares to the validated
 upstream agent-distro it was ported from, and how to verify it. The runtime spec
-is `docs/plans/29-brokk-distro-runtime.md`; the lore is `docs/lore.md` §XII.
+is `$YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/29-brokk-distro-runtime.md`; the lore is `docs/lore.md` §XII.
 
 ## The two tiers
 
@@ -102,4 +102,4 @@ options[2]{change,effect}:
 
 Ported from the validated upstream agent-distro (read-only reference) for
 [plan 29](plans/29-brokk-distro-runtime.md); the Norse names and the Brokk/Allfather
-substitutions are ours. The upstream's own contract is its `docs/sessionstart-nudge.md`.
+substitutions are ours. The upstream's own contract is its `docs/session-start.md`.

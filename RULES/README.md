@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[26]{file,subject}:
+rules_index[27]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -52,3 +52,7 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | 16 | `16-confidential-session.md` | A **confidential session** (`bin/vault/confidential.sh`): work on the vault with no route off it — confined workdir, off-vault doors off, an explicit model tier (local/none/remote), and `--airlock` for no network at all; `confidential-guard` refuses out-of-vault commits. |
 | 17 | `17-no-dead-code.md` | **No dead code**: an unreached file, function, branch or constant reads as a working feature and is not one; enforced by `bin/gates/guards/dead-code-guard.sh`. |
 | 26 | `26-external-surfaces.md` | **Private data does not cross an external surface.** No vault path, vault filename, secret or NDA/classified material in a Trello card, email, Chat or public PR; enforced by `bin/gates/guards/private-guard.sh` in mail and Trello. |
+
+## Appended 2026-10-21 — the documents are checked
+
+| 27 | [The documents are checked, not trusted](27-the-documents-are-checked.md) | a user-facing document's paths, packages and ports are verified by a ward, and a stale instruction fails the push |

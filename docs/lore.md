@@ -530,7 +530,7 @@ It carries:
 - **The realms** — Svartalfaheim (tenant workspaces), Midgard (shared assets)
 - **The gates** — Bifrost, Heimdall, Gjallarhorn, Utgard, Yggdrasil
 - **The skills** — 21+ Norse-named capabilities in `.agents/skills/`
-- **The plans** — 20+ architectural plans in `docs/plans/`
+- **The plans** — 20+ architectural plans in the plan ledger in the vault (`$YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/`)
 - **The lore** — this file, the load-bearing allegory
 
 *The forge is open. The hammer falls for anyone who brings good metal.*
@@ -618,9 +618,9 @@ memory budget into a single coherent payload before the first turn.
 - `bin/seat/valknut-load.sh` — load the full agent configuration
 - upstream `crew-dispatch.json` dispatch schema (provenance; Ymir ships `eindri-dispatch.json`)
 - `.agents/config/eindri-dispatch.json` — Eindri dispatch schema
-- `.agents/config/cron.yaml` — Nornir schedule
+- `config/cron.yaml.example` in the tree, and the live `cron.yaml` in the hoard — Nornir schedule
 - `.agents/config/startup-memory-budget` — memory limits at boot
-- `.agents/config/eindri-harness/` — harness profiles for Eindri workers
+- `config/agents.yaml` in the hoard (the roster) and `.agents/agents/` in the tree — harness profiles for Eindri workers
 
 **Rule:** Valknut loads once at session start. What it loads is the shape of
 the fleet for this session — agents, models, memory budget, cron schedule.
@@ -1255,7 +1255,7 @@ read through Snotra's ear. Where Sól says *what time it is*, Mánagandr says *w
 and when a meeting fits*. Rule: the calendar never speaks for the clock, and the clock never
 guesses the calendar.
 
-### Himinbjörg — the watchtower (planned, with the security ward)
+### Himinbjörg — the watchtower (built 2026-10-21)
 
 **Himinbjörg** is Heimdall's hall at the edge of heaven, from which he sees every road. It is the
 place the *warden's eyes* live: what is listening on this machine, what changed, what tried to
@@ -1264,7 +1264,7 @@ looks from. Planned, not built: plan 81, phases S0–S8 — and the door that ma
 `random.zerwiz.org`, a public tunnel answering **200 with no login** until it was taken down on
 2026-10-18.
 
-### Vörðr — the warden (planned)
+### Vörðr — the warden (built 2026-10-18; scheduled 2026-10-21)
 
 **Vörðr** is the warden: not a gate (that is Heimdall's) and not a judge (that is Forseti's), but
 the one who **composes the wards and watches the house** — the 16 gate guards, the vault, the
@@ -1363,3 +1363,29 @@ Each of these landed as **code before lore**: a script, an app, a service. The r
 the house is for* — did not. From here the order is the reverse: **a capability gets its figure
 when its plan is written, not when someone notices the lore has a hole.** A name is how the house
 thinks; a filename is how it forgets.
+
+## 2026-10-21 — Garmr, the hound at the gate (appended)
+
+**Every capability that lands needs its figure** (this section's own rule, 2026-10-18), and one
+landed without it: the guardian. The hound is **Garmr** — the bound hound at the gate of Hel, whose
+barking is an omen. He is *bound* because a watcher that roams is a watcher you cannot reason
+about; he *barks* because that is the whole of his duty: notice, and say so.
+
+**What is his:** the senses. What executes (with the command line redacted), who opens the meeting,
+evidence and vault shelves (the path as a hash), a change to an identity file or a persistence
+surface, what starts listening, what connects to a host we did not name, and which signal was sent
+to which process. `bin/ward/garmr.sh` is the door; `bin/ward/garmr-smoke.sh` is his own proof.
+
+**What is not:** judgement. **Vörðr** judges (his report composes Garmr's findings), **Runes** keeps
+the record, **Gná** carries the bark to the desktop and now the pocket, and **Himinbjörg** —
+built the same day — is the watchtower in the high seat: the panel that shows the heartbeat, the
+counts and the newest severe finding with the rung that answered it.
+
+**Two statuses are repaid by this section.** *Himinbjörg* was marked "planned, with the security
+ward" and is now built (`/api/ward` and the **ᛉ hound** chip in Hlidskjalf). *Vörðr* was marked
+"planned" and is built (`bin/ward/verdr.sh`, composed into Eir's `ward` surface); what he still
+lacks is a schedule, which is named debt in plan 98, not a missing capability.
+
+**His law, in one line:** *metadata only, and no model in the alert path.* A guardian that logs
+content is a leak with a badge; a guardian that asks a model what severity a fact is has handed the
+most expensive judgement to the least accountable thing in the house.
