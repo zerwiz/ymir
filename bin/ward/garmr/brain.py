@@ -68,6 +68,26 @@ def _rune(line: str, cfg: dict) -> None:
         pass
 
 
+def _phone(line: str, severity: str, cfg: dict) -> dict | None:
+    """The bark reaches the pocket (plan 99 P0). Never blocks the desktop alert."""
+    phone = ((cfg.get("alert", {}) or {}).get("phone") or "none").lower()
+    if phone in ("", "none"):
+        return None
+    threshold = rules.ORDER.get(str((cfg.get("alert", {}) or {}).get("phone_at", "high")).upper(), 2)
+    if rules.ORDER.get(severity, 0) < threshold:
+        return None
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notify.py")
+    try:
+        proc = subprocess.run([sys.executable, script, "--severity", severity, "--line", line],
+                              capture_output=True, text=True, timeout=20)
+        for row in (proc.stdout or "").splitlines():
+            if row.strip().startswith("{"):
+                return json.loads(row)
+    except Exception:
+        return None
+    return None
+
+
 def _escalate(finding: dict, severity: str, context: list[dict], cfg: dict) -> dict | None:
     script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "escalate.py")
     try:
@@ -116,6 +136,10 @@ def judge(rows: list[dict], cfg: dict, dry_run: bool = False,
         out.append(record)
         if not dry_run:
             _rune(verdict["line"], cfg)
+            if verdict["severity"] in ("HIGH", "CRITICAL"):
+                phone = _phone(verdict["line"], verdict["severity"], cfg)
+                if phone:
+                    record["phone"] = phone
             if rules.ORDER.get(verdict["severity"], 0) >= rules.ORDER["HIGH"]:
                 _speak(verdict["line"], cfg)
     return out
