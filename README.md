@@ -39,6 +39,22 @@ holds craft, not clients. Every change leaves by a pull request, because a merge
 and decisions are the Allfather's. And nothing here is allowed to be a mock in the shipped path:
 either a door answers, or it says loudly that it cannot.
 
+## Snotra — the ear at the table
+
+**Snotra** is the meeting ear. Where Skírnir is a mouth — answering people on his own bot — Snotra
+is the one figure whose only job is to *hear*: it watches for the call happening on the seat,
+records it, transcribes it **locally**, and mines the minutes — decisions, actions, owners — into
+the hoard, so a meeting becomes a record instead of a memory.
+
+Three things it will not do. It will not send a call's audio anywhere it is not supposed to: the
+transcription runs on the machine, with the engine the install seats. It will not post into a
+meeting: its agent-facing face is **read-only**, so an agent may read what was said and may not
+write into the room. And it will not pretend to have heard: a seat with no microphone reports a
+clean skip rather than an empty transcript that looks like a quiet meeting.
+
+A meeting without minutes is a conversation; the house does not count conversations as work. That
+is the whole reason the ear exists — and why the minutes, not the recording, are what it returns.
+
 **What it is not.** Not a multi-tenant platform, not a framework for you to host, not a chat
 window with tools bolted on. It is one operator's workshop, built the way a workshop is built —
 by using it every day, and by naming every part after the work it actually does.
