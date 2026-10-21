@@ -39,6 +39,40 @@ holds craft, not clients. Every change leaves by a pull request, because a merge
 and decisions are the Allfather's. And nothing here is allowed to be a mock in the shipped path:
 either a door answers, or it says loudly that it cannot.
 
+## The council — several minds, one verdict
+
+When a question deserves more than one opinion, Ymir convenes a **council**: not a swarm, not a
+vote — a small bench of seats, each with its own **lens**, and a **chair** that decides.
+
+A seat is a figure with a job: an architect weighs the shape, a security seat weighs the door, a
+cost seat weighs the bill, a skeptic tries to break the proposal, an operator weighs whether it can
+be lived with. The same model can sit in all five chairs, and that is still worth doing — five
+lenses on one mind find more than one mind with no lens. The council is not told what to agree on.
+
+**The chair is the point.** Móðguðr, the bridge-keeper, presides — she stands at the crossing and
+challenges every passer-by before they may cross, so her seat is not there to be encouraging. Her
+laws: *a claim is false until a command proves it · the house's own best story is my first suspect ·
+security is a door, not a section · production readiness is a list, not a feeling · a refusal names
+the one thing that would change my mind · I do not grade on effort.* A chair that repairs what it
+audits has no verdict, so she never edits.
+
+```
+modes[4]{mode,who_moves,use_when}:
+  "divide","the chair splits the task, sends each seat out on its slice, reports back with what returned","a task with parts"
+  "sortie","every seat out at once on the same quest; the chair reads the sweep after","breadth over judgement"
+  "report","seats report UP to the chair, the chair rules, and a failed seat is told what it must bring back","an audit"
+  "debate","seats answer each other, by name, in the record","a disagreement worth airing"
+```
+
+**It remembers.** The chair drinks the **well** before she sits and waters it with the verdict
+after, so the next council starts warmer than this one — and every word of a sitting lands in the
+**rooms**, attributed, because a council whose argument exists only inside five model contexts
+never happened.
+
+**What a council will not do.** It writes no code, merges nothing, and pushes nothing. A verdict is
+a *record*; the build is a separate errand with its own gate, and the chain stays in the Allfather's
+hand.
+
 ## Skírnir — the mouth with no hands
 
 **Skírnir** answers people while you are away. He is not Brokk and cannot act as him: the figure
@@ -85,6 +119,30 @@ window with tools bolted on. It is one operator's workshop, built the way a work
 by using it every day, and by naming every part after the work it actually does.
 
 ---
+
+## The rest of the hall
+
+The front door names what Ymir is; this is the rest of the catalogue, so nothing that exists is
+invisible from outside. Each one has its own how-to under the field notes.
+
+```
+hall[12]{area,thing,what_it_is}:
+  "rooms","Gladsheim — the fleet room","a Matrix hall where every SEAT speaks under its own name (one identity per machine), distinct from the rooms above, which are per-conversation records"
+  "rooms","Brimir — the hall of Allfathers","PLANNED: one federated room across operators, so several Allfathers can sit in one hall — designed, not built"
+  "meetings","the Trello board","the board read as a record: overdue cards and cards due today, so the digest is not the only thing that knows what is late"
+  "meetings","sign-off by email","minutes and decisions leave as a signed, attributable message rather than a file nobody opens"
+  "meetings","first-run setup","one command that seats the meeting skeleton — framework, agenda templates, the cron row — on a new seat"
+  "security","distinct gates","each gate answers for ONE surface; a gate that measures something else is a lie with a green tick"
+  "security","encryption and sensitive data","secrets live in an encrypted vault and are referenced, never inlined; the tree you are reading holds craft, not clients"
+  "runtime","the notification door","one way for any process to reach the operator — a severity, a key so it cannot repeat, and a record of what was said"
+  "runtime","approvals","a notification that can be ANSWERED: the click runs the decision, records it, and carves a rune — asking was one-way before this"
+  "vault","confidential session","work under seal: the workdir lives inside the vault, every off-vault door is switched off, the model tier is local or none, and with `--airlock` there is no network at all"
+  "desktop","the high seat","a real terminal inside the desktop shell, so the control plane can be operated without leaving it"
+  "people","collaborators and clients","the people Ymir knows, with tiers — owner, named collaborator, stranger — which is why the assistant answers each of them differently"
+```
+
+Where a thing is **planned**, it says so. A catalogue that cannot tell built from intended is a
+wish list wearing a documentation's clothes.
 
 ## The Allfather's Chain
 
