@@ -18,13 +18,114 @@ your primary agent; **Eindri** are the isolated workers it dispatches. Everythin
 development, marketing, business strategy, life — runs from one repository, with an
 audit ledger, a memory well, one tenant and its workspaces, and a control plane you actually look at.
 
+One operator, one repository, no tenancy machinery to please. There is no organisation chart
+here, no seat licensing, no dashboard whose only job is to be looked at by nobody: there is a
+machine you own, a hall you sit in, and a crew that is expected to *return with an artefact* or
+say plainly that it could not.
+
+**What is in it.** One checkout holds the runtime, the agents, the skills, the gates and the
+apps. Engines are adopted, never rebuilt — git worktrees for isolation, sandboxes for untrusted
+work, an embedding store for memory, a ledger that chains every entry — and each engine wears a
+Norse name so that the thing's *job* is legible from its name. **Brokk** plans, steers, reviews
+and dispatches from the main hall; the **Eindri** forge in isolation and hand back work a human
+can seal; a **council** argues a question from five lenses and a chair that is paid to be
+unimpressed; **Skírnir**, the assistant, answers people while you are away and carries his own
+walls. They talk to each other in **rooms** — attributed, append-only, so the house argues in
+the open instead of in five private contexts.
+
+**What it refuses.** Private data never enters this repository: plans, names, secrets and
+schedules live in a separate private vault, and the tree you are reading is public because it
+holds craft, not clients. Every change leaves by a pull request, because a merge is a decision
+and decisions are the Allfather's. And nothing here is allowed to be a mock in the shipped path:
+either a door answers, or it says loudly that it cannot.
+
+## Skírnir — the mouth with no hands
+
+**Skírnir** answers people while you are away. He is not Brokk and cannot act as him: the figure
+is Freyr's messenger, who goes in his lord's place, speaks his words, and **leaves the sword
+behind**. He is a separate presence with his own bot, his own token and his own walls, and if he
+is compromised the door to close is his alone.
+
+Four walls, each one a refusal rather than a promise:
+
+```
+walls[4]{wall,what_it_means}:
+  "the digest","his only knowledge: one file per fact, each approved by the Allfather with a source hash. The vault is never read and the plans are never indexed — he cannot leak what he was never given"
+  "the quarantine","no tool calls, no credentials, no shell. The model, when it is used at all, only paraphrases an approved fact"
+  "the gate","no URL, no link, no image, no code block; an intent allowlist on top; then the canaries — and a canary hit FAILS CLOSED, it is never a warning"
+  "the ledger","every question, answer, refusal and escalation, with the digest hash that produced it"
+```
+
+What he will do: answer from approved facts, take a message, escalate to the Allfather when the
+answer is not his to give, and say honestly *"I don't have that, and I would rather say so than
+guess."* What he will not do: guess, act, browse, or speak about NDA material to anyone but the
+operator or a named party — and never in a group, because a group is other people.
+
+A mouth with no hands is not a limitation to fix later. It is the design: an assistant who can
+only speak cannot be used to open a door for someone who is not the Allfather.
+
+## Snotra — the ear at the table
+
+**Snotra** is the meeting ear. Where Skírnir is a mouth — answering people on his own bot — Snotra
+is the one figure whose only job is to *hear*: it watches for the call happening on the seat,
+records it, transcribes it **locally**, and mines the minutes — decisions, actions, owners — into
+the hoard, so a meeting becomes a record instead of a memory.
+
+Three things it will not do. It will not send a call's audio anywhere it is not supposed to: the
+transcription runs on the machine, with the engine the install seats. It will not post into a
+meeting: its agent-facing face is **read-only**, so an agent may read what was said and may not
+write into the room. And it will not pretend to have heard: a seat with no microphone reports a
+clean skip rather than an empty transcript that looks like a quiet meeting.
+
+A meeting without minutes is a conversation; the house does not count conversations as work. That
+is the whole reason the ear exists — and why the minutes, not the recording, are what it returns.
+
+**What it is not.** Not a multi-tenant platform, not a framework for you to host, not a chat
+window with tools bolted on. It is one operator's workshop, built the way a workshop is built —
+by using it every day, and by naming every part after the work it actually does.
+
 ---
 
 ## The Allfather's Chain
 
-The Allfather holds the only chain. If the Allfather does not draw it, Ymir walks
-the machine as the Allfather walks it — no gate between the agent and the tools,
-no second master but the Allfather's own hand.
+**The Allfather holds the only chain.** Not the primary agent, not the council, not a cron
+row, not a model with a good record. One hand draws it, and everything in Ymir walks only
+while that hand holds it.
+
+**What the chain is.** The right to say *go* and the right to say *stop* — to open a door, to
+seal a change, to let a thing cross. It is drawn in the record, not in a conversation: a word
+given, a merge sealed, a rune carved. What is not in the record was never chained.
+
+**The gates are not a second master.** Ymir ships wards, guards and gates by the dozen —
+secret, vault, branch, fixes, people, public — and none of them commands. A gate can only
+*refuse*. Refusal is the chain made mechanical: the Allfather's hand, cast as a rule and
+re-run at every crossing while he is asleep. A gate that ever decides *for* him would be a
+second master; a gate that only ever says *no* is his own hand, remembered.
+
+**What holds it up.** Three things, and only three: the **ledger** (what was done, chained so
+it cannot be quietly edited), the **well** (what was learned, so the next hand starts where
+this one finished), and the **rooms** (where his agents speak to each other, attributed, so
+the house argues in the open instead of in five private contexts). None of the three can
+draw the chain. They can remember it, water it, and refuse it.
+
+**How the chain breaks.** Never in one dramatic act. It breaks in small mercies: an agent
+merging its own pull request because the tests were green; a token pasted into a chat because
+it was quicker than the vault; a gate skipped "just this once" because the gate was
+inconvenient that afternoon. Every one of those is a hand other than his, closing a door he
+never opened.
+
+```
+chain[6]{law,why}:
+  "one hand draws it","the Allfather's word is the only permission Ymir recognises"
+  "agents may refuse, never permit","a worker that could open a door for itself is a second master"
+  "a gate says no, never yes","the wards mechanise his caution, not his judgement"
+  "merges are sealed by his hand","an agent opens the pull request and stops there"
+  "what is not in the record was not chained","the ledger, the well and the rooms are the proof"
+  "it breaks by small mercies, never by one act","so the cheap shortcut is the whole risk"
+```
+
+> If the Allfather does not draw it, Ymir walks nothing. The machine may labour, may refuse,
+> may remember — but it may not decide.
 
 ---
 

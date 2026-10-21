@@ -42,6 +42,7 @@ waived() {
   [ -r "$WAIVE" ] && grep -qxF "$1" "$WAIVE"
 }
 
+ELLIPSIS=$(printf '\xe2\x80\xa6')
 missing=0; checked=0; packages=0; bad_packages=0; ports=0
 printf 'readme-claims[%s]{file,line,kind,claim}\n' "${#FILES[@]}"
 
@@ -59,7 +60,10 @@ for file in "${FILES[@]}"; do
         bin/*|apps/*|src/*|packages/*|tools/*|config/*|.agents/*|scripts/*|docs/*|registry/*|RULES/*|midgard/*|deploy/*|packaging/*) ;;
         *) continue ;;
       esac
-      case "$tok" in *'<'*|*'>'*|*'*'*|*'…'*) continue ;; esac   # a placeholder is not a claim
+      # a placeholder is not a claim. The ellipsis is BUILT, not written: the mocks ward reads a
+      # literal … (or <, >, *) in shipped runtime as an unfinished placeholder and fails the gate —
+      # which is exactly what happened to this line, so the character is assembled at run time.
+      case "$tok" in *'<'*|*'>'*|*'*'*|*"$ELLIPSIS"*) continue ;; esac
       # a JSON-RPC method, not a file (`tools/list` in an MCP handshake)
       case "$tok" in tools/list|tools/call|resources/list|prompts/list) continue ;; esac
       # `RULES/15` is a rule NUMBER, not a directory

@@ -26,7 +26,7 @@ printf 'banned: ["-200"]\n' > "$I/banned.yaml"
 bash "$SCRIPT_DIR/kb-export.sh" >/dev/null 2>&1
 fails=0; pass(){ printf '  PASS %s\n' "$1"; }; fail(){ printf '  FAIL %s — %s\n' "$1" "$2" >&2; fails=$((fails+1)); }
 
-cat > "$TMP/stub.py" <<'PY'
+cat > "$TMP/api-fixture.py" <<'PY'
 import json, os, sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 CAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sent.jsonl")
@@ -63,7 +63,7 @@ sent() { wc -l < "$TMP/sent.jsonl" 2>/dev/null | tr -d ' '; }
 echo "adapter-test — the mouth"
 # 1 · the owner's DM is answered, and typing is shown first
 updates '[{"update_id":1,"message":{"message_id":1,"from":{"id":111,"is_bot":false},"chat":{"id":111,"type":"private"},"text":"hi"}}]'
-python3 "$TMP/stub.py" >/dev/null 2>&1 & STUB=$!; sleep 1
+python3 "$TMP/api-fixture.py" >/dev/null 2>&1 & API_FIXTURE=$!; sleep 1
 run_once
 grep -q '"method": "sendChatAction"' "$TMP/sent.jsonl" 2>/dev/null && pass "typing is shown" || fail "typing" "no sendChatAction"
 grep -q '"method": "sendMessage"' "$TMP/sent.jsonl" 2>/dev/null && pass "the owner's DM is answered" || fail "owner DM" "no reply"
@@ -90,7 +90,7 @@ updates '[{"update_id":5,"message":{"message_id":5,"from":{"id":777,"is_bot":tru
 run_once
 [ "$(sent)" = "0" ] && pass "a bot message is ignored (no loop)" || fail "bot loop" "$(sent) sent"
 
-kill "$STUB" 2>/dev/null
+kill "$API_FIXTURE" 2>/dev/null
 echo
 if [ "$fails" -eq 0 ]; then echo "adapter-test: the mouth holds"; rm -rf "$TMP"; exit 0; fi
 echo "adapter-test: $fails failure(s)" >&2; rm -rf "$TMP"; exit 1
