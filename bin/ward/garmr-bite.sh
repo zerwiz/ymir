@@ -27,6 +27,7 @@
 #   garmr-bite.sh plan [--findings FILE]     # what it WOULD bite now (no side effects, ever)
 #   garmr-bite.sh contain [--dry-run]        # perform the allowlisted bites allowed by the switch
 #   garmr-bite.sh advise [--findings FILE]   # the model ADVISES one allowlisted bite; the rules dispose
+#   (hound.model: on in guardian.yaml puts the advisor in the RESPONSE path for an uncovered CRITICAL)
 #   garmr-bite.sh undo <rune-checksum|id>    # run the recorded un-bite for one bite
 #
 # Exit: 0 ok · 1 a refusal or a fault · 2 usage · 3 the switch forbids acting
@@ -74,6 +75,23 @@ print(m if m in ("off", "report", "contain", "hard") else "report")
 PY
 }
 MODE="$(bite_mode)"
+
+# Is the model in the response path?  `hound.model: on` in guardian.yaml, or GARMR_ADVISOR_MODEL=on.
+# Even then it may only choose from the six and only for a finding a written rule did not cover.
+model_mode() {
+  if [ -n "${GARMR_ADVISOR_MODEL:-}" ]; then printf '%s' "$GARMR_ADVISOR_MODEL"; return; fi
+  python3 - "$GUARDIAN" <<'PY'
+import sys
+try:
+    import yaml
+    d = yaml.safe_load(open(sys.argv[1])) or {}
+except Exception:
+    print("off"); raise SystemExit(0)
+raw = (d.get("hound") or {}).get("model", "off")
+print("on" if str(raw).strip().lower() in ("on", "true", "yes", "1") else "off")
+PY
+}
+MODEL_MODE="$(model_mode)"
 
 # ── the allowlist (the six bites plan 98 permits, and nothing else) ────────────
 allowlist() {
@@ -169,7 +187,7 @@ PY
 # GARMR_ADVISOR_CMD makes the advisor injectable (tests stub it; a seat with no model sets it empty).
 advise() {
   local findings="$1"
-  local cmd="${GARMR_ADVISOR_CMD-pi -p --no-session --no-tools --model llama-swap/qwen3.6-35b-a3b@iq3_s}"
+  local cmd="${GARMR_ADVISOR_CMD-pi -p --no-session --no-tools --model ${GARMR_ADVISOR_MODEL_NAME:-llama-swap/qwen3.5-9b@q4_k_s-summarizer}}"
   if [ -z "$cmd" ]; then
     printf 'bite[1]{advisor,result}:\n  "none","GARMR_ADVISOR_CMD is empty — the hound decides by rule alone (the safe default)"\n'
     return 0
@@ -205,6 +223,43 @@ PY
       printf 'bite[2]{advisor,proposal,note}:\n  "%s","still needs a WRITTEN RULE — the advisor proposes, the rules dispose"\n' "$answer" ;;
     *) printf 'bite[1]{advisor,result}:\n  "discarded","an answer outside the allowlist is not an advisor"\n' ;;
   esac
+}
+
+
+# ── the response fallback: an uncovered CRITICAL is put to the advisor ───────
+# This is the Allfather's whole idea, and it is fenced: the advisor may propose one allowlisted
+# bite; the deterministic layer still checks that the class is ARMED and still refuses without a
+# written rule — the rule set stays the policy, and the model only says which armed door to close.
+advisor_fallback() {
+  local findings="$1"
+  [ "$MODEL_MODE" = "on" ] || return 0
+  local uncovered
+  uncovered=$(python3 - "$findings" "$RULES" <<'PY'
+import sys, json, os
+findings, rules = sys.argv[1], sys.argv[2]
+try:
+    import yaml; d = yaml.safe_load(open(rules)) or {}
+except Exception: d = {}
+armed = {str(c).lower() for c in (d.get("enabled") or [])}
+out = []
+for line in open(findings, encoding="utf-8") if os.path.exists(findings) else []:
+    line=line.strip()
+    if not line: continue
+    try: f=json.loads(line)
+    except Exception: continue
+    if str(f.get("severity","")).upper() == "CRITICAL" and str(f.get("class","")).lower() not in armed:
+        out.append(f)
+print(json.dumps(out))
+PY
+)
+  [ "$uncovered" = "[]" ] || [ -z "$uncovered" ] && return 0
+  local advice
+  advice=$(advise "$findings" 2>/dev/null | sed -n 's/.*"\([a-z-]* [^"]*\)","still needs.*/\1/p')
+  [ -n "$advice" ] || return 0
+  local bite; bite=${advice%% *}
+  if printf '%s\n' "$(allowlist | sed -n 's/^  "\([a-z-]*\)".*/\1/p')" | grep -qx "$bite"; then
+    printf 'bite[2]{advisor,suggestion}:\n  "%s","REFUSED to act: the class is not armed in the rules file. Arm it in garmr-rules.yaml and the next pass will bite. An unarmed class is a bark, by law 1."\n' "$advice"
+  fi
 }
 
 # ── the act, with the record first ────────────────────────────────────────────
@@ -306,7 +361,7 @@ case "$CMD" in
   contain)
     dry=""; findings="$STATE/findings.jsonl"
     while [ $# -gt 0 ]; do case "$1" in --dry-run) dry=dry; shift ;; --findings) findings=${2-}; shift 2 ;; *) shift ;; esac; done
-    contain "$dry" "$findings" ;;
+    contain "$dry" "$findings"; rc=$?; advisor_fallback "$findings"; exit $rc ;;
   advise) advise "${1:-$STATE/findings.jsonl}" ;;
   undo) cmd_undo "$@" ;;
   *) printf 'bite[1]{error}: "unknown command: %s" · help: "garmr-bite.sh --help"\n' "$CMD" >&2; exit 2 ;;

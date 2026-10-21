@@ -73,5 +73,21 @@ out=$(GARMR_ADVISOR_CMD="" YMIR_HOME="$T" bash "$BITE" advise "$T/f.jsonl" 2>&1)
 check "no advisor is the safe default" 1 "$(has "$out" 'rule alone' && echo 1 || echo 0)"
 rm -rf "$T"
 
+# 14-15 · the model in the RESPONSE path: it may suggest, it may not widen a rule
+T=$(mktemp -d); mkhome "$T" contain; cp "$ROOT/.agents/config/garmr-rules.example.yaml" "$T/config/garmr-rules.yaml"
+printf 'hound:\n  bite: contain\n  model: on\n' > "$T/config/guardian.yaml"
+printf '%s\n' '{"class":"intrusion-suspected","severity":"CRITICAL","port":9999}' > "$T/f.jsonl"
+out=$(GARMR_ADVISOR_CMD="echo 'listener-close 9999'" YMIR_HOME="$T" bash "$BITE" contain --dry-run --findings "$T/f.jsonl" 2>&1)
+check "an unarmed class refuses even on advice" 1 "$(has "$out" 'REFUSED to act' && echo 1 || echo 0)"
+# arm the class → the DETERMINISTIC path bites, with no model at all
+python3 - "$T/config/garmr-rules.yaml" <<'PY'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); p.write_text(p.read_text().replace("# - listener-unknown", "- listener-unknown"))
+PY
+printf '%s\n' '{"class":"listener-unknown","severity":"CRITICAL","port":9999}' > "$T/f.jsonl"
+out=$(GARMR_ADVISOR_CMD="" YMIR_HOME="$T" bash "$BITE" contain --dry-run --findings "$T/f.jsonl" 2>&1)
+check "an armed class bites without a model" 1 "$(has "$out" 'listener-close' && echo 1 || echo 0)"
+rm -rf "$T"
+
 printf '\ngarmr_bite[2]{passed,failed}:\n  "%s","%s"\n' "$pass" "$fail"
 [ "$fail" = 0 ] || exit 1

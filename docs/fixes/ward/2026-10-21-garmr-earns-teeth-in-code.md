@@ -38,3 +38,25 @@ quotes the value with a comment saying why.
 - `bin/ward/garmr-bite.sh` (new)
 - `bin/ward/garmr-bite-test.sh` (new)
 - `config/garmr-rules.example.yaml` (new)
+
+### Addendum, same night — the model in the RESPONSE path
+
+The Allfather's clarification, in his words: *"we need to have so the agent can stop and counter
+attack… so we need to start an AI model then."* So the advisor is no longer only a thing you run by
+hand; it may sit in the response path — under three fences that keep the rules the policy:
+
+1. **Only for a finding no written rule covers**, and only at CRITICAL.
+2. **It sees metadata only** — class, severity, pid, port, path, destination. Never a payload:
+   text from an attacker in front of a model is a way to make the defender close the door the
+   attacker wants closed.
+3. **It may propose only from the six**, and the deterministic layer still checks that the class is
+   **armed in `garmr-rules.yaml`**. An unarmed class is refused with the reason said out loud:
+   *"Arm it in garmr-rules.yaml and the next pass will bite. An unarmed class is a bark, by law 1."*
+
+Switched by `hound.model: on|off` in the guardian config (default **off**), and the advisor model is
+named there too — by default the small local summariser preset, because the rail holds one model and
+an advisor must not evict the Allfather's work for longer than a triage.
+
+Proven: an unarmed CRITICAL with advice → refused, nothing bitten; the same finding with its class
+armed → the deterministic path plans the bite with its undo, **with no model in the loop at all**.
+Suite now 15/15.
