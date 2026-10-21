@@ -20,11 +20,15 @@ bin/ward/garmr.sh resume      # start again
 bin/ward/garmr.sh judge       # apply the rules to the newest findings, now
 bin/ward/garmr.sh tail 20     # the newest judgements, HIGH and CRITICAL first
 bin/ward/garmr.sh verify      # prove it is not silently dead
+bin/ward/garmr-smoke.sh       # the reusable 9-check smoke test (running ≠ armed ≠ working)
+bin/ward/garmr.sh refresh     # re-render the units after an update (Gróa runs this)
 ```
 
-**On and off.** `pause` stops the senses and skips the judgement; it leaves a marker so the
-status says plainly **paused**, never "all clear". `resume` starts it again. `install` is
-idempotent — running it twice is safe.
+**On and off.** `sudo bin/ward/garmr.sh pause` stops the senses and skips the judgement; it
+leaves a **root-owned** marker so the status says plainly **paused**, never "all clear", and
+writes the pause to `/var/log/ymir/garmr/pause.log`. `resume` starts it again. **Both need root
+on purpose** — a guardian an ordinary process can silence is a guardian the intruder silences
+first; the smoke test asserts that a non-root pause is refused. `install` is idempotent.
 
 **Where you see it.** The Hlidskjalf topbar carries a **ᛉ hound** chip: green when it is
 watching and quiet, amber at HIGH, red at CRITICAL, and a loud **silent** state if the
@@ -36,6 +40,8 @@ and the newest serious findings with the reasoner that answered, if one did.
 | Sense | What it records |
 |---|---|
 | exec | a program running (path, command line **redacted**, uid) |
+| file_change · identity | `/etc/passwd`, `/etc/shadow`, `/etc/group`, `/etc/sudoers`, `/etc/sudoers.d`, `~/.ssh/authorized_keys` changed — **CRITICAL** |
+| file_change · persistence | a unit, a cron row, or an autostart entry changed — `/etc/systemd/{system,user}`, `/etc/cron.d`, `/etc/crontab`, `/var/spool/cron`, `~/.config/systemd/user`, `~/.config/autostart` — **HIGH** |
 | sensitive | a read or write on a protected shelf (meeting data, evidence, the vault, secrets) — the path is stored as a **hash**, never as text |
 | listener | a socket that starts listening |
 | egress | a connection to a host that is not on your list |
