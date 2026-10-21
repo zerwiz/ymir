@@ -42,6 +42,23 @@ the rest is still being spoken. Piper remains as the fallback, so a dead TTS ser
 him. `--model <id>` lets the free-text leg use a local model — the digest is its only knowledge, and
 the gate still runs on what it says.
 
+**Memory, learning, bans and manners** (added 2026-10-21):
+`assistant.db` keeps the **last turns of each chat**, so a follow-up is a conversation rather than a new
+form; the model leg receives them and the gate still checks the answer. **"remember that …"** (owner
+only) writes a fact to `pending/` and asks for approval — `learn.sh` records the provenance,
+`approve-fact.sh` promotes it, `kb-export.sh` rebuilds. A chat that abuses him is **banned** outright
+(`bin/assistant/ban.sh`), not merely rate-limited. He shows **typing** while he composes, and his
+answers are no longer instant-looking lies about being alive.
+
+**The canaries are DERIVED, not hand-written**: every plan title in the ledger, the vault's markers and
+every secret *key name* are collected at export time into `canaries.derived.txt` — 194 strings, so a new
+plan is not born unguarded. The gate normalises before it compares (unicode folded, zero-width removed,
+separators stripped), so `H-nit-björg` is caught as `Hnitbjörg`. Sensitive classes never reach the
+model at all — templates only.
+
+**The tower shows him**: `/api/ward` carries `assistant{live, heartbeatAgeSeconds, lastAnswer,
+refusalsToday, turnsToday}`, so "quiet" is distinguishable from "broken".
+
 **What he may never do:** run a command, write a file, send mail, change a calendar or a board, read
 the vault, the plans or the security posture, or speak as the Allfather. None of these is "disabled";
 they are absent.

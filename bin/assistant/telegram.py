@@ -63,6 +63,7 @@ def vault(key: str) -> str:
 
 
 TOKEN = os.environ.get("SKIRNIR_TELEGRAM_BOT_TOKEN") or vault("SKIRNIR_TELEGRAM_BOT_TOKEN")
+BOT_USERNAME = os.environ.get("SKIRNIR_BOT_USERNAME", "SkirnirymirassistantBot")
 if not TOKEN:
     print('telegram[1]{error}: "SKIRNIR_TELEGRAM_BOT_TOKEN is missing from the vault"')
     sys.exit(1)
@@ -70,8 +71,11 @@ if not OWNER_ID:
     OWNER_ID = vault("TELEGRAM_OWNER_ID")
 
 
+API_BASE = os.environ.get("TELEGRAM_API_BASE", "https://api.telegram.org")
+
+
 def api(method: str, **params):
-    url = f"https://api.telegram.org/bot{TOKEN}/{method}"
+    url = f"{API_BASE}/bot{TOKEN}/{method}"
     data = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None}).encode()
     with urllib.request.urlopen(urllib.request.Request(url, data=data), timeout=60) as resp:
         return json.load(resp)
@@ -122,14 +126,18 @@ def tier_for(chat: dict) -> tuple[str, str]:
     return "stranger", "telegram-dm"
 
 
-def answer(text: str, tier: str, channel: str, sender: str) -> str:
+def answer(text: str, tier: str, channel: str, sender: str, chat_id: str = "") -> str:
     proc = subprocess.run([sys.executable, os.path.join(HERE, "skirnir.py"),
                            "--tier", tier if tier != "unknown-group" else "stranger",
-                           "--channel", channel, "--sender", sender, "--text", text],
+                           "--channel", channel, "--sender", sender, "--text", text,
+                           "--chat", str(chat_id)],
                           capture_output=True, text=True, timeout=120)
     for line in proc.stdout.splitlines():
         if line.strip().startswith("{"):
             return json.loads(line).get("answer", "")
+    # never fail silently: the reason goes to the journal, the person gets an honest line
+    tail = (proc.stderr or "").strip().splitlines()[-1:] or ["no stderr"]
+    print(f"telegram: skirnir.py failed — {tail[0][:200]}", file=sys.stderr)
     return "I'm having trouble answering just now — I'll ask the Allfather."
 
 
@@ -158,6 +166,12 @@ def main() -> int:
             text = msg.get("text") or ""
             if not text or sender.get("is_bot"):
                 continue
+            if chat.get("type") in ("group", "supergroup"):
+                addressed = ("skirnir" in text.lower()
+                             or "skírni" in text.lower()
+                             or f"@{BOT_USERNAME.lower()}" in text.lower())
+                if not addressed:
+                    continue
             # every group he is put in is RECORDED, even while it is not allowed to speak — that is
             # how the Allfather gets a chat id to allowlist instead of guessing one.
             if chat.get("type") in ("group", "supergroup"):
@@ -180,7 +194,7 @@ def main() -> int:
                                         "--ask", "--key", f"group-allow:{cid}",
                                         "--message",
                                         f"Skírnir was added to a group: “{chat.get('title','')}”. Allow him to answer there?",
-                                        "--exec", f"{approve} {cid} {chat.get('title','unnamed')!r}"],
+                                        "--exec", f"{approve} {cid}"],
                                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
             tier, channel = tier_for(chat)
@@ -193,7 +207,22 @@ def main() -> int:
                 if verbose:
                     print(f"telegram: rate limited ({why})", file=sys.stderr)
                 continue
-            reply = answer(text, tier, channel, sender.get("username", ""))
+            # a banned chat is not answered at all, and not told why
+            try:
+                import yaml as _y
+                _b = _y.safe_load(open(os.path.join(STATE, "banned.yaml"))) or {}
+                if str(chat.get("id")) in {str(x) for x in (_b.get("banned") or [])}:
+                    continue
+            except Exception:
+                pass
+            # typing: the Allfather should see that something is happening
+            try:
+                api("sendChatAction", chat_id=chat.get("id"), action="typing")
+            except Exception:
+                pass
+            reply = answer(text, tier, channel, sender.get("username", ""), chat.get("id"))
+            if not reply:
+                continue
             try:
                 api("sendMessage", chat_id=chat.get("id"), text=reply,
                     reply_to_message_id=msg.get("message_id"),
@@ -205,6 +234,8 @@ def main() -> int:
                 print(f"telegram: {tier} asked, answered ({len(reply)} chars)", file=sys.stderr)
         os.makedirs(STATE, exist_ok=True)
         open(OFFSET, "w").write(str(offset))
+        open(os.path.join(STATE, "telegram.heartbeat"), "w").write(
+            time.strftime("%Y-%m-%dT%H:%M:%S%z"))
         if once:
             return 0
 

@@ -23,7 +23,7 @@ DIGEST="$HOME_R/hodd/state/assistant/digest.jsonl"
 [ "${1:-}" = "--list" ] && { ls -1 "$APPROVED"/*.md 2>/dev/null | sed 's|.*/||;s|\.md$||'; exit 0; }
 
 ROOT_DIR="$ROOT" HOME_DIR_Q="$HOME_R" APPROVED_Q="$APPROVED" DIGEST_Q="$DIGEST" python3 - <<'PY'
-import hashlib, json, os, re, sys
+import hashlib, json, os, re, subprocess, sys
 
 approved = os.environ["APPROVED_Q"]
 digest = os.environ["DIGEST_Q"]
@@ -83,6 +83,42 @@ for person in people:
                  "approved_at": "2026-10-21", "expires": "",
                  "claim": claim, "hash": hashlib.sha256(claim.encode()).hexdigest()[:16],
                  "source": "collaborators.yaml"})
+
+# ── the canaries, DERIVED: plan titles, the vault's markers, and the secret KEY names ──────────
+# Hand-maintaining a canary list means a new plan is born unguarded. So they are collected:
+# every plan title in the ledger, every marker word from the base list, and every secret KEY name
+# (never a value) — the strings that must never appear in anything Skírnir says.
+import glob
+canary_path = os.path.join(os.path.dirname(digest), "canaries.derived.txt")
+canaries = set()
+ledger = os.path.join(os.environ.get("HOME_DIR_Q", ""), "svartalfaheim")
+for plan in glob.glob(os.path.join(ledger, "**", "plans", "*.md"), recursive=True):
+    try:
+        with open(plan, encoding="utf8") as fh:
+            first = fh.readline().strip()
+    except OSError:
+        continue
+    m = re.match(r"^#\s*Plan\s+\d+\s*[—-]\s*(.+)$", first)
+    if m:
+        title = re.sub(r"\s*\(.*?\)\s*$", "", m.group(1)).strip()
+        if 8 <= len(title) <= 60:
+            canaries.add(title)
+    canaries.add(os.path.basename(plan)[:-3])
+for token in ("Hnitbjörg", "age.key", "platform.env.age", "vault", "masterplan", "runes_audit"):
+    canaries.add(token)
+env = os.path.join(os.environ.get("HOME_DIR_Q", ""), "hodd", "secrets", "platform.env")
+try:
+    out = subprocess.run(["bash", os.path.join(os.environ.get("ROOT_DIR", ""), "bin", "vault", "hodd.sh"),
+                          "emit", "secrets/platform.env"], capture_output=True, text=True, timeout=30).stdout
+    for line in out.splitlines():
+        m = re.match(r"^export ([A-Z_]+)=", line)
+        if m:
+            canaries.add(m.group(1))
+except Exception:
+    pass
+with open(canary_path, "w") as fh:
+    for token in sorted(c for c in canaries if c):
+        fh.write(token + "\n")
 
 os.makedirs(os.path.dirname(digest), exist_ok=True)
 with open(digest, "w") as fh:

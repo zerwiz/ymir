@@ -12,7 +12,16 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
-ID="${1:-}"; TITLE="${2:-unnamed}"
+ID="${1:-}"; TITLE="${2:-}"
+[ -n "$TITLE" ] || TITLE="$(python3 - "$HOME_R/hodd/state/assistant/seen-groups.json" "$ID" 2>/dev/null <<'PY'
+import json, sys
+try:
+    seen = json.load(open(sys.argv[1]))
+    print(seen.get(sys.argv[2], {}).get("title", "unnamed"))
+except Exception:
+    print("unnamed")
+PY
+)"; TITLE="${TITLE:-unnamed}"
 [ -n "$ID" ] || { printf 'usage: group-allow.sh <chat-id> "<title>"\n' >&2; exit 2; }
 G="$HOME_R/hodd/state/assistant/groups.yaml"
 

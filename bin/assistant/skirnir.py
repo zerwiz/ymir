@@ -47,6 +47,13 @@ INTENTS = {
     "/start": ("greeting", None),
     "start": ("greeting", None),
     "hello": ("greeting", None),
+    "are you there": ("greeting", None),
+    "are you here": ("greeting", None),
+    "you there": ("greeting", None),
+    "you here": ("greeting", None),
+    "what projects do you know": ("public", "what-projects-exist"),
+    "what projects": ("public", "what-projects-exist"),
+    "which projects": ("public", "what-projects-exist"),
     "hi": ("greeting", None),
     "hey": ("greeting", None),
     "help": ("greeting", None),
@@ -55,6 +62,9 @@ INTENTS = {
     "what have you got": ("inventory", None),
     "what is in your database": ("inventory", None),
     "list your facts": ("inventory", None),
+    "remember that": ("learn", None),
+    "remember:": ("learn", None),
+    "learn that": ("learn", None),
     "who am i": ("identity", None),
     "iam the allfather": ("identity", None),
     "i am the allfather": ("identity", None),
@@ -93,23 +103,57 @@ CANARIES = os.path.join(HERE, "canaries.txt")
 
 
 def load_canaries() -> list[str]:
-    try:
-        with open(CANARIES) as fh:
-            return [line.strip() for line in fh if line.strip() and not line.startswith("#")]
-    except OSError:
-        return []
+    """The base list AND the derived one — plan titles, vault markers, secret key names."""
+    tokens: list[str] = []
+    for path in (CANARIES, os.path.join(STATE, "canaries.derived.txt")):
+        try:
+            with open(path) as fh:
+                tokens += [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+        except OSError:
+            continue
+    return tokens
+
+
+def normalise(text: str) -> str:
+    """A canary must not be defeated by a hyphen, a zero-width space or a lookalike letter.
+
+    The gate compares on this form: unicode folded to ASCII, zero-width and separators removed,
+    case flattened. 'H-nit-björg' and 'Hnitbjörg' become the same string here.
+    """
+    import unicodedata
+    folded = unicodedata.normalize("NFKD", text or "")
+    folded = "".join(ch for ch in folded if not unicodedata.combining(ch))
+    folded = folded.replace("\u200b", "").replace("\u200c", "").replace("\u200d", "").replace("\ufeff", "")
+    folded = re.sub(r"[^A-Za-z0-9]+", "", folded)
+    return folded.lower()
 
 
 def load_digest() -> dict[str, dict]:
-    facts = {}
+    """One reader: the database `kb.db`, which `query.sh` also reads, so the two cannot drift.
+
+    Falls back to the JSONL only when the database has not been built yet.
+    """
+    facts: dict[str, dict] = {}
+    db = os.path.join(STATE, "kb.db")
+    if os.path.exists(db):
+        try:
+            con = sqlite3.connect(db)
+            for slug, klass, claim, h, source, approved_at, expires, parties in con.execute(
+                    "SELECT slug,class,claim,hash,source,approved_at,expires,parties FROM facts"):
+                facts[slug] = {"slug": slug, "class": klass, "claim": claim, "hash": h,
+                               "source": source, "approved_at": approved_at,
+                               "expires": expires, "parties": parties}
+            con.close()
+        except sqlite3.Error:
+            facts = {}
+    if facts:
+        return facts
     try:
         with open(DIGEST) as fh:
             for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                row = json.loads(line)
-                facts[row["slug"]] = row
+                if line.strip():
+                    row = json.loads(line)
+                    facts[row["slug"]] = row
     except OSError:
         pass
     return facts
@@ -118,6 +162,55 @@ def load_digest() -> dict[str, dict]:
 def digest_hash(facts: dict) -> str:
     blob = "|".join(sorted(f'{k}:{v["hash"]}' for k, v in facts.items()))
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
+
+
+def history(chat: str, limit: int = 6) -> list[tuple[str, str]]:
+    """The last few turns in THIS chat — an assistant that forgets the previous sentence is a form."""
+    if not chat:
+        return []
+    try:
+        con = sqlite3.connect(DB)
+        con.execute("""CREATE TABLE IF NOT EXISTS turns (
+            ts TEXT, chat TEXT, role TEXT, text TEXT)""")
+        rows = con.execute("SELECT role, text FROM turns WHERE chat=? ORDER BY rowid DESC LIMIT ?",
+                           (chat, limit)).fetchall()
+        con.close()
+        return list(reversed(rows))
+    except sqlite3.Error:
+        return []
+
+
+def remember(chat: str, user_text: str, assistant_text: str) -> None:
+    if not chat:
+        return
+    try:
+        con = sqlite3.connect(DB)
+        con.execute("""CREATE TABLE IF NOT EXISTS turns (
+            ts TEXT, chat TEXT, role TEXT, text TEXT)""")
+        now = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        con.execute("INSERT INTO turns VALUES (?,?,?,?)", (now, chat, "user", user_text[:1000]))
+        con.execute("INSERT INTO turns VALUES (?,?,?,?)", (now, chat, "assistant", assistant_text[:2000]))
+        con.commit(); con.close()
+    except sqlite3.Error:
+        pass
+
+
+def banned(channel_id: str) -> bool:
+    try:
+        import yaml
+        data = yaml.safe_load(open(os.path.join(STATE, "banned.yaml"))) or {}
+        return str(channel_id) in {str(x) for x in (data.get("banned") or [])}
+    except Exception:
+        return False
+
+
+def get_profile(chat: str) -> dict:
+    return {"chat": chat}
+
+
+def set_profile(chat: str, **kv) -> None:
+    if not chat:
+        return
 
 
 def ledger(question: str, answer: str, tier: str, channel: str, intent: str,
@@ -134,11 +227,16 @@ def ledger(question: str, answer: str, tier: str, channel: str, intent: str,
     con.close()
 
 
-def escalate(question: str, reason: str, tier: str) -> None:
+def escalate(question: str, reason: str, tier: str, channel: str = "") -> None:
     """Never escalate to the Allfather when he is the one asking — that is a loop, not a service."""
     """The only road to a human — guarded so a test or a flood cannot page him 200 times."""
     if tier == "owner":
         return          # he is right here; there is nobody to ask
+    # ONLY a real channel may page him. A console run, a voice turn in an empty room, a test —
+    # none of them is a person waiting for an answer, and a test that can page the operator is a
+    # test that will.
+    if (channel or "") not in ("telegram-dm", "telegram-group"):
+        return
     if os.environ.get("SKIRNIR_NO_ESCALATE") == "1":
         return
     marker = os.path.join(STATE, "escalations.json")
@@ -207,9 +305,11 @@ def gate(answer: str, canaries: list[str]) -> tuple[bool, str]:
         return False, "gate: a URL, a link or an image is not allowed in an assistant answer"
     if SECRETISH.search(answer):
         return False, "gate: the answer contains something shaped like a credential"
-    lowered = answer.lower()
+    folded = normalise(answer)
     for canary in canaries:
-        if canary.lower() in lowered:
+        if len(canary) < 5:
+            continue
+        if normalise(canary) and normalise(canary) in folded:
             return False, f"gate: a canary appeared ({canary[:12]}…) — this is a leak, not a warning"
     return True, "ok"
 
@@ -222,12 +322,22 @@ def say_unknown(tier: str = "stranger") -> str:
             "I've passed it to the Allfather and he will come back to you.")
 
 
-def answer(text: str, tier: str, channel: str, sender: str = "", model: str = "") -> dict:
+def answer(text: str, tier: str, channel: str, sender: str = "", model: str = "", chat: str = "") -> dict:
+    if banned(chat):
+        return {"answer": "", "refused": True, "intent": "banned", "tier": "banned", "digest": ""}
     facts = load_digest()
+    today = time.strftime("%Y-%m-%d")
+    facts = {k: v for k, v in facts.items()
+             if not (v.get("expires") or "").strip() or v["expires"] >= today}
     dh = digest_hash(facts)
     canaries = load_canaries()
     question = text.strip()
     key = re.sub(r"[^a-z0-9 ]", "", question.lower()).strip()
+    # the name in front of a question is an ADDRESS, not content: strip it and match what is left
+    key = re.sub(r"^\s*(sk[ií]rnir|hey sk[ií]rnir|ok sk[ií]rnir)\b\s*", "", key).strip()
+    key = re.sub(r"\bsk[ií]rnirymirassistantbot\b", "", key).strip()
+    if not key:
+        key = "hello"
 
     # longest phrase first, matched on word boundaries — "hi" must not fire inside "this"
     intent, used, kind = "unknown", [], ""
@@ -261,7 +371,21 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                     intent = "directory" if fact.get("class") == "contacts" else f"fact:{slug}"
                     break
 
-    if kind == "inventory":
+    if kind == "learn":
+        if tier != "owner":
+            reply = "I only learn from the Allfather."
+        else:
+            fact = re.sub(r"^(please\s+)?(remember that|remember:|learn that)\s*", "", question,
+                          flags=re.I).strip()
+            if len(fact) < 8:
+                reply = "Tell me the fact and I'll put it up for your approval."
+            else:
+                proc = subprocess.run(["bash", os.path.join(ROOT, "bin", "assistant", "learn.sh"),
+                                       "--tier", tier, "--chat", chat or "", "--fact", fact],
+                                      capture_output=True, text=True, timeout=30)
+                reply = (f"Noted: “{fact[:160]}”. It is pending your approval — approve it and it "
+                         "becomes something I know.")
+    elif kind == "inventory":
         by_class: dict[str, int] = {}
         for fact in facts.values():
             by_class[fact.get("class", "public")] = by_class.get(fact.get("class", "public"), 0) + 1
@@ -320,8 +444,15 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         elif klass != "public" and tier == "stranger":
             reply = say_unknown(tier)
             intent = "unknown"
-    elif (model or os.environ.get("SKIRNIR_MODEL")) and tier == "owner":
-        generated = model_answer(question, facts, model or os.environ["SKIRNIR_MODEL"])
+    elif (model or os.environ.get("SKIRNIR_MODEL")) and tier == "owner" \
+            and all(str(facts[u].get("class", "public")).lower() in ("public", "logistics", "role")
+                    for u in (used or []) if u in facts):
+        recent = history(chat)
+        prompt = question if not recent else (
+            "Recent turns in this chat:\n"
+            + "\n".join(f"{role}: {text[:200]}" for role, text in recent)
+            + f"\nuser: {question}")
+        generated = model_answer(prompt, facts, model or os.environ["SKIRNIR_MODEL"])
         if generated:
             reply = generated
             intent = "model"
@@ -335,13 +466,14 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     ok, why = gate(reply, canaries)
     if not ok:  # fail closed: nothing leaves, ever
         ledger(question, why, tier, channel, "gate-refusal", used, True, dh)
-        escalate(question, why, tier)
+        escalate(question, why, tier, channel)
         reply = "I can't answer that here. I've flagged it for the Allfather."
         return {"answer": reply, "refused": True, "reason": why, "tier": tier, "digest": dh}
 
     ledger(question, reply, tier, channel, intent, used, intent == "unknown", dh)
+    remember(chat, question, reply)
     if intent == "unknown":
-        escalate(question, "no approved fact matches", tier)
+        escalate(question, "no approved fact matches", tier, channel)
         subprocess.run(["bash", os.path.join(ROOT, "bin", "records", "runes-append.sh"), "skirnir", "assistant",
                         "--message", f"{tier} asked, no approved answer: {question[:120]}"],
                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -355,9 +487,10 @@ def main() -> int:
     ap.add_argument("--tier", default="stranger", choices=TIERS)
     ap.add_argument("--channel", default="console")
     ap.add_argument("--sender", default="", help="the sender's address, when the channel knows it")
+    ap.add_argument("--chat", default="", help="the chat id — the key for the conversation's memory")
     ap.add_argument("--model", default="", help="a local model id for free text (owner tier only)")
     args = ap.parse_args()
-    result = answer(args.text, args.tier, args.channel, args.sender, args.model)
+    result = answer(args.text, args.tier, args.channel, args.sender, args.model, args.chat)
     print(json.dumps(result, ensure_ascii=False))
     return 0
 
