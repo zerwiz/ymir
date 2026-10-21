@@ -91,7 +91,8 @@ def load_groups() -> dict:
             data = yaml.safe_load(fh) or {}
         for row in data.get("groups", []) or []:
             groups[str(row.get("id"))] = {"tier": row.get("tier", "collaborator"),
-                                          "members": row.get("members") or []}
+                                          "members": row.get("members") or [],
+                                          "owner_trusted": bool(row.get("owner_trusted"))}
     except Exception:
         pass
     return groups
@@ -116,7 +117,18 @@ def allowed(chat_id: str) -> tuple[bool, str]:
     return True, ""
 
 
-def tier_for(chat: dict) -> tuple[str, str]:
+def is_owner(sender: dict) -> bool:
+    if str(sender.get("id")) == str(OWNER_ID):
+        return True
+    try:
+        import yaml as _y
+        ids = (_y.safe_load(open(os.path.join(IDENTITY, "grants.yaml"))) or {}).get("identities") or {}
+        return str(ids.get(str(sender.get("username", "")).lstrip("@"), "")) == "owner"
+    except Exception:
+        return False
+
+
+def tier_for(chat: dict, sender: dict | None = None) -> tuple[str, str]:
     kind = chat.get("type")
     chat_id = str(chat.get("id"))
     if kind == "private" and str(chat.get("id")) == str(OWNER_ID):
@@ -124,7 +136,12 @@ def tier_for(chat: dict) -> tuple[str, str]:
     if kind in ("group", "supergroup"):
         groups = load_groups()
         if chat_id in groups:
-            return groups[chat_id].get("tier", "collaborator"), "telegram-group"
+            group = groups[chat_id]
+            # a group may be declared owner-trusted: the Allfather is the Allfather in it too.
+            # Everything he hears there is heard by the whole room — which is why this is opt-in.
+            if group.get("owner_trusted") and sender and is_owner(sender or {}):
+                return "owner", "telegram-group"
+            return group.get("tier", "collaborator"), "telegram-group"
         return "unknown-group", "telegram-group"
     return "stranger", "telegram-dm"
 
@@ -165,13 +182,29 @@ def main() -> int:
             continue
         for update in data.get("result", []):
             offset = max(offset, update.get("update_id", 0) + 1)
-            msg = update.get("message") or {}
+            msg = update.get("message") or update.get("channel_post") or update.get("edited_message") or {}
             sender = msg.get("from") or {}
             chat = msg.get("chat") or {}
+            fwd = msg.get("forward_from_chat") or (msg.get("forward_origin") or {}).get("chat") or {}
+            if fwd.get("id"):
+                try:
+                    seen = json.load(open(SEEN))
+                except Exception:
+                    seen = {}
+                cid = str(fwd.get("id"))
+                if cid not in seen:
+                    seen[cid] = {"title": fwd.get("title", ""), "seen": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                                 "learned_from": "a forwarded message"}
+                    os.makedirs(STATE, exist_ok=True)
+                    json.dump(seen, open(SEEN, "w"), ensure_ascii=False, indent=1)
+                    print(f"telegram: learned a chat from a forward — {cid} {fwd.get('title')!r}", file=sys.stderr)
+            if verbose:
+                print(f"telegram: update {update.get('update_id')} kind={[k for k in update if k != 'update_id']} "
+                      f"chat={chat.get('id')} type={chat.get('type')} title={chat.get('title')!r}", file=sys.stderr)
             text = msg.get("text") or ""
             if not text or sender.get("is_bot"):
                 continue
-            if chat.get("type") in ("group", "supergroup"):
+            if chat.get("type") in ("group", "supergroup", "channel"):
                 addressed = ("skirnir" in text.lower()
                              or "skírni" in text.lower()
                              or f"@{BOT_USERNAME.lower()}" in text.lower())
@@ -179,7 +212,7 @@ def main() -> int:
                     continue
             # every group he is put in is RECORDED, even while it is not allowed to speak — that is
             # how the Allfather gets a chat id to allowlist instead of guessing one.
-            if chat.get("type") in ("group", "supergroup"):
+            if chat.get("type") in ("group", "supergroup", "channel"):
                 try:
                     seen = json.load(open(SEEN))
                 except Exception:
@@ -202,7 +235,7 @@ def main() -> int:
                                         "--exec", f"{approve} {cid}"],
                                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-            tier, channel = tier_for(chat)
+            tier, channel = tier_for(chat, sender)
             if tier == "unknown-group":
                 if verbose:
                     print(f"telegram: ignoring unknown group {chat.get('id')}", file=sys.stderr)
@@ -226,7 +259,7 @@ def main() -> int:
             except Exception:
                 pass
             members = None
-            if chat.get("type") in ("group", "supergroup"):
+            if chat.get("type") in ("group", "supergroup", "channel"):
                 members = (load_groups().get(str(chat.get("id"))) or {}).get("members") or []
             reply = answer(text, tier, channel, sender.get("username", ""), chat.get("id"),
                            sender.get("id", ""), members)
