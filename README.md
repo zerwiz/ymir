@@ -22,9 +22,44 @@ audit ledger, a memory well, one tenant and its workspaces, and a control plane 
 
 ## The Allfather's Chain
 
-The Allfather holds the only chain. If the Allfather does not draw it, Ymir walks
-the machine as the Allfather walks it — no gate between the agent and the tools,
-no second master but the Allfather's own hand.
+**The Allfather holds the only chain.** Not the primary agent, not the council, not a cron
+row, not a model with a good record. One hand draws it, and everything in Ymir walks only
+while that hand holds it.
+
+**What the chain is.** The right to say *go* and the right to say *stop* — to open a door, to
+seal a change, to let a thing cross. It is drawn in the record, not in a conversation: a word
+given, a merge sealed, a rune carved. What is not in the record was never chained.
+
+**The gates are not a second master.** Ymir ships wards, guards and gates by the dozen —
+secret, vault, branch, fixes, people, public — and none of them commands. A gate can only
+*refuse*. Refusal is the chain made mechanical: the Allfather's hand, cast as a rule and
+re-run at every crossing while he is asleep. A gate that ever decides *for* him would be a
+second master; a gate that only ever says *no* is his own hand, remembered.
+
+**What holds it up.** Three things, and only three: the **ledger** (what was done, chained so
+it cannot be quietly edited), the **well** (what was learned, so the next hand starts where
+this one finished), and the **rooms** (where his agents speak to each other, attributed, so
+the house argues in the open instead of in five private contexts). None of the three can
+draw the chain. They can remember it, water it, and refuse it.
+
+**How the chain breaks.** Never in one dramatic act. It breaks in small mercies: an agent
+merging its own pull request because the tests were green; a token pasted into a chat because
+it was quicker than the vault; a gate skipped "just this once" because the gate was
+inconvenient that afternoon. Every one of those is a hand other than his, closing a door he
+never opened.
+
+```
+chain[6]{law,why}:
+  "one hand draws it","the Allfather's word is the only permission Ymir recognises"
+  "agents may refuse, never permit","a worker that could open a door for itself is a second master"
+  "a gate says no, never yes","the wards mechanise his caution, not his judgement"
+  "merges are sealed by his hand","an agent opens the pull request and stops there"
+  "what is not in the record was not chained","the ledger, the well and the rooms are the proof"
+  "it breaks by small mercies, never by one act","so the cheap shortcut is the whole risk"
+```
+
+> If the Allfather does not draw it, Ymir walks nothing. The machine may labour, may refuse,
+> may remember — but it may not decide.
 
 ---
 
