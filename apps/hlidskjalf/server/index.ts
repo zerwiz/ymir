@@ -2603,7 +2603,9 @@ console.log(`[hlidskjalf] runtime    ${ROOT}`);
 // the state of the two units, the heartbeat (a silent hound is a finding), and the
 // newest judgements. It reads files only; it never starts, stops or closes anything.
 function wardState() {
-  const home = process.env.YMIR_HOME ?? join(process.env.HOME ?? '', 'Documents/ymirhome');
+  // the home is already resolved once at the top of this file (Rule 07): env ->
+  // the recorded choice -> one default. Never a second guess here.
+  const home = HOME_DIR;
   const judged = join(home, 'hodd/state/garmr/judged.jsonl');
   const pausedMarker = join(home, 'hodd/state/garmr/PAUSED');
   const heartbeatFile = '/var/log/ymir/garmr/state/hound.heartbeat';
@@ -2611,8 +2613,10 @@ function wardState() {
 
   const counts: Record<string, number> = { INFO: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };
   const newest: Array<Record<string, unknown>> = [];
+  let totalJudged = 0;
   if (existsSync(judged)) {
     const lines = read(judged).split('\n').filter((l) => l.trim().startsWith('{'));
+    totalJudged = lines.length;
     for (const line of lines.slice(-2000)) {
       try {
         const row = JSON.parse(line);
@@ -2640,7 +2644,10 @@ function wardState() {
     heartbeatAgeSeconds: beatAgeSeconds,
     silent: beatAgeSeconds === -1 || beatAgeSeconds > 600,
     findings: findingsLines,
-    judged: Object.values(counts).reduce((a, b) => a + b, 0),
+    // `judged` is the whole record; bySeverity is the recent window the panel shows.
+    // Reporting the window as the total made the tower say "2,000 judged" over a
+    // 20,000-line ledger — a small lie in a security surface is still a lie.
+    judged: totalJudged,
     bySeverity: counts,
     newest: newest.slice(-25).reverse(),
     door: 'bin/ward/garmr.sh',
