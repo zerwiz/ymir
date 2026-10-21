@@ -160,9 +160,13 @@ INNER
     if [ "$QUIET" = 1 ] && [ "$SEVERITY" = "MEDIUM" ] && [ "$ASK" = 0 ]; then
       :
     elif [ "$DRY" = 0 ]; then
-      eval "$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null | grep -E '^export TELEGRAM_(BOT_TOKEN|OWNER_ID|ALERT_CHAT)=')"
-      # the alarm room is NOT the conversation: a dedicated chat if one is configured
-      TELEGRAM_OWNER_ID="${TELEGRAM_ALERT_CHAT:-${TELEGRAM_OWNER_ID:-}}"
+      eval "$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null | grep -E '^export (TELEGRAM|SKIRNIR_TELEGRAM)_(BOT_TOKEN|OWNER_ID|ALERT_CHAT)=')"
+      # the alarm room is NOT the conversation: a dedicated chat if one is configured,
+      # posted by the assistant's own bot (the one that is an admin there).
+      if [ -n "${TELEGRAM_ALERT_CHAT:-}" ]; then
+        TELEGRAM_OWNER_ID="$TELEGRAM_ALERT_CHAT"
+        [ -n "${SKIRNIR_TELEGRAM_BOT_TOKEN:-}" ] && TELEGRAM_BOT_TOKEN="$SKIRNIR_TELEGRAM_BOT_TOKEN"
+      fi
       if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_OWNER_ID:-}" ]; then
         if curl -s -m 10 -o /dev/null -w '%{http_code}' \
           "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
