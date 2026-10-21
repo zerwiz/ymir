@@ -36,7 +36,7 @@ boundaries.
    [`.agents/assets/templates/company_entity.template.md`](../../.agents/assets/templates/company_entity.template.md).
    Register the realm in `data/projects.md`.
 
-5. **Register the house accents** (if new) in `src/data/realms.ts` (Hlidskjalf) and
+5. **Register the house accents** (if new) in `apps/hlidskjalf/src/data/realms.ts` (Hlidskjalf) and
    `midgard/design-system/tokens.css`.
 
 6. **Verify.**

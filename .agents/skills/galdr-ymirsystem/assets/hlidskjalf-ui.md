@@ -116,7 +116,7 @@ Rules that hold it honest:
   (`DOMAINS`), exactly as the landing page keeps its house seals. Chrome is the
   cloth; heraldry is not chrome.
 - The **workspace tints** are cloth too: `work` = bronze `#c9973f`, `personal` =
-  steel `#96a0a8` (`src/data/realms.ts` → `WORKSPACES`, mirrored by the
+  steel `#96a0a8` (`apps/hlidskjalf/src/data/realms.ts` → `WORKSPACES`, mirrored by the
   `data-realm` fallbacks in `styles/global.css`).
 - The **Emblem** (`components/Emblem.tsx`, `midgard/design-system/ymir-mark.svg`)
   is brand, not cloth — it keeps its own colours on the stone.
@@ -142,7 +142,7 @@ Rules that hold it honest:
 - `.rail` (brand · gates · tenants · status), `.topbar` (realm chip · search ·
   accent · density · trace index · account), `main.stage` (the gate), `.stream`
   (Ratatoskr + Runes, pausable).
-- Gates are **deep-linkable** and registered in `src/data/realms.ts` (`GATES`) and
+- Gates are **deep-linkable** and registered in `apps/hlidskjalf/src/data/realms.ts` (`GATES`) and
   routed in `src/app/Shell.tsx`:
   `#/fleet` · `#/tasks` · `#/well` · `#/runes` · `#/reviews` · `#/processes` ·
   `#/files` · `#/chat` · `#/forge` · `#/profile` · `#/sessions` · `#/trace` ·
@@ -445,7 +445,7 @@ broken while the work is fine.
 
 No new GATE was registered for this — a topbar control plus a panel is the surface the
 ask needed, and a gate is a bigger surface than "simple" is worth. Should a gate ever
-be added, it must be registered in `GATES` (`src/data/realms.ts`), routed in
+be added, it must be registered in `GATES` (`apps/hlidskjalf/src/data/realms.ts`), routed in
 `src/app/Shell.tsx` and declared in `GATE_META` (`src/data/metadata.ts`).
 
 ## Verification
@@ -479,7 +479,7 @@ forward and binds the plural one.
 
 The eight Labs are **domains (Greinar)** — the knowledge axes — not houses. A
 **house is a company** (WayOf). In the UI the eight render as an agent's
-**domain** (`agent.domain` via the `DOMAINS` map in `src/data/realms.ts`); the
+**domain** (`agent.domain` via the `DOMAINS` map in `apps/hlidskjalf/src/data/realms.ts`); the
 Forge picker is labelled **Domain**. `svartalfaheim/<company>/companies/` holds
 the house card(s); the eight domain cards live under `.../domains/`.
 

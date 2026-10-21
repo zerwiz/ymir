@@ -34,8 +34,8 @@ append_only[6]{artifact,why}:
 
 ## The duty at a move
 
-This rule exists because a home swap dropped `docs/append-only-log.md`,
-`docs/masterplan.md`, `docs/plans/` and the private business set: the backup
+This rule exists because a home swap dropped `docs/append-only-log.md` <!-- stale-ok: the log lives in the vault ($YMIR_HOME/docs/append-only-log.md) -->,
+`docs/masterplan.md` <!-- stale-ok: the masterplan is the vault's; the repo never ships it -->, `docs/plans/` <!-- stale-ok: the ledger moved to $YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/ --> and the private business set: the backup
 carried `state`, `.env.local`, `data`, the realm and `workspace` — but not
 `docs/` or `assets/`. The code arrived; the memory did not.
 
@@ -76,7 +76,7 @@ CHANGELOG.d/<YYYY-MM-DD>-<slug>.md     the entry, beginning with its `## YYYY-MM
 
 - **A fragment is a new file with a unique name.** Two branches never touch the
   same one, so the collision cannot occur. This is the whole point.
-- **`bin/changelog-assemble.sh` folds fragments into `CHANGELOG.md`** — newest
+- **`bin/changelog-assemble.sh` <!-- stale-ok: retired with the changelog; named as history --> folds fragments into `CHANGELOG.md`** — newest
   first, above everything already recorded. Folding is an **append**: the ledger's
   existing entries are copied verbatim, never reordered, never rewritten.
 - **The pre-push hook runs the assembler first**, so the ledger is never behind
@@ -127,7 +127,7 @@ docs/fixes/<component>/<version>-<slug>.md     ONE FILE PER FIX
   the notes. Nothing is assembled at push time.
 - **`bin/gates/guards/fixes-guard.sh`** is the pre-push gate: it only READS, requires at least
   one new note in the pushed range, and names the component the note must cover.
-  `bin/changelog-guard.sh` and `bin/changelog-assemble.sh` are removed with the
+  `bin/changelog-guard.sh` <!-- stale-ok: the changelog was retired (this rule's own amendment); named as history --> and `bin/changelog-assemble.sh` are removed with the
   system they served.
 - **Nothing was lost in the move.** Every `CHANGELOG.md` entry (166) is carried
   as a note in `docs/fixes/` (161 notes; the duplicates were already folded), and

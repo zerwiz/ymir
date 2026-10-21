@@ -105,8 +105,8 @@ secret, a key, a name, a plan, a schedule, a client, a credential, or a note.*
 
 Read until now, the automated wards enforced only the **secret** half.
 
-- `bin/secret-guard.sh` scanned content for **credential values** (keys, tokens).
-- `bin/private-guard.sh` scanned **paths** for private roots.
+- `bin/gates/guards/secret-guard.sh` scanned content for **credential values** (keys, tokens).
+- `bin/gates/guards/private-guard.sh` scanned **paths** for private roots.
 - **Nothing scanned file content for who the operator IS or WHERE their machines
   live.** So an operator username, a tailnet domain, a personal hostname and a
   fleet hardware inventory were committed and pushed to a public remote while
@@ -132,7 +132,7 @@ Read until now, the automated wards enforced only the **secret** half.
 4. The wards must **fail** on this class, not merely be able to. A test that
    cannot fail on the leak is not a test.
 
-**The ward:** `bin/private-guard.sh` now scans content for identity/topology by
+**The ward:** `bin/gates/guards/private-guard.sh` now scans content for identity/topology by
 **shape, never by value** — a literal `/home/<name>/`, a `*.ts.net` tailnet host,
 a CGNAT `100.64/10` address — and exempts synthetic fixtures and `.example`
 files. It deliberately contains **no** operator name, domain or hostname: naming
@@ -164,10 +164,10 @@ Rules:
    repo — not as a value, not as an "example" filled with the real thing.
 2. **Examples are synthetic.** An `.example` carries a made-up name
    (`h1.tail.ts.net`, `/home/alice`), never a real seat, domain or user. A ward
-   enforces it; see `bin/private-guard.sh` and the exempt-fixture rule in
+   enforces it; see `bin/gates/guards/private-guard.sh` and the exempt-fixture rule in
    `.agents/tests/private-guard-identity.test.sh`.
 3. **Functions read the hoard.** Anything needing operator data resolves it
-   through `bin/hoard-lib.sh` (`hoard_root`) at run time. A machine that has no
+   through `bin/vault/hoard-lib.sh` (`hoard_root`) at run time. A machine that has no
    hoard says so loudly; it never falls back to a value baked into the tree.
 4. **One source of truth.** When the data and the repo disagree, the hoard is
    right and the repo is drift.
@@ -175,7 +175,7 @@ Rules:
 Confirmed by the Allfather 2026-10-01. Appended under Law 06; a correction is a
 new entry citing this one.
 
-`bin/eir-doctor.sh`'s hoard placement check.
+`bin/agents/eir-doctor.sh`'s hoard placement check.
 
 ---
 
@@ -186,8 +186,8 @@ secret, a key, a name, a plan, a schedule, a client, a credential, or a note.*
 
 Read until now, the automated wards enforced only the **secret** half.
 
-- `bin/secret-guard.sh` scanned content for **credential values** (keys, tokens).
-- `bin/private-guard.sh` scanned **paths** for private roots.
+- `bin/gates/guards/secret-guard.sh` scanned content for **credential values** (keys, tokens).
+- `bin/gates/guards/private-guard.sh` scanned **paths** for private roots.
 - **Nothing scanned file content for who the operator IS or WHERE their machines
   live.** So an operator username, a tailnet domain, a personal hostname and a
   fleet hardware inventory were committed and pushed to a public remote while
@@ -213,7 +213,7 @@ Read until now, the automated wards enforced only the **secret** half.
 4. The wards must **fail** on this class, not merely be able to. A test that
    cannot fail on the leak is not a test.
 
-**The ward:** `bin/private-guard.sh` now scans content for identity/topology by
+**The ward:** `bin/gates/guards/private-guard.sh` now scans content for identity/topology by
 **shape, never by value** — a literal `/home/<name>/`, a `*.ts.net` tailnet host,
 a CGNAT `100.64/10` address — and exempts synthetic fixtures and `.example`
 files. It deliberately contains **no** operator name, domain or hostname: naming
@@ -245,10 +245,10 @@ Rules:
    repo — not as a value, not as an "example" filled with the real thing.
 2. **Examples are synthetic.** An `.example` carries a made-up name
    (`h1.tail.ts.net`, `/home/alice`), never a real seat, domain or user. A ward
-   enforces it; see `bin/private-guard.sh` and the exempt-fixture rule in
+   enforces it; see `bin/gates/guards/private-guard.sh` and the exempt-fixture rule in
    `.agents/tests/private-guard-identity.test.sh`.
 3. **Functions read the hoard.** Anything needing operator data resolves it
-   through `bin/hoard-lib.sh` (`hoard_root`) at run time. A machine that has no
+   through `bin/vault/hoard-lib.sh` (`hoard_root`) at run time. A machine that has no
    hoard says so loudly; it never falls back to a value baked into the tree.
 4. **One source of truth.** When the data and the repo disagree, the hoard is
    right and the repo is drift.
@@ -293,8 +293,8 @@ refuses any that does not ship under the repo root.
 
 **What it found on 2026-10-10 (11 findings):** the operator's private home cron
 used pre-`bin/`-move paths (`bin/nornir-job-*.sh` where the scripts live at  # allow-superseded-path: this line RECORDS the move, it does not make it
-`bin/time/…`; `bin/eindri-handoff.sh` at `bin/agents/…`) — every job unfindable —
-and named `bin/well-vault-sync.sh`, which existed **only in the home**. Fixed: the  # allow-superseded-path: this line RECORDS the move
+`bin/time/…`; `bin/agents/eindri-handoff.sh` at `bin/agents/…`) — every job unfindable —
+and named `bin/time/well-vault-sync.sh`, which existed **only in the home**. Fixed: the  # allow-superseded-path: this line RECORDS the move
 well sync now ships as `bin/time/well-vault-sync.sh` (generic; it resolves the
 home through `bin/vault/hoard-lib.sh`, never guesses it), and the private cron was
 corrected to the moved paths.
@@ -304,8 +304,8 @@ new entry citing this one.
 
 ## Correction — 2026-10-11 · the two wards moved, and the check kept calling the old paths
 
-**Cites:** the ward paragraphs above (the lines naming `bin/private-guard.sh` and
-`bin/secret-guard.sh`) and the appended Rule 04 section of 2026-10-01.
+**Cites:** the ward paragraphs above (the lines naming `bin/gates/guards/private-guard.sh` and
+`bin/gates/guards/secret-guard.sh`) and the appended Rule 04 section of 2026-10-01.
 
 The `bin/` move seated both wards under `bin/gates/guards/`:
 
@@ -314,7 +314,7 @@ The `bin/` move seated both wards under `bin/gates/guards/`:
   the secret ward    bin/gates/guards/secret-guard.sh
 ```
 
-`bin/private-guard.sh` and `bin/secret-guard.sh` no longer exist. Every reference
+`bin/gates/guards/private-guard.sh` and `bin/gates/guards/secret-guard.sh` no longer exist. Every reference
 above is therefore a path to nothing — and the compliance gate, which called them
 by those paths, was failing with an **empty** reason: bash answered
 `No such file or directory`, the ward's own summary line never printed, and the row

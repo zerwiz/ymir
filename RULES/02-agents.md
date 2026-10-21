@@ -50,7 +50,7 @@ mode/model/permission   the harness binding (OpenCode) — from the canonical
 - Agent ids, names, domains, models, and status must be **real** and sourced
   (from the profile, the harness config, or live signals). **Never fabricate**
   status, traceability, task counts, or uptime.
-- The **demo** roster (`apps/hlidskjalf/src/data/mock.ts`) is the single, clearly
+- The **demo** roster (`apps/hlidskjalf/src/data/mock.ts` <!-- stale-ok: named as the mock this rule forbids; the file is gone --) is the single, clearly
   labelled mock and appears only in demo mode; it never stands in for live data.
 
 ## 5. Changing an agent

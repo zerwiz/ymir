@@ -44,6 +44,24 @@ def _save_offset(path: str, value: int) -> None:
         handle.write(str(value))
 
 
+def _door(line: str, severity: str, source: str = "garmr", key: str = "") -> dict | None:
+    """Say it through the ONE door (plan 100): Runes, the arm, desktop, pocket, Telegram."""
+    door = os.path.join(common.repo_root(), "bin", "notify", "send.sh")
+    if not os.path.isfile(door):
+        return None
+    args = ["bash", door, "--source", source, "--severity", severity, "--message", line]
+    if key:
+        args += ["--key", key]
+    try:
+        proc = subprocess.run(args, capture_output=True, text=True, timeout=40)
+        for row in (proc.stdout or "").splitlines():
+            if row.strip().startswith('"send"') or row.strip().startswith('"duplicate"'):
+                return {"door": row.strip()}
+    except Exception:
+        return None
+    return None
+
+
 def _speak(line: str, cfg: dict) -> None:
     if not cfg.get("alert", {}).get("desktop", True):
         return
@@ -135,11 +153,14 @@ def judge(rows: list[dict], cfg: dict, dry_run: bool = False,
                 record["reasoning"] = answer
         out.append(record)
         if not dry_run:
-            _rune(verdict["line"], cfg)
-            if verdict["severity"] in ("HIGH", "CRITICAL"):
-                phone = _phone(verdict["line"], verdict["severity"], cfg)
-                if phone:
-                    record["phone"] = phone
+            said = _door(verdict["line"], verdict["severity"], "garmr",
+                         key=f"garmr:{verdict['title']}:{finding.get('pid','')}")
+            if said:
+                record["said"] = said
+            else:  # the door is absent — never go silent
+                _rune(verdict["line"], cfg)
+                if rules.ORDER.get(verdict["severity"], 0) >= rules.ORDER["HIGH"]:
+                    _speak(verdict["line"], cfg)
             if rules.ORDER.get(verdict["severity"], 0) >= rules.ORDER["HIGH"]:
                 _speak(verdict["line"], cfg)
     return out

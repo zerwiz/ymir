@@ -59,3 +59,32 @@ part that was missing before. The guard runs in the pre-commit and pre-push chai
 It does not keep dead code alive in a build. Moving is not a licence to keep calling something
 that no longer works: a moved file is **reference**, and `bin/` keeps only what a human or a cron row
 must still be able to run (Rule 07's inventory measures it).
+## 2026-10-21 — a clobber is a deletion too (appended)
+
+**Measured twice in one day.** A hand-edit of the vault decrypted to nothing and the re-encrypt
+replaced **90 secrets with 3** (a backup taken seconds earlier saved it). Hours later, proving a
+documentation ward could fail, a fake claim was appended to `README.md` and removed with
+`git checkout README.md` — which restores the **last commit, not the previous minute**, and threw
+away the uncommitted corrections that had just been made.
+
+Neither was carelessness about the target. Both were commands whose **blast radius was wider than
+the thing being changed**, and this rule's subject is deletion — which uncommitted work undergoes
+just as surely as a tracked file.
+
+```
+clobber_law[4]{rule,why}:
+  "a command that discards uncommitted work is a DELETION of work that was never recorded","Rule 11's subject arriving through a door the rule had not named"
+  "name the target: `git checkout <ref> -- <path>` on a file you have committed, or `git stash push` first","`git checkout <path>` and `git restore .` do not say what they are about to lose"
+  "a destructive command in a script is WAIVED IN WRITING, or it is refused","`# clobber-ok: <why>` on the same line, on a line a person can read"
+  "the same applies to the vault: never re-encrypt it by hand — `bin/vault/hodd-set.sh` carries the guards","a hand-edit has no round-trip check, and this one failed by succeeding"
+```
+
+**Enforced by `bin/gates/guards/git-clobber-guard.sh`** (in `guards.sh`): it judges the added lines
+of a push — and the whole tree with `--scan` — for `checkout --`, `checkout <ref> --`, `restore`,
+`reset --hard`, `clean -f`, `stash drop|clear` and `worktree remove --force`. A branch switch is
+**not** a clobber and is not flagged, because a noisy ward gets disabled and then the real one gets
+through. Its first run found a genuine case in `bin/desktop/sessrumnir-sync.sh`, which is now waived
+in writing with the reason (it runs inside a throwaway three-way merge repo).
+
+**The safe habit, in one line:** commit before experimenting, or revert a **hunk** with
+`git diff <file> | git apply -R`; never let a command decide what to throw away.
