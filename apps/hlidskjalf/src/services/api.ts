@@ -423,6 +423,12 @@ export interface SmidjaStats {
 
 export const gateApi = {
   health: () => get<{ ok: boolean; root: string }>('/api/health'),
+  ward: () => get<{
+    paused: boolean; heartbeat: string; heartbeatAgeSeconds: number; silent: boolean;
+    findings: number; judged: number; bySeverity: Record<string, number>;
+    newest: Array<{ ts: string; severity: string; line: string; title: string; comm: string; pid: string; reasoning?: { rung: string; model: string } | null }>;
+    door: string;
+  }>('/api/ward'),
   me: () => get<{ login: string; realm: RealmId }>('/api/me'),
   workspace: () => get<{ realm: RealmId; path: string }>('/api/workspace'),
   agents: () => get<AgentCard[]>('/api/agents'),

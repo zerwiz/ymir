@@ -2428,6 +2428,7 @@ const server = Bun.serve({
       if (p === '/api/well/episode') return json((await wellEpisode(url.searchParams.get('id') ?? '')) ?? { error: 'not found' });
       if (p === '/api/mimir/health') return json(await mimirHealth());
       if (p === '/api/processes') return json(await processes());
+      if (p === '/api/ward') return json(wardState());
       // The reviews gate shells out twice (lint + compliance), each with a 60s cap,
       // so an unmemoised poll leaves Glitnir hanging for a minute and reads as a
       // dead surface. One answer per minute is what a human review board needs.
@@ -2596,3 +2597,52 @@ const server = Bun.serve({
 
 console.log(`[hlidskjalf] gate api   http://127.0.0.1:${server.port}`);
 console.log(`[hlidskjalf] runtime    ${ROOT}`);
+
+/* ---- /api/ward — HIMINBJÖRG, the watchtower ------------------------------- */
+// Garmr notices, Vörðr judges, Gná speaks. The tower shows what the hound wrote:
+// the state of the two units, the heartbeat (a silent hound is a finding), and the
+// newest judgements. It reads files only; it never starts, stops or closes anything.
+function wardState() {
+  const home = process.env.YMIR_HOME ?? join(process.env.HOME ?? '', 'Documents/ymirhome');
+  const judged = join(home, 'hodd/state/garmr/judged.jsonl');
+  const pausedMarker = join(home, 'hodd/state/garmr/PAUSED');
+  const heartbeatFile = '/var/log/ymir/garmr/state/hound.heartbeat';
+  const findingsFile = '/var/log/ymir/garmr/findings.jsonl';
+
+  const counts: Record<string, number> = { INFO: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };
+  const newest: Array<Record<string, unknown>> = [];
+  if (existsSync(judged)) {
+    const lines = read(judged).split('\n').filter((l) => l.trim().startsWith('{'));
+    for (const line of lines.slice(-2000)) {
+      try {
+        const row = JSON.parse(line);
+        const sev = String(row.severity ?? 'INFO');
+        counts[sev] = (counts[sev] ?? 0) + 1;
+        if (sev === 'HIGH' || sev === 'CRITICAL') {
+          newest.push({
+            ts: row.ts ?? '', severity: sev, line: row.line ?? '', title: row.title ?? '',
+            comm: row.comm ?? '', pid: row.pid ?? '',
+            reasoning: row.reasoning ? { rung: row.reasoning.rung, model: row.reasoning.model } : null,
+          });
+        }
+      } catch { /* a torn line is not a reason to fail the panel */ }
+    }
+  }
+
+  const beat = existsSync(heartbeatFile) ? read(heartbeatFile).trim() : '';
+  const beatAgeSeconds = beat ? Math.max(0, Math.round((Date.now() - Date.parse(beat)) / 1000)) : -1;
+  const findingsLines = existsSync(findingsFile)
+    ? read(findingsFile).split('\n').filter((l) => l.trim()).length : 0;
+
+  return {
+    paused: existsSync(pausedMarker),
+    heartbeat: beat,
+    heartbeatAgeSeconds: beatAgeSeconds,
+    silent: beatAgeSeconds === -1 || beatAgeSeconds > 600,
+    findings: findingsLines,
+    judged: Object.values(counts).reduce((a, b) => a + b, 0),
+    bySeverity: counts,
+    newest: newest.slice(-25).reverse(),
+    door: 'bin/ward/garmr.sh',
+  };
+}

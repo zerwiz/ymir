@@ -126,6 +126,15 @@ Every user-facing feature has a **plain-language how-to**: what it is, what you
 need, and the exact commands.
 
 - **[docs/features/](docs/features/)** — the index.
+- [The guardian (Garmr) — watch your own machine](docs/features/the-guardian.md) — what executes,
+  who touches the meeting and vault shelves, what listens and what leaves; a **ᛉ hound** chip in
+  Hlidskjalf, and `bin/ward/garmr.sh pause|resume` when you want quiet
+- [Meeting outcomes (Snotra)](docs/features/meeting-outcomes.md) — a transcript becomes minutes,
+  decisions, actions, briefs and a follow-up email
+- [Sensitive-data gate](docs/features/sensitive-data-gate.md) — one choke point before anything
+  leaves the house
+- [Transcript provenance](docs/features/transcript-provenance.md) — a hash-chained seal over every
+  meeting artifact, plus an evidence bundle
 - [Unlock the vault (Hnitbjörg) with your phone](docs/features/unlock-the-vault-with-your-phone.md)
 
 A feature that ships without a page here is **not finished** — agents add or update

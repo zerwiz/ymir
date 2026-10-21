@@ -6,6 +6,7 @@ import { AccentPicker } from '../components/AccentPicker';
 import { AccountMenu } from '../components/AccountMenu';
 import { HallsSwitcher, raise } from '../components/Halls';
 import { SnotraLive } from '../components/SnotraLive';
+import { Ward } from '../components/Ward';
 
 export function Topbar() {
   const realm = useYmir((s) => s.realm);
@@ -101,6 +102,7 @@ export function Topbar() {
       {/* The live tail: ONE click to start listening, one to close the book, and
           the words as they are spoken. A front for snotra-live.sh, never a
           second pipeline. */}
+      <Ward />
       <SnotraLive />
 
       {/* The Óðrerir Live Hall — the landing's live board, not one of the three

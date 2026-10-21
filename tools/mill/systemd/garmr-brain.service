@@ -1,0 +1,14 @@
+# Garmr's judgement — the rules, the ladder, the bark. Runs as the operator, not root,
+# so a model key is the operator's own and nothing privileged is reachable from here.
+[Unit]
+Description=Garmr's judgement — apply the rules to new findings, escalate, speak, record
+Documentation=file://__YMIR_ROOT__/docs/features/the-guardian.md
+
+[Service]
+Type=oneshot
+ExecStart=__PYTHON__ __YMIR_ROOT__/bin/ward/garmr/brain.py --once
+Nice=10
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=default.target

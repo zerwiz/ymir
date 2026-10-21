@@ -1,0 +1,56 @@
+# Garmr — the guardian's settings, per machine.
+#
+# Copy to $YMIR_HOME/config/guardian.yaml and edit. The resolver is
+# `bin/ward/garmr-config.sh` (env -> this file -> the built-in defaults), so every
+# value below may be omitted; nothing here is required.
+#
+# The law the defaults enforce:
+#   * the ALERT is always a template (§6 of plan 98) — a fact never passes through a model;
+#   * a REASONER is only ever asked to write the paragraph beneath it;
+#   * nothing sensitive leaves the box: paths hash, argv redacts, content never travels.
+
+seat: ""                       # the seat's name; defaults to the hostname
+
+hound:                         # the senses (root service, read-only)
+  findings: /var/log/ymir/garmr/findings.jsonl
+  audit_log: /var/log/audit/audit.log
+  poll_seconds: 60             # egress + listeners
+  doors_seconds: 300           # listener diff
+  max_bytes: 5242880           # rotate findings past this
+
+allow:
+  # processes that MAY read the Snotra shelves and the vault without a finding
+  sensitive_readers: [snotra-detect.sh, snotra-bot.sh, snotra-capture.sh, snotra-cron.sh,
+                      mimir-bridge.py, mimir-log.py, well-vault-sync.sh, git, rsync, restic,
+                      tar, borg, backups]
+  # program directories considered expected
+  program_dirs: [/usr/, /opt/, /bin/, /sbin/, /nix/, ~/.local/bin/]
+  # writable places where a fresh binary is a finding
+  writable_dirs: [/tmp/, /var/tmp/, /dev/shm/, ~/Downloads/]
+  # listening ports that are expected on this seat
+  listen_ports: [22, 3888, 3889, 4602, 8080, 8316, 8317, 7777, 8765, 22000, 8384]
+  # remote peers that are expected (tailnet, loopback, the model host)
+  # names and loopback only — a LAN address is never a config value (home network law).
+  peer_hosts: [127.0.0.1, "::1", heimdall.tailefab81.ts.net]
+
+alert:
+  desktop: true                # ymir-say.sh on a HIGH or worse
+  phone: none                  # none | ntfy:<topic> | gotify:<url>
+
+escalate:                      # the severity ladder (plan 98 §'the severity ladder')
+  medium: local                # local | fleet | online
+  high: local-or-fleet
+  critical: online
+  fleet: [llamacpp-omarchy, llamacpp-whynot]
+  local: qwen3.6-35b-a3b@q4_k_xl-mtp
+  online: opencode-go/deepseek-v4.1-flash
+  on: high                     # a finding at or above this severity may be reasoned about
+  announce_eviction: true
+  degrade_loudly: true
+  budget:
+    online_calls_per_day: 20
+    online_usd_per_day: 5
+
+integrity:
+  nightly: true
+  watch: [RULES/, bin/ward/, bin/gates/guards/, tools/mill/systemd/]
