@@ -39,6 +39,22 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 VERSION="1.0.0"
 
+advise_cfg() {  # <key> <default> — read the advisor's road from the guardian config
+  python3 - "$GUARDIAN" "$1" "$2" <<'PY'
+import sys
+try:
+    import yaml
+    d = yaml.safe_load(open(sys.argv[1])) or {}
+except Exception:
+    print(sys.argv[3]); raise SystemExit(0)
+raw = (d.get("hound") or {}).get(sys.argv[2], sys.argv[3])
+if isinstance(raw, bool):
+    print("true" if raw else "false")
+else:
+    print(str(raw))
+PY
+}
+
 home_or_die() {
   local h=""
   declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root h 2>/dev/null
@@ -187,12 +203,26 @@ PY
 # GARMR_ADVISOR_CMD makes the advisor injectable (tests stub it; a seat with no model sets it empty).
 advise() {
   local findings="$1"
-  local cmd="${GARMR_ADVISOR_CMD-pi -p --no-session --no-tools --model ${GARMR_ADVISOR_MODEL_NAME:-llama-swap/qwen3.5-9b@q4_k_s-summarizer}}"
+  # The road: online first (fast, and strong enough to triage at 3 a.m.), then the Allfather's own
+  # 35B. `hound.advisor_online: true` must be set for the online road — an advisor is one thing, but
+  # a machine that ships its own topology to a vendor by default is another.
+  local primary fallback online cmd
+  primary="${GARMR_ADVISOR_MODEL_NAME:-$(advise_cfg model_name opencode-go/deepseek-v4.1-flash)}"
+  fallback="${GARMR_ADVISOR_MODEL_FALLBACK:-$(advise_cfg model_fallback llama-swap/qwen3.6-35b-a3b@q4_k_xl-mtp)}"
+  online="${GARMR_ADVISOR_ONLINE:-$(advise_cfg advisor_online false)}"
+  if [ -n "${GARMR_ADVISOR_CMD:-}" ]; then
+    cmd="$GARMR_ADVISOR_CMD"
+  elif [ "$online" = "true" ]; then
+    cmd="pi -p --no-session --no-tools --model $primary"
+  else
+    cmd="pi -p --no-session --no-tools --model $fallback"
+  fi
   if [ -z "$cmd" ]; then
     printf 'bite[1]{advisor,result}:\n  "none","GARMR_ADVISOR_CMD is empty — the hound decides by rule alone (the safe default)"\n'
     return 0
   fi
-  local meta answer
+  local meta answer coarse=0
+  [ "$online" = "true" ] && [ -z "${GARMR_ADVISOR_CMD:-}" ] && coarse=1
   meta=$(python3 - "$findings" <<'PY'
 import sys, json, os
 out = []
@@ -201,7 +231,17 @@ for line in open(sys.argv[1], encoding="utf-8") if os.path.exists(sys.argv[1]) e
     if not line: continue
     try: f = json.loads(line)
     except Exception: continue
+    coarse = os.environ.get("GARMR_COARSE", "0") == "1"
     keep = {k: f.get(k) for k in ("class", "severity", "pid", "port", "comm", "path", "dst", "unit", "token_id") if f.get(k) is not None}
+    if coarse:
+        # A vendor does not need our topology: keep the SHAPE of the finding, not the map.
+        if "path" in keep:
+            keep["path"] = "<path:" + os.path.basename(str(keep["path"])) + ">"
+        if "dst" in keep:
+            parts = str(keep["dst"]).split(".")
+            keep["dst"] = ".".join(parts[:2]) + ".*.*" if len(parts) == 4 else "<host>"
+        if "unit" in keep:
+            keep["unit"] = "<unit>"
     out.append(keep)
 print(json.dumps(out))
 PY
@@ -210,6 +250,10 @@ PY
   raw=""
   answer=$(printf '%s\n' "You are the hound's advisor, not its hand. From the findings below, choose AT MOST ONE bite and reply with ONE line: <bite> <target> — or exactly: none." "" "Allowed bites (nothing else exists): egress-block <dst> | listener-close <port> | stop-unit <unit> | kill-process <pid> | quarantine-file <path> | none" "" "Findings (metadata only): $meta" | timeout 120 sh -c "$cmd" 2>/dev/null | grep -Eio '^(egress-block|listener-close|stop-unit|kill-process|quarantine-file|revoke-token|none)[^\n]*' | head -1)
   raw=$(printf '%s\n' "Findings (metadata only): $meta" | timeout 120 sh -c "$cmd" 2>/dev/null | head -c 2000)
+  if [ -z "$answer" ] && [ -z "${GARMR_ADVISOR_CMD:-}" ] && [ "$primary" != "$fallback" ]; then
+    answer=$(printf '%s\n' "One line only: <bite> <target>, or none. Allowed: egress-block <dst> | listener-close <port> | stop-unit <unit> | kill-process <pid> | quarantine-file <path> | none." "" "Findings (metadata only): $meta" | timeout 180 pi -p --no-session --no-tools --model "$fallback" 2>/dev/null | grep -Eio '^(egress-block|listener-close|stop-unit|kill-process|quarantine-file|none)[^\n]*' | head -1)
+    [ -n "$answer" ] && printf 'bite[1]{advisor,road}:\n  "fallback","the online road answered nothing — the local 35B triaged instead"\n'
+  fi
   case "$answer" in
     none*) printf 'bite[1]{advisor,result}:\n  "none","the advisor declined — nothing is bitten on advice alone"\n'; return 0 ;;
     "")

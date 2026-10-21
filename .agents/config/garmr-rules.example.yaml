@@ -16,6 +16,15 @@ enabled:
   # - unit-anomaly             # → systemctl stop the unit (never a pid)
   # - token-no-approval        # → REFUSED automatically: reissued through its door, never un-revoked
 
+# ── the advisor's road (plan 98, "the model in the response path") ────────────
+# The advisor triages a CRITICAL finding that no written rule covers. It must be fast and strong,
+# because it is answering while something is happening. Online first, the operator's own 35B second.
+# `advisor_online: false` keeps every finding on the machine — the safe default for a house holding
+# NDA work; true coarsens the metadata (paths and destinations lose their detail) before it leaves.
+advisor_online: false
+model_name: opencode-go/deepseek-v4.1-flash
+model_fallback: llama-swap/qwen3.6-35b-a3b@q4_k_xl-mtp
+
 # Peers that are NEVER blocked — by name, never by a LAN address (the network law).
 peers:
   - "*.tailefab81.ts.net"      # the tailnet

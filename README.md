@@ -153,7 +153,7 @@ not an open vault, not a model mid-generation. And **every bite is announced** a
 un-bite included, because nobody should learn a door was closed by finding it closed.
 
 **A model may advise, and only in one narrow place.** When a CRITICAL finding arrives that no
-written rule covers, one short question goes to a **small local model** — given *metadata only*
+written rule covers, one short question goes to a **fast, strong advisor** — `opencode-go/deepseek-v4.1-flash` when you allow the online road, otherwise your own 35B — given *metadata only*
 (class, severity, pid, port, path, destination, never a payload) — and it may answer with one of the
 six bites, or `none`. Its answer is then checked against the allowlist and against the classes
 actually armed in the rules file. If the class is not armed, the hound refuses and tells you the one
