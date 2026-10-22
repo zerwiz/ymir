@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[28]{file,subject}:
+rules_index[29]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -29,6 +29,7 @@ rules_index[28]{file,subject}:
   "25-agnostic-by-construction.md","one core, every device: three axes, probe never assume, a clean skip is a pass, a move is a migration"
   "28-streaming-voice.md","Skírnir speaks in real time or not at all: a pipeline of overlapping stages, latency measured per turn, and a silent failure is a violation"
   "26-external-surfaces.md","private structure and NDA material never cross an external surface: no paths, vault names, secrets or classified material in Trello, email, Chat or a public PR"
+  "29-the-apps-stay-whole.md","an update that leaves an app unreadable is not an update: every server entry parses, every route the UI calls is answered, and a raised gate answers no 5xx"
   "README.md","this index"
 ```
 
@@ -63,3 +64,9 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | # | Rule | In one line |
 |---|---|---|
 | 28 | [Streaming voice](28-streaming-voice.md) | **Skírnir speaks in real time or he does not speak.** Capture is continuous, ASR is incremental over a rolling window, endpointing is a short VAD hangover, the answer is token-streamed and cut into sentences, the first sentence is synthesised immediately, and audio is pushed in real-time frames. Long text is allowed; a long silence is not. Every turn logs `stt_ms`, `ttft_ms`, `first_audio_ms`, `turn_ms` (target: first audio ≤ 1.5 s), and a **silent failure — a dead synthesiser, a full GPU, an empty buffer — is a violation**, not a soft error. Two gates stand before any claim: the bench oracle (push → record back → transcribe → match) and the room's own recording. |
+
+## Appended 2026-10-22 — an update that leaves an app unreadable is not an update
+
+| # | Rule | In one line |
+|---|---|---|
+| 29 | [The apps stay whole](29-the-apps-stay-whole.md) | **Every change that ships leaves every app able to start and every panel able to speak to it.** Three duties, one ward (`bin/gates/guards/app-functional-guard.sh`, wired into `bin/gates/guards.sh`): **it parses** (every app server entry is transpiled before it ships), **every door the UI knocks on is answered** (a route the interface calls and the server never implements is a promise the product does not keep), and **with the app raised, nothing answers 5xx** (`--live`). It exists because one missing `return {` took Hlidskjalf's whole data face down for a day — every `/api/*` 500 with zero bytes, the well reading DOWN over a healthy bridge — and no gate noticed. |
