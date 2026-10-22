@@ -211,14 +211,8 @@ def main() -> int:
             text = msg.get("text") or ""
             if not text or sender.get("is_bot"):
                 continue
-            if chat.get("type") in ("group", "supergroup", "channel"):
-                addressed = ("skirnir" in text.lower()
-                             or "skírni" in text.lower()
-                             or f"@{BOT_USERNAME.lower()}" in text.lower())
-                if not addressed:
-                    continue
-            # every group he is put in is RECORDED, even while it is not allowed to speak — that is
-            # how the Allfather gets a chat id to allowlist instead of guessing one.
+            # every group or channel he is put in is RECORDED first, before any filter — that is how
+            # the Allfather gets a chat id to allowlist instead of guessing one.
             if chat.get("type") in ("group", "supergroup", "channel"):
                 try:
                     seen = json.load(open(SEEN))
@@ -259,6 +253,13 @@ def main() -> int:
                     continue
 
             tier, channel = tier_for(chat, sender)
+            if chat.get("type") in ("group", "supergroup", "channel"):
+                low = text.lower()
+                named = any(tok in low for tok in ("skirn", "skirm", "skrin", "skírni", "skirnir",
+                                                   "brokk", "ymir", f"@{BOT_USERNAME.lower()}"))
+                trusted_owner = (tier == "owner")
+                if not (named or trusted_owner):
+                    continue
             if tier == "unknown-group":
                 if verbose:
                     print(f"telegram: ignoring unknown group {chat.get('id')}", file=sys.stderr)

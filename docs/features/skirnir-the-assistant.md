@@ -65,3 +65,32 @@ they are absent.
 
 **If it does not work.** `walls-test.sh` first — it attacks him the way a hostile message would. If a
 canary appears, the digest has a leak: fix the approved fact, not the filter.
+
+**The mouth has a model — and it is optional** (2026-10-22). By default Skírnir answers from his
+approved facts and a phrase table, with **no model at all** — instant, and never wrong about something
+else. To give him a voice, name a rail model in a **drop-in** (never in the unit, Rule 07):
+
+```sh
+mkdir -p ~/.config/systemd/user/skirnir-telegram.service.d
+printf '[Service]\nEnvironment=SKIRNIR_MODEL=qwen3.5-9b@q4_k_s-summarizer\n' \
+  > ~/.config/systemd/user/skirnir-telegram.service.d/10-model.conf
+systemctl --user daemon-reload && systemctl --user restart skirnir-telegram
+```
+
+With it armed, the model **phrases** a matched fact in its own words and answers from the digest when
+nothing matched — but only for the owner, a collaborator or a known person, and it is shown
+`public` + `logistics` + `role` facts **only**. Contacts, NDA, contracted and restricted material never
+enter its context. A stranger still gets templates. Its output runs through the same gate (no URL, no
+link, no image, no code, 194 canaries), and if it says it does not hold the fact, the answer stays a
+**refusal** so the handoff to the Allfather still happens. If the rail is down, nothing breaks: the
+verbatim claim or the honest no is already prepared.
+
+**Which model.** Measured on this box: `qwen3.5-9b@q4_k_s-summarizer` (32K, 5.4 GB, ~140–150 t/s,
+1.3–3.2 s warm, ~7 s on the first call while it loads) is the one that **says "I do not hold that"**
+when it does not. `minicpm5-1b` is five times faster and **invents** ("Gimle is a type of dog") — do
+not use a small model here; the mouth's whole value is that it will not guess. The 35B MoE is the same
+speed at 13.8 GB and starves the speech synthesiser.
+
+**Limits worth knowing.** The rail serves **one model at a time** (`--models-max 1`): the first answer
+after idle evicts whatever was resident and pays the load. Arming the mouth therefore costs the
+interactive model its place — that is a decision, not a bug.
