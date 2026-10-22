@@ -715,7 +715,7 @@ def model_research(question: str, sources: list[dict], model: str, tier: str = "
         f"[{i + 1}] {src.get('title', 'untitled')} ({src.get('domain', '')})\n{src.get('extract', '')}"
         for i, src in enumerate(sources))
     system = ("You are Skirnir, the Allfather's assistant. Answer ONLY from the web extracts below, "
-              + _audience(tier) + " "
+              + _audience(tier) + language_hint(question) + " "
               "In one or two short sentences. Say first that it comes from the open web and not from "
               "what you hold. Name the source in words (its title); never write a link, a URL, an "
               "image, a table or code. If the extracts do not answer the question, say so plainly.\n\n"
@@ -766,6 +766,16 @@ def denorse(text: str) -> str:
     return re.sub(r"\b(Odin|Woden|Wodan|All[- ]Father Odin)\b", "Allfather", text or "")
 
 
+SWEDISH = re.compile(r"\b(och|är|att|det|som|inte|med|för|på|jag|du|kan|vad|hur|var|när|vilken|"
+                     r"behöver|finns|tack|hej|hejsan)\b", re.I)
+
+
+def language_hint(question: str) -> str:
+    """Answer in the language the question was asked in. Swedish is not a translation, it is the room."""
+    hits = len(set(m.group(0).lower() for m in SWEDISH.finditer(question or "")))
+    return " Answer in Swedish." if hits >= 2 else ""
+
+
 def _audience(tier: str) -> str:
     """A mouth that says 'I will ask the Allfather' TO the Allfather is lying about the room."""
     if tier == "owner":
@@ -790,7 +800,7 @@ def model_answer(question: str, facts: dict, model: str,
         context += "\n\nThe last turns in this chat:\n" + "\n".join(
             f"{role}: {line[:200]}" for role, line in recent)
     system = ("You are Skírnir, the Allfather's assistant. Answer ONLY from the facts below. "
-              + _audience(tier) + " "
+              + _audience(tier) + language_hint(question) + " "
               "Never produce a URL, a link, an image, a table or code. Two sentences at most.\n"
               f"FACTS:\n{context}")
     return _rail(system + "\n" + VOICE, question, model, temperature=0.35,
@@ -1004,6 +1014,11 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             ranked.sort(reverse=True)
             if len(ranked) == 1 or ranked[0][:5] > ranked[1][:5]:
                 used, intent = [ranked[0][5]], f"fact:{ranked[0][5]}"
+            else:
+                # near-equal facts are the SAME subject seen from two angles: hand the model the set
+                best = ranked[0][0]
+                used = [r[5] for r in ranked[:3] if r[0] >= best - 0.15]
+                intent = f"fact:{used[0]}" if len(used) == 1 else "fact:multi"
 
     # "what are those 21 approved facts" — the owner asking to SEE the shelf, not to search it
     if intent == "unknown" and tier == "owner" and re.search(r"\b(facts?|claims?)\b", key) \
@@ -1241,11 +1256,19 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                     reply = say_unknown("owner", seed=chat or "owner")
         elif used and used[0] in facts \
                 and str(facts[used[0]].get("class", "public")).lower() in MODEL_SAFE_CLASSES:
-            said = model_answer(question, {used[0]: facts[used[0]]}, mouth, history(chat), tier)
+            bundle = {slug: facts[slug] for slug in used if slug in facts}
+            said = model_answer(question, bundle, mouth, history(chat), tier)
             if said and not sounds_like_refusal(said):
                 reply, intent = said, f"model:{used[0]}"
 
     reply = denorse(reply)
+    if "voice" in (channel or ""):
+        # the council's bar is 1.2 s to first audio: a spoken answer is ONE clause, never a table
+        if "\n" in reply:
+            first = reply.splitlines()[0]
+            rest = len([l for l in reply.splitlines()[1:] if l.strip()])
+            reply = first + (f" — and {rest} more, which I can read one at a time." if rest else "")
+        reply = reply.replace("·", ",").replace("*", "")
     ok, why = gate(reply, canaries)
     if not ok:  # fail closed: nothing leaves, ever
         ledger(question, why, tier, channel, "gate-refusal", used, True, dh)
