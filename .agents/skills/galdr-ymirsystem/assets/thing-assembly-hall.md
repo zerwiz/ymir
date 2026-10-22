@@ -1,6 +1,6 @@
 # Þing — the assembly hall (Galdr asset)
 
-**Role:** Ymir's own meeting room — MiroTalk P2P, hosted on whynot, named **Þing**
+**Role:** Ymir's own meeting room — MiroTalk P2P, hosted on the seats' compute host, named **Þing**
 (the assembly, the law-meeting; the plain where the free met was Þingvellir).
 The name is **SEALED by the Allfather** (plan 53). The hall complements the ear:
 Snotra (plan 52) records meetings held in other halls; Þing is a hall of our own,
@@ -13,8 +13,8 @@ so the ear can know the room, the participants, and the moment it began.
 | upstream | `miroslavpejic85/mirotalk` (AGPLv3) |
 | our fork | `zerwiz/mirotalk` — tracks upstream; branding/ops live here |
 | code tree | the operator's fork checkout (e.g. `~/mirotalk`) |
-| deployment | whynot — `~/thing/mirotalk`, port **3000**, unit `thing.service` (WantedBy `ymir.target`), public door `ping.zerwiz.org` via `cloudflared-thing` |
-| plan of record | `.../whynotproductions/workspace/ymir/plans/53-thing-the-assembly.md` |
+| deployment | the seats' compute host — `~/thing/mirotalk`, port **3000**, unit `thing.service` (WantedBy `ymir.target`), public door ``ping.<your-domain>`` via `cloudflared-thing` |
+| plan of record | `<plans-ledger>/53-thing-the-assembly.md` |
 
 ## How the brand works (the part everyone gets wrong)
 
@@ -38,7 +38,7 @@ public/js/brand.js           the client DEFAULT (fallback) brand
   section hidden client-side; the bloat sections were also **deleted** from
   `public/views/landing.html` so the payload no longer carries them. The
   landmark `features` and `footer` sections stay on.
-- The unit on whynot runs `node app/src/server.js` directly — **npm prestart
+- The unit on the seats' compute host runs `node app/src/server.js` directly — **npm prestart
   never runs**, so `config.js` does NOT self-refresh on pull. After updating
   the template on the seat you must regenerate it by hand (below).
 
@@ -60,7 +60,7 @@ public/js/brand.js           the client DEFAULT (fallback) brand
 ### The deploy weld (after any fork change)
 
 ```
-ssh whynot
+ssh the seats' compute host
 cd ~/thing/mirotalk
 git pull --ff-only origin master
 cp app/src/config.template.js app/src/config.js     # the unit skips npm prestart
@@ -79,7 +79,7 @@ tools/og-card/render.sh            # re-render, then commit both rasters
 The hall used to be shared as a bare link. `og:image` pointed at
 `../images/logo.svg` — a **relative** path (a crawler has not fetched the page and
 cannot resolve it) to an **SVG** (which no crawler renders) — and `og:url` was
-**empty**. Every share of `ping.zerwiz.org` unfurled to nothing.
+**empty**. Every share of ``ping.<your-domain>`` unfurled to nothing.
 
 ```
 social_card[3]{piece,where,rule}:
@@ -94,11 +94,11 @@ master. Neither is optional: a crawler fetches a file, not a build.
 
 ### The cache lie
 
-- `ping.zerwiz.org` is Cloudflare-backed (`cf-cache-status: DYNAMIC`), but
+- ``ping.<your-domain>`` is Cloudflare-backed (`cf-cache-status: DYNAMIC`), but
   **browser caches and sessionStorage** keep old pages alive:
   - sessionStorage brand → bump `brandDataKey` (above)
   - browser HTML cache → hard refresh (`Ctrl+Shift+R`) or a cache-busting query
-  - edge → `bin/forge/gjallarhorn-purge.sh ping.zerwiz.org` if a PoP held a copy
+  - edge → `bin/forge/gjallarhorn-purge.sh `ping.<your-domain>`` if a PoP held a copy
 - Debug by driving a headless Chromium at the public URL and reading the
   rendered DOM (the wire usually serves the new page while a browser shows the
   old one — that asymmetry is the tell).

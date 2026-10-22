@@ -13,9 +13,9 @@ THE WATCH (detect)     a CALL SEAT — any seat with a microphone. Watches PipeW
 THE EAR (capture)      the seat in the meeting — heimdall today, omarchy too
                        PipeWire mic + monitor capture. Nothing else can do this.
 THE BRAIN (transcribe) the seat with the GPU — the living-rail resolver's
-                       serving box (heimdall's <gpu> first, then whynot)
+                       serving box (heimdall's <gpu> first, then the seats' compute host)
                        whisper.cpp CUDA (~1.0s) + the LIVE rail for summaries
-THE RECORD (store/serve)  the heart (zerwizserver) — minutes in the vault, synced
+THE RECORD (store/serve)  the heart (the server) — minutes in the vault, synced
                        by the home's git road, the MCP face served there
 ```
 
@@ -24,10 +24,10 @@ heard only if a hand armed the capture; now the microphone is the signal — a
 voice call cannot happen unless the call application opens a capture stream on a
 microphone — and the moment the room empties the ear leaves.
 
-**Cost if run otherwise:** If the Allfather insists on transcribing on whynot
+**Cost if run otherwise:** If the Allfather insists on transcribing on the seats' compute host
 (the <gpu>), it costs a 3-5× slowdown on transcription (<gpu> lacks CUDA
 acceleration for whisper) and requires the recording to be transferred from the
-meeting seat to whynot first. The configuration change is a single env var:
+meeting seat to the seats' compute host first. The configuration change is a single env var:
 `WHISPER_GPU=off` and `WHISPER_MODEL` pointing to a CPU model. The design
 supports this; it is not a rewrite.
 
@@ -233,13 +233,13 @@ the public repo. The repo carries only the wiring scripts and the MCP server.
 | seat | engine | model | notes |
 |---|---|---|---|
 | heimdall | `~/whisper.cpp.src/build/bin/whisper-cli` (CUDA) | `~/whisper.cpp/models/ggml-small.en.bin` | the brain (<gpu>) |
-| whynot | `~/whisper.cpp/build/bin/whisper-cli` (CUDA) | `~/whisper.cpp/models/ggml-small.en.bin` | needs `LD_LIBRARY_PATH` |
+| the seats' compute host | `~/whisper.cpp/build/bin/whisper-cli` (CUDA) | `~/whisper.cpp/models/ggml-small.en.bin` | needs `LD_LIBRARY_PATH` |
 | omarchy | `/usr/bin/whisper-cli` (CPU, `extra/whisper-cpp`) | `~/.local/share/voxtype/models/ggml-small.en.bin` | voxtype also has a full `meeting` mode |
 
 The transcribe script discovers the engine (env → PATH → build trees →
 `voxtype transcribe`), normalises to 16 kHz mono, sets `LD_LIBRARY_PATH` for a
 build-tree binary, and picks GPU vs CPU by free VRAM (a resident rail model
-starves CUDA — whynot's <gpu> always falls to the CPU).
+starves CUDA — the seats' compute host's <gpu> always falls to the CPU).
 
 ### M13 — The live tail (`bin/time/snotra/snotra-live.sh`), 2026-10-07
 
@@ -405,7 +405,7 @@ generated, never hand-edited.
 | Door | Does |
 |---|---|
 | `bin/time/snotra/snotra-store.sh` | `new · put · state · index · list · verify · path` |
-| `bin/thing/ping-room.sh` | raises MiroTalk on the current seat, `local|tailnet|public`, exclusive `ping.zerwiz.org` claim |
+| `bin/thing/ping-room.sh` | raises MiroTalk on the current seat, `local|tailnet|public`, exclusive ``ping.<your-domain>`` claim |
 | `bin/time/snotra/snotra-autojoin.sh` | calendar scan → plan → bot dispatch (dry-run unless `--apply`) |
 | `bin/time/snotra/snotra-bot.sh` | Vexa API door; the participant name is **Snotra**; HTTPS and a vault key required |
 
@@ -415,7 +415,7 @@ transports hear one room, the bot's transcript is authoritative for speaker labe
 the ear's audio is kept as evidence.
 
 The private network law that governs where these run is `$YMIR_HOME/RULES/network.md`:
-the always-on control plane is zerwizserver; whynot is compute; the dev seats are where
+the always-on control plane is the server; the seats' compute host is compute; the dev seats are where
 the operator is; and Þing is raised on demand, never assumed.
 
 Tests: `bash tests/run.sh` — four suites, 61 assertions.
