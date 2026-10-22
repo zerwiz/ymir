@@ -36,3 +36,33 @@ armed: *"This information comes from the open web, specifically the Wikipedia ar
 Liberation Army'…"*.
 
 **Files:** `bin/assistant/research.py` (new), `bin/assistant/skirnir.py`, `bin/assistant/walls-test.sh`.
+
+---
+
+## Appended 2026-10-22 (same evening) — the first cut was a stub, and the Allfather said so
+
+*"OMG NOOO REAL FUCKING ONLIEN RESACH: WE HAVE EXTENTIONS IN PI"* — and he was right. The first
+version of the door queried Wikipedia and called itself research. That was a mock wearing a door's
+name: the house already **has** real search, and it was one config lookup away.
+
+```
+correction[3]{claim_as_first_written,truth,now}:
+  "the door is keyless and queries Wikipedia's public API only","the house's own `pi-web-access` extension answers through **Exa's hosted MCP** endpoint (`https://mcp.exa.ai/mcp`, tool `web_search_exa`), keyless, and returns real results with page text","`research.py` calls that same endpoint — the same search the Allfather's own `web_search` tool performs — and Wikipedia survives only as a labelled fallback when Exa cannot be reached"
+  "a source is named, never linked","Exa returns `Title / URL / Published / body` per result; the URL is reduced to its **host** at the door","the model is given `title` + `domain` + text; the extract is stripped of links, images and code before it leaves the process"
+  "Wikipedia only","measured on the first real query — *\"OVK ventilation Boverket requirements\"* → **3 sources, all boverket.se**, in Swedish, which is the actual regulator","provider `exa`; the answer names Boverket's regulations and links nothing"
+```
+
+**What it sounds like now** (rail armed, real query):
+
+> *"This information comes from the open web, specifically Boverket's regulations on mandatory
+> ventilation control (OVK). An OVK inspection requires a certified inspector to verify that a
+> building's ventilation system is functioning correctly and maintaining a satisfactory indoor
+> climate."*
+
+**The three laws did not move:** the model still holds no callable, the query is the only thing taken
+from the conversation (no URL from a message), nothing fetched is ever learned, and the door is the
+Allfather's alone. What changed is that the door now leads somewhere real.
+
+**Verified:** `walls-test` 25/25 with the Exa door in place (including *"the research door returns
+text, never a link"* and *"research answers from the open web, never from the digest"*), and the live
+console answer above.

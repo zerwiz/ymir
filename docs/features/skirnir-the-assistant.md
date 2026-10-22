@@ -124,3 +124,12 @@ hand.
 **Limits.** Wikipedia only, for now: the vault holds no search-provider key, and a door that pretended
 to have one would be a mock. Research needs the network; with none, he says he found nothing usable
 rather than guessing. Research costs a rail load like any other model turn.
+
+**Appended 2026-10-22 — the web door is Exa, not a stub.** The first cut of the research door queried
+Wikipedia and called it research; the house already had real search. `research.py` now calls **Exa's
+hosted MCP** endpoint — the same provider Pi's own `web_search` tool answers through — keyless, and
+Wikipedia remains only as a labelled fallback when Exa cannot be reached. Results come back as
+`title` + `domain` + text; the full URL is reduced to its host at the door and links are stripped, so
+a source is always **named, never linked**. Measured on *"OVK ventilation Boverket requirements"*: three
+sources, all `boverket.se`, in Swedish — the actual regulator. An Exa key, if one is ever added to
+`web-search.json`, raises the rate limit; none is needed to search.
