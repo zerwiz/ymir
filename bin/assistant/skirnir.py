@@ -531,7 +531,34 @@ def gate(answer: str, canaries: list[str]) -> tuple[bool, str]:
     return True, "ok"
 
 
-def say_unknown(tier: str = "stranger") -> str:
+PERSON_QUESTION = __import__("re").compile(
+    r"\b(who is|who's|what about|tell me about|do you know|have you met|"
+    r"what does|what is)\s+([A-Z][a-zA-Z'’.-]+(?:\s+[A-Z][a-zA-Z'’.-]+)?)")
+
+
+def asks_about_a_person(text: str) -> str | None:
+    """A name he was asked about, if the question is about a person at all.
+
+    The rule this serves (the Allfather's, 2026-10-22): *if he does not know the name, he asks for
+    it.* A refusal that tells a stranger "I don't have that" is a dead end; asking for the name
+    turns it into a conversation, and the name can then be put up for approval.
+    """
+    m = PERSON_QUESTION.search(text or "")
+    if not m:
+        return None
+    name = m.group(2).strip().rstrip("?.,!")
+    # a question about the house itself is not a question about a person
+    if name.lower().split()[0] in {"the", "this", "that", "it", "ymir", "snotra", "skirnir",
+                                   "brokk", "gimle", "wayof", "way", "opticat", "ovk"}:
+        return None
+    return name
+
+
+def say_unknown(tier: str = "stranger", asked_name: str | None = None) -> str:
+    if asked_name and tier != "owner":
+        # a stranger asked about somebody he does not hold: ask who they are, do not dead-end
+        return (f"I don't know {asked_name} yet. Who are they, and what should I know? "
+                "I'll put it up for the Allfather's approval before I hold it.")
     if tier == "owner":
         return ("I don't have that in what's approved yet — tell me the fact and I'll put it up for "
                 "your approval, or ask me something I hold.")
@@ -786,7 +813,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         reply = funt["claim"]
         kls = str(funt.get("class", "public")).lower()
         if kls not in ("public", "logistics") and tier != "owner":
-            reply = say_unknown(tier)
+            reply = say_unknown(tier, asks_about_a_person(question))
             intent = "unknown"
     elif used and used[0] in facts:
         fact = facts[used[0]]
