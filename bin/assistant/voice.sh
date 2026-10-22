@@ -23,7 +23,10 @@ SECONDS_TO_REC=6; TEXT=""; WAV=""; MODEL=""; SPEAK=1; KOKORO_URL="${KOKORO_URL:-
 if [ -z "${KOKORO_VOICE:-}" ] && [ -x "$HOME/.local/bin/kokoro-voice" ]; then
   KOKORO_VOICE="$("$HOME/.local/bin/kokoro-voice" 2>/dev/null | sed -n 's/.*voice: \([a-z_0-9]*\).*/\1/p' | head -1)"
 fi
-KOKORO_VOICE="${KOKORO_VOICE:-af_nicole}"
+# af_heart (grade A) is the default, NOT af_nicole (B-): measured 2026-10-22 on the same sentence,
+# af_nicole took 17.4 s with 14 stutter-pauses where af_heart took 10.7 s with 6. That difference is
+# what "she rushes and clips the adverb" was. The switcher (~/.local/bin/kokoro-voice, SUPER+CTRL+U)
+# is the source of truth; this is only the fallback.
 PIPER_VOICE_MODEL="${PIPER_VOICE:-$HOME/.local/share/piper-voices/en_US-lessac-medium.onnx}"
 while [ $# -gt 0 ]; do
   case "$1" in
