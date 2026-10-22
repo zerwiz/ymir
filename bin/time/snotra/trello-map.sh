@@ -21,6 +21,34 @@ ACTION="${1:-refresh}"
 
 if [ "$ACTION" = "--show" ]; then cat "$MAP" 2>/dev/null || printf 'no map yet\n'; exit 0; fi
 
+# trello-map.sh --resolve "<board>" "<list>"  → the list ARI, resolved from the map, never typed
+if [ "$ACTION" = "--resolve" ]; then
+  BOARD_Q="${2:-}" LIST_Q="${3:-}" MAP_Q="$MAP" BARE=0
+  [ "${4:-}" = "--bare" ] && BARE=1
+  export BOARD_Q LIST_Q MAP_Q BARE
+  python3 - <<'PY'
+import os, sys, yaml
+try:
+    m = yaml.safe_load(open(os.environ["MAP_Q"])) or {}
+except Exception:
+    print("trello-map: no map yet — run trello-map.sh first", file=sys.stderr); sys.exit(2)
+board_q, list_q = os.environ.get("BOARD_Q", "").lower(), os.environ.get("LIST_Q", "").lower()
+boards = [b for b in m.get("boards", []) if board_q in b["name"].lower()]
+if not boards:
+    print("trello-map: no board matches %r — have: %s" % (os.environ["BOARD_Q"],
+          ", ".join(b["name"] for b in m.get("boards", []))), file=sys.stderr); sys.exit(3)
+b = boards[0]
+lists = [l for l in b["lists"] if list_q in l["name"].lower()]
+if not lists:
+    print("trello-map: no list matches %r on %s — have: %s" % (os.environ.get("LIST_Q"), b["name"],
+          ", ".join(l["name"] for l in b["lists"])), file=sys.stderr); sys.exit(4)
+ws = m.get("workspace_id") or ""
+bare = lists[0]["id"].split("/")[-1]
+print(f"ari:cloud:trello::list/workspace/{ws}/{bare}" if ws and os.environ.get("BARE") != "1" else bare)
+PY
+  exit $?
+fi
+
 ROOT_Q="$ROOT" MAP_Q="$MAP" HOME_Q="$HOME_R" FACTS_Q=0
 [ "$ACTION" = "--facts" ] && FACTS_Q=1
 export ROOT_Q MAP_Q HOME_Q FACTS_Q
@@ -57,8 +85,9 @@ def get(path):
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.load(r)
 
-boards = get("/members/me/boards?fields=name,url,shortLink,closed,dateLastActivity,desc,prefs")
-out = {"generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "workspace": None, "boards": []}
+boards = get("/members/me/boards?fields=name,url,shortLink,closed,dateLastActivity,desc,prefs,idOrganization")
+ws_id = next((b.get("idOrganization") for b in boards if b.get("idOrganization")), "")
+out = {"generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "workspace_id": ws_id, "boards": []}
 for b in boards:
     if b.get("closed"):
         continue
@@ -67,7 +96,8 @@ for b in boards:
     entry = {"name": b["name"], "short_link": b.get("shortLink"), "url": b.get("url"),
              "visibility": ws, "last_activity": b.get("dateLastActivity"),
              "purpose": (b.get("desc") or "").strip().splitlines()[0][:200] if b.get("desc") else "",
-             "lists": [{"name": l["name"], "cards": len(l.get("cards") or []),
+             "lists": [{"name": l["name"], "id": l["id"], "pos": l.get("pos"),
+                        "cards": len(l.get("cards") or []),
                         "examples": [c["name"][:80] for c in (l.get("cards") or [])[:3]]}
                        for l in sorted(lists, key=lambda x: x.get("pos", 0))],
              "card_total": sum(len(l.get("cards") or []) for l in lists)}
