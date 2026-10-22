@@ -92,7 +92,8 @@ def main(argv):
     ap.add_argument("--workspace", default="work")
     ap.add_argument("--plane", action="store_true")
     ap.add_argument("--plane-project", default="")
-    ap.add_argument("--plane-workspace", default="whynotproductions")
+    ap.add_argument("--plane-workspace", default="",
+                    help="the Plane workspace slug — no default: a house is not the project's to name")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     if not args.home or not os.path.isdir(args.home):
