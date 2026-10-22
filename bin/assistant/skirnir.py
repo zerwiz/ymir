@@ -166,6 +166,29 @@ def looks_like_question(text: str, key: str) -> bool:
     return bool(INTERROGATIVE.match((key or "").strip()))
 
 
+DECLARATIVE = re.compile(
+    r"\b(is|are|was|were|has|have|had|means|refers to|belongs|works|keeps|uses|prefers|leads|runs|"
+    r"costs|equals|stands for|owns|handles|serves|contains|includes)\b")
+ACTION = re.compile(
+    r"^(send|post|message|email|e-mail|call|book|schedule|create|delete|cancel|forward|reply|pay|"
+    r"order|buy|remind|set up|add|remove|change|update|move|reschedule|invite)\b")
+IMPERATIVE = re.compile(
+    r"^(summarise|summarize|send|print|ignore|read|show|list|tell|explain|give|write|make|open|run|"
+    r"delete|change|update|remember|learn|find|search|translate|draft|book|call|set|add|remove)\b")
+
+
+def looks_like_statement(text: str, key: str) -> bool:
+    """An assertion, not a command and not a question: 'gimle are the team tools' is knowledge;
+    'summarise the masterplan' is an instruction, and an instruction is never a fact."""
+    if looks_like_question(text, key):
+        return False
+    if IMPERATIVE.match((key or "").strip()):
+        return False
+    if not DECLARATIVE.search(key or ""):
+        return False
+    return len(re.findall(r"[a-z0-9]+", key or "")) >= 3
+
+
 def facts_listing(facts: dict, tier: str, limit: int = 30) -> str:
     """The owner can always see what he holds. A mouth that cannot be audited is not trustworthy."""
     if tier != "owner":
@@ -526,6 +549,11 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             if slug:
                 used = [slug]
             break
+    # An ACTION request is neither a question nor a fact: he is a mouth, not a hand (plan 101 §4).
+    # It must be caught before retrieval, or a word like "send" matches a fact and reads as consent.
+    if ACTION.match(key.strip()):
+        kind, intent = "action", "action"
+
     if intent == "unknown" and key:
         # A typo is not a refusal: "whata do you have in your database" is the same question.
         # But a DIFFERENT subject is not a typo: "what is gimle" must never become "what is ymir".
@@ -630,8 +658,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     # refusal can be reached: no "?", no interrogative opening, three words or more, and never in a
     # room where other people are present (what is said there is not his word alone).
     if intent == "unknown" and tier == "owner" and "group" not in (channel or "") \
-            and not looks_like_question(question, key) \
-            and len(re.findall(r"[a-z0-9]+", key)) >= 3:
+            and looks_like_statement(question, key):
         kind, intent = "learn_plain", "learn-plain"
 
     if kind == "learn" or kind == "learn_plain":
@@ -649,6 +676,13 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                                       capture_output=True, text=True, timeout=30)
                 reply = (f"Noted: “{fact[:160]}”. It is pending your approval — approve it and it "
                          "becomes something I know.")
+    elif kind == "action":
+        if tier == "owner":
+            reply = ("I don't act for you — nothing sent, nothing booked, nothing changed. That is "
+                     "Brokk's work and your decision; tell me what it is and I'll hold it.")
+        else:
+            reply = ("I can't send, book or change anything — I'm a mouth, not a hand. Tell me what "
+                     "you need and I'll pass it to the Allfather.")
     elif kind == "facts_list":
         reply = facts_listing(facts, tier)
     elif kind == "inventory":
