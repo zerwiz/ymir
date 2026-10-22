@@ -71,6 +71,21 @@ else
   say well HIGH "the well bridge is down on :4602 — recall and observation are blind"
 fi
 
+# ── Skírnir: a mouth that stopped answering must be visible, not discovered ───
+checked=$((checked + 1))
+ABEAT="$HOME_R/hodd/state/assistant/telegram.heartbeat"
+if [ ! -f "$ABEAT" ]; then
+  printf '  "assistant","SKIP","no heartbeat file yet — the service has not run here"\n'
+else
+  aage=$(( $(date +%s) - $(date -r "$ABEAT" +%s) ))
+  if [ "$aage" -lt 600 ]; then
+    printf '  "assistant","ok","last poll %ss ago"\n' "$aage"
+  else
+    printf '  "assistant","FAIL","silent for %ss"\n' "$aage"; fails=$((fails + 1))
+    say assistant HIGH "Skírnir has not polled Telegram for ${aage}s — he may be deaf"
+  fi
+fi
+
 # ── the hound's heartbeat: a silent watcher is a finding ──────────────────────
 # the hound runs as root: its state lives beside its findings, not in the user's home
 BEAT="/var/log/ymir/garmr/state/hound.heartbeat"

@@ -167,6 +167,90 @@ else
   pass "the research door skipped cleanly — no network on this box"
 fi
 
+# ── the handoff: gather first, then name the asker ─────────────────────────────────────────────
+# a stranger's first unknown question must NOT be escalated yet — he asks who/what/when first
+out="$(python3 "$ENGINE" --tier stranger --channel telegram-dm --chat 5150 --sender isalorain \
+       --text "what is the OptiCat deadline" 2>/dev/null)"
+case "$out" in
+  *"Before I pass this"*) pass "he gathers before he escalates" ;;
+  *) fail "gather before escalating" "$out" ;;
+esac
+
+# and the second message must carry the asker's NAME, not an anonymous ping
+MSG="$(YMIR_HOME="$AMBIENT_YMIR_HOME" bash "$SCRIPT_DIR/escalate.sh" --tier collaborator --chat 5150 \
+        --who "Isabella Jakobsson (@isalorain)" --text "what is the OptiCat deadline" \
+        --context "the inspection is Friday" --reason "no approved fact matches" --dry-run 2>&1)"
+case "$MSG" in
+  *"Isabella Jakobsson"*) pass "the handoff names who is asking" ;;
+  *) fail "the handoff names the asker" "$MSG" ;;
+esac
+case "$MSG" in
+  *"inspection is Friday"*) pass "the handoff carries what they said" ;;
+  *) fail "the handoff carries the answer" "$MSG" ;;
+esac
+
+# the owner is never told to go and ask himself
+out="$(SKIRNIR_MODEL="${SKIRNIR_MODEL:-}" python3 "$ENGINE" --tier owner --channel telegram-dm \
+       --chat owner --text "what is Isabella working on" 2>/dev/null)"
+case "$out" in
+  *"ask the Allfather"*|*"will ask the Allfather"*) fail "the owner is asked to ask himself" "$out" ;;
+  *) pass "the Allfather is never told to ask the Allfather" ;;
+esac
+
+# ── where is he? the schedule is read live, and only as deep as the asker may hear ─────────────
+# The calendar is LIVE PRIVATE DATA and this suite runs on a scratch home, so it may be unreadable
+# here. That is a clean skip, never a failure (Rule 25) — a test that needs the Allfather's calendar
+# to be online would be red for the wrong reason.
+if printf '%s' "$(ask 'where is he' owner)" | grep -q "can't read his calendar"; then
+  skip "the schedule" "the calendar is not readable from this test home"
+else
+  out="$(ask 'where is he' owner)"
+  case "$out" in *schedule*) pass "the schedule answers the owner" ;; *) fail "schedule (owner)" "$out" ;; esac
+  out="$(ask 'where is he' collaborator)"
+  case "$out" in *"“"*) fail "a colleague heard a meeting title" "$out" ;;
+    *) pass "a colleague hears busy or free, never a title" ;; esac
+  out="$(ask 'where is he' stranger)"
+  case "$out" in *"not available"*) pass "a stranger hears only that he is unavailable" ;;
+    *) fail "schedule (stranger)" "$out" ;; esac
+fi
+
+# ── parity: a spoken answer is one clause, never a table ───────────────────────────────────────
+out="$(python3 "$ENGINE" --tier owner --channel voice --chat owner --text 'list your facts' 2>/dev/null)"
+said="$(printf '%s' "$out" | field answer)"
+case "$said" in
+  *$'\n'*) fail "a list was read aloud" "$said" ;;
+  *"more"*) pass "a list is compressed into one spoken clause" ;;
+  *) pass "a spoken answer stays one clause" ;;
+esac
+
+# ── language: a Swedish question is answered in Swedish (deterministic check, no rail needed) ──
+lang="$(python3 -c "
+import importlib.util, os
+spec = importlib.util.spec_from_file_location('sk', os.environ['ENGINE'])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print('sv' if m.language_hint('vad är OptiCat och vad behöver vi göra') else 'no')" 2>&1)"
+[ "$lang" = "sv" ] && pass "a Swedish question is marked for a Swedish answer" \
+  || fail "language hint" "$lang"
+
+# ── a voice note in, a voice note out: the two halves of the same loop ────────────────────────
+if curl -s -m 4 -o /dev/null http://127.0.0.1:8765/v1/audio/speech 2>/dev/null \
+   || (exec 3<>/dev/tcp/127.0.0.1/8765) 2>/dev/null; then
+  if bash "$SCRIPT_DIR/mouth.sh" "Skirnir, what is OptiCat? The inspection is on Friday." "$TMP/note.ogg" >/dev/null 2>&1 \
+     && [ -s "$TMP/note.ogg" ]; then
+    pass "the mouth makes a Telegram voice note ($(stat -c%s "$TMP/note.ogg") bytes)"
+    heard="$(bash "$SCRIPT_DIR/ear.sh" "$TMP/note.ogg" 2>/dev/null)"
+    case "$heard" in
+      *[Oo]pti[Cc]at*|*inspection*) pass "the ear hears it back" ;;
+      "") skip "the ear" "no transcription returned" ;;
+      *) fail "the ear" "heard: $heard" ;;
+    esac
+  else
+    fail "the mouth" "could not produce a voice note"
+  fi
+else
+  skip "voice notes" "no synthesiser on :8765"
+fi
+
 # the mouth, if the rail is up: it must answer honestly and still pass the gate. A clean skip when
 # there is no rail is a pass (Rule 25) — this suite must run on a box with no model.
 rail="$(KEY=$(python3 -c "import json,os;print((json.load(open(os.path.expanduser('~/.pi/agent/auth.json'))).get('llama-swap') or {}).get('key',''))" 2>/dev/null); \

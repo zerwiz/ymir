@@ -55,6 +55,7 @@ for name in sorted(os.listdir(approved) if os.path.isdir(approved) else []):
         continue
     claim = re.sub(r"\s+", " ", body).strip()
     rows.append({"slug": name[:-3], "class": meta.get("class", "public"),
+                 "verbatim": str(meta.get("verbatim", "")).strip().lower() in ("true", "yes", "1"),
                  "audience_declared": meta.get("audience", ""),
                  "approved_by": meta.get("approved_by"), "approved_at": meta.get("approved_at", ""),
                  "expires": meta.get("expires", ""), "claim": claim,
@@ -119,8 +120,24 @@ try:
             canaries.add(m.group(1))
 except Exception:
     pass
+# A canary must be DISTINCTIVE, or the wall mutes him on ordinary prose. Measured 2026-10-22: the
+# derived list carried bare words ('queue', 'register', 'questions'), so an honest answer containing
+# the word "questions" was refused by his own gate. Keep only tokens with the shape of an identifier:
+# ten characters or more, AND a digit, a separator, an inner capital, or a non-ASCII letter.
+import re as _re
+def _distinctive(token: str) -> bool:
+    if _re.search(r"[./]", token):                       # a path or a vault marker: age.key, 102-…md
+        return len(token) >= 5
+    if _re.match(r"^[A-Z0-9_]{6,}$", token):             # a secret KEY name: NPM_TOKEN, GITHUB_APP_ID
+        return True
+    if _re.search(r"[^\x00-\x7F]", token):               # Hnitbjörg
+        return len(token) >= 6
+    if _re.search(r"[0-9]", token) and _re.search(r"[-_]", token):   # a plan title: 101-the-assistant
+        return True
+    return False                                          # 'questions', 'queue', 'register' — prose
+
 with open(canary_path, "w") as fh:
-    for token in sorted(c for c in canaries if c):
+    for token in sorted(c for c in canaries if c and _distinctive(c)):
         fh.write(token + "\n")
 
 def audience_for(row):
