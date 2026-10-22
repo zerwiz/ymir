@@ -108,7 +108,7 @@ case "$answer" in
   *) fail "he says where it came from" "$answer" ;;
 esac
 case "$answer" in
-  *"Craig Martin"*|*Andre*|*Isabella*|*Reygan*) fail "no private name rode along" "$answer" ;;
+  *"Person Surname"*|*PersonGiven*|*PersonOther*) fail "no private name rode along" "$answer" ;;
   *) pass "no private name rode along" ;;
 esac
 

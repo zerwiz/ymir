@@ -658,8 +658,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 hit_body = len(q & body)
                 hit_head = len(q & head(claim))
                 words = re.findall(r"[a-z0-9]+", claim.lower())
-                # where the subject sits in the claim: "OptiCat is …" beats "The documents around
-                # an OptiCat …" when both match, because the first is a fact ABOUT it
+                # where the subject sits in the claim: "<subject> is …" beats "The documents around
+                # a <subject> …" when both match, because the first is a fact ABOUT it
                 pos = min((i for i, w in enumerate(words) if w in q), default=99)
                 if len(q) == 1:
                     # one word is only an answer if it is the SUBJECT of the claim. "how many

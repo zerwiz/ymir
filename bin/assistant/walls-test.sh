@@ -123,7 +123,7 @@ case "$out" in *"I hold"*) pass "a typo still reaches the inventory" ;; *) fail 
 
 # two facts about one subject: the focused one answers, the tie is not a refusal
 out="$(ask 'can you tell about opticat' owner)"
-case "$out" in *OptiCat*) pass "a subject with two facts still answers" ;; *) fail "tie refusal" "$out" ;; esac
+case "$out" in *subject-x*) pass "a subject with two facts still answers" ;; *) fail "tie refusal" "$out" ;; esac
 
 # the model's eye: private classes must never enter its context, whatever the tier
 ctx="$(YMIR_HOME="$YMIR_HOME" python3 -c "
@@ -131,7 +131,7 @@ import importlib.util, os
 spec = importlib.util.spec_from_file_location('sk', os.environ['ENGINE'])
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 facts = {'a': {'claim': 'public thing', 'class': 'public'},
-         'b': {'claim': 'Craig Martin is a partner', 'class': 'contacts'},
+         'b': {'claim': 'Person Surname is a partner', 'class': 'contacts'},
          'c': {'claim': 'phase two only', 'class': 'nda'}}
 seen = m.model_context(facts)
 print('clean' if set(seen) == {'a'} else 'leak:' + ','.join(sorted(seen)))" 2>&1)"
@@ -160,7 +160,7 @@ if curl -s -o /dev/null --max-time 4 https://en.wikipedia.org/w/api.php 2>/dev/n
   out="$(python3 "$SCRIPT_DIR/research.py" --query "Kosovo Liberation Army" --limit 2 2>/dev/null)"
   case "$out" in *http*|*"www."*|*"!["*) fail "research door leaks a link" "$out" ;; *) pass "the research door returns text, never a link" ;; esac
   out="$(ask 'look up Kosovo Liberation Army' owner)"
-  case "$out" in *"Craig Martin"*|*Andre*) fail "research mixed with private facts" "$out" ;;
+  case "$out" in *"Person Surname"*|*OtherGiven*) fail "research mixed with private facts" "$out" ;;
     *"open web"*) pass "research answers from the open web, never from the digest" ;;
     *) fail "research at the owner tier" "$out" ;; esac
 else
