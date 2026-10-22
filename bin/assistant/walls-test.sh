@@ -232,6 +232,25 @@ print('sv' if m.language_hint('vad är OptiCat och vad behöver vi göra') else 
 [ "$lang" = "sv" ] && pass "a Swedish question is marked for a Swedish answer" \
   || fail "language hint" "$lang"
 
+# ── a voice note in, a voice note out: the two halves of the same loop ────────────────────────
+if curl -s -m 4 -o /dev/null http://127.0.0.1:8765/v1/audio/speech 2>/dev/null \
+   || (exec 3<>/dev/tcp/127.0.0.1/8765) 2>/dev/null; then
+  if bash "$SCRIPT_DIR/mouth.sh" "Skirnir, what is OptiCat? The inspection is on Friday." "$TMP/note.ogg" >/dev/null 2>&1 \
+     && [ -s "$TMP/note.ogg" ]; then
+    pass "the mouth makes a Telegram voice note ($(stat -c%s "$TMP/note.ogg") bytes)"
+    heard="$(bash "$SCRIPT_DIR/ear.sh" "$TMP/note.ogg" 2>/dev/null)"
+    case "$heard" in
+      *[Oo]pti[Cc]at*|*inspection*) pass "the ear hears it back" ;;
+      "") skip "the ear" "no transcription returned" ;;
+      *) fail "the ear" "heard: $heard" ;;
+    esac
+  else
+    fail "the mouth" "could not produce a voice note"
+  fi
+else
+  skip "voice notes" "no synthesiser on :8765"
+fi
+
 # the mouth, if the rail is up: it must answer honestly and still pass the gate. A clean skip when
 # there is no rail is a pass (Rule 25) — this suite must run on a box with no model.
 rail="$(KEY=$(python3 -c "import json,os;print((json.load(open(os.path.expanduser('~/.pi/agent/auth.json'))).get('llama-swap') or {}).get('key',''))" 2>/dev/null); \

@@ -21,8 +21,10 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -80,6 +82,43 @@ def api(method: str, **params):
     data = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None}).encode()
     with urllib.request.urlopen(urllib.request.Request(url, data=data), timeout=60) as resp:
         return json.load(resp)
+
+
+def send_voice(chat_id, text: str, reply_to=None) -> None:
+    """Speak the answer and send it as a voice note, with the words as the caption.
+
+    A voice note in, a voice note out — the medium the Allfather used. The text rides as the caption so
+    the answer is also readable, and if the synthesiser is down the caller falls back to a message:
+    a broken mouth must never mean a silent assistant.
+    """
+    tmp = tempfile.mkdtemp(prefix="skirnir-voice-")
+    ogg = os.path.join(tmp, "say.ogg")
+    try:
+        made = subprocess.run(["bash", os.path.join(HERE, "mouth.sh"), text, ogg],
+                              capture_output=True, text=True, timeout=300)
+        if made.returncode != 0 or not os.path.exists(ogg):
+            print(f"telegram: voice note failed — {made.stderr.strip()[:160]}", file=sys.stderr)
+            api("sendMessage", chat_id=chat_id, text=text, reply_to_message_id=reply_to,
+                disable_web_page_preview="true")
+            return
+        fields = [f"chat_id={chat_id}"]
+        if reply_to:
+            fields.append(f"reply_to_message_id={reply_to}")
+        if text and len(text) <= 1000:
+            # curl encodes multipart fields itself: quoting here double-encoded the caption into
+            # "This%20is%20Sk%C3%ADrnir…" — measured 2026-10-22.
+            fields.append("caption=" + text)
+        cmd = ["curl", "-s", "-m", "120", f"{API_BASE}/bot{TOKEN}/sendVoice"]
+        for f in fields:
+            cmd += ["-F", f]
+        cmd += ["-F", f"voice=@{ogg}"]
+        out = subprocess.run(cmd, capture_output=True, text=True).stdout
+        if '"ok":true' not in out:
+            print(f"telegram: sendVoice refused — {out[:160]}", file=sys.stderr)
+            api("sendMessage", chat_id=chat_id, text=text, reply_to_message_id=reply_to,
+                disable_web_page_preview="true")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def load_groups() -> dict:
@@ -209,6 +248,31 @@ def main() -> int:
                 print(f"telegram: update {update.get('update_id')} kind={[k for k in update if k != 'update_id']} "
                       f"chat={chat.get('id')} type={chat.get('type')} title={chat.get('title')!r}", file=sys.stderr)
             text = msg.get("text") or ""
+            was_voice = False
+            # A VOICE NOTE IS A MESSAGE. The ear is Snotra's whisper server (one transcription path in
+            # this house), and the words it returns are treated exactly like typed ones — same tiers,
+            # same walls, same gate. Nothing about a voice bypasses a wall.
+            note = msg.get("voice") or msg.get("audio") or msg.get("video_note")
+            if not text and note and not sender.get("is_bot"):
+                try:
+                    got = api("getFile", file_id=note.get("file_id"))
+                    path = ((got or {}).get("result") or {}).get("file_path")
+                    if path:
+                        url = f"{API_BASE}/file/bot{TOKEN}/{path}"
+                        with urllib.request.urlopen(url, timeout=120) as resp:
+                            blob = resp.read()
+                        with tempfile.NamedTemporaryFile(suffix=".oga", delete=False) as fh:
+                            fh.write(blob)
+                            local = fh.name
+                        heard = subprocess.run(["bash", os.path.join(HERE, "ear.sh"), local],
+                                               capture_output=True, text=True, timeout=180)
+                        os.unlink(local)
+                        text = (heard.stdout or "").strip()
+                        was_voice = bool(text)
+                        if verbose:
+                            print(f"telegram: heard a voice note ({len(text)} chars)", file=sys.stderr)
+                except Exception as err:
+                    print(f"telegram: could not hear the voice note: {err}", file=sys.stderr)
             if not text or sender.get("is_bot"):
                 continue
             # every group or channel he is put in is RECORDED first, before any filter — that is how
@@ -290,9 +354,12 @@ def main() -> int:
             if not reply:
                 continue
             try:
-                api("sendMessage", chat_id=chat.get("id"), text=reply,
-                    reply_to_message_id=msg.get("message_id"),
-                    disable_web_page_preview="true")
+                if was_voice:
+                    send_voice(chat.get("id"), reply, msg.get("message_id"))
+                else:
+                    api("sendMessage", chat_id=chat.get("id"), text=reply,
+                        reply_to_message_id=msg.get("message_id"),
+                        disable_web_page_preview="true")
             except Exception as err:
                 if verbose:
                     print(f"telegram: send failed: {err}", file=sys.stderr)
