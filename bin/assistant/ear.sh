@@ -7,12 +7,14 @@
 # meeting, so there is one transcription path in this house and not two. If the service is down the
 # local `whisper-cli` is the fallback; if neither answers, the caller is told so, never given a guess.
 set -u
-FILE="${1:-}"; LANG_CODE="en"
-shift || true
+FILE=""; LANG_CODE="en"
 while [ $# -gt 0 ]; do
   case "$1" in
+    --file=*) FILE="${1#--file=}"; shift ;;      # the pi-telegram handler template's shape
+    --file) FILE="${2:-}"; shift 2 ;;
+    --lang=*) LANG_CODE="${1#--lang=}"; shift ;;
     --lang) LANG_CODE="${2:-en}"; shift 2 ;;
-    *) shift ;;
+    *) [ -z "$FILE" ] && FILE="$1"; shift ;;
   esac
 done
 [ -n "$FILE" ] && [ -r "$FILE" ] || { printf 'ear: no audio file\n' >&2; exit 2; }
