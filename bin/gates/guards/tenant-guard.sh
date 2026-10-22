@@ -55,7 +55,7 @@ for p in tracked:
     n = len(rx.findall(txt))
     if n:
         hits[p] = n
-base_path = os.path.join(root, "config/tenant-baseline.json")
+base_path = os.path.join(root, ".agents/tenant-baseline.json")
 baseline = {}
 if os.path.isfile(base_path):
     try: baseline = json.load(open(base_path))

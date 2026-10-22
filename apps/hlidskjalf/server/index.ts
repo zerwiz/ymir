@@ -992,7 +992,7 @@ function workspaceRoot(realm: string): string {
   // point into the hoard — which is why a listed file answered "not found".
   // The realm's OWN tree first. A workspace may name a company, but the operator's
   // projects live under svartalfaheim/<realm>/projects — the company mapping is a
-  // display owner, not the shelf. This is why Skrymir showed whynotproductions and
+  // display owner, not the shelf. This is why a workspace can show its owner's name and
   // not the work tree that holds the meetings.
   const realmTree = join(HOME_DIR, 'svartalfaheim', realm);
   if (existsSync(realmTree)) return realmTree;
@@ -1168,23 +1168,28 @@ async function cron() {
   };
 }
 
-// The server crons the board must show beside the local ones (plan 54,
-// 2026-09-24): whynot and zerwizserver are the fleet's servers (the hoard's
-// machines.md; ~/.ssh/config hosts `whynot` and `server` → zerwizserver).
-// One ssh round-trip per seat — read-on-demand, machine-local, BatchMode only.
-const DEFAULT_SERVER_SEATS = [
-  { seat: 'whynot', host: 'whynot' },
-  { seat: 'zerwizserver', host: 'server' },
-];
-function serverSeats(): { seat: string; host: string }[] {
+// The server crons the board shows beside the local ones (plan 54).
+//
+// The SEATS ARE NOT OURS TO NAME (Rule 25): a fleet is the operator's own, so the shipped
+// code carries no seat, no host and no ssh alias. It reads them from the environment —
+// `YMIR_CRON_SERVER_SEATS="<seat>:<ssh-host> …"` — or from the hoard's fleet file via the
+// resolver, and reports a clean SKIP when neither exists rather than guessing a machine.
+function configuredServerSeats(): { seat: string; host: string }[] {
   const env = process.env.YMIR_CRON_SERVER_SEATS;
   if (env) {
-    return env.split(/\s+/).filter(Boolean).map((e) => {
-      const [seat, host] = e.split(':');
-      return { seat, host: host ?? seat };
-    });
+    return env
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((e) => {
+        const [seat, host] = e.split(':');
+        return { seat, host: host ?? seat };
+      });
   }
-  return DEFAULT_SERVER_SEATS;
+  return [];
+}
+
+function serverSeats(): { seat: string; host: string }[] {
+  return configuredServerSeats();
 }
 
 async function cronSeats() {
