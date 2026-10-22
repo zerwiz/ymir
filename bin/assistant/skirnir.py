@@ -100,6 +100,10 @@ INTENTS = {
     "what is waiting": ("asks", None),
     "what is open": ("asks", None),
     "who is waiting": ("asks", None),
+    "what did we talk about": ("recap", None),
+    "summarise our chat": ("recap", None),
+    "summarize our chat": ("recap", None),
+    "what have we discussed": ("recap", None),
     "who are you": ("role", None),
     "how do i reach him": ("logistics", "availability"),
 }
@@ -590,6 +594,50 @@ def who_is(sender: str, sender_id: str, chat: str, channel: str) -> str:
     return f"someone in {channel or 'a chat'}"
 
 
+SUMMARY_EVERY = 8
+
+
+def _summary_path() -> str:
+    return os.path.join(STATE, "chat-summaries.json")
+
+
+def summary_get(chat: str) -> dict:
+    try:
+        data = json.load(open(_summary_path()))
+    except Exception:
+        return {}
+    return (data or {}).get(chat or "") or {}
+
+
+def summary_maybe_update(chat: str, model: str, tier: str) -> None:
+    """A conversation longer than a handful of turns deserves one line of shape. Owner only, and
+    only when a model is armed: a summary is written by a mouth, never invented by a template."""
+    if not chat or not model or tier != "owner":
+        return
+    recent = history(chat, limit=SUMMARY_EVERY)
+    if len(recent) < SUMMARY_EVERY:
+        return
+    stored = summary_get(chat)
+    if stored.get("turns") == len(recent):
+        return
+    text = "\n".join(f"{role}: {line[:200]}" for role, line in recent)
+    said = _rail("Summarise this conversation in at most two short sentences, for the assistant's own "
+                 "memory. Keep names, dates and decisions; drop pleasantries. " + name_law(), text,
+                 model, temperature=0.2)
+    if not said:
+        return
+    try:
+        data = json.load(open(_summary_path()))
+    except Exception:
+        data = {}
+    data[chat] = {"summary": said.strip()[:600], "at": time.time(), "turns": len(recent)}
+    try:
+        os.makedirs(STATE, exist_ok=True)
+        json.dump(data, open(_summary_path(), "w"), indent=1)
+    except Exception:
+        pass
+
+
 def _pending_path() -> str:
     return os.path.join(STATE, "pending-ask.json")
 
@@ -799,6 +847,10 @@ def model_answer(question: str, facts: dict, model: str,
     if recent:
         context += "\n\nThe last turns in this chat:\n" + "\n".join(
             f"{role}: {line[:200]}" for role, line in recent)
+    try:
+        prior = summary_get(chat_of(recent)) if False else {}
+    except Exception:
+        prior = {}
     system = ("You are Skírnir, the Allfather's assistant. Answer ONLY from the facts below. "
               + _audience(tier) + language_hint(question) + " "
               "Never produce a URL, a link, an image, a table or code. Two sentences at most.\n"
@@ -1077,6 +1129,15 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                              f"— {top.get('title', '')}.")
                 used = [f"web:{s.get('domain', '')}" for s in sources]
                 intent = "research"
+    elif kind == "recap":
+        if tier != "owner":
+            reply = "Our conversation is between us and the Allfather."
+            intent, denied = "unknown", True
+        else:
+            stored = summary_get(chat)
+            reply = (stored.get("summary") or
+                     "We haven't spoken long enough for me to hold a summary yet — a few more turns "
+                     "and I'll have the shape of it.")
     elif kind == "asks":
         door = os.path.join(HERE, "asks.sh")
         try:
@@ -1133,12 +1194,25 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             else:
                 needle = (m_tell.group(1) or "").strip().lower()
                 text_out = m_tell.group(2).strip()
-                for row in rows:
+                if needle in ("her", "him", "them", "the last one", "that one"):
+                    target = rows[-1] if rows else None
+                # the NEWEST matching ask wins: the same person can have two questions open, and
+                # the one he is answering now is the one most recently asked
+                for row in reversed(rows):
                     if needle and needle in row["who"].lower():
                         target = row
                         break
-                if not target and rows:
-                    target = rows[-1]
+                if not target and needle:
+                    # ASR mangles a name; a mangled ASKER must not send the answer to the wrong chat
+                    import difflib
+                    best, score = None, 0.0
+                    for row in reversed(rows):
+                        first = row["who"].split()[0].lower() if row["who"] else ""
+                        ratio = difflib.SequenceMatcher(None, needle, first).ratio()
+                        if ratio > score:
+                            best, score = row, ratio
+                    if best and score >= 0.6:
+                        target = best
             if not target:
                 reply = "There is no open question to answer — nothing is waiting on you."
             elif not text_out:
@@ -1280,6 +1354,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
 
     ledger(question, reply, tier, channel, intent, used, intent == "unknown", dh)
     remember(chat, question, reply)
+    summary_maybe_update(chat, mouth, tier)
     if intent == "unknown" and not denied:
         handoff = "not-needed"
         if tier == "owner":
