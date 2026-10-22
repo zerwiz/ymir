@@ -18,11 +18,19 @@ done
 [ -n "$FILE" ] && [ -r "$FILE" ] || { printf 'ear: no audio file\n' >&2; exit 2; }
 URL="${WHISPER_URL:-http://127.0.0.1:10300/inference}"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-# whisper wants 16 kHz mono PCM
-ffmpeg -hide_banner -loglevel error -y -i "$FILE" -ar 16000 -ac 1 "$TMP/16k.wav" 2>/dev/null \
+# whisper wants 16 kHz mono PCM — and TELEGRAM'S NOTES ARE QUIET. Measured 2026-10-22: the same note
+# without gain heard "OptiCAD"; with gain and a vocabulary hint it heard "OptiCat". Level first, then
+# the words.
+ffmpeg -hide_banner -loglevel error -y -i "$FILE" \
+  -af "volume=6dB,loudnorm=I=-16:TP=-1.5:LRA=11" -ar 16000 -ac 1 "$TMP/16k.wav" 2>/dev/null \
+  || ffmpeg -hide_banner -loglevel error -y -i "$FILE" -ar 16000 -ac 1 "$TMP/16k.wav" 2>/dev/null \
   || { printf 'ear: could not decode the audio\n' >&2; exit 3; }
 
-OUT="$(curl -s -m 120 "$URL" -F "file=@$TMP/16k.wav" -F response_format=json -F temperature=0 2>/dev/null)"
+# A VOCABULARY HINT, because a general model hears "OptiCAD" and this house has an OptiCat. Names only,
+# never a private fact: it biases the decoder toward the words the house actually says.
+VOCAB="${WHISPER_VOCAB:-OptiCat, OVK, Skírnir, Snotra, Boverket, WayOf, Whynot Productions, Synteon, ventilation inspection, Isabella, Craig, Brokk, Ymir}"
+OUT="$(curl -s -m 120 "$URL" -F "file=@$TMP/16k.wav" -F response_format=json -F temperature=0 \
+  -F "prompt=$VOCAB" 2>/dev/null)"
 TEXT="$(printf '%s' "$OUT" | python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("text","").strip())
 except Exception: print("")' 2>/dev/null)"
