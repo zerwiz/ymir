@@ -21,18 +21,20 @@ H="$(home_or_die)"; CFG="$H/config/guardian.yaml"; MAN="$H/state/garmr/canaries.
 mkdir -p "$H/state/garmr" 2>/dev/null || true
 
 canaries() {
-  python3 - "$CFG" <<'PY'
-import sys
+  python3 - "$CFG" "$H" <<'PY'
+import sys, os
 try:
-    import yaml, os
+    import yaml
     d = yaml.safe_load(open(sys.argv[1])) or {}
 except Exception:
     print("# no guardian config — nothing is watched"); raise SystemExit(0)
 rows = d.get("canary") or []
 if not rows:
-    rows = [os.path.expanduser(p) for p in ("~/Documents/ymirhome/hodd/memory/runes_audit.md",
-                                            "~/Documents/ymirhome/hodd/identity/operator.yaml",
-                                            "~/Documents/ymirhome/hodd/identity/companies.yaml")]
+    # the fallback asks the resolver's home (argv[2]); it never restates where the hoard lives.
+    h = sys.argv[2]
+    rows = [os.path.join(h, p) for p in ("hodd/memory/runes_audit.md",
+                                         "hodd/identity/operator.yaml",
+                                         "hodd/identity/companies.yaml")]
 for r in rows:
     print(os.path.expanduser(str(r)))
 PY
