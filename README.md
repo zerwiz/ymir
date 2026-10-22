@@ -11,7 +11,7 @@
 
 > **One operator. One repo. A whole business, run by a Norse-named agent fleet.**
 
-![Ymir — the single-tenant agent OS](assets/ymir-banner-03.png)
+![Ymir — the single-tenant agent OS](assets/ymir-banner-brown.jpg)
 
 Ymir is a lean, single-operator agentic OS. You are the **Allfather**; **Brokk** is
 your primary agent; **Eindri** are the isolated workers it dispatches. Everything —

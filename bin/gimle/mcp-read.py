@@ -78,22 +78,34 @@ class State:
             return {"meetings": []}
 
     def tokens_map(self) -> dict:
+        """`<token> <subject> [places]` — places are comma-separated; `*` means every place.
+
+        A token that names no place may touch **nothing**: the default is deny, because a token
+        with no scope is how "one token = the whole record" happened (plan 105, H4).
+        """
         out = {}
         try:
             with open(self.tokens, encoding="utf-8") as fh:
                 for line in fh:
                     parts = line.split()
                     if len(parts) >= 2:
-                        out[parts[1]] = parts[0]
+                        places = parts[2].split(",") if len(parts) > 2 else []
+                        out[parts[1]] = (parts[0], [p for p in places if p])
         except Exception:
             pass
         return out
 
-    def subject_for(self, presented: str) -> str | None:
-        for subject, token in self.tokens_map().items():
+    def subject_for(self, presented: str) -> tuple[str, list[str]] | None:
+        for subject, (token, places) in self.tokens_map().items():
             if hmac.compare_digest(token, presented):
-                return subject
+                return subject, places
         return None
+
+    @staticmethod
+    def may(subject_places: list[str], place: str) -> bool:
+        if "*" in subject_places:
+            return True
+        return any(place.lower().startswith(p.lower()) for p in subject_places)
 
     def record(self, subject: str, tool: str, verdict: str, why: str = ""):
         row = {"at": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
@@ -115,29 +127,37 @@ def result(payload, is_error=False):
             "isError": is_error}
 
 
-def call_tool(st: State, subject: str, name: str, args: dict):
+def call_tool(st: State, subject: str, places_allowed: list[str], name: str, args: dict):
     data = st.load()
     places = places_of(data)
     if name == "who_am_i":
-        return result({"subject": subject, "places": sorted(places),
+        return result({"subject": subject, "allowed_places": places, "places_in_the_record": sorted(places),
                        "phase": "read-only"})
     if name == "list_places":
-        counts = {k: len(v.get("actions", [])) + len(v.get("questions", [])) for k, v in places.items()}
-        return result({"places": [{"place": k, "open": n} for k, n in counts.items()]})
+        visible = {k: v for k, v in places.items() if st.may(places_allowed, k)}
+        counts = {k: len(v.get("actions", [])) + len(v.get("questions", [])) for k, v in visible.items()}
+        return result({"places": [{"place": k, "open": n} for k, n in counts.items()],
+                       "refused": len(places) - len(visible)})
     if name in ("my_tasks", "who_owes_what"):
         rows = []
+        refused = 0
         for place, m in places.items():
+            if not st.may(places_allowed, place):
+                refused += 1
+                continue
             for a in m.get("actions", []):
                 owner = str(a.get("owner", ""))
                 if name == "my_tasks" and subject.lower() not in owner.lower():
                     continue
                 rows.append({"place": place, "task": a.get("text"), "owner": owner,
                              "due": a.get("due"), "evidence": a.get("evidence")})
-        return result({"subject": subject, "count": len(rows), "rows": rows})
+        return result({"subject": subject, "count": len(rows), "rows": rows, "places_refused": refused})
     if name == "place_board":
         target = str(args.get("place", "")).lower()
         for place, m in places.items():
             if target and target in place.lower():
+                if not st.may(places_allowed, place):
+                    return result({"error": "that place is outside this token's scope", "place": place}, True)
                 return result({"place": place,
                                "actions": m.get("actions", []),
                                "questions": m.get("questions", [])})
@@ -146,6 +166,8 @@ def call_tool(st: State, subject: str, name: str, args: dict):
         target = str(args.get("meeting", "")).lower()
         for place, m in places.items():
             if target and (target in place.lower() or target == m.get("id", "")):
+                if not st.may(places_allowed, place):
+                    return result({"error": "that meeting is outside this token's scope", "meeting": place}, True)
                 return result({"meeting": place,
                                "decisions": m.get("decisions", []),
                                "questions": m.get("questions", []),
@@ -185,7 +207,8 @@ class Handler(BaseHTTPRequestHandler):
         if auth.lower().startswith("bearer "):
             presented = auth[7:].strip()
         presented = presented or self.headers.get("X-API-Key", "")
-        subject = self.state.subject_for(presented) if presented else None
+        ident = self.state.subject_for(presented) if presented else None
+        subject, places = (ident if ident else (None, []))
         if not subject:
             self.state.record("anonymous", "?", "refused", "no valid token")
             return self._json(401, {"error": "a Gimlé token is required"})
@@ -207,7 +230,7 @@ class Handler(BaseHTTPRequestHandler):
             params = req.get("params") or {}
             name = params.get("name", "")
             args = params.get("arguments") or {}
-            out = call_tool(self.state, subject, name, args)
+            out = call_tool(self.state, subject, places, name, args)
             self.state.record(subject, name, "refused" if out.get("isError") else "allowed",
                               "" if not out.get("isError") else "backend not configured or no such object")
             return self._json(200, {"jsonrpc": "2.0", "id": rid, "result": out})
