@@ -857,6 +857,8 @@ def model_answer(question: str, facts: dict, model: str,
     except Exception:
         prior = {}
     system = ("You are Skírnir, the Allfather's assistant. Answer ONLY from the facts below. "
+              "Never combine facts about different subjects into one sentence — a handle is not a "
+              "company, and one fact is not evidence for another. "
               + _audience(tier) + language_hint(question) + " "
               "Never produce a URL, a link, an image, a table or code. Two sentences at most.\n"
               f"FACTS:\n{context}")
@@ -905,12 +907,6 @@ def say_unknown(tier: str = "stranger", passed: bool = True, seed: str = "") -> 
         return (pick(REFUSALS_OTHER, seed or "other") +
                 " I've passed it to the Allfather and he will come back to you.")
     return pick(REFUSALS_UNREACHED, seed or "unreached")
-
-
-def _operator_schedule_intents() -> None:
-    """'where is <his name>' without ever writing the name in the repo."""
-    for alias in operator_aliases():
-        INTENTS.setdefault(f"where is {alias.lower()}", ("schedule", None))
 
 
 def answer(text: str, tier: str, channel: str, sender: str = "", model: str = "", chat: str = "", sender_id: str = "", members: list[str] | None = None) -> dict:
@@ -1104,7 +1100,10 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             else:
                 # near-equal facts are the SAME subject seen from two angles: hand the model the set
                 best = ranked[0][0]
-                used = [r[5] for r in ranked[:3] if r[0] >= best - 0.15]
+                # only facts that name the SUBJECT (hit_head >= 1): "the companies are …" is an
+                # aggregate, not a second opinion about WayOf, and joining the two produced a false
+                # sentence about a Telegram handle on 2026-10-22.
+                used = [r[5] for r in ranked[:3] if r[0] >= best - 0.15 and r[2] >= 1] or [ranked[0][5]]
                 intent = f"fact:{used[0]}" if len(used) == 1 else "fact:multi"
 
     # "what are those 21 approved facts" — the owner asking to SEE the shelf, not to search it
@@ -1384,6 +1383,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                     # a model may not invent an addressee: the Allfather IS the addressee
                     reply = say_unknown("owner", seed=chat or "owner")
         elif used and used[0] in facts \
+                and not any(facts[u].get("verbatim") for u in used if u in facts) \
                 and str(facts[used[0]].get("class", "public")).lower() in MODEL_SAFE_CLASSES:
             bundle = {slug: facts[slug] for slug in used if slug in facts}
             said = model_answer(question, bundle, mouth, history(chat), tier)
@@ -1450,9 +1450,6 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return {"answer": reply, "refused": intent == "unknown", "intent": intent,
             "facts": used, "tier": tier, "digest": dh}
-
-
-_operator_schedule_intents()
 
 
 def main() -> int:

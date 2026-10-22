@@ -151,3 +151,20 @@ one message per 5 s and more than 30 an hour in a chat. A research turn's real c
 plus a model answer — so the door keeps a **ten-minute cache** (the same question cost 1 197 ms live,
 195 ms cached) and reports a provider **throttle** as a throttle rather than quietly answering from the
 Wikipedia fallback. `--no-cache` forces a live call for the smoke test.
+
+**He knows the house itself** (2026-10-22). His digest began at 21 facts — enough to say what Ymir is
+and not much else. `bin/assistant/learn-house.sh` derives his knowledge from the house's own **public**
+documents: every named thing in `docs/lore.md` and every row of `FEATURES.md`, one approved fact each,
+read **verbatim** (a paraphrased feature description is how a catalogue becomes a rumour).
+
+```sh
+bin/assistant/learn-house.sh            # derive, write, rebuild the digest
+bin/assistant/learn-house.sh --dry-run  # how many facts it would write
+```
+
+Measured: **21 → 120 facts** (97 derived + his own), and the questions that used to earn the honest no
+now answer — *"what is Hlidskjalf"*, *"what is Snotra"*, *"does Ymir have a ward"*, *"what is the well"*.
+The generator owns **only** what it marked (`generated_by: bin/assistant/learn-house.sh`): a fact it no
+longer produces is removed, and nothing the Allfather approved by hand is ever touched. The lore's
+"Odin" is rewritten to "the Allfather" as it is derived — the name law binds the mouth, not just the
+prompt.

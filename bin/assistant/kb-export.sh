@@ -55,6 +55,7 @@ for name in sorted(os.listdir(approved) if os.path.isdir(approved) else []):
         continue
     claim = re.sub(r"\s+", " ", body).strip()
     rows.append({"slug": name[:-3], "class": meta.get("class", "public"),
+                 "verbatim": str(meta.get("verbatim", "")).strip().lower() in ("true", "yes", "1"),
                  "audience_declared": meta.get("audience", ""),
                  "approved_by": meta.get("approved_by"), "approved_at": meta.get("approved_at", ""),
                  "expires": meta.get("expires", ""), "claim": claim,
