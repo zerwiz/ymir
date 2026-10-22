@@ -41,7 +41,7 @@ fi
 
 # ── 1 · the door itself ─────────────────────────────────────────────────────────────────────────
 start=$(date +%s%N)
-OUT="$(timeout 90 python3 "$DOOR" --query "$QUERY" --limit 3 2>/dev/null)"
+OUT="$(timeout 90 python3 "$DOOR" --query "$QUERY" --limit 3 --no-cache 2>/dev/null)"
 elapsed=$(( ($(date +%s%N) - start) / 1000000 ))
 
 [ -n "$OUT" ] && pass "the door answered" || fail "the door answered" "no output"
@@ -72,6 +72,20 @@ print(",".join(sorted({s.get("domain","") for s in (d.get("sources") or []) if s
 
 [ "$elapsed" -lt 15000 ] && pass "a lookup, not a crawl — ${elapsed} ms for ${n} source(s)" \
   || fail "lookup latency" "${elapsed} ms is too slow for a request"
+
+# ── 1b · a repeat is not a new question ─────────────────────────────────────────────────────────
+start=$(date +%s%N)
+REP="$(timeout 90 python3 "$DOOR" --query "$QUERY" --limit 3 2>/dev/null)"
+rep_elapsed=$(( ($(date +%s%N) - start) / 1000000 ))
+rprovider="$(printf '%s' "$REP" | jget "d.get('provider','')")"
+rn="$(printf '%s' "$REP" | jget "len(d.get('sources') or [])")"
+case "$rprovider" in
+  exa-cache) pass "a repeat is served from the cache — ${rep_elapsed} ms, no provider call" ;;
+  exa) pass "the provider answered again (no cache on this home) — ${rep_elapsed} ms" ;;
+  *) fail "a repeat is served from the cache" "provider '$rprovider'" ;;
+esac
+[ "${rn:-0}" -ge 1 ] && pass "the cached answer still carries its sources (${rn})" \
+  || fail "cached sources" "none"
 
 # ── 2 · the engine routes a request to the door ─────────────────────────────────────────────────
 ask() { SKIRNIR_MODEL="$MODEL" python3 "$ENGINE" --tier "${2:-owner}" --channel "${3:-console}" \

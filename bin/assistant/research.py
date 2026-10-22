@@ -33,6 +33,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -41,6 +42,64 @@ EXA_TOOL = "web_search_exa"
 UA = "Ymir-Skirnir/1.0 (assistant research door; exa mcp; text only)"
 MAX_EXTRACT = 900
 MAX_TOTAL = 4000
+
+
+CACHE_TTL = 600          # seconds: the same query inside ten minutes costs neither Exa nor the rail
+
+
+def _state_dir() -> str:
+    """$YMIR_HOME/hodd/state/assistant — resolved, never guessed (Rule 07). No home, no cache."""
+    home = os.environ.get("YMIR_HOME", "").strip()
+    if not home:
+        lib = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                           "vault", "hoard-lib.sh")
+        try:
+            import subprocess
+            out = subprocess.run(["bash", "-c",
+                                  f'. "{lib}" >/dev/null 2>&1; r=""; ymir_home_root r 2>/dev/null; printf "%s" "$r"'],
+                                 capture_output=True, text=True, timeout=10).stdout.strip()
+            home = out if out and os.path.isdir(out) else ""
+        except Exception:
+            home = ""
+    if not home:
+        return ""
+    path = os.path.join(home, "hodd", "state", "assistant", "research-cache")
+    try:
+        os.makedirs(path, exist_ok=True)
+    except Exception:
+        return ""
+    return path
+
+
+def _cache_get(query: str, limit: int) -> list[dict] | None:
+    """A repeat of the same question is not a new question — and must not cost a model swap."""
+    d = _state_dir()
+    if not d:
+        return None
+    import hashlib
+    path = os.path.join(d, hashlib.sha256(f"{query}|{limit}".encode()).hexdigest()[:20] + ".json")
+    try:
+        if time.time() - os.path.getmtime(path) > CACHE_TTL:
+            return None
+        with open(path) as fh:
+            cached = json.load(fh)
+        sources = cached.get("sources") or []
+        return sources or None
+    except Exception:
+        return None
+
+
+def _cache_put(query: str, limit: int, sources: list[dict]) -> None:
+    d = _state_dir()
+    if not d or not sources:
+        return
+    import hashlib
+    path = os.path.join(d, hashlib.sha256(f"{query}|{limit}".encode()).hexdigest()[:20] + ".json")
+    try:
+        with open(path, "w") as fh:
+            json.dump({"query": query, "limit": limit, "at": time.time(), "sources": sources}, fh)
+    except Exception:
+        pass
 
 
 def _config_key() -> str:
@@ -148,6 +207,7 @@ def main() -> int:
     ap.add_argument("--query", required=True)
     ap.add_argument("--limit", type=int, default=3)
     ap.add_argument("--no-fallback", action="store_true")
+    ap.add_argument("--no-cache", action="store_true", help="force a live provider call (smoke tests)")
     args = ap.parse_args()
     query = (args.query or "").strip()
     limit = max(1, min(args.limit, 5))
@@ -156,12 +216,26 @@ def main() -> int:
         return 2
 
     provider, sources, error = "exa", [], ""
-    try:
-        sources = exa(query, limit)
-    except urllib.error.HTTPError as exc:
-        error = f"exa HTTP {exc.code}"
-    except Exception as exc:
-        error = f"exa {type(exc).__name__}: {exc}"[:160]
+    cached = None if args.no_cache else _cache_get(query, limit)
+    if cached:
+        provider = "exa-cache"
+        sources = cached
+    else:
+        try:
+            sources = exa(query, limit)
+        except urllib.error.HTTPError as exc:
+            error = f"exa HTTP {exc.code}"
+            if exc.code == 429:
+                # a throttle is reported as a throttle. Falling back to the stub here is how a
+                # silent downgrade hides itself, and that is the bug this door was rebuilt to end.
+                print(json.dumps({"query": query, "provider": "exa", "sources": [],
+                                  "error": "throttled: the search provider is rate-limiting this box "
+                                           "(a key in web-search.json raises the limit)"}))
+                return 1
+        except Exception as exc:
+            error = f"exa {type(exc).__name__}: {exc}"[:160]
+        if sources:
+            _cache_put(query, limit, sources)
     if not sources and not args.no_fallback:
         try:
             sources = wikipedia(query, limit)
