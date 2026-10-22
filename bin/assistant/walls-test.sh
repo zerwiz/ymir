@@ -214,6 +214,24 @@ else
     *) fail "schedule (stranger)" "$out" ;; esac
 fi
 
+# ── parity: a spoken answer is one clause, never a table ───────────────────────────────────────
+out="$(python3 "$ENGINE" --tier owner --channel voice --chat owner --text 'list your facts' 2>/dev/null)"
+said="$(printf '%s' "$out" | field answer)"
+case "$said" in
+  *$'\n'*) fail "a list was read aloud" "$said" ;;
+  *"more"*) pass "a list is compressed into one spoken clause" ;;
+  *) pass "a spoken answer stays one clause" ;;
+esac
+
+# ── language: a Swedish question is answered in Swedish (deterministic check, no rail needed) ──
+lang="$(python3 -c "
+import importlib.util, os
+spec = importlib.util.spec_from_file_location('sk', os.environ['ENGINE'])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print('sv' if m.language_hint('vad är OptiCat och vad behöver vi göra') else 'no')" 2>&1)"
+[ "$lang" = "sv" ] && pass "a Swedish question is marked for a Swedish answer" \
+  || fail "language hint" "$lang"
+
 # the mouth, if the rail is up: it must answer honestly and still pass the gate. A clean skip when
 # there is no rail is a pass (Rule 25) — this suite must run on a box with no model.
 rail="$(KEY=$(python3 -c "import json,os;print((json.load(open(os.path.expanduser('~/.pi/agent/auth.json'))).get('llama-swap') or {}).get('key',''))" 2>/dev/null); \

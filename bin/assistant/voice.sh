@@ -75,6 +75,23 @@ fi
 [ -n "${TEXT:-}" ] || { printf 'voice: nothing heard\n' >&2; exit 1; }
 printf 'you: %s\n' "$TEXT"
 
+speak_sentence_early() {
+  local text="$1"
+  if curl -s -m 20 -o /tmp/skirnir-early.wav -X POST "$KOKORO_URL" \
+      -H 'content-type: application/json' \
+      -d "$(python3 -c "import json,sys;print(json.dumps({'model':'kokoro','input':sys.argv[1],'voice':sys.argv[2]}))" "$text" "$KOKORO_VOICE")" 2>/dev/null \
+      && [ -s /tmp/skirnir-early.wav ]; then
+    command -v paplay >/dev/null 2>&1 && paplay /tmp/skirnir-early.wav 2>/dev/null || true
+  fi
+}
+
+# ── 1b · a slow turn announces itself ────────────────────────────────────────
+# Research is a provider call plus a model answer: 2.5-4 s before the first word, against the
+# council's 1.2 s bar. Silence reads as deafness, so say so first (plan 101, parity law).
+if printf '%s' "$TEXT" | grep -qiE '\b(look up|search|research|google|find)\b.*\b(online|web|internet)\b|\b(look up|search|research)\b'; then
+  speak_sentence_early "One moment, I'm looking." 2>/dev/null || true
+fi
+
 # ── 2 · think (the walls apply) ──────────────────────────────────────────────
 ARGS=(--tier owner --channel voice --sender voice --text "$TEXT")
 [ -n "$MODEL" ] && ARGS+=(--model "$MODEL")
