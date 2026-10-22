@@ -90,8 +90,10 @@ cmd_up() {
   local p raised=0
   for p in $PORTS; do
     if probe "$p"; then continue; fi
+    # A control socket, not a pattern: closing a door must name the door (the
+    # pkill ward refuses to let anyone kill by pattern, and rightly).
     ssh -o BatchMode=yes -o ExitOnForwardFailure=yes -o ConnectTimeout=8 \
-        -N -f -L "127.0.0.1:$p:$BEHIND:$p" "$HEART" 2>/dev/null \
+        -M -S "$DOOR_DIR/ctl-$p.sock" -N -f -L "127.0.0.1:$p:$BEHIND:$p" "$HEART" 2>/dev/null \
       && { printf '%s\n' "$p" >>"$DOOR_DIR/raised"; raised=$((raised+1)); } \
       || printf 'well-door: could not forward %s (ssh %s)\n' "$p" "$HEART" >&2
   done
@@ -102,7 +104,10 @@ cmd_up() {
 cmd_down() {
   local p
   for p in $PORTS; do
-    pgrep -f "ssh .*-L 127.0.0.1:$p:" >/dev/null 2>&1 && pkill -f "ssh .*-L 127.0.0.1:$p:" 2>/dev/null
+    if [ -S "$DOOR_DIR/ctl-$p.sock" ]; then
+      ssh -S "$DOOR_DIR/ctl-$p.sock" -O exit "$HEART" 2>/dev/null
+      rm -f "$DOOR_DIR/ctl-$p.sock" 2>/dev/null || true
+    fi
     printf 'well-door: closed %s\n' "$p"
   done
   rm -f "$DOOR_DIR/raised" 2>/dev/null || true
