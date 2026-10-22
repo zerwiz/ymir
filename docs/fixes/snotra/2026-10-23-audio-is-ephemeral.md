@@ -34,3 +34,22 @@ listening to telegram, it grows crazy"*) — a live tail belongs in a chat only 
 
 **Verified:** `scan` lists five files across the meetings shelf and `/tmp` with a per-file verdict; `apply`
 compressed the two transcribed meetings and removed their WAVs, and kept every file without a transcript.
+
+---
+
+## Appended 2026-10-23 — the tool deleted what it should have offloaded
+
+The first `apply` removed two `.opus` files — already-compressed audio — because the branch that handles
+`.opus` deleted unconditionally. Their **transcripts survived**, so no meeting was lost, but the audio was
+destroyed when the Allfather had asked for it to be **offloaded to a drive**, not burned.
+
+```
+correction[2]{case,was,now}:
+  "raw capture (.wav/.ogg/.mp3/.webm)","compressed to Opus, source deleted only after a verified encode","unchanged"
+  "already-compressed (.opus)","**deleted**","**offloaded** to `--archive` (filed by month) or, with no cold shelf, **kept**"
+```
+
+**Measured on the same night, and it is the number that justifies the rule:** a 30-minute microphone
+capture of tonight's Synteon call — **60 MB of WAV** — became **5.3 MB of Opus** (11×) with its 1,386-word
+transcript stored beside it. The whole meetings shelf went from 54 MB of raw audio to 5.4 MB of text +
+compressed audio.

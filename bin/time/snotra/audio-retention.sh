@@ -143,10 +143,23 @@ for r in rows:
         verdict = "keep"
     if verdict == "delete" and action == "apply":
         if r["path"].lower().endswith(".opus"):
-            try:
-                os.unlink(r["path"]); gone += 1; verdict = "removed"
-            except OSError:
-                verdict = "could not delete"
+            # ALREADY compressed: it is the archive copy, not raw capture. It goes to the cold/far
+            # shelf if one is configured; with no shelf it STAYS (Rule 30: offload, do not destroy).
+            # Measured 2026-10-23: the first run deleted two .opus files — their transcripts survived,
+            # but the audio did not, which is the opposite of what the Allfather asked for.
+            archive = os.environ.get("ARCHIVE_Q", "")
+            if archive and os.access(archive, os.W_OK):
+                import datetime as dt, shutil
+                out_dir = os.path.join(archive, dt.date.today().strftime("%Y-%m"))
+                os.makedirs(out_dir, exist_ok=True)
+                dest = os.path.join(out_dir, os.path.basename(r["path"]))
+                try:
+                    shutil.move(r["path"], dest)
+                    gone += 1; verdict = f"offloaded → {os.path.basename(dest)}"
+                except OSError as exc:
+                    verdict = f"offload failed: {exc}"
+            else:
+                verdict = "keep — already compressed, no cold shelf to offload to"
         else:
             ok, where = compress(r["path"], os.environ.get("ARCHIVE_Q", ""))
             if ok:
