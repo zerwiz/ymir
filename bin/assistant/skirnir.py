@@ -61,7 +61,19 @@ INTENTS = {
     "what do you know": ("inventory", None),
     "what have you got": ("inventory", None),
     "what is in your database": ("inventory", None),
-    "list your facts": ("inventory", None),
+    "list your facts": ("facts_list", None),
+    "list the facts": ("facts_list", None),
+    "list facts": ("facts_list", None),
+    "what do you hold": ("facts_list", None),
+    "what facts do you hold": ("facts_list", None),
+    "which facts do you hold": ("facts_list", None),
+    "what are your facts": ("facts_list", None),
+    "what are those facts": ("facts_list", None),
+    "name your facts": ("facts_list", None),
+    "show me your facts": ("facts_list", None),
+    "show your facts": ("facts_list", None),
+    "how are you": ("greeting", None),
+    "how are you doing": ("greeting", None),
     "remember that": ("learn", None),
     "remember:": ("learn", None),
     "learn that": ("learn", None),
@@ -140,6 +152,44 @@ def sounds_like_refusal(text: str) -> bool:
     return any(s in low for s in ("don't hold", "do not hold", "don't know", "do not know",
                                   "not in the facts", "no information", "will ask the allfather",
                                   "ask him", "cannot answer", "can't answer"))
+
+
+INTERROGATIVE = re.compile(
+    r"^(what|who|why|how|when|where|which|whose|can|could|do|does|did|is|are|was|were|will|would|"
+    r"should|may|might|have|has|am)\b")
+
+
+def looks_like_question(text: str, key: str) -> bool:
+    """A statement and a question are different acts. The Allfather TELLS him a fact, or ASKS him one."""
+    if "?" in (text or ""):
+        return True
+    return bool(INTERROGATIVE.match((key or "").strip()))
+
+
+def facts_listing(facts: dict, tier: str, limit: int = 30) -> str:
+    """The owner can always see what he holds. A mouth that cannot be audited is not trustworthy."""
+    if tier != "owner":
+        return ("I can tell you what Ymir and the projects are, and take a message. "
+                "The rest is his to read out.")
+    by_class: dict[str, list[tuple[str, str]]] = {}
+    for slug, fact in facts.items():
+        by_class.setdefault(str(fact.get("class", "public")).lower(), []).append(
+            (slug, str(fact.get("claim", "")).replace("\n", " ")))
+    lines = [f"I hold {len(facts)} approved facts."]
+    shown = 0
+    for klass in sorted(by_class):
+        lines.append("")
+        lines.append(f"{klass} ({len(by_class[klass])}):")
+        for slug, claim in by_class[klass]:
+            if shown >= limit:
+                continue
+            short = claim if len(claim) <= 110 else claim[:107].rstrip() + "…"
+            lines.append(f"· {slug} — {short}")
+            shown += 1
+    if shown < len(facts):
+        lines.append("")
+        lines.append(f"…and {len(facts) - shown} more, past what one message can carry.")
+    return "\n".join(lines)
 
 
 def load_canaries() -> list[str]:
@@ -571,12 +621,26 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             if len(ranked) == 1 or ranked[0][:5] > ranked[1][:5]:
                 used, intent = [ranked[0][5]], f"fact:{ranked[0][5]}"
 
-    if kind == "learn":
+    # "what are those 21 approved facts" — the owner asking to SEE the shelf, not to search it
+    if intent == "unknown" and tier == "owner" and re.search(r"\b(facts?|claims?)\b", key) \
+            and re.search(r"\b(list|name|show|what|which|those|all|every|hold|holds)\b", key):
+        kind, intent = "facts_list", "facts_list"
+
+    # A STATEMENT from the Allfather is knowledge, not a question. This runs before a model or a
+    # refusal can be reached: no "?", no interrogative opening, three words or more, and never in a
+    # room where other people are present (what is said there is not his word alone).
+    if intent == "unknown" and tier == "owner" and "group" not in (channel or "") \
+            and not looks_like_question(question, key) \
+            and len(re.findall(r"[a-z0-9]+", key)) >= 3:
+        kind, intent = "learn_plain", "learn-plain"
+
+    if kind == "learn" or kind == "learn_plain":
         if tier != "owner":
             reply = "I only learn from the Allfather."
         else:
-            fact = re.sub(r"^(please\s+)?(remember that|remember:|learn that)\s*", "", question,
-                          flags=re.I).strip()
+            fact = question if kind == "learn_plain" else re.sub(
+                r"^(please\s+)?(remember that|remember:|learn that)\s*", "", question, flags=re.I).strip()
+            fact = fact.strip()
             if len(fact) < 8:
                 reply = "Tell me the fact and I'll put it up for your approval."
             else:
@@ -585,6 +649,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                                       capture_output=True, text=True, timeout=30)
                 reply = (f"Noted: “{fact[:160]}”. It is pending your approval — approve it and it "
                          "becomes something I know.")
+    elif kind == "facts_list":
+        reply = facts_listing(facts, tier)
     elif kind == "inventory":
         by_class: dict[str, int] = {}
         for fact in facts.values():
@@ -594,7 +660,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             names = [f["claim"].split(" is ")[0] for f in facts.values() if f.get("class") == "contacts"]
             reply = (f"I hold {len(facts)} approved facts — {listing}. "
                      + (f"People I know: {', '.join(names[:8])}. " if names else "")
-                     + "Nothing from the private records; if it isn't approved, I don't have it.")
+                     + "Nothing from the private records; if it isn't approved, I don't have it. "
+                     + "Say 'list your facts' and I'll read them out.")
         else:
             reply = "I can tell you what Ymir and the projects are, and take a message. The rest is his."
     elif intent == "directory":
