@@ -82,7 +82,7 @@ speak_sentence_early() {
   local text="$1"
   if curl -s -m 20 -o /tmp/skirnir-early.wav -X POST "$KOKORO_URL" \
       -H 'content-type: application/json' \
-      -d "$(python3 -c "import json,sys;print(json.dumps({'model':'kokoro','input':sys.argv[1],'voice':sys.argv[2]}))" "$text" "$KOKORO_VOICE")" 2>/dev/null \
+      -d "$(python3 -c "import json,sys;print(json.dumps({'model':'kokoro','input':sys.argv[1],'voice':sys.argv[2],'response_format':'wav'}))" "$text" "$KOKORO_VOICE")" 2>/dev/null \
       && [ -s /tmp/skirnir-early.wav ]; then
     command -v paplay >/dev/null 2>&1 && paplay /tmp/skirnir-early.wav 2>/dev/null || true
   fi
@@ -112,14 +112,16 @@ speak_sentence() {
   local text="$1"
   if curl -s -m 30 -o /tmp/skirnir-say.wav -X POST "$KOKORO_URL" \
       -H 'content-type: application/json' \
-      -d "$(python3 -c "import json,sys;print(json.dumps({'model':'kokoro','input':sys.argv[1],'voice':sys.argv[2]}))" "$text" "$KOKORO_VOICE")" 2>/dev/null \
+      -d "$(python3 -c "import json,sys;print(json.dumps({'model':'kokoro','input':sys.argv[1],'voice':sys.argv[2],'response_format':'wav'}))" "$text" "$KOKORO_VOICE")" 2>/dev/null \
       && [ -s /tmp/skirnir-say.wav ]; then
+    python3 "$SCRIPT_DIR/audio-tighten.py" /tmp/skirnir-say.wav 2>/dev/null || true
     command -v paplay >/dev/null 2>&1 && paplay /tmp/skirnir-say.wav 2>/dev/null \
       || aplay -q /tmp/skirnir-say.wav 2>/dev/null || true
   elif [ -x "$HOME/.local/bin/kokoro-speak" ]; then
     "$HOME/.local/bin/kokoro-speak" "$text" >/dev/null 2>&1 || true
   elif [ -x "$PIPER" ] && [ -n "${PIPER_VOICE_MODEL:-}" ]; then
     printf '%s\n' "$text" | "$PIPER" --model "$PIPER_VOICE_MODEL" --output_file /tmp/skirnir-say.wav 2>/dev/null
+    python3 "$SCRIPT_DIR/audio-tighten.py" /tmp/skirnir-say.wav 2>/dev/null || true
     command -v paplay >/dev/null 2>&1 && paplay /tmp/skirnir-say.wav 2>/dev/null \
       || aplay -q /tmp/skirnir-say.wav 2>/dev/null || true
   fi
