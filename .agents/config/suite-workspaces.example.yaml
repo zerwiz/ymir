@@ -1,0 +1,33 @@
+# The suite's spaces — a TEMPLATE, not a setup. Rule 29.
+#
+# The real map is the operator's own and lives in the hoard:
+#     $YMIR_HOME/config/suite-workspaces.yaml
+# It is NEVER committed: the names of a house, a client or a private space are the
+# operator's, not the project's. This example ships so that `classification-guard.sh`
+# can explain what it expects, and so a fresh install has a shape to copy.
+#
+# A space's `class_ceiling` is the most sensitive class it may hold:
+#   0 public · 1 team · 2 client-confidential · 3 NDA/contracted · 4 the vault
+# Class 3 and 4 are NEVER held by a suite space: they live in the vault.
+spaces:
+  - id: private          # the operator's own — studies, personal plans, private notes
+    kind: private
+    class_ceiling: 2
+    may_enter: [operator]
+    invitations: never
+  - id: house-a          # one company: its products and its projects
+    kind: house
+    class_ceiling: 1
+    may_enter: [house-a]
+    invitations: operator-only
+  - id: client-a         # one client's work, one place
+    kind: client
+    class_ceiling: 2
+    may_enter: [client-a]
+    invitations: operator-only
+
+vault:
+  id: vault
+  class_ceiling: 4
+  may_enter: [operator]
+  never_projected: true
