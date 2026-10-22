@@ -133,3 +133,21 @@ Wikipedia remains only as a labelled fallback when Exa cannot be reached. Result
 a source is always **named, never linked**. Measured on *"OVK ventilation Boverket requirements"*: three
 sources, all `boverket.se`, in Swedish — the actual regulator. An Exa key, if one is ever added to
 `web-search.json`, raises the rate limit; none is needed to search.
+
+**Proving the door — `research-smoke.sh`.** One command runs the whole path: the door reaches Exa (not
+a stub), returns sources with text and no links, answers in about a second, routes a request through
+the engine, refuses a stranger, keeps private names out, and leaves the unheld-subject refusal intact.
+
+```sh
+bin/assistant/research-smoke.sh                                        # templates only
+bin/assistant/research-smoke.sh --model qwen3.5-9b@q4_k_s-summarizer   # with the mouth armed
+```
+
+Offline, it prints a clean SKIP and exits 0 — the box is not always on the network, and a smoke test
+that fails for that reason would be ignored.
+
+**Cost, and why there is no per-hour cap.** There is already one: the Telegram layer refuses more than
+one message per 5 s and more than 30 an hour in a chat. A research turn's real cost is a provider call
+plus a model answer — so the door keeps a **ten-minute cache** (the same question cost 1 197 ms live,
+195 ms cached) and reports a provider **throttle** as a throttle rather than quietly answering from the
+Wikipedia fallback. `--no-cache` forces a live call for the smoke test.
