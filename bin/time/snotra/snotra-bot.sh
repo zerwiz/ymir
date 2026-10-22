@@ -63,7 +63,9 @@ done
 pick_url(){
   local u code
   for u in "${_urls[@]}"; do
-    code="$(curl -sS -o /dev/null -w '%{http_code}' -m 3 -H "Authorization: Bearer $KEY" "${u%/}/health" 2>/dev/null || echo 000)"
+    # /health does not authenticate, so this probes REACHABILITY only; the join
+    # below is what proves the key. (A 200 here is not proof of a usable grant.)
+    code="$(curl -sS -o /dev/null -w '%{http_code}' -m 3 -H "X-API-Key: $KEY" "${u%/}/health" 2>/dev/null || echo 000)"
     [ "$code" = 200 ] && { printf '%s' "${u%/}"; return 0; }
   done
   return 1
@@ -73,7 +75,10 @@ export VEXA_API_URL
 
 api(){ # method path json
   local method=$1 path=$2 body=${3-}
-  local args=(-sS -m 30 -X "$method" -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' -w '\n%{http_code}')
+  # Vexa authenticates with X-API-Key. `Authorization: Bearer` is answered
+  # 401 "Missing API key" — and /health answers 200 to ANY header, so a Bearer
+  # probe looked healthy while every join died (measured 2026-10-22).
+  local args=(-sS -m 30 -X "$method" -H "X-API-Key: $KEY" -H 'Content-Type: application/json' -w '\n%{http_code}')
   [ -n "$body" ] && args+=(-d "$body")
   curl "${args[@]}" "${VEXA_API_URL%/}$path"
 }

@@ -69,3 +69,37 @@ append-only: `put` refuses to overwrite; a correction is `--as corrections`.
 | `no video link` | the event has no conference URL | the calendar reader must expose it |
 
 Tests: `bash tests/run.sh` (61 assertions across four suites).
+
+## Letting the assistant speak in the room
+
+**What it is.** `bin/time/snotra/snotra-speak-meeting.sh` puts one sentence of Ymir's voice
+into a meeting that is running **on this computer**. Kokoro renders the audio; the
+`snotra_mic` PipeWire source carries it; a meeting client that selects *Snotra Mic* as its
+microphone transmits it.
+
+**What you need.** `kokoro-serve.service` running (the door raises it and waits), the virtual
+microphone (`snotra-voice-device.sh ensure`, done automatically), and a call **on this seat** —
+a remote call heard only by the Vexa bot has no local uplink to borrow.
+
+```bash
+bin/time/snotra/snotra-voice-device.sh ensure     # the sink + the source, idempotent
+bin/time/snotra/snotra-speak-meeting.sh status    # muted? device? is Kokoro up?
+bin/time/snotra/snotra-speak-meeting.sh say "Craig, the actions are in the mail."
+bin/time/snotra/snotra-speak-meeting.sh say "..." --as Skírnir --dry-run   # render, do not play
+bin/time/snotra/snotra-speak-meeting.sh mute      # one command, and it holds
+```
+
+**The speech law the door enforces.** The first utterance in a meeting is prefixed with the
+speaker's own name (`Skírnir, the Allfather's assistant, speaking.`) — a support assistant
+mistaken for the operator is worse than a silent one. An utterance over 20 seconds is
+**refused**, not trimmed; shorten it. `--wait-quiet N` holds the first word until the room
+falls below −40 dB. Every utterance is written to the ledger as `voice.speak`.
+
+**Limits.** If Kokoro is down the door falls back to Piper and says so; if both fail it
+refuses with the reason. The audio goes into the virtual source, so **the client must have
+that source selected as its microphone** — this door cannot reach a browser that is using the
+real microphone.
+
+**If it does not work.** `status` first: `muted=yes` means `unmute`; `device_ready=no` means
+run `snotra-voice-device.sh ensure`; `tts=kokoro:down` means `systemctl --user start
+kokoro-serve` and read `journalctl --user -u kokoro-serve`.
