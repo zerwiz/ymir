@@ -9,7 +9,10 @@ The written answer is never touched — only what is SPOKEN is normalised:
 
   * curly quotes, dashes and ellipses folded to plain ASCII;
   * contractions expanded to their full words (don't → do not, it's → it is, …);
-  * runs of commas collapsed.
+  * a DASH becomes a full stop, because Kokoro rushes a comma and pauses at a period;
+  * a long clause is cut at its commas into short sentences — measured 2026-10-22: the Allfather
+    heard "…when he is available, normally within a short time" run together, the adverb clipped
+    onto the end of the previous word. A comma is not a breath; a full stop is.
 
 This is a rendering rule, not a policy: it runs after the gate, on the string handed to the synthesiser.
 """
@@ -38,14 +41,34 @@ def spoken(text: str) -> str:
     t = (text or "")
     t = (t.replace("\u2019", "'").replace("\u2018", "'")
           .replace("\u201c", '"').replace("\u201d", '"')
-          .replace("\u2013", ", ").replace("\u2014", ", ")
+          .replace("\u2013", ". ").replace("\u2014", ". ")
           .replace("\u2026", "."))
     for full, pattern in PAIRS:
         t = re.sub(pattern, full, t, flags=re.I)
     t = re.sub(r"\s+,", ",", t)
     t = re.sub(r"[,]{2,}", ",", t)
-    t = re.sub(r"\s+", " ", t)
-    return t.strip()
+    t = re.sub(r"\s+", " ", t).strip()
+    # a clause longer than a breath is cut at its commas: Kokoro does not pause at a comma, so a
+    # long comma-spliced sentence arrives as one rushed breath with the adverb jammed on.
+    out: list[str] = []
+    for sentence in re.split(r"(?<=[.!?])\s+", t):
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+        if len(sentence) <= 90:
+            out.append(sentence)
+            continue
+        buf = ""
+        for part in sentence.split(", "):
+            if buf and len(buf) + len(part) > 80:
+                out.append(buf.strip().rstrip(",") + ".")
+                buf = part
+            else:
+                buf = f"{buf}, {part}" if buf else part
+        if buf.strip():
+            tail = buf.strip().rstrip(",")
+            out.append(tail if tail.endswith((".", "!", "?")) else tail + ".")
+    return " ".join(out)
 
 
 if __name__ == "__main__":
