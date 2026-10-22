@@ -94,3 +94,33 @@ speed at 13.8 GB and starves the speech synthesiser.
 **Limits worth knowing.** The rail serves **one model at a time** (`--models-max 1`): the first answer
 after idle evicts whatever was resident and pays the load. Arming the mouth therefore costs the
 interactive model its place — that is a decision, not a bug.
+
+**The open web — one window, and the model cannot aim it** (2026-10-22). He can research, and the shape
+is the safety: the model holds **no callable at all**, so an instruction inside a fetched page has
+nothing to invoke. A separate door does the fetching — keyless, and it can only ask Wikipedia's public
+API: no URL taken from a message, no redirect, no private address.
+
+```sh
+bin/assistant/research.py --query "Kosovo Liberation Army" --limit 3   # JSON: title, domain, extract
+```
+
+Ask him in words: *"look up …"*, *"search the web for …"*, *"research …"*. **Owner only** — a stranger
+asking is refused in words. What he says begins *"From the open web, not from what I hold"* and names
+the source in words; the gate still forbids a URL, a link, an image and a code block, and the door
+strips links from the fetched text as well. **Nothing fetched is ever learned**: it is not written to
+the digest, not merged into a fact, and never mixed with private material — so a research turn never
+holds private data, untrusted content and outward speech at the same time.
+
+**What he may see of his own shelf.** *"list your facts"* / *"what are those 21 approved facts"* lists
+every claim by slug, grouped by class, capped at thirty per message.
+
+**What he does with a plain word of yours.** A declarative statement (*"gimle are the house team
+tools"*) is knowledge: it goes to `pending/` with a one-click approval, exactly as *"remember that …"*
+does. A **command** (*"summarise the masterplan"*) and a **question** are not facts and are never
+learned. An **action** request (*"send this message to Anna"*, *"book a call"*) is answered plainly —
+*"I don't act for you — nothing sent, nothing booked, nothing changed"* — because he is a mouth, not a
+hand.
+
+**Limits.** Wikipedia only, for now: the vault holds no search-provider key, and a door that pretended
+to have one would be a mock. Research needs the network; with none, he says he found nothing usable
+rather than guessing. Research costs a rail load like any other model turn.
