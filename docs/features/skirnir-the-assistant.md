@@ -145,3 +145,9 @@ bin/assistant/research-smoke.sh --model qwen3.5-9b@q4_k_s-summarizer   # with th
 
 Offline, it prints a clean SKIP and exits 0 — the box is not always on the network, and a smoke test
 that fails for that reason would be ignored.
+
+**Cost, and why there is no per-hour cap.** There is already one: the Telegram layer refuses more than
+one message per 5 s and more than 30 an hour in a chat. A research turn's real cost is a provider call
+plus a model answer — so the door keeps a **ten-minute cache** (the same question cost 1 197 ms live,
+195 ms cached) and reports a provider **throttle** as a throttle rather than quietly answering from the
+Wikipedia fallback. `--no-cache` forces a live call for the smoke test.
