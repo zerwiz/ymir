@@ -46,6 +46,7 @@ are **retired**.
 | `ymirhome.ts` | the ymirhome door | the door into `$YMIR_HOME` |
 | `ymir-subagents.ts` | the Eindri roster | exposes every `.agents/agents/*.md` figure through a `subagent` tool |
 | `todo.ts` | — | the todo surface |
+| `nidhogg-notice-gate.ts` | **Níðhöggr** (the loop-breaker) | the console ward: a multi-line `console.warn`/`console.error` is reported by its first line, shown once per session, and the whole text appended to `<state>/pi-notices.log` — so a foreign extension's native-load failure cannot paint over the editor (`ctx.ui.notify`, not raw stderr) |
 | `open-editor.ts` | — | `/edit [path]` and `ctrl+shift+e` — open files in the operator's editor |
 | `elder.ts`, `eir.ts`, `groa`-door, `rules.ts` | the records council | plan ledger, diagnostics, self-update, house law as a surface |
 | `constellation/index.ts` | the mesh | peer discovery over the A2A directory |

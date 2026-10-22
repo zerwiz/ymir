@@ -28,9 +28,9 @@ PI_GLOBAL="${HOME}/.pi/agent/agents"
 # seated. This loader therefore DEPLOYS NOTHING: it keeps the global home free of any
 # extension that also stands in the project tree, and writes the root record the
 # extensions read back.
-PI_EXT_SRC="$ROOT/.pi/extensions"
-PI_EXT_HOME="${HOME}/.pi/agent/extensions"
-PI_SETTINGS="${HOME}/.pi/agent/settings.json"
+PI_EXT_SRC="${PI_EXT_SRC:-$ROOT/.pi/extensions}"
+PI_EXT_HOME="${PI_EXT_HOME:-${HOME}/.pi/agent/extensions}"
+PI_SETTINGS="${PI_SETTINGS:-${HOME}/.pi/agent/settings.json}"
 OC_LOCAL="$ROOT/.opencode/agents"
 SKILLS="$ROOT/.agents/skills"
 
@@ -128,8 +128,20 @@ def is_other_ymir_extensions(entry):
     expanded = os.path.expanduser(entry)
     return expanded != src and os.path.isdir(expanded)
 
-kept = [entry for entry in extensions if not is_other_ymir_extensions(entry)]
-kept.append(src)
+# De-duplicate the whole array, preserving first-seen order. `kept.append(src)`
+# without this guard added a NEW copy on every run: six runs put six identical
+# entries in the list, and pi does not de-duplicate its `extensions[]` — so the
+# entire extension tree loaded six times, every tool registered six times and
+# every extension's console warning printed six times into the TUI.
+kept = []
+for entry in extensions:
+    if is_other_ymir_extensions(entry):
+        continue
+    if entry in kept:
+        continue
+    kept.append(entry)
+if src not in kept:
+    kept.append(src)
 
 if kept == extensions:
     print("unchanged")
@@ -157,7 +169,13 @@ try:
 except Exception:
     sys.exit(1)
 entries = data.get("extensions") if isinstance(data, dict) else None
-sys.exit(0 if isinstance(entries, list) and os.environ["PI_EXT_SRC"] in entries else 1)
+if not isinstance(entries, list):
+    sys.exit(1)
+src = os.environ["PI_EXT_SRC"]
+# Exactly one entry for THIS tree: present, and no duplicate of it. A repeated
+# entry loads the whole tree again (pi does not de-duplicate), which multiplies
+# every extension warning into UI-breaking noise.
+sys.exit(0 if entries.count(src) == 1 and len(entries) == len(set(map(str, entries))) else 1)
 PY
 }
 
