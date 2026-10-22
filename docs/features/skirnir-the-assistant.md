@@ -168,3 +168,17 @@ The generator owns **only** what it marked (`generated_by: bin/assistant/learn-h
 longer produces is removed, and nothing the Allfather approved by hand is ever touched. The lore's
 "Odin" is rewritten to "the Allfather" as it is derived — the name law binds the mouth, not just the
 prompt.
+
+**He knows the site too** (2026-10-22). *"he needs to know everything https://ymir.zerwiz.org/"* —
+`bin/assistant/learn-site.sh` fetches the house's public site (same-origin links, one level, eight pages
+at most), strips it to text, cuts it into passages, and writes each passage as an approved fact marked
+`verbatim`, with its source URL.
+
+```sh
+bin/assistant/learn-site.sh              # fetch, derive, rebuild the digest
+bin/assistant/learn-site.sh --dry-run    # how many passages it would write
+```
+
+Measured: **187 passages from 8 pages**, and the digest now holds **307 facts** — so *"what is Gungnir"*,
+*"what are the ten laws"*, *"what is the watch"* answer from the site's own words. The generator owns
+only what it marked, so a re-run replaces its own facts and never touches a hand-approved one.
