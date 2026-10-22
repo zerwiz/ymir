@@ -86,6 +86,20 @@ INTENTS = {
     "what is opticat": ("public", "what-opti-cat-is"),
     "are you available": ("logistics", "availability"),
     "when will he answer": ("logistics", "availability"),
+    "where is he": ("schedule", None),
+    "where is he now": ("schedule", None),
+    "where is the allfather": ("schedule", None),
+    "what is he doing": ("schedule", None),
+    "is he free": ("schedule", None),
+    "is he available": ("schedule", None),
+    "is the allfather free": ("schedule", None),
+    "is the allfather available": ("schedule", None),
+    "when is he free": ("schedule", None),
+    "what is his schedule": ("schedule", None),
+    "asks": ("asks", None),
+    "what is waiting": ("asks", None),
+    "what is open": ("asks", None),
+    "who is waiting": ("asks", None),
     "who are you": ("role", None),
     "how do i reach him": ("logistics", "availability"),
 }
@@ -169,9 +183,18 @@ def looks_like_question(text: str, key: str) -> bool:
 DECLARATIVE = re.compile(
     r"\b(is|are|was|were|has|have|had|means|refers to|belongs|works|keeps|uses|prefers|leads|runs|"
     r"costs|equals|stands for|owns|handles|serves|contains|includes)\b")
-RESEARCH = re.compile(
-    r"^(?:look up|search for|search the web for|search the web|research|google|"
-    r"what does the web say about|what do you find about|find out about)\s+(.{2,120})$", re.I)
+# People do not speak in triggers. Measured 2026-10-22: "can you find information about hvac online?"
+# missed every anchored pattern and earned the honest no. A research turn is a SEARCH VERB plus a WEB
+# MARKER, wherever they sit in the sentence — and the query is what is left once the scaffolding goes.
+RESEARCH_VERB = re.compile(
+    r"\b(look up|look for|search|research|google|find|check|see if|read up on)\b", re.I)
+RESEARCH_WEB = re.compile(
+    r"\b(online|on the web|on the internet|the web|internet|google|browse)\b", re.I)
+RESEARCH_SCAFFOLD = re.compile(
+    r"\b(can you|could you|would you|please|for me|do you|are you able to|"
+    r"find out|find information|information|info|about|search|look up|look for|research|google|"
+    r"check|read up on|online|on the web|on the internet|the web|internet|browse|some|anything|"
+    r"what do you|know|tell me|me|now|today)\b", re.I)
 ACTION = re.compile(
     r"^(send|post|message|email|e-mail|call|book|schedule|create|delete|cancel|forward|reply|pay|"
     r"order|buy|remind|set up|add|remove|change|update|move|reschedule|invite)\b")
@@ -420,18 +443,209 @@ def ledger(question: str, answer: str, tier: str, channel: str, intent: str,
     con.close()
 
 
-def escalate(question: str, reason: str, tier: str, channel: str = "") -> None:
+ASK_TTL = 1800          # a clarification older than half an hour is stale; ask again
+
+
+def schedule_now() -> dict:
+    """Where he is, read from Mánagandr at the moment of asking — never stored, never a fact."""
+    door = os.path.join(ROOT, "bin", "time", "snotra", "calendar-ask.sh")
+    if not os.path.isfile(door):
+        return {"ok": False, "reason": "no calendar door on this seat"}
+    now = time.time()
+    fmt = lambda t: time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(t))
+    try:
+        proc = subprocess.run(["bash", door, "json", f"{fmt(now - 7200)}..{fmt(now + 43200)}"],
+                              capture_output=True, text=True, timeout=90)
+        data = json.loads(proc.stdout or "{}")
+    except Exception as exc:
+        return {"ok": False, "reason": f"{type(exc).__name__}"}
+    if str(data.get("status")) != "ok":
+        return {"ok": False, "reason": str(data.get("reason") or data.get("status") or "unreadable")}
+    events = [e for e in (data.get("events") or [])
+              if e.get("busy") and str(e.get("status")) != "cancelled"]
+    now_ms = int(now * 1000)
+    current = [e for e in events if int(e.get("start_ms") or 0) <= now_ms < int(e.get("end_ms") or 0)]
+    # the reader may widen its window, so the bound that matters is OURS: the next twelve hours
+    upcoming = sorted([e for e in events if now_ms < int(e.get("start_ms") or 0) <= now_ms + 43_200_000],
+                      key=lambda e: int(e.get("start_ms") or 0))
+    def hm(ms: int) -> str:
+        """A time with its DAY when it is not today — 'until 09:00' at 18:00 is a riddle."""
+        when = time.localtime(int(ms) / 1000)
+        today = time.strftime("%Y-%m-%d") == time.strftime("%Y-%m-%d", when)
+        tomorrow = (time.strftime("%Y-%m-%d", time.localtime(time.time() + 86400))
+                    == time.strftime("%Y-%m-%d", when))
+        label = "today" if today else ("tomorrow" if tomorrow else time.strftime("%A", when))
+        return f"{label} at {time.strftime('%H:%M', when)}"
+    next_today = bool(upcoming) and time.strftime(
+        "%Y-%m-%d", time.localtime(int(upcoming[0]["start_ms"]) / 1000)) == time.strftime("%Y-%m-%d")
+    out = {"ok": True, "now": now_ms, "next_today": next_today,
+           "in_meeting": bool(current),
+           "busy_until": hm(current[0]["end_ms"]) if current else "",
+           "title": str(current[0].get("summary") or "") if current else "",
+           "next_title": str(upcoming[0].get("summary") or "") if upcoming else "",
+           "next_at": hm(upcoming[0]["start_ms"]) if upcoming else "",
+           "free_until": hm(upcoming[0]["start_ms"]) if upcoming else "",
+           "stale": bool(data.get("stale"))}
+    return out
+
+
+def schedule_says(sched: dict, tier: str) -> str:
+    """The same truth at three depths: his own calendar is his; a colleague hears busy or free."""
+    if tier == "owner":
+        if sched["in_meeting"]:
+            tail = f" Next is “{sched['next_title']}” at {sched['next_at']}." if sched["next_at"] else ""
+            return f"You are in “{sched['title'] or 'a meeting'}” until {sched['busy_until']}.{tail}"
+        if sched["next_at"] and sched.get("next_today"):
+            return (f"You are free until {sched['free_until']} — next is “{sched['next_title']}” "
+                    f"at {sched['next_at']}.")
+        if sched["next_at"]:
+            return (f"You are free for the rest of today. Next is “{sched['next_title']}” "
+                    f"{sched['next_at']}.")
+        return "You are free — nothing on the calendar in the next twelve hours."
+    if tier in ("collaborator", "known"):
+        if sched["in_meeting"]:
+            return (f"He is in a meeting until {sched['busy_until']}. I can take a message and he "
+                    "will come back to you.")
+        if sched["next_at"] and sched.get("next_today"):
+            return f"He is free until {sched['free_until']}, then he is booked. I can take a message."
+        if sched["next_at"]:
+            return "He is free for the rest of today. I can take a message and he will see it."
+        return "He is free right now. Leave it with me and he will see it."
+    return ("He is not available right now. He answers messages within one working day, and I will "
+            "pass yours to him.")
+
+
+# A mouth that says the same paragraph to every hello is not a person, it is a signboard. These are
+# the fallbacks — rotated deterministically per chat so a conversation does not flicker — and the
+# model phrases them in its own words whenever it is armed.
+GREET_OWNER = [
+    "Hello, Allfather. What do you need?",
+    "Allfather — I'm here. Ask, and I'll say plainly when I don't hold it.",
+    "Good to hear from you. What shall I look at?",
+]
+GREET_OTHER = [
+    "I'm Skírnir, the Allfather's assistant. I can tell you about his work and take a message for him.",
+    "Hello — Skírnir here, his assistant. Ask me what you need and I'll pass on what I can't answer.",
+    "I'm his assistant. I answer what I can and pass the rest to him — I don't act on his behalf.",
+]
+ROLE_LINES = [
+    "I'm Skírnir, the Allfather's assistant: I answer what I can and pass the rest to him.",
+    "I'm his assistant — a mouth, not a hand. I speak about his work, never for him.",
+    "Skírnir, his assistant. I take questions and messages; the decisions are his.",
+]
+
+
+def pick(options: list[str], seed: str) -> str:
+    """Deterministic across processes (str hash is salted per run) and stable per chat."""
+    digest = hashlib.sha256(seed.encode()).digest()
+    return options[int.from_bytes(digest[:4], "big") % len(options)]
+
+
+VOICE = ("Write like a person texting: short sentences, no preamble, no bullet lists. "
+         "Never open with the same words you used in your previous reply.")
+
+
+def model_small(system: str, question: str, model: str, recent: list | None = None) -> str | None:
+    """A short, gated line for the small talk — greetings, who he is, what he does."""
+    if recent:
+        system += "\nYour previous replies in this chat: " + " | ".join(
+            f"{line[:120]}" for role, line in recent if role == "assistant")
+    return _rail(system + "\n" + VOICE, question, model, temperature=0.5,
+                 seed=int(time.time()) ^ abs(hash(question)) % 100000)
+
+
+def who_is(sender: str, sender_id: str, chat: str, channel: str) -> str:
+    """Who is asking, in words the Allfather can act on: a name from the registry, or a plain handle."""
+    handle = (sender or "").lstrip("@").strip()
+    mapping: dict = {}
+    try:
+        import yaml
+        mapping = (yaml.safe_load(open(os.path.join(IDENTITY, "grants.yaml"))) or {}).get("identities") or {}
+    except Exception:
+        mapping = {}
+    person = ""
+    if handle and str(mapping.get(handle, "")) not in ("", "owner"):
+        person = str(mapping.get(handle))
+    if not person and sender_id and str(mapping.get(str(sender_id), "")) not in ("", "owner"):
+        person = str(mapping.get(str(sender_id)))
+    name = ""
+    if person:
+        try:
+            import yaml
+            people = (yaml.safe_load(open(os.path.join(home(), "hodd", "identity",
+                                                       "collaborators.yaml"))) or {})
+            for row in (people.get("collaborators") or people.get("people") or []):
+                if str(row.get("id")) == person:
+                    name = str(row.get("name") or "")
+                    break
+        except Exception:
+            name = ""
+    label = name or person
+    if label:
+        return f"{label}" + (f" (@{handle})" if handle else "")
+    if handle:
+        return f"@{handle} — not in the registry"
+    if sender_id:
+        return f"someone not in the registry (id {sender_id})"
+    return f"someone in {channel or 'a chat'}"
+
+
+def _pending_path() -> str:
+    return os.path.join(STATE, "pending-ask.json")
+
+
+def pending_get(chat: str) -> dict:
+    try:
+        data = json.load(open(_pending_path()))
+    except Exception:
+        return {}
+    row = (data or {}).get(chat or "") or {}
+    if not row or time.time() - float(row.get("at", 0)) > ASK_TTL:
+        return {}
+    return row
+
+
+def pending_put(chat: str, question: str, asked: str) -> None:
+    try:
+        data = json.load(open(_pending_path()))
+    except Exception:
+        data = {}
+    data = {k: v for k, v in (data or {}).items()
+            if time.time() - float(v.get("at", 0)) <= ASK_TTL}
+    data[chat or ""] = {"at": time.time(), "question": question, "asked": asked}
+    try:
+        os.makedirs(STATE, exist_ok=True)
+        json.dump(data, open(_pending_path(), "w"))
+    except Exception:
+        pass
+
+
+def pending_drop(chat: str) -> None:
+    try:
+        data = json.load(open(_pending_path()))
+    except Exception:
+        return
+    if chat in (data or {}):
+        data.pop(chat, None)
+        try:
+            json.dump(data, open(_pending_path(), "w"))
+        except Exception:
+            pass
+
+
+def escalate(question: str, reason: str, tier: str, channel: str = "", chat: str = "",
+             who: str = "", context: str = "") -> str:
     """Never escalate to the Allfather when he is the one asking — that is a loop, not a service."""
     """The only road to a human — guarded so a test or a flood cannot page him 200 times."""
     if tier == "owner":
-        return          # he is right here; there is nobody to ask
+        return "not-needed"          # he is right here; there is nobody to ask
     # ONLY a real channel may page him. A console run, a voice turn in an empty room, a test —
     # none of them is a person waiting for an answer, and a test that can page the operator is a
     # test that will.
     if (channel or "") not in ("telegram-dm", "telegram-group"):
-        return
+        return "not-needed"
     if os.environ.get("SKIRNIR_NO_ESCALATE") == "1":
-        return
+        return "test"
     marker = os.path.join(STATE, "escalations.json")
     now = time.time()
     try:
@@ -441,25 +655,32 @@ def escalate(question: str, reason: str, tier: str, channel: str = "") -> None:
     if len(stamps) >= 3:
         ledger(question, "(escalation suppressed: 3 this hour)", tier, "rate-limit",
                "suppressed", [], True, "")
-        return
+        print("skirnir: escalation SUPPRESSED (3 this hour) — the Allfather was not told", file=sys.stderr)
+        return "suppressed"
     stamps.append(now)
     os.makedirs(STATE, exist_ok=True)
     json.dump(stamps, open(marker, "w"))
     script = os.path.join(ROOT, "bin", "assistant", "escalate.sh")
     if os.path.isfile(script):
         # his own bot's DM first (so the Allfather can simply reply), then the hotline
-        subprocess.run(["bash", script, "--tier", tier, "--text", f"{reason} — {question[:200]}"],
-                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return
+        done = subprocess.run(["bash", script, "--tier", tier, "--text", question[:300],
+                               "--chat", chat or "", "--who", who or "someone",
+                               "--context", context or "", "--reason", reason or ""],
+                              check=False, capture_output=True, text=True)
+        delivered = "sent" if done.returncode == 0 else "failed"
+        print(f"skirnir: escalation to the Allfather — {delivered} ({tier})", file=sys.stderr)
+        return delivered
     door = os.path.join(ROOT, "bin", "notify", "send.sh")
     if os.path.isfile(door):
         subprocess.run(["bash", door, "--source", "assistant", "--severity", "HIGH",
                         "--message", f"Skírnir needs you ({tier}): {reason} — “{question[:80]}”",
                         "--key", f"assistant:{hashlib.sha256(question.encode()).hexdigest()[:12]}"],
                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return "sent"
 
 
-def _rail(system: str, user: str, model: str) -> str | None:
+def _rail(system: str, user: str, model: str, temperature: float = 0.0,
+          seed: int | None = None) -> str | None:
     """One call to the rail. No tools, no credential in the prompt, nothing but text in and out."""
     try:
         import urllib.request
@@ -469,9 +690,14 @@ def _rail(system: str, user: str, model: str) -> str | None:
             key = (auth.get("llama-swap") or {}).get("key", "")
         except Exception:
             pass
-        body = json.dumps({"model": model, "temperature": 0, "max_tokens": 160,
+        payload = {"model": model, "temperature": temperature, "max_tokens": 200,
                            "messages": [{"role": "system", "content": system},
-                                        {"role": "user", "content": user}]}).encode()
+                                        {"role": "user", "content": user}]}
+        # THE RAIL PINS seed = 42 in its [*] global, so identical prompts give identical words.
+        # A varying seed is what makes the same mouth sound alive without changing a fact.
+        if seed is not None:
+            payload["seed"] = int(seed) % 2_147_483_647
+        body = json.dumps(payload).encode()
         req = urllib.request.Request("http://127.0.0.1:8080/v1/chat/completions", data=body,
                                      headers={"Content-Type": "application/json",
                                               "Authorization": f"Bearer {key}"})
@@ -483,21 +709,75 @@ def _rail(system: str, user: str, model: str) -> str | None:
         return None
 
 
-def model_research(question: str, sources: list[dict], model: str) -> str | None:
+def model_research(question: str, sources: list[dict], model: str, tier: str = "owner") -> str | None:
     """The open web, framed as what it is: external text, named by source, never a link."""
     context = "\n\n".join(
         f"[{i + 1}] {src.get('title', 'untitled')} ({src.get('domain', '')})\n{src.get('extract', '')}"
         for i, src in enumerate(sources))
     system = ("You are Skirnir, the Allfather's assistant. Answer ONLY from the web extracts below, "
-              "in one or two short sentences. Say first that it comes from the open web and not from "
+              + _audience(tier) + " "
+              "In one or two short sentences. Say first that it comes from the open web and not from "
               "what you hold. Name the source in words (its title); never write a link, a URL, an "
               "image, a table or code. If the extracts do not answer the question, say so plainly.\n\n"
               f"WEB EXTRACTS:\n{context}")
-    return _rail(system, question, model)
+    return _rail(system + "\n" + VOICE, question, model, temperature=0.35,
+                 seed=int(time.time()) ^ abs(hash(question)) % 100000)
+
+
+def operator_name() -> str:
+    """His own name lives in the operator registry, never in this repo (Rule 04)."""
+    for name in ("operator.yaml", "profile.yaml"):
+        try:
+            import yaml
+            data = yaml.safe_load(open(os.path.join(home(), "hodd", "identity", name))) or {}
+            for key in ("name", "display_name", "full_name"):
+                if isinstance(data.get(key), str) and data[key].strip():
+                    return data[key].strip()
+        except Exception:
+            continue
+    return ""
+
+
+def operator_aliases() -> list[str]:
+    try:
+        import yaml
+        data = yaml.safe_load(open(os.path.join(home(), "hodd", "identity", "operator.yaml"))) or {}
+        out = [str(a).strip() for a in (data.get("aliases") or []) if str(a).strip()]
+        nm = data.get("name")
+        if isinstance(nm, str) and nm.strip():
+            out += [nm.strip()] + nm.strip().split()
+        extra = []
+        for a in out:
+            extra += [part for part in a.replace("-", " ").split() if len(part) > 2]
+        return list(dict.fromkeys(a for a in out + extra if len(a) > 2))
+    except Exception:
+        return []
+
+
+def name_law() -> str:
+    who = operator_name()
+    return (f"His name is {who}. " if who else "") + (
+        "He is called the Allfather. NEVER call him Odin, Woden, All-Father Odin, or any god's name: "
+        "this house uses Norse names for its machines, not for the man.")
+
+
+def denorse(text: str) -> str:
+    """A model's own priors are not the house's naming law: 'Odin' is scrubbed, not discussed."""
+    return re.sub(r"\b(Odin|Woden|Wodan|All[- ]Father Odin)\b", "Allfather", text or "")
+
+
+def _audience(tier: str) -> str:
+    """A mouth that says 'I will ask the Allfather' TO the Allfather is lying about the room."""
+    if tier == "owner":
+        return (name_law() + " You are speaking to him now. NEVER say you will ask him — he is here. "
+                "If the facts do not contain the answer, say plainly that you do not hold it and ask "
+                "him to tell you the fact.")
+    return (name_law() + " You are speaking to someone who is not the Allfather. If the facts do not "
+            "contain the answer, say you do not hold it and that it will be passed to him.")
 
 
 def model_answer(question: str, facts: dict, model: str,
-                 recent: list[tuple[str, str]] | None = None) -> str | None:
+                 recent: list[tuple[str, str]] | None = None, tier: str = "owner") -> str | None:
     """Free text from a local model, with the DIGEST as its only knowledge and the gate behind it.
 
     The model is a mouth, not a mind of the house: it receives the approved facts, the question and
@@ -510,10 +790,11 @@ def model_answer(question: str, facts: dict, model: str,
         context += "\n\nThe last turns in this chat:\n" + "\n".join(
             f"{role}: {line[:200]}" for role, line in recent)
     system = ("You are Skírnir, the Allfather's assistant. Answer ONLY from the facts below. "
-              "If the facts do not contain the answer, say you don't know and that you will ask him. "
+              + _audience(tier) + " "
               "Never produce a URL, a link, an image, a table or code. Two sentences at most.\n"
               f"FACTS:\n{context}")
-    return _rail(system, question, model)
+    return _rail(system + "\n" + VOICE, question, model, temperature=0.35,
+                 seed=int(time.time()) ^ abs(hash(question)) % 100000)
 
 
 def gate(answer: str, canaries: list[str]) -> tuple[bool, str]:
@@ -531,12 +812,38 @@ def gate(answer: str, canaries: list[str]) -> tuple[bool, str]:
     return True, "ok"
 
 
-def say_unknown(tier: str = "stranger") -> str:
+REFUSALS_OWNER = [
+    "I don't hold that — tell me the fact and I'll put it up for your approval.",
+    "That one isn't in what's approved. Give me the fact and I'll add it to the queue.",
+    "I can't answer that yet. Say it plainly and I'll learn it once you approve.",
+    "Nothing approved covers that — tell me and I'll have it ready for you.",
+]
+REFUSALS_OTHER = [
+    "I don't have that, and I would rather say so than guess.",
+    "That's not something I hold — I won't invent it.",
+    "I can't answer that from what I know. I'd rather tell you than make it up.",
+    "I don't know that one, and guessing would be worse than saying so.",
+]
+REFUSALS_UNREACHED = [
+    "I don't have that, and I could not reach the Allfather just now — ask me again shortly.",
+    "That one I can't answer, and the line to him is down this minute. Try me again in a little while.",
+]
+
+
+def say_unknown(tier: str = "stranger", passed: bool = True, seed: str = "") -> str:
+    """The honest no. At the owner tier there is nobody to pass it to — he IS the Allfather."""
     if tier == "owner":
-        return ("I don't have that in what's approved yet — tell me the fact and I'll put it up for "
-                "your approval, or ask me something I hold.")
-    return ("I don't have that, and I would rather say so than guess. "
-            "I've passed it to the Allfather and he will come back to you.")
+        return pick(REFUSALS_OWNER, seed or "owner")
+    if passed:
+        return (pick(REFUSALS_OTHER, seed or "other") +
+                " I've passed it to the Allfather and he will come back to you.")
+    return pick(REFUSALS_UNREACHED, seed or "unreached")
+
+
+def _operator_schedule_intents() -> None:
+    """'where is <his name>' without ever writing the name in the repo."""
+    for alias in operator_aliases():
+        INTENTS.setdefault(f"where is {alias.lower()}", ("schedule", None))
 
 
 def answer(text: str, tier: str, channel: str, sender: str = "", model: str = "", chat: str = "", sender_id: str = "", members: list[str] | None = None) -> dict:
@@ -562,6 +869,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
 
     # longest phrase first, matched on word boundaries — "hi" must not fire inside "this"
     intent, used, kind = "unknown", [], ""
+    denied = False          # refused for a reason other than "no fact matches" — no handoff owed
     for phrase in sorted(INTENTS, key=len, reverse=True):
         this_kind, slug = INTENTS[phrase]
         if re.search(r"(?<![a-z0-9])" + re.escape(phrase.strip()) + r"(?![a-z0-9])", key):
@@ -572,6 +880,15 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             if slug:
                 used = [slug]
             break
+    # CLOSING THE LOOP. An answer from the Allfather to a question he was handed: "tell <who>: …"
+    # or "answer [#n]: …". This is the only path by which Skírnir SPEAKS TO A THIRD PARTY, so it is
+    # owner-only, it always names the ask it closes, and it is recorded in asks.json.
+    m_tell = re.match(r"^\s*(?:tell|say to|reply to)\s+(.{2,40}?)\s*[:\-—]\s*(.+)$", question,
+                      re.I | re.S)
+    m_answer = re.match(r"^\s*answer\s*#?(\d{0,2})\s*[:\-—]\s*(.+)$", question, re.I | re.S)
+    if (m_tell or m_answer) and intent == "unknown":
+        kind, intent = "answer_ask", "answer-ask"
+
     # An ACTION request is neither a question nor a fact: he is a mouth, not a hand (plan 101 §4).
     # It must be caught before retrieval, or a word like "send" matches a fact and reads as consent.
     if ACTION.match(key.strip()):
@@ -580,10 +897,18 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     # THE OPEN WEB. Owner only, by a named verb, and it never touches the digest: what comes back is
     # external text that is read once, quoted, and forgotten. Nothing fetched is ever learned.
     research_subject = ""
-    m_research = RESEARCH.match(question.strip())
-    if m_research and intent == "unknown":
-        kind, intent = "research", "research"
-        research_subject = m_research.group(1).strip().rstrip("?.!")
+    starts_research = bool(re.match(
+        r"^\s*(look up|look for|search|research|google|find out about|find information about|"
+        r"what does the web say about)\b", question, re.I))
+    if intent == "unknown" and (starts_research or
+                                (RESEARCH_VERB.search(question) and RESEARCH_WEB.search(question))):
+        subject = RESEARCH_SCAFFOLD.sub(" ", question)
+        subject = re.sub(r"[^\w\s\-äöåÄÖÅ]", " ", subject)
+        subject = re.sub(r"\s+", " ", subject).strip()
+        # a verb with no subject ("can you search online?") is a question ABOUT him, not a query
+        if len(subject) >= 2:
+            kind, intent = "research", "research"
+            research_subject = subject[:120]
 
     if intent == "unknown" and key:
         # A typo is not a refusal: "whata do you have in your database" is the same question.
@@ -711,7 +1036,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         if tier != "owner":
             reply = ("I don't search the open web for anyone but him. Ask me what the house holds, "
                      "or leave a message and I'll pass it on.")
-            intent = "unknown"
+            intent, denied = "unknown", True
         elif not research_subject:
             reply = "Tell me what to look up and I'll look."
         else:
@@ -728,7 +1053,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                          f"“{research_subject}”. That is an honest no, not a guess.")
                 intent = "research-empty"
             else:
-                said = model_research(question, sources, mouth) if mouth else None
+                said = model_research(question, sources, mouth, tier) if mouth else None
                 if said:
                     reply = said
                 else:
@@ -737,6 +1062,84 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                              f"— {top.get('title', '')}.")
                 used = [f"web:{s.get('domain', '')}" for s in sources]
                 intent = "research"
+    elif kind == "asks":
+        door = os.path.join(HERE, "asks.sh")
+        try:
+            out = subprocess.run(["bash", door, "list", "--open"], capture_output=True,
+                                 text=True, timeout=30).stdout
+        except Exception:
+            out = ""
+        if tier != "owner":
+            reply = "That is his to see, not mine to share."
+            intent, denied = "unknown", True
+        elif "asks0" in out or not out.strip():
+            reply = "Nothing is waiting — nobody has asked me anything I could not answer."
+        else:
+            rows = [line for line in out.splitlines() if line.startswith('  "ask-')]
+            lines = [f"{len(rows)} question(s) waiting on you:"]
+            for line in rows[:10]:
+                parts = [x.strip('"') for x in line.strip().split('","')]
+                if len(parts) >= 5:
+                    lines.append(f"· {parts[1]} — “{parts[4][:80]}” ({parts[3]} h ago)")
+            reply = "\n".join(lines)
+    elif kind == "schedule":
+        sched = schedule_now()
+        if not sched.get("ok"):
+            reply = ("I can't read his calendar at this moment, so I won't guess where he is. "
+                     "Leave it with me and I'll pass it on.")
+            intent, denied = "unknown", True
+        else:
+            reply = schedule_says(sched, tier)
+    elif kind == "answer_ask":
+        if tier != "owner":
+            reply = "Only the Allfather answers for the house."
+            intent, denied = "unknown", True
+        else:
+            door = os.path.join(HERE, "asks.sh")
+            try:
+                listed = subprocess.run(["bash", door, "list", "--open"], capture_output=True,
+                                        text=True, timeout=30).stdout
+            except Exception:
+                listed = ""
+            rows = []
+            for line in listed.splitlines():
+                if line.startswith('  "ask-'):
+                    parts = [x.strip('"') for x in line.strip().split('","')]
+                    if len(parts) >= 5:
+                        rows.append({"id": parts[0], "who": parts[1], "question": parts[4]})
+            target, text_out = None, ""
+            if m_answer:
+                text_out = m_answer.group(2).strip()
+                want = m_answer.group(1)
+                if want and want.isdigit() and 1 <= int(want) <= len(rows):
+                    target = rows[int(want) - 1]
+                elif rows:
+                    target = rows[-1]
+            else:
+                needle = (m_tell.group(1) or "").strip().lower()
+                text_out = m_tell.group(2).strip()
+                for row in rows:
+                    if needle and needle in row["who"].lower():
+                        target = row
+                        break
+                if not target and rows:
+                    target = rows[-1]
+            if not target:
+                reply = "There is no open question to answer — nothing is waiting on you."
+            elif not text_out:
+                reply = "Tell me what to say and I'll send it."
+            else:
+                sent = subprocess.run(["bash", door, "deliver", target["id"], "--text", text_out],
+                                      capture_output=True, text=True, timeout=60)
+                if sent.returncode == 0:
+                    reply = (f"Sent to {target['who']} — I closed that question and told them it "
+                             "came from you.")
+                    intent = "answer-delivered"
+                else:
+                    reply = (f"I could not deliver it to {target['who']} just now. The question is "
+                             "still open and I'll keep it.")
+                    print(f"skirnir: delivery failed — {sent.stderr[:200]}", file=sys.stderr)
+                    intent, denied = "unknown", True
     elif kind == "action":
         if tier == "owner":
             reply = ("I don't act for you — nothing sent, nothing booked, nothing changed. That is "
@@ -766,12 +1169,18 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         else:
             reply = fact["claim"]
     elif kind == "greeting":
-        if tier == "owner":
-            reply = ("Hello, Allfather. I'm Skírnir, your assistant — I answer people while you are away, "
-                     "and I pass everything I can't answer to you. Ask me what I know, and I'll say when I don't.")
+        said = None
+        if mouth and tier in MODEL_TIERS:
+            said = model_small(
+                "You are Skírnir, the Allfather's assistant. " + _audience(tier) +
+                " Greet the person in ONE short sentence, in your own words, and offer to help. "
+                "No lists, no links, no repeated introduction of yourself as a system.", question, mouth)
+        if said and not sounds_like_refusal(said):
+            reply = said
+        elif tier == "owner":
+            reply = pick(GREET_OWNER, chat or "owner")
         else:
-            reply = ("I'm Skírnir, the Allfather's assistant. I can tell you a little about his work, "
-                     "take a message, and pass anything else to him. I won't act on his behalf.")
+            reply = pick(GREET_OTHER, chat or "someone")
     elif kind == "identity":
         if tier == "owner":
             reply = "You're the Allfather — this chat is yours, and I know your voice here."
@@ -779,14 +1188,19 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             reply = ("I can't confirm that from here, and I won't take a claim as a credential. "
                      "If you are the Allfather, write to me in your own chat.")
     elif kind == "role":
-        reply = ("I'm Skírnir, the Allfather's assistant. I answer what I can about his work and "
-                 "pass the rest to him — I don't act on his behalf.")
+        said = None
+        if mouth and tier in MODEL_TIERS:
+            said = model_small(
+                "You are Skírnir, the Allfather's assistant. " + _audience(tier) +
+                " Say who you are and what you do in ONE short sentence, in your own words. "
+                "No lists, no links, no code.", question, mouth)
+        reply = said if (said and not sounds_like_refusal(said)) else pick(ROLE_LINES, chat or "role")
     elif intent.startswith("fact:") and used and used[0] in facts:
         funt = facts[used[0]]
         reply = funt["claim"]
         kls = str(funt.get("class", "public")).lower()
         if kls not in ("public", "logistics") and tier != "owner":
-            reply = say_unknown(tier)
+            reply = say_unknown(tier, seed=chat or "chat")
             intent = "unknown"
     elif used and used[0] in facts:
         fact = facts[used[0]]
@@ -817,21 +1231,25 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     if mouth and tier in MODEL_TIERS:
         safe = model_context(facts)
         if intent == "unknown":
-            said = model_answer(question, safe, mouth, history(chat))
+            said = model_answer(question, safe, mouth, history(chat), tier)
             if said:
                 reply = said
                 # if it says it does not hold the fact, it stays a REFUSAL: he must be told
                 intent = "unknown" if sounds_like_refusal(said) else "model"
+                if intent == "unknown" and tier == "owner":
+                    # a model may not invent an addressee: the Allfather IS the addressee
+                    reply = say_unknown("owner", seed=chat or "owner")
         elif used and used[0] in facts \
                 and str(facts[used[0]].get("class", "public")).lower() in MODEL_SAFE_CLASSES:
-            said = model_answer(question, {used[0]: facts[used[0]]}, mouth, history(chat))
+            said = model_answer(question, {used[0]: facts[used[0]]}, mouth, history(chat), tier)
             if said and not sounds_like_refusal(said):
                 reply, intent = said, f"model:{used[0]}"
 
+    reply = denorse(reply)
     ok, why = gate(reply, canaries)
     if not ok:  # fail closed: nothing leaves, ever
         ledger(question, why, tier, channel, "gate-refusal", used, True, dh)
-        escalate(question, why, tier, channel)
+        escalate(question, why, tier, channel, chat)
         reply = ("My own gate refused that answer — it contained something it must not say. "
                  "I've flagged it, and the reason is in the log." if tier == "owner"
                  else "I can't answer that here. I've flagged it for the Allfather.")
@@ -839,13 +1257,49 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
 
     ledger(question, reply, tier, channel, intent, used, intent == "unknown", dh)
     remember(chat, question, reply)
-    if intent == "unknown":
-        escalate(question, "no approved fact matches", tier, channel)
+    if intent == "unknown" and not denied:
+        handoff = "not-needed"
+        if tier == "owner":
+            escalate(question, "no approved fact matches", tier, channel, chat)
+        elif used:
+            # a fact WAS found and refused by class (a stranger asking about availability). Asking
+            # "who are you" cannot change a tier — the tier comes from the registry, not a claim.
+            escalate(question, "matched but not permitted at this tier", tier, channel, chat)
+        else:
+            # STEP ONE — ask the asker. A handoff is worth nothing without who, what and when, and
+            # half of what he cannot answer is a question he could answer if it were put better.
+            who = who_is(sender, sender_id, chat, channel)
+            pending = pending_get(chat)
+            if not pending:
+                asked = ("Before I pass this to him — who are you, what does it concern, and is there "
+                         "a date or deadline? Give me those and he can answer properly instead of "
+                         "guessing.")
+                pending_put(chat, question, asked)
+                reply = asked
+                print(f"skirnir: gathered first ({who}) — nothing escalated yet", file=sys.stderr)
+                handoff = "gathering"
+            else:
+                # STEP TWO — they answered: pass it on, with the name and both messages
+                context = f"they were asked for who/what/when and replied: “{question[:300]}”"
+                handoff = escalate(pending.get("question") or question,
+                                   "no approved fact matches", tier, channel, chat,
+                                   who=who, context=context)
+                pending_drop(chat)
+                if handoff in ("suppressed", "failed"):
+                    reply = say_unknown(tier, passed=False, seed=chat or "chat")
+                else:
+                    reply = (f"Thank you — I've passed it to the Allfather with your name on it "
+                             f"({who}), what you asked, and what you told me. He will come back to you.")
+        if handoff in ("suppressed", "failed") and tier != "owner":
+            reply = say_unknown(tier, passed=False)
         subprocess.run(["bash", os.path.join(ROOT, "bin", "records", "runes-append.sh"), "skirnir", "assistant",
                         "--message", f"{tier} asked, no approved answer: {question[:120]}"],
                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return {"answer": reply, "refused": intent == "unknown", "intent": intent,
             "facts": used, "tier": tier, "digest": dh}
+
+
+_operator_schedule_intents()
 
 
 def main() -> int:
