@@ -81,6 +81,11 @@ INTENTS = {
     "iam the allfather": ("identity", None),
     "i am the allfather": ("identity", None),
     "do you know who i am": ("identity", None),
+    "what are the houses": ("public", "what-the-houses-are"),
+    "tell me about the houses": ("public", "what-the-houses-are"),
+    "what companies": ("public", "what-the-houses-are"),
+    "which companies": ("public", "what-the-houses-are"),
+    "what are the companies": ("public", "what-the-houses-are"),
     "what is ymir": ("public", "what-ymir-is"),
     "what is opti cat": ("public", "what-opti-cat-is"),
     "what is opticat": ("public", "what-opti-cat-is"),
@@ -955,7 +960,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     question = text.strip()
     key = re.sub(r"[^a-z0-9 ]", "", question.lower()).strip()
     # the name in front of a question is an ADDRESS, not content: strip it and match what is left
-    key = re.sub(r"^\s*(sk[ií]rnir|hey sk[ií]rnir|ok sk[ií]rnir)\b\s*", "", key).strip()
+    key = re.sub(r"^\s*(sk[ií]rnir|skirmir|ymir|brokk|hey sk[ií]rnir|ok sk[ií]rnir)\b\s*", "",
+                 key).strip()
     key = re.sub(r"\bsk[ií]rnirymirassistantbot\b", "", key).strip()
     if not key:
         key = "hello"
@@ -1075,6 +1081,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                     continue
                 hit_body = len(q & body)
                 hit_head = len(q & head(claim))
+                squashed = re.sub(r"[^a-z0-9]", "", claim.lower())
                 words = re.findall(r"[a-z0-9]+", claim.lower())
                 # where the subject sits in the claim: "<subject> is …" beats "The documents around
                 # a <subject> …" when both match, because the first is a fact ABOUT it
@@ -1087,6 +1094,13 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 else:
                     ok = hit_body >= 2 and (hit_body / len(q)) >= 0.5
                     score = hit_body / len(q)
+                # "whynotproductions", "opticat", "wayofteams": a question often runs a name together
+                # that the fact writes apart. A long token found inside the squashed claim IS the subject.
+                if not ok and any(t in squashed for t in q if len(t) >= 5):
+                    ok, score = True, max(score, 0.75)
+                    hit_body = max(hit_body, 1)
+                    hit_head = max(hit_head, 1)
+                    pos = 0
                 if ok:
                     # when two approved facts are both about the subject, the FOCUSED one answers:
                     # more of the question matched, then more of it in the subject, then the one
