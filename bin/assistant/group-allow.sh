@@ -23,7 +23,7 @@ except Exception:
 PY
 )"; TITLE="${TITLE:-unnamed}"
 [ -n "$ID" ] || { printf 'usage: group-allow.sh <chat-id> "<title>"\n' >&2; exit 2; }
-G="$HOME_R/hodd/state/assistant/groups.yaml"
+G="$HOME_R/hodd/identity/assistant/groups.yaml"
 
 python3 - "$G" "$ID" "$TITLE" <<'PY'
 import sys, yaml, pathlib, datetime

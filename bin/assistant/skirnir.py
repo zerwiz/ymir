@@ -61,7 +61,19 @@ INTENTS = {
     "what do you know": ("inventory", None),
     "what have you got": ("inventory", None),
     "what is in your database": ("inventory", None),
-    "list your facts": ("inventory", None),
+    "list your facts": ("facts_list", None),
+    "list the facts": ("facts_list", None),
+    "list facts": ("facts_list", None),
+    "what do you hold": ("facts_list", None),
+    "what facts do you hold": ("facts_list", None),
+    "which facts do you hold": ("facts_list", None),
+    "what are your facts": ("facts_list", None),
+    "what are those facts": ("facts_list", None),
+    "name your facts": ("facts_list", None),
+    "show me your facts": ("facts_list", None),
+    "show your facts": ("facts_list", None),
+    "how are you": ("greeting", None),
+    "how are you doing": ("greeting", None),
     "remember that": ("learn", None),
     "remember:": ("learn", None),
     "learn that": ("learn", None),
@@ -101,6 +113,109 @@ IDENTITY = os.path.join(home(), "hodd", "identity", "assistant")
 DIGEST = os.path.join(STATE, "digest.jsonl")
 DB = os.path.join(STATE, "assistant.db")
 CANARIES = os.path.join(HERE, "canaries.txt")
+
+
+STOPWORDS = {"the", "a", "an", "is", "are", "was", "were", "what", "who", "why", "how",
+             "does", "do", "did", "you", "your", "i", "my", "me", "we", "it", "its", "of",
+             "in", "on", "to", "for", "and", "or", "about", "that", "this", "there", "tell",
+             "know", "have", "has", "holds", "hold", "can", "could", "would", "should",
+             "much", "many", "far", "get", "got", "any", "all", "not", "with", "please"}
+
+# The classes a MODEL may ever phrase. Everything else is said verbatim or not at all: a paraphrase
+# of private material is still private material, and plan 101 §5 forbids handing it to a model.
+MODEL_SAFE_CLASSES = ("public", "logistics", "role")
+# The tiers allowed a free-text mouth. A stranger gets templates: an anonymous sender is exactly the
+# injection surface the quarantine exists for, and nothing about a stranger needs fluent prose.
+MODEL_TIERS = ("owner", "collaborator", "known")
+
+
+def tokens(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9]+", (text or "").lower())
+            if w not in STOPWORDS and len(w) > 2}
+
+
+def head(claim: str, n: int = 6) -> set[str]:
+    """The opening of a claim — its SUBJECT. A one-word question must match here, not anywhere."""
+    words = re.findall(r"[a-z0-9]+", (claim or "").lower())[:n]
+    return {w for w in words if w not in STOPWORDS and len(w) > 2}
+
+
+def model_context(facts: dict) -> dict:
+    """Only what a model is allowed to see. Contacts, NDA, contracted and restricted never enter."""
+    return {k: v for k, v in facts.items()
+            if str(v.get("class", "public")).lower() in MODEL_SAFE_CLASSES}
+
+
+def sounds_like_refusal(text: str) -> bool:
+    """A model saying it does not hold the fact must stay a REFUSAL, so the handoff still happens."""
+    low = (text or "").lower()
+    return any(s in low for s in ("don't hold", "do not hold", "don't know", "do not know",
+                                  "not in the facts", "no information", "will ask the allfather",
+                                  "ask him", "cannot answer", "can't answer"))
+
+
+INTERROGATIVE = re.compile(
+    r"^(what|who|why|how|when|where|which|whose|can|could|do|does|did|is|are|was|were|will|would|"
+    r"should|may|might|have|has|am)\b")
+
+
+def looks_like_question(text: str, key: str) -> bool:
+    """A statement and a question are different acts. The Allfather TELLS him a fact, or ASKS him one."""
+    if "?" in (text or ""):
+        return True
+    return bool(INTERROGATIVE.match((key or "").strip()))
+
+
+DECLARATIVE = re.compile(
+    r"\b(is|are|was|were|has|have|had|means|refers to|belongs|works|keeps|uses|prefers|leads|runs|"
+    r"costs|equals|stands for|owns|handles|serves|contains|includes)\b")
+RESEARCH = re.compile(
+    r"^(?:look up|search for|search the web for|search the web|research|google|"
+    r"what does the web say about|what do you find about|find out about)\s+(.{2,120})$", re.I)
+ACTION = re.compile(
+    r"^(send|post|message|email|e-mail|call|book|schedule|create|delete|cancel|forward|reply|pay|"
+    r"order|buy|remind|set up|add|remove|change|update|move|reschedule|invite)\b")
+IMPERATIVE = re.compile(
+    r"^(summarise|summarize|send|print|ignore|read|show|list|tell|explain|give|write|make|open|run|"
+    r"delete|change|update|remember|learn|find|search|translate|draft|book|call|set|add|remove)\b")
+
+
+def looks_like_statement(text: str, key: str) -> bool:
+    """An assertion, not a command and not a question: 'gimle are the team tools' is knowledge;
+    'summarise the masterplan' is an instruction, and an instruction is never a fact."""
+    if looks_like_question(text, key):
+        return False
+    if IMPERATIVE.match((key or "").strip()):
+        return False
+    if not DECLARATIVE.search(key or ""):
+        return False
+    return len(re.findall(r"[a-z0-9]+", key or "")) >= 3
+
+
+def facts_listing(facts: dict, tier: str, limit: int = 30) -> str:
+    """The owner can always see what he holds. A mouth that cannot be audited is not trustworthy."""
+    if tier != "owner":
+        return ("I can tell you what Ymir and the projects are, and take a message. "
+                "The rest is his to read out.")
+    by_class: dict[str, list[tuple[str, str]]] = {}
+    for slug, fact in facts.items():
+        by_class.setdefault(str(fact.get("class", "public")).lower(), []).append(
+            (slug, str(fact.get("claim", "")).replace("\n", " ")))
+    lines = [f"I hold {len(facts)} approved facts."]
+    shown = 0
+    for klass in sorted(by_class):
+        lines.append("")
+        lines.append(f"{klass} ({len(by_class[klass])}):")
+        for slug, claim in by_class[klass]:
+            if shown >= limit:
+                continue
+            short = claim if len(claim) <= 110 else claim[:107].rstrip() + "…"
+            lines.append(f"· {slug} — {short}")
+            shown += 1
+    if shown < len(facts):
+        lines.append("")
+        lines.append(f"…and {len(facts) - shown} more, past what one message can carry.")
+    return "\n".join(lines)
 
 
 def load_canaries() -> list[str]:
@@ -344,17 +459,8 @@ def escalate(question: str, reason: str, tier: str, channel: str = "") -> None:
                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def model_answer(question: str, facts: dict, model: str) -> str | None:
-    """Free text from a local model, with the DIGEST as its only knowledge and the gate behind it.
-
-    The model is a mouth, not a mind of the house: it receives the approved facts and the question,
-    nothing else. No tools, no vault, no history. If it fails, the caller falls back to templates.
-    """
-    context = "\n".join(f"- {row['claim']}" for row in facts.values())
-    system = ("You are Skírnir, the Allfather's assistant. Answer ONLY from the facts below. "
-              "If the facts do not contain the answer, say you don't know and that you will ask him. "
-              "Never produce a URL, a link, an image, a table or code. Two sentences at most.\n"
-              f"FACTS:\n{context}")
+def _rail(system: str, user: str, model: str) -> str | None:
+    """One call to the rail. No tools, no credential in the prompt, nothing but text in and out."""
     try:
         import urllib.request
         key = ""
@@ -363,9 +469,9 @@ def model_answer(question: str, facts: dict, model: str) -> str | None:
             key = (auth.get("llama-swap") or {}).get("key", "")
         except Exception:
             pass
-        body = json.dumps({"model": model, "temperature": 0, "max_tokens": 120,
+        body = json.dumps({"model": model, "temperature": 0, "max_tokens": 160,
                            "messages": [{"role": "system", "content": system},
-                                        {"role": "user", "content": question}]}).encode()
+                                        {"role": "user", "content": user}]}).encode()
         req = urllib.request.Request("http://127.0.0.1:8080/v1/chat/completions", data=body,
                                      headers={"Content-Type": "application/json",
                                               "Authorization": f"Bearer {key}"})
@@ -375,6 +481,39 @@ def model_answer(question: str, facts: dict, model: str) -> str | None:
         return text or None
     except Exception:
         return None
+
+
+def model_research(question: str, sources: list[dict], model: str) -> str | None:
+    """The open web, framed as what it is: external text, named by source, never a link."""
+    context = "\n\n".join(
+        f"[{i + 1}] {src.get('title', 'untitled')} ({src.get('domain', '')})\n{src.get('extract', '')}"
+        for i, src in enumerate(sources))
+    system = ("You are Skirnir, the Allfather's assistant. Answer ONLY from the web extracts below, "
+              "in one or two short sentences. Say first that it comes from the open web and not from "
+              "what you hold. Name the source in words (its title); never write a link, a URL, an "
+              "image, a table or code. If the extracts do not answer the question, say so plainly.\n\n"
+              f"WEB EXTRACTS:\n{context}")
+    return _rail(system, question, model)
+
+
+def model_answer(question: str, facts: dict, model: str,
+                 recent: list[tuple[str, str]] | None = None) -> str | None:
+    """Free text from a local model, with the DIGEST as its only knowledge and the gate behind it.
+
+    The model is a mouth, not a mind of the house: it receives the approved facts, the question and
+    the last turns of THIS chat — nothing else. No tools, no credential, no vault. Only facts in
+    MODEL_SAFE_CLASSES may be passed here (`model_context`); the caller must have filtered them.
+    If it fails, the caller falls back to the verbatim claim or the honest no.
+    """
+    context = "\n".join(f"- {row['claim']}" for row in facts.values())
+    if recent:
+        context += "\n\nThe last turns in this chat:\n" + "\n".join(
+            f"{role}: {line[:200]}" for role, line in recent)
+    system = ("You are Skírnir, the Allfather's assistant. Answer ONLY from the facts below. "
+              "If the facts do not contain the answer, say you don't know and that you will ask him. "
+              "Never produce a URL, a link, an image, a table or code. Two sentences at most.\n"
+              f"FACTS:\n{context}")
+    return _rail(system, question, model)
 
 
 def gate(answer: str, canaries: list[str]) -> tuple[bool, str]:
@@ -411,6 +550,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     facts = {k: v for k, v in facts.items() if audience_ok(v, allowed, channel)}
     dh = digest_hash(facts)
     canaries = load_canaries()
+    # the mouth is named ONCE, before any branch can ask whether it is armed
+    mouth = model or os.environ.get("SKIRNIR_MODEL") or ""
     question = text.strip()
     key = re.sub(r"[^a-z0-9 ]", "", question.lower()).strip()
     # the name in front of a question is an ADDRESS, not content: strip it and match what is left
@@ -431,15 +572,46 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             if slug:
                 used = [slug]
             break
+    # An ACTION request is neither a question nor a fact: he is a mouth, not a hand (plan 101 §4).
+    # It must be caught before retrieval, or a word like "send" matches a fact and reads as consent.
+    if ACTION.match(key.strip()):
+        kind, intent = "action", "action"
+
+    # THE OPEN WEB. Owner only, by a named verb, and it never touches the digest: what comes back is
+    # external text that is read once, quoted, and forgotten. Nothing fetched is ever learned.
+    research_subject = ""
+    m_research = RESEARCH.match(question.strip())
+    if m_research and intent == "unknown":
+        kind, intent = "research", "research"
+        research_subject = m_research.group(1).strip().rstrip("?.!")
+
     if intent == "unknown" and key:
-        # a typo is not a refusal: "whata do you have in your database" is the same question
+        # A typo is not a refusal: "whata do you have in your database" is the same question.
+        # But a DIFFERENT subject is not a typo: "what is gimle" must never become "what is ymir".
+        # So a key word may be MISSPELLED, never merely different — each one must be an existing
+        # word of the phrase, or close enough to be that word mistyped (≥0.80).
         import difflib
-        close = difflib.get_close_matches(key, list(INTENTS), n=1, cutoff=0.70)
-        if close:
-            intent = close[0]
-            kind = INTENTS[close[0]][0]
-            if INTENTS[close[0]][1]:
-                used = [INTENTS[close[0]][1]]
+        qf = tokens(key)
+        best, best_ratio = None, 0.0
+        for phrase in INTENTS:
+            # the "about X" rule binds the fallback too, or it bypasses the intent table's own guard
+            if re.match(r"^\s*" + re.escape(phrase.strip()) + r"\s+(about|on|regarding)\b", key):
+                continue
+            words = set(re.findall(r"[a-z0-9]+", phrase))
+            if not qf or not words:
+                continue
+            typo = all(w in words or any(difflib.SequenceMatcher(None, w, p).ratio() >= 0.80
+                                         for p in words) for w in qf)
+            if not typo:
+                continue
+            ratio = difflib.SequenceMatcher(None, key, phrase).ratio()
+            if ratio >= 0.82 and ratio > best_ratio:
+                best, best_ratio = phrase, ratio
+        if best:
+            intent = best
+            kind = INTENTS[best][0]
+            if INTENTS[best][1]:
+                used = [INTENTS[best][1]]
 
     # "what does <name> prefer" / "what do you know about <name>" — a fact search by subject
     if intent == "unknown":
@@ -465,12 +637,68 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                     intent = "directory" if fact.get("class") == "contacts" else f"fact:{slug}"
                     break
 
-    if kind == "learn":
+    # A general retrieval over the approved digest: a fact the Allfather has approved is
+    # answerable without hand-writing a phrase for it. Token overlap over the claims,
+    # stopwords removed, best fact wins if the question is really about it (Rule 28:
+    # he says what he holds, and what he does not hold he refuses).
+    if intent == "unknown" and key:
+        stop = {"the", "a", "an", "is", "are", "was", "were", "what", "who", "why", "how",
+                "does", "do", "did", "you", "your", "i", "my", "me", "we", "it", "its", "of",
+                "in", "on", "to", "for", "and", "or", "about", "that", "this", "there", "tell",
+                "know", "have", "has", "holds", "hold", "can", "could", "would", "should",
+                "much", "many", "far", "get", "got", "any", "all", "not", "with"}
+        q = tokens(key)
+        ranked: list[tuple[float, int, int, str]] = []
+        if q:
+            for slug, fact in facts.items():
+                claim = str(fact.get("claim", ""))
+                body = tokens(claim)
+                if not body:
+                    continue
+                hit_body = len(q & body)
+                hit_head = len(q & head(claim))
+                words = re.findall(r"[a-z0-9]+", claim.lower())
+                # where the subject sits in the claim: "OptiCat is …" beats "The documents around
+                # an OptiCat …" when both match, because the first is a fact ABOUT it
+                pos = min((i for i, w in enumerate(words) if w in q), default=99)
+                if len(q) == 1:
+                    # one word is only an answer if it is the SUBJECT of the claim. "how many
+                    # plans are there" must not become Brokk because his claim says "he plans".
+                    ok = hit_head >= 1
+                    score = 1.0 if ok else 0.0
+                else:
+                    ok = hit_body >= 2 and (hit_body / len(q)) >= 0.5
+                    score = hit_body / len(q)
+                if ok:
+                    # when two approved facts are both about the subject, the FOCUSED one answers:
+                    # more of the question matched, then more of it in the subject, then the one
+                    # that names it first, then the shorter claim. Only an exact dead heat is
+                    # refused — saying nothing beats guessing.
+                    ranked.append((score, hit_body, hit_head, -pos, -len(claim), slug))
+        if ranked:
+            ranked.sort(reverse=True)
+            if len(ranked) == 1 or ranked[0][:5] > ranked[1][:5]:
+                used, intent = [ranked[0][5]], f"fact:{ranked[0][5]}"
+
+    # "what are those 21 approved facts" — the owner asking to SEE the shelf, not to search it
+    if intent == "unknown" and tier == "owner" and re.search(r"\b(facts?|claims?)\b", key) \
+            and re.search(r"\b(list|name|show|what|which|those|all|every|hold|holds)\b", key):
+        kind, intent = "facts_list", "facts_list"
+
+    # A STATEMENT from the Allfather is knowledge, not a question. This runs before a model or a
+    # refusal can be reached: no "?", no interrogative opening, three words or more, and never in a
+    # room where other people are present (what is said there is not his word alone).
+    if intent == "unknown" and tier == "owner" and "group" not in (channel or "") \
+            and looks_like_statement(question, key):
+        kind, intent = "learn_plain", "learn-plain"
+
+    if kind == "learn" or kind == "learn_plain":
         if tier != "owner":
             reply = "I only learn from the Allfather."
         else:
-            fact = re.sub(r"^(please\s+)?(remember that|remember:|learn that)\s*", "", question,
-                          flags=re.I).strip()
+            fact = question if kind == "learn_plain" else re.sub(
+                r"^(please\s+)?(remember that|remember:|learn that)\s*", "", question, flags=re.I).strip()
+            fact = fact.strip()
             if len(fact) < 8:
                 reply = "Tell me the fact and I'll put it up for your approval."
             else:
@@ -479,6 +707,45 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                                       capture_output=True, text=True, timeout=30)
                 reply = (f"Noted: “{fact[:160]}”. It is pending your approval — approve it and it "
                          "becomes something I know.")
+    elif kind == "research":
+        if tier != "owner":
+            reply = ("I don't search the open web for anyone but him. Ask me what the house holds, "
+                     "or leave a message and I'll pass it on.")
+            intent = "unknown"
+        elif not research_subject:
+            reply = "Tell me what to look up and I'll look."
+        else:
+            door = os.path.join(HERE, "research.py")
+            try:
+                proc = subprocess.run([sys.executable, door, "--query", research_subject,
+                                       "--limit", "3"], capture_output=True, text=True, timeout=90)
+                found = json.loads(proc.stdout or "{}")
+            except Exception:
+                found = {}
+            sources = found.get("sources") or []
+            if not sources:
+                reply = (f"I looked, and the open web gave me nothing usable about "
+                         f"“{research_subject}”. That is an honest no, not a guess.")
+                intent = "research-empty"
+            else:
+                said = model_research(question, sources, mouth) if mouth else None
+                if said:
+                    reply = said
+                else:
+                    top = sources[0]
+                    reply = (f"From the open web, not from what I hold: {top.get('extract', '')[:400]} "
+                             f"— {top.get('title', '')}.")
+                used = [f"web:{s.get('domain', '')}" for s in sources]
+                intent = "research"
+    elif kind == "action":
+        if tier == "owner":
+            reply = ("I don't act for you — nothing sent, nothing booked, nothing changed. That is "
+                     "Brokk's work and your decision; tell me what it is and I'll hold it.")
+        else:
+            reply = ("I can't send, book or change anything — I'm a mouth, not a hand. Tell me what "
+                     "you need and I'll pass it to the Allfather.")
+    elif kind == "facts_list":
+        reply = facts_listing(facts, tier)
     elif kind == "inventory":
         by_class: dict[str, int] = {}
         for fact in facts.values():
@@ -488,7 +755,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             names = [f["claim"].split(" is ")[0] for f in facts.values() if f.get("class") == "contacts"]
             reply = (f"I hold {len(facts)} approved facts — {listing}. "
                      + (f"People I know: {', '.join(names[:8])}. " if names else "")
-                     + "Nothing from the private records; if it isn't approved, I don't have it.")
+                     + "Nothing from the private records; if it isn't approved, I don't have it. "
+                     + "Say 'list your facts' and I'll read them out.")
         else:
             reply = "I can tell you what Ymir and the projects are, and take a message. The rest is his."
     elif intent == "directory":
@@ -538,24 +806,27 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         elif klass != "public" and tier == "stranger":
             reply = say_unknown(tier)
             intent = "unknown"
-    elif (model or os.environ.get("SKIRNIR_MODEL")) and tier == "owner" \
-            and all(str(facts[u].get("class", "public")).lower() in ("public", "logistics", "role")
-                    for u in (used or []) if u in facts):
-        recent = history(chat)
-        prompt = question if not recent else (
-            "Recent turns in this chat:\n"
-            + "\n".join(f"{role}: {text[:200]}" for role, text in recent)
-            + f"\nuser: {question}")
-        generated = model_answer(prompt, facts, model or os.environ["SKIRNIR_MODEL"])
-        if generated:
-            reply = generated
-            intent = "model"
-        else:
-            reply = say_unknown(tier)
-            intent = "unknown"
     else:
         reply = say_unknown(tier)
         intent = "unknown"
+
+    # THE MOUTH. A model phrases, and only for the classes and tiers it may ever see. It receives
+    # the approved facts, the question and the last turns — no tools, no credential, no vault — and
+    # everything it says still runs through the gate below. A rail that is down is not an outage:
+    # the verbatim claim or the honest no is already in `reply`, and that is what gets said.
+    if mouth and tier in MODEL_TIERS:
+        safe = model_context(facts)
+        if intent == "unknown":
+            said = model_answer(question, safe, mouth, history(chat))
+            if said:
+                reply = said
+                # if it says it does not hold the fact, it stays a REFUSAL: he must be told
+                intent = "unknown" if sounds_like_refusal(said) else "model"
+        elif used and used[0] in facts \
+                and str(facts[used[0]].get("class", "public")).lower() in MODEL_SAFE_CLASSES:
+            said = model_answer(question, {used[0]: facts[used[0]]}, mouth, history(chat))
+            if said and not sounds_like_refusal(said):
+                reply, intent = said, f"model:{used[0]}"
 
     ok, why = gate(reply, canaries)
     if not ok:  # fail closed: nothing leaves, ever

@@ -65,3 +65,71 @@ they are absent.
 
 **If it does not work.** `walls-test.sh` first — it attacks him the way a hostile message would. If a
 canary appears, the digest has a leak: fix the approved fact, not the filter.
+
+**The mouth has a model — and it is optional** (2026-10-22). By default Skírnir answers from his
+approved facts and a phrase table, with **no model at all** — instant, and never wrong about something
+else. To give him a voice, name a rail model in a **drop-in** (never in the unit, Rule 07):
+
+```sh
+mkdir -p ~/.config/systemd/user/skirnir-telegram.service.d
+printf '[Service]\nEnvironment=SKIRNIR_MODEL=qwen3.5-9b@q4_k_s-summarizer\n' \
+  > ~/.config/systemd/user/skirnir-telegram.service.d/10-model.conf
+systemctl --user daemon-reload && systemctl --user restart skirnir-telegram
+```
+
+With it armed, the model **phrases** a matched fact in its own words and answers from the digest when
+nothing matched — but only for the owner, a collaborator or a known person, and it is shown
+`public` + `logistics` + `role` facts **only**. Contacts, NDA, contracted and restricted material never
+enter its context. A stranger still gets templates. Its output runs through the same gate (no URL, no
+link, no image, no code, 194 canaries), and if it says it does not hold the fact, the answer stays a
+**refusal** so the handoff to the Allfather still happens. If the rail is down, nothing breaks: the
+verbatim claim or the honest no is already prepared.
+
+**Which model.** Measured on this box: `qwen3.5-9b@q4_k_s-summarizer` (32K, 5.4 GB, ~140–150 t/s,
+1.3–3.2 s warm, ~7 s on the first call while it loads) is the one that **says "I do not hold that"**
+when it does not. `minicpm5-1b` is five times faster and **invents** ("Gimle is a type of dog") — do
+not use a small model here; the mouth's whole value is that it will not guess. The 35B MoE is the same
+speed at 13.8 GB and starves the speech synthesiser.
+
+**Limits worth knowing.** The rail serves **one model at a time** (`--models-max 1`): the first answer
+after idle evicts whatever was resident and pays the load. Arming the mouth therefore costs the
+interactive model its place — that is a decision, not a bug.
+
+**The open web — one window, and the model cannot aim it** (2026-10-22). He can research, and the shape
+is the safety: the model holds **no callable at all**, so an instruction inside a fetched page has
+nothing to invoke. A separate door does the fetching — keyless, and it can only ask Wikipedia's public
+API: no URL taken from a message, no redirect, no private address.
+
+```sh
+bin/assistant/research.py --query "Kosovo Liberation Army" --limit 3   # JSON: title, domain, extract
+```
+
+Ask him in words: *"look up …"*, *"search the web for …"*, *"research …"*. **Owner only** — a stranger
+asking is refused in words. What he says begins *"From the open web, not from what I hold"* and names
+the source in words; the gate still forbids a URL, a link, an image and a code block, and the door
+strips links from the fetched text as well. **Nothing fetched is ever learned**: it is not written to
+the digest, not merged into a fact, and never mixed with private material — so a research turn never
+holds private data, untrusted content and outward speech at the same time.
+
+**What he may see of his own shelf.** *"list your facts"* / *"what are those 21 approved facts"* lists
+every claim by slug, grouped by class, capped at thirty per message.
+
+**What he does with a plain word of yours.** A declarative statement (*"gimle are the house team
+tools"*) is knowledge: it goes to `pending/` with a one-click approval, exactly as *"remember that …"*
+does. A **command** (*"summarise the masterplan"*) and a **question** are not facts and are never
+learned. An **action** request (*"send this message to Anna"*, *"book a call"*) is answered plainly —
+*"I don't act for you — nothing sent, nothing booked, nothing changed"* — because he is a mouth, not a
+hand.
+
+**Limits.** Wikipedia only, for now: the vault holds no search-provider key, and a door that pretended
+to have one would be a mock. Research needs the network; with none, he says he found nothing usable
+rather than guessing. Research costs a rail load like any other model turn.
+
+**Appended 2026-10-22 — the web door is Exa, not a stub.** The first cut of the research door queried
+Wikipedia and called it research; the house already had real search. `research.py` now calls **Exa's
+hosted MCP** endpoint — the same provider Pi's own `web_search` tool answers through — keyless, and
+Wikipedia remains only as a labelled fallback when Exa cannot be reached. Results come back as
+`title` + `domain` + text; the full URL is reduced to its host at the door and links are stripped, so
+a source is always **named, never linked**. Measured on *"OVK ventilation Boverket requirements"*: three
+sources, all `boverket.se`, in Swedish — the actual regulator. An Exa key, if one is ever added to
+`web-search.json`, raises the rate limit; none is needed to search.
