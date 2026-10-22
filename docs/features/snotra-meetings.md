@@ -72,34 +72,42 @@ Tests: `bash tests/run.sh` (61 assertions across four suites).
 
 ## Letting the assistant speak in the room
 
-**What it is.** `bin/time/snotra/snotra-speak-meeting.sh` puts one sentence of Ymir's voice
-into a meeting that is running **on this computer**. Kokoro renders the audio; the
-`snotra_mic` PipeWire source carries it; a meeting client that selects *Snotra Mic* as its
-microphone transmits it.
+**What it is.** `bin/time/snotra/snotra-stream.sh` is Ymir's voice in a meeting that runs
+**on this computer**. `say` speaks one line; `talk` runs the **streaming loop** — it hears
+in ~2-second chunks, answers **only when it is named**, composes one short answer, and
+speaks it sentence by sentence (the next sentence is rendered while the current one plays).
+Kokoro makes the voice; the `snotra_mic` PipeWire source carries it; a meeting client that
+selects *Snotra Mic* as its microphone transmits it.
 
-**What you need.** `kokoro-serve.service` running (the door raises it and waits), the virtual
-microphone (`snotra-voice-device.sh ensure`, done automatically), and a call **on this seat** —
-a remote call heard only by the Vexa bot has no local uplink to borrow.
+**What you need.** `kokoro-serve.service` (the door raises it), a whisper server on
+`:10300` (`whisper-server` — the loop transcribes with it), the virtual microphone
+(`snotra-voice-device.sh ensure`, done automatically), and a call **on this seat** — a
+remote call heard only by the Vexa bot has no local uplink to borrow.
 
 ```bash
-bin/time/snotra/snotra-voice-device.sh ensure     # the sink + the source, idempotent
-bin/time/snotra/snotra-speak-meeting.sh status    # muted? device? is Kokoro up?
-bin/time/snotra/snotra-speak-meeting.sh say "Craig, the actions are in the mail."
-bin/time/snotra/snotra-speak-meeting.sh say "..." --as Skírnir --dry-run   # render, do not play
-bin/time/snotra/snotra-speak-meeting.sh mute      # one command, and it holds
+bin/time/snotra/snotra-voice-device.sh ensure          # the sink + the source, idempotent
+bin/time/snotra/snotra-stream.sh status                # muted? device? is Kokoro up?
+bin/time/snotra/snotra-stream.sh say "Craig, the actions are in the mail."
+bin/time/snotra/snotra-stream.sh talk --listen <source>   # the streaming loop
+python3 bin/time/snotra/snotra-talk.py --listen-file q.wav  # replay a recording (the test door)
+bin/time/snotra/snotra-stream.sh mute                  # one command, and it holds
 ```
 
-**The speech law the door enforces.** The first utterance in a meeting is prefixed with the
-speaker's own name (`Skírnir, the Allfather's assistant, speaking.`) — a support assistant
-mistaken for the operator is worse than a silent one. An utterance over 20 seconds is
-**refused**, not trimmed; shorten it. `--wait-quiet N` holds the first word until the room
-falls below −40 dB. Every utterance is written to the ledger as `voice.speak`.
+**The speech law the door enforces.** The first word in a meeting is the speaker's own
+name (`Skírnir, the Allfather's assistant, speaking.`) — an assistant mistaken for the
+operator is worse than a silent one. It answers **only when addressed**, matched loosely
+enough to survive speech recognition (whisper hears *"Skírnir"* as *"Scurnier"*). An answer
+over 20 seconds is cut, not stretched. No URL, plan number or port is ever spoken. Every
+utterance is one measured line in `talk.log` and one Rune.
 
-**Limits.** If Kokoro is down the door falls back to Piper and says so; if both fail it
-refuses with the reason. The audio goes into the virtual source, so **the client must have
-that source selected as its microphone** — this door cannot reach a browser that is using the
-real microphone.
+**Limits.** The loop's turn is a **note passed, not a conversation**: a 2-second chunk plus
+model time means it answers a question asked several seconds earlier — so it speaks only
+when named. A cold rail model costs ~20 s for the first answer (a warm one is far faster;
+use a small preset for meetings). The audio goes into the virtual source, so **the client
+must have that source selected as its microphone** — this door cannot reach a browser that
+is using the real microphone.
 
-**If it does not work.** `status` first: `muted=yes` means `unmute`; `device_ready=no` means
-run `snotra-voice-device.sh ensure`; `tts=kokoro:down` means `systemctl --user start
-kokoro-serve` and read `journalctl --user -u kokoro-serve`.
+**If it does not work.** `status` first: `muted=yes` means `unmute`; no device means run
+`snotra-voice-device.sh ensure`; no voice means `systemctl --user start kokoro-serve` and
+`journalctl --user -u kokoro-serve`; silence in the room means the client is not listening
+to *Snotra Mic*.

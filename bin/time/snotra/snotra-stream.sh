@@ -2,8 +2,15 @@
 # snotra-stream.sh — Snotra's voice into a meeting: say, and (later) the full loop.
 #
 #   snotra-stream.sh say "text" [--voice am_onyx] [--meeting <id>]
+#   snotra-stream.sh talk [--listen <source>] [--name Skírnir] [--once]
+#   snotra-stream.sh mute | unmute
 #   snotra-stream.sh status
 #   snotra-stream.sh stop          (stop any playback now)
+#
+# `talk` is the streaming loop (plan 34 applied to a room, plan 87's voice): it hears
+# in ~2 s chunks, answers only when NAMED, composes one short answer on the rail, and
+# speaks sentence by sentence — Kokoro rendering the next sentence while the current
+# one plays. Its implementation is snotra-talk.py beside this door.
 #
 # The voice is Kokoro (local, fast, 24 kHz); the audio goes into the "Snotra Mic"
 # virtual source, which the meeting client selects as its microphone.
@@ -22,6 +29,8 @@ LOG="$STATE_DIR/talk.log"
 MIC="${SNOTRA_MIC_NAME:-snotra_mic}"
 VOICE="${SNOTRA_VOICE:-am_onyx}"
 PIDFILE="$STATE_DIR/voice.pid"
+MUTE_FILE="$STATE_DIR/voice-muted"
+ANN_FILE="$STATE_DIR/voice-announced"
 die(){ printf 'error: %s\n' "$*" >&2; exit 1; }
 command -v kokoro >/dev/null || die "kokoro not found"
 command -v paplay >/dev/null || die "paplay not found"
@@ -30,10 +39,12 @@ say(){
   local text="" meeting=""
   text="${1-}"; shift 2>/dev/null || true
   [ -n "$text" ] || die "say needs text"
+  [ -e "$MUTE_FILE" ] && { printf 'refused: muted — run %s unmute\n' "$0" >&2; exit 3; }
   while [ $# -gt 0 ]; do case "$1" in
     --voice) VOICE="${2-}"; shift 2 ;;
     --meeting) meeting="${2-}"; shift 2 ;;
     *) die "unknown option: $1" ;; esac; done
+  [ -e "$ANN_FILE" ] || text="Skírnir, the Allfather's assistant, speaking. $text"
   bash "$ROOT/bin/time/snotra/snotra-voice-device.sh" ensure >/dev/null || die "voice device failed"
   local wav; wav="$(mktemp --suffix=.wav)"
   local t0 t1 t2; t0="$(date +%s%3N)"
@@ -42,6 +53,7 @@ say(){
   paplay --device="$MIC" "$wav" || die "playback failed"
   t2="$(date +%s%3N)"
   rm -f "$wav"
+  { [ -e "$ANN_FILE" ] || date -Iseconds > "$ANN_FILE"; } 2>/dev/null || true
   python3 - "$LOG" "$meeting" "$VOICE" "$t0" "$t1" "$t2" "$text" <<'PY'
 import sys,json,datetime
 log,meeting,voice,t0,t1,t2,text=sys.argv[1:]
@@ -64,8 +76,14 @@ stop(){
   pkill -f "^paplay --device=$MIC" 2>/dev/null || true
   printf 'voice\tstopped\n'
 }
+talk(){ exec python3 "$ROOT/bin/time/snotra/snotra-talk.py" "$@" ; }
+mute(){ printf 'muted %s\n' "$(date -Iseconds)" > "$MUTE_FILE"; printf 'mute\t%s\tthe next word needs `unmute`\n' "$(date -Iseconds)"; }
+unmute(){ rm -f "$MUTE_FILE" "$ANN_FILE"; printf 'unmute\t%s\tthe first word names the speaker again\n' "$(date -Iseconds)"; }
 case "$ACTION" in
   say) say "$@" ;;
+  talk) talk "$@" ;;
+  mute) mute ;;
+  unmute) unmute ;;
   status) status ;;
   stop) stop ;;
   *) printf 'usage: snotra-stream.sh say "text" [--voice V] [--meeting ID] | status | stop\n' >&2; exit 2 ;;

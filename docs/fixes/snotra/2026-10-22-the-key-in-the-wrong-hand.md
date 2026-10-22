@@ -25,12 +25,19 @@ were found only because a meeting the Allfather was sitting in had no Snotra in 
    transcribing; Snotra then joined (`requested → joining → awaiting_admission → active`,
    bot `mtg-4-b552ef2f`).
 
-3. **The voice existed only on paper.** Plan 87 named `snotra-voice-device.sh` (present but
-   never run) and `snotra-speak-meeting.sh` (**absent**). This change adds the missing door:
-   Kokoro → the `snotra_mic` sink → a client that selects that source, with the speech law
-   enforced — announce (the first word names the speaker), a 20-second cap that *refuses*
-   rather than trims, a mute file that holds, a Piper fallback whose reason is printed,
-   and a Rune per utterance.
+3. **The voice existed only as a one-shot.** `snotra-stream.sh say` could render one
+   sentence into the `snotra_mic` sink, and its own header said the full loop was
+   "(later)". This change builds that loop: `snotra-stream.sh talk` runs
+   `snotra-talk.py` — hear in ~2 s chunks, answer **only when named**, compose one short
+   answer on the rail, and speak sentence by sentence (Kokoro rendering the next while
+   the current plays). The speech law is enforced in the loop: the first word names the
+   speaker, a 20 s cap on the whole answer, a mute file that holds, no URL or plan spoken
+   aloud, and a Rune per utterance.
+
+   Name detection is deliberately tolerant: whisper small.en transcribes *"Skírnir"* as
+   **"Scurnier"** (measured), and the operator types *"Skirmir"*. An exact-match name test
+   would never fire in a real room, so the floor test compares a consonant skeleton
+   (`c`→`k`, vowels dropped) as well as edit distance.
 
 ### Also fixed in the same pass (seat, not repo)
 
@@ -45,8 +52,13 @@ next tick. The timer now takes the later of the stamp and the unit's own
 
 - `snotra-bot.sh status 4` → `bot 4 active` (auth proven against the live gateway).
 - Snotra joined a real Meet and was logged hearing both participants as speaker streams.
-- `snotra-speak-meeting.sh status | say --dry-run` → correct device, correct seconds, the
-  announcement prepended on the first utterance.
+- The loop, end to end on a rendered question (`--listen-file`): heard
+  *"Scurnier, what is Opti-Cat?"* → floor test passed → answer composed on the rail
+  (`compose=19.7s`, a cold swap) → 9.3 s of speech into `snotra_mic`, announced as
+  *"Skírnir, the Allfather's assistant, speaking."* → one `talk.log` row carrying the
+  measured times.
+- The floor test refuses ordinary conversation: *"the weather is fine"* and *"thanks for
+  the update everyone"* → `ignored`.
 - Kokoro `POST /v1/audio/speech` → 200 after the idle-stop fix.
 - The virtual source `snotra_mic` exists; `pw-link` shows `snotra_mic:monitor → input.snotra_mic`.
 
