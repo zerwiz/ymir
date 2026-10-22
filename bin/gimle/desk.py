@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+"""desk.py — Gimlé's desk: the page behind the door.
+
+The hall's login is a door; this is the desk behind it. It answers one question — *what is mine to do,
+and what was decided* — from the house's own record, in the house's own cloth. It is deliberately small:
+
+  • it renders, it never writes;
+  • it reads a JSON the projector writes (`meetings.json`), so the record stays in the hoard;
+  • it trusts the identity Authelia has already established, passed by Caddy as `Remote-User`.
+
+    desk.py --port 8487 --data /srv/gimle-desk/meetings.json [--plane-url URL --plane-token T]
+
+Sections, in the order a person actually needs them:
+  1 · due this week      — actions owed by me, with the meeting they came from
+  2 · last decisions     — the most recent decisions across my places
+  3 · questions for me   — open questions with my name against them
+  4 · the tiles          — Plane · AFFiNE · Excalidraw · Files (when it lands)
+"""
+from __future__ import annotations
+
+import argparse
+import datetime
+import html
+import json
+import os
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+CLOTH = """
+:root{--ymir-bg-0:#0e0c09;--ymir-bg-1:#151209;--ymir-bg-2:#1a1610;--ymir-line:#2b241a;
+ --ymir-bronze:#c9973f;--ymir-bronze-deep:#7d5f2a;--ymir-bone:#cfc3a9;--ymir-bone-dim:#9a8f75;
+ --ymir-bone-faint:#6b6250;--ymir-steel:#96a0a8;--ymir-blood:#c2584a;
+ --bevel:inset 0 0 0 1px rgba(201,151,79,.12);
+ --f-display:"Cormorant",Georgia,serif;--f-body:"Newsreader",Georgia,serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+*{box-sizing:border-box}body{margin:0;background:
+ radial-gradient(1000px 600px at 12% -10%,#1b1710 0%,transparent 60%),var(--ymir-bg-0);
+ color:var(--ymir-bone);font-family:var(--f-body);font-size:15px;line-height:22px}
+a{color:var(--ymir-bronze);text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:34px 22px 60px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--ymir-line);padding-bottom:14px}
+h1{font-family:var(--f-display);font-weight:400;font-size:40px;margin:0;letter-spacing:.02em}
+h1 em{font-style:italic;color:var(--ymir-bronze)}
+.who{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ymir-bone-faint)}
+h2{font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ymir-bronze);margin:34px 0 10px}
+.card{background:var(--ymir-bg-1);border:1px solid var(--ymir-line);border-radius:10px;box-shadow:var(--bevel);padding:16px 18px}
+ul{list-style:none;margin:0;padding:0}
+li{padding:10px 0;border-bottom:1px solid var(--ymir-line)}
+li:last-child{border-bottom:0}
+.meta{font-family:var(--f-mono);font-size:11px;color:var(--ymir-bone-faint);letter-spacing:.06em}
+.title{color:var(--ymir-bone)}
+.due{color:var(--ymir-bronze);font-family:var(--f-mono);font-size:11px}
+.over{color:var(--ymir-blood)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:8px}
+.tile{display:block;background:var(--ymir-bg-1);border:1px solid var(--ymir-line);border-radius:10px;padding:16px;box-shadow:var(--bevel)}
+.tile:hover{border-color:var(--ymir-bronze-deep)}
+.tile b{display:block;font-family:var(--f-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ymir-bone)}
+.tile span{display:block;font-size:13px;color:var(--ymir-bone-faint);margin-top:4px}
+.empty{color:var(--ymir-bone-faint);font-style:italic}
+footer{margin-top:40px;font-family:var(--f-mono);font-size:10.5px;color:var(--ymir-bone-faint);letter-spacing:.1em;text-align:center}
+"""
+
+TILES = [
+    ("Board", "https://board.zerwiz.org", "projects and tasks — Plane"),
+    ("Documents", "https://affine.zerwiz.org", "pages and databases — AFFiNE"),
+    ("Whiteboard", "https://whiteboard.zerwiz.org", "drawing and mind maps — Excalidraw"),
+    ("Meetings", "https://affine.zerwiz.org", "the record of what was said and decided"),
+]
+
+
+def load(path: str) -> dict:
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return {"generated": "", "meetings": []}
+
+
+def mine(rows, person: str):
+    if not person:
+        return rows
+    p = person.lower()
+    return [r for r in rows if p in (str(r.get("owner", "")) + str(r.get("who", ""))).lower()]
+
+
+def render(person: str, data: dict) -> str:
+    today = datetime.date.today()
+    horizon = today + datetime.timedelta(days=7)
+    actions, decisions, questions = [], [], []
+    for m in data.get("meetings", []):
+        for a in m.get("actions", []):
+            a["meeting"] = m.get("title", m.get("id", ""))
+            actions.append(a)
+        for d in m.get("decisions", []):
+            d["meeting"] = m.get("title", m.get("id", ""))
+            decisions.append(d)
+        for q in m.get("questions", []):
+            q["meeting"] = m.get("title", m.get("id", ""))
+            questions.append(q)
+
+    def due_row(a):
+        due = str(a.get("due") or "").strip()
+        label, cls = "date unresolved", "meta"
+        try:
+            d = datetime.date.fromisoformat(due[:10])
+            if d < today:
+                label, cls = f"overdue · {due}", "due over"
+            elif d <= horizon:
+                label, cls = f"due {due}", "due"
+            else:
+                label, cls = f"due {due}", "meta"
+        except Exception:
+            pass
+        return (f'<li><div class="title">{html.escape(str(a.get("text") or a.get("action") or ""))}</div>'
+                f'<div class="{cls}">{html.escape(label)}'
+                f' · <span class="meta">{html.escape(str(a.get("owner") or "owner unresolved"))}</span>'
+                f' · <span class="meta">{html.escape(str(a.get("meeting") or ""))}</span></div></li>')
+
+    def plain_row(r, key="text"):
+        return (f'<li><div class="title">{html.escape(str(r.get(key) or ""))}</div>'
+                f'<div class="meta">{html.escape(str(r.get("meeting") or ""))}'
+                f'{(" · " + html.escape(str(r.get("who") or r.get("owner")))) if (r.get("who") or r.get("owner")) else ""}</div></li>')
+
+    mine_actions = [a for a in mine(actions, person)]
+    mine_questions = [q for q in mine(questions, person)]
+
+    def section(title, rows, renderer):
+        if not rows:
+            body = '<ul><li class="empty">nothing here — a quiet desk</li></ul>'
+        else:
+            body = "<ul>" + "".join(renderer(r) for r in rows[:8]) + "</ul>"
+        return f'<h2>{title}</h2><div class="card">{body}</div>'
+
+    tiles = "".join(f'<a class="tile" href="{html.escape(url)}"><b>{html.escape(name)}</b>'
+                    f'<span>{html.escape(desc)}</span></a>' for name, url, desc in TILES)
+
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gimlé — the desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400&family=Newsreader:opsz,wght@6..72,300;6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>{CLOTH}</style></head><body><div class="wrap">
+<header><h1>The <em>desk</em></h1><span class="who">{html.escape(person or "friend")} · {today.isoformat()}</span></header>
+{section("Due this week", mine_actions, due_row)}
+{section("Last decisions", decisions[:5], plain_row)}
+{section("Questions waiting on me", mine_questions, plain_row)}
+<h2>The places</h2><div class="tiles">{tiles}</div>
+<footer>Gimlé — the hall that outlives the fire · on Zerwiz&rsquo;s own hardware</footer>
+</div></body></html>"""
+
+
+class Handler(BaseHTTPRequestHandler):
+    data_path = ""
+    server_version = "gimle-desk/1.0"
+
+    def do_GET(self):  # noqa: N802
+        if self.path.startswith("/health"):
+            return self._send(200, "text/plain", b"ok")
+        person = self.headers.get("Remote-User", "") or self.headers.get("X-Forwarded-User", "")
+        body = render(person, load(self.data_path)).encode("utf-8")
+        self._send(200, "text/html; charset=utf-8", body)
+
+    def _send(self, code: int, ctype: str, body: bytes):
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, fmt, *args):  # keep the journal quiet; one line per request
+        sys.stderr.write("desk %s %s\n" % (self.headers.get("Remote-User", "-"), fmt % args))
+
+
+def main(argv):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--port", type=int, default=8487)
+    ap.add_argument("--bind", default="127.0.0.1")
+    ap.add_argument("--data", default="/srv/gimle-desk/meetings.json")
+    args = ap.parse_args(argv)
+    Handler.data_path = args.data
+    srv = HTTPServer((args.bind, args.port), Handler)
+    print(f"gimle desk on http://{args.bind}:{args.port} · data {args.data}", flush=True)
+    srv.serve_forever()
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

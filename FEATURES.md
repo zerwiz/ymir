@@ -17,6 +17,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 
 ## Core — install, run, operate
 
+| Team | **Gimlé — the hall, the desk and the MCP** (`bin/gimle/`) | One door behind Authelia; a desk showing due this week, last decisions and questions waiting on you; one read-only MCP for the suite with per-person tokens and an audit of every call | [docs/features/gimle-the-hall.md](docs/features/gimle-the-hall.md) |
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
 | Install | `install.sh` / `bin/engine/ymir-install.sh` | One command installs Ymir into a prefix you own, writes PATH, runs first setup, then proves it | [docs/features/install-ymir.md](docs/features/install-ymir.md) |
