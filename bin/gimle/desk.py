@@ -82,11 +82,41 @@ def mine(rows, person: str):
     return [r for r in rows if p in (str(r.get("owner", "")) + str(r.get("who", ""))).lower()]
 
 
-def render(person: str, data: dict) -> str:
+OPERATOR_ENV = "GIMLE_OPERATOR"
+
+
+def places_for(person: str, data_path: str) -> list[str] | None:
+    """Which places this person may see — or None for 'everything' (the operator).
+
+    The map lives beside the record (`places.json`): `{"person": ["place substring", …]}`.
+    **Default deny**: a person not named in the map sees nothing; only the operator (named by
+    `GIMLE_OPERATOR`) sees every place. That is H3's fix, and it fails closed on purpose.
+    """
+    operator = os.environ.get(OPERATOR_ENV, "")
+    if operator and person.lower() == operator.lower():
+        return None
+    path = os.path.join(os.path.dirname(data_path), "places.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            mapping = json.load(fh)
+    except Exception:
+        return []                     # no map → nobody but the operator sees anything
+    for who, places in mapping.items():
+        if who.lower() == person.lower():
+            return [str(x) for x in places]
+    return []
+
+
+def render(person: str, data: dict, allowed: list[str] | None = None) -> str:
     today = datetime.date.today()
     horizon = today + datetime.timedelta(days=7)
     actions, decisions, questions = [], [], []
-    for m in data.get("meetings", []):
+    meetings = data.get("meetings", [])
+    if allowed is not None:
+        meetings = [m for m in meetings
+                    if any(str(m.get("title", "")).lower().startswith(a.lower()) or
+                           a.lower() in str(m.get("title", "")).lower() for a in allowed)]
+    for m in meetings:
         for a in m.get("actions", []):
             a["meeting"] = m.get("title", m.get("id", ""))
             actions.append(a)
@@ -156,7 +186,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.startswith("/health"):
             return self._send(200, "text/plain", b"ok")
         person = self.headers.get("Remote-User", "") or self.headers.get("X-Forwarded-User", "")
-        body = render(person, load(self.data_path)).encode("utf-8")
+        allowed = places_for(person, self.data_path)
+        body = render(person, load(self.data_path), allowed).encode("utf-8")
         self._send(200, "text/html; charset=utf-8", body)
 
     def _send(self, code: int, ctype: str, body: bytes):
