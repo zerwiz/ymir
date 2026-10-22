@@ -948,6 +948,24 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             if slug:
                 used = [slug]
             break
+    # THE SCHEDULE, ASKED THE WAY PEOPLE ASK. Measured 2026-10-22: "what are <name> working on?",
+    # "what are he doing now?", "when are he free for a meeting?" all missed the phrase table and
+    # were answered from an unrelated fact. A person-word plus a doing/free/schedule word is enough.
+    if intent == "unknown":
+        person_words = r"he|him|his|she|her|the allfather|" + "|".join(
+            re.escape(a.lower()) for a in operator_aliases()) or r"he"
+        if re.search(r"\b(doing|working on|working|free|available|busy|schedule|where is|where are|"
+                     r"when is|when are|meeting)\b", key, re.I) and \
+                re.search(r"\b(" + person_words + r")\b", key, re.I):
+            kind, intent = "schedule", "schedule"
+
+    # "can you ask him when he is available" is a REQUEST TO PASS A QUESTION, not a fact
+    ask_names = "|".join(re.escape(a.lower()) for a in operator_aliases()) or r"$^"
+    if intent == "unknown" and re.search(r"\b(ask him|ask her|ask the allfather|can you ask|"
+                                         r"check with him|find out from him)\b|\bask (" + ask_names + r")\b",
+                                         key, re.I):
+        kind, intent = "ask_him", "ask-him"
+
     # CLOSING THE LOOP. An answer from the Allfather to a question he was handed: "tell <who>: …"
     # or "answer [#n]: …". This is the only path by which Skírnir SPEAKS TO A THIRD PARTY, so it is
     # owner-only, it always names the ask it closes, and it is recorded in asks.json.
@@ -1065,7 +1083,10 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                     score = hit_body / len(q)
                 # "whynotproductions", "opticat", "wayofteams": a question often runs a name together
                 # that the fact writes apart. A long token found inside the squashed claim IS the subject.
-                if not ok and any(t in squashed for t in q if len(t) >= 5):
+                # ...but only when the token SPANS a word boundary: "whynotproductions" is two words
+                # run together, while "deadline" is one word and must not match by being inside it.
+                if not ok and any(t in squashed and not any(t in w for w in words)
+                                  for t in q if len(t) >= 8):
                     ok, score = True, max(score, 0.75)
                     hit_body = max(hit_body, 1)
                     hit_head = max(hit_head, 1)
@@ -1172,6 +1193,26 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 if len(parts) >= 5:
                     lines.append(f"· {parts[1]} — “{parts[4][:80]}” ({parts[3]} h ago)")
             reply = "\n".join(lines)
+    elif kind == "ask_him":
+        if tier == "owner":
+            reply = ("You're the Allfather — I'm speaking to you. Ask me what you need and I'll "
+                     "answer, or tell me what to pass on.")
+        else:
+            who = who_is(sender, sender_id, chat, channel)
+            pending = pending_get(chat)
+            if not pending:
+                asked = ("I can ask him. Tell me what you need from him, and by when — I'll put it in "
+                         "front of him with your name on it.")
+                pending_put(chat, question, asked)
+                reply = asked
+                handoff = "gathering"
+            else:
+                handoff = escalate(pending.get("question") or question, "asked to pass a question on",
+                                   tier, channel, chat, who=who,
+                                   context=f"they replied: “{question[:300]}”")
+                pending_drop(chat)
+                reply = (say_unknown(tier, passed=False, seed=chat) if handoff in ("suppressed", "failed")
+                         else f"Done — it's with him now, under your name ({who}).")
     elif kind == "schedule":
         sched = schedule_now()
         if not sched.get("ok"):
