@@ -39,6 +39,162 @@ holds craft, not clients. Every change leaves by a pull request, because a merge
 and decisions are the Allfather's. And nothing here is allowed to be a mock in the shipped path:
 either a door answers, or it says loudly that it cannot.
 
+## Contents
+
+- [What Ymir is](#what-ymir-is) · [The crew](#the-crew--twenty-two-figures-and-one-assistant) · [The skills](#the-skills--craft-on-demand-never-preloaded) · [The house itself](#the-house-itself--the-engines-under-the-names) · [Garmr](#garmr--the-hound-at-the-gate)
+- [The council](#the-council--several-minds-one-verdict) · [Víðarr the defender](#víðarr--the-defender) · [Skírnir](#skírnir--the-mouth-with-no-hands) · [Snotra](#snotra--the-ear-at-the-table) · [The rest of the hall](#the-rest-of-the-hall)
+- [The Allfather's Chain](#the-allfathers-chain) · [Install](#install) · [After it installs — the doors](#after-it-installs--the-doors) · [Features — how to use Ymir](#features--how-to-use-ymir)
+- [Host platforms](#host-platforms--three-first-class-identities) · [Bringing your own machine](#bringing-your-own-machine--windows-macos-linux) · [Termux](#termux--android--the-phone-is-a-hand) · [SteamOS](#steamos--steam-deck--a-full-seat-on-the-handheld)
+- [Running on more than one machine](#running-ymir-on-more-than-one-machine) · [Key combinations](#key-combinations) · [Inviting someone else in](#inviting-someone-else-in)
+- [Security — the ward](#security--the-ward) · [The names — a glossary](#the-names--a-glossary) · [Docs](#docs) · [With gratitude](#with-gratitude--the-people-we-stand-on)
+
+## The crew — twenty-two figures and one assistant
+
+Every figure is a **craft**, not a persona: a file with a job, a permission fence, and a name that
+says which job. They are not all running at once — a figure is seated when an errand needs it, and
+one machine can carry the whole bench because they share one repository, one memory and one chain.
+
+**In the hall.** **Brokk** is the primary — the counsellor who plans, steers, reviews and dispatches,
+and who does not build alone what a worker can forge in isolation. Beside him sit the figures who
+keep the house honest about itself: **Reginn the Elder**, keeper of the plan ledger and the shelves,
+who reads the elders before writing; **Mimir** the planner, who reads an ask into a file map and a
+dependency chain; **Urdh** the reconciler, who finds where two records disagree; **Sága** the
+seeress, who seats every session and hands it the digest; **Forseti** the just, the reviewer who
+holds the seal; **Týr** the judge of drift, who holds a change against the law; and **Móðguðr** at
+the chair of the council.
+
+**In the forge.** **Sindri** the smith writes and refactors code; **Hnoss** the shaper designs;
+**Völundr** runs Smíðja, the pipeline that turns a roster into bounded phases; **Galdr** is the
+master builder who keeps the craft itself installable.
+
+**In the field.** **Kvasir** scouts what is actually there, with file and line; **Huginn** the sage
+researches what the world says; **Bragi** the skald writes what goes out; **Jord** the grounded
+registers what was found.
+
+**Around the house.** **Snotra** documents and keeps the meeting ear; **Muninn** curates what should
+be remembered; **Sýn** recovers a blind turn; **Vör** diagnoses what is broken; **Gróa** renews a
+tree without forcing it; **Frigg** is the consent — the one who knows whether a thing may be
+touched at all.
+
+**Skírnir** is not on that bench. He is the assistant with his own bot and his own walls, described
+above: a mouth the Allfather can point at strangers, because a mouth that can only speak cannot open
+a door.
+
+## The skills — craft on demand, never preloaded
+
+A session that reads every skill acts like it read none, so **nothing is preloaded**. The house ships
+a shelf of skills — twenty-nine of them — and a session finds the one it needs by *asking for the
+words it would use*: every skill carries a one-line description, and a skill without one is
+unfindable and gets fixed before it ships.
+
+There are four shelves, searched in that order, first hit wins: the **shipped** shelf that travels
+with the repository and is the project's own craft; the **local** shelf, gitignored, which never
+leaves the machine; the operator's own **private** shelf; and the **harness-wide** shelf that belongs
+to the agent runtime rather than to Ymir. A shipped skill always beats a local one on purpose — the
+project's craft must be the same on every machine, or two people get two different answers.
+
+A missing capability can be synthesised into a new skill, and it is not trusted until it has been
+validated in a sandbox and indexed. That is the whole discipline: the shelf is small, findable, and
+earned.
+
+## The house itself — the engines under the names
+
+Ymir does not rebuild what already exists; it adopts an engine and gives it a name that explains the
+job.
+
+**Yggdrasil** is git worktrees, so parallel work cannot collide. **Utgard** is the ephemeral sandbox
+where untrusted code runs, and where a failure never reaches the main tree. **Mimirsbrunn** is the
+memory well — the embedding store an agent drinks from before it acts. **Runes** is the append-only
+ledger, each entry chained to the one before it so nothing can be quietly edited. **Sága** is the
+session digest. **Nornir** is the schedule. **Skuld** is the derived work queue.
+**Mjollnir** is the issue-to-PR pipeline that strikes and returns with a pull request for a human to
+seal. **Ratatoskr** is the agent-to-agent backbone. **Bifröst** is the ingress and **Heimdall** the
+guard that signs every agent's rune of introduction. **Hlidskjalf** is the control plane you
+actually look at, and **Herdr** is the seat backend where workers stand in panes.
+**Hófvarpnir** carries every message, **Vörðr** composes the wards, and **Garmr** — the hound — is
+the one that watches rather than gates: it sees what moved, runs the smoke test, and holds the
+switch.
+
+## Garmr — the hound at the gate
+
+**Garmr** is the house's watchman, and he is a different animal from the wards. A ward stands in a
+doorway and refuses; Garmr walks the house and **notices**. He watches what moves in the tree, what
+listens on the machine, what tries to leave it, and what the kernel's own audit has recorded — and he
+reports, judged, with the worst first.
+
+Four things are deliberately true of him.
+
+**He is read-only against the machine.** He never closes a door, never kills a process, never edits a
+tree. A watchman who can also act is a second hand on the wheel; Garmr exists to make sure the
+Allfather *knows*, not to make decisions for him.
+
+**A fact never passes through a model.** The alarm itself is always a template — a sentence built
+from what was measured, not written by a language model — so a finding cannot be reworded, softened
+or invented. A reasoner, when one is asked at all, is asked only to write the paragraph *beneath* the
+fact, never to produce the fact.
+
+**The loop never calls a model.** A watcher that asks a model every minute would evict whatever the
+operator was working on — the rail holds one model at a time — so the loop is deterministic, and a
+model is a thing you ask for, not a thing a cron does.
+
+**Silence is a finding.** A hound that is dead looks exactly like a hound that found nothing, so his
+own heartbeat is watched too: a silent guardian is a CRITICAL, not a quiet night.
+
+**He can bite — but only in a way that is written down.** Seeing an open door and doing nothing is
+not vigilance, so the hound carries a short, fixed **allowlist** of containments: close a listener
+nobody named, stop a unit that started behaving oddly, kill a process that has no unit and came from
+a writable path, block egress to a host that is not a named peer, quarantine a file that ran without
+being in the manifest, revoke a token that appeared without an approval record. Nothing else.
+
+Four rules make biting safe. **No bite without a rule** — a finding that matches no written rule is a
+bark, never a bite. **Every bite is recorded before it happens**, with the command that undoes it, so
+a guard can never become a vandal. **It never touches the operator's own hands** — not his terminal,
+not an open vault, not a model mid-generation. And **every bite is announced** at CRITICAL with its
+un-bite included, because nobody should learn a door was closed by finding it closed.
+
+**A model may advise, and only in one narrow place.** When a CRITICAL finding arrives that no
+written rule covers, one short question goes to a **fast, strong advisor** — `opencode-go/deepseek-v4.1-flash` when you allow the online road, otherwise your own 35B — given *metadata only*
+(class, severity, pid, port, path, destination, never a payload) — and it may answer with one of the
+six bites, or `none`. Its answer is then checked against the allowlist and against the classes
+actually armed in the rules file. If the class is not armed, the hound refuses and tells you the one
+line to edit. **The model never acts, never decides policy, and is never called by a loop**: a
+finding stays a template built from measurement, and the model at most says which already-unlocked
+door to close.
+
+**He does not strike back at anyone.** A blocked destination is a door *we* closed, not a
+counter-attack: nothing leaves the machine, and there is no retaliation, ever. The switch —
+`off · report · contain · hard` — is the Allfather's, and it ships at `report`, so the machine says
+what it *would* do before it does anything at all.
+
+What he notices, Vörðr reports, Gná carries, and Runes keeps. That division is the point: one thing
+watches, another judges, a third speaks, the ledger remembers — and the hound may close a door, but
+only one it was told it may close.
+
+## Víðarr — the defender
+
+**Víðarr** is the hand of the defence. At Ragnarök the wolf swallows the Allfather, and it is the
+silent one — who wears an iron shoe and speaks little — who puts a foot in the wolf's jaw and ends it.
+The house's defence is three figures, and the division is the design:
+
+- **Garmr** the hound notices: executed programs, sensitive reads, new listeners, egress, changed files.
+- **Vörðr** the ward refuses at a gate: a protected branch, a secret, a person's name, a vault copy.
+- **Víðarr** the hand contains: he closes the door the intruder opened, stops the unit, kills the
+  process that should not run, quarantines the file, and **keeps the evidence**.
+
+He is a live agent — a pi session on `opencode-go/deepseek-v4.1-flash`, seated with
+`bin/ward/vidarr-agent.sh`, addressed in the room **`the-watch`** — and his powers are the six
+allowlisted bites and nothing else, because `bin/ward/garmr-bite.sh` owns the allowlist and refuses
+what is not on it. Every action is recorded *before* it is taken, with the command that undoes it, and
+every incident leaves a **report** in `hodd/security/incidents/`: what was seen, what was decided, by
+which rule, what was done, what can undo it, and what is still owed. A containment that leaves no
+account of itself is indistinguishable from an accident.
+
+He is connected to the **Gná arm**: a bite and an opened incident speak through Hófvarpnir at
+CRITICAL, so the session that has to answer is **woken**, not polled. And he has his own hard limits —
+never the operator's terminal, never an open vault, never a model mid-generation, never a policy
+change, and **never a counter-strike**: nothing leaves the machine. A blocked destination is a door
+we closed, not an attack on anyone else.
+
 ## The council — several minds, one verdict
 
 When a question deserves more than one opinion, Ymir convenes a **council**: not a swarm, not a
@@ -122,27 +278,95 @@ by using it every day, and by naming every part after the work it actually does.
 
 ## The rest of the hall
 
-The front door names what Ymir is; this is the rest of the catalogue, so nothing that exists is
-invisible from outside. Each one has its own how-to under the field notes.
+The figures above are the ones you will meet first. These are the rest of the house — each with a
+name, each with a job, and each with a how-to under the field notes. Where a thing is not built yet,
+it says so; where the naming map is behind the machine, it says that too.
 
-```
-hall[12]{area,thing,what_it_is}:
-  "rooms","Gladsheim — the fleet room","a Matrix hall where every SEAT speaks under its own name (one identity per machine), distinct from the rooms above, which are per-conversation records"
-  "rooms","Brimir — the hall of Allfathers","PLANNED: one federated room across operators, so several Allfathers can sit in one hall — designed, not built"
-  "meetings","the Trello board","the board read as a record: overdue cards and cards due today, so the digest is not the only thing that knows what is late"
-  "meetings","sign-off by email","minutes and decisions leave as a signed, attributable message rather than a file nobody opens"
-  "meetings","first-run setup","one command that seats the meeting skeleton — framework, agenda templates, the cron row — on a new seat"
-  "security","distinct gates","each gate answers for ONE surface; a gate that measures something else is a lie with a green tick"
-  "security","encryption and sensitive data","secrets live in an encrypted vault and are referenced, never inlined; the tree you are reading holds craft, not clients"
-  "runtime","the notification door","one way for any process to reach the operator — a severity, a key so it cannot repeat, and a record of what was said"
-  "runtime","approvals","a notification that can be ANSWERED: the click runs the decision, records it, and carves a rune — asking was one-way before this"
-  "vault","confidential session","work under seal: the workdir lives inside the vault, every off-vault door is switched off, the model tier is local or none, and with `--airlock` there is no network at all"
-  "desktop","the high seat","a real terminal inside the desktop shell, so the control plane can be operated without leaving it"
-  "people","collaborators and clients","the people Ymir knows, with tiers — owner, named collaborator, stranger — which is why the assistant answers each of them differently"
-```
+### Gladsheim — the fleet room
 
-Where a thing is **planned**, it says so. A catalogue that cannot tell built from intended is a
-wish list wearing a documentation's clothes.
+**Gladsheim** is the hall where the whole fleet sits: a Matrix room, one identity per seat
+(`west: Galar`, `omarchy: Brokk`, this seat and so on), so a machine speaks under the name the map
+gave it rather than through somebody else's mouth. It is not the same thing as the rooms described
+above — those are per-conversation records inside one Ymir; Gladsheim is the durable room across
+machines, and it is where the fleet talks when no single session owns the question. It is live
+today, even though the naming map still files it as planned; the map is behind the machine, and this
+line is the correction.
+
+**Brimir** — the hall of Allfathers — goes one step further and is *not* built: one federated room
+across operators, joined over A2A, so two people running Ymir can sit in the same hall and argue.
+Planned, plan 74, and named after the hall where the surviving gods gather after the fire.
+
+### Hófvarpnir — the notification door
+
+Every system in Ymir needs the same thing: a way to say *look at this* to a person who is not
+sitting at the terminal. **Hófvarpnir** is that one door — the horse that carries every rider's
+word. Runes always record; at MEDIUM and above it wakes the watch; the desktop, the phone and
+Telegram all receive by the same hand, and every message carries a key so the same finding cannot
+repeat sixty times in an hour.
+
+It can also *ask*. A notification sent with `--ask` records a question rather than a statement, and
+its click runs the decision — approve or decline, written to the vault, carved into the ledger.
+Before that, a notification was one-way: the machine could tell you something and you could only
+agree out loud to nobody. An approval that leaves a record is the shortest honest loop this house
+has between a machine's hesitation and the operator's hand.
+
+### Hnitbjörg — the vault, and the work done under seal
+
+**Hnitbjörg** is the mountain stronghold where the mead of poetry was hidden, and in Ymir it is the
+encrypted document vault: a LUKS2 container, sealed by default, opened only by the operator. What
+lives inside it is work under NDA and work that must never travel — not to a model, not to a ticket,
+not into the repository you are reading.
+
+Because *sealed* is a mode and not a mood, the vault has a session: a work mode in which the working
+directory lives **inside** the mount, every off-vault door is switched off, and the model tier is
+explicitly `local`, `none`, or `remote` — never guessed. With `--airlock` the session runs with no
+network at all. A guard watches the vault's hash while it is open and refuses a commit that copies
+it verbatim. This is the strongest promise the project makes, and it is the reason the rest of the
+house is so fussy about what may be read where.
+
+### Vörðr — the ward, and Garmr — the hound
+
+**Vörðr** composes the wards. There is a guard for a push to a protected branch, a guard for a range
+of commits that carries no fix note, a guard for a secret in a commit, a guard for a person's name
+in the public tree, a guard for a vault copy. Each one answers for **one** surface, and a gate that
+measures something else is a lie with a green tick — that is law here (Rule 18), not taste.
+
+**Garmr** is the hound, and it is a different animal: not a gate but a watchdog. It watches the
+files that change, runs a smoke test, and carries a switch — the thing that notices what moved in
+the house while everyone was looking at a screen. The watchtower the warden will look from,
+**Himinbjörg**, is planned rather than built, and is named so that the plan has somewhere to live.
+
+### Snotra's board — meetings as records
+
+Snotra's own section is above; her hands are the meeting framework (**the Þing**) and the doors
+built on it: the board read as a record, so overdue cards and cards due today are known by something
+other than the digest; minutes that leave as a signed, attributable message rather than a file
+nobody opens; transcript provenance, so a claim can be traced to the words that carried it; and a
+first run that seats the whole skeleton — framework, agenda templates, cron row — on a new machine.
+
+### Sól and Mánagandr — the clock and the calendar
+
+**Sól** is one door for time and date, and its one rule is that it does arithmetic on *instants*, so
+daylight-saving cannot lie about how long something took. **Mánagandr**, the month-pursuer, sits on
+Sól and answers the other question: what is on the day, and where a meeting of a given length will
+fit. Both exist because a cron row that guesses about time is a cron row that runs twice a year at
+the wrong hour.
+
+### Sessrúmnir and Þráðr — the seat and its terminal
+
+**Sessrúmnir** is the desktop seat over the agents: a GUI over the same sessions the terminal runs,
+for the work that is easier to see than to type. **Þráðr** is the other half — a real terminal inside
+the high seat, so the control plane can be operated without leaving it. Neither is a second way of
+doing the work; both are windows onto the same sessions, which is why nothing has to be re-explained
+when you switch.
+
+### The people registry — collaborators and clients
+
+Ymir keeps one registry of the people the operator works with — clients, collaborators, advisers —
+and every entry carries a tier: owner, named collaborator, or stranger. That single distinction is
+why the assistant answers a stranger, a client and the Allfather so differently, and why an NDA fact
+can be answered to a named party and to nobody else. Identity is written down once and read
+everywhere, which is the only way a wall can hold.
 
 ## The Allfather's Chain
 
@@ -426,7 +650,10 @@ installable by anyone running pi.
 
 ---
 
-## System Map
+## The house — the engines as a table
+
+*The same ground as "The house itself" above, written as reference.*
+
 
 | Subsystem | Norse Name | Role |
 |---|---|---|
@@ -467,7 +694,10 @@ installable by anyone running pi.
 
 ---
 
-## Skills
+## The skills — the shelf as a table
+
+*The same ground as "The skills" above, written as reference: one row per shelf, so you can look rather than read.*
+
 
 Every reusable capability is a skill in [`.agents/skills/`](.agents/skills/), each
 named for the figure whose role matches the work (the Gungnir naming law). Galdr is
@@ -499,7 +729,10 @@ self-correcting errors) and the runtime acceptance gates; run
 
 ---
 
-## Agents
+## The crew — the same figures as a table
+
+*The same ground as "The crew" above, written as reference: one row per figure, so you can look rather than read.*
+
 
 The **Eindri** take a mythic name whose craft matches the job, and each runs in an
 Utgard sandbox on a Yggdrasil worktree.
@@ -896,6 +1129,50 @@ Doctrine, threat model, the local-network checks, and the roadmap (S0–S8):
 
 ---
 
+## The names — a glossary
+
+Every part of Ymir is named for the figure whose job it does, so the name is the documentation. If a
+word in this README was unfamiliar, it is here.
+
+| Name | Who or what it is | In one line |
+|---|---|---|
+| **Ymir** | the substrate | the machine, the repository, everything carved out of it |
+| **the Allfather** | you, the operator | the one hand that holds the chain |
+| **Brokk** | the primary agent | plans, steers, reviews, dispatches — the counsellor in the hall |
+| **Eindri** | the workers | isolated smiths that forge one errand and hand it back |
+| **Yggdrasil** | git worktrees | parallel work that cannot collide |
+| **Utgard** | the sandbox | untrusted code runs here; a failure never reaches the main tree |
+| **Mimirsbrunn** | the well | long-term memory: an agent drinks before it acts |
+| **Runes** | the ledger | append-only, chained, impossible to quietly edit |
+| **Sága** | the seeress | the session digest — she seats a session before its first word |
+| **Nornir** | the fates | the schedule |
+| **Skuld** | the queue | the derived work queue: what is owed, to whom |
+| **Mjollnir** | the hammer | issue → worktree → tests → pull request |
+| **Ratatoskr** | the squirrel | agent-to-agent messaging over A2A |
+| **Bifröst** | the bridge | ingress: every crossing passes over it |
+| **Heimdall** | the watchman | authentication: signs each agent's rune of introduction |
+| **Hlidskjalf** | the high seat | the control plane you actually look at |
+| **Herdr** | the seat-back | panes, tabs and sessions a worker stands in |
+| **Hófvarpnir** | the horse | one notification door to desktop, phone and Telegram — and it can ask |
+| **Vörðr** | the ward | the gates: each one refuses, never permits |
+| **Garmr** | the hound | the watcher: read-only, template-first, and a silent guardian is a CRITICAL |
+| **Hnitbjörg** | the stronghold | the encrypted vault, sealed by default, and the work done under seal |
+| **Gladsheim** | the fleet room | one room where every machine speaks under its own name |
+| **Brimir** | the hall of Allfathers | one room across operators *(planned)* |
+| **Snotra** | the ear | captures, transcribes locally, mines the minutes |
+| **Skírnir** | the mouth | answers people on his own bot, with no tools and four walls |
+| **the council** | the bench | seats with lenses, and a chair that decides |
+| **Móðguðr** | the chair | the bridge-keeper: a claim is false until a command proves it |
+| **Reginn** | the keeper | the plan ledger, the shelves, the memory — reads the elders before writing |
+| **Forseti** | the judge | the reviewer who holds the seal on a change |
+| **Týr** | the law | holds a change against the rules and names the drift |
+| **Sól** | the sun | the one clock: arithmetic on instants, so daylight-saving cannot lie |
+| **Mánagandr** | the month | the calendar: what is on the day, where a meeting fits |
+| **Sessrúmnir** | the seat | the desktop shell over the agents |
+| **Þráðr** | the thread | a real terminal inside the high seat |
+| **Smíðja · Völundr** | the smithy | the pipeline that turns a roster into bounded phases, and its master smith |
+| **Galdr** | the craft | the standards every skill and asset is held to |
+
 ## Docs
 
 - [`docs/security.md`](docs/security.md) — the ward: the law, the threat model, the checks, the roadmap
@@ -918,26 +1195,11 @@ Doctrine, threat model, the local-network checks, and the roadmap (S0–S8):
 
 *The bellows feed the flame; the smith reads the metal; the well remembers every blow.*
 
-## What was wrought — 2026-09-14
+## Read more
 
-One day, one loom. Everything below lives in this main and in the world:
-
-- **The cloth** — Hlidskjalf, Smiðja and Sessrúmnir wear one carved look (stone,
-  bronze, bone, blood; Cormorant · Newsreader · IBM Plex Mono); Smiðja's default
-  theme is **Fensalir**; text highlighting is carved amber — the blue is dead.
-- **Óðrerir, the Live Hall** — the landing's live board: a dealt slate pile, a
-  carved ledger (underway · landed · charted), and a planning glass fed by real
-  machine state. See it at the landing repo: `zerwiz/ymir-homepage` (local:
-  `:4321`), with the `To the Hall` rune in every app's chrome.
-- **The wake bridge** — every smith's finish files a saga and wakes the
-  primary; the echo-guard keeps the wire honest.
-- **The mark** — recoloured into the cloth, and the anvil-bars bug found and
-  fixed (the metal was always there; now it is seen).
-
-The lore runs to **XXXI — The Weaving of the Halls**; the masterplan carries
-the full day's ledger.
-
----
+The day-by-day history lives in the fix notes — one file per fix under the component it touched.
+It does not belong on the front door, which is for what the machine **is**, not what it did on a
+Tuesday.
 
 ## With gratitude — the people we stand on
 
@@ -992,14 +1254,14 @@ resolved from `$YMIR_HOME/secrets/platform.env` at runtime.
 
 ---
 
-## The Fleet — many machines, one record (2026-09-23)
+## Running Ymir on more than one machine
 
-Ymir is not one box. It is a **fleet**: a *heart* that owns the record, one or
-more *forges* that own the models, and *dev* bodies the operator works from — all
-over a LAN or a tailnet, with **one** memory, one backlog, one ledger. This
-section is the map of that layer. The design is Plan 51
-(`.../plans/fleet/51-multi-machine-operations.md`); the code is in `bin/` and
-tested in `.agents/tests/`.
+Ymir is not one box. It is a **fleet**: a *heart* that owns the record, one or more *forges* that
+own the models, and *dev* bodies the operator works from — all over a LAN or a tailnet, with **one**
+memory, one backlog, one ledger.
+
+You do not need any of this to use Ymir on one machine; a single box is a fleet of one, and it works
+with no network at all. Read on when you want a second machine to carry part of the work.
 
 ### Roles — declared once, enforced everywhere
 

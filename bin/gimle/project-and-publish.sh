@@ -12,12 +12,18 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HERE="$ROOT/bin/gimle"
+# The home is resolved, never assumed (defaults-guard, Rule 07).
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+home=""
+declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root home 2>/dev/null
+[ -n "$home" ] || home="${YMIR_HOME:-}"
+[ -n "$home" ] || { printf 'SKIP\tthe hoard is unresolved\tset YMIR_HOME, or install the resolver\n'; exit 0; }
 out="$(mktemp -d)"; trap 'rm -rf "$out"' EXIT
 dry=0; [ "${1-}" = "--dry-run" ] && dry=1
 python3 "$HERE/project.py" --out "$out" ${dry:+} || exit 1
 # The desk's host and directory are the operator's own (Rule 25): read them, never assume them.
 # `$YMIR_HOME/config/gimle-desktop.env` holds `GIMLE_DESK_SSH` and `GIMLE_DESK_DIR`.
-conf="${YMIR_HOME:-}/config/gimle-desktop.env"
+conf="$home/config/gimle-desktop.env"
 [ -r "$conf" ] && . "$conf"
 target="${GIMLE_DESK_SSH:-}"
 remote="${GIMLE_DESK_DIR:-}"
