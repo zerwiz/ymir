@@ -123,6 +123,9 @@ speak_sentence() {
 }
 
 if [ "$SPEAK" = 1 ]; then
+  # Kokoro stumbles on contractions ("do n,,,, t" — measured 2026-10-22). Only what is SPOKEN is
+  # normalised: the written answer is untouched.
+  REPLY="$(printf '%s' "$REPLY" | python3 "$SCRIPT_DIR/speech-text.py")"
   printf '%s' "$REPLY" | python3 -c "
 import re,sys
 for part in re.split(r'(?<=[.!?])\s+', sys.stdin.read()):

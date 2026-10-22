@@ -42,7 +42,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-export ROOT_DIR="$ROOT" ASKS_FILE="$FILE" ASKS_CMD="$cmd" ASKS_ID="$ID" ASKS_WHO="$WHO" ASKS_CHAT="$CHAT" \
+export HOME_R="$HOME_R" ROOT_DIR="$ROOT" ASKS_FILE="$FILE" ASKS_CMD="$cmd" ASKS_ID="$ID" ASKS_WHO="$WHO" ASKS_CHAT="$CHAT" \
        ASKS_CHANNEL="$CHANNEL" ASKS_QUESTION="$QUESTION" ASKS_CONTEXT="$CONTEXT" \
        ASKS_TEXT="$TEXT" ASKS_WHY="$WHY" ASKS_FILTER="$FILTER" ASKS_STATE="$STATE"
 python3 - <<'PY'
@@ -151,6 +151,31 @@ elif cmd == "deliver":
     a["answered_at"] = time.time()
     a["answer"] = text[:2000]
     save()
+    # THE ANSWER IS KNOWLEDGE. He wrote it himself for a person who asked; the next person who asks
+    # the same thing should not have to wait for him again. Approved because the words are his.
+    try:
+        import hashlib as _h
+        ident_dir = os.path.join(os.environ.get("HOME_R", ""), "hodd", "identity", "assistant", "approved")
+        if os.path.isdir(ident_dir):
+            slug = "answered-" + _h.sha256((a.get("question", "") + text).encode()).hexdigest()[:10]
+            claim = text.strip().replace("\n", " ")[:400]
+            question = str(a.get("question", "")).strip().replace("\n", " ")[:200]
+            with open(os.path.join(ident_dir, slug + ".md"), "w") as fh:
+                fh.write("---\n"
+                         "approved_by: the Allfather\n"
+                         f"approved_at: {time.strftime('%Y-%m-%d')}\n"
+                         "class: public\naudience: public\n"
+                         f"learned_from: the Allfather, answering {a.get('who','someone')}\n"
+                         f"learned_in: {chat}\n"
+                         f"learned_at: {time.strftime('%Y-%m-%dT%H:%M:%S%z')}\n"
+                         "---\n"
+                         f"Asked “{question}”, the Allfather's answer was: {claim}\n")
+            subprocess.run(["bash", os.path.join(os.environ.get("ROOT_DIR", ""),
+                                                 "bin", "assistant", "kb-export.sh")],
+                           check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f"asks: learned it — {slug} (the answer is now an approved fact)")
+    except Exception as exc:
+        print(f"asks: delivered, but could not learn it: {type(exc).__name__}", file=sys.stderr)
     print(f'ask[1]{{id,who,status,chat}}: "{a["id"]}","{a.get("who","")}","answered","{chat}"')
 else:
     print("usage: asks.sh add|list|get|close|deliver …", file=sys.stderr)
