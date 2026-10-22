@@ -169,6 +169,9 @@ def looks_like_question(text: str, key: str) -> bool:
 DECLARATIVE = re.compile(
     r"\b(is|are|was|were|has|have|had|means|refers to|belongs|works|keeps|uses|prefers|leads|runs|"
     r"costs|equals|stands for|owns|handles|serves|contains|includes)\b")
+RESEARCH = re.compile(
+    r"^(?:look up|search for|search the web for|search the web|research|google|"
+    r"what does the web say about|what do you find about|find out about)\s+(.{2,120})$", re.I)
 ACTION = re.compile(
     r"^(send|post|message|email|e-mail|call|book|schedule|create|delete|cancel|forward|reply|pay|"
     r"order|buy|remind|set up|add|remove|change|update|move|reschedule|invite)\b")
@@ -456,6 +459,43 @@ def escalate(question: str, reason: str, tier: str, channel: str = "") -> None:
                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def _rail(system: str, user: str, model: str) -> str | None:
+    """One call to the rail. No tools, no credential in the prompt, nothing but text in and out."""
+    try:
+        import urllib.request
+        key = ""
+        try:
+            auth = json.load(open(os.path.expanduser("~/.pi/agent/auth.json")))
+            key = (auth.get("llama-swap") or {}).get("key", "")
+        except Exception:
+            pass
+        body = json.dumps({"model": model, "temperature": 0, "max_tokens": 160,
+                           "messages": [{"role": "system", "content": system},
+                                        {"role": "user", "content": user}]}).encode()
+        req = urllib.request.Request("http://127.0.0.1:8080/v1/chat/completions", data=body,
+                                     headers={"Content-Type": "application/json",
+                                              "Authorization": f"Bearer {key}"})
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            data = json.load(resp)
+        text = (data.get("choices") or [{}])[0].get("message", {}).get("content", "").strip()
+        return text or None
+    except Exception:
+        return None
+
+
+def model_research(question: str, sources: list[dict], model: str) -> str | None:
+    """The open web, framed as what it is: external text, named by source, never a link."""
+    context = "\n\n".join(
+        f"[{i + 1}] {src.get('title', 'untitled')} ({src.get('domain', '')})\n{src.get('extract', '')}"
+        for i, src in enumerate(sources))
+    system = ("You are Skirnir, the Allfather's assistant. Answer ONLY from the web extracts below, "
+              "in one or two short sentences. Say first that it comes from the open web and not from "
+              "what you hold. Name the source in words (its title); never write a link, a URL, an "
+              "image, a table or code. If the extracts do not answer the question, say so plainly.\n\n"
+              f"WEB EXTRACTS:\n{context}")
+    return _rail(system, question, model)
+
+
 def model_answer(question: str, facts: dict, model: str,
                  recent: list[tuple[str, str]] | None = None) -> str | None:
     """Free text from a local model, with the DIGEST as its only knowledge and the gate behind it.
@@ -473,26 +513,7 @@ def model_answer(question: str, facts: dict, model: str,
               "If the facts do not contain the answer, say you don't know and that you will ask him. "
               "Never produce a URL, a link, an image, a table or code. Two sentences at most.\n"
               f"FACTS:\n{context}")
-    try:
-        import urllib.request
-        key = ""
-        try:
-            auth = json.load(open(os.path.expanduser("~/.pi/agent/auth.json")))
-            key = (auth.get("llama-swap") or {}).get("key", "")
-        except Exception:
-            pass
-        body = json.dumps({"model": model, "temperature": 0, "max_tokens": 120,
-                           "messages": [{"role": "system", "content": system},
-                                        {"role": "user", "content": question}]}).encode()
-        req = urllib.request.Request("http://127.0.0.1:8080/v1/chat/completions", data=body,
-                                     headers={"Content-Type": "application/json",
-                                              "Authorization": f"Bearer {key}"})
-        with urllib.request.urlopen(req, timeout=180) as resp:
-            data = json.load(resp)
-        text = (data.get("choices") or [{}])[0].get("message", {}).get("content", "").strip()
-        return text or None
-    except Exception:
-        return None
+    return _rail(system, question, model)
 
 
 def gate(answer: str, canaries: list[str]) -> tuple[bool, str]:
@@ -529,6 +550,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     facts = {k: v for k, v in facts.items() if audience_ok(v, allowed, channel)}
     dh = digest_hash(facts)
     canaries = load_canaries()
+    # the mouth is named ONCE, before any branch can ask whether it is armed
+    mouth = model or os.environ.get("SKIRNIR_MODEL") or ""
     question = text.strip()
     key = re.sub(r"[^a-z0-9 ]", "", question.lower()).strip()
     # the name in front of a question is an ADDRESS, not content: strip it and match what is left
@@ -553,6 +576,14 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     # It must be caught before retrieval, or a word like "send" matches a fact and reads as consent.
     if ACTION.match(key.strip()):
         kind, intent = "action", "action"
+
+    # THE OPEN WEB. Owner only, by a named verb, and it never touches the digest: what comes back is
+    # external text that is read once, quoted, and forgotten. Nothing fetched is ever learned.
+    research_subject = ""
+    m_research = RESEARCH.match(question.strip())
+    if m_research and intent == "unknown":
+        kind, intent = "research", "research"
+        research_subject = m_research.group(1).strip().rstrip("?.!")
 
     if intent == "unknown" and key:
         # A typo is not a refusal: "whata do you have in your database" is the same question.
@@ -676,6 +707,36 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                                       capture_output=True, text=True, timeout=30)
                 reply = (f"Noted: “{fact[:160]}”. It is pending your approval — approve it and it "
                          "becomes something I know.")
+    elif kind == "research":
+        if tier != "owner":
+            reply = ("I don't search the open web for anyone but him. Ask me what the house holds, "
+                     "or leave a message and I'll pass it on.")
+            intent = "unknown"
+        elif not research_subject:
+            reply = "Tell me what to look up and I'll look."
+        else:
+            door = os.path.join(HERE, "research.py")
+            try:
+                proc = subprocess.run([sys.executable, door, "--query", research_subject,
+                                       "--limit", "3"], capture_output=True, text=True, timeout=90)
+                found = json.loads(proc.stdout or "{}")
+            except Exception:
+                found = {}
+            sources = found.get("sources") or []
+            if not sources:
+                reply = (f"I looked, and the open web gave me nothing usable about "
+                         f"“{research_subject}”. That is an honest no, not a guess.")
+                intent = "research-empty"
+            else:
+                said = model_research(question, sources, mouth) if mouth else None
+                if said:
+                    reply = said
+                else:
+                    top = sources[0]
+                    reply = (f"From the open web, not from what I hold: {top.get('extract', '')[:400]} "
+                             f"— {top.get('title', '')}.")
+                used = [f"web:{s.get('domain', '')}" for s in sources]
+                intent = "research"
     elif kind == "action":
         if tier == "owner":
             reply = ("I don't act for you — nothing sent, nothing booked, nothing changed. That is "
@@ -753,7 +814,6 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     # the approved facts, the question and the last turns — no tools, no credential, no vault — and
     # everything it says still runs through the gate below. A rail that is down is not an outage:
     # the verbatim claim or the honest no is already in `reply`, and that is what gets said.
-    mouth = model or os.environ.get("SKIRNIR_MODEL") or ""
     if mouth and tier in MODEL_TIERS:
         safe = model_context(facts)
         if intent == "unknown":
