@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[27]{file,subject}:
+rules_index[28]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -27,6 +27,7 @@ rules_index[27]{file,subject}:
   "23-no-code-in-app-folders.md","an application lives in apps/; bin/ holds function-named machine tools — never an application's name in a path"
   "24-the-ward.md","a door is named or it is closed: nothing public without a credential, keys not passwords, the audit is a cron"
   "25-agnostic-by-construction.md","one core, every device: three axes, probe never assume, a clean skip is a pass, a move is a migration"
+  "28-streaming-voice.md","Skírnir speaks in real time or not at all: a pipeline of overlapping stages, latency measured per turn, and a silent failure is a violation"
   "26-external-surfaces.md","private structure and NDA material never cross an external surface: no paths, vault names, secrets or classified material in Trello, email, Chat or a public PR"
   "README.md","this index"
 ```
@@ -56,3 +57,9 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 ## Appended 2026-10-21 — the documents are checked
 
 | 27 | [The documents are checked, not trusted](27-the-documents-are-checked.md) | a user-facing document's paths, packages and ports are verified by a ward, and a stale instruction fails the push |
+
+## Appended 2026-10-22 — the voice is streaming, or it is not a voice
+
+| # | Rule | In one line |
+|---|---|---|
+| 28 | [Streaming voice](28-streaming-voice.md) | **Skírnir speaks in real time or he does not speak.** Capture is continuous, ASR is incremental over a rolling window, endpointing is a short VAD hangover, the answer is token-streamed and cut into sentences, the first sentence is synthesised immediately, and audio is pushed in real-time frames. Long text is allowed; a long silence is not. Every turn logs `stt_ms`, `ttft_ms`, `first_audio_ms`, `turn_ms` (target: first audio ≤ 1.5 s), and a **silent failure — a dead synthesiser, a full GPU, an empty buffer — is a violation**, not a soft error. Two gates stand before any claim: the bench oracle (push → record back → transcribe → match) and the room's own recording. |
