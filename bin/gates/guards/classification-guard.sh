@@ -18,7 +18,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 # The operator's own map lives in the hoard; the repo ships only the example.
 HOME_MAP="${YMIR_HOME:-}/config/suite-workspaces.yaml"
 if [ -n "${YMIR_HOME:-}" ] && [ -r "$HOME_MAP" ]; then MAP="$HOME_MAP"; SHIPPED=no
-else MAP="$ROOT/config/suite-workspaces.example.yaml"; SHIPPED=yes; fi
+else MAP="$ROOT/.agents/assets/agents/suite-workspaces.example.yaml"; SHIPPED=yes; fi
 fail=0
 say(){ printf '%s\n' "$*"; }
 

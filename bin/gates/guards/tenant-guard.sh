@@ -25,7 +25,7 @@ update = "--update-baseline" in argv
 listing = "--list" in argv
 home = os.environ.get("YMIR_HOME", "")
 cand = [os.path.join(home, "config/tenant-terms.txt")] if home else []
-cand.append(os.path.join(root, "config/tenant-terms.example.txt"))
+cand.append(os.path.join(root, ".agents/assets/agents/tenant-terms.example.txt"))
 terms_file = next((p for p in cand if os.path.isfile(p)), None)
 if not terms_file:
     print("tenant-guard: no terms list (neither the operator's nor the shipped example)")

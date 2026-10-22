@@ -7,16 +7,24 @@
 # the second, and it is idempotent: the projector rewrites `meetings.json` from the record each time, and
 # `places.json` is only created when absent (never overwritten — a membership map is not a projection).
 #
-# Env: YMIR_HOME (required) · GIMLE_DESK_HOST (default: the seat's configured server) ·
-#      GIMLE_DESK_DIR (default /home/zerwizserver/gimle/desk/data) · GIMLE_DESK_SSH (default: `server`)
+# Env: YMIR_HOME (required) · GIMLE_DESK_SSH and GIMLE_DESK_DIR, or the same two keys in
+#      `$YMIR_HOME/config/gimle-desktop.env`. A seat with neither reports SKIP — it never guesses.
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HERE="$ROOT/bin/gimle"
 out="$(mktemp -d)"; trap 'rm -rf "$out"' EXIT
 dry=0; [ "${1-}" = "--dry-run" ] && dry=1
 python3 "$HERE/project.py" --out "$out" ${dry:+} || exit 1
-target="${GIMLE_DESK_SSH:-server}"
-remote="${GIMLE_DESK_DIR:-/home/zerwizserver/gimle/desk/data}"
+# The desk's host and directory are the operator's own (Rule 25): read them, never assume them.
+# `$YMIR_HOME/config/gimle-desktop.env` holds `GIMLE_DESK_SSH` and `GIMLE_DESK_DIR`.
+conf="${YMIR_HOME:-}/config/gimle-desktop.env"
+[ -r "$conf" ] && . "$conf"
+target="${GIMLE_DESK_SSH:-}"
+remote="${GIMLE_DESK_DIR:-}"
+if [ -z "$target" ] || [ -z "$remote" ]; then
+  printf 'SKIP\tthe desk is not configured\tset GIMLE_DESK_SSH and GIMLE_DESK_DIR in %s\n' "$conf"
+  exit 0
+fi
 if [ "$dry" = 1 ]; then
   printf 'would publish\t%s/meetings.json\t%s/places.json\n' "$out" "$out"
   exit 0
