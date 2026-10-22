@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[28]{file,subject}:
+rules_index[29]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -28,6 +28,7 @@ rules_index[28]{file,subject}:
   "24-the-ward.md","a door is named or it is closed: nothing public without a credential, keys not passwords, the audit is a cron"
   "25-agnostic-by-construction.md","one core, every device: three axes, probe never assume, a clean skip is a pass, a move is a migration"
   "28-streaming-voice.md","Skírnir speaks in real time or not at all: a pipeline of overlapping stages, latency measured per turn, and a silent failure is a violation"
+  "29-what-goes-where.md","five classes of information, and a workspace is a boundary with people on one side: class 3 never projects, class 2 never crosses houses"
   "26-external-surfaces.md","private structure and NDA material never cross an external surface: no paths, vault names, secrets or classified material in Trello, email, Chat or a public PR"
   "README.md","this index"
 ```
@@ -63,3 +64,9 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | # | Rule | In one line |
 |---|---|---|
 | 28 | [Streaming voice](28-streaming-voice.md) | **Skírnir speaks in real time or he does not speak.** Capture is continuous, ASR is incremental over a rolling window, endpointing is a short VAD hangover, the answer is token-streamed and cut into sentences, the first sentence is synthesised immediately, and audio is pushed in real-time frames. Long text is allowed; a long silence is not. Every turn logs `stt_ms`, `ttft_ms`, `first_audio_ms`, `turn_ms` (target: first audio ≤ 1.5 s), and a **silent failure — a dead synthesiser, a full GPU, an empty buffer — is a violation**, not a soft error. Two gates stand before any claim: the bench oracle (push → record back → transcribe → match) and the room's own recording. |
+
+## Appended 2026-10-22 — what goes where, and who may see it
+
+| # | Rule | In one line |
+|---|---|---|
+| 29 | [What goes where](29-what-goes-where.md) | **Five classes** — public · team · client-confidential · NDA/contracted · the vault. **A workspace is not a folder; it is a boundary with people on one side.** Class 3 (NDA, patent, contracted terms) **never projects** — not to a board, a document store, a card, a chat, an email or a model's context. Class 2 never crosses houses. A membership is a disclosure, so a person is invited to the smallest space that does the work, never to an app. An agent acts as its person. The test before placing anything: *name who would see it tomorrow — if the answer is "whoever joins next", it is in the wrong place.* |
