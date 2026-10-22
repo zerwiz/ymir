@@ -53,6 +53,56 @@ ACTION="${1:-check}"; shift || true
 have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
 
+# ── the platform and the role: a `hand` on Android is a lawful substrate with
+# lawful absences. Before 2026-10-21 Eir asked every surface the same question
+# everywhere, so the phone reported ten red rows — vault (cryptsetup cannot exist
+# under Android), desktop shells (Electron is not built for bionic), autoboot (no
+# systemd) — and the two REAL breaks hid among eight false ones. Rule 25: probe,
+# never assume; and a clean skip is a pass.
+PLATFORM="linux"
+if [ -n "${PREFIX:-}" ] && [ -d "${PREFIX:-}/etc" ]; then PLATFORM="termux"; fi
+ROLE=""
+for _seat in "${HOME}/.pi/agent/extensions/.ymir-seat" "${YMIR_HOME:-/nonexistent}/state/.ymir-seat"; do
+  [ -r "$_seat" ] || continue
+  ROLE="$(sed -n 's/^role=//p' "$_seat" 2>/dev/null | head -1)"
+  [ -n "$ROLE" ] && break
+done
+unset _seat
+
+# surface_skip <surface> — 0 when this substrate/role cannot owe the surface.
+surface_skip() {
+  [ "$ROLE" = "hand" ] || return 1
+  case "$1" in
+    # Hnitbjörg needs cryptsetup + loop devices; a hand has neither, and by law the
+    # vault is a server-side property (Rule 15/16), never the roaming seat's.
+    vault)      return 0 ;;
+    # The Electron shells are not built for Android; the seat is the harness.
+    shells|sessrumnir) return 0 ;;
+    # No systemd on Android: there is no boot unit to enable. The Pi watcher owns
+    # supervision here, and `ymir-autoboot.sh verify` already names the gap.
+    autoboot)   return 0 ;;
+  esac
+  return 1
+}
+
+# surface_ok <surface> — 0 when the surface is satisfied by another door.
+surface_ok() {
+  case "$1" in
+    # herdr is one pane backend; tmux is the other, and it is the one this platform has.
+    herdr) have tmux ;;
+    *) return 1 ;;
+  esac
+}
+
+surface_detail_skip() {
+  case "$1" in
+    vault)      printf '%s\n' 'not this seat (no cryptsetup/loop devices on Android)' ;;
+    shells|sessrumnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
+    autoboot)   printf '%s\n' 'not this seat (no systemd; the Pi watcher owns supervision)' ;;
+    *)          printf '%s\n' 'skip' ;;
+  esac
+}
+
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
 SURFACES=(floors herdr a2abridge hermes snotra voice council sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot vault ward)
 
@@ -136,8 +186,22 @@ fi
 # The well: the door answers AND the store is whole (Rule 20). A memory that
 # shrank is a loss even while the bridge still serves — so the ward rides this
 # surface, and the mend re-checks before rolling the checkpoint forward.
-s_well()      { [ -x "$SCRIPT_DIR/../records/mimir.sh" ] && "$SCRIPT_DIR/../records/mimir.sh" health >/dev/null 2>&1 \
-                && [ -x "$SCRIPT_DIR/../records/well-guard.sh" ] && "$SCRIPT_DIR/../records/well-guard.sh" check >/dev/null 2>&1; }
+well_detail() {
+  if { exec 3<>/dev/tcp/127.0.0.1/4602; } 2>/dev/null; then
+    exec 3>&-
+    printf 'engram :4602 answering\n'
+  else
+    printf 'door silent on :4602%s\n' "${ROLE:+ (role $ROLE: the well is the heart door)}"
+  fi
+}
+
+s_well()      {
+  # HONESTY (2026-10-21): this used to answer `ok` from the presence of two
+  # scripts, never from the well itself — a green row while nothing listened on
+  # :4602. Ask the port.
+  { exec 3<>/dev/tcp/127.0.0.1/4602; } 2>/dev/null && { exec 3>&-; return 0; }
+  return 1
+}
 f_well()      { "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1; "$SCRIPT_DIR/../records/well-guard.sh" record >/dev/null 2>&1; }
 # MCP: both A2A servers wired into opencode + pi.
 s_mcp() {
@@ -327,11 +391,11 @@ f_hoard() {
 detail() { # <name> -> the command that prints one short fact
   case "$1" in
     floors)    printf '%s\n' "[ -x $SCRIPT_DIR/../engine/prereq-ensure.sh ] && echo 'tool floors'" ;;
-    herdr)     printf '%s\n' "have herdr && herdr --version 2>/dev/null | head -1 || echo 'herdr absent'" ;;
+    herdr)     printf '%s\n' "have herdr && herdr --version 2>/dev/null | head -1 || { have tmux && tmux -V | sed 's/^/tmux fallback: /' || echo 'no pane backend'; }" ;;
     a2abridge) printf '%s\n' "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
-    well)      printf '%s\n' "echo 'engram :4602'" ;;
+    well)      printf '%s\n' well_detail ;;
     mcp)       printf '%s\n' "echo 'a2abridge + engram'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
@@ -347,6 +411,7 @@ detail() { # <name> -> the command that prints one short fact
 broken=0
 if [ "$ACTION" = "fix" ]; then
   for s in "${SURFACES[@]}"; do
+    surface_skip "$s" && continue
     if ! "s_$s" >/dev/null 2>&1; then
       "f_$s" >/dev/null 2>&1 && printf 'eir: mended %s\n' "$s" || printf 'eir: could not mend %s\n' "$s" >&2
     fi
@@ -356,8 +421,18 @@ fi
 rows=""
 count=0
 for s in "${SURFACES[@]}"; do
-  if "s_$s" >/dev/null 2>&1; then state=ok; else state=broken; broken=$((broken+1)); fi
+  if surface_skip "$s"; then
+    state=skip
+    d="$(surface_detail_skip "$s")"
+    rows="${rows}  \"${s}\",\"${state}\",\"${d}\"\n"
+    count=$((count+1))
+    continue
+  fi
+  if "s_$s" >/dev/null 2>&1; then state=ok
+  elif surface_ok "$s"; then state=ok; d_override="tmux fallback"
+  else state=broken; broken=$((broken+1)); fi
   d="$(eval "$("detail" "$s" 2>/dev/null)" 2>/dev/null | head -1)"
+  [ -n "${d_override:-}" ] && { d="$d_override"; d_override=""; }
   rows="${rows}  \"${s}\",\"${state}\",\"${d}\"\n"
   count=$((count+1))
 done
