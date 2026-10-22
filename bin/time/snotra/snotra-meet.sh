@@ -62,6 +62,8 @@ case "$ACTION" in
     python3 "$BRIDGE" launch --port "$PORT" "${REST[@]+"${REST[@]}"}" ;;
   install)
     python3 "$BRIDGE" install --port "$PORT" ;;
+  seat)
+    python3 "$BRIDGE" seat --port "$PORT" --url "${URL:-$2}" "${REST[@]+"${REST[@]}"}" ;;
   join)
     python3 "$BRIDGE" install --port "$PORT" >/dev/null || true
     python3 "$BRIDGE" join --port "$PORT" --name "$NAME" "${REST[@]+"${REST[@]}"}" ;;
