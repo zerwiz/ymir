@@ -213,7 +213,15 @@ else
     command -v "$t" >/dev/null 2>&1 && have_any=1
   done
 fi
-[ "$have_any" = 0 ] && add HIGH "nothing watches this host" "no fail2ban/crowdsec/lynis/aide/osquery/falco installed" "plan 81 S2-S3: a ban for brute force, and a file-integrity baseline"
+[ "$have_any" = 0 ] && { [ -x "$SCRIPT_DIR/host-watch.sh" ] && "$SCRIPT_DIR/host-watch.sh" status >/dev/null 2>&1 && have_any=1; }
+# A hand cannot run fail2ban, crowdsec, lynis or aide — no root, no systemd, no log
+# syslog. The lawful question is whether ANYTHING looks at the host on a cycle and
+# leaves a record, so the house watcher counts, and is named when it is the one.
+WATCHER_NOTE="no fail2ban/crowdsec/lynis/aide/osquery/falco installed"
+if [ "$have_any" = 1 ] && [ -x "$SCRIPT_DIR/host-watch.sh" ] && "$SCRIPT_DIR/host-watch.sh" status >/dev/null 2>&1; then
+  WATCHER_NOTE="bin/ward/host-watch.sh — the house watcher, heartbeat fresh"
+fi
+[ "$have_any" = 0 ] && add HIGH "nothing watches this host" "$WATCHER_NOTE" "plan 81 S2-S3: a ban for brute force, and a file-integrity baseline; the hand's own watcher: bin/ward/host-watch.sh run"
 
 # ── the report ────────────────────────────────────────────────────────────────
 if [ "$JSON" = 1 ]; then

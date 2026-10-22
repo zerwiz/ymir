@@ -85,9 +85,9 @@ YMIR_HOME="$TMP/home3" bash "$HARDEN" apply --ssh-keys-perm >/dev/null 2>&1
 [ "$(stat -c '%a' "$TMP/home3/hodd/secrets/platform.env")" = "600" ] && ok "the secrets mend sets 600" || bad "secrets mend did not chmod"
 
 # ── the report is written where records live ──────────────────────────────────
-YMIR_HOME="$TMP/home4" bash "$VERDR" report --no-alert >/tmp/ward-verdr.out 2>&1
+YMIR_HOME="$TMP/home4" bash "$VERDR" report --no-alert >"$TMP/ward-verdr.out" 2>&1
 f="$(ls -1 "$TMP/home4/hodd/memory/ward"/*.md 2>/dev/null | head -1)"
-[ -n "$f" ] && ok "Vörðr writes a dated report into the home" || bad "no report written: $(cat /tmp/ward-verdr.out)"
+[ -n "$f" ] && ok "Vörðr writes a dated report into the home" || bad "no report written: $(cat "$TMP/ward-verdr.out")"
 [ -n "$f" ] && grep -q 'the warden.s report' "$f" && ok "…and the report is the warden's" || bad "report content: $(head -3 "$f" 2>/dev/null)"
 [ -n "$f" ] && grep -q 'The mends' "$f" && ok "…and it carries the mends, unapplied" || bad "mends missing from the report"
 
