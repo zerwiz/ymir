@@ -10,8 +10,8 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",588
-  "runtime modules (src/ymir_runtime/*.py)",54
+  "shell doors (bin/*.sh)",596
+  "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",28
   "Pi extension tools",0
   "generated","2026-10-23"
@@ -86,7 +86,7 @@ capabilities[5]{surface,count}:
 | room.sh | room.sh — the record of a room: append an utterance, or read what was  | tested+named | keep (a human or a cron row must run it) |
 | smoke.sh | smoke.sh — Skírnir and Snotra, end to end, in one command. The house' | tested+named | keep (a human or a cron row must run it) |
 | telegram.sh | telegram.sh — the door to Skírnir's own bot (the adapter lives in tel | tested | keep (a human or a cron row must run it) |
-| voice-handler.sh | voice-handler.sh — the bridge's outbound voice step, shaped for pi-tel | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| voice-handler.sh | voice-handler.sh — the bridge's outbound voice step, shaped for pi-tel | tested | keep (a human or a cron row must run it) |
 | voice.sh | voice.sh — talk to Skírnir with a voice, and hear him answer while he | tested | keep (a human or a cron row must run it) |
 | walls-test.sh | walls-test.sh — Skírnir's red-team suite. Eight assertions, each an a | tested | keep (a human or a cron row must run it) |
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
@@ -344,6 +344,7 @@ capabilities[5]{surface,count}:
 | ymir-update-check.sh | ymir-update-check.sh — does a newer Ymir stand on npm? One answer, cac | tested+named | keep (a human or a cron row must run it) |
 | ci-verify.sh | ci-verify.sh — what CI must prove, in one command, for BOTH hosts. | tested+named | keep (a human or a cron row must run it) |
 | doc-sweep.sh | doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's docume | tested | keep (a human or a cron row must run it) |
+| doors.sh | doors.sh — a door register for ANY directory, rendered from the tree ( | tested | keep (a human or a cron row must run it) |
 | feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
 | guards.sh | guards.sh — every TREE ward, in one command. | tested | keep (a human or a cron row must run it) |
@@ -358,8 +359,10 @@ capabilities[5]{surface,count}:
 | docs-guard.sh | docs-guard.sh — docs/ is the PUBLIC, user-facing tree. Block operator- | tested | keep (a human or a cron row must run it) |
 | features-guard.sh | features-guard.sh — every feature page is catalogued (Rule 14). | tested | keep (a human or a cron row must run it) |
 | fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | tested+named | keep (a human or a cron row must run it) |
+| fleet-version-guard.sh | fleet-version-guard.sh — the three labels and the two trees must agree | tested | keep (a human or a cron row must run it) |
 | git-clobber-guard.sh | git-clobber-guard.sh — no command that throws away uncommitted work. | tested | keep (a human or a cron row must run it) |
 | hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested+named | keep (a human or a cron row must run it) |
+| inventory-guard.sh | inventory-guard.sh — a register that runs in no gate is a capability t | tested | keep (a human or a cron row must run it) |
 | path-ledger-guard.sh | path-ledger-guard.sh — Rule 25: a path that MOVED may not be reference | tested | keep (a human or a cron row must run it) |
 | people-guard.sh | people-guard.sh — the public tree holds no people. | tested | keep (a human or a cron row must run it) |
 | perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |
@@ -370,6 +373,7 @@ capabilities[5]{surface,count}:
 | runtime-guard.sh | runtime-guard.sh — THE TREE IS NOT A RUNTIME. | tested | keep (a human or a cron row must run it) |
 | secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
 | sensitive-gate.sh | sensitive-gate.sh — one gate for every external surface of a sensitive | tested | keep (a human or a cron row must run it) |
+| subsystem-docs-guard.sh | subsystem-docs-guard.sh — the books a subsystem names must exist, and  | tested | keep (a human or a cron row must run it) |
 | syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
 | vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested+named | keep (a human or a cron row must run it) |
 | nidhogg.sh | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination fi | tested | keep (a human or a cron row must run it) |
@@ -433,6 +437,7 @@ capabilities[5]{surface,count}:
 | journal-append.sh | journal-append.sh — write one idempotent entry to THIS machine's outbo | tested+named | keep (a human or a cron row must run it) |
 | journal-receive.sh | journal-receive.sh — the HEART folds the bodies' journals into one rec | tested+named | keep (a human or a cron row must run it) |
 | journal-reconcile.sh | journal-reconcile.sh — push this machine's outbox to the heart, when i | tested | keep (a human or a cron row must run it) |
+| library.sh | library.sh — the library of records: one corpus, one contract, one doo | tested+named | keep (a human or a cron row must run it) |
 | mimir-ingest.sh | mimir-ingest.sh — ingest the repo's data material into the well (Mimir | tested+named | keep (a human or a cron row must run it) |
 | mimir-log.sh | mimir-log.sh — move memory between the engram and the append log (a th | tested+named | keep (a human or a cron row must run it) |
 | mimir-reflect.sh | mimir-reflect — smelt the well's episodes into facts, through the LLAM | tested | keep (a human or a cron row must run it) |
@@ -442,6 +447,7 @@ capabilities[5]{surface,count}:
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | tested+named | keep (a human or a cron row must run it) |
 | well-door.sh | well-door.sh — the hand's door to the heart's well, raised over SSH. | tested | keep (a human or a cron row must run it) |
 | well-guard.sh | well-guard.sh — the WARD behind RULES/20-the-well-appends.md. | tested+named | keep (a human or a cron row must run it) |
+| where.sh | where.sh — "which book do I read before touching this path?" | tested+named | keep (a human or a cron row must run it) |
 | workspace-rag.sh | workspace-rag.sh — memory over the realm workspaces (W0038). | tested+named | keep (a human or a cron row must run it) |
 | wyrd-db.sh | wyrd-db.sh — the database layer (W0040). Applies the platform schema a | tested+named | keep (a human or a cron row must run it) |
 | ymir-state.sh | ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runti | tested+named | keep (a human or a cron row must run it) |
@@ -501,7 +507,7 @@ capabilities[5]{surface,count}:
 | snotra-capture.sh | snotra-capture.sh — capture mic + system audio on the meeting seat. | tested+named | keep (a human or a cron row must run it) |
 | snotra-cron.sh | snotra-cron.sh — scheduled maintenance for the meeting system. | tested | keep (a human or a cron row must run it) |
 | snotra-detect.sh | snotra-detect.sh — the ear's watch: pricks up when a call begins, and  | tested+named | keep (a human or a cron row must run it) |
-| snotra-dispatch.sh | snotra-dispatch.sh — one draft per person, and the team follow-up, fro | tested | keep (a human or a cron row must run it) |
+| snotra-dispatch.sh | snotra-dispatch.sh — what we did with each person: which meetings, wha | tested | keep (a human or a cron row must run it) |
 | snotra-ensure.sh | snotra-ensure.sh — ensure the meeting ear's transcription engine is pr | tested+named | keep (a human or a cron row must run it) |
 | snotra-evidence.sh | snotra-evidence.sh — timestamp, immutable copy, certification and rete | tested | keep (a human or a cron row must run it) |
 | snotra-harvest.sh | snotra-harvest.sh — the meeting's OWN audio, out of the bot's store, v | tested+named | keep (a human or a cron row must run it) |
@@ -570,6 +576,7 @@ capabilities[5]{surface,count}:
 | `registry` | `dispatch/registry.py` — where a figure's model comes from, and nothin | yes | yes (bin/ imports the engine) |
 | `resolve` | `dispatch/resolve.py` — one errand, one resolution. | yes | yes (bin/ imports the engine) |
 | `table` | `dispatch/table.py` — the decision table, read as DATA. | yes | yes (bin/ imports the engine) |
+| `doors` | doors.py — a door register for ANY directory, rendered from the tree. | no | yes (bin/ imports the engine) |
 | `errors` | The engine's own failures, so a caller can tell them apart. | yes | yes (bin/ imports the engine) |
 | `__main__` | `python3 -m ymir_runtime.fleet` — the door face of the living rail res | yes | yes (bin/ imports the engine) |
 | `rail` | fleet/rail.py — the LIVING rail resolver (plan 51, Parts 9a/9b/9c). | yes | yes (bin/ imports the engine) |
@@ -577,6 +584,7 @@ capabilities[5]{surface,count}:
 | `harness` | Hamr — which harness wears this errand, and the exact line that launch | yes | yes (bin/ imports the engine) |
 | `heartbeat` | The heartbeat — a dead worker must never look like a thinking one. | yes | yes (bin/ imports the engine) |
 | `landed` | landed.py — did this work LAND? The teardown gate, owned by the engine | yes | yes (bin/ imports the engine) |
+| `library` | library.py — the library of records: one corpus, one contract, one doo | yes | yes (bin/ imports the engine) |
 | `paths` | Where the engine's roots live — the ONE Python reader of the home law. | yes | yes (bin/ imports the engine) |
 | `proc` | One place that runs a process, so every module is testable without a s | yes | yes (bin/ imports the engine) |
 | `seat` | seat(errand) -> seat_id — the one verb that puts an errand in the worl | yes | yes (bin/ imports the engine) |
