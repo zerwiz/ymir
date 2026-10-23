@@ -921,6 +921,29 @@ step_fleet() {
 # the two things that make that true: the ONE target is enabled (fleet-ensure
 # did it) and the seat's user units survive a reboot (Linger, on a headless
 # seat). The Linger value is reported here on EVERY seat — the DoD.
+# ── 3g. Gróa, seated (one per install) ───────────────────────────────────────
+# The updater arrives WITH the installation, not copied by hand. Her body is
+# bin/agents/groa-agent/: a leashed OpenCode agent that wakes daily, asks Gróa's
+# hands for a check, and fast-forwards only when they say so. A phone has no
+# systemd; a checkout with no systemd is not hers to keep.
+step_groa() {
+  if [ ! -d "$SCRIPT_DIR/../agents/groa-agent" ]; then add groa SKIP "no groa-agent pack"; return; fi
+  if ! have systemctl || [ ! -d /run/systemd/system ]; then add groa SKIP "no systemd on this host — the timer is a seat concern"; return; fi
+  if [ "$CHECK" = 1 ]; then
+    if systemctl --user list-unit-files groa-agent.timer 2>/dev/null | grep -q groa-agent.timer; then
+      add groa OK "her timer is seated — daily wake, leashed"
+    else
+      add groa WARN "her timer is not seated — a real run seats it"
+    fi
+    return
+  fi
+  if "$SCRIPT_DIR/../agents/groa-agent/seat.sh" --quiet >/dev/null 2>&1; then
+    add groa OK "seated — one Gróa per install (daily wake, leashed)"
+  else
+    add groa FAIL "could not seat her — run bin/agents/groa-agent/seat.sh to see why"
+  fi
+}
+
 step_autoboot() {
   # A phone (Android/Termux) has no systemd and no loginctl; boot units are the
   # heart's concern. Report honestly and never dereference $USER — Termux leaves
@@ -1576,6 +1599,7 @@ run_step step_role "role"
 run_step step_heimdall "the warden"
 run_step step_fleet "fleet services"
 run_step step_autoboot "autoboot"
+run_step step_groa "Gróa, the updater"
 run_step step_sandbox "sandbox"
 run_step step_memory "memory"
 run_step step_record "the record"
