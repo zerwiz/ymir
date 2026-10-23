@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[596]{file,does,kind,verdict,disposition,callers,lines}:
+bin[597]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",19,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",19,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",19,-
@@ -86,7 +86,7 @@ bin[596]{file,does,kind,verdict,disposition,callers,lines}:
   "doc-sweep.sh","doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's documents, inside","tool","tested","keep",0,589
   "docs-claims-guard.sh","docs-claims-guard.sh — Rule 27: a user-facing document may not name a road that is closed.","tool","wired","keep",0,40
   "docs-guard.sh","docs-guard.sh — docs/ is the PUBLIC, user-facing tree.","tool","wired","keep",1,55
-  "ear.sh","ear.sh — a voice note in, the words out.","tool","wired","keep",3,49
+  "ear.sh","ear.sh — a voice note in, the words out.","tool","wired","keep",3,70
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
   "eindri-acclaim-silent.sh","eindri-acclaim-silent.sh — action half of the Eindri silence bridge.","tool","wired","keep",1,57
   "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",6,160
@@ -316,7 +316,7 @@ bin[596]{file,does,kind,verdict,disposition,callers,lines}:
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,150
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",226,116
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",227,116
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",0,106
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",14,120
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
@@ -373,7 +373,7 @@ bin[596]{file,does,kind,verdict,disposition,callers,lines}:
   "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",1,150
   "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,168
   "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",1,29
-  "mouth.sh","mouth.sh — text in, a Telegram voice note out.","tool","wired","keep",3,64
+  "mouth.sh","mouth.sh — text in, a Telegram voice note out.","tool","wired","keep",4,64
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,152
   "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",0,229
   "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",2,87
@@ -483,7 +483,7 @@ bin[596]{file,does,kind,verdict,disposition,callers,lines}:
   "smoke.sh","smoke.sh — the Snotra meeting pipeline's own gate: five doors, three verdicts each.","tool","wired","keep",7,127
   "snotra-agenda.py","'''snotra-agenda — the agenda card that drives the next meeting (DEC-20261022-04).","data","wired","keep",1,206
   "snotra-agenda.sh","snotra-agenda.sh — the agenda card that drives the next meeting (DEC-20261022-04).","tool","wired","keep",2,19
-  "snotra-approve.sh","snotra-approve.sh — the operator's word, bound to the exact bytes of a letter.","tool","wired","keep",4,65
+  "snotra-approve.sh","snotra-approve.sh — the operator's word, bound to the exact bytes of a letter.","tool","wired","keep",4,69
   "snotra-attrib.py","'''snotra-attrib — who said it: the track, the person, and the evidence for both.","data","wired","keep",1,279
   "snotra-attrib.sh","snotra-attrib.sh — who said it: the track, the person, and the evidence for both.","tool","wired","keep",0,22
   "snotra-audio-ladder.py","'''snotra-audio-ladder — the meeting's sound gets smaller AFTER its words are safe.","data","wired","keep",1,253
@@ -554,7 +554,7 @@ bin[596]{file,does,kind,verdict,disposition,callers,lines}:
   "trello-due.sh","trello-due.sh — a card's due date is a promise; say when it is broken.","tool","wired","keep",0,100
   "trello-map.sh","trello-map.sh — the map of our Trello, written down so Snotra can know it.","tool","wired","keep",3,136
   "trello_client.py","'''trello_client — the Trello door, shared: the grant, the resolver, and the card verbs.","data","wired","keep",0,305
-  "tts-lease.sh","tts-lease.sh — say 'the card is in use' so the idle-stop never lowers the voice under a conversation.","tool","wired","keep",3,32
+  "tts-lease.sh","tts-lease.sh — say 'the card is in use' so the idle-stop never lowers the voice under a conversation.","tool","wired","keep",4,32
   "tui-frame-check.sh","tui-frame-check.sh — prove that what the TUI writes to the terminal fits the terminal.","tool","wired","keep",0,162
   "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","wired","keep",0,77
   "unit-template-check.sh","unit-template-check.sh — every shipped systemd unit template must be a unit systemd","tool","wired","keep",1,96
@@ -570,6 +570,7 @@ bin[596]{file,does,kind,verdict,disposition,callers,lines}:
   "vidarr-agent.sh","vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast road.","tool","wired","keep",0,70
   "vidarr.sh","vidarr.sh — VÍÐARR, the silent avenger: the defender's own door.","tool","wired","keep",1,249
   "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,164
+  "voice-handler.sh","voice-handler.sh — the bridge's outbound voice step, shaped for pi-telegram's command templates.","tool","wired","keep",0,21
   "voice.sh","voice.sh — talk to Skírnir with a voice, and hear him answer while he is still answering.","tool","wired","keep",0,150
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125
   "walls-test.sh","walls-test.sh — Skírnir's red-team suite.","tool","wired","keep",0,275
@@ -609,6 +610,6 @@ bin[596]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=368, tested=228
+**Tally.** verdict: wired=369, tested=228
 
-**Tally.** disposition: keep=584, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=585, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
