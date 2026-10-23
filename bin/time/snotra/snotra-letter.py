@@ -386,8 +386,20 @@ def send(d: Path) -> int:
     state = json.loads(statep.read_text(encoding="utf-8"))
     mail = ROOT / "bin" / "time" / "snotra" / "mail-send.sh"
     approve = ROOT / "bin" / "time" / "snotra" / "snotra-approve.sh"
+    # a TEST must be possible: `--person "<name>"` or `--to <email>` sends exactly one letter, so a trial
+    # can never become a broadcast by accident.
+    only_name = only_to = None
+    for i, a in enumerate(sys.argv):
+        if a == "--person" and i + 1 < len(sys.argv):
+            only_name = sys.argv[i + 1].strip().lower()
+        if a == "--to" and i + 1 < len(sys.argv):
+            only_to = sys.argv[i + 1].strip().lower()
     sent = 0
     for p in state.get("people", []):
+        if only_name and (p.get("name") or "").strip().lower() != only_name:
+            continue
+        if only_to and (p.get("email") or "").strip().lower() != only_to:
+            continue
         if p.get("sent"):
             continue
         chk = subprocess.run(["bash", str(approve), "check", p["draftId"]], capture_output=True, text=True)
@@ -395,6 +407,9 @@ def send(d: Path) -> int:
             say(f"held{{person:{p['name']},why:'no valid approval for draft {p['draftId']}'}}")
             continue
         res = subprocess.run(["bash", str(mail), "send", p["draftId"]], capture_output=True, text=True)
+        if res.returncode != 0:
+            say(f"failed{{person:{p['name']},why:{(res.stderr or res.stdout or '').strip()[:120]!r}}}")
+            continue
         p["sent"] = {"at": datetime.now().astimezone().isoformat(timespec="seconds"),
                      "out": (res.stdout or "").strip()[:200]}
         sent += 1
