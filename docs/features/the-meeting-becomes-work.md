@@ -41,6 +41,15 @@ bin/time/snotra/snotra-letter.sh  status   "$M"
 # sending needs the operator: snotra-approve.sh approve <draft-id>, then:
 bin/time/snotra/snotra-letter.sh  send     "$M" --approved
 
+bin/time/snotra/snotra-promote.sh list  "$M"      # every candidate: proposed · approved · rejected · held
+bin/time/snotra/snotra-promote.sh check "$M"      # the engine's validator, before anything is written
+bin/time/snotra/snotra-promote.sh set   "$M" DEC-20261022-01 accept --by "Lars-Josef Lindbom" --why "confirmed"
+bin/time/snotra/snotra-promote.sh log   "$M"      # promotions.jsonl — append-only, who and when
+
+bin/time/snotra/snotra-agenda.sh  plan  "$M"      # the next meeting's points, from the record
+bin/time/snotra/snotra-agenda.sh  apply "$M"      # the dated agenda card, in the place's agenda list
+bin/time/snotra/snotra-agenda.sh  verify "$M"
+
 bin/time/snotra/snotra-audio-ladder.sh plan  "$M"                 # what would shrink, and by how much
 bin/time/snotra/snotra-audio-ladder.sh apply "$M" [--offload DIR] # verify → compress → strip → report
 
@@ -64,6 +73,27 @@ $ bin/time/snotra/snotra-project.sh plan <a wayof meeting>
 snotra-project: the place wayof/projects declares surface 'gimle'; this projector speaks trello only —
 refusing rather than filing into the wrong engine
 ```
+
+## The register becomes law — and only a person may sign it
+
+Every one of the 22 October decisions is `proposed` until somebody promotes it. `snotra-promote.sh set`
+**requires `--by "<a person's name>"`** — "a machine may propose, only a person may promote" — validates
+the record through the engine's own validator first, **appends** the promotion to `promotions.jsonl`
+(from → to, by, why, when), writes the state, and **reads it back**. Setting the same state twice writes
+nothing. `hold` is a recorded state too: a person looked and did not decide yet, with the reason.
+
+The validator had to learn one thing for this to work: a decision that has not been promoted **may
+honestly have no approver** (`status: proposed` + `approver_pending: true`), while any decision that
+claims to stand — `approved`, `decided`, `rejected` — still must name exactly one person. Measured
+2026-10-23: the record failed its own validator with 14 errors, because honesty about an unattributed
+meeting looked like a fault.
+
+## The agenda drives the meeting (DEC-04)
+
+`snotra-agenda.sh` writes the dated card into the place's agenda list (*Next Meeting Agenda* for Synteon),
+in the room's own order: what is still **proposed** → **actions due** by that date → **open questions,
+last, always**. The date is `--date`, or the place's cadence (the Monday at `monday_at`). Every line cites
+its `DEC-`/`ACT-`/`OQ-` id, and the card is idempotent by `record-key`.
 
 ## The laws these doors keep
 

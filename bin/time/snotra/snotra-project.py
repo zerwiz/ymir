@@ -87,46 +87,72 @@ def items_of(rec: dict) -> list[dict]:
     for d in rec.get("decisions") or []:
         did = d.get("decision_id")
         grade = (d.get("grade") or "").upper()
+        # Trello renders markdown (headings, bold, italics, lists, hr) but NOT tables — so every field is
+        # a bold label on its own line, and the source quote is italic, with its timestamp beside it.
         desc = "\n".join(filter(None, [
-            f"**{grade or '—'} · {d.get('status') or 'proposed'}**",
-            f"Approver pending: {'yes' if d.get('approver_pending') else 'no'}",
-            f"Reversibility: {d.get('reversibility') or '—'}",
-            "",
-            d.get("rationale") or "",
-            "",
-            f"Evidence ({d.get('evidence', {}).get('timestamp', '?')}): \"{(d.get('evidence') or {}).get('quote', '')}\"",
-            "",
+            f"### {grade or '—'} · {(d.get('status') or 'proposed').title()}",
+            f"**Reversibility:** {d.get('reversibility') or '—'}  ",
+            f"**Decided by:** {d.get('decided_by') or 'not yet signed'}  ",
+            f"**Approver pending:** {'yes' if d.get('approver_pending') else 'no'}",
+            "---",
+            "**Why**",
+            (d.get("rationale") or "_no rationale recorded_"),
+            "---",
+            "**From the meeting**",
+            f"*\"{(d.get('evidence') or {}).get('quote', '')}\"*",
+            f"at `{(d.get('evidence') or {}).get('timestamp', '?')}` (unattributed — the register is " 
+            "confirmed at sign-off)",
+            "---",
+            f"*Source: {mid} · {did}*",
             f"{KEY}: {mid}:{did}",
         ]))
         out.append({"kind": "decision", "id": did, "name": trim(d.get("statement") or d.get("title") or did),
                     "desc": desc, "labels": [f"Grade {grade}"] if grade in ("A", "B", "C") else [],
+                    "member": d.get("decided_by") or None, "due": None,
+                    "checklist": ("To confirm", ["Confirm or correct this decision at sign-off"])
+                    if (d.get("status") or "") == "proposed" else None,
                     "item": d})
     for a in rec.get("actions") or []:
         aid = a.get("action_id")
         desc = "\n".join(filter(None, [
-            f"Owner: {a.get('owner') or '—'}",
-            f"Due: {a.get('due_at') or ('unresolved' if a.get('date_unresolved') else '—')}",
-            f"Done when: {a.get('definition_of_done') or 'to be agreed'}",
-            f"Depends on: {a.get('dependency') or 'none'}",
-            "",
-            f"Evidence ({a.get('evidence', {}).get('timestamp', '?')}): \"{(a.get('evidence') or {}).get('quote', '')}\"",
-            "",
+            "### Action",
+            f"**Owner:** {a.get('owner') or 'unowned'}  ",
+            f"**Due:** {a.get('due_at') or ('unresolved' if a.get('date_unresolved') else 'no date')}  ",
+            f"**Depends on:** {a.get('dependency') or 'nothing'}",
+            "---",
+            "**Done when**",
+            a.get("definition_of_done") or "_to be agreed — see the checklist_",
+            "---",
+            "**From the meeting**",
+            f"*\"{(a.get('evidence') or {}).get('quote', '')}\"* at `{(a.get('evidence') or {}).get('timestamp', '?')}`",
+            "---",
+            f"*Source: {mid} · {aid}*",
             f"{KEY}: {mid}:{aid}",
         ]))
         out.append({"kind": "action", "id": aid, "name": trim(a.get("deliverable") or aid),
-                    "desc": desc, "labels": [], "item": a})
+                    "desc": desc, "labels": [], "member": a.get("owner") or None,
+                    "due": a.get("due_at") if not a.get("date_unresolved") else None,
+                    "checklist": ("Definition of done", T.split_criteria(a.get("definition_of_done") or ""))
+                    if a.get("definition_of_done") else None,
+                    "item": a})
     for q in rec.get("questions") or []:
         qid = q.get("question_id")
         desc = "\n".join(filter(None, [
-            f"Asked by: {q.get('asked_by') or '—'}",
-            q.get("context") or "",
-            "",
-            f"Evidence ({q.get('evidence', {}).get('timestamp', '?')}): \"{(q.get('evidence') or {}).get('quote', '')}\"",
-            "",
+            "### Open question",
+            f"**Asked by:** {q.get('asked_by') or 'unattributed'}  ",
+            f"**Status:** {q.get('status') or 'open'}",
+            "---",
+            q.get("context") or "_no context recorded_",
+            "---",
+            "**From the meeting**",
+            f"*\"{(q.get('evidence') or {}).get('quote', '')}\"* at `{(q.get('evidence') or {}).get('timestamp', '?')}`",
+            "---",
+            f"*Source: {mid} · {qid}*",
             f"{KEY}: {mid}:{qid}",
         ]))
         out.append({"kind": "question", "id": qid, "name": trim(q.get("question") or qid),
-                    "desc": desc, "labels": ["Question"], "item": q})
+                    "desc": desc, "labels": ["Question"], "member": q.get("asked_by") or None,
+                    "due": None, "checklist": None, "item": q})
     return out
 
 
@@ -147,12 +173,16 @@ def meeting_item(rec: dict, place: dict) -> dict | None:
         f"Audio source: {cov.get('audio_source') or '—'}",
         f"Coverage: recorded from {cov.get('recorded_from') or '?'}; missing before {cov.get('missing_before') or 'nothing'}",
         "",
-        f"The record: the vault, {m.get('meeting_id')}",
+        "---",
+        f"**The record:** the vault, `{m.get('meeting_id')}`",
         "",
         f"{KEY}: {mid}:MEETING",
     ]))
-    return {"kind": "meeting", "id": "MEETING", "name": trim(f"{m.get('title') or mid} — {str(m.get('started_at'))[:10]}", 80),
-            "desc": desc, "labels": [], "item": m, "board": mc.get("board"), "list": mc.get("list")}
+    return {"kind": "meeting", "id": "MEETING",
+            "name": trim(f"{m.get('title') or mid} — {str(m.get('started_at'))[:10]}", 80),
+            "desc": desc, "labels": [], "member": m.get("chair") or None,
+            "due": m.get("started_at") if False else None, "checklist": None,
+            "item": m, "board": mc.get("board"), "list": mc.get("list")}
 
 
 # ── the board, read once ───────────────────────────────────────────────────────────────────────
@@ -179,7 +209,7 @@ def state_for(place: dict, board_name: str, cache: dict) -> tuple[dict, dict, di
     for c in T.board_cards(b["id"]):
         for line in (c.get("desc") or "").splitlines():
             if line.strip().startswith(KEY + ":"):
-                by_key[line.split(":", 2)[-1].strip()] = c
+                by_key[line.split("record-key:", 1)[1].strip()] = c
                 break
     cache[board_name] = (b, ids, by_key)
     return cache[board_name]
@@ -202,7 +232,7 @@ def plan(rec: dict, place: dict, it: dict, cache: dict) -> tuple[str, dict]:
         _, lst = T.resolve_list(board, liste)
         lid = lst["id"]
         ids[liste] = lid
-    key = next((ln.split(":", 2)[-1].strip() for ln in it["desc"].splitlines()
+    key = next((ln.split("record-key:", 1)[1].strip() for ln in it["desc"].splitlines()
                 if ln.strip().startswith(KEY + ":")), None)
     card = by_key.get(key) if key else None
     if card is None:
@@ -228,6 +258,7 @@ def apply(rec: dict, place: dict, d: Path, do_writes: bool, move: bool = False) 
     if mi:
         items.append(mi)
     state: dict = {}
+    member_cache: dict = {}
     drift = 0
     made = updated = okn = 0
     for it in items:
@@ -245,25 +276,52 @@ def apply(rec: dict, place: dict, d: Path, do_writes: bool, move: bool = False) 
                 say(f"moved   {it['id']} → {r['list']} (on the operator's --move)")
             continue
         if not do_writes:
-            say(f"would-{verdict} {it['kind']:<8} {it['id']:<22} → {r['list']}")
+            extra = []
+            if it.get("member"):
+                extra.append(f"member:{it['member']}")
+            if it.get("due"):
+                extra.append(f"due:{it['due']}")
+            if it.get("checklist"):
+                extra.append(f"checklist:{len(it['checklist'][1])} item(s)")
+            say(f"would-{verdict} {it['kind']:<8} {it['id']:<22} → {r['list']}"
+                + (f"  [{', '.join(extra)}]" if extra else ""))
             continue
         lids = label_ids(place, r["board"]["id"], it["labels"])
+        member = T.resolve_member(it.get("member") or "", r["board"]["id"], member_cache) if it.get("member") else None
+        if it.get("member") and not member:
+            say(f"unmatched{{item:{it['id']},name:{it['member']!r},why:'not on the board and not in the "
+                "workspace — the card carries no member rather than an invented one'}}")
+        due = T.due_iso(it.get("due"))
+        params: dict = {"name": it["name"], "desc": it["desc"]}
+        if lids:
+            params["idLabels"] = ",".join(lids)
+        if member:
+            params["idMembers"] = member
+        if due:
+            params["due"] = due
         if verdict == "create":
             card = T.create_card(r["list_id"], r["board"]["id"], it["name"], it["desc"], lids)
+            if member or due:
+                T.update_card(card["id"], **params)
             made += 1
-            say(f"created {it['kind']:<8} {it['id']:<22} {card['id']} → {r['list']}")
+            if it.get("checklist"):
+                T.ensure_checklist(card["id"], it["checklist"][0], it["checklist"][1])
+            say(f"created {it['kind']:<8} {it['id']:<22} {card['id']} → {r['list']}"
+                + (f"  member:{it['member']}" if member else "")
+                + (f"  due:{due[:10]}" if due else ""))
             back = T.get_card(card["id"])
             verdict_back = "ok" if back.get("idList") == r["list_id"] else "MISFILED"
             say(f"verify  {it['id']:<22} {verdict_back} (list {back.get('idList')})")
             if verdict_back != "ok":
                 drift += 1
         else:
-            params = {"name": it["name"], "desc": it["desc"]}
-            if lids:
-                params["idLabels"] = ",".join(lids)
             T.update_card(r["card"]["id"], **params)
+            if it.get("checklist"):
+                T.ensure_checklist(r["card"]["id"], it["checklist"][0], it["checklist"][1])
             updated += 1
-            say(f"updated {it['kind']:<8} {it['id']:<22} {r['card']['id']} → {r['list']}")
+            say(f"updated {it['kind']:<8} {it['id']:<22} {r['card']['id']} → {r['list']}"
+                + (f"  member:{it['member']}" if member else "")
+                + (f"  due:{due[:10]}" if due else ""))
     say(f"project{{planned:{len(items)},created:{made},updated:{updated},already_ok:{okn},drift:{drift},"
         f"writes:{str(do_writes).lower()}}}")
     return 1 if drift else 0

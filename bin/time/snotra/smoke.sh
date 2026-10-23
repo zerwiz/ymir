@@ -10,6 +10,9 @@
 #   PASS  harvest verify re-hashes the staged audio against the store's declared bytes
 #   PASS  ladder status sees a transcript before it would shrink anything
 #   PASS  project verify agrees with the board (or SKIPs: no Trello grant in reach)
+#   PASS  layout: the folder holds the standard and no strays
+#   PASS  promote: the record validates before any promotion is written
+#   PASS  agenda: the dated card sits in the place's agenda list (or SKIPs: none filed yet)
 #   PASS  a place declaring another surface is REFUSED, not cross-filed
 #   PASS  every place profile declares a surface and an authority block
 #
@@ -42,7 +45,9 @@ if [ -z "$D" ] || [ ! -f "$D/record.json" ]; then
   sk "no meeting folder with a record.json was found — nothing to exercise"
 else
   out="$("$ROOT/bin/time/snotra/snotra-harvest.sh" status "$D" 2>&1)"; rc=$?
-  if [ $rc -eq 0 ] && printf '%s' "$out" | grep -q '^store{'; then ok "harvest status reads the bot store"; else no "harvest status: ${out##*$'\n'}"; fi
+  if [ $rc -eq 0 ] && printf '%s' "$out" | grep -q '^store{'; then ok "harvest status reads the bot store"
+  elif printf '%s' "$out" | grep -q 'join_key{none'; then sk "this record carries no Meet link — no bot recording can exist for it"
+  else no "harvest status: ${out##*$'\n'}"; fi
 
   if [ -f "$D/harvest.json" ]; then
     out="$("$ROOT/bin/time/snotra/snotra-harvest.sh" verify "$D" 2>&1)"; rc=$?
@@ -57,6 +62,20 @@ else
   else
     sk "no harvest.json here — the harvest has not been run for this meeting"
   fi
+
+  out="$("$ROOT/bin/time/snotra/snotra-layout.sh" check "$D" 2>&1)"; rc=$?
+  if [ $rc -eq 0 ]; then ok "layout: no strays in the meeting folder"
+  else no "layout: ${out##*$'\n'} (run snotra-layout.sh apply)"; fi
+
+  out="$("$ROOT/bin/time/snotra/snotra-promote.sh" check "$D" 2>&1)"; rc=$?
+  if [ $rc -eq 0 ] && printf '%s' "$out" | grep -q 'ok:true'; then ok "promote: the record validates before any promotion"
+  else no "promote check: ${out##*$'\n'}"; fi
+
+  out="$("$ROOT/bin/time/snotra/snotra-agenda.sh" verify "$D" 2>&1)"; rc=$?
+  if printf '%s' "$out" | grep -q 'no place profile'; then sk "no place profile — no agenda to check"
+  elif [ $rc -eq 0 ]; then ok "agenda: the dated card sits in the place's agenda list"
+  elif printf '%s' "$out" | grep -q 'agenda{missing:true}'; then sk "no agenda card filed for this meeting yet"
+  else no "agenda verify: ${out##*$'\n'}"; fi
 
   out="$("$ROOT/bin/time/snotra/snotra-project.sh" verify "$D" 2>&1)"; rc=$?
   if printf '%s' "$out" | grep -qE 'no Trello grant|not reachable|unreachable'; then sk "Trello not reachable from here"

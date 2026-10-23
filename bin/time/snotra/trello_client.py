@@ -172,6 +172,110 @@ def board_id_of(name: str) -> str:
     return info["idBoard"]
 
 
+def ensure_checklist(card_id: str, name: str, items: list[str]) -> str | None:
+    """A native checklist, reused by name — never a second one, never a deleted item.
+
+    Why a checklist and not a bullet list: Trello renders a checklist as real, tickable acceptance
+    criteria (and an advanced checklist can carry a person and a due date per item). A `- [ ]` line in a
+    description renders as text, which is why acceptance criteria written that way get ignored.
+    """
+    clean = [(" ".join(i.split())) for i in (items or []) if i and i.strip()]
+    if not clean:
+        return None
+    for cl in api("GET", f"/cards/{card_id}/checklists", {"fields": "name,id"}):
+        if (cl.get("name") or "").strip().lower() == name.strip().lower():
+            have = {(x.get("name") or "").strip().lower()
+                    for x in api("GET", f"/checklists/{cl['id']}/checkItems", {"fields": "name"})}
+            for item in clean:
+                if item.strip().lower() not in have:
+                    api("POST", f"/checklists/{cl['id']}/checkItems", {"name": item})
+            return cl["id"]
+    made = api("POST", "/checklists", {"idCard": card_id, "name": name})
+    for item in clean:
+        api("POST", f"/checklists/{made['id']}/checkItems", {"name": item})
+    return made["id"]
+
+
+def split_criteria(text: str) -> list[str]:
+    """A definition of done is often a sentence with clauses: split on ; and · so each is tickable —
+    but never split a single clause into noise."""
+    t = " ".join((text or "").split())
+    if not t:
+        return []
+    parts = [x.strip(" .") for x in __import__("re").split(r"\s*[;·]\s*", t) if x.strip(" .")]
+    return parts if len(parts) > 1 else [t]
+
+
+# ── people, and dates: a card names a person and falls due ─────────────────────────────────────
+def board_members(board_id: str) -> dict[str, dict]:
+    """{lowercased full name: member} for everyone already on the board."""
+    out = {}
+    for m in api("GET", f"/boards/{board_id}/members", {"fields": "id,fullName,username"}):
+        full = (m.get("fullName") or "").strip()
+        if full:
+            out[full.lower()] = m
+    return out
+
+
+def workspace_members(board_id: str) -> dict[str, dict]:
+    """The workspace's people — a person may be seated here and not yet on this board."""
+    orgs = api("GET", f"/boards/{board_id}/organization", {"fields": "id"})
+    if not orgs:
+        return {}
+    out = {}
+    for m in api("GET", f"/organizations/{orgs['id']}/members", {"fields": "id,fullName,username"}):
+        full = (m.get("fullName") or "").strip()
+        if full:
+            out[full.lower()] = m
+    return out
+
+
+def resolve_member(name: str, board_id: str, cache: dict | None = None) -> str | None:
+    """A person's member id on this board, or None — NEVER an invented person.
+
+    Matching: exact full name, then the last name, then an alias the caller supplies. A person found in
+    the workspace but not on the board is seated on the board (they already belong to the workspace);
+    a person found nowhere is reported as unmatched, and the card simply carries no member.
+    """
+    q = " ".join((name or "").split()).lower()
+    if not q:
+        return None
+    cache = cache if cache is not None else {}
+    key = (board_id, "board")
+    if key not in cache:
+        cache[key] = board_members(board_id)
+    on_board = cache[key]
+    if q in on_board:
+        return on_board[q]["id"]
+    last = q.split()[-1]
+    for full, m in on_board.items():
+        if full.endswith(" " + last) or full == last:
+            return m["id"]
+    key = (board_id, "ws")
+    if key not in cache:
+        cache[key] = workspace_members(board_id)
+    ws = cache[key]
+    cand = ws.get(q) or next((m for full, m in ws.items() if full.endswith(" " + last) or full == last), None)
+    if cand:
+        api("PUT", f"/boards/{board_id}/members/{cand['id']}")
+        on_board[q] = cand
+        return cand["id"]
+    return None
+
+
+def due_iso(value: str | None) -> str | None:
+    """Trello wants ISO 8601. A bare date becomes noon UTC of that day, so the card never shows as late
+    because of a timezone the record never stated."""
+    if not value:
+        return None
+    v = str(value).strip()
+    if not v or v.lower() in ("none", "null", "unresolved"):
+        return None
+    if len(v) == 10:
+        return f"{v}T12:00:00.000Z"
+    return v
+
+
 # ── the verbs ───────────────────────────────────────────────────────────────────────────────────
 def board_cards(board_id: str, fields: str = "name,desc,idList,labels") -> list[dict]:
     return api("GET", f"/boards/{board_id}/cards", {"fields": fields, "limit": 1000})
