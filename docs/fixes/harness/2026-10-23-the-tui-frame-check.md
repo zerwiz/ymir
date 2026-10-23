@@ -49,3 +49,21 @@ the operator which sessions must be restarted*, and that rule belongs in the har
 **The rule this earns:** *a mend to the interface is not delivered until the session that shows it has
 started again — and what the interface writes must be measured at a narrow width, with a real pty, before
 it is believed.*
+
+## Appended 2026-10-23 21:15 — the dead branch where a painting path hides
+
+Reading #412's own fix in `eindri.ts` showed the mend was half a mend:
+
+```ts
+const out = execFileSync(cmd, args, { encoding: "utf8",
+  stdio: quiet ? ["ignore", "pipe", "ignore"] : "inherit" });   // quiet = true by default
+```
+
+No caller ever passes `quiet`, so the `"inherit"` branch was **unreachable — and still a painting path**:
+one future call `run(cmd, args, false)` and the terminal is the child's again. Dead code is exactly where
+such a path hides, so the branch is gone rather than defaulted: `run(cmd, args)` always captures
+(`stdio: ["ignore", "pipe", "ignore"]`), and the comment says why in one sentence. This is Rule 17's case
+made concrete — the guard is the absence of the branch, not a default in front of it.
+
+Verified: `bun build .pi/extensions/eindri.ts` bundles clean; the only inherited stdio left in the harness
+is `open-editor.ts`, which stops the TUI before handing over the terminal.
