@@ -14,6 +14,7 @@
 #   PASS  promote: the record validates before any promotion is written
 #   PASS  agenda: the dated card sits in the place's agenda list (or SKIPs: none filed yet)
 #   PASS  a place declaring another surface is REFUSED, not cross-filed
+#   PASS  every trello place's board exists with the lists and labels it names
 #   PASS  every place profile declares a surface and an authority block
 #
 # Exit: 0 all pass or a clean skip · 1 any FAIL
@@ -29,9 +30,14 @@ fi
 
 D="${1-}"
 if [ -z "$D" ]; then
-  D="$(ls -dt "$HOME_R"/svartalfaheim/*/meetings/*/ 2>/dev/null | while read -r c; do
-        [ -f "$c/record.json" ] && { printf '%s' "$c"; break; }
-      done)"
+  # every meetings shelf the home keeps, through the one resolver; prefer the RICHEST meeting: a placed
+  # record WITH a harvest exercises harvest · verify · ladder · project · agenda; else the newest placed one.
+  pick(){ YMIR_HOME="$HOME_R" python3 "$ROOT/bin/time/snotra/snotra_paths.py" --recent 3650 2>/dev/null | while read -r c; do
+            eval "$1" && { printf '%s' "$c"; break; }
+          done; }
+  D="$(pick '[ -f "$c/harvest.json" ] && grep -q "\"place\": \"" "$c/record.json" 2>/dev/null')"
+  [ -n "$D" ] || D="$(pick 'grep -q "\"place\": \"" "$c/record.json" 2>/dev/null')"
+  [ -n "$D" ] || D="$(YMIR_HOME="$HOME_R" python3 "$ROOT/bin/time/snotra/snotra_paths.py" --recent 3650 2>/dev/null | head -1)"
 fi
 D="${D%/}"
 pass=0; skip=0; fail=0
@@ -98,6 +104,15 @@ JSON
 else
   sk "no wayof place profile to test the surface refusal"
 fi
+
+# every trello place's board must exist with the lists and labels it names
+while IFS= read -r pl; do
+  [ -n "$pl" ] || continue
+  if grep -q '^surface: gimle' "$pl"; then sk "a place declares gimle — no adapter yet, so it is refused"; continue; fi
+  out="$("$ROOT/bin/time/snotra/snotra-board.sh" check "$(python3 -c "
+import yaml,sys;print(yaml.safe_load(open('$pl')).get('place'))")" 2>&1)"; rc=$?
+  [ $rc -eq 0 ] && ok "board for place: ${out##*board\{}" | cut -c1-70 || no "board missing or incomplete: ${out##*$'\n'}"
+done < <(ls "$HOME_R"/hodd/identity/places/*/*/place.yaml 2>/dev/null)
 
 bad=0
 for p in "$HOME_R"/hodd/identity/places/*/*/place.yaml; do

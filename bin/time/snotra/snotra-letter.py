@@ -73,6 +73,33 @@ def place_of(rec: dict) -> dict:
     return load_yaml(p)
 
 
+
+def confirm_action(rec: dict) -> dict | None:
+    """The action in the record that asks for confirmation — returned whole, so the letter can quote it."""
+    for a in rec.get("actions") or []:
+        t = ((a.get("deliverable") or "") + " " + (a.get("definition_of_done") or "")).lower()
+        if "confirm" in t or "correct" in t:
+            return a
+    return None
+
+
+def record_note(rec: dict) -> tuple[str | None, str | None]:
+    """The record's own caveat about provisional state, verbatim, with its risk id — or nothing.
+
+    A letter may not state a consequence the record does not carry. On 2026-10-23 the letter said
+    "silence is recorded as provisional acceptance" — a policy nobody agreed to. The record's own words
+    were narrower: "grade and approver are provisional until confirmed" (RSK-20261022-02).
+    """
+    for r in rec.get("risks") or []:
+        text = (r.get("mitigation") or "").strip()
+        if not text:
+            continue
+        low = (text + " " + (r.get("risk") or "")).lower()
+        if any(k in low for k in ("provisional", "confirm", "approver")):
+            return text, r.get("risk_id")
+    return None, None
+
+
 def business_days_after(iso_date: str, n: int) -> str:
     d = datetime.strptime(iso_date[:10], "%Y-%m-%d")
     added = 0
@@ -95,7 +122,15 @@ def _facts(rec: dict, place: dict, person: dict) -> dict:
         "title": m.get("title") or "the meeting",
         "held": held,
         "when": str(m.get("started_at") or "").replace("T", " ")[:16],
-        "due": business_days_after(held, days),
+        # A letter's deadline must be the one the ROOM set. The 22 Oct record carries ACT-20261022-03
+        # "confirm or correct this record within two business days" — due 2026-10-24. Computing 26 Oct from
+        # the cadence produced a letter that contradicted its own record (seen by the Allfather, 2026-10-23).
+        "ask": confirm_action(rec),
+        "note": record_note(rec)[0],
+        "note_id": record_note(rec)[1],
+        "due": (str((confirm_action(rec) or {}).get("due_at") or "")[:10]
+                or business_days_after(held, days)),
+        "due_action": (confirm_action(rec) or {}).get("action_id"),
         "days": days,
         "chair": (roles.get("chair") or "").strip(),
         "sender": (roles.get("operator") or roles.get("chair") or "").strip(),
@@ -125,7 +160,7 @@ def letter_text(rec: dict, place: dict, person: dict) -> str:
         for w in words:
             if len(cur) + len(w) + 1 > W and cur.strip():
                 lines.append(cur.rstrip()); cur = " " * len(prefix)
-            cur += (" " if cur.strip() else "") + w
+            cur += ("" if cur.endswith((" ", '"')) or not cur.strip() else " ") + w
         if cur.strip():
             lines.append(cur.rstrip())
         return lines or [prefix.rstrip()]
@@ -165,11 +200,29 @@ def letter_text(rec: dict, place: dict, person: dict) -> str:
                 L.append(line)
         L.append("")
     L.append("* WHAT I NEED FROM YOU")
-    for line in wrap("  ", f"Confirm or correct this record by {f['due']} ({f['days']} business days). "
-                           "Every decision in it is proposed until you confirm it. A correction is added as a "
-                           "new entry, never by editing the old one. Silence is recorded as provisional "
-                           "acceptance, not agreement."):
-        L.append(line)
+    ask = f.get("ask") or {}
+    if ask:
+        owner = ask.get("owner") or "unowned"
+        for line in wrap("  ", f"The record carries this action — {ask.get('action_id')}, "
+                               f"owned by {owner}:"):
+            L.append(line)
+        for line in wrap("    ", f"\"{(ask.get('deliverable') or '').rstrip('.')}.\""):
+            L.append(line)
+        if ask.get("definition_of_done"):
+            for line in wrap("    Done when: ", ask["definition_of_done"].rstrip(".") + "."):
+                L.append(line)
+        if ask.get("due_at"):
+            L.append(f"    By: {str(ask['due_at'])[:10]}")
+        if f["name"].lower() != owner.lower() and ask.get("definition_of_done"):
+            L.append("")
+            for line in wrap("  ", f"Your part: {ask['definition_of_done'].rstrip('.')}."):
+                L.append(line)
+    else:
+        L.append("  The record carries no confirmation action — review the record and reply with corrections.")
+    if f.get("note"):
+        L.append("")
+        for line in wrap("  ", f"Note ({f.get('note_id') or 'the record'}): {f['note']}."):
+            L.append(line)
     L.append("")
     L.append("WHAT THIS RECORD COVERS")
     cov = f["cov"]
@@ -228,70 +281,224 @@ li{margin:0 0 7px;}
 """
 
 
+def company_name(cid: str) -> str:
+    """The company's display name from the registry; the id title-cased when it has none."""
+    try:
+        import yaml  # noqa: PLC0415
+        f = home() / "hodd" / "identity" / "companies.yaml"
+        if f.is_file():
+            for c in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("companies") or []:
+                if (c.get("id") or "").lower() == (cid or "").lower():
+                    return c.get("name") or cid.title()
+    except Exception:  # noqa: BLE001
+        pass
+    return (cid or "").replace("-", " ").title()
+
+
+def initials(name: str) -> str:
+    parts = [x for x in (name or "").split() if x]
+    return (parts[0][0] + parts[-1][0]).upper() if len(parts) > 1 else (parts[0][:2].upper() if parts else "—")
+
+
+def next_monday(held: str, at: str) -> str:
+    from datetime import date, datetime, timedelta
+    try:
+        d = datetime.strptime((held or "")[:10], "%Y-%m-%d").date()
+    except ValueError:
+        d = date.today()
+    d += timedelta(days=1)
+    while d.weekday() != 0:
+        d += timedelta(days=1)
+    return d.strftime("%Y-%m-%d")
+
+
+CHIP = {"A": ("background:#fbeaea;color:#d64545", "Critical"),
+        "B": ("background:#fdf3e2;color:#e08a00", "Important"),
+        "C": ("background:#f0f3f7;color:#6b7a8d", "Standard")}
+
+
 def letter_html(rec: dict, place: dict, person: dict) -> str:
+    """The letter as a designed page: every value from the record, no sentence the record cannot cite."""
     f = _facts(rec, place, person)
+    m = rec.get("meeting") or {}
     e = esc
+    company = company_name(m.get("company") or "")
+    people = ", ".join(p.get("name") or "" for p in (rec.get("participants") or []) if p.get("present") is not False)
+    decs = f["decisions"]
+    qs = f["questions"]
+    acts = rec.get("actions") or []
+    ask = f.get("ask") or {}
+    # actions grouped by owner, counted — the record's own owners, nothing inferred
+    owners: dict[str, int] = {}
+    for a in acts:
+        owners[(a.get("owner") or "unowned")] = owners.get((a.get("owner") or "unowned"), 0) + 1
+    attach_rows = []
+    for a in f["attachments"]:
+        ext = a.rsplit(".", 1)[-1].upper()
+        label = {"PDF": "Meeting Record", "MD": a.replace(".md", "").replace("-", " ").title(),
+                 "TXT": "Raw transcript"}.get(ext, a)
+        attach_rows.append((ext, label))
+    nm = next_monday(f["held"], (place.get("cadence") or {}).get("monday_at") or "09:00")
+
     parts: list[str] = []
-    parts.append(f"<h1>{e(f['title'])}</h1>")
-    parts.append(f"<p class='kicker'>{e(f['when'])} · the record, your actions, and one thing to confirm</p>")
-    parts.append(f"<p class='meta'>{len(f['decisions'])} decisions · {f['actions_total']} actions · "
-                 f"{len(f['questions'])} open questions"
-                 + (f" · chair: {e(f['chair'])}" if f['chair'] else "") + "</p>")
-    parts.append(f"<p>{e(f['name'])},</p>")
-    parts.append(f"<p>Here is the record of this meeting. It is the record itself, not a summary — "
-                 f"every line below traces to a numbered item in the attachments.</p>")
-    parts.append("<h2>Your actions</h2>")
-    if f["mine"]:
-        parts.append("<ul>" + "".join(
-            f"<li><strong>{e(a.get('deliverable'))}</strong> — due {e(str(a.get('due_at') or ('unresolved' if a.get('date_unresolved') else 'no date')))}."
-            f"<br><span class='muted'>Done when: {e(a.get('definition_of_done') or 'to be agreed')}</span></li>"
-            for a in f["mine"]) + "</ul>")
-    else:
-        parts.append("<p class='muted'>You own no action from this meeting.</p>")
-    parts.append("<h2>The decisions</h2>")
-    for grp in ("A", "B", "C"):
-        rows = [d for d in f["decisions"] if (d.get("grade") or "").upper() == grp]
-        if not rows:
-            continue
-        parts.append(f"<p class='grade'>Grade {grp}</p><ul>")
-        for d in rows:
-            mark = " <span class='muted'>(you decided)</span>" if (d.get("decided_by") or "").strip().lower() == f["name"].lower() else ""
-            parts.append(f"<li>{e(d.get('statement'))}{mark}</li>")
-        parts.append("</ul>")
-    if f["questions"]:
-        parts.append("<h2>Open questions</h2><ul>" + "".join(
-            f"<li>{e(q.get('question'))}</li>" for q in f["questions"]) + "</ul>")
-    parts.append("<h2>What I need from you</h2>")
-    parts.append(f"<div class='ask'><p><strong>Confirm or correct this record by {e(f['due'])}</strong> "
-                 f"({f['days']} business days). Every decision is <em>proposed</em> until you confirm it. "
-                 f"A correction is added as a new entry — nothing is edited after sending. Silence is "
-                 f"recorded as provisional acceptance, not as agreement.</p></div>")
-    parts.append("<h2>What this record covers</h2><div class='note'>")
-    parts.append(f"<p>{e(f['cov'].get('audio_source') or 'declared in the record')}.</p>")
-    if f["cov"].get("missing_before"):
-        parts.append(f"<p>Missing before: {e(f['cov']['missing_before'])}.</p>")
-    if f["cov"].get("diarisation"):
-        parts.append(f"<p>Speaker attribution: {e(f['cov']['diarisation'])}.</p>")
-    parts.append("</div>")
-    if f["attachments"]:
-        parts.append("<h2>Attached</h2><ul>" + "".join(f"<li>{e(a)}</li>" for a in f["attachments"]) + "</ul>")
-    if f["chair"]:
-        parts.append(f"<p class='sign'>— {e(f['sender'] or 'the house')}</p>")
-        parts.append(f"<p class='muted'>{e(f['chair'])} holds the register as chair.</p>")
-    body = "\n".join(parts)
-    foot = (f"Sent from the house system on the operator's approval. The record lives in the vault under "
-            f"{e((rec.get('meeting') or {}).get('meeting_id') or 'this meeting')}.")
+    A = parts.append
+    A(f'<tr><td style="background:#12263f;padding:30px 36px 26px;border-bottom:3px solid #2f6f8f;">'
+      f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
+      f'<td style="vertical-align:middle;">'
+      f'<div style="color:#9fb3c8;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">{e(company)}</div>'
+      f'<div style="color:#ffffff;font-size:24px;font-weight:600;margin-top:8px;line-height:1.2;letter-spacing:-0.2px;">{e(f["title"])}</div>'
+      f'<div style="color:#9fb3c8;font-size:13px;margin-top:8px;">{e(f["held"])} &nbsp;·&nbsp; {e(people)}</div>'
+      f'</td><td align="right" style="vertical-align:top;">'
+      f'<div style="display:inline-block;padding:6px 12px;background:rgba(47,111,143,.25);border:1px solid #2f6f8f;border-radius:20px;color:#cfe3ef;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;">Meeting Record</div>'
+      f'</td></tr></table></td></tr>')
+
+    A(f'<tr><td style="padding:32px 36px 4px;font-size:15px;line-height:1.65;">'
+      f'<p style="margin:0 0 14px;">Hi {e(f["name"].split()[0])},</p>'
+      f'<p style="margin:0 0 14px;">Here is the record of the <strong style="color:#12263f;">{e(f["title"])}</strong> '
+      f'call — what we decided and who does what next.</p></td></tr>')
+
+    A('<tr><td style="padding:22px 36px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+      'style="background:#f4f7fb;border-radius:10px;overflow:hidden;"><tr>')
+    for i, (n, label) in enumerate(((len(decs), "Decisions"), (len(qs), "Open Questions"), (len(acts), "Actions"))):
+        border = "border-right:1px solid #e5ebf1;" if i < 2 else ""
+        A(f'<td width="33.33%" style="padding:14px 18px;{border}text-align:center;">'
+          f'<div style="font-size:22px;font-weight:700;color:#12263f;line-height:1;">{n}</div>'
+          f'<div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#7b8794;margin-top:5px;font-weight:600;">{label}</div></td>')
+    A('</tr></table></td></tr>')
+
+    # ── decisions, grouped by grade, chips in the record's own grade ──
+    A('<tr><td style="padding:28px 36px 0;"><div style="border-top:1px solid #e5ebf1;padding-top:20px;">'
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
+      '<td style="vertical-align:middle;"><span style="font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;color:#52606d;font-weight:700;">The decisions</span></td>'
+      '<td align="right" style="vertical-align:middle;"><span style="font-size:11px;color:#9aa8b6;">Graded A · B · C by criticality</span></td>'
+      '</tr></table><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;font-size:14.5px;line-height:1.55;">')
+    A('<tr><td colspan="2" style="padding:0 0 12px;">' + "".join(
+        f'<span style="display:inline-block;margin-right:14px;font-size:11.5px;color:#7b8794;">'
+        f'<span style="display:inline-block;width:9px;height:9px;background:{c};border-radius:2px;vertical-align:middle;margin-right:5px;"></span>'
+        f'Grade {g} · {lab}</span>'
+        for g, (st, lab), c in (("A", CHIP["A"], "#d64545"), ("B", CHIP["B"], "#e08a00"), ("C", CHIP["C"], "#9aa8b6"))) + '</td></tr>')
+    ordered = sorted(decs, key=lambda d: {"A": 0, "B": 1, "C": 2}.get((d.get("grade") or "").upper(), 3))
+    for i, d in enumerate(ordered):
+        g = (d.get("grade") or "").upper()
+        style, _ = CHIP.get(g, CHIP["C"])
+        last = 'border-bottom:1px solid #f0f3f7;' if i == len(ordered) - 1 else ''
+        A(f'<tr><td width="44" style="padding:11px 0;border-top:1px solid #f0f3f7;{last}vertical-align:top;">'
+          f'<span style="display:inline-block;width:26px;text-align:center;padding:3px 0;{style};border-radius:4px;font-size:10.5px;font-weight:700;letter-spacing:.5px;">{g or "—"}</span></td>'
+          f'<td style="padding:11px 0 11px 4px;border-top:1px solid #f0f3f7;{last}color:#243b53;">{e(d.get("statement"))}</td></tr>')
+    A('</table><div style="margin-top:10px;font-size:12px;color:#9aa8b6;font-style:italic;">All decisions are pending '
+      'confirmation until the chair signs the record.</div></div></td></tr>')
+
+    # ── open questions ──
+    if qs:
+        A('<tr><td style="padding:26px 36px 0;"><div style="border-top:1px solid #e5ebf1;padding-top:20px;">'
+          '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
+          '<td><span style="font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;color:#52606d;font-weight:700;">Open questions</span></td>'
+          '<td align="right"><span style="font-size:11px;color:#9aa8b6;">Asked by</span></td></tr></table>'
+          '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;font-size:14.5px;line-height:1.5;">')
+        for i, q in enumerate(qs, 1):
+            if i > 1:
+                A('<tr><td height="8" style="line-height:8px;font-size:0;">&nbsp;</td></tr>')
+            who = q.get("asked_by") or ""
+            A('<tr><td style="padding:13px 14px;background:#f7f9fc;border:1px solid #e2e9f1;border-radius:8px;border-left:3px solid #2f6f8f;">'
+              '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
+              f'<td style="vertical-align:top;color:#9aa8b6;font-size:13px;font-weight:600;padding-right:10px;width:18px;">{i}.</td>'
+              f'<td style="vertical-align:top;color:#243b53;">{e(q.get("question"))}</td></tr>'
+              + (f'<tr><td colspan="2" style="padding-top:8px;"><span style="display:inline-block;font-size:11.5px;color:#52606d;font-weight:600;">{e(who)}</span></td></tr>' if who else "")
+              + '</table></td></tr>')
+        A('</table></div></td></tr>')
+
+    # ── who does what ──
+    if owners:
+        A('<tr><td style="padding:26px 36px 0;"><div style="border-top:1px solid #e5ebf1;padding-top:20px;">'
+          '<div style="font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;color:#52606d;font-weight:700;margin-bottom:12px;">Who does what</div>'
+          '<div style="background:#f7f9fc;border:1px solid #e2e9f1;border-radius:10px;padding:18px 20px;">'
+          '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;">'
+          '<tr><td style="padding:10px 0;border-bottom:1px solid #edf1f5;color:#9aa8b6;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">Assignee</td>'
+          '<td align="right" style="padding:10px 0;border-bottom:1px solid #edf1f5;color:#9aa8b6;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">Open actions</td></tr>')
+        for who, n in sorted(owners.items(), key=lambda kv: -kv[1]):
+            A('<tr><td style="padding:13px 0;border-bottom:1px solid #edf1f5;">'
+              '<table role="presentation" cellpadding="0" cellspacing="0"><tr>'
+              f'<td style="vertical-align:middle;"><div style="width:32px;height:32px;border-radius:50%;background:#2f6f8f;color:#ffffff;text-align:center;line-height:32px;font-size:13px;font-weight:600;">{e(initials(who))}</div></td>'
+              f'<td style="vertical-align:middle;padding-left:12px;color:#243b53;font-weight:500;">{e(who)}</td>'
+              '</tr></table></td>'
+              f'<td align="right" style="padding:13px 0;border-bottom:1px solid #edf1f5;vertical-align:middle;">'
+              f'<span style="display:inline-block;background:#2f6f8f;color:#ffffff;font-size:13px;font-weight:700;padding:5px 14px;border-radius:14px;">{n}</span></td></tr>')
+        A('<tr><td colspan="2" style="padding:13px 0 0;font-size:12px;color:#9aa8b6;line-height:1.5;">'
+          'Action details are in the attached action register.</td></tr></table></div></div></td></tr>')
+
+    # ── attachments, the ones this letter actually carries ──
+    if attach_rows:
+        A('<tr><td style="padding:26px 36px 0;"><div style="border-top:1px solid #e5ebf1;padding-top:20px;">'
+          '<div style="font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;color:#52606d;font-weight:700;margin-bottom:12px;">Attached</div>'
+          '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>')
+        for i, (ext, label) in enumerate(attach_rows):
+            if i and i % 2 == 0:
+                A('</tr><tr>')
+            A(f'<td style="padding:0 0 10px;width:50%;vertical-align:top;">'
+              f'<div style="display:inline-block;margin:0 6px 8px 0;padding:9px 13px;background:#f2f6fa;border:1px solid #dbe4ec;border-radius:8px;font-size:12.5px;color:#243b53;">'
+              f'<span style="color:#2f6f8f;font-weight:700;margin-right:6px;">{e(ext)}</span>{e(label)}</div></td>')
+        A('</tr></table></div></td></tr>')
+
+    # ── the ask, quoted from the record ──
+    A('<tr><td style="padding:26px 36px 0;">'
+      '<div style="border-left:3px solid #2f6f8f;background:#f7fafc;padding:18px 20px;border-radius:0 8px 8px 0;">'
+      '<div style="color:#12263f;font-size:15px;font-weight:700;">What I need from you</div>'
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;font-size:14.5px;line-height:1.55;">')
+    if ask:
+        owner = ask.get("owner") or "unowned"
+        A(f'<tr><td style="vertical-align:top;color:#243b53;padding-bottom:8px;">'
+          f'<em>&ldquo;{e((ask.get("deliverable") or "").rstrip("."))}&rdquo;</em> '
+          f'<span style="color:#7b8794;font-size:12.5px;">— {e(ask.get("action_id") or "")}, owned by {e(owner)}</span>'
+          + (f'<br><span style="color:#7b8794;font-size:12.5px;">Done when: {e(ask.get("definition_of_done"))} · By: {e(str(ask.get("due_at"))[:10])}</span>' if ask.get("definition_of_done") or ask.get("due_at") else "")
+          + '</td></tr>')
+    if f.get("note"):
+        A(f'<tr><td style="vertical-align:top;color:#5b6b7c;font-size:13px;">'
+          f'{e(f.get("note_id") or "Note")}: {e(f["note"])}.</td></tr>')
+    A('</table></div></td></tr>')
+
+    # ── how to answer (the letter's own instruction, not a claim about the meeting) ──
+    A('<tr><td style="padding:18px 36px 0;"><div style="background:#f7fafc;border:1px solid #e2e9f1;border-radius:10px;padding:16px 18px;">'
+      '<div style="color:#12263f;font-size:14.5px;font-weight:700;">How to answer</div>'
+      '<div style="color:#5b6b7c;font-size:13px;margin-top:6px;line-height:1.55;">'
+      'Reply <strong style="background:#eef4ed;color:#2d7a46;padding:1px 7px;border-radius:4px;">confirm</strong> to sign the record, '
+      'or <strong style="background:#fdeeee;color:#c0392b;padding:1px 7px;border-radius:4px;">objection: &lt;what is wrong&gt;</strong> to correct it. '
+      f'Name the decision id (e.g. <span style="color:#243b53;">{e((decs[0] or {}).get("decision_id") or "DEC-…")}</span>) when you answer one decision — '
+      'a reply that names no id counts as the whole record, not as fourteen signatures.</div></div></td></tr>')
+
+    # ── next meeting (proposed) ──
+    A('<tr><td style="padding:18px 36px 0;"><div style="background:#f7fafc;border:1px solid #e2e9f1;border-radius:10px;padding:16px 18px;">'
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
+      '<td style="vertical-align:top;width:60px;padding-right:14px;">'
+      f'<div style="background:#ffffff;border:1px solid #e2e9f1;border-radius:8px;padding:8px 0;text-align:center;">'
+      f'<div style="font-size:20px;font-weight:700;color:#12263f;line-height:1.1;">{e(nm[8:10])}</div>'
+      f'<div style="font-size:10px;color:#9aa8b6;">{e(nm[:7])}</div></div></td>'
+      '<td style="vertical-align:middle;"><div style="color:#12263f;font-size:14.5px;font-weight:700;">Next meeting — proposed</div>'
+      f'<div style="color:#5b6b7c;font-size:13px;margin-top:3px;line-height:1.45;">{e(nm)} at {e((place.get("cadence") or {}).get("monday_at") or "09:00")} — the weekly review: what was planned, what is done, what is blocked.</div>'
+      '<div style="margin-top:8px;font-size:13px;color:#243b53;line-height:1.5;">The agenda card is on the board; the first item is the register above.</div>'
+      '</td></tr></table></div></td></tr>')
+
+    # ── sign-off ──
+    A('<tr><td style="padding:26px 36px 30px;font-size:14.5px;line-height:1.65;">'
+      '<p style="margin:0 0 14px;">A short reply is enough. If the format is wrong, say so plainly.</p>'
+      f'<p style="margin:18px 0 2px;">Best,<br>{e((f["sender"] or "the house").split()[0])}</p>'
+      '<div style="margin-top:22px;padding-top:16px;border-top:1px solid #e5ebf1;color:#52606d;font-size:13px;line-height:1.55;">'
+      f'<strong style="color:#12263f;">{e(f["sender"] or "")}</strong><br>{e(company)} &nbsp;·&nbsp; <a href="mailto:{e(person.get("email") or "")}" style="color:#2f6f8f;text-decoration:none;">{e(person.get("email") or "")}</a></div>'
+      '<div style="margin-top:10px;color:#9aa8b6;font-size:11.5px;line-height:1.5;">'
+      'Sent from the house system on the operator\'s approval. '
+      f"The record lives in the vault under {e((m.get('meeting_id') or ''))}; nothing here is edited after "
+      'sending — a correction is appended.</div></td></tr>')
+
     return f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light">
-<title>{e(subject_for(rec, place, person))}</title>
-<style>{CSS}</style></head>
-<body><table role="presentation" class="wrap" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
-<table role="presentation" class="card" width="600" cellpadding="0" cellspacing="0" border="0">
-<tr><td class="pad">{body}</td></tr>
-<tr><td class="foot">{foot}</td></tr>
-</table></td></tr></table></body></html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{e(subject_for(rec, place, person))}</title></head>
+<body style="margin:0;padding:0;background:#eef2f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#243b53;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f6;padding:32px 12px;"><tr><td align="center">
+<table role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(18,38,63,.08);">
+{''.join(parts)}
+</table>
+<div style="max-width:640px;margin:14px auto 0;color:#9aa8b6;font-size:11px;text-align:center;line-height:1.5;">
+You received this record because you attended the meeting. Reply to confirm or to raise an objection.</div>
+</td></tr></table></body></html>
 """
 
 
@@ -386,8 +593,20 @@ def send(d: Path) -> int:
     state = json.loads(statep.read_text(encoding="utf-8"))
     mail = ROOT / "bin" / "time" / "snotra" / "mail-send.sh"
     approve = ROOT / "bin" / "time" / "snotra" / "snotra-approve.sh"
+    # a TEST must be possible: `--person "<name>"` or `--to <email>` sends exactly one letter, so a trial
+    # can never become a broadcast by accident.
+    only_name = only_to = None
+    for i, a in enumerate(sys.argv):
+        if a == "--person" and i + 1 < len(sys.argv):
+            only_name = sys.argv[i + 1].strip().lower()
+        if a == "--to" and i + 1 < len(sys.argv):
+            only_to = sys.argv[i + 1].strip().lower()
     sent = 0
     for p in state.get("people", []):
+        if only_name and (p.get("name") or "").strip().lower() != only_name:
+            continue
+        if only_to and (p.get("email") or "").strip().lower() != only_to:
+            continue
         if p.get("sent"):
             continue
         chk = subprocess.run(["bash", str(approve), "check", p["draftId"]], capture_output=True, text=True)
@@ -395,6 +614,9 @@ def send(d: Path) -> int:
             say(f"held{{person:{p['name']},why:'no valid approval for draft {p['draftId']}'}}")
             continue
         res = subprocess.run(["bash", str(mail), "send", p["draftId"]], capture_output=True, text=True)
+        if res.returncode != 0:
+            say(f"failed{{person:{p['name']},why:{(res.stderr or res.stdout or '').strip()[:120]!r}}}")
+            continue
         p["sent"] = {"at": datetime.now().astimezone().isoformat(timespec="seconds"),
                      "out": (res.stdout or "").strip()[:200]}
         sent += 1

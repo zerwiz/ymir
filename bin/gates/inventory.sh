@@ -141,8 +141,12 @@ def analyse(path: Path, shelf: str):
     called_by = []
     # RECURSIVE: bin/ now has SYSTEM FOLDERS, and a root-only scan indexes 148 of 398 doors and
     # calls it current — the same blindness that hid four doors in the first move.
+    # The index is its OWN input if it is read here: every door's name appears in `README.md`, so each
+    # generation added one to every `called-by` count and `--check` could NEVER pass (measured
+    # 2026-10-23: two consecutive runs differed in 48 lines — `2 → 3`, `3 → 4`). A generator that reads
+    # its own output is not a generator, it is a feedback loop. Skip every index file by name.
     for other in BIN_TRACKED:
-        if other == path:
+        if other == path or other.name in ("README.md", "CAPABILITIES.md"):
             continue
         if name in read(other, 200000): called_by.append(other.name)
     outside = name in CORPUS

@@ -5,6 +5,10 @@ audio** is harvested out of the bot's store, the record is **projected onto the 
 meeting belongs to, a **letter per participant** carries their own tasks, and the sound is **shrunk after
 its words are safe**.
 
+**The full reference is the Snotra shelf: [`docs/snotra/`](../snotra/README.md)** — the pipeline, every door,
+the place contract, the record schema, the letters and the sound. This page is the how-to; that shelf is the
+specification.
+
 **Why it exists.** On 2026-10-23 the house discovered three faults at once: the meeting folder held the
 *laptop microphone* (never the meeting), the bot's own recording sat 155 MB away in a store no door
 reached, and 8 191 transcription calls had returned `ok: true` with **no words** — so the folder had no

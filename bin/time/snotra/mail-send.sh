@@ -6,6 +6,7 @@
 #
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
 #       [--html FILE] [--attach FILE ...] [--record ID] [--dry-run]
+#   mail-send.sh raw    <draft-id>     # the exact bytes, for an approval hash
 #   mail-send.sh send <draft-id>
 #   mail-send.sh discard <draft-id>
 #   mail-send.sh status
@@ -117,10 +118,28 @@ discard(){
 '*}"
   case "$code" in 200|204) printf 'discarded\t%s\n' "$id" ;; 404) printf 'gone\t%s\n' "$id" ;; *) die "discard failed (HTTP $code): $body" ;; esac
 }
+raw(){
+  # the draft's exact RFC822 bytes, base64url-decoded — what snotra-approve.sh hashes. Without this an
+  # approval cannot be bound to content, and "approved" would only mean "was looked at once".
+  # The body is passed through a FILE, not argv: a draft with attachments is tens of megabytes and
+  # "argument list too long" is a failure a mail door must not have.
+  local id="${1-}"; [ -n "$id" ] || die "raw needs a draft id"
+  local out code body tmp; out="$(gmail GET "/users/me/drafts/$id?format=raw")"; code="${out##*$'\n'}"; body="${out%$'\n'*}"
+  [ "$code" = 200 ] || die "raw failed (HTTP $code)"
+  tmp="$(mktemp)"; printf '%s' "$body" >"$tmp"
+  python3 - "$tmp" <<'PYRAW'
+import base64, json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+raw = (d.get("message") or {}).get("raw") or d.get("raw") or ""
+sys.stdout.write(base64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4)).decode("utf-8", "replace"))
+PYRAW
+  local rc=$?; rm -f "$tmp"; return $rc
+}
 status(){ local out code; out="$(gmail GET "/users/me/profile")"; code="${out##*$'\n'}"; [ "$code" = 200 ] && printf 'gmail\tready\n' || die "gmail not ready (HTTP $code)"; }
 case "$ACTION" in
   draft) draft "$@" ;;
   send) send "$@" ;;
+  raw) raw "$@" ;;
   discard) discard "$@" ;;
   status) status ;;
   *) printf 'usage: mail-send.sh draft|send|status\n' >&2; exit 2 ;;

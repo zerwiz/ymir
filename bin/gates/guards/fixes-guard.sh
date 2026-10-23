@@ -119,7 +119,7 @@ touched="$(git diff --name-only "$range" 2>/dev/null | grep -v '^docs/fixes/' | 
 if [ -z "$notes" ]; then
   printf 'fixes-guard[1]{gate,result}:\n  "push","refused — no fix note in this range"\n' >&2
   printf 'help: bin/gates/fixes.sh record --component=<%s> --version=<v> --title="what changed"\n' \
-    "install|runtime|skills|agents|hlidskjalf|odrerir|sessrumnir|smidja|hoard|gate" >&2
+    "install|runtime|snotra|skills|agents|hlidskjalf|odrerir|sessrumnir|smidja|hoard|gate" >&2
   printf 'note: a note is a file under docs/fixes/<component>/ — write one, commit it, push again.\n' >&2
   exit 1
 fi
@@ -135,6 +135,7 @@ fi
 # rather than clever: a path that names no component is mapped by WHAT IT IS.
 path_component() {  # <path> -> the component it belongs to, or empty
   case "$1" in
+    bin/time/snotra/*) echo snotra ;;
     src/ymir_runtime/*|bin/mimir*|bin/records/mimir.sh|bin/seat/verify-seat.sh|bin/time/saga-wake-drain.sh) echo runtime ;;
     tools/mcp-gateway/*|bin/bridge/mcp-gateway.sh|bin/records/journal-*.sh) echo runtime ;;
     bin/bridge/a2a-mcp.sh|bin/bridge/ratatoskr.sh) echo runtime ;;

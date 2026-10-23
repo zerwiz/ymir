@@ -11,571 +11,604 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[563]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",17,-
-  "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",6,168
-  "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",3,104
-  "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","wired","keep",2,9
-  "a2a-talk.sh","a2a-talk.sh — list A2A agents and talk to one (bidirectional reply).","tool","wired","keep",1,69
-  "a2abridge-ensure.sh","a2abridge-ensure.sh — ensure the A2A mesh engine (a2abridge) is present,","tool","wired","keep",4,122
+bin[596]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",19,-
+  "README.md","Gróa — the updater, one per install","data","tested","keep",19,-
+  "README.md","Gná — the one mail desk (production)","data","tested","keep",19,-
+  "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",5,168
+  "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",2,104
+  "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","wired","keep",1,9
+  "a2a-talk.sh","a2a-talk.sh — list A2A agents and talk to one (bidirectional reply).","tool","wired","keep",0,69
+  "a2abridge-ensure.sh","a2abridge-ensure.sh — ensure the A2A mesh engine (a2abridge) is present,","tool","wired","keep",3,122
   "adapter-test.sh","adapter-test.sh — the Telegram layer's own suite: tiers, the addressee rule, bans, typing, limits.","tool","wired","keep",1,97
-  "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,44
-  "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",13,310
-  "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",1,119
-  "app-build.sh","app-build — build the in-tree apps (plan 35).","tool","wired","keep",3,57
-  "app-folder-guard.sh","app-folder-guard.sh — Rule 23: no code in an application's folder, and no","tool","tested","keep",1,127
-  "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",1,136
-  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",17,99
-  "approve-fact.sh","approve-fact.sh — promote a pending fact into the approved digest.","tool","wired","keep",2,25
-  "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",4,61
-  "ask.sh","ask.sh — the door to Skírnir, the Allfather's assistant.","tool","tested","keep",8,12
-  "asks.sh","asks.sh — the ledger of questions Skírnir could not answer, and the road that closes the loop.","tool","wired","keep",4,184
-  "audio-retention.sh","audio-retention.sh — Rule 30 in one command: turn the sound into text, then let the sound go.","tool","wired","keep",2,197
-  "audio-tighten.py","'''audio-tighten.py — close the short gaps a voice inserts INSIDE its words.","tool","wired","keep",3,96
-  "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",4,259
-  "backup.sh","backup.sh — his ledger must survive this disk.","tool","wired","keep",2,64
-  "ban.sh","ban.sh — refuse a chat outright, and write down why.","tool","wired","keep",1,41
-  "bifrost-bridge.sh","bifrost-bridge.sh — raise/lower the model bridge (Bifrost: the bridge between","tool","wired","keep",7,142
-  "bifrost-ingress.sh","bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdall · Gjallarhorn).","tool","wired","keep",1,79
-  "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",1,82
-  "bootstrap-macos.sh","bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs.","tool","wired","keep",1,116
-  "bootstrap-windows.ps1","bootstrap-windows.ps1 — give a Windows operator the Ubuntu host Ymir needs.","data","wired","keep",1,113
-  "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",2,232
-  "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
-  "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",2,78
-  "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",48,74
-  "brokk-classify-lib.sh","Shared wake classifier: the common source of truth for Allfather-relevant status","lib","wired","keep",2,1771
-  "brokk-lease-lib.sh","brokk-lease-lib.sh - the per-task supervision lease contract (one owner).","lib","wired","keep",2,223
-  "brokk-lease.sh","brokk-lease.sh - claim, release, inspect, and sweep per-task supervision leases.","tool","wired","keep",3,194
-  "brokk-lint.sh","brokk-lint.sh — the Brokk lint gate.","tool","wired","keep",1,67
-  "brokk-send.sh","brokk-send.sh — send a one-line steer to a running Brokk/Eindri-home.","tool","wired","migrate → src/ymir_runtime/send.py",3,68
-  "brokk-timeout-lib.sh","brokk-timeout-lib.sh - the single owner of bounded command execution.","lib","wired","keep",2,145
-  "brokk-update.sh","brokk-update.sh — back-compat alias.","tool","wired","keep",3,10
-  "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,128
-  "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","tested","keep",6,1883
-  "browser-watch.sh","browser-watch.sh — record when a browser leaves, so a disappearance is evidence.","tool","wired","keep",1,71
-  "calendar-ask.sh","calendar-ask.sh — the shell door onto Mánagandr, the read calendar.","tool","tested","keep",3,132
-  "calendar-attendees.sh","calendar-attendees.sh — the participants of ONE meeting, read live from the calendar.","tool","wired","keep",2,64
-  "calendar-auth.sh","calendar-auth.sh — re-grant Mánagandr's read-only calendar and store the token.","tool","wired","keep",1,88
-  "calendar-invite.sh","calendar-invite.sh — create or cancel the next meeting in Google Calendar.","tool","wired","keep",2,93
-  "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",1,81
-  "canaries.txt","canaries.txt — strings that must NEVER appear in anything Skírnir says.","data","wired","keep",2,19
-  "capabilities.md","What Ymir can do — the capability register","data","wired","keep",3,28
-  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",6,234
-  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",2,76
-  "collaborators.sh","collaborators.sh — the people we work with: clients, collaborators, advisers, partners.","tool","wired","keep",2,245
-  "common.py","'''common.py — the one resolver for Garmr's settings and paths (Rule 07).","tool","wired","keep",2,162
-  "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",3,63
-  "confidential.sh","confidential.sh — a session where vault work has no route off the vault (Rule 16).","tool","tested","keep",2,156
-  "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",2,122
-  "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",1,182
-  "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","wired","keep",1,175
-  "cron-guard.sh","cron-guard.sh — the shipped tree must satisfy its own schedule.","tool","wired","keep",1,70
-  "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",2,104
-  "dead-code-guard.sh","dead-code-guard.sh — code that exists and is never reached is a claim that a feature exists.","tool","wired","keep",1,256
-  "defaults-guard.sh","defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE.","data","tested","keep",2,171
-  "design-check.sh","design-check.sh — one identity, two renderers: they must agree.","tool","wired","keep",1,93
-  "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",3,299
-  "desk.py","'''desk.py — Gimlé's desk: the page behind the door.","tool","wired","keep",1,188
+  "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",1,44
+  "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",12,310
+  "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",0,119
+  "app-build.sh","app-build — build the in-tree apps (plan 35).","tool","wired","keep",2,57
+  "app-folder-guard.sh","app-folder-guard.sh — Rule 23: no code in an application's folder, and no","tool","tested","keep",0,127
+  "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",0,136
+  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",16,99
+  "approve-fact.sh","approve-fact.sh — promote a pending fact into the approved digest.","tool","wired","keep",1,25
+  "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",6,61
+  "ask.sh","ask.sh — the door to Skírnir, the Allfather's assistant.","tool","tested","keep",7,12
+  "asks.sh","asks.sh — the ledger of questions Skírnir could not answer, and the road that closes the loop.","tool","wired","keep",3,184
+  "audio-retention.sh","audio-retention.sh — Rule 30 in one command: turn the sound into text, then let the sound go.","tool","wired","keep",1,188
+  "audio-tighten.py","'''audio-tighten.py — close the short gaps a voice inserts INSIDE its words.","tool","wired","keep",2,96
+  "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,259
+  "backup.sh","backup.sh — his ledger must survive this disk.","tool","wired","keep",1,64
+  "ban.sh","ban.sh — refuse a chat outright, and write down why.","tool","wired","keep",0,41
+  "bifrost-bridge.sh","bifrost-bridge.sh — raise/lower the model bridge (Bifrost: the bridge between","tool","wired","keep",6,142
+  "bifrost-ingress.sh","bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdall · Gjallarhorn).","tool","wired","keep",0,79
+  "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",0,82
+  "bootstrap-macos.sh","bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs.","tool","wired","keep",0,116
+  "bootstrap-windows.ps1","bootstrap-windows.ps1 — give a Windows operator the Ubuntu host Ymir needs.","data","wired","keep",0,113
+  "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,232
+  "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",1,82
+  "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",1,78
+  "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",50,74
+  "brokk-classify-lib.sh","Shared wake classifier: the common source of truth for Allfather-relevant status","lib","wired","keep",1,1771
+  "brokk-lease-lib.sh","brokk-lease-lib.sh - the per-task supervision lease contract (one owner).","lib","wired","keep",1,223
+  "brokk-lease.sh","brokk-lease.sh - claim, release, inspect, and sweep per-task supervision leases.","tool","wired","keep",2,194
+  "brokk-lint.sh","brokk-lint.sh — the Brokk lint gate.","tool","wired","keep",0,67
+  "brokk-send.sh","brokk-send.sh — send a one-line steer to a running Brokk/Eindri-home.","tool","wired","migrate → src/ymir_runtime/send.py",2,68
+  "brokk-timeout-lib.sh","brokk-timeout-lib.sh - the single owner of bounded command execution.","lib","wired","keep",1,145
+  "brokk-update.sh","brokk-update.sh — back-compat alias.","tool","wired","keep",2,10
+  "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",0,128
+  "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","tested","keep",5,1883
+  "browser-watch.sh","browser-watch.sh — record when a browser leaves, so a disappearance is evidence.","tool","wired","keep",0,71
+  "calendar-ask.sh","calendar-ask.sh — the shell door onto Mánagandr, the read calendar.","tool","tested","keep",2,132
+  "calendar-attendees.sh","calendar-attendees.sh — the participants of ONE meeting, read live from the calendar.","tool","wired","keep",1,64
+  "calendar-auth.sh","calendar-auth.sh — re-grant Mánagandr's read-only calendar and store the token.","tool","wired","keep",0,88
+  "calendar-invite.sh","calendar-invite.sh — create or cancel the next meeting in Google Calendar.","tool","wired","keep",1,93
+  "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
+  "canaries.txt","canaries.txt — strings that must NEVER appear in anything Skírnir says.","data","wired","keep",1,19
+  "capabilities.md","What Ymir can do — the capability register","data","wired","keep",2,28
+  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",5,234
+  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",1,76
+  "collaborators.sh","collaborators.sh — the people we work with: clients, collaborators, advisers, partners.","tool","wired","keep",1,245
+  "common.py","'''common.py — the one resolver for Garmr's settings and paths (Rule 07).","tool","wired","keep",1,162
+  "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",2,63
+  "confidential.sh","confidential.sh — a session where vault work has no route off the vault (Rule 16).","tool","tested","keep",1,156
+  "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",1,122
+  "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",0,182
+  "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","wired","keep",0,175
+  "cron-guard.sh","cron-guard.sh — the shipped tree must satisfy its own schedule.","tool","wired","keep",0,70
+  "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",1,104
+  "dead-code-guard.sh","dead-code-guard.sh — code that exists and is never reached is a claim that a feature exists.","tool","wired","keep",0,256
+  "defaults-guard.sh","defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE.","data","tested","keep",1,171
+  "design-check.sh","design-check.sh — one identity, two renderers: they must agree.","tool","wired","keep",0,93
+  "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",2,299
+  "desk.py","'''desk.py — Gimlé's desk: the page behind the door.","tool","wired","keep",2,188
   "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",8,320
-  "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",2,172
-  "dispatch-profile.sh","dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE, and","tool","tested","keep",3,277
-  "display-lib.sh","display-lib.sh — the ONE place that knows the displays, and how to talk to the","lib","wired","keep",3,176
-  "doc-sweep.sh","doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's documents, inside","tool","tested","keep",1,589
-  "docs-claims-guard.sh","docs-claims-guard.sh — Rule 27: a user-facing document may not name a road that is closed.","tool","wired","keep",1,40
-  "docs-guard.sh","docs-guard.sh — docs/ is the PUBLIC, user-facing tree.","tool","wired","keep",2,55
-  "ear.sh","ear.sh — a voice note in, the words out.","tool","wired","keep",4,49
-  "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",4,223
-  "eindri-acclaim-silent.sh","eindri-acclaim-silent.sh — action half of the Eindri silence bridge.","tool","wired","keep",2,57
-  "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",7,160
-  "eindri-arm.sh","eindri-arm.sh — the Eindri's own arm (plan 42, the automation law).","tool","wired","keep",2,128
-  "eindri-control.sh","eindri-control.sh — the CONTROL plane: allowlisted lifecycle verbs for a","tool","wired","keep",2,29
-  "eindri-dispatch.sh","eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42","tool","wired","keep",2,461
-  "eindri-handoff.sh","eindri-handoff.sh — the handoff failsafe.","tool","wired","keep",5,114
-  "eindri-heartbeat.sh","eindri-heartbeat.sh — condition half of the Eindri silence bridge.","tool","wired","keep",4,99
-  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",2,274
-  "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",3,117
-  "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",1,108
-  "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",1,85
-  "eindri-seen.sh","eindri-seen.sh — condition half of the Eindri→Brokk wake bridge.","tool","wired","keep",3,57
-  "eindri-send.sh","eindri-send.sh — the DATA plane: send conversational text to a seated Eindri.","tool","wired","keep",6,16
-  "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",2,130
-  "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",4,48
-  "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
-  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","wired","keep",11,999
+  "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",2,199
+  "dispatch-profile.sh","dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE, and","tool","tested","keep",2,277
+  "display-lib.sh","display-lib.sh — the ONE place that knows the displays, and how to talk to the","lib","wired","keep",2,176
+  "doc-sweep.sh","doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's documents, inside","tool","tested","keep",0,589
+  "docs-claims-guard.sh","docs-claims-guard.sh — Rule 27: a user-facing document may not name a road that is closed.","tool","wired","keep",0,40
+  "docs-guard.sh","docs-guard.sh — docs/ is the PUBLIC, user-facing tree.","tool","wired","keep",1,55
+  "ear.sh","ear.sh — a voice note in, the words out.","tool","wired","keep",3,49
+  "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
+  "eindri-acclaim-silent.sh","eindri-acclaim-silent.sh — action half of the Eindri silence bridge.","tool","wired","keep",1,57
+  "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",6,160
+  "eindri-arm.sh","eindri-arm.sh — the Eindri's own arm (plan 42, the automation law).","tool","wired","keep",1,128
+  "eindri-control.sh","eindri-control.sh — the CONTROL plane: allowlisted lifecycle verbs for a","tool","wired","keep",1,29
+  "eindri-dispatch.sh","eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42","tool","wired","keep",1,461
+  "eindri-handoff.sh","eindri-handoff.sh — the handoff failsafe.","tool","wired","keep",4,114
+  "eindri-heartbeat.sh","eindri-heartbeat.sh — condition half of the Eindri silence bridge.","tool","wired","keep",3,99
+  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",1,274
+  "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",2,117
+  "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",0,108
+  "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",0,85
+  "eindri-seen.sh","eindri-seen.sh — condition half of the Eindri→Brokk wake bridge.","tool","wired","keep",2,57
+  "eindri-send.sh","eindri-send.sh — the DATA plane: send conversational text to a seated Eindri.","tool","wired","keep",5,16
+  "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",1,130
+  "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",3,48
+  "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",5,131
+  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","wired","keep",10,999
   "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",6,456
-  "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",8,212
-  "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","wired","keep",5,374
-  "escalate.py","'''escalate.py — the severity ladder (plan 98 §'the severity ladder').","tool","tested","keep",2,210
-  "escalate.sh","escalate.sh — when Skírnir wonders, he asks the Allfather where the Allfather actually is.","tool","wired","keep",4,106
-  "escalation-timer.sh","escalation-timer.sh — the fifth part of a stop rule: what happens if nobody answers.","tool","wired","keep",1,78
-  "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",3,18
-  "extension-api-check.sh","extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool API.","tool","wired","keep",2,113
-  "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",1,88
-  "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",1,58
-  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",4,185
-  "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",2,159
-  "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",2,83
-  "fleet-deploy.sh","fleet-deploy.sh — refresh the machine's fleet services from THIS package.","tool","wired","keep",1,98
-  "fleet-ensure.sh","fleet-ensure.sh — the role-gated RAISE (plan 42's fleet services, plan 51's","tool","wired","keep",9,527
-  "fleet-version.sh","fleet-version.sh — is the fleet on ONE version?","tool","tested","keep",1,72
-  "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",5,655
-  "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",3,242
-  "fm-afk-start.sh","Enter away mode and run the sub-supervisor daemon in a harness-tracked","provenance","tested","keep",3,173
-  "fm-arm-pretool-check.sh","Stable PreToolUse transport for the watcher-arm command policy.","provenance","tested","keep",3,201
-  "fm-backend-hometag-lib.sh","bin/backend/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation","provenance","wired","keep",2,53
-  "fm-backend.sh","fm-backend.sh - runtime-backend selection, meta helpers, selector resolution,","provenance","tested","migrate → src/ymir_runtime/backend.py",24,982
-  "fm-backlog-handoff.sh","Hand already-identified, in-scope backlog items off from the main firstmate","provenance","tested","keep",3,910
-  "fm-backlog-receive.sh","Receive one delivered remote-secondmate outbox into this home's backlog.","provenance","tested","keep",3,188
-  "fm-backlog-transition-lib.sh","shellcheck shell=bash","provenance","tested","keep",7,780
-  "fm-bearings-board.sh","fm-bearings-board.sh - build and arm the /bearings lavish fleet board.","provenance","tested","keep",1,205
-  "fm-bearings-snapshot.sh","fm-bearings-snapshot.sh - compact, bounded, TOON-by-default bearings projection.","provenance","tested","keep",4,547
-  "fm-bootstrap.sh","Bootstrap detection, best-effort fleet refresh/prune, and installs.","provenance","tested","keep",15,1569
-  "fm-branch-outcome.sh","fm-branch-outcome.sh - the durable outcome store for the Pi supervision","provenance","tested","keep",2,204
-  "fm-branch-prompt.sh","fm-branch-prompt.sh - emit the supervision branch's system prompt","provenance","tested","keep",1,103
-  "fm-brief.sh","Scaffold a crewmate brief or persistent secondmate charter at","provenance","tested","keep",10,453
-  "fm-busy-event.sh","fm-busy-event.sh - the ONLY writer of the semantic busy-state contract","provenance","tested","keep",6,235
-  "fm-busy-lib.sh","fm-busy-lib.sh - the ONE owner of firstmate's semantic busy-state contract.","provenance","tested","keep",11,987
-  "fm-captain-hold.sh","fm-captain-hold.sh - deterministic mechanics for tasks held for the captain.","provenance","tested","keep",11,1002
-  "fm-cd-pretool-check.sh","Stable PreToolUse transport for the cd-guard command policy.","provenance","tested","keep",2,191
-  "fm-check-lib.sh","FM_CUSTOM_CHECK_HASH=","provenance","tested","keep",4,75
-  "fm-check-register.sh","Bind an intentional custom watcher check to its current bytes.","provenance","tested","keep",3,43
-  "fm-check-unregister.sh","Retire an intentional custom watcher check and its trust binding.","provenance","tested","keep",2,53
-  "fm-classify-lib.sh","Shared wake classifier: the common source of truth for captain-relevant status","provenance","tested","keep",16,1771
-  "fm-claude-stop-autoarm.sh","Claude Stop-owned watcher auto-arm (asyncRewake hook).","provenance","tested","keep",7,335
-  "fm-composer-lib.sh","bin/backend/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:","provenance","tested","keep",9,1417
-  "fm-config-inherit-lib.sh","shellcheck shell=bash","provenance","tested","keep",8,1203
-  "fm-config-push.sh","Push declared inherited local material to live secondmate homes.","provenance","tested","keep",3,255
-  "fm-control-lib.sh","fm-control-lib.sh - the ONE executable owner of firstmate's agent lifecycle","provenance","tested","keep",7,252
-  "fm-control.sh","fm-control.sh - the CONTROL PLANE for a firstmate-owned agent: allowlisted","provenance","tested","keep",8,879
-  "fm-crew-state.sh","fm-crew-state.sh - deterministic read of a crew's CURRENT state.","provenance","tested","keep",12,626
-  "fm-cursor-lib.sh","Cursor executable resolution and Cursor process identity.","provenance","tested","keep",6,244
-  "fm-decision-hold.sh","fm-decision-hold.sh - transitional compatibility shim over bin/backend/fm-captain-hold.sh.","provenance","tested","keep",3,233
-  "fm-doc-audience-check.sh","fm-doc-audience-check.sh - validate the tracked documentation audience inventory.","provenance","tested","keep",1,278
-  "fm-dod-lib.sh","Single owner of a ship task's mode-specific 'Definition of done' block.","provenance","wired","keep",3,68
-  "fm-ensure-agents-md.sh","Ensure a project worktree follows the agent-memory file convention.","provenance","tested","keep",3,254
-  "fm-extension.sh","Tracked shell entrypoint for local and fm-on extension binding commands.","provenance","tested","keep",2,17
-  "fm-ff-lib.sh","shellcheck shell=bash","provenance","tested","keep",9,421
-  "fm-fleet-snapshot.sh","fm-fleet-snapshot.sh - read-only structured fleet snapshot.","provenance","tested","keep",7,1464
-  "fm-fleet-sync.sh","Refresh project clones: fast-forward the checked-out local default branch to","provenance","tested","keep",9,459
-  "fm-fleet-view.sh","fm-fleet-view.sh - human renderer over fm-fleet-snapshot.sh.","provenance","tested","keep",2,97
-  "fm-gate-refuse-lib.sh","fm-gate-refuse-lib.sh - fail-closed refusal that keeps a no-mistakes GATE agent","provenance","tested","keep",9,103
-  "fm-guard.sh","Watcher liveness and worktree-tangle guard, called by supervision scripts, by","provenance","tested","keep",22,243
-  "fm-harness.sh","Detect the agent harness this process tree runs on.","provenance","tested","migrate → src/ymir_runtime/harness.py",10,196
-  "fm-herdr-ci-cleanup.sh","fm-herdr-ci-cleanup.sh - bounded cleanup of CI-owned Herdr lab sessions.","provenance","wired","keep",2,116
-  "fm-herdr-lab.sh","Provision and operate an isolated Herdr lab session without risking the live","provenance","tested","keep",3,347
-  "fm-herdr-session-cleanup.sh","Retire stale restored-shell Herdr presentation children at locked session start.","provenance","tested","keep",3,338
-  "fm-home-seed.sh","Provision and route persistent secondmate homes.","provenance","tested","keep",3,985
-  "fm-home-summary-refresh.sh","fm-home-summary-refresh.sh - publish this home's structured summary ledger.","provenance","tested","keep",6,256
-  "fm-hook-host-lib.sh","Shared 'which harness delivered this hook payload?' predicate for the tracked","provenance","tested","keep",6,37
-  "fm-inactive-reconcile.sh","fm-inactive-reconcile.sh - bounded reconciliation of suspicious inactive terminal outcomes.","provenance","tested","keep",6,532
-  "fm-inbox.sh","fm-inbox.sh - the captain's out-of-band capture surface.","provenance","tested","keep",1,400
-  "fm-install-actionlint.sh","fm-install-actionlint.sh - install CI's pinned, verified actionlint build.","provenance","tested","keep",3,93
-  "fm-install-herdr.sh","fm-install-herdr.sh - install CI's pinned, verified Herdr build.","provenance","wired","keep",4,97
-  "fm-install-shellcheck.sh","fm-install-shellcheck.sh - install CI's pinned, verified ShellCheck build.","provenance","tested","keep",3,93
-  "fm-install-treehouse.sh","fm-install-treehouse.sh - install CI's pinned, verified Treehouse build.","provenance","wired","keep",2,96
-  "fm-kimi-turnend-hook.sh","Install or remove Firstmate's guarded Kimi crew turn-end hook.","provenance","tested","keep",2,277
-  "fm-lease-lib.sh","fm-lease-lib.sh - the per-task supervision lease contract (one owner).","provenance","tested","keep",9,219
-  "fm-lease.sh","fm-lease.sh - claim, release, inspect, and sweep per-task supervision leases.","provenance","tested","keep",4,190
-  "fm-line-cap-lib.sh","shellcheck shell=bash","provenance","tested","keep",5,52
-  "fm-lint-workflows.sh","fm-lint-workflows.sh - owner of firstmate's GitHub workflow lint.","provenance","tested","keep",4,138
-  "fm-lint.sh","fm-lint.sh - the single owner of firstmate's lint definition.","provenance","tested","keep",4,592
-  "fm-lock-lib.sh","Shared 'is this git lock file provably abandoned?' decision procedure.","provenance","tested","migrate → src/ymir_runtime/state/lock.py",3,105
-  "fm-lock.sh","Acquire or inspect the per-home firstmate session lock.","provenance","tested","migrate → src/ymir_runtime/state/lock.py",6,108
-  "fm-marker-lib.sh","fm-marker-lib.sh - compatibility entry point for from-firstmate routing.","provenance","tested","keep",6,13
-  "fm-merge-local.sh","Perform the approved local merge for a local-only ship task: fast-forward the","provenance","tested","keep",5,75
-  "fm-merge-outcome-lib.sh","Shared durable, supervisor-facing outcome publication for a confirmed merge.","provenance","tested","keep",3,139
-  "fm-nm-run-lib.sh","Shared no-mistakes axi run attribution primitives.","provenance","tested","keep",4,125
-  "fm-on.sh","Execute one tracked Firstmate command in a configured remote secondmate home.","provenance","tested","keep",22,126
-  "fm-operational-input.sh","fm-operational-input.sh - canonical Firstmate operational-input protocol.","provenance","tested","keep",9,254
-  "fm-peek.sh","Print the tail of a crewmate endpoint (bounded, for cheap diagnosis).","provenance","tested","keep",6,47
-  "fm-pending-reply-lib.sh","fm-pending-reply-lib.sh - parent-owned secondmate missed-report guards.","provenance","tested","keep",9,1410
-  "fm-pr-check.sh","Record a PR-ready task: store one validated canonical pr=<url> and the forge's","provenance","tested","keep",5,136
-  "fm-pr-lib.sh","Shared validation and atomic artifact helpers for merge polling on the","provenance","tested","keep",19,1017
-  "fm-pr-merge.sh","Merge a task's PR or MR after recording pr= and any available pr_head= through","provenance","tested","keep",8,708
-  "fm-pr-poll.sh","Static watcher program for a validated PR/MR poll sidecar.","provenance","tested","keep",5,111
-  "fm-primary-scope-lib.sh","Shared marker-or-plain-checkout predicate for tracked hooks that must act only","provenance","tested","keep",8,34
-  "fm-procevent-lavish.sh","Lavish adapter for the generic process-to-event runner.","provenance","tested","keep",2,629
-  "fm-procevent-lib.sh","shellcheck shell=bash","provenance","tested","keep",6,893
-  "fm-procevent-quota.sh","Quota-exhaustion process-event adapter.","provenance","tested","keep",2,291
-  "fm-procevent-remote-reply.sh","Remote-secondmate reply adapter for the generic process-event runner.","provenance","tested","keep",6,578
-  "fm-procevent-when.sh","Condition->action adapter for the generic process-to-event runner: register a","provenance","tested","keep",2,505
-  "fm-procevent.sh","Generic process-to-event runner: supervise a registered long-polling child","provenance","tested","keep",13,1467
-  "fm-project-mode.sh","Resolve a project's REGISTERED delivery posture from the data/projects.md registry.","provenance","tested","keep",6,93
-  "fm-project-origin-lib.sh","Validate a project origin URL that one home hands to another.","provenance","tested","keep",3,181
-  "fm-promote.sh","Promote a scout task to a ship task in place: the crewmate keeps its window,","provenance","tested","keep",6,283
-  "fm-public-followup-emit.sh","fm-public-followup-emit.sh - emit ONE structured terminal work result for work","provenance","tested","keep",3,261
-  "fm-public-followup-lib.sh","shellcheck shell=bash","provenance","tested","keep",8,399
-  "fm-public-followup.sh","fm-public-followup.sh - the deterministic consumer and delivery owner for","provenance","tested","keep",10,1331
-  "fm-push-transition-lib.sh","Shared owner of the watcher's native push-transition escalation.","provenance","tested","keep",2,169
-  "fm-quota-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",5,94
-  "fm-quota-choose.sh","Choose the first quota-eligible candidate from a ranked list.","provenance","tested","keep",2,385
-  "fm-remote-delta-read.sh","Blocking, non-destructive delta read for a remote secondmate append-only log.","provenance","tested","keep",3,190
-  "fm-remote-doctor.sh","Check, and optionally repair, one remote account's second-mate readiness.","provenance","tested","keep",8,801
-  "fm-remote-entrypoint.sh","Fixed remote entrypoint for bin/backend/fm-on.sh.","provenance","tested","keep",4,194
-  "fm-remote-file.sh","Path-confined remote file transfer for fm-on.sh.","provenance","tested","keep",4,235
-  "fm-remote-home-provision.sh","Provision the FM_HOME selected by the fixed remote entrypoint.","provenance","tested","keep",3,260
-  "fm-remote-home-seed.sh","Register and provision a whole secondmate home on an SSH-reachable host.","provenance","tested","keep",2,260
-  "fm-remote-inherit-push.sh","Push the declared inherited-material allowlist to one remote secondmate route.","provenance","wired","keep",5,91
-  "fm-remote-inherit.sh","Apply one primary-authoritative inherited item inside the selected remote home.","provenance","tested","keep",3,180
-  "fm-remote-job-lib.sh","Shared remote fm-on job-worker protocol.","provenance","tested","keep",6,1242
-  "fm-remote-job-reap-orphans.sh","Reap remote job workers whose code root no longer exists.","provenance","tested","keep",3,138
-  "fm-remote-job-worker.sh","Long-lived per-account worker for remote fm-on jobs.","provenance","tested","keep",4,1125
-  "fm-remote-readiness-lib.sh","fm-remote-readiness-lib.sh - the remote second-mate readiness gate sequence.","provenance","wired","keep",4,45
-  "fm-remote-secondmate-control.sh","Host-local lifecycle control for the remote secondmate home selected by fm-on.","provenance","tested","keep",12,341
-  "fm-review-diff.sh","Review a crewmate branch against the authoritative base.","provenance","tested","keep",3,159
-  "fm-secondmate-charter-lib.sh","Shared extraction of secondmate registry summary and scope from a charter.","provenance","wired","keep",3,45
-  "fm-secondmate-nudge-lib.sh","shellcheck shell=bash disable=SC2034","provenance","wired","keep",4,69
-  "fm-secondmate-parent-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","tested","keep",6,71
-  "fm-secondmate-reconcile.sh","fm-secondmate-reconcile.sh - ask a secondmate to reconcile its own books, at","provenance","tested","keep",3,372
-  "fm-secondmate-registry-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","tested","keep",12,312
-  "fm-secondmate-report.sh","fm-secondmate-report.sh - optional helper to append a correlated parent report.","provenance","tested","keep",4,89
-  "fm-send.sh","Steer a task by durable record: write the message into the task's steering","provenance","tested","migrate → src/ymir_runtime/send.py",23,1060
-  "fm-session-lock-lib.sh","Shared session-lock harness identity.","provenance","tested","keep",8,177
-  "fm-session-start.sh","fm-session-start.sh - one command for the whole session start.","provenance","tested","keep",13,971
-  "fm-sessionstart-cursor.sh","Cursor session-open adapter: the RUN tier transport for Cursor Agent CLI.","provenance","tested","keep",1,41
-  "fm-sessionstart-nudge.sh","Print the one-line session-start instruction only for a genuine firstmate","provenance","tested","keep",4,46
-  "fm-sessionstart-run.sh","Session-open entry point for harnesses that RUN the digest instead of asking","provenance","tested","keep",4,146
-  "fm-spawn.sh","Spawn a direct report: a crewmate in a treehouse or Orca worktree, or a","provenance","tested","keep",29,3154
-  "fm-startup-memory-budget-lib.sh","shellcheck shell=bash","provenance","wired","keep",5,225
-  "fm-startup-memory-budget.sh","Read and account for the local startup-memory budget.","provenance","tested","keep",4,95
-  "fm-startup-network.sh","fm-startup-network.sh - the deferred network stage of a session start.","provenance","tested","keep",5,643
-  "fm-stow-cascade.sh","Enumerate this home's registered secondmates for an internal /stow cascade.","provenance","tested","keep",2,252
-  "fm-subagent-pretool-check.sh","PreToolUse guard against primary-session delegation outside the fleet.","provenance","tested","keep",1,208
-  "fm-supervise-daemon.sh","fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).","provenance","tested","keep",7,1733
-  "fm-supervision-instructions.sh","Render the primary-harness supervision operating block for session start and","provenance","tested","keep",5,217
-  "fm-supervision-lib.sh","shellcheck shell=bash","provenance","tested","keep",6,91
-  "fm-supervisor-target-lib.sh","fm-supervisor-target-lib.sh - the single owner of supervisor-pane discovery.","provenance","tested","keep",4,79
-  "fm-tangle-lib.sh","shellcheck shell=bash","provenance","tested","keep",3,54
-  "fm-task-inbox-lib.sh","fm-task-inbox-lib.sh - the per-task steering inbox: durable records plus a","provenance","tested","keep",7,403
-  "fm-tasks-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",13,124
-  "fm-teardown.sh","Tear down a finished task: return the treehouse worktree, release the Orca","provenance","tested","keep",21,2923
-  "fm-test-isolation-proof.sh","fm-test-isolation-proof.sh - bounded concurrent isolation proofs for portable","provenance","tested","keep",2,597
-  "fm-test-run.sh","fm-test-run.sh - single owner of Firstmate's behavior-test runner, lane","provenance","tested","keep",3,2208
-  "fm-timeout-lib.sh","fm-timeout-lib.sh - the single owner of bounded command execution.","provenance","tested","keep",17,142
-  "fm-timing-lib.sh","fm-timing-lib.sh - the single owner of the deferred network stage's elapsed-time","provenance","tested","keep",4,180
-  "fm-tmux-lib.sh","fm-tmux-lib.sh — shared tmux pane primitives for firstmate.","provenance","tested","keep",8,292
-  "fm-tool-update-check.sh","fm-tool-update-check.sh - report watched tooling that has an update available,","provenance","tested","keep",1,899
-  "fm-trace-context-lib.sh","shellcheck shell=bash","provenance","tested","keep",5,228
-  "fm-transition-lib.sh","Shared, backend-neutral agent-state transition shape and supervision policy.","provenance","tested","keep",4,104
-  "fm-turnend-guard-cursor.sh","Cursor `stop` hook adapter for a firstmate PRIMARY session: the park model.","provenance","tested","keep",3,392
-  "fm-turnend-guard-grok.sh","Grok Stop-hook adapter for the firstmate PRIMARY turn-end guard.","provenance","tested","keep",1,91
-  "fm-turnend-guard.sh","Turn-end guard for any firstmate PRIMARY session: the main home OR a","provenance","tested","keep",7,433
-  "fm-update.sh","Self-update a running firstmate and its secondmates to the latest origin.","provenance","tested","keep",4,111
-  "fm-vendor-auth-probe.sh","fm-vendor-auth-probe.sh - one hard-bounded, non-destructive authentication","provenance","tested","keep",3,191
-  "fm-wake-drain.sh","Present durable watcher wake records, optionally acknowledge handled records,","provenance","tested","keep",11,593
-  "fm-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","provenance","tested","keep",1,128
-  "fm-wake-lib.sh","Shared durable wake queue and portable lock helpers.","provenance","tested","keep",54,1858
-  "fm-watch-arm.sh","Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.","provenance","tested","keep",5,603
-  "fm-watch-checkpoint.sh","Run one bounded foreground watcher checkpoint for harnesses that should not","provenance","tested","keep",2,110
-  "fm-watch.sh","Firstmate watcher.","provenance","tested","migrate → src/ymir_runtime/watch.py",23,1963
-  "fm-x-dismiss.sh","Dismiss a pending X-mode mention at the relay WITHOUT replying to it.","provenance","tested","keep",1,117
-  "fm-x-followup.sh","Post a completion follow-up for an X-mode-linked task, up to three within a","provenance","tested","keep",5,287
-  "fm-x-lib.sh","Shared config resolution for the X-mode connector client (fm-x-poll.sh and","provenance","tested","keep",10,1001
-  "fm-x-link.sh","Link a spawned task to the X-mode mention that triggered it, so firstmate can","provenance","tested","keep",3,235
-  "fm-x-poll.sh","One short-poll of the relay connector for a pending X-mode mention.","provenance","tested","keep",5,186
-  "fm-x-reply.sh","Post firstmate's composed answer back to the relay for a pending X-mode mention.","provenance","tested","keep",4,386
-  "garmr-bite-test.sh","garmr-bite-test.sh — the laws of the bite, proven offline (no real bite is ever taken here).","tool","wired","keep",1,94
-  "garmr-bite.sh","garmr-bite.sh — GARMR'S TEETH.","tool","wired","keep",4,413
-  "garmr-canary.sh","garmr-canary.sh — the deletion tripwire: files that must never vanish.","tool","wired","keep",1,81
-  "garmr-smoke.sh","garmr-smoke.sh — GARMR's smoke test.","tool","wired","keep",1,180
-  "garmr.sh","garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian.","tool","wired","keep",5,226
-  "git-clobber-guard.sh","git-clobber-guard.sh — no command that throws away uncommitted work.","tool","wired","keep",1,86
-  "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",1,96
-  "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",1,152
-  "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",2,73
-  "gjallarhorn-purge.sh","gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname.","tool","wired","keep",2,69
-  "gjallarhorn-tunnel.sh","gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn).","tool","wired","keep",1,87
-  "gladsheim-ensure.sh","gladsheim-ensure.sh — seat the fleet room, whatever shape this machine is.","tool","wired","keep",2,216
-  "gladsheim.sh","gladsheim.sh — the door to Gladsheim, the fleet room.","tool","wired","keep",2,156
-  "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM.","lib","tested","keep",6,164
-  "google-auth.sh","google-auth.sh — one consent for the meeting powers: calendar write and mail.","tool","wired","keep",1,59
-  "graphics-lib.sh","graphics-lib.sh — the machine's graphics truth, shared by every reader.","lib","wired","keep",4,167
-  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",5,216
-  "group-add.sh","group-add.sh — put Skírnir in a Telegram group, in one word.","tool","wired","keep",2,87
-  "group-allow.sh","group-allow.sh — let Skírnir speak in ONE Telegram group, after the Allfather approves it.","tool","wired","keep",2,45
-  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",7,59
-  "hall-snapshot.sh","hall-snapshot.sh — the planning feed for the Óðrerir Live Hall.","tool","wired","keep",2,151
-  "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",2,247
-  "harden.sh","harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones applied.","tool","tested","keep",6,151
-  "heimdall-ensure.sh","heimdall-ensure.sh — ensure the Heimdall SSH-key ward is present and armed.","tool","wired","keep",5,134
-  "heimdall-ssh-keys.sh","heimdall-ssh-keys.sh — Heimdall's SSH-keys surface.","tool","wired","keep",2,382
-  "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",2,45
-  "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",5,106
-  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",9,569
-  "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",3,89
-  "hlidskjalf-agents.sh","hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doing.","tool","wired","keep",2,182
-  "hlidskjalf-usage.sh","hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy.","tool","wired","keep",1,202
-  "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",3,111
-  "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",4,250
-  "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",3,150
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",220,116
-  "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",1,106
-  "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",13,120
-  "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",2,82
-  "host-sense.sh","host-sense.sh — learn THIS machine: distro, kernel, session, desktop, and what","tool","wired","keep",6,200
-  "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",2,154
-  "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",2,326
-  "housekeeping.sh","housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has","tool","tested","keep",3,357
-  "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",1,110
-  "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",1,136
-  "inbox-watch.sh","inbox-watch.sh — notice when someone answers, without a human opening a mail client.","tool","wired","keep",1,103
-  "inbox.sh","inbox.sh — read the mail that matters to a collaborator, and prove you can answer it.","tool","tested","keep",3,121
-  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",6,262
-  "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",1,115
-  "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",2,137
-  "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",3,131
-  "kb-export.sh","kb-export.sh — build Skírnir's digest from facts the Allfather APPROVED, and nothing else.","tool","wired","keep",9,242
-  "learn-house.sh","learn-house.sh — give Skírnir the house's own public knowledge: the lore and the feature catalogue.","tool","wired","keep",1,115
-  "learn-site.sh","learn-site.sh — Skírnir learns the house's own public site.","tool","wired","keep",1,137
-  "learn.sh","learn.sh — a fact learned in conversation, waiting for the Allfather's approval.","tool","wired","keep",2,44
-  "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",4,163
-  "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",9,132
-  "logretta-council.sh","logretta-council.sh — the council's MODES: who divides the work, who is sent out, who rules.","tool","wired","keep",1,309
-  "logretta-debate.sh","logretta-debate.sh — the council's second round: seats answering SEATS, not the Allfather.","tool","wired","keep",2,118
-  "logretta-ensure.sh","logretta-ensure.sh — seat the council's roster on this machine.","tool","tested","keep",7,117
-  "logretta-panes.sh","logretta-panes.sh — the council, in herdr: one pane per seat, so it can be watched.","tool","wired","keep",1,118
-  "logretta-report.sh","logretta-report.sh — the council's chain: every seat reports to the CHAIR, the chair rules.","tool","wired","keep",2,216
-  "machine-profile.sh","machine-profile.sh — a body reads its OWN card (wave C, the persona loader).","tool","wired","keep",1,54
-  "mail-send.sh","mail-send.sh — the follow-up email with the record attached, as a draft or send.","tool","wired","keep",8,128
-  "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",1,94
-  "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",2,65
-  "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",5,278
-  "mcp-read.py","'''mcp-read.py — Gimlé MCP, phase 1: the six read tools, audited, behind a token.","tool","wired","keep",1,262
+  "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",7,212
+  "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","wired","keep",4,374
+  "escalate.py","'''escalate.py — the severity ladder (plan 98 §'the severity ladder').","tool","tested","keep",1,210
+  "escalate.sh","escalate.sh — when Skírnir wonders, he asks the Allfather where the Allfather actually is.","tool","wired","keep",3,106
+  "escalation-timer.sh","escalation-timer.sh — the fifth part of a stop rule: what happens if nobody answers.","tool","wired","keep",0,78
+  "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
+  "extension-api-check.sh","extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool API.","tool","wired","keep",1,113
+  "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",0,88
+  "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",0,58
+  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",3,186
+  "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",1,159
+  "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",1,83
+  "fleet-deploy.sh","fleet-deploy.sh — refresh the machine's fleet services from THIS package.","tool","wired","keep",0,98
+  "fleet-ensure.sh","fleet-ensure.sh — the role-gated RAISE (plan 42's fleet services, plan 51's","tool","wired","keep",8,527
+  "fleet-version.sh","fleet-version.sh — is the fleet on ONE version?","tool","tested","keep",0,72
+  "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",4,655
+  "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",2,242
+  "fm-afk-start.sh","Enter away mode and run the sub-supervisor daemon in a harness-tracked","provenance","tested","keep",2,173
+  "fm-arm-pretool-check.sh","Stable PreToolUse transport for the watcher-arm command policy.","provenance","tested","keep",2,201
+  "fm-backend-hometag-lib.sh","bin/backend/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation","provenance","wired","keep",1,53
+  "fm-backend.sh","fm-backend.sh - runtime-backend selection, meta helpers, selector resolution,","provenance","tested","migrate → src/ymir_runtime/backend.py",23,982
+  "fm-backlog-handoff.sh","Hand already-identified, in-scope backlog items off from the main firstmate","provenance","tested","keep",2,910
+  "fm-backlog-receive.sh","Receive one delivered remote-secondmate outbox into this home's backlog.","provenance","tested","keep",2,188
+  "fm-backlog-transition-lib.sh","shellcheck shell=bash","provenance","tested","keep",6,780
+  "fm-bearings-board.sh","fm-bearings-board.sh - build and arm the /bearings lavish fleet board.","provenance","tested","keep",0,205
+  "fm-bearings-snapshot.sh","fm-bearings-snapshot.sh - compact, bounded, TOON-by-default bearings projection.","provenance","tested","keep",3,547
+  "fm-bootstrap.sh","Bootstrap detection, best-effort fleet refresh/prune, and installs.","provenance","tested","keep",14,1569
+  "fm-branch-outcome.sh","fm-branch-outcome.sh - the durable outcome store for the Pi supervision","provenance","tested","keep",1,204
+  "fm-branch-prompt.sh","fm-branch-prompt.sh - emit the supervision branch's system prompt","provenance","tested","keep",0,103
+  "fm-brief.sh","Scaffold a crewmate brief or persistent secondmate charter at","provenance","tested","keep",9,453
+  "fm-busy-event.sh","fm-busy-event.sh - the ONLY writer of the semantic busy-state contract","provenance","tested","keep",5,235
+  "fm-busy-lib.sh","fm-busy-lib.sh - the ONE owner of firstmate's semantic busy-state contract.","provenance","tested","keep",10,987
+  "fm-captain-hold.sh","fm-captain-hold.sh - deterministic mechanics for tasks held for the captain.","provenance","tested","keep",10,1002
+  "fm-cd-pretool-check.sh","Stable PreToolUse transport for the cd-guard command policy.","provenance","tested","keep",1,191
+  "fm-check-lib.sh","FM_CUSTOM_CHECK_HASH=","provenance","tested","keep",3,75
+  "fm-check-register.sh","Bind an intentional custom watcher check to its current bytes.","provenance","tested","keep",2,43
+  "fm-check-unregister.sh","Retire an intentional custom watcher check and its trust binding.","provenance","tested","keep",1,53
+  "fm-classify-lib.sh","Shared wake classifier: the common source of truth for captain-relevant status","provenance","tested","keep",15,1771
+  "fm-claude-stop-autoarm.sh","Claude Stop-owned watcher auto-arm (asyncRewake hook).","provenance","tested","keep",6,335
+  "fm-composer-lib.sh","bin/backend/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:","provenance","tested","keep",8,1417
+  "fm-config-inherit-lib.sh","shellcheck shell=bash","provenance","tested","keep",7,1203
+  "fm-config-push.sh","Push declared inherited local material to live secondmate homes.","provenance","tested","keep",2,255
+  "fm-control-lib.sh","fm-control-lib.sh - the ONE executable owner of firstmate's agent lifecycle","provenance","tested","keep",6,252
+  "fm-control.sh","fm-control.sh - the CONTROL PLANE for a firstmate-owned agent: allowlisted","provenance","tested","keep",7,879
+  "fm-crew-state.sh","fm-crew-state.sh - deterministic read of a crew's CURRENT state.","provenance","tested","keep",11,626
+  "fm-cursor-lib.sh","Cursor executable resolution and Cursor process identity.","provenance","tested","keep",5,244
+  "fm-decision-hold.sh","fm-decision-hold.sh - transitional compatibility shim over bin/backend/fm-captain-hold.sh.","provenance","tested","keep",2,233
+  "fm-doc-audience-check.sh","fm-doc-audience-check.sh - validate the tracked documentation audience inventory.","provenance","tested","keep",0,278
+  "fm-dod-lib.sh","Single owner of a ship task's mode-specific 'Definition of done' block.","provenance","wired","keep",2,68
+  "fm-ensure-agents-md.sh","Ensure a project worktree follows the agent-memory file convention.","provenance","tested","keep",2,254
+  "fm-extension.sh","Tracked shell entrypoint for local and fm-on extension binding commands.","provenance","tested","keep",1,17
+  "fm-ff-lib.sh","shellcheck shell=bash","provenance","tested","keep",8,421
+  "fm-fleet-snapshot.sh","fm-fleet-snapshot.sh - read-only structured fleet snapshot.","provenance","tested","keep",6,1464
+  "fm-fleet-sync.sh","Refresh project clones: fast-forward the checked-out local default branch to","provenance","tested","keep",8,459
+  "fm-fleet-view.sh","fm-fleet-view.sh - human renderer over fm-fleet-snapshot.sh.","provenance","tested","keep",1,97
+  "fm-gate-refuse-lib.sh","fm-gate-refuse-lib.sh - fail-closed refusal that keeps a no-mistakes GATE agent","provenance","tested","keep",8,103
+  "fm-guard.sh","Watcher liveness and worktree-tangle guard, called by supervision scripts, by","provenance","tested","keep",21,243
+  "fm-harness.sh","Detect the agent harness this process tree runs on.","provenance","tested","migrate → src/ymir_runtime/harness.py",9,196
+  "fm-herdr-ci-cleanup.sh","fm-herdr-ci-cleanup.sh - bounded cleanup of CI-owned Herdr lab sessions.","provenance","wired","keep",1,116
+  "fm-herdr-lab.sh","Provision and operate an isolated Herdr lab session without risking the live","provenance","tested","keep",2,347
+  "fm-herdr-session-cleanup.sh","Retire stale restored-shell Herdr presentation children at locked session start.","provenance","tested","keep",2,338
+  "fm-home-seed.sh","Provision and route persistent secondmate homes.","provenance","tested","keep",2,985
+  "fm-home-summary-refresh.sh","fm-home-summary-refresh.sh - publish this home's structured summary ledger.","provenance","tested","keep",5,256
+  "fm-hook-host-lib.sh","Shared 'which harness delivered this hook payload?' predicate for the tracked","provenance","tested","keep",5,37
+  "fm-inactive-reconcile.sh","fm-inactive-reconcile.sh - bounded reconciliation of suspicious inactive terminal outcomes.","provenance","tested","keep",5,532
+  "fm-inbox.sh","fm-inbox.sh - the captain's out-of-band capture surface.","provenance","tested","keep",0,400
+  "fm-install-actionlint.sh","fm-install-actionlint.sh - install CI's pinned, verified actionlint build.","provenance","tested","keep",2,93
+  "fm-install-herdr.sh","fm-install-herdr.sh - install CI's pinned, verified Herdr build.","provenance","wired","keep",3,97
+  "fm-install-shellcheck.sh","fm-install-shellcheck.sh - install CI's pinned, verified ShellCheck build.","provenance","tested","keep",2,93
+  "fm-install-treehouse.sh","fm-install-treehouse.sh - install CI's pinned, verified Treehouse build.","provenance","wired","keep",1,96
+  "fm-kimi-turnend-hook.sh","Install or remove Firstmate's guarded Kimi crew turn-end hook.","provenance","tested","keep",1,277
+  "fm-lease-lib.sh","fm-lease-lib.sh - the per-task supervision lease contract (one owner).","provenance","tested","keep",8,219
+  "fm-lease.sh","fm-lease.sh - claim, release, inspect, and sweep per-task supervision leases.","provenance","tested","keep",3,190
+  "fm-line-cap-lib.sh","shellcheck shell=bash","provenance","tested","keep",4,52
+  "fm-lint-workflows.sh","fm-lint-workflows.sh - owner of firstmate's GitHub workflow lint.","provenance","tested","keep",3,138
+  "fm-lint.sh","fm-lint.sh - the single owner of firstmate's lint definition.","provenance","tested","keep",3,592
+  "fm-lock-lib.sh","Shared 'is this git lock file provably abandoned?' decision procedure.","provenance","tested","migrate → src/ymir_runtime/state/lock.py",2,105
+  "fm-lock.sh","Acquire or inspect the per-home firstmate session lock.","provenance","tested","migrate → src/ymir_runtime/state/lock.py",5,108
+  "fm-marker-lib.sh","fm-marker-lib.sh - compatibility entry point for from-firstmate routing.","provenance","tested","keep",5,13
+  "fm-merge-local.sh","Perform the approved local merge for a local-only ship task: fast-forward the","provenance","tested","keep",4,75
+  "fm-merge-outcome-lib.sh","Shared durable, supervisor-facing outcome publication for a confirmed merge.","provenance","tested","keep",2,139
+  "fm-nm-run-lib.sh","Shared no-mistakes axi run attribution primitives.","provenance","tested","keep",3,125
+  "fm-on.sh","Execute one tracked Firstmate command in a configured remote secondmate home.","provenance","tested","keep",21,126
+  "fm-operational-input.sh","fm-operational-input.sh - canonical Firstmate operational-input protocol.","provenance","tested","keep",8,254
+  "fm-peek.sh","Print the tail of a crewmate endpoint (bounded, for cheap diagnosis).","provenance","tested","keep",5,47
+  "fm-pending-reply-lib.sh","fm-pending-reply-lib.sh - parent-owned secondmate missed-report guards.","provenance","tested","keep",8,1410
+  "fm-pr-check.sh","Record a PR-ready task: store one validated canonical pr=<url> and the forge's","provenance","tested","keep",4,136
+  "fm-pr-lib.sh","Shared validation and atomic artifact helpers for merge polling on the","provenance","tested","keep",18,1017
+  "fm-pr-merge.sh","Merge a task's PR or MR after recording pr= and any available pr_head= through","provenance","tested","keep",7,708
+  "fm-pr-poll.sh","Static watcher program for a validated PR/MR poll sidecar.","provenance","tested","keep",4,111
+  "fm-primary-scope-lib.sh","Shared marker-or-plain-checkout predicate for tracked hooks that must act only","provenance","tested","keep",7,34
+  "fm-procevent-lavish.sh","Lavish adapter for the generic process-to-event runner.","provenance","tested","keep",1,629
+  "fm-procevent-lib.sh","shellcheck shell=bash","provenance","tested","keep",5,893
+  "fm-procevent-quota.sh","Quota-exhaustion process-event adapter.","provenance","tested","keep",1,291
+  "fm-procevent-remote-reply.sh","Remote-secondmate reply adapter for the generic process-event runner.","provenance","tested","keep",5,578
+  "fm-procevent-when.sh","Condition->action adapter for the generic process-to-event runner: register a","provenance","tested","keep",1,505
+  "fm-procevent.sh","Generic process-to-event runner: supervise a registered long-polling child","provenance","tested","keep",12,1467
+  "fm-project-mode.sh","Resolve a project's REGISTERED delivery posture from the data/projects.md registry.","provenance","tested","keep",5,93
+  "fm-project-origin-lib.sh","Validate a project origin URL that one home hands to another.","provenance","tested","keep",2,181
+  "fm-promote.sh","Promote a scout task to a ship task in place: the crewmate keeps its window,","provenance","tested","keep",5,283
+  "fm-public-followup-emit.sh","fm-public-followup-emit.sh - emit ONE structured terminal work result for work","provenance","tested","keep",2,261
+  "fm-public-followup-lib.sh","shellcheck shell=bash","provenance","tested","keep",7,399
+  "fm-public-followup.sh","fm-public-followup.sh - the deterministic consumer and delivery owner for","provenance","tested","keep",9,1331
+  "fm-push-transition-lib.sh","Shared owner of the watcher's native push-transition escalation.","provenance","tested","keep",1,169
+  "fm-quota-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",4,94
+  "fm-quota-choose.sh","Choose the first quota-eligible candidate from a ranked list.","provenance","tested","keep",1,385
+  "fm-remote-delta-read.sh","Blocking, non-destructive delta read for a remote secondmate append-only log.","provenance","tested","keep",2,190
+  "fm-remote-doctor.sh","Check, and optionally repair, one remote account's second-mate readiness.","provenance","tested","keep",7,801
+  "fm-remote-entrypoint.sh","Fixed remote entrypoint for bin/backend/fm-on.sh.","provenance","tested","keep",3,194
+  "fm-remote-file.sh","Path-confined remote file transfer for fm-on.sh.","provenance","tested","keep",3,235
+  "fm-remote-home-provision.sh","Provision the FM_HOME selected by the fixed remote entrypoint.","provenance","tested","keep",2,260
+  "fm-remote-home-seed.sh","Register and provision a whole secondmate home on an SSH-reachable host.","provenance","tested","keep",1,260
+  "fm-remote-inherit-push.sh","Push the declared inherited-material allowlist to one remote secondmate route.","provenance","wired","keep",4,91
+  "fm-remote-inherit.sh","Apply one primary-authoritative inherited item inside the selected remote home.","provenance","tested","keep",2,180
+  "fm-remote-job-lib.sh","Shared remote fm-on job-worker protocol.","provenance","tested","keep",5,1242
+  "fm-remote-job-reap-orphans.sh","Reap remote job workers whose code root no longer exists.","provenance","tested","keep",2,138
+  "fm-remote-job-worker.sh","Long-lived per-account worker for remote fm-on jobs.","provenance","tested","keep",3,1125
+  "fm-remote-readiness-lib.sh","fm-remote-readiness-lib.sh - the remote second-mate readiness gate sequence.","provenance","wired","keep",3,45
+  "fm-remote-secondmate-control.sh","Host-local lifecycle control for the remote secondmate home selected by fm-on.","provenance","tested","keep",11,341
+  "fm-review-diff.sh","Review a crewmate branch against the authoritative base.","provenance","tested","keep",2,159
+  "fm-secondmate-charter-lib.sh","Shared extraction of secondmate registry summary and scope from a charter.","provenance","wired","keep",2,45
+  "fm-secondmate-nudge-lib.sh","shellcheck shell=bash disable=SC2034","provenance","wired","keep",3,69
+  "fm-secondmate-parent-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","tested","keep",5,71
+  "fm-secondmate-reconcile.sh","fm-secondmate-reconcile.sh - ask a secondmate to reconcile its own books, at","provenance","tested","keep",2,372
+  "fm-secondmate-registry-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","tested","keep",11,312
+  "fm-secondmate-report.sh","fm-secondmate-report.sh - optional helper to append a correlated parent report.","provenance","tested","keep",3,89
+  "fm-send.sh","Steer a task by durable record: write the message into the task's steering","provenance","tested","migrate → src/ymir_runtime/send.py",22,1060
+  "fm-session-lock-lib.sh","Shared session-lock harness identity.","provenance","tested","keep",7,177
+  "fm-session-start.sh","fm-session-start.sh - one command for the whole session start.","provenance","tested","keep",12,971
+  "fm-sessionstart-cursor.sh","Cursor session-open adapter: the RUN tier transport for Cursor Agent CLI.","provenance","tested","keep",0,41
+  "fm-sessionstart-nudge.sh","Print the one-line session-start instruction only for a genuine firstmate","provenance","tested","keep",3,46
+  "fm-sessionstart-run.sh","Session-open entry point for harnesses that RUN the digest instead of asking","provenance","tested","keep",3,146
+  "fm-spawn.sh","Spawn a direct report: a crewmate in a treehouse or Orca worktree, or a","provenance","tested","keep",28,3154
+  "fm-startup-memory-budget-lib.sh","shellcheck shell=bash","provenance","wired","keep",4,225
+  "fm-startup-memory-budget.sh","Read and account for the local startup-memory budget.","provenance","tested","keep",3,95
+  "fm-startup-network.sh","fm-startup-network.sh - the deferred network stage of a session start.","provenance","tested","keep",4,643
+  "fm-stow-cascade.sh","Enumerate this home's registered secondmates for an internal /stow cascade.","provenance","tested","keep",1,252
+  "fm-subagent-pretool-check.sh","PreToolUse guard against primary-session delegation outside the fleet.","provenance","tested","keep",0,208
+  "fm-supervise-daemon.sh","fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).","provenance","tested","keep",6,1733
+  "fm-supervision-instructions.sh","Render the primary-harness supervision operating block for session start and","provenance","tested","keep",4,217
+  "fm-supervision-lib.sh","shellcheck shell=bash","provenance","tested","keep",5,91
+  "fm-supervisor-target-lib.sh","fm-supervisor-target-lib.sh - the single owner of supervisor-pane discovery.","provenance","tested","keep",3,79
+  "fm-tangle-lib.sh","shellcheck shell=bash","provenance","tested","keep",2,54
+  "fm-task-inbox-lib.sh","fm-task-inbox-lib.sh - the per-task steering inbox: durable records plus a","provenance","tested","keep",6,403
+  "fm-tasks-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",12,124
+  "fm-teardown.sh","Tear down a finished task: return the treehouse worktree, release the Orca","provenance","tested","keep",20,2923
+  "fm-test-isolation-proof.sh","fm-test-isolation-proof.sh - bounded concurrent isolation proofs for portable","provenance","tested","keep",1,597
+  "fm-test-run.sh","fm-test-run.sh - single owner of Firstmate's behavior-test runner, lane","provenance","tested","keep",2,2208
+  "fm-timeout-lib.sh","fm-timeout-lib.sh - the single owner of bounded command execution.","provenance","tested","keep",16,142
+  "fm-timing-lib.sh","fm-timing-lib.sh - the single owner of the deferred network stage's elapsed-time","provenance","tested","keep",3,180
+  "fm-tmux-lib.sh","fm-tmux-lib.sh — shared tmux pane primitives for firstmate.","provenance","tested","keep",7,292
+  "fm-tool-update-check.sh","fm-tool-update-check.sh - report watched tooling that has an update available,","provenance","tested","keep",0,899
+  "fm-trace-context-lib.sh","shellcheck shell=bash","provenance","tested","keep",4,228
+  "fm-transition-lib.sh","Shared, backend-neutral agent-state transition shape and supervision policy.","provenance","tested","keep",3,104
+  "fm-turnend-guard-cursor.sh","Cursor `stop` hook adapter for a firstmate PRIMARY session: the park model.","provenance","tested","keep",2,392
+  "fm-turnend-guard-grok.sh","Grok Stop-hook adapter for the firstmate PRIMARY turn-end guard.","provenance","tested","keep",0,91
+  "fm-turnend-guard.sh","Turn-end guard for any firstmate PRIMARY session: the main home OR a","provenance","tested","keep",6,433
+  "fm-update.sh","Self-update a running firstmate and its secondmates to the latest origin.","provenance","tested","keep",3,111
+  "fm-vendor-auth-probe.sh","fm-vendor-auth-probe.sh - one hard-bounded, non-destructive authentication","provenance","tested","keep",2,191
+  "fm-wake-drain.sh","Present durable watcher wake records, optionally acknowledge handled records,","provenance","tested","keep",10,593
+  "fm-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","provenance","tested","keep",0,128
+  "fm-wake-lib.sh","Shared durable wake queue and portable lock helpers.","provenance","tested","keep",53,1858
+  "fm-watch-arm.sh","Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.","provenance","tested","keep",4,603
+  "fm-watch-checkpoint.sh","Run one bounded foreground watcher checkpoint for harnesses that should not","provenance","tested","keep",1,110
+  "fm-watch.sh","Firstmate watcher.","provenance","tested","migrate → src/ymir_runtime/watch.py",22,1963
+  "fm-x-dismiss.sh","Dismiss a pending X-mode mention at the relay WITHOUT replying to it.","provenance","tested","keep",0,117
+  "fm-x-followup.sh","Post a completion follow-up for an X-mode-linked task, up to three within a","provenance","tested","keep",4,287
+  "fm-x-lib.sh","Shared config resolution for the X-mode connector client (fm-x-poll.sh and","provenance","tested","keep",9,1001
+  "fm-x-link.sh","Link a spawned task to the X-mode mention that triggered it, so firstmate can","provenance","tested","keep",2,235
+  "fm-x-poll.sh","One short-poll of the relay connector for a pending X-mode mention.","provenance","tested","keep",4,186
+  "fm-x-reply.sh","Post firstmate's composed answer back to the relay for a pending X-mode mention.","provenance","tested","keep",3,386
+  "garmr-bite-test.sh","garmr-bite-test.sh — the laws of the bite, proven offline (no real bite is ever taken here).","tool","wired","keep",0,94
+  "garmr-bite.sh","garmr-bite.sh — GARMR'S TEETH.","tool","wired","keep",3,413
+  "garmr-canary.sh","garmr-canary.sh — the deletion tripwire: files that must never vanish.","tool","wired","keep",0,81
+  "garmr-smoke.sh","garmr-smoke.sh — GARMR's smoke test.","tool","wired","keep",0,180
+  "garmr.sh","garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian.","tool","wired","keep",4,226
+  "git-clobber-guard.sh","git-clobber-guard.sh — no command that throws away uncommitted work.","tool","wired","keep",0,86
+  "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",0,96
+  "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
+  "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
+  "gjallarhorn-purge.sh","gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname.","tool","wired","keep",1,69
+  "gjallarhorn-tunnel.sh","gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn).","tool","wired","keep",0,87
+  "gladsheim-ensure.sh","gladsheim-ensure.sh — seat the fleet room, whatever shape this machine is.","tool","wired","keep",1,216
+  "gladsheim.sh","gladsheim.sh — the door to Gladsheim, the fleet room.","tool","wired","keep",1,156
+  "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM.","lib","tested","keep",5,164
+  "gna_desk.py","'''Gná's desk — read-only, loopback, one account per request.","tool","wired","keep",1,187
+  "gna_import.py","'''Gná's importer: one account, read-only, every message once.","tool","wired","keep",1,277
+  "gna_judge.py","'''Gná's judge: rules first, and every verdict carries the rule that gave it.","tool","wired","keep",0,169
+  "gna_store.py","'''Gná's store: one message once, and the account is the boundary.","tool","wired","keep",0,243
+  "google-auth.sh","google-auth.sh — one consent for the meeting powers: calendar write and mail.","tool","wired","keep",0,59
+  "graphics-lib.sh","graphics-lib.sh — the machine's graphics truth, shared by every reader.","lib","wired","keep",3,167
+  "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",1,100
+  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",7,220
+  "group-add.sh","group-add.sh — put Skírnir in a Telegram group, in one word.","tool","wired","keep",0,94
+  "group-allow.sh","group-allow.sh — let Skírnir speak in ONE Telegram group, after the Allfather approves it.","tool","wired","keep",1,45
+  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",6,59
+  "hall-snapshot.sh","hall-snapshot.sh — the planning feed for the Óðrerir Live Hall.","tool","wired","keep",1,151
+  "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",1,247
+  "harden.sh","harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones applied.","tool","tested","keep",5,151
+  "heimdall-ensure.sh","heimdall-ensure.sh — ensure the Heimdall SSH-key ward is present and armed.","tool","wired","keep",4,134
+  "heimdall-ssh-keys.sh","heimdall-ssh-keys.sh — Heimdall's SSH-keys surface.","tool","wired","keep",1,382
+  "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",1,45
+  "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
+  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",8,569
+  "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",2,89
+  "hlidskjalf-agents.sh","hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doing.","tool","wired","keep",1,182
+  "hlidskjalf-usage.sh","hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy.","tool","wired","keep",0,202
+  "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
+  "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
+  "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,150
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",226,116
+  "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",0,106
+  "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",14,120
+  "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
+  "host-sense.sh","host-sense.sh — learn THIS machine: distro, kernel, session, desktop, and what","tool","wired","keep",5,200
+  "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",1,154
+  "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",1,326
+  "housekeeping.sh","housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has","tool","tested","keep",2,357
+  "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",0,128
+  "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
+  "inbox-watch.sh","inbox-watch.sh — notice when someone answers, without a human opening a mail client.","tool","wired","keep",0,114
+  "inbox.sh","inbox.sh — read the mail that matters to a collaborator, and prove you can answer it.","tool","tested","keep",2,121
+  "install.sh","install.sh — seat Gná's desk on THIS machine.","data","tested","keep",30,82
+  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",5,266
+  "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",0,115
+  "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
+  "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
+  "kb-export.sh","kb-export.sh — build Skírnir's digest from facts the Allfather APPROVED, and nothing else.","tool","wired","keep",8,250
+  "learn-home.sh","learn-home.sh — give Skírnir the SHAPE of the house: its shelves, its law, its plans.","tool","wired","keep",2,187
+  "learn-house.sh","learn-house.sh — give Skírnir the house's own public knowledge: the lore and the feature catalogue.","tool","wired","keep",0,115
+  "learn-site.sh","learn-site.sh — Skírnir learns the house's own public site.","tool","wired","keep",0,137
+  "learn.sh","learn.sh — a fact learned in conversation, waiting for the Allfather's approval.","tool","wired","keep",1,44
+  "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
+  "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",8,132
+  "logretta-council.sh","logretta-council.sh — the council's MODES: who divides the work, who is sent out, who rules.","tool","wired","keep",0,309
+  "logretta-debate.sh","logretta-debate.sh — the council's second round: seats answering SEATS, not the Allfather.","tool","wired","keep",1,118
+  "logretta-ensure.sh","logretta-ensure.sh — seat the council's roster on this machine.","tool","tested","keep",6,117
+  "logretta-panes.sh","logretta-panes.sh — the council, in herdr: one pane per seat, so it can be watched.","tool","wired","keep",0,118
+  "logretta-report.sh","logretta-report.sh — the council's chain: every seat reports to the CHAIR, the chair rules.","tool","wired","keep",1,216
+  "machine-profile.sh","machine-profile.sh — a body reads its OWN card (wave C, the persona loader).","tool","wired","keep",0,54
+  "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",1,66
+  "mail-send.sh","mail-send.sh — the follow-up email with the record attached, as a draft or send.","tool","wired","keep",10,147
+  "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",0,94
+  "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",1,65
+  "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
+  "mcp-read.py","'''mcp-read.py — Gimlé MCP, phase 1: the six read tools, audited, behind a token.","tool","wired","keep",0,262
   "meet.sh","meet.sh — one command: 'put a meeting with <person> in the calendar, with a Meet link'.","tool","wired","keep",5,90
-  "meeting-record-guard.sh","meeting-record-guard.sh — a meeting record is a record: if one is missing, put it back.","tool","wired","keep",2,49
-  "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","wired","keep",5,372
-  "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","wired","keep",8,137
-  "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",2,133
-  "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",2,261
-  "mimir-log.sh","mimir-log.sh — move memory between the engram and the append log (a thin door).","tool","wired","keep",3,19
-  "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",1,35
-  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","wired","keep",13,131
-  "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",1,74
-  "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",2,106
-  "model-alias-check.sh","model-alias-check.sh — does every alias a body names resolve in the fleet?","tool","wired","keep",2,332
-  "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",2,124
-  "model-fit.sh","model-fit.sh — choose the best local model for THE USER'S hardware, probed at","tool","wired","keep",3,155
-  "model-hardware.sh","model-hardware.sh — profile THIS machine for local models and record the","tool","wired","keep",2,98
-  "model-placement.sh","model-placement.sh — which machine hosts the models, and is the rail up?","tool","tested","keep",1,96
-  "model-register.sh","model-register.sh — register the chosen model with Ymir, in the hoard.","tool","wired","keep",2,96
-  "model-resolve.sh","model-resolve.sh — resolve a human model request to a concrete harness+model.","tool","tested","keep",4,165
-  "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",2,150
-  "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",4,168
-  "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",2,29
-  "mouth.sh","mouth.sh — text in, a Telegram voice note out.","tool","wired","keep",4,33
-  "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",4,152
-  "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",1,229
-  "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",3,87
-  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",7,270
-  "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",1,63
-  "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",1,154
-  "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",1,205
-  "nornir-job-doctor.sh","nornir-job-doctor.sh — Eir, the healer, on the schedule.","data","wired","keep",1,35
-  "nornir-job-forgejo-git.sh","nornir-job-forgejo-git.sh — the local git round: issues and PRs on the forge.","tool","wired","keep",1,87
-  "nornir-job-git-sync.sh","nornir-job-git-sync.sh - Yggdrasil, the world-tree kept in order.","tool","wired","keep",2,153
-  "nornir-job-hall-snapshot.sh","nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board.","tool","wired","keep",1,31
-  "nornir-job-memory-housekeeping.sh","nornir-job-memory-housekeeping.sh - Muninn, the raven of memory.","tool","wired","keep",1,128
-  "nornir-job-nsr-compliance.sh","nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly.","tool","wired","keep",1,54
-  "nornir-job-observer.sh","nornir-job-observer.sh - Huginn, the raven of observation.","tool","wired","keep",1,181
-  "nornir-job-skillopt-sleep.sh","nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution.","tool","wired","keep",2,77
-  "nornir-job-worktree-housekeeping.sh","nornir-job-worktree-housekeeping.sh — the daily reckoning of what the worktrees cost.","tool","wired","keep",1,40
-  "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",3,229
-  "npm-install-local-test.sh","npm-install-local-test.sh — the REAL local installation test.","tool","wired","keep",1,116
-  "npm-pretest.sh","npm-pretest.sh — the pre-publish test gate (the Allfather's decree):","data","wired","keep",3,240
-  "npm-publish.sh","npm-publish.sh — publish through the HOARD's npm token, every single time.","tool","wired","keep",1,138
-  "odrerir-mcp-smoke.sh","odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans through the","tool","wired","keep",1,157
-  "omarchy-hook-install.sh","omarchy-hook-install.sh — let Ymir notice when Omarchy updates.","tool","wired","keep",2,62
-  "omarchy-install.sh","omarchy-install.sh — the Omarchy installation layer (Rule 05).","tool","wired","keep",2,163
-  "omarchy-plugins.sh","omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs on consent.","tool","wired","keep",3,189
-  "omarchy-sense.sh","omarchy-sense.sh — learn the Allfather's Omarchy machine.","tool","wired","keep",4,204
-  "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",1,85
-  "opendesign.sh","opendesign.sh — start / stop / status for OpenDesign (the design forge, Hnoss).","tool","wired","keep",1,88
-  "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",1,103
-  "participants-fill.sh","participants-fill.sh — fill participant emails from the meeting's calendar event.","tool","wired","keep",1,43
-  "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",1,99
-  "paths.py","'''paths.py — ONE resolver for the assistant's two shelves (Rule 07/22).","data","tested","migrate → src/ymir_runtime/paths.py",2,56
-  "people-guard.sh","people-guard.sh — the public tree holds no people.","tool","wired","keep",1,103
-  "perm-guard.sh","perm-guard.sh — flag agent profiles whose permissions are self-defeating.","tool","wired","keep",1,32
-  "phone-lib.sh","phone-lib.sh — reach the operator's phone storage for the vault's phone key.","lib","wired","keep",2,69
-  "pi-agent.sh","pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/mission","tool","wired","keep",1,83
-  "pi-ensure.sh","pi-ensure.sh — ensure the Pi packages Ymir depends on.","tool","wired","keep",3,106
-  "pi-local.sh","pi-local.sh — run a Pi agent on a LOCAL model, reusable.","tool","wired","keep",1,53
-  "pi-model-agnostic.sh","pi-model-agnostic — pi must not EXPECT any model.","tool","wired","keep",1,72
-  "pi-model-wire.sh","pi-model-wire.sh — wire a chosen local model into the operator's pi.","tool","wired","keep",2,152
-  "pi-seat.sh","pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a local","tool","wired","keep",2,115
-  "ping-room.sh","ping-room.sh — Þing on demand: raise a MiroTalk room on the computer you are on.","tool","wired","keep",1,134
-  "pkill-guard.sh","pkill-guard.sh — no blanket kill in the tree, and the audit that finds one.","tool","wired","keep",1,156
+  "meeting-record-guard.sh","meeting-record-guard.sh — a meeting record is a record: if one is missing, put it back.","tool","wired","keep",1,49
+  "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","wired","keep",4,372
+  "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","wired","keep",7,137
+  "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",1,133
+  "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",1,261
+  "mimir-log.sh","mimir-log.sh — move memory between the engram and the append log (a thin door).","tool","wired","keep",2,19
+  "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",0,35
+  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","wired","keep",12,131
+  "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",0,74
+  "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",1,106
+  "model-alias-check.sh","model-alias-check.sh — does every alias a body names resolve in the fleet?","tool","wired","keep",1,332
+  "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",1,124
+  "model-fit.sh","model-fit.sh — choose the best local model for THE USER'S hardware, probed at","tool","wired","keep",2,155
+  "model-hardware.sh","model-hardware.sh — profile THIS machine for local models and record the","tool","wired","keep",1,98
+  "model-placement.sh","model-placement.sh — which machine hosts the models, and is the rail up?","tool","tested","keep",0,96
+  "model-register.sh","model-register.sh — register the chosen model with Ymir, in the hoard.","tool","wired","keep",1,96
+  "model-resolve.sh","model-resolve.sh — resolve a human model request to a concrete harness+model.","tool","tested","keep",3,165
+  "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",1,150
+  "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,168
+  "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",1,29
+  "mouth.sh","mouth.sh — text in, a Telegram voice note out.","tool","wired","keep",3,64
+  "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,152
+  "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",0,229
+  "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",2,87
+  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",6,270
+  "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
+  "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
+  "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",0,205
+  "nornir-job-doctor.sh","nornir-job-doctor.sh — Eir, the healer, on the schedule.","data","wired","keep",0,35
+  "nornir-job-forgejo-git.sh","nornir-job-forgejo-git.sh — the local git round: issues and PRs on the forge.","tool","wired","keep",0,87
+  "nornir-job-git-sync.sh","nornir-job-git-sync.sh - Yggdrasil, the world-tree kept in order.","tool","wired","keep",1,153
+  "nornir-job-gna-mail.sh","nornir-job-gna-mail.sh — the desk's own clock: import, then prove the desk answers.","data","wired","keep",0,114
+  "nornir-job-hall-snapshot.sh","nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board.","tool","wired","keep",0,31
+  "nornir-job-memory-housekeeping.sh","nornir-job-memory-housekeeping.sh - Muninn, the raven of memory.","tool","wired","keep",0,128
+  "nornir-job-nsr-compliance.sh","nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly.","tool","wired","keep",0,54
+  "nornir-job-observer.sh","nornir-job-observer.sh - Huginn, the raven of observation.","tool","wired","keep",0,181
+  "nornir-job-skillopt-sleep.sh","nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution.","tool","wired","keep",1,77
+  "nornir-job-snotra-mail.sh","nornir-job-snotra-mail.sh — Snotra listens for the answers.","tool","wired","keep",0,45
+  "nornir-job-worktree-housekeeping.sh","nornir-job-worktree-housekeeping.sh — the daily reckoning of what the worktrees cost.","tool","wired","keep",0,40
+  "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",2,229
+  "npm-install-local-test.sh","npm-install-local-test.sh — the REAL local installation test.","tool","wired","keep",0,116
+  "npm-pretest.sh","npm-pretest.sh — the pre-publish test gate (the Allfather's decree):","data","wired","keep",2,240
+  "npm-publish.sh","npm-publish.sh — publish through the HOARD's npm token, every single time.","tool","wired","keep",0,138
+  "odrerir-mcp-smoke.sh","odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans through the","tool","wired","keep",0,157
+  "omarchy-hook-install.sh","omarchy-hook-install.sh — let Ymir notice when Omarchy updates.","tool","wired","keep",1,62
+  "omarchy-install.sh","omarchy-install.sh — the Omarchy installation layer (Rule 05).","tool","wired","keep",1,163
+  "omarchy-plugins.sh","omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs on consent.","tool","wired","keep",2,189
+  "omarchy-sense.sh","omarchy-sense.sh — learn the Allfather's Omarchy machine.","tool","wired","keep",3,204
+  "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",0,85
+  "opendesign.sh","opendesign.sh — start / stop / status for OpenDesign (the design forge, Hnoss).","tool","wired","keep",0,88
+  "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
+  "participants-fill.sh","participants-fill.sh — fill participant emails from the meeting's calendar event.","tool","wired","keep",0,43
+  "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",0,99
+  "paths.py","'''paths.py — ONE resolver for the assistant's two shelves (Rule 07/22).","data","tested","migrate → src/ymir_runtime/paths.py",4,56
+  "people-guard.sh","people-guard.sh — the public tree holds no people.","tool","wired","keep",0,103
+  "perm-guard.sh","perm-guard.sh — flag agent profiles whose permissions are self-defeating.","tool","wired","keep",0,32
+  "phone-lib.sh","phone-lib.sh — reach the operator's phone storage for the vault's phone key.","lib","wired","keep",1,69
+  "pi-agent.sh","pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/mission","tool","wired","keep",0,83
+  "pi-ensure.sh","pi-ensure.sh — ensure the Pi packages Ymir depends on.","tool","wired","keep",2,106
+  "pi-local.sh","pi-local.sh — run a Pi agent on a LOCAL model, reusable.","tool","wired","keep",0,53
+  "pi-model-agnostic.sh","pi-model-agnostic — pi must not EXPECT any model.","tool","wired","keep",0,72
+  "pi-model-wire.sh","pi-model-wire.sh — wire a chosen local model into the operator's pi.","tool","wired","keep",1,152
+  "pi-seat.sh","pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a local","tool","wired","keep",1,115
+  "ping-room.sh","ping-room.sh — Þing on demand: raise a MiroTalk room on the computer you are on.","tool","wired","keep",0,134
+  "pkill-guard.sh","pkill-guard.sh — no blanket kill in the tree, and the audit that finds one.","tool","wired","keep",0,156
   "place.sh","place.sh — team PLACES: a wall, not a permission (Rule 18; plan 77 Part 10).","tool","tested","keep",9,142
-  "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",2,59
-  "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",11,216
-  "private-guard.py","'''private-guard — private structure and protected material never cross a surface.'''","tool","wired","keep",2,122
-  "private-guard.sh","private-guard.sh — private structure and NDA material never cross a surface.","tool","tested","keep",5,10
-  "profile.sh","profile.sh — what THIS user's machine actually is, probed not assumed.","tool","tested","keep",5,97
-  "project-and-publish.sh","project-and-publish.sh — project the meeting record, then hand it to the desk on the server.","tool","wired","keep",1,43
-  "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",5,74
-  "project.py","'''project.py — the projector: a meeting's record becomes the desk's data, and (optionally) cards.","tool","wired","keep",3,146
-  "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",1,166
-  "prune.sh","prune.sh — the retention window, as a tool rather than a promise.","tool","wired","keep",1,43
-  "public-guard.sh","public-guard.sh — every PUBLIC, user-facing file must be free of operator","tool","wired","keep",2,87
-  "query.sh","query.sh — the ONLY way Skírnir reads his database: three fixed queries, grants enforced, audited.","tool","wired","keep",2,60
-  "queue.sh","queue.sh — THE work queue, and it is DERIVED, never authored.","tool","wired","migrate → src/ymir_runtime/state/queue.py",5,195
-  "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",9,72
-  "ratatoskr.sh","ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`).","tool","wired","keep",2,86
-  "readme-claims.sh","readme-claims.sh — the user-facing documents must not claim what the tree does not hold.","tool","wired","keep",2,106
-  "realm-lib.sh","realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the company's.","lib","wired","keep",6,46
-  "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",2,112
-  "registry-lib.sh","registry-lib.sh — the ONE reader for the master project registry's row keys.","lib","tested","migrate → src/ymir_runtime/dispatch/registry.py",14,82
-  "repo-scrub.sh","repo-scrub.sh — purge private paths from ALL git history before going public.","tool","wired","keep",1,77
-  "report.sh","report.sh — what Skírnir was asked, what he could not answer, and who is still waiting.","tool","tested","keep",10,99
-  "research-round.sh","research-round.sh — one reusable research errand: seat a skald or a sage, give","tool","wired","keep",1,144
-  "research-smoke.sh","research-smoke.sh — Skírnir's research door, proved end to end in one run.","tool","wired","keep",1,155
-  "research.py","'''research.py — Skírnir's window on the open web: the SAME provider Pi's web tool uses.","data","wired","keep",5,256
-  "rodd-operational-input.sh","rodd-operational-input.sh - canonical Rödd operational-input protocol.","tool","wired","keep",2,251
-  "role-lib.sh","role-lib.sh — what this machine IS, and the components its role owes","lib","tested","keep",2,125
-  "role.sh","role.sh — declare, read, and validate a machine's ROLE (plan 51, Phase 1).","tool","tested","keep",8,191
-  "room-squad.sh","room-squad.sh — raise the figures of a room, each with its own name and its own road.","tool","wired","keep",1,184
-  "room-wall-test.sh","room-wall-test.sh — the room door's assertions, deterministic and offline.","tool","wired","keep",1,94
-  "room.sh","room.sh — the record of a room: append an utterance, or read what was said.","tool","wired","keep",7,288
-  "rules-number-guard.sh","rules-number-guard.sh — the house law is NUMBERED, so no two rules may share a number,","tool","tested","keep",1,83
-  "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",1,102
-  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",31,117
-  "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",1,65
-  "runtime-guard.sh","runtime-guard.sh — THE TREE IS NOT A RUNTIME.","data","wired","keep",1,125
-  "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",4,261
-  "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",1,91
-  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",6,110
-  "seat-identity.sh","seat-identity.sh — print a seat's primary agent and its role file.","tool","wired","keep",4,176
-  "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",4,71
-  "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",6,243
-  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",55,194
-  "sensitive-gate.sh","sensitive-gate.sh — one gate for every external surface of a sensitive artifact set.","tool","wired","keep",3,81
-  "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",5,132
-  "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",3,153
-  "sessrumnir-sync.sh","sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmnir fork","tool","wired","keep",1,256
-  "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","tested","keep",5,188
-  "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",4,244
-  "skill-vendor-sync.sh","skill-vendor-sync.sh — keep imported third-party skill packs current.","tool","wired","keep",1,113
-  "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",2,77
-  "skirnir.py","'''skirnir.py — the Allfather's assistant: a mouth with no hands.","tool","wired","keep",7,1576
-  "skuld-branch-outcome.sh","skuld-branch-outcome.sh - the durable outcome store for the Pi supervision","tool","wired","keep",1,204
-  "skuld-branch-prompt.sh","skuld-branch-prompt.sh - emit the supervision branch's system prompt","tool","wired","keep",1,103
-  "skuld-sync.sh","skuld-sync.sh — the fleet mirror: the instances pull the heart's whole book.","tool","wired","keep",1,12
-  "smidja-board.sh","smidja-board.sh — Smíðja's board, by one name.","tool","wired","keep",2,145
-  "smidja-bootstrap.sh","smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh install.","tool","wired","keep",4,105
-  "smidja-lib.sh","smidja-lib.sh — where the smithy's parts actually live.","lib","wired","keep",5,69
-  "smidja-observe.sh","smidja-observe.sh — the smithy's trace, read-only (W0075).","data","wired","keep",2,88
-  "smoke.sh","smoke.sh — Skírnir and Snotra, end to end, in one command.","tool","wired","keep",8,247
-  "smoke.sh","smoke.sh — the Snotra meeting pipeline's own gate: five doors, three verdicts each.","tool","wired","keep",8,93
-  "snotra-audio-ladder.py","'''snotra-audio-ladder — the meeting's sound gets smaller AFTER its words are safe.","data","wired","keep",2,253
+  "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
+  "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",10,216
+  "private-guard.py","'''private-guard — private structure and protected material never cross a surface.'''","tool","wired","keep",1,122
+  "private-guard.sh","private-guard.sh — private structure and NDA material never cross a surface.","tool","tested","keep",4,10
+  "profile.sh","profile.sh — what THIS user's machine actually is, probed not assumed.","tool","tested","keep",4,97
+  "project-and-publish.sh","project-and-publish.sh — project the meeting record, then hand it to the desk on the server.","tool","wired","keep",0,43
+  "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",4,74
+  "project.py","'''project.py — the projector: a meeting's record becomes the desk's data, and (optionally) cards.","tool","wired","keep",2,146
+  "prompt.md","You are the Ymir update agent for ONE install.","data","tested","keep",3,25
+  "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",0,166
+  "prune.sh","prune.sh — the retention window, as a tool rather than a promise.","tool","wired","keep",0,43
+  "public-guard.sh","public-guard.sh — every PUBLIC, user-facing file must be free of operator","tool","wired","keep",1,87
+  "query.sh","query.sh — the ONLY way Skírnir reads his database: three fixed queries, grants enforced, audited.","tool","wired","keep",1,60
+  "queue.sh","queue.sh — THE work queue, and it is DERIVED, never authored.","tool","wired","migrate → src/ymir_runtime/state/queue.py",4,195
+  "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",8,72
+  "ratatoskr.sh","ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`).","tool","wired","keep",1,86
+  "readme-claims.sh","readme-claims.sh — the user-facing documents must not claim what the tree does not hold.","tool","wired","keep",1,106
+  "realm-lib.sh","realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the company's.","lib","wired","keep",5,46
+  "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",1,112
+  "registry-lib.sh","registry-lib.sh — the ONE reader for the master project registry's row keys.","lib","tested","migrate → src/ymir_runtime/dispatch/registry.py",13,82
+  "repo-scrub.sh","repo-scrub.sh — purge private paths from ALL git history before going public.","tool","wired","keep",0,77
+  "report.sh","report.sh — what Skírnir was asked, what he could not answer, and who is still waiting.","tool","tested","keep",9,99
+  "research-round.sh","research-round.sh — one reusable research errand: seat a skald or a sage, give","tool","wired","keep",0,144
+  "research-smoke.sh","research-smoke.sh — Skírnir's research door, proved end to end in one run.","tool","wired","keep",0,155
+  "research.py","'''research.py — Skírnir's window on the open web: the SAME provider Pi's web tool uses.","data","wired","keep",4,256
+  "rodd-operational-input.sh","rodd-operational-input.sh - canonical Rödd operational-input protocol.","tool","wired","keep",1,251
+  "role-lib.sh","role-lib.sh — what this machine IS, and the components its role owes","lib","tested","keep",1,125
+  "role.sh","role.sh — declare, read, and validate a machine's ROLE (plan 51, Phase 1).","tool","tested","keep",7,191
+  "room-squad.sh","room-squad.sh — raise the figures of a room, each with its own name and its own road.","tool","wired","keep",0,184
+  "room-wall-test.sh","room-wall-test.sh — the room door's assertions, deterministic and offline.","tool","wired","keep",0,94
+  "room.sh","room.sh — the record of a room: append an utterance, or read what was said.","tool","wired","keep",6,288
+  "rules-number-guard.sh","rules-number-guard.sh — the house law is NUMBERED, so no two rules may share a number,","tool","tested","keep",0,83
+  "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",0,102
+  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",34,117
+  "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
+  "runtime-guard.sh","runtime-guard.sh — THE TREE IS NOT A RUNTIME.","data","wired","keep",0,125
+  "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",3,261
+  "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",0,91
+  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",5,110
+  "seat-identity.sh","seat-identity.sh — print a seat's primary agent and its role file.","tool","wired","keep",3,176
+  "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/seat.py",8,100
+  "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",3,71
+  "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",5,243
+  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",57,194
+  "sensitive-gate.sh","sensitive-gate.sh — one gate for every external surface of a sensitive artifact set.","tool","wired","keep",2,81
+  "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",4,132
+  "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",2,153
+  "sessrumnir-sync.sh","sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmnir fork","tool","wired","keep",0,256
+  "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","tested","keep",4,188
+  "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",3,244
+  "skill-vendor-sync.sh","skill-vendor-sync.sh — keep imported third-party skill packs current.","tool","wired","keep",0,113
+  "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
+  "skirnir.py","'''skirnir.py — the Allfather's assistant: a mouth with no hands.","tool","wired","keep",6,1632
+  "skuld-branch-outcome.sh","skuld-branch-outcome.sh - the durable outcome store for the Pi supervision","tool","wired","keep",0,204
+  "skuld-branch-prompt.sh","skuld-branch-prompt.sh - emit the supervision branch's system prompt","tool","wired","keep",0,103
+  "skuld-sync.sh","skuld-sync.sh — the fleet mirror: the instances pull the heart's whole book.","tool","wired","keep",0,12
+  "smidja-board.sh","smidja-board.sh — Smíðja's board, by one name.","tool","wired","keep",1,145
+  "smidja-bootstrap.sh","smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh install.","tool","wired","keep",3,105
+  "smidja-lib.sh","smidja-lib.sh — where the smithy's parts actually live.","lib","wired","keep",4,69
+  "smidja-observe.sh","smidja-observe.sh — the smithy's trace, read-only (W0075).","data","wired","keep",1,88
+  "smoke.sh","smoke.sh — Skírnir and Snotra, end to end, in one command.","tool","wired","keep",7,263
+  "smoke.sh","smoke.sh — the Snotra meeting pipeline's own gate: five doors, three verdicts each.","tool","wired","keep",7,127
+  "snotra-agenda.py","'''snotra-agenda — the agenda card that drives the next meeting (DEC-20261022-04).","data","wired","keep",1,206
+  "snotra-agenda.sh","snotra-agenda.sh — the agenda card that drives the next meeting (DEC-20261022-04).","tool","wired","keep",2,19
+  "snotra-approve.sh","snotra-approve.sh — the operator's word, bound to the exact bytes of a letter.","tool","wired","keep",4,65
+  "snotra-attrib.py","'''snotra-attrib — who said it: the track, the person, and the evidence for both.","data","wired","keep",1,279
+  "snotra-attrib.sh","snotra-attrib.sh — who said it: the track, the person, and the evidence for both.","tool","wired","keep",0,22
+  "snotra-audio-ladder.py","'''snotra-audio-ladder — the meeting's sound gets smaller AFTER its words are safe.","data","wired","keep",1,253
   "snotra-audio-ladder.sh","snotra-audio-ladder.sh — the meeting's sound gets smaller AFTER its words are safe.","tool","wired","keep",2,19
-  "snotra-autojoin.sh","snotra-autojoin.sh — read the calendar, decide which meetings Snotra joins, and join them.","tool","wired","keep",1,164
-  "snotra-bot.sh","snotra-bot.sh — send Snotra into a meeting, through the Vexa API.","tool","wired","keep",2,146
-  "snotra-capture.sh","snotra-capture.sh — capture mic + system audio on the meeting seat.","tool","wired","keep",5,251
-  "snotra-cdp.py","'''snotra-cdp.py — a seat browser as the meeting's mouth and ear, with no OS mixer.","tool","wired","keep",5,624
-  "snotra-cron.sh","snotra-cron.sh — scheduled maintenance for the meeting system.","tool","wired","keep",2,99
-  "snotra-detect.sh","snotra-detect.sh — the ear's watch: pricks up when a call begins, and leaves","tool","tested","keep",5,1092
-  "snotra-dispatch.sh","snotra-dispatch.sh — one draft per person, and the team follow-up, from a record.","tool","wired","keep",1,89
-  "snotra-ensure.sh","snotra-ensure.sh — ensure the meeting ear's transcription engine is present.","tool","wired","keep",5,173
-  "snotra-evidence.sh","snotra-evidence.sh — timestamp, immutable copy, certification and retention.","tool","wired","keep",1,206
-  "snotra-harvest.py","'''snotra-harvest — take the meeting's OWN audio out of the bot's store, and prove it.","data","wired","keep",2,528
-  "snotra-harvest.sh","snotra-harvest.sh — the meeting's OWN audio, out of the bot's store, verified.","tool","wired","keep",3,27
-  "snotra-init.sh","snotra-init.sh — the first-run setup for the meeting system, agnostic by construction.","tool","wired","keep",2,107
-  "snotra-iscall.sh","snotra-iscall.sh — is a real call in progress on this seat?","tool","tested","keep",3,152
-  "snotra-letter.py","'''snotra-letter — one letter per participant, from the record, with their own tasks in it.","data","wired","keep",2,301
+  "snotra-autojoin.sh","snotra-autojoin.sh — read the calendar, decide which meetings Snotra joins, and join them.","tool","wired","keep",0,164
+  "snotra-board.py","'''snotra-board — a place declares a board; this door makes it, once.","data","wired","keep",1,201
+  "snotra-board.sh","snotra-board.sh — a place declares a board; this door makes it, once.","tool","wired","keep",1,17
+  "snotra-bot.sh","snotra-bot.sh — send Snotra into a meeting, through the Vexa API.","tool","wired","keep",1,146
+  "snotra-capture.sh","snotra-capture.sh — capture mic + system audio on the meeting seat.","tool","wired","keep",4,251
+  "snotra-cdp.py","'''snotra-cdp.py — a seat browser as the meeting's mouth and ear, with no OS mixer.","tool","wired","keep",4,624
+  "snotra-cron.sh","snotra-cron.sh — scheduled maintenance for the meeting system.","tool","wired","keep",1,99
+  "snotra-detect.sh","snotra-detect.sh — the ear's watch: pricks up when a call begins, and leaves","tool","tested","keep",4,1092
+  "snotra-dispatch.sh","snotra-dispatch.sh — one draft per person, and the team follow-up, from a record.","tool","wired","keep",0,89
+  "snotra-ensure.sh","snotra-ensure.sh — ensure the meeting ear's transcription engine is present.","tool","wired","keep",4,173
+  "snotra-evidence.sh","snotra-evidence.sh — timestamp, immutable copy, certification and retention.","tool","wired","keep",0,206
+  "snotra-harvest.py","'''snotra-harvest — take the meeting's OWN audio out of the bot's store, and prove it.","data","wired","keep",1,546
+  "snotra-harvest.sh","snotra-harvest.sh — the meeting's OWN audio, out of the bot's store, verified.","tool","wired","keep",5,27
+  "snotra-init.sh","snotra-init.sh — the first-run setup for the meeting system, agnostic by construction.","tool","wired","keep",1,107
+  "snotra-iscall.sh","snotra-iscall.sh — is a real call in progress on this seat?","tool","tested","keep",2,152
+  "snotra-layout.py","'''snotra-layout — a meeting folder is a standard, and a stray is a fault.","data","wired","keep",1,155
+  "snotra-layout.sh","snotra-layout.sh — a meeting folder is a standard, and a stray is a fault.","tool","wired","keep",2,21
+  "snotra-letter.py","'''snotra-letter — one letter per participant, from the record, with their own tasks in it.","data","wired","keep",1,650
   "snotra-letter.sh","snotra-letter.sh — one letter per participant, from the record, carrying their own tasks.","tool","wired","keep",1,24
-  "snotra-live.sh","snotra-live.sh — THE LIVE TAIL: listen through this machine's microphone and","tool","wired","keep",3,500
+  "snotra-live.sh","snotra-live.sh — THE LIVE TAIL: listen through this machine's microphone and","tool","wired","keep",2,500
+  "snotra-mail-watch.py","'''snotra-mail-watch — who has answered, and what they said (read-only; a person still promotes).","data","wired","keep",1,316
+  "snotra-mail-watch.sh","snotra-mail-watch.sh — who has answered, and what they said.","tool","wired","keep",2,24
   "snotra-meet.sh","snotra-meet.sh — the meeting voice: one door, and the browser is the audio device.","tool","wired","keep",4,97
-  "snotra-mine.sh","snotra-mine.sh — mine decisions and action items out of a transcript.","tool","wired","keep",4,178
-  "snotra-project.py","'''snotra-project — the record projected onto the place's boards, by kind, verified.","data","wired","keep",2,328
+  "snotra-mine.sh","snotra-mine.sh — mine decisions and action items out of a transcript.","tool","wired","keep",3,178
+  "snotra-pipeline.sh","snotra-pipeline.sh — one command: a meeting folder becomes the record, the board, the letters.","tool","wired","keep",0,131
+  "snotra-project.py","'''snotra-project — the record projected onto the place's boards, by kind, verified.","data","wired","keep",1,386
   "snotra-project.sh","snotra-project.sh — the record projected onto the place's boards, by kind, verified.","tool","wired","keep",2,24
-  "snotra-provenance.sh","snotra-provenance.sh — a tamper-evident record of every meeting artifact.","tool","wired","keep",3,72
+  "snotra-promote.py","'''snotra-promote — the register becomes law: accept · reject · hold, and the promotion is recorded.","data","wired","keep",1,187
+  "snotra-promote.sh","snotra-promote.sh — the register becomes law: accept · reject · hold, and the promotion is recorded.","tool","wired","keep",4,20
+  "snotra-provenance.sh","snotra-provenance.sh — a tamper-evident record of every meeting artifact.","tool","wired","keep",2,72
   "snotra-render-email.sh","snotra-render-email.sh — the follow-up letter, generated from the record.","tool","wired","keep",1,166
   "snotra-render-pdf.sh","snotra-render-pdf.sh — one printable PDF from a meeting record.","tool","wired","keep",1,78
   "snotra-signoff.sh","snotra-signoff.sh — the assembly signs the record, not the decision.","tool","wired","keep",2,190
-  "snotra-store.sh","snotra-store.sh — ONE contract for every meeting record, whichever transport heard it.","tool","wired","keep",1,286
-  "snotra-stream.sh","snotra-stream.sh — Snotra's voice into a meeting: say, and (later) the full loop.","tool","wired","keep",2,91
-  "snotra-talk.py","'''snotra-talk.py — the streaming talk loop: hear, decide, compose, speak, record.","tool","wired","keep",3,705
-  "snotra-transcribe.sh","snotra-transcribe.sh — transcribe a meeting recording and produce minutes.","tool","wired","keep",5,459
-  "snotra-trello.py","'''The Trello meeting board, generated from a meeting record.","tool","wired","keep",4,626
-  "snotra-trello.sh","snotra-trello.sh — the meeting board, generated from the record.","tool","wired","keep",4,16
-  "snotra-voice-device.sh","snotra-voice-device.sh — the virtual microphone a meeting can hear Snotra through.","tool","wired","keep",2,78
-  "snotra-voice.py","'''snotra-voice.py — the STREAMING voice loop: capture, transcribe and speak while","data","wired","keep",1,1001
+  "snotra-store.sh","snotra-store.sh — ONE contract for every meeting record, whichever transport heard it.","tool","wired","keep",0,286
+  "snotra-stream.sh","snotra-stream.sh — Snotra's voice into a meeting: say, and (later) the full loop.","tool","wired","keep",1,91
+  "snotra-talk.py","'''snotra-talk.py — the streaming talk loop: hear, decide, compose, speak, record.","tool","wired","keep",2,705
+  "snotra-transcribe-bot.py","'''snotra-transcribe-bot — the meeting's own audio becomes the record's text.","data","wired","keep",1,178
+  "snotra-transcribe-bot.sh","snotra-transcribe-bot.sh — the meeting's own audio becomes the record's text.","tool","wired","keep",1,18
+  "snotra-transcribe.sh","snotra-transcribe.sh — transcribe a meeting recording and produce minutes.","tool","wired","keep",4,459
+  "snotra-trello.py","'''The Trello meeting board, generated from a meeting record.","tool","wired","keep",3,626
+  "snotra-trello.sh","snotra-trello.sh — the meeting board, generated from the record.","tool","wired","keep",3,16
+  "snotra-voice-device.sh","snotra-voice-device.sh — the virtual microphone a meeting can hear Snotra through.","tool","wired","keep",1,78
+  "snotra-voice.py","'''snotra-voice.py — the STREAMING voice loop: capture, transcribe and speak while","data","wired","keep",0,1001
+  "snotra_paths.py","'''snotra_paths — where a meeting may live.","tool","wired","keep",3,74
   "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",4,244
-  "speech-text.py","'''speech-text.py — what Kokoro is allowed to be given.","tool","wired","keep",3,76
-  "stt-shim.py","'''stt-shim.py — the missing contract: OpenAI-compatible `/v1/audio/transcriptions` in front of our whisper.","tool","wired","keep",1,140
-  "stt-wire.sh","stt-wire.sh — point the meeting stack at the house's STT, in the only order that works.","tool","wired","keep",2,78
-  "syn-arm-pretool-check.sh","syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash commands.","tool","tested","keep",3,58
-  "syn-asset-pretool-check.sh","syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths.","tool","wired","keep",1,91
-  "syn-cd-pretool-check.sh","syn-cd-pretool-check.sh - PreToolUse seatbelt for directory-changing commands.","tool","wired","keep",1,29
-  "syn-guard-pretool-check.sh","syn-guard-pretool-check.sh - PreToolUse seatbelt for the runtime's load-bearing","tool","tested","keep",1,84
-  "syn-spawn-pretool-check.sh","syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for typing.","data","wired","keep",1,59
-  "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind.","tool","tested","keep",2,52
-  "syn-watch-arm.sh","syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.","tool","tested","keep",7,187
-  "syn-watch.sh","syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, seated","tool","tested","keep",5,53
-  "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",1,205
-  "telegram-bot.sh","telegram-bot.sh — the horn answers (W0036).","tool","wired","keep",1,84
-  "telegram.py","'''telegram.py — Skírnir's second mouth: his own bot, in DMs and in groups.","tool","wired","keep",3,390
-  "telegram.sh","telegram.sh — the door to Skírnir's own bot (the adapter lives in telegram.py).","tool","wired","keep",1,4
-  "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",1,75
-  "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",7,139
-  "trello-due.sh","trello-due.sh — a card's due date is a promise; say when it is broken.","tool","wired","keep",1,100
+  "speech-text.py","'''speech-text.py — what Kokoro is allowed to be given.","tool","wired","keep",2,76
+  "stt-shim.py","'''stt-shim.py — the missing contract: OpenAI-compatible `/v1/audio/transcriptions` in front of our whisper.","tool","wired","keep",0,140
+  "stt-wire.sh","stt-wire.sh — point the meeting stack at the house's STT, in the only order that works.","tool","wired","keep",1,78
+  "syn-arm-pretool-check.sh","syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash commands.","tool","tested","keep",2,58
+  "syn-asset-pretool-check.sh","syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths.","tool","wired","keep",0,91
+  "syn-cd-pretool-check.sh","syn-cd-pretool-check.sh - PreToolUse seatbelt for directory-changing commands.","tool","wired","keep",0,29
+  "syn-guard-pretool-check.sh","syn-guard-pretool-check.sh - PreToolUse seatbelt for the runtime's load-bearing","tool","tested","keep",0,84
+  "syn-spawn-pretool-check.sh","syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for typing.","data","wired","keep",0,59
+  "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind.","tool","tested","keep",1,52
+  "syn-watch-arm.sh","syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.","tool","tested","keep",6,187
+  "syn-watch.sh","syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, seated","tool","tested","keep",4,53
+  "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",0,205
+  "telegram-bot.sh","telegram-bot.sh — the horn answers (W0036).","tool","wired","keep",0,84
+  "telegram.py","'''telegram.py — Skírnir's second mouth: his own bot, in DMs and in groups.","tool","wired","keep",2,420
+  "telegram.sh","telegram.sh — the door to Skírnir's own bot (the adapter lives in telegram.py).","tool","wired","keep",0,4
+  "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","data","wired","keep",0,205
+  "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",0,75
+  "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",6,139
+  "trello-due.sh","trello-due.sh — a card's due date is a promise; say when it is broken.","tool","wired","keep",0,100
   "trello-map.sh","trello-map.sh — the map of our Trello, written down so Snotra can know it.","tool","wired","keep",3,136
-  "trello_client.py","'''trello_client — the Trello door, shared: the grant, the resolver, and the card verbs.","data","wired","keep",1,201
-  "tts-lease.sh","tts-lease.sh — say 'the card is in use' so the idle-stop never lowers the voice under a conversation.","tool","wired","keep",4,32
-  "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","wired","keep",1,77
-  "unit-template-check.sh","unit-template-check.sh — every shipped systemd unit template must be a unit systemd","tool","wired","keep",2,96
-  "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",3,76
-  "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",2,99
-  "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",5,113
-  "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",1,116
-  "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,604
-  "vault-guard.sh","vault-guard.sh — nothing may copy content OUT of the vault (Rule 15).","tool","wired","keep",3,96
-  "verdr.sh","verdr.sh — VÖRÐR, the warden: the standing report.","tool","tested","keep",2,127
-  "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",4,177
-  "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",1,25
-  "vidarr-agent.sh","vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast road.","tool","wired","keep",1,70
-  "vidarr.sh","vidarr.sh — VÍÐARR, the silent avenger: the defender's own door.","tool","wired","keep",2,249
-  "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",4,164
-  "voice.sh","voice.sh — talk to Skírnir with a voice, and hear him answer while he is still answering.","tool","wired","keep",1,150
-  "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",3,125
-  "walls-test.sh","walls-test.sh — Skírnir's red-team suite.","tool","wired","keep",1,275
-  "ward-answer.sh","ward-answer.sh — answer a ward decision.","tool","wired","keep",1,82
-  "ward-ask.sh","ward-ask.sh — Vörðr reports, then ASKS.","tool","wired","keep",2,82
-  "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","wired","keep",2,62
-  "well-door.sh","well-door.sh — the hand's door to the heart's well, raised over SSH.","tool","wired","keep",1,125
-  "well-guard.sh","well-guard.sh — the WARD behind RULES/20-the-well-appends.md.","tool","wired","keep",3,206
-  "well-vault-sync.sh","well-vault-sync.sh — Kaia's memory across the Allfather's machines.","tool","wired","keep",2,105
-  "who.sh","who.sh — the address book, and the one question that blocks everything: has this person an email?","tool","wired","keep",2,82
-  "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","wired","keep",2,78
-  "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",1,82
-  "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",1,165
-  "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",1,49
-  "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","wired","keep",5,153
-  "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",5,165
-  "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",1,44
-  "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",3,77
-  "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",1,177
-  "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",3,67
-  "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",4,61
-  "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",1,19
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",23,1636
-  "ymir-invite.sh","ymir-invite — hand someone a way in to your Ymir, and take it back.","tool","wired","keep",4,113
-  "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","data","wired","keep",1,89
-  "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",2,337
-  "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","wired","keep",6,76
-  "ymir-plan.sh","ymir-plan.sh — THE INSTALL PLAN.","tool","wired","keep",3,447
-  "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",19,244
-  "ymir-say.sh","ymir-say.sh — let Ymir speak on the Allfather's desktop.","tool","wired","keep",12,118
-  "ymir-setup-auth.sh","ymir-setup-auth.sh — set the operator's Ymir credential at first setup.","tool","wired","keep",4,121
-  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",5,44
-  "ymir-style.sh","ymir-style.sh — the cloth of the terminal halls.","tool","wired","keep",6,156
-  "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",2,71
-  "ymir-vad.py","'''","tool","wired","keep",1,135
-  "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",4,293
-  "ymir.js","/**","tool","wired","keep",6,263
-  "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",1,85
+  "trello_client.py","'''trello_client — the Trello door, shared: the grant, the resolver, and the card verbs.","data","wired","keep",0,305
+  "tts-lease.sh","tts-lease.sh — say 'the card is in use' so the idle-stop never lowers the voice under a conversation.","tool","wired","keep",3,32
+  "tui-frame-check.sh","tui-frame-check.sh — prove that what the TUI writes to the terminal fits the terminal.","tool","wired","keep",0,162
+  "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","wired","keep",0,77
+  "unit-template-check.sh","unit-template-check.sh — every shipped systemd unit template must be a unit systemd","tool","wired","keep",1,96
+  "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",2,76
+  "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",1,99
+  "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,113
+  "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",0,116
+  "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",7,604
+  "vault-guard.sh","vault-guard.sh — nothing may copy content OUT of the vault (Rule 15).","tool","wired","keep",2,96
+  "verdr.sh","verdr.sh — VÖRÐR, the warden: the standing report.","tool","tested","keep",1,127
+  "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
+  "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",0,25
+  "vidarr-agent.sh","vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast road.","tool","wired","keep",0,70
+  "vidarr.sh","vidarr.sh — VÍÐARR, the silent avenger: the defender's own door.","tool","wired","keep",1,249
+  "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,164
+  "voice.sh","voice.sh — talk to Skírnir with a voice, and hear him answer while he is still answering.","tool","wired","keep",0,150
+  "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125
+  "walls-test.sh","walls-test.sh — Skírnir's red-team suite.","tool","wired","keep",0,275
+  "ward-answer.sh","ward-answer.sh — answer a ward decision.","tool","wired","keep",0,82
+  "ward-ask.sh","ward-ask.sh — Vörðr reports, then ASKS.","tool","wired","keep",1,82
+  "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","wired","keep",1,62
+  "well-door.sh","well-door.sh — the hand's door to the heart's well, raised over SSH.","tool","wired","keep",0,125
+  "well-guard.sh","well-guard.sh — the WARD behind RULES/20-the-well-appends.md.","tool","wired","keep",2,206
+  "well-vault-sync.sh","well-vault-sync.sh — Kaia's memory across the Allfather's machines.","tool","wired","keep",1,105
+  "who.sh","who.sh — the address book, and the one question that blocks everything: has this person an email?","tool","wired","keep",1,82
+  "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","wired","keep",1,78
+  "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
+  "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",0,165
+  "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
+  "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","wired","keep",4,153
+  "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",4,165
+  "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
+  "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",2,77
+  "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,177
+  "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,67
+  "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",3,61
+  "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",0,19
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",23,1660
+  "ymir-invite.sh","ymir-invite — hand someone a way in to your Ymir, and take it back.","tool","wired","keep",3,113
+  "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","data","wired","keep",0,89
+  "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",1,337
+  "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","wired","keep",7,76
+  "ymir-plan.sh","ymir-plan.sh — THE INSTALL PLAN.","tool","wired","keep",2,447
+  "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",18,244
+  "ymir-say.sh","ymir-say.sh — let Ymir speak on the Allfather's desktop.","tool","wired","keep",11,118
+  "ymir-setup-auth.sh","ymir-setup-auth.sh — set the operator's Ymir credential at first setup.","tool","wired","keep",3,121
+  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",4,44
+  "ymir-style.sh","ymir-style.sh — the cloth of the terminal halls.","tool","wired","keep",5,156
+  "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
+  "ymir-vad.py","'''","tool","wired","keep",0,135
+  "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",3,293
+  "ymir.js","/**","tool","wired","keep",5,263
+  "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=340, tested=223
+**Tally.** verdict: wired=368, tested=228
 
-**Tally.** disposition: keep=552, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=584, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

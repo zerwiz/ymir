@@ -420,6 +420,24 @@ def speakers(d: Path, force: bool = False) -> int:
             frames += 1
     if not tracks:
         die("the capture log holds no pcm frames — nothing to split (is this the right session?)")
+
+    # ── VERIFY THE PAYLOAD IS SPEECH BEFORE WRITING "TRACKS" ─────────────────────────────────────
+    # Measured 2026-10-23: the capture log's field is named `pcm`, and it is NOT PCM — every frame decodes
+    # to full-scale noise (mean |s16| ≈ 16 286, max 32 765), so the "tracks" this door wrote were static.
+    # Speech has a mean magnitude of roughly 500–4 000 at these levels; a near-uniform spread means the
+    # frames are compressed or encrypted, not samples. A door that writes three noise files and reports
+    # success is exactly the fault this house keeps finding: make it refuse, and say why.
+    probe = b"".join(v[0] for k, v in sorted(tracks.items())[:3] for v in [v])[:200000]
+    if len(probe) >= 2000:
+        import struct as _struct
+        n = len(probe) // 2
+        vals = _struct.unpack("<%dh" % n, probe[: n * 2])
+        mean_abs = sum(abs(x) for x in vals) / max(1, n)
+        if mean_abs > 6000:
+            die(f"the capture log's `pcm` is not PCM: its frames decode to noise (mean magnitude "
+                f"{mean_abs:.0f}, speech is 500–4 000). No tracks are written — an audio file that is "
+                "static is worse than none. Attribution must come from the platform's per-participant "
+                "tracks, a voiceprint over the meeting's own master, or a human listen (snotra-attrib).")
     manifest = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": str(src),
                 "header": header or {}, "frames": frames, "tracks": {}}
     for si, blobs in sorted(tracks.items()):
