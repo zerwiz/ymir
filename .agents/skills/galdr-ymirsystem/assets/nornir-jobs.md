@@ -288,6 +288,25 @@ at sunrise. The forge address is the user's, from the home — never the tree:
 
 ### 3.8 The marketing stack (`bin/desktop/ymir-marketing-stack.sh`)
 
+### 3.8b Gná — the mail desk round (`bin/time/nornir-job-gna-mail.sh`, added 2026-10-23, plan 116)
+
+Four rows a day (`07:20 · 11:20 · 15:20 · 19:20`, any role that owns a mailbox)
+keep the desk's store current and prove the desk answers. The job imports every
+account declared in the home's `hodd/memory/mail/accounts.yaml` through
+`bin/mail/gna_import.py` (read-only Gmail; it cannot send), then probes
+`http://127.0.0.1:8490/health` with the desk's own token.
+
+Its law is the one the plan was born from: **absence is a failure, not an empty
+list.** A missing scope file, an unreadable registry, a failed import or a desk
+that does not answer writes a `FAIL` line to `state/gna-mail.log` and carves a
+Rune — the gate then shows 503 with the command that raises the desk, never an
+empty inbox. `--check` probes health alone; `--dry-run` reads and writes nothing.
+
+The desk itself is a systemd **user** unit (`gna-desk.service`, `Restart=always`),
+seated once by `bin/mail/install.sh`; a reboot raises it again. Port `8490`
+(`GNA_DESK_PORT`), loopback only. The store and the scope live in the home, and
+the message spine is git-ignored.
+
 ### 3.9 Eir — the daily doctor round (`bin/time/nornir-job-doctor.sh`, 08:15, added 2026-09-24)
 
 Every surface is checked daily so a desktop that cannot open is REPORTED, never
