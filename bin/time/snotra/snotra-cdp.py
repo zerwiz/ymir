@@ -363,7 +363,52 @@ def cmd_install(args) -> int:
     return 0 if ws.js("!!window.__skirnir") else 4
 
 
+def cmd_seat(args) -> int:
+    """THE ORDERED SEAT. The one fault that broke every meeting attempt was order:
+    the bridge was installed AFTER Meet had taken the microphone, so the room heard the host's mic.
+    Here the order is enforced: launch on about:blank → install (init script) → navigate → join →
+    unmute → verify `in_call && bridge`. Refuses to report success on anything less."""
+    _touch_lease()
+    port = int(args.get("port", 9222))
+    url = args.get("url", "")
+    profile = args.get("profile") or os.path.expanduser("~/.local/share/skirnir/meet-profile")
+    if not url:
+        print("seat: --url is required", file=sys.stderr); return 2
+    cmd_launch({"port": port, "url": "about:blank", "profile": profile,
+                "headed": args.get("headed", True)})
+    ws = attach(port)
+    ws.call("Page.enable")
+    ws.call("Page.addScriptToEvaluateOnNewDocument", source=BRIDGE)   # before Meet, always
+    print("seat\tbridge-installed")
+    ws.js("location.href=%s" % json.dumps(url), await_promise=False)
+    ws.close()
+    time.sleep(12)
+    join_args = {"port": port, "name": args.get("name", "Skírnir")}
+    rc = cmd_join(join_args)
+    ws = attach(port)
+    # unmute: our stream IS the microphone, so a muted Meet is a silent mouth
+    for _ in range(3):
+        unmuted = ws.js("""(() => {const b=Array.from(document.querySelectorAll('button,[role=button]'))
+            .find(e=>/turn on microphone/i.test(e.getAttribute('aria-label')||''));
+            if(!b) return 'already-on'; b.click(); return 'clicked';})()""")
+        if unmuted != "clicked":
+            break
+        time.sleep(2)
+    bridged = bool(ws.js("!!window.__skirnir"))
+    in_call = _in_call(ws)
+    ws.close()
+    print(f"seat\tin_call={in_call}\tbridge={bridged}\tjoin={rc}\tunmute={unmuted}")
+    if not (in_call and bridged):
+        print("seat: REFUSED to call this a seat — " +
+              ("the bridge is missing (the room would hear the host's mic) " if not bridged else "") +
+              ("or it is still in the lobby (the host must admit it, or invite the account) " if not in_call else ""),
+              file=sys.stderr)
+        return 4
+    return 0
+
+
 def cmd_join(args) -> int:
+    _touch_lease()
     name = args.get("name", "Skírnir")
     ws = attach(args.get("port", 9222))
     typed = ws.js("""(() => {const i=document.querySelector('input[type=text]');
@@ -432,7 +477,16 @@ def resample(raw: bytes, src: int, dst: int = 48000) -> bytes:
     return out.tobytes()
 
 
+def _touch_lease() -> None:
+    """Every word spoken into a room holds the TTS card (see ~/.local/bin/kokoro-idle-stop.sh)."""
+    import subprocess
+    here = os.path.dirname(os.path.abspath(__file__))
+    subprocess.run(["bash", os.path.join(here, "tts-lease.sh"), "touch"],
+                   check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def cmd_say(args) -> int:
+    _touch_lease()
     path = args.get("wav")
     if not path:
         raise SystemExit("say needs --wav")
@@ -539,7 +593,8 @@ def _transcribe(path: str) -> str:
 
 
 CMDS = {"launch": cmd_launch, "attach": lambda a: (attach(a.get("port", 9222)), 0)[1],
-        "install": cmd_install, "join": cmd_join, "state": cmd_state,
+        "install": cmd_install, "seat": cmd_seat,
+    "join": cmd_join, "state": cmd_state,
         "say": cmd_say, "hear": cmd_hear, "selftest": cmd_selftest}
 
 
