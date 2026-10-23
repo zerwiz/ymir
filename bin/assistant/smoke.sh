@@ -162,6 +162,73 @@ else bad "idle-stop" "~/.local/bin/kokoro-idle-stop.sh is missing"; fi
 G="$(bash "$ROOT/bin/people/group-members.sh" 2>/dev/null | grep -c '","')"
 [ "${G:-0}" -ge 1 ] && ok "the group door lists ${G} group(s)" || skip "group members" "no groups allowed yet"
 
+
+# ═══ the suite that must never let an update break a room ═══════════════════════════════════
+# Every check below exists because something BROKE this way on 2026-10-22/23. A check that cannot
+# fail is a decoration; each one here asserts a behaviour a person would notice.
+
+# ── A · the pitch, in the shapes people actually use (it fell through the table once) ─────────
+for PHRASE in "tell Regan about Ymir" "can you explain what ymir is" "introduce ymir to a client"; do
+  OUT="$(ASK "$PHRASE")"
+  W="$(printf '%s' "$OUT" | j "len(d.get('answer','').split())")"
+  [ "${W:-0}" -ge 40 ] && ok "the pitch answers \"$PHRASE\" (${W} words)" \
+    || bad "pitch: $PHRASE" "${W:-0} words — a label, not an explanation"
+done
+
+# ── B · the rooms: open answers everything, named-only ignores the unnamed ───────────────────
+ROOMS="$(bash "$ROOT/bin/assistant/group-add.sh" 2>/dev/null)"
+case "$ROOMS" in
+  *"any message"*) ok "at least one room is open (answers unnamed messages)" ;;
+  *) skip "open rooms" "no room is set to answer any message" ;;
+esac
+OPEN_ID="$(printf '%s' "$ROOMS" | awk -F'","' '/any message/{gsub(/[ "]/, "", $1); print $1; exit}')"
+if [ -n "$OPEN_ID" ]; then
+  R2="$(ASK 'hi' collaborator telegram-group "$OPEN_ID")"
+  [ -n "$R2" ] && ok "the open room answers an unnamed hello" || bad "open room" "silent on a plain hello"
+fi
+
+# ── C · the room's members, asked three ways ─────────────────────────────────────────────────
+for Q in "who is in this group" "can you see who are in this group" "who's in this room"; do
+  M="$(ASK "$Q" owner telegram-group "-5435500944")"
+  case "$M" in *"members"*|*"admin"*) ok "the group door answers \"$Q\"" ;; *) bad "group members: $Q" "$M" ;; esac
+done
+
+# ── D · the handoff names the asker (it said \"someone\" once) ───────────────────────────────
+H2="$(bash "$SCRIPT_DIR/escalate.sh" --tier collaborator --chat -5435500944 --who "Reygan Inmostinvestmentgroup" \
+      --text "smoke" --context "smoke" --reason "smoke" --dry-run 2>&1)"
+case "$H2" in *"Reygan Inmostinvestmentgroup"*) ok "the handoff carries the person's name" ;; *) bad "handoff name" "$H2" ;; esac
+
+# ── E · a tier gate that must not rot: a stranger cannot hear contacts ──────────────────────
+S2="$(ASK 'who is craig' stranger)"
+case "$S2" in *"Craig Martin"*) bad "tier gate" "a stranger heard a contact" ;; *) ok "a stranger cannot hear a contact" ;; esac
+O2="$(ASK 'who is craig' owner)"
+case "$O2" in *"Craig"*) ok "the owner can hear a contact" ;; *) bad "owner contact" "$O2" ;; esac
+
+# ── F · the voice fails LOUD when the synthesiser is down (it failed silently once) ─────────
+systemctl --user stop kokoro-serve.service >/dev/null 2>&1; sleep 1
+if bash "$SCRIPT_DIR/mouth.sh" "the voice must refuse loudly" /tmp/smoke-down.ogg >/dev/null 2>&1; then
+  bad "mouth guard" "succeeded with no synthesiser"
+else
+  RC=$?
+  [ "$RC" -eq 3 ] && ok "a dead synthesiser fails loudly (exit 3)" || ok "a dead synthesiser fails (exit $RC)"
+fi
+systemctl --user start kokoro-serve.service >/dev/null 2>&1
+for _i in $(seq 1 12); do sleep 2; curl -s -m 3 -o /dev/null http://127.0.0.1:8765/ 2>/dev/null && break; done
+bash "$SCRIPT_DIR/mouth.sh" "the voice is back" /tmp/smoke-up.ogg >/dev/null 2>&1 \
+  && ok "the voice comes back after a restart" || bad "voice restart" "no voice after restarting kokoro"
+
+# ── G · the idle-stop respects the lease, and lowers a truly idle card ──────────────────────
+bash "$ROOT/bin/time/snotra/tts-lease.sh" touch >/dev/null 2>&1
+bash "$HOME/.local/bin/kokoro-idle-stop.sh" >/dev/null 2>&1
+systemctl --user is-active --quiet kokoro-serve.service \
+  && ok "the idle-stop leaves the voice up while the lease is fresh" \
+  || bad "idle-stop lease" "lowered the voice under a fresh lease"
+
+# ── H · the ledger, the retention rule, the backup ──────────────────────────────────────────
+bash "$ROOT/bin/time/snotra/audio-retention.sh" scan >/dev/null 2>&1 \
+  && ok "the retention rule scans the audio shelf" || bad "retention" "scan failed"
+
+
 echo
 printf 'smoke: %d pass · %d skip · %d fail\n' "$PASS" "$SKIP" "$FAIL"
 [ "$FAIL" -eq 0 ] || exit 1

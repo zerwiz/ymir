@@ -63,7 +63,13 @@ OWNER="$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null \
 # to you", and that promise is a lie if every road failed. Exit 0 only when at least one road carried it.
 SENT=0
 if [ -n "$TOKEN" ] && [ -n "$OWNER" ]; then
-  # the ask is a RECORD first, so an answer can find its way back to the person who asked
+  # a dry run never records: it exists to PREVIEW, and an ask recorded by a preview is a false waiting
+if [ "$DRY" -eq 1 ]; then
+  printf 'escalate: DRY — would record the ask and send:\n  %s\n' "${WHO:-someone}" >&2
+  exit 0
+fi
+
+# the ask is a RECORD first, so an answer can find its way back to the person who asked
 ASK_ID="$(bash "$ROOT/bin/assistant/asks.sh" add --who "${WHO:-someone}" --chat "$CHAT" \
   --channel "${CHANNEL:-telegram-dm}" --question "$TEXT" --context "${CONTEXT:-}" 2>/dev/null)"
 MSG="Allfather — ${WHO:-someone} asks (${TIER}, chat ${CHAT:-unknown}): “${TEXT:0:400}”. ${CONTEXT:+They said: ${CONTEXT:0:350}. }${REASON:+I could not answer it: ${REASON:0:120}. }

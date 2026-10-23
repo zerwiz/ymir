@@ -188,6 +188,12 @@ def sounds_like_refusal(text: str) -> bool:
                                   "ask him", "cannot answer", "can't answer"))
 
 
+# A person does not quote the phrase table. The pitch fires on the INTENT to be told about Ymir:
+# "what is ymir", "tell Regan about Ymir", "explain it", "introduce yourself" (measured 2026-10-23:
+# "Can you tell Regan about Ymir?" fell through and earned the honest no).
+PITCH_RE = re.compile(r"\bymir\b.*\b(tell|explain|describe|introduce|present|sell|pitch|about)\b|"
+                      r"\b(tell|explain|describe|introduce|present|sell|pitch)\b.*\bymir\b|"
+                      r"\b(introduce yourself|what are you|tell them about (it|the house|the system))\b", re.I)
 INTERROGATIVE = re.compile(
     r"^(what|who|why|how|when|where|which|whose|can|could|do|does|did|is|are|was|were|will|would|"
     r"should|may|might|have|has|am)\b")
@@ -956,6 +962,10 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             if slug:
                 used = [slug]
             break
+    # THE PITCH, asked in any shape a person uses (measured: "Can you tell Regan about Ymir?" fell through)
+    if intent == "unknown" and PITCH_RE.search(question):
+        kind, intent = "ymir_pitch", "ymir_pitch"
+
     # THE SCHEDULE, ASKED THE WAY PEOPLE ASK. Measured 2026-10-22: "what are <name> working on?",
     # "what are he doing now?", "when are he free for a meeting?" all missed the phrase table and
     # were answered from an unrelated fact. A person-word plus a doing/free/schedule word is enough.
@@ -969,6 +979,11 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
 
     # "can you ask him when he is available" is a REQUEST TO PASS A QUESTION, not a fact
     ask_names = "|".join(re.escape(a.lower()) for a in operator_aliases()) or r"$^"
+    if intent == "unknown" and re.search(r"\b(who (is|are|'s)|which) .*\b(in|on) (this|the) (group|room|chat)\b"
+                                          r"|\bmembers?\b.*\b(group|room|chat)\b"
+                                          r"|\bwho( are| is|'s)? (in )?(here|there)\b", key, re.I):
+        kind, intent = "group_members", "group_members"
+
     if intent == "unknown" and re.search(r"\b(ask him|ask her|ask the allfather|can you ask|"
                                          r"check with him|find out from him)\b|\bask (" + ask_names + r")\b",
                                          key, re.I):

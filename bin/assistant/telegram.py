@@ -358,7 +358,10 @@ def main() -> int:
             members = None
             if chat.get("type") in ("group", "supergroup", "channel"):
                 members = (load_groups().get(str(chat.get("id"))) or {}).get("members") or []
-            reply = answer(text, tier, channel, sender.get("username", ""), chat.get("id"),
+            # the person's own name, so a handoff says WHO: username, else the display name
+            who = sender.get("username") or " ".join(
+                x for x in (sender.get("first_name"), sender.get("last_name")) if x) or ""
+            reply = answer(text, tier, channel, who, chat.get("id"),
                            sender.get("id", ""), members)
             if not reply:
                 continue
