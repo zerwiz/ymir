@@ -83,7 +83,7 @@ def business_days_after(iso_date: str, n: int) -> str:
     return d.strftime("%Y-%m-%d")
 
 
-def letter(rec: dict, place: dict, person: dict) -> tuple[str, str, str]:
+def letter(rec: dict, place: dict, person: dict, home_path: Path | None = None) -> tuple[str, str, str]:
     """Return (subject, markdown, html) for one participant."""
     m = rec.get("meeting") or {}
     name = person.get("name") or "colleague"
@@ -98,7 +98,11 @@ def letter(rec: dict, place: dict, person: dict) -> tuple[str, str, str]:
     decs = rec.get("decisions") or []
     qs = rec.get("questions") or []
     cov = m.get("coverage") or {}
-    attachments = ["record.pdf", "decisions.md", "actions.md"]
+    # Name only what exists: a letter that promises an attachment it does not carry is the same fault as
+    # a card that says it was filed when it was not. Measured 2026-10-23: the three drafts carried nothing
+    # while the letters promised three attachments.
+    wanted = ["record.pdf", "decisions.md", "actions.md", "minutes.md", "questions.md"]
+    attachments = [f for f in wanted if (home_path / f).is_file()] if home_path else []
 
     L: list[str] = []
     L.append(f"# {title} — {held}")
@@ -193,7 +197,7 @@ def render(d: Path) -> int:
     for p in rec.get("participants") or []:
         if p.get("present") is False:
             continue
-        subject, md, html = letter(rec, place, p)
+        subject, md, html = letter(rec, place, p, d)
         slug = slugify(p.get("name") or "")
         (outdir / f"{slug}.md").write_text(md, encoding="utf-8")
         (outdir / f"{slug}.html").write_text(html, encoding="utf-8")
@@ -219,9 +223,15 @@ def drafts(d: Path) -> int:
         if not md_p.is_file():
             die(f"no letter for {p.get('name')} — run render first")
         subject = md_p.read_text(encoding="utf-8").splitlines()[0].lstrip("# ").strip()
+        attaches: list[str] = []
+        for line in md_p.read_text(encoding="utf-8").splitlines():
+            m2 = re.match(r"^- (\S+)$", line.strip())
+            if m2 and (d / m2.group(1)).is_file():
+                attaches += ["--attach", str((d / m2.group(1)).resolve())]
         res = subprocess.run(["bash", str(mail), "draft", "--to", p["email"], "--subject",
                               f"{subject} — your actions and the record", "--body", str(md_p.resolve()),
-                              "--record", str(d.resolve())], capture_output=True, text=True)
+                              "--record", str(d.resolve())] + attaches,
+                             capture_output=True, text=True)
         line = (res.stdout or "").strip().splitlines()[-1] if res.stdout.strip() else res.stderr.strip()[:200]
         m = re.search(r"draft\t(\S+)", res.stdout or "")
         if not m:
@@ -232,7 +242,7 @@ def drafts(d: Path) -> int:
         state["people"].append({"name": p.get("name"), "email": p["email"], "draftId": did,
                                 "letter": f"letters/{slug}.md", "sent": None, "approved": None})
         made += 1
-        say(f"draft{{person:{p.get('name')},draft:{did},to:{p['email']}}}")
+        say(f"draft{{person:{p.get('name')},draft:{did},to:{p['email']},attachments:{len(attaches) // 2}}}")
     statep.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
     say(f"drafts{{made:{made},state:{statep}}}")
     return 0

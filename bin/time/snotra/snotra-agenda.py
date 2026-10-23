@@ -88,8 +88,15 @@ def build(rec: dict, place: dict, when: str) -> tuple[str, str, str]:
     qs = [q for q in (rec.get("questions") or []) if (q.get("status") or "open") in ("open", "proposed")]
     pending = [d for d in (rec.get("decisions") or []) if (d.get("status") or "decided") == "proposed"]
     acts = [a for a in (rec.get("actions") or []) if (a.get("due_at") or "9999")[:10] <= day]
-    lines = [f"**Meeting: {when}** — the agenda drives the meeting (DEC-20261022-04). The last point is "
-             f"always open questions.", ""]
+    chair = ((place.get("roles") or {}).get("chair") or "").strip()
+    lead = (place.get("cadence") or {}).get("agenda_lead_days")
+    head = f"**Meeting: {when}** — the agenda drives the meeting (DEC-20261022-04)."
+    if chair:
+        head += f" Chair: **{chair}**"
+        if lead:
+            head += f" — sent {lead} day{'s' if int(lead) != 1 else ''} ahead"
+        head += "."
+    lines = [head, "", "The last point is always open questions.", ""]
     n = 0
     lines.append("**1 · Confirm what is still proposed**")
     if pending:

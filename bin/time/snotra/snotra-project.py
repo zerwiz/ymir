@@ -179,7 +179,7 @@ def state_for(place: dict, board_name: str, cache: dict) -> tuple[dict, dict, di
     for c in T.board_cards(b["id"]):
         for line in (c.get("desc") or "").splitlines():
             if line.strip().startswith(KEY + ":"):
-                by_key[line.split(":", 2)[-1].strip()] = c
+                by_key[line.split("record-key:", 1)[1].strip()] = c
                 break
     cache[board_name] = (b, ids, by_key)
     return cache[board_name]
@@ -202,7 +202,7 @@ def plan(rec: dict, place: dict, it: dict, cache: dict) -> tuple[str, dict]:
         _, lst = T.resolve_list(board, liste)
         lid = lst["id"]
         ids[liste] = lid
-    key = next((ln.split(":", 2)[-1].strip() for ln in it["desc"].splitlines()
+    key = next((ln.split("record-key:", 1)[1].strip() for ln in it["desc"].splitlines()
                 if ln.strip().startswith(KEY + ":")), None)
     card = by_key.get(key) if key else None
     if card is None:
