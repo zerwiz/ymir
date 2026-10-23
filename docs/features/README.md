@@ -12,6 +12,7 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 | Feature | Page |
 |---|---|
 | Unlock the vault (Hnitbjörg) with your phone | [unlock-the-vault-with-your-phone.md](unlock-the-vault-with-your-phone.md) |
+| The TUI frame check (`pi` renders inside the terminal) | [the-tui-frame-check.md](the-tui-frame-check.md) |
 
 ## The shape of a page
 
