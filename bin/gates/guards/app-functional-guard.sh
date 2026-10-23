@@ -39,7 +39,7 @@ case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   check) shift ;;
-  "") set -- check ;;
+  "") ;;
   *) printf 'error: unknown action %s\nhelp: app-functional-guard.sh [check] [--live]\n' "${1-}" >&2; exit 2 ;;
 esac
 LIVE=0

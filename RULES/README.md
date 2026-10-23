@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[29]{file,subject}:
+rules_index[30]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -64,6 +64,7 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | # | Rule | In one line |
 |---|---|---|
 | 28 | [Streaming voice](28-streaming-voice.md) | **Skírnir speaks in real time or he does not speak.** Capture is continuous, ASR is incremental over a rolling window, endpointing is a short VAD hangover, the answer is token-streamed and cut into sentences, the first sentence is synthesised immediately, and audio is pushed in real-time frames. Long text is allowed; a long silence is not. Every turn logs `stt_ms`, `ttft_ms`, `first_audio_ms`, `turn_ms` (target: first audio ≤ 1.5 s), and a **silent failure — a dead synthesiser, a full GPU, an empty buffer — is a violation**, not a soft error. Two gates stand before any claim: the bench oracle (push → record back → transcribe → match) and the room's own recording. |
+| 30 | [Audio is ephemeral](30-audio-is-ephemeral.md) | **A recording is a means, not a record.** The transcript and the minutes are the record; audio may be deleted only after a transcript exists (or on an explicit `--force`, which writes a Rune). Audio has a 24-hour clock, the shelves have caps and the OLDEST goes first, and the tiers are hot (this machine, Opus 24 kbit/s mono), cold (one of the operator's drives, filed by month) and far (whynot's disks). Text stays forever. |
 
 ## Appended 2026-10-22 — an update that leaves an app unreadable is not an update
 
