@@ -11,9 +11,9 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[573]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",19,-
-  "README.md","Gróa — the updater, one per install","data","tested","keep",19,-
+bin[577]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",20,-
+  "README.md","Gróa — the updater, one per install","data","tested","keep",20,-
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",5,168
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",2,104
   "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","wired","keep",1,9
@@ -85,6 +85,7 @@ bin[573]{file,does,kind,verdict,disposition,callers,lines}:
   "doc-sweep.sh","doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's documents, inside","tool","tested","keep",0,589
   "docs-claims-guard.sh","docs-claims-guard.sh — Rule 27: a user-facing document may not name a road that is closed.","tool","wired","keep",0,40
   "docs-guard.sh","docs-guard.sh — docs/ is the PUBLIC, user-facing tree.","tool","wired","keep",1,55
+  "doors.sh","doors.sh — a door register for ANY directory, rendered from the tree (plan 115 P7).","tool","wired","migrate → src/ymir_runtime/doors.py",0,32
   "ear.sh","ear.sh — a voice note in, the words out.","tool","wired","keep",3,49
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
   "eindri-acclaim-silent.sh","eindri-acclaim-silent.sh — action half of the Eindri silence bridge.","tool","wired","keep",1,57
@@ -119,7 +120,8 @@ bin[573]{file,does,kind,verdict,disposition,callers,lines}:
   "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",1,83
   "fleet-deploy.sh","fleet-deploy.sh — refresh the machine's fleet services from THIS package.","tool","wired","keep",0,98
   "fleet-ensure.sh","fleet-ensure.sh — the role-gated RAISE (plan 42's fleet services, plan 51's","tool","wired","keep",8,527
-  "fleet-version.sh","fleet-version.sh — is the fleet on ONE version?","tool","tested","keep",0,99
+  "fleet-version-guard.sh","fleet-version-guard.sh — the three labels and the two trees must agree, or say so.","tool","wired","keep",0,62
+  "fleet-version.sh","fleet-version.sh — is the fleet on ONE version?","tool","tested","keep",1,99
   "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",4,655
   "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",2,242
   "fm-afk-start.sh","Enter away mode and run the sub-supervisor daemon in a harness-tracked","provenance","tested","keep",2,173
@@ -296,7 +298,7 @@ bin[573]{file,does,kind,verdict,disposition,callers,lines}:
   "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",7,220
   "group-add.sh","group-add.sh — put Skírnir in a Telegram group, in one word.","tool","wired","keep",1,87
   "group-allow.sh","group-allow.sh — let Skírnir speak in ONE Telegram group, after the Allfather approves it.","tool","wired","keep",1,45
-  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",6,59
+  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",7,59
   "hall-snapshot.sh","hall-snapshot.sh — the planning feed for the Óðrerir Live Hall.","tool","wired","keep",1,151
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",1,247
   "harden.sh","harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones applied.","tool","tested","keep",5,151
@@ -311,7 +313,7 @@ bin[573]{file,does,kind,verdict,disposition,callers,lines}:
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,150
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",220,116
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",221,116
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",0,106
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",12,120
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
@@ -323,7 +325,8 @@ bin[573]{file,does,kind,verdict,disposition,callers,lines}:
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
   "inbox-watch.sh","inbox-watch.sh — notice when someone answers, without a human opening a mail client.","tool","wired","keep",0,103
   "inbox.sh","inbox.sh — read the mail that matters to a collaborator, and prove you can answer it.","tool","tested","keep",2,121
-  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",5,269
+  "inventory-guard.sh","inventory-guard.sh — a register that runs in no gate is a capability that is silently absent.","data","wired","keep",1,54
+  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",7,269
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",0,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
@@ -331,6 +334,7 @@ bin[573]{file,does,kind,verdict,disposition,callers,lines}:
   "learn-house.sh","learn-house.sh — give Skírnir the house's own public knowledge: the lore and the feature catalogue.","tool","wired","keep",0,115
   "learn-site.sh","learn-site.sh — Skírnir learns the house's own public site.","tool","wired","keep",0,137
   "learn.sh","learn.sh — a fact learned in conversation, waiting for the Allfather's approval.","tool","wired","keep",1,44
+  "library.sh","library.sh — the library of records: one corpus, one contract, one door (plan 115).","tool","wired","migrate → src/ymir_runtime/library.py",0,69
   "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
   "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",8,132
   "logretta-council.sh","logretta-council.sh — the council's MODES: who divides the work, who is sent out, who rules.","tool","wired","keep",0,309
@@ -586,6 +590,6 @@ bin[573]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=347, tested=226
+**Tally.** verdict: wired=351, tested=226
 
-**Tally.** disposition: keep=561, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=563, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
