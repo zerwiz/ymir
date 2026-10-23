@@ -38,3 +38,15 @@ first task of the order agreed with the Allfather (plan 111, appendix 23:40 §6)
 `docs/fixes/snotra/`, and the ward's component map knew no `snotra` — so a correct note covered nothing and every
 push was refused. The map now names it (`bin/time/snotra/* → snotra`), the component list includes it, and the
 `RULES/README.md` index declares 31 rules with the new row. A gate that must be overridden is a gate nobody trusts.
+
+### Appendix 2 (same day) — the door index was a feedback loop, and that is why CI refused every push
+
+`inventory --check` failed on every run — **and it failed on `main` too** (585 doors on disk, 557 rows in the
+committed index). The generator read `bin/README.md` while computing each door's `called-by` count, so every
+generation added one to every row: measured, two consecutive runs differed in **48 lines** (`2 → 3`, `3 → 4`). A
+gate whose own input is its own output can never pass, and the house was one `YMIR_SKIP` away from ignoring it.
+
+The fix is three lines: the scan now skips every index file by name (`README.md`, `CAPABILITIES.md`). Measured
+after: **two consecutive runs differ by 0 lines**, `--check` reports *current (594 files)* on both indexes, and the
+whole ward set passes locally with **0 FAIL**. That is Rule 34 applied to a generator: *it proves its output or it
+refuses it* — and a generator that cannot reproduce itself must not be allowed to certify anything.
