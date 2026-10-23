@@ -131,7 +131,8 @@ def load_groups() -> dict:
         for row in data.get("groups", []) or []:
             groups[str(row.get("id"))] = {"tier": row.get("tier", "collaborator"),
                                           "members": row.get("members") or [],
-                                          "owner_trusted": bool(row.get("owner_trusted"))}
+                                          "owner_trusted": bool(row.get("owner_trusted")),
+                                          "addressed_only": row.get("addressed_only", True)}
     except Exception:
         pass
     return groups
@@ -322,7 +323,15 @@ def main() -> int:
                 named = any(tok in low for tok in ("skirn", "skirm", "skrin", "skírni", "skirnir",
                                                    "brokk", "ymir", f"@{BOT_USERNAME.lower()}"))
                 trusted_owner = (tier == "owner")
-                if not (named or trusted_owner):
+                # a room may be declared OPEN — then he answers any message in it, not only the ones
+                # that name him (the Allfather's word, 2026-10-23: Reygan wrote "Hey" and got silence,
+                # because a group is addressed-only by default)
+                room = (load_groups().get(str(chat.get("id"))) or {})
+                addressed_only = room.get("addressed_only", True)
+                if addressed_only and not (named or trusted_owner):
+                    if verbose:
+                        print(f"telegram: skipped an unaddressed group message ({room.get('tier')})",
+                              file=sys.stderr)
                     continue
             if tier == "unknown-group":
                 if verbose:
