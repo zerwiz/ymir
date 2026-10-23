@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[32]{file,subject}:
+rules_index[35]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -85,7 +85,12 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 ## Appended 2026-10-23 — a record has a shape, and what was learned outside is kept
 | 34 | [A record has a shape](34-the-record-has-a-shape.md) | **A document meant to be found again carries the header, and a view is rendered.** One contract — the one the harness already enforces, extended with `owner · tags · sources`; a **typed** document is `---` with `kind` and `status`; `verified:` is a **command** a reader can re-run; every index (`FEATURES.md`, `RULES/README.md`, `*/DOORS.md`, the library's `INDEX.md`) is **derived**, and a derived view that is not **reproducible and gated** is a document pretending to be a register; the gate is on the **diff**, not on history; a correction is a new record citing the old one. |
 | 35 | [What was learned outside is kept](35-the-research-is-kept.md) | **Every research episode is kept, in the home, by date, with its sources and its route.** One question, the finding **in our words**, every page behind it, under `hodd/library/research/<YYYY>/<MM>/`, indexed from the folders; **an unsourced finding is an opinion** (only a recorded **negative result** may stand without a source); an episode is never rewritten; nothing private enters the library (Rule 15 wins). |
-rules_index[33]{file,subject}:
   "36-the-run-is-visible.md","the run is visible or it did not happen: the trace is the record, one writer and one DB, the team from the roster YAML, uv from the repo root, pi -ne in a worktree, a failure shows its cause"
 ## Appended 2026-10-23 — the run is visible, or it did not happen
 | 36 | [The run is visible](36-the-run-is-visible.md) | **Every agent run appears in the Smíðja — session, phases, the agent lane, events and a verdict — and the trace is the record.** One writer and one database (`$YMIR_HOME/smidja/smidja.db`); the team comes from the roster YAML; the invocation is `uv run apps/smidja/smidja_*.py` **from the repo root**; `pi` starts with `-ne` in a worktree and its declared extensions are added with `-e`; a failure shows its cause in the panel; and **nobody patches the screen with a hand-written row**. |
+  "09-electron.md","Rule 09 — Electron is a Local Seat"
+  "11-never-delete-only-move.md","Rule 11 — Never delete, only move"
+  "12-bin-structure.md","Rule 12 — `bin/` has a shape: one folder per system, and nothing loose"
+  "13-pi-extensions.md","Rule 13 — Pi extensions: one home, pi's own layout, and a gate that proves it"
+  "27-the-documents-are-checked.md","27 — The documents are checked, not trusted"
+  "30-audio-is-ephemeral.md","30 — Audio is ephemeral: it exists only to become text"
