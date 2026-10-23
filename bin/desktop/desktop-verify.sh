@@ -122,6 +122,32 @@ check_live_class() {  # <surface>
 }
 
 # ── (d): the class invariant — one string, four writers ─────────────────────
+# ── (e): the INSTALLED launcher points at THIS install ──────────────────────
+# A launcher that hardcodes one node path keeps working until an update moves the
+# package — then a click runs a stale copy. On 2026-10-23 the icons ran a 0.1.52
+# duplicate while the live install was 0.1.53, and the app's GPU process aborted
+# in Mesa because the stale copy predated the GPU guard. Every check said "up".
+check_launcher() {  # <surface>
+  local s="$1" f exec_line ref live refv livev
+  f="$HOME/.local/share/applications/ymir-$s.desktop"
+  [ -f "$f" ] || { vok "$s" "no installed launcher entry (web-only or not installed here)"; return 0; }
+  exec_line="$(sed -n 's/^Exec=//p' "$f" | head -1)"
+  ref="$(printf '%s' "$exec_line" | grep -o '[^ ]*/@zerwiz/ymir/' | head -1)"
+  if [ -z "$ref" ]; then
+    vok "$s" "launcher resolves at run time (wrapper) — nothing hardcoded"
+    return 0
+  fi
+  live="$(npm root -g 2>/dev/null)/@zerwiz/ymir"
+  [ -d "$live" ] || { vok "$s" "launcher names $ref (no live global install to compare)"; return 0; }
+  refv="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$ref/package.json" 2>/dev/null | head -1)"
+  livev="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$live/package.json" 2>/dev/null | head -1)"
+  if [ -n "$refv" ] && [ -n "$livev" ] && [ "$refv" != "$livev" ]; then
+    vfail "$s" "launcher runs $ref (v$refv) but the live install is v$livev — a stale duplicate; re-run bin/desktop/desktop-place.sh apply"
+    return 1
+  fi
+  vok "$s" "launcher matches the live install (v${livev:-unknown})"
+}
+
 check_class_invariant() {  # <surface>
   local s="$1" cls tpl rule slugs srcs
   cls="$(app_class "$s")"
@@ -155,6 +181,7 @@ if [ "$CLASS_ONLY" = 1 ]; then
 else
   for s in "${SURFACES[@]}"; do
     check_runtime "$s" || true
+    check_launcher "$s" || true
     check_class_invariant "$s" || true
     [ "$LIVE" = 1 ] && check_live_class "$s" || true
   done
