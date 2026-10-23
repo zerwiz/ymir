@@ -228,3 +228,47 @@ which looks like a missing file and is a wrong working directory.
 run 8f110045   01 request  success   0.0s
                02 build    RUNNING   builder · llama-swap/qwen3.6-35b-a3b@q4_k_xl-mtp
                35 events in $YMIR_HOME/smidja/smidja.db
+### Correction, appended 2026-10-23 — the smithy is tracked; what is missing is the roster
+My earlier line in this asset said the smithy is not in git. **It is:** `git ls-files apps/smidja` → 34
+files, and `apps/smidja-factory` → 229. What `.gitignore:100-101` excludes is **runtime data** —
+`apps/smidja/smidja_data/` and `apps/smidja.db*` — which is why the agent prompts live there: they are
+run data, not repo content.
+**What this seat does not have, and the docs say it must:**
+docs say                          this seat
+roster.yaml = THE ONE config      apps/smidja/smidja_smidja_config/ holds ONLY smidja.config.yaml
+  stacks: teams                   — no `stacks:` block at all → no teams to pick → empty picker
+  role_defaults: roles
+  tiers: model catalog
+just rosters / sdlc / sessions    `just` is NOT installed
+START_SMIDJA.md (playbook)        absent
+**Read before you claim:** `apps/smidja-factory/cookbooks/{run_smidja,create_config,create_smidja,
+how_to_prompt_for_the_eng}.md` and `apps/smidja-factory/skills/{create-new-teams,create-new-agent,
+add-or-edit-ai-models,how-to-run-agent-teams,smidja-start,smidja-launcher,smidja-instructions}/SKILL.md`.
+A team is a `stacks:` block, created by interviewing the operator — never guessed, never generated as a
+throwaway config.
+### The books — `apps/smidja-factory/cookbooks/` and `apps/smidja-factory/skills/` (critical)
+Read the matching book **before** changing the smithy: a chain, a roster, a prompt, a module, or the
+invocation. They are the specification; a disagreement between a book and the tree is a ticket.
+cookbooks[9]{book,what it settles}:
+  "smidja_overview.md","what the smithy is: phases, envelopes, gates, the trace"
+  "run_smidja.md","how to launch a run and report it — the orchestrator observes, never implements"
+  "create_smidja.md","compose a new chain (the Phases: line is the contract)"
+  "create_config.md","the roster/config file: agents, prompts, tools, writes, protected files"
+  "update_config.md","change a roster without breaking a run"
+  "update_smidja.md","change a chain safely"
+  "update_modules.md","change a module (tracer, runner, gates, agents)"
+  "install.md","what a fresh install needs, and what is runtime data rather than repo content"
+  "how_to_prompt_for_the_eng.md","write the prompt the whole chain will read — same intent, sharper words, verified paths, a stated 'done means'"
+skills[9]{skill,what it settles}:
+  "smidja-start","the single exact way to put agents to work (chain · roster · models · orchestrator)"
+  "smidja-launcher","raise and watch a run"
+  "smidja-instructions","the operating instructions for the smithy"
+  "how-to-run-agent-teams","teams in practice"
+  "create-new-teams","a team IS a `stacks:` block in roster.yaml — interview the operator, never guess"
+  "create-new-agent","one new role, added to role_defaults"
+  "add-or-edit-ai-models","models, prompts and injection for an existing team"
+  "git-ops","branch/commit/push discipline for work the smithy produces"
+  "volundr","the master craftsman's own practice"
+**What this seat is missing against those books** (measured 2026-10-23): no `roster.yaml` (so no
+`stacks:` → no teams), `just` not installed (so no `just rosters/sdlc/sessions`), `START_SMIDJA.md`
+absent. Each is a ticket; none is a reason to improvise a team.

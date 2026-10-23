@@ -115,3 +115,113 @@ uv run apps/smidja/smidja_build.py … --config apps/smidja/smidja_smidja_config
 **The flag and the working directory were the whole difference between "no agent activity yet" and a
 builder lane on the rail.** A rule that does not name its own invocation is a rule someone will get
 wrong at 3am — so this rule names it, with the failure each way it can be got wrong.
+
+---
+
+## Correction, appended 2026-10-23 — I claimed the smithy was not in git. It is. I had not read its own docs.
+
+The Allfather: *"what.. are the apps not getting pushed to git? have you even read this docs____??
+apps/smidja-factory/cookbooks · apps/smidja-factory/skills"*. He was right on both counts.
+
+**Measured after reading them:**
+
+```
+git ls-files apps/ | tracked files:  smidja 34 · smidja-factory 229 · hlidskjalf 175 · odrerir 37 · sessrumnir 395
+ignored (by design):                 apps/smidja/smidja_data/  ·  apps/smidja.db*        (.gitignore:100-101)
+```
+
+So §1 of the earlier appendix was **wrong**: the smithy *is* tracked; only its **runtime data** is
+ignored. The prompts live under `smidja_data/` because they are *run data*, not repo content — a
+distinction the cookbooks state and I did not read before asserting otherwise.
+
+**What the docs say, and what this seat actually has — four disagreements:**
+
+| the docs (cookbooks/ + skills/) | this seat |
+|---|---|
+| `roster.yaml` is **the ONE config**: teams in `stacks:`, roles in `role_defaults:`, models in `tiers:` (`skills/create-new-teams`, `skills/smidja-start`) | `apps/smidja/smidja_smidja_config/` holds **only `smidja.config.yaml`** with an `agents:` list — **no `stacks:` at all**. There are no teams to choose, which is why the picker is empty — not only an API bug |
+| `just rosters` · `just sdlc` · `just sessions` · `just obs` (`justfile` at the repo root) | **`just` is not installed** — none of the documented recipes can run |
+| `START_SMIDJA.md` is the canonical playbook at the repo root (`skills/smidja-start`) | **absent** |
+| `uv run smidja/<chain>.py …` from `~/Ymir` (`cookbooks/run_smidja.md`) | the chains live at `apps/smidja/`, and the config's paths are root-relative — so the invocation is `uv run apps/smidja/smidja_*.py …` from the repo root (§4 above), which the cookbook predates |
+
+**What this changes in the law:** §3 of this rule stands and gets stronger — *the team comes from the
+roster YAML* means the file the docs name, with a `stacks:` block. A `smidja.config.yaml` that carries
+only `agents:` is a **roster with no teams**, and a picker over it can only be empty. Creating that file
+is a decision the operator makes with the `create-new-teams` skill's questions — purpose, surface
+(local/cloud/hybrid), the agents, and the model each agent runs — never a guess by the agent.
+
+---
+
+## Appended 2026-10-23 — the smithy's own books are load-bearing, and they are named here
+
+The Allfather: *"append to the rule and the system — this are critical skills and cookbooks."* They are,
+and this rule is where a hand is told so **before** it touches the Smíðja.
+
+**Two shelves, both under `apps/smidja-factory/`, both read before any change to the smithy:**
+
+```
+cookbooks/ (9)                              skills/ (9)
+  smidja_overview.md                          smidja-start/            the exact way to put agents to work
+  run_smidja.md                               smidja-launcher/         raise it, watch it
+  create_smidja.md                            smidja-instructions/     the operating instructions
+  create_config.md                            how-to-run-agent-teams/  teams in practice
+  update_config.md                            create-new-teams/        a team = a `stacks:` block (interview first)
+  update_smidja.md                            create-new-agent/        one new role
+  update_modules.md                           add-or-edit-ai-models/   models, prompts, injection
+  install.md                                  git-ops/                 branch/commit/push discipline
+  how_to_prompt_for_the_eng.md                volundr/                 the master craftsman
+```
+
+**The law that makes them load-bearing:**
+
+1. **Read the book before the code.** A change to the Smíðja — a chain, a roster, a prompt, a module, an
+   invocation — starts by reading the matching cookbook or skill. This rule's own correction exists
+   because that step was skipped: I claimed the smithy was untracked without opening
+   `cookbooks/install.md`.
+2. **They are the authority on the smithy, in this order:** the skill (`skills/smidja-start`) for *how to
+   run*, the cookbook (`cookbooks/run_smidja.md`) for *what to say*, the config (`roster.yaml`) for *who
+   runs it*. A doc that disagrees with the tree is a **ticket**, not an excuse to improvise — four such
+   disagreements were found and named on 2026-10-23.
+3. **A team is not improvised.** `skills/create-new-teams` says it plainly: a team is a `stacks:` block
+   in `roster.yaml`, made by **interviewing the operator** (purpose · local/cloud/hybrid · the agents ·
+   the model each runs). An agent that guesses a team has made a roster nobody asked for.
+4. **The orchestrator launches and observes; it never implements** (`cookbooks/run_smidja.md`). Stepping
+   into the work is the failure this whole rule exists to make visible.
+5. **When the books and the tree disagree, the books are the specification and the tree is the defect** —
+   unless the book itself predates a move, which is also a ticket (the cookbook still says
+   `uv run smidja/…`; the chains now live in `apps/smidja/`).
+
+---
+
+## Appended 2026-10-23 — the books are MANDATORY, and a missing book is a stop, not an improvisation
+
+The Allfather: *"this can never happend that we are missing this for the smidja ever again… append to the
+rules."* So it is a numbered clause of this rule, with a door and a ward behind it.
+
+**§9 · Before any change to the smithy, the books are read — in this order:**
+
+```
+1  apps/smidja-factory/SKILL.md        the entry: what the smithy is, what loads when
+2  apps/smidja-factory/AGENTS.md       the canonical doc: runtime, rosters, routing table, hard rules
+3  apps/smidja-factory/cookbooks/      9 books: overview · run · create/update chain · config · modules · install · prompting
+4  apps/smidja-factory/skills/         9 skills: start · launcher · instructions · agent-teams · new-teams · new-agent · models · git-ops · volundr
+5  apps/smidja-factory/docs/ · references/   the deep specs (roster/model source of truth, handoff, observability)
+```
+
+**Ask, do not remember:** `bin/records/where.sh apps/smidja` prints the entry, the canonical doc, the
+books, the doors **and what this tree is missing**. `bin/records/where.sh --check` proves every book the
+map names exists.
+
+**A missing book is a STOP, not an improvisation.** The map's `missing` cell names what the books promise
+and this tree does not have (measured 2026-10-23: `scripts/smidja` — the launcher with <!-- stale-ok: named as MISSING by this rule; the launcher the cookbooks promise does not exist on this seat (ticket: the broken board) -->
+`rosters|team|doctor` · `roster.yaml` with `stacks:` · `justfile` · `tests/local-models/`). The correct
+move is a ticket and, if the work cannot wait, the smallest honest thing — **never** a hand-made stand-in
+for the missing piece (the night of 2026-10-23 produced three: hand-written trace rows, hand-written agent
+prompts, and an ad-hoc launcher invocation).
+
+**The ward:** `bin/gates/guards/subsystem-docs-guard.sh` — in `bin/gates/guards.sh` — refuses a map row
+that names a book which does not exist, and refuses a **governed path in AGENTS.md with no row in the
+map**. A path with no book is how a night gets lost; a book that does not exist is worse than none.
+
+**The map:** `.agents/assets/agents/subsystem-docs.md` — one row per subsystem: path · entry · canonical
+doc · books · doors · missing. It is the only place a hand is told what to read, so it is checked, not
+trusted.
