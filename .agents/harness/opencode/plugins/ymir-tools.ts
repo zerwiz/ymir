@@ -49,7 +49,7 @@ async function resolveYmirPaths(): Promise<{ root: string; home: string; state: 
       if (home) home = home.replace(/\/hodd$/, "") // hoard -> home
     } catch {}
   }
-  if (!home) home = `${process.env.HOME}/Documents/ymirhome`
+  if (!home) throw new Error("YMIR_HOME not resolved — ask bin/vault/hodd.sh path, never assume it")
   
   const state = process.env.BROKK_STATE_OVERRIDE || `${home}/state`
   

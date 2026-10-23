@@ -12,7 +12,16 @@
 set -uo pipefail
 
 REPO="${YMIR_REPO:-$HOME/ymir}"
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+
+# Rule 07: the home is resolved, never restated.
+HOME_DIR="${YMIR_HOME:-}"
+if [ -z "$HOME_DIR" ]; then
+  for _lib in "$REPO/bin/vault/hoard-lib.sh" "$HOME/ymir/bin/vault/hoard-lib.sh"; do
+    [ -r "$_lib" ] && { . "$_lib"; ymir_home_root HOME_DIR 2>/dev/null; break; }
+  done
+  unset _lib
+fi
+[ -n "$HOME_DIR" ] || HOME_DIR="$HOME/.local/state"
 STATE_DIR="$HOME_DIR/hodd/state"
 LOG="$STATE_DIR/groa-agent.log"
 PIDFILE="$STATE_DIR/groa-agent.pid"
