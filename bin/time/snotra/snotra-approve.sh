@@ -20,6 +20,14 @@ MAIL="$ROOT/bin/time/snotra/mail-send.sh"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/ymir/approvals"
 mkdir -p "$STATE"
 
+# The home, through the ONE resolver (Rule 07): `$YMIR_HOME` is read below, so the
+# file must resolve it rather than restate it. A guarded `-n` test is not a resolver.
+if [ -z "${YMIR_HOME:-}" ]; then
+  # shellcheck source=../../vault/hoard-lib.sh
+  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root YMIR_HOME || true
+fi
+
 operator(){
   local id="${YMIR_OPERATOR:-}"
   [ -n "$id" ] && { printf '%s' "$id"; return; }
