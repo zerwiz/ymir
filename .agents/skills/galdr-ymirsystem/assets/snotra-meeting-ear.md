@@ -419,3 +419,56 @@ the always-on control plane is zerwizserver; whynot is compute; the dev seats ar
 the operator is; and Þing is raised on demand, never assumed.
 
 Tests: `bash tests/run.sh` — four suites, 61 assertions.
+
+---
+
+## Appended 2026-10-23 — the meeting pipeline, the place contract, and the reply path
+
+The ear is one door in a chain now. This section is the owner's list of what exists and what each part refuses;
+the full specification is the `docs/snotra/` shelf (README · the-pipeline · the-doors · the-places · the-record ·
+the-letters · the-sound).
+
+### The chain — one command
+
+```bash
+bin/time/snotra/snotra-pipeline.sh run <meeting-dir> [--dry-run] [--draft] [--shrink]
+bin/time/snotra/snotra-pipeline.sh run --recent [DAYS]
+```
+
+`record → harvest → signal → transcribe → speakers → layout → project → agenda → letters` (+ `ladder` with
+`--shrink`), one meeting at a time (flock), a rune per run, and four verdicts: **PASS · WARN · SKIP · FAIL**. A
+step that cannot be proven stops the chain and names itself; a skip always prints its reason (Rule 25).
+
+### The doors added with it
+
+| door | what it does | what it refuses |
+|---|---|---|
+| `snotra-harvest.sh` | the bot's own audio out of its store, verified against `file_size_bytes`; `speakers` splits by `speakerIndex`; `signal` audits the STT log | a download whose bytes do not match; a log of `ok:true, text:""` (exit 1) |
+| `snotra-transcribe-bot.sh` | whisper over the meeting's own audio → `evidence/bot/transcript.bot.txt` + `transcribe.json` | audio that is not `is_meeting_stream: true` (Rule 33); fewer than 50 words |
+| `snotra-project.sh` | the record onto the place's boards by kind: member · native due · checklist · verified read-back | a card moved by a human (`drift`, left in place); a place on another surface |
+| `snotra-agenda.sh` | the dated agenda card — proposed → due → **open questions last** | a record that names no company/place |
+| `snotra-letter.sh` | one letter per participant: text + HTML + attachments, multipart draft | an attachment it does not carry; a send without an approval record |
+| `snotra-promote.sh` | accept · reject · hold, appended to `promotions.jsonl`, read back | a promotion with no `--by "<person>"`; a record that does not validate |
+| `snotra-layout.sh` | the folder standard; `apply` retires a stray to `evidence/hand-built/` | a fifth hand-built letter at the top level |
+| `snotra-audio-ladder.sh` | verify → require a transcript → Opus 16 kbps → strip the duplicated `pcm` | shrinking before a transcript exists |
+| `snotra-board.sh` | `check`/`ensure` a declared board: lists, labels, private, in the house's org | creating a board that already exists by name |
+| `snotra-mail-watch.sh` | replies: `status` · `check` · `record` · `register` (each decision beside the reply that names it) | counting a reply that names no decision id; promoting without `--by` |
+| `snotra_paths.py` | every meetings shelf in one resolver | — |
+
+### The place contract (where a shape lives)
+
+`hodd/identity/places/<company>/<place>/place.yaml` — `surface` (trello | gimle | jira) · `board` (a NAME,
+resolved through `trello-map.yaml`) · `lists` per kind · `labels` · `roles` (chair, operator) · `cadence` ·
+`retention` · `authority` (the decisions or documents the shape comes from) · `never` (the laws quoted by the
+doors). **No company, board or list name appears in `bin/time/snotra/*.py`** — grep-proven; a second company
+files correctly with no code change, and a place declaring `surface: gimle` is refused until that adapter exists.
+
+### Installation and updates
+
+- the doors ship with `bin/` in the npm package; `bin/engine/ymir-install.sh`'s snotra step installs the ear;
+- **migration `0012-places-shelf`** gives an existing home the `places/` shelf and one declared example
+  (`example/projects`), because before it a fresh install could only answer "no place profile";
+- **cron**: `@dev 07:10 bin/time/nornir-job-snotra-mail.sh` (in `config/cron.yaml.example`) reads the letters'
+  replies nightly; the pipeline may be scheduled as `--recent 1 --draft` once the Allfather says so;
+- the state the doors need (`VEXA_API_URL`, `VEXA_S3_*`, the Trello grant in `~/.pi/agent/mcp-auth.json`) is
+  read from env/config with one documented default each — never invented.

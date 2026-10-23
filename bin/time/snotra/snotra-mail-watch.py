@@ -169,6 +169,88 @@ def replies(meeting: Path) -> list[dict]:
     return out
 
 
+
+# ── the register view: every decision beside the reply that answers it ─────────────────────────
+def load_replies(meeting: Path) -> list[dict]:
+    rows = []
+    p = meeting / "replies.jsonl"
+    if p.is_file():
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line:
+                try:
+                    rows.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+    if not rows:                      # nothing recorded yet: look now, without writing
+        for r in replies(meeting):
+            for x in r["replies"]:
+                rows.append({"person": r["name"], "email": r["email"], **x})
+    return rows
+
+
+def cmd_register(meeting: Path) -> int:
+    rec = json.loads((meeting / "record.json").read_text(encoding="utf-8"))
+    decs = rec.get("decisions") or []
+    rows = load_replies(meeting)
+    by_id: dict[str, list[dict]] = {}
+    whole: list[dict] = []
+    for x in rows:
+        for did in x.get("ids") or []:
+            by_id.setdefault(did, []).append(x)
+        if not x.get("ids"):
+            whole.append(x)
+
+    answered = confirmed = 0
+    for d in decs:
+        did = d.get("decision_id")
+        state = d.get("status") or "proposed"
+        hits = [x for x in by_id.get(did, []) if x.get("kind") in ("confirm", "correct")]
+        if hits:
+            answered += 1
+            x = hits[-1]
+            if x["kind"] == "confirm":
+                confirmed += 1
+            say(f"decision{{id:{did},grade:{d.get('grade')},status:{state},answer:{x['kind']},"
+                f"person:{x['person']},at:{x['at']},line:{x.get('line','')[:90]!r}}}")
+        else:
+            say(f"decision{{id:{did},grade:{d.get('grade')},status:{state},answer:none}}")
+
+    for x in whole:
+        say(f"reply{{person:{x['person']},kind:{x['kind']},names_no_id:true,at:{x['at']},"
+            f"line:{x.get('line','')[:90]!r}}}")
+    say(f"register{{decisions:{len(decs)},answered_by_id:{answered},confirmed_by_id:{confirmed},"
+        f"unnamed_replies:{len(whole)}}}")
+
+    # a reply is EVIDENCE. Promotion is a person's act: `--apply --by "<name>"` is how he performs it.
+    if "--apply" in sys.argv:
+        by = None
+        for i, a in enumerate(sys.argv):
+            if a == "--by" and i + 1 < len(sys.argv):
+                by = sys.argv[i + 1]
+        if not by:
+            die("refused: --apply needs a person — --by \"<name>\" (a machine may propose, only a person promotes)", 2)
+        promote = ROOT / "bin" / "time" / "snotra" / "snotra-promote.sh"
+        n = 0
+        for d in decs:
+            did = d.get("decision_id")
+            if (d.get("status") or "proposed") != "proposed":
+                continue
+            hits = [x for x in by_id.get(did, []) if x.get("kind") == "confirm"]
+            if not hits:
+                continue
+            x = hits[-1]
+            r = subprocess.run(["bash", str(promote), "set", str(meeting), did, "accept", "--by", by,
+                                "--why", f"reply {x['at']} from {x['person']}: {x.get('line','')[:120]}"],
+                               capture_output=True, text=True)
+            say((r.stdout or r.stderr).strip().splitlines()[-1] if (r.stdout or r.stderr) else f"promote {did}: ?")
+            n += 1 if r.returncode == 0 else 0
+        say(f"promoted{{count:{n},by:{by}}}")
+    elif confirmed:
+        say("next: a person promotes — `snotra-mail-watch.sh register <dir> --apply --by \"<name>\"`")
+    return 0
+
+
 def cmd_status(meeting: Path) -> int:
     rows = replies(meeting)
     for r in rows:
@@ -223,7 +305,9 @@ def main(argv: list[str]) -> int:
         return cmd_check(meeting)
     if cmd == "record":
         return cmd_record(meeting)
-    die(f"unknown command {cmd!r} — status | check | record", 2)
+    if cmd == "register":
+        return cmd_register(meeting)
+    die(f"unknown command {cmd!r} — status | check | record | register", 2)
     return 2
 
 

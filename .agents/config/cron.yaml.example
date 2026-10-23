@@ -34,3 +34,9 @@
 # The rollover backstop: hand off every repository that carries a .asken state,
 # so a session that died without a reporter still leaves a fresh HANDOFF.md.
 @heart 04:00 bin/time/nornir-job-asken-handoff.sh
+
+# Snotra listens for the answers: every meeting that sent letters is read for replies, and each reply is
+# recorded beside the decision it names. Read-only on the mailbox; it never sends and never promotes —
+# `snotra-mail-watch.sh register <dir> --apply --by "<name>"` is the operator's act.
+# Gated @dev: the mailbox belongs to the seat that holds the letters, not the heart.
+@dev 07:10 bin/time/nornir-job-snotra-mail.sh

@@ -4,6 +4,9 @@
 #   snotra-mail-watch.sh status <meeting-dir>            was each letter sent · is there a reply · what kind
 #   snotra-mail-watch.sh check  <meeting-dir> [--json]   the replies in full: sender · date · the telling line
 #   snotra-mail-watch.sh record <meeting-dir>            append what it saw to replies.jsonl + one rune
+#   snotra-mail-watch.sh register <meeting-dir> [--apply --by "<name>"]
+#                                                        every decision beside the reply that answers it;
+#                                                        --apply promotes the id-named confirms as HIS act
 #
 # It matches a thread by the letter's own subject and a sender by the record's participants — a stranger's
 # mail is never attributed to a meeting. A reply is EVIDENCE: it never promotes a decision. Only
