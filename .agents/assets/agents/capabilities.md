@@ -10,7 +10,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",547
+  "shell doors (bin/*.sh)",557
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",28
   "Pi extension tools",0
@@ -481,6 +481,8 @@ capabilities[5]{surface,count}:
 | mail-send.sh | mail-send.sh — the follow-up email with the record attached, as a draf | tested | keep (a human or a cron row must run it) |
 | meeting-record-guard.sh | meeting-record-guard.sh — a meeting record is a record: if one is miss | tested | keep (a human or a cron row must run it) |
 | participants-fill.sh | participants-fill.sh — fill participant emails from the meeting's cale | tested | keep (a human or a cron row must run it) |
+| smoke.sh | smoke.sh — the Snotra meeting pipeline's own gate: five doors, three v | tested+named | keep (a human or a cron row must run it) |
+| snotra-audio-ladder.sh | snotra-audio-ladder.sh — the meeting's sound gets smaller AFTER its wo | tested | keep (a human or a cron row must run it) |
 | snotra-autojoin.sh | snotra-autojoin.sh — read the calendar, decide which meetings Snotra j | tested+named | keep (a human or a cron row must run it) |
 | snotra-bot.sh | snotra-bot.sh — send Snotra into a meeting, through the Vexa API. | tested+named | keep (a human or a cron row must run it) |
 | snotra-capture.sh | snotra-capture.sh — capture mic + system audio on the meeting seat. | tested+named | keep (a human or a cron row must run it) |
@@ -489,11 +491,14 @@ capabilities[5]{surface,count}:
 | snotra-dispatch.sh | snotra-dispatch.sh — one draft per person, and the team follow-up, fro | tested | keep (a human or a cron row must run it) |
 | snotra-ensure.sh | snotra-ensure.sh — ensure the meeting ear's transcription engine is pr | tested+named | keep (a human or a cron row must run it) |
 | snotra-evidence.sh | snotra-evidence.sh — timestamp, immutable copy, certification and rete | tested | keep (a human or a cron row must run it) |
+| snotra-harvest.sh | snotra-harvest.sh — the meeting's OWN audio, out of the bot's store, v | tested | keep (a human or a cron row must run it) |
 | snotra-init.sh | snotra-init.sh — the first-run setup for the meeting system, agnostic  | tested | keep (a human or a cron row must run it) |
 | snotra-iscall.sh | snotra-iscall.sh — is a real call in progress on this seat? | tested | keep (a human or a cron row must run it) |
+| snotra-letter.sh | snotra-letter.sh — one letter per participant, from the record, carryi | tested | keep (a human or a cron row must run it) |
 | snotra-live.sh | snotra-live.sh — THE LIVE TAIL: listen through this machine's micropho | tested+named | keep (a human or a cron row must run it) |
 | snotra-meet.sh | snotra-meet.sh — the meeting voice: one door, and the browser is the a | tested | keep (a human or a cron row must run it) |
 | snotra-mine.sh | snotra-mine.sh — mine decisions and action items out of a transcript. | tested+named | keep (a human or a cron row must run it) |
+| snotra-project.sh | snotra-project.sh — the record projected onto the place's boards, by k | tested | keep (a human or a cron row must run it) |
 | snotra-provenance.sh | snotra-provenance.sh — a tamper-evident record of every meeting artifa | tested | keep (a human or a cron row must run it) |
 | snotra-render-email.sh | snotra-render-email.sh — the follow-up letter, generated from the reco | tested | keep (a human or a cron row must run it) |
 | snotra-render-pdf.sh | snotra-render-pdf.sh — one printable PDF from a meeting record. | tested | keep (a human or a cron row must run it) |
