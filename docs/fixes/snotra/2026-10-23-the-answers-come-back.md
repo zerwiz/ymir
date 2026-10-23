@@ -35,3 +35,12 @@ reply{kind:confirm, names_no_id:true, line:'Confirmed overall, thanks.'}     ←
 **The law this proves:** a whole-register "confirmed, thanks" is never fourteen signatures. A decision is promoted
 only when the reply names its id, and only by a person; the reply is recorded as the evidence in
 `promotions.jsonl`, so the register carries *who said so and on what words*.
+
+### Appendix (same day) — `snotra-dispatch.sh who "<person>"`
+
+The Allfather: *"he should know if we have emailed Reygan, cuz we have — and what was in that email."* The answer sat
+in four files and no door read them together. `snotra-dispatch.sh who "<person>"` now prints, per meeting they
+attended: the letter's state (`sent at …` vs `draft … · not sent`), what was filed on the board, the count of replies,
+the date the state file was last written, the letter's opening line, and the last reply with its kind — read-only, from
+the vault, never the mailbox. A send is a send only when `letters.json` carries `sent.at`; an absent file is
+**not recorded**, never *not sent* (Rule 37).
