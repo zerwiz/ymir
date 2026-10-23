@@ -48,3 +48,13 @@ verified[4]{check,result}:
 **Not verified here:** a full reboot (the unit's `WantedBy=default.target` is the claim), and a Nornir
 cycle actually firing the new rows (the scheduler is restarted in the same change; the first row lands
 at its minute).
+
+## Appended 2026-10-23 — the installer names its own fragility
+
+The unit had to be seated from `feat/mail-gate`'s worktree, because main carries no `bin/mail/` yet. A
+unit whose `ExecStart` points into `.yggdrasil/` dies the day that worktree is pruned — at a reboot,
+which is the worst moment to learn it. `bin/mail/install.sh` now prints a WARNING naming the worktree
+and the one command that re-seats it from the main tree, so the fragility is stated where it is
+created rather than discovered later.
+
+**After the merge:** `bash bin/mail/install.sh` from `~/ymir` — once, no other change.
