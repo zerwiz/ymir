@@ -69,7 +69,32 @@ never:                     # laws, not preferences — the doors quote these
 |---|---|---|---|---|---|---|
 | `synteon/documentation` | trello | Documentation | Decided / Resolved | Backlist Actions/Tasks | Open Questions | Next Meeting Agenda |
 | `whynotproductions/projects` | trello | Control Tower | Decided | Project Todos | Open Questions | Weekly Updates |
+| `ymir/projects` | trello | **Ymir** | Decisions | Doing | Open Questions | Agenda |
 | `wayof/projects` | **gimle** | — | — | — | — | — |
+
+## The house's own board (`ymir/projects`)
+
+Ymir is not a customer, so its authority is not a DEC register — it is the **plan ledger and `RULES/`**, cited
+in the profile. Its board was created by a door, not a hand:
+
+```
+$ snotra-board.sh ensure ymir/projects
+board{name:Ymir,id:6adb7bae165a8594de1103ac,created:true,org:6ad238393bae14df5e25c980}
+list{name:Decisions,created:true} · Doing · Open Questions · Agenda
+label{name:Plan,blue} Rule,purple Fix,orange Guard,red Skill,green Blocking,black
+map{refreshed:true}
+verify{board:Ymir,lists:4,missing:[],ok:true}
+```
+
+Its first card is **“How this board works — read me first”** (Agenda, pinned top) carrying the house emblem as
+its cover — the bronze world-tree — and the laws of the projection written on its back. `record-key:
+ymir/board:INTRO` makes it idempotent like every other card.
+
+**A declared board is executable.** `snotra-board.sh check <place>` asks whether the board, its lists and its
+labels exist; `ensure` creates only what is missing, finds an unmapped board by name inside the organisation
+before creating anything (the duplicate "Control Tower" of 2026-10-22 is why), and refreshes the map. The smoke
+now checks **every** place's board, and it found two real drifts on the first run: Documentation was missing
+the `Blocking` label, and Control Tower was missing every grade label its profile names.
 
 ## The proof that the shape is not in the code
 

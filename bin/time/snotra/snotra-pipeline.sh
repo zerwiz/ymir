@@ -40,10 +40,11 @@ while [ $# -gt 0 ]; do
   esac
 done
 if [ -n "$recent" ]; then
+  # every meetings shelf the home keeps — realm meetings, the operator's own work meetings, and the
+  # shared workspace — through the one resolver (snotra_paths.py), never a single hard-coded glob
   while IFS= read -r c; do
-    [ -f "$c/record.json" ] || continue
-    DIRS+=("$c")
-  done < <(find "$HOME_R"/svartalfaheim/*/meetings -maxdepth 1 -mindepth 1 -type d -mtime "-${recent}" 2>/dev/null)
+    [ -n "$c" ] && DIRS+=("$c")
+  done < <(YMIR_HOME="$HOME_R" python3 "$S/snotra_paths.py" --recent "$recent" 2>/dev/null)
 fi
 [ ${#DIRS[@]} -gt 0 ] || { printf 'snotra-pipeline: no meeting folder given\n' >&2; exit 2; }
 

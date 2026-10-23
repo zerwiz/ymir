@@ -81,6 +81,7 @@ $YMIR_HOME/hodd/memory/runes_audit.md  every pipeline run appends a rune
 |---|---|---|---|
 | `2026-10-22-sync-reygan-craig` | 22 verified · 0 drift | 9 pass · 0 skip · 0 fail | 3 drafted, 5 attachments each, **unsent** |
 | `2026-10-20-roadmap` | 35 verified · 0 drift | 6 pass · 2 skip · 0 fail | 4 rendered, not drafted |
+| the **Ymir** board | created by `snotra-board.sh ensure`, 4 lists · 6 labels · the emblem card | — | — |
 
 Not yet built, and named rather than hidden: **the Gimlé adapter** (a place declaring `surface: gimle` is
 refused, never cross-filed) · **per-speaker naming** (three tracks exist; naming is a reviewed alias match) ·
