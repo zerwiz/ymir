@@ -184,3 +184,27 @@ Expected: `2/2 phases passed`, a `smidja_id`, and the DB written. Then
    break the DB seed again.
 6. New skills synthesized for the smithy are validated in Utgard (Gungnir, W0007)
    before production.
+
+---
+
+## Appended 2026-10-23 — what the smithy owes the surface it ships (Rule 34)
+
+**A smith does not ship a surface that lies.** Rule 34 (this day) makes it law, and this section is Smíðja's part of
+it, because every panel, export, letter and prototype the factory produces is a *surface*:
+
+- **figures come from a receipt** — a stat, a count or a card that the factory renders must trace to a response it
+  actually received; a refused or failed read renders `—` and says which read refused, never `0`;
+- **diagnoses come from proof** — "down", "stopped", "empty", "none" are conclusions. A failed probe says *"could
+  not read"* and names the probe (measured 2026-10-23: the Well said "bridge down" while `GET :4602/health`
+  answered **200** with 167 episodes; Nornir said **STOPPED** while the runner was alive with 29 jobs);
+- **a generated artefact is verified before it is called done** — a card is read back from the board, an audio file
+  is decoded and heard, a letter cites its record's ids, a panel's figure is compared with the response that
+  produced it. Measured the same evening: `snotra-harvest.sh speakers` wrote three WAV files of static and exited
+  **0**, because nothing in it checked that the bytes were speech;
+- **a fallback carries its warning on the same line as the value**, marked `cached` · `stale` · `unverified` — not
+  in a footnote;
+- **a clean skip is a pass** (Rule 25) — *"not tested, because X"* is the honest output; a zero is not.
+
+Concretely for the factory's own output: a Smíðja chain that produces an app, a spec or a visualiser ends with a
+**surface check** (does every number it shows come from a read?), and a run that cannot answer says so in the
+trace rather than reporting success. Rule, ward and evidence: `RULES/34-a-surface-may-not-show-what-it-did-not-receive.md`.
