@@ -47,8 +47,16 @@ for name in sorted(os.listdir(approved) if os.path.isdir(approved) else []):
         if ":" in line:
             k, v = line.split(":", 1)
             meta[k.strip()] = v.strip()
-    if meta.get("approved_by", "").lower() not in ("the allfather", "allfather"):
-        refused.append((name, "not approved by the Allfather"))
+    # Approval is a person's signature — with ONE documentary exception: an `internal` fact (the
+    # owner's own map of his home, written by bin/assistant/learn-home.sh) is proved by the document
+    # it cites, so it carries `approved_by: document`. That word buys nothing anywhere else: a public
+    # claim signed by a machine is exactly the forgery this refusal exists to stop.
+    approver = meta.get("approved_by", "").lower()
+    klass_raw = str(meta.get("class", "public")).lower()
+    documentary = approver == "document" and klass_raw == "internal"
+    if approver not in ("the allfather", "allfather") and not documentary:
+        refused.append((name, "not approved by the Allfather (only an internal fact may be "
+                              "approved by its document)"))
         continue
     if "expires" in meta and meta["expires"] < "2026-10-21":
         refused.append((name, "expired"))
