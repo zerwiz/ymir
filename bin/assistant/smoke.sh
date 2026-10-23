@@ -152,6 +152,18 @@ else
   skip "the far-side ear" "no stt-wire.sh on this seat"
 fi
 
+# ── the meeting record: a tracked record may not go missing (Rule 11) ──────────────────────
+if [ -x "$ROOT/bin/time/snotra/meeting-record-guard.sh" ]; then
+  MG="$(bash "$ROOT/bin/time/snotra/meeting-record-guard.sh" check 2>&1)"
+  case "$MG" in
+    *not\ a\ git\ repo*) skip "meeting records" "the meetings shelf is not in a repo here" ;;
+    *'"0"'*) ok "every tracked meeting record is on disk" ;;
+    *) bad "meeting records" "$(printf '%s' "$MG" | sed -n '2,3p' | tr '\n' ' ')" ;;
+  esac
+else
+  skip "meeting records" "no meeting-record-guard.sh"
+fi
+
 # ── 11 · the guardrails that keep the above true ─────────────────────────────────────────────
 if [ -f "$HOME/.local/bin/kokoro-idle-stop.sh" ]; then
   grep -q "tts.lease" "$HOME/.local/bin/kokoro-idle-stop.sh" \
