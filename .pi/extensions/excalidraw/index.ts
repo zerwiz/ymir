@@ -388,17 +388,25 @@ export default function excalidraw(pi: any) {
 
   // Nothing is started here. This only says — once, plainly — whether the fork
   // is where the extension expects, because every tool above is useless if not.
-  pi.on("session_start", async () => {
+  // On the status line, never as a warning toast: the fork being absent is a
+  // bearing a hand can read, and a toast at every start paints over the editor.
+  pi.on("session_start", async (_event, ctx: any) => {
+    let line: string;
     if (!rootExists()) {
-      console.error(
-        `[excalidraw] no fork at ${root()} — set EXCALIDRAW_ROOT to the checkout.`,
-      );
-      return;
+      line = "excalidraw: no fork";
+    } else {
+      const rows = await status();
+      const up = rows.filter((row) => row.running).map((row) => `${row.name}:${row.port}`);
+      line = `excalidraw: ${up.length ? up.join(", ") : "fork, no services"}`;
     }
-    const rows = await status();
-    const up = rows.filter((row) => row.running).map((row) => `${row.name}:${row.port}`);
-    console.error(
-      `[excalidraw] fork at ${root()} — services up: ${up.length ? up.join(", ") : "none"}`,
-    );
+    if (ctx?.hasUI && ctx?.ui?.setStatus) {
+      try {
+        ctx.ui.setStatus("excalidraw", line);
+        return;
+      } catch {
+        // fall through to the headless channel
+      }
+    }
+    console.error(`[excalidraw] ${line}${rootExists() ? "" : ` — set EXCALIDRAW_ROOT; fork expects ${root()}`}`);
   });
 }

@@ -209,17 +209,27 @@ export default function constellation(pi: any) {
 
   // Say once, at session start, what this seat can and cannot do — the honest
   // shape of the mesh is part of its bearings, not a surprise at the first call.
-  pi.on?.("session_start", async () => {
+  // It goes on the status line, never through console.error: a warning toast at
+  // every start paints over the editor, and an unconfigured mesh is bearings,
+  // not a fault.
+  pi.on?.("session_start", async (_event: unknown, ctx: any) => {
     const resolution = resolveRegistry(process.env, root);
+    let line: string;
     if (resolution.status === "skip") {
-      console.error(`[constellation] SKIP — ${resolution.reason}`);
-      return;
+      line = "mesh: unconfigured";
+    } else {
+      const scan = scanRegistryDir(resolution.dir);
+      line = `mesh: ${scan.peers.length} peer(s)${scan.rejected.length ? ` · ${scan.rejected.length} invalid` : ""} · no grant`;
     }
-    const scan = scanRegistryDir(resolution.dir);
-    console.error(
-      `[constellation] ${scan.peers.length} peers from ${resolution.source} (${resolution.note}); ` +
-        `${scan.rejected.length} invalid; calls refused — no grant (phase 61.2).`,
-    );
+    if (ctx?.hasUI && ctx?.ui?.setStatus) {
+      try {
+        ctx.ui.setStatus("constellation", line);
+        return;
+      } catch {
+        // fall through to the headless channel
+      }
+    }
+    console.error(`[constellation] ${line}${resolution.status === "skip" ? ` — ${resolution.reason}` : ""}`);
   });
 
   return { loaded: registryIsVisible() };

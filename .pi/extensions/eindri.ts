@@ -48,15 +48,21 @@ function resolveRoot(): string {
 
 const ROOT = resolveRoot();
 
+/** A tool result is read, not scrolled: keep the head, and say how much was cut. */
+function brief(text: string, limit = 3000): string {
+  const out = (text ?? "").trim();
+  if (out.length <= limit) return out;
+  return `${out.slice(0, limit)}\n… ${out.length - limit} more chars (full output: state/ or the script's own log)`;
+}
+
 type RunResult = { rc: number; out: string };
 
 function run(cmd: string, args: string[], quiet = true): RunResult {
   try {
-    // With stdio:"inherit" execFileSync returns NULL, not a string — the child
-    // wrote to our terminal and there is nothing to capture. Calling .trim() on
-    // that null threw, the throw was caught as a failure, and EVERY non-quiet
-    // call (start, steer, close) reported rc=1 with a JavaScript error even when
-    // the command had succeeded.
+    // Capture is the default and the only sane default in a TUI: a child that inherits
+    // our stdio writes straight at the terminal pi owns, and its tables land on top of
+    // the editor and status line. That is why the errand tools below no longer pass
+    // quiet=false — their output belongs in the tool result, where pi can render it.
     const out = execFileSync(cmd, args, { encoding: "utf8", stdio: quiet ? ["ignore", "pipe", "ignore"] : "inherit" });
     return { rc: 0, out: (out ?? "").trim() };
   } catch (e: any) {
@@ -148,23 +154,23 @@ export default function eindri(pi: any) {
           const r = run("bash", [`${ROOT}/bin/agents/einherjar-spawn.sh`, id, String(args.project),
             "--mode", String(args.mode || "direct-PR"),
             ...(args.harness ? ["--harness", String(args.harness)] : []),
-            ...(args.model ? ["--model", String(args.model)] : [])], false);
-          return piOut(`${id}: spawn rc=${r.rc}\n${r.out || "(see state/" + id + ".status)"}\n` +
+            ...(args.model ? ["--model", String(args.model)] : [])]);
+          return piOut(`${id}: spawn rc=${r.rc}\n${brief(r.out) || "(see state/" + id + ".status)"}\n` +
               `one spawn path only - einherjar-spawn.sh. Start here again and you will get a refusal, which is correct.`);
         }
 
         case "steer": {
           if (!args.message) return piOut("steer needs `message` (one line).");
-          const r = run("bash", [`${ROOT}/bin/agents/eindri-send.sh`, id, String(args.message)], false);
-          return piOut(`steered ${id}: rc=${r.rc}\n${r.out || ""}`);
+          const r = run("bash", [`${ROOT}/bin/agents/eindri-send.sh`, id, String(args.message)]);
+          return piOut(`steered ${id}: rc=${r.rc}\n${brief(r.out)}`);
         }
 
         case "close": {
           const term = String(args.terminal || "done");
           const c = run("bash", [`${ROOT}/bin/agents/eindri-acclaim.sh`, id, "--terminal", term,
-            ...(args.note ? ["--line", String(args.note)] : [])], false);
+            ...(args.note ? ["--line", String(args.note)] : [])]);
           // and stop the seat, so a closed errand leaves nothing running
-          const x = run("bash", [`${ROOT}/bin/agents/eindri-control.sh`, "exit", id], false);
+          const x = run("bash", [`${ROOT}/bin/agents/eindri-control.sh`, "exit", id]);
           return piOut(`closed ${id} as ${term}\n  claim rc=${c.rc} ${c.out.split("\n").slice(0, 2).join(" · ")}\n` +
               `  seat  rc=${x.rc} ${x.out.split("\n").slice(0, 1).join("")}\n` +
               `  a closed errand leaves no running seat and one durable record.`);
