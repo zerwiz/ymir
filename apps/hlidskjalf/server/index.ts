@@ -59,6 +59,43 @@ const json = (data: unknown, status = 200) =>
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
   });
 
+/* ---- Gná, the mail desk (plan 116) ---------------------------------------- *
+ * The desk is a service of its own on loopback (hodd/bin/gna-agent/gna_desk.py),
+ * not a branch inside this file: mail carries a per-account security boundary and
+ * that must not live in a 2,700-line monolith. This gate only forwards, with the
+ * desk's own token, and passes its refusals through unchanged — an account-less
+ * query answers 400 naming what is missing, never an empty queue. */
+const MAIL_DESK = process.env.GNA_DESK_URL ?? 'http://127.0.0.1:8490';
+const MAIL_TOKEN_FILE = join(HOARD, 'state/gna-desk.token');
+
+function mailDeskToken(): string {
+  try {
+    return readFileSync(MAIL_TOKEN_FILE, 'utf8').trim();
+  } catch {
+    return '';
+  }
+}
+
+async function mailDesk(path: string, params: Record<string, string> = {}): Promise<Response> {
+  const token = mailDeskToken();
+  if (!token) {
+    return json({
+      error: 'the desk has no token yet — raise it with: python3 hodd/bin/gna-agent/gna_desk.py',
+    }, 503);
+  }
+  const qs = new URLSearchParams(params).toString();
+  try {
+    const r = await fetch(`${MAIL_DESK}${path}${qs ? `?${qs}` : ''}`, {
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(15000),
+    });
+    const body = await r.json().catch(() => ({ error: 'the desk sent no JSON' }));
+    return json(body, r.status);
+  } catch (e) {
+    return json({ error: `the desk did not answer at ${MAIL_DESK}: ${(e as Error).message}` }, 503);
+  }
+}
+
 function read(path: string): string {
   try {
     return readFileSync(path, 'utf8');
@@ -2373,6 +2410,24 @@ const server = Bun.serve({
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
+      if (p === '/api/mail/accounts') {
+        if (req.method !== 'GET') return json({ error: 'method not allowed' }, 405);
+        return mailDesk('/accounts');
+      }
+      if (p === '/api/mail/queue') {
+        if (req.method !== 'GET') return json({ error: 'method not allowed' }, 405);
+        return mailDesk('/queue', {
+          account: url.searchParams.get('account') ?? '',
+          hours: url.searchParams.get('hours') ?? '48',
+        });
+      }
+      if (p === '/api/mail/message') {
+        if (req.method !== 'GET') return json({ error: 'method not allowed' }, 405);
+        return mailDesk('/message', {
+          account: url.searchParams.get('account') ?? '',
+          id: url.searchParams.get('id') ?? '',
+        });
+      }
       // Þráðr's status strip (plan 93): the panel asked for a door this gate never had,
       // so it printed "terminal status 404" — an error string where a truth belongs.
       // There is no pty in this process (the backend is a separate errand), so the route

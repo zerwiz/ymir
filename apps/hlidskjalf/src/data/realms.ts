@@ -127,6 +127,7 @@ export const GATES: GateDef[] = [
   { id: 'stats', label: 'Stats', glyph: 'ᛗ', hint: 'Tokens · cost · by chain & model' },
   { id: 'managandr', label: 'Mánagandr', glyph: 'ᛅ', hint: 'Read calendar · reckoning · lanes' },
   { id: 'snotra', label: 'Snotra', glyph: 'ᛊ', hint: 'Meetings · record · prepare · approve · send' },
+  { id: 'mail', label: 'Gná', glyph: 'ᚷ', hint: 'The one mail desk · needs you · unsure · waiting · done' },
   { id: 'profile', label: 'Profile', glyph: 'ᛝ', hint: 'Personal & company settings' },
 ];
 

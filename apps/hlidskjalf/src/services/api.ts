@@ -58,6 +58,43 @@ export interface LiveTailStopResponse {
   error?: string;
 }
 
+/* ---- the mail desk (Gná, plan 116) ---------------------------------------- *
+ * The gate is a FRONT for hodd/bin/gna-agent/gna_desk.py on 127.0.0.1:8490.
+ * Those shapes are that service's own answer, never a second opinion: a column
+ * count, the row's evidence, and the account it belongs to. There is no send
+ * capability behind any of these, and no method here can acquire one. */
+export type MailColumn = 'needs_you' | 'unsure' | 'waiting' | 'done';
+
+export interface MailRow {
+  id: string;
+  account: string;
+  from: { name: string; email: string };
+  subject: string | null;
+  received_at: string;
+  summary: string;
+  classification: string;
+  confidence: number;
+  proposed_action: string;
+  person_id: string | null;
+  project_id: string | null;
+  matched_by: string;
+  evidence: string;
+  column: MailColumn;
+}
+
+export interface MailMessage extends MailRow {
+  body_text: string;
+}
+
+export interface MailQueue {
+  account: string;
+  window_hours: number;
+  columns: Record<MailColumn, MailRow[]>;
+  counts: Record<MailColumn, number>;
+  /** ISO instant of the oldest message still waiting on a human, or "". */
+  oldest_waiting: string;
+}
+
 export interface CronJob {
   at: string;
   command: string;
@@ -495,4 +532,9 @@ export const gateApi = {
   liveStatus: () => get<LiveTailStatus>('/api/snotra/live'),
   liveStart: (slug: string, topic?: string) => post<LiveTailStartResponse>('/api/snotra/live/start', { slug, topic }),
   liveStop: () => post<LiveTailStopResponse>('/api/snotra/live/stop', {}),
+  mailAccounts: () => get<{ accounts: string[] }>('/api/mail/accounts'),
+  mailQueue: (account: string, hours = 48) =>
+    get<MailQueue>(`/api/mail/queue?account=${encodeURIComponent(account)}&hours=${hours}`),
+  mailMessage: (account: string, id: string) =>
+    get<MailMessage>(`/api/mail/message?account=${encodeURIComponent(account)}&id=${encodeURIComponent(id)}`),
 };

@@ -122,6 +122,11 @@ export const GATE_META: Record<GateId, PageMeta> = {
     description:
       'The meeting record: the shelf, the record, the participants, and the follow-up draft. Prepare, approve, send — never edit.',
   },
+  mail: {
+    title: 'Gná',
+    description:
+      'The one mail desk: what needs you, what is unsure, what waits on an answer, and what was recorded. Read-only — Gná drafts, the Allfather sends.',
+  },
 };
 
 function setMeta(attr: 'name' | 'property', key: string, content: string): void {
