@@ -17,14 +17,18 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 MAIL="$ROOT/bin/time/snotra/mail-send.sh"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+# shellcheck disable=SC1091
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+ymir_home_root YMIR_HOME_R 2>/dev/null || true
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/ymir/approvals"
 mkdir -p "$STATE"
 
 operator(){
   local id="${YMIR_OPERATOR:-}"
   [ -n "$id" ] && { printf '%s' "$id"; return; }
-  if [ -n "${YMIR_HOME:-}" ] && [ -r "$YMIR_HOME/hodd/identity/operator.yaml" ]; then
-    sed -n 's/^name:[[:space:]]*//p' "$YMIR_HOME/hodd/identity/operator.yaml" | head -1
+  if [ -n "${YMIR_HOME_R:-}" ] && [ -r "$YMIR_HOME_R/hodd/identity/operator.yaml" ]; then
+    sed -n 's/^name:[[:space:]]*//p' "$YMIR_HOME_R/hodd/identity/operator.yaml" | head -1
   fi
 }
 now(){ "$ROOT/bin/time/sol.sh" now 2>/dev/null | sed -n 's/^  "utc","\(.*\)"/\1/p' | head -1; }

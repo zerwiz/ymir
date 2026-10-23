@@ -10,7 +10,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",587
+  "shell doors (bin/*.sh)",588
   "runtime modules (src/ymir_runtime/*.py)",54
   "skills (.agents/skills/*)",28
   "Pi extension tools",0
@@ -86,6 +86,7 @@ capabilities[5]{surface,count}:
 | room.sh | room.sh — the record of a room: append an utterance, or read what was  | tested+named | keep (a human or a cron row must run it) |
 | smoke.sh | smoke.sh — Skírnir and Snotra, end to end, in one command. The house' | tested+named | keep (a human or a cron row must run it) |
 | telegram.sh | telegram.sh — the door to Skírnir's own bot (the adapter lives in tel | tested | keep (a human or a cron row must run it) |
+| voice-handler.sh | voice-handler.sh — the bridge's outbound voice step, shaped for pi-tel | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | voice.sh | voice.sh — talk to Skírnir with a voice, and hear him answer while he | tested | keep (a human or a cron row must run it) |
 | walls-test.sh | walls-test.sh — Skírnir's red-team suite. Eight assertions, each an a | tested | keep (a human or a cron row must run it) |
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
