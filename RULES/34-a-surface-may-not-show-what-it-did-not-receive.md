@@ -61,4 +61,4 @@ already legislated the *door* half of this (a door fails loudly; a clean skip is
 
 Rule 06 (append-only), Rule 11 (never delete), Rule 25 (a clean skip is a pass), Rule 26 (the well appends),
 Rule 30 (audio is ephemeral — and is never called a transcript), Rule 33 (the ear hears the meeting, not the room),
-`RULES/32-the-send-is-the-operators.md` (whose incident is the letter half of this rule).
+Rule 32 (*the send is the operator's*), whose incident is the letter half of this rule.

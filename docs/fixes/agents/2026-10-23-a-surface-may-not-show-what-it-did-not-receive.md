@@ -31,3 +31,10 @@ Clean skips (Rule 25), labelled inference (`candidate`, `inferred`), and caching
 ### Owed
 The Hlidskjalf panels still render `0` on a 401: Rule 34 is the law they must now be changed to keep. That is the
 first task of the order agreed with the Allfather (plan 111, appendix 23:40 §6).
+
+### Appendix (same day) — the ward learned `snotra`
+
+`fixes-guard` refused this branch four times: the fix notes for the meeting doors live under
+`docs/fixes/snotra/`, and the ward's component map knew no `snotra` — so a correct note covered nothing and every
+push was refused. The map now names it (`bin/time/snotra/* → snotra`), the component list includes it, and the
+`RULES/README.md` index declares 31 rules with the new row. A gate that must be overridden is a gate nobody trusts.

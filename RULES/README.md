@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[30]{file,subject}:
+rules_index[31]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -31,6 +31,7 @@ rules_index[30]{file,subject}:
   "26-external-surfaces.md","private structure and NDA material never cross an external surface: no paths, vault names, secrets or classified material in Trello, email, Chat or a public PR"
   "29-the-apps-stay-whole.md","an update that leaves an app unreadable is not an update: every server entry parses, every route the UI calls is answered, and a raised gate answers no 5xx"
   "README.md","this index"
+  "34-a-surface-may-not-show-what-it-did-not-receive.md","a surface may not show what it did not receive"
 ```
 
 Keep each rule short and unambiguous; reference it from code where it bites.
