@@ -39,7 +39,18 @@ mkdir -p "$STATE_DIR" 2>/dev/null || true
 
 [ -r "$REG" ] || { printf 'inbox-watch[1]{state}: "no collaborators registry — nothing to watch"\n'; exit 0; }
 
-PEOPLE="$("$SCRIPT_DIR/collaborators.sh" list 2>/dev/null | tail -n +2)"
+# A registry that cannot be READ is not an empty registry. On 2026-10-23 a broken
+# YAML in collaborators.yaml made this watcher print "no people in the registry"
+# and exit 0 three times a day — silently watching nobody while mail arrived.
+PEOPLE_RAW="$("$SCRIPT_DIR/collaborators.sh" list 2>&1)"
+PEOPLE_STATUS=$?
+if [ "$PEOPLE_STATUS" -ne 0 ]; then
+  printf 'inbox-watch[1]{state}: "the people registry could not be read — NOT an empty registry"\n' >&2
+  printf '%s\n' "$PEOPLE_RAW" | tail -3 >&2
+  printf 'help: bin/people/collaborators.sh check   (a parse error is a fault, not silence)\n' >&2
+  exit 1
+fi
+PEOPLE="$(printf '%s\n' "$PEOPLE_RAW" | tail -n +2)"
 [ -n "$PEOPLE" ] || { printf 'inbox-watch[1]{state}: "no people in the registry"\n'; exit 0; }
 
 new_count=0
