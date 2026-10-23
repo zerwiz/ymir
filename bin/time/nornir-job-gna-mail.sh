@@ -18,7 +18,6 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # shellcheck disable=SC1091
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
-HOME_R="${HOME_R:-${YMIR_HOME:-$HOME/Documents/ymirhome}}"
 MAIL_DIR="$HOME_R/hodd/memory/mail"
 STATE="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
 DESK_URL="${GNA_DESK_URL:-http://127.0.0.1:8490}"
@@ -29,6 +28,14 @@ MODE="${1:-import}"
 DAYS="${GNA_DAYS:-2}"
 
 say() { printf 'gna-mail[%s] %s\n' "$MODE" "$*"; }
+
+# One resolver, no guessed home (Rule 07): hoard-lib owns the record and the one
+# documented default. If it cannot name the home, this job refuses — a job that
+# invents a path writes to a store nobody reads.
+if [ -z "${HOME_R:-}" ]; then
+  say "FAIL the home is unresolved (bin/vault/hoard-lib.sh) — refusing to guess a path"
+  exit 3
+fi
 
 accounts() {
   python3 - "$MAIL_DIR/accounts.yaml" <<'PY' 2>/dev/null
