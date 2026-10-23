@@ -801,3 +801,34 @@ Hlidskjalf reaches a phone three ways, all the same web app:
   `cap sync` time; with `cleartext:false` an operator points them at their HTTPS
   host with no code change. iOS builds require macOS + Xcode and are produced on
   a Mac, never here — `ios/` is scaffolded, not built.
+
+### Þráðr — the terminal in the high seat (2026-10-23)
+
+The high seat can carry a **real shell**, not a picture of one. `src/components/Terminal.tsx`
+draws with **xterm.js** — the emulator VS Code uses — and the other end is a pty on the gate
+(`node-pty`), so `herdr`, `vim` and anything else with a TTY behaves as it does in a terminal
+window. A panel that only printed text would not be a terminal; a terminal that runs in the
+browser with no pty is a log viewer wearing a shell's clothes.
+
+- **Three packages, declared.** `@xterm/xterm`, `@xterm/addon-fit` and `@xterm/addon-web-links`
+  are dependencies of `apps/hlidskjalf/package.json`. They were imported but **never declared**,
+  which is the fault this section exists to prevent: `tsc --noEmit` could not resolve them, so
+  `npm run build` failed and **the whole SPA bundle failed with it** — the gate was dark for a
+  reason that had nothing to do with the gate. Any import the component gains is declared in the
+  same change; `bin/desktop/app-build.sh hlidskjalf` is the proof, and it is what
+  `bin/forge/npm/npm-pretest.sh` runs before a tarball is packed.
+- **The status door.** `/api/terminal/status` reports the seat's real state:
+  `enabled` follows `YMIR_TERMINAL=1`, `remoteAllowed` follows `YMIR_TERMINAL_REMOTE=1`,
+  with `maxPerUser` (`YMIR_TERMINAL_MAX_PER_USER`, default 2) and `idleTimeoutMs`
+  (`YMIR_TERMINAL_IDLE_MS`, default 900000). When it is off, `reason` says so in words —
+  *"disabled: YMIR_TERMINAL is not 1, and this gate holds no pty"* — because a blank black
+  rectangle is indistinguishable from a hang. The panel once called this route before it
+  existed and printed `terminal status 404` where a capability belongs (plan 93).
+- **The socket owns the shell.** The panel opens a WebSocket to `/api/terminal`; unmounting
+  closes it and the gate kills the pty on close, so a closed tab is never a shell running
+  unattended. A refusal from the gate is **shown**, never swallowed.
+- **The cloth.** Colour comes from the app's own CSS variables (`--bg`, `--fg`, `--ember`), so
+  the terminal wears the hall's palette instead of a foreign one.
+
+Rule: a Hlidskjalf code change updates this asset in the same pass — and a component's imports
+are part of that change, not an afterthought of the install.
