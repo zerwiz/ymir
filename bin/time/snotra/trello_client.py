@@ -18,6 +18,7 @@ import json
 import os
 import time
 import urllib.error
+import subprocess
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -31,10 +32,21 @@ def die(msg: str, code: int = 1):
 
 
 def home_dir() -> Path:
+    """The hoard is RESOLVED, never restated (Rule 07): env first, then the one resolver."""
     h = os.environ.get("YMIR_HOME")
     if h:
         return Path(h).expanduser()
-    return Path(os.path.expanduser("~/Documents/ymirhome"))
+    root = Path(__file__).resolve().parents[3]
+    try:
+        out = subprocess.check_output(
+            ["bash", "-c",
+             f'. "{root}/bin/vault/hoard-lib.sh" >/dev/null 2>&1; out=""; ymir_home_root out; printf "%s" "$out"'],
+            timeout=20).decode().strip()
+    except Exception:  # noqa: BLE001
+        out = ""
+    if not out:
+        die("the hoard is unresolved — run bin/vault/hoard-lib.sh or set YMIR_HOME")
+    return Path(out)
 
 
 def auth_path() -> Path:

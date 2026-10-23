@@ -33,6 +33,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import trello_client as T  # noqa: E402
 KEY = "record-key"
 
 
@@ -56,8 +58,8 @@ def load_yaml(path: Path) -> dict:
 
 
 def home() -> Path:
-    h = os.environ.get("YMIR_HOME")
-    return Path(h).expanduser() if h else Path(os.path.expanduser("~/Documents/ymirhome"))
+    """The hoard is resolved through the one resolver, never restated here."""
+    return T.home_dir()
 
 
 def slugify(s: str) -> str:
