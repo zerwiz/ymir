@@ -10,7 +10,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",571
+  "shell doors (bin/*.sh)",581
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",28
   "Pi extension tools",0
@@ -72,6 +72,7 @@ capabilities[5]{surface,count}:
 | group-add.sh | group-add.sh — put Skírnir in a Telegram group, in one word. | tested | keep (a human or a cron row must run it) |
 | group-allow.sh | group-allow.sh — let Skírnir speak in ONE Telegram group, after the A | tested | keep (a human or a cron row must run it) |
 | kb-export.sh | kb-export.sh — build Skírnir's digest from facts the Allfather APPROV | tested | keep (a human or a cron row must run it) |
+| learn-home.sh | learn-home.sh — give Skírnir the SHAPE of the house: its shelves, its | tested | keep (a human or a cron row must run it) |
 | learn-house.sh | learn-house.sh — give Skírnir the house's own public knowledge: the l | tested | keep (a human or a cron row must run it) |
 | learn-site.sh | learn-site.sh — Skírnir learns the house's own public site. | tested | keep (a human or a cron row must run it) |
 | learn.sh | learn.sh — a fact learned in conversation, waiting for the Allfather's | tested | keep (a human or a cron row must run it) |
@@ -371,7 +372,7 @@ capabilities[5]{surface,count}:
 | runtime-guard.sh | runtime-guard.sh — THE TREE IS NOT A RUNTIME. | tested | keep (a human or a cron row must run it) |
 | secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
 | sensitive-gate.sh | sensitive-gate.sh — one gate for every external surface of a sensitive | tested | keep (a human or a cron row must run it) |
-| subsystem-docs-guard.sh | subsystem-docs-guard.sh — the books a subsystem names must exist, and  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| subsystem-docs-guard.sh | subsystem-docs-guard.sh — the books a subsystem names must exist, and  | tested | keep (a human or a cron row must run it) |
 | syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
 | vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested+named | keep (a human or a cron row must run it) |
 | nidhogg.sh | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination fi | tested | keep (a human or a cron row must run it) |
@@ -391,6 +392,8 @@ capabilities[5]{surface,count}:
 | omarchy-install.sh | omarchy-install.sh — the Omarchy installation layer (Rule 05). | tested | keep (a human or a cron row must run it) |
 | omarchy-plugins.sh | omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs o | tested+named | keep (a human or a cron row must run it) |
 | omarchy-sense.sh | omarchy-sense.sh — learn the Allfather's Omarchy machine. | tested+named | keep (a human or a cron row must run it) |
+| install.sh | install.sh — seat Gná's desk on THIS machine. Idempotent: one desk pe | tested+named | keep (a human or a cron row must run it) |
+| mail-scan.sh | mail-scan.sh — read-only: the last N hours of a mailbox, as compact JS | tested | keep (a human or a cron row must run it) |
 | apodex-smoke-test.sh | apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router | tested+named | keep (a human or a cron row must run it) |
 | llama-ensure.sh | llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or a | tested+named | keep (a human or a cron row must run it) |
 | local-model-lock.sh | local-model-lock.sh — serialize LOCAL model inference on one machine. | tested+named | keep (a human or a cron row must run it) |
@@ -427,6 +430,7 @@ capabilities[5]{surface,count}:
 | pi-seat.sh | pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a  | tested+named | keep (a human or a cron row must run it) |
 | syn-watch-arm.sh | syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client. | tested+named | keep (a human or a cron row must run it) |
 | syn-watch.sh | syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, se | tested+named | keep (a human or a cron row must run it) |
+| tui-frame-check.sh | tui-frame-check.sh — prove that what the TUI writes to the terminal fi | tested | keep (a human or a cron row must run it) |
 | place.sh | place.sh — team PLACES: a wall, not a permission (Rule 18; plan 77 Par | tested+named | keep (a human or a cron row must run it) |
 | daily-log.sh | daily-log.sh — the day's work, recorded where the contract says it liv | tested+named | keep (a human or a cron row must run it) |
 | journal-append.sh | journal-append.sh — write one idempotent entry to THIS machine's outbo | tested+named | keep (a human or a cron row must run it) |
@@ -442,7 +446,7 @@ capabilities[5]{surface,count}:
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | tested+named | keep (a human or a cron row must run it) |
 | well-door.sh | well-door.sh — the hand's door to the heart's well, raised over SSH. | tested | keep (a human or a cron row must run it) |
 | well-guard.sh | well-guard.sh — the WARD behind RULES/20-the-well-appends.md. | tested+named | keep (a human or a cron row must run it) |
-| where.sh | where.sh — "which book do I read before touching this path?" | uncalled+named | keep (a human or a cron row must run it) |
+| where.sh | where.sh — "which book do I read before touching this path?" | tested+named | keep (a human or a cron row must run it) |
 | workspace-rag.sh | workspace-rag.sh — memory over the realm workspaces (W0038). | tested+named | keep (a human or a cron row must run it) |
 | wyrd-db.sh | wyrd-db.sh — the database layer (W0040). Applies the platform schema a | tested+named | keep (a human or a cron row must run it) |
 | ymir-state.sh | ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runti | tested+named | keep (a human or a cron row must run it) |
@@ -470,6 +474,7 @@ capabilities[5]{surface,count}:
 | nornir-job-doctor.sh | nornir-job-doctor.sh — Eir, the healer, on the schedule. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-forgejo-git.sh | nornir-job-forgejo-git.sh — the local git round: issues and PRs on the | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-git-sync.sh | nornir-job-git-sync.sh - Yggdrasil, the world-tree kept in order. | tested+named | keep (a human or a cron row must run it) |
+| nornir-job-gna-mail.sh | nornir-job-gna-mail.sh — the desk's own clock: import, then prove the  | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-hall-snapshot.sh | nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-memory-housekeeping.sh | nornir-job-memory-housekeeping.sh - Muninn, the raven of memory. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-nsr-compliance.sh | nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly | tested+named | keep (a human or a cron row must run it) |
