@@ -10,7 +10,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",569
+  "shell doors (bin/*.sh)",571
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",28
   "Pi extension tools",0
@@ -342,7 +342,7 @@ capabilities[5]{surface,count}:
 | ymir-update-check.sh | ymir-update-check.sh — does a newer Ymir stand on npm? One answer, cac | tested+named | keep (a human or a cron row must run it) |
 | ci-verify.sh | ci-verify.sh — what CI must prove, in one command, for BOTH hosts. | tested+named | keep (a human or a cron row must run it) |
 | doc-sweep.sh | doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's docume | tested | keep (a human or a cron row must run it) |
-| doors.sh | doors.sh — a door register for ANY directory, rendered from the tree ( | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| doors.sh | doors.sh — a door register for ANY directory, rendered from the tree ( | tested | keep (a human or a cron row must run it) |
 | feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
 | guards.sh | guards.sh — every TREE ward, in one command. | tested | keep (a human or a cron row must run it) |
@@ -357,10 +357,10 @@ capabilities[5]{surface,count}:
 | docs-guard.sh | docs-guard.sh — docs/ is the PUBLIC, user-facing tree. Block operator- | tested | keep (a human or a cron row must run it) |
 | features-guard.sh | features-guard.sh — every feature page is catalogued (Rule 14). | tested | keep (a human or a cron row must run it) |
 | fixes-guard.sh | fixes-guard.sh — the delivery gate reads, and it checks the RECORD. | tested+named | keep (a human or a cron row must run it) |
-| fleet-version-guard.sh | fleet-version-guard.sh — the three labels and the two trees must agree | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| fleet-version-guard.sh | fleet-version-guard.sh — the three labels and the two trees must agree | tested | keep (a human or a cron row must run it) |
 | git-clobber-guard.sh | git-clobber-guard.sh — no command that throws away uncommitted work. | tested | keep (a human or a cron row must run it) |
 | hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested+named | keep (a human or a cron row must run it) |
-| inventory-guard.sh | inventory-guard.sh — a register that runs in no gate is a capability t | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| inventory-guard.sh | inventory-guard.sh — a register that runs in no gate is a capability t | tested | keep (a human or a cron row must run it) |
 | path-ledger-guard.sh | path-ledger-guard.sh — Rule 25: a path that MOVED may not be reference | tested | keep (a human or a cron row must run it) |
 | people-guard.sh | people-guard.sh — the public tree holds no people. | tested | keep (a human or a cron row must run it) |
 | perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |
@@ -371,6 +371,7 @@ capabilities[5]{surface,count}:
 | runtime-guard.sh | runtime-guard.sh — THE TREE IS NOT A RUNTIME. | tested | keep (a human or a cron row must run it) |
 | secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
 | sensitive-gate.sh | sensitive-gate.sh — one gate for every external surface of a sensitive | tested | keep (a human or a cron row must run it) |
+| subsystem-docs-guard.sh | subsystem-docs-guard.sh — the books a subsystem names must exist, and  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
 | vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested+named | keep (a human or a cron row must run it) |
 | nidhogg.sh | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination fi | tested | keep (a human or a cron row must run it) |
@@ -431,7 +432,7 @@ capabilities[5]{surface,count}:
 | journal-append.sh | journal-append.sh — write one idempotent entry to THIS machine's outbo | tested+named | keep (a human or a cron row must run it) |
 | journal-receive.sh | journal-receive.sh — the HEART folds the bodies' journals into one rec | tested+named | keep (a human or a cron row must run it) |
 | journal-reconcile.sh | journal-reconcile.sh — push this machine's outbox to the heart, when i | tested | keep (a human or a cron row must run it) |
-| library.sh | library.sh — the library of records: one corpus, one contract, one doo | uncalled+named | keep (a human or a cron row must run it) |
+| library.sh | library.sh — the library of records: one corpus, one contract, one doo | tested+named | keep (a human or a cron row must run it) |
 | mimir-ingest.sh | mimir-ingest.sh — ingest the repo's data material into the well (Mimir | tested+named | keep (a human or a cron row must run it) |
 | mimir-log.sh | mimir-log.sh — move memory between the engram and the append log (a th | tested+named | keep (a human or a cron row must run it) |
 | mimir-reflect.sh | mimir-reflect — smelt the well's episodes into facts, through the LLAM | tested | keep (a human or a cron row must run it) |
@@ -441,6 +442,7 @@ capabilities[5]{surface,count}:
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | tested+named | keep (a human or a cron row must run it) |
 | well-door.sh | well-door.sh — the hand's door to the heart's well, raised over SSH. | tested | keep (a human or a cron row must run it) |
 | well-guard.sh | well-guard.sh — the WARD behind RULES/20-the-well-appends.md. | tested+named | keep (a human or a cron row must run it) |
+| where.sh | where.sh — "which book do I read before touching this path?" | uncalled+named | keep (a human or a cron row must run it) |
 | workspace-rag.sh | workspace-rag.sh — memory over the realm workspaces (W0038). | tested+named | keep (a human or a cron row must run it) |
 | wyrd-db.sh | wyrd-db.sh — the database layer (W0040). Applies the platform schema a | tested+named | keep (a human or a cron row must run it) |
 | ymir-state.sh | ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runti | tested+named | keep (a human or a cron row must run it) |

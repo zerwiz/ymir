@@ -60,3 +60,24 @@ patches the screen.
 `apps/smidja/` tracked in git · one resolver for the teams with a `cause:` on empty · one DB path in the
 shipped config · `/api/chat/message` 500 ("Völundr (Pi) took too long") · `/api/memory` and `/api/chat`
 404 · the Forge's block-scalar parser.
+
+### Correction, appended the same night — "the smithy is gitignored" was false, and the docs said so
+
+`git ls-files apps/` → **smidja 34 · smidja-factory 229 · hlidskjalf 175 · odrerir 37 · sessrumnir 395**
+tracked. `.gitignore:100-101` excludes only `apps/smidja/smidja_data/` and `apps/smidja.db*` — **runtime
+data**, which is where the agent prompts live because they are run data, not repo content.
+
+The real gap is what the cookbooks (`apps/smidja-factory/cookbooks/`) and skills
+(`apps/smidja-factory/skills/`) name and this seat lacks:
+
+- **`roster.yaml` — the ONE config, teams in `stacks:`** — absent. `smidja.config.yaml` has `agents:`
+  but no `stacks:`, so there are no teams for the picker to show. The empty "Choose a team…" is a
+  missing file, not only the `repoRoot(dbPath)` bug.
+- **`just` is not installed**, so `just rosters` / `just sdlc` / `just sessions` cannot run.
+- **`START_SMIDJA.md`** (the canonical playbook) is absent.
+- The cookbook's `uv run smidja/<chain>.py` predates the move to `apps/smidja/`; from the repo root the
+  invocation is `uv run apps/smidja/smidja_*.py …`.
+
+I asserted the smithy was untracked **before reading its own documentation**. The rule (`RULES/36`) now
+carries the correction, and the lesson is the one this house keeps relearning: **read the subsystem's
+own cookbook before claiming what it does not have.**
