@@ -699,6 +699,33 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
 /* ============================================================
    Responsive: collapse rail to rune-only under 900px
    ============================================================ */
+/* ============================================================
+   Responsive: the window is the operator's to size.
+   The rail gives way in STEPS instead of squeezing the stage: 196px under
+   1280, rune-only under 1100/900, and the full mobile layout under 780
+   (styles/mobile.css). Before this the shell window had an 800px floor and the
+   stylesheet a single step at 900 — so every size the operator actually chose
+   between those two was a squeezed, half-collapsed hall (2026-10-23).
+   ============================================================ */
+@media (max-width: 1280px) {
+  .shell {
+    --rail-w: 196px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .shell {
+    --rail-w: 64px;
+  }
+  .topbar .search {
+    min-width: 0;
+    flex: 1 1 160px;
+  }
+}
+
+/* ============================================================
+   Responsive: collapse rail to rune-only under 900px
+   ============================================================ */
 @media (max-width: 900px) {
   .shell {
     --rail-w: 64px;

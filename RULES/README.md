@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[31]{file,subject}:
+rules_index[32]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -30,6 +30,7 @@ rules_index[31]{file,subject}:
   "28-streaming-voice.md","Skírnir speaks in real time or not at all: a pipeline of overlapping stages, latency measured per turn, and a silent failure is a violation"
   "26-external-surfaces.md","private structure and NDA material never cross an external surface: no paths, vault names, secrets or classified material in Trello, email, Chat or a public PR"
   "29-the-apps-stay-whole.md","an update that leaves an app unreadable is not an update: every server entry parses, every route the UI calls is answered, and a raised gate answers no 5xx"
+  "38-the-answer.md","an answer to the Allfather is prose, not a datasheet: short paragraphs, facts inside the sentence, and on Telegram a decision is a button"
   "README.md","this index"
   "37-a-surface-may-not-show-what-it-did-not-receive.md","a surface may not show what it did not receive"
 ```
@@ -73,3 +74,9 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 |---|---|---|
 | 29 | [The apps stay whole](29-the-apps-stay-whole.md) | **Every change that ships leaves every app able to start and every panel able to speak to it.** Three duties, one ward (`bin/gates/guards/app-functional-guard.sh`, wired into `bin/gates/guards.sh`): **it parses** (every app server entry is transpiled before it ships), **every door the UI knocks on is answered** (a route the interface calls and the server never implements is a promise the product does not keep), and **with the app raised, nothing answers 5xx** (`--live`). It exists because one missing `return {` took Hlidskjalf's whole data face down for a day — every `/api/*` 500 with zero bytes, the well reading DOWN over a healthy bridge — and no gate noticed. |
 | 37 | [A surface may not show what it did not receive](37-a-surface-may-not-show-what-it-did-not-receive.md) | **A panel, a letter, a report or a file that Smíðja or Snotra puts before a person may not present a value it did not actually receive.** A refused read is not zero; a failed probe is not "down"; an unknown attribution is not a name; an empty file is not a transcript. Measured six times in one evening: the Snotra panel showed 0 meetings on a **401** while 24 decisions sat on the shelf; the Well tile said "bridge down" while `:4602/health` answered 200; Nornir said STOPPED while the runner held 29 jobs; Mánagandr said "the window is empty" over a failed read; `speakers` wrote three WAVs of static and exited 0; a letter invented a policy and a date its own record contradicted. It is the *surface* half of Rule 25: **no figure without a receipt, no diagnosis from an absence, and a generator proves its output or refuses it.** |
+
+## Appended 2026-10-23 — the answer is prose, and a decision is a button
+
+| # | Rule | In one line |
+|---|---|---|
+| 38 | [The answer is prose, and a decision is a button](38-the-answer.md) | **An answer to the Allfather is written to be read, not parsed.** Short paragraphs, one idea each, facts quoted inside the sentence. TOON blocks, code fences, column tables and runs of bolded datum belong in files and agent-facing output — never in his reading. On **Telegram**, a decision gets **2–6 buttons** (`telegram_button`, `emoji + text`, a self-contained prompt each) instead of "reply 1 or 2"; a click is an ordinary request, never a grant of authority. |
