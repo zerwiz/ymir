@@ -52,6 +52,12 @@ PrivateTmp=true
 WantedBy=default.target
 UNITEOF
 
+# A unit seated from a WORKTREE is honest tonight and fragile tomorrow: prune the
+# worktree and the desk has no code. Say so rather than discover it at a reboot.
+case "$ROOT" in
+  */.yggdrasil/*) printf 'install: WARNING — seated from a worktree (%s), not from the main tree.\n          Re-run this installer from %s after the branch merges.\n' "$ROOT" "$HOME/ymir" >&2 ;;
+esac
+
 systemctl --user daemon-reload
 systemctl --user enable --now gna-desk.service >/dev/null 2>&1 || {
   echo "install: systemctl could not enable gna-desk.service" >&2
