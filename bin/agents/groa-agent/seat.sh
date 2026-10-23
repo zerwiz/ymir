@@ -24,6 +24,7 @@ while [ $# -gt 0 ]; do case "$1" in
   --repo) REPO="${2-}"; shift 2 ;;
   --auth) AUTH_SRC="${2-}"; shift 2 ;;
   --minute) MINUTE="${2-}"; shift 2 ;;
+  --quiet) QUIET=1; shift ;;
   *) echo "unknown option: $1" >&2; exit 2 ;;
 esac; done
 
