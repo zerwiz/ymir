@@ -24,6 +24,8 @@ curl -s -m 120 -o "$TMP/say.wav" -X POST "$SERVER" -H 'content-type: application
   -d "$(python3 -c "import json,sys;print(json.dumps({'model':'kokoro','input':sys.argv[1],'voice':sys.argv[2],'response_format':'wav'}))" "$SPOKEN" "$VOICE")" \
   || { printf 'mouth: the synthesiser did not answer\n' >&2; exit 3; }
 [ -s "$TMP/say.wav" ] || { printf 'mouth: empty audio\n' >&2; exit 4; }
+# hold the voice: the idle-stop must never lower the card under a conversation (2026-10-23)
+bash "$SCRIPT_DIR/../time/snotra/tts-lease.sh" touch 2>/dev/null || true
 python3 "$SCRIPT_DIR/audio-tighten.py" "$TMP/say.wav" 2>/dev/null || true
 ffmpeg -hide_banner -loglevel error -y -i "$TMP/say.wav" -c:a libopus -b:a 32k -ar 48000 -ac 1 "$OUT" 2>/dev/null \
   || { printf 'mouth: could not encode the voice note\n' >&2; exit 5; }

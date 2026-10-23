@@ -86,7 +86,13 @@ INTENTS = {
     "what companies": ("public", "what-the-houses-are"),
     "which companies": ("public", "what-the-houses-are"),
     "what are the companies": ("public", "what-the-houses-are"),
-    "what is ymir": ("public", "what-ymir-is"),
+    "what is ymir": ("ymir_pitch", None),
+    "tell me about ymir": ("ymir_pitch", None),
+    "explain ymir": ("ymir_pitch", None),
+    "what does ymir do": ("ymir_pitch", None),
+    "what is this system": ("ymir_pitch", None),
+    "sell me ymir": ("ymir_pitch", None),
+    "why ymir": ("ymir_pitch", None),
     "what is opti cat": ("public", "what-opti-cat-is"),
     "what is opticat": ("public", "what-opti-cat-is"),
     "are you available": ("logistics", "availability"),
@@ -109,6 +115,11 @@ INTENTS = {
     "summarise our chat": ("recap", None),
     "summarize our chat": ("recap", None),
     "what have we discussed": ("recap", None),
+    "who is in this group": ("group_members", None),
+    "who is in the group": ("group_members", None),
+    "who is in the groups": ("group_members", None),
+    "who is here": ("group_members", None),
+    "who is in this room": ("group_members", None),
     "who are you": ("role", None),
     "how do i reach him": ("logistics", "availability"),
 }
@@ -933,7 +944,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
 
     # longest phrase first, matched on word boundaries — "hi" must not fire inside "this"
     intent, used, kind = "unknown", [], ""
-    denied = False          # refused for a reason other than "no fact matches" — no handoff owed
+    denied = False
+    pitched = False          # the Ymir pitch is composed here and must not be re-phrased after          # refused for a reason other than "no fact matches" — no handoff owed
     for phrase in sorted(INTENTS, key=len, reverse=True):
         this_kind, slug = INTENTS[phrase]
         if re.search(r"(?<![a-z0-9])" + re.escape(phrase.strip()) + r"(?![a-z0-9])", key):
@@ -1172,6 +1184,81 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             reply = (stored.get("summary") or
                      "We haven't spoken long enough for me to hold a summary yet — a few more turns "
                      "and I'll have the shape of it.")
+    elif kind == "ymir_pitch":
+        # MARKETING, BUT STILL TRUE. His own word (2026-10-23): "when he gets asked about Ymir he
+        # needs to tell a lot more about what it is… he needs to get the user to understand what it
+        # is — not one sentence." So the pitch is assembled from MANY approved facts and composed by
+        # the mouth; every sentence must trace to a fact, and the gate still runs on all of it.
+        pitch_facts = {}
+        for slug, fact in facts.items():
+            claim = str(fact.get("claim", "")).lower()
+            if any(k in claim for k in ("ymir", "house", "substrate", "brokk", "eindri", "kaia",
+                                        "yggdrasil", "mimirsbrunn", "runes", "lore", "the fleet")):
+                pitch_facts[slug] = fact
+        # a stable spine first: what it is, then the fleet, then the parts
+        # the spine is chosen by SLUG, not by a keyword guess: these are the facts that say what the
+        # house is, and they exist in the digest by name
+        spine = [s2 for s2 in ("what-ymir-is", "lore-ymir", "lore-brokk", "lore-eindri", "lore-kaia",
+                               "lore-yggdrasil", "lore-mimirsbrunn", "lore-runes", "what-the-houses-are")
+                 if s2 in facts]
+        chosen = {k: facts[k] for k in spine if k in facts}
+        # without a model the pitch is the facts themselves, so the FLEET must be among them by name
+        for slug, fact in facts.items():
+            claim = str(fact.get("claim", ""))
+            if any(claim.startswith(n) for n in ("Brokk", "Eindri", "Kaia")):
+                chosen.setdefault(slug, fact)
+        for slug in sorted(pitch_facts):
+            if len(chosen) >= 10:
+                break
+            chosen.setdefault(slug, pitch_facts[slug])
+        brief = ("Write the answer a person needs in order to UNDERSTAND what Ymir is: three or four "
+                 "short paragraphs, plain language. Paragraph 1: what it is. Paragraph 2: who does the "
+                 "work — name ONLY the figures the facts name (Brokk the counsellor, Eindri the isolated "
+                 "workers, Kaia the orchestrator who remembers), never a name the facts do not use. "
+                 "Paragraph 3: how the work is kept — isolation in worktrees and sandboxes, the memory "
+                 "well, the append-only ledger. Paragraph 4: what it is for. "
+                 "HARD RULES: invent no name, product, number or claim that is not in the facts; no "
+                 "links, no lists longer than three items. " + name_law())
+        said = model_small(brief, question, mouth, history(chat)) if mouth else None
+        if said and not sounds_like_refusal(said):
+            reply = said
+        else:
+            # no model: a structured answer from the facts themselves, still several sentences
+            # spine first (what it is), then the fleet and the rest — the pitch must name the figures
+            lines = [str(chosen[k]["claim"]).strip() for k in spine if k in chosen]
+            lines += [str(v["claim"]).strip() for k, v in chosen.items() if k not in spine]
+            if not lines:
+                lines = [str(f["claim"]).strip() for f in list(chosen.values())[:4]]
+            reply = "\n\n".join(lines[:6])
+        used = list(chosen)[:10]
+        pitched = True
+    elif kind == "group_members":
+        if tier != "owner":
+            reply = "Who is in a room is his to see, not mine to give out."
+            intent, denied = "unknown", True
+        else:
+            door = os.path.join(ROOT, "bin", "people", "group-members.sh")
+            raw, err = "", ""
+            try:
+                done = subprocess.run(["bash", door, chat or ""], capture_output=True,
+                                      text=True, timeout=40)
+                raw, err = done.stdout, done.stderr
+            except Exception as exc:
+                err = f"{type(exc).__name__}"
+            # the door prints TOON rows; accept any line with the four fields, however indented
+            rows = [l.strip() for l in raw.splitlines() if '","' in l]
+            if not rows:
+                reply = ("I could not read the group's members just now"
+                         + (f" ({err.strip()[:80]})" if err.strip() else "") + ".")
+            else:
+                parts = []
+                for line in rows[:6]:
+                    fields = [f.strip('"') for f in line.strip().split('","')]
+                    if len(fields) >= 4:
+                        title, count, admins = fields[1], fields[2], fields[3]
+                        parts.append(f"{title}: {count} members, admins {admins}")
+                reply = ("A bot cannot list every member — Telegram only lets me see the count and the "
+                         "administrators. " + "; ".join(parts) + ".")
     elif kind == "asks":
         door = os.path.join(HERE, "asks.sh")
         try:
@@ -1371,7 +1458,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     # the approved facts, the question and the last turns — no tools, no credential, no vault — and
     # everything it says still runs through the gate below. A rail that is down is not an outage:
     # the verbatim claim or the honest no is already in `reply`, and that is what gets said.
-    if mouth and tier in MODEL_TIERS:
+    if mouth and tier in MODEL_TIERS and not pitched:
         safe = model_context(facts)
         if intent == "unknown":
             said = model_answer(question, safe, mouth, history(chat), tier)
