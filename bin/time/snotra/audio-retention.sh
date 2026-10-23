@@ -41,15 +41,7 @@ if [ -z "$ARCHIVE" ] && [ -d /run/media ]; then
 fi
 [ "$ACTION" = "scan" ] || [ "$ACTION" = "apply" ] || { printf 'usage: audio-retention.sh scan|apply\n' >&2; exit 2; }
 
-# Every meetings shelf under the home, discovered — not one hard-coded path. Measured 2026-10-23: the
-# old single path (`hodd/life/meetings`) reported 0 files / 0 B while five real recordings sat on disk,
-# because the company meetings live in `svartalfaheim/<realm>/meetings/`. A door that scans the wrong
-# shelf is a door that says "nothing to do" while the disk fills.
-STAGE="${SNOTRA_HARVEST_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir/snotra-harvest}"
-MEETINGS="$(ls -d "$HOME_R"/hodd/life/meetings "$HOME_R"/svartalfaheim/*/meetings \
-  "$HOME_R"/svartalfaheim/*/projects/*/meetings "$HOME_R"/svartalfaheim/*/workspace/*/meetings \
-  "$STAGE" 2>/dev/null | paste -sd: -)"
-[ -n "$MEETINGS" ] || MEETINGS="$HOME_R/hodd/life/meetings"
+MEETINGS="$HOME_R/hodd/life/meetings"
 HOURS_Q="$HOURS" CAP_Q="$CAP_MB" FORCE_Q="$FORCE" ACTION_Q="$ACTION" MEETINGS_Q="$MEETINGS" \
 ARCHIVE_Q="$ARCHIVE" SEND_Q="$SEND" \
 ROOT_Q="$ROOT" HOME_Q="$HOME_R" python3 - <<'PY'
@@ -120,8 +112,7 @@ def collect(base_dir: str, pattern_ok) -> None:
             rows.append({"path": path, "size": st.st_size, "mtime": st.st_mtime,
                           "has_text": transcripts_for(path)})
 
-for shelf in [m for m in meetings.split(":") if m and os.path.isdir(m)]:
-    collect(shelf, lambda n: True)
+collect(meetings, lambda n: True)
 collect("/tmp", lambda n: n.startswith(("meeting-mic-", "snotra-")) or "meeting" in n.lower())
 
 rows.sort(key=lambda r: r["mtime"])
