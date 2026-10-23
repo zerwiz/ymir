@@ -36,3 +36,18 @@ calendar 1d             → verdict busy, source cache, as_of 2026-10-23T19:10Z
 the refusal site: try `ground.who` → `ground.person` → `ground.decisions` → `ground.availability`, and offer the
 knowledge application when nothing answers) must land **with the assistant's own test suite green**, not in the last
 minutes of a session that has a live partner conversation running. That is the next session's first task.
+
+### Appendix — the projects overview (the Allfather's instruction, same night)
+
+*"and feed Skírnir with overview data off all my projects from Whynot Productions and Way of."*
+
+`ground.projects(<house|id>)` reads `hodd/identity/projects.yaml` (the master registry), resolves each project's
+plan ledger by **id, repo name or path** (`ymir-platform` lives under `projects/ymir` — the id is not always the
+folder), and counts the numbered plans in that ledger's index. It then generates
+`hodd/identity/assistant/approved/projects-overview.md`:
+
+- **23 projects** across Whynot Productions, Way of and the house's own; **2 with a plan ledger** (ymir-platform, 67
+  plans, latest 121; command), the rest say **no ledger** — an absent file is not an empty one (Rule 37);
+- generated, not hand-typed: `python3 bin/assistant/ground.py projects` regenerates it;
+- the page states what he may say (house · path · posture · plan count) and what he may not (a project's
+  *decisions* — those come from the ledger and the records reader, never from memory).

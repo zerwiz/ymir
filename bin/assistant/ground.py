@@ -196,6 +196,56 @@ def apply_for(question: str, asker: str, chat: str) -> dict:
     return {"filed": True, "file": f.name, "source": "the knowledge queue", "read": "now"}
 
 
+# ── the projects: a house's work, from the registry and the ledger ────────────────────────────
+def projects(house: str = "") -> dict:
+    """Every project the registry holds, with its house and its plan ledger.
+
+    Source: `hodd/identity/projects.yaml` (the master registry), `companies.yaml` (the houses), and each project's
+    plans index. A project with no plans says "no ledger", never "0 plans" — an absent file is not an empty one
+    (Rule 37).
+    """
+    base = home() / "hodd" / "identity"
+    reg = None
+    try:
+        import yaml  # noqa: PLC0415
+        reg = yaml.safe_load((base / "projects.yaml").read_text(encoding="utf-8")) if (base / "projects.yaml").is_file() else {}
+    except Exception:  # noqa: BLE001
+        reg = load(base / "projects.yaml") or {}
+    rows = (reg.get("projects") if isinstance(reg, dict) else reg) or {}
+    items = rows.values() if isinstance(rows, dict) else rows
+    q = (house or "").strip().lower()
+    out = []
+    for p in items:
+        if not isinstance(p, dict) or not p.get("id"):
+            continue
+        h = (p.get("workspace") or p.get("realm") or "").lower()
+        if q and q not in h and q not in (p.get("id") or "").lower():
+            continue
+        path = p.get("path") or (p.get("git") or {}).get("repo") or ""
+        # the registry id is not always the folder: `ymir-platform` lives under `projects/ymir`. Try the id,
+        # the repo name and the last path segment — a project's ledger is found by any of its names.
+        ledger = None
+        names = {p["id"].lower(), ((p.get("git") or {}).get("repo") or "").lower(),
+                 (p.get("path") or "").rstrip("/").split("/")[-1].lower()}
+        names.discard("")
+        for nm in sorted(names):
+            hits = list((home()).glob(f"svartalfaheim/*/projects/{nm}/plans/README.md"))
+            if hits:
+                ledger = hits[0]
+                break
+        plans = "no ledger"
+        latest = ""
+        if ledger:
+            txt = ledger.read_text(encoding="utf-8", errors="replace")
+            nums = re.findall(r"^\|\s*(\d{1,3})\s*\|", txt, re.M)
+            plans = len(nums) if nums else "no ledger"
+            latest = f"latest {max(nums, key=int)}" if nums else ""
+        out.append({"id": p["id"], "house": p.get("workspace") or p.get("realm") or "", "path": path,
+                    "posture": p.get("posture") or "—", "plans": plans, "latest": latest})
+    out.sort(key=lambda r: (r["house"], r["id"]))
+    return {"projects": out, "count": len(out), "source": "hodd/identity/projects.yaml", "read": stamp(base / "projects.yaml")}
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "help"
     arg = sys.argv[2] if len(sys.argv) > 2 else ""
@@ -207,5 +257,7 @@ if __name__ == "__main__":
         print(json.dumps(decisions(arg), indent=2, ensure_ascii=False))
     elif cmd == "calendar":
         print(json.dumps(availability(arg), indent=2, ensure_ascii=False))
+    elif cmd == "projects":
+        print(json.dumps(projects(arg), indent=2, ensure_ascii=False))
     else:
         print(__doc__)
