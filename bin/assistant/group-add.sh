@@ -2,8 +2,12 @@
 # group-add.sh — put Skírnir in a Telegram group, in one word.
 #
 #   group-add.sh                  # every group he has seen, and whether he answers there
-#   group-add.sh allow <name|id>  # allow it: answers any message, owner-trusted
-#   group-add.sh close <name|id>  # back to name-only (addressed_only)
+#   group-add.sh allow <name|id>  # allow it: he answers there WHEN NAMED (never every message)
+#   group-add.sh close <name|id>  # stop answering there at all (he is removed from the allowlist)
+#
+# THE LAW (the Allfather's word, 2026-10-23): "only my private chat should be answering on all.
+# groups never." `allow` therefore grants the ROOM, never the loudness — there is no switch that makes
+# him answer every message in a group, and this door no longer writes one.
 #
 # WHY: adding him used to mean reading a chat id out of a journal and editing YAML. A bot cannot join a
 # group from an invite link — Telegram has no such API — so the human adds the bot once, he RECORDS the
@@ -52,7 +56,7 @@ if action == "list":
     print(f"groups{len(seen)}")
     for cid, row in seen.items():
         g = allowed.get(cid) or {}
-        answers = "any message" if g and g.get("addressed_only") is False else ("when named" if g else "NO — he is not allowed here")
+        answers = "when named" if g else "NO — he is not allowed here"
         print(f'  "{cid}","{row.get("title","")}","{answers}","{bool(g.get("owner_trusted")) if g else False}"')
     sys.exit(0)
 
@@ -64,8 +68,9 @@ cid, title = hit
 if action == "allow":
     row = allowed.get(cid) or {"id": cid, "name": title}
     row.update({"name": title or row.get("name", ""), "tier": row.get("tier", "collaborator"),
-                "owner_trusted": True, "addressed_only": False,
+                "owner_trusted": True,
                 "added_by": "the Allfather", "added_at": "2026-10-23"})
+    row.pop("addressed_only", None)          # the law: a room never answers every message
     if cid not in allowed:
         groups.append(row)
     else:
@@ -73,14 +78,16 @@ if action == "allow":
             if str(g.get("id")) == cid:
                 groups[i] = row
     yaml.safe_dump(doc, open(path, "w"), sort_keys=False, allow_unicode=True)
-    print(f'group_add[1]{{id,title,answers}}: "{cid}","{title}","any message"')
+    print(f'group_add[1]{{id,title,answers}}: "{cid}","{title}","only when named"')
 elif action == "close":
-    for g in groups:
-        if str(g.get("id")) == cid:
-            g["addressed_only"] = True
-            yaml.safe_dump(doc, open(path, "w"), sort_keys=False, allow_unicode=True)
-            print(f'group_add[1]{{id,title,answers}}: "{cid}","{title}","only when named"')
-            break
+    # a closed room is a room he is not allowed in: the row goes, so nothing answers there at all
+    keep = [g for g in groups if str(g.get("id")) != cid]
+    if len(keep) != len(groups):
+        doc["groups"] = keep
+        yaml.safe_dump(doc, open(path, "w"), sort_keys=False, allow_unicode=True)
+        print(f'group_add[1]{{id,title,answers}}: "{cid}","{title}","not allowed — silent"')
+    else:
+        print(f'group_add[1]{{id,title,answers}}: "{cid}","{title}","was not allowed"')
 else:
     print("usage: group-add.sh [list|allow <name|id>|close <name|id>]", file=sys.stderr); sys.exit(2)
 PY

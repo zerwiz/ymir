@@ -187,16 +187,22 @@ for PHRASE in "tell Regan about Ymir" "can you explain what ymir is" "introduce 
     || bad "pitch: $PHRASE" "${W:-0} words — a label, not an explanation"
 done
 
-# ── B · the rooms: open answers everything, named-only ignores the unnamed ───────────────────
-ROOMS="$(bash "$ROOT/bin/assistant/group-add.sh" 2>/dev/null)"
-case "$ROOMS" in
-  *"any message"*) ok "at least one room is open (answers unnamed messages)" ;;
-  *) skip "open rooms" "no room is set to answer any message" ;;
-esac
-OPEN_ID="$(printf '%s' "$ROOMS" | awk -F'","' '/any message/{gsub(/[ "]/, "", $1); print $1; exit}')"
-if [ -n "$OPEN_ID" ]; then
-  R2="$(ASK 'hi' collaborator telegram-group "$OPEN_ID")"
-  [ -n "$R2" ] && ok "the open room answers an unnamed hello" || bad "open room" "silent on a plain hello"
+# ── B · the law: ONLY the owner's private chat answers every message ─────────────────────────
+# His word, 2026-10-23: "only my private chat should be answering on all. groups never." A room
+# that answers an unnamed message is a mouth talking to other people unprompted — and it did, once,
+# with a wrong fact in it. The adapter now has no per-room switch; this check proves the config has
+# not grown one back, and the adapter suite (`adapter-test.sh`) proves the code ignores the unnamed.
+if grep -vE '^[[:space:]]*#' "$H/hodd/identity/assistant/groups.yaml" 2>/dev/null \
+     | grep -qE 'addressed_only:[[:space:]]*false'; then
+  bad "the rooms" "a room is declared open — only the owner's DM may answer every message"
+else
+  ok "no room answers an unnamed message — only the owner's DM answers everything"
+fi
+# the adapter's own suite: the addressee rule is CODE now, so it is proven in code and not in a config
+if bash "$SCRIPT_DIR/adapter-test.sh" >/dev/null 2>&1; then
+  ok "the adapter suite holds — typing, the tiers, an unnamed group message ignored"
+else
+  bad "adapter suite" "bin/assistant/adapter-test.sh reports a failure"
 fi
 
 # ── C · the room's members, asked three ways ─────────────────────────────────────────────────
@@ -216,13 +222,23 @@ case "$S2" in *"Craig Martin"*) bad "tier gate" "a stranger heard a contact" ;; 
 O2="$(ASK 'who is craig' owner)"
 case "$O2" in *"Craig"*) ok "the owner can hear a contact" ;; *) bad "owner contact" "$O2" ;; esac
 
-# ── F · the voice fails LOUD when the synthesiser is down (it failed silently once) ─────────
+# ── F · the voice RAISES itself, and still fails LOUD when it cannot ────────────────────────
+# The idle-stop is CORRECT to lower an unused voice — which is why the mouth must raise it before it
+# speaks. That was the fault of 2026-10-23: kokoro was lowered at 12:29 and every voice note until
+# 19:30 arrived as text. A mouth that cannot be raised must still SAY SO, and must not hang.
 systemctl --user stop kokoro-serve.service >/dev/null 2>&1; sleep 1
-if bash "$SCRIPT_DIR/mouth.sh" "the voice must refuse loudly" /tmp/smoke-down.ogg >/dev/null 2>&1; then
+if bash "$SCRIPT_DIR/mouth.sh" "the voice raises itself" /tmp/smoke-raise.ogg >/dev/null 2>&1 \
+   && [ -s /tmp/smoke-raise.ogg ]; then
+  ok "the mouth raises an idle-lowered voice and speaks ($(stat -c%s /tmp/smoke-raise.ogg) bytes)"
+else
+  bad "mouth raise" "the mouth did not raise kokoro — a voice note would arrive as text"
+fi
+if MOUTH_WAIT_SECONDS=3 KOKORO_URL=http://127.0.0.1:9/v1/audio/speech \
+   bash "$SCRIPT_DIR/mouth.sh" "the voice must refuse loudly" /tmp/smoke-down.ogg >/dev/null 2>&1; then
   bad "mouth guard" "succeeded with no synthesiser"
 else
   RC=$?
-  [ "$RC" -eq 3 ] && ok "a dead synthesiser fails loudly (exit 3)" || ok "a dead synthesiser fails (exit $RC)"
+  [ "$RC" -eq 3 ] && ok "a synthesiser that cannot be raised fails loudly (exit 3)" || ok "a dead synthesiser fails (exit $RC)"
 fi
 systemctl --user start kokoro-serve.service >/dev/null 2>&1
 for _i in $(seq 1 12); do sleep 2; curl -s -m 3 -o /dev/null http://127.0.0.1:8765/ 2>/dev/null && break; done
