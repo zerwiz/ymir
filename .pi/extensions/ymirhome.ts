@@ -152,6 +152,8 @@ export default function ymirhome(pi: any) {
     "used_by",         // skill / door / gate that consumes it (the one-to-one law)
     "sensitivity",     // private | internal — lets the door REFUSE a secret
     "owner",           // who answers for this
+    "tags",            // a few words that make it findable — the library asks by them (plan 115)
+    "sources",         // REQUIRED on a research/audit record: the pages behind the claim
   ] as const;
 
 
@@ -265,6 +267,8 @@ export default function ymirhome(pi: any) {
             "used_by:",
             "sensitivity: internal",
             "owner:",
+            "tags:",
+            "sources:",
             "---",
             "",
           ].join("\n");

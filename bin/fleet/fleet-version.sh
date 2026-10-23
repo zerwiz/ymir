@@ -38,17 +38,43 @@ if command -v npm >/dev/null 2>&1; then
 fi
 [ -n "$PUBLISHED" ] || PUBLISHED="unreachable"
 
+# ── content, not just labels (2026-10-23) ────────────────────────────────────
+# Three labels can agree on a word that stopped meaning anything. Measured on this seat:
+# the tree, the install and npm ALL said 0.1.53, while the two trees differed by 155 doors,
+# 22 rules and 69 feature pages — the published copy had been frozen for 24 days. A
+# label-agreement check cannot see that. So when a global copy exists, count the things.
+CONTENT=""; CONTENT_NOTE=""
+if [ -n "$INSTALLED" ]; then
+  _groot="$(npm root -g 2>/dev/null)"
+  GI="${_groot%/}/@zerwiz/ymir"
+  if [ -d "$GI" ]; then
+    _td=$(find "$ROOT/bin" -name '*.sh' 2>/dev/null | wc -l); _id=$(find "$GI/bin" -name '*.sh' 2>/dev/null | wc -l)
+    _tr=$(ls "$ROOT"/RULES/[0-9][0-9]-*.md 2>/dev/null | wc -l); _ir=$(ls "$GI"/RULES/[0-9][0-9]-*.md 2>/dev/null | wc -l)
+    _tf=$(ls "$ROOT"/docs/features/*.md 2>/dev/null | wc -l); _if=$(ls "$GI"/docs/features/*.md 2>/dev/null | wc -l)
+    CONTENT_NOTE="doors ${_td}/${_id} · rules ${_tr}/${_ir} · feature pages ${_tf}/${_if} (tree/installed)"
+    if [ "$_td" != "$_id" ] || [ "$_tr" != "$_ir" ] || [ "$_tf" != "$_if" ]; then CONTENT="drift"; else CONTENT="same"; fi
+    unset _td _id _tr _ir _tf _if
+  fi
+  unset _groot GI
+fi
+
 # verdict — semver-ish via sort -V
 newer() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$1" ]; }
+# The order matters, and getting it wrong made a bump look like a fault: once the tree's
+# version moves ahead, the INSTALLED copy is behind by definition — that is a release owed,
+# not a broken seat. Only these are faults: an install NEWER than the tree, a published
+# version newer than the tree, or three equal labels over two different trees.
 VERDICT="in sync"; VERDICT_NOTE="tree, install, and publish agree"
 if [ -z "$TREE" ]; then
   VERDICT="unknown"; VERDICT_NOTE="no package.json at $ROOT"
-elif [ -n "$INSTALLED" ] && [ "$INSTALLED" != "$TREE" ]; then
-  VERDICT="drift"; VERDICT_NOTE="tree $TREE != installed $INSTALLED — reconcile before publish"
-elif [ "$PUBLISHED" != "unreachable" ] && newer "$TREE" "$PUBLISHED"; then
-  VERDICT="ahead"; VERDICT_NOTE="tree $TREE is ahead of published $PUBLISHED — ready to publish"
+elif [ -n "$INSTALLED" ] && newer "$INSTALLED" "$TREE"; then
+  VERDICT="drift"; VERDICT_NOTE="installed $INSTALLED is AHEAD of tree $TREE — this seat is not the tree it thinks"
 elif [ "$PUBLISHED" != "unreachable" ] && newer "$PUBLISHED" "$TREE"; then
   VERDICT="behind"; VERDICT_NOTE="tree $TREE is behind published $PUBLISHED — pull the line forward"
+elif [ "$PUBLISHED" != "unreachable" ] && newer "$TREE" "$PUBLISHED"; then
+  VERDICT="ahead"; VERDICT_NOTE="tree $TREE is ahead of published $PUBLISHED — a RELEASE is owed (${CONTENT_NOTE:-no install to compare})"
+elif [ "$CONTENT" = "drift" ]; then
+  VERDICT="content drift"; VERDICT_NOTE="three equal labels over two different trees — $CONTENT_NOTE"
 fi
 
 if [ "$MODE" = json ]; then
@@ -61,11 +87,12 @@ PY
   exit 0
 fi
 
-printf 'fleet_version[4]{scope,version,note}:\n'
+printf 'fleet_version[5]{scope,version,note}:\n'
 printf '  "tree","%s","package.json in this repo"\n' "${TREE:-none}"
 printf '  "installed","%s","@zerwiz/ymir in the global prefix"\n' "${INSTALLED:-none}"
 printf '  "published","%s","npm latest"\n' "$PUBLISHED"
 printf '  "verdict","%s","%s"\n' "$VERDICT" "$VERDICT_NOTE"
+printf '  "content","%s","%s"\n' "${CONTENT:-unmeasured}" "${CONTENT_NOTE:-no global copy to compare — a clean skip, not a pass}"
 
-if [ "$MODE" = check ] && [ "$VERDICT" = "drift" ]; then exit 1; fi
+if [ "$MODE" = check ] && { [ "$VERDICT" = "drift" ] || [ "$VERDICT" = "content drift" ]; }; then exit 1; fi
 exit 0
