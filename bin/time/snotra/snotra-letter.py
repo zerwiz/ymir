@@ -484,8 +484,9 @@ def letter_html(rec: dict, place: dict, person: dict) -> str:
       '<div style="margin-top:22px;padding-top:16px;border-top:1px solid #e5ebf1;color:#52606d;font-size:13px;line-height:1.55;">'
       f'<strong style="color:#12263f;">{e(f["sender"] or "")}</strong><br>{e(company)} &nbsp;·&nbsp; <a href="mailto:{e(person.get("email") or "")}" style="color:#2f6f8f;text-decoration:none;">{e(person.get("email") or "")}</a></div>'
       '<div style="margin-top:10px;color:#9aa8b6;font-size:11.5px;line-height:1.5;">'
-      f"Prepared from the record `{e((m.get('meeting_id') or ''))}` by the house system, on the operator's approval. "
-      'Nothing here is edited after sending — a correction is appended.</div></td></tr>')
+      'Sent from the house system on the operator\'s approval. '
+      f"The record lives in the vault under {e((m.get('meeting_id') or ''))}; nothing here is edited after "
+      'sending — a correction is appended.</div></td></tr>')
 
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
