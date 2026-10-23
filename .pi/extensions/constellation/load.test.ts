@@ -4,16 +4,21 @@
 // A registry module can pass every unit test and still be an extension pi refuses:
 // a factory that throws at load, a lib module the deployed copy cannot find, or a
 // duplicate tool name are all load-time failures. So this reproduces the deploy
-// `bin/seat/valknut-load.sh` performs — `.pi/shared/extensions/*.ts` plus
+// `bin/seat/valknut-load.sh` performs — `.pi/extensions/constellation/` plus
 // `.pi/extensions/lib/*` copied into ONE extension home, with `.ymir-root`
 // recording the tree that owns `bin/` — and drives the deployed factory with a stub
 // `pi`, reading back exactly what it registered. That is the question a pi session
 // asks at boot, answered here without touching the Allfather's live home.
 //
-// Run: node --test .pi/extensions/lib/constellation-load.test.ts
+// Rewritten 2026-10-23 for the ONE-HOME layout (Rule 13 after the ext-migration):
+// `.pi/shared/extensions` no longer exists, so the old copy path could only fail on
+// a missing directory. The extension is now a DIRECTORY with `index.ts`, and the
+// live tree is the only load path.
+//
+// Run: bun test ./.pi/extensions/constellation/load.test.ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
@@ -21,6 +26,9 @@ import { pathToFileURL } from "node:url";
 import shim from "./index.ts";
 
 const ROOT = resolve(import.meta.dirname, "../../..");
+// The scratch deploy has no bin/ of its own, so name the tree that owns one —
+// exactly what `.ymir-root` records for a deployed copy (lib/ymir-home.ts).
+process.env.YMIR_ROOT = ROOT;
 const TOOLS = ["constellation_ask", "constellation_card", "constellation_list"]; // sorted, as read back
 
 interface Registered {
@@ -50,7 +58,7 @@ function deployedHome(): string {
   const home = mkdtempSync(join(tmpdir(), "constellation-pi-home-"));
   const extensions = join(home, "extensions");
   mkdirSync(join(extensions, "lib"), { recursive: true });
-  cpSync(join(ROOT, ".pi/shared/extensions"), extensions, { recursive: true, filter: (src) => !src.includes("/lib/") });
+  cpSync(join(ROOT, ".pi/extensions/constellation"), join(extensions, "constellation"), { recursive: true });
   cpSync(join(ROOT, ".pi/extensions/lib"), join(extensions, "lib"), {
     recursive: true,
     filter: (src) => !src.endsWith(".test.ts"),
@@ -67,7 +75,7 @@ test("the deployed extension loads and registers exactly the three constellation
   process.env.BROKK_STATE_OVERRIDE = state;
   const extensions = deployedHome();
   try {
-    const deployed = await import(pathToFileURL(join(extensions, "constellation.ts")).href);
+    const deployed = await import(pathToFileURL(join(extensions, "constellation/index.ts")).href);
     assert.equal(typeof deployed.default, "function", "the factory must export");
 
     const { pi, registered, events } = stubPi();
@@ -99,7 +107,7 @@ test("with no registry configured, list and ask SKIP loudly rather than reportin
   delete process.env.CONSTELLATION_REGISTRY;
   const extensions = deployedHome();
   try {
-    const deployed = await import(pathToFileURL(join(extensions, "constellation.ts")).href);
+    const deployed = await import(pathToFileURL(join(extensions, "constellation/index.ts")).href);
     const { pi, registered } = stubPi();
     deployed.default(pi);
     const list = registered.find((tool) => tool.name === "constellation_list")!;
@@ -119,8 +127,14 @@ test("with no registry configured, list and ask SKIP loudly rather than reportin
   }
 });
 
-test("the project-local file registers nothing — the deployed copy owns the tools", () => {
+test("one home: the extension is a directory with an index.ts, and no second load path exists", () => {
+  assert.ok(existsSync(join(ROOT, ".pi/extensions/constellation/index.ts")),
+    "pi loads a subdirectory only when it holds index.ts");
+  assert.equal(existsSync(join(ROOT, ".pi/shared/extensions")), false,
+    "the retired shared tree would be a second home — pi does not de-duplicate");
+  // The same factory is what the live tree loads; it must not throw on load.
   const { pi, registered } = stubPi();
   shim(pi);
-  assert.deepEqual(registered, [], "loading twice makes pi refuse the duplicate tool");
+  assert.deepEqual(registered.map((tool) => tool.name).sort(), TOOLS,
+    "the live tree registers the mesh's surface, from its one home");
 });
