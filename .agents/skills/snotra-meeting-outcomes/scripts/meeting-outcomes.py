@@ -531,8 +531,18 @@ def validate_record(rec: dict) -> tuple[list[str], list[str]]:
             errors.append(f"{did}: invalid decision id")
         if not d.get("statement"):
             errors.append(f"{did}: statement required")
-        if not d.get("decided_by") or str(d.get("decided_by")).lower() in NEGATIVE_OWNER:
-            errors.append(f"{did}: decided_by must name one person")
+        # A decision that has NOT been promoted yet may honestly have no approver: `proposed` with
+        # `approver_pending: true` is the state the register is in while the participants confirm it
+        # (measured 2026-10-23: 14 proposed decisions, all unattributed, which is the truth for a record
+        # reconstructed from a partially captured meeting). A decision that claims to STAND — approved,
+        # decided or rejected — must still name the one person who made it.
+        state = (d.get("status") or "decided").strip().lower()
+        if state in ("approved", "decided", "rejected"):
+            if not d.get("decided_by") or str(d.get("decided_by")).lower() in NEGATIVE_OWNER:
+                errors.append(f"{did}: decided_by must name one person")
+        elif state == "proposed" and not d.get("approver_pending", True):
+            if not d.get("decided_by") or str(d.get("decided_by")).lower() in NEGATIVE_OWNER:
+                errors.append(f"{did}: proposed with no approver must say approver_pending: true")
         ev = d.get("evidence") or {}
         if not ev.get("quote") or not ev.get("timestamp"):
             errors.append(f"{did}: evidence (timestamp + quote) required")

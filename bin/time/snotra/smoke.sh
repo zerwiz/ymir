@@ -10,6 +10,8 @@
 #   PASS  harvest verify re-hashes the staged audio against the store's declared bytes
 #   PASS  ladder status sees a transcript before it would shrink anything
 #   PASS  project verify agrees with the board (or SKIPs: no Trello grant in reach)
+#   PASS  promote: the record validates before any promotion is written
+#   PASS  agenda: the dated card sits in the place's agenda list (or SKIPs: none filed yet)
 #   PASS  a place declaring another surface is REFUSED, not cross-filed
 #   PASS  every place profile declares a surface and an authority block
 #
@@ -57,6 +59,16 @@ else
   else
     sk "no harvest.json here — the harvest has not been run for this meeting"
   fi
+
+  out="$("$ROOT/bin/time/snotra/snotra-promote.sh" check "$D" 2>&1)"; rc=$?
+  if [ $rc -eq 0 ] && printf '%s' "$out" | grep -q 'ok:true'; then ok "promote: the record validates before any promotion"
+  else no "promote check: ${out##*$'\n'}"; fi
+
+  out="$("$ROOT/bin/time/snotra/snotra-agenda.sh" verify "$D" 2>&1)"; rc=$?
+  if printf '%s' "$out" | grep -q 'no place profile'; then sk "no place profile — no agenda to check"
+  elif [ $rc -eq 0 ]; then ok "agenda: the dated card sits in the place's agenda list"
+  elif printf '%s' "$out" | grep -q 'agenda{missing:true}'; then sk "no agenda card filed for this meeting yet"
+  else no "agenda verify: ${out##*$'\n'}"; fi
 
   out="$("$ROOT/bin/time/snotra/snotra-project.sh" verify "$D" 2>&1)"; rc=$?
   if printf '%s' "$out" | grep -qE 'no Trello grant|not reachable|unreachable'; then sk "Trello not reachable from here"
