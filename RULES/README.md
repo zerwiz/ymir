@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[30]{file,subject}:
+rules_index[32]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -30,6 +30,8 @@ rules_index[30]{file,subject}:
   "28-streaming-voice.md","Skírnir speaks in real time or not at all: a pipeline of overlapping stages, latency measured per turn, and a silent failure is a violation"
   "26-external-surfaces.md","private structure and NDA material never cross an external surface: no paths, vault names, secrets or classified material in Trello, email, Chat or a public PR"
   "29-the-apps-stay-whole.md","an update that leaves an app unreadable is not an update: every server entry parses, every route the UI calls is answered, and a raised gate answers no 5xx"
+  "34-the-record-has-a-shape.md","a record has a shape: the header contract, a verified that is a command, views rendered not appended, reproducible and gated, a gate on the diff, correction by citation"
+  "35-the-research-is-kept.md","what was learned outside is kept: one episode per question, in our words, with its sources and its route, indexed by date in the home; an unsourced finding is an opinion"
   "README.md","this index"
 ```
 
@@ -71,3 +73,10 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | # | Rule | In one line |
 |---|---|---|
 | 29 | [The apps stay whole](29-the-apps-stay-whole.md) | **Every change that ships leaves every app able to start and every panel able to speak to it.** Three duties, one ward (`bin/gates/guards/app-functional-guard.sh`, wired into `bin/gates/guards.sh`): **it parses** (every app server entry is transpiled before it ships), **every door the UI knocks on is answered** (a route the interface calls and the server never implements is a promise the product does not keep), and **with the app raised, nothing answers 5xx** (`--live`). It exists because one missing `return {` took Hlidskjalf's whole data face down for a day — every `/api/*` 500 with zero bytes, the well reading DOWN over a healthy bridge — and no gate noticed. |
+
+## Appended 2026-10-23 — a record has a shape, and what was learned outside is kept
+
+| # | Rule | In one line |
+|---|---|---|
+| 34 | [A record has a shape](34-the-record-has-a-shape.md) | **A document meant to be found again carries the header, and a view is rendered.** One contract — the one the harness already enforces, extended with `owner · tags · sources`; a **typed** document is `---` with `kind` and `status`; `verified:` is a **command** a reader can re-run; every index (`FEATURES.md`, `RULES/README.md`, `*/DOORS.md`, the library's `INDEX.md`) is **derived**, and a derived view that is not **reproducible and gated** is a document pretending to be a register; the gate is on the **diff**, not on history; a correction is a new record citing the old one. |
+| 35 | [What was learned outside is kept](35-the-research-is-kept.md) | **Every research episode is kept, in the home, by date, with its sources and its route.** One question, the finding **in our words**, every page behind it, under `hodd/library/research/<YYYY>/<MM>/`, indexed from the folders; **an unsourced finding is an opinion** (only a recorded **negative result** may stand without a source); an episode is never rewritten; nothing private enters the library (Rule 15 wins). |

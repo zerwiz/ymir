@@ -121,8 +121,15 @@ def counterpart(stem):
 # This was `BIN.rglob("*")` INSIDE analyse() — a filesystem walk per file (quadratic)
 # that also counted untracked scripts, so a seat's `called-by` totals ran higher than a
 # clean checkout's and the committed index could never match CI.
+# A VIEW IS NOT A CALLER (2026-10-23). This scan included `bin/README.md` — the file it
+# renders — so every door gained one caller the moment the index listed it, and the next
+# render counted one more. Measured: render 1 changed 97 lines, render 2 changed 26, and
+# only a third render matched. A markdown page that NAMES a door does not CALL it, so no
+# README.md is a caller: the register stays derived AND reproducible, and `--check` stops
+# being the lottery this file warns about (`bin/gates/guards/inventory-guard.sh` proves it).
 BIN_TRACKED = (
-    [p for p in sorted(BIN.rglob("*")) if p.is_file() and p.relative_to(ROOT).as_posix() in tracked_set]
+    [p for p in sorted(BIN.rglob("*"))
+     if p.is_file() and p.name != "README.md" and p.relative_to(ROOT).as_posix() in tracked_set]
     if BIN.exists() else []
 )
 

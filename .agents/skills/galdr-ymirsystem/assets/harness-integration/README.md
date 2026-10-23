@@ -1328,3 +1328,34 @@ drift. The remedy is one resolver in `lib/ymir-home.ts`, which all five import �
 owed rather than half-done, because the extensions must stay loadable by every harness.
 
 Record: this change's fix note under `docs/fixes/agents/`.
+
+## 2026-10-23 — the header contract gains `tags` and `sources`, because the library asks by them
+
+Plan 115. The Allfather's question — *"we need a better system then random md files scattered all
+over"* — has one answer at this layer: the header `.pi/extensions/ymirhome.ts` already enforces is the
+house's **one** contract, and the library (`bin/records/library.sh`, `RULES/34`) reads it rather than
+inventing a second.
+
+`HEADER_FIELDS` and the `apply` template now carry two more fields:
+
+```
+tags       a few words that make it findable — `library.sh ask` searches them
+sources    REQUIRED on a research or audit record: the pages behind the claim (RULES/35)
+```
+
+**Why it matters that this lives here and not in a new tool:** a second header checker would be the
+same fault the library exists to kill — two sources of truth about what a record is — one level down
+from the documents. The evidence is measured: the plan's first draft proposed a rival
+`kind · title · status · date · owner · verified · tags · sources` and the extension already had
+`kind · status · verified · verified_by · supersedes · superseded_by · grade · aliases · canonical ·
+origin · used_by · sensitivity · owner`. Two of the plan's fields were new; the plan's other seven were
+already there under other names.
+
+**What a document is now:** **typed** = its first line is `---` and the header carries `kind` and
+`status`. That definition is what `bin/records/library.sh check` counts, and what
+`check --changed` gates on the diff (`RULES/34` §5).
+
+**The door it feeds:** `bin/records/library.sh` — `check` (coverage per shelf), `ask` (one query across
+doors, capabilities, features, law, skills and research), `index`, and `research keep|list|show|find|
+index|check` (the research kind, `RULES/35`). Nothing here duplicates a door that already existed:
+`ask` reads the registers the house already keeps.
