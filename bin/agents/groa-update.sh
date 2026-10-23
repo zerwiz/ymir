@@ -152,6 +152,10 @@ if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS#
 # the hound's units are rendered from the repo, so an update re-seats them
 [ -x "$SCRIPT_DIR/../ward/garmr.sh" ] && "$SCRIPT_DIR/../ward/garmr.sh" refresh >/dev/null 2>&1 || true
 
+# Gróa's own body is rendered from the repo too: an update re-seats her, so the
+# features of the new tree are the features she runs. Never fatal.
+[ -x "$SCRIPT_DIR/groa-agent/seat.sh" ] && "$SCRIPT_DIR/groa-agent/seat.sh" --quiet >/dev/null 2>&1 || true
+
 # Eir checks after every update, so a desktop that cannot open is REPORTED and
 # never silently dead (P8, 2026-09-24). The update is never blocked on a
 # broken surface — the report is the loudness; the Nornir job keeps the watch
