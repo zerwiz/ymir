@@ -73,6 +73,33 @@ def place_of(rec: dict) -> dict:
     return load_yaml(p)
 
 
+
+def confirm_action(rec: dict) -> dict | None:
+    """The action in the record that asks for confirmation — returned whole, so the letter can quote it."""
+    for a in rec.get("actions") or []:
+        t = ((a.get("deliverable") or "") + " " + (a.get("definition_of_done") or "")).lower()
+        if "confirm" in t or "correct" in t:
+            return a
+    return None
+
+
+def record_note(rec: dict) -> tuple[str | None, str | None]:
+    """The record's own caveat about provisional state, verbatim, with its risk id — or nothing.
+
+    A letter may not state a consequence the record does not carry. On 2026-10-23 the letter said
+    "silence is recorded as provisional acceptance" — a policy nobody agreed to. The record's own words
+    were narrower: "grade and approver are provisional until confirmed" (RSK-20261022-02).
+    """
+    for r in rec.get("risks") or []:
+        text = (r.get("mitigation") or "").strip()
+        if not text:
+            continue
+        low = (text + " " + (r.get("risk") or "")).lower()
+        if any(k in low for k in ("provisional", "confirm", "approver")):
+            return text, r.get("risk_id")
+    return None, None
+
+
 def business_days_after(iso_date: str, n: int) -> str:
     d = datetime.strptime(iso_date[:10], "%Y-%m-%d")
     added = 0
@@ -95,7 +122,15 @@ def _facts(rec: dict, place: dict, person: dict) -> dict:
         "title": m.get("title") or "the meeting",
         "held": held,
         "when": str(m.get("started_at") or "").replace("T", " ")[:16],
-        "due": business_days_after(held, days),
+        # A letter's deadline must be the one the ROOM set. The 22 Oct record carries ACT-20261022-03
+        # "confirm or correct this record within two business days" — due 2026-10-24. Computing 26 Oct from
+        # the cadence produced a letter that contradicted its own record (seen by the Allfather, 2026-10-23).
+        "ask": confirm_action(rec),
+        "note": record_note(rec)[0],
+        "note_id": record_note(rec)[1],
+        "due": (str((confirm_action(rec) or {}).get("due_at") or "")[:10]
+                or business_days_after(held, days)),
+        "due_action": (confirm_action(rec) or {}).get("action_id"),
         "days": days,
         "chair": (roles.get("chair") or "").strip(),
         "sender": (roles.get("operator") or roles.get("chair") or "").strip(),
@@ -125,7 +160,7 @@ def letter_text(rec: dict, place: dict, person: dict) -> str:
         for w in words:
             if len(cur) + len(w) + 1 > W and cur.strip():
                 lines.append(cur.rstrip()); cur = " " * len(prefix)
-            cur += (" " if cur.strip() else "") + w
+            cur += ("" if cur.endswith((" ", '"')) or not cur.strip() else " ") + w
         if cur.strip():
             lines.append(cur.rstrip())
         return lines or [prefix.rstrip()]
@@ -165,11 +200,29 @@ def letter_text(rec: dict, place: dict, person: dict) -> str:
                 L.append(line)
         L.append("")
     L.append("* WHAT I NEED FROM YOU")
-    for line in wrap("  ", f"Confirm or correct this record by {f['due']} ({f['days']} business days). "
-                           "Every decision in it is proposed until you confirm it. A correction is added as a "
-                           "new entry, never by editing the old one. Silence is recorded as provisional "
-                           "acceptance, not agreement."):
-        L.append(line)
+    ask = f.get("ask") or {}
+    if ask:
+        owner = ask.get("owner") or "unowned"
+        for line in wrap("  ", f"The record carries this action — {ask.get('action_id')}, "
+                               f"owned by {owner}:"):
+            L.append(line)
+        for line in wrap("    ", f"\"{(ask.get('deliverable') or '').rstrip('.')}.\""):
+            L.append(line)
+        if ask.get("definition_of_done"):
+            for line in wrap("    Done when: ", ask["definition_of_done"].rstrip(".") + "."):
+                L.append(line)
+        if ask.get("due_at"):
+            L.append(f"    By: {str(ask['due_at'])[:10]}")
+        if f["name"].lower() != owner.lower() and ask.get("definition_of_done"):
+            L.append("")
+            for line in wrap("  ", f"Your part: {ask['definition_of_done'].rstrip('.')}."):
+                L.append(line)
+    else:
+        L.append("  The record carries no confirmation action — review the record and reply with corrections.")
+    if f.get("note"):
+        L.append("")
+        for line in wrap("  ", f"Note ({f.get('note_id') or 'the record'}): {f['note']}."):
+            L.append(line)
     L.append("")
     L.append("WHAT THIS RECORD COVERS")
     cov = f["cov"]
@@ -262,10 +315,21 @@ def letter_html(rec: dict, place: dict, person: dict) -> str:
         parts.append("<h2>Open questions</h2><ul>" + "".join(
             f"<li>{e(q.get('question'))}</li>" for q in f["questions"]) + "</ul>")
     parts.append("<h2>What I need from you</h2>")
-    parts.append(f"<div class='ask'><p><strong>Confirm or correct this record by {e(f['due'])}</strong> "
-                 f"({f['days']} business days). Every decision is <em>proposed</em> until you confirm it. "
-                 f"A correction is added as a new entry — nothing is edited after sending. Silence is "
-                 f"recorded as provisional acceptance, not as agreement.</p></div>")
+    ask = f.get("ask") or {}
+    if ask:
+        owner = ask.get("owner") or "unowned"
+        quote = f"<em>&ldquo;{e((ask.get('deliverable') or '').rstrip('.'))}.&rdquo;</em>"
+        done = (f"<br><span class='muted'>Done when: {e(ask.get('definition_of_done'))}</span>"
+                if ask.get("definition_of_done") else "")
+        due_h = f"<br><strong>By: {e(str(ask.get('due_at'))[:10])}</strong>" if ask.get("due_at") else ""
+        mine = (f"<br><br>Your part: {e(ask.get('definition_of_done'))}."
+                if f["name"].lower() != owner.lower() and ask.get("definition_of_done") else "")
+        cite_h = f" <span class='muted'>({e(ask.get('action_id'))}, owned by {e(owner)})</span>"
+        note_h = (f"<br><span class='muted'>{e(f.get('note_id') or 'Note')}: {e(f['note'])}.</span>"
+                  if f.get("note") else "")
+        parts.append(f"<div class='ask'><p>{quote}{cite_h}{done}{due_h}{mine}{note_h}</p></div>")
+    else:
+        parts.append("<div class='ask'><p>The record carries no confirmation action — reply with corrections.</p></div>")
     parts.append("<h2>What this record covers</h2><div class='note'>")
     parts.append(f"<p>{e(f['cov'].get('audio_source') or 'declared in the record')}.</p>")
     if f["cov"].get("missing_before"):
