@@ -51,6 +51,23 @@ INTENTS = {
     "are you here": ("greeting", None),
     "you there": ("greeting", None),
     "you here": ("greeting", None),
+    # "why can't I see my full ymir home" (2026-10-23): the home's own map is a fact now, and the
+    # question has one honest answer — its shelves. Without this phrase the query fell through to
+    # whichever claim shared a word, which is how the ward answered a question about the home.
+    "what are the rules of the house": ("rules_list", None),
+    "what are the rules": ("rules_list", None),
+    "what is the house law": ("rules_list", None),
+    "what laws govern the house": ("rules_list", None),
+    "list the rules": ("rules_list", None),
+    "list the house law": ("rules_list", None),
+    "what is in my ymir home": ("public", "home-the-home"),
+    "what is in my home": ("public", "home-the-home"),
+    "what is in the home": ("public", "home-the-home"),
+    "what does my home hold": ("public", "home-the-home"),
+    "what does the home hold": ("public", "home-the-home"),
+    "what is my ymir home": ("public", "home-the-home"),
+    "what is my home": ("public", "home-the-home"),
+    "what shelves does my home have": ("public", "home-the-home"),
     "what projects do you know": ("public", "what-projects-exist"),
     "what projects": ("public", "what-projects-exist"),
     "which projects": ("public", "what-projects-exist"),
@@ -267,10 +284,19 @@ def facts_listing(facts: dict, tier: str, limit: int = 30) -> str:
     return "\n".join(lines)
 
 
-def load_canaries() -> list[str]:
-    """The base list AND the derived one — plan titles, vault markers, secret key names."""
+def load_canaries(tier: str = "") -> list[str]:
+    """The base list ALWAYS; the derived one (plan slugs) only for anyone who is not the owner.
+
+    Why the split (2026-10-23): the derived list is every plan's slug, so a plan's own title
+    reproduces it — "Plan 116: Gná, the one mail desk" normalises to "116 gna the one mail desk",
+    which IS the slug. The wall then refused the Allfather his own plan, in his own chat, while the
+    base list (the vault's markers and the security posture) must bind everyone without exception.
+    A plan slug is an internal identifier, not a secret: speaking it to the owner is the point of
+    holding it; speaking it to a stranger is the leak. So the derived wall follows the tier."""
     tokens: list[str] = []
     for path in (CANARIES, os.path.join(STATE, "canaries.derived.txt")):
+        if path.endswith("canaries.derived.txt") and tier == "owner":
+            continue
         try:
             with open(path) as fh:
                 tokens += [line.strip() for line in fh if line.strip() and not line.startswith("#")]
@@ -936,7 +962,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     allowed = audiences_for(tier, chat, sender_id, members, sender, channel)
     facts = {k: v for k, v in facts.items() if audience_ok(v, allowed, channel)}
     dh = digest_hash(facts)
-    canaries = load_canaries()
+    canaries = load_canaries(tier)
     # the mouth is named ONCE, before any branch can ask whether it is armed
     mouth = model or os.environ.get("SKIRNIR_MODEL") or ""
     question = text.strip()
@@ -1081,7 +1107,22 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 "in", "on", "to", "for", "and", "or", "about", "that", "this", "there", "tell",
                 "know", "have", "has", "holds", "hold", "can", "could", "would", "should",
                 "much", "many", "far", "get", "got", "any", "all", "not", "with"}
-        q = tokens(key)
+        q_all = tokens(key)
+        # A WORD IN EVERY CLAIM IS NOT A SUBJECT. Every feature fact opens "Ymir has a feature: …",
+        # so "ymir" and "house" matched the HEAD of all 95 of them and any question mentioning Ymir
+        # was answered by whichever feature it was first — measured 2026-10-23: "what is in my ymir
+        # home" was answered with the ward's row. Tokens carried by more than a sixth of the book are
+        # dropped from the QUERY; if that empties it, the rarest tokens are kept instead.
+        df: dict[str, int] = {}
+        for other in facts.values():
+            for w in tokens(str(other.get("claim", ""))):
+                df[w] = df.get(w, 0) + 1
+        ceiling = max(3, len(facts) // 6)
+        q = {w for w in q_all if df.get(w, 0) <= ceiling}
+        if not q:
+            rarest = sorted(q_all, key=lambda w: df.get(w, 0))
+            keep = max(1, len(rarest) // 2)
+            q = set(rarest[:max(1, keep)])
         ranked: list[tuple[float, int, int, str]] = []
         if q:
             for slug, fact in facts.items():
@@ -1392,6 +1433,21 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         else:
             reply = ("I can't send, book or change anything — I'm a mouth, not a hand. Tell me what "
                      "you need and I'll pass it to the Allfather.")
+    elif kind == "rules_list":
+        if tier != "owner":
+            reply = ("The house law is his to read out. Ask me what Ymir is, or leave a question "
+                     "and I will pass it on.")
+            denied = True
+        else:
+            laws = sorted((slug, f.get("claim", "")) for slug, f in facts.items()
+                          if slug.startswith("home-rule-"))
+            if not laws:
+                reply = ("The law shelf is not in my book yet — run bin/assistant/learn-home.sh and "
+                         "I will hold it.")
+            else:
+                lines = [f"The house law holds {len(laws)} rules:"]
+                lines += [f"· {claim}" for _, claim in laws]
+                reply = "\n".join(lines)
     elif kind == "facts_list":
         reply = facts_listing(facts, tier)
     elif kind == "inventory":
