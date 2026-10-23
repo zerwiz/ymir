@@ -18,7 +18,11 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
-[ -n "${HOME_R:-}" ] || HOME_R="$HOME/Documents/ymirhome"
+# the hoard is resolved, never restated: if the resolver gave nothing, the smoke says so and stops
+if [ -z "${HOME_R:-}" ]; then
+  printf 'snotra smoke: the hoard is unresolved — run bin/vault/hoard-lib.sh or set YMIR_HOME\n' >&2
+  exit 2
+fi
 
 D="${1-}"
 if [ -z "$D" ]; then
