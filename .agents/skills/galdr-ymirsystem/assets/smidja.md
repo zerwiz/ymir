@@ -208,3 +208,67 @@ it, because every panel, export, letter and prototype the factory produces is a 
 Concretely for the factory's own output: a Smíðja chain that produces an app, a spec or a visualiser ends with a
 **surface check** (does every number it shows come from a read?), and a run that cannot answer says so in the
 trace rather than reporting success. Rule, ward and evidence: `RULES/37-a-surface-may-not-show-what-it-did-not-receive.md`.
+## 2026-10-23 — the night the panel showed nothing, and the five reasons why
+Measured on this seat between 19:30 and 20:30, while three agents ran and the Smíðja displayed "no agent
+activity yet". Each line is a way this subsystem can be honest in its parts and useless as a whole.
+Law: `RULES/36-the-run-is-visible.md`.
+faults[5]{fault,measured,remedy}:
+  "the smithy is not in git",".gitignore:174 `apps/smidja/`; the roster names prompt_engineering/{planner,builder}/{system,user}.md and harness_engineering/subagents.ts — NONE in git, none in the template","track it (git add -f) or the factory cannot run on any other seat; validation refuses before the first phase"
+  "the teams have three names",".agents/agents/*.md (23 figures) · config/agents.yaml (figure→model) · roster.yaml (what the picker reads — absent)","one resolver, stated fallback to config/agents.yaml, `cause:` in the payload when it is empty"
+  "a repo derived from a DB path","server/roster-api.ts:34 `repoRoot(dbPath)` while the DB lives in the home → /api/rosters []","SMIDJA_REPO_ROOT (default: the checkout); never derive a repo from a database"
+  "two database paths","config `db: apps/smidja/smidja_data/smidja.db` vs the visualizer's $YMIR_HOME/smidja/smidja.db → a real run invisible, observe says 'absent'","the shipped config names the home's DB; every reader resolves it the same way"
+  "pi refuses in a worktree","`Tool ymir_find conflicts with …/.yggdrasil/…/.pi/extensions/ymirhome.ts` — killed every builder turn (dae6d893: fail in 8.1s) and every errand","agent_pi.py starts pi with `-ne`; the run's declared extensions are added with `-e`"
+**The invocation, stated once, because it is the thing people get wrong:**
+# from the REPO ROOT — the config's prompt and data paths are root-relative
+uv run apps/smidja/smidja_build.py <prompt.md> \
+  --config apps/smidja/smidja_smidja_config/smidja.config.yaml
+From `apps/` the same command resolves `apps/apps/…` and validation refuses with "prompt not found" —
+which looks like a missing file and is a wrong working directory.
+**Proof that it works when the three things are right** (config · cwd · `-ne`):
+run 8f110045   01 request  success   0.0s
+               02 build    RUNNING   builder · llama-swap/qwen3.6-35b-a3b@q4_k_xl-mtp
+               35 events in $YMIR_HOME/smidja/smidja.db
+### Correction, appended 2026-10-23 — the smithy is tracked; what is missing is the roster
+My earlier line in this asset said the smithy is not in git. **It is:** `git ls-files apps/smidja` → 34
+files, and `apps/smidja-factory` → 229. What `.gitignore:100-101` excludes is **runtime data** —
+`apps/smidja/smidja_data/` and `apps/smidja.db*` — which is why the agent prompts live there: they are
+run data, not repo content.
+**What this seat does not have, and the docs say it must:**
+docs say                          this seat
+roster.yaml = THE ONE config      apps/smidja/smidja_smidja_config/ holds ONLY smidja.config.yaml
+  stacks: teams                   — no `stacks:` block at all → no teams to pick → empty picker
+  role_defaults: roles
+  tiers: model catalog
+just rosters / sdlc / sessions    `just` is NOT installed
+START_SMIDJA.md (playbook)        absent
+**Read before you claim:** `apps/smidja-factory/cookbooks/{run_smidja,create_config,create_smidja,
+how_to_prompt_for_the_eng}.md` and `apps/smidja-factory/skills/{create-new-teams,create-new-agent,
+add-or-edit-ai-models,how-to-run-agent-teams,smidja-start,smidja-launcher,smidja-instructions}/SKILL.md`.
+A team is a `stacks:` block, created by interviewing the operator — never guessed, never generated as a
+throwaway config.
+### The books — `apps/smidja-factory/cookbooks/` and `apps/smidja-factory/skills/` (critical)
+Read the matching book **before** changing the smithy: a chain, a roster, a prompt, a module, or the
+invocation. They are the specification; a disagreement between a book and the tree is a ticket.
+cookbooks[9]{book,what it settles}:
+  "smidja_overview.md","what the smithy is: phases, envelopes, gates, the trace"
+  "run_smidja.md","how to launch a run and report it — the orchestrator observes, never implements"
+  "create_smidja.md","compose a new chain (the Phases: line is the contract)"
+  "create_config.md","the roster/config file: agents, prompts, tools, writes, protected files"
+  "update_config.md","change a roster without breaking a run"
+  "update_smidja.md","change a chain safely"
+  "update_modules.md","change a module (tracer, runner, gates, agents)"
+  "install.md","what a fresh install needs, and what is runtime data rather than repo content"
+  "how_to_prompt_for_the_eng.md","write the prompt the whole chain will read — same intent, sharper words, verified paths, a stated 'done means'"
+skills[9]{skill,what it settles}:
+  "smidja-start","the single exact way to put agents to work (chain · roster · models · orchestrator)"
+  "smidja-launcher","raise and watch a run"
+  "smidja-instructions","the operating instructions for the smithy"
+  "how-to-run-agent-teams","teams in practice"
+  "create-new-teams","a team IS a `stacks:` block in roster.yaml — interview the operator, never guess"
+  "create-new-agent","one new role, added to role_defaults"
+  "add-or-edit-ai-models","models, prompts and injection for an existing team"
+  "git-ops","branch/commit/push discipline for work the smithy produces"
+  "volundr","the master craftsman's own practice"
+**What this seat is missing against those books** (measured 2026-10-23): no `roster.yaml` (so no
+`stacks:` → no teams), `just` not installed (so no `just rosters/sdlc/sessions`), `START_SMIDJA.md`
+absent. Each is a ticket; none is a reason to improvise a team.

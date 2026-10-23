@@ -136,3 +136,11 @@ mend the door layer on the server, not in the tree.
 ## Maintaining this
 
 - **Owner:** Brokk. **Loaded by:** `AGENTS.md`. **Mirror:** `.agents/skills/galdr-ymirsystem/assets/registry.md`.
+
+## The smithy's books (critical, and easy to miss)
+
+`apps/smidja-factory/cookbooks/` (9) and `apps/smidja-factory/skills/` (9) are the specification for the
+Smíðja: how a run is launched, what a roster is (`roster.yaml`, teams in `stacks:`), how a prompt is
+written, how a chain is composed, and what an install needs. They sit **inside an app**, so no inventory
+of `bin/` will ever surface them — read them before touching the smithy.
+Law: `RULES/36-the-run-is-visible.md` · detail: `assets/smidja.md`.

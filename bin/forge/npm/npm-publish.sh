@@ -108,6 +108,29 @@ if [ "$UNPUBLISH" = 1 ]; then
   exit 0
 fi
 
+# ── the release guard (2026-10-23) ───────────────────────────────────────────
+# Measured: the tree, the global install and npm all said 0.1.53 for 24 days while the tree
+# gained 155 doors, 22 rules and 69 feature pages. npm REFUSES to republish an existing
+# version, so the channel froze and every door after that date reached nobody. Two refusals:
+# a publish whose version already exists (that number cannot mean anything new), and a
+# publish from a tree that is not the one you can point at.
+if [ "$DRY" = 0 ] && [ "$UNPUBLISH" = 0 ] && [ "$WHO" = 0 ] && [ "${#TARGETS[@]}" -eq 1 ] && [ "${TARGETS[0]}" = "$ROOT" ]; then
+  _v="$(node -p "require('$ROOT/package.json').version" 2>/dev/null || true)"
+  _p="$(npm view @zerwiz/ymir version 2>/dev/null || true)"
+  if [ -n "$_v" ] && [ -n "$_p" ] && [ "$_v" = "$_p" ]; then
+    printf 'npm_publish[1]{package,version,state}:\n  "@zerwiz/ymir","%s","REFUSED — npm already has this version"\n' "$_v"
+    printf 'help: bump it first — `npm version patch` (or minor/major) — then publish. A republished\n' >&2
+    printf 'help: number freezes the channel: every door after the freeze reaches nobody (measured 2026-10-23).\n' >&2
+    exit 1
+  fi
+  if [ -n "$(git -C "$ROOT" status --porcelain 2>/dev/null)" ]; then
+    printf 'npm_publish[1]{package,version,state}:\n  "@zerwiz/ymir","%s","REFUSED — the tree has uncommitted changes"\n' "${_v:-?}"
+    printf 'help: publish the exact tree you can point at: commit, run bin/gates/ci-verify.sh, then publish.\n' >&2
+    exit 1
+  fi
+  unset _v _p
+fi
+
 # ── publish ──────────────────────────────────────────────────────────────────
 printf 'npm_publish[%d]{package,version,tag,state}:\n' "${#TARGETS[@]}"
 failed=0
