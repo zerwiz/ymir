@@ -187,9 +187,9 @@ Expected: `2/2 phases passed`, a `smidja_id`, and the DB written. Then
 
 ---
 
-## Appended 2026-10-23 — what the smithy owes the surface it ships (Rule 34)
+## Appended 2026-10-23 — what the smithy owes the surface it ships (Rule 37)
 
-**A smith does not ship a surface that lies.** Rule 34 (this day) makes it law, and this section is Smíðja's part of
+**A smith does not ship a surface that lies.** Rule 37 (this day) makes it law, and this section is Smíðja's part of
 it, because every panel, export, letter and prototype the factory produces is a *surface*:
 
 - **figures come from a receipt** — a stat, a count or a card that the factory renders must trace to a response it
@@ -207,4 +207,4 @@ it, because every panel, export, letter and prototype the factory produces is a 
 
 Concretely for the factory's own output: a Smíðja chain that produces an app, a spec or a visualiser ends with a
 **surface check** (does every number it shows come from a read?), and a run that cannot answer says so in the
-trace rather than reporting success. Rule, ward and evidence: `RULES/34-a-surface-may-not-show-what-it-did-not-receive.md`.
+trace rather than reporting success. Rule, ward and evidence: `RULES/37-a-surface-may-not-show-what-it-did-not-receive.md`.

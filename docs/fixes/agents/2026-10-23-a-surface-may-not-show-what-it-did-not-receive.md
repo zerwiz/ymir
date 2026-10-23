@@ -1,7 +1,7 @@
-## agents · 2026-10-23 — Rule 34: a surface may not show what it did not receive
+## agents · 2026-10-23 — Rule 37: a surface may not show what it did not receive
 
 ### Files
-- `RULES/34-a-surface-may-not-show-what-it-did-not-receive.md` (new law)
+- `RULES/37-a-surface-may-not-show-what-it-did-not-receive.md` (new law)
 - `RULES/README.md` (index row)
 - `.agents/skills/galdr-ymirsystem/assets/smidja.md` (what the smithy owes the surface it ships)
 
@@ -29,7 +29,7 @@ Six measured lies in one evening, all the same defect wearing different clothes 
 Clean skips (Rule 25), labelled inference (`candidate`, `inferred`), and caching — provided the surface says so.
 
 ### Owed
-The Hlidskjalf panels still render `0` on a 401: Rule 34 is the law they must now be changed to keep. That is the
+The Hlidskjalf panels still render `0` on a 401: Rule 37 is the law they must now be changed to keep. That is the
 first task of the order agreed with the Allfather (plan 111, appendix 23:40 §6).
 
 ### Appendix (same day) — the ward learned `snotra`
@@ -48,5 +48,5 @@ gate whose own input is its own output can never pass, and the house was one `YM
 
 The fix is three lines: the scan now skips every index file by name (`README.md`, `CAPABILITIES.md`). Measured
 after: **two consecutive runs differ by 0 lines**, `--check` reports *current (594 files)* on both indexes, and the
-whole ward set passes locally with **0 FAIL**. That is Rule 34 applied to a generator: *it proves its output or it
+whole ward set passes locally with **0 FAIL**. That is Rule 37 applied to a generator: *it proves its output or it
 refuses it* — and a generator that cannot reproduce itself must not be allowed to certify anything.

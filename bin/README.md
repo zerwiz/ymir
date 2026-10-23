@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[594]{file,does,kind,verdict,disposition,callers,lines}:
+bin[596]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",19,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",19,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",19,-
@@ -20,7 +20,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","wired","keep",1,9
   "a2a-talk.sh","a2a-talk.sh — list A2A agents and talk to one (bidirectional reply).","tool","wired","keep",0,69
   "a2abridge-ensure.sh","a2abridge-ensure.sh — ensure the A2A mesh engine (a2abridge) is present,","tool","wired","keep",3,122
-  "adapter-test.sh","adapter-test.sh — the Telegram layer's own suite: tiers, the addressee rule, bans, typing, limits.","tool","wired","keep",0,97
+  "adapter-test.sh","adapter-test.sh — the Telegram layer's own suite: tiers, the addressee rule, bans, typing, limits.","tool","wired","keep",1,97
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",1,44
   "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",12,310
   "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",0,119
@@ -299,7 +299,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "graphics-lib.sh","graphics-lib.sh — the machine's graphics truth, shared by every reader.","lib","wired","keep",3,167
   "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",1,100
   "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",7,220
-  "group-add.sh","group-add.sh — put Skírnir in a Telegram group, in one word.","tool","wired","keep",1,87
+  "group-add.sh","group-add.sh — put Skírnir in a Telegram group, in one word.","tool","wired","keep",0,94
   "group-allow.sh","group-allow.sh — let Skírnir speak in ONE Telegram group, after the Allfather approves it.","tool","wired","keep",1,45
   "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",6,59
   "hall-snapshot.sh","hall-snapshot.sh — the planning feed for the Óðrerir Live Hall.","tool","wired","keep",1,151
@@ -316,7 +316,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,150
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",225,116
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",226,116
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",0,106
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",14,120
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
@@ -324,7 +324,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",1,154
   "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",1,326
   "housekeeping.sh","housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has","tool","tested","keep",2,357
-  "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",0,110
+  "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",0,128
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
   "inbox-watch.sh","inbox-watch.sh — notice when someone answers, without a human opening a mail client.","tool","wired","keep",0,114
   "inbox.sh","inbox.sh — read the mail that matters to a collaborator, and prove you can answer it.","tool","tested","keep",2,121
@@ -333,7 +333,8 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",0,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
-  "kb-export.sh","kb-export.sh — build Skírnir's digest from facts the Allfather APPROVED, and nothing else.","tool","wired","keep",8,242
+  "kb-export.sh","kb-export.sh — build Skírnir's digest from facts the Allfather APPROVED, and nothing else.","tool","wired","keep",8,250
+  "learn-home.sh","learn-home.sh — give Skírnir the SHAPE of the house: its shelves, its law, its plans.","tool","wired","keep",2,187
   "learn-house.sh","learn-house.sh — give Skírnir the house's own public knowledge: the lore and the feature catalogue.","tool","wired","keep",0,115
   "learn-site.sh","learn-site.sh — Skírnir learns the house's own public site.","tool","wired","keep",0,137
   "learn.sh","learn.sh — a fact learned in conversation, waiting for the Allfather's approval.","tool","wired","keep",1,44
@@ -351,7 +352,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",1,65
   "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
   "mcp-read.py","'''mcp-read.py — Gimlé MCP, phase 1: the six read tools, audited, behind a token.","tool","wired","keep",0,262
-  "meet.sh","meet.sh — one command: 'put a meeting with <person> in the calendar, with a Meet link'.","tool","wired","keep",4,90
+  "meet.sh","meet.sh — one command: 'put a meeting with <person> in the calendar, with a Meet link'.","tool","wired","keep",5,90
   "meeting-record-guard.sh","meeting-record-guard.sh — a meeting record is a record: if one is missing, put it back.","tool","wired","keep",1,49
   "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","wired","keep",4,372
   "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","wired","keep",7,137
@@ -372,7 +373,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",1,150
   "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,168
   "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",1,29
-  "mouth.sh","mouth.sh — text in, a Telegram voice note out.","tool","wired","keep",3,33
+  "mouth.sh","mouth.sh — text in, a Telegram voice note out.","tool","wired","keep",3,64
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,152
   "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",0,229
   "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",2,87
@@ -470,7 +471,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",3,244
   "skill-vendor-sync.sh","skill-vendor-sync.sh — keep imported third-party skill packs current.","tool","wired","keep",0,113
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
-  "skirnir.py","'''skirnir.py — the Allfather's assistant: a mouth with no hands.","tool","wired","keep",6,1576
+  "skirnir.py","'''skirnir.py — the Allfather's assistant: a mouth with no hands.","tool","wired","keep",6,1632
   "skuld-branch-outcome.sh","skuld-branch-outcome.sh - the durable outcome store for the Pi supervision","tool","wired","keep",0,204
   "skuld-branch-prompt.sh","skuld-branch-prompt.sh - emit the supervision branch's system prompt","tool","wired","keep",0,103
   "skuld-sync.sh","skuld-sync.sh — the fleet mirror: the instances pull the heart's whole book.","tool","wired","keep",0,12
@@ -478,7 +479,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "smidja-bootstrap.sh","smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh install.","tool","wired","keep",3,105
   "smidja-lib.sh","smidja-lib.sh — where the smithy's parts actually live.","lib","wired","keep",4,69
   "smidja-observe.sh","smidja-observe.sh — the smithy's trace, read-only (W0075).","data","wired","keep",1,88
-  "smoke.sh","smoke.sh — Skírnir and Snotra, end to end, in one command.","tool","wired","keep",7,247
+  "smoke.sh","smoke.sh — Skírnir and Snotra, end to end, in one command.","tool","wired","keep",7,263
   "smoke.sh","smoke.sh — the Snotra meeting pipeline's own gate: five doors, three verdicts each.","tool","wired","keep",7,127
   "snotra-agenda.py","'''snotra-agenda — the agenda card that drives the next meeting (DEC-20261022-04).","data","wired","keep",1,206
   "snotra-agenda.sh","snotra-agenda.sh — the agenda card that drives the next meeting (DEC-20261022-04).","tool","wired","keep",2,19
@@ -509,7 +510,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-live.sh","snotra-live.sh — THE LIVE TAIL: listen through this machine's microphone and","tool","wired","keep",2,500
   "snotra-mail-watch.py","'''snotra-mail-watch — who has answered, and what they said (read-only; a person still promotes).","data","wired","keep",1,316
   "snotra-mail-watch.sh","snotra-mail-watch.sh — who has answered, and what they said.","tool","wired","keep",2,24
-  "snotra-meet.sh","snotra-meet.sh — the meeting voice: one door, and the browser is the audio device.","tool","wired","keep",3,97
+  "snotra-meet.sh","snotra-meet.sh — the meeting voice: one door, and the browser is the audio device.","tool","wired","keep",4,97
   "snotra-mine.sh","snotra-mine.sh — mine decisions and action items out of a transcript.","tool","wired","keep",3,178
   "snotra-pipeline.sh","snotra-pipeline.sh — one command: a meeting folder becomes the record, the board, the letters.","tool","wired","keep",0,131
   "snotra-project.py","'''snotra-project — the record projected onto the place's boards, by kind, verified.","data","wired","keep",1,386
@@ -545,7 +546,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-watch.sh","syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, seated","tool","tested","keep",4,53
   "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",0,205
   "telegram-bot.sh","telegram-bot.sh — the horn answers (W0036).","tool","wired","keep",0,84
-  "telegram.py","'''telegram.py — Skírnir's second mouth: his own bot, in DMs and in groups.","tool","wired","keep",2,390
+  "telegram.py","'''telegram.py — Skírnir's second mouth: his own bot, in DMs and in groups.","tool","wired","keep",2,420
   "telegram.sh","telegram.sh — the door to Skírnir's own bot (the adapter lives in telegram.py).","tool","wired","keep",0,4
   "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","data","wired","keep",0,205
   "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",0,75
@@ -554,6 +555,7 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "trello-map.sh","trello-map.sh — the map of our Trello, written down so Snotra can know it.","tool","wired","keep",3,136
   "trello_client.py","'''trello_client — the Trello door, shared: the grant, the resolver, and the card verbs.","data","wired","keep",0,305
   "tts-lease.sh","tts-lease.sh — say 'the card is in use' so the idle-stop never lowers the voice under a conversation.","tool","wired","keep",3,32
+  "tui-frame-check.sh","tui-frame-check.sh — prove that what the TUI writes to the terminal fits the terminal.","tool","wired","keep",0,162
   "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","wired","keep",0,77
   "unit-template-check.sh","unit-template-check.sh — every shipped systemd unit template must be a unit systemd","tool","wired","keep",1,96
   "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",2,76
@@ -607,6 +609,6 @@ bin[594]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=366, tested=228
+**Tally.** verdict: wired=368, tested=228
 
-**Tally.** disposition: keep=582, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=584, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

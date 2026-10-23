@@ -1,4 +1,4 @@
-# Rule 34 — a surface may not show what it did not receive
+# Rule 37 — a surface may not show what it did not receive
 
 **A panel, a letter, a report or a file that Smíðja or Snotra puts in front of a person may not present a value it
 did not actually receive.** A refused read is not zero. A failed probe is not "down". An unknown attribution is not
@@ -22,8 +22,8 @@ And the original of the family, from the same day: **8 191 transcription calls r
 and the meeting folder was reported "transcribed".
 
 Every one of them is the same defect wearing different clothes: **a fallback that reports success.** The house has
-already legislated the *door* half of this (a door fails loudly; a clean skip is printed — Rule 25); this rule is the
-*surface* half.
+already legislated the *door* half of this (a door fails loudly; a clean skip is printed — Rule 25); this rule (37) is the
+*surface* half of it.
 
 ## The law
 
@@ -61,4 +61,4 @@ already legislated the *door* half of this (a door fails loudly; a clean skip is
 
 Rule 06 (append-only), Rule 11 (never delete), Rule 25 (a clean skip is a pass), Rule 26 (the well appends),
 Rule 30 (audio is ephemeral — and is never called a transcript), Rule 33 (the ear hears the meeting, not the room),
-Rule 32 (*the send is the operator's*), whose incident is the letter half of this rule.
+Rule 32 (*the send is the operator's* — number claimed by another open change), whose incident is the letter half of this rule.
