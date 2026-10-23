@@ -47,8 +47,21 @@ the gate still runs on what it says.
 form; the model leg receives them and the gate still checks the answer. **"remember that …"** (owner
 only) writes a fact to `pending/` and asks for approval — `learn.sh` records the provenance,
 `approve-fact.sh` promotes it, `kb-export.sh` rebuilds. A chat that abuses him is **banned** outright
-(`bin/assistant/ban.sh`), not merely rate-limited. He shows **typing** while he composes, and his
-answers are no longer instant-looking lies about being alive.
+(`bin/assistant/ban.sh`), not merely rate-limited. He shows **typing** for as long as he composes —
+the indicator is re-sent every four seconds, because Telegram lapses it after about five and a cold
+model can take a minute (measured 2026-10-23: one call was not enough, and he looked dead while he
+thought). A voice note in shows **recording audio** and comes back as a **voice note**: the mouth
+raises `kokoro-serve` itself when the idle-stop has lowered it, and only a voice that cannot be raised
+comes back as text with a sentence saying so. And his answers are no longer instant-looking lies about
+being alive.
+
+**Who he answers, and where** (the Allfather's word, 2026-10-23: *"only my private chat should be
+answering on all. groups never."*). His **private chat answers every message** — that is the one room
+that is his alone. A **group answers only a message that names him** (`skirn`, `skirm`, `skrin`,
+`skírni`, `skirnir`, `brokk`, `ymir`, or `@<bot>`) or a message from the Allfather himself, and a group
+that is not on the allowlist is not answered at all. A room can be **allowed**, never made **loud**:
+`bin/assistant/group-add.sh` lists the rooms, `allow <name|id>` opens one (still name-only) and
+`close <name|id>` makes it silent entirely.
 
 **The canaries are DERIVED, not hand-written**: every plan title in the ledger, the vault's markers and
 every secret *key name* are collected at export time into `canaries.derived.txt` — 194 strings, so a new

@@ -5,6 +5,10 @@
 # the hound's own heartbeat. None of them has a listener; each has a port. A failure is a HIGH
 # through Hófvarpnir, keyed per surface per hour, so a flapping service says one thing, not sixty.
 #
+# The fifth (2026-10-23) is the VOICE: kokoro is idle-lowered on purpose, so being down is not a
+# fault by itself — being down while the TTS lease is held is. That distinction is the whole reason
+# a voice note came back as text for seven hours while every unit looked healthy.
+#
 #   bin/time/housewatch.sh [--dry-run] [--quiet]
 #
 # Exit: 0 every surface answered (or was deliberately skipped) · 1 one did not.
@@ -69,6 +73,20 @@ if curl -s -m 5 -o /dev/null http://127.0.0.1:4602/health 2>/dev/null \
 else
   printf '  "well","FAIL","nothing on :4602"\n'; fails=$((fails + 1))
   say well HIGH "the well bridge is down on :4602 — recall and observation are blind"
+fi
+
+# ── the voice: idle-lowered is by design; dark under a fresh lease is a fault ────────────────
+checked=$((checked + 1))
+LEASE="$HOME/.local/share/skirnir/tts.lease"
+LEASE_TTL="${SKIRNIR_TTS_LEASE_TTL:-900}"
+if (exec 3<>/dev/tcp/127.0.0.1/8765) 2>/dev/null; then
+  printf '  "voice","ok","kokoro answers on :8765"\n'
+elif [ -f "$LEASE" ] && [ $(( $(date +%s) - $(date -r "$LEASE" +%s) )) -lt "$LEASE_TTL" ]; then
+  printf '  "voice","FAIL","dark under a fresh TTS lease — a voice note would come back as text"\n'
+  fails=$((fails + 1))
+  say voice HIGH "kokoro is down while the TTS lease is held — the mouth cannot speak"
+else
+  printf '  "voice","ok","idle-lowered, as designed (no fresh lease)"\n'
 fi
 
 # ── Skírnir: a mouth that stopped answering must be visible, not discovered ───

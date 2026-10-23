@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -75,6 +76,9 @@ if not OWNER_ID:
 
 
 API_BASE = os.environ.get("TELEGRAM_API_BASE", "https://api.telegram.org")
+# A warm answer takes under a second; the first question after the rail evicted a model can take a
+# minute (a load happens inside the request). Bounded, and it must SPEAK when the bound is hit.
+ANSWER_TIMEOUT = int(os.environ.get("SKIRNIR_ANSWER_TIMEOUT", "120"))
 
 
 def api(method: str, **params):
@@ -91,6 +95,11 @@ def send_voice(chat_id, text: str, reply_to=None) -> None:
     the answer is also readable, and if the synthesiser is down the caller falls back to a message:
     a broken mouth must never mean a silent assistant.
     """
+    # the medium he is about to receive: "recording audio", not "typing"
+    try:
+        api("sendChatAction", chat_id=chat_id, action="record_voice")
+    except Exception:
+        pass
     tmp = tempfile.mkdtemp(prefix="skirnir-voice-")
     ogg = os.path.join(tmp, "say.ogg")
     try:
@@ -131,8 +140,7 @@ def load_groups() -> dict:
         for row in data.get("groups", []) or []:
             groups[str(row.get("id"))] = {"tier": row.get("tier", "collaborator"),
                                           "members": row.get("members") or [],
-                                          "owner_trusted": bool(row.get("owner_trusted")),
-                                          "addressed_only": row.get("addressed_only", True)}
+                                          "owner_trusted": bool(row.get("owner_trusted"))}
     except Exception:
         pass
     return groups
@@ -194,7 +202,15 @@ def answer(text: str, tier: str, channel: str, sender: str, chat_id: str = "", s
             "--chat", str(chat_id), "--sender-id", str(sender_id)]
     if members:
         args += ["--group-members", ",".join(members)]
-    proc = subprocess.run(args, capture_output=True, text=True, timeout=120)
+    # A TIMEOUT USED TO KILL THE WHOLE BOT. subprocess.run raised TimeoutExpired out of main(), the
+    # process exited 1, systemd restarted it — and the Allfather's message vanished with no sentence
+    # at all (measured 2026-10-23 01:55). A slow answer is now bounded and it is SAID.
+    try:
+        proc = subprocess.run(args, capture_output=True, text=True, timeout=ANSWER_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        print(f"telegram: the engine did not answer within {ANSWER_TIMEOUT}s", file=sys.stderr)
+        return ("My thinking is slow just now — the model is reloading. "
+                "Ask me again in a minute and I will answer properly.")
     for line in proc.stdout.splitlines():
         if line.strip().startswith("{"):
             return json.loads(line).get("answer", "")
@@ -323,15 +339,14 @@ def main() -> int:
                 named = any(tok in low for tok in ("skirn", "skirm", "skrin", "skírni", "skirnir",
                                                    "brokk", "ymir", f"@{BOT_USERNAME.lower()}"))
                 trusted_owner = (tier == "owner")
-                # a room may be declared OPEN — then he answers any message in it, not only the ones
-                # that name him (the Allfather's word, 2026-10-23: Reygan wrote "Hey" and got silence,
-                # because a group is addressed-only by default)
-                room = (load_groups().get(str(chat.get("id"))) or {})
-                addressed_only = room.get("addressed_only", True)
-                if addressed_only and not (named or trusted_owner):
+                # THE LAW (the Allfather's word, 2026-10-23): ONLY HIS PRIVATE CHAT ANSWERS EVERY
+                # MESSAGE. A group answers a message that NAMES him, or one from himself — never an
+                # unnamed message. There is deliberately no per-room switch: a room is other people,
+                # and a mouth that answers everything in a room is a mouth talking to strangers (it
+                # did exactly that for one evening, and a wrong fact went with it).
+                if not (named or trusted_owner):
                     if verbose:
-                        print(f"telegram: skipped an unaddressed group message ({room.get('tier')})",
-                              file=sys.stderr)
+                        print("telegram: skipped an unaddressed group message", file=sys.stderr)
                     continue
             if tier == "unknown-group":
                 if verbose:
@@ -350,19 +365,34 @@ def main() -> int:
                     continue
             except Exception:
                 pass
-            # typing: the Allfather should see that something is happening
-            try:
-                api("sendChatAction", chat_id=chat.get("id"), action="typing")
-            except Exception:
-                pass
+            # typing: ONE call is not enough. Telegram lapses the indicator after about five seconds
+            # and an answer can take a minute, so the bot looked dead exactly while it was thinking
+            # (measured 2026-10-23). Keep it alive until the words are ready; a voice note in gets
+            # "recording audio" out, so the medium is visible before it arrives.
+            typing_stop = threading.Event()
+            typing_action = "record_voice" if was_voice else "typing"
+
+            def keep_typing(chat_id=chat.get("id"), action=typing_action, stop=typing_stop):
+                while True:
+                    try:
+                        api("sendChatAction", chat_id=chat_id, action=action)
+                    except Exception:
+                        return
+                    if stop.wait(4):
+                        return
+
+            threading.Thread(target=keep_typing, daemon=True).start()
             members = None
             if chat.get("type") in ("group", "supergroup", "channel"):
                 members = (load_groups().get(str(chat.get("id"))) or {}).get("members") or []
             # the person's own name, so a handoff says WHO: username, else the display name
             who = sender.get("username") or " ".join(
                 x for x in (sender.get("first_name"), sender.get("last_name")) if x) or ""
-            reply = answer(text, tier, channel, who, chat.get("id"),
-                           sender.get("id", ""), members)
+            try:
+                reply = answer(text, tier, channel, who, chat.get("id"),
+                               sender.get("id", ""), members)
+            finally:
+                typing_stop.set()
             if not reply:
                 continue
             try:

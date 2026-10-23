@@ -57,13 +57,17 @@ function brief(text: string, limit = 3000): string {
 
 type RunResult = { rc: number; out: string };
 
-function run(cmd: string, args: string[], quiet = true): RunResult {
+function run(cmd: string, args: string[]): RunResult {
   try {
-    // Capture is the default and the only sane default in a TUI: a child that inherits
-    // our stdio writes straight at the terminal pi owns, and its tables land on top of
-    // the editor and status line. That is why the errand tools below no longer pass
-    // quiet=false — their output belongs in the tool result, where pi can render it.
-    const out = execFileSync(cmd, args, { encoding: "utf8", stdio: quiet ? ["ignore", "pipe", "ignore"] : "inherit" });
+    // CAPTURE, ALWAYS. A child that inherits our stdio writes straight at the terminal pi
+    // owns: its tables land on top of the editor, the status line and the spinner, and pi
+    // never sees those bytes, so nothing in its renderer can repair the damage. That is the
+    // "random texts over the UI" fault of 2026-10-23 (#412). The `quiet=false` branch that
+    // remained here was dead — no caller ever passed it — and dead is exactly where a
+    // painting path hides, so the parameter is gone rather than defaulted. A tool RETURNS
+    // text; pi renders it. The only inherited stdio left in the harness is the terminal
+    // editor in `open-editor.ts`, which stops the TUI first.
+    const out = execFileSync(cmd, args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
     return { rc: 0, out: (out ?? "").trim() };
   } catch (e: any) {
     if (e instanceof TypeError || e?.status === undefined) {
