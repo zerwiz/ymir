@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[577]{file,does,kind,verdict,disposition,callers,lines}:
+bin[579]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",20,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",20,-
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",5,168
@@ -84,7 +84,7 @@ bin[577]{file,does,kind,verdict,disposition,callers,lines}:
   "display-lib.sh","display-lib.sh — the ONE place that knows the displays, and how to talk to the","lib","wired","keep",2,176
   "doc-sweep.sh","doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's documents, inside","tool","tested","keep",0,589
   "docs-claims-guard.sh","docs-claims-guard.sh — Rule 27: a user-facing document may not name a road that is closed.","tool","wired","keep",0,40
-  "docs-guard.sh","docs-guard.sh — docs/ is the PUBLIC, user-facing tree.","tool","wired","keep",1,55
+  "docs-guard.sh","docs-guard.sh — docs/ is the PUBLIC, user-facing tree.","tool","wired","keep",3,55
   "doors.sh","doors.sh — a door register for ANY directory, rendered from the tree (plan 115 P7).","tool","wired","migrate → src/ymir_runtime/doors.py",0,32
   "ear.sh","ear.sh — a voice note in, the words out.","tool","wired","keep",3,49
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
@@ -519,6 +519,7 @@ bin[577]{file,does,kind,verdict,disposition,callers,lines}:
   "speech-text.py","'''speech-text.py — what Kokoro is allowed to be given.","tool","wired","keep",2,76
   "stt-shim.py","'''stt-shim.py — the missing contract: OpenAI-compatible `/v1/audio/transcriptions` in front of our whisper.","tool","wired","keep",0,140
   "stt-wire.sh","stt-wire.sh — point the meeting stack at the house's STT, in the only order that works.","tool","wired","keep",1,78
+  "subsystem-docs-guard.sh","subsystem-docs-guard.sh — the books a subsystem names must exist, and every governed path must name books.","tool","wired","keep",1,82
   "syn-arm-pretool-check.sh","syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash commands.","tool","tested","keep",2,58
   "syn-asset-pretool-check.sh","syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths.","tool","wired","keep",0,91
   "syn-cd-pretool-check.sh","syn-cd-pretool-check.sh - PreToolUse seatbelt for directory-changing commands.","tool","wired","keep",0,29
@@ -560,6 +561,7 @@ bin[577]{file,does,kind,verdict,disposition,callers,lines}:
   "well-door.sh","well-door.sh — the hand's door to the heart's well, raised over SSH.","tool","wired","keep",0,125
   "well-guard.sh","well-guard.sh — the WARD behind RULES/20-the-well-appends.md.","tool","wired","keep",2,206
   "well-vault-sync.sh","well-vault-sync.sh — Kaia's memory across the Allfather's machines.","tool","wired","keep",1,105
+  "where.sh","where.sh — 'which book do I read before touching this path?'","tool","wired","keep",1,101
   "who.sh","who.sh — the address book, and the one question that blocks everything: has this person an email?","tool","wired","keep",1,82
   "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","wired","keep",1,78
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
@@ -571,7 +573,7 @@ bin[577]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",2,77
   "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,177
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,67
-  "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",3,61
+  "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",4,61
   "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",0,19
   "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",23,1660
   "ymir-invite.sh","ymir-invite — hand someone a way in to your Ymir, and take it back.","tool","wired","keep",3,113
@@ -590,6 +592,6 @@ bin[577]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=351, tested=226
+**Tally.** verdict: wired=353, tested=226
 
-**Tally.** disposition: keep=563, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=565, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
