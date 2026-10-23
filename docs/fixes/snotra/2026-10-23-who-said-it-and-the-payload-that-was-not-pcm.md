@@ -1,4 +1,4 @@
-## snotra · 2026-10-23 — "who said what" is not solved, and the split was writing static
+## runtime · 2026-10-23 — "who said what" is not solved, and the split was writing static
 
 ### Files
 - `bin/time/snotra/snotra-attrib.{sh,py}` (new — list · sample · set · check · apply)
