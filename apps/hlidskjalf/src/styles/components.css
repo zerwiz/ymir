@@ -42,6 +42,8 @@
 }
 .panel-body.flush {
   padding: 0;
+  /* A wide table never widens the page: it scrolls inside its own panel. */
+  overflow-x: auto;
 }
 
 /* --- Buttons -------------------------------------------------- */
@@ -886,6 +888,43 @@
   grid-template-columns: 220px 1fr 280px;
   gap: var(--ymir-space-4);
   height: 100%;
+}
+/* Three panes put 500px of fixed rail in front of the conversation before it
+   gets a pixel. Under 1280 the side panes narrow; under 1040 the third pane
+   moves BENEATH the thread (never off the screen); under 780 mobile.css folds
+   the whole thing to one column. (2026-10-23 — the chat was unusable at any
+   window the operator actually resized to.) */
+@media (max-width: 1280px) {
+  .chat-layout {
+    grid-template-columns: 190px minmax(0, 1fr) 236px;
+  }
+}
+@media (max-width: 1040px) {
+  .chat-layout {
+    grid-template-columns: 176px minmax(0, 1fr);
+    height: auto;
+  }
+  .chat-layout > aside.col {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .chat-layout > aside.col > section {
+    flex: 1 1 240px;
+  }
+}
+@media (max-width: 860px) {
+  .files-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  .trace-row {
+    grid-template-columns: 96px minmax(0, 1fr) 84px;
+  }
+  .trace-row > :nth-child(2),
+  .trace-row > :nth-child(3) {
+    display: none;
+  }
 }
 .chat-scroll {
   flex: 1;

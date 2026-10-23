@@ -10,6 +10,7 @@
  *   PORT=3889 bun run server/index.ts
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { Database } from 'bun:sqlite';
 import { dirname, extname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -1250,6 +1251,25 @@ async function cronSeats() {
   return rows;
 }
 
+/** Forget every cached answer for one command. An ACTION must never be answered
+ *  by a status read taken before it ran (the status call is memoised for 3 s). */
+function forgetMemo(fragment: string): void {
+  for (const key of [...MEMO.keys()]) if (key.includes(fragment)) MEMO.delete(key);
+}
+
+/** Start or stop this seat's scheduler — the SAME script the session start runs
+ *  (`bin/time/nornir-cron-start.sh`). The board gains a hand, never a second
+ *  opinion about how the loop is raised: `start` is idempotent, `stop` kills the
+ *  pid the script itself owns. */
+async function cronAct(action: 'start' | 'stop') {
+  forgetMemo('nornir-cron-start.sh');
+  const argv = ['bash', 'bin/time/nornir-cron-start.sh'];
+  if (action === 'stop') argv.push('--stop');
+  const said = await runAsync(argv, 0);
+  forgetMemo('nornir-cron-start.sh');
+  return { ok: true, action, said, ...(await cron()) };
+}
+
 /* ---- /api/calendar (Mánagandr, the read reckoning) ----------------------- */
 // The reader (`tools/calendar/reader.mjs`, its own errand) refreshes the Google
 // grant and writes ONE rolling cache under the hoard's state. This route only
@@ -1656,6 +1676,28 @@ async function listModels(base: string): Promise<string[]> {
   return (data.data ?? []).map((m) => m.id ?? '').filter(Boolean);
 }
 
+/**
+ * The keys Pi itself uses. `models.json` carries base + model and often NO key —
+ * the provider's credential lives in `auth.json` as `{provider: {type, key}}`.
+ * Reading only the catalog sent every rail call without an Authorization header,
+ * so the local router answered 401 while the rail was up and serving: the chat
+ * fell through to Bifrost and reported "no model backend answered".
+ */
+const PI_AUTH_PATH = join(homedir(), '.pi/agent/auth.json');
+function piAuthKeys(): Record<string, string> {
+  const out: Record<string, string> = {};
+  try {
+    const raw = JSON.parse(read(PI_AUTH_PATH)) as Record<string, { key?: string } | string>;
+    for (const [pkey, pv] of Object.entries(raw)) {
+      const key = typeof pv === 'string' ? pv : pv?.key;
+      if (key) out[pkey] = key;
+    }
+  } catch {
+    /* no auth file — an unauthenticated provider stays unauthenticated */
+  }
+  return out;
+}
+
 /** Providers from the root Pi catalog: the exact base/model/key Pi uses. */
 function piCatalog(): ChatCatalogEntry[] {
   const out: ChatCatalogEntry[] = [];
@@ -1663,6 +1705,7 @@ function piCatalog(): ChatCatalogEntry[] {
     const raw = JSON.parse(read(PI_MODELS_PATH)) as {
       providers?: Record<string, { baseUrl?: string; apiKey?: string; models?: { id?: string }[] }>;
     };
+    const authKeys = piAuthKeys();
     for (const [pkey, pv] of Object.entries(raw.providers ?? {})) {
       const base = pv.baseUrl ?? '';
       if (!base) continue;
@@ -1677,7 +1720,7 @@ function piCatalog(): ChatCatalogEntry[] {
           kind,
           base,
           model: mid,
-          key: pv.apiKey,
+          key: pv.apiKey || authKeys[pkey],
           label: mid,
         });
       }
@@ -1726,8 +1769,19 @@ function resolveChatTarget(model?: string): ChatTarget[] {
     ];
     return raw;
   }
-  // No choice: the operator's Pi default, then any local catalog model, then bases.
+  // No choice: this seat's named default first (Rule 07 — env, never a literal in
+  // the code), then the operator's Pi default, then any local catalog model.
   const targets: ChatTarget[] = [];
+  // `CHAT_MODEL` names the model the chat asks when the operator has not picked
+  // one. Without it the first local catalog entry won — `apodex-1.0-mini`, the
+  // 21.7 GB preset — so the first message of the day swapped the rail away from
+  // the model Pi itself was running (2026-10-23).
+  if (CHAT_MODEL_ENV) {
+    const named = cat.find(
+      (e) => e.model === CHAT_MODEL_ENV || e.id === CHAT_MODEL_ENV || e.name === CHAT_MODEL_ENV,
+    );
+    if (named) targets.push(named);
+  }
   try {
     const s = JSON.parse(read(PI_SETTINGS_PATH)) as { defaultProvider?: string; defaultModel?: string };
     const d = cat.find((e) => e.provider === s.defaultProvider && e.model === s.defaultModel) ?? cat.find((e) => e.provider === s.defaultProvider);
@@ -2059,14 +2113,69 @@ const APP_HOSTS: Array<{ host: string; base: string; name: string }> = [
 ].filter((a) => a.host !== '');
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
-/** token → login. A session must know *who* it is, not merely that it exists. */
-const SESSIONS = new Map<string, string>();
+/**
+ * Sessions SURVIVE a restart. The cookie used to be a key in a process-local
+ * Map, so every API restart silently voided every session — and the boards
+ * painted the refused calls as ZEROS: 0 jobs in Nornir, 0/0 watched in Valhalla,
+ * while the scheduler ran 33 jobs and 56 daemons were up (2026-10-23, both
+ * reported to the Allfather as "dead"). A door that forgets who came in is not
+ * a lock, it is a trapdoor.
+ *
+ * The token is a signed statement (`login.expiry.mac`), not a row in memory:
+ * the law that no session is WRITTEN to disk still stands — what lives on disk
+ * is the signing key, one machine secret under the hoard's state (0600).
+ */
+const SESSION_TTL_S = Number(process.env.YMIR_SESSION_TTL_SECONDS ?? 60 * 60 * 24 * 30);
+const SESSION_KEY = (() => {
+  const fromEnv = process.env.YMIR_SESSION_SECRET;
+  if (fromEnv) return fromEnv;
+  const path = join(HOARD, 'state', 'gate-session.key');
+  try {
+    const k = readFileSync(path, 'utf8').trim();
+    if (k) return k;
+  } catch {
+    /* first run on this machine */
+  }
+  const k = randomBytes(32).toString('hex');
+  try {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, `${k}\n`, { mode: 0o600 });
+  } catch {
+    /* an unwritable hoard still signs for this process's lifetime */
+  }
+  return k;
+})();
+function sessionMac(login: string, exp: number): string {
+  return createHmac('sha256', SESSION_KEY).update(`${login}\u0000${exp}`).digest('base64url');
+}
+/** Mint the cookie's value: who, until when, and a MAC binding both. */
+function mintSession(login: string): string {
+  const exp = Math.floor(Date.now() / 1000) + SESSION_TTL_S;
+  return `${Buffer.from(login, 'utf8').toString('base64url')}.${exp}.${sessionMac(login, exp)}`;
+}
+/** The login a token vouches for, or null — expired and forged alike are null. */
+function readSession(token: string): string | null {
+  const [b64, expRaw, mac] = token.split('.');
+  if (!b64 || !expRaw || !mac) return null;
+  const exp = Number(expRaw);
+  if (!Number.isFinite(exp) || exp * 1000 < Date.now()) return null;
+  let login = '';
+  try {
+    login = Buffer.from(b64, 'base64url').toString('utf8');
+  } catch {
+    return null;
+  }
+  if (!login) return null;
+  const want = Buffer.from(sessionMac(login, exp));
+  const got = Buffer.from(mac);
+  if (want.length !== got.length || !timingSafeEqual(want, got)) return null;
+  return login;
+}
 
 /**
  * The token a request carries is the httpOnly `ymir_session` cookie — and nothing
  * else. There is deliberately NO header credential (no `X-Ymir-Session`/`Bearer`)
- * and NO token on disk: a persisted bearer is a credential at rest that any local
- * process could replay, and every app must be verified live by this gate rather
+ * and no stored session: every app must be verified live by this gate rather
  * than read a file that claims a session. The gate is the one authority.
  */
 function cookieToken(req: Request): string {
@@ -2076,8 +2185,7 @@ function cookieToken(req: Request): string {
 }
 function isAuthed(req: Request): boolean {
   if (isDesktopSeat(req)) return true;
-  const t = cookieToken(req);
-  return !!t && SESSIONS.has(t);
+  return !!readSession(cookieToken(req));
 }
 
 /** The peer address per request: Bun's Request has no socket, so it is recorded
@@ -2118,13 +2226,12 @@ function seatOf(req: Request): string {
 
 /** The login behind a request's session, if any. */
 function loginOf(req: Request): string | null {
-  return SESSIONS.get(cookieToken(req)) ?? null;
+  return readSession(cookieToken(req));
 }
 
-/** Begin a session and hand back the cookie. No copy is kept on disk. */
+/** Begin a session and hand back the cookie. No session is kept on disk. */
 function sessionResponse(login: string): Response {
-  const token = crypto.randomUUID();
-  SESSIONS.set(token, login);
+  const token = mintSession(login);
   return new Response(JSON.stringify({ ok: true, login }), {
     headers: {
       'content-type': 'application/json',
@@ -2134,81 +2241,6 @@ function sessionResponse(login: string): Response {
 }
 
 /** The login screen for an app host — same gate, same credentials. */
-function appLoginPage(name = 'Smíðja'): Response {
-  const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>${name} — Sign in</title>
-<style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
-    background: radial-gradient(900px 500px at 50% -10%, rgba(226,232,240,.07), transparent 60%), #080c14;
-    color: #e2e8f0; font: 15px/1.4 system-ui, sans-serif; }
-  form { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px;
-    background: #0d131f; border: 1px solid #23304a; border-radius: 14px; padding: 26px;
-    box-shadow: 0 24px 60px rgba(0,0,0,.5); }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand b { font-size: 20px; letter-spacing: .18em; }
-  .brand small { display: block; font: 10px/1 ui-monospace, monospace; letter-spacing: .28em;
-    text-transform: uppercase; color: #e2e8f0; margin-top: 4px; }
-  h1 { font-size: 22px; margin: 0; }
-  p { margin: 0; color: #94a3b8; font-size: 13px; }
-  input { padding: 11px 12px; border-radius: 9px; border: 1px solid #23304a; background: #111a2b;
-    color: #e2e8f0; font-size: 15px; }
-  input:focus { outline: none; border-color: #e2e8f0; }
-  button { padding: 11px 12px; border: none; border-radius: 9px; background: #e2e8f0; color: #06121f;
-    font-weight: 700; font-size: 15px; cursor: pointer; }
-  .err { color: #f87171; font-size: 12px; min-height: 14px; }
-</style>
-</head>
-<body>
-<form id="gate">
-  <div class="brand">
-    <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true">
-      <rect x="1" y="1" width="30" height="30" rx="7" fill="#0f172a" stroke="#1e293b"/>
-      <g fill="#e2e8f0">
-        <polygon points="7,6 10,6 16,11.5 22,6 25,6 17.5,13 17.5,20 14.5,20 14.5,13"/>
-        <polygon points="6,21 26,21 25.4,24 6.6,24"/>
-        <polygon points="8,25 24,25 23.3,27.5 8.7,27.5"/>
-      </g>
-    </svg>
-    <span><b>${name.toUpperCase()}</b><small>Ymir</small></span>
-  </div>
-  <h1>Sign in</h1>
-  <p>The gate is closed. Sign in, or enter an invite code to make your own account.</p>
-  <input name="username" placeholder="username" autocomplete="username" autofocus />
-  <input name="password" type="password" placeholder="••••••••" autocomplete="current-password" />
-  <input name="invite" placeholder="invite code (only to create an account)" autocomplete="off" />
-  <span class="err" id="err"></span>
-  <button type="submit">Enter</button>
-</form>
-<script>
-  const f = document.getElementById('gate');
-  f.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const b = new FormData(f);
-    const invite = String(b.get('invite') || '').trim();
-    // An invite in the field means "make me an account"; without one this is an
-    // ordinary sign-in. A bad or spent code is refused by the gate either way.
-    const r = await fetch(invite ? '/api/register' : '/api/login', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ username: b.get('username'), password: b.get('password'), invite }),
-    });
-    if (r.ok) { location.reload(); return; }
-    const said = await r.json().catch(() => ({}));
-    document.getElementById('err').textContent = said.error || 'Wrong username or password';
-  });
-</script>
-</body>
-</html>`;
-  return new Response(html, {
-    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
-  });
-}
 
 /** Forward an authed Smíðja-host request to the visualizer on :8437. */
 async function proxyApp(req: Request, url: URL, base = SMIDJA_URL, label = 'smidja'): Promise<Response> {
@@ -2386,7 +2418,7 @@ const server = Bun.serve({
         });
       }
       if (p === '/api/logout' && req.method === 'POST') {
-        SESSIONS.delete(cookieToken(req));
+        // The cookie is cleared client-side; the signed token expires on its own.
         return new Response(JSON.stringify({ ok: true }), {
           headers: { 'content-type': 'application/json', 'set-cookie': 'ymir_session=; Path=/; Max-Age=0' },
         });
@@ -2532,6 +2564,8 @@ const server = Bun.serve({
       }
       if (p === '/api/calendar') return json(calendar());
       if (p === '/api/cron') return json(await cron());
+      if (p === '/api/cron/start' && req.method === 'POST') return json(await cronAct('start'));
+      if (p === '/api/cron/stop' && req.method === 'POST') return json(await cronAct('stop'));
       if (p === '/api/cron/seats') return json(await cronSeats());
       if (p === '/api/loaders') return json(await loaders());
       if (p === '/api/checks') return json(await checks());

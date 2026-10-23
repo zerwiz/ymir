@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useYmir } from '../state/store';
 import { StatusChip } from '../components/Status';
 import { MetricTile } from '../components/MetricTile';
@@ -12,6 +13,10 @@ import { MetricTile } from '../components/MetricTile';
 export function Cron() {
   const cron = useYmir((s) => s.cron);
   const seats = useYmir((s) => s.cronSeats) ?? [];
+  const cronError = useYmir((s) => s.cronError);
+  const startCron = useYmir((s) => s.startCron);
+  const stopCron = useYmir((s) => s.stopCron);
+  const [busy, setBusy] = useState(false);
   const jobs = cron?.jobs ?? [];
   const running = cron?.running ?? false;
   const roles = cron?.roles ?? [];
@@ -35,8 +40,44 @@ export function Cron() {
         </div>
         <div className="row">
           <StatusChip status={running ? 'nominal' : 'down'} />
+          {running ? (
+            <button
+              className="btn btn-sm"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void stopCron().finally(() => setBusy(false));
+              }}
+              title="Lower this seat's scheduler (bin/time/nornir-cron-start.sh --stop)"
+            >
+              {busy ? '…' : 'Stop'}
+            </button>
+          ) : (
+            <button
+              className="btn btn-primary btn-sm"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void startCron().finally(() => setBusy(false));
+              }}
+              title="Raise this seat's scheduler (bin/time/nornir-cron-start.sh)"
+            >
+              {busy ? '…' : 'Start'}
+            </button>
+          )}
         </div>
       </div>
+
+      {cronError ? (
+        <div className="panel" style={{ marginBottom: 'var(--ymir-space-4)' }}>
+          <div className="panel-body">
+            <p style={{ margin: 0 }} className="muted">
+              The board could not read the schedule — {cronError}. The numbers below are an
+              <strong> unread </strong> schedule, not a stopped one.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="metric-grid" style={{ marginBottom: 'var(--ymir-space-4)' }}>
         <MetricTile

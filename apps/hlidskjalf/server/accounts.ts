@@ -131,11 +131,15 @@ export async function register(login: string, password: string, code: string): P
   if (!LOGIN_RE.test(name)) {
     return { ok: false, reason: 'a username is 2–32 characters: letters, digits, dot, dash, underscore' };
   }
+  // The invite is the DOOR: without one there is no account to make, so it is
+  // answered before the password rules. A blank invite field used to be met with
+  // "a password of at least 8 characters is required", which named the wrong
+  // fault to a person trying to get in (2026-10-23).
+  const check = inviteCheck(code);
+  if (!check.ok) return { ok: false, reason: check.reason };
   if (password.length < MIN_PASSWORD) {
     return { ok: false, reason: `a password of at least ${MIN_PASSWORD} characters is required` };
   }
-  const check = inviteCheck(code);
-  if (!check.ok) return { ok: false, reason: check.reason };
 
   const s = load();
   if (s.accounts.some((a) => a.login === name)) return { ok: false, reason: 'that username is taken' };

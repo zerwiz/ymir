@@ -136,21 +136,71 @@ function centeredBounds(display) {
   const wantH = 900;
   if (!display) return { width: wantW, height: wantH };
   const wa = display.workArea || display.bounds;
-  const w = Math.max(800, Math.min(wantW, wa.width));
-  const h = Math.max(600, Math.min(wantH, wa.height));
+  const w = Math.max(380, Math.min(wantW, wa.width));
+  const h = Math.max(420, Math.min(wantH, wa.height));
   const x = Math.round(wa.x + (wa.width - w) / 2);
   const y = Math.round(wa.y + (wa.height - h) / 2);
   return { width: w, height: h, x, y };
 }
 
+/* ---- The window remembers the size the operator gave it ------------------ *
+ * A hall that re-centres itself at 1440x900 on every launch makes resizing
+ * pointless: he sizes the window, the next start forgets it. The bounds live in
+ * the app's userData (never the repo, never the hoard) and are clamped to the
+ * display the window is about to open on, so a window from a bigger monitor
+ * still fits a smaller one. (2026-10-23) */
+const fs = require('node:fs');
+const boundsFile = () => path.join(app.getPath('userData'), 'window-bounds.json');
+function readSavedBounds() {
+  try {
+    const b = JSON.parse(fs.readFileSync(boundsFile(), 'utf8'));
+    return b && Number(b.width) > 0 && Number(b.height) > 0 ? b : null;
+  } catch {
+    return null;
+  }
+}
+function clampToDisplay(display, b) {
+  const wa = display && (display.workArea || display.bounds);
+  if (!wa) return b;
+  const w = Math.max(380, Math.min(Number(b.width), wa.width));
+  const h = Math.max(420, Math.min(Number(b.height), wa.height));
+  let x = Number.isFinite(b.x) ? Math.round(b.x) : Math.round(wa.x + (wa.width - w) / 2);
+  let y = Number.isFinite(b.y) ? Math.round(b.y) : Math.round(wa.y + (wa.height - h) / 2);
+  // A remembered title bar must never sit outside the screen.
+  if (x < wa.x - 8 || x + w > wa.x + wa.width + 8) x = Math.round(wa.x + (wa.width - w) / 2);
+  if (y < wa.y - 8 || y + h > wa.y + wa.height + 8) y = Math.round(wa.y + (wa.height - h) / 2);
+  return { width: w, height: h, x, y };
+}
+function windowBounds(display) {
+  const saved = readSavedBounds();
+  return saved ? clampToDisplay(display, saved) : centeredBounds(display);
+}
+function rememberBounds(window) {
+  const save = () => {
+    try {
+      if (!window.isDestroyed()) fs.writeFileSync(boundsFile(), JSON.stringify(window.getBounds()));
+    } catch {
+      /* no write: the next start centres */
+    }
+  };
+  let timer = null;
+  const later = () => { clearTimeout(timer); timer = setTimeout(save, 400); };
+  window.on('resize', later);
+  window.on('move', later);
+  window.on('close', () => { clearTimeout(timer); save(); });
+}
+
 function openWindow(url, title) {
   // Never stack: reuse the window we already have.
   if (win && !win.isDestroyed()) { if (win.isMinimized()) win.restore(); win.focus(); return win; }
-  const bounds = centeredBounds(targetDisplay());
+  const bounds = windowBounds(targetDisplay());
   win = new BrowserWindow({
     ...bounds,
-    minWidth: 800,
-    minHeight: 600,
+    // The hall refits down to a small pane (the stylesheet steps the rail at
+    // 1280/1100/900) instead of refusing to shrink below 800x600 — the floor
+    // that made resizing pointless (2026-10-23).
+    minWidth: 380,
+    minHeight: 420,
     backgroundColor: '#080c14',
     icon: ICON,
     title,
@@ -161,6 +211,7 @@ function openWindow(url, title) {
       nodeIntegration: false,
     },
   });
+  rememberBounds(win);
   win.loadURL(url);
   // The desktop header stays "Ymir" — never the current workspace/gate title.
   win.on('page-title-updated', (e) => e.preventDefault());

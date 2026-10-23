@@ -1,12 +1,14 @@
 /**
- * OLD LOGIN — retired, kept, not wired.
+ * The gate's ONE login — the forged page with the lore, and the door every
+ * surface goes through (the web, and the app hosts by redirect).
  *
- * This is the original Hlidskjalf login modal, and with it the lore telling
- * (`LORE_BEATS` / `LORE_LONG`). It is no longer the door; the live login is a
- * standalone forge page served elsewhere.
+ * It was labelled "OLD LOGIN — retired, kept, not wired" while `App.tsx`
+ * rendered it as the only way in: the header was written for a build where a
+ * standalone forge page served the sign-in, and that page (`appLoginPage`) was
+ * never called by anything. Retired the false label and the dead page together
+ * (Rule 17), 2026-10-23; the lore stays, the door stays.
  *
- * KEEP FOR THE LORE — the beats and the long telling are wanted for the future.
- * Do not delete, and do not re-wire it as the gate without an explicit decision.
+ * The beats below are the visitor's telling, sourced from docs/lore.md.
  */
 import { useEffect, useState } from 'react';
 import { gateApi } from '../services/api';

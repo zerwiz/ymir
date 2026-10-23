@@ -57,6 +57,17 @@ function agentsFailureStatus(error: unknown): AgentsStatus {
   return 'offline';
 }
 
+/** Why the cron board has no numbers: an unread schedule is not a stopped one.
+ *  A 401 here means the session died with the API process (sessions are held in
+ *  memory), which must be said plainly or the board lies with zeros. */
+function cronFailure(error: unknown): string {
+  if (error instanceof GateError && error.status === 401) {
+    return 'the gate is locked — the session did not survive the last API restart';
+  }
+  if (error instanceof GateError) return `the gate answered ${error.status}`;
+  return 'the gate did not answer';
+}
+
 /* --- Personal accent: paint your own seat ---------------------- */
 function hexToRgba(hex: string, alpha: number): string {
   const h = hex.replace('#', '');
@@ -150,6 +161,7 @@ interface YmirState {
   calendar: CalendarInfo | null;
   cron: CronInfo | null;
   cronSeats: CronSeat[] | null;
+  cronError: string | null;
   mimir: MimirHealth | null;
   smidjaDb: string;
   smidjaSessions: SmidjaSession[];
@@ -184,6 +196,8 @@ interface YmirState {
   provision: (input: { login: string; name: string; kind: 'work' | 'personal'; domains: string[] }) => void;
   signOut: () => void;
   loadLive: () => Promise<void>;
+  startCron: () => Promise<void>;
+  stopCron: () => Promise<void>;
   refreshSmidja: () => Promise<void>;
   /** The reckoning on its own track: a slow endpoint must not hold the grid. */
   refreshCalendar: () => Promise<void>;
@@ -323,6 +337,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   calendar: null,
   cron: null,
   cronSeats: null,
+  cronError: null,
   mimir: null,
   smidjaDb: 'absent',
   smidjaSessions: [],
@@ -368,7 +383,15 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.reviews().then((v) => ok(v, get().reviews)).catch(() => get().reviews),
           gateApi.files(get().realm).then((v) => ok(v, get().files)).catch(() => get().files),
           gateApi.runtime().then((v) => ok(v, get().runtime)).catch(() => get().runtime),
-          gateApi.cron().then((v) => ok(v, get().cron)).catch(() => get().cron),
+          gateApi.cron()
+            .then((v) => {
+              set({ cronError: null });
+              return ok(v, get().cron);
+            })
+            .catch((error: unknown) => {
+              set({ cronError: cronFailure(error) });
+              return get().cron;
+            }),
           gateApi.cronSeats().then((v) => ok(v, get().cronSeats ?? [])).catch(() => get().cronSeats ?? []),
           gateApi.mimirHealth().catch(() => null),
           gateApi.skills().then((v) => ok(v, get().skills)).catch(() => get().skills),
@@ -381,6 +404,23 @@ export const useYmir = create<YmirState>((set, get) => ({
         live: false,
         agentsStatus: s.agentsStatus === 'loading' ? 'offline' : s.agentsStatus,
       }));
+    }
+  },
+
+  // The board's hand: start and stop are the SAME script the session runs, and
+  // the answer it returns is the scheduler's own word, never the board's guess.
+  startCron: async () => {
+    try {
+      set({ cron: (await gateApi.cronStart()) as CronInfo, cronError: null });
+    } catch (error) {
+      set({ cronError: cronFailure(error) });
+    }
+  },
+  stopCron: async () => {
+    try {
+      set({ cron: (await gateApi.cronStop()) as CronInfo, cronError: null });
+    } catch (error) {
+      set({ cronError: cronFailure(error) });
     }
   },
 
