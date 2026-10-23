@@ -208,3 +208,23 @@ it, because every panel, export, letter and prototype the factory produces is a 
 Concretely for the factory's own output: a Smíðja chain that produces an app, a spec or a visualiser ends with a
 **surface check** (does every number it shows come from a read?), and a run that cannot answer says so in the
 trace rather than reporting success. Rule, ward and evidence: `RULES/37-a-surface-may-not-show-what-it-did-not-receive.md`.
+## 2026-10-23 — the night the panel showed nothing, and the five reasons why
+Measured on this seat between 19:30 and 20:30, while three agents ran and the Smíðja displayed "no agent
+activity yet". Each line is a way this subsystem can be honest in its parts and useless as a whole.
+Law: `RULES/36-the-run-is-visible.md`.
+faults[5]{fault,measured,remedy}:
+  "the smithy is not in git",".gitignore:174 `apps/smidja/`; the roster names prompt_engineering/{planner,builder}/{system,user}.md and harness_engineering/subagents.ts — NONE in git, none in the template","track it (git add -f) or the factory cannot run on any other seat; validation refuses before the first phase"
+  "the teams have three names",".agents/agents/*.md (23 figures) · config/agents.yaml (figure→model) · roster.yaml (what the picker reads — absent)","one resolver, stated fallback to config/agents.yaml, `cause:` in the payload when it is empty"
+  "a repo derived from a DB path","server/roster-api.ts:34 `repoRoot(dbPath)` while the DB lives in the home → /api/rosters []","SMIDJA_REPO_ROOT (default: the checkout); never derive a repo from a database"
+  "two database paths","config `db: apps/smidja/smidja_data/smidja.db` vs the visualizer's $YMIR_HOME/smidja/smidja.db → a real run invisible, observe says 'absent'","the shipped config names the home's DB; every reader resolves it the same way"
+  "pi refuses in a worktree","`Tool ymir_find conflicts with …/.yggdrasil/…/.pi/extensions/ymirhome.ts` — killed every builder turn (dae6d893: fail in 8.1s) and every errand","agent_pi.py starts pi with `-ne`; the run's declared extensions are added with `-e`"
+**The invocation, stated once, because it is the thing people get wrong:**
+# from the REPO ROOT — the config's prompt and data paths are root-relative
+uv run apps/smidja/smidja_build.py <prompt.md> \
+  --config apps/smidja/smidja_smidja_config/smidja.config.yaml
+From `apps/` the same command resolves `apps/apps/…` and validation refuses with "prompt not found" —
+which looks like a missing file and is a wrong working directory.
+**Proof that it works when the three things are right** (config · cwd · `-ne`):
+run 8f110045   01 request  success   0.0s
+               02 build    RUNNING   builder · llama-swap/qwen3.6-35b-a3b@q4_k_xl-mtp
+               35 events in $YMIR_HOME/smidja/smidja.db

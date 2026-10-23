@@ -50,3 +50,68 @@ was broken, silently, and each broke the panel's honesty in a different way.
 | a run's own phases | a run that ends with no phase and no verdict |
 | `bin/gates/guards.sh` | the tree faults that make a run invisible (extension collision, stale register) |
 | this rule's own smoke (owed) | an empty `/api/rosters`, `/api/models` or `/api/memory` that names no cause |
+
+---
+
+## Appended 2026-10-23 (later that evening) — what the first real run taught this rule
+
+The rule was written while a run was visible for the first time. Four things that made the *previous*
+seven hours invisible are now part of the law, because each one is a way the panel can lie without a
+single line of code being wrong.
+
+### 1 · A factory that is not in git cannot ship, so it cannot run anywhere but here
+
+```
+.gitignore:174   apps/smidja/
+```
+
+The smithy — its config, its prompts, its modules — is **gitignored**. Measured: the roster names
+`apps/smidja/smidja_data/prompt_engineering/{planner,builder}/{system,user}.md` and
+`…/harness_engineering/subagents.ts`; **none of them exists in git, and the template ships none of
+them either.** A fresh clone therefore cannot start a single run: validation refuses before the first
+phase. This rule's §1 is unenforceable on any seat but this one until `apps/smidja/` is tracked
+(`git add -f`, or the ignore removed with a dated reason).
+
+### 2 · The teams had three names and the UI read the one that did not exist
+
+`.agents/agents/*.md` (23 figures) · `config/agents.yaml` (figure → model) · `roster.yaml` (what the
+picker reads — **absent everywhere**). And `/api/rosters` answered `[]` because the server derived the
+**repo root from the database path** (`rosterRootOf(dbPath)`), while the DB lives in the home by
+design. So the "Choose a team…" list was empty for a reason no one could see. Rule 36 §3 stands; the
+mend is one resolver with a **stated fallback** to `config/agents.yaml` and a `cause:` in the payload.
+
+### 3 · One database, or two doors describe two houses
+
+The factory's config said `db: apps/smidja/smidja_data/smidja.db` while the visualizer read
+`$YMIR_HOME/smidja/smidja.db` — so a real run wrote a trace **the panel could not see**, and
+`smidja-observe.sh` said *"absent"* over four runs. Tonight the run used a local config override
+(`smidja.local.yaml`, `db:` → the home) so the trace landed where the UI reads it. **That override is
+the workaround, not the rule:** the shipped config must name the home's DB, and every reader must
+resolve it through the same door.
+
+### 4 · The chat door and the empty picker are part of this rule, not a separate fault
+
+```
+POST /api/chat/message → 500 {"error":"Völundr (Pi) took too long — try again"}
+GET  /api/rosters      → []
+GET  /api/models       → []
+GET  /api/memory       → 404   ·   GET /api/chat → 404
+```
+
+A panel that cannot answer, cannot list a team and cannot say why is the same fault as a run that
+leaves no trace: **the operator's question "what is happening?" has no honest answer.** Under this rule
+each of these answers either a value or a `cause` — never a bare empty.
+
+### 5 · What the fix proved, and how
+
+```
+pi -ne  (agent_pi.py)     run dae6d893: 2 phases · 17 events · fail in 8.1s   →  extension conflict
+pi -ne  (same)            run 8f110045: 01 request success · 02 build RUNNING · builder on the rail
+uv run apps/smidja/smidja_build.py … --config apps/smidja/smidja_smidja_config/smidja.local.yaml
+                          invoked FROM THE REPO ROOT — from apps/ the config's root-relative paths
+                          resolve apps/apps/… and validation refuses (§4 of this rule)
+```
+
+**The flag and the working directory were the whole difference between "no agent activity yet" and a
+builder lane on the rail.** A rule that does not name its own invocation is a rule someone will get
+wrong at 3am — so this rule names it, with the failure each way it can be got wrong.
