@@ -97,12 +97,17 @@ if pi_files:
                     except Exception:
                         continue
                     t = d.get("tokens") or d.get("usage") or {}
+                    # pi nests it one level down: {"type":"message","message":{"usage":{...}}}
+                    # with camelCase cache keys. Reading only the top level counted 23
+                    # messages where the session files held hundreds of turns.
+                    if not t and isinstance(d.get("message"), dict):
+                        t = d["message"].get("usage") or {}
                     if not t:
                         continue
                     inp = t.get("input") or t.get("input_tokens") or 0
                     outp = t.get("output") or t.get("output_tokens") or 0
-                    cr = (t.get("cache") or {}).get("read") or t.get("cache_read_input_tokens") or 0
-                    cw = (t.get("cache") or {}).get("write") or t.get("cache_creation_input_tokens") or 0
+                    cr = (t.get("cache") or {}).get("read") or t.get("cacheRead") or t.get("cache_read_input_tokens") or 0
+                    cw = (t.get("cache") or {}).get("write") or t.get("cacheWrite") or t.get("cache_creation_input_tokens") or 0
                     agg["input"] += inp; agg["output"] += outp
                     agg["cache_read"] += cr; agg["cache_write"] += cw; agg["messages"] += 1
                     m = d.get("modelID") or d.get("model") or "unknown"

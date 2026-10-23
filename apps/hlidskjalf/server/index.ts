@@ -2373,6 +2373,22 @@ const server = Bun.serve({
       }
       if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
+      // Þráðr's status strip (plan 93): the panel asked for a door this gate never had,
+      // so it printed "terminal status 404" — an error string where a truth belongs.
+      // There is no pty in this process (the backend is a separate errand), so the route
+      // reports the seat's real capability instead of pretending to hold a shell.
+      if (p === '/api/terminal/status') return json({
+        enabled: process.env.YMIR_TERMINAL === '1',
+        remoteAllowed: process.env.YMIR_TERMINAL_REMOTE === '1',
+        shell: process.env.SHELL || '/bin/bash',
+        cwd: ROOT,
+        open: 0,
+        maxPerUser: Number(process.env.YMIR_TERMINAL_MAX_PER_USER ?? 2),
+        idleTimeoutMs: Number(process.env.YMIR_TERMINAL_IDLE_MS ?? 900_000),
+        reason: (process.env.YMIR_TERMINAL === '1')
+          ? 'enabled, but this gate holds no pty — the terminal backend is plan 93'
+          : 'disabled: YMIR_TERMINAL is not 1, and this gate holds no pty',
+      });
       if (p === '/api/usage') {
         // What the HARNESSES spent — opencode and pi — not only the smithy's runs.
         // Memoised for a minute: the aggregate is one bounded SQL statement over a
@@ -2664,6 +2680,7 @@ function wardState() {
                       live: beatAge >= 0 && beatAge < 300,
                       lastAnswer, refusalsToday, turnsToday };
 
+  return {
     paused: existsSync(pausedMarker),
     heartbeat: beat,
     heartbeatAgeSeconds: beatAgeSeconds,
@@ -2675,6 +2692,7 @@ function wardState() {
     judged: totalJudged,
     bySeverity: counts,
     newest: newest.slice(-25).reverse(),
+    assistant,
     door: 'bin/ward/garmr.sh',
   };
 }

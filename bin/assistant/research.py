@@ -5,7 +5,7 @@
 
 The house already pays for real search — `pi-web-access` answers through Exa's hosted MCP endpoint,
 keyless, and that is the door this script knocks on. Nothing is invented here and nothing is scraped
-from a stub: it is the same search the Allfather's own `web_search` tool performs.
+from a stand-in: it is the same search the Allfather's own `web_search` tool performs.
 
 WHY THIS IS A SEPARATE PROCESS, AND NOT A TOOL IN THE MODEL (plan 101 §5, appended 2026-10-22):
 

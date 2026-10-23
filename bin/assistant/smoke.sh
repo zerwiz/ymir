@@ -104,7 +104,7 @@ if [ "$QUICK" = 0 ]; then
   case "$PR" in
     exa) ok "research reaches Exa (${NS} sources)" ;;
     exa-cache) ok "research answered from cache (${NS} sources)" ;;
-    wikipedia-fallback) bad "research" "fell back to the stub — Exa unreachable" ;;
+    wikipedia-fallback) bad "research" "fell back to the open encyclopaedia — Exa unreachable" ;;
     *) skip "research" "no network or no provider" ;;
   esac
   case "$RD" in *http*) bad "research door" "a link leaked into the text" ;; *) : ;; esac
