@@ -14,9 +14,11 @@ Steps:
 3. If and only if it reports that updates are available, run: bin/agents/groa-update.sh
 4. Run: bin/engine/ymir-migrate.sh status
 5. Run: bin/gates/checks/ymir-update-check.sh --force
+6. Run: bin/desktop/desktop-verify.sh
 
 Report exactly four lines:
 - GUARD: stopped at step N because <error>   (only if you stopped)
 - BEHIND: <targets that were behind, or none>
 - UPDATED: <what moved, or nothing>
 - MIGRATIONS: <needed|not needed> · NPM: <newer stands|current>
+- APPS: <ok|FAIL: the surfaces named by desktop-verify>

@@ -18,6 +18,7 @@ run[5]{step,command,why}:
   "check","bin/agents/groa-update.sh --check","Gróa decides, not the agent"
   "update","bin/agents/groa-update.sh","fast-forward only"
   "migrations","bin/engine/ymir-migrate.sh status","a moved tree may need a moved home"
+  "apps","bin/desktop/desktop-verify.sh","every desktop surface can actually open — runtime answers, launcher points at the live install, class routing agrees"
   "report","printed to the log","what was behind, what moved, what still needs a hand"
 ```
 
