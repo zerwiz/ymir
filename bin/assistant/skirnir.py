@@ -942,6 +942,93 @@ REFUSALS_UNREACHED = [
 ]
 
 
+def ground_answer(question: str, sender: str, chat: str, tier: str) -> tuple[str, str] | None:
+    """READ THE HOUSE BEFORE REFUSING. The readers in `bin/assistant/ground.py` answer what a shelf of facts
+    cannot: who is asking, what we sent a person, what a meeting decided, when the Allfather is free, which
+    projects exist. Every answer cites its door and the date it read it (Rule 37), and a failure here returns
+    None so the honest refusal stands — this widens the assistant, it does not make it guess.
+    """
+    try:
+        import ground  # noqa: PLC0415
+    except Exception:  # noqa: BLE001
+        return None
+    q = (question or "").lower()
+    try:
+        # 1 · a PERSON, asked about what we sent them or where they were
+        m = re.search(r"\b(?:did we|have we|do we|did you)\b.*\b(?:send|sent|email|emailed|mail|mailed|"
+                      r"invite|invited|file|filed|post|posted)\b", q) or \
+            re.search(r"\b(?:which|what) meetings?\b.*\b(?:in|with|attend)", q)
+        if m:
+            cand = re.search(r"@(\w+)", question)
+            if not cand:
+                # a name is taken from the REGISTER, never from a list written into the public tree (Rule 04)
+                try:
+                    for _p in ground.people():
+                        for _tok in [(_p.get("name") or "")] + [_p.get("id") or ""]:
+                            first = (_tok.split() or [""])[0].lower()
+                            if first and re.search(r"\b" + re.escape(first) + r"\b", q):
+                                cand = re.match(re.escape((_p.get("name") or "").split()[0]), q) or None
+                                break
+                        if cand:
+                            break
+                except Exception:  # noqa: BLE001
+                    cand = None
+                if cand is None:
+                    _hit = next(((_p.get("name") or "") for _p in (ground.people() or [])
+                                 if any(((_p.get("name") or "").split() or [""])[0].lower() in q for _ in [0])), None)
+                    if _hit:
+                        cand = re.match(re.escape(_hit.split()[0]), q)
+            if cand:
+                who = ground.who(cand.group(0))
+                if who.get("found"):
+                    per = ground.person(who["name"])
+                    if per.get("found"):
+                        bits = []
+                        for x in per["meetings"]:
+                            state = (f"letter sent {x['sent_at']}" if x["letter"] == "sent"
+                                     else f"letter {x['letter']}")
+                            bits.append(f"{x['held']}: {state}, {x['filed']} cards filed on the board")
+                        return ("ground:person",
+                                f"{who['name']} — " + "; ".join(bits) +
+                                f". (read from the meeting records, {per['read']}.)")
+                    return ("ground:person", f"{who['name']} is in the register, and no meeting names them yet. "
+                                             f"(collaborators.yaml, {who['read']}.)")
+        # 2 · a DECISION, an ACTION or an OPEN QUESTION
+        if re.search(r"\b(decid\w*|agreed|open questions?|actions?|owe[sd]?|who owns)\b", q):
+            dec = ground.decisions(question)
+            if dec["hits"]:
+                lines = [f"{h['id']} ({h['kind']}, {h['status']}): {h['text']}" for h in dec["hits"][:3]]
+                return ("ground:records", "; ".join(lines) +
+                        f". (read from the meeting records, {dec['read']}.)")
+        # 3 · the CALENDAR
+        if re.search(r"\b(free|busy|available|availability|calendar|booked)\b", q):
+            cal = ground.availability("1d")
+            if cal.get("known"):
+                return ("ground:calendar",
+                        f"He is {cal['verdict']} over the next day, per the calendar reader "
+                        f"({cal['source']}, read {cal['read']}; the window is the reader's own).")
+        # 4 · the PROJECTS
+        if re.search(r"\b(projects?|houses?|workspaces?)\b", q) and re.search(
+                r"\b(which|what|list|all|overview|many)\b", q):
+            pr = ground.projects()
+            names = ", ".join(f"{x['id']} ({x['house']})" for x in pr["projects"][:12])
+            return ("ground:projects",
+                    f"{pr['count']} projects in the registry: {names}" +
+                    (" …" if pr["count"] > 12 else "") + f". (projects.yaml, read {pr['read']}.)")
+        # 5 · WHO IS ASKING (the 9:32 failure — a partner addressed by the owner's name)
+        if sender and re.search(r"\b(who am i|do you know me|my name)\b", q):
+            who = ground.who(sender)
+            if who.get("found"):
+                return ("ground:who", f"You are {who['name']}" +
+                        (f", of {who['org']}" if who.get("org") else "") +
+                        f". (collaborators.yaml, read {who['read']}.)")
+            return ("ground:who", f"I don't have {sender} in the register — I won't guess a name "
+                                  f"(collaborators.yaml, read {who['read']}).")
+    except Exception:  # noqa: BLE001 — a reader that fails must never break the answer path
+        return None
+    return None
+
+
 def say_unknown(tier: str = "stranger", passed: bool = True, seed: str = "") -> str:
     """The honest no. At the owner tier there is nobody to pass it to — he IS the Allfather."""
     if tier == "owner":
@@ -1522,8 +1609,14 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
             reply = say_unknown(tier)
             intent = "unknown"
     else:
-        reply = say_unknown(tier)
-        intent = "unknown"
+        # BEFORE REFUSING, READ THE HOUSE (ground.py) — a refusal about something the house can answer is a lie
+        # of omission, the fault a partner met on 2026-10-23.
+        g = ground_answer(question, sender, chat, tier)
+        if g:
+            intent, reply = g
+        else:
+            reply = say_unknown(tier)
+            intent = "unknown"
 
     # THE MOUTH. A model phrases, and only for the classes and tiers it may ever see. It receives
     # the approved facts, the question and the last turns — no tools, no credential, no vault — and
