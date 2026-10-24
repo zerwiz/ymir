@@ -53,6 +53,8 @@ gate ward        "the tree wards (runtime, defaults)"   bash "$ROOT/bin/gates/gu
 gate compliance  "the 15 governance gates"              bash "$ROOT/.agents/skills/galdr-ymirsystem/scripts/compliance-check.sh"
 gate contracts   "the typed surfaces (one contract, two consumers)" bash "$ROOT/bin/gates/checks/contracts-check.sh"
 gate queue       "the derived work queue is current"              bash "$ROOT/bin/gates/queue.sh" --check
+gate plan-ledger  "every plan carries the contract (his words, a measure, proven phases, a refusal, questions, a number, a row with a status)" \
+               bash "$ROOT/bin/gates/plan-audit.sh" --check
 gate capability "the capability register is current"           bash "$ROOT/bin/gates/capabilities.sh" --check
 gate home-index "the home's shelves are navigable"             bash "$ROOT/bin/gates/checks/home-index-check.sh"
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/gates/checks/usage-ratchet.sh"
