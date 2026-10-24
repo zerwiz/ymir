@@ -64,3 +64,30 @@ cd .yggdrasil/<errand> && pi --list-models        # eighteen collisions, exit
 # the fix, proved
 cd .yggdrasil/<errand> && pi -ne -e "$(cat ~/.pi/agent/extensions/.ymir-root)/.pi/extensions" --list-models
 ```
+
+---
+
+## Correction and the actual root (same day, after the Allfather's rebuke)
+
+He said it plainly: *"we have scripts and extensions for this."* He was right, and the hand-patched
+`-ne -e` experiment in `einherjar-spawn.sh` and `herdr-run.sh` was backed out undelivered — the house door
+for this is `bin/seat/valknut-load.sh` (its own header states the law: pi loads BOTH the project tree and the
+settings-named tree and does not de-duplicate).
+
+**The real duplicate is the WORKTREE's own copy.** A Yggdrasil worktree checks out `.pi/extensions/` like any
+other file, so a seat inside it has two trees carrying the same eighteen extensions — the checkout's and the
+worktree's — regardless of what the settings say. Removing that second copy makes the plain house road work:
+with `<worktree>/.pi/extensions` pointing at the seat root's one tree, `state/<id>.launch.sh` (plain `pi
+--model …`, no flags) starts and **stays up** — measured at 2 min 45 s and climbing, on branch
+`eindri/clients-128`, the first live seat of the day.
+
+**So the durable fix belongs in `bin/forge/yggdrasil.sh`**, not in the spawn road: a worktree must not carry a
+second `.pi/extensions`. The clean way is a sparse-checkout exclusion of that path when the worktree is
+created (a symlink works and was used to prove the diagnosis, but it shows up as deleted tracked files and
+must not be the shipped answer). And `valknut-load.sh --check` should gain the worktree case: *the tree in
+this worktree is the same home as the seat root's, so it is not a second home.*
+
+**Also fixed here:** `src/ymir_runtime/seat.py` resolved its `worth-a-smith` door as `bin/herdr-run.sh`, which
+moved to `bin/seat/herdr-run.sh` in the restructure; the engine therefore answered "no worth-a-smith door on
+this machine" and dispatched on the brief alone, silently, for every errand. It now resolves the current path
+and keeps the old one as a fallback.

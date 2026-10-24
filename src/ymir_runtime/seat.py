@@ -65,7 +65,14 @@ def _worth_a_smith(roots: paths.Roots, brief_text: str, runner: proc.Runner) -> 
         return "no", "the brief still carries the unfilled {TASK} errand text — write the errand into the brief before dispatch"
     if len(text) <= 1:
         return "no", "the brief has no # Task section to judge — fill the errand before dispatch"
-    door = roots.root / "bin" / "herdr-run.sh"
+    # The door moved in the restructure (bin/herdr-run.sh -> bin/seat/herdr-run.sh)
+    # and this line did not follow: the engine answered "no worth-a-smith door on
+    # this machine" and dispatched on the brief alone, silently, for every errand
+    # (measured 2026-10-24). Resolve the current path first, keep the old one as a
+    # fallback so a pre-restructure checkout still answers.
+    door = roots.root / "bin" / "seat" / "herdr-run.sh"
+    if not door.is_file():
+        door = roots.root / "bin" / "herdr-run.sh"
     if door.is_file():
         result = runner([str(door), "worth-a-smith", text])
         row = _VERDICT_ROW.search(proc.out(result))
