@@ -80,7 +80,7 @@ PY
 esac
 
 if [ -s "$FMQ" ]; then
-  printf 'FM wake queue: %s pending (fm-queued wakes below)\n' "$(wc -l <"$FMQ" | tr -d '[:space:]')"
+  printf 'FM wake queue: %s pending (fm-queued wakes below)\n' "$(awk 'END{print NR}' "$FMQ")"
   while IFS= read -r line; do
     [ -n "$line" ] && printf 'WAKE %s\n' "$line"
   done <"$FMQ"
@@ -90,7 +90,11 @@ fi
 if [ ! -s "$QUEUE" ]; then
   printf 'wake queue: 0 pending\n'
 else
-  count=$(wc -l <"$QUEUE" | tr -d '[:space:]')
+  # Count LINES, not newlines: the door is judged non-empty by `[ -s ]`, so a queue
+  # holding one unterminated line must present that line too. `wc -l` said 0 for
+  # exactly that file, while the extension read the same door as non-empty and
+  # re-presented one week-old wake at every turn boundary (2026-10-24).
+  count=$(awk 'END{print NR}' "$QUEUE")
   printf 'wake queue: %s pending\n' "${count:-0}"
   while IFS= read -r line; do
     [ -n "$line" ] && printf 'WAKE %s\n' "$line"

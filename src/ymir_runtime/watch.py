@@ -31,6 +31,7 @@ The state, all under the resolved state dir (Rule 04: the home, never the tree):
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import signal
 import sys
@@ -54,7 +55,18 @@ IDLE = "idle"
 STALE = "stale"
 DOWN = "down"
 
-WATCH_DOOR = ("bin", "syn-watch.sh")
+WATCH_DOOR = ("bin", "pi", "syn-watch.sh")
+
+# ── the cadence law ─────────────────────────────────────────────────────────
+# A condition that has not changed is not news. The queue signal carries its own
+# brake (one line per DISTINCT queue content); every other line is braked here:
+# the same line may not repeat inside the floor, and no more than the ceiling may
+# be raised in one hour — above it the arm reports its own rate once and falls
+# silent. A poll loop that speaks every cycle is a heartbeat pretending to be an
+# alarm (2026-10-24: twenty copies of one falsehood over a healthy arm).
+RAISE_FLOOR_SECONDS = 900
+RAISE_HOURLY_CEILING = 3
+BRAKED_PREFIXES = ("stale:", "check:")
 
 
 def _positive_int(value: str | None, default: int) -> int:
@@ -107,6 +119,10 @@ class ArmPaths:
     @property
     def wake_hash(self) -> Path:
         return self.state / ".wake-last-hash"
+
+    @property
+    def raise_state(self) -> Path:
+        return self.state / ".arm.raise"
 
     @property
     def stop_marker(self) -> Path:
@@ -356,6 +372,59 @@ def raise_line(paths: ArmPaths) -> str:
     return ""
 
 
+def read_raise_state(paths: ArmPaths) -> dict:
+    """The cadence record: what was raised, when, and how many this hour."""
+    try:
+        data = json.loads(paths.raise_state.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    return data if isinstance(data, dict) else {}
+
+
+def write_raise_state(paths: ArmPaths, state: Mapping) -> None:
+    try:
+        temporary = paths.raise_state.with_name(f"{paths.raise_state.name}.tmp.{os.getpid()}")
+        temporary.write_text(json.dumps(dict(state), sort_keys=True), encoding="utf-8")
+        temporary.replace(paths.raise_state)
+    except OSError:
+        pass
+
+
+def brake_line(paths: ArmPaths, line: str, *, now: float | None = None) -> str:
+    """The cadence law: the line to raise, or "" when the house is owed silence.
+
+    The queue signal is never braked here — its content hash already makes it one
+    line per DISTINCT content, and two different queues may share the same words.
+    """
+    if not line.startswith(BRAKED_PREFIXES):
+        return line
+    moment = time.time() if now is None else now
+    hour = int(moment // 3600)
+    state = read_raise_state(paths)
+    count = state.get("count", 0)
+    count = int(count) if str(count).isdigit() else 0
+    if state.get("hour") != hour:
+        count = 0
+    signature = hashlib.md5(line.encode("utf-8")).hexdigest()  # noqa: S324 - a dedup key, not a security control
+    try:
+        last_at = float(state.get("at", 0))
+    except (TypeError, ValueError):
+        last_at = 0.0
+    if signature == state.get("signature") and moment - last_at < RAISE_FLOOR_SECONDS:
+        return ""
+    if count >= RAISE_HOURLY_CEILING:
+        rate_line = f"check: the arm has raised {count} lines in the last hour"
+        rate_signature = hashlib.md5(rate_line.encode("utf-8")).hexdigest()  # noqa: S324
+        if state.get("rate_signature") == rate_signature and state.get("rate_hour") == hour:
+            return ""
+        write_raise_state(
+            paths, {**state, "hour": hour, "count": count, "rate_signature": rate_signature, "rate_hour": hour}
+        )
+        return rate_line
+    write_raise_state(paths, {"hour": hour, "count": count + 1, "signature": signature, "at": moment})
+    return line
+
+
 def publish(paths: ArmPaths, line: str) -> None:
     """Fill the delivery slot (an undelivered line is never overwritten) and journal it."""
     if paths.event.exists() and paths.event.stat().st_size > 0:
@@ -409,6 +478,9 @@ def cycle(
     )
     sweep_handoff(paths, env=env, runner=runner)
     line = raise_line(paths)
+    if not line:
+        return ""
+    line = brake_line(paths, line, now=now)
     if not line:
         return ""
     if emit:

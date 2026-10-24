@@ -297,8 +297,16 @@ class StartStopTest(ArmTestCase):
         self.assertEqual(code, 0)
         self.assertEqual(len(spawned), 1)
         self.assertTrue(spawned[0][0].endswith("bash"))
-        self.assertEqual(Path(spawned[0][1]).name, "syn-watch.sh")
+        self.assertTrue(
+            Path(spawned[0][1]).as_posix().endswith("bin/pi/syn-watch.sh"),
+            f"the engine must spawn the door that actually exists; it spawned {spawned[0][1]}",
+        )
         self.assertEqual(spawned[0][2], "run")
+
+    def test_the_door_the_engine_spawns_really_exists(self) -> None:
+        root = Path(__file__).resolve().parents[3]
+        door = root.joinpath(*watch.WATCH_DOOR)
+        self.assertTrue(door.is_file(), f"the arm door the engine spawns does not exist: {door}")
 
     def test_stop_signals_the_lease_holder_and_proves_it_let_go(self) -> None:
         child = subprocess.Popen(["sleep", "30"])  # noqa: S603,S607 - a real holder, so the proof is real
@@ -339,6 +347,32 @@ class ProcTest(unittest.TestCase):
 
     def test_a_non_numeric_pid_is_not_alive(self) -> None:
         self.assertFalse(proc.pid_alive("none"))
+
+
+class CadenceTest(ArmTestCase):
+    """The cadence law: one line per transition, a floor, and a ceiling."""
+
+    def test_the_same_line_is_not_repeated_inside_the_floor(self) -> None:
+        line = "stale: arm service is down"
+        self.assertEqual(watch.brake_line(self.paths, line, now=1000.0), line)
+        self.assertEqual(watch.brake_line(self.paths, line, now=1000.0 + 60), "")
+        self.assertEqual(
+            watch.brake_line(self.paths, line, now=1000.0 + watch.RAISE_FLOOR_SECONDS + 1), line
+        )
+
+    def test_a_different_line_passes_immediately(self) -> None:
+        self.assertEqual(watch.brake_line(self.paths, "stale: a", now=1000.0), "stale: a")
+        self.assertEqual(watch.brake_line(self.paths, "stale: b", now=1000.1), "stale: b")
+
+    def test_the_queue_signal_is_never_braked_here(self) -> None:
+        self.assertEqual(watch.brake_line(self.paths, "signal: wake queue", now=1000.0), "signal: wake queue")
+        self.assertEqual(watch.brake_line(self.paths, "signal: wake queue", now=1000.1), "signal: wake queue")
+
+    def test_the_hourly_ceiling_reports_its_own_rate_once(self) -> None:
+        raised = [watch.brake_line(self.paths, f"stale: fault {n}", now=1000.0 + n) for n in range(4)]
+        self.assertEqual(raised[:3], ["stale: fault 0", "stale: fault 1", "stale: fault 2"])
+        self.assertEqual(raised[3], "check: the arm has raised 3 lines in the last hour")
+        self.assertEqual(watch.brake_line(self.paths, "stale: fault 9", now=1000.0 + 10), "")
 
 
 if __name__ == "__main__":  # pragma: no cover
