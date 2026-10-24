@@ -4,10 +4,19 @@
   gna_desk.py                 # 127.0.0.1:8490, token in hodd/state/gna-desk.token
   gna_desk.py --port 8490 --print-token
 
+  gna_desk.py --honesty          the honesty line on stdout, TOON (no server)
+
   GET /health                        no token, counts only, never a subject
   GET /accounts                      the declared scope
-  GET /queue?account=A&hours=48      the four columns
+  GET /addresses                     the honesty line: deliverable · forwarded · unreadable
+  GET /queue?account=A&hours=48      the four columns, with the honesty line beside them
   GET /message?account=A&id=ID       one message, inside that account
+
+THE HONESTY LINE (plan 116 §15.3.3). An empty queue is ambiguous: it can mean "nothing
+needs you" or "nothing could arrive, and nobody could have read it if it had". Every
+queue answer therefore carries, per declared address, `deliverable · forwarded ·
+unreadable` and an `inbox_state` for the account — the desk can never render an empty
+inbox where nothing was able to land.
 
 There is no draft route and no approve route in this file. The desk at P0 reads;
 the hand that sends is the Allfather's, through the gate that already exists.
@@ -27,6 +36,7 @@ from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import gna_addresses
 import gna_store
 
 
@@ -84,13 +94,47 @@ def queue(account: str, hours: int) -> dict:
     for record in rows:
         if column_of(record) in ("needs_you", "unsure"):
             oldest = record.get("received_at") or oldest
+    document = honesty()
+    inbox = inbox_state(account, document)
     return {
         "account": account,
         "window_hours": hours,
         "columns": columns,
         "counts": {k: len(v) for k, v in columns.items()},
         "oldest_waiting": oldest,
+        "inbox_state": inbox["inbox_state"],
+        "notice": inbox["notice"],
+        "addresses": inbox["addresses"],
+        "address_counts": document["counts"],
     }
+
+
+def honesty() -> dict:
+    """Per address: deliverable · forwarded · unreadable. Measured, or declared honestly."""
+    return gna_addresses.honesty()
+
+
+def account_addresses(account: str, document: dict) -> list[dict]:
+    """The declared addresses whose mail lands IN this account."""
+    return [row for row in document["addresses"] if (row.get("forwarded") or "").lower() == account]
+
+
+def inbox_state(account: str, document: dict) -> dict:
+    """Can anything arrive here at all? The answer the desk must show beside an empty queue."""
+    rows = account_addresses(account, document)
+    states = [row["deliverable"] for row in rows]
+    if any(state == "deliverable" for state in states):
+        state, notice = "arrivable", "proven: a test message reached this account"
+    elif any(state == "declared" for state in states):
+        state, notice = "declared-only", ("no arrival is proven yet — the address has MX and a route, "
+                                          "but no test message has landed (bin/mail/inbound-test.sh proves it)")
+    elif not rows:
+        state, notice = "cannot-arrive", ("no declared address forwards into this account, so an empty queue "
+                                          "here means nothing was ever addressed to it")
+    else:
+        state, notice = "cannot-arrive", "nothing could arrive: " + "; ".join(
+            f"{row['address']} — {row['reason']}" for row in rows)
+    return {"account": account, "inbox_state": state, "notice": notice, "addresses": rows}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -128,6 +172,7 @@ class Handler(BaseHTTPRequestHandler):
                 "versions": stats.get("versions", 0),
                 "last_ingest": stats.get("last_ingest", ""),
                 "last_run": last_run,
+                "addresses": honesty()["counts"],
             })
 
         if not self._authed():
@@ -137,6 +182,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == "/accounts":
                 return self._json({"accounts": sorted(gna_store.declared_accounts())})
+            if path == "/addresses":
+                document = honesty()
+                document["inbox"] = {name: inbox_state(name, document)
+                                     for name in sorted(gna_store.declared_accounts())}
+                return self._json(document)
             if path == "/queue":
                 hours = int((query.get("hours") or ["48"])[0])
                 return self._json(queue(gna_store.require_account(account), hours))
@@ -149,7 +199,8 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError as exc:
             return self._json({"error": f"bad parameter: {exc}"}, HTTPStatus.BAD_REQUEST)
 
-        return self._json({"error": "not found", "routes": ["/health", "/accounts", "/queue", "/message"]},
+        return self._json({"error": "not found",
+                           "routes": ["/health", "/accounts", "/addresses", "/queue", "/message"]},
                           HTTPStatus.NOT_FOUND)
 
     def do_POST(self) -> None:  # noqa: N802
@@ -165,7 +216,23 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=int(os.environ.get("GNA_DESK_PORT", "8490")))
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--print-token", action="store_true")
+    ap.add_argument("--honesty", action="store_true",
+                    help="print the honesty line (deliverable · forwarded · unreadable) and exit")
     args = ap.parse_args()
+    if args.honesty:
+        document = honesty()
+        print(gna_addresses.toon_honesty(document))
+        accounts = sorted(gna_store.declared_accounts())
+        if not accounts:
+            print("inbox[0]{account}:\n")
+            print("the desk serves no declared account — it can read no mailbox at all")
+            return 0
+        print(f"inbox[{len(accounts)}]{{account,inbox_state,notice}}:")
+        for name in accounts:
+            state = inbox_state(name, document)
+            print(f'  "{name}","{state["inbox_state"]}",'
+                  f'"{state["notice"].replace(chr(34), chr(39))}"')
+        return 0
     if args.host not in ("127.0.0.1", "localhost", "::1"):
         raise SystemExit("gna-desk: loopback only — the desk is never bound to a public address")
 

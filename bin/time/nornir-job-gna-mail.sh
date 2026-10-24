@@ -50,6 +50,27 @@ for row in rows:
 PY
 }
 
+addresses() {
+  # The register of addresses the house uses (plan 116 §15.3.1). A desk that reads an
+  # inbox nobody can mail is an empty page with a confident face: this line says so
+  # every round, and NEVER fails the import — an undeliverable inbound address is a
+  # DNS/console fault, not a reason to stop reading the mail that does arrive.
+  local out rc
+  [ -x "$ROOT/bin/mail/addresses.sh" ] || return 0
+  out="$("$ROOT/bin/mail/addresses.sh" --check 2>&1)"; rc=$?
+  case "$rc" in
+    0) return 0 ;;
+    1) say "WARN an address the house uses cannot receive (addresses.sh --check rc=1):"
+       printf '%s\n' "$out" | sed -n 's/^  undeliverable  /       undeliverable  /p; s/^  unmeasured     /       unmeasured     /p' ;;
+    3) say "WARN no address is PROVEN deliverable yet (addresses.sh --check rc=3 — declared, never assumed):"
+       printf '%s\n' "$out" | sed -n 's/^  unproven       /       unproven       /p' ;;
+    *) say "WARN the address register could not be read (addresses.sh --check rc=$rc)"
+       printf '%s\n' "$out" | tail -2 ;;
+  esac
+  printf '%s gna-mail WARN addresses rc=%s\n' "$(date -Is)" "$rc" >> "${STATE:-/tmp}/gna-mail.log" 2>/dev/null || true
+  return 0
+}
+
 health() {
   local token out
   token="$(cat "$TOKEN_FILE" 2>/dev/null || true)"
@@ -63,6 +84,7 @@ health() {
 }
 
 if [ "$MODE" = "--check" ]; then
+  addresses
   health; exit $?
 fi
 
@@ -109,5 +131,6 @@ if [ -x "$RUNES" ]; then
   "$RUNES" gna gna-mail-import --message "mail desk import: rc=$rc_total · accounts=$(printf '%s' "$ACCOUNTS" | wc -l)" >/dev/null 2>&1 || true
 fi
 
+addresses
 health || rc_total=2
 exit $rc_total
