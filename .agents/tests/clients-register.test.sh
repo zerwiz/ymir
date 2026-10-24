@@ -130,5 +130,27 @@ grep -qE "cat *>.*identity/projects\.yaml" "$INSTALL" \
 grep -q 'cp "$ROOT/registry/projects.yaml.example"' "$INSTALL" \
   && ok "…the installer copies the template instead" || bad "…the installer copies the template instead"
 
+# ── 8. the install's seeding door — one copy, an existing register untouched ──
+SEEDR="$T/seed"; mkdir -p "$SEEDR/home"
+out="$(YMIR_HOME="$SEEDR/home" bash "$ROOT/bin/identity/registers-seed.sh" 2>&1)"
+if [ -f "$SEEDR/home/hodd/identity/clients.yaml" ] && [ -f "$SEEDR/home/hodd/identity/companies.yaml" ]; then
+  ok "registers-seed.sh seeds both registers from the templates"
+else
+  bad "registers-seed.sh seeds both registers from the templates" "$out"
+fi
+printf 'version: 1\nclients:\n  - id: mine\n    name: Mine\n    state: active\n    served_by: wayof\n' \
+  > "$SEEDR/home/hodd/identity/clients.yaml"
+out="$(YMIR_HOME="$SEEDR/home" bash "$ROOT/bin/identity/registers-seed.sh" 2>&1)"
+printf '%s' "$out" | grep -q 'nothing touched' \
+  && ok "a second seed says nothing to do" || bad "a second seed says nothing to do" "$out"
+grep -q 'id: mine' "$SEEDR/home/hodd/identity/clients.yaml" \
+  && ok "…and it never overwrites a register the operator wrote" \
+  || bad "…and it never overwrites a register the operator wrote"
+rm -f "$SEEDR/home/hodd/identity/clients.yaml"
+YMIR_HOME="$SEEDR/home" bash "$ROOT/bin/identity/registers-seed.sh" --check >/dev/null 2>&1
+[ -f "$SEEDR/home/hodd/identity/clients.yaml" ] \
+  && bad "--check writes nothing" "it created the register" \
+  || ok "--check reports and writes nothing"
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

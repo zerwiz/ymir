@@ -312,15 +312,12 @@ YAML
 # RED naming the file and the fix — absent is not a shrug (plan 128 §4 phase 3).
 step_clients() {
   local id="$HOARD/identity"
-  local made=0 f seeded="" out why
+  local made=0 seeded="" out why
   if [ "$CHECK" = 0 ]; then
-    mkdir -p "$id"
-    for f in clients companies; do
-      if [ ! -f "$id/$f.yaml" ] && [ -f "$ROOT/registry/$f.yaml.example" ]; then
-        cp "$ROOT/registry/$f.yaml.example" "$id/$f.yaml"
-        made=$((made+1))
-      fi
-    done
+    # One owner for the copy — bin/identity/registers-seed.sh — and one template per fact
+    # on the registry shelf. An existing register is never touched.
+    out="$(YMIR_HOME="$YMIR_HOME" bash "$ROOT/bin/identity/registers-seed.sh" 2>&1)" || true
+    made="$(printf '%s' "$out" | grep -c 'seeded ' || true)"
     [ "$made" -gt 0 ] && seeded=" · seeded $made register file(s) from registry/"
   fi
 
