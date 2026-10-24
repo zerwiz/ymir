@@ -12,11 +12,11 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
 bin[615]{file,does,kind,verdict,disposition,callers,lines}:
-  "IDEWorkspaceChecks.plist","<?xml version='1.0' encoding='UTF-8'?>","data","orphan","retire",0,9
+  "IDEWorkspaceChecks.plist","<?xml version='1.0' encoding='UTF-8'?>","data","wired","keep",0,9
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",22,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",22,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",22,-
-  "WhisperCppDemo.xcscheme","<?xml version='1.0' encoding='UTF-8'?>","data","orphan","retire",0,101
+  "WhisperCppDemo.xcscheme","<?xml version='1.0' encoding='UTF-8'?>","data","wired","keep",0,101
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",5,168
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",2,104
   "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","wired","keep",1,9
@@ -454,8 +454,8 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "registry-lib.sh","registry-lib.sh — the ONE reader for the master project registry's row keys.","lib","tested","migrate → src/ymir_runtime/dispatch/registry.py",13,82
   "repo-scrub.sh","repo-scrub.sh — purge private paths from ALL git history before going public.","tool","wired","keep",0,77
   "report.sh","report.sh — what Skírnir was asked, what he could not answer, and who is still waiting.","tool","tested","keep",9,99
-  "requirements.txt","This is the minimal set of dependencies we need to compute","data","orphan","retire",0,7
-  "requirements.txt","This is the minimal set of dependencies we need to compute","data","orphan","retire",0,7
+  "requirements.txt","This is the minimal set of dependencies we need to compute","data","wired","keep",0,7
+  "requirements.txt","This is the minimal set of dependencies we need to compute","data","wired","keep",0,7
   "research-round.sh","research-round.sh — one reusable research errand: seat a skald or a sage, give","tool","wired","keep",0,144
   "research-smoke.sh","research-smoke.sh — Skírnir's research door, proved end to end in one run.","tool","wired","keep",0,155
   "research.py","'''research.py — Skírnir's window on the open web: the SAME provider Pi's web tool uses.","data","wired","keep",4,256
@@ -628,6 +628,6 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=382, tested=229, orphan=4
+**Tally.** verdict: wired=386, tested=229
 
-**Tally.** disposition: keep=597, retire=4, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=601, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
