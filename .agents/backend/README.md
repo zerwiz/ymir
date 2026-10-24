@@ -182,7 +182,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "herdr-eventwait.py","'''Raw AF_UNIX subscriber for herdr's native pane.agent_status_changed stream.","tool","tested","keep",0,158
   "herdr-workspace-move.py","'''Send one narrowly scoped workspace.move request to a Herdr control socket.","tool","tested","keep",0,115
   "herdr.sh","bin/backends/herdr.sh - the herdr session-provider adapter (EXPERIMENTAL).","data","tested","keep",10,3387
-  "model-bridge.py","'''model-bridge.py — expose a model provider to pi via an OpenAI-compatible","data","wired","keep",1,361
+  "model-bridge.py","'''model-bridge.py — expose a model provider to pi via an OpenAI-compatible","data","wired","keep",1,409
   "opencode-go-bridge.py","'''opencode-go-bridge.py — backward-compatible entry point.","tool","wired","keep",0,31
   "orca.sh","bin/backends/orca.sh - the Orca terminal session-provider adapter.","data","tested","keep",2,291
   "tmux.sh","bin/backends/tmux.sh - the tmux session-provider adapter.","data","tested","keep",4,358

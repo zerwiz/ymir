@@ -75,7 +75,7 @@ arm_silence() {
   name="${1-}"
   case "$window" in ''|*[!0-9]*) echo "error: --window must be a number of seconds" >&2; exit 2 ;; esac
   "$WHEN" arm "${name}-silent" --interval "$interval" --stable "$stable" \
-    --condition bash "$SCRIPT_DIR/eindri-heartbeat.sh" "$name" --window "$window" \
+    --condition bash "$SCRIPT_DIR/eindri-heartbeat.sh" check "$name" --window "$window" \
     --action bash "$SCRIPT_DIR/eindri-acclaim-silent.sh" "$name"
   printf 'eindri-watch[1]{agent,source,window}:
   "%s","when-%s-silent","%s"\n' "$name" "$name" "$window"

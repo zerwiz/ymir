@@ -1,18 +1,15 @@
-# Master project registry — the SHAPE only. The real registry lives in the Hoard:
-#   hodd/identity/projects.yaml   (private; see RULES/04-hoard.md)
-# Every project carries its GitHub block; auth is a REFERENCE, never a value.
-#
-# A row names its REALM. Plan 62 renamed the key `workspace:` -> `realm:` — it was
-# never a workspace, and every id in workspaces.yaml.example IS a realm. Shape:
-#
+# Master project registry. Every project carries its GitHub block here; the
+# runtime reads it — never guesses a remote. auth is a REFERENCE, never a value.
+# Register your own projects, e.g.:
 #   - id: my-project
 #     name: My Project
-#     realm: work
+#     realm: personal        # the realm — it was `workspace:` before plan 62
 #     domains: [development]
 #     repo: projects/my-project
 #     posture: local-only
 #     git: { host: github.com, owner: <you>, repo: my-project, remote: origin, default_branch: main, auth: gh }
 #
-# DEPRECATED: `workspace:` still resolves wherever `realm:` does — bin/skuld/registry-lib.sh
-# reads both and names the old key out loud — but the row should be renamed.
+# Optional: `client: <client-id>` names a client from clients.yaml that this
+# project serves (plan 128).
+
 projects: []

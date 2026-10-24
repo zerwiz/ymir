@@ -287,19 +287,7 @@ YAML
     created=$((created+1))
   fi
   if [ ! -f "$HOARD/identity/projects.yaml" ]; then
-    cat >"$HOARD/identity/projects.yaml" <<'YAML'
-# Master project registry. Every project carries its GitHub block here; the
-# runtime reads it — never guesses a remote. auth is a REFERENCE, never a value.
-# Register your own projects, e.g.:
-#   - id: my-project
-#     name: My Project
-#     realm: personal        # the realm — it was `workspace:` before plan 62
-#     domains: [development]
-#     repo: projects/my-project
-#     posture: local-only
-#     git: { host: github.com, owner: <you>, repo: my-project, remote: origin, default_branch: main, auth: gh }
-projects: []
-YAML
+    cp "$ROOT/registry/projects.yaml.example" "$HOARD/identity/projects.yaml"
     created=$((created+1))
   fi
   add tree OK "workspace/{personal} · companies · registries · hoard (outside the repo) (created $created)"
