@@ -463,7 +463,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "runtime-guard.sh","runtime-guard.sh — THE TREE IS NOT A RUNTIME.","data","wired","keep",0,125
   "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",3,261
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",0,91
-  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",5,110
+  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",5,114
   "seat-identity.sh","seat-identity.sh — print a seat's primary agent and its role file.","tool","wired","keep",3,176
   "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/seat.py",8,100
   "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",3,71
