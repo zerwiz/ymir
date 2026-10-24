@@ -11,12 +11,10 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[615]{file,does,kind,verdict,disposition,callers,lines}:
-  "IDEWorkspaceChecks.plist","<?xml version='1.0' encoding='UTF-8'?>","data","wired","keep",0,9
+bin[610]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",22,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",22,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",22,-
-  "WhisperCppDemo.xcscheme","<?xml version='1.0' encoding='UTF-8'?>","data","wired","keep",0,101
   "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",5,168
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",2,104
   "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","wired","keep",1,9
@@ -45,7 +43,7 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "bootstrap-macos.sh","bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs.","tool","wired","keep",0,116
   "bootstrap-windows.ps1","bootstrap-windows.ps1 — give a Windows operator the Ubuntu host Ymir needs.","data","wired","keep",0,113
   "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,232
-  "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",1,82
+  "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",1,78
   "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",50,74
   "brokk-classify-lib.sh","Shared wake classifier: the common source of truth for Allfather-relevant status","lib","wired","keep",1,1771
@@ -65,7 +63,7 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
   "canaries.txt","canaries.txt — strings that must NEVER appear in anything Skírnir says.","data","wired","keep",1,19
   "capabilities.md","What Ymir can do — the capability register","data","wired","keep",2,28
-  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",5,234
+  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",5,241
   "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",2,77
   "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",2,76
   "clients.sh","clients.sh — the clients register: load, validate, and check.","tool","wired","keep",0,193
@@ -110,7 +108,7 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",3,48
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",5,131
   "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","wired","keep",10,995
-  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",6,456
+  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",6,484
   "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",7,212
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","wired","keep",4,374
   "escalate.py","'''escalate.py — the severity ladder (plan 98 §'the severity ladder').","tool","tested","keep",1,210
@@ -120,7 +118,7 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "extension-api-check.sh","extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool API.","tool","wired","keep",1,113
   "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",0,88
   "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",0,58
-  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",3,186
+  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",4,186
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",1,162
   "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",1,83
   "fleet-deploy.sh","fleet-deploy.sh — refresh the machine's fleet services from THIS package.","tool","wired","keep",0,98
@@ -331,7 +329,7 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "host-sense.sh","host-sense.sh — learn THIS machine: distro, kernel, session, desktop, and what","tool","wired","keep",5,200
   "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",1,154
   "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",1,326
-  "housekeeping.sh","housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has","tool","tested","keep",2,357
+  "housekeeping.sh","housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has","tool","tested","keep",2,365
   "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",0,128
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
   "inbox-watch.sh","inbox-watch.sh — notice when someone answers, without a human opening a mail client.","tool","wired","keep",0,114
@@ -413,7 +411,6 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "omarchy-sense.sh","omarchy-sense.sh — learn the Allfather's Omarchy machine.","tool","wired","keep",3,204
   "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",0,85
   "opendesign.sh","opendesign.sh — start / stop / status for OpenDesign (the design forge, Hnoss).","tool","wired","keep",0,88
-  "package.json","'name': 'whisper.cpp',","data","tested","keep",18,27
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
   "participants-fill.sh","participants-fill.sh — fill participant emails from the meeting's calendar event.","tool","wired","keep",0,43
   "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",0,99
@@ -454,8 +451,6 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "registry-lib.sh","registry-lib.sh — the ONE reader for the master project registry's row keys.","lib","tested","migrate → src/ymir_runtime/dispatch/registry.py",13,82
   "repo-scrub.sh","repo-scrub.sh — purge private paths from ALL git history before going public.","tool","wired","keep",0,77
   "report.sh","report.sh — what Skírnir was asked, what he could not answer, and who is still waiting.","tool","tested","keep",9,99
-  "requirements.txt","This is the minimal set of dependencies we need to compute","data","wired","keep",0,7
-  "requirements.txt","This is the minimal set of dependencies we need to compute","data","wired","keep",0,7
   "research-round.sh","research-round.sh — one reusable research errand: seat a skald or a sage, give","tool","wired","keep",0,144
   "research-smoke.sh","research-smoke.sh — Skírnir's research door, proved end to end in one run.","tool","wired","keep",0,155
   "research.py","'''research.py — Skírnir's window on the open web: the SAME provider Pi's web tool uses.","data","wired","keep",4,256
@@ -628,6 +623,6 @@ bin[615]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=385, tested=230
+**Tally.** verdict: wired=381, tested=229
 
-**Tally.** disposition: keep=601, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=596, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
