@@ -68,7 +68,7 @@ function resolveHome(): string {
 // readonly-variable shell prelude so an accidental override fails loudly
 // inside the branch's own shell. bin/agents/brokk-lease-lib.sh documents the grade and
 // its deliberate limits.
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

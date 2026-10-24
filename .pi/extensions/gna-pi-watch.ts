@@ -486,19 +486,26 @@ export default function (pi: ExtensionAPI) {
     !roTranscriptClassIsVisible(itemClass);
 
   let lastWatcherWake = "";
+  let lastWatcherWakeAt = 0;
+  let lastWatcherWakeDoors = "";
+  const WAKE_REPEAT_FLOOR_MS = 10 * 60 * 1000;
 
-  function queueHasFreshContent(): boolean {
-    // A wake is fresh only while one of the durable doors still carries a line;
-    // with both empty, a repeated identical wake is an echo of one already
-    // drained (the loud-stretch flood came from exactly this re-presentation).
+  function durableDoors(): string {
+    // The doors' CONTENT, not merely their emptiness. A door that had carried the
+    // same line since October made every repeated wake look fresh, so one
+    // falsehood was re-delivered at every turn boundary (2026-10-24). Freshness is
+    // a CHANGE in the doors, or the passing of the floor — never "a door is
+    // non-empty".
+    let fingerprint = "";
     for (const p of [`${state}/.wake-queue`, `${fmHome}/.agents/state/.wake-queue`]) {
       try {
-        if (readFileSync(p, "utf8").trim().length > 0) return true;
+        fingerprint += readFileSync(p, "utf8");
       } catch {
         // absent queue reads as empty
       }
+      fingerprint += "\u0000";
     }
-    return false;
+    return fingerprint;
   }
 
   async function sendWake(
@@ -506,11 +513,19 @@ export default function (pi: ExtensionAPI) {
     message: string,
   ): Promise<void> {
     if (!generationIsLive(owner)) return;
-    // Deliver an identical wake at most once per drained state: a repeat with
-    // no fresh queue content is the same news the primary already handled, and
-    // re-sending it floods the follow-up queue one-per-prompt.
-    if (message === lastWatcherWake && !queueHasFreshContent()) return;
+    // Deliver an identical wake only when the durable doors have CHANGED since the
+    // last one, or the floor has passed: a repeat with unchanged doors is the same
+    // news the primary already handled, and re-sending it floods the follow-up
+    // queue one-per-prompt.
+    const doors = durableDoors();
+    const repeated =
+      message === lastWatcherWake &&
+      doors === lastWatcherWakeDoors &&
+      Date.now() - lastWatcherWakeAt < WAKE_REPEAT_FLOOR_MS;
+    if (repeated) return;
     lastWatcherWake = message;
+    lastWatcherWakeAt = Date.now();
+    lastWatcherWakeDoors = doors;
     const content = encodeRoddOperationalInput(
       "watcher",
       `BROKK WATCHER WAKE: ${message}\n\nRun bin/time/saga-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.`,
