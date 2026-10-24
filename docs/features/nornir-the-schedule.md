@@ -48,3 +48,21 @@ in the repo** — a `cron-guard` ward refuses one that does not (Rule 16's door 
 | `--status` says no scheduler | `bin/time/nornir-cron-start.sh`. |
 | A job never fires | Check its time/role in `config/cron.yaml`; confirm the seat holds that role. |
 | `cron-guard` refuses a push | A job names a script that does not ship — move it into the repo. |
+
+## Appended 2026-10-24 — a row that cannot run is not a row
+
+The four Gná mail rows ran on 2026-10-23 and then, without a single failing check, stopped
+executing: the script they name was committed `644`, and the runner takes a bare `bin/…` to
+`exec`, so every round since answered `rc=126 Permission denied`. `cron-guard` passed the whole
+time — it asked whether the script **ships**, which it does.
+
+`cron-guard` now asks both questions: a `bin/…` named by a schedule must exist **and** be
+executable, in the operator's cron, the repo's, and the shipped example. The example was itself
+naming a `644` script (`bin/time/nornir-job-doctor.sh`), so a fresh install's daily doctor would
+never have run either. Both are executable now; a schedule that names a `644` script fails the
+ward with the `chmod` in the message.
+
+| What you see | What to do |
+|---|---|
+| `a cron job names a script it cannot execute (no execute bit)` | `chmod +x <script> && git update-index --chmod=+x <script>` |
+| A cron row that fires and does nothing | `grep rc= state/cron.log` — `rc=126` is this fault, `rc=127` is a path that does not exist |
