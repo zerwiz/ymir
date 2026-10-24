@@ -53,3 +53,24 @@ delivery of four finished errands. It teaches exactly the wrong lesson: *the war
 cp bin/README.md /tmp/a && bin/gates/inventory.sh >/dev/null && diff /tmp/a bin/README.md   # differs
 bin/gates/inventory.sh --check                                                            # STALE, always
 ```
+
+---
+
+## Correction, same hour — it was a race, not a permanent impossibility
+
+Appended, not rewritten (Rule 06). After the tree had settled, two consecutive renders came out **byte-identical**
+and `inventory.sh --check` answered **current** for both registers. So the register *can* be satisfied; what failed
+earlier was a **race**: a render followed immediately by a check, with the tree changing in between (my own edits to
+`bin/`, an errand committing in a worktree, the assistant's snapshot cron). The verdict of one row depends on
+`called_by`, so a file appearing or leaving between the render and the check flips that row.
+
+**What stands from the finding above:** rows are keyed by **basename**, so two files sharing a name argue over one
+row — a latent determinism hazard, not yet the observed cause. Keying by path is still the right hardening.
+
+**What is corrected:** "the ward can never be satisfied" was wrong, and saying so matters — a false accusation
+against a gate teaches the same bad lesson as a gate that deserves one. The honest statement is: *the ward is
+satisfiable, and the discipline it demands is "render last, then commit, then check" in a single breath.*
+
+**The narrow lesson for the push gate:** a generated register compared against a *live* tree must render from the
+tree at the commit being pushed (`git ls-tree HEAD`), not from the working directory — otherwise every push is a
+race against whatever else is writing.
