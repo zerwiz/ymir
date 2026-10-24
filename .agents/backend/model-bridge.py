@@ -300,11 +300,17 @@ def _curl_open(req, timeout: int = 60):
             "-X", (req.get_method() or "GET")]
     for k, v in (req.header_items() or []):
         argv += ["-H", f"{k}: {v}"]
+    # THE BODY NEVER RIDES IN argv. A prompt is user content and grows without
+    # bound; argv has a hard kernel limit (E2BIG, ~128 KiB per argument on this
+    # host) that surfaces as "[Errno 7] Argument list too long: 'curl'" — a 500 on
+    # a request that was perfectly valid (measured 2026-10-24: every errand whose
+    # prompt crossed the line died here). curl reads the body from stdin instead.
     data = req.data
     if data:
-        argv += ["--data-binary", data.decode() if isinstance(data, bytes) else data]
+        argv += ["--data-binary", "@-"]
     argv.append(req.full_url)
-    out = subprocess.run(argv, capture_output=True)
+    payload = data if isinstance(data, (bytes, type(None))) else str(data).encode()
+    out = subprocess.run(argv, capture_output=True, input=payload)
     raw = out.stdout
     body, _, tail = raw.rpartition(b"\n")
     try:
@@ -316,8 +322,48 @@ def _curl_open(req, timeout: int = 60):
     return _CurlResponse(body, status or 200)
 
 
+def _self_test() -> int:
+    """Prove a body far larger than argv allows still crosses (E2BIG regression).
+
+    A 2 MiB payload is sent through `_curl_open` to a throwaway local sink. Before
+    the fix this raised OSError(7, 'Argument list too long'); a body that large is
+    an ordinary long prompt, not an edge case.
+    """
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    got = {}
+
+    class Sink(BaseHTTPRequestHandler):
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length") or 0)
+            got["len"] = len(self.rfile.read(n))
+            self.send_response(200); self.end_headers(); self.wfile.write(b"ok")
+        def log_message(self, *a):
+            pass
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), Sink)
+    threading.Thread(target=srv.handle_request, daemon=True).start()
+    port = srv.server_address[1]
+    body = b"x" * (2 * 1024 * 1024)
+    req = urllib.request.Request(f"http://127.0.0.1:{port}/", data=body, method="POST")
+    req.add_header("Content-Type", "application/json")
+    ok = True
+    try:
+        _curl_open(req, timeout=30)
+    except OSError as e:
+        ok = False
+        print(json.dumps({"bridge_self_test": "FAIL", "error": str(e)}))
+    srv.server_close()
+    if ok and got.get("len") == len(body):
+        print(json.dumps({"bridge_self_test": "PASS", "bytes": got["len"]}))
+        return 0
+    print(json.dumps({"bridge_self_test": "FAIL", "received": got.get("len")}))
+    return 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--self-test", action="store_true", help="prove a multi-megabyte body crosses (E2BIG regression)")
     ap.add_argument("--port", type=int,
                     default=int(os.environ.get("OPENCODE_GO_BRIDGE_PORT", DEFAULT_PORT)))
     ap.add_argument("--env", default=os.environ.get("ENV_FILE",
@@ -325,6 +371,8 @@ def main() -> int:
     ap.add_argument("--provider", default=None,
                     help="opencode-go | lmstudio | openai-compatible")
     args = ap.parse_args()
+    if getattr(args, "self_test", False):
+        return _self_test()
 
     global KEY, BASE_URL, PROVIDER
     env = load_env(args.env)

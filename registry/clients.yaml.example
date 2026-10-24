@@ -1,0 +1,13 @@
+# The clients — the companies the house SERVES, never the houses it IS.
+#
+# WHY THIS FILE EXISTS: a company we serve is not a house we are.
+# `companies.yaml` holds the houses we are; `clients.yaml` holds the companies
+# we serve. A client is never a house and never a member of one.
+#
+# state: lead      — we have spoken, nothing agreed
+#        prospect  — a conversation is live
+#        active    — work being delivered now
+#        paused    — live but nothing moving
+#        ended     — closed, kept for the record (never deleted: Rule 06)
+
+clients: []
