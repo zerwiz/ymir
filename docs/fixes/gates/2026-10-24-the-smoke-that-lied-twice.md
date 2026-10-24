@@ -45,3 +45,29 @@ refuse a schedule it does not own, or the spawn should pass an empty config. Kil
 smoke: 49 OK · 8 SKIP · 1 FAIL
 the one FAIL: mcp:trello — initialize failed (https://mcp.trello.com/v1) — an external door, needing its own grant
 ```
+
+---
+
+## Fixed the same night — a seat may not schedule the house
+
+The leak this note recorded is now closed at its source. `bin/time/nornir-cron-start.sh` refuses to start when
+`BROKK_STATE_OVERRIDE` is a seat state directory (`…/ymir/seats/<id>`), printing the reason and exiting **0** so a
+session start is not broken:
+
+```
+cron[1]{state,why}:
+  "refused","a seat does not schedule the house — …/seats/probe is a seat state dir; the primary owns config/cron.yaml"
+```
+
+Before this, every seat's "is the scheduler stopped" check answered yes — because its own state dir was empty — so
+six seats each started a loop over the one `config/cron.yaml`, with separate already-fired marks. Killing the loops
+was the symptom; this is the cause.
+
+**And seventeen ghosts reconciled.** Nineteen status files still said `working` for more than two hours. Each was
+checked for a live process in its worktree: two were genuinely alive (`ledger-bookkeeping`, `yggdrasil-seat`), and
+seventeen were dead. Each dead one gained an appended line rather than a rewrite — the record keeps what it said and
+adds the truth:
+
+```
+stale: no process holds its worktree; reconciled 2026-10-24 by Brokk (the silence watch could not fire until today)
+```

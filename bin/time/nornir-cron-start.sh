@@ -34,6 +34,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 export ROOT  # the job wrapper needs it after bash -c
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
+# A SEAT MUST NOT SCHEDULE THE HOUSE. Every errand seat runs a session start with
+# its OWN state dir (`…/ymir/seats/<id>`), and this door's "is it stopped" check then
+# answers yes — so six seats started six schedulers over one config/cron.yaml, each
+# keeping its own already-fired marks. A 14:20 job could run six times, each scheduler
+# believing it was first (measured 2026-10-24: `cron-leak: 6 cron loops`). Only the
+# primary's state starts the house schedule; a seat says so and exits 0.
+case "${BROKK_STATE_OVERRIDE:-}" in
+  */seats/*)
+    printf 'cron[1]{state,why}:\n  "refused","a seat does not schedule the house — %s is a seat state dir; the primary owns config/cron.yaml"\n' "$BROKK_STATE_OVERRIDE" >&2
+    exit 0 ;;
+esac
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 # The schedule is the USER'S, not the distro's: an explicit BROKK_CONFIG_OVERRIDE
 # wins, then the home's own config/cron.yaml, then the repo's example (which
