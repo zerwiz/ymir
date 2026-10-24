@@ -1359,3 +1359,41 @@ already there under other names.
 doors, capabilities, features, law, skills and research), `index`, and `research keep|list|show|find|
 index|check` (the research kind, `RULES/35`). Nothing here duplicates a door that already existed:
 `ask` reads the registers the house already keeps.
+
+## 2026-10-24 — a worktree is one extension home, and the loader can now say so
+
+Appended. The sections above state the law (one home, the project tree) and the reason
+naming the same absolute directory in user settings is safe where a copy or a symlink is
+not. This adds the case none of them named, and it is the one that killed four dispatches
+(`docs/fixes/seat/2026-10-24-a-worktree-carries-no-second-extension-home.md`).
+
+**The worktree had its own copy.** A Yggdrasil worktree checks `.pi/extensions/` out like
+any other file, so a pi seat inside it had two trees carrying the same eighteen extensions:
+the worktree's, found as `<cwd>/.pi/extensions`, and the seat's, named in settings. Two
+absolute paths for the same code is two registrations — pi refuses every extension on the
+tool-name collision and exits, leaving a shell the dispatcher types the brief into. The road
+was patched instead of the checkout twice; the checkout is where it was.
+
+```
+worktree_extension_home[4]{surface,what}
+  "bin/forge/yggdrasil.sh create","excludes .pi/extensions/ by a per-worktree sparse-checkout (`sparse-checkout set --no-cone '/*' '!/.pi/extensions/'`), verified before it reports success; the files stay tracked, the worktree stays clean, nothing existing is rewritten"
+  "git's own bookkeeping","the pattern file and core.sparseCheckout land in .git/worktrees/<id>/config.worktree, which needs extensions.worktreeConfig=true in the shared config — one additive line git sets itself"
+  "valknut-load.sh --check","asks which tree serves this session: `own` · `absent` · `shared` (a worktree of the SEATED repository — ONE home) · `shared-link` · `shared-copy` (its own copy — the fault, FAIL with the repair)"
+  "valknut-load.sh --ext-home","prints `{tree,state,seat_root,serving}` for the tree you stand in, so a human, the test and the gate ask one door"
+```
+
+"Same repository" is asked of git — `rev-parse --git-common-dir` on both trees,
+canonicalised — never inferred from a path. A tree of a **different** repository is its own
+home and must pass on its own terms. The telemetry the resolver reads (`.ymir-root`, the
+settings `extensions[]`) is unchanged; only the interpretation of a worktree is new.
+
+Two limits, stated because a later reader will meet them:
+
+- **`~/.pi/agent/settings.json` on this seat names no extension tree** (it carries
+  `["-builtin:mcp"]`, rewritten 11:26 on 2026-10-24), so `--check` reports that one row as a
+  FAIL in the seat root too, measured with `main`'s unmodified loader. Minting it is
+  `valknut-load.sh --pi`. It is also why the double-load fault is latent rather than gone.
+- **The root walk keys on `.pi` and `RULES` existing**, so a tree whose `.pi/` held *only*
+  extensions would stop recognising its own worktree once sparse. The real tree keeps
+  `.pi/agents`, `.pi/shared` and `.pi/mcp-adapter.json` beside them, and the test's fixture
+  mirrors that deliberately. The walk itself is unchanged.

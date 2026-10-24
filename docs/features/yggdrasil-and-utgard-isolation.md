@@ -64,3 +64,40 @@ bin/forge/utgard.sh run <worktree> -- <command…> \
 | `neither docker nor podman is reachable` | Start the engine, or declare `Isolation: herdr` deliberately. |
 | A run times out | Raise `--timeout`, or the work does not fit the cap — split it. |
 | A worktree will not merge | It diverged; resolve on its branch (see [resolving conflicts]). Yggdrasil never forces. |
+
+## Added 2026-10-24 — a worktree carries no second extension tree
+
+A new worktree used to check out `.pi/extensions/` like any other file. A pi seat inside
+it then loaded the same extensions **twice** — the worktree's copy and the seat's — every
+tool name collided, pi exited, and the errand's brief landed in a bare shell. Four
+dispatches died that way.
+
+`bin/forge/yggdrasil.sh create` now leaves that one path out of the worktree, using git's
+own sparse-checkout. **You do not have to do anything**: a worktree made by the road from
+now on is clean, and the files are still tracked — they are simply not checked out, so the
+worktree stays clean and nothing is deleted.
+
+Ask which extension tree serves the tree you are standing in, and whether that is one home:
+
+```bash
+bin/seat/valknut-load.sh --ext-home    # {tree, state, seat_root, serving}
+bin/seat/valknut-load.sh --check       # exit 1 if a second home exists
+```
+
+`state` is `own` (this tree holds the extensions), `shared` (a worktree of the seat's own
+repository — one home, served by the seat tree), `shared-copy` (this worktree has its own
+copy — the fault) or `absent`. A worktree of a **different** repository is its own home.
+
+**An older worktree is not rewritten.** If `--check` names one, its owner repairs it with
+the single line the gate prints:
+
+```bash
+git -C <worktree> sparse-checkout set --no-cone '/*' '!/.pi/extensions/'
+```
+
+Two things to know: the exclusion relies on `extensions.worktreeConfig = true` in the
+repository's config (git sets it when the first worktree becomes sparse — do not remove
+it, or a later checkout repopulates the second tree), and a tree whose `.pi/` held *only*
+extensions would no longer recognise its own worktree once sparse. Ymir's own tree keeps
+`.pi/agents`, `.pi/shared` and `.pi/mcp-adapter.json` there, so this is a note, not a
+limitation you will meet in this repository.
