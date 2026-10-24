@@ -222,6 +222,20 @@ else
   printf 'skill-index: not installed\n'
 fi
 
+section "MODEL CATALOG"
+# Audited 2026-10-24: pi already knows every model this machine can serve, but no
+# line at boot said so, so a session rediscovered it by probing — and three other
+# places (a resolver table, a spawn heuristic, a prose provider table naming a
+# retired LM Studio door) disagreed. The catalogue is the one answer.
+cat_models="$("$ROOT/bin/model/catalog.sh" --providers 2>/dev/null | sed -n '2,20p' | tr -d '"' || true)"
+if [ -n "$cat_models" ]; then
+  printf 'the catalogue is the truth: bin/model/catalog.sh  (pi own list — never a table in a doc)\n'
+  printf '%s\n' "$cat_models"
+  printf 'a model the catalogue lists is pi to serve; bin/model/catalog.sh --has <provider/model> answers before dispatch\n'
+else
+  printf 'the catalogue cannot be read — bin/model/catalog.sh --check says why; do not dispatch on a guess\n'
+fi
+
 section "ASSET ROUTING"
 # Load the owning asset BEFORE editing a governed path. A code change not
 # reflected in its asset is an incomplete change. Router: galdr/SKILL.md.

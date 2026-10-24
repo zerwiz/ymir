@@ -653,3 +653,23 @@ Law: `RULES/06-append-only.md`.
 **This file is the public user contract.** The operator's own private contract
 lives at `$YMIR_HOME/AGENTS.md` (untracked); its shape is
 `hodd/AGENTS.example.md` (in the repo as a template).
+
+## 2026-10-24 — the catalog is the truth (correcting the provider table above)
+
+The table above was written before the fleet grew and is **stale**: it names **LM Studio on `:1234`**, which the
+Allfather retired (*"no lm studio we not using that"*), and one rail address that no longer serves what it says.
+It is kept as the record of what was believed; this section is the correction.
+
+**Ask the machine, never a document.** `bin/model/catalog.sh` is the one door to what this box can serve —
+`pi --list-models` behind a TOON face, currently 496 models across five providers (openrouter · llama-swap ·
+opencode-go · llamacpp-omarchy · llamacpp-whynot). The resolver, the spawn guard and the session digest all read
+that door; none keeps a second table.
+
+```
+model_rule[3]{rule,why}:
+  "a model the catalog lists is pi's to serve","the harness follows the catalog, not a prose rule"
+  "opencode-go models are served through pi with that provider","they are in pi's catalog: `bin/model/catalog.sh --has opencode-go/deepseek-v4.1-flash`"
+  "a model the catalog does not list is a refusal","never a guess, never a silent fallback"
+```
+
+Audit and evidence: `hodd/docs/audits/2026-10-24-the-model-knowledge-audited.md` in the hoard.

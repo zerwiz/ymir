@@ -406,21 +406,12 @@ fi
 MODEL_LOCAL=no
 WT_ROOT="$BROKK_HOME/.yggdrasil"
 
-catalog_has() {  # <provider/model> -> 0 when the pair is in the live pi catalog
-  python3 - "$1" <<'PY'
-import sys, subprocess
-want = sys.argv[1]
-prov, _, model = want.partition("/")
-try:
-    out = subprocess.check_output(["pi", "--list-models"], text=True, stderr=subprocess.DEVNULL)
-except Exception:
-    raise SystemExit(1)
-for line in out.splitlines():
-    p = line.split()
-    if len(p) >= 2 and p[0] == prov and p[1].rstrip() == model:
-        raise SystemExit(0)
-raise SystemExit(1)
-PY
+catalog_has() {  # <provider/model> -> 0 when the door says the pair is listed
+  # ONE owner for the answer (audit 2026-10-24): `pi --list-models` behind
+  # bin/model/catalog.sh. This guard used to parse the catalogue itself, so its
+  # reading could disagree with the resolver's table and with AGENTS.md's prose.
+  [ -x "$SCRIPT_DIR/../model/catalog.sh" ] || return 1
+  "$SCRIPT_DIR/../model/catalog.sh" --has "$1" >/dev/null 2>&1
 }
 
 pi_first_local_model() {  # -> the first served provider/model from the pi catalog
