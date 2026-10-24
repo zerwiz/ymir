@@ -109,16 +109,20 @@ PY
     #   projects → project ids in projects.yaml
     [ -f "$CLIENTS_FILE" ] || die "no clients register at $CLIENTS_FILE"
 
-    # Resolve the hoard paths
+    # Resolve the hoard paths. Two roots, and never one for the other: the identity
+    # registers live under <home>/hodd/identity, while a REALM lives at <home>/<realm>
+    # (`svartalfaheim/opticat`) — a client names its realm by that path, so joining a
+    # realm onto the hodd root would refuse every client on a healthy home.
     HOARD="${YMIR_HOME:-}/hodd"
+    HOME_ROOT="${YMIR_HOME:-}"
     COMPANIES_FILE="$HOARD/identity/companies.yaml"
     COLLABS_FILE="$HOARD/identity/collaborators.yaml"
     PROJECTS_FILE="$HOARD/identity/projects.yaml"
 
-    python3 - "$CLIENTS_FILE" "$COMPANIES_FILE" "$COLLABS_FILE" "$PROJECTS_FILE" "$HOARD" <<'PY'
+    python3 - "$CLIENTS_FILE" "$COMPANIES_FILE" "$COLLABS_FILE" "$PROJECTS_FILE" "$HOARD" "$HOME_ROOT" <<'PY'
 import sys, yaml, os, re
 
-clients_file, companies_file, collabs_file, projects_file, hoard = sys.argv[1:6]
+clients_file, companies_file, collabs_file, projects_file, hoard, home_root = sys.argv[1:7]
 
 clients = yaml.safe_load(open(clients_file, encoding='utf-8')) or {}
 clients = clients.get('clients', [])
@@ -163,13 +167,13 @@ for c in clients:
     # realm must exist as a directory
     realm = c.get('realm')
     if realm:
-        realm_path = os.path.join(hoard, realm)
+        realm_path = os.path.join(home_root, realm)
         if not os.path.isdir(realm_path):
             errors.append(f"  {cid}: realm={realm!r} — directory not found at {realm_path}")
     # place must exist as a place.yaml
     place = c.get('place')
     if place:
-        place_path = os.path.join(hoard, 'hodd', 'identity', 'places', place, 'place.yaml')
+        place_path = os.path.join(hoard, 'identity', 'places', place, 'place.yaml')
         if not os.path.isfile(place_path):
             errors.append(f"  {cid}: place={place!r} — no place.yaml at {place_path}")
     # projects must be known project ids
