@@ -397,7 +397,7 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
             "")                          KIND=pi ;;   # nothing resolved: stay local
             *)                           KIND=opencode ;;
           esac
-          [ -n "$md" ] && MODEL_ARGS=(-- --model "$pv/$md")
+          [ -n "$md" ] && MODEL_ARGS=(--model "$pv/$md")
           printf 'herdr-run[1]{model,harness,provider,model_id}:\n  "%s","%s","%s","%s"\n' "$MODEL_REQ" "$h" "$pv" "$md" >&2 ;;
       esac
     fi
@@ -408,7 +408,7 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
       _h="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$ROLE" harness 2>/dev/null)"
       _m="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$ROLE" model 2>/dev/null)"
       [ -n "$_h" ] && KIND="$_h"
-      [ -n "$_m" ] && MODEL_ARGS=(-- --model "$_m")
+      [ -n "$_m" ] && MODEL_ARGS=(--model "$_m")
       printf 'herdr-run[1]{agent,harness,model}:\n  "%s","%s","%s"\n' "$ROLE" "${_h:-?}" "${_m:-?}" >&2
     fi
 
@@ -419,7 +419,6 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     if [ "$KIND" = "pi" ] && [ -n "$ROLE" ]; then
       role_file="$(role_file_for "$ROLE")" || role_file=""
       if [ -n "$role_file" ]; then
-        [ ${#MODEL_ARGS[@]} -eq 0 ] && MODEL_ARGS=(--)
         MODEL_ARGS+=(--append-system-prompt "$role_file")
         printf 'herdr-run[1]{role,prompt}:\n  "%s","%s"\n' "$ROLE" "$role_file" >&2
       else
@@ -490,10 +489,48 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     [ -n "$tab" ] || { printf 'error: could not seat the Eindri\n' >&2; exit 1; }
     [ -n "$pane" ] || { printf 'error: the tab has no pane\n' >&2; exit 1; }
 
-    if ! hdr agent start "$NAME" --kind "$KIND" --pane "$pane" "${MODEL_ARGS[@]}" >/dev/null 2>&1; then
+    # ONE EXTENSION HOME PER SEAT (RULES/13). A Yggdrasil worktree carries its own
+    # `.pi/extensions`, so pi discovers THAT tree and also the user settings' tree:
+    # every tool name collides, pi refuses all extensions, and the seat drops to a
+    # bare shell that looks alive. Measured 2026-10-24: 18 collisions, three
+    # dispatches, three empty prompts. So a pi seat starts with discovery OFF and
+    # exactly ONE explicit tree — the seat's canonical one.
+    SEAT_ARGS=()
+    EXT_NOTE="default (pi discovers its own)"
+    if [ "$KIND" = "pi" ]; then
+      _ext_root="$(cat "$HOME/.pi/agent/extensions/.ymir-root" 2>/dev/null || true)"
+      if [ -n "$_ext_root" ] && [ -d "$_ext_root/.pi/extensions" ] && [ "$(pwd -P)" != "$(cd "$_ext_root" && pwd -P)" ]; then
+        SEAT_ARGS=(-ne -e "$_ext_root/.pi/extensions")
+        EXT_NOTE="explicit $_ext_root/.pi/extensions (discovery off: a worktree's copy must not collide)"
+        printf 'herdr-run[1]{extensions,root}:
+  "explicit","%s"
+' "$_ext_root/.pi/extensions" >&2
+      fi
+    fi
+    _launch=(--)
+    [ ${#SEAT_ARGS[@]} -gt 0 ] && _launch+=("${SEAT_ARGS[@]}")
+    [ ${#MODEL_ARGS[@]} -gt 0 ] && _launch+=("${MODEL_ARGS[@]}")
+    [ "${#SEAT_ARGS[@]}" -eq 0 ] && [ "${#MODEL_ARGS[@]}" -eq 0 ] && _launch=()
+    if ! hdr agent start "$NAME" --kind "$KIND" --pane "$pane" "${_launch[@]}" >/dev/null 2>&1; then
       printf 'error: could not start a %s Eindri in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$KIND" "$pane" >&2
       exit 1
     fi
+    # A STARTED PROCESS IS NOT A SEATED MIND. pi can exit within seconds (extension
+    # failure, a bad flag) and the pane falls back to a shell that accepts the task
+    # text and does nothing. So the registration is the proof, and it is required.
+    _seated=0
+    for _i in 1 2 3 4 5 6 7 8 9 10; do
+      if hdr agent get "$NAME" >/dev/null 2>&1; then _seated=1; break; fi
+      sleep 1
+    done
+    if [ "$_seated" != 1 ]; then
+      printf 'error: %s never registered as a %s agent — the process died before it could think\n' "$NAME" "$KIND" >&2
+      printf 'help: read the pane it was given; the usual cause is an extension that failed to load\n' >&2
+      hdr pane read "$pane" 2>/dev/null | tail -12 | sed 's/^/  pane: /' >&2 || true
+      exit 1
+    fi
+    printf 'herdr-run[1]{seated,kind,extensions,args}:
+  "%s","%s","%s","%s"\n' "$NAME" "$KIND" "$EXT_NOTE" "${_launch[*]:-none}" >&2
     # Inject the task — retry until it lands. `agent start` can return before the
     # harness accepts input (opencode is slower than pi), and a single swallowed
     # prompt is the "it started but nothing was injected" bug.
