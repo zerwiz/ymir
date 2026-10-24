@@ -425,7 +425,7 @@ bin[607]{file,does,kind,verdict,disposition,callers,lines}:
   "ping-room.sh","ping-room.sh — Þing on demand: raise a MiroTalk room on the computer you are on.","tool","wired","keep",0,134
   "pkill-guard.sh","pkill-guard.sh — no blanket kill in the tree, and the audit that finds one.","tool","wired","keep",0,156
   "place.sh","place.sh — team PLACES: a wall, not a permission (Rule 18; plan 77 Part 10).","tool","tested","keep",9,142
-  "plan-audit.sh","plan-audit.sh — the plan CONTRACT, as a check over the ledger shelf.","tool","wired","keep",1,733
+  "plan-audit.sh","plan-audit.sh — the plan CONTRACT, as a check over the ledger shelf.","tool","wired","keep",1,826
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",10,216
   "private-guard.py","'''private-guard — private structure and protected material never cross a surface.'''","tool","wired","keep",1,122

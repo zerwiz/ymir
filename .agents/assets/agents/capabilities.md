@@ -10,11 +10,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",596
+  "shell doors (bin/*.sh)",597
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",28
   "Pi extension tools",0
-  "generated","2026-10-23"
+  "generated","2026-10-24"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -377,6 +377,7 @@ capabilities[5]{surface,count}:
 | syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
 | vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested+named | keep (a human or a cron row must run it) |
 | nidhogg.sh | nidhogg.sh — Níðhöggr, the gnawer at the root. The hallucination fi | tested | keep (a human or a cron row must run it) |
+| plan-audit.sh | plan-audit.sh — the plan CONTRACT, as a check over the ledger shelf. | tested | keep (a human or a cron row must run it) |
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |
