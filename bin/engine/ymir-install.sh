@@ -298,17 +298,63 @@ YAML
     cp "$ROOT/registry/projects.yaml.example" "$HOARD/identity/projects.yaml"
     created=$((created+1))
   fi
-  # clients.yaml — the register of companies the house SERVES (plan 128)
-  if [ ! -f "$HOARD/identity/clients.yaml" ]; then
-    cp "$ROOT/registry/clients.yaml.example" "$HOARD/identity/clients.yaml"
-    created=$((created+1))
-  fi
-  # companies.yaml — the houses the house IS (plan 128)
-  if [ ! -f "$HOARD/identity/companies.yaml" ]; then
-    cp "$ROOT/registry/companies.yaml.example" "$HOARD/identity/companies.yaml"
-    created=$((created+1))
-  fi
   add tree OK "workspace/{personal} · companies · registries · hoard (outside the repo) (created $created)"
+}
+
+# ── 2b. the client register — a company we SERVE is never a house we ARE ──────
+# Plan 128. `companies.yaml` holds the houses the operator IS; `clients.yaml` holds the
+# companies a house SERVES. They are two facts, so they are two files, and each arrives
+# from its template in registry/ — one source each, never a heredoc in this script.
+#
+# The relation is the point: a place that declares `client_of: <house>` must resolve
+# against a register that exists. `place-validate.sh --all` is the one door that decides
+# that, so the install cannot disagree with the operator's own check. A refusal here is a
+# RED naming the file and the fix — absent is not a shrug (plan 128 §4 phase 3).
+step_clients() {
+  local id="$HOARD/identity"
+  local made=0 f seeded="" out why
+  if [ "$CHECK" = 0 ]; then
+    mkdir -p "$id"
+    for f in clients companies; do
+      if [ ! -f "$id/$f.yaml" ] && [ -f "$ROOT/registry/$f.yaml.example" ]; then
+        cp "$ROOT/registry/$f.yaml.example" "$id/$f.yaml"
+        made=$((made+1))
+      fi
+    done
+    [ "$made" -gt 0 ] && seeded=" · seeded $made register file(s) from registry/"
+  fi
+
+  # The register's SHAPE: a bad one is refused by the door that owns it, never read
+  # speculatively by this step.
+  if [ -f "$id/clients.yaml" ]; then
+    if out="$(YMIR_HOME="$YMIR_HOME" bash "$ROOT/bin/identity/clients.sh" validate 2>&1)"; then
+      :
+    else
+      add clients FAIL "hodd/identity/clients.yaml has a bad shape — $(printf '%s' "$out" | head -1) (fix: state is lead|prospect|active|paused|ended, served_by names a house)"
+      return 0
+    fi
+  fi
+
+  # The places that POINT at the register. `place-validate.sh --all` is the one door
+  # that decides a place's relation, so this step cannot disagree with the operator.
+  if [ -d "$id/places" ]; then
+    if out="$(YMIR_HOME="$YMIR_HOME" bash "$ROOT/bin/identity/place-validate.sh" --all 2>&1)"; then
+      if [ -f "$id/clients.yaml" ]; then
+        add clients OK "${out##*$'\n'}$seeded"
+      else
+        add clients WARN "no clients register at hodd/identity/clients.yaml — nothing to resolve yet$seeded (a real run seeds it from registry/clients.yaml.example)"
+      fi
+    else
+      why="$(printf '%s' "$out" | grep -m1 '^FAIL ' | sed 's/^FAIL  *//')"
+      add clients FAIL "${why:-a place was refused — run bin/identity/place-validate.sh --all to see it}"
+    fi
+    return 0
+  fi
+  if [ -f "$id/clients.yaml" ]; then
+    add clients OK "register present$seeded · no places shelf to resolve"
+  else
+    add clients SKIP "no register yet and no places — nothing to resolve$seeded"
+  fi
 }
 
 # ── 2a. the home the operator chooses ────────────────────────────────────────
@@ -1586,6 +1632,7 @@ run_step step_panes "panes"
 run_step step_prereqs "prerequisites"
 run_step step_home "home"
 run_step step_tree "workspace tree"
+run_step step_clients "the client register"
 run_step step_apps "apps"
 run_step step_engines "engines"
 run_step step_models "models"
