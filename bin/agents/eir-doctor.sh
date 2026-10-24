@@ -287,7 +287,7 @@ s_hoard() {
       # THE MAP MUST DESCRIBE *THIS* MACHINE. The previous code RETRIED a foreign path
       # under this root, which made a map naming another computer pass as 'ok' —
       # masking the very fault this surface exists to catch (measured 2026-10-13:
-      # .ymir-layout.yaml pointed at /home/heimdall/… for every path, and this
+      # .ymir-layout.yaml pointed at an absolute per-user home for every path, and this
       # surface still reported 'ok'). A foreign map is now a FAILURE.
       maproot="$(sed -nE 's/^git_repo: "([^"]+)".*/\1/p' "$lay" 2>/dev/null | head -1)"
       if [ -n "$maproot" ] && [ "$maproot" != "$YMIR_HOME" ]; then
