@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[606]{file,does,kind,verdict,disposition,callers,lines}:
+bin[607]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",22,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",22,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",22,-
@@ -29,7 +29,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",0,136
   "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",16,99
   "approve-fact.sh","approve-fact.sh — promote a pending fact into the approved digest.","tool","wired","keep",1,25
-  "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",7,61
+  "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",8,61
   "ask.sh","ask.sh — the door to Skírnir, the Allfather's assistant.","tool","tested","keep",9,12
   "asks.sh","asks.sh — the ledger of questions Skírnir could not answer, and the road that closes the loop.","tool","wired","keep",3,184
   "audio-retention.sh","audio-retention.sh — Rule 30 in one command: turn the sound into text, then let the sound go.","tool","wired","keep",1,188
@@ -59,7 +59,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "calendar-ask.sh","calendar-ask.sh — the shell door onto Mánagandr, the read calendar.","tool","tested","keep",4,132
   "calendar-attendees.sh","calendar-attendees.sh — the participants of ONE meeting, read live from the calendar.","tool","wired","keep",1,64
   "calendar-auth.sh","calendar-auth.sh — re-grant Mánagandr's read-only calendar and store the token.","tool","wired","keep",0,88
-  "calendar-invite.sh","calendar-invite.sh — create or cancel the next meeting in Google Calendar.","tool","wired","keep",2,175
+  "calendar-invite.sh","calendar-invite.sh — create or cancel the next meeting in Google Calendar.","tool","wired","keep",3,175
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
   "canaries.txt","canaries.txt — strings that must NEVER appear in anything Skírnir says.","data","wired","keep",1,19
   "capabilities.md","What Ymir can do — the capability register","data","wired","keep",2,28
@@ -353,12 +353,12 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "logretta-report.sh","logretta-report.sh — the council's chain: every seat reports to the CHAIR, the chair rules.","tool","wired","keep",1,216
   "machine-profile.sh","machine-profile.sh — a body reads its OWN card (wave C, the persona loader).","tool","wired","keep",0,54
   "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",1,66
-  "mail-send.sh","mail-send.sh — the follow-up email with the record attached, as a draft or send.","tool","wired","keep",9,165
+  "mail-send.sh","mail-send.sh — the follow-up email with the record attached, as a draft or send.","tool","wired","keep",10,165
   "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",0,94
   "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",1,65
   "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
   "mcp-read.py","'''mcp-read.py — Gimlé MCP, phase 1: the six read tools, audited, behind a token.","tool","wired","keep",0,262
-  "meet.sh","meet.sh — one command: 'put a meeting with <person> in the calendar, with a Meet link'.","tool","wired","keep",5,90
+  "meet.sh","meet.sh — one command: 'put a meeting with <person> in the calendar, with a Meet link'.","tool","wired","keep",6,90
   "meeting-record-guard.sh","meeting-record-guard.sh — a meeting record is a record: if one is missing, put it back.","tool","wired","keep",1,49
   "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","wired","keep",4,372
   "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","wired","keep",7,137
@@ -468,7 +468,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/seat.py",8,100
   "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",3,71
   "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",5,243
-  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",56,194
+  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",57,194
   "sensitive-gate.sh","sensitive-gate.sh — one gate for every external surface of a sensitive artifact set.","tool","wired","keep",2,81
   "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",4,132
   "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",2,153
@@ -489,7 +489,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "smoke.sh","smoke.sh — the Snotra meeting pipeline's own gate: five doors, three verdicts each.","tool","wired","keep",7,127
   "snotra-agenda.py","'''snotra-agenda — the agenda card that drives the next meeting (DEC-20261022-04).","data","wired","keep",1,206
   "snotra-agenda.sh","snotra-agenda.sh — the agenda card that drives the next meeting (DEC-20261022-04).","tool","wired","keep",2,19
-  "snotra-approve.sh","snotra-approve.sh — the operator's word, bound to the exact bytes of what leaves.","tool","wired","keep",5,170
+  "snotra-approve.sh","snotra-approve.sh — the operator's word, bound to the exact bytes of what leaves.","tool","wired","keep",6,170
   "snotra-attrib.py","'''snotra-attrib — who said it: the track, the person, and the evidence for both.","data","wired","keep",1,279
   "snotra-attrib.sh","snotra-attrib.sh — who said it: the track, the person, and the evidence for both.","tool","wired","keep",0,22
   "snotra-audio-ladder.py","'''snotra-audio-ladder — the meeting's sound gets smaller AFTER its words are safe.","data","wired","keep",1,253
@@ -556,7 +556,8 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "telegram-bot.sh","telegram-bot.sh — the horn answers (W0036).","tool","wired","keep",0,84
   "telegram.py","'''telegram.py — Skírnir's second mouth: his own bot, in DMs and in groups.","tool","wired","keep",2,420
   "telegram.sh","telegram.sh — the door to Skírnir's own bot (the adapter lives in telegram.py).","tool","wired","keep",0,4
-  "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","data","wired","keep",0,205
+  "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","data","wired","keep",1,205
+  "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",2,346
   "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",0,75
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",6,139
   "trello-due.sh","trello-due.sh — a card's due date is a promise; say when it is broken.","tool","wired","keep",0,100
@@ -619,6 +620,6 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=378, tested=228
+**Tally.** verdict: wired=379, tested=228
 
-**Tally.** disposition: keep=592, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=593, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
