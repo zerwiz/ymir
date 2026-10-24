@@ -806,7 +806,12 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
   fi
   case "$HARNESS" in
     opencode)
-      printf 'OPENCODE_CONFIG_CONTENT=%s opencode %s--prompt "$(cat %s)"' \
+      # `exec VAR=value cmd` is not a thing: exec takes a command, not assignments,
+      # so the old form died with "exec: OPENCODE_CONFIG_CONTENT=…: not found" and
+      # EVERY opencode seat was born dead while the dispatcher said "spawned"
+      # (measured 2026-10-24, four dispatches, four empty panes). `env` carries the
+      # assignment through the exec.
+      printf 'env OPENCODE_CONFIG_CONTENT=%s opencode %s--prompt "$(cat %s)"' \
         "$(shell_quote '{"permission":{"*":"allow"}}')" "$model_flag" "$(shell_quote "$brief_ref")"
       ;;
     pi|pi-signed)
