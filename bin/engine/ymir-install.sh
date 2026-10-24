@@ -247,6 +247,14 @@ step_tree() {
   if [ "$CHECK" = 1 ]; then
     local ok=1
     [ -d "$WORKSPACE/work" ] && [ -d "$WORKSPACE/personal" ] && [ -f "$HOARD/identity/workspaces.yaml" ] && [ -f "$HOARD/identity/projects.yaml" ] || ok=0
+    # Phase 3: validate client_of references (plan 128)
+    if [ -d "$HOARD/identity/places" ] && [ -x "$SCRIPT_DIR/../identity/place-validate.sh" ]; then
+      local place_err
+      if ! place_err=$(bash "$SCRIPT_DIR/../identity/place-validate.sh" --all 2>&1); then
+        add tree WARN "client_of validation failed — $place_err"
+        ok=0
+      fi
+    fi
     if [ "$ok" = 1 ]; then add tree OK "workspace tree present"; else add tree WARN "workspace tree incomplete"; fi
     return
   fi
@@ -288,6 +296,16 @@ YAML
   fi
   if [ ! -f "$HOARD/identity/projects.yaml" ]; then
     cp "$ROOT/registry/projects.yaml.example" "$HOARD/identity/projects.yaml"
+    created=$((created+1))
+  fi
+  # clients.yaml — the register of companies the house SERVES (plan 128)
+  if [ ! -f "$HOARD/identity/clients.yaml" ]; then
+    cp "$ROOT/registry/clients.yaml.example" "$HOARD/identity/clients.yaml"
+    created=$((created+1))
+  fi
+  # companies.yaml — the houses the house IS (plan 128)
+  if [ ! -f "$HOARD/identity/companies.yaml" ]; then
+    cp "$ROOT/registry/companies.yaml.example" "$HOARD/identity/companies.yaml"
     created=$((created+1))
   fi
   add tree OK "workspace/{personal} · companies · registries · hoard (outside the repo) (created $created)"
