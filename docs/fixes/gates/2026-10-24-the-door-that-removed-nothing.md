@@ -53,3 +53,26 @@ uncommitted work and refused themselves — correctly.
 Make the two loops accept `reclaimable:*` and resolve `full` through `$WT_ROOT` when the path is not absolute —
 then prove it by removing a known-reclaimable worktree through the door, not by hand. Until that proof exists, this
 note is the record that the door does not reclaim, and the work is done by the documented loop above.
+
+---
+
+## Fixed and proven, the same evening
+
+Three faults, all in `bin/forge/housekeeping.sh`, all found by watching the door refuse to work:
+
+1. **Five fields read from a six-field row.** The row is `idx · branch · verdict · size · path · detail`, so the
+   last variable swallowed `path<TAB>detail` and `[ -d "$full" ]` was false for **every** worktree. The loop ran,
+   skipped everything, and reported `removed 0`.
+2. **Two of the four reclaimable verdicts were skipped.** `reclaimable:upstream` and `reclaimable:content-in-main`
+   fell into `*) continue`, and those two describe most of this shelf, where rebases and cherry-picks leave
+   different SHAs for identical content.
+3. **The branch delete trusted ancestry.** `git merge-base --is-ancestor` is false for exactly those rebased
+   branches, so `git branch -d` refused them as "not merged" — the door kept every branch it had just called
+   reclaimable. It now deletes with `-D` **under the verdict's own proof**, and says so.
+
+**Proven:** after the three fixes the door, by itself, removed **79 branches** (112 → 33). The four remaining
+worktrees held uncommitted work and refused themselves; their work was committed and tagged
+(`archive-2026-10-24-dirty/*`) before removal, so nothing was discarded.
+
+**Final numbers for the night:** worktrees 59 → 17, branches 174 → 30, `.yggdrasil` 6.5 GB → 1.9 GB, with 178
+archive tags on origin and a verified 46 MB `git bundle --all` as the floor beneath it all.
