@@ -574,7 +574,11 @@ if [ "$DEEP" = 1 ]; then
   # A rename is only done when nothing still speaks the old name. Excluded on
   # purpose: a migration (it MUST name what it moves), the fix notes (the
   # append-only record of what the old name was), and worktrees.
-  stale=$(grep -rnE "hodd/workspaces|svartalfaheim/[a-z]+/workspace/|\$ROOT/workspace/" \
+  # `hodd/workspaces/` is NOT stale: the home carries it and it holds real shelves
+  # (aizerwiz · meetings). The rename this checks is `svartalfaheim/<realm>/workspace/`
+  # → `projects/` and the retired flat `workspace/` in the REPO. Flagging the home's own
+  # shelf made the suite red for code that was right (measured 2026-10-24).
+  stale=$(grep -rnE "svartalfaheim/[a-z]+/workspace/|\$ROOT/workspace/" \
             bin src apps/hlidskjalf/server .agents/skills/*/scripts .agents/skills/*/assets docs AGENTS.md RULES 2>/dev/null \
           | grep -v "^\.agents/migrations/" | grep -v "^docs/fixes/" | grep -v "smoke_test.sh" \
           | grep -v "elder-home/assets/ledger.md" | head -5)
