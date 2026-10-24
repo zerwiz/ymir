@@ -18,12 +18,17 @@ case "$VERB" in
       || { printf 'eindri-control[1]{verb,target,state}:\n  "interrupt","%s","failed"\n' "$TARGET" >&2; exit 1; } ;;
   exit)
     # Stop the agent AND THE WORK IT STARTED; keep the pane/worktree.
+    # A seat that has already lost its pane (the common close path) must not turn a
+    # successful stop into a failure: the WORK is what this verb guarantees, and
+    # seat-stop.sh is the judge of that (measured 2026-10-24: close returned rc=1 on a
+    # seat whose work had stopped cleanly).
     # A pane that closes while its worker lives on is the fault of 2026-10-24: a seat was
     # closed and a process waiting on the model lock survived, to be killed by hand.
-    herdr pane close "$TARGET" >/dev/null 2>&1
+    herdr pane close "$TARGET" >/dev/null 2>&1 || true
     herdr agent release-agent "$TARGET" >/dev/null 2>&1 || true
-    if [ -x "$SCRIPT_DIR/seat-stop.sh" ]; then
-      "$SCRIPT_DIR/seat-stop.sh" "$TARGET" >/dev/null 2>&1 || \
+    _sd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -x "$_sd/seat-stop.sh" ]; then
+      "$_sd/seat-stop.sh" "$TARGET" >/dev/null 2>&1 || \
         printf 'eindri-control[1]{verb,target,warn}:\n  "exit","%s","a process in its worktree survived the stop — run bin/agents/seat-stop.sh %s"\n' "$TARGET" "$TARGET" >&2
     fi
     printf 'eindri-control[1]{verb,target,state}:\n  "exit","%s","stopped (pane and worktree processes)"\n' "$TARGET" ;;
