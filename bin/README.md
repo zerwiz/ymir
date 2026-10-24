@@ -29,7 +29,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",0,136
   "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",16,99
   "approve-fact.sh","approve-fact.sh — promote a pending fact into the approved digest.","tool","wired","keep",1,25
-  "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",6,61
+  "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",7,61
   "ask.sh","ask.sh — the door to Skírnir, the Allfather's assistant.","tool","tested","keep",9,12
   "asks.sh","asks.sh — the ledger of questions Skírnir could not answer, and the road that closes the loop.","tool","wired","keep",3,184
   "audio-retention.sh","audio-retention.sh — Rule 30 in one command: turn the sound into text, then let the sound go.","tool","wired","keep",1,188
@@ -59,7 +59,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "calendar-ask.sh","calendar-ask.sh — the shell door onto Mánagandr, the read calendar.","tool","tested","keep",4,132
   "calendar-attendees.sh","calendar-attendees.sh — the participants of ONE meeting, read live from the calendar.","tool","wired","keep",1,64
   "calendar-auth.sh","calendar-auth.sh — re-grant Mánagandr's read-only calendar and store the token.","tool","wired","keep",0,88
-  "calendar-invite.sh","calendar-invite.sh — create or cancel the next meeting in Google Calendar.","tool","wired","keep",1,93
+  "calendar-invite.sh","calendar-invite.sh — create or cancel the next meeting in Google Calendar.","tool","wired","keep",2,175
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
   "canaries.txt","canaries.txt — strings that must NEVER appear in anything Skírnir says.","data","wired","keep",1,19
   "capabilities.md","What Ymir can do — the capability register","data","wired","keep",2,28
@@ -353,7 +353,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "logretta-report.sh","logretta-report.sh — the council's chain: every seat reports to the CHAIR, the chair rules.","tool","wired","keep",1,216
   "machine-profile.sh","machine-profile.sh — a body reads its OWN card (wave C, the persona loader).","tool","wired","keep",0,54
   "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",1,66
-  "mail-send.sh","mail-send.sh — the follow-up email with the record attached, as a draft or send.","tool","wired","keep",9,147
+  "mail-send.sh","mail-send.sh — the follow-up email with the record attached, as a draft or send.","tool","wired","keep",9,165
   "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",0,94
   "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",1,65
   "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
@@ -458,7 +458,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "room.sh","room.sh — the record of a room: append an utterance, or read what was said.","tool","wired","keep",6,288
   "rules-number-guard.sh","rules-number-guard.sh — the house law is NUMBERED, so no two rules may share a number,","tool","tested","keep",0,83
   "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",0,102
-  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",34,117
+  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",35,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "runtime-guard.sh","runtime-guard.sh — THE TREE IS NOT A RUNTIME.","data","wired","keep",0,125
   "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",3,261
@@ -489,7 +489,7 @@ bin[606]{file,does,kind,verdict,disposition,callers,lines}:
   "smoke.sh","smoke.sh — the Snotra meeting pipeline's own gate: five doors, three verdicts each.","tool","wired","keep",7,127
   "snotra-agenda.py","'''snotra-agenda — the agenda card that drives the next meeting (DEC-20261022-04).","data","wired","keep",1,206
   "snotra-agenda.sh","snotra-agenda.sh — the agenda card that drives the next meeting (DEC-20261022-04).","tool","wired","keep",2,19
-  "snotra-approve.sh","snotra-approve.sh — the operator's word, bound to the exact bytes of a letter.","tool","wired","keep",4,77
+  "snotra-approve.sh","snotra-approve.sh — the operator's word, bound to the exact bytes of what leaves.","tool","wired","keep",5,170
   "snotra-attrib.py","'''snotra-attrib — who said it: the track, the person, and the evidence for both.","data","wired","keep",1,279
   "snotra-attrib.sh","snotra-attrib.sh — who said it: the track, the person, and the evidence for both.","tool","wired","keep",0,22
   "snotra-audio-ladder.py","'''snotra-audio-ladder — the meeting's sound gets smaller AFTER its words are safe.","data","wired","keep",1,253

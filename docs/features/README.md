@@ -13,6 +13,7 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 |---|---|
 | Unlock the vault (Hnitbjörg) with your phone | [unlock-the-vault-with-your-phone.md](unlock-the-vault-with-your-phone.md) |
 | The TUI frame check (`pi` renders inside the terminal) | [the-tui-frame-check.md](the-tui-frame-check.md) |
+| The outbound gate (nothing leaves until you have read it) | [the-outbound-gate.md](the-outbound-gate.md) |
 
 ## The shape of a page
 

@@ -472,3 +472,54 @@ files correctly with no code change, and a place declaring `surface: gimle` is r
   replies nightly; the pipeline may be scheduled as `--recent 1 --draft` once the Allfather says so;
 - the state the doors need (`VEXA_API_URL`, `VEXA_S3_*`, the Trello grant in `~/.pi/agent/mcp-auth.json`) is
   read from env/config with one documented default each — never invented.
+
+## Appended 2026-10-24 — the outbound gate stands in every door (plan 124 §7)
+
+Before this day the approval gate existed and was **enforced by a caller**. `snotra-approve.sh` bound the
+operator's word to a draft's exact RFC822 bytes, and `snotra-letter.py send` asked it — but the other doors never
+did. The audit (plan 124 §7) measured three: `mail-send.sh send` POSTed `drafts/send` without asking,
+`calendar-invite.sh` posted with `sendUpdates=all` so **Google mailed every attendee the instant an event was
+made**, and Gná's absent send path was a debt nobody had written down.
+
+**The contract now, and it is a contract of the DOOR, not of a caller:**
+
+```
+outbound_gate[6]{rule,why}:
+  "every outbound door calls `snotra-approve.sh gate <kind> <key>` before it builds a request","a check in a caller is a habit; a check in the door is a gate"
+  "kinds: `mail` (a Gmail draft id) and `event` (an event key naming the body that would be posted)","one word, two shapes of thing that can leave"
+  "the word is bound to BYTES: mail → `mail-send.sh raw <id>`; event → the rendered payload, held by `approve-event <key>`","edit one character and it reads STALE, not 'approved earlier'"
+  "an approval is SPENT by the send it authorised (a `.sent` sidecar), and a replay is refused ALREADY SENT","one word, one send; a second click is not a second letter"
+  "google mails nobody by default: `sendUpdates=none` unless a fresh approved event body says otherwise; `cancel --notify` is gated the same way","an invitation is outbound mail, and so is a cancellation"
+  "every refusal, spend and approval is carved into the Runes with subject, operator and reason","a refusal is evidence; 'what did we tell them, on whose word' is answerable without reading mail"
+```
+
+**Where it lives.** The record is **state, not a document**: `$XDG_STATE_HOME/ymir/approvals/<key>.json` (with
+`<key>.sent` after a send) and `…/approvals/pending/<key>.json` for a held event body — never in git, never in
+the home.
+
+**Endpoints are configuration (Rule 07), never constants:** `YMIR_GMAIL_API_BASE` · `YMIR_CALENDAR_API_BASE` ·
+`YMIR_OAUTH_TOKEN_URL`, each defaulting to the real Google door. That is also what makes the gate **provable
+without a mailbox** — `bin/time/snotra/tests/test_outbound_gate.py` stands a local HTTP server behind those three
+variables, builds a throwaway home with a real `age` vault, and runs the shipping doors unchanged: 12 proofs
+(unapproved refused and recorded · approved sends once · replay refused · stale refused · invite with attendees
+posts nothing · approved invite sets `sendUpdates=all` · stale event refused · no attendees mails nobody ·
+cancel gated · the door's own default · Gná's ward · no door in `bin/` sends around the gate). Each door carries
+its half as `--self-test`.
+
+**Doors, at a glance**
+
+| door | verb | asks the gate when |
+|---|---|---|
+| `mail-send.sh` | `send <draft-id>` | always — before the send request; spends the word on success |
+| `calendar-invite.sh` | `create … --attendees` | always — `sendUpdates=all` only on a fresh approved body |
+| `calendar-invite.sh` | `cancel <id> --notify` | always — the cancellation body is its own key |
+| `snotra-letter.sh` / `snotra-letter.py` | `send <dir> --approved` | its own check remains, but it is now a courtesy: `mail-send.sh send` refuses anyway |
+
+**What is owed, and deliberately not built.** Gná (`bin/mail/`) still has **no send path**. Her drafts and
+approvals are owed to plan 116 (P1) and must arrive through this same gate — `tests/test_gna.py::NoSendCapability`
+fails if a send verb appears in that directory, and `bin/mail/README.md` says so on its face. The approval record
+lives on one seat; plan 126 decides which records must ride the vault.
+
+**Owner docs.** How-to: `docs/features/the-outbound-gate.md` · the gate's own history:
+`docs/fixes/snotra/2026-10-23-the-approval-gate-was-not-in-the-tree.md`,
+`docs/fixes/snotra/2026-10-24-the-gate-is-in-every-door.md` · the shelf: `docs/snotra/the-letters.md`.

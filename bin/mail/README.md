@@ -69,3 +69,14 @@ Every row carries `evidence`: the rule **and the word** that fired.
 Drafts and approvals (P1) on the same gate · a second account with its own grant
 (P2) · the agent door `mail_search · mail_thread · mail_draft` (P3) · rules that
 earn their place (P4). None of them may add a send path.
+
+## Appended 2026-10-24 — the send path she is owed goes through the gate, not around it
+
+Plan 116 P1 (drafts and approvals) is still owed, and this line is the debt written down before anyone pays it
+(today it was only a hope, which is how a hole opens): **when Gná's draft and send verbs land they must call
+`bin/time/snotra/snotra-approve.sh gate mail <draft-id>` before any send, exactly as `mail-send.sh send` does.**
+No SMTP, no `users/me/drafts/send`, no socket of her own — the gate is the only socket in the house (plan 124 §7).
+
+The two wards that keep this honest are already standing: `tests/test_gna.py::NoSendCapability` fails if a send
+pattern appears in any file here, and
+`bin/time/snotra/tests/test_outbound_gate.py::GnaOwed` fails if a send in `bin/` does not name the gate.
