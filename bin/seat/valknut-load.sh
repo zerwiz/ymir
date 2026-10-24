@@ -37,7 +37,7 @@ OC_LOCAL="$ROOT/.opencode/agents"
 SKILLS="$ROOT/.agents/skills"
 
 usage() {
-  sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 for a in "$@"; do
