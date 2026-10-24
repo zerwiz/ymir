@@ -125,6 +125,25 @@ ensure_engram() {
   return 1
 }
 
+ensure_pyyaml() {
+  # The naming law's registry reads YAML. It is not part of the stdlib, so a seat
+  # without it cannot build the registry and therefore cannot be NAMED — the door
+  # answered a traceback instead of a remedy until 2026-10-24.
+  local py; py="$(engram_python 2>/dev/null || printf 'python3')"
+  if "$py" -c 'import yaml' >/dev/null 2>&1; then
+    say pyyaml present "$(engram_v "$py" 2>/dev/null || printf '%s' "$py")"
+    return 0
+  fi
+  engram_ensure_pip "$py" >/dev/null 2>&1 || true
+  if "$py" -m pip install --user --break-system-packages -q pyyaml >/dev/null 2>&1 \
+     && "$py" -c 'import yaml' >/dev/null 2>&1; then
+    say pyyaml installed "$(engram_v "$py" 2>/dev/null || printf '%s' "$py")"
+    return 0
+  fi
+  say pyyaml absent "pip could not install pyyaml under $(engram_v "$py" 2>/dev/null || printf '%s' "$py") — help: python3 -m pip install --user pyyaml"
+  return 1
+}
+
 ensure_bun() {
   add_path "$BUN_HOME/bin"
   if have bun; then say bun present "$(bun --version 2>/dev/null)"; return 0; fi
@@ -193,6 +212,7 @@ case "$1" in
   uv)     ensure_uv ;;
   mcp)    ensure_mcp ;;
   engram) ensure_engram ;;
+  pyyaml) ensure_pyyaml ;;
   python) ensure_python "${2:?usage: prereq-ensure.sh python <X.Y>}" ;;
   status)
     engine="$(ymir_container_engine_name 2>/dev/null || true)"

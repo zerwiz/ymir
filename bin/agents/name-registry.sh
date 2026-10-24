@@ -36,6 +36,21 @@ try:
 except Exception:
     yaml = None
 
+
+def need_yaml():
+    """Name the missing dependency instead of dying in an AttributeError.
+
+    `scan()` called `yaml.safe_load` unguarded, so on a seat without PyYAML the
+    registry died with `'NoneType' object has no attribute 'safe_load'` and the
+    seat could not be named — a door that answers a traceback rather than a
+    remedy (measured on the hand, 2026-10-24).
+    """
+    if yaml:
+        return
+    print("error: PyYAML is not installed — the name registry reads YAML by it", file=sys.stderr)
+    print("help: bin/engine/prereq-ensure.sh pyyaml  (or: python3 -m pip install --user pyyaml)", file=sys.stderr)
+    sys.exit(2)
+
 def norm(s):
     s = unicodedata.normalize("NFKD", s)
     s = "".join(c for c in s if not unicodedata.combining(c))
@@ -48,8 +63,8 @@ def entries():
     if not yaml or not os.path.exists(out):
         print("error: registry not built — run: name-registry.sh scan", file=sys.stderr); sys.exit(1)
     return yaml.safe_load(open(out)) or {"names": {}}
-
 def scan():
+    need_yaml()
     names = {}
     def add(name, kind, source, owner=""):
         n = norm(name)
