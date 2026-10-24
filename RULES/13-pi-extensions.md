@@ -153,3 +153,32 @@ rule now records.
 
 Superseded sentence, named so a reader is not misled: *"Pi reads `${HOME}/.pi/agent/extensions/`"*
 in the harness-integration asset — still true, and no longer the whole truth.
+
+## 2026-10-24 — the worktree case: a worktree of the seat is ONE home, never a second
+
+Appended, not edited: the law above stands. This is the case it could not name, and the
+reason four errands died on 2026-10-24 with a bare shell at a prompt
+(`docs/fixes/seat/2026-10-24-a-worktree-carries-no-second-extension-home.md`).
+
+A Yggdrasil worktree checks `.pi/extensions/` out like any other file, so a pi seat inside
+it loaded the same eighteen extensions **twice** — the worktree's copy and the settings-named
+seat tree, two absolute paths, two registrations, eighteen tool-name collisions, pi exits,
+and the dispatcher types the brief into what is left. The law was right; nothing enforced it
+inside a worktree.
+
+```
+worktree_extension_home[4]{rule,where}:
+  "a worktree is created WITHOUT .pi/extensions/","bin/forge/yggdrasil.sh create — per-worktree sparse-checkout, non-cone: '/*' and '!/.pi/extensions/'"
+  "the exclusion is sparse, never a symlink and never a delete","the files stay tracked and the worktree stays clean; a symlink shows as deleted tracked files and must not ship"
+  "a worktree of the SEATED repository is ONE home","valknut-load.sh --check: state `shared`, served by the seat tree — PASS"
+  "a worktree that carries its OWN .pi/extensions is the fault","state `shared-copy` — FAIL, with the one-line `sparse-checkout set` repair printed"
+```
+
+"Same repository" is **asked of git** (`rev-parse --git-common-dir` on both trees, both
+canonicalised), never inferred from a path: a tree of a different repository is its own home
+and must pass on its own terms. `bin/seat/valknut-load.sh --ext-home` prints the verdict for
+the tree you are standing in, so a human and a test ask the same door;
+`.agents/tests/pi-extensions.test.sh` section 8 proves both directions hermetically.
+
+An existing worktree is never rewritten. One that is not sparse keeps working, reports
+`shared-copy`, and is repaired by its owner with the line the gate prints.

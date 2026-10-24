@@ -32,8 +32,11 @@ ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; 
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 FIXES="$ROOT/docs/fixes"
 
-# The components are the machine's own parts, not an invented list.
-COMPONENTS="install runtime skills agents hlidskjalf odrerir sessrumnir smidja hoard gate"
+# The components are the machine's own parts, not an invented list. `seat` joined
+# 2026-10-24: the seat road (valknut, harness binding, worktree discipline) had its
+# own directory of notes and no name in this list, so every note written there
+# validated as an unknown component.
+COMPONENTS="install runtime skills agents seat hlidskjalf odrerir sessrumnir smidja hoard gate"
 
 usage() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; }
 die() { printf 'error: %s\n' "$1" >&2; [ -n "${2:-}" ] && printf 'help: %s\n' "$2" >&2; exit 1; }
