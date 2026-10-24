@@ -51,7 +51,7 @@ last_line=$(tail -n1 "$STATUS" 2>/dev/null || echo "(no status lines)")
 printf 'eindri %s SILENT: no status append for a while (elapsed %s) — last line: %s\n' \
   "$AGENT" "$elapsed" "$last_line" >>"$STATE/.wake-queue"
 printf '%s\n%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "elapsed=$elapsed last_line=$last_line" >"$STATE/eindri-silent/$AGENT.md"
-if [ -x "$SCRIPT_DIR/../time/snotra/ymir-say.sh" ]; then
-  "$SCRIPT_DIR/../time/snotra/ymir-say.sh" note "Eindri $AGENT may be silent — check it" >/dev/null 2>&1 || true
+if [ -x "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" ]; then
+  "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" note "Eindri $AGENT may be silent — check it" >/dev/null 2>&1 || true
 fi
 printf 'eindri-acclaim-silent[1]{agent,elapsed,last_line}:\n  "%s","%s","%s"\n' "$AGENT" "$elapsed" "$last_line"

@@ -118,3 +118,12 @@ moves:
     why: "the bin/ reorganisation (Rule 23)"
     migration: "0009-flat-bin-paths"
     superseded: true
+  # 2026-10-24 — plan 129: Snotra is a SYSTEM, and ownership is the axis (Rule 23's appended section).
+  # The old spelling is a DIRECTORY, so one entry covers every door inside it; the per-door destination
+  # (which SERVICE each door went to) is declared in systems/snotra/domain.yaml and read by the migration.
+  - old: "bin/time/snotra/"
+    new: "systems/snotra/"
+    date: "2026-10-24"
+    why: "ownership is the axis, plan 129 — a domain is the primary folder; a layer is a folder inside it"
+    migration: "0014-systems-shelf"
+    superseded: true

@@ -117,7 +117,7 @@ f_hermes()    { "$SCRIPT_DIR/../engine/hermes-ensure.sh" ensure --install >/dev/
 # The meeting ear's engine (whisper.cpp + a model); the MCP face + unit ride
 # the fleet surface below. A seat that captures but transcribes elsewhere still
 # passes (voxtype counts as an engine).
-s_snotra()    { [ -x "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ] && "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" status >/dev/null 2>&1; }
+s_snotra()    { [ -x "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" ] && "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" status >/dev/null 2>&1; }
 # The voice engines (whisper STT + piper TTS): a machine property, adopted or installed.
 s_voice()     { [ -x "$SCRIPT_DIR/../voice/voice-ensure.sh" ] && "$SCRIPT_DIR/../voice/voice-ensure.sh" status >/dev/null 2>&1; }
 f_voice()     { "$SCRIPT_DIR/../voice/voice-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -125,7 +125,7 @@ f_voice()     { "$SCRIPT_DIR/../voice/voice-ensure.sh" ensure --install >/dev/nu
 # is a loud skip. The surface asks the ensure door, which never overwrites a stack.
 s_council()   { [ -x "$SCRIPT_DIR/../pi/logretta-ensure.sh" ] && "$SCRIPT_DIR/../pi/logretta-ensure.sh" status >/dev/null 2>&1; }
 f_council()   { "$SCRIPT_DIR/../pi/logretta-ensure.sh" ensure >/dev/null 2>&1; }
-f_snotra()    { "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
+f_snotra()    { "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
 # The boot law (2026-09-24): every role-owed program enabled and standing. The

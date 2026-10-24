@@ -403,7 +403,7 @@ next decision is evidence-based.
 
 ## The live tail (Snotra) — one chip, three routes
 
-`bin/time/snotra/snotra-live.sh` transcribes this machine as you speak and writes the
+`systems/snotra/services/ear/snotra-live.sh` transcribes this machine as you speak and writes the
 words into a document under `$YMIR_HOME/hodd/life/meetings/`. **The UI is a front for
 that script and never a second pipeline**: it calls the script and reports what the
 script says. No transcription, slice timing or engine discovery is re-implemented in
@@ -686,7 +686,7 @@ new tab — **never** a launcher call.
   (tokens only, no raw hex), press feedback in `styles/overlays.css`.
 - **The hall app:** `apps/odrerir` — an Astro board (the Óðrerir Live Hall) that
   serves `:4322` and reads `public/livehall.json`, written by
-  `bin/time/snotra/hall-snapshot.sh` (planning glass; public-safe). Its own Electron shell:
+  `systems/snotra/services/cron/hall-snapshot.sh` (planning glass; public-safe). Its own Electron shell:
   `apps/odrerir/electron/main.cjs`, raised by `scripts/electron.sh --view odrerir`.
 - **Target rule — one rule for all of Ymir's apps:** `HALL_URL` in
   `src/data/metadata.ts`. `window.location.host` starting with `localhost` or

@@ -11,7 +11,7 @@ set -u
 TEXT="${1:-}"; OUT="${2:-}"
 [ -n "$TEXT" ] && [ -n "$OUT" ] || { printf 'mouth: usage: mouth.sh "text" out.ogg\n' >&2; exit 2; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LEASE="$SCRIPT_DIR/../time/snotra/tts-lease.sh"
+LEASE="$SCRIPT_DIR/../../systems/snotra/services/tts-lease/tts-lease.sh"
 VOICE="${KOKORO_VOICE:-}"
 if [ -z "$VOICE" ] && [ -x "$HOME/.local/bin/kokoro-voice" ]; then
   VOICE="$("$HOME/.local/bin/kokoro-voice" 2>/dev/null | sed -n 's/.*voice: \([a-z_0-9]*\).*/\1/p' | head -1)"

@@ -234,7 +234,7 @@ removed and the failure is reported plainly.
 
 The Live Hall is a glass: it reads `/livehall.json` (same-origin,
 `cache: no-store`). This job writes that snapshot from real state via
-`bin/time/snotra/hall-snapshot.sh` — runes, the project registry, the cron gauge, the wake
+`systems/snotra/services/cron/hall-snapshot.sh` — runes, the project registry, the cron gauge, the wake
 queue, standing smiths, armed `when-` sources, and the landed errands — then
 carves Rune `odrerir / hall.snapshot`. The snapshot is written for BOTH install
 shapes: `apps/odrerir/public/livehall.json` (a clone, served at request time by

@@ -118,7 +118,7 @@ else
 fi
 
 if [ "$ALERT" = 1 ] && { [ "$crit" != "0" ] || [ "$high" != "0" ]; }; then
-  say="$ROOT/bin/time/snotra/ymir-say.sh"
+  say="$ROOT/systems/snotra/services/tts-lease/ymir-say.sh"
   [ -x "$say" ] && "$say" fail "Vörðr: $crit critical, $high high — bin/ward/verdr.sh last" >/dev/null 2>&1 || true
 fi
 

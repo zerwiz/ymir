@@ -4,7 +4,7 @@ Snotra is the house's **meeting ear and recorder**: it hears the meeting, writes
 on the board, and sends the letters. This shelf is the whole of it — the surfaces, the doors, the contracts,
 the laws and the runbook.
 
-> **Snotra is the subsystem, not a script.** Every door below lives in `bin/time/snotra/`. Every meeting
+> **Snotra is the subsystem, not a script.** Every door below lives in `systems/snotra/`. Every meeting
 > lives under `svartalfaheim/<company>/meetings/<YYYY-MM-DD>-<slug>/` in the vault, and every board sits
 > behind a **place profile** in `hodd/identity/places/`.
 
@@ -67,7 +67,7 @@ the room ──► the bot (Vexa) ──► its store: 682 webm chunks + a per-f
 ## Where things live
 
 ```
-bin/time/snotra/                     the doors (see the-doors.md)
+systems/snotra/                     the doors (see the-doors.md)
 hodd/identity/places/<c>/<p>/        the place profiles (see the-places.md)
 hodd/identity/trello-map.yaml        the board map: names → real ids, refreshed by trello-map.sh
 svartalfaheim/<company>/meetings/    the meeting folders (see the-record.md)

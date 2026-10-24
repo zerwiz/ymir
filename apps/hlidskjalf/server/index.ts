@@ -1478,7 +1478,7 @@ function snotraDraft(id: string): { draftId: string } | { error: string } {
     if (existsSync(p)) att.push('--attach', p);
   }
   const record = join(m.dir, 'record.json');
-  const args = [join(ROOT, 'bin/time/snotra/mail-send.sh'), 'draft',
+  const args = [join(ROOT, 'systems/snotra/services/letters/mail-send.sh'), 'draft',
     '--from-record', record, '--subject', `${m.title} — Meeting Record`,
     '--body', body, ...att, '--record', m.id];
   const r = spawnSync('bash', args, { encoding: 'utf8', timeout: 120_000 });
@@ -1490,7 +1490,7 @@ function snotraDraft(id: string): { draftId: string } | { error: string } {
 
 function snotraSend(draftId: string): { sent: string } | { error: string } {
   if (!/^r-\d+$/.test(draftId)) return { error: 'invalid draft id' };
-  const r = spawnSync('bash', [join(ROOT, 'bin/time/snotra/mail-send.sh'), 'send', draftId],
+  const r = spawnSync('bash', [join(ROOT, 'systems/snotra/services/letters/mail-send.sh'), 'send', draftId],
     { encoding: 'utf8', timeout: 120_000 });
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
   const hit = out.match(/^sent\t(\S+)/m);
@@ -1541,7 +1541,7 @@ function settings() {
  * script says. Nothing here re-implements transcription, slice timing or engine
  * discovery. The document stays in the hoard (`$YMIR_HOME/hodd/life/meetings/`);
  * only these three authenticated routes read it, and only for the operator. */
-const LIVE_SCRIPT = 'bin/time/snotra/snotra-live.sh';
+const LIVE_SCRIPT = 'systems/snotra/services/ear/snotra-live.sh';
 
 /** A `stop` this gate spawned, still running. `stop` joins every slice into one
  *  WAV, re-transcribes the recording, asks the rail for a summary, writes the

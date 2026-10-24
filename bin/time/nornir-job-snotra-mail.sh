@@ -26,7 +26,7 @@ while IFS= read -r M; do
   [ -n "$M" ] || continue
   [ -f "$M/letters.json" ] || continue
   seen=$((seen + 1))
-  if out="$("$ROOT/bin/time/snotra/snotra-mail-watch.sh" record "$M" 2>&1)"; then
+  if out="$("$ROOT/systems/snotra/services/mail-watch/snotra-mail-watch.sh" record "$M" 2>&1)"; then
     n="$(printf '%s' "$out" | sed -n 's/.*replies:\([0-9]*\).*/\1/p')"
     recorded=$((recorded + ${n:-0}))
     printf '  %s — %s\n' "$(basename "$M")" "$(printf '%s' "$out" | tail -1)"
@@ -34,7 +34,7 @@ while IFS= read -r M; do
     printf '  %s — FAILED: %s\n' "$(basename "$M")" "$(printf '%s' "$out" | tail -1)"
     rc=1
   fi
-done < <(YMIR_HOME="$HOME_R" python3 "$ROOT/bin/time/snotra/snotra_paths.py" --recent "$DAYS" 2>/dev/null)
+done < <(YMIR_HOME="$HOME_R" python3 "$ROOT/systems/snotra/services/record/snotra_paths.py" --recent "$DAYS" 2>/dev/null)
 
 printf 'snotra-mail: %d meeting(s) with letters · %d reply(ies) recorded · %d failure(s)\n' "$seen" "$recorded" "$rc"
 if [ -x "$ROOT/bin/records/runes-append.sh" ] && [ "$seen" -gt 0 ]; then

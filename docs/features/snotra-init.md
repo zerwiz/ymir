@@ -10,8 +10,8 @@ board — those belong to the operator.
 ## Use it
 
 ```sh
-bin/time/snotra/snotra-init.sh check   # what is missing — no writes
-bin/time/snotra/snotra-init.sh apply   # create it, idempotently
+systems/snotra/services/record/snotra-init.sh check   # what is missing — no writes
+systems/snotra/services/record/snotra-init.sh apply   # create it, idempotently
 ```
 
 The installer runs `apply` as part of the `snotra` step, and the versioned migration

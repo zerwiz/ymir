@@ -75,7 +75,7 @@ else:
     print("answer: close · keep (with a reason) · plan — silence is not consent.")
 PY
 
-if [ "$SPEAK" = 1 ] && [ "$HIGH" -gt 0 ] && [ -x "$ROOT/bin/time/snotra/ymir-say.sh" ]; then
-  "$ROOT/bin/time/snotra/ymir-say.sh" --note "Vörðr: $HIGH security decision(s) waiting — bin/ward/ward-ask.sh" >/dev/null 2>&1 || true
+if [ "$SPEAK" = 1 ] && [ "$HIGH" -gt 0 ] && [ -x "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" ]; then
+  "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" --note "Vörðr: $HIGH security decision(s) waiting — bin/ward/ward-ask.sh" >/dev/null 2>&1 || true
 fi
 [ "$HIGH" -eq 0 ] && exit 0 || exit 3

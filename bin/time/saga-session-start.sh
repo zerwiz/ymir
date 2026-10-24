@@ -253,7 +253,7 @@ section "TOOL SURFACE"
 # would reach for one.
 printf 'tools[4]{handle,what}:\n'
 printf '  "/edit <path>","open a file in his own editor (ctrl+shift+e for the picker)"\n'
-printf '  "bin/time/snotra/ymir-say.sh","Ymir speaks on the desktop (done/alarm/fail/note)"\n'
+printf '  "systems/snotra/services/tts-lease/ymir-say.sh","Ymir speaks on the desktop (done/alarm/fail/note)"\n'
 printf '  "bin/host/omarchy-plugins.sh","the suggested Omarchy shell plugins; add/list"\n'
 printf '  "bin/seat/herdr-run.sh","seat an Eindri in a herdr tab, or a disposable space"\n'
 

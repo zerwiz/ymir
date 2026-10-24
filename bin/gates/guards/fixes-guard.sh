@@ -135,7 +135,7 @@ fi
 # rather than clever: a path that names no component is mapped by WHAT IT IS.
 path_component() {  # <path> -> the component it belongs to, or empty
   case "$1" in
-    bin/time/snotra/*) echo snotra ;;
+    systems/snotra/*) echo snotra ;;
     src/ymir_runtime/*|bin/mimir*|bin/records/mimir.sh|bin/seat/verify-seat.sh|bin/time/saga-wake-drain.sh) echo runtime ;;
     tools/mcp-gateway/*|bin/bridge/mcp-gateway.sh|bin/records/journal-*.sh) echo runtime ;;
     bin/bridge/a2a-mcp.sh|bin/bridge/ratatoskr.sh) echo runtime ;;

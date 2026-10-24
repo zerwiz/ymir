@@ -45,7 +45,7 @@ supports this; it is not a rewrite.
   outside a shell that already knew the home
 - Pinned version: Meetily-Local AppImage (see fetch below)
 
-### M0 — the engine ensure (`bin/time/snotra/snotra-ensure.sh`)
+### M0 — the engine ensure (`systems/snotra/services/ear/snotra-ensure.sh`)
 
 - Reports the seat's engine + model; installs what is missing
 - Per-OS: `pacman -S whisper-cpp` (Arch/omarchy), `apt-get install whisper.cpp`
@@ -63,7 +63,7 @@ supports this; it is not a rewrite.
 - Runs `node ~/.fleet/snotra-server.mjs` on port 8321
 - Depends on `$YMIR_HOME` being mounted (the hoard)
 
-### M3 — Capture road (`bin/time/snotra/snotra-capture.sh`)
+### M3 — Capture road (`systems/snotra/services/ear/snotra-capture.sh`)
 
 - `start` — PipeWire mic + system monitor → dated WAV under the hoard
 - `stop` — kills the ffmpeg process
@@ -71,7 +71,7 @@ supports this; it is not a rewrite.
 - Listening indicator: writes `state/.snotra-listening` (value: `recording`)
   so the bar can display it alongside ScreenRecording and Dictation
 
-### M4 — Minutes into the vault (`bin/time/snotra/snotra-transcribe.sh`)
+### M4 — Minutes into the vault (`systems/snotra/services/ear/snotra-transcribe.sh`)
 
 - Transcribes WAV with whisper.cpp (local GPU)
 - Produces structured Markdown minutes
@@ -106,7 +106,7 @@ supports this; it is not a rewrite.
 - This asset updated in the same change
 - `compliance-check.sh` clean
 
-### M9 — The watch (`bin/time/snotra/snotra-detect.sh`)
+### M9 — The watch (`systems/snotra/services/ear/snotra-detect.sh`)
 
 - `run` — the standing watch (the unit's `ExecStart`); `status` — TOON row;
   `scan` — the PipeWire picture, once; `once` — one scan and act
@@ -152,13 +152,13 @@ serves) → mine → write → deliver:
 - `<date>-<lane>-<slug>.actions.md` — the mined decisions and actions
 - `<date>-<lane>-<slug>.transcript.txt` — the transcript with its timestamps
 - `<date>-<lane>-<slug>.wav` — the recording
-- **delivery**: `bin/time/snotra/ymir-say.sh --mark-done` (a desktop note) AND a durable wake
+- **delivery**: `systems/snotra/services/tts-lease/ymir-say.sh --mark-done` (a desktop note) AND a durable wake
   through the queue's own door — `bin/records/ymir-state.sh queue append check
   "meeting:<slug>" "check: …"` — so the meeting reaches Brokk with no arm and no
   sweep. The append is **bounded** (`timeout 20`): no queue pathology may wedge a
   delivery.
 
-### M11 — The miner (`bin/time/snotra/snotra-mine.sh`)
+### M11 — The miner (`systems/snotra/services/record/snotra-mine.sh`)
 
 - Mechanical commitment cues over the transcript: decisions ("we decided",
   "agreed", "confirmed", "the decision is", …) and action items ("I will",
@@ -241,7 +241,7 @@ The transcribe script discovers the engine (env → PATH → build trees →
 build-tree binary, and picks GPU vs CPU by free VRAM (a resident rail model
 starves CUDA — whynot's <gpu> always falls to the CPU).
 
-### M13 — The live tail (`bin/time/snotra/snotra-live.sh`), 2026-10-07
+### M13 — The live tail (`systems/snotra/services/ear/snotra-live.sh`), 2026-10-07
 
 The ear above is **batch**: it records, and it writes the minutes **at the leave**.
 The live tail is the other door — text that grows while the mouth moves.
@@ -306,7 +306,7 @@ capturer the seat uses.
 
 `tools/mill/systemd/snotra-ear.service` — the whisper engine on `:8322` — is
 **not a boot resident and carries no `[Install]` section**, so nothing can put
-it in `ymir.target`. `bin/time/snotra/snotra-detect.sh` seats it into
+it in `ymir.target`. `systems/snotra/services/ear/snotra-detect.sh` seats it into
 `~/.config/systemd/user/` at arm time and owns its whole lifecycle:
 
 | when | what | why there |
@@ -346,7 +346,7 @@ that need the fix most. A seat that hand-wrote its own engine unit is **not**
 refused: the watch warns and leaves it standing, because silently replacing a
 hand-made unit is the same sin in the other direction.
 
-**The rail yields during transcription.** `bin/time/snotra/snotra-transcribe.sh` defaults
+**The rail yields during transcription.** `systems/snotra/services/ear/snotra-transcribe.sh` defaults
 `SNOTRA_FREE_RAIL=1`: when the GPU is starved it sources
 `~/.local/bin/voice-gpu-lib.sh` and calls `voice_ensure_vram 2048`, unloading the
 resident rail model and retrying on GPU. A meeting is the thing that matters while
@@ -404,10 +404,10 @@ generated, never hand-edited.
 
 | Door | Does |
 |---|---|
-| `bin/time/snotra/snotra-store.sh` | `new · put · state · index · list · verify · path` |
+| `systems/snotra/services/record/snotra-store.sh` | `new · put · state · index · list · verify · path` |
 | `bin/thing/ping-room.sh` | raises MiroTalk on the current seat, `local|tailnet|public`, exclusive `ping.zerwiz.org` claim |
-| `bin/time/snotra/snotra-autojoin.sh` | calendar scan → plan → bot dispatch (dry-run unless `--apply`) |
-| `bin/time/snotra/snotra-bot.sh` | Vexa API door; the participant name is **Snotra**; HTTPS and a vault key required |
+| `systems/snotra/services/ear/snotra-autojoin.sh` | calendar scan → plan → bot dispatch (dry-run unless `--apply`) |
+| `systems/snotra/services/ear/snotra-bot.sh` | Vexa API door; the participant name is **Snotra**; HTTPS and a vault key required |
 
 Transport is recorded, not inferred: `source` (`ear|bot|ping|telegram`), `transport`
 (`pipewire|webrtc`), `platform` (`google_meet|zoom|teams|jitsi|ping|local`). If two
@@ -431,8 +431,8 @@ the-letters · the-sound).
 ### The chain — one command
 
 ```bash
-bin/time/snotra/snotra-pipeline.sh run <meeting-dir> [--dry-run] [--draft] [--shrink]
-bin/time/snotra/snotra-pipeline.sh run --recent [DAYS]
+systems/snotra/services/cron/snotra-pipeline.sh run <meeting-dir> [--dry-run] [--draft] [--shrink]
+systems/snotra/services/cron/snotra-pipeline.sh run --recent [DAYS]
 ```
 
 `record → harvest → signal → transcribe → speakers → layout → project → agenda → letters` (+ `ladder` with
@@ -460,7 +460,7 @@ step that cannot be proven stops the chain and names itself; a skip always print
 `hodd/identity/places/<company>/<place>/place.yaml` — `surface` (trello | gimle | jira) · `board` (a NAME,
 resolved through `trello-map.yaml`) · `lists` per kind · `labels` · `roles` (chair, operator) · `cadence` ·
 `retention` · `authority` (the decisions or documents the shape comes from) · `never` (the laws quoted by the
-doors). **No company, board or list name appears in `bin/time/snotra/*.py`** — grep-proven; a second company
+doors). **No company, board or list name appears in `systems/snotra/*.py`** — grep-proven; a second company
 files correctly with no code change, and a place declaring `surface: gimle` is refused until that adapter exists.
 
 ### Installation and updates

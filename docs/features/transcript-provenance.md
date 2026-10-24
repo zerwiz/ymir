@@ -1,6 +1,6 @@
 # Transcript provenance — proving a meeting record has not changed
 
-**What it is.** `bin/time/snotra/snotra-provenance.sh` seals every meeting artifact with
+**What it is.** `systems/snotra/services/record/snotra-provenance.sh` seals every meeting artifact with
 a SHA-256 manifest and a hash-chained, append-only log, and verifies it later. It is the
 local, cryptographic half of the evidence chain; it is **not** a qualified eIDAS
 timestamp and does not by itself make a transcript legally certified.
@@ -8,9 +8,9 @@ timestamp and does not by itself make a transcript legally certified.
 ## Use it
 
 ```sh
-bin/time/snotra/snotra-provenance.sh seal   <meeting-dir> --note "after sign-off"
-bin/time/snotra/snotra-provenance.sh verify <meeting-dir>
-bin/time/snotra/snotra-provenance.sh status <meeting-dir>
+systems/snotra/services/record/snotra-provenance.sh seal   <meeting-dir> --note "after sign-off"
+systems/snotra/services/record/snotra-provenance.sh verify <meeting-dir>
+systems/snotra/services/record/snotra-provenance.sh status <meeting-dir>
 ```
 
 `seal` writes `provenance.json` (the manifest) and appends one entry to
@@ -69,20 +69,20 @@ contractual controls, not regexes.
 
 ```sh
 # 1. seal the artifact set
-bin/time/snotra/snotra-provenance.sh seal <meeting-dir>
+systems/snotra/services/record/snotra-provenance.sh seal <meeting-dir>
 
 # 2. timestamp the root (with a QTSP/RFC 3161 authority if you have one)
-bin/time/snotra/snotra-evidence.sh timestamp <meeting-dir> --tsa https://tsa.example/rfc3161
+systems/snotra/services/record/snotra-evidence.sh timestamp <meeting-dir> --tsa https://tsa.example/rfc3161
 
 # 3. a local read-only copy (not object-lock, but tamper-resistant)
-bin/time/snotra/snotra-evidence.sh worm <meeting-dir>
+systems/snotra/services/record/snotra-evidence.sh worm <meeting-dir>
 
 # 4. human certification
-bin/time/snotra/snotra-evidence.sh certify <meeting-dir> --reviewer "Reviewer Name" --note "corrections"
+systems/snotra/services/record/snotra-evidence.sh certify <meeting-dir> --reviewer "Reviewer Name" --note "corrections"
 
 # 5. retention policy (enforce moves, never deletes)
-bin/time/snotra/snotra-evidence.sh retention <meeting-dir> --days 365
-bin/time/snotra/snotra-evidence.sh enforce <meeting-dir> --dry-run
+systems/snotra/services/record/snotra-evidence.sh retention <meeting-dir> --days 365
+systems/snotra/services/record/snotra-evidence.sh enforce <meeting-dir> --dry-run
 ```
 
 Without `--tsa`, the timestamp is stored as **local-unqualified** and labelled as such.
@@ -96,7 +96,7 @@ SNOTRA_WORM_ENDPOINT=https://s3.eu-central-2.wasabisys.com \
 SNOTRA_WORM_BUCKET=evidence \
 SNOTRA_WORM_MODE=COMPLIANCE \
 SNOTRA_WORM_RETENTION_DAYS=3650 \
-bin/time/snotra/snotra-evidence.sh worm-s3 <meeting-dir> [--dry-run]
+systems/snotra/services/record/snotra-evidence.sh worm-s3 <meeting-dir> [--dry-run]
 ```
 
 `worm-s3` uploads every artifact except the mutable access log with S3 Object Lock in

@@ -45,9 +45,9 @@ mkdir -p "$STATE_DIR" 2>/dev/null || true
 printf '%s\twedge\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CHANNEL" "$SUMMARY" >>"$LOG" 2>/dev/null || true
 
 fired=0
-# Speak through the one voice: bin/time/snotra/ymir-say.sh owns the desktop manner.
-if [ -x "$ROOT/bin/time/snotra/ymir-say.sh" ]; then
-  "$ROOT/bin/time/snotra/ymir-say.sh" --mark-alarm "wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
+# Speak through the one voice: systems/snotra/services/tts-lease/ymir-say.sh owns the desktop manner.
+if [ -x "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" ]; then
+  "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" --mark-alarm "wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
 elif command -v omarchy-notification-send >/dev/null 2>&1; then
   omarchy-notification-send -u critical -g "" "Ymir wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
 elif command -v notify-send >/dev/null 2>&1; then

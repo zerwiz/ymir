@@ -67,7 +67,7 @@ fi
 
 # 2. provenance for held/sensitive sets
 if [ "$SURFACE" != private ] && [ -f "$DIR/provenance.json" ]; then
-  "$ROOT/bin/time/snotra/snotra-provenance.sh" verify "$DIR" >/dev/null 2>&1 || fail "provenance verify failed"
+  "$ROOT/systems/snotra/services/record/snotra-provenance.sh" verify "$DIR" >/dev/null 2>&1 || fail "provenance verify failed"
 fi
 case "$CLASS" in
   *patent*|*restricted*) [ -f "$DIR/provenance.json" ] || fail "sensitive set has no provenance seal" ;;
