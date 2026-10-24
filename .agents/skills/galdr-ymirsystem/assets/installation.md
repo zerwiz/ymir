@@ -452,15 +452,28 @@ resolve both through `bin/skuld/registry-lib.sh` and name the old key when they 
 and `bin/engine/ymir-validate.sh`'s `registry` check warns (never fails) about rows still
 carrying it. The operator's live registry is renamed by hand, with his word.
 
+The registers beside it are **one file for one fact**, and each arrives from its template
+in `registry/` — never a heredoc in the installer (plan 128): `companies.yaml` holds the
+houses the operator IS, `clients.yaml` the companies a house SERVES. A client is a company
+whose owner is not us, served by exactly one house (`served_by`), with its own realm and
+its own decisions — never a house, never a member of one. So a place can say whose client
+it is: `place.yaml`'s `client_of: <house-id>` makes a place whose `company:` is a client
+resolve, and `projects.yaml`'s optional `client: <client-id>` names the client a project is
+for. `bin/identity/place-validate.sh --all`, `bin/identity/clients.sh validate|check` and
+`bin/identity/projects-validate.sh` are the doors that decide it, and the `clients` step
+reads the same door: a place that cannot say whose client it is is a **RED** naming the file
+and the fix, never a shrug.
+
 ## The steps
 
 ```
-install[34]{step,what,self-heals}:
+install[35]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/seat/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/engine/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "home","the home the operator CHOOSES, recorded under ~/.config/ymir/home","asks once, records the answer; --check never writes, --yes takes what is recorded, else the documented default"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at the hoard root under the chosen home)","creates if missing; hoard_root resolves through bin/vault/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/vault/hodd.sh emit resolves"
+  "clients","the client register — the companies a house SERVES, beside the houses it IS (plan 128)","seeds hodd/identity/{clients,companies}.yaml from registry/*.yaml.example when absent (one source each, never an inline heredoc) and then reads the ONE door — bin/identity/clients.sh validate for the register's shape, bin/identity/place-validate.sh --all for every place's client_of/served_by relation; a place whose client_of names no resolvable client, or an absent register beside a place that declares one, is a FAIL naming the file and the fix — absent is a red, not a shrug"
   "apps","the app repos (the app split) — hlidskjalf · hlidskjalf-mobile · odrerir · sessrumnir · smidja","reads $HOARD/identity/projects.yaml (never guesses a remote); clones a missing apps/<path> from its registered git{} block, fast-forwards a present one, and stamps the smithy engine (apps/smidja) from the cloned factory's templates"
   "engines","treehouse · sandcastle · no-mistakes","installs treehouse + no-mistakes from their installers"
   "local-model","the local brain for THIS hardware — a CUDA llama.cpp engine, the best model that fits, pi wiring, and Ymir registration","bin/model/llama-ensure.sh ADOPTS a standing CUDA llama-server (proves CUDA0, never rebuilds it) and only builds with GGML_CUDA=ON when none exists; bin/model/model-fit.sh picks the largest model that fits the PROBED GPU/VRAM/RAM/disk (generic — never this box); bin/model/model-fetch.sh downloads it resumable, checksummed, consent first, into the hoard; bin/pi/pi-model-wire.sh wires ~/.pi/agent/models.json (exact served id + key reference) and proves a one-shot; bin/model/model-register.sh writes the same model into the hoard config/agents.<host>.yaml overlay so Ymir/Smidja share one model road; bin/model/model-tune.sh measures the real ctx/ngl/n-cpu-moe/kv/fa and replaces the placeholder in data/local-models.md. When a local rail already serves models, NOTHING is downloaded — the operator's registered model is adopted. Loud refusals (no CUDA, unknown hardware, no disk, bad checksum), never a silent skip"
