@@ -619,7 +619,7 @@ bin[610]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-style.sh","ymir-style.sh — the cloth of the terminal halls.","tool","wired","keep",5,156
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
   "ymir-vad.py","'''","tool","wired","keep",0,135
-  "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",3,293
+  "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",3,296
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
