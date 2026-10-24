@@ -1,0 +1,10 @@
+import { heartCard } from './packages/a2a/ratatoskr/card.ts';
+const c = heartCard();
+console.log('keys:', Object.keys(c).join(','));
+console.log('name:', c.name);
+console.log('url_host_class:', String(c.url).includes('127.0.0.1') ? 'loopback' : (String(c.url).includes('.ts.net') ? 'tailnet' : 'lan-or-other'));
+console.log('protocols:', JSON.stringify(c.protocols));
+console.log('securitySchemes_type:', Array.isArray(c.securitySchemes) ? 'array' : typeof c.securitySchemes);
+console.log('protocolVersion_present:', 'protocolVersion' in c);
+console.log('capabilities:', JSON.stringify(c.capabilities));
+console.log('skills:', JSON.stringify(c.skills));
