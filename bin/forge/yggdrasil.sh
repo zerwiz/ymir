@@ -17,7 +17,9 @@
 # Engine: the reusable worktree pool is **treehouse**
 # (github.com/kunchenguid/treehouse); this script is the Norse shell. `create`
 # keeps an explicit, named branch for merge/cleanup; `pool` delegates to the
-# treehouse pool directly.
+# treehouse pool directly. A created worktree does NOT carry `.pi/extensions/`:
+# it is excluded by a per-worktree sparse-checkout, so a seat inside it loads ONE
+# extension tree, never two (RULES/13).
 #
 # Exit: 0 ok, 1 error, 2 usage.
 set -u
@@ -28,7 +30,7 @@ REPO="${YGGDRASIL_REPO:-$(pwd)}"
 WT=".yggdrasil"
 PREFIX="yggdrasil"
 
-usage() { sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1-}"; shift || true
 case "$CMD" in
@@ -83,7 +85,28 @@ case "$CMD" in
     BASE="${BASE:-$(default_branch)}"
     mkdir -p "$REPO/$WT"
     git -C "$REPO" worktree add -b "$BRANCH" "$WTPATH" "$BASE" >/dev/null 2>&1 || { printf 'error: git worktree add failed (base %s)\n' "$BASE" >&2; exit 1; }
+    # ONE EXTENSION HOME PER WORKTREE. A worktree checks `.pi/extensions/` out like
+    # any other file, so a pi seat inside it loads eighteen extensions TWICE — the
+    # worktree's copy and the settings-named seat tree. pi does not de-duplicate, so
+    # every tool name collides, pi refuses all extensions, exits, and the dispatcher
+    # types the brief into the bare shell that is left. Four errands died this way
+    # (docs/fixes/agents/2026-10-24-the-errand-that-looked-alive.md).
+    # Use git's own mechanism — a per-worktree sparse-checkout with a non-cone
+    # exclusion — never a symlink: a symlink shows as deleted tracked files and must
+    # not ship. The pattern file and `core.sparseCheckout` land in THIS worktree's
+    # own gitdir (`config.worktree`), so no existing checkout or worktree changes.
+    if ! git -C "$WTPATH" sparse-checkout set --no-cone '/*' '!/.pi/extensions/' >/dev/null 2>&1; then
+      printf 'error: created %s but could not exclude .pi/extensions from it\nhelp: git -C %s sparse-checkout set --no-cone %s %s   (then bin/forge/yggdrasil.sh cleanup %s)\n' \
+        "$BRANCH" "$WTPATH" "'/*'" "'!/.pi/extensions/'" "$ID" >&2
+      exit 1
+    fi
+    if [ -e "$WTPATH/.pi/extensions" ] && [ ! -L "$WTPATH/.pi/extensions" ]; then
+      printf 'error: %s still carries its own .pi/extensions — two load paths, no seat\nhelp: git -C %s sparse-checkout set --no-cone %s %s\n' \
+        "$BRANCH" "$WTPATH" "'/*'" "'!/.pi/extensions/'" >&2
+      exit 1
+    fi
     printf 'worktree[1]{id,branch,path,base}:\n  "%s","%s","%s","%s"\n' "$ID" "$BRANCH" "$WT/$ID" "$BASE"
+    printf 'sparse[1]{excluded,state,why}:\n  ".pi/extensions","not checked out","one extension home — the seat tree serves the worktree"\n'
     ;;
 
   list)

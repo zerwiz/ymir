@@ -8,6 +8,8 @@
 #
 # Usage:
 #   bin/seat/valknut-load.sh [--opencode] [--pi] [--global] [--status] [--all]
+#   bin/seat/valknut-load.sh --check        # is the extension home ONE home? (exit 1 if not)
+#   bin/seat/valknut-load.sh --ext-home     # which extension tree serves THIS tree?
 #   bin/seat/valknut-load.sh --install      # seat the post-merge hook (bind on merge)
 #   bin/seat/valknut-load.sh --version | -v
 #
@@ -35,7 +37,7 @@ OC_LOCAL="$ROOT/.opencode/agents"
 SKILLS="$ROOT/.agents/skills"
 
 usage() {
-  sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 for a in "$@"; do
@@ -45,7 +47,7 @@ for a in "$@"; do
   esac
 done
 
-MODE_OPENCODE=0; MODE_PI=0; MODE_GLOBAL=0; MODE_INSTALL=0; MODE_STATUS=0; MODE_CHECK=0
+MODE_OPENCODE=0; MODE_PI=0; MODE_GLOBAL=0; MODE_INSTALL=0; MODE_STATUS=0; MODE_CHECK=0; MODE_EXT_HOME=0
 for a in "$@"; do
   case "$a" in
     --opencode) MODE_OPENCODE=1 ;;
@@ -53,11 +55,80 @@ for a in "$@"; do
     --global) MODE_GLOBAL=1 ;;
     --status) MODE_STATUS=1 ;;
     --check) MODE_CHECK=1 ;;
+    --ext-home) MODE_EXT_HOME=1 ;;
     --all) MODE_OPENCODE=1; MODE_PI=1 ;;
     --install) MODE_INSTALL=1 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/seat/valknut-load.sh [--opencode|--pi|--global|--status|--check|--all]\n' "$a" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/seat/valknut-load.sh [--opencode|--pi|--global|--status|--check|--ext-home|--all]\n' "$a" >&2; exit 2 ;;
   esac
 done
+
+# ── ONE HOME ACROSS A WORKTREE (2026-10-24) ─────────────────────────────────
+# A Yggdrasil worktree is the SAME repository as the seat root, so its
+# `.pi/extensions/` is one home seen twice, never two homes. It used to be checked
+# out like any other file, so a pi seat inside it loaded eighteen extensions twice,
+# every tool name collided, pi exited, and the dispatcher typed the brief into the
+# bare shell that was left (docs/fixes/agents/2026-10-24-the-errand-that-looked-alive.md).
+# `bin/forge/yggdrasil.sh create` now excludes that path by a per-worktree
+# sparse-checkout. This resolver is how every mode sees the difference:
+#
+#   own          this tree carries the extension home (the normal case)
+#   absent       this tree carries none, and is NOT a worktree of the seated tree
+#   shared       a worktree of the seated tree with no copy of its own — ONE home,
+#                served by the seated tree
+#   shared-link  that worktree points at the seated tree by symlink (works, but the
+#                shipped shape is the sparse exclusion: a symlink shows as deleted
+#                tracked files)
+#   shared-copy  that worktree carries its OWN `.pi/extensions` — a genuine second
+#                home, and exactly the fault
+#
+# A tree of a DIFFERENT repository is never "shared": it is its own home and must
+# pass on its own terms.
+git_common_dir() {  # <dir> -> absolute shared git dir, or nothing
+  local d
+  d="$(git -C "$1" rev-parse --git-common-dir 2>/dev/null)" || return 0
+  [ -n "$d" ] || return 0
+  case "$d" in /*) ;; *) d="$1/$d" ;; esac
+  ( cd "$d" 2>/dev/null && pwd -P )
+}
+
+pi_ext_seat_root() {  # the recorded seat root that still holds a live bin/, or nothing
+  local pointer="$PI_EXT_HOME/.ymir-root" line
+  [ -r "$pointer" ] || return 0
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    [ -x "$line/bin/pi/syn-watch-arm.sh" ] && { printf '%s' "$line"; return 0; }
+  done <"$pointer"
+}
+
+# Sets PI_EXT_SEAT, PI_EXT_STATE and PI_EXT_SERVING (the tree pi really loads).
+pi_ext_resolve() {
+  PI_EXT_SEAT="$(pi_ext_seat_root)"
+  PI_EXT_SERVING="$PI_EXT_SRC"
+  if [ -e "$PI_EXT_SRC" ] || [ -L "$PI_EXT_SRC" ]; then PI_EXT_STATE=own; else PI_EXT_STATE=absent; fi
+  [ -n "$PI_EXT_SEAT" ] || return 0
+  [ "$PI_EXT_SEAT" = "$ROOT" ] && return 0
+  local here seat
+  here="$(git_common_dir "$ROOT")"; seat="$(git_common_dir "$PI_EXT_SEAT")"
+  [ -n "$here" ] && [ "$here" = "$seat" ] || return 0   # a different repository: not shared
+  if [ "$PI_EXT_STATE" = absent ]; then
+    PI_EXT_STATE=shared
+    PI_EXT_SERVING="$PI_EXT_SEAT/.pi/extensions"
+  elif [ -L "$PI_EXT_SRC" ]; then
+    PI_EXT_STATE=shared-link
+    PI_EXT_SERVING="$(cd "$PI_EXT_SRC" 2>/dev/null && pwd -P)"
+    [ -n "$PI_EXT_SERVING" ] || PI_EXT_SERVING="$PI_EXT_SRC"
+  else
+    PI_EXT_STATE=shared-copy
+  fi
+}
+
+pi_ext_resolve
+
+if [ "$MODE_EXT_HOME" = "1" ]; then
+  printf 'ext-home[1]{tree,state,seat_root,serving}:\n  "%s","%s","%s","%s"\n' \
+    "$PI_EXT_SRC" "$PI_EXT_STATE" "${PI_EXT_SEAT:-}" "$PI_EXT_SERVING"
+  exit 0
+fi
 
 # --check: is the DEPLOYED extension tree what the repo says it is?
 #
@@ -183,51 +254,61 @@ if [ "$MODE_CHECK" = "1" ]; then
   fails=0
   printf 'check{pi-extensions-one-home}:
 '
+  # THE WORKTREE CASE (2026-10-24). A worktree of the SEATED repository is one
+  # home, not two — but only while it carries no copy of its own. A copy is the
+  # fault itself (`pi --list-models` inside such a worktree lists eighteen tool
+  # conflicts and exits), so it is a FAIL with the exact repair.
+  case "$PI_EXT_STATE" in
+    shared)
+      printf '  %-46s %s\n' "worktree of the seat's repository" "ONE HOME -> $PI_EXT_SERVING"
+      printf '  %-46s %s\n' "the worktree carries no second tree" "PASS (sparse: .pi/extensions not checked out)" ;;
+    shared-link)
+      printf '  %-46s %s\n' "worktree of the seat's repository" "ONE HOME -> $PI_EXT_SERVING"
+      printf '  %-46s %s\n' "the worktree carries no second tree" "PASS (symlink — sparse is the shipped shape)" ;;
+    shared-copy)
+      printf '  %-46s %s\n' "worktree of the seat's repository" "FAIL — it carries its OWN $PI_EXT_SRC"
+      printf '  %-46s %s\n' "two load paths, so no seat" "FAIL — git -C $ROOT sparse-checkout set --no-cone '/*' '!/.pi/extensions/'"
+      fails=$((fails+2)) ;;
+    absent)
+      printf '  %-46s %s\n' "project home holds extensions" "FAIL — $PI_EXT_SRC is absent and this is no worktree of the seat"
+      fails=$((fails+1)) ;;
+  esac
+  # From here on, the tree that SERVES this session: the seated tree when the
+  # worktree is sparse, else this tree's own.
   n_src=0
-  for f in "$PI_EXT_SRC"/*.ts "$PI_EXT_SRC"/*.js; do [ -e "$f" ] && n_src=$((n_src+1)); done
-  [ "$n_src" -gt 0 ] && printf '  %-46s %s
-' "project home holds extensions ($n_src)" "PASS" \
-                     || { printf '  %-46s %s
-' "project home holds extensions" "FAIL"; fails=$((fails+1)); }
+  for f in "$PI_EXT_SERVING"/*.ts "$PI_EXT_SERVING"/*.js; do [ -e "$f" ] && n_src=$((n_src+1)); done
+  { [ "$n_src" -gt 0 ] && printf '  %-46s %s\n' "the serving home holds extensions ($n_src)" "PASS"; } \
+    || { [ "$PI_EXT_STATE" = absent ] || { printf '  %-46s %s\n' "the serving home holds extensions" "FAIL"; fails=$((fails+1)); }; }
   dupes=0
-  for ext in "$PI_EXT_SRC"/*; do
+  for ext in "$PI_EXT_SERVING"/*; do
     [ -e "$ext" ] || continue
     b=$(basename "$ext")
     case "$b" in node_modules|lib) continue ;; esac
     if [ -e "$PI_EXT_HOME/$b" ]; then
-      printf '  %-46s %s
-' "$b" "DUPLICATE — also in the global home; pi would double-register it"
+      printf '  %-46s %s\n' "$b" "DUPLICATE — also in the global home; pi would double-register it"
       dupes=$((dupes+1))
     fi
   done
-  [ "$dupes" -eq 0 ] && printf '  %-46s %s
-' "no extension in two load paths" "PASS" \
-                     || { printf '  %-46s %s
-' "double-registered extensions" "FAIL ($dupes)"; fails=$((fails+1)); }
+  [ "$dupes" -eq 0 ] && printf '  %-46s %s\n' "no extension in two load paths" "PASS" \
+                     || { printf '  %-46s %s\n' "double-registered extensions" "FAIL ($dupes)"; fails=$((fails+1)); }
   pointer="$PI_EXT_HOME/.ymir-root"; vroot=""
   if [ -r "$pointer" ]; then while IFS= read -r line; do [ -n "$line" ] || continue; [ -d "$line/bin" ] && { vroot="$line"; break; }; done <"$pointer"; fi
-  if [ -n "$vroot" ]; then printf '  %-46s %s
-' ".ymir-root record" "PASS -> $vroot"
-  else printf '  %-46s %s
-' ".ymir-root record" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1)); fi
-  # Global reach: the user settings must name THIS checkout's extensions tree, or
+  if [ -n "$vroot" ]; then printf '  %-46s %s\n' ".ymir-root record" "PASS -> $vroot"
+  else printf '  %-46s %s\n' ".ymir-root record" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1)); fi
+  # Global reach: the user settings must name the tree that serves this session, or
   # the extensions load only when a session happens to sit inside the repo.
-  if pi_settings_extension_root_present; then
-    printf '  %-46s %s
-' "pi settings name the extensions tree" "PASS -> $PI_EXT_SRC"
+  if PI_EXT_SRC="$PI_EXT_SERVING" pi_settings_extension_root_present; then
+    printf '  %-46s %s\n' "pi settings name the extensions tree" "PASS -> $PI_EXT_SERVING"
   else
-    printf '  %-46s %s
-' "pi settings name the extensions tree" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1))
+    printf '  %-46s %s\n' "pi settings name the extensions tree" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1))
   fi
   printf 'check{pi-extension-check}:
 '
   if [ "$fails" -eq 0 ]; then
-    printf '  %-46s %s
-' "valknut-load --check" "PASS"
+    printf '  %-46s %s\n' "valknut-load --check" "PASS"
     exit 0
   fi
-  printf '  %-46s %s
-' "valknut-load --check" "FAIL ($fails) — run: bin/seat/valknut-load.sh --pi"
+  printf '  %-46s %s\n' "valknut-load --check" "FAIL ($fails) — run: bin/seat/valknut-load.sh --pi"
   exit 1
 fi
 
